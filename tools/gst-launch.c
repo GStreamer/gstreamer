@@ -76,79 +76,6 @@ static gboolean waiting_eos = FALSE;
 /* convenience macro so we don't have to litter the code with if(!quiet) */
 #define PRINT if(!quiet)g_print
 
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-static GstElement *
-xmllaunch_parse_cmdline (const gchar ** argv)
-{
-  GstElement *pipeline = NULL, *e;
-  GstXML *xml;
-  gboolean err;
-  const gchar *arg;
-  gchar *element, *property, *value;
-  GList *l;
-  gint i = 0;
-
-  if (!(arg = argv[0])) {
-    g_printerr ("%s",
-        _("Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"));
-    exit (1);
-  }
-
-  xml = gst_xml_new ();
-  /* FIXME guchar from gstxml.c */
-  err = gst_xml_parse_file (xml, (guchar *) arg, NULL);
-
-  if (err != TRUE) {
-    g_printerr (_("ERROR: parse of xml file '%s' failed.\n"), arg);
-    exit (1);
-  }
-
-  l = gst_xml_get_topelements (xml);
-  if (!l) {
-    g_printerr (_("ERROR: no toplevel pipeline element in file '%s'.\n"), arg);
-    exit (1);
-  }
-
-  if (l->next) {
-    g_printerr ("%s",
-        _("WARNING: only one toplevel element is supported at this time.\n"));
-  }
-
-  pipeline = GST_ELEMENT (l->data);
-
-  while ((arg = argv[++i])) {
-    element = g_strdup (arg);
-    property = strchr (element, '.');
-    value = strchr (element, '=');
-
-    if (!(element < property && property < value)) {
-      g_printerr (_("ERROR: could not parse command line argument %d: %s.\n"),
-          i, element);
-      g_free (element);
-      exit (1);
-    }
-
-    *property++ = '\0';
-    *value++ = '\0';
-
-    e = gst_bin_get_by_name (GST_BIN (pipeline), element);
-    if (!e) {
-      g_printerr (_("WARNING: element named '%s' not found.\n"), element);
-    } else {
-      gst_util_set_object_arg (G_OBJECT (e), property, value);
-    }
-    g_free (element);
-  }
-
-  if (!l)
-    return NULL;
-
-  gst_object_ref (pipeline);
-  gst_object_unref (xml);
-  return pipeline;
-}
-#endif
-
 #ifndef DISABLE_FAULT_HANDLER
 #ifndef USE_SIGINFO
 static void
@@ -730,10 +657,6 @@ main (int argc, char *argv[])
         N_("Output messages"), NULL},
     {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
         N_("Do not output status information of TYPE"), N_("TYPE1,TYPE2,...")},
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-    {"output", 'o', 0, G_OPTION_ARG_STRING, &savefile,
-        N_("Save xml representation of pipeline to FILE and exit"), N_("FILE")},
-#endif
     {"no-fault", 'f', 0, G_OPTION_ARG_NONE, &no_fault,
         N_("Do not install a fault handler"), NULL},
     {"no-sigusr-handler", '\0', 0, G_OPTION_ARG_NONE, &no_sigusr_handler,
@@ -804,15 +727,6 @@ main (int argc, char *argv[])
   /* make a null-terminated version of argv */
   argvn = g_new0 (char *, argc);
   memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-  if (strstr (argv[0], "gst-xmllaunch")) {
-    /* FIXME 0.11: remove xmllaunch entirely */
-    g_warning ("gst-xmllaunch is deprecated and broken for all but the most "
-        "simple pipelines. It will most likely be removed in future. Don't "
-        "use it.\n");
-    pipeline = xmllaunch_parse_cmdline ((const gchar **) argvn);
-  } else
-#endif
   {
     pipeline =
         (GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
@@ -841,15 +755,6 @@ main (int argc, char *argv[])
     g_signal_connect (pipeline, "deep-notify",
         G_CALLBACK (gst_object_default_deep_notify), exclude_list);
   }
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-  if (savefile) {
-    g_warning ("Pipeline serialization to XML is deprecated and broken for "
-        "all but the most simple pipelines. It will most likely be removed "
-        "in future. Don't use it.\n");
-
-    gst_xml_write_file (GST_ELEMENT (pipeline), fopen (savefile, "w"));
-  }
-#endif
 
   if (!savefile) {
     GstState state, pending;

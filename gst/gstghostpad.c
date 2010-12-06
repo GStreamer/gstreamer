@@ -77,14 +77,6 @@ static GstPad *gst_proxy_pad_get_target (GstPad * pad);
 static void gst_proxy_pad_dispose (GObject * object);
 static void gst_proxy_pad_finalize (GObject * object);
 
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-#ifdef GST_DISABLE_DEPRECATED
-#include <libxml/parser.h>
-#endif
-static xmlNodePtr gst_proxy_pad_save_thyself (GstObject * object,
-    xmlNodePtr parent);
-#endif
-
 static void on_src_target_notify (GstPad * target,
     GParamSpec * unused, gpointer user_data);
 
@@ -384,16 +376,6 @@ gst_proxy_pad_class_init (GstProxyPadClass * klass)
   gobject_class->dispose = gst_proxy_pad_dispose;
   gobject_class->finalize = gst_proxy_pad_finalize;
 
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-  {
-    GstObjectClass *gstobject_class = (GstObjectClass *) klass;
-
-    gstobject_class->save_thyself =
-        ((gpointer (*)(GstObject * object,
-                gpointer self)) *
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_save_thyself));
-  }
-#endif
   /* Register common function pointer descriptions */
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_query_type);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_event);
@@ -461,60 +443,6 @@ gst_proxy_pad_init (GstProxyPad * ppad)
   gst_pad_set_setcaps_function (pad, gst_proxy_pad_do_setcaps);
   gst_pad_set_unlink_function (pad, gst_proxy_pad_do_unlink);
 }
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-/**
- * gst_proxy_pad_save_thyself:
- * @pad: a ghost #GstPad to save.
- * @parent: the parent #xmlNodePtr to save the description in.
- *
- * Saves the ghost pad into an xml representation.
- *
- * Returns: the #xmlNodePtr representation of the pad.
- */
-static xmlNodePtr
-gst_proxy_pad_save_thyself (GstObject * object, xmlNodePtr parent)
-{
-  xmlNodePtr self;
-  GstProxyPad *proxypad;
-  GstPad *pad;
-  GstPad *peer;
-
-  g_return_val_if_fail (GST_IS_PROXY_PAD (object), NULL);
-
-  self = xmlNewChild (parent, NULL, (xmlChar *) "ghostpad", NULL);
-  xmlNewChild (self, NULL, (xmlChar *) "name",
-      (xmlChar *) GST_OBJECT_NAME (object));
-  xmlNewChild (self, NULL, (xmlChar *) "parent",
-      (xmlChar *) GST_OBJECT_NAME (GST_OBJECT_PARENT (object)));
-
-  proxypad = GST_PROXY_PAD_CAST (object);
-  pad = GST_PAD_CAST (proxypad);
-  peer = GST_PAD_CAST (pad->peer);
-
-  if (GST_IS_PAD (pad)) {
-    if (GST_PAD_IS_SRC (pad))
-      xmlNewChild (self, NULL, (xmlChar *) "direction", (xmlChar *) "source");
-    else if (GST_PAD_IS_SINK (pad))
-      xmlNewChild (self, NULL, (xmlChar *) "direction", (xmlChar *) "sink");
-    else
-      xmlNewChild (self, NULL, (xmlChar *) "direction", (xmlChar *) "unknown");
-  } else {
-    xmlNewChild (self, NULL, (xmlChar *) "direction", (xmlChar *) "unknown");
-  }
-  if (GST_IS_PAD (peer)) {
-    gchar *content = g_strdup_printf ("%s.%s",
-        GST_OBJECT_NAME (GST_PAD_PARENT (peer)), GST_PAD_NAME (peer));
-
-    xmlNewChild (self, NULL, (xmlChar *) "peer", (xmlChar *) content);
-    g_free (content);
-  } else {
-    xmlNewChild (self, NULL, (xmlChar *) "peer", NULL);
-  }
-
-  return self;
-}
-#endif /* GST_DISABLE_LOADSAVE */
 
 
 /***********************************************************************

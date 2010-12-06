@@ -2673,31 +2673,6 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
 }
 
 
-/**
- * gst_buffer_stamp:
- * @dest: buffer to stamp
- * @src: buffer to stamp from
- *
- * Copies additional information (the timestamp, duration, and offset start
- * and end) from one buffer to the other.
- *
- * This function does not copy any buffer flags or caps and is equivalent to
- * gst_buffer_copy_metadata(@dest, @src, GST_BUFFER_COPY_TIMESTAMPS).
- *
- * Deprecated: use gst_buffer_copy_metadata() instead, it provides more
- * control.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-void gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src);
-#endif
-void
-gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
-{
-  gst_buffer_copy_metadata (dest, src, GST_BUFFER_COPY_TIMESTAMPS);
-}
-#endif /* GST_REMOVE_DEPRECATED */
-
 static gboolean
 getcaps_fold_func (GstPad * pad, GValue * ret, GstPad * orig)
 {
@@ -3120,27 +3095,6 @@ gst_pad_query_peer_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
 
   return ret;
 }
-
-/**
- * gst_atomic_int_set:
- * @atomic_int: pointer to an atomic integer
- * @value: value to set
- *
- * Unconditionally sets the atomic integer to @value.
- *
- * Deprecated: Use g_atomic_int_set().
- *
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-void gst_atomic_int_set (gint * atomic_int, gint value);
-#endif
-void
-gst_atomic_int_set (gint * atomic_int, gint value)
-{
-  g_atomic_int_set (atomic_int, value);
-}
-#endif
 
 /**
  * gst_pad_add_data_probe:
@@ -3601,34 +3555,6 @@ gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
 
   return pad;
 }
-
-/**
- * gst_bin_find_unconnected_pad:
- * @bin: bin in which to look for elements with unlinked pads
- * @direction: whether to look for an unlinked source or sink pad
- *
- * Recursively looks for elements with an unlinked pad of the given
- * direction within the specified bin and returns an unlinked pad
- * if one is found, or NULL otherwise. If a pad is found, the caller
- * owns a reference to it and should use gst_object_unref() on the
- * pad when it is not needed any longer.
- *
- * Returns: unlinked pad of the given direction, or NULL.
- *
- * Since: 0.10.3
- *
- * Deprecated: use gst_bin_find_unlinked_pad() instead.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-GstPad *gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction);
-#endif
-GstPad *
-gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
-{
-  return gst_bin_find_unlinked_pad (bin, direction);
-}
-#endif
 
 /**
  * gst_parse_bin_from_description:

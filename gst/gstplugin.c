@@ -164,38 +164,6 @@ gst_plugin_error_quark (void)
   return quark;
 }
 
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-void _gst_plugin_register_static (GstPluginDesc * desc);
-#endif
-/* this function can be called in the GCC constructor extension, before
- * the _gst_plugin_initialize() was called. In that case, we store the
- * plugin description in a list to initialize it when we open the main
- * module later on.
- * When the main module is known, we can register the plugin right away.
- */
-void
-_gst_plugin_register_static (GstPluginDesc * desc)
-{
-  g_return_if_fail (desc != NULL);
-
-  if (!_gst_plugin_inited) {
-    /* We can't use any GLib functions here, since g_thread_init hasn't been
-     * called yet, and we can't call it here either, or programs that don't
-     * guard their g_thread_init calls in main() will just abort */
-    ++_num_static_plugins;
-    _static_plugins =
-        realloc (_static_plugins, _num_static_plugins * sizeof (GstPluginDesc));
-    /* assume strings in the GstPluginDesc are static const or live forever */
-    _static_plugins[_num_static_plugins - 1] = *desc;
-  } else {
-    gst_plugin_register_static (desc->major_version, desc->minor_version,
-        desc->name, desc->description, desc->plugin_init, desc->version,
-        desc->license, desc->source, desc->package, desc->origin);
-  }
-}
-#endif
-
 /**
  * gst_plugin_register_static:
  * @major_version: the major version number of the GStreamer core that the
@@ -1568,7 +1536,7 @@ gst_plugin_ext_dep_scan_dir_and_match_names (GstPlugin * plugin,
   GDir *dir;
   guint hash = 0;
 
-  recurse_dirs = ! !(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
+  recurse_dirs = !!(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
 
   dir = g_dir_open (path, 0, &err);
   if (dir == NULL) {
@@ -1630,8 +1598,8 @@ gst_plugin_ext_dep_scan_path_with_filenames (GstPlugin * plugin,
   if (filenames == NULL || *filenames == NULL)
     filenames = empty_filenames;
 
-  recurse_into_dirs = ! !(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
-  partial_names = ! !(flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX);
+  recurse_into_dirs = !!(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
+  partial_names = !!(flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX);
 
   /* if we can construct the exact paths to check with the data we have, just
    * stat them one by one; this is more efficient than opening the directory

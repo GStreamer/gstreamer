@@ -109,16 +109,6 @@ enum
       /* FILL ME */
 };
 
-#ifdef GST_DISABLE_DEPRECATED
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-#include <libxml/parser.h>
-xmlNodePtr gst_object_save_thyself (const GstObject * object,
-    xmlNodePtr parent);
-GstObject *gst_object_load_thyself (xmlNodePtr parent);
-void gst_pad_load_and_link (xmlNodePtr self, GstObject * parent);
-#endif
-#endif
-
 static void gst_element_class_init (GstElementClass * klass);
 static void gst_element_init (GstElement * element);
 static void gst_element_base_class_init (gpointer g_class);
@@ -143,12 +133,6 @@ static gboolean gst_element_default_query (GstElement * element,
 static GstPadTemplate
     * gst_element_class_get_request_pad_template (GstElementClass *
     element_class, const gchar * name);
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-static xmlNodePtr gst_element_save_thyself (GstObject * object,
-    xmlNodePtr parent);
-static void gst_element_restore_thyself (GstObject * parent, xmlNodePtr self);
-#endif
 
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
@@ -232,15 +216,6 @@ gst_element_class_init (GstElementClass * klass)
 
   gobject_class->dispose = gst_element_dispose;
   gobject_class->finalize = gst_element_finalize;
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-  gstobject_class->save_thyself =
-      ((gpointer (*)(GstObject * object,
-              gpointer self)) * GST_DEBUG_FUNCPTR (gst_element_save_thyself));
-  gstobject_class->restore_thyself =
-      ((void (*)(GstObject * object,
-              gpointer self)) *GST_DEBUG_FUNCPTR (gst_element_restore_thyself));
-#endif
 
   klass->change_state = GST_DEBUG_FUNCPTR (gst_element_change_state_func);
   klass->set_state = GST_DEBUG_FUNCPTR (gst_element_set_state_func);
@@ -1072,42 +1047,6 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
   return pad;
 }
 
-/**
- * gst_element_get_pad:
- * @element: a #GstElement.
- * @name: the name of the pad to retrieve.
- *
- * Retrieves a pad from @element by name. Tries gst_element_get_static_pad()
- * first, then gst_element_get_request_pad().
- *
- * Deprecated: This function is deprecated as it's unclear if the reference
- * to the result pad should be released with gst_object_unref() in case of a static pad
- * or gst_element_release_request_pad() in case of a request pad.
- * Use gst_element_get_static_pad() or gst_element_get_request_pad() instead.
- *
- * Returns: the #GstPad if found, otherwise %NULL. Unref or Release after usage,
- * depending on the type of the pad.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-GstPad *gst_element_get_pad (GstElement * element, const gchar * name);
-#endif
-GstPad *
-gst_element_get_pad (GstElement * element, const gchar * name)
-{
-  GstPad *pad;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
-
-  pad = gst_element_get_static_pad (element, name);
-  if (!pad)
-    pad = gst_element_get_request_pad (element, name);
-
-  return pad;
-}
-#endif /* GST_REMOVE_DEPRECATED */
-
 static GstIteratorItem
 iterate_pad (GstIterator * it, GstPad * pad)
 {
@@ -1269,36 +1208,6 @@ gst_element_class_set_icon_name (GstElementClass * klass, const gchar * name)
 
   gst_element_class_add_meta_data (klass, "icon-name", name);
 }
-
-/* FIXME-0.11: deprecate and remove gst_element_class_set_details*() */
-/**
- * gst_element_class_set_details:
- * @klass: class to set details for
- * @details: details to set
- *
- * Sets the detailed information for a #GstElementClass.
- * <note>This function is for use in _base_init functions only.</note>
- *
- * The @details are copied.
- *
- * Deprecated: Use gst_element_class_set_details_simple() instead.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-void
-gst_element_class_set_details (GstElementClass * klass,
-    const GstElementDetails * details);
-#endif
-void
-gst_element_class_set_details (GstElementClass * klass,
-    const GstElementDetails * details)
-{
-  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
-  g_return_if_fail (GST_IS_ELEMENT_DETAILS (details));
-
-  __gst_element_details_copy (&klass->details, details);
-}
-#endif
 
 /**
  * gst_element_class_set_details_simple:
@@ -2976,148 +2885,6 @@ gst_element_finalize (GObject * object)
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-/**
- * gst_element_save_thyself:
- * @element: a #GstElement to save.
- * @parent: the xml parent node.
- *
- * Saves the element as part of the given XML structure.
- *
- * Returns: the new #xmlNodePtr.
- */
-static xmlNodePtr
-gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
-{
-  GList *pads;
-  GstElementClass *oclass;
-  GParamSpec **specs, *spec;
-  guint nspecs;
-  guint i;
-  GValue value = { 0, };
-  GstElement *element;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (object), parent);
-
-  element = GST_ELEMENT_CAST (object);
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  xmlNewChild (parent, NULL, (xmlChar *) "name",
-      (xmlChar *) GST_ELEMENT_NAME (element));
-
-  if (oclass->elementfactory != NULL) {
-    GstElementFactory *factory = (GstElementFactory *) oclass->elementfactory;
-
-    xmlNewChild (parent, NULL, (xmlChar *) "type",
-        (xmlChar *) GST_PLUGIN_FEATURE (factory)->name);
-  }
-
-  /* params */
-  specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (object), &nspecs);
-
-  for (i = 0; i < nspecs; i++) {
-    spec = specs[i];
-    if (spec->flags & G_PARAM_READABLE) {
-      xmlNodePtr param;
-      char *contents;
-
-      g_value_init (&value, spec->value_type);
-
-      g_object_get_property (G_OBJECT (element), spec->name, &value);
-      param = xmlNewChild (parent, NULL, (xmlChar *) "param", NULL);
-      xmlNewChild (param, NULL, (xmlChar *) "name", (xmlChar *) spec->name);
-
-      if (G_IS_PARAM_SPEC_STRING (spec))
-        contents = g_value_dup_string (&value);
-      else if (G_IS_PARAM_SPEC_ENUM (spec))
-        contents = g_strdup_printf ("%d", g_value_get_enum (&value));
-      else if (G_IS_PARAM_SPEC_INT64 (spec))
-        contents = g_strdup_printf ("%" G_GINT64_FORMAT,
-            g_value_get_int64 (&value));
-      else if (GST_VALUE_HOLDS_STRUCTURE (&value)) {
-        if (g_value_get_boxed (&value) != NULL) {
-          contents = g_strdup_value_contents (&value);
-        } else {
-          contents = g_strdup ("NULL");
-        }
-      } else
-        contents = g_strdup_value_contents (&value);
-
-      xmlNewChild (param, NULL, (xmlChar *) "value", (xmlChar *) contents);
-      g_free (contents);
-
-      g_value_unset (&value);
-    }
-  }
-
-  g_free (specs);
-
-  pads = g_list_last (GST_ELEMENT_PADS (element));
-
-  while (pads) {
-    GstPad *pad = GST_PAD_CAST (pads->data);
-
-    /* figure out if it's a direct pad or a ghostpad */
-    if (GST_ELEMENT_CAST (GST_OBJECT_PARENT (pad)) == element) {
-      xmlNodePtr padtag = xmlNewChild (parent, NULL, (xmlChar *) "pad", NULL);
-
-      gst_object_save_thyself (GST_OBJECT_CAST (pad), padtag);
-    }
-    pads = g_list_previous (pads);
-  }
-
-  return parent;
-}
-
-static void
-gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
-{
-  xmlNodePtr children;
-  GstElement *element;
-  gchar *name = NULL;
-  gchar *value = NULL;
-
-  element = GST_ELEMENT_CAST (object);
-  g_return_if_fail (element != NULL);
-
-  /* parameters */
-  children = self->xmlChildrenNode;
-  while (children) {
-    if (!strcmp ((char *) children->name, "param")) {
-      xmlNodePtr child = children->xmlChildrenNode;
-
-      while (child) {
-        if (!strcmp ((char *) child->name, "name")) {
-          name = (gchar *) xmlNodeGetContent (child);
-        } else if (!strcmp ((char *) child->name, "value")) {
-          value = (gchar *) xmlNodeGetContent (child);
-        }
-        child = child->next;
-      }
-      /* FIXME: can this just be g_object_set ? */
-      gst_util_set_object_arg (G_OBJECT (element), name, value);
-      /* g_object_set (G_OBJECT (element), name, value, NULL); */
-      g_free (name);
-      g_free (value);
-    }
-    children = children->next;
-  }
-
-  /* pads */
-  children = self->xmlChildrenNode;
-  while (children) {
-    if (!strcmp ((char *) children->name, "pad")) {
-      gst_pad_load_and_link (children, GST_OBJECT_CAST (element));
-    }
-    children = children->next;
-  }
-
-  if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
-    (GST_OBJECT_CLASS (parent_class)->restore_thyself) (object, self);
-}
-#endif /* GST_DISABLE_LOADSAVE */
 
 static void
 gst_element_set_bus_func (GstElement * element, GstBus * bus)

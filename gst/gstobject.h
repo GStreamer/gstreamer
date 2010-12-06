@@ -39,14 +39,6 @@ G_BEGIN_DECLS
 #define GST_OBJECT_CAST(obj)            ((GstObject*)(obj))
 #define GST_OBJECT_CLASS_CAST(klass)    ((GstObjectClass*)(klass))
 
-/* make sure we don't change the object size but still make it compile
- * without libxml */
-#if defined(GST_DISABLE_LOADSAVE) || defined(GST_DISABLE_DEPRECATED)
-#define GstXmlNodePtr	gpointer
-#else
-#define GstXmlNodePtr	xmlNodePtr
-#endif
-
 /**
  * GstObjectFlags:
  * @GST_OBJECT_DISPOSING: the object is been destroyed, don't use it anymore
@@ -247,10 +239,7 @@ struct _GstObject {
  * @lock: class lock to be used with GST_CLASS_GET_LOCK(), GST_CLASS_LOCK(), GST_CLASS_UNLOCK() and others.
  * @parent_set: default signal handler
  * @parent_unset: default signal handler
- * @object_saved: default signal handler
  * @deep_notify: default signal handler
- * @save_thyself: xml serialisation
- * @restore_thyself: xml de-serialisation
  *
  * GStreamer base object class.
  */
@@ -267,15 +256,10 @@ struct _GstObjectClass {
   /* FIXME-0.11: remove, and pass NULL in g_signal_new(), we never used them */
   void          (*parent_set)       (GstObject * object, GstObject * parent);
   void          (*parent_unset)     (GstObject * object, GstObject * parent);
-  /* FIXME 0.11: Remove this, it's deprecated */
-  void          (*object_saved)     (GstObject * object, GstXmlNodePtr parent);
   void          (*deep_notify)      (GstObject * object, GstObject * orig, GParamSpec * pspec);
 
   /*< public >*/
   /* virtual methods for subclasses */
-  /* FIXME 0.11: Remove this, it's deprecated */
-  GstXmlNodePtr (*save_thyself)     (GstObject * object, GstXmlNodePtr parent);
-  void          (*restore_thyself)  (GstObject * object, GstXmlNodePtr self);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -287,11 +271,6 @@ GType		gst_object_get_type		(void);
 /* name routines */
 gboolean	gst_object_set_name		(GstObject *object, const gchar *name);
 gchar*		gst_object_get_name		(GstObject *object);
-
-#ifndef GST_DISABLE_DEPRECATED
-void		gst_object_set_name_prefix	(GstObject *object, const gchar *name_prefix);
-gchar*		gst_object_get_name_prefix	(GstObject *object);
-#endif
 
 /* parentage routines */
 gboolean	gst_object_set_parent		(GstObject *object, GstObject *parent);
@@ -317,36 +296,11 @@ gchar *		gst_object_get_path_string	(GstObject *object);
 /* misc utils */
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
-/* load/save */
-#ifndef GST_DISABLE_DEPRECATED
-#ifndef GST_DISABLE_LOADSAVE
-GstXmlNodePtr   gst_object_save_thyself    (GstObject *object, GstXmlNodePtr parent);
-void            gst_object_restore_thyself (GstObject *object, GstXmlNodePtr self);
-#else
-#if defined __GNUC__ && __GNUC__ >= 3
-#pragma GCC poison gst_object_save_thyself
-#pragma GCC poison gst_object_restore_thyself
-#endif
-#endif
-#endif
-
 /* class signal stuff */
 guint		gst_class_signal_connect	(GstObjectClass	*klass,
 						 const gchar	*name,
 						 gpointer	 func,
 						 gpointer	 func_data);
-
-#ifndef GST_DISABLE_DEPRECATED
-#ifndef GST_DISABLE_LOADSAVE
-void        gst_class_signal_emit_by_name   (GstObject     * object,
-                                             const gchar   * name,
-                                             GstXmlNodePtr   self);
-#else
-#if defined __GNUC__ && __GNUC__ >= 3
-#pragma GCC poison gst_class_signal_emit_by_name
-#endif
-#endif
-#endif
 
 G_END_DECLS
 

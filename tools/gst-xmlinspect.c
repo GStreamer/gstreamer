@@ -516,12 +516,6 @@ print_element_info (GstElementFactory * factory)
   PUT_STRING (2, "<state-change function=\"%s\"/>",
       GST_DEBUG_FUNCPTR_NAME (gstelement_class->change_state));
 
-#ifndef GST_DISABLE_LOADSAVE
-  PUT_STRING (2, "<save function=\"%s\"/>",
-      GST_DEBUG_FUNCPTR_NAME (gstobject_class->save_thyself));
-  PUT_STRING (2, "<load function=\"%s\"/>",
-      GST_DEBUG_FUNCPTR_NAME (gstobject_class->restore_thyself));
-#endif
   PUT_END_TAG (1, "element-implementation");
 
   PUT_START_TAG (1, "clocking-interaction");

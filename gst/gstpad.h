@@ -149,41 +149,6 @@ typedef enum {
   GST_FLOW_CUSTOM_ERROR_2 = -102
 } GstFlowReturn;
 
-/**
- * GST_FLOW_IS_FATAL:
- * @ret: a #GstFlowReturn value
- *
- * Macro to test if the given #GstFlowReturn value indicates a fatal
- * error. This macro is mainly used in elements driving the pipeline to decide
- * whether an error message should be posted on the bus. Note that such
- * elements may also need to post an error message in the #GST_FLOW_NOT_LINKED
- * case which is not caught by this macro.
- *
- * Deprecated: This macro is badly named and can't be used in any real
- * scenarios without additional checks.
- */
-#ifndef GST_DISABLE_DEPRECATED
-#define GST_FLOW_IS_FATAL(ret) ((ret) <= GST_FLOW_UNEXPECTED)
-#endif
-
-/**
- * GST_FLOW_IS_SUCCESS:
- * @ret: a #GstFlowReturn value
- *
- * Macro to test if the given #GstFlowReturn value indicates a
- * successfull result
- * This macro is mainly used in elements to decide if the processing
- * of a buffer was successfull.
- *
- * Since: 0.10.7
- *
- * Deprecated: This macro is badly named and can't be used in any real
- * scenarios without additional checks.
- */
-#ifndef GST_DISABLE_DEPRECATED
-#define GST_FLOW_IS_SUCCESS(ret) ((ret) >= GST_FLOW_OK)
-#endif
-
 G_CONST_RETURN gchar*	gst_flow_get_name	(GstFlowReturn ret);
 GQuark			gst_flow_to_quark	(GstFlowReturn ret);
 
@@ -767,9 +732,6 @@ struct _GstPadClass {
 #define GST_PAD_EVENTFUNC(pad)		(GST_PAD_CAST(pad)->eventfunc)
 #define GST_PAD_QUERYTYPEFUNC(pad)	(GST_PAD_CAST(pad)->querytypefunc)
 #define GST_PAD_QUERYFUNC(pad)		(GST_PAD_CAST(pad)->queryfunc)
-#ifndef GST_DISABLE_DEPRECATED
-#define GST_PAD_INTLINKFUNC(pad)	(GST_PAD_CAST(pad)->intlinkfunc)
-#endif
 #define GST_PAD_ITERINTLINKFUNC(pad)    (GST_PAD_CAST(pad)->iterintlinkfunc)
 
 #define GST_PAD_PEER(pad)		(GST_PAD_CAST(pad)->peer)
@@ -997,12 +959,6 @@ gboolean		gst_pad_pause_task			(GstPad *pad);
 gboolean		gst_pad_stop_task			(GstPad *pad);
 
 /* internal links */
-#ifndef GST_DISABLE_DEPRECATED
-void			gst_pad_set_internal_link_function	(GstPad *pad, GstPadIntLinkFunction intlink);
-GList*			gst_pad_get_internal_links		(GstPad *pad);
-GList*			gst_pad_get_internal_links_default	(GstPad *pad);
-#endif
-
 void                    gst_pad_set_iterate_internal_links_function (GstPad * pad,
                                                                  GstPadIterIntLinkFunction iterintlink);
 GstIterator *           gst_pad_iterate_internal_links          (GstPad * pad);
@@ -1024,10 +980,6 @@ gboolean		gst_pad_query_default			(GstPad *pad, GstQuery *query);
 /* misc helper functions */
 gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,
 								 gpointer data);
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_DISABLE_DEPRECATED)
-void			gst_pad_load_and_link			(xmlNodePtr self, GstObject *parent);
-#endif
 
 G_END_DECLS
 

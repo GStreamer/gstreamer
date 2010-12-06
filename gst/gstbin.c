@@ -162,7 +162,6 @@
 #include "gstevent.h"
 #include "gstbin.h"
 #include "gstmarshal.h"
-#include "gstxml.h"
 #include "gstinfo.h"
 #include "gsterror.h"
 
@@ -170,18 +169,6 @@
 #include "gstindexfactory.h"
 #include "gstutils.h"
 #include "gstchildproxy.h"
-
-#ifdef GST_DISABLE_DEPRECATED
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-#undef GstXmlNodePtr
-#define GstXmlNodePtr xmlNodePtr
-#include <libxml/parser.h>
-GstXmlNodePtr gst_object_save_thyself (GstObject * object,
-    GstXmlNodePtr parent);
-void gst_object_restore_thyself (GstObject * object, GstXmlNodePtr parent);
-GstElement *gst_xml_make_element (xmlNodePtr cur, GstObject * parent);
-#endif
-#endif
 
 /* enable for DURATION caching.
  * FIXME currently too many elements don't update
@@ -261,11 +248,6 @@ static GstBusSyncReply bin_bus_handler (GstBus * bus,
 static gboolean gst_bin_query (GstElement * element, GstQuery * query);
 
 static gboolean gst_bin_do_latency_func (GstBin * bin);
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-static xmlNodePtr gst_bin_save_thyself (GstObject * object, xmlNodePtr parent);
-static void gst_bin_restore_thyself (GstObject * object, xmlNodePtr self);
-#endif
 
 static void bin_remove_messages (GstBin * bin, GstObject * src,
     GstMessageType types);
@@ -490,15 +472,6 @@ gst_bin_class_init (GstBinClass * klass)
           DEFAULT_MESSAGE_FORWARD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->dispose = gst_bin_dispose;
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-  gstobject_class->save_thyself =
-      ((gpointer (*)(GstObject * object,
-              gpointer self)) * GST_DEBUG_FUNCPTR (gst_bin_save_thyself));
-  gstobject_class->restore_thyself =
-      ((void (*)(GstObject * object,
-              gpointer self)) *GST_DEBUG_FUNCPTR (gst_bin_restore_thyself));
-#endif
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_bin_change_state_func);
@@ -3831,58 +3804,3 @@ gst_bin_iterate_all_by_interface (GstBin * bin, GType iface)
 
   return result;
 }
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-static xmlNodePtr
-gst_bin_save_thyself (GstObject * object, xmlNodePtr parent)
-{
-  GstBin *bin = GST_BIN_CAST (object);
-  xmlNodePtr childlist, elementnode;
-  GList *children;
-  GstElement *child;
-
-  if (GST_OBJECT_CLASS (parent_class)->save_thyself)
-    GST_OBJECT_CLASS (parent_class)->save_thyself (GST_OBJECT (bin), parent);
-
-  childlist = xmlNewChild (parent, NULL, (xmlChar *) "children", NULL);
-
-  GST_CAT_INFO (GST_CAT_XML, "[%s]: saving %d children",
-      GST_ELEMENT_NAME (bin), bin->numchildren);
-
-  children = g_list_last (bin->children);
-  while (children) {
-    child = GST_ELEMENT_CAST (children->data);
-    elementnode = xmlNewChild (childlist, NULL, (xmlChar *) "element", NULL);
-    gst_object_save_thyself (GST_OBJECT (child), elementnode);
-    children = g_list_previous (children);
-  }
-  return childlist;
-}
-
-static void
-gst_bin_restore_thyself (GstObject * object, xmlNodePtr self)
-{
-  GstBin *bin = GST_BIN_CAST (object);
-  xmlNodePtr field = self->xmlChildrenNode;
-  xmlNodePtr childlist;
-
-  while (field) {
-    if (!strcmp ((char *) field->name, "children")) {
-      GST_CAT_INFO (GST_CAT_XML, "[%s]: loading children",
-          GST_ELEMENT_NAME (object));
-      childlist = field->xmlChildrenNode;
-      while (childlist) {
-        if (!strcmp ((char *) childlist->name, "element")) {
-          /* gst_xml_make_element will gst_bin_add() the element to ourself */
-          gst_xml_make_element (childlist, GST_OBJECT (bin));
-        }
-        childlist = childlist->next;
-      }
-    }
-
-    field = field->next;
-  }
-  if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
-    (GST_OBJECT_CLASS (parent_class)->restore_thyself) (object, self);
-}
-#endif /* GST_DISABLE_LOADSAVE */

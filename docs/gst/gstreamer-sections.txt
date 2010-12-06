@@ -65,7 +65,6 @@ gst_bin_recalculate_latency
 gst_bin_add_many
 gst_bin_remove_many
 gst_bin_find_unlinked_pad
-gst_bin_find_unconnected_pad
 
 <SUBSECTION>
 GstBinFlags
@@ -191,7 +190,6 @@ gst_buffer_create_sub
 gst_buffer_is_span_fast
 gst_buffer_span
 
-gst_buffer_stamp
 gst_buffer_join
 gst_buffer_merge
 
@@ -275,7 +273,6 @@ GST_CAPS_REFCOUNT_VALUE
 GST_STATIC_CAPS_ANY
 GST_STATIC_CAPS_NONE
 GST_CAPS_IS_SIMPLE
-GST_DEBUG_CAPS
 GST_STATIC_CAPS
 
 gst_caps_new_empty
@@ -309,8 +306,6 @@ gst_caps_intersect
 gst_caps_union
 gst_caps_normalize
 gst_caps_do_simplify
-gst_caps_save_thyself
-gst_caps_load_thyself
 gst_caps_replace
 gst_caps_to_string
 gst_caps_from_string
@@ -510,14 +505,12 @@ gst_element_class_add_pad_template
 gst_element_class_get_pad_template
 gst_element_class_get_pad_template_list
 gst_element_class_install_std_props
-gst_element_class_set_details
 gst_element_class_set_details_simple
 gst_element_class_set_documentation_uri
 gst_element_class_set_icon_name
 
 <SUBSECTION element-pads>
 gst_element_add_pad
-gst_element_get_pad
 gst_element_create_all_pads
 gst_element_get_compatible_pad
 gst_element_get_compatible_pad_template
@@ -1351,14 +1344,10 @@ gst_object_get_name
 gst_object_set_parent
 gst_object_get_parent
 gst_object_unparent
-gst_object_get_name_prefix
-gst_object_set_name_prefix
 gst_object_default_deep_notify
 gst_object_default_error
 gst_object_check_uniqueness
 gst_object_has_ancestor
-gst_object_save_thyself
-gst_object_restore_thyself
 gst_object_ref
 gst_object_unref
 gst_object_ref_sink
@@ -1366,7 +1355,6 @@ gst_object_sink
 gst_object_replace
 gst_object_get_path_string
 gst_class_signal_connect
-gst_class_signal_emit_by_name
 <SUBSECTION Standard>
 GST_OBJECT
 GST_IS_OBJECT
@@ -1380,7 +1368,6 @@ GST_OBJECT_CLASS_CAST
 <SUBSECTION Private>
 gst_object_get_type
 gst_object_flags_get_type
-GstXmlNodePtr
 </SECTION>
 
 
@@ -1532,13 +1519,6 @@ GstPadIterIntLinkFunction
 gst_pad_iterate_internal_links
 gst_pad_iterate_internal_links_default
 
-gst_pad_set_internal_link_function
-GstPadIntLinkFunction
-gst_pad_get_internal_links
-gst_pad_get_internal_links_default
-
-gst_pad_load_and_link
-
 gst_pad_dispatcher
 GstPadDispatcherFunction
 
@@ -1563,9 +1543,6 @@ GST_PAD_STREAM_LOCK_FULL
 GST_PAD_STREAM_TRYLOCK
 GST_PAD_STREAM_UNLOCK
 GST_PAD_STREAM_UNLOCK_FULL
-
-GST_FLOW_IS_FATAL
-GST_FLOW_IS_SUCCESS
 
 <SUBSECTION Standard>
 GstPadClass
@@ -1631,7 +1608,6 @@ GST_PAD_EVENTFUNC
 GST_PAD_FIXATECAPSFUNC
 GST_PAD_GETCAPSFUNC
 GST_PAD_GETRANGEFUNC
-GST_PAD_INTLINKFUNC
 GST_PAD_ITERINTLINKFUNC
 GST_PAD_IS_FLUSHING
 GST_PAD_LINKFUNC
@@ -1756,9 +1732,6 @@ gst_pipeline_get_clock
 
 gst_pipeline_use_clock
 gst_pipeline_auto_clock
-
-gst_pipeline_set_new_stream_time
-gst_pipeline_get_last_stream_time
 
 gst_pipeline_set_auto_flush_bus
 gst_pipeline_get_auto_flush_bus
@@ -2064,8 +2037,6 @@ GST_MAGIC_BINARY_VERSION_STR
 GST_MAGIC_BINARY_VERSION_LEN
 gst_registry_get_type
 GstRegistryPrivate
-gst_registry_xml_read_cache
-gst_registry_xml_write_cache
 </SECTION>
 
 
@@ -2614,7 +2585,6 @@ GST_ROUND_DOWN_16
 GST_ROUND_DOWN_32
 GST_ROUND_DOWN_64
 
-gst_atomic_int_set
 gst_flow_get_name
 gst_flow_to_quark
 gst_print_element_args
@@ -2823,29 +2793,3 @@ GST_VERSION_NANO
 GST_CHECK_VERSION
 </SECTION>
 
-
-<SECTION>
-<FILE>gstxml</FILE>
-<TITLE>GstXML</TITLE>
-GstXML
-
-gst_xml_write
-gst_xml_write_file
-gst_xml_new
-gst_xml_parse_doc
-gst_xml_parse_file
-gst_xml_parse_memory
-gst_xml_get_element
-gst_xml_get_topelements
-gst_xml_make_element
-<SUBSECTION Standard>
-GstXMLClass
-GST_XML
-GST_IS_XML
-GST_XML_CLASS
-GST_IS_XML_CLASS
-GST_XML_GET_CLASS
-GST_TYPE_XML
-<SUBSECTION Private>
-gst_xml_get_type
-</SECTION>

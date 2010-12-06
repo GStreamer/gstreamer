@@ -132,23 +132,6 @@ static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
 static gboolean gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps);
 
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-#ifdef GST_DISABLE_DEPRECATED
-#include <libxml/parser.h>
-#endif
-static xmlNodePtr gst_pad_save_thyself (GstObject * object, xmlNodePtr parent);
-void gst_pad_load_and_link (xmlNodePtr self, GstObject * parent);
-#endif
-
-/* Some deprecated stuff that we need inside here for
- * backwards compatibility */
-#ifdef GST_DISABLE_DEPRECATED
-#ifndef GST_REMOVE_DEPRECATED
-#define GST_PAD_INTLINKFUNC(pad)	(GST_PAD_CAST(pad)->intlinkfunc)
-GList *gst_pad_get_internal_links_default (GstPad * pad);
-#endif
-#endif
-
 static GstObjectClass *parent_class = NULL;
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
@@ -344,11 +327,6 @@ gst_pad_class_init (GstPadClass * klass)
           "The GstPadTemplate of this pad", GST_TYPE_PAD_TEMPLATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-  gstobject_class->save_thyself =
-      ((gpointer (*)(GstObject * object,
-              gpointer self)) * GST_DEBUG_FUNCPTR (gst_pad_save_thyself));
-#endif
   gstobject_class->path_string_separator = ".";
 
   /* Register common function pointer descriptions */
@@ -356,9 +334,6 @@ gst_pad_class_init (GstPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_event_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_get_query_types_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_query_default);
-#ifndef GST_REMOVE_DEPRECATED
-  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_get_internal_links_default);
-#endif
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_iterate_internal_links_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_acceptcaps_default);
 
@@ -384,9 +359,6 @@ gst_pad_init (GstPad * pad)
   GST_PAD_EVENTFUNC (pad) = gst_pad_event_default;
   GST_PAD_QUERYTYPEFUNC (pad) = gst_pad_get_query_types_default;
   GST_PAD_QUERYFUNC (pad) = gst_pad_query_default;
-#ifndef GST_REMOVE_DEPRECATED
-  GST_PAD_INTLINKFUNC (pad) = gst_pad_get_internal_links_default;
-#endif
   GST_PAD_ITERINTLINKFUNC (pad) = gst_pad_iterate_internal_links_default;
 
   GST_PAD_ACCEPTCAPSFUNC (pad) = gst_pad_acceptcaps_default;
@@ -1489,32 +1461,6 @@ gst_pad_set_iterate_internal_links_function (GstPad * pad,
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "internal link iterator set to %s",
       GST_DEBUG_FUNCPTR_NAME (iterintlink));
 }
-
-/**
- * gst_pad_set_internal_link_function:
- * @pad: a #GstPad of either direction.
- * @intlink: the #GstPadIntLinkFunction to set.
- *
- * Sets the given internal link function for the pad.
- *
- * Deprecated: Use the thread-safe gst_pad_set_iterate_internal_links_function()
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-void
-gst_pad_set_internal_link_function (GstPad * pad,
-    GstPadIntLinkFunction intlink);
-#endif
-void
-gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
-{
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  GST_PAD_INTLINKFUNC (pad) = intlink;
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "internal link set to %s",
-      GST_DEBUG_FUNCPTR_NAME (intlink));
-}
-#endif /* GST_REMOVE_DEPRECATED */
 
 /**
  * gst_pad_set_link_function:
@@ -3200,21 +3146,6 @@ gst_pad_alloc_buffer_and_set_caps (GstPad * pad, guint64 offset, gint size,
 }
 
 
-#ifndef GST_REMOVE_DEPRECATED
-typedef struct
-{
-  GList *list;
-  guint32 cookie;
-} IntLinkIterData;
-
-static void
-int_link_iter_data_free (IntLinkIterData * data)
-{
-  g_list_free (data->list);
-  g_slice_free (IntLinkIterData, data);
-}
-#endif
-
 static GstIteratorItem
 iterate_pad (GstIterator * it, GstPad * pad)
 {
@@ -3250,35 +3181,6 @@ gst_pad_iterate_internal_links_default (GstPad * pad)
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-#ifndef GST_REMOVE_DEPRECATED
-  /* when we get here, the default handler for the iterate links is called,
-   * which means that the user has not installed a custom one. We first check if
-   * there is maybe a custom legacy function we can call. */
-  if (GST_PAD_INTLINKFUNC (pad) &&
-      GST_PAD_INTLINKFUNC (pad) != gst_pad_get_internal_links_default) {
-    IntLinkIterData *data;
-
-    /* make an iterator for the list. We can't protect the list with a
-     * cookie. If we would take the cookie of the parent element, we need to
-     * have a parent, which is not required for GST_PAD_INTLINKFUNC(). We could
-     * cache the per-pad list and invalidate the list when a new call to
-     * INTLINKFUNC() returned a different list but then this would only work if
-     * two concurrent iterators were used and the last iterator would still be
-     * thread-unsafe. Just don't use this method anymore. */
-    data = g_slice_new (IntLinkIterData);
-    data->list = GST_PAD_INTLINKFUNC (pad) (pad);
-    data->cookie = 0;
-
-    GST_WARNING_OBJECT (pad, "Making unsafe iterator");
-
-    cookie = &data->cookie;
-    padlist = &data->list;
-    owner = data;
-    dispose = (GstIteratorDisposeFunction) int_link_iter_data_free;
-    /* reuse the pad lock, it's all we have here */
-    lock = GST_OBJECT_GET_LOCK (pad);
-  } else
-#endif
   {
     GstElement *parent;
 
@@ -3345,151 +3247,6 @@ gst_pad_iterate_internal_links (GstPad * pad)
 
   return res;
 }
-
-#ifndef GST_REMOVE_DEPRECATED
-static void
-add_unref_pad_to_list (GstPad * pad, GList ** list)
-{
-  *list = g_list_prepend (*list, pad);
-  gst_object_unref (pad);
-}
-#endif
-
-/**
- * gst_pad_get_internal_links_default:
- * @pad: the #GstPad to get the internal links of.
- *
- * Gets a list of pads to which the given pad is linked to
- * inside of the parent element.
- * This is the default handler, and thus returns a list of all of the
- * pads inside the parent element with opposite direction.
- *
- * The caller must free this list after use with g_list_free().
- *
- * Returns: a newly allocated #GList of pads, or NULL if the pad has no parent.
- *
- * Not MT safe.
- *
- * Deprecated: This function does not ref the pads in the list so that they
- * could become invalid by the time the application accesses them. It's also
- * possible that the list changes while handling the pads, which the caller of
- * this function is unable to know. Use the thread-safe 
- * gst_pad_iterate_internal_links_default() instead.
- */
-#ifndef GST_REMOVE_DEPRECATED
-GList *
-gst_pad_get_internal_links_default (GstPad * pad)
-{
-  GList *res = NULL;
-  GstElement *parent;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  GST_WARNING_OBJECT (pad, "Unsafe internal links used");
-
-  /* when we get here, the default handler for get_internal_links is called,
-   * which means that the user has not installed a custom one. We first check if
-   * there is maybe a custom iterate function we can call. */
-  if (GST_PAD_ITERINTLINKFUNC (pad) &&
-      GST_PAD_ITERINTLINKFUNC (pad) != gst_pad_iterate_internal_links_default) {
-    GstIterator *it;
-    GstIteratorResult ires;
-    gboolean done = FALSE;
-
-    it = gst_pad_iterate_internal_links (pad);
-    /* loop over the iterator and put all elements into a list, we also
-     * immediatly unref them, which is bad. */
-    do {
-      ires = gst_iterator_foreach (it, (GFunc) add_unref_pad_to_list, &res);
-      switch (ires) {
-        case GST_ITERATOR_OK:
-        case GST_ITERATOR_DONE:
-        case GST_ITERATOR_ERROR:
-          done = TRUE;
-          break;
-        case GST_ITERATOR_RESYNC:
-          /* restart, discard previous list */
-          gst_iterator_resync (it);
-          g_list_free (res);
-          res = NULL;
-          break;
-      }
-    } while (!done);
-
-    gst_iterator_free (it);
-  } else {
-    /* lock pad, check and ref parent */
-    GST_OBJECT_LOCK (pad);
-    parent = GST_PAD_PARENT (pad);
-    if (!parent || !GST_IS_ELEMENT (parent))
-      goto no_parent;
-
-    parent = gst_object_ref (parent);
-    GST_OBJECT_UNLOCK (pad);
-
-    /* now lock the parent while we copy the pads */
-    GST_OBJECT_LOCK (parent);
-    if (pad->direction == GST_PAD_SRC)
-      res = g_list_copy (parent->sinkpads);
-    else
-      res = g_list_copy (parent->srcpads);
-    GST_OBJECT_UNLOCK (parent);
-
-    gst_object_unref (parent);
-  }
-
-  /* At this point pads can be changed and unreffed. Nothing we can do about it
-   * because for compatibility reasons this function cannot ref the pads or
-   * notify the app that the list changed. */
-
-  return res;
-
-no_parent:
-  {
-    GST_DEBUG_OBJECT (pad, "no parent");
-    GST_OBJECT_UNLOCK (pad);
-    return NULL;
-  }
-}
-#endif /* GST_REMOVE_DEPRECATED */
-
-/**
- * gst_pad_get_internal_links:
- * @pad: the #GstPad to get the internal links of.
- *
- * Gets a list of pads to which the given pad is linked to
- * inside of the parent element.
- * The caller must free this list after use.
- *
- * Not MT safe.
- *
- * Returns: a newly allocated #GList of pads, free with g_list_free().
- * 
- * Deprecated: This function does not ref the pads in the list so that they
- * could become invalid by the time the application accesses them. It's also
- * possible that the list changes while handling the pads, which the caller of
- * this function is unable to know. Use the thread-safe 
- * gst_pad_iterate_internal_links() instead.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-GList *gst_pad_get_internal_links (GstPad * pad);
-#endif
-GList *
-gst_pad_get_internal_links (GstPad * pad)
-{
-  GList *res = NULL;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  GST_WARNING_OBJECT (pad, "Calling unsafe internal links");
-
-  if (GST_PAD_INTLINKFUNC (pad))
-    res = GST_PAD_INTLINKFUNC (pad) (pad);
-
-  return res;
-}
-#endif /* GST_REMOVE_DEPRECATED */
 
 static gboolean
 gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
@@ -3801,161 +3558,6 @@ gst_pad_query_default (GstPad * pad, GstQuery * query)
           (pad, (GstPadDispatcherFunction) gst_pad_query, query);
   }
 }
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-/* FIXME: why isn't this on a GstElement ? */
-/**
- * gst_pad_load_and_link:
- * @self: an #xmlNodePtr to read the description from.
- * @parent: the #GstObject element that owns the pad.
- *
- * Reads the pad definition from the XML node and links the given pad
- * in the element to a pad of an element up in the hierarchy.
- */
-void
-gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
-{
-  xmlNodePtr field = self->xmlChildrenNode;
-  GstPad *pad = NULL, *targetpad;
-  GstPadTemplate *tmpl;
-  gchar *peer = NULL;
-  gchar **split;
-  GstElement *target;
-  GstObject *grandparent;
-  gchar *name = NULL;
-
-  while (field) {
-    if (!strcmp ((char *) field->name, "name")) {
-      name = (gchar *) xmlNodeGetContent (field);
-      pad = gst_element_get_static_pad (GST_ELEMENT (parent), name);
-      if ((!pad) || ((tmpl = gst_pad_get_pad_template (pad))
-              && (GST_PAD_REQUEST == GST_PAD_TEMPLATE_PRESENCE (tmpl))))
-        pad = gst_element_get_request_pad (GST_ELEMENT (parent), name);
-      g_free (name);
-    } else if (!strcmp ((char *) field->name, "peer")) {
-      peer = (gchar *) xmlNodeGetContent (field);
-    }
-    field = field->next;
-  }
-  g_return_if_fail (pad != NULL);
-
-  if (peer == NULL)
-    return;
-
-  split = g_strsplit (peer, ".", 2);
-
-  if (split[0] == NULL || split[1] == NULL) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_XML, pad,
-        "Could not parse peer '%s', leaving unlinked", peer);
-
-    g_free (peer);
-    return;
-  }
-  g_free (peer);
-
-  g_return_if_fail (split[0] != NULL);
-  g_return_if_fail (split[1] != NULL);
-
-  grandparent = gst_object_get_parent (parent);
-
-  if (grandparent && GST_IS_BIN (grandparent)) {
-    target = gst_bin_get_by_name_recurse_up (GST_BIN (grandparent), split[0]);
-  } else
-    goto cleanup;
-
-  if (target == NULL)
-    goto cleanup;
-
-  targetpad = gst_element_get_static_pad (target, split[1]);
-  if (!targetpad)
-    targetpad = gst_element_get_request_pad (target, split[1]);
-
-  if (targetpad == NULL)
-    goto cleanup;
-
-  if (gst_pad_get_direction (pad) == GST_PAD_SRC)
-    gst_pad_link (pad, targetpad);
-  else
-    gst_pad_link (targetpad, pad);
-
-cleanup:
-  g_strfreev (split);
-}
-
-/**
- * gst_pad_save_thyself:
- * @pad: a #GstPad to save.
- * @parent: the parent #xmlNodePtr to save the description in.
- *
- * Saves the pad into an xml representation.
- *
- * Returns: the #xmlNodePtr representation of the pad.
- */
-static xmlNodePtr
-gst_pad_save_thyself (GstObject * object, xmlNodePtr parent)
-{
-  GstPad *pad;
-  GstPad *peer;
-
-  g_return_val_if_fail (GST_IS_PAD (object), NULL);
-
-  pad = GST_PAD_CAST (object);
-
-  xmlNewChild (parent, NULL, (xmlChar *) "name",
-      (xmlChar *) GST_PAD_NAME (pad));
-
-  if (GST_PAD_IS_SRC (pad)) {
-    xmlNewChild (parent, NULL, (xmlChar *) "direction", (xmlChar *) "source");
-  } else if (GST_PAD_IS_SINK (pad)) {
-    xmlNewChild (parent, NULL, (xmlChar *) "direction", (xmlChar *) "sink");
-  } else {
-    xmlNewChild (parent, NULL, (xmlChar *) "direction", (xmlChar *) "unknown");
-  }
-
-  if (GST_PAD_PEER (pad) != NULL) {
-    gchar *content;
-
-    peer = GST_PAD_PEER (pad);
-    /* first check to see if the peer's parent's parent is the same */
-    /* we just save it off */
-    content = g_strdup_printf ("%s.%s",
-        GST_OBJECT_NAME (GST_PAD_PARENT (peer)), GST_PAD_NAME (peer));
-    xmlNewChild (parent, NULL, (xmlChar *) "peer", (xmlChar *) content);
-    g_free (content);
-  } else
-    xmlNewChild (parent, NULL, (xmlChar *) "peer", NULL);
-
-  return parent;
-}
-
-#if 0
-/**
- * gst_ghost_pad_save_thyself:
- * @pad: a ghost #GstPad to save.
- * @parent: the parent #xmlNodePtr to save the description in.
- *
- * Saves the ghost pad into an xml representation.
- *
- * Returns: the #xmlNodePtr representation of the pad.
- */
-xmlNodePtr
-gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
-{
-  xmlNodePtr self;
-
-  g_return_val_if_fail (GST_IS_GHOST_PAD (pad), NULL);
-
-  self = xmlNewChild (parent, NULL, (xmlChar *) "ghostpad", NULL);
-  xmlNewChild (self, NULL, (xmlChar *) "name", (xmlChar *) GST_PAD_NAME (pad));
-  xmlNewChild (self, NULL, (xmlChar *) "parent",
-      (xmlChar *) GST_OBJECT_NAME (GST_PAD_PARENT (pad)));
-
-  /* FIXME FIXME FIXME! */
-
-  return self;
-}
-#endif /* 0 */
-#endif /* GST_DISABLE_LOADSAVE */
 
 /*
  * should be called with pad OBJECT_LOCK and STREAM_LOCK held.

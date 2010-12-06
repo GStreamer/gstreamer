@@ -104,9 +104,6 @@ enum
 {
   PARENT_SET,
   PARENT_UNSET,
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-  OBJECT_SAVED,
-#endif
   DEEP_NOTIFY,
   LAST_SIGNAL
 };
@@ -134,10 +131,6 @@ typedef struct _GstSignalObjectClass GstSignalObjectClass;
 
 static GType gst_signal_object_get_type (void);
 
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
-#endif
-
 static void gst_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_object_get_property (GObject * object, guint prop_id,
@@ -149,24 +142,6 @@ static void gst_object_dispose (GObject * object);
 static void gst_object_finalize (GObject * object);
 
 static gboolean gst_object_set_name_default (GstObject * object);
-
-#ifdef GST_DISABLE_DEPRECATED
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-#undef GstXmlNodePtr
-#define GstXmlNodePtr xmlNodePtr
-#include <libxml/parser.h>
-GstXmlNodePtr gst_object_save_thyself (GstObject * object,
-    GstXmlNodePtr parent);
-void gst_object_restore_thyself (GstObject * object, GstXmlNodePtr parent);
-void gst_class_signal_emit_by_name (GstObject * object, const gchar * name,
-    GstXmlNodePtr self);
-#endif
-#endif
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-static void gst_object_real_restore_thyself (GstObject * object,
-    GstXmlNodePtr self);
-#endif
 
 static GObjectClass *parent_class = NULL;
 static guint gst_object_signals[LAST_SIGNAL] = { 0 };
@@ -215,28 +190,6 @@ gst_object_class_init (GstObjectClass * klass)
       g_signal_new ("parent-unset", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, parent_unset), NULL,
       NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-  /**
-   * GstObject::object-saved:
-   * @gstobject: a #GstObject
-   * @xml_node: the xmlNodePtr of the parent node
-   *
-   * Trigered whenever a new object is saved to XML. You can connect to this
-   * signal to insert custom XML tags into the core XML.
-   */
-  /* FIXME This should be the GType of xmlNodePtr instead of G_TYPE_POINTER
-   *       (if libxml would use GObject)
-   */
-  gst_object_signals[OBJECT_SAVED] =
-      g_signal_new ("object-saved", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL,
-      NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
-
-  klass->restore_thyself =
-      ((void (*)(GstObject * object,
-              gpointer self)) *gst_object_real_restore_thyself);
-#endif
 
   /**
    * GstObject::deep-notify:
@@ -746,71 +699,6 @@ gst_object_get_name (GstObject * object)
 }
 
 /**
- * gst_object_set_name_prefix:
- * @object:      a #GstObject
- * @name_prefix: new name prefix of @object
- *
- * Sets the name prefix of @object to @name_prefix.
- * This function makes a copy of the provided name prefix, so the caller
- * retains ownership of the name prefix it sent.
- *
- * MT safe.  This function grabs and releases @object's LOCK.
- *
- * Deprecated: deprecated because the name prefix has never actually been used
- *     for anything.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-void gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix);
-#endif
-void
-gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
-{
-  g_return_if_fail (GST_IS_OBJECT (object));
-
-  GST_OBJECT_LOCK (object);
-  g_free (object->name_prefix);
-  object->name_prefix = g_strdup (name_prefix); /* NULL gives NULL */
-  GST_OBJECT_UNLOCK (object);
-}
-#endif /* GST_REMOVE_DEPRECATED */
-
-/**
- * gst_object_get_name_prefix:
- * @object: a #GstObject
- *
- * Returns a copy of the name prefix of @object.
- * Caller should g_free() the return value after usage.
- * For a prefixless object, this returns NULL, which you can safely g_free()
- * as well.
- *
- * Returns: the name prefix of @object. g_free() after usage.
- *
- * MT safe. This function grabs and releases @object's LOCK.
- *
- * Deprecated: deprecated because the name prefix has never actually been used
- *     for anything.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-gchar *gst_object_get_name_prefix (GstObject * object);
-#endif
-gchar *
-gst_object_get_name_prefix (GstObject * object)
-{
-  gchar *result = NULL;
-
-  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
-
-  GST_OBJECT_LOCK (object);
-  result = g_strdup (object->name_prefix);
-  GST_OBJECT_UNLOCK (object);
-
-  return result;
-}
-#endif /* GST_REMOVE_DEPRECATED */
-
-/**
  * gst_object_set_parent:
  * @object: a #GstObject
  * @parent: new parent of object
@@ -1005,65 +893,6 @@ gst_object_check_uniqueness (GList * list, const gchar * name)
 }
 
 
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-/**
- * gst_object_save_thyself:
- * @object: a #GstObject to save
- * @parent: The parent XML node to save @object into
- *
- * Saves @object into the parent XML node.
- *
- * Returns: the new xmlNodePtr with the saved object
- */
-GstXmlNodePtr
-gst_object_save_thyself (GstObject * object, GstXmlNodePtr parent)
-{
-  GstObjectClass *oclass;
-
-  g_return_val_if_fail (GST_IS_OBJECT (object), parent);
-  g_return_val_if_fail (parent != NULL, parent);
-
-  oclass = GST_OBJECT_GET_CLASS (object);
-
-  if (oclass->save_thyself)
-    oclass->save_thyself (object, parent);
-
-  g_signal_emit (object, gst_object_signals[OBJECT_SAVED], 0, parent);
-
-  return parent;
-}
-
-/**
- * gst_object_restore_thyself:
- * @object: a #GstObject to load into
- * @self: The XML node to load @object from
- *
- * Restores @object with the data from the parent XML node.
- */
-void
-gst_object_restore_thyself (GstObject * object, GstXmlNodePtr self)
-{
-  GstObjectClass *oclass;
-
-  g_return_if_fail (GST_IS_OBJECT (object));
-  g_return_if_fail (self != NULL);
-
-  oclass = GST_OBJECT_GET_CLASS (object);
-
-  if (oclass->restore_thyself)
-    oclass->restore_thyself (object, self);
-}
-
-static void
-gst_object_real_restore_thyself (GstObject * object, GstXmlNodePtr self)
-{
-  g_return_if_fail (GST_IS_OBJECT (object));
-  g_return_if_fail (self != NULL);
-
-  gst_class_signal_emit_by_name (object, "object_loaded", self);
-}
-#endif /* GST_DISABLE_LOADSAVE */
-
 static void
 gst_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1194,11 +1023,6 @@ struct _GstSignalObjectClass
 {
   GObjectClass parent_class;
 
-  /* signals */
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-  void (*object_loaded) (GstSignalObject * object, GstObject * new,
-      GstXmlNodePtr self);
-#endif
 };
 
 G_DEFINE_TYPE (GstSignalObject, gst_signal_object, G_TYPE_OBJECT);
@@ -1208,13 +1032,6 @@ gst_signal_object_class_init (GstSignalObjectClass * klass)
 {
   parent_class = g_type_class_peek_parent (klass);
 
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-  gst_signal_object_signals[SO_OBJECT_LOADED] =
-      g_signal_new ("object-loaded", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSignalObjectClass, object_loaded),
-      NULL, NULL, gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
-      G_TYPE_OBJECT, G_TYPE_POINTER);
-#endif
 }
 
 static void
@@ -1242,25 +1059,3 @@ gst_class_signal_connect (GstObjectClass * klass,
   return g_signal_connect (klass->signal_object, name, G_CALLBACK (func),
       func_data);
 }
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-/**
- * gst_class_signal_emit_by_name:
- * @object: a #GstObject that emits the signal
- * @name: the name of the signal to emit
- * @self: data for the signal
- *
- * emits the named class signal.
- */
-void
-gst_class_signal_emit_by_name (GstObject * object,
-    const gchar * name, GstXmlNodePtr self)
-{
-  GstObjectClass *oclass;
-
-  oclass = GST_OBJECT_GET_CLASS (object);
-
-  g_signal_emit_by_name (oclass->signal_object, name, object, self);
-}
-
-#endif /* GST_DISABLE_LOADSAVE */

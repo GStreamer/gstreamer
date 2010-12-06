@@ -1075,21 +1075,10 @@ gboolean                gst_pad_query_peer_convert      (GstPad *pad, GstFormat 
 void                    gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
 void                    gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
 GstPad *                gst_bin_find_unlinked_pad       (GstBin *bin, GstPadDirection direction);
-#ifndef GST_DISABLE_DEPRECATED
-GstPad *                gst_bin_find_unconnected_pad    (GstBin *bin, GstPadDirection direction);
-#endif
 
 /* buffer functions */
 GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);
 GstBuffer *		gst_buffer_join			(GstBuffer * buf1, GstBuffer * buf2);
-#ifndef GST_DISABLE_DEPRECATED
-void			gst_buffer_stamp		(GstBuffer * dest, const GstBuffer * src);
-#endif /* GST_DISABLE_DEPRECATED */
-
-/* atomic functions */
-#ifndef GST_DISABLE_DEPRECATED
-void                    gst_atomic_int_set              (gint * atomic_int, gint value);
-#endif
 
 /* probes */
 gulong			gst_pad_add_data_probe		(GstPad   * pad,

@@ -709,12 +709,6 @@ print_implementation_info (GstElement * element)
 
   n_print ("  Has change_state() function: %s\n",
       GST_DEBUG_FUNCPTR_NAME (gstelement_class->change_state));
-#ifndef GST_DISABLE_LOADSAVE
-  n_print ("  Has custom save_thyself() function: %s\n",
-      GST_DEBUG_FUNCPTR_NAME (gstobject_class->save_thyself));
-  n_print ("  Has custom restore_thyself() function: %s\n",
-      GST_DEBUG_FUNCPTR_NAME (gstobject_class->restore_thyself));
-#endif
 }
 
 static void

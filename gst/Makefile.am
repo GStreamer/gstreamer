@@ -1,11 +1,5 @@
 lib_LTLIBRARIES = libgstreamer-@GST_MAJORMINOR@.la
 
-if GST_DISABLE_LOADSAVE
-GST_LOADSAVE_SRC =
-else
-GST_LOADSAVE_SRC = gstxml.c
-endif
-
 if GST_DISABLE_REGISTRY
 GST_REGISTRY_SRC =
 else
@@ -44,7 +38,7 @@ built_header_make = gstenumtypes.h gstmarshal.h
 built_source_make = gstenumtypes.c gstmarshal.c
 
 EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
-	gstmarshal.list gsttrace.c gstxml.c \
+	gstmarshal.list gsttrace.c \
 	gstregistrybinary.c
 
 
@@ -104,8 +98,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstutils.c		\
 	gstvalue.c		\
 	gstparse.c		\
-	$(GST_REGISTRY_SRC)	\
-	$(GST_LOADSAVE_SRC)
+	$(GST_REGISTRY_SRC)
 
 # do not put files in the distribution that are generated
 nodist_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = $(built_source_make)
@@ -193,8 +186,7 @@ gst_headers =			\
 	gstutils.h		\
 	gstvalue.h		\
 	gstregistry.h		\
-	gstparse.h		\
-	gstxml.h
+	gstparse.h
 
 libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers) math-compat.h
 
@@ -263,13 +255,11 @@ Gst-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_MAJORMINOR@
 		--include=GLib-2.0 \
 		--include=GObject-2.0 \
 		--include=GModule-2.0 \
-		--include=libxml2-2.0 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg glib-2.0 \
 		--pkg gobject-2.0 \
 		--pkg gmodule-no-export-2.0 \
 		--pkg gthread-2.0 \
-		--pkg libxml-2.0 \
 		--pkg-export gstreamer-0.11 \
 		--output $@ \
 		$(gir_headers) \

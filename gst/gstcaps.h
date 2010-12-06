@@ -82,21 +82,6 @@ typedef enum {
  */
 #define GST_CAPS_IS_SIMPLE(caps) (gst_caps_get_size(caps) == 1)
 
-#ifndef GST_DISABLE_DEPRECATED
-/**
- * GST_DEBUG_CAPS:
- * @string: a string that should be prepended to the caps data.
- * @caps: the #GstCaps instance to print
- *
- * Convenience macro for printing out the contents of caps with GST_DEBUG().
- *
- * Deprecated: do not use anymore
- */
-#define GST_DEBUG_CAPS(string, caps) \
-  GST_DEBUG ( string "%s: " GST_PTR_FORMAT, caps)
-
-#endif /* GST_DISABLE_DEPRECATED */
-
 /**
  * GST_STATIC_CAPS:
  * @string: the string describing the caps
@@ -243,12 +228,6 @@ GstCaps *         gst_caps_union                   (const GstCaps *caps1,
 						    const GstCaps *caps2);
 GstCaps *         gst_caps_normalize               (const GstCaps *caps);
 gboolean          gst_caps_do_simplify             (GstCaps       *caps);
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_DISABLE_DEPRECATED)
-xmlNodePtr        gst_caps_save_thyself            (const GstCaps *caps,
-                                                    xmlNodePtr     parent);
-GstCaps *         gst_caps_load_thyself            (xmlNodePtr     parent);
-#endif
 
 /* utility */
 void              gst_caps_replace                 (GstCaps      **caps,

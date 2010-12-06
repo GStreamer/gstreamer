@@ -344,10 +344,6 @@ typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
 
 GType                   gst_plugin_get_type             (void);
 
-#ifndef GST_DISABLE_DEPRECATED
-void			_gst_plugin_register_static	(GstPluginDesc *desc);
-#endif
-
 gboolean		gst_plugin_register_static	(gint major_version,
                                                          gint minor_version,
                                                          const gchar *name,

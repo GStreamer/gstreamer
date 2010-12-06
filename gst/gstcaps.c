@@ -73,14 +73,6 @@
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
 
-#ifdef GST_DISABLE_DEPRECATED
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-#include <libxml/parser.h>
-xmlNodePtr gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent);
-GstCaps *gst_caps_load_thyself (xmlNodePtr parent);
-#endif
-#endif
-
 #define DEBUG_REFCOUNT
 
 #define CAPS_POISON(caps) G_STMT_START{ \
@@ -1959,47 +1951,6 @@ gst_caps_do_simplify (GstCaps * caps)
   /* gst_caps_do_simplify (caps); */
   return TRUE;
 }
-
-/* persistence */
-
-#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
-/**
- * gst_caps_save_thyself:
- * @caps: a #GstCaps structure
- * @parent: a XML parent node
- *
- * Serializes a #GstCaps to XML and adds it as a child node of @parent.
- *
- * Returns: a XML node pointer
- */
-xmlNodePtr
-gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent)
-{
-  char *s = gst_caps_to_string (caps);
-
-  xmlNewChild (parent, NULL, (xmlChar *) "caps", (xmlChar *) s);
-  g_free (s);
-  return parent;
-}
-
-/**
- * gst_caps_load_thyself:
- * @parent: a XML node
- *
- * Creates a #GstCaps from its XML serialization.
- *
- * Returns: a new #GstCaps structure
- */
-GstCaps *
-gst_caps_load_thyself (xmlNodePtr parent)
-{
-  if (strcmp ("caps", (char *) parent->name) == 0) {
-    return gst_caps_from_string ((gchar *) xmlNodeGetContent (parent));
-  }
-
-  return NULL;
-}
-#endif
 
 /* utility */
 

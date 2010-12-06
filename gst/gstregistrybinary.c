@@ -630,27 +630,3 @@ Error:
   }
   return res;
 }
-
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-gboolean
-gst_registry_xml_read_cache (GstRegistry * registry, const char *location);
-#endif
-/* FIXME 0.11: these symbols are here for backwards compatibility and should
- * be removed or made private */
-gboolean
-gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
-{
-  return FALSE;
-}
-
-#ifdef GST_DISABLE_DEPRECATED
-gboolean
-gst_registry_xml_write_cache (GstRegistry * registry, const char *location);
-#endif
-gboolean
-gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
-{
-  return FALSE;
-}
-#endif /* GST_REMOVE_DEPRECATED */
