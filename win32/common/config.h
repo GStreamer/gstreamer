@@ -6,7 +6,7 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gst-plugins-bad-0.10"
+#define GETTEXT_PACKAGE "gst-plugins-bad-0.11"
 
 /* PREFIX - specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
@@ -199,7 +199,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.20.1"
+#define VERSION "0.11.0.1"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
