@@ -498,6 +498,7 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
       if (noffset < 0) {
         /* ignore and continue resyncing until we hit the end
          * of our data or find a sync point that looks okay */
+        offset++;
         continue;
       }
       GST_DEBUG ("found sync at 0x%x", offset + 2);
