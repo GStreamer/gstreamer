@@ -1501,6 +1501,10 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   if (!media->reusable && media->reused)
     goto is_reused;
 
+  media->rtpbin = gst_element_factory_make ("gstrtpbin", NULL);
+  if (media->rtpbin == NULL)
+    goto no_gstrtpbin;
+
   GST_INFO ("preparing media %p", media);
 
   /* reset some variables */
@@ -1519,8 +1523,6 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
   media->id = g_source_attach (media->source, klass->context);
-
-  media->rtpbin = gst_element_factory_make ("gstrtpbin", NULL);
 
   /* add stuff to the bin */
   gst_bin_add (GST_BIN (media->pipeline), media->rtpbin);
@@ -1590,6 +1592,12 @@ was_prepared:
 is_reused:
   {
     GST_WARNING ("can not reuse media %p", media);
+    return FALSE;
+  }
+no_gstrtpbin:
+  {
+    GST_WARNING ("no gstrtpbin element");
+    g_warning ("failed to create element 'gstrtpbin', check your installation");
     return FALSE;
   }
 state_failed:
