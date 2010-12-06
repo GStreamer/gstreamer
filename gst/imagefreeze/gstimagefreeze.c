@@ -553,6 +553,13 @@ gst_image_freeze_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
+      if (!self->buffer) {
+        /* if we receive EOS before a buffer arrives, then let it pass */
+        GST_DEBUG_OBJECT (self, "EOS without input buffer, passing on");
+        ret = gst_pad_push_event (self->srcpad, event);
+        break;
+      }
+      /* fall-through */
     case GST_EVENT_NEWSEGMENT:
       GST_DEBUG_OBJECT (pad, "Dropping event");
       gst_event_unref (event);
