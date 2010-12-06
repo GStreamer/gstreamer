@@ -10,7 +10,7 @@ First attempt at making a list of tasks in roughly chronological order.
   - ..
   
   This should allow us to continue expanding later in the same way that 0.10 was
-  exapanded.
+  expanded.
 
 
 * Review GstCaps fields
