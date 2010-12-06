@@ -10,13 +10,13 @@ wavparse_LOCAL_SRC_FILES:= \
 LOCAL_SRC_FILES:= $(addprefix ../,$(wavparse_LOCAL_SRC_FILES))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.10       \
-    libgstbase-0.10         \
+    libgstreamer-0.11       \
+    libgstbase-0.11         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0 			\
-	libgstriff-0.10
+	libgstriff-0.11
 
 LOCAL_MODULE:= libgstwavparse
 
@@ -25,7 +25,7 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/..         			\
     $(LOCAL_PATH)/../gst-libs 			\
 	$(LOCAL_PATH)      					\
-	$(TARGET_OUT_HEADERS)/gstreamer-0.10 \
+	$(TARGET_OUT_HEADERS)/gstreamer-0.11 \
 	$(TARGET_OUT_HEADERS)/glib-2.0 	  	\
     $(TARGET_OUT_HEADERS)/glib-2.0/glib \
 	external/libxml2/include
@@ -41,7 +41,7 @@ LOCAL_CFLAGS := -DHAVE_CONFIG_H
 #
 LOCAL_PRELINK_MODULE := false
 
-#It's a gstreamer plugins, and it must be installed on ..../lib/gstreamer-0.10
-LOCAL_MODULE_PATH := $(TARGET_OUT)/lib/gstreamer-0.10
+#It's a gstreamer plugins, and it must be installed on ..../lib/gstreamer-0.11
+LOCAL_MODULE_PATH := $(TARGET_OUT)/lib/gstreamer-0.11
 
 include $(BUILD_SHARED_LIBRARY)
