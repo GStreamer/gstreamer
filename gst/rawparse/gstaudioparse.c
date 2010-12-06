@@ -373,6 +373,11 @@ gst_audio_parse_set_channel_positions (GstAudioParse * ap, GstStructure * s)
   GValue pos_array = { 0, };
   gint i;
 
+  if (!ap->channel_positions && ap->channels <= 2) {
+    /* Implicit mapping for 1- and 2-channel audio is okay */
+    return;
+  }
+
   g_value_init (&pos_array, GST_TYPE_ARRAY);
 
   if (ap->channel_positions
@@ -382,7 +387,8 @@ gst_audio_parse_set_channel_positions (GstAudioParse * ap, GstStructure * s)
     for (i = 0; i < ap->channels; i++)
       gst_value_array_append_value (&pos_array,
           g_value_array_get_nth (ap->channel_positions, i));
-  } else if (ap->channels != 1 && ap->channels != 2) {
+  } else {
+    /* >2 channels and no explicit mapping */
     GValue pos_none = { 0, };
 
     GST_WARNING_OBJECT (ap, "Using NONE channel positions");
