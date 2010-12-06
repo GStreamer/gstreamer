@@ -3,7 +3,7 @@ AC_PREREQ(2.60)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(GStreamer Bad Plug-ins, 0.10.20.1,
+AC_INIT(GStreamer Bad Plug-ins, 0.11.0.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-bad)
 
@@ -38,7 +38,7 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_PLUGINS_BAD_VERSION_MAJOR.$GST_PLUGINS_BAD_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
-GST_MAJORMINOR=0.10
+GST_MAJORMINOR=0.11
 AC_SUBST(GST_MAJORMINOR)
 
 dnl FIXME: this macro doesn't actually work;
@@ -50,8 +50,8 @@ AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.30.1
-GSTPB_REQ=0.10.30.1
+GST_REQ=0.11.0.1
+GSTPB_REQ=0.11.0.1
 
 dnl *** autotools stuff ****
 
@@ -192,9 +192,9 @@ AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], yes)
 
 dnl check for uninstalled plugin directories for unit tests
-AG_GST_CHECK_GST_PLUGINS_GOOD($GST_MAJORMINOR, [0.10.25])
-AG_GST_CHECK_GST_PLUGINS_UGLY($GST_MAJORMINOR, [0.10.16])
-AG_GST_CHECK_GST_PLUGINS_FFMPEG($GST_MAJORMINOR, [0.10.11])
+AG_GST_CHECK_GST_PLUGINS_GOOD($GST_MAJORMINOR, [0.11.0])
+AG_GST_CHECK_GST_PLUGINS_UGLY($GST_MAJORMINOR, [0.11.0])
+AG_GST_CHECK_GST_PLUGINS_FFMPEG($GST_MAJORMINOR, [0.11.0])
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
