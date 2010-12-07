@@ -35,12 +35,18 @@ endif
 
 # Do not run the abi test in case any option which causes the API to change has
 # been used
+if FALSE
 if !GST_DISABLE_LOADSAVE
 if !GST_DISABLE_REGISTRY
 if !GST_DISABLE_TRACE
 ABI_CHECKS = gst/gstabi
 endif
 endif
+endif
+endif
+
+if FALSE
+LIBSABI_CHECKS = libs/libsabi
 endif
 
 if HAVE_CXX
@@ -115,7 +121,7 @@ check_PROGRAMS =				\
 	generic/states				\
 	$(PARSE_CHECKS)				\
 	$(REGISTRY_CHECKS)			\
-	libs/libsabi				\
+	$(LIBSABI_CHECKS)		     	\
 	libs/gdp				\
 	libs/adapter				\
 	libs/bitreader				\
