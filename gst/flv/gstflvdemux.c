@@ -40,6 +40,7 @@
 #include <string.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/pbutils/descriptions.h>
+#include <gst/pbutils/pbutils.h>
 
 static GstStaticPadTemplate flv_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -575,6 +576,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
   GstCaps *caps = NULL;
   gchar *codec_name = NULL;
   gboolean ret = FALSE;
+  guint adjusted_rate = rate;
 
   switch (codec_tag) {
     case 1:
@@ -603,9 +605,29 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       caps = gst_caps_new_simple ("audio/x-nellymoser", NULL);
       break;
     case 10:
+    {
+      /* use codec-data to extract and verify samplerate */
+      if (demux->audio_codec_data &&
+          GST_BUFFER_SIZE (demux->audio_codec_data) >= 2) {
+        gint freq_index;
+
+        freq_index =
+            ((GST_READ_UINT16_BE (GST_BUFFER_DATA (demux->audio_codec_data))));
+        freq_index = (freq_index & 0x0780) >> 7;
+        adjusted_rate =
+            gst_codec_utils_aac_get_sample_rate_from_index (freq_index);
+
+        if (adjusted_rate && (rate != adjusted_rate)) {
+          GST_LOG_OBJECT (demux, "Ajusting AAC sample rate %d -> %d", rate,
+              adjusted_rate);
+        } else {
+          adjusted_rate = rate;
+        }
+      }
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
+    }
     case 7:
       caps = gst_caps_new_simple ("audio/x-alaw", NULL);
       break;
@@ -624,8 +646,8 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     goto beach;
   }
 
-  gst_caps_set_simple (caps,
-      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
+  gst_caps_set_simple (caps, "rate", G_TYPE_INT, adjusted_rate,
+      "channels", G_TYPE_INT, channels, NULL);
 
   if (demux->audio_codec_data) {
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER,
@@ -635,7 +657,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
   ret = gst_pad_set_caps (demux->audio_pad, caps);
 
   if (G_LIKELY (ret)) {
-    /* Store the caps we have set */
+    /* Store the caps we got from tags */
     demux->audio_codec_tag = codec_tag;
     demux->rate = rate;
     demux->channels = channels;
@@ -851,7 +873,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     switch (aac_packet_type) {
       case 0:
       {
-        /* AudioSpecificConfic data */
+        /* AudioSpecificConfig data */
         GST_LOG_OBJECT (demux, "got an AAC codec data packet");
         if (demux->audio_codec_data) {
           gst_buffer_unref (demux->audio_codec_data);
