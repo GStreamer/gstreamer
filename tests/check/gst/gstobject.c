@@ -360,7 +360,7 @@ GST_START_TEST (test_fake_object_parentage)
   fail_if (object1 == NULL, "Failed to create instance of GstFakeObject");
   fail_unless (GST_IS_OBJECT (object1),
       "GstFakeObject instance is not a GstObject");
-  fail_unless (GST_OBJECT_IS_FLOATING (object1),
+  fail_unless (g_object_is_floating (object1),
       "GstFakeObject instance is not floating");
 
   /* check the parent */
@@ -374,7 +374,7 @@ GST_START_TEST (test_fake_object_parentage)
   fail_if (result == TRUE, "GstFakeObject accepted itself as parent");
 
   /* should still be floating */
-  fail_unless (GST_OBJECT_IS_FLOATING (object1),
+  fail_unless (g_object_is_floating (object1),
       "GstFakeObject instance is not floating");
 
   /* create another object */
@@ -383,7 +383,7 @@ GST_START_TEST (test_fake_object_parentage)
       "Failed to create another instance of GstFakeObject");
   fail_unless (GST_IS_OBJECT (object2),
       "second GstFakeObject instance is not a GstObject");
-  fail_unless (GST_OBJECT_IS_FLOATING (object1),
+  fail_unless (g_object_is_floating (object1),
       "GstFakeObject instance is not floating");
 
   /* try to set other object as parent */
@@ -392,10 +392,10 @@ GST_START_TEST (test_fake_object_parentage)
       "GstFakeObject could not accept other object as parent");
 
   /* should not be floating anymore */
-  fail_if (GST_OBJECT_IS_FLOATING (object1),
+  fail_if (g_object_is_floating (object1),
       "GstFakeObject instance is still floating");
   /* parent should still be floating */
-  fail_unless (GST_OBJECT_IS_FLOATING (object2),
+  fail_unless (g_object_is_floating (object2),
       "GstFakeObject instance is not floating");
 
   /* check the parent */
@@ -416,7 +416,7 @@ GST_START_TEST (test_fake_object_parentage)
   fail_if (parent != NULL, "GstFakeObject has parent");
 
   /* object should not be floating */
-  fail_if (GST_OBJECT_IS_FLOATING (object1),
+  fail_if (g_object_is_floating (object1),
       "GstFakeObject instance is floating again");
 
   gst_object_unref (object1);
