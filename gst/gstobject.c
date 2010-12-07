@@ -409,8 +409,9 @@ gst_object_sink (gpointer object)
 
 /**
  * gst_object_replace:
- * @oldobj: pointer to a place of a #GstObject to replace
- * @newobj: a new #GstObject
+ * @oldobj: (inout) (transfer full): pointer to a place of a #GstObject to
+ *     replace
+ * @newobj: (transfer none): a new #GstObject
  *
  * Unrefs the #GstObject pointed to by @oldobj, refs @newobj and
  * puts @newobj in *@oldobj. Be carefull when calling this
@@ -558,8 +559,9 @@ gst_object_dispatch_properties_changed (GObject * object,
  * @object: the #GObject that signalled the notify.
  * @orig: a #GstObject that initiated the notify.
  * @pspec: a #GParamSpec of the property.
- * @excluded_props: a set of user-specified properties to exclude or
- *  NULL to show all changes.
+ * @excluded_props: (array zero-terminated=1) (element-type gchar*)
+ *     (allow-none):a set of user-specified properties to exclude or
+ *     NULL to show all changes.
  *
  * A default deep_notify signal callback for an object. The user data
  * should contain a pointer to an array of strings that should be excluded
@@ -727,7 +729,9 @@ had_parent:
  * For a nameless object, this returns NULL, which you can safely g_free()
  * as well.
  *
- * Returns: the name of @object. g_free() after usage.
+ * Free-function: g_free
+ *
+ * Returns: (transfer full): the name of @object. g_free() after usage.
  *
  * MT safe. This function grabs and releases @object's LOCK.
  */
@@ -875,8 +879,8 @@ had_parent:
  * Returns the parent of @object. This function increases the refcount
  * of the parent object so you should gst_object_unref() it after usage.
  *
- * Returns: parent of @object, this can be NULL if @object has no
- *   parent. unref after usage.
+ * Returns: (transfer full): parent of @object, this can be NULL if @object
+ *   has no parent. unref after usage.
  *
  * MT safe. Grabs and releases @object's LOCK.
  */
@@ -965,7 +969,8 @@ gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
 
 /**
  * gst_object_check_uniqueness:
- * @list: a list of #GstObject to check through
+ * @list: (transfer none) (element-type Gst.Object): a list of #GstObject to
+ *      check through
  * @name: the name to search for
  *
  * Checks to see if there is any object named @name in @list. This function
@@ -1107,7 +1112,9 @@ gst_object_get_property (GObject * object, guint prop_id,
  * Generates a string describing the path of @object in
  * the object hierarchy. Only useful (or used) for debugging.
  *
- * Returns: a string describing the path of @object. You must
+ * Free-function: g_free
+ *
+ * Returns: (transfer full): a string describing the path of @object. You must
  *          g_free() the string after usage.
  *
  * MT safe. Grabs and releases the #GstObject's LOCK for all objects

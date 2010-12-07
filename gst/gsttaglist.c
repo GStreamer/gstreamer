@@ -369,7 +369,7 @@ _gst_tag_initialize (void)
 
 /**
  * gst_tag_merge_use_first:
- * @dest: uninitialized GValue to store result in
+ * @dest: (out caller-allocates): uninitialized GValue to store result in
  * @src: GValue to copy from
  *
  * This is a convenience function for the func argument of gst_tag_register().
@@ -386,7 +386,7 @@ gst_tag_merge_use_first (GValue * dest, const GValue * src)
 
 /**
  * gst_tag_merge_strings_with_comma:
- * @dest: uninitialized GValue to store result in
+ * @dest: (out caller-allocates): uninitialized GValue to store result in
  * @src: GValue to copy from
  *
  * This is a convenience function for the func argument of gst_tag_register().
@@ -612,7 +612,9 @@ gst_tag_is_fixed (const gchar * tag)
  *
  * Creates a new empty GstTagList.
  *
- * Returns: An empty tag list
+ * Free-function: gst_tag_list_free
+ *
+ * Returns: (transfer full): An empty tag list
  */
 GstTagList *
 gst_tag_list_new (void)
@@ -633,8 +635,10 @@ gst_tag_list_new (void)
  * function. The tag list will make copies of any arguments passed
  * (e.g. strings, buffers).
  *
- * Returns: a new #GstTagList. Free with gst_tag_list_free() when no longer
- *     needed.
+ * Free-function: gst_tag_list_free
+ *
+ * Returns: (transfer full): a new #GstTagList. Free with gst_tag_list_free()
+ *     when no longer needed.
  *
  * Since: 0.10.24
  */
@@ -662,8 +666,10 @@ gst_tag_list_new_full (const gchar * tag, ...)
  * Just like gst_tag_list_new_full(), only that it takes a va_list argument.
  * Useful mostly for language bindings.
  *
- * Returns: a new #GstTagList. Free with gst_tag_list_free() when no longer
- *     needed.
+ * Free-function: gst_tag_list_free
+ *
+ * Returns: (transfer full): a new #GstTagList. Free with gst_tag_list_free()
+ *     when no longer needed.
  *
  * Since: 0.10.24
  */
@@ -829,7 +835,9 @@ gst_tag_list_insert (GstTagList * into, const GstTagList * from,
  *
  * Copies a given #GstTagList.
  *
- * Returns: copy of the given list
+ * Free-function: gst_tag_list_free
+ *
+ * Returns: (transfer full): copy of the given list
  */
 GstTagList *
 gst_tag_list_copy (const GstTagList * list)
@@ -848,7 +856,9 @@ gst_tag_list_copy (const GstTagList * list)
  * Merges the two given lists into a new list. If one of the lists is NULL, a
  * copy of the other is returned. If both lists are NULL, NULL is returned.
  *
- * Returns: the new list
+ * Free-function: gst_tag_list_free
+ *
+ * Returns: (transfer full): the new list
  */
 GstTagList *
 gst_tag_list_merge (const GstTagList * list1, const GstTagList * list2,
@@ -880,7 +890,7 @@ gst_tag_list_merge (const GstTagList * list1, const GstTagList * list2,
 
 /**
  * gst_tag_list_free:
- * @list: the list to free
+ * @list: (in) (transfer full): the list to free
  *
  * Frees the given list and all associated values.
  */
@@ -1111,7 +1121,7 @@ structure_foreach_wrapper (GQuark field_id, const GValue * value,
  * gst_tag_list_foreach:
  * @list: list to iterate over
  * @func: function to be called for each tag
- * @user_data: user specified data
+ * @user_data: (closure): user specified data
  *
  * Calls the given function for each tag inside the tag list. Note that if there
  * is no tag, the function won't be called at all.
@@ -1141,8 +1151,8 @@ gst_tag_list_foreach (const GstTagList * list, GstTagForeachFunc func,
  * Gets the value that is at the given index for the given tag in the given
  * list.
  *
- * Returns: The GValue for the specified entry or NULL if the tag wasn't
- *          available or the tag doesn't have as many entries
+ * Returns: (transfer none): The GValue for the specified entry or NULL if the
+ *          tag wasn't available or the tag doesn't have as many entries
  */
 G_CONST_RETURN GValue *
 gst_tag_list_get_value_index (const GstTagList * list, const gchar * tag,
@@ -1170,7 +1180,7 @@ gst_tag_list_get_value_index (const GstTagList * list, const gchar * tag,
 
 /**
  * gst_tag_list_copy_value:
- * @dest: uninitialized #GValue to copy into
+ * @dest: (out caller-allocates): uninitialized #GValue to copy into
  * @list: list to get the tag from
  * @tag: tag to read out
  *
@@ -1268,7 +1278,7 @@ gst_tag_list_get_ ## name ## _index (const GstTagList *list,            \
  * gst_tag_list_get_char:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1281,7 +1291,7 @@ gst_tag_list_get_ ## name ## _index (const GstTagList *list,            \
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1294,7 +1304,7 @@ TAG_MERGE_FUNCS (char, gchar, TRUE)
  * gst_tag_list_get_uchar:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1307,7 +1317,7 @@ TAG_MERGE_FUNCS (char, gchar, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1320,7 +1330,7 @@ TAG_MERGE_FUNCS (uchar, guchar, TRUE)
  * gst_tag_list_get_boolean:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1333,7 +1343,7 @@ TAG_MERGE_FUNCS (uchar, guchar, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1346,7 +1356,7 @@ TAG_MERGE_FUNCS (boolean, gboolean, TRUE)
  * gst_tag_list_get_int:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1359,7 +1369,7 @@ TAG_MERGE_FUNCS (boolean, gboolean, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1372,7 +1382,7 @@ TAG_MERGE_FUNCS (int, gint, TRUE)
  * gst_tag_list_get_uint:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1385,7 +1395,7 @@ TAG_MERGE_FUNCS (int, gint, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1398,7 +1408,7 @@ TAG_MERGE_FUNCS (uint, guint, TRUE)
  * gst_tag_list_get_long:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1411,7 +1421,7 @@ TAG_MERGE_FUNCS (uint, guint, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1424,7 +1434,7 @@ TAG_MERGE_FUNCS (long, glong, TRUE)
  * gst_tag_list_get_ulong:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1437,7 +1447,7 @@ TAG_MERGE_FUNCS (long, glong, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1450,7 +1460,7 @@ TAG_MERGE_FUNCS (ulong, gulong, TRUE)
  * gst_tag_list_get_int64:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1463,7 +1473,7 @@ TAG_MERGE_FUNCS (ulong, gulong, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1476,7 +1486,7 @@ TAG_MERGE_FUNCS (int64, gint64, TRUE)
  * gst_tag_list_get_uint64:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1489,7 +1499,7 @@ TAG_MERGE_FUNCS (int64, gint64, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1502,7 +1512,7 @@ TAG_MERGE_FUNCS (uint64, guint64, TRUE)
  * gst_tag_list_get_float:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1515,7 +1525,7 @@ TAG_MERGE_FUNCS (uint64, guint64, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1528,7 +1538,7 @@ TAG_MERGE_FUNCS (float, gfloat, TRUE)
  * gst_tag_list_get_double:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1541,7 +1551,7 @@ TAG_MERGE_FUNCS (float, gfloat, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1554,7 +1564,7 @@ TAG_MERGE_FUNCS (double, gdouble, TRUE)
  * gst_tag_list_get_pointer:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out) (transfer none): location for the result
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
@@ -1567,7 +1577,7 @@ TAG_MERGE_FUNCS (double, gdouble, TRUE)
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out) (transfer none): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1582,7 +1592,7 @@ TAG_MERGE_FUNCS (pointer, gpointer, (*value != NULL))
  * gst_tag_list_get_string:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: (out callee-allocates) (transfer full): location for the result
  *
  * Copies the contents for the given tag into the value, possibly merging
  * multiple values into one if multiple values are associated with the tag.
@@ -1594,6 +1604,8 @@ TAG_MERGE_FUNCS (pointer, gpointer, (*value != NULL))
  * freed by the caller using g_free when no longer needed. Since 0.10.24 the
  * returned string is also guaranteed to be non-NULL and non-empty.
  *
+ * Free-function: g_free
+ *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
@@ -1602,7 +1614,7 @@ TAG_MERGE_FUNCS (pointer, gpointer, (*value != NULL))
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out callee-allocates) (transfer full): location for the result
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
@@ -1610,6 +1622,8 @@ TAG_MERGE_FUNCS (pointer, gpointer, (*value != NULL))
  * The resulting string in @value will be in UTF-8 encoding and should be
  * freed by the caller using g_free when no longer needed. Since 0.10.24 the
  * returned string is also guaranteed to be non-NULL and non-empty.
+ *
+ * Free-function: g_free
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
@@ -1626,7 +1640,7 @@ TAG_MERGE_FUNCS (string, gchar *, (*value != NULL && **value != '\0'))
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out) (transfer none): location for the result
  *
  * Peeks at the value that is at the given index for the given tag in the given
  * list.
@@ -1658,11 +1672,14 @@ gst_tag_list_peek_string_index (const GstTagList * list,
  * gst_tag_list_get_date:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: address of a GDate pointer variable to store the result into
+ * @value: (out callee-allocates) (transfer full): address of a GDate pointer
+ *     variable to store the result into
  *
  * Copies the first date for the given tag in the taglist into the variable
  * pointed to by @value. Free the date with g_date_free() when it is no longer
  * needed.
+ *
+ * Free-function: g_date_free
  *
  * Returns: TRUE, if a date was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.
@@ -1689,11 +1706,13 @@ gst_tag_list_get_date (const GstTagList * list, const gchar * tag,
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out callee-allocates) (transfer full): location for the result
  *
  * Gets the date that is at the given index for the given tag in the given
  * list and copies it into the variable pointed to by @value. Free the date
  * with g_date_free() when it is no longer needed.
+ *
+ * Free-function: g_date_free
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.
@@ -1718,14 +1737,18 @@ gst_tag_list_get_date_index (const GstTagList * list,
  * gst_tag_list_get_date_time:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: address of a #GstDateTime pointer variable to store the result into
+ * @value: (out callee-allocates) (transfer full): address of a #GstDateTime
+ *     pointer variable to store the result into
  *
  * Copies the first datetime for the given tag in the taglist into the variable
  * pointed to by @value. Unref the date with gst_date_time_unref() when
  * it is no longer needed.
  *
- * Returns: TRUE, if a datetime was copied, FALSE if the tag didn't exist in the
- *              given list or if it was #NULL.
+ * Free-function: gst_date_time_unref
+ *
+ * Returns: TRUE, if a datetime was copied, FALSE if the tag didn't exist in
+ *              thegiven list or if it was #NULL.
+ *
  * Since: 0.10.31
  */
 gboolean
@@ -1753,14 +1776,17 @@ gst_tag_list_get_date_time (const GstTagList * list, const gchar * tag,
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: location for the result
+ * @value: (out callee-allocates) (transfer full): location for the result
  *
  * Gets the datetime that is at the given index for the given tag in the given
  * list and copies it into the variable pointed to by @value. Unref the datetime
  * with gst_date_time_unref() when it is no longer needed.
  *
+ * Free-function: gst_date_time_unref
+ *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.
+ *
  * Since: 0.10.31
  */
 gboolean
@@ -1783,11 +1809,14 @@ gst_tag_list_get_date_time_index (const GstTagList * list,
  * gst_tag_list_get_buffer:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: address of a GstBuffer pointer variable to store the result into
+ * @value: (out callee-allocates) (transfer full): address of a GstBuffer
+ *     pointer variable to store the result into
  *
  * Copies the first buffer for the given tag in the taglist into the variable
  * pointed to by @value. Free the buffer with gst_buffer_unref() when it is
  * no longer needed.
+ *
+ * Free-function: gst_buffer_unref
  *
  * Returns: TRUE, if a buffer was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.
@@ -1816,11 +1845,14 @@ gst_tag_list_get_buffer (const GstTagList * list, const gchar * tag,
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: address of a GstBuffer pointer variable to store the result into
+ * @value: (out callee-allocates) (transfer full): address of a GstBuffer
+ *     pointer variable to store the result into
  *
  * Gets the buffer that is at the given index for the given tag in the given
  * list and copies it into the variable pointed to by @value. Free the buffer
  * with gst_buffer_unref() when it is no longer needed.
+ *
+ * Free-function: gst_buffer_unref
  *
  * Returns: TRUE, if a buffer was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.

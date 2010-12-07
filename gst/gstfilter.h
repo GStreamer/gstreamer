@@ -29,7 +29,7 @@ G_BEGIN_DECLS
  * @obj: the object
  * @user_data: filter data
  *
- * Function prototype for a filter callback taht can be use in gst_filter_run().
+ * Function prototype for a filter callback that can be use in gst_filter_run().
  * The function should apply its filtering to @obj. Additional data passed to
  * gst_filter_run() are in @data.
  *

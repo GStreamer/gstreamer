@@ -29,6 +29,8 @@
  * in a pipeline.
  */
 
+/* FIXME: complete gobject annotations */
+
 #include "gst_private.h"
 
 #include "gstinfo.h"
@@ -281,7 +283,7 @@ gst_index_group_free (GstIndexGroup * group)
  *
  * Create a new tileindex object
  *
- * Returns: a new index object
+ * Returns: (transfer full): a new index object
  */
 GstIndex *
 gst_index_new (void)
@@ -501,7 +503,9 @@ gst_index_set_resolver_full (GstIndex * index, GstIndexResolver resolver,
  *
  * Copies an entry and returns the result.
  *
- * Returns: a newly allocated #GstIndexEntry.
+ * Free-function: gst_index_entry_free
+ *
+ * Returns: (transfer full): a newly allocated #GstIndexEntry.
  */
 GstIndexEntry *
 gst_index_entry_copy (GstIndexEntry * entry)
@@ -514,7 +518,7 @@ gst_index_entry_copy (GstIndexEntry * entry)
 
 /**
  * gst_index_entry_free:
- * @entry: the entry to free
+ * @entry: (transfer full): the entry to free
  *
  * Free the memory used by the given entry.
  */
@@ -553,7 +557,9 @@ gst_index_entry_free (GstIndexEntry * entry)
  * used to map dynamic GstFormat ids to their original
  * format key.
  *
- * Returns: a pointer to the newly added entry in the index.
+ * Free-function: gst_index_entry_free
+ *
+ * Returns: (transfer full): a pointer to the newly added entry in the index.
  */
 GstIndexEntry *
 gst_index_add_format (GstIndex * index, gint id, GstFormat format)

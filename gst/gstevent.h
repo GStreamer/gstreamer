@@ -224,9 +224,10 @@ typedef struct _GstEventClass GstEventClass;
 
 /**
  * gst_event_replace:
- * @old_event: pointer to a pointer to a #GstEvent to be replaced.
- * @new_event: pointer to a #GstEvent that will replace the event pointed to
- *        by @old_event.
+ * @old_event: (inout) (transfer full): pointer to a pointer to a #GstEvent
+ *     to be replaced.
+ * @new_event: (allow-none) (transfer none): pointer to a #GstEvent that will
+ *     replace the event pointed to by @old_event.
  *
  * Modifies a pointer to a #GstEvent to point to a different #GstEvent. The
  * modification is done atomically (so this is useful for ensuring thread safety
@@ -356,7 +357,7 @@ GType           gst_event_get_type              (void);
  *
  * Increase the refcount of this event.
  *
- * Returns: @event (for convenience when doing assignments)
+ * Returns: (transfer full): @event (for convenience when doing assignments)
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstEvent * gst_event_ref (GstEvent * event);
@@ -370,7 +371,7 @@ gst_event_ref (GstEvent * event)
 
 /**
  * gst_event_unref:
- * @event: The event to refcount
+ * @event: (transfer full): the event to refcount
  *
  * Decrease the refcount of an event, freeing it if the refcount reaches 0.
  */
@@ -391,7 +392,7 @@ gst_event_unref (GstEvent * event)
  *
  * Copy the event using the event specific copy function.
  *
- * Returns: the new event
+ * Returns: (transfer full): the new event
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstEvent * gst_event_copy (const GstEvent * event);

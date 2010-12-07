@@ -177,7 +177,7 @@ gst_mini_object_finalize (GstMiniObject * obj)
  *
  * MT safe
  *
- * Returns: the new mini-object.
+ * Returns: (transfer full): the new mini-object.
  */
 GstMiniObject *
 gst_mini_object_new (GType type)
@@ -217,7 +217,7 @@ gst_mini_object_new (GType type)
  *
  * MT safe
  *
- * Returns: the new mini-object.
+ * Returns: (transfer full): the new mini-object.
  */
 GstMiniObject *
 gst_mini_object_copy (const GstMiniObject * mini_object)
@@ -255,7 +255,7 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
 
 /**
  * gst_mini_object_make_writable:
- * @mini_object: the mini-object to make writable
+ * @mini_object: (transfer full): the mini-object to make writable
  *
  * Checks if a mini-object is writable.  If not, a writable copy is made and
  * returned.  This gives away the reference to the original mini object,
@@ -263,7 +263,8 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
  *
  * MT safe
  *
- * Returns: a mini-object (possibly the same pointer) that is writable.
+ * Returns: (transfer full): a mini-object (possibly the same pointer) that
+ *     is writable.
  */
 GstMiniObject *
 gst_mini_object_make_writable (GstMiniObject * mini_object)
@@ -371,7 +372,8 @@ gst_mini_object_unref (GstMiniObject * mini_object)
 
 /**
  * gst_mini_object_replace:
- * @olddata: pointer to a pointer to a mini-object to be replaced
+ * @olddata: (inout) (transfer full): pointer to a pointer to a mini-object to
+ *     be replaced
  * @newdata: pointer to new mini-object
  *
  * Modifies a pointer to point to a new mini-object.  The modification
@@ -475,8 +477,8 @@ gst_value_mini_object_lcopy (const GValue * value, guint n_collect_values,
 
 /**
  * gst_value_set_mini_object:
- * @value:       a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
- * @mini_object: mini object value to set
+ * @value: a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
+ * @mini_object: (transfer none): mini object value to set
  *
  * Set the contents of a %GST_TYPE_MINI_OBJECT derived #GValue to
  * @mini_object.
@@ -496,8 +498,8 @@ gst_value_set_mini_object (GValue * value, GstMiniObject * mini_object)
 
 /**
  * gst_value_take_mini_object:
- * @value:       a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
- * @mini_object: mini object value to take
+ * @value: a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
+ * @mini_object: (transfer full): mini object value to take
  *
  * Set the contents of a %GST_TYPE_MINI_OBJECT derived #GValue to
  * @mini_object.
@@ -527,7 +529,7 @@ gst_value_take_mini_object (GValue * value, GstMiniObject * mini_object)
  * Get the contents of a %GST_TYPE_MINI_OBJECT derived #GValue.
  * Does not increase the refcount of the returned object.
  *
- * Returns: mini object contents of @value
+ * Returns: (transfer none): mini object contents of @value
  */
 GstMiniObject *
 gst_value_get_mini_object (const GValue * value)
@@ -544,7 +546,7 @@ gst_value_get_mini_object (const GValue * value)
  * Get the contents of a %GST_TYPE_MINI_OBJECT derived #GValue,
  * increasing its reference count.
  *
- * Returns: mini object contents of @value
+ * Returns: (transfer full): mini object contents of @value
  *
  * Since: 0.10.20
  */

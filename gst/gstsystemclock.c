@@ -268,7 +268,7 @@ gst_system_clock_get_property (GObject * object, guint prop_id, GValue * value,
  * clock will be increased so you need to unref the clock after
  * usage.
  *
- * Returns: the default clock.
+ * Returns: (transfer full): the default clock.
  *
  * MT safe.
  */

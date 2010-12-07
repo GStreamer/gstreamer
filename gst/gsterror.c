@@ -300,8 +300,8 @@ QUARK_FUNC (stream);
  *
  * Get a string describing the error message in the current locale.
  *
- * Returns: a newly allocated string describing the error message in the
- * current locale.
+ * Returns: (transfer full) (type gchar*): a newly allocated string describing
+ *     the error message in the current locale.
  */
 gchar *
 gst_error_get_message (GQuark domain, gint code)

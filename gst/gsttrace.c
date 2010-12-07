@@ -86,7 +86,7 @@ read_tsc (gint64 * dst)
 
 /**
  * gst_trace_read_tsc:
- * @dst: pointer to hold the result.
+ * @dst: (out) pointer to hold the result.
  *
  * Read a platform independent timer value that can be used in
  * benchmarks.
@@ -108,7 +108,9 @@ gint _gst_trace_on = 1;
  * Create a ringbuffer of @size in the file with @filename to 
  * store trace results in.
  *
- * Returns: a new #GstTrace.
+ * Free-function: gst_trace_destroy
+ *
+ * Returns: (transfer full): a new #GstTrace.
  */
 GstTrace *
 gst_trace_new (const gchar * filename, gint size)
@@ -138,7 +140,7 @@ gst_trace_new (const gchar * filename, gint size)
 
 /**
  * gst_trace_destroy:
- * @trace: the #GstTrace to destroy
+ * @trace: (in) (transfer full): the #GstTrace to destroy
  *
  * Flush an close the previously allocated @trace.
  */

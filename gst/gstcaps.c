@@ -157,7 +157,7 @@ gst_caps_get_type (void)
  * #GstCaps contains no media formats.
  * Caller is responsible for unreffing the returned caps.
  *
- * Returns: the new #GstCaps
+ * Returns: (transfer full): the new #GstCaps
  */
 GstCaps *
 gst_caps_new_empty (void)
@@ -187,7 +187,7 @@ gst_caps_new_empty (void)
  * Creates a new #GstCaps that indicates that it is compatible with
  * any media format.
  *
- * Returns: the new #GstCaps
+ * Returns: (transfer full): the new #GstCaps
  */
 GstCaps *
 gst_caps_new_any (void)
@@ -210,7 +210,7 @@ gst_caps_new_any (void)
  * as gst_structure_new().
  * Caller is responsible for unreffing the returned caps.
  *
- * Returns: the new #GstCaps
+ * Returns: (transfer full): the new #GstCaps
  */
 GstCaps *
 gst_caps_new_simple (const char *media_type, const char *fieldname, ...)
@@ -239,7 +239,7 @@ gst_caps_new_simple (const char *media_type, const char *fieldname, ...)
  * arguments.  The list must be NULL-terminated.  The structures
  * are not copied; the returned #GstCaps owns the structures.
  *
- * Returns: the new #GstCaps
+ * Returns: (transfer full): the new #GstCaps
  */
 GstCaps *
 gst_caps_new_full (GstStructure * struct1, ...)
@@ -263,7 +263,7 @@ gst_caps_new_full (GstStructure * struct1, ...)
  * arguments.  The list must be NULL-terminated.  The structures
  * are not copied; the returned #GstCaps owns the structures.
  *
- * Returns: the new #GstCaps
+ * Returns: (transfer full): the new #GstCaps
  */
 GstCaps *
 gst_caps_new_full_valist (GstStructure * structure, va_list var_args)
@@ -293,7 +293,7 @@ gst_caps_new_full_valist (GstStructure * structure, va_list var_args)
  *
  * When you are finished with the caps, call gst_caps_unref() on it.
  *
- * Returns: the new #GstCaps
+ * Returns: (transfer full): the new #GstCaps
  */
 GstCaps *
 gst_caps_copy (const GstCaps * caps)
@@ -346,7 +346,7 @@ _gst_caps_free (GstCaps * caps)
 
 /**
  * gst_caps_make_writable:
- * @caps: the #GstCaps to make writable
+ * @caps: (transfer full): the #GstCaps to make writable
  *
  * Returns a writable copy of @caps.
  *
@@ -360,7 +360,7 @@ _gst_caps_free (GstCaps * caps)
  * that it returns. Don't access the argument after calling this function. See
  * also: gst_caps_ref().
  *
- * Returns: the same #GstCaps object.
+ * Returns: (transfer full): the same #GstCaps object.
  */
 GstCaps *
 gst_caps_make_writable (GstCaps * caps)
@@ -394,7 +394,7 @@ gst_caps_make_writable (GstCaps * caps)
  * implicitly by e.g. gst_caps_new_simple(), or via taking one explicitly with
  * this function.
  *
- * Returns: the same #GstCaps object.
+ * Returns: (transfer full): the same #GstCaps object.
  */
 GstCaps *
 gst_caps_ref (GstCaps * caps)
@@ -414,7 +414,7 @@ gst_caps_ref (GstCaps * caps)
 
 /**
  * gst_caps_unref:
- * @caps: the #GstCaps to unref
+ * @caps: (transfer full): the #GstCaps to unref
  *
  * Unref a #GstCaps and and free all its structures and the
  * structures' values when the refcount reaches 0.
@@ -454,9 +454,9 @@ gst_static_caps_get_type (void)
  *
  * Converts a #GstStaticCaps to a #GstCaps.
  *
- * Returns: A pointer to the #GstCaps. Unref after usage. Since the
- * core holds an additional ref to the returned caps,
- * use gst_caps_make_writable() on the returned caps to modify it.
+ * Returns: (transfer full): a pointer to the #GstCaps. Unref after usage.
+ *     Since the core holds an additional ref to the returned caps,
+ *     use gst_caps_make_writable() on the returned caps to modify it.
  */
 GstCaps *
 gst_static_caps_get (GstStaticCaps * static_caps)
@@ -545,7 +545,8 @@ gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
  * Retrieves the stucture with the given index from the list of structures
  * contained in @caps. The caller becomes the owner of the returned structure.
  *
- * Returns: a pointer to the #GstStructure corresponding to @index.
+ * Returns: (transfer full): a pointer to the #GstStructure corresponding
+ *     to @index.
  *
  * Since: 0.10.30
  */
@@ -640,7 +641,7 @@ gst_caps_structure_is_subset (const GstStructure * minuend,
 /**
  * gst_caps_append:
  * @caps1: the #GstCaps that will be appended to
- * @caps2: the #GstCaps to append
+ * @caps2: (transfer full): the #GstCaps to append
  *
  * Appends the structures contained in @caps2 to @caps1. The structures in
  * @caps2 are not copied -- they are transferred to @caps1, and then @caps2 is
@@ -679,7 +680,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
 /**
  * gst_caps_merge:
  * @caps1: the #GstCaps that will take the new entries
- * @caps2: the #GstCaps to merge in
+ * @caps2: (transfer full): the #GstCaps to merge in
  *
  * Appends the structures contained in @caps2 to @caps1 if they are not yet
  * expressed by @caps1. The structures in @caps2 are not copied -- they are
@@ -734,7 +735,7 @@ gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
 /**
  * gst_caps_append_structure:
  * @caps: the #GstCaps that will be appended to
- * @structure: the #GstStructure to append
+ * @structure: (transfer full): the #GstStructure to append
  *
  * Appends @structure to @caps.  The structure is not copied; @caps
  * becomes the owner of @structure.
@@ -780,7 +781,7 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
 /**
  * gst_caps_merge_structure:
  * @caps: the #GstCaps that will the the new structure
- * @structure: the #GstStructure to merge
+ * @structure: (transfer full): the #GstStructure to merge
  *
  * Appends @structure to @caps if its not already expressed by @caps.  The
  * structure is not copied; @caps becomes the owner of @structure.
@@ -855,7 +856,8 @@ gst_caps_get_size (const GstCaps * caps)
  * You do not need to free or unref the structure returned, it
  * belongs to the #GstCaps.
  *
- * Returns: a pointer to the #GstStructure corresponding to @index
+ * Returns: (transfer none): a pointer to the #GstStructure corresponding
+ *     to @index
  */
 GstStructure *
 gst_caps_get_structure (const GstCaps * caps, guint index)
@@ -874,7 +876,7 @@ gst_caps_get_structure (const GstCaps * caps, guint index)
  * Creates a new #GstCaps and appends a copy of the nth structure
  * contained in @caps.
  *
- * Returns: the new #GstCaps
+ * Returns: (transfer full): the new #GstCaps
  */
 GstCaps *
 gst_caps_copy_nth (const GstCaps * caps, guint nth)
@@ -2005,7 +2007,7 @@ gst_caps_load_thyself (xmlNodePtr parent)
 
 /**
  * gst_caps_replace:
- * @caps: a pointer to #GstCaps
+ * @caps: (inout) (transfer full): a pointer to #GstCaps
  * @newcaps: a #GstCaps to replace *caps
  *
  * Replaces *caps with @newcaps.  Unrefs the #GstCaps in the location
@@ -2050,7 +2052,7 @@ gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
  * ]|
  * This prints the caps in human readble form.
  *
- * Returns: a newly allocated string representing @caps.
+ * Returns: (transfer full): a newly allocated string representing @caps.
  */
 gchar *
 gst_caps_to_string (const GstCaps * caps)
@@ -2146,7 +2148,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
  *
  * Converts @caps from a string representation.
  *
- * Returns: a newly allocated #GstCaps
+ * Returns: (transfer full): a newly allocated #GstCaps
  */
 GstCaps *
 gst_caps_from_string (const gchar * string)

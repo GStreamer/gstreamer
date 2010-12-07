@@ -279,8 +279,8 @@ gst_event_new (GstEventType type)
 /**
  * gst_event_new_custom:
  * @type: The type of the new event
- * @structure: The structure for the event. The event will take ownership of
- * the structure.
+ * @structure: (transfer full): the structure for the event. The event will
+ *     take ownership of the structure.
  *
  * Create a new custom-typed event. This can be used for anything not
  * handled by other event-specific functions to pass an event to another
@@ -293,7 +293,7 @@ gst_event_new (GstEventType type)
  * New custom events can also be created by subclassing the event type if
  * needed.
  *
- * Returns: The new custom event.
+ * Returns: (transfer full): the new custom event.
  */
 GstEvent *
 gst_event_new_custom (GstEventType type, GstStructure * structure)
@@ -431,7 +431,7 @@ gst_event_set_seqnum (GstEvent * event, guint32 seqnum)
  * This event is typically generated after a seek to flush out all queued data
  * in the pipeline so that the new media is played as soon as possible.
  *
- * Returns: A new flush start event.
+ * Returns: (transfer full): a new flush start event.
  */
 GstEvent *
 gst_event_new_flush_start (void)
@@ -453,7 +453,7 @@ gst_event_new_flush_start (void)
  * This event is typically generated to complete a seek and to resume
  * dataflow.
  *
- * Returns: A new flush stop event.
+ * Returns: (transfer full): a new flush stop event.
  */
 GstEvent *
 gst_event_new_flush_stop (void)
@@ -478,7 +478,7 @@ gst_event_new_flush_stop (void)
  *
  * The EOS event itself will not cause any state transitions of the pipeline.
  *
- * Returns: The new EOS event.
+ * Returns: (transfer full): the new EOS event.
  */
 GstEvent *
 gst_event_new_eos (void)
@@ -500,7 +500,7 @@ gst_event_new_eos (void)
  * This method calls gst_event_new_new_segment_full() passing a default
  * value of 1.0 for applied_rate
  *
- * Returns: A new newsegment event.
+ * Returns: (transfer full): a new newsegment event.
  */
 GstEvent *
 gst_event_new_new_segment (gboolean update, gdouble rate, GstFormat format,
@@ -575,7 +575,7 @@ gst_event_parse_new_segment (GstEvent * event, gboolean * update,
  *
  *   position + (TIMESTAMP(buf) - start) * ABS (rate * applied_rate)
  *
- * Returns: A new newsegment event.
+ * Returns: (transfer full): a new newsegment event.
  *
  * Since: 0.10.6
  */
@@ -687,7 +687,7 @@ gst_event_parse_new_segment_full (GstEvent * event, gboolean * update,
  *
  * Generates a metadata tag event from the given @taglist.
  *
- * Returns: a new #GstEvent
+ * Returns: (transfer full): a new #GstEvent
  */
 GstEvent *
 gst_event_new_tag (GstTagList * taglist)
@@ -700,7 +700,7 @@ gst_event_new_tag (GstTagList * taglist)
 /**
  * gst_event_parse_tag:
  * @event: a tag event
- * @taglist: (out): pointer to metadata list
+ * @taglist: (out) (transfer none): pointer to metadata list
  *
  * Parses a tag @event and stores the results in the given @taglist location.
  */
@@ -727,7 +727,7 @@ gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
  *
  * When the @async flag is set, a thread boundary is prefered.
  *
- * Returns: a new #GstEvent
+ * Returns: (transfer full): a new #GstEvent
  */
 GstEvent *
 gst_event_new_buffer_size (GstFormat format, gint64 minsize,
@@ -829,7 +829,7 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
  * The application can use general event probes to intercept the QoS
  * event and implement custom application specific QoS handling.
  *
- * Returns: A new QOS event.
+ * Returns: (transfer full): a new QOS event.
  */
 GstEvent *
 gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
@@ -931,7 +931,7 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * #GST_QUERY_POSITION and update the playback segment current position with a
  * #GST_SEEK_TYPE_SET to the desired position. 
  *
- * Returns: A new seek event.
+ * Returns: (transfer full): a new seek event.
  */
 GstEvent *
 gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
@@ -1027,12 +1027,12 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
 
 /**
  * gst_event_new_navigation:
- * @structure: description of the event. The event will take ownership of the
- *     structure.
+ * @structure: (transfer full): description of the event. The event will take
+ *     ownership of the structure.
  *
  * Create a new navigation event from the given description.
  *
- * Returns: a new #GstEvent
+ * Returns: (transfer full): a new #GstEvent
  */
 GstEvent *
 gst_event_new_navigation (GstStructure * structure)
@@ -1053,7 +1053,7 @@ gst_event_new_navigation (GstStructure * structure)
  * The latency is mostly used in live sinks and is always expressed in
  * the time format.
  *
- * Returns: a new #GstEvent
+ * Returns: (transfer full): a new #GstEvent
  *
  * Since: 0.10.12
  */
@@ -1115,7 +1115,7 @@ gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
  * The @intermediate flag instructs the pipeline that this step operation is
  * part of a larger step operation.
  *
- * Returns: a new #GstEvent
+ * Returns: (transfer full): a new #GstEvent
  *
  * Since: 0.10.24
  */
@@ -1144,11 +1144,12 @@ gst_event_new_step (GstFormat format, guint64 amount, gdouble rate,
 /**
  * gst_event_parse_step:
  * @event: The event to query
- * @format: (out): A pointer to store the format in.
- * @amount: (out): A pointer to store the amount in.
- * @rate: (out): A pointer to store the rate in.
- * @flush: (out): A pointer to store the flush boolean in.
- * @intermediate: (out): A pointer to store the intermediate boolean in.
+ * @format: (out) (allow-none): a pointer to store the format in
+ * @amount: (out) (allow-none): a pointer to store the amount in
+ * @rate: (out) (allow-none): a pointer to store the rate in
+ * @flush: (out) (allow-none): a pointer to store the flush boolean in
+ * @intermediate: (out) (allow-none): a pointer to store the intermediate
+ *     boolean in
  *
  * Parse the step event.
  *
@@ -1183,13 +1184,13 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
 
 /**
  * gst_event_new_sink_message:
- * @msg: The #GstMessage to be posted
+ * @msg: (transfer none): the #GstMessage to be posted
  *
  * Create a new sink-message event. The purpose of the sink-message event is
  * to instruct a sink to post the message contained in the event synchronized
  * with the stream.
  *
- * Returns: a new #GstEvent
+ * Returns: (transfer full): a new #GstEvent
  *
  * Since: 0.10.26
  */
@@ -1213,7 +1214,7 @@ gst_event_new_sink_message (GstMessage * msg)
 /**
  * gst_event_parse_sink_message:
  * @event: The event to query
- * @msg: (out): A pointer to store the #GstMessage in.
+ * @msg: (out) (transfer full): a pointer to store the #GstMessage in.
  *
  * Parse the sink-message event. Unref @msg after usage.
  *

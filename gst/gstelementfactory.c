@@ -125,7 +125,7 @@ gst_element_factory_finalize (GObject * object)
  * Search for an element factory of the given name. Refs the returned
  * element factory; caller is responsible for unreffing.
  *
- * Returns: #GstElementFactory if found, NULL otherwise
+ * Returns: (transfer full): #GstElementFactory if found, NULL otherwise
  */
 GstElementFactory *
 gst_element_factory_find (const gchar * name)
@@ -193,8 +193,9 @@ gst_element_factory_cleanup (GstElementFactory * factory)
 
 /**
  * gst_element_register:
- * @plugin: #GstPlugin to register the element with, or NULL for a static
- * element (note that passing NULL only works in GStreamer 0.10.13 and later)
+ * @plugin: (allow-none): #GstPlugin to register the element with, or NULL for
+ *     a static element (note that passing NULL only works in GStreamer 0.10.13
+ *     and later)
  * @name: name of elements of this type
  * @rank: rank of element (higher rank means more importance when autoplugging)
  * @type: GType of element to register
@@ -342,7 +343,8 @@ detailserror:
  * It will be given the name supplied, since all elements require a name as
  * their first argument.
  *
- * Returns: new #GstElement or NULL if the element couldn't be created
+ * Returns: (transfer full): new #GstElement or NULL if the element couldn't
+ *     be created
  */
 GstElement *
 gst_element_factory_create (GstElementFactory * factory, const gchar * name)
@@ -427,7 +429,7 @@ no_element:
  * consisting of the element factory name and a number.
  * If name is given, it will be given the name supplied.
  *
- * Returns: new #GstElement or NULL if unable to create element
+ * Returns: (transfer full): new #GstElement or NULL if unable to create element
  */
 GstElement *
 gst_element_factory_make (const gchar * factoryname, const gchar * name)
@@ -650,7 +652,8 @@ __gst_element_factory_add_interface (GstElementFactory * elementfactory,
  *
  * Gets the #GList of #GstStaticPadTemplate for this factory.
  *
- * Returns: the padtemplates
+ * Returns: (transfer none) (element-type Gst.StaticPadTemplate): the
+ *     static pad templates
  */
 G_CONST_RETURN GList *
 gst_element_factory_get_static_pad_templates (GstElementFactory * factory)
@@ -685,7 +688,8 @@ gst_element_factory_get_uri_type (GstElementFactory * factory)
  * array, as it is still owned by the element factory. Use g_strdupv() to
  * make a copy of the protocol string array if you need to.
  *
- * Returns: the supported protocols or NULL
+ * Returns: (transfer none) (array zero-terminated=1): the supported protocols
+ *     or NULL
  */
 gchar **
 gst_element_factory_get_uri_protocols (GstElementFactory * factory)
@@ -826,8 +830,9 @@ element_filter (GstPluginFeature * feature, FilterData * data)
  * with a rank greater or equal to @minrank will be returned.
  * The list of factories is returned by decreasing rank.
  *
- * Returns: a #GList of #GstElementFactory elements. Use
- * gst_plugin_feature_list_free() after usage.
+ * Returns: (transfer full) (element-type Gst.ElementFactory): a #GList of
+ *     #GstElementFactory elements. Use gst_plugin_feature_list_free() after
+ *     usage.
  *
  * Since: 0.10.31
  */
@@ -854,7 +859,8 @@ gst_element_factory_list_get_elements (GstElementFactoryListType type,
 
 /**
  * gst_element_factory_list_filter:
- * @list: a #GList of #GstElementFactory to filter
+ * @list: (transfer none) (element-type Gst.ElementFactory): a #GList of
+ *     #GstElementFactory to filter
  * @caps: a #GstCaps
  * @direction: a #GstPadDirection to filter on
  * @subsetonly: whether to filter on caps subsets or not.
@@ -866,8 +872,9 @@ gst_element_factory_list_get_elements (GstElementFactoryListType type,
  * are a complete superset of @caps will be returned. Else any element
  * whose pad templates caps can intersect with @caps will be returned.
  *
- * Returns: a #GList of #GstElementFactory elements that match the
- * given requisits. Use #gst_plugin_feature_list_free after usage.
+ * Returns: (transfer full) (element-type Gst.ElementFactory): a #GList of
+ *     #GstElementFactory elements that match the given requisits.
+ *     Use #gst_plugin_feature_list_free after usage.
  *
  * Since: 0.10.31
  */

@@ -867,7 +867,8 @@ no_presets:
  *
  * Get a copy of preset names as a NULL terminated string array.
  *
- * Returns: list with names, ue g_strfreev() after usage.
+ * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*):
+ *     list with names, ue g_strfreev() after usage.
  *
  * Since: 0.10.20
  */
@@ -885,7 +886,8 @@ gst_preset_get_preset_names (GstPreset * preset)
  *
  * Get a the names of the GObject properties that can be used for presets.
  *
- * Returns: an array of property names which should be freed with g_strfreev() after use.
+ * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*): an
+ *   array of property names which should be freed with g_strfreev() after use.
  *
  * Since: 0.10.20
  */
@@ -1014,7 +1016,7 @@ gst_preset_set_meta (GstPreset * preset, const gchar * name, const gchar * tag,
  * @preset: a #GObject that implements #GstPreset
  * @name: preset name
  * @tag: meta data item name
- * @value: value
+ * @value: (out callee-allocates): value
  *
  * Gets the @value for an existing meta data @tag. Meta data @tag names can be
  * something like e.g. "comment". Returned values need to be released when done.

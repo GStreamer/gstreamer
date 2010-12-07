@@ -336,7 +336,7 @@ gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
 
 /**
  * gst_value_list_concat:
- * @dest: an uninitialized #GValue to take the result
+ * @dest: (out caller-allocates): an uninitialized #GValue to take the result
  * @value1: a #GValue
  * @value2: a #GValue
  *
@@ -408,7 +408,7 @@ gst_value_list_get_size (const GValue * value)
  * Gets the value that is a member of the list contained in @value and
  * has the index @index.
  *
- * Returns: the value at the given index
+ * Returns: (transfer none): the value at the given index
  */
 const GValue *
 gst_value_list_get_value (const GValue * value, guint index)
@@ -482,7 +482,7 @@ gst_value_array_get_size (const GValue * value)
  * Gets the value that is a member of the array contained in @value and
  * has the index @index.
  *
- * Returns: the value at the given index
+ * Returns: (transfer none): the value at the given index
  */
 const GValue *
 gst_value_array_get_value (const GValue * value, guint index)
@@ -1480,7 +1480,7 @@ gst_value_deserialize_fraction_range (GValue * dest, const gchar * s)
 /**
  * gst_value_set_caps:
  * @value: a GValue initialized to GST_TYPE_CAPS
- * @caps: the caps to set the value to
+ * @caps: (transfer none): the caps to set the value to
  *
  * Sets the contents of @value to @caps. A reference to the
  * provided @caps will be taken by the @value.
@@ -1503,7 +1503,7 @@ gst_value_set_caps (GValue * value, const GstCaps * caps)
  * #GstCaps will not be modified, therefore the caller must take one
  * before getting rid of the @value.
  *
- * Returns: the contents of @value
+ * Returns: (transfer none): the contents of @value
  */
 const GstCaps *
 gst_value_get_caps (const GValue * value)
@@ -1565,7 +1565,7 @@ gst_value_set_structure (GValue * value, const GstStructure * structure)
  *
  * Gets the contents of @value.
  *
- * Returns: the contents of @value
+ * Returns: (transfer none): the contents of @value
  *
  * Since: 0.10.15
  */
@@ -3370,7 +3370,7 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_union:
- * @dest: the destination value
+ * @dest: (out caller-allocates): the destination value
  * @value1: a value to union
  * @value2: another value to union
  *
@@ -3489,7 +3489,7 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_intersect:
- * @dest: a uninitialized #GValue that will hold the calculated
+ * @dest: (out caller-allocates): a uninitialized #GValue that will hold the calculated
  * intersection value
  * @value1: a value to intersect
  * @value2: another value to intersect
@@ -3575,7 +3575,8 @@ gst_value_register_intersect_func (GType type1, GType type2,
 
 /**
  * gst_value_subtract:
- * @dest: the destination value for the result if the subtraction is not empty
+ * @dest: (out caller-allocates): the destination value for the result if the
+ *     subtraction is not empty
  * @minuend: the value to subtract from
  * @subtrahend: the value to subtract
  *
@@ -3732,7 +3733,7 @@ gst_value_register (const GstValueTable * table)
 
 /**
  * gst_value_init_and_copy:
- * @dest: the target value
+ * @dest: (out caller-allocates): the target value
  * @src: the source value
  *
  * Initialises the target value to be of the same type as source and then copies
@@ -3755,7 +3756,9 @@ gst_value_init_and_copy (GValue * dest, const GValue * src)
  * tries to transform the given @value into a string representation that allows
  * getting back this string later on using gst_value_deserialize().
  *
- * Returns: the serialization for @value or NULL if none exists
+ * Free-function: g_free
+ *
+ * Returns: (transfer full): the serialization for @value or NULL if none exists
  */
 gchar *
 gst_value_serialize (const GValue * value)
@@ -3799,7 +3802,8 @@ gst_value_serialize (const GValue * value)
 
 /**
  * gst_value_deserialize:
- * @dest: #GValue to fill with contents of deserialization
+ * @dest: (out caller-allocates): #GValue to fill with contents of
+ *     deserialization
  * @src: string to deserialize
  *
  * Tries to deserialize a string into the type specified by the given GValue.
@@ -4261,7 +4265,7 @@ gst_value_set_date (GValue * value, const GDate * date)
  *
  * Gets the contents of @value.
  *
- * Returns: the contents of @value
+ * Returns: (transfer none): the contents of @value
  */
 const GDate *
 gst_value_get_date (const GValue * value)

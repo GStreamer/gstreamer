@@ -158,7 +158,7 @@ gst_task_pool_finalize (GObject * object)
  * Create a new default task pool. The default task pool will use a regular
  * GThreadPool for threads.
  *
- * Returns: a new #GstTaskPool. gst_object_unref() after usage.
+ * Returns: (transfer full): a new #GstTaskPool. gst_object_unref() after usage.
  *
  * Since: 0.10.24
  */
@@ -224,7 +224,7 @@ gst_task_pool_cleanup (GstTaskPool * pool)
  * gst_task_pool_push:
  * @pool: a #GstTaskPool
  * @func: the function to call
- * @user_data: data to pass to @func
+ * @user_data: (closure): data to pass to @func
  * @error: return location for an error
  *
  * Start the execution of a new thread from @pool.

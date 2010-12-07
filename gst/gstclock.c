@@ -254,7 +254,7 @@ gst_clock_single_shot_id_reinit (GstClock * clock, GstClockID id,
  *
  * Increase the refcount of given @id.
  *
- * Returns: The same #GstClockID with increased refcount.
+ * Returns: (transfer full): The same #GstClockID with increased refcount.
  *
  * MT safe.
  */
@@ -287,7 +287,7 @@ _gst_clock_id_free (GstClockID id)
 
 /**
  * gst_clock_id_unref:
- * @id: The #GstClockID to unref
+ * @id: (transfer full): The #GstClockID to unref
  *
  * Unref given @id. When the refcount reaches 0 the
  * #GstClockID will be freed.
@@ -317,7 +317,10 @@ gst_clock_id_unref (GstClockID id)
  * notification at the requested time. The single shot id should be
  * unreffed after usage.
  *
- * Returns: A #GstClockID that can be used to request the time notification.
+ * Free-function: gst_clock_id_unref
+ *
+ * Returns: (transfer full): a #GstClockID that can be used to request the
+ *     time notification.
  *
  * MT safe.
  */
@@ -341,7 +344,10 @@ gst_clock_new_single_shot_id (GstClock * clock, GstClockTime time)
  * will then be fired with the given @interval. @id should be unreffed
  * after usage.
  *
- * Returns: A #GstClockID that can be used to request the time notification.
+ * Free-function: gst_clock_id_unref
+ *
+ * Returns: (transfer full): a #GstClockID that can be used to request the
+ *     time notification.
  *
  * MT safe.
  */
@@ -408,7 +414,8 @@ gst_clock_id_get_time (GstClockID id)
 /**
  * gst_clock_id_wait
  * @id: The #GstClockID to wait on
- * @jitter: A pointer that will contain the jitter, can be %NULL.
+ * @jitter (out) (allow-none): a pointer that will contain the jitter,
+ *     can be %NULL.
  *
  * Perform a blocking wait on @id. 
  * @id should have been created with gst_clock_new_single_shot_id()
@@ -1027,10 +1034,10 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
 /**
  * gst_clock_get_calibration
  * @clock: a #GstClock 
- * @internal: a location to store the internal time
- * @external: a location to store the external time
- * @rate_num: a location to store the rate numerator
- * @rate_denom: a location to store the rate denominator
+ * @internal: (out) (allow-none): a location to store the internal time
+ * @external: (out) (allow-none): a location to store the external time
+ * @rate_num: (out) (allow-none): a location to store the rate numerator
+ * @rate_denom: (out) (allow-none): a location to store the rate denominator
  *
  * Gets the internal rate and reference time of @clock. See
  * gst_clock_set_calibration() for more information.
@@ -1088,7 +1095,7 @@ gst_clock_slave_callback (GstClock * master, GstClockTime time,
 /**
  * gst_clock_set_master
  * @clock: a #GstClock 
- * @master: a master #GstClock 
+ * @master: (allow-none): a master #GstClock 
  *
  * Set @master as the master clock for @clock. @clock will be automatically
  * calibrated so that gst_clock_get_time() reports the same time as the
@@ -1166,8 +1173,8 @@ not_supported:
  * Get the master clock that @clock is slaved to or %NULL when the clock is
  * not slaved to any master clock.
  *
- * Returns: a master #GstClock or %NULL when this clock is not slaved to a
- * master clock. Unref after usage.
+ * Returns: (transfer full): a master #GstClock or %NULL when this clock is
+ *     not slaved to a master clock. Unref after usage.
  *
  * MT safe.
  */
@@ -1314,7 +1321,7 @@ invalid:
  * @clock: a #GstClock 
  * @slave: a time on the slave
  * @master: a time on the master
- * @r_squared: a pointer to hold the result
+ * @r_squared: (out): a pointer to hold the result
  *
  * The time @master of the master clock and the time @slave of the slave
  * clock are added to the list of observations. If enough observations

@@ -439,7 +439,8 @@ _gst_debug_init (void)
  * @file: the file that emitted the message, usually the __FILE__ identifier
  * @function: the function that emitted the message
  * @line: the line from that the message was emitted, usually __LINE__
- * @object: the object this message relates to or NULL if none
+ * @object: (transfer none) (allow-none): the object this message relates to,
+ *     or NULL if none
  * @format: a printf style format string
  * @...: optional arguments for the format
  *
@@ -465,7 +466,8 @@ gst_debug_log (GstDebugCategory * category, GstDebugLevel level,
  * @file: the file that emitted the message, usually the __FILE__ identifier
  * @function: the function that emitted the message
  * @line: the line from that the message was emitted, usually __LINE__
- * @object: the object this message relates to or NULL if none
+ * @object: (transfer none) (allow-none): the object this message relates to,
+ *     or NULL if none
  * @format: a printf style format string
  * @args: optional arguments for the format
  *
@@ -734,7 +736,8 @@ gst_debug_print_segment (gpointer ptr)
  * terminals.
  * You need to free the string after use.
  *
- * Returns: a string containing the color definition
+ * Returns: (transfer full) (type gchar*): a string containing the color
+ *     definition
  */
 gchar *
 gst_debug_construct_term_color (guint colorinfo)
@@ -883,7 +886,8 @@ static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
  * @function: the function that emitted the message
  * @line: the line from that the message was emitted, usually __LINE__
  * @message: the actual message
- * @object: the object this message relates to or NULL if none
+ * @object: (transfer none) (allow-none): the object this message relates to,
+ *     or NULL if none
  * @unused: an unused variable, reserved for some user_data.
  *
  * The default logging handler used by GStreamer. Logging functions get called
@@ -1034,7 +1038,7 @@ gst_debug_level_get_name (GstDebugLevel level)
 /**
  * gst_debug_add_log_function:
  * @func: the function to use
- * @data: user data
+ * @data: (closure): user data
  *
  * Adds the logging function to the list of logging functions.
  * Be sure to use #G_GNUC_NO_INSTRUMENT on that function, it is needed.
@@ -1509,7 +1513,8 @@ gst_debug_category_get_description (GstDebugCategory * category)
  * may change anytime.
  * The caller has to free the list after use.
  *
- * Returns: the list of categories
+ * Returns: (transfer container) (element-type Gst.DebugCategory): the list of
+ *     debug categories
  */
 GSList *
 gst_debug_get_all_categories (void)

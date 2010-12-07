@@ -533,8 +533,10 @@ gst_poll_collect_winsock_events (GstPoll * set)
  * is possible to restart or flush a call to gst_poll_wait() with
  * gst_poll_restart() and gst_poll_set_flushing() respectively.
  *
- * Returns: a new #GstPoll, or %NULL in case of an error. Free with
- * gst_poll_free().
+ * Free-function: gst_poll_free
+ *
+ * Returns: (transfer full): a new #GstPoll, or %NULL in case of an error.
+ *     Free with gst_poll_free().
  *
  * Since: 0.10.18
  */
@@ -603,8 +605,10 @@ no_socket_pair:
  * A timeout is performed with gst_poll_wait(). Multiple timeouts can be
  * performed from different threads. 
  *
- * Returns: a new #GstPoll, or %NULL in case of an error. Free with
- * gst_poll_free().
+ * Free-function: gst_poll_free
+ *
+ * Returns: (transfer full): a new #GstPoll, or %NULL in case of an error.
+ *     Free with gst_poll_free().
  *
  * Since: 0.10.23
  */
@@ -626,7 +630,7 @@ done:
 
 /**
  * gst_poll_free:
- * @set: a file descriptor set.
+ * @set: (transfer full): a file descriptor set.
  *
  * Free a file descriptor set.
  *

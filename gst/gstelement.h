@@ -696,7 +696,7 @@ GType                   gst_element_get_type            (void);
  * For a nameless element, this returns NULL, which you can safely g_free()
  * as well.
  *
- * Returns: the name of @elem. g_free() after usage. MT safe. 
+ * Returns: (transfer full): the name of @elem. g_free() after usage. MT safe.
  *
  */
 #define                 gst_element_get_name(elem)      gst_object_get_name(GST_OBJECT_CAST(elem))
@@ -714,7 +714,7 @@ GType                   gst_element_get_type            (void);
  * gst_element_get_parent:
  * @elem: a #GstElement to get the parent of.
  *
- * Gets the parent of an element.
+ * Returns: (transfer full): the parent of an element.
  */
 #define                 gst_element_get_parent(elem)    gst_object_get_parent(GST_OBJECT_CAST(elem))
 

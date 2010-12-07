@@ -310,7 +310,7 @@ gst_registry_finalize (GObject * object)
  * Retrieves the default registry. The caller does not own a reference on the
  * registry, as it is alive as long as GStreamer is initialized.
  *
- * Returns: The default #GstRegistry.
+ * Returns: (transfer none): The default #GstRegistry.
  */
 GstRegistry *
 gst_registry_get_default (void)
@@ -375,7 +375,8 @@ was_added:
  *
  * Get the list of paths for the given registry.
  *
- * Returns: A Glist of paths as strings. g_list_free after use.
+ * Returns: (transfer container) (element-type char*): A #GList of paths as
+ *     strings. g_list_free after use.
  *
  * MT safe.
  */
@@ -399,7 +400,7 @@ gst_registry_get_path_list (GstRegistry * registry)
 /**
  * gst_registry_add_plugin:
  * @registry: the registry to add the plugin to
- * @plugin: the plugin to add
+ * @plugin: (transfer full): the plugin to add
  *
  * Add the plugin to the registry. The plugin-added signal will be emitted.
  * This function will sink @plugin.
@@ -484,7 +485,7 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
 /**
  * gst_registry_remove_plugin:
  * @registry: the registry to remove the plugin from
- * @plugin: the plugin to remove
+ * @plugin: (transfer none): the plugin to remove
  *
  * Remove the plugin from the registry.
  *
@@ -511,7 +512,7 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
 /**
  * gst_registry_add_feature:
  * @registry: the registry to add the plugin to
- * @feature: the feature to add
+ * @feature: (transfer full): the feature to add
  *
  * Add the feature to the registry. The feature-added signal will be emitted.
  * This function sinks @feature.
@@ -567,7 +568,7 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
 /**
  * gst_registry_remove_feature:
  * @registry: the registry to remove the feature from
- * @feature: the feature to remove
+ * @feature: (transfer none): the feature to remove
  *
  * Remove the feature from the registry.
  *
@@ -595,7 +596,7 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
  * @registry: registry to query
  * @filter: the filter to use
  * @first: only return first match
- * @user_data: user data passed to the filter function
+ * @user_data: (closure): user data passed to the filter function
  *
  * Runs a filter against all plugins in the registry and returns a #GList with
  * the results. If the first flag is set, only the first match is
@@ -603,7 +604,8 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
  * Every plugin is reffed; use gst_plugin_list_free() after use, which
  * will unref again.
  *
- * Returns: a #GList of #GstPlugin. Use gst_plugin_list_free() after usage.
+ * Returns: (transfer full) (element-type Gst.Plugin): a #GList of #GstPlugin.
+ *     Use gst_plugin_list_free() after usage.
  *
  * MT safe.
  */
@@ -714,15 +716,15 @@ gst_registry_get_typefind_factory_list (GstRegistry * registry)
  * @registry: registry to query
  * @filter: the filter to use
  * @first: only return first match
- * @user_data: user data passed to the filter function
+ * @user_data: (closure): user data passed to the filter function
  *
  * Runs a filter against all features of the plugins in the registry
  * and returns a GList with the results.
  * If the first flag is set, only the first match is
  * returned (as a list with a single object).
  *
- * Returns: a #GList of #GstPluginFeature. Use gst_plugin_feature_list_free()
- * after usage.
+ * Returns: (transfer full) (element-type Gst.PluginFeature): a #GList of
+ *     #GstPluginFeature. Use gst_plugin_feature_list_free() after usage.
  *
  * MT safe.
  */
@@ -754,8 +756,8 @@ gst_registry_feature_filter (GstRegistry * registry,
  * Find the plugin with the given name in the registry.
  * The plugin will be reffed; caller is responsible for unreffing.
  *
- * Returns: The plugin with the given name or NULL if the plugin was not found.
- * gst_object_unref() after usage.
+ * Returns: (transfer full): the plugin with the given name or NULL if the
+ *     plugin was not found. gst_object_unref() after usage.
  *
  * MT safe.
  */
@@ -788,8 +790,8 @@ gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
  *
  * Find the pluginfeature with the given name and type in the registry.
  *
- * Returns: The pluginfeature with the given name and type or NULL
- * if the plugin was not found. gst_object_unref() after usage.
+ * Returns: (transfer full): the pluginfeature with the given name and type
+ *     or NULL if the plugin was not found. gst_object_unref() after usage.
  *
  * MT safe.
  */
@@ -819,8 +821,8 @@ gst_registry_find_feature (GstRegistry * registry, const gchar * name,
  *
  * Retrieves a #GList of #GstPluginFeature of @type.
  *
- * Returns: a #GList of #GstPluginFeature of @type. Use
- * gst_plugin_feature_list_free() after usage.
+ * Returns: (transfer full) (element-type Gst.PluginFeature): a #GList of
+ *     #GstPluginFeature of @type. Use gst_plugin_feature_list_free() after use
  *
  * MT safe.
  */
@@ -853,7 +855,8 @@ gst_registry_get_feature_list (GstRegistry * registry, GType type)
  * Get a copy of all plugins registered in the given registry. The refcount
  * of each element in the list in incremented.
  *
- * Returns: a #GList of #GstPlugin. Use gst_plugin_list_free() after usage.
+ * Returns: (transfer full) (element-type Gst.Plugin): a #GList of #GstPlugin.
+ *     Use gst_plugin_list_free() after usage.
  *
  * MT safe.
  */
@@ -888,8 +891,8 @@ gst_registry_lookup_feature_locked (GstRegistry * registry, const char *name)
  *
  * Find a #GstPluginFeature with @name in @registry.
  *
- * Returns: a #GstPluginFeature with its refcount incremented, use
- * gst_object_unref() after usage.
+ * Returns: (transfer full): a #GstPluginFeature with its refcount incremented,
+ *     use gst_object_unref() after usage.
  *
  * MT safe.
  */
@@ -938,8 +941,8 @@ gst_registry_lookup_bn (GstRegistry * registry, const char *basename)
  * Look up a plugin in the given registry with the given filename.
  * If found, plugin is reffed.
  *
- * Returns: the #GstPlugin if found, or NULL if not. gst_object_unref()
- * after usage.
+ * Returns: (transfer full): the #GstPlugin if found, or NULL if not.
+ *     gst_object_unref() after usage.
  */
 GstPlugin *
 gst_registry_lookup (GstRegistry * registry, const char *filename)
@@ -1276,8 +1279,8 @@ _gst_plugin_feature_filter_plugin_name (GstPluginFeature * feature,
  *
  * Retrieves a #GList of features of the plugin with name @name.
  *
- * Returns: a #GList of #GstPluginFeature. Use gst_plugin_feature_list_free()
- * after usage.
+ * Returns: (transfer full) (element-type Gst.PluginFeature): a #GList of
+ *     #GstPluginFeature. Use gst_plugin_feature_list_free() after usage.
  */
 GList *
 gst_registry_get_feature_list_by_plugin (GstRegistry * registry,

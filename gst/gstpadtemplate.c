@@ -307,7 +307,7 @@ gst_static_pad_template_get_type (void)
  *
  * Converts a #GstStaticPadTemplate into a #GstPadTemplate.
  *
- * Returns: a new #GstPadTemplate.
+ * Returns: (transfer full): a new #GstPadTemplate.
  */
 /* FIXME0.11: rename to gst_pad_template_new_from_static_pad_template() */
 GstPadTemplate *
@@ -337,13 +337,14 @@ gst_static_pad_template_get (GstStaticPadTemplate * pad_template)
  * @name_template: the name template.
  * @direction: the #GstPadDirection of the template.
  * @presence: the #GstPadPresence of the pad.
- * @caps: a #GstCaps set for the template. The caps are taken ownership of.
+ * @caps: (transfer full): a #GstCaps set for the template. The caps are
+ *     taken ownership of.
  *
  * Creates a new pad template with a name according to the given template
  * and with the given arguments. This functions takes ownership of the provided
  * caps, so be sure to not use them afterwards.
  *
- * Returns: a new #GstPadTemplate.
+ * Returns: (transfer full): a new #GstPadTemplate.
  */
 GstPadTemplate *
 gst_pad_template_new (const gchar * name_template,
@@ -378,7 +379,7 @@ gst_pad_template_new (const gchar * name_template,
  *
  * Gets the capabilities of the static pad template.
  *
- * Returns: the #GstCaps of the static pad template.
+ * Returns: (transfer full): the #GstCaps of the static pad template.
  * Unref after usage. Since the core holds an additional
  * ref to the returned caps, use gst_caps_make_writable()
  * on the returned caps to modify it.
@@ -397,8 +398,8 @@ gst_static_pad_template_get_caps (GstStaticPadTemplate * templ)
  *
  * Gets the capabilities of the pad template.
  *
- * Returns: the #GstCaps of the pad template. If you need to keep a reference to
- * the caps, take a ref (see gst_caps_ref ()).
+ * Returns: (transfer none): the #GstCaps of the pad template. If you need to
+ *     keep a reference to the caps, take a ref (see gst_caps_ref ()).
  */
 GstCaps *
 gst_pad_template_get_caps (GstPadTemplate * templ)

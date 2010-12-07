@@ -529,7 +529,7 @@ gst_pad_get_property (GObject * object, guint prop_id,
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: a new #GstPad, or NULL in case of an error.
+ * Returns: (transfer full): a new #GstPad, or NULL in case of an error.
  *
  * MT safe.
  */
@@ -550,7 +550,7 @@ gst_pad_new (const gchar * name, GstPadDirection direction)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: a new #GstPad, or NULL in case of an error.
+ * Returns: (transfer full): a new #GstPad, or NULL in case of an error.
  */
 GstPad *
 gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
@@ -571,7 +571,7 @@ gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: a new #GstPad, or NULL in case of an error.
+ * Returns: (transfer full): a new #GstPad, or NULL in case of an error.
  */
 GstPad *
 gst_pad_new_from_static_template (GstStaticPadTemplate * templ,
@@ -1019,7 +1019,7 @@ gst_pad_is_active (GstPad * pad)
  * @blocked: boolean indicating whether the pad should be blocked or unblocked
  * @callback: #GstPadBlockCallback that will be called when the
  *            operation succeeds
- * @user_data: user data passed to the callback
+ * @user_data: (closure): user data passed to the callback
  * @destroy_data: #GDestroyNotify for user_data
  *
  * Blocks or unblocks the dataflow on a pad. The provided callback
@@ -1115,7 +1115,7 @@ had_right_state:
  * @blocked: boolean indicating whether the pad should be blocked or unblocked
  * @callback: #GstPadBlockCallback that will be called when the
  *            operation succeeds
- * @user_data: user data passed to the callback
+ * @user_data: (closure): user data passed to the callback
  *
  * Blocks or unblocks the dataflow on a pad. The provided callback
  * is called when the operation succeeds; this happens right before the next
@@ -1422,7 +1422,8 @@ gst_pad_set_query_type_function (GstPad * pad,
  * Get an array of supported queries that can be performed
  * on this pad.
  *
- * Returns: a zero-terminated array of #GstQueryType.
+ * Returns: (transfer none) (array zero-terminated=1): a zero-terminated array
+ *     of #GstQueryType.
  */
 const GstQueryType *
 gst_pad_get_query_types (GstPad * pad)
@@ -1457,8 +1458,9 @@ gst_pad_get_query_types_dispatcher (GstPad * pad, const GstQueryType ** data)
  * Invoke the default dispatcher for the query types on
  * the pad.
  *
- * Returns: an zero-terminated array of #GstQueryType, or NULL if none of the
- * internally-linked pads has a query types function.
+ * Returns: (transfer none) (array zero-terminated=1): a zero-terminated array
+ *     of #GstQueryType, or NULL if none of the internally-linked pads has a
+ *     query types function.
  */
 const GstQueryType *
 gst_pad_get_query_types_default (GstPad * pad)
@@ -2182,8 +2184,8 @@ gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ)
  *
  * Gets the template for @pad.
  *
- * Returns: the #GstPadTemplate from which this pad was instantiated, or %NULL
- * if this pad has no template.
+ * Returns: (transfer none): the #GstPadTemplate from which this pad was
+ *     instantiated, or %NULL if this pad has no template.
  *
  * FIXME: currently returns an unrefcounted padtemplate.
  */
@@ -2281,7 +2283,7 @@ done:
  * Gets the capabilities this pad can produce or consume. Preferred function if
  * one only wants to read or intersect the caps.
  *
- * Returns: the caps of the pad with incremented ref-count.
+ * Returns: (transfer full): the caps of the pad with incremented ref-count.
  *
  * Since: 0.10.26
  */
@@ -2314,7 +2316,7 @@ gst_pad_get_caps_reffed (GstPad * pad)
  * the pad's get_caps function;
  * this returns the pad template caps if not explicitly set.
  *
- * Returns: a newly allocated copy of the #GstCaps of this pad.
+ * Returns: (transfer full): a newly allocated copy of the #GstCaps of this pad
  *
  * MT safe.
  */
@@ -2340,7 +2342,7 @@ gst_pad_get_caps (GstPad * pad)
  * Gets the capabilities of the peer connected to this pad. Preferred function
  * if one only wants to read or intersect the caps.
  *
- * Returns: the caps of the pad with incremented ref-count.
+ * Returns: (transfer full): the caps of the pad with incremented ref-count
  *
  * Since: 0.10.26
  */
@@ -2383,9 +2385,9 @@ no_peer:
  * Gets the capabilities of the peer connected to this pad. Similar to
  * gst_pad_get_caps().
  *
- * Returns: a newly allocated copy of the #GstCaps of the peer pad. Use
- * gst_caps_unref() to get rid of it. This function returns %NULL if there is
- * no peer pad.
+ * Returns: (transfer full): a newly allocated copy of the #GstCaps of the
+ *     peer pad. Use gst_caps_unref() to get rid of it. This function
+ *     returns %NULL if there is no peer pad.
  */
 GstCaps *
 gst_pad_peer_get_caps (GstPad * pad)
@@ -2649,7 +2651,7 @@ no_peer:
 /**
  * gst_pad_set_caps:
  * @pad: a  #GstPad to set the capabilities of.
- * @caps: a #GstCaps to set.
+ * @caps: (transfer none): a #GstCaps to set.
  *
  * Sets the capabilities of this pad. The caps must be fixed. Any previous
  * caps on the pad will be unreffed. This function refs the caps so you should
@@ -2792,8 +2794,8 @@ not_accepted:
  *
  * Gets the capabilities for @pad's template.
  *
- * Returns: the #GstCaps of this pad template. If you intend to keep a
- * reference on the caps, make a copy (see gst_caps_copy ()).
+ * Returns: (transfer none): the #GstCaps of this pad template. If you intend
+ *     to keep a reference on the caps, make a copy (see gst_caps_copy ()).
  */
 const GstCaps *
 gst_pad_get_pad_template_caps (GstPad * pad)
@@ -2815,7 +2817,7 @@ gst_pad_get_pad_template_caps (GstPad * pad)
  * Gets the peer of @pad. This function refs the peer pad so
  * you need to unref it after use.
  *
- * Returns: the peer #GstPad. Unref after usage.
+ * Returns: (transfer full): the peer #GstPad. Unref after usage.
  *
  * MT safe.
  */
@@ -2846,8 +2848,9 @@ gst_pad_get_peer (GstPad * pad)
  * calling gst_pad_get_caps() on @pad and its peer. The caller owns a reference
  * on the resulting caps.
  *
- * Returns: the allowed #GstCaps of the pad link. Unref the caps when you no
- * longer need it. This function returns NULL when @pad has no peer.
+ * Returns: (transfer full): the allowed #GstCaps of the pad link. Unref the
+ *     caps when you no longer need it. This function returns NULL when @pad
+ *     has no peer.
  *
  * MT safe.
  */
@@ -2905,9 +2908,9 @@ no_peer:
  * always negotiated before sinkpads so it is possible that the negotiated caps
  * on the srcpad do not match the negotiated caps of the peer.
  *
- * Returns: the negotiated #GstCaps of the pad link.  Unref the caps when
- * you no longer need it. This function returns NULL when the @pad has no
- * peer or is not negotiated yet.
+ * Returns: (transfer full): the negotiated #GstCaps of the pad link. Unref
+ *     the caps when you no longer need it. This function returns NULL when
+ *     the @pad has no peer or is not negotiated yet.
  *
  * MT safe.
  */
@@ -3174,8 +3177,8 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
  * @pad: a source #GstPad
  * @offset: the offset of the new buffer in the stream
  * @size: the size of the new buffer
- * @caps: the caps of the new buffer
- * @buf: a newly allocated buffer
+ * @caps: (transfer none): the caps of the new buffer
+ * @buf: (out callee-allocates): a newly allocated buffer
  *
  * In addition to the function gst_pad_alloc_buffer(), this function
  * automatically calls gst_pad_set_caps() when the caps of the
@@ -3331,8 +3334,11 @@ no_parent:
  * Each #GstPad element yielded by the iterator will have its refcount increased,
  * so unref after use.
  *
- * Returns: a new #GstIterator of #GstPad or %NULL when the pad does not have an
- * iterator function configured. Use gst_iterator_free() after usage.
+ * Free-function: gst_iterator_free
+ *
+ * Returns: (transfer full): a new #GstIterator of #GstPad or %NULL when the
+ *     pad does not have an iterator function configured. Use
+ *     gst_iterator_free() after usage.
  *
  * Since: 0.10.21
  */
@@ -3369,7 +3375,8 @@ add_unref_pad_to_list (GstPad * pad, GList ** list)
  *
  * The caller must free this list after use with g_list_free().
  *
- * Returns: a newly allocated #GList of pads, or NULL if the pad has no parent.
+ * Returns: (transfer full) (element-type Gst.Pad): a newly allocated #GList
+ *     of pads, or NULL if the pad has no parent.
  *
  * Not MT safe.
  *
@@ -3466,7 +3473,8 @@ no_parent:
  *
  * Not MT safe.
  *
- * Returns: a newly allocated #GList of pads, free with g_list_free().
+ * Returns: (transfer full) (element-type Gst.Pad): a newly allocated #GList
+ *     of pads, free with g_list_free().
  * 
  * Deprecated: This function does not ref the pads in the list so that they
  * could become invalid by the time the application accesses them. It's also
@@ -3584,7 +3592,7 @@ no_iter:
 /**
  * gst_pad_event_default:
  * @pad: a #GstPad to call the default event handler on.
- * @event: the #GstEvent to handle.
+ * @event: (transfer full): the #GstEvent to handle.
  *
  * Invokes the default event handler for the given pad. End-of-stream and
  * discontinuity events are handled specially, and then the event is sent to all
@@ -3620,7 +3628,7 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
  * gst_pad_dispatcher:
  * @pad: a #GstPad to dispatch.
  * @dispatch: the #GstPadDispatcherFunction to call.
- * @data: gpointer user data passed to the dispatcher function.
+ * @data: (closure): gpointer user data passed to the dispatcher function.
  *
  * Invokes the given dispatcher function on each respective peer of
  * all pads that are internally linked to the given pad.
@@ -3688,7 +3696,7 @@ no_iter:
 /**
  * gst_pad_query:
  * @pad: a #GstPad to invoke the default query on.
- * @query: the #GstQuery to perform.
+ * @query: (transfer none): the #GstQuery to perform.
  *
  * Dispatches a query to a pad. The query should have been allocated by the
  * caller via one of the type-specific allocation functions. The element that
@@ -3728,7 +3736,7 @@ no_func:
 /**
  * gst_pad_peer_query:
  * @pad: a #GstPad to invoke the peer query on.
- * @query: the #GstQuery to perform.
+ * @query: (transfer none): the #GstQuery to perform.
  *
  * Performs gst_pad_query() on the peer of @pad.
  *
@@ -3778,7 +3786,7 @@ no_peer:
 /**
  * gst_pad_query_default:
  * @pad: a #GstPad to call the default query handler on.
- * @query: the #GstQuery to handle.
+ * @query: (transfer none): the #GstQuery to handle.
  *
  * Invokes the default query handler for the given pad.
  * The query is sent to all pads internally linked to @pad. Note that
@@ -4322,7 +4330,8 @@ no_function:
 /**
  * gst_pad_chain:
  * @pad: a sink #GstPad, returns GST_FLOW_ERROR if not.
- * @buffer: the #GstBuffer to send, return GST_FLOW_ERROR if not.
+ * @buffer: (transfer full): the #GstBuffer to send, return GST_FLOW_ERROR
+ *     if not.
  *
  * Chain a buffer to @pad.
  *
@@ -4358,7 +4367,8 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
 /**
  * gst_pad_chain_list:
  * @pad: a sink #GstPad, returns GST_FLOW_ERROR if not.
- * @list: the #GstBufferList to send, return GST_FLOW_ERROR if not.
+ * @list: (transfer full): the #GstBufferList to send, return GST_FLOW_ERROR
+ *     if not.
  *
  * Chain a bufferlist to @pad.
  *
@@ -4594,7 +4604,8 @@ _priv_gst_pad_invalidate_cache (GstPad * pad)
 /**
  * gst_pad_push:
  * @pad: a source #GstPad, returns #GST_FLOW_ERROR if not.
- * @buffer: the #GstBuffer to push returns GST_FLOW_ERROR if not.
+ * @buffer: (transfer full): the #GstBuffer to push returns GST_FLOW_ERROR
+ *     if not.
  *
  * Pushes a buffer to the peer of @pad.
  *
@@ -4691,7 +4702,8 @@ slow_path:
 /**
  * gst_pad_push_list:
  * @pad: a source #GstPad, returns #GST_FLOW_ERROR if not.
- * @list: the #GstBufferList to push returns GST_FLOW_ERROR if not.
+ * @list: (transfer full): the #GstBufferList to push returns GST_FLOW_ERROR
+ *     if not.
  *
  * Pushes a buffer list to the peer of @pad.
  *
@@ -4965,7 +4977,8 @@ not_negotiated:
  * @pad: a src #GstPad, returns #GST_FLOW_ERROR if not.
  * @offset: The start offset of the buffer
  * @size: The length of the buffer
- * @buffer: a pointer to hold the #GstBuffer, returns #GST_FLOW_ERROR if %NULL.
+ * @buffer: (out callee-allocates): a pointer to hold the #GstBuffer,
+ *     returns #GST_FLOW_ERROR if %NULL.
  *
  * When @pad is flushing this function returns #GST_FLOW_WRONG_STATE
  * immediatly and @buffer is %NULL.
@@ -4997,7 +5010,8 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
  * @pad: a sink #GstPad, returns GST_FLOW_ERROR if not.
  * @offset: The start offset of the buffer
  * @size: The length of the buffer
- * @buffer: a pointer to hold the #GstBuffer, returns GST_FLOW_ERROR if %NULL.
+ * @buffer: (out callee-allocates): a pointer to hold the #GstBuffer, returns
+ *     GST_FLOW_ERROR if %NULL.
  *
  * Pulls a @buffer from the peer pad.
  *
@@ -5115,7 +5129,7 @@ not_negotiated:
 /**
  * gst_pad_push_event:
  * @pad: a #GstPad to push the event to.
- * @event: the #GstEvent to send to the pad.
+ * @event: (transfer full): the #GstEvent to send to the pad.
  *
  * Sends the event to the peer of the given pad. This function is
  * mainly used by elements to send events to their peer
@@ -5236,7 +5250,7 @@ flushed:
 /**
  * gst_pad_send_event:
  * @pad: a #GstPad to send the event to.
- * @event: the #GstEvent to send to the pad.
+ * @event: (transfer full): the #GstEvent to send to the pad.
  *
  * Sends the event to the pad. This function can be used
  * by applications to send events in the pipeline.

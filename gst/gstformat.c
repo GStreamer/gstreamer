@@ -247,7 +247,7 @@ gst_format_get_details (GstFormat format)
  * Iterate all the registered formats. The format definition is read
  * only.
  *
- * Returns: A GstIterator of #GstFormatDefinition.
+ * Returns: (transfer full): a GstIterator of #GstFormatDefinition.
  */
 GstIterator *
 gst_format_iterate_definitions (void)

@@ -78,7 +78,7 @@ gst_index_factory_finalize (GObject * object)
  *
  * Create a new indexfactory with the given parameters
  *
- * Returns: a new #GstIndexFactory.
+ * Returns: (transfer full): a new #GstIndexFactory.
  */
 GstIndexFactory *
 gst_index_factory_new (const gchar * name, const gchar * longdesc, GType type)
@@ -109,6 +109,7 @@ gst_index_factory_destroy (GstIndexFactory * factory)
   g_return_if_fail (factory != NULL);
 
   /* we don't free the struct bacause someone might  have a handle to it.. */
+  /* FIXME: gst_index_factory_destroy */
 }
 
 /**
@@ -117,7 +118,7 @@ gst_index_factory_destroy (GstIndexFactory * factory)
  *
  * Search for an indexfactory of the given name.
  *
- * Returns: #GstIndexFactory if found, NULL otherwise
+ * Returns: (transfer full): #GstIndexFactory if found, NULL otherwise
  */
 GstIndexFactory *
 gst_index_factory_find (const gchar * name)
@@ -143,7 +144,7 @@ gst_index_factory_find (const gchar * name)
  * Create a new #GstIndex instance from the
  * given indexfactory.
  *
- * Returns: A new #GstIndex instance.
+ * Returns: (transfer full): a new #GstIndex instance.
  */
 GstIndex *
 gst_index_factory_create (GstIndexFactory * factory)
@@ -173,7 +174,7 @@ gst_index_factory_create (GstIndexFactory * factory)
  * Create a new #GstIndex instance from the
  * indexfactory with the given name.
  *
- * Returns: A new #GstIndex instance.
+ * Returns: (transfer full): a new #GstIndex instance.
  */
 GstIndex *
 gst_index_factory_make (const gchar * name)

@@ -297,7 +297,7 @@ DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  * threading system as one of the very first things in your program
  * (see the example at the beginning of this section).
  *
- * Returns: a pointer to GStreamer's option group.
+ * Returns: (transfer full): a pointer to GStreamer's option group.
  */
 
 GOptionGroup *
@@ -398,7 +398,7 @@ gst_init_get_option_group (void)
 
 /**
  * gst_init_check:
- * @argc: (inout): pointer to application's argc
+ * @argc: (inout) (allow-none): pointer to application's argc
  * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
  * @err: pointer to a #GError to which a message will be posted on error
  *
@@ -457,7 +457,7 @@ gst_init_check (int *argc, char **argv[], GError ** err)
 
 /**
  * gst_init:
- * @argc: (inout): pointer to application's argc
+ * @argc: (inout) (allow-none): pointer to application's argc
  * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
  *
  * Initializes the GStreamer library, setting up internal path lists,
@@ -1125,10 +1125,10 @@ gst_deinit (void)
 
 /**
  * gst_version:
- * @major: pointer to a guint to store the major version number
- * @minor: pointer to a guint to store the minor version number
- * @micro: pointer to a guint to store the micro version number
- * @nano:  pointer to a guint to store the nano version number
+ * @major: (out): pointer to a guint to store the major version number
+ * @minor: (out): pointer to a guint to store the minor version number
+ * @micro: (out): pointer to a guint to store the micro version number
+ * @nano:  (out): pointer to a guint to store the nano version number
  *
  * Gets the version number of the GStreamer library.
  */
@@ -1152,7 +1152,8 @@ gst_version (guint * major, guint * minor, guint * micro, guint * nano)
  * This function returns a string that is useful for describing this version
  * of GStreamer to the outside world: user agent strings, logging, ...
  *
- * Returns: a newly allocated string describing this version of GStreamer.
+ * Returns: (transfer full): a newly allocated string describing this version
+ *     of GStreamer.
  */
 
 gchar *

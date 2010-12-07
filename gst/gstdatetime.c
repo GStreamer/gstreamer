@@ -152,7 +152,9 @@
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @secs. The #GstDateTime is in the local timezone.
  *
- * Return value: the newly created #GstDateTime
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime
  *
  * Since: 0.10.31
  */
@@ -164,7 +166,9 @@
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @secs. The #GstDateTime is in the UTC timezone.
  *
- * Return value: the newly created #GstDateTime
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime
  *
  * Since: 0.10.31
  */
@@ -186,7 +190,9 @@
  * 1 to 31, @hour from 0 to 23, @minutes and @seconds from 0 to 59 and
  * @microsecond from 0 to 999999.
  *
- * Return value: the newly created #GstDateTime
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime
  *
  * Since: 0.10.31
  */
@@ -213,7 +219,9 @@
  * some fractional timezones, while it still keeps the readability of
  * represeting it in hours for most timezones.
  *
- * Return value: the newly created #GstDateTime
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime
  *
  * Since: 0.10.31
  */
@@ -223,8 +231,10 @@
  *
  * Creates a new #GstDateTime representing the current date and time.
  *
- * Return value: the newly created #GstDateTime which should be freed with
- *   gst_date_time_unref().
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime which should
+ *     be freed with gst_date_time_unref().
  *
  * Since: 0.10.31
  */
@@ -235,8 +245,10 @@
  * Creates a new #GstDateTime that represents the current instant at Universal
  * coordinated time.
  *
- * Return value: the newly created #GstDateTime which should be freed with
- *   gst_date_time_unref().
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime which should
+ *   be freed with gst_date_time_unref().
  *
  * Since: 0.10.31
  */
@@ -767,7 +779,7 @@ gst_date_time_free (GstDateTime * datetime)
  *
  * Atomically increments the reference count of @datetime by one.
  *
- * Return value: the reference @datetime
+ * Return value: (transfer full): the reference @datetime
  *
  * Since: 0.10.31
  */
@@ -782,7 +794,7 @@ gst_date_time_ref (GstDateTime * datetime)
 
 /**
  * gst_date_time_unref:
- * @datetime: a #GstDateTime
+ * @datetime: (transfer full): a #GstDateTime
  *
  * Atomically decrements the reference count of @datetime by one.  When the
  * reference count reaches zero, the structure is freed.
