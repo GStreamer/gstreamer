@@ -638,8 +638,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       }
       play_bin->video_sink = g_value_get_object (value);
       if (play_bin->video_sink != NULL) {
-        gst_object_ref (play_bin->video_sink);
-        gst_object_sink (GST_OBJECT_CAST (play_bin->video_sink));
+        gst_object_ref_sink (play_bin->video_sink);
       }
       /* when changing the videosink, we just remove the
        * video pipeline from the cache so that it will be
@@ -656,8 +655,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       }
       play_bin->audio_sink = g_value_get_object (value);
       if (play_bin->audio_sink != NULL) {
-        gst_object_ref (play_bin->audio_sink);
-        gst_object_sink (GST_OBJECT_CAST (play_bin->audio_sink));
+        gst_object_ref_sink (play_bin->audio_sink);
       }
       g_hash_table_remove (play_bin->cache, "abin");
       break;
@@ -668,8 +666,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
 
       /* Take ownership */
       if (pending_visualisation) {
-        gst_object_ref (pending_visualisation);
-        gst_object_sink (pending_visualisation);
+        gst_object_ref_sink (pending_visualisation);
       }
 
       /* Do we already have a visualisation change pending ? */

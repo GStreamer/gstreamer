@@ -3294,8 +3294,7 @@ gst_decode_pad_init (GstDecodePad * pad)
   pad->blocked = FALSE;
   pad->exposed = FALSE;
   pad->drained = FALSE;
-  gst_object_ref (pad);
-  gst_object_sink (pad);
+  gst_object_ref_sink (pad);
 }
 
 static void

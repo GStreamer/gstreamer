@@ -1159,8 +1159,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
 
   ret = g_object_new (GST_TYPE_OGG_PAD, NULL);
   /* we own this one */
-  gst_object_ref (ret);
-  gst_object_sink (ret);
+  gst_object_ref_sink (ret);
 
   GST_PAD_DIRECTION (ret) = GST_PAD_SRC;
   gst_ogg_pad_mark_discont (ret);
