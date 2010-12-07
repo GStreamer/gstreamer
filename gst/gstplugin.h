@@ -273,53 +273,6 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
 G_END_DECLS
 
 /**
- * GST_PLUGIN_DEFINE_STATIC:
- * @major: major version number of the gstreamer-core that plugin was compiled for
- * @minor: minor version number of the gstreamer-core that plugin was compiled for
- * @name: short, but unique name of the plugin
- * @description: information about the purpose of the plugin
- * @init: function pointer to the plugin_init method with the signature of <code>static gboolean plugin_init (GstPlugin * plugin)</code>.
- * @version: full version string (e.g. VERSION from config.h)
- * @license: under which licence the package has been released, e.g. GPL, LGPL.
- * @package: the package-name (e.g. PACKAGE_NAME from config.h)
- * @origin: a description from where the package comes from (e.g. the homepage URL)
- *
- * This macro needs to be used to define the entry point and meta data of a
- * local plugin. One would use this macro to define a local plugin that can only
- * be used by the own application.
- *
- * The macro uses a define named PACKAGE for the #GstPluginDesc.source field.
- *
- * Deprecated: Use gst_plugin_register_static() instead. This macro was
- * deprecated because it uses constructors, which is a compiler feature not
- * available on all compilers.
- *
- */
-/* We don't have deprecation guards here on purpose, it's enough to have
- * deprecation guards around _gst_plugin_register_static(), and will result in
- * much better error messages when compiling with -DGST_DISABLE_DEPRECATED */
-#define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,package,origin)  \
-static void GST_GNUC_CONSTRUCTOR			\
-_gst_plugin_static_init__ ##init (void)			\
-{							\
-  static GstPluginDesc plugin_desc_ = {			\
-    major,						\
-    minor,						\
-    name,						\
-    (gchar *) description,				\
-    init,						\
-    version,						\
-    license,						\
-    PACKAGE,						\
-    package,						\
-    origin,						\
-    NULL,						\
-    GST_PADDING_INIT				        \
-  };							\
-  _gst_plugin_register_static (&plugin_desc_);		\
-}
-
-/**
  * GST_LICENSE_UNKNOWN:
  *
  * To be used in GST_PLUGIN_DEFINE or GST_PLUGIN_DEFINE_STATIC if usure about
