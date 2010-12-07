@@ -183,23 +183,6 @@ gst_base_camera_src_get_allowed_input_caps (GstBaseCameraSrc * self)
 }
 
 /**
- * gst_base_camera_src_finish_image_capture:
- * @self: camerasrc object
- *
- * Perform finishing operations after image capture is done and
- * returning back to view finder mode.
- */
-void
-gst_base_camera_src_finish_image_capture (GstBaseCameraSrc * self)
-{
-  GstBaseCameraSrcClass *bclass = GST_BASE_CAMERA_SRC_GET_CLASS (self);
-
-  if (bclass->finish_image_capture) {
-    bclass->finish_image_capture (self);
-  }
-}
-
-/**
  * gst_base_camera_src_find_better_framerate:
  * @self: camerasrc object
  * @st: structure that contains framerate candidates

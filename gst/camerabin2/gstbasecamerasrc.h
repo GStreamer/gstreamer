@@ -126,10 +126,6 @@ struct _GstBaseCameraSrcClass
   /* */
   GstCaps *   (*get_allowed_input_caps) (GstBaseCameraSrc * self);
 
-  /* optional */
-  void        (*finish_image_capture) (GstBaseCameraSrc * self);
-
-
   void (*private_start_capture) (GstBaseCameraSrc * src);
   void (*private_stop_capture) (GstBaseCameraSrc * src);
   gboolean (*start_capture) (GstBaseCameraSrc * src);
@@ -150,7 +146,6 @@ GstColorBalance * gst_base_camera_src_get_color_balance (GstBaseCameraSrc *self)
 gboolean gst_base_camera_src_set_mode (GstBaseCameraSrc *self, GstCameraBinMode mode);
 void gst_base_camera_src_setup_zoom (GstBaseCameraSrc * self);
 GstCaps * gst_base_camera_src_get_allowed_input_caps (GstBaseCameraSrc * self);
-void gst_base_camera_src_finish_image_capture (GstBaseCameraSrc * self);
 const GValue * gst_base_camera_src_find_better_framerate (
     GstBaseCameraSrc * self, GstStructure * st, const GValue * orig_framerate);
 

@@ -952,27 +952,6 @@ set_capsfilter_caps (GstV4l2CameraSrc * self, GstCaps * new_caps)
   GST_INFO_OBJECT (self, "udpated");
 }
 
-static void
-gst_v4l2_camera_src_finish_image_capture (GstBaseCameraSrc * bcamsrc)
-{
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (bcamsrc);
-
-  if (self->image_capture_caps) {
-    /* If we used specific caps for image capture we need to
-       restore the caps and zoom/crop for view finder mode */
-    if (self->src_zoom_crop) {
-      GST_DEBUG_OBJECT (self, "resetting crop in camerabin");
-      g_object_set (self->src_zoom_crop, "left", 0, "right", 0,
-          "top", 0, "bottom", 0, NULL);
-    }
-    self->base_crop_left = 0;
-    self->base_crop_right = 0;
-    self->base_crop_top = 0;
-    self->base_crop_bottom = 0;
-    set_capsfilter_caps (self, self->view_finder_caps);
-  }
-}
-
 static gboolean
 gst_v4l2_camera_src_start_capture (GstBaseCameraSrc * camerasrc)
 {
@@ -1049,8 +1028,6 @@ gst_v4l2_camera_src_class_init (GstV4l2CameraSrcClass * klass)
   gstbasecamerasrc_class->set_mode = gst_v4l2_camera_src_set_mode;
   gstbasecamerasrc_class->get_allowed_input_caps =
       gst_v4l2_camera_src_get_allowed_input_caps;
-  gstbasecamerasrc_class->finish_image_capture =
-      gst_v4l2_camera_src_finish_image_capture;
   gstbasecamerasrc_class->start_capture = gst_v4l2_camera_src_start_capture;
   gstbasecamerasrc_class->stop_capture = gst_v4l2_camera_src_stop_capture;
 }
