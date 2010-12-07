@@ -60,6 +60,7 @@ GstBase-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_MAJORMINO
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		-I$(top_srcdir) \
+		-I$(top_srcdir)/libs \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
 		--library=libgstbase-0.11.la \

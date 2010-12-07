@@ -120,6 +120,7 @@ GstCheck-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_MAJORMI
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		-I$(top_srcdir) \
+		-I$(top_srcdir)/libs \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
 		--library=libgstcheck-0.11.la \

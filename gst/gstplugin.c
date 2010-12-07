@@ -570,7 +570,8 @@ _gst_plugin_fault_handler_sighandler (int signum)
       g_print ("%s\n\n", _gst_plugin_fault_handler_filename);
       g_print ("Please either:\n");
       g_print ("- remove it and restart.\n");
-      g_print ("- run with --gst-disable-segtrap and debug.\n");
+      g_print
+          ("- run with --gst-disable-segtrap --gst-disable-registry-fork and debug.\n");
       exit (-1);
       break;
     default:
