@@ -1567,17 +1567,13 @@ again:
 
   /* we keep these elements, we configure all in configure_transport when the
    * server told us to really use the UDP ports. */
-  stream->udpsrc[0] = gst_object_ref (udpsrc0);
-  stream->udpsrc[1] = gst_object_ref (udpsrc1);
+  stream->udpsrc[0] = gst_object_ref_sink (udpsrc0);
+  stream->udpsrc[1] = gst_object_ref_sink (udpsrc1);
 
   /* keep track of next available port number when we have a range
    * configured */
   if (src->next_port_num != 0)
     src->next_port_num = tmp_rtcp + 1;
-
-  /* they are ours now */
-  gst_object_sink (udpsrc0);
-  gst_object_sink (udpsrc1);
 
   return TRUE;
 
@@ -2611,8 +2607,7 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
       goto no_element;
 
     /* take ownership */
-    gst_object_ref (stream->udpsrc[0]);
-    gst_object_sink (stream->udpsrc[0]);
+    gst_object_ref_sink (stream->udpsrc[0]);
 
     /* change state */
     gst_element_set_state (stream->udpsrc[0], GST_STATE_PAUSED);
@@ -2627,8 +2622,7 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
       goto no_element;
 
     /* take ownership */
-    gst_object_ref (stream->udpsrc[1]);
-    gst_object_sink (stream->udpsrc[1]);
+    gst_object_ref_sink (stream->udpsrc[1]);
 
     gst_element_set_state (stream->udpsrc[1], GST_STATE_PAUSED);
   }
