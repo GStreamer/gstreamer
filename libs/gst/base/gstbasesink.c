@@ -945,9 +945,11 @@ gst_base_sink_get_ts_offset (GstBaseSink * sink)
  *
  * The #GstCaps on the buffer can be used to determine the type of the buffer.
  *
- * Returns: a #GstBuffer. gst_buffer_unref() after usage. This function returns
- * NULL when no buffer has arrived in the sink yet or when the sink is not in
- * PAUSED or PLAYING.
+ * Free-function: gst_buffer_unref
+ *
+ * Returns: (transfer full): a #GstBuffer. gst_buffer_unref() after usage.
+ *     This function returns NULL when no buffer has arrived in the sink yet
+ *     or when the sink is not in PAUSED or PLAYING.
  *
  * Since: 0.10.15
  */
@@ -1069,10 +1071,10 @@ gst_base_sink_get_latency (GstBaseSink * sink)
 /**
  * gst_base_sink_query_latency:
  * @sink: the sink
- * @live: if the sink is live
- * @upstream_live: if an upstream element is live
- * @min_latency: the min latency of the upstream elements
- * @max_latency: the max latency of the upstream elements
+ * @live: (out) (allow-none): if the sink is live
+ * @upstream_live: (out) (allow-none): if an upstream element is live
+ * @min_latency: (out) (allow-none): the min latency of the upstream elements
+ * @max_latency: (out) (allow-none): the max latency of the upstream elements
  *
  * Query the sink for the latency parameters. The latency will be queried from
  * the upstream elements. @live will be TRUE if @sink is configured to
@@ -2054,7 +2056,7 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
  * gst_base_sink_wait_clock:
  * @sink: the sink
  * @time: the running_time to be reached
- * @jitter: the jitter to be filled with time diff (can be NULL)
+ * @jitter: (out) (allow-none): the jitter to be filled with time diff, or NULL
  *
  * This function will block until @time is reached. It is usually called by
  * subclasses that use their own internal synchronisation.
@@ -2164,10 +2166,10 @@ no_clock:
  * This function should only be called with the PREROLL_LOCK held, like in the
  * render function.
  *
- * Since: 0.10.11
- *
  * Returns: #GST_FLOW_OK if the preroll completed and processing can
  * continue. Any other return value should be returned from the render vmethod.
+ *
+ * Since: 0.10.11
  */
 GstFlowReturn
 gst_base_sink_wait_preroll (GstBaseSink * sink)
@@ -2202,7 +2204,7 @@ step_unlocked:
 /**
  * gst_base_sink_do_preroll:
  * @sink: the sink
- * @obj: the object that caused the preroll
+ * @obj: (transfer none): the mini object that caused the preroll
  *
  * If the @sink spawns its own thread for pulling buffers from upstream it
  * should call this method after it has pulled a buffer. If the element needed
@@ -2211,10 +2213,10 @@ step_unlocked:
  *
  * This function should be called with the PREROLL_LOCK held.
  *
- * Since 0.10.22
- *
  * Returns: #GST_FLOW_OK if the preroll completed and processing can
  * continue. Any other return value should be returned from the render vmethod.
+ *
+ * Since 0.10.22
  */
 GstFlowReturn
 gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
@@ -2259,7 +2261,7 @@ preroll_failed:
  * gst_base_sink_wait_eos:
  * @sink: the sink
  * @time: the running_time to be reached
- * @jitter: the jitter to be filled with time diff (can be NULL)
+ * @jitter: (out) (allow-none): the jitter to be filled with time diff, or NULL
  *
  * This function will block until @time is reached. It is usually called by
  * subclasses that use their own internal synchronisation but want to let the
@@ -2271,9 +2273,9 @@ preroll_failed:
  * The @time argument should be the running_time of when the EOS should happen
  * and will be adjusted with any latency and offset configured in the sink.
  *
- * Since 0.10.15
- *
  * Returns: #GstFlowReturn
+ *
+ * Since 0.10.15
  */
 GstFlowReturn
 gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,

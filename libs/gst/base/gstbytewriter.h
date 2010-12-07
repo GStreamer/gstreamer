@@ -154,7 +154,7 @@ gboolean gst_byte_writer_put_string_utf32 (GstByteWriter *writer, const guint32 
 /**
  * gst_byte_writer_put_string:
  * @writer: #GstByteWriter instance
- * @data: Null terminated string
+ * @data: (in) (array zero-terminated=1): Null terminated string
  *
  * Write a NUL-terminated string to @writer (including the terminator). The
  * string is assumed to be in an 8-bit encoding (e.g. ASCII,UTF-8 or

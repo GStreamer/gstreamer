@@ -43,7 +43,9 @@
  *
  * Create a new #GstBitReader instance, which will read from @data.
  *
- * Returns: a new #GstBitReader instance
+ * Free-function: gst_bit_reader_free
+ *
+ * Returns: (transfer full): a new #GstBitReader instance
  *
  * Since: 0.10.22
  */
@@ -65,7 +67,9 @@ gst_bit_reader_new (const guint8 * data, guint size)
  * Create a new #GstBitReader instance, which will read from the
  * #GstBuffer @buffer.
  *
- * Returns: a new #GstBitReader instance
+ * Free-function: gst_bit_reader_free
+ *
+ * Returns: (transfer full): a new #GstBitReader instance
  *
  * Since: 0.10.22
  */
@@ -80,7 +84,7 @@ gst_bit_reader_new_from_buffer (const GstBuffer * buffer)
 
 /**
  * gst_bit_reader_free:
- * @reader: a #GstBitReader instance
+ * @reader: (in) (transfer full): a #GstBitReader instance
  *
  * Frees a #GstBitReader instance, which was previously allocated by
  * gst_bit_reader_new() or gst_bit_reader_new_from_buffer().
@@ -98,7 +102,7 @@ gst_bit_reader_free (GstBitReader * reader)
 /**
  * gst_bit_reader_init:
  * @reader: a #GstBitReader instance
- * @data: Data from which the #GstBitReader should read
+ * @data: (in) (array length=size): data from which the bit reader should read
  * @size: Size of @data in bytes
  *
  * Initializes a #GstBitReader instance to read from @data. This function
@@ -119,7 +123,7 @@ gst_bit_reader_init (GstBitReader * reader, const guint8 * data, guint size)
 /**
  * gst_bit_reader_init_from_buffer:
  * @reader: a #GstBitReader instance
- * @buffer: Buffer from which the #GstBitReader should read
+ * @buffer: (transfer none): Buffer from which the #GstBitReader should read
  *
  * Initializes a #GstBitReader instance to read from @buffer. This function
  * can be called on already initialized instances.

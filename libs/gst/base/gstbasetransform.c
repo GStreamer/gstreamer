@@ -2758,7 +2758,7 @@ gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
 /**
  * gst_base_transform_suggest:
  * @trans: a #GstBaseTransform
- * @caps: caps to suggest
+ * @caps: (transfer none): caps to suggest
  * @size: buffer size to suggest
  *
  * Instructs @trans to suggest new @caps upstream. A copy of @caps will be

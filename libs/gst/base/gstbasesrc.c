@@ -580,9 +580,9 @@ gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
 /**
  * gst_base_src_query_latency:
  * @src: the source
- * @live: if the source is live
- * @min_latency: the min latency of the source
- * @max_latency: the max latency of the source
+ * @live: (out) (allow-none): if the source is live
+ * @min_latency: (out) (allow-none): the min latency of the source
+ * @max_latency: (out) (allow-none): the max latency of the source
  *
  * Query the source for the latency parameters. @live will be TRUE when @src is
  * configured as a live source. @min_latency will be set to the difference

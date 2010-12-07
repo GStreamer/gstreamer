@@ -191,7 +191,7 @@ gst_adapter_finalize (GObject * object)
  *
  * Creates a new #GstAdapter. Free with g_object_unref().
  *
- * Returns: a new #GstAdapter
+ * Returns: (transfer full): a new #GstAdapter
  */
 GstAdapter *
 gst_adapter_new (void)
@@ -285,7 +285,7 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
 /**
  * gst_adapter_push:
  * @adapter: a #GstAdapter
- * @buf: a #GstBuffer to add to queue in the adapter
+ * @buf: (transfer full): a #GstBuffer to add to queue in the adapter
  *
  * Adds the data from @buf to the data stored inside @adapter and takes
  * ownership of the buffer.
@@ -386,7 +386,8 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
  *
  * Returns #NULL if @size bytes are not available.
  *
- * Returns: a pointer to the first @size bytes of data, or NULL.
+ * Returns: (transfer none) (array length=size): a pointer to the first
+ *     @size bytes of data, or NULL
  */
 const guint8 *
 gst_adapter_peek (GstAdapter * adapter, guint size)
@@ -459,7 +460,7 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
 /**
  * gst_adapter_copy:
  * @adapter: a #GstAdapter
- * @dest: the memory where to copy to
+ * @dest: (out caller-allocates) (array length=size): the memory to copy into
  * @offset: the bytes offset in the adapter to start from
  * @size: the number of bytes to copy
  *
@@ -608,7 +609,10 @@ gst_adapter_take_internal (GstAdapter * adapter, guint nbytes)
  *
  * Caller owns returned value. g_free after usage.
  *
- * Returns: oven-fresh hot data, or #NULL if @nbytes bytes are not available
+ * Free-function: g_free
+ *
+ * Returns: (transfer full) (array length=nbytes): oven-fresh hot data, or
+ *     #NULL if @nbytes bytes are not available
  */
 guint8 *
 gst_adapter_take (GstAdapter * adapter, guint nbytes)
@@ -644,10 +648,12 @@ gst_adapter_take (GstAdapter * adapter, guint nbytes)
  *
  * Caller owns returned value. gst_buffer_unref() after usage.
  *
- * Since: 0.10.6
+ * Free-function: gst_buffer_unref
  *
- * Returns: a #GstBuffer containing the first @nbytes of the adapter,
- * or #NULL if @nbytes bytes are not available
+ * Returns: (transfer full): a #GstBuffer containing the first @nbytes of
+ *     the adapter, or #NULL if @nbytes bytes are not available
+ *
+ * Since: 0.10.6
  */
 GstBuffer *
 gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
@@ -714,16 +720,17 @@ done:
  * @adapter: a #GstAdapter
  * @nbytes: the number of bytes to take
  *
- * Returns a #GSList of buffers containing the first @nbytes bytes of the
+ * Returns a #GList of buffers containing the first @nbytes bytes of the
  * @adapter. The returned bytes will be flushed from the adapter.
  * When the caller can deal with individual buffers, this function is more
- * performant because no memory should be coppied.
+ * performant because no memory should be copied.
  *
  * Caller owns returned list and contained buffers. gst_buffer_unref() each
- * buffer in the list before freeng the list after usage.
+ * buffer in the list before freeing the list after usage.
  *
- * Returns: a #GSList of buffers containing the first @nbytes of the adapter,
- * or #NULL if @nbytes bytes are not available
+ * Returns: (element-type Gst.Buffer) (transfer full): a #GList of buffers
+ *     containing the first @nbytes of the adapter, or #NULL if @nbytes bytes
+ *     are not available
  *
  * Since: 0.10.31
  */
@@ -820,7 +827,7 @@ gst_adapter_available_fast (GstAdapter * adapter)
 /**
  * gst_adapter_prev_timestamp:
  * @adapter: a #GstAdapter
- * @distance: pointer to location for distance or NULL
+ * @distance: (out) (allow-none): pointer to location for distance, or NULL
  *
  * Get the timestamp that was before the current byte in the adapter. When
  * @distance is given, the amount of bytes between the timestamp and the current
