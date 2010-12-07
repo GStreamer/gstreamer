@@ -110,12 +110,8 @@ static GstPadPushCache _pad_cache_invalid = { NULL, };
 #define GST_PAD_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PAD, GstPadPrivate))
 
-#define GST_PAD_CHAINLISTFUNC(pad) ((pad)->abidata.ABI.priv->chainlistfunc)
-
 struct _GstPadPrivate
 {
-  GstPadChainListFunction chainlistfunc;
-
   GstPadPushCache *cache_ptr;
 };
 
@@ -343,7 +339,7 @@ gst_pad_class_init (GstPadClass * klass)
 static void
 gst_pad_init (GstPad * pad)
 {
-  pad->abidata.ABI.priv = GST_PAD_GET_PRIVATE (pad);
+  pad->priv = GST_PAD_GET_PRIVATE (pad);
 
   GST_PAD_DIRECTION (pad) = GST_PAD_UNKNOWN;
   GST_PAD_PEER (pad) = NULL;
@@ -1037,7 +1033,7 @@ gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
     pad->block_callback = callback;
     pad->block_data = user_data;
     pad->block_destroy_data = destroy_data;
-    pad->abidata.ABI.block_callback_called = FALSE;
+    pad->block_callback_called = FALSE;
     if (!callback) {
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "waiting for block");
       GST_PAD_BLOCK_WAIT (pad);
@@ -1054,7 +1050,7 @@ gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
     pad->block_callback = callback;
     pad->block_data = user_data;
     pad->block_destroy_data = destroy_data;
-    pad->abidata.ABI.block_callback_called = FALSE;
+    pad->block_callback_called = FALSE;
 
     GST_PAD_BLOCK_BROADCAST (pad);
     if (!callback) {
@@ -3615,7 +3611,7 @@ handle_pad_block (GstPad * pad)
       /* we either have a callback installed to notify the block or
        * some other thread is doing a GCond wait. */
       callback = pad->block_callback;
-      pad->abidata.ABI.block_callback_called = TRUE;
+      pad->block_callback_called = TRUE;
       if (callback) {
         /* there is a callback installed, call it. We release the
          * lock so that the callback can do something usefull with the
@@ -3633,8 +3629,7 @@ handle_pad_block (GstPad * pad)
          * if any. */
         GST_PAD_BLOCK_BROADCAST (pad);
       }
-    } while (pad->abidata.ABI.block_callback_called == FALSE
-        && GST_PAD_IS_BLOCKED (pad));
+    } while (pad->block_callback_called == FALSE && GST_PAD_IS_BLOCKED (pad));
 
     /* OBJECT_LOCK could have been released when we did the callback, which
      * then could have made the pad unblock so we need to check the blocking
@@ -4174,7 +4169,7 @@ _priv_gst_pad_invalidate_cache (GstPad * pad)
       return;
   }
 
-  cache_ptr = (gpointer *) & pad->abidata.ABI.priv->cache_ptr;
+  cache_ptr = (gpointer *) & pad->priv->cache_ptr;
 
   /* try to get the cached data */
   do {
@@ -4229,7 +4224,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  cache_ptr = (gpointer *) & pad->abidata.ABI.priv->cache_ptr;
+  cache_ptr = (gpointer *) & pad->priv->cache_ptr;
 
   cache = pad_take_cache (pad, cache_ptr);
 
@@ -4336,7 +4331,7 @@ gst_pad_push_list (GstPad * pad, GstBufferList * list)
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  cache_ptr = (gpointer *) & pad->abidata.ABI.priv->cache_ptr;
+  cache_ptr = (gpointer *) & pad->priv->cache_ptr;
 
   cache = pad_take_cache (pad, cache_ptr);
 

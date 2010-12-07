@@ -358,21 +358,6 @@ typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad);
 
 /* internal links */
 /**
- * GstPadIntLinkFunction:
- * @pad: The #GstPad to query.
- *
- * The signature of the internal pad link function.
- *
- * Returns: (element-type Gst.Pad) (transfer container): a newly allocated #GList of pads that are linked to the given pad on
- * the inside of the parent element.
- *
- * The caller must call g_list_free() on it after use.
- *
- * Deprecated: use the threadsafe #GstPadIterIntLinkFunction instead.
- */
-typedef GList*			(*GstPadIntLinkFunction)	(GstPad *pad);
-
-/**
  * GstPadIterIntLinkFunction:
  * @pad: The #GstPad to query.
  *
@@ -641,6 +626,8 @@ struct _GstPad {
   GCond				*block_cond;
   GstPadBlockCallback		 block_callback;
   gpointer			 block_data;
+  GDestroyNotify                 block_destroy_data;
+  gboolean                       block_callback_called;
 
   /* the pad capabilities */
   GstCaps			*caps;
@@ -662,6 +649,7 @@ struct _GstPad {
 
   /* data transport functions */
   GstPadChainFunction		 chainfunc;
+  GstPadChainListFunction        chainlistfunc;
   GstPadCheckGetRangeFunction	 checkgetrangefunc;
   GstPadGetRangeFunction	 getrangefunc;
   GstPadEventFunction		 eventfunc;
@@ -673,7 +661,7 @@ struct _GstPad {
   GstPadQueryFunction		 queryfunc;
 
   /* internal links */
-  GstPadIntLinkFunction		 intlinkfunc;
+  GstPadIterIntLinkFunction      iterintlinkfunc;
 
   GstPadBufferAllocFunction      bufferallocfunc;
 
@@ -682,21 +670,10 @@ struct _GstPad {
   gint				 do_buffer_signals;
   gint				 do_event_signals;
 
-  /* ABI added */
-  /* iterate internal links */
-  GstPadIterIntLinkFunction     iterintlinkfunc;
-
-  /* free block_data */
-  GDestroyNotify block_destroy_data;
-
   /*< private >*/
-  union {
-    struct {
-      gboolean                      block_callback_called;
-      GstPadPrivate                *priv;
-    } ABI;
-    gpointer _gst_reserved[GST_PADDING - 2];
-  } abidata;
+  GstPadPrivate                 *priv;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPadClass {
@@ -727,6 +704,7 @@ struct _GstPadClass {
 #define GST_PAD_ACTIVATEPUSHFUNC(pad)	(GST_PAD_CAST(pad)->activatepushfunc)
 #define GST_PAD_ACTIVATEPULLFUNC(pad)	(GST_PAD_CAST(pad)->activatepullfunc)
 #define GST_PAD_CHAINFUNC(pad)		(GST_PAD_CAST(pad)->chainfunc)
+#define GST_PAD_CHAINLISTFUNC(pad)      (GST_PAD_CAST(pad)->chainlistfunc)
 #define GST_PAD_CHECKGETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->checkgetrangefunc)
 #define GST_PAD_GETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->getrangefunc)
 #define GST_PAD_EVENTFUNC(pad)		(GST_PAD_CAST(pad)->eventfunc)
