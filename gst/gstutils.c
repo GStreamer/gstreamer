@@ -1236,21 +1236,6 @@ G_CONST_RETURN gchar *
 gst_element_state_get_name (GstState state)
 {
   switch (state) {
-#ifdef GST_DEBUG_COLOR
-    case GST_STATE_VOID_PENDING:
-      return "VOID_PENDING";
-    case GST_STATE_NULL:
-      return "\033[01;34mNULL\033[00m";
-    case GST_STATE_READY:
-      return "\033[01;31mREADY\033[00m";
-    case GST_STATE_PLAYING:
-      return "\033[01;32mPLAYING\033[00m";
-    case GST_STATE_PAUSED:
-      return "\033[01;33mPAUSED\033[00m";
-    default:
-      /* This is a memory leak */
-      return g_strdup_printf ("\033[01;35;41mUNKNOWN!\033[00m(%d)", state);
-#else
     case GST_STATE_VOID_PENDING:
       return "VOID_PENDING";
     case GST_STATE_NULL:
@@ -1264,7 +1249,6 @@ gst_element_state_get_name (GstState state)
     default:
       /* This is a memory leak */
       return g_strdup_printf ("UNKNOWN!(%d)", state);
-#endif
   }
 }
 
@@ -1283,19 +1267,6 @@ G_CONST_RETURN gchar *
 gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
 {
   switch (state_ret) {
-#ifdef GST_DEBUG_COLOR
-    case GST_STATE_CHANGE_FAILURE:
-      return "\033[01;31mFAILURE\033[00m";
-    case GST_STATE_CHANGE_SUCCESS:
-      return "\033[01;32mSUCCESS\033[00m";
-    case GST_STATE_CHANGE_ASYNC:
-      return "\033[01;33mASYNC\033[00m";
-    case GST_STATE_CHANGE_NO_PREROLL:
-      return "\033[01;34mNO_PREROLL\033[00m";
-    default:
-      /* This is a memory leak */
-      return g_strdup_printf ("\033[01;35;41mUNKNOWN!\033[00m(%d)", state_ret);
-#else
     case GST_STATE_CHANGE_FAILURE:
       return "FAILURE";
     case GST_STATE_CHANGE_SUCCESS:
@@ -1307,7 +1278,6 @@ gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
     default:
       /* This is a memory leak */
       return g_strdup_printf ("UNKNOWN!(%d)", state_ret);
-#endif
   }
 }
 
