@@ -950,28 +950,18 @@ gst_mpeg4vparse_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
-gst_mpeg4vparse_dispose (GObject * object)
+gst_mpeg4vparse_finalize (GObject * object)
 {
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (object);
+
+  gst_mpeg4vparse_cleanup (parse);
 
   if (parse->adapter) {
     g_object_unref (parse->adapter);
     parse->adapter = NULL;
   }
-  if (parse->config != NULL) {
-    gst_buffer_unref (parse->config);
-    parse->config = NULL;
-  }
 
-  if (parse->pending_segment)
-    gst_event_unref (parse->pending_segment);
-  parse->pending_segment = NULL;
-
-  g_list_foreach (parse->pending_events, (GFunc) gst_event_unref, NULL);
-  g_list_free (parse->pending_events);
-  parse->pending_events = NULL;
-
-  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
 static void
@@ -1036,7 +1026,7 @@ gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_finalize);
 
   gobject_class->set_property = gst_mpeg4vparse_set_property;
   gobject_class->get_property = gst_mpeg4vparse_get_property;
