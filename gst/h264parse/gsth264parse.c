@@ -1368,10 +1368,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   /* save as new caps, caps will be set when pushing data */
   /* avoid replacing caps by a mere identical copy, thereby triggering
    * negotiating (which e.g. some container might not appreciate) */
-  if (modified) {
+  if (modified)
     gst_caps_replace (&h264parse->src_caps, src_caps);
-    gst_pad_set_caps (h264parse->srcpad, h264parse->src_caps);
-  }
   gst_caps_unref (src_caps);
 
   return TRUE;
