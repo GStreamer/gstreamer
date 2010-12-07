@@ -10,6 +10,7 @@ Summary
   B. Effects configurability
   C. Keyframes
 4. Use-cases
+5. API draft
 
 The goal of this proposal is to find a simple way to handle effects through an
 API which would allow developers to handle any use-case
@@ -87,22 +88,234 @@ C. Keyframes
 4. Use-cases
 -----------
 
-  The user wants to add an effect to an entire clip => GESTimelineObject new API
+  UC-1. The user wants to add an effect to an entire clip => GESTimelineObject new API
 
-  The user wants to add an effect to an entire layer => GESTimelineLayer API.
+  UC-2. The user wants to add an effect to an entire layer => GESTimelineLayer API.
 
-  The developer wants to allow his users to configure effects => mapping between
+  UC-3. The developer wants to allow his users to configure effects => mapping between
   GESTrackEffect and the configurable properties of elements (GESEffect).
 
-  The user wants to add an effect on a special portion of a clip, we should
+  UC-4. The user wants to add an effect on a special portion of a clip, we should
   allow him to configure that thanks to a system of keyframes. FIXME
 
-  We want to implement an effect which isn't only composed by a bin, but is more
+  UC-5. We want to implement an effect which isn't only composed by a bin, but is more
   complexe than that (ex: "effect '24'") => we have the GESTrackOperation
   which is the base class (abstract) for this kind of implementation. We should
   also have a GESPropertiesMapping abstract class which would be the base
   class of GESEffect and could be used in this use-case.
 
-  A developer wants to implement effect which handle music and video at the same
+  UC-6. A developer wants to implement effect which handle music and video at the same
   time, Would the solution be to implement a GESTimelineEffect to handle this
   special usecase? FIXME
+
+  UC-7. The developers wants to configure each elements of an effect the way he wants
+  with a full control over it.
+
+  UC-8. Developers want to expose all effects present on the system to the end-user
+
+5. API draft V1
+------------
+
+  A.  The GESEffectDescriptor
+      It is a structure that describes effects so they can easily be instanciate.
+      They can be composed of a simple description of a the bin, they can also
+      define more complexe effects, the GESEffectContainer will be able to handle
+      those cases. 
+
+      /**
+      * ges_effect_descriptor_get_effect_name:
+      *
+      * Returns the name of the effect
+      */
+      const gchar *
+      ges_effect_descriptor_get_effect_name (GESEffectDescriptor *self);
+      
+      /**
+      * ges_effect_descriptor_get_effect_description:
+      *
+      * Returns the description of the effect
+      */
+      const gchar *
+      ges_effect_descriptor_get_effect_description (GESEffectDescriptor *self);
+      
+      /**
+      * ges_effect_descriptor_get_effect_categories:
+      *
+      * Returns an array of 
+      */
+      gchar **
+      ges_effect_descriptor_get_effect_categories (GESEffectDescriptor *self);
+
+  B.  GESEffectRegistry API:
+      This should be a singleton since we don't want an app to instanciate more
+      than one registry. It should be able to get effects from various sources.
+      (UC-8)
+
+      /**
+      * ges_effect_registry_new:
+      *
+      * Returns a newly created #GESEffectRegistry
+      */
+      GESEffectRegistry *
+      ges_effect_registry_new (void);
+        -> Usecases:
+          + Have a registry of all effects that are on the système (UC-8)
+
+      /**
+      * ges_effect_registry_get_all:
+      *
+      * @self: The origin #GESEffectRegistry
+      *
+      * Returns a #GList of #GESEffectDescriptors. The 
+      */
+      GList *
+      ges_effect_registry_get_all (GESEffectRegistry *self);
+        -> Usecases:
+          + Get all effects descriptors that are on the système (UC-8)
+
+      /**
+      * ges_effect_set_thumbnail:
+      *
+      * @self: The origin #GESEffect
+      *
+      * Returns %TRUE if it has been set, %FALSE otherwize
+      */
+      gboolean *
+      ges_effect_set_thumbnail (GESEffect *self, ?? *thumbnail);
+      
+      /**
+      * ges_effect_get_thumbnail:
+      *
+      * @self: The origin #GESEffect
+      *
+      * Returns the #GstBuffer or %NULL if the thumbnail hasen't been set yet.
+      */
+      ?? *
+      ges_effect_get_thumbnail (GESEffect *self);
+
+      => Can we think about a way to add effects thumbnails directly in Gst or use 
+      system thumbnails when running on Gnome?
+
+  C. The GESffectContainer API
+
+    This is an interface which would be first implemented in GESTimelineObject
+    and GESTimelineLayer.
+
+      /**
+      * ges_effect_container_add_effect:
+      *
+      * @object: The origin #GESEffectContainer
+      *
+      * Adds a new effect corresponding to the @effect_desc to the #GESEffectContainer
+      * If an effect with the exact same bin_desc as already been added to this @object,
+      * it will not be added, and the corresponding #GESEffect will be returned.
+      *
+      * Returns: The newly created #GESEffect, or %NULL if there was an error.
+      */
+      GESEffect *ges_effect_container_add_effect (GESEffectContainer *object,
+                                          GESEffectDescriptor *effect_desc, gchar *name);
+        => Usecases:
+          + We can add any kind of effects to any object which comes from a class that
+            implements this interface (UC-1 and UC-2)
+
+      /**
+      * ges_effect_container_get_effects:
+      *
+      * @object: The origin #GESEffectContainer
+      *
+      *
+      * Returns the #GList of #GESEffect that are applied on the
+      * @object.
+      * The refcount of the objects will be increased. The user will have to
+      * unref each #GESEffect and free the #GList.
+      */
+      GList *ges_effect_container_get_effects (GESEffectContainer *object);
+        -> Usecases:
+          + First step to allow to allow the configuration of effects (UC-3)
+
+      /**
+      * ges_effect_container_get_effect_from_name:
+      *
+      * @object: The origin #GESEffectContainer
+      *
+      * Returns the #GESEffect that as @name as a name or NULL if we can't find that
+      * effect. The refcount of the objects will be increased. The user will have to
+      * unref each #GESEffect and free the #GList.
+      */
+      GESEffect *ges_effect_container_get_effect_from_name (GESEffectContainer *object,
+                    const gchar *name);
+        -> Usecases:
+          + First step to allow the configuration of effects (UC-3)
+
+      /**
+      * ges_effect_container_remove:
+      *
+      * @object: The origin #GESEffectContainer
+      *
+      * The refcount of the objects will be increased. The user will have to unref each
+      * #GESEffect and free the #GList.
+      */
+      gboolean *ges_effect_container_get_effect_from_name (GESEffectContainer *object,
+                    const gchar *name);
+        -> Usecases:
+          + First step to allow to allow the configuration of effects (UC-3)
+
+  D - The GESEffect API:
+
+    This class is an abstract class which aims at mapping all properties of an effect
+    so we can configure it through this API. They shouldn't be instanciate by clients,
+    but they are created calling ges_effect_container_add_effect().
+
+      /**
+      * ges_effect_get_all_properties:
+      *
+      * @self: The origin #GESEffectContainer
+      *
+      * Returns an array of the GParamSpec** that can be configured. They should be
+      * freed after use.
+      */
+      GList *ges_effect_get_all_properties(GESEffect *self);
+        -> Usecases:
+          + Let user configure effects easily (UC-3)
+
+      /**
+      * ges_effect_set_property:
+      *
+      * @self: The origin #GESEffectContainer
+      * @property_name : the name of the property to set
+      * @value : the value
+      *
+      * Returns an array of the GParamSpec** that can be configured. They should be
+      * freed after use.
+      */
+      gboolean *ges_effect_set_property (GESEffect *self, gchar *property_name,
+                              GValue *value);
+        -> Usecases:
+          + Let user configure effects easily (UC-3)
+
+      /**
+      * ges_effect_get_gst_elements:
+      *
+      * @self: The origin #GESEffectContainer
+      *
+      * Returns a #GList of all the GstElement-s that are usefull in the effect.
+      * The user is responsible for unreffing all elements and freeing the
+      * #GList
+      */
+      GList *ges_effect_get_gst_elements (GESEffect *self);
+        -> Usecases:
+          + Let user have the full control of effects configuration (UC-3)
+
+      /**
+      * ges_effect_get_descriptor:
+      *
+      * @self: The origin #GESEffect
+      *
+      * Returns the #GESEffectDescriptor that describes the effect.
+      */
+      GList *ges_effect_get_descriptor (GESEffect *self);
+        -> Usecases:
+          + The user want's to have all the characteristic of an effect
+
+
+=> We are still missing spec to handle Keyframes
