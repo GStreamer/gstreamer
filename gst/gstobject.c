@@ -98,8 +98,6 @@ static GstAllocTrace *_gst_object_trace;
 #define DEBUG_REFCOUNT
 
 /* Object signals and args */
-/* FIXME-0.11: have a read-only parent property instead of the two signals
- * then we get notify::parent for free */
 enum
 {
   DEEP_NOTIFY,
@@ -631,10 +629,7 @@ gst_object_get_name (GstObject * object)
  * @parent: new parent of object
  *
  * Sets the parent of @object to @parent. The object's reference count will
- * be incremented, and any floating reference will be removed (see gst_object_sink()).
- *
- * This function causes the parent-set signal to be emitted when the parent
- * was successfully set.
+ * be incremented, and any floating reference will be removed (see gst_object_ref_sink()).
  *
  * Returns: TRUE if @parent could be set or FALSE when @object
  * already had a parent or @object and @parent are the same.

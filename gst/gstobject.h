@@ -157,9 +157,8 @@ typedef struct _GstObjectClass GstObjectClass;
  * GstObject:
  * @lock: object LOCK
  * @name: The name of the object
- * @name_prefix: unused
  * @parent: this object's parent, weak ref
- * @flags: use GST_OBJECT_IS_XXX macros to access the flags
+ * @flags: flags for this object
  *
  * GStreamer base object class.
  */
