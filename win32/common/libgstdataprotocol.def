@@ -4,12 +4,9 @@ EXPORTS
 	gst_dp_crc
 	gst_dp_dump_byte_array
 	gst_dp_event_from_packet
-	gst_dp_header_from_buffer
 	gst_dp_header_payload_length
 	gst_dp_header_payload_type
 	gst_dp_init
-	gst_dp_packet_from_caps
-	gst_dp_packet_from_event
 	gst_dp_packetizer_free
 	gst_dp_packetizer_new
 	gst_dp_validate_header

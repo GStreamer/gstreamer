@@ -46,7 +46,6 @@ EXPORTS
 	_gst_element_error_printf
 	_gst_elementclass_factory DATA
 	_gst_plugin_loader_client_run
-	_gst_plugin_register_static
 	_gst_trace_add_entry
 	_gst_trace_mutex DATA
 	_gst_trace_on DATA
@@ -62,10 +61,8 @@ EXPORTS
 	gst_alloc_trace_set_flags
 	gst_alloc_trace_set_flags_all
 	gst_assoc_flags_get_type
-	gst_atomic_int_set
 	gst_bin_add
 	gst_bin_add_many
-	gst_bin_find_unconnected_pad
 	gst_bin_find_unlinked_pad
 	gst_bin_flags_get_type
 	gst_bin_get_by_interface
@@ -116,7 +113,6 @@ EXPORTS
 	gst_buffer_new_and_alloc
 	gst_buffer_set_caps
 	gst_buffer_span
-	gst_buffer_stamp
 	gst_buffer_try_new_and_alloc
 	gst_buffering_mode_get_type
 	gst_bus_add_signal_watch
@@ -162,7 +158,6 @@ EXPORTS
 	gst_caps_is_equal_fixed
 	gst_caps_is_fixed
 	gst_caps_is_subset
-	gst_caps_load_thyself
 	gst_caps_make_writable
 	gst_caps_merge
 	gst_caps_merge_structure
@@ -175,7 +170,6 @@ EXPORTS
 	gst_caps_ref
 	gst_caps_remove_structure
 	gst_caps_replace
-	gst_caps_save_thyself
 	gst_caps_set_simple
 	gst_caps_set_simple_valist
 	gst_caps_set_value
@@ -198,8 +192,6 @@ EXPORTS
 	gst_child_proxy_set
 	gst_child_proxy_set_property
 	gst_child_proxy_set_valist
-	gst_class_signal_connect
-	gst_class_signal_emit_by_name
 	gst_clock_add_observation
 	gst_clock_adjust_unlocked
 	gst_clock_entry_type_get_type
@@ -283,27 +275,20 @@ EXPORTS
 	gst_element_abort_state
 	gst_element_add_pad
 	gst_element_change_state
+	gst_element_class_add_metadata
 	gst_element_class_add_pad_template
 	gst_element_class_get_pad_template
 	gst_element_class_get_pad_template_list
 	gst_element_class_install_std_props
-	gst_element_class_set_details
-	gst_element_class_set_details_simple
-	gst_element_class_set_documentation_uri
-	gst_element_class_set_icon_name
+	gst_element_class_set_metadata
 	gst_element_continue_state
 	gst_element_create_all_pads
 	gst_element_factory_can_sink_caps
 	gst_element_factory_can_src_caps
 	gst_element_factory_create
 	gst_element_factory_find
-	gst_element_factory_get_author
-	gst_element_factory_get_description
-	gst_element_factory_get_documentation_uri
 	gst_element_factory_get_element_type
-	gst_element_factory_get_icon_name
-	gst_element_factory_get_klass
-	gst_element_factory_get_longname
+	gst_element_factory_get_metadata
 	gst_element_factory_get_num_pad_templates
 	gst_element_factory_get_static_pad_templates
 	gst_element_factory_get_type
@@ -324,7 +309,6 @@ EXPORTS
 	gst_element_get_compatible_pad_template
 	gst_element_get_factory
 	gst_element_get_index
-	gst_element_get_pad
 	gst_element_get_query_types
 	gst_element_get_request_pad
 	gst_element_get_start_time
@@ -585,7 +569,6 @@ EXPORTS
 	gst_object_default_error
 	gst_object_flags_get_type
 	gst_object_get_name
-	gst_object_get_name_prefix
 	gst_object_get_parent
 	gst_object_get_path_string
 	gst_object_get_type
@@ -593,12 +576,8 @@ EXPORTS
 	gst_object_ref
 	gst_object_ref_sink
 	gst_object_replace
-	gst_object_restore_thyself
-	gst_object_save_thyself
 	gst_object_set_name
-	gst_object_set_name_prefix
 	gst_object_set_parent
-	gst_object_sink
 	gst_object_unparent
 	gst_object_unref
 	gst_pad_accept_caps
@@ -623,12 +602,9 @@ EXPORTS
 	gst_pad_flags_get_type
 	gst_pad_get_allowed_caps
 	gst_pad_get_caps
-	gst_pad_get_caps_reffed
 	gst_pad_get_direction
 	gst_pad_get_element_private
 	gst_pad_get_fixed_caps_func
-	gst_pad_get_internal_links
-	gst_pad_get_internal_links_default
 	gst_pad_get_negotiated_caps
 	gst_pad_get_pad_template
 	gst_pad_get_pad_template_caps
@@ -648,14 +624,12 @@ EXPORTS
 	gst_pad_link_check_get_type
 	gst_pad_link_full
 	gst_pad_link_return_get_type
-	gst_pad_load_and_link
 	gst_pad_new
 	gst_pad_new_from_static_template
 	gst_pad_new_from_template
 	gst_pad_pause_task
 	gst_pad_peer_accept_caps
 	gst_pad_peer_get_caps
-	gst_pad_peer_get_caps_reffed
 	gst_pad_peer_query
 	gst_pad_presence_get_type
 	gst_pad_proxy_getcaps
@@ -694,7 +668,6 @@ EXPORTS
 	gst_pad_set_fixatecaps_function
 	gst_pad_set_getcaps_function
 	gst_pad_set_getrange_function
-	gst_pad_set_internal_link_function
 	gst_pad_set_iterate_internal_links_function
 	gst_pad_set_link_function
 	gst_pad_set_query_function
@@ -732,13 +705,11 @@ EXPORTS
 	gst_pipeline_get_bus
 	gst_pipeline_get_clock
 	gst_pipeline_get_delay
-	gst_pipeline_get_last_stream_time
 	gst_pipeline_get_type
 	gst_pipeline_new
 	gst_pipeline_set_auto_flush_bus
 	gst_pipeline_set_clock
 	gst_pipeline_set_delay
-	gst_pipeline_set_new_stream_time
 	gst_pipeline_use_clock
 	gst_plugin_add_dependency
 	gst_plugin_add_dependency_simple
@@ -881,8 +852,6 @@ EXPORTS
 	gst_registry_remove_feature
 	gst_registry_remove_plugin
 	gst_registry_scan_path
-	gst_registry_xml_read_cache
-	gst_registry_xml_write_cache
 	gst_resource_error_get_type
 	gst_resource_error_quark
 	gst_search_mode_get_type
@@ -1186,13 +1155,3 @@ EXPORTS
 	gst_value_union
 	gst_version
 	gst_version_string
-	gst_xml_get_element
-	gst_xml_get_topelements
-	gst_xml_get_type
-	gst_xml_make_element
-	gst_xml_new
-	gst_xml_parse_doc
-	gst_xml_parse_file
-	gst_xml_parse_memory
-	gst_xml_write
-	gst_xml_write_file
