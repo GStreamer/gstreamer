@@ -1983,7 +1983,7 @@ static gboolean
 qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     QtDemuxStream * stream, guint32 d_sample_duration, guint32 d_sample_size,
     guint32 d_sample_flags, gint64 moof_offset, gint64 moof_length,
-    gint64 * base_offset)
+    gint64 * base_offset, gint64 * running_offset)
 {
   guint64 timestamp;
   gint32 data_offset = 0;
@@ -2016,7 +2016,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
       GST_LOG_OBJECT (qtdemux, "base_offset at moof");
       *base_offset = moof_offset;
     }
-    *base_offset += data_offset;
+    *running_offset = *base_offset + data_offset;
   } else {
     /* if no offset at all, that would mean data starts at moof start,
      * which is a bit wrong and is ismv crappy way, so compensate
@@ -2026,10 +2026,12 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
       GST_LOG_OBJECT (qtdemux, "base_offset assumed in mdat after moof");
       ismv = TRUE;
     }
+    if (*running_offset == -1)
+      *running_offset = *base_offset;
   }
 
-  GST_LOG_OBJECT (qtdemux, "base offset now %" G_GINT64_FORMAT, *base_offset);
-
+  GST_LOG_OBJECT (qtdemux, "running offset now %" G_GINT64_FORMAT,
+      *running_offset);
   GST_LOG_OBJECT (qtdemux, "trun offset %d, flags 0x%x, entries %d",
       data_offset, flags, samples_count);
 
@@ -2135,7 +2137,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     data += entry_size;
 
     /* fill the sample information */
-    sample->offset = *base_offset;
+    sample->offset = *running_offset;
     sample->pts_offset = ct;
     sample->size = size;
     sample->timestamp = timestamp;
@@ -2144,7 +2146,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     /* ismv seems to use 0x40 for keyframe, 0xc0 for non-keyframe,
      * now idea how it relates to bitfield other than massive LE/BE confusion */
     sample->keyframe = ismv ? ((sflags & 0xff) == 0x40) : !(sflags & 0x10000);
-    *base_offset += size;
+    *running_offset += size;
     timestamp += dur;
     sample++;
   }
@@ -2220,10 +2222,8 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
     goto invalid_track;
 
   *stream = qtdemux_find_stream (qtdemux, track_id);
-  if (G_UNLIKELY (!*stream)) {
-    GST_DEBUG_OBJECT (qtdemux, "unknown stream in tfhd");
-    goto invalid_track;
-  }
+  if (G_UNLIKELY (!*stream))
+    goto unknown_stream;
 
   if (flags & TF_BASE_DATA_OFFSET)
     if (!gst_byte_reader_get_uint64_be (tfhd, (guint64 *) base_offset))
@@ -2254,8 +2254,13 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
 
 invalid_track:
   {
-    GST_WARNING_OBJECT (qtdemux, "invalid track header");
+    GST_WARNING_OBJECT (qtdemux, "invalid track fragment header");
     return FALSE;
+  }
+unknown_stream:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "unknown stream in tfhd");
+    return TRUE;
   }
 }
 
@@ -2266,7 +2271,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
   GNode *moof_node, *traf_node, *tfhd_node, *trun_node;
   GstByteReader trun_data, tfhd_data;
   guint32 ds_size = 0, ds_duration = 0, ds_flags = 0;
-  gint64 base_offset;
+  gint64 base_offset, running_offset;
 
   /* NOTE @stream ignored */
 
@@ -2275,7 +2280,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
   qtdemux_node_dump (qtdemux, moof_node);
 
   /* unknown base_offset to start with */
-  base_offset = -1;
+  base_offset = running_offset = -1;
   traf_node = qtdemux_tree_get_child_by_type (moof_node, FOURCC_traf);
   while (traf_node) {
     /* Fragment Header node */
@@ -2287,18 +2292,31 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     if (!qtdemux_parse_tfhd (qtdemux, &tfhd_data, &stream, &ds_duration,
             &ds_size, &ds_flags, &base_offset))
       goto missing_tfhd;
+    if (G_UNLIKELY (!stream)) {
+      /* we lost track of offset, we'll need to regain it,
+       * but can delay complaining until later or avoid doing so altogether */
+      base_offset = -2;
+      goto next;
+    }
+    if (G_UNLIKELY (base_offset < -1))
+      goto lost_offset;
     /* Track Run node */
     trun_node =
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
         &trun_data);
     while (trun_node) {
       qtdemux_parse_trun (qtdemux, &trun_data, stream,
-          ds_duration, ds_size, ds_flags, moof_offset, length, &base_offset);
+          ds_duration, ds_size, ds_flags, moof_offset, length, &base_offset,
+          &running_offset);
       /* iterate all siblings */
       trun_node = qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
           &trun_data);
     }
-
+    /* if no new base_offset provided for next traf,
+     * base is end of current traf */
+    base_offset = running_offset;
+    running_offset = -1;
+  next:
     /* iterate all siblings */
     traf_node = qtdemux_tree_get_sibling_by_type (traf_node, FOURCC_traf);
   }
@@ -2307,10 +2325,19 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
 
 missing_tfhd:
   {
+    GST_DEBUG_OBJECT (qtdemux, "missing tfhd box");
+    goto fail;
+  }
+lost_offset:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "lost offset");
+    goto fail;
+  }
+fail:
+  {
     g_node_destroy (moof_node);
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
-        (_("This file is corrupt and cannot be played.")),
-        ("missing tfhd box"));
+        (_("This file is corrupt and cannot be played.")), (NULL));
     return FALSE;
   }
 }
