@@ -731,6 +731,7 @@ gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
     } else {
       const guint8 *data = GST_BUFFER_DATA (buf);
 
+      res = FALSE;
       if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
         if (data[3] == VOS_STARTCODE) {
           /* Usually the codec data will be a visual object sequence, containing
@@ -745,6 +746,8 @@ gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
           res = gst_mpeg4vparse_handle_vo (parse, data, GST_BUFFER_SIZE (buf),
               FALSE);
         }
+        if (!res)
+          goto failed_parse;
       } else {
         GST_WARNING_OBJECT (parse,
             "codec_data does not begin with start code, invalid");
