@@ -25,3 +25,19 @@ The 0.11 porting guide
 
     parent-set and parent-unset signals removed. Use notify:parent. Currently
     still disabled because of deep notify locking issues.
+
+* GstElement:
+    GstElementDetails is removed and replaced with more generic metadata.
+
+    gst_element_class_set_details_simple() -> gst_element_class_set_metadata()
+    gst_element_class_set_documentation_uri -> gst_element_class_add_metadata
+    gst_element_class_set_icon_name -> gst_element_class_add_metadata
+
+    gst_element_factory_get_longname -> gst_element_factory_get_metadata
+    gst_element_factory_get_klass -> gst_element_factory_get_metadata
+    gst_element_factory_get_description -> gst_element_factory_get_metadata
+    gst_element_factory_get_author -> gst_element_factory_get_metadata
+    gst_element_factory_get_documentation_uri -> gst_element_factory_get_metadata
+    gst_element_factory_get_icon_name -> gst_element_factory_get_metadata
+
+    gstelementmetadata.h contains the keys for all standard metadata.
