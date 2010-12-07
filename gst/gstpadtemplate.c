@@ -230,7 +230,7 @@ gst_pad_template_init (GstPadTemplate * templ)
    * For consistency, then, we only produce them  with sunken references
    * owned by the creator of the object
    */
-  if (GST_OBJECT_IS_FLOATING (templ)) {
+  if (g_object_is_floating (templ)) {
     gst_object_ref_sink (templ);
   }
 }

@@ -41,17 +41,12 @@ G_BEGIN_DECLS
 
 /**
  * GstObjectFlags:
- * @GST_OBJECT_DISPOSING: the object is been destroyed, don't use it anymore
- * @GST_OBJECT_FLOATING:  the object has a floating reference count (e.g. its
- *  not assigned to a bin)
  * @GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag
  *
  * The standard flags that an gstobject may have.
  */
 typedef enum
 {
-  GST_OBJECT_DISPOSING = (1<<0),
-  GST_OBJECT_FLOATING = (1<<1),
   /* padding */
   GST_OBJECT_FLAG_LAST = (1<<4)
 } GstObjectFlags;
@@ -155,27 +150,11 @@ typedef enum
 #define GST_OBJECT_FLAG_UNSET(obj,flag)        (GST_OBJECT_FLAGS (obj) &= ~(flag))
 
 
-/**
- * GST_OBJECT_IS_DISPOSING:
- * @obj: a #GstObject
- *
- * Check if the given object is beeing destroyed.
- */
-#define GST_OBJECT_IS_DISPOSING(obj)    (GST_OBJECT_FLAG_IS_SET (obj, GST_OBJECT_DISPOSING))
-/**
- * GST_OBJECT_IS_FLOATING:
- * @obj: a #GstObject
- *
- * Check if the given object is floating (has no owner).
- */
-#define GST_OBJECT_IS_FLOATING(obj)     (GST_OBJECT_FLAG_IS_SET (obj, GST_OBJECT_FLOATING))
-
 typedef struct _GstObject GstObject;
 typedef struct _GstObjectClass GstObjectClass;
 
 /**
  * GstObject:
- * @refcount: unused
  * @lock: object LOCK
  * @name: The name of the object
  * @name_prefix: unused
@@ -185,15 +164,11 @@ typedef struct _GstObjectClass GstObjectClass;
  * GStreamer base object class.
  */
 struct _GstObject {
-  GObject 	 object;
-
-  /*< public >*/
-  gint           refcount;    /* unused (FIXME 0.11: remove) */
+  GInitiallyUnowned object;
 
   /*< public >*/ /* with LOCK */
   GMutex        *lock;        /* object LOCK */
   gchar         *name;        /* object name */
-  gchar         *name_prefix; /* (un)used for debugging (FIXME 0.11: remove) */
   GstObject     *parent;      /* this object's parent, weak ref */
   guint32        flags;
 
@@ -202,60 +177,20 @@ struct _GstObject {
 };
 
 /**
- * GST_CLASS_GET_LOCK:
- * @obj: a #GstObjectClass
- *
- * This macro will return the class lock used to protect deep_notify signal
- * emission on thread-unsafe glib versions (glib < 2.8).
- */
-#define GST_CLASS_GET_LOCK(obj)         (GST_OBJECT_CLASS_CAST(obj)->lock)
-/**
- * GST_CLASS_LOCK:
- * @obj: a #GstObjectClass
- *
- * Lock the class.
- */
-#define GST_CLASS_LOCK(obj)             (g_static_rec_mutex_lock(GST_CLASS_GET_LOCK(obj)))
-/**
- * GST_CLASS_TRYLOCK:
- * @obj: a #GstObjectClass
- *
- * Try to lock the class, returns TRUE if class could be locked.
- */
-#define GST_CLASS_TRYLOCK(obj)          (g_static_rec_mutex_trylock(GST_CLASS_GET_LOCK(obj)))
-/**
- * GST_CLASS_UNLOCK:
- * @obj: a #GstObjectClass
- *
- * Unlock the class.
- */
-#define GST_CLASS_UNLOCK(obj)           (g_static_rec_mutex_unlock(GST_CLASS_GET_LOCK(obj)))
-
-/**
  * GstObjectClass:
  * @parent_class: parent
  * @path_string_separator: separator used by gst_object_get_path_string()
  * @signal_object: is used to signal to the whole class
- * @lock: class lock to be used with GST_CLASS_GET_LOCK(), GST_CLASS_LOCK(), GST_CLASS_UNLOCK() and others.
- * @parent_set: default signal handler
- * @parent_unset: default signal handler
  * @deep_notify: default signal handler
  *
  * GStreamer base object class.
  */
 struct _GstObjectClass {
-  GObjectClass	parent_class;
+  GInitiallyUnownedClass parent_class;
 
   const gchar	*path_string_separator;
-  GObject	*signal_object;
-
-  /* FIXME-0.11: remove this, plus the above GST_CLASS_*_LOCK macros */
-  GStaticRecMutex *lock;
 
   /* signals */
-  /* FIXME-0.11: remove, and pass NULL in g_signal_new(), we never used them */
-  void          (*parent_set)       (GstObject * object, GstObject * parent);
-  void          (*parent_unset)     (GstObject * object, GstObject * parent);
   void          (*deep_notify)      (GstObject * object, GstObject * orig, GParamSpec * pspec);
 
   /*< public >*/
@@ -278,29 +213,22 @@ GstObject*	gst_object_get_parent		(GstObject *object);
 void		gst_object_unparent		(GstObject *object);
 gboolean	gst_object_has_ancestor		(GstObject *object, GstObject *ancestor);
 
-void            gst_object_default_deep_notify 	(GObject *object, GstObject *orig,
+void            gst_object_default_deep_notify  (GObject *object, GstObject *orig,
                                                  GParamSpec *pspec, gchar **excluded_props);
 
 /* refcounting + life cycle */
 gpointer	gst_object_ref			(gpointer object);
 void		gst_object_unref		(gpointer object);
-void 		gst_object_ref_sink		(gpointer object);
-void 		gst_object_sink			(gpointer object);
+gpointer        gst_object_ref_sink		(gpointer object);
 
 /* replace object pointer */
-void 		gst_object_replace		(GstObject **oldobj, GstObject *newobj);
+void            gst_object_replace		(GstObject **oldobj, GstObject *newobj);
 
 /* printing out the 'path' of the object */
 gchar *		gst_object_get_path_string	(GstObject *object);
 
 /* misc utils */
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
-
-/* class signal stuff */
-guint		gst_class_signal_connect	(GstObjectClass	*klass,
-						 const gchar	*name,
-						 gpointer	 func,
-						 gpointer	 func_data);
 
 G_END_DECLS
 

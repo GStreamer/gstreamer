@@ -6,3 +6,22 @@ The 0.11 porting guide
 
 * multifdsink, tcpclientsink, tcpclientsrc, tcpserversrc the protocol property
   is removed, use gdppay and gdpdepay.
+
+* GstObject:
+    GST_OBJECT_DISPOSING flag removed
+    GST_OBJECT_IS_DISPOSING removed
+    GST_OBJECT_FLOATING flag remove, GstObject is now GInitiallyUnowned
+    GST_OBJECT_IS_FLOATING removed, use g_object_is_floating()
+
+    GST_CLASS_GET_LOCK, GST_CLASS_LOCK, GST_CLASS_TRYLOCK, GST_CLASS_UNLOCK,
+    used to be a workaround for thread-unsafe glib < 2.8
+
+    gst_object_ref_sink() has gpointer as result to make it more like the
+    GObject version.
+
+    gst_object_sink() removed, use gst_object_ref_sink() instead.
+
+    gst_class_signal_connect() removed, was only used for XML
+
+    parent-set and parent-unset signals removed. Use notify:parent. Currently
+    still disabled because of deep notify locking issues.

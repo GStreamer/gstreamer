@@ -102,17 +102,16 @@ static GstAllocTrace *_gst_object_trace;
  * then we get notify::parent for free */
 enum
 {
-  PARENT_SET,
-  PARENT_UNSET,
   DEEP_NOTIFY,
   LAST_SIGNAL
 };
 
 enum
 {
-  ARG_0,
-  ARG_NAME
-      /* FILL ME */
+  PROP_0,
+  PROP_NAME,
+  PROP_PARENT,
+  PROP_LAST
 };
 
 enum
@@ -126,15 +125,11 @@ static GData *object_name_counts = NULL;
 
 G_LOCK_DEFINE_STATIC (object_name_mutex);
 
-typedef struct _GstSignalObject GstSignalObject;
-typedef struct _GstSignalObjectClass GstSignalObjectClass;
-
-static GType gst_signal_object_get_type (void);
-
 static void gst_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_object_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
 static void gst_object_dispatch_properties_changed (GObject * object,
     guint n_pspecs, GParamSpec ** pspecs);
 
@@ -143,17 +138,16 @@ static void gst_object_finalize (GObject * object);
 
 static gboolean gst_object_set_name_default (GstObject * object);
 
-static GObjectClass *parent_class = NULL;
 static guint gst_object_signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_ABSTRACT_TYPE (GstObject, gst_object, G_TYPE_OBJECT);
+static GParamSpec *properties[PROP_LAST];
+
+G_DEFINE_ABSTRACT_TYPE (GstObject, gst_object, G_TYPE_INITIALLY_UNOWNED);
 
 static void
 gst_object_class_init (GstObjectClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
 
 #ifndef GST_DISABLE_TRACE
   _gst_object_trace = gst_alloc_trace_register (g_type_name (GST_TYPE_OBJECT));
@@ -162,34 +156,17 @@ gst_object_class_init (GstObjectClass * klass)
   gobject_class->set_property = gst_object_set_property;
   gobject_class->get_property = gst_object_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_NAME,
-      g_param_spec_string ("name", "Name", "The name of the object",
-          NULL,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  properties[PROP_NAME] =
+      g_param_spec_string ("name", "Name", "The name of the object", NULL,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_class, PROP_NAME,
+      properties[PROP_NAME]);
 
-  /**
-   * GstObject::parent-set:
-   * @gstobject: a #GstObject
-   * @parent: the new parent
-   *
-   * Emitted when the parent of an object is set.
-   */
-  gst_object_signals[PARENT_SET] =
-      g_signal_new ("parent-set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
-      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
-
-  /**
-   * GstObject::parent-unset:
-   * @gstobject: a #GstObject
-   * @parent: the old parent
-   *
-   * Emitted when the parent of an object is unset.
-   */
-  gst_object_signals[PARENT_UNSET] =
-      g_signal_new ("parent-unset", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, parent_unset), NULL,
-      NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
+  properties[PROP_PARENT] =
+      g_param_spec_object ("parent", "Parent", "The parent of the object",
+      GST_TYPE_OBJECT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_class, PROP_PARENT,
+      properties[PROP_PARENT]);
 
   /**
    * GstObject::deep-notify:
@@ -209,11 +186,6 @@ gst_object_class_init (GstObjectClass * klass)
       G_TYPE_PARAM);
 
   klass->path_string_separator = "/";
-  /* FIXME 0.11: Store this directly in the class struct */
-  klass->lock = g_slice_new (GStaticRecMutex);
-  g_static_rec_mutex_init (klass->lock);
-
-  klass->signal_object = g_object_newv (gst_signal_object_get_type (), 0, NULL);
 
   /* see the comments at gst_object_dispatch_properties_changed */
   gobject_class->dispatch_properties_changed
@@ -236,7 +208,6 @@ gst_object_init (GstObject * object)
 #endif
 
   object->flags = 0;
-  GST_OBJECT_FLAG_SET (object, GST_OBJECT_FLOATING);
 }
 
 /**
@@ -303,61 +274,18 @@ gst_object_unref (gpointer object)
  * the floating flag while leaving the reference count unchanged. If the object
  * is not floating, then this call adds a new normal reference increasing the
  * reference count by one.
- *
- * MT safe. This function grabs and releases @object lock.
- *
- * Since: 0.10.24
  */
-void
+gpointer
 gst_object_ref_sink (gpointer object)
 {
-  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_val_if_fail (object != NULL, NULL);
 
-  GST_OBJECT_LOCK (object);
-  if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
-    GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object,
-        "unsetting floating flag");
-    GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
-    GST_OBJECT_UNLOCK (object);
-  } else {
-    GST_OBJECT_UNLOCK (object);
-    gst_object_ref (object);
-  }
-}
-
-/**
- * gst_object_sink:
- * @object: a #GstObject to sink
- *
- * If @object was floating, the #GST_OBJECT_FLOATING flag is removed
- * and @object is unreffed. When @object was not floating,
- * this function does nothing.
- *
- * Any newly created object has a refcount of 1 and is floating.
- * This function should be used when creating a new object to
- * symbolically 'take ownership' of @object. This done by first doing a
- * gst_object_ref() to keep a reference to @object and then gst_object_sink()
- * to remove and unref any floating references to @object.
- * Use gst_object_set_parent() to have this done for you.
- *
- * MT safe. This function grabs and releases @object lock.
- */
-void
-gst_object_sink (gpointer object)
-{
-  g_return_if_fail (GST_IS_OBJECT (object));
-
-  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "sink");
-
-  GST_OBJECT_LOCK (object);
-  if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
-    GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "clear floating flag");
-    GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
-    GST_OBJECT_UNLOCK (object);
-    gst_object_unref (object);
-  } else {
-    GST_OBJECT_UNLOCK (object);
-  }
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref_sink %d->%d",
+      object, ((GObject *) object)->ref_count,
+      ((GObject *) object)->ref_count + 1);
+#endif
+  return g_object_ref_sink (object);
 }
 
 /**
@@ -414,7 +342,7 @@ gst_object_dispose (GObject * object)
   GST_OBJECT_PARENT (object) = NULL;
   GST_OBJECT_UNLOCK (object);
 
-  parent_class->dispose (object);
+  ((GObjectClass *) gst_object_parent_class)->dispose (object);
 
   return;
 
@@ -449,7 +377,7 @@ gst_object_finalize (GObject * object)
   gst_alloc_trace_free (_gst_object_trace, object);
 #endif
 
-  parent_class->finalize (object);
+  ((GObjectClass *) gst_object_parent_class)->finalize (object);
 }
 
 /* Changing a GObject property of a GstObject will result in "deep-notify"
@@ -457,9 +385,6 @@ gst_object_finalize (GObject * object)
  * object. This is so that an application can connect a listener to the
  * top-level bin to catch property-change notifications for all contained
  * elements.
- *
- * This function is not MT safe in glib < 2.8 so we need to lock it with a
- * classwide mutex in that case.
  *
  * MT safe.
  */
@@ -475,7 +400,9 @@ gst_object_dispatch_properties_changed (GObject * object,
 #endif
 
   /* do the standard dispatching */
-  parent_class->dispatch_properties_changed (object, n_pspecs, pspecs);
+  ((GObjectClass *)
+      gst_object_parent_class)->dispatch_properties_changed (object, n_pspecs,
+      pspecs);
 
   gst_object = GST_OBJECT_CAST (object);
 #ifndef GST_DISABLE_GST_DEBUG
@@ -728,21 +655,14 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
   if (G_UNLIKELY (object->parent != NULL))
     goto had_parent;
 
-  /* sink object, we don't call our own function because we don't
-   * need to release/acquire the lock needlessly or touch the refcount
-   * in the floating case. */
   object->parent = parent;
-  if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
-    GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object,
-        "unsetting floating flag");
-    GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
-    GST_OBJECT_UNLOCK (object);
-  } else {
-    GST_OBJECT_UNLOCK (object);
-    gst_object_ref (object);
-  }
+  g_object_ref_sink (object);
+  GST_OBJECT_UNLOCK (object);
 
-  g_signal_emit (object, gst_object_signals[PARENT_SET], 0, parent);
+  /* FIXME, this does not work, the deep notify takes the lock from the parent
+   * object and deadlocks when the parent holds its lock when calling this
+   * function (like _element_add_pad()) */
+  /* g_object_notify_by_pspec ((GObject *)object, properties[PROP_PARENT]); */
 
   return TRUE;
 
@@ -808,7 +728,7 @@ gst_object_unparent (GstObject * object)
     object->parent = NULL;
     GST_OBJECT_UNLOCK (object);
 
-    g_signal_emit (object, gst_object_signals[PARENT_UNSET], 0, parent);
+    /* g_object_notify_by_pspec ((GObject *)object, properties[PROP_PARENT]); */
 
     gst_object_unref (object);
   } else {
@@ -902,8 +822,11 @@ gst_object_set_property (GObject * object, guint prop_id,
   gstobject = GST_OBJECT_CAST (object);
 
   switch (prop_id) {
-    case ARG_NAME:
+    case PROP_NAME:
       gst_object_set_name (gstobject, g_value_get_string (value));
+      break;
+    case PROP_PARENT:
+      gst_object_set_parent (gstobject, g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -920,8 +843,11 @@ gst_object_get_property (GObject * object, guint prop_id,
   gstobject = GST_OBJECT_CAST (object);
 
   switch (prop_id) {
-    case ARG_NAME:
+    case PROP_NAME:
       g_value_take_string (value, gst_object_get_name (gstobject));
+      break;
+    case PROP_PARENT:
+      g_value_take_object (value, gst_object_get_parent (gstobject));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1011,51 +937,4 @@ gst_object_get_path_string (GstObject * object)
   g_slist_free (parentage);
 
   return path;
-}
-
-
-struct _GstSignalObject
-{
-  GObject object;
-};
-
-struct _GstSignalObjectClass
-{
-  GObjectClass parent_class;
-
-};
-
-G_DEFINE_TYPE (GstSignalObject, gst_signal_object, G_TYPE_OBJECT);
-
-static void
-gst_signal_object_class_init (GstSignalObjectClass * klass)
-{
-  parent_class = g_type_class_peek_parent (klass);
-
-}
-
-static void
-gst_signal_object_init (GstSignalObject * object)
-{
-}
-
-/**
- * gst_class_signal_connect
- * @klass: a #GstObjectClass to attach the signal to
- * @name: the name of the signal to attach to
- * @func: the signal function
- * @func_data: a pointer to user data
- *
- * Connect to a class signal.
- *
- * Returns: the signal id.
- */
-guint
-gst_class_signal_connect (GstObjectClass * klass,
-    const gchar * name, gpointer func, gpointer func_data)
-{
-  /* [0.11] func parameter needs to be changed to a GCallback *
-   * doing so now would be an API break. */
-  return g_signal_connect (klass->signal_object, name, G_CALLBACK (func),
-      func_data);
 }
