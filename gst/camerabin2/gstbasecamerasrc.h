@@ -48,6 +48,9 @@ GType gst_base_camera_src_get_type (void);
 typedef struct _GstBaseCameraSrc GstBaseCameraSrc;
 typedef struct _GstBaseCameraSrcClass GstBaseCameraSrcClass;
 
+#define GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME "vfsrc"
+#define GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME "imgsrc"
+#define GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME "vidsrc"
 
 /**
  * GstBaseCameraSrc:
@@ -55,10 +58,6 @@ typedef struct _GstBaseCameraSrcClass GstBaseCameraSrcClass;
 struct _GstBaseCameraSrc
 {
   GstBin parent;
-
-  GstPad *vfsrc;
-  GstPad *imgsrc;
-  GstPad *vidsrc;
 
   gint mode;
 
@@ -105,13 +104,8 @@ struct _GstBaseCameraSrcClass
 {
   GstBinClass parent;
 
-  /* construct pipeline must be implemented by derived class, and return by
-   * reference vfsrc, imgsrc, and vidsrc pads of the contained pipeline, which
-   * will be ghosted to the src pads of the camerasrc bin (and optionally the
-   * preview src pads?) */
-  gboolean    (*construct_pipeline)  (GstBaseCameraSrc *self,
-                                      GstPad **vfsrc, GstPad **imgsrc,
-                                      GstPad **vidsrc);
+  /* construct pipeline must be implemented by derived class */
+  gboolean    (*construct_pipeline)  (GstBaseCameraSrc *self);
 
   /* optional */
   gboolean    (*setup_pipeline)      (GstBaseCameraSrc *self);
@@ -130,7 +124,6 @@ struct _GstBaseCameraSrcClass
   void (*private_stop_capture) (GstBaseCameraSrc * src);
   gboolean (*start_capture) (GstBaseCameraSrc * src);
   void (*stop_capture) (GstBaseCameraSrc * src);
-
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };

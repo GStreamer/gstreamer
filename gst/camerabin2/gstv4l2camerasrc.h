@@ -57,6 +57,10 @@ struct _GstV4l2CameraSrc
 {
   GstBaseCameraSrc parent;
 
+  GstPad *vfsrc;
+  GstPad *imgsrc;
+  GstPad *vidsrc;
+
   /* video recording controls */
   gint video_rec_status;
 

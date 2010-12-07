@@ -50,17 +50,20 @@ GST_DEBUG_CATEGORY (base_camera_src_debug);
 
 GST_BOILERPLATE (GstBaseCameraSrc, gst_base_camera_src, GstBin, GST_TYPE_BIN);
 
-static GstStaticPadTemplate vfsrc_template = GST_STATIC_PAD_TEMPLATE ("vfsrc",
+static GstStaticPadTemplate vfsrc_template =
+GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME,
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static GstStaticPadTemplate imgsrc_template = GST_STATIC_PAD_TEMPLATE ("imgsrc",
+static GstStaticPadTemplate imgsrc_template =
+GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME,
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static GstStaticPadTemplate vidsrc_template = GST_STATIC_PAD_TEMPLATE ("vidsrc",
+static GstStaticPadTemplate vidsrc_template =
+GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME,
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
@@ -368,34 +371,13 @@ static gboolean
 construct_pipeline (GstBaseCameraSrc * self)
 {
   GstBaseCameraSrcClass *bclass = GST_BASE_CAMERA_SRC_GET_CLASS (self);
-  GstPad *vfsrc = NULL;
-  GstPad *imgsrc = NULL;
-  GstPad *vidsrc = NULL;
 
   g_return_val_if_fail (bclass->construct_pipeline, FALSE);
 
-  if (!bclass->construct_pipeline (self, &vfsrc, &imgsrc, &vidsrc)) {
+  if (!bclass->construct_pipeline (self)) {
     GST_ERROR_OBJECT (self, "pipeline construction failed");
     return FALSE;
   }
-
-  if (!vfsrc || !imgsrc || !vidsrc) {
-    GST_ERROR_OBJECT (self, "derived class must return src pads");
-    return FALSE;
-  }
-
-  GST_DEBUG_OBJECT (self, "vfsrc:  %" GST_PTR_FORMAT, vfsrc);
-  GST_DEBUG_OBJECT (self, "imgsrc: %" GST_PTR_FORMAT, imgsrc);
-  GST_DEBUG_OBJECT (self, "vidsrc: %" GST_PTR_FORMAT, vidsrc);
-
-  /* hook-up the ghostpads */
-  gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), vfsrc);
-  gst_ghost_pad_set_target (GST_GHOST_PAD (self->imgsrc), imgsrc);
-  gst_ghost_pad_set_target (GST_GHOST_PAD (self->vidsrc), vidsrc);
-
-  gst_pad_set_active (self->vfsrc, TRUE);
-  gst_pad_set_active (self->imgsrc, TRUE);      /* XXX ??? */
-  gst_pad_set_active (self->vidsrc, TRUE);      /* XXX ??? */
 
   return TRUE;
 }
@@ -527,15 +509,6 @@ static void
 gst_base_camera_src_init (GstBaseCameraSrc * self,
     GstBaseCameraSrcClass * klass)
 {
-  self->vfsrc = gst_ghost_pad_new_no_target ("vfsrc", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (self), self->vfsrc);
-
-  self->imgsrc = gst_ghost_pad_new_no_target ("imgsrc", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (self), self->imgsrc);
-
-  self->vidsrc = gst_ghost_pad_new_no_target ("vidsrc", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (self), self->vidsrc);
-
   self->width = DEFAULT_WIDTH;
   self->height = DEFAULT_HEIGHT;
   self->zoom = DEFAULT_ZOOM;

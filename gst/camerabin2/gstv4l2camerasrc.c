@@ -199,9 +199,6 @@ gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
 /**
  * gst_v4l2_camera_src_construct_pipeline:
  * @bcamsrc: camerasrc object
- * @vfsrc: viewfinder src element (returned by reference)
- * @imgsrc: image src element (returned by reference)
- * @vidsrc: video src element (returned by reference)
  *
  * This function creates and links the elements of the camerasrc bin
  * videosrc ! cspconv ! capsfilter ! crop ! scale ! capsfilter ! tee ! ..
@@ -209,8 +206,7 @@ gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
  * Returns: TRUE, if elements were successfully created, FALSE otherwise
  */
 static gboolean
-gst_v4l2_camera_src_construct_pipeline (GstBaseCameraSrc * bcamsrc,
-    GstPad ** vfsrc, GstPad ** imgsrc, GstPad ** vidsrc)
+gst_v4l2_camera_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
 {
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (bcamsrc);
   GstBin *cbin = GST_BIN (bcamsrc);
@@ -265,9 +261,17 @@ gst_v4l2_camera_src_construct_pipeline (GstBaseCameraSrc * bcamsrc,
   gst_pad_add_buffer_probe (self->tee_video_srcpad,
       G_CALLBACK (gst_v4l2_camera_src_vidsrc_probe), self);
 
-  *vfsrc = self->tee_vf_srcpad;
-  *imgsrc = self->tee_image_srcpad;
-  *vidsrc = self->tee_video_srcpad;
+  /* hook-up the ghostpads */
+  gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), self->tee_vf_srcpad);
+  gst_ghost_pad_set_target (GST_GHOST_PAD (self->imgsrc),
+      self->tee_image_srcpad);
+  gst_ghost_pad_set_target (GST_GHOST_PAD (self->vidsrc),
+      self->tee_video_srcpad);
+
+  gst_pad_set_active (self->vfsrc, TRUE);
+  gst_pad_set_active (self->imgsrc, TRUE);      /* XXX ??? */
+  gst_pad_set_active (self->vidsrc, TRUE);      /* XXX ??? */
+
 
   ret = TRUE;
 done:
@@ -1036,6 +1040,22 @@ static void
 gst_v4l2_camera_src_init (GstV4l2CameraSrc * self,
     GstV4l2CameraSrcClass * klass)
 {
+  self->vfsrc =
+      gst_ghost_pad_new_no_target (GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME,
+      GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (self), self->vfsrc);
+
+  self->imgsrc =
+      gst_ghost_pad_new_no_target (GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME,
+      GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (self), self->imgsrc);
+
+  self->vidsrc =
+      gst_ghost_pad_new_no_target (GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME,
+      GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (self), self->vidsrc);
+
+
   /* TODO where are variables reset? */
   self->image_capture_count = 0;
   self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
