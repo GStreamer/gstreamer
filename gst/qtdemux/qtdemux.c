@@ -1986,11 +1986,11 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     gint64 * base_offset)
 {
   guint64 timestamp;
-  gint32 data_offset;
+  gint32 data_offset = 0;
   guint32 flags, first_flags = 0, samples_count;
   gint i;
   guint8 *data;
-  guint entry_size, dur_offset, size_offset, flags_offset, ct_offset;
+  guint entry_size, dur_offset, size_offset, flags_offset = 0, ct_offset = 0;
   QtDemuxSample *sample;
   gboolean ismv = FALSE;
 
@@ -2078,7 +2078,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
       QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
     goto index_too_big;
 
-  GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u (%u MB)",
+  GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u (%lu MB)",
       stream->n_samples, (stream->n_samples * sizeof (QtDemuxSample)) >> 20);
 
   /* create a new array of samples if it's the first sample parsed */
@@ -4970,7 +4970,7 @@ qtdemux_find_atom (GstQTDemux * qtdemux, guint64 * offset,
     } else {
       GST_LOG_OBJECT (qtdemux,
           "skipping atom '%" GST_FOURCC_FORMAT "' at %" G_GUINT64_FORMAT,
-          GST_FOURCC_ARGS (fourcc), offset);
+          GST_FOURCC_ARGS (fourcc), *offset);
       *offset += *length;
     }
   }

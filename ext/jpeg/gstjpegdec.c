@@ -368,8 +368,11 @@ gst_jpeg_dec_ensure_header (GstJpegDec * dec)
     return FALSE;
   }
 
+  if (offset > 0) {
+    GST_LOG_OBJECT (dec, "Skipping %u bytes.", offset);
+    gst_adapter_flush (dec->adapter, offset);
+  }
   GST_DEBUG_OBJECT (dec, "Found JPEG header");
-  gst_adapter_flush (dec->adapter, offset);
 
   return TRUE;
 }
@@ -382,9 +385,10 @@ gst_jpeg_dec_parse_tag_has_entropy_segment (guint8 tag)
   return FALSE;
 }
 
-/* returns image length in bytes if parsed
- * successfully, otherwise 0 */
-static guint
+/* returns image length in bytes if parsed successfully,
+ * otherwise 0 if more data needed,
+ * if < 0 the absolute value needs to be flushed */
+static gint
 gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
 {
   guint size;
@@ -445,7 +449,14 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
       dec->parse_resync = FALSE;
       dec->parse_offset = 0;
       return (offset + 4);
+    } else if (value == 0xd8) {
+      /* Skip this frame if we found another SOI marker */
+      GST_DEBUG ("0x%08x: SOI marker before EOI, skipping", offset + 2);
+      dec->parse_resync = FALSE;
+      dec->parse_offset = 0;
+      return -(offset + 2);
     }
+
 
     if (value >= 0xd0 && value <= 0xd7)
       frame_len = 0;
@@ -498,6 +509,7 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
       if (noffset < 0) {
         /* ignore and continue resyncing until we hit the end
          * of our data or find a sync point that looks okay */
+        offset++;
         continue;
       }
       GST_DEBUG ("found sync at 0x%x", offset + 2);
@@ -1148,7 +1160,8 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 #endif
   guchar *outdata;
   guchar *base[3], *last[3];
-  guint img_len, outsize;
+  gint img_len;
+  guint outsize;
   gint width, height;
   gint r_h, r_v;
   guint code, hdr_ok;
@@ -1186,6 +1199,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     goto need_more_data;
   }
 
+again:
   if (!gst_jpeg_dec_ensure_header (dec))
     goto need_more_data;
 
@@ -1200,8 +1214,12 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
      * is not aligned to buffer boundaries */
     img_len = gst_jpeg_dec_parse_image_data (dec);
 
-    if (img_len == 0)
+    if (img_len == 0) {
       goto need_more_data;
+    } else if (img_len < 0) {
+      gst_adapter_flush (dec->adapter, -img_len);
+      goto again;
+    }
   }
 
   dec->rem_img_len = img_len;
