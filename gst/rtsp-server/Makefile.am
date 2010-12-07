@@ -8,7 +8,7 @@ public_headers = \
 		rtsp-session-pool.h \
 		rtsp-client.h \
 		rtsp-server.h
-		
+
 c_sources = \
 	rtsp-params.c \
 	rtsp-sdp.c \
@@ -19,13 +19,13 @@ c_sources = \
 	rtsp-session-pool.c \
 	rtsp-client.c \
 	rtsp-server.c
-	
+
 lib_LTLIBRARIES = \
 	libgstrtspserver-@GST_MAJORMINOR@.la
 
 libgstrtspserver_@GST_MAJORMINOR@_la_SOURCES = \
     $(c_sources)
-    
+
 libgstrtspserver_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtspserver_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrtspserver_@GST_MAJORMINOR@_la_LIBADD = \
@@ -41,28 +41,45 @@ libgstrtspserver_@GST_MAJORMINOR@include_HEADERS = $(public_headers)
 
 CLEANFILES =
 
--include $(INTROSPECTION_MAKEFILE)
-INTROSPECTION_GIRS =
-INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --strip-prefix=Gst
-INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
-
 if HAVE_INTROSPECTION
-introspection_sources = $(public_headers) $(c_sources)
+BUILT_GIRSOURCES = GstRtspServer-@GST_MAJORMINOR@.gir
 
-GstRtspServer-0.10.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@GST_MAJORMINOR@.la
-GstRtspServer_0_10_gir_INCLUDES = Gst-@GST_MAJORMINOR@ GstRtsp-@GST_MAJORMINOR@
-GstRtspServer_0_10_gir_CFLAGS = $(INCLUDES)
-GstRtspServer_0_10_gir_LIBS = libgstrtspserver-@GST_MAJORMINOR@.la
-GstRtspServer_0_10_gir_FILES = $(introspection_sources)
-GstRtspServer_0_10_gir_NAMESPACE = GstRtspServer
-GstRtspServer_0_10_gir_VERSION = @GST_MAJORMINOR@
-INTROSPECTION_GIRS += GstRtspServer-0.10.gir
+gir_headers=$(patsubst %,$(srcdir)/%, $(libgstrtspserver_@GST_MAJORMINOR@include_HEADERS))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstrtspserver_@GST_MAJORMINOR@_la_SOURCES))
+gir_cincludes=$(patsubst %,--c-include='gst/rtsp-server/%',$(libgstrtspinclude_HEADERS))
 
+GstRtspServer-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@GST_MAJORMINOR@.la
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
+		$(INTROSPECTION_SCANNER) -v --namespace GstRtspServer \
+		--nsversion=@GST_MAJORMINOR@ \
+		--strip-prefix=Gst \
+		-I$(top_srcdir) \
+		-I$(top_builddir) \
+		-DIN_GOBJECT_INTROSPECTION=1 \
+		--c-include='gst/gst.h' \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
+		--library=libgstrtspserver-0.10.la \
+		--include=Gst-0.10 \
+		--include=GstRtsp-0.10 \
+		--libtool="$(top_builddir)/libtool" \
+		--pkg gstreamer-0.10 \
+		--pkg gstreamer-rtsp-0.10 \
+		--pkg-export gstreamer-rtsp-server-0.10 \
+		--output $@ \
+		$(gir_headers) \
+		$(gir_sources)
+
+# INTROSPECTION_GIRDIR/INTROSPECTION_TYPELIBDIR aren't the right place to
+# install anything - we need to install inside our prefix.
 girdir = $(datadir)/gir-1.0
-gir_DATA = $(INTROSPECTION_GIRS)
+gir_DATA = $(BUILT_GIRSOURCES)
 
-typelibdir = $(libdir)/girepository-1.0
-typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
+typelibsdir = $(libdir)/girepository-1.0/
 
-CLEANFILES += $(gir_DATA) $(typelib_DATA)
+typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
+
+%.typelib: %.gir $(INTROSPECTION_COMPILER)
+	$(AM_V_GEN)$(INTROSPECTION_COMPILER) --includedir=$(srcdir) --includedir=$(builddir) $(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+
+CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
