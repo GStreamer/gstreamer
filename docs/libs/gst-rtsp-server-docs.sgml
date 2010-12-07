@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>GStreamer RTSP Server Reference Manual</title>
+    <releaseinfo>
+      for GStreamer RTSP Server &GST_MAJORMINOR;
+    </releaseinfo>
+  </bookinfo>
+
+  <chapter>
+    <xi:include href="xml/rtsp-client.xml"/>
+    <xi:include href="xml/rtsp-media-factory.xml"/>
+    <xi:include href="xml/rtsp-media-mapping.xml"/>
+    <xi:include href="xml/rtsp-media.xml"/>
+    <xi:include href="xml/rtsp-params.xml"/>
+    <xi:include href="xml/rtsp-sdp.xml"/>
+    <xi:include href="xml/rtsp-server.xml"/>
+    <xi:include href="xml/rtsp-session-pool.xml"/>
+    <xi:include href="xml/rtsp-session.xml"/>
+  </chapter>
+
+  <!-- <chapter> -->
+  <!--   <title>Base Classes</title> -->
+  <!--   <xi:include href="xml/ges-timeline.xml"/> -->
+  <!--   <xi:include href="xml/ges-timeline-layer.xml"/> -->
+  <!--   <xi:include href="xml/ges-timeline-object.xml"/> -->
+  <!--   <xi:include href="xml/ges-timeline-source.xml"/> -->
+  <!--   <xi:include href="xml/ges-timeline-overlay.xml"/> -->
+  <!--   <xi:include href="xml/ges-track.xml"/> -->
+  <!--   <xi:include href="xml/ges-track-object.xml"/> -->
+  <!--   <xi:include href="xml/ges-track-source.xml"/> -->
+  <!--   <xi:include href="xml/ges-track-operation.xml"/> -->
+  <!-- </chapter> -->
+
+  <!-- <chapter> -->
+  <!--   <title>Timeline objects</title> -->
+  <!--   <xi:include href="xml/ges-timeline-filesource.xml"/> -->
+  <!--   <xi:include href="xml/ges-timeline-title-source.xml"/> -->
+  <!--   <xi:include href="xml/ges-timeline-test-source.xml"/> -->
+  <!--   <xi:include href="xml/ges-timeline-text-overlay.xml"/> -->
+  <!--   <xi:include href="xml/ges-timeline-transition.xml"/> -->
+  <!-- </chapter> -->
+
+  <!-- <chapter> -->
+  <!--   <title>Track objects</title> -->
+  <!--   <xi:include href="xml/ges-track-filesource.xml"/> -->
+  <!--   <xi:include href="xml/ges-track-title-source.xml"/> -->
+  <!--   <xi:include href="xml/ges-track-audio-test-source.xml"/> -->
+  <!--   <xi:include href="xml/ges-track-video-test-source.xml"/> -->
+  <!--   <xi:include href="xml/ges-track-text-overlay.xml"/> -->
+  <!--   <xi:include href="xml/ges-track-transition.xml"/> -->
+  <!--   <xi:include href="xml/ges-track-video-transition.xml"/> -->
+  <!--   <xi:include href="xml/ges-track-audio-transition.xml"/> -->
+  <!-- </chapter> -->
+
+  <!-- <chapter> -->
+  <!--   <title>Simple Timeline interface</title> -->
+  <!--   <xi:include href="xml/ges-simple-timeline-layer.xml"/> -->
+  <!-- </chapter> -->
+
+  <!-- <chapter> -->
+  <!--   <title>Convenience classes</title> -->
+  <!--   <xi:include href="xml/ges-timeline-pipeline.xml"/> -->
+  <!--   <xi:include href="xml/ges-custom-timeline-source.xml"/> -->
+  <!-- </chapter> -->
+
+  <!-- <chapter> -->
+  <!--   <title>Serialization Classes</title> -->
+  <!--   <xi:include href="xml/ges-formatter.xml"/> -->
+  <!--   <xi:include href="xml/ges-keyfile-formatter.xml"/> -->
+  <!-- </chapter> -->
+
+  <chapter id="ges-hierarchy">
+    <title>Object Hierarchy</title>
+    <xi:include href="xml/tree_index.sgml"/>
+  </chapter>
+
+  <index id="api-index-full">
+    <title>API Index</title>
+    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+  </index>
+</book>

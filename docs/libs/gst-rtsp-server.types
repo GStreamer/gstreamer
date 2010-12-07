@@ -1,0 +1,8 @@
+#include <gst/gst.h>
+gst_rtsp_media_mapping_get_type
+gst_rtsp_media_factory_get_type
+gst_rtsp_media_get_type
+gst_rtsp_server_get_type
+gst_rtsp_session_pool_get_type
+gst_rtsp_session_get_type
+gst_rtsp_client_get_type

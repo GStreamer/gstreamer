@@ -6,6 +6,7 @@ SUBDIRS = 		\
 	m4   		\
 	common \
 	pkgconfig \
+	docs \
 	examples
 
 DIST_SUBDIRS = $(SUBDIRS)

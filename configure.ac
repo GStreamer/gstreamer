@@ -297,6 +297,9 @@ bindings/vala/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-rtsp-server.pc
 pkgconfig/gst-rtsp-server-uninstalled.pc
+docs/Makefile
+docs/version.entities
+docs/libs/Makefile
 ])
 AC_OUTPUT
 
