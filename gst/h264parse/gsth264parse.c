@@ -1031,29 +1031,13 @@ static void
 gst_h264_parse_finalize (GObject * object)
 {
   GstH264Parse *h264parse;
-  gint i;
 
   h264parse = GST_H264PARSE (object);
 
+  gst_h264_parse_reset (h264parse);
+
   g_object_unref (h264parse->adapter);
   g_object_unref (h264parse->picture_adapter);
-
-  for (i = 0; i < MAX_SPS_COUNT; i++) {
-    if (h264parse->sps_buffers[i] != NULL)
-      g_slice_free (GstH264Sps, h264parse->sps_buffers[i]);
-  }
-
-  for (i = 0; i < MAX_PPS_COUNT; i++) {
-    if (h264parse->pps_buffers[i] != NULL)
-      g_slice_free (GstH264Pps, h264parse->pps_buffers[i]);
-  }
-
-  if (h264parse->pending_segment)
-    gst_event_replace (&h264parse->pending_segment, NULL);
-
-  g_list_foreach (h264parse->pending_events, (GFunc) gst_event_unref, NULL);
-  g_list_free (h264parse->pending_events);
-  h264parse->pending_events = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
