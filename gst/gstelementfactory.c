@@ -60,7 +60,7 @@
 #include "gst_private.h"
 
 #include "gstelement.h"
-#include "gstelementdetails.h"
+#include "gstelementmetadata.h"
 #include "gstinfo.h"
 #include "gsturi.h"
 #include "gstregistry.h"
@@ -150,10 +150,9 @@ gst_element_factory_cleanup (GstElementFactory * factory)
 {
   GList *item;
 
-  __gst_element_details_clear (&factory->details);
-  if (factory->meta_data) {
-    gst_structure_free ((GstStructure *) factory->meta_data);
-    factory->meta_data = NULL;
+  if (factory->metadata) {
+    gst_structure_free ((GstStructure *) factory->metadata);
+    factory->metadata = NULL;
   }
   if (factory->type) {
     factory->type = G_TYPE_INVALID;
@@ -247,17 +246,16 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   /* provide info needed during class structure setup */
   g_type_set_qdata (type, _gst_elementclass_factory, factory);
   klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
+#if 0
+  /* FIXME */
   if ((klass->details.longname == NULL) ||
       (klass->details.klass == NULL) || (klass->details.author == NULL))
     goto detailserror;
+#endif
 
   factory->type = type;
-  __gst_element_details_copy (&factory->details, &klass->details);
-  if (klass->meta_data) {
-    factory->meta_data = gst_structure_copy ((GstStructure *) klass->meta_data);
-  } else {
-    factory->meta_data = NULL;
-  }
+  factory->metadata = gst_structure_copy ((GstStructure *) klass->metadata);
+
   for (item = klass->padtemplates; item; item = item->next) {
     GstPadTemplate *templ = item->data;
     GstStaticPadTemplate *newt;
@@ -324,6 +322,7 @@ urierror:
     return FALSE;
   }
 
+#if 0
 detailserror:
   {
     GST_WARNING_OBJECT (factory,
@@ -331,6 +330,7 @@ detailserror:
     gst_element_factory_cleanup (factory);
     return FALSE;
   }
+#endif
 }
 
 /**
@@ -498,113 +498,11 @@ gst_element_factory_get_element_type (GstElementFactory * factory)
   return factory->type;
 }
 
-/**
- * gst_element_factory_get_longname:
- * @factory: a #GstElementFactory
- *
- * Gets the longname for this factory
- *
- * Returns: the longname
- */
 G_CONST_RETURN gchar *
-gst_element_factory_get_longname (GstElementFactory * factory)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
-
-  return factory->details.longname;
-}
-
-/**
- * gst_element_factory_get_klass:
- * @factory: a #GstElementFactory
- *
- * Gets the class for this factory.
- *
- * Returns: the class
- */
-G_CONST_RETURN gchar *
-gst_element_factory_get_klass (GstElementFactory * factory)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
-
-  return factory->details.klass;
-}
-
-/**
- * gst_element_factory_get_description:
- * @factory: a #GstElementFactory
- *
- * Gets the description for this factory.
- *
- * Returns: the description
- */
-G_CONST_RETURN gchar *
-gst_element_factory_get_description (GstElementFactory * factory)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
-
-  return factory->details.description;
-}
-
-/**
- * gst_element_factory_get_author:
- * @factory: a #GstElementFactory
- *
- * Gets the author for this factory.
- *
- * Returns: the author
- */
-G_CONST_RETURN gchar *
-gst_element_factory_get_author (GstElementFactory * factory)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
-
-  return factory->details.author;
-}
-
-static G_CONST_RETURN gchar *
-gst_element_factory_get_meta_data (GstElementFactory * factory,
+gst_element_factory_get_metadata (GstElementFactory * factory,
     const gchar * key)
 {
-  if (!factory->meta_data)
-    return NULL;
-
-  /* FIXME: do we want to support other types? */
-  return gst_structure_get_string ((GstStructure *) factory->meta_data, key);
-}
-
-/**
- * gst_element_factory_get_documentation_uri:
- * @factory: a #GstElementFactory
- *
- * Gets documentation uri for this factory if set.
- *
- * Since: 0.10.31
- *
- * Returns: the documentation uri
- */
-G_CONST_RETURN gchar *
-gst_element_factory_get_documentation_uri (GstElementFactory * factory)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
-  return gst_element_factory_get_meta_data (factory, "doc-uri");
-}
-
-/**
- * gst_element_factory_get_documentation_uri:
- * @factory: a #GstElementFactory
- *
- * Gets icon name for this factory if set.
- *
- * Since: 0.10.31
- *
- * Returns: the icon name
- */
-G_CONST_RETURN gchar *
-gst_element_factory_get_icon_name (GstElementFactory * factory)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
-  return gst_element_factory_get_meta_data (factory, "icon-name");
+  return gst_structure_get_string ((GstStructure *) factory->metadata, key);
 }
 
 /**
@@ -749,7 +647,8 @@ gst_element_factory_list_is_type (GstElementFactory * factory,
   gboolean res = FALSE;
   const gchar *klass;
 
-  klass = gst_element_factory_get_klass (factory);
+  klass =
+      gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
 
   /* Filter by element type first, as soon as it matches
    * one type, we skip all other tests */

@@ -434,6 +434,17 @@ print_element_signals (GstElement * element, gint pfx)
   }
 }
 
+static gboolean
+put_factory_metadata (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  const gchar *key = g_quark_to_string (field_id);
+  const gchar *val = g_value_get_string (value);
+
+  PUT_ESCAPED (2, key, val);
+
+  return TRUE;
+}
+
 static gint
 print_element_info (GstElementFactory * factory)
 {
@@ -457,10 +468,8 @@ print_element_info (GstElementFactory * factory)
   gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
   PUT_START_TAG (1, "details");
-  PUT_ESCAPED (2, "long-name", factory->details.longname);
-  PUT_ESCAPED (2, "class", factory->details.klass);
-  PUT_ESCAPED (2, "description", factory->details.description);
-  PUT_ESCAPED (2, "authors", factory->details.author);
+  gst_structure_foreach ((GstStructure *) factory->metadata,
+      put_factory_metadata, NULL);
   PUT_END_TAG (1, "details");
 
   output_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);

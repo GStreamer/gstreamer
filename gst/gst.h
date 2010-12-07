@@ -40,6 +40,7 @@
 #include <gst/gstdatetime.h>
 #include <gst/gstdebugutils.h>
 #include <gst/gstelement.h>
+#include <gst/gstelementmetadata.h>
 #include <gst/gsterror.h>
 #include <gst/gstevent.h>
 #include <gst/gstghostpad.h>

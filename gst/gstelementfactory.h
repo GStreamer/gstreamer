@@ -36,68 +36,6 @@ typedef struct _GstElementFactoryClass GstElementFactoryClass;
 
 G_BEGIN_DECLS
 
-/* FIXME 0.11: Move GstElementDetails into a private header and use it internally
- * in GstElementFactory, GstElementClass and the registry
- */
-
-typedef struct _GstElementDetails GstElementDetails;
-
-/**
- * GstElementDetails:
- * @longname: long, english name
- * @klass: string describing the type of element, as an unordered list
- * separated with slashes ('/'). See draft-klass.txt of the design docs
- * for more details and common types
- * @description: what the element is about
- * @author: who wrote this thing?
- *
- * This struct defines the public information about a #GstElement. It contains
- * meta-data about the element that is mostly for the benefit of editors.
- *
- * The @klass member can be used by applications to filter elements based
- * on functionality.
- */
-/* FIXME: need translatable stuff in here (how handle in registry)?
- * can't we use _N("long name") in element implementations and use _(longname)
- * in gst_element_factory_get_longname()
- */
-struct _GstElementDetails
-{
-  /*< public > */
-  gchar *longname;
-  gchar *klass;
-  gchar *description;
-  gchar *author;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-/**
- * GST_ELEMENT_DETAILS:
- * @longname: long, english name
- * @klass: string describing the type of element, as an unordered list
- * separated with slashes ('/'). See draft-klass.txt of the design docs
- * for more details and common types
- * @description: what the element is about
- * @author: who wrote this element
- *
- * Macro to initialize #GstElementDetails.
- */
-#define GST_ELEMENT_DETAILS(longname,klass,description,author)          \
-  { longname, klass, description, author, {NULL} }
-
-/**
- * GST_IS_ELEMENT_DETAILS:
- * @details: the #GstElementDetails to check
- *
- * Tests if element details are initialized.
- */
-/* FIXME: what about adding '&& (*__gst_reserved==NULL)' */
-#define GST_IS_ELEMENT_DETAILS(details) (                                       \
-  (details) && ((details)->longname != NULL) && ((details)->klass != NULL)      \
-  && ((details)->description != NULL) && ((details)->author != NULL))
-
 #define GST_TYPE_ELEMENT_FACTORY                (gst_element_factory_get_type())
 #define GST_ELEMENT_FACTORY(obj)                (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ELEMENT_FACTORY,\
                                                  GstElementFactory))
@@ -117,8 +55,7 @@ struct _GstElementFactory {
 
   GType                 type;                   /* unique GType of element or 0 if not loaded */
 
-  /* FIXME-0.11: deprecate this in favour of meta_data */
-  GstElementDetails     details;
+  gpointer		metadata;
 
   GList *               staticpadtemplates;     /* GstStaticPadTemplate list */
   guint                 numpadtemplates;
@@ -130,9 +67,7 @@ struct _GstElementFactory {
   GList *               interfaces;             /* interface type names this element implements */
 
   /*< private >*/
-  /* FIXME-0.11: move up and replace details */
-  gpointer		meta_data;
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstElementFactoryClass {
@@ -146,16 +81,15 @@ GType                   gst_element_factory_get_type            (void);
 GstElementFactory *     gst_element_factory_find                (const gchar *name);
 
 GType                   gst_element_factory_get_element_type    (GstElementFactory *factory);
-G_CONST_RETURN gchar *  gst_element_factory_get_longname        (GstElementFactory *factory);
-G_CONST_RETURN gchar *  gst_element_factory_get_klass           (GstElementFactory *factory);
-G_CONST_RETURN gchar *  gst_element_factory_get_description     (GstElementFactory *factory);
-G_CONST_RETURN gchar *  gst_element_factory_get_author          (GstElementFactory *factory);
-G_CONST_RETURN gchar *  gst_element_factory_get_documentation_uri (GstElementFactory *factory);
-G_CONST_RETURN gchar *  gst_element_factory_get_icon_name       (GstElementFactory *factory);
+
+G_CONST_RETURN gchar *  gst_element_factory_get_metadata        (GstElementFactory *factoryi, const gchar *key);
+
 guint                   gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
 G_CONST_RETURN GList *  gst_element_factory_get_static_pad_templates (GstElementFactory *factory);
+
 gint                    gst_element_factory_get_uri_type        (GstElementFactory *factory);
 gchar **                gst_element_factory_get_uri_protocols   (GstElementFactory *factory);
+
 gboolean                gst_element_factory_has_interface       (GstElementFactory *factory,
                                                                  const gchar *interfacename);
 

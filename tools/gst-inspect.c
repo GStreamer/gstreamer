@@ -199,7 +199,7 @@ get_rank_name (char *s, gint rank)
 }
 
 static gboolean
-print_factory_details_meta_data (GQuark field_id, const GValue * value,
+print_factory_details_metadata (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
   gchar *val = g_strdup_value_contents (value);
@@ -218,17 +218,11 @@ print_factory_details_info (GstElementFactory * factory)
   char s[20];
 
   n_print ("Factory Details:\n");
-  n_print ("  Long name:\t%s\n", factory->details.longname);
-  n_print ("  Class:\t%s\n", factory->details.klass);
-  n_print ("  Description:\t%s\n", factory->details.description);
-  n_print ("  Author(s):\t%s\n", factory->details.author);
   n_print ("  Rank:\t\t%s (%d)\n",
       get_rank_name (s, GST_PLUGIN_FEATURE (factory)->rank),
       GST_PLUGIN_FEATURE (factory)->rank);
-  if (factory->meta_data != NULL) {
-    gst_structure_foreach ((GstStructure *) factory->meta_data,
-        print_factory_details_meta_data, NULL);
-  }
+  gst_structure_foreach ((GstStructure *) factory->metadata,
+      print_factory_details_metadata, NULL);
   n_print ("\n");
 }
 

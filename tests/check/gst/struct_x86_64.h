@@ -14,7 +14,6 @@ static GstCheckABIStruct list[] = {
   {"GstElementClass", sizeof (GstElementClass), 488} ,
   {"GstElementFactory", sizeof (GstElementFactory), 280} ,
   {"GstElementFactoryClass", sizeof (GstElementFactoryClass), 304} ,
-  {"GstElementDetails", sizeof (GstElementDetails), 64} ,
   {"GstEvent", sizeof (GstEvent), 64} ,
   {"GstEventClass", sizeof (GstEventClass), 64} ,
   {"GstFormatDefinition", sizeof (GstFormatDefinition), 32} ,

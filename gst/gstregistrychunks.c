@@ -284,17 +284,9 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
       }
     }
 
-    /* pack element factory strings */
-    gst_registry_chunks_save_const_string (list, factory->details.author);
-    gst_registry_chunks_save_const_string (list, factory->details.description);
-    gst_registry_chunks_save_const_string (list, factory->details.klass);
-    gst_registry_chunks_save_const_string (list, factory->details.longname);
-    if (factory->meta_data) {
-      gst_registry_chunks_save_string (list,
-          gst_structure_to_string (factory->meta_data));
-    } else {
-      gst_registry_chunks_save_const_string (list, "");
-    }
+    /* pack element metadata strings */
+    gst_registry_chunks_save_string (list,
+        gst_structure_to_string (factory->metadata));
   } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
     GstRegistryChunkTypeFindFactory *tff;
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
@@ -585,21 +577,16 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
     /* unpack element factory strings */
     unpack_string_nocopy (*in, meta_data_str, end, fail);
     if (meta_data_str && *meta_data_str) {
-      factory->meta_data = gst_structure_from_string (meta_data_str, NULL);
-      if (!factory->meta_data) {
+      factory->metadata = gst_structure_from_string (meta_data_str, NULL);
+      if (!factory->metadata) {
         GST_ERROR
             ("Error when trying to deserialize structure for metadata '%s'",
             meta_data_str);
         goto fail;
       }
     }
-    unpack_string (*in, factory->details.longname, end, fail);
-    unpack_string (*in, factory->details.klass, end, fail);
-    unpack_string (*in, factory->details.description, end, fail);
-    unpack_string (*in, factory->details.author, end, fail);
     n = ef->npadtemplates;
-    GST_DEBUG ("Element factory : '%s' with npadtemplates=%d",
-        factory->details.longname, n);
+    GST_DEBUG ("Element factory : npadtemplates=%d", n);
 
     /* load pad templates */
     for (i = 0; i < n; i++) {

@@ -82,7 +82,7 @@
 #include <gobject/gvaluecollector.h>
 
 #include "gstelement.h"
-#include "gstelementdetails.h"
+#include "gstelementmetadata.h"
 #include "gstenumtypes.h"
 #include "gstbus.h"
 #include "gstmarshal.h"
@@ -233,7 +233,7 @@ gst_element_base_class_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  /* FIXME 0.11: Copy the element details and instead of clearing the
+  /* FIXME 0.11: Instead of clearing the
    * pad template list copy the list and increase the refcount of
    * the pad templates by one.
    *
@@ -242,8 +242,7 @@ gst_element_base_class_init (gpointer g_class)
    * of doing things.
    * See http://bugzilla.gnome.org/show_bug.cgi?id=491501
    */
-  memset (&element_class->details, 0, sizeof (GstElementDetails));
-  element_class->meta_data = NULL;
+  element_class->metadata = gst_structure_empty_new ("metadata");
   element_class->padtemplates = NULL;
 
   /* set the factory, see gst_element_register() */
@@ -261,11 +260,8 @@ gst_element_base_class_finalize (gpointer g_class)
 
   g_list_foreach (klass->padtemplates, (GFunc) gst_object_unref, NULL);
   g_list_free (klass->padtemplates);
-  __gst_element_details_clear (&klass->details);
-  if (klass->meta_data) {
-    gst_structure_free (klass->meta_data);
-    klass->meta_data = NULL;
-  }
+
+  gst_structure_free (klass->metadata);
 }
 
 static void
@@ -1158,60 +1154,29 @@ gst_element_class_add_pad_template (GstElementClass * klass,
   klass->numpadtemplates++;
 }
 
-static void
-gst_element_class_add_meta_data (GstElementClass * klass,
+/**
+ * gst_element_class_add_metadata:
+ * @klass: class to set metadata for
+ * @key: the key to set
+ * @value: the value to set
+ *
+ * Set @key with @value as metadata in @klass.
+ */
+void
+gst_element_class_add_metadata (GstElementClass * klass,
     const gchar * key, const gchar * value)
 {
-  if (!klass->meta_data) {
-    /* FIXME: use a quark for "metadata" */
-    klass->meta_data = gst_structure_empty_new ("metadata");
-  }
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+  g_return_if_fail (key != NULL);
+  g_return_if_fail (value != NULL);
 
-  gst_structure_set ((GstStructure *) klass->meta_data,
+  gst_structure_set ((GstStructure *) klass->metadata,
       key, G_TYPE_STRING, value, NULL);
 }
 
 /**
- * gst_element_class_set_documentation_uri:
- * @klass: class to set details for
- * @uri: uri of element documentation
- *
- * Set uri pointing to user documentation. Applications can use this to show
- * help for e.g. effects to users.
- *
- * Since: 0.10.31
- */
-void
-gst_element_class_set_documentation_uri (GstElementClass * klass,
-    const gchar * uri)
-{
-  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
-
-  gst_element_class_add_meta_data (klass, "doc-uri", uri);
-}
-
-/**
- * gst_element_class_set_icon_name:
- * @klass: class to set details for
- * @name: name of an icon
- *
- * Elements that bridge to certain other products can include an icon of that
- * used product. Application can show the icon in menus/selectors to help
- * identifying specific elements.
- *
- * Since: 0.10.31
- */
-void
-gst_element_class_set_icon_name (GstElementClass * klass, const gchar * name)
-{
-  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
-
-  gst_element_class_add_meta_data (klass, "icon-name", name);
-}
-
-/**
- * gst_element_class_set_details_simple:
- * @klass: class to set details for
+ * gst_element_class_set_metadata:
+ * @klass: class to set metadata for
  * @longname: The long English name of the element. E.g. "File Sink"
  * @classification: String describing the type of element, as an unordered list
  * separated with slashes ('/'). See draft-klass.txt of the design docs
@@ -1219,29 +1184,23 @@ gst_element_class_set_icon_name (GstElementClass * klass, const gchar * name)
  * @description: Sentence describing the purpose of the element.
  * E.g: "Write stream to a file"
  * @author: Name and contact details of the author(s). Use \n to separate
- * multiple author details. E.g: "Joe Bloggs &lt;joe.blogs at foo.com&gt;"
+ * multiple author metadata. E.g: "Joe Bloggs &lt;joe.blogs at foo.com&gt;"
  *
- * Sets the detailed information for a #GstElementClass. Simpler version of
- * gst_element_class_set_details() that generates less linker overhead.
+ * Sets the detailed information for a #GstElementClass.
  * <note>This function is for use in _base_init functions only.</note>
- *
- * The detail parameter strings are copied into the #GstElementDetails for
- * the element class.
- *
- * Since: 0.10.14
  */
 void
-gst_element_class_set_details_simple (GstElementClass * klass,
+gst_element_class_set_metadata (GstElementClass * klass,
     const gchar * longname, const gchar * classification,
     const gchar * description, const gchar * author)
 {
-  const GstElementDetails details =
-      GST_ELEMENT_DETAILS ((gchar *) longname, (gchar *) classification,
-      (gchar *) description, (gchar *) author);
-
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
 
-  __gst_element_details_copy (&klass->details, &details);
+  gst_structure_set ((GstStructure *) klass->metadata,
+      GST_ELEMENT_METADATA_LONGNAME, G_TYPE_STRING, longname,
+      GST_ELEMENT_METADATA_KLASS, G_TYPE_STRING, classification,
+      GST_ELEMENT_METADATA_DESCRIPTION, G_TYPE_STRING, description,
+      GST_ELEMENT_METADATA_AUTHOR, G_TYPE_STRING, author, NULL);
 }
 
 /**

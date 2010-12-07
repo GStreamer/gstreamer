@@ -153,7 +153,7 @@ gst_pipeline_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details_simple (gstelement_class, "Pipeline object",
+  gst_element_class_set_metadata (gstelement_class, "Pipeline object",
       "Generic/Bin",
       "Complete pipeline object",
       "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");

@@ -131,7 +131,7 @@ typedef enum {
  *
  * Since: 0.10.13
  */
-#define GST_STATE_TARGET(elem)          (GST_ELEMENT_CAST(elem)->abidata.ABI.target_state)
+#define GST_STATE_TARGET(elem)          (GST_ELEMENT_CAST(elem)->target_state)
 
 /**
  * GST_STATE_RETURN:
@@ -391,7 +391,7 @@ typedef enum
  *
  * Since: 0.10.24
  */
-#define GST_ELEMENT_START_TIME(elem)            (GST_ELEMENT_CAST(elem)->abidata.ABI.start_time)
+#define GST_ELEMENT_START_TIME(elem)            (GST_ELEMENT_CAST(elem)->start_time)
 
 /**
  * GST_ELEMENT_ERROR:
@@ -513,6 +513,7 @@ G_STMT_START {                                                          \
  * @state_cond: Used to signal completion of a state change
  * @state_cookie: Used to detect concurrent execution of
  * gst_element_set_state() and gst_element_get_state()
+ * @target_state: the target state of an element as set by the application
  * @current_state: the current state of an element
  * @next_state: the next state of an element, can be #GST_STATE_VOID_PENDING if
  * the element is in the correct state.
@@ -526,6 +527,7 @@ G_STMT_START {                                                          \
  * @base_time: the time of the clock right before the element is set to
  * PLAYING. Subtracting @base_time from the current clock time in the PLAYING
  * state will yield the running_time against the clock.
+ * @start_time: the running_time of the last PAUSED state
  * @numpads: number of pads of the element, includes both source and sink pads.
  * @pads: list of pads
  * @numsrcpads: number of source pads of the element.
@@ -546,6 +548,7 @@ struct _GstElement
   /* element state */
   GCond                *state_cond;
   guint32               state_cookie;
+  GstState              target_state;
   GstState              current_state;
   GstState              next_state;
   GstState              pending_state;
@@ -556,6 +559,7 @@ struct _GstElement
   /* allocated clock */
   GstClock             *clock;
   GstClockTimeDiff      base_time; /* NULL/READY: 0 - PAUSED: current time - PLAYING: difference to clock */
+  GstClockTime          start_time;
 
   /* element pads, these lists can only be iterated while holding
    * the LOCK or checking the cookie after each LOCK. */
@@ -568,22 +572,13 @@ struct _GstElement
   guint32               pads_cookie;
 
   /*< private >*/
-  union {
-    struct {
-      /* state set by application */
-      GstState              target_state;
-      /* running time of the last PAUSED state */
-      GstClockTime          start_time;
-    } ABI;
-    /* adding + 0 to mark ABI change to be undone later */
-    gpointer _gst_reserved[GST_PADDING + 0];
-  } abidata;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
  * GstElementClass:
  * @parent_class: the parent class structure
- * @details: #GstElementDetails for elements of this class
+ * @metadata: metadata for elements of this class
  * @elementfactory: the #GstElementFactory that creates these elements
  * @padtemplates: a #GList of #GstPadTemplate
  * @numpadtemplates: the number of padtemplates
@@ -610,9 +605,8 @@ struct _GstElementClass
   GstObjectClass         parent_class;
 
   /*< public >*/
-  /* the element details */
-  /* FIXME-0.11: deprecate this in favour of meta_data */
-  GstElementDetails      details;
+  /* the element metadata */
+  gpointer		 metadata;
 
   /* factory that the element was created from */
   GstElementFactory     *elementfactory;
@@ -659,10 +653,8 @@ struct _GstElementClass
   gboolean              (*query)                (GstElement *element, GstQuery *query);
 
   /*< private >*/
-  /* FIXME-0.11: move up and replace details */
-  gpointer		meta_data;
 
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* element class pad templates */
@@ -671,13 +663,14 @@ GstPadTemplate*         gst_element_class_get_pad_template      (GstElementClass
 GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
 
 /* element class meta data */
-void                    gst_element_class_set_documentation_uri (GstElementClass * klass, const gchar *uri);
-void                    gst_element_class_set_icon_name         (GstElementClass * klass, const gchar *name);
-void                    gst_element_class_set_details_simple    (GstElementClass *klass,
+void                    gst_element_class_set_metadata          (GstElementClass *klass,
                                                                  const gchar     *longname,
                                                                  const gchar     *classification,
                                                                  const gchar     *description,
                                                                  const gchar     *author);
+void                    gst_element_class_add_metadata          (GstElementClass * klass,
+                                                                 const gchar * key, const gchar * value);
+
 
 /* element instance */
 GType                   gst_element_get_type            (void);

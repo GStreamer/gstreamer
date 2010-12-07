@@ -198,7 +198,7 @@ noinst_HEADERS = 		\
 	glib-compat-private.h	\
 	gst-i18n-lib.h		\
 	gst-i18n-app.h		\
-	gstelementdetails.h	\
+	gstelementmetadata.h	\
 	gstpluginloader.h	\
 	gstquark.h		\
 	gstregistrybinary.h     \
