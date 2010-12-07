@@ -1148,7 +1148,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
           gboolean compatible;
 
           /* Now check if the two pads' caps are compatible */
-          temp = gst_pad_get_caps_reffed (pad);
+          temp = gst_pad_get_caps (pad);
           if (caps) {
             intersection = gst_caps_intersect (temp, caps);
             gst_caps_unref (temp);
@@ -1156,7 +1156,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
             intersection = temp;
           }
 
-          temp = gst_pad_get_caps_reffed (current);
+          temp = gst_pad_get_caps (current);
           compatible = gst_caps_can_intersect (temp, intersection);
           gst_caps_unref (temp);
           gst_caps_unref (intersection);
@@ -1202,7 +1202,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   /* try to create a new one */
   /* requesting is a little crazy, we need a template. Let's create one */
   /* FIXME: why not gst_pad_get_pad_template (pad); */
-  templcaps = gst_pad_get_caps_reffed (pad);
+  templcaps = gst_pad_get_caps (pad);
 
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
       GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
@@ -2680,7 +2680,7 @@ getcaps_fold_func (GstPad * pad, GValue * ret, GstPad * orig)
   GstCaps *peercaps, *existing;
 
   existing = g_value_get_pointer (ret);
-  peercaps = gst_pad_peer_get_caps_reffed (pad);
+  peercaps = gst_pad_peer_get_caps (pad);
   if (G_LIKELY (peercaps)) {
     GstCaps *intersection = gst_caps_intersect (existing, peercaps);
 

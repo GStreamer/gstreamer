@@ -651,33 +651,6 @@ GST_START_TEST (test_sink_unref_unlink)
 
 GST_END_TEST;
 
-/* gst_pad_get_caps should return a copy of the caps */
-GST_START_TEST (test_get_caps_must_be_copy)
-{
-  GstPad *pad;
-  GstCaps *caps;
-  GstPadTemplate *templ;
-
-  caps = gst_caps_new_any ();
-  templ =
-      gst_pad_template_new ("test_templ", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
-
-  pad = gst_pad_new_from_template (templ, NULL);
-  fail_unless (GST_PAD_CAPS (pad) == NULL, "caps present on pad");
-  /* This is a writable copy ! */
-  caps = gst_pad_get_caps (pad);
-
-  /* we must own the caps */
-  ASSERT_OBJECT_REFCOUNT (caps, "caps", 1);
-
-  /* cleanup */
-  gst_object_unref (templ);
-  gst_caps_unref (caps);
-  gst_object_unref (pad);
-}
-
-GST_END_TEST;
-
 static void
 unblock_async_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 {
@@ -989,7 +962,6 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_push_negotiation);
   tcase_add_test (tc_chain, test_src_unref_unlink);
   tcase_add_test (tc_chain, test_sink_unref_unlink);
-  tcase_add_test (tc_chain, test_get_caps_must_be_copy);
   tcase_add_test (tc_chain, test_block_async);
 #if 0
   tcase_add_test (tc_chain, test_block_async_replace_callback);

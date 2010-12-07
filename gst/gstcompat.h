@@ -44,6 +44,8 @@ G_BEGIN_DECLS
 #define gst_element_factory_get_documentation_uri(f)  gst_element_factory_get_metadata(f, GST_ELEMENT_METADATA_DOC_URI)
 #define gst_element_factory_get_icon_name(f)   gst_element_factory_get_metadata(f, GST_ELEMENT_METADATA_ICON_NAME)
 
+#define gst_pad_get_caps_reffed(p)             gst_pad_get_caps(p)
+#define gst_pad_peer_get_caps_reffed(p)        gst_pad_peer_get_caps(p)
 
 #ifndef GST_DISABLE_DEPRECATED
 
