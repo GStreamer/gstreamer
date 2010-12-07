@@ -26,15 +26,15 @@
 #include "gstalsadeviceprobe.h"
 #include "gst/interfaces/propertyprobe.h"
 
+G_LOCK_DEFINE_STATIC (probe_lock);
+
 static const GList *
 gst_alsa_device_property_probe_get_properties (GstPropertyProbe * probe)
 {
   GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
   static GList *list = NULL;
 
-  /* well, not perfect, but better than no locking at all.
-   * In the worst case we leak a list node, so who cares? */
-  GST_CLASS_LOCK (GST_OBJECT_CLASS (klass));
+  G_LOCK (probe_lock);
 
   if (!list) {
     GParamSpec *pspec;
@@ -43,7 +43,7 @@ gst_alsa_device_property_probe_get_properties (GstPropertyProbe * probe)
     list = g_list_append (NULL, pspec);
   }
 
-  GST_CLASS_UNLOCK (GST_OBJECT_CLASS (klass));
+  G_UNLOCK (probe_lock);
 
   return list;
 }
