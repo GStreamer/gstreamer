@@ -41,3 +41,12 @@ The 0.11 porting guide
     gst_element_factory_get_icon_name -> gst_element_factory_get_metadata
 
     gstelementmetadata.h contains the keys for all standard metadata.
+
+* GstPad:
+    gst_pad_get_caps() does not return writable caps anymore and an explicit
+    gst_caps_make_writable() needs to be performed. This was the functionality
+    of gst_pad_get_caps_reffed(), which is removed now.
+
+    A similar change was done for gst_pad_peer_get_caps() and
+    gst_pad_peer_get_caps_reffed()
+
