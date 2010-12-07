@@ -1072,7 +1072,6 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
 
   GST_DEBUG_OBJECT (psink, "starting");
   pbuf->paused = FALSE;
-  gst_pulsering_set_corked (pbuf, FALSE, FALSE);
   pa_threaded_mainloop_unlock (mainloop);
 
   return TRUE;
