@@ -992,8 +992,9 @@ GST_WRITE_DOUBLE_BE(guint8 *data, gdouble num)
  */
 #define GST_ROUND_DOWN_64(num) ((num)&(~63))
 
-void			gst_object_default_error	(GstObject * source,
-							 GError * error, gchar * debug);
+void			gst_object_default_error	(GstObject    * source,
+							 const GError * error,
+							 const gchar  * debug);
 
 /* element functions */
 void                    gst_element_create_all_pads     (GstElement *element);

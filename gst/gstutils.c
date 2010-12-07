@@ -2438,10 +2438,12 @@ gst_pad_get_parent_element (GstPad * pad)
  * The default handler will simply print the error string using g_print.
  */
 void
-gst_object_default_error (GstObject * source, GError * error, gchar * debug)
+gst_object_default_error (GstObject * source, const GError * error,
+    const gchar * debug)
 {
   gchar *name = gst_object_get_path_string (source);
 
+  /* FIXME 0.11: should change this to g_printerr() */
   g_print (_("ERROR: from element %s: %s\n"), name, error->message);
   if (debug)
     g_print (_("Additional debug info:\n%s\n"), debug);
