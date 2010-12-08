@@ -217,9 +217,9 @@ static GESTrackObject *
 ges_timeline_source_create_track_object (GESTimelineObject * obj,
     GESTrack * track)
 {
-  GST_DEBUG ("Creating a GESTrackSource");
-  /* FIXME : Implement properly ! */
-  return (GESTrackObject *) ges_track_source_new ();
+  GST_ERROR
+      ("No GESTimelineObject::create_track_object vmethod implementation");
+  return NULL;
 }
 
 static gboolean

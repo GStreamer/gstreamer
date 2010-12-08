@@ -120,9 +120,3 @@ ges_track_source_init (GESTrackSource * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_SOURCE, GESTrackSourcePrivate);
 }
-
-GESTrackSource *
-ges_track_source_new (void)
-{
-  return g_object_new (GES_TYPE_TRACK_SOURCE, NULL);
-}

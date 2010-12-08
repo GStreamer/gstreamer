@@ -85,8 +85,6 @@ struct _GESTrackOperationClass {
 
 GType ges_track_operation_get_type (void);
 
-GESTrackOperation* ges_track_operation_new (void);
-
 G_END_DECLS
 
 #endif /* _GES_TRACK_OPERATION */

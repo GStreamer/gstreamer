@@ -31,6 +31,7 @@
 #include "ges-internal.h"
 #include "ges-custom-timeline-source.h"
 #include "ges-timeline-source.h"
+#include "ges-track-source.h"
 
 struct _GESCustomTimelineSourcePrivate
 {
@@ -65,6 +66,13 @@ ges_cust_timeline_src_set_property (GObject * object, guint property_id,
   }
 }
 
+static GESTrackObject *
+ges_cust_timeline_src_create_track_object (GESTimelineObject * obj,
+    GESTrack * track)
+{
+  return g_object_new (GES_TYPE_TRACK_SOURCE, NULL);
+}
+
 static void
 ges_cust_timeline_src_dispose (GObject * object)
 {
@@ -91,6 +99,7 @@ ges_cust_timeline_src_class_init (GESCustomTimelineSourceClass * klass)
   object_class->finalize = ges_cust_timeline_src_finalize;
 
   tlobj_class->fill_track_object = ges_cust_timeline_src_fill_track_object;
+  tlobj_class->create_track_object = ges_cust_timeline_src_create_track_object;
 }
 
 static void

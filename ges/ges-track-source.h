@@ -86,8 +86,6 @@ struct _GESTrackSourceClass {
 
 GType ges_track_source_get_type (void);
 
-GESTrackSource* ges_track_source_new (void);
-
 G_END_DECLS
 
 #endif /* _GES_TRACK_SOURCE */

@@ -94,7 +94,6 @@ GES_TYPE_TRACK_OBJECT
 <TITLE>GESTrackSource</TITLE>
 GESTrackSource
 GESTrackSourceClass
-ges_track_source_new
 <SUBSECTION Standard>
 GESTrackSourcePrivate
 GES_TRACK_SOURCE
@@ -111,7 +110,6 @@ ges_track_source_get_type
 <TITLE>GESTrackOperation</TITLE>
 GESTrackOperation
 GESTrackOperationClass
-ges_track_operation_new
 <SUBSECTION Standard>
 GESTrackOperationPrivate
 ges_track_operation_get_type
