@@ -48,22 +48,17 @@
  */
 
 struct _GESKeyfileFormatter {
+  /*< private >*/
   GESFormatter parent;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-/**
- * GESKeyfileFormatterClass:
- * @parent_class: parent class
- */
-
 struct _GESKeyfileFormatterClass {
+  /*< private >*/
   GESFormatterClass parent_class;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

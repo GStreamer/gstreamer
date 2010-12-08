@@ -51,9 +51,9 @@ typedef struct _GESTimelineOverlayPrivate GESTimelineOverlayPrivate;
  */
 
 struct _GESTimelineOverlay {
-  GESTimelineObject parent;
-
   /*< private >*/
+
+  GESTimelineObject parent;
 
   GESTimelineOverlayPrivate *priv;
 

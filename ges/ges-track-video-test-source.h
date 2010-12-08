@@ -47,13 +47,13 @@ G_BEGIN_DECLS
 
 typedef struct _GESTrackVideoTestSourcePrivate GESTrackVideoTestSourcePrivate;
 
-/** 
+/**
  * GESTrackVideoTestSource:
  */
 struct _GESTrackVideoTestSource {
+  /*< private >*/
   GESTrackSource parent;
 
-  /*< private >*/
   GESVideoTestPattern pattern;
 
   GESTrackVideoTestSourcePrivate *priv;
@@ -62,15 +62,9 @@ struct _GESTrackVideoTestSource {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-/**
- * GESTrackVideoTestSourceClass:
- * @parent_class: parent class
- */
-
 struct _GESTrackVideoTestSourceClass {
   GESTrackSourceClass parent_class;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

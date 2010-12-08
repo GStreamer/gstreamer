@@ -47,14 +47,13 @@ G_BEGIN_DECLS
 
 typedef struct _GESTrackTextOverlayPrivate GESTrackTextOverlayPrivate;
 
-/** 
+/**
  * GESTrackTextOverlay:
- *
  */
 struct _GESTrackTextOverlay {
+  /*< private >*/
   GESTrackOperation parent;
 
-  /*< private >*/
   gchar         *text;
   gchar         *font_desc;
   GESTextHAlign halign;
@@ -66,11 +65,6 @@ struct _GESTrackTextOverlay {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-/**
- * GESTrackTextOverlayClass:
- * @parent_class: parent class
- */
 
 struct _GESTrackTextOverlayClass {
   GESTrackOperationClass parent_class;

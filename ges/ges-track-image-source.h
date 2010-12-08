@@ -46,15 +46,13 @@ G_BEGIN_DECLS
 
 typedef struct _GESTrackImageSourcePrivate GESTrackImageSourcePrivate;
 
-/** 
+/**
  * GESTrackImageSource:
- * @uri: #gchar *, the URI of the media file to play
- *
  */
 struct _GESTrackImageSource {
+  /*< private >*/
   GESTrackSource parent;
 
-  /*< public >*/
   gchar *uri;
 
   GESTrackImageSourcePrivate *priv;
@@ -63,15 +61,8 @@ struct _GESTrackImageSource {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-/**
- * GESTrackImageSourceClass:
- * @parent_class: parent class
- */
-
 struct _GESTrackImageSourceClass {
   GESTrackSourceClass parent_class;
-
-  /* <public> */
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

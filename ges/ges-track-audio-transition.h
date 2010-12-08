@@ -46,7 +46,7 @@ G_BEGIN_DECLS
 
 typedef struct _GESTrackAudioTransitionPrivate GESTrackAudioTransitionPrivate;
 
-/** 
+/**
  * GESTrackAudioTransition:
  *
  */
@@ -69,16 +69,9 @@ struct _GESTrackAudioTransition {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-/**
- * GESTrackAudioTransitionClass:
- * @parent_class: parent class
- *
- */
-
 struct _GESTrackAudioTransitionClass {
   GESTrackTransitionClass parent_class;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

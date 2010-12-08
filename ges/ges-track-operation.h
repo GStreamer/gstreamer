@@ -49,16 +49,14 @@ typedef struct _GESTrackOperationPrivate GESTrackOperationPrivate;
 
 /**
  * GESTrackOperation:
- * @parent: parent
  *
  * Base class for overlays, transitions, and effects
- *
  */
 
 struct _GESTrackOperation {
+  /*< private >*/
   GESTrackObject parent;
 
-  /*< private >*/
   GstElement *element;
 
   GESTrackOperationPrivate *priv;
@@ -69,14 +67,15 @@ struct _GESTrackOperation {
 
 /**
  * GESTrackOperationClass:
- * @parent_class: the parent class
  * @create_element: virtual method which creates the GStreamer element for
  * this object
  */
 
 struct _GESTrackOperationClass {
+  /*< private >*/
   GESTrackObjectClass parent_class;
 
+  /*< public >*/
   GstElement *(*create_element) (GESTrackOperation *);
 
   /*< private >*/

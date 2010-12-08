@@ -49,13 +49,14 @@ typedef struct _GESTimelineTitleSourcePrivate GESTimelineTitleSourcePrivate;
 
 /**
  * GESTimelineTitleSource:
- * 
+ *
+ * Render stand-alone titles in GESTimelineLayer.
  */
 
 struct _GESTimelineTitleSource {
+  /*< private >*/
   GESTimelineSource parent;
 
-  /*< private >*/
   gboolean mute;
   gchar *text;
   gchar *font_desc;
@@ -68,15 +69,10 @@ struct _GESTimelineTitleSource {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-/**
- * GESTimelineTitleSourceClass:
- * @parent_class: parent class
- */
-
 struct _GESTimelineTitleSourceClass {
+  /*< private >*/
   GESTimelineSourceClass parent_class;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

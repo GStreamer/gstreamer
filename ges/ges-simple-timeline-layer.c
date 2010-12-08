@@ -441,13 +441,13 @@ ges_simple_timeline_layer_new (void)
 
 /**
  * ges_simple_timeline_layer_is_valid:
+ * @layer: a #GESSimpleTimelineLayer
  *
- * FALSE when the arrangement of objects in the layer would cause errors or
- * unexpected output during playback. Do not set the containing pipeline
+ * Checks whether the arrangement of objects in the layer would cause errors
+ * or unexpected output during playback. Do not set the containing pipeline
  * state to PLAYING when this property is FALSE.
  *
- * Returns: #True if current arrangement of the layer is valid, #False
- * otherwise
+ * Returns: #TRUE if current arrangement of the layer is valid else #FALSE.
  */
 gboolean
 ges_simple_timeline_layer_is_valid (GESSimpleTimelineLayer * layer)

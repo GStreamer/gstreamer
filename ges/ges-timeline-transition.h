@@ -49,9 +49,9 @@ typedef struct _GESTimelineTransitionPrivate GESTimelineTransitionPrivate;
  * GESTimelineTransition:
  * @vtype: a #GESVideoTransitionType indicating the type of video transition
  * to apply.
- *
  */
 struct _GESTimelineTransition {
+  /*< private >*/
   GESTimelineObject parent;
 
   /*< public >*/
@@ -66,14 +66,13 @@ struct _GESTimelineTransition {
 
 /**
  * GESTimelineTransitionClass:
- * @parent_class: parent class
  *
  */
 
 struct _GESTimelineTransitionClass {
+  /*< private >*/
   GESTimelineObjectClass parent_class;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

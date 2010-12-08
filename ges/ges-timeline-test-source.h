@@ -54,9 +54,9 @@ typedef struct _GESTimelineTestSourcePrivate GESTimelineTestSourcePrivate;
  */
 
 struct _GESTimelineTestSource {
+  /*< private >*/
   GESTimelineSource parent;
 
-  /*< private >*/
   gboolean mute;
   GESVideoTestPattern vpattern;
   gdouble freq;
@@ -70,13 +70,12 @@ struct _GESTimelineTestSource {
 
 /**
  * GESTimelineTestSourceClass:
- * @parent_class: parent class
  */
 
 struct _GESTimelineTestSourceClass {
+  /*< private >*/
   GESTimelineSourceClass parent_class;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

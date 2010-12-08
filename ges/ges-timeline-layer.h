@@ -73,13 +73,13 @@ struct _GESTimelineLayer {
 
 /**
  * GESTimelineLayerClass:
- * @parent_class: layer parent class
  * @get_objects: method to get the objects contained in the layer
  *
  * Subclasses can override the @get_objects if they can provide a more
  * efficient way of providing the list of contained #GESTimelineObject(s).
  */
 struct _GESTimelineLayerClass {
+  /*< private >*/
   GObjectClass parent_class;
 
   /*< public >*/

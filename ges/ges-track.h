@@ -77,13 +77,12 @@ struct _GESTrack {
 
 /**
  * GESTrackClass:
- * @parent_class: parent class
  */
 
 struct _GESTrackClass {
+  /*< private >*/
   GstBinClass parent_class;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

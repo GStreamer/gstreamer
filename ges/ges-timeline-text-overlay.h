@@ -53,9 +53,9 @@ typedef struct _GESTimelineTextOverlayPrivate GESTimelineTextOverlayPrivate;
  */
 
 struct _GESTimelineTextOverlay {
+  /*< private >*/
   GESTimelineOverlay parent;
 
-  /*< private >*/
   gboolean mute;
   gchar *text;
   gchar *font_desc;
@@ -70,13 +70,12 @@ struct _GESTimelineTextOverlay {
 
 /**
  * GESTimelineTextOverlayClass:
- * @parent_class: parent class
  */
 
 struct _GESTimelineTextOverlayClass {
-  GESTimelineOverlayClass parent_class;
+  /*< private >*/
 
-  /*< public >*/
+  GESTimelineOverlayClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

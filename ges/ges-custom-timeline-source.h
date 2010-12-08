@@ -69,6 +69,7 @@ typedef gboolean (*FillTrackObjectUserFunc) (GESTimelineObject * object,
 /**
  * GESCustomTimelineSource:
  *
+ * Debugging custom timeline source
  */
 
 struct _GESCustomTimelineSource {
@@ -83,8 +84,6 @@ struct _GESCustomTimelineSource {
 
 /**
  * GESCustomTimelineSourceClass:
- * @parent_class: parent class
- *
  */
 
 struct _GESCustomTimelineSourceClass {

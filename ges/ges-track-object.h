@@ -132,7 +132,6 @@ struct _GESTrackObject {
   guint32 pending_gnl_priority;
   gboolean pending_active;
 
-
   GstElement *gnlobject;
 
   GESTrackObjectPrivate *priv;
@@ -143,7 +142,6 @@ struct _GESTrackObject {
 
 /**
  * GESTrackObjectClass:
- * @parent_class: parent class
  * @create_gnl_object: method to create the GNonLin container object.
  * @start_changed: start property of gnlobject has changed
  * @media_start_changed: media-start property of gnlobject has changed
@@ -155,6 +153,7 @@ struct _GESTrackObject {
  * of GNonLin object will be created.
  */ 
 struct _GESTrackObjectClass {
+  /*< private >*/
   GObjectClass parent_class;
 
   /*< public >*/

@@ -49,16 +49,14 @@ typedef struct _GESTrackSourcePrivate GESTrackSourcePrivate;
 
 /**
  * GESTrackSource:
- * @parent: parent
  *
  * Base class for single-media sources
- *
  */
 
 struct _GESTrackSource {
+  /*< private >*/
   GESTrackObject parent;
 
-  /*< private >*/
   GstElement *element;
 
   GESTrackSourcePrivate *priv;
@@ -69,15 +67,16 @@ struct _GESTrackSource {
 
 /**
  * GESTrackSourceClass:
- * @parent_class: the parent class
  * @create_element: virtual method which creates the GStreamer element for
  * this object
  *
  */
 
 struct _GESTrackSourceClass {
+  /*< private >*/
   GESTrackObjectClass parent_class;
 
+  /*< public >*/
   GstElement *(*create_element) (GESTrackSource *);
 
   /*< private >*/

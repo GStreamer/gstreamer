@@ -46,15 +46,16 @@ G_BEGIN_DECLS
 
 typedef struct _GESTrackAudioTestSourcePrivate GESTrackAudioTestSourcePrivate;
 
-/** 
+
+/**
  * GESTrackAudioTestSource:
  *
  */
 
 struct _GESTrackAudioTestSource {
+  /*< private >*/
   GESTrackSource parent;
 
-  /*< private >*/
   gdouble freq;
   gdouble volume;
 
@@ -64,16 +65,10 @@ struct _GESTrackAudioTestSource {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-/**
- * GESTrackAudioTestSourceClass:
- * @parent_class: parent class
- *
- */
-
 struct _GESTrackAudioTestSourceClass {
+  /*< private >*/
   GESTrackSourceClass parent_class;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

@@ -55,16 +55,14 @@ typedef struct _GESTrackTransitionPrivate GESTrackTransitionPrivate;
 /**
  * GESTrackTransition:
  *
- * Track level representation of a transition. Has a concrete implementation
- * for both audio and video streams.
- *
+ * Base class for media transitions.
  */
 
 struct _GESTrackTransition
 {
+  /*< private >*/
   GESTrackObject parent;
 
-  /*< private >*/
   GESTrackTransitionPrivate *priv;
 
   /* Padding for API extension */
@@ -72,11 +70,12 @@ struct _GESTrackTransition
 };
 
 /**
- * GESTrackTransitionClass
- * @parent_class: parent class
+ * GESTrackTransitionClass:
+ * @create_element: return the element that should be controlled by the transition
  */
 
 struct _GESTrackTransitionClass {
+  /*< private >*/
   GESTrackObjectClass parent_class;
   
   /*< public >*/

@@ -50,6 +50,7 @@ typedef struct _GESTimelineSourcePrivate GESTimelineSourcePrivate;
 /**
  * GESTimelineSource:
  *
+ * Base class for sources of a #GESTimelineLayer
  */
 
 struct _GESTimelineSource {
@@ -69,13 +70,12 @@ struct _GESTimelineSource {
 
 /**
  * GESTimelineSourceClass:
- * @parent_class: parent class
  */
 
 struct _GESTimelineSourceClass {
+  /*< private >*/
   GESTimelineObjectClass parent_class;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

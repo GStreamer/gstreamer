@@ -139,15 +139,12 @@ typedef gboolean (*CreateTrackObjectsFunc) (GESTimelineObject * object,
 
 /**
  * GESTimelineObject:
- * @layer: the #GESTimelineLayer where this object is being used.
  *
  * The GESTimelineObject subclass. Subclasses can access these fields.
  */
 struct _GESTimelineObject {
-  GObject parent;
-
-
   /*< private >*/
+  GObject parent;
 
   GESTimelineObjectPrivate *priv;
   
@@ -167,7 +164,6 @@ struct _GESTimelineObject {
 
 /**
  * GESTimelineObjectClass:
- * @parent_class: object parent class
  * @create_track_object: method to create a single #GESTrackObject for a given #GESTrack.
  * @create_track_objects: method to crate multiple #GESTrackObjects for a
  * #GESTrack.
@@ -177,6 +173,7 @@ struct _GESTimelineObject {
  * Subclasses can override the @create_track_object and @fill_track_object methods.
  */
 struct _GESTimelineObjectClass {
+  /*< private >*/
   GObjectClass parent_class;
 
   /*< public >*/

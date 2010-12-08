@@ -4,6 +4,8 @@
 <FILE>ges-common</FILE>
 <TITLE>Initialization</TITLE>
 ges_init
+<SUBSECTION Standard>
+GES_PADDING
 </SECTION>
 
 <SECTION>
@@ -39,7 +41,6 @@ ges_video_transition_type_get_type
 <FILE>ges-track</FILE>
 <TITLE>GESTrack</TITLE>
 GESTrack
-GESTrackClass
 ges_track_audio_raw_new
 ges_track_video_raw_new
 ges_track_new
@@ -47,6 +48,7 @@ ges_track_add_object
 ges_track_remove_object
 ges_track_set_caps
 <SUBSECTION Standard>
+GESTrackClass
 GESTrackPrivate
 ges_track_set_timeline
 ges_track_get_type
@@ -125,9 +127,9 @@ GES_TYPE_TRACK_OPERATION
 <FILE>ges-track-filesource</FILE>
 <TITLE>GESTrackFileSource</TITLE>
 GESTrackFileSource
-GESTrackFileSourceClass
 ges_track_filesource_new
 <SUBSECTION Standard>
+GESTrackFileSourceClass
 GESTrackFileSourcePrivate
 GES_TRACK_FILESOURCE
 GES_TRACK_FILESOURCE_CLASS
@@ -142,7 +144,7 @@ ges_track_filesource_get_type
 <FILE>ges-track-image-source</FILE>
 <TITLE>GESTrackImageSource</TITLE>
 GESTrackImageSource
-GESTrackImageSourceClass
+ges_track_image_source_new
 <SUBSECTION Standard>
 GESTrackImageSourcePrivate
 GES_IS_TRACK_IMAGE_SOURCE
@@ -151,8 +153,8 @@ GES_TRACK_IMAGE_SOURCE
 GES_TRACK_IMAGE_SOURCE_CLASS
 GES_TRACK_IMAGE_SOURCE_GET_CLASS
 GES_TYPE_TRACK_IMAGE_SOURCE
+GESTrackImageSourceClass
 ges_track_image_source_get_type
-ges_track_image_source_new
 </SECTION>
 
 <SECTION>
@@ -175,9 +177,9 @@ ges_track_transition_get_type
 <FILE>ges-track-audio-transition</FILE>
 <TITLE>GESTrackAudioTransition</TITLE>
 GESTrackAudioTransition
-GESTrackAudioTransitionClass
 ges_track_audio_transition_new
 <SUBSECTION Standard>
+GESTrackAudioTransitionClass
 GESTrackAudioTransitionPrivate
 GES_IS_TRACK_AUDIO_TRANSITION
 ges_track_audio_transition_get_type
@@ -192,10 +194,10 @@ GES_TYPE_TRACK_AUDIO_TRANSITION
 <FILE>ges-track-video-transition</FILE>
 <TITLE>GESTrackVideoTransition</TITLE>
 GESTrackVideoTransition
-GESTrackVideoTransitionClass
 ges_track_video_transition_new
 ges_track_video_transition_set_type
 <SUBSECTION Standard>
+GESTrackVideoTransitionClass
 GESTrackVideoTransitionPrivate
 ges_track_video_transition_get_type
 GES_IS_TRACK_VIDEO_TRANSITION
@@ -210,7 +212,6 @@ GES_TYPE_TRACK_VIDEO_TRANSITION
 <FILE>ges-timeline</FILE>
 <TITLE>GESTimeline</TITLE>
 GESTimeline
-GESTimelineClass
 ges_timeline_new
 ges_timeline_new_audio_video
 ges_timeline_new_from_uri
@@ -218,11 +219,13 @@ ges_timeline_add_layer
 ges_timeline_remove_layer
 ges_timeline_add_track
 ges_timeline_remove_track
-ges_timeline_get_track_for_pad
 ges_timeline_load_from_uri
 ges_timeline_save_to_uri
+<SUBSECTION usage>
 ges_timeline_get_tracks
+ges_timeline_get_track_for_pad
 <SUBSECTION Standard>
+GESTimelineClass
 ges_timeline_get_type
 GES_IS_TIMELINE
 GES_IS_TIMELINE_CLASS
@@ -283,6 +286,7 @@ ges_timeline_object_release_track_object
 ges_timeline_object_get_track_objects
 ges_timeline_object_set_layer
 ges_timeline_object_set_priority
+GESTimelineObjectPrivate
 GES_IS_TIMELINE_OBJECT
 GES_IS_TIMELINE_OBJECT_CLASS
 GES_TIMELINE_OBJECT
@@ -297,7 +301,6 @@ ges_timeline_object_get_type
 <FILE>ges-timeline-pipeline</FILE>
 <TITLE>GESTimelinePipeline</TITLE>
 GESTimelinePipeline
-GESTimelinePipelineClass
 GESPipelineFlags
 ges_timeline_pipeline_new
 ges_timeline_pipeline_add_timeline
@@ -307,6 +310,8 @@ ges_timeline_pipeline_get_thumbnail_buffer
 ges_timeline_pipeline_get_thumbnail_rgb24
 ges_timeline_pipeline_save_thumbnail
 <SUBSECTION Standard>
+GESTimelinePipelineClass
+GESTimelinePipelinePrivate
 ges_play_sink_convert_frame
 ges_timeline_pipeline_get_type
 GES_TIMELINE_PIPELINE
@@ -339,9 +344,9 @@ GES_TYPE_TIMELINE_SOURCE
 <FILE>ges-timeline-filesource</FILE>
 <TITLE>GESTimelineFileSource</TITLE>
 GESTimelineFileSource
-GESTimelineFileSourceClass
 ges_timeline_filesource_new
 <SUBSECTION Standard>
+GESTimelineFileSourceClass
 ges_tl_filesource_get_type
 GES_IS_TIMELINE_FILE_SOURCE
 GES_IS_TIMELINE_FILE_SOURCE_CLASS
@@ -390,10 +395,10 @@ ges_timeline_transition_get_type
 <FILE>ges-custom-timeline-source</FILE>
 <TITLE>GESCustomTimelineSource</TITLE>
 GESCustomTimelineSource
-GESCustomTimelineSourceClass
 FillTrackObjectUserFunc
 ges_custom_timeline_source_new
 <SUBSECTION Standard>
+GESCustomTimelineSourceClass
 ges_cust_timeline_src_get_type
 GESCustomTimelineSourcePrivate
 GES_CUSTOM_TIMELINE_SOURCE
@@ -408,12 +413,12 @@ GES_TYPE_CUSTOM_TIMELINE_SOURCE
 <FILE>ges-simple-timeline-layer</FILE>
 <TITLE>GESSimpleTimelineLayer</TITLE>
 GESSimpleTimelineLayer
-GESSimpleTimelineLayerClass
 ges_simple_timeline_layer_new
 ges_simple_timeline_layer_add_object
 ges_simple_timeline_layer_move_object
 ges_simple_timeline_layer_is_valid
 <SUBSECTION Standard>
+GESSimpleTimelineLayerClass
 ges_simple_timeline_layer_get_type
 GESSimpleTimelineLayerPrivate
 GES_IS_SIMPLE_TIMELINE_LAYER
@@ -446,9 +451,9 @@ GES_TIMELINE_TEST_SOURCE_GET_CLASS
 <FILE>ges-timeline-title-source</FILE>
 <TITLE>GESTimelineTitleSource</TITLE>
 GESTimelineTitleSource
-GESTimelineTitleSourceClass
 ges_timeline_title_source_new
 <SUBSECTION Standard>
+GESTimelineTitleSourceClass
 GESTimelineTitleSourcePrivate
 ges_tl_title_src_get_type
 GES_IS_TIMELINE_TITLE_SOURCE
@@ -462,9 +467,9 @@ GES_TIMELINE_TITLE_SOURCE_GET_CLASS
 <FILE>ges-timeline-text-overlay</FILE>
 <TITLE>GESTimelineTextOverlay</TITLE>
 GESTimelineTextOverlay
-GESTimelineTextOverlayClass
 ges_timeline_text_overlay_new
 <SUBSECTION Standard>
+GESTimelineTextOverlayClass
 GESTimelineTextOverlayPrivate
 ges_tl_text_overlay_get_type
 GES_IS_TIMELINE_TEXT_OVERLAY
@@ -479,10 +484,10 @@ GES_TYPE_TIMELINE_TEXT_OVERLAY
 <FILE>ges-track-video-test-source</FILE>
 <TITLE>GESTrackVideoTestSource</TITLE>
 GESTrackVideoTestSource
-GESTrackVideoTestSourceClass
 ges_track_video_test_source_new
 ges_track_video_test_source_set_pattern
 <SUBSECTION Standard>
+GESTrackVideoTestSourceClass
 GESTrackVideoTestSourcePrivate
 ges_track_video_test_source_get_type
 GES_IS_TRACK_VIDEO_TEST_SOURCE
@@ -497,11 +502,11 @@ GES_TYPE_TRACK_VIDEO_TEST_SOURCE
 <FILE>ges-track-audio-test-source</FILE>
 <TITLE>GESTrackAudioTestSource</TITLE>
 GESTrackAudioTestSource
-GESTrackAudioTestSourceClass
 ges_track_audio_test_source_new
 ges_track_audio_test_source_set_freq
 ges_track_audio_test_source_set_volume
 <SUBSECTION Standard>
+GESTrackAudioTestSourceClass
 GESTrackAudioTestSourcePrivate
 ges_track_audio_test_source_get_type
 GES_TRACK_AUDIO_TEST_SOURCE
@@ -516,14 +521,13 @@ GES_IS_TRACK_AUDIO_TEST_SOURCE_CLASS
 <FILE>ges-track-title-source</FILE>
 <TITLE>GESTrackTitleSource</TITLE>
 GESTrackTitleSource
-GESTrackTitleSourceClass
-ges_tl_title_src_get_type
 ges_track_title_source_set_text
 ges_track_title_source_set_font_desc
 ges_track_title_source_set_halignment
 ges_track_title_source_set_valignment
 ges_track_title_source_new
 <SUBSECTION Standard>
+GESTrackTitleSourceClass
 GESTrackTitleSourcePrivate
 ges_track_title_src_get_type
 GES_TRACK_TITLE_SOURCE
@@ -539,13 +543,13 @@ GES_IS_TRACK_TITLE_SOURCE_CLASS
 <FILE>ges-track-text-overlay</FILE>
 <TITLE>GESTrackTextOverlay</TITLE>
 GESTrackTextOverlay
-GESTrackTextOverlayClass
 ges_track_text_overlay_new
 ges_track_text_overlay_set_font_desc
 ges_track_text_overlay_set_halignment
 ges_track_text_overlay_set_text
 ges_track_text_overlay_set_valignment
 <SUBSECTION Standard>
+GESTrackTextOverlayClass
 GESTrackTextOverlayPrivate
 ges_track_text_overlay_get_type
 GES_IS_TRACK_TEXT_OVERLAY
@@ -593,9 +597,9 @@ GESFormatterSaveMethod
 <FILE>ges-keyfile-formatter</FILE>
 <TITLE>GESKeyFileFormatter</TITLE>
 GESKeyfileFormatter
-GESKeyfileFormatterClass
 ges_keyfile_formatter_new
 <SUBSECTION Standard>
+GESKeyfileFormatterClass
 GES_IS_KEYFILE_FORMATTER
 GES_IS_KEYFILE_FORMATTER_CLASS
 GES_KEYFILE_FORMATTER

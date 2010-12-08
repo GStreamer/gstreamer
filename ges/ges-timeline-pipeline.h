@@ -70,9 +70,9 @@ typedef enum {
  */
 
 struct _GESTimelinePipeline {
+  /*< private >*/
   GstPipeline parent;
 
-  /* <private> */
   GESTimelinePipelinePrivate *priv;
 
   /* Padding for API extension */
@@ -86,9 +86,9 @@ struct _GESTimelinePipeline {
  */
 
 struct _GESTimelinePipelineClass {
+  /*< private >*/
   GstPipelineClass parent_class;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

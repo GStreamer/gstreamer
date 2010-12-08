@@ -920,7 +920,8 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
  * Returns the list of #GESTrack used by the Timeline.
  *
  * Returns: A list of #GESTrack. The caller should unref each track
- * once he is done with them. */
+ * once he is done with them.
+ */
 GList *
 ges_timeline_get_tracks (GESTimeline * timeline)
 {

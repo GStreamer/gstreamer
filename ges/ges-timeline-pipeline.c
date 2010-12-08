@@ -596,7 +596,7 @@ ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
 /**
  * ges_timeline_pipeline_set_render_settings:
  * @pipeline: a #GESTimelinePipeline
- * @output_uri: the %URI to which the timeline will be rendered
+ * @output_uri: the URI to which the timeline will be rendered
  * @profile: the #GstEncodingProfile to use to render the timeline.
  *
  * Specify where the pipeline shall be rendered and with what settings.

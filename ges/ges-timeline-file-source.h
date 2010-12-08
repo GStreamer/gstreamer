@@ -51,9 +51,9 @@ G_BEGIN_DECLS
  */
 
 struct _GESTimelineFileSource {
+  /*< private >*/
   GESTimelineSource parent;
 
-  /*< private >*/
   gchar *uri;
 
   gboolean mute;
@@ -71,13 +71,11 @@ struct _GESTimelineFileSource {
 
 /**
  * GESTimelineFileSourceClass:
- * @parent_class: parent class
  */
 
 struct _GESTimelineFileSourceClass {
-  GESTimelineSourceClass parent_class;
-
   /*< private >*/
+  GESTimelineSourceClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

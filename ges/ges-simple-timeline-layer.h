@@ -48,32 +48,25 @@ typedef struct _GESSimpleTimelineLayerPrivate GESSimpleTimelineLayerPrivate;
 
 /**
  * GESSimpleTimelineLayer:
- * 
  */
 
 struct _GESSimpleTimelineLayer {
+  /*< private >*/
   GESTimelineLayer parent;
 
-  /*< private >*/
   GESSimpleTimelineLayerPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-/**
- * GESSimpleTimelineLayerClass:
- * @parent_class: parent class
- *
- */
-
 struct _GESSimpleTimelineLayerClass {
+  /*< private >*/
   GESTimelineLayerClass parent_class;
-  /*< signals >*/
 
+  /*< signals >*/
   void (*object_moved) (GESTimelineLayer * layer, GESTimelineObject * object,
       gint old_position, gint new_position);
-  /*< private >*/
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
