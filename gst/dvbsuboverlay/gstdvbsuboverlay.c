@@ -519,7 +519,7 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
 
   for (counter = 0; counter < subs->num_rects; counter++) {
     gint dw, dh;
-    gint32 sx, sy;              /* 16.16 fixed point */
+    gint32 sx = 0, sy;          /* 16.16 fixed point */
     gint32 xstep, ystep;        /* 16.16 fixed point */
 
     sub_region = subs->rects[counter];
@@ -894,7 +894,8 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
   GST_LOG_OBJECT (overlay,
       "Video segment: %" GST_SEGMENT_FORMAT " --- Subtitle last_stop: %"
       GST_TIME_FORMAT " --- BUFFER: ts=%" GST_TIME_FORMAT,
-      &overlay->video_segment, &overlay->subtitle_segment.last_stop,
+      &overlay->video_segment,
+      GST_TIME_ARGS (overlay->subtitle_segment.last_stop),
       GST_TIME_ARGS (start));
 
   /* ignore buffers that are outside of the current segment */
