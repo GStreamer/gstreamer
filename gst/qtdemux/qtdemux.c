@@ -1856,9 +1856,10 @@ qtdemux_parse_uuid (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
   }
 }
 
+/* caller verifies at least 8 bytes in buf */
 static void
-extract_initial_length_and_fourcc (const guint8 * data, guint64 * plength,
-    guint32 * pfourcc)
+extract_initial_length_and_fourcc (const guint8 * data, guint size,
+    guint64 * plength, guint32 * pfourcc)
 {
   guint64 length;
   guint32 fourcc;
@@ -1870,7 +1871,7 @@ extract_initial_length_and_fourcc (const guint8 * data, guint64 * plength,
 
   if (length == 0) {
     length = G_MAXUINT32;
-  } else if (length == 1) {
+  } else if (length == 1 && size >= 16) {
     /* this means we have an extended size, which is the 64 bit value of
      * the next 8 bytes */
     length = QT_UINT64 (data + 8);
@@ -2537,16 +2538,18 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
   ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, 16, &buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
-  if (G_LIKELY (GST_BUFFER_SIZE (buf) == 16))
-    extract_initial_length_and_fourcc (GST_BUFFER_DATA (buf), &length, &fourcc);
+  if (G_LIKELY (GST_BUFFER_SIZE (buf) >= 8))
+    extract_initial_length_and_fourcc (GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf), &length, &fourcc);
   gst_buffer_unref (buf);
 
+  /* maybe we already got most we needed, so only consider this eof */
   if (G_UNLIKELY (length == 0)) {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
-        (_("This file is invalid and cannot be played.")),
+    GST_ELEMENT_WARNING (qtdemux, STREAM, DEMUX,
+        (_("Invalid atom size.")),
         ("Header atom '%" GST_FOURCC_FORMAT "' has empty length",
             GST_FOURCC_ARGS (fourcc)));
-    ret = GST_FLOW_ERROR;
+    ret = GST_FLOW_UNEXPECTED;
     goto beach;
   }
 
@@ -3887,7 +3890,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         data = gst_adapter_peek (demux->adapter, demux->neededbytes);
 
         /* get fourcc/length, set neededbytes */
-        extract_initial_length_and_fourcc ((guint8 *) data, &size, &fourcc);
+        extract_initial_length_and_fourcc ((guint8 *) data, demux->neededbytes,
+            &size, &fourcc);
         GST_DEBUG_OBJECT (demux, "Peeking found [%" GST_FOURCC_FORMAT "] "
             "size: %" G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc), size);
         if (size == 0) {
@@ -3978,7 +3982,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         data = gst_adapter_peek (demux->adapter, demux->neededbytes);
 
         /* parse the header */
-        extract_initial_length_and_fourcc (data, NULL, &fourcc);
+        extract_initial_length_and_fourcc (data, demux->neededbytes, NULL,
+            &fourcc);
         if (fourcc == FOURCC_moov) {
           GST_DEBUG_OBJECT (demux, "Parsing [moov]");
 
@@ -4977,11 +4982,13 @@ qtdemux_find_atom (GstQTDemux * qtdemux, guint64 * offset,
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto locate_failed;
     if (G_LIKELY (GST_BUFFER_SIZE (buf) != 16)) {
+      /* likely EOF */
+      ret = GST_FLOW_UNEXPECTED;
       gst_buffer_unref (buf);
-      ret = GST_FLOW_ERROR;
       goto locate_failed;
     }
-    extract_initial_length_and_fourcc (GST_BUFFER_DATA (buf), length, &lfourcc);
+    extract_initial_length_and_fourcc (GST_BUFFER_DATA (buf), 16, length,
+        &lfourcc);
     gst_buffer_unref (buf);
 
     if (G_UNLIKELY (*length == 0)) {
