@@ -2074,7 +2074,7 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
  * return and is not adjusted with any latency or offset configured in the
  * sink.
  *
- * Since 0.10.20
+ * Since: 0.10.20
  *
  * Returns: #GstClockReturn
  */
@@ -2216,7 +2216,7 @@ step_unlocked:
  * Returns: #GST_FLOW_OK if the preroll completed and processing can
  * continue. Any other return value should be returned from the render vmethod.
  *
- * Since 0.10.22
+ * Since: 0.10.22
  */
 GstFlowReturn
 gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
@@ -2275,7 +2275,7 @@ preroll_failed:
  *
  * Returns: #GstFlowReturn
  *
- * Since 0.10.15
+ * Since: 0.10.15
  */
 GstFlowReturn
 gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
