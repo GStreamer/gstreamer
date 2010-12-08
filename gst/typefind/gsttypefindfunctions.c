@@ -2545,7 +2545,26 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       tip = 0;
       break;
     }
+
     size = GST_READ_UINT32_BE (data);
+    /* check compatible brands rather than ever expaning major brands above */
+    if ((STRNCMP (&data[4], "ftyp", 4) == 0) && (size >= 16)) {
+      new_offset = offset + 12;
+      while (new_offset + 4 <= offset + size) {
+        data = gst_type_find_peek (tf, new_offset, 4);
+        if (data == NULL)
+          goto done;
+        if (STRNCMP (&data[4], "isom", 4) == 0 ||
+            STRNCMP (&data[4], "avc1", 4) == 0 ||
+            STRNCMP (&data[4], "mp41", 4) == 0 ||
+            STRNCMP (&data[4], "mp42", 4) == 0) {
+          tip = GST_TYPE_FIND_MAXIMUM;
+          variant = "iso";
+          goto done;
+        }
+        new_offset += 4;
+      }
+    }
     if (size == 1) {
       guint8 *sizedata;
 
@@ -2564,6 +2583,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     offset = new_offset;
   }
 
+done:
   if (tip > 0) {
     if (variant) {
       GstCaps *caps = gst_caps_copy (QT_CAPS);
