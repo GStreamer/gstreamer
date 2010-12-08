@@ -739,7 +739,7 @@ gst_rtp_buffer_get_extension_data (GstBuffer * buffer, guint16 * bits,
  *
  * Returns: True if done.
  *
- * Since : 0.10.18
+ * Since: 0.10.18
  */
 gboolean
 gst_rtp_buffer_set_extension_data (GstBuffer * buffer, guint16 bits,

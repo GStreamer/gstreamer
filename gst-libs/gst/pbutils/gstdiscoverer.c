@@ -37,7 +37,7 @@
  *
  * All the information is returned in a #GstDiscovererInfo structure.
  * 
- * Since 0.10.31
+ * Since: 0.10.31
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1222,7 +1222,7 @@ gst_discoverer_start (GstDiscoverer * discoverer)
  * Stop the discovery of any pending URIs and clears the list of
  * pending URIS (if any).
  * 
- * Since 0.10.31
+ * Since: 0.10.31
  */
 void
 gst_discoverer_stop (GstDiscoverer * discoverer)
