@@ -656,9 +656,10 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
       GST_DEBUG ("Reading %d Typefind extensions at address %p",
           tff->nextensions, *in);
       factory->extensions = g_new0 (gchar *, tff->nextensions + 1);
-      for (i = 0; i < tff->nextensions; i++) {
+      /* unpack in reverse order to maintain the correct order */
+      for (i = tff->nextensions; i > 0; i--) {
         unpack_string (*in, str, end, fail);
-        factory->extensions[i] = str;
+        factory->extensions[i - 1] = str;
       }
     }
   } else if (GST_IS_INDEX_FACTORY (feature)) {
