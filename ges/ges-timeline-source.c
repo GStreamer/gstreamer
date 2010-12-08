@@ -213,12 +213,6 @@ ges_timeline_source_init (GESTimelineSource * self)
   self->valign = DEFAULT_PROP_VALIGNMENT;
 }
 
-GESTimelineSource *
-ges_timeline_source_new (void)
-{
-  return g_object_new (GES_TYPE_TIMELINE_SOURCE, NULL);
-}
-
 static GESTrackObject *
 ges_timeline_source_create_track_object (GESTimelineObject * obj,
     GESTrack * track)

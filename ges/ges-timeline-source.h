@@ -82,8 +82,6 @@ struct _GESTimelineSourceClass {
 
 GType ges_timeline_source_get_type (void);
 
-GESTimelineSource* ges_timeline_source_new (void);
-
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_SOURCE */

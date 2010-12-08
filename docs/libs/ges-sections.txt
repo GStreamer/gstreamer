@@ -328,7 +328,6 @@ GES_TYPE_TIMELINE_PIPELINE
 <TITLE>GESTimelineSource</TITLE>
 GESTimelineSource
 GESTimelineSourceClass
-ges_timeline_source_new
 <SUBSECTION Standard>
 GESTimelineSourcePrivate
 ges_timeline_source_get_type
