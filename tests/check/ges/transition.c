@@ -20,16 +20,13 @@
 
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
-#include <ges/ges-timeline-transition.h>
-#include <ges/ges-track-video-transition.h>
-#include <ges/ges-track-audio-transition.h>
 
 /* This test uri will eventually have to be fixed */
 #define TEST_URI "blahblahblah"
 
 GST_START_TEST (test_transition_basic)
 {
-  GESTimelineTransition *tr1, *tr2;
+  GESTimelineStandardTransition *tr1, *tr2;
   GESTrackObject *trackobject;
   GESTrack *track;
 
@@ -38,11 +35,13 @@ GST_START_TEST (test_transition_basic)
   track = ges_track_video_raw_new ();
   fail_unless (track != 0);
 
-  tr1 = ges_timeline_transition_new (GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
+  tr1 =
+      ges_timeline_standard_transition_new
+      (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   fail_unless (tr1 != 0);
-  fail_unless (tr1->vtype == GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
+  fail_unless (tr1->vtype == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
 
-  tr2 = ges_timeline_transition_new_for_nick ((gchar *) "bar-wipe-lr");
+  tr2 = ges_timeline_standard_transition_new_for_nick ((gchar *) "bar-wipe-lr");
   fail_unless (tr2 != 0);
   fail_unless (tr2->vtype == 1);
 
@@ -88,8 +87,8 @@ GST_START_TEST (test_transition_properties)
   ges_init ();
 
   object =
-      GES_TIMELINE_OBJECT (ges_timeline_transition_new
-      (GES_VIDEO_TRANSITION_TYPE_CROSSFADE));
+      GES_TIMELINE_OBJECT (ges_timeline_standard_transition_new
+      (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
 
   track = ges_track_video_raw_new ();
   fail_unless (track != NULL);
@@ -129,21 +128,22 @@ GST_START_TEST (test_transition_properties)
 
   /* test changing vtype */
   GST_DEBUG ("Setting to crossfade");
-  g_object_set (object, "vtype", GES_VIDEO_TRANSITION_TYPE_CROSSFADE, NULL);
-  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype,
-      GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
+  g_object_set (object, "vtype", GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE,
+      NULL);
+  assert_equals_int (GES_TIMELINE_STANDARD_TRANSITION (object)->vtype,
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type,
-      GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
 
   /* Check that changing from crossfade to anything else fails (it should
    * still be using crossfade */
   GST_DEBUG ("Setting back to 1 (should fail)");
   g_object_set (object, "vtype", 1, NULL);
   /* FIXME : This should succeed */
-  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype,
-      GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
+  assert_equals_int (GES_TIMELINE_STANDARD_TRANSITION (object)->vtype,
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type,
-      GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
 
   GST_DEBUG ("Releasing track object");
   ges_timeline_object_release_track_object (object, trackobject);
@@ -159,7 +159,7 @@ GST_START_TEST (test_transition_properties)
    * type (in this case 1) */
   GST_DEBUG ("Setting to vtype:1");
   assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type, 1);
-  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, 1);
+  assert_equals_int (GES_TIMELINE_STANDARD_TRANSITION (object)->vtype, 1);
 
   ges_timeline_object_release_track_object (object, trackobject);
   g_object_unref (object);

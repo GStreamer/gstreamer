@@ -403,7 +403,7 @@ static GEnumValue transition_types[] = {
       "windshield-h"}
   ,
   {
-        GES_VIDEO_TRANSITION_TYPE_CROSSFADE,
+        GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE,
         "Crossfade between two clips",
       "crossfade"}
   ,
@@ -411,7 +411,7 @@ static GEnumValue transition_types[] = {
 };
 
 GType
-ges_video_transition_type_get_type (void)
+ges_video_standard_transition_type_get_type (void)
 {
   static GType the_type = 0;
   static gsize once = 0;

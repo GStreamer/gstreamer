@@ -33,11 +33,8 @@
  * the two adjacent sources.
  */
 
+#include <ges/ges.h>
 #include "ges-internal.h"
-#include "ges-simple-timeline-layer.h"
-#include "ges-timeline-object.h"
-#include "ges-timeline-source.h"
-#include "ges-timeline-transition.h"
 #include "gesmarshal.h"
 
 static void

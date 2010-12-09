@@ -47,15 +47,10 @@ typedef struct _GESTimelineTransitionPrivate GESTimelineTransitionPrivate;
 
 /**
  * GESTimelineTransition:
- * @vtype: a #GESVideoTransitionType indicating the type of video transition
- * to apply.
  */
 struct _GESTimelineTransition {
   /*< private >*/
   GESTimelineOperation parent;
-
-  /*< public >*/
-  GESVideoTransitionType vtype;
 
   /*< private >*/
   GESTimelineTransitionPrivate *priv;
@@ -78,9 +73,6 @@ struct _GESTimelineTransitionClass {
 };
 
 GType ges_timeline_transition_get_type (void);
-
-GESTimelineTransition *ges_timeline_transition_new (GESVideoTransitionType vtype);
-GESTimelineTransition *ges_timeline_transition_new_for_nick (char *nick);
 
 G_END_DECLS
 

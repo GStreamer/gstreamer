@@ -23,10 +23,8 @@
  * @short_description: implements video crossfade transition
  */
 
+#include <ges/ges.h>
 #include "ges-internal.h"
-#include "ges-track-object.h"
-#include "ges-timeline-transition.h"
-#include "ges-track-video-transition.h"
 
 G_DEFINE_TYPE (GESTrackVideoTransition, ges_track_video_transition,
     GES_TYPE_TRACK_TRANSITION);
@@ -103,7 +101,7 @@ ges_track_video_transition_init (GESTrackVideoTransition * self)
   self->mixer = NULL;
   self->sinka = NULL;
   self->sinkb = NULL;
-  self->type = GES_VIDEO_TRANSITION_TYPE_NONE;
+  self->type = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
   self->start_value = 0.0;
   self->end_value = 0.0;
 }
@@ -199,7 +197,7 @@ ges_track_video_transition_create_element (GESTrackTransition * object)
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
-  if (self->type != GES_VIDEO_TRANSITION_TYPE_CROSSFADE) {
+  if (self->type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
     self->sinka =
         (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva,
         mixer, self->type, NULL);
@@ -327,20 +325,20 @@ ges_track_video_transition_duration_changed (GESTrackObject * object,
 
 gboolean
 ges_track_video_transition_set_type (GESTrackVideoTransition * self,
-    GESVideoTransitionType type)
+    GESVideoStandardTransitionType type)
 {
   GST_DEBUG ("%p %d => %d", self, self->type, type);
 
   if (self->type && (self->type != type) &&
-      ((type == GES_VIDEO_TRANSITION_TYPE_CROSSFADE) ||
-          (self->type == GES_VIDEO_TRANSITION_TYPE_CROSSFADE))) {
+      ((type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) ||
+          (self->type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE))) {
     GST_WARNING
         ("Changing between 'crossfade' and other types is not supported");
     return FALSE;
   }
 
   self->type = type;
-  if (self->smpte && (type != GES_VIDEO_TRANSITION_TYPE_CROSSFADE))
+  if (self->smpte && (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE))
     g_object_set (self->smpte, "type", (gint) type, NULL);
   return TRUE;
 }

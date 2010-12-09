@@ -56,6 +56,9 @@ typedef struct _GESTimelineFileSourceClass GESTimelineFileSourceClass;
 typedef struct _GESTimelineTransition GESTimelineTransition;
 typedef struct _GESTimelineTransitionClass GESTimelineTransitionClass;
 
+typedef struct _GESTimelineStandardTransition GESTimelineStandardTransition;
+typedef struct _GESTimelineStandardTransitionClass GESTimelineStandardTransitionClass;
+
 typedef struct _GESTimelineTestSource GESTimelineTestSource;
 typedef struct _GESTimelineTestSourceClass GESTimelineTestSourceClass;
 

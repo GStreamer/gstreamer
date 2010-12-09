@@ -54,7 +54,7 @@ struct _GESTrackVideoTransition {
   GESTrackTransition parent;
   
   /*< private >*/
-  GESVideoTransitionType        type;
+  GESVideoStandardTransitionType        type;
  
   /* these enable video interpolation */
   GstController                 *controller;
@@ -95,7 +95,7 @@ GType ges_track_video_transition_get_type (void);
 
 gboolean
 ges_track_video_transition_set_type (GESTrackVideoTransition * self,
-GESVideoTransitionType type);
+GESVideoStandardTransitionType type);
 ;
 
 GESTrackVideoTransition* ges_track_video_transition_new (void);

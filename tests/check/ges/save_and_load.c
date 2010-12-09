@@ -130,13 +130,13 @@ GST_START_TEST (test_keyfile_save)
 
   GST_DEBUG ("Adding transition");
   source = (GESTimelineObject *)
-      ges_timeline_transition_new_for_nick ((gchar *) "bar-wipe-lr");
+      ges_timeline_standard_transition_new_for_nick ((gchar *) "bar-wipe-lr");
 
   g_object_set (G_OBJECT (source), "duration", (guint64) GST_SECOND / 2, NULL);
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (layer),
       source, -1);
 
-  KEY ("Object1", "type", "GESTimelineTransition");
+  KEY ("Object1", "type", "GESTimelineStandardTransition");
   KEY ("Object1", "start", "1500000000");
   KEY ("Object1", "in-point", "0");
   KEY ("Object1", "duration", "500000000");
@@ -537,7 +537,7 @@ static const gchar *data = "\n[General]\n"
     "volume=0\n"
     "\n"
     "[Object1]\n"
-    "type=GESTimelineTransition\n"
+    "type=GESTimelineStandardTransition\n"
     "start=1500000000\n"
     "in-point=0\n"
     "duration=500000000\n"
@@ -604,9 +604,9 @@ GST_START_TEST (test_keyfile_load)
       SIMPLE_LAYER_OBJECT ((GES_TYPE_TIMELINE_TEST_SOURCE), -1,
           "duration", (guint64) 2 * GST_SECOND);
 
-      SIMPLE_LAYER_OBJECT ((GES_TYPE_TIMELINE_TRANSITION), -1,
+      SIMPLE_LAYER_OBJECT ((GES_TYPE_TIMELINE_STANDARD_TRANSITION), -1,
           "duration", (guint64) GST_SECOND / 2,
-          "vtype", GES_VIDEO_TRANSITION_TYPE_BAR_WIPE_LR);
+          "vtype", GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR);
 
       SIMPLE_LAYER_OBJECT ((GES_TYPE_TIMELINE_TEST_SOURCE), -1,
           "duration", (guint64) 2 * GST_SECOND);

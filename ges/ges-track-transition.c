@@ -24,12 +24,11 @@
  *
  */
 
+#include <ges/ges.h>
 #include "ges-internal.h"
-#include "ges-track-object.h"
-#include "ges-track-transition.h"
-#include "ges-timeline-transition.h"
 
-G_DEFINE_TYPE (GESTrackTransition, ges_track_transition, GES_TYPE_TRACK_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GESTrackTransition, ges_track_transition,
+    GES_TYPE_TRACK_OBJECT);
 
 struct _GESTrackTransitionPrivate
 {

@@ -152,7 +152,7 @@ typedef gboolean (*CreateTrackObjectsFunc) (GESTimelineObject * object,
 /**
  * GESTimelineObject:
  *
- * The GESTimelineObject subclass. Subclasses can access these fields.
+ * The #GESTimelineObject base class.
  */
 struct _GESTimelineObject {
   /*< private >*/
@@ -177,7 +177,7 @@ struct _GESTimelineObject {
 /**
  * GESTimelineObjectClass:
  * @create_track_object: method to create a single #GESTrackObject for a given #GESTrack.
- * @create_track_objects: method to crate multiple #GESTrackObjects for a
+ * @create_track_objects: method to create multiple #GESTrackObjects for a
  * #GESTrack.
  * @fill_track_object: method to fill an associated #GESTrackObject.
  * @need_fill_track: Set to TRUE if @fill_track_object needs to be called.

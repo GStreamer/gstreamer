@@ -27,7 +27,8 @@
 #include "ges-track-object.h"
 #include "ges-track-operation.h"
 
-G_DEFINE_TYPE (GESTrackOperation, ges_track_operation, GES_TYPE_TRACK_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GESTrackOperation, ges_track_operation,
+    GES_TYPE_TRACK_OBJECT);
 
 struct _GESTrackOperationPrivate
 {

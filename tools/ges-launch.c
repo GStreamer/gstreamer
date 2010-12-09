@@ -234,7 +234,9 @@ create_timeline (int nbargs, gchar ** argv)
     }
 
     else if (!g_strcmp0 ("+transition", source)) {
-      obj = GES_TIMELINE_OBJECT (ges_timeline_transition_new_for_nick (arg0));
+      obj =
+          GES_TIMELINE_OBJECT (ges_timeline_standard_transition_new_for_nick
+          (arg0));
 
       if (!obj)
         g_error ("invalid transition type\n");
@@ -382,13 +384,14 @@ void
 print_transition_list (void)
 {
   GEnumClass *smpte_class;
-  GESTimelineTransition *tr;
-  GESTimelineTransitionClass *klass;
+  GESTimelineStandardTransition *tr;
+  GESTimelineStandardTransitionClass *klass;
   GParamSpec *pspec;
   GEnumValue *v;
 
-  tr = ges_timeline_transition_new (GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
-  klass = GES_TIMELINE_TRANSITION_GET_CLASS (tr);
+  tr = ges_timeline_standard_transition_new
+      (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
+  klass = GES_TIMELINE_STANDARD_TRANSITION_GET_CLASS (tr);
 
   if ((pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vtype"))) {
 

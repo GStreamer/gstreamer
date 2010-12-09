@@ -17,7 +17,7 @@ GES_PADDING
 <SECTION>
 <FILE>ges-enums</FILE>
 <TITLE>GES Enums</TITLE>
-GESVideoTransitionType
+GESVideoStandardTransitionType
 GESTrackType
 GESTextHAlign
 DEFAULT_HALIGNMENT
@@ -33,8 +33,8 @@ GES_TEXT_VALIGN_TYPE
 ges_text_valign_get_type
 GES_VIDEO_TEST_PATTERN_TYPE
 ges_video_test_pattern_get_type
-GES_VIDEO_TRANSITION_TYPE_TYPE
-ges_video_transition_type_get_type
+GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE
+ges_video_standard_transition_type_get_type
 </SECTION>
 
 <SECTION>
@@ -265,11 +265,6 @@ GESTimelineObjectClass
 CreateTrackObjectFunc
 CreateTrackObjectsFunc
 FillTrackObjectFunc
-GES_TIMELINE_OBJECT_DURATION
-GES_TIMELINE_OBJECT_INPOINT
-GES_TIMELINE_OBJECT_PRIORITY
-GES_TIMELINE_OBJECT_START
-GES_TIMELINE_OBJECT_HEIGHT
 ges_timeline_object_set_inpoint
 ges_timeline_object_set_start
 ges_timeline_object_set_duration
@@ -277,6 +272,11 @@ ges_timeline_object_get_layer
 ges_timeline_object_find_track_object
 ges_timeline_object_add_track_object
 <SUBSECTION Standard>
+GES_TIMELINE_OBJECT_DURATION
+GES_TIMELINE_OBJECT_INPOINT
+GES_TIMELINE_OBJECT_PRIORITY
+GES_TIMELINE_OBJECT_START
+GES_TIMELINE_OBJECT_HEIGHT
 ges_timeline_object_create_track_objects
 ges_timeline_object_create_track_object
 ges_timeline_object_fill_track_object
@@ -389,18 +389,34 @@ GES_TYPE_TIMELINE_OVERLAY
 <FILE>ges-timeline-transition</FILE>
 <TITLE>GESTimelineTransition</TITLE>
 GESTimelineTransition
-GESTimelineTransitionClass
-ges_timeline_transition_new
-ges_timeline_transition_new_for_nick
 <SUBSECTION Standard>
+GESTimelineTransitionClass
 GESTimelineTransitionPrivate
-GES_IS_TIMELINE_TRANSITION
-GES_IS_TIMELINE_TRANSITION_CLASS
 GES_TIMELINE_TRANSITION
-GES_TIMELINE_TRANSITION_CLASS
-GES_TIMELINE_TRANSITION_GET_CLASS
+GES_IS_TIMELINE_TRANSITION
 GES_TYPE_TIMELINE_TRANSITION
 ges_timeline_transition_get_type
+GES_TIMELINE_TRANSITION_CLASS
+GES_IS_TIMELINE_TRANSITION_CLASS
+GES_TIMELINE_TRANSITION_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>ges-timeline-standard-transition</FILE>
+<TITLE>GESTimelineStandardTransition</TITLE>
+GESTimelineStandardTransition
+ges_timeline_standard_transition_new
+ges_timeline_standard_transition_new_for_nick
+<SUBSECTION Standard>
+GESTimelineStandardTransitionClass
+GESTimelineStandardTransitionPrivate
+GES_IS_TIMELINE_STANDARD_TRANSITION
+GES_IS_TIMELINE_STANDARD_TRANSITION_CLASS
+GES_TIMELINE_STANDARD_TRANSITION
+GES_TIMELINE_STANDARD_TRANSITION_CLASS
+GES_TIMELINE_STANDARD_TRANSITION_GET_CLASS
+GES_TYPE_TIMELINE_STANDARD_TRANSITION
+ges_timeline_standard_transition_get_type
 </SECTION>
 
 

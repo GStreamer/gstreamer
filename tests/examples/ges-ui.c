@@ -1011,7 +1011,7 @@ app_move_selected_up (App * app)
   pos = g_list_index (objects, app->selected_objects->data);
 
   ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-       GES_TIMELINE_OBJECT (app->selected_objects->data), pos - 1);
+      GES_TIMELINE_OBJECT (app->selected_objects->data), pos - 1);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
     g_object_unref (tmp->data);
@@ -1028,7 +1028,7 @@ app_move_selected_down (App * app)
   pos = g_list_index (objects, app->selected_objects->data);
 
   ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-       GES_TIMELINE_OBJECT (app->selected_objects->data), pos - 1);
+      GES_TIMELINE_OBJECT (app->selected_objects->data), pos - 1);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
     g_object_unref (tmp->data);
@@ -1083,8 +1083,8 @@ app_add_transition (App * app)
 
   GST_DEBUG ("adding transition");
 
-  obj = GES_TIMELINE_OBJECT (ges_timeline_transition_new
-      (GES_VIDEO_TRANSITION_TYPE_CROSSFADE));
+  obj = GES_TIMELINE_OBJECT (ges_timeline_standard_transition_new
+      (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
   g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
