@@ -245,6 +245,8 @@ openFailed:
 
   g_assert (device != nil);
 
+  GST_INFO ("setting up session");
+
   s = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (s, "width", &width);
   gst_structure_get_int (s, "height", &height);
@@ -351,7 +353,7 @@ openFailed:
 {
   [queueLock lock];
   stopRequest = NO;
-  [queueLock unlock];
+  [queueLock unlockWithCondition:NO_FRAMES];
 
   return YES;
 }
@@ -384,6 +386,8 @@ openFailed:
     [queueLock unlock];
     return;
   }
+
+  GST_INFO ("got new frame");
 
   if ([queue count] == FRAME_QUEUE_SIZE)
     [queue removeLastObject];
