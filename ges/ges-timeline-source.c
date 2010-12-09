@@ -54,10 +54,6 @@ enum
 G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source,
     GES_TYPE_TIMELINE_OBJECT);
 
-static GESTrackObject
-    * ges_timeline_source_create_track_object (GESTimelineObject * obj,
-    GESTrack * track);
-
 static gboolean
 ges_timeline_source_create_track_objects (GESTimelineObject * obj,
     GESTrack * track);
@@ -198,8 +194,6 @@ ges_timeline_source_class_init (GESTimelineSourceClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
 
-  timobj_class->create_track_object = ges_timeline_source_create_track_object;
-
   timobj_class->create_track_objects = ges_timeline_source_create_track_objects;
 }
 
@@ -211,15 +205,6 @@ ges_timeline_source_init (GESTimelineSource * self)
 
   self->halign = DEFAULT_PROP_HALIGNMENT;
   self->valign = DEFAULT_PROP_VALIGNMENT;
-}
-
-static GESTrackObject *
-ges_timeline_source_create_track_object (GESTimelineObject * obj,
-    GESTrack * track)
-{
-  GST_ERROR
-      ("No GESTimelineObject::create_track_object vmethod implementation");
-  return NULL;
 }
 
 static gboolean
