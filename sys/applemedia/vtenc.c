@@ -77,7 +77,7 @@ static VTStatus gst_vtenc_session_configure_property_double (GstVTEnc * self,
     VTCompressionSessionRef session, CFStringRef name, gdouble value);
 
 static GstFlowReturn gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf);
-static VTStatus gst_vtenc_output_buffer (void *data, int a2, int a3, int a4,
+static VTStatus gst_vtenc_enqueue_buffer (void *data, int a2, int a3, int a4,
     CMSampleBufferRef sbuf, int a6, int a7);
 static gboolean gst_vtenc_buffer_is_keyframe (GstVTEnc * self,
     CMSampleBufferRef sbuf);
@@ -411,9 +411,7 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
     gst_buffer_unref (codec_data);
   }
 
-  GST_OBJECT_UNLOCK (self);
   result = gst_pad_set_caps (self->srcpad, caps);
-  GST_OBJECT_LOCK (self);
 
   gst_caps_unref (caps);
 
@@ -502,7 +500,7 @@ gst_vtenc_create_session (GstVTEnc * self)
   gst_vtutil_dict_set_i32 (pb_attrs, *(cv->kCVPixelBufferHeightKey),
       self->negotiated_height);
 
-  callback.func = gst_vtenc_output_buffer;
+  callback.func = gst_vtenc_enqueue_buffer;
   callback.data = self;
 
   status = vt->VTCompressionSessionCreate (NULL,
@@ -770,13 +768,22 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   self->cur_inbuf = NULL;
   gst_buffer_unref (buf);
 
+  if (self->cur_outbufs->len > 0) {
+    GstCoreMediaBuffer *cmbuf =
+        GST_CORE_MEDIA_BUFFER_CAST (g_ptr_array_index (self->cur_outbufs, 0));
+    if (!gst_vtenc_negotiate_downstream (self, cmbuf->sample_buf))
+      ret = GST_FLOW_NOT_NEGOTIATED;
+  }
+
   for (i = 0; i != self->cur_outbufs->len; i++) {
     GstBuffer *buf = g_ptr_array_index (self->cur_outbufs, i);
 
-    if (ret == GST_FLOW_OK)
+    if (ret == GST_FLOW_OK) {
+      gst_buffer_set_caps (buf, GST_PAD_CAPS (self->srcpad));
       ret = gst_pad_push (self->srcpad, buf);
-    else
+    } else {
       gst_buffer_unref (buf);
+    }
   }
   g_ptr_array_set_size (self->cur_outbufs, 0);
 
@@ -792,7 +799,7 @@ cv_error:
 }
 
 static VTStatus
-gst_vtenc_output_buffer (void *data, int a2, int a3, int a4,
+gst_vtenc_enqueue_buffer (void *data, int a2, int a3, int a4,
     CMSampleBufferRef sbuf, int a6, int a7)
 {
   GstVTEnc *self = data;
@@ -812,11 +819,7 @@ gst_vtenc_output_buffer (void *data, int a2, int a3, int a4,
   }
   self->expect_keyframe = FALSE;
 
-  if (!gst_vtenc_negotiate_downstream (self, sbuf))
-    goto beach;
-
   buf = gst_core_media_buffer_new (self->ctx, sbuf);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (self->srcpad));
   gst_buffer_copy_metadata (buf, self->cur_inbuf, GST_BUFFER_COPY_TIMESTAMPS);
   if (is_keyframe) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
