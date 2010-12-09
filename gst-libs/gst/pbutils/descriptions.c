@@ -62,6 +62,7 @@ typedef struct
 
 static const FormatInfo formats[] = {
   /* container/tag formats with static descriptions */
+  {"application/gxf", "General Exchange Format (GXF)", FLAG_CONTAINER},
   {"application/ogg", "Ogg", FLAG_CONTAINER},
   {"application/mxf", "MXF", FLAG_CONTAINER},
   {"application/vnd.rn-realmedia", "Realmedia", FLAG_CONTAINER},
@@ -209,8 +210,8 @@ static const FormatInfo formats[] = {
   {"image/jpeg", "JPEG", 0},
   {"image/jng", "JPEG Network Graphics (JNG)", 0},
   {"image/png", "PNG", 0},
-  {"image/pbm", "PBM", 0},
-  {"image/ppm", "PPM", 0},
+  {"image/pbm", "Portable BitMap (PBM)", 0},
+  {"image/ppm", "Portable PixMap (PPM)", 0},
   {"image/svg+xml", "Scalable Vector Graphics (SVG)", 0},
   {"image/tiff", "TIFF", 0},
   {"image/x-cmu-raster", "CMU Raster Format", 0},
@@ -218,8 +219,11 @@ static const FormatInfo formats[] = {
   {"image/x-j2c", "JPEG 2000", 0},
   {"image/x-jpc", "JPEG 2000", 0},
   {"image/jp2", "JPEG 2000", 0},
+  {"image/x-pcx", "PCX", 0},
   {"image/x-xcf", "XFC", 0},
   {"image/x-pixmap", "XPM", 0},
+  {"image/x-portable-anymap", "Portable AnyMap (PAM)", 0},
+  {"image/x-portable-graymap", "Portable GrayMap (PGM)", 0},
   {"image/x-xpixmap", "XPM", 0},
   {"image/x-quicktime", "QuickTime Image Format (QTIF)", 0},
   {"image/x-sun-raster", "Sun Raster Format (RAS)", 0},
