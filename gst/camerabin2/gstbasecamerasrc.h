@@ -92,11 +92,8 @@ struct _GstBaseCameraSrc
 
 /**
  * GstBaseCameraSrcClass:
- * @construct_pipeline: construct pipeline must be implemented by derived
- *    class, and return by reference vfsrc, imgsrc, and vidsrc pads of the
- *    contained pipeline, which will be ghosted to the src pads of the
- *    camerasrc bin (and optionally the preview src pads?)
- * @setup_pipeline:
+ * @construct_pipeline: construct pipeline must be implemented by derived class
+ * @setup_pipeline: configure pipeline for the chosen settings
  * @set_zoom: set the zoom
  * @set_mode: set the mode
  */

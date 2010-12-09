@@ -23,8 +23,30 @@
 /**
  * SECTION:element-basecamerasrc
  *
- * Base class for the camera src bin used by camerabin.  Indented to be
- * subclassed when plugging in more sophisticated cameras.
+ * Base class for the camera source bin used by camerabin for capture. 
+ * Sophisticated camera hardware can derive from this baseclass and map the
+ * features to this interface.
+ *
+ * The design mandates that the subclasses implement the following features and
+ * behaviour:
+ * <itemizedlist>
+ *   <listitem><para>
+ *     3 pads: viewfinder, image capture, video capture
+ *   </para></listitem>
+ *   <listitem><para>
+ *   </para></listitem>
+ * </itemizedlist>
+ *
+ * During construct_pipeline() vmethod a subclass can add several elements into
+ * the bin and expose 3 srcs pads as ghostpads implementing the 3 pad templates.
+ *
+ * It is also possible to add regular pads from the subclass and implement the
+ * dataflow methods on these pads. This way all functionality can be implemneted
+ * directly in the subclass without extra elements.
+ *
+ * The src will receive the capture mode from #GstCameraBin2 on the 
+ * #GstBaseCameraSrc:mode property. Possible capture modes are defined in
+ * #GstCameraBinMode.
  */
 
 
@@ -130,7 +152,7 @@ gst_base_camera_src_get_color_balance (GstBaseCameraSrc * self)
  * @self: the camerasrc bin
  * @mode: the mode
  *
- * XXX
+ * Set the chosen #GstCameraBinMode capture mode.
  */
 gboolean
 gst_base_camera_src_set_mode (GstBaseCameraSrc * self, GstCameraBinMode mode)
