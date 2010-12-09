@@ -120,7 +120,7 @@ C. Keyframes
       It is a structure that describes effects so they can easily be instanciate.
       They can be composed of a simple description of a the bin, they can also
       define more complexe effects, the GESEffectContainer will be able to handle
-      those cases. 
+      those cases.
 
       /**
       * ges_effect_descriptor_get_effect_name:
@@ -129,7 +129,7 @@ C. Keyframes
       */
       const gchar *
       ges_effect_descriptor_get_effect_name (GESEffectDescriptor *self);
-      
+
       /**
       * ges_effect_descriptor_get_effect_description:
       *
@@ -137,11 +137,11 @@ C. Keyframes
       */
       const gchar *
       ges_effect_descriptor_get_effect_description (GESEffectDescriptor *self);
-      
+
       /**
       * ges_effect_descriptor_get_effect_categories:
       *
-      * Returns an array of 
+      * Returns an array of
       */
       gchar **
       ges_effect_descriptor_get_effect_categories (GESEffectDescriptor *self);
@@ -149,27 +149,28 @@ C. Keyframes
   B.  GESEffectRegistry API:
       This should be a singleton since we don't want an app to instanciate more
       than one registry. It should be able to get effects from various sources.
-      (UC-8)
+      We should also make sure any custom effect is detected.
 
       /**
-      * ges_effect_registry_new:
+      * ges_effect_registry_get_default:
       *
-      * Returns a newly created #GESEffectRegistry
+      * Returns a newly created #GESEffectRegistry or the existing one increasing
+      * its refcount
       */
       GESEffectRegistry *
-      ges_effect_registry_new (void);
+      ges_effect_registry_get_default (void);
         -> Usecases:
           + Have a registry of all effects that are on the système (UC-8)
 
       /**
-      * ges_effect_registry_get_all:
+      * ges_effect_registry_get_effect_list:
       *
       * @self: The origin #GESEffectRegistry
       *
-      * Returns a #GList of #GESEffectDescriptors. The 
+      * Returns a #GList of #GESEffectDescriptors. The
       */
       GList *
-      ges_effect_registry_get_all (GESEffectRegistry *self);
+      ges_effect_registry_get_effect_list (GESEffectRegistry *self);
         -> Usecases:
           + Get all effects descriptors that are on the système (UC-8)
 
@@ -182,7 +183,7 @@ C. Keyframes
       */
       gboolean *
       ges_effect_set_thumbnail (GESEffect *self, ?? *thumbnail);
-      
+
       /**
       * ges_effect_get_thumbnail:
       *
@@ -193,7 +194,7 @@ C. Keyframes
       ?? *
       ges_effect_get_thumbnail (GESEffect *self);
 
-      => Can we think about a way to add effects thumbnails directly in Gst or use 
+      => Can we think about a way to add effects thumbnails directly in Gst or use
       system thumbnails when running on Gnome?
 
   C. The GESffectContainer API
@@ -201,14 +202,17 @@ C. Keyframes
     This is an interface which would be first implemented in GESTimelineObject
     and GESTimelineLayer.
 
+      This class has those signals:
+        * effect-added: emited when an effect is added
+        * effect-removed: emited when an effect is removed
+        * effect-moved: emited when an effect is moved
+
       /**
       * ges_effect_container_add_effect:
       *
       * @object: The origin #GESEffectContainer
       *
       * Adds a new effect corresponding to the @effect_desc to the #GESEffectContainer
-      * If an effect with the exact same bin_desc as already been added to this @object,
-      * it will not be added, and the corresponding #GESEffect will be returned.
       *
       * Returns: The newly created #GESEffect, or %NULL if there was an error.
       */
@@ -234,16 +238,33 @@ C. Keyframes
           + First step to allow to allow the configuration of effects (UC-3)
 
       /**
-      * ges_effect_container_get_effect_from_name:
+      * ges_effect_container_get_effect_nth:
       *
       * @object: The origin #GESEffectContainer
+      * @nth: The nth #GESEffect to return
       *
-      * Returns the #GESEffect that as @name as a name or NULL if we can't find that
-      * effect. The refcount of the objects will be increased. The user will have to
-      * unref each #GESEffect and free the #GList.
+      * Returns the #GESEffect that is at position @nth. The refcount of the
+      * objects will be increased. The user will have to unref each #GESEffect
+      * and free the #GList.
       */
-      GESEffect *ges_effect_container_get_effect_from_name (GESEffectContainer *object,
-                    const gchar *name);
+      GESEffect *
+      ges_effect_container_get_effect_nth (GESEffectContainer *object,
+            guint nth);
+        -> Usecases:
+          + First step to allow the configuration of effects (UC-3)
+
+      /**
+      * ges_effect_container_move_effect:
+      *
+      * @object: The origin #GESEffectContainer
+      * @effect: The #GESEffect to move
+      * @newposition: the new position at which to move the @effect
+      *
+      * Returns: %TRUE if the @effect was successfuly moved, %FALSE otherwize.
+      */
+      gboolean
+      ges_effect_container_get_effect_nth (GESEffectContainer *object,
+            GESEffect *effect, guint nth);
         -> Usecases:
           + First step to allow the configuration of effects (UC-3)
 
@@ -267,14 +288,14 @@ C. Keyframes
     but they are created calling ges_effect_container_add_effect().
 
       /**
-      * ges_effect_get_all_properties:
+      * ges_effect_list_properties:
       *
       * @self: The origin #GESEffectContainer
       *
       * Returns an array of the GParamSpec** that can be configured. They should be
       * freed after use.
       */
-      GList *ges_effect_get_all_properties(GESEffect *self);
+      GList *ges_effect_list_properties (GESEffect *self);
         -> Usecases:
           + Let user configure effects easily (UC-3)
 
@@ -294,7 +315,7 @@ C. Keyframes
           + Let user configure effects easily (UC-3)
 
       /**
-      * ges_effect_get_gst_elements:
+      * ges_effect_get_elements:
       *
       * @self: The origin #GESEffectContainer
       *
@@ -302,7 +323,7 @@ C. Keyframes
       * The user is responsible for unreffing all elements and freeing the
       * #GList
       */
-      GList *ges_effect_get_gst_elements (GESEffect *self);
+      GList *ges_effect_get_elements (GESEffect *self);
         -> Usecases:
           + Let user have the full control of effects configuration (UC-3)
 
