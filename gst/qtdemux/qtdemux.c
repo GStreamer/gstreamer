@@ -3248,6 +3248,11 @@ gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
   /* store the value */
   stream->last_ret = ret;
 
+  /* any other error that is not-linked or eos can be returned right away */
+  if (G_LIKELY (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_NOT_LINKED))
+    goto done;
+
+  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
   for (i = 0; i < demux->n_streams; i++) {
     QtDemuxStream *ostream = demux->streams[i];
 
