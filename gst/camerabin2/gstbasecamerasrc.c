@@ -390,11 +390,11 @@ construct_pipeline (GstBaseCameraSrc * self)
 {
   GstBaseCameraSrcClass *bclass = GST_BASE_CAMERA_SRC_GET_CLASS (self);
 
-  g_return_val_if_fail (bclass->construct_pipeline, FALSE);
-
-  if (!bclass->construct_pipeline (self)) {
-    GST_ERROR_OBJECT (self, "pipeline construction failed");
-    return FALSE;
+  if (bclass->construct_pipeline) {
+    if (!bclass->construct_pipeline (self)) {
+      GST_ERROR_OBJECT (self, "pipeline construction failed");
+      return FALSE;
+    }
   }
 
   return TRUE;
