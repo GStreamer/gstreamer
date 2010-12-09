@@ -354,6 +354,22 @@ GES_TYPE_TIMELINE_FILE_SOURCE
 </SECTION>
 
 <SECTION>
+<FILE>ges-timeline-operation</FILE>
+<TITLE>GESTimelineOperation</TITLE>
+GESTimelineOperation
+<SUBSECTION Standard>
+GESTimelineOperationClass
+GESTimelineOperationPrivate
+GES_TIMELINE_OPERATION
+GES_IS_TIMELINE_OPERATION
+GES_TYPE_TIMELINE_OPERATION
+ges_timeline_operation_get_type
+GES_TIMELINE_OPERATION_CLASS
+GES_IS_TIMELINE_OPERATION_CLASS
+GES_TIMELINE_OPERATION_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>ges-timeline-overlay</FILE>
 <TITLE>GESTimelineOverlay</TITLE>
 GESTimelineOverlay

@@ -52,7 +52,7 @@ typedef struct _GESTimelineTransitionPrivate GESTimelineTransitionPrivate;
  */
 struct _GESTimelineTransition {
   /*< private >*/
-  GESTimelineObject parent;
+  GESTimelineOperation parent;
 
   /*< public >*/
   GESVideoTransitionType vtype;
@@ -71,7 +71,7 @@ struct _GESTimelineTransition {
 
 struct _GESTimelineTransitionClass {
   /*< private >*/
-  GESTimelineObjectClass parent_class;
+  GESTimelineOperationClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

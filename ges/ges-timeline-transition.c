@@ -54,7 +54,7 @@ enum
 };
 
 G_DEFINE_TYPE (GESTimelineTransition, ges_timeline_transition,
-    GES_TYPE_TIMELINE_OBJECT);
+    GES_TYPE_TIMELINE_OPERATION);
 
 static GESTrackObject *ges_tl_transition_create_track_object (GESTimelineObject
     * self, GESTrack * track);
