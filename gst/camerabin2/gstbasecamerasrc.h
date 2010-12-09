@@ -59,7 +59,7 @@ struct _GstBaseCameraSrc
 {
   GstBin parent;
 
-  gint mode;
+  GstCameraBinMode mode;
 
   gboolean capturing;
   GMutex *capturing_mutex;
