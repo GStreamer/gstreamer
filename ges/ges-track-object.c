@@ -47,8 +47,8 @@ static GQuark _priority_quark;
   _priority_quark = g_quark_from_static_string ("priority"); \
 }
 
-G_DEFINE_TYPE_WITH_CODE (GESTrackObject, ges_track_object, G_TYPE_OBJECT,
-    _do_init);
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTrackObject, ges_track_object,
+    G_TYPE_OBJECT, _do_init);
 
 struct _GESTrackObjectPrivate
 {

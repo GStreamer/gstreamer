@@ -46,7 +46,7 @@
 #include "ges-keyfile-formatter.h"
 #include "ges-internal.h"
 
-G_DEFINE_TYPE (GESFormatter, ges_formatter, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GESFormatter, ges_formatter, G_TYPE_OBJECT);
 
 static void ges_formatter_dispose (GObject * object);
 static gboolean load_from_uri (GESFormatter * formatter, GESTimeline *
