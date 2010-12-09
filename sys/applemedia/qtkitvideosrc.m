@@ -241,6 +241,7 @@ openFailed:
   GstStructure *s;
   NSDictionary *outputAttrs;
   BOOL success;
+  NSRunLoop *mainRunLoop;
 
   g_assert (device != nil);
 
@@ -275,6 +276,16 @@ openFailed:
 
   [output setDelegate:self];
   [session startRunning];
+
+  mainRunLoop = [NSRunLoop mainRunLoop];
+  if ([mainRunLoop currentMode] == nil) {
+    /* QTCaptureSession::addInput and QTCaptureSession::addOutput call
+     * NSObject::performSelectorOnMainThread internally. If the mainRunLoop is
+     * not running we need to run it for a while for those methods to complete
+     */
+    GST_INFO ("mainRunLoop not running");
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
+  }
 
   return YES;
 }
