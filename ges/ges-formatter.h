@@ -106,8 +106,6 @@ typedef gboolean (*GESFormatterLoadMethod) (GESFormatter * formatter,
  * @can_save_uri: Whether the URI can be saved
  * @load_from_uri: class method to deserialize data from a URI
  * @save_to_uri: class method to serialize data to a URI
- * @save: Save the contents of the timeline to the internal data pointer.
- * @load: Load the timeline with the contents of the internal data pointer.
  *
  * GES Formatter class. Override the vmethods to implement the formatter functionnality.
  */
@@ -123,10 +121,11 @@ struct _GESFormatterClass {
   GESFormatterCanSaveURIMethod can_save_uri;
   GESFormatterLoadFromURIMethod load_from_uri;
   GESFormatterSaveToURIMethod save_to_uri;
+
+  /*< private >*/
   GESFormatterSaveMethod save;
   GESFormatterLoadMethod load;
 
-  /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
@@ -148,7 +147,7 @@ gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
 					 GESTimeline *timeline,
 					 gchar *uri);
 
-/* Non-standard methods */
+/* Non-standard methods. WILL BE DEPRECATED */
 gboolean ges_formatter_load             (GESFormatter * formatter,
 					 GESTimeline * timeline);
 gboolean ges_formatter_save             (GESFormatter * formatter,
