@@ -31,7 +31,12 @@ my_fill_track_func (GESTimelineObject * object,
 
   /* Let's just put a fakesource in for the time being */
   src = gst_element_factory_make ("fakesrc", NULL);
-  return gst_bin_add (GST_BIN (gnlobj), src);
+
+  /* If this fails... that means that there already was something
+   * in it */
+  fail_unless (gst_bin_add (GST_BIN (gnlobj), src));
+
+  return TRUE;
 }
 
 static gboolean
@@ -46,9 +51,11 @@ arbitrary_fill_track_func (GESTimelineObject * object,
       user_data, object, trobject, gnlobj);
 
   /* interpret user_data as name of element to create */
-
   src = gst_element_factory_make (user_data, NULL);
-  gst_bin_add (GST_BIN (gnlobj), src);
+
+  /* If this fails... that means that there already was something
+   * in it */
+  fail_unless (gst_bin_add (GST_BIN (gnlobj), src));
 
   return TRUE;
 }

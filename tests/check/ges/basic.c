@@ -39,7 +39,12 @@ my_fill_track_func (GESTimelineObject * object,
 
   /* Let's just put a fakesource in for the time being */
   src = gst_element_factory_make ("fakesrc", NULL);
-  return gst_bin_add (GST_BIN (gnlobj), src);
+
+  /* If this fails... that means that there already was something
+   * in it */
+  fail_unless (gst_bin_add (GST_BIN (gnlobj), src));
+
+  return TRUE;
 }
 
 GST_START_TEST (test_ges_scenario)
