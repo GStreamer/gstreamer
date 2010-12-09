@@ -68,7 +68,7 @@ GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-/* note: we could provide a vmethod for derived class to overload to provide
+/* NOTE: we could provide a vmethod for derived class to overload to provide
  * it's own implementation of interface..  but in all cases I can think of at
  * moment, either the camerasrc itself, or some element within the bin, will
  * be implementing the interface..
@@ -301,10 +301,6 @@ gst_base_camera_src_finish_capture (GstBaseCameraSrc * self)
   g_object_notify (G_OBJECT (self), "ready-for-capture");
 }
 
-
-/**
- *
- */
 static void
 gst_base_camera_src_dispose (GObject * object)
 {
