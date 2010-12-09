@@ -535,8 +535,8 @@ fail:
     if (*outbuf)
       gst_buffer_unref (*outbuf);
     *outbuf = NULL;
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), (NULL));
-    ret = GST_FLOW_ERROR;
+    GST_ELEMENT_WARNING (dec, STREAM, DECODE, (NULL), (NULL));
+    ret = GST_FLOW_OK;
     goto done;
   }
 no_buffer:
