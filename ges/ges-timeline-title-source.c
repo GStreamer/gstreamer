@@ -242,6 +242,7 @@ ges_tl_title_src_set_text (GESTimelineTitleSource * self, const gchar * text)
 
   self->text = g_strdup (text);
 
+  /* FIXME : We need a much less crack way to find the trackobject to change */
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
@@ -269,6 +270,7 @@ ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
 
   self->font_desc = g_strdup (font_desc);
 
+  /* FIXME : We need a much less crack way to find the trackobject to change */
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
@@ -293,6 +295,7 @@ ges_tl_title_src_set_halign (GESTimelineTitleSource * self,
 
   self->halign = halign;
 
+  /* FIXME : We need a much less crack way to find the trackobject to change */
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
@@ -317,6 +320,7 @@ ges_tl_title_src_set_valign (GESTimelineTitleSource * self,
 
   self->valign = valign;
 
+  /* FIXME : We need a much less crack way to find the trackobject to change */
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
@@ -327,6 +331,7 @@ ges_tl_title_src_set_valign (GESTimelineTitleSource * self,
 
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 }
 
 static void
@@ -340,6 +345,7 @@ ges_tl_title_src_set_mute (GESTimelineTitleSource * self, gboolean mute)
   self->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
+  /* FIXME : We need a much less crack way to find the trackobject to change */
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;

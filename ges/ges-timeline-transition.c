@@ -66,20 +66,22 @@ ges_timeline_transition_update_vtype_internal (GESTimelineObject * self,
   GList *tmp, *trackobjects;
   GESTimelineTransition *trself = (GESTimelineTransition *) self;
 
+  /* FIXME : We need a much less crack way to find the trackobject to change */
   trackobjects = ges_timeline_object_get_track_objects (self);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackVideoTransition *obj;
     if (GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
       obj = (GESTrackVideoTransition *) tmp->data;
       if (!ges_track_video_transition_set_type (obj, value))
-        return;
+        goto beach;
     }
-
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
-  g_list_free (trackobjects);
 
   trself->vtype = value;
+
+beach:
+  g_list_foreach (trackobjects, (GFunc) g_object_unref, NULL);
+  g_list_free (trackobjects);
   return;
 }
 
