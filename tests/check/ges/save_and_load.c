@@ -119,9 +119,6 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object0", "in-point", "0");
   KEY ("Object0", "duration", "2000000000");
   KEY ("Object0", "priority", "2");
-  KEY ("Object0", "font-desc", "\"Serif\\\\ 36\"");
-  KEY ("Object0", "halignment", "center");
-  KEY ("Object0", "valignment", "baseline");
   KEY ("Object0", "mute", "false");
   KEY ("Object0", "vpattern", "100% Black");
   KEY ("Object0", "freq", "440");
@@ -154,11 +151,7 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object2", "start", "1500000000");
   KEY ("Object2", "in-point", "0");
   KEY ("Object2", "duration", "2000000000");
-  /* This object will be under the other object and transition */
-  KEY ("Object2", "priority", "4");
-  KEY ("Object2", "font-desc", "\"Serif\\\\ 36\"");
-  KEY ("Object2", "halignment", "center");
-  KEY ("Object2", "valignment", "baseline");
+  KEY ("Object2", "priority", "3");
   KEY ("Object2", "mute", "false");
   KEY ("Object2", "vpattern", "100% Black");
   KEY ("Object2", "freq", "440");
@@ -528,9 +521,6 @@ static const gchar *data = "\n[General]\n"
     "in-point=0\n"
     "duration=2000000000\n"
     "priority=2\n"
-    "font-desc=\"Serif\\\\ 36\"\n"
-    "halignment=center\n"
-    "valignment=baseline\n"
     "mute=false\n"
     "vpattern=100% Black\n"
     "freq=440\n"
@@ -550,9 +540,6 @@ static const gchar *data = "\n[General]\n"
     "in-point=0\n"
     "duration=2000000000\n"
     "priority=2\n"
-    "font-desc=\"Serif\\\\ 36\"\n"
-    "halignment=center\n"
-    "valignment=baseline\n"
     "mute=false\n"
     "vpattern=100% Black\n"
     "freq=440\n"

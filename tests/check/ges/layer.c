@@ -104,28 +104,28 @@ GST_START_TEST (test_layer_properties)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 51);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 0);
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 1, TRUE);
+  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 0, TRUE);
 
   /* Change the priority of the layer */
   g_object_set (layer, "priority", 1, NULL);
   assert_equals_int (layer->priority, 1);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 10);
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 11, TRUE);
+  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 10, TRUE);
 
   /* Change it to an insanely high value */
   g_object_set (layer, "priority", 1000000, NULL);
   assert_equals_int (layer->priority, 1000000);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 10000000);
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 10000001, TRUE);
+  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 10000000, TRUE);
 
   /* and back to 0 */
   g_object_set (layer, "priority", 0, NULL);
   assert_equals_int (layer->priority, 0);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 0);
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 1, TRUE);
+  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 0, TRUE);
 
   /* check priority offsets */
-  assert_equals_int (GES_TIMELINE_OBJECT_HEIGHT (object), 2);
+  assert_equals_int (GES_TIMELINE_OBJECT_HEIGHT (object), 1);
   g_object_set (trackobject, "priority-offset", (guint32) 3, NULL);
   gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 3, TRUE);
   g_object_set (object, "priority", 5, NULL);

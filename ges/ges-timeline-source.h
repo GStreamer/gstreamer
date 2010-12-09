@@ -57,11 +57,6 @@ struct _GESTimelineSource {
   GESTimelineObject parent;
 
   /*< private >*/
-  gchar *text;
-  gchar *font_desc;
-  GESTextHAlign halign;
-  GESTextVAlign valign;
-
   GESTimelineSourcePrivate *priv;
 
   /* Padding for API extension */

@@ -65,6 +65,7 @@ GST_START_TEST (test_text_properties_in_layer)
       ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v,
       GES_TYPE_TRACK_TEXT_OVERLAY);
 
+  fail_unless (trobj != NULL);
   assert_equals_int (trobj->active, FALSE);
 
   /* specifically test the text property */
