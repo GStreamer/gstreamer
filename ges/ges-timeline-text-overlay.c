@@ -138,12 +138,6 @@ ges_tl_text_overlay_dispose (GObject * object)
 }
 
 static void
-ges_tl_text_overlay_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_tl_text_overlay_parent_class)->finalize (object);
-}
-
-static void
 ges_tl_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -154,7 +148,6 @@ ges_tl_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
   object_class->get_property = ges_tl_text_overlay_get_property;
   object_class->set_property = ges_tl_text_overlay_set_property;
   object_class->dispose = ges_tl_text_overlay_dispose;
-  object_class->finalize = ges_tl_text_overlay_finalize;
 
   /**
    * GESTimelineTextOverlay:text

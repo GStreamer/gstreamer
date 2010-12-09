@@ -104,12 +104,6 @@ ges_timeline_layer_dispose (GObject * object)
 }
 
 static void
-ges_timeline_layer_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_timeline_layer_parent_class)->finalize (object);
-}
-
-static void
 ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -119,7 +113,6 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
   object_class->get_property = ges_timeline_layer_get_property;
   object_class->set_property = ges_timeline_layer_set_property;
   object_class->dispose = ges_timeline_layer_dispose;
-  object_class->finalize = ges_timeline_layer_finalize;
 
   /**
    * GESTimelineLayer:priority

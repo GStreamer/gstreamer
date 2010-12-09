@@ -118,12 +118,6 @@ ges_timeline_source_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_source_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (ges_timeline_source_parent_class)->dispose (object);
-}
-
-static void
 ges_timeline_source_finalize (GObject * object)
 {
   GESTimelineSource *source = (GESTimelineSource *) object;
@@ -146,7 +140,6 @@ ges_timeline_source_class_init (GESTimelineSourceClass * klass)
 
   object_class->get_property = ges_timeline_source_get_property;
   object_class->set_property = ges_timeline_source_set_property;
-  object_class->dispose = ges_timeline_source_dispose;
   object_class->finalize = ges_timeline_source_finalize;
 
   /**

@@ -45,10 +45,6 @@ enum
   PROP_0,
 };
 
-static void ges_track_audio_test_source_dispose (GObject * object);
-
-static void ges_track_audio_test_source_finalize (GObject * object);
-
 static void ges_track_audio_test_source_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
 
@@ -71,8 +67,6 @@ ges_track_audio_test_source_class_init (GESTrackAudioTestSourceClass * klass)
 
   object_class->get_property = ges_track_audio_test_source_get_property;
   object_class->set_property = ges_track_audio_test_source_set_property;
-  object_class->dispose = ges_track_audio_test_source_dispose;
-  object_class->finalize = ges_track_audio_test_source_finalize;
 
   bg_class->create_element = ges_track_audio_test_source_create_element;
 }
@@ -85,18 +79,6 @@ ges_track_audio_test_source_init (GESTrackAudioTestSource * self)
 
   self->freq = 440;
   self->volume = 0;
-}
-
-static void
-ges_track_audio_test_source_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (ges_track_audio_test_source_parent_class)->dispose (object);
-}
-
-static void
-ges_track_audio_test_source_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_track_audio_test_source_parent_class)->finalize (object);
 }
 
 static void

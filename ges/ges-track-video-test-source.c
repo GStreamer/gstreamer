@@ -36,39 +36,17 @@ struct _GESTrackVideoTestSourcePrivate
   void *nothing;
 };
 
-enum
-{
-  PROP_0,
-};
-
-static void ges_track_video_test_source_dispose (GObject * object);
-
-static void ges_track_video_test_source_finalize (GObject * object);
-
-static void ges_track_video_test_source_get_property (GObject * object, guint
-    property_id, GValue * value, GParamSpec * pspec);
-
-static void ges_track_video_test_source_set_property (GObject * object, guint
-    property_id, const GValue * value, GParamSpec * pspec);
-
 static GstElement *ges_track_video_test_source_create_element (GESTrackSource *
     self);
 
 static void
 ges_track_video_test_source_class_init (GESTrackVideoTestSourceClass * klass)
 {
-  GObjectClass *object_class;
   GESTrackSourceClass *track_source_class;
 
   g_type_class_add_private (klass, sizeof (GESTrackVideoTestSourcePrivate));
 
-  object_class = G_OBJECT_CLASS (klass);
   track_source_class = GES_TRACK_SOURCE_CLASS (klass);
-
-  object_class->get_property = ges_track_video_test_source_get_property;
-  object_class->set_property = ges_track_video_test_source_set_property;
-  object_class->dispose = ges_track_video_test_source_dispose;
-  object_class->finalize = ges_track_video_test_source_finalize;
 
   track_source_class->create_element =
       ges_track_video_test_source_create_element;
@@ -81,38 +59,6 @@ ges_track_video_test_source_init (GESTrackVideoTestSource * self)
       GES_TYPE_TRACK_VIDEO_TEST_SOURCE, GESTrackVideoTestSourcePrivate);
 
   self->pattern = GES_VIDEO_TEST_PATTERN_BLACK;
-}
-
-static void
-ges_track_video_test_source_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (ges_track_video_test_source_parent_class)->dispose (object);
-}
-
-static void
-ges_track_video_test_source_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_track_video_test_source_parent_class)->finalize (object);
-}
-
-static void
-ges_track_video_test_source_get_property (GObject * object,
-    guint property_id, GValue * value, GParamSpec * pspec)
-{
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-  }
-}
-
-static void
-ges_track_video_test_source_set_property (GObject * object,
-    guint property_id, const GValue * value, GParamSpec * pspec)
-{
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-  }
 }
 
 static GstElement *

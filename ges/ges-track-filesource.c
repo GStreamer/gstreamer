@@ -85,12 +85,6 @@ ges_track_filesource_dispose (GObject * object)
   G_OBJECT_CLASS (ges_track_filesource_parent_class)->dispose (object);
 }
 
-static void
-ges_track_filesource_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_track_filesource_parent_class)->finalize (object);
-}
-
 static gboolean
 ges_track_filesource_create_gnl_object (GESTrackObject * object)
 {
@@ -112,7 +106,6 @@ ges_track_filesource_class_init (GESTrackFileSourceClass * klass)
   object_class->get_property = ges_track_filesource_get_property;
   object_class->set_property = ges_track_filesource_set_property;
   object_class->dispose = ges_track_filesource_dispose;
-  object_class->finalize = ges_track_filesource_finalize;
 
   /**
    * GESTrackFileSource:uri

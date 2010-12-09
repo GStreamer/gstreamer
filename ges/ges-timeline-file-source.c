@@ -111,12 +111,6 @@ ges_tl_filesource_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_tl_filesource_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (ges_tl_filesource_parent_class)->dispose (object);
-}
-
-static void
 ges_tl_filesource_finalize (GObject * object)
 {
   GESTimelineFileSource *tfs = GES_TIMELINE_FILE_SOURCE (object);
@@ -134,7 +128,6 @@ ges_tl_filesource_class_init (GESTimelineFileSourceClass * klass)
 
   object_class->get_property = ges_tl_filesource_get_property;
   object_class->set_property = ges_tl_filesource_set_property;
-  object_class->dispose = ges_tl_filesource_dispose;
   object_class->finalize = ges_tl_filesource_finalize;
 
 

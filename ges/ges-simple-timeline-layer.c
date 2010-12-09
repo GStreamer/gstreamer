@@ -108,18 +108,6 @@ ges_simple_timeline_layer_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_simple_timeline_layer_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (ges_simple_timeline_layer_parent_class)->dispose (object);
-}
-
-static void
-ges_simple_timeline_layer_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_simple_timeline_layer_parent_class)->finalize (object);
-}
-
-static void
 ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -129,8 +117,6 @@ ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
 
   object_class->get_property = ges_simple_timeline_layer_get_property;
   object_class->set_property = ges_simple_timeline_layer_set_property;
-  object_class->dispose = ges_simple_timeline_layer_dispose;
-  object_class->finalize = ges_simple_timeline_layer_finalize;
 
   /* Be informed when objects are being added/removed from elsewhere */
   layer_class->object_removed = ges_simple_timeline_layer_object_removed;

@@ -149,12 +149,6 @@ ges_tl_title_src_dispose (GObject * object)
 }
 
 static void
-ges_tl_title_src_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_tl_title_src_parent_class)->finalize (object);
-}
-
-static void
 ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -165,7 +159,6 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
   object_class->get_property = ges_tl_title_src_get_property;
   object_class->set_property = ges_tl_title_src_set_property;
   object_class->dispose = ges_tl_title_src_dispose;
-  object_class->finalize = ges_tl_title_src_finalize;
 
   /**
    * GESTimelineTitleSource:text:

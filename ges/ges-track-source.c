@@ -35,38 +35,6 @@ struct _GESTrackSourcePrivate
   void *nothing;
 };
 
-static void
-ges_track_source_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
-{
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-  }
-}
-
-static void
-ges_track_source_set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-  }
-}
-
-static void
-ges_track_source_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (ges_track_source_parent_class)->dispose (object);
-}
-
-static void
-ges_track_source_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_track_source_parent_class)->finalize (object);
-}
-
 static gboolean
 ges_track_source_create_gnl_object (GESTrackObject * object)
 {
@@ -100,15 +68,9 @@ ges_track_source_create_gnl_object (GESTrackObject * object)
 static void
 ges_track_source_class_init (GESTrackSourceClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackObjectClass *track_class = GES_TRACK_OBJECT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackSourcePrivate));
-
-  object_class->get_property = ges_track_source_get_property;
-  object_class->set_property = ges_track_source_set_property;
-  object_class->dispose = ges_track_source_dispose;
-  object_class->finalize = ges_track_source_finalize;
 
   track_class->create_gnl_object = ges_track_source_create_gnl_object;
   klass->create_element = NULL;

@@ -30,9 +30,6 @@
 
 G_DEFINE_TYPE (GESKeyfileFormatter, ges_keyfile_formatter, GES_TYPE_FORMATTER);
 
-static void ges_keyfile_formatter_dispose (GObject * object);
-static void ges_keyfile_formatter_finalize (GObject * object);
-
 /* for ini format */
 static gboolean save_keyfile (GESFormatter * keyfile_formatter,
     GESTimeline * timeline);
@@ -43,13 +40,8 @@ static void
 ges_keyfile_formatter_class_init (GESKeyfileFormatterClass * klass)
 {
   GESFormatterClass *formatter_klass;
-  GObjectClass *object_class;
 
-  object_class = G_OBJECT_CLASS (klass);
   formatter_klass = GES_FORMATTER_CLASS (klass);
-
-  object_class->dispose = ges_keyfile_formatter_dispose;
-  object_class->finalize = ges_keyfile_formatter_finalize;
 
   formatter_klass->save = save_keyfile;
   formatter_klass->load = load_keyfile;
@@ -57,17 +49,6 @@ ges_keyfile_formatter_class_init (GESKeyfileFormatterClass * klass)
 
 static void
 ges_keyfile_formatter_init (GESKeyfileFormatter * object)
-{
-}
-
-static void
-ges_keyfile_formatter_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (ges_keyfile_formatter_parent_class)->dispose (object);
-}
-
-static void
-ges_keyfile_formatter_finalize (GObject * keyfile_formatter)
 {
 }
 

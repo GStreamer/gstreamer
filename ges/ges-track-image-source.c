@@ -89,12 +89,6 @@ ges_track_image_source_dispose (GObject * object)
 }
 
 static void
-ges_track_image_source_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_track_image_source_parent_class)->finalize (object);
-}
-
-static void
 pad_added_cb (GstElement * timeline, GstPad * pad, GstElement * scale)
 {
   GstPad *sinkpad;
@@ -164,7 +158,6 @@ ges_track_image_source_class_init (GESTrackImageSourceClass * klass)
   object_class->get_property = ges_track_image_source_get_property;
   object_class->set_property = ges_track_image_source_set_property;
   object_class->dispose = ges_track_image_source_dispose;
-  object_class->finalize = ges_track_image_source_finalize;
 
   /**
    * GESTrackImageSource:uri

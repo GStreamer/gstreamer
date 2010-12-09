@@ -44,8 +44,6 @@ enum
 
 static void ges_track_title_src_dispose (GObject * object);
 
-static void ges_track_title_src_finalize (GObject * object);
-
 static void ges_track_title_src_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
 
@@ -68,7 +66,6 @@ ges_track_title_src_class_init (GESTrackTitleSourceClass * klass)
   object_class->get_property = ges_track_title_src_get_property;
   object_class->set_property = ges_track_title_src_set_property;
   object_class->dispose = ges_track_title_src_dispose;
-  object_class->finalize = ges_track_title_src_finalize;
 
   bg_class->create_element = ges_track_title_src_create_element;
 }
@@ -110,12 +107,6 @@ ges_track_title_src_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (ges_track_title_src_parent_class)->dispose (object);
-}
-
-static void
-ges_track_title_src_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_track_title_src_parent_class)->finalize (object);
 }
 
 static void

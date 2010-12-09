@@ -114,18 +114,6 @@ ges_timeline_transition_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_transition_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (ges_timeline_transition_parent_class)->dispose (object);
-}
-
-static void
-ges_timeline_transition_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (ges_timeline_transition_parent_class)->finalize (object);
-}
-
-static void
 ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -135,8 +123,6 @@ ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
 
   object_class->get_property = ges_timeline_transition_get_property;
   object_class->set_property = ges_timeline_transition_set_property;
-  object_class->dispose = ges_timeline_transition_dispose;
-  object_class->finalize = ges_timeline_transition_finalize;
 
   /**
    * GESTimelineTransition:vtype
