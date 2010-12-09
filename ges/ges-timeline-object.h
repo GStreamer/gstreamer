@@ -69,18 +69,23 @@ typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
  * @object: a #GESTimelineObject
  * @track: a #GESTrack
  *
- * Creates the 'primary track object for this @object.
+ * Creates the 'primary' track object for this @object.
  *
- * Implementors should override this function if they only interested in
- * creating a single custom track object per track.
+ * Subclasses should implement this method if they only provide a
+ * single #GESTrackObject per track.
+ *
+ * If the subclass needs to create more than one #GESTrackObject for a
+ * given track, then it should implement the 'create_track_objects'
+ * method instead.
  *
  * The implementer of this function shall return the proper #GESTrackObject
  * that should be controlled by @object for the given @track.
  *
- * If the @object can't support the media-type of the @track, this function
- * should return %NULL.
+ * The returned #GESTrackObject will be automatically added to the list
+ * of objects controlled by the #GESTimelineObject.
  *
- * Returns: the #GESTrackObject to be used, or %NULL.
+ * Returns: the #GESTrackObject to be used, or %NULL if it can't provide one
+ * for the given @track.
  */
 typedef GESTrackObject* (*CreateTrackObjectFunc) (GESTimelineObject * object,
                          GESTrack * track);
@@ -91,6 +96,13 @@ typedef GESTrackObject* (*CreateTrackObjectFunc) (GESTimelineObject * object,
  * @track: a #GESTrack
  *
  * Create all track objects this object handles for this type of track.
+ *
+ * Subclasses should implement this method if they potentially need to
+ * return more than one #GESTrackObject(s) for a given #GESTrack.
+ *
+ * For each object created, the subclass must call
+ * ges_timeline_object_add_track_object() with the newly created object
+ * and provided @track.
  *
  * Returns: %TRUE on success %FALSE on failure.
  */

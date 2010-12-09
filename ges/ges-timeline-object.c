@@ -22,9 +22,11 @@
  * SECTION:ges-timeline-object
  * @short_description: Base Class for objects in a #GESTimelineLayer
  *
- * Responsible for creating the #GESTrackObject(s) for given #GESTrack(s)
+ * A #GESTimelineObject is a 'natural' object which controls one or more
+ * #GESTrackObject(s) in one or more #GESTrack(s).
  *
- * Keeps a reference to the #GESTrackObject(s) it created and sets/updates their properties.
+ * Keeps a reference to the #GESTrackObject(s) it created and
+ * sets/updates their properties.
  */
 
 #include "ges-timeline-object.h"
@@ -263,11 +265,11 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
  * @track: The #GESTrack to create each #GESTrackObject for.
  *
  * Creates all #GESTrackObjects supported by this object and adds them to the
- * provided track. The the track is responsible for calling
+ * provided track. The track is responsible for calling
  * #ges_timeline_release_track_object on these objects when it is finished
  * with them.
  *
- * Returns: True if each track object was created successfully, or false if an
+ * Returns: %TRUE if each track object was created successfully, or %FALSE if an
  * error occured.
  */
 
@@ -280,13 +282,16 @@ ges_timeline_object_create_track_objects (GESTimelineObject * object,
   klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
   if (!(klass->create_track_objects)) {
-    GST_INFO ("no create_track_objects implentation");
+    GST_WARNING ("no GESTimelineObject::create_track_objects implentation");
     return FALSE;
   }
 
   return klass->create_track_objects (object, track);
 }
 
+/*
+ * default implementation of GESTimelineObjectClass::create_track_objects
+ */
 gboolean
 ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
     GESTrack * track)
@@ -360,7 +365,8 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
     return FALSE;
   }
 
-  /* FIXME : Do we need to tell the subclasses ? If so, add a new virtual-method */
+  /* FIXME : Do we need to tell the subclasses ?
+   * If so, add a new virtual-method */
 
   object->priv->trackobjects =
       g_list_remove (object->priv->trackobjects, trobj);
