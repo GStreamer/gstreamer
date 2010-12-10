@@ -110,26 +110,6 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME     GST_BUFFER_FLAG_LAST
 
-/**
- * GST_BASE_PARSE_LOCK:
- * @obj: base parse instance
- *
- * Obtain a lock to protect the parse function from concurrent access.
- *
- * Since: 0.10.x
- */
-#define GST_BASE_PARSE_LOCK(obj)   g_mutex_lock (GST_BASE_PARSE_CAST (obj)->parse_lock)
-
-/**
- * GST_BASE_PARSE_UNLOCK:
- * @obj: base parse instance
- *
- * Release the lock that protects the parse function from concurrent access.
- *
- * Since: 0.10.x
- */
-#define GST_BASE_PARSE_UNLOCK(obj) g_mutex_unlock (GST_BASE_PARSE_CAST (obj)->parse_lock)
-
 
 /**
  * GstBaseParseSeekable:
@@ -172,8 +152,6 @@ struct _GstBaseParse {
 
   /* Segment event that closes the running segment prior to SEEK */
   GstEvent       *close_segment;
-
-  GMutex         *parse_lock;
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE];
