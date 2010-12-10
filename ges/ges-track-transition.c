@@ -28,7 +28,7 @@
 #include "ges-internal.h"
 
 G_DEFINE_ABSTRACT_TYPE (GESTrackTransition, ges_track_transition,
-    GES_TYPE_TRACK_OBJECT);
+    GES_TYPE_TRACK_OPERATION);
 
 struct _GESTrackTransitionPrivate
 {

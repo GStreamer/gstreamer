@@ -26,7 +26,7 @@
 #include <gst/controller/gstcontroller.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-object.h>
+#include <ges/ges-track-operation.h>
 
 G_BEGIN_DECLS
 
@@ -61,7 +61,7 @@ typedef struct _GESTrackTransitionPrivate GESTrackTransitionPrivate;
 struct _GESTrackTransition
 {
   /*< private >*/
-  GESTrackObject parent;
+  GESTrackOperation parent;
 
   GESTrackTransitionPrivate *priv;
 
@@ -76,7 +76,7 @@ struct _GESTrackTransition
 
 struct _GESTrackTransitionClass {
   /*< private >*/
-  GESTrackObjectClass parent_class;
+  GESTrackOperationClass parent_class;
   
   /*< public >*/
   GstElement* (*create_element) (GESTrackTransition *self);
