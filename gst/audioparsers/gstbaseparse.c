@@ -686,11 +686,11 @@ gst_base_parse_sink_event (GstPad * pad, GstEvent * event)
   gboolean handled = FALSE;
   gboolean ret = TRUE;
 
-
   parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
 
-  GST_DEBUG_OBJECT (parse, "handling event %d", GST_EVENT_TYPE (event));
+  GST_DEBUG_OBJECT (parse, "handling event %d, %s", GST_EVENT_TYPE (event),
+      GST_EVENT_TYPE_NAME (event));
 
   /* Cache all events except EOS, NEWSEGMENT and FLUSH_STOP if we have a
    * pending segment */
@@ -2397,7 +2397,7 @@ gst_base_parse_sink_activate (GstPad * sinkpad)
 /**
  * gst_base_parse_activate:
  * @parse: #GstBaseParse.
- * @active: TRUE if element will be activated, FALSE if disactivated.
+ * @active: TRUE if element will be activated, FALSE if deactivated.
  *
  * Returns: TRUE if the operation succeeded.
  */
@@ -2564,6 +2564,7 @@ gst_base_parse_set_seek (GstBaseParse * parse,
 {
   parse->priv->seekable = seek;
   parse->priv->bitrate = bitrate;
+  GST_DEBUG_OBJECT (parse, "seek %d, bitrate %d", seek, bitrate);
 }
 
 
