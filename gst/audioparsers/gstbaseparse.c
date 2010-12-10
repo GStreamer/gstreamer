@@ -2153,10 +2153,16 @@ gst_base_parse_handle_previous_fragment (GstBaseParse * parse)
   if (ret != GST_FLOW_OK)
     goto exit;
 
+  /* offset will increase again as fragment is processed/parsed */
+  parse->priv->last_offset = offset;
+
   gst_adapter_push (parse->adapter, buffer);
   ret = gst_base_parse_process_fragment (parse, FALSE);
   if (ret != GST_FLOW_OK)
     goto exit;
+
+  /* force previous fragment */
+  parse->priv->offset = -1;
 
 exit:
   return ret;
@@ -2275,7 +2281,9 @@ gst_base_parse_loop (GstPad * pad)
    * first fragment (closest to stop time) is handled normally below,
    * then we pull in fragments going backwards */
   if (parse->segment.rate < 0.0) {
-    if (GST_CLOCK_TIME_IS_VALID (parse->priv->last_ts)) {
+    /* check if we jumped back to a previous fragment,
+     * which is a post-first fragment */
+    if (parse->priv->offset < 0) {
       ret = gst_base_parse_handle_previous_fragment (parse);
       goto done;
     }
@@ -2294,6 +2302,8 @@ gst_base_parse_loop (GstPad * pad)
     GST_DEBUG_OBJECT (parse, "downstream has reached end of segment");
     /* push what was accumulated during loop run */
     gst_base_parse_process_fragment (parse, TRUE);
+    /* force previous fragment */
+    parse->priv->offset = -1;
     ret = GST_FLOW_OK;
   }
 
