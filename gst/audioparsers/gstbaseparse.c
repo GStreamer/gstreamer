@@ -392,7 +392,6 @@ gst_base_parse_finalize (GObject * object)
   GstBaseParse *parse = GST_BASE_PARSE (object);
   GstEvent **p_ev;
 
-  g_mutex_free (parse->parse_lock);
   g_object_unref (parse->adapter);
 
   if (parse->pending_segment) {
@@ -494,7 +493,6 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
   GST_DEBUG_OBJECT (parse, "src created");
 
-  parse->parse_lock = g_mutex_new ();
   parse->adapter = gst_adapter_new ();
 
   parse->priv->pad_mode = GST_ACTIVATE_NONE;
@@ -1909,9 +1907,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
     /* Synchronization loop */
     for (;;) {
-      GST_BASE_PARSE_LOCK (parse);
       min_size = parse->priv->min_frame_size;
-      GST_BASE_PARSE_UNLOCK (parse);
 
       if (G_UNLIKELY (parse->priv->drain)) {
         min_size = gst_adapter_available (parse->adapter);
@@ -2182,9 +2178,7 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
 
   while (TRUE) {
 
-    GST_BASE_PARSE_LOCK (parse);
     min_size = parse->priv->min_frame_size;
-    GST_BASE_PARSE_UNLOCK (parse);
 
     ret = gst_base_parse_pull_range (parse, min_size, &buffer);
     if (ret != GST_FLOW_OK)
@@ -2523,7 +2517,6 @@ gst_base_parse_set_duration (GstBaseParse * parse,
 {
   g_return_if_fail (parse != NULL);
 
-  GST_BASE_PARSE_LOCK (parse);
   if (parse->priv->upstream_has_duration) {
     GST_DEBUG_OBJECT (parse, "using upstream duration; discarding update");
     goto exit;
@@ -2549,7 +2542,7 @@ gst_base_parse_set_duration (GstBaseParse * parse,
   GST_DEBUG_OBJECT (parse, "set update interval: %d", interval);
   parse->priv->update_interval = interval;
 exit:
-  GST_BASE_PARSE_UNLOCK (parse);
+  return;
 }
 
 /**
@@ -2588,10 +2581,8 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
 {
   g_return_if_fail (parse != NULL);
 
-  GST_BASE_PARSE_LOCK (parse);
   parse->priv->min_frame_size = min_size;
   GST_LOG_OBJECT (parse, "set frame_min_size: %d", min_size);
-  GST_BASE_PARSE_UNLOCK (parse);
 }
 
 /**
@@ -2607,10 +2598,8 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
 {
   g_return_if_fail (parse != NULL);
 
-  GST_BASE_PARSE_LOCK (parse);
   parse->priv->passthrough = passthrough;
   GST_LOG_OBJECT (parse, "set passthrough: %d", passthrough);
-  GST_BASE_PARSE_UNLOCK (parse);
 }
 
 /**
@@ -2633,7 +2622,6 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
 {
   g_return_if_fail (parse != NULL);
 
-  GST_BASE_PARSE_LOCK (parse);
   parse->priv->fps_num = fps_num;
   parse->priv->fps_den = fps_den;
   if (!fps_num || !fps_den) {
@@ -2659,7 +2647,6 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
       "lead out: %d frames = %" G_GUINT64_FORMAT " ms",
       lead_in, parse->priv->lead_in_ts / GST_MSECOND,
       lead_out, parse->priv->lead_out_ts / GST_MSECOND);
-  GST_BASE_PARSE_UNLOCK (parse);
 }
 
 /**
@@ -2676,10 +2663,8 @@ gst_base_parse_get_sync (GstBaseParse * parse)
 
   g_return_val_if_fail (parse != NULL, FALSE);
 
-  GST_BASE_PARSE_LOCK (parse);
   /* losing sync is pretty much a discont (and vice versa), no ? */
   ret = !parse->priv->discont;
-  GST_BASE_PARSE_UNLOCK (parse);
 
   GST_DEBUG_OBJECT (parse, "sync: %d", ret);
   return ret;
@@ -2699,10 +2684,8 @@ gst_base_parse_get_drain (GstBaseParse * parse)
 
   g_return_val_if_fail (parse != NULL, FALSE);
 
-  GST_BASE_PARSE_LOCK (parse);
   /* losing sync is pretty much a discont (and vice versa), no ? */
   ret = parse->priv->drain;
-  GST_BASE_PARSE_UNLOCK (parse);
 
   GST_DEBUG_OBJECT (parse, "drain: %d", ret);
   return ret;
@@ -2784,7 +2767,7 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       GST_DEBUG_OBJECT (parse, "position query");
       gst_query_parse_position (query, &format, NULL);
 
-      g_mutex_lock (parse->parse_lock);
+      GST_OBJECT_LOCK (parse);
       if (format == GST_FORMAT_BYTES) {
         dest_value = parse->priv->offset;
         res = TRUE;
@@ -2793,7 +2776,7 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
         dest_value = parse->segment.last_stop;
         res = TRUE;
       }
-      g_mutex_unlock (parse->parse_lock);
+      GST_OBJECT_UNLOCK (parse);
 
       if (res)
         gst_query_set_position (query, format, dest_value);
@@ -2802,10 +2785,8 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
         if (!res) {
           /* no precise result, upstream no idea either, then best estimate */
           /* priv->offset is updated in both PUSH/PULL modes */
-          g_mutex_lock (parse->parse_lock);
           res = gst_base_parse_convert (parse,
               GST_FORMAT_BYTES, parse->priv->offset, format, &dest_value);
-          g_mutex_unlock (parse->parse_lock);
         }
       }
       break;
@@ -2823,9 +2804,7 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
 
       /* otherwise best estimate from us */
       if (!res) {
-        g_mutex_lock (parse->parse_lock);
         res = gst_base_parse_get_duration (parse, format, &duration);
-        g_mutex_unlock (parse->parse_lock);
         if (res)
           gst_query_set_duration (query, format, duration);
       }
