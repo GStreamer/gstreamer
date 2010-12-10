@@ -58,7 +58,6 @@ static gboolean gst_h263_parse_check_valid_frame (GstBaseParse * parse,
     GstBuffer * buffer, guint * framesize, gint * skipsize);
 static GstFlowReturn gst_h263_parse_parse_frame (GstBaseParse * parse,
     GstBuffer * buffer);
-static GstCaps *gst_h263_parse_src_getcaps (GstPad * pad);
 
 static void
 gst_h263_parse_base_init (gpointer g_class)
@@ -95,8 +94,6 @@ gst_h263_parse_class_init (GstH263ParseClass * klass)
 static void
 gst_h263_parse_init (GstH263Parse * h263parse, GstH263ParseClass * g_class)
 {
-  gst_pad_set_getcaps_function (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE
-          (h263parse)), GST_DEBUG_FUNCPTR (gst_h263_parse_src_getcaps));
 }
 
 static gboolean
@@ -286,22 +283,6 @@ gst_h263_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
 out:
   g_free (params);
   return res;
-}
-
-static GstCaps *
-gst_h263_parse_src_getcaps (GstPad * pad)
-{
-  GstH263Parse *h263parse;
-  GstCaps *caps;
-
-  h263parse = GST_H263PARSE (GST_PAD_PARENT (pad));
-
-  if (h263parse->state == PARSING)
-    /* Not got more specific caps from headers yet - return template caps */
-    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-
-  g_object_get (pad, "caps", &caps, NULL);
-  return caps;
 }
 
 static gboolean
