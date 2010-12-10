@@ -117,7 +117,6 @@ gst_image_capture_bin_set_property (GObject * object, guint prop_id,
     case PROP_LOCATION:
       g_free (imagebin->location);
       imagebin->location = g_value_dup_string (value);
-
       if (imagebin->sink) {
         g_object_set (imagebin, "location", imagebin->location, NULL);
       }
