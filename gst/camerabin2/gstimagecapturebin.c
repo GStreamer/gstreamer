@@ -68,14 +68,14 @@ static void
 gst_image_capture_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstImageCaptureBin *imgbin = GST_IMAGE_CAPTURE_BIN_CAST (object);
+  GstImageCaptureBin *imagebin = GST_IMAGE_CAPTURE_BIN_CAST (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
-      g_free (imgbin->location);
-      imgbin->location = g_value_dup_string (value);
-      if (imgbin->sink) {
-        g_object_set (imgbin, "location", imgbin->location, NULL);
+      g_free (imagebin->location);
+      imagebin->location = g_value_dup_string (value);
+      if (imagebin->sink) {
+        g_object_set (imagebin, "location", imagebin->location, NULL);
       }
       break;
     default:
@@ -88,11 +88,11 @@ static void
 gst_image_capture_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstImageCaptureBin *imgbin = GST_IMAGE_CAPTURE_BIN_CAST (object);
+  GstImageCaptureBin *imagebin = GST_IMAGE_CAPTURE_BIN_CAST (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
-      g_value_set_string (value, imgbin->location);
+      g_value_set_string (value, imagebin->location);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -147,66 +147,66 @@ gst_image_capture_bin_class_init (GstImageCaptureBinClass * klass)
 }
 
 static void
-gst_image_capture_bin_init (GstImageCaptureBin * image_capturebin,
-    GstImageCaptureBinClass * image_capturebin_class)
+gst_image_capture_bin_init (GstImageCaptureBin * imagebin,
+    GstImageCaptureBinClass * imagebin_class)
 {
   GstPadTemplate *tmpl;
 
   tmpl = gst_static_pad_template_get (&sink_template);
-  image_capturebin->ghostpad =
+  imagebin->ghostpad =
       gst_ghost_pad_new_no_target_from_template ("sink", tmpl);
   gst_object_unref (tmpl);
+  gst_element_add_pad (GST_ELEMENT_CAST (imagebin), imagebin->ghostpad);
 
-  gst_element_add_pad (GST_ELEMENT_CAST (image_capturebin),
-      image_capturebin->ghostpad);
-
-  image_capturebin->location = g_strdup (DEFAULT_LOCATION);
+  imagebin->location = g_strdup (DEFAULT_LOCATION);
 }
 
 static gboolean
-gst_image_capture_bin_create_elements (GstImageCaptureBin * icbin)
+gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
 {
-  GstElement *csp;
-  GstElement *enc;
-  GstElement *mux;
+  GstElement *colorspace;
+  GstElement *encoder;
+  GstElement *muxer;
   GstElement *sink;
   GstPad *pad = NULL;
 
-  if (icbin->elements_created)
+  if (imagebin->elements_created)
     return TRUE;
 
   /* create elements */
-  csp = gst_element_factory_make ("ffmpegcolorspace", "icbin-csp");
-  if (!csp)
+  colorspace =
+      gst_element_factory_make ("ffmpegcolorspace", "imagebin-colorspace");
+  if (!colorspace)
     goto error;
 
-  enc = gst_element_factory_make ("jpegenc", "icbin-enc");
-  if (!enc)
+  encoder = gst_element_factory_make ("jpegenc", "imagebin-encoder");
+  if (!encoder)
     goto error;
 
-  mux = gst_element_factory_make ("jifmux", "icbin-mux");
-  if (!mux)
+  muxer = gst_element_factory_make ("jifmux", "imagebin-muxer");
+  if (!muxer)
     goto error;
 
-  sink = gst_element_factory_make ("multifilesink", "icbin-sink");
+  sink = gst_element_factory_make ("multifilesink", "imagebin-sink");
   if (!sink)
     goto error;
 
-  icbin->sink = sink;
-  g_object_set (sink, "location", icbin->location, "async", FALSE, NULL);
+  imagebin->sink = sink;
+  g_object_set (sink, "location", imagebin->location, "async", FALSE, NULL);
 
   /* add and link */
-  gst_bin_add_many (GST_BIN_CAST (icbin), csp, enc, mux, sink, NULL);
-  if (!gst_element_link_many (csp, enc, mux, sink, NULL))
+  gst_bin_add_many (GST_BIN_CAST (imagebin), colorspace, encoder, muxer, sink,
+      NULL);
+  if (!gst_element_link_many (colorspace, encoder, muxer, sink, NULL))
     goto error;
 
   /* add ghostpad */
-  pad = gst_element_get_static_pad (csp, "sink");
-  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (icbin->ghostpad), pad))
+  pad = gst_element_get_static_pad (colorspace, "sink");
+  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (imagebin->ghostpad), pad))
     goto error;
   gst_object_unref (pad);
 
-  icbin->elements_created = TRUE;
+  imagebin->elements_created = TRUE;
   return TRUE;
 
 error:
@@ -219,11 +219,11 @@ static GstStateChangeReturn
 gst_image_capture_bin_change_state (GstElement * element, GstStateChange trans)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstImageCaptureBin *icbin = GST_IMAGE_CAPTURE_BIN_CAST (element);
+  GstImageCaptureBin *imagebin = GST_IMAGE_CAPTURE_BIN_CAST (element);
 
   switch (trans) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_image_capture_bin_create_elements (icbin)) {
+      if (!gst_image_capture_bin_create_elements (imagebin)) {
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
