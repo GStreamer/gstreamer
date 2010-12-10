@@ -71,16 +71,12 @@ struct _GESTrackTransition
 
 /**
  * GESTrackTransitionClass:
- * @create_element: return the element that should be controlled by the transition
  */
 
 struct _GESTrackTransitionClass {
   /*< private >*/
   GESTrackOperationClass parent_class;
   
-  /*< public >*/
-  GstElement* (*create_element) (GESTrackTransition *self);
-
   /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

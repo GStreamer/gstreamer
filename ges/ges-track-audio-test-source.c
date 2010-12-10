@@ -51,19 +51,16 @@ static void ges_track_audio_test_source_get_property (GObject * object, guint
 static void ges_track_audio_test_source_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_audio_test_source_create_element (GESTrackSource *
+static GstElement *ges_track_audio_test_source_create_element (GESTrackObject *
     self);
 
 static void
 ges_track_audio_test_source_class_init (GESTrackAudioTestSourceClass * klass)
 {
-  GObjectClass *object_class;
-  GESTrackSourceClass *bg_class;
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GESTrackObjectClass *bg_class = GES_TRACK_OBJECT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackAudioTestSourcePrivate));
-
-  object_class = G_OBJECT_CLASS (klass);
-  bg_class = GES_TRACK_SOURCE_CLASS (klass);
 
   object_class->get_property = ges_track_audio_test_source_get_property;
   object_class->set_property = ges_track_audio_test_source_set_property;
@@ -102,7 +99,7 @@ ges_track_audio_test_source_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_audio_test_source_create_element (GESTrackSource * trksrc)
+ges_track_audio_test_source_create_element (GESTrackObject * trksrc)
 {
   GESTrackAudioTestSource *self;
   GstElement *ret;
@@ -122,7 +119,7 @@ ges_track_audio_test_source_set_freq (GESTrackAudioTestSource * self,
   GstElement *element;
 
   self->freq = freq;
-  element = ((GESTrackSource *) self)->element;
+  element = ((GESTrackObject *) self)->element;
   if (element)
     g_object_set (element, "freq", (gdouble) freq, NULL);
 }
@@ -134,7 +131,7 @@ ges_track_audio_test_source_set_volume (GESTrackAudioTestSource * self,
   GstElement *element;
 
   self->volume = volume;
-  element = ((GESTrackSource *) self)->element;
+  element = ((GESTrackObject *) self)->element;
   if (element)
     g_object_set (element, "volume", (gdouble) volume, NULL);
 }

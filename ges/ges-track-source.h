@@ -57,8 +57,6 @@ struct _GESTrackSource {
   /*< private >*/
   GESTrackObject parent;
 
-  GstElement *element;
-
   GESTrackSourcePrivate *priv;
 
   /* Padding for API extension */
@@ -67,17 +65,11 @@ struct _GESTrackSource {
 
 /**
  * GESTrackSourceClass:
- * @create_element: virtual method which creates the GStreamer element for
- * this object
- *
  */
 
 struct _GESTrackSourceClass {
   /*< private >*/
   GESTrackObjectClass parent_class;
-
-  /*< public >*/
-  GstElement *(*create_element) (GESTrackSource *);
 
   /*< private >*/
   /* Padding for API extension */

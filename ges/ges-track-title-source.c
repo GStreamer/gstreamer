@@ -50,18 +50,15 @@ static void ges_track_title_src_get_property (GObject * object, guint
 static void ges_track_title_src_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_title_src_create_element (GESTrackSource * self);
+static GstElement *ges_track_title_src_create_element (GESTrackObject * self);
 
 static void
 ges_track_title_src_class_init (GESTrackTitleSourceClass * klass)
 {
-  GObjectClass *object_class;
-  GESTrackSourceClass *bg_class;
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GESTrackObjectClass *bg_class = GES_TRACK_OBJECT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackTitleSourcePrivate));
-
-  object_class = G_OBJECT_CLASS (klass);
-  bg_class = GES_TRACK_SOURCE_CLASS (klass);
 
   object_class->get_property = ges_track_title_src_get_property;
   object_class->set_property = ges_track_title_src_set_property;
@@ -130,7 +127,7 @@ ges_track_title_src_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_title_src_create_element (GESTrackSource * object)
+ges_track_title_src_create_element (GESTrackObject * object)
 {
   GESTrackTitleSource *self = GES_TRACK_TITLE_SOURCE (object);
   GstElement *topbin, *background, *text;

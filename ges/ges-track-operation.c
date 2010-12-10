@@ -36,36 +36,6 @@ struct _GESTrackOperationPrivate
   void *nothing;
 };
 
-static gboolean
-ges_track_operation_create_gnl_object (GESTrackObject * object)
-{
-  GESTrackOperationClass *klass = NULL;
-  GESTrackOperation *self = NULL;
-  GstElement *child = NULL;
-  GstElement *gnlobject;
-
-  self = GES_TRACK_OPERATION (object);
-  klass = GES_TRACK_OPERATION_GET_CLASS (self);
-
-  gnlobject = gst_element_factory_make ("gnloperation", NULL);
-
-  if (klass->create_element) {
-    child = klass->create_element (self);
-
-    if (G_UNLIKELY (!child)) {
-      GST_ERROR ("create_element returned NULL");
-      return TRUE;
-    }
-
-    gst_bin_add (GST_BIN (gnlobject), child);
-    self->element = child;
-  }
-
-  object->gnlobject = gnlobject;
-
-  return TRUE;
-}
-
 static void
 ges_track_operation_class_init (GESTrackOperationClass * klass)
 {
@@ -73,8 +43,7 @@ ges_track_operation_class_init (GESTrackOperationClass * klass)
 
   g_type_class_add_private (klass, sizeof (GESTrackOperationPrivate));
 
-  track_class->create_gnl_object = ges_track_operation_create_gnl_object;
-  klass->create_element = NULL;
+  track_class->gnlobject_factorytype = "gnloperation";
 }
 
 static void

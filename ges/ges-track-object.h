@@ -132,7 +132,8 @@ struct _GESTrackObject {
   guint32 pending_gnl_priority;
   gboolean pending_active;
 
-  GstElement *gnlobject;
+  GstElement *gnlobject;  /* The GnlObject */
+  GstElement *element;	  /* The element contained in the gnlobject (can be NULL) */
 
   GESTrackObjectPrivate *priv;
 
@@ -142,7 +143,12 @@ struct _GESTrackObject {
 
 /**
  * GESTrackObjectClass:
+ * @gnlobject_factorytype: name of the GNonLin GStElementFactory type to use.
  * @create_gnl_object: method to create the GNonLin container object.
+ * Create and fill the gnlobject and set it to GESTrackObject->gnlobject.
+ * The default implementation will create an object of type @gnlobject_factorytype
+ * and call @create_element.
+ * @create_element: method to return the GstElement to put in the gnlobject.
  * @start_changed: start property of gnlobject has changed
  * @media_start_changed: media-start property of gnlobject has changed
  * @duration_changed: duration property glnobject has changed
@@ -158,7 +164,9 @@ struct _GESTrackObjectClass {
 
   /*< public >*/
   /* virtual methods for subclasses */
+  const gchar *gnlobject_factorytype;
   gboolean (*create_gnl_object) (GESTrackObject * object);
+  GstElement* (*create_element) (GESTrackObject * object);
 
   void (*start_changed) (GESTrackObject *object, guint64 start);
   void (*media_start_changed) (GESTrackObject *object, guint64 media_start);

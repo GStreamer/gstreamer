@@ -36,52 +36,11 @@ struct _GESTrackTransitionPrivate
   void *nothing;
 };
 
-GstElement *ges_track_transition_create_element (GESTrackTransition * self);
-
-static gboolean
-ges_track_transition_create_gnl_object (GESTrackObject * object)
-{
-  GESTrackTransition *self;
-  GESTrackTransitionClass *klass;
-  GstElement *element;
-  gchar *name;
-  static gint tnum = 0;
-
-  self = GES_TRACK_TRANSITION (object);
-  klass = GES_TRACK_TRANSITION_GET_CLASS (object);
-
-  name = g_strdup_printf ("transition-operation%d", tnum++);
-  object->gnlobject = gst_element_factory_make ("gnloperation", name);
-  g_free (name);
-
-  g_object_set (object->gnlobject, "priority", 0, NULL);
-
-  element = klass->create_element (self);
-  if (!GST_IS_ELEMENT (element))
-    return FALSE;
-
-  gst_bin_add (GST_BIN (object->gnlobject), element);
-
-  return TRUE;
-}
-
-GstElement *
-ges_track_transition_create_element (GESTrackTransition * self)
-{
-  GST_WARNING ("transitions don't handle this track type!");
-
-  return NULL;
-}
 
 static void
 ges_track_transition_class_init (GESTrackTransitionClass * klass)
 {
-  GESTrackObjectClass *track_class = GES_TRACK_OBJECT_CLASS (klass);
-
   g_type_class_add_private (klass, sizeof (GESTrackTransitionPrivate));
-
-  track_class->create_gnl_object = ges_track_transition_create_gnl_object;
-  klass->create_element = ges_track_transition_create_element;
 }
 
 static void
@@ -89,5 +48,4 @@ ges_track_transition_init (GESTrackTransition * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_TRANSITION, GESTrackTransitionPrivate);
-
 }

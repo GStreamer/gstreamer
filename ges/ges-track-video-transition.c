@@ -53,7 +53,7 @@ static void
 ges_track_video_transition_duration_changed (GESTrackObject * self,
     guint64 duration);
 
-static GstElement *ges_track_video_transition_create_element (GESTrackTransition
+static GstElement *ges_track_video_transition_create_element (GESTrackObject
     * self);
 
 static void ges_track_video_transition_dispose (GObject * object);
@@ -71,13 +71,11 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
 {
   GObjectClass *object_class;
   GESTrackObjectClass *toclass;
-  GESTrackTransitionClass *pclass;
 
   g_type_class_add_private (klass, sizeof (GESTrackVideoTransitionPrivate));
 
   object_class = G_OBJECT_CLASS (klass);
   toclass = GES_TRACK_OBJECT_CLASS (klass);
-  pclass = GES_TRACK_TRANSITION_CLASS (klass);
 
   object_class->get_property = ges_track_video_transition_get_property;
   object_class->set_property = ges_track_video_transition_set_property;
@@ -85,8 +83,7 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
   object_class->finalize = ges_track_video_transition_finalize;
 
   toclass->duration_changed = ges_track_video_transition_duration_changed;
-
-  pclass->create_element = ges_track_video_transition_create_element;
+  toclass->create_element = ges_track_video_transition_create_element;
 }
 
 static void
@@ -169,7 +166,7 @@ ges_track_video_transition_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_video_transition_create_element (GESTrackTransition * object)
+ges_track_video_transition_create_element (GESTrackObject * object)
 {
   GstElement *topbin, *iconva, *iconvb, *oconv;
   GObject *target = NULL;

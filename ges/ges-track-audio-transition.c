@@ -47,7 +47,7 @@ enum
 static void
 ges_track_audio_transition_duration_changed (GESTrackObject * self, guint64);
 
-static GstElement *ges_track_audio_transition_create_element (GESTrackTransition
+static GstElement *ges_track_audio_transition_create_element (GESTrackObject
     * self);
 
 static void ges_track_audio_transition_dispose (GObject * object);
@@ -65,13 +65,11 @@ ges_track_audio_transition_class_init (GESTrackAudioTransitionClass * klass)
 {
   GObjectClass *object_class;
   GESTrackObjectClass *toclass;
-  GESTrackTransitionClass *pclass;
 
   g_type_class_add_private (klass, sizeof (GESTrackAudioTransitionPrivate));
 
   object_class = G_OBJECT_CLASS (klass);
   toclass = GES_TRACK_OBJECT_CLASS (klass);
-  pclass = GES_TRACK_TRANSITION_CLASS (klass);
 
   object_class->get_property = ges_track_audio_transition_get_property;
   object_class->set_property = ges_track_audio_transition_set_property;
@@ -80,7 +78,7 @@ ges_track_audio_transition_class_init (GESTrackAudioTransitionClass * klass)
 
   toclass->duration_changed = ges_track_audio_transition_duration_changed;
 
-  pclass->create_element = ges_track_audio_transition_create_element;
+  toclass->create_element = ges_track_audio_transition_create_element;
 
 }
 
@@ -166,7 +164,7 @@ link_element_to_mixer_with_volume (GstBin * bin, GstElement * element,
 }
 
 static GstElement *
-ges_track_audio_transition_create_element (GESTrackTransition * object)
+ges_track_audio_transition_create_element (GESTrackObject * object)
 {
   GESTrackAudioTransition *self;
   GstElement *topbin, *iconva, *iconvb, *oconv;

@@ -54,19 +54,16 @@ static void ges_track_text_overlay_get_property (GObject * object, guint
 static void ges_track_text_overlay_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_text_overlay_create_element (GESTrackOperation
+static GstElement *ges_track_text_overlay_create_element (GESTrackObject
     * self);
 
 static void
 ges_track_text_overlay_class_init (GESTrackTextOverlayClass * klass)
 {
-  GObjectClass *object_class;
-  GESTrackOperationClass *bg_class;
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GESTrackObjectClass *bg_class = GES_TRACK_OBJECT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackTextOverlayPrivate));
-
-  object_class = G_OBJECT_CLASS (klass);
-  bg_class = GES_TRACK_OPERATION_CLASS (klass);
 
   object_class->get_property = ges_track_text_overlay_get_property;
   object_class->set_property = ges_track_text_overlay_set_property;
@@ -136,7 +133,7 @@ ges_track_text_overlay_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_text_overlay_create_element (GESTrackOperation * object)
+ges_track_text_overlay_create_element (GESTrackObject * object)
 {
   GstElement *ret, *text, *iconv, *oconv;
   GstPad *src_target, *sink_target;

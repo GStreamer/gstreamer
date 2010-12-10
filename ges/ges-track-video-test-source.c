@@ -36,19 +36,17 @@ struct _GESTrackVideoTestSourcePrivate
   void *nothing;
 };
 
-static GstElement *ges_track_video_test_source_create_element (GESTrackSource *
+static GstElement *ges_track_video_test_source_create_element (GESTrackObject *
     self);
 
 static void
 ges_track_video_test_source_class_init (GESTrackVideoTestSourceClass * klass)
 {
-  GESTrackSourceClass *track_source_class;
+  GESTrackObjectClass *track_object_class = GES_TRACK_OBJECT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackVideoTestSourcePrivate));
 
-  track_source_class = GES_TRACK_SOURCE_CLASS (klass);
-
-  track_source_class->create_element =
+  track_object_class->create_element =
       ges_track_video_test_source_create_element;
 }
 
@@ -62,7 +60,7 @@ ges_track_video_test_source_init (GESTrackVideoTestSource * self)
 }
 
 static GstElement *
-ges_track_video_test_source_create_element (GESTrackSource * self)
+ges_track_video_test_source_create_element (GESTrackObject * self)
 {
   GstElement *ret;
   gint pattern;
@@ -81,7 +79,7 @@ ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
 {
   GstElement *element;
 
-  element = GES_TRACK_SOURCE (self)->element;
+  element = GES_TRACK_OBJECT (self)->element;
   self->pattern = pattern;
 
   if (element)
