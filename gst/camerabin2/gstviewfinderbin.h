@@ -39,6 +39,8 @@ struct _GstViewfinderBin
 
   GstPad *ghostpad;
 
+  GstElement *video_sink;
+
   gboolean elements_created;
 };
 

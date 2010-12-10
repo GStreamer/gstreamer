@@ -117,12 +117,19 @@ static void
 setup (void)
 {
   GstBus *bus;
+  GstElement *vfbin;
+  GstElement *fakevideosink;
 
   GST_INFO ("init");
 
   main_loop = g_main_loop_new (NULL, TRUE);
 
   camera = gst_check_setup_element ("camerabin2");
+  fakevideosink = gst_check_setup_element ("fakesink");
+
+  vfbin = gst_bin_get_by_name (GST_BIN (camera), "vf-bin");
+  g_object_set (G_OBJECT (vfbin), "video-sink", fakevideosink, NULL);
+  gst_object_unref (vfbin);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (camera));
   gst_bus_add_watch (bus, (GstBusFunc) capture_bus_cb, main_loop);

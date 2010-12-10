@@ -44,6 +44,8 @@ struct _GstCameraBin
   GstElement *vid_queue;
   GstElement *vid_capsfilter;
 
+  GstElement *vf_bin;
+
   GstElement *imgbin;
 
   gint vid_index;

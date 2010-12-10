@@ -44,7 +44,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_viewfinder_bin_debug);
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_VIDEO_SINK,
 };
 
 /* pad templates */
@@ -58,6 +59,15 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 /* class initialization */
 
 GST_BOILERPLATE (GstViewfinderBin, gst_viewfinder_bin, GstBin, GST_TYPE_BIN);
+
+static void gst_viewfinder_bin_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * spec);
+static void gst_viewfinder_bin_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * spec);
+
+static void
+gst_viewfinder_bin_set_video_sink (GstViewfinderBin * vfbin, GstElement * sink);
+
 
 /* Element class functions */
 static GstStateChangeReturn
@@ -79,12 +89,22 @@ gst_viewfinder_bin_base_init (gpointer g_class)
 static void
 gst_viewfinder_bin_class_init (GstViewfinderBinClass * klass)
 {
+  GObjectClass *gobject_klass;
   GstElementClass *element_class;
 
+  gobject_klass = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_viewfinder_bin_change_state);
+
+  gobject_klass->set_property = gst_viewfinder_bin_set_property;
+  gobject_klass->get_property = gst_viewfinder_bin_get_property;
+
+  g_object_class_install_property (gobject_klass, PROP_VIDEO_SINK,
+      g_param_spec_object ("video-sink", "Video Sink",
+          "the video output element to use (NULL = default)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -95,6 +115,8 @@ gst_viewfinder_bin_init (GstViewfinderBin * viewfinderbin,
       gst_static_pad_template_get (&sink_template));
   gst_element_add_pad (GST_ELEMENT_CAST (viewfinderbin),
       viewfinderbin->ghostpad);
+
+  viewfinderbin->video_sink = NULL;
 }
 
 static gboolean
@@ -120,9 +142,13 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
   if (!videoscale)
     goto error;
 
-  sink = gst_element_factory_make ("autovideosink", "vfbin-sink");
-  if (!sink)
-    goto error;
+  if (vfbin->video_sink) {
+    sink = vfbin->video_sink;
+  } else {
+    sink = gst_element_factory_make ("autovideosink", "vfbin-sink");
+    if (!sink)
+      goto error;
+  }
 
   GST_DEBUG_OBJECT (vfbin, "Internal elements created, proceding to linking");
 
@@ -184,6 +210,56 @@ gst_viewfinder_bin_change_state (GstElement * element, GstStateChange trans)
   }
 
   return ret;
+}
+
+static void
+gst_viewfinder_bin_set_video_sink (GstViewfinderBin * vfbin, GstElement * sink)
+{
+  GST_INFO_OBJECT (vfbin, "Setting video sink to %" GST_PTR_FORMAT, sink);
+
+  if (vfbin->video_sink != sink) {
+    if (sink)
+      gst_object_ref_sink (sink);
+
+    if (vfbin->video_sink)
+      gst_object_unref (vfbin->video_sink);
+
+    vfbin->video_sink = sink;
+  }
+
+  GST_LOG_OBJECT (vfbin, "Video sink is now %" GST_PTR_FORMAT, sink);
+}
+
+static void
+gst_viewfinder_bin_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstViewfinderBin *vfbin = GST_VIEWFINDER_BIN_CAST (object);
+
+  switch (prop_id) {
+    case PROP_VIDEO_SINK:
+      gst_viewfinder_bin_set_video_sink (vfbin, g_value_get_object (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_viewfinder_bin_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstViewfinderBin *vfbin = GST_VIEWFINDER_BIN_CAST (object);
+
+  switch (prop_id) {
+    case PROP_VIDEO_SINK:
+      g_value_take_object (value, vfbin->video_sink);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 gboolean
