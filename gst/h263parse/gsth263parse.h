@@ -65,9 +65,6 @@ struct _GstH263Parse
 {
   GstBaseParse baseparse;
 
-  gint psc_pos;
-  guint last_pos;
-
   gint profile, level;
   guint bitrate;
 

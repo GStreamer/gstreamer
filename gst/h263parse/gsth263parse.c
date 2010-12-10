@@ -106,9 +106,6 @@ gst_h263_parse_start (GstBaseParse * parse)
 
   GST_DEBUG ("Start");
 
-  h263parse->last_pos = 0;
-  h263parse->psc_pos = -1;
-
   h263parse->bitrate = 0;
   h263parse->profile = -1;
   h263parse->level = -1;
@@ -188,34 +185,31 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buffer,
     guint * framesize, gint * skipsize)
 {
   GstH263Parse *h263parse;
-  guint psc_pos;
+  guint psc_pos, next_psc_pos;
 
   h263parse = GST_H263PARSE (parse);
 
-  psc_pos = find_psc (buffer, h263parse->last_pos);
+  psc_pos = find_psc (buffer, 0);
 
   if (psc_pos == -1) {
     /* PSC not found, need more data */
     if (GST_BUFFER_SIZE (buffer) > 3)
-      h263parse->last_pos = GST_BUFFER_SIZE (buffer) - 3;
+      psc_pos = GST_BUFFER_SIZE (buffer) - 3;
+    else
+      psc_pos = 0;
     goto more;
   }
 
-  if (h263parse->psc_pos == -1) {
-    /* Found the start of the frame, now try to find the end */
+  /* Found the start of the frame, now try to find the end */
+  next_psc_pos = psc_pos + 3;
+  next_psc_pos = find_psc (buffer, next_psc_pos);
 
-    h263parse->psc_pos = psc_pos;
-    h263parse->last_pos = psc_pos + 3;
-
-    psc_pos = find_psc (buffer, h263parse->last_pos);
-
-    if (psc_pos == -1) {
-      if (gst_base_parse_get_drain (GST_BASE_PARSE (h263parse)))
-        /* FLUSH/EOS, it's okay if we can't find the next frame */
-        psc_pos = GST_BUFFER_SIZE (buffer);
-      else
-        goto more;
-    }
+  if (next_psc_pos == -1) {
+    if (gst_base_parse_get_drain (GST_BASE_PARSE (h263parse)))
+      /* FLUSH/EOS, it's okay if we can't find the next frame */
+      next_psc_pos = GST_BUFFER_SIZE (buffer);
+    else
+      goto more;
   }
 
   /* We should now have a complete frame */
@@ -238,11 +232,8 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buffer,
       g_free (params);
   }
 
-  *skipsize = h263parse->psc_pos;
-  *framesize = psc_pos - h263parse->psc_pos;
-
-  h263parse->psc_pos = -1;
-  h263parse->last_pos = 0;
+  *skipsize = psc_pos;
+  *framesize = next_psc_pos - psc_pos;
 
   /* XXX: After getting a keyframe, should we adjust min_frame_size to
    * something smaller so we don't end up collecting too many non-keyframes? */
@@ -255,8 +246,7 @@ more:
   /* Ask for 1024 bytes more - this is an arbitrary choice */
   gst_base_parse_set_min_frame_size (parse, GST_BUFFER_SIZE (buffer) + 1024);
 
-  /* Prevent baseparse from auto-skipping one byte */
-  *skipsize = 0;
+  *skipsize = psc_pos;
 
   return FALSE;
 }
