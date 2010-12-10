@@ -667,8 +667,8 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
 
       sy += 2 * ystep;
 
-      dst_y += y_stride + (y_stride - w);
-      dst_y2 += y_stride + (y_stride - w);
+      dst_y += y_stride + (y_stride - dw);
+      dst_y2 += y_stride + (y_stride - dw);
       dst_u += u_stride - w2;
       dst_v += v_stride - w2;
     }
