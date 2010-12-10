@@ -630,6 +630,7 @@ gst_app_sink_start (GstBaseSink * psink)
 
   g_mutex_lock (priv->mutex);
   GST_DEBUG_OBJECT (appsink, "starting");
+  priv->flushing = FALSE;
   priv->started = TRUE;
   g_mutex_unlock (priv->mutex);
 
