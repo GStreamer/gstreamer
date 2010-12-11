@@ -178,10 +178,10 @@ gst_rtsp_session_set_property (GObject * object, guint propid,
 /**
  * gst_rtsp_session_manage_media:
  * @sess: a #GstRTSPSession
- * @url: the url for the media
- * @media: a #GstRTSPMediaObject
+ * @uri: the uri for the media
+ * @media: a #GstRTSPMedia
  *
- * Manage the media object @obj in @sess. @url will be used to retrieve this
+ * Manage the media object @obj in @sess. @uri will be used to retrieve this
  * media from the session with gst_rtsp_session_get_media().
  *
  * Ownership is taken from @media.
@@ -222,7 +222,7 @@ gst_rtsp_session_manage_media (GstRTSPSession * sess, const GstRTSPUrl * uri,
 /**
  * gst_rtsp_session_release_media:
  * @sess: a #GstRTSPSession
- * @media: a #GstRTSPMediaObject
+ * @media: a #GstRTSPMedia
  *
  * Release the managed @media in @sess, freeing the memory allocated by it.
  *

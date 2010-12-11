@@ -22,7 +22,7 @@
 
 /**
  * gst_rtsp_sdp_from_media:
- * @sdp: a #GstSDPessage
+ * @sdp: a #GstSDPMessage
  * @info: info
  * @media: a #GstRTSPMedia
  *

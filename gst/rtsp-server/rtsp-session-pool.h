@@ -77,7 +77,7 @@ struct _GstRTSPSessionPoolClass {
  * The function will be called when the pool must be cleaned up because one or
  * more sessions timed out.
  *
- * Returns: %FALSe if the source should be removed.
+ * Returns: %FALSE if the source should be removed.
  */
 typedef gboolean (*GstRTSPSessionPoolFunc)  (GstRTSPSessionPool *pool, gpointer user_data);
 

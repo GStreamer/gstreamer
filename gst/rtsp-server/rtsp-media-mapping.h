@@ -56,7 +56,7 @@ struct _GstRTSPMediaMapping {
  * GstRTSPMediaMappingClass:
  * @find_media: Create or return a previously cached #GstRTSPMediaFactory object
  *        for the given url. the default implementation will use the mappings
- *        added with gst_rtsp_media_mapping_add_factory ().
+ *        added with gst_rtsp_media_mapping_add_factory().
  *
  * The class for the media mapping object.
  */

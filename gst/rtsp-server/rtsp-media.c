@@ -547,7 +547,7 @@ gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
 
 /**
  * gst_rtsp_media_seek:
- * @stream: a #GstRTSPMediaStream
+ * @media: a #GstRTSPMedia
  * @range: a #GstRTSPTimeRange
  *
  * Seek the pipeline to @range.
@@ -1475,7 +1475,7 @@ no_more_pads_cb (GstElement * element, GstRTSPMedia * media)
 
 /**
  * gst_rtsp_media_prepare:
- * @obj: a #GstRTSPMedia
+ * @media: a #GstRTSPMedia
  *
  * Prepare @media for streaming. This function will create the pipeline and
  * other objects to manage the streaming.
@@ -1604,7 +1604,7 @@ state_failed:
 
 /**
  * gst_rtsp_media_unprepare:
- * @obj: a #GstRTSPMedia
+ * @media: a #GstRTSPMedia
  *
  * Unprepare @media. After this call, the media should be prepared again before
  * it can be used again. If the media is set to be non-reusable, a new instance
@@ -1740,7 +1740,7 @@ remove_udp_destination (GstRTSPMedia *media, GstRTSPMediaStream *stream,
  * gst_rtsp_media_set_state:
  * @media: a #GstRTSPMedia
  * @state: the target state of the media
- * @transports: a GArray of #GstRTSPMediaTrans pointers
+ * @transports: a #GArray of #GstRTSPMediaTrans pointers
  *
  * Set the state of @media to @state and for the transports in @transports.
  *
