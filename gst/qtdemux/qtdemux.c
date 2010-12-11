@@ -876,6 +876,9 @@ gst_qtdemux_find_index_for_given_media_offset_linear (GstQTDemux * qtdemux,
   QtDemuxSample *result = str->samples;
   guint32 index = 0;
 
+  if (result == NULL || str->n_samples == 0)
+    return -1;
+
   if (media_offset == result->offset)
     return index;
 
