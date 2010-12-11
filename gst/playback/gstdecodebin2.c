@@ -596,6 +596,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * This signal gets emitted as soon as a new pad of the same type as one of
    * the valid 'raw' types is added.
+   *
+   * Deprecated: Use GstElement::pad-added instead of this signal.
+   *
    */
   gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD] =
       g_signal_new ("new-decoded-pad", G_TYPE_FROM_CLASS (klass),
@@ -610,6 +613,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * @pad: The pad that was removed
    *
    * This signal is emitted when a 'final' caps pad has been removed.
+   *
+   * Deprecated: Use GstElement::pad-removed instead of this signal.
+   *
    */
   gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD] =
       g_signal_new ("removed-decoded-pad", G_TYPE_FROM_CLASS (klass),
