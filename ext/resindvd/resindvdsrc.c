@@ -409,6 +409,7 @@ rsn_dvdsrc_start (GstBaseSrc * bsrc)
   src->branching = FALSE;
   src->discont = TRUE;
   src->need_segment = TRUE;
+  src->need_tag_update = TRUE;
 
   src->cur_position = GST_CLOCK_TIME_NONE;
   src->pgc_duration = GST_CLOCK_TIME_NONE;
@@ -810,8 +811,8 @@ get_current_pgc (resinDvdSrc * src)
   return pgc;
 }
 
-static void
-update_title_info (resinDvdSrc * src)
+static GstTagList *
+update_title_info (resinDvdSrc * src, gboolean force)
 {
   gint n_angles, cur_agl;
   gint title_n, part_n;
@@ -825,14 +826,14 @@ update_title_info (resinDvdSrc * src)
   if (dvdnav_current_title_info (src->dvdnav, &title_n,
           &part_n) != DVDNAV_STATUS_OK) {
     if (!src->in_menu)
-      return;                   /* Can't update now */
+      return NULL;              /* Can't update now */
     /* Must be in the first play sequence */
     title_n = -1;
     part_n = 0;
   }
 
   if (title_n != src->title_n || part_n != src->part_n ||
-      src->n_angles != n_angles || src->cur_angle != cur_agl) {
+      src->n_angles != n_angles || src->cur_angle != cur_agl || force) {
     gchar *title_str = NULL;
 
     src->title_n = title_n;
@@ -870,9 +871,11 @@ update_title_info (resinDvdSrc * src)
       gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
           title_str, NULL);
       g_free (title_str);
-      gst_element_found_tags (GST_ELEMENT_CAST (src), tags);
+      return tags;
     }
   }
+
+  return NULL;
 }
 
 /* we don't cache the result on purpose */
@@ -1046,8 +1049,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
           GST_TIME_ARGS (src->cur_position));
 
       rsn_dvdsrc_prepare_streamsinfo_event (src);
-
-      update_title_info (src);
+      src->need_tag_update = TRUE;
 
       break;
     }
@@ -1294,6 +1296,7 @@ rsn_dvdsrc_create (GstBaseSrc * bsrc, guint64 offset,
   GstEvent *audio_select_event = NULL;
   GstEvent *highlight_event = NULL;
   GstMessage *angles_msg = NULL;
+  GstTagList *tags = NULL;
   gboolean cmds_changed = FALSE;
 
   *outbuf = NULL;
@@ -1330,6 +1333,11 @@ rsn_dvdsrc_create (GstBaseSrc * bsrc, guint64 offset,
 
   cmds_changed = src->commands_changed;
   src->commands_changed = FALSE;
+
+  if (src->need_tag_update) {
+    tags = update_title_info (src, FALSE);
+    src->need_tag_update = FALSE;
+  }
 
   g_mutex_unlock (src->dvd_lock);
 
@@ -1377,6 +1385,11 @@ rsn_dvdsrc_create (GstBaseSrc * bsrc, guint64 offset,
   if (src->cur_end_ts != GST_CLOCK_TIME_NONE)
     gst_segment_set_last_stop (segment, GST_FORMAT_TIME, src->cur_end_ts);
 
+  if (tags) {
+    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (src),
+        GST_BASE_SRC_PAD (src), tags);
+    tags = NULL;
+  }
   g_mutex_lock (src->dvd_lock);
 
   if (src->next_buf != NULL) {
@@ -1784,7 +1797,7 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
       }
       src->angles_changed = FALSE;
 
-      update_title_info (src);
+      src->need_tag_update = TRUE;
     }
 
     cmds_changed = src->commands_changed;
