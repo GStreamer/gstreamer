@@ -763,7 +763,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
   gchar *trans_str, *pos;
   guint streamid;
   GstRTSPSessionMedia *media;
-  gboolean need_session;
   GstRTSPUrl *url;
 
   /* the uri contains the stream number we added in the SDP config, which is
@@ -851,8 +850,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
     /* get a handle to the configuration of the media in the session, this can
      * return NULL if this is a new url to manage in this session. */
     media = gst_rtsp_session_get_media (session, uri);
-
-    need_session = FALSE;
   } else {
     /* create a session if this fails we probably reached our session limit or
      * something. */
@@ -861,8 +858,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
 
     /* we need a new media configuration in this session */
     media = NULL;
-
-    need_session = TRUE;
   }
 
   /* we have no media, find one and manage it */
@@ -1220,7 +1215,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   }
 
   /* we always try to parse the url first */
-  if ((res = gst_rtsp_url_parse (uristr, &uri)) != GST_RTSP_OK) {
+  if (gst_rtsp_url_parse (uristr, &uri) != GST_RTSP_OK) {
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, request);
     return;
   }
