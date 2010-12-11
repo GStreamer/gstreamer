@@ -593,6 +593,16 @@ gst_deinterlace_reset_history (GstDeinterlace * self, gboolean drop_all)
 {
   gint i;
 
+  if (!drop_all) {
+    GST_DEBUG_OBJECT (self, "Flushing history (count %d)", self->history_count);
+    while (self->history_count > 0) {
+      if (gst_deinterlace_output_frame (self, TRUE) != GST_FLOW_OK) {
+        /* Encountered error, or flushing -> skip and drop all remaining */
+        drop_all = TRUE;
+        break;
+      }
+    }
+  }
   if (drop_all) {
     GST_DEBUG_OBJECT (self, "Resetting history (count %d)",
         self->history_count);
@@ -603,10 +613,6 @@ gst_deinterlace_reset_history (GstDeinterlace * self, gboolean drop_all)
         self->field_history[i].buf = NULL;
       }
     }
-  } else {
-    GST_DEBUG_OBJECT (self, "Flushing history (count %d)", self->history_count);
-    while (self->history_count > 0)
-      gst_deinterlace_output_frame (self, TRUE);
   }
   memset (self->field_history, 0,
       GST_DEINTERLACE_MAX_FIELD_HISTORY * sizeof (GstDeinterlaceField));
