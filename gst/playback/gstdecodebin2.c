@@ -2346,9 +2346,12 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
   }
 
   if (chain->endpad) {
-    if (chain->endpad->exposed)
+    if (chain->endpad->exposed) {
       gst_element_remove_pad (GST_ELEMENT_CAST (chain->dbin),
           GST_PAD_CAST (chain->endpad));
+      g_signal_emit (G_OBJECT (chain->dbin),
+          gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD], 0, chain->endpad);
+    }
 
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (chain->endpad), NULL);
     chain->endpad->exposed = FALSE;
