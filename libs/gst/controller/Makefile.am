@@ -45,6 +45,7 @@ GstController-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@G
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		-I$(top_srcdir) \
+		-I$(top_builddir) \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
 		--library=libgstcontroller-0.10.la \

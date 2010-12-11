@@ -35,6 +35,7 @@ GstDataprotocol-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstdataprotoco
 		--strip-prefix=Gst \
 		--nsversion=@GST_MAJORMINOR@ \
 		-I$(top_srcdir) \
+		-I$(top_builddir) \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
 		--library=libgstdataprotocol-0.10.la \

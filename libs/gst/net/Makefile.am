@@ -37,6 +37,8 @@ GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@
 		--nsversion=@GST_MAJORMINOR@ \
 		-I$(top_srcdir) \
 		-I$(top_srcdir)/libs \
+		-I$(top_builddir) \
+		-I$(top_builddir)/libs \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
 		--library=libgstnet-0.10.la \
