@@ -207,6 +207,7 @@ struct _GstRTSPMedia {
   GstRTSPMediaStatus status;
   gint               active;
   gboolean           eos_pending;
+  gboolean           adding;
 
   /* the pipeline for the media */
   GstElement        *pipeline;

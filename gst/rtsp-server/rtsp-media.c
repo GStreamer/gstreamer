@@ -1387,10 +1387,17 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
     case GST_MESSAGE_STREAM_STATUS:
       break;
     case GST_MESSAGE_ASYNC_DONE:
-      GST_INFO ("%p: got ASYNC_DONE", media);
-      collect_media_stats (media);
+      if (!media->adding) {
+        /* when we are dynamically adding pads, the addition of the udpsrc will
+         * temporarily produce ASYNC_DONE messages. We have to ignore them and
+         * wait for the final ASYNC_DONE after everything prerolled */
+        GST_INFO ("%p: got ASYNC_DONE", media);
+        collect_media_stats (media);
 
-      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
+        gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
+      } else {
+        GST_INFO ("%p: ignoring ASYNC_DONE", media);
+      }
       break;
     case GST_MESSAGE_EOS:
       GST_INFO ("%p: got EOS", media);
@@ -1442,6 +1449,8 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 
   name = g_strdup_printf ("dynpay%d", i);
 
+  media->adding = TRUE;
+
   /* ghost the pad of the payloader to the element */
   stream->srcpad = gst_ghost_pad_new (name, pad);
   gst_pad_set_active (stream->srcpad, TRUE);
@@ -1460,6 +1469,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
     gst_element_set_state (stream->selector[i], GST_STATE_PAUSED);
     gst_element_set_state (stream->appsrc[i], GST_STATE_PAUSED);
   }
+  media->adding = FALSE;
 }
 
 static void
@@ -1541,6 +1551,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
 
   for (walk = media->dynamic; walk; walk = g_list_next (walk)) {
     GstElement *elem = walk->data;
+
+    GST_INFO ("adding callbacks for dynamic element %p", elem);
 
     g_signal_connect (elem, "pad-added", (GCallback) pad_added_cb, media);
     g_signal_connect (elem, "no-more-pads", (GCallback) no_more_pads_cb, media);
