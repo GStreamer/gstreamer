@@ -33,13 +33,13 @@ enum
 GST_DEBUG_CATEGORY (rtsp_session_debug);
 #define GST_CAT_DEFAULT rtsp_session_debug
 
-static void gst_rtsp_session_pool_get_property (GObject *object, guint propid,
-    GValue *value, GParamSpec *pspec);
-static void gst_rtsp_session_pool_set_property (GObject *object, guint propid,
-    const GValue *value, GParamSpec *pspec);
+static void gst_rtsp_session_pool_get_property (GObject * object, guint propid,
+    GValue * value, GParamSpec * pspec);
+static void gst_rtsp_session_pool_set_property (GObject * object, guint propid,
+    const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_session_pool_finalize (GObject * object);
 
-static gchar * create_session_id (GstRTSPSessionPool *pool);
+static gchar *create_session_id (GstRTSPSessionPool * pool);
 
 G_DEFINE_TYPE (GstRTSPSessionPool, gst_rtsp_session_pool, G_TYPE_OBJECT);
 
@@ -62,7 +62,8 @@ gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
 
   klass->create_session_id = create_session_id;
 
-  GST_DEBUG_CATEGORY_INIT (rtsp_session_debug, "rtspsession", 0, "GstRTSPSession");
+  GST_DEBUG_CATEGORY_INIT (rtsp_session_debug, "rtspsession", 0,
+      "GstRTSPSession");
 }
 
 static void
@@ -70,24 +71,24 @@ gst_rtsp_session_pool_init (GstRTSPSessionPool * pool)
 {
   pool->lock = g_mutex_new ();
   pool->sessions = g_hash_table_new_full (g_str_hash, g_str_equal,
-		  NULL, g_object_unref);
+      NULL, g_object_unref);
   pool->max_sessions = DEFAULT_MAX_SESSIONS;
 }
 
 static void
 gst_rtsp_session_pool_finalize (GObject * object)
 {
-  GstRTSPSessionPool * pool = GST_RTSP_SESSION_POOL (object);
+  GstRTSPSessionPool *pool = GST_RTSP_SESSION_POOL (object);
 
   g_mutex_free (pool->lock);
   g_hash_table_unref (pool->sessions);
-  
+
   G_OBJECT_CLASS (gst_rtsp_session_pool_parent_class)->finalize (object);
 }
 
 static void
-gst_rtsp_session_pool_get_property (GObject *object, guint propid,
-    GValue *value, GParamSpec *pspec)
+gst_rtsp_session_pool_get_property (GObject * object, guint propid,
+    GValue * value, GParamSpec * pspec)
 {
   GstRTSPSessionPool *pool = GST_RTSP_SESSION_POOL (object);
 
@@ -102,8 +103,8 @@ gst_rtsp_session_pool_get_property (GObject *object, guint propid,
 }
 
 static void
-gst_rtsp_session_pool_set_property (GObject *object, guint propid,
-    const GValue *value, GParamSpec *pspec)
+gst_rtsp_session_pool_set_property (GObject * object, guint propid,
+    const GValue * value, GParamSpec * pspec)
 {
   GstRTSPSessionPool *pool = GST_RTSP_SESSION_POOL (object);
 
@@ -143,7 +144,7 @@ gst_rtsp_session_pool_new (void)
  * A value of 0 means an unlimited amount of sessions.
  */
 void
-gst_rtsp_session_pool_set_max_sessions (GstRTSPSessionPool *pool, guint max)
+gst_rtsp_session_pool_set_max_sessions (GstRTSPSessionPool * pool, guint max)
 {
   g_return_if_fail (GST_IS_RTSP_SESSION_POOL (pool));
 
@@ -162,7 +163,7 @@ gst_rtsp_session_pool_set_max_sessions (GstRTSPSessionPool *pool, guint max)
  * Returns: the maximum allowed number of sessions.
  */
 guint
-gst_rtsp_session_pool_get_max_sessions (GstRTSPSessionPool *pool)
+gst_rtsp_session_pool_get_max_sessions (GstRTSPSessionPool * pool)
 {
   guint result;
 
@@ -184,7 +185,7 @@ gst_rtsp_session_pool_get_max_sessions (GstRTSPSessionPool *pool)
  * Returns: the amount of active sessions in @pool.
  */
 guint
-gst_rtsp_session_pool_get_n_sessions (GstRTSPSessionPool *pool)
+gst_rtsp_session_pool_get_n_sessions (GstRTSPSessionPool * pool)
 {
   guint result;
 
@@ -209,7 +210,7 @@ gst_rtsp_session_pool_get_n_sessions (GstRTSPSessionPool *pool)
  * not exist. g_object_unref() after usage.
  */
 GstRTSPSession *
-gst_rtsp_session_pool_find (GstRTSPSessionPool *pool, const gchar *sessionid)
+gst_rtsp_session_pool_find (GstRTSPSessionPool * pool, const gchar * sessionid)
 {
   GstRTSPSession *result;
 
@@ -228,7 +229,7 @@ gst_rtsp_session_pool_find (GstRTSPSessionPool *pool, const gchar *sessionid)
 }
 
 static gchar *
-create_session_id (GstRTSPSessionPool *pool)
+create_session_id (GstRTSPSessionPool * pool)
 {
   gchar id[16];
   gint i;
@@ -249,7 +250,7 @@ create_session_id (GstRTSPSessionPool *pool)
  * Returns: a new #GstRTSPSession.
  */
 GstRTSPSession *
-gst_rtsp_session_pool_create (GstRTSPSessionPool *pool)
+gst_rtsp_session_pool_create (GstRTSPSessionPool * pool)
 {
   GstRTSPSession *result = NULL;
   GstRTSPSessionPoolClass *klass;
@@ -276,7 +277,7 @@ gst_rtsp_session_pool_create (GstRTSPSessionPool *pool)
     /* check session limit */
     if (pool->max_sessions > 0) {
       if (g_hash_table_size (pool->sessions) >= pool->max_sessions)
-	goto too_many_sessions;
+        goto too_many_sessions;
     }
     /* check if the sessionid existed */
     result = g_hash_table_lookup (pool->sessions, id);
@@ -285,11 +286,10 @@ gst_rtsp_session_pool_create (GstRTSPSessionPool *pool)
       result = NULL;
       retry++;
       if (retry > 100)
-	goto collision;
-    }
-    else {
+        goto collision;
+    } else {
       /* not found, create session and insert it in the pool */
-      result = gst_rtsp_session_new (id); 
+      result = gst_rtsp_session_new (id);
       /* take additional ref for the pool */
       g_object_ref (result);
       g_hash_table_insert (pool->sessions, result->sessionid, result);
@@ -338,7 +338,7 @@ too_many_sessions:
  * Returns: %TRUE if the session was found and removed.
  */
 gboolean
-gst_rtsp_session_pool_remove (GstRTSPSessionPool *pool, GstRTSPSession *sess)
+gst_rtsp_session_pool_remove (GstRTSPSessionPool * pool, GstRTSPSession * sess)
 {
   gboolean found;
 
@@ -353,7 +353,7 @@ gst_rtsp_session_pool_remove (GstRTSPSessionPool *pool, GstRTSPSession *sess)
 }
 
 static gboolean
-cleanup_func (gchar *sessionid, GstRTSPSession *sess, GTimeVal *now)
+cleanup_func (gchar * sessionid, GstRTSPSession * sess, GTimeVal * now)
 {
   return gst_rtsp_session_is_expired (sess, now);
 }
@@ -368,7 +368,7 @@ cleanup_func (gchar *sessionid, GstRTSPSession *sess, GTimeVal *now)
  * Returns: the amount of sessions that got removed.
  */
 guint
-gst_rtsp_session_pool_cleanup (GstRTSPSessionPool *pool)
+gst_rtsp_session_pool_cleanup (GstRTSPSessionPool * pool)
 {
   guint result;
   GTimeVal now;
@@ -378,7 +378,9 @@ gst_rtsp_session_pool_cleanup (GstRTSPSessionPool *pool)
   g_get_current_time (&now);
 
   g_mutex_lock (pool->lock);
-  result = g_hash_table_foreach_remove (pool->sessions, (GHRFunc) cleanup_func, &now);
+  result =
+      g_hash_table_foreach_remove (pool->sessions, (GHRFunc) cleanup_func,
+      &now);
   g_mutex_unlock (pool->lock);
 
   return result;
@@ -393,7 +395,7 @@ typedef struct
 } FilterData;
 
 static gboolean
-filter_func (gchar *sessionid, GstRTSPSession *sess, FilterData *data)
+filter_func (gchar * sessionid, GstRTSPSession * sess, FilterData * data)
 {
   switch (data->func (data->pool, sess, data->user_data)) {
     case GST_RTSP_FILTER_REMOVE:
@@ -432,7 +434,7 @@ filter_func (gchar *sessionid, GstRTSPSession *sess, FilterData *data)
  * before the list is freed.
  */
 GList *
-gst_rtsp_session_pool_filter (GstRTSPSessionPool *pool,
+gst_rtsp_session_pool_filter (GstRTSPSessionPool * pool,
     GstRTSPSessionFilterFunc func, gpointer user_data)
 {
   FilterData data;
@@ -460,12 +462,12 @@ typedef struct
 } GstPoolSource;
 
 static void
-collect_timeout (gchar *sessionid, GstRTSPSession *sess, GstPoolSource *psrc)
+collect_timeout (gchar * sessionid, GstRTSPSession * sess, GstPoolSource * psrc)
 {
   gint timeout;
   GTimeVal now;
 
-  g_source_get_current_time ((GSource*)psrc, &now);
+  g_source_get_current_time ((GSource *) psrc, &now);
 
   timeout = gst_rtsp_session_next_timeout (sess, &now);
   GST_INFO ("%p: next timeout: %d", sess, timeout);
@@ -547,7 +549,7 @@ static GSourceFuncs gst_pool_source_funcs = {
  * A GSource that will be dispatched when the session should be cleaned up.
  */
 GSource *
-gst_rtsp_session_pool_create_watch (GstRTSPSessionPool *pool)
+gst_rtsp_session_pool_create_watch (GstRTSPSessionPool * pool)
 {
   GstPoolSource *source;
 
@@ -559,4 +561,3 @@ gst_rtsp_session_pool_create_watch (GstRTSPSessionPool *pool)
 
   return (GSource *) source;
 }
-

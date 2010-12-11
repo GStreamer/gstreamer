@@ -49,7 +49,7 @@ static void gst_rtsp_client_finalize (GObject * obj);
 static void client_session_finalized (GstRTSPClient * client,
     GstRTSPSession * session);
 static void unlink_session_streams (GstRTSPClient * client,
-    GstRTSPSession *session, GstRTSPSessionMedia * media);
+    GstRTSPSession * session, GstRTSPSessionMedia * media);
 
 G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
@@ -89,18 +89,19 @@ gst_rtsp_client_init (GstRTSPClient * client)
 }
 
 static void
-client_unlink_session (GstRTSPClient *client, GstRTSPSession *session)
+client_unlink_session (GstRTSPClient * client, GstRTSPSession * session)
 {
   GList *medias;
 
   /* unlink all media managed in this session */
   for (medias = session->medias; medias; medias = g_list_next (medias)) {
-    unlink_session_streams (client, session, (GstRTSPSessionMedia *) medias->data);
+    unlink_session_streams (client, session,
+        (GstRTSPSessionMedia *) medias->data);
   }
 }
 
 static void
-client_cleanup_sessions (GstRTSPClient *client)
+client_cleanup_sessions (GstRTSPClient * client)
 {
   GList *sessions;
 
@@ -350,7 +351,8 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 }
 
 static void
-link_stream (GstRTSPClient * client, GstRTSPSession *session, GstRTSPSessionStream * stream)
+link_stream (GstRTSPClient * client, GstRTSPSession * session,
+    GstRTSPSessionStream * stream)
 {
   GST_DEBUG ("client %p: linking stream %p", client, stream);
   gst_rtsp_session_stream_set_callbacks (stream, (GstRTSPSendFunc) do_send_data,
@@ -361,7 +363,8 @@ link_stream (GstRTSPClient * client, GstRTSPSession *session, GstRTSPSessionStre
 }
 
 static void
-unlink_stream (GstRTSPClient * client, GstRTSPSession *session, GstRTSPSessionStream * stream)
+unlink_stream (GstRTSPClient * client, GstRTSPSession * session,
+    GstRTSPSessionStream * stream)
 {
   GST_DEBUG ("client %p: unlinking stream %p", client, stream);
   gst_rtsp_session_stream_set_callbacks (stream, NULL, NULL, NULL, NULL);
@@ -371,7 +374,8 @@ unlink_stream (GstRTSPClient * client, GstRTSPSession *session, GstRTSPSessionSt
 }
 
 static void
-unlink_session_streams (GstRTSPClient * client, GstRTSPSession *session, GstRTSPSessionMedia * media)
+unlink_session_streams (GstRTSPClient * client, GstRTSPSession * session,
+    GstRTSPSessionMedia * media)
 {
   guint n_streams, i;
 
@@ -396,7 +400,7 @@ unlink_session_streams (GstRTSPClient * client, GstRTSPSession *session, GstRTSP
 static void
 close_connection (GstRTSPClient * client)
 {
-  const gchar * tunnelid;
+  const gchar *tunnelid;
 
   GST_DEBUG ("client %p: closing connection", client);
 
@@ -1163,7 +1167,8 @@ client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
 
   /* remove the session */
   if (!(client->sessions = g_list_remove (client->sessions, session))) {
-    GST_INFO ("client %p: all sessions finalized, close the connection", client);
+    GST_INFO ("client %p: all sessions finalized, close the connection",
+        client);
     close_connection (client);
   }
 }
@@ -1550,7 +1555,8 @@ no_tunnelid:
 tunnel_existed:
   {
     g_mutex_unlock (tunnels_lock);
-    GST_ERROR ("client %p: tunnel session %s already existed", client, tunnelid);
+    GST_ERROR ("client %p: tunnel session %s already existed", client,
+        tunnelid);
     return FALSE;
   }
 }
@@ -1562,7 +1568,8 @@ tunnel_start (GstRTSPWatch * watch, gpointer user_data)
 
   client = GST_RTSP_CLIENT (user_data);
 
-  GST_INFO ("client %p: tunnel start (connection %p)", client, client->connection);
+  GST_INFO ("client %p: tunnel start (connection %p)", client,
+      client->connection);
 
   if (!remember_tunnel (client))
     goto tunnel_error;
@@ -1584,7 +1591,8 @@ tunnel_lost (GstRTSPWatch * watch, gpointer user_data)
 
   client = GST_RTSP_CLIENT (user_data);
 
-  GST_INFO ("client %p: tunnel lost (connection %p)", client, client->connection);
+  GST_INFO ("client %p: tunnel lost (connection %p)", client,
+      client->connection);
 
   /* ignore error, it'll only be a problem when the client does a POST again */
   remember_tunnel (client);

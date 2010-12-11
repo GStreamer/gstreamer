@@ -26,7 +26,8 @@ GST_DEBUG_CATEGORY_EXTERN (rtsp_media_debug);
 
 static void gst_rtsp_media_mapping_finalize (GObject * obj);
 
-static GstRTSPMediaFactory * find_media (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url);
+static GstRTSPMediaFactory *find_media (GstRTSPMediaMapping * mapping,
+    const GstRTSPUrl * url);
 
 static void
 gst_rtsp_media_mapping_class_init (GstRTSPMediaMappingClass * klass)
@@ -44,7 +45,7 @@ static void
 gst_rtsp_media_mapping_init (GstRTSPMediaMapping * mapping)
 {
   mapping->mappings = g_hash_table_new_full (g_str_hash, g_str_equal,
-		  	g_free, g_object_unref);
+      g_free, g_object_unref);
 }
 
 static void
@@ -68,7 +69,7 @@ gst_rtsp_media_mapping_new (void)
 }
 
 static GstRTSPMediaFactory *
-find_media (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url)
+find_media (GstRTSPMediaMapping * mapping, const GstRTSPUrl * url)
 {
   GstRTSPMediaFactory *result;
 
@@ -76,7 +77,7 @@ find_media (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url)
    * path of the uri to find a mapping. If the mapping depends on other
    * properties found in the url, this method should be overridden. */
   result = g_hash_table_lookup (mapping->mappings, url->abspath);
-  if (result) 
+  if (result)
     g_object_ref (result);
 
   GST_INFO ("found media %p for url abspath %s", result, url->abspath);
@@ -95,7 +96,8 @@ find_media (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url)
  * Returns: the #GstRTSPMediaFactory for @url. g_object_unref() after usage.
  */
 GstRTSPMediaFactory *
-gst_rtsp_media_mapping_find_factory (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url)
+gst_rtsp_media_mapping_find_factory (GstRTSPMediaMapping * mapping,
+    const GstRTSPUrl * url)
 {
   GstRTSPMediaFactory *result;
   GstRTSPMediaMappingClass *klass;
@@ -124,8 +126,8 @@ gst_rtsp_media_mapping_find_factory (GstRTSPMediaMapping *mapping, const GstRTSP
  * used after calling this function.
  */
 void
-gst_rtsp_media_mapping_add_factory (GstRTSPMediaMapping *mapping, const gchar *path,
-    GstRTSPMediaFactory *factory)
+gst_rtsp_media_mapping_add_factory (GstRTSPMediaMapping * mapping,
+    const gchar * path, GstRTSPMediaFactory * factory)
 {
   g_return_if_fail (GST_IS_RTSP_MEDIA_MAPPING (mapping));
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
@@ -142,11 +144,11 @@ gst_rtsp_media_mapping_add_factory (GstRTSPMediaMapping *mapping, const gchar *p
  * Remove the #GstRTSPMediaFactory associated with @path in @mapping.
  */
 void
-gst_rtsp_media_mapping_remove_factory (GstRTSPMediaMapping *mapping, const gchar *path)
+gst_rtsp_media_mapping_remove_factory (GstRTSPMediaMapping * mapping,
+    const gchar * path)
 {
   g_return_if_fail (GST_IS_RTSP_MEDIA_MAPPING (mapping));
   g_return_if_fail (path != NULL);
 
   g_hash_table_remove (mapping->mappings, path);
 }
-

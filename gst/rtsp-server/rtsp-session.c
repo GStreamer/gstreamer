@@ -421,7 +421,7 @@ gst_rtsp_session_touch (GstRTSPSession * session)
 }
 
 void
-gst_rtsp_session_prevent_expire (GstRTSPSession *session)
+gst_rtsp_session_prevent_expire (GstRTSPSession * session)
 {
   g_return_if_fail (GST_IS_RTSP_SESSION (session));
 
@@ -429,7 +429,7 @@ gst_rtsp_session_prevent_expire (GstRTSPSession *session)
 }
 
 void
-gst_rtsp_session_allow_expire (GstRTSPSession *session)
+gst_rtsp_session_allow_expire (GstRTSPSession * session)
 {
   g_atomic_int_add (&session->expire_count, -1);
 }
