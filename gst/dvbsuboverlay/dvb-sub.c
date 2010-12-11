@@ -189,6 +189,7 @@ struct _DvbSubPrivate
   int display_list_size;
   DVBSubRegionDisplay *display_list;
   GString *pes_buffer;
+  DVBSubtitleWindow display_def;
 };
 
 #define DVB_SUB_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), DVB_TYPE_SUB, DvbSubPrivate))
@@ -329,6 +330,12 @@ dvb_sub_init (DvbSub * self)
   priv->object_list = NULL;
   priv->page_time_out = 0;      /* FIXME: Maybe 255 instead? */
   priv->pes_buffer = g_string_new (NULL);
+
+  /* display/window information */
+  priv->display_def.version = -1;
+  priv->display_def.window_flag = 0;
+  priv->display_def.display_width = 720;
+  priv->display_def.display_height = 576;
 }
 
 static void
@@ -1249,6 +1256,46 @@ _dvb_sub_parse_object_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 }
 
 static gint
+_dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, guint8 * buf,
+    gint buf_size)
+{
+  int dds_version, info_byte;
+  DvbSubPrivate *ctx = dvb_sub->private_data;
+
+  if (buf_size < 5)
+    return -1;
+
+  info_byte = *buf++;
+  dds_version = info_byte >> 4;
+
+  if (ctx->display_def.version == dds_version)
+    return 0;                   /* already have this display definition version */
+
+  ctx->display_def.version = dds_version;
+  ctx->display_def.display_width = GST_READ_UINT16_BE (buf) + 1;
+  buf += 2;
+  ctx->display_def.display_height = GST_READ_UINT16_BE (buf) + 1;
+  buf += 2;
+
+  ctx->display_def.window_flag = info_byte & 1 << 3;
+
+  if (buf_size >= 13 && ctx->display_def.window_flag) {
+    ctx->display_def.window_x = GST_READ_UINT16_BE (buf);
+    buf += 2;
+    ctx->display_def.window_y = GST_READ_UINT16_BE (buf);
+    buf += 2;
+    ctx->display_def.window_width =
+        GST_READ_UINT16_BE (buf) - ctx->display_def.window_x + 1;
+    buf += 2;
+    ctx->display_def.window_height =
+        GST_READ_UINT16_BE (buf) - ctx->display_def.window_y + 1;
+    buf += 2;
+  }
+
+  return 0;
+}
+
+static gint
 _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
     guint8 * buf, gint buf_size, guint64 pts)
 {
@@ -1285,6 +1332,9 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
   }
 
   i = 0;
+
+  /* copy subtitle display and window information */
+  sub->display_def = priv->display_def;
 
   for (display = priv->display_list; display; display = display->next) {
     region = get_region (dvb_sub, display->region_id);
@@ -1405,6 +1455,7 @@ dvb_sub_new (void)
 #define DVB_SUB_SEGMENT_REGION_COMPOSITION 0x11
 #define DVB_SUB_SEGMENT_CLUT_DEFINITION 0x12
 #define DVB_SUB_SEGMENT_OBJECT_DATA 0x13
+#define DVB_SUB_SEGMENT_DISPLAY_DEFINITION 0x14
 #define DVB_SUB_SEGMENT_END_OF_DISPLAY_SET 0x80
 #define DVB_SUB_SEGMENT_STUFFING 0xFF
 
@@ -1502,6 +1553,12 @@ dvb_sub_feed_with_pts (DvbSub * dvb_sub, guint64 pts, guint8 * data, gint len)
         dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
             "Object data segment at buffer pos %u\n", pos);
         _dvb_sub_parse_object_segment (dvb_sub, page_id, data + pos, segment_len);      /* FIXME: Not sure about args */
+        break;
+      case DVB_SUB_SEGMENT_DISPLAY_DEFINITION:
+        dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
+            "display definition segment at buffer pos %u\n", pos);
+        _dvb_sub_parse_display_definition_segment (dvb_sub, data + pos,
+            segment_len);
         break;
       case DVB_SUB_SEGMENT_END_OF_DISPLAY_SET:
         dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,

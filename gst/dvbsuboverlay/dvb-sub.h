@@ -94,6 +94,33 @@ typedef struct DVBSubtitleRect {
 } DVBSubtitleRect;
 
 /**
+ * DVBSubtitleWindow
+ * @version: version 
+ * @display_window_flag: window_* are valid
+ * @display_width: assumed width of display
+ * @display_height: assumed height of display
+ * @window_x: x coordinate of top left corner of the subtitle window
+ * @window_y: y coordinate of top left corner of the subtitle window
+ * @window_width: width of the subtitle window
+ * @window_height: height of the subtitle window
+ *
+ * A structure presenting display and window information
+ * display definition segment from ETSI EN 300 743 V1.3.1
+ */
+typedef struct DVBSubtitleWindow {
+    gint version;
+    gint window_flag;
+
+    gint display_width;
+    gint display_height;
+
+    gint window_x;
+    gint window_y;
+    gint window_width;
+    gint window_height;
+} DVBSubtitleWindow;
+
+/**
  * DVBSubtitles:
  * @num_rects: the number of #DVBSubtitleRect in @rects
  * @rects: dynamic array of #DVBSubtitleRect
@@ -105,6 +132,7 @@ typedef struct DVBSubtitles {
 	guint8 page_time_out;
 	unsigned int num_rects;
 	DVBSubtitleRect **rects;
+	DVBSubtitleWindow display_def;
 } DVBSubtitles;
 
 /**
