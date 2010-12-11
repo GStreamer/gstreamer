@@ -480,7 +480,7 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
   guint32 color;
   const guint8 *src;
   guint8 *dst_y, *dst_y2, *dst_u, *dst_v;
-  gint x, y, w, h;
+  gint x, y;
   gint w2, h2;
   gint width = overlay->width;
   gint height = overlay->height;
@@ -518,7 +518,7 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
   v_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 2, width);
 
   for (counter = 0; counter < subs->num_rects; counter++) {
-    gint dw, dh;
+    gint dw, dh, dx, dy;
     gint32 sx = 0, sy;          /* 16.16 fixed point */
     gint32 xstep, ystep;        /* 16.16 fixed point */
 
@@ -527,18 +527,16 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
       continue;
 
     /* blend subtitles onto the video frame */
-    w = MIN (sub_region->w, width - sub_region->x);
-    h = MIN (sub_region->h, height - sub_region->y);
+    dx = sub_region->x * width / subs->display_def.display_width;
+    dy = sub_region->y * height / subs->display_def.display_height;
 
-    /* TODO
-       dw = MIN (sub_region->dw, width - sub_region->x);
-       dh = MIN (sub_region->dh, height - sub_region->y);
-     */
-    dw = w;
-    dh = h;
+    dw = MIN (sub_region->w * width / subs->display_def.display_width,
+        width - dx);
+    dh = MIN (sub_region->h * height / subs->display_def.display_height,
+        height - dy);
 
-    xstep = (w << 16) / dw;
-    ystep = (h << 16) / dh;
+    xstep = (sub_region->w << 16) / dw;
+    ystep = (sub_region->h << 16) / dh;
 
     w2 = (dw + 1) / 2;
     h2 = (dh + 1) / 2;
@@ -546,21 +544,16 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
     src_stride = sub_region->pict.rowstride;
 
     src = sub_region->pict.data;
-    dst_y = buffer->data + y_offset + sub_region->y * y_stride + sub_region->x;
-    dst_y2 =
-        buffer->data + y_offset + (sub_region->y + 1) * y_stride +
-        sub_region->x;
-    dst_u =
-        buffer->data + u_offset + ((sub_region->y + 1) / 2) * u_stride +
-        (sub_region->x + 1) / 2;
-    dst_v =
-        buffer->data + v_offset + ((sub_region->y + 1) / 2) * v_stride +
-        (sub_region->x + 1) / 2;
+    dst_y = buffer->data + y_offset + dy * y_stride + dx;
+    dst_y2 = buffer->data + y_offset + (dy + 1) * y_stride + dx;
+    dst_u = buffer->data + u_offset + ((dy + 1) / 2) * u_stride + (dx + 1) / 2;
+    dst_v = buffer->data + v_offset + ((dy + 1) / 2) * v_stride + (dx + 1) / 2;
 
     sy = 0;
     for (y = 0; y < dh - 1; y += 2) {
       sx = 0;
       for (x = 0; x < dw - 1; x += 2) {
+
         color =
             sub_region->pict.palette[src[(sy >> 16) * src_stride + (sx >> 16)]];
         a1 = (color >> 24) & 0xff;
