@@ -40,6 +40,10 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPMediaFactory GstRTSPMediaFactory;
 typedef struct _GstRTSPMediaFactoryClass GstRTSPMediaFactoryClass;
 
+#define GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)       (GST_RTSP_MEDIA_FACTORY_CAST(f)->lock)
+#define GST_RTSP_MEDIA_FACTORY_LOCK(f)           (g_mutex_lock(GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)))
+#define GST_RTSP_MEDIA_FACTORY_UNLOCK(f)         (g_mutex_unlock(GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)))
+
 /**
  * GstRTSPMediaFactory:
  * @lock: mutex protecting the datastructure.

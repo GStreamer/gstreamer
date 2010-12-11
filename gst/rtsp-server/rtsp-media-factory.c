@@ -215,10 +215,10 @@ gst_rtsp_media_factory_set_launch (GstRTSPMediaFactory * factory,
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
   g_return_if_fail (launch != NULL);
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   g_free (factory->launch);
   factory->launch = g_strdup (launch);
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 }
 
 /**
@@ -237,9 +237,9 @@ gst_rtsp_media_factory_get_launch (GstRTSPMediaFactory * factory)
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   result = g_strdup (factory->launch);
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
 }
@@ -257,9 +257,9 @@ gst_rtsp_media_factory_set_shared (GstRTSPMediaFactory * factory,
 {
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   factory->shared = shared;
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 }
 
 /**
@@ -277,9 +277,9 @@ gst_rtsp_media_factory_is_shared (GstRTSPMediaFactory * factory)
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), FALSE);
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   result = factory->shared;
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
 }
@@ -298,9 +298,9 @@ gst_rtsp_media_factory_set_eos_shutdown (GstRTSPMediaFactory * factory,
 {
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   factory->eos_shutdown = eos_shutdown;
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 }
 
 /**
@@ -319,9 +319,9 @@ gst_rtsp_media_factory_is_eos_shutdown (GstRTSPMediaFactory * factory)
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), FALSE);
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   result = factory->eos_shutdown;
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
 }
@@ -440,7 +440,7 @@ default_get_element (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
   GstElement *element;
   GError *error = NULL;
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   /* we need a parse syntax */
   if (factory->launch == NULL)
     goto no_launch;
@@ -450,7 +450,7 @@ default_get_element (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
   if (element == NULL)
     goto parse_error;
 
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   if (error != NULL) {
     /* a recoverable error was encountered */
@@ -462,13 +462,13 @@ default_get_element (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
   /* ERRORS */
 no_launch:
   {
-    g_mutex_unlock (factory->lock);
+    GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
     g_critical ("no launch line specified");
     return NULL;
   }
 parse_error:
   {
-    g_mutex_unlock (factory->lock);
+    GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
     g_critical ("could not parse launch syntax (%s): %s", factory->launch,
         (error ? error->message : "unknown reason"));
     if (error)
@@ -610,10 +610,10 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gboolean shared, eos_shutdown;
 
   /* configure the sharedness */
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   shared = factory->shared;
   eos_shutdown = factory->eos_shutdown;
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_shared (media, shared);
   gst_rtsp_media_set_eos_shutdown (media, eos_shutdown);
