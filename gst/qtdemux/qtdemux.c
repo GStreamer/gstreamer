@@ -387,6 +387,13 @@ GST_BOILERPLATE (GstQTDemux, gst_qtdemux, GstQTDemux, GST_TYPE_ELEMENT);
 
 static void gst_qtdemux_dispose (GObject * object);
 
+static guint32
+gst_qtdemux_find_index_linear (GstQTDemux * qtdemux, QtDemuxStream * str,
+    guint64 media_time);
+static guint32
+gst_qtdemux_find_index_for_given_media_offset_linear (GstQTDemux * qtdemux,
+    QtDemuxStream * str, gint64 media_offset);
+
 static void gst_qtdemux_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_qtdemux_get_index (GstElement * element);
 static GstStateChangeReturn gst_qtdemux_change_state (GstElement * element,
@@ -561,47 +568,57 @@ gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
   return flow;
 }
 
-#if 0
+#if 1
 static gboolean
 gst_qtdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
+    GstFormat dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
   QtDemuxStream *stream = gst_pad_get_element_private (pad);
+  GstQTDemux *qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
+  gint32 index;
 
-  if (stream->subtype == GST_MAKE_FOURCC ('v', 'i', 'd', 'e') &&
-      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
+  if (stream->subtype != FOURCC_vide)
     return FALSE;
 
   switch (src_format) {
     case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = src_value * 1;  /* FIXME */
+      switch (dest_format) {
+        case GST_FORMAT_BYTES:{
+          index = gst_qtdemux_find_index_linear (qtdemux, stream, src_value);
+          if (-1 == index)
+            return FALSE;
+
+          *dest_value = stream->samples[index].offset;
+
+          GST_DEBUG_OBJECT (qtdemux, "Format Conversion Time->Offset :%"
+              GST_TIME_FORMAT "->%" G_GUINT64_FORMAT,
+              GST_TIME_ARGS (src_value), *dest_value);
           break;
-        case GST_FORMAT_DEFAULT:
-          *dest_value = src_value * 1;  /* FIXME */
-          break;
+        }
         default:
           res = FALSE;
           break;
       }
       break;
     case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          *dest_value = src_value * 1;  /* FIXME */
+      switch (dest_format) {
+        case GST_FORMAT_TIME:{
+          index =
+              gst_qtdemux_find_index_for_given_media_offset_linear (qtdemux,
+              stream, src_value);
+
+          if (-1 == index)
+            return FALSE;
+
+          *dest_value =
+              gst_util_uint64_scale (stream->samples[index].timestamp,
+              GST_SECOND, stream->timescale);
+          GST_DEBUG_OBJECT (qtdemux, "Format Conversion Offset->Time :%"
+              G_GUINT64_FORMAT "->%" GST_TIME_FORMAT,
+              src_value, GST_TIME_ARGS (*dest_value));
           break;
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-    case GST_FORMAT_DEFAULT:
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          *dest_value = src_value * 1;  /* FIXME */
-          break;
+        }
         default:
           res = FALSE;
           break;
@@ -621,6 +638,8 @@ gst_qtdemux_get_src_query_types (GstPad * pad)
   static const GstQueryType src_types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
+    GST_QUERY_CONVERT,
+    GST_QUERY_FORMATS,
     GST_QUERY_SEEKING,
     0
   };
@@ -675,6 +694,24 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_CONVERT:{
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_value, dest_value;
+
+      gst_query_parse_convert (query, &src_fmt, &src_value, &dest_fmt, NULL);
+
+      res = gst_qtdemux_src_convert (pad,
+          src_fmt, src_value, dest_fmt, &dest_value);
+      if (res) {
+        gst_query_set_convert (query, src_fmt, src_value, dest_fmt, dest_value);
+        res = TRUE;
+      }
+      break;
+    }
+    case GST_QUERY_FORMATS:
+      gst_query_set_formats (query, 2, GST_FORMAT_TIME, GST_FORMAT_BYTES);
+      res = TRUE;
+      break;
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
       gboolean seekable;
@@ -823,6 +860,44 @@ gst_qtdemux_find_index (GstQTDemux * qtdemux, QtDemuxStream * str,
     index = 0;
 
   return index;
+}
+
+
+
+/* find the index of the sample that includes the data for @media_offset using a
+ * linear search
+ *
+ * Returns the index of the sample.
+ */
+static guint32
+gst_qtdemux_find_index_for_given_media_offset_linear (GstQTDemux * qtdemux,
+    QtDemuxStream * str, gint64 media_offset)
+{
+  QtDemuxSample *result = str->samples;
+  guint32 index = 0;
+
+  if (media_offset == result->offset)
+    return index;
+
+  result++;
+  while (index < str->n_samples - 1) {
+    if (!qtdemux_parse_samples (qtdemux, str, index + 1))
+      goto parse_failed;
+
+    if (media_offset < result->offset)
+      break;
+
+    index++;
+    result++;
+  }
+  return index;
+
+  /* ERRORS */
+parse_failed:
+  {
+    GST_LOG_OBJECT (qtdemux, "Parsing of index %u failed!", index + 1);
+    return -1;
+  }
 }
 
 /* find the index of the sample that includes the data for @media_time using a
@@ -5123,7 +5198,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* sync sample atom */
   stream->stps_present = FALSE;
   if ((stream->stss_present =
-          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
@@ -5141,7 +5216,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* partial sync sample atom */
     if ((stream->stps_present =
-            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+            ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
       stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
@@ -5261,7 +5336,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
   /* composition time-to-sample */
   if ((stream->ctts_present =
-          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
