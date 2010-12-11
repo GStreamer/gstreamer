@@ -33,8 +33,8 @@ main (int argc, char *argv[])
 
   if (argc < 2) {
     g_print ("usage: %s <launch line> \n"
-	"example: %s \"( videotestsrc ! x264enc ! rtph264pay name=pay0 pt=96 )\"\n",
-	argv[0], argv[0]);
+        "example: %s \"( videotestsrc ! x264enc ! rtph264pay name=pay0 pt=96 )\"\n",
+        argv[0], argv[0]);
     return -1;
   }
 

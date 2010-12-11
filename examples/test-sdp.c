@@ -23,7 +23,7 @@
 
 
 static gboolean
-timeout (GstRTSPServer *server, gboolean ignored)
+timeout (GstRTSPServer * server, gboolean ignored)
 {
   GstRTSPSessionPool *pool;
 
@@ -65,7 +65,9 @@ main (int argc, char *argv[])
    * element with pay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
 
-  str = g_strdup_printf ( "( filesrc location=%s ! sdpdemux name=dynpay0 )", argv[1]);
+  str =
+      g_strdup_printf ("( filesrc location=%s ! sdpdemux name=dynpay0 )",
+      argv[1]);
   gst_rtsp_media_factory_set_launch (factory, str);
   gst_rtsp_media_factory_set_shared (factory, TRUE);
   g_free (str);
@@ -79,7 +81,7 @@ main (int argc, char *argv[])
   /* attach the server to the default maincontext */
   gst_rtsp_server_attach (server, NULL);
 
-  g_timeout_add_seconds (2, (GSourceFunc) timeout, server); 
+  g_timeout_add_seconds (2, (GSourceFunc) timeout, server);
 
   /* start serving */
   g_main_loop_run (loop);
