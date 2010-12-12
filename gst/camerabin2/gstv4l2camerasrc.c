@@ -35,6 +35,14 @@
 #include "camerabingeneral.h"
 #include "gstcamerabin-enum.h"
 
+enum
+{
+  PROP_0,
+  PROP_FILTER_CAPS,
+  PROP_VIDEO_SRC,
+  PROP_VIDEO_SOURCE_FILTER
+};
+
 #define CAMERABIN_DEFAULT_VF_CAPS "video/x-raw-yuv,format=(fourcc)I420"
 
 /* Using "bilinear" as default zoom method */
@@ -68,14 +76,14 @@ gst_v4l2_camera_src_set_property (GObject * object,
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (object);
 
   switch (prop_id) {
-    case ARG_FILTER_CAPS:
+    case PROP_FILTER_CAPS:
       GST_OBJECT_LOCK (self);
       gst_caps_replace (&self->view_finder_caps,
           (GstCaps *) gst_value_get_caps (value));
       GST_OBJECT_UNLOCK (self);
       configure_format (self, self->view_finder_caps);
       break;
-    case ARG_VIDEO_SOURCE_FILTER:
+    case PROP_VIDEO_SOURCE_FILTER:
       if (GST_STATE (self) != GST_STATE_NULL) {
         GST_ELEMENT_ERROR (self, CORE, FAILED,
             ("camerasrc must be in NULL state when setting the video filter element"),
@@ -86,7 +94,7 @@ gst_v4l2_camera_src_set_property (GObject * object,
         self->app_video_filter = g_value_dup_object (value);
       }
       break;
-    case ARG_VIDEO_SRC:
+    case PROP_VIDEO_SRC:
       if (GST_STATE (self) != GST_STATE_NULL) {
         GST_ELEMENT_ERROR (self, CORE, FAILED,
             ("camerasrc must be in NULL state when setting the video source element"),
@@ -111,13 +119,13 @@ gst_v4l2_camera_src_get_property (GObject * object,
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (object);
 
   switch (prop_id) {
-    case ARG_FILTER_CAPS:
+    case PROP_FILTER_CAPS:
       gst_value_set_caps (value, self->view_finder_caps);
       break;
-    case ARG_VIDEO_SOURCE_FILTER:
+    case PROP_VIDEO_SOURCE_FILTER:
       g_value_set_object (value, self->app_video_filter);
       break;
-    case ARG_VIDEO_SRC:
+    case PROP_VIDEO_SRC:
       if (self->src_vid_src)
         g_value_set_object (value, self->src_vid_src);
       else

@@ -58,6 +58,14 @@
 
 enum
 {
+  PROP_0,
+  PROP_MODE,
+  PROP_ZOOM,
+  PROP_READY_FOR_CAPTURE
+};
+
+enum
+{
   /* action signals */
   START_CAPTURE_SIGNAL,
   STOP_CAPTURE_SIGNAL,
@@ -346,11 +354,11 @@ gst_base_camera_src_set_property (GObject * object,
   GstBaseCameraSrc *self = GST_BASE_CAMERA_SRC (object);
 
   switch (prop_id) {
-    case ARG_MODE:
+    case PROP_MODE:
       gst_base_camera_src_set_mode (GST_BASE_CAMERA_SRC (self),
           g_value_get_enum (value));
       break;
-    case ARG_ZOOM:{
+    case PROP_ZOOM:{
       g_atomic_int_set (&self->zoom, g_value_get_int (value));
       /* does not set it if in NULL, the src is not created yet */
       if (GST_STATE (self) != GST_STATE_NULL)
@@ -370,13 +378,13 @@ gst_base_camera_src_get_property (GObject * object,
   GstBaseCameraSrc *self = GST_BASE_CAMERA_SRC (object);
 
   switch (prop_id) {
-    case ARG_MODE:
+    case PROP_MODE:
       g_value_set_enum (value, self->mode);
       break;
-    case ARG_READY_FOR_CAPTURE:
+    case PROP_READY_FOR_CAPTURE:
       g_value_set_boolean (value, !self->capturing);
       break;
-    case ARG_ZOOM:
+    case PROP_ZOOM:
       g_value_set_int (value, g_atomic_int_get (&self->zoom));
       break;
     default:
@@ -475,7 +483,7 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
   gobject_class->get_property = gst_base_camera_src_get_property;
 
   // g_object_class_install_property ....
-  g_object_class_install_property (gobject_class, ARG_MODE,
+  g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
           "The capture mode (still image capture or video recording)",
           GST_TYPE_CAMERABIN_MODE, MODE_IMAGE,
@@ -492,7 +500,7 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
    * function, please schedule a new thread to do it. If you're using glib's
    * mainloop you can use g_idle_add() for example.
    */
-  g_object_class_install_property (gobject_class, ARG_READY_FOR_CAPTURE,
+  g_object_class_install_property (gobject_class, PROP_READY_FOR_CAPTURE,
       g_param_spec_boolean ("ready-for-capture", "Ready for capture",
           "Informs this element is ready for starting another capture",
           TRUE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
