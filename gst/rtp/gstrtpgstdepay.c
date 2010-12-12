@@ -50,6 +50,10 @@ GST_BOILERPLATE (GstRtpGSTDepay, gst_rtp_gst_depay, GstBaseRTPDepayload,
 
 static void gst_rtp_gst_depay_finalize (GObject * object);
 
+static GstStateChangeReturn gst_rtp_gst_depay_change_state (GstElement *
+    element, GstStateChange transition);
+
+static void gst_rtp_gst_depay_reset (GstRtpGSTDepay * rtpgstdepay);
 static gboolean gst_rtp_gst_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload,
@@ -75,12 +79,16 @@ static void
 gst_rtp_gst_depay_class_init (GstRtpGSTDepayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_gst_depay_finalize;
+
+  gstelement_class->change_state = gst_rtp_gst_depay_change_state;
 
   gstbasertpdepayload_class->set_caps = gst_rtp_gst_depay_setcaps;
   gstbasertpdepayload_class->process = gst_rtp_gst_depay_process;
@@ -103,9 +111,29 @@ gst_rtp_gst_depay_finalize (GObject * object)
 
   rtpgstdepay = GST_RTP_GST_DEPAY (object);
 
+  gst_rtp_gst_depay_reset (rtpgstdepay);
   g_object_unref (rtpgstdepay->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+store_cache (GstRtpGSTDepay * rtpgstdepay, guint CV, GstCaps * caps)
+{
+  if (rtpgstdepay->CV_cache[CV])
+    gst_caps_unref (rtpgstdepay->CV_cache[CV]);
+  rtpgstdepay->CV_cache[CV] = caps;
+}
+
+static void
+gst_rtp_gst_depay_reset (GstRtpGSTDepay * rtpgstdepay)
+{
+  guint i;
+
+  gst_adapter_clear (rtpgstdepay->adapter);
+  rtpgstdepay->current_CV = 0;
+  for (i = 0; i < 8; i++)
+    store_cache (rtpgstdepay, i, NULL);
 }
 
 static gboolean
@@ -137,6 +165,8 @@ gst_rtp_gst_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
     /* we have the SDP caps as output caps */
     rtpgstdepay->current_CV = 0;
+    gst_caps_ref (outcaps);
+    store_cache (rtpgstdepay, 0, outcaps);
   } else {
     outcaps = gst_caps_new_any ();
   }
@@ -220,9 +250,7 @@ gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
       /* parse and store in cache */
       outcaps = gst_caps_from_string ((gchar *) & data[offset]);
-      if (rtpgstdepay->CV_cache[CV])
-        gst_caps_unref (rtpgstdepay->CV_cache[CV]);
-      rtpgstdepay->CV_cache[CV] = outcaps;
+      store_cache (rtpgstdepay, CV, outcaps);
 
       /* skip caps */
       offset += csize;
@@ -293,6 +321,35 @@ missing_caps:
     return NULL;
   }
 }
+
+static GstStateChangeReturn
+gst_rtp_gst_depay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstRtpGSTDepay *rtpgstdepay;
+  GstStateChangeReturn ret;
+
+  rtpgstdepay = GST_RTP_GST_DEPAY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_rtp_gst_depay_reset (rtpgstdepay);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_rtp_gst_depay_reset (rtpgstdepay);
+      break;
+    default:
+      break;
+  }
+  return ret;
+}
+
 
 gboolean
 gst_rtp_gst_depay_plugin_init (GstPlugin * plugin)
