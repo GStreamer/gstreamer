@@ -96,7 +96,7 @@ struct _GstFFMpegDec
   gboolean has_b_frames;
   gboolean reordered_in;
   GstClockTime last_in;
-  GstClockTime next_in;
+  GstClockTime last_diff;
   gboolean reordered_out;
   GstClockTime last_out;
   GstClockTime next_out;
@@ -498,7 +498,7 @@ static void
 gst_ffmpegdec_reset_ts (GstFFMpegDec * ffmpegdec)
 {
   ffmpegdec->last_in = GST_CLOCK_TIME_NONE;
-  ffmpegdec->next_in = GST_CLOCK_TIME_NONE;
+  ffmpegdec->last_diff = GST_CLOCK_TIME_NONE;
   ffmpegdec->last_out = GST_CLOCK_TIME_NONE;
   ffmpegdec->next_out = GST_CLOCK_TIME_NONE;
   ffmpegdec->reordered_in = FALSE;
@@ -1872,6 +1872,9 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   } else if (GST_CLOCK_TIME_IS_VALID (dec_info->duration)) {
     GST_LOG_OBJECT (ffmpegdec, "using in_duration");
     out_duration = dec_info->duration;
+  } else if (GST_CLOCK_TIME_IS_VALID (ffmpegdec->last_diff)) {
+    GST_LOG_OBJECT (ffmpegdec, "using last-diff");
+    out_duration = ffmpegdec->last_diff;
   } else {
     /* if we have an input framerate, use that */
     if (ffmpegdec->format.video.fps_n != -1 &&
@@ -2482,10 +2485,15 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   if (in_timestamp != -1) {
     /* check for increasing timestamps if they are jumping backwards, we
      * probably are dealing with PTS as timestamps */
-    if (!ffmpegdec->reordered_in && ffmpegdec->last_in != -1
-        && in_timestamp < ffmpegdec->last_in) {
-      GST_LOG_OBJECT (ffmpegdec, "detected reordered input timestamps");
-      ffmpegdec->reordered_in = TRUE;
+    if (!ffmpegdec->reordered_in && ffmpegdec->last_in != -1) {
+      if (in_timestamp < ffmpegdec->last_in) {
+        GST_LOG_OBJECT (ffmpegdec, "detected reordered input timestamps");
+        ffmpegdec->reordered_in = TRUE;
+        ffmpegdec->last_diff = GST_CLOCK_TIME_NONE;
+      } else if (in_timestamp > ffmpegdec->last_in) {
+        /* keep track of timestamp diff to estimate duration */
+        ffmpegdec->last_diff = in_timestamp - ffmpegdec->last_in;
+      }
     }
     ffmpegdec->last_in = in_timestamp;
   }
