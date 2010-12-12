@@ -49,6 +49,8 @@ struct _GstRTSPMediaFactoryURI {
   GstRTSPMediaFactory   parent;
 
   gchar *uri;
+  GstCaps *raw_vcaps;
+  GstCaps *raw_acaps;
   GList *factories;
 };
 

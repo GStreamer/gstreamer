@@ -28,6 +28,32 @@ enum
   PROP_LAST
 };
 
+
+#define RAW_VIDEO_CAPS \
+    "video/x-raw-yuv; " \
+    "video/x-raw-rgb; " \
+    "video/x-raw-gray"
+
+#define RAW_AUDIO_CAPS \
+    "audio/x-raw-int; " \
+    "audio/x-raw-float"
+
+static GstStaticCaps raw_video_caps = GST_STATIC_CAPS (RAW_VIDEO_CAPS);
+static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS (RAW_AUDIO_CAPS);
+
+typedef struct
+{
+  GstRTSPMediaFactoryURI *factory;
+  guint pt;
+} FactoryData;
+
+static void
+free_data (FactoryData * data)
+{
+  g_object_unref (data->factory);
+  g_free (data);
+}
+
 static const gchar *factory_key = "GstRTSPMediaFactoryURI";
 
 GST_DEBUG_CATEGORY (rtsp_media_factory_uri_debug);
@@ -81,6 +107,8 @@ gst_rtsp_media_factory_uri_init (GstRTSPMediaFactoryURI * factory)
   factory->factories =
       gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_PAYLOADER,
       GST_RANK_NONE);
+  factory->raw_vcaps = gst_static_caps_get (&raw_video_caps);
+  factory->raw_acaps = gst_static_caps_get (&raw_audio_caps);
 }
 
 static void
@@ -90,6 +118,8 @@ gst_rtsp_media_factory_uri_finalize (GObject * obj)
 
   g_free (factory->uri);
   gst_plugin_feature_list_free (factory->factories);
+  gst_caps_unref (factory->raw_vcaps);
+  gst_caps_unref (factory->raw_acaps);
 
   G_OBJECT_CLASS (gst_rtsp_media_factory_uri_parent_class)->finalize (obj);
 }
@@ -217,16 +247,16 @@ autoplug_continue_cb (GstElement * uribin, GstPad * pad, GstCaps * caps,
     GstElement * element)
 {
   GList *list, *tmp;
-  GstRTSPMediaFactoryURI *urifact;
+  FactoryData *data;
   GstElementFactory *factory;
   gboolean res;
 
   GST_DEBUG ("found pad %s:%s of caps %" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
 
-  urifact = g_object_get_data (G_OBJECT (element), factory_key);
+  data = g_object_get_data (G_OBJECT (element), factory_key);
 
-  if (!(factory = find_payloader (urifact, caps)))
+  if (!(factory = find_payloader (data->factory, caps)))
     goto no_factory;
 
   /* we found a payloader, stop autoplugging */
@@ -249,19 +279,59 @@ static void
 pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
 {
   GstRTSPMediaFactoryURI *urifact;
+  FactoryData *data;
   GstElementFactory *factory;
   GstElement *payloader;
   GstCaps *caps;
   GstPad *sinkpad, *srcpad, *ghostpad;
+  GstElement *convert;
+  gchar *padname;
 
   GST_DEBUG ("added pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   /* link the element now and expose the pad */
-  urifact = g_object_get_data (G_OBJECT (element), factory_key);
+  data = g_object_get_data (G_OBJECT (element), factory_key);
+  urifact = data->factory;
 
-  caps = gst_pad_get_caps (pad);
-  if (caps == NULL)
+  /* ref to make refcounting easier later */
+  gst_object_ref (pad);
+  padname = gst_pad_get_name (pad);
+
+  /* get pad caps first, then call get_caps, then fail */
+  if ((caps = GST_PAD_CAPS (pad)))
+    gst_caps_ref (caps);
+  else if ((caps = gst_pad_get_caps (pad)) == NULL)
     goto no_caps;
+
+  /* check for raw caps */
+  if (gst_caps_can_intersect (caps, urifact->raw_vcaps)) {
+    /* we have raw video caps, insert converter */
+    convert = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  } else if (gst_caps_can_intersect (caps, urifact->raw_acaps)) {
+    /* we have raw audio caps, insert converter */
+    convert = gst_element_factory_make ("audioconvert", NULL);
+  } else {
+    convert = NULL;
+  }
+
+  if (convert) {
+    gst_bin_add (GST_BIN_CAST (element), convert);
+    gst_element_set_state (convert, GST_STATE_PLAYING);
+
+    sinkpad = gst_element_get_static_pad (convert, "sink");
+    gst_pad_link (pad, sinkpad);
+    gst_object_unref (sinkpad);
+
+    /* unref old pad, we reffed before */
+    gst_object_unref (pad);
+
+    /* continue with new pad and caps */
+    pad = gst_element_get_static_pad (convert, "src");
+    if ((caps = GST_PAD_CAPS (pad)))
+      gst_caps_ref (caps);
+    else if ((caps = gst_pad_get_caps (pad)) == NULL)
+      goto no_caps;
+  }
 
   if (!(factory = find_payloader (urifact, caps)))
     goto no_factory;
@@ -276,21 +346,25 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
   if (payloader == NULL)
     goto no_payloader;
 
+  g_object_set (payloader, "pt", data->pt, NULL);
+  data->pt++;
+
   /* add the payloader to the pipeline */
   gst_bin_add (GST_BIN_CAST (element), payloader);
-
   gst_element_set_state (payloader, GST_STATE_PLAYING);
 
   /* link the pad to the sinkpad of the payloader */
   sinkpad = gst_element_get_static_pad (payloader, "sink");
   gst_pad_link (pad, sinkpad);
   gst_object_unref (sinkpad);
+  gst_object_unref (pad);
 
   /* now expose the srcpad of the payloader as a ghostpad with the same name
    * as the uridecodebin pad name. */
   srcpad = gst_element_get_static_pad (payloader, "src");
-  ghostpad = gst_ghost_pad_new (GST_PAD_NAME (pad), srcpad);
+  ghostpad = gst_ghost_pad_new (padname, srcpad);
   gst_object_unref (srcpad);
+  g_free (padname);
 
   gst_pad_set_active (ghostpad, TRUE);
   gst_element_add_pad (element, ghostpad);
@@ -301,18 +375,24 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
 no_caps:
   {
     GST_WARNING ("could not get caps from pad");
+    g_free (padname);
+    gst_object_unref (pad);
     return;
   }
 no_factory:
   {
     GST_DEBUG ("no payloader found");
+    g_free (padname);
     gst_caps_unref (caps);
+    gst_object_unref (pad);
     return;
   }
 no_payloader:
   {
     GST_ERROR ("could not create payloader from factory");
+    g_free (padname);
     gst_caps_unref (caps);
+    gst_object_unref (pad);
     return;
   }
 }
@@ -330,6 +410,7 @@ rtsp_media_factory_uri_get_element (GstRTSPMediaFactory * factory,
 {
   GstElement *topbin, *element, *uribin;
   GstRTSPMediaFactoryURI *urifact;
+  FactoryData *data;
 
   urifact = GST_RTSP_MEDIA_FACTORY_URI_CAST (factory);
 
@@ -348,9 +429,13 @@ rtsp_media_factory_uri_get_element (GstRTSPMediaFactory * factory,
 
   g_object_set (uribin, "uri", urifact->uri, NULL);
 
-  /* keep factory around */
+  /* keep factory data around */
+  data = g_new0 (FactoryData, 1);
+  data->factory = g_object_ref (factory);
+  data->pt = 96;
+
   g_object_set_data_full (G_OBJECT (element), factory_key,
-      g_object_ref (factory), g_object_unref);
+      data, (GDestroyNotify) free_data);
 
   /* connect to the signals */
   g_signal_connect (uribin, "autoplug-continue",
