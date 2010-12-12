@@ -115,8 +115,6 @@ gst_viewfinder_bin_init (GstViewfinderBin * viewfinderbin,
       gst_static_pad_template_get (&sink_template));
   gst_element_add_pad (GST_ELEMENT_CAST (viewfinderbin),
       viewfinderbin->ghostpad);
-
-  viewfinderbin->video_sink = NULL;
 }
 
 static gboolean
@@ -124,47 +122,65 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
 {
   GstElement *csp = NULL;
   GstElement *videoscale = NULL;
-  GstElement *sink = NULL;
   GstPad *pad = NULL;
   gboolean added = FALSE;
 
   GST_DEBUG_OBJECT (vfbin, "Creating internal elements");
 
-  if (vfbin->elements_created)
-    return TRUE;
-
-  /* create elements */
-  csp = gst_element_factory_make ("ffmpegcolorspace", "vfbin-csp");
-  if (!csp)
-    goto error;
-
-  videoscale = gst_element_factory_make ("videoscale", "vfbin-videoscale");
-  if (!videoscale)
-    goto error;
-
-  if (vfbin->video_sink) {
-    sink = vfbin->video_sink;
-  } else {
-    sink = gst_element_factory_make ("autovideosink", "vfbin-sink");
-    if (!sink)
+  if (!vfbin->elements_created) {
+    /* create elements */
+    csp = gst_element_factory_make ("ffmpegcolorspace", "vfbin-csp");
+    if (!csp)
       goto error;
+
+    videoscale = gst_element_factory_make ("videoscale", "vfbin-videoscale");
+    if (!videoscale)
+      goto error;
+
+    GST_DEBUG_OBJECT (vfbin, "Internal elements created, proceding to linking");
+
+    /* add and link */
+    gst_bin_add_many (GST_BIN_CAST (vfbin), csp, videoscale, NULL);
+    added = TRUE;
+    if (!gst_element_link (csp, videoscale))
+      goto error;
+
+    /* add ghostpad */
+    pad = gst_element_get_static_pad (csp, "sink");
+    if (!gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), pad))
+      goto error;
+
+    vfbin->elements_created = TRUE;
+    GST_DEBUG_OBJECT (vfbin, "Elements succesfully created and linked");
   }
 
-  GST_DEBUG_OBJECT (vfbin, "Internal elements created, proceding to linking");
+  if (vfbin->video_sink) {
+    /* check if we need to replace the current one */
+    if (vfbin->user_video_sink && vfbin->video_sink != vfbin->user_video_sink) {
+      gst_bin_remove (GST_BIN_CAST (vfbin), vfbin->video_sink);
+      gst_object_unref (vfbin->video_sink);
+      vfbin->video_sink = NULL;
+    }
+  }
 
-  /* add and link */
-  gst_bin_add_many (GST_BIN_CAST (vfbin), csp, videoscale, sink, NULL);
-  added = TRUE;
-  if (!gst_element_link_many (csp, videoscale, sink, NULL))
-    goto error;
+  if (!vfbin->video_sink) {
+    if (vfbin->user_video_sink)
+      vfbin->video_sink = gst_object_ref (vfbin->user_video_sink);
+    else
+      vfbin->video_sink = gst_element_factory_make ("autovideosink",
+          "vfbin-sink");
 
-  /* add ghostpad */
-  pad = gst_element_get_static_pad (csp, "sink");
-  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), pad))
-    goto error;
+    gst_bin_add (GST_BIN_CAST (vfbin), gst_object_ref (vfbin->video_sink));
 
-  vfbin->elements_created = TRUE;
-  GST_DEBUG_OBJECT (vfbin, "Elements succesfully created and linked");
+    if (!videoscale)
+      videoscale = gst_bin_get_by_name (GST_BIN_CAST (vfbin),
+          "vfbin-videoscale");
+
+    if (!gst_element_link_pads (videoscale, "src", vfbin->video_sink, "sink")) {
+      GST_WARNING_OBJECT (vfbin, "Failed to link the new sink");
+    }
+  }
+
   return TRUE;
 
 error:
@@ -176,10 +192,8 @@ error:
       gst_object_unref (csp);
     if (videoscale)
       gst_object_unref (videoscale);
-    if (sink)
-      gst_object_unref (sink);
   } else {
-    gst_bin_remove_many (GST_BIN_CAST (vfbin), csp, videoscale, sink, NULL);
+    gst_bin_remove_many (GST_BIN_CAST (vfbin), csp, videoscale, NULL);
   }
   return FALSE;
 }
@@ -221,10 +235,26 @@ gst_viewfinder_bin_set_video_sink (GstViewfinderBin * vfbin, GstElement * sink)
     if (sink)
       gst_object_ref_sink (sink);
 
-    if (vfbin->video_sink)
+    if (vfbin->video_sink) {
+      gst_bin_remove (GST_BIN_CAST (vfbin), vfbin->video_sink);
       gst_object_unref (vfbin->video_sink);
+    }
 
     vfbin->video_sink = sink;
+    if (sink) {
+      gst_bin_add (GST_BIN_CAST (vfbin), gst_object_ref (sink));
+      if (vfbin->elements_created) {
+        GstElement *videoscale = gst_bin_get_by_name (GST_BIN_CAST (vfbin),
+            "vfbin-videoscale");
+
+        g_assert (videoscale != NULL);
+
+        if (!gst_element_link_pads (videoscale, "src", sink, "sink")) {
+          GST_WARNING_OBJECT (vfbin, "Failed to link the new sink");
+        }
+      }
+    }
+
   }
 
   GST_LOG_OBJECT (vfbin, "Video sink is now %" GST_PTR_FORMAT, sink);
@@ -254,7 +284,7 @@ gst_viewfinder_bin_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_VIDEO_SINK:
-      g_value_take_object (value, vfbin->video_sink);
+      g_value_set_object (value, vfbin->video_sink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

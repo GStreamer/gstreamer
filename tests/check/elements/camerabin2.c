@@ -130,6 +130,7 @@ setup (void)
   vfbin = gst_bin_get_by_name (GST_BIN (camera), "vf-bin");
   g_object_set (G_OBJECT (vfbin), "video-sink", fakevideosink, NULL);
   gst_object_unref (vfbin);
+  gst_object_unref (fakevideosink);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (camera));
   gst_bus_add_watch (bus, (GstBusFunc) capture_bus_cb, main_loop);

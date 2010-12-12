@@ -40,6 +40,7 @@ struct _GstViewfinderBin
   GstPad *ghostpad;
 
   GstElement *video_sink;
+  GstElement *user_video_sink;
 
   gboolean elements_created;
 };

@@ -192,7 +192,8 @@ gst_camera_bin_dispose (GObject * object)
 {
   GstCameraBin *camerabin = GST_CAMERA_BIN_CAST (object);
 
-  gst_object_unref (camerabin->vf_bin);
+  if (camerabin->vf_bin)
+    gst_object_unref (camerabin->vf_bin);
 
   g_free (camerabin->img_location);
   g_free (camerabin->vid_location);
