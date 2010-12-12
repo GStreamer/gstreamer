@@ -79,6 +79,7 @@ rfb_decoder_new (void)
   decoder->rect_width = 0;
   decoder->rect_height = 0;
   decoder->shared_flag = TRUE;
+  decoder->disconnected = FALSE;
   decoder->data = NULL;
   decoder->data_len = 0;
 
@@ -129,6 +130,9 @@ rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * addr, guint port)
     return FALSE;
   }
   //rfb_decoder_use_file_descriptor (decoder, fd);
+
+  decoder->disconnected = FALSE;
+
   return TRUE;
 }
 
@@ -178,6 +182,7 @@ rfb_decoder_read (RfbDecoder * decoder, guint32 len)
     now = recv (decoder->fd, (char *) decoder->data + total, len - total, 0);
 #endif
     if (now <= 0) {
+      decoder->disconnected = TRUE;
       GST_WARNING ("rfb read error on socket");
       return NULL;
     }
@@ -620,6 +625,13 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
   GST_DEBUG ("w:%d h:%d", w, h);
   GST_DEBUG ("encoding: %d", encoding);
 
+  if (((w * h) + (x * y)) > (decoder->width * decoder->height)) {
+    GST_ERROR ("Desktop resize is unsupported.");
+    decoder->state = NULL;
+    decoder->disconnected = TRUE;
+    return TRUE;
+  }
+
   switch (encoding) {
     case ENCODING_TYPE_RAW:
       rfb_decoder_raw_encoding (decoder, x, y, w, h);
@@ -641,7 +653,7 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
       break;
   }
   decoder->n_rects--;
-  if (decoder->n_rects == 0) {
+  if (decoder->n_rects == 0 || decoder->disconnected == TRUE) {
     decoder->state = NULL;
   } else {
     decoder->state = rfb_decoder_state_framebuffer_update_rectangle;
