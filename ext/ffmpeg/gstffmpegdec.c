@@ -97,6 +97,7 @@ struct _GstFFMpegDec
   gboolean reordered_in;
   GstClockTime last_in;
   GstClockTime last_diff;
+  guint last_frames;
   gboolean reordered_out;
   GstClockTime last_out;
   GstClockTime next_out;
@@ -499,6 +500,7 @@ gst_ffmpegdec_reset_ts (GstFFMpegDec * ffmpegdec)
 {
   ffmpegdec->last_in = GST_CLOCK_TIME_NONE;
   ffmpegdec->last_diff = GST_CLOCK_TIME_NONE;
+  ffmpegdec->last_frames = 0;
   ffmpegdec->last_out = GST_CLOCK_TIME_NONE;
   ffmpegdec->next_out = GST_CLOCK_TIME_NONE;
   ffmpegdec->reordered_in = FALSE;
@@ -2491,12 +2493,22 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
         ffmpegdec->reordered_in = TRUE;
         ffmpegdec->last_diff = GST_CLOCK_TIME_NONE;
       } else if (in_timestamp > ffmpegdec->last_in) {
+        GstClockTime diff;
         /* keep track of timestamp diff to estimate duration */
-        ffmpegdec->last_diff = in_timestamp - ffmpegdec->last_in;
+        diff = in_timestamp - ffmpegdec->last_in;
+        /* need to scale with amount of frames in the interval */
+        if (ffmpegdec->last_frames)
+          diff /= ffmpegdec->last_frames;
+
+        GST_LOG_OBJECT (ffmpegdec, "estimated duration %" GST_TIME_FORMAT " %u",
+            GST_TIME_ARGS (diff), ffmpegdec->last_frames);
+
+        ffmpegdec->last_diff = diff;
       }
     }
     ffmpegdec->last_in = in_timestamp;
   }
+  ffmpegdec->last_frames = 0;
 
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %u, offset:%" G_GUINT64_FORMAT ", ts:%"
@@ -2634,6 +2646,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     } else {
       ffmpegdec->clear_ts = TRUE;
     }
+    ffmpegdec->last_frames++;
 
     GST_LOG_OBJECT (ffmpegdec, "Before (while bsize>0).  bsize:%d , bdata:%p",
         bsize, bdata);
