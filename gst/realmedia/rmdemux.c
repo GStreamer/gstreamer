@@ -2462,6 +2462,10 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
         stream->discont = FALSE;
       }
 
+      if (!key) {
+        GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
+      }
+
       ret = gst_pad_push (stream->pad, out);
       ret = gst_rmdemux_combine_flows (rmdemux, stream, ret);
       if (ret != GST_FLOW_OK)
