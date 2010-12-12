@@ -341,7 +341,7 @@ collect_media_stats (GstRTSPMedia * media)
     GST_INFO ("stats: position %" GST_TIME_FORMAT ", duration %"
         GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
 
-    if (position == -1) {
+    if (position == -1 || media->active > 0) {
       media->range.min.type = GST_RTSP_TIME_NOW;
       media->range.min.seconds = -1;
     } else {
@@ -1893,7 +1893,7 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   }
 
   /* remember where we are */
-  if (state == GST_STATE_PAUSED)
+  if (state == GST_STATE_PAUSED || old_active != media->active)
     collect_media_stats (media);
 
   return TRUE;
