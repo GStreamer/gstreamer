@@ -1110,7 +1110,7 @@ gst_ssim_class_init (GstSSimClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_ssim_sink_modified_template));
   gst_element_class_set_details_simple (gstelement_class, "SSim",
-      "Filter/Converter/Video",
+      "Filter/Analyzer/Video",
       "Calculate Y-SSIM for n+2 YUV video streams",
       "Руслан Ижбулатов <lrn1986 _at_ gmail _dot_ com>");
 
