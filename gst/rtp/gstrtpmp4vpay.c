@@ -31,11 +31,11 @@ GST_DEBUG_CATEGORY_STATIC (rtpmp4vpay_debug);
 #define GST_CAT_DEFAULT (rtpmp4vpay_debug)
 
 static GstStaticPadTemplate gst_rtp_mp4v_pay_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg,"
-        "mpegversion=(int) 4," "systemstream=(boolean)false")
+        "mpegversion=(int) 4," "systemstream=(boolean)false;" "video/x-xvid")
     );
 
 static GstStaticPadTemplate gst_rtp_mp4v_pay_src_template =
