@@ -35,6 +35,7 @@
 #endif
 
 #include "gstimagecapturebin.h"
+#include "camerabingeneral.h"
 
 /* prototypes */
 
@@ -42,10 +43,15 @@
 enum
 {
   PROP_0,
-  PROP_LOCATION
+  PROP_LOCATION,
+  PROP_ENCODER
 };
 
 #define DEFAULT_LOCATION "img_%d"
+#define DEFAULT_COLORSPACE "ffmpegcolorspace"
+#define DEFAULT_ENCODER "jpegenc"
+#define DEFAULT_MUXER "jifmux"
+#define DEFAULT_SINK "multifilesink"
 
 /* pad templates */
 
@@ -65,6 +71,22 @@ static GstStateChangeReturn
 gst_image_capture_bin_change_state (GstElement * element, GstStateChange trans);
 
 static void
+gst_image_capture_bin_set_encoder (GstImageCaptureBin * imagebin,
+    GstElement * encoder)
+{
+  GST_DEBUG_OBJECT (GST_OBJECT (imagebin),
+      "Setting image encoder %" GST_PTR_FORMAT, encoder);
+
+  if (imagebin->user_encoder)
+    g_object_unref (imagebin->user_encoder);
+
+  if (encoder)
+    g_object_ref (encoder);
+
+  imagebin->user_encoder = encoder;
+}
+
+static void
 gst_image_capture_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -77,6 +99,9 @@ gst_image_capture_bin_set_property (GObject * object, guint prop_id,
       if (imagebin->sink) {
         g_object_set (imagebin, "location", imagebin->location, NULL);
       }
+      break;
+    case PROP_ENCODER:
+      gst_image_capture_bin_set_encoder (imagebin, g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -93,6 +118,9 @@ gst_image_capture_bin_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LOCATION:
       g_value_set_string (value, imagebin->location);
+      break;
+    case PROP_ENCODER:
+      g_value_set_object (value, imagebin->encoder);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -144,6 +172,11 @@ gst_image_capture_bin_class_init (GstImageCaptureBinClass * klass)
           "Location to save the captured files. A %%d can be used as a "
           "placeholder for a capture count",
           DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_ENCODER,
+      g_param_spec_object ("image-encoder", "Image encoder",
+          "Image encoder GStreamer element (default is jpegenc)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -159,15 +192,14 @@ gst_image_capture_bin_init (GstImageCaptureBin * imagebin,
   gst_element_add_pad (GST_ELEMENT_CAST (imagebin), imagebin->ghostpad);
 
   imagebin->location = g_strdup (DEFAULT_LOCATION);
+  imagebin->encoder = NULL;
+  imagebin->user_encoder = NULL;
 }
 
 static gboolean
 gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
 {
   GstElement *colorspace;
-  GstElement *encoder;
-  GstElement *muxer;
-  GstElement *sink;
   GstPad *pad = NULL;
 
   if (imagebin->elements_created)
@@ -175,30 +207,36 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
 
   /* create elements */
   colorspace =
-      gst_element_factory_make ("ffmpegcolorspace", "imagebin-colorspace");
+      gst_camerabin_create_and_add_element (GST_BIN (imagebin),
+      DEFAULT_COLORSPACE);
   if (!colorspace)
     goto error;
 
-  encoder = gst_element_factory_make ("jpegenc", "imagebin-encoder");
-  if (!encoder)
+  if (imagebin->user_encoder) {
+    imagebin->encoder = imagebin->user_encoder;
+    if (!gst_camerabin_add_element (GST_BIN (imagebin), imagebin->encoder)) {
+      goto error;
+    }
+  } else {
+    imagebin->encoder =
+        gst_camerabin_create_and_add_element (GST_BIN (imagebin),
+        DEFAULT_ENCODER);
+    if (!imagebin->encoder)
+      goto error;
+  }
+
+  imagebin->muxer =
+      gst_camerabin_create_and_add_element (GST_BIN (imagebin), DEFAULT_MUXER);
+  if (!imagebin->muxer)
     goto error;
 
-  muxer = gst_element_factory_make ("jifmux", "imagebin-muxer");
-  if (!muxer)
+  imagebin->sink =
+      gst_camerabin_create_and_add_element (GST_BIN (imagebin), DEFAULT_SINK);
+  if (!imagebin->sink)
     goto error;
 
-  sink = gst_element_factory_make ("multifilesink", "imagebin-sink");
-  if (!sink)
-    goto error;
-
-  imagebin->sink = sink;
-  g_object_set (sink, "location", imagebin->location, "async", FALSE, NULL);
-
-  /* add and link */
-  gst_bin_add_many (GST_BIN_CAST (imagebin), colorspace, encoder, muxer, sink,
+  g_object_set (imagebin->sink, "location", imagebin->location, "async", FALSE,
       NULL);
-  if (!gst_element_link_many (colorspace, encoder, muxer, sink, NULL))
-    goto error;
 
   /* add ghostpad */
   pad = gst_element_get_static_pad (colorspace, "sink");
