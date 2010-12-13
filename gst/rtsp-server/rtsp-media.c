@@ -46,6 +46,7 @@ enum
 
 enum
 {
+  SIGNAL_PREPARED,
   SIGNAL_UNPREPARED,
   SIGNAL_LAST
 };
@@ -102,6 +103,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       g_param_spec_boolean ("eos-shutdown", "EOS Shutdown",
           "Send an EOS event to the pipeline before unpreparing",
           DEFAULT_EOS_SHUTDOWN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_rtsp_media_signals[SIGNAL_PREPARED] =
+      g_signal_new ("prepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstRTSPMediaClass, prepared), NULL, NULL,
+      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   gst_rtsp_media_signals[SIGNAL_UNPREPARED] =
       g_signal_new ("unprepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -1591,6 +1597,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   status = gst_rtsp_media_get_status (media);
   if (status == GST_RTSP_MEDIA_STATUS_ERROR)
     goto state_failed;
+
+  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_PREPARED], 0, NULL);
 
   GST_INFO ("object %p is prerolled", media);
 

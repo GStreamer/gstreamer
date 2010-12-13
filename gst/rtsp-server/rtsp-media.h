@@ -250,6 +250,7 @@ struct _GstRTSPMediaClass {
   gboolean     (*unprepare)       (GstRTSPMedia *media);
 
   /* signals */
+  gboolean     (*prepared)        (GstRTSPMedia *media);
   gboolean     (*unprepared)      (GstRTSPMedia *media);
 };
 
