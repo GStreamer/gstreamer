@@ -61,9 +61,9 @@ struct _GstAudioResample {
   GstClockTime t0;
   guint64 in_offset0;
   guint64 out_offset0;
-  guint64 next_in_offset;
-  guint64 next_out_offset;
-  
+  guint64 samples_in;
+  guint64 samples_out;
+
   gint channels;
   gint inrate;
   gint outrate;

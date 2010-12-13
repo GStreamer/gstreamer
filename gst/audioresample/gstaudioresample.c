@@ -240,8 +240,8 @@ gst_audio_resample_start (GstBaseTransform * base)
   resample->t0 = GST_CLOCK_TIME_NONE;
   resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
   resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
-  resample->next_in_offset = GST_BUFFER_OFFSET_NONE;
-  resample->next_out_offset = GST_BUFFER_OFFSET_NONE;
+  resample->samples_in = 0;
+  resample->samples_out = 0;
 
   resample->tmp_in = NULL;
   resample->tmp_in_size = 0;
@@ -854,24 +854,29 @@ gst_audio_resample_push_drain (GstAudioResample * resample)
     return;
   }
 
+  /* time */
   if (GST_CLOCK_TIME_IS_VALID (resample->t0)) {
-    GST_BUFFER_OFFSET (outbuf) = resample->next_out_offset;
-    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET (outbuf) + out_processed;
     GST_BUFFER_TIMESTAMP (outbuf) = resample->t0 +
-        gst_util_uint64_scale_int_round (GST_BUFFER_OFFSET (outbuf) -
-        resample->out_offset0, GST_SECOND, resample->outrate);
-    GST_BUFFER_DURATION (outbuf) = resample->t0 +
-        gst_util_uint64_scale_int_round (GST_BUFFER_OFFSET_END (outbuf) -
-        resample->out_offset0, GST_SECOND, resample->outrate) -
-        GST_BUFFER_TIMESTAMP (outbuf);
-    resample->next_out_offset += out_processed;
-    resample->next_in_offset += 0;
+        gst_util_uint64_scale_int_round (resample->samples_out, GST_SECOND,
+        resample->outrate);
+    GST_BUFFER_DURATION (outbuf) =
+        gst_util_uint64_scale_int_round (resample->samples_out + out_processed,
+        GST_SECOND, resample->outrate) - GST_BUFFER_TIMESTAMP (outbuf);
   } else {
-    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
-    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
   }
+  /* offset */
+  if (resample->out_offset0 != GST_BUFFER_OFFSET_NONE) {
+    GST_BUFFER_OFFSET (outbuf) = resample->out_offset0 + resample->samples_out;
+    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET (outbuf) + out_processed;
+  } else {
+    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
+  }
+  /* move along */
+  resample->samples_out += out_processed;
+  resample->samples_in += 0;
 
   GST_BUFFER_SIZE (outbuf) =
       out_processed * resample->channels * (resample->width / 8);
@@ -904,8 +909,8 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       resample->t0 = GST_CLOCK_TIME_NONE;
       resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
       resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
-      resample->next_in_offset = GST_BUFFER_OFFSET_NONE;
-      resample->next_out_offset = GST_BUFFER_OFFSET_NONE;
+      resample->samples_in = 0;
+      resample->samples_out = 0;
       resample->need_discont = TRUE;
       break;
     case GST_EVENT_NEWSEGMENT:
@@ -914,8 +919,8 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       resample->t0 = GST_CLOCK_TIME_NONE;
       resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
       resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
-      resample->next_in_offset = GST_BUFFER_OFFSET_NONE;
-      resample->next_out_offset = GST_BUFFER_OFFSET_NONE;
+      resample->samples_in = 0;
+      resample->samples_out = 0;
       resample->need_discont = TRUE;
       break;
     case GST_EVENT_EOS:
@@ -941,21 +946,18 @@ gst_audio_resample_check_discont (GstAudioResample * resample, GstBuffer * buf)
 
   /* no valid timestamps or offsets to compare --> no discontinuity */
   if (G_UNLIKELY (!(GST_BUFFER_TIMESTAMP_IS_VALID (buf) &&
-              GST_CLOCK_TIME_IS_VALID (resample->t0) &&
-              resample->in_offset0 != GST_BUFFER_OFFSET_NONE &&
-              resample->next_in_offset != GST_BUFFER_OFFSET_NONE)))
+              GST_CLOCK_TIME_IS_VALID (resample->t0))))
     return FALSE;
 
   /* convert the inbound timestamp to an offset. */
   offset =
-      resample->in_offset0 +
       gst_util_uint64_scale_int_round (GST_BUFFER_TIMESTAMP (buf) -
       resample->t0, resample->inrate, GST_SECOND);
 
   /* many elements generate imperfect streams due to rounding errors, so we
    * permit a small error (up to one sample) without triggering a filter
    * flush/restart (if triggered incorrectly, this will be audible) */
-  delta = ABS ((gint64) (offset - resample->next_in_offset));
+  delta = ABS ((gint64) (offset - resample->samples_in));
   if (delta <= 1)
     return FALSE;
 
@@ -1030,24 +1032,29 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
         in_processed, in_len);
   }
 
+  /* time */
   if (GST_CLOCK_TIME_IS_VALID (resample->t0)) {
-    GST_BUFFER_OFFSET (outbuf) = resample->next_out_offset;
-    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET (outbuf) + out_processed;
     GST_BUFFER_TIMESTAMP (outbuf) = resample->t0 +
-        gst_util_uint64_scale_int_round (GST_BUFFER_OFFSET (outbuf) -
-        resample->out_offset0, GST_SECOND, resample->outrate);
-    GST_BUFFER_DURATION (outbuf) = resample->t0 +
-        gst_util_uint64_scale_int_round (GST_BUFFER_OFFSET_END (outbuf) -
-        resample->out_offset0, GST_SECOND, resample->outrate) -
-        GST_BUFFER_TIMESTAMP (outbuf);
-    resample->next_out_offset += out_processed;
-    resample->next_in_offset += in_len;
+        gst_util_uint64_scale_int_round (resample->samples_out, GST_SECOND,
+        resample->outrate);
+    GST_BUFFER_DURATION (outbuf) =
+        gst_util_uint64_scale_int_round (resample->samples_out + out_processed,
+        GST_SECOND, resample->outrate) - GST_BUFFER_TIMESTAMP (outbuf);
   } else {
-    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
-    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
   }
+  /* offset */
+  if (resample->out_offset0 != GST_BUFFER_OFFSET_NONE) {
+    GST_BUFFER_OFFSET (outbuf) = resample->out_offset0 + resample->samples_out;
+    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET (outbuf) + out_processed;
+  } else {
+    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
+  }
+  /* move along */
+  resample->samples_out += out_processed;
+  resample->samples_in += in_len;
 
   GST_BUFFER_SIZE (outbuf) =
       out_processed * resample->channels * (resample->width / 8);
@@ -1106,24 +1113,26 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   /* handle discontinuity */
   if (G_UNLIKELY (resample->need_discont)) {
+    /* reset */
+    resample->samples_in = 0;
+    resample->samples_out = 0;
+    GST_DEBUG_OBJECT (resample, "found discontinuity; resyncing");
     /* resync the timestamp and offset counters if possible */
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (inbuf) &&
-        GST_BUFFER_OFFSET_IS_VALID (inbuf)) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (inbuf)) {
       resample->t0 = GST_BUFFER_TIMESTAMP (inbuf);
+    } else {
+      GST_DEBUG_OBJECT (resample, "... but new timestamp is invalid");
+      resample->t0 = GST_CLOCK_TIME_NONE;
+    }
+    if (GST_BUFFER_OFFSET_IS_VALID (inbuf)) {
       resample->in_offset0 = GST_BUFFER_OFFSET (inbuf);
       resample->out_offset0 =
           gst_util_uint64_scale_int_round (resample->in_offset0,
           resample->outrate, resample->inrate);
-      resample->next_in_offset = resample->in_offset0;
-      resample->next_out_offset = resample->out_offset0;
     } else {
-      GST_DEBUG_OBJECT (resample, "found discontinuity but timestamp and/or "
-          "offset is invalid, cannot sync output timestamp and offset counter");
-      resample->t0 = GST_CLOCK_TIME_NONE;
+      GST_DEBUG_OBJECT (resample, "... but new offset is invalid");
       resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
       resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
-      resample->next_in_offset = GST_BUFFER_OFFSET_NONE;
-      resample->next_out_offset = GST_BUFFER_OFFSET_NONE;
     }
     /* set DISCONT flag on output buffer */
     GST_DEBUG_OBJECT (resample, "marking this buffer with the DISCONT flag");
