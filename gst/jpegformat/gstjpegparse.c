@@ -934,15 +934,17 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event)
       parse->priv->new_segment = TRUE;
       break;
     case GST_EVENT_TAG:{
-      GstTagList *taglist = NULL;
-      gst_event_parse_tag (event, &taglist);
       if (!parse->priv->new_segment)
         res = gst_pad_event_default (pad, event);
       else {
+        GstTagList *taglist = NULL;
+
+        gst_event_parse_tag (event, &taglist);
         /* Hold on to the tags till the srcpad caps are definitely set */
         if (!parse->priv->tags)
           parse->priv->tags = gst_tag_list_new ();
         gst_tag_list_insert (parse->priv->tags, taglist, GST_TAG_MERGE_REPLACE);
+        gst_event_unref (event);
       }
       break;
     }
