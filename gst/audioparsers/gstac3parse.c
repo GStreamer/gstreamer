@@ -262,10 +262,13 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   bsmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
   acmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
 
-  /* FIXME: are other bsids ok as well? check spec */
-  if (bsid != 8 && bsid != 6) {
+  /* spec not quite clear here: decoder should decode if less than 8,
+   * but seemingly only defines 6 and 8 cases */
+  if (bsid > 8) {
     GST_DEBUG_OBJECT (ac3parse, "unexpected bsid=%d", bsid);
     return FALSE;
+  } else if (bsid != 8 && bsid != 6) {
+    GST_DEBUG_OBJECT (ac3parse, "undefined bsid=%d", bsid);
   }
 
   if ((acmod & 0x1) && (acmod != 0x1))  /* 3 front channels */
