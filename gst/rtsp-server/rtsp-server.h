@@ -35,6 +35,7 @@
 
 #include "rtsp-session-pool.h"
 #include "rtsp-media-mapping.h"
+#include "rtsp-media-factory-uri.h"
 #include "rtsp-client.h"
 
 #ifndef __GST_RTSP_SERVER_H__

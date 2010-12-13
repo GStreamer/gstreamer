@@ -82,7 +82,6 @@ struct _GstRTSPMediaTrans {
 
 /**
  * GstRTSPMediaStream:
- *
  * @srcpad: the srcpad of the stream
  * @payloader: the payloader of the format
  * @prepared: if the stream is prepared for streaming
@@ -185,7 +184,7 @@ typedef enum {
  * @range: the range of the media being streamed
  *
  * A class that contains the GStreamer element along with a list of
- * #GstRTSPediaStream objects that can produce data.
+ * #GstRTSPMediaStream objects that can produce data.
  *
  * This object is usually created from a #GstRTSPMediaFactory.
  */
@@ -208,6 +207,7 @@ struct _GstRTSPMedia {
   GstRTSPMediaStatus status;
   gint               active;
   gboolean           eos_pending;
+  gboolean           adding;
 
   /* the pipeline for the media */
   GstElement        *pipeline;
@@ -284,7 +284,7 @@ gboolean              gst_rtsp_media_seek             (GstRTSPMedia *media, GstR
 GstFlowReturn         gst_rtsp_media_stream_rtp       (GstRTSPMediaStream *stream, GstBuffer *buffer);
 GstFlowReturn         gst_rtsp_media_stream_rtcp      (GstRTSPMediaStream *stream, GstBuffer *buffer);
 
-gboolean              gst_rtsp_media_set_state        (GstRTSPMedia *media, GstState state, GArray *trans);
+gboolean              gst_rtsp_media_set_state        (GstRTSPMedia *media, GstState state, GArray *transports);
 
 void                  gst_rtsp_media_remove_elements  (GstRTSPMedia *media);
 

@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2009 Wim Taymans <wim.taymans at gmail.com>
+ * Copyright (C) 2008 Wim Taymans <wim.taymans at gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -40,13 +40,12 @@ main (int argc, char *argv[])
   GMainLoop *loop;
   GstRTSPServer *server;
   GstRTSPMediaMapping *mapping;
-  GstRTSPMediaFactory *factory;
-  gchar *str;
+  GstRTSPMediaFactoryURI *factory;
 
   gst_init (&argc, &argv);
 
   if (argc < 2) {
-    g_message ("usage: %s <filename.sdp>", argv[0]);
+    g_message ("usage: %s <uri>", argv[0]);
     return -1;
   }
 
@@ -59,27 +58,20 @@ main (int argc, char *argv[])
    * that be used to map uri mount points to media factories */
   mapping = gst_rtsp_server_get_media_mapping (server);
 
-  /* make a media factory for a test stream. The default media factory can use
-   * gst-launch syntax to create pipelines. 
-   * any launch line works as long as it contains elements named pay%d. Each
-   * element with pay%d names will be a stream */
-  factory = gst_rtsp_media_factory_new ();
-
-  str =
-      g_strdup_printf ("( filesrc location=%s ! sdpdemux name=dynpay0 )",
-      argv[1]);
-  gst_rtsp_media_factory_set_launch (factory, str);
-  gst_rtsp_media_factory_set_shared (factory, TRUE);
-  g_free (str);
+  /* make a URI media factory for a test stream. */
+  factory = gst_rtsp_media_factory_uri_new ();
+  gst_rtsp_media_factory_uri_set_uri (factory, argv[1]);
 
   /* attach the test factory to the /test url */
-  gst_rtsp_media_mapping_add_factory (mapping, "/test", factory);
+  gst_rtsp_media_mapping_add_factory (mapping, "/test",
+      GST_RTSP_MEDIA_FACTORY (factory));
 
   /* don't need the ref to the mapper anymore */
   g_object_unref (mapping);
 
   /* attach the server to the default maincontext */
-  gst_rtsp_server_attach (server, NULL);
+  if (gst_rtsp_server_attach (server, NULL) == 0)
+    goto failed;
 
   g_timeout_add_seconds (2, (GSourceFunc) timeout, server);
 
@@ -87,4 +79,11 @@ main (int argc, char *argv[])
   g_main_loop_run (loop);
 
   return 0;
+
+  /* ERRORS */
+failed:
+  {
+    g_print ("failed to attach the server\n");
+    return -1;
+  }
 }

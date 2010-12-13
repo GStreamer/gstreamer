@@ -46,12 +46,10 @@ main (int argc, char *argv[])
    * that be used to map uri mount points to media factories */
   mapping = gst_rtsp_server_get_media_mapping (server);
 
-  str = g_strdup_printf (
-    "( "
+  str = g_strdup_printf ("( "
       "filesrc location=%s ! qtdemux name=d "
-        "d. ! queue ! rtph264pay pt=96 name=pay0 "
-        "d. ! queue ! rtpmp4apay pt=97 name=pay1 "
-    ")", argv[1]);
+      "d. ! queue ! rtph264pay pt=96 name=pay0 "
+      "d. ! queue ! rtpmp4apay pt=97 name=pay1 " ")", argv[1]);
 
   /* make a media factory for a test stream. The default media factory can use
    * gst-launch syntax to create pipelines. 

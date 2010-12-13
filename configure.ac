@@ -3,8 +3,9 @@ dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
 AC_INIT(Gst-RTSP, 0.11.0.1,
-    http://gstreamer.net/,
+    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-rtsp)
+AG_GST_INIT
 
 dnl initialize automake
 AM_INIT_AUTOMAKE([-Wno-portability 1.10])
@@ -13,7 +14,7 @@ dnl define PACKAGE_VERSION_* variables
 AS_VERSION
 
 dnl check if this is a release version
-AS_NANO(GST_CVS="no", GST_CVS="yes")
+AS_NANO(GST_GIT="no", GST_GIT="yes")
 
 dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([gst/rtsp-server/rtsp-server.c])
@@ -52,6 +53,12 @@ AS_AUTOTOOLS_ALTERNATE
 dnl Add parameters for aclocal
 AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 
+dnl set up gettext
+dnl the version check needs to stay here because autopoint greps for it
+AM_GNU_GETTEXT_VERSION([0.17])
+AM_GNU_GETTEXT([external])
+AG_GST_GETTEXT([gstreamer-$GST_MAJORMINOR])
+
 dnl *** check for arguments to configure ***
 
 AG_GST_ARG_DEBUG
@@ -71,8 +78,22 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 
 dnl check for python
-AM_PATH_PYTHON(2.3)
-AM_CHECK_PYTHON_HEADERS([HAVE_PYTHON_HEADERS="yes"], [HAVE_PYTHON_HEADERS="no"])
+AM_PATH_PYTHON
+AC_MSG_CHECKING(for python >= 2.3)
+prog="
+import sys, string
+minver = (2,3,0,'final',0)
+if sys.version_info < minver:
+  sys.exit(1)
+sys.exit(0)"
+
+if $PYTHON -c "$prog" 1>&AC_FD_CC 2>&AC_FD_CC
+then
+  AC_MSG_RESULT(okay)
+else
+  AC_MSG_ERROR(too old)
+fi
+AM_CHECK_PYTHON_HEADERS(,[AC_MSG_ERROR(could not find Python headers)])
 
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
@@ -190,10 +211,10 @@ dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CFLAGS($GST_GIT)
 
 dnl define correct level for debugging messages
-AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
+AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
 
 dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
@@ -276,6 +297,9 @@ bindings/vala/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-rtsp-server.pc
 pkgconfig/gst-rtsp-server-uninstalled.pc
+docs/Makefile
+docs/version.entities
+docs/libs/Makefile
 ])
 AC_OUTPUT
 

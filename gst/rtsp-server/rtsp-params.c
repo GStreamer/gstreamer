@@ -32,7 +32,7 @@ gst_rtsp_params_set (GstRTSPClient * client, GstRTSPUrl * uri,
   code = GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD;
 
   gst_rtsp_message_init_response (response, code,
-          gst_rtsp_status_as_text (code), request);
+      gst_rtsp_status_as_text (code), request);
 
   return GST_RTSP_OK;
 }
@@ -49,7 +49,7 @@ gst_rtsp_params_get (GstRTSPClient * client, GstRTSPUrl * uri,
   code = GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD;
 
   gst_rtsp_message_init_response (response, code,
-          gst_rtsp_status_as_text (code), request);
+      gst_rtsp_status_as_text (code), request);
 
   return GST_RTSP_OK;
 }

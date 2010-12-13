@@ -23,7 +23,7 @@
 
 
 static gboolean
-timeout (GstRTSPServer *server, gboolean ignored)
+timeout (GstRTSPServer * server, gboolean ignored)
 {
   GstRTSPSessionPool *pool;
 
@@ -59,11 +59,10 @@ main (int argc, char *argv[])
    * element with pay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
   gst_rtsp_media_factory_set_launch (factory, "( "
-    "videotestsrc ! video/x-raw-yuv,width=352,height=288,framerate=15/1 ! "
-    "x264enc ! rtph264pay name=pay0 pt=96 "
-    "audiotestsrc ! audio/x-raw-int,rate=8000 ! "
-    "alawenc ! rtppcmapay name=pay1 pt=97 "
-    ")");
+      "videotestsrc ! video/x-raw-yuv,width=352,height=288,framerate=15/1 ! "
+      "x264enc ! rtph264pay name=pay0 pt=96 "
+      "audiotestsrc ! audio/x-raw-int,rate=8000 ! "
+      "alawenc ! rtppcmapay name=pay1 pt=97 " ")");
 
   /* attach the test factory to the /test url */
   gst_rtsp_media_mapping_add_factory (mapping, "/test", factory);
@@ -75,7 +74,7 @@ main (int argc, char *argv[])
   if (gst_rtsp_server_attach (server, NULL) == 0)
     goto failed;
 
-  g_timeout_add_seconds (2, (GSourceFunc) timeout, server); 
+  g_timeout_add_seconds (2, (GSourceFunc) timeout, server);
 
   /* start serving */
   g_main_loop_run (loop);

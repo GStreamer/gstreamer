@@ -137,7 +137,7 @@ gboolean               gst_rtsp_session_release_media        (GstRTSPSession *se
                                                               GstRTSPSessionMedia *media);
 /* get media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
-                                                              const GstRTSPUrl *uri);
+                                                              const GstRTSPUrl *url);
 /* control media */
 gboolean               gst_rtsp_session_media_set_state      (GstRTSPSessionMedia *media, GstState state);
 

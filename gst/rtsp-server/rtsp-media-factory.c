@@ -35,17 +35,22 @@ enum
 GST_DEBUG_CATEGORY (rtsp_media_debug);
 #define GST_CAT_DEFAULT rtsp_media_debug
 
-static void gst_rtsp_media_factory_get_property (GObject *object, guint propid,
-    GValue *value, GParamSpec *pspec);
-static void gst_rtsp_media_factory_set_property (GObject *object, guint propid,
-    const GValue *value, GParamSpec *pspec);
+static void gst_rtsp_media_factory_get_property (GObject * object, guint propid,
+    GValue * value, GParamSpec * pspec);
+static void gst_rtsp_media_factory_set_property (GObject * object, guint propid,
+    const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_media_factory_finalize (GObject * obj);
 
-static gchar * default_gen_key (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
-static GstElement * default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
-static GstRTSPMedia * default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
-static void default_configure (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
-static GstElement* default_create_pipeline (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
+static gchar *default_gen_key (GstRTSPMediaFactory * factory,
+    const GstRTSPUrl * url);
+static GstElement *default_get_element (GstRTSPMediaFactory * factory,
+    const GstRTSPUrl * url);
+static GstRTSPMedia *default_construct (GstRTSPMediaFactory * factory,
+    const GstRTSPUrl * url);
+static void default_configure (GstRTSPMediaFactory * factory,
+    GstRTSPMedia * media);
+static GstElement *default_create_pipeline (GstRTSPMediaFactory * factory,
+    GstRTSPMedia * media);
 
 G_DEFINE_TYPE (GstRTSPMediaFactory, gst_rtsp_media_factory, G_TYPE_OBJECT);
 
@@ -77,16 +82,18 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
    * named dynpay0, dynpay1, etc..
    */
   g_object_class_install_property (gobject_class, PROP_LAUNCH,
-      g_param_spec_string ("launch", "Launch", "A launch description of the pipeline",
-          DEFAULT_LAUNCH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_string ("launch", "Launch",
+          "A launch description of the pipeline", DEFAULT_LAUNCH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SHARED,
-      g_param_spec_boolean ("shared", "Shared", "If media from this factory is shared",
-          DEFAULT_SHARED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("shared", "Shared",
+          "If media from this factory is shared", DEFAULT_SHARED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_EOS_SHUTDOWN,
       g_param_spec_boolean ("eos-shutdown", "EOS Shutdown",
-        "Send EOS down the pipeline before shutting down",
+          "Send EOS down the pipeline before shutting down",
           DEFAULT_EOS_SHUTDOWN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->gen_key = default_gen_key;
@@ -108,7 +115,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   factory->lock = g_mutex_new ();
   factory->medias_lock = g_mutex_new ();
   factory->medias = g_hash_table_new_full (g_str_hash, g_str_equal,
-		  g_free, g_object_unref);
+      g_free, g_object_unref);
 }
 
 static void
@@ -125,8 +132,8 @@ gst_rtsp_media_factory_finalize (GObject * obj)
 }
 
 static void
-gst_rtsp_media_factory_get_property (GObject *object, guint propid,
-    GValue *value, GParamSpec *pspec)
+gst_rtsp_media_factory_get_property (GObject * object, guint propid,
+    GValue * value, GParamSpec * pspec)
 {
   GstRTSPMediaFactory *factory = GST_RTSP_MEDIA_FACTORY (object);
 
@@ -138,7 +145,8 @@ gst_rtsp_media_factory_get_property (GObject *object, guint propid,
       g_value_set_boolean (value, gst_rtsp_media_factory_is_shared (factory));
       break;
     case PROP_EOS_SHUTDOWN:
-      g_value_set_boolean (value, gst_rtsp_media_factory_is_eos_shutdown (factory));
+      g_value_set_boolean (value,
+          gst_rtsp_media_factory_is_eos_shutdown (factory));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -146,8 +154,8 @@ gst_rtsp_media_factory_get_property (GObject *object, guint propid,
 }
 
 static void
-gst_rtsp_media_factory_set_property (GObject *object, guint propid,
-    const GValue *value, GParamSpec *pspec)
+gst_rtsp_media_factory_set_property (GObject * object, guint propid,
+    const GValue * value, GParamSpec * pspec)
 {
   GstRTSPMediaFactory *factory = GST_RTSP_MEDIA_FACTORY (object);
 
@@ -159,7 +167,8 @@ gst_rtsp_media_factory_set_property (GObject *object, guint propid,
       gst_rtsp_media_factory_set_shared (factory, g_value_get_boolean (value));
       break;
     case PROP_EOS_SHUTDOWN:
-      gst_rtsp_media_factory_set_eos_shutdown (factory, g_value_get_boolean (value));
+      gst_rtsp_media_factory_set_eos_shutdown (factory,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -200,15 +209,16 @@ gst_rtsp_media_factory_new (void)
  * etc.. Each of the payloaders will result in a stream.
  */
 void
-gst_rtsp_media_factory_set_launch (GstRTSPMediaFactory *factory, const gchar *launch)
+gst_rtsp_media_factory_set_launch (GstRTSPMediaFactory * factory,
+    const gchar * launch)
 {
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
   g_return_if_fail (launch != NULL);
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   g_free (factory->launch);
   factory->launch = g_strdup (launch);
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 }
 
 /**
@@ -221,15 +231,15 @@ gst_rtsp_media_factory_set_launch (GstRTSPMediaFactory *factory, const gchar *la
  * Returns: the configured launch description. g_free() after usage.
  */
 gchar *
-gst_rtsp_media_factory_get_launch (GstRTSPMediaFactory *factory)
+gst_rtsp_media_factory_get_launch (GstRTSPMediaFactory * factory)
 {
   gchar *result;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   result = g_strdup (factory->launch);
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
 }
@@ -242,14 +252,14 @@ gst_rtsp_media_factory_get_launch (GstRTSPMediaFactory *factory)
  * Configure if media created from this factory can be shared between clients.
  */
 void
-gst_rtsp_media_factory_set_shared (GstRTSPMediaFactory *factory,
+gst_rtsp_media_factory_set_shared (GstRTSPMediaFactory * factory,
     gboolean shared)
 {
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   factory->shared = shared;
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 }
 
 /**
@@ -261,15 +271,15 @@ gst_rtsp_media_factory_set_shared (GstRTSPMediaFactory *factory,
  * Returns: %TRUE if the media will be shared between clients.
  */
 gboolean
-gst_rtsp_media_factory_is_shared (GstRTSPMediaFactory *factory)
+gst_rtsp_media_factory_is_shared (GstRTSPMediaFactory * factory)
 {
   gboolean result;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), FALSE);
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   result = factory->shared;
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
 }
@@ -283,14 +293,14 @@ gst_rtsp_media_factory_is_shared (GstRTSPMediaFactory *factory)
  * pipeline before shutdown.
  */
 void
-gst_rtsp_media_factory_set_eos_shutdown (GstRTSPMediaFactory *factory,
+gst_rtsp_media_factory_set_eos_shutdown (GstRTSPMediaFactory * factory,
     gboolean eos_shutdown)
 {
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   factory->eos_shutdown = eos_shutdown;
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 }
 
 /**
@@ -303,31 +313,30 @@ gst_rtsp_media_factory_set_eos_shutdown (GstRTSPMediaFactory *factory,
  * Returns: %TRUE if the media will receive EOS before shutdown.
  */
 gboolean
-gst_rtsp_media_factory_is_eos_shutdown (GstRTSPMediaFactory *factory)
+gst_rtsp_media_factory_is_eos_shutdown (GstRTSPMediaFactory * factory)
 {
   gboolean result;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), FALSE);
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   result = factory->eos_shutdown;
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
 }
 
 static gboolean
-compare_media (gpointer key, GstRTSPMedia *media1, GstRTSPMedia *media2)
+compare_media (gpointer key, GstRTSPMedia * media1, GstRTSPMedia * media2)
 {
   return (media1 == media2);
 }
 
 static void
-media_unprepared (GstRTSPMedia *media, GstRTSPMediaFactory *factory)
+media_unprepared (GstRTSPMedia * media, GstRTSPMediaFactory * factory)
 {
   g_mutex_lock (factory->medias_lock);
-  g_hash_table_foreach_remove (factory->medias, (GHRFunc) compare_media,
-       media);
+  g_hash_table_foreach_remove (factory->medias, (GHRFunc) compare_media, media);
   g_mutex_unlock (factory->medias_lock);
 }
 
@@ -347,7 +356,8 @@ media_unprepared (GstRTSPMedia *media, GstRTSPMediaFactory *factory)
  * Returns: a new #GstRTSPMedia if the media could be prepared.
  */
 GstRTSPMedia *
-gst_rtsp_media_factory_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
+gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
+    const GstRTSPUrl * url)
 {
   gchar *key;
   GstRTSPMedia *media;
@@ -368,8 +378,7 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl
     media = g_hash_table_lookup (factory->medias, key);
     if (media)
       g_object_ref (media);
-  }
-  else
+  } else
     media = NULL;
 
   if (media == NULL) {
@@ -392,10 +401,10 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl
         key = NULL;
       }
       if (!gst_rtsp_media_is_reusable (media)) {
-	/* when not reusable, connect to the unprepare signal to remove the item
-	 * from our cache when it gets unprepared */
-	g_signal_connect (media, "unprepared", (GCallback) media_unprepared,
-			factory);
+        /* when not reusable, connect to the unprepare signal to remove the item
+         * from our cache when it gets unprepared */
+        g_signal_connect (media, "unprepared", (GCallback) media_unprepared,
+            factory);
       }
     }
   }
@@ -410,7 +419,7 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl
 }
 
 static gchar *
-default_gen_key (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
+default_gen_key (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
   gchar *result;
   const gchar *pre_query;
@@ -419,18 +428,19 @@ default_gen_key (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
   pre_query = url->query ? "?" : "";
   query = url->query ? url->query : "";
 
-  result = g_strdup_printf ("%u%s%s%s", url->port, url->abspath, pre_query, query);
+  result =
+      g_strdup_printf ("%u%s%s%s", url->port, url->abspath, pre_query, query);
 
   return result;
 }
 
 static GstElement *
-default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
+default_get_element (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
   GstElement *element;
   GError *error = NULL;
 
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   /* we need a parse syntax */
   if (factory->launch == NULL)
     goto no_launch;
@@ -440,7 +450,7 @@ default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
   if (element == NULL)
     goto parse_error;
 
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   if (error != NULL) {
     /* a recoverable error was encountered */
@@ -452,15 +462,15 @@ default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
   /* ERRORS */
 no_launch:
   {
-    g_mutex_unlock (factory->lock);
+    GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
     g_critical ("no launch line specified");
     return NULL;
   }
 parse_error:
   {
-    g_mutex_unlock (factory->lock);
-    g_critical ("could not parse launch syntax (%s): %s", factory->launch, 
-         (error ? error->message : "unknown reason"));
+    GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+    g_critical ("could not parse launch syntax (%s): %s", factory->launch,
+        (error ? error->message : "unknown reason"));
     if (error)
       g_error_free (error);
     return NULL;
@@ -470,11 +480,11 @@ parse_error:
 /* try to find all the payloader elements, they should be named 'pay%d'. for
  * each of the payloaders we will create a stream and collect the source pad. */
 void
-gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory *factory, const GstRTSPUrl *url,
-    GstRTSPMedia *media)
+gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory * factory,
+    const GstRTSPUrl * url, GstRTSPMedia * media)
 {
   GstElement *element, *elem;
-  GstPad * pad;
+  GstPad *pad;
   gint i;
   GstRTSPMediaStream *stream;
   gboolean have_elem;
@@ -482,7 +492,7 @@ gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory *factory, const GstR
   element = media->element;
 
   have_elem = TRUE;
-  for (i = 0; have_elem ; i++) {
+  for (i = 0; have_elem; i++) {
     gchar *name;
 
     have_elem = FALSE;
@@ -524,7 +534,7 @@ gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory *factory, const GstR
 }
 
 static GstRTSPMedia *
-default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
+default_construct (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
   GstRTSPMedia *media;
   GstElement *element;
@@ -573,8 +583,8 @@ no_pipeline:
   }
 }
 
-static GstElement*
-default_create_pipeline (GstRTSPMediaFactory *factory, GstRTSPMedia *media)
+static GstElement *
+default_create_pipeline (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
 {
   GstElement *pipeline;
 
@@ -595,15 +605,15 @@ no_element:
 }
 
 static void
-default_configure (GstRTSPMediaFactory *factory, GstRTSPMedia *media)
+default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
 {
   gboolean shared, eos_shutdown;
 
   /* configure the sharedness */
-  g_mutex_lock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   shared = factory->shared;
   eos_shutdown = factory->eos_shutdown;
-  g_mutex_unlock (factory->lock);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_shared (media, shared);
   gst_rtsp_media_set_eos_shutdown (media, eos_shutdown);
