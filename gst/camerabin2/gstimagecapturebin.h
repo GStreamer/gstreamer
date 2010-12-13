@@ -39,12 +39,13 @@ struct _GstImageCaptureBin
 
   GstPad *ghostpad;
   GstElement *sink;
-  GstElement *muxer;
 
   /* props */
   gchar *location;
   GstElement *encoder;
   GstElement *user_encoder;
+  GstElement *muxer;
+  GstElement *user_muxer;
 
   gboolean elements_created;
 };

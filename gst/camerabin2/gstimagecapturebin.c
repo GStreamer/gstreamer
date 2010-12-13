@@ -44,7 +44,8 @@ enum
 {
   PROP_0,
   PROP_LOCATION,
-  PROP_ENCODER
+  PROP_ENCODER,
+  PROP_MUXER
 };
 
 #define DEFAULT_LOCATION "img_%d"
@@ -87,6 +88,22 @@ gst_image_capture_bin_set_encoder (GstImageCaptureBin * imagebin,
 }
 
 static void
+gst_image_capture_bin_set_muxer (GstImageCaptureBin * imagebin,
+    GstElement * muxer)
+{
+  GST_DEBUG_OBJECT (GST_OBJECT (imagebin),
+      "Setting image muxer %" GST_PTR_FORMAT, muxer);
+
+  if (imagebin->user_muxer)
+    g_object_unref (imagebin->user_muxer);
+
+  if (muxer)
+    g_object_ref (muxer);
+
+  imagebin->user_muxer = muxer;
+}
+
+static void
 gst_image_capture_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -102,6 +119,9 @@ gst_image_capture_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ENCODER:
       gst_image_capture_bin_set_encoder (imagebin, g_value_get_object (value));
+      break;
+    case PROP_MUXER:
+      gst_image_capture_bin_set_muxer (imagebin, g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -121,6 +141,9 @@ gst_image_capture_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ENCODER:
       g_value_set_object (value, imagebin->encoder);
+      break;
+    case PROP_MUXER:
+      g_value_set_object (value, imagebin->muxer);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -177,6 +200,11 @@ gst_image_capture_bin_class_init (GstImageCaptureBinClass * klass)
       g_param_spec_object ("image-encoder", "Image encoder",
           "Image encoder GStreamer element (default is jpegenc)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MUXER,
+      g_param_spec_object ("image-muxer", "Image muxer",
+          "Image muxer GStreamer element (default is jifmux)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -225,10 +253,18 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
       goto error;
   }
 
-  imagebin->muxer =
-      gst_camerabin_create_and_add_element (GST_BIN (imagebin), DEFAULT_MUXER);
-  if (!imagebin->muxer)
-    goto error;
+  if (imagebin->user_muxer) {
+    imagebin->muxer = imagebin->user_muxer;
+    if (!gst_camerabin_add_element (GST_BIN (imagebin), imagebin->muxer)) {
+      goto error;
+    }
+  } else {
+    imagebin->muxer =
+        gst_camerabin_create_and_add_element (GST_BIN (imagebin),
+        DEFAULT_MUXER);
+    if (!imagebin->muxer)
+      goto error;
+  }
 
   imagebin->sink =
       gst_camerabin_create_and_add_element (GST_BIN (imagebin), DEFAULT_SINK);
