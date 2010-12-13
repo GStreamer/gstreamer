@@ -1118,6 +1118,7 @@ newseg_wrong_format:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "received non TIME newsegment");
     ret = FALSE;
+    gst_event_unref (event);
     goto done;
   }
 }
