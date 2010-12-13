@@ -957,8 +957,10 @@ gst_audio_resample_check_discont (GstAudioResample * resample, GstBuffer * buf)
   /* many elements generate imperfect streams due to rounding errors, so we
    * permit a small error (up to one sample) without triggering a filter
    * flush/restart (if triggered incorrectly, this will be audible) */
+  /* allow even up to more samples, since sink is not so strict anyway,
+   * so give that one a chance to handle this as configured */
   delta = ABS ((gint64) (offset - resample->samples_in));
-  if (delta <= 1)
+  if (delta <= (resample->inrate >> 5))
     return FALSE;
 
   GST_WARNING_OBJECT (resample,
