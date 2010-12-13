@@ -4263,7 +4263,7 @@ plugin_init (GstPlugin * plugin)
       NULL, CMML_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-executable",
       GST_RANK_MARGINAL, NULL, "\177ELF", 4, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER (plugin, "aac", GST_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "audio/aac", GST_RANK_SECONDARY,
       aac_type_find, aac_exts, AAC_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-spc", GST_RANK_SECONDARY,
       spc_exts, "SNES-SPC700 Sound File Data", 27, GST_TYPE_FIND_MAXIMUM);
