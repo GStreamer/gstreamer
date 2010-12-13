@@ -241,10 +241,12 @@ print_topology (GstDiscovererStreamInfo * info, gint depth)
 }
 
 static void
-print_duration (GstDiscovererInfo * info, gint tab)
+print_properties (GstDiscovererInfo * info, gint tab)
 {
-  g_print ("%*s%" GST_TIME_FORMAT "\n", tab + 1, " ",
+  g_print ("%*sDuration: %" GST_TIME_FORMAT "\n", tab + 1, " ",
       GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
+  g_print ("%*sSeekable: %s\n", tab + 1, " ",
+      (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
 }
 
 static void
@@ -296,8 +298,8 @@ print_info (GstDiscovererInfo * info, GError * err)
   if ((sinfo = gst_discoverer_info_get_stream_info (info))) {
     g_print ("\nTopology:\n");
     print_topology (sinfo, 1);
-    g_print ("\nDuration:\n");
-    print_duration (info, 1);
+    g_print ("\nProperties:\n");
+    print_properties (info, 1);
     gst_discoverer_stream_info_unref (sinfo);
   }
 

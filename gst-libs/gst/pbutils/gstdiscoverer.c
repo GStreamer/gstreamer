@@ -105,6 +105,9 @@ struct _GstDiscovererPrivate
   GMainContext *ctx;
   guint sourceid;
   guint timeoutid;
+
+  /* reusable queries */
+  GstQuery *seeking_query;
 };
 
 #define DISCO_LOCK(dc) g_mutex_lock (dc->priv->lock);
@@ -242,6 +245,7 @@ static void
 gst_discoverer_init (GstDiscoverer * dc)
 {
   GstElement *tmp;
+  GstFormat format = GST_FORMAT_TIME;
 
   dc->priv = G_TYPE_INSTANCE_GET_PRIVATE (dc, GST_TYPE_DISCOVERER,
       GstDiscovererPrivate);
@@ -284,6 +288,9 @@ gst_discoverer_init (GstDiscoverer * dc)
   tmp = gst_element_factory_make ("decodebin2", NULL);
   dc->priv->decodebin2_type = G_OBJECT_TYPE (tmp);
   gst_object_unref (tmp);
+
+  /* create queries */
+  dc->priv->seeking_query = gst_query_new_seeking (format);
 }
 
 static void
@@ -321,6 +328,11 @@ gst_discoverer_dispose (GObject * obj)
   if (dc->priv->lock) {
     g_mutex_free (dc->priv->lock);
     dc->priv->lock = NULL;
+  }
+
+  if (dc->priv->seeking_query) {
+    gst_query_unref (dc->priv->seeking_query);
+    dc->priv->seeking_query = NULL;
   }
 }
 
@@ -859,16 +871,29 @@ discoverer_collect (GstDiscoverer * dc)
   if (dc->priv->streams) {
     /* FIXME : Make this querying optional */
     if (TRUE) {
+      GstElement *pipeline = (GstElement *) dc->priv->pipeline;
       GstFormat format = GST_FORMAT_TIME;
       gint64 dur;
 
       GST_DEBUG ("Attempting to query duration");
 
-      if (gst_element_query_duration ((GstElement *) dc->priv->pipeline,
-              &format, &dur)) {
+      if (gst_element_query_duration (pipeline, &format, &dur)) {
         if (format == GST_FORMAT_TIME) {
           GST_DEBUG ("Got duration %" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
           dc->priv->current_info->duration = (guint64) dur;
+        }
+      }
+
+      if (dc->priv->seeking_query) {
+        if (gst_element_query (pipeline, dc->priv->seeking_query)) {
+          gboolean seekable;
+
+          gst_query_parse_seeking (dc->priv->seeking_query, &format,
+              &seekable, NULL, NULL);
+          if (format == GST_FORMAT_TIME) {
+            GST_DEBUG ("Got seekable %d", seekable);
+            dc->priv->current_info->seekable = seekable;
+          }
         }
       }
     }
@@ -894,8 +919,8 @@ discoverer_collect (GstDiscoverer * dc)
           gst_caps_get_structure (dc->priv->current_info->stream_info->caps, 0);
 
       if (g_str_has_prefix (gst_structure_get_name (st), "image/"))
-        ((GstDiscovererVideoInfo *) dc->priv->current_info->
-            stream_info)->is_image = TRUE;
+        ((GstDiscovererVideoInfo *) dc->priv->current_info->stream_info)->
+            is_image = TRUE;
     }
   }
 

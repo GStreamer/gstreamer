@@ -179,6 +179,7 @@ GstDiscovererResult       gst_discoverer_info_get_result(const GstDiscovererInfo
 GstDiscovererStreamInfo*  gst_discoverer_info_get_stream_info(GstDiscovererInfo* info);
 GList*                    gst_discoverer_info_get_stream_list(GstDiscovererInfo* info);
 GstClockTime              gst_discoverer_info_get_duration(const GstDiscovererInfo* info);
+gboolean                  gst_discoverer_info_get_seekable(const GstDiscovererInfo* info);
 const GstStructure*       gst_discoverer_info_get_misc(const GstDiscovererInfo* info);
 const GstTagList*         gst_discoverer_info_get_tags(const GstDiscovererInfo* info);
 
