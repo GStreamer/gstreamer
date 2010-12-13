@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <glib.h>
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/check/gstcheck.h>
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
 
@@ -35,6 +36,134 @@
 #define VIDEO_FILENAME "video"
 #define CAPTURE_COUNT 3
 #define VIDEO_DURATION 5
+
+#define VIDEO_PAD_SUPPORTED_CAPS GST_VIDEO_CAPS_RGB ", width=600, height=480"
+#define IMAGE_PAD_SUPPORTED_CAPS GST_VIDEO_CAPS_RGB ", width=800, height=600"
+
+/* custom test camera src element */
+#define GST_TYPE_TEST_CAMERA_SRC \
+  (gst_test_camera_src_get_type())
+#define GST_TEST_CAMERA_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TEST_CAMERA_SRC,GstTestCameraSrc))
+#define GST_TEST_CAMERA_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TEST_CAMERA_SRC,GstTestCameraSrcClass))
+#define GST_IS_TEST_REVERSE_NEGOTIATION_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TEST_CAMERA_SRC))
+#define GST_IS_TEST_REVERSE_NEGOTIATION_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TEST_CAMERA_SRC))
+#define GST_TEST_CAMERA_SRC_CAST(obj) ((GstTestCameraSrc *)obj)
+
+typedef struct _GstTestCameraSrc GstTestCameraSrc;
+typedef struct _GstTestCameraSrcClass GstTestCameraSrcClass;
+struct _GstTestCameraSrc
+{
+  GstBaseCameraSrc element;
+
+  GstPad *vfpad;
+  GstPad *vidpad;
+  GstPad *imgpad;
+
+  GstCameraBinMode mode;
+};
+
+struct _GstTestCameraSrcClass
+{
+  GstBaseCameraSrcClass parent_class;
+};
+
+GType gst_test_camera_src_get_type (void);
+
+GST_BOILERPLATE (GstTestCameraSrc,
+    gst_test_camera_src, GstBaseCameraSrc, GST_TYPE_BASE_CAMERA_SRC);
+
+static gboolean
+gst_test_camera_src_set_mode (GstBaseCameraSrc * src, GstCameraBinMode mode)
+{
+  GstTestCameraSrc *self = GST_TEST_CAMERA_SRC (src);
+
+  self->mode = mode;
+  return TRUE;
+}
+
+static GstCaps *
+gst_test_camera_src_get_caps (GstPad * pad)
+{
+  GstTestCameraSrc *self = (GstTestCameraSrc *) GST_PAD_PARENT (pad);
+  GstCaps *result = NULL;
+
+  if (pad == self->vfpad) {
+    result = gst_caps_new_any ();
+  } else if (pad == self->vidpad) {
+    result = gst_caps_from_string (VIDEO_PAD_SUPPORTED_CAPS);
+  } else if (pad == self->imgpad) {
+    result = gst_caps_from_string (IMAGE_PAD_SUPPORTED_CAPS);
+  } else {
+    g_assert_not_reached ();
+  }
+
+  return result;
+}
+
+static void
+gst_test_camera_src_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Test Camera Src",
+      "Camera/Src",
+      "Some test camera src",
+      "Thiago Santos <thiago.sousa.santos@collabora.co.uk>");
+}
+
+static void
+gst_test_camera_src_class_init (GstTestCameraSrcClass * klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+  GstBaseCameraSrcClass *gstbasecamera_class;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
+  gstbasecamera_class = GST_BASE_CAMERA_SRC_CLASS (klass);
+
+  gstbasecamera_class->set_mode = gst_test_camera_src_set_mode;
+}
+
+static void
+gst_test_camera_src_init (GstTestCameraSrc * self,
+    GstTestCameraSrcClass * g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GstPadTemplate *template;
+
+  /* create pads */
+  template = gst_element_class_get_pad_template (gstelement_class,
+      GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME);
+  self->vfpad = gst_pad_new_from_template (template,
+      GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME);
+  gst_element_add_pad (GST_ELEMENT_CAST (self), self->vfpad);
+
+  template = gst_element_class_get_pad_template (gstelement_class,
+      GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME);
+  self->imgpad = gst_pad_new_from_template (template,
+      GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME);
+  gst_element_add_pad (GST_ELEMENT_CAST (self), self->imgpad);
+
+  template = gst_element_class_get_pad_template (gstelement_class,
+      GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
+  self->vidpad = gst_pad_new_from_template (template,
+      GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
+  gst_element_add_pad (GST_ELEMENT_CAST (self), self->vidpad);
+
+  /* add get caps functions */
+  gst_pad_set_getcaps_function (self->vfpad, gst_test_camera_src_get_caps);
+  gst_pad_set_getcaps_function (self->vidpad, gst_test_camera_src_get_caps);
+  gst_pad_set_getcaps_function (self->imgpad, gst_test_camera_src_get_caps);
+}
+
+/* end of custom test camera src element */
+
 
 static GstElement *camera;
 static GMainLoop *main_loop;
@@ -120,6 +249,7 @@ setup (void)
   GstBus *bus;
   GstElement *vfbin;
   GstElement *fakevideosink;
+  GstElement *src;
 
   GST_INFO ("init");
 
@@ -127,6 +257,7 @@ setup (void)
 
   camera = gst_check_setup_element ("camerabin2");
   fakevideosink = gst_check_setup_element ("fakesink");
+  src = gst_check_setup_element ("v4l2camerasrc");
 
   vfbin = gst_bin_get_by_name (GST_BIN (camera), "vf-bin");
   g_object_set (G_OBJECT (vfbin), "video-sink", fakevideosink, NULL);
@@ -322,6 +453,51 @@ GST_START_TEST (test_image_video_cycle)
 
 GST_END_TEST;
 
+GST_START_TEST (test_supported_caps)
+{
+  GstCaps *padcaps = NULL;
+  GstCaps *expectedcaps;
+  GstElement *src;
+
+  if (!camera)
+    return;
+
+  src = g_object_new (GST_TYPE_TEST_CAMERA_SRC, NULL);
+  g_object_set (camera, "camera-src", src, NULL);
+  gst_object_unref (src);
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
+  g_assert (camera != NULL);
+
+  expectedcaps = gst_caps_from_string (VIDEO_PAD_SUPPORTED_CAPS);
+  g_object_get (G_OBJECT (camera), "video-capture-supported-caps", &padcaps,
+      NULL);
+  g_assert (expectedcaps != NULL);
+  g_assert (padcaps != NULL);
+  g_assert (gst_caps_is_equal (padcaps, expectedcaps));
+  gst_caps_unref (expectedcaps);
+  gst_caps_unref (padcaps);
+
+  expectedcaps = gst_caps_from_string (IMAGE_PAD_SUPPORTED_CAPS);
+  g_object_get (G_OBJECT (camera), "image-capture-supported-caps", &padcaps,
+      NULL);
+  g_assert (expectedcaps != NULL);
+  g_assert (padcaps != NULL);
+  g_assert (gst_caps_is_equal (padcaps, expectedcaps));
+  gst_caps_unref (expectedcaps);
+  gst_caps_unref (padcaps);
+
+  gst_element_set_state (camera, GST_STATE_NULL);
+}
+
+GST_END_TEST;
+
 static Suite *
 camerabin_suite (void)
 {
@@ -336,6 +512,7 @@ camerabin_suite (void)
   tcase_add_test (tc_basic, test_single_image_capture);
   tcase_add_test (tc_basic, test_video_recording);
   tcase_add_test (tc_basic, test_image_video_cycle);
+  tcase_add_test (tc_basic, test_supported_caps);
 
   return s;
 }
