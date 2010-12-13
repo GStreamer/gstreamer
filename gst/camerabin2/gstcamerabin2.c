@@ -28,14 +28,14 @@
 /*
  * Detail Topics:
  *
- * videorecordingbin state management (for now on vidbin)
- * - The problem: keeping vidbin state in sync with camerabin will make it
+ * videorecordingbin state management (for now on videobin)
+ * - The problem: keeping videobin state in sync with camerabin will make it
  *                go to playing when it might not be used, causing its internal
  *                filesink to open a file that might be left blank.
- * - The solution: vidbin state is set to locked upon its creation and camerabin
+ * - The solution: videobin state is set to locked upon its creation and camerabin
  *                 registers itself on the notify::ready-for-capture of the src.
  *                 Whenever the src readyness goes to FALSE it means a new
- *                 capture is starting. If we are on video mode, the vidbin's
+ *                 capture is starting. If we are on video mode, the videobin's
  *                 state is set to NULL and then PLAYING (in between this we
  *                 have room to set the destination filename).
  *                 There is no problem to leave it on playing after an EOS, so
@@ -176,16 +176,17 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
 
       /* a video recording is about to start, we reset the videobin to clear eos/flushing state
        * also need to clean the queue ! capsfilter before it */
-      gst_element_set_state (camera->vidbin, GST_STATE_NULL);
-      gst_element_set_state (camera->vid_queue, GST_STATE_NULL);
-      gst_element_set_state (camera->vid_capsfilter, GST_STATE_NULL);
-      location = g_strdup_printf (camera->vid_location, camera->vid_index++);
-      GST_DEBUG_OBJECT (camera, "Switching vidbin location to %s", location);
-      g_object_set (camera->vidbin, "location", location, NULL);
+      gst_element_set_state (camera->videobin, GST_STATE_NULL);
+      gst_element_set_state (camera->videobin_queue, GST_STATE_NULL);
+      gst_element_set_state (camera->videobin_capsfilter, GST_STATE_NULL);
+      location =
+          g_strdup_printf (camera->video_location, camera->video_index++);
+      GST_DEBUG_OBJECT (camera, "Switching videobin location to %s", location);
+      g_object_set (camera->videobin, "location", location, NULL);
       g_free (location);
-      gst_element_set_state (camera->vidbin, GST_STATE_PLAYING);
-      gst_element_set_state (camera->vid_capsfilter, GST_STATE_PLAYING);
-      gst_element_set_state (camera->vid_queue, GST_STATE_PLAYING);
+      gst_element_set_state (camera->videobin, GST_STATE_PLAYING);
+      gst_element_set_state (camera->videobin_capsfilter, GST_STATE_PLAYING);
+      gst_element_set_state (camera->videobin_queue, GST_STATE_PLAYING);
     }
   }
 }
@@ -195,11 +196,9 @@ gst_camera_bin_dispose (GObject * object)
 {
   GstCameraBin *camerabin = GST_CAMERA_BIN_CAST (object);
 
-  if (camerabin->vf_bin)
-    gst_object_unref (camerabin->vf_bin);
 
-  g_free (camerabin->img_location);
-  g_free (camerabin->vid_location);
+  g_free (camerabin->image_location);
+  g_free (camerabin->video_location);
 
   if (camerabin->src_capture_notify_id)
     g_signal_handler_disconnect (camerabin->src,
@@ -207,15 +206,27 @@ gst_camera_bin_dispose (GObject * object)
   if (camerabin->src)
     gst_object_unref (camerabin->src);
 
-  if (camerabin->vidbin)
-    gst_object_unref (camerabin->vidbin);
-  if (camerabin->vid_queue)
-    gst_object_unref (camerabin->vid_queue);
-  if (camerabin->vid_capsfilter)
-    gst_object_unref (camerabin->vid_capsfilter);
+  if (camerabin->viewfinderbin)
+    gst_object_unref (camerabin->viewfinderbin);
+  if (camerabin->viewfinderbin_queue)
+    gst_object_unref (camerabin->viewfinderbin_queue);
+  if (camerabin->viewfinderbin_capsfilter)
+    gst_object_unref (camerabin->viewfinderbin_capsfilter);
 
-  if (camerabin->imgbin)
-    gst_object_unref (camerabin->imgbin);
+
+  if (camerabin->videobin)
+    gst_object_unref (camerabin->videobin);
+  if (camerabin->videobin_queue)
+    gst_object_unref (camerabin->videobin_queue);
+  if (camerabin->videobin_capsfilter)
+    gst_object_unref (camerabin->videobin_capsfilter);
+
+  if (camerabin->imagebin)
+    gst_object_unref (camerabin->imagebin);
+  if (camerabin->imagebin_queue)
+    gst_object_unref (camerabin->imagebin_queue);
+  if (camerabin->imagebin_capsfilter)
+    gst_object_unref (camerabin->imagebin_capsfilter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -318,11 +329,12 @@ static void
 gst_camera_bin_init (GstCameraBin * camerabin)
 {
   camerabin->mode = DEFAULT_MODE;
-  camerabin->vid_location = g_strdup (DEFAULT_VID_LOCATION);
-  camerabin->img_location = g_strdup (DEFAULT_IMG_LOCATION);
-  camerabin->vf_bin = gst_element_factory_make ("viewfinderbin", "vf-bin");
+  camerabin->video_location = g_strdup (DEFAULT_VID_LOCATION);
+  camerabin->image_location = g_strdup (DEFAULT_IMG_LOCATION);
+  camerabin->viewfinderbin = gst_element_factory_make ("viewfinderbin",
+      "vf-bin");
 
-  gst_bin_add (GST_BIN (camerabin), gst_object_ref (camerabin->vf_bin));
+  gst_bin_add (GST_BIN (camerabin), gst_object_ref (camerabin->viewfinderbin));
 }
 
 /**
@@ -340,49 +352,45 @@ gst_camera_bin_init (GstCameraBin * camerabin)
 static gboolean
 gst_camera_bin_create_elements (GstCameraBin * camera)
 {
-  GstElement *src;
-  GstElement *vid;
-  GstElement *img;
-  GstElement *vid_queue;
-  GstElement *img_queue;
-  GstElement *vf_queue;
-  GstElement *vid_capsfilter;
-  GstElement *img_capsfilter;
-  GstElement *vf_capsfilter;
-
   if (camera->elements_created)
     return TRUE;
 
-  src = gst_element_factory_make ("v4l2camerasrc", "camerasrc");
-  vid = gst_element_factory_make ("videorecordingbin", "video-rec-bin");
-  img = gst_element_factory_make ("imagecapturebin", "image-cap-bin");
+  camera->src = gst_element_factory_make ("v4l2camerasrc", "camerasrc");
+  camera->videobin = gst_element_factory_make ("videorecordingbin", "videobin");
+  camera->imagebin = gst_element_factory_make ("imagecapturebin", "imagebin");
 
-  camera->src = gst_object_ref (src);
-  camera->vidbin = gst_object_ref (vid);
-  camera->imgbin = gst_object_ref (img);
+  camera->videobin_queue = gst_element_factory_make ("queue", "videobin-queue");
+  camera->imagebin_queue = gst_element_factory_make ("queue", "imagebin-queue");
+  camera->viewfinderbin_queue = gst_element_factory_make ("queue",
+      "viewfinderbin-queue");
 
-  vid_queue = gst_element_factory_make ("queue", "video-queue");
-  img_queue = gst_element_factory_make ("queue", "image-queue");
-  vf_queue = gst_element_factory_make ("queue", "vf-queue");
+  camera->videobin_capsfilter = gst_element_factory_make ("capsfilter",
+      "videobin-capsfilter");
+  camera->imagebin_capsfilter = gst_element_factory_make ("capsfilter",
+      "imagebin-capsfilter");
+  camera->viewfinderbin_capsfilter = gst_element_factory_make ("capsfilter",
+      "viewfinderbin-capsfilter");
 
-  vid_capsfilter = gst_element_factory_make ("capsfilter", "video-capsfilter");
-  img_capsfilter = gst_element_factory_make ("capsfilter", "image-capsfilter");
-  vf_capsfilter = gst_element_factory_make ("capsfilter", "vf-capsfilter");
-
-  gst_bin_add_many (GST_BIN_CAST (camera), src, vid, img,
-      vid_queue, img_queue, vf_queue, vid_capsfilter, img_capsfilter,
-      vf_capsfilter, NULL);
+  gst_bin_add_many (GST_BIN_CAST (camera), gst_object_ref (camera->src),
+      gst_object_ref (camera->videobin), gst_object_ref (camera->imagebin),
+      gst_object_ref (camera->videobin_queue),
+      gst_object_ref (camera->imagebin_queue),
+      gst_object_ref (camera->viewfinderbin_queue),
+      gst_object_ref (camera->videobin_capsfilter),
+      gst_object_ref (camera->imagebin_capsfilter),
+      gst_object_ref (camera->viewfinderbin_capsfilter), NULL);
 
   /* Linking can be optimized TODO */
-  gst_element_link_many (vid_queue, vid_capsfilter, vid, NULL);
-  gst_element_link_many (img_queue, img_capsfilter, img, NULL);
-  gst_element_link_many (vf_queue, vf_capsfilter, camera->vf_bin, NULL);
-  gst_element_link_pads (src, "vfsrc", vf_queue, "sink");
-  gst_element_link_pads (src, "imgsrc", img_queue, "sink");
-  gst_element_link_pads (src, "vidsrc", vid_queue, "sink");
-
-  camera->vid_queue = gst_object_ref (vid_queue);
-  camera->vid_capsfilter = gst_object_ref (vid_capsfilter);
+  gst_element_link_many (camera->videobin_queue, camera->videobin_capsfilter,
+      camera->videobin, NULL);
+  gst_element_link_many (camera->imagebin_queue, camera->imagebin_capsfilter,
+      camera->imagebin, NULL);
+  gst_element_link_many (camera->viewfinderbin_queue,
+      camera->viewfinderbin_capsfilter, camera->viewfinderbin, NULL);
+  gst_element_link_pads (camera->src, "vfsrc", camera->viewfinderbin_queue,
+      "sink");
+  gst_element_link_pads (camera->src, "imgsrc", camera->imagebin_queue, "sink");
+  gst_element_link_pads (camera->src, "vidsrc", camera->videobin_queue, "sink");
 
   /*
    * Video can't get into playing as its internal filesink will open
@@ -393,14 +401,14 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
    * the source's ready-for-capture goes to FALSE it means it is
    * starting recording, so we should prepare the video bin.
    */
-  gst_element_set_locked_state (vid, TRUE);
-  camera->src_capture_notify_id = g_signal_connect (G_OBJECT (src),
+  gst_element_set_locked_state (camera->videobin, TRUE);
+  camera->src_capture_notify_id = g_signal_connect (G_OBJECT (camera->src),
       "notify::ready-for-capture",
       G_CALLBACK (gst_camera_bin_src_notify_readyforcapture), camera);
 
-  g_object_set (src, "mode", camera->mode, NULL);
-  g_object_set (vid, "location", camera->vid_location, NULL);
-  g_object_set (img, "location", camera->img_location, NULL);
+  g_object_set (camera->src, "mode", camera->mode, NULL);
+  g_object_set (camera->videobin, "location", camera->video_location, NULL);
+  g_object_set (camera->imagebin, "location", camera->image_location, NULL);
 
   camera->elements_created = TRUE;
   return TRUE;
@@ -426,7 +434,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 
   switch (trans) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_element_set_state (camera->vidbin, GST_STATE_NULL);
+      gst_element_set_state (camera->videobin, GST_STATE_NULL);
       break;
     default:
       break;
@@ -441,13 +449,13 @@ gst_camera_bin_set_location (GstCameraBin * camera, const gchar * location)
   GST_DEBUG_OBJECT (camera, "Setting mode %d location to %s", camera->mode,
       location);
   if (camera->mode == MODE_IMAGE) {
-    if (camera->imgbin)
-      g_object_set (camera->imgbin, "location", location, NULL);
-    g_free (camera->img_location);
-    camera->img_location = g_strdup (location);
+    if (camera->imagebin)
+      g_object_set (camera->imagebin, "location", location, NULL);
+    g_free (camera->image_location);
+    camera->image_location = g_strdup (location);
   } else {
-    g_free (camera->vid_location);
-    camera->vid_location = g_strdup (location);
+    g_free (camera->video_location);
+    camera->video_location = g_strdup (location);
   }
 }
 
@@ -482,9 +490,9 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_LOCATION:
       if (camera->mode == MODE_VIDEO) {
-        g_value_set_string (value, camera->vid_location);
+        g_value_set_string (value, camera->video_location);
       } else {
-        g_value_set_string (value, camera->img_location);
+        g_value_set_string (value, camera->image_location);
       }
       break;
     case PROP_VIDEO_CAPTURE_SUPPORTED_CAPS:

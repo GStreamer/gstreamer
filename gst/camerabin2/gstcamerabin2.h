@@ -40,20 +40,25 @@ struct _GstCameraBin
   GstElement *src;
   gulong src_capture_notify_id;
 
-  GstElement *vidbin;
-  GstElement *vid_queue;
-  GstElement *vid_capsfilter;
+  GstElement *videobin;
+  GstElement *videobin_queue;
+  GstElement *videobin_capsfilter;
 
-  GstElement *vf_bin;
+  GstElement *viewfinderbin;
+  GstElement *viewfinderbin_queue;
+  GstElement *viewfinderbin_capsfilter;
 
-  GstElement *imgbin;
+  GstElement *imagebin;
+  GstElement *imagebin_queue;
+  GstElement *imagebin_capsfilter;
 
-  gint vid_index;
+  /* Index of the auto incrementing file index for video recordings */
+  gint video_index;
 
   /* properties */
   gint mode;
-  gchar *vid_location;
-  gchar *img_location;
+  gchar *video_location;
+  gchar *image_location;
 
   gboolean elements_created;
 };
