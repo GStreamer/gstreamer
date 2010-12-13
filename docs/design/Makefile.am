@@ -2,6 +2,7 @@ SUBDIRS =
 
 
 EXTRA_DIST = \
+	design-audiosinks.txt      \
 	design-decodebin.txt       \
 	design-orc-integration.txt \
 	draft-keyframe-force.txt   \
