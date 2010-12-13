@@ -33,7 +33,6 @@
 
 #include "gstv4l2camerasrc.h"
 #include "camerabingeneral.h"
-#include "gstcamerabin-enum.h"
 
 enum
 {

@@ -49,9 +49,8 @@
 #include "config.h"
 #endif
 
-#include "gstbasecamerasrc.h"
+#include <gst/basecamerabinsrc/gstbasecamerasrc.h>
 #include "gstcamerabin2.h"
-#include "gstcamerabin-enum.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_camera_bin_debug);
 #define GST_CAT_DEFAULT gst_camera_bin_debug

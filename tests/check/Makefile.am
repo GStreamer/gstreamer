@@ -197,6 +197,20 @@ elements_camerabin_LDADD = \
          -lgstinterfaces-@GST_MAJORMINOR@
 elements_camerabin_SOURCES = elements/camerabin.c
 
+if BUILD_EXPERIMENTAL
+elements_camerabin2_CFLAGS = \
+        -I$(top_builddir)/gst-libs \
+        $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+        $(GST_PLUGINS_BAD_CFLAGS) $(GST_CHECK_CFLAGS) \
+        -DGST_USE_UNSTABLE_API
+elements_camerabin2_LDADD = \
+        $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
+        $(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-@GST_MAJORMINOR@.la \
+        $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
+        $(GST_CHECK_LIBS)
+elements_camerabin2_SOURCES = elements/camerabin2.c
+endif
+
 elements_jifmux_CFLAGS = $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) $(AM_CFLAGS) $(EXIF_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 elements_jifmux_LDADD = $(GST_CHECK_LIBS) $(EXIF_LIBS) $(LDADD) $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR)
 elements_jifmux_SOURCES = elements/jifmux.c

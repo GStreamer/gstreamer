@@ -23,7 +23,7 @@
 #define __GST_V4L2_CAMERA_SRC_H__
 
 #include <gst/gst.h>
-#include "gstbasecamerasrc.h"
+#include <gst/basecamerabinsrc/gstbasecamerasrc.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_V4L2_CAMERA_SRC \

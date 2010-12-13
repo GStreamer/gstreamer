@@ -29,6 +29,7 @@
 #include <glib.h>
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
+#include <gst/basecamerabinsrc/gstbasecamerasrc.h>
 
 #define IMAGE_FILENAME "image"
 #define VIDEO_FILENAME "video"
