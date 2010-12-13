@@ -64,7 +64,7 @@ static const FormatInfo formats[] = {
   /* container/tag formats with static descriptions */
   {"application/gxf", "General Exchange Format (GXF)", FLAG_CONTAINER},
   {"application/ogg", "Ogg", FLAG_CONTAINER},
-  {"application/mxf", "MXF", FLAG_CONTAINER},
+  {"application/mxf", "Material eXchange Format (MXF)", FLAG_CONTAINER},
   {"application/vnd.rn-realmedia", "Realmedia", FLAG_CONTAINER},
   {"application/x-id3", N_("ID3 tag"), FLAG_CONTAINER},
   {"application/x-ape", N_("APE tag"), FLAG_CONTAINER},
@@ -79,7 +79,7 @@ static const FormatInfo formats[] = {
   {"video/x-matroska", "Matroska", FLAG_CONTAINER},
   {"video/webm", "WebM", FLAG_CONTAINER},
   {"video/x-ms-asf", "Advanced Streaming Format (ASF)", FLAG_CONTAINER},
-  {"video/x-msvideo", "AVI", FLAG_CONTAINER},
+  {"video/x-msvideo", "Audio Video Interleave (AVI)", FLAG_CONTAINER},
   {"video/x-quicktime", "Quicktime", FLAG_CONTAINER},
   {"video/quicktime", "Quicktime", FLAG_CONTAINER},
   {"video/mj2", "Motion JPEG 2000", FLAG_CONTAINER},
