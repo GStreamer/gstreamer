@@ -482,7 +482,6 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
   gobject_class->set_property = gst_base_camera_src_set_property;
   gobject_class->get_property = gst_base_camera_src_get_property;
 
-  // g_object_class_install_property ....
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
           "The capture mode (still image capture or video recording)",

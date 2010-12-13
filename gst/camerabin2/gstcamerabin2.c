@@ -49,6 +49,7 @@
 #include "config.h"
 #endif
 
+#include "gstbasecamerasrc.h"
 #include "gstcamerabin2.h"
 #include "gstcamerabin-enum.h"
 
@@ -61,7 +62,9 @@ enum
 {
   PROP_0,
   PROP_MODE,
-  PROP_LOCATION
+  PROP_LOCATION,
+  PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
+  PROP_VIDEO_CAPTURE_SUPPORTED_CAPS
 };
 
 enum
@@ -271,6 +274,21 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           "Default for images is img_%d and vid_%d for videos",
           DEFAULT_IMG_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class,
+      PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
+      g_param_spec_boxed ("image-capture-supported-caps",
+          "Image capture supported caps",
+          "Formats supported for capturing images represented as GstCaps",
+          GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class,
+      PROP_VIDEO_CAPTURE_SUPPORTED_CAPS,
+      g_param_spec_boxed ("video-capture-supported-caps",
+          "Video capture supported caps",
+          "Formats supported for capturing videos represented as GstCaps",
+          GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+
   /**
    * GstCameraBin::capture-start:
    * @camera: the camera bin element
@@ -468,6 +486,41 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       } else {
         g_value_set_string (value, camera->img_location);
       }
+      break;
+    case PROP_VIDEO_CAPTURE_SUPPORTED_CAPS:
+    case PROP_IMAGE_CAPTURE_SUPPORTED_CAPS:{
+      GstPad *pad;
+      GstCaps *caps;
+      const gchar *padname;
+
+      if (prop_id == PROP_VIDEO_CAPTURE_SUPPORTED_CAPS) {
+        padname = GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME;
+      } else {
+        padname = GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME;
+      }
+
+      if (camera->src) {
+        pad = gst_element_get_static_pad (camera->src, padname);
+
+        g_assert (pad != NULL);
+
+        /* TODO not sure if we want get_caps or get_allowed_caps to already
+         * consider the full pipeline scenario and avoid picking a caps that
+         * won't negotiate. Need to take care on the special case of the
+         * pad being unlinked.
+         */
+        caps = gst_pad_get_caps_reffed (pad);
+        if (caps) {
+          gst_value_set_caps (value, caps);
+          gst_caps_unref (caps);
+        }
+
+        gst_object_unref (pad);
+      } else {
+        GST_DEBUG_OBJECT (camera, "Camera source not created, can't get "
+            "supported caps");
+      }
+    }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
