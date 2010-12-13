@@ -38,6 +38,7 @@ struct _GstCameraBin
   GstPipeline pipeline;
 
   GstElement *src;
+  GstElement *user_src;
   gulong src_capture_notify_id;
 
   GstElement *videobin;
