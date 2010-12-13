@@ -77,6 +77,16 @@ dnl find a compiler
 AC_PROG_CC
 AM_PROG_CC_C_O
 
+AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
+AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
+
+dnl check for gobject-introspection
+GOBJECT_INTROSPECTION_CHECK([0.6.3])
+
+dnl check for documentation tools
+AG_GST_DOCBOOK_CHECK
+GTK_DOC_CHECK([1.3])
+
 dnl check for python
 AM_PATH_PYTHON
 AC_MSG_CHECKING(for python >= 2.3)
@@ -89,49 +99,33 @@ sys.exit(0)"
 
 if $PYTHON -c "$prog" 1>&AC_FD_CC 2>&AC_FD_CC
 then
+  HAVE_PYTHON=yes
   AC_MSG_RESULT(okay)
 else
-  AC_MSG_ERROR(too old)
+  HAVE_PYTHON=no
+  AC_MSG_RESULT(no python)
 fi
-AM_CHECK_PYTHON_HEADERS(,[AC_MSG_ERROR(could not find Python headers)])
 
-AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
-AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
-
-dnl check for gobject-introspection
-GOBJECT_INTROSPECTION_CHECK([0.6.3])
-
-dnl check for documentation tools
-AG_GST_DOCBOOK_CHECK
-GTK_DOC_CHECK([1.3])
-
-AC_SUBST(PYGOBJECT_REQ, 2.11.2)
+AM_CHECK_PYTHON_HEADERS([HAVE_PYTHON_HEADERS=yes],[HAVE_PYTHON_HEADERS=no])
 
 dnl check for pygobject (optional, used in the bindings)
 PKG_CHECK_MODULES(PYGOBJECT, pygobject-2.0 >= $PYGOBJECT_REQ,
-  [
-    HAVE_PYGOBJECT="yes"
-  ],
-  [
-    HAVE_PYGOBJECT="no"
-  ])
+  [HAVE_PYGOBJECT="yes"], [HAVE_PYGOBJECT="no"])
 AC_SUBST(PYGOBJECT_CFLAGS)
+AC_SUBST(PYGOBJECT_REQ, 2.11.2)
 
 dnl check for gst-python
 PKG_CHECK_MODULES(PYGST, gst-python-0.10,
-  [
-    HAVE_PYGST="yes"
-  ],
-  [
-    HAVE_PYGST="no"
-  ])
+  [HAVE_PYGST="yes"], [HAVE_PYGST="no"])
 
 if test "x$HAVE_PYGST" = "xyes"; then
   PYGST_DEFSDIR=`pkg-config gst-python-0.10 --variable=defsdir`
 fi
 AC_SUBST(PYGST_DEFSDIR, $PYGST_DEFSDIR)
 
-if test "x$HAVE_PYTHON_HEADERS" = "xyes" -a \
+if test \
+    "x$HAVE_PYTHON" = "xyes" -a \
+    "x$HAVE_PYTHON_HEADERS" = "xyes" -a \
     "x$HAVE_PYGOBJECT" = "xyes" -a \
     "x$HAVE_PYGST" = "xyes"; then
   HAVE_PYTHON_BINDINGS="yes"
