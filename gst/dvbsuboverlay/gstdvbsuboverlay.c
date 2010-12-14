@@ -289,7 +289,7 @@ gst_dvbsub_overlay_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_ENABLE:
-      overlay->enable = g_value_get_boolean (value);
+      g_atomic_int_set (&overlay->enable, g_value_get_boolean (value));
       break;
     case PROP_MAX_PAGE_TIMEOUT:
       g_atomic_int_set (&overlay->max_page_timeout, g_value_get_int (value));
@@ -308,7 +308,7 @@ gst_dvbsub_overlay_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_ENABLE:
-      g_value_set_boolean (value, overlay->enable);
+      g_value_set_int (value, g_atomic_int_get (&overlay->enable));
       break;
     case PROP_MAX_PAGE_TIMEOUT:
       g_value_set_int (value, g_atomic_int_get (&overlay->max_page_timeout));
