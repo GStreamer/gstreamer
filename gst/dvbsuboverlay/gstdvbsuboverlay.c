@@ -488,6 +488,8 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
   gint y_offset, y_height, y_width, y_stride;
   gint u_offset, u_height, u_width, u_stride;
   gint v_offset, v_height, v_width, v_stride;
+  gint scale = 0;
+  gint scale_x, scale_y;        /* 16.16 fixed point */
 
   y_offset =
       gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0, width,
@@ -517,6 +519,18 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
   u_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
   v_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 2, width);
 
+  if (width != subs->display_def.display_width &&
+      height != subs->display_def.display_height) {
+    scale = 1;
+    if (subs->display_def.window_flag) {
+      scale_x = (width << 16) / subs->display_def.window_width;
+      scale_y = (height << 16) / subs->display_def.window_height;
+    } else {
+      scale_x = (width << 16) / subs->display_def.display_width;
+      scale_y = (height << 16) / subs->display_def.display_height;
+    }
+  }
+
   for (counter = 0; counter < subs->num_rects; counter++) {
     gint dw, dh, dx, dy;
     gint32 sx = 0, sy;          /* 16.16 fixed point */
@@ -527,13 +541,25 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
       continue;
 
     /* blend subtitles onto the video frame */
-    dx = sub_region->x * width / subs->display_def.display_width;
-    dy = sub_region->y * height / subs->display_def.display_height;
+    dx = sub_region->x;
+    dy = sub_region->y;
+    dw = sub_region->w;
+    dh = sub_region->h;
 
-    dw = MIN (sub_region->w * width / subs->display_def.display_width,
-        width - dx);
-    dh = MIN (sub_region->h * height / subs->display_def.display_height,
-        height - dy);
+    if (scale) {
+      dx = (dx * scale_x) >> 16;
+      dy = (dy * scale_y) >> 16;
+      dw = (dw * scale_x) >> 16;
+      dh = (dh * scale_y) >> 16;
+      /* apply subtitle window offsets after scaling */
+      if (subs->display_def.window_flag) {
+        dx += subs->display_def.window_x;
+        dy += subs->display_def.window_y;
+      }
+    }
+
+    dw = MIN (dw, width - dx);
+    dh = MIN (dh, height - dx);
 
     xstep = (sub_region->w << 16) / dw;
     ystep = (sub_region->h << 16) / dh;
