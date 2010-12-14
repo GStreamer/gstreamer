@@ -154,6 +154,54 @@ GST_START_TEST (test_setting_video_encoder)
 
 GST_END_TEST;
 
+GST_START_TEST (test_setting_video_muxer)
+{
+  GstVideoRecordingBinTestContext ctx;
+  GstBus *bus;
+  GstMessage *msg;
+  GstElement *encoder;
+  GstElement *muxer;
+  gchar *test_file_name;
+  FILE *f;
+
+  gstvideorecordingbin_init_test_context (&ctx, N_BUFFERS);
+  bus = gst_element_get_bus (ctx.pipe);
+
+  test_file_name = make_test_file_name (0);
+  g_object_set (ctx.vrbin, "location", test_file_name, NULL);
+
+  encoder = gst_element_factory_make ("theoraenc", NULL);
+  g_object_set (ctx.vrbin, "video-encoder", encoder, NULL);
+
+  muxer = gst_element_factory_make ("oggmux", NULL);
+  g_object_set (ctx.vrbin, "video-muxer", muxer, NULL);
+
+  fail_if (gst_element_set_state (ctx.pipe, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE);
+
+  msg = gst_bus_timed_pop_filtered (bus, GST_SECOND * 10,
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+
+  /* check there is a recorded file */
+  fail_unless (g_file_test (test_file_name, G_FILE_TEST_EXISTS));
+  fail_unless (g_file_test (test_file_name, G_FILE_TEST_IS_REGULAR));
+  fail_if (g_file_test (test_file_name, G_FILE_TEST_IS_SYMLINK));
+
+  /* check the file isn't empty */
+  f = fopen (test_file_name, "r");
+  fseek (f, 0, SEEK_END);
+  fail_unless (ftell (f) > 0);
+  fclose (f);
+
+  gstvideorecordingbin_unset_test_context (&ctx);
+  gst_object_unref (bus);
+  g_free (test_file_name);
+}
+
+GST_END_TEST;
+
 static Suite *
 videorecordingbin_suite (void)
 {
@@ -163,6 +211,7 @@ videorecordingbin_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_simple_recording);
   tcase_add_test (tc_chain, test_setting_video_encoder);
+  tcase_add_test (tc_chain, test_setting_video_muxer);
 
   return s;
 }

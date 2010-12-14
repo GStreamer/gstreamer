@@ -44,6 +44,8 @@ struct _GstVideoRecordingBin
   gchar *location;
   GstElement *video_encoder;
   GstElement *user_video_encoder;
+  GstElement *muxer;
+  GstElement *user_muxer;
 
   gboolean elements_created;
 };
