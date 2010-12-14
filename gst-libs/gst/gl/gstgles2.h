@@ -23,6 +23,8 @@
 #ifndef __GST_GL_ES2__
 #define __GST_GL_ES2__
 
+G_BEGIN_DECLS
+
 /* GLEW */
 
 #define GLEW_OK 0
@@ -111,5 +113,7 @@
 #define GL_COLOR_ATTACHMENT2_EXT 0
 #define GL_TEXTURE_ENV 0
 #define GL_TEXTURE_ENV_MODE 0
+
+G_END_DECLS
 
 #endif /* __GST_GL_ES2__ */

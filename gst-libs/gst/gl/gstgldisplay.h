@@ -28,6 +28,8 @@
 #include "gstglwindow.h"
 #include "gstglshader.h"
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_GL_DISPLAY			\
   (gst_gl_display_get_type())
 #define GST_GL_DISPLAY(obj)						\
@@ -290,4 +292,6 @@ void gst_gl_display_set_client_data (GstGLDisplay * display, gpointer data);
 gulong gst_gl_display_get_internal_gl_context (GstGLDisplay * display);
 void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate);
 
-#endif
+G_END_DECLS
+
+#endif /* __GST_GL_H__ */

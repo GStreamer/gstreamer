@@ -27,6 +27,8 @@
 
 #include "gstgldisplay.h"
 
+G_BEGIN_DECLS
+
 typedef struct _GstGLBuffer GstGLBuffer;
 
 #define GST_TYPE_GL_BUFFER (gst_gl_buffer_get_type())
@@ -66,5 +68,6 @@ gboolean gst_gl_buffer_parse_caps (GstCaps* caps, gint* width, gint* height);
   "pixel-aspect-ratio=(fraction)1/1," \
   "framerate=(fraction)[0/1,100/1]"
 
-#endif
+G_END_DECLS
 
+#endif /* _GST_GL_BUFFER_H_ */
