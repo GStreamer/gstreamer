@@ -54,7 +54,8 @@ enum
 enum
 {
   PROP_0,
-  PROP_ENABLE
+  PROP_ENABLE,
+  PROP_MAX_PAGE_TIMEOUT,
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -143,6 +144,11 @@ gst_dvbsub_overlay_class_init (GstDVBSubOverlayClass * klass)
   g_object_class_install_property (gobject_class, PROP_ENABLE, g_param_spec_boolean ("enable", "Enable",        /* FIXME: "enable" vs "silent"? */
           "Enable rendering of subtitles", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_PAGE_TIMEOUT,
+      g_param_spec_int ("max-page-timeout", "max-page-timeout",
+          "Limit maximum display time of a subtitle page (0 - disabled, value in seconds)",
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_change_state);
@@ -285,6 +291,9 @@ gst_dvbsub_overlay_set_property (GObject * object, guint prop_id,
     case PROP_ENABLE:
       overlay->enable = g_value_get_boolean (value);
       break;
+    case PROP_MAX_PAGE_TIMEOUT:
+      g_atomic_int_set (&overlay->max_page_timeout, g_value_get_int (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -300,6 +309,9 @@ gst_dvbsub_overlay_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_ENABLE:
       g_value_set_boolean (value, overlay->enable);
+      break;
+    case PROP_MAX_PAGE_TIMEOUT:
+      g_value_set_int (value, g_atomic_int_get (&overlay->max_page_timeout));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -814,6 +826,9 @@ static void
 new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs, gpointer user_data)
 {
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (user_data);
+
+  if (overlay->max_page_timeout > 0)
+    subs->page_time_out = MIN (subs->page_time_out, overlay->max_page_timeout);
 
   GST_INFO_OBJECT (overlay,
       "New DVB subtitles arrived with a page_time_out of %d and %d regions for PTS=%"

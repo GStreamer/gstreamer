@@ -43,6 +43,7 @@ struct _GstDVBSubOverlay
 
   /* properties */
   gboolean enable;
+  gint max_page_timeout;
 
   /* <private> */
   GstSegment video_segment;
