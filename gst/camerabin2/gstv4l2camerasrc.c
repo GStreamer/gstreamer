@@ -102,7 +102,8 @@ gst_v4l2_camera_src_set_property (GObject * object,
         if (self->app_vid_src)
           gst_object_unref (self->app_vid_src);
         self->app_vid_src = g_value_get_object (value);
-        gst_object_ref (self->app_vid_src);
+        if (self->app_vid_src)
+          gst_object_ref (self->app_vid_src);
       }
       break;
     default:
@@ -1031,6 +1032,10 @@ gst_v4l2_camera_src_class_init (GstV4l2CameraSrcClass * klass)
   gobject_class->get_property = gst_v4l2_camera_src_get_property;
 
   /* g_object_class_install_property .... */
+  g_object_class_install_property (gobject_class, PROP_VIDEO_SRC,
+      g_param_spec_object ("video-src", "Video source",
+          "The video source element to be used",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasecamerasrc_class->construct_pipeline =
       gst_v4l2_camera_src_construct_pipeline;
