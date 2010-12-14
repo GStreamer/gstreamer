@@ -64,7 +64,9 @@ enum
   PROP_LOCATION,
   PROP_CAMERA_SRC,
   PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
-  PROP_VIDEO_CAPTURE_SUPPORTED_CAPS
+  PROP_VIDEO_CAPTURE_SUPPORTED_CAPS,
+  PROP_IMAGE_CAPTURE_CAPS,
+  PROP_VIDEO_CAPTURE_CAPS
 };
 
 enum
@@ -305,6 +307,20 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           "Formats supported for capturing videos represented as GstCaps",
           GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class,
+      PROP_IMAGE_CAPTURE_CAPS,
+      g_param_spec_boxed ("image-capture-caps",
+          "Image capture caps",
+          "Caps for image capture",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class,
+      PROP_VIDEO_CAPTURE_CAPS,
+      g_param_spec_boxed ("video-capture-caps",
+          "Video capture caps",
+          "Caps for video capture",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 
   /**
    * GstCameraBin::capture-start:
@@ -332,15 +348,28 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
 }
 
 static void
-gst_camera_bin_init (GstCameraBin * camerabin)
+gst_camera_bin_init (GstCameraBin * camera)
 {
-  camerabin->mode = DEFAULT_MODE;
-  camerabin->video_location = g_strdup (DEFAULT_VID_LOCATION);
-  camerabin->image_location = g_strdup (DEFAULT_IMG_LOCATION);
-  camerabin->viewfinderbin = gst_element_factory_make ("viewfinderbin",
-      "vf-bin");
+  camera->mode = DEFAULT_MODE;
+  camera->video_location = g_strdup (DEFAULT_VID_LOCATION);
+  camera->image_location = g_strdup (DEFAULT_IMG_LOCATION);
+  camera->viewfinderbin = gst_element_factory_make ("viewfinderbin", "vf-bin");
 
-  gst_bin_add (GST_BIN (camerabin), gst_object_ref (camerabin->viewfinderbin));
+  /* capsfilters are created here as we proxy their caps properties and
+   * this way we avoid having to store the caps while on NULL state to 
+   * set them later */
+  camera->videobin_capsfilter = gst_element_factory_make ("capsfilter",
+      "videobin-capsfilter");
+  camera->imagebin_capsfilter = gst_element_factory_make ("capsfilter",
+      "imagebin-capsfilter");
+  camera->viewfinderbin_capsfilter = gst_element_factory_make ("capsfilter",
+      "viewfinderbin-capsfilter");
+
+  gst_bin_add_many (GST_BIN (camera),
+      gst_object_ref (camera->viewfinderbin),
+      gst_object_ref (camera->videobin_capsfilter),
+      gst_object_ref (camera->imagebin_capsfilter),
+      gst_object_ref (camera->viewfinderbin_capsfilter), NULL);
 }
 
 /**
@@ -373,21 +402,11 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     camera->viewfinderbin_queue =
         gst_element_factory_make ("queue", "viewfinderbin-queue");
 
-    camera->videobin_capsfilter = gst_element_factory_make ("capsfilter",
-        "videobin-capsfilter");
-    camera->imagebin_capsfilter = gst_element_factory_make ("capsfilter",
-        "imagebin-capsfilter");
-    camera->viewfinderbin_capsfilter = gst_element_factory_make ("capsfilter",
-        "viewfinderbin-capsfilter");
-
     gst_bin_add_many (GST_BIN_CAST (camera),
         gst_object_ref (camera->videobin), gst_object_ref (camera->imagebin),
         gst_object_ref (camera->videobin_queue),
         gst_object_ref (camera->imagebin_queue),
-        gst_object_ref (camera->viewfinderbin_queue),
-        gst_object_ref (camera->videobin_capsfilter),
-        gst_object_ref (camera->imagebin_capsfilter),
-        gst_object_ref (camera->viewfinderbin_capsfilter), NULL);
+        gst_object_ref (camera->viewfinderbin_queue), NULL);
 
     /* Linking can be optimized TODO */
     gst_element_link_many (camera->videobin_queue, camera->videobin_capsfilter,
@@ -531,6 +550,14 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
     case PROP_CAMERA_SRC:
       gst_camera_bin_set_camera_src (camera, g_value_get_object (value));
       break;
+    case PROP_IMAGE_CAPTURE_CAPS:
+      g_object_set (camera->imagebin_capsfilter, "caps",
+          gst_value_get_caps (value), NULL);
+      break;
+    case PROP_VIDEO_CAPTURE_CAPS:
+      g_object_set (camera->videobin_capsfilter, "caps",
+          gst_value_get_caps (value), NULL);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -590,6 +617,20 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
         GST_DEBUG_OBJECT (camera, "Camera source not created, can't get "
             "supported caps");
       }
+    }
+      break;
+    case PROP_IMAGE_CAPTURE_CAPS:{
+      GstCaps *caps = NULL;
+      g_object_get (camera->imagebin_capsfilter, "caps", &caps, NULL);
+      gst_value_set_caps (value, caps);
+      gst_caps_unref (caps);
+    }
+      break;
+    case PROP_VIDEO_CAPTURE_CAPS:{
+      GstCaps *caps = NULL;
+      g_object_get (camera->videobin_capsfilter, "caps", &caps, NULL);
+      gst_value_set_caps (value, caps);
+      gst_caps_unref (caps);
     }
       break;
     default:
