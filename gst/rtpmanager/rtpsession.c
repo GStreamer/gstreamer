@@ -81,7 +81,8 @@ enum
   if ((avg) == 0)                       \
    (avg) = (val);                       \
   else                                  \
-   (avg) = ((val) + (15 * (val))) >> 4;
+   (avg) = ((val) + (15 * (avg))) >> 4;
+
 
 /* The number RTCP intervals after which to timeout entries in the
  * collision table
@@ -368,6 +369,7 @@ rtp_session_init (RTPSession * sess)
   sess->source->validated = TRUE;
   sess->source->internal = TRUE;
   sess->stats.active_sources++;
+  INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
 
   /* default UDP header length */
   sess->header_len = 28;
@@ -2001,6 +2003,8 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
     /* keep track of average packet size */
     UPDATE_AVG (sess->stats.avg_rtcp_packet_size, arrival.bytes);
   }
+  GST_DEBUG ("%p, received RTCP packet, avg size %u, %u", &sess->stats,
+      sess->stats.avg_rtcp_packet_size, arrival.bytes);
   RTP_SESSION_UNLOCK (sess);
 
   /* notify caller of sr packets in the callback */
@@ -2693,10 +2697,13 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     gst_rtcp_buffer_end (data.rtcp);
 
     if (sess->callbacks.send_rtcp) {
-      UPDATE_AVG (sess->stats.avg_rtcp_packet_size,
-          GST_BUFFER_SIZE (data.rtcp));
-      GST_DEBUG ("sending RTCP packet, avg size %u",
-          sess->stats.avg_rtcp_packet_size);
+      guint packet_size;
+
+      packet_size = GST_BUFFER_SIZE (data.rtcp) + sess->header_len;
+
+      UPDATE_AVG (sess->stats.avg_rtcp_packet_size, packet_size);
+      GST_DEBUG ("%p, sending RTCP packet, avg size %u, %u", &sess->stats,
+          sess->stats.avg_rtcp_packet_size, packet_size);
       result =
           sess->callbacks.send_rtcp (sess, own, data.rtcp, sess->sent_bye,
           sess->send_rtcp_user_data);
