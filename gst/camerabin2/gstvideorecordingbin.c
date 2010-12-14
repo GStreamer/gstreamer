@@ -35,6 +35,7 @@
 #endif
 
 #include "gstvideorecordingbin.h"
+#include "camerabingeneral.h"
 
 /* prototypes */
 
@@ -42,10 +43,15 @@
 enum
 {
   PROP_0,
-  PROP_LOCATION
+  PROP_LOCATION,
+  PROP_VIDEO_ENCODER
 };
 
 #define DEFAULT_LOCATION "vidcap"
+#define DEFAULT_COLORSPACE "ffmpegcolorspace"
+#define DEFAULT_VIDEO_ENCODER "theoraenc"
+#define DEFAULT_MUXER "oggmux"
+#define DEFAULT_SINK "filesink"
 
 /* pad templates */
 
@@ -60,10 +66,30 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_BOILERPLATE (GstVideoRecordingBin, gst_video_recording_bin, GstBin,
     GST_TYPE_BIN);
 
+/* GObject callbacks */
+static void gst_video_recording_bin_dispose (GObject * object);
+static void gst_video_recording_bin_finalize (GObject * object);
+
 /* Element class functions */
 static GstStateChangeReturn
 gst_video_recording_bin_change_state (GstElement * element,
     GstStateChange trans);
+
+static void
+gst_video_recording_bin_set_video_encoder (GstVideoRecordingBin * videobin,
+    GstElement * encoder)
+{
+  GST_DEBUG_OBJECT (GST_OBJECT (videobin),
+      "Setting video encoder %" GST_PTR_FORMAT, encoder);
+
+  if (videobin->user_video_encoder)
+    g_object_unref (videobin->user_video_encoder);
+
+  if (encoder)
+    g_object_ref (encoder);
+
+  videobin->user_video_encoder = encoder;
+}
 
 static void
 gst_video_recording_bin_set_property (GObject * object, guint prop_id,
@@ -73,10 +99,17 @@ gst_video_recording_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
+      if (videobin->location)
+        g_free (videobin->location);
+
       videobin->location = g_value_dup_string (value);
       if (videobin->sink) {
         g_object_set (videobin->sink, "location", videobin->location, NULL);
       }
+      break;
+    case PROP_VIDEO_ENCODER:
+      gst_video_recording_bin_set_video_encoder (videobin,
+          g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -93,6 +126,9 @@ gst_video_recording_bin_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LOCATION:
       g_value_set_string (value, videobin->location);
+      break;
+    case PROP_VIDEO_ENCODER:
+      g_value_set_object (value, videobin->video_encoder);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -122,6 +158,9 @@ gst_video_recording_bin_class_init (GstVideoRecordingBinClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
 
+  gobject_class->dispose = gst_video_recording_bin_dispose;
+  gobject_class->finalize = gst_video_recording_bin_finalize;
+
   gobject_class->set_property = gst_video_recording_bin_set_property;
   gobject_class->get_property = gst_video_recording_bin_get_property;
 
@@ -132,6 +171,11 @@ gst_video_recording_bin_class_init (GstVideoRecordingBinClass * klass)
       g_param_spec_string ("location", "Location",
           "Location to save the captured files.",
           DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_VIDEO_ENCODER,
+      g_param_spec_object ("video-encoder", "Video encoder",
+          "Video encoder GstElement (default is theoraenc).",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -144,13 +188,39 @@ gst_video_recording_bin_init (GstVideoRecordingBin * videobin,
   gst_element_add_pad (GST_ELEMENT_CAST (videobin), videobin->ghostpad);
 
   videobin->location = g_strdup (DEFAULT_LOCATION);
+  videobin->video_encoder = NULL;
+  videobin->user_video_encoder = NULL;
 }
+
+static void
+gst_video_recording_bin_dispose (GObject * object)
+{
+  GstVideoRecordingBin *videobin = GST_VIDEO_RECORDING_BIN_CAST (object);
+
+  if (videobin->user_video_encoder) {
+    gst_object_unref (videobin->user_video_encoder);
+    videobin->user_video_encoder = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose ((GObject *) videobin);
+}
+
+static void
+gst_video_recording_bin_finalize (GObject * object)
+{
+  GstVideoRecordingBin *videobin = GST_VIDEO_RECORDING_BIN_CAST (object);
+
+  g_free (videobin->location);
+  videobin->location = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize ((GObject *) videobin);
+}
+
 
 static gboolean
 gst_video_recording_bin_create_elements (GstVideoRecordingBin * videobin)
 {
   GstElement *colorspace;
-  GstElement *encoder;
   GstElement *muxer;
   GstElement *sink;
   GstPad *pad = NULL;
@@ -160,30 +230,37 @@ gst_video_recording_bin_create_elements (GstVideoRecordingBin * videobin)
 
   /* create elements */
   colorspace =
-      gst_element_factory_make ("ffmpegcolorspace", "videobin-colorspace");
+      gst_camerabin_create_and_add_element (GST_BIN (videobin),
+      DEFAULT_COLORSPACE);
   if (!colorspace)
     goto error;
 
-  encoder = gst_element_factory_make ("theoraenc", "videobin-encoder");
-  if (!encoder)
-    goto error;
+  if (videobin->user_video_encoder) {
+    videobin->video_encoder = videobin->user_video_encoder;
+    if (!gst_camerabin_add_element (GST_BIN (videobin),
+            videobin->video_encoder)) {
+      goto error;
+    }
+  } else {
+    videobin->video_encoder =
+        gst_camerabin_create_and_add_element (GST_BIN (videobin),
+        DEFAULT_VIDEO_ENCODER);
+    if (!videobin->video_encoder)
+      goto error;
+  }
 
-  muxer = gst_element_factory_make ("oggmux", "videobin->muxer");
+  muxer = gst_camerabin_create_and_add_element (GST_BIN (videobin),
+      DEFAULT_MUXER);
   if (!muxer)
     goto error;
 
-  sink = gst_element_factory_make ("filesink", "videobin-sink");
+  sink = gst_camerabin_create_and_add_element (GST_BIN (videobin),
+      DEFAULT_SINK);
   if (!sink)
     goto error;
 
   videobin->sink = gst_object_ref (sink);
   g_object_set (sink, "location", videobin->location, "async", FALSE, NULL);
-
-  /* add and link */
-  gst_bin_add_many (GST_BIN_CAST (videobin), colorspace, encoder, muxer, sink,
-      NULL);
-  if (!gst_element_link_many (colorspace, encoder, muxer, sink, NULL))
-    goto error;
 
   /* add ghostpad */
   pad = gst_element_get_static_pad (colorspace, "sink");

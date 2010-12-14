@@ -42,6 +42,8 @@ struct _GstVideoRecordingBin
 
   /* props */
   gchar *location;
+  GstElement *video_encoder;
+  GstElement *user_video_encoder;
 
   gboolean elements_created;
 };
