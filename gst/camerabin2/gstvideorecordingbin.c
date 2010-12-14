@@ -69,13 +69,13 @@ static void
 gst_video_recording_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideoRecordingBin *vidbin = GST_VIDEO_RECORDING_BIN_CAST (object);
+  GstVideoRecordingBin *videobin = GST_VIDEO_RECORDING_BIN_CAST (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
-      vidbin->location = g_value_dup_string (value);
-      if (vidbin->sink) {
-        g_object_set (vidbin->sink, "location", vidbin->location, NULL);
+      videobin->location = g_value_dup_string (value);
+      if (videobin->sink) {
+        g_object_set (videobin->sink, "location", videobin->location, NULL);
       }
       break;
     default:
@@ -88,11 +88,11 @@ static void
 gst_video_recording_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVideoRecordingBin *vidbin = GST_VIDEO_RECORDING_BIN_CAST (object);
+  GstVideoRecordingBin *videobin = GST_VIDEO_RECORDING_BIN_CAST (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
-      g_value_set_string (value, vidbin->location);
+      g_value_set_string (value, videobin->location);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -135,61 +135,62 @@ gst_video_recording_bin_class_init (GstVideoRecordingBinClass * klass)
 }
 
 static void
-gst_video_recording_bin_init (GstVideoRecordingBin * video_recordingbin,
-    GstVideoRecordingBinClass * video_recordingbin_class)
+gst_video_recording_bin_init (GstVideoRecordingBin * videobin,
+    GstVideoRecordingBinClass * videobin_class)
 {
-  video_recordingbin->ghostpad =
+  videobin->ghostpad =
       gst_ghost_pad_new_no_target_from_template ("sink",
       gst_static_pad_template_get (&sink_template));
-  gst_element_add_pad (GST_ELEMENT_CAST (video_recordingbin),
-      video_recordingbin->ghostpad);
+  gst_element_add_pad (GST_ELEMENT_CAST (videobin), videobin->ghostpad);
 
-  video_recordingbin->location = g_strdup (DEFAULT_LOCATION);
+  videobin->location = g_strdup (DEFAULT_LOCATION);
 }
 
 static gboolean
-gst_video_recording_bin_create_elements (GstVideoRecordingBin * vrbin)
+gst_video_recording_bin_create_elements (GstVideoRecordingBin * videobin)
 {
-  GstElement *csp;
-  GstElement *enc;
-  GstElement *mux;
+  GstElement *colorspace;
+  GstElement *encoder;
+  GstElement *muxer;
   GstElement *sink;
   GstPad *pad = NULL;
 
-  if (vrbin->elements_created)
+  if (videobin->elements_created)
     return TRUE;
 
   /* create elements */
-  csp = gst_element_factory_make ("ffmpegcolorspace", "vrbin-csp");
-  if (!csp)
+  colorspace =
+      gst_element_factory_make ("ffmpegcolorspace", "videobin-colorspace");
+  if (!colorspace)
     goto error;
 
-  enc = gst_element_factory_make ("theoraenc", "vrbin-enc");
-  if (!enc)
+  encoder = gst_element_factory_make ("theoraenc", "videobin-encoder");
+  if (!encoder)
     goto error;
 
-  mux = gst_element_factory_make ("oggmux", "vrbin-mux");
-  if (!mux)
+  muxer = gst_element_factory_make ("oggmux", "videobin->muxer");
+  if (!muxer)
     goto error;
 
-  sink = gst_element_factory_make ("filesink", "vrbin-sink");
+  sink = gst_element_factory_make ("filesink", "videobin-sink");
   if (!sink)
     goto error;
 
-  vrbin->sink = gst_object_ref (sink);
-  g_object_set (sink, "location", vrbin->location, "async", FALSE, NULL);
+  videobin->sink = gst_object_ref (sink);
+  g_object_set (sink, "location", videobin->location, "async", FALSE, NULL);
 
   /* add and link */
-  gst_bin_add_many (GST_BIN_CAST (vrbin), csp, enc, mux, sink, NULL);
-  if (!gst_element_link_many (csp, enc, mux, sink, NULL))
+  gst_bin_add_many (GST_BIN_CAST (videobin), colorspace, encoder, muxer, sink,
+      NULL);
+  if (!gst_element_link_many (colorspace, encoder, muxer, sink, NULL))
     goto error;
 
   /* add ghostpad */
-  pad = gst_element_get_static_pad (csp, "sink");
-  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (vrbin->ghostpad), pad))
+  pad = gst_element_get_static_pad (colorspace, "sink");
+  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (videobin->ghostpad), pad))
     goto error;
 
-  vrbin->elements_created = TRUE;
+  videobin->elements_created = TRUE;
   return TRUE;
 
 error:
@@ -203,11 +204,11 @@ gst_video_recording_bin_change_state (GstElement * element,
     GstStateChange trans)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstVideoRecordingBin *vrbin = GST_VIDEO_RECORDING_BIN_CAST (element);
+  GstVideoRecordingBin *videobin = GST_VIDEO_RECORDING_BIN_CAST (element);
 
   switch (trans) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_video_recording_bin_create_elements (vrbin)) {
+      if (!gst_video_recording_bin_create_elements (videobin)) {
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
