@@ -348,6 +348,7 @@ AG_GST_CHECK_PLUGIN(videomaxrate)
 AG_GST_CHECK_PLUGIN(videomeasure)
 AG_GST_CHECK_PLUGIN(videosignal)
 AG_GST_CHECK_PLUGIN(vmnc)
+AG_GST_CHECK_PLUGIN(y4m)
 
 dnl *** plug-ins to exclude ***
 
@@ -1777,6 +1778,7 @@ gst/videomaxrate/Makefile
 gst/videomeasure/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile
+gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/interfaces/Makefile
