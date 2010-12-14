@@ -39,7 +39,6 @@ enum
   PROP_0,
   PROP_FILTER_CAPS,
   PROP_VIDEO_SRC,
-  PROP_VIDEO_SOURCE_FILTER
 };
 
 #define CAMERABIN_DEFAULT_VF_CAPS "video/x-raw-yuv,format=(fourcc)I420"
@@ -82,17 +81,6 @@ gst_v4l2_camera_src_set_property (GObject * object,
       GST_OBJECT_UNLOCK (self);
       configure_format (self, self->view_finder_caps);
       break;
-    case PROP_VIDEO_SOURCE_FILTER:
-      if (GST_STATE (self) != GST_STATE_NULL) {
-        GST_ELEMENT_ERROR (self, CORE, FAILED,
-            ("camerasrc must be in NULL state when setting the video filter element"),
-            (NULL));
-      } else {
-        if (self->app_video_filter)
-          gst_object_unref (self->app_video_filter);
-        self->app_video_filter = g_value_dup_object (value);
-      }
-      break;
     case PROP_VIDEO_SRC:
       if (GST_STATE (self) != GST_STATE_NULL) {
         GST_ELEMENT_ERROR (self, CORE, FAILED,
@@ -121,9 +109,6 @@ gst_v4l2_camera_src_get_property (GObject * object,
   switch (prop_id) {
     case PROP_FILTER_CAPS:
       gst_value_set_caps (value, self->view_finder_caps);
-      break;
-    case PROP_VIDEO_SOURCE_FILTER:
-      g_value_set_object (value, self->app_video_filter);
       break;
     case PROP_VIDEO_SRC:
       if (self->src_vid_src)
@@ -250,12 +235,6 @@ gst_v4l2_camera_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   if (!(self->src_zoom_filter =
           gst_camerabin_create_and_add_element (cbin, "capsfilter")))
     goto done;
-
-  if (self->app_video_filter) {
-    if (!gst_camerabin_add_element (cbin, self->app_video_filter)) {
-      goto done;
-    }
-  }
 
   if (!(tee = gst_camerabin_create_and_add_element (cbin, "tee")))
     goto done;

@@ -81,7 +81,6 @@ struct _GstV4l2CameraSrc
 
   /* Application configurable elements */
   GstElement *app_vid_src;
-  GstElement *app_video_filter;
 
   /* Caps that videosrc supports */
   GstCaps *allowed_caps;
