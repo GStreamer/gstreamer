@@ -67,6 +67,10 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_BOILERPLATE (GstImageCaptureBin, gst_image_capture_bin, GstBin,
     GST_TYPE_BIN);
 
+/* GObject callbacks */
+static void gst_image_capture_bin_dispose (GObject * object);
+static void gst_image_capture_bin_finalize (GObject * object);
+
 /* Element class functions */
 static GstStateChangeReturn
 gst_image_capture_bin_change_state (GstElement * element, GstStateChange trans);
@@ -113,6 +117,7 @@ gst_image_capture_bin_set_property (GObject * object, guint prop_id,
     case PROP_LOCATION:
       g_free (imagebin->location);
       imagebin->location = g_value_dup_string (value);
+
       if (imagebin->sink) {
         g_object_set (imagebin, "location", imagebin->location, NULL);
       }
@@ -183,9 +188,10 @@ gst_image_capture_bin_class_init (GstImageCaptureBinClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
 
+  gobject_class->dispose = gst_image_capture_bin_dispose;
+  gobject_class->finalize = gst_image_capture_bin_finalize;
   gobject_class->set_property = gst_image_capture_bin_set_property;
   gobject_class->get_property = gst_image_capture_bin_get_property;
-  gobject_class->finalize = gst_image_capture_bin_finalize;
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_image_capture_bin_change_state);
@@ -214,14 +220,34 @@ gst_image_capture_bin_init (GstImageCaptureBin * imagebin,
   GstPadTemplate *tmpl;
 
   tmpl = gst_static_pad_template_get (&sink_template);
-  imagebin->ghostpad =
-      gst_ghost_pad_new_no_target_from_template ("sink", tmpl);
+  imagebin->ghostpad = gst_ghost_pad_new_no_target_from_template ("sink", tmpl);
   gst_object_unref (tmpl);
   gst_element_add_pad (GST_ELEMENT_CAST (imagebin), imagebin->ghostpad);
+
+  imagebin->sink = NULL;
 
   imagebin->location = g_strdup (DEFAULT_LOCATION);
   imagebin->encoder = NULL;
   imagebin->user_encoder = NULL;
+  imagebin->muxer = NULL;
+  imagebin->user_muxer = NULL;
+}
+
+static void
+gst_image_capture_bin_dispose (GObject * object)
+{
+  GstImageCaptureBin *imagebin = GST_IMAGE_CAPTURE_BIN_CAST (object);
+
+  if (imagebin->user_encoder) {
+    gst_object_unref (imagebin->user_encoder);
+    imagebin->user_encoder = NULL;
+  }
+
+  if (imagebin->user_muxer) {
+    gst_object_unref (imagebin->user_muxer);
+    imagebin->user_muxer = NULL;
+  }
+  G_OBJECT_CLASS (parent_class)->dispose ((GObject *) imagebin);
 }
 
 static gboolean
