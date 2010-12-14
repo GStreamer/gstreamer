@@ -1962,7 +1962,7 @@ again:
   }
 
   /* set last stop position */
-  if (G_LIKELY (cstop != GST_CLOCK_TIME_NONE))
+  if (G_LIKELY (stop != GST_CLOCK_TIME_NONE && cstop != GST_CLOCK_TIME_NONE))
     gst_segment_set_last_stop (segment, GST_FORMAT_TIME, cstop);
   else
     gst_segment_set_last_stop (segment, GST_FORMAT_TIME, cstart);
