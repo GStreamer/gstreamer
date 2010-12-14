@@ -74,13 +74,14 @@ enum
   PROP_LAST
 };
 
-/* update average packet size, we keep this scaled by 16 to keep enough
- * precision. */
+/* update average packet size */
+#define INIT_AVG(avg, val) \
+   (avg) = (val);
 #define UPDATE_AVG(avg, val)            \
   if ((avg) == 0)                       \
-   (avg) = (val) << 4;                  \
+   (avg) = (val);                       \
   else                                  \
-   (avg) = ((val) + (15 * (avg)));
+   (avg) = ((val) + (15 * (val))) >> 4;
 
 /* The number RTCP intervals after which to timeout entries in the
  * collision table
@@ -2169,8 +2170,7 @@ rtp_session_schedule_bye_locked (RTPSession * sess, const gchar * reason,
   /* at least one member wants to send a BYE */
   g_free (sess->bye_reason);
   sess->bye_reason = g_strdup (reason);
-  /* The avg packet size is kept scaled by 16 */
-  sess->stats.avg_rtcp_packet_size = 100 * 16;
+  INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
   sess->stats.bye_members = 1;
   sess->first_rtcp = TRUE;
   sess->sent_bye = FALSE;
@@ -2692,12 +2692,14 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     /* close the RTCP packet */
     gst_rtcp_buffer_end (data.rtcp);
 
-    GST_DEBUG ("sending packet");
     if (sess->callbacks.send_rtcp) {
       UPDATE_AVG (sess->stats.avg_rtcp_packet_size,
           GST_BUFFER_SIZE (data.rtcp));
-      result = sess->callbacks.send_rtcp (sess, own, data.rtcp,
-          sess->sent_bye, sess->send_rtcp_user_data);
+      GST_DEBUG ("sending RTCP packet, avg size %u",
+          sess->stats.avg_rtcp_packet_size);
+      result =
+          sess->callbacks.send_rtcp (sess, own, data.rtcp, sess->sent_bye,
+          sess->send_rtcp_user_data);
     } else {
       GST_DEBUG ("freeing packet");
       gst_buffer_unref (data.rtcp);
