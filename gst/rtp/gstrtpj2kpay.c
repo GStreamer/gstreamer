@@ -437,6 +437,11 @@ gst_rtp_j2k_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       }
 
       pos = end;
+
+      /* exit when finished */
+      if (pos == size)
+        break;
+
       /* scan next packetization unit and fill in the header */
       end = find_pu_end (pay, data, size, pos, &state);
     } while (TRUE);
