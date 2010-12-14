@@ -2201,6 +2201,23 @@ step_unlocked:
   }
 }
 
+static inline guint8
+get_object_type (GstMiniObject * obj)
+{
+  guint8 obj_type;
+
+  if (G_LIKELY (GST_IS_BUFFER (obj)))
+    obj_type = _PR_IS_BUFFER;
+  else if (GST_IS_EVENT (obj))
+    obj_type = _PR_IS_EVENT;
+  else if (GST_IS_BUFFER_LIST (obj))
+    obj_type = _PR_IS_BUFFERLIST;
+  else
+    obj_type = _PR_IS_NOTHING;
+
+  return obj_type;
+}
+
 /**
  * gst_base_sink_do_preroll:
  * @sink: the sink
@@ -2224,15 +2241,10 @@ gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
   GstFlowReturn ret;
 
   while (G_UNLIKELY (sink->need_preroll)) {
-    guint8 obj_type = _PR_IS_NOTHING;
+    guint8 obj_type;
     GST_DEBUG_OBJECT (sink, "prerolling object %p", obj);
 
-    if (G_LIKELY (GST_IS_BUFFER (obj)))
-      obj_type = _PR_IS_BUFFER;
-    else if (GST_IS_EVENT (obj))
-      obj_type = _PR_IS_EVENT;
-    else if (GST_IS_BUFFER_LIST (obj))
-      obj_type = _PR_IS_BUFFERLIST;
+    obj_type = get_object_type (obj);
 
     ret = gst_base_sink_preroll_object (sink, obj_type, obj);
     if (ret != GST_FLOW_OK)
@@ -3124,14 +3136,15 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
   q = basesink->preroll_queue;
   while (G_UNLIKELY (!g_queue_is_empty (q))) {
     GstMiniObject *o;
+    guint8 ot;
 
     o = g_queue_pop_head (q);
     GST_DEBUG_OBJECT (basesink, "rendering queued object %p", o);
 
+    ot = get_object_type (o);
+
     /* do something with the return value */
-    ret =
-        gst_base_sink_render_object (basesink, pad,
-        GST_IS_BUFFER (o) ? _PR_IS_BUFFER : _PR_IS_EVENT, o);
+    ret = gst_base_sink_render_object (basesink, pad, ot, o);
     if (ret != GST_FLOW_OK)
       goto dequeue_failed;
   }
