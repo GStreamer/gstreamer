@@ -430,7 +430,8 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     if (camera->user_src) {
       camera->src = gst_object_ref (camera->user_src);
     } else {
-      camera->src = gst_element_factory_make ("v4l2camerasrc", "camerasrc");
+      camera->src =
+          gst_element_factory_make ("wrappercamerabinsrc", "camerasrc");
     }
 
     new_src = TRUE;

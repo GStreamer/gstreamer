@@ -4,7 +4,7 @@ libgstcamerabin2_la_SOURCES = gstviewfinderbin.c \
 				gstimagecapturebin.c \
 				gstvideorecordingbin.c \
 				camerabingeneral.c \
-				gstv4l2camerasrc.c \
+				gstwrappercamerabinsrc.c \
 				gstcamerabin2.c \
 				gstplugin.c
 
@@ -26,5 +26,5 @@ noinst_HEADERS = gstviewfinderbin.h \
 		gstimagecapturebin.h \
 		gstvideorecordingbin.h \
 		camerabingeneral.h \
-		gstv4l2camerasrc.h \
+		gstwrappercamerabinsrc.h \
 		gstcamerabin2.h

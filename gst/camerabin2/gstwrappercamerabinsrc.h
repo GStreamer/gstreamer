@@ -19,27 +19,27 @@
  */
 
 
-#ifndef __GST_V4L2_CAMERA_SRC_H__
-#define __GST_V4L2_CAMERA_SRC_H__
+#ifndef __GST_WRAPPER_CAMERA_BIN_SRC_H__
+#define __GST_WRAPPER_CAMERA_BIN_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
 
 G_BEGIN_DECLS
-#define GST_TYPE_V4L2_CAMERA_SRC \
-  (gst_v4l2_camera_src_get_type())
-#define GST_V4L2_CAMERA_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_V4L2_CAMERA_SRC,GstV4l2CameraSrc))
-#define GST_V4L2_CAMERA_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_V4L2_CAMERA_SRC,GstV4l2CameraSrcClass))
-#define GST_IS_V4L2_CAMERA_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4L2_CAMERA_SRC))
-#define GST_IS_V4L2_CAMERA_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4L2_CAMERA_SRC))
-    GType gst_v4l2_camera_src_get_type (void);
+#define GST_TYPE_WRAPPER_CAMERA_BIN_SRC \
+  (gst_wrapper_camera_bin_src_get_type())
+#define GST_WRAPPER_CAMERA_BIN_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WRAPPER_CAMERA_BIN_SRC,GstWrapperCameraBinSrc))
+#define GST_WRAPPER_CAMERA_BIN_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_WRAPPER_CAMERA_BIN_SRC,GstWrapperCameraBinSrcClass))
+#define GST_IS_WRAPPER_CAMERA_BIN_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WRAPPER_CAMERA_BIN_SRC))
+#define GST_IS_WRAPPER_CAMERA_BIN_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WRAPPER_CAMERA_BIN_SRC))
+    GType gst_wrapper_camera_bin_src_get_type (void);
 
-typedef struct _GstV4l2CameraSrc GstV4l2CameraSrc;
-typedef struct _GstV4l2CameraSrcClass GstV4l2CameraSrcClass;
+typedef struct _GstWrapperCameraBinSrc GstWrapperCameraBinSrc;
+typedef struct _GstWrapperCameraBinSrcClass GstWrapperCameraBinSrcClass;
 
 enum GstVideoRecordingStatus {
   GST_VIDEO_RECORDING_STATUS_DONE,
@@ -50,10 +50,10 @@ enum GstVideoRecordingStatus {
 
 
 /**
- * GstV4l2CameraSrc:
+ * GstWrapperCameraBinSrc:
  *
  */
-struct _GstV4l2CameraSrc
+struct _GstWrapperCameraBinSrc
 {
   GstBaseCameraSrc parent;
 
@@ -102,14 +102,14 @@ struct _GstV4l2CameraSrc
 
 
 /**
- * GstV4l2CameraSrcClass:
+ * GstWrapperCameraBinSrcClass:
  *
  */
-struct _GstV4l2CameraSrcClass
+struct _GstWrapperCameraBinSrcClass
 {
   GstBaseCameraSrcClass parent;
 };
 
-gboolean gst_v4l2_camera_src_plugin_init (GstPlugin * plugin);
+gboolean gst_wrapper_camera_bin_src_plugin_init (GstPlugin * plugin);
 
-#endif /* __GST_V4L2_CAMERA_SRC_H__ */
+#endif /* __GST_WRAPPER_CAMERA_BIN_SRC_H__ */

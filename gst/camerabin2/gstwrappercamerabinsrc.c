@@ -20,18 +20,17 @@
 
 
 /**
- * SECTION:element-v4l2camerasrc
+ * SECTION:element-wrappercamerabinsrc
  *
- * A camera src element for camerabin.. currently uses v4l2 directly.
- * It could be worthwhile to make this subclassable, so that other
- * camera elements with a single src pad could re-use this..
+ * A camera bin src element that wraps a default video source with a single
+ * pad into the 3pad model that camerabin2 expects.
  */
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
 
-#include "gstv4l2camerasrc.h"
+#include "gstwrappercamerabinsrc.h"
 #include "camerabingeneral.h"
 
 enum
@@ -46,32 +45,33 @@ enum
 /* Using "bilinear" as default zoom method */
 #define CAMERABIN_DEFAULT_ZOOM_METHOD 1
 
-GST_DEBUG_CATEGORY (v4l2_camera_src_debug);
-#define GST_CAT_DEFAULT v4l2_camera_src_debug
+GST_DEBUG_CATEGORY (wrapper_camera_bin_src_debug);
+#define GST_CAT_DEFAULT wrapper_camera_bin_src_debug
 
-GST_BOILERPLATE (GstV4l2CameraSrc, gst_v4l2_camera_src, GstBaseCameraSrc,
-    GST_TYPE_BASE_CAMERA_SRC);
+GST_BOILERPLATE (GstWrapperCameraBinSrc, gst_wrapper_camera_bin_src,
+    GstBaseCameraSrc, GST_TYPE_BASE_CAMERA_SRC);
 
-static void configure_format (GstV4l2CameraSrc * self, GstCaps * caps);
-static void set_capsfilter_caps (GstV4l2CameraSrc * self, GstCaps * new_caps);
+static void configure_format (GstWrapperCameraBinSrc * self, GstCaps * caps);
+static void set_capsfilter_caps (GstWrapperCameraBinSrc * self,
+    GstCaps * new_caps);
 
 static void
-gst_v4l2_camera_src_dispose (GObject * object)
+gst_wrapper_camera_bin_src_dispose (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
-gst_v4l2_camera_src_finalize (GstV4l2CameraSrc * self)
+gst_wrapper_camera_bin_src_finalize (GstWrapperCameraBinSrc * self)
 {
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) (self));
 }
 
 static void
-gst_v4l2_camera_src_set_property (GObject * object,
+gst_wrapper_camera_bin_src_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (object);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (object);
 
   switch (prop_id) {
     case PROP_FILTER_CAPS:
@@ -101,10 +101,10 @@ gst_v4l2_camera_src_set_property (GObject * object,
 }
 
 static void
-gst_v4l2_camera_src_get_property (GObject * object,
+gst_wrapper_camera_bin_src_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (object);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (object);
 
   switch (prop_id) {
     case PROP_FILTER_CAPS:
@@ -123,15 +123,15 @@ gst_v4l2_camera_src_get_property (GObject * object,
 }
 
 /**
- * gst_v4l2_camera_src_imgsrc_probe:
+ * gst_wrapper_camera_bin_src_imgsrc_probe:
  *
  * Buffer probe called before sending each buffer to image queue.
  */
 static gboolean
-gst_v4l2_camera_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
+gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
     gpointer data)
 {
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (data);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (data);
   GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC (data);
   gboolean ret = FALSE;
 
@@ -148,15 +148,15 @@ gst_v4l2_camera_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
 }
 
 /**
- * gst_v4l2_camera_src_vidsrc_probe:
+ * gst_wrapper_camera_bin_src_vidsrc_probe:
  *
  * Buffer probe called before sending each buffer to image queue.
  */
 static gboolean
-gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
+gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
     gpointer data)
 {
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (data);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (data);
   GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC_CAST (self);
   gboolean ret = FALSE;
 
@@ -190,7 +190,7 @@ gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
 }
 
 /**
- * gst_v4l2_camera_src_construct_pipeline:
+ * gst_wrapper_camera_bin_src_construct_pipeline:
  * @bcamsrc: camerasrc object
  *
  * This function creates and links the elements of the camerasrc bin
@@ -199,9 +199,9 @@ gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
  * Returns: TRUE, if elements were successfully created, FALSE otherwise
  */
 static gboolean
-gst_v4l2_camera_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
+gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
 {
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (bcamsrc);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
   GstBin *cbin = GST_BIN (bcamsrc);
   GstElement *tee;
   gboolean ret = FALSE;
@@ -244,9 +244,9 @@ gst_v4l2_camera_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   self->tee_video_srcpad = gst_element_get_request_pad (tee, "src%d");
 
   gst_pad_add_buffer_probe (self->tee_image_srcpad,
-      G_CALLBACK (gst_v4l2_camera_src_imgsrc_probe), self);
+      G_CALLBACK (gst_wrapper_camera_bin_src_imgsrc_probe), self);
   gst_pad_add_buffer_probe (self->tee_video_srcpad,
-      G_CALLBACK (gst_v4l2_camera_src_vidsrc_probe), self);
+      G_CALLBACK (gst_wrapper_camera_bin_src_vidsrc_probe), self);
 
   /* hook-up the ghostpads */
   gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), self->tee_vf_srcpad);
@@ -317,7 +317,7 @@ no_pad:
  * resolution in @filter_caps. Set found frame rate to @filter_caps.
  */
 static void
-set_allowed_framerate (GstV4l2CameraSrc * self, GstCaps * filter_caps)
+set_allowed_framerate (GstWrapperCameraBinSrc * self, GstCaps * filter_caps)
 {
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
   GstStructure *structure;
@@ -378,7 +378,7 @@ set_allowed_framerate (GstV4l2CameraSrc * self, GstCaps * filter_caps)
 }
 
 /**
- * gst_v4l2_camera_src_setup_pipeline:
+ * gst_wrapper_camera_bin_src_setup_pipeline:
  * @bcamsrc: camerasrc object
  *
  * This function updates camerabin capsfilters according
@@ -386,9 +386,9 @@ set_allowed_framerate (GstV4l2CameraSrc * self, GstCaps * filter_caps)
  * to camerabin.
  */
 static gboolean
-gst_v4l2_camera_src_setup_pipeline (GstBaseCameraSrc * bcamsrc)
+gst_wrapper_camera_bin_src_setup_pipeline (GstBaseCameraSrc * bcamsrc)
 {
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (bcamsrc);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
   GstStructure *st;
   GstCaps *new_caps;
   gboolean detect_framerate = FALSE;
@@ -478,7 +478,7 @@ copy_missing_fields (GQuark field_id, const GValue * value, gpointer user_data)
  *
  */
 static void
-adapt_image_capture (GstV4l2CameraSrc * self, GstCaps * in_caps)
+adapt_image_capture (GstWrapperCameraBinSrc * self, GstCaps * in_caps)
 {
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
   GstStructure *in_st, *new_st, *req_st;
@@ -568,7 +568,7 @@ adapt_image_capture (GstV4l2CameraSrc * self, GstCaps * in_caps)
 static void
 img_capture_prepared (gpointer data, GstCaps * caps)
 {
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (data);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (data);
 
   GST_INFO_OBJECT (self, "image capture prepared");
 
@@ -581,7 +581,7 @@ img_capture_prepared (gpointer data, GstCaps * caps)
 }
 
 static void
-set_image_capture_caps (GstV4l2CameraSrc * self, gint width, gint height)
+set_image_capture_caps (GstWrapperCameraBinSrc * self, gint width, gint height)
 {
   GstStructure *structure;
   GstCaps *new_caps = NULL;
@@ -608,7 +608,7 @@ set_image_capture_caps (GstV4l2CameraSrc * self, gint width, gint height)
  *
  */
 static gboolean
-start_image_capture (GstV4l2CameraSrc * self)
+start_image_capture (GstWrapperCameraBinSrc * self)
 {
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
   GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
@@ -645,7 +645,8 @@ start_image_capture (GstV4l2CameraSrc * self)
 }
 
 static gboolean
-gst_v4l2_camera_src_set_mode (GstBaseCameraSrc * bcamsrc, GstCameraBinMode mode)
+gst_wrapper_camera_bin_src_set_mode (GstBaseCameraSrc * bcamsrc,
+    GstCameraBinMode mode)
 {
   GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
 
@@ -659,7 +660,7 @@ gst_v4l2_camera_src_set_mode (GstBaseCameraSrc * bcamsrc, GstCameraBinMode mode)
 }
 
 static gboolean
-set_videosrc_zoom (GstV4l2CameraSrc * self, gint zoom)
+set_videosrc_zoom (GstWrapperCameraBinSrc * self, gint zoom)
 {
   gboolean ret = FALSE;
 
@@ -673,7 +674,7 @@ set_videosrc_zoom (GstV4l2CameraSrc * self, gint zoom)
 }
 
 static gboolean
-set_element_zoom (GstV4l2CameraSrc * self, gint zoom)
+set_element_zoom (GstWrapperCameraBinSrc * self, gint zoom)
 {
   gboolean ret = FALSE;
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
@@ -720,9 +721,9 @@ set_element_zoom (GstV4l2CameraSrc * self, gint zoom)
 }
 
 static void
-gst_v4l2_camera_src_set_zoom (GstBaseCameraSrc * bcamsrc, gint zoom)
+gst_wrapper_camera_bin_src_set_zoom (GstBaseCameraSrc * bcamsrc, gint zoom)
 {
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (bcamsrc);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
 
   GST_INFO_OBJECT (self, "setting zoom %d", zoom);
 
@@ -737,9 +738,9 @@ gst_v4l2_camera_src_set_zoom (GstBaseCameraSrc * bcamsrc, gint zoom)
 }
 
 static GstCaps *
-gst_v4l2_camera_src_get_allowed_input_caps (GstBaseCameraSrc * bcamsrc)
+gst_wrapper_camera_bin_src_get_allowed_input_caps (GstBaseCameraSrc * bcamsrc)
 {
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (bcamsrc);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
   GstCaps *caps = NULL;
   GstPad *pad = NULL, *peer_pad = NULL;
   GstState state;
@@ -811,7 +812,7 @@ failed:
  * Configure internal video format for camerabin.
  */
 static void
-configure_format (GstV4l2CameraSrc * self, GstCaps * caps)
+configure_format (GstWrapperCameraBinSrc * self, GstCaps * caps)
 {
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
   GstStructure *st;
@@ -837,7 +838,7 @@ configure_format (GstV4l2CameraSrc * self, GstCaps * caps)
  * scale frames for showing them in view finder.
  */
 static void
-update_aspect_filter (GstV4l2CameraSrc * self, GstCaps * new_caps)
+update_aspect_filter (GstWrapperCameraBinSrc * self, GstCaps * new_caps)
 {
   // XXX why not instead add a preserve-aspect-ratio property to videoscale?
 #if 0
@@ -926,7 +927,7 @@ update_aspect_filter (GstV4l2CameraSrc * self, GstCaps * new_caps)
  * Set given caps to camerabin capsfilters.
  */
 static void
-set_capsfilter_caps (GstV4l2CameraSrc * self, GstCaps * new_caps)
+set_capsfilter_caps (GstWrapperCameraBinSrc * self, GstCaps * new_caps)
 {
   GST_INFO_OBJECT (self, "new_caps:%" GST_PTR_FORMAT, new_caps);
 
@@ -944,9 +945,9 @@ set_capsfilter_caps (GstV4l2CameraSrc * self, GstCaps * new_caps)
 }
 
 static gboolean
-gst_v4l2_camera_src_start_capture (GstBaseCameraSrc * camerasrc)
+gst_wrapper_camera_bin_src_start_capture (GstBaseCameraSrc * camerasrc)
 {
-  GstV4l2CameraSrc *src = GST_V4L2_CAMERA_SRC (camerasrc);
+  GstWrapperCameraBinSrc *src = GST_WRAPPER_CAMERA_BIN_SRC (camerasrc);
 
   /* TODO shoud we access this directly? Maybe a macro is better? */
   if (camerasrc->mode == MODE_IMAGE) {
@@ -964,9 +965,9 @@ gst_v4l2_camera_src_start_capture (GstBaseCameraSrc * camerasrc)
 }
 
 static void
-gst_v4l2_camera_src_stop_capture (GstBaseCameraSrc * camerasrc)
+gst_wrapper_camera_bin_src_stop_capture (GstBaseCameraSrc * camerasrc)
 {
-  GstV4l2CameraSrc *src = GST_V4L2_CAMERA_SRC (camerasrc);
+  GstWrapperCameraBinSrc *src = GST_WRAPPER_CAMERA_BIN_SRC (camerasrc);
 
   /* TODO shoud we access this directly? Maybe a macro is better? */
   if (camerasrc->mode == MODE_VIDEO) {
@@ -984,12 +985,12 @@ gst_v4l2_camera_src_stop_capture (GstBaseCameraSrc * camerasrc)
 }
 
 static void
-gst_v4l2_camera_src_base_init (gpointer g_class)
+gst_wrapper_camera_bin_src_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  GST_DEBUG_CATEGORY_INIT (v4l2_camera_src_debug, "v4l2camerasrc", 0,
-      "V4l2 camera src");
+  GST_DEBUG_CATEGORY_INIT (wrapper_camera_bin_src_debug, "wrappercamerabinsrc",
+      0, "V4l2 camera src");
 
   gst_element_class_set_details_simple (gstelement_class,
       "V4l2 camera src element for camerabin", "Source/Video",
@@ -997,7 +998,7 @@ gst_v4l2_camera_src_base_init (gpointer g_class)
 }
 
 static void
-gst_v4l2_camera_src_class_init (GstV4l2CameraSrcClass * klass)
+gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseCameraSrcClass *gstbasecamerasrc_class;
@@ -1005,10 +1006,11 @@ gst_v4l2_camera_src_class_init (GstV4l2CameraSrcClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstbasecamerasrc_class = GST_BASE_CAMERA_SRC_CLASS (klass);
 
-  gobject_class->dispose = gst_v4l2_camera_src_dispose;
-  gobject_class->finalize = (GObjectFinalizeFunc) gst_v4l2_camera_src_finalize;
-  gobject_class->set_property = gst_v4l2_camera_src_set_property;
-  gobject_class->get_property = gst_v4l2_camera_src_get_property;
+  gobject_class->dispose = gst_wrapper_camera_bin_src_dispose;
+  gobject_class->finalize =
+      (GObjectFinalizeFunc) gst_wrapper_camera_bin_src_finalize;
+  gobject_class->set_property = gst_wrapper_camera_bin_src_set_property;
+  gobject_class->get_property = gst_wrapper_camera_bin_src_get_property;
 
   /* g_object_class_install_property .... */
   g_object_class_install_property (gobject_class, PROP_VIDEO_SRC,
@@ -1017,19 +1019,22 @@ gst_v4l2_camera_src_class_init (GstV4l2CameraSrcClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasecamerasrc_class->construct_pipeline =
-      gst_v4l2_camera_src_construct_pipeline;
-  gstbasecamerasrc_class->setup_pipeline = gst_v4l2_camera_src_setup_pipeline;
-  gstbasecamerasrc_class->set_zoom = gst_v4l2_camera_src_set_zoom;
-  gstbasecamerasrc_class->set_mode = gst_v4l2_camera_src_set_mode;
+      gst_wrapper_camera_bin_src_construct_pipeline;
+  gstbasecamerasrc_class->setup_pipeline =
+      gst_wrapper_camera_bin_src_setup_pipeline;
+  gstbasecamerasrc_class->set_zoom = gst_wrapper_camera_bin_src_set_zoom;
+  gstbasecamerasrc_class->set_mode = gst_wrapper_camera_bin_src_set_mode;
   gstbasecamerasrc_class->get_allowed_input_caps =
-      gst_v4l2_camera_src_get_allowed_input_caps;
-  gstbasecamerasrc_class->start_capture = gst_v4l2_camera_src_start_capture;
-  gstbasecamerasrc_class->stop_capture = gst_v4l2_camera_src_stop_capture;
+      gst_wrapper_camera_bin_src_get_allowed_input_caps;
+  gstbasecamerasrc_class->start_capture =
+      gst_wrapper_camera_bin_src_start_capture;
+  gstbasecamerasrc_class->stop_capture =
+      gst_wrapper_camera_bin_src_stop_capture;
 }
 
 static void
-gst_v4l2_camera_src_init (GstV4l2CameraSrc * self,
-    GstV4l2CameraSrcClass * klass)
+gst_wrapper_camera_bin_src_init (GstWrapperCameraBinSrc * self,
+    GstWrapperCameraBinSrcClass * klass)
 {
   self->vfsrc =
       gst_ghost_pad_new_no_target (GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME,
@@ -1053,8 +1058,8 @@ gst_v4l2_camera_src_init (GstV4l2CameraSrc * self,
 }
 
 gboolean
-gst_v4l2_camera_src_plugin_init (GstPlugin * plugin)
+gst_wrapper_camera_bin_src_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "v4l2camerasrc", GST_RANK_NONE,
-      gst_v4l2_camera_src_get_type ());
+  return gst_element_register (plugin, "wrappercamerabinsrc", GST_RANK_NONE,
+      gst_wrapper_camera_bin_src_get_type ());
 }

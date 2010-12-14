@@ -258,7 +258,7 @@ setup (void)
 
   camera = gst_check_setup_element ("camerabin2");
   fakevideosink = gst_check_setup_element ("fakesink");
-  src = gst_check_setup_element ("v4l2camerasrc");
+  src = gst_check_setup_element ("wrappercamerabinsrc");
   testsrc = gst_check_setup_element ("videotestsrc");
 
   g_object_set (G_OBJECT (testsrc), "is-live", TRUE, NULL);
