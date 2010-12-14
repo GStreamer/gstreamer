@@ -70,23 +70,6 @@ G_BEGIN_DECLS
  */
 #define GES_TRACK_OBJECT_DURATION(obj) (((GESTrackObject*)obj)->duration)
 
-/**
- * GES_TRACK_OBJECT_PRIORITY:
- * @obj: a #GESTrackObject
- *
- * The base priority of the object.
- */
-#define GES_TRACK_OBJECT_PRIORITY(obj) (((GESTrackObject*)obj)->base_priority)
-
-/**
- * GES_TRACK_OBJECT_PRIORITY_OFFSET:
- * @obj: a #GESTrackObject
- *
- * The priority of the object relative to its parent timeline object.
- */
-#define GES_TRACK_OBJECT_PRIORITY_OFFSET(obj)\
-    (((GESTrackObject*)obj)->priority_offset)
-
 typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
 
 /**
@@ -119,10 +102,6 @@ struct _GESTrackObject {
   guint64 duration;
   guint32 gnl_priority;
   gboolean active;
-
-  /* cache the base priority and offset */
-  guint32 base_priority;
-  guint32 priority_offset;
 
   /*< private >*/
   /* These fields are only used before the gnlobject is available */
@@ -175,7 +154,7 @@ struct _GESTrackObjectClass {
   void (*active_changed) (GESTrackObject *object, gboolean active);
 
   /*< private >*/
-  /* signals */
+  /* signals (currently unused) */
   void	(*changed)	(GESTrackObject * object);
 
   /* Padding for API extension */
@@ -194,6 +173,8 @@ gboolean ges_track_object_set_duration_internal (GESTrackObject * object, guint6
 gboolean ges_track_object_set_priority_internal (GESTrackObject * object, guint32 priority);
 gboolean ges_track_object_set_priority_offset_internal(GESTrackObject *
     object, guint32 priority_offset);
+
+guint32 ges_track_object_get_priority_offset (GESTrackObject *object);
 
 gboolean ges_track_object_set_active (GESTrackObject * object, gboolean active);
 G_END_DECLS

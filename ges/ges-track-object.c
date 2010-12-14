@@ -52,8 +52,9 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTrackObject, ges_track_object,
 
 struct _GESTrackObjectPrivate
 {
-  /* Dummy variable */
-  void *nothing;
+  /* cache the base priority and offset */
+  guint32 base_priority;
+  guint32 priority_offset;
 };
 
 enum
@@ -104,10 +105,10 @@ ges_track_object_get_property (GObject * object, guint property_id,
       g_value_set_uint64 (value, tobj->duration);
       break;
     case PROP_PRIORITY:
-      g_value_set_uint (value, tobj->base_priority);
+      g_value_set_uint (value, tobj->priv->base_priority);
       break;
     case PROP_PRIORITY_OFFSET:
-      g_value_set_uint (value, tobj->priority_offset);
+      g_value_set_uint (value, tobj->priv->priority_offset);
       break;
     case PROP_ACTIVE:
       g_value_set_boolean (value, tobj->active);
@@ -321,12 +322,12 @@ ges_track_object_set_priority_internal (GESTrackObject * object,
     guint32 priority)
 {
   guint32 save;
-  save = object->base_priority;
+  save = object->priv->base_priority;
   GST_DEBUG ("object:%p, priority:%d", object, priority);
 
-  object->base_priority = priority;
+  object->priv->base_priority = priority;
   if (!ges_track_object_update_priority (object)) {
-    object->base_priority = save;
+    object->priv->base_priority = save;
     return FALSE;
   }
   return TRUE;
@@ -337,12 +338,12 @@ ges_track_object_set_priority_offset_internal (GESTrackObject * object,
     guint32 priority_offset)
 {
   guint32 save;
-  save = object->priority_offset;
+  save = object->priv->priority_offset;
   GST_DEBUG ("object:%p, offset:%d", object, priority_offset);
 
-  object->priority_offset = priority_offset;
+  object->priv->priority_offset = priority_offset;
   if (!ges_track_object_update_priority (object)) {
-    object->base_priority = save;
+    object->priv->base_priority = save;
     return FALSE;
   }
   return TRUE;
@@ -352,8 +353,9 @@ static gboolean
 ges_track_object_update_priority (GESTrackObject * object)
 {
   guint32 priority, offset, gnl;
-  priority = object->base_priority;
-  offset = object->priority_offset;
+
+  priority = object->priv->base_priority;
+  offset = object->priv->priority_offset;
   gnl = priority + offset;
   GST_DEBUG ("object:%p, base:%d, offset:%d: gnl:%d", object, priority, offset,
       gnl);
@@ -667,4 +669,10 @@ ges_track_object_set_timeline_object (GESTrackObject * object,
   GST_DEBUG ("object:%p, timeline-object:%p", object, tlobj);
 
   object->timelineobj = tlobj;
+}
+
+guint32
+ges_track_object_get_priority_offset (GESTrackObject * object)
+{
+  return object->priv->priority_offset;
 }

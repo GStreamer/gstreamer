@@ -55,7 +55,6 @@ struct _GESTimelineObjectPrivate
   /*< private > */
   /* A list of TrackObject controlled by this TimelineObject */
   GList *trackobjects;
-
 };
 
 enum
@@ -581,7 +580,7 @@ track_object_priority_offset_changed_cb (GESTrackObject * child,
   guint new, old;
 
   /* all track objects have height 1 */
-  new = GES_TRACK_OBJECT_PRIORITY_OFFSET (child) + 1;
+  new = ges_track_object_get_priority_offset (child) + 1;
   old = GES_TIMELINE_OBJECT_HEIGHT (obj);
 
   GST_LOG ("object %p, new=%d, old=%d", obj, new, old);
