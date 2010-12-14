@@ -250,6 +250,7 @@ setup (void)
   GstElement *vfbin;
   GstElement *fakevideosink;
   GstElement *src;
+  GstElement *testsrc;
 
   GST_INFO ("init");
 
@@ -258,6 +259,13 @@ setup (void)
   camera = gst_check_setup_element ("camerabin2");
   fakevideosink = gst_check_setup_element ("fakesink");
   src = gst_check_setup_element ("v4l2camerasrc");
+  testsrc = gst_check_setup_element ("videotestsrc");
+
+  g_object_set (G_OBJECT (testsrc), "is-live", TRUE, NULL);
+  g_object_set (G_OBJECT (src), "video-src", testsrc, NULL);
+  g_object_set (G_OBJECT (camera), "camera-src", src, NULL);
+  gst_object_unref (src);
+  gst_object_unref (testsrc);
 
   vfbin = gst_bin_get_by_name (GST_BIN (camera), "vf-bin");
   g_object_set (G_OBJECT (vfbin), "video-sink", fakevideosink, NULL);
