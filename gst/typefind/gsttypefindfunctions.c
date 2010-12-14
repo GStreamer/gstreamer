@@ -4063,6 +4063,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *msword_exts[] = { "doc", NULL };
   static const gchar *dsstore_exts[] = { "DS_Store", NULL };
   static const gchar *psd_exts[] = { "psd", NULL };
+  static const gchar *y4m_exts[] = { "y4m", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -4321,6 +4322,8 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER_START_WITH (plugin, "image/vnd.adobe.photoshop",
       GST_RANK_SECONDARY, psd_exts, "8BPS\000\001\000\000\000\000", 10,
       GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-yuv4mpeg",
+      GST_RANK_SECONDARY, y4m_exts, "YUV4MPEG2 ", 10, GST_TYPE_FIND_LIKELY);
 
 #ifdef USE_GIO
   TYPE_FIND_REGISTER (plugin, "xdgmime-base", GST_RANK_MARGINAL,
