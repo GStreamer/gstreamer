@@ -351,7 +351,16 @@ _gst_debug_init (void)
   _GST_CAT_DEBUG = _gst_debug_category_new ("GST_DEBUG",
       GST_DEBUG_BOLD | GST_DEBUG_FG_YELLOW, "debugging subsystem");
 
-  gst_debug_add_log_function (gst_debug_log_default, NULL);
+  /* we need to use the publicly visible address, so that one could remove it by
+   * the same address */
+  {
+    GModule *module = g_module_open (NULL, 0);
+    gpointer ptr;
+
+    g_module_symbol (module, "gst_debug_log_default", &ptr);
+    gst_debug_add_log_function (ptr, NULL);
+    g_module_close (module);
+  }
 
   /* FIXME: add descriptions here */
   GST_CAT_GST_INIT = _gst_debug_category_new ("GST_INIT",
