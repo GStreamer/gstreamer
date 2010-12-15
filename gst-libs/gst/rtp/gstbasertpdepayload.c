@@ -496,30 +496,58 @@ create_segment_event (GstBaseRTPDepayload * filter, gboolean update,
   return event;
 }
 
-static GstFlowReturn
-gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
-    gboolean do_ts, guint32 rtptime, GstBuffer * out_buf)
+typedef struct
 {
-  GstFlowReturn ret;
-  GstCaps *srccaps;
+  GstBaseRTPDepayload *depayload;
   GstBaseRTPDepayloadClass *bclass;
+  GstCaps *caps;
+  gboolean do_ts;
+  gboolean rtptime;
+} HeaderData;
+
+static GstBufferListItem
+set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
+{
+  GstBaseRTPDepayload *depayload = data->depayload;
+
+  *buffer = gst_buffer_make_metadata_writable (*buffer);
+  gst_buffer_set_caps (*buffer, data->caps);
+
+  /* set the timestamp if we must and can */
+  if (data->bclass->set_gst_timestamp && data->do_ts)
+    data->bclass->set_gst_timestamp (depayload, data->rtptime, *buffer);
+
+  if (G_UNLIKELY (depayload->priv->discont)) {
+    GST_LOG_OBJECT (depayload, "Marking DISCONT on output buffer");
+    GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_DISCONT);
+    depayload->priv->discont = FALSE;
+  }
+
+  return GST_BUFFER_LIST_SKIP_GROUP;
+}
+
+static GstFlowReturn
+gst_base_rtp_depayload_prepare_push (GstBaseRTPDepayload * filter,
+    gboolean do_ts, guint32 rtptime, gboolean is_list, gpointer obj)
+{
   GstBaseRTPDepayloadPrivate *priv;
+  HeaderData data;
 
   priv = filter->priv;
 
-  /* almost certainly required */
-  out_buf = gst_buffer_make_metadata_writable (out_buf);
+  data.depayload = filter;
+  data.caps = GST_PAD_CAPS (filter->srcpad);
+  data.rtptime = rtptime;
+  data.do_ts = do_ts;
+  data.bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
-  /* set the caps if any */
-  srccaps = GST_PAD_CAPS (filter->srcpad);
-  if (G_LIKELY (srccaps))
-    gst_buffer_set_caps (out_buf, srccaps);
-
-  bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
-
-  /* set the timestamp if we must and can */
-  if (bclass->set_gst_timestamp && do_ts)
-    bclass->set_gst_timestamp (filter, rtptime, out_buf);
+  if (is_list) {
+    gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj),
+        (GstBufferListFunc) set_headers, &data);
+  } else {
+    GstBuffer *buf = GST_BUFFER_CAST (obj);
+    set_headers (&buf, 0, 0, &data);
+  }
 
   /* if this is the first buffer send a NEWSEGMENT */
   if (G_UNLIKELY (filter->need_newsegment)) {
@@ -533,20 +561,7 @@ gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
     GST_DEBUG_OBJECT (filter, "Pushed newsegment event on this first buffer");
   }
 
-  if (G_UNLIKELY (priv->discont)) {
-    GST_LOG_OBJECT (filter, "Marking DISCONT on output buffer");
-    GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DISCONT);
-    priv->discont = FALSE;
-  }
-
-  /* push it */
-  GST_LOG_OBJECT (filter, "Pushing buffer size %d, timestamp %" GST_TIME_FORMAT,
-      GST_BUFFER_SIZE (out_buf),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out_buf)));
-
-  ret = gst_pad_push (filter->srcpad, out_buf);
-
-  return ret;
+  return GST_FLOW_OK;
 }
 
 /**
@@ -569,7 +584,18 @@ GstFlowReturn
 gst_base_rtp_depayload_push_ts (GstBaseRTPDepayload * filter, guint32 timestamp,
     GstBuffer * out_buf)
 {
-  return gst_base_rtp_depayload_push_full (filter, TRUE, timestamp, out_buf);
+  GstFlowReturn res;
+
+  res =
+      gst_base_rtp_depayload_prepare_push (filter, TRUE, timestamp, FALSE,
+      out_buf);
+
+  if (G_LIKELY (res == GST_FLOW_OK))
+    res = gst_pad_push (filter->srcpad, out_buf);
+  else
+    gst_buffer_unref (out_buf);
+
+  return res;
 }
 
 /**
@@ -589,7 +615,44 @@ gst_base_rtp_depayload_push_ts (GstBaseRTPDepayload * filter, guint32 timestamp,
 GstFlowReturn
 gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * out_buf)
 {
-  return gst_base_rtp_depayload_push_full (filter, FALSE, 0, out_buf);
+  GstFlowReturn res;
+
+  res = gst_base_rtp_depayload_prepare_push (filter, FALSE, 0, FALSE, out_buf);
+
+  if (G_LIKELY (res == GST_FLOW_OK))
+    res = gst_pad_push (filter->srcpad, out_buf);
+  else
+    gst_buffer_unref (out_buf);
+
+  return res;
+}
+
+/**
+ * gst_base_rtp_depayload_push_list:
+ * @filter: a #GstBaseRTPDepayload
+ * @out_list: a #GstBufferList
+ *
+ * Push @out_list to the peer of @filter. This function takes ownership of
+ * @out_list.
+ *
+ * Returns: a #GstFlowReturn.
+ *
+ * Since: 0.10.32
+ */
+GstFlowReturn
+gst_base_rtp_depayload_push_list (GstBaseRTPDepayload * filter,
+    GstBufferList * out_list)
+{
+  GstFlowReturn res;
+
+  res = gst_base_rtp_depayload_prepare_push (filter, TRUE, 0, TRUE, out_list);
+
+  if (G_LIKELY (res == GST_FLOW_OK))
+    res = gst_pad_push_list (filter->srcpad, out_list);
+  else
+    gst_buffer_list_unref (out_list);
+
+  return res;
 }
 
 /* convert the PacketLost event form a jitterbuffer to a segment update.

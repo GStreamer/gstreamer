@@ -128,6 +128,8 @@ GType gst_base_rtp_depayload_get_type (void);
 GstFlowReturn   gst_base_rtp_depayload_push              (GstBaseRTPDepayload *filter, GstBuffer *out_buf);
 GstFlowReturn   gst_base_rtp_depayload_push_ts           (GstBaseRTPDepayload *filter,
 		                                          guint32 timestamp, GstBuffer *out_buf);
+GstFlowReturn   gst_base_rtp_depayload_push_list         (GstBaseRTPDepayload *filter, GstBufferList *out_list);
+
 
 G_END_DECLS
 
