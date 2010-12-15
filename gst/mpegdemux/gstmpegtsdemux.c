@@ -671,7 +671,7 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
               DESC_DVB_SUBTITLING)) {
         template = klass->private_template;
         name = g_strdup_printf ("private_%04x", stream->PID);
-        caps = gst_caps_new_simple ("private/x-dvbsub", NULL);
+        caps = gst_caps_new_simple ("subpicture/x-dvb", NULL);
       }
       break;
     case ST_HDV_AUX_V:
