@@ -362,7 +362,7 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
  * the position is off the end of the layer.
  */
 
-GESTimelineObject *
+const GESTimelineObject *
 ges_simple_timeline_layer_nth (GESSimpleTimelineLayer * layer, gint position)
 {
   GList *list;

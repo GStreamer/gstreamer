@@ -66,7 +66,7 @@ GST_START_TEST (test_gsl_add)
   GESTimelineLayer *layer;
   GESTrack *track;
   GESCustomTimelineSource *source;
-  GESTimelineObject *source2;
+  const GESTimelineObject *source2;
 
   ges_init ();
   /* This is the simplest scenario ever */
