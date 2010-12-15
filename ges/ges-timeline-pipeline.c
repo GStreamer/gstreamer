@@ -95,7 +95,7 @@ ges_timeline_pipeline_dispose (GObject * object)
   }
 
   if (self->priv->profile) {
-    gst_encoding_profile_free (self->priv->profile);
+    gst_encoding_profile_unref (self->priv->profile);
     self->priv->profile = NULL;
   }
 
@@ -165,10 +165,9 @@ ges_timeline_pipeline_new (void)
   return g_object_new (GES_TYPE_TIMELINE_PIPELINE, NULL);
 }
 
-#define TRACK_COMPATIBLE_PROFILE(tracktype, proftype) \
-  (((proftype) == GST_ENCODING_PROFILE_AUDIO && (tracktype) == GES_TRACK_TYPE_AUDIO) || \
-  ((proftype) == GST_ENCODING_PROFILE_VIDEO && (tracktype) == GES_TRACK_TYPE_VIDEO) || \
-   ((proftype) == GST_ENCODING_PROFILE_TEXT && (tracktype) == GES_TRACK_TYPE_TEXT))
+#define TRACK_COMPATIBLE_PROFILE(tracktype, profile)			\
+  ( (GST_IS_ENCODING_AUDIO_PROFILE (profile) && (tracktype) == GES_TRACK_TYPE_AUDIO) || \
+    (GST_IS_ENCODING_VIDEO_PROFILE (profile) && (tracktype) == GES_TRACK_TYPE_VIDEO))
 
 static gboolean
 ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
@@ -186,19 +185,22 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
    * track to set the caps on */
   for (ltrack = tracks; ltrack; ltrack = ltrack->next) {
     GESTrack *track = (GESTrack *) ltrack->data;
+    GList *allstreams;
+
+    allstreams = (GList *)
+        gst_encoding_container_profile_get_profiles (
+        (GstEncodingContainerProfile *) self->priv->profile);
 
     /* Find a matching stream setting */
-    for (lstream = self->priv->profile->encodingprofiles; lstream;
-        lstream = lstream->next) {
-      GstStreamEncodingProfile *prof =
-          (GstStreamEncodingProfile *) lstream->data;
+    for (lstream = allstreams; lstream; lstream = lstream->next) {
+      GstEncodingProfile *prof = (GstEncodingProfile *) lstream->data;
 
-      if (TRACK_COMPATIBLE_PROFILE (track->type, prof->type)) {
+      if (TRACK_COMPATIBLE_PROFILE (track->type, prof)) {
         if (self->priv->mode == TIMELINE_MODE_SMART_RENDER) {
           GstCaps *ocaps, *rcaps;
 
           GST_DEBUG ("Smart Render mode, setting output caps");
-          ocaps = gst_stream_encoding_profile_get_output_caps (prof);
+          ocaps = gst_encoding_profile_get_output_caps (prof);
           if (track->type == GES_TRACK_TYPE_AUDIO)
             rcaps = gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
           else
@@ -251,8 +253,8 @@ ges_timeline_pipeline_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->priv->
-          mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      if (self->
+          priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
         GST_DEBUG ("rendering => Updating pipeline caps");
       if (!ges_timeline_pipeline_update_caps (self)) {
         GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
@@ -630,11 +632,12 @@ ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
   }
 
   if (pipeline->priv->profile)
-    gst_encoding_profile_free (pipeline->priv->profile);
+    gst_encoding_profile_unref (pipeline->priv->profile);
   g_object_set (pipeline->priv->encodebin, "use-smartencoder",
       !(!(pipeline->priv->mode & TIMELINE_MODE_SMART_RENDER)), NULL);
   g_object_set (pipeline->priv->encodebin, "profile", profile, NULL);
-  pipeline->priv->profile = gst_encoding_profile_copy (profile);
+  pipeline->priv->profile =
+      (GstEncodingProfile *) gst_encoding_profile_ref (profile);
 
   return TRUE;
 }

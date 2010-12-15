@@ -18,8 +18,8 @@
  */
 
 #include <ges/ges.h>
-#include <gst/profile/gstprofile.h>
 #include <gst/pbutils/gstdiscoverer.h>
+#include <gst/pbutils/encoding-profile.h>
 
 GstDiscovererInfo *get_info_for_file (GstDiscoverer * disco, gchar * filename);
 
@@ -51,15 +51,15 @@ get_info_for_file (GstDiscoverer * disco, gchar * filename)
 static GstEncodingProfile *
 make_profile_from_info (GstDiscovererInfo * info)
 {
-  GstEncodingProfile *profile = NULL;
+  GstEncodingContainerProfile *profile = NULL;
   GstDiscovererStreamInfo *sinfo = gst_discoverer_info_get_stream_info (info);
 
   /* Get the container format */
   if (GST_IS_DISCOVERER_CONTAINER_INFO (sinfo)) {
     GList *tmp, *substreams;
 
-    profile = gst_encoding_profile_new ((gchar *) "concatenate",
-        gst_discoverer_stream_info_get_caps (sinfo), NULL, FALSE);
+    profile = gst_encoding_container_profile_new ((gchar *) "concatenate", NULL,
+        gst_discoverer_stream_info_get_caps (sinfo), NULL);
 
     substreams =
         gst_discoverer_container_info_get_streams ((GstDiscovererContainerInfo
@@ -68,13 +68,20 @@ make_profile_from_info (GstDiscovererInfo * info)
     /* For each on the formats add stream profiles */
     for (tmp = substreams; tmp; tmp = tmp->next) {
       GstDiscovererStreamInfo *stream = GST_DISCOVERER_STREAM_INFO (tmp->data);
-      GstStreamEncodingProfile *sprof;
+      GstEncodingProfile *sprof;
 
-      sprof =
-          gst_stream_encoding_profile_new (GST_IS_DISCOVERER_VIDEO_INFO (stream)
-          ? GST_ENCODING_PROFILE_VIDEO : GST_ENCODING_PROFILE_AUDIO,
-          gst_discoverer_stream_info_get_caps (stream), NULL, NULL, 1);
-      gst_encoding_profile_add_stream (profile, sprof);
+      if (GST_IS_DISCOVERER_VIDEO_INFO (stream)) {
+        sprof = (GstEncodingProfile *)
+            gst_encoding_video_profile_new (gst_discoverer_stream_info_get_caps
+            (stream), NULL, NULL, 1);
+      } else if (GST_IS_DISCOVERER_AUDIO_INFO (stream)) {
+        sprof = (GstEncodingProfile *)
+            gst_encoding_audio_profile_new (gst_discoverer_stream_info_get_caps
+            (stream), NULL, NULL, 1);
+      } else
+        GST_WARNING ("Unsupported streams");
+
+      gst_encoding_container_profile_add_profile (profile, sprof);
     }
     if (substreams)
       gst_discoverer_stream_info_list_free (substreams);
@@ -85,7 +92,7 @@ make_profile_from_info (GstDiscovererInfo * info)
   if (sinfo)
     gst_discoverer_stream_info_unref (sinfo);
 
-  return profile;
+  return (GstEncodingProfile *) profile;
 }
 
 static void

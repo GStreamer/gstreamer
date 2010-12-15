@@ -26,7 +26,7 @@
 #include <string.h>
 #include <glib.h>
 #include <ges/ges.h>
-#include <gst/profile/gstprofile.h>
+#include <gst/pbutils/encoding-profile.h>
 #include <regex.h>
 
 /* GLOBAL VARIABLE */
@@ -165,29 +165,29 @@ static GstEncodingProfile *
 make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
     gchar * container)
 {
-  GstEncodingProfile *profile;
-  GstStreamEncodingProfile *stream;
+  GstEncodingContainerProfile *profile;
+  GstEncodingProfile *stream;
   GstCaps *caps;
 
   caps = gst_caps_from_string (container);
-  profile = gst_encoding_profile_new ((gchar *) "ges-test4", caps, NULL, FALSE);
+  profile =
+      gst_encoding_container_profile_new ((gchar *) "ges-test4", NULL, caps,
+      NULL);
   gst_caps_unref (caps);
 
   caps = gst_caps_from_string (audio);
-  stream =
-      gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_AUDIO,
-      caps, NULL, NULL, 0);
-  gst_encoding_profile_add_stream (profile, stream);
+  stream = (GstEncodingProfile *)
+      gst_encoding_audio_profile_new (caps, NULL, NULL, 0);
+  gst_encoding_container_profile_add_profile (profile, stream);
   gst_caps_unref (caps);
 
   caps = gst_caps_from_string (video);
-  stream = gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_VIDEO,
-      gst_caps_from_string (video),
-      NULL, gst_caps_from_string (video_restriction), 0);
-  gst_encoding_profile_add_stream (profile, stream);
+  stream = (GstEncodingProfile *)
+      gst_encoding_video_profile_new (caps, NULL, NULL, 0);
+  gst_encoding_container_profile_add_profile (profile, stream);
   gst_caps_unref (caps);
 
-  return profile;
+  return (GstEncodingProfile *) profile;
 }
 
 static GESTimeline *
@@ -544,7 +544,7 @@ main (int argc, gchar ** argv)
       exit (1);
 
     g_free (outputuri);
-    gst_encoding_profile_free (prof);
+    gst_encoding_profile_unref (prof);
   } else {
     ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
   }

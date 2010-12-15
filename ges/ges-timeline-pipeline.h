@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges.h>
-#include <gst/profile/gstprofile.h>
+#include <gst/pbutils/encoding-profile.h>
 
 G_BEGIN_DECLS
 

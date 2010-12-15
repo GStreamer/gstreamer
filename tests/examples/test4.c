@@ -18,7 +18,7 @@
  */
 
 #include <ges/ges.h>
-#include <gst/profile/gstprofile.h>
+#include <gst/pbutils/encoding-profile.h>
 
 GstEncodingProfile *make_ogg_vorbis_profile (void);
 
@@ -32,15 +32,14 @@ GstEncodingProfile *make_ogg_vorbis_profile (void);
 GstEncodingProfile *
 make_ogg_vorbis_profile (void)
 {
-  GstEncodingProfile *profile;
-  GstStreamEncodingProfile *audiostream;
+  GstEncodingContainerProfile *profile;
 
-  profile = gst_encoding_profile_new ((gchar *) "ges-test4",
-      gst_caps_new_simple ("application/ogg", NULL), NULL, FALSE);
-  audiostream = gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_AUDIO,
-      gst_caps_new_simple ("audio/x-vorbis", NULL), NULL, NULL, 1);
-  gst_encoding_profile_add_stream (profile, audiostream);
-  return profile;
+  profile = gst_encoding_container_profile_new ((gchar *) "ges-test4", NULL,
+      gst_caps_new_simple ("application/ogg", NULL), NULL);
+  gst_encoding_container_profile_add_profile (profile, (GstEncodingProfile *)
+      gst_encoding_audio_profile_new (gst_caps_new_simple ("audio/x-vorbis",
+              NULL), NULL, NULL, 1));
+  return (GstEncodingProfile *) profile;
 }
 
 int

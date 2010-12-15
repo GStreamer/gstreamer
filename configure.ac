@@ -51,7 +51,7 @@ AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=0.10.30.4
-GSTPB_REQ=0.10.30.4
+GSTPB_REQ=0.10.31.1
 
 dnl *** autotools stuff ****
 
@@ -155,14 +155,6 @@ AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_MAJORMINOR --variable pluginsdir`
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
-
-dnl check for gstreamer-profile
-PKG_CHECK_MODULES(GST_PROFILE, gstreamer-profile-$GST_MAJORMINOR, HAVE_GST_PROFILE="yes", HAVE_GST_PROFILE="no")
-if test "x$HAVE_GST_PROFILE" != "xyes"; then
-  AC_ERROR([gst-profile is required for rendering support])
-fi
-AC_SUBST(GST_PROFILE_LIBS)
-AC_SUBST(GST_PROFILE_CFLAGS)
 
 dnl check for gstreamer-pbutils
 PKG_CHECK_MODULES(GST_PBUTILS, gstreamer-pbutils-$GST_MAJORMINOR, HAVE_GST_PBUTILS="yes", HAVE_GST_PBUTILS="no")
