@@ -196,10 +196,10 @@ gst_rsvg_overlay_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_X:
-      g_value_set_uint (value, overlay->x_offset);
+      g_value_set_int (value, overlay->x_offset);
       break;
     case PROP_Y:
-      g_value_set_uint (value, overlay->y_offset);
+      g_value_set_int (value, overlay->y_offset);
       break;
     case PROP_FIT_TO_FRAME:
       g_value_set_boolean (value, overlay->fit_to_frame);
