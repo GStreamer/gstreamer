@@ -37,8 +37,14 @@ G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN);
 
 struct _GESTrackPrivate
 {
-  /* Dummy variable */
-  void *nothing;
+  /*< private > */
+  GESTimeline *timeline;
+  GList *trackobjects;
+
+  GstCaps *caps;
+
+  GstElement *composition;      /* The composition associated with this track */
+  GstPad *srcpad;               /* The source GhostPad */
 };
 
 enum
@@ -61,7 +67,7 @@ ges_track_get_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case ARG_CAPS:
-      gst_value_set_caps (value, track->caps);
+      gst_value_set_caps (value, track->priv->caps);
       break;
     case ARG_TYPE:
       g_value_set_flags (value, track->type);
@@ -93,21 +99,22 @@ static void
 ges_track_dispose (GObject * object)
 {
   GESTrack *track = (GESTrack *) object;
+  GESTrackPrivate *priv = track->priv;
 
-  while (track->trackobjects) {
-    GESTrackObject *trobj = GES_TRACK_OBJECT (track->trackobjects->data);
+  while (priv->trackobjects) {
+    GESTrackObject *trobj = GES_TRACK_OBJECT (priv->trackobjects->data);
     ges_track_remove_object (track, trobj);
     ges_timeline_object_release_track_object (trobj->timelineobj, trobj);
   }
 
-  if (track->composition) {
-    gst_bin_remove (GST_BIN (object), track->composition);
-    track->composition = NULL;
+  if (priv->composition) {
+    gst_bin_remove (GST_BIN (object), priv->composition);
+    priv->composition = NULL;
   }
 
-  if (track->caps) {
-    gst_caps_unref (track->caps);
-    track->caps = NULL;
+  if (priv->caps) {
+    gst_caps_unref (priv->caps);
+    priv->caps = NULL;
   }
 
   G_OBJECT_CLASS (ges_track_parent_class)->dispose (object);
@@ -167,14 +174,14 @@ ges_track_init (GESTrack * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK, GESTrackPrivate);
 
-  self->composition = gst_element_factory_make ("gnlcomposition", NULL);
+  self->priv->composition = gst_element_factory_make ("gnlcomposition", NULL);
 
-  g_signal_connect (self->composition, "pad-added", (GCallback) pad_added_cb,
-      self);
-  g_signal_connect (self->composition, "pad-removed",
+  g_signal_connect (self->priv->composition, "pad-added",
+      (GCallback) pad_added_cb, self);
+  g_signal_connect (self->priv->composition, "pad-removed",
       (GCallback) pad_removed_cb, self);
 
-  if (!gst_bin_add (GST_BIN (self), self->composition))
+  if (!gst_bin_add (GST_BIN (self), self->priv->composition))
     GST_ERROR ("Couldn't add composition to bin !");
 }
 
@@ -239,12 +246,19 @@ ges_track_audio_raw_new (void)
   return track;
 }
 
+/**
+ * ges_track_set_timeline:
+ * @track: a #GESTrack
+ * @timeline: a #GESTimeline
+ *
+ * Sets @timeline as the timeline controlling @track.
+ */
 void
 ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
 {
   GST_DEBUG ("track:%p, timeline:%p", track, timeline);
 
-  track->timeline = timeline;
+  track->priv->timeline = timeline;
 }
 
 /**
@@ -257,15 +271,20 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
 void
 ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 {
-  GST_DEBUG ("track:%p, caps:%" GST_PTR_FORMAT, track, caps);
+  GESTrackPrivate *priv;
 
+  g_return_if_fail (GES_IS_TRACK (track));
   g_return_if_fail (GST_IS_CAPS (caps));
 
-  if (track->caps)
-    gst_caps_unref (track->caps);
-  track->caps = gst_caps_copy (caps);
+  GST_DEBUG ("track:%p, caps:%" GST_PTR_FORMAT, track, caps);
 
-  g_object_set (track->composition, "caps", caps, NULL);
+  priv = track->priv;
+
+  if (priv->caps)
+    gst_caps_unref (priv->caps);
+  priv->caps = gst_caps_copy (caps);
+
+  g_object_set (priv->composition, "caps", caps, NULL);
   /* FIXME : update all trackobjects ? */
 }
 
@@ -282,6 +301,9 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 gboolean
 ges_track_add_object (GESTrack * track, GESTrackObject * object)
 {
+  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+
   GST_DEBUG ("track:%p, object:%p", track, object);
 
   if (G_UNLIKELY (object->track != NULL)) {
@@ -302,13 +324,13 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
   GST_DEBUG ("Adding object to ourself");
 
   /* make sure the object has a valid gnlobject ! */
-  if (G_UNLIKELY (!gst_bin_add (GST_BIN (track->composition),
+  if (G_UNLIKELY (!gst_bin_add (GST_BIN (track->priv->composition),
               object->gnlobject))) {
     GST_WARNING ("Couldn't add object to the GnlComposition");
     return FALSE;
   }
 
-  track->trackobjects = g_list_append (track->trackobjects, object);
+  track->priv->trackobjects = g_list_append (track->priv->trackobjects, object);
 
   return TRUE;
 }
@@ -326,7 +348,14 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
 gboolean
 ges_track_remove_object (GESTrack * track, GESTrackObject * object)
 {
+  GESTrackPrivate *priv;
+
+  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+
   GST_DEBUG ("track:%p, object:%p", track, object);
+
+  priv = track->priv;
 
   if (G_UNLIKELY (object->track != track)) {
     GST_WARNING ("Object belongs to another track");
@@ -335,14 +364,14 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
 
   if (G_LIKELY (object->gnlobject != NULL)) {
     GST_DEBUG ("Removing GnlObject from composition");
-    if (!gst_bin_remove (GST_BIN (track->composition), object->gnlobject)) {
+    if (!gst_bin_remove (GST_BIN (priv->composition), object->gnlobject)) {
       GST_WARNING ("Failed to remove gnlobject from composition");
       return FALSE;
     }
   }
 
   ges_track_object_set_track (object, NULL);
-  track->trackobjects = g_list_remove (track->trackobjects, object);
+  priv->trackobjects = g_list_remove (priv->trackobjects, object);
 
   return TRUE;
 }
@@ -350,14 +379,16 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
 static void
 pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track)
 {
+  GESTrackPrivate *priv = track->priv;
+
   GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
 
   /* ghost the pad */
-  track->srcpad = gst_ghost_pad_new ("src", pad);
+  priv->srcpad = gst_ghost_pad_new ("src", pad);
 
-  gst_pad_set_active (track->srcpad, TRUE);
+  gst_pad_set_active (priv->srcpad, TRUE);
 
-  gst_element_add_pad (GST_ELEMENT (track), track->srcpad);
+  gst_element_add_pad (GST_ELEMENT (track), priv->srcpad);
 
   GST_DEBUG ("done");
 }
@@ -365,13 +396,43 @@ pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track)
 static void
 pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track)
 {
+  GESTrackPrivate *priv = track->priv;
+
   GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
 
-  if (G_LIKELY (track->srcpad)) {
-    gst_pad_set_active (track->srcpad, FALSE);
-    gst_element_remove_pad (GST_ELEMENT (track), track->srcpad);
-    track->srcpad = NULL;
+  if (G_LIKELY (priv->srcpad)) {
+    gst_pad_set_active (priv->srcpad, FALSE);
+    gst_element_remove_pad (GST_ELEMENT (track), priv->srcpad);
+    priv->srcpad = NULL;
   }
 
   GST_DEBUG ("done");
+}
+
+/**
+ * ges_track_get_caps:
+ * @track: a #GESTrack
+ *
+ * Returns: The #GstCaps this track is configured to output.
+ */
+const GstCaps *
+ges_track_get_caps (GESTrack * track)
+{
+  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+
+  return track->priv->caps;
+}
+
+/**
+ * ges_track_get_timeline:
+ * @track: a #GESTrack
+ *
+ * Returns: The #GESTimeline this track belongs to. Can be %NULL.
+ */
+const GESTimeline *
+ges_track_get_timeline (GESTrack * track)
+{
+  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+
+  return track->priv->timeline;
 }

@@ -201,7 +201,7 @@ GST_START_TEST (test_keyfile_save)
   GST_DEBUG ("Removing track from the timeline");
   g_object_ref (track);
   fail_unless (ges_timeline_remove_track (timeline, track));
-  fail_unless (track->timeline == NULL);
+  fail_unless (ges_track_get_timeline (track) == NULL);
   ASSERT_OBJECT_REFCOUNT (track, "track", 1);
   g_object_unref (track);
 

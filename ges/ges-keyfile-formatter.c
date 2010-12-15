@@ -90,7 +90,7 @@ save_keyfile (GESFormatter * keyfile_formatter, GESTimeline * timeline)
     g_object_get_property (G_OBJECT (track), "track-type", &v);
 
     type = gst_value_serialize (&v);
-    caps = gst_caps_to_string (track->caps);
+    caps = gst_caps_to_string (ges_track_get_caps (track));
 
     g_key_file_set_value (kf, buffer, "type", type);
     g_key_file_set_string (kf, buffer, "caps", caps);

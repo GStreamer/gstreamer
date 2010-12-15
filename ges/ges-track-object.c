@@ -631,7 +631,7 @@ ensure_gnl_object (GESTrackObject * object)
     if (res) {
       /* Set some properties on the GnlObject */
       g_object_set (object->gnlobject,
-          "caps", object->track->caps,
+          "caps", ges_track_get_caps (object->track),
           "duration", object->pending_duration,
           "media-duration", object->pending_duration,
           "start", object->pending_start,

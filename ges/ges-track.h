@@ -60,15 +60,6 @@ struct _GESTrack {
   /* READ-ONLY */
   GESTrackType type;
 
-  /*< private >*/
-  GESTimeline * timeline;
-  GList * trackobjects;
-
-  GstCaps * caps;
-
-  GstElement * composition;	/* The composition associated with this track */
-  GstPad * srcpad;		/* The source GhostPad */
-
   GESTrackPrivate * priv;
 
   /* Padding for API extension */
@@ -91,11 +82,17 @@ GType ges_track_get_type (void);
 
 GESTrack* ges_track_new (GESTrackType type, GstCaps * caps);
 
-void ges_track_set_timeline (GESTrack * track, GESTimeline *timeline);
-void ges_track_set_caps (GESTrack * track, const GstCaps * caps);
+void		ges_track_set_timeline (GESTrack * track,
+					GESTimeline *timeline);
+void		ges_track_set_caps     (GESTrack * track,
+					const GstCaps * caps);
+const GstCaps * ges_track_get_caps     (GESTrack *track);
+const GESTimeline *ges_track_get_timeline (GESTrack *track);
 
-gboolean ges_track_add_object (GESTrack * track, GESTrackObject * object);
-gboolean ges_track_remove_object (GESTrack * track, GESTrackObject * object);
+gboolean ges_track_add_object    (GESTrack * track,
+				  GESTrackObject * object);
+gboolean ges_track_remove_object (GESTrack * track,
+				  GESTrackObject * object);
 
 GESTrack *ges_track_video_raw_new (void);
 GESTrack *ges_track_audio_raw_new (void);

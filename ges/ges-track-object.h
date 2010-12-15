@@ -80,8 +80,6 @@ typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
  * @start: Position (in nanoseconds) of the object the track.
  * @inpoint: in-point (in nanoseconds) of the object in the track.
  * @duration: Duration of the object.
- * @base_priority: base priority of the object in the track (0:top priority)
- * @priority_offset: priority relative to its parent timeline object.
  * @gnl_priority: the cached gnl priority (base + offset)
  * @active: Whether the object is to be used or not.
  *

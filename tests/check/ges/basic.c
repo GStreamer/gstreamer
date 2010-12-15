@@ -82,9 +82,10 @@ GST_START_TEST (test_ges_scenario)
 
   GST_DEBUG ("Add the track to the timeline");
   fail_unless (ges_timeline_add_track (timeline, track));
+
   /* The timeline steals the reference to the track */
   ASSERT_OBJECT_REFCOUNT (track, "track", 1);
-  fail_unless (track->timeline == timeline);
+  fail_unless (ges_track_get_timeline (track) == timeline);
   fail_unless ((gpointer) GST_ELEMENT_PARENT (track) == (gpointer) timeline);
 
   /* Create a source and add it to the Layer */
@@ -132,7 +133,7 @@ GST_START_TEST (test_ges_scenario)
   /* Remove the track from the timeline */
   g_object_ref (track);
   fail_unless (ges_timeline_remove_track (timeline, track));
-  fail_unless (track->timeline == NULL);
+  fail_unless (ges_track_get_timeline (track) == NULL);
   fail_unless (timeline->tracks == NULL);
   ASSERT_OBJECT_REFCOUNT (track, "track", 1);
   g_object_unref (track);
@@ -185,7 +186,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   fail_unless (ges_timeline_add_track (timeline, track));
   /* The timeline steals the reference to the track */
   ASSERT_OBJECT_REFCOUNT (track, "track", 1);
-  fail_unless (track->timeline == timeline);
+  fail_unless (ges_track_get_timeline (track) == timeline);
   fail_unless ((gpointer) GST_ELEMENT_PARENT (track) == (gpointer) timeline);
 
   /* Create a source and add it to the Layer */
@@ -321,7 +322,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   GST_DEBUG ("Add the track to the timeline");
   fail_unless (ges_timeline_add_track (timeline, track));
   ASSERT_OBJECT_REFCOUNT (track, "track", 1);
-  fail_unless (track->timeline == timeline);
+  fail_unless (ges_track_get_timeline (track) == timeline);
   fail_unless ((gpointer) GST_ELEMENT_PARENT (track) == (gpointer) timeline);
 
   /* Make sure the associated TrackObjects are in the Track */
@@ -417,7 +418,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
   GST_DEBUG ("Add the track to the timeline");
   fail_unless (ges_timeline_add_track (timeline, track));
   ASSERT_OBJECT_REFCOUNT (track, "track", 1);
-  fail_unless (track->timeline == timeline);
+  fail_unless (ges_track_get_timeline (track) == timeline);
   fail_unless ((gpointer) GST_ELEMENT_PARENT (track) == (gpointer) timeline);
 
   /* Make sure the associated TrackObjects are in the Track */

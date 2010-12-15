@@ -47,10 +47,12 @@ ges_track_new
 ges_track_add_object
 ges_track_remove_object
 ges_track_set_caps
+ges_track_get_caps
 <SUBSECTION Standard>
 GESTrackClass
 GESTrackPrivate
 ges_track_set_timeline
+ges_track_get_timeline
 ges_track_get_type
 GES_IS_TRACK
 GES_IS_TRACK_CLASS
@@ -65,13 +67,12 @@ GES_TYPE_TRACK
 <TITLE>GESTrackObject</TITLE>
 GESTrackObject
 GESTrackObjectClass
-GES_TRACK_OBJECT_DURATION
-GES_TRACK_OBJECT_INPOINT
-GES_TRACK_OBJECT_PRIORITY
-GES_TRACK_OBJECT_PRIORITY_OFFSET
-GES_TRACK_OBJECT_START
 ges_track_object_set_active
 <SUBSECTION Standard>
+GES_TRACK_OBJECT_DURATION
+GES_TRACK_OBJECT_INPOINT
+GES_TRACK_OBJECT_START
+ges_track_object_get_priority_offset
 GESTrackObjectPrivate
 ges_track_object_set_timeline_object
 ges_track_object_set_track
