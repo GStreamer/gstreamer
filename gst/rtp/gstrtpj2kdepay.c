@@ -56,10 +56,24 @@ typedef enum
   J2K_MARKER_EOC = 0xD9
 } RtpJ2KMarker;
 
+#define DEFAULT_BUFFER_LIST             TRUE
+
+enum
+{
+  PROP_0,
+  PROP_BUFFER_LIST,
+  PROP_LAST
+};
+
 GST_BOILERPLATE (GstRtpJ2KDepay, gst_rtp_j2k_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void gst_rtp_j2k_depay_finalize (GObject * object);
+
+static void gst_rtp_j2k_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_rtp_j2k_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn
 gst_rtp_j2k_depay_change_state (GstElement * element,
@@ -99,6 +113,14 @@ gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
 
   gobject_class->finalize = gst_rtp_j2k_depay_finalize;
 
+  gobject_class->set_property = gst_rtp_j2k_depay_set_property;
+  gobject_class->get_property = gst_rtp_j2k_depay_get_property;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_LIST,
+      g_param_spec_boolean ("buffer-list", "Buffer List",
+          "Use Buffer Lists",
+          DEFAULT_BUFFER_LIST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_rtp_j2k_depay_change_state;
 
   gstbasertpdepayload_class->set_caps = gst_rtp_j2k_depay_setcaps;
@@ -112,6 +134,8 @@ static void
 gst_rtp_j2k_depay_init (GstRtpJ2KDepay * rtpj2kdepay,
     GstRtpJ2KDepayClass * klass)
 {
+  rtpj2kdepay->buffer_list = DEFAULT_BUFFER_LIST;
+
   rtpj2kdepay->pu_adapter = gst_adapter_new ();
   rtpj2kdepay->t_adapter = gst_adapter_new ();
   rtpj2kdepay->f_adapter = gst_adapter_new ();
@@ -350,7 +374,7 @@ gst_rtp_j2k_depay_flush_frame (GstBaseRTPDepayload * depayload)
   guint8 end[2];
   guint8 *data;
   guint avail;
-  GstBuffer *outbuf;
+
   GstFlowReturn ret = GST_FLOW_OK;
 
   rtpj2kdepay = GST_RTP_J2K_DEPAY (depayload);
@@ -364,6 +388,8 @@ gst_rtp_j2k_depay_flush_frame (GstBaseRTPDepayload * depayload)
     goto done;
 
   if (avail > 2) {
+    GstBuffer *outbuf;
+
     /* take the last bytes of the JPEG 2000 data to see if there is an EOC
      * marker */
     gst_adapter_copy (rtpj2kdepay->f_adapter, end, avail - 2, 2);
@@ -381,9 +407,26 @@ gst_rtp_j2k_depay_flush_frame (GstBaseRTPDepayload * depayload)
       avail += 2;
     }
 
-    GST_DEBUG_OBJECT (rtpj2kdepay, "pushing %u bytes", avail);
-    outbuf = gst_adapter_take_buffer (rtpj2kdepay->f_adapter, avail);
-    ret = gst_base_rtp_depayload_push (depayload, outbuf);
+    if (rtpj2kdepay->buffer_list) {
+      GList *list;
+      GstBufferList *buflist;
+      GstBufferListIterator *it;
+
+      GST_DEBUG_OBJECT (rtpj2kdepay, "pushing buffer list of %u bytes", avail);
+      list = gst_adapter_take_list (rtpj2kdepay->f_adapter, avail);
+
+      buflist = gst_buffer_list_new ();
+      it = gst_buffer_list_iterate (buflist);
+      gst_buffer_list_iterator_add_group (it);
+      gst_buffer_list_iterator_add_list (it, list);
+      gst_buffer_list_iterator_free (it);
+
+      ret = gst_base_rtp_depayload_push_list (depayload, buflist);
+    } else {
+      GST_DEBUG_OBJECT (rtpj2kdepay, "pushing buffer of %u bytes", avail);
+      outbuf = gst_adapter_take_buffer (rtpj2kdepay->f_adapter, avail);
+      ret = gst_base_rtp_depayload_push (depayload, outbuf);
+    }
   } else {
     GST_WARNING_OBJECT (rtpj2kdepay, "empty packet");
     gst_adapter_clear (rtpj2kdepay->f_adapter);
@@ -552,6 +595,42 @@ wrong_mh_id:
         (NULL));
     gst_rtp_j2k_depay_clear_pu (rtpj2kdepay);
     return NULL;
+  }
+}
+
+static void
+gst_rtp_j2k_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpJ2KDepay *rtpj2kdepay;
+
+  rtpj2kdepay = GST_RTP_J2K_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_BUFFER_LIST:
+      rtpj2kdepay->buffer_list = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_j2k_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpJ2KDepay *rtpj2kdepay;
+
+  rtpj2kdepay = GST_RTP_J2K_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_BUFFER_LIST:
+      g_value_set_boolean (value, rtpj2kdepay->buffer_list);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
 }
 
