@@ -87,6 +87,10 @@ ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer *layer,
 gboolean
 ges_simple_timeline_layer_is_valid (GESSimpleTimelineLayer *layer);
 
+GESTimelineObject *
+ges_simple_timeline_layer_nth (GESSimpleTimelineLayer *layer,
+			       gint position);
+
 G_END_DECLS
 
 #endif /* _GES_SIMPLE_TIMELINE_LAYER */

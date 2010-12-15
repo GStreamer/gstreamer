@@ -348,6 +348,31 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
 }
 
 /**
+ * ges_simple_timeline_layer_nth:
+ * @layer: a #GESSimpleTimelineLayer
+ * @position: The position in position to get, starting from 0.
+ *
+ * Gets the timeline object at the given position.
+ *
+ * Returns: The #GESTimelineObject at the given position or NULL if
+ * the position is off the end of the layer.
+ */
+
+GESTimelineObject *
+ges_simple_timeline_layer_nth (GESSimpleTimelineLayer * layer, gint position)
+{
+  GList *list;
+  GESSimpleTimelineLayerPrivate *priv = layer->priv;
+
+  list = g_list_nth (priv->objects, position);
+
+  if (list)
+    return GES_TIMELINE_OBJECT (list->data);
+
+  return NULL;
+}
+
+/**
  * ges_simple_timeline_layer_move_object:
  * @layer: a #GESSimpleTimelineLayer
  * @object: the #GESTimelineObject to move

@@ -445,6 +445,7 @@ GESSimpleTimelineLayer
 ges_simple_timeline_layer_new
 ges_simple_timeline_layer_add_object
 ges_simple_timeline_layer_move_object
+ges_simple_timeline_layer_nth
 ges_simple_timeline_layer_is_valid
 <SUBSECTION Standard>
 GESSimpleTimelineLayerClass
