@@ -120,8 +120,11 @@ ges_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, test_text_properties_in_layer);
-
+  /* Disabled until adding overlays/effect to generic sources
+   * is re-added. (Edward, 15th Dec 2010) */
+  if (0) {
+    tcase_add_test (tc_chain, test_text_properties_in_layer);
+  }
   return s;
 }
 
