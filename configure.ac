@@ -289,5 +289,8 @@ tools/Makefile
 docs/Makefile
 docs/version.entities
 docs/libs/Makefile
+pkgconfig/Makefile
+pkgconfig/gst-editing-services.pc
+pkgconfig/gst-editing-services-uninstalled.pc
 )
 AC_OUTPUT

@@ -1,0 +1,12 @@
+# the standard variables don't make sense for an uninstalled copy
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../ges
+includedir=${pcfiledir}/..
+
+Name: gst-editing-services
+Description: GStreamer Editing Services
+Version: @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-plugins-base-@GST_MAJORMINOR@
+Libs: ${libdir}/libges-@GST_MAJORMINOR@
+Cflags: -I${includedir} -I@srcdir@/..
