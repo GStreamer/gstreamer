@@ -65,7 +65,7 @@ typedef gboolean (*GESFillTrackObjectFunc) (GESTimelineObject * object,
                     GstElement * gnlobj);
 
 /**
- * CreateTrackObjectFunc:
+ * GESCreateTrackObjectFunc:
  * @object: a #GESTimelineObject
  * @track: a #GESTrack
  *
@@ -87,11 +87,11 @@ typedef gboolean (*GESFillTrackObjectFunc) (GESTimelineObject * object,
  * Returns: the #GESTrackObject to be used, or %NULL if it can't provide one
  * for the given @track.
  */
-typedef GESTrackObject* (*CreateTrackObjectFunc) (GESTimelineObject * object,
+typedef GESTrackObject* (*GESCreateTrackObjectFunc) (GESTimelineObject * object,
                          GESTrack * track);
 
 /**
- * CreateTrackObjectsFunc:
+ * GESCreateTrackObjectsFunc:
  * @object: a #GESTimelineObject
  * @track: a #GESTrack
  *
@@ -106,7 +106,7 @@ typedef GESTrackObject* (*CreateTrackObjectFunc) (GESTimelineObject * object,
  *
  * Returns: %TRUE on success %FALSE on failure.
  */
-typedef gboolean (*CreateTrackObjectsFunc) (GESTimelineObject * object,
+typedef gboolean (*GESCreateTrackObjectsFunc) (GESTimelineObject * object,
                                             GESTrack *track);
 
 /**
@@ -189,8 +189,8 @@ struct _GESTimelineObjectClass {
   GObjectClass parent_class;
 
   /*< public >*/
-  CreateTrackObjectFunc create_track_object;
-  CreateTrackObjectsFunc create_track_objects;
+  GESCreateTrackObjectFunc create_track_object;
+  GESCreateTrackObjectsFunc create_track_objects;
 
   /* FIXME : might need a release_track_object */
   GESFillTrackObjectFunc  fill_track_object;

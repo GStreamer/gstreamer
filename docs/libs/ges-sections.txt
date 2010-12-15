@@ -263,8 +263,8 @@ GES_TYPE_TIMELINE_LAYER
 <TITLE>GESTimelineObject</TITLE>
 GESTimelineObject
 GESTimelineObjectClass
-CreateTrackObjectFunc
-CreateTrackObjectsFunc
+GESCreateTrackObjectFunc
+GESCreateTrackObjectsFunc
 GESFillTrackObjectFunc
 ges_timeline_object_set_inpoint
 ges_timeline_object_set_start
