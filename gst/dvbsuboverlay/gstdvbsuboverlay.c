@@ -58,6 +58,9 @@ enum
   PROP_MAX_PAGE_TIMEOUT,
 };
 
+#define DEFAULT_ENABLE (TRUE)
+#define DEFAULT_MAX_PAGE_TIMEOUT (0)
+
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -142,13 +145,14 @@ gst_dvbsub_overlay_class_init (GstDVBSubOverlayClass * klass)
   gobject_class->finalize = gst_dvbsub_overlay_finalize;
 
   g_object_class_install_property (gobject_class, PROP_ENABLE, g_param_spec_boolean ("enable", "Enable",        /* FIXME: "enable" vs "silent"? */
-          "Enable rendering of subtitles", TRUE,
+          "Enable rendering of subtitles", DEFAULT_ENABLE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAX_PAGE_TIMEOUT,
       g_param_spec_int ("max-page-timeout", "max-page-timeout",
           "Limit maximum display time of a subtitle page (0 - disabled, value in seconds)",
-          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0, G_MAXINT, DEFAULT_MAX_PAGE_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_change_state);
@@ -249,7 +253,8 @@ gst_dvbsub_overlay_init (GstDVBSubOverlay * render,
   render->current_subtitle = NULL;
   render->pending_subtitles = g_queue_new ();
 
-  render->enable = TRUE;
+  render->enable = DEFAULT_ENABLE;
+  render->max_page_timeout = DEFAULT_MAX_PAGE_TIMEOUT;
 
   render->dvbsub_mutex = g_mutex_new ();
   gst_dvbsub_overlay_flush_subtitles (render);
