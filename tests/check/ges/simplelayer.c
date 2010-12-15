@@ -66,6 +66,7 @@ GST_START_TEST (test_gsl_add)
   GESTimelineLayer *layer;
   GESTrack *track;
   GESCustomTimelineSource *source;
+  GESTimelineObject *source2;
 
   ges_init ();
   /* This is the simplest scenario ever */
@@ -89,6 +90,15 @@ GST_START_TEST (test_gsl_add)
       layer);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source), GST_SECOND);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source), 0);
+
+  /* test nth */
+  source2 =
+      ges_simple_timeline_layer_nth ((GESSimpleTimelineLayer *) layer, -1);
+  fail_if (source2);
+  source2 = ges_simple_timeline_layer_nth ((GESSimpleTimelineLayer *) layer, 2);
+  fail_if (source2);
+  source2 = ges_simple_timeline_layer_nth ((GESSimpleTimelineLayer *) layer, 0);
+  fail_unless ((GESTimelineObject *) source == source2);
 
   fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source)));
