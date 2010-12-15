@@ -1,3 +1,4 @@
+/* vim: set filetype=c: */
 % ClassName
 GstVideoSink
 % TYPE_CLASS_NAME

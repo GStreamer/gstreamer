@@ -2,6 +2,7 @@
 
 
 prefix=gst
+templatedir=element-templates
 
 while [ "$1" ] ; do
   case $1 in
@@ -43,7 +44,7 @@ if [ "$name" = "" -o "$class" = "" ] ; then
   exit 1
 fi
 
-if [ ! -f "gst$class.c" ] ; then
+if [ ! -f "element-templates/$class" ] ; then
   echo "Template file for $class not found."
   exit 1
 fi
@@ -69,11 +70,11 @@ if [ "$EMAIL_ADDRESS" = "" ] ; then
   EMAIL_ADDRESS=fixme@example.com
 fi
 
-source=gst$class.c
-pkg=`grep -A 10000 '^% pkg-config' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
-GST_TYPE_BASE_REPLACE=`grep -A 10000 '^% TYPE_CLASS_NAME' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
-GstBaseReplace=`grep -A 10000 '^% ClassName' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
-pads=`grep -A 10000 '^% pads' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+
+pkg=`grep -A 10000 '^% pkg-config' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+GST_TYPE_BASE_REPLACE=`grep -A 10000 '^% TYPE_CLASS_NAME' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+GstBaseReplace=`grep -A 10000 '^% ClassName' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+pads=`grep -A 10000 '^% pads' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
 
 generate ()
 {
@@ -115,7 +116,7 @@ cat <<-EOF
  */
 EOF
 
-#grep -A 10000 '^% copyright' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+#grep -A 10000 '^% copyright' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
 cat <<EOF
 
@@ -125,9 +126,9 @@ cat <<EOF
 
 EOF
 
-grep -A 10000 '^% includes' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% includes' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% includes' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
 cat <<EOF
 #include "gstreplace.h"
@@ -136,12 +137,12 @@ cat <<EOF
 
 EOF
 
-grep -A 10000 '^% prototypes' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% prototypes' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% prototypes' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% prototypes' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% prototypes' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% prototypes' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 for each in $pads
 do
-  grep -A 10000 '^% prototypes' $each.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+  grep -A 10000 '^% prototypes' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 done
 
 cat <<EOF
@@ -157,7 +158,7 @@ EOF
 
 for each in $pads
 do
-  grep -A 10000 '^% pad-template' $each.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+  grep -A 10000 '^% pad-template' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 done
 
 cat <<EOF
@@ -176,7 +177,7 @@ EOF
 
 for each in $pads
 do
-  grep -A 10000 '^% base-init' $each.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+  grep -A 10000 '^% base-init' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 done
 
 cat <<EOF
@@ -189,15 +190,15 @@ static void
 gst_replace_class_init (GstReplaceClass * klass)
 {
 EOF
-grep -A 10000 '^% declare-class' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% declare-class' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% declare-class' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% declare-class' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% declare-class' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% declare-class' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
 echo
 
-grep -A 10000 '^% set-methods' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% set-methods' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% set-methods' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% set-methods' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% set-methods' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% set-methods' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
 cat <<EOF
 
@@ -210,7 +211,7 @@ EOF
 
 for each in $pads
 do
-  grep -A 10000 '^% instance-init' $each.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+  grep -A 10000 '^% instance-init' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 done
 
 
@@ -219,12 +220,12 @@ cat <<EOF
 EOF
 
 
-grep -A 10000 '^% methods' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% methods' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% methods' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% methods' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% methods' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% methods' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 for each in $pads
 do
-  grep -A 10000 '^% methods' $each.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+  grep -A 10000 '^% methods' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 done
 
 
@@ -267,7 +268,7 @@ EOF
 generate_header ()
 {
 
-grep -A 10000 '^% copyright' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% copyright' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
 cat <<EOF
 #ifndef _GST_REPLACE_H_
@@ -275,9 +276,9 @@ cat <<EOF
 
 EOF
 
-grep -A 10000 '^% includes' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% includes' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-grep -A 10000 '^% includes' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
 cat <<EOF
 
@@ -305,7 +306,7 @@ EOF
 
 for each in $pads
 do
-  grep -A 10000 '^% instance-members' $each.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+  grep -A 10000 '^% instance-members' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 done
 
 cat <<EOF

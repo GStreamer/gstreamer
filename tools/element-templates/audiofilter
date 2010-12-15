@@ -1,3 +1,4 @@
+/* vim: set filetype=c: */
 % ClassName
 GstAudioFilter
 % TYPE_CLASS_NAME

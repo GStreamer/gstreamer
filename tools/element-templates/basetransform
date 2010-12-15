@@ -1,3 +1,4 @@
+/* vim: set filetype=c: */
 % ClassName
 GstBaseTransform
 % TYPE_CLASS_NAME

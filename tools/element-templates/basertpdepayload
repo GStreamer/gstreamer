@@ -1,3 +1,4 @@
+/* vim: set filetype=c: */
 % ClassName
 GstBaseRTPDepayload
 % TYPE_CLASS_NAME
