@@ -10,6 +10,7 @@ EXPORTS
 	gst_base_rtp_audio_payload_set_samplebits_options
 	gst_base_rtp_depayload_get_type
 	gst_base_rtp_depayload_push
+	gst_base_rtp_depayload_push_list
 	gst_base_rtp_depayload_push_ts
 	gst_basertppayload_get_type
 	gst_basertppayload_is_filled
