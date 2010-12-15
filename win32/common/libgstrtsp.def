@@ -93,6 +93,7 @@ EXPORTS
 	gst_rtsp_transport_new
 	gst_rtsp_transport_parse
 	gst_rtsp_url_copy
+	gst_rtsp_url_decode_path_components
 	gst_rtsp_url_free
 	gst_rtsp_url_get_port
 	gst_rtsp_url_get_request_uri
