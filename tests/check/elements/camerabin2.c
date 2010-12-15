@@ -322,9 +322,15 @@ validity_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
 /* Validate captured files by playing them with playbin
  * and checking that no errors occur. */
 static gboolean
-check_file_validity (const gchar * filename, gint num, GstTagList * taglist)
+check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
+    gint width, gint height)
 {
   GstBus *bus;
+  GstPad *pad;
+  GstCaps *caps;
+  gint caps_width, caps_height;
+  GstState state;
+
   GMainLoop *loop = g_main_loop_new (NULL, FALSE);
   GstElement *playbin = gst_element_factory_make ("playbin2", NULL);
   GstElement *fakevideo = gst_element_factory_make ("fakesink", NULL);
@@ -338,6 +344,27 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist)
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (playbin));
   gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
+
+  gst_element_set_state (playbin, GST_STATE_PAUSED);
+
+  if (width != 0 && height != 0) {
+    gst_element_get_state (playbin, &state, NULL, GST_SECOND * 3);
+
+    g_signal_emit_by_name (playbin, "get-video-pad", 0, &pad, NULL);
+    g_assert (pad != NULL);
+    caps = gst_pad_get_negotiated_caps (pad);
+
+    g_assert (gst_structure_get_int (gst_caps_get_structure (caps, 0),
+            "width", &caps_width));
+    g_assert (gst_structure_get_int (gst_caps_get_structure (caps, 0),
+            "height", &caps_height));
+
+    g_assert (width == caps_width);
+    g_assert (height == caps_height);
+
+    gst_caps_unref (caps);
+    gst_object_unref (pad);
+  }
 
   gst_element_set_state (playbin, GST_STATE_PLAYING);
   g_main_loop_run (loop);
@@ -373,12 +400,58 @@ GST_START_TEST (test_single_image_capture)
   g_usleep (G_USEC_PER_SEC * 3);
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
-  check_file_validity (IMAGE_FILENAME, 0, NULL);
+  check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0);
 }
 
 GST_END_TEST;
 
-GST_START_TEST (test_video_recording)
+
+GST_START_TEST (test_multiple_image_captures)
+{
+  gint i;
+  gint widths[] = { 800, 640, 1280 };
+  gint heights[] = { 600, 480, 1024 };
+
+  if (!camera)
+    return;
+
+  /* set still image mode */
+  g_object_set (camera, "mode", 1,
+      "location", make_test_file_name (IMAGE_FILENAME, -1), NULL);
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
+  fail_unless (camera != NULL);
+  GST_INFO ("starting capture");
+
+  for (i = 0; i < 3; i++) {
+    GstCaps *caps;
+
+    caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
+        widths[i], "height", G_TYPE_INT, heights[i], NULL);
+
+    g_object_set (camera, "image-capture-caps", caps, NULL);
+    gst_caps_unref (caps);
+
+    g_signal_emit_by_name (camera, "start-capture", NULL);
+    g_usleep (G_USEC_PER_SEC * 1);
+  }
+
+  g_usleep (G_USEC_PER_SEC * 3);
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+  for (i = 0; i < 3; i++) {
+    check_file_validity (IMAGE_FILENAME, i, NULL, widths[i], heights[i]);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_single_video_recording)
 {
   if (!camera)
     return;
@@ -406,7 +479,7 @@ GST_START_TEST (test_video_recording)
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
-  check_file_validity (VIDEO_FILENAME, 0, NULL);
+  check_file_validity (VIDEO_FILENAME, 0, NULL, 0, 0);
 }
 
 GST_END_TEST;
@@ -454,8 +527,8 @@ GST_START_TEST (test_image_video_cycle)
 
   /* validate all the files */
   for (i = 0; i < 2; i++) {
-    check_file_validity (IMAGE_FILENAME, i, NULL);
-    check_file_validity (VIDEO_FILENAME, i, NULL);
+    check_file_validity (IMAGE_FILENAME, i, NULL, 0, 0);
+    check_file_validity (VIDEO_FILENAME, i, NULL, 0, 0);
   }
 }
 
@@ -518,8 +591,9 @@ camerabin_suite (void)
   tcase_set_timeout (tc_basic, 30);
   tcase_add_checked_fixture (tc_basic, setup, teardown);
   tcase_add_test (tc_basic, test_single_image_capture);
-  tcase_add_test (tc_basic, test_video_recording);
+  tcase_add_test (tc_basic, test_single_video_recording);
   tcase_add_test (tc_basic, test_image_video_cycle);
+  tcase_add_test (tc_basic, test_multiple_image_captures);
   tcase_add_test (tc_basic, test_supported_caps);
 
   return s;
