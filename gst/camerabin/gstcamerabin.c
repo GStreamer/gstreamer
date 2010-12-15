@@ -3931,16 +3931,19 @@ gst_camerabin_provide_clock (GstElement * element)
   return clock;
 }
 
-static gboolean
+static gpointer
 gst_camerabin_imgbin_finished (gpointer u_data)
 {
   GstCameraBin *camera = GST_CAMERABIN (u_data);
   gchar *filename = NULL;
 
-  /* Get the filename of the finished image */
-  g_object_get (G_OBJECT (camera->imgbin), "filename", &filename, NULL);
+  /* FIXME: should set a flag (and take a lock) when going to NULL, so we
+   * short-circuit this bit if we got shut down between thread create and now */
 
   GST_DEBUG_OBJECT (camera, "Image encoding finished");
+
+  /* Get the filename of the finished image */
+  g_object_get (G_OBJECT (camera->imgbin), "filename", &filename, NULL);
 
   /* Close the file of saved image */
   gst_element_set_state (camera->imgbin, GST_STATE_READY);
@@ -3951,26 +3954,35 @@ gst_camerabin_imgbin_finished (gpointer u_data)
     CAMERABIN_PROCESSING_DEC_UNLOCKED (camera);
   } else {
     /* Camerabin state change to READY may have reset processing counter to
-     * zero. This is possible as this functions is scheduled from g_idle_add
+     * zero. This is possible as this functions is scheduled from another
+     * thread.
      */
     GST_WARNING_OBJECT (camera, "camerabin has been forced to idle");
   }
   g_mutex_unlock (camera->capture_mutex);
 
-  /* Send image-done signal */
-  gst_camerabin_image_capture_continue (camera, filename);
-  g_free (filename);
-
   /* Set image bin back to PAUSED so that buffer-allocs don't fail */
   gst_element_set_state (camera->imgbin, GST_STATE_PAUSED);
 
   /* Unblock image queue pad to process next buffer */
-  gst_pad_set_blocked_async (camera->pad_src_queue, FALSE,
-      (GstPadBlockCallback) camerabin_pad_blocked, camera);
-  GST_DEBUG_OBJECT (camera, "Queue srcpad unblocked");
+  GST_STATE_LOCK (camera);
+  if (camera->pad_src_queue) {
+    gst_pad_set_blocked_async (camera->pad_src_queue, FALSE,
+        (GstPadBlockCallback) camerabin_pad_blocked, camera);
+    GST_DEBUG_OBJECT (camera, "Queue srcpad unblocked");
+  } else {
+    GST_DEBUG_OBJECT (camera, "Queue srcpad unreffed already, doesn't need "
+        "to unblock");
+  }
+  GST_STATE_UNLOCK (camera);
 
-  /* disconnect automatically */
-  return FALSE;
+  /* Send image-done signal */
+  gst_camerabin_image_capture_continue (camera, filename);
+  g_free (filename);
+
+  GST_INFO_OBJECT (camera, "leaving helper thread");
+  gst_object_unref (camera);
+  return NULL;
 }
 
 /*
@@ -3998,10 +4010,12 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * msg)
       } else if (GST_MESSAGE_SRC (msg) == GST_OBJECT (camera->imgbin)) {
         /* Image eos */
         GST_DEBUG_OBJECT (camera, "got image eos message");
-        /* Calling callback directly will deadlock in
-           imagebin state change functions */
-        g_idle_add_full (G_PRIORITY_HIGH_IDLE, gst_camerabin_imgbin_finished,
-            camera, NULL);
+        /* Can't change state here, since we're in the streaming thread */
+        if (!g_thread_create (gst_camerabin_imgbin_finished,
+                gst_object_ref (camera), FALSE, NULL)) {
+          /* FIXME: what do do if this fails? */
+          gst_object_unref (camera);
+        }
       }
       break;
     case GST_MESSAGE_ERROR:
