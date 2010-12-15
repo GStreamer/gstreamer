@@ -2,6 +2,8 @@
 GstBaseSrc
 % TYPE_CLASS_NAME
 GST_TYPE_BASE_SRC
+% pads
+srcpad-simple
 % pkg-config
 gstreamer-base-0.10
 % includes

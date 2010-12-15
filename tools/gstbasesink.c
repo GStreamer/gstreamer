@@ -2,6 +2,8 @@
 GstBaseSink
 % TYPE_CLASS_NAME
 GST_TYPE_BASE_SINK
+% pads
+sinkpad-simple
 % pkg-config
 gstreamer-base-0.10
 % includes

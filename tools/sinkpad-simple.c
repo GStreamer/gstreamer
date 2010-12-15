@@ -1,0 +1,23 @@
+
+% instance-members
+  GstPad *sinkpad;
+% prototypes
+% pad-template
+static GstStaticPadTemplate gst_replace_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/unknown")
+    );
+
+% base-init
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_replace_sink_template));
+% instance-init
+
+  replace->sinkpad = gst_pad_new_from_static_template (&gst_replace_sink_template
+      ,     
+            "sink");
+% methods
+% end
+

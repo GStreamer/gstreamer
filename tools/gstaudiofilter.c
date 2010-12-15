@@ -2,6 +2,8 @@
 GstAudioFilter
 % TYPE_CLASS_NAME
 GST_TYPE_AUDIO_FILTER
+% pads
+sinkpad-simple srcpad-simple
 % pkg-config
 gstreamer-audio-0.10
 % includes

@@ -2,6 +2,8 @@
 GstCddaBaseSrc
 % TYPE_CLASS_NAME
 GST_TYPE_CDDA_BASE_SRC
+% pads
+srcpad-simple
 % pkg-config
 gstreamer-cdda-0.10
 % includes

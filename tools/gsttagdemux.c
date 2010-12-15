@@ -2,6 +2,8 @@
 GstTagDemux
 % TYPE_CLASS_NAME
 GST_TYPE_TAG_DEMUX
+% pads
+sinkpad-simple srcpad-simple
 % pkg-config
 gstreamer-tag-0.10
 % includes

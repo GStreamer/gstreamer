@@ -2,8 +2,12 @@
 GstBaseTransform
 % TYPE_CLASS_NAME
 GST_TYPE_BASE_TRANSFORM
+% pads
+sinkpad-simple srcpad-simple
 % pkg-config
 gstreamer-base-0.10
+% pads
+sinkpad-simple srcpad-simple
 % includes
 #include <gst/base/gstbasetransform.h>
 % prototypes

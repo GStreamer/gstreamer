@@ -17,4 +17,8 @@ EXTRA_DIST = \
 	gstelement.c \
 	gstpushsrc.c \
 	gsttagdemux.c \
-	gstvideosink.c
+	gstvideosink.c \
+	sinkpad.c \
+	sinkpad-simple.c \
+	srcpad.c \
+	srcpad-simple.c

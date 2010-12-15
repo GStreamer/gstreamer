@@ -2,6 +2,8 @@
 GstBaseAudioSink
 % TYPE_CLASS_NAME
 GST_TYPE_BASE_AUDIO_SINK
+% pads
+sinkpad-simple
 % pkg-config
 gstreamer-audio-0.10
 % includes
@@ -9,14 +11,14 @@ gstreamer-audio-0.10
 % prototypes
 static GstRingBuffer *gst_replace_create_ringbuffer (GstBaseAudioSink * sink);
 % declare-class
-  GstBaseAudioSink *base_audio_sink_class = GST_BASE_AUDIO_SINK (klass);
+  GstBaseAudioSinkClass *base_audio_sink_class = GST_BASE_AUDIO_SINK_CLASS (klass);
 % set-methods
-  base_audio_sink_class-> = GST_DEBUG_FUNCPTR (gst_replace_);
+  base_audio_sink_class->create_ringbuffer = GST_DEBUG_FUNCPTR (gst_replace_create_ringbuffer);
 % methods
 
 static GstRingBuffer *
 gst_replace_create_ringbuffer (GstBaseAudioSink * sink)
 {
-
+  return NULL;
 }
 % end

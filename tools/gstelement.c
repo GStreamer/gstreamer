@@ -2,6 +2,8 @@
 GstElement
 % TYPE_CLASS_NAME
 GST_TYPE_ELEMENT
+% pads
+sinkpad srcpad
 % pkg-config
 gstreamer-0.10
 % includes
@@ -11,35 +13,24 @@ static GstPad *gst_replace_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_replace_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn
-gst_replace_get_state (GstElement * element, GstState * state,
-    GstState * pending, GstClockTime timeout);
-static GstStateChangeReturn
-gst_replace_set_state (GstElement * element, GstState state);
-static GstStateChangeReturn
 gst_replace_change_state (GstElement * element, GstStateChange transition);
-static void gst_replace_set_bus (GstElement * element, GstBus * bus);
 static GstClock *gst_replace_provide_clock (GstElement * element);
 static gboolean gst_replace_set_clock (GstElement * element, GstClock * clock);
 static GstIndex *gst_replace_get_index (GstElement * element);
 static void gst_replace_set_index (GstElement * element, GstIndex * index);
 static gboolean gst_replace_send_event (GstElement * element, GstEvent * event);
-static const GstQueryType *gst_replace_get_query_types (GstElement * element);
 static gboolean gst_replace_query (GstElement * element, GstQuery * query);
 % declare-class
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 % set-methods
   element_class->request_new_pad = GST_DEBUG_FUNCPTR (gst_replace_request_new_pad);
   element_class->release_pad = GST_DEBUG_FUNCPTR (gst_replace_release_pad);
-  element_class->get_state = GST_DEBUG_FUNCPTR (gst_replace_get_state);
-  element_class->set_state = GST_DEBUG_FUNCPTR (gst_replace_set_state);
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_replace_change_state);
-  element_class->set_bus = GST_DEBUG_FUNCPTR (gst_replace_set_bus);
   element_class->provide_clock = GST_DEBUG_FUNCPTR (gst_replace_provide_clock);
   element_class->set_clock = GST_DEBUG_FUNCPTR (gst_replace_set_clock);
   element_class->get_index = GST_DEBUG_FUNCPTR (gst_replace_get_index);
   element_class->set_index = GST_DEBUG_FUNCPTR (gst_replace_set_index);
   element_class->send_event = GST_DEBUG_FUNCPTR (gst_replace_send_event);
-  element_class->get_query_types = GST_DEBUG_FUNCPTR (gst_replace_get_query_types);
   element_class->query = GST_DEBUG_FUNCPTR (gst_replace_query);
 % methods
 
@@ -59,31 +50,39 @@ gst_replace_release_pad (GstElement * element, GstPad * pad)
 }
 
 static GstStateChangeReturn
-gst_replace_get_state (GstElement * element, GstState * state,
-    GstState * pending, GstClockTime timeout)
-{
-
-  return GST_STATE_CHANGE_SUCCESS;
-}
-
-static GstStateChangeReturn
-gst_replace_set_state (GstElement * element, GstState state)
-{
-
-  return GST_STATE_CHANGE_SUCCESS;
-}
-
-static GstStateChangeReturn
 gst_replace_change_state (GstElement * element, GstStateChange transition)
 {
+  GstReplace *replace;
+  GstStateChangeReturn ret;
 
-  return GST_STATE_CHANGE_SUCCESS;
-}
+  g_return_val_if_fail (GST_IS_REPLACE (element), GST_STATE_CHANGE_FAILURE);
+  replace = GST_REPLACE (element);
 
-static void
-gst_replace_set_bus (GstElement * element, GstBus * bus)
-{
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    default:
+      break;
+  }
 
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static GstClock *
@@ -118,13 +117,6 @@ gst_replace_send_event (GstElement * element, GstEvent * event)
 {
 
   return TRUE;
-}
-
-static const GstQueryType *
-gst_replace_get_query_types (GstElement * element)
-{
-
-  return NULL;
 }
 
 static gboolean

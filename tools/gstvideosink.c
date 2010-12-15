@@ -2,6 +2,8 @@
 GstVideoSink
 % TYPE_CLASS_NAME
 GST_TYPE_VIDEO_SINK
+% pads
+sinkpad-simple
 % pkg-config
 gstreamer-video-0.10
 % includes

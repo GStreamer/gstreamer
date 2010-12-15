@@ -2,6 +2,8 @@
 GstBaseRTPPayload
 % TYPE_CLASS_NAME
 GST_TYPE_BASE_RTP_PAYLOAD
+% pads
+sinkpad-simple srcpad-simple
 % pkg-config
 gstreamer-rtp-0.10
 % includes
