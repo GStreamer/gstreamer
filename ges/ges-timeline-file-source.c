@@ -33,7 +33,7 @@
 #include "ges-track-image-source.h"
 #include "ges-track-audio-test-source.h"
 
-G_DEFINE_TYPE (GESTimelineFileSource, ges_tl_filesource,
+G_DEFINE_TYPE (GESTimelineFileSource, ges_timeline_filesource,
     GES_TYPE_TIMELINE_SOURCE);
 
 enum
@@ -47,17 +47,17 @@ enum
 };
 
 static void
-ges_tl_filesource_set_mute (GESTimelineFileSource * self, gboolean mute);
+ges_timeline_filesource_set_mute (GESTimelineFileSource * self, gboolean mute);
 static void
-ges_tl_filesource_set_max_duration (GESTimelineFileSource * self,
+ges_timeline_filesource_set_max_duration (GESTimelineFileSource * self,
     guint64 maxduration);
 
 static GESTrackObject
-    * ges_tl_filesource_create_track_object (GESTimelineObject * obj,
+    * ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
 
 static void
-ges_tl_filesource_get_property (GObject * object, guint property_id,
+ges_timeline_filesource_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
   GESTimelineFileSource *tfs = GES_TIMELINE_FILE_SOURCE (object);
@@ -84,7 +84,7 @@ ges_tl_filesource_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_tl_filesource_set_property (GObject * object, guint property_id,
+ges_timeline_filesource_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
   GESTimelineFileSource *tfs = GES_TIMELINE_FILE_SOURCE (object);
@@ -94,10 +94,11 @@ ges_tl_filesource_set_property (GObject * object, guint property_id,
       tfs->uri = g_value_dup_string (value);
       break;
     case PROP_MUTE:
-      ges_tl_filesource_set_mute (tfs, g_value_get_boolean (value));
+      ges_timeline_filesource_set_mute (tfs, g_value_get_boolean (value));
       break;
     case PROP_MAX_DURATION:
-      ges_tl_filesource_set_max_duration (tfs, g_value_get_uint64 (value));
+      ges_timeline_filesource_set_max_duration (tfs,
+          g_value_get_uint64 (value));
       break;
     case PROP_SUPPORTED_FORMATS:
       tfs->supportedformats = g_value_get_flags (value);
@@ -111,24 +112,24 @@ ges_tl_filesource_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_tl_filesource_finalize (GObject * object)
+ges_timeline_filesource_finalize (GObject * object)
 {
   GESTimelineFileSource *tfs = GES_TIMELINE_FILE_SOURCE (object);
 
   if (tfs->uri)
     g_free (tfs->uri);
-  G_OBJECT_CLASS (ges_tl_filesource_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_timeline_filesource_parent_class)->finalize (object);
 }
 
 static void
-ges_tl_filesource_class_init (GESTimelineFileSourceClass * klass)
+ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
-  object_class->get_property = ges_tl_filesource_get_property;
-  object_class->set_property = ges_tl_filesource_set_property;
-  object_class->finalize = ges_tl_filesource_finalize;
+  object_class->get_property = ges_timeline_filesource_get_property;
+  object_class->set_property = ges_timeline_filesource_set_property;
+  object_class->finalize = ges_timeline_filesource_finalize;
 
 
   /**
@@ -183,19 +184,20 @@ ges_tl_filesource_class_init (GESTimelineFileSourceClass * klass)
           "Whether the timeline object represents a still image or not",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  timobj_class->create_track_object = ges_tl_filesource_create_track_object;
+  timobj_class->create_track_object =
+      ges_timeline_filesource_create_track_object;
   timobj_class->need_fill_track = FALSE;
 }
 
 static void
-ges_tl_filesource_init (GESTimelineFileSource * self)
+ges_timeline_filesource_init (GESTimelineFileSource * self)
 {
   /* Setting the duration to -1 by default. */
   GES_TIMELINE_OBJECT (self)->duration = GST_CLOCK_TIME_NONE;
 }
 
 static void
-ges_tl_filesource_set_mute (GESTimelineFileSource * self, gboolean mute)
+ges_timeline_filesource_set_mute (GESTimelineFileSource * self, gboolean mute)
 {
   GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
@@ -218,7 +220,7 @@ ges_tl_filesource_set_mute (GESTimelineFileSource * self, gboolean mute)
 }
 
 static void
-ges_tl_filesource_set_max_duration (GESTimelineFileSource * self,
+ges_timeline_filesource_set_max_duration (GESTimelineFileSource * self,
     guint64 maxduration)
 {
   GESTimelineObject *object = GES_TIMELINE_OBJECT (self);
@@ -231,7 +233,7 @@ ges_tl_filesource_set_max_duration (GESTimelineFileSource * self,
 }
 
 static GESTrackObject *
-ges_tl_filesource_create_track_object (GESTimelineObject * obj,
+ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
     GESTrack * track)
 {
   GESTimelineFileSource *tfs = (GESTimelineFileSource *) obj;

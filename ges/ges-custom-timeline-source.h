@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GES_CUST_TIMELINE_SRC
-#define _GES_CUST_TIMELINE_SRC
+#ifndef _GES_CUSTOM_TIMELINE_SOURCE
+#define _GES_CUSTOM_TIMELINE_SOURCE
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_CUSTOM_TIMELINE_SOURCE ges_cust_timeline_src_get_type()
+#define GES_TYPE_CUSTOM_TIMELINE_SOURCE ges_custom_timeline_source_get_type()
 
 #define GES_CUSTOM_TIMELINE_SOURCE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_CUSTOM_TIMELINE_SOURCE, GESCustomTimelineSource))
@@ -47,7 +47,7 @@ G_BEGIN_DECLS
 typedef struct _GESCustomTimelineSourcePrivate   GESCustomTimelineSourcePrivate;
 
 /**
- * FillTrackObjectUserFunc:
+ * GESFillTrackObjectUserFunc:
  * @object: the #GESTimelineObject controlling the track object
  * @trobject: the #GESTrackObject
  * @gnlobj: the GNonLin object that needs to be filled.
@@ -61,7 +61,7 @@ typedef struct _GESCustomTimelineSourcePrivate   GESCustomTimelineSourcePrivate;
  *
  * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
  */
-typedef gboolean (*FillTrackObjectUserFunc) (GESTimelineObject * object,
+typedef gboolean (*GESFillTrackObjectUserFunc) (GESTimelineObject * object,
 					     GESTrackObject * trobject,
 					     GstElement * gnlobj,
 					     gpointer user_data);
@@ -94,13 +94,13 @@ struct _GESCustomTimelineSourceClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_cust_timeline_src_get_type (void);
+GType ges_custom_timeline_source_get_type (void);
 
 GESCustomTimelineSource*
-ges_custom_timeline_source_new (FillTrackObjectUserFunc func,
+ges_custom_timeline_source_new (GESFillTrackObjectUserFunc func,
 				gpointer user_data);
 
 G_END_DECLS
 
-#endif /* _GES_CUST_TIMELINE_SRC */
+#endif /* _GES_CUSTOM_TIMELINE_SOURCE */
 

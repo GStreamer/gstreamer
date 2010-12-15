@@ -47,7 +47,7 @@ G_BEGIN_DECLS
 typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
 
 /**
- * FillTrackObjectFunc:
+ * GESFillTrackObjectFunc:
  * @object: the #GESTimelineObject controlling the track object
  * @trobject: the #GESTrackObject
  * @gnlobj: the GNonLin object that needs to be filled.
@@ -60,7 +60,7 @@ typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
  *
  * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
  */
-typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
+typedef gboolean (*GESFillTrackObjectFunc) (GESTimelineObject * object,
                     GESTrackObject * trobject,
                     GstElement * gnlobj);
 
@@ -193,7 +193,7 @@ struct _GESTimelineObjectClass {
   CreateTrackObjectsFunc create_track_objects;
 
   /* FIXME : might need a release_track_object */
-  FillTrackObjectFunc  fill_track_object;
+  GESFillTrackObjectFunc  fill_track_object;
   gboolean need_fill_track;
 
   /*< private >*/

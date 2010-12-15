@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_TITLE_SOURCE ges_track_title_src_get_type()
+#define GES_TYPE_TRACK_TITLE_SOURCE ges_track_title_source_get_type()
 
 #define GES_TRACK_TITLE_SOURCE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_TITLE_SOURCE, GESTrackTitleSource))
@@ -81,7 +81,7 @@ struct _GESTrackTitleSourceClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_track_title_src_get_type (void);
+GType ges_track_title_source_get_type (void);
 
 void ges_track_title_source_set_text(GESTrackTitleSource *self, const
     gchar *text);

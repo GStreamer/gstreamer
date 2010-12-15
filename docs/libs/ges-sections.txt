@@ -264,7 +264,7 @@ GESTimelineObject
 GESTimelineObjectClass
 CreateTrackObjectFunc
 CreateTrackObjectsFunc
-FillTrackObjectFunc
+GESFillTrackObjectFunc
 ges_timeline_object_set_inpoint
 ges_timeline_object_set_start
 ges_timeline_object_set_duration
@@ -344,7 +344,7 @@ GESTimelineFileSource
 ges_timeline_filesource_new
 <SUBSECTION Standard>
 GESTimelineFileSourceClass
-ges_tl_filesource_get_type
+ges_timeline_filesource_get_type
 GES_IS_TIMELINE_FILE_SOURCE
 GES_IS_TIMELINE_FILE_SOURCE_CLASS
 GES_TIMELINE_FILE_SOURCE
@@ -424,11 +424,11 @@ ges_timeline_standard_transition_get_type
 <FILE>ges-custom-timeline-source</FILE>
 <TITLE>GESCustomTimelineSource</TITLE>
 GESCustomTimelineSource
-FillTrackObjectUserFunc
+GESFillTrackObjectUserFunc
 ges_custom_timeline_source_new
 <SUBSECTION Standard>
 GESCustomTimelineSourceClass
-ges_cust_timeline_src_get_type
+ges_custom_timeline_source_get_type
 GESCustomTimelineSourcePrivate
 GES_CUSTOM_TIMELINE_SOURCE
 GES_CUSTOM_TIMELINE_SOURCE_CLASS
@@ -484,7 +484,7 @@ ges_timeline_title_source_new
 <SUBSECTION Standard>
 GESTimelineTitleSourceClass
 GESTimelineTitleSourcePrivate
-ges_tl_title_src_get_type
+ges_timeline_title_source_get_type
 GES_IS_TIMELINE_TITLE_SOURCE
 GES_IS_TIMELINE_TITLE_SOURCE_CLASS
 GES_TIMELINE_TITLE_SOURCE
@@ -500,7 +500,7 @@ ges_timeline_text_overlay_new
 <SUBSECTION Standard>
 GESTimelineTextOverlayClass
 GESTimelineTextOverlayPrivate
-ges_tl_text_overlay_get_type
+ges_timeline_text_overlay_get_type
 GES_IS_TIMELINE_TEXT_OVERLAY
 GES_IS_TIMELINE_TEXT_OVERLAY_CLASS
 GES_TIMELINE_TEXT_OVERLAY
@@ -558,7 +558,7 @@ ges_track_title_source_new
 <SUBSECTION Standard>
 GESTrackTitleSourceClass
 GESTrackTitleSourcePrivate
-ges_track_title_src_get_type
+ges_track_title_source_get_type
 GES_TRACK_TITLE_SOURCE
 GES_TRACK_TITLE_SOURCE_CLASS
 GES_TRACK_TITLE_SOURCE_GET_CLASS

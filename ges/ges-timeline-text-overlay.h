@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TIMELINE_TEXT_OVERLAY ges_tl_text_overlay_get_type()
+#define GES_TYPE_TIMELINE_TEXT_OVERLAY ges_timeline_text_overlay_get_type()
 
 #define GES_TIMELINE_TEXT_OVERLAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_TEXT_OVERLAY, GESTimelineTextOverlay))
@@ -81,7 +81,7 @@ struct _GESTimelineTextOverlayClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_tl_text_overlay_get_type (void);
+GType ges_timeline_text_overlay_get_type (void);
 
 GESTimelineTextOverlay* ges_timeline_text_overlay_new (void);
 

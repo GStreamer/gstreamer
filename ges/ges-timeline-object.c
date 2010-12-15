@@ -337,15 +337,15 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
 /**
  * ges_timeline_object_release_track_object:
  * @object: a #GESTimelineObject
- * @trobj: the #GESTrackObject to release
+ * @trackobject: the #GESTrackObject to release
  */
 gboolean
 ges_timeline_object_release_track_object (GESTimelineObject * object,
-    GESTrackObject * trobj)
+    GESTrackObject * trackobject)
 {
-  GST_DEBUG ("object:%p, trackobject:%p", object, trobj);
+  GST_DEBUG ("object:%p, trackobject:%p", object, trackobject);
 
-  if (!(g_list_find (object->priv->trackobjects, trobj))) {
+  if (!(g_list_find (object->priv->trackobjects, trackobject))) {
     GST_WARNING ("TrackObject isn't controlled by this object");
     return FALSE;
   }
@@ -354,11 +354,11 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
    * If so, add a new virtual-method */
 
   object->priv->trackobjects =
-      g_list_remove (object->priv->trackobjects, trobj);
+      g_list_remove (object->priv->trackobjects, trackobject);
 
-  ges_track_object_set_timeline_object (trobj, NULL);
+  ges_track_object_set_timeline_object (trackobject, NULL);
 
-  g_object_unref (trobj);
+  g_object_unref (trackobject);
 
   return TRUE;
 }
@@ -550,7 +550,7 @@ ges_timeline_object_get_layer (GESTimelineObject * object)
 
 /**
  * ges_timeline_object_get_track_objects:
- * @obj: a #GESTimelineObject
+ * @object: a #GESTimelineObject
  *
  * Returns: The list of trackobject contained in @object.
  * The user is responsible for unreffing the contained objects 

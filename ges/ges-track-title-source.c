@@ -29,7 +29,8 @@
 #include "ges-track-title-source.h"
 #include "ges-track-video-test-source.h"
 
-G_DEFINE_TYPE (GESTrackTitleSource, ges_track_title_src, GES_TYPE_TRACK_SOURCE);
+G_DEFINE_TYPE (GESTrackTitleSource, ges_track_title_source,
+    GES_TYPE_TRACK_SOURCE);
 
 struct _GESTrackTitleSourcePrivate
 {
@@ -42,33 +43,34 @@ enum
   PROP_0,
 };
 
-static void ges_track_title_src_dispose (GObject * object);
+static void ges_track_title_source_dispose (GObject * object);
 
-static void ges_track_title_src_get_property (GObject * object, guint
+static void ges_track_title_source_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
 
-static void ges_track_title_src_set_property (GObject * object, guint
+static void ges_track_title_source_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_title_src_create_element (GESTrackObject * self);
+static GstElement *ges_track_title_source_create_element (GESTrackObject *
+    self);
 
 static void
-ges_track_title_src_class_init (GESTrackTitleSourceClass * klass)
+ges_track_title_source_class_init (GESTrackTitleSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackObjectClass *bg_class = GES_TRACK_OBJECT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackTitleSourcePrivate));
 
-  object_class->get_property = ges_track_title_src_get_property;
-  object_class->set_property = ges_track_title_src_set_property;
-  object_class->dispose = ges_track_title_src_dispose;
+  object_class->get_property = ges_track_title_source_get_property;
+  object_class->set_property = ges_track_title_source_set_property;
+  object_class->dispose = ges_track_title_source_dispose;
 
-  bg_class->create_element = ges_track_title_src_create_element;
+  bg_class->create_element = ges_track_title_source_create_element;
 }
 
 static void
-ges_track_title_src_init (GESTrackTitleSource * self)
+ges_track_title_source_init (GESTrackTitleSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_TITLE_SOURCE, GESTrackTitleSourcePrivate);
@@ -82,7 +84,7 @@ ges_track_title_src_init (GESTrackTitleSource * self)
 }
 
 static void
-ges_track_title_src_dispose (GObject * object)
+ges_track_title_source_dispose (GObject * object)
 {
   GESTrackTitleSource *self = GES_TRACK_TITLE_SOURCE (object);
   if (self->text) {
@@ -103,11 +105,11 @@ ges_track_title_src_dispose (GObject * object)
     self->background_el = NULL;
   }
 
-  G_OBJECT_CLASS (ges_track_title_src_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_track_title_source_parent_class)->dispose (object);
 }
 
 static void
-ges_track_title_src_get_property (GObject * object,
+ges_track_title_source_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -117,7 +119,7 @@ ges_track_title_src_get_property (GObject * object,
 }
 
 static void
-ges_track_title_src_set_property (GObject * object,
+ges_track_title_source_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -127,7 +129,7 @@ ges_track_title_src_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_title_src_create_element (GESTrackObject * object)
+ges_track_title_source_create_element (GESTrackObject * object)
 {
   GESTrackTitleSource *self = GES_TRACK_TITLE_SOURCE (object);
   GstElement *topbin, *background, *text;

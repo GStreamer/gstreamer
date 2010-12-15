@@ -35,44 +35,45 @@
 
 struct _GESCustomTimelineSourcePrivate
 {
-  FillTrackObjectUserFunc filltrackobjectfunc;
+  GESFillTrackObjectUserFunc filltrackobjectfunc;
   gpointer user_data;
 };
 
-G_DEFINE_TYPE (GESCustomTimelineSource, ges_cust_timeline_src,
+G_DEFINE_TYPE (GESCustomTimelineSource, ges_custom_timeline_source,
     GES_TYPE_TIMELINE_SOURCE);
 
 static gboolean
-ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
+ges_custom_timeline_source_fill_track_object (GESTimelineObject * object,
     GESTrackObject * trobject, GstElement * gnlobj);
 
 static GESTrackObject *
-ges_cust_timeline_src_create_track_object (GESTimelineObject * obj,
+ges_custom_timeline_source_create_track_object (GESTimelineObject * obj,
     GESTrack * track)
 {
   return g_object_new (GES_TYPE_TRACK_SOURCE, NULL);
 }
 
 static void
-ges_cust_timeline_src_class_init (GESCustomTimelineSourceClass * klass)
+ges_custom_timeline_source_class_init (GESCustomTimelineSourceClass * klass)
 {
   GESTimelineObjectClass *tlobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESCustomTimelineSourcePrivate));
 
-  tlobj_class->fill_track_object = ges_cust_timeline_src_fill_track_object;
-  tlobj_class->create_track_object = ges_cust_timeline_src_create_track_object;
+  tlobj_class->fill_track_object = ges_custom_timeline_source_fill_track_object;
+  tlobj_class->create_track_object =
+      ges_custom_timeline_source_create_track_object;
 }
 
 static void
-ges_cust_timeline_src_init (GESCustomTimelineSource * self)
+ges_custom_timeline_source_init (GESCustomTimelineSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_CUSTOM_TIMELINE_SOURCE, GESCustomTimelineSourcePrivate);
 }
 
 static gboolean
-ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
+ges_custom_timeline_source_fill_track_object (GESTimelineObject * object,
     GESTrackObject * trobject, GstElement * gnlobj)
 {
   gboolean res;
@@ -91,7 +92,7 @@ ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
 
 /**
  * ges_custom_timeline_source_new:
- * @func: The #FillTrackObjectUserFunc that will be used to fill the track objects.
+ * @func: The #GESFillTrackObjectUserFunc that will be used to fill the track objects.
  * @user_data: a gpointer that will be used when @func is called.
  *
  * Creates a new #GESCustomTimelineSource.
@@ -99,7 +100,7 @@ ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
  * Returns: The new #GESCustomTimelineSource.
  */
 GESCustomTimelineSource *
-ges_custom_timeline_source_new (FillTrackObjectUserFunc func,
+ges_custom_timeline_source_new (GESFillTrackObjectUserFunc func,
     gpointer user_data)
 {
   GESCustomTimelineSource *src;

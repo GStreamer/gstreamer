@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GES_TL_FILESOURCE
-#define _GES_TL_FILESOURCE
+#ifndef _GES_TIMELINE_FILESOURCE
+#define _GES_TIMELINE_FILESOURCE
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TIMELINE_FILE_SOURCE ges_tl_filesource_get_type()
+#define GES_TYPE_TIMELINE_FILE_SOURCE ges_timeline_filesource_get_type()
 
 #define GES_TIMELINE_FILE_SOURCE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_FILE_SOURCE, GESTimelineFileSource))
@@ -81,11 +81,11 @@ struct _GESTimelineFileSourceClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_tl_filesource_get_type (void);
+GType ges_timeline_filesource_get_type (void);
 
 GESTimelineFileSource* ges_timeline_filesource_new (gchar *uri);
 
 G_END_DECLS
 
-#endif /* _GES_TL_FILESOURCE */
+#endif /* _GES_TIMELINE_FILESOURCE */
 
