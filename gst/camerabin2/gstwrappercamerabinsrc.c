@@ -612,10 +612,9 @@ start_image_capture (GstWrapperCameraBinSrc * self)
 {
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
   GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
-  gboolean wait_for_prepare = FALSE, ret = FALSE;
+  gboolean ret = FALSE;
 
   if (photography) {
-    wait_for_prepare = TRUE;
 
     if (!self->image_capture_caps || self->image_capture_caps_update) {
       if (bcamsrc->image_capture_width && bcamsrc->image_capture_height) {
