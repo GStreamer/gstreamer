@@ -1471,12 +1471,18 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
         /* set adaptor */
         GST_LOG ("Initializing PES filter for PID %u", ES_stream->PID);
         gst_pes_filter_init (&ES_stream->filter, NULL, NULL);
+
         if (ES_stream->stream_type == ST_PRIVATE_DATA) {
-          GST_FIXME ("Stream type is ST_PRIVATE_DATA, setting "
-              "filter->gather_pes as a HACK");
-          /* FIXME: There's another place where pes filters could get
-           * initialized. Might need similar temporary hack there as well */
-          ES_stream->filter.gather_pes = TRUE;
+          guint8 *dvb_sub_desc = gst_mpeg_descriptor_find (ES_stream->ES_info,
+              DESC_DVB_SUBTITLING);
+
+          /* enable gather PES for DVB subtitles since the dvbsuboverlay
+           * expects complete PES packets */
+          if (dvb_sub_desc) {
+            /* FIXME: There's another place where pes filters could get
+             * initialized. Might need similar temporary hack there as well */
+            ES_stream->filter.gather_pes = TRUE;
+          }
         }
         gst_pes_filter_set_callbacks (&ES_stream->filter,
             (GstPESFilterData) gst_mpegts_demux_data_cb,
