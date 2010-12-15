@@ -104,3 +104,56 @@ gesmarshal.c: gesmarshal.list
 	echo "#include \"gesmarshal.h\"" >> gesmarshal.c.tmp
 	glib-genmarshal --body --prefix=ges_marshal $^ >> gesmarshal.c.tmp
 	mv gesmarshal.c.tmp gesmarshal.c
+include $(top_srcdir)/common/gst-glib-gen.mak
+
+if HAVE_INTROSPECTION
+BUILT_GIRSOURCES = GES-@GST_MAJORMINOR@.gir
+
+gir_headers=$(patsubst %,$(srcdir)/%, $(libges_@GST_MAJORMINOR@include_HEADERS))
+gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libges_@GST_MAJORMINOR@include_HEADERS))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libges_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libges_@GST_MAJORMINOR@_la_SOURCES))
+gir_cincludes=$(patsubst %,--c-include='ges/%',$(libges_@GST_MAJORMINOR@include_HEADERS))
+gir_cincludes+=$(patsubst %,--c-include='ges/%',$(nodist_libges_@GST_MAJORMINOR@include_HEADERS))
+
+GES-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libges-@GST_MAJORMINOR@.la
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
+		$(INTROSPECTION_SCANNER) -v --namespace GES \
+		--nsversion=@GST_MAJORMINOR@ \
+		--identifier-prefix=GES \
+		--symbol-prefix=ges \
+		--warn-all \
+		$(gir_cincludes) \
+		-I$(top_srcdir) \
+		-I$(top_builddir) \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10 gstreamer-pbutils-0.10` \
+		--library=libges-@GST_MAJORMINOR@.la \
+		--include=Gst-@GST_MAJORMINOR@ \
+		--include=GstPbutils-@GST_MAJORMINOR@ \
+		--libtool="$(top_builddir)/libtool" \
+		--pkg gstreamer-@GST_MAJORMINOR@ \
+		--pkg gstreamer-pbutils-@GST_MAJORMINOR@ \
+		--pkg-export ges-@GST_MAJORMINOR@ \
+		--output $@ \
+		$(gir_headers) \
+		$(gir_sources)
+
+# INTROSPECTION_GIRDIR/INTROSPECTION_TYPELIBDIR aren't the right place to
+# install anything - we need to install inside our prefix.
+girdir = $(datadir)/gir-1.0
+gir_DATA = $(BUILT_GIRSOURCES)
+
+typelibsdir = $(libdir)/girepository-1.0/
+
+typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
+
+%.typelib: %.gir $(INTROSPECTION_COMPILER)
+	$(AM_V_GEN)$(INTROSPECTION_COMPILER) \
+		--includedir=$(srcdir) \
+		--includedir=$(srcdir)/../video \
+		--includedir=$(builddir) \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10 gstreamer-pbutils-0.10` \
+		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+
+CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
+endif
