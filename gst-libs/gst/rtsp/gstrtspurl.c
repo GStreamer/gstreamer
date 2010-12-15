@@ -341,3 +341,76 @@ gst_rtsp_url_get_request_uri (const GstRTSPUrl * url)
 
   return uri;
 }
+
+static int
+hex_to_int (gchar c)
+{
+  if (c >= '0' && c <= '9')
+    return c - '0';
+  else if (c >= 'a' && c <= 'f')
+    return c - 'a' + 10;
+  else if (c >= 'A' && c <= 'F')
+    return c - 'A' + 10;
+  else
+    return -1;
+}
+
+static void
+unescape_path_component (gchar * comp)
+{
+  guint len = strlen (comp);
+  guint i;
+
+  for (i = 0; i + 2 < len; i++)
+    if (comp[i] == '%') {
+      int a, b;
+
+      a = hex_to_int (comp[i + 1]);
+      b = hex_to_int (comp[i + 2]);
+
+      /* The a||b check is to ensure that the byte is not '\0' */
+      if (a >= 0 && b >= 0 && (a || b)) {
+        comp[i] = (gchar) (a * 16 + b);
+        memmove (comp + i + 1, comp + i + 3, len - i - 3);
+        len -= 2;
+        comp[len] = '\0';
+      }
+    }
+}
+
+/**
+ * gst_rtsp_url_decode_path_components:
+ * @url: a #GstRTSPUrl
+ *
+ * Splits the path of @url on '/' boundaries, decoding the resulting components,
+ *
+ * The decoding performed by this routine is "URI decoding", as defined in RFC
+ * 3986, commonly known as percent-decoding. For example, a string "foo%2fbar"
+ * will decode to "foo/bar" -- the %2f being replaced by the corresponding byte
+ * with hex value 0x2f. Note that there is no guarantee that the resulting byte
+ * sequence is valid in any given encoding. As a special case, %00 is not
+ * unescaped to NUL, as that would prematurely terminate the string.
+ *
+ * Also note that since paths usually start with a slash, the first component
+ * will usually be the empty string.
+ *
+ * Returns: a string vector. g_strfreev() after usage.
+ *
+ * Since: 0.10.32
+ */
+gchar **
+gst_rtsp_url_decode_path_components (const GstRTSPUrl * url)
+{
+  gchar **ret;
+  guint i;
+
+  g_return_val_if_fail (url != NULL, NULL);
+  g_return_val_if_fail (url->abspath != NULL, NULL);
+
+  ret = g_strsplit (url->abspath, "/", -1);
+
+  for (i = 0; ret[i]; i++)
+    unescape_path_component (ret[i]);
+
+  return ret;
+}

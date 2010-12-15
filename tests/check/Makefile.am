@@ -130,6 +130,7 @@ check_PROGRAMS = \
 	libs/pbutils \
 	libs/profile \
 	libs/rtp \
+	libs/rtsp \
 	libs/tag \
 	libs/video \
 	$(check_orc) \
@@ -222,6 +223,13 @@ libs_rtp_CFLAGS = \
 	$(AM_CFLAGS)
 libs_rtp_LDADD = \
 	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) $(LDADD)
+
+libs_rtsp_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+libs_rtsp_LDADD = \
+	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
 libs_tag_CFLAGS = \
