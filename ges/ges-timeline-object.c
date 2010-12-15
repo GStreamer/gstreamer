@@ -220,7 +220,7 @@ ges_timeline_object_init (GESTimelineObject * self)
  * keep a reference to the newly created trackobject, you therefore need to
  * call @ges_timeline_object_release_track_object when you are done with it.
  *
- * Returns: A #GESTrackObject. Returns NULL if the #GESTrackObject could not
+ * Returns: (transfer none): A #GESTrackObject. Returns NULL if the #GESTrackObject could not
  * be created.
  */
 
@@ -407,6 +407,13 @@ ges_timeline_object_fill_track_object_func (GESTimelineObject * object,
   return FALSE;
 }
 
+/**
+ * ges_timeline_object_set_start:
+ * @object: a #GESTimelineObject
+ * @start: the position in #GstClockTime
+ *
+ * Set the position of the object in its containing layer
+ */
 void
 ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
 {
@@ -426,6 +433,14 @@ ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
 
 }
 
+/**
+ * ges_timeline_object_set_inpoint:
+ * @object: a #GESTimelineObject
+ * @inpoint: the in-point in #GstClockTime
+ *
+ * Set the in-point, that is the moment at which the @object will start
+ * outputting data from its contents.
+ */
 void
 ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
 {
@@ -447,6 +462,13 @@ ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
 
 }
 
+/**
+ * ges_timeline_object_set_duration:
+ * @object: a #GESTimelineObject
+ * @duration: the duration in #GstClockTime
+ *
+ * Set the duration of the object
+ */
 void
 ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
 {
@@ -468,6 +490,13 @@ ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
 
 }
 
+/**
+ * ges_timeline_object_set_priority:
+ * @object: a #GESTimelineObject
+ * @priority: the priority
+ *
+ * Sets the priority of the object within the containing layer
+ */
 void
 ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
 {
@@ -500,7 +529,7 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
  * Note: The reference count of the returned #GESTrackObject will be increased,
  * unref when done with it.
  *
- * Returns: The #GESTrackObject used by @track, else #NULL.
+ * Returns: (transfer full): The #GESTrackObject used by @track, else #NULL.
  */
 
 GESTrackObject *
@@ -534,7 +563,7 @@ ges_timeline_object_find_track_object (GESTimelineObject * object,
  * Note: The reference count of the returned #GESTimelineLayer will be increased,
  * The user is responsible for unreffing it.
  *
- * Returns: The #GESTimelineLayer where this @object is being used, #NULL if 
+ * Returns: (transfer full): The #GESTimelineLayer where this @object is being used, #NULL if 
  * it is not used on any layer.
  */
 GESTimelineLayer *
@@ -552,7 +581,8 @@ ges_timeline_object_get_layer (GESTimelineObject * object)
  * ges_timeline_object_get_track_objects:
  * @object: a #GESTimelineObject
  *
- * Returns: The list of trackobject contained in @object.
+ * Returns: (transfer full) (element-type GESTrackObject): The list of
+ * trackobject contained in @object.
  * The user is responsible for unreffing the contained objects 
  * and freeing the list.
  */

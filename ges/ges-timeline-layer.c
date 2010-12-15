@@ -357,7 +357,8 @@ ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
  *
  * Get the timeline objects this layer contains.
  *
- * Returns: a #GList of timeline objects. The user is responsible for
+ * Returns: (transfer full) (element-type GESTimelineObject): a #GList of
+ * timeline objects. The user is responsible for
  * unreffing the contained objects and freeing the list.
  */
 

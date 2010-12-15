@@ -895,8 +895,8 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
  *
  * Search the #GESTrack corresponding to the given @timeline's @pad.
  *
- * Returns: The corresponding #GESTrack if it is found, or #NULL if there is
- * an error.
+ * Returns: (transfer none): The corresponding #GESTrack if it is found,
+ * or #NULL if there is an error.
  */
 
 GESTrack *
@@ -919,8 +919,8 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
  *
  * Returns the list of #GESTrack used by the Timeline.
  *
- * Returns: A list of #GESTrack. The caller should unref each track
- * once he is done with them.
+ * Returns: (transfer full) (element-type GESTrack): A list of #GESTrack.
+ * The caller should unref each track once he is done with them.
  */
 GList *
 ges_timeline_get_tracks (GESTimeline * timeline)
