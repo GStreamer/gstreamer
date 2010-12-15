@@ -324,11 +324,16 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
 
   priv->adding_object = TRUE;
 
+  /* provisionally insert the object */
+  priv->objects = g_list_insert (priv->objects, object, position);
+
   res = ges_timeline_layer_add_object ((GESTimelineLayer *) layer, object);
 
   /* Add to layer */
   if (G_UNLIKELY (!res)) {
     priv->adding_object = FALSE;
+    /* we failed to add the object, so remove it from our list */
+    priv->objects = g_list_remove (priv->objects, object);
     return FALSE;
   }
 
@@ -336,7 +341,6 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
 
   GST_DEBUG ("Adding object %p to the list", object);
 
-  priv->objects = g_list_insert (priv->objects, object, position);
 
   g_signal_connect (G_OBJECT (object), "notify::height", G_CALLBACK
       (timeline_object_height_changed_cb), layer);
