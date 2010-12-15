@@ -31,8 +31,9 @@ Topology:
     Tags:
       taglist, audio-codec=(string)"MPEG\ 1\ Audio\,\ Layer\ 3\ \(MP3\)", has-crc=(boolean)false, channel-mode=(string)stereo, bitrate=(uint)128000;
 
-Duration:
-  0:04:00.039125000
+Properties:
+  Duration: 0:04:00.039125000
+  Seekable: yes
 
 
 == compare ==
@@ -70,10 +71,11 @@ Duration:
 - tag lists
   - if there is a "language-code" in the tags (or subtitles?) use flag icons
     - deluge installs some under: /usr/share/pyshared/deluge/data/mediainfo/pixmaps/flags/
+    - famfamfam-flag-png: locale/usr/share/flags/countries/
   - handle album art in tag lists
   - geo-tags: map-widget?, link to google-maps?
   - artist: links to {last.fm,wikipedia}
-- show level meters for audio
+- show level meters for audio next or below video drawable
 
 == deep scan mode ==
 - update fields when playing
@@ -83,14 +85,80 @@ Duration:
   - gst-mi can draw them as a graph
 - get key-frame statistics
   - number of keyframes
-  - min,max,avg keyframe intervall
+  - min,max,avg keyframe interval
+- disconts
 - raw data statistics
   - audio: level, ...
   - video: histogram, ...
 
 = TODO for discoverer =
 - add deep-scan mode (see above)
+  - add a mode property: quick-scan, deep-scan
+   (or just a boolean for deep-scan that is false by default)
+  - in deep-scan, don't stop on handle_message::GST_MESSAGE_ASYNC_DONE
+    - in deep-scan we need pad-probes for encoded data pads (to get bitrates)
+      - uridecodebin_pad_added_cb() has raw pads :/
+      - look at uridecodebin_element_added_cb()
+    - the pads on uri-decodebin are sufficient to get keyframes and disconts
 - get duration per stream
   - this would need individual queries on the demuxer src pads
   - or duration as part of per stream tags
+
+= discoverer workflow =
+== sync quick-scan ==
+app                   disco
+---                   -----
+ |    discover_uri()    |
+ |--------------------->|
+ |         done         |
+ |<---------------------|
+ |
+
+== async quick-scan ==
+app                   disco
+---                   -----
+ | discover_uri_async() |
+ |--------------------->|
+ |         ...          |
+ | discover_uri_async() |
+ |--------------------->|
+ |       start()        |
+ |--------------------->|
+ |     ::discovered     |
+ |<---------------------|
+ |         ...          |
+ |     ::discovered     |
+ |<---------------------|
+ |     ::finisheded     |
+ |<---------------------|
+ | 
+
+== sync deep-scan ==
+- same as "sync quick-scan", no intermediate result
+
+== async deep-scan ==
+- same as "async quick-scan", but each discovered signal is followed by an
+  "analyzed" signal with detailed information
+
+app                   disco
+---                   -----
+ | discover_uri_async() |
+ |--------------------->|
+ |         ...          |
+ | discover_uri_async() |
+ |--------------------->|
+ |       start()        |
+ |--------------------->|
+ |     ::discovered     |
+ |<---------------------|
+ |     ::analzeded      |
+ |<---------------------|
+ |         ...          |
+ |     ::discovered     |
+ |<---------------------|
+ |     ::analzeded      |
+ |<---------------------|
+ |     ::finisheded     |
+ |<---------------------|
+ | 
 
