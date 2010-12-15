@@ -135,6 +135,13 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans);
 
 /* Camerabin functions */
 
+static GstEvent *
+gst_camera_bin_new_event_renegotiate (void)
+{
+  return gst_event_new_custom (GST_EVENT_CUSTOM_BOTH,
+      gst_structure_new ("renegotiate", NULL));
+}
+
 static void
 gst_camera_bin_start_capture (GstCameraBin * camerabin)
 {
@@ -550,13 +557,43 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
     case PROP_CAMERA_SRC:
       gst_camera_bin_set_camera_src (camera, g_value_get_object (value));
       break;
-    case PROP_IMAGE_CAPTURE_CAPS:
+    case PROP_IMAGE_CAPTURE_CAPS:{
+      GstPad *pad = NULL;
+
+      if (camera->src)
+        pad =
+            gst_element_get_static_pad (camera->src,
+            GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME);
+
+      /* set the capsfilter caps and notify the src to renegotiate */
       g_object_set (camera->imagebin_capsfilter, "caps",
           gst_value_get_caps (value), NULL);
+      if (pad) {
+        GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
+            GST_PAD_NAME (pad));
+        GST_PAD_EVENTFUNC (pad) (pad, gst_camera_bin_new_event_renegotiate ());
+        gst_object_unref (pad);
+      }
+    }
       break;
-    case PROP_VIDEO_CAPTURE_CAPS:
+    case PROP_VIDEO_CAPTURE_CAPS:{
+      GstPad *pad = NULL;
+
+      if (camera->src)
+        pad =
+            gst_element_get_static_pad (camera->src,
+            GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
+
+      /* set the capsfilter caps and notify the src to renegotiate */
       g_object_set (camera->videobin_capsfilter, "caps",
           gst_value_get_caps (value), NULL);
+      if (pad) {
+        GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
+            GST_PAD_NAME (pad));
+        gst_pad_push_event (pad, gst_camera_bin_new_event_renegotiate ());
+        gst_object_unref (pad);
+      }
+    }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
