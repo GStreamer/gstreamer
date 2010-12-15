@@ -27,7 +27,7 @@
  * |[ FIXME
  * gst-launch -v filesrc location=/path/to/ts ! mpegtsdemux name=d ! queue ! mp3parse ! mad ! audioconvert ! autoaudiosink \
  *     d. ! queue ! mpeg2dec ! ffmpegcolorspace ! r. \
- *     d. ! queue ! "private/x-dvbsub" ! dvbsuboverlay name=r ! ffmpegcolorspace ! autovideosink
+ *     d. ! queue ! "subpicture/x-dvb" ! dvbsuboverlay name=r ! ffmpegcolorspace ! autovideosink
  * ]| This pipeline demuxes a MPEG-TS file with MPEG2 video, MP3 audio and embedded DVB subtitles and renders the subtitles on top of the video.
  * </refsect2>
  */
@@ -78,7 +78,7 @@ static GstStaticPadTemplate text_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("text_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("private/x-dvbsub")
+    GST_STATIC_CAPS ("subpicture/x-dvb")
     );
 
 static void gst_dvbsub_overlay_set_property (GObject * object, guint prop_id,
@@ -873,7 +873,7 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstBuffer * buffer)
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (GST_PAD_PARENT (pad));
   GstClockTime sub_running_time;
 
-  GST_INFO_OBJECT (overlay, "private/x-dvbsub buffer with size %u",
+  GST_INFO_OBJECT (overlay, "subpicture/x-dvb buffer with size %u",
       GST_BUFFER_SIZE (buffer));
 
   GST_LOG_OBJECT (overlay,
