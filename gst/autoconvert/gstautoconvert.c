@@ -1552,6 +1552,7 @@ gst_auto_convert_internal_src_query_type (GstPad * pad)
   return ret;
 }
 
+/*
 static gboolean
 gst_auto_convert_plugin_init (GstPlugin * plugin)
 {
@@ -1565,3 +1566,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "Selects convertor element based on caps",
     gst_auto_convert_plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME,
     GST_PACKAGE_ORIGIN)
+*/
