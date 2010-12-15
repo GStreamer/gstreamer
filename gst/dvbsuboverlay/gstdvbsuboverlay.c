@@ -1033,7 +1033,7 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
   }
 
   /* Now render it */
-  if (overlay->current_subtitle) {
+  if (g_atomic_int_get (&overlay->enable) && overlay->current_subtitle) {
     buffer = gst_buffer_make_writable (buffer);
     blit_i420 (overlay, overlay->current_subtitle, buffer);
   }
