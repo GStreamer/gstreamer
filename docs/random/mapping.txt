@@ -38,6 +38,12 @@ Use Cases:
  accordingly. Ex : moving a TrackObject down by one priority should
  increase the TimelineObject "heigh" property by 1.
 
+ A TimelineObject might want to have a tighter control over which
+ Track(s) each of the TrackObjects it is controlling are going. This
+ is more obvious in the case of timeline with multiple Tracks of the
+ same kind, or if a TimelineObject can produce multiple TrackObjects
+ of the same media type (ex: file with multiple audio tracks).
+
 
 Main Problem:
 
