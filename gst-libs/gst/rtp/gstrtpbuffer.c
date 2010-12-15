@@ -453,32 +453,19 @@ gst_rtp_buffer_list_validate (GstBufferList * list)
     guint8 *packet_payload;
     guint payload_size;
     guint packet_size;
+    guint j, n_buffers;
 
-    /* each group should consists of 2 buffers: one containing the RTP header
-     * and the other one the payload, FIXME, relax the requirement of only one
-     * payload buffer. */
-    if (gst_buffer_list_iterator_n_buffers (it) != 2)
+    /* each group should consists of at least 1 buffer: The first buffer always
+     * contains the complete RTP header. Next buffers contain the payload */
+    n_buffers = gst_buffer_list_iterator_n_buffers (it);
+    if (n_buffers < 1)
       goto invalid_list;
 
-    /* get the RTP header */
+    /* get the RTP header (and if n_buffers == 1 also the payload) */
     rtpbuf = gst_buffer_list_iterator_next (it);
     packet_header = GST_BUFFER_DATA (rtpbuf);
     if (packet_header == NULL)
       goto invalid_list;
-
-    /* get the payload */
-    paybuf = gst_buffer_list_iterator_next (it);
-    packet_payload = GST_BUFFER_DATA (paybuf);
-    if (packet_payload == NULL) {
-      goto invalid_list;
-    }
-    payload_size = GST_BUFFER_SIZE (paybuf);
-    if (payload_size == 0) {
-      goto invalid_list;
-    }
-
-    /* the size of the RTP packet within the current group */
-    packet_size = GST_BUFFER_SIZE (rtpbuf) + payload_size;
 
     /* check the sequence number */
     if (G_UNLIKELY (i == 0)) {
@@ -487,6 +474,25 @@ gst_rtp_buffer_list_validate (GstBufferList * list)
     } else {
       if (++prev_seqnum != g_ntohs (GST_RTP_HEADER_SEQ (packet_header)))
         goto invalid_list;
+    }
+
+    packet_size = GST_BUFFER_SIZE (rtpbuf);
+    packet_payload = NULL;
+    payload_size = 0;
+
+    /* get the payload buffers */
+    for (j = 1; j < n_buffers; j++) {
+      /* get the payload */
+      paybuf = gst_buffer_list_iterator_next (it);
+
+      if ((packet_payload = GST_BUFFER_DATA (paybuf)) == NULL)
+        goto invalid_list;
+
+      if ((payload_size = GST_BUFFER_SIZE (paybuf)) == 0)
+        goto invalid_list;
+
+      /* the size of the RTP packet within the current group */
+      packet_size += payload_size;
     }
 
     /* validate packet */
