@@ -948,8 +948,9 @@ gst_mpegts_demux_send_tags_for_stream (GstMpegTSDemux * demux,
   GstTagList *list = NULL;
 
   if (stream->ES_info) {
-    guint8 lang_descs[] = { DESC_ISO_639_LANGUAGE, DESC_DVB_SUBTITLING };
-    for (gint i = 0; i < sizeof (lang_descs); i++) {
+    static const guint8 lang_descs[] =
+        { DESC_ISO_639_LANGUAGE, DESC_DVB_SUBTITLING };
+    for (gint i = 0; i < G_N_ELEMENTS (lang_descs); i++) {
       guint8 *iso639_languages =
           gst_mpeg_descriptor_find (stream->ES_info, lang_descs[i]);
       if (iso639_languages) {
