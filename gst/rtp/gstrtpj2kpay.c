@@ -241,8 +241,8 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
             GST_LOG_OBJECT (pay, "reached next SOT at %u", offset);
             state->bitstream = FALSE;
             state->force_packet = TRUE;
-            if (marker == J2K_MARKER_EOC)
-              /* include EOC */
+            if (marker == J2K_MARKER_EOC && state->next_sot + 2 <= size)
+              /* include EOC but never go past the max size */
               return state->next_sot + 2;
             else
               return state->next_sot;
