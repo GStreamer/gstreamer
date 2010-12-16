@@ -23,7 +23,7 @@
 #endif
 
 #include "gstautoconvert.h"
-#include "gstautocolorspace.h"
+#include "gstautovideoconvert.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -33,8 +33,8 @@ plugin_init (GstPlugin * plugin)
   ret = gst_element_register (plugin, "autoconvert",
       GST_RANK_NONE, GST_TYPE_AUTO_CONVERT);
 
-  ret &= gst_element_register (plugin, "autocolorspace",
-      GST_RANK_NONE, GST_TYPE_AUTO_COLOR_SPACE);
+  ret &= gst_element_register (plugin, "autovideoconvert",
+      GST_RANK_NONE, GST_TYPE_AUTO_VIDEO_CONVERT);
 
   return ret;
 }
