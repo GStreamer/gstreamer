@@ -377,6 +377,25 @@ ges_simple_timeline_layer_nth (GESSimpleTimelineLayer * layer, gint position)
 }
 
 /**
+ * ges_simple_timeline_layer_index:
+ * @layer: a #GESSimpleTimelineLayer
+ * @object: a #GESTimelineObject in the layer
+ *
+ * Gets the position of the given object within the given layer.
+ *
+ * Returns: The position of the object starting from 0, or -1 if the
+ * object was not found.
+ */
+
+gint
+ges_simple_timeline_layer_index (GESSimpleTimelineLayer * layer,
+    GESTimelineObject * object)
+{
+  GESSimpleTimelineLayerPrivate *priv = layer->priv;
+  return g_list_index (priv->objects, object);
+}
+
+/**
  * ges_simple_timeline_layer_move_object:
  * @layer: a #GESSimpleTimelineLayer
  * @object: the #GESTimelineObject to move

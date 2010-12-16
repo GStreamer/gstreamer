@@ -91,6 +91,10 @@ const GESTimelineObject *
 ges_simple_timeline_layer_nth (GESSimpleTimelineLayer *layer,
 			       gint position);
 
+gint
+ges_simple_timeline_layer_index (GESSimpleTimelineLayer *layer,
+				 GESTimelineObject *object);
+
 G_END_DECLS
 
 #endif /* _GES_SIMPLE_TIMELINE_LAYER */
