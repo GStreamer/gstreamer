@@ -231,33 +231,14 @@ gst_viewfinder_bin_set_video_sink (GstViewfinderBin * vfbin, GstElement * sink)
 {
   GST_INFO_OBJECT (vfbin, "Setting video sink to %" GST_PTR_FORMAT, sink);
 
-  if (vfbin->video_sink != sink) {
+  if (vfbin->user_video_sink != sink) {
+    if (vfbin->user_video_sink) {
+      gst_object_unref (vfbin->user_video_sink);
+    }
+    vfbin->user_video_sink = sink;
     if (sink)
-      gst_object_ref_sink (sink);
-
-    if (vfbin->video_sink) {
-      gst_bin_remove (GST_BIN_CAST (vfbin), vfbin->video_sink);
-      gst_object_unref (vfbin->video_sink);
-    }
-
-    vfbin->video_sink = sink;
-    if (sink) {
-      gst_bin_add (GST_BIN_CAST (vfbin), gst_object_ref (sink));
-      if (vfbin->elements_created) {
-        GstElement *videoscale = gst_bin_get_by_name (GST_BIN_CAST (vfbin),
-            "vfbin-videoscale");
-
-        g_assert (videoscale != NULL);
-
-        if (!gst_element_link_pads (videoscale, "src", sink, "sink")) {
-          GST_WARNING_OBJECT (vfbin, "Failed to link the new sink");
-        }
-      }
-    }
-
+      gst_object_ref (sink);
   }
-
-  GST_LOG_OBJECT (vfbin, "Video sink is now %" GST_PTR_FORMAT, sink);
 }
 
 static void
