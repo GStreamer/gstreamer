@@ -71,6 +71,8 @@ struct _GESTrackObjectPrivate
 
   gboolean valid;
 
+  gboolean locked;              /* If TRUE, then moves in sync with its controlling
+                                 * GESTimelineObject */
 };
 
 enum
@@ -273,6 +275,7 @@ ges_track_object_init (GESTrackObject * self)
   self->priv->pending_duration = GST_SECOND;
   self->priv->pending_gnl_priority = 1;
   self->priv->pending_active = TRUE;
+  self->priv->locked = TRUE;
 }
 
 gboolean
@@ -759,4 +762,32 @@ GstElement *
 ges_track_object_get_element (GESTrackObject * object)
 {
   return object->priv->element;
+}
+
+/**
+ * ges_track_object_set_locked:
+ * @object: a #GESTrackObject
+ * @locked: whether the object is lock to its parent
+ *
+ * Set the locking status of the @object in relationship to its controlling
+ * #GESTimelineObject. If @locked is %TRUE, then this object will move synchronously
+ * with its controlling #GESTimelineObject.
+*/
+void
+ges_track_object_set_locked (GESTrackObject * object, gboolean locked)
+{
+  object->priv->locked = locked;
+}
+
+/**
+ * ges_track_object_is_locked:
+ * @object: a #GESTrackObject
+ *
+ * Returns: %TRUE if the object is moving synchronously to its controlling
+ * #GESTimelineObject, else %FALSE.
+ */
+gboolean
+ges_track_object_is_locked (GESTrackObject * object)
+{
+  return object->priv->locked;
 }

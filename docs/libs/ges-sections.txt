@@ -68,6 +68,8 @@ GES_TYPE_TRACK
 GESTrackObject
 GESTrackObjectClass
 ges_track_object_set_active
+ges_track_object_set_locked
+ges_track_object_is_locked
 ges_track_object_get_track
 ges_track_object_get_timeline_object
 ges_track_object_get_gnlobject

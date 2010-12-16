@@ -151,6 +151,9 @@ GESTimelineObject * ges_track_object_get_timeline_object (GESTrackObject* object
 GstElement * ges_track_object_get_gnlobject (GESTrackObject * object);
 GstElement * ges_track_object_get_element (GESTrackObject * object);
 
+void ges_track_object_set_locked (GESTrackObject * object, gboolean locked);
+gboolean ges_track_object_is_locked (GESTrackObject * object);
+
 /* Private methods for GESTimelineObject's usage only */
 gboolean ges_track_object_set_start_internal (GESTrackObject * object, guint64 start);
 gboolean ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint);

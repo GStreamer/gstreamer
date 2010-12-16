@@ -417,20 +417,20 @@ ges_timeline_object_fill_track_object_func (GESTimelineObject * object,
 void
 ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
 {
+  GList *tmp;
+  GESTrackObject *tr;
+
   GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (start));
 
-  if (G_LIKELY (object->priv->trackobjects)) {
-    GList *tmp;
-
-    for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp))
+  for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
+    tr = (GESTrackObject *) tmp->data;
+    if (ges_track_object_is_locked (tr))
       /* call set_start_internal on each trackobject */
-      ges_track_object_set_start_internal (GES_TRACK_OBJECT (tmp->data), start);
-
+      ges_track_object_set_start_internal (tr, start);
   }
 
   object->start = start;
-
 }
 
 /**
@@ -444,22 +444,21 @@ ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
 void
 ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
 {
+  GList *tmp;
+  GESTrackObject *tr;
+
   GST_DEBUG ("object:%p, inpoint:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (inpoint));
 
-  if (G_LIKELY (object->priv->trackobjects)) {
-    GList *tmp;
+  for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
+    tr = (GESTrackObject *) tmp->data;
 
-    for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp))
+    if (ges_track_object_is_locked (tr))
       /* call set_inpoint_internal on each trackobject */
-      ges_track_object_set_inpoint_internal (GES_TRACK_OBJECT (tmp->data),
-          inpoint);
-
+      ges_track_object_set_inpoint_internal (tr, inpoint);
   }
 
   object->inpoint = inpoint;
-
-
 }
 
 /**
@@ -472,22 +471,21 @@ ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
 void
 ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
 {
+  GList *tmp;
+  GESTrackObject *tr;
+
   GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (duration));
 
-  if (G_LIKELY (object->priv->trackobjects)) {
-    GList *tmp;
+  for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
+    tr = (GESTrackObject *) tmp->data;
 
-    for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp))
+    if (ges_track_object_is_locked (tr))
       /* call set_duration_internal on each trackobject */
-      ges_track_object_set_duration_internal (GES_TRACK_OBJECT (tmp->data),
-          duration);
-
+      ges_track_object_set_duration_internal (tr, duration);
   }
 
   object->duration = duration;
-
-
 }
 
 /**
@@ -500,20 +498,19 @@ ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
 void
 ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
 {
+  GList *tmp;
+  GESTrackObject *tr;
+
   GST_DEBUG ("object:%p, priority:%d", object, priority);
 
-  if (G_LIKELY (object->priv->trackobjects)) {
-    GList *tmp;
-
-    for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp))
+  for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
+    tr = (GESTrackObject *) tmp->data;
+    if (ges_track_object_is_locked (tr))
       /* call set_priority_internal on each trackobject */
-      ges_track_object_set_priority_internal (GES_TRACK_OBJECT (tmp->data),
-          priority);
-
+      ges_track_object_set_priority_internal (tr, priority);
   }
 
   object->priority = priority;
-
 }
 
 /**
@@ -537,23 +534,20 @@ ges_timeline_object_find_track_object (GESTimelineObject * object,
     GESTrack * track, GType type)
 {
   GESTrackObject *ret = NULL;
+  GList *tmp;
+  GESTrackObject *otmp;
 
-  if (G_LIKELY (object->priv->trackobjects)) {
-    GList *tmp;
-    GESTrackObject *otmp;
+  for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
+    otmp = (GESTrackObject *) tmp->data;
 
-    for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
-      otmp = (GESTrackObject *) tmp->data;
+    if (ges_track_object_get_track (otmp) == track) {
+      if ((type != G_TYPE_NONE) && !G_TYPE_CHECK_INSTANCE_TYPE (tmp->data,
+              type))
+        continue;
 
-      if (ges_track_object_get_track (otmp) == track) {
-        if ((type != G_TYPE_NONE) && !G_TYPE_CHECK_INSTANCE_TYPE (tmp->data,
-                type))
-          continue;
-
-        ret = GES_TRACK_OBJECT (tmp->data);
-        g_object_ref (ret);
-        break;
-      }
+      ret = GES_TRACK_OBJECT (tmp->data);
+      g_object_ref (ret);
+      break;
     }
   }
 
@@ -607,21 +601,26 @@ ges_timeline_object_get_track_objects (GESTimelineObject * object)
   return ret;
 }
 
+
+/*
+ * PROPERTY NOTIFICATIONS FROM TRACK OBJECTS
+ */
 static void
 track_object_priority_offset_changed_cb (GESTrackObject * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * obj)
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
 {
   guint new, old;
 
   /* all track objects have height 1 */
   new = ges_track_object_get_priority_offset (child) + 1;
-  old = GES_TIMELINE_OBJECT_HEIGHT (obj);
+  old = GES_TIMELINE_OBJECT_HEIGHT (object);
 
-  GST_LOG ("object %p, new=%d, old=%d", obj, new, old);
+  GST_LOG ("object %p, new=%d, old=%d", object, new, old);
 
   if (new > old) {
-    obj->height = new;
+    object->height = new;
     GST_LOG ("emitting notify signal");
-    g_object_notify ((GObject *) obj, "height");
+    /* FIXME : use g_object_notify_by_pspec */
+    g_object_notify ((GObject *) object, "height");
   }
 }
