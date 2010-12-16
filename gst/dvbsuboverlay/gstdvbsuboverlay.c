@@ -711,6 +711,7 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
 
     /* Odd height */
     if (y < dh) {
+      sx = 0;
       for (x = 0; x < dw - 1; x += 2) {
         color =
             sub_region->pict.palette[src[(sy >> 16) * src_stride + (sx >> 16)]];
