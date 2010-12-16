@@ -61,8 +61,7 @@
  * rtspsrc will internally instantiate an RTP session manager element
  * that will handle the RTCP messages to and from the server, jitter removal,
  * packet reordering along with providing a clock for the pipeline. 
- * This feature is currently fully implemented with the gstrtpbin in the
- * gst-plugins-bad module.
+ * This feature is implemented using the gstrtpbin element.
  *
  * rtspsrc acts like a live source and will therefore only generate data in the 
  * PLAYING state.
