@@ -105,6 +105,15 @@ GST_START_TEST (test_object_properties)
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
       510, 0, TRUE);
 
+
+  /* This time, we move the trackobject to see if the changes move
+   * along to the parent and the gnonlin object */
+  g_object_set (trackobject, "start", (guint64) 400, NULL);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 400);
+  assert_equals_uint64 (GES_TRACK_OBJECT_START (trackobject), 400);
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 400, 510, 120,
+      510, 0, TRUE);
+
   ges_timeline_object_release_track_object (object, trackobject);
 
   g_object_unref (object);
@@ -165,6 +174,17 @@ GST_START_TEST (test_object_properties_unlocked)
   /* ... and neither on the GNonLin object */
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
       51, 0, TRUE);
+
+  /* When unlocked, moving the GESTrackObject won't move the GESTimelineObject
+   * either */
+  /* This time, we move the trackobject to see if the changes move
+   * along to the parent and the gnonlin object */
+  g_object_set (trackobject, "start", (guint64) 400, NULL);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 420);
+  assert_equals_uint64 (GES_TRACK_OBJECT_START (trackobject), 400);
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 400, 51, 12,
+      51, 0, TRUE);
+
 
   ges_timeline_object_release_track_object (object, trackobject);
 

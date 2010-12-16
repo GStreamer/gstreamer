@@ -42,10 +42,40 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject
     * object, GESTrack * track);
 
 static void
-track_object_priority_offset_changed_cb (GESTrackObject * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * obj);
+track_object_start_changed_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
+static void
+track_object_inpoint_changed_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
+static void
+track_object_duration_changed_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
+static void
+track_object_priority_changed_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
 
 G_DEFINE_ABSTRACT_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT);
+
+/* Mapping of relationship between a TimelineObject and the TrackObjects
+ * it controls
+ *
+ * NOTE : how do we make this public in the future ?
+ */
+typedef struct
+{
+  GESTrackObject *object;
+  gint64 start_offset;
+  gint64 duration_offset;
+  gint64 inpoint_offset;
+  gint32 priority_offset;
+
+  guint start_notifyid;
+  guint duration_notifyid;
+  guint inpoint_notifyid;
+  guint priority_notifyid;
+
+  /* track mapping ?? */
+} ObjectMapping;
 
 struct _GESTimelineObjectPrivate
 {
@@ -55,6 +85,13 @@ struct _GESTimelineObjectPrivate
   /*< private > */
   /* A list of TrackObject controlled by this TimelineObject */
   GList *trackobjects;
+
+  /* Set to TRUE when the timelineobject is doing updates of track object
+   * properties so we don't end up in infinite property update loops
+   */
+  gboolean ignore_notifies;
+
+  GList *mappings;
 };
 
 enum
@@ -66,7 +103,10 @@ enum
   PROP_PRIORITY,
   PROP_HEIGHT,
   PROP_LAYER,
+  PROP_LAST
 };
+
+static GParamSpec *properties[PROP_LAST];
 
 static void
 ges_timeline_object_get_property (GObject * object, guint property_id,
@@ -138,10 +178,10 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    *
    * The position of the object in the #GESTimelineLayer (in nanoseconds).
    */
+  properties[PROP_START] = g_param_spec_uint64 ("start", "Start",
+      "The position in the container", 0, G_MAXUINT64, 0, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_START,
-      g_param_spec_uint64 ("start", "Start",
-          "The position in the container", 0, G_MAXUINT64, 0,
-          G_PARAM_READWRITE));
+      properties[PROP_START]);
 
   /**
    * GESTimelineObject:in-point
@@ -152,9 +192,11 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    * Ex : an in-point of 5 seconds means that the first outputted buffer will
    * be the one located 5 seconds in the controlled resource.
    */
-  g_object_class_install_property (object_class, PROP_INPOINT,
+  properties[PROP_INPOINT] =
       g_param_spec_uint64 ("in-point", "In-point", "The in-point", 0,
-          G_MAXUINT64, 0, G_PARAM_READWRITE));
+      G_MAXUINT64, 0, G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_INPOINT,
+      properties[PROP_INPOINT]);
 
   /**
    * GESTimelineObject:duration
@@ -162,19 +204,21 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    * The duration (in nanoseconds) which will be used in the container #GESTrack
    * starting from 'in-point'.
    */
+  properties[PROP_DURATION] =
+      g_param_spec_uint64 ("duration", "Duration", "The duration to use", 0,
+      G_MAXUINT64, GST_CLOCK_TIME_NONE, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_DURATION,
-      g_param_spec_uint64 ("duration", "Duration", "The duration to use",
-          0, G_MAXUINT64, GST_CLOCK_TIME_NONE, G_PARAM_READWRITE));
+      properties[PROP_DURATION]);
 
   /**
    * GESTimelineObject:priority
    *
    * The layer priority of the timeline object.
    */
-
+  properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
+      "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_PRIORITY,
-      g_param_spec_uint ("priority", "Priority",
-          "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
+      properties[PROP_PRIORITY]);
 
   /**
    * GESTimelineObject:height
@@ -306,6 +350,8 @@ gboolean
 ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
     * trobj)
 {
+  ObjectMapping *mapping;
+
   GST_LOG ("Got a TrackObject : %p , setting the timeline object as its"
       "creator", trobj);
 
@@ -313,6 +359,10 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
     return FALSE;
 
   ges_track_object_set_timeline_object (trobj, object);
+
+  mapping = g_slice_new0 (ObjectMapping);
+  mapping->object = trobj;
+  object->priv->mappings = g_list_append (object->priv->mappings, mapping);
 
   GST_DEBUG ("Adding TrackObject to the list of controlled track objects");
   /* We steal the initial reference */
@@ -328,8 +378,19 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
 
   GST_DEBUG ("Returning trobj:%p", trobj);
 
-  g_signal_connect (G_OBJECT (trobj), "notify::priority-offset", G_CALLBACK
-      (track_object_priority_offset_changed_cb), object);
+  /* Listen to all property changes */
+  mapping->start_notifyid =
+      g_signal_connect (G_OBJECT (trobj), "notify::start",
+      G_CALLBACK (track_object_start_changed_cb), object);
+  mapping->duration_notifyid =
+      g_signal_connect (G_OBJECT (trobj), "notify::duration",
+      G_CALLBACK (track_object_duration_changed_cb), object);
+  mapping->inpoint_notifyid =
+      g_signal_connect (G_OBJECT (trobj), "notify::inpoint",
+      G_CALLBACK (track_object_inpoint_changed_cb), object);
+  mapping->priority_notifyid =
+      g_signal_connect (G_OBJECT (trobj), "notify::priority",
+      G_CALLBACK (track_object_priority_changed_cb), object);
 
   return TRUE;
 }
@@ -338,11 +399,18 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
  * ges_timeline_object_release_track_object:
  * @object: a #GESTimelineObject
  * @trackobject: the #GESTrackObject to release
+ *
+ * Release the @trackobject from the control of @object.
+ *
+ * Returns: %TRUE if the @trackobject was properly released, else %FALSE.
  */
 gboolean
 ges_timeline_object_release_track_object (GESTimelineObject * object,
     GESTrackObject * trackobject)
 {
+  GList *tmp;
+  ObjectMapping *mapping = NULL;
+
   GST_DEBUG ("object:%p, trackobject:%p", object, trackobject);
 
   if (!(g_list_find (object->priv->trackobjects, trackobject))) {
@@ -353,12 +421,33 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
   /* FIXME : Do we need to tell the subclasses ?
    * If so, add a new virtual-method */
 
+  for (tmp = object->priv->mappings; tmp; tmp = tmp->next) {
+    mapping = (ObjectMapping *) tmp->data;
+    if (mapping->object == trackobject)
+      break;
+  }
+
+  if (tmp && mapping) {
+
+    /* Disconnect all notify listeners */
+    g_signal_handler_disconnect (trackobject, mapping->start_notifyid);
+    g_signal_handler_disconnect (trackobject, mapping->duration_notifyid);
+    g_signal_handler_disconnect (trackobject, mapping->inpoint_notifyid);
+    g_signal_handler_disconnect (trackobject, mapping->priority_notifyid);
+
+    g_slice_free (ObjectMapping, mapping);
+
+    object->priv->mappings = g_list_delete_link (object->priv->mappings, tmp);
+  }
+
   object->priv->trackobjects =
       g_list_remove (object->priv->trackobjects, trackobject);
 
   ges_track_object_set_timeline_object (trackobject, NULL);
 
   g_object_unref (trackobject);
+
+  /* FIXME : resync properties ? */
 
   return TRUE;
 }
@@ -407,6 +496,20 @@ ges_timeline_object_fill_track_object_func (GESTimelineObject * object,
   return FALSE;
 }
 
+static ObjectMapping *
+find_object_mapping (GESTimelineObject * object, GESTrackObject * child)
+{
+  GList *tmp;
+
+  for (tmp = object->priv->mappings; tmp; tmp = tmp->next) {
+    ObjectMapping *map = (ObjectMapping *) tmp->data;
+    if (map->object == child)
+      return map;
+  }
+
+  return NULL;
+}
+
 /**
  * ges_timeline_object_set_start:
  * @object: a #GESTimelineObject
@@ -419,16 +522,27 @@ ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
 {
   GList *tmp;
   GESTrackObject *tr;
+  ObjectMapping *map;
 
   GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (start));
 
+  object->priv->ignore_notifies = TRUE;
+
   for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
     tr = (GESTrackObject *) tmp->data;
-    if (ges_track_object_is_locked (tr))
-      /* call set_start on each trackobject */
-      ges_track_object_set_start (tr, start);
+    map = find_object_mapping (object, tr);
+
+    if (ges_track_object_is_locked (tr)) {
+      /* Move the child... */
+      ges_track_object_set_start (tr, start + map->start_offset);
+    } else {
+      /* ... or update the offset */
+      map->start_offset = start - tr->start;
+    }
   }
+
+  object->priv->ignore_notifies = FALSE;
 
   object->start = start;
 }
@@ -500,15 +614,27 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
 {
   GList *tmp;
   GESTrackObject *tr;
+  ObjectMapping *map;
 
-  GST_DEBUG ("object:%p, priority:%d", object, priority);
+  GST_DEBUG ("object:%p, priority:%" GST_TIME_FORMAT,
+      object, GST_TIME_ARGS (priority));
+
+  object->priv->ignore_notifies = TRUE;
 
   for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
     tr = (GESTrackObject *) tmp->data;
-    if (ges_track_object_is_locked (tr))
-      /* call set_priority on each trackobject */
-      ges_track_object_set_priority (tr, priority);
+    map = find_object_mapping (object, tr);
+
+    if (ges_track_object_is_locked (tr)) {
+      /* Move the child... */
+      ges_track_object_set_priority (tr, priority + map->priority_offset);
+    } else {
+      /* ... or update the offset */
+      map->priority_offset = priority - tr->priority;
+    }
   }
+
+  object->priv->ignore_notifies = FALSE;
 
   object->priority = priority;
 }
@@ -605,22 +731,89 @@ ges_timeline_object_get_track_objects (GESTimelineObject * object)
 /*
  * PROPERTY NOTIFICATIONS FROM TRACK OBJECTS
  */
+
 static void
-track_object_priority_offset_changed_cb (GESTrackObject * child,
+track_object_start_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
 {
-  guint new, old;
+  ObjectMapping *map;
 
-  /* all track objects have height 1 */
-  new = ges_track_object_get_priority_offset (child) + 1;
-  old = GES_TIMELINE_OBJECT_HEIGHT (object);
+  if (object->priv->ignore_notifies)
+    return;
 
-  GST_LOG ("object %p, new=%d, old=%d", object, new, old);
+  map = find_object_mapping (object, child);
+  if (G_UNLIKELY (map == NULL))
+    /* something massively screwed up if we get this */
+    return;
 
-  if (new > old) {
-    object->height = new;
-    GST_LOG ("emitting notify signal");
-    /* FIXME : use g_object_notify_by_pspec */
-    g_object_notify ((GObject *) object, "height");
+  if (!ges_track_object_is_locked (child)) {
+    /* Update the internal start_offset */
+    map->start_offset = object->start - child->start;
+  } else {
+    /* Or update the parent start */
+    ges_timeline_object_set_start (object, child->start + map->start_offset);
+  }
+}
+
+static void
+track_object_inpoint_changed_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
+{
+  if (object->priv->ignore_notifies)
+    return;
+
+}
+
+static void
+track_object_duration_changed_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
+{
+  if (object->priv->ignore_notifies)
+    return;
+
+}
+
+static void
+track_object_priority_changed_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
+{
+  ObjectMapping *map;
+
+  if (object->priv->ignore_notifies)
+    return;
+
+  map = find_object_mapping (object, child);
+  if (G_UNLIKELY (map == NULL))
+    /* something massively screwed up if we get this */
+    return;
+
+  if (!ges_track_object_is_locked (child)) {
+    GList *tmp;
+    guint32 min_prio = G_MAXUINT32, max_prio = 0;
+
+    /* Update the internal priority_offset */
+    map->priority_offset = object->priority - child->priority;
+
+    /* Go over all childs and check if height has changed */
+    for (tmp = object->priv->trackobjects; tmp; tmp = tmp->next) {
+      GESTrackObject *tmpo = (GESTrackObject *) tmp->data;
+
+      if (tmpo->priority < min_prio)
+        min_prio = tmpo->priority;
+      if (tmpo->priority > max_prio)
+        max_prio = tmpo->priority;
+    }
+
+    /* FIXME : We only grow the height */
+    if (object->height < (max_prio - min_prio + 1)) {
+      object->height = max_prio - min_prio + 1;
+      g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_HEIGHT]);
+    }
+  } else {
+    /* Or update the parent priority */
+    ges_timeline_object_set_priority (object,
+        child->priority + map->priority_offset);
+    /* For the locked situation, we don't need to check the height,
+     * since all object priorities are moving together */
   }
 }
