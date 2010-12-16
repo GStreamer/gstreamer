@@ -369,7 +369,7 @@ gst_deinterlace_base_init (gpointer klass)
 
   gst_element_class_set_details_simple (element_class,
       "Deinterlacer",
-      "Filter/Video",
+      "Filter/Effect/Video/Deinterlace",
       "Deinterlace Methods ported from DScaler/TvTime",
       "Martin Eikermann <meiker@upb.de>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
