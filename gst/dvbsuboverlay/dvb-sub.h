@@ -153,14 +153,13 @@ typedef struct {
 	gpointer _dvb_sub_reserved[3];
 } DvbSubCallbacks;
 
+void     dvb_sub_init_debug    (void);
+
 GType    dvb_sub_get_type      (void) G_GNUC_CONST;
 DvbSub  *dvb_sub_new           (void);
 gint     dvb_sub_feed_with_pts (DvbSub *dvb_sub, guint64 pts, guint8 *data, gint len);
 void     dvb_sub_set_callbacks (DvbSub *dvb_sub, DvbSubCallbacks *callbacks, gpointer user_data);
 void     dvb_subtitles_free    (DVBSubtitles *sub);
-
-void dvb_sub_set_global_log_cb (void (*log_cb) (GLogLevelFlags log_level, const gchar *format, va_list args, gpointer user_data),
-                                gpointer user_data);
 
 G_END_DECLS
 

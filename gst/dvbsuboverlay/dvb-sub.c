@@ -36,51 +36,14 @@
 #include <gst/base/gstbitreader.h>      /* GstBitReader */
 #include "ffmpeg-colorspace.h" /* YUV_TO_RGB1_CCIR */   /* FIXME: Just give YUV data to gstreamer then? */
 
-/* FIXME: Convert to GST_LOG and clean up */
-void (*g_log_callback) (GLogLevelFlags log_level, const gchar * format,
-    va_list args, gpointer user_data) = NULL;
-gpointer g_log_callback_user_data = NULL;
+GST_DEBUG_CATEGORY_STATIC (dvbsub_debug);
+#define GST_CAT_DEFAULT dvbsub_debug
 
-#define DEBUG
-#ifdef DEBUG
-#define dvb_log(log_type, log_level, format...) real_dvb_log(log_type, log_level, ## format)
-typedef enum
+void
+dvb_sub_init_debug (void)
 {
-  /* dvb_log types // DVB_LOG environment variable string */
-  DVB_LOG_GENERAL,              /* GENERAL */
-  DVB_LOG_PAGE,                 /* PAGE */
-  DVB_LOG_REGION,               /* REGION */
-  DVB_LOG_CLUT,                 /* CLUT */
-  DVB_LOG_OBJECT,               /* OBJECT */
-  DVB_LOG_PIXEL,                /* PIXEL */
-  DVB_LOG_RUNLEN,               /* RUNLEN */
-  DVB_LOG_DISPLAY,              /* DISPLAY */
-  DVB_LOG_STREAM,               /* STREAM - issues in the encoded stream (TV service provider encoder problem) */
-  DVB_LOG_PACKET,               /* PACKET - messages during raw demuxer data packet handling */
-  DVB_LOG_LAST                  /* sentinel use only */
-} DvbLogTypes;
-
-static void
-real_dvb_log (const gint log_type, GLogLevelFlags log_level,
-    const gchar * format, ...)
-{
-  if (g_log_callback) {
-    va_list va;
-    va_start (va, format);
-    switch (log_type) {
-      default:
-        g_log_callback (log_level, format, va, g_log_callback_user_data);
-        break;
-      case DVB_LOG_PIXEL:
-      case DVB_LOG_RUNLEN:
-        break;
-    }
-    va_end (va);
-  }
+  GST_DEBUG_CATEGORY_INIT (dvbsub_debug, "dvbsub", 0, "dvbsuboverlay parser");
 }
-#else
-#define dvb_log(log_type, log_level, format...)
-#endif
 
 /* FIXME: Are we waiting for an acquisition point before trying to do things? */
 /* FIXME: In the end convert some of the guint8/16 (especially stack variables) back to gint for access efficiency */
@@ -452,14 +415,8 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   guint8 region_id;
   guint8 page_state;
 
-#ifdef DEBUG
-  static int counter = 0;
-  static const gchar *page_state_str[] = {
-    "Normal case",
-    "ACQUISITION POINT",
-    "Mode Change",
-    "RESERVED"
-  };
+#ifndef GST_DISABLE_GST_DEBUG
+  static int counter = 0;       /* FIXME: static counter? I think not.. */
 #endif
 
   if (buf_size < 1)
@@ -468,12 +425,17 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   priv->page_time_out = *buf++;
   page_state = ((*buf++) >> 2) & 3;
 
-#ifdef DEBUG
-  ++counter;
-  dvb_log (DVB_LOG_PAGE, G_LOG_LEVEL_DEBUG,
-      "%d: page_id = %u, length = %d, page_time_out = %u seconds, page_state = %s",
-      counter, page_id, buf_size, priv->page_time_out,
-      page_state_str[page_state]);
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    static const gchar *page_state_str[4] = {
+      "Normal case", "ACQUISITION POINT", "Mode Change", "RESERVED"
+    };
+
+    ++counter;
+    GST_DEBUG ("PAGE: %d: page_id = %u, length = %d, page_time_out = %u secs, "
+        "page_state = %s", counter, page_id, buf_size, priv->page_time_out,
+        page_state_str[page_state]);
+  }
 #endif
 
   if (page_state == 2) {        /* Mode change */
@@ -512,8 +474,7 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     priv->display_list = display;
     priv->display_list_size++;
 
-    dvb_log (DVB_LOG_PAGE, G_LOG_LEVEL_DEBUG,
-        "%d: REGION information: ID = %u, address = %ux%u",
+    GST_LOG ("PAGE %d: REGION information: ID = %u, address = %ux%u",
         counter, region_id, display->x_pos, display->y_pos);
   }
 
@@ -574,7 +535,7 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 
   region->depth = 1 << (((*buf++) >> 2) & 7);
   if (region->depth < 2 || region->depth > 8) {
-    g_warning ("region depth %d is invalid\n", region->depth);
+    GST_WARNING ("region depth %d is invalid", region->depth);
     region->depth = 4;          /* FIXME: Check from spec this is the default? */
   }
 
@@ -591,14 +552,13 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
       region->bgcolor = (((*buf++) >> 2) & 3);
   }
 
-  dvb_log (DVB_LOG_REGION, G_LOG_LEVEL_DEBUG,
-      "id = %u, (%ux%u)@%u-bit",
-      region_id, region->width, region->height, region->depth);
+  GST_DEBUG ("REGION: id = %u, (%ux%u)@%u-bit", region_id, region->width,
+      region->height, region->depth);
 
   if (fill) {
     memset (region->pbuf, region->bgcolor, region->buf_size);
-    dvb_log (DVB_LOG_REGION, G_LOG_LEVEL_DEBUG,
-        "Filling region (%u) with bgcolor = %u", region->id, region->bgcolor);
+    GST_DEBUG ("REGION: filling region (%u) with bgcolor = %u", region->id,
+        region->bgcolor);
   }
 
   delete_region_display_list (dvb_sub, region); /* Delete the region display list for current region - FIXME: why? */
@@ -641,14 +601,14 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     object_display->object_list_next = object->display_list;
     object->display_list = object_display;
 
-    dvb_log (DVB_LOG_REGION, G_LOG_LEVEL_DEBUG,
-        "REGION DATA: object_id = %u, region_id = %u, pos = %ux%u, obj_type = %u",
-        object->id, region->id, object_display->x_pos, object_display->y_pos,
-        object->type);
-    if (object->type == 1 || object->type == 2)
-      dvb_log (DVB_LOG_REGION, G_LOG_LEVEL_DEBUG,
-          "REGION DATA: fgcolor = %u, bgcolor = %u\n", object_display->fgcolor,
-          object_display->bgcolor);
+    GST_DEBUG ("REGION DATA: object_id = %u, region_id = %u, pos = %ux%u, "
+        "obj_type = %u", object->id, region->id, object_display->x_pos,
+        object_display->y_pos, object->type);
+
+    if (object->type == 1 || object->type == 2) {
+      GST_DEBUG ("REGION DATA: fgcolor = %u, bgcolor = %u",
+          object_display->fgcolor, object_display->bgcolor);
+    }
   }
 }
 
@@ -665,10 +625,7 @@ _dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   int y, cr, cb, alpha;
   int r, g, b, r_add, g_add, b_add;
 
-#ifdef DEBUG_PACKET_CONTENTS
-  g_print ("DVB clut packet:\n");
-  gst_util_dump_mem (buf, buf_size);
-#endif
+  GST_MEMDUMP ("DVB clut packet", buf, buf_size);
 
   clut_id = *buf++;
   buf += 1;
@@ -692,7 +649,7 @@ _dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     depth = (*buf) & 0xe0;
 
     if (depth == 0) {
-      g_warning ("Invalid clut depth 0x%x!", *buf);
+      GST_WARNING ("Invalid clut depth 0x%x!", *buf);
       return;
     }
 
@@ -718,8 +675,8 @@ _dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     YUV_TO_RGB1_CCIR (cb, cr);
     YUV_TO_RGB2_CCIR (r, g, b, y);
 
-    dvb_log (DVB_LOG_CLUT, G_LOG_LEVEL_DEBUG,
-        "CLUT DEFINITION: clut %d := (%d,%d,%d,%d)", entry_id, r, g, b, alpha);
+    GST_DEBUG ("CLUT DEFINITION: clut %d := (%d,%d,%d,%d)", entry_id, r, g, b,
+        alpha);
 
     if (depth & 0x80)
       clut->clut4[entry_id] = RGBA (r, g, b, 255 - alpha);
@@ -745,13 +702,13 @@ _dvb_sub_read_2bit_string (guint8 * destbuf, gint dbuf_len,
 
   static gboolean warning_shown = FALSE;
   if (!warning_shown) {
-    g_warning
-        ("Parsing 2bit color DVB sub-picture. This is not tested at all. If you see this message, "
-        "please provide the developers with sample media with these subtitles, if possible.");
+    g_warning ("Parsing 2bit color DVB sub-picture. This is not tested at all. "
+        "If you see this message, please provide the developers with sample "
+        "media with these subtitles, if possible.");
     warning_shown = TRUE;
   }
-  dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-      "(n=2): Inside %s with dbuf_len = %d", __PRETTY_FUNCTION__, dbuf_len);
+
+  GST_TRACE ("dbuf_len = %d", dbuf_len);
 
   while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 0)) {
     guint run_length = 0, clut_index = 0;
@@ -811,9 +768,9 @@ _dvb_sub_read_2bit_string (guint8 * destbuf, gint dbuf_len,
 
     /* Now we can simply memset run_length count of destination bytes
      * to clut_index, but only if not non_modifying */
-    dvb_log (DVB_LOG_RUNLEN, G_LOG_LEVEL_DEBUG,
-        "Setting %u pixels to color 0x%x in destination buffer; dbuf_len left is %d pixels",
-        run_length, clut_index, dbuf_len);
+    GST_TRACE ("RUNLEN: setting %u pixels to color 0x%x in destination buffer, "
+        "dbuf_len left is %d pixels", run_length, clut_index, dbuf_len);
+
     if (!(non_mod == 1 && bits == 1))
       memset (destbuf, clut_index, run_length);
 
@@ -825,8 +782,7 @@ _dvb_sub_read_2bit_string (guint8 * destbuf, gint dbuf_len,
   //gst_bit_reader_skip_to_byte (&gb);
   *srcbuf += (gst_bit_reader_get_pos (&gb) + 7) >> 3;
 
-  dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-      "Returning from 2bit_string parser with %u pixels read", pixels_read);
+  GST_TRACE ("PIXEL: returning, read %u pixels", pixels_read);
   // FIXME: Shouldn't need this variable if tracking things in the loop better
   return pixels_read;
 }
@@ -843,9 +799,8 @@ _dvb_sub_read_4bit_string (guint8 * destbuf, gint dbuf_len,
   guint32 bits = 0;
   guint32 pixels_read = 0;
 
-  dvb_log (DVB_LOG_RUNLEN, G_LOG_LEVEL_DEBUG,
-      "Entering 4bit_string parser at srcbuf position %p with buf_size = %d; destination buffer size is %d @ %p",
-      *srcbuf, buf_size, dbuf_len, destbuf);
+  GST_TRACE ("RUNLEN: srcbuf position %p, buf_size = %d; destination buffer "
+      "size is %d @ %p", *srcbuf, buf_size, dbuf_len, destbuf);
 
   while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 0)) {
     guint run_length = 0, clut_index = 0;
@@ -910,9 +865,9 @@ _dvb_sub_read_4bit_string (guint8 * destbuf, gint dbuf_len,
 
     /* Now we can simply memset run_length count of destination bytes
      * to clut_index, but only if not non_modifying */
-    dvb_log (DVB_LOG_RUNLEN, G_LOG_LEVEL_DEBUG,
-        "Setting %u pixels to color 0x%x in destination buffer; dbuf_len left is %d pixels",
-        run_length, clut_index, dbuf_len);
+    GST_TRACE ("RUNLEN: setting %u pixels to color 0x%x in destination buffer; "
+        "dbuf_len left is %d pixels", run_length, clut_index, dbuf_len);
+
     if (!(non_mod == 1 && bits == 1))
       memset (destbuf, clut_index, run_length);
 
@@ -924,8 +879,8 @@ _dvb_sub_read_4bit_string (guint8 * destbuf, gint dbuf_len,
   //gst_bit_reader_skip_to_byte (&gb);
   *srcbuf += (gst_bit_reader_get_pos (&gb) + 7) >> 3;
 
-  dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-      "Returning from 4bit_string parser with %u pixels read", pixels_read);
+  GST_LOG ("Returning with %u pixels read", pixels_read);
+
   // FIXME: Shouldn't need this variable if tracking things in the loop better
   return pixels_read;
 }
@@ -948,8 +903,8 @@ _dvb_sub_read_8bit_string (guint8 * destbuf, gint dbuf_len,
         "please provide the developers with sample media with these subtitles, if possible.");
     warning_shown = TRUE;
   }
-  dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-      "(n=8): Inside %s with dbuf_len = %d", __PRETTY_FUNCTION__, dbuf_len);
+
+  GST_LOG ("dbuf_len = %d", dbuf_len);
 
   /* FFMPEG-FIXME: ffmpeg uses a manual byte walking algorithm, which might be more performant,
    * FFMPEG-FIXME: but it does almost absolutely no buffer length checking, so could walk over
@@ -977,14 +932,11 @@ _dvb_sub_read_8bit_string (guint8 * destbuf, gint dbuf_len,
         /* run_length_3-127 */
         gst_bit_reader_get_bits_uint32 (&gb, &run_length, 7);
         gst_bit_reader_get_bits_uint32 (&gb, &clut_index, 8);
-#ifdef DEBUG
-        /* Emit a debugging message about stream not following specification */
+
         if (run_length < 3) {
-          dvb_log (DVB_LOG_STREAM, G_LOG_LEVEL_WARNING,
-              "8-bit/pixel_code_string::run_length_3-127 value was %u, but the spec requires it must be >=3",
-              run_length);
+          GST_WARNING ("runlength value was %u, but the spec requires it "
+              "must be >=3", run_length);
         }
-#endif
       }
     }
 
@@ -1005,9 +957,9 @@ _dvb_sub_read_8bit_string (guint8 * destbuf, gint dbuf_len,
 
     /* Now we can simply memset run_length count of destination bytes
      * to clut_index, but only if not non_modifying */
-    dvb_log (DVB_LOG_RUNLEN, G_LOG_LEVEL_DEBUG,
-        "Setting %u pixels to color 0x%x in destination buffer; dbuf_len left is %d pixels",
-        run_length, clut_index, dbuf_len);
+    GST_TRACE ("RUNLEN: setting %u pixels to color 0x%x in destination buffer; "
+        "dbuf_len left is %d pixels", run_length, clut_index, dbuf_len);
+
     if (!(non_mod == 1 && bits == 1))
       memset (destbuf, clut_index, run_length);
 
@@ -1015,8 +967,8 @@ _dvb_sub_read_8bit_string (guint8 * destbuf, gint dbuf_len,
     pixels_read += run_length;
   }
 
-  dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-      "Returning from 8bit_string parser with %u pixels read", pixels_read);
+  GST_LOG ("Returning with %u pixels read", pixels_read);
+
   // FIXME: Shouldn't need this variable if tracking things in the loop better
   return pixels_read;
 }
@@ -1040,16 +992,13 @@ _dvb_sub_parse_pixel_data_block (DvbSub * dvb_sub,
   };
   guint8 *map_table;
 
-  dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-      "(parse_block): DVB pixel block size %d, %s field:",
-      buf_size, top_bottom ? "bottom" : "top");
+  GST_LOG ("DVB pixel block size %d, %s field:", buf_size,
+      top_bottom ? "bottom" : "top");
 
-#ifdef DEBUG_PACKET_CONTENTS
-  gst_util_dump_mem (buf, buf_size);
-#endif
+  GST_MEMDUMP ("packet", buf, buf_size);
 
   if (region == NULL) {
-    g_print ("Region is NULL, returning\n");
+    GST_LOG ("Region is NULL, returning");
     return;
   }
 
@@ -1062,11 +1011,11 @@ _dvb_sub_parse_pixel_data_block (DvbSub * dvb_sub,
     y_pos++;
 
   while (buf < buf_end) {
-    dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-        "Iteration start, %u bytes missing from end; buf = %p, buf_end = %p;  "
-        "Region is number %u, with a dimension of %dx%d; We are at position %dx%d",
-        buf_end - buf, buf, buf_end,
+    GST_LOG ("Iteration start, %u bytes missing from end; buf = %p, "
+        "buf_end = %p; Region is number %u, with a dimension of %dx%d; "
+        "We are at position %dx%d", (guint) (buf_end - buf), buf, buf_end,
         region->id, region->width, region->height, x_pos, y_pos);
+
     // FFMPEG-FIXME: ffmpeg doesn't check for equality and so can overflow destination buffer later on with bad input data
     // FFMPEG-FIXME: However that makes it warn on end_of_object_line and map tables as well, so we add the dest_buf_filled tracking
     // FIXME: Removed x_pos checking here, because we don't want to turn dest_buf_filled to TRUE permanently in that case
@@ -1079,9 +1028,11 @@ _dvb_sub_parse_pixel_data_block (DvbSub * dvb_sub,
     switch (*buf++) {
       case 0x10:
         if (dest_buf_filled) {
-          g_warning ("Invalid object location for data_type 0x%x!\n", *(buf - 1));      /* FIXME: Be more verbose */
-          g_print ("Remaining data after invalid object location:\n");
-          gst_util_dump_mem (buf, buf_end - buf);
+          /* FIXME: Be more verbose */
+          GST_WARNING ("Invalid object location for data_type 0x%x!",
+              *(buf - 1));
+          GST_MEMDUMP ("Remaining data after invalid object location:", buf,
+              (guint) (buf_end - buf));
           return;
         }
 
@@ -1100,14 +1051,16 @@ _dvb_sub_parse_pixel_data_block (DvbSub * dvb_sub,
         break;
       case 0x11:
         if (dest_buf_filled) {
-          g_warning ("Invalid object location for data_type 0x%x!\n", *(buf - 1));      /* FIXME: Be more verbose */
-          g_print ("Remaining data after invalid object location:\n");
-          gst_util_dump_mem (buf, buf_end - buf);
+          /* FIXME: Be more verbose */
+          GST_WARNING ("Invalid object location for data_type 0x%x!",
+              *(buf - 1));
+          GST_MEMDUMP ("Remaining data after invalid object location:", buf,
+              buf_end - buf);
           return;               // FIXME: Perhaps tell read_nbit_string that dbuf_len is zero and let it walk the bytes regardless? (Same FIXME for 2bit and 8bit)
         }
 
         if (region->depth < 4) {
-          g_warning ("4-bit pixel string in %d-bit region!\n", region->depth);
+          GST_WARNING ("4-bit pixel string in %d-bit region!", region->depth);
           return;
         }
 
@@ -1116,27 +1069,27 @@ _dvb_sub_parse_pixel_data_block (DvbSub * dvb_sub,
         else
           map_table = NULL;
 
-        dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-            "READ_nBIT_STRING (4): String data into position %dx%d; buf before is %p\n",
-            x_pos, y_pos, buf);
+        GST_LOG ("READ_4BIT_STRING: String data into position %dx%d; "
+            "buf before is %p", x_pos, y_pos, buf);
         // FFMPEG-FIXME: ffmpeg code passes buf_size instead of buf_end - buf, and could
         // FFMPEG-FIXME: therefore potentially walk over the memory area we own
         x_pos +=
             _dvb_sub_read_4bit_string (pbuf + (y_pos * region->width) + x_pos,
             region->width - x_pos, &buf, buf_end - buf, non_mod, map_table);
-        dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-            "READ_nBIT_STRING (4) finished: buf pointer now %p", buf);
+        GST_DEBUG ("READ_4BIT_STRING finished: buf pointer now %p", buf);
         break;
       case 0x12:
         if (dest_buf_filled) {
-          g_warning ("Invalid object location for data_type 0x%x!\n", *(buf - 1));      /* FIXME: Be more verbose */
-          g_print ("Remaining data after invalid object location:\n");
-          gst_util_dump_mem (buf, buf_end - buf);
+          /* FIXME: Be more verbose */
+          GST_WARNING ("Invalid object location for data_type 0x%x!",
+              *(buf - 1));
+          GST_MEMDUMP ("Remaining data after invalid object location:",
+              buf, (guint) (buf_end - buf));
           return;
         }
 
         if (region->depth < 8) {
-          g_warning ("8-bit pixel string in %d-bit region!\n", region->depth);
+          GST_WARNING ("8-bit pixel string in %d-bit region!", region->depth);
           return;
         }
         // FFMPEG-FIXME: ffmpeg code passes buf_size instead of buf_end - buf, and could
@@ -1147,8 +1100,7 @@ _dvb_sub_parse_pixel_data_block (DvbSub * dvb_sub,
         break;
 
       case 0x20:
-        dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-            "(parse_block): handling map2to4 table data");
+        GST_DEBUG ("handling map2to4 table data");
         /* FIXME: I don't see any guards about buffer size here - buf++ happens with the switch, but
          * FIXME: buffer is walked without length checks? Same deal in other map table cases */
         map2to4[0] = (*buf) >> 4;
@@ -1157,27 +1109,23 @@ _dvb_sub_parse_pixel_data_block (DvbSub * dvb_sub,
         map2to4[3] = (*buf++) & 0xf;
         break;
       case 0x21:
-        dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-            "(parse_block): handling map2to8 table data");
+        GST_DEBUG ("handling map2to8 table data");
         for (i = 0; i < 4; i++)
           map2to8[i] = *buf++;
         break;
       case 0x22:
-        dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-            "(parse_block): handling map4to8 table data");
+        GST_DEBUG ("handling map4to8 table data");
         for (i = 0; i < 16; i++)
           map4to8[i] = *buf++;
         break;
-
       case 0xf0:
-        dvb_log (DVB_LOG_PIXEL, G_LOG_LEVEL_DEBUG,
-            "(parse_block): end of object line code encountered");
+        GST_DEBUG ("end of object line code encountered");
         x_pos = display->x_pos;
         y_pos += 2;
         break;
       default:
         /* FIXME: Do we consume word align stuffing byte that could follow top/bottom data? */
-        g_warning ("Unknown/unsupported pixel block 0x%x", *(buf - 1));
+        GST_WARNING ("Unknown/unsupported pixel block 0x%x", *(buf - 1));
     }
   }
 }
@@ -1197,13 +1145,11 @@ _dvb_sub_parse_object_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 
   object = get_object (dvb_sub, object_id);
 
-  dvb_log (DVB_LOG_OBJECT, G_LOG_LEVEL_DEBUG,
-      "parse_object_segment: A new object segment has occurred for object_id = %u",
+  GST_DEBUG ("OBJECT: a new object segment has occurred for object_id = %u",
       object_id);
 
   if (!object) {
-    g_warning
-        ("Nothing known about object with ID %u yet inside parse_object_segment, bailing out",
+    GST_WARNING ("Nothing known about object with ID %u yet, bailing out",
         object_id);
     return;
   }
@@ -1222,7 +1168,7 @@ _dvb_sub_parse_object_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     buf += 2;
 
     if (buf + top_field_len + bottom_field_len > buf_end) {
-      g_warning ("%s: Field data size too large\n", __PRETTY_FUNCTION__);
+      GST_WARNING ("Field data size too large");
       return;
     }
 
@@ -1232,9 +1178,10 @@ _dvb_sub_parse_object_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
         display = display->object_list_next) {
       block = buf;
 
-      dvb_log (DVB_LOG_OBJECT, G_LOG_LEVEL_DEBUG,
-          "Parsing top and bottom part of object id %d; top_field_len = %u, bottom_field_len = %u",
+      GST_DEBUG ("OBJECT: parsing top and bottom part of object id %d; "
+          "top_field_len = %u, bottom_field_len = %u",
           display->object_id, top_field_len, bottom_field_len);
+
       _dvb_sub_parse_pixel_data_block (dvb_sub, display, block, top_field_len,
           TOP_FIELD, non_modifying_color);
 
@@ -1248,10 +1195,9 @@ _dvb_sub_parse_object_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     }
 
   } else if (coding_method == 1) {
-    g_warning ("'a string of characters' coding method not supported (yet?)!");
+    GST_FIXME ("'a string of characters' coding method not supported yet!");
   } else {
-    g_warning ("%s: Unknown object coding 0x%x\n", __PRETTY_FUNCTION__,
-        coding_method);
+    GST_WARNING ("Unknown object coding 0x%x", coding_method);
   }
 }
 
@@ -1310,10 +1256,9 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
   guint32 *clut_table;
   int i;
 
-  static unsigned counter = 0;  /* DEBUG use only */
+  static unsigned counter = 0;  /* DEBUG use only *//* FIXME: get rid */
 
-  dvb_log (DVB_LOG_DISPLAY, G_LOG_LEVEL_DEBUG,
-      "END OF DISPLAY SET: page_id = %u, length = %d\n", page_id, buf_size);
+  GST_DEBUG ("DISPLAY SET END: page_id = %u, length = %d", page_id, buf_size);
 
   sub->rects = NULL;
 #if 0                           /* FIXME: PTS stuff not figured out yet */
@@ -1379,23 +1324,19 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
     rect->pict.palette = g_malloc ((1 << region->depth) * sizeof (guint32));    /* FIXME: Can we use GSlice here? */
     memcpy (rect->pict.palette, clut_table,
         (1 << region->depth) * sizeof (guint32));
-#if 0
-    g_print ("rect->pict.data.palette content:\n");
-    gst_util_dump_mem (rect->pict.palette,
-        (1 << region->depth) * sizeof (guint32));
-#endif
+
+    GST_MEMDUMP ("rect->pict.data.palette content",
+        (guint8 *) rect->pict.palette, (1 << region->depth) * sizeof (guint32));
 
     rect->pict.data = g_malloc (region->buf_size);      /* FIXME: Can we use GSlice here? */
     memcpy (rect->pict.data, region->pbuf, region->buf_size);
 
     ++counter;
-    dvb_log (DVB_LOG_DISPLAY, G_LOG_LEVEL_DEBUG,
-        "An object rect created: number %u, iteration %u, pos: %d:%d, size: %dx%d",
-        counter, i, rect->x, rect->y, rect->w, rect->h);
-#if 0
-    g_print ("rect->pict.data content:\n");
-    gst_util_dump_mem (rect->pict.data, region->buf_size);
-#endif
+    GST_DEBUG ("DISPLAY: an object rect created: number %u, iteration %u, "
+        "pos: %d:%d, size: %dx%d", counter, i, rect->x, rect->y, rect->w,
+        rect->h);
+
+    GST_MEMDUMP ("rect->pict.data content", rect->pict.data, region->buf_size);
 
     ++i;
   }
@@ -1484,50 +1425,46 @@ dvb_sub_feed_with_pts (DvbSub * dvb_sub, guint64 pts, guint8 * data, gint len)
   guint16 segment_len;
   guint16 page_id;
 
-  dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
-      "Inside dvb_sub_feed_with_pts with pts=%" G_GUINT64_FORMAT
-      " and length %d", pts, len);
+  GST_DEBUG ("pts=%" G_GUINT64_FORMAT " and length %d", pts, len);
 
   g_return_val_if_fail (data != NULL, -1);
 
   if (len <= 3) {               /* len(0x20 0x00 end_of_PES_data_field_marker) */
-    g_warning ("Data length too short");
+    GST_WARNING ("Data length too short");
     return -1;
   }
 
   if (data[pos++] != 0x20) {
-    g_warning
-        ("Tried to handle a PES packet private data that isn't a subtitle packet (does not start with 0x20)");
+    GST_WARNING ("Tried to handle a PES packet private data that isn't a "
+        "subtitle packet (does not start with 0x20)");
     return -1;
   }
 
   if (data[pos++] != 0x00) {
-    g_warning
-        ("'Subtitle stream in this PES packet' was not 0x00, so this is in theory not a DVB subtitle stream (but some other subtitle standard?); bailing out");
+    GST_WARNING ("'Subtitle stream in this PES packet' was not 0x00, so this "
+        "is in theory not a DVB subtitle stream (but some other subtitle "
+        "standard?); bailing out");
     return -1;
   }
 
   while (data[pos++] == DVB_SUB_SYNC_BYTE) {
     if ((len - pos) < (2 * 2 + 1)) {
-      g_warning
-          ("Data after SYNC BYTE too short, less than needed to even get to segment_length");
+      GST_WARNING ("Data after SYNC BYTE too short, less than needed to "
+          "even get to segment_length");
       return -2;
     }
     segment_type = data[pos++];
-    dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
-        "=== Segment type is 0x%x", segment_type);
+    GST_DEBUG ("=== Segment type is 0x%x", segment_type);
     page_id = (data[pos] << 8) | data[pos + 1];
-    dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG, "page_id is 0x%x", page_id);
+    GST_DEBUG ("page_id is 0x%x", page_id);
     pos += 2;
     segment_len = (data[pos] << 8) | data[pos + 1];
-    dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
-        "segment_length is %d (0x%x 0x%x)", segment_len, data[pos],
+    GST_DEBUG ("segment_length is %d (0x%x 0x%x)", segment_len, data[pos],
         data[pos + 1]);
     pos += 2;
     if ((len - pos) < segment_len) {
-      g_warning
-          ("segment_length was told to be %u, but we only have %d bytes left",
-          segment_len, len - pos);
+      GST_WARNING ("segment_length was told to be %u, but we only have "
+          "%d bytes left", segment_len, len - pos);
       return -2;
     }
     // TODO: Parse the segment per type  (this is probably a leftover TODO that is now done?)
@@ -1535,50 +1472,44 @@ dvb_sub_feed_with_pts (DvbSub * dvb_sub, guint64 pts, guint8 * data, gint len)
      * FIXME: but we let it slip and just take it for granted in end_of_display_set */
     switch (segment_type) {
       case DVB_SUB_SEGMENT_PAGE_COMPOSITION:
-        dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
-            "Page composition segment at buffer pos %u\n", pos);
+        GST_DEBUG ("Page composition segment at buffer pos %u", pos);
         _dvb_sub_parse_page_segment (dvb_sub, page_id, data + pos, segment_len);        /* FIXME: Not sure about args */
         break;
       case DVB_SUB_SEGMENT_REGION_COMPOSITION:
-        dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
-            "Region composition segment at buffer pos %u\n", pos);
+        GST_DEBUG ("Region composition segment at buffer pos %u", pos);
         _dvb_sub_parse_region_segment (dvb_sub, page_id, data + pos, segment_len);      /* FIXME: Not sure about args */
         break;
       case DVB_SUB_SEGMENT_CLUT_DEFINITION:
-        dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
-            "CLUT definition segment at buffer pos %u\n", pos);
+        GST_DEBUG ("CLUT definition segment at buffer pos %u", pos);
         _dvb_sub_parse_clut_segment (dvb_sub, page_id, data + pos, segment_len);        /* FIXME: Not sure about args */
         break;
       case DVB_SUB_SEGMENT_OBJECT_DATA:
-        dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
-            "Object data segment at buffer pos %u\n", pos);
+        GST_DEBUG ("Object data segment at buffer pos %u", pos);
         _dvb_sub_parse_object_segment (dvb_sub, page_id, data + pos, segment_len);      /* FIXME: Not sure about args */
         break;
       case DVB_SUB_SEGMENT_DISPLAY_DEFINITION:
-        dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
-            "display definition segment at buffer pos %u\n", pos);
+        GST_DEBUG ("display definition segment at buffer pos %u", pos);
         _dvb_sub_parse_display_definition_segment (dvb_sub, data + pos,
             segment_len);
         break;
       case DVB_SUB_SEGMENT_END_OF_DISPLAY_SET:
-        dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
-            "End of display set at buffer pos %u\n", pos);
+        GST_DEBUG ("End of display set at buffer pos %u", pos);
         _dvb_sub_parse_end_of_display_set (dvb_sub, page_id, data + pos, segment_len, pts);     /* FIXME: Not sure about args */
         break;
       default:
-        g_warning ("Unhandled segment type 0x%x", segment_type);
+        GST_FIXME ("Unhandled segment type 0x%x", segment_type);
         break;
     }
 
     pos += segment_len;
 
     if (pos == len) {
-      g_warning ("Data ended without a PES data end marker");
+      GST_WARNING ("Data ended without a PES data end marker");
       return 1;
     }
   }
 
-  g_warning ("Processed %d bytes out of %d\n", pos, len);
+  GST_LOG ("Processed %d bytes out of %d", pos, len);
   return pos;
 }
 
@@ -1604,15 +1535,4 @@ dvb_sub_set_callbacks (DvbSub * dvb_sub, DvbSubCallbacks * callbacks,
 
   priv->callbacks = *callbacks;
   priv->user_data = user_data;
-}
-
-void
-dvb_sub_set_global_log_cb (void (*log_cb) (GLogLevelFlags log_level,
-        const gchar * format, va_list args, gpointer user_data),
-    gpointer user_data)
-{
-  if (log_cb) {
-    g_log_callback = log_cb;
-    g_log_callback_user_data = user_data;
-  }
 }

@@ -42,7 +42,6 @@
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_dvbsub_overlay_debug);
-GST_DEBUG_CATEGORY_STATIC (gst_dvbsub_overlay_lib_debug);
 #define GST_CAT_DEFAULT gst_dvbsub_overlay_debug
 
 /* Filter signals and props */
@@ -156,27 +155,6 @@ gst_dvbsub_overlay_class_init (GstDVBSubOverlayClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_change_state);
-}
-
-static void
-_dvbsub_log_cb (GLogLevelFlags level, const gchar * fmt, va_list args,
-    gpointer render)
-{
-  gchar *message = g_strdup_vprintf (fmt, args);
-
-  if (level & G_LOG_LEVEL_ERROR)
-    GST_CAT_ERROR (gst_dvbsub_overlay_lib_debug, "%s", message);
-  else if (level & G_LOG_LEVEL_WARNING)
-    GST_CAT_WARNING (gst_dvbsub_overlay_lib_debug, "%s", message);
-  else if (level & G_LOG_LEVEL_INFO)
-    GST_CAT_INFO (gst_dvbsub_overlay_lib_debug, "%s", message);
-  else if (level & G_LOG_LEVEL_DEBUG)
-    GST_CAT_DEBUG (gst_dvbsub_overlay_lib_debug, "%s", message);
-  else
-    GST_CAT_LOG (gst_dvbsub_overlay_lib_debug,
-        "log level %d: %s", level, message);
-
-  g_free (message);
 }
 
 static void
@@ -1178,10 +1156,8 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_dvbsub_overlay_debug, "dvbsuboverlay",
       0, "DVB subtitle overlay");
-  GST_DEBUG_CATEGORY_INIT (gst_dvbsub_overlay_lib_debug, "dvbsub_library",
-      0, "libdvbsub library");
 
-  dvb_sub_set_global_log_cb (_dvbsub_log_cb, NULL);
+  dvb_sub_init_debug ();
 
   return gst_element_register (plugin, "dvbsuboverlay",
       GST_RANK_PRIMARY, GST_TYPE_DVBSUB_OVERLAY);
