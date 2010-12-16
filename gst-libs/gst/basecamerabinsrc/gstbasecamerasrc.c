@@ -222,6 +222,8 @@ gst_base_camera_src_start_capture (GstBaseCameraSrc * src)
 
   g_return_if_fail (klass->start_capture != NULL);
 
+  GST_DEBUG_OBJECT (src, "Starting capture");
+
   g_mutex_lock (src->capturing_mutex);
   if (src->capturing) {
     GST_WARNING_OBJECT (src, "Capturing already ongoing");
@@ -229,10 +231,12 @@ gst_base_camera_src_start_capture (GstBaseCameraSrc * src)
     return;
   }
 
+  src->capturing = TRUE;
   if (klass->start_capture (src)) {
-    src->capturing = TRUE;
+    GST_DEBUG_OBJECT (src, "Capture started");
     g_object_notify (G_OBJECT (src), "ready-for-capture");
   } else {
+    src->capturing = FALSE;
     GST_WARNING_OBJECT (src, "Failed to start capture");
   }
   g_mutex_unlock (src->capturing_mutex);
@@ -258,6 +262,7 @@ gst_base_camera_src_stop_capture (GstBaseCameraSrc * src)
 void
 gst_base_camera_src_finish_capture (GstBaseCameraSrc * self)
 {
+  GST_DEBUG_OBJECT (self, "Finishing capture");
   g_return_if_fail (self->capturing);
   self->capturing = FALSE;
   g_object_notify (G_OBJECT (self), "ready-for-capture");
