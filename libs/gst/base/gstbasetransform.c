@@ -1489,6 +1489,12 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
         gst_buffer_unref (*out_buf);
       *out_buf = NULL;
     }
+  } else if (outsize != newsize) {
+    GST_WARNING_OBJECT (trans, "Caps did not change but allocated size does "
+        "not match expected size (%d != %d)", newsize, outsize);
+    if (in_buf != *out_buf)
+      gst_buffer_unref (*out_buf);
+    *out_buf = NULL;
   }
 
   /* these are the final output caps */
