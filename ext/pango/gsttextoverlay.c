@@ -848,10 +848,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       overlay->wait_text = g_value_get_boolean (value);
       break;
     case PROP_AUTO_ADJUST_SIZE:
-    {
       overlay->auto_adjust_size = g_value_get_boolean (value);
       overlay->need_render = TRUE;
-    }
+      break;
     case PROP_VERTICAL_RENDER:
       overlay->use_vertical_render = g_value_get_boolean (value);
       gst_text_overlay_update_render_mode (overlay);
