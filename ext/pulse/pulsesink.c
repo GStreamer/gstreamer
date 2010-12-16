@@ -1649,6 +1649,50 @@ write_failed:
   }
 }
 
+/* write pending local samples, must be called with the mainloop lock */
+static void
+gst_pulsering_flush (GstPulseRingBuffer * pbuf)
+{
+#ifdef HAVE_PULSE_0_9_16
+  GstPulseSink *psink;
+
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+  GST_DEBUG_OBJECT (psink, "entering flush");
+
+  /* flush the buffer if possible */
+  if (pbuf->stream && (pbuf->m_data != NULL) && (pbuf->m_towrite > 0)) {
+#ifndef GST_DISABLE_GST_DEBUG
+    gint bps;
+
+    bps = (GST_RING_BUFFER_CAST (pbuf))->spec.bytes_per_sample;
+    GST_LOG_OBJECT (psink,
+        "flushing %u samples at offset %" G_GINT64_FORMAT,
+        (guint) pbuf->m_towrite / bps, pbuf->m_offset);
+#endif
+
+    if (pa_stream_write (pbuf->stream, (uint8_t *) pbuf->m_data,
+            pbuf->m_towrite, NULL, pbuf->m_offset, PA_SEEK_ABSOLUTE) < 0) {
+      goto write_failed;
+    }
+
+    pbuf->m_towrite = 0;
+    pbuf->m_offset += pbuf->m_towrite;  /* keep track of current offset */
+  }
+
+done:
+  return;
+
+  /* ERRORS */
+write_failed:
+  {
+    GST_ELEMENT_ERROR (psink, RESOURCE, FAILED,
+        ("pa_stream_write() failed: %s",
+            pa_strerror (pa_context_errno (pbuf->context))), (NULL));
+    goto done;
+  }
+#endif
+}
+
 static void gst_pulsesink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_pulsesink_get_property (GObject * object, guint prop_id,
@@ -2579,6 +2623,34 @@ update_failed:
 }
 #endif
 
+static void
+gst_pulsesink_flush_ringbuffer (GstPulseSink * psink)
+{
+  GstPulseRingBuffer *pbuf;
+
+  pa_threaded_mainloop_lock (mainloop);
+
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+
+  if (pbuf == NULL || pbuf->stream == NULL)
+    goto no_buffer;
+
+  gst_pulsering_flush (pbuf);
+
+  /* We're not interested if this operation failed or not */
+unlock:
+  pa_threaded_mainloop_unlock (mainloop);
+
+  return;
+
+  /* ERRORS */
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
+    goto unlock;
+  }
+}
+
 static gboolean
 gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
 {
@@ -2626,6 +2698,9 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
 
       break;
     }
+    case GST_EVENT_EOS:
+      gst_pulsesink_flush_ringbuffer (pulsesink);
+      break;
     default:
       ;
   }
