@@ -104,32 +104,38 @@ GST_START_TEST (test_layer_properties)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 51);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 0);
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 0, TRUE);
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+      51, 0, TRUE);
 
   /* Change the priority of the layer */
   g_object_set (layer, "priority", 1, NULL);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 1);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 10);
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 10, TRUE);
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+      51, 10, TRUE);
 
   /* Change it to an insanely high value */
   g_object_set (layer, "priority", 1000000, NULL);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 1000000);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 10000000);
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 10000000, TRUE);
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+      51, 10000000, TRUE);
 
   /* and back to 0 */
   g_object_set (layer, "priority", 0, NULL);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 0);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 0);
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 0, TRUE);
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+      51, 0, TRUE);
 
   /* check priority offsets */
   assert_equals_int (GES_TIMELINE_OBJECT_HEIGHT (object), 1);
   g_object_set (trackobject, "priority-offset", (guint32) 3, NULL);
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 3, TRUE);
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+      51, 3, TRUE);
   g_object_set (object, "priority", 5, NULL);
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 8, TRUE);
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+      51, 8, TRUE);
   assert_equals_int (GES_TIMELINE_OBJECT_HEIGHT (object), 4);
 
   g_object_unref (trackobject);

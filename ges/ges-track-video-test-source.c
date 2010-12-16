@@ -77,9 +77,8 @@ void
 ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
     * self, GESVideoTestPattern pattern)
 {
-  GstElement *element;
+  GstElement *element = ges_track_object_get_element (GES_TRACK_OBJECT (self));
 
-  element = GES_TRACK_OBJECT (self)->element;
   self->pattern = pattern;
 
   if (element)

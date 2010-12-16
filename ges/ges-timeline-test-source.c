@@ -202,7 +202,7 @@ ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute)
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
-    if (trackobject->track->type == GES_TRACK_TYPE_AUDIO)
+    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_AUDIO)
       ges_track_object_set_active (trackobject, !mute);
 
     g_object_unref (GES_TRACK_OBJECT (tmp->data));

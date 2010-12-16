@@ -111,7 +111,8 @@ GST_START_TEST (test_transition_properties)
   assert_equals_uint64 (GES_TRACK_OBJECT_INPOINT (trackobject), 12);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 0, TRUE);
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+      51, 0, TRUE);
 
   /* Change more properties, see if they propagate */
   g_object_set (object, "start", (guint64) 420, "duration", (guint64) 510,
@@ -124,7 +125,8 @@ GST_START_TEST (test_transition_properties)
   assert_equals_uint64 (GES_TRACK_OBJECT_INPOINT (trackobject), 120);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (trackobject->gnlobject, 420, 510, 120, 510, 0, TRUE);
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
+      510, 0, TRUE);
 
   /* test changing vtype */
   GST_DEBUG ("Setting to crossfade");

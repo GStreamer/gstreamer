@@ -97,7 +97,7 @@ pattern_source_fill_func (GESTimelineObject * object,
     GESTrackObject * trobject, GstElement * gnlobj, gpointer user_data)
 {
   guint pattern = GPOINTER_TO_UINT (user_data);
-  GESTrack *track = trobject->track;
+  GESTrack *track = ges_track_object_get_track (trobject);
   GstElement *testsrc;
 
   g_assert (track);

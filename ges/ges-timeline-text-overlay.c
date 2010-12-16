@@ -230,7 +230,7 @@ ges_timeline_text_overlay_set_text (GESTimelineTextOverlay * self,
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
-    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_text (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->text);
 
@@ -257,7 +257,7 @@ ges_timeline_text_overlay_set_font_desc (GESTimelineTextOverlay * self,
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
-    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_font_desc (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->font_desc);
 
@@ -282,7 +282,7 @@ ges_timeline_text_overlay_set_halign (GESTimelineTextOverlay * self,
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
-    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_halignment (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->halign);
 
@@ -307,7 +307,7 @@ ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
-    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_valignment (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->valign);
 

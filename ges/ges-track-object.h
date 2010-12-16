@@ -74,9 +74,6 @@ typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
 
 /**
  * GESTrackObject:
- * @timelineobj: The #GESTimelineObject to which this object belongs.
- * @track: The #GESTrack in which this object is.
- * @valid: #TRUE if the content of the @gnlobject is valid.
  * @start: Position (in nanoseconds) of the object the track.
  * @inpoint: in-point (in nanoseconds) of the object in the track.
  * @duration: Duration of the object.
@@ -89,11 +86,6 @@ struct _GESTrackObject {
   GObject parent;
 
   /*< public >*/
-  GESTimelineObject *timelineobj;
-  GESTrack *track;
-
-  gboolean valid;
-
   /* Cached values of the gnlobject properties */
   guint64 start;
   guint64 inpoint;
@@ -102,16 +94,6 @@ struct _GESTrackObject {
   gboolean active;
 
   /*< private >*/
-  /* These fields are only used before the gnlobject is available */
-  guint64 pending_start;
-  guint64 pending_inpoint;
-  guint64 pending_duration;
-  guint32 pending_gnl_priority;
-  gboolean pending_active;
-
-  GstElement *gnlobject;  /* The GnlObject */
-  GstElement *element;	  /* The element contained in the gnlobject (can be NULL) */
-
   GESTrackObjectPrivate *priv;
 
   /* Padding for API extension */
@@ -122,7 +104,6 @@ struct _GESTrackObject {
  * GESTrackObjectClass:
  * @gnlobject_factorytype: name of the GNonLin GStElementFactory type to use.
  * @create_gnl_object: method to create the GNonLin container object.
- * Create and fill the gnlobject and set it to GESTrackObject->gnlobject.
  * The default implementation will create an object of type @gnlobject_factorytype
  * and call @create_element.
  * @create_element: method to return the GstElement to put in the gnlobject.
@@ -142,7 +123,7 @@ struct _GESTrackObjectClass {
   /*< public >*/
   /* virtual methods for subclasses */
   const gchar *gnlobject_factorytype;
-  gboolean (*create_gnl_object) (GESTrackObject * object);
+  GstElement* (*create_gnl_object) (GESTrackObject * object);
   GstElement* (*create_element) (GESTrackObject * object);
 
   void (*start_changed) (GESTrackObject *object, guint64 start);
@@ -161,8 +142,14 @@ struct _GESTrackObjectClass {
 
 GType ges_track_object_get_type (void);
 
-gboolean ges_track_object_set_track (GESTrackObject * object, GESTrack * track);
+gboolean        ges_track_object_set_track (GESTrackObject * object, GESTrack * track);
+GESTrack* ges_track_object_get_track (GESTrackObject * object);
+
 void ges_track_object_set_timeline_object (GESTrackObject * object, GESTimelineObject * tlobject);
+GESTimelineObject * ges_track_object_get_timeline_object (GESTrackObject* object);
+
+GstElement * ges_track_object_get_gnlobject (GESTrackObject * object);
+GstElement * ges_track_object_get_element (GESTrackObject * object);
 
 /* Private methods for GESTimelineObject's usage only */
 gboolean ges_track_object_set_start_internal (GESTrackObject * object, guint64 start);

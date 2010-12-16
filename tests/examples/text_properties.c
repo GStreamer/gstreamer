@@ -68,7 +68,7 @@ print_transition_data (GESTimelineObject * tr)
 
   trackobjects = ges_timeline_object_get_track_objects (tr);
   trackobj = GES_TRACK_OBJECT (trackobjects->data);
-  gnlobj = trackobj->gnlobject;
+  gnlobj = ges_track_object_get_gnlobject (trackobj);
 
   g_object_get (gnlobj, "start", &start, "duration", &duration,
       "priority", &priority, "name", &name, NULL);

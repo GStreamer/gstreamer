@@ -564,10 +564,10 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 
     GST_DEBUG ("Trying to remove TrackObject %p", trobj);
     if (G_LIKELY (g_list_find_custom (timeline->tracks,
-                (gconstpointer) trobj->track,
+                ges_track_object_get_track (trobj),
                 (GCompareFunc) custom_find_track))) {
       GST_DEBUG ("Belongs to one of the tracks we control");
-      ges_track_remove_object (trobj->track, trobj);
+      ges_track_remove_object (ges_track_object_get_track (trobj), trobj);
 
       ges_timeline_object_release_track_object (object, trobj);
     }

@@ -27,14 +27,15 @@ fill_customsrc (GESTimelineObject * object, GESTrackObject * trobject,
 {
   GstElement *src;
   guint var = GPOINTER_TO_UINT (user_data);
+  GESTrack *track = ges_track_object_get_track (trobject);
 
   /* Based on the Track type, we will either put a videotestsrc
    * or an audiotestsrc */
 
-  if (trobject->track->type == GES_TRACK_TYPE_VIDEO) {
+  if (track->type == GES_TRACK_TYPE_VIDEO) {
     src = gst_element_factory_make ("videotestsrc", NULL);
     g_object_set (src, "pattern", var, NULL);
-  } else if (trobject->track->type == GES_TRACK_TYPE_AUDIO) {
+  } else if (track->type == GES_TRACK_TYPE_AUDIO) {
     src = gst_element_factory_make ("audiotestsrc", NULL);
     g_object_set (src, "freq", 440.0 * (var + 1), NULL);
   } else

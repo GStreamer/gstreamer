@@ -104,7 +104,8 @@ ges_track_dispose (GObject * object)
   while (priv->trackobjects) {
     GESTrackObject *trobj = GES_TRACK_OBJECT (priv->trackobjects->data);
     ges_track_remove_object (track, trobj);
-    ges_timeline_object_release_track_object (trobj->timelineobj, trobj);
+    ges_timeline_object_release_track_object ((GESTimelineObject *)
+        ges_track_object_get_timeline_object (trobj), trobj);
   }
 
   if (priv->composition) {
@@ -306,13 +307,16 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
 
   GST_DEBUG ("track:%p, object:%p", track, object);
 
-  if (G_UNLIKELY (object->track != NULL)) {
+  if (G_UNLIKELY (ges_track_object_get_track (object) != NULL)) {
     GST_WARNING ("Object already belongs to another track");
     return FALSE;
   }
 
-  if (G_UNLIKELY (object->gnlobject != NULL)) {
-    GST_ERROR ("TrackObject doesn't have a gnlobject !");
+  /* At this point, the track object shouldn't have any gnlobject since
+   * it hasn't been added to a track yet.
+   * FIXME : This check seems a bit obsolete */
+  if (G_UNLIKELY (ges_track_object_get_gnlobject (object) != NULL)) {
+    GST_ERROR ("TrackObject already controls a gnlobject !");
     return FALSE;
   }
 
@@ -323,9 +327,8 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
 
   GST_DEBUG ("Adding object to ourself");
 
-  /* make sure the object has a valid gnlobject ! */
   if (G_UNLIKELY (!gst_bin_add (GST_BIN (track->priv->composition),
-              object->gnlobject))) {
+              ges_track_object_get_gnlobject (object)))) {
     GST_WARNING ("Couldn't add object to the GnlComposition");
     return FALSE;
   }
@@ -349,6 +352,7 @@ gboolean
 ges_track_remove_object (GESTrack * track, GESTrackObject * object)
 {
   GESTrackPrivate *priv;
+  GstElement *gnlobject;
 
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
@@ -357,14 +361,14 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
 
   priv = track->priv;
 
-  if (G_UNLIKELY (object->track != track)) {
+  if (G_UNLIKELY (ges_track_object_get_track (object) != track)) {
     GST_WARNING ("Object belongs to another track");
     return FALSE;
   }
 
-  if (G_LIKELY (object->gnlobject != NULL)) {
+  if ((gnlobject = ges_track_object_get_gnlobject (object))) {
     GST_DEBUG ("Removing GnlObject from composition");
-    if (!gst_bin_remove (GST_BIN (priv->composition), object->gnlobject)) {
+    if (!gst_bin_remove (GST_BIN (priv->composition), gnlobject)) {
       GST_WARNING ("Failed to remove gnlobject from composition");
       return FALSE;
     }

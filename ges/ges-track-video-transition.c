@@ -296,7 +296,7 @@ ges_track_video_transition_duration_changed (GESTrackObject * object,
 {
   GValue start_value = { 0, };
   GValue end_value = { 0, };
-  GstElement *gnlobj = object->gnlobject;
+  GstElement *gnlobj = ges_track_object_get_gnlobject (object);
   GESTrackVideoTransition *self = GES_TRACK_VIDEO_TRANSITION (object);
 
   GST_LOG ("updating controller");

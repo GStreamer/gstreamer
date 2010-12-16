@@ -249,7 +249,7 @@ ges_track_audio_transition_duration_changed (GESTrackObject * object,
     guint64 duration)
 {
   GESTrackAudioTransition *self;
-  GstElement *gnlobj = object->gnlobject;
+  GstElement *gnlobj = ges_track_object_get_gnlobject (object);
 
   GValue zero = { 0, };
   GValue one = { 0, };
