@@ -36,7 +36,6 @@
 enum
 {
   PROP_0,
-  PROP_FILTER_CAPS,
   PROP_VIDEO_SRC,
 };
 
@@ -51,7 +50,6 @@ GST_DEBUG_CATEGORY (wrapper_camera_bin_src_debug);
 GST_BOILERPLATE (GstWrapperCameraBinSrc, gst_wrapper_camera_bin_src,
     GstBaseCameraSrc, GST_TYPE_BASE_CAMERA_SRC);
 
-static void configure_format (GstWrapperCameraBinSrc * self, GstCaps * caps);
 static void set_capsfilter_caps (GstWrapperCameraBinSrc * self,
     GstCaps * new_caps);
 
@@ -74,13 +72,6 @@ gst_wrapper_camera_bin_src_set_property (GObject * object,
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (object);
 
   switch (prop_id) {
-    case PROP_FILTER_CAPS:
-      GST_OBJECT_LOCK (self);
-      gst_caps_replace (&self->view_finder_caps,
-          (GstCaps *) gst_value_get_caps (value));
-      GST_OBJECT_UNLOCK (self);
-      configure_format (self, self->view_finder_caps);
-      break;
     case PROP_VIDEO_SRC:
       if (GST_STATE (self) != GST_STATE_NULL) {
         GST_ELEMENT_ERROR (self, CORE, FAILED,
@@ -107,9 +98,6 @@ gst_wrapper_camera_bin_src_get_property (GObject * object,
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (object);
 
   switch (prop_id) {
-    case PROP_FILTER_CAPS:
-      gst_value_set_caps (value, self->view_finder_caps);
-      break;
     case PROP_VIDEO_SRC:
       if (self->src_vid_src)
         g_value_set_object (value, self->src_vid_src);
@@ -265,195 +253,6 @@ done:
   return ret;
 }
 
-/**
- * get_srcpad_current_format:
- * @element: element to get the format from
- *
- * Helper function to get the negotiated fourcc
- * format from @element src pad.
- *
- * Returns: negotiated format (fourcc), 0 if not found
- */
-static guint32
-get_srcpad_current_format (GstElement * element)
-{
-  GstPad *srcpad = NULL;
-  GstCaps *srccaps = NULL;
-  GstStructure *structure;
-  guint32 format = 0;
-
-  g_return_val_if_fail (element != NULL, 0);
-
-  if ((srcpad = gst_element_get_static_pad (element, "src")) == NULL) {
-    goto no_pad;
-  }
-
-  if ((srccaps = gst_pad_get_negotiated_caps (srcpad)) == NULL) {
-    goto no_caps;
-  }
-
-  GST_LOG ("negotiated caps %" GST_PTR_FORMAT, srccaps);
-
-  structure = gst_caps_get_structure (srccaps, 0);
-  if (gst_structure_has_field (structure, "format")) {
-    gst_structure_get_fourcc (structure, "format", &format);
-  }
-
-  gst_caps_unref (srccaps);
-no_caps:
-  gst_object_unref (srcpad);
-no_pad:
-  GST_DEBUG ("current format for %" GST_PTR_FORMAT ": %" GST_FOURCC_FORMAT,
-      element, GST_FOURCC_ARGS (format));
-  return format;
-}
-
-/**
- * set_allowed_framerate:
- * @self: camerasrc object
- * @filter_caps: update allowed framerate to these caps
- *
- * Find allowed frame rate from video source that matches with
- * resolution in @filter_caps. Set found frame rate to @filter_caps.
- */
-static void
-set_allowed_framerate (GstWrapperCameraBinSrc * self, GstCaps * filter_caps)
-{
-  GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
-  GstStructure *structure;
-  GstCaps *allowed_caps = NULL, *intersect = NULL, *tmp_caps = NULL;
-  const GValue *framerate = NULL;
-  guint caps_size, i;
-  guint32 format = 0;
-
-  GST_INFO_OBJECT (self, "filter caps:%" GST_PTR_FORMAT, filter_caps);
-
-  structure = gst_structure_copy (gst_caps_get_structure (filter_caps, 0));
-
-  /* Set fourcc format according to current videosrc format */
-  format = get_srcpad_current_format (self->src_vid_src);
-  if (format) {
-    GST_DEBUG_OBJECT (self,
-        "using format %" GST_FOURCC_FORMAT " for matching",
-        GST_FOURCC_ARGS (format));
-    gst_structure_set (structure, "format", GST_TYPE_FOURCC, format, NULL);
-  } else {
-    GST_DEBUG_OBJECT (self, "not matching against fourcc format");
-    gst_structure_remove_field (structure, "format");
-  }
-
-  tmp_caps = gst_caps_new_full (structure, NULL);
-
-  /* Get supported caps from video src that matches with new filter caps */
-  allowed_caps = gst_base_camera_src_get_allowed_input_caps (bcamsrc);
-  intersect = gst_caps_intersect (allowed_caps, tmp_caps);
-  GST_INFO_OBJECT (self, "intersect caps:%" GST_PTR_FORMAT, intersect);
-
-  /* Find the best framerate from the caps */
-  caps_size = gst_caps_get_size (intersect);
-  for (i = 0; i < caps_size; i++) {
-    structure = gst_caps_get_structure (intersect, i);
-    framerate = gst_base_camera_src_find_better_framerate (bcamsrc,
-        structure, framerate);
-  }
-
-  /* Set found frame rate to original caps */
-  if (GST_VALUE_HOLDS_FRACTION (framerate)) {
-    gst_caps_set_simple (filter_caps,
-        "framerate", GST_TYPE_FRACTION,
-        gst_value_get_fraction_numerator (framerate),
-        gst_value_get_fraction_denominator (framerate), NULL);
-  }
-
-  /* Unref helper caps */
-  if (allowed_caps) {
-    gst_caps_unref (allowed_caps);
-  }
-  if (intersect) {
-    gst_caps_unref (intersect);
-  }
-  if (tmp_caps) {
-    gst_caps_unref (tmp_caps);
-  }
-}
-
-/**
- * gst_wrapper_camera_bin_src_setup_pipeline:
- * @bcamsrc: camerasrc object
- *
- * This function updates camerabin capsfilters according
- * to fps, resolution and zoom that have been configured
- * to camerabin.
- */
-static gboolean
-gst_wrapper_camera_bin_src_setup_pipeline (GstBaseCameraSrc * bcamsrc)
-{
-  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
-  GstStructure *st;
-  GstCaps *new_caps;
-  gboolean detect_framerate = FALSE;
-
-  /* clear video update status */
-//XXX  self->video_capture_caps_update = FALSE;
-
-  if (!self->view_finder_caps) {
-    st = gst_structure_from_string (CAMERABIN_DEFAULT_VF_CAPS, NULL);
-  } else {
-    st = gst_structure_copy (gst_caps_get_structure (self->view_finder_caps,
-            0));
-  }
-
-  if (bcamsrc->width > 0 && bcamsrc->height > 0) {
-    gst_structure_set (st,
-        "width", G_TYPE_INT, bcamsrc->width,
-        "height", G_TYPE_INT, bcamsrc->height, NULL);
-  }
-
-  if (bcamsrc->fps_n > 0 && bcamsrc->fps_d > 0) {
-    if (bcamsrc->night_mode) {
-      GST_INFO_OBJECT (self, "night mode, lowest allowed fps will be forced");
-      bcamsrc->pre_night_fps_n = bcamsrc->fps_n;
-      bcamsrc->pre_night_fps_d = bcamsrc->fps_d;
-      detect_framerate = TRUE;
-    } else {
-      gst_structure_set (st,
-          "framerate", GST_TYPE_FRACTION, bcamsrc->fps_n, bcamsrc->fps_d, NULL);
-      new_caps = gst_caps_new_full (st, NULL);
-    }
-  } else {
-    GST_DEBUG_OBJECT (self, "no framerate specified");
-    detect_framerate = TRUE;
-  }
-
-  if (detect_framerate) {
-    GST_DEBUG_OBJECT (self, "detecting allowed framerate");
-    /* Remove old framerate if any */
-    if (gst_structure_has_field (st, "framerate")) {
-      gst_structure_remove_field (st, "framerate");
-    }
-    new_caps = gst_caps_new_full (st, NULL);
-
-    /* Set allowed framerate for the resolution */
-    set_allowed_framerate (self, new_caps);
-  }
-
-  /* Set default zoom method */
-  if (self->src_zoom_scale) {
-    g_object_set (self->src_zoom_scale, "method",
-        CAMERABIN_DEFAULT_ZOOM_METHOD, NULL);
-  }
-
-  /* we create new caps in any way and they take ownership of the structure st */
-  gst_caps_replace (&self->view_finder_caps, new_caps);
-  gst_caps_unref (new_caps);
-
-  /* Set caps for view finder mode */
-  /* This also sets zoom */
-  set_capsfilter_caps (self, self->view_finder_caps);
-
-  return TRUE;
-}
-
 static gboolean
 copy_missing_fields (GQuark field_id, const GValue * value, gpointer user_data)
 {
@@ -580,30 +379,6 @@ img_capture_prepared (gpointer data, GstCaps * caps)
   }
 }
 
-static void
-set_image_capture_caps (GstWrapperCameraBinSrc * self, gint width, gint height)
-{
-  GstStructure *structure;
-  GstCaps *new_caps = NULL;
-
-  if (width && height && self->view_finder_caps) {
-    /* Use view finder mode caps as a basis */
-    structure = gst_caps_get_structure (self->view_finder_caps, 0);
-
-    /* Set new resolution for image capture */
-    new_caps = gst_caps_new_simple (gst_structure_get_name (structure),
-        "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
-
-    /* Set allowed framerate for the resolution. */
-    set_allowed_framerate (self, new_caps);
-  }
-
-  GST_INFO_OBJECT (self,
-      "init filter caps for image capture %" GST_PTR_FORMAT, new_caps);
-  gst_caps_replace (&self->image_capture_caps, new_caps);
-  self->image_capture_caps_update = FALSE;
-}
-
 /**
  *
  */
@@ -617,15 +392,9 @@ start_image_capture (GstWrapperCameraBinSrc * self)
   if (photography) {
 
     if (!self->image_capture_caps || self->image_capture_caps_update) {
-      if (bcamsrc->image_capture_width && bcamsrc->image_capture_height) {
-        /* Resolution is set, but it isn't in use yet */
-        set_image_capture_caps (self, bcamsrc->image_capture_width,
-            bcamsrc->image_capture_height);
-      } else {
-        /* Capture resolution not set. Use viewfinder resolution */
-        self->image_capture_caps = gst_caps_copy (self->view_finder_caps);
-        self->image_capture_caps_update = FALSE;
-      }
+      /* Capture resolution not set. Use viewfinder resolution */
+      self->image_capture_caps = gst_caps_copy (self->view_finder_caps);
+      self->image_capture_caps_update = FALSE;
     }
 
     /* Start preparations for image capture */
@@ -804,31 +573,6 @@ failed:
 }
 
 /**
- * configure_format:
- * @self: camerasrc object
- * @caps: caps describing new format
- *
- * Configure internal video format for camerabin.
- */
-static void
-configure_format (GstWrapperCameraBinSrc * self, GstCaps * caps)
-{
-  GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
-  GstStructure *st;
-
-  st = gst_caps_get_structure (caps, 0);
-
-  gst_structure_get_int (st, "width", &bcamsrc->width);
-  gst_structure_get_int (st, "height", &bcamsrc->height);
-
-  if (gst_structure_has_field_typed (st, "framerate", GST_TYPE_FRACTION)) {
-    gst_structure_get_fraction (st, "framerate", &bcamsrc->fps_n,
-        &bcamsrc->fps_d);
-  }
-}
-
-
-/**
  * update_aspect_filter:
  * @self: camerasrc object
  * @new_caps: new caps of next buffers arriving to view finder sink element
@@ -930,8 +674,6 @@ set_capsfilter_caps (GstWrapperCameraBinSrc * self, GstCaps * new_caps)
 {
   GST_INFO_OBJECT (self, "new_caps:%" GST_PTR_FORMAT, new_caps);
 
-  configure_format (self, new_caps);
-
   /* Update zoom */
   gst_base_camera_src_setup_zoom (GST_BASE_CAMERA_SRC (self));
 
@@ -1019,8 +761,6 @@ gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
 
   gstbasecamerasrc_class->construct_pipeline =
       gst_wrapper_camera_bin_src_construct_pipeline;
-  gstbasecamerasrc_class->setup_pipeline =
-      gst_wrapper_camera_bin_src_setup_pipeline;
   gstbasecamerasrc_class->set_zoom = gst_wrapper_camera_bin_src_set_zoom;
   gstbasecamerasrc_class->set_mode = gst_wrapper_camera_bin_src_set_mode;
   gstbasecamerasrc_class->get_allowed_input_caps =

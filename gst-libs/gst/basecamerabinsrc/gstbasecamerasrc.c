@@ -215,74 +215,6 @@ gst_base_camera_src_get_allowed_input_caps (GstBaseCameraSrc * self)
   return bclass->get_allowed_input_caps (self);
 }
 
-/**
- * gst_base_camera_src_find_better_framerate:
- * @self: camerasrc object
- * @st: structure that contains framerate candidates
- * @orig_framerate: best framerate so far
- *
- * Looks for framerate better than @orig_framerate from @st structure.
- * In night mode lowest framerate is considered best, otherwise highest is
- * best.
- *
- * Returns: @orig_framerate or better if found
- */
-const GValue *
-gst_base_camera_src_find_better_framerate (GstBaseCameraSrc * self,
-    GstStructure * st, const GValue * orig_framerate)
-{
-  const GValue *framerate = NULL;
-  guint i, i_best, list_size;
-  gint res, comparison;
-
-  if (self->night_mode) {
-    GST_LOG_OBJECT (self, "finding min framerate in %" GST_PTR_FORMAT, st);
-    comparison = GST_VALUE_LESS_THAN;
-  } else {
-    GST_LOG_OBJECT (self, "finding max framerate in %" GST_PTR_FORMAT, st);
-    comparison = GST_VALUE_GREATER_THAN;
-  }
-
-  if (gst_structure_has_field (st, "framerate")) {
-    framerate = gst_structure_get_value (st, "framerate");
-    /* Handle framerate lists */
-    if (GST_VALUE_HOLDS_LIST (framerate)) {
-      list_size = gst_value_list_get_size (framerate);
-      GST_LOG_OBJECT (self, "finding framerate from list");
-      for (i = 0, i_best = 0; i < list_size; i++) {
-        res = gst_value_compare (gst_value_list_get_value (framerate, i),
-            gst_value_list_get_value (framerate, i_best));
-        if (comparison == res) {
-          i_best = i;
-        }
-      }
-      GST_LOG_OBJECT (self, "found best framerate from index %d", i_best);
-      framerate = gst_value_list_get_value (framerate, i_best);
-    }
-    /* Handle framerate ranges */
-    if (GST_VALUE_HOLDS_FRACTION_RANGE (framerate)) {
-      if (self->night_mode) {
-        GST_LOG_OBJECT (self, "getting min framerate from range");
-        framerate = gst_value_get_fraction_range_min (framerate);
-      } else {
-        GST_LOG_OBJECT (self, "getting max framerate from range");
-        framerate = gst_value_get_fraction_range_max (framerate);
-      }
-    }
-  }
-
-  /* Check if we found better framerate */
-  if (orig_framerate && framerate) {
-    res = gst_value_compare (orig_framerate, framerate);
-    if (comparison == res) {
-      GST_LOG_OBJECT (self, "original framerate was the best");
-      framerate = orig_framerate;
-    }
-  }
-
-  return framerate;
-}
-
 static void
 gst_base_camera_src_start_capture (GstBaseCameraSrc * src)
 {
@@ -537,14 +469,7 @@ gst_base_camera_src_init (GstBaseCameraSrc * self,
   self->width = DEFAULT_WIDTH;
   self->height = DEFAULT_HEIGHT;
   self->zoom = DEFAULT_ZOOM;
-  self->image_capture_width = 0;
-  self->image_capture_height = 0;
   self->mode = MODE_IMAGE;
-
-  self->night_mode = FALSE;
-
-  self->fps_n = DEFAULT_FPS_N;
-  self->fps_d = DEFAULT_FPS_D;
 
   self->capturing = FALSE;
   self->capturing_mutex = g_mutex_new ();

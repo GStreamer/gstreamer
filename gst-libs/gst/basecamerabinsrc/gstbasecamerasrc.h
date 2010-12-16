@@ -64,27 +64,12 @@ struct _GstBaseCameraSrc
   gboolean capturing;
   GMutex *capturing_mutex;
 
-  /* XXX preview pads? */
-
   /* Resolution of the buffers configured to camerabin */
   gint width;
   gint height;
 
   /* The digital zoom (from 100% to 1000%) */
   gint zoom;
-
-  /* Image capture resolution */
-  gint image_capture_width;
-  gint image_capture_height;
-
-  /* Frames per second configured to camerabin */
-  gint fps_n;
-  gint fps_d;
-
-  /* Night mode handling */
-  gboolean night_mode;
-  gint pre_night_fps_n;
-  gint pre_night_fps_d;
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
@@ -136,9 +121,6 @@ GstColorBalance * gst_base_camera_src_get_color_balance (GstBaseCameraSrc *self)
 gboolean gst_base_camera_src_set_mode (GstBaseCameraSrc *self, GstCameraBinMode mode);
 void gst_base_camera_src_setup_zoom (GstBaseCameraSrc * self);
 GstCaps * gst_base_camera_src_get_allowed_input_caps (GstBaseCameraSrc * self);
-const GValue * gst_base_camera_src_find_better_framerate (
-    GstBaseCameraSrc * self, GstStructure * st, const GValue * orig_framerate);
-
 void gst_base_camera_src_finish_capture (GstBaseCameraSrc *self);
 
 
