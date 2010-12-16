@@ -67,7 +67,9 @@ Properties:
   (somehow align the parse tree with the hexdump)
 
 == unsorted ==
-- handle chapters
+- show named audio channel configurations instead only numbers
+  e.g. "mono", "stereo", "5.1"
+- handle chapters (once the patches are merged)
 - tag lists
   - if there is a "language-code" in the tags (or subtitles?) use flag icons
     - deluge installs some under: /usr/share/pyshared/deluge/data/mediainfo/pixmaps/flags/
@@ -75,6 +77,7 @@ Properties:
   - handle album art in tag lists
   - geo-tags: map-widget?, link to google-maps?
   - artist: links to {last.fm,wikipedia}
+  - format dates nicely
 - show level meters for audio next or below video drawable
 
 == deep scan mode ==
