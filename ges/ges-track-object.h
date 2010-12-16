@@ -74,26 +74,19 @@ typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
 
 /**
  * GESTrackObject:
- * @start: Position (in nanoseconds) of the object the track.
- * @inpoint: in-point (in nanoseconds) of the object in the track.
- * @duration: Duration of the object.
- * @gnl_priority: the cached gnl priority (base + offset)
- * @active: Whether the object is to be used or not.
  *
- * The GESTrackObject base class. Only sub-classes can access these fields.
+ * The GESTrackObject base class.
  */
 struct _GESTrackObject {
   GObject parent;
 
-  /*< public >*/
-  /* Cached values of the gnlobject properties */
+  /*< private >*/
   guint64 start;
   guint64 inpoint;
   guint64 duration;
-  guint32 gnl_priority;
+  guint32 priority;
   gboolean active;
 
-  /*< private >*/
   GESTrackObjectPrivate *priv;
 
   /* Padding for API extension */
@@ -158,8 +151,6 @@ void ges_track_object_set_start (GESTrackObject * object, guint64 start);
 void ges_track_object_set_inpoint (GESTrackObject * object, guint64 inpoint);
 void ges_track_object_set_duration (GESTrackObject * object, guint64 duration);
 void ges_track_object_set_priority (GESTrackObject * object, guint32 priority);
-
-guint32 ges_track_object_get_priority_offset (GESTrackObject *object);
 
 gboolean ges_track_object_set_active (GESTrackObject * object, gboolean active);
 G_END_DECLS
