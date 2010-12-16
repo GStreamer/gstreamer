@@ -832,10 +832,11 @@ static void
 new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs, gpointer user_data)
 {
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (user_data);
+  int max_page_timeout;
 
-  if (overlay->max_page_timeout > 0)
-    subs->page_time_out = MIN (subs->page_time_out,
-        g_atomic_int_get (&overlay->max_page_timeout));
+  max_page_timeout = g_atomic_int_get (&overlay->max_page_timeout);
+  if (max_page_timeout > 0)
+    subs->page_time_out = MIN (subs->page_time_out, max_page_timeout);
 
   GST_INFO_OBJECT (overlay,
       "New DVB subtitles arrived with a page_time_out of %d and %d regions for PTS=%"
