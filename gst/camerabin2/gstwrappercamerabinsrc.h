@@ -76,10 +76,14 @@ struct _GstWrapperCameraBinSrc
   GstElement *src_zoom_scale;
   GstElement *src_zoom_filter;
 
+  guint src_event_probe_id;
+
   /* srcpads of tee */
   GstPad *tee_vf_srcpad;
   GstPad *tee_image_srcpad;
   GstPad *tee_video_srcpad;
+
+  GstPadEventFunction srcpad_event_func;
 
   /* Application configurable elements */
   GstElement *app_vid_src;
@@ -99,7 +103,8 @@ struct _GstWrapperCameraBinSrc
 
   /* Caps applied to capsfilters when taking still image */
   GstCaps *image_capture_caps;
-  gboolean image_capture_caps_update; // XXX where does this get set..
+  gboolean image_renegotiate;
+  gboolean video_renegotiate;
 };
 
 
