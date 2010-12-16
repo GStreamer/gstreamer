@@ -10,7 +10,7 @@ TrackObject/TimelineObject basic properties (hereafter position):
 
 Use Cases:
 
- A TimelineObject can be tracking one or many TrackObject(s).
+ A TimelineObject tracks one or many TrackObject(s).
 
  When the TimelineObject position is modified we might need
  to cascade those changes to the controlled TrackObject(s) if those
@@ -52,5 +52,48 @@ Main Problem:
 
 Design:
 
- TBD
+ The TimelineObject listen to TrackObject 'notify' signals
 
+ When it sets a property on its trackobjects, it 'ignores' all
+ notifications that happen while setting them.
+
+ Setting a property on a TrackObject will see its property changed,
+ and then it emits a notify with the modified property.
+
+ TrackObject::locked
+  ges_track_object_set_locked()
+  ges_track_object_is_locked()
+
+ Mapping {
+   GESTrackObject *object;
+   gint64 start_offset;
+   gint64 duration_offset;
+   gint64 inpoint_offset;
+   gint32 priority_offset;
+   /* Track ??? */
+ }
+
+ P : property
+ V : value
+
+ TimelineObject set_property(P,V)
+   ignore_notifies = TRUE
+   parent.P = V
+   foreach child in trackobjects:
+     if child.is_locked():
+        child.set_property(P, parent.P + mapping(child).P_offset)
+   ignore_notifies = FALSE
+
+ TimelineObject child 'notify::P' handler:
+   if ignore_notifies:
+      return
+   if not child.is_locked():
+     mapping(child).P_offset = timeline.P - child.P
+   else:
+     TimelineObject.set_property(P, child value + mapping(child).P_offset)
+
+ TrackObject set_property(P, V)
+   update the property locally (P = V)
+   emit 'notify::P' signal
+
+ TODO : When do we resync the parent values to have minimal offsets ?
