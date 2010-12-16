@@ -321,10 +321,10 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
 
   GST_DEBUG ("Setting properties on newly created TrackObject");
 
-  ges_track_object_set_start_internal (trobj, object->start);
-  ges_track_object_set_priority_internal (trobj, object->priority);
-  ges_track_object_set_duration_internal (trobj, object->duration);
-  ges_track_object_set_inpoint_internal (trobj, object->inpoint);
+  ges_track_object_set_start (trobj, object->start);
+  ges_track_object_set_priority (trobj, object->priority);
+  ges_track_object_set_duration (trobj, object->duration);
+  ges_track_object_set_inpoint (trobj, object->inpoint);
 
   GST_DEBUG ("Returning trobj:%p", trobj);
 
@@ -426,8 +426,8 @@ ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
   for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
     tr = (GESTrackObject *) tmp->data;
     if (ges_track_object_is_locked (tr))
-      /* call set_start_internal on each trackobject */
-      ges_track_object_set_start_internal (tr, start);
+      /* call set_start on each trackobject */
+      ges_track_object_set_start (tr, start);
   }
 
   object->start = start;
@@ -454,8 +454,8 @@ ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
     tr = (GESTrackObject *) tmp->data;
 
     if (ges_track_object_is_locked (tr))
-      /* call set_inpoint_internal on each trackobject */
-      ges_track_object_set_inpoint_internal (tr, inpoint);
+      /* call set_inpoint on each trackobject */
+      ges_track_object_set_inpoint (tr, inpoint);
   }
 
   object->inpoint = inpoint;
@@ -481,8 +481,8 @@ ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
     tr = (GESTrackObject *) tmp->data;
 
     if (ges_track_object_is_locked (tr))
-      /* call set_duration_internal on each trackobject */
-      ges_track_object_set_duration_internal (tr, duration);
+      /* call set_duration on each trackobject */
+      ges_track_object_set_duration (tr, duration);
   }
 
   object->duration = duration;
@@ -506,8 +506,8 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
   for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
     tr = (GESTrackObject *) tmp->data;
     if (ges_track_object_is_locked (tr))
-      /* call set_priority_internal on each trackobject */
-      ges_track_object_set_priority_internal (tr, priority);
+      /* call set_priority on each trackobject */
+      ges_track_object_set_priority (tr, priority);
   }
 
   object->priority = priority;

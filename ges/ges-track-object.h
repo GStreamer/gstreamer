@@ -154,13 +154,10 @@ GstElement * ges_track_object_get_element (GESTrackObject * object);
 void ges_track_object_set_locked (GESTrackObject * object, gboolean locked);
 gboolean ges_track_object_is_locked (GESTrackObject * object);
 
-/* Private methods for GESTimelineObject's usage only */
-gboolean ges_track_object_set_start_internal (GESTrackObject * object, guint64 start);
-gboolean ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint);
-gboolean ges_track_object_set_duration_internal (GESTrackObject * object, guint64 duration);
-gboolean ges_track_object_set_priority_internal (GESTrackObject * object, guint32 priority);
-gboolean ges_track_object_set_priority_offset_internal(GESTrackObject *
-    object, guint32 priority_offset);
+void ges_track_object_set_start (GESTrackObject * object, guint64 start);
+void ges_track_object_set_inpoint (GESTrackObject * object, guint64 inpoint);
+void ges_track_object_set_duration (GESTrackObject * object, guint64 duration);
+void ges_track_object_set_priority (GESTrackObject * object, guint32 priority);
 
 guint32 ges_track_object_get_priority_offset (GESTrackObject *object);
 

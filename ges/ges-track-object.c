@@ -83,8 +83,11 @@ enum
   PROP_DURATION,
   PROP_PRIORITY,
   PROP_PRIORITY_OFFSET,
-  PROP_ACTIVE
+  PROP_ACTIVE,
+  PROP_LAST
 };
+
+static GParamSpec *properties[PROP_LAST];
 
 static GstElement *ges_track_object_create_gnl_object_func (GESTrackObject *
     object);
@@ -103,6 +106,19 @@ void gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
 
 void gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackObject * obj);
+
+static inline gboolean
+ges_track_object_set_start_internal (GESTrackObject * object, guint64 start);
+static inline gboolean
+ges_track_object_set_inpoint_internal (GESTrackObject * object,
+    guint64 inpoint);
+static inline gboolean ges_track_object_set_duration_internal (GESTrackObject *
+    object, guint64 duration);
+static inline gboolean ges_track_object_set_priority_internal (GESTrackObject *
+    object, guint32 priority);
+static inline gboolean
+ges_track_object_set_priority_offset_internal (GESTrackObject * object,
+    guint32 priority);
 
 static gboolean ges_track_object_update_priority (GESTrackObject * object);
 
@@ -196,10 +212,10 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    *
    * The position of the object in the container #GESTrack (in nanoseconds).
    */
+  properties[PROP_START] = g_param_spec_uint64 ("start", "Start",
+      "The position in the container", 0, G_MAXUINT64, 0, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_START,
-      g_param_spec_uint64 ("start", "Start",
-          "The position in the container", 0, G_MAXUINT64, 0,
-          G_PARAM_READWRITE));
+      properties[PROP_START]);
 
   /**
    * GESTrackObject:in-point
@@ -210,9 +226,11 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    * Ex : an in-point of 5 seconds means that the first outputted buffer will
    * be the one located 5 seconds in the controlled resource.
    */
-  g_object_class_install_property (object_class, PROP_INPOINT,
+  properties[PROP_INPOINT] =
       g_param_spec_uint64 ("in-point", "In-point", "The in-point", 0,
-          G_MAXUINT64, 0, G_PARAM_READWRITE));
+      G_MAXUINT64, 0, G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_INPOINT,
+      properties[PROP_INPOINT]);
 
   /**
    * GESTrackObject:duration
@@ -221,9 +239,11 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    * starting from 'in-point'.
    *
    */
+  properties[PROP_DURATION] =
+      g_param_spec_uint64 ("duration", "Duration", "The duration to use", 0,
+      G_MAXUINT64, GST_SECOND, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_DURATION,
-      g_param_spec_uint64 ("duration", "Duration", "The duration to use",
-          0, G_MAXUINT64, GST_SECOND, G_PARAM_READWRITE));
+      properties[PROP_DURATION]);
 
   /**
    * GESTrackObject:priority
@@ -236,19 +256,21 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    * priorities go in increasing numerical value (with #G_MAXUINT64 being the
    * lowest priority).
    */
+  properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
+      "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_PRIORITY,
-      g_param_spec_uint ("priority", "Priority",
-          "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
+      properties[PROP_PRIORITY]);
 
   /**
    * GESTrackObject:priority-offset
    *
    * The priority of the object relative to its parent #GESTimelineObject.
    */
-  g_object_class_install_property (object_class, PROP_PRIORITY_OFFSET,
+  properties[PROP_PRIORITY_OFFSET] =
       g_param_spec_uint ("priority-offset", "Priority Offset",
-          "An offset from the base priority", 0, G_MAXUINT, 0,
-          G_PARAM_READWRITE));
+      "An offset from the base priority", 0, G_MAXUINT, 0, G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_PRIORITY_OFFSET,
+      properties[PROP_PRIORITY_OFFSET]);
 
   /**
    * GESTrackObject:active
@@ -256,9 +278,11 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    * Whether the object should be taken into account in the #GESTrack output.
    * If #FALSE, then its contents will not be used in the resulting track.
    */
+  properties[PROP_ACTIVE] =
+      g_param_spec_boolean ("active", "Active", "Use object in output", TRUE,
+      G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_ACTIVE,
-      g_param_spec_boolean ("active", "Active", "Use object in output",
-          TRUE, G_PARAM_READWRITE));
+      properties[PROP_ACTIVE]);
 
   klass->create_gnl_object = ges_track_object_create_gnl_object_func;
 }
@@ -278,7 +302,7 @@ ges_track_object_init (GESTrackObject * self)
   self->priv->locked = TRUE;
 }
 
-gboolean
+static inline gboolean
 ges_track_object_set_start_internal (GESTrackObject * object, guint64 start)
 {
   GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
@@ -294,7 +318,21 @@ ges_track_object_set_start_internal (GESTrackObject * object, guint64 start)
   return TRUE;
 };
 
-gboolean
+/**
+ * ges_track_object_set_start:
+ * @object: a #GESTrackObject
+ * @start: the start position (in #GstClockTime)
+ *
+ * Sets the position of the object in the container #GESTrack.
+ */
+void
+ges_track_object_set_start (GESTrackObject * object, guint64 start)
+{
+  if (ges_track_object_set_start_internal (object, start))
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_START]);
+}
+
+static inline gboolean
 ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint)
 {
 
@@ -312,7 +350,21 @@ ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint)
   return TRUE;
 }
 
-gboolean
+/**
+ * ges_track_object_set_inpoint:
+ * @object: a #GESTrackObject
+ * @inpoint: the in-point (in #GstClockTime)
+ *
+ * Set the offset within the contents of this #GESTrackObject
+ */
+void
+ges_track_object_set_inpoint (GESTrackObject * object, guint64 inpoint)
+{
+  if (ges_track_object_set_inpoint_internal (object, inpoint))
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_INPOINT]);
+}
+
+static inline gboolean
 ges_track_object_set_duration_internal (GESTrackObject * object,
     guint64 duration)
 {
@@ -330,17 +382,34 @@ ges_track_object_set_duration_internal (GESTrackObject * object,
   return TRUE;
 }
 
+/**
+ * ges_track_object_set_duration:
+ * @object: a #GESTrackObject
+ * @duration: the duration (in #GstClockTime)
+ *
+ * Set the duration which will be used in the container #GESTrack
+ * starting from the 'in-point'
+ */
+void
+ges_track_object_set_duration (GESTrackObject * object, guint64 duration)
+{
+  if (ges_track_object_set_duration_internal (object, duration))
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_DURATION]);
+}
+
+
 /* NOTE: we handle priority differently than other properties! the gnlpriority
  * is object->base_priority + object->priority_offset! A change to either one
  * will trigger an update to the gnonlin priority and a subsequent property
  * notification.
  */
 
-gboolean
+static inline gboolean
 ges_track_object_set_priority_internal (GESTrackObject * object,
     guint32 priority)
 {
   guint32 save;
+
   save = object->priv->base_priority;
   GST_DEBUG ("object:%p, priority:%d", object, priority);
 
@@ -350,6 +419,26 @@ ges_track_object_set_priority_internal (GESTrackObject * object,
     return FALSE;
   }
   return TRUE;
+}
+
+/**
+ * ges_track_object_set_priority:
+ * @object: a #GESTrackObject
+ * @priority: the priority
+ *
+ * Sets the priority of the object withing the containing #GESTrack.
+ * If two objects intersect over the same region of time, the priority
+ * property is used to decide which one takes precedence.
+ *
+ * The highest priority (that supercedes everything) is 0, and then
+ * lowering priorities go in increasing numerical value (with G_MAXUINT32
+ * being the lowest priority).
+ */
+void
+ges_track_object_set_priority (GESTrackObject * object, guint32 priority)
+{
+  if (ges_track_object_set_priority_internal (object, priority))
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_PRIORITY]);
 }
 
 gboolean
@@ -640,6 +729,7 @@ ensure_gnl_object (GESTrackObject * object)
   object->priv->gnlobject = gnlobject;
 
   /* Connect to property notifications */
+  /* FIXME : remember the signalids so we can remove them later on !!! */
   g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::start",
       G_CALLBACK (gnlobject_start_cb), object);
   g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::media-start",
