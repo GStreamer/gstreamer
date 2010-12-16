@@ -1728,6 +1728,13 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           goto skip_frame;
         }
 
+        if (GST_BUFFER_SIZE (outbuffer) != nsamples * mad->channels * 4) {
+          gst_buffer_unref (outbuffer);
+
+          outbuffer = gst_buffer_new_and_alloc (nsamples * mad->channels * 4);
+          gst_buffer_set_caps (outbuffer, GST_PAD_CAPS (mad->srcpad));
+        }
+
         mad_synth_frame (&mad->synth, &mad->frame);
         left_ch = mad->synth.pcm.samples[0];
         right_ch = mad->synth.pcm.samples[1];
