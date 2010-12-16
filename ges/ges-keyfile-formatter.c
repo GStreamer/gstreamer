@@ -117,7 +117,8 @@ save_keyfile (GESFormatter * keyfile_formatter, GESTimeline * timeline)
       type = "default";
     }
 
-    g_key_file_set_integer (kf, buffer, "priority", layer->priority);
+    g_key_file_set_integer (kf, buffer, "priority",
+        ges_timeline_layer_get_priority (layer));
     g_key_file_set_value (kf, buffer, "type", type);
 
     objs = ges_timeline_layer_get_objects (layer);

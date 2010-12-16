@@ -56,13 +56,7 @@ struct _GESTimelineLayer {
 
   GESTimeline *timeline;
 
-  /*< private >*/
-  GSList * objects_start;	/* The TimelineObjects sorted by start and
-				 * priority */
-
-  guint32 priority;		/* The priority of the layer within the 
-				 * containing timeline */
-
+  /*< protected >*/
   guint32 min_gnl_priority, max_gnl_priority;
 
   GESTimelineLayerPrivate *priv;
@@ -99,12 +93,17 @@ GType ges_timeline_layer_get_type (void);
 
 GESTimelineLayer* ges_timeline_layer_new (void);
 
-void ges_timeline_layer_set_timeline (GESTimelineLayer * layer, GESTimeline * timeline);
-gboolean ges_timeline_layer_add_object (GESTimelineLayer * layer, GESTimelineObject * object);
-gboolean ges_timeline_layer_remove_object (GESTimelineLayer * layer, GESTimelineObject * object);
+void     ges_timeline_layer_set_timeline  (GESTimelineLayer * layer,
+					   GESTimeline * timeline);
+gboolean ges_timeline_layer_add_object    (GESTimelineLayer * layer,
+					   GESTimelineObject * object);
+gboolean ges_timeline_layer_remove_object (GESTimelineLayer * layer,
+					   GESTimelineObject * object);
 
-void ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority);
-GList * ges_timeline_layer_get_objects (GESTimelineLayer * layer);
+void     ges_timeline_layer_set_priority  (GESTimelineLayer * layer,
+					   guint priority);
+guint    ges_timeline_layer_get_priority  (GESTimelineLayer * layer);
+GList*   ges_timeline_layer_get_objects   (GESTimelineLayer * layer);
 
 G_END_DECLS
 
