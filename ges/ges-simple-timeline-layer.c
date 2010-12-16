@@ -358,11 +358,11 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
  *
  * Gets the timeline object at the given position.
  *
- * Returns: The #GESTimelineObject at the given position or NULL if
+ * Returns: (transfer none): The #GESTimelineObject at the given position or NULL if
  * the position is off the end of the layer.
  */
 
-const GESTimelineObject *
+GESTimelineObject *
 ges_simple_timeline_layer_nth (GESSimpleTimelineLayer * layer, gint position)
 {
   GList *list;
