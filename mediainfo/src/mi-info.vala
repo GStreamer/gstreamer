@@ -324,7 +324,9 @@ public class MediaInfo.Info : VBox
           label = new Label ("Framerate:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u / %u frames/second".printf (((DiscovererVideoInfo)sinfo).get_framerate_num(),((DiscovererVideoInfo)sinfo).get_framerate_denom());
+          double fps_num = (double)((DiscovererVideoInfo)sinfo).get_framerate_num();
+          double fps_denom = (double)((DiscovererVideoInfo)sinfo).get_framerate_denom();
+          str = "%.3lf frames/second".printf (fps_num/fps_denom);
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           label.set_selectable(true);
