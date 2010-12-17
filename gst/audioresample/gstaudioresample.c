@@ -389,6 +389,8 @@ gst_audio_resample_init_state (GstAudioResample * resample, gint width,
     return NULL;
   }
 
+  funcs->skip_zeros (ret);
+
   return ret;
 }
 
@@ -941,9 +943,8 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_audio_resample_reset_state (resample);
       if (resample->state)
-        resample->count_gap = resample->funcs->get_filt_len (resample->state);
-      else
-        resample->count_gap = 0;
+        resample->funcs->skip_zeros (resample->state);
+      resample->count_gap = 0;
       resample->count_nongap = 0;
       resample->t0 = GST_CLOCK_TIME_NONE;
       resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
@@ -957,9 +958,8 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
         gst_audio_resample_push_drain (resample, resample->count_nongap);
       gst_audio_resample_reset_state (resample);
       if (resample->state)
-        resample->count_gap = resample->funcs->get_filt_len (resample->state);
-      else
-        resample->count_gap = 0;
+        resample->funcs->skip_zeros (resample->state);
+      resample->count_gap = 0;
       resample->count_nongap = 0;
       resample->t0 = GST_CLOCK_TIME_NONE;
       resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
@@ -985,9 +985,6 @@ gst_audio_resample_check_discont (GstAudioResample * resample, GstBuffer * buf)
 {
   guint64 offset;
   guint64 delta;
-  guint filt_len = resample->funcs->get_filt_len (resample->state);
-  guint64 delay =
-      gst_util_uint64_scale_round (filt_len, GST_SECOND, 2 * resample->inrate);
 
   /* is the incoming buffer a discontinuity? */
   if (G_UNLIKELY (GST_BUFFER_IS_DISCONT (buf)))
@@ -1001,7 +998,7 @@ gst_audio_resample_check_discont (GstAudioResample * resample, GstBuffer * buf)
   /* convert the inbound timestamp to an offset. */
   offset =
       gst_util_uint64_scale_int_round (GST_BUFFER_TIMESTAMP (buf) -
-      resample->t0 - delay, resample->inrate, GST_SECOND);
+      resample->t0, resample->inrate, GST_SECOND);
 
   /* many elements generate imperfect streams due to rounding errors, so we
    * permit a small error (up to one sample) without triggering a filter
@@ -1054,9 +1051,12 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
     {
       guint num, den;
       resample->funcs->get_ratio (resample->state, &num, &den);
-      out_processed =
-          gst_util_uint64_scale_int_ceil (resample->samples_in + in_len, den,
-          num) - resample->samples_out;
+      if (resample->samples_in + in_len >= filt_len / 2)
+        out_processed =
+            gst_util_uint64_scale_int_ceil (resample->samples_in + in_len -
+            filt_len / 2, den, num) - resample->samples_out;
+      else
+        out_processed = 0;
 
       memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
@@ -1209,17 +1209,16 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   /* handle discontinuity */
   if (G_UNLIKELY (resample->need_discont)) {
-    guint filt_len = resample->funcs->get_filt_len (resample->state);
-    guint64 delay = gst_util_uint64_scale_round (filt_len, GST_SECOND,
-        2 * resample->inrate);
-    resample->count_gap = resample->funcs->get_filt_len (resample->state);
+    resample->funcs->skip_zeros (resample->state);
+    resample->count_gap = 0;
+    resample->count_nongap = 0;
     /* reset */
     resample->samples_in = 0;
     resample->samples_out = 0;
     GST_DEBUG_OBJECT (resample, "found discontinuity; resyncing");
     /* resync the timestamp and offset counters if possible */
     if (GST_BUFFER_TIMESTAMP_IS_VALID (inbuf)) {
-      resample->t0 = GST_BUFFER_TIMESTAMP (inbuf) - delay;
+      resample->t0 = GST_BUFFER_TIMESTAMP (inbuf);
     } else {
       GST_DEBUG_OBJECT (resample, "... but new timestamp is invalid");
       resample->t0 = GST_CLOCK_TIME_NONE;
