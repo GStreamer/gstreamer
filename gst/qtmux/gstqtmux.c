@@ -1645,6 +1645,11 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     GstCollectData *cdata = (GstCollectData *) walk->data;
     GstQTPad *qtpad = (GstQTPad *) cdata;
 
+    if (!qtpad->last_buf) {
+      GST_DEBUG_OBJECT (qtmux, "Pad %s has no buffers",
+          GST_PAD_NAME (qtpad->collect.pad));
+      continue;
+    }
     /* send last buffer */
     GST_DEBUG_OBJECT (qtmux, "Sending the last buffer for pad %s",
         GST_PAD_NAME (qtpad->collect.pad));
