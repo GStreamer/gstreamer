@@ -57,6 +57,8 @@ struct _GstWrapperCameraBinSrc
 {
   GstBaseCameraSrc parent;
 
+  GstCameraBinMode mode;
+
   GstPad *vfsrc;
   GstPad *imgsrc;
   GstPad *vidsrc;

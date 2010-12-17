@@ -417,6 +417,9 @@ gst_wrapper_camera_bin_src_set_mode (GstBaseCameraSrc * bcamsrc,
     GstCameraBinMode mode)
 {
   GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
+
+  self->mode = mode;
 
   if (photography) {
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (photography),
@@ -691,10 +694,10 @@ gst_wrapper_camera_bin_src_start_capture (GstBaseCameraSrc * camerasrc)
   GstWrapperCameraBinSrc *src = GST_WRAPPER_CAMERA_BIN_SRC (camerasrc);
 
   /* TODO shoud we access this directly? Maybe a macro is better? */
-  if (camerasrc->mode == MODE_IMAGE) {
+  if (src->mode == MODE_IMAGE) {
     src->image_capture_count = 1;
     start_image_capture (src);
-  } else if (camerasrc->mode == MODE_VIDEO) {
+  } else if (src->mode == MODE_VIDEO) {
     if (src->video_rec_status == GST_VIDEO_RECORDING_STATUS_DONE) {
       src->video_rec_status = GST_VIDEO_RECORDING_STATUS_STARTING;
     }
@@ -711,7 +714,7 @@ gst_wrapper_camera_bin_src_stop_capture (GstBaseCameraSrc * camerasrc)
   GstWrapperCameraBinSrc *src = GST_WRAPPER_CAMERA_BIN_SRC (camerasrc);
 
   /* TODO shoud we access this directly? Maybe a macro is better? */
-  if (camerasrc->mode == MODE_VIDEO) {
+  if (src->mode == MODE_VIDEO) {
     if (src->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
       GST_DEBUG_OBJECT (src, "Aborting, had not started recording");
       src->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
@@ -794,6 +797,9 @@ gst_wrapper_camera_bin_src_init (GstWrapperCameraBinSrc * self,
   /* TODO where are variables reset? */
   self->image_capture_count = 0;
   self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
+  self->video_renegotiate = FALSE;
+  self->image_renegotiate = FALSE;
+  self->mode = GST_BASE_CAMERA_SRC_CAST (self)->mode;
 }
 
 gboolean
