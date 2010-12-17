@@ -64,8 +64,8 @@ struct _GstAudioResample {
   guint64 samples_in;
   guint64 samples_out;
   
-  guint count_gap;
-  guint count_nongap;
+  guint num_gap_samples;
+  guint num_nongap_samples;
 
   gint channels;
   gint inrate;

@@ -238,8 +238,8 @@ gst_audio_resample_start (GstBaseTransform * base)
 
   resample->need_discont = TRUE;
 
-  resample->count_gap = 0;
-  resample->count_nongap = 0;
+  resample->num_gap_samples = 0;
+  resample->num_nongap_samples = 0;
   resample->t0 = GST_CLOCK_TIME_NONE;
   resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
   resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
@@ -944,8 +944,8 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       gst_audio_resample_reset_state (resample);
       if (resample->state)
         resample->funcs->skip_zeros (resample->state);
-      resample->count_gap = 0;
-      resample->count_nongap = 0;
+      resample->num_gap_samples = 0;
+      resample->num_nongap_samples = 0;
       resample->t0 = GST_CLOCK_TIME_NONE;
       resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
       resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
@@ -955,12 +955,12 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       break;
     case GST_EVENT_NEWSEGMENT:
       if (resample->state)
-        gst_audio_resample_push_drain (resample, resample->count_nongap);
+        gst_audio_resample_push_drain (resample, resample->num_nongap_samples);
       gst_audio_resample_reset_state (resample);
       if (resample->state)
         resample->funcs->skip_zeros (resample->state);
-      resample->count_gap = 0;
-      resample->count_nongap = 0;
+      resample->num_gap_samples = 0;
+      resample->num_nongap_samples = 0;
       resample->t0 = GST_CLOCK_TIME_NONE;
       resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
       resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
@@ -970,7 +970,7 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       break;
     case GST_EVENT_EOS:
       if (resample->state)
-        gst_audio_resample_push_drain (resample, resample->count_nongap);
+        gst_audio_resample_push_drain (resample, resample->num_nongap_samples);
       gst_audio_resample_reset_state (resample);
       break;
     default:
@@ -1035,17 +1035,17 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
   out_processed = out_len;
 
   if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
-    resample->count_nongap = 0;
-    if (resample->count_gap < filt_len) {
+    resample->num_nongap_samples = 0;
+    if (resample->num_gap_samples < filt_len) {
       guint zeros_to_push;
-      if (in_len >= filt_len - resample->count_gap)
-        zeros_to_push = filt_len - resample->count_gap;
+      if (in_len >= filt_len - resample->num_gap_samples)
+        zeros_to_push = filt_len - resample->num_gap_samples;
       else
         zeros_to_push = in_len;
 
       gst_audio_resample_push_drain (resample, zeros_to_push);
       in_len -= zeros_to_push;
-      resample->count_gap += zeros_to_push;
+      resample->num_gap_samples += zeros_to_push;
     }
 
     {
@@ -1060,25 +1060,25 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
 
       memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
-      resample->count_gap += in_len;
+      resample->num_gap_samples += in_len;
       in_processed = in_len;
     }
   } else {                      /* not a gap */
 
     gint err;
 
-    if (resample->count_gap > filt_len) {
+    if (resample->num_gap_samples > filt_len) {
       /* push in enough zeros to restore the filter to the right offset */
       guint num, den;
       resample->funcs->get_ratio (resample->state, &num, &den);
       gst_audio_resample_dump_drain (resample,
-          (resample->count_gap - filt_len) % num);
+          (resample->num_gap_samples - filt_len) % num);
     }
-    resample->count_gap = 0;
-    if (resample->count_nongap < filt_len) {
-      resample->count_nongap += in_len;
-      if (resample->count_nongap > filt_len)
-        resample->count_nongap = filt_len;
+    resample->num_gap_samples = 0;
+    if (resample->num_nongap_samples < filt_len) {
+      resample->num_nongap_samples += in_len;
+      if (resample->num_nongap_samples > filt_len)
+        resample->num_nongap_samples = filt_len;
     }
 
     if (resample->funcs->width != resample->width) {
@@ -1210,8 +1210,8 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
   /* handle discontinuity */
   if (G_UNLIKELY (resample->need_discont)) {
     resample->funcs->skip_zeros (resample->state);
-    resample->count_gap = 0;
-    resample->count_nongap = 0;
+    resample->num_gap_samples = 0;
+    resample->num_nongap_samples = 0;
     /* reset */
     resample->samples_in = 0;
     resample->samples_out = 0;
