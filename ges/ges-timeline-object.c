@@ -807,7 +807,11 @@ track_object_priority_changed_cb (GESTrackObject * child,
     /* FIXME : We only grow the height */
     if (object->height < (max_prio - min_prio + 1)) {
       object->height = max_prio - min_prio + 1;
+#if GLIB_CHECK_VERSION(2,26,0)
       g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_HEIGHT]);
+#else
+      g_object_notify (G_OBJECT (object), "height");
+#endif
     }
   } else {
     /* Or update the parent priority */
