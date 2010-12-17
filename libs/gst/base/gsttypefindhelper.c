@@ -217,8 +217,8 @@ helper_find_get_length (gpointer data)
 /**
  * gst_type_find_helper_get_range_ext:
  * @obj: A #GstObject that will be passed as first argument to @func
- * @func: A generic #GstTypeFindHelperGetRangeFunction that will be used
- *        to access data at random offsets when doing the typefinding
+ * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
+ *        be used to access data at random offsets when doing the typefinding
  * @size: The length in bytes
  * @extension: extension of the media
  * @prob: (out) (allow-none): location to store the probability of the found
@@ -348,8 +348,8 @@ gst_type_find_helper_get_range_ext (GstObject * obj,
 /**
  * gst_type_find_helper_get_range:
  * @obj: A #GstObject that will be passed as first argument to @func
- * @func: A generic #GstTypeFindHelperGetRangeFunction that will be used
- *        to access data at random offsets when doing the typefinding
+ * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
+ *        be used to access data at random offsets when doing the typefinding
  * @size: The length in bytes
  * @prob: (out) (allow-none): location to store the probability of the found
  *     caps, or #NULL

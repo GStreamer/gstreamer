@@ -741,7 +741,7 @@ gst_collect_pads_stop (GstCollectPads * pads)
  * should be called with the @pads LOCK held, such as in the callback
  * handler.
  *
- * Returns: The buffer in @data or NULL if no buffer is queued.
+ * Returns: (transfer full): The buffer in @data or NULL if no buffer is queued.
  *  should unref the buffer after usage.
  *
  * MT safe.
