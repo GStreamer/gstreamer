@@ -34,21 +34,7 @@
 #include "ges-track-object.h"
 #include "ges-timeline-object.h"
 
-static GQuark _start_quark;
-static GQuark _inpoint_quark;
-static GQuark _duration_quark;
-static GQuark _priority_quark;
-
-#define _do_init \
-{ \
-  _start_quark = g_quark_from_static_string ("start"); \
-  _inpoint_quark = g_quark_from_static_string ("inpoint"); \
-  _duration_quark = g_quark_from_static_string ("duration"); \
-  _priority_quark = g_quark_from_static_string ("priority"); \
-}
-
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTrackObject, ges_track_object,
-    G_TYPE_OBJECT, _do_init);
+G_DEFINE_ABSTRACT_TYPE (GESTrackObject, ges_track_object, G_TYPE_OBJECT);
 
 struct _GESTrackObjectPrivate
 {
