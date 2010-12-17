@@ -116,7 +116,6 @@ cat <<-EOF
  */
 EOF
 
-#grep -A 10000 '^% copyright' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
 cat <<EOF
 
@@ -124,9 +123,9 @@ cat <<EOF
 #include "config.h"
 #endif
 
+#include <gst/gst.h>
 EOF
 
-grep -A 10000 '^% includes' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% includes' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% includes' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
@@ -140,7 +139,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_replace_debug);
 
 EOF
 
-grep -A 10000 '^% prototypes' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% prototypes' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% prototypes' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 for each in $pads
@@ -180,6 +178,9 @@ gst_replace_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
+  GST_DEBUG_CATEGORY_INIT (gst_replace_debug_category, "replace", 0,
+      "replace element");
+
 EOF
 
 for each in $pads
@@ -197,13 +198,11 @@ static void
 gst_replace_class_init (GstReplaceClass * klass)
 {
 EOF
-grep -A 10000 '^% declare-class' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% declare-class' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% declare-class' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
 echo
 
-grep -A 10000 '^% set-methods' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% set-methods' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% set-methods' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
@@ -227,7 +226,6 @@ cat <<EOF
 EOF
 
 
-grep -A 10000 '^% methods' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% methods' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% methods' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 for each in $pads
@@ -275,7 +273,27 @@ EOF
 generate_header ()
 {
 
-grep -A 10000 '^% copyright' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+cat <<-EOF
+/* GStreamer
+ * Copyright (C) $(date +%Y) $REAL_NAME <$EMAIL_ADDRESS>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+EOF
 
 cat <<EOF
 #ifndef _GST_REPLACE_H_
@@ -283,7 +301,6 @@ cat <<EOF
 
 EOF
 
-grep -A 10000 '^% includes' $templatedir/base | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% includes' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% includes' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
