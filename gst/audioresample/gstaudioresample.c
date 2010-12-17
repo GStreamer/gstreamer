@@ -954,8 +954,10 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       resample->need_discont = TRUE;
       break;
     case GST_EVENT_NEWSEGMENT:
-      if (resample->state)
-        gst_audio_resample_push_drain (resample, resample->num_nongap_samples);
+      if (resample->state) {
+        guint latency = resample->funcs->get_input_latency (resample->state);
+        gst_audio_resample_push_drain (resample, latency);
+      }
       gst_audio_resample_reset_state (resample);
       if (resample->state)
         resample->funcs->skip_zeros (resample->state);
@@ -969,8 +971,10 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       resample->need_discont = TRUE;
       break;
     case GST_EVENT_EOS:
-      if (resample->state)
-        gst_audio_resample_push_drain (resample, resample->num_nongap_samples);
+      if (resample->state) {
+        guint latency = resample->funcs->get_input_latency (resample->state);
+        gst_audio_resample_push_drain (resample, latency);
+      }
       gst_audio_resample_reset_state (resample);
       break;
     default:
