@@ -180,15 +180,13 @@
  * @day: the day of the gregorian month
  * @hour: the hour of the day
  * @minute: the minute of the hour
- * @second: the second of the minute
- * @microsecond: the microsecond of the second
+ * @seconds: the second of the minute
  *
  * Creates a new #GstDateTime using the date and times in the gregorian calendar
  * in the local timezone.
  *
  * @year should be from 1 to 9999, @month should be from 1 to 12, @day from
- * 1 to 31, @hour from 0 to 23, @minutes and @seconds from 0 to 59 and
- * @microsecond from 0 to 999999.
+ * 1 to 31, @hour from 0 to 23, @minutes and @seconds from 0 to 59.
  *
  * Free-function: gst_date_time_unref
  *
@@ -205,15 +203,13 @@
  * @day: the day of the gregorian month
  * @hour: the hour of the day
  * @minute: the minute of the hour
- * @second: the second of the minute
- * @microsecond: the microsecond of the second
+ * @seconds: the second of the minute
  *
  * Creates a new #GstDateTime using the date and times in the gregorian calendar
  * in the supplied timezone.
  *
  * @year should be from 1 to 9999, @month should be from 1 to 12, @day from
- * 1 to 31, @hour from 0 to 23, @minutes and @seconds from 0 to 59 and
- * @microsecond from 0 to 999999.
+ * 1 to 31, @hour from 0 to 23, @minutes and @seconds from 0 to 59.
  *
  * Note that @tzoffset is a float and was chosen so for being able to handle
  * some fractional timezones, while it still keeps the readability of
