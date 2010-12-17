@@ -300,7 +300,7 @@ gst_buffer_list_n_groups (GstBufferList * list)
 /**
  * gst_buffer_list_foreach:
  * @list: a #GstBufferList
- * @func: a #GstBufferListFunc to call
+ * @func: (scope call): a #GstBufferListFunc to call
  * @user_data: user data passed to @func
  *
  * Call @func with @data for each buffer in @list.

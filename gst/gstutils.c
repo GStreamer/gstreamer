@@ -2645,7 +2645,8 @@ gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
  * unreffing the input parameters. Language bindings without
  * explicit reference counting should not wrap this function.
  *
- * Returns: the new #GstBuffer which is the concatenation of the source buffers.
+ * Returns: (transfer full): the new #GstBuffer which is the concatenation of
+ * the source buffers.
  */
 GstBuffer *
 gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
@@ -3641,7 +3642,7 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
  *
- * Returns: a newly-created bin, or NULL if an error occurred.
+ * Returns: (transfer full): a newly-created bin, or NULL if an error occurred.
  *
  * Since: 0.10.3
  */
@@ -3673,7 +3674,7 @@ gst_parse_bin_from_description (const gchar * bin_description,
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
  *
- * Returns: a newly-created bin, or NULL if an error occurred.
+ * Returns: (transfer full): a newly-created bin, or NULL if an error occurred.
  *
  * Since: 0.10.20
  */

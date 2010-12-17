@@ -309,7 +309,7 @@ gst_clock_id_unref (GstClockID id)
 }
 
 /**
- * gst_clock_new_single_shot_id
+ * gst_clock_new_single_shot_id:
  * @clock: The #GstClockID to get a single shot notification from
  * @time: the requested time
  *
@@ -334,7 +334,7 @@ gst_clock_new_single_shot_id (GstClock * clock, GstClockTime time)
 }
 
 /**
- * gst_clock_new_periodic_id
+ * gst_clock_new_periodic_id:
  * @clock: The #GstClockID to get a periodic notification id from
  * @start_time: the requested start time
  * @interval: the requested interval
@@ -1167,7 +1167,7 @@ not_supported:
 }
 
 /**
- * gst_clock_get_master
+ * gst_clock_get_master:
  * @clock: a #GstClock 
  *
  * Get the master clock that @clock is slaved to or %NULL when the clock is

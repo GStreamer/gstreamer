@@ -5437,7 +5437,7 @@ gst_pad_set_element_private (GstPad * pad, gpointer priv)
  * Gets the private data of a pad.
  * No locking is performed in this function.
  *
- * Returns: a #gpointer to the private data.
+ * Returns: (transfer none): a #gpointer to the private data.
  */
 gpointer
 gst_pad_get_element_private (GstPad * pad)

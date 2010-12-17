@@ -206,7 +206,7 @@ _gst_plugin_register_static (GstPluginDesc * desc)
  *     library-specific namespace prefix in order to avoid name conflicts in
  *     case a similar plugin with the same name ever gets added to GStreamer)
  * @description: description of the plugin
- * @init_func: pointer to the init function of this plugin.
+ * @init_func: (scope call): pointer to the init function of this plugin.
  * @version: version string of the plugin
  * @license: effective license of plugin. Must be one of the approved licenses
  *     (see #GstPluginDesc above) or the plugin will not be registered.
@@ -269,7 +269,8 @@ gst_plugin_register_static (gint major_version, gint minor_version,
  *     library-specific namespace prefix in order to avoid name conflicts in
  *     case a similar plugin with the same name ever gets added to GStreamer)
  * @description: description of the plugin
- * @init_full_func: pointer to the init function with user data of this plugin.
+ * @init_full_func: (scope call): pointer to the init function with user data
+ *     of this plugin.
  * @version: version string of the plugin
  * @license: effective license of plugin. Must be one of the approved licenses
  *     (see #GstPluginDesc above) or the plugin will not be registered.
@@ -699,8 +700,8 @@ static GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
  *
  * Loads the given plugin and refs it.  Caller needs to unref after use.
  *
- * Returns: a reference to the existing loaded GstPlugin, a reference to the
- * newly-loaded GstPlugin, or NULL if an error occurred.
+ * Returns: (transfer full): a reference to the existing loaded GstPlugin, a 
+ * reference to the newly-loaded GstPlugin, or NULL if an error occurred.
  */
 GstPlugin *
 gst_plugin_load_file (const gchar * filename, GError ** error)

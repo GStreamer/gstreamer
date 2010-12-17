@@ -298,7 +298,7 @@ gst_object_init (GstObject * object)
  * constructs like :
  *  result = gst_object_ref (object->parent);
  *
- * Returns: A pointer to @object
+ * Returns: (transfer full): A pointer to @object
  */
 gpointer
 gst_object_ref (gpointer object)

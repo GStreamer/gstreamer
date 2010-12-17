@@ -1120,7 +1120,7 @@ structure_foreach_wrapper (GQuark field_id, const GValue * value,
 /**
  * gst_tag_list_foreach:
  * @list: list to iterate over
- * @func: function to be called for each tag
+ * @func: (scope call): function to be called for each tag
  * @user_data: (closure): user specified data
  *
  * Calls the given function for each tag inside the tag list. Note that if there

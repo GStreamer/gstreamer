@@ -396,7 +396,7 @@ gst_element_provides_clock (GstElement * element)
  * <note>An element is only required to provide a clock in the PAUSED
  * state. Some elements can provide a clock in other states.</note>
  *
- * Returns: the GstClock provided by the element or %NULL
+ * Returns: (transfer full): the GstClock provided by the element or %NULL
  * if no clock could be provided.  Unref after usage.
  *
  * MT safe.
@@ -466,7 +466,7 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
  * Gets the currently configured clock of the element. This is the clock as was
  * last set with gst_element_set_clock().
  *
- * Returns: the #GstClock of the element. unref after usage.
+ * Returns: (transfer full): the #GstClock of the element. unref after usage.
  *
  * MT safe.
  */
@@ -1086,7 +1086,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
  * or gst_element_release_request_pad() in case of a request pad.
  * Use gst_element_get_static_pad() or gst_element_get_request_pad() instead.
  *
- * Returns: the #GstPad if found, otherwise %NULL. Unref or Release after usage,
+ * Returns: (transfer full): the #GstPad if found, otherwise %NULL. Unref or Release after usage,
  * depending on the type of the pad.
  */
 #ifndef GST_REMOVE_DEPRECATED
