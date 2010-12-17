@@ -12,7 +12,7 @@
     <element>
       <name>videoscale</name>
       <longname>Video scaler</longname>
-      <class>Filter/Effect/Video</class>
+      <class>Filter/Converter/Video/Scaler</class>
       <description>Resizes video</description>
       <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
       <pads>
