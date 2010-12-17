@@ -1732,6 +1732,32 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   return TRUE;
 }
 
+static gint64
+packet_duration_kate (GstOggStream * pad, ogg_packet * packet)
+{
+  gint64 duration;
+
+  if (packet->bytes < 1)
+    return 0;
+
+  switch (packet->packet[0]) {
+    case 0x00:                 /* text data */
+      if (packet->bytes < 1 + 8 * 2) {
+        duration = 0;
+      } else {
+        duration = GST_READ_UINT64_LE (packet->packet + 1 + 8);
+        if (duration < 0)
+          duration = 0;
+      }
+      break;
+    default:
+      duration = GST_CLOCK_TIME_NONE;
+      break;
+  }
+
+  return duration;
+}
+
 
 /* *INDENT-OFF* */
 /* indent hates our freedoms */
@@ -1875,7 +1901,7 @@ const GstOggMap mappers[] = {
     granule_to_granulepos_default,
     NULL,
     is_header_count,
-    NULL,
+    packet_duration_kate,
     NULL,
     NULL
   },

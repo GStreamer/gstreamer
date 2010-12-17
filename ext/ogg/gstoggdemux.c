@@ -540,7 +540,12 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       } else if (pad->map.is_sparse) {
         out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
             pad->current_granule);
-        out_duration = GST_CLOCK_TIME_NONE;
+        if (duration == GST_CLOCK_TIME_NONE) {
+          out_duration = GST_CLOCK_TIME_NONE;
+        } else {
+          out_duration = gst_util_uint64_scale (duration,
+              GST_SECOND * pad->map.granulerate_d, pad->map.granulerate_n);
+        }
       } else {
         out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
             pad->current_granule - duration);
