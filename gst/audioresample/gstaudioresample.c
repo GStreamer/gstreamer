@@ -889,7 +889,7 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
     GST_BUFFER_TIMESTAMP (outbuf) = resample->t0 +
         gst_util_uint64_scale_int_round (resample->samples_out, GST_SECOND,
         resample->outrate);
-    GST_BUFFER_DURATION (outbuf) =
+    GST_BUFFER_DURATION (outbuf) = resample->t0 +
         gst_util_uint64_scale_int_round (resample->samples_out + out_processed,
         GST_SECOND, resample->outrate) - GST_BUFFER_TIMESTAMP (outbuf);
   } else {
@@ -1137,7 +1137,7 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
     GST_BUFFER_TIMESTAMP (outbuf) = resample->t0 +
         gst_util_uint64_scale_int_round (resample->samples_out, GST_SECOND,
         resample->outrate);
-    GST_BUFFER_DURATION (outbuf) =
+    GST_BUFFER_DURATION (outbuf) = resample->t0 +
         gst_util_uint64_scale_int_round (resample->samples_out + out_processed,
         GST_SECOND, resample->outrate) - GST_BUFFER_TIMESTAMP (outbuf);
   } else {
