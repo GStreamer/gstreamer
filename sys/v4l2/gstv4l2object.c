@@ -1987,7 +1987,7 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
     default:
       GST_WARNING_OBJECT (v4l2object->element,
           "Unsupported field type for %" GST_FOURCC_FORMAT "@%ux%u",
-          GST_FOURCC_ARGS (pixelformat), width, height);
+          GST_FOURCC_ARGS (pixelformat), *width, *height);
       return FALSE;
   }
 
