@@ -565,6 +565,10 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
             gst_element_get_static_pad (camera->src,
             GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME);
 
+      GST_DEBUG_OBJECT (camera,
+          "Setting image capture caps to %" GST_PTR_FORMAT,
+          gst_value_get_caps (value));
+
       /* set the capsfilter caps and notify the src to renegotiate */
       g_object_set (camera->imagebin_capsfilter, "caps",
           gst_value_get_caps (value), NULL);
@@ -583,6 +587,10 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
         pad =
             gst_element_get_static_pad (camera->src,
             GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
+
+      GST_DEBUG_OBJECT (camera,
+          "Setting video capture caps to %" GST_PTR_FORMAT,
+          gst_value_get_caps (value));
 
       /* set the capsfilter caps and notify the src to renegotiate */
       g_object_set (camera->videobin_capsfilter, "caps",
