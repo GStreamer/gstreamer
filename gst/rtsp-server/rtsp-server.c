@@ -464,6 +464,15 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
       continue;
     }
 
+    /* make address reusable */
+    ret = 1;
+    if (setsockopt (sockfd, SOL_SOCKET, SO_REUSEADDR,
+            (void *) &ret, sizeof (ret)) < 0) {
+      /* warn but try to bind anyway */
+      GST_WARNING_OBJECT (server, "failed to reuse socker (%s)",
+          g_strerror (errno));
+    }
+
     if (bind (sockfd, rp->ai_addr, rp->ai_addrlen) == 0) {
       GST_DEBUG_OBJECT (server, "bind on %s", rp->ai_canonname);
       break;
@@ -482,12 +491,6 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
 
   GST_DEBUG_OBJECT (server, "opened sending server socket with fd %d",
       server->server_sock.fd);
-
-  /* make address reusable */
-  ret = 1;
-  if (setsockopt (server->server_sock.fd, SOL_SOCKET, SO_REUSEADDR,
-          (void *) &ret, sizeof (ret)) < 0)
-    goto reuse_failed;
 
   /* keep connection alive; avoids SIGPIPE during write */
   ret = 1;
@@ -534,11 +537,6 @@ no_socket:
     GST_ERROR_OBJECT (server, "failed to create socket: %s",
         g_strerror (errno));
     return FALSE;
-  }
-reuse_failed:
-  {
-    GST_ERROR_OBJECT (server, "failed to reuse socket: %s", g_strerror (errno));
-    goto close_error;
   }
 keepalive_failed:
   {
