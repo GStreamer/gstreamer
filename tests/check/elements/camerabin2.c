@@ -257,11 +257,11 @@ setup (void)
   main_loop = g_main_loop_new (NULL, TRUE);
 
   camera = gst_check_setup_element ("camerabin2");
-  fakevideosink = gst_check_setup_element ("fakesink");
-  src = gst_check_setup_element ("wrappercamerabinsrc");
-  testsrc = gst_check_setup_element ("videotestsrc");
+  fakevideosink = gst_element_factory_make ("fakesink", NULL);
+  src = gst_element_factory_make ("wrappercamerabinsrc", NULL);
+  testsrc = gst_element_factory_make ("videotestsrc", NULL);
 
-  g_object_set (G_OBJECT (testsrc), "is-live", TRUE, NULL);
+  g_object_set (G_OBJECT (testsrc), "is-live", TRUE, "peer-alloc", FALSE, NULL);
   g_object_set (G_OBJECT (src), "video-src", testsrc, NULL);
   g_object_set (G_OBJECT (camera), "camera-src", src, NULL);
   gst_object_unref (src);
@@ -588,7 +588,7 @@ camerabin_suite (void)
   /* Test that basic operations run without errors */
   suite_add_tcase (s, tc_basic);
   /* Increase timeout due to video recording */
-  tcase_set_timeout (tc_basic, 30);
+  tcase_set_timeout (tc_basic, 60);
   tcase_add_checked_fixture (tc_basic, setup, teardown);
   tcase_add_test (tc_basic, test_single_image_capture);
   tcase_add_test (tc_basic, test_single_video_recording);
