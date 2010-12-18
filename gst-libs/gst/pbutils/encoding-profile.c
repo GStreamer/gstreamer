@@ -235,7 +235,7 @@ gst_encoding_profile_get_preset (GstEncodingProfile * profile)
  * Returns: The number of time the profile is used in its parent
  * container profile. If 0, it is not a mandatory stream
  */
-const guint
+guint
 gst_encoding_profile_get_presence (GstEncodingProfile * profile)
 {
   return profile->presence;

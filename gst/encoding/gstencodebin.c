@@ -451,7 +451,8 @@ stream_profile_used_count (GstEncodeBin * ebin, GstEncodingProfile * sprof)
 static inline GstEncodingProfile *
 next_unused_stream_profile (GstEncodeBin * ebin, GType ptype, GstCaps * caps)
 {
-  GST_DEBUG_OBJECT (ebin, "ptype:%d, caps:%" GST_PTR_FORMAT, ptype, caps);
+  GST_DEBUG_OBJECT (ebin, "ptype:%s, caps:%" GST_PTR_FORMAT,
+      g_type_name (ptype), caps);
 
   if (G_UNLIKELY (ptype == G_TYPE_NONE && caps != NULL)) {
     /* Identify the profile type based on raw caps */
@@ -461,7 +462,8 @@ next_unused_stream_profile (GstEncodeBin * ebin, GType ptype, GstCaps * caps)
       ptype = GST_TYPE_ENCODING_AUDIO_PROFILE;
     /* else if (gst_caps_can_intersect (ebin->raw_text_caps, caps)) */
     /*   ptype = GST_TYPE_ENCODING_TEXT_PROFILE; */
-    GST_DEBUG_OBJECT (ebin, "Detected profile type as being %d", ptype);
+    GST_DEBUG_OBJECT (ebin, "Detected profile type as being %s",
+        g_type_name (ptype));
   }
 
   if (GST_IS_ENCODING_CONTAINER_PROFILE (ebin->profile)) {
