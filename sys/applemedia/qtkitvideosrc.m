@@ -86,7 +86,8 @@ typedef enum _QueueState {
   HAS_FRAME_OR_STOP_REQUEST,
 } QueueState;
 
-static GstPushSrcClass * parent_class;
+GST_BOILERPLATE (GstQTKitVideoSrc, gst_qtkit_video_src, GstPushSrc,
+    GST_TYPE_PUSH_SRC);
 
 @interface GstQTKitVideoSrcImpl : NSObject {
   GstElement *element;
@@ -465,9 +466,6 @@ enum
   PROP_0,
   PROP_DEVICE_INDEX
 };
-
-GST_BOILERPLATE (GstQTKitVideoSrc, gst_qtkit_video_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC);
 
 static void gst_qtkit_video_src_finalize (GObject * obj);
 static void gst_qtkit_video_src_get_property (GObject * object, guint prop_id,
