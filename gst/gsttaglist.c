@@ -1299,7 +1299,7 @@ gst_tag_list_get_ ## name ## _index (const GstTagList *list,            \
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (char, gchar, TRUE)
+TAG_MERGE_FUNCS (char, gchar, TRUE);
 /**
  * gst_tag_list_get_uchar:
  * @list: a #GstTagList to get the tag from
@@ -1325,7 +1325,7 @@ TAG_MERGE_FUNCS (char, gchar, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (uchar, guchar, TRUE)
+TAG_MERGE_FUNCS (uchar, guchar, TRUE);
 /**
  * gst_tag_list_get_boolean:
  * @list: a #GstTagList to get the tag from
@@ -1351,7 +1351,7 @@ TAG_MERGE_FUNCS (uchar, guchar, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (boolean, gboolean, TRUE)
+TAG_MERGE_FUNCS (boolean, gboolean, TRUE);
 /**
  * gst_tag_list_get_int:
  * @list: a #GstTagList to get the tag from
@@ -1377,7 +1377,7 @@ TAG_MERGE_FUNCS (boolean, gboolean, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (int, gint, TRUE)
+TAG_MERGE_FUNCS (int, gint, TRUE);
 /**
  * gst_tag_list_get_uint:
  * @list: a #GstTagList to get the tag from
@@ -1403,7 +1403,7 @@ TAG_MERGE_FUNCS (int, gint, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (uint, guint, TRUE)
+TAG_MERGE_FUNCS (uint, guint, TRUE);
 /**
  * gst_tag_list_get_long:
  * @list: a #GstTagList to get the tag from
@@ -1429,7 +1429,7 @@ TAG_MERGE_FUNCS (uint, guint, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (long, glong, TRUE)
+TAG_MERGE_FUNCS (long, glong, TRUE);
 /**
  * gst_tag_list_get_ulong:
  * @list: a #GstTagList to get the tag from
@@ -1455,7 +1455,7 @@ TAG_MERGE_FUNCS (long, glong, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (ulong, gulong, TRUE)
+TAG_MERGE_FUNCS (ulong, gulong, TRUE);
 /**
  * gst_tag_list_get_int64:
  * @list: a #GstTagList to get the tag from
@@ -1481,7 +1481,7 @@ TAG_MERGE_FUNCS (ulong, gulong, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (int64, gint64, TRUE)
+TAG_MERGE_FUNCS (int64, gint64, TRUE);
 /**
  * gst_tag_list_get_uint64:
  * @list: a #GstTagList to get the tag from
@@ -1507,7 +1507,7 @@ TAG_MERGE_FUNCS (int64, gint64, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (uint64, guint64, TRUE)
+TAG_MERGE_FUNCS (uint64, guint64, TRUE);
 /**
  * gst_tag_list_get_float:
  * @list: a #GstTagList to get the tag from
@@ -1533,7 +1533,7 @@ TAG_MERGE_FUNCS (uint64, guint64, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (float, gfloat, TRUE)
+TAG_MERGE_FUNCS (float, gfloat, TRUE);
 /**
  * gst_tag_list_get_double:
  * @list: a #GstTagList to get the tag from
@@ -1559,7 +1559,7 @@ TAG_MERGE_FUNCS (float, gfloat, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (double, gdouble, TRUE)
+TAG_MERGE_FUNCS (double, gdouble, TRUE);
 /**
  * gst_tag_list_get_pointer:
  * @list: a #GstTagList to get the tag from
@@ -1585,9 +1585,20 @@ TAG_MERGE_FUNCS (double, gdouble, TRUE)
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (pointer, gpointer, (*value != NULL))
+TAG_MERGE_FUNCS (pointer, gpointer, (*value != NULL));
+
+static inline gchar *
+_gst_strdup0 (const gchar * s)
+{
+  if (s == NULL || *s == '\0')
+    return NULL;
+
+  return g_strdup (s);
+}
+
 #undef COPY_FUNC
-#define COPY_FUNC g_strdup
+#define COPY_FUNC _gst_strdup0
+
 /**
  * gst_tag_list_get_string:
  * @list: a #GstTagList to get the tag from
@@ -1628,7 +1639,7 @@ TAG_MERGE_FUNCS (pointer, gpointer, (*value != NULL))
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
  */
-TAG_MERGE_FUNCS (string, gchar *, (*value != NULL && **value != '\0'))
+TAG_MERGE_FUNCS (string, gchar *, (*value != NULL));
 
 /*
  *FIXME 0.11: Instead of _peek (non-copy) and _get (copy), we could have
