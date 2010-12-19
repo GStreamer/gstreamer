@@ -166,16 +166,25 @@ gst_auto_video_convert_class_init (GstAutoVideoConvertClass * klass)
 
 }
 
-static void
+static gboolean
 gst_auto_video_convert_add_autoconvert (GstAutoVideoConvert * autovideoconvert)
 {
   GstPad *pad;
 
+  if (autovideoconvert->autoconvert)
+    return TRUE;
+
   autovideoconvert->autoconvert =
       gst_element_factory_make ("autoconvert", "autoconvertchild");
+  if (!autovideoconvert->autoconvert) {
+    GST_ERROR_OBJECT (autovideoconvert,
+        "Could not create autoconvert instance");
+    return FALSE;
+  }
 
   /* first add autoconvert in bin */
-  gst_bin_add (GST_BIN (autovideoconvert), autovideoconvert->autoconvert);
+  gst_bin_add (GST_BIN (autovideoconvert),
+      gst_object_ref (autovideoconvert->autoconvert));
 
   /* get sinkpad and link it to ghost sink pad */
   pad = gst_element_get_static_pad (autovideoconvert->autoconvert, "sink");
@@ -187,6 +196,25 @@ gst_auto_video_convert_add_autoconvert (GstAutoVideoConvert * autovideoconvert)
   pad = gst_element_get_static_pad (autovideoconvert->autoconvert, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (autovideoconvert->srcpad), pad);
   gst_object_unref (pad);
+
+  return TRUE;
+}
+
+static void
+gst_auto_video_convert_remove_autoconvert (GstAutoVideoConvert *
+    autovideoconvert)
+{
+  if (!autovideoconvert->autoconvert)
+    return;
+
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (autovideoconvert->srcpad),
+      NULL);
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (autovideoconvert->sinkpad),
+      NULL);
+
+  gst_bin_remove (GST_BIN (autovideoconvert), autovideoconvert->autoconvert);
+  gst_object_unref (autovideoconvert->autoconvert);
+  autovideoconvert->autoconvert = NULL;
 }
 
 static void
@@ -221,23 +249,34 @@ gst_auto_video_convert_change_state (GstElement * element,
   GstAutoVideoConvert *autovideoconvert = GST_AUTO_VIDEO_CONVERT (element);
   GstStateChangeReturn ret;
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
     {
       /* create and add autoconvert in bin */
-      gst_auto_video_convert_add_autoconvert (autovideoconvert);
+      if (!gst_auto_video_convert_add_autoconvert (autovideoconvert)) {
+        ret = GST_STATE_CHANGE_FAILURE;
+        return ret;
+      }
       /* get an updated list of factories */
       gst_auto_video_convert_update_factory_list (autovideoconvert);
       GST_DEBUG_OBJECT (autovideoconvert, "set factories list");
       /* give factory list to autoconvert */
       g_object_set (GST_ELEMENT (autovideoconvert->autoconvert), "factories",
           factories, NULL);
-      /* synchronize autoconvert state with parent state */
-      gst_element_sync_state_with_parent (autovideoconvert->autoconvert);
+      break;
+    }
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+    {
+      gst_auto_video_convert_remove_autoconvert (autovideoconvert);
       break;
     }
     default:
