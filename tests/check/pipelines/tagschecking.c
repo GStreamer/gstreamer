@@ -114,6 +114,7 @@ test_mux_tags (const gchar * tag_str, const gchar * caps,
   sent_tags = gst_structure_from_string (tag_str, NULL);
   fail_unless (sent_tags != NULL);
   gst_tag_setter_merge_tags (setter, sent_tags, GST_TAG_MERGE_REPLACE);
+  gst_tag_list_free (sent_tags);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
@@ -246,6 +247,7 @@ test_tags (const gchar * tag_str, const gchar * caps, const gchar * muxer,
   GST_DEBUG ("testing tags : %s", tag_str);
   test_mux_tags (tag_str, caps, muxer, tmpfile);
   test_demux_tags (tag_str, demuxer, tmpfile);
+  g_free (tmpfile);
 }
 
 #define H264_CAPS "video/x-h264, width=(int)320, height=(int)240," \
