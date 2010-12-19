@@ -192,7 +192,7 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * icbin)
   if (!sink)
     goto error;
 
-  icbin->sink = gst_object_ref (sink);
+  icbin->sink = sink;
   g_object_set (sink, "location", icbin->location, "async", FALSE, NULL);
 
   /* add and link */
@@ -204,6 +204,7 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * icbin)
   pad = gst_element_get_static_pad (csp, "sink");
   if (!gst_ghost_pad_set_target (GST_GHOST_PAD (icbin->ghostpad), pad))
     goto error;
+  gst_object_unref (pad);
 
   icbin->elements_created = TRUE;
   return TRUE;
