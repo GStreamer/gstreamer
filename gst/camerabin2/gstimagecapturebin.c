@@ -150,9 +150,13 @@ static void
 gst_image_capture_bin_init (GstImageCaptureBin * image_capturebin,
     GstImageCaptureBinClass * image_capturebin_class)
 {
+  GstPadTemplate *tmpl;
+
+  tmpl = gst_static_pad_template_get (&sink_template);
   image_capturebin->ghostpad =
-      gst_ghost_pad_new_no_target_from_template ("sink",
-      gst_static_pad_template_get (&sink_template));
+      gst_ghost_pad_new_no_target_from_template ("sink", tmpl);
+  gst_object_unref (tmpl);
+
   gst_element_add_pad (GST_ELEMENT_CAST (image_capturebin),
       image_capturebin->ghostpad);
 
