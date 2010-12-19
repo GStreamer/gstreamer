@@ -111,6 +111,7 @@ make_n_channel_wav (const gint channels, const GValueArray * arr)
   g_main_loop_run (loop);
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
+  gst_object_unref (pipeline);
   g_free (audiotestsrc);
 }
 
@@ -129,6 +130,7 @@ GST_START_TEST (test_encode_stereo)
   g_value_unset (&val);
 
   make_n_channel_wav (2, arr);
+  g_value_array_free (arr);
 }
 
 GST_END_TEST;
