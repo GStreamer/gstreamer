@@ -723,6 +723,7 @@ gst_qt_mux_add_3gp_keywords (GstQTMux * qtmux, const GstTagList * list,
     return;
 
   kwds = g_strsplit (keywords, ",", 0);
+  g_free (keywords);
 
   size = 0;
   for (i = 0; kwds[i]; i++) {
