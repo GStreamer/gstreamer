@@ -72,6 +72,7 @@ gst_image_capture_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
+      g_free (imgbin->location);
       imgbin->location = g_value_dup_string (value);
       if (imgbin->sink) {
         g_object_set (imgbin, "location", imgbin->location, NULL);
@@ -100,6 +101,16 @@ gst_image_capture_bin_get_property (GObject * object, guint prop_id,
 }
 
 static void
+gst_image_capture_bin_finalize (GObject * object)
+{
+  GstImageCaptureBin *imgbin = GST_IMAGE_CAPTURE_BIN_CAST (object);
+
+  g_free (imgbin->location);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_image_capture_bin_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -123,6 +134,7 @@ gst_image_capture_bin_class_init (GstImageCaptureBinClass * klass)
 
   gobject_class->set_property = gst_image_capture_bin_set_property;
   gobject_class->get_property = gst_image_capture_bin_get_property;
+  gobject_class->finalize = gst_image_capture_bin_finalize;
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_image_capture_bin_change_state);
