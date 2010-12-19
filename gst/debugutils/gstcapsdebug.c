@@ -103,8 +103,7 @@ gst_caps_debug_init (GstCapsDebug * capsdebug,
 {
 
   capsdebug->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_caps_debug_src_template), "src");
+      gst_pad_new_from_static_template (&gst_caps_debug_src_template, "src");
   gst_pad_set_getcaps_function (capsdebug->srcpad,
       GST_DEBUG_FUNCPTR (gst_caps_debug_getcaps));
   gst_pad_set_acceptcaps_function (capsdebug->srcpad,
@@ -112,8 +111,7 @@ gst_caps_debug_init (GstCapsDebug * capsdebug,
   gst_element_add_pad (GST_ELEMENT (capsdebug), capsdebug->srcpad);
 
   capsdebug->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_caps_debug_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_caps_debug_sink_template, "sink");
   gst_pad_set_chain_function (capsdebug->sinkpad,
       GST_DEBUG_FUNCPTR (gst_caps_debug_sink_chain));
   gst_pad_set_bufferalloc_function (capsdebug->sinkpad,
