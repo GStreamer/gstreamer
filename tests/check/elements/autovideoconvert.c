@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * unit test for autocolorspace element
+ * unit test for autovideoconvert element
  * Copyright (C) 2009 Jan Schmidt <thaytan@noraisin.net>
  * Copyright (C) 2010 ST-Ericsson SA 
  *  @author: Benjamin Gaignard <benjamin.gaignard@stericsson.com>
@@ -95,13 +95,13 @@ run_test (const gchar * pipeline_string)
 
 }
 
-GST_START_TEST (test_autocolorspace_rbg2bayer)
+GST_START_TEST (test_autovideoconvert_rbg2bayer)
 {
   gchar *pipeline;
 
   pipeline =
       g_strdup_printf
-      ("videotestsrc num-buffers=1 ! video/x-raw-rgb,bpp=32,depth=32,width=100,height=100,framerate=10/1 ! autocolorspace ! video/x-raw-bayer,width=100,height=100,format=bggr,framerate=10/1 ! fakesink");
+      ("videotestsrc num-buffers=1 ! video/x-raw-rgb,bpp=32,depth=32,width=100,height=100,framerate=10/1 ! autovideoconvert ! video/x-raw-bayer,width=100,height=100,format=bggr,framerate=10/1 ! fakesink");
 
   run_test (pipeline);
   g_free (pipeline);
@@ -109,13 +109,13 @@ GST_START_TEST (test_autocolorspace_rbg2bayer)
 
 GST_END_TEST;
 
-GST_START_TEST (test_autocolorspace_ffmpegcolorspace)
+GST_START_TEST (test_autovideoconvert_ffmpegcolorspace)
 {
   gchar *pipeline;
 
   pipeline =
       g_strdup_printf
-      ("videotestsrc num-buffers=1 ! video/x-raw-rgb,bpp=32,width=100,height=100,framerate=10/1 ! autocolorspace ! video/x-raw-rgb,bpp=16,width=100,height=100,framerate=10/1 ! fakesink");
+      ("videotestsrc num-buffers=1 ! video/x-raw-rgb,bpp=32,width=100,height=100,framerate=10/1 ! autovideoconvert ! video/x-raw-rgb,bpp=16,width=100,height=100,framerate=10/1 ! fakesink");
 
   run_test (pipeline);
   g_free (pipeline);
@@ -124,16 +124,16 @@ GST_START_TEST (test_autocolorspace_ffmpegcolorspace)
 GST_END_TEST;
 
 static Suite *
-autocolorspace_suite (void)
+autovideoconvert_suite (void)
 {
-  Suite *s = suite_create ("autocolorspace");
+  Suite *s = suite_create ("autovideoconvert");
   TCase *tc_basic = tcase_create ("general");
 
   suite_add_tcase (s, tc_basic);
-  tcase_add_test (tc_basic, test_autocolorspace_rbg2bayer);
-  tcase_add_test (tc_basic, test_autocolorspace_ffmpegcolorspace);
+  tcase_add_test (tc_basic, test_autovideoconvert_rbg2bayer);
+  tcase_add_test (tc_basic, test_autovideoconvert_ffmpegcolorspace);
 
   return s;
 }
 
-GST_CHECK_MAIN (autocolorspace);
+GST_CHECK_MAIN (autovideoconvert);

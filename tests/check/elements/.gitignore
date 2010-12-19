@@ -5,6 +5,7 @@ amrparse
 asfmux
 assrender
 autoconvert
+autovideoconvert
 camerabin
 deinterleave
 dataurisrc

@@ -152,7 +152,7 @@ check_PROGRAMS = \
 	elements/ac3parse \
 	elements/amrparse \
 	elements/autoconvert \
-	elements/autocolorspace \
+	elements/autovideoconvert \
 	elements/asfmux \
 	elements/camerabin \
 	elements/dataurisrc \
