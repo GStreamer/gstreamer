@@ -230,6 +230,7 @@ gst_auto_video_convert_init (GstAutoVideoConvert * autovideoconvert,
   /* add sink ghost pad */
   gst_element_add_pad (GST_ELEMENT (autovideoconvert),
       autovideoconvert->sinkpad);
+  gst_object_unref (pad_tmpl);
 
   /* get src pad template */
   pad_tmpl = gst_static_pad_template_get (&srctemplate);
@@ -238,6 +239,7 @@ gst_auto_video_convert_init (GstAutoVideoConvert * autovideoconvert,
   /* add src ghost pad */
   gst_element_add_pad (GST_ELEMENT (autovideoconvert),
       autovideoconvert->srcpad);
+  gst_object_unref (pad_tmpl);
 
   return;
 }
