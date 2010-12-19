@@ -90,6 +90,7 @@ GST_START_TEST (test_simple_capture)
       GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
   fail_unless (msg != NULL);
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
 
   /* check there are N_BUFFERS files */
   for (i = 0; i < N_BUFFERS; i++) {
