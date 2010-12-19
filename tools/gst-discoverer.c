@@ -204,9 +204,6 @@ print_stream_info (GstDiscovererStreamInfo * info, void *depth)
       desc =
           gst_stream_video_information_to_string (info,
           GPOINTER_TO_INT (depth) + 1);
-  }
-
-  if (desc) {
     g_print ("%s", desc);
     g_free (desc);
   }
@@ -240,13 +237,35 @@ print_topology (GstDiscovererStreamInfo * info, gint depth)
   }
 }
 
+static gboolean
+print_tag_each (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  gint tab = GPOINTER_TO_INT (user_data);
+  gchar *ser;
+
+  ser = gst_value_serialize (value);
+
+  g_print ("%*s%s: %s\n", tab, " ",
+      gst_tag_get_nick (g_quark_to_string (field_id)), ser);
+  g_free (ser);
+
+  return TRUE;
+}
+
 static void
 print_properties (GstDiscovererInfo * info, gint tab)
 {
+  const GstTagList *tags;
+
   g_print ("%*sDuration: %" GST_TIME_FORMAT "\n", tab + 1, " ",
       GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
   g_print ("%*sSeekable: %s\n", tab + 1, " ",
       (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
+  if ((tags = gst_discoverer_info_get_tags (info))) {
+    g_print ("%*sTags: \n", tab + 1, " ");
+    gst_structure_foreach ((const GstStructure *) tags, print_tag_each,
+        GINT_TO_POINTER (tab + 5));
+  }
 }
 
 static void
