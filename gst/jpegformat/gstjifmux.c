@@ -513,6 +513,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
   }
   if (!tags) {
     tags = gst_tag_list_new ();
+    cleanup_tags = TRUE;
   }
 
   GST_DEBUG_OBJECT (self, "Tags to be serialized %" GST_PTR_FORMAT, tags);
