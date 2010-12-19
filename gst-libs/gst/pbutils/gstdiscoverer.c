@@ -385,12 +385,15 @@ static gboolean
 _event_probe (GstPad * pad, GstEvent * event, PrivateStream * ps)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
-    GstTagList *tl = NULL;
+    GstTagList *tl = NULL, *tmp;
 
     gst_event_parse_tag (event, &tl);
     GST_DEBUG_OBJECT (pad, "tags %" GST_PTR_FORMAT, tl);
     DISCO_LOCK (ps->dc);
-    ps->tags = gst_tag_list_merge (ps->tags, tl, GST_TAG_MERGE_APPEND);
+    tmp = gst_tag_list_merge (ps->tags, tl, GST_TAG_MERGE_APPEND);
+    if (ps->tags)
+      gst_tag_list_free (ps->tags);
+    ps->tags = tmp;
     DISCO_UNLOCK (ps->dc);
   }
 
@@ -919,8 +922,8 @@ discoverer_collect (GstDiscoverer * dc)
           gst_caps_get_structure (dc->priv->current_info->stream_info->caps, 0);
 
       if (g_str_has_prefix (gst_structure_get_name (st), "image/"))
-        ((GstDiscovererVideoInfo *) dc->priv->current_info->stream_info)->
-            is_image = TRUE;
+        ((GstDiscovererVideoInfo *) dc->priv->current_info->
+            stream_info)->is_image = TRUE;
     }
   }
 
@@ -1003,15 +1006,18 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
 
     case GST_MESSAGE_TAG:
     {
-      GstTagList *tl;
+      GstTagList *tl, *tmp;
 
       gst_message_parse_tag (msg, &tl);
       GST_DEBUG ("Got tags %" GST_PTR_FORMAT, tl);
       /* Merge with current tags */
-      dc->priv->current_info->tags =
+      tmp =
           gst_tag_list_merge (dc->priv->current_info->tags, tl,
           GST_TAG_MERGE_APPEND);
       gst_tag_list_free (tl);
+      if (dc->priv->current_info->tags)
+        gst_tag_list_free (dc->priv->current_info->tags);
+      dc->priv->current_info->tags = tmp;
     }
       break;
 
