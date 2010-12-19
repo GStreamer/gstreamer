@@ -287,7 +287,7 @@ blurzoomcore (GstRadioacTV * filter)
 
 /* Background image is refreshed every frame */
 static void
-image_bgsubtract_update_y (guint32 * src, guint32 * background, guint8 * diff,
+image_bgsubtract_update_y (guint32 * src, gint16 * background, guint8 * diff,
     gint video_area, gint y_threshold)
 {
   gint i;
@@ -298,7 +298,7 @@ image_bgsubtract_update_y (guint32 * src, guint32 * background, guint8 * diff,
   gint v;
 
   p = src;
-  q = (gint16 *) background;
+  q = background;
   r = diff;
   for (i = 0; i < video_area; i++) {
     R = ((*p) & 0xff0000) >> (16 - 1);
@@ -446,7 +446,7 @@ gst_radioactv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
     if (filter->background)
       g_free (filter->background);
-    filter->background = g_new (guint32, filter->width * filter->height);
+    filter->background = g_new0 (gint16, filter->width * filter->height);
 
     setTable (filter);
 

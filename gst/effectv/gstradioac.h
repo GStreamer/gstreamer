@@ -64,7 +64,7 @@ struct _GstRadioacTV
   guint32 *snapframe;
   guint8 *blurzoombuf;
   guint8 *diff;
-  guint32 *background;
+  gint16 *background;
   gint *blurzoomx;
   gint *blurzoomy;
 
