@@ -68,6 +68,7 @@ GST_START_TEST (test_rtsp_url_components_1)
   fail_unless (!strcmp (comps[1], "foo"));
   fail_unless (!strcmp (comps[2], "bar"));
 
+  g_strfreev (comps);
   gst_rtsp_url_free (url);
 }
 
@@ -90,6 +91,7 @@ GST_START_TEST (test_rtsp_url_components_2)
   fail_unless (!strcmp (comps[1], "foo/bar"));
   fail_unless (!strcmp (comps[2], "qux baz"));
 
+  g_strfreev (comps);
   gst_rtsp_url_free (url);
 }
 
@@ -112,6 +114,7 @@ GST_START_TEST (test_rtsp_url_components_3)
   fail_unless (!strcmp (comps[1], "foo%00bar"));
   fail_unless (!strcmp (comps[2], "qux baz"));
 
+  g_strfreev (comps);
   gst_rtsp_url_free (url);
 }
 
