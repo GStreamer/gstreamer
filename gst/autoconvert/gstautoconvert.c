@@ -707,8 +707,8 @@ factory_can_intersect (GstAutoConvert * autoconvert,
     GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
 
     if (template->direction == direction) {
-      GstCaps *intersect = NULL;
       GstCaps *tmpl_caps = NULL;
+      gboolean intersect;
 
       /* If there is more than one pad in this direction, we return FALSE
        * Only transform elements (with one sink and one source pad)
@@ -723,18 +723,14 @@ factory_can_intersect (GstAutoConvert * autoconvert,
       has_direction = TRUE;
 
       tmpl_caps = gst_static_caps_get (&template->static_caps);
-      intersect = gst_caps_intersect (tmpl_caps, caps);
-      GST_DEBUG_OBJECT (autoconvert, "Intersection of factory %" GST_PTR_FORMAT
+      intersect = gst_caps_can_intersect (tmpl_caps, caps);
+      GST_DEBUG_OBJECT (autoconvert, "Factories %" GST_PTR_FORMAT
           " static caps %" GST_PTR_FORMAT " and caps %" GST_PTR_FORMAT
-          " is %" GST_PTR_FORMAT, factory, tmpl_caps, caps, intersect);
+          " can%s intersect", factory, tmpl_caps, caps,
+          intersect ? "" : " not");
       gst_caps_unref (tmpl_caps);
 
-      if (intersect) {
-        if (!gst_caps_is_empty (intersect))
-          ret = TRUE;
-
-        gst_caps_unref (intersect);
-      }
+      ret |= intersect;
     }
     templates = g_list_next (templates);
   }
