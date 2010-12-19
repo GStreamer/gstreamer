@@ -359,6 +359,7 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   for (walk = qtmux->extra_atoms; walk; walk = g_slist_next (walk)) {
     AtomInfo *ainfo = (AtomInfo *) walk->data;
     ainfo->free_func (ainfo->atom);
+    g_free (ainfo);
   }
   g_slist_free (qtmux->extra_atoms);
   qtmux->extra_atoms = NULL;
