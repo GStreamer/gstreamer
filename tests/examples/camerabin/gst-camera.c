@@ -276,7 +276,11 @@ my_bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
 
   /* FIXME: make sure to get XID in main thread */
   gst_x_overlay_set_window_handle (GST_X_OVERLAY (message->src),
+#if GTK_CHECK_VERSION (2, 91, 6)
+      GDK_WINDOW_XID (gtk_widget_get_window (ui_drawing));
+#else
       GDK_WINDOW_XWINDOW (gtk_widget_get_window (ui_drawing)));
+#endif
 
   gst_message_unref (message);
   return GST_BUS_DROP;
@@ -1157,6 +1161,10 @@ create_menu_items_from_structure (GstStructure * structure)
 
     for (j = 0; j < num_framerates; j++) {
       GstCaps *video_caps;
+#if GTK_CHECK_VERSION (2, 91, 6)
+      GtkListStore *sotre;
+      GtkTreeIter iter;
+#endif
 
       if (framerate_list) {
         const GValue *item = gst_value_list_get_value (framerate_list, j);
@@ -1167,7 +1175,13 @@ create_menu_items_from_structure (GstStructure * structure)
       g_string_append_printf (item_str, " (%" GST_FOURCC_FORMAT ")",
           GST_FOURCC_ARGS (fourcc));
       g_string_append_printf (item_str, ", %dx%d at %d/%d", w, h, n, d);
+#if GTK_CHECK_VERSION (2, 91, 6)
+      store = GTK_LIST_STORE (gtk_combo_box_get_model (ui_cbbox_resolution));
+      gtk_list_store_append (store, &iter);
+      gtk_list_store_set (store, &iter, 0, item_str->str, -1);
+#else
       gtk_combo_box_append_text (ui_cbbox_resolution, item_str->str);
+#endif
 
       video_caps =
           gst_caps_new_simple (structure_name, "format", GST_TYPE_FOURCC,
