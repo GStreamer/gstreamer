@@ -33,7 +33,7 @@
 #include "ges-timeline-layer.h"
 #include "ges.h"
 
-G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_INITIALLY_UNOWNED);
 
 struct _GESTimelineLayerPrivate
 {

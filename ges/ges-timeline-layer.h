@@ -50,7 +50,7 @@ typedef struct _GESTimelineLayerPrivate GESTimelineLayerPrivate;
  * @timeline: the #GESTimeline where this layer is being used.
  */
 struct _GESTimelineLayer {
-  GObject parent; 
+  GInitiallyUnowned parent; 
 
   /*< public >*/
 
@@ -74,7 +74,7 @@ struct _GESTimelineLayer {
  */
 struct _GESTimelineLayerClass {
   /*< private >*/
-  GObjectClass parent_class;
+  GInitiallyUnownedClass parent_class;
 
   /*< public >*/
   /* virtual methods for subclasses */

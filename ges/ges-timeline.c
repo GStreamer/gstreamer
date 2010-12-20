@@ -608,7 +608,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
     return FALSE;
   }
 
-  /* Reference is stolen */
+  g_object_ref_sink (layer);
   timeline->layers = g_list_append (timeline->layers, layer);
 
   /* Inform the layer that it belongs to a new timeline */

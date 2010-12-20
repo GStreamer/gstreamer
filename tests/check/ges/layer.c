@@ -73,7 +73,11 @@ GST_START_TEST (test_layer_properties)
   /* The default priority is 0 */
   fail_unless_equals_int (ges_timeline_layer_get_priority (layer), 0);
 
+  /* Layers are initially floating, once we add them to the timeline,
+   * the timeline will take that reference. */
+  fail_unless (g_object_is_floating (layer));
   fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_if (g_object_is_floating (layer));
 
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
   fail_unless (track != NULL);
