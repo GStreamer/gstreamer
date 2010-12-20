@@ -34,7 +34,8 @@
 #include "ges-track-object.h"
 #include "ges-timeline-object.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESTrackObject, ges_track_object, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GESTrackObject, ges_track_object,
+    G_TYPE_INITIALLY_UNOWNED);
 
 struct _GESTrackObjectPrivate
 {

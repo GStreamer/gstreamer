@@ -292,9 +292,12 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 /**
  * ges_track_add_object:
  * @track: a #GESTrack
- * @object: the #GESTrackObject to add
+ * @object: (transfer full): the #GESTrackObject to add
  *
- * Adds the given object to the track.
+ * Adds the given object to the track. Sets the object's controlling track,
+ * and thus takes ownership of the @object.
+ *
+ * An object can only be added to one track.
  *
  * Returns: #TRUE if the object was properly added. #FALSE if the track does not
  * want to accept the object.
@@ -333,6 +336,8 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
     return FALSE;
   }
 
+  g_object_ref_sink (object);
+
   track->priv->trackobjects = g_list_append (track->priv->trackobjects, object);
 
   return TRUE;
@@ -343,7 +348,10 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
  * @track: a #GESTrack
  * @object: the #GESTrackObject to remove
  *
- * Removes the object from the track.
+ * Removes the object from the track and unparents it.
+ * Unparenting it means the reference owned by @track on the @object will be
+ * removed. If you wish to use the @object after this function, make sure you
+ * call g_object_ref() before removing it from the @track.
  *
  * Returns: #TRUE if the object was removed, else #FALSE if the track
  * could not remove the object (like if it didn't belong to the track).
@@ -376,6 +384,8 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
 
   ges_track_object_set_track (object, NULL);
   priv->trackobjects = g_list_remove (priv->trackobjects, object);
+
+  g_object_unref (object);
 
   return TRUE;
 }

@@ -78,7 +78,7 @@ typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
  * The GESTrackObject base class.
  */
 struct _GESTrackObject {
-  GObject parent;
+  GInitiallyUnowned parent;
 
   /*< private >*/
   guint64 start;
@@ -111,7 +111,7 @@ struct _GESTrackObject {
  */ 
 struct _GESTrackObjectClass {
   /*< private >*/
-  GObjectClass parent_class;
+  GInitiallyUnownedClass parent_class;
 
   /*< public >*/
   /* virtual methods for subclasses */
