@@ -130,7 +130,8 @@ VALGRIND_TESTS_DISABLE = \
 if BUILD_EXPERIMENTAL
 EXPERIMENTAL_CHECKS=elements/camerabin2 \
 		elements/imagecapturebin \
-		elements/videorecordingbin
+		elements/videorecordingbin \
+		elements/viewfinderbin
 endif
 
 # these tests don't even pass
