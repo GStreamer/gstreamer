@@ -56,6 +56,7 @@ static GstStateChangeReturn gst_rtp_mpa_pay_change_state (GstElement * element,
 static gboolean gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static gboolean gst_rtp_mpa_pay_handle_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay);
 static GstFlowReturn gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * payload,
     GstBuffer * buffer);
 
@@ -144,6 +145,10 @@ gst_rtp_mpa_pay_handle_event (GstPad * pad, GstEvent * event)
   rtpmpapay = GST_RTP_MPA_PAY (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      /* make sure we push the last packets in the adapter on EOS */
+      gst_rtp_mpa_pay_flush (rtpmpapay);
+      break;
     case GST_EVENT_FLUSH_STOP:
       gst_rtp_mpa_pay_reset (rtpmpapay);
       break;
