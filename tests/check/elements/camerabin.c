@@ -579,6 +579,7 @@ GST_START_TEST (test_video_recording)
 
   /* Set preview-caps */
   g_object_set (camera, "preview-caps", preview_caps, NULL);
+  gst_caps_unref (preview_caps);
 
   /* check that the camera is idle */
   g_object_get (camera, "idle", &idle, NULL);
@@ -626,6 +627,7 @@ GST_START_TEST (test_video_recording_with_flags)
 
   /* Set preview-caps */
   g_object_set (camera, "preview-caps", preview_caps, NULL);
+  gst_caps_unref (preview_caps);
 
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
@@ -712,6 +714,7 @@ GST_START_TEST (test_video_recording_no_audio)
 
   /* Set preview-caps */
   g_object_set (camera, "preview-caps", preview_caps, NULL);
+  gst_caps_unref (preview_caps);
 
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
