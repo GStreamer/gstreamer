@@ -1927,8 +1927,13 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
       GstRtpBinStream *stream;
       gboolean change = FALSE, active = FALSE;
       GstClockTime min_out_time;
+      GstBufferingMode mode;
+      gint avg_in, avg_out;
+      gint64 buffering_left;
 
       gst_message_parse_buffering (message, &percent);
+      gst_message_parse_buffering_stats (message, &mode, &avg_in, &avg_out,
+          &buffering_left);
 
       stream =
           g_object_get_data (G_OBJECT (GST_MESSAGE_SRC (message)),
@@ -1990,6 +1995,8 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
         /* make a new buffering message with the min value */
         message =
             gst_message_new_buffering (GST_OBJECT_CAST (bin), min_percent);
+        gst_message_set_buffering_stats (message, mode, avg_in, avg_out,
+            buffering_left);
 
         if (G_UNLIKELY (change)) {
           GstClock *clock;
