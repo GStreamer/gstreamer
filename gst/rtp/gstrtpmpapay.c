@@ -50,6 +50,9 @@ static GstStaticPadTemplate gst_rtp_mpa_pay_src_template =
 
 static void gst_rtp_mpa_pay_finalize (GObject * object);
 
+static GstStateChangeReturn gst_rtp_mpa_pay_change_state (GstElement * element,
+    GstStateChange transition);
+
 static gboolean gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static gboolean gst_rtp_mpa_pay_handle_event (GstPad * pad, GstEvent * event);
@@ -78,12 +81,16 @@ static void
 gst_rtp_mpa_pay_class_init (GstRtpMPAPayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_mpa_pay_finalize;
+
+  gstelement_class->change_state = gst_rtp_mpa_pay_change_state;
 
   gstbasertppayload_class->set_caps = gst_rtp_mpa_pay_setcaps;
   gstbasertppayload_class->handle_event = gst_rtp_mpa_pay_handle_event;
@@ -270,6 +277,34 @@ gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   gst_adapter_push (rtpmpapay->adapter, buffer);
   rtpmpapay->duration = duration;
 
+  return ret;
+}
+
+static GstStateChangeReturn
+gst_rtp_mpa_pay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstRtpMPAPay *rtpmpapay;
+  GstStateChangeReturn ret;
+
+  rtpmpapay = GST_RTP_MPA_PAY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_rtp_mpa_pay_reset (rtpmpapay);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_rtp_mpa_pay_reset (rtpmpapay);
+      break;
+    default:
+      break;
+  }
   return ret;
 }
 
