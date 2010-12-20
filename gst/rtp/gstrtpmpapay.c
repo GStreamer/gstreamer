@@ -52,6 +52,7 @@ static void gst_rtp_mpa_pay_finalize (GObject * object);
 
 static gboolean gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
+static gboolean gst_rtp_mpa_pay_handle_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * payload,
     GstBuffer * buffer);
 
@@ -85,6 +86,7 @@ gst_rtp_mpa_pay_class_init (GstRtpMPAPayClass * klass)
   gobject_class->finalize = gst_rtp_mpa_pay_finalize;
 
   gstbasertppayload_class->set_caps = gst_rtp_mpa_pay_setcaps;
+  gstbasertppayload_class->handle_event = gst_rtp_mpa_pay_handle_event;
   gstbasertppayload_class->handle_buffer = gst_rtp_mpa_pay_handle_buffer;
 }
 
@@ -107,6 +109,15 @@ gst_rtp_mpa_pay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_rtp_mpa_pay_reset (GstRtpMPAPay * pay)
+{
+  pay->first_ts = -1;
+  pay->duration = 0;
+  gst_adapter_clear (pay->adapter);
+  GST_DEBUG_OBJECT (pay, "reset depayloader");
+}
+
 static gboolean
 gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
@@ -116,6 +127,27 @@ gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   res = gst_basertppayload_set_outcaps (payload, NULL);
 
   return res;
+}
+
+static gboolean
+gst_rtp_mpa_pay_handle_event (GstPad * pad, GstEvent * event)
+{
+  GstRtpMPAPay *rtpmpapay;
+
+  rtpmpapay = GST_RTP_MPA_PAY (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_mpa_pay_reset (rtpmpapay);
+      break;
+    default:
+      break;
+  }
+
+  gst_object_unref (rtpmpapay);
+
+  /* FALSE to let the parent handle the event as well */
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -143,7 +175,7 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     guint payload_len;
     guint packet_len;
 
-    /* this will be the total lenght of the packet */
+    /* this will be the total length of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (4 + avail, 0, 0);
 
     /* fill one MTU or all available bytes */
@@ -198,18 +230,20 @@ gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstFlowReturn ret;
   guint size, avail;
   guint packet_len;
-  GstClockTime duration;
+  GstClockTime duration, timestamp;
 
   rtpmpapay = GST_RTP_MPA_PAY (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
   duration = GST_BUFFER_DURATION (buffer);
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+  if (GST_BUFFER_IS_DISCONT (buffer)) {
+    GST_DEBUG_OBJECT (rtpmpapay, "DISCONT");
+    gst_rtp_mpa_pay_reset (rtpmpapay);
+  }
 
   avail = gst_adapter_available (rtpmpapay->adapter);
-  if (avail == 0) {
-    rtpmpapay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtpmpapay->duration = 0;
-  }
 
   /* get packet length of previous data and this new data,
    * payload length includes a 4 byte header */
@@ -220,14 +254,21 @@ gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   if (gst_basertppayload_is_filled (basepayload,
           packet_len, rtpmpapay->duration + duration)) {
     ret = gst_rtp_mpa_pay_flush (rtpmpapay);
-    rtpmpapay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtpmpapay->duration = 0;
+    avail = 0;
   } else {
     ret = GST_FLOW_OK;
   }
 
+  if (avail == 0) {
+    GST_DEBUG_OBJECT (rtpmpapay,
+        "first packet, save timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+    rtpmpapay->first_ts = timestamp;
+    rtpmpapay->duration = 0;
+  }
+
   gst_adapter_push (rtpmpapay->adapter, buffer);
-  rtpmpapay->duration += duration;
+  rtpmpapay->duration = duration;
 
   return ret;
 }
