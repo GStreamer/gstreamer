@@ -235,6 +235,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   GstBin *cbin = GST_BIN (bcamsrc);
   GstElement *tee;
   gboolean ret = FALSE;
+  GstElement *videoscale;
 
   GST_DEBUG_OBJECT (self, "constructing pipeline");
 
@@ -279,6 +280,17 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     goto done;
 
   self->tee_vf_srcpad = gst_element_get_request_pad (tee, "src%d");
+  g_object_set (tee, "alloc-pad", self->tee_vf_srcpad, NULL);
+
+  /* the viewfinder should always work, so we add some converters to it */
+  if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace"))
+    goto done;
+  if (!(videoscale = gst_camerabin_create_and_add_element (cbin, "videoscale")))
+    goto done;
+
+  gst_object_unref (self->tee_vf_srcpad);
+  self->tee_vf_srcpad = gst_element_get_static_pad (videoscale, "src");
+
   self->tee_image_srcpad = gst_element_get_request_pad (tee, "src%d");
   self->tee_video_srcpad = gst_element_get_request_pad (tee, "src%d");
 
@@ -287,7 +299,6 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   gst_pad_add_buffer_probe (self->tee_video_srcpad,
       G_CALLBACK (gst_wrapper_camera_bin_src_vidsrc_probe), self);
 
-  g_object_set (tee, "alloc-pad", self->tee_vf_srcpad, NULL);
 
   /* hook-up the ghostpads */
   gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), self->tee_vf_srcpad);
