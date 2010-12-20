@@ -107,14 +107,22 @@ GST_START_TEST (test_ges_scenario)
       ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (source));
   fail_unless (trackobjects != NULL);
   trackobject = GES_TRACK_OBJECT (trackobjects->data);
-  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 2);
+  /* There are 3 references:
+   * 1 by the timelineobject
+   * 1 by the track
+   * 1 added by the call to _get_track_objects() above */
+  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 3);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
-  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
+  /* There are 2 references:
+   * 1 by the timelineobject
+   * 1 by the track */
+  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 2);
 
   GST_DEBUG ("Remove the TimelineObject from the layer");
+
   /* Now remove the timelineobject */
   g_object_ref (source);
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
@@ -229,12 +237,19 @@ GST_START_TEST (test_ges_timeline_add_layer)
       ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s1));
   fail_unless (trackobjects != NULL);
   trackobject = GES_TRACK_OBJECT (trackobjects->data);
-  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 2);
+  /* There are 3 references:
+   * 1 by the timelineobject
+   * 1 by the trackobject
+   * 1 added by the call to _get_track_objects() above */
+  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 3);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
-  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
+  /* There are 2 references:
+   * 1 by the timelineobject
+   * 1 by the trackobject */
+  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 2);
 
   trackobjects =
       ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s2));
@@ -244,7 +259,10 @@ GST_START_TEST (test_ges_timeline_add_layer)
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
-  ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (trackobject), "trackobject", 1);
+  /* There are 2 references:
+   * 1 by the timelineobject
+   * 1 by the trackobject */
+  ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (trackobject), "trackobject", 2);
 
   trackobjects =
       ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s3));
@@ -254,7 +272,10 @@ GST_START_TEST (test_ges_timeline_add_layer)
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
-  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
+  /* There are 2 references:
+   * 1 by the timelineobject
+   * 1 by the trackobject */
+  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 2);
 
   /* theoretically this is all we need to do to ensure cleanup */
   g_object_unref (timeline);
@@ -330,7 +351,11 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
       ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s1));
   fail_unless (trackobjects != NULL);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 2);
+    /* Each object has 3 references:
+     * 1 by the timelineobject
+     * 1 by the track
+     * 1 added by _get_track_object() above */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 3);
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
@@ -339,7 +364,11 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
       ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s2));
   fail_unless (trackobjects != NULL);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 2);
+    /* Each object has 3 references:
+     * 1 by the timelineobject
+     * 1 by the track
+     * 1 added by _get_track_object() above */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 3);
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
@@ -348,7 +377,11 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
       ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s3));
   fail_unless (trackobjects != NULL);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 2);
+    /* Each object has 3 references:
+     * 1 by the timelineobject
+     * 1 by the track
+     * 1 added by _get_track_object() above */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 3);
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
@@ -426,37 +459,61 @@ GST_START_TEST (test_ges_timeline_remove_track)
       ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s1));
   fail_unless (trackobjects != NULL);
   t1 = GES_TRACK_OBJECT ((trackobjects)->data);
-  g_object_ref (t1);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    /* There are 3 references held:
+     * 1 by the timelineobject
+     * 1 by the track
+     * 1 added by the call to _get_track_objects() above */
     ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 3);
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_object_ref (t1);
   g_list_free (trackobjects);
-  ASSERT_OBJECT_REFCOUNT (t1, "trackobject", 2);
+  /* There are 3 references held:
+   * 1 by the timelinobject
+   * 1 by the track
+   * 1 added by ourselves above (g_object_ref (t1)) */
+  ASSERT_OBJECT_REFCOUNT (t1, "trackobject", 3);
 
   trackobjects =
       ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s2));
   fail_unless (trackobjects != NULL);
   t2 = GES_TRACK_OBJECT (trackobjects->data);
-  g_object_ref (t2);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    /* There are 3 references held:
+     * 1 by the timelineobject
+     * 1 by the track
+     * 1 added by the call to _get_track_objects() above */
     ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 3);
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_object_ref (t2);
   g_list_free (trackobjects);
-  ASSERT_OBJECT_REFCOUNT (t2, "t2", 2);
+  /* There are 3 references held:
+   * 1 by the timelinobject
+   * 1 by the track
+   * 1 added by ourselves above (g_object_ref (t1)) */
+  ASSERT_OBJECT_REFCOUNT (t2, "t2", 3);
 
   trackobjects =
       ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s3));
   fail_unless (trackobjects != NULL);
   t3 = GES_TRACK_OBJECT (trackobjects->data);
-  g_object_ref (t3);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    /* There are 3 references held:
+     * 1 by the timelineobject
+     * 1 by the track
+     * 1 added by the call to _get_track_objects() above */
     ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 3);
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_object_ref (t3);
   g_list_free (trackobjects);
-  ASSERT_OBJECT_REFCOUNT (t3, "t3", 2);
+  /* There are 3 references held:
+   * 1 by the timelinobject
+   * 1 by the track
+   * 1 added by ourselves above (g_object_ref (t1)) */
+  ASSERT_OBJECT_REFCOUNT (t3, "t3", 3);
 
   /* remove the track and check that the track objects have been released */
   fail_unless (ges_timeline_remove_track (timeline, track));

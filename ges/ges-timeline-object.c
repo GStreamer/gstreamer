@@ -343,6 +343,8 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
  * Add a track object to the timeline object. Should only be called by
  * subclasses implementing the create_track_objects (plural) vmethod.
  *
+ * Takes a reference on @trobj.
+ *
  * Returns: %TRUE on success, %FALSE on failure.
  */
 
@@ -359,6 +361,7 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
     return FALSE;
 
   ges_track_object_set_timeline_object (trobj, object);
+  g_object_ref (trobj);
 
   mapping = g_slice_new0 (ObjectMapping);
   mapping->object = trobj;
@@ -444,6 +447,8 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
       g_list_remove (object->priv->trackobjects, trackobject);
 
   ges_track_object_set_timeline_object (trackobject, NULL);
+
+  GST_DEBUG ("Removing reference to track object %p", trackobject);
 
   g_object_unref (trackobject);
 

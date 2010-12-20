@@ -57,8 +57,9 @@ GST_START_TEST (test_filesource_basic)
       track);
   fail_unless (trackobject != NULL);
 
-  /* The track holds a reference to the object */
-  ASSERT_OBJECT_REFCOUNT (trackobject, "Track Object", 1);
+  /* The track holds a reference to the object
+   * and the timelineobject holds a reference on the object */
+  ASSERT_OBJECT_REFCOUNT (trackobject, "Track Object", 2);
 
   fail_unless (ges_timeline_object_release_track_object (GES_TIMELINE_OBJECT
           (source), trackobject) == TRUE);
@@ -175,8 +176,9 @@ GST_START_TEST (test_filesource_images)
   trobj = ges_timeline_object_create_track_object (tlobj, v);
   fail_unless (GES_IS_TRACK_IMAGE_SOURCE (trobj));
 
-  /* The track holds a reference to the object */
-  ASSERT_OBJECT_REFCOUNT (trobj, "Video Track Object", 1);
+  /* The track holds a reference to the object
+   * and the timelinobject holds a reference to the object */
+  ASSERT_OBJECT_REFCOUNT (trobj, "Video Track Object", 2);
 
   ges_track_remove_object (v, trobj);
   ges_timeline_object_release_track_object (tlobj, trobj);
@@ -187,8 +189,9 @@ GST_START_TEST (test_filesource_images)
   trobj = ges_timeline_object_create_track_object (tlobj, a);
   fail_unless (GES_IS_TRACK_AUDIO_TEST_SOURCE (trobj));
 
-  /* The track holds a reference to the object */
-  ASSERT_OBJECT_REFCOUNT (trobj, "Audio Track Object", 1);
+  /* The track holds a reference to the object
+   * And the timelineobject holds a reference to the object */
+  ASSERT_OBJECT_REFCOUNT (trobj, "Audio Track Object", 2);
 
   ges_track_remove_object (v, trobj);
   ges_timeline_object_release_track_object (tlobj, trobj);
