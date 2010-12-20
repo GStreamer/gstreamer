@@ -202,6 +202,9 @@ elements_interleave_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR
 elements_imagefreeze_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_imagefreeze_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-$(GST_MAJORMINOR)
 
+elements_jpegenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_jpegenc_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstapp-0.10
+
 elements_level_LDADD = $(LDADD) $(LIBM)
 
 elements_matroskamux_LDADD = $(GST_BASE_LIBS) $(LDADD) $(LIBM)
