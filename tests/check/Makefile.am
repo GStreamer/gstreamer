@@ -210,6 +210,16 @@ elements_camerabin2_LDADD = \
         $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
         $(GST_CHECK_LIBS)
 elements_camerabin2_SOURCES = elements/camerabin2.c
+
+elements_imagecapturebin_CFLAGS = \
+        -I$(top_builddir)/gst-libs \
+        $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+        $(GST_CHECK_CFLAGS) \
+        -DGST_USE_UNSTABLE_API
+elements_imagecapturebin_LDADD = \
+        $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
+        $(GST_CHECK_LIBS) -lgstapp-@GST_MAJORMINOR@
+elements_imagecapturebin_SOURCES = elements/imagecapturebin.c
 endif
 
 elements_jifmux_CFLAGS = $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) $(AM_CFLAGS) $(EXIF_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
