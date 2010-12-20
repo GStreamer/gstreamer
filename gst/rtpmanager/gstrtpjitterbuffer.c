@@ -235,6 +235,7 @@ static GstPad *gst_rtp_jitter_buffer_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_rtp_jitter_buffer_release_pad (GstElement * element,
     GstPad * pad);
+static GstClock *gst_rtp_jitter_buffer_provide_clock (GstElement * element);
 
 /* pad overrides */
 static GstCaps *gst_rtp_jitter_buffer_getcaps (GstPad * pad);
@@ -439,6 +440,8 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_release_pad);
+  gstelement_class->provide_clock =
+      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_provide_clock);
 
   klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_clear_pt_map);
   klass->set_active = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_set_active);
@@ -649,6 +652,12 @@ wrong_pad:
     g_warning ("gstjitterbuffer: asked to release an unknown pad");
     return;
   }
+}
+
+static GstClock *
+gst_rtp_jitter_buffer_provide_clock (GstElement * element)
+{
+  return gst_system_clock_obtain ();
 }
 
 static void
