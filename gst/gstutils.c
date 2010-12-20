@@ -933,26 +933,6 @@ gst_element_get_compatible_pad_template (GstElement * element,
   return newtempl;
 }
 
-static GstPad *
-gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * name)
-{
-  GstPad *newpad = NULL;
-  GstElementClass *oclass;
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->request_new_pad)
-    newpad = (oclass->request_new_pad) (element, templ, name);
-
-  if (newpad)
-    gst_object_ref (newpad);
-
-  return newpad;
-}
-
-
-
 /**
  * gst_element_get_pad_from_template:
  * @element: (transfer none): a #GstElement.
@@ -988,7 +968,7 @@ gst_element_get_pad_from_template (GstElement * element, GstPadTemplate * templ)
       break;
 
     case GST_PAD_REQUEST:
-      ret = gst_element_request_pad (element, templ, NULL);
+      ret = gst_element_request_pad (element, templ, NULL, NULL);
       break;
   }
 
@@ -1783,9 +1763,11 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
             if (gst_caps_is_always_compatible (gst_pad_template_get_caps
                     (srctempl), gst_pad_template_get_caps (desttempl))) {
               srcpad =
-                  gst_element_get_request_pad (src, srctempl->name_template);
+                  gst_element_request_pad (src, srctempl,
+                  srctempl->name_template, NULL);
               destpad =
-                  gst_element_get_request_pad (dest, desttempl->name_template);
+                  gst_element_request_pad (dest, desttempl,
+                  desttempl->name_template, NULL);
               if (srcpad && destpad
                   && pad_link_maybe_ghosting (srcpad, destpad, flags)) {
                 GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,

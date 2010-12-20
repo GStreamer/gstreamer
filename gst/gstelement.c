@@ -968,15 +968,17 @@ gst_element_get_static_pad (GstElement * element, const gchar * name)
 }
 
 static GstPad *
-gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * name)
+_gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * name, const GstCaps * caps)
 {
   GstPad *newpad = NULL;
   GstElementClass *oclass;
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  if (oclass->request_new_pad)
+  if (oclass->request_new_pad_full)
+    newpad = (oclass->request_new_pad_full) (element, templ, name, caps);
+  else if (oclass->request_new_pad)
     newpad = (oclass->request_new_pad) (element, templ, name);
 
   if (newpad)
@@ -993,6 +995,9 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * Retrieves a pad from the element by name. This version only retrieves
  * request pads. The pad should be released with
  * gst_element_release_request_pad().
+ *
+ * This method is slow and will be deprecated in the future. New code should
+ * use gst_element_request_pad() with the requested template.
  *
  * Returns: (transfer full): requested #GstPad if found, otherwise %NULL.
  *     Release after usage.
@@ -1068,9 +1073,41 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
   if (!templ_found)
     return NULL;
 
-  pad = gst_element_request_pad (element, templ, req_name);
+  pad = _gst_element_request_pad (element, templ, req_name, NULL);
 
   return pad;
+}
+
+/**
+ * gst_element_request_pad:
+ * @element: a #GstElement to find a request pad of.
+ * @templ: a #GstPadTemplate of which we want a pad of.
+ * @name: (transfer none) (allow-none): the name of the request #GstPad
+ * to retrieve. Can be %NULL.
+ * @caps: (transfer none) (allow-none): the caps of the pad we want to
+ * request. Can be %NULL.
+ *
+ * Retrieves a request pad from the element according to the provided template.
+ *
+ * If the @caps are specified and the element implements thew new
+ * request_new_pad_full virtual method, the element will use them to select
+ * which pad to create.
+ *
+ * The pad should be released with gst_element_release_request_pad().
+ *
+ * Returns: (transfer full): requested #GstPad if found, otherwise %NULL.
+ *     Release after usage.
+ *
+ * Since: 0.10.32
+ */
+GstPad *
+gst_element_request_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (templ != NULL, NULL);
+
+  return _gst_element_request_pad (element, templ, name, caps);
 }
 
 /**

@@ -523,6 +523,7 @@ gst_element_get_compatible_pad
 gst_element_get_compatible_pad_template
 gst_element_get_request_pad
 gst_element_get_static_pad
+gst_element_request_pad
 gst_element_no_more_pads
 gst_element_release_request_pad
 gst_element_remove_pad
