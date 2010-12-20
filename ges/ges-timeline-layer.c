@@ -212,13 +212,15 @@ objects_start_compare (GESTimelineObject * a, GESTimelineObject * b)
 /**
  * ges_timeline_layer_add_object:
  * @layer: a #GESTimelineLayer
- * @object: the #GESTimelineObject to add.
+ * @object: (transfer full): the #GESTimelineObject to add.
  *
- * Adds the object to the layer. The layer will steal a reference to the
- * provided object.
+ * Adds the given object to the layer. Sets the object's parent, and thus
+ * takes ownership of the object.
+ *
+ * An object can only be added to one layer.
  *
  * Returns: TRUE if the object was properly added to the layer, or FALSE
- * if the @layer refused to add the object.
+ * if the @layer refuses to add the object.
  */
 
 gboolean
@@ -230,11 +232,14 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
   GST_DEBUG ("layer:%p, object:%p", layer, object);
 
   tl_obj_layer = ges_timeline_object_get_layer (object);
+
   if (G_UNLIKELY (tl_obj_layer)) {
     GST_WARNING ("TimelineObject %p already belongs to another layer");
     g_object_unref (tl_obj_layer);
     return FALSE;
   }
+
+  g_object_ref_sink (object);
 
   /* Take a reference to the object and store it stored by start/priority */
   layer->priv->objects_start =
@@ -268,18 +273,23 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
  * @layer: a #GESTimelineLayer
  * @object: the #GESTimelineObject to remove
  *
- * Removes the given @object from the @layer. The reference stolen by the @layer
- * when the object was added will be removed. If you wish to use the object after
- * this function, make sure you take an extra reference to the object before
- * calling this function.
+ * Removes the given @object from the @layer and unparents it.
+ * Unparenting it means the reference owned by @layer on the @object will be
+ * removed. If you wish to use the @object after this function, make sure you
+ * call g_object_ref() before removing it from the @layer.
  *
- * Returns: TRUE if the object was properly remove, else FALSE.
+ * Returns: TRUE if the object could be removed, FALSE if the layer does
+ * not want to remove the object.
  */
 gboolean
 ges_timeline_layer_remove_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
 {
   GESTimelineLayer *tl_obj_layer;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
   GST_DEBUG ("layer:%p, object:%p", layer, object);
 
   tl_obj_layer = ges_timeline_object_get_layer (object);

@@ -97,8 +97,10 @@ GST_START_TEST (test_layer_properties)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 0);
 
   /* Add the object to the timeline */
+  fail_unless (g_object_is_floating (object));
   fail_unless (ges_timeline_layer_add_object (layer,
           GES_TIMELINE_OBJECT (object)));
+  fail_if (g_object_is_floating (object));
   trackobject = ges_timeline_object_find_track_object (object, track,
       G_TYPE_NONE);
   fail_unless (trackobject != NULL);

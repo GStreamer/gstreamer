@@ -54,7 +54,8 @@ static void
 track_object_priority_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
 
-G_DEFINE_ABSTRACT_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GESTimelineObject, ges_timeline_object,
+    G_TYPE_INITIALLY_UNOWNED);
 
 /* Mapping of relationship between a TimelineObject and the TrackObjects
  * it controls

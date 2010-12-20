@@ -156,7 +156,7 @@ typedef gboolean (*GESCreateTrackObjectsFunc) (GESTimelineObject * object,
  */
 struct _GESTimelineObject {
   /*< private >*/
-  GObject parent;
+  GInitiallyUnowned parent;
 
   GESTimelineObjectPrivate *priv;
   
@@ -186,7 +186,7 @@ struct _GESTimelineObject {
  */
 struct _GESTimelineObjectClass {
   /*< private >*/
-  GObjectClass parent_class;
+  GInitiallyUnownedClass parent_class;
 
   /*< public >*/
   GESCreateTrackObjectFunc create_track_object;

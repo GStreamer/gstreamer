@@ -93,11 +93,15 @@ GST_START_TEST (test_ges_scenario)
   source = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (source != NULL);
 
+  /* The source will be floating before added to the layer... */
+  fail_unless (g_object_is_floating (source));
   GST_DEBUG ("Adding the source to the timeline layer");
   fail_unless (ges_timeline_layer_add_object (layer,
           GES_TIMELINE_OBJECT (source)));
+  fail_if (g_object_is_floating (source));
   tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (source));
   fail_unless (tmp_layer == layer);
+  /* The timeline stole our reference */
   ASSERT_OBJECT_REFCOUNT (source, "source", 1);
   g_object_unref (tmp_layer);
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
