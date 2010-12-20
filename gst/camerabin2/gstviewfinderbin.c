@@ -74,6 +74,24 @@ static GstStateChangeReturn
 gst_viewfinder_bin_change_state (GstElement * element, GstStateChange trans);
 
 static void
+gst_viewfinder_bin_dispose (GObject * object)
+{
+  GstViewfinderBin *viewfinderbin = GST_VIEWFINDER_BIN_CAST (object);
+
+  if (viewfinderbin->user_video_sink) {
+    gst_object_unref (viewfinderbin->user_video_sink);
+    viewfinderbin->user_video_sink = NULL;
+  }
+
+  if (viewfinderbin->video_sink) {
+    gst_object_unref (viewfinderbin->video_sink);
+    viewfinderbin->video_sink = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose ((GObject *) viewfinderbin);
+}
+
+static void
 gst_viewfinder_bin_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -98,6 +116,7 @@ gst_viewfinder_bin_class_init (GstViewfinderBinClass * klass)
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_viewfinder_bin_change_state);
 
+  gobject_klass->dispose = gst_viewfinder_bin_dispose;
   gobject_klass->set_property = gst_viewfinder_bin_set_property;
   gobject_klass->get_property = gst_viewfinder_bin_get_property;
 
@@ -111,8 +130,10 @@ static void
 gst_viewfinder_bin_init (GstViewfinderBin * viewfinderbin,
     GstViewfinderBinClass * viewfinderbin_class)
 {
+  GstPadTemplate *templ = gst_static_pad_template_get (&sink_template);
   viewfinderbin->ghostpad = gst_ghost_pad_new_no_target_from_template ("sink",
-      gst_static_pad_template_get (&sink_template));
+      templ);
+  gst_object_unref (templ);
   gst_element_add_pad (GST_ELEMENT_CAST (viewfinderbin),
       viewfinderbin->ghostpad);
 }
@@ -149,6 +170,7 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
     pad = gst_element_get_static_pad (csp, "sink");
     if (!gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), pad))
       goto error;
+    gst_object_unref (pad);
 
     vfbin->elements_created = TRUE;
     GST_DEBUG_OBJECT (vfbin, "Elements succesfully created and linked");
