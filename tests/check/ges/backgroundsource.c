@@ -199,8 +199,8 @@ GST_END_TEST;
 static Suite *
 ges_suite (void)
 {
-  Suite *s = suite_create ("ges");
-  TCase *tc_chain = tcase_create ("filesource");
+  Suite *s = suite_create ("ges-backgroundsource");
+  TCase *tc_chain = tcase_create ("backgroundsource");
 
   suite_add_tcase (s, tc_chain);
 
