@@ -807,6 +807,7 @@ check_content (ExifContent * content, void *user_data)
 
       fail_unless (strcmp (str, taglist_str) == 0);
       test_data->result = TRUE;
+      g_free (taglist_str);
     }
       break;
     case EXIF_TYPE_RATIONAL:{
@@ -886,6 +887,7 @@ check_content (ExifContent * content, void *user_data)
       }
 
       test_data->result = TRUE;
+      gst_buffer_unref (buf);
     }
       break;
     default:
@@ -927,6 +929,7 @@ generate_jif_file_with_tags_from_taglist (GstTagList * taglist,
 
   pipeline = gst_parse_launch (launchline, NULL);
   fail_unless (pipeline != NULL);
+  g_free (launchline);
 
   jifmux = gst_bin_get_by_name (GST_BIN (pipeline), "jifmux0");
   fail_unless (jifmux != NULL);
