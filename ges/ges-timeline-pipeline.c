@@ -136,7 +136,7 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
    * stream fed to it are decoupled already */
   g_object_set (self->priv->encodebin, "queue-buffers-max", (guint32) 1,
       "queue-bytes-max", (guint32) 0, "queue-time-max", (guint64) 0,
-      "use-smartencoder", TRUE, NULL);
+      "avoid-reencoding", TRUE, NULL);
 
   if (G_UNLIKELY (self->priv->playsink == NULL))
     GST_ERROR_OBJECT (self, "Can't create playsink instance !");
@@ -633,7 +633,7 @@ ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
 
   if (pipeline->priv->profile)
     gst_encoding_profile_unref (pipeline->priv->profile);
-  g_object_set (pipeline->priv->encodebin, "use-smartencoder",
+  g_object_set (pipeline->priv->encodebin, "avoid-reencoding",
       !(!(pipeline->priv->mode & TIMELINE_MODE_SMART_RENDER)), NULL);
   g_object_set (pipeline->priv->encodebin, "profile", profile, NULL);
   pipeline->priv->profile =
@@ -722,7 +722,7 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
       GST_ERROR_OBJECT (pipeline, "Couldn't add URI sink");
       return FALSE;
     }
-    g_object_set (pipeline->priv->encodebin, "use-smartencoder",
+    g_object_set (pipeline->priv->encodebin, "avoid-reencoding",
         !(!(mode & TIMELINE_MODE_SMART_RENDER)), NULL);
 
     gst_element_link_pads_full (pipeline->priv->encodebin, "src",
