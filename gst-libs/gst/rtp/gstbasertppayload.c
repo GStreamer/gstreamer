@@ -787,12 +787,16 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
     rtime = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
         data.timestamp);
 
-    GST_LOG_OBJECT (payload,
-        "Using running_time %" GST_TIME_FORMAT " for RTP timestamp",
-        GST_TIME_ARGS (rtime));
-
-    rtime = gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
-
+    if (rtime == -1) {
+      GST_LOG_OBJECT (payload, "Clipped timestamp, using base RTP timestamp");
+      rtime = 0;
+    } else {
+      GST_LOG_OBJECT (payload,
+          "Using running_time %" GST_TIME_FORMAT " for RTP timestamp",
+          GST_TIME_ARGS (rtime));
+      rtime =
+          gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
+    }
     /* add running_time in clock-rate units to the base timestamp */
     data.rtptime = payload->ts_base + rtime;
   } else {
@@ -820,8 +824,8 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
       GST_BUFFER_SIZE (GST_BUFFER (obj)), payload->seqnum, data.rtptime,
       GST_TIME_ARGS (data.timestamp));
 
-  if (g_atomic_int_compare_and_exchange (&payload->priv->
-          notified_first_timestamp, 1, 0)) {
+  if (g_atomic_int_compare_and_exchange (&payload->
+          priv->notified_first_timestamp, 1, 0)) {
     g_object_notify (G_OBJECT (payload), "timestamp");
     g_object_notify (G_OBJECT (payload), "seqnum");
   }
