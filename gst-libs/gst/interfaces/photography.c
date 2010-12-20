@@ -616,11 +616,9 @@ gst_photography_iface_class_init (gpointer g_class)
 
   /* Noise Reduction, Bayer an YCC noise reduction are enabled by default */
   g_object_interface_install_property (g_class,
-      g_param_spec_uint (GST_PHOTOGRAPHY_PROP_NOISE_REDUCTION,
+      g_param_spec_flags (GST_PHOTOGRAPHY_PROP_NOISE_REDUCTION,
           "Noise Reduction settings",
           "Which noise reduction modes are enalbed in Camera (0 = disabled)",
-          0, G_MAXUINT32,
-          GST_PHOTOGRAPHY_NOISE_REDUCTION_YCC |
-          GST_PHOTOGRAPHY_NOISE_REDUCTION_BAYER,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_PHOTOGRAPHY_NOISE_REDUCTION,
+          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
