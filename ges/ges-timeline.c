@@ -572,7 +572,8 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
       ges_timeline_object_release_track_object (object, trobj);
     }
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    /* removing the reference added by _get_track_objects() */
+    g_object_unref (trobj);
   }
   g_list_free (trackobjects);
 
