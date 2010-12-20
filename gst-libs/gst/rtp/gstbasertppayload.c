@@ -402,15 +402,25 @@ gst_basertppayload_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
     {
       gboolean update;
-      gdouble rate;
+      gdouble rate, arate;
       GstFormat fmt;
       gint64 start, stop, position;
+      GstSegment *segment;
 
-      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
-          &position);
-      gst_segment_set_newsegment (&basertppayload->segment, update, rate, fmt,
-          start, stop, position);
+      segment = &basertppayload->segment;
 
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
+          &start, &stop, &position);
+      gst_segment_set_newsegment_full (segment, update, rate, arate, fmt, start,
+          stop, position);
+
+      GST_DEBUG_OBJECT (basertppayload,
+          "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+          "format %d, "
+          "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
+          G_GINT64_FORMAT ", accum %" G_GINT64_FORMAT, update, rate, arate,
+          segment->format, segment->start, segment->stop, segment->time,
+          segment->accum);
       /* fallthrough */
     }
     default:
