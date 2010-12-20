@@ -576,6 +576,7 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
   if (!sinkpad) {
     GST_ERROR_OBJECT (autoconvert, "Could not find sink in %s",
         GST_OBJECT_NAME (element));
+    gst_object_unref (srcpad);
     goto error;
   }
 
@@ -652,6 +653,9 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
   /* Increment the reference count we will return to the caller */
   gst_object_ref (element);
 
+  /* unref sink and src pad */
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
   return element;
 
 error:
@@ -879,6 +883,8 @@ gst_auto_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
     /* And make it the current child */
     if (gst_auto_convert_activate_element (autoconvert, element, caps))
       break;
+    else
+      gst_object_unref (element);
   }
 
 get_out:
