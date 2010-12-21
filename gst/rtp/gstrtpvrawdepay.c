@@ -58,6 +58,9 @@ static GstBuffer *gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload,
 static GstStateChangeReturn gst_rtp_vraw_depay_change_state (GstElement *
     element, GstStateChange transition);
 
+static gboolean gst_rtp_vraw_depay_handle_event (GstBaseRTPDepayload * filter,
+    GstEvent * event);
+
 static void
 gst_rtp_vraw_depay_base_init (gpointer klass)
 {
@@ -87,6 +90,7 @@ gst_rtp_vraw_depay_class_init (GstRtpVRawDepayClass * klass)
 
   gstbasertpdepayload_class->set_caps = gst_rtp_vraw_depay_setcaps;
   gstbasertpdepayload_class->process = gst_rtp_vraw_depay_process;
+  gstbasertpdepayload_class->handle_event = gst_rtp_vraw_depay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtpvrawdepay_debug, "rtpvrawdepay", 0,
       "raw video RTP Depayloader");
@@ -97,6 +101,16 @@ gst_rtp_vraw_depay_init (GstRtpVRawDepay * rtpvrawdepay,
     GstRtpVRawDepayClass * klass)
 {
   /* needed because of GST_BOILERPLATE */
+}
+
+static void
+gst_rtp_vraw_depay_reset (GstRtpVRawDepay * rtpvrawdepay)
+{
+  if (rtpvrawdepay->outbuf) {
+    gst_buffer_unref (rtpvrawdepay->outbuf);
+    rtpvrawdepay->outbuf = NULL;
+  }
+  rtpvrawdepay->timestamp = -1;
 }
 
 static gboolean
@@ -513,6 +527,28 @@ short_packet:
   }
 }
 
+static gboolean
+gst_rtp_vraw_depay_handle_event (GstBaseRTPDepayload * filter, GstEvent * event)
+{
+  gboolean ret;
+  GstRtpVRawDepay *rtpvrawdepay;
+
+  rtpvrawdepay = GST_RTP_VRAW_DEPAY (filter);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_vraw_depay_reset (rtpvrawdepay);
+      break;
+    default:
+      break;
+  }
+
+  ret =
+      GST_BASE_RTP_DEPAYLOAD_CLASS (parent_class)->handle_event (filter, event);
+
+  return ret;
+}
+
 static GstStateChangeReturn
 gst_rtp_vraw_depay_change_state (GstElement * element,
     GstStateChange transition)
@@ -526,7 +562,7 @@ gst_rtp_vraw_depay_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      rtpvrawdepay->timestamp = -1;
+      gst_rtp_vraw_depay_reset (rtpvrawdepay);
       break;
     default:
       break;
@@ -536,10 +572,7 @@ gst_rtp_vraw_depay_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (rtpvrawdepay->outbuf) {
-        gst_buffer_unref (rtpvrawdepay->outbuf);
-        rtpvrawdepay->outbuf = NULL;
-      }
+      gst_rtp_vraw_depay_reset (rtpvrawdepay);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
