@@ -547,8 +547,8 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
   GstElement *element = NULL;
   GstPad *internal_sinkpad = NULL;
   GstPad *internal_srcpad = NULL;
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstPad *sinkpad = NULL;
+  GstPad *srcpad = NULL;
   GstPadLinkReturn padlinkret;
 
   GST_DEBUG_OBJECT (autoconvert, "Adding element %s to the autoconvert bin",
@@ -576,7 +576,6 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
   if (!sinkpad) {
     GST_ERROR_OBJECT (autoconvert, "Could not find sink in %s",
         GST_OBJECT_NAME (element));
-    gst_object_unref (srcpad);
     goto error;
   }
 
@@ -588,6 +587,10 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
 
   if (!internal_sinkpad || !internal_srcpad) {
     GST_ERROR_OBJECT (autoconvert, "Could not create internal pads");
+    if (internal_srcpad)
+      gst_object_unref (internal_srcpad);
+    if (internal_sinkpad)
+      gst_object_unref (internal_sinkpad);
     goto error;
   }
 
@@ -660,6 +663,11 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
 
 error:
   gst_bin_remove (GST_BIN (autoconvert), element);
+
+  if (srcpad)
+    gst_object_unref (srcpad);
+  if (sinkpad)
+    gst_object_unref (sinkpad);
 
   return NULL;
 }
