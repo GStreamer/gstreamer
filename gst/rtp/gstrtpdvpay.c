@@ -371,5 +371,5 @@ gboolean
 gst_rtp_dv_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpdvpay",
-      GST_RANK_NONE, GST_TYPE_RTP_DV_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_DV_PAY);
 }

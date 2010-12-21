@@ -227,5 +227,5 @@ gboolean
 gst_rtp_mp4v_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp4vdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_MP4V_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MP4V_DEPAY);
 }

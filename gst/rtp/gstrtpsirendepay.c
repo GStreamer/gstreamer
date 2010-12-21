@@ -120,5 +120,5 @@ gboolean
 gst_rtp_siren_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpsirendepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_SIREN_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_SIREN_DEPAY);
 }

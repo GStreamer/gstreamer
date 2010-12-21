@@ -1234,5 +1234,5 @@ gboolean
 gst_rtp_h264_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtph264pay",
-      GST_RANK_NONE, GST_TYPE_RTP_H264_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_H264_PAY);
 }

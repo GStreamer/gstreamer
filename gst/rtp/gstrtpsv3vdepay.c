@@ -320,5 +320,5 @@ gst_rtp_sv3v_depay_plugin_init (GstPlugin * plugin)
       "RTP SV3V depayloader");
 
   return gst_element_register (plugin, "rtpsv3vdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_SV3V_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_SV3V_DEPAY);
 }

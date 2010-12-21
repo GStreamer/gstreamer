@@ -616,5 +616,5 @@ gboolean
 gst_rtp_theora_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtptheoradepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_THEORA_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_THEORA_DEPAY);
 }

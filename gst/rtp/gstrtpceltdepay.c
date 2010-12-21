@@ -271,5 +271,5 @@ gboolean
 gst_rtp_celt_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpceltdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_CELT_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_CELT_DEPAY);
 }

@@ -173,5 +173,5 @@ gboolean
 gst_rtp_gsm_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpgsmpay",
-      GST_RANK_NONE, GST_TYPE_RTP_GSM_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_GSM_PAY);
 }

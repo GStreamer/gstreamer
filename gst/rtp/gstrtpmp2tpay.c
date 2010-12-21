@@ -202,5 +202,5 @@ gboolean
 gst_rtp_mp2t_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp2tpay",
-      GST_RANK_NONE, GST_TYPE_RTP_MP2T_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MP2T_PAY);
 }

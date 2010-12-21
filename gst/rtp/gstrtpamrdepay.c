@@ -455,5 +455,5 @@ gboolean
 gst_rtp_amr_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpamrdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_AMR_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_AMR_DEPAY);
 }

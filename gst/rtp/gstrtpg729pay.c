@@ -399,5 +399,5 @@ gboolean
 gst_rtp_g729_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpg729pay",
-      GST_RANK_NONE, GST_TYPE_RTP_G729_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_G729_PAY);
 }

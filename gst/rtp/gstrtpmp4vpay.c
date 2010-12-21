@@ -672,5 +672,5 @@ gboolean
 gst_rtp_mp4v_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp4vpay",
-      GST_RANK_NONE, GST_TYPE_RTP_MP4V_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MP4V_PAY);
 }

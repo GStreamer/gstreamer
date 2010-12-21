@@ -849,5 +849,5 @@ gboolean
 gst_rtp_theora_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtptheorapay",
-      GST_RANK_NONE, GST_TYPE_RTP_THEORA_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_THEORA_PAY);
 }

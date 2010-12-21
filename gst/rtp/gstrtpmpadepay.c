@@ -179,5 +179,5 @@ gboolean
 gst_rtp_mpa_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmpadepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_MPA_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MPA_DEPAY);
 }

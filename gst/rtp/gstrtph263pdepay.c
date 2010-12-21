@@ -395,5 +395,5 @@ gboolean
 gst_rtp_h263p_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtph263pdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_H263P_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_H263P_DEPAY);
 }

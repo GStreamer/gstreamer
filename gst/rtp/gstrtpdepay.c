@@ -158,5 +158,5 @@ gboolean
 gst_rtp_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_DEPAY);
 }

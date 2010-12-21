@@ -415,5 +415,5 @@ gst_rtp_qdm2_depay_plugin_init (GstPlugin * plugin)
       "RTP QDM2 depayloader");
 
   return gst_element_register (plugin, "rtpqdm2depay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_QDM2_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_QDM2_DEPAY);
 }

@@ -223,5 +223,5 @@ gboolean
 gst_rtp_mp2t_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp2tdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_MP2T_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MP2T_DEPAY);
 }

@@ -232,5 +232,5 @@ gboolean
 gst_rtp_ilbc_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpilbcdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_ILBC_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_ILBC_DEPAY);
 }

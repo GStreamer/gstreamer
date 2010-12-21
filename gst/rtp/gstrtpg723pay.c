@@ -311,6 +311,6 @@ gst_rtp_g723_pay_change_state (GstElement * element, GstStateChange transition)
 gboolean
 gst_rtp_g723_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpg723pay", GST_RANK_NONE,
+  return gst_element_register (plugin, "rtpg723pay", GST_RANK_SECONDARY,
       gst_rtp_g723_pay_get_type ());
 }

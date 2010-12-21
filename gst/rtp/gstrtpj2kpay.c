@@ -575,6 +575,6 @@ gst_rtp_j2k_pay_get_property (GObject * object, guint prop_id,
 gboolean
 gst_rtp_j2k_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpj2kpay", GST_RANK_NONE,
+  return gst_element_register (plugin, "rtpj2kpay", GST_RANK_SECONDARY,
       GST_TYPE_RTP_J2K_PAY);
 }

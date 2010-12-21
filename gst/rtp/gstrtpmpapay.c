@@ -317,5 +317,5 @@ gboolean
 gst_rtp_mpa_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmpapay",
-      GST_RANK_NONE, GST_TYPE_RTP_MPA_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MPA_PAY);
 }

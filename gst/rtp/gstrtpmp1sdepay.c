@@ -141,5 +141,5 @@ gboolean
 gst_rtp_mp1s_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp1sdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_MP1S_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MP1S_DEPAY);
 }

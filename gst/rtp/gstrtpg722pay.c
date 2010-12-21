@@ -206,5 +206,5 @@ gboolean
 gst_rtp_g722_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpg722pay",
-      GST_RANK_NONE, GST_TYPE_RTP_G722_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_G722_PAY);
 }

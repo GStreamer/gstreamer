@@ -261,5 +261,5 @@ gboolean
 gst_rtp_L16_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpL16depay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_L16_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_L16_DEPAY);
 }

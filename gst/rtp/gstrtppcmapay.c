@@ -114,5 +114,5 @@ gboolean
 gst_rtp_pcma_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtppcmapay",
-      GST_RANK_NONE, GST_TYPE_RTP_PCMA_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_PCMA_PAY);
 }

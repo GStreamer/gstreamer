@@ -1796,5 +1796,5 @@ gboolean
 gst_rtp_h263_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtph263pay",
-      GST_RANK_NONE, GST_TYPE_RTP_H263_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_H263_PAY);
 }

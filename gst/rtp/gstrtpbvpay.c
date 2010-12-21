@@ -219,5 +219,5 @@ gboolean
 gst_rtp_bv_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpbvpay",
-      GST_RANK_NONE, GST_TYPE_RTP_BV_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_BV_PAY);
 }

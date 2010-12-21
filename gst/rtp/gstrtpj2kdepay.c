@@ -670,5 +670,5 @@ gboolean
 gst_rtp_j2k_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpj2kdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_J2K_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_J2K_DEPAY);
 }

@@ -221,5 +221,5 @@ gboolean
 gst_rtp_speex_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpspeexdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_SPEEX_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_SPEEX_DEPAY);
 }
