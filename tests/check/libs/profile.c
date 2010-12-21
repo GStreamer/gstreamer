@@ -132,6 +132,83 @@ GST_START_TEST (test_profile_output_caps)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_target_naming)
+{
+  GstEncodingTarget *target;
+
+  /* NULL values */
+  ASSERT_CRITICAL (target = gst_encoding_target_new (NULL, NULL, NULL, NULL));
+  fail_if (target != NULL);
+  ASSERT_CRITICAL (target =
+      gst_encoding_target_new ("donkey", NULL, NULL, NULL));
+  fail_if (target != NULL);
+  ASSERT_CRITICAL (target =
+      gst_encoding_target_new (NULL, "donkey", NULL, NULL));
+  fail_if (target != NULL);
+  ASSERT_CRITICAL (target =
+      gst_encoding_target_new (NULL, NULL, "donkey", NULL));
+  fail_if (target != NULL);
+
+  /* Name and Category validation */
+
+  /* empty non-NULL strings */
+  fail_if (gst_encoding_target_new ("", "valid", "description", NULL) != NULL);
+  fail_if (gst_encoding_target_new ("valid", "", "description", NULL) != NULL);
+
+  /* don't start with a lower case ASCII character */
+  fail_if (gst_encoding_target_new ("A", "valid", "description", NULL) != NULL);
+  fail_if (gst_encoding_target_new ("3", "valid", "description", NULL) != NULL);
+  fail_if (gst_encoding_target_new ("-", "valid", "description", NULL) != NULL);
+  fail_if (gst_encoding_target_new ("!", "valid", "description", NULL) != NULL);
+  fail_if (gst_encoding_target_new (" ", "valid", "description", NULL) != NULL);
+  fail_if (gst_encoding_target_new ("valid", "A", "description", NULL) != NULL);
+  fail_if (gst_encoding_target_new ("valid", "3", "description", NULL) != NULL);
+  fail_if (gst_encoding_target_new ("valid", "-", "description", NULL) != NULL);
+  fail_if (gst_encoding_target_new ("valid", "!", "description", NULL) != NULL);
+  fail_if (gst_encoding_target_new ("valid", " ", "description", NULL) != NULL);
+
+  /* Starting with anything else is valid */
+  target = gst_encoding_target_new ("a", "valid", "description", NULL);
+  fail_if (target == NULL);
+  gst_encoding_target_unref (target);
+  target = gst_encoding_target_new ("z", "valid", "description", NULL);
+  fail_if (target == NULL);
+  gst_encoding_target_unref (target);
+  target = gst_encoding_target_new ("valid", "a", "description", NULL);
+  fail_if (target == NULL);
+  gst_encoding_target_unref (target);
+  target = gst_encoding_target_new ("valid", "z", "description", NULL);
+  fail_if (target == NULL);
+  gst_encoding_target_unref (target);
+
+  /* only inner valid characters are lower-case ASCII letters *OR* digits *OR* hyphens */
+  fail_if (gst_encoding_target_new ("aA", "valid", "description",
+          NULL) != NULL);
+  fail_if (gst_encoding_target_new ("a!", "valid", "description",
+          NULL) != NULL);
+  fail_if (gst_encoding_target_new ("space donkeys", "valid", "description",
+          NULL) != NULL);
+  fail_if (gst_encoding_target_new ("howaboutùnicode", "valid", "description",
+          NULL) != NULL);
+  fail_if (gst_encoding_target_new ("valid", "aA", "description",
+          NULL) != NULL);
+  fail_if (gst_encoding_target_new ("valid", "a!", "description",
+          NULL) != NULL);
+
+  target =
+      gst_encoding_target_new ("donkey-4-ever", "valid", "description", NULL);
+  fail_if (target == NULL);
+  gst_encoding_target_unref (target);
+  target =
+      gst_encoding_target_new ("valid", "donkey-4-ever", "description", NULL);
+  fail_if (target == NULL);
+  gst_encoding_target_unref (target);
+
+}
+
+GST_END_TEST;
+
 static GstEncodingTarget *
 create_saveload_target (void)
 {
@@ -395,6 +472,7 @@ profile_suite (void)
 
   tcase_add_test (tc_chain, test_profile_creation);
   tcase_add_test (tc_chain, test_profile_output_caps);
+  tcase_add_test (tc_chain, test_target_naming);
   if (can_write) {
     tcase_add_test (tc_chain, test_loading_profile);
     tcase_add_test (tc_chain, test_saving_profile);

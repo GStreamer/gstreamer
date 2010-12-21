@@ -19,6 +19,7 @@
  */
 
 #include <locale.h>
+#include <string.h>
 #include "encoding-target.h"
 
 /*
@@ -150,6 +151,40 @@ gst_encoding_target_get_profiles (GstEncodingTarget * target)
   return target->profiles;
 }
 
+static inline gboolean
+validate_name (const gchar * name)
+{
+  guint i, len;
+
+  len = strlen (name);
+  if (len == 0)
+    return FALSE;
+
+  /* First character can only be a lower case ASCII character */
+  if (!g_ascii_isalpha (name[0]) || !g_ascii_islower (name[0]))
+    return FALSE;
+
+  /* All following characters can only by:
+   * either a lower case ASCII character
+   * or an hyphen
+   * or a numeric */
+  for (i = 1; i < len; i++) {
+    /* if uppercase ASCII letter, return */
+    if (g_ascii_isupper (name[i]))
+      return FALSE;
+    /* if a digit, continue */
+    if (g_ascii_isdigit (name[i]))
+      continue;
+    /* if an hyphen, continue */
+    if (name[i] == '-')
+      continue;
+    /* remaining should only be ascii letters */
+    if (!g_ascii_isalpha (name[i]))
+      return FALSE;
+  }
+
+  return TRUE;
+}
 
 /**
  * gst_encoding_target_new:
@@ -159,6 +194,10 @@ gst_encoding_target_get_profiles (GstEncodingTarget * target)
  * @profiles: A #GList of #GstEncodingProfile.
  *
  * Creates a new #GstEncodingTarget.
+ *
+ * The name and category can only consist of lowercase ASCII letters for the
+ * first character, followed by either lowercase ASCII letters, digits or
+ * hyphens ('-').
  *
  * Since: 0.10.32
  *
@@ -176,6 +215,12 @@ gst_encoding_target_new (const gchar * name, const gchar * category,
   g_return_val_if_fail (category != NULL, NULL);
   g_return_val_if_fail (description != NULL, NULL);
 
+  /* Validate name */
+  if (!validate_name (name))
+    goto invalid_name;
+  if (!validate_name (category))
+    goto invalid_category;
+
   res = (GstEncodingTarget *) gst_mini_object_new (GST_TYPE_ENCODING_TARGET);
   res->name = g_strdup (name);
   res->category = g_strdup (category);
@@ -190,6 +235,18 @@ gst_encoding_target_new (const gchar * name, const gchar * category,
   }
 
   return res;
+
+invalid_name:
+  {
+    GST_ERROR ("Invalid name for encoding category : '%s'", name);
+    return NULL;
+  }
+
+invalid_category:
+  {
+    GST_ERROR ("Invalid category for encoding category : '%s'", category);
+    return NULL;
+  }
 }
 
 /**
