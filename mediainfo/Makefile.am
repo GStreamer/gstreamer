@@ -30,3 +30,7 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/ChangeLog
 
 -include $(top_srcdir)/git.mk
+
+ACLOCAL_AMFLAGS = -I m4
+
+EXTRA_DIST = config.rpath
