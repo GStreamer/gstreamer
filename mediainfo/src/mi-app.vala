@@ -88,6 +88,17 @@ public class MediaInfo.App : Window
     sub_menu.append (item);
     item.activate.connect (Gtk.main_quit);
 
+    item = new MenuItem.with_label (_("View"));
+    menu_bar.append (item);
+    
+    sub_menu = new Menu ();
+    item.set_submenu (sub_menu);
+ 
+   // TODO: need F11 accelerator
+    CheckMenuItem citem = new CheckMenuItem.with_label (_("Full Screen"));
+    sub_menu.append (citem);
+    citem.toggled.connect (on_fullscreen_toggled);
+
     // TODO: add "help" menu with "about" item
 
     return (menu_bar);  
@@ -104,6 +115,15 @@ public class MediaInfo.App : Window
       res = info.discover (chooser.get_uri());
     }
     chooser.set_preview_widget_active (res);
+  }
+  
+  private void on_fullscreen_toggled (CheckMenuItem item)
+  {
+    if (item.active) {
+      fullscreen();
+    } else {
+      unfullscreen();
+    }
   }
 }
 
