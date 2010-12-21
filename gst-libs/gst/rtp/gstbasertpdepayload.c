@@ -97,6 +97,8 @@ static void gst_base_rtp_depayload_set_gst_timestamp
     (GstBaseRTPDepayload * filter, guint32 rtptime, GstBuffer * buf);
 static gboolean gst_base_rtp_depayload_packet_lost (GstBaseRTPDepayload *
     filter, GstEvent * event);
+static gboolean gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload *
+    filter, GstEvent * event);
 
 GST_BOILERPLATE (GstBaseRTPDepayload, gst_base_rtp_depayload, GstElement,
     GST_TYPE_ELEMENT);
@@ -142,6 +144,7 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
 
   klass->set_gst_timestamp = gst_base_rtp_depayload_set_gst_timestamp;
   klass->packet_lost = gst_base_rtp_depayload_packet_lost;
+  klass->handle_event = gst_base_rtp_depayload_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (basertpdepayload_debug, "basertpdepayload", 0,
       "Base class for RTP Depayloaders");
@@ -407,13 +410,11 @@ no_process:
 }
 
 static gboolean
-gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload * filter,
+    GstEvent * event)
 {
-  GstBaseRTPDepayload *filter;
   gboolean res = TRUE;
   gboolean forward = TRUE;
-
-  filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
@@ -470,6 +471,22 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
     res = gst_pad_push_event (filter->srcpad, event);
   else
     gst_event_unref (event);
+
+  return res;
+}
+
+static gboolean
+gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res = FALSE;
+  GstBaseRTPDepayload *filter;
+  GstBaseRTPDepayloadClass *bclass;
+
+  filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
+
+  bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+  if (bclass->handle_event)
+    res = bclass->handle_event (filter, event);
 
   return res;
 }

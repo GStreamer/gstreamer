@@ -119,8 +119,12 @@ struct _GstBaseRTPDepayloadClass
    * The default implementation of this message pushes a segment update. */
   gboolean (*packet_lost) (GstBaseRTPDepayload *filter, GstEvent *event);
 
+  /* the default implementation does the default actions for events but
+   * implementation can override. */
+  gboolean (*handle_event) (GstBaseRTPDepayload * filter, GstEvent * event);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING-2];
 };
 
 GType gst_base_rtp_depayload_get_type (void);
