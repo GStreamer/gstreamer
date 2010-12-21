@@ -44,6 +44,7 @@ public class MediaInfo.App : Window
     vbox.pack_start (create_menu(), false, false, 0);
 
     HPaned paned = new HPaned ();
+    paned.set_border_width (0);
     vbox.pack_start (paned, true, true, 3);
     
     // add a file-chooser with info pane as preview widget

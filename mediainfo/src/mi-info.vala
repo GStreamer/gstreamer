@@ -34,7 +34,7 @@ sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala/mediainfo/vapi/
 sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala-0.10/vapi/
 */
 
-public class MediaInfo.Info : VBox
+public class MediaInfo.Info : VPaned
 {
   // ui components
   private Label container_name;
@@ -61,7 +61,7 @@ public class MediaInfo.Info : VBox
     uint row = 0;
 
     // configure the view
-    set_homogeneous (false);
+    set_border_width (0);
 
     // setup lookup tables
     // video resolutions: http://upload.wikimedia.org/wikipedia/mediainfo/commons/e/e5/Vector_Video_Standards2.svg
@@ -103,14 +103,18 @@ public class MediaInfo.Info : VBox
     // add widgets
     // FIXME: handle aspect ratio (AspectFrame.ratio)
     drawing_area = new DrawingArea ();
-    drawing_area.set_size_request (300, 150);
+    drawing_area.set_size_request (160, 120);
     drawing_area.expose_event.connect (on_drawing_area_expose);
     drawing_area.realize.connect (on_drawing_area_realize);
     drawing_area.unrealize.connect (on_drawing_area_unrealize);
-    pack_start (drawing_area, true, true, 0);
+    pack1 (drawing_area, true, true);
+    
+    ScrolledWindow sw = new ScrolledWindow (null, null);
+    sw.set_policy (PolicyType.NEVER, PolicyType.ALWAYS);
+    pack2 (sw, true, true);
 
     table = new Table (8, 3, false);
-    pack_start (table, false, false, 0);
+    sw.add_with_viewport (table);
      
     label = new Label (null);
     label.set_markup("<b>Container</b>");
