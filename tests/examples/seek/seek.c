@@ -2402,6 +2402,7 @@ msg_buffering (GstBus * bus, GstMessage * message, GstPipeline * data)
       do_download_buffering (percent);
       break;
     case GST_BUFFERING_LIVE:
+      is_live = TRUE;
     case GST_BUFFERING_TIMESHIFT:
     case GST_BUFFERING_STREAM:
       do_stream_buffering (percent);
