@@ -385,6 +385,98 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
 }
 
 /**
+ * gst_value_list_merge:
+ * @dest: (out caller-allocates): an uninitialized #GValue to take the result
+ * @value1: a #GValue
+ * @value2: a #GValue
+ *
+ * Merges copies of @value1 and @value2 into a list.  Values that are not
+ * of type #GST_TYPE_LIST are treated as if they were lists of length 1.
+ * @dest will be initialized to the type #GST_TYPE_LIST.
+ *
+ * The resulting list won't have duplicated values.
+ */
+void
+gst_value_list_merge (GValue * dest, const GValue * value1,
+    const GValue * value2)
+{
+  guint i, j, k, value1_length, value2_length, skipped;
+  const GValue *src;
+  gboolean skip;
+  GArray *array;
+
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (G_VALUE_TYPE (dest) == 0);
+  g_return_if_fail (G_IS_VALUE (value1));
+  g_return_if_fail (G_IS_VALUE (value2));
+
+  value1_length =
+      (GST_VALUE_HOLDS_LIST (value1) ? VALUE_LIST_SIZE (value1) : 1);
+  value2_length =
+      (GST_VALUE_HOLDS_LIST (value2) ? VALUE_LIST_SIZE (value2) : 1);
+  g_value_init (dest, GST_TYPE_LIST);
+  array = (GArray *) dest->data[0].v_pointer;
+  g_array_set_size (array, value1_length + value2_length);
+
+  if (GST_VALUE_HOLDS_LIST (value1)) {
+    for (i = 0; i < value1_length; i++) {
+      gst_value_init_and_copy (&g_array_index (array, GValue, i),
+          VALUE_LIST_GET_VALUE (value1, i));
+    }
+  } else {
+    gst_value_init_and_copy (&g_array_index (array, GValue, 0), value1);
+  }
+
+  j = value1_length;
+  skipped = 0;
+  if (GST_VALUE_HOLDS_LIST (value2)) {
+    for (i = 0; i < value2_length; i++) {
+      skip = FALSE;
+      src = VALUE_LIST_GET_VALUE (value2, i);
+      for (k = 0; k < value1_length; k++) {
+        if (gst_value_compare (&g_array_index (array, GValue, k),
+                src) == GST_VALUE_EQUAL) {
+          skip = TRUE;
+          skipped++;
+          break;
+        }
+      }
+      if (!skip) {
+        gst_value_init_and_copy (&g_array_index (array, GValue, j), src);
+        j++;
+      }
+    }
+  } else {
+    skip = FALSE;
+    for (k = 0; k < value1_length; k++) {
+      if (gst_value_compare (&g_array_index (array, GValue, k),
+              value2) == GST_VALUE_EQUAL) {
+        skip = TRUE;
+        skipped++;
+        break;
+      }
+    }
+    if (!skip) {
+      gst_value_init_and_copy (&g_array_index (array, GValue, j), value2);
+    }
+  }
+  if (skipped) {
+    guint new_size = value1_length + (value2_length - skipped);
+
+    if (new_size > 1) {
+      /* shrink list */
+      g_array_set_size (array, new_size);
+    } else {
+      GValue *tmp = dest;
+
+      /* turn into single value */
+      gst_value_init_and_copy (dest, &g_array_index (array, GValue, 0));
+      g_value_unset (tmp);
+    }
+  }
+}
+
+/**
  * gst_value_list_get_size:
  * @value: a #GValue of type #GST_TYPE_LIST
  *

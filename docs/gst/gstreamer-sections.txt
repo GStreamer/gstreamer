@@ -2717,6 +2717,7 @@ GST_TYPE_ARRAY
 gst_value_list_append_value
 gst_value_list_prepend_value
 gst_value_list_concat
+gst_value_list_merge
 gst_value_list_get_size
 gst_value_list_get_value
 

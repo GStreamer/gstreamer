@@ -755,12 +755,12 @@ gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
         gst_structure_id_set_value (list, tag, value);
         break;
       case GST_TAG_MERGE_PREPEND:
-        gst_value_list_concat (&dest, value, value2);
+        gst_value_list_merge (&dest, value, value2);
         gst_structure_id_set_value (list, tag, &dest);
         g_value_unset (&dest);
         break;
       case GST_TAG_MERGE_APPEND:
-        gst_value_list_concat (&dest, value2, value);
+        gst_value_list_merge (&dest, value2, value);
         gst_structure_id_set_value (list, tag, &dest);
         g_value_unset (&dest);
         break;

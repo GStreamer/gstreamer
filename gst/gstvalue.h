@@ -466,6 +466,9 @@ void		gst_value_list_prepend_value	(GValue		*value,
 void		gst_value_list_concat		(GValue		*dest,
 						 const GValue   *value1,
 						 const GValue	*value2);
+void		gst_value_list_merge		(GValue		*dest,
+						 const GValue   *value1,
+						 const GValue	*value2);
 guint		gst_value_list_get_size		(const GValue	*value);
 G_CONST_RETURN GValue *
 		gst_value_list_get_value	(const GValue	*value,

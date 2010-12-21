@@ -1164,6 +1164,7 @@ EXPORTS
 	gst_value_list_get_size
 	gst_value_list_get_type
 	gst_value_list_get_value
+	gst_value_list_merge
 	gst_value_list_prepend_value
 	gst_value_register
 	gst_value_register_intersect_func
