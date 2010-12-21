@@ -98,6 +98,7 @@ public class MediaInfo.Info : VPaned
     tag_black_list.add ("bitrate");
     tag_black_list.add ("container-format");
     tag_black_list.add ("duration");
+    tag_black_list.add ("nominal-bitrate");
     tag_black_list.add ("maximum-bitrate");
 
     // add widgets
