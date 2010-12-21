@@ -210,9 +210,12 @@ static void
 gst_video_recording_bin_init (GstVideoRecordingBin * videobin,
     GstVideoRecordingBinClass * videobin_class)
 {
+  GstPadTemplate *templ;
+
+  templ = gst_static_pad_template_get (&sink_template);
   videobin->ghostpad =
-      gst_ghost_pad_new_no_target_from_template ("sink",
-      gst_static_pad_template_get (&sink_template));
+      gst_ghost_pad_new_no_target_from_template ("sink", templ);
+  gst_object_unref (templ);
   gst_element_add_pad (GST_ELEMENT_CAST (videobin), videobin->ghostpad);
 
   videobin->location = g_strdup (DEFAULT_LOCATION);
@@ -307,6 +310,8 @@ gst_video_recording_bin_create_elements (GstVideoRecordingBin * videobin)
   pad = gst_element_get_static_pad (colorspace, "sink");
   if (!gst_ghost_pad_set_target (GST_GHOST_PAD (videobin->ghostpad), pad))
     goto error;
+  gst_object_unref (pad);
+  pad = NULL;
 
   videobin->elements_created = TRUE;
   return TRUE;
