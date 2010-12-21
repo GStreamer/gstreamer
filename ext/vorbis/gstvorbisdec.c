@@ -827,7 +827,7 @@ vorbis_do_timestamps (GstVorbisDec * vd, GstBuffer * buf, gboolean reverse,
     GstClockTime timestamp, GstClockTime duration)
 {
   /* interpolate reverse */
-  if (vd->last_timestamp != -1 && reverse)
+  if (vd->last_timestamp != -1 && duration != -1 && reverse)
     vd->last_timestamp -= duration;
 
   /* take buffer timestamp, use interpolated timestamp otherwise */
@@ -837,7 +837,7 @@ vorbis_do_timestamps (GstVorbisDec * vd, GstBuffer * buf, gboolean reverse,
     timestamp = vd->last_timestamp;
 
   /* interpolate forwards */
-  if (vd->last_timestamp != -1 && !reverse)
+  if (vd->last_timestamp != -1 && duration != -1 && !reverse)
     vd->last_timestamp += duration;
 
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
