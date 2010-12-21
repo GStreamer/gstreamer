@@ -27,6 +27,9 @@
 
 #include "gstrtpmpapay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtpmpapay_debug);
+#define GST_CAT_DEFAULT (rtpmpapay_debug)
+
 static GstStaticPadTemplate gst_rtp_mpa_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -96,6 +99,9 @@ gst_rtp_mpa_pay_class_init (GstRtpMPAPayClass * klass)
   gstbasertppayload_class->set_caps = gst_rtp_mpa_pay_setcaps;
   gstbasertppayload_class->handle_event = gst_rtp_mpa_pay_handle_event;
   gstbasertppayload_class->handle_buffer = gst_rtp_mpa_pay_handle_buffer;
+
+  GST_DEBUG_CATEGORY_INIT (rtpmpapay_debug, "rtpmpapay", 0,
+      "MPEG Audio RTP Depayloader");
 }
 
 static void
