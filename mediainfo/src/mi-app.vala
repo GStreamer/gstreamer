@@ -98,7 +98,7 @@ public class MediaInfo.App : Window
     CheckMenuItem citem = new CheckMenuItem.with_label (_("Full Screen"));
     // see http://bugzilla.gnome.org/show_bug.cgi?id=551184
     // FIXME: we're also not getting a proper accelerator shown in the menu item
-    citem.add_accelerator("activate", accel_group, 0xffc8, 0, 0);
+    citem.add_accelerator("activate", accel_group, Gdk.keyval_from_name ("F11"), 0, 0);
     //citem.set_accel_path ("<GstMi-Main>/MainMenu/View/FullScreen");
     //AccelMap.add_entry ("<GstMi-Main>/MainMenu/View/FullScreen", 0xffc8, 0);
  
