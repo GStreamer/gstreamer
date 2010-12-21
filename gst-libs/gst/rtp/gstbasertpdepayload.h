@@ -120,7 +120,8 @@ struct _GstBaseRTPDepayloadClass
   gboolean (*packet_lost) (GstBaseRTPDepayload *filter, GstEvent *event);
 
   /* the default implementation does the default actions for events but
-   * implementation can override. */
+   * implementation can override.
+   * Since: 0.10.32   */
   gboolean (*handle_event) (GstBaseRTPDepayload * filter, GstEvent * event);
 
   /*< private >*/
