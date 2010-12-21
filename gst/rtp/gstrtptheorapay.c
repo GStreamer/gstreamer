@@ -84,6 +84,9 @@ static GstStateChangeReturn gst_rtp_theora_pay_change_state (GstElement *
     element, GstStateChange transition);
 static GstFlowReturn gst_rtp_theora_pay_handle_buffer (GstBaseRTPPayload * pad,
     GstBuffer * buffer);
+static gboolean gst_rtp_theora_pay_handle_event (GstPad * pad,
+    GstEvent * event);
+
 
 static void gst_rtp_theora_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -121,6 +124,7 @@ gst_rtp_theora_pay_class_init (GstRtpTheoraPayClass * klass)
 
   gstbasertppayload_class->set_caps = gst_rtp_theora_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_theora_pay_handle_buffer;
+  gstbasertppayload_class->handle_event = gst_rtp_theora_pay_handle_event;
 
   gobject_class->set_property = gst_rtp_theora_pay_set_property;
   gobject_class->get_property = gst_rtp_theora_pay_get_property;
@@ -145,15 +149,21 @@ gst_rtp_theora_pay_init (GstRtpTheoraPay * rtptheorapay,
 }
 
 static void
+gst_rtp_theora_pay_clear_packet (GstRtpTheoraPay * rtptheorapay)
+{
+  if (rtptheorapay->packet)
+    gst_buffer_unref (rtptheorapay->packet);
+  rtptheorapay->packet = NULL;
+}
+
+static void
 gst_rtp_theora_pay_cleanup (GstRtpTheoraPay * rtptheorapay)
 {
   g_list_foreach (rtptheorapay->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (rtptheorapay->headers);
   rtptheorapay->headers = NULL;
 
-  if (rtptheorapay->packet)
-    gst_buffer_unref (rtptheorapay->packet);
-  rtptheorapay->packet = NULL;
+  gst_rtp_theora_pay_clear_packet (rtptheorapay);
 
   if (rtptheorapay->config_data)
     g_free (rtptheorapay->config_data);
@@ -756,6 +766,22 @@ header_error:
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
+}
+
+static gboolean
+gst_rtp_theora_pay_handle_event (GstPad * pad, GstEvent * event)
+{
+  GstRtpTheoraPay *rtptheorapay = GST_RTP_THEORA_PAY (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_theora_pay_clear_packet (rtptheorapay);
+      break;
+    default:
+      break;
+  }
+  /* false to let parent handle event as well */
+  return FALSE;
 }
 
 static GstStateChangeReturn
