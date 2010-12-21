@@ -132,51 +132,6 @@ GST_START_TEST (test_profile_output_caps)
 
 GST_END_TEST;
 
-GST_START_TEST (test_containerless_profile)
-{
-  GstEncodingProfile *encprof;
-  GstEncodingAudioProfile *audioprof;
-  GstCaps *container = NULL, *vorbis;
-  GstCaps *test1, *test2;
-
-  vorbis = gst_caps_new_simple ("audio/x-vorbis", NULL);
-
-  GST_DEBUG ("Creating container profile without any caps");
-  encprof = (GstEncodingProfile *) gst_encoding_container_profile_new ((gchar *)
-      "container-vorbis", "dumb-profile", container, (gchar *) "dumb-preset");
-  CHECK_PROFILE (encprof, "container-vorbis", "dumb-profile", NULL,
-      "dumb-preset", 0, 0);
-
-  GST_DEBUG ("Creating audio profile");
-  audioprof = gst_encoding_audio_profile_new (vorbis, (gchar *) "HQ", NULL, 0);
-  CHECK_PROFILE ((GstEncodingProfile *) audioprof, NULL, NULL, vorbis, "HQ", 0,
-      0);
-
-  GST_DEBUG ("Adding audio profile to container");
-  /* We can add one stream profile to container-less profiles.. */
-  fail_unless (gst_encoding_container_profile_add_profile (
-          (GstEncodingContainerProfile *) encprof,
-          (GstEncodingProfile *) audioprof));
-  GST_DEBUG ("Adding audio profile to container a second time (should fail)");
-  /* .. but not two */
-  fail_if (gst_encoding_container_profile_add_profile (
-          (GstEncodingContainerProfile *) encprof,
-          (GstEncodingProfile *) audioprof));
-
-  GST_DEBUG ("Checking caps");
-  /* Test caps */
-  test1 = gst_caps_from_string ("audio/x-vorbis");
-  test2 = gst_encoding_profile_get_output_caps (encprof);
-  fail_unless (gst_caps_is_equal (test1, test2));
-  gst_caps_unref (test1);
-  gst_caps_unref (test2);
-
-  gst_encoding_profile_unref (encprof);
-  gst_caps_unref (vorbis);
-}
-
-GST_END_TEST;
-
 static GstEncodingTarget *
 create_saveload_target (void)
 {
@@ -440,7 +395,6 @@ profile_suite (void)
 
   tcase_add_test (tc_chain, test_profile_creation);
   tcase_add_test (tc_chain, test_profile_output_caps);
-  tcase_add_test (tc_chain, test_containerless_profile);
   if (can_write) {
     tcase_add_test (tc_chain, test_loading_profile);
     tcase_add_test (tc_chain, test_saving_profile);

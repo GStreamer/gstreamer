@@ -75,6 +75,21 @@ create_ogg_theora_vorbis_profile (guint theorapresence, guint vorbispresence)
   return (GstEncodingProfile *) prof;
 }
 
+static GstEncodingProfile *
+create_vorbis_only_profile (void)
+{
+  GstEncodingProfile *prof;
+  GstCaps *vorbis;
+
+  vorbis = gst_caps_new_simple ("audio/x-vorbis", NULL);
+  prof =
+      (GstEncodingProfile *) gst_encoding_audio_profile_new (vorbis, NULL, NULL,
+      0);
+  gst_caps_unref (vorbis);
+
+  return prof;
+}
+
 GST_START_TEST (test_encodebin_states)
 {
   GstElement *ebin;
@@ -454,6 +469,74 @@ GST_START_TEST (test_encodebin_render_audio_static)
 
 GST_END_TEST;
 
+GST_START_TEST (test_encodebin_render_audio_only_static)
+{
+  GstElement *ebin, *pipeline, *audiotestsrc, *fakesink;
+  GstEncodingProfile *prof;
+  GstBus *bus;
+  gboolean done = FALSE;
+  GstPad *sinkpad;
+  GstCaps *sinkcaps;
+
+  /* Create an encodebin and render 5s of vorbis only */
+
+  pipeline = gst_pipeline_new ("encodebin-pipeline");
+  bus = gst_pipeline_get_bus ((GstPipeline *) pipeline);
+  audiotestsrc = gst_element_factory_make ("audiotestsrc", NULL);
+  g_object_set (audiotestsrc, "num-buffers", 10, NULL);
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+
+  ebin = gst_element_factory_make ("encodebin", NULL);
+
+  prof = create_vorbis_only_profile ();
+  g_object_set (ebin, "profile", prof, NULL);
+  gst_encoding_profile_unref (prof);
+
+  gst_bin_add_many ((GstBin *) pipeline, audiotestsrc, ebin, fakesink, NULL);
+
+  fail_unless (gst_element_link_many (audiotestsrc, ebin, fakesink, NULL));
+
+  /* Requesting a new pad should fail */
+  fail_if (gst_element_get_request_pad (ebin, "audio_0") != NULL);
+  sinkcaps = gst_caps_new_simple ("audio/x-raw-int", NULL);
+  g_signal_emit_by_name (ebin, "request-pad", sinkcaps, &sinkpad);
+  gst_caps_unref (sinkcaps);
+  fail_if (sinkpad != NULL);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  while (!done) {
+    GstMessage *msg;
+
+    /* poll the bus until we get EOS without any errors */
+    msg = gst_bus_timed_pop (bus, GST_SECOND / 10);
+    if (msg) {
+      switch (GST_MESSAGE_TYPE (msg)) {
+        case GST_MESSAGE_ERROR:
+          fail ("GST_MESSAGE_ERROR");
+          break;
+        case GST_MESSAGE_EOS:
+          done = TRUE;
+          break;
+        default:
+          break;
+      }
+      gst_message_unref (msg);
+    }
+  }
+
+  /* Set back to NULL */
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  g_object_unref (bus);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_encodebin_render_audio_dynamic)
 {
   GstElement *ebin, *pipeline, *audiotestsrc, *fakesink;
@@ -731,6 +814,7 @@ encodebin_suite (void)
   tcase_add_test (tc_chain, test_encodebin_sink_pads_multiple_dynamic);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_dynamic_encoder);
   tcase_add_test (tc_chain, test_encodebin_render_audio_static);
+  tcase_add_test (tc_chain, test_encodebin_render_audio_only_static);
   tcase_add_test (tc_chain, test_encodebin_render_audio_dynamic);
   tcase_add_test (tc_chain, test_encodebin_render_audio_video_static);
   tcase_add_test (tc_chain, test_encodebin_render_audio_video_dynamic);
