@@ -260,8 +260,8 @@ ges_track_audio_transition_duration_changed (GESTrackObject * object,
       gnlobj, self->a_controller, self->b_controller);
 
   if (G_UNLIKELY ((!gnlobj || !self->a_control_source ||
-              !self->b_control_source)));
-  return;
+              !self->b_control_source)))
+    return;
 
   GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
   g_value_init (&zero, G_TYPE_DOUBLE);
