@@ -82,7 +82,7 @@ gst_rtp_ac3_depay_class_init (GstRtpAC3DepayClass * klass)
   gstbasertpdepayload_class->process = gst_rtp_ac3_depay_process;
 
   GST_DEBUG_CATEGORY_INIT (rtpac3depay_debug, "rtpac3depay", 0,
-      "MPEG Audio RTP Depayloader");
+      "AC3 Audio RTP Depayloader");
 }
 
 static void
