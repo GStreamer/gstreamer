@@ -673,6 +673,8 @@ GstEncodingContainerProfile *
 gst_encoding_container_profile_new (const gchar * name,
     const gchar * description, GstCaps * format, const gchar * preset)
 {
+  g_return_val_if_fail (GST_IS_CAPS (format), NULL);
+
   return (GstEncodingContainerProfile *)
       common_creation (GST_TYPE_ENCODING_CONTAINER_PROFILE, format, preset,
       name, description, NULL, 0);
