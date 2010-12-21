@@ -167,6 +167,7 @@ gst_test_camera_src_init (GstTestCameraSrc * self,
 
 static GstElement *camera;
 static GMainLoop *main_loop;
+guint32 test_id = 0;
 
 /* helper function for filenames */
 static const gchar *
@@ -178,10 +179,12 @@ make_test_file_name (const gchar * base_name, gint num)
    * multifilesink like location */
   if (num == -1) {
     g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S
-        "gstcamerabin2test_%s_%%03d.cap", g_get_tmp_dir (), base_name);
+        "gstcamerabin2test_%s_%u_%%03d.cap", g_get_tmp_dir (), base_name,
+        test_id);
   } else {
     g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S
-        "gstcamerabin2test_%s_%03d.cap", g_get_tmp_dir (), base_name, num);
+        "gstcamerabin2test_%s_%u_%03d.cap", g_get_tmp_dir (), base_name,
+        test_id, num);
   }
 
   GST_INFO ("capturing to: %s", file_name);
@@ -244,7 +247,7 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
 }
 
 static void
-setup (void)
+setup_wrappercamerabinsrc_videotestsrc (void)
 {
   GstBus *bus;
   GstElement *vfbin;
@@ -253,6 +256,8 @@ setup (void)
   GstElement *testsrc;
 
   GST_INFO ("init");
+
+  test_id = g_random_int ();
 
   main_loop = g_main_loop_new (NULL, TRUE);
 
@@ -579,22 +584,42 @@ GST_START_TEST (test_supported_caps)
 
 GST_END_TEST;
 
+
+typedef struct _TestCaseDef
+{
+  const gchar *name;
+  gpointer setup_func;
+} TestCaseDef;
+
+TestCaseDef tests[] = {
+  {"wrappercamerabinsrc", setup_wrappercamerabinsrc_videotestsrc}
+};
+
 static Suite *
 camerabin_suite (void)
 {
   Suite *s = suite_create ("camerabin2");
-  TCase *tc_basic = tcase_create ("general");
+  gint i;
+  TCase *tc_generic = tcase_create ("generic");
 
-  /* Test that basic operations run without errors */
-  suite_add_tcase (s, tc_basic);
-  /* Increase timeout due to video recording */
-  tcase_set_timeout (tc_basic, 60);
-  tcase_add_checked_fixture (tc_basic, setup, teardown);
-  tcase_add_test (tc_basic, test_single_image_capture);
-  tcase_add_test (tc_basic, test_single_video_recording);
-  tcase_add_test (tc_basic, test_image_video_cycle);
-  tcase_add_test (tc_basic, test_multiple_image_captures);
-  tcase_add_test (tc_basic, test_supported_caps);
+  suite_add_tcase (s, tc_generic);
+  tcase_add_checked_fixture (tc_generic, setup_wrappercamerabinsrc_videotestsrc,
+      teardown);
+  tcase_add_test (tc_generic, test_supported_caps);
+
+  for (i = 0; i < G_N_ELEMENTS (tests); i++) {
+    TCase *tc_basic = tcase_create (tests[i].name);
+    suite_add_tcase (s, tc_basic);
+
+    /* Increase timeout due to video recording */
+    tcase_set_timeout (tc_basic, 60);
+    tcase_add_checked_fixture (tc_basic, tests[i].setup_func, teardown);
+
+    tcase_add_test (tc_basic, test_single_image_capture);
+    tcase_add_test (tc_basic, test_single_video_recording);
+    tcase_add_test (tc_basic, test_image_video_cycle);
+    tcase_add_test (tc_basic, test_multiple_image_captures);
+  }
 
   return s;
 }
