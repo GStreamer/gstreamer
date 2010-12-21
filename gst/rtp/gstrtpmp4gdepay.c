@@ -316,6 +316,18 @@ gst_rtp_mp4g_depay_clear_queue (GstRtpMP4GDepay * rtpmp4gdepay)
 }
 
 static void
+gst_rtp_mp4g_depay_reset (GstRtpMP4GDepay * rtpmp4gdepay)
+{
+  gst_adapter_clear (rtpmp4gdepay->adapter);
+  rtpmp4gdepay->max_AU_index = -1;
+  rtpmp4gdepay->next_AU_index = -1;
+  rtpmp4gdepay->prev_AU_index = -1;
+  rtpmp4gdepay->prev_rtptime = -1;
+  rtpmp4gdepay->last_AU_index = -1;
+  gst_rtp_mp4g_depay_clear_queue (rtpmp4gdepay);
+}
+
+static void
 gst_rtp_mp4g_depay_flush_queue (GstRtpMP4GDepay * rtpmp4gdepay)
 {
   GstBuffer *outbuf;
@@ -710,13 +722,7 @@ gst_rtp_mp4g_depay_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_adapter_clear (rtpmp4gdepay->adapter);
-      rtpmp4gdepay->max_AU_index = -1;
-      rtpmp4gdepay->next_AU_index = -1;
-      rtpmp4gdepay->prev_AU_index = -1;
-      rtpmp4gdepay->prev_rtptime = -1;
-      rtpmp4gdepay->last_AU_index = -1;
-      rtpmp4gdepay->prev_AU_num = -1;
+      gst_rtp_mp4g_depay_reset (rtpmp4gdepay);
       break;
     default:
       break;
@@ -726,8 +732,7 @@ gst_rtp_mp4g_depay_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_adapter_clear (rtpmp4gdepay->adapter);
-      gst_rtp_mp4g_depay_clear_queue (rtpmp4gdepay);
+      gst_rtp_mp4g_depay_reset (rtpmp4gdepay);
       break;
     default:
       break;
