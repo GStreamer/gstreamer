@@ -72,7 +72,7 @@ gst_rtp_vraw_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_vraw_depay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP Raw Video depayloader", "Codec/Depayloader/Network",
+      "RTP Raw Video depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts raw video from RTP packets (RFC 4175)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }

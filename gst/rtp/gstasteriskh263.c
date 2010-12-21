@@ -85,7 +85,7 @@ gst_asteriskh263_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_asteriskh263_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP Asterisk H263 depayloader", "Codec/Depayloader/Network",
+      "RTP Asterisk H263 depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts H263 video from RTP and encodes in Asterisk H263 format",
       "Neil Stratford <neils@vipadia.com>");
 }

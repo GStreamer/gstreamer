@@ -125,7 +125,7 @@ gst_rtp_amr_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_amr_depay_sink_template));
 
   gst_element_class_set_details_simple (element_class, "RTP AMR depayloader",
-      "Codec/Depayloader/Network",
+      "Codec/Depayloader/Network/RTP",
       "Extracts AMR or AMR-WB audio from RTP packets (RFC 3267)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }

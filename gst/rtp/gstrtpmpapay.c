@@ -73,7 +73,7 @@ GST_BOILERPLATE (GstRtpMPAPay, gst_rtp_mpa_pay, GstBaseRTPPayload,
       gst_static_pad_template_get (&gst_rtp_mpa_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP MPEG audio payloader", "Codec/Payloader/Network",
+      "RTP MPEG audio payloader", "Codec/Payloader/Network/RTP",
       "Payload MPEG audio as RTP packets (RFC 2038)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }

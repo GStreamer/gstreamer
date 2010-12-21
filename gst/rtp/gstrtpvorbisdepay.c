@@ -82,7 +82,7 @@ gst_rtp_vorbis_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_vorbis_depay_src_template));
 
   gst_element_class_set_details_simple (element_class, "RTP Vorbis depayloader",
-      "Codec/Depayloader/Network",
+      "Codec/Depayloader/Network/RTP",
       "Extracts Vorbis Audio from RTP packets (RFC 5215)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }

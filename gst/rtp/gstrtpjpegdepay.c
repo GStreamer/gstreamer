@@ -90,7 +90,7 @@ gst_rtp_jpeg_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_jpeg_depay_sink_template));
 
   gst_element_class_set_details_simple (element_class, "RTP JPEG depayloader",
-      "Codec/Depayloader/Network",
+      "Codec/Depayloader/Network/RTP",
       "Extracts JPEG video from RTP packets (RFC 2435)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }

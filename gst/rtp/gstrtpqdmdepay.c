@@ -77,7 +77,7 @@ gst_rtp_qdm2_depay_base_init (gpointer klass)
 
 
   gst_element_class_set_details_simple (element_class, "RTP QDM2 depayloader",
-      "Codec/Depayloader/Network",
+      "Codec/Depayloader/Network/RTP",
       "Extracts QDM2 audio from RTP packets (no RFC)",
       "Edward Hervey <bilboed@bilboed.com>");
 }

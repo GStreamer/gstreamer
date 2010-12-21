@@ -80,7 +80,7 @@ gst_rtp_g723_pay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_g723_pay_src_template));
   gst_element_class_set_details_simple (element_class, "RTP G.723 payloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Packetize G.723 audio into RTP packets",
       "Wim Taymans <wim.taymans@gmail.com>");
 }

@@ -103,7 +103,7 @@ gst_rtp_h263p_depay_base_init (gpointer klass)
 
 
   gst_element_class_set_details_simple (element_class, "RTP H263 depayloader",
-      "Codec/Depayloader/Network",
+      "Codec/Depayloader/Network/RTP",
       "Extracts H263/+/++ video from RTP packets (RFC 4629)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }

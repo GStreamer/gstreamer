@@ -72,7 +72,7 @@ gst_rtp_sv3v_depay_base_init (gpointer klass)
 
 
   gst_element_class_set_details_simple (element_class, "RTP SVQ3 depayloader",
-      "Codec/Depayloader/Network",
+      "Codec/Depayloader/Network/RTP",
       "Extracts SVQ3 video from RTP packets (no RFC)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }

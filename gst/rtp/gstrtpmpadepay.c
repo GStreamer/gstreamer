@@ -69,7 +69,7 @@ gst_rtp_mpa_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_mpa_depay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP MPEG audio depayloader", "Codec/Depayloader/Network",
+      "RTP MPEG audio depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts MPEG audio from RTP packets (RFC 2038)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }

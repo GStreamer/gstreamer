@@ -122,7 +122,7 @@ GST_BOILERPLATE (GstRtpVRawPay, gst_rtp_vraw_pay, GstBaseRTPPayload,
       gst_static_pad_template_get (&gst_rtp_vraw_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP Raw Video payloader", "Codec/Payloader/Network",
+      "RTP Raw Video payloader", "Codec/Payloader/Network/RTP",
       "Payload raw video as RTP packets (RFC 4175)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }

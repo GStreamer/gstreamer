@@ -80,7 +80,7 @@ gst_rtp_mp4a_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_mp4a_depay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP MPEG4 audio depayloader", "Codec/Depayloader/Network",
+      "RTP MPEG4 audio depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts MPEG4 audio from RTP packets (RFC 3016)",
       "Nokia Corporation (contact <stefan.kost@nokia.com>), "
       "Wim Taymans <wim.taymans@gmail.com>");

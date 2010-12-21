@@ -130,7 +130,7 @@ gst_rtp_h264_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_h264_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class, "RTP H264 payloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Payload-encode H264 video into RTP packets (RFC 3984)",
       "Laurent Glayal <spglegle@yahoo.fr>");
 }

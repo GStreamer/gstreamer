@@ -81,7 +81,7 @@ gst_rtp_vorbis_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_vorbis_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class, "RTP Vorbis depayloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Payload-encode Vorbis audio into RTP packets (RFC 5215)",
       "Wim Taymans <wimi.taymans@gmail.com>");
 }

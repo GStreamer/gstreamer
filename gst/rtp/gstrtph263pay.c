@@ -408,7 +408,7 @@ GST_BOILERPLATE (GstRtpH263Pay, gst_rtp_h263_pay, GstBaseRTPPayload,
       gst_static_pad_template_get (&gst_rtp_h263_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP H263 packet payloader", "Codec/Payloader/Network",
+      "RTP H263 packet payloader", "Codec/Payloader/Network/RTP",
       "Payload-encodes H263 video in RTP packets (RFC 2190)",
       "Neil Stratford <neils@vipadia.com>"
       "Dejan Sakelsak <dejan.sakelsak@marand.si>");
