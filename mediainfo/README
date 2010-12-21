@@ -94,6 +94,26 @@ Properties:
   - audio: level, ...
   - video: histogram, ...
 
+= TODO for gstreamer =
+- file/stream layout
+  - from every element we'd like to know what data is processes, what is pushed
+    further and some metadata about it:
+    layout {
+      gsize offset;         // in bytes
+      gsize length;         // in bytes
+      gboolean known;       // or an enum: handled, skipped, unknown
+      gchar *name;          // e.g. atom/chunk name
+      gchar *description;   // long description or NULL
+      enum block_type type; // meta, audio, video, text, ...
+    };
+    - offset is not neccesarily easy to determine for later elements, not sure
+      if we can make it relative
+  - elements could emit messages with this info
+    - need a common way to enable it ("post-stream-layout" property)
+  - we would need a cairo custom widget to draw a table
+    - one row per element
+    - each row contains colored segments
+
 = TODO for discoverer =
 - add deep-scan mode (see above)
   - add a mode property: quick-scan, deep-scan
@@ -106,6 +126,12 @@ Properties:
 - get duration per stream
   - this would need individual queries on the demuxer src pads
   - or duration as part of per stream tags
+- errors/warnings about files/stream processing
+  - we'd like to know about fixable, unfixable issues in the file/stream
+  - many elements do this already
+  - the pipeline and thus the bus is internal to discoverer, so it would be nice
+    if it could gather the messages and offer them
+  - having them globaly should be enough
 
 = discoverer workflow =
 == sync quick-scan ==
