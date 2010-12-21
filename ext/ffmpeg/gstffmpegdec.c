@@ -2286,6 +2286,22 @@ gst_ffmpegdec_drain (GstFFMpegDec * ffmpegdec)
 static void
 gst_ffmpegdec_flush_pcache (GstFFMpegDec * ffmpegdec)
 {
+  if (ffmpegdec->pctx) {
+    gint res, size, bsize;
+    guint8 *data;
+    guint8 bdata[FF_INPUT_BUFFER_PADDING_SIZE];
+
+    bsize = FF_INPUT_BUFFER_PADDING_SIZE;
+    memset (bdata, 0, bsize);
+
+    /* parse some dummy data to work around some ffmpeg weirdness where it keeps
+     * the previous pts around */
+    res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
+        &data, &size, bdata, bsize, -1, -1);
+    ffmpegdec->pctx->pts = -1;
+    ffmpegdec->pctx->dts = -1;
+  }
+
   if (ffmpegdec->pcache) {
     gst_buffer_unref (ffmpegdec->pcache);
     ffmpegdec->pcache = NULL;
@@ -2535,7 +2551,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 
       GST_LOG_OBJECT (ffmpegdec,
           "Calling av_parser_parse with offset %" G_GINT64_FORMAT ", ts:%"
-          GST_TIME_FORMAT, in_offset, GST_TIME_ARGS (in_timestamp));
+          GST_TIME_FORMAT " size %d", in_offset, GST_TIME_ARGS (in_timestamp),
+          bsize);
 
       /* feed the parser. We pass the timestamp info so that we can recover all
        * info again later */
@@ -2543,10 +2560,19 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
           &data, &size, bdata, bsize, in_info->idx, in_info->idx);
 
       GST_LOG_OBJECT (ffmpegdec,
-          "parser returned res %d and size %d", res, size);
+          "parser returned res %d and size %d, id %d", res, size,
+          ffmpegdec->pctx->pts);
 
       /* store pts for decoding */
-      dec_info = gst_ts_info_get (ffmpegdec, ffmpegdec->pctx->pts);
+      if (ffmpegdec->pctx->pts != -1)
+        dec_info = gst_ts_info_get (ffmpegdec, ffmpegdec->pctx->pts);
+      else {
+        /* ffmpeg sometimes loses track after a flush, help it by feeding a
+         * valid start time */
+        ffmpegdec->pctx->pts = in_info->idx;
+        ffmpegdec->pctx->dts = in_info->idx;
+        dec_info = in_info;
+      }
 
       GST_LOG_OBJECT (ffmpegdec, "consuming %d bytes. id %d", size,
           dec_info->idx);
