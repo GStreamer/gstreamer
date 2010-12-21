@@ -88,6 +88,7 @@ struct _GstEncodeBin
   GList *streams;               /* List of StreamGroup, not sorted */
 
   GstElement *muxer;
+  /* Ghostpad with changing target */
   GstPad *srcpad;
 
   /* TRUE if in PAUSED/PLAYING */
@@ -148,16 +149,16 @@ struct _StreamGroup
 #define DEFAULT_AUDIO_JITTER_TOLERANCE 20 * GST_MSECOND
 #define DEFAULT_AVOID_REENCODING   FALSE
 
-#define DEFAULT_RAW_CAPS \
-    "video/x-raw-yuv; " \
-    "video/x-raw-rgb; " \
-    "video/x-raw-gray; " \
-    "audio/x-raw-int; " \
-    "audio/x-raw-float; " \
-    "text/plain; " \
-    "text/x-pango-markup; " \
-    "video/x-dvd-subpicture; " \
-    "subpicture/x-pgs"
+#define DEFAULT_RAW_CAPS			\
+  "video/x-raw-yuv; "				\
+  "video/x-raw-rgb; "				\
+  "video/x-raw-gray; "				\
+  "audio/x-raw-int; "				\
+  "audio/x-raw-float; "				\
+  "text/plain; "				\
+  "text/x-pango-markup; "			\
+  "video/x-dvd-subpicture; "			\
+  "subpicture/x-pgs"
 
 /* Properties */
 enum
@@ -835,7 +836,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     const gchar * sinkpadname, GstCaps * sinkcaps)
 {
   StreamGroup *sgroup = NULL;
-  GstPad *sinkpad, *srcpad, *muxerpad;
+  GstPad *sinkpad, *srcpad, *muxerpad = NULL;
   /* Element we will link to the encoder */
   GstElement *last = NULL;
   GList *tmp, *tosync = NULL;
@@ -871,12 +872,14 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   if (G_UNLIKELY (sgroup->encoder == NULL))
     goto no_encoder;
 
-  /* Muxer
-   * We first figure out if the muxer has a sinkpad compatible with the selected
-   * profile */
-  muxerpad = get_compatible_muxer_sink_pad (ebin, NULL, format);
-  if (G_UNLIKELY (muxerpad == NULL))
-    goto no_muxer_pad;
+  /* Muxer.
+   * If we are handling a container profile, figure out if the muxer has a
+   * sinkpad compatible with the selected profile */
+  if (ebin->muxer) {
+    muxerpad = get_compatible_muxer_sink_pad (ebin, NULL, format);
+    if (G_UNLIKELY (muxerpad == NULL))
+      goto no_muxer_pad;
+  }
 
   /* Output Queue.
    * We only use a 1buffer long queue here, the actual queueing will be done
@@ -888,11 +891,15 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   gst_bin_add (GST_BIN (ebin), sgroup->outqueue);
   tosync = g_list_append (tosync, sgroup->outqueue);
   srcpad = gst_element_get_static_pad (sgroup->outqueue, "src");
-  if (G_UNLIKELY (fast_pad_link (srcpad, muxerpad) != GST_PAD_LINK_OK)) {
-    goto muxer_link_failure;
+  if (muxerpad) {
+    if (G_UNLIKELY (fast_pad_link (srcpad, muxerpad) != GST_PAD_LINK_OK)) {
+      goto muxer_link_failure;
+    }
+    gst_object_unref (muxerpad);
+  } else {
+    gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), srcpad);
   }
   gst_object_unref (srcpad);
-  gst_object_unref (muxerpad);
 
   /* Output capsfilter
    * This will receive the format caps from the streamprofile */
@@ -1264,12 +1271,6 @@ _get_muxer (GstEncodeBin * ebin)
   format = gst_encoding_profile_get_format (ebin->profile);
   preset = gst_encoding_profile_get_preset (ebin->profile);
 
-  if (format == NULL) {
-    GST_DEBUG ("Container-less profile, using identity");
-    muxer = gst_element_factory_make ("identity", NULL);
-    goto beach;
-  }
-
   GST_DEBUG ("Getting list of muxers for format %" GST_PTR_FORMAT, format);
 
   muxers =
@@ -1327,42 +1328,47 @@ create_elements_and_pads (GstEncodeBin * ebin)
   GST_DEBUG ("Current profile : %s",
       gst_encoding_profile_get_name (ebin->profile));
 
-  /* 1. Get the compatible muxer */
-  muxer = _get_muxer (ebin);
-  if (G_UNLIKELY (muxer == NULL))
-    goto no_muxer;
+  if (GST_IS_ENCODING_CONTAINER_PROFILE (ebin->profile)) {
+    /* 1. Get the compatible muxer */
+    muxer = _get_muxer (ebin);
+    if (G_UNLIKELY (muxer == NULL))
+      goto no_muxer;
 
-  /* Record the muxer */
-  ebin->muxer = muxer;
-  gst_bin_add ((GstBin *) ebin, muxer);
+    /* Record the muxer */
+    ebin->muxer = muxer;
+    gst_bin_add ((GstBin *) ebin, muxer);
 
-  /* 2. Ghost the muxer source pad */
+    /* 2. Ghost the muxer source pad */
 
-  /* FIXME : We should figure out if it's a static/request/dyamic pad, 
-   * but for the time being let's assume it's a static pad :) */
-  muxerpad = gst_element_get_static_pad (muxer, "src");
-  if (G_UNLIKELY (muxerpad == NULL))
-    goto no_muxer_pad;
+    /* FIXME : We should figure out if it's a static/request/dyamic pad, 
+     * but for the time being let's assume it's a static pad :) */
+    muxerpad = gst_element_get_static_pad (muxer, "src");
+    if (G_UNLIKELY (muxerpad == NULL))
+      goto no_muxer_pad;
 
-  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), muxerpad))
-    goto no_muxer_ghost_pad;
+    if (!gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), muxerpad))
+      goto no_muxer_ghost_pad;
 
-  gst_object_unref (muxerpad);
+    gst_object_unref (muxerpad);
+    /* 3. Activate fixed presence streams */
+    profiles =
+        gst_encoding_container_profile_get_profiles
+        (GST_ENCODING_CONTAINER_PROFILE (ebin->profile));
+    for (tmp = profiles; tmp; tmp = tmp->next) {
+      sprof = (GstEncodingProfile *) tmp->data;
 
-  /* 3. Activate fixed presence streams */
-  profiles =
-      gst_encoding_container_profile_get_profiles
-      (GST_ENCODING_CONTAINER_PROFILE (ebin->profile));
-  for (tmp = profiles; tmp; tmp = tmp->next) {
-    sprof = (GstEncodingProfile *) tmp->data;
+      GST_DEBUG ("Trying stream profile with presence %d",
+          gst_encoding_profile_get_presence (sprof));
 
-    GST_DEBUG ("Trying stream profile with presence %d",
-        gst_encoding_profile_get_presence (sprof));
-
-    if (gst_encoding_profile_get_presence (sprof) != 0) {
-      if (G_UNLIKELY (_create_stream_group (ebin, sprof, NULL, NULL) == NULL))
-        goto stream_error;
+      if (gst_encoding_profile_get_presence (sprof) != 0) {
+        if (G_UNLIKELY (_create_stream_group (ebin, sprof, NULL, NULL) == NULL))
+          goto stream_error;
+      }
     }
+  } else {
+    if (G_UNLIKELY (_create_stream_group (ebin, ebin->profile, NULL,
+                NULL) == NULL))
+      goto stream_error;
   }
 
   return ret;
@@ -1394,10 +1400,8 @@ no_muxer_ghost_pad:
 stream_error:
   {
     GST_WARNING ("Could not create Streams");
-    gst_element_remove_pad ((GstElement *) ebin, ebin->srcpad);
     gst_bin_remove (GST_BIN (ebin), muxer);
     ebin->muxer = NULL;
-    ebin->srcpad = NULL;
     return FALSE;
   }
 }
@@ -1434,15 +1438,17 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
 
   GST_DEBUG_OBJECT (ebin, "Freeing StreamGroup %p", sgroup);
 
-  /* outqueue - Muxer */
-  tmppad = gst_element_get_static_pad (sgroup->outqueue, "src");
-  pad = gst_pad_get_peer (tmppad);
+  if (ebin->muxer) {
+    /* outqueue - Muxer */
+    tmppad = gst_element_get_static_pad (sgroup->outqueue, "src");
+    pad = gst_pad_get_peer (tmppad);
 
-  /* Remove muxer request sink pad */
-  gst_pad_unlink (tmppad, pad);
-  gst_element_release_request_pad (ebin->muxer, pad);
-  gst_object_unref (tmppad);
-  gst_object_unref (pad);
+    /* Remove muxer request sink pad */
+    gst_pad_unlink (tmppad, pad);
+    gst_element_release_request_pad (ebin->muxer, pad);
+    gst_object_unref (tmppad);
+    gst_object_unref (pad);
+  }
   if (sgroup->outqueue)
     gst_element_set_state (sgroup->outqueue, GST_STATE_NULL);
 
@@ -1538,6 +1544,15 @@ gst_encode_bin_tear_down_profile (GstEncodeBin * ebin)
   while (ebin->streams)
     stream_group_remove (ebin, (StreamGroup *) ebin->streams->data);
 
+  /* Set ghostpad target to NULL */
+  gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), NULL);
+
+  /* Remove muxer if present */
+  if (ebin->muxer) {
+    gst_bin_remove (GST_BIN (ebin), ebin->muxer);
+    ebin->muxer = NULL;
+  }
+
   /* free/clear profile */
   gst_encoding_profile_unref (ebin->profile);
   ebin->profile = NULL;
@@ -1550,7 +1565,9 @@ gst_encode_bin_setup_profile (GstEncodeBin * ebin, GstEncodingProfile * profile)
 
   g_return_val_if_fail (ebin->profile == NULL, FALSE);
 
-  GST_DEBUG ("Setting up profile %s", gst_encoding_profile_get_name (profile));
+  GST_DEBUG ("Setting up profile %s (type:%s)",
+      gst_encoding_profile_get_name (profile),
+      gst_encoding_profile_get_type_nick (profile));
 
   ebin->profile = profile;
   gst_mini_object_ref ((GstMiniObject *) ebin->profile);
@@ -1566,6 +1583,8 @@ gst_encode_bin_setup_profile (GstEncodeBin * ebin, GstEncodingProfile * profile)
 static gboolean
 gst_encode_bin_set_profile (GstEncodeBin * ebin, GstEncodingProfile * profile)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), FALSE);
+
   GST_DEBUG_OBJECT (ebin, "profile : %s",
       gst_encoding_profile_get_name (profile));
 
