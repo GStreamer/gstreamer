@@ -17,6 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
+
 #include "rtsp-media-factory-uri.h"
 
 #define DEFAULT_URI     NULL
@@ -100,13 +102,42 @@ gst_rtsp_media_factory_uri_class_init (GstRTSPMediaFactoryURIClass * klass)
       0, "GstRTSPMediaFactoryUri");
 }
 
+static gboolean
+payloader_filter (GstPluginFeature * feature, gpointer data)
+{
+  gboolean res;
+  const gchar *klass;
+
+  /* we only care about element factories */
+  if (G_UNLIKELY (!GST_IS_ELEMENT_FACTORY (feature)))
+    return FALSE;
+
+  if (gst_plugin_feature_get_rank (feature) < GST_RANK_MARGINAL)
+    return FALSE;
+
+  klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY_CAST (feature));
+
+  if (strstr (klass, "Payloader") == NULL)
+    return FALSE;
+
+  if (strstr (klass, "RTP") == NULL)
+    return FALSE;
+
+  return TRUE;
+}
+
 static void
 gst_rtsp_media_factory_uri_init (GstRTSPMediaFactoryURI * factory)
 {
   factory->uri = g_strdup (DEFAULT_URI);
+  /* get the feature list using the filter */
   factory->factories =
-      gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_PAYLOADER,
-      GST_RANK_NONE);
+      gst_default_registry_feature_filter ((GstPluginFeatureFilter)
+      payloader_filter, FALSE, NULL);
+  /* sort on rank and name */
+  factory->factories =
+      g_list_sort (factory->factories, gst_plugin_feature_rank_compare_func);
+
   factory->raw_vcaps = gst_static_caps_get (&raw_video_caps);
   factory->raw_acaps = gst_static_caps_get (&raw_audio_caps);
 }
@@ -228,8 +259,6 @@ find_payloader (GstRTSPMediaFactoryURI * urifact, GstCaps * caps)
     const gchar *name;
 
     name = gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (f));
-    if (strcmp (name, "gdppay") == 0)
-      continue;
 
     factory = f;
     break;
