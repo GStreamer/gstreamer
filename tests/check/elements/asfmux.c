@@ -156,6 +156,7 @@ check_asfmux_pad (GstStaticPadTemplate * srctemplate,
   GstBuffer *inbuffer;
   GstCaps *caps;
   GstFlowReturn ret;
+  GList *l;
 
   asfmux = setup_asfmux (srctemplate, sinkname);
   fail_unless (gst_element_set_state (asfmux,
@@ -172,6 +173,8 @@ check_asfmux_pad (GstStaticPadTemplate * srctemplate,
   fail_unless (ret == GST_FLOW_OK, "Pad push returned: %d", ret);
 
   cleanup_asfmux (asfmux, sinkname);
+  for (l = buffers; l; l = l->next)
+    gst_buffer_unref (l->data);
   g_list_free (buffers);
   buffers = NULL;
 }
