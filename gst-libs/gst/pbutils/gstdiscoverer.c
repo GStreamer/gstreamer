@@ -1346,9 +1346,11 @@ gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
  *
  * Synchronously discovers the given @uri.
  *
- * A copy of @uri will be done internally, the caller can safely g_free() afterwards.
+ * A copy of @uri will be done internally, the caller can safely g_free()
+ * afterwards.
  *
- * Returns: see #GstDiscovererInfo. The caller must unref this structure after use.
+ * Returns: (transfer full): the result of the scanning. Can be %NULL iif an
+ * error occured.
  * 
  * Since: 0.10.31
  */
@@ -1400,7 +1402,7 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
  *
  * Creates a new #GstDiscoverer with the provided timeout.
  *
- * Returns: The new #GstDiscoverer. Free with gst_object_unref() when done.
+ * Returns: (transfer full): The new #GstDiscoverer.
  * If an error happened when creating the discoverer, @err will be set
  * accordingly and %NULL will be returned. If @err is set, the caller must
  * free it when no longer needed using g_error_free().

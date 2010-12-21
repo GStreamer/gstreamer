@@ -166,7 +166,7 @@ copy_and_clean_caps (const GstCaps * caps)
  * that a source element for a particular URI protocol is missing. This
  * function is mainly for use in plugins.
  *
- * Returns: a new #GstMessage, or NULL on error
+ * Returns: (transfer full): a new #GstMessage, or NULL on error
  */
 GstMessage *
 gst_missing_uri_source_message_new (GstElement * element,
@@ -199,7 +199,7 @@ gst_missing_uri_source_message_new (GstElement * element,
  * that a sink element for a particular URI protocol is missing. This
  * function is mainly for use in plugins.
  *
- * Returns: a new #GstMessage, or NULL on error
+ * Returns: (transfer full): a new #GstMessage, or NULL on error
  */
 GstMessage *
 gst_missing_uri_sink_message_new (GstElement * element, const gchar * protocol)
@@ -231,7 +231,7 @@ gst_missing_uri_sink_message_new (GstElement * element, const gchar * protocol)
  * that a certain required element is missing. This function is mainly for
  * use in plugins.
  *
- * Returns: a new #GstMessage, or NULL on error
+ * Returns: (transfer full): a new #GstMessage, or NULL on error
  */
 GstMessage *
 gst_missing_element_message_new (GstElement * element,
@@ -263,7 +263,7 @@ gst_missing_element_message_new (GstElement * element,
  * that a decoder element for a particular set of (fixed) caps is missing.
  * This function is mainly for use in plugins.
  *
- * Returns: a new #GstMessage, or NULL on error
+ * Returns: (transfer full): a new #GstMessage, or NULL on error
  */
 GstMessage *
 gst_missing_decoder_message_new (GstElement * element,
@@ -303,7 +303,7 @@ gst_missing_decoder_message_new (GstElement * element,
  * that an encoder element for a particular set of (fixed) caps is missing.
  * This function is mainly for use in plugins.
  *
- * Returns: a new #GstMessage, or NULL on error
+ * Returns: (transfer full): a new #GstMessage, or NULL on error
  */
 GstMessage *
 gst_missing_encoder_message_new (GstElement * element,

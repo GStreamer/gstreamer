@@ -101,7 +101,7 @@ gst_encoding_target_class_init (GstMiniObjectClass * klass)
  *
  * Since: 0.10.32
  *
- * Returns: The name of the @target.
+ * Returns: (transfer none): The name of the @target.
  */
 const gchar *
 gst_encoding_target_get_name (GstEncodingTarget * target)
@@ -115,7 +115,7 @@ gst_encoding_target_get_name (GstEncodingTarget * target)
  *
  * Since: 0.10.32
  *
- * Returns: The category of the @target.
+ * Returns: (transfer none): The category of the @target.
  */
 const gchar *
 gst_encoding_target_get_category (GstEncodingTarget * target)
@@ -129,7 +129,7 @@ gst_encoding_target_get_category (GstEncodingTarget * target)
  *
  * Since: 0.10.32
  *
- * Returns: The description of the @target.
+ * Returns: (transfer none): The description of the @target.
  */
 const gchar *
 gst_encoding_target_get_description (GstEncodingTarget * target)
@@ -143,7 +143,8 @@ gst_encoding_target_get_description (GstEncodingTarget * target)
  *
  * Since: 0.10.32
  *
- * Returns: A list of #GstEncodingProfile(s) this @target handles.
+ * Returns: (transfer none) (element-type Gst.EncodingProfile): A list of
+ * #GstEncodingProfile(s) this @target handles.
  */
 const GList *
 gst_encoding_target_get_profiles (GstEncodingTarget * target)
@@ -189,9 +190,12 @@ validate_name (const gchar * name)
 /**
  * gst_encoding_target_new:
  * @name: The name of the target.
- * @category: The name of the category to which this @target belongs.
- * @description: A description of #GstEncodingTarget in the current locale.
- * @profiles: A #GList of #GstEncodingProfile.
+ * @category: (transfer none): The name of the category to which this @target
+ * belongs.
+ * @description: (transfer none): A description of #GstEncodingTarget in the
+ * current locale.
+ * @profiles: (transfer none) (element-type Gst.EncodingProfile): A #GList of
+ * #GstEncodingProfile.
  *
  * Creates a new #GstEncodingTarget.
  *
@@ -201,8 +205,8 @@ validate_name (const gchar * name)
  *
  * Since: 0.10.32
  *
- * Returns: The newly created #GstEncodingTarget or %NULL if there was an 
- * error.
+ * Returns: (transfer full): The newly created #GstEncodingTarget or %NULL if
+ * there was an error.
  */
 
 GstEncodingTarget *
@@ -252,7 +256,7 @@ invalid_category:
 /**
  * gst_encoding_target_add_profile:
  * @target: the #GstEncodingTarget to add a profile to
- * @profile: the #GstEncodingProfile to add
+ * @profile: (transfer full): the #GstEncodingProfile to add
  *
  * Adds the given @profile to the @target.
  *
@@ -642,7 +646,8 @@ empty_name:
  *
  * Since: 0.10.32
  *
- * Returns: The #GstEncodingTarget contained in the file, else %NULL
+ * Returns: (transfer full): The #GstEncodingTarget contained in the file, else
+ * %NULL
  */
 
 GstEncodingTarget *
@@ -677,7 +682,7 @@ beach:
  *
  * Since: 0.10.32
  *
- * Returns: The #GstEncodingTarget if available, else %NULL
+ * Returns: (transfer full): The #GstEncodingTarget if available, else %NULL.
  */
 
 GstEncodingTarget *

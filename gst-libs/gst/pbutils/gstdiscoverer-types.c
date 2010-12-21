@@ -382,8 +382,9 @@ gst_discoverer_stream_info_list_free (GList * infos)
  * Finds the #GstDiscovererStreamInfo contained in @info that match the
  * given @streamtype.
  *
- * Returns: A #GList of matching #GstDiscovererStreamInfo. The caller should
- * free it with #gst_discoverer_stream_info_list_free.
+ * Returns: (transfer full) (element-type Gst.DiscovererStreamInfo): A #GList of
+ * matching #GstDiscovererStreamInfo. The caller should free it with
+ * gst_discoverer_stream_info_list_free().
  *
  * Since: 0.10.31
  */
@@ -408,8 +409,9 @@ gst_discoverer_info_get_streams (GstDiscovererInfo * info, GType streamtype)
  *
  * Finds all the #GstDiscovererAudioInfo contained in @info
  *
- * Returns: A #GList of matching #GstDiscovererStreamInfo. The caller should
- * free it with #gst_discoverer_stream_info_list_free.
+ * Returns: (transfer full) (element-type Gst.DiscovererStreamInfo): A #GList of
+ * matching #GstDiscovererStreamInfo. The caller should free it with
+ * gst_discoverer_stream_info_list_free().
  *
  * Since: 0.10.31
  */
@@ -425,8 +427,9 @@ gst_discoverer_info_get_audio_streams (GstDiscovererInfo * info)
  *
  * Finds all the #GstDiscovererVideoInfo contained in @info
  *
- * Returns: A #GList of matching #GstDiscovererStreamInfo. The caller should
- * free it with #gst_discoverer_stream_info_list_free.
+ * Returns: (transfer full) (element-type Gst.DiscovererStreamInfo): A #GList of
+ * matching #GstDiscovererStreamInfo. The caller should free it with
+ * gst_discoverer_stream_info_list_free().
  *
  * Since: 0.10.31
  */
@@ -442,8 +445,9 @@ gst_discoverer_info_get_video_streams (GstDiscovererInfo * info)
  *
  * Finds all the #GstDiscovererContainerInfo contained in @info
  *
- * Returns: A #GList of matching #GstDiscovererStreamInfo. The caller should
- * free it with #gst_discoverer_stream_info_list_free.
+ * Returns: (transfer full) (element-type Gst.DiscovererStreamInfo): A #GList of
+ * matching #GstDiscovererStreamInfo. The caller should free it with
+ * gst_discoverer_stream_info_list_free().
  *
  * Since: 0.10.31
  */
@@ -493,8 +497,9 @@ gst_discoverer_stream_info_get_stream_type_nick (GstDiscovererStreamInfo * info)
  * gst_discoverer_stream_info_get_previous:
  * @info: a #GstDiscovererStreamInfo
  *
- * Returns: the previous #GstDiscovererStreamInfo in a chain. %NULL for starting
- * points. Unref with #gst_discoverer_stream_info_unref after usage.
+ * Returns: (transfer full): the previous #GstDiscovererStreamInfo in a chain.
+ * %NULL for starting points. Unref with #gst_discoverer_stream_info_unref
+ * after usage.
  *
  * Since: 0.10.31
  */
@@ -512,7 +517,8 @@ gst_discoverer_stream_info_get_previous (GstDiscovererStreamInfo * info)
  * gst_discoverer_stream_info_get_next:
  * @info: a #GstDiscovererStreamInfo
  *
- * Returns: the next #GstDiscovererStreamInfo in a chain. %NULL for final streams.
+ * Returns: (transfer full): the next #GstDiscovererStreamInfo in a chain. %NULL
+ * for final streams.
  * Unref with #gst_discoverer_stream_info_unref after usage.
  *
  * Since: 0.10.31
@@ -532,7 +538,8 @@ gst_discoverer_stream_info_get_next (GstDiscovererStreamInfo * info)
  * gst_discoverer_stream_info_get_caps:
  * @info: a #GstDiscovererStreamInfo
  *
- * Returns: the #GstCaps of the stream. Unref with #gst_caps_unref after usage.
+ * Returns: (transfer full): the #GstCaps of the stream. Unref with
+ * #gst_caps_unref after usage.
  *
  * Since: 0.10.31
  */
@@ -550,8 +557,8 @@ gst_discoverer_stream_info_get_caps (GstDiscovererStreamInfo * info)
  * gst_discoverer_stream_info_get_tags:
  * @info: a #GstDiscovererStreamInfo
  *
- * Returns: the tags contained in this stream. If you wish to use the tags after
- * the life-time of @info you will need to copy them.
+ * Returns: (transfer none): the tags contained in this stream. If you wish to
+ * use the tags after the life-time of @info you will need to copy them.
  *
  * Since: 0.10.31
  */
@@ -568,9 +575,9 @@ gst_discoverer_stream_info_get_tags (GstDiscovererStreamInfo * info)
  * gst_discoverer_stream_info_get_misc:
  * @info: a #GstDiscovererStreamInfo
  *
- * Returns: additional information regarding the stream (for example codec version,
- * profile, etc..). If you wish to use the #GstStructure after the life-time of
- * @info you will need to copy it.
+ * Returns: (transfer none): additional information regarding the stream (for
+ * example codec version, profile, etc..). If you wish to use the #GstStructure
+ * after the life-time of @info you will need to copy it.
  *
  * Since: 0.10.31
  */
@@ -588,8 +595,9 @@ gst_discoverer_stream_info_get_misc (GstDiscovererStreamInfo * info)
  * gst_discoverer_container_info_get_streams:
  * @info: a #GstDiscovererStreamInfo
  *
- * Returns: the list of #GstDiscovererStreamInfo this container stream offers.
- * Free with #gst_discoverer_stream_info_list_free after usage.
+ * Returns: (transfer full) (element-type Gst.DiscovererStreamInfo): the list of
+ * #GstDiscovererStreamInfo this container stream offers.
+ * Free with gst_discoverer_stream_info_list_free() after usage.
  *
  * Since: 0.10.31
  */
@@ -822,8 +830,8 @@ gst_discoverer_video_info_is_image (const GstDiscovererVideoInfo * info)
  * gst_discoverer_info_get_uri:
  * @info: a #GstDiscovererInfo
  *
- * Returns: the URI to which this information corresponds to. Copy it if you
- * wish to use it after the life-time of @info.
+ * Returns: (transfer none): the URI to which this information corresponds to.
+ * Copy it if you wish to use it after the life-time of @info.
  *
  * Since: 0.10.31
  */
@@ -845,9 +853,10 @@ DISCOVERER_INFO_ACCESSOR_CODE (result, GstDiscovererResult, GST_DISCOVERER_OK);
  * gst_discoverer_info_get_stream_info:
  * @info: a #GstDiscovererInfo
  *
- * Returns: the structure (or topology) of the URI as a #GstDiscovererStreamInfo.
+ * Returns: (transfer full): the structure (or topology) of the URI as a
+ * #GstDiscovererStreamInfo.
  * This structure can be traversed to see the original hierarchy. Unref with
- * #gst_discoverer_stream_info_unref after usage.
+ * gst_discoverer_stream_info_unref() after usage.
  *
  * Since: 0.10.31
  */
@@ -866,8 +875,9 @@ gst_discoverer_info_get_stream_info (GstDiscovererInfo * info)
  * gst_discoverer_info_get_stream_list:
  * @info: a #GstDiscovererInfo
  *
- * Returns: the list of all streams contained in the #info. Free after usage
- * with #gst_discoverer_stream_info_list_free.
+ * Returns: (transfer full) (element-type Gst.DiscovererStreamInfo): the list of
+ * all streams contained in the #info. Free after usage
+ * with gst_discoverer_stream_info_list_free().
  *
  * Since: 0.10.31
  */
@@ -912,9 +922,9 @@ DISCOVERER_INFO_ACCESSOR_CODE (seekable, gboolean, FALSE);
  * gst_discoverer_info_get_misc:
  * @info: a #GstDiscovererInfo
  *
- * Returns: Miscellaneous information stored as a #GstStructure (for example:
- * information about missing plugins). If you wish to use the #GstStructure
- * after the life-time of @info, you will need to copy it.
+ * Returns: (transfer none): Miscellaneous information stored as a #GstStructure
+ * (for example: information about missing plugins). If you wish to use the
+ * #GstStructure after the life-time of @info, you will need to copy it.
  *
  * Since: 0.10.31
  */
@@ -925,8 +935,8 @@ DISCOVERER_INFO_ACCESSOR_CODE (misc, const GstStructure *, NULL);
  * gst_discoverer_info_get_tags:
  * @info: a #GstDiscovererInfo
  *
- * Returns: all tags contained in the %URI. If you wish to use the tags after
- * the life-time of @info, you will need to copy them.
+ * Returns: (transfer none): all tags contained in the %URI. If you wish to use
+ * the tags after the life-time of @info, you will need to copy them.
  *
  * Since: 0.10.31
  */
