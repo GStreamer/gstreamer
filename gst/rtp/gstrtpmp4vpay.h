@@ -60,8 +60,6 @@ struct _GstRtpMP4VPay
    * payloader */
   guint         config_interval;
   GstClockTime  last_config;
-
-  GstPadEventFunction old_event_func;
 };
 
 struct _GstRtpMP4VPayClass
