@@ -4157,17 +4157,10 @@ gst_matroska_demux_push_hdr_buf (GstMatroskaDemux * demux,
     GstMatroskaTrackContext * stream, guint8 * data, guint len)
 {
   GstFlowReturn ret, cret;
-  GstBuffer *header_buf = NULL;
+  GstBuffer *header_buf;
 
-  ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
-      GST_BUFFER_OFFSET_NONE, len, stream->caps, &header_buf);
-
-  /* we combine but don't use the combined value to check if we have a buffer
-   * or not. The combined value is what we return. */
-  cret = gst_matroska_demux_combine_flows (demux, stream, ret);
-  if (ret != GST_FLOW_OK)
-    goto no_buffer;
-
+  header_buf = gst_buffer_new_and_alloc (len);
+  gst_buffer_set_caps (header_buf, stream->caps);
   memcpy (GST_BUFFER_DATA (header_buf), data, len);
 
   if (stream->set_discont) {
@@ -4181,14 +4174,6 @@ gst_matroska_demux_push_hdr_buf (GstMatroskaDemux * demux,
   cret = gst_matroska_demux_combine_flows (demux, stream, ret);
 
   return cret;
-
-  /* ERRORS */
-no_buffer:
-  {
-    GST_DEBUG_OBJECT (demux, "could not alloc buffer: %s, combined %s",
-        gst_flow_get_name (ret), gst_flow_get_name (cret));
-    return cret;
-  }
 }
 
 static GstFlowReturn
@@ -4423,18 +4408,9 @@ gst_matroska_demux_add_mpeg_seq_header (GstElement * element,
   /* Sequence start code, if not found prepend */
   if (header != 0x000001b3) {
     GstBuffer *newbuf;
-    GstFlowReturn ret, cret;
 
-    ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
-        GST_BUFFER_OFFSET_NONE, GST_BUFFER_SIZE (*buf) + seq_header_len,
-        stream->caps, &newbuf);
-    cret = gst_matroska_demux_combine_flows (demux, stream, ret);
-    if (ret != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (demux, "Reallocating buffer for sequence header "
-          "failed: %s, combined flow return: %s", gst_flow_get_name (ret),
-          gst_flow_get_name (cret));
-      return cret;
-    }
+    newbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + seq_header_len);
+    gst_buffer_set_caps (newbuf, stream->caps);
 
     GST_DEBUG_OBJECT (demux, "Prepending MPEG sequence header");
     gst_buffer_copy_metadata (newbuf, *buf, GST_BUFFER_COPY_TIMESTAMPS |
@@ -4459,7 +4435,6 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
   GstBuffer *newbuf = NULL;
   guint8 *data;
   guint newlen;
-  GstFlowReturn ret, cret = GST_FLOW_OK;
   Wavpack4Header wvh;
 
   wvh.ck_id[0] = 'w';
@@ -4486,15 +4461,8 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
 
     /* block_samples, flags and crc are already in the buffer */
     newlen = GST_BUFFER_SIZE (*buf) + sizeof (Wavpack4Header) - 12;
-    ret =
-        gst_pad_alloc_buffer_and_set_caps (stream->pad, GST_BUFFER_OFFSET_NONE,
-        newlen, stream->caps, &newbuf);
-    cret = gst_matroska_demux_combine_flows (demux, stream, ret);
-    if (ret != GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (demux, "pad_alloc failed %s, combined %s",
-          gst_flow_get_name (ret), gst_flow_get_name (cret));
-      return cret;
-    }
+    newbuf = gst_buffer_new_and_alloc (newlen);
+    gst_buffer_set_caps (newbuf, stream->caps);
 
     data = GST_BUFFER_DATA (newbuf);
     data[0] = 'w';
@@ -4590,7 +4558,7 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     audiocontext->wvpk_block_index += block_samples;
   }
 
-  return cret;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
