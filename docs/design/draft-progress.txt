@@ -4,7 +4,7 @@ Progress Reporting
 This document describes the design and use cases for the progress reporting
 messages.
 
-PROGRESS messages are ported on the bus to inform the application about the
+PROGRESS messages are posted on the bus to inform the application about the
 progress of asynchonous operations in the pipeline. This should not be confused
 with asynchronous state changes.
 
