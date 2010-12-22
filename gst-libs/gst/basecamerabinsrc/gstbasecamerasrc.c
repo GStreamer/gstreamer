@@ -232,11 +232,12 @@ gst_base_camera_src_start_capture (GstBaseCameraSrc * src)
   }
 
   src->capturing = TRUE;
+  g_object_notify (G_OBJECT (src), "ready-for-capture");
   if (klass->start_capture (src)) {
     GST_DEBUG_OBJECT (src, "Capture started");
-    g_object_notify (G_OBJECT (src), "ready-for-capture");
   } else {
     src->capturing = FALSE;
+    g_object_notify (G_OBJECT (src), "ready-for-capture");
     GST_WARNING_OBJECT (src, "Failed to start capture");
   }
   g_mutex_unlock (src->capturing_mutex);
