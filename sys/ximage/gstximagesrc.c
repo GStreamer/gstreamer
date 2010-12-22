@@ -876,7 +876,7 @@ gst_ximage_src_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_uint (value, src->endy);
       break;
     case PROP_REMOTE:
-      g_value_set_uint (value, src->remote);
+      g_value_set_boolean (value, src->remote);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
