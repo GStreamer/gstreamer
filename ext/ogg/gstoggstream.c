@@ -343,8 +343,8 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
   guint8 *data = packet->packet;
   guint w, h, par_d, par_n;
 
-  w = GST_READ_UINT24_BE (data + 14) & 0xFFFFF0;
-  h = GST_READ_UINT24_BE (data + 17) & 0xFFFFF0;
+  w = GST_READ_UINT24_BE (data + 14) & 0xFFFFFF;
+  h = GST_READ_UINT24_BE (data + 17) & 0xFFFFFF;
 
   pad->granulerate_n = GST_READ_UINT32_BE (data + 22);
   pad->granulerate_d = GST_READ_UINT32_BE (data + 26);
