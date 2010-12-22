@@ -325,13 +325,20 @@ static void
 gst_encode_bin_init (GstEncodeBin * encode_bin)
 {
   GstPadTemplate *tmpl;
+  GList *formatters;
 
   encode_bin->muxers =
       gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_MUXER,
       GST_RANK_MARGINAL);
+  formatters =
+      gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_FORMATTER,
+      GST_RANK_SECONDARY);
+  encode_bin->muxers = g_list_concat (encode_bin->muxers, formatters);
+
   encode_bin->encoders =
       gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_ENCODER,
       GST_RANK_MARGINAL);
+
   encode_bin->parsers =
       gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_PARSER,
       GST_RANK_MARGINAL);
