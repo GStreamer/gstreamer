@@ -65,6 +65,7 @@ EXPORTS
 	gst_encoding_container_profile_get_profiles
 	gst_encoding_container_profile_get_type
 	gst_encoding_container_profile_new
+	gst_encoding_profile_find
 	gst_encoding_profile_get_description
 	gst_encoding_profile_get_format
 	gst_encoding_profile_get_name

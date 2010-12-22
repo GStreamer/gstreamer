@@ -118,6 +118,7 @@
 #endif
 
 #include "encoding-profile.h"
+#include "encoding-target.h"
 
 /* GstEncodingProfile API */
 
@@ -134,12 +135,53 @@ struct _GstEncodingProfile
   GstCaps *restriction;
 };
 
-G_DEFINE_TYPE (GstEncodingProfile, gst_encoding_profile, GST_TYPE_MINI_OBJECT);
+static void string_to_profile_transform (const GValue * src_value,
+    GValue * dest_value);
+static gboolean gst_encoding_profile_deserialize_valfunc (GValue * value,
+    const gchar * s);
+
+static void gst_encoding_profile_class_init (GstEncodingProfileClass * klass);
+static gpointer gst_encoding_profile_parent_class = NULL;
 
 static void
-gst_encoding_profile_init (GstEncodingProfile * prof)
+gst_encoding_profile_class_intern_init (gpointer klass)
 {
-  /* Nothing to initialize */
+  gst_encoding_profile_parent_class = g_type_class_peek_parent (klass);
+  gst_encoding_profile_class_init ((GstEncodingProfileClass *) klass);
+}
+
+GType
+gst_encoding_profile_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    GType g_define_type_id =
+        g_type_register_static_simple (GST_TYPE_MINI_OBJECT,
+        g_intern_static_string ("GstEncodingProfile"),
+        sizeof (GstEncodingProfileClass),
+        (GClassInitFunc) gst_encoding_profile_class_intern_init,
+        sizeof (GstEncodingProfile),
+        NULL,
+        (GTypeFlags) 0);
+    static GstValueTable gstvtable = {
+      G_TYPE_NONE,
+      (GstValueCompareFunc) NULL,
+      (GstValueSerializeFunc) NULL,
+      (GstValueDeserializeFunc) gst_encoding_profile_deserialize_valfunc
+    };
+
+    gstvtable.type = g_define_type_id;
+
+    /* Register a STRING=>PROFILE GValueTransformFunc */
+    g_value_register_transform_func (G_TYPE_STRING, g_define_type_id,
+        string_to_profile_transform);
+    /* Register gst-specific GValue functions */
+    gst_value_register (&gstvtable);
+
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
 }
 
 static void
@@ -827,4 +869,83 @@ gst_encoding_profile_get_type_nick (GstEncodingProfile * profile)
   if (GST_IS_ENCODING_AUDIO_PROFILE (profile))
     return "audio";
   return NULL;
+}
+
+/**
+ * gst_encoding_profile_find:
+ * @targetname: (transfer none): The name of the target
+ * @profilename: (transfer none): The name of the profile
+ * @category: (transfer none) (allow-none): The target category. Can be %NULL
+ *
+ * Find the #GstEncodingProfile with the specified name and category.
+ *
+ * Returns: (transfer full): The matching #GstEncodingProfile or %NULL.
+ */
+GstEncodingProfile *
+gst_encoding_profile_find (const gchar * targetname, const gchar * profilename,
+    const gchar * category)
+{
+  GstEncodingProfile *res = NULL;
+  GstEncodingTarget *target;
+
+  g_return_val_if_fail (targetname != NULL, NULL);
+  g_return_val_if_fail (profilename != NULL, NULL);
+
+  /* FIXME : how do we handle profiles named the same in several
+   * categories but of which only one has the required profile ? */
+  target = gst_encoding_target_load (targetname, category, NULL);
+  if (target) {
+    res = gst_encoding_target_get_profile (target, profilename);
+    gst_encoding_target_unref (target);
+  }
+
+  return res;
+}
+
+static GstEncodingProfile *
+combo_search (const gchar * pname)
+{
+  GstEncodingProfile *res;
+  gchar **split;
+
+  /* Splitup */
+  split = g_strsplit (pname, "/", 2);
+  if (g_strv_length (split) != 2)
+    return NULL;
+
+  res = gst_encoding_profile_find (split[0], split[1], NULL);
+
+  g_strfreev (split);
+
+  return res;
+}
+
+/* GValue transform function */
+static void
+string_to_profile_transform (const GValue * src_value, GValue * dest_value)
+{
+  const gchar *profilename;
+  GstEncodingProfile *profile;
+
+  profilename = g_value_get_string (src_value);
+
+  profile = combo_search (profilename);
+
+  if (profile)
+    gst_value_take_mini_object (dest_value, (GstMiniObject *) profile);
+}
+
+static gboolean
+gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
+{
+  GstEncodingProfile *profile;
+
+  profile = combo_search (s);
+
+  if (profile) {
+    gst_value_take_mini_object (value, (GstMiniObject *) profile);
+    return TRUE;
+  }
+
+  return FALSE;
 }

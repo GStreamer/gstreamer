@@ -325,21 +325,12 @@ GST_START_TEST (test_saving_profile)
 
 GST_END_TEST;
 
-GST_START_TEST (test_loading_profile)
+static void
+test_individual_target (GstEncodingTarget * target)
 {
-  GstEncodingTarget *target;
-  gchar *profile_file_name;
   GstEncodingProfile *prof;
   GstCaps *tmpcaps, *tmpcaps2;
   GstEncodingProfile *sprof1, *sprof2;
-
-  profile_file_name = g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "profile", "TestProfile.profile", NULL);
-
-  GST_DEBUG ("Loading target from '%s'", profile_file_name);
-  target = gst_encoding_target_load_from (profile_file_name, NULL);
-  g_free (profile_file_name);
-  fail_unless (target != NULL);
 
   GST_DEBUG ("Checking the target properties");
   /* Check the target  */
@@ -396,8 +387,79 @@ GST_START_TEST (test_loading_profile)
   gst_encoding_profile_unref (sprof2);
   gst_caps_unref (tmpcaps);
   gst_caps_unref (tmpcaps2);
+}
 
+GST_START_TEST (test_loading_profile)
+{
+  GstEncodingTarget *target;
+  gchar *profile_file_name;
+  GstEncodingProfile *profile;
+  GstCaps *tmpcaps;
+  GValue strvalue = { 0, };
+  GValue miniobjectvalue = { 0, };
+
+  /* Test loading using short method and all arguments */
+  target = gst_encoding_target_load ("myponytarget", "herding", NULL);
+  fail_unless (target != NULL);
+  test_individual_target (target);
   gst_encoding_target_unref (target);
+
+  /* Test loading using short method and no category */
+  target = gst_encoding_target_load ("myponytarget", NULL, NULL);
+  fail_unless (target != NULL);
+  test_individual_target (target);
+  gst_encoding_target_unref (target);
+
+  /* Test loading using fully specified path */
+  profile_file_name = g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
+      "encoding-profile", "herding", "myponytarget.gstprofile", NULL);
+
+  GST_DEBUG ("Loading target from '%s'", profile_file_name);
+  target = gst_encoding_target_load_from (profile_file_name, NULL);
+  g_free (profile_file_name);
+  fail_unless (target != NULL);
+  test_individual_target (target);
+  gst_encoding_target_unref (target);
+
+  /* Test getting the profiles directly
+   * First without category */
+  profile = gst_encoding_profile_find ("myponytarget", "pony", NULL);
+  fail_unless (profile != NULL);
+  tmpcaps = gst_caps_from_string ("animal/x-pony");
+  CHECK_PROFILE (profile, "pony", "I don't want a description !", tmpcaps, NULL,
+      0, 0);
+  gst_caps_unref (tmpcaps);
+  gst_encoding_profile_unref (profile);
+
+  /* Then with a specific category */
+  profile = gst_encoding_profile_find ("myponytarget", "pony", "herding");
+  fail_unless (profile != NULL);
+  tmpcaps = gst_caps_from_string ("animal/x-pony");
+  CHECK_PROFILE (profile, "pony", "I don't want a description !", tmpcaps, NULL,
+      0, 0);
+  gst_caps_unref (tmpcaps);
+  gst_encoding_profile_unref (profile);
+
+  /* For my next trick, I will need the assistance of a GValue */
+  g_value_init (&strvalue, G_TYPE_STRING);
+  g_value_init (&miniobjectvalue, GST_TYPE_ENCODING_PROFILE);
+  g_value_set_static_string (&strvalue, "myponytarget/pony");
+  fail_unless (g_value_transform (&strvalue, &miniobjectvalue));
+  profile = (GstEncodingProfile *) gst_value_dup_mini_object (&miniobjectvalue);
+  fail_if (profile == NULL);
+  g_value_unset (&strvalue);
+  g_value_unset (&miniobjectvalue);
+  tmpcaps = gst_caps_from_string ("animal/x-pony");
+  CHECK_PROFILE (profile, "pony", "I don't want a description !", tmpcaps, NULL,
+      0, 0);
+  gst_caps_unref (tmpcaps);
+  gst_encoding_profile_unref (profile);
+
+  /* Let's go crazy for error detection */
+  fail_if (gst_encoding_profile_find ("myponytarget", "whales", NULL));
+  fail_if (gst_encoding_profile_find ("myponytarget", "whales", "herding"));
+  fail_if (gst_encoding_profile_find ("myponytarget", "", NULL));
+  fail_if (gst_encoding_profile_find ("", "pony", NULL));
 }
 
 GST_END_TEST;

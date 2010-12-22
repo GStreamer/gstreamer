@@ -147,6 +147,10 @@ GstCaps * gst_encoding_profile_get_output_caps (GstEncodingProfile *profile);
 
 const gchar *gst_encoding_profile_get_type_nick (GstEncodingProfile *profile);
 
+GstEncodingProfile * gst_encoding_profile_find (const gchar *targetname,
+						const gchar *profilename,
+						const gchar *category);
+
 /* GstEncodingContainerProfile API */
 gboolean  gst_encoding_container_profile_add_profile       (GstEncodingContainerProfile *container,
 							    GstEncodingProfile *profile);
@@ -178,7 +182,6 @@ void     gst_encoding_video_profile_set_pass              (GstEncodingVideoProfi
 							   guint pass);
 void     gst_encoding_video_profile_set_variableframerate (GstEncodingVideoProfile *prof,
 							   gboolean variableframerate);
-
 G_END_DECLS
 
 #endif /* __GST_PROFILE_H__ */

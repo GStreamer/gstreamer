@@ -90,6 +90,7 @@ GstPbutils-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_MAJ
 		--pkg gstreamer-0.10 \
 		--pkg gstreamer-video-@GST_MAJORMINOR@ \
 		--pkg-export gstreamer-pbutils-@GST_MAJORMINOR@ \
+		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
