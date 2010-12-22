@@ -567,10 +567,9 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       goto empty_packet;
   }
 
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (GST_PAD_CAST (pad),
-      GST_BUFFER_OFFSET_NONE, packet->bytes - offset - trim,
-      GST_PAD_CAPS (pad), &buf);
+  buf = gst_buffer_new_and_alloc (packet->bytes - offset - trim);
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
+  ret = GST_FLOW_OK;
 
   /* combine flows */
   cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
