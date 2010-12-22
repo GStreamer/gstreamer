@@ -1215,8 +1215,12 @@ gst_rtp_session_get_caps_for_pt (GstRtpSession * rtpsession, guint payload)
   g_value_init (&ret, GST_TYPE_CAPS);
   g_value_set_boxed (&ret, NULL);
 
+  GST_RTP_SESSION_UNLOCK (rtpsession);
+
   g_signal_emitv (args, gst_rtp_session_signals[SIGNAL_REQUEST_PT_MAP], 0,
       &ret);
+
+  GST_RTP_SESSION_LOCK (rtpsession);
 
   g_value_unset (&args[0]);
   g_value_unset (&args[1]);
