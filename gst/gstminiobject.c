@@ -635,7 +635,7 @@ gst_param_spec_mini_object_get_type (void)
  *
  * Creates a new #GParamSpec instance that hold #GstMiniObject references.
  *
- * Returns: a newly allocated #GParamSpec instance
+ * Returns: (transfer full): a newly allocated #GParamSpec instance
  */
 GParamSpec *
 gst_param_spec_mini_object (const char *name, const char *nick,
