@@ -85,6 +85,7 @@ EXPORTS
 	gst_encoding_target_get_category
 	gst_encoding_target_get_description
 	gst_encoding_target_get_name
+	gst_encoding_target_get_profile
 	gst_encoding_target_get_profiles
 	gst_encoding_target_get_type
 	gst_encoding_target_load

@@ -85,6 +85,8 @@ const gchar *gst_encoding_target_get_name (GstEncodingTarget *target);
 const gchar *gst_encoding_target_get_category (GstEncodingTarget *target);
 const gchar *gst_encoding_target_get_description (GstEncodingTarget *target);
 const GList *gst_encoding_target_get_profiles (GstEncodingTarget *target);
+GstEncodingProfile *gst_encoding_target_get_profile (GstEncodingTarget *target,
+						     const gchar *name);
 
 gboolean
 gst_encoding_target_add_profile (GstEncodingTarget *target, GstEncodingProfile *profile);

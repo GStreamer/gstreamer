@@ -253,6 +253,30 @@ create_saveload_target (void)
   return target;
 }
 
+GST_START_TEST (test_target_profile)
+{
+  GstEncodingTarget *target;
+  GstEncodingProfile *prof;
+
+  target = create_saveload_target ();
+
+  /* NULL isn't a valid profile name */
+  ASSERT_CRITICAL (gst_encoding_target_get_profile (target, NULL));
+
+  /* try finding a profile that doesn't exist */
+  fail_if (gst_encoding_target_get_profile (target,
+          "no-really-does-not-exist"));
+
+  /* try finding a profile that exists */
+  prof = gst_encoding_target_get_profile (target, "pony");
+  fail_if (prof == NULL);
+
+  gst_encoding_profile_unref (prof);
+  gst_encoding_target_unref (target);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_saving_profile)
 {
   GstEncodingTarget *orig, *loaded = NULL;
@@ -473,6 +497,7 @@ profile_suite (void)
   tcase_add_test (tc_chain, test_profile_creation);
   tcase_add_test (tc_chain, test_profile_output_caps);
   tcase_add_test (tc_chain, test_target_naming);
+  tcase_add_test (tc_chain, test_target_profile);
   if (can_write) {
     tcase_add_test (tc_chain, test_loading_profile);
     tcase_add_test (tc_chain, test_saving_profile);

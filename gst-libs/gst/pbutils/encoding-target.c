@@ -152,6 +152,35 @@ gst_encoding_target_get_profiles (GstEncodingTarget * target)
   return target->profiles;
 }
 
+/**
+ * gst_encoding_target_get_profile:
+ * @target: a #GstEncodingTarget
+ * @name: the name of the profile to retrieve
+ *
+ * Since: 0.10.32
+ *
+ * Returns: (transfer full): The matching #GstEncodingProfile, or %NULL.
+ */
+GstEncodingProfile *
+gst_encoding_target_get_profile (GstEncodingTarget * target, const gchar * name)
+{
+  GList *tmp;
+
+  g_return_val_if_fail (GST_IS_ENCODING_TARGET (target), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  for (tmp = target->profiles; tmp; tmp = tmp->next) {
+    GstEncodingProfile *tprof = (GstEncodingProfile *) tmp->data;
+
+    if (!g_strcmp0 (gst_encoding_profile_get_name (tprof), name)) {
+      gst_encoding_profile_ref (tprof);
+      return tprof;
+    }
+  }
+
+  return NULL;
+}
+
 static inline gboolean
 validate_name (const gchar * name)
 {

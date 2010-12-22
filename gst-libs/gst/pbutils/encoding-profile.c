@@ -95,20 +95,14 @@
  *{
  *  GstEncodingProfile *prof = NULL;
  *  GstEncodingTarget *target = NULL;
- *  GList *tmp;
  *
  *  target = gst_encoding_target_load_from (path);
  *  if (target == NULL)
  *    return NULL;
  *
- *  for (tmp = target->profiles; tmp; tmp = tmp->next) {
- *    GstEncodingProfile *ptmp = (GstEncodingProfile*) tmp->data;
+ *  prof = gst_encoding_target_get_profile (target, profilename);
  *
- *    if (!strcmp(gst_encoding_profile_get_name(ptmp), profilename)) {
- *      prof = ptmp;
- *      break;
- *    }
- *  }
+ *  gst_encoding_target_unref (target);
  *
  *  return prof;
  *}
