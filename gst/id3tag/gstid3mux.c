@@ -214,7 +214,8 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_id3_mux_debug, "id3mux", 0,
       "ID3 v1 and v2 tag muxer");
 
-  if (!gst_element_register (plugin, "id3mux", GST_RANK_NONE, GST_TYPE_ID3_MUX))
+  if (!gst_element_register (plugin, "id3mux", GST_RANK_PRIMARY,
+          GST_TYPE_ID3_MUX))
     return FALSE;
 
   gst_tag_register_musicbrainz_tags ();
