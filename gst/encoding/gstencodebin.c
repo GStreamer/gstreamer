@@ -1320,7 +1320,7 @@ static gboolean
 create_elements_and_pads (GstEncodeBin * ebin)
 {
   gboolean ret = TRUE;
-  GstElement *muxer;
+  GstElement *muxer = NULL;
   GstPad *muxerpad;
   const GList *tmp, *profiles;
   GstEncodingProfile *sprof;
@@ -1400,7 +1400,8 @@ no_muxer_ghost_pad:
 stream_error:
   {
     GST_WARNING ("Could not create Streams");
-    gst_bin_remove (GST_BIN (ebin), muxer);
+    if (muxer)
+      gst_bin_remove (GST_BIN (ebin), muxer);
     ebin->muxer = NULL;
     return FALSE;
   }
