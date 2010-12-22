@@ -242,13 +242,13 @@ gst_encoding_target_new (const gchar * name, const gchar * category,
 
 invalid_name:
   {
-    GST_ERROR ("Invalid name for encoding category : '%s'", name);
+    GST_ERROR ("Invalid name for encoding target : '%s'", name);
     return NULL;
   }
 
 invalid_category:
   {
-    GST_ERROR ("Invalid category for encoding category : '%s'", category);
+    GST_ERROR ("Invalid name for encoding category : '%s'", category);
     return NULL;
   }
 }
