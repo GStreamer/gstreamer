@@ -203,7 +203,7 @@ static GstStaticPadTemplate subtitlesink_templ =
 GST_STATIC_PAD_TEMPLATE ("subtitle_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS_ANY);
+    GST_STATIC_CAPS ("subtitle/x-kate"));
 
 static GArray *used_uids;
 G_LOCK_DEFINE_STATIC (used_uids);
