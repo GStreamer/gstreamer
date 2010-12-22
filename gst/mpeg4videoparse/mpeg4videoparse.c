@@ -502,6 +502,7 @@ gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
     GstBuffer *out_buf;
 
     out_buf = gst_adapter_take_buffer (parse->adapter, parse->offset);
+    out_buf = gst_buffer_make_metadata_writable (out_buf);
     GST_BUFFER_TIMESTAMP (out_buf) = parse->timestamp;
 
     if (G_LIKELY (out_buf)) {
