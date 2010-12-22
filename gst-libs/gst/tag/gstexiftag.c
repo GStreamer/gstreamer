@@ -752,7 +752,7 @@ static void
 write_exif_undefined_tag (GstExifWriter * writer, guint16 tag,
     const guint8 * data, gint size)
 {
-  guint32 offset;
+  guint32 offset = 0;
 
   if (size > 4) {
     /* we only use the data offset here, later we add up the
@@ -773,7 +773,7 @@ static void
 write_exif_ascii_tag (GstExifWriter * writer, guint16 tag, const gchar * str)
 {
   gint size;
-  guint32 offset;
+  guint32 offset = 0;
 
   size = strlen (str) + 1;
 
