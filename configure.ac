@@ -389,6 +389,11 @@ AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
 dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
 
+dnl needed for encoding-target
+GST_DATADIR="$GST_PREFIX/share"
+AC_DEFINE_UNQUOTED(GST_DATADIR, "$GST_DATADIR", [system wide data directory])
+AC_DEFINE_UNQUOTED(GST_MAJORMINOR, "$GST_MAJORMINOR", [major/minor version])
+
 dnl behaviour of speex based audio resampler
 AC_MSG_CHECKING(which audio resample format to use for integer)
 AC_ARG_WITH([audioresample_format],

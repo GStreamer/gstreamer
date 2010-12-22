@@ -20,6 +20,9 @@
 
 #include <locale.h>
 #include <string.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "encoding-target.h"
 
 /*
@@ -48,6 +51,21 @@
  * pass : <pass>
  * variableframerate : <variableframerate>
  *  */
+
+/*
+ * Location of profile files
+ *
+ * $GST_DATADIR/gstreamer-GST_MAJORMINOR/encoding-profile
+ * $HOME/gstreamer-GST_MAJORMINOR/encoding-profile
+ *
+ * Naming convention
+ *   $(target.category)/$(target.name).gstprof
+ *
+ * Naming restrictions:
+ *  lowercase ASCII letter for the first character
+ *  Same for all other characters + numerics + hyphens
+ */
+
 
 #define GST_ENCODING_TARGET_HEADER "_gstencodingtarget_"
 
@@ -700,48 +718,131 @@ beach:
 }
 
 /**
+ *
+ * returned list contents must be freed
+ */
+static GList *
+get_matching_filenames (gchar * path, gchar * filename)
+{
+  GList *res = NULL;
+  GDir *topdir;
+  const gchar *subdirname;
+
+  topdir = g_dir_open (path, 0, NULL);
+  if (G_UNLIKELY (topdir == NULL))
+    return NULL;
+
+  while ((subdirname = g_dir_read_name (topdir))) {
+    gchar *ltmp = g_build_filename (path, subdirname, NULL);
+
+    if (g_file_test (ltmp, G_FILE_TEST_IS_DIR)) {
+      gchar *tmp = g_build_filename (path, subdirname, filename, NULL);
+      /* Test to see if we have a file named like that in that directory */
+      if (g_file_test (tmp, G_FILE_TEST_EXISTS))
+        res = g_list_append (res, tmp);
+      else
+        g_free (tmp);
+    }
+    g_free (ltmp);
+  }
+
+  g_dir_close (topdir);
+
+  return res;
+}
+
+static GstEncodingTarget *
+gst_encoding_target_subload (gchar * path, const gchar * category,
+    gchar * lfilename, GError ** error)
+{
+  GstEncodingTarget *target = NULL;
+
+  if (category) {
+    gchar *filename;
+
+    filename = g_build_filename (path, category, lfilename, NULL);
+    target = gst_encoding_target_load_from (filename, error);
+    g_free (filename);
+  } else {
+    GList *tmp, *tries = get_matching_filenames (path, lfilename);
+
+    /* Try to find a file named %s.gstprofile in any subdirectories */
+    for (tmp = tries; tmp; tmp = tmp->next) {
+      target = gst_encoding_target_load_from ((gchar *) tmp->data, NULL);
+      if (target)
+        break;
+    }
+    g_list_foreach (tries, (GFunc) g_free, NULL);
+    if (tries)
+      g_list_free (tries);
+  }
+
+  return target;
+}
+
+/**
  * gst_encoding_target_load:
  * @name: the name of the #GstEncodingTarget to load.
+ * @category: (allow-none): the name of the target category. Can be %NULL
  * @error: If an error occured, this field will be filled in.
  *
  * Searches for the #GstEncodingTarget with the given name, loads it
  * and returns it.
  *
- * Warning: NOT IMPLEMENTED.
+ * If the category name is specified only targets from that category will be
+ * searched for.
  *
  * Since: 0.10.32
  *
  * Returns: (transfer full): The #GstEncodingTarget if available, else %NULL.
  */
-
 GstEncodingTarget *
-gst_encoding_target_load (const gchar * name, GError ** error)
+gst_encoding_target_load (const gchar * name, const gchar * category,
+    GError ** error)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
-}
+  gchar *lfilename, *tldir;
+  GstEncodingTarget *target = NULL;
 
-/**
- * gst_encoding_target_save:
- * @target: a #GstEncodingTarget
- * @error: If an error occured, this field will be filled in.
- *
- * Saves the @target to the default location.
- *
- * Warning: NOT IMPLEMENTED.
- *
- * Since: 0.10.32
- *
- * Returns: %TRUE if the target was correctly saved, else %FALSE.
- **/
+  g_return_val_if_fail (name != NULL, NULL);
 
-gboolean
-gst_encoding_target_save (GstEncodingTarget * target, GError ** error)
-{
-  g_return_val_if_fail (GST_IS_ENCODING_TARGET (target), FALSE);
+  if (!validate_name (name))
+    goto invalid_name;
 
-  /* FIXME : IMPLEMENT */
-  return FALSE;
+  if (category && !validate_name (category))
+    goto invalid_category;
+
+  lfilename = g_strdup_printf ("%s.gstprofile", name);
+
+  /* Try from local profiles */
+  tldir =
+      g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
+      "encoding-profile", NULL);
+  target = gst_encoding_target_subload (tldir, category, lfilename, error);
+  g_free (tldir);
+
+  if (target == NULL) {
+    /* Try from system-wide profiles */
+    tldir =
+        g_build_filename (GST_DATADIR, "gstreamer-" GST_MAJORMINOR,
+        "encoding-profile", NULL);
+    target = gst_encoding_target_subload (tldir, category, lfilename, error);
+    g_free (tldir);
+  }
+
+  g_free (lfilename);
+
+  return target;
+
+invalid_name:
+  {
+    GST_ERROR ("Invalid name for encoding target : '%s'", name);
+    return NULL;
+  }
+invalid_category:
+  {
+    GST_ERROR ("Invalid name for encoding category : '%s'", category);
+    return NULL;
+  }
 }
 
 /**
@@ -812,4 +913,40 @@ write_failed:
     g_free (data);
     return FALSE;
   }
+}
+
+/**
+ * gst_encoding_target_save:
+ * @target: a #GstEncodingTarget
+ * @error: If an error occured, this field will be filled in.
+ *
+ * Saves the @target to the default location. Unless the user has write access
+ * to the system-wide encoding target directory, it will be saved in a
+ * user-local directory.
+ *
+ * Since: 0.10.32
+ *
+ * Returns: %TRUE if the target was correctly saved, else %FALSE.
+ **/
+
+gboolean
+gst_encoding_target_save (GstEncodingTarget * target, GError ** error)
+{
+  gchar *filename;
+  gchar *lfilename;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_ENCODING_TARGET (target), FALSE);
+  g_return_val_if_fail (target->category != NULL, FALSE);
+
+  lfilename = g_strdup_printf ("%s.gstprofile", target->name);
+  filename =
+      g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
+      "encoding-profile", target->category, lfilename, NULL);
+  g_free (lfilename);
+
+  res = gst_encoding_target_save_to (target, filename, error);
+  g_free (filename);
+
+  return TRUE;
 }

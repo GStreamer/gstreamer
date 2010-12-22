@@ -97,6 +97,7 @@ gboolean gst_encoding_target_save_to (GstEncodingTarget *target,
 				      const gchar *path,
 				      GError **error);
 GstEncodingTarget *gst_encoding_target_load (const gchar *name,
+					     const gchar *category,
 					     GError **error);
 GstEncodingTarget *gst_encoding_target_load_from (const gchar *path,
 						  GError **error);
