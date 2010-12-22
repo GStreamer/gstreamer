@@ -38,7 +38,7 @@
  *
  * C: caps inlined flag 
  *   When C set, first part of payload contains caps definition. Caps definition
- *   starts with variable length length prefix and then a string of that length.
+ *   starts with variable-length length prefix and then a string of that length.
  *   the length is encoded in big endian 7 bit chunks, the top 1 bit of a byte
  *   is the continuation marker and the 7 next bits the data. A continuation
  *   marker of 1 means that the next byte contains more data. 
@@ -88,7 +88,7 @@ GST_BOILERPLATE (GstRtpGSTPay, gst_rtp_gst_pay, GstBaseRTPPayload,
       gst_static_pad_template_get (&gst_rtp_gst_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP GStreamer payloader", "Codec/Payloader/Network",
+      "RTP GStreamer payloader", "Codec/Payloader/Network/RTP",
       "Payload GStreamer buffers as RTP packets",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
