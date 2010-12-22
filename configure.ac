@@ -1437,7 +1437,7 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
   HAVE_XVID=no
   AC_CHECK_HEADER(xvid.h, [
     OLD_LIBS="$LIBS"
-    LIBS="-lm"
+    LIBS="-lpthread -lm"
     AC_CHECK_LIB(xvidcore, xvid_encore, [
       AC_CHECK_LIB(xvidcore, xvid_decore, [
         AC_CHECK_LIB(xvidcore, xvid_global, [
