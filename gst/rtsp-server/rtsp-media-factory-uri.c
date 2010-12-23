@@ -21,12 +21,14 @@
 
 #include "rtsp-media-factory-uri.h"
 
-#define DEFAULT_URI     NULL
+#define DEFAULT_URI         NULL
+#define DEFAULT_USE_GSTPAY  FALSE
 
 enum
 {
   PROP_0,
   PROP_URI,
+  PROP_USE_GSTPAY,
   PROP_LAST
 };
 
@@ -95,6 +97,16 @@ gst_rtsp_media_factory_uri_class_init (GstRTSPMediaFactoryURIClass * klass)
       g_param_spec_string ("uri", "URI",
           "The URI of the resource to stream", DEFAULT_URI,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRTSPMediaFactoryURI::use-gstpay
+   *
+   * Allow the usage of gstpay in order to avoid decoding of compressed formats
+   * without a payloader.
+   */
+  g_object_class_install_property (gobject_class, PROP_USE_GSTPAY,
+      g_param_spec_string ("use-gstpay", "Use gstpay",
+          "Use the gstpay payloader to avoid decoding", DEFAULT_USE_GSTPAY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   mediafactory_class->get_element = rtsp_media_factory_uri_get_element;
 
@@ -151,6 +163,8 @@ gst_rtsp_media_factory_uri_init (GstRTSPMediaFactoryURI * factory)
   FilterData data = { NULL, NULL, NULL };
 
   factory->uri = g_strdup (DEFAULT_URI);
+  factory->use_gstpay = DEFAULT_USE_GSTPAY;
+
   /* get the feature list using the filter */
   gst_default_registry_feature_filter ((GstPluginFeatureFilter)
       payloader_filter, FALSE, &data);
@@ -191,6 +205,9 @@ gst_rtsp_media_factory_uri_get_property (GObject * object, guint propid,
     case PROP_URI:
       g_value_take_string (value, gst_rtsp_media_factory_uri_get_uri (factory));
       break;
+    case PROP_USE_GSTPAY:
+      g_value_set_boolean (value, factory->use_gstpay);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -205,6 +222,9 @@ gst_rtsp_media_factory_uri_set_property (GObject * object, guint propid,
   switch (propid) {
     case PROP_URI:
       gst_rtsp_media_factory_uri_set_uri (factory, g_value_get_string (value));
+      break;
+    case PROP_USE_GSTPAY:
+      factory->use_gstpay = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -291,14 +311,20 @@ find_payloader (GstRTSPMediaFactoryURI * urifact, GstCaps * caps)
       GST_PAD_SINK, FALSE);
 
   if (list == NULL) {
-    /* no depayloader, try a decoder */
-    list = gst_element_factory_list_filter (urifact->decoders, caps,
-        GST_PAD_SINK, FALSE);
+    if (urifact->use_gstpay) {
+      /* no depayloader or parser/demuxer, use gstpay when allowed */
+      factory = gst_element_factory_find ("rtpgstpay");
+    } else {
+      /* no depayloader, try a decoder, we'll get to a payloader for a decoded
+       * video or audio format, worst case. */
+      list = gst_element_factory_list_filter (urifact->decoders, caps,
+          GST_PAD_SINK, FALSE);
 
-    if (list != NULL) {
-      /* we have a decoder, try that one first */
-      gst_plugin_feature_list_free (list);
-      return NULL;
+      if (list != NULL) {
+        /* we have a decoder, try that one first */
+        gst_plugin_feature_list_free (list);
+        return NULL;
+      }
     }
   }
 
