@@ -97,6 +97,7 @@ struct _GstKateTiger
 
   GstSegment video_segment;
   gboolean video_flushing;
+  gboolean seen_header;
 };
 
 struct _GstKateTigerClass

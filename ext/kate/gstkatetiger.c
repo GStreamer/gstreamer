@@ -355,6 +355,8 @@ gst_kate_tiger_init (GstKateTiger * tiger, GstKateTigerClass * gclass)
 
   tiger->video_width = 0;
   tiger->video_height = 0;
+
+  tiger->seen_header = FALSE;
 }
 
 static void
@@ -565,6 +567,50 @@ gst_kate_tiger_kate_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (tiger, "Got kate buffer, caps %s",
       gst_caps_to_string (GST_BUFFER_CAPS (buf)));
 
+  /* Unfortunately, it can happen that the start of the stream is not sent,
+     for instance if there's a stream selector upstream, which is switched
+     from another Kate stream. If this happens, then we can fallback on the
+     headers stored in the caps (if any). */
+  if (!tiger->seen_header) {
+    if (GST_BUFFER_SIZE (buf) == 0 || (GST_BUFFER_DATA (buf)[0] & 0x80) == 0) {
+      /* Not a header, try to fall back on caps */
+      GstStructure *s;
+      const GValue *streamheader;
+
+      GST_INFO_OBJECT (tiger, "Headers not seen, start of stream is cut off");
+      s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+      streamheader = gst_structure_get_value (s, "streamheader");
+      if (streamheader && G_VALUE_TYPE (streamheader) == GST_TYPE_ARRAY) {
+        GstPad *tagpad = gst_pad_get_peer (pad);
+        GArray *array;
+        gint i;
+
+        GST_INFO_OBJECT (tiger, "Falling back on caps to initialize decoder");
+        array = g_value_peek_pointer (streamheader);
+        for (i = 0; i < array->len; i++) {
+          GValue *value = &g_array_index (array, GValue, i);
+          if (G_VALUE_TYPE (value) == GST_TYPE_BUFFER) {
+            GstBuffer *hbuf = g_value_peek_pointer (value);
+            gst_buffer_ref (hbuf);
+            rflow =
+                gst_kate_util_decoder_base_chain_kate_packet (&tiger->decoder,
+                GST_ELEMENT_CAST (tiger), pad, hbuf, tiger->srcpad, tagpad,
+                NULL, NULL);
+          } else {
+            GST_WARNING_OBJECT (tiger,
+                "Streamheader index %d does not hold a buffer", i);
+          }
+        }
+        gst_object_unref (tagpad);
+        tiger->seen_header = TRUE;
+      } else {
+        GST_WARNING_OBJECT (tiger, "No headers seen, and no headers on caps");
+      }
+    } else {
+      tiger->seen_header = TRUE;
+    }
+  }
+
   if (gst_kate_util_decoder_base_update_segment (&tiger->decoder,
           GST_ELEMENT_CAST (tiger), buf)) {
     GstPad *tagpad = gst_pad_get_peer (pad);
@@ -750,6 +796,7 @@ gst_kate_tiger_change_state (GstElement * element, GstStateChange transition)
       }
       gst_segment_init (&tiger->video_segment, GST_FORMAT_UNDEFINED);
       tiger->video_flushing = FALSE;
+      tiger->seen_header = FALSE;
       GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
       break;
     default:
