@@ -123,6 +123,62 @@ rtp_source_class_init (RTPSourceClass * klass)
    * The statistics of the source. This property returns a GstStructure with
    * name application/x-rtp-source-stats with the following fields:
    *
+   *  "ssrc"         G_TYPE_UINT     The SSRC of this source
+   *  "internal"     G_TYPE_BOOLEAN  If this source is the source of the session
+   *  "validated"    G_TYPE_BOOLEAN  If the source is validated
+   *  "received-bye" G_TYPE_BOOLEAN  If we received a BYE from this source
+   *  "is-csrc"      G_TYPE_BOOLEAN  If this source was found as CSRC
+   *  "is-sender"    G_TYPE_BOOLEAN  If this source is a sender
+   *  "seqnum-base"  G_TYPE_INT      first seqnum if known
+   *  "clock-rate"   G_TYPE_INT      the clock rate of the media
+   *
+   * The following two fields are only present when known.
+   *
+   *  "rtp-from"     G_TYPE_STRING   where we received the last RTP packet from
+   *  "rtcp-from"    G_TYPE_STRING   where we received the last RTCP packet from
+   *
+   * The following fields make sense for internal sources and will only increase
+   * when "is-sender" is TRUE:
+   *
+   *  "octets-sent"  G_TYPE_UINT64   number of bytes we sent
+   *  "packets-sent" G_TYPE_UINT64   number of packets we sent
+   *
+   * The following fields make sense for non-internal sources and will only
+   * increase when "is-sender" is TRUE.
+   *
+   *  "octets-received"  G_TYPE_UINT64  total number of bytes received
+   *  "packets-received" G_TYPE_UINT64  total number of packets received
+   *
+   * Following fields are updated when "is-sender" is TRUE.
+   *
+   *  "bitrate"      G_TYPE_UINT64   bitrate in bits per second
+   *  "jitter"       G_TYPE_UINT     estimated jitter
+   *  "packets-lost" G_TYPE_INT      estimated amount of packets lost
+   *
+   * The last SR report this source sent. This only updates when "is-sender" is
+   * TRUE.
+   *
+   *  "have-sr"         G_TYPE_BOOLEAN  the source has sent SR
+   *  "sr-ntptime"      G_TYPE_UINT64   ntptime of SR
+   *  "sr-rtptime"      G_TYPE_UINT     rtptime of SR
+   *  "sr-octet-count"  G_TYPE_UINT     the number of bytes in the SR
+   *  "sr-packet-count" G_TYPE_UINT     the number of packets in the SR
+   *
+   * The last RB that this source sent. This is only updated when the source is
+   * receiving data.
+   *
+   *  "have-rb"          G_TYPE_BOOLEAN  the source has sent RB
+   *  "rb-fractionlost"  G_TYPE_UINT     lost fraction
+   *  "rb-packetslost"   G_TYPE_INT      lost packets
+   *  "rb-exthighestseq" G_TYPE_UINT     highest received seqnum
+   *  "rb-jitter"        G_TYPE_UINT     reception jitter
+   *  "rb-lsr"           G_TYPE_UINT     last SR time
+   *  "rb-dlsr"          G_TYPE_UINT     delay since last SR
+   *
+   * The round trip of this source. This is calculated from the last RB
+   * values and the recption time of the last RB packet.
+   *
+   *  "rb-round-trip"    G_TYPE_UINT     the round trip time in nanoseconds
    */
   g_object_class_install_property (gobject_class, PROP_STATS,
       g_param_spec_boxed ("stats", "Stats",
@@ -202,6 +258,21 @@ rtp_source_create_stats (RTPSource * src)
   gboolean is_sender = src->is_sender;
   gboolean internal = src->internal;
   gchar address_str[GST_NETADDRESS_MAX_LEN];
+  gboolean have_rb;
+  guint8 fractionlost = 0;
+  gint32 packetslost = 0;
+  guint32 exthighestseq = 0;
+  guint32 jitter = 0;
+  guint32 lsr = 0;
+  guint32 dlsr = 0;
+  guint32 round_trip = 0;
+  gboolean have_sr;
+  GstClockTime time = 0;
+  guint64 ntptime = 0;
+  guint32 rtptime = 0;
+  guint32 packet_count = 0;
+  guint32 octet_count = 0;
+
 
   /* common data for all types of sources */
   s = gst_structure_new ("application/x-rtp-source-stats",
@@ -226,70 +297,39 @@ rtp_source_create_stats (RTPSource * src)
     gst_structure_set (s, "rtcp-from", G_TYPE_STRING, address_str, NULL);
   }
 
-  if (internal) {
-    /* our internal source */
+  gst_structure_set (s,
+      "octets-sent", G_TYPE_UINT64, src->stats.octets_sent,
+      "packets-sent", G_TYPE_UINT64, src->stats.packets_sent,
+      "octets-received", G_TYPE_UINT64, src->stats.octets_received,
+      "packets-received", G_TYPE_UINT64, src->stats.packets_received,
+      "bitrate", G_TYPE_UINT64, src->bitrate,
+      "packets-lost", G_TYPE_INT,
+      (gint) rtp_stats_get_packets_lost (&src->stats), "jitter", G_TYPE_UINT,
+      (guint) (src->stats.jitter >> 4), NULL);
 
-    /* report accumulated send statistics, other sources will have a RB with
-     * info on reception. */
-    gst_structure_set (s,
-        "octets-sent", G_TYPE_UINT64, src->stats.octets_sent,
-        "packets-sent", G_TYPE_UINT64, src->stats.packets_sent, NULL);
+  /* get the last SR. */
+  have_sr = rtp_source_get_last_sr (src, &time, &ntptime, &rtptime,
+      &packet_count, &octet_count);
+  gst_structure_set (s,
+      "have-sr", G_TYPE_BOOLEAN, have_sr,
+      "sr-ntptime", G_TYPE_UINT64, ntptime,
+      "sr-rtptime", G_TYPE_UINT, (guint) rtptime,
+      "sr-octet-count", G_TYPE_UINT, (guint) octet_count,
+      "sr-packet-count", G_TYPE_UINT, (guint) packet_count, NULL);
 
-    if (is_sender)
-      gst_structure_set (s, "bitrate", G_TYPE_UINT64, src->bitrate, NULL);
+  /* get the last RB */
+  have_rb = rtp_source_get_last_rb (src, &fractionlost, &packetslost,
+      &exthighestseq, &jitter, &lsr, &dlsr, &round_trip);
 
-  } else {
-    /* other sources */
-    gboolean have_rb;
-    guint8 fractionlost = 0;
-    gint32 packetslost = 0;
-    guint32 exthighestseq = 0;
-    guint32 jitter = 0;
-    guint32 lsr = 0;
-    guint32 dlsr = 0;
-    guint32 round_trip = 0;
-
-    gst_structure_set (s,
-        "octets-received", G_TYPE_UINT64, src->stats.octets_received,
-        "packets-received", G_TYPE_UINT64, src->stats.packets_received,
-        "bitrate", G_TYPE_UINT64, src->bitrate,
-        "packets-lost", G_TYPE_INT,
-        (gint) rtp_stats_get_packets_lost (&src->stats), "jitter", G_TYPE_UINT,
-        (guint) (src->stats.jitter >> 4), NULL);
-
-    if (is_sender) {
-      gboolean have_sr;
-      GstClockTime time = 0;
-      guint64 ntptime = 0;
-      guint32 rtptime = 0;
-      guint32 packet_count = 0;
-      guint32 octet_count = 0;
-
-      /* this source is sending to us, get the last SR. */
-      have_sr = rtp_source_get_last_sr (src, &time, &ntptime, &rtptime,
-          &packet_count, &octet_count);
-      gst_structure_set (s,
-          "have-sr", G_TYPE_BOOLEAN, have_sr,
-          "sr-ntptime", G_TYPE_UINT64, ntptime,
-          "sr-rtptime", G_TYPE_UINT, (guint) rtptime,
-          "sr-octet-count", G_TYPE_UINT, (guint) octet_count,
-          "sr-packet-count", G_TYPE_UINT, (guint) packet_count, NULL);
-    }
-    /* we might be sending to this SSRC so we report about how it is
-     * receiving our data */
-    have_rb = rtp_source_get_last_rb (src, &fractionlost, &packetslost,
-        &exthighestseq, &jitter, &lsr, &dlsr, &round_trip);
-
-    gst_structure_set (s,
-        "have-rb", G_TYPE_BOOLEAN, have_rb,
-        "rb-fractionlost", G_TYPE_UINT, (guint) fractionlost,
-        "rb-packetslost", G_TYPE_INT, (gint) packetslost,
-        "rb-exthighestseq", G_TYPE_UINT, (guint) exthighestseq,
-        "rb-jitter", G_TYPE_UINT, (guint) jitter,
-        "rb-lsr", G_TYPE_UINT, (guint) lsr,
-        "rb-dlsr", G_TYPE_UINT, (guint) dlsr,
-        "rb-round-trip", G_TYPE_UINT, (guint) round_trip, NULL);
-  }
+  gst_structure_set (s,
+      "have-rb", G_TYPE_BOOLEAN, have_rb,
+      "rb-fractionlost", G_TYPE_UINT, (guint) fractionlost,
+      "rb-packetslost", G_TYPE_INT, (gint) packetslost,
+      "rb-exthighestseq", G_TYPE_UINT, (guint) exthighestseq,
+      "rb-jitter", G_TYPE_UINT, (guint) jitter,
+      "rb-lsr", G_TYPE_UINT, (guint) lsr,
+      "rb-dlsr", G_TYPE_UINT, (guint) dlsr,
+      "rb-round-trip", G_TYPE_UINT, (guint) round_trip, NULL);
 
   return s;
 }
