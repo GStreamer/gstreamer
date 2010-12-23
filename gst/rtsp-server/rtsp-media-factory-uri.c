@@ -102,11 +102,20 @@ gst_rtsp_media_factory_uri_class_init (GstRTSPMediaFactoryURIClass * klass)
       0, "GstRTSPMediaFactoryUri");
 }
 
+typedef struct
+{
+  GList *demux;
+  GList *payload;
+  GList *decode;
+} FilterData;
+
 static gboolean
-payloader_filter (GstPluginFeature * feature, gpointer data)
+payloader_filter (GstPluginFeature * feature, FilterData * data)
 {
   gboolean res;
   const gchar *klass;
+  GstElementFactory *fact;
+  GList **list = NULL;
 
   /* we only care about element factories */
   if (G_UNLIKELY (!GST_IS_ELEMENT_FACTORY (feature)))
@@ -115,28 +124,43 @@ payloader_filter (GstPluginFeature * feature, gpointer data)
   if (gst_plugin_feature_get_rank (feature) < GST_RANK_MARGINAL)
     return FALSE;
 
-  klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY_CAST (feature));
+  fact = GST_ELEMENT_FACTORY_CAST (feature);
 
-  if (strstr (klass, "Payloader") == NULL)
-    return FALSE;
+  klass = gst_element_factory_get_klass (fact);
 
-  if (strstr (klass, "RTP") == NULL)
-    return FALSE;
+  if (strstr (klass, "Decoder"))
+    list = &data->decode;
+  else if (strstr (klass, "Demux"))
+    list = &data->demux;
+  else if (strstr (klass, "Parser") && strstr (klass, "Codec"))
+    list = &data->demux;
+  else if (strstr (klass, "Payloader") && strstr (klass, "RTP"))
+    list = &data->payload;
 
-  return TRUE;
+  if (list) {
+    GST_DEBUG ("adding %s", GST_PLUGIN_FEATURE_NAME (fact));
+    *list = g_list_prepend (*list, fact);
+  }
+
+  return FALSE;
 }
 
 static void
 gst_rtsp_media_factory_uri_init (GstRTSPMediaFactoryURI * factory)
 {
+  FilterData data = { NULL, NULL, NULL };
+
   factory->uri = g_strdup (DEFAULT_URI);
   /* get the feature list using the filter */
-  factory->factories =
-      gst_default_registry_feature_filter ((GstPluginFeatureFilter)
-      payloader_filter, FALSE, NULL);
-  /* sort on rank and name */
-  factory->factories =
-      g_list_sort (factory->factories, gst_plugin_feature_rank_compare_func);
+  gst_default_registry_feature_filter ((GstPluginFeatureFilter)
+      payloader_filter, FALSE, &data);
+  /* sort */
+  factory->demuxers =
+      g_list_sort (data.demux, gst_plugin_feature_rank_compare_func);
+  factory->payloaders =
+      g_list_sort (data.payload, gst_plugin_feature_rank_compare_func);
+  factory->decoders =
+      g_list_sort (data.decode, gst_plugin_feature_rank_compare_func);
 
   factory->raw_vcaps = gst_static_caps_get (&raw_video_caps);
   factory->raw_acaps = gst_static_caps_get (&raw_audio_caps);
@@ -148,7 +172,9 @@ gst_rtsp_media_factory_uri_finalize (GObject * obj)
   GstRTSPMediaFactoryURI *factory = GST_RTSP_MEDIA_FACTORY_URI (obj);
 
   g_free (factory->uri);
-  gst_plugin_feature_list_free (factory->factories);
+  gst_plugin_feature_list_free (factory->demuxers);
+  gst_plugin_feature_list_free (factory->payloaders);
+  gst_plugin_feature_list_free (factory->decoders);
   gst_caps_unref (factory->raw_vcaps);
   gst_caps_unref (factory->raw_acaps);
 
@@ -250,24 +276,37 @@ find_payloader (GstRTSPMediaFactoryURI * urifact, GstCaps * caps)
   GList *list, *tmp;
   GstElementFactory *factory = NULL;
 
-  /* find payloader that can link */
-  list = gst_element_factory_list_filter (urifact->factories, caps,
+  /* first find a demuxer that can link */
+  list = gst_element_factory_list_filter (urifact->demuxers, caps,
       GST_PAD_SINK, FALSE);
 
-  for (tmp = list; tmp; tmp = g_list_next (tmp)) {
-    GstElementFactory *f = GST_ELEMENT_FACTORY_CAST (tmp->data);
-    const gchar *name;
-
-    name = gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (f));
-
-    factory = f;
-    break;
+  if (list != NULL) {
+    /* we have a demuxer, try that one first */
+    gst_plugin_feature_list_free (list);
+    return NULL;
   }
-  if (factory)
+
+  /* no demuxer try a depayloader */
+  list = gst_element_factory_list_filter (urifact->payloaders, caps,
+      GST_PAD_SINK, FALSE);
+
+  if (list == NULL) {
+    /* no depayloader, try a decoder */
+    list = gst_element_factory_list_filter (urifact->decoders, caps,
+        GST_PAD_SINK, FALSE);
+
+    if (list != NULL) {
+      /* we have a decoder, try that one first */
+      gst_plugin_feature_list_free (list);
+      return NULL;
+    }
+  }
+
+  if (list != NULL) {
+    factory = GST_ELEMENT_FACTORY_CAST (list->data);
     g_object_ref (factory);
-
-  gst_plugin_feature_list_free (list);
-
+    gst_plugin_feature_list_free (list);
+  }
   return factory;
 }
 
@@ -288,8 +327,9 @@ autoplug_continue_cb (GstElement * uribin, GstPad * pad, GstCaps * caps,
   if (!(factory = find_payloader (data->factory, caps)))
     goto no_factory;
 
-  /* we found a payloader, stop autoplugging */
-  GST_DEBUG ("found payloader factory %s",
+  /* we found a payloader, stop autoplugging so we can plug the
+   * payloader. */
+  GST_DEBUG ("found factory %s",
       gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
   gst_object_unref (factory);
 

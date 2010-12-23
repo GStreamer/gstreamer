@@ -51,7 +51,9 @@ struct _GstRTSPMediaFactoryURI {
   gchar *uri;
   GstCaps *raw_vcaps;
   GstCaps *raw_acaps;
-  GList *factories;
+  GList *demuxers;
+  GList *payloaders;
+  GList *decoders;
 };
 
 /**
