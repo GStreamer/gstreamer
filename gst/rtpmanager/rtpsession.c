@@ -1647,10 +1647,9 @@ rtp_session_process_rb (RTPSession * sess, RTPSource * source,
        * the other sender to see if we are better or worse. */
       rtp_source_process_rb (source, arrival->current_time, fractionlost,
           packetslost, exthighestseq, jitter, lsr, dlsr);
-
-      on_ssrc_active (sess, source);
     }
   }
+  on_ssrc_active (sess, source);
 }
 
 /* A Sender report contains statistics about how the sender is doing. This
