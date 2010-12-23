@@ -6444,6 +6444,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
       gst_buffer_unref (priv);
 
+      gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "avc",
+          "alignment", G_TYPE_STRING, "au", NULL);
     }
     *codec_name = g_strdup ("H264");
   } else if ((!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO1)) ||
