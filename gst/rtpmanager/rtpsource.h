@@ -167,6 +167,7 @@ struct _RTPSource {
   gpointer           user_data;
 
   RTPSourceStats stats;
+  RTPReceiverReport last_rr;
 
   GList         *conflicting_addresses;
 };

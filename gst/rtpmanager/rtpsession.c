@@ -2357,6 +2357,15 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
       rtp_source_get_new_rb (source, data->current_time, &fractionlost,
           &packetslost, &exthighestseq, &jitter, &lsr, &dlsr);
 
+      /* store last generated RR packet */
+      source->last_rr.is_valid = TRUE;
+      source->last_rr.fractionlost = fractionlost;
+      source->last_rr.packetslost = packetslost;
+      source->last_rr.exthighestseq = exthighestseq;
+      source->last_rr.jitter = jitter;
+      source->last_rr.lsr = lsr;
+      source->last_rr.dlsr = dlsr;
+
       /* packet is not yet filled, add report block for this source. */
       gst_rtcp_packet_add_rb (packet, source->ssrc, fractionlost, packetslost,
           exthighestseq, jitter, lsr, dlsr);
