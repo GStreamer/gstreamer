@@ -13,7 +13,13 @@
 G_BEGIN_DECLS
 
 #if !GLIB_CHECK_VERSION(2,25,0)
+
+#if defined (_MSC_VER) && !defined(_WIN64)
+typedef struct _stat32 GStatBuf;
+#else
 typedef struct stat GStatBuf;
+#endif
+
 #endif
 
 #if GLIB_CHECK_VERSION(2,26,0)
