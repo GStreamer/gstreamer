@@ -122,6 +122,9 @@ static GstFlowReturn gst_ogg_demux_combine_flows (GstOggDemux * ogg,
     GstOggPad * pad, GstFlowReturn ret);
 static void gst_ogg_demux_sync_streams (GstOggDemux * ogg);
 
+GstCaps *gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg,
+    GstCaps * caps, GList * headers);
+
 GType gst_ogg_pad_get_type (void);
 G_DEFINE_TYPE (GstOggPad, gst_ogg_pad, GST_TYPE_PAD);
 
@@ -1710,6 +1713,47 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   return TRUE;
 }
 
+GstCaps *
+gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg, GstCaps * caps,
+    GList * headers)
+{
+  GstStructure *structure;
+  GValue array = { 0 };
+
+  GST_LOG_OBJECT (ogg, "caps: %" GST_PTR_FORMAT, caps);
+
+  if (G_UNLIKELY (!caps))
+    return NULL;
+  if (G_UNLIKELY (!headers))
+    return NULL;
+
+  caps = gst_caps_make_writable (caps);
+  structure = gst_caps_get_structure (caps, 0);
+
+  g_value_init (&array, GST_TYPE_ARRAY);
+
+  while (headers) {
+    GValue value = { 0 };
+    GstBuffer *buffer;
+    ogg_packet *op = headers->data;
+    g_assert (op);
+    buffer = gst_buffer_new_and_alloc (op->bytes);
+    memcpy (GST_BUFFER_DATA (buffer), op->packet, op->bytes);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
+    g_value_init (&value, GST_TYPE_BUFFER);
+    gst_value_take_buffer (&value, buffer);
+    gst_value_array_append_value (&array, &value);
+    g_value_unset (&value);
+    headers = headers->next;
+  }
+
+  gst_structure_set_value (structure, "streamheader", &array);
+  g_value_unset (&array);
+  GST_LOG_OBJECT (ogg, "here are the newly set caps: %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
+
 static gboolean
 gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     GstEvent * event)
@@ -1794,6 +1838,11 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
           GST_PAD_CAST (pad), pad->map.taglist);
       pad->map.taglist = NULL;
     }
+
+    /* Set headers on caps */
+    pad->map.caps =
+        gst_ogg_demux_set_header_on_caps (ogg, pad->map.caps, pad->map.headers);
+    gst_pad_set_caps (GST_PAD_CAST (pad), pad->map.caps);
 
     GST_DEBUG_OBJECT (ogg, "pushing headers");
     /* push headers */
