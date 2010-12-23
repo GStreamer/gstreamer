@@ -2284,13 +2284,17 @@ on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
 }
 
 static void
-on_npt_stop (GObject * session, GObject * source, GstRTSPStream * stream)
+on_npt_stop (GstElement * rtpbin, guint session, guint ssrc, GstRTSPSrc * src)
 {
-  GstRTSPSrc *src = stream->parent;
+  GstRTSPStream *stream;
 
-  GST_DEBUG_OBJECT (src, "source in session %u reached NPT stop", stream->id);
+  GST_DEBUG_OBJECT (src, "source in session %u reached NPT stop", session);
 
-  gst_rtspsrc_do_stream_eos (src, stream);
+  /* get stream for session */
+  stream = find_stream (src, &session, (gpointer) find_stream_by_id);
+  if (stream) {
+    gst_rtspsrc_do_stream_eos (src, stream);
+  }
 }
 
 static void
@@ -2391,6 +2395,9 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       src->manager_ptmap_id =
           g_signal_connect (src->manager, "request-pt-map",
           (GCallback) request_pt_map, src);
+
+      g_signal_connect (src->manager, "on-npt-stop", (GCallback) on_npt_stop,
+          src);
     }
 
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
@@ -2435,8 +2442,6 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
         g_signal_connect (rtpsession, "on-bye-timeout", (GCallback) on_timeout,
             stream);
         g_signal_connect (rtpsession, "on-timeout", (GCallback) on_timeout,
-            stream);
-        g_signal_connect (rtpsession, "on-npt-stop", (GCallback) on_npt_stop,
             stream);
         g_signal_connect (rtpsession, "on-ssrc-active",
             (GCallback) on_ssrc_active, stream);
