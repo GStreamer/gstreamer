@@ -58,6 +58,11 @@
  * mapping. One can clear the cached values with the #GstRtpSession::clear-pt-map
  * signal.
  *
+ * Access to the internal statistics of gstrtpbin is provided with the
+ * get-internal-session property. This action signal gives access to the
+ * RTPSession object which further provides action signals to retrieve the
+ * internal source and other sources.
+ *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
