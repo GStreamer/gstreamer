@@ -263,7 +263,7 @@ gst_v4l2_buffer_pool_get_type (void)
 
   if (G_UNLIKELY (_gst_v4l2_buffer_pool_type == 0)) {
     static const GTypeInfo v4l2_buffer_pool_info = {
-      sizeof (GstBufferClass),
+      sizeof (GstMiniObjectClass),
       NULL,
       NULL,
       gst_v4l2_buffer_pool_class_init,
