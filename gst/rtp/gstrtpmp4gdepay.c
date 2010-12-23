@@ -135,6 +135,8 @@ static gboolean gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
+static gboolean gst_rtp_mp4g_depay_handle_event (GstBaseRTPDepayload * filter,
+    GstEvent * event);
 
 static GstStateChangeReturn gst_rtp_mp4g_depay_change_state (GstElement *
     element, GstStateChange transition);
@@ -173,6 +175,7 @@ gst_rtp_mp4g_depay_class_init (GstRtpMP4GDepayClass * klass)
 
   gstbasertpdepayload_class->process = gst_rtp_mp4g_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_mp4g_depay_setcaps;
+  gstbasertpdepayload_class->handle_event = gst_rtp_mp4g_depay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtpmp4gdepay_debug, "rtpmp4gdepay", 0,
       "MP4-generic RTP Depayloader");
@@ -709,6 +712,28 @@ short_payload:
         ("Packet payload was too short."), (NULL));
     return NULL;
   }
+}
+
+static gboolean
+gst_rtp_mp4g_depay_handle_event (GstBaseRTPDepayload * filter, GstEvent * event)
+{
+  gboolean ret;
+  GstRtpMP4GDepay *rtpmp4gdepay;
+
+  rtpmp4gdepay = GST_RTP_MP4G_DEPAY (filter);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_mp4g_depay_reset (rtpmp4gdepay);
+      break;
+    default:
+      break;
+  }
+
+  ret =
+      GST_BASE_RTP_DEPAYLOAD_CLASS (parent_class)->handle_event (filter, event);
+
+  return ret;
 }
 
 static GstStateChangeReturn
