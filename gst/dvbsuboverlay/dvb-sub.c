@@ -134,10 +134,8 @@ typedef struct DVBSubRegion
   struct DVBSubRegion *next;
 } DVBSubRegion;
 
-typedef struct _DvbSubPrivate DvbSubPrivate;
-struct _DvbSubPrivate
+struct _DvbSub
 {
-  int fd;
   DvbSubCallbacks callbacks;
   gpointer user_data;
 
@@ -151,12 +149,6 @@ struct _DvbSubPrivate
   GString *pes_buffer;
   DVBSubtitleWindow display_def;
 };
-struct _DvbSub
-{
-  DvbSubPrivate priv;           // FIXME (tpm)
-
-  DvbSubPrivate *private_data;
-};
 
 typedef enum
 {
@@ -164,12 +156,10 @@ typedef enum
   BOTTOM_FIELD = 1
 } DvbSubPixelDataSubBlockFieldType;
 
-/* FIXME: It might make sense to pass DvbSubPrivate for all the get_* functions, instead of public DvbSub */
 static DVBSubObject *
 get_object (DvbSub * dvb_sub, guint16 object_id)
 {
-  const DvbSubPrivate *priv = (DvbSubPrivate *) dvb_sub->private_data;
-  DVBSubObject *ptr = priv->object_list;
+  DVBSubObject *ptr = dvb_sub->object_list;
 
   while (ptr && ptr->id != object_id) {
     ptr = ptr->next;
@@ -181,8 +171,7 @@ get_object (DvbSub * dvb_sub, guint16 object_id)
 static DVBSubCLUT *
 get_clut (DvbSub * dvb_sub, gint clut_id)
 {
-  const DvbSubPrivate *priv = (DvbSubPrivate *) dvb_sub->private_data;
-  DVBSubCLUT *ptr = priv->clut_list;
+  DVBSubCLUT *ptr = dvb_sub->clut_list;
 
   while (ptr && ptr->id != clut_id) {
     ptr = ptr->next;
@@ -191,12 +180,10 @@ get_clut (DvbSub * dvb_sub, gint clut_id)
   return ptr;
 }
 
-// FIXME: Just pass private_data pointer directly here and in other get_* helper functions?
 static DVBSubRegion *
 get_region (DvbSub * dvb_sub, guint8 region_id)
 {
-  const DvbSubPrivate *priv = (DvbSubPrivate *) dvb_sub->private_data;
-  DVBSubRegion *ptr = priv->region_list;
+  DVBSubRegion *ptr = dvb_sub->region_list;
 
   while (ptr && ptr->id != region_id) {
     ptr = ptr->next;
@@ -208,7 +195,6 @@ get_region (DvbSub * dvb_sub, guint8 region_id)
 static void
 delete_region_display_list (DvbSub * dvb_sub, DVBSubRegion * region)
 {
-  const DvbSubPrivate *priv = (DvbSubPrivate *) dvb_sub->private_data;
   DVBSubObject *object, *obj2;
   DVBSubObject **obj2_ptr;
   DVBSubObjectDisplay *display, *obj_disp, **obj_disp_ptr;
@@ -231,7 +217,7 @@ delete_region_display_list (DvbSub * dvb_sub, DVBSubRegion * region)
         *obj_disp_ptr = obj_disp->object_list_next;
 
         if (!object->display_list) {
-          obj2_ptr = (DVBSubObject **) & priv->object_list;     /* FIXME: Evil casting */
+          obj2_ptr = (DVBSubObject **) & dvb_sub->object_list;  /* FIXME: Evil casting */
           obj2 = *obj2_ptr;
 
           while (obj2 != object) {
@@ -256,13 +242,12 @@ delete_region_display_list (DvbSub * dvb_sub, DVBSubRegion * region)
 static void
 delete_state (DvbSub * dvb_sub)
 {
-  DvbSubPrivate *priv = (DvbSubPrivate *) dvb_sub->private_data;
   DVBSubRegion *region;
 
-  while (priv->region_list) {
-    region = priv->region_list;
+  while (dvb_sub->region_list) {
+    region = dvb_sub->region_list;
 
-    priv->region_list = region->next;
+    dvb_sub->region_list = region->next;
 
     delete_region_display_list (dvb_sub, region);
     if (region->pbuf)
@@ -271,12 +256,11 @@ delete_state (DvbSub * dvb_sub)
     g_slice_free (DVBSubRegion, region);
   }
 
-  g_slice_free_chain (DVBSubCLUT, priv->clut_list, next);
-  priv->clut_list = NULL;
+  g_slice_free_chain (DVBSubCLUT, dvb_sub->clut_list, next);
+  dvb_sub->clut_list = NULL;
 
-  /* Should already be null */
-  if (priv->object_list)
-    g_warning ("Memory deallocation error!");
+  /* Should already be NULL */
+  g_warn_if_fail (dvb_sub->object_list == NULL);
 }
 
 /* init static data necessary for ffmpeg-colorspace conversion */
@@ -369,7 +353,6 @@ static void
 _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     gint buf_size)
 {                               /* FIXME: Use guint for buf_size here and in many other places? */
-  DvbSubPrivate *priv = (DvbSubPrivate *) dvb_sub->private_data;
   DVBSubRegionDisplay *display;
   DVBSubRegionDisplay *tmp_display_list, **tmp_ptr;
 
@@ -384,7 +367,7 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   if (buf_size < 1)
     return;
 
-  priv->page_time_out = *buf++;
+  dvb_sub->page_time_out = *buf++;
   page_state = ((*buf++) >> 2) & 3;
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -395,7 +378,7 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 
     ++counter;
     GST_DEBUG ("PAGE: %d: page_id = %u, length = %d, page_time_out = %u secs, "
-        "page_state = %s", counter, page_id, buf_size, priv->page_time_out,
+        "page_state = %s", counter, page_id, buf_size, dvb_sub->page_time_out,
         page_state_str[page_state]);
   }
 #endif
@@ -404,9 +387,9 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     delete_state (dvb_sub);
   }
 
-  tmp_display_list = priv->display_list;
-  priv->display_list = NULL;
-  priv->display_list_size = 0;
+  tmp_display_list = dvb_sub->display_list;
+  dvb_sub->display_list = NULL;
+  dvb_sub->display_list_size = 0;
 
   while (buf + 5 < buf_end) {
     region_id = *buf++;
@@ -432,9 +415,9 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 
     *tmp_ptr = display->next;
 
-    display->next = priv->display_list;
-    priv->display_list = display;
-    priv->display_list_size++;
+    display->next = dvb_sub->display_list;
+    dvb_sub->display_list = display;
+    dvb_sub->display_list_size++;
 
     GST_LOG ("PAGE %d: REGION information: ID = %u, address = %ux%u",
         counter, region_id, display->x_pos, display->y_pos);
@@ -453,8 +436,6 @@ static void
 _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     gint buf_size)
 {
-  DvbSubPrivate *priv = (DvbSubPrivate *) dvb_sub->private_data;
-
   const guint8 *buf_end = buf + buf_size;
   guint8 region_id;
   guint16 object_id;
@@ -473,8 +454,8 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   if (!region) {                /* Create a new region */
     region = g_slice_new0 (DVBSubRegion);
     region->id = region_id;
-    region->next = priv->region_list;
-    priv->region_list = region;
+    region->next = dvb_sub->region_list;
+    dvb_sub->region_list = region;
   }
 
   fill = ((*buf++) >> 3) & 1;
@@ -536,8 +517,8 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 
       object->id = object_id;
 
-      object->next = priv->object_list;
-      priv->object_list = object;
+      object->next = dvb_sub->object_list;
+      dvb_sub->object_list = object;
     }
 
     object->type = (*buf) >> 6;
@@ -578,8 +559,6 @@ static void
 _dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     gint buf_size)
 {
-  DvbSubPrivate *priv = (DvbSubPrivate *) dvb_sub->private_data;
-
   const guint8 *buf_end = buf + buf_size;
   guint8 clut_id;
   DVBSubCLUT *clut;
@@ -601,8 +580,8 @@ _dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 
     clut->id = clut_id;
 
-    clut->next = priv->clut_list;
-    priv->clut_list = clut;
+    clut->next = dvb_sub->clut_list;
+    dvb_sub->clut_list = clut;
   }
 
   while (buf + 4 < buf_end) {
@@ -1168,7 +1147,6 @@ _dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, guint8 * buf,
     gint buf_size)
 {
   int dds_version, info_byte;
-  DvbSubPrivate *ctx = dvb_sub->private_data;
 
   if (buf_size < 5)
     return -1;
@@ -1176,27 +1154,27 @@ _dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, guint8 * buf,
   info_byte = *buf++;
   dds_version = info_byte >> 4;
 
-  if (ctx->display_def.version == dds_version)
+  if (dvb_sub->display_def.version == dds_version)
     return 0;                   /* already have this display definition version */
 
-  ctx->display_def.version = dds_version;
-  ctx->display_def.display_width = GST_READ_UINT16_BE (buf) + 1;
+  dvb_sub->display_def.version = dds_version;
+  dvb_sub->display_def.display_width = GST_READ_UINT16_BE (buf) + 1;
   buf += 2;
-  ctx->display_def.display_height = GST_READ_UINT16_BE (buf) + 1;
+  dvb_sub->display_def.display_height = GST_READ_UINT16_BE (buf) + 1;
   buf += 2;
 
-  ctx->display_def.window_flag = info_byte & 1 << 3;
+  dvb_sub->display_def.window_flag = info_byte & 1 << 3;
 
-  if (buf_size >= 13 && ctx->display_def.window_flag) {
-    ctx->display_def.window_x = GST_READ_UINT16_BE (buf);
+  if (buf_size >= 13 && dvb_sub->display_def.window_flag) {
+    dvb_sub->display_def.window_x = GST_READ_UINT16_BE (buf);
     buf += 2;
-    ctx->display_def.window_y = GST_READ_UINT16_BE (buf);
+    dvb_sub->display_def.window_y = GST_READ_UINT16_BE (buf);
     buf += 2;
-    ctx->display_def.window_width =
-        GST_READ_UINT16_BE (buf) - ctx->display_def.window_x + 1;
+    dvb_sub->display_def.window_width =
+        GST_READ_UINT16_BE (buf) - dvb_sub->display_def.window_x + 1;
     buf += 2;
-    ctx->display_def.window_height =
-        GST_READ_UINT16_BE (buf) - ctx->display_def.window_y + 1;
+    dvb_sub->display_def.window_height =
+        GST_READ_UINT16_BE (buf) - dvb_sub->display_def.window_y + 1;
     buf += 2;
   }
 
@@ -1207,8 +1185,6 @@ static gint
 _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
     guint8 * buf, gint buf_size, guint64 pts)
 {
-  DvbSubPrivate *priv = (DvbSubPrivate *) dvb_sub->private_data;
-
   DVBSubtitles *sub = g_slice_new0 (DVBSubtitles);
 
   DVBSubRegion *region;
@@ -1229,7 +1205,7 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
   sub->format = 0;              /* 0 = graphics */
 #endif
 
-  sub->num_rects = priv->display_list_size;
+  sub->num_rects = dvb_sub->display_list_size;
 
   if (sub->num_rects > 0) {
     // FIXME-MEMORY-LEAK: This structure is not freed up yet
@@ -1241,9 +1217,9 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
   i = 0;
 
   /* copy subtitle display and window information */
-  sub->display_def = priv->display_def;
+  sub->display_def = dvb_sub->display_def;
 
-  for (display = priv->display_list; display; display = display->next) {
+  for (display = dvb_sub->display_list; display; display = display->next) {
     region = get_region (dvb_sub, display->region_id);
     rect = sub->rects[i];
 
@@ -1304,11 +1280,11 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
   }
 
   sub->pts = pts;
-  sub->page_time_out = priv->page_time_out;
+  sub->page_time_out = dvb_sub->page_time_out;
   sub->num_rects = i;
 
-  if (priv->callbacks.new_data) {
-    priv->callbacks.new_data (dvb_sub, sub, priv->user_data);
+  if (dvb_sub->callbacks.new_data) {
+    dvb_sub->callbacks.new_data (dvb_sub, sub, dvb_sub->user_data);
   } else {
     /* No-one responsible to clean up memory, so do it ourselves */
     /* FIXME: Just don't bother with all this palette image creation in the first place then... */
@@ -1343,18 +1319,14 @@ DvbSub *
 dvb_sub_new (void)
 {
   static gsize inited = 0;
-  DvbSubPrivate *sub;
-  DvbSub *dvb_sub;
+  DvbSub *sub;
 
   if (g_once_init_enter (&inited)) {
     dvb_sub_init ();
     g_once_init_leave (&inited, TRUE);
   }
 
-  dvb_sub = g_slice_new0 (DvbSub);
-  dvb_sub->private_data = &dvb_sub->priv;
-
-  sub = dvb_sub->private_data;
+  sub = g_slice_new0 (DvbSub);
 
   /* TODO: Add initialization code here */
   /* FIXME: Do we have a reason to initiate the members to zero, or are we guaranteed that anyway? */
@@ -1369,7 +1341,7 @@ dvb_sub_new (void)
   sub->display_def.display_width = 720;
   sub->display_def.display_height = 576;
 
-  return dvb_sub;
+  return sub;
 }
 
 void
@@ -1378,7 +1350,7 @@ dvb_sub_free (DvbSub * sub)
   /* TODO: Add deinitalization code here */
   /* FIXME: Clear up region_list contents */
   delete_state (sub);
-  g_string_free (sub->private_data->pes_buffer, TRUE);
+  g_string_free (sub->pes_buffer, TRUE);
   g_slice_free (DvbSub, sub);
 }
 
@@ -1515,13 +1487,9 @@ void
 dvb_sub_set_callbacks (DvbSub * dvb_sub, DvbSubCallbacks * callbacks,
     gpointer user_data)
 {
-  DvbSubPrivate *priv;
-
   g_return_if_fail (dvb_sub != NULL);
   g_return_if_fail (callbacks != NULL);
 
-  priv = (DvbSubPrivate *) dvb_sub->private_data;
-
-  priv->callbacks = *callbacks;
-  priv->user_data = user_data;
+  dvb_sub->callbacks = *callbacks;
+  dvb_sub->user_data = user_data;
 }
