@@ -1930,12 +1930,8 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   GST_LOG ("packet_size = %u, leaf_size = %u, height= %u", packet_size,
       leaf_size, height);
 
-  ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
-      GST_BUFFER_OFFSET_NONE, height * packet_size,
-      GST_PAD_CAPS (stream->pad), &outbuf);
-
-  if (ret != GST_FLOW_OK)
-    goto done;
+  outbuf = gst_buffer_new_and_alloc (height * packet_size);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (stream->pad));
 
   for (p = 0; p < height; ++p) {
     GstBuffer *b = g_ptr_array_index (stream->subpackets, p);
@@ -1975,8 +1971,6 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   }
 
   gst_buffer_unref (outbuf);
-
-done:
 
   gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
 
@@ -2061,12 +2055,8 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
   GST_LOG ("packet_size = %u, leaf_size = %u, height= %u", packet_size,
       stream->leaf_size, height);
 
-  ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
-      GST_BUFFER_OFFSET_NONE, height * packet_size,
-      GST_PAD_CAPS (stream->pad), &outbuf);
-
-  if (ret != GST_FLOW_OK)
-    goto done;
+  outbuf = gst_buffer_new_and_alloc (height * packet_size);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (stream->pad));
 
   for (p = 0; p < height; ++p) {
     GstBuffer *b = g_ptr_array_index (stream->subpackets, p);
@@ -2090,8 +2080,6 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
 
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (stream->pad));
   ret = gst_pad_push (stream->pad, outbuf);
-
-done:
 
   gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
 
@@ -2505,7 +2493,7 @@ gst_rmdemux_parse_audio_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     GstBuffer * in, guint offset, guint16 version,
     GstClockTime timestamp, gboolean key)
 {
-  GstFlowReturn ret, cret;
+  GstFlowReturn ret;
   GstBuffer *buffer;
   const guint8 *data;
   guint size;
@@ -2513,12 +2501,8 @@ gst_rmdemux_parse_audio_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
   data = GST_BUFFER_DATA (in) + offset;
   size = GST_BUFFER_SIZE (in) - offset;
 
-  ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
-      GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (stream->pad), &buffer);
-
-  cret = gst_rmdemux_combine_flows (rmdemux, stream, ret);
-  if (ret != GST_FLOW_OK)
-    goto alloc_failed;
+  buffer = gst_buffer_new_and_alloc (size);
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (stream->pad));
 
   memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, size);
 
@@ -2552,14 +2536,6 @@ gst_rmdemux_parse_audio_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
   gst_buffer_unref (in);
 
   return ret;
-
-  /* ERRORS */
-alloc_failed:
-  {
-    GST_DEBUG_OBJECT (rmdemux, "pad alloc returned %d", ret);
-    gst_buffer_unref (in);
-    return cret;
-  }
 }
 
 static GstFlowReturn
