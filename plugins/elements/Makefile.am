@@ -1,22 +1,14 @@
 
 plugin_LTLIBRARIES = libgstcoreelements.la
 
-if HAVE_SYS_SOCKET_H
-GSTFDSRC = gstfdsrc.c
-GSTFDSINK = gstfdsink.c
-else
-GSTFDSRC =
-GSTFDSINK =
-endif
-
 libgstcoreelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
 libgstcoreelements_la_SOURCES =	\
 	gstcapsfilter.c		\
 	gstelements.c		\
 	gstfakesrc.c		\
 	gstfakesink.c		\
-	$(GSTFDSRC)		\
-	$(GSTFDSINK)		\
+	gstfdsrc.c		\
+	gstfdsink.c		\
 	gstfilesink.c		\
 	gstfilesrc.c		\
 	gstidentity.c		\
