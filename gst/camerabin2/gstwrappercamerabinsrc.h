@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Texas Instruments, Inc
+ * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -75,13 +76,14 @@ struct _GstWrapperCameraBinSrc
   GstElement *src_zoom_crop;
   GstElement *src_zoom_scale;
   GstElement *src_zoom_filter;
+  GstElement *output_selector;
+
+  gboolean elements_created;
 
   guint src_event_probe_id;
 
-  /* srcpads of tee */
-  GstPad *tee_vf_srcpad;
-  GstPad *tee_image_srcpad;
-  GstPad *tee_video_srcpad;
+  GstPad *outsel_imgpad;
+  GstPad *outsel_vidpad;
 
   GstPadEventFunction srcpad_event_func;
 

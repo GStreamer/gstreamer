@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Texas Instruments, Inc
+ * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -137,6 +138,10 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
   GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC (data);
   gboolean ret = FALSE;
 
+  GST_LOG_OBJECT (self, "Image probe, mode %d, capture count %d, caps %"
+      GST_PTR_FORMAT, camerasrc->mode, self->image_capture_count,
+      GST_BUFFER_CAPS (buffer));
+
   g_mutex_lock (camerasrc->capturing_mutex);
   if (self->image_capture_count > 0) {
     ret = TRUE;
@@ -161,6 +166,9 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (data);
   GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC_CAST (self);
   gboolean ret = FALSE;
+
+  GST_LOG_OBJECT (self, "Video probe, mode %d, capture status %d",
+      camerasrc->mode, self->video_rec_status);
 
   /* TODO do we want to lock for every buffer? */
   /*
@@ -200,6 +208,9 @@ gst_wrapper_camera_bin_src_event (GstPad * pad, GstEvent * event)
 
   structure = gst_event_get_structure (event);
   if (structure && gst_structure_has_name (structure, "renegotiate")) {
+    GST_DEBUG_OBJECT (src, "Received renegotiate on pad %s",
+        GST_PAD_NAME (pad));
+
     if (pad == src->imgsrc) {
       src->image_renegotiate = TRUE;
     } else if (pad == src->vidsrc) {
@@ -224,7 +235,11 @@ src_event_probe (GstPad * pad, GstEvent * event, gpointer user_data)
  * @bcamsrc: camerasrc object
  *
  * This function creates and links the elements of the camerasrc bin
- * videosrc ! cspconv ! capsfilter ! crop ! scale ! capsfilter ! tee ! ..
+ * videosrc ! cspconv ! capsfilter ! crop ! scale ! capsfilter ! tee name=t !
+ *    t. ! ... (viewfinder pad)
+ *    t. ! output-selector name=outsel
+ *        outsel. ! (image pad)
+ *        outsel. ! (video pad)
  *
  * Returns: TRUE, if elements were successfully created, FALSE otherwise
  */
@@ -236,6 +251,11 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   GstElement *tee;
   gboolean ret = FALSE;
   GstElement *videoscale;
+  GstPad *vf_pad;
+  GstPad *tee_capture_pad;
+
+  if (self->elements_created)
+    return TRUE;
 
   GST_DEBUG_OBJECT (self, "constructing pipeline");
 
@@ -250,6 +270,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     }
   }
 
+  /* add a buffer probe to the src elemento to drop EOS from READY->NULL */
   {
     GstPad *pad;
     pad = gst_element_get_static_pad (self->src_vid_src, "src");
@@ -279,8 +300,9 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   if (!(tee = gst_camerabin_create_and_add_element (cbin, "tee")))
     goto done;
 
-  self->tee_vf_srcpad = gst_element_get_request_pad (tee, "src%d");
-  g_object_set (tee, "alloc-pad", self->tee_vf_srcpad, NULL);
+  /* viewfinder pad */
+  vf_pad = gst_element_get_request_pad (tee, "src%d");
+  g_object_set (tee, "alloc-pad", vf_pad, NULL);
 
   /* the viewfinder should always work, so we add some converters to it */
   if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace"))
@@ -288,30 +310,56 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   if (!(videoscale = gst_camerabin_create_and_add_element (cbin, "videoscale")))
     goto done;
 
-  gst_object_unref (self->tee_vf_srcpad);
-  self->tee_vf_srcpad = gst_element_get_static_pad (videoscale, "src");
+  gst_object_unref (vf_pad);
+  vf_pad = gst_element_get_static_pad (videoscale, "src");
 
-  self->tee_image_srcpad = gst_element_get_request_pad (tee, "src%d");
-  self->tee_video_srcpad = gst_element_get_request_pad (tee, "src%d");
+  /* image/video pad from tee */
+  tee_capture_pad = gst_element_get_request_pad (tee, "src%d");
 
-  gst_pad_add_buffer_probe (self->tee_image_srcpad,
+  self->output_selector =
+      gst_element_factory_make ("output-selector", "outsel");
+  gst_bin_add (GST_BIN (self), self->output_selector);
+  {
+    GstPad *pad = gst_element_get_static_pad (self->output_selector, "sink");
+
+    /* check return TODO */
+    gst_pad_link (tee_capture_pad, pad);
+    gst_object_unref (pad);
+  }
+
+  /* Create the 2 output pads for video and image */
+  self->outsel_vidpad =
+      gst_element_get_request_pad (self->output_selector, "src%d");
+  self->outsel_imgpad =
+      gst_element_get_request_pad (self->output_selector, "src%d");
+
+  g_assert (self->outsel_vidpad != NULL);
+  g_assert (self->outsel_imgpad != NULL);
+
+  gst_pad_add_buffer_probe (self->outsel_imgpad,
       G_CALLBACK (gst_wrapper_camera_bin_src_imgsrc_probe), self);
-  gst_pad_add_buffer_probe (self->tee_video_srcpad,
+  gst_pad_add_buffer_probe (self->outsel_vidpad,
       G_CALLBACK (gst_wrapper_camera_bin_src_vidsrc_probe), self);
+  gst_ghost_pad_set_target (GST_GHOST_PAD (self->imgsrc), self->outsel_imgpad);
+  gst_ghost_pad_set_target (GST_GHOST_PAD (self->vidsrc), self->outsel_vidpad);
 
+  if (bcamsrc->mode == MODE_IMAGE) {
+    g_object_set (self->output_selector, "active-pad", self->outsel_imgpad,
+        NULL);
+  } else {
+    g_object_set (self->output_selector, "active-pad", self->outsel_vidpad,
+        NULL);
+  }
 
-  /* hook-up the ghostpads */
-  gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), self->tee_vf_srcpad);
-  gst_ghost_pad_set_target (GST_GHOST_PAD (self->imgsrc),
-      self->tee_image_srcpad);
-  gst_ghost_pad_set_target (GST_GHOST_PAD (self->vidsrc),
-      self->tee_video_srcpad);
+  /* hook-up the vf ghostpads */
+  gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), vf_pad);
 
   gst_pad_set_active (self->vfsrc, TRUE);
   gst_pad_set_active (self->imgsrc, TRUE);      /* XXX ??? */
   gst_pad_set_active (self->vidsrc, TRUE);      /* XXX ??? */
 
   ret = TRUE;
+  self->elements_created = TRUE;
 done:
   return ret;
 }
@@ -497,6 +545,16 @@ gst_wrapper_camera_bin_src_set_mode (GstBaseCameraSrc * bcamsrc,
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
 
   self->mode = mode;
+
+  if (self->output_selector) {
+    if (mode == MODE_IMAGE) {
+      g_object_set (self->output_selector, "active-pad", self->outsel_imgpad,
+          NULL);
+    } else {
+      g_object_set (self->output_selector, "active-pad", self->outsel_vidpad,
+          NULL);
+    }
+  }
 
   if (photography) {
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (photography),
@@ -775,8 +833,8 @@ gst_wrapper_camera_bin_src_start_capture (GstBaseCameraSrc * camerasrc)
 
   /* TODO shoud we access this directly? Maybe a macro is better? */
   if (src->mode == MODE_IMAGE) {
-    src->image_capture_count = 1;
     start_image_capture (src);
+    src->image_capture_count = 1;
   } else if (src->mode == MODE_VIDEO) {
     g_mutex_unlock (camerasrc->capturing_mutex);
     gst_wrapper_camera_bin_reset_video_src_caps (src, NULL);
