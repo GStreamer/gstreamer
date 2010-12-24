@@ -1616,11 +1616,9 @@ gst_mpegts_stream_parse_private_section (GstMpegTSStream * stream,
       goto wrong_crc;
 
   /* just dump this down the pad */
-  if (gst_pad_alloc_buffer (stream->pad, 0, datalen, NULL, &buffer) ==
-      GST_FLOW_OK) {
-    memcpy (buffer->data, data, datalen);
-    gst_pad_push (stream->pad, buffer);
-  }
+  buffer = gst_buffer_new_and_alloc (datalen);
+  memcpy (buffer->data, data, datalen);
+  gst_pad_push (stream->pad, buffer);
 
   GST_DEBUG_OBJECT (demux, "parsing private section");
   return TRUE;
