@@ -21,38 +21,11 @@
 #ifndef _DVB_SUB_H_
 #define _DVB_SUB_H_
 
-#include <glib-object.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 
-#define DVB_TYPE_SUB             (dvb_sub_get_type ())
-#define DVB_SUB(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), DVB_TYPE_SUB, DvbSub))
-#define DVB_SUB_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), DVB_TYPE_SUB, DvbSubClass))
-#define DVB_IS_SUB(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), DVB_TYPE_SUB))
-#define DVB_IS_SUB_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), DVB_TYPE_SUB))
-#define DVB_SUB_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), DVB_TYPE_SUB, DvbSubClass))
-
-typedef struct _DvbSubClass DvbSubClass;
 typedef struct _DvbSub DvbSub;
-
-struct _DvbSubClass
-{
-	GObjectClass parent_class;
-};
-
-/**
- * DvbSub:
- *
- * The #DvbSub struct contains only private fields and should not be
- * directly accessed.
- */
-struct _DvbSub
-{
-	GObject parent_instance;
-
-	/*< private >*/
-	gpointer private_data;
-};
 
 /**
  * DVBSubtitlePicture:
@@ -153,10 +126,9 @@ typedef struct {
 	gpointer _dvb_sub_reserved[3];
 } DvbSubCallbacks;
 
-void     dvb_sub_init_debug    (void);
-
-GType    dvb_sub_get_type      (void) G_GNUC_CONST;
 DvbSub  *dvb_sub_new           (void);
+void     dvb_sub_free          (DvbSub * sub);
+
 gint     dvb_sub_feed_with_pts (DvbSub *dvb_sub, guint64 pts, guint8 *data, gint len);
 void     dvb_sub_set_callbacks (DvbSub *dvb_sub, DvbSubCallbacks *callbacks, gpointer user_data);
 void     dvb_subtitles_free    (DVBSubtitles *sub);

@@ -30,20 +30,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dvb-sub.h"
 #include <string.h>             /* memset */
 #include <gst/gstutils.h>       /* GST_READ_UINT16_BE */
 #include <gst/base/gstbitreader.h>      /* GstBitReader */
 #include "ffmpeg-colorspace.h" /* YUV_TO_RGB1_CCIR */   /* FIXME: Just give YUV data to gstreamer then? */
 
+#include "dvb-sub.h"
+
 GST_DEBUG_CATEGORY_STATIC (dvbsub_debug);
 #define GST_CAT_DEFAULT dvbsub_debug
 
-void
-dvb_sub_init_debug (void)
-{
-  GST_DEBUG_CATEGORY_INIT (dvbsub_debug, "dvbsub", 0, "dvbsuboverlay parser");
-}
+static void dvb_sub_init (void);
 
 /* FIXME: Are we waiting for an acquisition point before trying to do things? */
 /* FIXME: In the end convert some of the guint8/16 (especially stack variables) back to gint for access efficiency */
@@ -154,10 +151,12 @@ struct _DvbSubPrivate
   GString *pes_buffer;
   DVBSubtitleWindow display_def;
 };
+struct _DvbSub
+{
+  DvbSubPrivate priv;           // FIXME (tpm)
 
-#define DVB_SUB_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), DVB_TYPE_SUB, DvbSubPrivate))
-
-G_DEFINE_TYPE (DvbSub, dvb_sub, G_TYPE_OBJECT);
+  DvbSubPrivate *private_data;
+};
 
 typedef enum
 {
@@ -280,40 +279,6 @@ delete_state (DvbSub * dvb_sub)
     g_warning ("Memory deallocation error!");
 }
 
-static void
-dvb_sub_init (DvbSub * self)
-{
-  DvbSubPrivate *priv;
-
-  self->private_data = priv = DVB_SUB_GET_PRIVATE (self);
-
-  /* TODO: Add initialization code here */
-  /* FIXME: Do we have a reason to initiate the members to zero, or are we guaranteed that anyway? */
-  priv->region_list = NULL;
-  priv->object_list = NULL;
-  priv->page_time_out = 0;      /* FIXME: Maybe 255 instead? */
-  priv->pes_buffer = g_string_new (NULL);
-
-  /* display/window information */
-  priv->display_def.version = -1;
-  priv->display_def.window_flag = 0;
-  priv->display_def.display_width = 720;
-  priv->display_def.display_height = 576;
-}
-
-static void
-dvb_sub_finalize (GObject * object)
-{
-  DvbSub *self = DVB_SUB (object);
-  DvbSubPrivate *priv = (DvbSubPrivate *) self->private_data;
-  /* TODO: Add deinitalization code here */
-  /* FIXME: Clear up region_list contents */
-  delete_state (self);          /* close_pid should have called this, but lets be sure */
-  g_string_free (priv->pes_buffer, TRUE);
-
-  G_OBJECT_CLASS (dvb_sub_parent_class)->finalize (object);
-}
-
 /* init static data necessary for ffmpeg-colorspace conversion */
 static void
 dsputil_static_init (void)
@@ -329,14 +294,11 @@ dsputil_static_init (void)
 }
 
 static void
-dvb_sub_class_init (DvbSubClass * klass)
+dvb_sub_init (void)
 {
   int i, r, g, b, a = 0;
-  GObjectClass *object_class = (GObjectClass *) klass;
 
-  object_class->finalize = dvb_sub_finalize;
-
-  g_type_class_add_private (klass, sizeof (DvbSubPrivate));
+  GST_DEBUG_CATEGORY_INIT (dvbsub_debug, "dvbsub", 0, "dvbsuboverlay parser");
 
   dsputil_static_init ();       /* Initializes ff_cropTbl table, used in YUV_TO_RGB conversion */
 
@@ -1377,19 +1339,47 @@ dvb_subtitles_free (DVBSubtitles * sub)
   g_slice_free (DVBSubtitles, sub);
 }
 
-/**
- * dvb_sub_new:
- *
- * Creates a new #DvbSub.
- *
- * Return value: a newly created #DvbSub
- */
 DvbSub *
 dvb_sub_new (void)
 {
-  DvbSub *dvbsub = g_object_new (DVB_TYPE_SUB, NULL);
+  static gsize inited = 0;
+  DvbSubPrivate *sub;
+  DvbSub *dvb_sub;
 
-  return dvbsub;
+  if (g_once_init_enter (&inited)) {
+    dvb_sub_init ();
+    g_once_init_leave (&inited, TRUE);
+  }
+
+  dvb_sub = g_slice_new0 (DvbSub);
+  dvb_sub->private_data = &dvb_sub->priv;
+
+  sub = dvb_sub->private_data;
+
+  /* TODO: Add initialization code here */
+  /* FIXME: Do we have a reason to initiate the members to zero, or are we guaranteed that anyway? */
+  sub->region_list = NULL;
+  sub->object_list = NULL;
+  sub->page_time_out = 0;       /* FIXME: Maybe 255 instead? */
+  sub->pes_buffer = g_string_new (NULL);
+
+  /* display/window information */
+  sub->display_def.version = -1;
+  sub->display_def.window_flag = 0;
+  sub->display_def.display_width = 720;
+  sub->display_def.display_height = 576;
+
+  return dvb_sub;
+}
+
+void
+dvb_sub_free (DvbSub * sub)
+{
+  /* TODO: Add deinitalization code here */
+  /* FIXME: Clear up region_list contents */
+  delete_state (sub);
+  g_string_free (sub->private_data->pes_buffer, TRUE);
+  g_slice_free (DvbSub, sub);
 }
 
 #define DVB_SUB_SEGMENT_PAGE_COMPOSITION 0x10
@@ -1528,7 +1518,6 @@ dvb_sub_set_callbacks (DvbSub * dvb_sub, DvbSubCallbacks * callbacks,
   DvbSubPrivate *priv;
 
   g_return_if_fail (dvb_sub != NULL);
-  g_return_if_fail (DVB_IS_SUB (dvb_sub));
   g_return_if_fail (callbacks != NULL);
 
   priv = (DvbSubPrivate *) dvb_sub->private_data;

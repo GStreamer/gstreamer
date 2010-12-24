@@ -168,12 +168,9 @@ gst_dvbsub_overlay_flush_subtitles (GstDVBSubOverlay * render)
   }
 
   if (render->dvb_sub)
-    g_object_unref (render->dvb_sub);
+    dvb_sub_free (render->dvb_sub);
+
   render->dvb_sub = dvb_sub_new ();
-  if (!render->dvb_sub) {
-    GST_WARNING_OBJECT (render, "cannot create dvbsub instance");
-    g_assert_not_reached ();
-  }
 
   {
     DvbSubCallbacks dvbsub_callbacks = { &new_dvb_subtitles_cb, };
@@ -254,9 +251,8 @@ gst_dvbsub_overlay_finalize (GObject * object)
   }
   g_queue_free (overlay->pending_subtitles);
 
-  if (overlay->dvb_sub) {
-    g_object_unref (overlay->dvb_sub);
-  }
+  if (overlay->dvb_sub)
+    dvb_sub_free (overlay->dvb_sub);
 
   if (overlay->dvbsub_mutex)
     g_mutex_free (overlay->dvbsub_mutex);
@@ -1156,8 +1152,6 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_dvbsub_overlay_debug, "dvbsuboverlay",
       0, "DVB subtitle overlay");
-
-  dvb_sub_init_debug ();
 
   return gst_element_register (plugin, "dvbsuboverlay",
       GST_RANK_PRIMARY, GST_TYPE_DVBSUB_OVERLAY);
