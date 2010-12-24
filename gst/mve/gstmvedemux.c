@@ -288,14 +288,11 @@ static GstFlowReturn
 gst_mve_buffer_alloc_for_pad (GstMveDemuxStream * stream,
     guint32 size, GstBuffer ** buffer)
 {
-  GstFlowReturn ret =
-      gst_pad_alloc_buffer_and_set_caps (stream->pad, stream->offset,
-      size, stream->caps, buffer);
-
-  if (ret == GST_FLOW_OK)
-    GST_BUFFER_TIMESTAMP (*buffer) = stream->last_ts;
-
-  return ret;
+  *buffer = gst_buffer_new_and_alloc (size);
+  gst_buffer_set_caps (*buffer, stream->caps);
+  GST_BUFFER_TIMESTAMP (*buffer) = stream->last_ts;
+  GST_BUFFER_OFFSET (*buffer) = stream->offset;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
