@@ -784,7 +784,9 @@ gst_kate_tiger_seek (GstKateTiger * tiger, GstPad * pad, GstEvent * event)
         target = cur / (float) GST_SECOND;
         break;
       case GST_SEEK_TYPE_CUR:
-        target = gst_kate_tiger_get_time (tiger) + cur / (float) GST_SECOND;
+        GST_WARNING_OBJECT (tiger,
+            "Seeking from the current segment, cannot work out target so flushing everything");
+        target = (kate_float) 0;
         break;
       case GST_SEEK_TYPE_END:
         GST_WARNING_OBJECT (tiger,
