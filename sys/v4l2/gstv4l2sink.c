@@ -472,7 +472,7 @@ gst_v4l2sink_change_state (GstElement * element, GstStateChange transition)
         if (!gst_v4l2_object_stop_streaming (v4l2sink->v4l2object)) {
           return GST_STATE_CHANGE_FAILURE;
         }
-        v4l2sink->state = STATE_OFF;
+        v4l2sink->state = STATE_PENDING_STREAMON;
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -482,6 +482,7 @@ gst_v4l2sink_change_state (GstElement * element, GstStateChange transition)
       /* close the device */
       if (!gst_v4l2_object_stop (v4l2sink->v4l2object))
         return GST_STATE_CHANGE_FAILURE;
+      v4l2sink->state = STATE_OFF;
       break;
     default:
       break;
