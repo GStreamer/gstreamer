@@ -131,30 +131,26 @@ static GstStaticPadTemplate kate_sink_factory =
     GST_STATIC_CAPS ("subtitle/x-kate; application/x-kate")
     );
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define TIGER_VIDEO_CAPS \
+    GST_VIDEO_CAPS_xRGB ", endianness = (int)1234; " \
+    GST_VIDEO_CAPS_BGRx ", endianness = (int)4321"
+#else
+#define TIGER_VIDEO_CAPS \
+    GST_VIDEO_CAPS_BGRx ", endianness = (int)4321; " \
+    GST_VIDEO_CAPS_xRGB ", endianness = (int)1234"
+#endif
+
 static GstStaticPadTemplate video_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("video_sink",
+GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB ", endianness = (int) 1234" ";"
-        GST_VIDEO_CAPS_BGRx ", endianness = (int)4321")
-#else
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB ", endianness = (int) 4321" ";"
-        GST_VIDEO_CAPS_BGRx ", endianness = (int)1234")
-#endif
-    );
+    GST_STATIC_CAPS (TIGER_VIDEO_CAPS));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB ", endianness = (int) 1234" ";"
-        GST_VIDEO_CAPS_BGRx ", endianness = (int)4321")
-#else
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB ", endianness = (int) 4321" ";"
-        GST_VIDEO_CAPS_BGRx ", endianness = (int)1234")
-#endif
-    );
+    GST_STATIC_CAPS (TIGER_VIDEO_CAPS));
 
 GST_BOILERPLATE (GstKateTiger, gst_kate_tiger, GstElement, GST_TYPE_ELEMENT);
 
