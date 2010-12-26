@@ -577,7 +577,7 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
   gboolean complete;
 
   g_return_val_if_fail (buffer != NULL, NULL);
-  g_return_val_if_fail (buffer->mini_object.refcount, NULL);
+  g_return_val_if_fail (buffer->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (buffer->size >= offset + size, NULL);
 
   /* find real parent */
@@ -657,8 +657,8 @@ gboolean
 gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
 {
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, FALSE);
-  g_return_val_if_fail (buf1->mini_object.refcount, FALSE);
-  g_return_val_if_fail (buf2->mini_object.refcount, FALSE);
+  g_return_val_if_fail (buf1->mini_object.refcount > 0, FALSE);
+  g_return_val_if_fail (buf2->mini_object.refcount > 0, FALSE);
 
   /* it's only fast if we have subbuffers of the same parent */
   return (GST_IS_SUBBUFFER (buf1) &&
@@ -696,9 +696,9 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
   GstBuffer *newbuf;
 
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, NULL);
-  g_return_val_if_fail (buf1->mini_object.refcount, NULL);
-  g_return_val_if_fail (buf2->mini_object.refcount, NULL);
-  g_return_val_if_fail (len, NULL);
+  g_return_val_if_fail (buf1->mini_object.refcount > 0, NULL);
+  g_return_val_if_fail (buf2->mini_object.refcount > 0, NULL);
+  g_return_val_if_fail (len > 0, NULL);
   g_return_val_if_fail (len <= buf1->size + buf2->size - offset, NULL);
 
   /* if the two buffers have the same parent and are adjacent */

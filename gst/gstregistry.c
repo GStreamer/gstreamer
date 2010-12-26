@@ -1129,7 +1129,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
       /* FIXME 0.11: Don't recurse into directories, this behaviour
        * is inconsistent with other PATH environment variables
        */
-      if (level) {
+      if (level > 0) {
         GST_LOG_OBJECT (context->registry, "recursing into directory %s",
             filename);
         changed |= gst_registry_scan_path_level (context, filename, level - 1);

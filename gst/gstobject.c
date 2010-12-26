@@ -329,7 +329,7 @@ void
 gst_object_unref (gpointer object)
 {
   g_return_if_fail (object != NULL);
-  g_return_if_fail (((GObject *) object)->ref_count);
+  g_return_if_fail (((GObject *) object)->ref_count > 0);
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "%p unref %d->%d", object,

@@ -1172,7 +1172,7 @@ gst_tag_list_get_value_index (const GstTagList * list, const gchar * tag,
       return NULL;
     return gst_value_list_get_value (value, index);
   } else {
-    if (index)
+    if (index > 0)
       return NULL;
     return value;
   }
