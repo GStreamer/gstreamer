@@ -618,7 +618,7 @@ gst_photography_iface_class_init (gpointer g_class)
   g_object_interface_install_property (g_class,
       g_param_spec_flags (GST_PHOTOGRAPHY_PROP_NOISE_REDUCTION,
           "Noise Reduction settings",
-          "Which noise reduction modes are enalbed in Camera (0 = disabled)",
+          "Which noise reduction modes are enabled (0 = disabled)",
           GST_TYPE_PHOTOGRAPHY_NOISE_REDUCTION,
           0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
