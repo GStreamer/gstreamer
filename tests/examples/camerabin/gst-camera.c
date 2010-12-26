@@ -1105,6 +1105,7 @@ format_value_callback (GtkScale * scale, gdouble value, gpointer user_data)
 static gint
 create_menu_items_from_structure (GstStructure * structure)
 {
+  GtkListStore *store;
   const GValue *framerate_list = NULL;
   const gchar *structure_name;
   GString *item_str = NULL;
@@ -1159,12 +1160,10 @@ create_menu_items_from_structure (GstStructure * structure)
       goto range_found;
     }
 
+    store = GTK_LIST_STORE (gtk_combo_box_get_model (ui_cbbox_resolution));
     for (j = 0; j < num_framerates; j++) {
       GstCaps *video_caps;
-#if GTK_CHECK_VERSION (2, 91, 6)
-      GtkListStore *sotre;
       GtkTreeIter iter;
-#endif
 
       if (framerate_list) {
         const GValue *item = gst_value_list_get_value (framerate_list, j);
@@ -1175,13 +1174,8 @@ create_menu_items_from_structure (GstStructure * structure)
       g_string_append_printf (item_str, " (%" GST_FOURCC_FORMAT ")",
           GST_FOURCC_ARGS (fourcc));
       g_string_append_printf (item_str, ", %dx%d at %d/%d", w, h, n, d);
-#if GTK_CHECK_VERSION (2, 91, 6)
-      store = GTK_LIST_STORE (gtk_combo_box_get_model (ui_cbbox_resolution));
       gtk_list_store_append (store, &iter);
       gtk_list_store_set (store, &iter, 0, item_str->str, -1);
-#else
-      gtk_combo_box_append_text (ui_cbbox_resolution, item_str->str);
-#endif
 
       video_caps =
           gst_caps_new_simple (structure_name, "format", GST_TYPE_FOURCC,
