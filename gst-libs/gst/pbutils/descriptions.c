@@ -161,6 +161,7 @@ static const FormatInfo formats[] = {
   {"video/x-compressed-yuv", N_("CYUV Lossless"), 0},
   {"video/x-dirac", "Dirac", 0},
   {"video/x-dnxhd", "Digital Nonlinear Extensible High Definition (DNxHD)", 0},
+  /* FIXME 0.11: rename to subpicture/x-dvd or so */
   {"video/x-dvd-subpicture", "DVD subpicture", 0},
   {"video/x-ffv", N_("FFMpeg v1"), 0},
   {"video/x-flash-screen", "Flash Screen Video", 0},
@@ -235,6 +236,7 @@ static const FormatInfo formats[] = {
   {"application/x-subtitle-tmplayer", N_("TMPlayer subtitle format"), 0},
   {"application/x-kate", "Kate", 0},
   {"subtitle/x-kate", N_("Kate subtitle format"), 0},
+  {"subpicture/x-dvb", "DVB subtitles", 0},
   /* add variant field to typefinder? { "application/x-subtitle", N_("subtitle"), 0}, */
 
   /* non-audio/video/container formats */
