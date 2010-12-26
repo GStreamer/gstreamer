@@ -489,6 +489,55 @@ GST_START_TEST (test_single_video_recording)
 
 GST_END_TEST;
 
+GST_START_TEST (test_multiple_video_recordings)
+{
+  gint i;
+  gint widths[] = { 800, 640, 1280 };
+  gint heights[] = { 600, 480, 1024 };
+  gint fr[] = { 20, 30, 5 };
+
+  if (!camera)
+    return;
+
+  /* Set video recording mode */
+  g_object_set (camera, "mode", 2, NULL);
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
+
+  GST_INFO ("starting capture");
+  fail_unless (camera != NULL);
+  for (i = 0; i < 3; i++) {
+    GstCaps *caps;
+
+    caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
+        widths[i], "height", G_TYPE_INT, heights[i], "framerate",
+        GST_TYPE_FRACTION, fr[i], 1, NULL);
+
+    g_object_set (camera, "video-capture-caps", caps,
+        "location", make_test_file_name (VIDEO_FILENAME, i), NULL);
+
+    gst_caps_unref (caps);
+
+    g_signal_emit_by_name (camera, "start-capture", NULL);
+    g_usleep (VIDEO_DURATION * G_USEC_PER_SEC);
+    g_signal_emit_by_name (camera, "stop-capture", NULL);
+    g_usleep (1 * G_USEC_PER_SEC);
+  }
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  for (i = 0; i < 3; i++) {
+    check_file_validity (VIDEO_FILENAME, i, NULL, widths[i], heights[i]);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_image_video_cycle)
 {
   gint i;
@@ -619,6 +668,7 @@ camerabin_suite (void)
     tcase_add_test (tc_basic, test_single_video_recording);
     tcase_add_test (tc_basic, test_image_video_cycle);
     tcase_add_test (tc_basic, test_multiple_image_captures);
+    tcase_add_test (tc_basic, test_multiple_video_recordings);
   }
 
   return s;
