@@ -449,7 +449,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) I420, "
+        "format = (fourcc) { I420, YV12 }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
     );
@@ -1384,15 +1384,14 @@ static gboolean
 gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstX264Enc *encoder = GST_X264_ENC (GST_OBJECT_PARENT (pad));
+  GstVideoFormat format;
   gint width, height;
   gint fps_num, fps_den;
   gint par_num, par_den;
   gint i;
 
   /* get info from caps */
-  /* only I420 supported for now; so apparently claims x264enc ? */
-  if (!gst_video_format_parse_caps (caps, &encoder->format, &width, &height) ||
-      encoder->format != GST_VIDEO_FORMAT_I420)
+  if (!gst_video_format_parse_caps (caps, &format, &width, &height))
     return FALSE;
   if (!gst_video_parse_caps_framerate (caps, &fps_num, &fps_den))
     return FALSE;
@@ -1401,8 +1400,8 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
     par_den = 1;
   }
 
-  /* If the encoder is initialized, do not
-     reinitialize it again if not necessary */
+  /* If the encoder is initialized, do not reinitialize it again if not
+   * necessary */
   if (encoder->x264enc) {
     if (width == encoder->width && height == encoder->height
         && fps_num == encoder->fps_num && fps_den == encoder->fps_den
@@ -1416,6 +1415,7 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   }
 
   /* store input description */
+  encoder->format = format;
   encoder->width = width;
   encoder->height = height;
   encoder->fps_num = fps_num;
@@ -1423,11 +1423,12 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   encoder->par_num = par_num;
   encoder->par_den = par_den;
 
-  /* prepare a cached image description  */
+  /* prepare a cached image description */
   encoder->image_size = gst_video_format_get_size (encoder->format, width,
       height);
   for (i = 0; i < 3; ++i) {
-    /* only offsets now, is shifted later */
+    /* only offsets now, is shifted later. Offsets will be for Y, U, V so we
+     * can just feed YV12 as I420 to the decoder later */
     encoder->offset[i] = gst_video_format_get_component_offset (encoder->format,
         i, width, height);
     encoder->stride[i] = gst_video_format_get_row_stride (encoder->format,
