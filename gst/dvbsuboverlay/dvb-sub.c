@@ -1185,11 +1185,8 @@ static gint
 _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
     guint8 * buf, gint buf_size, guint64 pts)
 {
-  DVBSubtitles *sub = g_slice_new0 (DVBSubtitles);
-
-  DVBSubRegion *region;
   DVBSubRegionDisplay *display;
-  DVBSubtitleRect *rect;
+  DVBSubtitles *sub;
   DVBSubCLUT *clut;
   guint32 *clut_table;
   int i;
@@ -1198,21 +1195,17 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
 
   GST_DEBUG ("DISPLAY SET END: page_id = %u, length = %d", page_id, buf_size);
 
-  sub->rects = NULL;
+  sub = g_slice_new0 (DVBSubtitles);
+
 #if 0                           /* FIXME: PTS stuff not figured out yet */
   sub->start_display_time = 0;
   sub->end_display_time = priv->page_time_out * 1000;
   sub->format = 0;              /* 0 = graphics */
 #endif
 
+  /* N.B. g_new0() will return NULL if num_rects is 0 */
   sub->num_rects = dvb_sub->display_list_size;
-
-  if (sub->num_rects > 0) {
-    // FIXME-MEMORY-LEAK: This structure is not freed up yet
-    sub->rects = g_malloc0 (sizeof (*sub->rects) * sub->num_rects);     /* GSlice? */
-    for (i = 0; i < sub->num_rects; i++)
-      sub->rects[i] = g_malloc0 (sizeof (*sub->rects[i]));      /* GSlice? */
-  }
+  sub->rects = g_new0 (DVBSubtitleRect, sub->num_rects);
 
   i = 0;
 
@@ -1220,12 +1213,15 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
   sub->display_def = dvb_sub->display_def;
 
   for (display = dvb_sub->display_list; display; display = display->next) {
+    DVBSubtitleRect *rect;
+    DVBSubRegion *region;
+
     region = get_region (dvb_sub, display->region_id);
-    rect = sub->rects[i];
 
     if (!region)
       continue;
 
+    rect = &sub->rects[i];
     rect->x = display->x_pos;
     rect->y = display->y_pos;
     rect->w = region->width;
@@ -1298,18 +1294,14 @@ void
 dvb_subtitles_free (DVBSubtitles * sub)
 {
   int i;
-  DVBSubtitleRect *rect;
 
   if (sub == NULL)
     return;
 
   /* Now free up all the temporary memory we allocated */
   for (i = 0; i < sub->num_rects; ++i) {
-    rect = sub->rects[i];
-
-    g_free (rect->pict.palette);
-    g_free (rect->pict.data);
-    g_free (rect);
+    g_free (sub->rects[i].pict.palette);
+    g_free (sub->rects[i].pict.data);
   }
   g_free (sub->rects);
   g_slice_free (DVBSubtitles, sub);

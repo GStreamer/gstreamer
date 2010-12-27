@@ -527,7 +527,7 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
     gint32 sx = 0, sy;          /* 16.16 fixed point */
     gint32 xstep, ystep;        /* 16.16 fixed point */
 
-    sub_region = subs->rects[counter];
+    sub_region = &subs->rects[counter];
     if (sub_region->y > height || sub_region->x > width)
       continue;
 

@@ -103,8 +103,8 @@ typedef struct DVBSubtitleWindow {
 typedef struct DVBSubtitles {
 	guint64 pts;
 	guint8 page_time_out;
-	unsigned int num_rects;
-	DVBSubtitleRect **rects;
+	guint num_rects;
+	DVBSubtitleRect *rects;
 	DVBSubtitleWindow display_def;
 } DVBSubtitles;
 
