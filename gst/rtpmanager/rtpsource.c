@@ -334,7 +334,7 @@ rtp_source_create_stats (RTPSource * src)
   if (!internal) {
     /* get the last RB we sent */
     gst_structure_set (s,
-        "sent-rb", G_TYPE_BOOLEAN, have_rb,
+        "sent-rb", G_TYPE_BOOLEAN, src->last_rr.is_valid,
         "sent-rb-fractionlost", G_TYPE_UINT, (guint) src->last_rr.fractionlost,
         "sent-rb-packetslost", G_TYPE_INT, (gint) src->last_rr.packetslost,
         "sent-rb-exthighestseq", G_TYPE_UINT,
