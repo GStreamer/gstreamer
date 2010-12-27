@@ -17,7 +17,7 @@ libgstcamerabin2_la_CFLAGS = \
 libgstcamerabin2_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-$(GST_MAJORMINOR).la \
 	$(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-$(GST_MAJORMINOR).la \
-	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR) -lgsttag-$(GST_MAJORMINOR) -lgstapp-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR) -lgsttag-$(GST_MAJORMINOR) -lgstapp-$(GST_MAJORMINOR) -lgstpbutils-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 
 libgstcamerabin2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
