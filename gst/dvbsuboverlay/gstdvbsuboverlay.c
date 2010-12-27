@@ -480,7 +480,7 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
   gint u_offset, u_height, u_width, u_stride;
   gint v_offset, v_height, v_width, v_stride;
   gint scale = 0;
-  gint scale_x, scale_y;        /* 16.16 fixed point */
+  gint scale_x = 0, scale_y = 0;        /* 16.16 fixed point */
 
   y_offset =
       gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0, width,
