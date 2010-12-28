@@ -1325,6 +1325,72 @@ GST_START_TEST (test_async_false_seek)
 
 GST_END_TEST;
 
+static GMutex *handoff_lock;
+static GCond *handoff_cond;
+
+static void
+test_async_false_seek_in_playing_handoff (GstElement * elem, GstBuffer * buf,
+    GstPad * pad, gpointer data)
+{
+  g_mutex_lock (handoff_lock);
+  GST_DEBUG ("Got handoff buffer %p", buf);
+  g_cond_signal (handoff_cond);
+  g_mutex_unlock (handoff_lock);
+}
+
+GST_START_TEST (test_async_false_seek_in_playing)
+{
+  GstElement *pipeline, *source, *sink;
+
+  handoff_lock = g_mutex_new ();
+  handoff_cond = g_cond_new ();
+
+  /* Create gstreamer elements */
+  pipeline = gst_pipeline_new ("test-pipeline");
+  source = gst_element_factory_make ("fakesrc", "fake-source");
+  sink = gst_element_factory_make ("fakesink", "fake-output");
+
+  g_object_set (G_OBJECT (sink), "async", FALSE, NULL);
+  g_object_set (G_OBJECT (sink), "signal-handoffs", TRUE, NULL);
+
+  g_signal_connect (sink, "handoff",
+      G_CALLBACK (test_async_false_seek_in_playing_handoff), NULL);
+
+  /* we add all elements into the pipeline */
+  gst_bin_add_many (GST_BIN (pipeline), source, sink, NULL);
+
+  /* we link the elements together */
+  gst_element_link (source, sink);
+
+  GST_DEBUG ("Now playing");
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  g_mutex_lock (handoff_lock);
+  GST_DEBUG ("wait for handoff buffer");
+  g_cond_wait (handoff_cond, handoff_lock);
+  g_mutex_unlock (handoff_lock);
+
+  GST_DEBUG ("Seeking");
+  fail_unless (gst_element_seek (source, 1.0, GST_FORMAT_BYTES,
+          GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, -1));
+
+  g_mutex_lock (handoff_lock);
+  GST_DEBUG ("wait for handoff buffer");
+  g_cond_wait (handoff_cond, handoff_lock);
+  g_mutex_unlock (handoff_lock);
+
+  GST_DEBUG ("bring pipe to state NULL");
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  GST_DEBUG ("Deleting pipeline");
+  gst_object_unref (GST_OBJECT (pipeline));
+
+  g_mutex_free (handoff_lock);
+  g_cond_free (handoff_cond);
+}
+
+GST_END_TEST;
+
 /* test: try changing state of sinks */
 static Suite *
 gst_sinks_suite (void)
@@ -1359,6 +1425,7 @@ gst_sinks_suite (void)
   tcase_add_test (tc_chain, test_async_done);
   tcase_add_test (tc_chain, test_async_done_eos);
   tcase_add_test (tc_chain, test_async_false_seek);
+  tcase_add_test (tc_chain, test_async_false_seek_in_playing);
 
   return s;
 }
