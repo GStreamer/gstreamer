@@ -1312,7 +1312,6 @@ static void
 gst_camerabin_rewrite_tags_to_bin (GstBin * bin, const GstTagList * list)
 {
   GstElement *setter;
-  GstElementFactory *setter_factory;
   GstIterator *iter;
   GstIteratorResult res = GST_ITERATOR_OK;
   gpointer data;
@@ -1333,7 +1332,6 @@ gst_camerabin_rewrite_tags_to_bin (GstBin * bin, const GstTagList * list)
       case GST_ITERATOR_OK:
         setter = GST_ELEMENT (data);
         GST_LOG ("iterating tag setters: %" GST_PTR_FORMAT, setter);
-        setter_factory = gst_element_get_factory (setter);
         GST_DEBUG ("replacement tags %" GST_PTR_FORMAT, list);
         gst_tag_setter_merge_tags (GST_TAG_SETTER (setter), list,
             GST_TAG_MERGE_REPLACE_ALL);
