@@ -342,6 +342,11 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
   guint w, h, par_d, par_n;
+  guint8 vmaj, vmin, vrev;
+
+  vmaj = data[7];
+  vmin = data[8];
+  vrev = data[9];
 
   w = GST_READ_UINT24_BE (data + 14) & 0xFFFFFF;
   h = GST_READ_UINT24_BE (data + 17) & 0xFFFFFF;
@@ -371,6 +376,12 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
     return FALSE;
   }
 
+  /* The interpretation of the granule position has changed with 3.2.1.
+     The granule is now made from the number of frames encoded, rather than
+     the index of the frame being encoded - so three is a difference of 1. */
+  pad->theora_has_zero_keyoffset =
+      ((vmaj << 16) | (vmin << 8) | vrev) < 0x030201;
+
   pad->caps = gst_caps_new_simple ("video/x-theora", NULL);
 
   if (w > 0 && h > 0) {
@@ -398,9 +409,6 @@ granulepos_to_granule_theora (GstOggStream * pad, gint64 granulepos)
   if (pad->granuleshift != 0) {
     keyindex = granulepos >> pad->granuleshift;
     keyoffset = granulepos - (keyindex << pad->granuleshift);
-    if (keyoffset == 0) {
-      pad->theora_has_zero_keyoffset = TRUE;
-    }
     if (pad->theora_has_zero_keyoffset) {
       keyoffset++;
     }
