@@ -1127,7 +1127,7 @@ handle_options_request (GstRTSPClient * client, GstRTSPUrl * uri,
 
 /* remove duplicate and trailing '/' */
 static void
-santize_uri (GstRTSPUrl * uri)
+sanitize_uri (GstRTSPUrl * uri)
 {
   gint i, len;
   gchar *s, *d;
@@ -1221,7 +1221,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   }
 
   /* sanitize the uri */
-  santize_uri (uri);
+  sanitize_uri (uri);
 
   /* get the session if there is any */
   res = gst_rtsp_message_get_header (request, GST_RTSP_HDR_SESSION, &sessid, 0);
