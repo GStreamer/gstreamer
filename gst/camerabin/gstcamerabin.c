@@ -3520,7 +3520,7 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
         prev_pipe = &camera->preview_pipeline;
         preview_source_filter = &camera->app_preview_source_filter;
         prev_caps = &camera->preview_caps;
-      } else if (camera->mode == MODE_VIDEO) {
+      } else {                  /* MODE VIDEO */
         prev_pipe = &camera->video_preview_pipeline;
         preview_source_filter = &camera->app_video_preview_source_filter;
         prev_caps = &camera->video_preview_caps;
@@ -3562,7 +3562,7 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
           preview_pipe = &camera->preview_pipeline;
           preview_source_filter = &camera->app_preview_source_filter;
           preview_caps = camera->preview_caps;
-        } else if (camera->mode == MODE_VIDEO) {
+        } else {                /* MODE VIDEO */
           preview_pipe = &camera->video_preview_pipeline;
           preview_source_filter = &camera->app_video_preview_source_filter;
           preview_caps = camera->video_preview_caps;
