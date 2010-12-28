@@ -43,7 +43,7 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
 
   n_streams = gst_rtsp_media_n_streams (media);
 
-  rangestr = gst_rtsp_range_to_string (&media->range);
+  rangestr = gst_rtsp_media_get_range_string (media, FALSE);
   gst_sdp_message_add_attribute (sdp, "range", rangestr);
   g_free (rangestr);
 

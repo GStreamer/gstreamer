@@ -353,7 +353,7 @@ collect_media_stats (GstRTSPMedia * media)
     GST_INFO ("stats: position %" GST_TIME_FORMAT ", duration %"
         GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
 
-    if (position == -1 || media->active > 0) {
+    if (position == -1) {
       media->range.min.type = GST_RTSP_TIME_NOW;
       media->range.min.seconds = -1;
     } else {
@@ -558,6 +558,34 @@ gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
     res = NULL;
 
   return res;
+}
+
+/**
+ * gst_rtsp_media_get_range_string:
+ * @media: a #GstRTSPMedia
+ * @play: for the PLAY request
+ *
+ * Get the current range as a string.
+ *
+ * Returns: The range as a string, g_free() after usage.
+ */
+gchar *
+gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play)
+{
+  gchar *result;
+  GstRTSPTimeRange range;
+
+  /* make copy */
+  range = media->range;
+
+  if (!play && media->active > 0) {
+    range.min.type = GST_RTSP_TIME_NOW;
+    range.min.seconds = -1;
+  }
+
+  result = gst_rtsp_range_to_string (&range);
+
+  return result;
 }
 
 /**

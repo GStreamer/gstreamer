@@ -283,6 +283,7 @@ guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);
 GstRTSPMediaStream *  gst_rtsp_media_get_stream       (GstRTSPMedia *media, guint idx);
 
 gboolean              gst_rtsp_media_seek             (GstRTSPMedia *media, GstRTSPTimeRange *range);
+gchar *               gst_rtsp_media_get_range_string (GstRTSPMedia *media, gboolean play);
 
 GstFlowReturn         gst_rtsp_media_stream_rtp       (GstRTSPMediaStream *stream, GstBuffer *buffer);
 GstFlowReturn         gst_rtsp_media_stream_rtcp      (GstRTSPMediaStream *stream, GstBuffer *buffer);

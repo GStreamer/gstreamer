@@ -708,7 +708,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPUrl * uri,
   }
 
   /* add the range */
-  str = gst_rtsp_range_to_string (&media->media->range);
+  str = gst_rtsp_media_get_range_string (media->media, TRUE);
   gst_rtsp_message_take_header (&response, GST_RTSP_HDR_RANGE, str);
 
   send_response (client, session, &response);
