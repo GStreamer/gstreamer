@@ -452,6 +452,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   guint64 out_offset, out_offset_end;
   gboolean delta_unit = FALSE;
 
+  cret = GST_FLOW_OK;
+
   GST_DEBUG_OBJECT (ogg,
       "%p streaming to peer serial %08lx", pad, pad->map.serialno);
 
@@ -467,7 +469,6 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
 
     if ((data[0] & 1) || (data[0] & 3 && pad->map.is_ogm_text)) {
       /* We don't push header packets for OGM */
-      cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
     }
 
@@ -488,7 +489,6 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
         packet->b_o_s ||
         (packet->bytes >= 5 && memcmp (packet->packet, "OVP80", 5) == 0)) {
       /* We don't push header packets for VP8 */
-      cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
     }
     offset = 0;
@@ -570,14 +570,11 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       goto empty_packet;
   }
 
+  if (!pad->added)
+    goto not_added;
+
   buf = gst_buffer_new_and_alloc (packet->bytes - offset - trim);
   gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
-  ret = GST_FLOW_OK;
-
-  /* combine flows */
-  cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
-  if (ret != GST_FLOW_OK)
-    goto no_buffer;
 
   /* set delta flag for OGM content */
   if (delta_unit)
@@ -658,23 +655,17 @@ done:
 empty_packet:
   {
     GST_DEBUG_OBJECT (ogg, "Skipping empty packet");
-    cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
     goto done;
   }
 
 no_timestamp:
   {
     GST_DEBUG_OBJECT (ogg, "skipping packet: no valid granule found yet");
-    cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
     goto done;
   }
-
-no_buffer:
+not_added:
   {
-    GST_DEBUG_OBJECT (ogg,
-        "%p could not get buffer from peer %08lx, %d (%s), combined %d (%s)",
-        pad, pad->map.serialno, ret, gst_flow_get_name (ret),
-        cret, gst_flow_get_name (cret));
+    GST_DEBUG_OBJECT (ogg, "pad not added yet");
     goto done;
   }
 }
