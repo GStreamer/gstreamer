@@ -3239,10 +3239,10 @@ gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
    * anymore */
   GST_PAD_STREAM_LOCK (pad);
   gst_base_sink_reset_qos (basesink);
+  /* and we need to commit our state again on the next
+   * prerolled buffer */
+  basesink->playing_async = TRUE;
   if (basesink->priv->async_enabled) {
-    /* and we need to commit our state again on the next
-     * prerolled buffer */
-    basesink->playing_async = TRUE;
     gst_element_lost_state (GST_ELEMENT_CAST (basesink));
   } else {
     basesink->priv->have_latency = TRUE;
