@@ -48,6 +48,7 @@ enum
 {
   SIGNAL_PREPARED,
   SIGNAL_UNPREPARED,
+  SIGNAL_NEW_STATE,
   SIGNAL_LAST
 };
 
@@ -113,6 +114,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       g_signal_new ("unprepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, unprepared), NULL, NULL,
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+  gst_rtsp_media_signals[SIGNAL_NEW_STATE] =
+      g_signal_new ("new-state", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstRTSPMediaClass, new_state), NULL, NULL,
+      g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 0, G_TYPE_INT);
 
   klass->context = g_main_context_new ();
   klass->loop = g_main_loop_new (klass->context, TRUE);
@@ -1888,16 +1894,22 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   else
     do_state = FALSE;
 
-  GST_INFO ("active %d media %p", media->active, media);
+  GST_INFO ("state %d active %d media %p do_state %d", state, media->active,
+      media, do_state);
 
-  if (do_state && media->target_state != state) {
-    if (state == GST_STATE_NULL) {
-      gst_rtsp_media_unprepare (media);
-    } else {
-      GST_INFO ("state %s media %p", gst_element_state_get_name (state), media);
-      media->target_state = state;
-      ret = gst_element_set_state (media->pipeline, state);
+  if (media->target_state != state) {
+    if (do_state) {
+      if (state == GST_STATE_NULL) {
+        gst_rtsp_media_unprepare (media);
+      } else {
+        GST_INFO ("state %s media %p", gst_element_state_get_name (state),
+            media);
+        media->target_state = state;
+        ret = gst_element_set_state (media->pipeline, state);
+      }
     }
+    g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STATE], 0, state,
+        NULL);
   }
 
   /* remember where we are */

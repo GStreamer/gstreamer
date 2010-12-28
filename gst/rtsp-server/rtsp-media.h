@@ -252,6 +252,8 @@ struct _GstRTSPMediaClass {
   /* signals */
   gboolean     (*prepared)        (GstRTSPMedia *media);
   gboolean     (*unprepared)      (GstRTSPMedia *media);
+
+  gboolean     (*new_state)       (GstRTSPMedia *media, GstState state);
 };
 
 GType                 gst_rtsp_media_get_type         (void);
