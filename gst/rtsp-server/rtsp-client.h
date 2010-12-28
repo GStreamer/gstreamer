@@ -98,15 +98,15 @@ GType                 gst_rtsp_client_get_type          (void);
 
 GstRTSPClient *       gst_rtsp_client_new               (void);
 
-void                  gst_rtsp_client_set_session_pool  (GstRTSPClient *client, 
+void                  gst_rtsp_client_set_session_pool  (GstRTSPClient *client,
                                                          GstRTSPSessionPool *pool);
 GstRTSPSessionPool *  gst_rtsp_client_get_session_pool  (GstRTSPClient *client);
 
-void                  gst_rtsp_client_set_media_mapping (GstRTSPClient *client, 
+void                  gst_rtsp_client_set_media_mapping (GstRTSPClient *client,
                                                          GstRTSPMediaMapping *mapping);
 GstRTSPMediaMapping * gst_rtsp_client_get_media_mapping (GstRTSPClient *client);
 
-gboolean              gst_rtsp_client_accept            (GstRTSPClient *client, 
+gboolean              gst_rtsp_client_accept            (GstRTSPClient *client,
                                                          GIOChannel *channel);
 
 G_END_DECLS
