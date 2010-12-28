@@ -559,11 +559,11 @@ gst_base_rtp_depayload_prepare_push (GstBaseRTPDepayload * filter,
   data.bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
   if (is_list) {
-    gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj),
-        (GstBufferListFunc) set_headers, &data);
+    GstBufferList **blist = obj;
+    gst_buffer_list_foreach (*blist, (GstBufferListFunc) set_headers, &data);
   } else {
-    GstBuffer *buf = GST_BUFFER_CAST (obj);
-    set_headers (&buf, 0, 0, &data);
+    GstBuffer **buf = obj;
+    set_headers (buf, 0, 0, &data);
   }
 
   /* if this is the first buffer send a NEWSEGMENT */
@@ -605,7 +605,7 @@ gst_base_rtp_depayload_push_ts (GstBaseRTPDepayload * filter, guint32 timestamp,
 
   res =
       gst_base_rtp_depayload_prepare_push (filter, TRUE, timestamp, FALSE,
-      out_buf);
+      &out_buf);
 
   if (G_LIKELY (res == GST_FLOW_OK))
     res = gst_pad_push (filter->srcpad, out_buf);
@@ -634,7 +634,7 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * out_buf)
 {
   GstFlowReturn res;
 
-  res = gst_base_rtp_depayload_prepare_push (filter, FALSE, 0, FALSE, out_buf);
+  res = gst_base_rtp_depayload_prepare_push (filter, FALSE, 0, FALSE, &out_buf);
 
   if (G_LIKELY (res == GST_FLOW_OK))
     res = gst_pad_push (filter->srcpad, out_buf);
@@ -662,7 +662,7 @@ gst_base_rtp_depayload_push_list (GstBaseRTPDepayload * filter,
 {
   GstFlowReturn res;
 
-  res = gst_base_rtp_depayload_prepare_push (filter, TRUE, 0, TRUE, out_list);
+  res = gst_base_rtp_depayload_prepare_push (filter, TRUE, 0, TRUE, &out_list);
 
   if (G_LIKELY (res == GST_FLOW_OK))
     res = gst_pad_push_list (filter->srcpad, out_list);
