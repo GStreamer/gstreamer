@@ -3184,6 +3184,10 @@ ebml_check_header (GstTypeFind * tf, const gchar * doctype, int doctype_len)
   if (!data)
     return FALSE;
 
+  /* only check doctype if asked to do so */
+  if (doctype == NULL || doctype_len == 0)
+    return TRUE;
+
   /* the header must contain the doctype. For now, we don't parse the
    * whole header but simply check for the availability of that array
    * of characters inside the header. Not fully fool-proof, but good
@@ -3204,6 +3208,8 @@ matroska_type_find (GstTypeFind * tf, gpointer ununsed)
 {
   if (ebml_check_header (tf, "matroska", 8))
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MATROSKA_CAPS);
+  else if (ebml_check_header (tf, NULL, 0))
+    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, MATROSKA_CAPS);
 }
 
 /*** video/webm ***/
