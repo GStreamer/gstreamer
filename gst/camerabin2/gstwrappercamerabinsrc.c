@@ -57,6 +57,13 @@ static void set_capsfilter_caps (GstWrapperCameraBinSrc * self,
 static void
 gst_wrapper_camera_bin_src_dispose (GObject * object)
 {
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (object);
+
+  if (self->app_vid_src) {
+    gst_object_unref (self->app_vid_src);
+    self->app_vid_src = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -116,7 +123,6 @@ gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
     GstCaps * caps)
 {
   GST_DEBUG_OBJECT (self, "Resetting src caps to %" GST_PTR_FORMAT, caps);
-  /* TODO this won't work on NULL */
   if (self->src_vid_src) {
     gst_element_set_state (self->src_vid_src, GST_STATE_NULL);
     set_capsfilter_caps (self, caps);
@@ -268,6 +274,8 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       goto done;
     }
   }
+  /* we lost the reference */
+  self->app_vid_src = NULL;
 
   /* add a buffer probe to the src elemento to drop EOS from READY->NULL */
   {
@@ -302,15 +310,13 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   /* viewfinder pad */
   vf_pad = gst_element_get_request_pad (tee, "src%d");
   g_object_set (tee, "alloc-pad", vf_pad, NULL);
+  gst_object_unref (vf_pad);
 
   /* the viewfinder should always work, so we add some converters to it */
   if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace"))
     goto done;
   if (!(videoscale = gst_camerabin_create_and_add_element (cbin, "videoscale")))
     goto done;
-
-  gst_object_unref (vf_pad);
-  vf_pad = gst_element_get_static_pad (videoscale, "src");
 
   /* image/video pad from tee */
   tee_capture_pad = gst_element_get_request_pad (tee, "src%d");
@@ -325,6 +331,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     gst_pad_link (tee_capture_pad, pad);
     gst_object_unref (pad);
   }
+  gst_object_unref (tee_capture_pad);
 
   /* Create the 2 output pads for video and image */
   self->outsel_vidpad =
@@ -350,8 +357,10 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
         NULL);
   }
 
-  /* hook-up the vf ghostpads */
+  /* hook-up the vf ghostpad */
+  vf_pad = gst_element_get_static_pad (videoscale, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), vf_pad);
+  gst_object_unref (vf_pad);
 
   gst_pad_set_active (self->vfsrc, TRUE);
   gst_pad_set_active (self->imgsrc, TRUE);      /* XXX ??? */
@@ -446,8 +455,10 @@ adapt_image_capture (GstWrapperCameraBinSrc * self, GstCaps * in_caps)
   }
 
   /* Update capsfilters */
-  gst_caps_replace (&self->image_capture_caps,
-      gst_caps_new_full (new_st, NULL));
+  if (self->image_capture_caps) {
+    gst_caps_unref (self->image_capture_caps);
+  }
+  self->image_capture_caps = gst_caps_new_full (new_st, NULL);
   set_capsfilter_caps (self, self->image_capture_caps);
 
   /* Adjust the capsfilter before crop and videoscale elements if necessary */
@@ -830,7 +841,7 @@ gst_wrapper_camera_bin_src_start_capture (GstBaseCameraSrc * camerasrc)
 {
   GstWrapperCameraBinSrc *src = GST_WRAPPER_CAMERA_BIN_SRC (camerasrc);
 
-  /* TODO shoud we access this directly? Maybe a macro is better? */
+  /* TODO should we access this directly? Maybe a macro is better? */
   if (src->mode == MODE_IMAGE) {
     start_image_capture (src);
     src->image_capture_count = 1;
