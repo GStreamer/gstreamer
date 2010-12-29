@@ -255,6 +255,11 @@ granule_to_granulepos_default (GstOggStream * pad, gint64 granule,
   gint64 keyoffset;
 
   if (pad->granuleshift != 0) {
+    /* If we don't know where the previous keyframe is yet, assume it is
+       at 0 or 1, depending on bitstream version. If nothing else, this
+       avoids getting negative granpos back. */
+    if (keyframe_granule < 0)
+      keyframe_granule = pad->theora_has_zero_keyoffset ? 0 : 1;
     keyoffset = granule - keyframe_granule;
     return (keyframe_granule << pad->granuleshift) | keyoffset;
   } else {
