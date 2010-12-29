@@ -268,7 +268,7 @@ gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec)
   }
 
   /* reset the initial video state */
-  mpeg2dec->format = MPEG2DEC_FORMAT_NONE;
+  mpeg2dec->format = GST_VIDEO_FORMAT_UNKNOWN;
   mpeg2dec->width = -1;
   mpeg2dec->height = -1;
   gst_segment_init (&mpeg2dec->segment, GST_FORMAT_UNDEFINED);
@@ -424,14 +424,14 @@ crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf)
     /* If we don't know about the format, we just return the original
      * buffer.
      */
-    if (mpeg2dec->format == MPEG2DEC_FORMAT_I422 ||
-        mpeg2dec->format == MPEG2DEC_FORMAT_I420 ||
-        mpeg2dec->format == MPEG2DEC_FORMAT_YV12) {
+    if (mpeg2dec->format == GST_VIDEO_FORMAT_Y42B ||
+        mpeg2dec->format == GST_VIDEO_FORMAT_I420 ||
+        mpeg2dec->format == GST_VIDEO_FORMAT_YV12) {
       /*FIXME:  I have tried to use gst_buffer_copy_on_write, but it
        *        still have some artifact, so I'me allocating new buffer
        *        for each frame decoded...
        */
-      if (mpeg2dec->format == MPEG2DEC_FORMAT_I422) {
+      if (mpeg2dec->format == GST_VIDEO_FORMAT_Y42B) {
         outbuf = crop_copy_i422_buffer (mpeg2dec, input);
       } else {
         outbuf = crop_copy_i420_buffer (mpeg2dec, input);
@@ -552,7 +552,7 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
       sequence->height != sequence->chroma_height) {
 
     fourcc = GST_STR_FOURCC ("I420");
-    mpeg2dec->format = MPEG2DEC_FORMAT_I420;
+    mpeg2dec->format = GST_VIDEO_FORMAT_I420;
     mpeg2dec->size =
         I420_SIZE (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
 
@@ -568,7 +568,7 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
     gint halfsize;
 
     fourcc = GST_STR_FOURCC ("Y42B");
-    mpeg2dec->format = MPEG2DEC_FORMAT_I422;
+    mpeg2dec->format = GST_VIDEO_FORMAT_Y42B;
     halfsize = mpeg2dec->decoded_width * mpeg2dec->decoded_height;
     mpeg2dec->size = halfsize * 2;
     mpeg2dec->u_offs = halfsize;
@@ -579,7 +579,7 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
     size = mpeg2dec->decoded_width * mpeg2dec->decoded_height;
 
     fourcc = GST_STR_FOURCC ("Y444");
-    mpeg2dec->format = MPEG2DEC_FORMAT_Y444;
+    mpeg2dec->format = GST_VIDEO_FORMAT_Y444;
     mpeg2dec->size = size * 3;
     mpeg2dec->u_offs = size;
     mpeg2dec->v_offs = size * 2;
