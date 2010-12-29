@@ -460,15 +460,23 @@ gst_rtp_jpeg_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if (media_attr) {
     GValue src = { 0 };
     GValue dest = { 0 };
+    gchar *s;
+
+    /* canonicalise floating point string so we can handle framerate strings
+     * in the form "24.930" or "24,930" irrespective of the current locale */
+    s = g_strdup (media_attr);
+    g_strdelimit (s, ",", '.');
 
     /* convert the float to a fraction */
     g_value_init (&src, G_TYPE_DOUBLE);
-    g_value_set_double (&src, atof (media_attr));
+    g_value_set_double (&src, g_ascii_strtod (s, NULL));
     g_value_init (&dest, GST_TYPE_FRACTION);
     g_value_transform (&src, &dest);
 
     rtpjpegdepay->frate_num = gst_value_get_fraction_numerator (&dest);
     rtpjpegdepay->frate_denom = gst_value_get_fraction_denominator (&dest);
+
+    g_free (s);
   }
 
   return TRUE;
