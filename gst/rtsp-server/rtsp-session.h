@@ -154,6 +154,8 @@ GstRTSPTransport *     gst_rtsp_session_stream_set_transport (GstRTSPSessionStre
 void                   gst_rtsp_session_stream_set_callbacks (GstRTSPSessionStream *stream,
                                                               GstRTSPSendFunc send_rtp,
                                                               GstRTSPSendFunc send_rtcp,
+                                                              GstRTSPSendListFunc send_rtp_list,
+                                                              GstRTSPSendListFunc send_rtcp_list,
                                                               gpointer user_data,
                                                               GDestroyNotify  notify);
 void                   gst_rtsp_session_stream_set_keepalive (GstRTSPSessionStream *stream,

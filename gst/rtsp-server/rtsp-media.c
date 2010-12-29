@@ -1108,10 +1108,42 @@ handle_new_buffer (GstAppSink * sink, gpointer user_data)
   return GST_FLOW_OK;
 }
 
+static GstFlowReturn
+handle_new_buffer_list (GstAppSink * sink, gpointer user_data)
+{
+  GList *walk;
+  GstBufferList *blist;
+  GstRTSPMediaStream *stream;
+
+  blist = gst_app_sink_pull_buffer_list (sink);
+  if (!blist)
+    return GST_FLOW_OK;
+
+  stream = (GstRTSPMediaStream *) user_data;
+
+  for (walk = stream->transports; walk; walk = g_list_next (walk)) {
+    GstRTSPMediaTrans *tr = (GstRTSPMediaTrans *) walk->data;
+
+    if (GST_ELEMENT_CAST (sink) == stream->appsink[0]) {
+      if (tr->send_rtp_list)
+        tr->send_rtp_list (blist, tr->transport->interleaved.min,
+            tr->user_data);
+    } else {
+      if (tr->send_rtcp_list)
+        tr->send_rtcp_list (blist, tr->transport->interleaved.max,
+            tr->user_data);
+    }
+  }
+  gst_buffer_list_unref (blist);
+
+  return GST_FLOW_OK;
+}
+
 static GstAppSinkCallbacks sink_cb = {
   NULL,                         /* not interested in EOS */
   NULL,                         /* not interested in preroll buffers */
-  handle_new_buffer
+  handle_new_buffer,
+  handle_new_buffer_list
 };
 
 /* prepare the pipeline objects to handle @stream in @media */

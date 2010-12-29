@@ -79,7 +79,8 @@ gst_rtsp_session_free_stream (GstRTSPSessionStream * stream)
   GST_INFO ("free session stream %p", stream);
 
   /* remove callbacks now */
-  gst_rtsp_session_stream_set_callbacks (stream, NULL, NULL, NULL, NULL);
+  gst_rtsp_session_stream_set_callbacks (stream, NULL, NULL, NULL, NULL, NULL,
+      NULL);
   gst_rtsp_session_stream_set_keepalive (stream, NULL, NULL, NULL);
 
   gst_rtsp_media_trans_cleanup (&stream->trans);
@@ -549,6 +550,8 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream * stream,
  * @stream: a #GstRTSPSessionStream
  * @send_rtp: a callback called when RTP should be sent
  * @send_rtcp: a callback called when RTCP should be sent
+ * @send_rtp_list: a callback called when RTP should be sent
+ * @send_rtcp_list: a callback called when RTCP should be sent
  * @user_data: user data passed to callbacks
  * @notify: called with the user_data when no longer needed.
  *
@@ -557,11 +560,14 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream * stream,
  */
 void
 gst_rtsp_session_stream_set_callbacks (GstRTSPSessionStream * stream,
-    GstRTSPSendFunc send_rtp, GstRTSPSendFunc send_rtcp, gpointer user_data,
-    GDestroyNotify notify)
+    GstRTSPSendFunc send_rtp, GstRTSPSendFunc send_rtcp,
+    GstRTSPSendListFunc send_rtp_list, GstRTSPSendListFunc send_rtcp_list,
+    gpointer user_data, GDestroyNotify notify)
 {
   stream->trans.send_rtp = send_rtp;
   stream->trans.send_rtcp = send_rtcp;
+  stream->trans.send_rtp_list = send_rtp_list;
+  stream->trans.send_rtcp_list = send_rtcp_list;
   if (stream->trans.notify)
     stream->trans.notify (stream->trans.user_data);
   stream->trans.user_data = user_data;
