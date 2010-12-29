@@ -489,11 +489,9 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
       mpeg2dec->decoded_width, mpeg2dec->decoded_height);
 
   if (mpeg2dec->pixel_width == 0 || mpeg2dec->pixel_height == 0) {
-    GValue par = { 0, }
-    , dar = {
-    0,}
-    , dimensions = {
-    0,};
+    GValue par = { 0, };
+    GValue dar = { 0, };
+    GValue dimensions = { 0, };
 
     /* assume display aspect ratio (DAR) of 4:3 */
     g_value_init (&dar, GST_TYPE_FRACTION);
