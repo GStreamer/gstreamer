@@ -121,7 +121,7 @@ static const GstEventMask *gst_mpeg2dec_get_event_masks (GstPad * pad);
 
 static GstElementClass *parent_class = NULL;
 
-static gboolean crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf);
+static gboolean gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf);
 
 /*static guint gst_mpeg2dec_signals[LAST_SIGNAL] = { 0 };*/
 
@@ -319,137 +319,57 @@ gst_mpeg2dec_get_index (GstElement * element)
 }
 #endif
 
-/* see gst-plugins/gst/games/gstvideoimage.c, paint_setup_I420() */
-#define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
-#define I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
-#define I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
-
-#define I420_Y_OFFSET(w,h) (0)
-#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
-#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-
-#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-
-static GstBuffer *
-crop_copy_i420_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input)
+static gboolean
+gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf)
 {
+  GstBuffer *inbuf = *buf;
   GstBuffer *outbuf;
-  guint8 *dest, *src;
-  guint outsize, line;
+  guint outsize, c;
 
-  outsize = I420_SIZE (mpeg2dec->width, mpeg2dec->height);
-  GST_LOG_OBJECT (mpeg2dec, "Copying input buffer %ux%u (%u) to output buffer "
-      "%ux%u (%u)", mpeg2dec->decoded_width, mpeg2dec->decoded_height,
-      GST_BUFFER_SIZE (input), mpeg2dec->width, mpeg2dec->height, outsize);
+  outsize = gst_video_format_get_size (dec->format, dec->width, dec->height);
+
+  GST_LOG_OBJECT (dec, "Copying input buffer %ux%u (%u) to output buffer "
+      "%ux%u (%u)", dec->decoded_width, dec->decoded_height,
+      GST_BUFFER_SIZE (inbuf), dec->width, dec->height, outsize);
+
   outbuf = gst_buffer_new_and_alloc (outsize);
 
-  /* Copy Y first */
-  src = GST_BUFFER_DATA (input);
-  dest = GST_BUFFER_DATA (outbuf);
-  for (line = 0; line < mpeg2dec->height; line++) {
-    memcpy (dest, src, mpeg2dec->width);
-    dest += I420_Y_ROWSTRIDE (mpeg2dec->width);
-    src += I420_Y_ROWSTRIDE (mpeg2dec->decoded_width);
-  }
+  for (c = 0; c < 3; c++) {
+    const guint8 *src;
+    guint8 *dest;
+    guint stride_in, stride_out;
+    guint c_height, c_width, line;
 
-  /* U */
-  src = GST_BUFFER_DATA (input)
-      + I420_U_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
-  dest = GST_BUFFER_DATA (outbuf)
-      + I420_U_OFFSET (mpeg2dec->width, mpeg2dec->height);
-  for (line = 0; line < mpeg2dec->height / 2; line++) {
-    memcpy (dest, src, mpeg2dec->width / 2);
-    dest += I420_U_ROWSTRIDE (mpeg2dec->width);
-    src += I420_U_ROWSTRIDE (mpeg2dec->decoded_width);
-  }
+    src =
+        GST_BUFFER_DATA (inbuf) +
+        gst_video_format_get_component_offset (dec->format, c,
+        dec->decoded_width, dec->decoded_height);
+    dest =
+        GST_BUFFER_DATA (outbuf) +
+        gst_video_format_get_component_offset (dec->format, c, dec->width,
+        dec->height);
+    stride_out = gst_video_format_get_row_stride (dec->format, c, dec->width);
+    stride_in =
+        gst_video_format_get_row_stride (dec->format, c, dec->decoded_width);
+    c_height =
+        gst_video_format_get_component_width (dec->format, c, dec->height);
+    c_width = gst_video_format_get_component_width (dec->format, c, dec->width);
 
-  /* V */
-  src = GST_BUFFER_DATA (input)
-      + I420_V_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
-  dest = GST_BUFFER_DATA (outbuf)
-      + I420_V_OFFSET (mpeg2dec->width, mpeg2dec->height);
-  for (line = 0; line < mpeg2dec->height / 2; line++) {
-    memcpy (dest, src, mpeg2dec->width / 2);
-    dest += I420_V_ROWSTRIDE (mpeg2dec->width);
-    src += I420_V_ROWSTRIDE (mpeg2dec->decoded_width);
-  }
-
-  return outbuf;
-}
-
-  /* FIXME: this is unlikely to be right stride-wise and offset-wise */
-static GstBuffer *
-crop_copy_i422_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input)
-{
-  GstBuffer *outbuf;
-  guint8 *in_data, *out_data;
-  guint line;
-
-  outbuf = gst_buffer_new_and_alloc (mpeg2dec->width * mpeg2dec->height * 2);
-
-  /* Copy Y first */
-  in_data = GST_BUFFER_DATA (input);
-  out_data = GST_BUFFER_DATA (outbuf);
-  for (line = 0; line < mpeg2dec->height; line++) {
-    memcpy (out_data, in_data, mpeg2dec->width);
-    out_data += mpeg2dec->width;
-    in_data += mpeg2dec->decoded_width;
-  }
-
-  /* Now copy U & V */
-  in_data = GST_BUFFER_DATA (input)
-      + mpeg2dec->decoded_width * mpeg2dec->decoded_height;
-  for (line = 0; line < mpeg2dec->height; line++) {
-    memcpy (out_data, in_data, mpeg2dec->width / 2);
-    memcpy (out_data + mpeg2dec->width * mpeg2dec->height / 2,
-        in_data + mpeg2dec->decoded_width * mpeg2dec->decoded_height / 2,
-        mpeg2dec->width / 2);
-    out_data += mpeg2dec->width / 2;
-    in_data += mpeg2dec->decoded_width / 2;
-  }
-
-  return outbuf;
-}
-
-static gboolean
-crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf)
-{
-  gboolean result = TRUE;
-  GstBuffer *input = *buf;
-  GstBuffer *outbuf;
-
-  /*We crop only if the target region is smaller than the input one */
-  if ((mpeg2dec->decoded_width > mpeg2dec->width) ||
-      (mpeg2dec->decoded_height > mpeg2dec->height)) {
-    /* If we don't know about the format, we just return the original
-     * buffer.
-     */
-    if (mpeg2dec->format == GST_VIDEO_FORMAT_Y42B ||
-        mpeg2dec->format == GST_VIDEO_FORMAT_I420 ||
-        mpeg2dec->format == GST_VIDEO_FORMAT_YV12) {
-      /*FIXME:  I have tried to use gst_buffer_copy_on_write, but it
-       *        still have some artifact, so I'me allocating new buffer
-       *        for each frame decoded...
-       */
-      if (mpeg2dec->format == GST_VIDEO_FORMAT_Y42B) {
-        outbuf = crop_copy_i422_buffer (mpeg2dec, input);
-      } else {
-        outbuf = crop_copy_i420_buffer (mpeg2dec, input);
-      }
-
-      GST_DEBUG ("cropping buffer");
-
-      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mpeg2dec->srcpad));
-      gst_buffer_copy_metadata (outbuf, input,
-          GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
-      gst_buffer_unref (input);
-
-      *buf = outbuf;
-      result = TRUE;
+    for (line = 0; line < c_height; line++) {
+      memcpy (dest, src, c_width);
+      dest += stride_out;
+      src += stride_in;
     }
   }
 
-  return result;
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (dec->srcpad));
+  gst_buffer_copy_metadata (outbuf, inbuf,
+      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
+
+  gst_buffer_unref (*buf);
+  *buf = outbuf;
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -550,40 +470,23 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
 
   if (sequence->width != sequence->chroma_width &&
       sequence->height != sequence->chroma_height) {
-
-    fourcc = GST_STR_FOURCC ("I420");
     mpeg2dec->format = GST_VIDEO_FORMAT_I420;
-    mpeg2dec->size =
-        I420_SIZE (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
-
-    mpeg2dec->u_offs =
-        I420_U_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
-    mpeg2dec->v_offs =
-        I420_V_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
-
   } else if ((sequence->width == sequence->chroma_width &&
           sequence->height != sequence->chroma_height) ||
       (sequence->width != sequence->chroma_width &&
           sequence->height == sequence->chroma_height)) {
-    gint halfsize;
-
-    fourcc = GST_STR_FOURCC ("Y42B");
     mpeg2dec->format = GST_VIDEO_FORMAT_Y42B;
-    halfsize = mpeg2dec->decoded_width * mpeg2dec->decoded_height;
-    mpeg2dec->size = halfsize * 2;
-    mpeg2dec->u_offs = halfsize;
-    mpeg2dec->v_offs = halfsize + (halfsize / 2);
   } else {
-    gint size;
-
-    size = mpeg2dec->decoded_width * mpeg2dec->decoded_height;
-
-    fourcc = GST_STR_FOURCC ("Y444");
     mpeg2dec->format = GST_VIDEO_FORMAT_Y444;
-    mpeg2dec->size = size * 3;
-    mpeg2dec->u_offs = size;
-    mpeg2dec->v_offs = size * 2;
   }
+
+  fourcc = gst_video_format_to_fourcc (mpeg2dec->format);
+  mpeg2dec->size = gst_video_format_get_size (mpeg2dec->format,
+      mpeg2dec->decoded_width, mpeg2dec->decoded_height);
+  mpeg2dec->u_offs = gst_video_format_get_component_offset (mpeg2dec->format, 1,
+      mpeg2dec->decoded_width, mpeg2dec->decoded_height);
+  mpeg2dec->v_offs = gst_video_format_get_component_offset (mpeg2dec->format, 2,
+      mpeg2dec->decoded_width, mpeg2dec->decoded_height);
 
   if (mpeg2dec->pixel_width == 0 || mpeg2dec->pixel_height == 0) {
     GValue par = { 0, }
@@ -1025,8 +928,12 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
    * array of buffers */
   gst_buffer_ref (outbuf);
 
-  /* do cropping if needed */
-  crop_buffer (mpeg2dec, &outbuf);
+  /* do cropping if the target region is smaller than the input one */
+  if (mpeg2dec->decoded_width != mpeg2dec->width ||
+      mpeg2dec->decoded_height != mpeg2dec->height) {
+    GST_DEBUG_OBJECT (mpeg2dec, "cropping buffer");
+    gst_mpeg2dec_crop_buffer (mpeg2dec, &outbuf);
+  }
 
   if (mpeg2dec->segment.rate >= 0.0) {
     /* forward: push right away */
