@@ -2052,6 +2052,7 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
       } else {
         /* client can pick a buffer from the global queue */
         GstBuffer *buf;
+        GstClockTime timestamp;
 
         /* for new connections, we need to find a good spot in the
          * bufqueue to start streaming from */
@@ -2078,10 +2079,11 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
         client->bufpos--;
 
         /* update stats */
+        timestamp = GST_BUFFER_TIMESTAMP (buf);
         if (client->first_buffer_ts == GST_CLOCK_TIME_NONE)
-          client->first_buffer_ts = GST_BUFFER_TIMESTAMP (buf);
-        client->last_buffer_ts = GST_BUFFER_TIMESTAMP (buf);
-
+          client->first_buffer_ts = timestamp;
+        if (timestamp != -1)
+          client->last_buffer_ts = timestamp;
 
         /* decrease flushcount */
         if (client->flushcount != -1)
