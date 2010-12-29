@@ -5436,10 +5436,12 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 
 #define GST_FLOW_OVERFLOW   GST_FLOW_CUSTOM_ERROR
 
+#define MAX_BLOCK_SIZE (15 * 1024 * 1024)
+
 static inline GstFlowReturn
 gst_matroska_demux_check_read_size (GstMatroskaDemux * demux, guint64 bytes)
 {
-  if (G_UNLIKELY (bytes > 10 * 1024 * 1024)) {
+  if (G_UNLIKELY (bytes > MAX_BLOCK_SIZE)) {
     /* only a few blocks are expected/allowed to be large,
      * and will be recursed into, whereas others will be read and must fit */
     if (demux->streaming) {
