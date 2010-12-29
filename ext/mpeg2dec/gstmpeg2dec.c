@@ -319,9 +319,10 @@ gst_mpeg2dec_get_index (GstElement * element)
 }
 #endif
 
-static gboolean
+static GstFlowReturn
 gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf)
 {
+  GstFlowReturn flow_ret;
   GstBuffer *inbuf = *buf;
   GstBuffer *outbuf;
   guint outsize, c;
@@ -332,7 +333,11 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf)
       "%ux%u (%u)", dec->decoded_width, dec->decoded_height,
       GST_BUFFER_SIZE (inbuf), dec->width, dec->height, outsize);
 
-  outbuf = gst_buffer_new_and_alloc (outsize);
+  flow_ret = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
+      GST_BUFFER_OFFSET_NONE, outsize, GST_PAD_CAPS (dec->srcpad), &outbuf);
+
+  if (G_UNLIKELY (flow_ret != GST_FLOW_OK))
+    return flow_ret;
 
   for (c = 0; c < 3; c++) {
     const guint8 *src;
@@ -369,7 +374,7 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf)
   gst_buffer_unref (*buf);
   *buf = outbuf;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -930,7 +935,9 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   if (mpeg2dec->decoded_width != mpeg2dec->width ||
       mpeg2dec->decoded_height != mpeg2dec->height) {
     GST_DEBUG_OBJECT (mpeg2dec, "cropping buffer");
-    gst_mpeg2dec_crop_buffer (mpeg2dec, &outbuf);
+    ret = gst_mpeg2dec_crop_buffer (mpeg2dec, &outbuf);
+    if (ret != GST_FLOW_OK)
+      goto done;
   }
 
   if (mpeg2dec->segment.rate >= 0.0) {
@@ -952,6 +959,8 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
     mpeg2dec->queued = g_list_prepend (mpeg2dec->queued, outbuf);
     ret = GST_FLOW_OK;
   }
+
+done:
 
   return ret;
 
