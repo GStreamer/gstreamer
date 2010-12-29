@@ -226,15 +226,6 @@ gst_wrapper_camera_bin_src_event (GstPad * pad, GstEvent * event)
   return src->srcpad_event_func (pad, event);
 }
 
-static gboolean
-src_event_probe (GstPad * pad, GstEvent * event, gpointer user_data)
-{
-  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    return FALSE;
-  }
-  return TRUE;
-}
-
 /**
  * gst_wrapper_camera_bin_src_construct_pipeline:
  * @bcamsrc: camerasrc object
@@ -283,7 +274,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     pad = gst_element_get_static_pad (self->src_vid_src, "src");
 
     self->src_event_probe_id = gst_pad_add_event_probe (pad,
-        (GCallback) src_event_probe, self);
+        (GCallback) gst_camerabin_drop_eos_probe, NULL);
     gst_object_unref (pad);
   }
 
