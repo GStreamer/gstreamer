@@ -378,7 +378,7 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
 
   /* The interpretation of the granule position has changed with 3.2.1.
      The granule is now made from the number of frames encoded, rather than
-     the index of the frame being encoded - so three is a difference of 1. */
+     the index of the frame being encoded - so there is a difference of 1. */
   pad->theora_has_zero_keyoffset =
       ((vmaj << 16) | (vmin << 8) | vrev) < 0x030201;
 
