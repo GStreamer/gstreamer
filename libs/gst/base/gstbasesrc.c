@@ -490,13 +490,14 @@ gst_base_src_wait_playing (GstBaseSrc * src)
 {
   g_return_val_if_fail (GST_IS_BASE_SRC (src), GST_FLOW_ERROR);
 
-  /* block until the state changes, or we get a flush, or something */
-  GST_DEBUG_OBJECT (src, "live source waiting for running state");
-  GST_LIVE_WAIT (src);
-  if (src->priv->flushing)
-    goto flushing;
-  GST_DEBUG_OBJECT (src, "live source unlocked");
-
+  while (G_UNLIKELY (!src->live_running)) {
+    /* block until the state changes, or we get a flush, or something */
+    GST_DEBUG_OBJECT (src, "live source waiting for running state");
+    GST_LIVE_WAIT (src);
+    GST_DEBUG_OBJECT (src, "live source unlocked");
+    if (src->priv->flushing)
+      goto flushing;
+  }
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -2096,7 +2097,7 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
 
 again:
   if (src->is_live) {
-    while (G_UNLIKELY (!src->live_running)) {
+    if (G_UNLIKELY (!src->live_running)) {
       ret = gst_base_src_wait_playing (src);
       if (ret != GST_FLOW_OK)
         goto stopped;
