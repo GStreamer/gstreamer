@@ -260,7 +260,6 @@ static gboolean gst_rtspsrc_stream_push_event (GstRTSPSrc * src,
     GstRTSPStream * stream, GstEvent * event, gboolean source);
 static gboolean gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event,
     gboolean source);
-static gchar *gst_rtspsrc_dup_printf (const gchar * format, ...);
 
 /* commands we send to out loop to notify it of events */
 #define CMD_WAIT	0
@@ -4968,7 +4967,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     /* if the user wants a non default RTP packet size we add the blocksize
      * parameter */
     if (src->rtp_blocksize > 0) {
-      hval = gst_rtspsrc_dup_printf ("%d", src->rtp_blocksize);
+      hval = g_strdup_printf ("%d", src->rtp_blocksize);
       gst_rtsp_message_add_header (&request, GST_RTSP_HDR_BLOCKSIZE, hval);
       g_free (hval);
     }
@@ -5744,51 +5743,34 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
   return TRUE;
 }
 
-#define USE_POSIX_LOCALE {                              \
-  gchar *__old_locale = g_strdup (setlocale (LC_NUMERIC, NULL)); \
-  setlocale (LC_NUMERIC, "POSIX");
-
-#define RESTORE_LOCALE                                \
-  setlocale (LC_NUMERIC, __old_locale);               \
-  g_free (__old_locale);}
-
-static gchar *
-gst_rtspsrc_dup_printf (const gchar * format, ...)
+static gdouble
+gst_rtspsrc_get_float (const gchar * dstr)
 {
-  gchar *result;
-  va_list varargs;
+  gchar s[G_ASCII_DTOSTR_BUF_SIZE] = { 0, };
 
-  USE_POSIX_LOCALE va_start (varargs, format);
-
-  result = g_strdup_vprintf (format, varargs);
-  va_end (varargs);
-  RESTORE_LOCALE return result;
-}
-
-static gint
-gst_rtspsrc_get_float (const char *str, gfloat * val)
-{
-  gint result;
-
-  USE_POSIX_LOCALE result = sscanf (str, "%f", val);
-  RESTORE_LOCALE return result;
+  /* canonicalise floating point string so we can handle float strings
+   * in the form "24.930" or "24,930" irrespective of the current locale */
+  g_strlcpy (s, dstr, sizeof (s));
+  g_strdelimit (s, ",", '.');
+  return g_ascii_strtod (s, NULL);
 }
 
 static gchar *
 gen_range_header (GstRTSPSrc * src, GstSegment * segment)
 {
-  gchar *res;
+  gchar val_str[G_ASCII_DTOSTR_BUF_SIZE] = { 0, };
 
   if (src->range && src->range->min.type == GST_RTSP_TIME_NOW) {
-    res = g_strdup_printf ("npt=now-");
+    g_strlcpy (val_str, "now", sizeof (val_str));
   } else {
-    if (segment->last_stop == 0)
-      res = g_strdup_printf ("npt=0-");
-    else
-      res = gst_rtspsrc_dup_printf ("npt=%f-",
+    if (segment->last_stop == 0) {
+      g_strlcpy (val_str, "0", sizeof (val_str));
+    } else {
+      g_ascii_dtostr (val_str, sizeof (val_str),
           ((gdouble) segment->last_stop) / GST_SECOND);
+    }
   }
-  return res;
+  return g_strdup_printf ("npt=%s-", val_str);
 }
 
 static void
@@ -5813,7 +5795,6 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   GstRTSPResult res;
   GList *walk;
   gchar *hval;
-  gfloat fval;
   gint hval_idx;
   gchar *control;
 
@@ -5878,12 +5859,13 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
     }
 
     if (segment->rate != 1.0) {
-      hval = gst_rtspsrc_dup_printf ("%f", segment->rate);
+      gchar hval[G_ASCII_DTOSTR_BUF_SIZE];
+
+      g_ascii_dtostr (hval, sizeof (hval), segment->rate);
       if (src->skip)
         gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, hval);
       else
         gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, hval);
-      g_free (hval);
     }
 
     if (gst_rtspsrc_send (src, conn, &request, &response, NULL) < 0)
@@ -5926,12 +5908,10 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
      * and should be put in the NEWSEGMENT rate field. */
     if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SPEED, &hval,
             0) == GST_RTSP_OK) {
-      if (gst_rtspsrc_get_float (hval, &fval) > 0)
-        segment->rate = fval;
+      segment->rate = gst_rtspsrc_get_float (hval);
     } else if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SCALE,
             &hval, 0) == GST_RTSP_OK) {
-      if (gst_rtspsrc_get_float (hval, &fval) > 0)
-        segment->rate = fval;
+      segment->rate = gst_rtspsrc_get_float (hval);
     }
 
     /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
