@@ -80,6 +80,7 @@ REGISTRY_CHECKS =				\
 	elements/multiqueue			\
 	elements/tee			  	\
 	elements/queue                          \
+	elements/valve                          \
 	libs/basesrc				\
 	libs/basesink				\
 	libs/controller				\

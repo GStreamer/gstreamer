@@ -9,4 +9,5 @@ identity
 multiqueue
 queue
 tee
+valve
 *.check.xml
