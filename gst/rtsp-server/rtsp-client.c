@@ -182,6 +182,8 @@ gst_rtsp_client_set_property (GObject * object, guint propid,
  * gst_rtsp_client_new:
  *
  * Create a new #GstRTSPClient instance.
+ *
+ * Returns: a new #GstRTSPClient
  */
 GstRTSPClient *
 gst_rtsp_client_new (void)
