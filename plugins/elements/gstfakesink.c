@@ -133,7 +133,7 @@ static gboolean gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event);
 
 static guint gst_fake_sink_signals[LAST_SIGNAL] = { 0 };
 
-GParamSpec *pspec_last_message = NULL;
+static GParamSpec *pspec_last_message = NULL;
 
 static void
 marshal_VOID__MINIOBJECT_OBJECT (GClosure * closure, GValue * return_value,
