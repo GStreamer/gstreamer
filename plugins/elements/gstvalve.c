@@ -114,10 +114,8 @@ gst_valve_class_init (GstValveClass * klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_valve_get_property);
 
   g_object_class_install_property (gobject_class, ARG_DROP,
-      g_param_spec_boolean ("drop",
-          "Drops all buffers if TRUE",
-          "If this property if TRUE, the element will drop all buffers, "
-          "if its FALSE, it will let them through",
+      g_param_spec_boolean ("drop", "Drop buffers and events",
+          "Whether to drop buffers and events or let them through",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
