@@ -1993,13 +1993,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   if (G_LIKELY (buf) && !pad->is_out_of_order) {
     if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (last_buf) &&
             GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
-      if ((GST_BUFFER_TIMESTAMP (buf) < GST_BUFFER_TIMESTAMP (last_buf)) ||
-          (!GST_CLOCK_TIME_IS_VALID (pad->first_ts) &&
-              GST_BUFFER_DURATION_IS_VALID (last_buf) &&
-              gst_qtmux_check_difference (qtmux,
-                  GST_BUFFER_TIMESTAMP (last_buf) +
-                  GST_BUFFER_DURATION (last_buf), GST_BUFFER_TIMESTAMP (buf),
-                  GST_BUFFER_DURATION (last_buf)))) {
+      if ((GST_BUFFER_TIMESTAMP (buf) < GST_BUFFER_TIMESTAMP (last_buf))) {
         GST_DEBUG_OBJECT (qtmux, "detected out-of-order input");
         pad->is_out_of_order = TRUE;
       }
