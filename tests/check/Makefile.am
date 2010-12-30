@@ -171,7 +171,6 @@ check_PROGRAMS = \
 	$(check_mimic) \
 	elements/rtpmux \
 	$(check_schro) \
-	elements/valve \
 	$(check_vp8) \
 	$(check_zbar) \
 	$(check_orc) \
@@ -234,9 +233,6 @@ elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
 elements_rtpmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_rtpmux_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstrtp-0.10
-
-elements_valve_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-elements_valve_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstrtp-0.10
 
 elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_assrender_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-0.10 -lgstapp-0.10

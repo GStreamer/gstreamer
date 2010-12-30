@@ -122,7 +122,6 @@
     <xi:include href="xml/element-trm.xml" />
     <xi:include href="xml/element-tunnel.xml" />
     <xi:include href="xml/element-twirl.xml" />
-    <xi:include href="xml/element-valve.xml" />
     <xi:include href="xml/element-videoanalyse.xml" />
     <xi:include href="xml/element-videodetect.xml" />
     <xi:include href="xml/element-videomark.xml" />
@@ -215,7 +214,6 @@
     <xi:include href="xml/plugin-swfdec.xml" />
     <xi:include href="xml/plugin-timidity.xml" />
     <xi:include href="xml/plugin-tta.xml" />
-    <xi:include href="xml/plugin-valve.xml" />
     <xi:include href="xml/plugin-vcdsrc.xml" />
     <xi:include href="xml/plugin-videomaxrate.xml" />
     <xi:include href="xml/plugin-videosignal.xml" />

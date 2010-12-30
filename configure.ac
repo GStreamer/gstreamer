@@ -50,8 +50,8 @@ AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.31
-GSTPB_REQ=0.10.31
+GST_REQ=0.10.31.1
+GSTPB_REQ=0.10.31.1
 
 dnl *** autotools stuff ****
 
@@ -178,7 +178,7 @@ AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
 AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.20])
+AG_GST_GLIB_CHECK([2.22])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
@@ -343,7 +343,6 @@ AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
 AG_GST_CHECK_PLUGIN(tta)
-AG_GST_CHECK_PLUGIN(valve)
 AG_GST_CHECK_PLUGIN(videomaxrate)
 AG_GST_CHECK_PLUGIN(videomeasure)
 AG_GST_CHECK_PLUGIN(videosignal)
@@ -1773,7 +1772,6 @@ gst/speed/Makefile
 gst/subenc/Makefile
 gst/stereo/Makefile
 gst/tta/Makefile
-gst/valve/Makefile
 gst/videomaxrate/Makefile
 gst/videomeasure/Makefile
 gst/videosignal/Makefile

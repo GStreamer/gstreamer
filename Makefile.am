@@ -49,12 +49,14 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/aacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/flacparse/.libs/*.{so,dll,DLL,dylib} \
-	$(top_builddir)/gst/shapewipe/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/imagefreeze/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/shapewipe/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/valve/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/sys/oss4/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/tests/check/elements/autocolorspace \
 	$(top_builddir)/tests/check/elements/capssetter \
 	$(top_builddir)/tests/check/elements/imagefreeze \
+	$(top_builddir)/tests/check/elements/valve \
 	$(top_builddir)/tests/check/pipelines/metadata \
 	$(top_builddir)/tests/icles/test-oss4
 
@@ -64,6 +66,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/flacparse \
 	$(top_srcdir)/gst/imagefreeze \
 	$(top_srcdir)/gst/shapewipe \
+	$(top_srcdir)/gst/valve \
 	$(top_srcdir)/tests/examples/shapewipe \
 	$(top_srcdir)/ext/alsaspdif \
 	$(top_srcdir)/ext/ivorbis \
