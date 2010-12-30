@@ -246,5 +246,26 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>valve</name>
+      <longname>Valve element</longname>
+      <class>Filter</class>
+      <description>Drops buffers and events or lets them through</description>
+      <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>

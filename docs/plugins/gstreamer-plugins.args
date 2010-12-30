@@ -894,7 +894,7 @@
 <RANGE>[0,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>High percent</NICK>
-<BLURB>High threshold for buffering to finish.</BLURB>
+<BLURB>High threshold for buffering to finish. Only used if use-buffering is True.</BLURB>
 <DEFAULT>99</DEFAULT>
 </ARG>
 
@@ -904,7 +904,7 @@
 <RANGE>[0,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Low percent</NICK>
-<BLURB>Low threshold for buffering to start.</BLURB>
+<BLURB>Low threshold for buffering to start. Only used if use-buffering is True.</BLURB>
 <DEFAULT>10</DEFAULT>
 </ARG>
 
@@ -996,5 +996,15 @@
 <NICK>Max. ring buffer size (bytes)</NICK>
 <BLURB>Max. amount of data in the ring buffer (bytes, 0 = disabled.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstValve::drop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop buffers and events</NICK>
+<BLURB>Whether to drop buffers and events or let them through.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

@@ -30,6 +30,7 @@
     <xi:include href="xml/element-queue2.xml" />
     <xi:include href="xml/element-tee.xml" />
     <xi:include href="xml/element-typefind.xml" />
+    <xi:include href="xml/element-valve.xml" />
   </chapter>
 
   <chapter>

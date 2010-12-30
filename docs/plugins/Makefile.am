@@ -90,7 +90,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/plugins/elements/gstqueue.h \
 	$(top_srcdir)/plugins/elements/gstqueue2.h \
 	$(top_srcdir)/plugins/elements/gsttypefindelement.h \
-	$(top_srcdir)/plugins/elements/gsttee.h
+	$(top_srcdir)/plugins/elements/gsttee.h \
+	$(top_srcdir)/plugins/elements/gstvalve.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =
