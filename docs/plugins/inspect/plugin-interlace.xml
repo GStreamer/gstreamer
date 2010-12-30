@@ -11,10 +11,10 @@
   <elements>
     <element>
       <name>interlace</name>
-      <longname>Inverse Telecine filter</longname>
+      <longname>Interlace filter</longname>
       <class>Filter/Video</class>
-      <description>Detects and reconstructs progressive content from telecine video</description>
-      <author>Entropy Wave &lt;ds@entropywave.com&gt;</author>
+      <description>Creates an interlaced video from progressive frames</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

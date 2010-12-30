@@ -1,0 +1,34 @@
+<plugin>
+  <name>y4mdec</name>
+  <description>FIXME</description>
+  <filename>../../gst/y4m/.libs/libgsty4mdec.so</filename>
+  <basename>libgsty4mdec.so</basename>
+  <version>0.10.20.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>y4mdec</name>
+      <longname>YUV4MPEG demuxer/decoder</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demuxes/decodes YUV4MPEG streams</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-yuv4mpeg, y4mversion=(int)2</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc){ I420, Y42B, Y444 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

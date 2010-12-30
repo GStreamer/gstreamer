@@ -30,5 +30,26 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>autovideoconvert</name>
+      <longname>Select color space convertor based on caps</longname>
+      <class>Generic/Bin</class>
+      <description>Selects the right color space convertor based on the caps</description>
+      <author>Benjamin Gaignard &lt;benjamin.gaignard@stericsson.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>
