@@ -52,6 +52,8 @@ typedef struct _GstBaseCameraSrcClass GstBaseCameraSrcClass;
 #define GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME "imgsrc"
 #define GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME "vidsrc"
 
+#define GST_BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME "preview-image"
+
 /**
  * GstBaseCameraSrc:
  */

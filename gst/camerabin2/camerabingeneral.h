@@ -23,6 +23,22 @@
 
 #include <gst/gst.h>
 
+typedef struct
+{
+  GstElement *pipeline;
+
+  GstElement *appsrc;
+  GstElement *capsfilter;
+  GstElement *appsink;
+
+  GstElement *element;
+} GstCameraBinPreviewPipelineData;
+
+GstCameraBinPreviewPipelineData *gst_camerabin_create_preview_pipeline (GstElement * element);
+void gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData * preview);
+gboolean gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview, GstBuffer * buffer);
+void gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview, GstCaps * caps);
+
 gboolean gst_camerabin_try_add_element (GstBin * bin, const gchar * srcpad, GstElement * new_elem, const gchar * dstpad);
 gboolean gst_camerabin_add_element (GstBin * bin, GstElement * new_elem);
 gboolean gst_camerabin_add_element_full (GstBin * bin, const gchar * srcpad, GstElement * new_elem, const gchar * dstpad);
