@@ -402,7 +402,8 @@ GST_START_TEST (test_single_image_capture)
   fail_unless (camera != NULL);
   g_signal_emit_by_name (camera, "start-capture", NULL);
 
-  g_usleep (G_USEC_PER_SEC * 3);
+  g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
+  g_main_loop_run (main_loop);
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
   check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0);
@@ -444,7 +445,9 @@ GST_START_TEST (test_multiple_image_captures)
     gst_caps_unref (caps);
 
     g_signal_emit_by_name (camera, "start-capture", NULL);
-    g_usleep (G_USEC_PER_SEC * 1);
+
+    g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
+    g_main_loop_run (main_loop);
   }
 
   g_usleep (G_USEC_PER_SEC * 3);
@@ -478,7 +481,9 @@ GST_START_TEST (test_single_video_recording)
   g_signal_emit_by_name (camera, "start-capture", NULL);
 
   /* Record for one seconds  */
-  g_usleep (VIDEO_DURATION * G_USEC_PER_SEC);
+  g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
+      main_loop);
+  g_main_loop_run (main_loop);
 
   g_signal_emit_by_name (camera, "stop-capture", NULL);
 
@@ -525,9 +530,13 @@ GST_START_TEST (test_multiple_video_recordings)
     gst_caps_unref (caps);
 
     g_signal_emit_by_name (camera, "start-capture", NULL);
-    g_usleep (VIDEO_DURATION * G_USEC_PER_SEC);
+    g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
+        main_loop);
+    g_main_loop_run (main_loop);
     g_signal_emit_by_name (camera, "stop-capture", NULL);
-    g_usleep (1 * G_USEC_PER_SEC);
+
+    g_timeout_add_seconds (1, (GSourceFunc) g_main_loop_quit, main_loop);
+    g_main_loop_run (main_loop);
   }
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
@@ -566,12 +575,15 @@ GST_START_TEST (test_image_video_cycle)
     /* take a picture */
     g_object_set (camera, "mode", 1, NULL);
     g_signal_emit_by_name (camera, "start-capture", NULL);
-    g_usleep (G_USEC_PER_SEC * 3);
+    g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
+    g_main_loop_run (main_loop);
 
     /* now go to video */
     g_object_set (camera, "mode", 2, NULL);
     g_signal_emit_by_name (camera, "start-capture", NULL);
-    g_usleep (G_USEC_PER_SEC * 5);
+    g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
+        main_loop);
+    g_main_loop_run (main_loop);
     g_signal_emit_by_name (camera, "stop-capture", NULL);
 
     /* wait for capture to finish */
