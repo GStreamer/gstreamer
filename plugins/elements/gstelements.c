@@ -35,6 +35,8 @@
 #include "gstfilesink.h"
 #include "gstfilesrc.h"
 #include "gstidentity.h"
+#include "gstinputselector.h"
+#include "gstoutputselector.h"
 #include "gstmultiqueue.h"
 #include "gstqueue.h"
 #include "gstqueue2.h"
@@ -60,6 +62,8 @@ static struct _elements_entry _elements[] = {
 #endif
   {"filesrc", GST_RANK_PRIMARY, gst_file_src_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
+  {"input-selector", GST_RANK_NONE, gst_input_selector_get_type},
+  {"output-selector", GST_RANK_NONE, gst_output_selector_get_type},
   {"queue", GST_RANK_NONE, gst_queue_get_type},
   {"queue2", GST_RANK_NONE, gst_queue2_get_type},
   {"filesink", GST_RANK_PRIMARY, gst_file_sink_get_type},
