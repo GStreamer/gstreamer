@@ -51,7 +51,7 @@ typedef struct _TENTACLE_FX_DATA
   /* statics from pretty_move */
   float distt;
   float distt2;
-  float rot;                    /* entre 0 et 2 * M_PI */
+  float rot;                    /* entre 0 et 2 * G_PI */
   int happens;
   int rotation;
   int lock;
@@ -85,7 +85,7 @@ tentacle_fx_init (VisualFX * _this, PluginInfo * info)
 
   data->distt = 10.0f;
   data->distt2 = 0.0f;
-  data->rot = 0.0f;             /* entre 0 et 2 * M_PI */
+  data->rot = 0.0f;             /* entre 0 et 2 * G_PI */
   data->happens = 0;
 
   data->rotation = 0;
@@ -253,27 +253,27 @@ pretty_move (PluginInfo * goomInfo, float cycle, float *dist, float *dist2,
   *dist = fx_data->distt = (tmp + 3.0f * fx_data->distt) / 4.0f;
 
   if (!fx_data->happens) {
-    tmp = M_PI * sin (cycle) / 32 + 3 * M_PI / 2;
+    tmp = G_PI * sin (cycle) / 32 + 3 * G_PI / 2;
   } else {
     fx_data->rotation =
         goom_irand (goomInfo->gRandom,
         500) ? fx_data->rotation : goom_irand (goomInfo->gRandom, 2);
     if (fx_data->rotation)
-      cycle *= 2.0f * M_PI;
+      cycle *= 2.0f * G_PI;
     else
-      cycle *= -1.0f * M_PI;
-    tmp = cycle - (M_PI * 2.0) * floor (cycle / (M_PI * 2.0));
+      cycle *= -1.0f * G_PI;
+    tmp = cycle - (G_PI * 2.0) * floor (cycle / (G_PI * 2.0));
   }
 
-  if (abs (tmp - fx_data->rot) > abs (tmp - (fx_data->rot + 2.0 * M_PI))) {
-    fx_data->rot = (tmp + 15.0f * (fx_data->rot + 2 * M_PI)) / 16.0f;
-    if (fx_data->rot > 2.0 * M_PI)
-      fx_data->rot -= 2.0 * M_PI;
+  if (abs (tmp - fx_data->rot) > abs (tmp - (fx_data->rot + 2.0 * G_PI))) {
+    fx_data->rot = (tmp + 15.0f * (fx_data->rot + 2 * G_PI)) / 16.0f;
+    if (fx_data->rot > 2.0 * G_PI)
+      fx_data->rot -= 2.0 * G_PI;
     *rotangle = fx_data->rot;
-  } else if (abs (tmp - fx_data->rot) > abs (tmp - (fx_data->rot - 2.0 * M_PI))) {
-    fx_data->rot = (tmp + 15.0f * (fx_data->rot - 2.0 * M_PI)) / 16.0f;
+  } else if (abs (tmp - fx_data->rot) > abs (tmp - (fx_data->rot - 2.0 * G_PI))) {
+    fx_data->rot = (tmp + 15.0f * (fx_data->rot - 2.0 * G_PI)) / 16.0f;
     if (fx_data->rot < 0.0f)
-      fx_data->rot += 2.0 * M_PI;
+      fx_data->rot += 2.0 * G_PI;
     *rotangle = fx_data->rot;
   } else
     *rotangle = fx_data->rot = (tmp + 15.0f * fx_data->rot) / 16.0f;

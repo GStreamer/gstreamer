@@ -255,7 +255,7 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
       (self->mode == MODE_BAND_PASS) ? "band-pass" : "band-reject");
 
   /* fill the lp kernel */
-  w = 2 * M_PI * (self->lower_frequency / GST_AUDIO_FILTER (self)->format.rate);
+  w = 2 * G_PI * (self->lower_frequency / GST_AUDIO_FILTER (self)->format.rate);
   kernel_lp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
     if (i == len / 2)
@@ -265,11 +265,11 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
           / (i - len / 2);
     /* Windowing */
     if (self->window == WINDOW_HAMMING)
-      kernel_lp[i] *= (0.54 - 0.46 * cos (2 * M_PI * i / len));
+      kernel_lp[i] *= (0.54 - 0.46 * cos (2 * G_PI * i / len));
     else
       kernel_lp[i] *=
-          (0.42 - 0.5 * cos (2 * M_PI * i / len) +
-          0.08 * cos (4 * M_PI * i / len));
+          (0.42 - 0.5 * cos (2 * G_PI * i / len) +
+          0.08 * cos (4 * G_PI * i / len));
   }
 
   /* normalize for unity gain at DC */
@@ -280,7 +280,7 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
     kernel_lp[i] /= sum;
 
   /* fill the hp kernel */
-  w = 2 * M_PI * (self->upper_frequency / GST_AUDIO_FILTER (self)->format.rate);
+  w = 2 * G_PI * (self->upper_frequency / GST_AUDIO_FILTER (self)->format.rate);
   kernel_hp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
     if (i == len / 2)
@@ -290,11 +290,11 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
           / (i - len / 2);
     /* Windowing */
     if (self->window == WINDOW_HAMMING)
-      kernel_hp[i] *= (0.54 - 0.46 * cos (2 * M_PI * i / len));
+      kernel_hp[i] *= (0.54 - 0.46 * cos (2 * G_PI * i / len));
     else
       kernel_hp[i] *=
-          (0.42 - 0.5 * cos (2 * M_PI * i / len) +
-          0.08 * cos (4 * M_PI * i / len));
+          (0.42 - 0.5 * cos (2 * G_PI * i / len) +
+          0.08 * cos (4 * G_PI * i / len));
   }
 
   /* normalize for unity gain at DC */

@@ -161,14 +161,14 @@ setOpmap (gint8 * opmap[4], gint width, gint height)
 #endif
 
       opmap[OP_SPIRAL1][i] = ((guint)
-          ((at / M_PI * 256) + (r * 4000))) & 255;
+          ((at / G_PI * 256) + (r * 4000))) & 255;
 
       j = r * 300 / 32;
       rr = r * 300 - j * 32;
       j *= 64;
       j += (rr > 28) ? (rr - 28) * 16 : 0;
       opmap[OP_SPIRAL2][i] = ((guint)
-          ((at / M_PI * 4096) + (r * 1600) - j)) & 255;
+          ((at / G_PI * 4096) + (r * 1600) - j)) & 255;
 
       opmap[OP_PARABOLA][i] =
           ((guint) (yy / (xx * xx * 0.3 + 0.1) * 400)) & 255;

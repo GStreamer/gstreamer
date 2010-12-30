@@ -63,7 +63,7 @@ on_rate_changed (GstElement * element, gint rate, gpointer user_data)
   gdouble x;
 
   if (rate / 2.0 > CUTOFF)
-    x = exp (-2.0 * M_PI * (CUTOFF / rate));
+    x = exp (-2.0 * G_PI * (CUTOFF / rate));
   else
     x = 0.0;
 

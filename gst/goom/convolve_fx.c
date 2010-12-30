@@ -76,7 +76,7 @@ compute_tables (VisualFX * _this, PluginInfo * info)
   data->h_height = info->screen.height;
 
   for (i = 0; i < NB_THETA; i++) {
-    radian = 2 * i * M_PI / NB_THETA;
+    radian = 2 * i * G_PI / NB_THETA;
     h = (0.2 + cos (radian) / 15.0 * sin (radian * 2.0 + 12.123)) * screen_coef;
     data->h_cos[i] = 0x10000 * (-h * cos (radian) * cos (radian));
     data->h_sin[i] = 0x10000 * (h * sin (radian + 1.57) * sin (radian));

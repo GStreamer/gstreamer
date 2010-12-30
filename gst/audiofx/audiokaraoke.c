@@ -179,8 +179,8 @@ update_filter (GstAudioKaraoke * filter, gint rate)
   if (rate == 0)
     return;
 
-  C = exp (-2 * M_PI * filter->filter_width / rate);
-  B = -4 * C / (1 + C) * cos (2 * M_PI * filter->filter_band / rate);
+  C = exp (-2 * G_PI * filter->filter_width / rate);
+  B = -4 * C / (1 + C) * cos (2 * G_PI * filter->filter_band / rate);
   A = sqrt (1 - B * B / (4 * C)) * (1 - C);
 
   filter->A = A;

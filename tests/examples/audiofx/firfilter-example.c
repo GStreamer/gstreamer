@@ -90,7 +90,7 @@ on_rate_changed (GstElement * element, gint rate, gpointer user_data)
    * a better result than given from the rectangular window
    */
   for (i = 0; i < 32; i++)
-    filter_kernel[i] *= (0.54 - 0.46 * cos (2 * M_PI * i / 32));
+    filter_kernel[i] *= (0.54 - 0.46 * cos (2 * G_PI * i / 32));
 
   va = g_value_array_new (1);
 
