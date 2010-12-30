@@ -51,11 +51,7 @@
 #include <gst/controller/gstcontroller.h>
 #include <gst/interfaces/colorbalance.h>
 
-#ifndef M_PI
-#define M_PI  3.14159265358979323846
-#endif
-
-#ifdef G_OS_WIN32
+#ifndef HAVE_RINT
 #define rint(x) (floor((x)+0.5))
 #endif
 
@@ -170,8 +166,8 @@ gst_video_balance_update_tables (GstVideoBalance * vb)
     vb->tabley[i] = rint (y);
   }
 
-  hue_cos = cos (M_PI * vb->hue);
-  hue_sin = sin (M_PI * vb->hue);
+  hue_cos = cos (G_PI * vb->hue);
+  hue_sin = sin (G_PI * vb->hue);
 
   /* U/V lookup tables are 2D, since we need both U/V for each table
    * separately. */
