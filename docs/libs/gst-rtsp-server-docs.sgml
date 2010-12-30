@@ -16,6 +16,7 @@
   <chapter>
     <xi:include href="xml/rtsp-client.xml"/>
     <xi:include href="xml/rtsp-media-factory.xml"/>
+    <xi:include href="xml/rtsp-media-factory-uri.xml"/>
     <xi:include href="xml/rtsp-media-mapping.xml"/>
     <xi:include href="xml/rtsp-media.xml"/>
     <xi:include href="xml/rtsp-params.xml"/>

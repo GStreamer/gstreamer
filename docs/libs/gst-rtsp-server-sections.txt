@@ -46,6 +46,30 @@ GST_RTSP_MEDIA_FACTORY_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>rtsp-media-factory-uri</FILE>
+<TITLE>GstRTSPMediaFactoryURI</TITLE>
+GST_RTSP_MEDIA_FACTORY_GET_LOCK
+GST_RTSP_MEDIA_FACTORY_LOCK
+GST_RTSP_MEDIA_FACTORY_UNLOCK
+GstRTSPMediaFactoryURI
+GstRTSPMediaFactoryURIClass
+gst_rtsp_media_factory_uri_new
+gst_rtsp_media_factory_uri_set_uri
+gst_rtsp_media_factory_uri_get_uri
+<SUBSECTION Standard>
+GST_IS_RTSP_MEDIA_FACTORY_URI
+GST_IS_RTSP_MEDIA_FACTORY_URI_CLASS
+GST_RTSP_MEDIA_FACTORY_URI
+GST_RTSP_MEDIA_FACTORY_URI_CAST
+GST_RTSP_MEDIA_FACTORY_URI_CLASS
+GST_RTSP_MEDIA_FACTORY_URI_CLASS_CAST
+GST_RTSP_MEDIA_FACTORY_URI_GET_CLASS
+GST_TYPE_RTSP_MEDIA_FACTORY_URI
+gst_rtsp_media_factory_uri_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>rtsp-media</FILE>
 <TITLE>GstRTSPMedia</TITLE>
 GstRTSPMediaStream
@@ -53,6 +77,7 @@ GstRTSPMedia
 GstRTSPMediaClass
 GstRTSPMediaTrans
 GstRTSPSendFunc
+GstRTSPSendListFunc
 GstRTSPKeepAliveFunc
 GstRTSPMediaStatus
 gst_rtsp_media_new
@@ -70,6 +95,7 @@ gst_rtsp_media_unprepare
 gst_rtsp_media_n_streams
 gst_rtsp_media_get_stream
 gst_rtsp_media_seek
+gst_rtsp_media_get_range_string
 gst_rtsp_media_stream_rtp
 gst_rtsp_media_stream_rtcp
 gst_rtsp_media_set_state
