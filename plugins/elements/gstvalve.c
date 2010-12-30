@@ -1,4 +1,4 @@
-/* GStreamer
+/* GStreamer valve element
  *  Copyright 2007-2009 Collabora Ltd
  *   @author: Olivier Crete <olivier.crete@collabora.co.uk>
  *  Copyright 2007-2009 Nokia Corporation
@@ -30,7 +30,12 @@
  * is ignored. So downstream element can be set to  %GST_STATE_NULL and removed,
  * without using pad blocking.
  *
- * Last reviewed on 2008-02-10 (0.10.11)
+ * This element was previously part of gst-plugins-farsight, and then
+ * gst-plugins-bad.
+ *
+ * Since: 0.10.32
+ *
+ * Documentation last reviewed on 2010-12-30 (0.10.31)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,7 +46,7 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY (valve_debug);
+GST_DEBUG_CATEGORY_STATIC (valve_debug);
 #define GST_CAT_DEFAULT (valve_debug)
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -54,21 +59,13 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-/* Valve signals and args */
 enum
 {
-  /* FILL ME */
-  LAST_SIGNAL
+  PROP_0,
+  PROP_DROP
 };
 
-enum
-{
-  ARG_0,
-  ARG_DROP,
-};
-
-
-
+#define DEFAULT_DROP FALSE
 
 static void gst_valve_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -98,8 +95,7 @@ gst_valve_base_init (gpointer klass)
       gst_static_pad_template_get (&sinktemplate));
 
   gst_element_class_set_details_simple (element_class, "Valve element",
-      "Filter",
-      "This element drops all packets when drop is TRUE",
+      "Filter", "Drops buffers and events or lets them through",
       "Olivier Crete <olivier.crete@collabora.co.uk>");
 }
 
@@ -110,13 +106,13 @@ gst_valve_class_init (GstValveClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_valve_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_valve_get_property);
+  gobject_class->set_property = gst_valve_set_property;
+  gobject_class->get_property = gst_valve_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_DROP,
+  g_object_class_install_property (gobject_class, PROP_DROP,
       g_param_spec_boolean ("drop", "Drop buffers and events",
           "Whether to drop buffers and events or let them through",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_DROP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -150,7 +146,7 @@ gst_valve_set_property (GObject * object,
   GstValve *valve = GST_VALVE (object);
 
   switch (prop_id) {
-    case ARG_DROP:
+    case PROP_DROP:
       g_atomic_int_set (&valve->drop, g_value_get_boolean (value));
       break;
     default:
@@ -166,7 +162,7 @@ gst_valve_get_property (GObject * object,
   GstValve *valve = GST_VALVE (object);
 
   switch (prop_id) {
-    case ARG_DROP:
+    case PROP_DROP:
       g_value_set_boolean (value, g_atomic_int_get (&valve->drop));
       break;
     default:

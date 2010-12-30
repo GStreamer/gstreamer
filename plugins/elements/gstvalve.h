@@ -1,5 +1,4 @@
-/*
- * Farsight Voice+Video library
+/* GStreamer valve element
  *
  *  Copyright 2007 Collabora Ltd, 
  *  Copyright 2007 Nokia Corporation
@@ -41,14 +40,16 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VALVE))
 #define GST_IS_VALVE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VALVE))
+
 typedef struct _GstValve GstValve;
 typedef struct _GstValveClass GstValveClass;
-typedef struct _GstValvePrivate GstValvePrivate;
 
 /**
  * GstValve:
  *
  * The private valve structure
+ *
+ * Since: 0.10.32
  */
 struct _GstValve
 {
@@ -63,20 +64,15 @@ struct _GstValve
 
   GstPad *srcpad;
   GstPad *sinkpad;
-
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstValveClass
 {
   GstElementClass parent_class;
-
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_valve_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_VALVE_H__ */
