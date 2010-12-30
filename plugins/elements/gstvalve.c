@@ -268,17 +268,3 @@ gst_valve_getcaps (GstPad * pad)
 
   return caps;
 }
-
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "valve",
-      GST_RANK_MARGINAL, GST_TYPE_VALVE);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "valve",
-    "Valve",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

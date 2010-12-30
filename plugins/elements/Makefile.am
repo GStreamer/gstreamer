@@ -12,11 +12,12 @@ libgstcoreelements_la_SOURCES =	\
 	gstfilesink.c		\
 	gstfilesrc.c		\
 	gstidentity.c		\
+	gstmultiqueue.c		\
 	gstqueue.c		\
 	gstqueue2.c		\
 	gsttee.c		\
 	gsttypefindelement.c	\
-	gstmultiqueue.c
+	gstvalve.c
 
 libgstcoreelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstcoreelements_la_LIBADD = \
@@ -34,11 +35,12 @@ noinst_HEADERS =		\
 	gstfilesink.h		\
 	gstfilesrc.h		\
 	gstidentity.h		\
+	gstmultiqueue.h		\
 	gstqueue.h		\
 	gstqueue2.h		\
 	gsttee.h		\
 	gsttypefindelement.h	\
-	gstmultiqueue.h
+	gstvalve.h
 
 EXTRA_DIST = gstfdsrc.c \
 	     gstfdsink.c
