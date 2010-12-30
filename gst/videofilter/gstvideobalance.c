@@ -55,7 +55,7 @@
 #define M_PI  3.14159265358979323846
 #endif
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #define rint(x) (floor((x)+0.5))
 #endif
 
