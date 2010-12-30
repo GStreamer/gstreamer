@@ -60,6 +60,8 @@ struct _GstCameraBin
   gint mode;
   gchar *video_location;
   gchar *image_location;
+  gboolean post_previews;
+  GstCaps *preview_caps;
 
   gboolean elements_created;
 };

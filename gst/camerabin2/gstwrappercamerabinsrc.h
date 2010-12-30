@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
+#include "camerabingeneral.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_WRAPPER_CAMERA_BIN_SRC \
@@ -107,6 +108,11 @@ struct _GstWrapperCameraBinSrc
   GstCaps *image_capture_caps;
   gboolean image_renegotiate;
   gboolean video_renegotiate;
+
+  /* Preview convert pipeline */
+  GstCameraBinPreviewPipelineData *preview_pipeline;
+  gboolean post_previews;
+  GstCaps *preview_caps;
 };
 
 

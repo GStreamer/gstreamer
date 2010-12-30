@@ -66,7 +66,9 @@ enum
   PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
   PROP_VIDEO_CAPTURE_SUPPORTED_CAPS,
   PROP_IMAGE_CAPTURE_CAPS,
-  PROP_VIDEO_CAPTURE_CAPS
+  PROP_VIDEO_CAPTURE_CAPS,
+  PROP_POST_PREVIEWS,
+  PROP_PREVIEW_CAPS
 };
 
 enum
@@ -82,6 +84,7 @@ static guint camerabin_signals[LAST_SIGNAL];
 #define DEFAULT_MODE MODE_IMAGE
 #define DEFAULT_VID_LOCATION "vid_%d"
 #define DEFAULT_IMG_LOCATION "img_%d"
+#define DEFAULT_POST_PREVIEWS TRUE
 
 /********************************
  * Standard GObject boilerplate *
@@ -328,6 +331,15 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           "Caps for video capture",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_POST_PREVIEWS,
+      g_param_spec_boolean ("post-previews", "Post Previews",
+          "If capture preview images should be posted to the bus",
+          DEFAULT_POST_PREVIEWS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_PREVIEW_CAPS,
+      g_param_spec_boxed ("preview-caps", "Preview caps",
+          "The caps of the preview image to be posted",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin::capture-start:
@@ -357,6 +369,7 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
 static void
 gst_camera_bin_init (GstCameraBin * camera)
 {
+  camera->post_previews = DEFAULT_POST_PREVIEWS;
   camera->mode = DEFAULT_MODE;
   camera->video_location = g_strdup (DEFAULT_VID_LOCATION);
   camera->image_location = g_strdup (DEFAULT_IMG_LOCATION);
@@ -465,6 +478,12 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
 
   g_assert (camera->src != NULL);
   g_object_set (camera->src, "mode", camera->mode, NULL);
+  if (camera->src
+      && g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src),
+          "preview-caps")) {
+    g_object_set (camera->src, "post-previews", camera->post_previews,
+        "preview-caps", camera->preview_caps, NULL);
+  }
   if (new_src) {
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->src));
     camera->src_capture_notify_id = g_signal_connect (G_OBJECT (camera->src),
@@ -603,6 +622,22 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       }
     }
       break;
+    case PROP_POST_PREVIEWS:
+      camera->post_previews = g_value_get_boolean (value);
+      if (camera->src
+          && g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src),
+              "post-previews"))
+        g_object_set (camera->src, "post-previews", camera->post_previews,
+            NULL);
+      break;
+    case PROP_PREVIEW_CAPS:
+      gst_caps_replace (&camera->preview_caps,
+          (GstCaps *) gst_value_get_caps (value));
+      if (camera->src
+          && g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src),
+              "preview-caps"))
+        g_object_set (camera->src, "preview-caps", camera->preview_caps, NULL);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -677,6 +712,13 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       gst_value_set_caps (value, caps);
       gst_caps_unref (caps);
     }
+      break;
+    case PROP_POST_PREVIEWS:
+      g_value_set_boolean (value, camera->post_previews);
+      break;
+    case PROP_PREVIEW_CAPS:
+      if (camera->preview_caps)
+        gst_value_set_caps (value, camera->preview_caps);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

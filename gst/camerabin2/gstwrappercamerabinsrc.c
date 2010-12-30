@@ -38,9 +38,12 @@ enum
 {
   PROP_0,
   PROP_VIDEO_SRC,
+  PROP_POST_PREVIEWS,
+  PROP_PREVIEW_CAPS
 };
 
 #define CAMERABIN_DEFAULT_VF_CAPS "video/x-raw-yuv,format=(fourcc)I420"
+#define DEFAULT_POST_PREVIEWS TRUE
 
 /* Using "bilinear" as default zoom method */
 #define CAMERABIN_DEFAULT_ZOOM_METHOD 1
@@ -62,6 +65,11 @@ gst_wrapper_camera_bin_src_dispose (GObject * object)
   if (self->app_vid_src) {
     gst_object_unref (self->app_vid_src);
     self->app_vid_src = NULL;
+  }
+
+  if (self->preview_pipeline) {
+    gst_camerabin_destroy_preview_pipeline (self->preview_pipeline);
+    self->preview_pipeline = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -93,6 +101,16 @@ gst_wrapper_camera_bin_src_set_property (GObject * object,
           gst_object_ref (self->app_vid_src);
       }
       break;
+    case PROP_POST_PREVIEWS:
+      self->post_previews = g_value_get_boolean (value);
+      break;
+    case PROP_PREVIEW_CAPS:
+      gst_caps_replace (&self->preview_caps,
+          (GstCaps *) gst_value_get_caps (value));
+      if (self->preview_pipeline)
+        gst_camerabin_preview_set_caps (self->preview_pipeline,
+            (GstCaps *) gst_value_get_caps (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
       break;
@@ -111,6 +129,13 @@ gst_wrapper_camera_bin_src_get_property (GObject * object,
         g_value_set_object (value, self->src_vid_src);
       else
         g_value_set_object (value, self->app_vid_src);
+      break;
+    case PROP_POST_PREVIEWS:
+      g_value_set_boolean (value, self->post_previews);
+      break;
+    case PROP_PREVIEW_CAPS:
+      if (self->preview_caps)
+        gst_value_set_caps (value, self->preview_caps);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -151,6 +176,13 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
   if (self->image_capture_count > 0) {
     ret = TRUE;
     self->image_capture_count--;
+
+    /* post preview */
+    /* TODO This can likely be optimized if the viewfinder caps is the same as
+     * the preview caps, avoiding another scaling of the same buffer. */
+    if (self->post_previews)
+      gst_camerabin_preview_pipeline_post (self->preview_pipeline, buffer);
+
     if (self->image_capture_count == 0) {
       gst_base_camera_src_finish_capture (camerasrc);
     }
@@ -190,6 +222,11 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
     gst_pad_push_event (pad, gst_event_new_new_segment (FALSE, 1.0,
             GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer), -1, 0));
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_RUNNING;
+
+    /* post preview */
+    if (self->post_previews)
+      gst_camerabin_preview_pipeline_post (self->preview_pipeline, buffer);
+
     ret = TRUE;
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_FINISHING) {
     /* send eos */
@@ -356,6 +393,12 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   gst_pad_set_active (self->vfsrc, TRUE);
   gst_pad_set_active (self->imgsrc, TRUE);      /* XXX ??? */
   gst_pad_set_active (self->vidsrc, TRUE);      /* XXX ??? */
+
+  /* create the preview pipeline */
+  self->preview_pipeline =
+      gst_camerabin_create_preview_pipeline (GST_ELEMENT_CAST (self));
+  if (self->preview_caps)
+    gst_camerabin_preview_set_caps (self->preview_pipeline, self->preview_caps);
 
   ret = TRUE;
   self->elements_created = TRUE;
@@ -890,6 +933,30 @@ gst_wrapper_camera_bin_src_stop_capture (GstBaseCameraSrc * camerasrc)
   }
 }
 
+static GstStateChangeReturn
+gst_wrapper_camera_bin_src_change_state (GstElement * element,
+    GstStateChange trans)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (element);
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, trans);
+
+  switch (trans) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_element_set_state (self->preview_pipeline->pipeline, GST_STATE_NULL);
+      break;
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      gst_element_set_state (self->preview_pipeline->pipeline,
+          GST_STATE_PLAYING);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
 static void
 gst_wrapper_camera_bin_src_base_init (gpointer g_class)
 {
@@ -907,9 +974,11 @@ static void
 gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseCameraSrcClass *gstbasecamerasrc_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasecamerasrc_class = GST_BASE_CAMERA_SRC_CLASS (klass);
 
   gobject_class->dispose = gst_wrapper_camera_bin_src_dispose;
@@ -923,6 +992,18 @@ gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
       g_param_spec_object ("video-src", "Video source",
           "The video source element to be used",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_POST_PREVIEWS,
+      g_param_spec_boolean ("post-previews", "Post Previews",
+          "If capture preview images should be posted to the bus",
+          DEFAULT_POST_PREVIEWS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_PREVIEW_CAPS,
+      g_param_spec_boxed ("preview-caps", "Preview caps",
+          "The caps of the preview image to be posted",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gstelement_class->change_state = gst_wrapper_camera_bin_src_change_state;
 
   gstbasecamerasrc_class->construct_pipeline =
       gst_wrapper_camera_bin_src_construct_pipeline;
@@ -967,6 +1048,7 @@ gst_wrapper_camera_bin_src_init (GstWrapperCameraBinSrc * self,
   self->video_renegotiate = FALSE;
   self->image_renegotiate = FALSE;
   self->mode = GST_BASE_CAMERA_SRC_CAST (self)->mode;
+  self->post_previews = DEFAULT_POST_PREVIEWS;
 }
 
 gboolean
