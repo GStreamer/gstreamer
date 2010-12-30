@@ -48,12 +48,17 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"MPV\"")
     );
 
+static GstStateChangeReturn gst_rtp_mpv_pay_change_state (GstElement * element,
+    GstStateChange transition);
+
+static void gst_rtp_mpv_pay_finalize (GObject * object);
+
+static GstFlowReturn gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay);
 static gboolean gst_rtp_mpv_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_mpv_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
-static GstFlowReturn gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay);
-static void gst_rtp_mpv_pay_finalize (GObject * object);
+static gboolean gst_rtp_mpv_pay_handle_event (GstPad * pad, GstEvent * event);
 
 GST_BOILERPLATE (GstRTPMPVPay, gst_rtp_mpv_pay, GstBaseRTPPayload,
     GST_TYPE_BASE_RTP_PAYLOAD);
@@ -77,15 +82,20 @@ static void
 gst_rtp_mpv_pay_class_init (GstRTPMPVPayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_mpv_pay_finalize;
 
+  gstelement_class->change_state = gst_rtp_mpv_pay_change_state;
+
   gstbasertppayload_class->set_caps = gst_rtp_mpv_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_mpv_pay_handle_buffer;
+  gstbasertppayload_class->handle_event = gst_rtp_mpv_pay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtpmpvpay_debug, "rtpmpvpay", 0,
       "MPEG2 ES Video RTP Payloader");
@@ -113,11 +123,45 @@ gst_rtp_mpv_pay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_rtp_mpv_pay_reset (GstRTPMPVPay * pay)
+{
+  pay->first_ts = -1;
+  pay->duration = 0;
+  gst_adapter_clear (pay->adapter);
+  GST_DEBUG_OBJECT (pay, "reset depayloader");
+}
+
 static gboolean
 gst_rtp_mpv_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   gst_basertppayload_set_options (payload, "video", FALSE, "MPV", 90000);
   return gst_basertppayload_set_outcaps (payload, NULL);
+}
+
+static gboolean
+gst_rtp_mpv_pay_handle_event (GstPad * pad, GstEvent * event)
+{
+  GstRTPMPVPay *rtpmpvpay;
+
+  rtpmpvpay = GST_RTP_MPV_PAY (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      /* make sure we push the last packets in the adapter on EOS */
+      gst_rtp_mpv_pay_flush (rtpmpvpay);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_mpv_pay_reset (rtpmpvpay);
+      break;
+    default:
+      break;
+  }
+
+  gst_object_unref (rtpmpvpay);
+
+  /* FALSE to let the parent handle the event as well */
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -191,6 +235,11 @@ gst_rtp_mpv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
+  if (GST_BUFFER_IS_DISCONT (buffer)) {
+    GST_DEBUG_OBJECT (rtpmpvpay, "DISCONT");
+    gst_rtp_mpv_pay_reset (rtpmpvpay);
+  }
+
   avail = gst_adapter_available (rtpmpvpay->adapter);
 
   if (duration == -1)
@@ -223,6 +272,35 @@ gst_rtp_mpv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   return ret;
 }
+
+static GstStateChangeReturn
+gst_rtp_mpv_pay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstRTPMPVPay *rtpmpvpay;
+  GstStateChangeReturn ret;
+
+  rtpmpvpay = GST_RTP_MPV_PAY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_rtp_mpv_pay_reset (rtpmpvpay);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_rtp_mpv_pay_reset (rtpmpvpay);
+      break;
+    default:
+      break;
+  }
+  return ret;
+}
+
 
 gboolean
 gst_rtp_mpv_pay_plugin_init (GstPlugin * plugin)
