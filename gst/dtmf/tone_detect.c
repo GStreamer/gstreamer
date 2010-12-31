@@ -38,8 +38,12 @@
 #include <fcntl.h>
 #include "tone_detect.h"
 
+#ifndef FALSE
 #define FALSE   0
+#endif
+#ifndef TRUE
 #define TRUE    (!FALSE)
+#endif
 
 //#define USE_3DNOW
 
