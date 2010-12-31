@@ -157,26 +157,26 @@ static GstFlowReturn gst_selector_pad_bufferalloc (GstPad * pad,
 static GType
 gst_selector_pad_get_type (void)
 {
-  static GType selector_pad_type = 0;
+  static volatile gsize selector_pad_type = 0;
+  static const GTypeInfo selector_pad_info = {
+    sizeof (GstSelectorPadClass),
+    NULL,
+    NULL,
+    (GClassInitFunc) gst_selector_pad_class_init,
+    NULL,
+    NULL,
+    sizeof (GstSelectorPad),
+    0,
+    (GInstanceInitFunc) gst_selector_pad_init,
+  };
 
-  if (!selector_pad_type) {
-    static const GTypeInfo selector_pad_info = {
-      sizeof (GstSelectorPadClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_selector_pad_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSelectorPad),
-      0,
-      (GInstanceInitFunc) gst_selector_pad_init,
-    };
-
-    selector_pad_type =
-        g_type_register_static (GST_TYPE_PAD, "GstSelectorPad",
+  if (g_once_init_enter (&selector_pad_type)) {
+    GType tmp = g_type_register_static (GST_TYPE_PAD, "GstSelectorPad",
         &selector_pad_info, 0);
+    g_once_init_leave (&selector_pad_type, tmp);
   }
-  return selector_pad_type;
+
+  return (GType) selector_pad_type;
 }
 
 static void
