@@ -27,7 +27,7 @@
 #include <string.h>
 #include <cog/cog.h>
 #include <cog/cogvirtframe.h>
-#include <math.h>
+#include <gst/math-compat.h>
 
 #include "gstcogutils.h"
 

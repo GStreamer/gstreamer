@@ -22,6 +22,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/math-compat.h>
 #include "gstcms.h"
 
 #include "cogutils.h"
