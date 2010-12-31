@@ -1,4 +1,4 @@
-/* GStreamer
+/* GStreamer output selector
  * Copyright (C) 2008 Nokia Corporation. (contact <stefan.kost@nokia.com>)
  *
  * This library is free software; you can redistribute it and/or
@@ -22,6 +22,8 @@
  * @see_also: #GstOutputSelector, #GstInputSelector
  *
  * Direct input stream to one out of N output pads.
+ *
+ * Since: 0.10.32
  */
 
 #ifdef HAVE_CONFIG_H
@@ -51,13 +53,12 @@ enum
 {
   PROP_0,
   PROP_ACTIVE_PAD,
-  PROP_RESEND_LATEST,
-  PROP_LAST
+  PROP_RESEND_LATEST
 };
 
 #define _do_init(bla) \
 GST_DEBUG_CATEGORY_INIT (output_selector_debug, \
-        "output-selector", 0, "An output stream selector element");
+        "output-selector", 0, "Output stream selector");
 
 GST_BOILERPLATE_FULL (GstOutputSelector, gst_output_selector, GstElement,
     GST_TYPE_ELEMENT, _do_init);
@@ -85,8 +86,7 @@ gst_output_selector_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details_simple (element_class, "Output selector",
-      "Generic",
-      "1-to-N output stream selectoring",
+      "Generic", "1-to-N output stream selector",
       "Stefan Kost <stefan.kost@nokia.com>");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_output_selector_sink_factory));
@@ -100,14 +100,10 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->dispose = gst_output_selector_dispose;
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_output_selector_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_output_selector_get_property);
+  gobject_class->set_property = gst_output_selector_set_property;
+  gobject_class->get_property = gst_output_selector_get_property;
 
   g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
       g_param_spec_object ("active-pad", "Active pad",

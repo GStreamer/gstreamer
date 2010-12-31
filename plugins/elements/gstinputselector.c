@@ -1,4 +1,4 @@
-/* GStreamer
+/* GStreamer input selector
  * Copyright (C) 2003 Julien Moutte <julien@moutte.net>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2005 Jan Schmidt <thaytan@mad.scientist.com>
@@ -27,6 +27,8 @@
  * @see_also: #GstOutputSelector
  *
  * Direct one out of N input streams to the output pad.
+ *
+ * Since: 0.10.32
  */
 
 #ifdef HAVE_CONFIG_H
@@ -57,11 +59,10 @@ enum
   PROP_0,
   PROP_N_PADS,
   PROP_ACTIVE_PAD,
-  PROP_SELECT_ALL,
-  PROP_LAST
+  PROP_SELECT_ALL
 };
 
-#define DEFAULT_PAD_ALWAYS_OK	TRUE
+#define DEFAULT_PAD_ALWAYS_OK TRUE
 
 enum
 {
@@ -69,8 +70,7 @@ enum
   PROP_PAD_RUNNING_TIME,
   PROP_PAD_TAGS,
   PROP_PAD_ACTIVE,
-  PROP_PAD_ALWAYS_OK,
-  PROP_PAD_LAST
+  PROP_PAD_ALWAYS_OK
 };
 
 enum
@@ -196,6 +196,7 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
       g_param_spec_boolean ("active", "Active",
           "If the pad is currently active", FALSE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  /* FIXME: better property name? */
   g_object_class_install_property (gobject_class, PROP_PAD_ALWAYS_OK,
       g_param_spec_boolean ("always-ok", "Always OK",
           "Make an inactive pad return OK instead of NOT_LINKED",
@@ -780,7 +781,7 @@ gst_input_selector_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details_simple (element_class, "Input selector",
-      "Generic", "N-to-1 input stream selectoring",
+      "Generic", "N-to-1 input stream selector",
       "Julien Moutte <julien@moutte.net>, "
       "Jan Schmidt <thaytan@mad.scientist.com>, "
       "Wim Taymans <wim.taymans@gmail.com>");
