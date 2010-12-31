@@ -307,7 +307,7 @@ make_gaussian_kernel (GaussBlur * gb, float sigma)
   int i, center, left, right;
   float sum, sum2;
   const float fe = -0.5 / (sigma * sigma);
-  const float dx = 1.0 / (sigma * sqrt (2 * M_PI));
+  const float dx = 1.0 / (sigma * sqrt (2 * G_PI));
 
   center = ceil (2.5 * fabs (sigma));
   gb->windowsize = (int) (1 + 2 * center);
@@ -330,7 +330,7 @@ make_gaussian_kernel (GaussBlur * gb, float sigma)
   left = center - 1;
   right = center + 1;
   for (i = 1; i <= center; i++, left--, right++) {
-    float fx = dx * pow (M_E, fe * i * i);
+    float fx = dx * pow (G_E, fe * i * i);
     gb->kernel[right] = gb->kernel[left] = fx;
     sum += 2 * fx;
   }
