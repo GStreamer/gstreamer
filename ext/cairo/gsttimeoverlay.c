@@ -36,18 +36,15 @@
 #include "config.h"
 #endif
 
+#include <gst/math-compat.h>
+
 #include <gsttimeoverlay.h>
 
 #include <string.h>
-#include <math.h>
 
 #include <cairo.h>
 
 #include <gst/video/video.h>
-
-#ifndef HAVE_RINT
-#define rint(x) ((double) floor((x)+(((x) < 0)? -0.5 : 0.5)))
-#endif
 
 static GstStaticPadTemplate gst_cairo_time_overlay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",

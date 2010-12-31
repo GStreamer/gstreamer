@@ -44,16 +44,13 @@
 #include "config.h"
 #endif
 
+#include <gst/math-compat.h>
+
 #include "gstvideobalance.h"
 #include <string.h>
-#include <math.h>
 
 #include <gst/controller/gstcontroller.h>
 #include <gst/interfaces/colorbalance.h>
-
-#ifndef HAVE_RINT
-#define rint(x) (floor((x)+0.5))
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (videobalance_debug);
 #define GST_CAT_DEFAULT videobalance_debug
