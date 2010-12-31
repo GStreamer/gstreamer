@@ -24,5 +24,6 @@ templatefiles=\
 
 EXTRA_DIST = \
 	gst-element-maker \
+	gst-app-maker \
 	$(templatefiles)
 
