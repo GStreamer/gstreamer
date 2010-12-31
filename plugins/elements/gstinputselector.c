@@ -42,6 +42,15 @@
 GST_DEBUG_CATEGORY_STATIC (input_selector_debug);
 #define GST_CAT_DEFAULT input_selector_debug
 
+#if GLIB_CHECK_VERSION(2, 26, 0)
+#define NOTIFY_MUTEX_LOCK()
+#define NOTIFY_MUTEX_UNLOCK()
+#else
+static GStaticRecMutex notify_mutex = G_STATIC_REC_MUTEX_INIT;
+#define NOTIFY_MUTEX_LOCK() g_static_rec_mutex_lock (&notify_mutex)
+#define NOTIFY_MUTEX_UNLOCK() g_static_rec_mutex_unlock (&notify_mutex)
+#endif
+
 static GstStaticPadTemplate gst_input_selector_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_PAD_SINK,
@@ -353,8 +362,11 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
     forward = FALSE;
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
-  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad)
+  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad) {
+    NOTIFY_MUTEX_LOCK ();
     g_object_notify (G_OBJECT (sel), "active-pad");
+    NOTIFY_MUTEX_UNLOCK ();
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -498,8 +510,11 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
 
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
-  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad)
+  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad) {
+    NOTIFY_MUTEX_LOCK ();
     g_object_notify (G_OBJECT (sel), "active-pad");
+    NOTIFY_MUTEX_UNLOCK ();
+  }
 
   result = gst_pad_alloc_buffer (sel->srcpad, offset, size, caps, buf);
 
@@ -620,8 +635,11 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   }
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
-  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad)
+  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad) {
+    NOTIFY_MUTEX_LOCK ();
     g_object_notify (G_OBJECT (sel), "active-pad");
+    NOTIFY_MUTEX_UNLOCK ();
+  }
 
   if (close_event)
     gst_pad_push_event (sel->srcpad, close_event);
@@ -1453,8 +1471,11 @@ gst_input_selector_switch (GstInputSelector * self, GstPad * pad,
   GST_INPUT_SELECTOR_BROADCAST (self);
   GST_INPUT_SELECTOR_UNLOCK (self);
 
-  if (changed)
+  if (changed) {
+    NOTIFY_MUTEX_LOCK ();
     g_object_notify (G_OBJECT (self), "active-pad");
+    NOTIFY_MUTEX_UNLOCK ();
+  }
 }
 
 static gboolean
