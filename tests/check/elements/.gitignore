@@ -8,6 +8,7 @@ filesrc
 identity
 multiqueue
 queue
+selector
 tee
 valve
 *.check.xml

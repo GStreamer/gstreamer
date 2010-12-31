@@ -78,6 +78,7 @@ REGISTRY_CHECKS =				\
 	elements/filesrc			\
 	elements/identity			\
 	elements/multiqueue			\
+	elements/selector			\
 	elements/tee			  	\
 	elements/queue                          \
 	elements/valve                          \
