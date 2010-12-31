@@ -162,7 +162,6 @@ check_PROGRAMS = \
         $(check_jifmux) \
 	elements/jpegparse \
 	elements/qtmux \
-	elements/selector \
 	elements/mxfdemux \
 	elements/mxfmux \
 	elements/id3mux \

@@ -21,5 +21,7 @@ else
 CAMERABIN2=
 endif
 
-SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(JACK_EXAMPLES) switch
-DIST_SUBDIRS= camerabin $(CAMERABIN2) directfb jack mxf scaletempo switch
+SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(JACK_EXAMPLES)
+DIST_SUBDIRS= camerabin $(CAMERABIN2) directfb jack mxf scaletempo
+
+include $(top_srcdir)/common/parallel-subdirs.mak

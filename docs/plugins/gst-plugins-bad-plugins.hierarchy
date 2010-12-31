@@ -223,7 +223,6 @@ GObject
       GstISMLMux
       GstId3BaseMux
         GstId3Mux
-      GstInputSelector
       GstInterlace
       GstInvtelecine
       GstIvfParse
@@ -254,7 +253,6 @@ GObject
       GstMveMux
       GstNsfDec
       GstNuvDemux
-      GstOutputSelector
       GstPcapParse
       GstPitch
       GstPnmdec
