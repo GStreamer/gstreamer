@@ -230,7 +230,6 @@
 #include "gstplay-marshal.h"
 #include "gstplayback.h"
 #include "gstplaysink.h"
-#include "gstinputselector.h"
 #include "gstsubtitleoverlay.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
@@ -2456,11 +2455,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   GST_SOURCE_GROUP_LOCK (group);
   if (select->selector == NULL && playbin->have_selector) {
     /* no selector, create one */
-    GST_DEBUG_OBJECT (playbin, "creating new selector");
-    select->selector = g_object_new (GST_TYPE_INPUT_SELECTOR, NULL);
-    /* the above can't fail, but we keep the error handling around for when
-     * the selector plugin has moved to -base or -good and we stop using an
-     * internal copy of input-selector */
+    GST_DEBUG_OBJECT (playbin, "creating new input selector");
+    select->selector = gst_element_factory_make ("input-selector", NULL);
     if (select->selector == NULL) {
       /* post the missing selector message only once */
       playbin->have_selector = FALSE;
@@ -3620,8 +3616,6 @@ gboolean
 gst_play_bin2_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_play_bin_debug, "playbin2", 0, "play bin");
-
-  g_type_class_ref (gst_input_selector_get_type ());
 
   return gst_element_register (plugin, "playbin2", GST_RANK_NONE,
       GST_TYPE_PLAY_BIN);
