@@ -415,8 +415,8 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri)
 
   /* Convert to UTF8 */
   if (strcmp ("text/plain", mimetype) == 0 &&
-      charset && strcasecmp ("US-ASCII", charset) != 0
-      && strcasecmp ("UTF-8", charset) != 0) {
+      charset && g_ascii_strcasecmp ("US-ASCII", charset) != 0
+      && g_ascii_strcasecmp ("UTF-8", charset) != 0) {
     gsize read;
     gsize written;
     gchar *old_data = (gchar *) GST_BUFFER_DATA (src->buffer);
