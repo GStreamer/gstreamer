@@ -44,6 +44,7 @@ struct _GstRtpMP4ADepay
   GstBaseRTPDepayload depayload;
   GstAdapter *adapter;
   guint8 numSubFrames;
+  guint frame_len;
 };
 
 struct _GstRtpMP4ADepayClass
