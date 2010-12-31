@@ -17,7 +17,9 @@ GObject
         GstIdentity
       GstBin
         GstPipeline
+      GstInputSelector
       GstMultiQueue
+      GstOutputSelector
       GstQueue
       GstQueue2
       GstTee

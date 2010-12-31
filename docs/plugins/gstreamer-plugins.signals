@@ -107,3 +107,20 @@ GstMultiQueue *gstmultiqueue
 GstMultiQueue *gstmultiqueue
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstInputSelector::block</NAME>
+<RETURNS>gint64</RETURNS>
+<FLAGS>la</FLAGS>
+GstInputSelector *gstinputselector
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstInputSelector::switch</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstInputSelector *gstinputselector
+GstPad *arg1
+gint64  arg2
+gint64  arg3
+</SIGNAL>
+

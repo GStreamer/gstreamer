@@ -86,7 +86,9 @@ EXTRA_HFILES = \
 	$(top_srcdir)/plugins/elements/gstfilesrc.h \
 	$(top_srcdir)/plugins/elements/gstfilesink.h \
 	$(top_srcdir)/plugins/elements/gstidentity.h \
+	$(top_srcdir)/plugins/elements/gstinputselector.h \
 	$(top_srcdir)/plugins/elements/gstmultiqueue.h \
+	$(top_srcdir)/plugins/elements/gstoutputselector.h \
 	$(top_srcdir)/plugins/elements/gstqueue.h \
 	$(top_srcdir)/plugins/elements/gstqueue2.h \
 	$(top_srcdir)/plugins/elements/gsttypefindelement.h \
