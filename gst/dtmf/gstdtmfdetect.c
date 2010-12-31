@@ -175,7 +175,7 @@ gst_dtmf_detect_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
-  zap_dtmf_detect (&self->dtmf_state, (int16_t *) GST_BUFFER_DATA (buf),
+  zap_dtmf_detect (&self->dtmf_state, (gint16 *) GST_BUFFER_DATA (buf),
       GST_BUFFER_SIZE (buf) / 2, FALSE);
 
   dtmf_count = zap_dtmf_get (&self->dtmf_state, dtmfbuf, MAX_DTMF_DIGITS);

@@ -199,16 +199,16 @@ zap_dtmf_detect_init (dtmf_detect_state_t * s)
   s->hit1 = s->hit2 = 0;
 
   for (i = 0; i < 4; i++) {
-    theta = 2.0 * M_PI * (dtmf_row[i] / SAMPLE_RATE);
+    theta = 2.0 * G_PI * (dtmf_row[i] / SAMPLE_RATE);
     dtmf_detect_row[i].fac = 2.0 * cos (theta);
 
-    theta = 2.0 * M_PI * (dtmf_col[i] / SAMPLE_RATE);
+    theta = 2.0 * G_PI * (dtmf_col[i] / SAMPLE_RATE);
     dtmf_detect_col[i].fac = 2.0 * cos (theta);
 
-    theta = 2.0 * M_PI * (dtmf_row[i] * 2.0 / SAMPLE_RATE);
+    theta = 2.0 * G_PI * (dtmf_row[i] * 2.0 / SAMPLE_RATE);
     dtmf_detect_row_2nd[i].fac = 2.0 * cos (theta);
 
-    theta = 2.0 * M_PI * (dtmf_col[i] * 2.0 / SAMPLE_RATE);
+    theta = 2.0 * G_PI * (dtmf_col[i] * 2.0 / SAMPLE_RATE);
     dtmf_detect_col_2nd[i].fac = 2.0 * cos (theta);
 
     goertzel_init (&s->row_out[i], &dtmf_detect_row[i]);
@@ -220,12 +220,12 @@ zap_dtmf_detect_init (dtmf_detect_state_t * s)
   }
 
   /* Same for the fax dector */
-  theta = 2.0 * M_PI * (fax_freq / SAMPLE_RATE);
+  theta = 2.0 * G_PI * (fax_freq / SAMPLE_RATE);
   fax_detect.fac = 2.0 * cos (theta);
   goertzel_init (&s->fax_tone, &fax_detect);
 
   /* Same for the fax dector 2nd harmonic */
-  theta = 2.0 * M_PI * (fax_freq * 2.0 / SAMPLE_RATE);
+  theta = 2.0 * G_PI * (fax_freq * 2.0 / SAMPLE_RATE);
   fax_detect_2nd.fac = 2.0 * cos (theta);
   goertzel_init (&s->fax_tone2nd, &fax_detect_2nd);
 
