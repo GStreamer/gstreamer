@@ -35,6 +35,8 @@
 
 #include "_stdint.h"
 
+#include <glib.h>
+
 typedef struct
 {
     float v2;
@@ -75,13 +77,13 @@ typedef struct
 } tone_detection_descriptor_t;
 
 void zap_goertzel_update(goertzel_state_t *s,
-                     int16_t x[],
+                     gint16 x[],
                      int samples);
 float zap_goertzel_result (goertzel_state_t *s);
 
 void zap_dtmf_detect_init (dtmf_detect_state_t *s);
 int zap_dtmf_detect (dtmf_detect_state_t *s,
-                 int16_t amp[],
+                 gint16 amp[],
                  int samples,
 		 int isradio);
 int zap_dtmf_get (dtmf_detect_state_t *s,
