@@ -1,4 +1,6 @@
 audio-trickplay
+input-selector-test
+output-selector-test
 playbin-text
 position-formats
 stress-playbin

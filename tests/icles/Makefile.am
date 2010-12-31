@@ -26,6 +26,18 @@ test_xoverlay_LDADD = $(GST_LIBS) $(X_LIBS) $(LIBM) $(GTK_LIBS) \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la
 endif
 
+output_selector_test_SOURCES = output-selector-test.c
+output_selector_test_CFLAGS  = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+output_selector_test_LDADD   = $(GST_LIBS)
+output_selector_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+input_selector_test_SOURCES = input-selector-test.c
+input_selector_test_CFLAGS  = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+input_selector_test_LDADD   = $(GST_LIBS)
+input_selector_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+X_TESTS += output-selector-test input-selector-test
+
 else
 X_TESTS =
 endif
