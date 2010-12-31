@@ -453,7 +453,7 @@ GST_START_TEST (test_parse_bin_from_description)
     }
 
     if (strcmp (s->str, bin_tests[i].pad_names) != 0) {
-      g_error ("FAILED: expted '%s', got '%s' for bin '%s'",
+      g_error ("FAILED: expected '%s', got '%s' for bin '%s'",
           bin_tests[i].pad_names, s->str, bin_tests[i].bin_desc);
     }
     g_string_free (s, TRUE);
