@@ -66,13 +66,13 @@ struct _GstFrei0rFuncTable {
 			   f0r_param_t param, int param_index);
   
   void (*update) (f0r_instance_t instance, 
-		  double time, const uint32_t* inframe, uint32_t* outframe);
+		  double time, const guint32* inframe, guint32* outframe);
   void (*update2) (f0r_instance_t instance,
 		   double time,
-		   const uint32_t* inframe1,
-		   const uint32_t* inframe2,
-		   const uint32_t* inframe3,
-		   uint32_t* outframe);
+		   const guint32* inframe1,
+		   const guint32* inframe2,
+		   const guint32* inframe3,
+		   guint32* outframe);
 };
 
 typedef enum {

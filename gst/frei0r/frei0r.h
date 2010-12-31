@@ -200,7 +200,7 @@
 #ifndef INCLUDED_FREI0R_H
 #define INCLUDED_FREI0R_H
 
-#include <inttypes.h>
+#include <glib.h>
 
 /**
  * The frei0r API major version
@@ -554,7 +554,7 @@ void f0r_get_param_value(f0r_instance_t instance,
  * \see f0r_update2
  */
 void f0r_update(f0r_instance_t instance, 
-		double time, const uint32_t* inframe, uint32_t* outframe);
+		double time, const guint32* inframe, guint32* outframe);
 
 //---------------------------------------------------------------------------
 
@@ -581,10 +581,10 @@ void f0r_update(f0r_instance_t instance,
  */
 void f0r_update2(f0r_instance_t instance,
 		 double time,
-		 const uint32_t* inframe1,
-		 const uint32_t* inframe2,
-		 const uint32_t* inframe3,
-		 uint32_t* outframe);
+		 const guint32* inframe1,
+		 const guint32* inframe2,
+		 const guint32* inframe3,
+		 guint32* outframe);
 //---------------------------------------------------------------------------
 
 #endif
