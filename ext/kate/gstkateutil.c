@@ -356,7 +356,6 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
           if (old)
             gst_tag_list_free (old);
 
-#if 0
           if (decoder->initialized) {
             gst_element_found_tags_for_pad (element, tagpad, decoder->tags);
             decoder->tags = NULL;
@@ -367,7 +366,6 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
                 gst_message_new_tag (GST_OBJECT (element),
                     gst_tag_list_copy (decoder->tags)));
           }
-#endif
         }
         break;
 
