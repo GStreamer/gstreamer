@@ -236,7 +236,7 @@ gst_kate_tiger_class_init (GstKateTigerClass * klass)
       g_param_spec_enum ("default-font-effect", "Default font effect",
           "Whether to apply an effect to text by default, for increased readability",
           gst_kate_tiger_font_effect_get_type (),
-          tiger_font_plain,
+          tiger_font_outline,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
@@ -342,7 +342,7 @@ gst_kate_tiger_init (GstKateTiger * tiger, GstKateTigerClass * gclass)
 
   tiger->default_font_desc = NULL;
   tiger->quality = -1.0;
-  tiger->default_font_effect = tiger_font_plain;
+  tiger->default_font_effect = tiger_font_outline;
   tiger->default_font_effect_strength = 0.5;
   tiger->default_font_r = 255;
   tiger->default_font_g = 255;
