@@ -66,7 +66,7 @@ for the negotiated format.
 
 The bufferpool could be a helper GObject (like we use GstAdapter). If would
 manage a collection of GstBuffers. For each buffer t tracks wheter its in use or
-available. The bufferpool in gst-plgin-good/sys/v4l2/gstv4l2bufferpool might be
+available. The bufferpool in gst-plugin-good/sys/v4l2/gstv4l2bufferpool might be
 a starting point.
 
 
