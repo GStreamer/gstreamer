@@ -172,8 +172,6 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
   gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   gstpush_src_class = GST_PUSH_SRC_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = gst_fd_src_set_property;
   gobject_class->get_property = gst_fd_src_get_property;
   gobject_class->dispose = gst_fd_src_dispose;

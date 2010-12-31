@@ -281,8 +281,6 @@ gst_queue2_class_init (GstQueue2Class * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = gst_queue2_set_property;
   gobject_class->get_property = gst_queue2_get_property;
 
