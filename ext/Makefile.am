@@ -58,6 +58,12 @@ else
 CELT_DIR=
 endif
 
+if USE_CHROMAPRINT
+CHROMAPRINT_DIR=chromaprint
+else
+CHROMAPRINT_DIR=
+endif
+
 if USE_COG
 COG_DIR=cog
 else
@@ -397,6 +403,7 @@ SUBDIRS=\
 	$(BZ2_DIR) \
 	$(CDAUDIO_DIR) \
 	$(CELT_DIR) \
+	$(CHROMAPRINT_DIR) \
 	$(COG_DIR) \
 	$(CURL_DIR) \
 	$(DC1394_DIR) \
@@ -456,6 +463,7 @@ DIST_SUBDIRS = \
 	bz2 \
 	cdaudio \
 	celt \
+	chromaprint \
 	cog \
 	curl \
 	dc1394 \

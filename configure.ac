@@ -732,6 +732,16 @@ AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
   AC_SUBST(CELT_LIBS)
 ])
 
+dnl *** chromaprint ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CHROMAPRINT, true)
+AG_GST_CHECK_FEATURE(CHROMAPRINT, [chromaprint], chromaprint, [
+  PKG_CHECK_MODULES(CHROMAPRINT, libchromaprint, HAVE_CHROMAPRINT="yes", [
+    HAVE_CHROMAPRINT="no"
+  ])
+  AC_SUBST(CHROMAPRINT_CFLAGS)
+  AC_SUBST(CHROMAPRINT_LIBS)
+])
+
 dnl *** Cog ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_COG, true)
 AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
@@ -1777,6 +1787,7 @@ AM_CONDITIONAL(USE_APEXSINK, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CDAUDIO, false)
 AM_CONDITIONAL(USE_CELT, false)
+AM_CONDITIONAL(USE_CHROMAPRINT, false)
 AM_CONDITIONAL(USE_COG, false)
 AM_CONDITIONAL(USE_CURL, false)
 AM_CONDITIONAL(USE_DC1394, false)
@@ -2034,6 +2045,7 @@ ext/apexsink/Makefile
 ext/bz2/Makefile
 ext/cdaudio/Makefile
 ext/celt/Makefile
+ext/chromaprint/Makefile
 ext/cog/Makefile
 ext/curl/Makefile
 ext/dc1394/Makefile
