@@ -27,22 +27,23 @@
 GType
 gst_jack_connect_get_type (void)
 {
-  static GType jack_connect_type = 0;
-  static const GEnumValue jack_connect[] = {
-    {GST_JACK_CONNECT_NONE,
-        "Don't automatically connect ports to physical ports", "none"},
-    {GST_JACK_CONNECT_AUTO,
-        "Automatically connect ports to physical ports", "auto"},
-    {GST_JACK_CONNECT_AUTO_FORCED,
-          "Automatically connect ports to as many physical ports as possible",
-        "auto-forced"},
-    {0, NULL, NULL},
-  };
+  static volatile gsize jack_connect_type = 0;
 
-  if (!jack_connect_type) {
-    jack_connect_type = g_enum_register_static ("GstJackConnect", jack_connect);
+  if (g_once_init_enter (&jack_connect_type)) {
+    static const GEnumValue jack_connect_enums[] = {
+      {GST_JACK_CONNECT_NONE,
+          "Don't automatically connect ports to physical ports", "none"},
+      {GST_JACK_CONNECT_AUTO,
+          "Automatically connect ports to physical ports", "auto"},
+      {GST_JACK_CONNECT_AUTO_FORCED,
+            "Automatically connect ports to as many physical ports as possible",
+          "auto-forced"},
+      {0, NULL, NULL},
+    };
+    GType tmp = g_enum_register_static ("GstJackConnect", jack_connect_enums);
+    g_once_init_leave (&jack_connect_type, tmp);
   }
-  return jack_connect_type;
+  return (GType) jack_connect_type;
 }
 
 
@@ -63,16 +64,17 @@ gst_jack_client_free (gpointer jclient)
 GType
 gst_jack_client_get_type (void)
 {
-  static GType type;            /* 0 */
+  static volatile gsize jack_client_type = 0;
 
-  if (type == 0) {
+  if (g_once_init_enter (&jack_client_type)) {
     /* hackish, but makes it show up nicely in gst-inspect */
-    type = g_boxed_type_register_static ("JackClient",
+    GType tmp = g_boxed_type_register_static ("JackClient",
         (GBoxedCopyFunc) gst_jack_client_copy,
         (GBoxedFreeFunc) gst_jack_client_free);
+    g_once_init_leave (&jack_client_type, tmp);
   }
 
-  return type;
+  return (GType) jack_client_type;
 }
 
 static gboolean

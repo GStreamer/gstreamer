@@ -151,9 +151,9 @@ gst_jack_audio_src_free_channels (GstJackAudioSrc * src)
 static GType
 gst_jack_ring_buffer_get_type (void)
 {
-  static GType ringbuffer_type = 0;
+  static volatile gsize ringbuffer_type = 0;
 
-  if (!ringbuffer_type) {
+  if (g_once_init_enter (&ringbuffer_type)) {
     static const GTypeInfo ringbuffer_info = { sizeof (GstJackRingBufferClass),
       NULL,
       NULL,
@@ -165,12 +165,12 @@ gst_jack_ring_buffer_get_type (void)
       (GInstanceInitFunc) gst_jack_ring_buffer_init,
       NULL
     };
-
-    ringbuffer_type =
-        g_type_register_static (GST_TYPE_RING_BUFFER,
+    GType tmp = g_type_register_static (GST_TYPE_RING_BUFFER,
         "GstJackAudioSrcRingBuffer", &ringbuffer_info, 0);
+    g_once_init_leave (&ringbuffer_type, tmp);
   }
-  return ringbuffer_type;
+
+  return (GType) ringbuffer_type;
 }
 
 static void
