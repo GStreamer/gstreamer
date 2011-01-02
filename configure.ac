@@ -748,6 +748,14 @@ AG_GST_CHECK_FEATURE(HAL, [HAL libraries], halelements, [
   AG_GST_PKG_CHECK_MODULES(HAL, [hal >= 0.5.6, dbus-1 >= 0.32])
 ])
 
+dnl *** Jack ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
+AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
+  PKG_CHECK_MODULES(JACK, jack >= 0.99.10, HAVE_JACK="yes", HAVE_JACK="no")
+  AC_SUBST(JACK_CFLAGS)
+  AC_SUBST(JACK_LIBS)
+])
+
 dnl *** jpeg ***
 dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG, true)
@@ -1020,6 +1028,7 @@ AM_CONDITIONAL(USE_GCONFTOOL, false)
 AM_CONDITIONAL(USE_GDK_PIXBUF, false)
 AM_CONDITIONAL(USE_GST_V4L2, false)
 AM_CONDITIONAL(USE_HAL, false)
+AM_CONDITIONAL(USE_JACK, false)
 AM_CONDITIONAL(USE_JPEG, false)
 AM_CONDITIONAL(USE_LIBCACA, false)
 AM_CONDITIONAL(USE_LIBDV, false)
@@ -1144,7 +1153,6 @@ gst/wavenc/Makefile
 gst/wavparse/Makefile
 gst/flx/Makefile
 gst/y4m/Makefile
-ext/jpeg/Makefile
 ext/Makefile
 ext/aalib/Makefile
 ext/annodex/Makefile
@@ -1155,6 +1163,8 @@ ext/flac/Makefile
 ext/gconf/Makefile
 ext/gdk_pixbuf/Makefile
 ext/hal/Makefile
+ext/jack/Makefile
+ext/jpeg/Makefile
 ext/libcaca/Makefile
 ext/libpng/Makefile
 ext/pulse/Makefile
@@ -1180,6 +1190,7 @@ tests/check/Makefile
 tests/examples/Makefile
 tests/examples/audiofx/Makefile
 tests/examples/equalizer/Makefile
+tests/examples/jack/Makefile
 tests/examples/level/Makefile
 tests/examples/pulse/Makefile
 tests/examples/rtp/Makefile
