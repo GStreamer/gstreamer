@@ -267,6 +267,7 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
     GstBaseAudioSinkClass * g_class)
 {
   GstPluginFeature *feature;
+  GstBaseSink *basesink;
 
   baseaudiosink->priv = GST_BASE_AUDIO_SINK_GET_PRIVATE (baseaudiosink);
 
@@ -274,13 +275,16 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
   baseaudiosink->latency_time = DEFAULT_LATENCY_TIME;
   baseaudiosink->provide_clock = DEFAULT_PROVIDE_CLOCK;
   baseaudiosink->priv->slave_method = DEFAULT_SLAVE_METHOD;
+  baseaudiosink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
 
   baseaudiosink->provided_clock = gst_audio_clock_new ("GstAudioSinkClock",
       (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
 
-  GST_BASE_SINK (baseaudiosink)->can_activate_push = TRUE;
-  GST_BASE_SINK (baseaudiosink)->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
-  baseaudiosink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
+  basesink = GST_BASE_SINK_CAST (baseaudiosink);
+  basesink->can_activate_push = TRUE;
+  basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
+
+  gst_base_sink_set_last_buffer_enabled (basesink, FALSE);
 
   /* install some custom pad_query functions */
   gst_pad_set_query_function (GST_BASE_SINK_PAD (baseaudiosink),
