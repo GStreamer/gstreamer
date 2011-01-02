@@ -11,3 +11,5 @@ libgstgaudieffects_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = \
         gstburn.h gstchromium.h gstdilate.h gstdodge.h \
         gstexclusion.h gstgaussblur.h gstplugin.h gstsolarize.h
+
+EXTRA_DIST = blur-example.py  burn-example.py
