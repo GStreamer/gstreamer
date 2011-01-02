@@ -158,8 +158,8 @@ gst_kate_dec_class_init (GstKateDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_kate_dec_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_kate_dec_get_property);
+  gobject_class->set_property = gst_kate_dec_set_property;
+  gobject_class->get_property = gst_kate_dec_get_property;
 
   gst_kate_util_install_decoder_base_properties (gobject_class);
 
@@ -360,10 +360,17 @@ not_in_seg:
 static GstStateChangeReturn
 gst_kate_dec_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret;
   GstKateDec *kd = GST_KATE_DEC (element);
 
-  return gst_kate_decoder_base_change_state (&kd->decoder, element,
+  ret = gst_kate_decoder_base_change_state (&kd->decoder, element,
       parent_class, transition);
+
+  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY) {
+    gst_caps_replace (&kd->src_caps, NULL);
+  }
+
+  return ret;
 }
 
 gboolean
@@ -383,11 +390,9 @@ gst_kate_dec_sink_event (GstPad * pad, GstEvent * event)
   GstKateDec *kd = (GstKateDec *) (gst_object_get_parent (GST_OBJECT (pad)));
   gboolean res = TRUE;
 
-  g_return_val_if_fail (kd != NULL, FALSE);
+  GST_LOG_OBJECT (pad, "Event on sink pad: %s", GST_EVENT_TYPE_NAME (event));
 
-  GST_LOG_OBJECT (kd, "Event on sink pad: %s", GST_EVENT_TYPE_NAME (event));
-
-  // Delay events till we've set caps
+  /* Delay events till we've set caps */
   if (gst_kate_util_decoder_base_queue_event (&kd->decoder, event,
           &gst_kate_dec_sink_handle_event, pad)) {
     gst_object_unref (kd);
@@ -407,9 +412,7 @@ gst_kate_dec_sink_handle_event (GstPad * pad, GstEvent * event)
   GstKateDec *kd = (GstKateDec *) (gst_object_get_parent (GST_OBJECT (pad)));
   gboolean res = TRUE;
 
-  g_return_val_if_fail (kd != NULL, FALSE);
-
-  GST_LOG_OBJECT (kd, "Handling event on sink pad: %s",
+  GST_LOG_OBJECT (pad, "Handling event on sink pad: %s",
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
@@ -444,11 +447,8 @@ gst_kate_dec_src_get_caps (GstPad * pad)
   GstKateDec *kd = (GstKateDec *) (gst_object_get_parent (GST_OBJECT (pad)));
   GstCaps *caps;
 
-  g_return_val_if_fail (kd != NULL, FALSE);
-
   if (kd->src_caps) {
-    GST_DEBUG_OBJECT (kd, "We have src caps (%s)",
-        gst_caps_to_string (kd->src_caps));
+    GST_DEBUG_OBJECT (kd, "We have src caps %" GST_PTR_FORMAT, kd->src_caps);
     caps = kd->src_caps;
   } else {
     GST_DEBUG_OBJECT (kd, "We have no src caps, using template caps");

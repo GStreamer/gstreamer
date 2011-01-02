@@ -564,8 +564,8 @@ gst_kate_tiger_kate_chain (GstPad * pad, GstBuffer * buf)
 
   GST_KATE_TIGER_MUTEX_LOCK (tiger);
 
-  GST_LOG_OBJECT (tiger, "Got kate buffer, caps %s",
-      gst_caps_to_string (GST_BUFFER_CAPS (buf)));
+  GST_LOG_OBJECT (tiger, "Got kate buffer, caps %" GST_PTR_FORMAT,
+      GST_BUFFER_CAPS (buf));
 
   /* Unfortunately, it can happen that the start of the stream is not sent,
      for instance if there's a stream selector upstream, which is switched

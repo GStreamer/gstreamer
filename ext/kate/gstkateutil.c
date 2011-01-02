@@ -282,12 +282,10 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
           } else {
             *src_caps = gst_caps_new_simple ("text/x-pango-markup", NULL);
           }
-          GST_INFO_OBJECT (element, "Setting src caps to %s",
-              gst_caps_to_string (*src_caps));
+          GST_INFO_OBJECT (srcpad, "Setting caps: %" GST_PTR_FORMAT, *src_caps);
           if (!gst_pad_set_caps (srcpad, *src_caps)) {
-            GST_ERROR_OBJECT (element,
-                "Failed to renegotiate caps for pad %s:%s",
-                GST_DEBUG_PAD_NAME (srcpad));
+            GST_ERROR_OBJECT (srcpad, "Failed to set caps %" GST_PTR_FORMAT,
+                *src_caps);
           }
         }
         if (decoder->k.ki->language && *decoder->k.ki->language) {
