@@ -31,7 +31,6 @@ GObject
             GstApExSink
             GstNasSink
             GstSDLAudioSink
-          GstJackAudioSink
         GstChecksumSink
         GstDCCPClientSink
         GstDCCPServerSink
@@ -46,8 +45,6 @@ GObject
         GstDTMFSrc
         GstDataURISrc
         GstPushSrc
-          GstBaseAudioSrc
-            GstJackAudioSrc
           GstDCCPClientSrc
           GstDCCPServerSrc
           GstDc1394
@@ -490,8 +487,6 @@ GObject
     GstRegistry
     GstRingBuffer
       GstAudioSinkRingBuffer
-      GstJackAudioSinkRingBuffer
-      GstJackAudioSrcRingBuffer
     GstTask
     GstTaskPool
   GstSignalObject

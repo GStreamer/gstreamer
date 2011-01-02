@@ -165,7 +165,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 @USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
 @USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
-@USE_JACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjack.so
 @USE_SNDFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
 @USE_CELT_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcelt.so
 @USE_MPEG2ENC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so

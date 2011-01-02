@@ -888,14 +888,6 @@ AG_GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
   AC_SUBST(GSM_LIBS)
 ])
 
-dnl *** Jack ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
-AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
-  PKG_CHECK_MODULES(JACK, jack >= 0.99.10, HAVE_JACK="yes", HAVE_JACK="no")
-  AC_SUBST(JACK_CFLAGS)
-  AC_SUBST(JACK_LIBS)
-])
-
 dnl *** jp2k ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JP2K, true)
 AG_GST_CHECK_FEATURE(JP2K, [jp2k], jp2kdec jp2kenc, [
@@ -1607,7 +1599,6 @@ AM_CONDITIONAL(USE_FAAD, false)
 AM_CONDITIONAL(USE_FBDEV, false)
 AM_CONDITIONAL(USE_FLITE, false)
 AM_CONDITIONAL(USE_GSM, false)
-AM_CONDITIONAL(USE_JACK, false)
 AM_CONDITIONAL(USE_JP2K, false)
 AM_CONDITIONAL(USE_KATE, false)
 AM_CONDITIONAL(USE_TIGER, false)
@@ -1812,7 +1803,6 @@ tests/examples/camerabin2/Makefile
 tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile
-tests/examples/jack/Makefile
 tests/icles/Makefile
 ext/amrwbenc/Makefile
 ext/assrender/Makefile
@@ -1830,7 +1820,6 @@ ext/faac/Makefile
 ext/faad/Makefile
 ext/flite/Makefile
 ext/gsm/Makefile
-ext/jack/Makefile
 ext/jp2k/Makefile
 ext/kate/Makefile
 ext/ladspa/Makefile

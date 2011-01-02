@@ -136,12 +136,6 @@ endif
 HERMES_DIR=
 # endif
 
-if USE_JACK
-JACK_DIR=jack
-else
-JACK_DIR=
-endif
-
 if USE_JP2K
 JP2K_DIR = jp2k
 else
@@ -398,7 +392,6 @@ SUBDIRS=\
 	$(GSM_DIR) \
 	$(G729_DIR) \
 	$(HERMES_DIR) \
-	$(JACK_DIR) \
 	$(JP2K_DIR) \
 	$(KATE_DIR) \
 	$(LADSPA_DIR) \
@@ -453,7 +446,6 @@ DIST_SUBDIRS = \
 	gsettings \
 	gsm \
 	ladspa \
-	jack \
 	jp2k \
 	kate \
 	libmms \
