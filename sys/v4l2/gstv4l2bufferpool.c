@@ -34,7 +34,9 @@
 
 #include <gstv4l2bufferpool.h>
 #include "gstv4l2src.h"
+#ifdef HAVE_EXPERIMENTAL
 #include "gstv4l2sink.h"
+#endif
 #include "v4l2_calls.h"
 #include "gst/gst-i18n-plugin.h"
 
@@ -290,8 +292,10 @@ get_v4l2_object (GstElement * v4l2elem)
   GstV4l2Object *v4l2object = NULL;
   if (GST_IS_V4L2SRC (v4l2elem)) {
     v4l2object = (GST_V4L2SRC (v4l2elem))->v4l2object;
+#ifdef HAVE_EXPERIMENTAL
   } else if (GST_IS_V4L2SINK (v4l2elem)) {
     v4l2object = (GST_V4L2SINK (v4l2elem))->v4l2object;
+#endif
   } else {
     GST_ERROR_OBJECT (v4l2elem, "unknown v4l2 element");
   }
