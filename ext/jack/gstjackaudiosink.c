@@ -660,7 +660,8 @@ gst_jack_audio_sink_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details_simple (element_class, "Audio Sink (Jack)",
-      "Sink/Audio", "Output to Jack", "Wim Taymans <wim@fluendo.com>");
+      "Sink/Audio", "Output audio to a JACK server",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&jackaudiosink_sink_factory));

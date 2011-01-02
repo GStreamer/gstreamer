@@ -680,8 +680,8 @@ gst_jack_audio_src_base_init (gpointer gclass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_set_details_simple (element_class, "Audio Source (Jack)",
-      "Source/Audio",
-      "Input from Jack", "Tristan Matthews <tristan@sat.qc.ca>");
+      "Source/Audio", "Captures audio from a JACK server",
+      "Tristan Matthews <tristan@sat.qc.ca>");
 }
 
 /* initialize the jack_audio_src's class */
