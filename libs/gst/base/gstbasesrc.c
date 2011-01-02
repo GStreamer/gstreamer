@@ -346,6 +346,7 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   gobject_class->set_property = gst_base_src_set_property;
   gobject_class->get_property = gst_base_src_get_property;
 
+/* FIXME 0.11: blocksize property should be int, not ulong (min is >max here) */
   g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
       g_param_spec_ulong ("blocksize", "Block size",
           "Size in bytes to read per buffer (-1 = default)", 0, G_MAXULONG,
@@ -641,6 +642,7 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
  *
  * Since: 0.10.22
  */
+/* FIXME 0.11: blocksize property should be int, not ulong */
 void
 gst_base_src_set_blocksize (GstBaseSrc * src, gulong blocksize)
 {
@@ -661,6 +663,7 @@ gst_base_src_set_blocksize (GstBaseSrc * src, gulong blocksize)
  *
  * Since: 0.10.22
  */
+/* FIXME 0.11: blocksize property should be int, not ulong */
 gulong
 gst_base_src_get_blocksize (GstBaseSrc * src)
 {

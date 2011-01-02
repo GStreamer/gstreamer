@@ -506,6 +506,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    *
    * Since: 0.10.22
    */
+  /* FIXME 0.11: blocksize property should be int, otherwise min>max.. */
   g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
       g_param_spec_uint ("blocksize", "Block size",
           "Size in bytes to pull per buffer (0 = default)", 0, G_MAXUINT,
@@ -1244,6 +1245,7 @@ gst_base_sink_get_render_delay (GstBaseSink * sink)
  *
  * Since: 0.10.22
  */
+/* FIXME 0.11: blocksize property should be int, otherwise min>max.. */
 void
 gst_base_sink_set_blocksize (GstBaseSink * sink, guint blocksize)
 {
@@ -1266,6 +1268,7 @@ gst_base_sink_set_blocksize (GstBaseSink * sink, guint blocksize)
  *
  * Since: 0.10.22
  */
+/* FIXME 0.11: blocksize property should be int, otherwise min>max.. */
 guint
 gst_base_sink_get_blocksize (GstBaseSink * sink)
 {
