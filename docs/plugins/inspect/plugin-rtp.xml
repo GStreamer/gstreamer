@@ -12,7 +12,7 @@
     <element>
       <name>asteriskh263</name>
       <longname>RTP Asterisk H263 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts H263 video from RTP and encodes in Asterisk H263 format</description>
       <author>Neil Stratford &lt;neils@vipadia.com&gt;</author>
       <pads>
@@ -33,7 +33,7 @@
     <element>
       <name>rtpL16depay</name>
       <longname>RTP audio depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts raw audio from RTP packets</description>
       <author>Zeeshan Ali &lt;zak147@yahoo.com&gt;,Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -54,7 +54,7 @@
     <element>
       <name>rtpL16pay</name>
       <longname>RTP audio payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encode Raw audio into RTP packets (RFC 3551)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -75,7 +75,7 @@
     <element>
       <name>rtpac3depay</name>
       <longname>RTP AC3 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts AC3 audio from RTP packets (RFC 4184)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -94,9 +94,30 @@
       </pads>
     </element>
     <element>
+      <name>rtpac3pay</name>
+      <longname>RTP AC3 audio payloader</longname>
+      <class>Codec/Payloader/Network/RTP</class>
+      <description>Payload AC3 audio as RTP packets (RFC 4184)</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/ac3; audio/x-ac3</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int){ 32000, 44100, 48000 }, encoding-name=(string)AC3</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpamrdepay</name>
       <longname>RTP AMR depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts AMR or AMR-WB audio from RTP packets (RFC 3267)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -117,7 +138,7 @@
     <element>
       <name>rtpamrpay</name>
       <longname>RTP AMR payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encode AMR or AMR-WB audio into RTP packets (RFC 3267)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -138,7 +159,7 @@
     <element>
       <name>rtpbvdepay</name>
       <longname>RTP BroadcomVoice depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts BroadcomVoice audio from RTP packets (RFC 4298)</description>
       <author>Wim Taymans &lt;wim.taymans@collabora.co.uk&gt;</author>
       <pads>
@@ -159,7 +180,7 @@
     <element>
       <name>rtpbvpay</name>
       <longname>RTP BV Payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Packetize BroadcomVoice audio streams into RTP packets (RFC 4298)</description>
       <author>Wim Taymans &lt;wim.taymans@collabora.co.uk&gt;</author>
       <pads>
@@ -180,7 +201,7 @@
     <element>
       <name>rtpceltdepay</name>
       <longname>RTP CELT depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts CELT audio from RTP packets</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -201,7 +222,7 @@
     <element>
       <name>rtpceltpay</name>
       <longname>RTP CELT payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes CELT audio into a RTP packet</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -222,7 +243,7 @@
     <element>
       <name>rtpdepay</name>
       <longname>Dummy RTP session manager</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Accepts raw RTP and RTCP packets and sends them forward</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -255,7 +276,7 @@
     <element>
       <name>rtpdvdepay</name>
       <longname>RTP DV Depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Depayloads DV from RTP packets (RFC 3189)</description>
       <author>Marcel Moreaux &lt;marcelm@spacelabs.nl&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -276,7 +297,7 @@
     <element>
       <name>rtpdvpay</name>
       <longname>RTP DV Payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payloads DV into RTP packets (RFC 3189)</description>
       <author>Marcel Moreaux &lt;marcelm@spacelabs.nl&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -297,7 +318,7 @@
     <element>
       <name>rtpg722depay</name>
       <longname>RTP audio depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts G722 audio from RTP packets</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -318,7 +339,7 @@
     <element>
       <name>rtpg722pay</name>
       <longname>RTP audio payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encode Raw audio into RTP packets (RFC 3551)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -339,7 +360,7 @@
     <element>
       <name>rtpg723depay</name>
       <longname>RTP G.723 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts G.723 audio from RTP packets (RFC 3551)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -360,7 +381,7 @@
     <element>
       <name>rtpg723pay</name>
       <longname>RTP G.723 payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Packetize G.723 audio into RTP packets</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -381,7 +402,7 @@
     <element>
       <name>rtpg726depay</name>
       <longname>RTP G.726 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts G.726 audio from RTP packets</description>
       <author>Axis Communications &lt;dev-gstreamer@axis.com&gt;</author>
       <pads>
@@ -402,7 +423,7 @@
     <element>
       <name>rtpg726pay</name>
       <longname>RTP G.726 payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes G.726 audio into a RTP packet</description>
       <author>Axis Communications &lt;dev-gstreamer@axis.com&gt;</author>
       <pads>
@@ -423,7 +444,7 @@
     <element>
       <name>rtpg729depay</name>
       <longname>RTP G.729 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts G.729 audio from RTP packets (RFC 3551)</description>
       <author>Laurent Glayal &lt;spglegle@yahoo.fr&gt;</author>
       <pads>
@@ -444,7 +465,7 @@
     <element>
       <name>rtpg729pay</name>
       <longname>RTP G.729 payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Packetize G.729 audio into RTP packets</description>
       <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
       <pads>
@@ -465,7 +486,7 @@
     <element>
       <name>rtpgsmdepay</name>
       <longname>RTP GSM depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts GSM audio from RTP packets</description>
       <author>Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
       <pads>
@@ -486,7 +507,7 @@
     <element>
       <name>rtpgsmpay</name>
       <longname>RTP GSM payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes GSM audio into a RTP packet</description>
       <author>Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
       <pads>
@@ -505,9 +526,51 @@
       </pads>
     </element>
     <element>
+      <name>rtpgstdepay</name>
+      <longname>GStreamer depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts GStreamer buffers from RTP packets</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)application, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)X-GST</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpgstpay</name>
+      <longname>RTP GStreamer payloader</longname>
+      <class>Codec/Payloader/Network/RTP</class>
+      <description>Payload GStreamer buffers as RTP packets</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)application, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)X-GST</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtph263depay</name>
       <longname>RTP H263 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts H263 video from RTP packets (RFC 2190)</description>
       <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
@@ -528,7 +591,7 @@
     <element>
       <name>rtph263pay</name>
       <longname>RTP H263 packet payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes H263 video in RTP packets (RFC 2190)</description>
       <author>Neil Stratford &lt;neils@vipadia.com&gt;Dejan Sakelsak &lt;dejan.sakelsak@marand.si&gt;</author>
       <pads>
@@ -549,7 +612,7 @@
     <element>
       <name>rtph263pdepay</name>
       <longname>RTP H263 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts H263/+/++ video from RTP packets (RFC 4629)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -570,7 +633,7 @@
     <element>
       <name>rtph263ppay</name>
       <longname>RTP H263 payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes H263/+/++ video in RTP packets (RFC 4629)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -591,7 +654,7 @@
     <element>
       <name>rtph264depay</name>
       <longname>RTP H264 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts H264 video from RTP packets (RFC 3984)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -612,7 +675,7 @@
     <element>
       <name>rtph264pay</name>
       <longname>RTP H264 payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encode H264 video into RTP packets (RFC 3984)</description>
       <author>Laurent Glayal &lt;spglegle@yahoo.fr&gt;</author>
       <pads>
@@ -633,7 +696,7 @@
     <element>
       <name>rtpilbcdepay</name>
       <longname>RTP iLBC depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts iLBC audio from RTP packets (RFC 3952)</description>
       <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;</author>
       <pads>
@@ -654,7 +717,7 @@
     <element>
       <name>rtpilbcpay</name>
       <longname>RTP iLBC Payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Packetize iLBC audio streams into RTP packets</description>
       <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;</author>
       <pads>
@@ -675,7 +738,7 @@
     <element>
       <name>rtpj2kdepay</name>
       <longname>RTP JPEG 2000 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts JPEG 2000 video from RTP packets (RFC 5371)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -696,7 +759,7 @@
     <element>
       <name>rtpj2kpay</name>
       <longname>RTP JPEG 2000 payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes JPEG 2000 pictures into RTP packets (RFC 5371)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -717,7 +780,7 @@
     <element>
       <name>rtpjpegdepay</name>
       <longname>RTP JPEG depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts JPEG video from RTP packets (RFC 2435)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -738,7 +801,7 @@
     <element>
       <name>rtpjpegpay</name>
       <longname>RTP JPEG payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes JPEG pictures into RTP packets (RFC 2435)</description>
       <author>Axis Communications &lt;dev-gstreamer@axis.com&gt;</author>
       <pads>
@@ -759,7 +822,7 @@
     <element>
       <name>rtpmp1sdepay</name>
       <longname>RTP MPEG1 System Stream depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts MPEG1 System Streams from RTP packets (RFC 3555)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -780,7 +843,7 @@
     <element>
       <name>rtpmp2tdepay</name>
       <longname>RTP MPEG Transport Stream depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts MPEG2 TS from RTP packets (RFC 2250)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;</author>
       <pads>
@@ -801,7 +864,7 @@
     <element>
       <name>rtpmp2tpay</name>
       <longname>RTP MPEG2 Transport Stream payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes MPEG2 TS into RTP packets (RFC 2250)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -822,7 +885,7 @@
     <element>
       <name>rtpmp4adepay</name>
       <longname>RTP MPEG4 audio depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts MPEG4 audio from RTP packets (RFC 3016)</description>
       <author>Nokia Corporation (contact &lt;stefan.kost@nokia.com&gt;), Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -843,7 +906,7 @@
     <element>
       <name>rtpmp4apay</name>
       <longname>RTP MPEG4 audio payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload MPEG4 audio as RTP packets (RFC 3016)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -864,7 +927,7 @@
     <element>
       <name>rtpmp4gdepay</name>
       <longname>RTP MPEG4 ES depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts MPEG4 elementary streams from RTP packets (RFC 3640)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -885,7 +948,7 @@
     <element>
       <name>rtpmp4gpay</name>
       <longname>RTP MPEG4 ES payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload MPEG4 elementary streams as RTP packets (RFC 3640)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -906,7 +969,7 @@
     <element>
       <name>rtpmp4vdepay</name>
       <longname>RTP MPEG4 video depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts MPEG4 video from RTP packets (RFC 3016)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -927,7 +990,7 @@
     <element>
       <name>rtpmp4vpay</name>
       <longname>RTP MPEG4 Video payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload MPEG-4 video as RTP packets (RFC 3016)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -935,7 +998,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-xvid</details>
         </caps>
         <caps>
           <name>src</name>
@@ -948,7 +1011,7 @@
     <element>
       <name>rtpmpadepay</name>
       <longname>RTP MPEG audio depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts MPEG audio from RTP packets (RFC 2038)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -969,7 +1032,7 @@
     <element>
       <name>rtpmpapay</name>
       <longname>RTP MPEG audio payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload MPEG audio as RTP packets (RFC 2038)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -990,7 +1053,7 @@
     <element>
       <name>rtpmparobustdepay</name>
       <longname>RTP MPEG audio depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts MPEG audio from RTP packets (RFC 5219)</description>
       <author>Mark Nauwelaerts &lt;mark.nauwelaerts@collabora.co.uk&gt;</author>
       <pads>
@@ -1011,7 +1074,7 @@
     <element>
       <name>rtpmpvdepay</name>
       <longname>RTP MPEG video depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts MPEG video from RTP packets (RFC 2250)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -1032,7 +1095,7 @@
     <element>
       <name>rtpmpvpay</name>
       <longname>RTP MPEG2 ES video payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes MPEG2 ES into RTP packets (RFC 2250)</description>
       <author>Thijs Vermeir &lt;thijsvermeir@gmail.com&gt;</author>
       <pads>
@@ -1053,7 +1116,7 @@
     <element>
       <name>rtppcmadepay</name>
       <longname>RTP PCMA depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts PCMA audio from RTP packets</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
       <pads>
@@ -1074,7 +1137,7 @@
     <element>
       <name>rtppcmapay</name>
       <longname>RTP PCMA payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes PCMA audio into a RTP packet</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
@@ -1095,7 +1158,7 @@
     <element>
       <name>rtppcmudepay</name>
       <longname>RTP PCMU depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts PCMU audio from RTP packets</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
       <pads>
@@ -1116,7 +1179,7 @@
     <element>
       <name>rtppcmupay</name>
       <longname>RTP PCMU payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes PCMU audio into a RTP packet</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
@@ -1137,7 +1200,7 @@
     <element>
       <name>rtpqcelpdepay</name>
       <longname>RTP QCELP depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts QCELP (PureVoice) audio from RTP packets (RFC 2658)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -1158,7 +1221,7 @@
     <element>
       <name>rtpqdm2depay</name>
       <longname>RTP QDM2 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts QDM2 audio from RTP packets (no RFC)</description>
       <author>Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
@@ -1179,7 +1242,7 @@
     <element>
       <name>rtpsirendepay</name>
       <longname>RTP Siren packet depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts Siren audio from RTP packets</description>
       <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;</author>
       <pads>
@@ -1200,7 +1263,7 @@
     <element>
       <name>rtpsirenpay</name>
       <longname>RTP Payloader for Siren Audio</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Packetize Siren audio streams into RTP packets</description>
       <author>Youness Alaoui &lt;kakaroto@kakaroto.homelinux.net&gt;</author>
       <pads>
@@ -1221,7 +1284,7 @@
     <element>
       <name>rtpspeexdepay</name>
       <longname>RTP Speex depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts Speex audio from RTP packets</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
@@ -1242,7 +1305,7 @@
     <element>
       <name>rtpspeexpay</name>
       <longname>RTP Speex payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes Speex audio into a RTP packet</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
@@ -1263,7 +1326,7 @@
     <element>
       <name>rtpsv3vdepay</name>
       <longname>RTP SVQ3 depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts SVQ3 video from RTP packets (no RFC)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -1284,7 +1347,7 @@
     <element>
       <name>rtptheoradepay</name>
       <longname>RTP Theora depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts Theora video from RTP packets (draft-01 of RFC XXXX)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -1305,7 +1368,7 @@
     <element>
       <name>rtptheorapay</name>
       <longname>RTP Theora payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encode Theora video into RTP packets (draft-01 RFC XXXX)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -1326,7 +1389,7 @@
     <element>
       <name>rtpvorbisdepay</name>
       <longname>RTP Vorbis depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts Vorbis Audio from RTP packets (RFC 5215)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -1347,7 +1410,7 @@
     <element>
       <name>rtpvorbispay</name>
       <longname>RTP Vorbis depayloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encode Vorbis audio into RTP packets (RFC 5215)</description>
       <author>Wim Taymans &lt;wimi.taymans@gmail.com&gt;</author>
       <pads>
@@ -1368,7 +1431,7 @@
     <element>
       <name>rtpvrawdepay</name>
       <longname>RTP Raw Video depayloader</longname>
-      <class>Codec/Depayloader/Network</class>
+      <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts raw video from RTP packets (RFC 4175)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
@@ -1389,7 +1452,7 @@
     <element>
       <name>rtpvrawpay</name>
       <longname>RTP Raw Video payloader</longname>
-      <class>Codec/Payloader/Network</class>
+      <class>Codec/Payloader/Network/RTP</class>
       <description>Payload raw video as RTP packets (RFC 4175)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>

@@ -12,7 +12,7 @@
     <element>
       <name>deinterlace</name>
       <longname>Deinterlacer</longname>
-      <class>Filter/Video</class>
+      <class>Filter/Effect/Video/Deinterlace</class>
       <description>Deinterlace Methods ported from DScaler/TvTime</description>
       <author>Martin Eikermann &lt;meiker@upb.de&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
