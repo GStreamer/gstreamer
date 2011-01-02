@@ -55,7 +55,6 @@
 
 
 #include "gstv4l2colorbalance.h"
-#include "gstv4l2tuner.h"
 #ifdef HAVE_XVIDEO
 #include "gstv4l2xoverlay.h"
 #endif
@@ -92,7 +91,6 @@ enum
 
 GST_IMPLEMENT_V4L2_PROBE_METHODS (GstV4l2SinkClass, gst_v4l2sink);
 GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Sink, gst_v4l2sink);
-GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Sink, gst_v4l2sink);
 #ifdef HAVE_XVIDEO
 GST_IMPLEMENT_V4L2_XOVERLAY_METHODS (GstV4l2Sink, gst_v4l2sink);
 #endif
@@ -103,13 +101,14 @@ gst_v4l2sink_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
   GstV4l2Object *v4l2object = GST_V4L2SINK (iface)->v4l2object;
 
-  g_assert (iface_type == GST_TYPE_TUNER ||
 #ifdef HAVE_XVIDEO
-      iface_type == GST_TYPE_X_OVERLAY ||
-      iface_type == GST_TYPE_NAVIGATION ||
-#endif
+  g_assert (iface_type == GST_TYPE_X_OVERLAY ||
       iface_type == GST_TYPE_COLOR_BALANCE ||
       iface_type == GST_TYPE_VIDEO_ORIENTATION);
+#else
+  g_assert (iface_type == GST_TYPE_COLOR_BALANCE ||
+      iface_type == GST_TYPE_VIDEO_ORIENTATION);
+#endif
 
   if (v4l2object->video_fd == -1)
     return FALSE;
@@ -151,11 +150,6 @@ gst_v4l2sink_init_interfaces (GType type)
     NULL,
     NULL,
   };
-  static const GInterfaceInfo v4l2_tuner_info = {
-    (GInterfaceInitFunc) gst_v4l2sink_tuner_interface_init,
-    NULL,
-    NULL,
-  };
 #ifdef HAVE_XVIDEO
   static const GInterfaceInfo v4l2_xoverlay_info = {
     (GInterfaceInitFunc) gst_v4l2sink_xoverlay_interface_init,
@@ -186,7 +180,6 @@ gst_v4l2sink_init_interfaces (GType type)
 
   g_type_add_interface_static (type,
       GST_TYPE_IMPLEMENTS_INTERFACE, &v4l2iface_info);
-  g_type_add_interface_static (type, GST_TYPE_TUNER, &v4l2_tuner_info);
 #ifdef HAVE_XVIDEO
   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &v4l2_xoverlay_info);
   g_type_add_interface_static (type,
