@@ -875,7 +875,7 @@ id3v2_genre_fields_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
   for (i = 0; i < tag_fields->len; i++) {
     gint len;
 
-    tag_str = g_array_index (tag_fields, gchar *, 0);
+    tag_str = g_array_index (tag_fields, gchar *, i);
     if (tag_str == NULL)
       continue;
 
