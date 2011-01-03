@@ -376,6 +376,7 @@ fd_set_to_pollfd (GstPoll * set, fd_set * readfds, fd_set * writefds,
     struct pollfd *pfd = &g_array_index (set->active_fds, struct pollfd, i);
 
     if (pfd->fd < FD_SETSIZE) {
+      pfd->revents = 0;
       if (FD_ISSET (pfd->fd, readfds))
         pfd->revents |= POLLIN;
       if (FD_ISSET (pfd->fd, writefds))
