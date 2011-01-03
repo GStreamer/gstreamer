@@ -161,7 +161,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_DEBUG            FALSE
 #define DEFAULT_RETRY            20
 #define DEFAULT_TIMEOUT          5000000
-#define DEFAULT_UDP_BUFFER_SIZE  0
+#define DEFAULT_UDP_BUFFER_SIZE  0x80000
 #define DEFAULT_TCP_TIMEOUT      20000000
 #define DEFAULT_LATENCY_MS       2000
 #define DEFAULT_CONNECTION_SPEED 0
@@ -1494,6 +1494,10 @@ again:
     goto no_udp_protocol;
   g_object_set (G_OBJECT (udpsrc0), "port", tmp_rtp, "reuse", FALSE, NULL);
 
+  if (src->udp_buffer_size != 0)
+    g_object_set (G_OBJECT (udpsrc0), "buffer-size", src->udp_buffer_size,
+        NULL);
+
   ret = gst_element_set_state (udpsrc0, GST_STATE_PAUSED);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     if (tmp_rtp != 0) {
@@ -2720,8 +2724,6 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
      * if we can. */
     g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", src->udp_timeout,
         NULL);
-    g_object_set (G_OBJECT (stream->udpsrc[0]), "buffer-size",
-        src->udp_buffer_size, NULL);
 
     /* get output pad of the UDP source. */
     *outpad = gst_element_get_static_pad (stream->udpsrc[0], "src");
