@@ -1708,6 +1708,7 @@ convert_Y444_AYUV (ColorspaceConvert * convert, guint8 * dest,
       convert->src_stride[2], convert->width, convert->height);
 }
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 static void
 convert_AYUV_ARGB (ColorspaceConvert * convert, guint8 * dest,
     const guint8 * src)
@@ -1776,6 +1777,7 @@ convert_I420_BGRA (ColorspaceConvert * convert, guint8 * dest,
     }
   }
 }
+#endif
 
 
 
@@ -1857,6 +1859,7 @@ static const ColorspaceTransform transforms[] = {
   {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
       COLOR_SPEC_NONE, TRUE, convert_Y444_Y42B},
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_ARGB,
       COLOR_SPEC_RGB, FALSE, convert_AYUV_ARGB},
   {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_BGRA,
@@ -1872,6 +1875,7 @@ static const ColorspaceTransform transforms[] = {
 
   {GST_VIDEO_FORMAT_I420, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_BGRA,
       COLOR_SPEC_RGB, FALSE, convert_I420_BGRA},
+#endif
 };
 
 static void
