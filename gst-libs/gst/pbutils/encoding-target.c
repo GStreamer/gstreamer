@@ -725,8 +725,7 @@ beach:
   return res;
 }
 
-/**
- *
+/*
  * returned list contents must be freed
  */
 static GList *
@@ -929,9 +928,7 @@ write_failed:
  * @target: a #GstEncodingTarget
  * @error: If an error occured, this field will be filled in.
  *
- * Saves the @target to the default location. Unless the user has write access
- * to the system-wide encoding target directory, it will be saved in a
- * user-local directory.
+ * Saves the @target to a default user-local directory.
  *
  * Since: 0.10.32
  *

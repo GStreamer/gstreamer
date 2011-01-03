@@ -298,10 +298,10 @@ gst_encoding_profile_get_restriction (GstEncodingProfile * profile)
  * @profile: a #GstEncodingProfile
  * @name: the name to set on the profile
  *
- * Since: 0.10.32
- *
  * Set @name as the given name for the @profile. A copy of @name will be made
  * internally.
+ *
+ * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_name (GstEncodingProfile * profile, const gchar * name)
@@ -316,10 +316,10 @@ gst_encoding_profile_set_name (GstEncodingProfile * profile, const gchar * name)
  * @profile: a #GstEncodingProfile
  * @description: the description to set on the profile
  *
- * Since: 0.10.32
- *
  * Set @description as the given description for the @profile. A copy of @description will be made
  * internally.
+ *
+ * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_description (GstEncodingProfile * profile,
@@ -335,9 +335,9 @@ gst_encoding_profile_set_description (GstEncodingProfile * profile,
  * @profile: a #GstEncodingProfile
  * @format: the media format to use in the profile.
  *
- * Since: 0.10.32
- *
  * Sets the media format used in the profile.
+ *
+ * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_format (GstEncodingProfile * profile, GstCaps * format)
@@ -352,9 +352,9 @@ gst_encoding_profile_set_format (GstEncodingProfile * profile, GstCaps * format)
  * @profile: a #GstEncodingProfile
  * @preset: the element preset to use
  *
- * Since: 0.10.32
- *
  * Sets the preset to use for the profile.
+ *
+ * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_preset (GstEncodingProfile * profile,
@@ -370,10 +370,10 @@ gst_encoding_profile_set_preset (GstEncodingProfile * profile,
  * @profile: a #GstEncodingProfile
  * @presence: the number of time the profile can be used
  *
- * Since: 0.10.32
- *
  * Set the number of time the profile is used in its parent
  * container profile. If 0, it is not a mandatory stream
+ *
+ * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
@@ -386,10 +386,10 @@ gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
  * @profile: a #GstEncodingProfile
  * @restriction: the restriction to apply
  *
- * Since: 0.10.32
- *
  * Set the restriction #GstCaps to apply before the encoder
  * that will be used in the profile. Does not apply to #GstEncodingContainerProfile.
+ *
+ * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_restriction (GstEncodingProfile * profile,
@@ -501,11 +501,11 @@ gst_encoding_video_profile_get_variableframerate (GstEncodingVideoProfile *
  * @prof: a #GstEncodingVideoProfile
  * @pass: the pass number for this profile
  *
- * Since: 0.10.32
- *
  * Sets the pass number of this video profile. The first pass profile should have
  * this value set to 1. If this video profile isn't part of a multi-pass profile,
  * you may set it to 0 (the default value).
+ *
+ * Since: 0.10.32
  */
 void
 gst_encoding_video_profile_set_pass (GstEncodingVideoProfile * prof, guint pass)
@@ -518,12 +518,12 @@ gst_encoding_video_profile_set_pass (GstEncodingVideoProfile * prof, guint pass)
  * @prof: a #GstEncodingVideoProfile
  * @variableframerate: a boolean
  *
- * Since: 0.10.32
- *
  * If set to %TRUE, then the incoming streamm will be allowed to have non-constant
  * framerate. If set to %FALSE (default value), then the incoming stream will
  * be normalized by dropping/duplicating frames in order to produce a
  * constance framerate.
+ *
+ * Since: 0.10.32
  */
 void
 gst_encoding_video_profile_set_variableframerate (GstEncodingVideoProfile *
