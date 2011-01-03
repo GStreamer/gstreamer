@@ -32,15 +32,48 @@ G_BEGIN_DECLS
  *
  */
 
+/**
+ * GST_ENCODING_CATEGORY_DEVICE:
+ * #GstEncodingTarget category for device-specific targets.
+ * The name of the target will usually be the contructor and model of the device,
+ * and that target will contain #GstEncodingProfiles suitable for that device.
+ */
 #define GST_ENCODING_CATEGORY_DEVICE		"device"
+
+/**
+ * GST_ENCODING_CATEGORY_ONLINE_SERVICE:
+ * #GstEncodingTarget category for online-services.
+ * The name of the target will usually be the name of the online service
+ * and that target will contain #GstEncodingProfiles suitable for that online
+ * service.
+ */
+
 #define GST_ENCODING_CATEGORY_ONLINE_SERVICE	"online-service"
+
+/**
+ * GST_ENCODING_CATEGORY_STORAGE_EDITING:
+ * #GstEncodingTarget category for storage, archiving and editing targets.
+ * Those targets can be lossless and/or provide very fast random access content.
+ * The name of the target will usually be the container type or editing target,
+ * and that target will contain #GstEncodingProfiles suitable for editing or
+ * storage.
+ */
 #define GST_ENCODING_CATEGORY_STORAGE_EDITING   "storage-editing"
+
+/**
+ * GST_ENCODING_CATEGORY_CAPTURE:
+ * #GstEncodingTarget category for recording and capture.
+ * Targets within this category are optimized for low latency encoding.
+ */
 #define GST_ENCODING_CATEGORY_CAPTURE		"capture"
 
 /**
  * GstEncodingTarget:
  *
  * Collection of #GstEncodingProfile for a specific target or use-case.
+ *
+ * When being stored/loaded, targets come from a specific category, like
+ * #GST_ENCODING_CATEGORY_DEVICE.
  *
  * Since: 0.10.32
  */

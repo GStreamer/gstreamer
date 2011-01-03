@@ -133,7 +133,8 @@ gst_encoding_target_get_name (GstEncodingTarget * target)
  *
  * Since: 0.10.32
  *
- * Returns: (transfer none): The category of the @target.
+ * Returns: (transfer none): The category of the @target. For example:
+ * #GST_ENCODING_CATEGORY_DEVICE.
  */
 const gchar *
 gst_encoding_target_get_category (GstEncodingTarget * target)
@@ -238,7 +239,7 @@ validate_name (const gchar * name)
  * gst_encoding_target_new:
  * @name: The name of the target.
  * @category: (transfer none): The name of the category to which this @target
- * belongs.
+ * belongs. For example: #GST_ENCODING_CATEGORY_DEVICE.
  * @description: (transfer none): A description of #GstEncodingTarget in the
  * current locale.
  * @profiles: (transfer none) (element-type Gst.EncodingProfile): A #GList of
@@ -249,6 +250,10 @@ validate_name (const gchar * name)
  * The name and category can only consist of lowercase ASCII letters for the
  * first character, followed by either lowercase ASCII letters, digits or
  * hyphens ('-').
+ *
+ * The @category *should* be one of the existing well-defined categories, like
+ * #GST_ENCODING_CATEGORY_DEVICE, but it *can* be a application or user specific
+ * category if needed.
  *
  * Since: 0.10.32
  *
@@ -305,7 +310,8 @@ invalid_category:
  * @target: the #GstEncodingTarget to add a profile to
  * @profile: (transfer full): the #GstEncodingProfile to add
  *
- * Adds the given @profile to the @target.
+ * Adds the given @profile to the @target. Each added profile must have
+ * a unique name within the profile.
  *
  * The @target will steal a reference to the @profile. If you wish to use
  * the profile after calling this method, you should increase its reference
@@ -783,7 +789,8 @@ gst_encoding_target_subload (gchar * path, const gchar * category,
 /**
  * gst_encoding_target_load:
  * @name: the name of the #GstEncodingTarget to load.
- * @category: (allow-none): the name of the target category. Can be %NULL
+ * @category: (allow-none): the name of the target category, like
+ * #GST_ENCODING_CATEGORY_DEVICE. Can be %NULL
  * @error: If an error occured, this field will be filled in.
  *
  * Searches for the #GstEncodingTarget with the given name, loads it
