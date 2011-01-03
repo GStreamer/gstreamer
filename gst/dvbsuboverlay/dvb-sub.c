@@ -33,7 +33,6 @@
 #include <string.h>             /* memset */
 #include <gst/gstutils.h>       /* GST_READ_UINT16_BE */
 #include <gst/base/gstbitreader.h>      /* GstBitReader */
-#include "ffmpeg-colorspace.h" /* YUV_TO_RGB1_CCIR */   /* FIXME: Just give YUV data to gstreamer then? */
 
 #include "dvb-sub.h"
 
@@ -55,13 +54,10 @@ static void dvb_sub_init (void);
  */
 
 #define MAX_NEG_CROP 1024
-static guint8 ff_cropTbl[256 + 2 * MAX_NEG_CROP] = { 0, };
 
-#define cm (ff_cropTbl + MAX_NEG_CROP)
+#define AYUV(y,u,v,a) (((a) << 24) | ((y) << 16) | ((u) << 8) | (v))
+#define RGBA_TO_AYUV(r,g,b,a) (((a) << 24) | ((rgb_to_y(r,g,b)) << 16) | ((rgb_to_u(r,g,b)) << 8) | (rgb_to_v(r,g,b)))
 
-/* FIXME: This is really ARGB... We might need this configurable for performant
- * FIXME: use in GStreamer as well if that likes RGBA more (Qt prefers ARGB) */
-#define RGBA(r,g,b,a) (((a) << 24) | ((r) << 16) | ((g) << 8) | (b))
 
 typedef struct DVBSubCLUT
 {
@@ -155,6 +151,40 @@ typedef enum
   TOP_FIELD = 0,
   BOTTOM_FIELD = 1
 } DvbSubPixelDataSubBlockFieldType;
+
+static inline gint
+rgb_to_y (gint r, gint g, gint b)
+{
+  gint ret;
+
+  ret = (gint) (((19595 * r) >> 16) + ((38470 * g) >> 16) + ((7471 * b) >> 16));
+  ret = CLAMP (ret, 0, 255);
+  return ret;
+}
+
+static inline gint
+rgb_to_u (gint r, gint g, gint b)
+{
+  gint ret;
+
+  ret =
+      (gint) (-((11059 * r) >> 16) - ((21709 * g) >> 16) + ((32768 * b) >> 16) +
+      128);
+  ret = CLAMP (ret, 0, 255);
+  return ret;
+}
+
+static inline gint
+rgb_to_v (gint r, gint g, gint b)
+{
+  gint ret;
+
+  ret =
+      (gint) (((32768 * r) >> 16) - ((27439 * g) >> 16) - ((5329 * b) >> 16) +
+      128);
+  ret = CLAMP (ret, 0, 255);
+  return ret;
+}
 
 static DVBSubObject *
 get_object (DvbSub * dvb_sub, guint16 object_id)
@@ -263,20 +293,6 @@ delete_state (DvbSub * dvb_sub)
   g_warn_if_fail (dvb_sub->object_list == NULL);
 }
 
-/* init static data necessary for ffmpeg-colorspace conversion */
-static void
-dsputil_static_init (void)
-{
-  int i;
-
-  for (i = 0; i < 256; i++)
-    ff_cropTbl[i + MAX_NEG_CROP] = i;
-  for (i = 0; i < MAX_NEG_CROP; i++) {
-    ff_cropTbl[i] = 0;
-    ff_cropTbl[i + MAX_NEG_CROP + 256] = 255;
-  }
-}
-
 static void
 dvb_sub_init (void)
 {
@@ -284,19 +300,17 @@ dvb_sub_init (void)
 
   GST_DEBUG_CATEGORY_INIT (dvbsub_debug, "dvbsub", 0, "dvbsuboverlay parser");
 
-  dsputil_static_init ();       /* Initializes ff_cropTbl table, used in YUV_TO_RGB conversion */
-
   /* Initialize the static default_clut structure, from which other clut
    * structures are initialized from (to start off with default CLUTs
    * as defined in the specification). */
   default_clut.id = -1;
 
-  default_clut.clut4[0] = RGBA (0, 0, 0, 0);
-  default_clut.clut4[1] = RGBA (255, 255, 255, 255);
-  default_clut.clut4[2] = RGBA (0, 0, 0, 255);
-  default_clut.clut4[3] = RGBA (127, 127, 127, 255);
+  default_clut.clut4[0] = RGBA_TO_AYUV (0, 0, 0, 0);
+  default_clut.clut4[1] = RGBA_TO_AYUV (255, 255, 255, 255);
+  default_clut.clut4[2] = RGBA_TO_AYUV (0, 0, 0, 255);
+  default_clut.clut4[3] = RGBA_TO_AYUV (127, 127, 127, 255);
 
-  default_clut.clut16[0] = RGBA (0, 0, 0, 0);
+  default_clut.clut16[0] = RGBA_TO_AYUV (0, 0, 0, 0);
   for (i = 1; i < 16; i++) {
     if (i < 8) {
       r = (i & 1) ? 255 : 0;
@@ -307,10 +321,10 @@ dvb_sub_init (void)
       g = (i & 2) ? 127 : 0;
       b = (i & 4) ? 127 : 0;
     }
-    default_clut.clut16[i] = RGBA (r, g, b, 255);
+    default_clut.clut16[i] = RGBA_TO_AYUV (r, g, b, 255);
   }
 
-  default_clut.clut256[0] = RGBA (0, 0, 0, 0);
+  default_clut.clut256[0] = RGBA_TO_AYUV (0, 0, 0, 0);
   for (i = 1; i < 256; i++) {
     if (i < 8) {
       r = (i & 1) ? 255 : 0;
@@ -345,7 +359,7 @@ dvb_sub_init (void)
           break;
       }
     }
-    default_clut.clut256[i] = RGBA (r, g, b, a);
+    default_clut.clut256[i] = RGBA_TO_AYUV (r, g, b, a);
   }
 }
 
@@ -564,7 +578,6 @@ _dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   DVBSubCLUT *clut;
   int entry_id, depth, full_range;
   int y, cr, cb, alpha;
-  int r, g, b, r_add, g_add, b_add;
 
   GST_MEMDUMP ("DVB clut packet", buf, buf_size);
 
@@ -613,18 +626,15 @@ _dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     if (y == 0)
       alpha = 0xff;
 
-    YUV_TO_RGB1_CCIR (cb, cr);
-    YUV_TO_RGB2_CCIR (r, g, b, y);
-
-    GST_DEBUG ("CLUT DEFINITION: clut %d := (%d,%d,%d,%d)", entry_id, r, g, b,
+    GST_DEBUG ("CLUT DEFINITION: clut %d := (%d,%d,%d,%d)", entry_id, y, cb, cr,
         alpha);
 
     if (depth & 0x80)
-      clut->clut4[entry_id] = RGBA (r, g, b, 255 - alpha);
+      clut->clut4[entry_id] = AYUV (y, cb, cr, 255 - alpha);
     if (depth & 0x40)
-      clut->clut16[entry_id] = RGBA (r, g, b, 255 - alpha);
+      clut->clut16[entry_id] = AYUV (y, cb, cr, 255 - alpha);
     if (depth & 0x20)
-      clut->clut256[entry_id] = RGBA (r, g, b, 255 - alpha);
+      clut->clut256[entry_id] = AYUV (y, cb, cr, 255 - alpha);
   }
 }
 

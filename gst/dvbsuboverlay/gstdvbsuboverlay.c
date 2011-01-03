@@ -423,47 +423,11 @@ gst_dvbsub_overlay_getcaps (GstPad * pad)
   return caps;
 }
 
-static inline gint
-rgb_to_y (gint r, gint g, gint b)
-{
-  gint ret;
-
-  ret = (gint) (((19595 * r) >> 16) + ((38470 * g) >> 16) + ((7471 * b) >> 16));
-  ret = CLAMP (ret, 0, 255);
-  return ret;
-}
-
-static inline gint
-rgb_to_u (gint r, gint g, gint b)
-{
-  gint ret;
-
-  ret =
-      (gint) (-((11059 * r) >> 16) - ((21709 * g) >> 16) + ((32768 * b) >> 16) +
-      128);
-  ret = CLAMP (ret, 0, 255);
-  return ret;
-}
-
-static inline gint
-rgb_to_v (gint r, gint g, gint b)
-{
-  gint ret;
-
-  ret =
-      (gint) (((32768 * r) >> 16) - ((27439 * g) >> 16) - ((5329 * b) >> 16) +
-      128);
-  ret = CLAMP (ret, 0, 255);
-  return ret;
-}
-
-/* FIXME: DVB-SUB actually provides us AYUV from CLUT, but libdvbsub used to convert it to ARGB */
 static void
 blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
 {
   guint counter;
   DVBSubtitleRect *sub_region;
-  gint r, g, b;
   gint a1, a2, a3, a4;
   gint y1, y2, y3, y4;
   gint u1, u2, u3, u4;
@@ -574,49 +538,33 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         color =
             sub_region->pict.palette[src[(sy >> 16) * src_stride + (sx >> 16)]];
         a1 = (color >> 24) & 0xff;
-        r = (color >> 16) & 0xff;
-        g = (color >> 8) & 0xff;
-        b = color & 0xff;
-
-        y1 = rgb_to_y (r, g, b);
-        u1 = rgb_to_u (r, g, b);
-        v1 = rgb_to_v (r, g, b);
+        y1 = (color >> 16) & 0xff;
+        u1 = (color >> 8) & 0xff;
+        v1 = color & 0xff;
 
         color =
             sub_region->pict.palette[src[(sy >> 16) * src_stride + ((sx +
                         xstep) >> 16)]];
         a2 = (color >> 24) & 0xff;
-        r = (color >> 16) & 0xff;
-        g = (color >> 8) & 0xff;
-        b = color & 0xff;
-
-        y2 = rgb_to_y (r, g, b);
-        u2 = rgb_to_u (r, g, b);
-        v2 = rgb_to_v (r, g, b);
+        y2 = (color >> 16) & 0xff;
+        u2 = (color >> 8) & 0xff;
+        v2 = color & 0xff;
 
         color =
             sub_region->pict.palette[src[((sy + ystep) >> 16) * src_stride +
                 (sx >> 16)]];
         a3 = (color >> 24) & 0xff;
-        r = (color >> 16) & 0xff;
-        g = (color >> 8) & 0xff;
-        b = color & 0xff;
-
-        y3 = rgb_to_y (r, g, b);
-        u3 = rgb_to_u (r, g, b);
-        v3 = rgb_to_v (r, g, b);
+        y3 = (color >> 16) & 0xff;
+        u3 = (color >> 8) & 0xff;
+        v3 = color & 0xff;
 
         color =
             sub_region->pict.palette[src[((sy + ystep) >> 16) * src_stride +
                 ((sx + xstep) >> 16)]];
         a4 = (color >> 24) & 0xff;
-        r = (color >> 16) & 0xff;
-        g = (color >> 8) & 0xff;
-        b = color & 0xff;
-
-        y4 = rgb_to_y (r, g, b);
-        u4 = rgb_to_u (r, g, b);
-        v4 = rgb_to_v (r, g, b);
+        y4 = (color >> 16) & 0xff;
+        u4 = (color >> 8) & 0xff;
+        v4 = color & 0xff;
 
         dst_y[0] = (a1 * y1 + (255 - a1) * dst_y[0]) / 255;
         dst_y[1] = (a2 * y2 + (255 - a2) * dst_y[1]) / 255;
@@ -641,25 +589,17 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         color =
             sub_region->pict.palette[src[(sy >> 16) * src_stride + (sx >> 16)]];
         a1 = (color >> 24) & 0xff;
-        r = (color >> 16) & 0xff;
-        g = (color >> 8) & 0xff;
-        b = color & 0xff;
-
-        y1 = rgb_to_y (r, g, b);
-        u1 = rgb_to_u (r, g, b);
-        v1 = rgb_to_v (r, g, b);
+        y1 = (color >> 16) & 0xff;
+        u1 = (color >> 8) & 0xff;
+        v1 = color & 0xff;
 
         color =
             sub_region->pict.palette[src[((sy + ystep) >> 16) * src_stride +
                 (sx >> 16)]];
         a3 = (color >> 24) & 0xff;
-        r = (color >> 16) & 0xff;
-        g = (color >> 8) & 0xff;
-        b = color & 0xff;
-
-        y3 = rgb_to_y (r, g, b);
-        u3 = rgb_to_u (r, g, b);
-        v3 = rgb_to_v (r, g, b);
+        y3 = (color >> 16) & 0xff;
+        u3 = (color >> 8) & 0xff;
+        v3 = color & 0xff;
 
         dst_y[0] = (a1 * y1 + (255 - a1) * dst_y[0]) / 255;
         dst_y2[0] = (a3 * y3 + (255 - a3) * dst_y2[0]) / 255;
@@ -690,25 +630,17 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         color =
             sub_region->pict.palette[src[(sy >> 16) * src_stride + (sx >> 16)]];
         a1 = (color >> 24) & 0xff;
-        r = (color >> 16) & 0xff;
-        g = (color >> 8) & 0xff;
-        b = color & 0xff;
-
-        y1 = rgb_to_y (r, g, b);
-        u1 = rgb_to_u (r, g, b);
-        v1 = rgb_to_v (r, g, b);
+        y1 = (color >> 16) & 0xff;
+        u1 = (color >> 8) & 0xff;
+        v1 = color & 0xff;
 
         color =
             sub_region->pict.palette[src[(sy >> 16) * src_stride + ((sx +
                         xstep) >> 16)]];
         a2 = (color >> 24) & 0xff;
-        r = (color >> 16) & 0xff;
-        g = (color >> 8) & 0xff;
-        b = color & 0xff;
-
-        y2 = rgb_to_y (r, g, b);
-        u2 = rgb_to_u (r, g, b);
-        v2 = rgb_to_v (r, g, b);
+        y2 = (color >> 16) & 0xff;
+        u2 = (color >> 8) & 0xff;
+        v2 = color & 0xff;
 
         dst_y[0] = (a1 * y1 + (255 - a1) * dst_y[0]) / 255;
         dst_y[1] = (a2 * y2 + (255 - a2) * dst_y[1]) / 255;
@@ -728,13 +660,9 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         color =
             sub_region->pict.palette[src[(sy >> 16) * src_stride + (sx >> 16)]];
         a1 = (color >> 24) & 0xff;
-        r = (color >> 16) & 0xff;
-        g = (color >> 8) & 0xff;
-        b = color & 0xff;
-
-        y1 = rgb_to_y (r, g, b);
-        u1 = rgb_to_u (r, g, b);
-        v1 = rgb_to_v (r, g, b);
+        y1 = (color >> 16) & 0xff;
+        u1 = (color >> 8) & 0xff;
+        v1 = color & 0xff;
 
         dst_y[0] = (a1 * y1 + (255 - a1) * dst_y[0]) / 255;
 
