@@ -292,7 +292,7 @@ GST_START_TEST (test_saving_profile)
   profile_file_name = g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
       "encoding-profiles", "herding", "myponytarget2.gep", NULL);
   GST_DEBUG ("Loading target from '%s'", profile_file_name);
-  loaded = gst_encoding_target_load_from (profile_file_name, NULL);
+  loaded = gst_encoding_target_load_from_file (profile_file_name, NULL);
   fail_unless (loaded != NULL);
   g_free (profile_file_name);
 
@@ -415,7 +415,7 @@ GST_START_TEST (test_loading_profile)
       "encoding-profiles", "herding", "myponytarget.gep", NULL);
 
   GST_DEBUG ("Loading target from '%s'", profile_file_name);
-  target = gst_encoding_target_load_from (profile_file_name, NULL);
+  target = gst_encoding_target_load_from_file (profile_file_name, NULL);
   g_free (profile_file_name);
   fail_unless (target != NULL);
   test_individual_target (target);

@@ -693,8 +693,8 @@ empty_name:
 }
 
 /**
- * gst_encoding_target_load_from:
- * @path: The file to load the #GstEncodingTarget from
+ * gst_encoding_target_load_from_file:
+ * @filepath: The file location to load the #GstEncodingTarget from
  * @error: If an error occured, this field will be filled in.
  *
  * Opens the provided file and returns the contained #GstEncodingTarget.
@@ -706,13 +706,13 @@ empty_name:
  */
 
 GstEncodingTarget *
-gst_encoding_target_load_from (const gchar * path, GError ** error)
+gst_encoding_target_load_from_file (const gchar * filepath, GError ** error)
 {
   GKeyFile *in;
   gchar *targetname, *categoryname, *description;
   GstEncodingTarget *res = NULL;
 
-  in = load_file_and_read_header (path, &targetname, &categoryname,
+  in = load_file_and_read_header (filepath, &targetname, &categoryname,
       &description, error);
   if (!in)
     goto beach;
@@ -768,14 +768,14 @@ gst_encoding_target_subload (gchar * path, const gchar * category,
     gchar *filename;
 
     filename = g_build_filename (path, category, lfilename, NULL);
-    target = gst_encoding_target_load_from (filename, error);
+    target = gst_encoding_target_load_from_file (filename, error);
     g_free (filename);
   } else {
     GList *tmp, *tries = get_matching_filenames (path, lfilename);
 
     /* Try to find a file named %s.gstprofile in any subdirectories */
     for (tmp = tries; tmp; tmp = tmp->next) {
-      target = gst_encoding_target_load_from ((gchar *) tmp->data, NULL);
+      target = gst_encoding_target_load_from_file ((gchar *) tmp->data, NULL);
       if (target)
         break;
     }
@@ -854,12 +854,12 @@ invalid_category:
 }
 
 /**
- * gst_encoding_target_save_to:
+ * gst_encoding_target_save_to_file:
  * @target: a #GstEncodingTarget
- * @path: the location to store the @target at.
+ * @filepath: the location to store the @target at.
  * @error: If an error occured, this field will be filled in.
  *
- * Saves the @target to the provided location.
+ * Saves the @target to the provided file location.
  *
  * Since: 0.10.32
  *
@@ -867,17 +867,17 @@ invalid_category:
  **/
 
 gboolean
-gst_encoding_target_save_to (GstEncodingTarget * target, const gchar * path,
-    GError ** error)
+gst_encoding_target_save_to_file (GstEncodingTarget * target,
+    const gchar * filepath, GError ** error)
 {
   GKeyFile *out;
   gchar *data;
   gsize data_size;
 
   g_return_val_if_fail (GST_IS_ENCODING_TARGET (target), FALSE);
-  g_return_val_if_fail (path != NULL, FALSE);
+  g_return_val_if_fail (filepath != NULL, FALSE);
 
-  /* FIXME : Check path is valid and writable
+  /* FIXME : Check filepath is valid and writable
    * FIXME : Strip out profiles already present in system target */
 
   /* Get unique name... */
@@ -891,7 +891,7 @@ gst_encoding_target_save_to (GstEncodingTarget * target, const gchar * path,
   if (!(data = g_key_file_to_data (out, &data_size, error)))
     goto convert_failed;
 
-  if (!g_file_set_contents (path, data, data_size, error))
+  if (!g_file_set_contents (filepath, data, data_size, error))
     goto write_failed;
 
   g_key_file_free (out);
@@ -916,7 +916,7 @@ convert_failed:
 
 write_failed:
   {
-    GST_ERROR ("Unable to write file %s: %s", path, (*error)->message);
+    GST_ERROR ("Unable to write file %s: %s", filepath, (*error)->message);
     g_key_file_free (out);
     g_free (data);
     return FALSE;
@@ -951,7 +951,7 @@ gst_encoding_target_save (GstEncodingTarget * target, GError ** error)
       GST_ENCODING_TARGET_DIRECTORY, target->category, lfilename, NULL);
   g_free (lfilename);
 
-  res = gst_encoding_target_save_to (target, filename, error);
+  res = gst_encoding_target_save_to_file (target, filename, error);
   g_free (filename);
 
   return TRUE;
@@ -1041,7 +1041,7 @@ sub_get_all_targets (gchar * subdir)
       continue;
 
     fullname = g_build_filename (subdir, filename, NULL);
-    target = gst_encoding_target_load_from (fullname, NULL);
+    target = gst_encoding_target_load_from_file (fullname, NULL);
     if (target) {
       res = g_list_append (res, target);
     } else

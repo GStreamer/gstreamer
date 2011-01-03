@@ -92,10 +92,10 @@ EXPORTS
 	gst_encoding_target_get_profiles
 	gst_encoding_target_get_type
 	gst_encoding_target_load
-	gst_encoding_target_load_from
+	gst_encoding_target_load_from_file
 	gst_encoding_target_new
 	gst_encoding_target_save
-	gst_encoding_target_save_to
+	gst_encoding_target_save_to_file
 	gst_encoding_video_profile_get_pass
 	gst_encoding_video_profile_get_type
 	gst_encoding_video_profile_get_variableframerate

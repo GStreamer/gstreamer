@@ -130,14 +130,14 @@ gst_encoding_target_add_profile (GstEncodingTarget *target, GstEncodingProfile *
 
 gboolean gst_encoding_target_save (GstEncodingTarget *target,
 				   GError **error);
-gboolean gst_encoding_target_save_to (GstEncodingTarget *target,
-				      const gchar *path,
-				      GError **error);
+gboolean gst_encoding_target_save_to_file (GstEncodingTarget *target,
+					   const gchar *filepath,
+					   GError **error);
 GstEncodingTarget *gst_encoding_target_load (const gchar *name,
 					     const gchar *category,
 					     GError **error);
-GstEncodingTarget *gst_encoding_target_load_from (const gchar *path,
-						  GError **error);
+GstEncodingTarget *gst_encoding_target_load_from_file (const gchar *filepath,
+						       GError **error);
 
 GList *gst_encoding_list_available_categories (void);
 GList *gst_encoding_list_all_targets (const gchar * categoryname);
