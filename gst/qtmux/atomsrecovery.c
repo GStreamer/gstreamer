@@ -761,7 +761,7 @@ trak_recov_data_add_sample (TrakRecovData * trak, TrakBufferEntryInfo * b)
 {
   trak->duration += b->nsamples * b->delta;
   atom_stbl_add_samples (&trak->stbl, b->nsamples, b->delta, b->size,
-      b->chunk_offset, b->sync, b->do_pts, b->pts_offset);
+      b->chunk_offset, b->sync, b->pts_offset);
 }
 
 /**
