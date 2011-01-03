@@ -290,7 +290,7 @@ GST_START_TEST (test_saving_profile)
 
   /* Check we can load it */
   profile_file_name = g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "encoding-profile", "herding", "myponytarget2.gstprofile", NULL);
+      "encoding-profiles", "herding", "myponytarget2.gep", NULL);
   GST_DEBUG ("Loading target from '%s'", profile_file_name);
   loaded = gst_encoding_target_load_from (profile_file_name, NULL);
   fail_unless (loaded != NULL);
@@ -412,7 +412,7 @@ GST_START_TEST (test_loading_profile)
 
   /* Test loading using fully specified path */
   profile_file_name = g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "encoding-profile", "herding", "myponytarget.gstprofile", NULL);
+      "encoding-profiles", "herding", "myponytarget.gep", NULL);
 
   GST_DEBUG ("Loading target from '%s'", profile_file_name);
   target = gst_encoding_target_load_from (profile_file_name, NULL);
@@ -545,11 +545,11 @@ remove_profile_file (void)
   gchar *profile_file_name;
 
   profile_file_name = g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "encoding-profile", "herding", "myponytarget.gstprofile", NULL);
+      "encoding-profiles", "herding", "myponytarget.gep", NULL);
   g_unlink (profile_file_name);
   g_free (profile_file_name);
   profile_file_name = g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "encoding-profile", "herding", "myponytarget2.gstprofile", NULL);
+      "encoding-profiles", "herding", "myponytarget2.gep", NULL);
   g_unlink (profile_file_name);
   g_free (profile_file_name);
 }
@@ -563,10 +563,10 @@ create_profile_file (void)
 
   profile_dir =
       g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "encoding-profile", "herding", NULL);
+      "encoding-profiles", "herding", NULL);
   profile_file_name =
       g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "encoding-profile", "herding", "myponytarget.gstprofile", NULL);
+      "encoding-profiles", "herding", "myponytarget.gep", NULL);
   g_mkdir_with_parents (profile_dir, S_IRUSR | S_IWUSR | S_IXUSR);
   if (!g_file_set_contents (profile_file_name, profile_string,
           strlen (profile_string), &error))

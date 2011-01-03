@@ -68,6 +68,8 @@
 
 
 #define GST_ENCODING_TARGET_HEADER "_gstencodingtarget_"
+#define GST_ENCODING_TARGET_DIRECTORY "encoding-profiles"
+#define GST_ENCODING_TARGET_SUFFIX ".gep"
 
 struct _GstEncodingTarget
 {
@@ -818,12 +820,12 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
   if (category && !validate_name (category))
     goto invalid_category;
 
-  lfilename = g_strdup_printf ("%s.gstprofile", name);
+  lfilename = g_strdup_printf ("%s" GST_ENCODING_TARGET_SUFFIX, name);
 
   /* Try from local profiles */
   tldir =
-      g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "encoding-profile", NULL);
+      g_build_filename (g_get_home_dir (), ".gstreamer-" GST_MAJORMINOR,
+      GST_ENCODING_TARGET_DIRECTORY, NULL);
   target = gst_encoding_target_subload (tldir, category, lfilename, error);
   g_free (tldir);
 
@@ -831,7 +833,7 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
     /* Try from system-wide profiles */
     tldir =
         g_build_filename (GST_DATADIR, "gstreamer-" GST_MAJORMINOR,
-        "encoding-profile", NULL);
+        GST_ENCODING_TARGET_DIRECTORY, NULL);
     target = gst_encoding_target_subload (tldir, category, lfilename, error);
     g_free (tldir);
   }
@@ -946,10 +948,10 @@ gst_encoding_target_save (GstEncodingTarget * target, GError ** error)
   g_return_val_if_fail (GST_IS_ENCODING_TARGET (target), FALSE);
   g_return_val_if_fail (target->category != NULL, FALSE);
 
-  lfilename = g_strdup_printf ("%s.gstprofile", target->name);
+  lfilename = g_strdup_printf ("%s" GST_ENCODING_TARGET_SUFFIX, target->name);
   filename =
-      g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "encoding-profile", target->category, lfilename, NULL);
+      g_build_filename (g_get_home_dir (), ".gstreamer-" GST_MAJORMINOR,
+      GST_ENCODING_TARGET_DIRECTORY, target->category, lfilename, NULL);
   g_free (lfilename);
 
   res = gst_encoding_target_save_to (target, filename, error);
@@ -999,14 +1001,14 @@ gst_encoding_list_available_categories (void)
   gchar *topdir;
 
   /* First try user-local categories */
-  topdir = g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "encoding-profile", NULL);
+  topdir = g_build_filename (g_get_home_dir (), ".gstreamer-" GST_MAJORMINOR,
+      GST_ENCODING_TARGET_DIRECTORY, NULL);
   res = get_categories (topdir);
   g_free (topdir);
 
   /* Extend with system-wide categories */
   topdir = g_build_filename (GST_DATADIR, "gstreamer-" GST_MAJORMINOR,
-      "encoding-profile", NULL);
+      GST_ENCODING_TARGET_DIRECTORY, NULL);
   tmp1 = get_categories (topdir);
   g_free (topdir);
 
@@ -1038,7 +1040,7 @@ sub_get_all_targets (gchar * subdir)
     gchar *fullname;
 
     /* Only try files ending with .gstprofile */
-    if (!g_str_has_suffix (filename, ".gstprofile"))
+    if (!g_str_has_suffix (filename, GST_ENCODING_TARGET_SUFFIX))
       continue;
 
     fullname = g_build_filename (subdir, filename, NULL);
@@ -1113,14 +1115,14 @@ gst_encoding_list_all_targets (const gchar * categoryname)
   gchar *topdir;
 
   /* Get user-locals */
-  topdir = g_build_filename (g_get_home_dir (), ".gstreamer-0.10",
-      "encoding-profile", NULL);
+  topdir = g_build_filename (g_get_home_dir (), ".gstreamer-" GST_MAJORMINOR,
+      GST_ENCODING_TARGET_DIRECTORY, NULL);
   res = get_all_targets (topdir, categoryname);
   g_free (topdir);
 
   /* Get system-wide */
   topdir = g_build_filename (GST_DATADIR, "gstreamer-" GST_MAJORMINOR,
-      "encoding-profile", NULL);
+      GST_ENCODING_TARGET_DIRECTORY, NULL);
   tmp1 = get_all_targets (topdir, categoryname);
   g_free (topdir);
 
