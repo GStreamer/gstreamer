@@ -1312,6 +1312,11 @@ gst_ffmpegenc_register (GstPlugin * plugin)
   while (in_plugin) {
     gchar *type_name;
 
+    /* Skip non-AV codecs */
+    if (in_plugin->type != CODEC_TYPE_AUDIO &&
+        in_plugin->type != CODEC_TYPE_VIDEO)
+      goto next;
+
     /* no quasi codecs, please */
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
         in_plugin->id == CODEC_ID_V210 ||
