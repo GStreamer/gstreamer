@@ -17,6 +17,6 @@ CAMERABIN2=
 endif
 
 SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES)
-DIST_SUBDIRS= camerabin $(CAMERABIN2) directfb mxf scaletempo
+DIST_SUBDIRS= camerabin camerabin2 directfb mxf scaletempo
 
 include $(top_srcdir)/common/parallel-subdirs.mak
