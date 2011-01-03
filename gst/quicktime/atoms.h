@@ -479,6 +479,7 @@ typedef struct _AtomCTTS
 
   /* also entry count here */
   ATOM_ARRAY (CTTSEntry) entries;
+  gboolean do_pts;
 } AtomCTTS;
 
 typedef struct _AtomSTBL
@@ -806,7 +807,7 @@ void       atom_ftyp_free              (AtomFTYP *ftyp);
 AtomTRAK*  atom_trak_new               (AtomsContext *context);
 void       atom_trak_add_samples       (AtomTRAK * trak, guint32 nsamples, guint32 delta,
                                         guint32 size, guint64 chunk_offset, gboolean sync,
-                                        gboolean do_pts, gint64 pts_offset);
+                                        gint64 pts_offset);
 void       atom_trak_add_elst_entry    (AtomTRAK * trak, guint32 duration,
                                         guint32 media_time, guint32 rate);
 guint32    atom_trak_get_timescale     (AtomTRAK *trak);
@@ -814,7 +815,7 @@ guint32    atom_trak_get_id            (AtomTRAK * trak);
 void       atom_stbl_add_samples       (AtomSTBL * stbl, guint32 nsamples,
                                         guint32 delta, guint32 size,
                                         guint64 chunk_offset, gboolean sync,
-                                        gboolean do_pts, gint64 pts_offset);
+                                        gint64 pts_offset);
 
 AtomMOOV*  atom_moov_new               (AtomsContext *context);
 void       atom_moov_free              (AtomMOOV *moov);
@@ -850,8 +851,7 @@ guint64    atom_moof_copy_data         (AtomMOOF *moof, guint8 **buffer, guint64
 AtomTRAF * atom_traf_new               (AtomsContext * context, guint32 track_ID);
 void       atom_traf_free              (AtomTRAF * traf);
 void       atom_traf_add_samples       (AtomTRAF * traf, guint32 delta,
-                                        guint32 size, gboolean sync,
-                                        gboolean do_pts, gint64 pts_offset,
+                                        guint32 size, gboolean sync, gint64 pts_offset,
                                         gboolean sdtp_sync);
 guint32    atom_traf_get_sample_num    (AtomTRAF * traf);
 void       atom_moof_add_traf          (AtomMOOF *moof, AtomTRAF *traf);

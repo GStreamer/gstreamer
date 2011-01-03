@@ -1838,8 +1838,7 @@ ftyp_error:
 static GstFlowReturn
 gst_qt_mux_pad_fragment_add_buffer (GstQTMux * qtmux, GstQTPad * pad,
     GstBuffer * buf, gboolean force, guint32 nsamples, gint64 dts,
-    guint32 delta, guint32 size, gboolean sync, gboolean do_pts,
-    gint64 pts_offset)
+    guint32 delta, guint32 size, gboolean sync, gint64 pts_offset)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -1913,7 +1912,7 @@ init:
   }
 
   /* add buffer and metadata */
-  atom_traf_add_samples (pad->traf, delta, size, sync, do_pts, pts_offset,
+  atom_traf_add_samples (pad->traf, delta, size, sync, pts_offset,
       pad->sync && sync);
   atom_array_append (&pad->fragment_buffers, buf, 256);
   pad->fragment_duration -= delta;
@@ -2159,8 +2158,8 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   /* note that a new chunk is started each time (not fancy but works) */
   if (qtmux->moov_recov_file) {
     if (!atoms_recov_write_trak_samples (qtmux->moov_recov_file, pad->trak,
-            nsamples, scaled_duration, sample_size, chunk_offset, sync, do_pts,
-            pts_offset)) {
+            nsamples, (gint32) scaled_duration, sample_size, chunk_offset, sync,
+            do_pts, pts_offset)) {
       GST_WARNING_OBJECT (qtmux, "Failed to write sample information to "
           "recovery file, disabling recovery");
       fclose (qtmux->moov_recov_file);
@@ -2175,10 +2174,10 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     /* ensure that always sync samples are marked as such */
     return gst_qt_mux_pad_fragment_add_buffer (qtmux, pad, last_buf,
         buf == NULL, nsamples, last_dts, scaled_duration, sample_size,
-        !pad->sync || sync, do_pts, pts_offset);
+        !pad->sync || sync, pts_offset);
   } else {
-    atom_trak_add_samples (pad->trak, nsamples, scaled_duration, sample_size,
-        chunk_offset, sync, do_pts, pts_offset);
+    atom_trak_add_samples (pad->trak, nsamples, scaled_duration,
+        sample_size, chunk_offset, sync, pts_offset);
     return gst_qt_mux_send_buffer (qtmux, last_buf, &qtmux->mdat_size, TRUE);
   }
 
