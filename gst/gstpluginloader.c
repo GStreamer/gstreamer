@@ -725,11 +725,10 @@ handle_rx_packet (GstPluginLoader * l,
     case PACKET_EXIT:
       gst_poll_fd_ctl_read (l->fdset, &l->fd_r, FALSE);
       if (l->is_child) {
-        /* Respond, then we keep looping until the parent closes the fd */
+        /* Respond */
         put_packet (l, PACKET_EXIT, 0, NULL, 0);
-      } else {
-        l->rx_done = TRUE;      /* All done reading from child */
       }
+      l->rx_done = TRUE;
       return TRUE;
     case PACKET_LOAD_PLUGIN:{
       if (!l->is_child)
