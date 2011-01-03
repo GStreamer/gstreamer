@@ -1964,6 +1964,8 @@ gst_encoding_target_save
 gst_encoding_target_save_to
 gst_encoding_target_load
 gst_encoding_target_load_from
+gst_encoding_list_all_targets
+gst_encoding_list_available_categories
 <SUBSECTION Standard>
 GST_ENCODING_PROFILE
 GST_IS_ENCODING_PROFILE

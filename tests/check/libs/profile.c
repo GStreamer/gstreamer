@@ -464,6 +464,52 @@ GST_START_TEST (test_loading_profile)
 
 GST_END_TEST;
 
+GST_START_TEST (test_target_list)
+{
+  GList *categories;
+  GList *targets;
+  GList *tmp;
+
+  /* Make sure we get our test category in the available categories */
+  categories = gst_encoding_list_available_categories ();
+  fail_if (categories == NULL);
+  fail_if (g_list_find_custom (categories, "herding",
+          (GCompareFunc) g_strcmp0) == NULL);
+  g_list_foreach (categories, (GFunc) g_free, NULL);
+  g_list_free (categories);
+
+  /* Try getting all available targets with a specified category */
+  targets = gst_encoding_list_all_targets ("herding");
+  fail_if (targets == NULL);
+  for (tmp = targets; tmp; tmp = tmp->next) {
+    GstEncodingTarget *target = (GstEncodingTarget *) tmp->data;
+    if (!g_strcmp0 (gst_encoding_target_get_name (target), "myponytarget"))
+      break;
+  }
+  /* If tmp is NULL, it means we iterated the whole list without finding
+   * our target */
+  fail_if (tmp == NULL);
+  g_list_foreach (targets, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (targets);
+
+  /* Try getting all available targets without a specified category */
+  targets = gst_encoding_list_all_targets (NULL);
+  fail_if (targets == NULL);
+  for (tmp = targets; tmp; tmp = tmp->next) {
+    GstEncodingTarget *target = (GstEncodingTarget *) tmp->data;
+    if (!g_strcmp0 (gst_encoding_target_get_name (target), "myponytarget"))
+      break;
+  }
+  /* If tmp is NULL, it means we iterated the whole list without finding
+   * our target */
+  fail_if (tmp == NULL);
+  g_list_foreach (targets, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (targets);
+}
+
+GST_END_TEST;
+
+
 static const gchar *profile_string = "\
 [_gstencodingtarget_]\n\
 name=myponytarget\n\
@@ -564,6 +610,7 @@ profile_suite (void)
   if (can_write) {
     tcase_add_test (tc_chain, test_loading_profile);
     tcase_add_test (tc_chain, test_saving_profile);
+    tcase_add_test (tc_chain, test_target_list);
   }
 
   tcase_add_unchecked_fixture (tc_chain, test_setup, test_teardown);

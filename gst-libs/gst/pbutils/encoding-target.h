@@ -102,6 +102,9 @@ GstEncodingTarget *gst_encoding_target_load (const gchar *name,
 GstEncodingTarget *gst_encoding_target_load_from (const gchar *path,
 						  GError **error);
 
+GList *gst_encoding_list_available_categories (void);
+GList *gst_encoding_list_all_targets (const gchar * categoryname);
+
 G_END_DECLS
 
 #endif	/* __GST_PROFILE_REGISTRY_H__ */
