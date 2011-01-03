@@ -85,27 +85,36 @@
  * </para>
  * </refsect2>
  * <refsect2>
- * <title>Example: Loading a profile from disk</title>
+ * <title>Example: Listing categories, targets and profiles</title>
  * <para>
  * |[
  * #include <gst/pbutils/encoding-profile.h>
  * ...
- *GstEncodingProfile *
- *get_ogg_theora_profile(const gchar *path, const gchar *profilename)
- *{
- *  GstEncodingProfile *prof = NULL;
- *  GstEncodingTarget *target = NULL;
+ * GstEncodingProfile *prof;
+ * GList *categories, *tmpc;
+ * GList *targets, *tmpt;
+ * ...
+ * categories = gst_encoding_target_list_available_categories();
  *
- *  target = gst_encoding_target_load_from (path);
- *  if (target == NULL)
- *    return NULL;
+ * ... Show available categories to user ...
  *
- *  prof = gst_encoding_target_get_profile (target, profilename);
+ * for (tmpc = categories; tmpc; tmpc = tmpc->next) {
+ *   gchar *category = (gchar *) tmpc->data;
  *
- *  gst_encoding_target_unref (target);
+ *   ... and we can list all targets within that category ...
+ *   
+ *   targets = gst_encoding_target_list_all (category);
  *
- *  return prof;
- *}
+ *   ... and show a list to our users ...
+ *
+ *   g_list_foreach (targets, (GFunc) gst_encoding_target_unref, NULL);
+ *   g_list_free (targets);
+ * }
+ *
+ * g_list_foreach (categories, (GFunc) g_free, NULL);
+ * g_list_free (categories);
+ *
+ * ...
  * ]|
  * </para>
  * </refsect2>
