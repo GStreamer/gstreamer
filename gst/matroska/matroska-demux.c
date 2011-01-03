@@ -4386,7 +4386,6 @@ static GstFlowReturn
 gst_matroska_demux_add_mpeg_seq_header (GstElement * element,
     GstMatroskaTrackContext * stream, GstBuffer ** buf)
 {
-  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
   guint8 *seq_header;
   guint seq_header_len;
   guint32 header;
@@ -4416,7 +4415,7 @@ gst_matroska_demux_add_mpeg_seq_header (GstElement * element,
     newbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + seq_header_len);
     gst_buffer_set_caps (newbuf, stream->caps);
 
-    GST_DEBUG_OBJECT (demux, "Prepending MPEG sequence header");
+    GST_DEBUG_OBJECT (element, "Prepending MPEG sequence header");
     gst_buffer_copy_metadata (newbuf, *buf, GST_BUFFER_COPY_TIMESTAMPS |
         GST_BUFFER_COPY_FLAGS);
     g_memmove (GST_BUFFER_DATA (newbuf), seq_header, seq_header_len);
@@ -4433,7 +4432,6 @@ static GstFlowReturn
 gst_matroska_demux_add_wvpk_header (GstElement * element,
     GstMatroskaTrackContext * stream, GstBuffer ** buf)
 {
-  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
   GstMatroskaTrackAudioContext *audiocontext =
       (GstMatroskaTrackAudioContext *) stream;
   GstBuffer *newbuf = NULL;
@@ -4495,7 +4493,7 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     size = GST_BUFFER_SIZE (*buf);
 
     if (size < 4) {
-      GST_ERROR_OBJECT (demux, "Too small wavpack buffer");
+      GST_ERROR_OBJECT (element, "Too small wavpack buffer");
       return GST_FLOW_ERROR;
     }
 
