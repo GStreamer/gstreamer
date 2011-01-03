@@ -390,11 +390,14 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
  * @value1: a #GValue
  * @value2: a #GValue
  *
- * Merges copies of @value1 and @value2 into a list.  Values that are not
+ * Merges copies of @value1 and @value2.  Values that are not
  * of type #GST_TYPE_LIST are treated as if they were lists of length 1.
- * @dest will be initialized to the type #GST_TYPE_LIST.
  *
- * The resulting list won't have duplicated values.
+ * The result will be put into @dest and will either be a list that will not
+ * contain any duplicates, or a non-list type (if @value1 and @value2
+ * were equal).
+ *
+ * Since: 0.10.32
  */
 void
 gst_value_list_merge (GValue * dest, const GValue * value1,
@@ -467,11 +470,19 @@ gst_value_list_merge (GValue * dest, const GValue * value1,
       /* shrink list */
       g_array_set_size (array, new_size);
     } else {
-      GValue *tmp = dest;
+      GValue single_dest;
 
-      /* turn into single value */
-      gst_value_init_and_copy (dest, &g_array_index (array, GValue, 0));
-      g_value_unset (tmp);
+      /* size is 1, take single value in list and make it new dest */
+      single_dest = g_array_index (array, GValue, 0);
+
+      /* clean up old value allocations: must set array size to 0, because
+       * allocated values are not inited meaning g_value_unset() will not
+       * work on them */
+      g_array_set_size (array, 0);
+      g_value_unset (dest);
+
+      /* the single value is our new result */
+      *dest = single_dest;
     }
   }
 }
