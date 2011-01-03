@@ -44,6 +44,8 @@
 #include <config.h>
 #endif
 
+#undef HAVE_XVIDEO
+
 #include <string.h>
 #include <sys/time.h>
 #include "v4l2src_calls.h"
@@ -143,6 +145,7 @@ gst_v4l2src_init_interfaces (GType type)
     NULL,
   };
 #ifdef HAVE_XVIDEO
+  /* FIXME: does GstXOverlay for v4l2src make sense in a GStreamer context? */
   static const GInterfaceInfo v4l2_xoverlay_info = {
     (GInterfaceInitFunc) gst_v4l2src_xoverlay_interface_init,
     NULL,
