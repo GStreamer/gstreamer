@@ -45,7 +45,6 @@
 #include <sys/ioctl.h>
 #include <sys/poll.h>
 #include <fcntl.h>
-#include <error.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

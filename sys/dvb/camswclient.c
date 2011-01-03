@@ -25,6 +25,8 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <gst/gst.h>
 
@@ -78,7 +80,7 @@ cam_sw_client_open (CamSwClient * client, const char *sock_path)
   g_return_val_if_fail (sock_path != NULL, FALSE);
 
   addr.sun_family = AF_UNIX;
-  strncpy (addr.sun_path, sock_path, UNIX_PATH_MAX);
+  strncpy (addr.sun_path, sock_path, sizeof (addr.sun_path));
 
   GST_INFO ("connecting to softcam socket: %s", sock_path);
   client->sock = socket (PF_UNIX, SOCK_STREAM, 0);
