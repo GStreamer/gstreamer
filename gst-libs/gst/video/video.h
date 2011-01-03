@@ -410,6 +410,16 @@ typedef enum {
  */
 #define GST_VIDEO_BUFFER_ONEFIELD GST_BUFFER_FLAG_MEDIA3
 
+/**
+ * GST_VIDEO_BUFFER_PROGRESSIVE:
+ *
+ * If the #GstBuffer is telecined, then the buffer is progressive if the
+ * %GST_VIDEO_BUFFER_PROGRESSIVE flag is set, else it is telecine mixed.
+ *
+ * Since: 0.10.33
+ */
+#define GST_VIDEO_BUFFER_PROGRESSIVE GST_BUFFER_FLAG_MEDIA4
+
 /* functions */
 const GValue *gst_video_frame_rate (GstPad *pad);
 gboolean gst_video_get_size   (GstPad *pad,
