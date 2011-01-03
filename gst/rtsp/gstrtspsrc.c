@@ -2247,9 +2247,7 @@ unknown_stream:
 static void
 gst_rtspsrc_do_stream_eos (GstRTSPSrc * src, GstRTSPStream * stream)
 {
-  guint session = stream->id;
-
-  GST_DEBUG_OBJECT (src, "setting stream for session %u to EOS", session);
+  GST_DEBUG_OBJECT (src, "setting stream for session %u to EOS", stream->id);
 
   if (stream->eos)
     goto was_eos;
@@ -2261,7 +2259,7 @@ gst_rtspsrc_do_stream_eos (GstRTSPSrc * src, GstRTSPStream * stream)
   /* ERRORS */
 was_eos:
   {
-    GST_DEBUG_OBJECT (src, "stream for session %u was already EOS", session);
+    GST_DEBUG_OBJECT (src, "stream for session %u was already EOS", stream->id);
     return;
   }
 }
@@ -2303,9 +2301,8 @@ on_npt_stop (GstElement * rtpbin, guint session, guint ssrc, GstRTSPSrc * src)
 static void
 on_ssrc_active (GObject * session, GObject * source, GstRTSPStream * stream)
 {
-  GstRTSPSrc *src = stream->parent;
-
-  GST_DEBUG_OBJECT (src, "source in session %u is active", stream->id);
+  GST_DEBUG_OBJECT (stream->parent, "source in session %u is active",
+      stream->id);
 }
 
 /* try to get and configure a manager */
