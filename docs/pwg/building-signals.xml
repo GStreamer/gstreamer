@@ -10,7 +10,7 @@
     for application-element interaction, signals are probably not what
     you're looking for. In many cases, however, signals can be very useful.
     See the <ulink type="http"
-      url="http://www.le-hacker.org/papers/gobject/index.html">GObject
+      url="http://library.gnome.org/devel/gobject/stable/">GObject
     documentation</ulink> for all internals about signals.
   </para>
 </chapter>
