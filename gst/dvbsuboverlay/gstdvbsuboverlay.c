@@ -905,6 +905,8 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
           dvb_subtitles_free (candidate);
         candidate = NULL;
         g_queue_pop_head (overlay->pending_subtitles);
+        dvb_subtitles_free (tmp);
+        tmp = NULL;
       } else if (tmp->pts + tmp->page_time_out * GST_SECOND *
           overlay->subtitle_segment.abs_rate >= vid_running_time) {
         if (candidate)
