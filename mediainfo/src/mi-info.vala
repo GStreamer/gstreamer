@@ -116,7 +116,11 @@ public class MediaInfo.Info : VPaned
 
     table = new Table (8, 3, false);
     sw.add_with_viewport (table);
-     
+
+    /* TODO: also use tabs for containers
+     * - this is needed for e.g. mpeg-ts or mp3 inside ape
+     * - we should move duration and mime-type out of the tabs
+     */
     label = new Label (null);
     label.set_markup("<b>Container</b>");
     label.set_alignment (0.0f, 0.5f);
@@ -153,6 +157,10 @@ public class MediaInfo.Info : VPaned
     table.attach (duration, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
+    /* TODO: if screen-height<600 use a *single* notebook for both audio and
+     * video streams
+     * - this needs a bit of cleverness when switching streams
+     */
     label = new Label (null);
     label.set_markup("<b>Video Streams</b>");
     label.set_alignment (0.0f, 0.5f);
