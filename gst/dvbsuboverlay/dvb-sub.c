@@ -1352,6 +1352,11 @@ dvb_sub_free (DvbSub * sub)
   /* TODO: Add deinitalization code here */
   /* FIXME: Clear up region_list contents */
   delete_state (sub);
+  while (sub->display_list) {
+    DVBSubRegionDisplay *tmp = sub->display_list->next;
+    g_slice_free (DVBSubRegionDisplay, sub->display_list);
+    sub->display_list = tmp;
+  }
   g_string_free (sub->pes_buffer, TRUE);
   g_slice_free (DvbSub, sub);
 }

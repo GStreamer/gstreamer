@@ -167,6 +167,10 @@ gst_dvbsub_overlay_flush_subtitles (GstDVBSubOverlay * render)
     dvb_subtitles_free (subs);
   }
 
+  if (render->current_subtitle)
+    dvb_subtitles_free (render->current_subtitle);
+  render->current_subtitle = NULL;
+
   if (render->dvb_sub)
     dvb_sub_free (render->dvb_sub);
 
@@ -250,6 +254,10 @@ gst_dvbsub_overlay_finalize (GObject * object)
     dvb_subtitles_free (subs);
   }
   g_queue_free (overlay->pending_subtitles);
+
+  if (overlay->current_subtitle)
+    dvb_subtitles_free (overlay->current_subtitle);
+  overlay->current_subtitle = NULL;
 
   if (overlay->dvb_sub)
     dvb_sub_free (overlay->dvb_sub);
