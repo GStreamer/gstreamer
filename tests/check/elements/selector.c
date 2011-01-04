@@ -61,13 +61,16 @@ probe_cb (GstPad * pad, GstMiniObject * obj, gpointer user_data)
 
 /* Create and link output pad: selector:src%d ! output_pad */
 static GstPad *
-setup_output_pad (GstElement * element)
+setup_output_pad (GstElement * element, GstStaticPadTemplate * tmpl)
 {
   GstPad *srcpad = NULL, *output_pad = NULL;
   gulong probe_id = 0;
 
+  if (tmpl == NULL)
+    tmpl = &sinktemplate;
+
   /* create output_pad */
-  output_pad = gst_pad_new_from_static_template (&sinktemplate, "sink");
+  output_pad = gst_pad_new_from_static_template (tmpl, "sink");
   fail_if (output_pad == NULL, "Could not create a output_pad");
 
   /* add probe */
@@ -244,7 +247,7 @@ run_output_selector_buffer_count (gint num_output_pads,
   input_pads = g_list_append (input_pads, input_pad);
   gst_pad_set_active (input_pad, TRUE);
   for (i = 0; i < num_output_pads; i++) {
-    output_pads = g_list_append (output_pads, setup_output_pad (sel));
+    output_pads = g_list_append (output_pads, setup_output_pad (sel, NULL));
   }
 
   /* run the test */
@@ -369,6 +372,157 @@ GST_START_TEST (test_input_selector_buffer_count);
 
 GST_END_TEST;
 
+GstElement *sel;
+GstPad *input_pad;
+GList *output_pads = NULL;      /* list of sinkpads linked to output-selector */
+#define OUTPUT_SELECTOR_NUM_PADS 2
+
+static GstStaticPadTemplate sinktmpl_nego_a = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("format/abc; format/xyz"));
+static GstStaticPadTemplate sinktmpl_nego_b = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("format/abc"));
+
+static void
+setup_output_selector (void)
+{
+  sel = gst_check_setup_element ("output-selector");
+  input_pad = gst_check_setup_src_pad (sel, &srctemplate, NULL);
+  gst_pad_set_active (input_pad, TRUE);
+
+  output_pads = g_list_append (output_pads, setup_output_pad (sel,
+          &sinktmpl_nego_a));
+  output_pads = g_list_append (output_pads, setup_output_pad (sel,
+          &sinktmpl_nego_b));
+}
+
+static void
+teardown_output_selector (void)
+{
+  gst_pad_set_active (input_pad, FALSE);
+  gst_object_unref (input_pad);
+  gst_check_teardown_src_pad (sel);
+  g_list_foreach (output_pads, (GFunc) cleanup_pad, sel);
+  g_list_free (output_pads);
+  gst_check_teardown_element (sel);
+  output_pads = NULL;
+}
+
+GST_START_TEST (test_output_selector_getcaps_none);
+{
+  GList *walker;
+
+  /* set pad negotiation mode to none */
+  g_object_set (sel, "pad-negotiation-mode", 0, NULL);
+
+  fail_unless (gst_element_set_state (sel,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  for (walker = output_pads; walker; walker = g_list_next (walker)) {
+    GstCaps *caps;
+    GstPad *pad;
+
+    pad = gst_pad_get_peer ((GstPad *) walker->data);
+
+    g_object_set (sel, "active-pad", pad, NULL);
+
+    caps = gst_pad_peer_get_caps (input_pad);
+
+    /* in 'none' mode, the getcaps returns the template, which is ANY */
+    g_assert (gst_caps_is_any (caps));
+    gst_caps_unref (caps);
+  }
+
+  fail_unless (gst_element_set_state (sel,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_output_selector_getcaps_all);
+{
+  GList *walker;
+  GstCaps *expected;
+
+  /* set pad negotiation mode to 'all' */
+  g_object_set (sel, "pad-negotiation-mode", 1, NULL);
+
+  fail_unless (gst_element_set_state (sel,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  /* in 'all' mode, the intersection of the srcpad caps should be returned on
+   * the sinkpad's getcaps */
+  expected = gst_caps_new_simple ("format/abc", NULL);
+
+  for (walker = output_pads; walker; walker = g_list_next (walker)) {
+    GstCaps *caps;
+    GstPad *pad;
+
+    pad = gst_pad_get_peer ((GstPad *) walker->data);
+
+    g_object_set (sel, "active-pad", pad, NULL);
+
+    caps = gst_pad_peer_get_caps (input_pad);
+
+    g_assert (gst_caps_is_equal (caps, expected));
+    gst_caps_unref (caps);
+  }
+  gst_caps_unref (expected);
+
+  fail_unless (gst_element_set_state (sel,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_output_selector_getcaps_active);
+{
+  GList *walker;
+  GstCaps *expected;
+
+  /* set pad negotiation mode to 'active' */
+  g_object_set (sel, "pad-negotiation-mode", 2, NULL);
+
+  fail_unless (gst_element_set_state (sel,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  for (walker = output_pads; walker; walker = g_list_next (walker)) {
+    GstCaps *caps;
+    GstPad *pad;
+
+    pad = gst_pad_get_peer ((GstPad *) walker->data);
+
+    g_object_set (sel, "active-pad", pad, NULL);
+
+    /* in 'active' mode, the active srcpad peer's caps should be returned on
+     * the sinkpad's getcaps */
+
+    expected = gst_pad_template_get_caps (gst_pad_get_pad_template ((GstPad *)
+            walker->data));
+    caps = gst_pad_peer_get_caps (input_pad);
+
+    g_assert (gst_caps_is_equal (caps, expected));
+    gst_caps_unref (caps);
+  }
+
+  fail_unless (gst_element_set_state (sel,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+}
+
+GST_END_TEST;
+
+
 static Suite *
 selector_suite (void)
 {
@@ -378,6 +532,14 @@ selector_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_output_selector_buffer_count);
   tcase_add_test (tc_chain, test_input_selector_buffer_count);
+
+  tc_chain = tcase_create ("output-selector-negotiation");
+  tcase_add_checked_fixture (tc_chain, setup_output_selector,
+      teardown_output_selector);
+  suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_output_selector_getcaps_none);
+  tcase_add_test (tc_chain, test_output_selector_getcaps_all);
+  tcase_add_test (tc_chain, test_output_selector_getcaps_active);
 
   return s;
 }

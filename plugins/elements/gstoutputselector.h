@@ -47,6 +47,8 @@ struct _GstOutputSelector {
   GstPad *pending_srcpad;
   guint nb_srcpads;
 
+  gint pad_negotiation_mode;
+
   GstSegment segment;
 
   /* resend latest buffer after switch */

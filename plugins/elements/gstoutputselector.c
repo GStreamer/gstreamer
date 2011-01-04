@@ -49,12 +49,42 @@ GST_STATIC_PAD_TEMPLATE ("src%d",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
+enum GstOutputSelectorPadNegotiationMode
+{
+  GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE,
+  GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL,
+  GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ACTIVE
+};
+#define GST_TYPE_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE (gst_output_selector_pad_negotiation_mode_get_type())
+static GType
+gst_output_selector_pad_negotiation_mode_get_type (void)
+{
+  static GType pad_negotiation_mode_type = 0;
+  static GEnumValue pad_negotiation_modes[] = {
+    {GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE, "None", "none"},
+    {GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL, "All", "all"},
+    {GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ACTIVE, "Active", "active"},
+    {0, NULL, NULL}
+  };
+
+  if (!pad_negotiation_mode_type) {
+    pad_negotiation_mode_type =
+        g_enum_register_static ("GstOutputSelectorPadNegotiationMode",
+        pad_negotiation_modes);
+  }
+  return pad_negotiation_mode_type;
+}
+
+
 enum
 {
   PROP_0,
   PROP_ACTIVE_PAD,
-  PROP_RESEND_LATEST
+  PROP_RESEND_LATEST,
+  PROP_PAD_NEGOTIATION_MODE
 };
+
+#define DEFAULT_PAD_NEGOTIATION_MODE GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL
 
 #define _do_init(bla) \
 GST_DEBUG_CATEGORY_INIT (output_selector_debug, \
@@ -79,6 +109,8 @@ static GstStateChangeReturn gst_output_selector_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_output_selector_handle_sink_event (GstPad * pad,
     GstEvent * event);
+static void gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector *
+    sel, gint mode);
 
 static void
 gst_output_selector_base_init (gpointer g_class)
@@ -113,6 +145,12 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
       g_param_spec_boolean ("resend-latest", "Resend latest buffer",
           "Resend latest buffer after a switch to a new pad", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAD_NEGOTIATION_MODE,
+      g_param_spec_enum ("pad-negotiation-mode", "Pad negotiation mode",
+          "The mode to be used for pad negotiation",
+          GST_TYPE_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE,
+          DEFAULT_PAD_NEGOTIATION_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_output_selector_request_new_pad);
@@ -135,12 +173,6 @@ gst_output_selector_init (GstOutputSelector * sel,
       GST_DEBUG_FUNCPTR (gst_output_selector_handle_sink_event));
   gst_pad_set_bufferalloc_function (sel->sinkpad,
       GST_DEBUG_FUNCPTR (gst_output_selector_buffer_alloc));
-  /*
-     gst_pad_set_setcaps_function (sel->sinkpad,
-     GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
-     gst_pad_set_getcaps_function (sel->sinkpad,
-     GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
-   */
 
   gst_element_add_pad (GST_ELEMENT (sel), sel->sinkpad);
 
@@ -152,6 +184,8 @@ gst_output_selector_init (GstOutputSelector * sel,
 
   sel->resend_latest = FALSE;
   sel->latest_buffer = NULL;
+  gst_output_selector_switch_pad_negotiation_mode (sel,
+      DEFAULT_PAD_NEGOTIATION_MODE);
 }
 
 static void
@@ -218,6 +252,11 @@ gst_output_selector_set_property (GObject * object, guint prop_id,
       sel->resend_latest = g_value_get_boolean (value);
       break;
     }
+    case PROP_PAD_NEGOTIATION_MODE:{
+      gst_output_selector_switch_pad_negotiation_mode (sel,
+          g_value_get_enum (value));
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -243,9 +282,72 @@ gst_output_selector_get_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (object);
       break;
     }
+    case PROP_PAD_NEGOTIATION_MODE:
+      g_value_set_enum (value, sel->pad_negotiation_mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
+  }
+}
+
+static GstCaps *
+gst_output_selector_sink_getcaps (GstPad * pad)
+{
+  GstOutputSelector *sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
+  GstPad *active;
+  GstCaps *caps;
+
+  GST_OBJECT_LOCK (sel);
+  if (sel->pending_srcpad)
+    active = gst_object_ref (sel->pending_srcpad);
+  else
+    active = gst_object_ref (sel->active_srcpad);
+  GST_OBJECT_UNLOCK (sel);
+
+  caps = gst_pad_peer_get_caps_reffed (active);
+  gst_object_unref (active);
+  if (caps == NULL) {
+    caps = gst_caps_new_any ();
+  }
+  return caps;
+}
+
+static gboolean
+gst_output_selector_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstOutputSelector *sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
+  GstPad *active;
+  gboolean ret;
+
+  GST_OBJECT_LOCK (sel);
+  if (sel->pending_srcpad)
+    active = gst_object_ref (sel->pending_srcpad);
+  else
+    active = gst_object_ref (sel->active_srcpad);
+  GST_OBJECT_UNLOCK (sel);
+
+  ret = gst_pad_set_caps (active, caps);
+  gst_object_unref (active);
+  return ret;
+}
+
+static void
+gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector * sel,
+    gint mode)
+{
+  sel->pad_negotiation_mode = mode;
+  if (mode == GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL) {
+    gst_pad_set_getcaps_function (sel->sinkpad, gst_pad_proxy_getcaps);
+    gst_pad_set_setcaps_function (sel->sinkpad, gst_pad_proxy_setcaps);
+  } else if (mode == GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE) {
+    gst_pad_set_getcaps_function (sel->sinkpad, NULL);
+    gst_pad_set_setcaps_function (sel->sinkpad, NULL);
+  } else {                      /* active */
+    gst_pad_set_getcaps_function (sel->sinkpad,
+        gst_output_selector_sink_getcaps);
+    gst_pad_set_setcaps_function (sel->sinkpad,
+        gst_output_selector_sink_setcaps);
   }
 }
 
