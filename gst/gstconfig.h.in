@@ -174,7 +174,9 @@
  *
  * (not official API)
  */
-#ifdef GST_DISABLE_PRINTF_EXTENSION
+/* If GLib is not using the system printf, we can't use the registered
+ * extensions because the GLib-internal printf won't know how to parse them */
+#if defined(GST_DISABLE_PRINTF_EXTENSION) || !defined(GLIB_USING_SYSTEM_PRINTF)
   #undef GST_PTR_FORMAT
   #define GST_PTR_FORMAT "p"
   #undef GST_SEGMENT_FORMAT
