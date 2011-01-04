@@ -29,10 +29,10 @@
  * <para>
  * Encoding profiles describe the media types and settings one wishes to use for
  * an encoding process. The top-level profiles are commonly
- * #GstEncodingContainerProfile(s) (which contains user-readable name and 
- * description along with which container format to use) which references one or
- * more #GstEncodingProfile(s) which indicate which encoding format should be
- * used on each individual streams.
+ * #GstEncodingContainerProfile(s) (which contains a user-readable name and
+ * description along with which container format to use). These, in turn,
+ * reference one or more #GstEncodingProfile(s) which indicate which encoding
+ * format should be used on each individual streams.
  * </para>
  * <para>
  * #GstEncodingProfile(s) can be provided to the 'encodebin' element, which will take
@@ -249,7 +249,7 @@ gst_encoding_profile_get_description (GstEncodingProfile * profile)
  *
  * Since: 0.10.32
  *
- * Returns: the media format used in the profile.
+ * Returns: the #GstCaps corresponding to the media format used in the profile.
  */
 const GstCaps *
 gst_encoding_profile_get_format (GstEncodingProfile * profile)
@@ -263,7 +263,7 @@ gst_encoding_profile_get_format (GstEncodingProfile * profile)
  *
  * Since: 0.10.32
  *
- * Returns: the preset to be used in the profile.
+ * Returns: the name of the #GstPreset to be used in the profile.
  */
 const gchar *
 gst_encoding_profile_get_preset (GstEncodingProfile * profile)
@@ -277,8 +277,8 @@ gst_encoding_profile_get_preset (GstEncodingProfile * profile)
  *
  * Since: 0.10.32
  *
- * Returns: The number of time the profile is used in its parent
- * container profile. If 0, it is not a mandatory stream
+ * Returns: The number of times the profile is used in its parent
+ * container profile. If 0, it is not a mandatory stream.
  */
 guint
 gst_encoding_profile_get_presence (GstEncodingProfile * profile)
@@ -293,7 +293,10 @@ gst_encoding_profile_get_presence (GstEncodingProfile * profile)
  * Since: 0.10.32
  *
  * Returns: The restriction #GstCaps to apply before the encoder
- * that will be used in the profile. Does not apply to #GstEncodingContainerProfile.
+ * that will be used in the profile. The fields present in restriction caps are
+ * properties of the raw stream (that is before encoding), such as height and
+ * width for video and depth and sampling rate for audio. Does not apply to
+ * #GstEncodingContainerProfile (since there is no corresponding raw stream).
  * Can be %NULL.
  */
 const GstCaps *
@@ -396,7 +399,8 @@ gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
  * @restriction: the restriction to apply
  *
  * Set the restriction #GstCaps to apply before the encoder
- * that will be used in the profile. Does not apply to #GstEncodingContainerProfile.
+ * that will be used in the profile. See gst_encoding_profile_set_restriction()
+ * for more about restrictions. Does not apply to #GstEncodingContainerProfile.
  *
  * Since: 0.10.32
  */
@@ -730,7 +734,7 @@ gst_encoding_container_profile_new (const gchar * name,
  * @format: the #GstCaps
  * @preset: the preset(s) to use on the encoder, can be #NULL
  * @restriction: the #GstCaps used to restrict the input to the encoder, can be
- * NULL.
+ * NULL. See gst_encoding_profile_get_restriction() for more details.
  * @presence: the number of time this stream must be used. 0 means any number of
  *  times (including never)
  *
@@ -763,7 +767,7 @@ gst_encoding_video_profile_new (GstCaps * format, const gchar * preset,
  * @format: the #GstCaps
  * @preset: the preset(s) to use on the encoder, can be #NULL
  * @restriction: the #GstCaps used to restrict the input to the encoder, can be
- * NULL.
+ * NULL. See gst_encoding_profile_get_restriction() for more details.
  * @presence: the number of time this stream must be used. 0 means any number of
  *  times (including never)
  *

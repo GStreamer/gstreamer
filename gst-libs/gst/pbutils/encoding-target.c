@@ -59,7 +59,7 @@
  * $HOME/gstreamer-GST_MAJORMINOR/encoding-profile
  *
  * Naming convention
- *   $(target.category)/$(target.name).gstprof
+ *   $(target.category)/$(target.name).gep
  *
  * Naming restrictions:
  *  lowercase ASCII letter for the first character
@@ -253,9 +253,10 @@ validate_name (const gchar * name)
  * first character, followed by either lowercase ASCII letters, digits or
  * hyphens ('-').
  *
- * The @category *should* be one of the existing well-defined categories, like
- * #GST_ENCODING_CATEGORY_DEVICE, but it *can* be a application or user specific
- * category if needed.
+ * The @category <emphasis>should</emphasis> be one of the existing
+ * well-defined categories, like #GST_ENCODING_CATEGORY_DEVICE, but it
+ * <emphasis>can</emphasis> be a application or user specific category if
+ * needed.
  *
  * Since: 0.10.32
  *
@@ -1097,10 +1098,10 @@ compare_targets (const GstEncodingTarget * ta, const GstEncodingTarget * tb)
 /**
  * gst_encoding_list_all_targets:
  * @categoryname: (allow-none): The category, for ex: #GST_ENCODING_CATEGORY_DEVICE.
- * Can be NULL.
+ * Can be %NULL.
  *
  * List all available #GstEncodingTarget for the specified category, or all categories
- * if @categoryname is NULL.
+ * if @categoryname is %NULL.
  *
  * Returns: (transfer full) (element-type GstEncodingTarget): The list of #GstEncodingTarget
  */
