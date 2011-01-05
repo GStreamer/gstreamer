@@ -57,6 +57,10 @@
     '("bgr15" "GST_VIDEO_FORMAT_BGR15")
     '("uyvp" "GST_VIDEO_FORMAT_UYVP")
     '("a420" "GST_VIDEO_FORMAT_A420")
+    '("rgb8-paletted" "GST_VIDEO_FORMAT_RGB8_PALETTED")
+    '("yuv9" "GST_VIDEO_FORMAT_YUV9")
+    '("yvu9" "GST_VIDEO_FORMAT_YVU9")
+    '("iyu1" "GST_VIDEO_FORMAT_IYU1")
   )
 )
 
@@ -168,6 +172,14 @@
 (define-function parse_caps_chroma_site
   (c-name "gst_video_parse_caps_chroma_site")
   (return-type "const-char*")
+  (parameters
+    '("GstCaps*" "caps")
+  )
+)
+
+(define-function video_parse_caps_palette
+  (c-name "gst_video_parse_caps_palette")
+  (return-type "GstBuffer*")
   (parameters
     '("GstCaps*" "caps")
   )

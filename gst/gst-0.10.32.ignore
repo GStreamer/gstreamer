@@ -1,0 +1,7 @@
+%%
+ignore
+  gst_clock_single_shot_id_reinit
+  gst_read_gpollfd
+  gst_value_list_merge
+%%
+

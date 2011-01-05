@@ -1162,6 +1162,16 @@
   (return-type "none")
 )
 
+(define-method single_shot_id_reinit
+  (of-object "GstClock")
+  (c-name "gst_clock_single_shot_id_reinit")
+  (return-type "gboolean")
+  (parameters
+    '("GstClockID" "id")
+    '("GstClockTime" "time")
+  )
+)
+
 (define-virtual change_resolution
   (of-object "GstClock")
   (return-type "GstClockTime")
@@ -5645,6 +5655,15 @@
   (return-type "none")
 )
 
+(define-method get_read_gpollfd
+  (of-object "GstPoll")
+  (c-name "gst_poll_get_read_gpollfd")
+  (return-type "none")
+  (parameters
+    '("GPollFD*" "fd")
+  )
+)
+
 (define-method init
   (of-object "GstPollFD")
   (c-name "gst_poll_fd_init")
@@ -8939,6 +8958,16 @@
 
 (define-function value_list_concat
   (c-name "gst_value_list_concat")
+  (return-type "none")
+  (parameters
+    '("GValue*" "dest")
+    '("const-GValue*" "value1")
+    '("const-GValue*" "value2")
+  )
+)
+
+(define-function value_list_merge
+  (c-name "gst_value_list_merge")
   (return-type "none")
   (parameters
     '("GValue*" "dest")

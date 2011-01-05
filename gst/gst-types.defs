@@ -440,6 +440,7 @@
     '("badtime" "GST_CLOCK_BADTIME")
     '("error" "GST_CLOCK_ERROR")
     '("unsupported" "GST_CLOCK_UNSUPPORTED")
+    '("done" "GST_CLOCK_DONE")
   )
 )
 

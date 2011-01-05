@@ -83,6 +83,41 @@
   (gtype-id "GST_TYPE_DISCOVERER_VIDEO_INFO")
 )
 
+(define-miniobject EncodingProfile
+  (in-module "Gst")
+  (c-name "GstEncodingProfile")
+  (parent "GstMiniObject")
+  (gtype-id "GST_TYPE_ENCODING_PROFILE")
+)
+
+(define-miniobject EncodingContainerProfile
+  (in-module "Gst")
+  (c-name "GstEncodingContainerProfile")
+  (parent "GstEncodingProfile")
+  (gtype-id "GST_TYPE_ENCODING_CONTAINER_PROFILE")
+)
+
+(define-miniobject EncodingVideoProfile
+  (in-module "Gst")
+  (c-name "GstEncodingVideoProfile")
+  (parent "GstEncodingProfile")
+  (gtype-id "GST_TYPE_ENCODING_VIDEO_PROFILE")
+)
+
+(define-miniobject EncodingAudioProfile
+  (in-module "Gst")
+  (c-name "GstEncodingAudioProfile")
+  (parent "GstEncodingProfile")
+  (gtype-id "GST_TYPE_ENCODING_AUDIO_PROFILE")
+)
+
+(define-miniobject EncodingTarget
+  (in-module "Gst")
+  (c-name "GstEncodingTarget")
+  (parent "GstMiniObject")
+  (gtype-id "GST_TYPE_ENCODING_TARGET")
+)
+
 ;; From codec-utils.h
 
 (define-function codec_utils_aac_get_sample_rate_from_index
@@ -300,12 +335,298 @@
 )
 
 
-;; From gstdiscoverer.h
+;; From encoding-profile.h
 
-(define-function gst_discoverer_stream_info_get_type
-  (c-name "gst_discoverer_stream_info_get_type")
-  (return-type "GType")
+(define-method get_name
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_get_name")
+  (return-type "const-gchar*")
 )
+
+(define-method get_description
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_get_description")
+  (return-type "const-gchar*")
+)
+
+(define-method get_format
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_get_format")
+  (return-type "const-GstCaps*")
+)
+
+(define-method get_preset
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_get_preset")
+  (return-type "const-gchar*")
+)
+
+(define-method get_presence
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_get_presence")
+  (return-type "guint")
+)
+
+(define-method get_restriction
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_get_restriction")
+  (return-type "const-GstCaps*")
+)
+
+(define-method set_name
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_set_name")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-method set_description
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_set_description")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "description")
+  )
+)
+
+(define-method set_format
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_set_format")
+  (return-type "none")
+  (parameters
+    '("GstCaps*" "format")
+  )
+)
+
+(define-method set_preset
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_set_preset")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "preset")
+  )
+)
+
+(define-method set_restriction
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_set_restriction")
+  (return-type "none")
+  (parameters
+    '("GstCaps*" "restriction")
+  )
+)
+
+(define-method set_presence
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_set_presence")
+  (return-type "none")
+  (parameters
+    '("guint" "presence")
+  )
+)
+
+(define-method is_equal
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_is_equal")
+  (return-type "gboolean")
+  (parameters
+    '("GstEncodingProfile*" "b")
+  )
+)
+
+(define-method get_output_caps
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_get_output_caps")
+  (return-type "GstCaps*")
+)
+
+(define-method get_type_nick
+  (of-object "GstEncodingProfile")
+  (c-name "gst_encoding_profile_get_type_nick")
+  (return-type "const-gchar*")
+)
+
+(define-method add_profile
+  (of-object "GstEncodingContainerProfile")
+  (c-name "gst_encoding_container_profile_add_profile")
+  (return-type "gboolean")
+  (parameters
+    '("GstEncodingProfile*" "profile")
+  )
+)
+
+(define-method contains_profile
+  (of-object "GstEncodingContainerProfile")
+  (c-name "gst_encoding_container_profile_contains_profile")
+  (return-type "gboolean")
+  (parameters
+    '("GstEncodingProfile*" "profile")
+  )
+)
+
+(define-method get_profiles
+  (of-object "GstEncodingContainerProfile")
+  (c-name "gst_encoding_container_profile_get_profiles")
+  (return-type "const-GList*")
+)
+
+(define-function gst_encoding_container_profile_new
+  (c-name "gst_encoding_container_profile_new")
+  (is-constructor-of "GstEncodingContainerProfile")
+  (return-type "GstEncodingContainerProfile*")
+  (parameters
+    '("const-gchar*" "name")
+    '("const-gchar*" "description")
+    '("GstCaps*" "format")
+    '("const-gchar*" "preset")
+  )
+)
+
+(define-function gst_encoding_video_profile_new
+  (c-name "gst_encoding_video_profile_new")
+  (is-constructor-of "GstEncodingVideoProfile")
+  (return-type "GstEncodingVideoProfile*")
+  (parameters
+    '("GstCaps*" "format")
+    '("const-gchar*" "preset")
+    '("GstCaps*" "restriction")
+    '("guint" "presence")
+  )
+)
+
+(define-function gst_encoding_audio_profile_new
+  (c-name "gst_encoding_audio_profile_new")
+  (is-constructor-of "GstEncodingAudioProfile")
+  (return-type "GstEncodingAudioProfile*")
+  (parameters
+    '("GstCaps*" "format")
+    '("const-gchar*" "preset")
+    '("GstCaps*" "restriction")
+    '("guint" "presence")
+  )
+)
+
+(define-method get_pass
+  (of-object "GstEncodingVideoProfile")
+  (c-name "gst_encoding_video_profile_get_pass")
+  (return-type "guint")
+)
+
+(define-method get_variableframerate
+  (of-object "GstEncodingVideoProfile")
+  (c-name "gst_encoding_video_profile_get_variableframerate")
+  (return-type "gboolean")
+)
+
+(define-method set_pass
+  (of-object "GstEncodingVideoProfile")
+  (c-name "gst_encoding_video_profile_set_pass")
+  (return-type "none")
+  (parameters
+    '("guint" "pass")
+  )
+)
+
+(define-method set_variableframerate
+  (of-object "GstEncodingVideoProfile")
+  (c-name "gst_encoding_video_profile_set_variableframerate")
+  (return-type "none")
+  (parameters
+    '("gboolean" "variableframerate")
+  )
+)
+
+
+
+;; From encoding-target.h
+
+(define-function gst_encoding_target_new
+  (c-name "gst_encoding_target_new")
+  (is-constructor-of "GstEncodingTarget")
+  (return-type "GstEncodingTarget*")
+  (parameters
+    '("const-gchar*" "name")
+    '("const-gchar*" "category")
+    '("const-gchar*" "description")
+    '("const-GList*" "profiles")
+  )
+)
+
+(define-method get_name
+  (of-object "GstEncodingTarget")
+  (c-name "gst_encoding_target_get_name")
+  (return-type "const-gchar*")
+)
+
+(define-method get_category
+  (of-object "GstEncodingTarget")
+  (c-name "gst_encoding_target_get_category")
+  (return-type "const-gchar*")
+)
+
+(define-method get_description
+  (of-object "GstEncodingTarget")
+  (c-name "gst_encoding_target_get_description")
+  (return-type "const-gchar*")
+)
+
+(define-method get_profiles
+  (of-object "GstEncodingTarget")
+  (c-name "gst_encoding_target_get_profiles")
+  (return-type "const-GList*")
+)
+
+(define-method add_profile
+  (of-object "GstEncodingTarget")
+  (c-name "gst_encoding_target_add_profile")
+  (return-type "gboolean")
+  (parameters
+    '("GstEncodingProfile*" "profile")
+  )
+)
+
+(define-method save
+  (of-object "GstEncodingTarget")
+  (c-name "gst_encoding_target_save")
+  (return-type "gboolean")
+  (parameters
+    '("GError**" "error")
+  )
+)
+
+(define-method save_to
+  (of-object "GstEncodingTarget")
+  (c-name "gst_encoding_target_save_to")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "path")
+    '("GError**" "error")
+  )
+)
+
+(define-function gst_encoding_target_load
+  (c-name "gst_encoding_target_load")
+  (return-type "GstEncodingTarget*")
+  (parameters
+    '("const-gchar*" "name")
+    '("GError**" "error")
+  )
+)
+
+(define-function gst_encoding_target_load_from
+  (c-name "gst_encoding_target_load_from")
+  (return-type "GstEncodingTarget*")
+  (parameters
+    '("const-gchar*" "path")
+    '("GError**" "error")
+  )
+)
+
+
+
+;; From gstdiscoverer.h
 
 (define-method get_previous
   (of-object "GstDiscovererStreamInfo")
@@ -343,20 +664,10 @@
   (return-type "const-gchar*")
 )
 
-(define-function gst_discoverer_container_info_get_type
-  (c-name "gst_discoverer_container_info_get_type")
-  (return-type "GType")
-)
-
 (define-method get_streams
   (of-object "GstDiscovererContainerInfo")
   (c-name "gst_discoverer_container_info_get_streams")
   (return-type "GList*")
-)
-
-(define-function gst_discoverer_audio_info_get_type
-  (c-name "gst_discoverer_audio_info_get_type")
-  (return-type "GType")
 )
 
 (define-function gst_discoverer_audio_info_get_channels
@@ -397,11 +708,6 @@
   (parameters
     '("GstDiscovererAudioInfo*" "info")
   )
-)
-
-(define-function gst_discoverer_video_info_get_type
-  (c-name "gst_discoverer_video_info_get_type")
-  (return-type "GType")
 )
 
 (define-function gst_discoverer_video_info_get_width
@@ -492,11 +798,6 @@
   )
 )
 
-(define-function gst_discoverer_info_get_type
-  (c-name "gst_discoverer_info_get_type")
-  (return-type "GType")
-)
-
 (define-method copy
   (of-object "GstDiscovererInfo")
   (c-name "gst_discoverer_info_copy")
@@ -531,6 +832,12 @@
   (of-object "GstDiscovererInfo")
   (c-name "gst_discoverer_info_get_duration")
   (return-type "GstClockTime")
+)
+
+(define-method get_seekable
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_seekable")
+  (return-type "gboolean")
 )
 
 (define-method get_misc
@@ -578,11 +885,6 @@
   (parameters
     '("GList*" "infos")
   )
-)
-
-(define-function gst_discoverer_get_type
-  (c-name "gst_discoverer_get_type")
-  (return-type "GType")
 )
 
 (define-function gst_discoverer_new
