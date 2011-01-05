@@ -444,6 +444,10 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
   g_object_set (payloader, "pt", data->pt, NULL);
   data->pt++;
 
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (payloader),
+          "buffer-list"))
+    g_object_set (payloader, "buffer-list", TRUE, NULL);
+
   /* add the payloader to the pipeline */
   gst_bin_add (GST_BIN_CAST (element), payloader);
   gst_element_set_state (payloader, GST_STATE_PLAYING);
