@@ -2113,7 +2113,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
       goto next;
 
     granulepos = ogg_page_granulepos (&og);
-    if (granulepos == -1) {
+    if (granulepos == -1 || granulepos == 0) {
       GST_LOG_OBJECT (ogg, "granulepos of next page is -1");
       continue;
     }
