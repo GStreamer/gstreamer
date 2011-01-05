@@ -1740,7 +1740,6 @@ gst_rtsp_client_accept (GstRTSPClient * client, GIOChannel * channel)
 
   client->is_ipv6 = addr.ss_family == AF_INET6;
 
-  addrlen = sizeof (addr);
   if (getnameinfo ((struct sockaddr *) &addr, addrlen, ip, sizeof (ip), NULL, 0,
           NI_NUMERICHOST) != 0)
     goto getnameinfo_failed;
