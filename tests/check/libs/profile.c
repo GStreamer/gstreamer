@@ -76,7 +76,7 @@ GST_START_TEST (test_profile_creation)
 
   /* Test caps */
   test1 = gst_caps_from_string ("video/x-theora; audio/x-vorbis");
-  test2 = gst_encoding_profile_get_output_caps (encprof);
+  test2 = gst_encoding_profile_get_input_caps (encprof);
   fail_unless (gst_caps_is_equal (test1, test2));
   gst_caps_unref (test1);
   gst_caps_unref (test2);
@@ -90,7 +90,7 @@ GST_START_TEST (test_profile_creation)
 GST_END_TEST;
 
 
-GST_START_TEST (test_profile_output_caps)
+GST_START_TEST (test_profile_input_caps)
 {
   GstEncodingProfile *sprof;
   GstCaps *vorbis;
@@ -103,7 +103,7 @@ GST_START_TEST (test_profile_output_caps)
       gst_encoding_audio_profile_new (vorbis, NULL, NULL, 0);
   fail_if (sprof == NULL);
 
-  out = gst_encoding_profile_get_output_caps (sprof);
+  out = gst_encoding_profile_get_input_caps (sprof);
   fail_if (out == NULL);
   fail_unless (gst_caps_is_equal (out, vorbis));
   gst_caps_unref (out);
@@ -118,7 +118,7 @@ GST_START_TEST (test_profile_output_caps)
       gst_encoding_audio_profile_new (vorbis, NULL, restriction, 0);
   fail_if (sprof == NULL);
 
-  out = gst_encoding_profile_get_output_caps (sprof);
+  out = gst_encoding_profile_get_input_caps (sprof);
   fail_if (out == NULL);
   GST_DEBUG ("got caps %" GST_PTR_FORMAT, out);
   fail_unless (gst_caps_is_equal (out, test1));
@@ -604,7 +604,7 @@ profile_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_profile_creation);
-  tcase_add_test (tc_chain, test_profile_output_caps);
+  tcase_add_test (tc_chain, test_profile_input_caps);
   tcase_add_test (tc_chain, test_target_naming);
   tcase_add_test (tc_chain, test_target_profile);
   if (can_write) {

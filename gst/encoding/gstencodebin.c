@@ -497,7 +497,7 @@ next_unused_stream_profile (GstEncodeBin * ebin, GType ptype, GstCaps * caps)
         GstCaps *outcaps;
         gboolean res;
 
-        outcaps = gst_encoding_profile_get_output_caps (sprof);
+        outcaps = gst_encoding_profile_get_input_caps (sprof);
         GST_DEBUG ("Unknown stream, seeing if it's compatible with %"
             GST_PTR_FORMAT, outcaps);
         res = gst_caps_can_intersect (outcaps, caps);

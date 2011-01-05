@@ -143,7 +143,7 @@ void	gst_encoding_profile_set_presence(GstEncodingProfile *profile, guint presen
 
 gboolean gst_encoding_profile_is_equal (GstEncodingProfile *a,
 					GstEncodingProfile *b);
-GstCaps * gst_encoding_profile_get_output_caps (GstEncodingProfile *profile);
+GstCaps * gst_encoding_profile_get_input_caps (GstEncodingProfile *profile);
 
 const gchar *gst_encoding_profile_get_type_nick (GstEncodingProfile *profile);
 

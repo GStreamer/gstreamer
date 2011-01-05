@@ -304,7 +304,7 @@ transcode_file (gchar * uri, gchar * outputuri, GstEncodingProfile * prof)
   /* Figure out the streams that can be passed as-is to encodebin */
   g_object_get (src, "caps", &rescaps, NULL);
   rescaps = gst_caps_copy (rescaps);
-  profilecaps = gst_encoding_profile_get_output_caps (prof);
+  profilecaps = gst_encoding_profile_get_input_caps (prof);
   gst_caps_append (rescaps, profilecaps);
 
   /* Set properties */

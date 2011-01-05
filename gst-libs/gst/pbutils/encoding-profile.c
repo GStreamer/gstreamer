@@ -809,7 +809,7 @@ gst_encoding_profile_is_equal (GstEncodingProfile * a, GstEncodingProfile * b)
 
 
 /**
- * gst_encoding_profile_get_output_caps:
+ * gst_encoding_profile_get_input_caps:
  * @profile: a #GstEncodingProfile
  *
  * Computes the full output caps that this @profile will be able to consume.
@@ -820,7 +820,7 @@ gst_encoding_profile_is_equal (GstEncodingProfile * a, GstEncodingProfile * b)
  * when you are done with the caps.
  */
 GstCaps *
-gst_encoding_profile_get_output_caps (GstEncodingProfile * profile)
+gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
 {
   GstCaps *out, *tmp;
   GList *ltmp;
@@ -835,7 +835,7 @@ gst_encoding_profile_get_output_caps (GstEncodingProfile * profile)
     for (ltmp = GST_ENCODING_CONTAINER_PROFILE (profile)->encodingprofiles;
         ltmp; ltmp = ltmp->next) {
       GstEncodingProfile *sprof = (GstEncodingProfile *) ltmp->data;
-      gst_caps_merge (res, gst_encoding_profile_get_output_caps (sprof));
+      gst_caps_merge (res, gst_encoding_profile_get_input_caps (sprof));
     }
     return res;
   }
