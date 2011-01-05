@@ -198,7 +198,7 @@ static GstStateChangeReturn gst_encode_bin_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstPad *gst_encode_bin_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_encode_bin_release_pad (GstElement * element, GstPad * pad);
 
 static gboolean
@@ -283,7 +283,7 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_encode_bin_change_state);
-  gstelement_klass->request_new_pad =
+  gstelement_klass->request_new_pad_full =
       GST_DEBUG_FUNCPTR (gst_encode_bin_request_new_pad);
   gstelement_klass->release_pad =
       GST_DEBUG_FUNCPTR (gst_encode_bin_release_pad);
@@ -513,71 +513,22 @@ next_unused_stream_profile (GstEncodeBin * ebin, GType ptype, GstCaps * caps)
 }
 
 static GstPad *
-gst_encode_bin_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+request_pad_for_stream (GstEncodeBin * encodebin, GType ptype,
+    const gchar * name, GstCaps * caps)
 {
-  GstEncodeBin *ebin = (GstEncodeBin *) element;
-  GType ptype;
   StreamGroup *sgroup;
   GstEncodingProfile *sprof;
 
-  GST_DEBUG_OBJECT (element, "templ:%s, name:%s", templ->name_template, name);
-
-  /* Identify the stream group */
-
-  if (!strcmp (templ->name_template, "video_%d"))
-    ptype = GST_TYPE_ENCODING_VIDEO_PROFILE;
-  else if (!strcmp (templ->name_template, "audio_%d"))
-    ptype = GST_TYPE_ENCODING_AUDIO_PROFILE;
-  /* else if (!strcmp (templ->name_template, "text_%d")) */
-  /*   ptype = GST_TYPE_ENCODING_TEXT_PROFILE; */
-  else
-    ptype = G_TYPE_NONE;
-
-  /* FIXME : Check uniqueness of pad */
-  /* FIXME : Check that the requested number is the last one, and if not,
-   * update the last_pad_id variable so that we don't create a pad with
-   * the same name/number in the future */
-
-  /* Find GstEncodingProfile which we need */
-  sprof = next_unused_stream_profile (ebin, ptype, NULL);
-  if (G_UNLIKELY (sprof == NULL))
-    goto no_stream_profile;
-
-  sgroup = _create_stream_group (ebin, sprof, name, NULL);
-  if (G_UNLIKELY (sgroup == NULL))
-    goto no_stream_group;
-
-  return sgroup->ghostpad;
-
-no_stream_profile:
-  {
-    GST_WARNING_OBJECT (ebin, "Couldn't find a compatible stream profile");
-    return NULL;
-  }
-
-no_stream_group:
-  {
-    GST_WARNING_OBJECT (ebin, "Couldn't create a StreamGroup");
-    return NULL;
-  }
-}
-
-static GstPad *
-gst_encode_bin_request_pad_signal (GstEncodeBin * encodebin, GstCaps * caps)
-{
-  GstEncodingProfile *sprof;
-  StreamGroup *sgroup;
-
-  GST_DEBUG_OBJECT (encodebin, "caps:%" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (encodebin, "name:%s caps:%" GST_PTR_FORMAT, name, caps);
 
   /* Figure out if we have a unused GstEncodingProfile we can use for
    * these caps */
-  sprof = next_unused_stream_profile (encodebin, G_TYPE_NONE, caps);
+  sprof = next_unused_stream_profile (encodebin, ptype, caps);
+
   if (G_UNLIKELY (sprof == NULL))
     goto no_stream_profile;
 
-  sgroup = _create_stream_group (encodebin, sprof, NULL, caps);
+  sgroup = _create_stream_group (encodebin, sprof, name, caps);
   if (G_UNLIKELY (sgroup == NULL))
     goto no_stream_group;
 
@@ -594,6 +545,47 @@ no_stream_group:
     GST_WARNING_OBJECT (encodebin, "Couldn't create a StreamGroup");
     return NULL;
   }
+}
+
+static GstPad *
+gst_encode_bin_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
+{
+  GstEncodeBin *ebin = (GstEncodeBin *) element;
+  GstPad *res = NULL;
+
+  GST_DEBUG_OBJECT (element, "templ:%s, name:%s", templ->name_template, name);
+
+  /* Identify the stream group */
+  if (caps != NULL) {
+    res = request_pad_for_stream (ebin, G_TYPE_NONE, name, (GstCaps *) caps);
+  }
+
+  if (res == NULL) {
+    GType ptype = G_TYPE_NONE;
+
+    if (!strcmp (templ->name_template, "video_%d"))
+      ptype = GST_TYPE_ENCODING_VIDEO_PROFILE;
+    else if (!strcmp (templ->name_template, "audio_%d"))
+      ptype = GST_TYPE_ENCODING_AUDIO_PROFILE;
+    /* else if (!strcmp (templ->name_template, "text_%d")) */
+    /*   ptype = GST_TYPE_ENCODING_TEXT_PROFILE; */
+
+    /* FIXME : Check uniqueness of pad */
+    /* FIXME : Check that the requested number is the last one, and if not,
+     * update the last_pad_id variable so that we don't create a pad with
+     * the same name/number in the future */
+
+    res = request_pad_for_stream (ebin, ptype, name, NULL);
+  }
+
+  return res;
+}
+
+static GstPad *
+gst_encode_bin_request_pad_signal (GstEncodeBin * encodebin, GstCaps * caps)
+{
+  return request_pad_for_stream (encodebin, G_TYPE_NONE, NULL, caps);
 }
 
 static inline StreamGroup *
@@ -740,7 +732,7 @@ beach:
 }
 
 static GstPad *
-gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
+local_element_request_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name)
 {
   GstPad *newpad = NULL;
@@ -780,7 +772,7 @@ gst_element_get_pad_from_template (GstElement * element, GstPadTemplate * templ)
       break;
 
     case GST_PAD_REQUEST:
-      ret = gst_element_request_pad (element, templ, NULL);
+      ret = gst_element_request_pad (element, templ, NULL, NULL);
       break;
   }
 
@@ -1015,7 +1007,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
 
   /* Path 1 : Already-encoded data */
-  sinkpad = gst_element_request_pad (sgroup->combiner, NULL, "passthroughsink");
+  sinkpad =
+      local_element_request_pad (sgroup->combiner, NULL, "passthroughsink");
   if (G_UNLIKELY (sinkpad == NULL))
     goto no_combiner_sinkpad;
 
@@ -1042,7 +1035,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     g_object_unref (srcpad);
   }
 
-  srcpad = gst_element_request_pad (sgroup->splitter, NULL, "passthroughsrc");
+  srcpad = local_element_request_pad (sgroup->splitter, NULL, "passthroughsrc");
   if (G_UNLIKELY (srcpad == NULL))
     goto no_splitter_srcpad;
 
@@ -1061,7 +1054,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   gst_bin_add ((GstBin *) ebin, sgroup->encoder);
   tosync = g_list_append (tosync, sgroup->encoder);
 
-  sinkpad = gst_element_request_pad (sgroup->combiner, NULL, "encodingsink");
+  sinkpad = local_element_request_pad (sgroup->combiner, NULL, "encodingsink");
   if (G_UNLIKELY (sinkpad == NULL))
     goto no_combiner_sinkpad;
   srcpad = gst_element_get_static_pad (sgroup->encoder, "src");
@@ -1151,7 +1144,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
   /* Link to stream splitter */
   sinkpad = gst_element_get_static_pad (last, "sink");
-  srcpad = gst_element_request_pad (sgroup->splitter, NULL, "encodingsrc");
+  srcpad = local_element_request_pad (sgroup->splitter, NULL, "encodingsrc");
   if (G_UNLIKELY (srcpad == NULL))
     goto no_splitter_srcpad;
   if (G_UNLIKELY (fast_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK))
