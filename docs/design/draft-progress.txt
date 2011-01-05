@@ -56,6 +56,11 @@ The main reason for adding these extra progress notifications is twofold:
     application an opportunity to wait (and timeout) for the completion of the
     async operation before setting the element to the final NULL state.
 
+Progress updates are very similar to buffering messages in the same way that the
+application can decide to wait for the completion of the buffering process
+before performing the next state change. It might make sense to implement
+buffering with the progress messages in the future.
+
 
 Async state changes
 ~~~~~~~~~~~~~~~~~~~
@@ -130,8 +135,8 @@ Messages
                   one continues. This is done so that the application can follow
                   a set of continuous tasks and react to COMPLETE only when the
                   element completely finished.
-        GST_PROGRESS_TYPE_CANCELED: A task is stopped, this can either be
-                  because the user canceled it or there was an error. In case of
+        GST_PROGRESS_TYPE_CANCELED: A task is canceled by the user.
+        GST_PROGRESS_TYPE_ERROR: A task stopped because of an error. In case of
                   an error, an error message will have been posted before.
         GST_PROGRESS_TYPE_COMPLETE: A task completed successfully.
 
@@ -145,11 +150,13 @@ Messages
 
      A user visible string detailing the action.
 
-  - "progress", GST_TYPE_FRACTION
+  - "percent", G_TYPE_INT  between 0 and 100
 
-     A value indicating the current progress. The denominator contains the total
-     amount of steps, the numerator contains the current step. This is purely
-     informational and can change for each posted message.
+    Progress of the action as a percentage, the following values are allowed:
+      - GST_PROGRESS_TYPE_START always has a 0% value.
+      - GST_PROGRESS_TYPE_CONTINUE have a value between 0 and 100
+      - GST_PROGRESS_TYPE_CANCELED, GST_PROGRESS_TYPE_ERROR and
+        GST_PROGRESS_TYPE_COMPLETE always have a 100% value.
 
   - ....
 
@@ -163,6 +170,12 @@ Elements should not do blocking operations from the state change function.
 Instead, elements should post an appropriate progress message with the right
 category and of type GST_PROGRESS_TYPE_START and then start a thread to perform
 the blocking calls in a cancelable manner.
+
+It is highly recommended to only start async operations from the READY to PAUSED
+state and onwards and not from the NULL to READY state. The reason for this is
+that streaming threads are usually started in the READY to PAUSED state and that
+the current NULL to READY state change is used to perform a blocking check for
+the presence of devices.
 
 The progress message needs to be posted from the state change function so that
 the application can immediately take appropriate action after setting the state.
@@ -180,12 +193,13 @@ and GST_PROGRESS_TYPE_CANCELED is posted.
 
 The application can know about pending tasks because they received the
 GST_PROGRESS_TYPE_START messages that didn't complete with a
-GST_PROGRESS_TYPE_COMPLETE message or got canceled with a
-GST_PROGRESS_TYPE_CANCELED. Applications should be able to choose if
-they wait for the pending operation or cancel them.
+GST_PROGRESS_TYPE_COMPLETE message, got canceled with a
+GST_PROGRESS_TYPE_CANCELED or errored with GST_PROGRESS_TYPE_ERROR.
+Applications should be able to choose if they wait for the pending
+operation or cancel them.
 
 If an async operation fails, an error message is posted first before the
-GST_PROGRESS_TYPE_CANCELED progress message.
+GST_PROGRESS_TYPE_ERROR progress message.
 
 
 Categories
@@ -198,6 +212,10 @@ Categories
   "connect" : A socket connection is established
 
   "disconnect" : a socket connection is closed
+
+  "request" : A request is sent to a server and we are waiting for a
+              reply. This message is posted right before the request is sent
+              and completed when the reply has arrived completely.
 
   "mount" : A volume is being mounted
 
