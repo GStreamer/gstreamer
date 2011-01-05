@@ -80,6 +80,7 @@ struct _GstMultiUDPSink {
   guint16        ss_family;
 
   gboolean       send_duplicates;
+  gint           buffer_size;
 };
 
 struct _GstMultiUDPSinkClass {

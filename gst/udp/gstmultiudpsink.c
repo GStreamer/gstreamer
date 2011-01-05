@@ -80,6 +80,7 @@ enum
 #define DEFAULT_LOOP               TRUE
 #define DEFAULT_QOS_DSCP           -1
 #define DEFAULT_SEND_DUPLICATES    TRUE
+#define DEFAULT_BUFFER_SIZE        0
 
 enum
 {
@@ -96,6 +97,7 @@ enum
   PROP_LOOP,
   PROP_QOS_DSCP,
   PROP_SEND_DUPLICATES,
+  PROP_BUFFER_SIZE,
   PROP_LAST
 };
 
@@ -346,6 +348,11 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
           "When a distination/port pair is added multiple times, send packets "
           "multiple times as well", DEFAULT_SEND_DUPLICATES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_SIZE,
+      g_param_spec_int ("buffer-size", "Buffer Size",
+          "Size of the kernel send buffer in bytes, 0=default", 0, G_MAXINT,
+          DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
@@ -773,6 +780,9 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
     case PROP_SEND_DUPLICATES:
       udpsink->send_duplicates = g_value_get_boolean (value);
       break;
+    case PROP_BUFFER_SIZE:
+      udpsink->buffer_size = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -824,6 +834,9 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SEND_DUPLICATES:
       g_value_set_boolean (value, udpsink->send_duplicates);
+      break;
+    case PROP_BUFFER_SIZE:
+      g_value_set_int (value, udpsink->buffer_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -899,6 +912,12 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   guint bc_val;
   GList *clients;
   GstUDPClient *client;
+  int sndsize, ret;
+#ifdef G_OS_WIN32
+  gint len;
+#else
+  guint len;
+#endif
 
   if (sink->sockfd == -1) {
     GST_DEBUG_OBJECT (sink, "creating sockets");
@@ -914,11 +933,6 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
     sink->externalfd = FALSE;
   } else {
     struct sockaddr_storage myaddr;
-#ifdef G_OS_WIN32
-    gint len;
-#else
-    guint len;
-#endif
 
     GST_DEBUG_OBJECT (sink, "using configured socket");
     /* we use the configured socket, try to get some info about it */
@@ -931,6 +945,35 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
     sink->sock = sink->sockfd;
     sink->externalfd = TRUE;
   }
+
+  len = sizeof (sndsize);
+  if (sink->buffer_size != 0) {
+    sndsize = sink->buffer_size;
+
+    GST_DEBUG_OBJECT (sink, "setting udp buffer of %d bytes", sndsize);
+    /* set buffer size, Note that on Linux this is typically limited to a
+     * maximum of around 100K. Also a minimum of 128 bytes is required on
+     * Linux. */
+    ret =
+        setsockopt (sink->sockfd, SOL_SOCKET, SO_SNDBUF, (void *) &sndsize,
+        len);
+    if (ret != 0) {
+      GST_ELEMENT_WARNING (sink, RESOURCE, SETTINGS, (NULL),
+          ("Could not create a buffer of requested %d bytes, %d: %s (%d)",
+              sndsize, ret, g_strerror (errno), errno));
+    }
+  }
+
+  /* read the value of the receive buffer. Note that on linux this returns 2x the
+   * value we set because the kernel allocates extra memory for metadata.
+   * The default on Linux is about 100K (which is about 50K without metadata) */
+  ret =
+      getsockopt (sink->sockfd, SOL_SOCKET, SO_SNDBUF, (void *) &sndsize, &len);
+  if (ret == 0)
+    GST_DEBUG_OBJECT (sink, "have udp buffer of %d bytes", sndsize);
+  else
+    GST_DEBUG_OBJECT (sink, "could not get udp buffer size");
+
 
   bc_val = 1;
   if (setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
