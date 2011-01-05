@@ -523,7 +523,7 @@ gboolean
 qtdemux_dump_tfra (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
   guint64 time = 0, moof_offset = 0;
-  guint32 len = 0, num_entries = 0, ver_flags, track_id, i;
+  guint32 len = 0, num_entries = 0, ver_flags = 0, track_id = 0, i;
   guint value_size, traf_size, trun_size, sample_size;
 
   if (!gst_byte_reader_get_uint32_be (data, &ver_flags))
@@ -569,8 +569,8 @@ qtdemux_dump_tfra (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 gboolean
 qtdemux_dump_tfhd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
-  guint32 flags, n, track_id;
-  guint64 base_data_offset;
+  guint32 flags = 0, n = 0, track_id = 0;
+  guint64 base_data_offset = 0;
 
   if (!gst_byte_reader_skip (data, 1) ||
       !gst_byte_reader_get_uint24_be (data, &flags))
@@ -700,7 +700,7 @@ qtdemux_dump_trex (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 gboolean
 qtdemux_dump_mehd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
-  guint32 version;
+  guint32 version = 0;
   guint64 fragment_duration;
   guint value_size;
 

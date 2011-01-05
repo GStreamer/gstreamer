@@ -1965,8 +1965,8 @@ extract_initial_length_and_fourcc (const guint8 * data, guint size,
 static gboolean
 qtdemux_parse_mehd (GstQTDemux * qtdemux, GstByteReader * br)
 {
-  guint32 version;
-  guint64 duration;
+  guint32 version = 0;
+  guint64 duration = 0;
 
   if (!gst_byte_reader_get_uint32_be (br, &version))
     goto failed;
@@ -1976,7 +1976,7 @@ qtdemux_parse_mehd (GstQTDemux * qtdemux, GstByteReader * br)
     if (!gst_byte_reader_get_uint64_be (br, &duration))
       goto failed;
   } else {
-    guint32 dur;
+    guint32 dur = 0;
 
     if (!gst_byte_reader_get_uint32_be (br, &dur))
       goto failed;
@@ -2008,7 +2008,7 @@ qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
       trex = qtdemux_tree_get_child_by_type_full (mvex, FOURCC_trex,
           &trex_data);
       while (trex) {
-        guint32 id, dur, size, flags;
+        guint32 id = 0, dur = 0, size = 0, flags = 0;
 
         /* skip version/flags */
         if (!gst_byte_reader_skip (&trex_data, 4))
@@ -2066,7 +2066,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
 {
   guint64 timestamp;
   gint32 data_offset = 0;
-  guint32 flags, first_flags = 0, samples_count;
+  guint32 flags = 0, first_flags = 0, samples_count = 0;
   gint i;
   guint8 *data;
   guint entry_size, dur_offset, size_offset, flags_offset = 0, ct_offset = 0;
@@ -2290,8 +2290,8 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
     guint32 * default_sample_size, guint32 * default_sample_flags,
     gint64 * base_offset)
 {
-  guint32 flags;
-  guint32 track_id;
+  guint32 flags = 0;
+  guint32 track_id = 0;
 
   if (!gst_byte_reader_skip (tfhd, 1) ||
       !gst_byte_reader_get_uint24_be (tfhd, &flags))
@@ -5201,7 +5201,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* sync sample atom */
   stream->stps_present = FALSE;
   if ((stream->stss_present =
-          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
@@ -5219,7 +5219,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* partial sync sample atom */
     if ((stream->stps_present =
-            ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
       stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
@@ -5339,7 +5339,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
   /* composition time-to-sample */
   if ((stream->ctts_present =
-          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
