@@ -566,9 +566,9 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
   }
   if (gst_video_format_is_rgb (format)) {
     GstCaps *caps;
-    int red_mask;
-    int blue_mask;
-    int green_mask;
+    int red_mask = 0;
+    int blue_mask = 0;
+    int green_mask = 0;
     int alpha_mask;
     int depth;
     int bpp;
