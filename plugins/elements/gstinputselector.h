@@ -64,9 +64,6 @@ struct _GstInputSelector {
   GCond *cond;
   gboolean blocked;
   gboolean flushing;
-
-  /* select all mode, send data from all input pads forward */
-  gboolean select_all;
 };
 
 struct _GstInputSelectorClass {
