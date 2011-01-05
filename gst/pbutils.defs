@@ -448,6 +448,16 @@
   (return-type "const-gchar*")
 )
 
+(define-function encoding_profile_find
+  (c-name "gst_encoding_profile_find")
+  (return-type "GstEncodingProfile*")
+  (parameters
+    '("const-gchar*" "targetname")
+    '("const-gchar*" "profilename")
+    '("const-gchar*" "category")
+  )
+)
+
 (define-method add_profile
   (of-object "GstEncodingContainerProfile")
   (c-name "gst_encoding_container_profile_add_profile")
@@ -596,9 +606,9 @@
   )
 )
 
-(define-method save_to
+(define-method save_to_file
   (of-object "GstEncodingTarget")
-  (c-name "gst_encoding_target_save_to")
+  (c-name "gst_encoding_target_save_to_file")
   (return-type "gboolean")
   (parameters
     '("const-gchar*" "path")
@@ -606,21 +616,35 @@
   )
 )
 
-(define-function gst_encoding_target_load
+(define-function encoding_target_load
   (c-name "gst_encoding_target_load")
   (return-type "GstEncodingTarget*")
   (parameters
     '("const-gchar*" "name")
+    '("const-gchar*" "category")
     '("GError**" "error")
   )
 )
 
-(define-function gst_encoding_target_load_from
-  (c-name "gst_encoding_target_load_from")
+(define-function encoding_target_load_from_file
+  (c-name "gst_encoding_target_load_from_file")
   (return-type "GstEncodingTarget*")
   (parameters
     '("const-gchar*" "path")
     '("GError**" "error")
+  )
+)
+
+(define-function encoding_list_available_categories
+  (c-name "gst_encoding_list_available_categories")
+  (return-type "GList*")
+)
+
+(define-function encoding_list_all_targets
+  (c-name "gst_encoding_list_all_targets")
+  (return-type "GList*")
+  (parameters
+    '("const-gchar*" "categoryname")
   )
 )
 
