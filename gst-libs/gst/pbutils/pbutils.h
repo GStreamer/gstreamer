@@ -29,6 +29,8 @@
 #include <gst/pbutils/codec-utils.h>
 #include <gst/pbutils/pbutils-enumtypes.h>
 #include <gst/pbutils/gstdiscoverer.h>
+#include <gst/pbutils/encoding-profile.h>
+#include <gst/pbutils/encoding-target.h>
 
 G_BEGIN_DECLS
 
