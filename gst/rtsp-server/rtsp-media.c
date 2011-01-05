@@ -850,6 +850,13 @@ again:
     stream->filter_duplicates = TRUE;
   }
 
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (udpsink0),
+          "buffer-size")) {
+    g_object_set (G_OBJECT (udpsink0), "buffer-size", 0x80000, NULL);
+  } else {
+    GST_WARNING ("multiudpsink version found without buffer-size property");
+  }
+
   g_object_get (G_OBJECT (udpsrc1), "sock", &sockfd, NULL);
   g_object_set (G_OBJECT (udpsink1), "sockfd", sockfd, NULL);
   g_object_set (G_OBJECT (udpsink1), "closefd", FALSE, NULL);
