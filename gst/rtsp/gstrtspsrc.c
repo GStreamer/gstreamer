@@ -4397,7 +4397,7 @@ server_eof:
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("The server closed the connection."));
     gst_rtsp_message_unset (response);
-    return GST_FLOW_UNEXPECTED;
+    return res;
   }
 }
 
