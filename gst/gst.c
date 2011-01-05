@@ -572,16 +572,6 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     return TRUE;
   }
 
-  /* GStreamer was built against a GLib >= 2.8 and is therefore not doing
-   * the refcount hack. Check that it isn't being run against an older GLib */
-  if (glib_major_version < 2 ||
-      (glib_major_version == 2 && glib_minor_version < 8)) {
-    g_warning ("GStreamer was compiled against GLib %d.%d.%d but is running"
-        " against %d.%d.%d. This will cause reference counting issues",
-        GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION, GLIB_MICRO_VERSION,
-        glib_major_version, glib_minor_version, glib_micro_version);
-  }
-
   g_type_init ();
 
   /* we need threading to be enabled right here */
