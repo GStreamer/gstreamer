@@ -146,7 +146,7 @@ Messages
      action that is in progress. Some standard predefined categories will be
      defined.
 
-  - "message", G_TYPE_STRING
+  - "text", G_TYPE_STRING
 
      A user visible string detailing the action.
 
