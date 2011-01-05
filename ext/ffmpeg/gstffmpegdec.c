@@ -2560,7 +2560,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
           &data, &size, bdata, bsize, in_info->idx, in_info->idx);
 
       GST_LOG_OBJECT (ffmpegdec,
-          "parser returned res %d and size %d, id %d", res, size,
+          "parser returned res %d and size %d, id %" G_GINT64_FORMAT, res, size,
           ffmpegdec->pctx->pts);
 
       /* store pts for decoding */
