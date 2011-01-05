@@ -38,9 +38,21 @@ GType gst_discoverer_stream_info_get_type (void);
 /**
  * GstDiscovererStreamInfo:
  *
- * Base structure for informations concerning a media stream. Depending on the @streamtype,
- * One can find more media-specific information in #GstDiscovererAudioInfo,
- * #GstDiscovererVideoInfo, #GstDiscovererContainerInfo.
+ * Base structure for information concerning a media stream. Depending on the
+ * stream type, one can find more media-specific information in
+ * #GstDiscovererAudioInfo, #GstDiscovererVideoInfo, and
+ * #GstDiscovererContainerInfo.
+ *
+ * The #GstDiscovererStreamInfo represents the topology of the stream. Siblings
+ * can be iterated over with gst_discoverer_stream_info_get_next() and
+ * gst_discoverer_stream_info_get_previous(). Children (sub-streams) of a
+ * stream can be accessed using the #GstDiscovererContainerInfo API.
+ *
+ * As a simple example, if you run #GstDiscoverer on an AVI file with one audio
+ * and one video stream, you will get a #GstDiscovererContainerInfo
+ * corresponding to the AVI container, which in turn will have a
+ * #GstDiscovererAudioInfo sub-stream and a #GstDiscovererVideoInfo sub-stream
+ * for the audio and video streams respectively.
  *
  * Since: 0.10.31
  */
@@ -102,7 +114,7 @@ guint gst_discoverer_audio_info_get_max_bitrate(const GstDiscovererAudioInfo* in
 /**
  * GstDiscovererVideoInfo:
  *
- * #GstDiscovererStreamInfo specific to video streams.
+ * #GstDiscovererStreamInfo specific to video streams (this includes images).
  *
  * Since: 0.10.31
  */

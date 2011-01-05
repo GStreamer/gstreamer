@@ -377,7 +377,7 @@ gst_discoverer_stream_info_list_free (GList * infos)
 /**
  * gst_discoverer_info_get_streams:
  * @info: a #GstDiscovererInfo
- * @streamtype: a #GType of #GstDiscovererStreamInfo
+ * @streamtype: a #GType derived from #GstDiscovererStreamInfo
  *
  * Finds the #GstDiscovererStreamInfo contained in @info that match the
  * given @streamtype.
@@ -712,8 +712,7 @@ VIDEO_INFO_ACCESSOR_CODE (height, guint, 0);
  * gst_discoverer_video_info_get_depth:
  * @info: a #GstDiscovererVideoInfo
  *
- * Returns: the depth in bits of the video stream (only relevant for
- * video streams).
+ * Returns: the depth in bits of the video stream.
  *
  * Since: 0.10.31
  */
@@ -942,3 +941,43 @@ DISCOVERER_INFO_ACCESSOR_CODE (misc, const GstStructure *, NULL);
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (tags, const GstTagList *, NULL);
+
+/**
+ * gst_discoverer_info_ref:
+ * @info: a #GstDiscovererInfo
+ *
+ * Increments the reference count of @info.
+ *
+ * Returns: the same #GstDiscovererInfo object
+ *
+ * Since: 0.10.31
+ */
+
+/**
+ * gst_discoverer_info_unref:
+ * @info: a #GstDiscovererInfo
+ *
+ * Decrements the reference count of @info.
+ *
+ * Since: 0.10.31
+ */
+
+/**
+ * gst_discoverer_stream_info_ref:
+ * @info: a #GstDiscovererStreamInfo
+ *
+ * Increments the reference count of @info.
+ *
+ * Returns: the same #GstDiscovererStreamInfo object
+ *
+ * Since: 0.10.31
+ */
+
+/**
+ * gst_discoverer_stream_info_unref:
+ * @info: a #GstDiscovererStreamInfo
+ *
+ * Decrements the reference count of @info.
+ *
+ * Since: 0.10.31
+ */

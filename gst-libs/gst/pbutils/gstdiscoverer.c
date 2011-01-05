@@ -218,7 +218,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
    * @discoverer: the #GstDiscoverer
    * @info: the results #GstDiscovererInfo
    * @error: (type GLib.Error): #GError, which will be non-NULL if an error
-   *                            occured during discovery
+   *                            occurred during discovery
    *
    * Will be emitted when all information on a URI could be discovered.
    */
@@ -1309,7 +1309,8 @@ gst_discoverer_stop (GstDiscoverer * discoverer)
  * discovery of the @uri will only take place if gst_discoverer_start() has
  * been called.
  *
- * A copy of @uri will be done internally, the caller can safely g_free() afterwards.
+ * A copy of @uri will be made internally, so the caller can safely g_free()
+ * afterwards.
  *
  * Returns: %TRUE if the @uri was succesfully appended to the list of pending
  * uris, else %FALSE
@@ -1342,15 +1343,15 @@ gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
  * gst_discoverer_discover_uri:
  * @discoverer: A #GstDiscoverer
  * @uri: The URI to run on.
- * @err: If an error occured, this field will be filled in.
+ * @err: If an error occurred, this field will be filled in.
  *
  * Synchronously discovers the given @uri.
  *
- * A copy of @uri will be done internally, the caller can safely g_free()
+ * A copy of @uri will be made internally, so the caller can safely g_free()
  * afterwards.
  *
- * Returns: (transfer full): the result of the scanning. Can be %NULL iif an
- * error occured.
+ * Returns: (transfer full): the result of the scanning. Can be %NULL if an
+ * error occurred.
  * 
  * Since: 0.10.31
  */
@@ -1403,7 +1404,7 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
  * Creates a new #GstDiscoverer with the provided timeout.
  *
  * Returns: (transfer full): The new #GstDiscoverer.
- * If an error happened when creating the discoverer, @err will be set
+ * If an error occurred when creating the discoverer, @err will be set
  * accordingly and %NULL will be returned. If @err is set, the caller must
  * free it when no longer needed using g_error_free().
  * 
