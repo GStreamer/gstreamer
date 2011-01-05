@@ -53,8 +53,6 @@ static void dvb_sub_init (void);
  * and signalling the API user for new bitmaps to show on screen.
  */
 
-#define MAX_NEG_CROP 1024
-
 #define AYUV(y,u,v,a) (((a) << 24) | ((y) << 16) | ((u) << 8) | (v))
 #define RGBA_TO_AYUV(r,g,b,a) (((a) << 24) | ((rgb_to_y(r,g,b)) << 16) | ((rgb_to_u(r,g,b)) << 8) | (rgb_to_v(r,g,b)))
 
@@ -374,10 +372,6 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   guint8 region_id;
   guint8 page_state;
 
-#ifndef GST_DISABLE_GST_DEBUG
-  static int counter = 0;       /* FIXME: static counter? I think not.. */
-#endif
-
   if (buf_size < 1)
     return;
 
@@ -390,9 +384,8 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
       "Normal case", "ACQUISITION POINT", "Mode Change", "RESERVED"
     };
 
-    ++counter;
-    GST_DEBUG ("PAGE: %d: page_id = %u, length = %d, page_time_out = %u secs, "
-        "page_state = %s", counter, page_id, buf_size, dvb_sub->page_time_out,
+    GST_DEBUG ("PAGE: page_id = %u, length = %d, page_time_out = %u secs, "
+        "page_state = %s", page_id, buf_size, dvb_sub->page_time_out,
         page_state_str[page_state]);
   }
 #endif
@@ -433,8 +426,8 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     dvb_sub->display_list = display;
     dvb_sub->display_list_size++;
 
-    GST_LOG ("PAGE %d: REGION information: ID = %u, address = %ux%u",
-        counter, region_id, display->x_pos, display->y_pos);
+    GST_LOG ("PAGE: REGION information: ID = %u, address = %ux%u", region_id,
+        display->x_pos, display->y_pos);
   }
 
   while (tmp_display_list) {
@@ -587,7 +580,7 @@ _dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   clut = get_clut (dvb_sub, clut_id);
 
   if (!clut) {
-    clut = g_slice_new (DVBSubCLUT);    /* FIXME-MEMORY-LEAK: This seems to leak per valgrind */
+    clut = g_slice_new (DVBSubCLUT);
 
     memcpy (clut, &default_clut, sizeof (DVBSubCLUT));
 
@@ -1201,8 +1194,6 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
   guint32 *clut_table;
   int i;
 
-  static unsigned counter = 0;  /* DEBUG use only *//* FIXME: get rid */
-
   GST_DEBUG ("DISPLAY SET END: page_id = %u, length = %d", page_id, buf_size);
 
   sub = g_slice_new0 (DVBSubtitles);
@@ -1275,10 +1266,8 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
     rect->pict.data = g_malloc (region->buf_size);      /* FIXME: Can we use GSlice here? */
     memcpy (rect->pict.data, region->pbuf, region->buf_size);
 
-    ++counter;
-    GST_DEBUG ("DISPLAY: an object rect created: number %u, iteration %u, "
-        "pos: %d:%d, size: %dx%d", counter, i, rect->x, rect->y, rect->w,
-        rect->h);
+    GST_DEBUG ("DISPLAY: an object rect created: iteration %u, "
+        "pos: %d:%d, size: %dx%d", i, rect->x, rect->y, rect->w, rect->h);
 
     GST_MEMDUMP ("rect->pict.data content", rect->pict.data, region->buf_size);
 
