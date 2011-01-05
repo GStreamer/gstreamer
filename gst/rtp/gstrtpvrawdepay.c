@@ -242,6 +242,7 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GST_DEBUG_OBJECT (depayload, "width %d, height %d, format %d", width, height,
       format);
   GST_DEBUG_OBJECT (depayload, "yp %d, up %d, vp %d", yp, up, vp);
+  GST_DEBUG_OBJECT (depayload, "xinc %d, yinc %d", xinc, yinc);
   GST_DEBUG_OBJECT (depayload, "pgroup %d, ystride %d, uvstride %d", pgroup,
       ystride, uvstride);
   GST_DEBUG_OBJECT (depayload, "outsize %u", outsize);
@@ -386,10 +387,10 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     }
 
     /* calculate the maximim amount of bytes we can use per line */
-    if (offs + ((length / pgroup) * xinc) > (width - xinc)) {
+    if (offs + ((length / pgroup) * xinc) > width) {
       plen = ((width - offs) * pgroup) / xinc;
-      GST_WARNING_OBJECT (depayload, "clipping length %d, offset %d", length,
-          offs);
+      GST_WARNING_OBJECT (depayload, "clipping length %d, offset %d, plen %d",
+          length, offs, plen);
     } else
       plen = length;
 
