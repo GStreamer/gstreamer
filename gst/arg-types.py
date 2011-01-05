@@ -138,7 +138,7 @@ class GstCapsArg(ArgType):
 			copyval = 'TRUE'
 		else:
 			raise RuntimeError, "write_return not implemented for %s" % ptype
-		info.codeafter.append('    return pyg_boxed_new (GST_TYPE_CAPS, ret, '+copyval+', TRUE);')
+		info.codeafter.append('    return pyg_boxed_new (GST_TYPE_CAPS, (GstCaps*) ret, '+copyval+', TRUE);')
 
 class GstIteratorArg(ArgType):
 	def write_return(self, ptype, ownsreturn, info):
