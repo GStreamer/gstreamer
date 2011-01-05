@@ -1600,6 +1600,18 @@
   )
 )
 
+(define-method request_pad
+  (of-object "GstElement")
+  (c-name "gst_element_request_pad")
+  (return-type "GstPad*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstPadTemplate*" "templ")
+    '("const-gchar*" "name")
+    '("const-GstCaps*" "caps")
+  )
+)
+
 (define-method release_request_pad
   (of-object "GstElement")
   (c-name "gst_element_release_request_pad")
