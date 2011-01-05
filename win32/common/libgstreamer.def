@@ -531,6 +531,7 @@ EXPORTS
 	gst_message_new_info
 	gst_message_new_latency
 	gst_message_new_new_clock
+	gst_message_new_progress
 	gst_message_new_qos
 	gst_message_new_request_state
 	gst_message_new_segment_done
@@ -553,6 +554,7 @@ EXPORTS
 	gst_message_parse_error
 	gst_message_parse_info
 	gst_message_parse_new_clock
+	gst_message_parse_progress
 	gst_message_parse_qos
 	gst_message_parse_qos_stats
 	gst_message_parse_qos_values
@@ -813,6 +815,7 @@ EXPORTS
 	gst_preset_set_meta
 	gst_print_element_args
 	gst_print_pad_caps
+	gst_progress_type_get_type
 	gst_proxy_pad_get_type
 	gst_qos_type_get_type
 	gst_query_add_buffering_range

@@ -2079,3 +2079,68 @@ gst_message_parse_qos_stats (GstMessage * message, GstFormat * format,
       GST_QUARK (PROCESSED), G_TYPE_UINT64, processed,
       GST_QUARK (DROPPED), G_TYPE_UINT64, dropped, NULL);
 }
+
+/**
+ * gst_message_new_progress:
+ * @src: The object originating the message.
+ * @type: a #GstProgressType
+ * @category: a progress category
+ * @text: free, user visible text describing the progress
+ *
+ * Progress messages are posted by elements when they use an asynchronous task
+ * to perform actions triggered by a state change.
+ *
+ * @category contains a well defined string describing the action.
+ * @test should contain a user visible string detailing the current action.
+ *
+ * Returns: (transfer full): The new qos message.
+ *
+ * Since: 0.10.33
+ */
+GstMessage *
+gst_message_new_progress (GstObject * src, GstProgressType type,
+    const gchar * category, const gchar * text)
+{
+  GstMessage *message;
+  GstStructure *structure;
+  gint percent = 100;
+
+  g_return_val_if_fail (category != NULL, NULL);
+  g_return_val_if_fail (text != NULL, NULL);
+
+  if (type == GST_PROGRESS_TYPE_START || type == GST_PROGRESS_TYPE_CONTINUE)
+    percent = 0;
+
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_PROGRESS),
+      GST_QUARK (TYPE), GST_TYPE_PROGRESS_TYPE, type,
+      GST_QUARK (CATEGORY), G_TYPE_STRING, category,
+      GST_QUARK (TEXT), G_TYPE_STRING, text,
+      GST_QUARK (PERCENT), G_TYPE_INT, percent, NULL);
+  message = gst_message_new_custom (GST_MESSAGE_PROGRESS, src, structure);
+
+  return message;
+}
+
+/**
+ * gst_message_parse_progress:
+ * @message: A valid #GstMessage of type GST_MESSAGE_PROGRESS.
+ * @type: (out) (allow-none): location for the type
+ * @category: (out) (allow-none) (transfer full): location for the category
+ * @text: (out) (allow-none) (transfer full): location for the text
+ *
+ * Parses the progress @type, @category and @text.
+ *
+ * Since: 0.10.33
+ */
+void
+gst_message_parse_progress (GstMessage * message, GstProgressType * type,
+    gchar ** category, gchar ** text)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_PROGRESS);
+
+  gst_structure_id_get (message->structure,
+      GST_QUARK (TYPE), GST_TYPE_PROGRESS_TYPE, type,
+      GST_QUARK (CATEGORY), G_TYPE_STRING, category,
+      GST_QUARK (TEXT), G_TYPE_STRING, text, NULL);
+}

@@ -88,6 +88,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_STEP_START: A stepping operation was started. Since: 0.10.24
  * @GST_MESSAGE_QOS: A buffer was dropped or an element changed its processing
  * strategy for Quality of Service reasons. Since: 0.10.29
+ * @GST_MESSAGE_PROGRESS: A progress message. Since: 0.10.33
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -123,6 +124,7 @@ typedef enum
   GST_MESSAGE_REQUEST_STATE     = (1 << 22),
   GST_MESSAGE_STEP_START        = (1 << 23),
   GST_MESSAGE_QOS               = (1 << 24),
+  GST_MESSAGE_PROGRESS          = (1 << 25),
   GST_MESSAGE_ANY               = ~0
 } GstMessageType;
 
@@ -239,6 +241,28 @@ typedef enum {
   GST_STREAM_STATUS_TYPE_PAUSE    = 9,
   GST_STREAM_STATUS_TYPE_STOP     = 10
 } GstStreamStatusType;
+
+/**
+ * GstProgressType:
+ * @GST_PROGRESS_TYPE_START: A new task started.
+ * @GST_PROGRESS_TYPE_CONTINUE: A task completed and a new one continues.
+ * @GST_PROGRESS_TYPE_COMPLETE: A task completed.
+ * @GST_PROGRESS_TYPE_CANCELED: A task was canceled.
+ * @GST_PROGRESS_TYPE_ERROR: A task caused an error. An error message is also
+ *          posted on the bus.
+ *
+ * The type of a %GST_MESSAGE_PROGRESS. The progress messages inform the
+ * application of the status of assynchronous tasks.
+ *
+ * Since: 0.10.33
+ */
+typedef enum {
+  GST_PROGRESS_TYPE_START    = 0,
+  GST_PROGRESS_TYPE_CONTINUE = 1,
+  GST_PROGRESS_TYPE_COMPLETE = 2,
+  GST_PROGRESS_TYPE_CANCELED = 3,
+  GST_PROGRESS_TYPE_ERROR    = 4,
+} GstProgressType;
 
 /**
  * GstMessage:
@@ -492,6 +516,12 @@ void            gst_message_parse_qos_values    (GstMessage * message, gint64 * 
                                                  gint * quality);
 void            gst_message_parse_qos_stats     (GstMessage * message, GstFormat * format, guint64 * processed,
                                                  guint64 * dropped);
+/* PROGRESS */
+GstMessage *    gst_message_new_progress           (GstObject * src, GstProgressType type, const gchar *category,
+                                                    const gchar *text);
+void            gst_message_parse_progress         (GstMessage * message, GstProgressType * type, gchar ** category,
+                                                    gchar ** text);
+
 
 /* custom messages */
 GstMessage *    gst_message_new_custom          (GstMessageType type,

@@ -1248,6 +1248,10 @@ gst_message_parse_stream_status
 gst_message_set_stream_status_object
 gst_message_get_stream_status_object
 
+GstProgressType
+gst_message_new_progress
+gst_message_parse_progress
+
 <SUBSECTION Standard>
 GstMessageClass
 GST_MESSAGE
@@ -1260,11 +1264,13 @@ GST_MESSAGE_GET_CLASS
 GST_TYPE_MESSAGE_TYPE
 GST_TYPE_STRUCTURE_CHANGE_TYPE
 GST_TYPE_STREAM_STATUS_TYPE
+GST_TYPE_PROGRESS_TYPE
 <SUBSECTION Private>
 gst_message_get_type
 gst_message_type_get_type
 gst_structure_change_type_get_type
 gst_stream_status_type_get_type
+gst_progress_type_get_type
 GST_MESSAGE_COND
 GST_MESSAGE_GET_LOCK
 GST_MESSAGE_LOCK
