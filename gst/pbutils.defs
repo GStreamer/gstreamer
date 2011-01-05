@@ -436,9 +436,9 @@
   )
 )
 
-(define-method get_output_caps
+(define-method get_input_caps
   (of-object "GstEncodingProfile")
-  (c-name "gst_encoding_profile_get_output_caps")
+  (c-name "gst_encoding_profile_get_input_caps")
   (return-type "GstCaps*")
 )
 
