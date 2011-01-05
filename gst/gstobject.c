@@ -641,11 +641,10 @@ gst_object_set_name_default (GstObject * object)
   type_name = g_quark_to_string (q);
   if (strncmp (type_name, "Gst", 3) == 0)
     type_name += 3;
-  l = strlen (type_name);
-  name = g_malloc (l + 6 + 1);
+  name = g_strdup_printf ("%s%d", type_name, count);
+  l = strlen (name);
   for (i = 0; i < l; i++)
-    name[i] = g_ascii_tolower (type_name[i]);
-  g_snprintf (&name[i], 6, "%d", count);
+    name[i] = g_ascii_tolower (name[i]);
 
   GST_OBJECT_LOCK (object);
   if (G_UNLIKELY (object->parent != NULL))
