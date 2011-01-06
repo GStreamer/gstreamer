@@ -3,6 +3,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/controller/gstcontroller.h>
 #include <pango/pangocairo.h>
 
 G_BEGIN_DECLS
