@@ -30,10 +30,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include "gstbaseparse.h"
-
-GST_DEBUG_CATEGORY_EXTERN (h263_parse_debug);
-#define GST_CAT_DEFAULT h263_parse_debug
+#include <gstbaseparse.h>
 
 G_BEGIN_DECLS
 
@@ -46,16 +43,17 @@ typedef enum
 
 typedef struct _H263Params H263Params;
 
-#define GST_TYPE_H263PARSE \
+#define GST_TYPE_H263_PARSE \
   (gst_h263_parse_get_type())
-#define GST_H263PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_H263PARSE,GstH263Parse))
-#define GST_H263PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_H263PARSE,GstH263ParseClass))
-#define GST_IS_H263PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_H263PARSE))
-#define GST_IS_H263PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_H263PARSE))
+#define GST_H263_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_H263_PARSE,GstH263Parse))
+#define GST_H263_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_H263_PARSE,GstH263ParseClass))
+#define GST_IS_H263_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_H263_PARSE))
+#define GST_IS_H263_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_H263_PARSE))
+
 GType gst_h263_parse_get_type (void);
 
 typedef struct _GstH263Parse GstH263Parse;

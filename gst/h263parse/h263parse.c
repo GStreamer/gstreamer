@@ -27,6 +27,9 @@
 #include <gst/base/gstbitreader.h>
 #include "gsth263parse.h"
 
+GST_DEBUG_CATEGORY_EXTERN (h263_parse_debug);
+#define GST_CAT_DEFAULT h263_parse_debug
+
 /* H263 Optional Features */
 typedef enum
 {

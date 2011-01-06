@@ -33,6 +33,7 @@
 #include "gsth263parse.h"
 
 GST_DEBUG_CATEGORY (h263_parse_debug);
+#define GST_CAT_DEFAULT h263_parse_debug
 
 static GstStaticPadTemplate srctemplate =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
@@ -99,7 +100,7 @@ gst_h263_parse_init (GstH263Parse * h263parse, GstH263ParseClass * g_class)
 static gboolean
 gst_h263_parse_start (GstBaseParse * parse)
 {
-  GstH263Parse *h263parse = GST_H263PARSE (parse);
+  GstH263Parse *h263parse = GST_H263_PARSE (parse);
 
   GST_DEBUG ("Start");
 
@@ -109,6 +110,7 @@ gst_h263_parse_start (GstBaseParse * parse)
 
   h263parse->state = PARSING;
 
+  gst_base_parse_set_min_frame_size (parse, 512);
   gst_base_parse_set_passthrough (parse, FALSE);
 
   return TRUE;
@@ -128,7 +130,7 @@ gst_h263_parse_sink_event (GstBaseParse * parse, GstEvent * event)
   GstH263Parse *h263parse;
   gboolean res = FALSE;
 
-  h263parse = GST_H263PARSE (parse);
+  h263parse = GST_H263_PARSE (parse);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
@@ -184,7 +186,10 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buffer,
   GstH263Parse *h263parse;
   guint psc_pos, next_psc_pos;
 
-  h263parse = GST_H263PARSE (parse);
+  h263parse = GST_H263_PARSE (parse);
+
+  if (GST_BUFFER_SIZE (buffer) < 3)
+    return FALSE;
 
   psc_pos = find_psc (buffer, 0);
 
@@ -255,7 +260,7 @@ gst_h263_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
   GstFlowReturn res;
   H263Params *params = NULL;
 
-  h263parse = GST_H263PARSE (parse);
+  h263parse = GST_H263_PARSE (parse);
 
   res = gst_h263_parse_get_params (h263parse, buffer, &params, TRUE);
   if (res != GST_FLOW_OK)
