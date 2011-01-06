@@ -20,8 +20,8 @@ BuildRequires: 	  %{gstreamer}-devel >= %{gst_minver}
 
 BuildRequires:  gcc-c++
 BuildRequires:  gtk-doc >= 1.3
-BuildRequires:  liboil-devel >= 0.3.14 
-Requires:       liboil => 0.3.14 
+BuildRequires:  orc-devel
+Requires:       orc
 
 @USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
 @USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
@@ -81,6 +81,7 @@ rm -rf $RPM_BUILD_ROOT
 
 # helper programs
 %{_bindir}/gst-visualise-%{majorminor}
+%{_bindir}/gst-discoverer-%{majorminor}
 %{_mandir}/man1/gst-visualise-%{majorminor}*
 
 # libraries
@@ -118,6 +119,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiotestsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapp.so
+%{_libdir}/gstreamer-%{majorminor}/libgstencodebin.so
 
 # Here are packages not in the base plugins package but not dependant
 # on an external lib
@@ -215,6 +217,11 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audio-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/streamvolume.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/codec-utils.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/encoding-profile.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/encoding-target.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/gstdiscoverer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/gstpluginsbaseversion.h
 
 %{_libdir}/libgstfft-%{majorminor}.so
 %{_libdir}/libgstrtsp-%{majorminor}.so
