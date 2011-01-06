@@ -898,7 +898,7 @@ static void
 gst_flac_parse_process_seektable (GstFlacParse * flacparse, gint64 boffset)
 {
   GstByteReader br;
-  gint64 offset, samples;
+  gint64 offset = 0, samples = 0;
 
   GST_DEBUG_OBJECT (flacparse,
       "parsing seektable; base offset %" G_GINT64_FORMAT, boffset);
