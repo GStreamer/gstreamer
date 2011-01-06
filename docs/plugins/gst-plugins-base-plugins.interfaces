@@ -3,30 +3,30 @@ GstPipeline GstChildProxy
 GstPlayBaseBin GstChildProxy
 GstPlayBin GstChildProxy
 GstPlayBin2 GstChildProxy GstStreamVolume
+GstDecodeBin2 GstChildProxy
+GstURIDecodeBin GstChildProxy
 GstDecodeBin GstChildProxy
 GstPlaySink GstChildProxy
 GstSubtitleOverlay GstChildProxy
-GstDecodeBin2 GstChildProxy
-GstURIDecodeBin GstChildProxy
 GstEncodeBin GstChildProxy
+GstVorbisEnc GstTagSetter GstPreset
+GstVorbisTag GstTagSetter
 GstCddaBaseSrc GstURIHandler
 GstCdParanoiaSrc GstURIHandler
 GstAlsaSrc GstImplementsInterface GstMixer GstPropertyProbe
 GstV4lElement GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
 GstV4lSrc GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
-GstGnomeVFSSrc GstURIHandler
 GstGioSrc GstURIHandler
+GstGnomeVFSSrc GstURIHandler
 GstAppSrc GstURIHandler
-GstGnomeVFSSink GstURIHandler
-GstAlsaSink GstPropertyProbe
 GstGioSink GstURIHandler
+GstAlsaSink GstPropertyProbe
+GstGnomeVFSSink GstURIHandler
 GstXImageSink GstImplementsInterface GstNavigation GstXOverlay
 GstXvImageSink GstImplementsInterface GstNavigation GstXOverlay GstColorBalance GstPropertyProbe
 GstAppSink GstURIHandler
-GstVorbisEnc GstTagSetter GstPreset
-GstVorbisTag GstTagSetter
-GstTheoraEnc GstPreset
 GstAlsaMixerElement GstImplementsInterface GstMixer GstPropertyProbe
+GstTheoraEnc GstPreset
 GstOggMux GstPreset
 GstVolume GstImplementsInterface GstMixer GstStreamVolume
 PangoCairoFcFontMap PangoCairoFontMap
