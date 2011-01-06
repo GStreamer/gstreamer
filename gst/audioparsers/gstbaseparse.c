@@ -76,7 +76,7 @@
  *       #GstAdapter.
  *     </para></listitem>
  *     <listitem><para>
- *       A buffer of min_frame_size bytes is passed to subclass with
+ *       A buffer of (at least) min_frame_size bytes is passed to subclass with
  *       @check_valid_frame. Subclass checks the contents and returns TRUE
  *       if the buffer contains a valid frame. It also needs to set the
  *       @framesize according to the detected frame size. If buffer didn't
@@ -1874,7 +1874,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   guint fsize = 0;
   gint skip = -1;
   const guint8 *data;
-  guint min_size;
+  guint min_size, av;
   GstClockTime timestamp;
 
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
@@ -1908,9 +1908,10 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     /* Synchronization loop */
     for (;;) {
       min_size = parse->priv->min_frame_size;
+      av = gst_adapter_available (parse->adapter);
 
       if (G_UNLIKELY (parse->priv->drain)) {
-        min_size = gst_adapter_available (parse->adapter);
+        min_size = av;
         GST_DEBUG_OBJECT (parse, "draining, data left: %d", min_size);
         if (G_UNLIKELY (!min_size)) {
           gst_buffer_unref (tmpbuf);
@@ -1919,14 +1920,15 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       }
 
       /* Collect at least min_frame_size bytes */
-      if (gst_adapter_available (parse->adapter) < min_size) {
+      if (av < min_size) {
         GST_DEBUG_OBJECT (parse, "not enough data available (only %d bytes)",
-            gst_adapter_available (parse->adapter));
+            av);
         gst_buffer_unref (tmpbuf);
         goto done;
       }
 
-      data = gst_adapter_peek (parse->adapter, min_size);
+      /* always pass all available data */
+      data = gst_adapter_peek (parse->adapter, av);
       GST_BUFFER_DATA (tmpbuf) = (guint8 *) data;
       GST_BUFFER_SIZE (tmpbuf) = min_size;
       GST_BUFFER_OFFSET (tmpbuf) = parse->priv->offset;
@@ -1946,6 +1948,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
           gst_buffer_unref (tmpbuf);
           goto done;
         }
+        GST_LOG_OBJECT (parse, "valid frame of size %d at pos %d", fsize, skip);
         break;
       }
       if (skip == -1) {
@@ -2203,6 +2206,7 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
     skip = -1;
     if (klass->check_valid_frame (parse, buffer, &fsize, &skip)) {
       parse->priv->drain = FALSE;
+      GST_LOG_OBJECT (parse, "valid frame of size %d at pos %d", fsize, skip);
       break;
     }
     parse->priv->drain = FALSE;
