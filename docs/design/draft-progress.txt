@@ -207,6 +207,9 @@ Categories
 
  We want to propose some standard categories here:
  
+  "open" : A resource is being opened
+  "close" : A resource is being closed
+
   "name-lookup" : A DNS lookup.
 
   "connect" : A socket connection is established
