@@ -73,6 +73,7 @@ struct _GstProxyPadPrivate
 G_DEFINE_TYPE (GstProxyPad, gst_proxy_pad, GST_TYPE_PAD);
 
 static GstPad *gst_proxy_pad_get_target (GstPad * pad);
+static GstPad *gst_proxy_pad_get_internal (GstPad * pad);
 
 static void gst_proxy_pad_dispose (GObject * object);
 static void gst_proxy_pad_finalize (GObject * object);
@@ -107,9 +108,12 @@ static gboolean
 gst_proxy_pad_do_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = FALSE;
-  GstPad *internal = GST_PROXY_PAD_INTERNAL (pad);
+  GstPad *internal = gst_proxy_pad_get_internal (pad);
 
-  res = gst_pad_push_event (internal, event);
+  if (internal) {
+    res = gst_pad_push_event (internal, event);
+    gst_object_unref (internal);
+  }
 
   return res;
 }
@@ -147,10 +151,13 @@ static GstFlowReturn
 gst_proxy_pad_do_bufferalloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
-  GstFlowReturn result;
-  GstPad *internal = GST_PROXY_PAD_INTERNAL (pad);
+  GstFlowReturn result = GST_FLOW_WRONG_STATE;
+  GstPad *internal = gst_proxy_pad_get_internal (pad);
 
-  result = gst_pad_alloc_buffer (internal, offset, size, caps, buf);
+  if (internal) {
+    result = gst_pad_alloc_buffer (internal, offset, size, caps, buf);
+    gst_object_unref (internal);
+  }
 
   return result;
 }
@@ -355,6 +362,20 @@ gst_proxy_pad_get_target (GstPad * pad)
   GST_PROXY_UNLOCK (pad);
 
   return target;
+}
+
+static GstPad *
+gst_proxy_pad_get_internal (GstPad * pad)
+{
+  GstPad *internal;
+
+  GST_PROXY_LOCK (pad);
+  internal = GST_PROXY_PAD_INTERNAL (pad);
+  if (internal)
+    gst_object_ref (internal);
+  GST_PROXY_UNLOCK (pad);
+
+  return internal;
 }
 
 static void
