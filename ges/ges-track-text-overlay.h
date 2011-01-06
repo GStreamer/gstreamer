@@ -51,15 +51,9 @@ typedef struct _GESTrackTextOverlayPrivate GESTrackTextOverlayPrivate;
  * GESTrackTextOverlay:
  */
 struct _GESTrackTextOverlay {
-  /*< private >*/
   GESTrackOperation parent;
 
-  gchar         *text;
-  gchar         *font_desc;
-  GESTextHAlign halign;
-  GESTextVAlign valign;
-  GstElement    *text_el;
-
+  /*< private >*/
   GESTrackTextOverlayPrivate *priv;
 
   /* Padding for API extension */
@@ -77,21 +71,24 @@ struct _GESTrackTextOverlayClass {
 
 GType ges_track_text_overlay_get_type (void);
 
-void ges_track_text_overlay_set_text(GESTrackTextOverlay *self, const
-    gchar *text);
-
+void ges_track_text_overlay_set_text(GESTrackTextOverlay *self,
+                                     const gchar *text);
 void ges_track_text_overlay_set_font_desc(GESTrackTextOverlay *self,
-    const gchar *font_desc);
+                                          const gchar *font_desc);
 
-void ges_track_text_overlay_set_halignment(GESTrackTextOverlay
-    *self, GESTextHAlign halgn);
+void ges_track_text_overlay_set_halignment(GESTrackTextOverlay *self,
+                                           GESTextHAlign halgn);
 
-void ges_track_text_overlay_set_valignment(GESTrackTextOverlay
-    *self, GESTextVAlign valign);
+void ges_track_text_overlay_set_valignment(GESTrackTextOverlay *self,
+                                           GESTextVAlign valign);
+
+const gchar *ges_track_text_overlay_get_text(GESTrackTextOverlay *self);
+const char *ges_track_text_overlay_get_font_desc(GESTrackTextOverlay *self);
+GESTextHAlign ges_track_text_overlay_get_halignment(GESTrackTextOverlay *self);
+GESTextVAlign ges_track_text_overlay_get_valignment(GESTrackTextOverlay *self);
 
 GESTrackTextOverlay* ges_track_text_overlay_new (void);
 
 G_END_DECLS
 
 #endif /* _GES_TRACK_TEXT_OVERLAY */
-

@@ -35,8 +35,11 @@ G_DEFINE_TYPE (GESTrackTextOverlay, ges_track_text_overlay,
 
 struct _GESTrackTextOverlayPrivate
 {
-  /*  Dummy variable */
-  void *nothing;
+  gchar *text;
+  gchar *font_desc;
+  GESTextHAlign halign;
+  GESTextVAlign valign;
+  GstElement *text_el;
 };
 
 enum
@@ -79,28 +82,28 @@ ges_track_text_overlay_init (GESTrackTextOverlay * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_TEXT_OVERLAY, GESTrackTextOverlayPrivate);
 
-  self->text = NULL;
-  self->font_desc = NULL;
-  self->text_el = NULL;
-  self->halign = DEFAULT_HALIGNMENT;
-  self->valign = DEFAULT_VALIGNMENT;
+  self->priv->text = NULL;
+  self->priv->font_desc = NULL;
+  self->priv->text_el = NULL;
+  self->priv->halign = DEFAULT_HALIGNMENT;
+  self->priv->valign = DEFAULT_VALIGNMENT;
 }
 
 static void
 ges_track_text_overlay_dispose (GObject * object)
 {
   GESTrackTextOverlay *self = GES_TRACK_TEXT_OVERLAY (object);
-  if (self->text) {
-    g_free (self->text);
+  if (self->priv->text) {
+    g_free (self->priv->text);
   }
 
-  if (self->font_desc) {
-    g_free (self->font_desc);
+  if (self->priv->font_desc) {
+    g_free (self->priv->font_desc);
   }
 
-  if (self->text_el) {
-    g_object_unref (self->text_el);
-    self->text_el = NULL;
+  if (self->priv->text_el) {
+    g_object_unref (self->priv->text_el);
+    self->priv->text_el = NULL;
   }
 
   G_OBJECT_CLASS (ges_track_text_overlay_parent_class)->dispose (object);
@@ -143,16 +146,16 @@ ges_track_text_overlay_create_element (GESTrackObject * object)
   text = gst_element_factory_make ("textoverlay", NULL);
   iconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
   oconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
-  self->text_el = text;
+  self->priv->text_el = text;
   g_object_ref (text);
 
-  if (self->text)
-    g_object_set (text, "text", (gchar *) self->text, NULL);
-  if (self->font_desc)
-    g_object_set (text, "font-desc", (gchar *) self->font_desc, NULL);
+  if (self->priv->text)
+    g_object_set (text, "text", (gchar *) self->priv->text, NULL);
+  if (self->priv->font_desc)
+    g_object_set (text, "font-desc", (gchar *) self->priv->font_desc, NULL);
 
-  g_object_set (text, "halignment", (gint) self->halign, "valignment",
-      (gint) self->valign, NULL);
+  g_object_set (text, "halignment", (gint) self->priv->halign, "valignment",
+      (gint) self->priv->valign, NULL);
 
   ret = gst_bin_new ("overlay-bin");
   gst_bin_add_many (GST_BIN (ret), text, iconv, oconv, NULL);
@@ -177,7 +180,7 @@ ges_track_text_overlay_create_element (GESTrackObject * object)
  * @self: the #GESTrackTextOverlay* to set text on
  * @text: the text to render. an internal copy of this text will be
  * made.
- * 
+ *
  * Sets the text this track object will render.
  *
  */
@@ -185,19 +188,19 @@ ges_track_text_overlay_create_element (GESTrackObject * object)
 void
 ges_track_text_overlay_set_text (GESTrackTextOverlay * self, const gchar * text)
 {
-  if (self->text)
-    g_free (self->text);
+  if (self->priv->text)
+    g_free (self->priv->text);
 
-  self->text = g_strdup (text);
-  if (self->text_el)
-    g_object_set (self->text_el, "text", text, NULL);
+  self->priv->text = g_strdup (text);
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "text", text, NULL);
 }
 
 /**
  * ges_track_text_overlay_set_font_desc:
  * @self: the #GESTrackTextOverlay
  * @font_desc: the pango font description
- * 
+ *
  * Sets the text this track object will render.
  *
  */
@@ -206,13 +209,13 @@ void
 ges_track_text_overlay_set_font_desc (GESTrackTextOverlay * self,
     const gchar * font_desc)
 {
-  if (self->font_desc)
-    g_free (self->font_desc);
+  if (self->priv->font_desc)
+    g_free (self->priv->font_desc);
 
-  self->font_desc = g_strdup (font_desc);
+  self->priv->font_desc = g_strdup (font_desc);
   GST_LOG ("setting font-desc to '%s'", font_desc);
-  if (self->text_el)
-    g_object_set (self->text_el, "font-desc", font_desc, NULL);
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "font-desc", font_desc, NULL);
 }
 
 /**
@@ -226,10 +229,10 @@ void
 ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
     GESTextVAlign valign)
 {
-  self->valign = valign;
+  self->priv->valign = valign;
   GST_LOG ("set valignment to: %d", valign);
-  if (self->text_el)
-    g_object_set (self->text_el, "valignment", valign, NULL);
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "valignment", valign, NULL);
 }
 
 /**
@@ -243,10 +246,58 @@ void
 ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
     GESTextHAlign halign)
 {
-  self->halign = halign;
+  self->priv->halign = halign;
   GST_LOG ("set halignment to: %d", halign);
-  if (self->text_el)
-    g_object_set (self->text_el, "halignment", halign, NULL);
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "halignment", halign, NULL);
+}
+
+/**
+ * ges_track_text_overlay_get_text:
+ * @self: a GESTrackTextOverlay
+ *
+ * Returns: The text currently set on the @source.
+ * */
+const gchar *
+ges_track_text_overlay_get_text (GESTrackTextOverlay * self)
+{
+  return self->priv->text;
+}
+
+/**
+ * ges_track_text_overlay_get_font_desc:
+ * @self: a GESTrackTextOverlay
+ *
+ * Returns: The pango font description used by the @source.
+ */
+const char *
+ges_track_text_overlay_get_font_desc (GESTrackTextOverlay * self)
+{
+  return self->priv->font_desc;
+}
+
+/**
+ * ges_track_text_overlay_get_halignment:
+ * @self: a GESTrackTextOverlay
+ *
+ * Returns: The horizontal aligment used by this @source.
+ */
+GESTextHAlign
+ges_track_text_overlay_get_halignment (GESTrackTextOverlay * self)
+{
+  return self->priv->halign;
+}
+
+/**
+ * ges_track_text_overlay_get_valignment:
+ * @self: a GESTrackTextOverlay
+ *
+ * Returns: The vertical aligment used by this @source.
+ */
+GESTextVAlign
+ges_track_text_overlay_get_valignment (GESTrackTextOverlay * self)
+{
+  return self->priv->valign;
 }
 
 GESTrackTextOverlay *

@@ -147,8 +147,8 @@ GST_START_TEST (test_overlay_in_layer)
   assert_equals_string ("sans 72", text);
   g_free (text);
 
-  text = ((GESTrackTextOverlay *) trobj)->font_desc;
-  assert_equals_string ("sans 72", text);
+  assert_equals_string ("sans 72",
+      ges_track_text_overlay_get_font_desc (GES_TRACK_TEXT_OVERLAY (trobj)));
 
   /* test halign and valign */
   g_object_set (source, "halignment", (gint)
@@ -157,8 +157,10 @@ GST_START_TEST (test_overlay_in_layer)
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
-  halign = ((GESTrackTextOverlay *) trobj)->halign;
-  valign = ((GESTrackTextOverlay *) trobj)->valign;
+  halign =
+      ges_track_text_overlay_get_halignment (GES_TRACK_TEXT_OVERLAY (trobj));
+  valign =
+      ges_track_text_overlay_get_valignment (GES_TRACK_TEXT_OVERLAY (trobj));
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
