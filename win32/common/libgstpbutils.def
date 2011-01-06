@@ -70,8 +70,8 @@ EXPORTS
 	gst_encoding_profile_find
 	gst_encoding_profile_get_description
 	gst_encoding_profile_get_format
+	gst_encoding_profile_get_input_caps
 	gst_encoding_profile_get_name
-	gst_encoding_profile_get_output_caps
 	gst_encoding_profile_get_presence
 	gst_encoding_profile_get_preset
 	gst_encoding_profile_get_restriction
