@@ -621,8 +621,9 @@ qtdemux_dump_tfhd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 gboolean
 qtdemux_dump_trun (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
-  guint32 flags, samples_count, data_offset, first_sample_flags;
-  guint32 sample_duration, sample_size, sample_flags, composition_time_offsets;
+  guint32 flags = 0, samples_count = 0, data_offset = 0, first_sample_flags = 0;
+  guint32 sample_duration = 0, sample_size = 0, sample_flags =
+      0, composition_time_offsets = 0;
   int i = 0;
 
   if (!gst_byte_reader_skip (data, 1) ||
