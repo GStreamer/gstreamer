@@ -243,7 +243,13 @@ print_tag_each (GQuark field_id, const GValue * value, gpointer user_data)
   gint tab = GPOINTER_TO_INT (user_data);
   gchar *ser;
 
-  ser = gst_value_serialize (value);
+  if (G_VALUE_HOLDS_STRING (value))
+    ser = g_value_dup_string (value);
+  else if (GST_VALUE_HOLDS_BUFFER (value)) {
+    GstBuffer *buf = gst_value_get_buffer (value);
+    ser = g_strdup_printf ("<GstBuffer [%d bytes]>", GST_BUFFER_SIZE (buf));
+  } else
+    ser = gst_value_serialize (value);
 
   g_print ("%*s%s: %s\n", tab, " ",
       gst_tag_get_nick (g_quark_to_string (field_id)), ser);
