@@ -6,4 +6,4 @@ libgsth263parse_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
 libgsth263parse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgsth263parse_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gsth263parse.h gstbaseparse.h
+noinst_HEADERS = gsth263parse.h h263parse.h gstbaseparse.h

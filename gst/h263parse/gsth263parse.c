@@ -179,6 +179,70 @@ out:
   return psc_pos;
 }
 
+static void
+gst_h263_parse_set_src_caps (GstH263Parse * h263parse, H263Params * params)
+{
+  GstStructure *st;
+  GstCaps *caps, *sink_caps;
+  gint fr_num, fr_denom;
+
+  g_assert (h263parse->state == PASSTHROUGH || h263parse->state == GOT_HEADER);
+
+  caps = GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (h263parse));
+  if (caps) {
+    caps = gst_caps_copy (caps);
+  } else {
+    caps = gst_caps_new_simple ("video/x-h263",
+        "variant", G_TYPE_STRING, "itu", NULL);
+  }
+  gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  sink_caps = GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (h263parse));
+  if (sink_caps && (st = gst_caps_get_structure (sink_caps, 0)) &&
+      gst_structure_get_fraction (st, "framerate", &fr_num, &fr_denom)) {
+    /* Got it in caps - nothing more to do */
+    GST_DEBUG ("Sink caps override framerate from headers");
+  } else {
+    /* Caps didn't have the framerate - get it from params */
+    gst_h263_parse_get_framerate (params, &fr_num, &fr_denom);
+  }
+  gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, fr_num, fr_denom,
+      NULL);
+
+  if (h263parse->state == GOT_HEADER) {
+    gst_caps_set_simple (caps,
+        "annex-d", G_TYPE_BOOLEAN, (params->features & H263_OPTION_UMV_MODE),
+        "annex-e", G_TYPE_BOOLEAN, (params->features & H263_OPTION_SAC_MODE),
+        "annex-f", G_TYPE_BOOLEAN, (params->features & H263_OPTION_AP_MODE),
+        "annex-g", G_TYPE_BOOLEAN, (params->features & H263_OPTION_PB_MODE),
+        "annex-i", G_TYPE_BOOLEAN, (params->features & H263_OPTION_AIC_MODE),
+        "annex-j", G_TYPE_BOOLEAN, (params->features & H263_OPTION_DF_MODE),
+        "annex-k", G_TYPE_BOOLEAN, (params->features & H263_OPTION_SS_MODE),
+        "annex-m", G_TYPE_BOOLEAN, (params->type == PICTURE_IMPROVED_PB),
+        "annex-n", G_TYPE_BOOLEAN, (params->features & H263_OPTION_RPS_MODE),
+        "annex-q", G_TYPE_BOOLEAN, (params->features & H263_OPTION_RRU_MODE),
+        "annex-r", G_TYPE_BOOLEAN, (params->features & H263_OPTION_ISD_MODE),
+        "annex-s", G_TYPE_BOOLEAN, (params->features & H263_OPTION_AIV_MODE),
+        "annex-t", G_TYPE_BOOLEAN, (params->features & H263_OPTION_MQ_MODE),
+        "annex-u", G_TYPE_BOOLEAN, (params->features & H263_OPTION_ERPS_MODE),
+        "annex-v", G_TYPE_BOOLEAN, (params->features & H263_OPTION_DPS_MODE),
+        NULL);
+
+    h263parse->profile = gst_h263_parse_get_profile (params);
+    if (h263parse->profile != -1)
+      gst_caps_set_simple (caps, "profile", G_TYPE_UINT, h263parse->profile,
+          NULL);
+
+    h263parse->level = gst_h263_parse_get_level (params, h263parse->profile,
+        h263parse->bitrate, fr_num, fr_denom);
+    if (h263parse->level != -1)
+      gst_caps_set_simple (caps, "level", G_TYPE_UINT, h263parse->level, NULL);
+  }
+
+  gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (h263parse)), caps);
+  gst_caps_unref (caps);
+}
+
 static gboolean
 gst_h263_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buffer,
     guint * framesize, gint * skipsize)
@@ -219,9 +283,9 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buffer,
   /* If this is the first frame, parse and set srcpad caps */
   if (h263parse->state == PARSING) {
     H263Params *params = NULL;
-    GstFlowReturn res = gst_h263_parse_get_params (h263parse, buffer,
-        &params, FALSE);
+    GstFlowReturn res;
 
+    res = gst_h263_parse_get_params (&params, buffer, FALSE, &h263parse->state);
     if (res != GST_FLOW_OK || h263parse->state != GOT_HEADER) {
       GST_WARNING ("Couldn't parse header - setting passthrough mode");
       gst_base_parse_set_passthrough (parse, TRUE);
@@ -262,7 +326,7 @@ gst_h263_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
 
   h263parse = GST_H263_PARSE (parse);
 
-  res = gst_h263_parse_get_params (h263parse, buffer, &params, TRUE);
+  res = gst_h263_parse_get_params (&params, buffer, TRUE, &h263parse->state);
   if (res != GST_FLOW_OK)
     goto out;
 

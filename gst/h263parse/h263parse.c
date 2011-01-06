@@ -30,99 +30,6 @@
 GST_DEBUG_CATEGORY_EXTERN (h263_parse_debug);
 #define GST_CAT_DEFAULT h263_parse_debug
 
-/* H263 Optional Features */
-typedef enum
-{
-  /* Optional Unrestricted Motion Vector (UMV) mode (see Annex D) */
-  H263_OPTION_UMV_MODE = 1 << 0,
-  /* Optional Syntax-based Arithmetic Coding (SAC) mode (see Annex E) */
-  H263_OPTION_SAC_MODE = 1 << 1,
-  /* Optional Advanced Prediction mode (AP) (see Annex F) */
-  H263_OPTION_AP_MODE = 1 << 2,
-  /* Optional PB-frames mode (see Annex G) */
-  H263_OPTION_PB_MODE = 1 << 3,
-  /* Optional Advanced INTRA Coding (AIC) mode (see Annex I) */
-  H263_OPTION_AIC_MODE = 1 << 4,
-  /* Optional Deblocking Filter (DF) mode (see Annex J) */
-  H263_OPTION_DF_MODE = 1 << 5,
-  /* Optional Slice Structured (SS) mode (see Annex K) */
-  H263_OPTION_SS_MODE = 1 << 6,
-  /* Optional Reference Picture Selection (RPS) mode (see Annex N) */
-  H263_OPTION_RPS_MODE = 1 << 7,
-  /* Optional Independent Segment Decoding (ISD) mode (see Annex R) */
-  H263_OPTION_ISD_MODE = 1 << 8,
-  /* Optional Alternative INTER VLC (AIV) mode (see Annex S) */
-  H263_OPTION_AIV_MODE = 1 << 9,
-  /* Optional Modified Quantization (MQ) mode (see Annex T) */
-  H263_OPTION_MQ_MODE = 1 << 10,
-  /* Optional Reference Picture Resampling (RPR) mode (see Annex P) */
-  H263_OPTION_RPR_MODE = 1 << 11,
-  /* Optional Reduced-Resolution Update (RRU) mode (see Annex Q) */
-  H263_OPTION_RRU_MODE = 1 << 12,
-  /* Optional Enhanced Reference Picture Selection (ERPS) mode (see Annex U) */
-  H263_OPTION_ERPS_MODE = 1 << 13,
-  /* Optional Data Partitioned Slices (DPS) mode (see Annex V) */
-  H263_OPTION_DPS_MODE = 1 << 14
-} H263OptionalFeatures;
-
-/* H263 Picture Types */
-typedef enum
-{
-  PICTURE_I = 0,                /* I-picture (INTRA) Baseline */
-  PICTURE_P,                    /* P-picture (INTER) Baseline */
-  PICTURE_IMPROVED_PB,          /* Improved PB-frame (Annex M) */
-  PICTURE_B,                    /* B-picture (Annex O) */
-  PICTURE_EI,                   /* EI-picture (Annex O) */
-  PICTURE_EP,                   /* EP-picture (Annex O) */
-  PICTURE_RESERVED1,
-  PICTURE_RESERVED2,
-  PICTURE_PB                    /* PB-frame (See Annex G) */
-} H263PictureType;
-
-/* H263 Picture Format */
-typedef enum
-{
-  PICTURE_FMT_FORBIDDEN_0 = 0,
-  PICTURE_FMT_SUB_QCIF,
-  PICTURE_FMT_QCIF,
-  PICTURE_FMT_CIF,
-  PICTURE_FMT_4CIF,
-  PICTURE_FMT_16CIF,
-  PICTURE_FMT_RESERVED1,
-  PICTURE_FMT_EXTENDEDPTYPE
-} H263PictureFormat;
-
-typedef enum
-{
-  UUI_ABSENT = 0,
-  UUI_IS_1,
-  UUI_IS_01,
-} H263UUI;
-
-struct _H263Params
-{
-  guint32 temporal_ref;
-
-  H263OptionalFeatures features;
-
-  gboolean splitscreen;
-  gboolean documentcamera;
-  gboolean fullpicturefreezerelease;
-  gboolean custompcfpresent;
-  H263UUI uui;
-  guint8 sss;
-
-  H263PictureFormat format;
-
-  H263PictureType type;
-
-  guint32 width;
-  guint32 height;
-  guint8 parnum, pardenom;
-  gint32 pcfnum, pcfdenom;
-};
-
-
 gboolean
 gst_h263_parse_is_delta_unit (H263Params * params)
 {
@@ -133,8 +40,8 @@ gst_h263_parse_is_delta_unit (H263Params * params)
  * extract a subset of the data (for now, it quits once we have the picture
  * type. */
 GstFlowReturn
-gst_h263_parse_get_params (GstH263Parse * h263parse, GstBuffer * buffer,
-    H263Params ** params_p, gboolean fast)
+gst_h263_parse_get_params (H263Params ** params_p, GstBuffer * buffer,
+    gboolean fast, H263ParseState * state)
 {
   static const guint8 partable[6][2] = {
     {1, 0},
@@ -538,12 +445,12 @@ gst_h263_parse_get_params (GstH263Parse * h263parse, GstBuffer * buffer,
    * have no means of specifying what sub-modes, if any, are used. */
 
 done:
-  h263parse->state = GOT_HEADER;
+  *state = GOT_HEADER;
 more:
   return GST_FLOW_OK;
 
 beach:
-  h263parse->state = PASSTHROUGH;
+  *state = PASSTHROUGH;
   return GST_FLOW_OK;
 }
 
@@ -752,75 +659,8 @@ gst_h263_parse_get_level (H263Params * params, gint profile,
 }
 
 void
-gst_h263_parse_get_framerate (GstCaps * sink_caps, H263Params * params,
-    gint * num, gint * denom)
+gst_h263_parse_get_framerate (H263Params * params, gint * num, gint * denom)
 {
-  GstStructure *st;
-
-  st = gst_caps_get_structure (sink_caps, 0);
-
-  if (gst_structure_get_fraction (st, "framerate", num, denom)) {
-    /* Got it in caps - nothing more to do */
-    GST_DEBUG ("Sink caps override framerate from headers");
-    return;
-  }
-
-  /* Caps didn't have the framerate - get it from params */
   *num = params->pcfnum;
   *denom = params->pcfdenom;
-}
-
-void
-gst_h263_parse_set_src_caps (GstH263Parse * h263parse, H263Params * params)
-{
-  GstCaps *caps;
-  gint fr_num, fr_denom;
-
-  g_assert (h263parse->state == PASSTHROUGH || h263parse->state == GOT_HEADER);
-
-  caps = GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (GST_BASE_PARSE (h263parse)));
-  if (caps) {
-    caps = gst_caps_copy (caps);
-  } else {
-    caps = gst_caps_new_simple ("video/x-h263",
-        "variant", G_TYPE_STRING, "itu", NULL);
-  }
-  gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-
-  gst_h263_parse_get_framerate (caps, params, &fr_num, &fr_denom);
-  gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, fr_num, fr_denom,
-      NULL);
-
-  if (h263parse->state == GOT_HEADER) {
-    gst_caps_set_simple (caps,
-        "annex-d", G_TYPE_BOOLEAN, (params->features & H263_OPTION_UMV_MODE),
-        "annex-e", G_TYPE_BOOLEAN, (params->features & H263_OPTION_SAC_MODE),
-        "annex-f", G_TYPE_BOOLEAN, (params->features & H263_OPTION_AP_MODE),
-        "annex-g", G_TYPE_BOOLEAN, (params->features & H263_OPTION_PB_MODE),
-        "annex-i", G_TYPE_BOOLEAN, (params->features & H263_OPTION_AIC_MODE),
-        "annex-j", G_TYPE_BOOLEAN, (params->features & H263_OPTION_DF_MODE),
-        "annex-k", G_TYPE_BOOLEAN, (params->features & H263_OPTION_SS_MODE),
-        "annex-m", G_TYPE_BOOLEAN, (params->type == PICTURE_IMPROVED_PB),
-        "annex-n", G_TYPE_BOOLEAN, (params->features & H263_OPTION_RPS_MODE),
-        "annex-q", G_TYPE_BOOLEAN, (params->features & H263_OPTION_RRU_MODE),
-        "annex-r", G_TYPE_BOOLEAN, (params->features & H263_OPTION_ISD_MODE),
-        "annex-s", G_TYPE_BOOLEAN, (params->features & H263_OPTION_AIV_MODE),
-        "annex-t", G_TYPE_BOOLEAN, (params->features & H263_OPTION_MQ_MODE),
-        "annex-u", G_TYPE_BOOLEAN, (params->features & H263_OPTION_ERPS_MODE),
-        "annex-v", G_TYPE_BOOLEAN, (params->features & H263_OPTION_DPS_MODE),
-        NULL);
-
-    h263parse->profile = gst_h263_parse_get_profile (params);
-    if (h263parse->profile != -1)
-      gst_caps_set_simple (caps, "profile", G_TYPE_UINT, h263parse->profile,
-          NULL);
-
-    h263parse->level = gst_h263_parse_get_level (params, h263parse->profile,
-        h263parse->bitrate, fr_num, fr_denom);
-    if (h263parse->level != -1)
-      gst_caps_set_simple (caps, "level", G_TYPE_UINT, h263parse->level, NULL);
-  }
-
-  gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (h263parse)), caps);
-  gst_caps_unref (caps);
 }

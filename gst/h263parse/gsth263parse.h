@@ -32,16 +32,9 @@
 #include <gst/base/gstadapter.h>
 #include <gstbaseparse.h>
 
+#include "h263parse.h"
+
 G_BEGIN_DECLS
-
-typedef enum
-{
-  PARSING = 0,
-  GOT_HEADER,
-  PASSTHROUGH
-} H263ParseState;
-
-typedef struct _H263Params H263Params;
 
 #define GST_TYPE_H263_PARSE \
   (gst_h263_parse_get_type())
@@ -73,17 +66,6 @@ struct _GstH263ParseClass
 {
   GstBaseParseClass parent_class;
 };
-
-gboolean gst_h263_parse_is_delta_unit (H263Params * params);
-GstFlowReturn gst_h263_parse_get_params (GstH263Parse * h263parse,
-    GstBuffer * buffer, H263Params ** params_p, gboolean fast);
-void gst_h263_parse_get_framerate (GstCaps * caps, H263Params * params,
-    gint * num, gint * denom);
-void gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
-    H263Params * params);
-gint gst_h263_parse_get_profile (H263Params * params);
-gint gst_h263_parse_get_level (H263Params * params, gint profile,
-    guint bitrate, gint fps_num, gint fps_denom);
 
 G_END_DECLS
 #endif
