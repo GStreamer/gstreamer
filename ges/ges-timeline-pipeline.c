@@ -199,8 +199,8 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
         if (self->priv->mode == TIMELINE_MODE_SMART_RENDER) {
           GstCaps *ocaps, *rcaps;
 
-          GST_DEBUG ("Smart Render mode, setting output caps");
-          ocaps = gst_encoding_profile_get_output_caps (prof);
+          GST_DEBUG ("Smart Render mode, setting input caps");
+          ocaps = gst_encoding_profile_get_input_caps (prof);
           if (track->type == GES_TRACK_TYPE_AUDIO)
             rcaps = gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
           else
