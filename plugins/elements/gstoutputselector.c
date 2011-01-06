@@ -294,9 +294,12 @@ gst_output_selector_get_property (GObject * object, guint prop_id,
 static GstCaps *
 gst_output_selector_sink_getcaps (GstPad * pad)
 {
-  GstOutputSelector *sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
+  GstOutputSelector *sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
   GstPad *active = NULL;
   GstCaps *caps = NULL;
+
+  if (G_UNLIKELY (sel == NULL))
+    return gst_caps_new_any ();
 
   GST_OBJECT_LOCK (sel);
   if (sel->pending_srcpad)
@@ -312,6 +315,8 @@ gst_output_selector_sink_getcaps (GstPad * pad)
   if (caps == NULL) {
     caps = gst_caps_new_any ();
   }
+
+  gst_object_unref (sel);
   return caps;
 }
 
@@ -363,7 +368,9 @@ gst_output_selector_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn res;
   GstPad *allocpad;
 
-  sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
+  sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL))
+    return GST_FLOW_WRONG_STATE;
   res = GST_FLOW_NOT_LINKED;
 
   GST_OBJECT_LOCK (sel);
@@ -390,6 +397,7 @@ gst_output_selector_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
   GST_DEBUG_OBJECT (sel, "buffer alloc finished: %s", gst_flow_get_name (res));
 
+  gst_object_unref (sel);
   return res;
 }
 
@@ -579,6 +587,10 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
   GstPad *output_pad = NULL;
 
   sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:

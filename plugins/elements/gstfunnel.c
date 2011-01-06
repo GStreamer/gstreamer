@@ -191,7 +191,10 @@ gst_funnel_sink_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent_element (pad));
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn ret;
+
+  if (G_UNLIKELY (funnel == NULL))
+    return GST_FLOW_WRONG_STATE;
 
   ret = gst_pad_alloc_buffer (funnel->srcpad, offset, size, caps, buf);
 
@@ -245,6 +248,9 @@ gst_funnel_sink_getcaps (GstPad * pad)
 {
   GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
   GstCaps *caps;
+
+  if (G_UNLIKELY (funnel == NULL))
+    return gst_caps_new_any ();
 
   caps = gst_pad_peer_get_caps_reffed (funnel->srcpad);
   if (caps == NULL)
@@ -327,6 +333,11 @@ gst_funnel_sink_event (GstPad * pad, GstEvent * event)
   gboolean forward = TRUE;
   gboolean res = TRUE;
 
+  if (G_UNLIKELY (funnel == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
     {
@@ -346,7 +357,6 @@ gst_funnel_sink_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_UNLOCK (funnel);
 
       forward = FALSE;
-      gst_event_unref (event);
     }
       break;
     case GST_EVENT_FLUSH_STOP:
@@ -363,6 +373,8 @@ gst_funnel_sink_event (GstPad * pad, GstEvent * event)
 
   if (forward)
     res = gst_pad_push_event (funnel->srcpad, event);
+  else
+    gst_event_unref (event);
 
   gst_object_unref (funnel);
 
@@ -379,7 +391,10 @@ gst_funnel_src_event (GstPad * pad, GstEvent * event)
   gboolean done = FALSE;
 
   funnel = gst_pad_get_parent_element (pad);
-  g_return_val_if_fail (funnel != NULL, FALSE);
+  if (G_UNLIKELY (funnel == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   iter = gst_element_iterate_sink_pads (funnel);
 

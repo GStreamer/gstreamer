@@ -386,6 +386,10 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
   GstPad *active_sinkpad;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
   selpad = GST_SELECTOR_PAD_CAST (pad);
 
   GST_INPUT_SELECTOR_LOCK (sel);
@@ -513,6 +517,8 @@ gst_selector_pad_getcaps (GstPad * pad)
   GstCaps *caps;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL))
+    return gst_caps_new_any ();
 
   GST_DEBUG_OBJECT (sel, "Getting caps of srcpad peer");
   caps = gst_pad_peer_get_caps_reffed (sel->srcpad);
@@ -531,6 +537,8 @@ gst_selector_pad_acceptcaps (GstPad * pad, GstCaps * caps)
   gboolean res;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL))
+    return FALSE;
 
   GST_DEBUG_OBJECT (sel, "Checking acceptcaps of srcpad peer");
   res = gst_pad_peer_accept_caps (sel->srcpad, caps);
@@ -550,6 +558,9 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
   GstSelectorPad *selpad;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL))
+    return GST_FLOW_WRONG_STATE;
+
   selpad = GST_SELECTOR_PAD_CAST (pad);
 
   GST_LOG_OBJECT (pad, "received alloc");

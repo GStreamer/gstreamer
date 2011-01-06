@@ -551,7 +551,9 @@ gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn res;
   GstPad *allocpad;
 
-  tee = GST_TEE_CAST (GST_PAD_PARENT (pad));
+  tee = GST_TEE_CAST (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (tee == NULL))
+    return GST_FLOW_WRONG_STATE;
 
   res = GST_FLOW_NOT_LINKED;
 
@@ -587,6 +589,7 @@ gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   }
   GST_OBJECT_UNLOCK (tee);
 
+  gst_object_unref (tee);
   return res;
 }
 

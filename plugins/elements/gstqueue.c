@@ -472,10 +472,14 @@ gst_queue_acceptcaps (GstPad * pad, GstCaps * caps)
   GstQueue *queue;
   GstPad *otherpad;
 
-  queue = GST_QUEUE (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (queue == NULL))
+    return FALSE;
 
   otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
   result = gst_pad_peer_accept_caps (otherpad, caps);
+
+  gst_object_unref (queue);
 
   return result;
 }
@@ -545,11 +549,14 @@ gst_queue_bufferalloc (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
   GstQueue *queue;
   GstFlowReturn result;
 
-  queue = GST_QUEUE (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (queue == NULL))
+    return GST_FLOW_WRONG_STATE;
 
   /* Forward to src pad, without setting caps on the src pad */
   result = gst_pad_alloc_buffer (queue->srcpad, offset, size, caps, buf);
 
+  gst_object_unref (queue);
   return result;
 }
 
@@ -804,7 +811,11 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
 {
   GstQueue *queue;
 
-  queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
+  queue = GST_QUEUE (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (queue == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -865,6 +876,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 done:
+  gst_object_unref (queue);
   return TRUE;
 
   /* ERRORS */
@@ -873,6 +885,7 @@ out_flushing:
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "refusing event, we are flushing");
     GST_QUEUE_MUTEX_UNLOCK (queue);
+    gst_object_unref (queue);
     gst_event_unref (event);
     return FALSE;
   }
@@ -880,6 +893,7 @@ out_eos:
   {
     GST_CAT_LOG_OBJECT (queue_dataflow, queue, "refusing event, we are EOS");
     GST_QUEUE_MUTEX_UNLOCK (queue);
+    gst_object_unref (queue);
     gst_event_unref (event);
     return FALSE;
   }
