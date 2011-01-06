@@ -32,6 +32,8 @@
  */
 #define PTM_DISCONT_ADJUST (0.3 * GST_SECOND)
 #define INITIAL_END_PTM (-1)
+#define MAX_GAP ( 3 * GST_SECOND / 2 )
+#define MAX_GAP_TOLERANCE ( GST_SECOND / 20 )
 
 GST_DEBUG_CATEGORY_STATIC (gstdvddemux_debug);
 #define GST_CAT_DEFAULT (gstdvddemux_debug)
@@ -439,8 +441,8 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     gst_element_no_more_pads (GST_ELEMENT (dvd_demux));
 
     /* Keep video/audio/subtitle pads within 1/2 sec of the SCR */
-    mpeg_demux->max_gap = GST_SECOND / 2;
-    mpeg_demux->max_gap_tolerance = GST_SECOND / 20;
+    mpeg_demux->max_gap = MAX_GAP;
+    mpeg_demux->max_gap_tolerance = MAX_GAP_TOLERANCE;
   } else {
     GST_DEBUG_OBJECT (dvd_demux, "dvddemux Forwarding DVD event %s to all pads",
         event_type);
@@ -1179,8 +1181,8 @@ gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
   dvd_demux->mpeg_version = 0;
 
   /* Reset max_gap handling */
-  mpeg_demux->max_gap = 0.5 * GST_SECOND;
-  mpeg_demux->max_gap_tolerance = 0.05 * GST_SECOND;
+  mpeg_demux->max_gap = MAX_GAP;
+  mpeg_demux->max_gap_tolerance = MAX_GAP_TOLERANCE;
 }
 
 static void
