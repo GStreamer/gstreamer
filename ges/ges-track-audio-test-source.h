@@ -53,12 +53,9 @@ typedef struct _GESTrackAudioTestSourcePrivate GESTrackAudioTestSourcePrivate;
  */
 
 struct _GESTrackAudioTestSource {
-  /*< private >*/
   GESTrackSource parent;
 
-  gdouble freq;
-  gdouble volume;
-
+  /*< private >*/
   GESTrackAudioTestSourcePrivate *priv;
 
   /* Padding for API extension */
@@ -75,14 +72,17 @@ struct _GESTrackAudioTestSourceClass {
 
 GType ges_track_audio_test_source_get_type (void);
 
-GESTrackAudioTestSource* ges_track_audio_test_source_new (void);
 
 void ges_track_audio_test_source_set_freq(GESTrackAudioTestSource *self,
-    gdouble freq);
+                                          gdouble freq);
 
 void ges_track_audio_test_source_set_volume(GESTrackAudioTestSource *self,
-    gdouble volume);
+                                            gdouble volume);
 
+double ges_track_audio_test_source_get_freq(GESTrackAudioTestSource *self);
+double ges_track_audio_test_source_get_volume(GESTrackAudioTestSource *self);
+
+GESTrackAudioTestSource* ges_track_audio_test_source_new (void);
 G_END_DECLS
 
 #endif /* _GES_TRACK_AUDIO_TEST_SOURCE */

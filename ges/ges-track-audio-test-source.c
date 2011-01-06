@@ -36,8 +36,8 @@ G_DEFINE_TYPE (GESTrackAudioTestSource, ges_track_audio_test_source,
 
 struct _GESTrackAudioTestSourcePrivate
 {
-  /* Dummy variable */
-  void *nothing;
+  gdouble freq;
+  gdouble volume;
 };
 
 enum
@@ -74,8 +74,8 @@ ges_track_audio_test_source_init (GESTrackAudioTestSource * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_AUDIO_TEST_SOURCE, GESTrackAudioTestSourcePrivate);
 
-  self->freq = 440;
-  self->volume = 0;
+  self->priv->freq = 440;
+  self->priv->volume = 0;
 }
 
 static void
@@ -106,8 +106,8 @@ ges_track_audio_test_source_create_element (GESTrackObject * trksrc)
 
   self = (GESTrackAudioTestSource *) trksrc;
   ret = gst_element_factory_make ("audiotestsrc", NULL);
-  g_object_set (ret, "volume", (gdouble) self->volume, "freq", (gdouble)
-      self->freq, NULL);
+  g_object_set (ret, "volume", (gdouble) self->priv->volume, "freq", (gdouble)
+      self->priv->freq, NULL);
 
   return ret;
 }
@@ -118,7 +118,7 @@ ges_track_audio_test_source_set_freq (GESTrackAudioTestSource * self,
 {
   GstElement *element = ges_track_object_get_element (GES_TRACK_OBJECT (self));
 
-  self->freq = freq;
+  self->priv->freq = freq;
   if (element)
     g_object_set (element, "freq", (gdouble) freq, NULL);
 }
@@ -129,9 +129,33 @@ ges_track_audio_test_source_set_volume (GESTrackAudioTestSource * self,
 {
   GstElement *element = ges_track_object_get_element (GES_TRACK_OBJECT (self));
 
-  self->volume = volume;
+  self->priv->volume = volume;
   if (element)
     g_object_set (element, "volume", (gdouble) volume, NULL);
+}
+
+/**
+ * ges_track_audio_test_source_get_freq:
+ * @self: a #GESTrackAudioTestSource
+ *
+ * Returns: The current frequency of @self
+ */
+double
+ges_track_audio_test_source_get_freq (GESTrackAudioTestSource * self)
+{
+  return self->priv->freq;
+}
+
+/**
+ * ges_track_audio_test_source_get_volume:
+ * @self: a #GESTrackAudioTestSource
+ *
+ * Returns: The current volume of @self
+ */
+double
+ges_track_audio_test_source_get_volume (GESTrackAudioTestSource * self)
+{
+  return self->priv->volume;
 }
 
 GESTrackAudioTestSource *

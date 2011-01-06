@@ -544,6 +544,8 @@ GESTrackAudioTestSource
 ges_track_audio_test_source_new
 ges_track_audio_test_source_set_freq
 ges_track_audio_test_source_set_volume
+ges_track_audio_test_source_get_freq
+ges_track_audio_test_source_get_volume
 <SUBSECTION Standard>
 GESTrackAudioTestSourceClass
 GESTrackAudioTestSourcePrivate
