@@ -18,11 +18,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <locale.h>
-#include <string.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <locale.h>
+#include <string.h>
 #include "encoding-target.h"
 
 /*
