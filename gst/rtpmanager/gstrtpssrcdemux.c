@@ -420,6 +420,8 @@ gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event)
   gboolean res = FALSE;
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (demux == NULL))
+    return FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
@@ -699,6 +701,8 @@ gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query)
   gboolean res = FALSE;
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (demux == NULL))
+    return FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:

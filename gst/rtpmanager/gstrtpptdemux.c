@@ -434,6 +434,8 @@ gst_rtp_pt_demux_sink_event (GstPad * pad, GstEvent * event)
   gboolean res = FALSE;
 
   rtpdemux = GST_RTP_PT_DEMUX (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (rtpdemux == NULL))
+    return FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM:

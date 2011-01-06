@@ -1008,6 +1008,8 @@ gst_rtp_jitter_buffer_src_event (GstPad * pad, GstEvent * event)
   GstRtpJitterBufferPrivate *priv;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (jitterbuffer == NULL))
+    return FALSE;
   priv = jitterbuffer->priv;
 
   GST_DEBUG_OBJECT (jitterbuffer, "received %s", GST_EVENT_TYPE_NAME (event));

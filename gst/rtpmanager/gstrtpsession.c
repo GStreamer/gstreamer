@@ -1325,6 +1325,8 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
   gboolean ret = FALSE;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (rtpsession == NULL))
+    return FALSE;
 
   GST_DEBUG_OBJECT (rtpsession, "received event %s",
       GST_EVENT_TYPE_NAME (event));
@@ -1463,9 +1465,13 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstEvent * event)
 static GstIterator *
 gst_rtp_session_iterate_internal_links (GstPad * pad)
 {
-  GstRtpSession *rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  GstRtpSession *rtpsession;
   GstPad *otherpad = NULL;
   GstIterator *it = NULL;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (rtpsession == NULL))
+    return NULL;
 
   GST_RTP_SESSION_LOCK (rtpsession);
   if (pad == rtpsession->recv_rtp_src) {
@@ -1633,11 +1639,16 @@ static gboolean
 gst_rtp_session_event_send_rtcp_src (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
-  gboolean ret;
+  gboolean ret = TRUE;
+  gboolean handled = FALSE;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (rtpsession, "received EVENT");
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (rtpsession == NULL))
+    return FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -1650,6 +1661,24 @@ gst_rtp_session_event_send_rtcp_src (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       ret = FALSE;
       break;
+  }
+
+  gst_object_unref (rtpsession);
+
+  if (handled)
+    gst_event_unref (event);
+  else {
+    GstPad *recv_rtp_sink = NULL;
+    GST_RTP_SESSION_LOCK (rtpsession);
+    if (rtpsession->recv_rtp_sink)
+      recv_rtp_sink = gst_object_ref (rtpsession->recv_rtp_sink);
+    GST_RTP_SESSION_UNLOCK (rtpsession);
+
+    if (recv_rtp_sink) {
+      ret = gst_pad_push_event (recv_rtp_sink, event);
+      gst_object_unref (recv_rtp_sink);
+    } else
+      gst_event_unref (event);
   }
 
   gst_object_unref (rtpsession);
@@ -1716,9 +1745,21 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
           current_time);
       break;
     }
-    default:
-      ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
+    default:{
+      GstPad *send_rtp_src = NULL;
+      GST_RTP_SESSION_LOCK (rtpsession);
+      if (rtpsession->send_rtp_src)
+        send_rtp_src = gst_object_ref (rtpsession->send_rtp_src);
+      GST_RTP_SESSION_UNLOCK (rtpsession);
+
+      if (send_rtp_src) {
+        ret = gst_pad_push_event (send_rtp_src, event);
+        gst_object_unref (send_rtp_src);
+      } else
+        gst_event_unref (event);
+
       break;
+    }
   }
   gst_object_unref (rtpsession);
 
