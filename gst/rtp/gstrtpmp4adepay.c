@@ -170,8 +170,8 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       guint8 *data;
       guint size;
       gint i;
-      guint32 rate;
-      guint8 obj_type, sr_idx, channels;
+      guint32 rate = 0;
+      guint8 obj_type = 0, sr_idx = 0, channels = 0;
       GstBitReader br;
 
       buffer = gst_value_get_buffer (&v);
