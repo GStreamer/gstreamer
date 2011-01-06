@@ -560,11 +560,15 @@ GES_IS_TRACK_AUDIO_TEST_SOURCE_CLASS
 <FILE>ges-track-title-source</FILE>
 <TITLE>GESTrackTitleSource</TITLE>
 GESTrackTitleSource
+ges_track_title_source_new
 ges_track_title_source_set_text
 ges_track_title_source_set_font_desc
 ges_track_title_source_set_halignment
 ges_track_title_source_set_valignment
-ges_track_title_source_new
+ges_track_title_source_get_font_desc
+ges_track_title_source_get_halignment
+ges_track_title_source_get_text
+ges_track_title_source_get_valignment
 <SUBSECTION Standard>
 GESTrackTitleSourceClass
 GESTrackTitleSourcePrivate

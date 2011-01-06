@@ -54,13 +54,6 @@ struct _GESTrackTitleSource {
   GESTrackSource parent;
 
   /*< private >*/
-  gchar         *text;
-  gchar         *font_desc;
-  GESTextHAlign halign;
-  GESTextVAlign valign;
-  GstElement    *text_el;
-  GstElement    *background_el;
-
   GESTrackTitleSourcePrivate *priv;
 
   /* Padding for API extension */
@@ -83,17 +76,22 @@ struct _GESTrackTitleSourceClass {
 
 GType ges_track_title_source_get_type (void);
 
-void ges_track_title_source_set_text(GESTrackTitleSource *self, const
-    gchar *text);
+void ges_track_title_source_set_text(GESTrackTitleSource *self,
+				     const gchar *text);
 
 void ges_track_title_source_set_font_desc(GESTrackTitleSource *self,
-    const gchar *font_desc);
+					  const gchar *font_desc);
 
-void ges_track_title_source_set_halignment(GESTrackTitleSource
-    *self, GESTextHAlign halgn);
+void ges_track_title_source_set_halignment(GESTrackTitleSource *self,
+					   GESTextHAlign halign);
 
-void ges_track_title_source_set_valignment(GESTrackTitleSource
-    *self, GESTextVAlign valign);
+void ges_track_title_source_set_valignment(GESTrackTitleSource *self,
+					   GESTextVAlign valign);
+
+const gchar *ges_track_title_source_get_text (GESTrackTitleSource *source);
+const gchar *ges_track_title_source_get_font_desc (GESTrackTitleSource *source);
+GESTextHAlign ges_track_title_source_get_halignment (GESTrackTitleSource *source);
+GESTextVAlign ges_track_title_source_get_valignment (GESTrackTitleSource *source);
 
 GESTrackTitleSource* ges_track_title_source_new (void);
 

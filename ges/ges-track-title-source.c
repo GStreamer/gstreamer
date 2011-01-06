@@ -34,8 +34,12 @@ G_DEFINE_TYPE (GESTrackTitleSource, ges_track_title_source,
 
 struct _GESTrackTitleSourcePrivate
 {
-  /*  Dummy variable */
-  void *nothing;
+  gchar *text;
+  gchar *font_desc;
+  GESTextHAlign halign;
+  GESTextVAlign valign;
+  GstElement *text_el;
+  GstElement *background_el;
 };
 
 enum
@@ -75,34 +79,34 @@ ges_track_title_source_init (GESTrackTitleSource * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_TITLE_SOURCE, GESTrackTitleSourcePrivate);
 
-  self->text = NULL;
-  self->font_desc = NULL;
-  self->text_el = NULL;
-  self->halign = DEFAULT_HALIGNMENT;
-  self->valign = DEFAULT_VALIGNMENT;
-  self->background_el = NULL;
+  self->priv->text = NULL;
+  self->priv->font_desc = NULL;
+  self->priv->text_el = NULL;
+  self->priv->halign = DEFAULT_HALIGNMENT;
+  self->priv->valign = DEFAULT_VALIGNMENT;
+  self->priv->background_el = NULL;
 }
 
 static void
 ges_track_title_source_dispose (GObject * object)
 {
   GESTrackTitleSource *self = GES_TRACK_TITLE_SOURCE (object);
-  if (self->text) {
-    g_free (self->text);
+  if (self->priv->text) {
+    g_free (self->priv->text);
   }
 
-  if (self->font_desc) {
-    g_free (self->font_desc);
+  if (self->priv->font_desc) {
+    g_free (self->priv->font_desc);
   }
 
-  if (self->text_el) {
-    g_object_unref (self->text_el);
-    self->text_el = NULL;
+  if (self->priv->text_el) {
+    g_object_unref (self->priv->text_el);
+    self->priv->text_el = NULL;
   }
 
-  if (self->background_el) {
-    g_object_unref (self->background_el);
-    self->background_el = NULL;
+  if (self->priv->background_el) {
+    g_object_unref (self->priv->background_el);
+    self->priv->background_el = NULL;
   }
 
   G_OBJECT_CLASS (ges_track_title_source_parent_class)->dispose (object);
@@ -132,6 +136,7 @@ static GstElement *
 ges_track_title_source_create_element (GESTrackObject * object)
 {
   GESTrackTitleSource *self = GES_TRACK_TITLE_SOURCE (object);
+  GESTrackTitleSourcePrivate *priv = self->priv;
   GstElement *topbin, *background, *text;
   GstPad *src;
 
@@ -139,14 +144,14 @@ ges_track_title_source_create_element (GESTrackObject * object)
   background = gst_element_factory_make ("videotestsrc", "titlesrc-bg");
 
   text = gst_element_factory_make ("textoverlay", "titlsrc-text");
-  if (self->text) {
-    g_object_set (text, "text", self->text, NULL);
+  if (priv->text) {
+    g_object_set (text, "text", priv->text, NULL);
   }
-  if (self->font_desc) {
-    g_object_set (text, "font-desc", self->font_desc, NULL);
+  if (priv->font_desc) {
+    g_object_set (text, "font-desc", priv->font_desc, NULL);
   }
-  g_object_set (text, "valignment", (gint) self->valign, "halignment",
-      (gint) self->halign, NULL);
+  g_object_set (text, "valignment", (gint) priv->valign, "halignment",
+      (gint) priv->halign, NULL);
 
   g_object_set (background, "pattern", (gint) GES_VIDEO_TEST_PATTERN_BLACK,
       NULL);
@@ -162,8 +167,8 @@ ges_track_title_source_create_element (GESTrackObject * object)
   g_object_ref (text);
   g_object_ref (background);
 
-  self->text_el = text;
-  self->background_el = background;
+  priv->text_el = text;
+  priv->background_el = background;
 
   return topbin;
 }
@@ -175,18 +180,17 @@ ges_track_title_source_create_element (GESTrackObject * object)
  * made.
  * 
  * Sets the text this track object will render.
- *
  */
 
 void
 ges_track_title_source_set_text (GESTrackTitleSource * self, const gchar * text)
 {
-  if (self->text)
-    g_free (self->text);
+  if (self->priv->text)
+    g_free (self->priv->text);
 
-  self->text = g_strdup (text);
-  if (self->text_el)
-    g_object_set (self->text_el, "text", text, NULL);
+  self->priv->text = g_strdup (text);
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "text", text, NULL);
 }
 
 /**
@@ -194,25 +198,25 @@ ges_track_title_source_set_text (GESTrackTitleSource * self, const gchar * text)
  * @self: the #GESTrackTitleSource
  * @font_desc: the pango font description
  * 
- * Sets the text this track object will render.
- *
+ * Set the pango font description this source will use to render
+ * the text.
  */
 
 void
 ges_track_title_source_set_font_desc (GESTrackTitleSource * self,
     const gchar * font_desc)
 {
-  if (self->font_desc)
-    g_free (self->font_desc);
+  if (self->priv->font_desc)
+    g_free (self->priv->font_desc);
 
-  self->font_desc = g_strdup (font_desc);
+  self->priv->font_desc = g_strdup (font_desc);
   GST_LOG ("setting font-desc to '%s'", font_desc);
-  if (self->text_el)
-    g_object_set (self->text_el, "font-desc", font_desc, NULL);
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "font-desc", font_desc, NULL);
 }
 
 /**
- * ges_track_title_source_valignment:
+ * ges_track_title_source_set_valignment:
  * @self: the #GESTrackTitleSource* to set text on
  * @valign: #GESTextVAlign
  *
@@ -222,14 +226,14 @@ void
 ges_track_title_source_set_valignment (GESTrackTitleSource * self,
     GESTextVAlign valign)
 {
-  self->valign = valign;
+  self->priv->valign = valign;
   GST_LOG ("set valignment to: %d", valign);
-  if (self->text_el)
-    g_object_set (self->text_el, "valignment", valign, NULL);
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "valignment", valign, NULL);
 }
 
 /**
- * ges_track_title_source_halignment:
+ * ges_track_title_source_set_halignment:
  * @self: the #GESTrackTitleSource* to set text on
  * @halign: #GESTextHAlign
  *
@@ -239,11 +243,61 @@ void
 ges_track_title_source_set_halignment (GESTrackTitleSource * self,
     GESTextHAlign halign)
 {
-  self->halign = halign;
+  self->priv->halign = halign;
   GST_LOG ("set halignment to: %d", halign);
-  if (self->text_el)
-    g_object_set (self->text_el, "halignment", halign, NULL);
+  if (self->priv->text_el)
+    g_object_set (self->priv->text_el, "halignment", halign, NULL);
 }
+
+/**
+ * ges_track_title_source_get_text:
+ * @source: a #GESTrackTitleSource
+ *
+ * Returns: (transfer none): The text currently set on the @source.
+ */
+const gchar *
+ges_track_title_source_get_text (GESTrackTitleSource * source)
+{
+  return source->priv->text;
+}
+
+/**
+ * ges_track_title_source_get_font_desc:
+ * @source: a #GESTrackTitleSource
+ *
+ * Returns: (transfer none): The pango font description used by this
+ * @source.
+ */
+const gchar *
+ges_track_title_source_get_font_desc (GESTrackTitleSource * source)
+{
+  return source->priv->font_desc;
+}
+
+/**
+ * ges_track_title_source_get_halignment:
+ * @source: a #GESTrackTitleSource
+ *
+ * Returns: The horizontal aligment used by this source.
+ */
+GESTextHAlign
+ges_track_title_source_get_halignment (GESTrackTitleSource * source)
+{
+  return source->priv->halign;
+}
+
+/**
+ * ges_track_title_source_get_valignment:
+ * @source: a #GESTrackTitleSource
+ *
+ * Returns: The vertical aligment used by this source.
+ */
+GESTextVAlign
+ges_track_title_source_get_valignment (GESTrackTitleSource * source)
+{
+  return source->priv->valign;
+}
+
 
 GESTrackTitleSource *
 ges_track_title_source_new (void)

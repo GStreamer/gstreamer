@@ -150,14 +150,18 @@ GST_START_TEST (test_title_source_in_layer)
       ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v,
       GES_TYPE_TRACK_TITLE_SOURCE);
 
+  /* Check the text is still the same */
+  assert_equals_string (ges_track_title_source_get_text (GES_TRACK_TITLE_SOURCE
+          (trobj)), "some text");
+
   /* test the font-desc property */
   g_object_set (source, "font-desc", (gchar *) "sans 72", NULL);
   g_object_get (source, "font-desc", &text, NULL);
   assert_equals_string ("sans 72", text);
   g_free (text);
 
-  text = ((GESTrackTitleSource *) trobj)->font_desc;
-  assert_equals_string ("sans 72", text);
+  assert_equals_string ("sans 72",
+      ges_track_title_source_get_font_desc (GES_TRACK_TITLE_SOURCE (trobj)));
 
   /* test halign and valign */
   g_object_set (source, "halignment", (gint)
@@ -166,10 +170,10 @@ GST_START_TEST (test_title_source_in_layer)
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
-  halign = ((GESTrackTitleSource *) trobj)->halign;
-  valign = ((GESTrackTitleSource *) trobj)->valign;
-  assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
-  assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
+  assert_equals_int (ges_track_title_source_get_halignment
+      (GES_TRACK_TITLE_SOURCE (trobj)), GES_TEXT_HALIGN_LEFT);
+  assert_equals_int (ges_track_title_source_get_valignment
+      (GES_TRACK_TITLE_SOURCE (trobj)), GES_TEXT_VALIGN_TOP);
 
   GST_DEBUG ("removing the source");
 
