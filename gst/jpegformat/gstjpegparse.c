@@ -515,7 +515,7 @@ static inline gboolean
 gst_jpeg_parse_skip_marker (GstJpegParse * parse,
     GstByteReader * reader, guint8 marker)
 {
-  guint16 size;
+  guint16 size = 0;
 
   if (!gst_byte_reader_get_uint16_be (reader, &size))
     return FALSE;
