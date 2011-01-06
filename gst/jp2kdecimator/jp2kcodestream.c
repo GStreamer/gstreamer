@@ -839,8 +839,8 @@ parse_packet (GstJP2kDecimator * self, GstByteReader * reader,
     const MainHeader * header, Tile * tile, const PacketIterator * it)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  guint16 marker, length;
-  guint16 seqno;
+  guint16 marker = 0, length;
+  guint16 seqno = 0;
   guint packet_start_pos;
   const guint8 *packet_start_data;
   gboolean sop, eph;
@@ -1031,7 +1031,7 @@ parse_tile (GstJP2kDecimator * self, GstByteReader * reader,
     const MainHeader * header, Tile * tile)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  guint16 marker, length;
+  guint16 marker = 0, length;
 
   if (!gst_byte_reader_peek_uint16_be (reader, &marker)) {
     GST_ERROR_OBJECT (self, "Could not read marker");
@@ -1425,7 +1425,7 @@ parse_main_header (GstJP2kDecimator * self, GstByteReader * reader,
     MainHeader * header)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  guint16 marker, length;
+  guint16 marker = 0, length = 0;
 
   /* First SOC */
   if (!gst_byte_reader_get_uint16_be (reader, &marker)
