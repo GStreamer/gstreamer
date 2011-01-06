@@ -112,6 +112,7 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_REQUEST_STATE, "request-state", 0},
   {GST_MESSAGE_STEP_START, "step-start", 0},
   {GST_MESSAGE_QOS, "qos", 0},
+  {GST_MESSAGE_PROGRESS, "progress", 0},
   {0, NULL, 0}
 };
 
