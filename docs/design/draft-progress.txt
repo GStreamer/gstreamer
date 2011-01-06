@@ -33,7 +33,7 @@ The main reason for adding these extra progress notifications is twofold:
 
  1) to give the application more information of what is going on 
 
-    When there are well defined progress information categories, applications
+    When there are well defined progress information codes, applications
     can let the user know about the status of the progress. We anticipate to
     have at least DNS resolving and server connections and requests be well
     defined.
@@ -140,10 +140,10 @@ Messages
                   an error, an error message will have been posted before.
         GST_PROGRESS_TYPE_COMPLETE: A task completed successfully.
 
-  - "category", G_TYPE_STRING
+  - "code", G_TYPE_STRING
 
      A generic extensible string that can be used to programatically determine the
-     action that is in progress. Some standard predefined categories will be
+     action that is in progress. Some standard predefined codes will be
      defined.
 
   - "text", G_TYPE_STRING
@@ -160,7 +160,7 @@ Messages
 
   - ....
 
-     Depending on the category, more fields can be put here.
+     Depending on the code, more fields can be put here.
 
 
 Implementation
@@ -168,7 +168,7 @@ Implementation
 
 Elements should not do blocking operations from the state change function.
 Instead, elements should post an appropriate progress message with the right
-category and of type GST_PROGRESS_TYPE_START and then start a thread to perform
+code and of type GST_PROGRESS_TYPE_START and then start a thread to perform
 the blocking calls in a cancelable manner.
 
 It is highly recommended to only start async operations from the READY to PAUSED
@@ -180,7 +180,7 @@ the presence of devices.
 The progress message needs to be posted from the state change function so that
 the application can immediately take appropriate action after setting the state.
 
-The threads will usually perform many blocking calls with different categories
+The threads will usually perform many blocking calls with different codes
 in a row, a client might first do a DNS query and then continue with
 establishing a connection to the server. For this purpose the
 GST_PROGRESS_TYPE_CONTINUE must be used.
@@ -205,7 +205,7 @@ GST_PROGRESS_TYPE_ERROR progress message.
 Categories
 ~~~~~~~~~~
 
- We want to propose some standard categories here:
+ We want to propose some standard codes here:
  
   "open" : A resource is being opened
   "close" : A resource is being closed
@@ -224,4 +224,4 @@ Categories
 
   "unmount" : A volume is being unmounted
 
- More categories can be posted by elements and can be made official later.
+ More codes can be posted by elements and can be made official later.

@@ -517,9 +517,9 @@ void            gst_message_parse_qos_values    (GstMessage * message, gint64 * 
 void            gst_message_parse_qos_stats     (GstMessage * message, GstFormat * format, guint64 * processed,
                                                  guint64 * dropped);
 /* PROGRESS */
-GstMessage *    gst_message_new_progress           (GstObject * src, GstProgressType type, const gchar *category,
+GstMessage *    gst_message_new_progress           (GstObject * src, GstProgressType type, const gchar *code,
                                                     const gchar *text);
-void            gst_message_parse_progress         (GstMessage * message, GstProgressType * type, gchar ** category,
+void            gst_message_parse_progress         (GstMessage * message, GstProgressType * type, gchar ** code,
                                                     gchar ** text);
 
 
