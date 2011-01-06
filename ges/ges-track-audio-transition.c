@@ -32,8 +32,14 @@ G_DEFINE_TYPE (GESTrackAudioTransition, ges_track_audio_transition,
 
 struct _GESTrackAudioTransitionPrivate
 {
-  /*  Dummy variable */
-  void *nothing;
+  /* these enable volume interpolation. Unlike video, both inputs are adjusted
+   * simultaneously */
+  GstController *a_controller;
+  GstInterpolationControlSource *a_control_source;
+
+  GstController *b_controller;
+  GstInterpolationControlSource *b_control_source;
+
 };
 
 enum
@@ -89,11 +95,11 @@ ges_track_audio_transition_init (GESTrackAudioTransition * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_AUDIO_TRANSITION, GESTrackAudioTransitionPrivate);
 
-  self->a_controller = NULL;
-  self->a_control_source = NULL;
+  self->priv->a_controller = NULL;
+  self->priv->a_control_source = NULL;
 
-  self->b_controller = NULL;
-  self->b_control_source = NULL;
+  self->priv->b_controller = NULL;
+  self->priv->b_control_source = NULL;
 }
 
 static void
@@ -103,20 +109,20 @@ ges_track_audio_transition_dispose (GObject * object)
 
   self = GES_TRACK_AUDIO_TRANSITION (object);
 
-  if (self->a_controller) {
-    g_object_unref (self->a_controller);
-    self->a_controller = NULL;
-    if (self->a_control_source)
-      gst_object_unref (self->a_control_source);
-    self->a_control_source = NULL;
+  if (self->priv->a_controller) {
+    g_object_unref (self->priv->a_controller);
+    self->priv->a_controller = NULL;
+    if (self->priv->a_control_source)
+      gst_object_unref (self->priv->a_control_source);
+    self->priv->a_control_source = NULL;
   }
 
-  if (self->b_controller) {
-    g_object_unref (self->b_controller);
-    self->b_controller = NULL;
-    if (self->b_control_source)
-      gst_object_unref (self->b_control_source);
-    self->b_control_source = NULL;
+  if (self->priv->b_controller) {
+    g_object_unref (self->priv->b_controller);
+    self->priv->b_controller = NULL;
+    if (self->priv->b_control_source)
+      gst_object_unref (self->priv->b_control_source);
+    self->priv->b_control_source = NULL;
   }
 
   G_OBJECT_CLASS (ges_track_audio_transition_parent_class)->dispose (object);
@@ -236,10 +242,10 @@ ges_track_audio_transition_create_element (GESTrackObject * object)
   gst_interpolation_control_source_set_interpolation_mode (bcontrol_source,
       GST_INTERPOLATE_LINEAR);
 
-  self->a_controller = acontroller;
-  self->b_controller = bcontroller;
-  self->a_control_source = acontrol_source;
-  self->b_control_source = bcontrol_source;
+  self->priv->a_controller = acontroller;
+  self->priv->b_controller = bcontroller;
+  self->priv->a_control_source = acontrol_source;
+  self->priv->b_control_source = bcontrol_source;
 
   return topbin;
 }
@@ -257,10 +263,10 @@ ges_track_audio_transition_duration_changed (GESTrackObject * object,
   self = GES_TRACK_AUDIO_TRANSITION (object);
 
   GST_LOG ("updating controller: gnlobj (%p) acontroller(%p) bcontroller(%p)",
-      gnlobj, self->a_controller, self->b_controller);
+      gnlobj, self->priv->a_controller, self->priv->b_controller);
 
-  if (G_UNLIKELY ((!gnlobj || !self->a_control_source ||
-              !self->b_control_source)))
+  if (G_UNLIKELY ((!gnlobj || !self->priv->a_control_source ||
+              !self->priv->b_control_source)))
     return;
 
   GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
@@ -271,14 +277,15 @@ ges_track_audio_transition_duration_changed (GESTrackObject * object,
 
   GST_LOG ("setting values on controller");
 
-  gst_interpolation_control_source_unset_all (self->a_control_source);
-  gst_interpolation_control_source_set (self->a_control_source, 0, &one);
-  gst_interpolation_control_source_set (self->a_control_source,
+  gst_interpolation_control_source_unset_all (self->priv->a_control_source);
+  gst_interpolation_control_source_set (self->priv->a_control_source, 0, &one);
+  gst_interpolation_control_source_set (self->priv->a_control_source,
       duration, &zero);
 
-  gst_interpolation_control_source_unset_all (self->b_control_source);
-  gst_interpolation_control_source_set (self->b_control_source, 0, &zero);
-  gst_interpolation_control_source_set (self->b_control_source, duration, &one);
+  gst_interpolation_control_source_unset_all (self->priv->b_control_source);
+  gst_interpolation_control_source_set (self->priv->b_control_source, 0, &zero);
+  gst_interpolation_control_source_set (self->priv->b_control_source, duration,
+      &one);
 
   GST_LOG ("done updating controller");
 }
