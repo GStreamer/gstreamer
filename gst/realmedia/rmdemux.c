@@ -1918,7 +1918,7 @@ gst_rmdemux_stream_clear_cached_subpackets (GstRMDemux * rmdemux,
 static GstFlowReturn
 gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_ERROR;
   GstBuffer *outbuf;
   guint packet_size = stream->packet_size;
   guint height = stream->subpackets->len;
