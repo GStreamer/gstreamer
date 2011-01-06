@@ -115,7 +115,7 @@ ges_timeline_pipeline_get_thumbnail_rgb24(GESTimelinePipeline *self,
 
 gboolean
 ges_timeline_pipeline_save_thumbnail(GESTimelinePipeline *self,
-    int width, int height, gchar *format, gchar *location);
+    int width, int height, const gchar *format, const gchar *location);
 
 G_END_DECLS
 

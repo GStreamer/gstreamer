@@ -740,9 +740,10 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
 }
 
 /**
- * ges_timeline_pipeline_get_thumbnail
+ * ges_timeline_pipeline_get_thumbnail_buffer:
  * @self: a #GESTimelinePipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
- * @caps: caps specifying current format. Use %GST_CAPS_ANY for native size.
+ * @caps: (transfer none): caps specifying current format. Use %GST_CAPS_ANY
+ * for native size.
  *
  * Returns a #GstBuffer with the currently playing in the format specified by
  * caps. The caller should unref the #gst_buffer_unref when finished. If %ANY
@@ -750,7 +751,7 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
  * is currently used by the sink. This information can be retrieve from caps
  * associated with the buffer.
  *
- * Returns: a #GstBuffer or %NULL
+ * Returns: (transfer full): a #GstBuffer or %NULL
  */
 
 GstBuffer *
@@ -772,7 +773,7 @@ ges_timeline_pipeline_get_thumbnail_buffer (GESTimelinePipeline * self,
 }
 
 /**
- * ges_timeline_pipeline_save_thumbnail
+ * ges_timeline_pipeline_save_thumbnail:
  * @self: a #GESTimelinePipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
  * @width: the requested width or -1 for native size
  * @height: the requested height or -1 for native size
@@ -780,21 +781,14 @@ ges_timeline_pipeline_get_thumbnail_buffer (GESTimelinePipeline * self,
  * image/jpeg)
  * @location: the path to save the thumbnail
  *
- * A convenience method for ges_timeline_pipeline_get_thumbnail_raw which
- * returns a buffer in 24-bit RGB, optionally scaled to the specified width
- * and height. If -1 is specified for either dimension, it will be left at
- * native size. You can retreive this information from the caps associated
- * with the buffer.
+ * Saves the current frame to the specified @location.
  * 
- * The caller is responsible for unreffing the returned buffer with
- * #gst_buffer_unref.
- *
- * Returns: a #GstBuffer or %NULL
+ * Returns: %TRUE if the thumbnail was properly save, else %FALSE.
  */
 
 gboolean
 ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
-    height, gchar * format, gchar * location)
+    height, const gchar * format, const gchar * location)
 {
   GstBuffer *b;
   FILE *fp;
@@ -814,6 +808,7 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
     return res;
   }
 
+  /* FIXME : Use standard glib methods */
   fp = fopen (location, "w+");
   if (!fwrite (GST_BUFFER_DATA (b), GST_BUFFER_SIZE (b), 1, fp) || ferror (fp)) {
     res = FALSE;
@@ -826,7 +821,7 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
 }
 
 /**
- * ges_timeline_pipeline_get_thumbnail_rgb24
+ * ges_timeline_pipeline_get_thumbnail_rgb24:
  * @self: a #GESTimelinePipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
  * @width: the requested width or -1 for native size
  * @height: the requested height or -1 for native size
@@ -840,7 +835,7 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
  * The caller is responsible for unreffing the returned buffer with
  * #gst_buffer_unref.
  *
- * Returns: a #GstBuffer or %NULL
+ * Returns: (transfer full): a #GstBuffer or %NULL
  */
 
 GstBuffer *
