@@ -483,6 +483,7 @@ main (int argc, char **argv)
 
     gst_discoverer_stop (dc);
     g_free (ps);
+    g_main_loop_unref (ml);
   }
   g_object_unref (dc);
 
