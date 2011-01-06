@@ -419,7 +419,7 @@ ges_video_standard_transition_type_get_type (void)
   if (g_once_init_enter (&once)) {
     g_assert (!once);
 
-    the_type = g_enum_register_static ("GESVideoTransitionType",
+    the_type = g_enum_register_static ("GESVideoStandardTransitionType",
         transition_types);
     g_once_init_leave (&once, 1);
   }

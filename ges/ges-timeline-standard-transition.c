@@ -131,7 +131,7 @@ ges_timeline_standard_transition_class_init (GESTimelineStandardTransitionClass
   /**
    * GESTimelineStandardTransition:vtype
    *
-   * a #GESVideoTransitionType representing the wipe to use
+   * a #GESVideoStandardTransitionType representing the wipe to use
    */
   g_object_class_install_property (object_class, PROP_VTYPE,
       g_param_spec_enum ("vtype", "VType",
