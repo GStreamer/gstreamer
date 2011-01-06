@@ -71,7 +71,7 @@ ges_timeline_standard_transition_update_vtype_internal (GESTimelineObject *
     GESTrackVideoTransition *obj;
     if (GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
       obj = (GESTrackVideoTransition *) tmp->data;
-      if (!ges_track_video_transition_set_type (obj, value))
+      if (!ges_track_video_transition_set_transition_type (obj, value))
         goto beach;
     }
   }
@@ -168,8 +168,8 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
 
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     res = GES_TRACK_OBJECT (ges_track_video_transition_new ());
-    ges_track_video_transition_set_type ((GESTrackVideoTransition *) res,
-        transition->vtype);
+    ges_track_video_transition_set_transition_type ((GESTrackVideoTransition *)
+        res, transition->vtype);
   }
 
   else if (track->type == GES_TRACK_TYPE_AUDIO) {

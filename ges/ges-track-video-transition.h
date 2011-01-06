@@ -54,22 +54,6 @@ struct _GESTrackVideoTransition {
   GESTrackTransition parent;
   
   /*< private >*/
-  GESVideoStandardTransitionType        type;
- 
-  /* these enable video interpolation */
-  GstController                 *controller;
-  GstInterpolationControlSource *control_source;
-
-  /* so we can support changing between wipes */
-  GstElement                    *smpte;
-  GstElement                    *mixer;
-  GstPad                        *sinka;
-  GstPad                        *sinkb;
-  
-  /* these will be different depending on whether smptealpha or alpha element
-   * is used */
-  gdouble                       start_value;
-  gdouble                       end_value;
 
   GESTrackVideoTransitionPrivate *priv;
 
@@ -93,8 +77,11 @@ struct _GESTrackVideoTransitionClass {
 
 GType ges_track_video_transition_get_type (void);
 
-gboolean ges_track_video_transition_set_type (GESTrackVideoTransition * self,
-					      GESVideoStandardTransitionType type);
+gboolean
+ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
+						GESVideoStandardTransitionType type);
+GESVideoStandardTransitionType
+ges_track_video_transition_get_transition_type (GESTrackVideoTransition * trans);
 
 GESTrackVideoTransition* ges_track_video_transition_new (void);
 

@@ -198,7 +198,8 @@ GES_TYPE_TRACK_AUDIO_TRANSITION
 <TITLE>GESTrackVideoTransition</TITLE>
 GESTrackVideoTransition
 ges_track_video_transition_new
-ges_track_video_transition_set_type
+ges_track_video_transition_set_transition_type
+ges_track_video_transition_get_transition_type
 <SUBSECTION Standard>
 GESTrackVideoTransitionClass
 GESTrackVideoTransitionPrivate

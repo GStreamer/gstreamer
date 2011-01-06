@@ -31,8 +31,22 @@ G_DEFINE_TYPE (GESTrackVideoTransition, ges_track_video_transition,
 
 struct _GESTrackVideoTransitionPrivate
 {
-  /*  Dummy variable */
-  void *nothing;
+  GESVideoStandardTransitionType type;
+
+  /* these enable video interpolation */
+  GstController *controller;
+  GstInterpolationControlSource *control_source;
+
+  /* so we can support changing between wipes */
+  GstElement *smpte;
+  GstElement *mixer;
+  GstPad *sinka;
+  GstPad *sinkb;
+
+  /* these will be different depending on whether smptealpha or alpha element
+   * is used */
+  gdouble start_value;
+  gdouble end_value;
 };
 
 enum
@@ -92,48 +106,49 @@ ges_track_video_transition_init (GESTrackVideoTransition * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_VIDEO_TRANSITION, GESTrackVideoTransitionPrivate);
 
-  self->controller = NULL;
-  self->control_source = NULL;
-  self->smpte = NULL;
-  self->mixer = NULL;
-  self->sinka = NULL;
-  self->sinkb = NULL;
-  self->type = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
-  self->start_value = 0.0;
-  self->end_value = 0.0;
+  self->priv->controller = NULL;
+  self->priv->control_source = NULL;
+  self->priv->smpte = NULL;
+  self->priv->mixer = NULL;
+  self->priv->sinka = NULL;
+  self->priv->sinkb = NULL;
+  self->priv->type = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
+  self->priv->start_value = 0.0;
+  self->priv->end_value = 0.0;
 }
 
 static void
 ges_track_video_transition_dispose (GObject * object)
 {
   GESTrackVideoTransition *self = GES_TRACK_VIDEO_TRANSITION (object);
+  GESTrackVideoTransitionPrivate *priv = self->priv;
 
   GST_DEBUG ("disposing");
   GST_LOG ("mixer: %p smpte: %p sinka: %p sinkb: %p",
-      self->mixer, self->smpte, self->sinka, self->sinkb);
+      priv->mixer, priv->smpte, priv->sinka, priv->sinkb);
 
-  if (self->controller) {
-    g_object_unref (self->controller);
-    self->controller = NULL;
-    if (self->control_source)
-      gst_object_unref (self->control_source);
-    self->control_source = NULL;
+  if (priv->controller) {
+    g_object_unref (priv->controller);
+    priv->controller = NULL;
+    if (priv->control_source)
+      gst_object_unref (priv->control_source);
+    priv->control_source = NULL;
   }
 
-  if (self->sinka && self->sinkb) {
+  if (priv->sinka && priv->sinkb) {
     GST_DEBUG ("releasing request pads for mixer");
-    gst_element_release_request_pad (self->mixer, self->sinka);
-    gst_element_release_request_pad (self->mixer, self->sinkb);
-    gst_object_unref (self->sinka);
-    gst_object_unref (self->sinkb);
-    self->sinka = NULL;
-    self->sinkb = NULL;
+    gst_element_release_request_pad (priv->mixer, priv->sinka);
+    gst_element_release_request_pad (priv->mixer, priv->sinkb);
+    gst_object_unref (priv->sinka);
+    gst_object_unref (priv->sinkb);
+    priv->sinka = NULL;
+    priv->sinkb = NULL;
   }
 
-  if (self->mixer) {
+  if (priv->mixer) {
     GST_LOG ("unrefing mixer");
-    gst_object_unref (self->mixer);
-    self->mixer = NULL;
+    gst_object_unref (priv->mixer);
+    priv->mixer = NULL;
   }
 
   G_OBJECT_CLASS (ges_track_video_transition_parent_class)->dispose (object);
@@ -176,8 +191,10 @@ ges_track_video_transition_create_element (GESTrackObject * object)
   GstController *controller;
   GstInterpolationControlSource *control_source;
   GESTrackVideoTransition *self;
+  GESTrackVideoTransitionPrivate *priv;
 
   self = GES_TRACK_VIDEO_TRANSITION (object);
+  priv = self->priv;
 
   GST_LOG ("creating a video bin");
 
@@ -194,27 +211,27 @@ ges_track_video_transition_create_element (GESTrackObject * object)
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
-  if (self->type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
-    self->sinka =
+  if (priv->type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
+    priv->sinka =
         (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva,
-        mixer, self->type, NULL);
-    self->sinkb =
+        mixer, priv->type, NULL);
+    priv->sinkb =
         (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
-        mixer, self->type, &self->smpte);
-    target = (GObject *) self->smpte;
+        mixer, priv->type, &priv->smpte);
+    target = (GObject *) priv->smpte;
     propname = "position";
-    self->start_value = 1.0;
-    self->end_value = 0.0;
+    priv->start_value = 1.0;
+    priv->end_value = 0.0;
   } else {
-    self->sinka = (GstPad *) link_element_to_mixer (iconva, mixer);
-    self->sinkb = (GstPad *) link_element_to_mixer (iconvb, mixer);
-    target = (GObject *) self->sinkb;
+    priv->sinka = (GstPad *) link_element_to_mixer (iconva, mixer);
+    priv->sinkb = (GstPad *) link_element_to_mixer (iconvb, mixer);
+    target = (GObject *) priv->sinkb;
     propname = "alpha";
-    self->start_value = 0.0;
-    self->end_value = 1.0;
+    priv->start_value = 0.0;
+    priv->end_value = 1.0;
   }
 
-  self->mixer = gst_object_ref (mixer);
+  priv->mixer = gst_object_ref (mixer);
 
   fast_element_link (mixer, oconv);
 
@@ -246,8 +263,8 @@ ges_track_video_transition_create_element (GESTrackObject * object)
   gst_interpolation_control_source_set_interpolation_mode (control_source,
       GST_INTERPOLATE_LINEAR);
 
-  self->controller = controller;
-  self->control_source = control_source;
+  priv->controller = controller;
+  priv->control_source = control_source;
 
   return topbin;
 }
@@ -298,46 +315,70 @@ ges_track_video_transition_duration_changed (GESTrackObject * object,
   GValue end_value = { 0, };
   GstElement *gnlobj = ges_track_object_get_gnlobject (object);
   GESTrackVideoTransition *self = GES_TRACK_VIDEO_TRANSITION (object);
+  GESTrackVideoTransitionPrivate *priv = self->priv;
 
   GST_LOG ("updating controller");
 
-  if (G_UNLIKELY (!gnlobj || !self->control_source))
+  if (G_UNLIKELY (!gnlobj || !priv->control_source))
     return;
 
   GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
   g_value_init (&start_value, G_TYPE_DOUBLE);
   g_value_init (&end_value, G_TYPE_DOUBLE);
-  g_value_set_double (&start_value, self->start_value);
-  g_value_set_double (&end_value, self->end_value);
+  g_value_set_double (&start_value, priv->start_value);
+  g_value_set_double (&end_value, priv->end_value);
 
   GST_LOG ("setting values on controller");
 
-  gst_interpolation_control_source_unset_all (self->control_source);
-  gst_interpolation_control_source_set (self->control_source, 0, &start_value);
-  gst_interpolation_control_source_set (self->control_source,
+  gst_interpolation_control_source_unset_all (priv->control_source);
+  gst_interpolation_control_source_set (priv->control_source, 0, &start_value);
+  gst_interpolation_control_source_set (priv->control_source,
       duration, &end_value);
 
   GST_LOG ("done updating controller");
 }
 
+/**
+ * ges_track_video_transition_set_transition_type:
+ * @self: a #GESTrackVideoTransition
+ * @type: a #GESVideoStandardTransitionType
+ *
+ * Sets the transition being used to @type.
+ *
+ * Returns: %TRUE if the transition type was properly changed, else %FALSE.
+ */
 gboolean
-ges_track_video_transition_set_type (GESTrackVideoTransition * self,
+ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
     GESVideoStandardTransitionType type)
 {
-  GST_DEBUG ("%p %d => %d", self, self->type, type);
+  GESTrackVideoTransitionPrivate *priv = self->priv;
 
-  if (self->type && (self->type != type) &&
+  GST_DEBUG ("%p %d => %d", self, priv->type, type);
+
+  if (priv->type && (priv->type != type) &&
       ((type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) ||
-          (self->type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE))) {
+          (priv->type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE))) {
     GST_WARNING
         ("Changing between 'crossfade' and other types is not supported");
     return FALSE;
   }
 
-  self->type = type;
-  if (self->smpte && (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE))
-    g_object_set (self->smpte, "type", (gint) type, NULL);
+  priv->type = type;
+  if (priv->smpte && (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE))
+    g_object_set (priv->smpte, "type", (gint) type, NULL);
   return TRUE;
+}
+
+/**
+ * ges_track_video_transition_get_transition_type:
+ * @trans: a #GESTrackVideoTransition
+ *
+ * Returns: The transition type used by @trans.
+ */
+GESVideoStandardTransitionType
+ges_track_video_transition_get_transition_type (GESTrackVideoTransition * trans)
+{
+  return trans->priv->type;
 }
 
 GESTrackVideoTransition *
