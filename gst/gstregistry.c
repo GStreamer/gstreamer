@@ -1161,6 +1161,17 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
     GST_LOG_OBJECT (context->registry, "file %s looks like a possible module",
         filename);
 
+    /* try to avoid unnecessary plugin-move pain */
+    if (g_str_has_prefix (dirent, "libgstvalve") ||
+        g_str_has_prefix (dirent, "libgstselector")) {
+      GST_WARNING_OBJECT (context->registry, "ignoring old plugin %s which "
+          "has been merged into the corelements plugin", filename);
+      /* Plugin will be removed from cache after the scan completes if it
+       * is still marked 'cached' */
+      g_free (filename);
+      continue;
+    }
+
     /* plug-ins are considered unique by basename; if the given name
      * was already seen by the registry, we ignore it */
     plugin = gst_registry_lookup_bn (context->registry, dirent);
