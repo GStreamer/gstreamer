@@ -151,7 +151,8 @@ GST_START_TEST (test_test_source_in_layer)
       ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v,
       GES_TYPE_TRACK_VIDEO_TEST_SOURCE);
 
-  ptrn = ((GESTrackVideoTestSource *) trobj)->pattern;
+  ptrn = (ges_track_video_test_source_get_pattern ((GESTrackVideoTestSource *)
+          trobj));
   assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_WHITE);
   g_object_unref (trobj);
 

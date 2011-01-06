@@ -524,6 +524,7 @@ GES_TYPE_TIMELINE_TEXT_OVERLAY
 GESTrackVideoTestSource
 ges_track_video_test_source_new
 ges_track_video_test_source_set_pattern
+ges_track_video_test_source_get_pattern
 <SUBSECTION Standard>
 GESTrackVideoTestSourceClass
 GESTrackVideoTestSourcePrivate

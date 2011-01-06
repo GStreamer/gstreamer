@@ -54,8 +54,6 @@ struct _GESTrackVideoTestSource {
   /*< private >*/
   GESTrackSource parent;
 
-  GESVideoTestPattern pattern;
-
   GESTrackVideoTestSourcePrivate *priv;
 
   /* Padding for API extension */
@@ -76,6 +74,8 @@ GESTrackVideoTestSource* ges_track_video_test_source_new (void);
 void
 ges_track_video_test_source_set_pattern(GESTrackVideoTestSource *self,
 					GESVideoTestPattern pattern);
+GESVideoTestPattern
+ges_track_video_test_source_get_pattern (GESTrackVideoTestSource *source);
 
 G_END_DECLS
 

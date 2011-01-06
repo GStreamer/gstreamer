@@ -32,8 +32,7 @@ G_DEFINE_TYPE (GESTrackVideoTestSource, ges_track_video_test_source,
 
 struct _GESTrackVideoTestSourcePrivate
 {
-  /*  Dummy variable */
-  void *nothing;
+  GESVideoTestPattern pattern;
 };
 
 static GstElement *ges_track_video_test_source_create_element (GESTrackObject *
@@ -56,7 +55,7 @@ ges_track_video_test_source_init (GESTrackVideoTestSource * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_VIDEO_TEST_SOURCE, GESTrackVideoTestSourcePrivate);
 
-  self->pattern = GES_VIDEO_TEST_PATTERN_BLACK;
+  self->priv->pattern = GES_VIDEO_TEST_PATTERN_BLACK;
 }
 
 static GstElement *
@@ -65,7 +64,7 @@ ges_track_video_test_source_create_element (GESTrackObject * self)
   GstElement *ret;
   gint pattern;
 
-  pattern = ((GESTrackVideoTestSource *) self)->pattern;
+  pattern = ((GESTrackVideoTestSource *) self)->priv->pattern;
 
   ret = gst_element_factory_make ("videotestsrc", NULL);
   g_object_set (ret, "pattern", (gint) pattern, NULL);
@@ -73,16 +72,35 @@ ges_track_video_test_source_create_element (GESTrackObject * self)
   return ret;
 }
 
+/**
+ * ges_track_video_test_source_set_pattern:
+ * @self: a #GESTrackVideoTestSource
+ * @pattern: a #GESVideoTestPattern
+ *
+ * Sets the source to use the given @pattern.
+ */
 void
 ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
     * self, GESVideoTestPattern pattern)
 {
   GstElement *element = ges_track_object_get_element (GES_TRACK_OBJECT (self));
 
-  self->pattern = pattern;
+  self->priv->pattern = pattern;
 
   if (element)
     g_object_set (element, "pattern", (gint) pattern, NULL);
+}
+
+/**
+ * ges_track_video_test_source_get_pattern:
+ * @source: a #GESVideoTestPattern
+ *
+ * Returns: the video pattern used by the @source.
+ */
+GESVideoTestPattern
+ges_track_video_test_source_get_pattern (GESTrackVideoTestSource * source)
+{
+  return source->priv->pattern;
 }
 
 GESTrackVideoTestSource *
