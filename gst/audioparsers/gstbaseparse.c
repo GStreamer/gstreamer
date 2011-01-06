@@ -82,7 +82,8 @@
  *       @framesize according to the detected frame size. If buffer didn't
  *       contain a valid frame, this call must return FALSE and optionally
  *       set the @skipsize value to inform base class that how many bytes
- *       it needs to skip in order to find a valid frame. The passed buffer
+ *       it needs to skip in order to find a valid frame. @framesize can always
+ *       indicate a new minimum for current frame parsing.  The passed buffer
  *       is read-only.  Note that @check_valid_frame might receive any small
  *       amount of input data when leftover data is being drained (e.g. at EOS).
  *     </para></listitem>
@@ -1874,7 +1875,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   guint fsize = 0;
   gint skip = -1;
   const guint8 *data;
-  guint min_size, av;
+  guint old_min_size = 0, min_size, av;
   GstClockTime timestamp;
 
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
@@ -1905,10 +1906,16 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   while (!parse->priv->flushing) {
     tmpbuf = gst_buffer_new ();
 
+    old_min_size = 0;
     /* Synchronization loop */
     for (;;) {
-      min_size = parse->priv->min_frame_size;
+      min_size = MAX (parse->priv->min_frame_size, fsize);
       av = gst_adapter_available (parse->adapter);
+
+      /* loop safety check */
+      if (G_UNLIKELY (old_min_size >= min_size))
+        goto invalid_min;
+      old_min_size = min_size;
 
       if (G_UNLIKELY (parse->priv->drain)) {
         min_size = av;
@@ -1975,10 +1982,11 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
         if (!parse->priv->discont)
           parse->priv->sync_offset = parse->priv->offset;
         parse->priv->discont = TRUE;
+        /* something changed least; nullify loop check */
+        old_min_size = 0;
       }
-      /* There is a possibility that subclass set the skip value to zero.
-         This means that it has probably found a frame but wants to ask
-         more data (by increasing the min_size) to be sure of this. */
+      /* skip == 0 should imply subclass set min_size to need more data;
+       * we check this shortly */
       if ((ret = gst_base_parse_check_sync (parse)) != GST_FLOW_OK) {
         gst_buffer_unref (tmpbuf);
         goto done;
@@ -2033,6 +2041,15 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 done:
   GST_LOG_OBJECT (parse, "chain leaving");
   return ret;
+
+  /* ERRORS */
+invalid_min:
+  {
+    GST_ELEMENT_ERROR (parse, STREAM, FAILED, (NULL),
+        ("min_size evolution %d -> %d; breaking to avoid looping",
+            old_min_size, min_size));
+    return GST_FLOW_ERROR;
+  }
 }
 
 /* pull @size bytes at current offset,
@@ -2180,14 +2197,18 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
 {
   GstBuffer *buffer, *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint fsize = 0, min_size;
+  guint fsize = 0, min_size, old_min_size = 0;
   gint skip = 0;
 
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
   while (TRUE) {
 
-    min_size = parse->priv->min_frame_size;
+    min_size = MAX (parse->priv->min_frame_size, fsize);
+    /* loop safety check */
+    if (G_UNLIKELY (old_min_size >= min_size))
+      goto invalid_min;
+    old_min_size = min_size;
 
     ret = gst_base_parse_pull_range (parse, min_size, &buffer);
     if (ret != GST_FLOW_OK)
@@ -2227,8 +2248,11 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
       if (!parse->priv->discont)
         parse->priv->sync_offset = parse->priv->offset;
       parse->priv->discont = TRUE;
+      /* something changed least; nullify loop check */
+      old_min_size = 0;
     }
-    /* skip == 0 should imply subclass set min_size to need more data ... */
+    /* skip == 0 should imply subclass set min_size to need more data;
+     * we check this shortly */
     GST_DEBUG_OBJECT (parse, "finding sync...");
     gst_buffer_unref (buffer);
     if ((ret = gst_base_parse_check_sync (parse)) != GST_FLOW_OK) {
@@ -2264,6 +2288,15 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
 
 done:
   return ret;
+
+  /* ERRORS */
+invalid_min:
+  {
+    GST_ELEMENT_ERROR (parse, STREAM, FAILED, (NULL),
+        ("min_size evolution %d -> %d; breaking to avoid looping",
+            old_min_size, min_size));
+    return GST_FLOW_ERROR;
+  }
 }
 
 /**
