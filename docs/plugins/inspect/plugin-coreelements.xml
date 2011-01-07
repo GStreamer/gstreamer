@@ -3,10 +3,10 @@
   <description>standard GStreamer elements</description>
   <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
   <basename>libgstcoreelements.so</basename>
-  <version>0.10.31.1</version>
+  <version>0.10.31.2</version>
   <license>LGPL</license>
   <source>gstreamer</source>
-  <package>GStreamer git</package>
+  <package>GStreamer prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -145,7 +145,7 @@
       <name>input-selector</name>
       <longname>Input selector</longname>
       <class>Generic</class>
-      <description>N-to-1 input stream selectoring</description>
+      <description>N-to-1 input stream selector</description>
       <author>Julien Moutte &lt;julien@moutte.net&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>

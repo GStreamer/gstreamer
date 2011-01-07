@@ -1029,6 +1029,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstOutputSelector::pad-negotiation-mode</NAME>
+<TYPE>GstOutputSelectorPadNegotiationMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pad negotiation mode</NICK>
+<BLURB>The mode to be used for pad negotiation.</BLURB>
+<DEFAULT>All</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstInputSelector::active-pad</NAME>
 <TYPE>GstPad*</TYPE>
 <RANGE></RANGE>
