@@ -131,7 +131,7 @@ struct _GstRTSPStream {
   gboolean      container;
   /* original control url */
   gchar        *control_url;
-  guint32       ssrc; 
+  guint32       ssrc;
   guint32       seqbase;
   guint64       timebase;
 
@@ -201,7 +201,7 @@ struct _GstRTSPSrc {
   /* properties */
   GstRTSPLowerTrans protocols;
   gboolean          debug;
-  guint   	    retry;
+  guint             retry;
   guint64           udp_timeout;
   GTimeVal          tcp_timeout;
   GTimeVal         *ptcp_timeout;
