@@ -1422,7 +1422,8 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
   /* check initial frame to determine if subclass/format can provide ts.
    * If so, that allows and enables extra seek and duration determining options */
   if (G_UNLIKELY (parse->priv->first_frame_offset < 0 && ret == GST_FLOW_OK)) {
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
+        parse->priv->pad_mode == GST_ACTIVATE_PULL) {
       parse->priv->first_frame_offset = offset;
       parse->priv->first_frame_ts = GST_BUFFER_TIMESTAMP (buffer);
       GST_DEBUG_OBJECT (parse, "subclass provided ts %" GST_TIME_FORMAT
@@ -3497,7 +3498,7 @@ gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (klass->set_sink_caps)
     res = klass->set_sink_caps (parse, caps);
 
-  return res && gst_pad_set_caps (pad, caps);
+  return res;
 }
 
 static void
