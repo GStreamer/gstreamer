@@ -3876,9 +3876,6 @@ interrupt:
   if (src->loop_cmd != CMD_RECONNECT)
     goto stopping;
 
-  /* when we get here we have to reconnect using tcp */
-  src->loop_cmd = CMD_LOOP;
-
   /* only restart when the pads were not yet activated, else we were
    * streaming over UDP */
   restart = src->need_activate;
@@ -3988,9 +3985,117 @@ server_eof:
 }
 
 static void
+gst_rtspsrc_loop_start_cmd (GstRTSPSrc * src, gint cmd)
+{
+  switch (cmd) {
+    case CMD_OPEN:
+      GST_ELEMENT_PROGRESS (src, START, "open", ("Opening Stream"));
+      break;
+    case CMD_PLAY:
+      GST_ELEMENT_PROGRESS (src, START, "request", ("Sending PLAY request"));
+      break;
+    case CMD_PAUSE:
+      GST_ELEMENT_PROGRESS (src, START, "request", ("Sending PAUSE request"));
+      break;
+    case CMD_CLOSE:
+      GST_ELEMENT_PROGRESS (src, START, "close", ("Closing Stream"));
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_rtspsrc_loop_complete_cmd (GstRTSPSrc * src, gint cmd)
+{
+  switch (cmd) {
+    case CMD_OPEN:
+      GST_ELEMENT_PROGRESS (src, COMPLETE, "open", ("Opened Stream"));
+      break;
+    case CMD_PLAY:
+      GST_ELEMENT_PROGRESS (src, COMPLETE, "request", ("Sent PLAY request"));
+      break;
+    case CMD_PAUSE:
+      GST_ELEMENT_PROGRESS (src, COMPLETE, "request", ("Sent PAUSE request"));
+      break;
+    case CMD_CLOSE:
+      GST_ELEMENT_PROGRESS (src, COMPLETE, "close", ("Closed Stream"));
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_rtspsrc_loop_cancel_cmd (GstRTSPSrc * src, gint cmd)
+{
+  switch (cmd) {
+    case CMD_OPEN:
+      GST_ELEMENT_PROGRESS (src, CANCELED, "open", ("Open canceled"));
+      break;
+    case CMD_PLAY:
+      GST_ELEMENT_PROGRESS (src, CANCELED, "request", ("PLAY canceled"));
+      break;
+    case CMD_PAUSE:
+      GST_ELEMENT_PROGRESS (src, CANCELED, "request", ("PAUSE canceled"));
+      break;
+    case CMD_CLOSE:
+      GST_ELEMENT_PROGRESS (src, CANCELED, "close", ("Close canceled"));
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_rtspsrc_loop_error_cmd (GstRTSPSrc * src, gint cmd)
+{
+  switch (cmd) {
+    case CMD_OPEN:
+      GST_ELEMENT_PROGRESS (src, ERROR, "open", ("Open failed"));
+      break;
+    case CMD_PLAY:
+      GST_ELEMENT_PROGRESS (src, ERROR, "request", ("PLAY failed"));
+      break;
+    case CMD_PAUSE:
+      GST_ELEMENT_PROGRESS (src, ERROR, "request", ("PAUSE failed"));
+      break;
+    case CMD_CLOSE:
+      GST_ELEMENT_PROGRESS (src, ERROR, "close", ("Close failed"));
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_rtspsrc_loop_end_cmd (GstRTSPSrc * src, gint cmd, GstRTSPResult ret)
+{
+  if (ret == GST_RTSP_OK)
+    gst_rtspsrc_loop_complete_cmd (src, cmd);
+  else if (ret == GST_RTSP_EINTR)
+    gst_rtspsrc_loop_cancel_cmd (src, cmd);
+  else
+    gst_rtspsrc_loop_error_cmd (src, cmd);
+}
+
+static void
 gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gboolean flush)
 {
+  gint old;
+
+  /* start new request */
+  gst_rtspsrc_loop_start_cmd (src, cmd);
+
   GST_OBJECT_LOCK (src);
+  old = src->loop_cmd;
+  if (old != CMD_WAIT) {
+    src->loop_cmd = CMD_WAIT;
+    GST_OBJECT_UNLOCK (src);
+    /* cancel previous request */
+    gst_rtspsrc_loop_cancel_cmd (src, old);
+    GST_OBJECT_LOCK (src);
+  }
   src->loop_cmd = cmd;
   src->flushing = flush;
   if (flush) {
@@ -5580,13 +5685,6 @@ cleanup_error:
   }
 }
 
-static void
-gst_rtspsrc_open_async (GstRTSPSrc * src)
-{
-  GST_ELEMENT_PROGRESS (src, START, "open", ("Opening Stream"));
-  gst_rtspsrc_loop_send_cmd (src, CMD_OPEN, FALSE);
-}
-
 static GstRTSPResult
 gst_rtspsrc_open (GstRTSPSrc * src, gboolean async)
 {
@@ -5604,14 +5702,9 @@ gst_rtspsrc_open (GstRTSPSrc * src, gboolean async)
     goto open_failed;
 
 done:
-  if (async) {
-    if (ret == GST_RTSP_OK)
-      GST_ELEMENT_PROGRESS (src, COMPLETE, "open", ("Opened stream"));
-    else if (ret == GST_RTSP_EINTR)
-      GST_ELEMENT_PROGRESS (src, CANCELED, "open", ("Open canceled"));
-    else
-      GST_ELEMENT_PROGRESS (src, ERROR, "open", ("Open failed"));
-  }
+  if (async)
+    gst_rtspsrc_loop_end_cmd (src, CMD_OPEN, ret);
+
   return ret;
 
   /* ERRORS */
@@ -5625,13 +5718,6 @@ open_failed:
     GST_WARNING_OBJECT (src, "can't setup streaming from sdp");
     goto done;
   }
-}
-
-static void
-gst_rtspsrc_close_async (GstRTSPSrc * src)
-{
-  GST_ELEMENT_PROGRESS (src, START, "close", ("Closing Stream"));
-  gst_rtspsrc_loop_send_cmd (src, CMD_CLOSE, FALSE);
 }
 
 static GstRTSPResult
@@ -5718,14 +5804,9 @@ close:
 
   src->state = GST_RTSP_STATE_INVALID;
 
-  if (async) {
-    if (res == GST_RTSP_OK)
-      GST_ELEMENT_PROGRESS (src, COMPLETE, "close", ("Closed stream"));
-    else if (res == GST_RTSP_EINTR)
-      GST_ELEMENT_PROGRESS (src, CANCELED, "close", ("Close canceled"));
-    else
-      GST_ELEMENT_PROGRESS (src, ERROR, "close", ("Close failed"));
-  }
+  if (async)
+    gst_rtspsrc_loop_end_cmd (src, CMD_CLOSE, res);
+
   return res;
 
   /* ERRORS */
@@ -5870,13 +5951,6 @@ clear_rtp_base (GstRTSPSrc * src, GstRTSPStream * stream)
     s = gst_caps_get_structure (stream->caps, 0);
     gst_structure_remove_fields (s, "clock-base", "seqnum-base", NULL);
   }
-}
-
-static void
-gst_rtspsrc_play_async (GstRTSPSrc * src)
-{
-  GST_ELEMENT_PROGRESS (src, START, "request", ("Sending PLAY request"));
-  gst_rtspsrc_loop_send_cmd (src, CMD_PLAY, FALSE);
 }
 
 static GstRTSPResult
@@ -6027,7 +6101,6 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
   src->running = TRUE;
   src->base_time = -1;
   src->state = GST_RTSP_STATE_PLAYING;
-  src->loop_cmd = CMD_LOOP;
 
   /* mark discont */
   GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
@@ -6037,15 +6110,9 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
   }
 
 done:
-  if (async) {
-    if (res == GST_RTSP_OK)
-      GST_ELEMENT_PROGRESS (src, COMPLETE, "request", ("PLAY request sent"));
-    else if (res == GST_RTSP_EINTR)
-      GST_ELEMENT_PROGRESS (src, CANCELED, "request",
-          ("PLAY request canceled"));
-    else
-      GST_ELEMENT_PROGRESS (src, ERROR, "request", ("PLAY request failed"));
-  }
+  if (async)
+    gst_rtspsrc_loop_end_cmd (src, CMD_PLAY, res);
+
   return res;
 
   /* ERRORS */
@@ -6082,13 +6149,6 @@ send_error:
     g_free (str);
     goto done;
   }
-}
-
-static void
-gst_rtspsrc_pause_async (GstRTSPSrc * src)
-{
-  GST_ELEMENT_PROGRESS (src, START, "request", ("Sending PAUSE request"));
-  gst_rtspsrc_loop_send_cmd (src, CMD_PAUSE, FALSE);
 }
 
 static GstRTSPResult
@@ -6158,25 +6218,13 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle, gboolean async)
       break;
   }
 
-  if (idle && src->task) {
-    GST_DEBUG_OBJECT (src, "starting idle task again");
-    src->base_time = -1;
-    src->loop_cmd = CMD_LOOP;
-  }
-
 no_connection:
   src->state = GST_RTSP_STATE_READY;
 
 done:
-  if (async) {
-    if (res == GST_RTSP_OK)
-      GST_ELEMENT_PROGRESS (src, COMPLETE, "request", ("PAUSE request sent"));
-    else if (res == GST_RTSP_EINTR)
-      GST_ELEMENT_PROGRESS (src, CANCELED, "request",
-          ("PAUSE request canceled"));
-    else
-      GST_ELEMENT_PROGRESS (src, ERROR, "request", ("PAUSE request failed"));
-  }
+  if (async)
+    gst_rtspsrc_loop_end_cmd (src, CMD_PAUSE, res);
+
   return res;
 
   /* ERRORS */
@@ -6319,9 +6367,13 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
       break;
     case CMD_PLAY:
       ret = gst_rtspsrc_play (src, &src->segment, TRUE);
+      if (ret == GST_RTSP_OK)
+        running = TRUE;
       break;
     case CMD_PAUSE:
       ret = gst_rtspsrc_pause (src, TRUE, TRUE);
+      if (ret == GST_RTSP_OK)
+        running = TRUE;
       break;
     case CMD_CLOSE:
       ret = gst_rtspsrc_close (src, TRUE);
@@ -6379,7 +6431,8 @@ gst_rtspsrc_stop (GstRTSPSrc * src)
 
   GST_DEBUG_OBJECT (src, "stopping");
 
-  gst_rtspsrc_connection_flush (src, TRUE);
+  /* also cancels pending task */
+  gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, TRUE);
 
   GST_OBJECT_LOCK (src);
   if ((task = src->task)) {
@@ -6419,7 +6472,7 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
         goto start_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_rtspsrc_open_async (rtspsrc);
+      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_OPEN, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -6438,18 +6491,18 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      gst_rtspsrc_play_async (rtspsrc);
+      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PLAY, FALSE);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* send pause request and keep the idle task around */
-      gst_rtspsrc_pause_async (rtspsrc);
+      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PAUSE, FALSE);
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_rtspsrc_close_async (rtspsrc);
+      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_CLOSE, FALSE);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_rtspsrc_stop (rtspsrc);
