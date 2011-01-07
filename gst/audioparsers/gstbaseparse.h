@@ -234,11 +234,6 @@ struct _GstBaseParseClass {
                                        GstFormat dest_format,
                                        gint64 * dest_value);
 
-  gboolean      (*find_frame)         (GstBaseParse *parse,
-                                       GstFormat src_format,
-                                       gint64 src_value,
-                                       gint64 * dest_value);
-
   gboolean      (*event)              (GstBaseParse *parse,
                                        GstEvent *event);
 
