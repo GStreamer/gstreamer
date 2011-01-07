@@ -90,11 +90,10 @@ struct _GstRTSPMediaTrans {
  * @srcpad: the srcpad of the stream
  * @payloader: the payloader of the format
  * @prepared: if the stream is prepared for streaming
- * @server_port: the server udp ports
  * @recv_rtp_sink: sinkpad for RTP buffers
  * @recv_rtcp_sink: sinkpad for RTCP buffers
- * @recv_rtp_src: srcpad for RTP buffers
- * @recv_rtcp_src: srcpad for RTCP buffers
+ * @send_rtp_src: srcpad for RTP buffers
+ * @send_rtcp_src: srcpad for RTCP buffers
  * @udpsrc: the udp source elements for RTP/RTCP
  * @udpsink: the udp sink elements for RTP/RTCP
  * @appsrc: the app source elements for RTP/RTCP
