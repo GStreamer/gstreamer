@@ -694,132 +694,100 @@
   (return-type "GList*")
 )
 
-(define-function gst_discoverer_audio_info_get_channels
+(define-method get_channels
+  (of-object "GstDiscovererAudioInfo")
   (c-name "gst_discoverer_audio_info_get_channels")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererAudioInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_audio_info_get_sample_rate
+(define-method get_sample_rate
+  (of-object "GstDiscovererAudioInfo")
   (c-name "gst_discoverer_audio_info_get_sample_rate")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererAudioInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_audio_info_get_depth
+(define-method get_depth
+  (of-object "GstDiscovererAudioInfo")
   (c-name "gst_discoverer_audio_info_get_depth")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererAudioInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_audio_info_get_bitrate
+(define-method get_bitrate
+  (of-object "GstDiscovererAudioInfo")
   (c-name "gst_discoverer_audio_info_get_bitrate")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererAudioInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_audio_info_get_max_bitrate
+(define-method get_max_bitrate
+  (of-object "GstDiscovererAudioInfo")
   (c-name "gst_discoverer_audio_info_get_max_bitrate")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererAudioInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_get_width
+(define-method get_width
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_get_width")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_get_height
+(define-method get_height
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_get_height")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_get_depth
+(define-method get_depth
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_get_depth")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_get_framerate_num
+(define-method get_framerate_num
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_get_framerate_num")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_get_framerate_denom
+(define-method get_framerate_denom
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_get_framerate_denom")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_get_par_num
+(define-method get_par_num
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_get_par_num")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_get_par_denom
+(define-method get_par_denom
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_get_par_denom")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_is_interlaced
+(define-method is_interlaced
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_is_interlaced")
   (return-type "gboolean")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_get_bitrate
+(define-method get_bitrate
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_get_bitrate")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_get_max_bitrate
+(define-method get_max_bitrate
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_get_max_bitrate")
   (return-type "guint")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
-(define-function gst_discoverer_video_info_is_image
+(define-method is_image
+  (of-object "GstDiscovererVideoInfo")
   (c-name "gst_discoverer_video_info_is_image")
   (return-type "gboolean")
-  (parameters
-    '("GstDiscovererVideoInfo*" "info")
-  )
 )
 
 (define-method copy
@@ -903,13 +871,6 @@
   (return-type "GList*")
 )
 
-(define-function gst_discoverer_stream_info_list_free
-  (c-name "gst_discoverer_stream_info_list_free")
-  (return-type "none")
-  (parameters
-    '("GList*" "infos")
-  )
-)
 
 (define-function gst_discoverer_new
   (c-name "gst_discoverer_new")
