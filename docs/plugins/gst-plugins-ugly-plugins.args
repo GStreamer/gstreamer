@@ -1041,7 +1041,7 @@
 <ARG>
 <NAME>GstX264Enc::vbv-buf-capacity</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[300,10000]</RANGE>
+<RANGE><= 10000</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>VBV buffer capacity</NICK>
 <BLURB>Size of the VBV buffer in milliseconds.</BLURB>
