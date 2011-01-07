@@ -32,10 +32,70 @@
 /**
  * SECTION:element-encodebin
  *
- * encodebin provides a bin for encoding/muxing various streams according to
+ * EncodeBin provides a bin for encoding/muxing various streams according to
  * a specified #GstEncodingProfile.
  *
- * 
+ * Based on the profile that was set (via the #GstEncodeBin:profile property),
+ * EncodeBin will internally select and configure the required elements
+ * (encoders, muxers, but also audio and video converters) so that you can
+ * provide it raw or pre-encoded streams of data in input and have your
+ * encoded/muxed/converted stream in output.
+ *
+ * <refsect2>
+ * <title>Features</title>
+ * <itemizedlist>
+ * <listitem>
+ * Automatic encoder and muxer selection based on elements available on the
+ * system.
+ * </listitem>
+ * <listitem>
+ * Conversion of raw audio/video streams (scaling, framerate conversion,
+ * colorspace conversion, samplerate conversion) to conform to the profile
+ * output format.
+ * </listitem>
+ * <listitem>
+ * Variable number of streams. If the presence property for a stream encoding
+ * profile is 0, you can request any number of sink pads for it via the
+ * standard request pad gstreamer API or the #GstEncodeBin::request-pad action
+ * signal.
+ * </listitem>
+ * <listitem>
+ * Avoid reencoding (passthrough). If the input stream is already encoded and is
+ * compatible with what the #GstEncodingProfile expects, then the stream won't
+ * be re-encoded but just passed through downstream to the muxer or the output.
+ * </listitem>
+ * <listitem>
+ * Mix pre-encoded and raw streams as input. In addition to the passthrough
+ * feature above, you can feed both raw audio/video *AND* already-encoded data
+ * to a pad. #GstEncodeBin will take care of passing through the compatible
+ * segments and re-encoding the segments of media that need encoding.
+ * </listitem>
+ * <listitem>
+ * Standard behaviour is to use a #GstEncodingContainerProfile to have both
+ * encoding and muxing performed. But you can also provide a single stream
+ * profile (like #GstEncodingAudioProfile) to only have the encoding done and
+ * handle the encoded output yourself.
+ * </listitem>
+ * <listitem>
+ * Audio imperfection corrections. Incoming audio streams can have non perfect
+ * timestamps (jitter), like the streams coming from ASF files. #GstEncodeBin
+ * will automatically fix those imperfections for you. See
+ * #GstEncodeBin:audio-jitter-tolerance for more details.
+ * </listitem>
+ * <listitem>
+ * Variable or Constant video framerate. If your #GstEncodingVideoProfile has
+ * the variableframerate property deactivated (default), then the incoming
+ * raw video stream will be retimestampped in order to produce a constant
+ * framerate.
+ * </listitem>
+ * <listitem>
+ * Cross-boundary re-encoding. When feeding compatible pre-encoded streams that
+ * fall on segment boundaries, and for supported formats (right now only H263),
+ * the GOP will be decoded/reencoded when needed to produce an encoded output
+ * that fits exactly within the request GstSegment.
+ * </listitem>
+ * </itemizedlist>
+ * </refsect2>
  */
 
 
@@ -227,6 +287,13 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
   gobject_klass->get_property = gst_encode_bin_get_property;
 
   /* Properties */
+
+  /**
+   * GstEncodeBin:profile:
+   *
+   * The #GstEncodingProfile to use. This property must be set before going
+   * to %GST_STATE_PAUSED or higher.
+   */
   g_object_class_install_property (gobject_klass, PROP_PROFILE,
       gst_param_spec_mini_object ("profile", "Profile",
           "The GstEncodingProfile to use", GST_TYPE_ENCODING_PROFILE,
@@ -262,6 +329,18 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Signals */
+  /**
+   * GstEncodeBin::request-pad
+   * @encodebin: a #GstEncodeBin instance
+   * @caps: a #GstCaps
+   *
+   * Use this method to request an unused sink request #GstPad that can take the
+   * provided @caps as input. You must release the pad with
+   * gst_element_release_request_pad() when you are done with it.
+   *
+   * Returns: A compatible #GstPad, or %NULL if no compatible #GstPad could be
+   * created or is available.
+   */
   gst_encode_bin_signals[SIGNAL_REQUEST_PAD] =
       g_signal_new ("request-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstEncodeBinClass,
