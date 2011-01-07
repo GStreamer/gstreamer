@@ -49,11 +49,6 @@ struct _MpegVideoParse {
   gint64 next_offset;
   gboolean need_discont;
 
-  /* Timestamp calculation */
-  GstClockTime ref_ts;
-  guint16 temp_ref;
-  GstClockTime base_time_code;
-
   /* Info from the Sequence Header */
   MPEGSeqHdr seq_hdr;
   GstBuffer *seq_hdr_buf;

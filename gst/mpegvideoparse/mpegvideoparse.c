@@ -92,10 +92,6 @@ gst_mpegvideoparse_change_state (GstElement * element,
 
 static void mpv_send_pending_segs (MpegVideoParse * mpegvideoparse);
 static void mpv_clear_pending_segs (MpegVideoParse * mpegvideoparse);
-static GstClockTime mpegvideoparse_get_timestamp_from_reference (MPEGSeqHdr *
-    seq_hdr, GstClockTime ref_ts, gint32 ref);
-static GstClockTime mpegvideoparse_get_time_code (guint8 * cur,
-    MPEGSeqHdr * seq_hdr);
 
 static GstElementClass *parent_class = NULL;
 
@@ -166,9 +162,6 @@ mpv_parse_reset (MpegVideoParse * mpegvideoparse)
   mpegvideoparse->seq_hdr.width = mpegvideoparse->seq_hdr.height = -1;
   mpegvideoparse->seq_hdr.fps_n = mpegvideoparse->seq_hdr.par_w = 0;
   mpegvideoparse->seq_hdr.fps_d = mpegvideoparse->seq_hdr.par_h = 1;
-
-  mpegvideoparse->ref_ts = GST_CLOCK_TIME_NONE;
-  mpegvideoparse->base_time_code = GST_CLOCK_TIME_NONE;
 
   mpv_clear_pending_segs (mpegvideoparse);
 }
@@ -411,30 +404,6 @@ picture_type_name (guint8 pct)
 }
 #endif /* GST_DISABLE_GST_DEBUG */
 
-static GstClockTime
-mpegvideoparse_get_timestamp_from_reference (MPEGSeqHdr * seq_hdr,
-    GstClockTime ref_ts, gint32 ref)
-{
-
-  if (ref < 0) {
-    GstClockTime duration;
-
-    duration = gst_util_uint64_scale_int (ref * GST_SECOND * -1,
-        seq_hdr->fps_d, seq_hdr->fps_n);
-
-    if (duration > ref_ts)
-      return ref_ts;
-    else
-      return ref_ts - duration;
-  }
-
-  if (ref == 0)
-    return ref_ts;
-
-  return ref_ts + gst_util_uint64_scale_int (ref * GST_SECOND,
-      seq_hdr->fps_d, seq_hdr->fps_n);
-}
-
 static gboolean
 mpegvideoparse_handle_picture (MpegVideoParse * mpegvideoparse, GstBuffer * buf)
 {
@@ -463,43 +432,8 @@ mpegvideoparse_handle_picture (MpegVideoParse * mpegvideoparse, GstBuffer * buf)
 
       GST_LOG_OBJECT (mpegvideoparse, "Picture type is %s",
           picture_type_name (hdr.pic_type));
-
-      if (GST_BUFFER_TIMESTAMP (buf) == GST_CLOCK_TIME_NONE) {
-        if (mpegvideoparse->ref_ts != GST_CLOCK_TIME_NONE) {
-          GST_BUFFER_TIMESTAMP (buf) =
-              mpegvideoparse_get_timestamp_from_reference
-              (&mpegvideoparse->seq_hdr, mpegvideoparse->ref_ts,
-              hdr.temp_ref - mpegvideoparse->temp_ref);
-        }
-      } else {
-        /* we got a timestamp from upstream, use this timestamp as our reference now */
-        mpegvideoparse->ref_ts = GST_BUFFER_TIMESTAMP (buf);
-        mpegvideoparse->temp_ref = hdr.temp_ref;
-      }
-
-      GST_DEBUG_OBJECT (mpegvideoparse,
-          "Picture timestamp %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
-    } else if (cur[0] == MPEG_PACKET_GOP) {
-      if (GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
-        mpegvideoparse->base_time_code =
-            mpegvideoparse_get_time_code (cur,
-            &mpegvideoparse->seq_hdr) - GST_BUFFER_TIMESTAMP (buf);
-        mpegvideoparse->ref_ts = GST_BUFFER_TIMESTAMP (buf);
-        mpegvideoparse->temp_ref = 0;
-      } else {
-        if (mpegvideoparse->base_time_code == GST_CLOCK_TIME_NONE) {
-          mpegvideoparse->base_time_code =
-              mpegvideoparse_get_time_code (cur, &mpegvideoparse->seq_hdr);
-          mpegvideoparse->ref_ts = 0;
-          mpegvideoparse->temp_ref = 0;
-        } else {
-          mpegvideoparse->ref_ts =
-              mpegvideoparse_get_time_code (cur,
-              &mpegvideoparse->seq_hdr) - mpegvideoparse->base_time_code;
-          mpegvideoparse->temp_ref = 0;
-        }
-      }
+      /* FIXME: Can use the picture type and number of fields to track a
+       * timestamp */
     }
     cur = mpeg_util_find_start_code (&sync_word, cur, end);
   }
@@ -507,10 +441,11 @@ mpegvideoparse_handle_picture (MpegVideoParse * mpegvideoparse, GstBuffer * buf)
   return TRUE;
 }
 
-static GstClockTime
-mpegvideoparse_get_time_code (guint8 * cur, MPEGSeqHdr * seq_hdr)
+#if 0
+static guint64
+gst_mpegvideoparse_time_code (guchar * gop, MPEGSeqHdr * seq_hdr)
 {
-  guint32 data = GST_READ_UINT32_BE (cur + 1);
+  guint32 data = GST_READ_UINT32_BE (gop);
   guint64 seconds;
   guint8 frames;
 
@@ -523,6 +458,7 @@ mpegvideoparse_get_time_code (guint8 * cur, MPEGSeqHdr * seq_hdr)
   return seconds * GST_SECOND + gst_util_uint64_scale_int (frames * GST_SECOND,
       seq_hdr->fps_d, seq_hdr->fps_n);
 }
+#endif
 
 static void
 gst_mpegvideoparse_flush (MpegVideoParse * mpegvideoparse)
