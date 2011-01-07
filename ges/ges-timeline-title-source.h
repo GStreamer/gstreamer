@@ -54,15 +54,9 @@ typedef struct _GESTimelineTitleSourcePrivate GESTimelineTitleSourcePrivate;
  */
 
 struct _GESTimelineTitleSource {
-  /*< private >*/
   GESTimelineSource parent;
 
-  gboolean mute;
-  gchar *text;
-  gchar *font_desc;
-  GESTextVAlign halign;
-  GESTextHAlign valign;
-
+  /*< private >*/
   GESTimelineTitleSourcePrivate *priv;
 
   /* Padding for API extension */
@@ -78,6 +72,38 @@ struct _GESTimelineTitleSourceClass {
 };
 
 GType ges_timeline_title_source_get_type (void);
+
+void
+ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
+    gboolean mute);
+
+void
+ges_timeline_title_source_set_text( GESTimelineTitleSource * self,
+    const gchar * text);
+
+void
+ges_timeline_title_source_set_font_desc (GESTimelineTitleSource * self,
+    const gchar * font_desc);
+
+void
+ges_timeline_title_source_set_valignment (GESTimelineTitleSource * self,
+    GESTextVAlign valign);
+
+void
+ges_timeline_title_source_set_halignment (GESTimelineTitleSource * self,
+    GESTextHAlign halign);
+
+const gchar* 
+ges_timeline_title_source_get_font_desc (GESTimelineTitleSource * self);
+
+GESTextVAlign
+ges_timeline_title_source_get_valignment (GESTimelineTitleSource * self);
+
+GESTextHAlign
+ges_timeline_title_source_get_halignment (GESTimelineTitleSource * self);
+
+gboolean ges_timeline_title_source_is_muted (GESTimelineTitleSource * self);
+const gchar* ges_timeline_title_source_get_text (GESTimelineTitleSource * self);
 
 GESTimelineTitleSource* ges_timeline_title_source_new (void);
 

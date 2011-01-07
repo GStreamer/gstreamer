@@ -578,9 +578,11 @@ connect_to_title_source (GESTimelineObject * object, App * app)
 {
   GESTimelineTitleSource *obj;
   obj = GES_TIMELINE_TITLE_SOURCE (object);
-  gtk_combo_box_set_active (app->halign, obj->halign);
-  gtk_combo_box_set_active (app->valign, obj->valign);
-  gtk_entry_set_text (app->text, obj->text);
+  gtk_combo_box_set_active (app->halign,
+      ges_timeline_title_source_get_halignment (obj));
+  gtk_combo_box_set_active (app->valign,
+      ges_timeline_title_source_get_valignment (obj));
+  gtk_entry_set_text (app->text, ges_timeline_title_source_get_text (obj));
 }
 
 static void

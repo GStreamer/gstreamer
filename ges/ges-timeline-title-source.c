@@ -21,7 +21,7 @@
 /**
  * SECTION:ges-timeline-title-source
  * @short_description: Render stand-alone titles in  GESTimelineLayer.
- * 
+ *
  * Renders the given text in the specified font, at specified position, and
  * with the specified background pattern.
  *
@@ -46,8 +46,11 @@ G_DEFINE_TYPE (GESTimelineTitleSource, ges_timeline_title_source,
 
 struct _GESTimelineTitleSourcePrivate
 {
-  /* Dummy variable */
-  void *nothing;
+  gboolean mute;
+  gchar *text;
+  gchar *font_desc;
+  GESTextVAlign halign;
+  GESTextHAlign valign;
 };
 
 enum
@@ -60,26 +63,6 @@ enum
   PROP_VALIGNMENT,
 };
 
-static void
-ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
-    gboolean mute);
-
-static void
-ges_timeline_title_source_set_text (GESTimelineTitleSource * self,
-    const gchar * text);
-
-static void
-ges_timeline_title_source_set_font_desc (GESTimelineTitleSource * self,
-    const gchar * font_desc);
-
-static void
-ges_timeline_title_source_set_valign (GESTimelineTitleSource * self,
-    GESTextVAlign valign);
-
-static void
-ges_timeline_title_source_set_halign (GESTimelineTitleSource * self,
-    GESTextHAlign halign);
-
 static GESTrackObject
     * ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
@@ -88,23 +71,24 @@ static void
 ges_timeline_title_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTimelineTitleSource *tfs = GES_TIMELINE_TITLE_SOURCE (object);
+  GESTimelineTitleSourcePrivate *priv =
+      GES_TIMELINE_TITLE_SOURCE (object)->priv;
 
   switch (property_id) {
     case PROP_MUTE:
-      g_value_set_boolean (value, tfs->mute);
+      g_value_set_boolean (value, priv->mute);
       break;
     case PROP_TEXT:
-      g_value_set_string (value, tfs->text);
+      g_value_set_string (value, priv->text);
       break;
     case PROP_FONT_DESC:
-      g_value_set_string (value, tfs->font_desc);
+      g_value_set_string (value, priv->font_desc);
       break;
     case PROP_HALIGNMENT:
-      g_value_set_enum (value, tfs->halign);
+      g_value_set_enum (value, priv->halign);
       break;
     case PROP_VALIGNMENT:
-      g_value_set_enum (value, tfs->valign);
+      g_value_set_enum (value, priv->valign);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -128,10 +112,10 @@ ges_timeline_title_source_set_property (GObject * object, guint property_id,
       ges_timeline_title_source_set_font_desc (tfs, g_value_get_string (value));
       break;
     case PROP_HALIGNMENT:
-      ges_timeline_title_source_set_halign (tfs, g_value_get_enum (value));
+      ges_timeline_title_source_set_halignment (tfs, g_value_get_enum (value));
       break;
     case PROP_VALIGNMENT:
-      ges_timeline_title_source_set_valign (tfs, g_value_get_enum (value));
+      ges_timeline_title_source_set_valignment (tfs, g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -143,10 +127,10 @@ ges_timeline_title_source_dispose (GObject * object)
 {
   GESTimelineTitleSource *self = GES_TIMELINE_TITLE_SOURCE (object);
 
-  if (self->text)
-    g_free (self->text);
-  if (self->font_desc)
-    g_free (self->font_desc);
+  if (self->priv->text)
+    g_free (self->priv->text);
+  if (self->priv->font_desc)
+    g_free (self->priv->font_desc);
 
   G_OBJECT_CLASS (ges_timeline_title_source_parent_class)->dispose (object);
 }
@@ -226,14 +210,23 @@ ges_timeline_title_source_init (GESTimelineTitleSource * self)
 
   GES_TIMELINE_OBJECT (self)->duration = 0;
   /* Not 100% required since a new gobject's content will always be memzero'd */
-  self->mute = FALSE;
-  self->text = NULL;
-  self->font_desc = NULL;
-  self->halign = DEFAULT_HALIGNMENT;
-  self->valign = DEFAULT_VALIGNMENT;
+  self->priv->mute = FALSE;
+  self->priv->text = NULL;
+  self->priv->font_desc = NULL;
+  self->priv->halign = DEFAULT_HALIGNMENT;
+  self->priv->valign = DEFAULT_VALIGNMENT;
 }
 
-static void
+/**
+ * ges_timeline_title_source_set_text:
+ * @self: the #GESTimelineTitleSource* to set text on
+ * @text: the text to render. an internal copy of this text will be
+ * made.
+ *
+ * Sets the text this timeline object will render.
+ *
+ */
+void
 ges_timeline_title_source_set_text (GESTimelineTitleSource * self,
     const gchar * text)
 {
@@ -242,10 +235,10 @@ ges_timeline_title_source_set_text (GESTimelineTitleSource * self,
 
   GST_DEBUG ("self:%p, text:%s", self, text);
 
-  if (self->text)
-    g_free (self->text);
+  if (self->priv->text)
+    g_free (self->priv->text);
 
-  self->text = g_strdup (text);
+  self->priv->text = g_strdup (text);
 
   /* FIXME : We need a much less crack way to find the trackobject to change */
   trackobjects = ges_timeline_object_get_track_objects (object);
@@ -254,14 +247,22 @@ ges_timeline_title_source_set_text (GESTimelineTitleSource * self,
 
     if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_text (GES_TRACK_TITLE_SOURCE
-          (trackobject), self->text);
+          (trackobject), self->priv->text);
 
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
 }
 
-static void
+/**
+ * ges_timeline_title_source_set_font_desc:
+ * @self: the #GESTimelineTitleSource*
+ * @font_desc: the pango font description
+ *
+ * Sets the pango font description of the text.
+ *
+ */
+void
 ges_timeline_title_source_set_font_desc (GESTimelineTitleSource * self,
     const gchar * font_desc)
 {
@@ -270,10 +271,10 @@ ges_timeline_title_source_set_font_desc (GESTimelineTitleSource * self,
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
 
-  if (self->font_desc)
-    g_free (self->font_desc);
+  if (self->priv->font_desc)
+    g_free (self->priv->font_desc);
 
-  self->font_desc = g_strdup (font_desc);
+  self->priv->font_desc = g_strdup (font_desc);
 
   /* FIXME : We need a much less crack way to find the trackobject to change */
   trackobjects = ges_timeline_object_get_track_objects (object);
@@ -282,15 +283,23 @@ ges_timeline_title_source_set_font_desc (GESTimelineTitleSource * self,
 
     if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_font_desc (GES_TRACK_TITLE_SOURCE
-          (trackobject), self->font_desc);
+          (trackobject), self->priv->font_desc);
 
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
 }
 
-static void
-ges_timeline_title_source_set_halign (GESTimelineTitleSource * self,
+/**
+ * ges_timeline_title_source_set_halignment:
+ * @self: the #GESTimelineTitleSource* to set horizontal alignement of text on
+ * @halign: #GESTextHAlign
+ *
+ * Sets the horizontal aligment of the text.
+ *
+ */
+void
+ges_timeline_title_source_set_halignment (GESTimelineTitleSource * self,
     GESTextHAlign halign)
 {
   GList *tmp, *trackobjects;
@@ -298,7 +307,7 @@ ges_timeline_title_source_set_halign (GESTimelineTitleSource * self,
 
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
-  self->halign = halign;
+  self->priv->halign = halign;
 
   /* FIXME : We need a much less crack way to find the trackobject to change */
   trackobjects = ges_timeline_object_get_track_objects (object);
@@ -307,15 +316,23 @@ ges_timeline_title_source_set_halign (GESTimelineTitleSource * self,
 
     if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_halignment (GES_TRACK_TITLE_SOURCE
-          (trackobject), self->halign);
+          (trackobject), self->priv->halign);
 
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
 }
 
-static void
-ges_timeline_title_source_set_valign (GESTimelineTitleSource * self,
+/**
+ * ges_timeline_title_source_set_valignment:
+ * @self: the #GESTimelineTitleSource* to set vertical alignement of text on
+ * @valign: #GESTextVAlign
+ *
+ * Sets the vertical aligment of the text.
+ *
+ */
+void
+ges_timeline_title_source_set_valignment (GESTimelineTitleSource * self,
     GESTextVAlign valign)
 {
   GList *tmp, *trackobjects;
@@ -323,7 +340,7 @@ ges_timeline_title_source_set_valign (GESTimelineTitleSource * self,
 
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
-  self->valign = valign;
+  self->priv->valign = valign;
 
   /* FIXME : We need a much less crack way to find the trackobject to change */
   trackobjects = ges_timeline_object_get_track_objects (object);
@@ -332,14 +349,22 @@ ges_timeline_title_source_set_valign (GESTimelineTitleSource * self,
 
     if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_valignment (GES_TRACK_TITLE_SOURCE
-          (trackobject), self->valign);
+          (trackobject), self->priv->valign);
 
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
 }
 
-static void
+/**
+ * ges_timeline_title_source_set_mute:
+ * @self: the #GESTimelineTitleSource on which to mute or unmute the audio track
+ * @mute: %TRUE to mute the audio track, %FALSE to unmute it
+ *
+ * Sets whether the audio track of this timeline object is muted or not
+ *
+ */
+void
 ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
     gboolean mute)
 {
@@ -348,7 +373,7 @@ ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
 
-  self->mute = mute;
+  self->priv->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
   /* FIXME : We need a much less crack way to find the trackobject to change */
@@ -364,12 +389,78 @@ ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
   g_list_free (trackobjects);
 }
 
+/**
+ * ges_timeline_title_source_get_text:
+ * @self: a #GESTimelineTitleSource
+ *
+ * Returns: The text currently set on the @self.
+ *
+ */
+const gchar *
+ges_timeline_title_source_get_text (GESTimelineTitleSource * self)
+{
+  return self->priv->text;
+}
+
+/**
+ * ges_timeline_title_source_get_font_desc:
+ * @self: a #GESTimelineTitleSource
+ *
+ * Returns: The pango font description used by the @self.
+ *
+ */
+const char *
+ges_timeline_title_source_get_font_desc (GESTimelineTitleSource * self)
+{
+  return self->priv->font_desc;
+}
+
+/**
+ * ges_timeline_title_source_get_halignment:
+ * @self: a #GESTimelineTitleSource
+ *
+ * Returns: The horizontal aligment used by @self.
+ *
+ */
+GESTextHAlign
+ges_timeline_title_source_get_halignment (GESTimelineTitleSource * self)
+{
+  return self->priv->halign;
+}
+
+/**
+ * ges_timeline_title_source_get_valignment:
+ * @self: a #GESTimelineTitleSource
+ *
+ * Returns: The vertical aligment used by @self.
+ *
+ */
+GESTextVAlign
+ges_timeline_title_source_get_valignment (GESTimelineTitleSource * self)
+{
+  return self->priv->valign;
+}
+
+
+/**
+ * ges_timeline_title_source_is_muted:
+ * @self: a #GESTimelineTitleSource
+ *
+ * Returns: Whether the audio track of @self is muted or not.
+ *
+ */
+gboolean
+ges_timeline_title_source_is_muted (GESTimelineTitleSource * self)
+{
+  return self->priv->mute;
+}
+
 static GESTrackObject *
 ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
     GESTrack * track)
 {
 
-  GESTimelineTitleSource *tfs = (GESTimelineTitleSource *) obj;
+  GESTimelineTitleSourcePrivate *priv = GES_TIMELINE_TITLE_SOURCE (obj)->priv;
   GESTrackObject *res = NULL;
 
   GST_DEBUG ("Creating a GESTrackTitleSource");
@@ -377,18 +468,18 @@ ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_title_source_new ();
     GST_DEBUG ("Setting text property");
-    ges_track_title_source_set_text ((GESTrackTitleSource *) res, tfs->text);
+    ges_track_title_source_set_text ((GESTrackTitleSource *) res, priv->text);
     ges_track_title_source_set_font_desc ((GESTrackTitleSource *) res,
-        tfs->font_desc);
+        priv->font_desc);
     ges_track_title_source_set_halignment ((GESTrackTitleSource *) res,
-        tfs->halign);
+        priv->halign);
     ges_track_title_source_set_valignment ((GESTrackTitleSource *) res,
-        tfs->valign);
+        priv->valign);
   }
 
   else if (track->type == GES_TRACK_TYPE_AUDIO) {
     res = (GESTrackObject *) ges_track_audio_test_source_new ();
-    if (tfs->mute)
+    if (priv->mute)
       ges_track_object_set_active (res, FALSE);
   }
 
@@ -396,7 +487,7 @@ ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
 }
 
 /**
- * ges_timeline_titlesource_new:
+ * ges_timeline_title_source_new:
  *
  * Creates a new #GESTimelineTitleSource
  *
