@@ -689,11 +689,11 @@ dnl *** DTS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DTS, true)
 AG_GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
   HAVE_DTS="yes"
-  AG_GST_CHECK_LIBHEADER(DTS, dca, dca_init, -lm, dca.h,
-    DTS_LIBS="-ldca -lm", HAVE_DTS="no")
+  AG_GST_CHECK_LIBHEADER(DTS, dca, dca_init, $LIBM, dca.h,
+    DTS_LIBS="-ldca $LIBM", HAVE_DTS="no")
   if test $HAVE_DTS = "no"; then
-    AG_GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, -lm, dts.h,
-      [ DTS_LIBS="-ldts_pic -lm"
+    AG_GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, $LIBM, dts.h,
+      [ DTS_LIBS="-ldts_pic $LIBM"
         AC_DEFINE(DTS_OLD, 1, [Define if an old libdts is used])
       ])
   fi
@@ -750,7 +750,7 @@ return 0;
       AC_MSG_WARN([Wrong version of divx4linux installed])
     ])
   fi
-  LIBS="-lm"
+  LIBS="$LIBM"
   if test x$HAVE_DIVX = xyes; then
     AC_CHECK_LIB(divxencore, encore, , [
       AC_MSG_WARN([Divx4linux encore libs not found])
@@ -764,8 +764,8 @@ return 0;
   ])
   fi
   if test x$HAVE_DIVX = xyes; then
-    DIVXENC_LIBS="-ldivxencore -lm"
-    DIVXDEC_LIBS="-ldivxdecore -lm"
+    DIVXENC_LIBS="-ldivxencore $LIBM"
+    DIVXDEC_LIBS="-ldivxdecore $LIBM"
     AC_SUBST(DIVXENC_LIBS)
     AC_SUBST(DIVXDEC_LIBS)
   fi
@@ -792,8 +792,8 @@ AG_GST_CHECK_FEATURE(EXIF, [exif], exif, [
 dnl **** Free AAC Encoder (FAAC) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
 AG_GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
-  AG_GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, -lm, faac.h,
-    FAAC_LIBS="-lfaac -lm")
+  AG_GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, $LIBM, faac.h,
+    FAAC_LIBS="-lfaac $LIBM")
   AS_SCRUB_INCLUDE(FAAC_CFLAGS)
   AC_SUBST(FAAC_LIBS)
 ])
@@ -803,11 +803,11 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
 AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   HAVE_FAAD="yes"
   faad_hdr=""
-  AG_GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h,
-    FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
+  AG_GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, $LIBM, faad.h,
+    FAAD_LIBS="-lfaad $LIBM", HAVE_FAAD="no")
   if test $HAVE_FAAD = "no"; then
-    AG_GST_CHECK_LIBHEADER(FAAD, faad, NeAACDecOpen, -lm, neaacdec.h,
-      [ FAAD_LIBS="-lfaad -lm"
+    AG_GST_CHECK_LIBHEADER(FAAD, faad, NeAACDecOpen, $LIBM, neaacdec.h,
+      [ FAAD_LIBS="-lfaad $LIBM"
         AC_DEFINE(FAAD_IS_NEAAC, 1, [Define if AAC is using new api prefix])
         faad_hdr="neaacdec.h"
       ], [
@@ -868,8 +868,8 @@ AG_GST_CHECK_FEATURE(FBDEV, [linux framebuffer], fbdevsink, [
 dnl *** flite ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLITE, true)
 AG_GST_CHECK_FEATURE(FLITE, [Flite plugin], flite, [
-  AG_GST_CHECK_LIBHEADER(FLITE, flite, flite_init, -lm, flite/flite.h,
-    FLITE_LIBS="-lflite -lflite_cmu_us_kal -lflite_usenglish -lflite_cmulex -lm")
+  AG_GST_CHECK_LIBHEADER(FLITE, flite, flite_init, $LIBM, flite/flite.h,
+    FLITE_LIBS="-lflite -lflite_cmu_us_kal -lflite_usenglish -lflite_cmulex $LIBM")
 
   AC_SUBST(FLITE_CFLAGS)
   AC_SUBST(FLITE_LIBS)
@@ -991,7 +991,7 @@ PKG_CHECK_EXISTS(mjpegtools >= 1.6.1.93 mjpegtools < 1.8.0, [
       OLD_CFLAGS="$CFLAGS"
       OLD_LIBS="$LIBS"
       CFLAGS="$MJPEG_CFLAGS"
-      LIBS="$LIBS $MJPEG_LIBS -lmjpegutils -lm -lpthread"
+      LIBS="$LIBS $MJPEG_LIBS -lmjpegutils $LIBM -lpthread"
       AC_CHECK_FUNC(mjpeg_loglev_t, [
         mjpegtools_api=10903
         ], [
@@ -1028,7 +1028,7 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
       dnl check headers
       mpeg2enc_headers_ok=no
       AC_CHECK_HEADER([mpeg2encoder.hh], [
-        MPEG2ENC_LIBS="$MPEG2ENC_LIBS -lmpeg2encpp -lm -lpthread"
+        MPEG2ENC_LIBS="$MPEG2ENC_LIBS -lmpeg2encpp $LIBM -lpthread"
         OLD_LIBS="$LIBS"
         LIBS="$LIBS $MPEG2ENC_LIBS"
         AC_MSG_CHECKING([for valid mpeg2enc objects])
@@ -1096,7 +1096,7 @@ AG_GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [
       OLD_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$CPPFLAGS $MPLEX_CFLAGS"
       AC_CHECK_HEADER(interact.hpp, [
-        MPLEX_LIBS="$MPLEX_LIBS -lmplex2 -lm"
+        MPLEX_LIBS="$MPLEX_LIBS -lmplex2 $LIBM"
         OLD_LIBS="$LIBS"
         LIBS="$LIBS $MPLEX_LIBS"
         OLD_LDFLAGS="$LDFLAGS"
@@ -1427,7 +1427,7 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
   HAVE_XVID=no
   AC_CHECK_HEADER(xvid.h, [
     OLD_LIBS="$LIBS"
-    LIBS="-lpthread -lm"
+    LIBS="-lpthread $LIBM"
     AC_CHECK_LIB(xvidcore, xvid_encore, [
       AC_CHECK_LIB(xvidcore, xvid_decore, [
         AC_CHECK_LIB(xvidcore, xvid_global, [
@@ -1437,7 +1437,7 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
               #error "Incompatible XviD API version"
               #endif
           ],[ AC_MSG_RESULT(yes)
-            XVID_LIBS="-lxvidcore -lm"
+            XVID_LIBS="-lxvidcore $LIBM"
             AC_SUBST(XVID_LIBS)
             HAVE_XVID=yes
           ], AC_MSG_RESULT(no) )
@@ -1544,7 +1544,7 @@ AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
     HAVE_VP8_DECODER=no
 
     OLD_LIBS="$LIBS"
-    LIBS="$LIBS -lm -lpthread"
+    LIBS="$LIBS $LIBM -lpthread"
     AC_CHECK_LIB(vpx, vpx_codec_vp8_cx_algo, [
       HAVE_VP8=yes
       AC_DEFINE(HAVE_VP8_ENCODER, 1, [Defined if the VP8 encoder is available])
