@@ -2936,6 +2936,9 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_SIPR:
         rank = GST_RANK_SECONDARY;
         break;
+      case CODEC_ID_MP3:
+        rank = GST_RANK_NONE;
+        break;
       default:
         rank = GST_RANK_MARGINAL;
         break;
