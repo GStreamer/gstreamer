@@ -280,7 +280,7 @@ ges_track_text_overlay_get_font_desc (GESTrackTextOverlay * self)
  * ges_track_text_overlay_get_halignment:
  * @self: a GESTrackTextOverlay
  *
- * Returns: The horizontal aligment used by this @source.
+ * Returns: The horizontal aligment used by @source.
  */
 GESTextHAlign
 ges_track_text_overlay_get_halignment (GESTrackTextOverlay * self)
@@ -292,7 +292,7 @@ ges_track_text_overlay_get_halignment (GESTrackTextOverlay * self)
  * ges_track_text_overlay_get_valignment:
  * @self: a GESTrackTextOverlay
  *
- * Returns: The vertical aligment used by this @source.
+ * Returns: The vertical aligment used by @source.
  */
 GESTextVAlign
 ges_track_text_overlay_get_valignment (GESTrackTextOverlay * self)

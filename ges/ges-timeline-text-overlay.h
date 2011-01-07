@@ -53,15 +53,9 @@ typedef struct _GESTimelineTextOverlayPrivate GESTimelineTextOverlayPrivate;
  */
 
 struct _GESTimelineTextOverlay {
-  /*< private >*/
   GESTimelineOverlay parent;
 
-  gboolean mute;
-  gchar *text;
-  gchar *font_desc;
-  GESTextHAlign halign;
-  GESTextVAlign valign;
-
+  /*< private >*/
   GESTimelineTextOverlayPrivate *priv;
 
   /* Padding for API extension */
@@ -83,9 +77,35 @@ struct _GESTimelineTextOverlayClass {
 
 GType ges_timeline_text_overlay_get_type (void);
 
+void
+ges_timeline_text_overlay_set_text (GESTimelineTextOverlay * self,
+    const gchar * text);
+
+void
+ges_timeline_text_overlay_set_font_desc (GESTimelineTextOverlay * self,
+    const gchar * font_desc);
+
+void
+ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
+    GESTextVAlign valign);
+
+void
+ges_timeline_text_overlay_set_halign (GESTimelineTextOverlay * self,
+    GESTextHAlign halign);
+
+const gchar* ges_timeline_text_overlay_get_text (GESTimelineTextOverlay * self);
+
+const gchar* 
+ges_timeline_text_overlay_get_font_desc (GESTimelineTextOverlay * self);
+
+GESTextVAlign
+ges_timeline_text_overlay_get_valignment (GESTimelineTextOverlay * self);
+
+GESTextHAlign
+ges_timeline_text_overlay_get_halignment (GESTimelineTextOverlay * self);
+
 GESTimelineTextOverlay* ges_timeline_text_overlay_new (void);
 
 G_END_DECLS
 
 #endif /* _GES_TL_OVERLAY */
-

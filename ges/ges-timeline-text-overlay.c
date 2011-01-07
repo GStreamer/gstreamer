@@ -42,8 +42,10 @@ G_DEFINE_TYPE (GESTimelineTextOverlay, ges_timeline_text_overlay,
 
 struct _GESTimelineTextOverlayPrivate
 {
-  /* Dummy variable */
-  void *nothing;
+  gchar *text;
+  gchar *font_desc;
+  GESTextHAlign halign;
+  GESTextVAlign valign;
 };
 
 enum
@@ -55,23 +57,6 @@ enum
   PROP_VALIGNMENT,
 };
 
-
-static void
-ges_timeline_text_overlay_set_text (GESTimelineTextOverlay * self,
-    const gchar * text);
-
-static void
-ges_timeline_text_overlay_set_font_desc (GESTimelineTextOverlay * self,
-    const gchar * font_desc);
-
-static void
-ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
-    GESTextVAlign valign);
-
-static void
-ges_timeline_text_overlay_set_halign (GESTimelineTextOverlay * self,
-    GESTextHAlign halign);
-
 static GESTrackObject
     * ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
@@ -80,20 +65,21 @@ static void
 ges_timeline_text_overlay_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTimelineTextOverlay *tfs = GES_TIMELINE_TEXT_OVERLAY (object);
+  GESTimelineTextOverlayPrivate *priv =
+      GES_TIMELINE_TEXT_OVERLAY (object)->priv;
 
   switch (property_id) {
     case PROP_TEXT:
-      g_value_set_string (value, tfs->text);
+      g_value_set_string (value, priv->text);
       break;
     case PROP_FONT_DESC:
-      g_value_set_string (value, tfs->font_desc);
+      g_value_set_string (value, priv->font_desc);
       break;
     case PROP_HALIGNMENT:
-      g_value_set_enum (value, tfs->halign);
+      g_value_set_enum (value, priv->halign);
       break;
     case PROP_VALIGNMENT:
-      g_value_set_enum (value, tfs->valign);
+      g_value_set_enum (value, priv->valign);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -127,12 +113,13 @@ ges_timeline_text_overlay_set_property (GObject * object, guint property_id,
 static void
 ges_timeline_text_overlay_dispose (GObject * object)
 {
-  GESTimelineTextOverlay *self = GES_TIMELINE_TEXT_OVERLAY (object);
+  GESTimelineTextOverlayPrivate *priv =
+      GES_TIMELINE_TEXT_OVERLAY (object)->priv;
 
-  if (self->text)
-    g_free (self->text);
-  if (self->font_desc)
-    g_free (self->font_desc);
+  if (priv->text)
+    g_free (priv->text);
+  if (priv->font_desc)
+    g_free (priv->font_desc);
 
   G_OBJECT_CLASS (ges_timeline_text_overlay_parent_class)->dispose (object);
 }
@@ -206,13 +193,22 @@ ges_timeline_text_overlay_init (GESTimelineTextOverlay * self)
 
   GES_TIMELINE_OBJECT (self)->duration = 0;
   /* Not 100% needed since gobject contents are memzero'd when created */
-  self->text = NULL;
-  self->font_desc = NULL;
-  self->halign = DEFAULT_PROP_HALIGNMENT;
-  self->valign = DEFAULT_PROP_VALIGNMENT;
+  self->priv->text = NULL;
+  self->priv->font_desc = NULL;
+  self->priv->halign = DEFAULT_PROP_HALIGNMENT;
+  self->priv->valign = DEFAULT_PROP_VALIGNMENT;
 }
 
-static void
+/**
+ * ges_timeline_text_overlay_set_text:
+ * @self: the #GESTimelineTextOverlay* to set text on
+ * @text: the text to render. an internal copy of this text will be
+ * made.
+ *
+ * Sets the text this timeline object will render.
+ *
+ */
+void
 ges_timeline_text_overlay_set_text (GESTimelineTextOverlay * self,
     const gchar * text)
 {
@@ -221,10 +217,10 @@ ges_timeline_text_overlay_set_text (GESTimelineTextOverlay * self,
 
   GST_DEBUG ("self:%p, text:%s", self, text);
 
-  if (self->text)
-    g_free (self->text);
+  if (self->priv->text)
+    g_free (self->priv->text);
 
-  self->text = g_strdup (text);
+  self->priv->text = g_strdup (text);
 
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
@@ -232,14 +228,22 @@ ges_timeline_text_overlay_set_text (GESTimelineTextOverlay * self,
 
     if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_text (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->text);
+          (trackobject), self->priv->text);
 
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
   g_list_free (trackobjects);
 }
 
-static void
+/**
+ * ges_timeline_text_overlay_set_font_desc:
+ * @self: the #GESTimelineTextOverlay*
+ * @font_desc: the pango font description
+ *
+ * Sets the pango font description of the text
+ *
+ */
+void
 ges_timeline_text_overlay_set_font_desc (GESTimelineTextOverlay * self,
     const gchar * font_desc)
 {
@@ -248,10 +252,10 @@ ges_timeline_text_overlay_set_font_desc (GESTimelineTextOverlay * self,
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
 
-  if (self->font_desc)
-    g_free (self->font_desc);
+  if (self->priv->font_desc)
+    g_free (self->priv->font_desc);
 
-  self->font_desc = g_strdup (font_desc);
+  self->priv->font_desc = g_strdup (font_desc);
 
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
@@ -259,7 +263,7 @@ ges_timeline_text_overlay_set_font_desc (GESTimelineTextOverlay * self,
 
     if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_font_desc (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->font_desc);
+          (trackobject), self->priv->font_desc);
 
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
@@ -267,7 +271,15 @@ ges_timeline_text_overlay_set_font_desc (GESTimelineTextOverlay * self,
 
 }
 
-static void
+/**
+ * ges_timeline_text_overlay_set_halign:
+ * @self: the #GESTimelineTextOverlay* to set horizontal alignement of text on
+ * @halign: #GESTextHAlign
+ *
+ * Sets the horizontal aligment of the text.
+ *
+ */
+void
 ges_timeline_text_overlay_set_halign (GESTimelineTextOverlay * self,
     GESTextHAlign halign)
 {
@@ -276,7 +288,7 @@ ges_timeline_text_overlay_set_halign (GESTimelineTextOverlay * self,
 
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
-  self->halign = halign;
+  self->priv->halign = halign;
 
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
@@ -284,7 +296,7 @@ ges_timeline_text_overlay_set_halign (GESTimelineTextOverlay * self,
 
     if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_halignment (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->halign);
+          (trackobject), self->priv->halign);
 
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
@@ -292,7 +304,15 @@ ges_timeline_text_overlay_set_halign (GESTimelineTextOverlay * self,
 
 }
 
-static void
+/**
+ * ges_timeline_text_overlay_set_valign:
+ * @self: the #GESTimelineTextOverlay* to set vertical alignement of text on
+ * @valign: #GESTextVAlign
+ *
+ * Sets the vertical aligment of the text.
+ *
+ */
+void
 ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
     GESTextVAlign valign)
 {
@@ -301,7 +321,7 @@ ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
 
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
-  self->valign = valign;
+  self->priv->valign = valign;
 
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
@@ -309,7 +329,7 @@ ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
 
     if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_valignment (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->valign);
+          (trackobject), self->priv->valign);
 
     g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
@@ -317,12 +337,61 @@ ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
 
 }
 
+/**
+ * ges_timeline_text_overlay_get_text:
+ * @self: a #GESTimelineTextOverlay
+ *
+ * Returns: The text currently set on @self.
+ *
+ */
+const gchar *
+ges_timeline_text_overlay_get_text (GESTimelineTextOverlay * self)
+{
+  return self->priv->text;
+}
+
+/**
+ * ges_timeline_text_overlay_get_font_desc:
+ * @self: a #GESTimelineTextOverlay
+ *
+ * Returns: The pango font description used by @self.
+ */
+const char *
+ges_timeline_text_overlay_get_font_desc (GESTimelineTextOverlay * self)
+{
+  return self->priv->font_desc;
+}
+
+/**
+ * ges_timeline_text_overlay_get_halignment:
+ * @self: a #GESTimelineTextOverlay
+ *
+ * Returns: The horizontal aligment used by @self.
+ */
+GESTextHAlign
+ges_timeline_text_overlay_get_halignment (GESTimelineTextOverlay * self)
+{
+  return self->priv->halign;
+}
+
+/**
+ * ges_timeline_text_overlay_get_valignment:
+ * @self: a #GESTimelineTextOverlay
+ *
+ * Returns: The vertical aligment used by @self.
+ */
+GESTextVAlign
+ges_timeline_text_overlay_get_valignment (GESTimelineTextOverlay * self)
+{
+  return self->priv->valign;
+}
+
 static GESTrackObject *
 ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
     GESTrack * track)
 {
 
-  GESTimelineTextOverlay *tfs = (GESTimelineTextOverlay *) obj;
+  GESTimelineTextOverlayPrivate *priv = GES_TIMELINE_TEXT_OVERLAY (obj)->priv;
   GESTrackObject *res = NULL;
 
   GST_DEBUG ("Creating a GESTrackOverlay");
@@ -330,13 +399,13 @@ ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_text_overlay_new ();
     GST_DEBUG ("Setting text property");
-    ges_track_text_overlay_set_text ((GESTrackTextOverlay *) res, tfs->text);
+    ges_track_text_overlay_set_text ((GESTrackTextOverlay *) res, priv->text);
     ges_track_text_overlay_set_font_desc ((GESTrackTextOverlay *) res,
-        tfs->font_desc);
+        priv->font_desc);
     ges_track_text_overlay_set_halignment ((GESTrackTextOverlay *) res,
-        tfs->halign);
+        priv->halign);
     ges_track_text_overlay_set_valignment ((GESTrackTextOverlay *) res,
-        tfs->valign);
+        priv->valign);
   }
 
   return res;
