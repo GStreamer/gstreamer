@@ -53,6 +53,9 @@
 /* The GnomeVFS modules directory. */
 #undef GNOME_VFS_MODULES_DIR
 
+/* system wide data directory */
+#define GST_DATADIR PREFIX "\\share"
+
 /* macro to use to show function name */
 #undef GST_FUNCTION
 
@@ -68,14 +71,17 @@
 /* GStreamer license */
 #define GST_LICENSE "LGPL"
 
+/* major/minor version */
+#define GST_MAJORMINOR "0.10"
+
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2010-12-02T00:05Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-01-06T23:48Z"
 
 /* I know the API is subject to change. */
 #undef G_UDEV_API_IS_SUBJECT_TO_CHANGE
@@ -331,7 +337,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.31.1"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.31.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -340,7 +346,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.31.1"
+#define PACKAGE_VERSION "0.10.31.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -368,7 +374,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.31.1"
+#define VERSION "0.10.31.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

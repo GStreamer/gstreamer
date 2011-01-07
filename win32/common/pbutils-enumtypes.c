@@ -6,6 +6,8 @@
 #include "pbutils.h"
 #include "codec-utils.h"
 #include "descriptions.h"
+#include "encoding-profile.h"
+#include "encoding-target.h"
 #include "install-plugins.h"
 #include "missing-plugins.h"
 #include "gstdiscoverer.h"
