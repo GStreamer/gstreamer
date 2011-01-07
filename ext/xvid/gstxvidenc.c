@@ -714,11 +714,17 @@ gst_xvidenc_setcaps (GstPad * pad, GstCaps * vscaps)
 
   structure = gst_caps_get_structure (vscaps, 0);
 
-  g_return_val_if_fail (gst_structure_get_int (structure, "width", &w), FALSE);
-  g_return_val_if_fail (gst_structure_get_int (structure, "height", &h), FALSE);
+  if (!gst_structure_get_int (structure, "width", &w) ||
+      !gst_structure_get_int (structure, "height", &h)) {
+    return FALSE;
+  }
+
   fps = gst_structure_get_value (structure, "framerate");
-  g_return_val_if_fail (w > 0 && h > 0
-      && fps != NULL && GST_VALUE_HOLDS_FRACTION (fps), FALSE);
+  if (fps == NULL || !GST_VALUE_HOLDS_FRACTION (fps)) {
+    GST_WARNING_OBJECT (pad, "no framerate specified, or not a GstFraction");
+    return FALSE;
+  }
+
   /* optional par info */
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
@@ -1039,7 +1045,6 @@ gst_xvidenc_set_property (GObject * object,
   GstXvidEnc *xvidenc;
   guint offset;
 
-  g_return_if_fail (GST_IS_XVIDENC (object));
   xvidenc = GST_XVIDENC (object);
 
   if (prop_id > xvidenc_prop_count) {
@@ -1050,7 +1055,9 @@ gst_xvidenc_set_property (GObject * object,
   /* our param specs should have such qdata */
   offset =
       GPOINTER_TO_UINT (g_param_spec_get_qdata (pspec, xvidenc_pspec_quark));
-  g_return_if_fail (offset != 0);
+
+  if (offset == 0)
+    return;
 
   switch (G_PARAM_SPEC_VALUE_TYPE (pspec)) {
     case G_TYPE_BOOLEAN:
@@ -1080,7 +1087,6 @@ gst_xvidenc_get_property (GObject * object,
   GstXvidEnc *xvidenc;
   guint offset;
 
-  g_return_if_fail (GST_IS_XVIDENC (object));
   xvidenc = GST_XVIDENC (object);
 
   if (prop_id > xvidenc_prop_count) {
@@ -1091,7 +1097,9 @@ gst_xvidenc_get_property (GObject * object,
   /* our param specs should have such qdata */
   offset =
       GPOINTER_TO_UINT (g_param_spec_get_qdata (pspec, xvidenc_pspec_quark));
-  g_return_if_fail (offset != 0);
+
+  if (offset == 0)
+    return;
 
   switch (G_PARAM_SPEC_VALUE_TYPE (pspec)) {
     case G_TYPE_BOOLEAN:
