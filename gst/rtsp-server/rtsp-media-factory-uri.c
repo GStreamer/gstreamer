@@ -104,7 +104,7 @@ gst_rtsp_media_factory_uri_class_init (GstRTSPMediaFactoryURIClass * klass)
    * without a payloader.
    */
   g_object_class_install_property (gobject_class, PROP_USE_GSTPAY,
-      g_param_spec_string ("use-gstpay", "Use gstpay",
+      g_param_spec_boolean ("use-gstpay", "Use gstpay",
           "Use the gstpay payloader to avoid decoding", DEFAULT_USE_GSTPAY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
