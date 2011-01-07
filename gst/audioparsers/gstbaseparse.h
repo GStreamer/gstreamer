@@ -200,7 +200,7 @@ struct _GstBaseParse {
  *                   Called just prior to pushing a frame (after any pending
  *                   events have been sent) to give subclass a chance to perform
  *                   additional actions at this time (e.g. tag sending) or to
- *                   decide whether this buffer should be dropped or no
+ *                   decide whether this buffer should be dropped or not
  *                   (e.g. custom segment clipping).
  *
  * Subclasses can override any of the available virtual methods or not, as

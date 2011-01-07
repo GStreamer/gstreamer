@@ -90,7 +90,8 @@
  *     <listitem><para>
  *       After valid frame is found, it will be passed again to subclass with
  *       @parse_frame call. Now subclass is responsible for parsing the
- *       frame contents and setting the caps, buffer timestamp and duration
+ *       frame contents and setting the caps, and buffer metadata (e.g.
+ *       buffer timestamp and duration, or keyframe if applicable).
  *       (although the latter can also be done by GstBaseParse if it is
  *       appropriately configured, see below).
  *     </para></listitem>
@@ -2202,6 +2203,9 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
 
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
+  GST_LOG_OBJECT (parse, "scanning for frame at offset %" G_GUINT64_FORMAT
+      " (%#" G_GINT64_MODIFIER "x)", parse->priv->offset, parse->priv->offset);
+
   while (TRUE) {
 
     min_size = MAX (parse->priv->min_frame_size, fsize);
@@ -2640,8 +2644,12 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
  * @parse: the #GstBaseParse to set
  * @passthrough: boolean indicating passthrough mode.
  *
- * Set passthrough mode for this parser.  If operating in passthrough,
- * incoming buffers are pushed through unmodified.
+ * Set passthrough mode for this parser (which only applies operating in pull
+ * mode).  If operating in passthrough, incoming buffers are pushed through
+ * unmodified.  That is, no @check_valid_frame or @parse_frame callbacks
+ * will be invoked.  On the ohter hand, @pre_push_buffer is still invoked,
+ * where subclass can perform as much or as little is appropriate for
+ * "passthrough" semantics.
  */
 void
 gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
