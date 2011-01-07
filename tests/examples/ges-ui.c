@@ -598,7 +598,8 @@ connect_to_test_source (GESTimelineObject * object, App * app)
 
   GESTimelineTestSource *obj;
   obj = GES_TIMELINE_TEST_SOURCE (object);
-  gtk_combo_box_set_active (app->background_type, obj->vpattern);
+  gtk_combo_box_set_active (app->background_type,
+      ges_timeline_test_source_get_vpattern (obj));
 
   g_signal_connect (G_OBJECT (object), "notify::volume",
       G_CALLBACK (test_source_notify_volume_changed_cb), app);
@@ -612,7 +613,8 @@ connect_to_test_source (GESTimelineObject * object, App * app)
   pspec = G_PARAM_SPEC_DOUBLE (g_object_class_find_property (klass, "freq"));
   gtk_spin_button_set_range (app->frequency, pspec->minimum, pspec->maximum);
   gtk_spin_button_set_value (app->frequency,
-      GES_TIMELINE_TEST_SOURCE (object)->freq);
+      ges_timeline_test_source_get_frequency (GES_TIMELINE_TEST_SOURCE
+          (object)));
 }
 
 static void

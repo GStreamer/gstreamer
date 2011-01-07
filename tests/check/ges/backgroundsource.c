@@ -161,8 +161,8 @@ GST_START_TEST (test_test_source_in_layer)
   trobj = ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source),
       a, GES_TYPE_TRACK_AUDIO_TEST_SOURCE);
   g_assert (GES_IS_TRACK_AUDIO_TEST_SOURCE (trobj));
-  assert_equals_float (source->freq, 440);
-  assert_equals_float (source->volume, 0);
+  assert_equals_float (ges_timeline_test_source_get_frequency (source), 440);
+  assert_equals_float (ges_timeline_test_source_get_volume (source), 0);
 
   g_object_get (source, "freq", &freq, "volume", &volume, NULL);
   assert_equals_float (freq, 440);

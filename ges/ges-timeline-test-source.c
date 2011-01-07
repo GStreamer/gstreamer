@@ -40,8 +40,10 @@ G_DEFINE_TYPE (GESTimelineTestSource, ges_timeline_test_source,
 
 struct _GESTimelineTestSourcePrivate
 {
-  /*  Dummy variable */
-  void *nothing;
+  gboolean mute;
+  GESVideoTestPattern vpattern;
+  gdouble freq;
+  gdouble volume;
 };
 
 enum
@@ -53,20 +55,6 @@ enum
   PROP_VOLUME,
 };
 
-static void
-ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute);
-
-static void
-ges_timeline_test_source_set_vpattern (GESTimelineTestSource * self,
-    GESVideoTestPattern vpattern);
-
-static void
-ges_timeline_test_source_set_freq (GESTimelineTestSource * self, gdouble freq);
-
-static void
-ges_timeline_test_source_set_volume (GESTimelineTestSource * self,
-    gdouble volume);
-
 static GESTrackObject
     * ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
@@ -75,20 +63,20 @@ static void
 ges_timeline_test_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTimelineTestSource *tfs = GES_TIMELINE_TEST_SOURCE (object);
+  GESTimelineTestSourcePrivate *priv = GES_TIMELINE_TEST_SOURCE (object)->priv;
 
   switch (property_id) {
     case PROP_MUTE:
-      g_value_set_boolean (value, tfs->mute);
+      g_value_set_boolean (value, priv->mute);
       break;
     case PROP_VPATTERN:
-      g_value_set_enum (value, tfs->vpattern);
+      g_value_set_enum (value, priv->vpattern);
       break;
     case PROP_FREQ:
-      g_value_set_double (value, tfs->freq);
+      g_value_set_double (value, priv->freq);
       break;
     case PROP_VOLUME:
-      g_value_set_double (value, tfs->volume);
+      g_value_set_double (value, priv->volume);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -109,7 +97,7 @@ ges_timeline_test_source_set_property (GObject * object, guint property_id,
       ges_timeline_test_source_set_vpattern (tfs, g_value_get_enum (value));
       break;
     case PROP_FREQ:
-      ges_timeline_test_source_set_freq (tfs, g_value_get_double (value));
+      ges_timeline_test_source_set_frequency (tfs, g_value_get_double (value));
       break;
     case PROP_VOLUME:
       ges_timeline_test_source_set_volume (tfs, g_value_get_double (value));
@@ -182,12 +170,20 @@ ges_timeline_test_source_init (GESTimelineTestSource * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TIMELINE_TEST_SOURCE, GESTimelineTestSourcePrivate);
 
-  self->freq = 0;
-  self->volume = 0;
+  self->priv->freq = 0;
+  self->priv->volume = 0;
   GES_TIMELINE_OBJECT (self)->duration = 0;
 }
 
-static void
+/**
+ * ges_timeline_test_source_set_mute:
+ * @self: the #GESTimelineTestSource on which to mute or unmute the audio track
+ * @mute: %TRUE to mute the audio track, %FALSE to unmute it
+ *
+ * Sets whether the audio track of this timeline object is muted or not.
+ *
+ */
+void
 ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute)
 {
   GList *tmp, *trackobjects;
@@ -195,7 +191,7 @@ ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute)
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
 
-  self->mute = mute;
+  self->priv->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
   trackobjects = ges_timeline_object_get_track_objects (object);
@@ -210,14 +206,22 @@ ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute)
   g_list_free (trackobjects);
 }
 
-static void
+/**
+ * ges_timeline_test_source_set_vpattern:
+ * @self: the #GESTimelineTestSource to set the pattern on
+ * @vpattern: the #GESVideoTestPattern to use on @self
+ *
+ * Sets which video pattern to display on @self.
+ *
+ */
+void
 ges_timeline_test_source_set_vpattern (GESTimelineTestSource * self,
     GESVideoTestPattern vpattern)
 {
   GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
-  self->vpattern = vpattern;
+  self->priv->vpattern = vpattern;
 
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
@@ -231,13 +235,22 @@ ges_timeline_test_source_set_vpattern (GESTimelineTestSource * self,
   g_list_free (trackobjects);
 }
 
-static void
-ges_timeline_test_source_set_freq (GESTimelineTestSource * self, gdouble freq)
+/**
+ * ges_timeline_test_source_set_frequency:
+ * @self: the #GESTimelineTestSource to set the frequency on
+ * @freq: the frequency you want to use on @self
+ *
+ * Sets the frequency to generate. See audiotestsrc element.
+ *
+ */
+void
+ges_timeline_test_source_set_frequency (GESTimelineTestSource * self,
+    gdouble freq)
 {
   GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
-  self->freq = freq;
+  self->priv->freq = freq;
 
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
@@ -251,14 +264,22 @@ ges_timeline_test_source_set_freq (GESTimelineTestSource * self, gdouble freq)
   g_list_free (trackobjects);
 }
 
-static void
+/**
+ * ges_timeline_test_source_set_volume:
+ * @self: the #GESTimelineTestSource to set the volume on
+ * @volume: the volume of the audio signal you want to use on @self
+ *
+ * Sets the volume of the test audio signal.
+ *
+ */
+void
 ges_timeline_test_source_set_volume (GESTimelineTestSource * self,
     gdouble volume)
 {
   GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
-  self->volume = volume;
+  self->priv->volume = volume;
 
   trackobjects = ges_timeline_object_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
@@ -272,11 +293,60 @@ ges_timeline_test_source_set_volume (GESTimelineTestSource * self,
   g_list_free (trackobjects);
 }
 
+/**
+* ges_timeline_test_source_get_vpattern:
+ * @self: a #GESTimelineTestSource
+ *
+ * Returns: The #GESVideoTestPattern which is applied on @self.
+ */
+GESVideoTestPattern
+ges_timeline_test_source_get_vpattern (GESTimelineTestSource * self)
+{
+  return self->priv->vpattern;
+}
+
+/**
+ * ges_timeline_test_source_is_muted:
+ * @self: a #GESTimelineTestSource
+ *
+ * Returns: Whether the audio track of @self is muted or not.
+ */
+gboolean
+ges_timeline_test_source_is_muted (GESTimelineTestSource * self)
+{
+  return self->priv->mute;
+}
+
+/**
+ * ges_timeline_test_source_get_frequency:
+ * @self: a #GESTimelineTestSource
+ *
+ * Returns: The frequency @self generates. See audiotestsrc element.
+ */
+gdouble
+ges_timeline_test_source_get_frequency (GESTimelineTestSource * self)
+{
+  return self->priv->freq;
+}
+
+/**
+ * ges_timeline_test_source_get_volume:
+ * @self: a #GESTimelineTestSource
+ *
+ * Returns: The volume of the test audio signal applied on @self.
+ *
+ */
+gdouble
+ges_timeline_test_source_get_volume (GESTimelineTestSource * self)
+{
+  return self->priv->volume;
+}
+
 static GESTrackObject *
 ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
     GESTrack * track)
 {
-  GESTimelineTestSource *tfs = (GESTimelineTestSource *) obj;
+  GESTimelineTestSourcePrivate *priv = GES_TIMELINE_TEST_SOURCE (obj)->priv;
   GESTrackObject *res = NULL;
 
   GST_DEBUG ("Creating a GESTrackTestSource");
@@ -284,19 +354,19 @@ ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_video_test_source_new ();
     ges_track_video_test_source_set_pattern (
-        (GESTrackVideoTestSource *) res, tfs->vpattern);
+        (GESTrackVideoTestSource *) res, priv->vpattern);
   }
 
   else if (track->type == GES_TRACK_TYPE_AUDIO) {
     res = (GESTrackObject *) ges_track_audio_test_source_new ();
 
-    if (tfs->mute)
+    if (priv->mute)
       ges_track_object_set_active (res, FALSE);
 
     ges_track_audio_test_source_set_freq ((GESTrackAudioTestSource *) res,
-        tfs->freq);
+        priv->freq);
     ges_track_audio_test_source_set_volume ((GESTrackAudioTestSource *) res,
-        tfs->volume);
+        priv->volume);
   }
 
   return res;

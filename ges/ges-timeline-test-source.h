@@ -54,14 +54,10 @@ typedef struct _GESTimelineTestSourcePrivate GESTimelineTestSourcePrivate;
  */
 
 struct _GESTimelineTestSource {
-  /*< private >*/
+
   GESTimelineSource parent;
 
-  gboolean mute;
-  GESVideoTestPattern vpattern;
-  gdouble freq;
-  gdouble volume;
-  
+  /*< private >*/
   GESTimelineTestSourcePrivate *priv;
 
   /* Padding for API extension */
@@ -82,9 +78,30 @@ struct _GESTimelineTestSourceClass {
 
 GType ges_timeline_test_source_get_type (void);
 
+void
+ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute);
+
+void
+ges_timeline_test_source_set_vpattern (GESTimelineTestSource * self,
+    GESVideoTestPattern vpattern);
+
+void
+ges_timeline_test_source_set_frequency (GESTimelineTestSource * self, gdouble freq);
+
+void
+ges_timeline_test_source_set_volume (GESTimelineTestSource * self,
+    gdouble volume);
+
+
+GESVideoTestPattern
+ges_timeline_test_source_get_vpattern (GESTimelineTestSource * self);
+
+gboolean ges_timeline_test_source_is_muted (GESTimelineTestSource * self);
+gdouble ges_timeline_test_source_get_frequency (GESTimelineTestSource * self);
+gdouble ges_timeline_test_source_get_volume (GESTimelineTestSource * self);
+
 GESTimelineTestSource* ges_timeline_test_source_new (void);
-GESTimelineTestSource* ges_timeline_test_source_new_for_nick(gchar
-    * nick);
+GESTimelineTestSource* ges_timeline_test_source_new_for_nick(gchar * nick);
 
 G_END_DECLS
 
