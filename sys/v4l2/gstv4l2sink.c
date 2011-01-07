@@ -400,7 +400,10 @@ gst_v4l2sink_sync_overlay_fields (GstV4l2Sink * v4l2sink)
     memset (&format, 0x00, sizeof (struct v4l2_format));
     format.type = V4L2_BUF_TYPE_VIDEO_OVERLAY;
 
-    g_return_if_fail (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) >= 0);
+    if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0) {
+      GST_WARNING_OBJECT (v4l2sink, "VIDIOC_G_FMT failed");
+      return;
+    }
 
     GST_DEBUG_OBJECT (v4l2sink,
         "setting overlay: overlay_fields_set=0x%02x, top=%d, left=%d, width=%d, height=%d",
@@ -417,7 +420,10 @@ gst_v4l2sink_sync_overlay_fields (GstV4l2Sink * v4l2sink)
     if (v4l2sink->overlay_fields_set & RECT_HEIGHT_SET)
       format.fmt.win.w.height = v4l2sink->overlay.height;
 
-    g_return_if_fail (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) >= 0);
+    if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0) {
+      GST_WARNING_OBJECT (v4l2sink, "VIDIOC_S_FMT failed");
+      return;
+    }
 
     v4l2sink->overlay_fields_set = 0;
     v4l2sink->overlay = format.fmt.win.w;
@@ -438,7 +444,10 @@ gst_v4l2sink_sync_crop_fields (GstV4l2Sink * v4l2sink)
     memset (&crop, 0x00, sizeof (struct v4l2_crop));
     crop.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
 
-    g_return_if_fail (v4l2_ioctl (fd, VIDIOC_G_CROP, &crop) >= 0);
+    if (v4l2_ioctl (fd, VIDIOC_G_CROP, &crop) < 0) {
+      GST_WARNING_OBJECT (v4l2sink, "VIDIOC_G_CROP failed");
+      return;
+    }
 
     GST_DEBUG_OBJECT (v4l2sink,
         "setting crop: crop_fields_set=0x%02x, top=%d, left=%d, width=%d, height=%d",
@@ -455,7 +464,10 @@ gst_v4l2sink_sync_crop_fields (GstV4l2Sink * v4l2sink)
     if (v4l2sink->crop_fields_set & RECT_HEIGHT_SET)
       crop.c.height = v4l2sink->crop.height;
 
-    g_return_if_fail (v4l2_ioctl (fd, VIDIOC_S_CROP, &crop) >= 0);
+    if (v4l2_ioctl (fd, VIDIOC_S_CROP, &crop) < 0) {
+      GST_WARNING_OBJECT (v4l2sink, "VIDIOC_S_CROP failed");
+      return;
+    }
 
     v4l2sink->crop_fields_set = 0;
     v4l2sink->crop = crop.c;
