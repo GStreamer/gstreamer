@@ -219,4 +219,5 @@ mpegts_pmt_info_add_stream (MpegTsPmtInfo * pmt_info,
   g_value_init (&v, G_TYPE_OBJECT);
   g_value_take_object (&v, stream);
   g_value_array_append (pmt_info->streams, &v);
+  g_value_unset (&v);
 }

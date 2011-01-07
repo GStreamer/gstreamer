@@ -3137,6 +3137,7 @@ mpegts_demux_build_pat_info (GstMpegTSDemux * demux)
     g_value_init (&v, G_TYPE_OBJECT);
     g_value_take_object (&v, info_obj);
     g_value_array_append (vals, &v);
+    g_value_unset (&v);
   }
   return vals;
 }
