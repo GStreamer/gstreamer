@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2009-02-12 14:35+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -72,11 +72,14 @@ msgstr "Файл не содержит воспроизводимых поток
 msgid "This file is invalid and cannot be played."
 msgstr "Файл некорректен и не может быть воспроизведён."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Файл не полон и не может быть воспроизведён."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Файл повреждён и не может быть воспроизведён."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Файл не полон и не может быть воспроизведён."
 
 msgid "The video in this file might not play correctly."
 msgstr "Видео из этого файла может быть воспроизведено некорректно."
@@ -661,6 +664,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Не удалось выбрать вход %d для устройства %s"
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Не удалось определить активный вход устройства «%s». Возможно, это радио-"
+"устройство"
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Не удалось выбрать вход %d для устройства %s"
 
 #, c-format

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-10-25 20:15+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -71,11 +71,14 @@ msgstr "Dit bestand bevat geen afspeelbare stromen."
 msgid "This file is invalid and cannot be played."
 msgstr "Dit bestand is ongeldig en kan niet afgespeeld worden."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Dit bestand is incompleet en kan niet afgespeeld worden."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Dit bestand is beschadigd en kan niet afgespeeld worden."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Dit bestand is incompleet en kan niet afgespeeld worden."
 
 msgid "The video in this file might not play correctly."
 msgstr "De video in dit bestand zal mogelijk niet correct afgespeeld worden."
@@ -625,6 +628,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Kan invoer %d op apparaat '%s' niet instellen."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Kan de huidige instellingen van apparaat '%s' niet verkrijgen. Het is "
+"mogelijk een radio"
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Kan invoer %d op apparaat '%s' niet instellen."
 
 #, c-format

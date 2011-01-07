@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-10-26 08:50+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -68,11 +68,15 @@ msgstr "Den här filen innehåller inga uppspelningsbara strömmar."
 msgid "This file is invalid and cannot be played."
 msgstr "Den här filen är ogiltig och kan inte spelas upp."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Den här filen är inte fullständig och kan inte spelas upp."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Den här filen är skadad och kan inte spelas upp."
+
+#, fuzzy
+msgid "Invalid atom size."
+msgstr "Ogiltig cd-enhet"
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Den här filen är inte fullständig och kan inte spelas upp."
 
 msgid "The video in this file might not play correctly."
 msgstr "Videon i den här filen kanske inte kan spelas upp korrekt."
@@ -628,6 +632,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Kunde inte ställa in ingång %d på enheten %s."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Misslyckades med att få tag på aktuell ingång på enheten \"%s\". Kan vara en "
+"radioenhet"
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Kunde inte ställa in ingång %d på enheten %s."
 
 #, c-format
@@ -1485,9 +1500,6 @@ msgstr "Kan inte fungera utan en klocka"
 
 #~ msgid "_Set device"
 #~ msgstr "_Ställ in enhet"
-
-#~ msgid "Invalid CD device"
-#~ msgstr "Ogiltig cd-enhet"
 
 #~ msgid "Volume control"
 #~ msgstr "Volymkontroll"

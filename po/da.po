@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-10-26 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -73,11 +73,14 @@ msgstr "Denne fil indeholder ingen spilbar strøm."
 msgid "This file is invalid and cannot be played."
 msgstr "Denne fil er ufuldstændig og kan ikke afspilles."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Denne fil er ufuldstændig og kan ikke afspilles."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Denne fil er ødelagt og kan ikke afspilles."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Denne fil er ufuldstændig og kan ikke afspilles."
 
 msgid "The video in this file might not play correctly."
 msgstr "Videoen i denne fil afspilles måske ikke korrekt."
@@ -632,6 +635,16 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Kunne ikke sætte inddata %d for enhed %s."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Kunne ikke hente nuværende inddata for enhed '%s'. Måske er det en radioenhed"
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Kunne ikke sætte inddata %d for enhed %s."
 
 #, c-format

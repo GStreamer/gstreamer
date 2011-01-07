@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-18 00:43+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-11-04 01:21+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -73,11 +73,14 @@ msgstr "A fájl nem tartalmaz lejátszható adatfolyamokat."
 msgid "This file is invalid and cannot be played."
 msgstr "A fájl nem érvényes és nem játszható le."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "A fájl nem teljes és nem játszható le."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "A fájl sérült és nem játszható le."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "A fájl nem teljes és nem játszható le."
 
 msgid "The video in this file might not play correctly."
 msgstr "A fájlban található videó lehet, hogy nem játszható le megfelelően."
@@ -629,6 +632,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "A(z) %d. bemenet beállítása meghiúsult a(z) „%s” eszközön."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Az aktuális bemenet lekérése meghiúsult a(z) „%s” eszközről. Lehet, hogy ez "
+"egy rádióeszköz."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "A(z) %d. bemenet beállítása meghiúsult a(z) „%s” eszközön."
 
 #, c-format

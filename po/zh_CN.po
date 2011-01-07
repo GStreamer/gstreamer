@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2009-11-13 22:20+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -70,11 +70,14 @@ msgstr "此文件不包含可播放的流。"
 msgid "This file is invalid and cannot be played."
 msgstr "此文件无效，无法播放。"
 
-msgid "This file is incomplete and cannot be played."
-msgstr "此文件不完整且无法播放。"
-
 msgid "This file is corrupt and cannot be played."
 msgstr "此文件已损坏，无法播放。"
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "此文件不完整且无法播放。"
 
 msgid "The video in this file might not play correctly."
 msgstr "此文件中的视频可能无法正确播放。"
@@ -631,6 +634,15 @@ msgstr "获取设备‘%s’上的当前输入出错。也许它是一个广播�
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "设置设备 %2$s 上的输入 %1$d 时出错。"
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr "获取设备‘%s’上的当前输入出错。也许它是一个广播设备"
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "设置设备 %2$s 上的输入 %1$d 时出错。"
 
 #, c-format

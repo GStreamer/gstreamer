@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -72,10 +72,13 @@ msgstr ""
 msgid "This file is invalid and cannot be played."
 msgstr ""
 
-msgid "This file is incomplete and cannot be played."
+msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-msgid "This file is corrupt and cannot be played."
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
 msgstr ""
 
 msgid "The video in this file might not play correctly."
@@ -626,6 +629,15 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
 #, fuzzy, c-format

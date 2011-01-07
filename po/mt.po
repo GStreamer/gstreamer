@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -70,11 +70,14 @@ msgstr "Il-fajl ma fiħ l-ebda stream li tista tindaqq."
 msgid "This file is invalid and cannot be played."
 msgstr "Il-fajl mhux validu u ma jistax jindaqq"
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Il-fajl mhux komplut u ma jistax jindaqq,"
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Il-fajl huwa korrott u ma jistax jinfetaħ."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Il-fajl mhux komplut u ma jistax jindaqq,"
 
 msgid "The video in this file might not play correctly."
 msgstr "Jista jkun illi l-vidjo ġo dan il-fajl ma jidhirx sewwa."
@@ -656,6 +659,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Problema biex nissettja input %d fuq apparat %s."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Problema biex inġib current input fuq apparat '%s'. Jista jkun li huwa "
+"apparat tar-radju."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Problema biex nissettja input %d fuq apparat %s."
 
 #, c-format

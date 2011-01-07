@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2009-06-01 19:29+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -73,11 +73,14 @@ msgstr "このファイルには再生不可能なストリームが含まれて
 msgid "This file is invalid and cannot be played."
 msgstr "このファイルは不正なため再生することができません"
 
-msgid "This file is incomplete and cannot be played."
-msgstr "このファイルは正常ではないため、再生することができません"
-
 msgid "This file is corrupt and cannot be played."
 msgstr "このファイルは壊れているため再生することができません"
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "このファイルは正常ではないため、再生することができません"
 
 msgid "The video in this file might not play correctly."
 msgstr "このファイルの中の動画は正しく再生できないかもしれません"
@@ -696,6 +699,17 @@ msgstr ""
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr ""
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"デバイス '%s' 上の現在の入力の取得に失敗しました。ラジオデバイスかもしれませ"
+"ん"
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
+msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."

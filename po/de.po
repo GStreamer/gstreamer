@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-10-25 00:33+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -79,11 +79,14 @@ msgstr "Diese Datei enthält keine abspielbaren Ströme."
 msgid "This file is invalid and cannot be played."
 msgstr "Diese Datei ist ungültig und kann nicht wiedergegeben werden."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Diese Datei ist unvollständig und kann nicht wiedergegeben werden."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Diese Datei ist beschädigt und kann nicht wiedergegeben werden."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Diese Datei ist unvollständig und kann nicht wiedergegeben werden."
 
 msgid "The video in this file might not play correctly."
 msgstr "Das Video in dieser Datei wird vielleicht nicht korrekt wiedergegeben."
@@ -641,6 +644,18 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Festlegen der Eingabe »%d« des Geräts »%s« schlug fehl."
+
+# Sendegerät sicherlich nicht, eben eher ein Radio. Warum diese Fehlermeldung beie einem Radiogerät kommen könnte, weiß ich allerdings auch nicht.
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Auslesen der aktuellen Eingabe auf dem Gerät »%s« schlug fehl. Vielleicht "
+"ist es ein Radiogerät."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Festlegen der Eingabe »%d« des Geräts »%s« schlug fehl."
 
 #, c-format

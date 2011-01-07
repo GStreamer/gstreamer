@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-10-27 09:48+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -72,11 +72,14 @@ msgstr "Ce fichier ne contient aucun flux exploitable."
 msgid "This file is invalid and cannot be played."
 msgstr "Ce fichier n'est pas valide et ne peut donc pas être lu."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Ce fichier n'est pas complet et ne peut donc pas être lu."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Ce fichier est corrompu et ne peut pas être lu."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Ce fichier n'est pas complet et ne peut donc pas être lu."
 
 msgid "The video in this file might not play correctly."
 msgstr ""
@@ -635,6 +638,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Impossible de définir l'entrée %d du périphérique %s."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Impossible d'obtenir l'entrée actuelle du périphérique « %s ». C'est peut-"
+"être un périphérique radio"
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Impossible de définir l'entrée %d du périphérique %s."
 
 #, c-format

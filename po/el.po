@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-10-27 12:16+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -70,11 +70,14 @@ msgstr "Αυτό το αρχείο δεν περιέχει αναπαραγώγ�
 msgid "This file is invalid and cannot be played."
 msgstr "Το αρχείο αυτό δεν είναι έγκυρο και δεν μπορεί να αναπαραχθεί."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Το αρχείο αυτό είναι ανολοκλήρωτο και δεν μπορεί να αναπαραχθεί."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Το αρχείο αυτό είναι κατεστραμμένο και δεν μπορεί να αναπαραχθεί. "
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Το αρχείο αυτό είναι ανολοκλήρωτο και δεν μπορεί να αναπαραχθεί."
 
 msgid "The video in this file might not play correctly."
 msgstr "Το βίντεο σε αυτό το αρχείο μπορεί να μην αναπαραχθεί σωστά."
@@ -629,6 +632,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Αποτυχία ρύθμισης εισαγωγής %d στην συσκευή %s."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Αποτυχία ανάγνωσης της τρέχουσας εισαγωγής στην συσκευή '%s'. Πιθανόν να "
+"είναι μια συσκευή ράδιο"
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Αποτυχία ρύθμισης εισαγωγής %d στην συσκευή %s."
 
 #, c-format

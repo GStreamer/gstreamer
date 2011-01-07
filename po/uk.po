@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2007-07-05 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -71,11 +71,14 @@ msgstr "Файл містить потоки, які неможливо відт
 msgid "This file is invalid and cannot be played."
 msgstr "Файл неповний або не може відтворюватись."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Файл неповний або не може відтворюватись."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Файл пошкоджений та не може бути відтворений."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Файл неповний або не може відтворюватись."
 
 msgid "The video in this file might not play correctly."
 msgstr "Потік відео у цьому файлі неможливо коректно відтворити."
@@ -614,6 +617,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Не вдається встановити ввід %d пристрою \"%s\"."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Не вдається отримати поточний ввід пристрою \"%s\". Можливо цей пристрій - "
+"радіо."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Не вдається встановити ввід %d пристрою \"%s\"."
 
 #, c-format

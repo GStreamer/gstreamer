@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -70,10 +70,13 @@ msgstr ""
 msgid "This file is invalid and cannot be played."
 msgstr ""
 
-msgid "This file is incomplete and cannot be played."
+msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-msgid "This file is corrupt and cannot be played."
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
 msgstr ""
 
 msgid "The video in this file might not play correctly."
@@ -624,6 +627,15 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Kon nie oudio-toestel \"%s\" toemaak nie."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Kon nie oudio-toestel \"%s\" toemaak nie."
 
 #, fuzzy, c-format

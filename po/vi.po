@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:23+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-10-03 18:48+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -73,11 +73,14 @@ msgstr "Tập tin này không chứa luồng có thể phát."
 msgid "This file is invalid and cannot be played."
 msgstr "Tập tin này không hợp lệ nên không thể phát được."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Tập tin này chưa hoàn thành nên không thể được phát."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Tập tin này bị hỏng nên không thể phát."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Tập tin này chưa hoàn thành nên không thể được phát."
 
 msgid "The video in this file might not play correctly."
 msgstr "Ảnh động trong tập tin này có thể không phát đúng."
@@ -624,6 +627,16 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị « %s »."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Lỗi lấy kết nhập hiện thời vào thiết bị « %s ». Có thể là thiết bị thu thanh."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị « %s »."
 
 #, c-format

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-10-25 07:27+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -66,11 +66,14 @@ msgstr "Ten plik nie zawiera strumieni nadających się do odtworzenia."
 msgid "This file is invalid and cannot be played."
 msgstr "Ten plik jest błędny i nie może być odtworzony."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Ten plik jest niekompletny i nie może być odtworzony."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Ten plik jest uszkodzony i nie może być odtworzony."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Ten plik jest niekompletny i nie może być odtworzony."
 
 msgid "The video in this file might not play correctly."
 msgstr "Obraz w tym pliku może nie być odtwarzany prawidłowo."
@@ -620,6 +623,16 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Nie udało się ustawić wejścia %d urządzenia %s."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Nie udało się uzyskać aktualnego wejścia urządzenia '%s'. Może to radio"
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Nie udało się ustawić wejścia %d urządzenia %s."
 
 #, c-format
