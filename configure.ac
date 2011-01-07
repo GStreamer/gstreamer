@@ -250,7 +250,7 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
 AG_GST_CHECK_FEATURE(AMRNB, [amrnb library], amrnb, [
   PKG_CHECK_MODULES(AMRNB, opencore-amrnb, HAVE_AMRNB="yes",
       [ AG_GST_CHECK_LIBHEADER(AMRNB, opencore-amrnb,
-		           Decoder_Interface_init, -lm,
+		           Decoder_Interface_init, $LIBM,
 		           opencore-amrnb/interf_dec.h,
 			   AMRNB_LIBS="-lopencore-amrnb")
       ])
@@ -287,10 +287,10 @@ AG_GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
 AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
-  AG_GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h,
+  AG_GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, $LIBM, lame/lame.h,
   [
     HAVE_LAME="yes"
-    LAME_LIBS="-lmp3lame -lm"
+    LAME_LIBS="-lmp3lame $LIBM"
     dnl is lame presets available
     LAME_CFLAGS=""
     AC_TRY_COMPILE([#include <lame/lame.h>], [ int preset = MEDIUM ],
