@@ -397,7 +397,7 @@ gst_alpha_set_property (GObject * object, guint prop_id,
     case PROP_PREFER_PASSTHROUGH:{
       gboolean prefer_passthrough = g_value_get_boolean (value);
 
-      reconfigure = ((!!prefer_passthrough) != (!!alpha->prefer_passthrough))
+      reconfigure = ((! !prefer_passthrough) != (! !alpha->prefer_passthrough))
           && (alpha->method == ALPHA_METHOD_SET) && (alpha->alpha == 1.0);
       alpha->prefer_passthrough = prefer_passthrough;
       break;
@@ -1425,7 +1425,7 @@ gst_alpha_set_planar_yuv_ayuv (const guint8 * src, guint8 * dest, gint width,
       break;
     default:
       g_assert_not_reached ();
-      break;
+      return;
   }
 
   if (alpha->in_sdtv == alpha->out_sdtv) {
@@ -1544,7 +1544,7 @@ gst_alpha_chroma_key_planar_yuv_ayuv (const guint8 * src, guint8 * dest,
       break;
     default:
       g_assert_not_reached ();
-      break;
+      return;
   }
 
   if (alpha->in_sdtv == alpha->out_sdtv) {
@@ -1685,7 +1685,7 @@ gst_alpha_set_planar_yuv_argb (const guint8 * src, guint8 * dest, gint width,
       break;
     default:
       g_assert_not_reached ();
-      break;
+      return;
   }
 
   memcpy (matrix,
@@ -1793,7 +1793,7 @@ gst_alpha_chroma_key_planar_yuv_argb (const guint8 * src, guint8 * dest,
       break;
     default:
       g_assert_not_reached ();
-      break;
+      return;
   }
 
   memcpy (matrix,
