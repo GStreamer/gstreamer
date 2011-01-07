@@ -246,25 +246,41 @@ static void gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd,
 static GstRTSPResult gst_rtspsrc_send_cb (GstRTSPExtension * ext,
     GstRTSPMessage * request, GstRTSPMessage * response, GstRTSPSrc * src);
 
-static gboolean gst_rtspsrc_open (GstRTSPSrc * src);
-static gboolean gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment);
-static gboolean gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle);
-static gboolean gst_rtspsrc_close (GstRTSPSrc * src);
+static GstRTSPResult gst_rtspsrc_open (GstRTSPSrc * src, gboolean async);
+static GstRTSPResult gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment,
+    gboolean async);
+static GstRTSPResult gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle,
+    gboolean async);
+static GstRTSPResult gst_rtspsrc_close (GstRTSPSrc * src, gboolean async);
 
 static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
     const gchar * uri);
 
 static gboolean gst_rtspsrc_activate_streams (GstRTSPSrc * src);
-static void gst_rtspsrc_loop (GstRTSPSrc * src);
+static gboolean gst_rtspsrc_loop (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_stream_push_event (GstRTSPSrc * src,
     GstRTSPStream * stream, GstEvent * event, gboolean source);
 static gboolean gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event,
     gboolean source);
 
 /* commands we send to out loop to notify it of events */
-#define CMD_WAIT	0
-#define CMD_RECONNECT	1
-#define CMD_STOP	2
+#define CMD_OPEN	0
+#define CMD_PLAY	1
+#define CMD_PAUSE	2
+#define CMD_CLOSE	3
+#define CMD_WAIT	4
+#define CMD_RECONNECT	5
+#define CMD_STOP	6
+#define CMD_LOOP	7
+
+#define GST_ELEMENT_PROGRESS(el, type, code, text)      \
+G_STMT_START {                                          \
+  gchar *__txt = _gst_element_error_printf text;        \
+  gst_element_post_message (GST_ELEMENT_CAST (el),      \
+      gst_message_new_progress (GST_OBJECT_CAST (el),   \
+          GST_PROGRESS_TYPE_ ##type, code, __txt));     \
+  g_free (__txt);                                       \
+} G_STMT_END
 
 /*static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -1657,7 +1673,7 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   } else {
     event = gst_event_new_flush_stop ();
     GST_DEBUG_OBJECT (src, "stop flush");
-    cmd = CMD_WAIT;
+    cmd = CMD_LOOP;
     state = GST_STATE_PLAYING;
     clock = gst_element_get_clock (GST_ELEMENT_CAST (src));
     if (clock) {
@@ -1850,14 +1866,14 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   if (playing) {
     /* obtain current position in case seek fails */
     gst_rtspsrc_get_position (src);
-    gst_rtspsrc_pause (src, FALSE);
+    gst_rtspsrc_pause (src, FALSE, FALSE);
   }
 
   gst_rtspsrc_do_seek (src, &seeksegment);
 
   /* and continue playing */
   if (playing)
-    gst_rtspsrc_play (src, &seeksegment);
+    gst_rtspsrc_play (src, &seeksegment, FALSE);
 
   /* prepare for streaming again */
   if (flush) {
@@ -3307,6 +3323,8 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info)
 
   if (!info->connected) {
     /* connect */
+    GST_ELEMENT_PROGRESS (src, CONTINUE, "connect",
+        ("Connecting to %s", info->location));
     GST_DEBUG_OBJECT (src, "connecting (%s)...", info->location);
     if ((res =
             gst_rtsp_connection_connect (info->connection,
@@ -3710,7 +3728,6 @@ interrupt:
   {
     gst_rtsp_message_unset (&message);
     GST_DEBUG_OBJECT (src, "got interrupted: stop connection flush");
-    /* unset flushing so we can do something else */
     gst_rtspsrc_connection_flush (src, FALSE);
     return GST_FLOW_WRONG_STATE;
   }
@@ -3752,108 +3769,101 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   GstRTSPMessage message = { 0 };
   gint retry = 0;
 
+  while (TRUE) {
+    GTimeVal tv_timeout;
+
+    /* get the next timeout interval */
+    gst_rtsp_connection_next_timeout (src->conninfo.connection, &tv_timeout);
+
+    GST_DEBUG_OBJECT (src, "doing receive with timeout %d seconds",
+        (gint) tv_timeout.tv_sec);
+
+    gst_rtsp_message_unset (&message);
+    /* we should continue reading the TCP socket because the server might
+     * send us requests. When the session timeout expires, we need to send a
+     * keep-alive request to keep the session open. */
+    res =
+        gst_rtspsrc_connection_receive (src, src->conninfo.connection,
+        &message, &tv_timeout);
+
+    switch (res) {
+      case GST_RTSP_OK:
+        GST_DEBUG_OBJECT (src, "we received a server message");
+        break;
+      case GST_RTSP_EINTR:
+        /* we got interrupted, see what we have to do */
+        GST_DEBUG_OBJECT (src, "got interrupted: stop connection flush");
+        goto interrupt;
+      case GST_RTSP_ETIMEOUT:
+        /* send keep-alive, ignore the result, a warning will be posted. */
+        GST_DEBUG_OBJECT (src, "timeout, sending keep-alive");
+        gst_rtspsrc_send_keep_alive (src);
+        continue;
+      case GST_RTSP_EEOF:
+        /* server closed the connection. not very fatal for UDP, reconnect and
+         * see what happens. */
+        GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
+            ("The server closed the connection."));
+        if ((res = gst_rtsp_conninfo_reconnect (src, &src->conninfo)) < 0)
+          goto connect_error;
+
+        continue;
+      default:
+        goto receive_error;
+    }
+
+    switch (message.type) {
+      case GST_RTSP_MESSAGE_REQUEST:
+        /* server sends us a request message, handle it */
+        res =
+            gst_rtspsrc_handle_request (src, src->conninfo.connection,
+            &message);
+        if (res == GST_RTSP_EEOF)
+          goto server_eof;
+        else if (res < 0)
+          goto handle_request_failed;
+        break;
+      case GST_RTSP_MESSAGE_RESPONSE:
+        /* we ignore response and data messages */
+        GST_DEBUG_OBJECT (src, "ignoring response message");
+        if (src->debug)
+          gst_rtsp_message_dump (&message);
+        if (message.type_data.response.code == GST_RTSP_STS_UNAUTHORIZED) {
+          GST_DEBUG_OBJECT (src, "but is Unauthorized response ...");
+          if (gst_rtspsrc_setup_auth (src, &message) && !(retry++)) {
+            GST_DEBUG_OBJECT (src, "so retrying keep-alive");
+            gst_rtspsrc_send_keep_alive (src);
+          }
+        } else {
+          retry = 0;
+        }
+        break;
+      case GST_RTSP_MESSAGE_DATA:
+        /* we ignore response and data messages */
+        GST_DEBUG_OBJECT (src, "ignoring data message");
+        break;
+      default:
+        GST_WARNING_OBJECT (src, "ignoring unknown message type %d",
+            message.type);
+        break;
+    }
+  }
+
+interrupt:
+  /* we get here when the connection got interrupted */
   GST_OBJECT_LOCK (src);
-  if (src->loop_cmd == CMD_STOP)
+  gst_rtspsrc_connection_flush (src, FALSE);
+  GST_DEBUG_OBJECT (src, "we have command %d", src->loop_cmd);
+  if (src->loop_cmd != CMD_RECONNECT)
     goto stopping;
 
-  while (src->loop_cmd == CMD_WAIT) {
-    GST_OBJECT_UNLOCK (src);
 
-    while (TRUE) {
-      GTimeVal tv_timeout;
+  /* when we get here we have to reconnect using tcp */
+  src->loop_cmd = CMD_LOOP;
 
-      /* get the next timeout interval */
-      gst_rtsp_connection_next_timeout (src->conninfo.connection, &tv_timeout);
-
-      GST_DEBUG_OBJECT (src, "doing receive with timeout %d seconds",
-          (gint) tv_timeout.tv_sec);
-
-      gst_rtsp_message_unset (&message);
-      /* we should continue reading the TCP socket because the server might
-       * send us requests. When the session timeout expires, we need to send a
-       * keep-alive request to keep the session open. */
-      res =
-          gst_rtspsrc_connection_receive (src, src->conninfo.connection,
-          &message, &tv_timeout);
-
-      switch (res) {
-        case GST_RTSP_OK:
-          GST_DEBUG_OBJECT (src, "we received a server message");
-          break;
-        case GST_RTSP_EINTR:
-          /* we got interrupted, see what we have to do */
-          GST_DEBUG_OBJECT (src, "got interrupted: stop connection flush");
-          /* unset flushing so we can do something else */
-          gst_rtspsrc_connection_flush (src, FALSE);
-          goto interrupt;
-        case GST_RTSP_ETIMEOUT:
-          /* send keep-alive, ignore the result, a warning will be posted. */
-          GST_DEBUG_OBJECT (src, "timeout, sending keep-alive");
-          gst_rtspsrc_send_keep_alive (src);
-          continue;
-        case GST_RTSP_EEOF:
-          /* server closed the connection. not very fatal for UDP, reconnect and
-           * see what happens. */
-          GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
-              ("The server closed the connection."));
-          if ((res = gst_rtsp_conninfo_reconnect (src, &src->conninfo)) < 0)
-            goto connect_error;
-
-          continue;
-        default:
-          goto receive_error;
-      }
-
-      switch (message.type) {
-        case GST_RTSP_MESSAGE_REQUEST:
-          /* server sends us a request message, handle it */
-          res =
-              gst_rtspsrc_handle_request (src, src->conninfo.connection,
-              &message);
-          if (res == GST_RTSP_EEOF)
-            goto server_eof;
-          else if (res < 0)
-            goto handle_request_failed;
-          break;
-        case GST_RTSP_MESSAGE_RESPONSE:
-          /* we ignore response and data messages */
-          GST_DEBUG_OBJECT (src, "ignoring response message");
-          if (src->debug)
-            gst_rtsp_message_dump (&message);
-          if (message.type_data.response.code == GST_RTSP_STS_UNAUTHORIZED) {
-            GST_DEBUG_OBJECT (src, "but is Unauthorized response ...");
-            if (gst_rtspsrc_setup_auth (src, &message) && !(retry++)) {
-              GST_DEBUG_OBJECT (src, "so retrying keep-alive");
-              gst_rtspsrc_send_keep_alive (src);
-            }
-          } else {
-            retry = 0;
-          }
-          break;
-        case GST_RTSP_MESSAGE_DATA:
-          /* we ignore response and data messages */
-          GST_DEBUG_OBJECT (src, "ignoring data message");
-          break;
-        default:
-          GST_WARNING_OBJECT (src, "ignoring unknown message type %d",
-              message.type);
-          break;
-      }
-    }
-  interrupt:
-    GST_OBJECT_LOCK (src);
-    GST_DEBUG_OBJECT (src, "we have command %d", src->loop_cmd);
-    if (src->loop_cmd == CMD_STOP)
-      goto stopping;
-  }
-  if (src->loop_cmd == CMD_RECONNECT) {
-    /* when we get here we have to reconnect using tcp */
-    src->loop_cmd = CMD_WAIT;
-
-    /* only restart when the pads were not yet activated, else we were
-     * streaming over UDP */
-    restart = src->need_activate;
-  }
+  /* only restart when the pads were not yet activated, else we were
+   * streaming over UDP */
+  restart = src->need_activate;
   GST_OBJECT_UNLOCK (src);
 
   /* no need to restart, we're done */
@@ -3864,18 +3874,10 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   src->cur_protocols = GST_RTSP_LOWER_TRANS_TCP;
 
   /* pause to prepare for a restart */
-  gst_rtspsrc_pause (src, FALSE);
+  gst_rtspsrc_pause (src, FALSE, FALSE);
 
-  if (src->task) {
-    /* stop task, we cannot join as this would deadlock, the task will stop when
-     * we exit this function below. */
-    gst_task_stop (src->task);
-    /* and free the task so that _close will not stop/join it again. */
-    gst_object_unref (GST_OBJECT (src->task));
-    src->task = NULL;
-  }
   /* close and cleanup our state */
-  gst_rtspsrc_close (src);
+  gst_rtspsrc_close (src, FALSE);
 
   /* see if we have TCP left to try. Also don't try TCP when we were configured
    * with an SDP. */
@@ -3890,11 +3892,11 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
           gst_guint64_to_gdouble (src->udp_timeout / 1000000.0)));
 
   /* open new connection using tcp */
-  if (!gst_rtspsrc_open (src))
+  if (!gst_rtspsrc_open (src, FALSE))
     goto open_failed;
 
   /* start playback */
-  if (!gst_rtspsrc_play (src, &src->segment))
+  if (!gst_rtspsrc_play (src, &src->segment, FALSE))
     goto play_failed;
 
 done:
@@ -3979,10 +3981,12 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gboolean flush)
     GST_DEBUG_OBJECT (src, "stop connection flush");
     gst_rtspsrc_connection_flush (src, FALSE);
   }
+  if (src->task)
+    gst_task_start (src->task);
   GST_OBJECT_UNLOCK (src);
 }
 
-static void
+static gboolean
 gst_rtspsrc_loop (GstRTSPSrc * src)
 {
   GstFlowReturn ret;
@@ -3995,7 +3999,7 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
   if (ret != GST_FLOW_OK)
     goto pause;
 
-  return;
+  return TRUE;
 
   /* ERRORS */
 pause:
@@ -4004,10 +4008,6 @@ pause:
 
     GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
     src->running = FALSE;
-    if (src->task) {
-      /* can be NULL when we stopped and unreffed already */
-      gst_task_pause (src->task);
-    }
     if (ret == GST_FLOW_UNEXPECTED) {
       /* perform EOS logic */
       if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
@@ -4025,7 +4025,7 @@ pause:
           ("streaming task paused, reason %s (%d)", reason, ret));
       gst_rtspsrc_push_event (src, gst_event_new_eos (), FALSE);
     }
-    return;
+    return FALSE;
   }
 }
 
@@ -4400,7 +4400,6 @@ send_error:
   }
 receive_error:
   {
-
     switch (res) {
       case GST_RTSP_EEOF:
         GST_WARNING_OBJECT (src, "server closed connection, doing reconnect");
@@ -4857,8 +4856,8 @@ gst_rtspsrc_stream_is_real_media (GstRTSPStream * stream)
  * This function will also configure the stream for the selected transport,
  * which basically means creating the pipeline.
  */
-static gboolean
-gst_rtspsrc_setup_streams (GstRTSPSrc * src)
+static GstRTSPResult
+gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
 {
   GList *walk;
   GstRTSPResult res;
@@ -5009,6 +5008,10 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
       g_free (hval);
     }
 
+    if (async)
+      GST_ELEMENT_PROGRESS (src, CONTINUE, "request", ("SETUP stream %d",
+              stream->id));
+
     /* handle the code ourselves */
     if ((res = gst_rtspsrc_send (src, conn, &request, &response, &code) < 0))
       goto send_error;
@@ -5131,7 +5134,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   if (!src->need_activate)
     goto nothing_to_activate;
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 no_protocols:
@@ -5139,7 +5142,7 @@ no_protocols:
     /* no transport possible, post an error and stop */
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not connect to server, no protocols left"));
-    return FALSE;
+    return GST_RTSP_ERROR;
   }
 create_request_failed:
   {
@@ -5154,6 +5157,7 @@ setup_transport_failed:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Could not setup transport."));
+    res = GST_RTSP_ERROR;
     goto cleanup_error;
   }
 response_error:
@@ -5162,6 +5166,7 @@ response_error:
 
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Error (%d): %s", code, GST_STR_NULL (str)));
+    res = GST_RTSP_ERROR;
     goto cleanup_error;
   }
 send_error:
@@ -5177,6 +5182,7 @@ no_transport:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Server did not select transport."));
+    res = GST_RTSP_ERROR;
     goto cleanup_error;
   }
 nothing_to_activate:
@@ -5193,13 +5199,13 @@ nothing_to_activate:
                   "more transport protocols or may otherwise be missing "
                   "the right GStreamer RTSP extension plugin.")), (NULL));
     }
-    return FALSE;
+    return GST_RTSP_ERROR;
   }
 cleanup_error:
   {
     gst_rtsp_message_unset (&request);
     gst_rtsp_message_unset (&response);
-    return FALSE;
+    return res;
   }
 }
 
@@ -5272,9 +5278,11 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
 }
 
 /* must be called with the RTSP state lock */
-static gboolean
-gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp)
+static GstRTSPResult
+gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
+    gboolean async)
 {
+  GstRTSPResult res;
   gint i, n_streams;
 
   /* prepare global stream caps properties */
@@ -5344,7 +5352,7 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp)
   GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
 
   /* setup streams */
-  if (!gst_rtspsrc_setup_streams (src))
+  if ((res = gst_rtspsrc_setup_streams (src, async)) < 0)
     goto setup_failed;
 
   /* reset our state */
@@ -5353,18 +5361,19 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp)
 
   src->state = GST_RTSP_STATE_READY;
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 setup_failed:
   {
     GST_ERROR_OBJECT (src, "setup failed");
-    return FALSE;
+    return res;
   }
 }
 
-static gboolean
-gst_rtspsrc_retrieve_sdp (GstRTSPSrc * src, GstSDPMessage ** sdp)
+static GstRTSPResult
+gst_rtspsrc_retrieve_sdp (GstRTSPSrc * src, GstSDPMessage ** sdp,
+    gboolean async)
 {
   GstRTSPResult res;
   GstRTSPMessage request = { 0 };
@@ -5394,8 +5403,13 @@ restart:
 
   /* send OPTIONS */
   GST_DEBUG_OBJECT (src, "send options...");
-  if (gst_rtspsrc_send (src, src->conninfo.connection, &request, &response,
-          NULL) < 0)
+
+  if (async)
+    GST_ELEMENT_PROGRESS (src, CONTINUE, "open", ("Retrieving server options"));
+
+  if ((res =
+          gst_rtspsrc_send (src, src->conninfo.connection, &request, &response,
+              NULL)) < 0)
     goto send_error;
 
   /* parse OPTIONS */
@@ -5416,8 +5430,13 @@ restart:
 
   /* send DESCRIBE */
   GST_DEBUG_OBJECT (src, "send describe...");
-  if (gst_rtspsrc_send (src, src->conninfo.connection, &request, &response,
-          NULL) < 0)
+
+  if (async)
+    GST_ELEMENT_PROGRESS (src, CONTINUE, "open", ("Retrieving media info"));
+
+  if ((res =
+          gst_rtspsrc_send (src, src->conninfo.connection, &request, &response,
+              NULL)) < 0)
     goto send_error;
 
   /* we only perform redirect for the describe, currently */
@@ -5460,7 +5479,7 @@ restart:
   gst_rtsp_message_unset (&request);
   gst_rtsp_message_unset (&response);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 no_url:
@@ -5491,23 +5510,27 @@ send_error:
   {
     /* Don't post a message - the rtsp_send method will have
      * taken care of it because we passed NULL for the response code */
+
     goto cleanup_error;
   }
 methods_error:
   {
     /* error was posted */
+    res = GST_RTSP_ERROR;
     goto cleanup_error;
   }
 wrong_content_type:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Server does not support SDP, got %s.", respcont));
+    res = GST_RTSP_ERROR;
     goto cleanup_error;
   }
 no_describe:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Server can not provide an SDP."));
+    res = GST_RTSP_ERROR;
     goto cleanup_error;
   }
 cleanup_error:
@@ -5518,104 +5541,74 @@ cleanup_error:
     }
     gst_rtsp_message_unset (&request);
     gst_rtsp_message_unset (&response);
-    return FALSE;
+    return res;
   }
 }
 
-static gboolean
-gst_rtspsrc_open (GstRTSPSrc * src)
+static void
+gst_rtspsrc_open_async (GstRTSPSrc * src)
 {
-  gboolean res;
+  GST_ELEMENT_PROGRESS (src, START, "open", ("Opening Stream"));
+  gst_rtspsrc_loop_send_cmd (src, CMD_OPEN, FALSE);
+}
+
+static GstRTSPResult
+gst_rtspsrc_open (GstRTSPSrc * src, gboolean async)
+{
+  GstRTSPResult ret;
 
   src->methods =
       GST_RTSP_SETUP | GST_RTSP_PLAY | GST_RTSP_PAUSE | GST_RTSP_TEARDOWN;
 
-  GST_RTSP_STATE_LOCK (src);
-
   if (src->sdp == NULL) {
-    if (!(res = gst_rtspsrc_retrieve_sdp (src, &src->sdp)))
+    if ((ret = gst_rtspsrc_retrieve_sdp (src, &src->sdp, async)) < 0)
       goto no_sdp;
   }
 
-  if (!(res = gst_rtspsrc_open_from_sdp (src, src->sdp)))
+  if ((ret = gst_rtspsrc_open_from_sdp (src, src->sdp, async)) < 0)
     goto open_failed;
 
-  GST_RTSP_STATE_UNLOCK (src);
-
-  return res;
+done:
+  if (async) {
+    if (ret == GST_RTSP_OK)
+      GST_ELEMENT_PROGRESS (src, COMPLETE, "open", ("Opened stream"));
+    else if (ret == GST_RTSP_EINTR)
+      GST_ELEMENT_PROGRESS (src, CANCELED, "open", ("Open canceled"));
+    else
+      GST_ELEMENT_PROGRESS (src, ERROR, "open", ("Open failed"));
+  }
+  return ret;
 
   /* ERRORS */
 no_sdp:
   {
     GST_WARNING_OBJECT (src, "can't get sdp");
-    GST_RTSP_STATE_UNLOCK (src);
-    return FALSE;
+    goto done;
   }
 open_failed:
   {
     GST_WARNING_OBJECT (src, "can't setup streaming from sdp");
-    GST_RTSP_STATE_UNLOCK (src);
-    return FALSE;
+    goto done;
   }
 }
 
-#if 0
-static gboolean
-gst_rtspsrc_async_open (GstRTSPSrc * src)
+static void
+gst_rtspsrc_close_async (GstRTSPSrc * src)
 {
-  GError *error = NULL;
-  gboolean res = TRUE;
-
-  src->thread =
-      g_thread_create ((GThreadFunc) gst_rtspsrc_open, src, TRUE, &error);
-  if (error != NULL) {
-    GST_ELEMENT_ERROR (src, RESOURCE, INIT, (NULL),
-        ("Could not start async thread (%s).", error->message));
-  }
-  return res;
+  GST_ELEMENT_PROGRESS (src, START, "close", ("Closing Stream"));
+  gst_rtspsrc_loop_send_cmd (src, CMD_CLOSE, FALSE);
 }
-#endif
 
-
-static gboolean
-gst_rtspsrc_close (GstRTSPSrc * src)
+static GstRTSPResult
+gst_rtspsrc_close (GstRTSPSrc * src, gboolean async)
 {
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
-  GstRTSPResult res;
+  GstRTSPResult res = GST_RTSP_OK;
   GList *walk;
-  gboolean ret = FALSE;
   gchar *control;
 
   GST_DEBUG_OBJECT (src, "TEARDOWN...");
-
-  GST_RTSP_STATE_LOCK (src);
-
-  gst_rtspsrc_loop_send_cmd (src, CMD_STOP, TRUE);
-
-  /* stop task if any */
-  if (src->task) {
-    /* release lock before trying to get the streamlock */
-    GST_RTSP_STATE_UNLOCK (src);
-
-    gst_task_stop (src->task);
-
-    /* make sure it is not running */
-    GST_RTSP_STREAM_LOCK (src);
-    GST_RTSP_STREAM_UNLOCK (src);
-
-    /* now wait for the task to finish */
-    gst_task_join (src->task);
-
-    /* and free the task */
-    gst_object_unref (GST_OBJECT (src->task));
-    src->task = NULL;
-
-    GST_RTSP_STATE_LOCK (src);
-  }
-
-  /* make sure we're not flushing anymore */
-  gst_rtspsrc_connection_flush (src, FALSE);
 
   if (src->state < GST_RTSP_STATE_READY) {
     GST_DEBUG_OBJECT (src, "not ready, doing cleanup");
@@ -5658,7 +5651,12 @@ gst_rtspsrc_close (GstRTSPSrc * src)
     if (res < 0)
       goto create_request_failed;
 
-    if (gst_rtspsrc_send (src, info->connection, &request, &response, NULL) < 0)
+    if (async)
+      GST_ELEMENT_PROGRESS (src, CONTINUE, "close", ("Closing stream"));
+
+    if ((res =
+            gst_rtspsrc_send (src, info->connection, &request, &response,
+                NULL)) < 0)
       goto send_error;
 
     /* FIXME, parse result? */
@@ -5684,24 +5682,35 @@ close:
   gst_rtspsrc_cleanup (src);
 
   src->state = GST_RTSP_STATE_INVALID;
-  GST_RTSP_STATE_UNLOCK (src);
 
-  return ret;
+  if (async) {
+    if (res == GST_RTSP_OK)
+      GST_ELEMENT_PROGRESS (src, COMPLETE, "close", ("Closed stream"));
+    else if (res == GST_RTSP_EINTR)
+      GST_ELEMENT_PROGRESS (src, CANCELED, "close", ("Close canceled"));
+    else
+      GST_ELEMENT_PROGRESS (src, ERROR, "close", ("Close failed"));
+  }
+  return res;
 
   /* ERRORS */
 create_request_failed:
   {
+    gchar *str = gst_rtsp_strresult (res);
+
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
-        ("Could not create request."));
-    ret = FALSE;
+        ("Could not create request. (%s)", str));
+    g_free (str);
     goto close;
   }
 send_error:
   {
+    gchar *str = gst_rtsp_strresult (res);
+
     gst_rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
-        ("Could not send message."));
-    ret = FALSE;
+        ("Could not send message. (%s)", str));
+    g_free (str);
     goto close;
   }
 not_supported:
@@ -5824,18 +5833,23 @@ clear_rtp_base (GstRTSPSrc * src, GstRTSPStream * stream)
   }
 }
 
-static gboolean
-gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
+static void
+gst_rtspsrc_play_async (GstRTSPSrc * src)
+{
+  GST_ELEMENT_PROGRESS (src, START, "request", ("Sending PLAY request"));
+  gst_rtspsrc_loop_send_cmd (src, CMD_PLAY, FALSE);
+}
+
+static GstRTSPResult
+gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
 {
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
-  GstRTSPResult res;
+  GstRTSPResult res = GST_RTSP_OK;
   GList *walk;
   gchar *hval;
   gint hval_idx;
   gchar *control;
-
-  GST_RTSP_STATE_LOCK (src);
 
   GST_DEBUG_OBJECT (src, "PLAY...");
 
@@ -5855,8 +5869,12 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   GST_DEBUG_OBJECT (src, "connection is idle now");
   GST_RTSP_CONN_UNLOCK (src);
 
-  GST_DEBUG_OBJECT (src, "stop connection flush");
-  gst_rtspsrc_connection_flush (src, FALSE);
+  /* send some dummy packets before we activate the receive in the
+   * udp sources */
+  gst_rtspsrc_send_dummy_packets (src);
+
+  /* activate receive elements */
+  gst_element_set_state (GST_ELEMENT_CAST (src), GST_STATE_PLAYING);
 
   /* construct a control url */
   if (src->control)
@@ -5905,7 +5923,10 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
         gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, hval);
     }
 
-    if (gst_rtspsrc_send (src, conn, &request, &response, NULL) < 0)
+    if (async)
+      GST_ELEMENT_PROGRESS (src, CONTINUE, "request", ("Sending PLAY request"));
+
+    if ((res = gst_rtspsrc_send (src, conn, &request, &response, NULL)) < 0)
       goto send_error;
 
     /* seek may have silently failed as it is not supported */
@@ -5971,18 +5992,10 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   /* configure the caps of the streams after we parsed all headers. */
   gst_rtspsrc_configure_caps (src, segment);
 
-  /* for interleaved transport, we receive the data on the RTSP connection
-   * instead of UDP. We start a task to select and read from that connection.
-   * For UDP we start the task as well to look for server info and UDP timeouts. */
-  if (src->task == NULL) {
-    src->task = gst_task_create ((GstTaskFunction) gst_rtspsrc_loop, src);
-    gst_task_set_lock (src->task, GST_RTSP_STREAM_GET_LOCK (src));
-  }
   src->running = TRUE;
   src->base_time = -1;
   src->state = GST_RTSP_STATE_PLAYING;
-  gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, FALSE);
-  gst_task_start (src->task);
+  src->loop_cmd = CMD_LOOP;
 
   /* mark discont */
   GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
@@ -5992,9 +6005,16 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   }
 
 done:
-  GST_RTSP_STATE_UNLOCK (src);
-
-  return TRUE;
+  if (async) {
+    if (res == GST_RTSP_OK)
+      GST_ELEMENT_PROGRESS (src, COMPLETE, "request", ("PLAY request sent"));
+    else if (res == GST_RTSP_EINTR)
+      GST_ELEMENT_PROGRESS (src, CANCELED, "request",
+          ("PLAY request canceled"));
+    else
+      GST_ELEMENT_PROGRESS (src, ERROR, "request", ("PLAY request failed"));
+  }
+  return res;
 
   /* ERRORS */
 not_supported:
@@ -6009,30 +6029,40 @@ was_playing:
   }
 create_request_failed:
   {
-    GST_RTSP_STATE_UNLOCK (src);
+    gchar *str = gst_rtsp_strresult (res);
+
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
-        ("Could not create request."));
-    return FALSE;
+        ("Could not create request. (%s)", str));
+    g_free (str);
+    goto done;
   }
 send_error:
   {
-    GST_RTSP_STATE_UNLOCK (src);
+    gchar *str = gst_rtsp_strresult (res);
+
     gst_rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
-        ("Could not send message."));
-    return FALSE;
+        ("Could not send message. (%s)", str));
+    g_free (str);
+    goto done;
   }
 }
 
-static gboolean
-gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle)
+static void
+gst_rtspsrc_pause_async (GstRTSPSrc * src)
 {
+  GST_ELEMENT_PROGRESS (src, START, "request", ("Sending PAUSE request"));
+  gst_rtspsrc_loop_send_cmd (src, CMD_PAUSE, FALSE);
+}
+
+static GstRTSPResult
+gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle, gboolean async)
+{
+  GstRTSPResult res = GST_RTSP_OK;
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
   GList *walk;
   gchar *control;
-
-  GST_RTSP_STATE_LOCK (src);
 
   GST_DEBUG_OBJECT (src, "PAUSE...");
 
@@ -6051,9 +6081,6 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle)
 
   if (!src->conninfo.connection || !src->conninfo.connected)
     goto no_connection;
-
-  GST_DEBUG_OBJECT (src, "stop connection flush");
-  gst_rtspsrc_connection_flush (src, FALSE);
 
   /* construct a control url */
   if (src->control)
@@ -6082,10 +6109,16 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle)
       continue;
     }
 
-    if (gst_rtsp_message_init_request (&request, GST_RTSP_PAUSE, setup_url) < 0)
+    if (async)
+      GST_ELEMENT_PROGRESS (src, CONTINUE, "request",
+          ("Sending PAUSE request"));
+
+    if ((res =
+            gst_rtsp_message_init_request (&request, GST_RTSP_PAUSE,
+                setup_url)) < 0)
       goto create_request_failed;
 
-    if (gst_rtspsrc_send (src, conn, &request, &response, NULL) < 0)
+    if ((res = gst_rtspsrc_send (src, conn, &request, &response, NULL)) < 0)
       goto send_error;
 
     gst_rtsp_message_unset (&request);
@@ -6099,17 +6132,23 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle)
   if (idle && src->task) {
     GST_DEBUG_OBJECT (src, "starting idle task again");
     src->base_time = -1;
-    gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, FALSE);
-    gst_task_start (src->task);
+    src->loop_cmd = CMD_LOOP;
   }
 
 no_connection:
   src->state = GST_RTSP_STATE_READY;
 
 done:
-  GST_RTSP_STATE_UNLOCK (src);
-
-  return TRUE;
+  if (async) {
+    if (res == GST_RTSP_OK)
+      GST_ELEMENT_PROGRESS (src, COMPLETE, "request", ("PAUSE request sent"));
+    else if (res == GST_RTSP_EINTR)
+      GST_ELEMENT_PROGRESS (src, CANCELED, "request",
+          ("PAUSE request canceled"));
+    else
+      GST_ELEMENT_PROGRESS (src, ERROR, "request", ("PAUSE request failed"));
+  }
+  return res;
 
   /* ERRORS */
 not_supported:
@@ -6124,18 +6163,22 @@ was_paused:
   }
 create_request_failed:
   {
-    GST_RTSP_STATE_UNLOCK (src);
+    gchar *str = gst_rtsp_strresult (res);
+
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
-        ("Could not create request."));
-    return FALSE;
+        ("Could not create request. (%s)", str));
+    g_free (str);
+    goto done;
   }
 send_error:
   {
-    GST_RTSP_STATE_UNLOCK (src);
+    gchar *str = gst_rtsp_strresult (res);
+
     gst_rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
-        ("Could not send message."));
-    return FALSE;
+        ("Could not send message. (%s)", str));
+    g_free (str);
+    goto done;
   }
 }
 
@@ -6219,6 +6262,111 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
   }
 }
 
+/* the thread where everything happens */
+static void
+gst_rtspsrc_thread (GstRTSPSrc * src)
+{
+  gint cmd;
+  GstRTSPResult ret;
+  gboolean running = FALSE;
+
+  GST_OBJECT_LOCK (src);
+  cmd = src->loop_cmd;
+  src->loop_cmd = CMD_WAIT;
+  GST_DEBUG_OBJECT (src, "got command %d", cmd);
+  GST_OBJECT_UNLOCK (src);
+
+  switch (cmd) {
+    case CMD_OPEN:
+      src->cur_protocols = src->protocols;
+      /* first attempt, don't ignore timeouts */
+      src->ignore_timeout = FALSE;
+      ret = gst_rtspsrc_open (src, TRUE);
+      break;
+    case CMD_PLAY:
+      ret = gst_rtspsrc_play (src, &src->segment, TRUE);
+      break;
+    case CMD_PAUSE:
+      ret = gst_rtspsrc_pause (src, TRUE, TRUE);
+      break;
+    case CMD_CLOSE:
+      ret = gst_rtspsrc_close (src, TRUE);
+      break;
+    case CMD_LOOP:
+      running = gst_rtspsrc_loop (src);
+      break;
+    default:
+      break;
+  }
+
+  GST_OBJECT_LOCK (src);
+  /* and go back to sleep */
+  if (!running && src->loop_cmd == CMD_WAIT && src->task)
+    gst_task_pause (src->task);
+  GST_OBJECT_UNLOCK (src);
+}
+
+static gboolean
+gst_rtspsrc_start (GstRTSPSrc * src)
+{
+  GST_DEBUG_OBJECT (src, "starting");
+
+  GST_OBJECT_LOCK (src);
+
+  src->loop_cmd = CMD_WAIT;
+
+  if (src->task == NULL) {
+    src->task = gst_task_create ((GstTaskFunction) gst_rtspsrc_thread, src);
+    if (src->task == NULL)
+      goto task_error;
+
+    gst_task_set_lock (src->task, GST_RTSP_STREAM_GET_LOCK (src));
+  }
+  GST_OBJECT_UNLOCK (src);
+
+  return TRUE;
+
+  /* ERRORS */
+task_error:
+  {
+    GST_ERROR_OBJECT (src, "failed to create task");
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_rtspsrc_stop (GstRTSPSrc * src)
+{
+  GstTask *task;
+
+  GST_DEBUG_OBJECT (src, "stopping");
+
+  gst_rtspsrc_connection_flush (src, TRUE);
+
+  GST_OBJECT_LOCK (src);
+  if ((task = src->task)) {
+    src->task = NULL;
+    GST_OBJECT_UNLOCK (src);
+
+    gst_task_stop (task);
+
+    /* make sure it is not running */
+    GST_RTSP_STREAM_LOCK (src);
+    GST_RTSP_STREAM_UNLOCK (src);
+
+    /* now wait for the task to finish */
+    gst_task_join (task);
+
+    /* and free the task */
+    gst_object_unref (GST_OBJECT (task));
+
+    GST_OBJECT_LOCK (src);
+  }
+  GST_OBJECT_UNLOCK (src);
+
+  return TRUE;
+}
+
 static GstStateChangeReturn
 gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
 {
@@ -6229,25 +6377,18 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!gst_rtspsrc_start (rtspsrc))
+        goto start_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      rtspsrc->cur_protocols = rtspsrc->protocols;
-      /* first attempt, don't ignore timeouts */
-      rtspsrc->ignore_timeout = FALSE;
-      if (!gst_rtspsrc_open (rtspsrc))
-        goto open_failed;
+      gst_rtspsrc_open_async (rtspsrc);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      GST_DEBUG_OBJECT (rtspsrc, "PAUSED->PLAYING: stop connection flush");
-      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_STOP, TRUE);
-      /* send some dummy packets before we chain up to the parent to activate
-       * the receive in the udp sources */
-      gst_rtspsrc_send_dummy_packets (rtspsrc);
-      break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      /* unblock the tcp tasks and make the loop waiting */
+      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_WAIT, TRUE);
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_DEBUG_OBJECT (rtspsrc, "state change: sending stop command");
-      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_STOP, TRUE);
       break;
     default:
       break;
@@ -6259,21 +6400,21 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      /* chained up to parent so the udp sources are activated and receiving */
-      gst_rtspsrc_play (rtspsrc, &rtspsrc->segment);
+      gst_rtspsrc_play_async (rtspsrc);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* send pause request and keep the idle task around */
-      gst_rtspsrc_pause (rtspsrc, TRUE);
+      gst_rtspsrc_pause_async (rtspsrc);
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_rtspsrc_close (rtspsrc);
+      gst_rtspsrc_close_async (rtspsrc);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_rtspsrc_stop (rtspsrc);
       break;
     default:
       break;
@@ -6282,9 +6423,9 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
 done:
   return ret;
 
-open_failed:
+start_failed:
   {
-    GST_DEBUG_OBJECT (rtspsrc, "open failed");
+    GST_DEBUG_OBJECT (rtspsrc, "start failed");
     return GST_STATE_CHANGE_FAILURE;
   }
 }
