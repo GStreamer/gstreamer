@@ -1,48 +1,49 @@
-# Catalan translation for GStreamer.
-# Copyright © 2004 Free Software Foundation, Inc.
-# This file is distributed under the same licence as the gst-plugins package.
-# Jordi Mallach <jordi@sindominio.net>, 2004.
+# Catalan translation for gstreamer.
+# Copyright © 2004, 2005, 2010 Free Software Foundation, Inc.
+# This file is put in the public domain.
+# Jordi Mallach <jordi@sindominio.net>, 2004, 2005, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.8.3\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
-"PO-Revision-Date: 2004-08-05 15:48+0200\n"
+"POT-Creation-Date: 2011-01-07 14:34+0000\n"
+"PO-Revision-Date: 2010-11-04 23:22+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
 "Language: ca\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n!=1;\n"
 
-#, fuzzy
 msgid "Could not read from CD."
-msgstr "No s'ha pogut escriure al fitxer «%s»."
+msgstr "No s'ha pogut llegir des del CD."
 
 msgid "Could not open CD device for reading."
-msgstr "No s'ha pogut obrir el dispositiu de CD per a la lectura."
+msgstr "No s'ha pogut obrir el dispositiu de CD per a llegir."
 
-#, fuzzy
 msgid "Disc is not an Audio CD."
-msgstr "El dispositiu no està obert."
+msgstr "El disc no és un CD d'àudio."
 
 msgid "Could not open DVD"
-msgstr ""
+msgstr "No s'ha pogut obrir el DVD"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open DVD title %d"
-msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
+msgstr "No s'ha pogut obrir el títol %d del DVD"
 
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr ""
+msgstr "No s'ha pogut anar al capítol %d del títol %d del DVD."
 
 #, c-format
 msgid ""
 "Could not open DVD title %d. Interactive titles are not supported by this "
 "element"
 msgstr ""
+"No s'ha pogut obrir el títol %d del DVD. Els títols interactius no són "
+"implementats per aquest element"
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
@@ -51,208 +52,28 @@ msgstr ""
 
 #, fuzzy
 msgid "Could not read DVD."
-msgstr "No s'ha pogut escriure al fitxer «%s»."
+msgstr "No s'ha pogut obrir el DVD"
 
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
+"No s'ha pogut configurar el codificador LAME. Comproveu els paràmetres de "
+"codificació."
 
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"La taxa de bits %d kbit/s per a la propietat «%s» no és permesa. S'ha "
+"canviat la taxa de bits a %d kbit/s."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"No s'ha pogut configurar el codificador TwoLAME. Comproveu els paràmetres de "
+"codificació."
 
 msgid "This stream contains no data."
-msgstr ""
+msgstr "Aquest flux no conté dades."
 
 msgid "Internal data stream error."
-msgstr ""
-
-#, fuzzy
-#~ msgid "Could not read title information for DVD."
-#~ msgstr "No s'ha pogut escriure al fitxer «%s»."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "No s'ha pogut obrir el fitxer «%s» per a l'escriptura."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "S'ha produït un error en tancar el fitxer «%s»."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
-
-#~ msgid "Could not open vfs file \"%s\" for reading."
-#~ msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a la lectura."
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a l'escriptura: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "No s'ha donat cap nom de fitxer"
-
-#~ msgid "No filename specified."
-#~ msgstr "No s'ha especificat cap nom de fitxer."
-
-#~ msgid "No or invalid input audio, AVI stream will be corrupt."
-#~ msgstr ""
-#~ "L'entrada d'àudio no existeix o és invàlida, el flux AVI serà corrupte."
-
-#~ msgid ""
-#~ "The %s element could not be found. This element is essential for "
-#~ "playback. Please install the right plug-in and verify that it works by "
-#~ "running 'gst-inspect %s'"
-#~ msgstr ""
-#~ "No s'ha pogut trobar l'element %s. Aquest element és essencial per a la "
-#~ "reproducció. Si us plau, instal·leu el connector adequat i verifiqueu que "
-#~ "funciona correctament executant «gst-inspect %s»"
-
-#~ msgid ""
-#~ "No usable colorspace element could be found.\n"
-#~ "Please install one and restart."
-#~ msgstr ""
-#~ "No s'ha trobat cap element d'espai de color utilitzable.\n"
-#~ "Si us plau, instal·leu un i reinicieu."
-
-#~ msgid "Could not open audio device \"%s\" for writing."
-#~ msgstr "No s'ha pogut el dispositiu d'àudio «%s» per a l'escriptura."
-
-#~ msgid "Could not open control device \"%s\" for writing."
-#~ msgstr ""
-#~ "No s'ha pogut obrir el dispositiu de control «%s» per a l'escriptura."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "No s'ha pogut configurar el dispositiu d'àudio «%s»."
-
-#~ msgid "Could not set audio device \"%s\" to %d Hz."
-#~ msgstr "No s'ha pogut establir el dispositiu d'àudio «%s» a %d Hz."
-
-#~ msgid "Could not close audio device \"%s\"."
-#~ msgstr "No s'ha pogut tancar el dispositiu d'àudio «%s»."
-
-#~ msgid "Could not close control device \"%s\"."
-#~ msgstr "No s'ha pogut tancar el dispositiu de control «%s»."
-
-#~ msgid "Could not open video device \"%s\" for writing."
-#~ msgstr "No s'ha pogut obrir el dispositiu de vídeo «%s» per a l'escriptura."
-
-#~ msgid "Could not close video device \"%s\"."
-#~ msgstr "No s'ha pogut tancar el dispositiu de vídeo «%s»."
-
-#~ msgid "Could not write to device \"%s\"."
-#~ msgstr "No s'ha pogut escriure al dispositiu «%s»."
-
-#~ msgid "OSS device \"%s\" is already in use by another program."
-#~ msgstr "El dispositiu OSS «%s» ja està en ús per un altre programa."
-
-#~ msgid "Could not access device \"%s\", check its permissions."
-#~ msgstr ""
-#~ "No s'ha pogut accedir al dispositiu «%s», comproveu els seus permisos."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "El dispositiu «%s» no existeix."
-
-#~ msgid "Could not open device \"%s\" for writing."
-#~ msgstr "No s'ha pogut obrir el dispositiu «%s» per a l'escriptura."
-
-#~ msgid "Could not open device \"%s\" for reading."
-#~ msgstr "No s'ha pogut obrir el dispositiu «%s» per a la lectura."
-
-#~ msgid "Your OSS device could not be probed correctly"
-#~ msgstr "No s'ha pogut detectar el vostre dispositiu d'OSS correctament"
-
-#~ msgid "Volume"
-#~ msgstr "Volum"
-
-#~ msgid "Bass"
-#~ msgstr "Baixos"
-
-#~ msgid "Treble"
-#~ msgstr "Aguts"
-
-#~ msgid "Synth"
-#~ msgstr "Sintetitzador"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Speaker"
-#~ msgstr "Altaveu"
-
-#~ msgid "Line-in"
-#~ msgstr "Línia-entrada"
-
-#~ msgid "Microphone"
-#~ msgstr "Micròfon"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Mixer"
-#~ msgstr "Mesclador"
-
-#~ msgid "PCM-2"
-#~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Enregistrament"
-
-#~ msgid "In-gain"
-#~ msgstr "Ganància-entrada"
-
-#~ msgid "Out-gain"
-#~ msgstr "Ganància-sortida"
-
-#~ msgid "Line-1"
-#~ msgstr "Línia-1"
-
-#~ msgid "Line-2"
-#~ msgstr "Línia-2"
-
-#~ msgid "Line-3"
-#~ msgstr "Línia-3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Digital-1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Digital-2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Digital-3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Telèfon-entrada"
-
-#~ msgid "Phone-out"
-#~ msgstr "Telèfon-sortida"
-
-#~ msgid "Video"
-#~ msgstr "Vídeo"
-
-#~ msgid "Radio"
-#~ msgstr "Ràdio"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#~ msgid "No device specified."
-#~ msgstr "No s'ha especificat cap dispositiu."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr ""
-#~ "No s'ha pogut obrir el dispositiu «%s» per a l'escriptura i lectura."
-
-#~ msgid "Device is open."
-#~ msgstr "El dispositiu està obert."
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "El dispositiu «%s» no és un dispositiu de captura."
-
-#~ msgid "Could not get buffers from device \"%s\"."
-#~ msgstr "No s'han pogut obtenir els búfers del dispositiu «%s»."
-
-#~ msgid "Could not get enough buffers from device \"%s\"."
-#~ msgstr "No s'han pogut obtenir búfers suficients del dispositiu «%s»."
+msgstr "S'ha produït un error intern de flux de dades."
