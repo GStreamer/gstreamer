@@ -4413,8 +4413,12 @@ send_error:
   {
     gchar *str = gst_rtsp_strresult (res);
 
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
-        ("Could not send message. (%s)", str));
+    if (res != GST_RTSP_EINTR) {
+      GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+          ("Could not send message. (%s)", str));
+    } else {
+      GST_WARNING_OBJECT (src, "send interrupted");
+    }
     g_free (str);
     return res;
   }
@@ -4434,8 +4438,12 @@ receive_error:
       {
         gchar *str = gst_rtsp_strresult (res);
 
-        GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-            ("Could not receive message. (%s)", str));
+        if (res != GST_RTSP_EINTR) {
+          GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+              ("Could not receive message. (%s)", str));
+        } else {
+          GST_WARNING_OBJECT (src, "receive interrupted");
+        }
         g_free (str);
         break;
       }
@@ -5193,8 +5201,12 @@ send_error:
   {
     gchar *str = gst_rtsp_strresult (res);
 
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
-        ("Could not send message. (%s)", str));
+    if (res != GST_RTSP_EINTR) {
+      GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+          ("Could not send message. (%s)", str));
+    } else {
+      GST_WARNING_OBJECT (src, "send interrupted");
+    }
     g_free (str);
     goto cleanup_error;
   }
@@ -5512,8 +5524,12 @@ connect_failed:
   {
     gchar *str = gst_rtsp_strresult (res);
 
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
-        ("Failed to connect. (%s)", str));
+    if (res != GST_RTSP_EINTR) {
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
+          ("Failed to connect. (%s)", str));
+    } else {
+      GST_WARNING_OBJECT (src, "connect interrupted");
+    }
     g_free (str);
     goto cleanup_error;
   }
@@ -5530,7 +5546,6 @@ send_error:
   {
     /* Don't post a message - the rtsp_send method will have
      * taken care of it because we passed NULL for the response code */
-
     goto cleanup_error;
   }
 methods_error:
@@ -5728,8 +5743,12 @@ send_error:
     gchar *str = gst_rtsp_strresult (res);
 
     gst_rtsp_message_unset (&request);
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
-        ("Could not send message. (%s)", str));
+    if (res != GST_RTSP_EINTR) {
+      GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+          ("Could not send message. (%s)", str));
+    } else {
+      GST_WARNING_OBJECT (src, "TEARDOWN interrupted");
+    }
     g_free (str);
     goto close;
   }
@@ -6054,8 +6073,12 @@ send_error:
     gchar *str = gst_rtsp_strresult (res);
 
     gst_rtsp_message_unset (&request);
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
-        ("Could not send message. (%s)", str));
+    if (res != GST_RTSP_EINTR) {
+      GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+          ("Could not send message. (%s)", str));
+    } else {
+      GST_WARNING_OBJECT (src, "PLAY interrupted");
+    }
     g_free (str);
     goto done;
   }
@@ -6181,8 +6204,12 @@ send_error:
     gchar *str = gst_rtsp_strresult (res);
 
     gst_rtsp_message_unset (&request);
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
-        ("Could not send message. (%s)", str));
+    if (res != GST_RTSP_EINTR) {
+      GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+          ("Could not send message. (%s)", str));
+    } else {
+      GST_WARNING_OBJECT (src, "PAUSE interrupted");
+    }
     g_free (str);
     goto done;
   }
