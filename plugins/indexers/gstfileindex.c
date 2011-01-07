@@ -978,7 +978,7 @@ gst_file_index_plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 
-  GST_PLUGIN_FEATURE (factory)->plugin_name = g_strdup (plugin->desc.name);
+  GST_PLUGIN_FEATURE (factory)->plugin_name = plugin->desc.name;
   GST_PLUGIN_FEATURE (factory)->loaded = TRUE;
 
   gst_registry_add_feature (gst_registry_get_default (),
