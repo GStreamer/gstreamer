@@ -94,6 +94,12 @@
  * the GOP will be decoded/reencoded when needed to produce an encoded output
  * that fits exactly within the request GstSegment.
  * </listitem>
+ * <listitem>
+ * Missing plugin support. If a #GstElement is missing to encode/mux to the
+ * request profile formats, a missing-plugin #GstMessage will be posted on the
+ * #GstBus, allowing systems that support the missing-plugin system to offer the
+ * user a way to install the missing element.
+ * </listitem>
  * </itemizedlist>
  * </refsect2>
  */
@@ -1259,6 +1265,11 @@ splitter_encoding_failure:
 no_encoder:
   GST_ERROR_OBJECT (ebin, "Couldn't create encoder for format %" GST_PTR_FORMAT,
       format);
+  /* missing plugin support */
+  gst_element_post_message (GST_ELEMENT_CAST (ebin),
+      gst_missing_encoder_message_new (GST_ELEMENT_CAST (ebin), format));
+  GST_ELEMENT_ERROR (ebin, CORE, MISSING_PLUGIN, (NULL),
+      ("Couldn't create encoder for format %" GST_PTR_FORMAT, format));
   goto cleanup;
 
 no_muxer_pad:
@@ -1456,6 +1467,13 @@ no_muxer:
   {
     GST_WARNING ("No available muxer for %" GST_PTR_FORMAT,
         gst_encoding_profile_get_format (ebin->profile));
+    /* missing plugin support */
+    gst_element_post_message (GST_ELEMENT_CAST (ebin),
+        gst_missing_encoder_message_new (GST_ELEMENT_CAST (ebin),
+            gst_encoding_profile_get_format (ebin->profile)));
+    GST_ELEMENT_ERROR (ebin, CORE, MISSING_PLUGIN, (NULL),
+        ("No available muxer for format %" GST_PTR_FORMAT,
+            gst_encoding_profile_get_format (ebin->profile)));
     return FALSE;
   }
 
