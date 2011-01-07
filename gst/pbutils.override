@@ -386,3 +386,100 @@ _wrap_gst_discoverer_container_info_get_streams(PyGstMiniObject * self)
 	gst_discoverer_stream_info_list_free(res);
     return pyres;
 }
+%%
+override gst_encoding_container_profile_get_profiles noargs
+static PyObject *
+_wrap_gst_encoding_container_profile_get_profiles(PyGstMiniObject * self)
+{
+    GList *res, *tmp;
+    PyObject *pyres;
+
+    res = (GList*) gst_encoding_container_profile_get_profiles(GST_ENCODING_CONTAINER_PROFILE (self->obj));
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	PyList_Append(pyres, pygstminiobject_new((GstMiniObject*) tmp->data));
+    }
+    if (res)
+	g_list_free (res);
+    return pyres;
+}
+%%
+override gst_encoding_target_get_profiles noargs
+static PyObject *
+_wrap_gst_encoding_target_get_profiles(PyGstMiniObject * self)
+{
+    GList *res, *tmp;
+    PyObject *pyres;
+
+    res = (GList*) gst_encoding_target_get_profiles(GST_ENCODING_TARGET (self->obj));
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	PyList_Append(pyres, pygstminiobject_new((GstMiniObject*) tmp->data));
+    }
+    if (res)
+	g_list_free (res);
+    return pyres;
+}
+%%
+override gst_encoding_list_all_targets kwargs
+static PyObject *
+_wrap_gst_encoding_list_all_targets(PyGstMiniObject * self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "categoryname", NULL };
+    GList *res, *tmp;
+    const gchar *categoryname = NULL;
+    PyObject *pyres;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"!s:GstDiscovererInfo.get_streams", kwlist, &categoryname))
+        return NULL;
+    res = (GList*) gst_encoding_list_all_targets(categoryname);
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	PyList_Append(pyres, pygstminiobject_new((GstMiniObject*) tmp->data));
+    }
+    if (res)
+	g_list_free (res);
+    return pyres;
+}
+%%
+override gst_encoding_list_available_categories noargs
+static PyObject *
+_wrap_gst_encoding_list_available_categories(PyGstMiniObject * self)
+{
+    GList *res, *tmp;
+    PyObject *pyres;
+
+    res = (GList*) gst_encoding_list_available_categories();
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	PyList_Append(pyres, PyString_FromString((const gchar*) tmp->data));
+	g_free (tmp->data);
+    }
+    if (res)
+	g_list_free (res);
+    return pyres;
+}
+%%
+override gst_encoding_target_new kwargs
+static int
+_wrap_gst_encoding_target_new(PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "category", "description", NULL };
+    char *name, *description, *category;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"sss:GstEncodingContainerProfile.__init__", kwlist, &name, &category, &description))
+        return -1;
+
+    self->obj = (GstMiniObject *)gst_encoding_target_new(name, category, description, NULL);
+
+    if (!self->obj) {
+        PyErr_SetString(PyExc_RuntimeError, "could not create GstEncodingTarget miniobject");
+        return -1;
+    }
+    pygstminiobject_register_wrapper((PyObject *)self);
+    return 0;
+}
