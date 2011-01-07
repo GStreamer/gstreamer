@@ -60,7 +60,13 @@ main (int argc, char *argv[])
 
   /* make a URI media factory for a test stream. */
   factory = gst_rtsp_media_factory_uri_new ();
+  /* when using GStreamer as a client, one can use the gst payloader, which is
+   * more efficient when there is no payloader for the compressed format */
+  /* g_object_set (factory, "use-gstpay", TRUE, NULL); */
   gst_rtsp_media_factory_uri_set_uri (factory, argv[1]);
+  /* if you want multiple clients to see the same video, set the shared property
+   * to TRUE */
+  /* gst_rtsp_media_factory_set_shared ( GST_RTSP_MEDIA_FACTORY (factory), TRUE); */
 
   /* attach the test factory to the /test url */
   gst_rtsp_media_mapping_add_factory (mapping, "/test",
