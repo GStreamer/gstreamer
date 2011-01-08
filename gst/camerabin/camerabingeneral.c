@@ -27,9 +27,10 @@
  *
  */
 #include <string.h>
+#include <glib.h>
 
 #include "camerabingeneral.h"
-#include <glib.h>
+#include "gstinputselector.h"
 
 GST_DEBUG_CATEGORY (gst_camerabin_debug);
 
@@ -128,7 +129,15 @@ gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name)
   g_return_val_if_fail (bin, FALSE);
   g_return_val_if_fail (elem_name, FALSE);
 
-  new_elem = gst_element_factory_make (elem_name, NULL);
+  if (strcmp (elem_name, "input-selector") == 0) {
+    /* we ship our own copy of input-selector because we still use the
+     * "select-all" property which was removed when input-selector was
+     * moved to core */
+    new_elem = g_object_new (GST_TYPE_INPUT_SELECTOR, NULL);
+  } else {
+    new_elem = gst_element_factory_make (elem_name, NULL);
+  }
+
   if (!new_elem) {
     GST_ELEMENT_ERROR (bin, CORE, MISSING_PLUGIN, (NULL),
         ("could not create \"%s\" element.", elem_name));
