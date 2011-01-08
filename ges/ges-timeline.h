@@ -45,6 +45,8 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE, GESTimelineClass))
 
+typedef struct _GESTimelinePrivate GESTimelinePrivate;
+
 /**
  * GESTimeline:
  *
@@ -53,15 +55,7 @@ struct _GESTimeline {
   GstBin parent;
 
   /*< private >*/
-  GList *layers; /* A list of GESTimelineLayer sorted by priority */
-  GList *tracks; /* A list of private track data */
-
-  /* discoverer used for virgin sources */
-  GstDiscoverer *discoverer;
-  /* Objects that are being discovered FIXME : LOCK ! */
-  GList *pendingobjects;
-  /* Whether we are changing state asynchronously or not */
-  gboolean async_pending;
+  GESTimelinePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
@@ -96,6 +90,7 @@ gboolean ges_timeline_save_to_uri (GESTimeline *timeline, gchar *uri);
 
 gboolean ges_timeline_add_layer (GESTimeline *timeline, GESTimelineLayer *layer);
 gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESTimelineLayer *layer);
+GList* ges_timeline_get_layers (GESTimeline *timeline);
 
 gboolean ges_timeline_add_track (GESTimeline *timeline, GESTrack *track);
 gboolean ges_timeline_remove_track (GESTimeline *timeline, GESTrack *track);

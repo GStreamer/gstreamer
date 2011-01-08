@@ -62,7 +62,7 @@ static gboolean
 save_keyfile (GESFormatter * keyfile_formatter, GESTimeline * timeline)
 {
   GKeyFile *kf;
-  GList *tmp, *tracks;
+  GList *tmp, *tracks, *layers;
   int i = 0;
   int n_objects = 0;
   gchar buffer[255];
@@ -103,7 +103,9 @@ save_keyfile (GESFormatter * keyfile_formatter, GESTimeline * timeline)
 
   g_list_free (tracks);
 
-  for (i = 0, tmp = timeline->layers; tmp; i++, tmp = tmp->next) {
+  layers = ges_timeline_get_layers (timeline);
+
+  for (i = 0, tmp = layers; tmp; i++, tmp = tmp->next) {
     const gchar *type;
     GESTimelineLayer *layer;
     GList *objs, *cur;
@@ -166,6 +168,10 @@ save_keyfile (GESFormatter * keyfile_formatter, GESTimeline * timeline)
     }
 
     g_list_free (objs);
+  }
+
+  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
+    g_object_unref (tmp->data);
   }
 
   data = g_key_file_to_data (kf, &length, NULL);

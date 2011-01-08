@@ -54,7 +54,7 @@ GST_START_TEST (test_ges_scenario)
   GESTrack *track;
   GESCustomTimelineSource *source;
   GESTrackObject *trackobject;
-  GList *trackobjects, *tmp;
+  GList *trackobjects, *tmp, *layers, *tracks;
 
   ges_init ();
   /* This is the simplest scenario ever */
@@ -73,7 +73,12 @@ GST_START_TEST (test_ges_scenario)
   /* The timeline steals our reference to the layer */
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
   fail_unless (layer->timeline == timeline);
-  fail_unless (g_list_find (timeline->layers, layer) != NULL);
+
+  layers = ges_timeline_get_layers (timeline);
+  fail_unless (g_list_find (layers, layer) != NULL);
+  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
+    g_object_unref (tmp->data);
+  }
 
   /* Give the Timeline a Track */
   GST_DEBUG ("Create a Track");
@@ -146,7 +151,9 @@ GST_START_TEST (test_ges_scenario)
   g_object_ref (track);
   fail_unless (ges_timeline_remove_track (timeline, track));
   fail_unless (ges_track_get_timeline (track) == NULL);
-  fail_unless (timeline->tracks == NULL);
+
+  tracks = ges_timeline_get_tracks (timeline);
+  fail_unless (tracks == NULL);
   ASSERT_OBJECT_REFCOUNT (track, "track", 1);
   g_object_unref (track);
 
@@ -155,7 +162,9 @@ GST_START_TEST (test_ges_scenario)
   g_object_ref (layer);
   fail_unless (ges_timeline_remove_layer (timeline, layer));
   fail_unless (layer->timeline == NULL);
-  fail_unless (timeline->layers == NULL);
+
+  layers = ges_timeline_get_layers (timeline);
+  fail_unless (layers == NULL);
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
   g_object_unref (layer);
 
@@ -176,7 +185,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   GESTimelineLayer *layer, *tmp_layer;
   GESTrack *track;
   GESCustomTimelineSource *s1, *s2, *s3;
-  GList *trackobjects, *tmp;
+  GList *trackobjects, *tmp, *layers;
   GESTrackObject *trackobject;
 
   ges_init ();
@@ -234,7 +243,11 @@ GST_START_TEST (test_ges_timeline_add_layer)
   /* The timeline steals our reference to the layer */
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
   fail_unless (layer->timeline == timeline);
-  fail_unless (g_list_find (timeline->layers, layer) != NULL);
+  layers = ges_timeline_get_layers (timeline);
+  fail_unless (g_list_find (layers, layer) != NULL);
+  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
+    g_object_unref (tmp->data);
+  }
 
   /* Make sure the associated TrackObjects are in the Track */
   trackobjects =
@@ -295,7 +308,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   GESTimelineLayer *layer, *tmp_layer;
   GESTrack *track;
   GESCustomTimelineSource *s1, *s2, *s3;
-  GList *trackobjects, *tmp;
+  GList *trackobjects, *tmp, *layers;
 
   ges_init ();
 
@@ -342,7 +355,11 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   /* The timeline steals our reference to the layer */
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
   fail_unless (layer->timeline == timeline);
-  fail_unless (g_list_find (timeline->layers, layer) != NULL);
+  layers = ges_timeline_get_layers (timeline);
+  fail_unless (g_list_find (layers, layer) != NULL);
+  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
+    g_object_unref (tmp->data);
+  }
 
   GST_DEBUG ("Add the track to the timeline");
   fail_unless (ges_timeline_add_track (timeline, track));
@@ -403,7 +420,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
   GESTrack *track;
   GESCustomTimelineSource *s1, *s2, *s3;
   GESTrackObject *t1, *t2, *t3;
-  GList *trackobjects, *tmp;
+  GList *trackobjects, *tmp, *layers;
 
   ges_init ();
 
@@ -450,7 +467,12 @@ GST_START_TEST (test_ges_timeline_remove_track)
   /* The timeline steals our reference to the layer */
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
   fail_unless (layer->timeline == timeline);
-  fail_unless (g_list_find (timeline->layers, layer) != NULL);
+
+  layers = ges_timeline_get_layers (timeline);
+  fail_unless (g_list_find (layers, layer) != NULL);
+  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
+    g_object_unref (tmp->data);
+  }
 
   GST_DEBUG ("Add the track to the timeline");
   fail_unless (ges_timeline_add_track (timeline, track));

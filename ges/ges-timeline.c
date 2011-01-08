@@ -23,7 +23,7 @@
  * @short_description: Multimedia timeline
  *
  * #GESTimeline is the central object for any multimedia timeline.
- * 
+ *
  * Contains a list of #GESTimelineLayer which users should use to arrange the
  * various timeline objects through time.
  *
@@ -45,6 +45,19 @@
 
 
 G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN);
+
+struct _GESTimelinePrivate
+{
+  GList *layers;                /* A list of GESTimelineLayer sorted by priority */
+  GList *tracks;                /* A list of private track data */
+
+  /* discoverer used for virgin sources */
+  GstDiscoverer *discoverer;
+  /* Objects that are being discovered FIXME : LOCK ! */
+  GList *pendingobjects;
+  /* Whether we are changing state asynchronously or not */
+  gboolean async_pending;
+};
 
 /* private structure to contain our track-related information */
 
@@ -69,7 +82,7 @@ static GstBinClass *parent_class;
 
 static guint ges_timeline_signals[LAST_SIGNAL] = { 0 };
 
-gint custom_find_track (TrackPrivate * priv, GESTrack * track);
+gint custom_find_track (TrackPrivate * tr_priv, GESTrack * track);
 static GstStateChangeReturn
 ges_timeline_change_state (GstElement * element, GstStateChange transition);
 static void
@@ -101,17 +114,17 @@ ges_timeline_set_property (GObject * object, guint property_id,
 static void
 ges_timeline_dispose (GObject * object)
 {
-  GESTimeline *timeline = GES_TIMELINE (object);
+  GESTimelinePrivate *priv = GES_TIMELINE (object)->priv;
 
-  if (timeline->discoverer) {
-    gst_discoverer_stop (timeline->discoverer);
-    g_object_unref (timeline->discoverer);
-    timeline->discoverer = NULL;
+  if (priv->discoverer) {
+    gst_discoverer_stop (priv->discoverer);
+    g_object_unref (priv->discoverer);
+    priv->discoverer = NULL;
   }
 
-  while (timeline->layers) {
-    GESTimelineLayer *layer = (GESTimelineLayer *) timeline->layers->data;
-    ges_timeline_remove_layer (timeline, layer);
+  while (priv->layers) {
+    GESTimelineLayer *layer = (GESTimelineLayer *) priv->layers->data;
+    ges_timeline_remove_layer (GES_TIMELINE (object), layer);
   }
 
   /* FIXME: it should be possible to remove tracks before removing
@@ -119,9 +132,9 @@ ges_timeline_dispose (GObject * object)
    * objects aren't notified that their gnlobjects have been destroyed.
    */
 
-  while (timeline->tracks) {
-    TrackPrivate *priv = (TrackPrivate *) timeline->tracks->data;
-    ges_timeline_remove_track (timeline, priv->track);
+  while (priv->tracks) {
+    TrackPrivate *tr_priv = (TrackPrivate *) priv->tracks->data;
+    ges_timeline_remove_track (GES_TIMELINE (object), tr_priv->track);
   }
 
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
@@ -138,6 +151,8 @@ ges_timeline_class_init (GESTimelineClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  g_type_class_add_private (klass, sizeof (GESTimelinePrivate));
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -201,16 +216,20 @@ ges_timeline_class_init (GESTimelineClass * klass)
 static void
 ges_timeline_init (GESTimeline * self)
 {
-  self->layers = NULL;
-  self->tracks = NULL;
+
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TIMELINE, GESTimelinePrivate);
+
+  self->priv->layers = NULL;
+  self->priv->tracks = NULL;
 
   /* New discoverer with a 15s timeout */
-  self->discoverer = gst_discoverer_new (15 * GST_SECOND, NULL);
-  g_signal_connect (self->discoverer, "finished",
+  self->priv->discoverer = gst_discoverer_new (15 * GST_SECOND, NULL);
+  g_signal_connect (self->priv->discoverer, "finished",
       G_CALLBACK (discoverer_finished_cb), self);
-  g_signal_connect (self->discoverer, "discovered",
+  g_signal_connect (self->priv->discoverer, "discovered",
       G_CALLBACK (discoverer_discovered_cb), self);
-  gst_discoverer_start (self->discoverer);
+  gst_discoverer_start (self->priv->discoverer);
 }
 
 /**
@@ -234,7 +253,7 @@ ges_timeline_new (void)
  * Creates a timeline from the given URI.
  *
  * Returns: A new timeline if the uri was loaded successfully, or NULL if the
- * uri could not be loaded 
+ * uri could not be loaded
  */
 
 GESTimeline *
@@ -243,7 +262,7 @@ ges_timeline_new_from_uri (gchar * uri)
   GESTimeline *ret;
 
   /* FIXME : we should have a GError** argument so the user can know why
-   * it wasn't able to load the uri 
+   * it wasn't able to load the uri
    */
 
   ret = ges_timeline_new ();
@@ -275,7 +294,7 @@ ges_timeline_load_from_uri (GESTimeline * timeline, gchar * uri)
   gboolean ret = FALSE;
 
   /* FIXME : we should have a GError** argument so the user can know why
-   * it wasn't able to load the uri 
+   * it wasn't able to load the uri
    */
 
   if (!(p = ges_formatter_new_for_uri (uri))) {
@@ -355,9 +374,9 @@ add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object)
 {
   GList *tmp;
 
-  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
-    TrackPrivate *priv = (TrackPrivate *) tmp->data;
-    GESTrack *track = priv->track;
+  for (tmp = timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
+    GESTrack *track = tr_priv->track;
 
     GST_LOG ("Trying with track %p", track);
     add_object_to_track (object, track);
@@ -371,12 +390,12 @@ do_async_start (GESTimeline * timeline)
   GstMessage *message;
   GList *tmp;
 
-  timeline->async_pending = TRUE;
+  timeline->priv->async_pending = TRUE;
 
   /* Freeze state of tracks */
-  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
-    TrackPrivate *priv = (TrackPrivate *) tmp->data;
-    gst_element_set_locked_state ((GstElement *) priv->track, TRUE);
+  for (tmp = timeline->priv->tracks; tmp; tmp = tmp->next) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
+    gst_element_set_locked_state ((GstElement *) tr_priv->track, TRUE);
   }
 
   message = gst_message_new_async_start (GST_OBJECT_CAST (timeline), FALSE);
@@ -388,20 +407,20 @@ do_async_done (GESTimeline * timeline)
 {
   GstMessage *message;
 
-  if (timeline->async_pending) {
+  if (timeline->priv->async_pending) {
     GList *tmp;
     /* Unfreeze state of tracks */
-    for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
-      TrackPrivate *priv = (TrackPrivate *) tmp->data;
-      gst_element_set_locked_state ((GstElement *) priv->track, FALSE);
-      gst_element_sync_state_with_parent ((GstElement *) priv->track);
+    for (tmp = timeline->priv->tracks; tmp; tmp = tmp->next) {
+      TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
+      gst_element_set_locked_state ((GstElement *) tr_priv->track, FALSE);
+      gst_element_sync_state_with_parent ((GstElement *) tr_priv->track);
     }
 
     GST_DEBUG_OBJECT (timeline, "Emitting async-done");
     message = gst_message_new_async_done (GST_OBJECT_CAST (timeline));
     parent_class->handle_message (GST_BIN_CAST (timeline), message);
 
-    timeline->async_pending = FALSE;
+    timeline->priv->async_pending = FALSE;
   }
 }
 
@@ -419,12 +438,13 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
   gboolean found = FALSE;
   gboolean is_image = FALSE;
   GESTimelineFileSource *tfs = NULL;
+  GESTimelinePrivate *priv = timeline->priv;
   const gchar *uri = gst_discoverer_info_get_uri (info);
 
   GST_DEBUG ("Discovered uri %s", uri);
 
   /* Find corresponding TimelineFileSource in the sources */
-  for (tmp = timeline->pendingobjects; tmp; tmp = tmp->next) {
+  for (tmp = priv->pendingobjects; tmp; tmp = tmp->next) {
     tfs = (GESTimelineFileSource *) tmp->data;
 
     if (!g_strcmp0 (tfs->uri, uri)) {
@@ -437,8 +457,7 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
     GList *stream_list;
 
     /* Remove object from list */
-    timeline->pendingobjects =
-        g_list_delete_link (timeline->pendingobjects, tmp);
+    priv->pendingobjects = g_list_delete_link (priv->pendingobjects, tmp);
 
     /* FIXME : Handle errors in discovery */
     stream_list = gst_discoverer_info_get_stream_list (info);
@@ -485,7 +504,7 @@ ges_timeline_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (timeline->pendingobjects) {
+      if (timeline->priv->pendingobjects) {
         do_async_start (timeline);
         ret = GST_STATE_CHANGE_ASYNC;
       }
@@ -533,9 +552,9 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     if (tfs->supportedformats == GES_TRACK_TYPE_UNKNOWN ||
         tfs->maxduration == GST_CLOCK_TIME_NONE || object->duration == 0) {
       GST_LOG ("Incomplete TimelineFileSource, discovering it");
-      timeline->pendingobjects =
-          g_list_append (timeline->pendingobjects, object);
-      gst_discoverer_discover_uri_async (timeline->discoverer,
+      timeline->priv->pendingobjects =
+          g_list_append (timeline->priv->pendingobjects, object);
+      gst_discoverer_discover_uri_async (timeline->priv->discoverer,
           GES_TIMELINE_FILE_SOURCE (object)->uri);
     } else
       add_object_to_tracks (timeline, object);
@@ -563,7 +582,7 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GESTrackObject *trobj = (GESTrackObject *) tmp->data;
 
     GST_DEBUG ("Trying to remove TrackObject %p", trobj);
-    if (G_LIKELY (g_list_find_custom (timeline->tracks,
+    if (G_LIKELY (g_list_find_custom (timeline->priv->tracks,
                 ges_track_object_get_track (trobj),
                 (GCompareFunc) custom_find_track))) {
       GST_DEBUG ("Belongs to one of the tracks we control");
@@ -594,6 +613,7 @@ gboolean
 ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
   GList *objects, *tmp;
+  GESTimelinePrivate *priv = timeline->priv;
 
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
@@ -604,13 +624,13 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   }
 
   /* Add to the list of layers, make sure we don't already control it */
-  if (G_UNLIKELY (g_list_find (timeline->layers, (gconstpointer) layer))) {
+  if (G_UNLIKELY (g_list_find (priv->layers, (gconstpointer) layer))) {
     GST_WARNING ("Layer is already controlled by this timeline");
     return FALSE;
   }
 
   g_object_ref_sink (layer);
-  timeline->layers = g_list_append (timeline->layers, layer);
+  priv->layers = g_list_append (priv->layers, layer);
 
   /* Inform the layer that it belongs to a new timeline */
   ges_timeline_layer_set_timeline (layer, timeline);
@@ -652,10 +672,11 @@ gboolean
 ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
   GList *layer_objects, *tmp;
+  GESTimelinePrivate *priv = timeline->priv;
 
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
-  if (G_UNLIKELY (!g_list_find (timeline->layers, layer))) {
+  if (G_UNLIKELY (!g_list_find (priv->layers, layer))) {
     GST_WARNING ("Layer doesn't belong to this timeline");
     return FALSE;
   }
@@ -676,7 +697,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   g_signal_handlers_disconnect_by_func (layer, layer_object_removed_cb,
       timeline);
 
-  timeline->layers = g_list_remove (timeline->layers, layer);
+  priv->layers = g_list_remove (priv->layers, layer);
 
   ges_timeline_layer_set_timeline (layer, NULL);
 
@@ -688,56 +709,56 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 }
 
 static void
-pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * priv)
+pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
 {
   gchar *padname;
 
 
   GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
 
-  if (G_UNLIKELY (priv->pad)) {
+  if (G_UNLIKELY (tr_priv->pad)) {
     GST_WARNING ("We are already controlling a pad for this track");
     return;
   }
 
   /* Remember the pad */
-  priv->pad = pad;
+  tr_priv->pad = pad;
 
   /* ghost it ! */
   GST_DEBUG ("Ghosting pad and adding it to ourself");
   padname = g_strdup_printf ("track_%p_src", track);
-  priv->ghostpad = gst_ghost_pad_new (padname, pad);
+  tr_priv->ghostpad = gst_ghost_pad_new (padname, pad);
   g_free (padname);
-  gst_pad_set_active (priv->ghostpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT (priv->timeline), priv->ghostpad);
+  gst_pad_set_active (tr_priv->ghostpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
 }
 
 static void
-pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * priv)
+pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
 {
   GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
 
-  if (G_UNLIKELY (priv->pad != pad)) {
+  if (G_UNLIKELY (tr_priv->pad != pad)) {
     GST_WARNING ("Not the pad we're controlling");
     return;
   }
 
-  if (G_UNLIKELY (priv->ghostpad == NULL)) {
+  if (G_UNLIKELY (tr_priv->ghostpad == NULL)) {
     GST_WARNING ("We don't have a ghostpad for this pad !");
     return;
   }
 
   GST_DEBUG ("Removing ghostpad");
-  gst_pad_set_active (priv->ghostpad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT (priv->timeline), priv->ghostpad);
-  priv->ghostpad = NULL;
-  priv->pad = NULL;
+  gst_pad_set_active (tr_priv->ghostpad, FALSE);
+  gst_element_remove_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
+  tr_priv->ghostpad = NULL;
+  tr_priv->pad = NULL;
 }
 
 gint
-custom_find_track (TrackPrivate * priv, GESTrack * track)
+custom_find_track (TrackPrivate * tr_priv, GESTrack * track)
 {
-  if (priv->track == track)
+  if (tr_priv->track == track)
     return 0;
   return -1;
 }
@@ -760,35 +781,36 @@ custom_find_track (TrackPrivate * priv, GESTrack * track)
 gboolean
 ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
-  TrackPrivate *priv;
+  TrackPrivate *tr_priv;
+  GESTimelinePrivate *priv = timeline->priv;
   GList *tmp;
 
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
   /* make sure we don't already control it */
-  if (G_UNLIKELY (g_list_find_custom (timeline->tracks, (gconstpointer) track,
+  if (G_UNLIKELY (g_list_find_custom (priv->tracks, (gconstpointer) track,
               (GCompareFunc) custom_find_track))) {
     GST_WARNING ("Track is already controlled by this timeline");
     return FALSE;
   }
 
-  /* Add the track to ourself (as a GstBin) 
+  /* Add the track to ourself (as a GstBin)
    * Reference is stolen ! */
   if (G_UNLIKELY (!gst_bin_add (GST_BIN (timeline), GST_ELEMENT (track)))) {
     GST_WARNING ("Couldn't add track to ourself (GST)");
     return FALSE;
   }
 
-  priv = g_new0 (TrackPrivate, 1);
-  priv->timeline = timeline;
-  priv->track = track;
+  tr_priv = g_new0 (TrackPrivate, 1);
+  tr_priv->timeline = timeline;
+  tr_priv->track = track;
 
   /* Add the track to the list of tracks we track */
-  timeline->tracks = g_list_append (timeline->tracks, priv);
+  priv->tracks = g_list_append (priv->tracks, tr_priv);
 
   /* Listen to pad-added/-removed */
-  g_signal_connect (track, "pad-added", (GCallback) pad_added_cb, priv);
-  g_signal_connect (track, "pad-removed", (GCallback) pad_removed_cb, priv);
+  g_signal_connect (track, "pad-added", (GCallback) pad_added_cb, tr_priv);
+  g_signal_connect (track, "pad-removed", (GCallback) pad_removed_cb, tr_priv);
 
   /* Inform the track that it's currently being used by ourself */
   ges_track_set_timeline (track, timeline);
@@ -801,7 +823,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   /* ensure that each existing timeline object has the opportunity to create a
    * track object for this track*/
 
-  for (tmp = timeline->layers; tmp; tmp = tmp->next) {
+  for (tmp = priv->layers; tmp; tmp = tmp->next) {
     GList *objects, *obj;
     objects = ges_timeline_layer_get_objects (tmp->data);
 
@@ -837,33 +859,34 @@ gboolean
 ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 {
   GList *tmp;
-  TrackPrivate *priv;
+  TrackPrivate *tr_priv;
+  GESTimelinePrivate *priv = timeline->priv;
 
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
   if (G_UNLIKELY (!(tmp =
-              g_list_find_custom (timeline->tracks, (gconstpointer) track,
+              g_list_find_custom (priv->tracks, (gconstpointer) track,
                   (GCompareFunc) custom_find_track)))) {
     GST_WARNING ("Track doesn't belong to this timeline");
     return FALSE;
   }
 
-  priv = tmp->data;
-  timeline->tracks = g_list_remove (timeline->tracks, priv);
+  tr_priv = tmp->data;
+  priv->tracks = g_list_remove (priv->tracks, tr_priv);
 
   ges_track_set_timeline (track, NULL);
 
   /* Remove ghost pad */
-  if (priv->ghostpad) {
+  if (tr_priv->ghostpad) {
     GST_DEBUG ("Removing ghostpad");
-    gst_pad_set_active (priv->ghostpad, FALSE);
-    gst_ghost_pad_set_target ((GstGhostPad *) priv->ghostpad, NULL);
-    gst_element_remove_pad (GST_ELEMENT (timeline), priv->ghostpad);
+    gst_pad_set_active (tr_priv->ghostpad, FALSE);
+    gst_ghost_pad_set_target ((GstGhostPad *) tr_priv->ghostpad, NULL);
+    gst_element_remove_pad (GST_ELEMENT (timeline), tr_priv->ghostpad);
   }
 
   /* Remove pad-added/-removed handlers */
-  g_signal_handlers_disconnect_by_func (track, pad_added_cb, priv);
-  g_signal_handlers_disconnect_by_func (track, pad_removed_cb, priv);
+  g_signal_handlers_disconnect_by_func (track, pad_added_cb, tr_priv);
+  g_signal_handlers_disconnect_by_func (track, pad_removed_cb, tr_priv);
 
   /* Signal track removal to all layers/objects */
   g_signal_emit (timeline, ges_timeline_signals[TRACK_REMOVED], 0, track);
@@ -882,7 +905,7 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 
   gst_object_unref (track);
 
-  g_free (priv);
+  g_free (tr_priv);
 
   return TRUE;
 }
@@ -903,10 +926,10 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
 {
   GList *tmp;
 
-  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
-    TrackPrivate *priv = (TrackPrivate *) tmp->data;
-    if (pad == priv->ghostpad)
-      return priv->track;
+  for (tmp = timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
+    if (pad == tr_priv->ghostpad)
+      return tr_priv->track;
   }
 
   return NULL;
@@ -926,9 +949,28 @@ ges_timeline_get_tracks (GESTimeline * timeline)
 {
   GList *tmp, *res = NULL;
 
-  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
-    TrackPrivate *priv = (TrackPrivate *) tmp->data;
-    res = g_list_append (res, g_object_ref (priv->track));
+  for (tmp = timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
+    res = g_list_append (res, g_object_ref (tr_priv->track));
+  }
+
+  return res;
+}
+
+/**
+ * ges_timeline_get_layers:
+ * @timeline: a #GESTimeline
+ *
+ * Returns the list of #GESTimelineLayer present in the Timeline.
+ * The caller should unref each Layer once he is done with them.
+ */
+GList *
+ges_timeline_get_layers (GESTimeline * timeline)
+{
+  GList *tmp, *res = NULL;
+
+  for (tmp = timeline->priv->layers; tmp; tmp = g_list_next (tmp)) {
+    res = g_list_append (res, g_object_ref (tmp->data));
   }
 
   return res;

@@ -227,8 +227,10 @@ ges_timeline_load_from_uri
 ges_timeline_save_to_uri
 <SUBSECTION usage>
 ges_timeline_get_tracks
+ges_timeline_get_layers
 ges_timeline_get_track_for_pad
 <SUBSECTION Standard>
+GESTimelinePrivate
 GESTimelineClass
 ges_timeline_get_type
 GES_IS_TIMELINE

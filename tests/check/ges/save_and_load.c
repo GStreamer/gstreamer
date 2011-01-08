@@ -379,7 +379,7 @@ fail:
 static gboolean
 ges_timelines_equal (GESTimeline * a, GESTimeline * b)
 {
-  GList *a_tracks, *b_tracks, *a_iter, *b_iter;
+  GList *a_tracks, *b_tracks, *a_iter, *b_iter, *a_layers, *b_layers;
 
   gboolean ret = FALSE;
   guint i;
@@ -391,6 +391,8 @@ ges_timelines_equal (GESTimeline * a, GESTimeline * b)
 
   a_tracks = ges_timeline_get_tracks (a);
   b_tracks = ges_timeline_get_tracks (b);
+  a_layers = ges_timeline_get_layers (a);
+  b_layers = ges_timeline_get_layers (b);
 
   /* one shortcoming of this procedure is that the objects need to be stored
    * in the same order. Not sure if this is a problem in practice */
@@ -410,7 +412,7 @@ ges_timelines_equal (GESTimeline * a, GESTimeline * b)
     goto fail;
   }
 
-  for (i = 0, a_iter = a->layers, b_iter = b->layers; a_iter && b_iter; a_iter =
+  for (i = 0, a_iter = a_layers, b_iter = b_layers; a_iter && b_iter; a_iter =
       a_iter->next, b_iter = b_iter->next, i++) {
     if (!ges_layers_equal (a_iter->data, b_iter->data)) {
       goto fail;
@@ -429,6 +431,8 @@ fail:
 
   g_list_free_all (a_tracks);
   g_list_free_all (b_tracks);
+  g_list_free_all (a_layers);
+  g_list_free_all (b_layers);
 
   return ret;
 }
