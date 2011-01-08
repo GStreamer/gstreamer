@@ -4,6 +4,8 @@ exec_prefix=
 libdir=
 # includedir is builddir because it is used to find gstconfig.h in places
 includedir=@abs_top_builddir@/gst-libs
+girdir=@abs_top_builddir@/gst-libs/gst/app
+typelibdir=@abs_top_builddir@/gst-libs/gst/app
 
 Name: GStreamer Application Library, Uninstalled
 Description: Helper functions and base classes for application integration, uninstalled
