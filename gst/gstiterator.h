@@ -216,9 +216,10 @@ struct _GstIterator {
   guint32   cookie;		/* cookie of the iterator */
   guint32  *master_cookie;	/* pointer to guint32 holding the cookie when this
 				   iterator was created */
+  guint     size;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 /* creating iterators */

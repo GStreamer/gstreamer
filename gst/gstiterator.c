@@ -71,13 +71,14 @@
 #include "gst_private.h"
 #include <gst/gstiterator.h>
 
-/* FIXME 0.11: Store the size inside the iterator, use GSlice for allocation
- * and let gst_iterator_free() free the memory while the free-func only frees
- * additional resources (maybe call it finalize?).
+/* FIXME 0.11: use GSlice for allocation and let gst_iterator_free() free
+ * the memory while the free-func only frees additional resources
+ * (maybe call it finalize?).
  */
 
 static void
 gst_iterator_init (GstIterator * it,
+    guint size,
     GType type,
     GMutex * lock,
     guint32 * master_cookie,
@@ -85,6 +86,7 @@ gst_iterator_init (GstIterator * it,
     GstIteratorItemFunction item,
     GstIteratorResyncFunction resync, GstIteratorFreeFunction free)
 {
+  it->size = size;
   it->type = type;
   it->lock = lock;
   it->master_cookie = master_cookie;
@@ -137,8 +139,8 @@ gst_iterator_new (guint size,
   g_return_val_if_fail (free != NULL, NULL);
 
   result = g_malloc (size);
-  gst_iterator_init (result, type, lock, master_cookie, next, item, resync,
-      free);
+  gst_iterator_init (result, size, type, lock, master_cookie, next, item,
+      resync, free);
 
   return result;
 }
