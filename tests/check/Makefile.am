@@ -181,13 +181,14 @@ noinst_HEADERS = elements/mxfdemux.h
 TESTS = $(check_PROGRAMS)
 
 AM_CFLAGS = $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) \
-		-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\""
+		-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
+		-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(GST_CHECK_LIBS)
 
 elements_camerabin_CFLAGS = \
         -I$(top_builddir)/gst-libs \
         $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-        $(GST_PLUGINS_BAD_CFLAGS) $(GST_CHECK_CFLAGS) \
+        $(GST_PLUGINS_BAD_CFLAGS) $(GST_CHECK_CFLAGS) $(AM_CFLAGS) \
         -DGST_USE_UNSTABLE_API
 elements_camerabin_LDADD = \
         $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
@@ -200,7 +201,7 @@ if BUILD_EXPERIMENTAL
 elements_camerabin2_CFLAGS = \
         -I$(top_builddir)/gst-libs \
         $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-        $(GST_PLUGINS_BAD_CFLAGS) $(GST_CHECK_CFLAGS) \
+        $(GST_PLUGINS_BAD_CFLAGS) $(GST_CHECK_CFLAGS) $(AM_CFLAGS) \
         -DGST_USE_UNSTABLE_API
 elements_camerabin2_LDADD = \
         $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
@@ -212,7 +213,7 @@ elements_camerabin2_SOURCES = elements/camerabin2.c
 elements_imagecapturebin_CFLAGS = \
         -I$(top_builddir)/gst-libs \
         $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-        $(GST_CHECK_CFLAGS) \
+        $(GST_CHECK_CFLAGS) $(AM_CFLAGS) \
         -DGST_USE_UNSTABLE_API
 elements_imagecapturebin_LDADD = \
         $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
