@@ -2016,7 +2016,6 @@ gst_bin_sort_iterator_free (GstBinSortIterator * bit)
   g_queue_free (bit->queue);
   g_hash_table_destroy (bit->hash);
   gst_object_unref (bin);
-  g_free (bit);
 }
 
 /* should be called with the bin LOCK held */

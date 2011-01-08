@@ -71,9 +71,7 @@
 #include "gst_private.h"
 #include <gst/gstiterator.h>
 
-/* FIXME 0.11: use GSlice for allocation and let gst_iterator_free() free
- * the memory while the free-func only frees additional resources
- * (maybe call it finalize?).
+/* FIXME 0.11: use GSlice for allocation
  */
 
 static void
@@ -181,7 +179,6 @@ gst_list_iterator_free (GstListIterator * it)
   if (it->freefunc) {
     it->freefunc (it->owner);
   }
-  g_free (it);
 }
 
 /**
@@ -378,6 +375,8 @@ gst_iterator_free (GstIterator * it)
   gst_iterator_pop (it);
 
   it->free (it);
+
+  g_free (it);
 }
 
 /**
@@ -467,7 +466,6 @@ filter_free (GstIteratorFilter * it)
 {
   filter_uninit (it);
   gst_iterator_free (it->slave);
-  g_free (it);
 }
 
 /**
@@ -710,7 +708,6 @@ gst_single_object_iterator_free (GstSingleObjectIterator * it)
 {
   if (it->object)
     it->free (it->object);
-  g_free (it);
 }
 
 /**
