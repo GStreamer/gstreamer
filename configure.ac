@@ -52,6 +52,7 @@ AS_AUTOTOOLS_ALTERNATE
 
 dnl Add parameters for aclocal
 AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
@@ -282,7 +283,6 @@ Makefile
 gst-rtsp.spec
 common/Makefile
 common/m4/Makefile
-m4/Makefile
 gst/Makefile
 gst/rtsp-server/Makefile
 examples/Makefile

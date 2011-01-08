@@ -34,3 +34,5 @@ bindings/python/rtspserver.c
 tags
 gst-rtsp.spec
 stamp-h.in
+
+/m4/*m4
