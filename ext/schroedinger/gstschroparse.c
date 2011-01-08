@@ -579,6 +579,7 @@ gst_schro_parse_get_caps (GstBaseVideoParse * base_video_parse)
         state->par_d, NULL);
   } else {
     g_assert_not_reached ();
+    caps = NULL;
   }
 
   return caps;

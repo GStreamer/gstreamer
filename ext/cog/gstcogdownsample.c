@@ -357,6 +357,7 @@ gst_cogdownsample_transform (GstBaseTransform * base_transform,
       break;
     default:
       g_assert_not_reached ();
+      return GST_FLOW_ERROR;
   }
 
   frame = cog_virt_frame_new_unpack (frame);

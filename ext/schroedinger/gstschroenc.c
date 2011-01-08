@@ -600,6 +600,7 @@ gst_schro_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
         state->par_d, NULL);
   } else {
     g_assert_not_reached ();
+    caps = NULL;
   }
 
   return caps;
