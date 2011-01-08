@@ -48,6 +48,12 @@
 
 G_DEFINE_ABSTRACT_TYPE (GESFormatter, ges_formatter, G_TYPE_OBJECT);
 
+struct _GESFormatterPrivate
+{
+  gchar *data;
+  gsize length;
+};
+
 static void ges_formatter_dispose (GObject * object);
 static gboolean load_from_uri (GESFormatter * formatter, GESTimeline *
     timeline, gchar * uri);
@@ -61,6 +67,8 @@ ges_formatter_class_init (GESFormatterClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESFormatterPrivate));
+
   object_class->dispose = ges_formatter_dispose;
 
   klass->can_load_uri = default_can_load_uri;
@@ -72,16 +80,17 @@ ges_formatter_class_init (GESFormatterClass * klass)
 static void
 ges_formatter_init (GESFormatter * object)
 {
+  object->priv = G_TYPE_INSTANCE_GET_PRIVATE (object,
+      GES_TYPE_FORMATTER, GESFormatterPrivate);
 }
 
 static void
 ges_formatter_dispose (GObject * object)
 {
-  GESFormatter *formatter;
-  formatter = GES_FORMATTER (object);
+  GESFormatterPrivate *priv = GES_FORMATTER (object)->priv;
 
-  if (formatter->data) {
-    g_free (formatter->data);
+  if (priv->data) {
+    g_free (priv->data);
   }
 }
 
@@ -213,10 +222,12 @@ ges_formatter_can_save_uri (gchar * uri)
 void
 ges_formatter_set_data (GESFormatter * formatter, void *data, gsize length)
 {
-  if (formatter->data)
-    g_free (formatter->data);
-  formatter->data = data;
-  formatter->length = length;
+  GESFormatterPrivate *priv = GES_FORMATTER (formatter)->priv;
+
+  if (priv->data)
+    g_free (priv->data);
+  priv->data = data;
+  priv->length = length;
 }
 
 /**
@@ -230,9 +241,11 @@ ges_formatter_set_data (GESFormatter * formatter, void *data, gsize length)
 void *
 ges_formatter_get_data (GESFormatter * formatter, gsize * length)
 {
-  *length = formatter->length;
+  GESFormatterPrivate *priv = GES_FORMATTER (formatter)->priv;
 
-  return formatter->data;
+  *length = priv->length;
+
+  return priv->data;
 }
 
 /**
@@ -247,8 +260,10 @@ ges_formatter_get_data (GESFormatter * formatter, gsize * length)
 void
 ges_formatter_clear_data (GESFormatter * formatter)
 {
-  formatter->data = NULL;
-  formatter->length = 0;
+  GESFormatterPrivate *priv = GES_FORMATTER (formatter)->priv;
+
+  priv->data = NULL;
+  priv->length = 0;
 }
 
 /**
@@ -337,9 +352,10 @@ load_from_uri (GESFormatter * formatter, GESTimeline * timeline, gchar * uri)
   gchar *location;
   GError *e = NULL;
   gboolean ret = TRUE;
+  GESFormatterPrivate *priv = GES_FORMATTER (formatter)->priv;
 
 
-  if (formatter->data) {
+  if (priv->data) {
     GST_ERROR ("formatter already has data! please set data to NULL");
   }
 
@@ -347,7 +363,7 @@ load_from_uri (GESFormatter * formatter, GESTimeline * timeline, gchar * uri)
     return FALSE;
   }
 
-  if (g_file_get_contents (location, &formatter->data, &formatter->length, &e)) {
+  if (g_file_get_contents (location, &priv->data, &priv->length, &e)) {
     if (!ges_formatter_load (formatter, timeline)) {
       GST_ERROR ("couldn't deserialize formatter");
       ret = FALSE;
@@ -403,7 +419,7 @@ save_to_uri (GESFormatter * formatter, GESTimeline * timeline, gchar * uri)
   gchar *location;
   GError *e = NULL;
   gboolean ret = TRUE;
-
+  GESFormatterPrivate *priv = GES_FORMATTER (formatter)->priv;
 
   if (!(location = g_filename_from_uri (uri, NULL, NULL))) {
     return FALSE;
@@ -412,7 +428,7 @@ save_to_uri (GESFormatter * formatter, GESTimeline * timeline, gchar * uri)
   if (!ges_formatter_save (formatter, timeline)) {
     GST_ERROR ("couldn't serialize formatter");
   } else {
-    if (!g_file_set_contents (location, formatter->data, formatter->length, &e)) {
+    if (!g_file_set_contents (location, priv->data, priv->length, &e)) {
       GST_ERROR ("couldn't write file '%s': %s", location, e->message);
       ret = FALSE;
     }

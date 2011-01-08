@@ -41,6 +41,8 @@
 #define GES_FORMATTER_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_FORMATTER, GESFormatterClass))
 
+typedef struct _GESFormatterPrivate GESFormatterPrivate;
+
 /**
  * GESFormatter:
  *
@@ -51,8 +53,7 @@ struct _GESFormatter {
   GObject parent;
 
   /*< private >*/
-  gchar    *data;
-  gsize    length;
+  GESFormatterPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
