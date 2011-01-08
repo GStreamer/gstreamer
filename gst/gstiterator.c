@@ -71,9 +71,6 @@
 #include "gst_private.h"
 #include <gst/gstiterator.h>
 
-/* FIXME 0.11: use GSlice for allocation
- */
-
 static void
 gst_iterator_init (GstIterator * it,
     guint size,
@@ -136,7 +133,7 @@ gst_iterator_new (guint size,
   g_return_val_if_fail (resync != NULL, NULL);
   g_return_val_if_fail (free != NULL, NULL);
 
-  result = g_malloc (size);
+  result = g_slice_alloc (size);
   gst_iterator_init (result, size, type, lock, master_cookie, next, item,
       resync, free);
 
@@ -376,7 +373,7 @@ gst_iterator_free (GstIterator * it)
 
   it->free (it);
 
-  g_free (it);
+  g_slice_free1 (it->size, it);
 }
 
 /**
