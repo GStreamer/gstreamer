@@ -67,6 +67,8 @@ AG_GST_ARG_GCOV
 AG_GST_ARG_WITH_PACKAGE_NAME
 AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
+AG_GST_PKG_CONFIG_PATH
+
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *
