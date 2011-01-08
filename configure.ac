@@ -892,7 +892,7 @@ AC_SUBST(GST_LIBS)
 dnl LDFLAGS really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
-if test "x${enable_Bsymbolic}" == "xyes"; then
+if test "x${enable_Bsymbolic}" = "xyes"; then
   GST_ALL_LDFLAGS="$GST_ALL_LDFLAGS -Wl,-Bsymbolic-functions"
 fi
 AC_SUBST(GST_ALL_LDFLAGS)
