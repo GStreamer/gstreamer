@@ -22474,6 +22474,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMJ2Mux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>delta/duration</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGPPMux::faststart</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -22561,6 +22571,16 @@
 <NICK>Track timescale</NICK>
 <BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>delta/duration</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22654,6 +22674,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMP4Mux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>delta/duration</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQTMux::faststart</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -22741,6 +22771,16 @@
 <NICK>Track timescale</NICK>
 <BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>delta/duration</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26470,7 +26510,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>8.09774e-321</DEFAULT>
+<DEFAULT>4.63015e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26510,7 +26550,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>2.34994e-310</DEFAULT>
+<DEFAULT>4.62958e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26520,7 +26560,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>1.82574e-315</DEFAULT>
+<DEFAULT>4.63015e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26550,7 +26590,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>1.47273e-316</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26560,7 +26600,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>1.85891e-316</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26570,7 +26610,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>2.18476e-316</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26600,7 +26640,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>1.39669e-37</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26620,7 +26660,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>7.30424e-38</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26950,7 +26990,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>3.40216e-111</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26960,7 +27000,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>6.9235e+228</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26970,7 +27010,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>7.54985e-96</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27140,7 +27180,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>4.77773e-299</DEFAULT>
+<DEFAULT>4.74303e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27330,7 +27370,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>1.86264e-09</DEFAULT>
+<DEFAULT>2.98023e-08</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27680,7 +27720,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Default font effect</NICK>
 <BLURB>Whether to apply an effect to text by default, for increased readability.</BLURB>
-<DEFAULT>none</DEFAULT>
+<DEFAULT>outline</DEFAULT>
 </ARG>
 
 <ARG>
@@ -45906,7 +45946,7 @@
 <ARG>
 <NAME>GstVideoMaxRate::average-period</NAME>
 <TYPE>guint64</TYPE>
-<RANGE>[1,G_MAXINT64]</RANGE>
+<RANGE>[1,G_MAXLONG]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Period over which to average</NICK>
 <BLURB>Period over which to average the framerate (in ns).</BLURB>
@@ -46861,6 +46901,16 @@
 <NICK>Track timescale</NICK>
 <BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>delta/duration</DEFAULT>
 </ARG>
 
 <ARG>

@@ -1,5 +1,7 @@
 GObject
   GstColorBalanceChannel
+  GstMixerTrack
+    GstMixerOptions
   GstObject
     GstBus
     GstClock
