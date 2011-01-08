@@ -45,25 +45,18 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_FILE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_FILE_SOURCE, GESTimelineFileSourceClass))
 
+typedef struct _GESTimelineFileSourcePrivate GESTimelineFileSourcePrivate;
+
 /**
  * GESTimelineSource:
  * 
  */
 
 struct _GESTimelineFileSource {
-  /*< private >*/
   GESTimelineSource parent;
 
-  gchar *uri;
-
-  gboolean mute;
-  gboolean is_image;
-
-  guint64 maxduration;
-
-  /* The formats supported by this filesource
-   * TODO : Could maybe be moved to a parent class */
-  GESTrackType supportedformats;
+  /*< private >*/
+  GESTimelineFileSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
@@ -82,6 +75,28 @@ struct _GESTimelineFileSourceClass {
 };
 
 GType ges_timeline_filesource_get_type (void);
+
+void
+ges_timeline_filesource_set_mute (GESTimelineFileSource * self, gboolean mute);
+
+void
+ges_timeline_filesource_set_max_duration (GESTimelineFileSource * self,
+    guint64 maxduration);
+
+void
+ges_timeline_filesource_set_supported_formats (GESTimelineFileSource * self,
+    GESTrackType supportedformats);
+
+void
+ges_timeline_filesource_set_is_image (GESTimelineFileSource * self,
+    gboolean is_image);
+
+gboolean ges_timeline_filesource_is_muted (GESTimelineFileSource * self);
+guint64 ges_timeline_filesource_get_max_duration (GESTimelineFileSource * self);
+gboolean ges_timeline_filesource_is_image (GESTimelineFileSource * self);
+const gchar *ges_timeline_filesource_get_uri (GESTimelineFileSource * self);
+GESTrackType
+ges_timeline_filesource_get_supported_formats (GESTimelineFileSource * self);
 
 GESTimelineFileSource* ges_timeline_filesource_new (gchar *uri);
 

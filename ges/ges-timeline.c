@@ -447,7 +447,7 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
   for (tmp = priv->pendingobjects; tmp; tmp = tmp->next) {
     tfs = (GESTimelineFileSource *) tmp->data;
 
-    if (!g_strcmp0 (tfs->uri, uri)) {
+    if (!g_strcmp0 (ges_timeline_filesource_get_uri (tfs), uri)) {
       found = TRUE;
       break;
     }
@@ -455,6 +455,7 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 
   if (found) {
     GList *stream_list;
+    GESTrackType tfs_supportedformats;
 
     /* Remove object from list */
     priv->pendingobjects = g_list_delete_link (priv->pendingobjects, tmp);
@@ -466,13 +467,22 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
     for (tmp = stream_list; tmp; tmp = tmp->next) {
       GstDiscovererStreamInfo *sinf = (GstDiscovererStreamInfo *) tmp->data;
 
-      if (GST_IS_DISCOVERER_AUDIO_INFO (sinf))
-        tfs->supportedformats |= GES_TRACK_TYPE_AUDIO;
-      else if (GST_IS_DISCOVERER_VIDEO_INFO (sinf)) {
-        tfs->supportedformats |= GES_TRACK_TYPE_VIDEO;
+      tfs_supportedformats =
+          ges_timeline_filesource_get_supported_formats (tfs);
+
+      if (GST_IS_DISCOVERER_AUDIO_INFO (sinf)) {
+        tfs_supportedformats |= GES_TRACK_TYPE_AUDIO;
+        ges_timeline_filesource_set_supported_formats (tfs,
+            tfs_supportedformats);
+      } else if (GST_IS_DISCOVERER_VIDEO_INFO (sinf)) {
+        tfs_supportedformats |= GES_TRACK_TYPE_VIDEO;
+        ges_timeline_filesource_set_supported_formats (tfs,
+            tfs_supportedformats);
         if (gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
                 sinf)) {
-          tfs->supportedformats |= GES_TRACK_TYPE_AUDIO;
+          tfs_supportedformats |= GES_TRACK_TYPE_AUDIO;
+          ges_timeline_filesource_set_supported_formats (tfs,
+              tfs_supportedformats);
           is_image = TRUE;
         }
       }
@@ -543,19 +553,23 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 
   if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
     GESTimelineFileSource *tfs = GES_TIMELINE_FILE_SOURCE (object);
+    GESTrackType tfs_supportedformats =
+        ges_timeline_filesource_get_supported_formats (tfs);
+    guint64 tfs_maxdur = ges_timeline_filesource_get_max_duration (tfs);
+    const gchar *tfs_uri;
 
     /* Send the filesource to the discoverer if:
      * * it doesn't have specified supported formats
      * * OR it doesn't have a specified max-duration
      * * OR it doesn't have a valid duration  */
 
-    if (tfs->supportedformats == GES_TRACK_TYPE_UNKNOWN ||
-        tfs->maxduration == GST_CLOCK_TIME_NONE || object->duration == 0) {
+    if (tfs_supportedformats == GES_TRACK_TYPE_UNKNOWN ||
+        tfs_maxdur == GST_CLOCK_TIME_NONE || object->duration == 0) {
       GST_LOG ("Incomplete TimelineFileSource, discovering it");
+      tfs_uri = ges_timeline_filesource_get_uri (tfs);
       timeline->priv->pendingobjects =
           g_list_append (timeline->priv->pendingobjects, object);
-      gst_discoverer_discover_uri_async (timeline->priv->discoverer,
-          GES_TIMELINE_FILE_SOURCE (object)->uri);
+      gst_discoverer_discover_uri_async (timeline->priv->discoverer, tfs_uri);
     } else
       add_object_to_tracks (timeline, object);
   } else {

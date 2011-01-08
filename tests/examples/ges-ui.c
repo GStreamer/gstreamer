@@ -243,7 +243,9 @@ filesource_notify_duration_cb (GESTimelineObject * object,
 {
   guint64 duration, max_inpoint;
   duration = GES_TIMELINE_OBJECT_DURATION (object);
-  max_inpoint = GES_TIMELINE_FILE_SOURCE (object)->maxduration - duration;
+  max_inpoint =
+      ges_timeline_filesource_get_max_duration (GES_TIMELINE_FILE_SOURCE
+      (object)) - duration;
 
   gtk_range_set_value (GTK_RANGE (app->duration), duration);
   gtk_range_set_fill_level (GTK_RANGE (app->in_point), max_inpoint);
@@ -257,10 +259,12 @@ static void
 filesource_notify_max_duration_cb (GESTimelineObject * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
-  gtk_range_set_range (GTK_RANGE (app->duration),
-      0, (gdouble) GES_TIMELINE_FILE_SOURCE (object)->maxduration);
-  gtk_range_set_range (GTK_RANGE (app->in_point),
-      0, (gdouble) GES_TIMELINE_FILE_SOURCE (object)->maxduration);
+  gtk_range_set_range (GTK_RANGE (app->duration), 0, (gdouble)
+      ges_timeline_filesource_get_max_duration (GES_TIMELINE_FILE_SOURCE
+          (object)));
+  gtk_range_set_range (GTK_RANGE (app->in_point), 0, (gdouble)
+      ges_timeline_filesource_get_max_duration (GES_TIMELINE_FILE_SOURCE
+          (object)));
 }
 
 static void
@@ -1460,7 +1464,9 @@ duration_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
 
   for (i = app->selected_objects; i; i = i->next) {
     guint64 duration, maxduration;
-    maxduration = GES_TIMELINE_FILE_SOURCE (i->data)->maxduration;
+    maxduration =
+        ges_timeline_filesource_get_max_duration (GES_TIMELINE_FILE_SOURCE
+        (i->data));
     duration = (value < maxduration ? (value > 0 ? value : 0) : maxduration);
     g_object_set (G_OBJECT (i->data), "duration", (guint64) duration, NULL);
   }
@@ -1475,8 +1481,9 @@ in_point_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
 
   for (i = app->selected_objects; i; i = i->next) {
     guint64 in_point, maxduration;
-    maxduration = GES_TIMELINE_FILE_SOURCE (i->data)->maxduration -
-        GES_TIMELINE_OBJECT_DURATION (i->data);
+    maxduration =
+        ges_timeline_filesource_get_max_duration (GES_TIMELINE_FILE_SOURCE
+        (i->data)) - GES_TIMELINE_OBJECT_DURATION (i->data);
     in_point = (value < maxduration ? (value > 0 ? value : 0) : maxduration);
     g_object_set (G_OBJECT (i->data), "in-point", (guint64) in_point, NULL);
   }
