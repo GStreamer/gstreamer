@@ -27,6 +27,8 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_ITERATOR (gst_iterator_get_type ())
+
 /**
  * GstIteratorResult:
  * @GST_ITERATOR_DONE:   No more items in the iterator
@@ -221,6 +223,8 @@ struct _GstIterator {
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING-1];
 };
+
+GType                   gst_iterator_get_type           (void);
 
 /* creating iterators */
 GstIterator*		gst_iterator_new		(guint size,

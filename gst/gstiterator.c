@@ -71,6 +71,23 @@
 #include "gst_private.h"
 #include <gst/gstiterator.h>
 
+static GstIterator *
+gst_iterator_copy (GstIterator * it)
+{
+  return g_slice_copy (it->size, it);
+}
+
+GType
+gst_iterator_get_type (void)
+{
+  static GType type = 0;
+
+  if (G_UNLIKELY (type == 0))
+    type = g_boxed_type_register_static ("GstIterator",
+        (GBoxedCopyFunc) gst_iterator_copy, (GBoxedFreeFunc) gst_iterator_free);
+  return type;
+}
+
 static void
 gst_iterator_init (GstIterator * it,
     guint size,
