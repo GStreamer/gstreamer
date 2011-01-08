@@ -424,8 +424,20 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
         gst_registry_lookup_bn_locked (registry, plugin->basename);
     if (existing_plugin) {
       GST_DEBUG_OBJECT (registry,
-          "Replacing existing plugin %p with new plugin %p for filename \"%s\"",
-          existing_plugin, plugin, GST_STR_NULL (plugin->filename));
+          "Replacing existing plugin \"%s\" %p with new plugin %p for filename \"%s\"",
+          GST_STR_NULL (existing_plugin->filename), existing_plugin, plugin,
+          GST_STR_NULL (plugin->filename));
+      /* If the new plugin is blacklisted and the existing one isn't cached, do not
+       * accept if it's from a different location than the existing one */
+      if ((plugin->flags & GST_PLUGIN_FLAG_BLACKLISTED) &&
+          strcmp (plugin->filename, existing_plugin->filename)) {
+        GST_WARNING_OBJECT (registry,
+            "Not replacing plugin because new one (%s) is blacklisted but for a different location than existing one (%s)",
+            plugin->filename, existing_plugin->filename);
+        gst_object_unref (plugin);
+        GST_OBJECT_UNLOCK (registry);
+        return FALSE;
+      }
       registry->plugins = g_list_remove (registry->plugins, existing_plugin);
       if (G_LIKELY (existing_plugin->basename))
         g_hash_table_remove (registry->basename_hash,
