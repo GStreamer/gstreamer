@@ -167,7 +167,7 @@ fi
 # the gstreamer base dir and start $SHELL
 cd $GST
 shell=$SHELL
-if test "x$SHELL" == "x/bin/bash"
+if test "x$SHELL" = "x/bin/bash"
 then
   # debian/ubuntu resets our PS1.  bastards.
   shell="$SHELL --noprofile"
