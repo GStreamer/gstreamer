@@ -1,31 +1,32 @@
 # Bulgarian translation of gst-plugins-bad.
-# Copyright (C) 2007, 2008, 2009 Free Software Fondation, Inc.
+# Copyright (C) 2007, 2008, 2009, 2010 Free Software Fondation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Alexander Shopov <ash@contact.bg>, 2007, 2008, 2009.
+# Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010.
+#
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2009-09-24 15:33+0300\n"
-"Last-Translator: Alexander Shopov <ash@contact.bg>\n"
+"POT-Creation-Date: 2011-01-07 20:26+0000\n"
+"PO-Revision-Date: 2010-11-04 14:25+0200\n"
+"Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
-"Language: bg\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Could not read title information for DVD."
-msgstr "Информацията за заглавието на DVD-то не може да бъде прочетена."
+msgstr "Информацията за заглавните части на DVD-то не може да бъде прочетена."
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Устройството за DVD „%s“ не може да бъде отворено."
+msgstr "Не може да се чете от устройството за DVD-та „%s“."
 
 msgid "Failed to set PGC based seeking."
-msgstr "Неуспех при задаване на търсене чрез PGC."
+msgstr "Не може да се търси по веригата на програмите (PGC)"
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
@@ -34,24 +35,24 @@ msgstr ""
 
 #, fuzzy
 msgid "Could not read DVD."
-msgstr "Информацията за заглавието на DVD-то не може да бъде прочетена."
+msgstr "Информацията за заглавните части на DVD-то не може да бъде прочетена."
 
 msgid "No file name specified for writing."
-msgstr "Не е указано име на файл, в който да се пише."
+msgstr "Не е указано име на файл за запис."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Файлът „%s“ не може да бъде отворен за запис."
+msgstr "Файлът „%s“ не може да се отвори за запис."
 
 msgid "Internal data stream error."
-msgstr "Вътрешна грешка в потока от данни."
+msgstr "Вътрешна грешка в потока на данни."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
-msgstr "Във файла „%s“ не може да се пише."
+msgstr "Не може да се записва във файла „%s“."
 
 msgid "Internal data flow error."
-msgstr "Вътрешна грешка в потока от данни."
+msgstr "Вътрешна грешка в потока на данни."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -63,14 +64,8 @@ msgstr "Устройството „%s“ не може да бъде отвор
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Не могат да бъдат получени настройките от устройството „%s“."
+msgstr "Настройките на устройството „%s“ не могат да бъдат получени."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Файлът „%s“ не може да бъде отворен за четене."
-
-#~ msgid "%s %d"
-#~ msgstr "%s %d"
-
-#~ msgid "Internal clock error."
-#~ msgstr "Вътрешна грешка в часовника."
+msgstr "Файлът „%s“ не може да се отвори за четене."

@@ -1,13 +1,13 @@
 # Japanese traslation for gst-plugins-bad
 # This file is put in the public domain.
 #
-# Makoto Kato <makoto.kt@gmail.com>, 2009.
+# Makoto Kato <makoto.kt@gmail.com>, 2009-2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.11.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2009-06-01 20:27+0900\n"
+"POT-Creation-Date: 2011-01-07 20:26+0000\n"
+"PO-Revision-Date: 2010-10-26 16:31+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "Language: ja\n"
@@ -25,7 +25,7 @@ msgid "Failed to open DVD device '%s'."
 msgstr "DVD デバイス '%s' のオープンに失敗しました"
 
 msgid "Failed to set PGC based seeking."
-msgstr ""
+msgstr "PGCを利用したシークに失敗しました。"
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
@@ -72,6 +72,61 @@ msgstr "読み込み用にファイル \"%s\" を開くことができません�
 #~ msgid "Internal clock error."
 #~ msgstr "内部クロックエラー"
 
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr ""
+#~ "ミキサーがコントロールするオーディオデバイスを開くことができません。"
+
+#~ msgid "Low"
+#~ msgstr "低音"
+
+#~ msgid "Medium"
+#~ msgstr "中音"
+
+#~ msgid "High"
+#~ msgstr "高音"
+
+#~ msgid "Production"
+#~ msgstr "プロダクション"
+
+#~ msgid "Off"
+#~ msgstr "Off"
+
+#~ msgid "On"
+#~ msgstr "On"
+
+#~ msgid "Stereo"
+#~ msgstr "ステレオ"
+
+#~ msgid "Surround sound"
+#~ msgstr "サラウンドサウンド"
+
+#~ msgid "Input mix"
+#~ msgstr "入力ミックス"
+
+#~ msgid "Front"
+#~ msgstr "フロント"
+
+#~ msgid "Rear"
+#~ msgstr "リア"
+
+#~ msgid "Side"
+#~ msgstr "サイド"
+
+#~ msgid "Center / LFE"
+#~ msgstr "センター / LFE"
+
+#~ msgid "Microphone"
+#~ msgstr "マイクロフォン"
+
+#~ msgid "Front panel microphone"
+#~ msgstr "フロントパネルのマイクロフォン"
+
+#~ msgid "Input"
+#~ msgstr "入力"
+
+#~ msgid "Line-in"
+#~ msgstr "ライン入力"
+
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"
 
@@ -84,11 +139,98 @@ msgstr "読み込み用にファイル \"%s\" を開くことができません�
 #~ msgid "PCM 4"
 #~ msgstr "PCM 4"
 
+#~ msgid "Green connector"
+#~ msgstr "緑色コネクタ"
+
+#~ msgid "Green front panel connector"
+#~ msgstr "緑色のフロントパネルのコネクタ"
+
+#~ msgid "Pink connector"
+#~ msgstr "ピンク色コネクタ"
+
+#~ msgid "Pink front panel connector"
+#~ msgstr "ピンク色のフロントパネルコネクタ"
+
+#~ msgid "Blue connector"
+#~ msgstr "青色コネクタ"
+
+#~ msgid "Orange connector"
+#~ msgstr "オレンジ色コネクタ"
+
+#~ msgid "Black connector"
+#~ msgstr "黒色コネクタ"
+
+#~ msgid "Gray connector"
+#~ msgstr "グレー色コネクタ"
+
+#~ msgid "White connector"
+#~ msgstr "白色コネクタ"
+
+#~ msgid "Red connector"
+#~ msgstr "赤色コネクタ"
+
+#~ msgid "Yellow connector"
+#~ msgstr "黄色コネクタ"
+
 #~ msgid "Green connector function"
 #~ msgstr "緑色コネクタ機能"
 
+#~ msgid "Front panel line-in"
+#~ msgstr "プロントパネルのライン入力"
+
+#~ msgid "Headphones"
+#~ msgstr "ヘッドフォン"
+
+#~ msgid "Front panel headphones"
+#~ msgstr "フロントパネルのヘッドフォン"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Virtual mixer input"
+#~ msgstr "仮想ミキサー入力"
+
+#~ msgid "Virtual mixer output"
+#~ msgstr "仮想ミキサー出力"
+
 #~ msgid "Virtual mixer channel configuration"
 #~ msgstr "仮想ミックスチャンネル設定"
+
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "プレイバック用にオーディオデバイスを開くことができませんでした。デバイスは"
+#~ "他のアプリケーションによって使われています。"
+
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "プレイバック用にオーディオデバイスを開くことができませんでした。デバイスを"
+#~ "開くための権限を持っていません。"
+
+#~ msgid "Could not open audio device for playback."
+#~ msgstr "プレイバック用にオーディオデバイスを開くことができませんでした。"
+
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "プレイバック用にオーディオデバイスを開くことができませんでした。この Open "
+#~ "Sound System のバージョンはこのエレメントによってサポートされません。"
+
+#~ msgid "Playback is not supported by this audio device."
+#~ msgstr "プレイバックはこのオーディオデバイスによってサポートされません。"
+
+#~ msgid "Audio playback error."
+#~ msgstr "オーディオプレイバックエラー"
+
+#~ msgid "Recording is not supported by this audio device."
+#~ msgstr "録音はこのオーディオデバイスによってサポートされません。"
+
+#~ msgid "Error recording from audio device."
+#~ msgstr "オーディオデバイスからの録音時にエラーが発生しました。"
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 #~ msgstr ""
