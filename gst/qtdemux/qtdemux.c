@@ -6328,13 +6328,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     esds = NULL;
     pasp = NULL;
-    mp4v = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4v);
-    if (!mp4v)
-      mp4v = qtdemux_tree_get_child_by_type (stsd, FOURCC_MP4V);
-    /* H264 is MPEG-4 after all,
-     * and qt seems to put MPEG-4 stuff in there as well */
-    if (!mp4v)
-      mp4v = qtdemux_tree_get_child_by_type (stsd, FOURCC_avc1);
+    /* pick 'the' stsd child */
+    mp4v = qtdemux_tree_get_child_by_type (stsd, fourcc);
     if (mp4v) {
       esds = qtdemux_tree_get_child_by_type (mp4v, FOURCC_esds);
       pasp = qtdemux_tree_get_child_by_type (mp4v, FOURCC_pasp);
