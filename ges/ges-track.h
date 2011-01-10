@@ -60,6 +60,7 @@ struct _GESTrack {
   /* READ-ONLY */
   GESTrackType type;
 
+  /*< private >*/
   GESTrackPrivate * priv;
 
   /* Padding for API extension */
