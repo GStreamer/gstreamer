@@ -78,10 +78,10 @@ static gboolean gst_amrparse_sink_setcaps (GstBaseParse * parse,
     GstCaps * caps);
 
 gboolean gst_amrparse_check_valid_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * framesize, gint * skipsize);
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
 
 GstFlowReturn gst_amrparse_parse_frame (GstBaseParse * parse,
-    GstBuffer * buffer);
+    GstBaseParseFrame * frame);
 
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_amrparse_debug, "amrparse", 0, \
@@ -267,13 +267,15 @@ gst_amrparse_parse_header (GstAmrParse * amrparse,
  */
 gboolean
 gst_amrparse_check_valid_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * framesize, gint * skipsize)
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
+  GstBuffer *buffer;
   const guint8 *data;
   gint fsize, mode, dsize;
   GstAmrParse *amrparse;
 
   amrparse = GST_AMRPARSE (parse);
+  buffer = frame->buffer;
   data = GST_BUFFER_DATA (buffer);
   dsize = GST_BUFFER_SIZE (buffer);
 
@@ -305,8 +307,8 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
      *       to contain a valid header as well (and there is enough data to
      *       perform this check)
      */
-    if (gst_base_parse_get_sync (parse) || gst_base_parse_get_drain (parse) ||
-        (dsize >= fsize && (data[fsize] & 0x83) == 0)) {
+    if (GST_BASE_PARSE_FRAME_SYNC (frame) || GST_BASE_PARSE_FRAME_DRAIN (frame)
+        || (dsize >= fsize && (data[fsize] & 0x83) == 0)) {
       *framesize = fsize;
       return TRUE;
     }
@@ -327,9 +329,8 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
  * Returns: #GstFlowReturn defining the parsing status.
  */
 GstFlowReturn
-gst_amrparse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
+gst_amrparse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
   return GST_FLOW_OK;
 }
 

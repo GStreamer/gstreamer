@@ -77,10 +77,10 @@ static gboolean gst_aacparse_sink_setcaps (GstBaseParse * parse,
     GstCaps * caps);
 
 gboolean gst_aacparse_check_valid_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * size, gint * skipsize);
+    GstBaseParseFrame * frame, guint * size, gint * skipsize);
 
 GstFlowReturn gst_aacparse_parse_frame (GstBaseParse * parse,
-    GstBuffer * buffer);
+    GstBaseParseFrame * frame);
 
 gboolean gst_aacparse_convert (GstBaseParse * parse,
     GstFormat src_format,
@@ -147,8 +147,6 @@ gst_aacparse_class_init (GstAacParseClass * klass)
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_aacparse_parse_frame);
   parse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_aacparse_check_valid_frame);
-  parse_class->get_frame_overhead =
-      GST_DEBUG_FUNCPTR (gst_aacparse_get_frame_overhead);
 }
 
 
@@ -330,8 +328,8 @@ gst_aacparse_adts_get_frame_len (const guint8 * data)
  */
 static gboolean
 gst_aacparse_check_adts_frame (GstAacParse * aacparse,
-    const guint8 * data,
-    const guint avail, guint * framesize, guint * needed_data)
+    const guint8 * data, const guint avail, gboolean drain,
+    guint * framesize, guint * needed_data)
 {
   if (G_UNLIKELY (avail < 2))
     return FALSE;
@@ -340,7 +338,7 @@ gst_aacparse_check_adts_frame (GstAacParse * aacparse,
     *framesize = gst_aacparse_adts_get_frame_len (data);
 
     /* In EOS mode this is enough. No need to examine the data further */
-    if (gst_base_parse_get_drain (GST_BASE_PARSE (aacparse))) {
+    if (drain) {
       return TRUE;
     }
 
@@ -408,7 +406,8 @@ gst_aacparse_parse_adts_header (GstAacParse * aacparse, const guint8 * data,
  */
 static gboolean
 gst_aacparse_detect_stream (GstAacParse * aacparse,
-    const guint8 * data, const guint avail, guint * framesize, gint * skipsize)
+    const guint8 * data, const guint avail, gboolean drain,
+    guint * framesize, gint * skipsize)
 {
   gboolean found = FALSE;
   guint need_data = 0;
@@ -444,7 +443,7 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     return FALSE;
   }
 
-  if (gst_aacparse_check_adts_frame (aacparse, data, avail,
+  if (gst_aacparse_check_adts_frame (aacparse, data, avail, drain,
           framesize, &need_data)) {
     gint rate, channels;
 
@@ -568,17 +567,19 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
  */
 gboolean
 gst_aacparse_check_valid_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * framesize, gint * skipsize)
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
   const guint8 *data;
   GstAacParse *aacparse;
   gboolean ret = FALSE;
   gboolean sync;
+  GstBuffer *buffer;
 
   aacparse = GST_AACPARSE (parse);
+  buffer = frame->buffer;
   data = GST_BUFFER_DATA (buffer);
 
-  sync = gst_base_parse_get_sync (parse);
+  sync = GST_BASE_PARSE_FRAME_SYNC (frame);
 
   if (aacparse->header_type == DSPAAC_HEADER_ADIF ||
       aacparse->header_type == DSPAAC_HEADER_NONE) {
@@ -589,13 +590,14 @@ gst_aacparse_check_valid_frame (GstBaseParse * parse,
   } else if (aacparse->header_type == DSPAAC_HEADER_NOT_PARSED || sync == FALSE) {
 
     ret = gst_aacparse_detect_stream (aacparse, data, GST_BUFFER_SIZE (buffer),
-        framesize, skipsize);
+        GST_BASE_PARSE_FRAME_DRAIN (frame), framesize, skipsize);
 
   } else if (aacparse->header_type == DSPAAC_HEADER_ADTS) {
     guint needed_data = 1024;
 
     ret = gst_aacparse_check_adts_frame (aacparse, data,
-        GST_BUFFER_SIZE (buffer), framesize, &needed_data);
+        GST_BUFFER_SIZE (buffer), GST_BASE_PARSE_FRAME_DRAIN (frame),
+        framesize, &needed_data);
 
     if (!ret) {
       GST_DEBUG ("buffer didn't contain valid frame");
@@ -619,20 +621,38 @@ gst_aacparse_check_valid_frame (GstBaseParse * parse,
  *
  * Implementation of "parse_frame" vmethod in #GstBaseParse class.
  *
+ * Also determines frame overhead.
+ * ADTS streams have a 7 byte header in each frame. MP4 and ADIF streams don't have
+ * a per-frame header.
+ *
+ * We're making a couple of simplifying assumptions:
+ *
+ * 1. We count Program Configuration Elements rather than searching for them
+ *    in the streams to discount them - the overhead is negligible.
+ *
+ * 2. We ignore CRC. This has a worst-case impact of (num_raw_blocks + 1)*16
+ *    bits, which should still not be significant enough to warrant the
+ *    additional parsing through the headers
+ *
  * Returns: GST_FLOW_OK if frame was successfully parsed and can be pushed
  *          forward. Otherwise appropriate error is returned.
  */
 GstFlowReturn
-gst_aacparse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
+gst_aacparse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstAacParse *aacparse;
+  GstBuffer *buffer;
   GstFlowReturn ret = GST_FLOW_OK;
   gint rate, channels;
 
   aacparse = GST_AACPARSE (parse);
+  buffer = frame->buffer;
 
   if (G_UNLIKELY (aacparse->header_type != DSPAAC_HEADER_ADTS))
     return ret;
+
+  /* see above */
+  frame->overhead = 7;
 
   gst_aacparse_parse_adts_header (aacparse, GST_BUFFER_DATA (buffer),
       &rate, &channels, NULL, NULL);
@@ -691,34 +711,4 @@ gst_aacparse_stop (GstBaseParse * parse)
 {
   GST_DEBUG ("stop");
   return TRUE;
-}
-
-
-/**
- * gst_aacparse_get_frame_overhead:
- * @parse: #GstBaseParse.
- * @buffer: #GstBuffer.
- *
- * Implementation of "get_frame_overhead" vmethod in #GstBaseParse class. ADTS
- * streams have a 7 byte header in each frame. MP4 and ADIF streams don't have
- * a per-frame header.
- *
- * We're making a couple of simplifying assumptions:
- *
- * 1. We count Program Configuration Elements rather than searching for them
- *    in the streams to discount them - the overhead is negligible.
- *
- * 2. We ignore CRC. This has a worst-case impact of (num_raw_blocks + 1)*16
- *    bits, which should still not be significant enough to warrant the
- *    additional parsing through the headers
- */
-gint
-gst_aacparse_get_frame_overhead (GstBaseParse * parse, GstBuffer * buffer)
-{
-  GstAacParse *aacparse = GST_AACPARSE (parse);
-
-  if (aacparse->header_type == DSPAAC_HEADER_ADTS)
-    return 7;
-  else
-    return 0;
 }

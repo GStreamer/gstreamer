@@ -90,25 +90,78 @@ G_BEGIN_DECLS
 #define GST_BASE_PARSE_FLOW_DROPPED   GST_FLOW_CUSTOM_SUCCESS
 
 /**
- * GST_BASE_PARSE_FLOW_CLIP:
+ * GstBaseParseFrameFlags:
+ * @GST_BASE_PARSE_FRAME_FLAG_NONE: no flag
+ * @GST_BASE_PARSE_FRAME_FLAG_SYNC: indicates if parsing is 'in sync'
+ * @GST_BASE_PARSE_FRAME_FLAG_DRAIN: indicates if parser is 'draining'.
+ *   That is, leftover data (e.g. in FLUSH or EOS situation) is being parsed.
+ * @GST_BASE_PARSE_FRAME_FLAG_NO_FRAME: set to indicate this buffer should not be
+ *   counted as frame, e.g. if this frame is dependent on a previous one.
+ *   As it is not counted as a frame, bitrate increases but frame to time
+ *   conversions are maintained.
+ * @GST_BASE_PARSE_FRAME_FLAG_CLIP: @pre_push_buffer can set this to indicate
+ *    that regular segment clipping can still be performed (as opposed to
+ *    any custom one having been done).
  *
- * A #GstFlowReturn that can be returned from pre_push_buffer to
- * indicate that regular segment clipping should be performed.
+ * Flags to be used in a #GstBaseParseFrame.
  *
  * Since: 0.10.x
  */
-#define GST_BASE_PARSE_FLOW_CLIP      GST_FLOW_CUSTOM_SUCCESS_1
+typedef enum {
+  GST_BASE_PARSE_FRAME_FLAG_NONE         = 0,
+  GST_BASE_PARSE_FRAME_FLAG_SYNC         = (1 << 0),
+  GST_BASE_PARSE_FRAME_FLAG_DRAIN        = (1 << 1),
+  GST_BASE_PARSE_FRAME_FLAG_NO_FRAME     = (1 << 2),
+  GST_BASE_PARSE_FRAME_FLAG_CLIP         = (1 << 3)
+} GstBaseParseFrameFlags;
 
 /**
- * GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME:
+ * GstBaseParseFrame:
+ * @buffer: data to check for valid frame or parsed frame.
+ *   Subclass is allowed to replace this buffer.
+ * @overhead: subclass can set this to indicates the metadata overhead
+ *   for the given frame, which is then used to enable more accurate bitrate
+ *   computations. If this is -1, it is assumed that this frame should be
+ *   skipped in bitrate calculation.
+ * @flags: a combination of input and output #GstBaseParseFrameFlags that
+ *  convey additional context to subclass or allow subclass to tune
+ *  subsequent #GstBaseParse actions.
  *
- * A #GstBufferFlag that can be set to have this buffer not counted as frame,
- * e.g. if this frame is dependent on a previous one.  As it is not counted as
- * a frame, bitrate increases but frame to time conversions are maintained.
+ * Frame (context) data passed to each frame parsing virtual methods.  In
+ * addition to providing the data to be checked for a valid frame or an already
+ * identified frame, it conveys additional metadata or control information
+ * from and to the subclass w.r.t. the particular frame in question (rather
+ * than global parameters).  Some of these may apply to each parsing stage, others
+ * only to some a particular one.  These parameters are effectively zeroed at start
+ * of each frame's processing, i.e. parsing virtual method invocation sequence.
  *
  * Since: 0.10.x
  */
-#define GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME     GST_BUFFER_FLAG_LAST
+typedef struct {
+  GstBuffer       *buffer;
+  guint           flags;
+  gint            overhead;
+} GstBaseParseFrame;
+
+/**
+ * GST_BASE_PARSE_FRAME_SYNC:
+ * @frame: base parse frame instance
+ *
+ * Obtains current sync status indicated in frame.
+ *
+ * Since: 0.10.x
+ */
+#define GST_BASE_PARSE_FRAME_SYNC(frame)     (!!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_SYNC))
+
+/**
+ * GST_BASE_PARSE_FRAME_DRAIN:
+ * @frame: base parse frame instance
+ *
+ * Obtains current drain status indicated in frame.
+ *
+ * Since: 0.10.x
+ */
+#define GST_BASE_PARSE_FRAME_DRAIN(frame)    (!!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_DRAIN))
 
 
 /**
@@ -118,6 +171,8 @@ G_BEGIN_DECLS
  * GST_BASE_PARSE_SEEK_TABLE: Additional metadata provides more accurate seeking.
  *
  * Indicates what level (of quality) of seeking is possible.
+ *
+ * Since: 0.10.x
  */
 typedef enum _GstBaseParseSeekable {
   GST_BASE_PARSE_SEEK_NONE,
@@ -221,12 +276,15 @@ struct _GstBaseParseClass {
                                        GstCaps *caps);
 
   gboolean      (*check_valid_frame)  (GstBaseParse *parse,
-                                       GstBuffer *buffer,
+                                       GstBaseParseFrame *frame,
                                        guint *framesize,
                                        gint *skipsize);
 
   GstFlowReturn (*parse_frame)        (GstBaseParse *parse,
-                                       GstBuffer *buffer);
+                                       GstBaseParseFrame *frame);
+
+  GstFlowReturn (*pre_push_frame)     (GstBaseParse *parse,
+                                       GstBaseParseFrame *frame);
 
   gboolean      (*convert)            (GstBaseParse * parse,
                                        GstFormat src_format,
@@ -240,21 +298,16 @@ struct _GstBaseParseClass {
   gboolean      (*src_event)          (GstBaseParse *parse,
                                        GstEvent *event);
 
-  gint          (*get_frame_overhead) (GstBaseParse *parse,
-                                       GstBuffer *buf);
-
-  GstFlowReturn (*pre_push_buffer)    (GstBaseParse *parse,
-                                       GstBuffer *buf);
-
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];  
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType           gst_base_parse_get_type         (void);
 
+void gst_base_parse_frame_init (GstBaseParse * parse, GstBaseParseFrame * frame);
 
-GstFlowReturn gst_base_parse_push_buffer (GstBaseParse *parse,
-                                          GstBuffer *buffer);
+GstFlowReturn gst_base_parse_push_frame (GstBaseParse *parse,
+                                          GstBaseParseFrame *frame);
 
 void gst_base_parse_set_duration (GstBaseParse *parse,
                                   GstFormat fmt, gint64 duration, gint interval);
@@ -262,16 +315,12 @@ void gst_base_parse_set_duration (GstBaseParse *parse,
 void gst_base_parse_set_seek (GstBaseParse * parse,
                               GstBaseParseSeekable seek, guint bitrate);
 
-void gst_base_parse_set_min_frame_size (GstBaseParse *parse,
-                                        guint min_size);
+void gst_base_parse_set_min_frame_size (GstBaseParse *parse, guint min_size);
+
 void gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough);
 
 void gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
                                      guint fps_den, guint lead_in, guint lead_out);
-
-gboolean gst_base_parse_get_sync (GstBaseParse * parse);
-
-gboolean gst_base_parse_get_drain (GstBaseParse * parse);
 
 gboolean gst_base_parse_convert_default (GstBaseParse * parse,
                                          GstFormat src_format, gint64 src_value,
