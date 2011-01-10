@@ -5,7 +5,7 @@
  *  @author: Olivier Crete <olivier.crete@collabora.co.uk>
  * Copyright 2007 Nokia Corp.
  *
- * fs-funnel.c: Simple Funnel element
+ * rtsp-funnel.c: Simple Funnel element
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
  */
 
 /**
- * SECTION:element-fsfunnel
+ * SECTION:element-rtspfunnel
  * @short_description: N-to-1 simple funnel
  *
  * Takes packets from various input sinks into one output source
@@ -33,12 +33,12 @@
 #  include "config.h"
 #endif
 
-#include "fs-funnel.h"
+#include "rtsp-funnel.h"
 
-GST_DEBUG_CATEGORY_STATIC (fs_funnel_debug);
-#define GST_CAT_DEFAULT fs_funnel_debug
+GST_DEBUG_CATEGORY_STATIC (rtsp_funnel_debug);
+#define GST_CAT_DEFAULT rtsp_funnel_debug
 
-static const GstElementDetails fs_funnel_details =
+static const GstElementDetails rtsp_funnel_details =
 GST_ELEMENT_DETAILS ("Farsight Funnel pipe fitting",
     "Generic",
     "N-to-1 pipe fitting",
@@ -60,38 +60,39 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static void
 _do_init (GType type)
 {
-  GST_DEBUG_CATEGORY_INIT (fs_funnel_debug, "fsfunnel", 0, "fsfunnel element");
+  GST_DEBUG_CATEGORY_INIT (rtsp_funnel_debug, "rtspfunnel", 0,
+      "rtsp funnel element");
 }
 
-GST_BOILERPLATE_FULL (FsFunnel, fs_funnel, GstElement, GST_TYPE_ELEMENT,
+GST_BOILERPLATE_FULL (RTSPFunnel, rtsp_funnel, GstElement, GST_TYPE_ELEMENT,
     _do_init);
 
 
 
-static GstStateChangeReturn fs_funnel_change_state (GstElement * element,
+static GstStateChangeReturn rtsp_funnel_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstPad *fs_funnel_request_new_pad (GstElement * element,
+static GstPad *rtsp_funnel_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
-static void fs_funnel_release_pad (GstElement * element, GstPad * pad);
+static void rtsp_funnel_release_pad (GstElement * element, GstPad * pad);
 
-static GstFlowReturn fs_funnel_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean fs_funnel_event (GstPad * pad, GstEvent * event);
-static gboolean fs_funnel_src_event (GstPad * pad, GstEvent * event);
-static GstCaps *fs_funnel_getcaps (GstPad * pad);
+static GstFlowReturn rtsp_funnel_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean rtsp_funnel_event (GstPad * pad, GstEvent * event);
+static gboolean rtsp_funnel_src_event (GstPad * pad, GstEvent * event);
+static GstCaps *rtsp_funnel_getcaps (GstPad * pad);
 
 
 typedef struct
 {
   GstSegment segment;
-} FsFunnelPadPrivate;
+} RTSPFunnelPadPrivate;
 
 static void
-fs_funnel_base_init (gpointer g_class)
+rtsp_funnel_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (gstelement_class, &fs_funnel_details);
+  gst_element_class_set_details (gstelement_class, &rtsp_funnel_details);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&funnel_sink_template));
@@ -101,7 +102,7 @@ fs_funnel_base_init (gpointer g_class)
 
 
 static void
-fs_funnel_dispose (GObject * object)
+rtsp_funnel_dispose (GObject * object)
 {
   GList *item;
 
@@ -119,44 +120,45 @@ restart:
 }
 
 static void
-fs_funnel_class_init (FsFunnelClass * klass)
+rtsp_funnel_class_init (RTSPFunnelClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (fs_funnel_dispose);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (rtsp_funnel_dispose);
 
   gstelement_class->request_new_pad =
-      GST_DEBUG_FUNCPTR (fs_funnel_request_new_pad);
-  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (fs_funnel_release_pad);
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (fs_funnel_change_state);
+      GST_DEBUG_FUNCPTR (rtsp_funnel_request_new_pad);
+  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (rtsp_funnel_release_pad);
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (rtsp_funnel_change_state);
 }
 
 static void
-fs_funnel_init (FsFunnel * funnel, FsFunnelClass * g_class)
+rtsp_funnel_init (RTSPFunnel * funnel, RTSPFunnelClass * g_class)
 {
   funnel->srcpad = gst_pad_new_from_static_template (&funnel_src_template,
       "src");
-  gst_pad_set_event_function (funnel->srcpad, fs_funnel_src_event);
+  gst_pad_set_event_function (funnel->srcpad, rtsp_funnel_src_event);
   gst_pad_use_fixed_caps (funnel->srcpad);
   gst_element_add_pad (GST_ELEMENT (funnel), funnel->srcpad);
 }
 
 
 static GstPad *
-fs_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
+rtsp_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name)
 {
   GstPad *sinkpad;
-  FsFunnelPadPrivate *priv = g_slice_alloc0 (sizeof (FsFunnelPadPrivate));
+  RTSPFunnelPadPrivate *priv = g_slice_alloc0 (sizeof (RTSPFunnelPadPrivate));
 
   GST_DEBUG_OBJECT (element, "requesting pad");
 
   sinkpad = gst_pad_new_from_template (templ, name);
 
-  gst_pad_set_chain_function (sinkpad, GST_DEBUG_FUNCPTR (fs_funnel_chain));
-  gst_pad_set_event_function (sinkpad, GST_DEBUG_FUNCPTR (fs_funnel_event));
-  gst_pad_set_getcaps_function (sinkpad, GST_DEBUG_FUNCPTR (fs_funnel_getcaps));
+  gst_pad_set_chain_function (sinkpad, GST_DEBUG_FUNCPTR (rtsp_funnel_chain));
+  gst_pad_set_event_function (sinkpad, GST_DEBUG_FUNCPTR (rtsp_funnel_event));
+  gst_pad_set_getcaps_function (sinkpad,
+      GST_DEBUG_FUNCPTR (rtsp_funnel_getcaps));
 
   gst_segment_init (&priv->segment, GST_FORMAT_UNDEFINED);
   gst_pad_set_element_private (sinkpad, priv);
@@ -169,25 +171,25 @@ fs_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
 }
 
 static void
-fs_funnel_release_pad (GstElement * element, GstPad * pad)
+rtsp_funnel_release_pad (GstElement * element, GstPad * pad)
 {
-  FsFunnel *funnel = FS_FUNNEL (element);
-  FsFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
+  RTSPFunnel *funnel = RTSP_FUNNEL (element);
+  RTSPFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
 
   GST_DEBUG_OBJECT (funnel, "releasing pad");
 
   gst_pad_set_active (pad, FALSE);
 
   if (priv)
-    g_slice_free1 (sizeof (FsFunnelPadPrivate), priv);
+    g_slice_free1 (sizeof (RTSPFunnelPadPrivate), priv);
 
   gst_element_remove_pad (GST_ELEMENT_CAST (funnel), pad);
 }
 
 static GstCaps *
-fs_funnel_getcaps (GstPad * pad)
+rtsp_funnel_getcaps (GstPad * pad)
 {
-  FsFunnel *funnel = FS_FUNNEL (gst_pad_get_parent (pad));
+  RTSPFunnel *funnel = RTSP_FUNNEL (gst_pad_get_parent (pad));
   GstCaps *caps;
 
   caps = gst_pad_peer_get_caps (funnel->srcpad);
@@ -200,11 +202,11 @@ fs_funnel_getcaps (GstPad * pad)
 }
 
 static GstFlowReturn
-fs_funnel_chain (GstPad * pad, GstBuffer * buffer)
+rtsp_funnel_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn res;
-  FsFunnel *funnel = FS_FUNNEL (gst_pad_get_parent (pad));
-  FsFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
+  RTSPFunnel *funnel = RTSP_FUNNEL (gst_pad_get_parent (pad));
+  RTSPFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
   GstEvent *event = NULL;
   GstClockTime newts;
   GstCaps *padcaps;
@@ -268,10 +270,10 @@ out:
 }
 
 static gboolean
-fs_funnel_event (GstPad * pad, GstEvent * event)
+rtsp_funnel_event (GstPad * pad, GstEvent * event)
 {
-  FsFunnel *funnel = FS_FUNNEL (gst_pad_get_parent (pad));
-  FsFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
+  RTSPFunnel *funnel = RTSP_FUNNEL (gst_pad_get_parent (pad));
+  RTSPFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
   gboolean forward = TRUE;
   gboolean res = TRUE;
 
@@ -319,7 +321,7 @@ fs_funnel_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-fs_funnel_src_event (GstPad * pad, GstEvent * event)
+rtsp_funnel_src_event (GstPad * pad, GstEvent * event)
 {
   GstElement *funnel;
   GstIterator *iter;
@@ -361,7 +363,7 @@ static void
 reset_pad (gpointer data, gpointer user_data)
 {
   GstPad *pad = data;
-  FsFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
+  RTSPFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
 
   GST_OBJECT_LOCK (pad);
   gst_segment_init (&priv->segment, GST_FORMAT_UNDEFINED);
@@ -370,9 +372,9 @@ reset_pad (gpointer data, gpointer user_data)
 }
 
 static GstStateChangeReturn
-fs_funnel_change_state (GstElement * element, GstStateChange transition)
+rtsp_funnel_change_state (GstElement * element, GstStateChange transition)
 {
-  FsFunnel *funnel = FS_FUNNEL (element);
+  RTSPFunnel *funnel = RTSP_FUNNEL (element);
   GstStateChangeReturn ret;
 
   switch (transition) {

@@ -5,7 +5,7 @@
  *  @author: Olivier Crete <olivier.crete@collabora.co.uk>
  * Copyright 2007 Nokia Corp.
  *
- * fs-funnel.h: Simple Funnel element
+ * rtsp-funnel.h: Simple Funnel element
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,33 +23,33 @@
  */
 
 
-#ifndef __FS_FUNNEL_H__
-#define __FS_FUNNEL_H__
+#ifndef __RTSP_FUNNEL_H__
+#define __RTSP_FUNNEL_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define FS_TYPE_FUNNEL \
-  (fs_funnel_get_type ())
-#define FS_FUNNEL(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),FS_TYPE_FUNNEL,FsFunnel))
-#define FS_FUNNEL_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),FS_TYPE_FUNNEL,FsFunnelClass))
-#define FS_IS_FUNNEL(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),FS_TYPE_FUNNEL))
-#define FS_IS_FUNNEL_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),FS_TYPE_FUNNEL))
+#define RTSP_TYPE_FUNNEL \
+  (rtsp_funnel_get_type ())
+#define RTSP_FUNNEL(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),RTSP_TYPE_FUNNEL,RTSPFunnel))
+#define RTSP_FUNNEL_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),RTSP_TYPE_FUNNEL,RTSPFunnelClass))
+#define RTSP_IS_FUNNEL(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),RTSP_TYPE_FUNNEL))
+#define RTSP_IS_FUNNEL_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),RTSP_TYPE_FUNNEL))
 
-typedef struct _FsFunnel          FsFunnel;
-typedef struct _FsFunnelClass     FsFunnelClass;
+typedef struct _RTSPFunnel          RTSPFunnel;
+typedef struct _RTSPFunnelClass     RTSPFunnelClass;
 
 /**
- * FsFunnel:
+ * RTSPFunnel:
  *
- * Opaque #FsFunnel data structure.
+ * Opaque #RTSPFunnel data structure.
  */
-struct _FsFunnel {
+struct _RTSPFunnel {
   GstElement      element;
 
   /*< private >*/
@@ -58,12 +58,12 @@ struct _FsFunnel {
   gboolean has_segment;
 };
 
-struct _FsFunnelClass {
+struct _RTSPFunnelClass {
   GstElementClass parent_class;
 };
 
-GType   fs_funnel_get_type        (void);
+GType   rtsp_funnel_get_type        (void);
 
 G_END_DECLS
 
-#endif /* __FS_FUNNEL_H__ */
+#endif /* __RTSP_FUNNEL_H__ */
