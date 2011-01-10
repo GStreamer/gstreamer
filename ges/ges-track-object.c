@@ -626,7 +626,7 @@ ensure_gnl_object (GESTrackObject * object)
 {
   GESTrackObjectClass *class;
   GstElement *gnlobject;
-  gboolean res = TRUE;
+  gboolean res = FALSE;
 
   if (object->priv->gnlobject && object->priv->valid)
     return FALSE;
@@ -638,7 +638,7 @@ ensure_gnl_object (GESTrackObject * object)
 
   if (G_UNLIKELY (class->create_gnl_object == NULL)) {
     GST_ERROR ("No 'create_gnl_object' implementation !");
-    return FALSE;
+    goto done;
   }
 
   GST_DEBUG ("Calling virtual method");
@@ -649,23 +649,10 @@ ensure_gnl_object (GESTrackObject * object)
   if (G_UNLIKELY (gnlobject == NULL)) {
     GST_ERROR
         ("'create_gnl_object' implementation returned TRUE but no GnlObject is available");
-    return FALSE;
+    goto done;
   }
 
   object->priv->gnlobject = gnlobject;
-
-  /* Connect to property notifications */
-  /* FIXME : remember the signalids so we can remove them later on !!! */
-  g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::start",
-      G_CALLBACK (gnlobject_start_cb), object);
-  g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::media-start",
-      G_CALLBACK (gnlobject_media_start_cb), object);
-  g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::duration",
-      G_CALLBACK (gnlobject_duration_cb), object);
-  g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::priority",
-      G_CALLBACK (gnlobject_priority_cb), object);
-  g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::active",
-      G_CALLBACK (gnlobject_active_cb), object);
 
   /* 2. Fill in the GnlObject */
   if (gnlobject) {
@@ -675,6 +662,19 @@ ensure_gnl_object (GESTrackObject * object)
         ges_timeline_object_fill_track_object (object->priv->timelineobj,
         object, object->priv->gnlobject);
     if (res) {
+      /* Connect to property notifications */
+      /* FIXME : remember the signalids so we can remove them later on !!! */
+      g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::start",
+          G_CALLBACK (gnlobject_start_cb), object);
+      g_signal_connect (G_OBJECT (object->priv->gnlobject),
+          "notify::media-start", G_CALLBACK (gnlobject_media_start_cb), object);
+      g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::duration",
+          G_CALLBACK (gnlobject_duration_cb), object);
+      g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::priority",
+          G_CALLBACK (gnlobject_priority_cb), object);
+      g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::active",
+          G_CALLBACK (gnlobject_active_cb), object);
+
       /* Set some properties on the GnlObject */
       g_object_set (object->priv->gnlobject,
           "caps", ges_track_get_caps (object->priv->track),
@@ -688,6 +688,7 @@ ensure_gnl_object (GESTrackObject * object)
     }
   }
 
+done:
   object->priv->valid = res;
 
   GST_DEBUG ("Returning res:%d", res);
