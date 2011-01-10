@@ -93,7 +93,10 @@
  *       frame contents and setting the caps, and buffer metadata (e.g.
  *       buffer timestamp and duration, or keyframe if applicable).
  *       (although the latter can also be done by GstBaseParse if it is
- *       appropriately configured, see below).
+ *       appropriately configured, see below).  Frame is provided with
+ *       timestamp derived from upstream (as much as generally possible),
+ *       duration obtained form configuration (see below), and offset
+ *       if meaningful (in pull mode).
  *     </para></listitem>
  *     <listitem><para>
  *       Finally the buffer can be pushed downstream and parsing loop starts
@@ -1469,6 +1472,9 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
       GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET (buffer),
       GST_BUFFER_SIZE (buffer));
 
+  /* use default handler to provide initial (upstream) metadata */
+  gst_base_parse_parse_frame (parse, frame);
+
   /* store offset as it might get overwritten */
   offset = GST_BUFFER_OFFSET (buffer);
   ret = klass->parse_frame (parse, frame);
@@ -1504,7 +1510,8 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
     }
   }
 
-  /* re-use default handler to add missing metadata as-much-as-possible */
+  /* again use default handler to add missing metadata;
+   * we may have new information on frame properties */
   gst_base_parse_parse_frame (parse, frame);
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
       GST_BUFFER_DURATION_IS_VALID (buffer)) {
