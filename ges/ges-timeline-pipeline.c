@@ -746,7 +746,7 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
  * for native size.
  *
  * Returns a #GstBuffer with the currently playing in the format specified by
- * caps. The caller should unref the #gst_buffer_unref when finished. If %ANY
+ * caps. The caller should unref the #gst_buffer_unref when finished. If ANY
  * caps are specified, the information will be returned in the whatever format
  * is currently used by the sink. This information can be retrieve from caps
  * associated with the buffer.
