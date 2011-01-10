@@ -182,6 +182,7 @@ struct _GstRTSPSrc {
   gboolean         ignore_timeout;
   gboolean         flushing;
   gboolean         waiting;
+  gboolean         open_error;
 
   /* mutex for protecting state changes */
   GStaticRecMutex *state_rec_lock;

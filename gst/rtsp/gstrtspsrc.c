@@ -3952,10 +3952,6 @@ gst_rtspsrc_reconnect (GstRTSPSrc * src, gboolean async)
   /* we can try only TCP now */
   src->cur_protocols = GST_RTSP_LOWER_TRANS_TCP;
 
-  /* pause to prepare for a restart */
-  if ((res = gst_rtspsrc_pause (src, FALSE, async)) < 0)
-    goto done;
-
   /* close and cleanup our state */
   if ((res = gst_rtspsrc_close (src, async)) < 0)
     goto done;
@@ -5744,11 +5740,13 @@ done:
 no_sdp:
   {
     GST_WARNING_OBJECT (src, "can't get sdp");
+    src->open_error = TRUE;
     goto done;
   }
 open_failed:
   {
     GST_WARNING_OBJECT (src, "can't setup streaming from sdp");
+    src->open_error = TRUE;
     goto done;
   }
 }
@@ -5987,6 +5985,30 @@ clear_rtp_base (GstRTSPSrc * src, GstRTSPStream * stream)
 }
 
 static GstRTSPResult
+gst_rtspsrc_ensure_open (GstRTSPSrc * src, gboolean async)
+{
+  GstRTSPResult res = GST_RTSP_OK;
+
+  if (src->state < GST_RTSP_STATE_READY) {
+    res = GST_RTSP_ERROR;
+    if (src->open_error) {
+      GST_DEBUG_OBJECT (src, "the stream was in error");
+      goto done;
+    }
+    if (async)
+      gst_rtspsrc_loop_start_cmd (src, CMD_OPEN);
+
+    if ((res = gst_rtspsrc_open (src, async)) < 0) {
+      GST_DEBUG_OBJECT (src, "failed to open stream");
+      goto done;
+    }
+  }
+
+done:
+  return res;
+}
+
+static GstRTSPResult
 gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
 {
   GstRTSPMessage request = { 0 };
@@ -5998,6 +6020,9 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
   gchar *control;
 
   GST_DEBUG_OBJECT (src, "PLAY...");
+
+  if ((res = gst_rtspsrc_ensure_open (src, async)) < 0)
+    goto open_failed;
 
   if (!(src->methods & GST_RTSP_PLAY))
     goto not_supported;
@@ -6149,6 +6174,11 @@ done:
   return res;
 
   /* ERRORS */
+open_failed:
+  {
+    GST_DEBUG_OBJECT (src, "failed to open stream");
+    goto done;
+  }
 not_supported:
   {
     GST_DEBUG_OBJECT (src, "PLAY is not supported");
@@ -6194,6 +6224,9 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle, gboolean async)
   gchar *control;
 
   GST_DEBUG_OBJECT (src, "PAUSE...");
+
+  if ((res = gst_rtspsrc_ensure_open (src, async)) < 0)
+    goto open_failed;
 
   if (!(src->methods & GST_RTSP_PAUSE))
     goto not_supported;
@@ -6261,6 +6294,11 @@ done:
   return res;
 
   /* ERRORS */
+open_failed:
+  {
+    GST_DEBUG_OBJECT (src, "failed to open stream");
+    goto done;
+  }
 not_supported:
   {
     GST_DEBUG_OBJECT (src, "PAUSE is not supported");
@@ -6395,6 +6433,7 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
       src->cur_protocols = src->protocols;
       /* first attempt, don't ignore timeouts */
       src->ignore_timeout = FALSE;
+      src->open_error = FALSE;
       ret = gst_rtspsrc_open (src, TRUE);
       break;
     case CMD_PLAY:
