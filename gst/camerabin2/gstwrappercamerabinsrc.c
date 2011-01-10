@@ -942,6 +942,9 @@ gst_wrapper_camera_bin_src_change_state (GstElement * element,
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, trans);
 
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto end;
+
   switch (trans) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_element_set_state (self->preview_pipeline->pipeline, GST_STATE_NULL);
@@ -954,6 +957,7 @@ gst_wrapper_camera_bin_src_change_state (GstElement * element,
       break;
   }
 
+end:
   return ret;
 }
 
