@@ -295,18 +295,20 @@ static GstCaps *
 gst_output_selector_sink_getcaps (GstPad * pad)
 {
   GstOutputSelector *sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
-  GstPad *active;
-  GstCaps *caps;
+  GstPad *active = NULL;
+  GstCaps *caps = NULL;
 
   GST_OBJECT_LOCK (sel);
   if (sel->pending_srcpad)
     active = gst_object_ref (sel->pending_srcpad);
-  else
+  else if (sel->active_srcpad)
     active = gst_object_ref (sel->active_srcpad);
   GST_OBJECT_UNLOCK (sel);
 
-  caps = gst_pad_peer_get_caps_reffed (active);
-  gst_object_unref (active);
+  if (active) {
+    caps = gst_pad_peer_get_caps_reffed (active);
+    gst_object_unref (active);
+  }
   if (caps == NULL) {
     caps = gst_caps_new_any ();
   }
@@ -317,18 +319,20 @@ static gboolean
 gst_output_selector_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstOutputSelector *sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
-  GstPad *active;
-  gboolean ret;
+  GstPad *active = NULL;
+  gboolean ret = TRUE;
 
   GST_OBJECT_LOCK (sel);
   if (sel->pending_srcpad)
     active = gst_object_ref (sel->pending_srcpad);
-  else
+  else if (sel->active_srcpad)
     active = gst_object_ref (sel->active_srcpad);
   GST_OBJECT_UNLOCK (sel);
 
-  ret = gst_pad_set_caps (active, caps);
-  gst_object_unref (active);
+  if (active) {
+    ret = gst_pad_set_caps (active, caps);
+    gst_object_unref (active);
+  }
   return ret;
 }
 
