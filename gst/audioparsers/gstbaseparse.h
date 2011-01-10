@@ -46,7 +46,7 @@ G_BEGIN_DECLS
  *
  * the name of the templates for the source pad
  */
-#define GST_BASE_PARSE_SRC_NAME	"src"
+#define GST_BASE_PARSE_SRC_NAME	        "src"
 
 /**
  * GST_BASE_PARSE_SRC_PAD:
@@ -56,7 +56,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.x
  */
-#define GST_BASE_PARSE_SRC_PAD(obj)		(GST_BASE_PARSE_CAST (obj)->srcpad)
+#define GST_BASE_PARSE_SRC_PAD(obj)	(GST_BASE_PARSE_CAST (obj)->srcpad)
 
 /**
  * GST_BASE_PARSE_SINK_PAD:
@@ -87,7 +87,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.x
  */
-#define GST_BASE_PARSE_FLOW_DROPPED   GST_FLOW_CUSTOM_SUCCESS
+#define GST_BASE_PARSE_FLOW_DROPPED     GST_FLOW_CUSTOM_SUCCESS
 
 /**
  * GstBaseParseFrameFlags:
@@ -325,31 +325,33 @@ struct _GstBaseParseClass {
 
 GType           gst_base_parse_get_type         (void);
 
-void gst_base_parse_frame_init (GstBaseParse * parse, GstBaseParseFrame * frame);
+void            gst_base_parse_frame_init (GstBaseParse * parse,
+                                           GstBaseParseFrame * frame);
+GstFlowReturn   gst_base_parse_push_frame (GstBaseParse *parse,
+                                           GstBaseParseFrame *frame);
 
-GstFlowReturn gst_base_parse_push_frame (GstBaseParse *parse,
-                                          GstBaseParseFrame *frame);
+void            gst_base_parse_set_duration (GstBaseParse *parse,
+                                             GstFormat fmt, gint64 duration,
+                                              gint interval);
+void            gst_base_parse_set_seek (GstBaseParse * parse,
+                                         GstBaseParseSeekable seek,
+                                         guint bitrate);
+void            gst_base_parse_set_min_frame_size (GstBaseParse *parse,
+                                                   guint min_size);
+void            gst_base_parse_set_format (GstBaseParse * parse,
+                                           GstBaseParseFormat flag,
+                                           gboolean on);
+void            gst_base_parse_set_frame_props (GstBaseParse * parse,
+                                                guint fps_num, guint fps_den,
+                                                guint lead_in, guint lead_out);
 
-void gst_base_parse_set_duration (GstBaseParse *parse,
-                                  GstFormat fmt, gint64 duration, gint interval);
+gboolean        gst_base_parse_convert_default (GstBaseParse * parse,
+                                                GstFormat src_format, gint64 src_value,
+                                                GstFormat dest_format, gint64 * dest_value);
 
-void gst_base_parse_set_seek (GstBaseParse * parse,
-                              GstBaseParseSeekable seek, guint bitrate);
-
-void gst_base_parse_set_min_frame_size (GstBaseParse *parse, guint min_size);
-
-void gst_base_parse_set_format (GstBaseParse * parse, GstBaseParseFormat flag,
-                                gboolean on);
-
-void gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
-                                     guint fps_den, guint lead_in, guint lead_out);
-
-gboolean gst_base_parse_convert_default (GstBaseParse * parse,
-                                         GstFormat src_format, gint64 src_value,
-                                         GstFormat dest_format, gint64 * dest_value);
-
-gboolean gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
-                                         GstClockTime ts, gboolean key, gboolean force);
+gboolean        gst_base_parse_add_index_entry (GstBaseParse * parse,
+                                                guint64 offset, GstClockTime ts,
+                                                gboolean key, gboolean force);
 
 G_END_DECLS
 
