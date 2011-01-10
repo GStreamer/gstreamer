@@ -193,13 +193,11 @@ static void gst_flac_parse_get_property (GObject * object, guint prop_id,
 static gboolean gst_flac_parse_start (GstBaseParse * parse);
 static gboolean gst_flac_parse_stop (GstBaseParse * parse);
 static gboolean gst_flac_parse_check_valid_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * framesize, gint * skipsize);
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
 static GstFlowReturn gst_flac_parse_parse_frame (GstBaseParse * parse,
-    GstBuffer * buffer);
-static gint gst_flac_parse_get_frame_overhead (GstBaseParse * parse,
-    GstBuffer * buffer);
-static GstFlowReturn gst_flac_parse_pre_push_buffer (GstBaseParse * parse,
-    GstBuffer * buf);
+    GstBaseParseFrame * frame);
+static GstFlowReturn gst_flac_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 
 GST_BOILERPLATE (GstFlacParse, gst_flac_parse, GstBaseParse,
     GST_TYPE_BASE_PARSE);
@@ -244,10 +242,8 @@ gst_flac_parse_class_init (GstFlacParseClass * klass)
   baseparse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_flac_parse_check_valid_frame);
   baseparse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_flac_parse_parse_frame);
-  baseparse_class->get_frame_overhead =
-      GST_DEBUG_FUNCPTR (gst_flac_parse_get_frame_overhead);
-  baseparse_class->pre_push_buffer =
-      GST_DEBUG_FUNCPTR (gst_flac_parse_pre_push_buffer);
+  baseparse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_flac_parse_pre_push_frame);
 }
 
 static void
@@ -563,15 +559,17 @@ need_more_data:
 }
 
 static gboolean
-gst_flac_parse_frame_is_valid (GstFlacParse * flacparse, GstBuffer * buffer,
-    guint * ret)
+gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
+    GstBaseParseFrame * frame, guint * ret)
 {
+  GstBuffer *buffer;
   const guint8 *data;
   guint max, size, remaining;
   guint i, search_start, search_end;
   FrameHeaderCheckReturn header_ret;
   guint16 block_size;
 
+  buffer = frame->buffer;
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
@@ -621,7 +619,7 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse, GstBuffer * buffer,
   }
 
   /* For the last frame output everything to the end */
-  if (G_UNLIKELY (gst_base_parse_get_drain (GST_BASE_PARSE (flacparse)))) {
+  if (G_UNLIKELY (GST_BASE_PARSE_FRAME_DRAIN (frame))) {
     if (flacparse->check_frame_checksums) {
       guint16 actual_crc = gst_flac_calculate_crc16 (data, size - 2);
       guint16 expected_crc = GST_READ_UINT16_BE (data + size - 2);
@@ -648,9 +646,10 @@ need_more:
 
 static gboolean
 gst_flac_parse_check_valid_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * framesize, gint * skipsize)
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
   GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
+  GstBuffer *buffer = frame->buffer;
   const guint8 *data = GST_BUFFER_DATA (buffer);
 
   if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < 4))
@@ -689,13 +688,13 @@ gst_flac_parse_check_valid_frame (GstBaseParse * parse,
       flacparse->sample_number = 0;
 
       GST_DEBUG_OBJECT (flacparse, "Found sync code");
-      ret = gst_flac_parse_frame_is_valid (flacparse, buffer, &next);
+      ret = gst_flac_parse_frame_is_valid (flacparse, frame, &next);
       if (ret) {
         *framesize = next;
         return TRUE;
       } else {
         /* If we're at EOS and the frame was not valid, drop it! */
-        if (G_UNLIKELY (gst_base_parse_get_drain (parse))) {
+        if (G_UNLIKELY (GST_BASE_PARSE_FRAME_DRAIN (frame))) {
           GST_WARNING_OBJECT (flacparse, "EOS");
           return FALSE;
         }
@@ -1044,6 +1043,7 @@ push_headers:
   while (flacparse->headers) {
     GstBuffer *buf = GST_BUFFER (flacparse->headers->data);
     GstFlowReturn ret;
+    GstBaseParseFrame frame;
 
     flacparse->headers =
         g_list_delete_link (flacparse->headers, flacparse->headers);
@@ -1051,7 +1051,11 @@ push_headers:
     gst_buffer_set_caps (buf,
         GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (flacparse))));
 
-    ret = gst_base_parse_push_buffer (GST_BASE_PARSE (flacparse), buf);
+    /* init, set and give away frame */
+    gst_base_parse_frame_init (GST_BASE_PARSE (flacparse), &frame);
+    frame.buffer = buf;
+    frame.overhead = -1;
+    ret = gst_base_parse_push_frame (GST_BASE_PARSE (flacparse), &frame);
     if (ret != GST_FLOW_OK) {
       res = FALSE;
       break;
@@ -1175,9 +1179,10 @@ gst_flac_parse_generate_headers (GstFlacParse * flacparse)
 }
 
 static GstFlowReturn
-gst_flac_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
+gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
+  GstBuffer *buffer = frame->buffer;
   const guint8 *data = GST_BUFFER_DATA (buffer);
 
   if (flacparse->state == GST_FLAC_PARSE_STATE_INIT) {
@@ -1312,6 +1317,11 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
     GST_BUFFER_DURATION (buffer) =
         GST_BUFFER_OFFSET (buffer) - GST_BUFFER_TIMESTAMP (buffer);
 
+    /* To simplify, we just assume that it's a fixed size header and ignore
+     * subframe headers. The first could lead us to being off by 88 bits and
+     * the second even less, so the total inaccuracy is negligible. */
+    frame->overhead = 7;
+
     /* Minimal size of a frame header */
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), MAX (9,
             flacparse->min_framesize));
@@ -1324,22 +1334,8 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
   }
 }
 
-static gint
-gst_flac_parse_get_frame_overhead (GstBaseParse * parse, GstBuffer * buffer)
-{
-  GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
-
-  if (flacparse->state != GST_FLAC_PARSE_STATE_DATA)
-    return -1;
-  else
-    /* To simplify, we just assume that it's a fixed size header and ignore
-     * subframe headers. The first could lead us to being off by 88 bits and
-     * the second even less, so the total inaccuracy is negligible. */
-    return 7;
-}
-
 static GstFlowReturn
-gst_flac_parse_pre_push_buffer (GstBaseParse * parse, GstBuffer * buf)
+gst_flac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
 
@@ -1349,5 +1345,7 @@ gst_flac_parse_pre_push_buffer (GstBaseParse * parse, GstBuffer * buf)
     flacparse->tags = NULL;
   }
 
-  return GST_BASE_PARSE_FLOW_CLIP;
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
+
+  return GST_FLOW_OK;
 }

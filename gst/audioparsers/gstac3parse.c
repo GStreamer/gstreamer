@@ -160,9 +160,9 @@ static void gst_ac3_parse_finalize (GObject * object);
 static gboolean gst_ac3_parse_start (GstBaseParse * parse);
 static gboolean gst_ac3_parse_stop (GstBaseParse * parse);
 static gboolean gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * size, gint * skipsize);
+    GstBaseParseFrame * frame, guint * size, gint * skipsize);
 static GstFlowReturn gst_ac3_parse_parse_frame (GstBaseParse * parse,
-    GstBuffer * buf);
+    GstBaseParseFrame * frame);
 
 GST_BOILERPLATE (GstAc3Parse, gst_ac3_parse, GstBaseParse, GST_TYPE_BASE_PARSE);
 
@@ -384,11 +384,12 @@ gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf,
 }
 
 static gboolean
-gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
-    guint * framesize, gint * skipsize)
+gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
+  GstBuffer *buf = frame->buffer;
+  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   gint off;
   gboolean sync, drain;
 
@@ -421,8 +422,8 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
 
   GST_LOG_OBJECT (parse, "got frame");
 
-  sync = gst_base_parse_get_sync (parse);
-  drain = gst_base_parse_get_drain (parse);
+  sync = GST_BASE_PARSE_FRAME_SYNC (frame);
+  drain = GST_BASE_PARSE_FRAME_DRAIN (frame);
 
   if (!sync && !drain) {
     guint16 word = 0;
@@ -451,9 +452,10 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
 }
 
 static GstFlowReturn
-gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
+gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
+  GstBuffer *buf = frame->buffer;
   guint fsize, rate, chans, blocks, sid;
   gboolean eac;
 
@@ -465,7 +467,7 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
 
   if (G_UNLIKELY (sid)) {
     GST_LOG_OBJECT (parse, "sid: %d", sid);
-    GST_BUFFER_FLAG_SET (buf, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME);
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_NO_FRAME;
   }
 
   if (G_UNLIKELY (ac3parse->sample_rate != rate || ac3parse->channels != chans

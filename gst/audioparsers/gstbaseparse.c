@@ -352,10 +352,9 @@ static GstFlowReturn gst_base_parse_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_base_parse_loop (GstPad * pad);
 
 static gboolean gst_base_parse_check_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * framesize, gint * skipsize);
-
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
 static GstFlowReturn gst_base_parse_parse_frame (GstBaseParse * parse,
-    GstBuffer * buffer);
+    GstBaseParseFrame * frame);
 
 static gboolean gst_base_parse_sink_eventfunc (GstBaseParse * parse,
     GstEvent * event);
@@ -504,6 +503,49 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   GST_DEBUG_OBJECT (parse, "init ok");
 }
 
+/**
+ * gst_base_parse_frame_init:
+ * @parse: #GstBaseParse.
+ * @fmt: #GstBaseParseFrame.
+ *
+ * Sets a #GstBaseParseFrame to initial state.  Currently this means
+ * all fields are zero-ed.
+ */
+void
+gst_base_parse_frame_init (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  memset (frame, 0, sizeof (*frame));
+}
+
+/* clear == frame no longer to be used following this */
+static void
+gst_base_parse_frame_clear (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  /* limited for now */
+  if (frame->buffer) {
+    gst_buffer_unref (frame->buffer);
+    frame->buffer = NULL;
+  }
+}
+
+static inline void
+gst_base_parse_frame_update (GstBaseParse * parse, GstBaseParseFrame * frame,
+    GstBuffer * buf)
+{
+  gst_buffer_replace (&frame->buffer, buf);
+  if (parse->priv->drain) {
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DRAIN;
+  } else {
+    frame->flags &= ~(GST_BASE_PARSE_FRAME_FLAG_DRAIN);
+  }
+  /* losing sync is pretty much a discont (and vice versa), no ? */
+  if (!parse->priv->discont) {
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_SYNC;
+  } else {
+    frame->flags &= ~(GST_BASE_PARSE_FRAME_FLAG_SYNC);
+  }
+}
+
 static void
 gst_base_parse_reset (GstBaseParse * parse)
 {
@@ -587,9 +629,9 @@ gst_base_parse_reset (GstBaseParse * parse)
  */
 static gboolean
 gst_base_parse_check_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * framesize, gint * skipsize)
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
-  *framesize = GST_BUFFER_SIZE (buffer);
+  *framesize = GST_BUFFER_SIZE (frame->buffer);
   *skipsize = 0;
   return TRUE;
 }
@@ -603,8 +645,10 @@ gst_base_parse_check_frame (GstBaseParse * parse,
  * Default callback for parse_frame.
  */
 static GstFlowReturn
-gst_base_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
+gst_base_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
+  GstBuffer *buffer = frame->buffer;
+
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
       GST_CLOCK_TIME_IS_VALID (parse->priv->next_ts)) {
     GST_BUFFER_TIMESTAMP (buffer) = parse->priv->next_ts;
@@ -1114,23 +1158,22 @@ gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
  * running average bitrate of the stream so far.
  */
 static void
-gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
+gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   /* Only update the tag on a 10 kbps delta */
   static const gint update_threshold = 10000;
 
   GstBaseParseClass *klass;
   guint64 data_len, frame_dur;
-  gint overhead = 0, frame_bitrate, old_avg_bitrate;
+  gint overhead, frame_bitrate, old_avg_bitrate;
   gboolean update_min = FALSE, update_avg = FALSE, update_max = FALSE;
+  GstBuffer *buffer = frame->buffer;
 
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
-  if (klass->get_frame_overhead) {
-    overhead = klass->get_frame_overhead (parse, buffer);
-    if (overhead == -1)
-      return;
-  }
+  overhead = frame->overhead;
+  if (overhead == -1)
+    return;
 
   data_len = GST_BUFFER_SIZE (buffer) - overhead;
   parse->priv->data_bytecount += data_len;
@@ -1391,11 +1434,16 @@ gst_base_parse_check_media (GstBaseParse * parse)
  * Returns: #GstFlowReturn
  */
 static GstFlowReturn
-gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
-    GstBaseParseClass * klass, GstBuffer * buffer)
+gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
+    GstBaseParseClass * klass, GstBaseParseFrame * frame)
 {
   GstFlowReturn ret;
   gint64 offset;
+  GstBuffer *buffer;
+
+  g_return_val_if_fail (frame != NULL, GST_FLOW_ERROR);
+
+  buffer = frame->buffer;
 
   if (parse->priv->discont) {
     GST_DEBUG_OBJECT (parse, "marking DISCONT");
@@ -1417,7 +1465,11 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
 
   /* store offset as it might get overwritten */
   offset = GST_BUFFER_OFFSET (buffer);
-  ret = klass->parse_frame (parse, buffer);
+  ret = klass->parse_frame (parse, frame);
+  /* sync */
+  buffer = frame->buffer;
+  /* subclass must play nice */
+  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
   /* check initial frame to determine if subclass/format can provide ts.
    * If so, that allows and enables extra seek and duration determining options */
@@ -1446,7 +1498,7 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
   }
 
   /* re-use default handler to add missing metadata as-much-as-possible */
-  gst_base_parse_parse_frame (parse, buffer);
+  gst_base_parse_parse_frame (parse, frame);
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
       GST_BUFFER_DURATION_IS_VALID (buffer)) {
     parse->priv->next_ts =
@@ -1468,34 +1520,40 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
    * frames to decide on the format and queues them internally */
   /* convert internal flow to OK and mark discont for the next buffer. */
   if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
-    gst_buffer_unref (buffer);
+    gst_base_parse_frame_clear (parse, frame);
     return GST_FLOW_OK;
   } else if (ret != GST_FLOW_OK) {
     return ret;
   }
 
-  return gst_base_parse_push_buffer (parse, buffer);
+  return gst_base_parse_push_frame (parse, frame);
 }
 
 /**
- * gst_base_parse_push_buffer:
+ * gst_base_parse_push_frame:
  * @parse: #GstBaseParse.
- * @buffer: #GstBuffer.
+ * @frame: #GstBaseParseFrame.
  *
- * Pushes the buffer downstream, sends any pending events and
+ * Pushes the frame downstream, sends any pending events and
  * does some timestamp and segment handling.
  *
- * This must be called with srcpad STREAM_LOCK held.
+ * This must be called with sinkpad STREAM_LOCK held.
  *
  * Returns: #GstFlowReturn
  */
 GstFlowReturn
-gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
+gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime last_start = GST_CLOCK_TIME_NONE;
   GstClockTime last_stop = GST_CLOCK_TIME_NONE;
   GstBaseParseClass *klass = GST_BASE_PARSE_GET_CLASS (parse);
+  GstBuffer *buffer;
+
+  g_return_val_if_fail (frame != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (frame->buffer != NULL, GST_FLOW_ERROR);
+
+  buffer = frame->buffer;
 
   GST_LOG_OBJECT (parse,
       "processing buffer of size %d with ts %" GST_TIME_FORMAT
@@ -1505,13 +1563,12 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
 
   /* update stats */
   parse->priv->bytecount += GST_BUFFER_SIZE (buffer);
-  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME)) {
+  if (G_LIKELY (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_NO_FRAME))) {
     parse->priv->framecount++;
     if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
       parse->priv->acc_duration += GST_BUFFER_DURATION (buffer);
     }
   }
-  GST_BUFFER_FLAG_UNSET (buffer, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME);
   if (parse->priv->update_interval &&
       (parse->priv->framecount % parse->priv->update_interval) == 0)
     gst_base_parse_update_duration (parse);
@@ -1524,8 +1581,6 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
 
   /* should have caps by now */
   g_return_val_if_fail (GST_PAD_CAPS (parse->srcpad), GST_FLOW_ERROR);
-
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
 
   /* segment adjustment magic; only if we are running the whole show */
   if (!parse->priv->passthrough && parse->segment.rate > 0.0 &&
@@ -1615,7 +1670,7 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
 
   /* update bitrates and optionally post corresponding tags
    * (following newsegment) */
-  gst_base_parse_update_bitrates (parse, buffer);
+  gst_base_parse_update_bitrates (parse, frame);
 
   if (G_UNLIKELY (parse->priv->pending_events)) {
     GList *l;
@@ -1627,15 +1682,26 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
     parse->priv->pending_events = NULL;
   }
 
-  if (klass->pre_push_buffer)
-    ret = klass->pre_push_buffer (parse, buffer);
-  else
-    ret = GST_BASE_PARSE_FLOW_CLIP;
+  if (klass->pre_push_frame) {
+    ret = klass->pre_push_frame (parse, frame);
+  } else {
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
+  }
+
+  /* take final ownership of frame buffer */
+  buffer = frame->buffer;
+  frame->buffer = NULL;
+
+  /* subclass must play nice */
+  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
+
+  /* decorate */
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
 
   parse->priv->seen_keyframe |= parse->priv->is_video &&
       !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
-  if (ret == GST_BASE_PARSE_FLOW_CLIP) {
+  if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_CLIP) {
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
         GST_CLOCK_TIME_IS_VALID (parse->segment.stop) &&
         GST_BUFFER_TIMESTAMP (buffer) >
@@ -1692,6 +1758,8 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   if (ret == GST_FLOW_OK && last_stop != GST_CLOCK_TIME_NONE &&
       parse->segment.last_stop < last_stop)
     gst_segment_set_last_stop (&parse->segment, GST_FORMAT_TIME, last_stop);
+
+  gst_base_parse_frame_clear (parse, frame);
 
   return ret;
 }
@@ -1879,16 +1947,19 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   const guint8 *data;
   guint old_min_size = 0, min_size, av;
   GstClockTime timestamp;
+  GstBaseParseFrame _frame = { 0, };
+  GstBaseParseFrame *frame;
 
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
+  frame = &_frame;
 
   if (G_LIKELY (buffer)) {
     GST_LOG_OBJECT (parse, "buffer size: %d, offset = %" G_GINT64_FORMAT,
         GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
     if (G_UNLIKELY (parse->priv->passthrough)) {
-      buffer = gst_buffer_make_metadata_writable (buffer);
-      return gst_base_parse_push_buffer (parse, buffer);
+      frame->buffer = gst_buffer_make_metadata_writable (buffer);
+      return gst_base_parse_push_frame (parse, frame);
     }
     /* upstream feeding us in reverse playback;
      * gather each fragment, then process it in single run */
@@ -1906,6 +1977,8 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   /* Parse and push as many frames as possible */
   /* Stop either when adapter is empty or we are flushing */
   while (!parse->priv->flushing) {
+    gboolean res;
+
     tmpbuf = gst_buffer_new ();
 
     old_min_size = 0;
@@ -1949,7 +2022,10 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       }
 
       skip = -1;
-      if (bclass->check_valid_frame (parse, tmpbuf, &fsize, &skip)) {
+      gst_base_parse_frame_update (parse, frame, tmpbuf);
+      res = bclass->check_valid_frame (parse, frame, &fsize, &skip);
+      gst_buffer_replace (&frame->buffer, NULL);
+      if (res) {
         if (gst_adapter_available (parse->adapter) < fsize) {
           GST_DEBUG_OBJECT (parse,
               "found valid frame but not enough data available (only %d bytes)",
@@ -2031,7 +2107,8 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       parse->priv->prev_ts = parse->priv->next_ts = timestamp;
     }
 
-    ret = gst_base_parse_handle_and_push_buffer (parse, bclass, outbuf);
+    frame->buffer = outbuf;
+    ret = gst_base_parse_handle_and_push_frame (parse, bclass, frame);
     GST_PAD_STREAM_UNLOCK (parse->srcpad);
 
     if (ret != GST_FLOW_OK) {
@@ -2195,19 +2272,20 @@ exit:
  * ajusts sync, drain and offset going along */
 static GstFlowReturn
 gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
-    GstBuffer ** buf, gboolean full)
+    GstBaseParseFrame * frame, gboolean full)
 {
   GstBuffer *buffer, *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
   guint fsize = 0, min_size, old_min_size = 0;
   gint skip = 0;
 
-  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (frame != NULL, GST_FLOW_ERROR);
 
   GST_LOG_OBJECT (parse, "scanning for frame at offset %" G_GUINT64_FORMAT
       " (%#" G_GINT64_MODIFIER "x)", parse->priv->offset, parse->priv->offset);
 
   while (TRUE) {
+    gboolean res;
 
     min_size = MAX (parse->priv->min_frame_size, fsize);
     /* loop safety check */
@@ -2230,7 +2308,10 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
       parse->priv->drain = TRUE;
 
     skip = -1;
-    if (klass->check_valid_frame (parse, buffer, &fsize, &skip)) {
+    gst_base_parse_frame_update (parse, frame, buffer);
+    res = klass->check_valid_frame (parse, frame, &fsize, &skip);
+    gst_buffer_replace (&frame->buffer, NULL);
+    if (res) {
       parse->priv->drain = FALSE;
       GST_LOG_OBJECT (parse, "valid frame of size %d at pos %d", fsize, skip);
       break;
@@ -2289,7 +2370,7 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
 
   parse->priv->offset += fsize;
 
-  *buf = outbuf;
+  frame->buffer = outbuf;
 
 done:
   return ret;
@@ -2315,8 +2396,8 @@ gst_base_parse_loop (GstPad * pad)
 {
   GstBaseParse *parse;
   GstBaseParseClass *klass;
-  GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstBaseParseFrame frame = { 0, };
 
   parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
   klass = GST_BASE_PARSE_GET_CLASS (parse);
@@ -2333,12 +2414,12 @@ gst_base_parse_loop (GstPad * pad)
     }
   }
 
-  ret = gst_base_parse_scan_frame (parse, klass, &outbuf, TRUE);
+  ret = gst_base_parse_scan_frame (parse, klass, &frame, TRUE);
   if (ret != GST_FLOW_OK)
     goto done;
 
-  /* This always unrefs the outbuf, even if error occurs */
-  ret = gst_base_parse_handle_and_push_buffer (parse, klass, outbuf);
+  /* This always cleans up frame, even if error occurs */
+  ret = gst_base_parse_handle_and_push_frame (parse, klass, &frame);
 
   /* eat expected eos signalling past segment in reverse playback */
   if (parse->segment.rate < 0.0 && ret == GST_FLOW_UNEXPECTED &&
@@ -2708,48 +2789,6 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
       lead_out, parse->priv->lead_out_ts / GST_MSECOND);
 }
 
-/**
- * gst_base_parse_get_sync:
- * @parse: the #GstBaseParse to query
- *
- * Returns: TRUE if parser is considered 'in sync'.  That is, frames have been
- * continuously successfully parsed and pushed.
- */
-gboolean
-gst_base_parse_get_sync (GstBaseParse * parse)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (parse != NULL, FALSE);
-
-  /* losing sync is pretty much a discont (and vice versa), no ? */
-  ret = !parse->priv->discont;
-
-  GST_DEBUG_OBJECT (parse, "sync: %d", ret);
-  return ret;
-}
-
-/**
- * gst_base_parse_get_drain:
- * @parse: the #GstBaseParse to query
- *
- * Returns: TRUE if parser is currently 'draining'.  That is, leftover data
- * (e.g. in FLUSH or EOS situation) is being parsed.
- */
-gboolean
-gst_base_parse_get_drain (GstBaseParse * parse)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (parse != NULL, FALSE);
-
-  /* losing sync is pretty much a discont (and vice versa), no ? */
-  ret = parse->priv->drain;
-
-  GST_DEBUG_OBJECT (parse, "drain: %d", ret);
-  return ret;
-}
-
 static gboolean
 gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
     GstClockTime * duration)
@@ -2941,6 +2980,7 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
   gboolean orig_drain, orig_discont;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buf = NULL;
+  GstBaseParseFrame frame = { 0, };
 
   g_return_val_if_fail (GST_FLOW_ERROR, pos != NULL);
   g_return_val_if_fail (GST_FLOW_ERROR, time != NULL);
@@ -2961,10 +3001,11 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
 
   /* jump elsewhere and locate next frame */
   parse->priv->offset = *pos;
-  ret = gst_base_parse_scan_frame (parse, klass, &buf, FALSE);
+  ret = gst_base_parse_scan_frame (parse, klass, &frame, FALSE);
   if (ret != GST_FLOW_OK)
     goto done;
 
+  buf = frame.buffer;
   GST_LOG_OBJECT (parse,
       "peek parsing frame at offset %" G_GUINT64_FORMAT
       " (%#" G_GINT64_MODIFIER "x) of size %d",
@@ -2972,12 +3013,13 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
 
   /* get offset first, subclass parsing might dump other stuff in there */
   *pos = GST_BUFFER_OFFSET (buf);
-  ret = klass->parse_frame (parse, buf);
+  ret = klass->parse_frame (parse, &frame);
+  buf = frame.buffer;
 
   /* but it should provide proper time */
   *time = GST_BUFFER_TIMESTAMP (buf);
   *duration = GST_BUFFER_DURATION (buf);
-  gst_buffer_unref (buf);
+  gst_base_parse_frame_clear (parse, &frame);
 
   GST_LOG_OBJECT (parse,
       "frame with time %" GST_TIME_FORMAT " at offset %" G_GINT64_FORMAT,

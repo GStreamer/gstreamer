@@ -70,9 +70,9 @@ static void gst_dca_parse_finalize (GObject * object);
 static gboolean gst_dca_parse_start (GstBaseParse * parse);
 static gboolean gst_dca_parse_stop (GstBaseParse * parse);
 static gboolean gst_dca_parse_check_valid_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * size, gint * skipsize);
+    GstBaseParseFrame * frame, guint * size, gint * skipsize);
 static GstFlowReturn gst_dca_parse_parse_frame (GstBaseParse * parse,
-    GstBuffer * buf);
+    GstBaseParseFrame * frame);
 
 GST_BOILERPLATE (GstDcaParse, gst_dca_parse, GstBaseParse, GST_TYPE_BASE_PARSE);
 
@@ -289,11 +289,12 @@ gst_dca_parse_find_sync (GstDcaParse * dcaparse, GstByteReader * reader,
 }
 
 static gboolean
-gst_dca_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
-    guint * framesize, gint * skipsize)
+gst_dca_parse_check_valid_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
-  GstByteReader r = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   GstDcaParse *dcaparse = GST_DCA_PARSE (parse);
+  GstBuffer *buf = frame->buffer;
+  GstByteReader r = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   gboolean parser_draining;
   gboolean parser_in_sync;
   guint32 sync = 0;
@@ -303,7 +304,7 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
   if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < 16))
     return FALSE;
 
-  parser_in_sync = gst_base_parse_get_sync (parse);
+  parser_in_sync = GST_BASE_PARSE_FRAME_SYNC (frame);
 
   if (G_LIKELY (parser_in_sync && dcaparse->last_sync != 0)) {
     off = gst_byte_reader_masked_scan_uint32 (&r, 0xffffffff,
@@ -343,7 +344,7 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
 
   dcaparse->last_sync = sync;
 
-  parser_draining = gst_base_parse_get_drain (parse);
+  parser_draining = GST_BASE_PARSE_FRAME_DRAIN (frame);
 
   if (!parser_in_sync && !parser_draining) {
     /* check for second frame to be sure */
@@ -377,10 +378,11 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
 }
 
 static GstFlowReturn
-gst_dca_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
+gst_dca_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
-  GstByteReader r = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   GstDcaParse *dcaparse = GST_DCA_PARSE (parse);
+  GstBuffer *buf = frame->buffer;
+  GstByteReader r = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   guint size, rate, chans, samples;
 
   if (!gst_dca_parse_parse_header (dcaparse, &r, &size, &rate, &chans,
