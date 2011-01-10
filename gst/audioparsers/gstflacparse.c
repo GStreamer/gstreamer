@@ -326,6 +326,9 @@ gst_flac_parse_start (GstBaseParse * parse)
 
   /* "fLaC" marker */
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), 4);
+  /* inform baseclass we can come up with ts, based on counters in packets */
+  gst_base_parse_set_format (GST_BASE_PARSE (flacparse),
+      GST_BASE_PARSE_FORMAT_HAS_TIME, TRUE);
 
   return TRUE;
 }

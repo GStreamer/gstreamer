@@ -267,7 +267,8 @@ gst_aacparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
 
       /* arrange for metadata and get out of the way */
       gst_aacparse_set_src_caps (aacparse, caps);
-      gst_base_parse_set_passthrough (parse, TRUE);
+      gst_base_parse_set_format (parse,
+          GST_BASE_PARSE_FORMAT_PASSTHROUGH, TRUE);
     } else
       return FALSE;
 
@@ -542,7 +543,8 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     /* arrange for metadata and get out of the way */
     gst_aacparse_set_src_caps (aacparse,
         GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (aacparse)));
-    gst_base_parse_set_passthrough (GST_BASE_PARSE (aacparse), TRUE);
+    gst_base_parse_set_format (GST_BASE_PARSE (aacparse),
+        GST_BASE_PARSE_FORMAT_PASSTHROUGH, TRUE);
 
     *framesize = avail;
     return TRUE;
@@ -693,7 +695,6 @@ gst_aacparse_start (GstBaseParse * parse)
   aacparse = GST_AACPARSE (parse);
   GST_DEBUG ("start");
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 1024);
-  gst_base_parse_set_passthrough (parse, FALSE);
   return TRUE;
 }
 
