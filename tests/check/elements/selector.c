@@ -372,6 +372,49 @@ GST_START_TEST (test_input_selector_buffer_count);
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_output_selector_no_srcpad_negotiation);
+{
+  GstElement *sel;
+  GstCaps *caps;
+  GstPad *pad;
+  gint i;
+
+  sel = gst_element_factory_make ("output-selector", NULL);
+  fail_unless (sel != NULL);
+
+  pad = gst_element_get_static_pad (sel, "sink");
+  fail_unless (pad != NULL);
+
+  fail_unless (gst_element_set_state (sel,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  for (i = 0; i <= 2; i++) {
+
+    /* regardless of pad-negotiation-mode, getcaps should return ANY and
+     * setcaps should accept any caps when there are no srcpads */
+    g_object_set (sel, "pad-negotiation-mode", i, NULL);
+
+    caps = gst_pad_get_caps (pad);
+    fail_unless (gst_caps_is_any (caps));
+
+    gst_caps_unref (caps);
+
+    caps = gst_caps_new_simple ("mymedia/mycaps", NULL);
+    fail_unless (gst_pad_set_caps (pad, caps));
+    gst_caps_unref (caps);
+  }
+
+  fail_unless (gst_element_set_state (sel,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+  gst_object_unref (pad);
+  gst_object_unref (sel);
+}
+
+GST_END_TEST;
+
+
 GstElement *sel;
 GstPad *input_pad;
 GList *output_pads = NULL;      /* list of sinkpads linked to output-selector */
@@ -535,6 +578,7 @@ selector_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_output_selector_buffer_count);
   tcase_add_test (tc_chain, test_input_selector_buffer_count);
+  tcase_add_test (tc_chain, test_output_selector_no_srcpad_negotiation);
 
   tc_chain = tcase_create ("output-selector-negotiation");
   tcase_add_checked_fixture (tc_chain, setup_output_selector,
