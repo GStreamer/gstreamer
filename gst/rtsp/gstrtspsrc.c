@@ -3541,7 +3541,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
         tv_timeout.tv_sec, tv_timeout.tv_usec);
 
     GST_OBJECT_LOCK (src);
-    if (src->loop_cmd == CMD_LOOP && !src->flushing) {
+    if (!src->flushing) {
       src->waiting = TRUE;
       GST_OBJECT_UNLOCK (src);
 
@@ -3787,7 +3787,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
     gst_rtsp_message_unset (&message);
 
     GST_OBJECT_LOCK (src);
-    if (src->loop_cmd == CMD_LOOP && !src->flushing) {
+    if (!src->flushing) {
       src->waiting = TRUE;
       GST_OBJECT_UNLOCK (src);
 
@@ -4138,6 +4138,9 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
 {
   GstFlowReturn ret;
 
+  if (!src->conninfo.connection || !src->conninfo.connected)
+    goto no_connection;
+
   if (src->interleaved)
     ret = gst_rtspsrc_loop_interleaved (src);
   else
@@ -4149,6 +4152,12 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
   return TRUE;
 
   /* ERRORS */
+no_connection:
+  {
+    GST_WARNING_OBJECT (src, "we are not connected");
+    ret = GST_FLOW_WRONG_STATE;
+    goto pause;
+  }
 pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
@@ -6377,8 +6386,7 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
 
   GST_OBJECT_LOCK (src);
   cmd = src->loop_cmd;
-  if (cmd != CMD_LOOP || src->flushing)
-    src->loop_cmd = CMD_WAIT;
+  src->loop_cmd = CMD_WAIT;
   GST_DEBUG_OBJECT (src, "got command %d", cmd);
   GST_OBJECT_UNLOCK (src);
 
