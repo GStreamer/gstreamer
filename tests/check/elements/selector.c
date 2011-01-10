@@ -435,6 +435,7 @@ GST_START_TEST (test_output_selector_getcaps_none);
     /* in 'none' mode, the getcaps returns the template, which is ANY */
     g_assert (gst_caps_is_any (caps));
     gst_caps_unref (caps);
+    gst_object_unref (pad);
   }
 
   fail_unless (gst_element_set_state (sel,
@@ -473,6 +474,7 @@ GST_START_TEST (test_output_selector_getcaps_all);
 
     g_assert (gst_caps_is_equal (caps, expected));
     gst_caps_unref (caps);
+    gst_object_unref (pad);
   }
   gst_caps_unref (expected);
 
@@ -513,6 +515,7 @@ GST_START_TEST (test_output_selector_getcaps_active);
 
     g_assert (gst_caps_is_equal (caps, expected));
     gst_caps_unref (caps);
+    gst_object_unref (pad);
   }
 
   fail_unless (gst_element_set_state (sel,
