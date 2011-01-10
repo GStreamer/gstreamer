@@ -2107,9 +2107,13 @@ mpegts_try_discover_packet_size (MpegTSPacketizer * packetizer)
   }
   GST_DEBUG ("have packetsize detected: %d of %u bytes",
       packetizer->know_packet_size, packetizer->packet_size);
-  /* flush to sync byte */
-  if (pos > 0)
+  if (pos > 0) {
+    /* flush to sync byte */
     gst_adapter_flush (packetizer->adapter, pos);
+  } else if (!packetizer->know_packet_size) {
+    /* drop invalid data and move to the next possible packets */
+    gst_adapter_flush (packetizer->adapter, MPEGTS_MAX_PACKETSIZE);
+  }
   g_free (dest);
 }
 
