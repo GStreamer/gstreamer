@@ -4689,12 +4689,15 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       }
       case FOURCC_mp4v:
       case FOURCC_MP4V:
+      case FOURCC_fmp4:
+      case FOURCC_FMP4:
       {
         const guint8 *buf;
         guint32 version;
         int tlen;
 
-        GST_DEBUG_OBJECT (qtdemux, "parsing in mp4v");
+        GST_DEBUG_OBJECT (qtdemux, "parsing in %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (fourcc));
         version = QT_UINT32 (buffer + 16);
         GST_DEBUG_OBJECT (qtdemux, "version %08x", version);
         if (1 || version == 0x00000000) {
@@ -6439,13 +6442,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         case FOURCC_mp4v:
         case FOURCC_MP4V:
+        case FOURCC_fmp4:
+        case FOURCC_FMP4:
         {
           GNode *glbl;
 
-          GST_DEBUG_OBJECT (qtdemux, "found mp4v");
+          GST_DEBUG_OBJECT (qtdemux, "found %" GST_FOURCC_FORMAT,
+              GST_FOURCC_ARGS (fourcc));
 
           /* codec data might be in glbl extension atom */
-          glbl = qtdemux_tree_get_child_by_type (mp4v, FOURCC_glbl);
+          glbl = mp4v ?
+              qtdemux_tree_get_child_by_type (mp4v, FOURCC_glbl) : NULL;
           if (glbl) {
             guint8 *data;
             GstBuffer *buf;
@@ -6463,6 +6470,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               gst_buffer_unref (buf);
             }
           }
+          break;
         }
         case FOURCC_mjp2:
         {
