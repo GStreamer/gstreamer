@@ -2089,15 +2089,11 @@ mpegts_try_discover_packet_size (MpegTSPacketizer * packetizer)
         if (dest[i] == 0x47 && dest[i + packetsize] == 0x47 &&
             dest[i + packetsize * 2] == 0x47 &&
             dest[i + packetsize * 3] == 0x47) {
-          gchar *str;
           packetizer->know_packet_size = TRUE;
           packetizer->packet_size = packetsize;
-          str =
-              g_strdup_printf
-              ("video/mpegts, systemstream=(boolean)true, packetsize=%d",
-              packetsize);
-          packetizer->caps = gst_caps_from_string ((const gchar *) str);
-          g_free (str);
+          packetizer->caps = gst_caps_new_simple ("video/mpegts",
+              "systemstream", G_TYPE_BOOLEAN, TRUE,
+              "packetsize", packetsize, NULL);
           pos = i;
           break;
         }
