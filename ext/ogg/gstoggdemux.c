@@ -1397,10 +1397,7 @@ gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-/* submit the given buffer to the ogg sync.
- *
- * Returns the number of bytes submited.
- */
+/* submit the given buffer to the ogg sync */
 static GstFlowReturn
 gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
 {
