@@ -76,9 +76,8 @@ GST_START_TEST (test_ges_scenario)
 
   layers = ges_timeline_get_layers (timeline);
   fail_unless (g_list_find (layers, layer) != NULL);
-  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
-    g_object_unref (tmp->data);
-  }
+  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_free (layers);
 
   /* Give the Timeline a Track */
   GST_DEBUG ("Create a Track");
@@ -245,9 +244,8 @@ GST_START_TEST (test_ges_timeline_add_layer)
   fail_unless (layer->timeline == timeline);
   layers = ges_timeline_get_layers (timeline);
   fail_unless (g_list_find (layers, layer) != NULL);
-  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
-    g_object_unref (tmp->data);
-  }
+  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_free (layers);
 
   /* Make sure the associated TrackObjects are in the Track */
   trackobjects =
@@ -357,9 +355,8 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   fail_unless (layer->timeline == timeline);
   layers = ges_timeline_get_layers (timeline);
   fail_unless (g_list_find (layers, layer) != NULL);
-  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
-    g_object_unref (tmp->data);
-  }
+  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_free (layers);
 
   GST_DEBUG ("Add the track to the timeline");
   fail_unless (ges_timeline_add_track (timeline, track));
@@ -470,9 +467,8 @@ GST_START_TEST (test_ges_timeline_remove_track)
 
   layers = ges_timeline_get_layers (timeline);
   fail_unless (g_list_find (layers, layer) != NULL);
-  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
-    g_object_unref (tmp->data);
-  }
+  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_free (layers);
 
   GST_DEBUG ("Add the track to the timeline");
   fail_unless (ges_timeline_add_track (timeline, track));
