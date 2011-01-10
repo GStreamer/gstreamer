@@ -82,10 +82,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ges/ges-types.h
 
 # Images to copy into HTML directory.
-HTML_IMAGES =
+HTML_IMAGES =  layer_track_overview.png
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
-content_files = architecture.xml  layer_track_overview.png
+content_files = architecture.xml 
 
 # Other files to distribute.
 extra_files =
