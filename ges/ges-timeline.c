@@ -975,7 +975,8 @@ ges_timeline_get_tracks (GESTimeline * timeline)
  * ges_timeline_get_layers:
  * @timeline: a #GESTimeline
  *
- * Returns the list of #GESTimelineLayer present in the Timeline.
+ * Returns: (transfer full) (element-type GESTimelineLayer): the list of
+ * #GESTimelineLayer present in the Timeline.
  * The caller should unref each Layer once he is done with them.
  */
 GList *
