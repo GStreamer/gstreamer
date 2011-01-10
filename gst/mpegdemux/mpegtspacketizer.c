@@ -2093,7 +2093,7 @@ mpegts_try_discover_packet_size (MpegTSPacketizer * packetizer)
           packetizer->packet_size = packetsize;
           packetizer->caps = gst_caps_new_simple ("video/mpegts",
               "systemstream", G_TYPE_BOOLEAN, TRUE,
-              "packetsize", packetsize, NULL);
+              "packetsize", G_TYPE_INT, packetsize, NULL);
           pos = i;
           break;
         }
