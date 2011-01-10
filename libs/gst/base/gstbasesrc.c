@@ -491,14 +491,15 @@ gst_base_src_wait_playing (GstBaseSrc * src)
 {
   g_return_val_if_fail (GST_IS_BASE_SRC (src), GST_FLOW_ERROR);
 
-  while (G_UNLIKELY (!src->live_running)) {
+  do {
     /* block until the state changes, or we get a flush, or something */
     GST_DEBUG_OBJECT (src, "live source waiting for running state");
     GST_LIVE_WAIT (src);
     GST_DEBUG_OBJECT (src, "live source unlocked");
     if (src->priv->flushing)
       goto flushing;
-  }
+  } while (G_UNLIKELY (!src->live_running));
+
   return GST_FLOW_OK;
 
   /* ERRORS */
