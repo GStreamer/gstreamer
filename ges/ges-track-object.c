@@ -454,7 +454,6 @@ gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     obj->start = start;
     if (klass->start_changed)
       klass->start_changed (obj, start);
-    /* FIXME : emit changed */
   }
 }
 
@@ -477,7 +476,6 @@ gnlobject_media_start_cb (GstElement * gnlobject,
     obj->inpoint = start;
     if (klass->media_start_changed)
       klass->media_start_changed (obj, start);
-    /* FIXME : emit changed */
   }
 }
 
@@ -498,7 +496,6 @@ gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     obj->priority = priority;
     if (klass->gnl_priority_changed)
       klass->gnl_priority_changed (obj, priority);
-    /* FIXME : emit changed */
   }
 }
 
@@ -520,7 +517,6 @@ gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     obj->duration = duration;
     if (klass->duration_changed)
       klass->duration_changed (obj, duration);
-    /* FIXME : emit changed */
   }
 }
 
@@ -541,7 +537,6 @@ gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     obj->active = active;
     if (klass->active_changed)
       klass->active_changed (obj, active);
-    /* FIXME : emit changed */
   }
 }
 
