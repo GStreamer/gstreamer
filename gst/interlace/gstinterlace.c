@@ -135,11 +135,13 @@ gst_interlace_pattern_get_type (void)
 {
   static GType interlace_pattern_type = 0;
   static const GEnumValue pattern_types[] = {
-    {GST_INTERLACE_PATTERN_1_1, "1:1", "1:1"},
-    {GST_INTERLACE_PATTERN_2_2, "2:2", "2:2"},
-    {GST_INTERLACE_PATTERN_2_3, "2:3", "2:3"},
-    {GST_INTERLACE_PATTERN_2_3_3_2, "2:3:3:2", "2:3:3:2"},
-    {GST_INTERLACE_PATTERN_EURO, "Euro 2-11:3", "2-11:3"},
+    {GST_INTERLACE_PATTERN_1_1, "1:1 (e.g. 60p -> 60i)", "1:1"},
+    {GST_INTERLACE_PATTERN_2_2, "2:2 (e.g. 30p -> 60i)", "2:2"},
+    {GST_INTERLACE_PATTERN_2_3, "2:3 (e.g. 24p -> 60i telecine)", "2:3"},
+    {GST_INTERLACE_PATTERN_2_3_3_2, "2:3:3:2 (e.g. 24p -> 60i telecine)",
+        "2:3:3:2"},
+    {GST_INTERLACE_PATTERN_EURO, "Euro 2-11:3 (e.g. 24p -> 50i telecine)",
+        "2-11:3"},
     {0, NULL, NULL}
   };
 
