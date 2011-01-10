@@ -711,6 +711,8 @@ ges_timeline_object_get_layer (GESTimelineObject * object)
  * ges_timeline_object_get_track_objects:
  * @object: a #GESTimelineObject
  *
+ * Get the list of #GESTrackObject contained in @object
+ *
  * Returns: (transfer full) (element-type GESTrackObject): The list of
  * trackobject contained in @object.
  * The user is responsible for unreffing the contained objects 

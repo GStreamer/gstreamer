@@ -393,7 +393,9 @@ ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
  * ges_timeline_title_source_get_text:
  * @self: a #GESTimelineTitleSource
  *
- * Returns: The text currently set on the @self.
+ * Get the text currently set on @self.
+ *
+ * Returns: The text currently set on @self.
  *
  */
 const gchar *
@@ -406,7 +408,9 @@ ges_timeline_title_source_get_text (GESTimelineTitleSource * self)
  * ges_timeline_title_source_get_font_desc:
  * @self: a #GESTimelineTitleSource
  *
- * Returns: The pango font description used by the @self.
+ * Get the pango font description used by @self.
+ *
+ * Returns: The pango font description used by @self.
  *
  */
 const char *
@@ -418,6 +422,8 @@ ges_timeline_title_source_get_font_desc (GESTimelineTitleSource * self)
 /**
  * ges_timeline_title_source_get_halignment:
  * @self: a #GESTimelineTitleSource
+ *
+ * Get the horizontal aligment used by @self.
  *
  * Returns: The horizontal aligment used by @self.
  *
@@ -432,6 +438,8 @@ ges_timeline_title_source_get_halignment (GESTimelineTitleSource * self)
  * ges_timeline_title_source_get_valignment:
  * @self: a #GESTimelineTitleSource
  *
+ * Get the vertical aligment used by @self.
+ *
  * Returns: The vertical aligment used by @self.
  *
  */
@@ -445,6 +453,8 @@ ges_timeline_title_source_get_valignment (GESTimelineTitleSource * self)
 /**
  * ges_timeline_title_source_is_muted:
  * @self: a #GESTimelineTitleSource
+ *
+ * Let you know if the audio track of @self is muted or not.
  *
  * Returns: Whether the audio track of @self is muted or not.
  *

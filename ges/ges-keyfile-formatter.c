@@ -52,6 +52,13 @@ ges_keyfile_formatter_init (GESKeyfileFormatter * object)
 {
 }
 
+/**
+ * ges_keyfile_formatter_new:
+ *
+ * Creates a new #GESKeyfileFormatter.
+ *
+ * Returns: The newly created #GESKeyfileFormatter.
+ */
 GESKeyfileFormatter *
 ges_keyfile_formatter_new (void)
 {

@@ -21,7 +21,7 @@
 /**
  * SECTION:ges-timeline-text-overlay
  * @short_description: Render text onto another stream in a #GESTimelineLayer
- * 
+ *
  * Renders text onto the next lower priority stream using textrender.
  */
 
@@ -341,6 +341,8 @@ ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
  * ges_timeline_text_overlay_get_text:
  * @self: a #GESTimelineTextOverlay
  *
+ * Get the text currently set on @self.
+ *
  * Returns: The text currently set on @self.
  *
  */
@@ -354,6 +356,8 @@ ges_timeline_text_overlay_get_text (GESTimelineTextOverlay * self)
  * ges_timeline_text_overlay_get_font_desc:
  * @self: a #GESTimelineTextOverlay
  *
+ * Get the pango font description used by @self.
+ *
  * Returns: The pango font description used by @self.
  */
 const char *
@@ -366,6 +370,8 @@ ges_timeline_text_overlay_get_font_desc (GESTimelineTextOverlay * self)
  * ges_timeline_text_overlay_get_halignment:
  * @self: a #GESTimelineTextOverlay
  *
+ * Get the horizontal aligment used by @self.
+ *
  * Returns: The horizontal aligment used by @self.
  */
 GESTextHAlign
@@ -377,6 +383,8 @@ ges_timeline_text_overlay_get_halignment (GESTimelineTextOverlay * self)
 /**
  * ges_timeline_text_overlay_get_valignment:
  * @self: a #GESTimelineTextOverlay
+ *
+ * Get the vertical aligment used by @self.
  *
  * Returns: The vertical aligment used by @self.
  */
@@ -412,7 +420,7 @@ ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
 }
 
 /**
- * ges_timeline_titlesource_new:
+ * ges_timeline_text_overlay_new:
  *
  * Creates a new #GESTimelineTextOverlay
  *

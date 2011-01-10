@@ -427,6 +427,8 @@ pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track)
  * ges_track_get_caps:
  * @track: a #GESTrack
  *
+ * Get the #GstCaps this track is configured to output.
+ *
  * Returns: The #GstCaps this track is configured to output.
  */
 const GstCaps *
@@ -440,6 +442,8 @@ ges_track_get_caps (GESTrack * track)
 /**
  * ges_track_get_timeline:
  * @track: a #GESTrack
+ *
+ * Get the #GESTimeline this track belongs to. Can be %NULL.
  *
  * Returns: The #GESTimeline this track belongs to. Can be %NULL.
  */

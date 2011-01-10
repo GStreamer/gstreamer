@@ -184,7 +184,6 @@ ges_track_text_overlay_create_element (GESTrackObject * object)
  * Sets the text this track object will render.
  *
  */
-
 void
 ges_track_text_overlay_set_text (GESTrackTextOverlay * self, const gchar * text)
 {
@@ -201,10 +200,10 @@ ges_track_text_overlay_set_text (GESTrackTextOverlay * self, const gchar * text)
  * @self: the #GESTrackTextOverlay
  * @font_desc: the pango font description
  *
- * Sets the text this track object will render.
+ * Sets the pango font description of the text this track object
+ * will render.
  *
  */
-
 void
 ges_track_text_overlay_set_font_desc (GESTrackTextOverlay * self,
     const gchar * font_desc)
@@ -219,11 +218,13 @@ ges_track_text_overlay_set_font_desc (GESTrackTextOverlay * self,
 }
 
 /**
- * ges_track_text_overlay_valignment:
+ * ges_track_text_overlay_set_valignment:
  * @self: the #GESTrackTextOverlay* to set text on
- * @valign: #GESTextVAlign
+ * @valign: The #GESTextVAlign defining the vertical alignment
+ * of the text render by @self.
  *
  * Sets the vertical aligment of the text.
+ *
  */
 void
 ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
@@ -236,11 +237,13 @@ ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
 }
 
 /**
- * ges_track_text_overlay_halignment:
+ * ges_track_text_overlay_set_halignment:
  * @self: the #GESTrackTextOverlay* to set text on
- * @halign: #GESTextHAlign
+ * @halign: The #GESTextHAlign defining the horizontal alignment
+ * of the text render by @self.
  *
- * Sets the vertical aligment of the text.
+ * Sets the horizontal aligment of the text.
+ *
  */
 void
 ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
@@ -256,8 +259,10 @@ ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
  * ges_track_text_overlay_get_text:
  * @self: a GESTrackTextOverlay
  *
- * Returns: The text currently set on the @source.
- * */
+ * Get the text currently set on @source.
+ *
+ * Returns: The text currently set on @source.
+ */
 const gchar *
 ges_track_text_overlay_get_text (GESTrackTextOverlay * self)
 {
@@ -268,7 +273,9 @@ ges_track_text_overlay_get_text (GESTrackTextOverlay * self)
  * ges_track_text_overlay_get_font_desc:
  * @self: a GESTrackTextOverlay
  *
- * Returns: The pango font description used by the @source.
+ * Get the pango font description currently set on @source.
+ *
+ * Returns: The pango font description currently set on @source.
  */
 const char *
 ges_track_text_overlay_get_font_desc (GESTrackTextOverlay * self)
@@ -279,6 +286,8 @@ ges_track_text_overlay_get_font_desc (GESTrackTextOverlay * self)
 /**
  * ges_track_text_overlay_get_halignment:
  * @self: a GESTrackTextOverlay
+ *
+ * Get the horizontal aligment used by @source.
  *
  * Returns: The horizontal aligment used by @source.
  */
@@ -292,6 +301,8 @@ ges_track_text_overlay_get_halignment (GESTrackTextOverlay * self)
  * ges_track_text_overlay_get_valignment:
  * @self: a GESTrackTextOverlay
  *
+ * Get the vertical aligment used by @source.
+ *
  * Returns: The vertical aligment used by @source.
  */
 GESTextVAlign
@@ -300,6 +311,14 @@ ges_track_text_overlay_get_valignment (GESTrackTextOverlay * self)
   return self->priv->valign;
 }
 
+/**
+ * ges_track_text_overlay_new:
+ *
+ * Creates a new #GESTrackTextOverlay.
+ *
+ * Returns: The newly created #GESTrackTextOverlay or %NULL if something went
+ * wrong.
+ */
 GESTrackTextOverlay *
 ges_track_text_overlay_new (void)
 {

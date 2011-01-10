@@ -77,7 +77,7 @@ void ges_track_text_overlay_set_font_desc(GESTrackTextOverlay *self,
                                           const gchar *font_desc);
 
 void ges_track_text_overlay_set_halignment(GESTrackTextOverlay *self,
-                                           GESTextHAlign halgn);
+                                           GESTextHAlign halign);
 
 void ges_track_text_overlay_set_valignment(GESTrackTextOverlay *self,
                                            GESTextVAlign valign);

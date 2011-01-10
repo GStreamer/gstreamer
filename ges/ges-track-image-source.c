@@ -177,6 +177,14 @@ ges_track_image_source_init (GESTrackImageSource * self)
       GES_TYPE_TRACK_IMAGE_SOURCE, GESTrackImageSourcePrivate);
 }
 
+/**
+ * ges_track_image_source_new:
+ * @uri: the URI the source should control
+ *
+ * Creates a new #GESTrackImageSource for the provided @uri.
+ *
+ * Returns: A new #GESTrackImageSource.
+ */
 GESTrackImageSource *
 ges_track_image_source_new (gchar * uri)
 {

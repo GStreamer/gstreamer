@@ -373,6 +373,8 @@ ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
  * ges_track_video_transition_get_transition_type:
  * @trans: a #GESTrackVideoTransition
  *
+ * Get the transition type used by @trans.
+ *
  * Returns: The transition type used by @trans.
  */
 GESVideoStandardTransitionType
@@ -381,6 +383,14 @@ ges_track_video_transition_get_transition_type (GESTrackVideoTransition * trans)
   return trans->priv->type;
 }
 
+/**
+ * ges_track_video_transition_new:
+ *
+ * Creates a new #GESTrackVideoTransition.
+ *
+ * Returns: The newly created #GESTrackVideoTransition, or %NULL if there was an
+ * error.
+ */
 GESTrackVideoTransition *
 ges_track_video_transition_new (void)
 {

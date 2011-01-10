@@ -112,6 +112,13 @@ ges_track_audio_test_source_create_element (GESTrackObject * trksrc)
   return ret;
 }
 
+/**
+ * ges_track_audio_test_source_set_freq:
+ * @self: a #GESTrackAudioTestSource
+ * @freq: The frequency you want to apply on @self
+ *
+ * Lets you set the frequency applied on the track object
+ */
 void
 ges_track_audio_test_source_set_freq (GESTrackAudioTestSource * self,
     gdouble freq)
@@ -123,6 +130,13 @@ ges_track_audio_test_source_set_freq (GESTrackAudioTestSource * self,
     g_object_set (element, "freq", (gdouble) freq, NULL);
 }
 
+/**
+ * ges_track_audio_test_source_set_volume:
+ * @self: a #GESTrackAudioTestSource
+ * @volume: The volume you want to apply on @self
+ *
+ * Sets the volume of the test audio signal.
+ */
 void
 ges_track_audio_test_source_set_volume (GESTrackAudioTestSource * self,
     gdouble volume)
@@ -138,7 +152,9 @@ ges_track_audio_test_source_set_volume (GESTrackAudioTestSource * self,
  * ges_track_audio_test_source_get_freq:
  * @self: a #GESTrackAudioTestSource
  *
- * Returns: The current frequency of @self
+ * Get the current frequency of @self.
+ *
+ * Returns: The current frequency of @self.
  */
 double
 ges_track_audio_test_source_get_freq (GESTrackAudioTestSource * self)
@@ -149,6 +165,8 @@ ges_track_audio_test_source_get_freq (GESTrackAudioTestSource * self)
 /**
  * ges_track_audio_test_source_get_volume:
  * @self: a #GESTrackAudioTestSource
+ * 
+ * Get the current volume of @self.
  *
  * Returns: The current volume of @self
  */
@@ -158,6 +176,13 @@ ges_track_audio_test_source_get_volume (GESTrackAudioTestSource * self)
   return self->priv->volume;
 }
 
+/**
+ * ges_track_audio_test_source_new:
+ *
+ * Creates a new #GESTrackAudioTestSource.
+ *
+ * Returns: The newly created #GESTrackAudioTestSource.
+ */
 GESTrackAudioTestSource *
 ges_track_audio_test_source_new (void)
 {

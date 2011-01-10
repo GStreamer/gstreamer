@@ -235,9 +235,10 @@ ges_formatter_set_data (GESFormatter * formatter, void *data, gsize length)
  * @formatter: a #GESFormatter
  * @length: location into which to store the size of the data in bytes.
  *
+ * Lets you get the data @formatter used for loading.
+ *
  * Returns: a pointer to the data.
  */
-
 void *
 ges_formatter_get_data (GESFormatter * formatter, gsize * length)
 {

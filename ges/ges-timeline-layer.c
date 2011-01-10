@@ -373,7 +373,9 @@ ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
  * ges_timeline_layer_get_priority:
  * @layer: a #GESTimelineLayer
  *
- * Returns: the priority of the @layer within the timeline.
+ * Get the priority of @layer within the timeline.
+ *
+ * Returns: The priority of the @layer within the timeline.
  */
 guint
 ges_timeline_layer_get_priority (GESTimelineLayer * layer)

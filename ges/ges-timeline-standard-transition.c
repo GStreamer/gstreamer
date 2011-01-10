@@ -188,8 +188,11 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
  * ges_timeline_standard_transition_new:
  * @vtype: the type of transition to create
  *
+ * Creates a new #GESTimelineStandardTransition.
+ *
+ * Returns: a newly created #GESTimelineStandardTransition, or %NULL if something
+ * went wrong.
  */
-
 GESTimelineStandardTransition *
 ges_timeline_standard_transition_new (GESVideoStandardTransitionType vtype)
 {
@@ -200,6 +203,11 @@ ges_timeline_standard_transition_new (GESVideoStandardTransitionType vtype)
 /**
  * ges_timeline_standard_transition_new_for_nick:
  * @nick: a string representing the type of transition to create
+ *
+ * Creates a new #GESTimelineStandardTransition for the provided @nick.
+ *
+ * Returns: The newly created #GESTimelineStandardTransition, or %NULL if something
+ * went wrong
  */
 
 GESTimelineStandardTransition *

@@ -714,6 +714,8 @@ ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
  * ges_track_object_get_track:
  * @object: a #GESTrackObject
  *
+ * Get the #GESTrack to which this object belongs. 
+ *
  * Returns: (transfer none): The #GESTrack to which this object belongs. Can be %NULL if it
  * is not in any track
  */
@@ -739,6 +741,8 @@ ges_track_object_set_timeline_object (GESTrackObject * object,
  * ges_track_object_get_timeline_object:
  * @object: a #GESTrackObject
  *
+ * Get the #GESTimelineObject which is controlling this track object
+ *
  * Returns: (transfer none): the #GESTimelineObject which is controlling
  * this track object
  */
@@ -754,6 +758,8 @@ ges_track_object_get_timeline_object (GESTrackObject * object)
  * ges_track_object_get_gnlobject:
  * @object: a #GESTrackObject
  *
+ * Get the GNonLin object this object is controlling.
+ *
  * Returns: (transfer none): the GNonLin object this object is controlling.
  */
 GstElement *
@@ -765,6 +771,8 @@ ges_track_object_get_gnlobject (GESTrackObject * object)
 /**
  * ges_track_object_get_element:
  * @object: a #GESTrackObject
+ *
+ * Get the #GstElement this track object is controlling within GNonLin.
  *
  * Returns: (transfer none): the #GstElement this track object is controlling
  * within GNonLin.
@@ -793,6 +801,8 @@ ges_track_object_set_locked (GESTrackObject * object, gboolean locked)
 /**
  * ges_track_object_is_locked:
  * @object: a #GESTrackObject
+ *
+ * Let you know if object us locked or not (moving synchronously).
  *
  * Returns: %TRUE if the object is moving synchronously to its controlling
  * #GESTimelineObject, else %FALSE.

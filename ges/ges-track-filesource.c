@@ -126,6 +126,15 @@ ges_track_filesource_init (GESTrackFileSource * self)
       GES_TYPE_TRACK_FILESOURCE, GESTrackFileSourcePrivate);
 }
 
+/**
+ * ges_track_filesource_new:
+ * @uri: the URI the source should control
+ *
+ * Creates a new #GESTrackFileSource for the provided @uri.
+ *
+ * Returns: The newly created #GESTrackFileSource, or %NULL if there was an
+ * error.
+ */
 GESTrackFileSource *
 ges_track_filesource_new (gchar * uri)
 {

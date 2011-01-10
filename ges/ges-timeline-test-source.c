@@ -294,8 +294,10 @@ ges_timeline_test_source_set_volume (GESTimelineTestSource * self,
 }
 
 /**
-* ges_timeline_test_source_get_vpattern:
+ * ges_timeline_test_source_get_vpattern:
  * @self: a #GESTimelineTestSource
+ *
+ * Get the #GESVideoTestPattern which is applied on @self.
  *
  * Returns: The #GESVideoTestPattern which is applied on @self.
  */
@@ -309,6 +311,8 @@ ges_timeline_test_source_get_vpattern (GESTimelineTestSource * self)
  * ges_timeline_test_source_is_muted:
  * @self: a #GESTimelineTestSource
  *
+ * Let you know if the audio track of @self is muted or not.
+ *
  * Returns: Whether the audio track of @self is muted or not.
  */
 gboolean
@@ -320,6 +324,8 @@ ges_timeline_test_source_is_muted (GESTimelineTestSource * self)
 /**
  * ges_timeline_test_source_get_frequency:
  * @self: a #GESTimelineTestSource
+ *
+ * Get the frequency @self generates.
  *
  * Returns: The frequency @self generates. See audiotestsrc element.
  */
@@ -333,8 +339,9 @@ ges_timeline_test_source_get_frequency (GESTimelineTestSource * self)
  * ges_timeline_test_source_get_volume:
  * @self: a #GESTimelineTestSource
  *
- * Returns: The volume of the test audio signal applied on @self.
+ * Get the volume of the test audio signal applied on @self.
  *
+ * Returns: The volume of the test audio signal applied on @self.
  */
 gdouble
 ges_timeline_test_source_get_volume (GESTimelineTestSource * self)
@@ -373,10 +380,9 @@ ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
 }
 
 /**
- * ges_timeline_testsource_new:
- * @uri: the URI the source should control
+ * ges_timeline_test_source_new:
  *
- * Creates a new #GESTimelineTestSource for the provided @uri.
+ * Creates a new #GESTimelineTestSource.
  *
  * Returns: The newly created #GESTimelineTestSource, or NULL if there was an
  * error.
@@ -388,6 +394,15 @@ ges_timeline_test_source_new (void)
   return g_object_new (GES_TYPE_TIMELINE_TEST_SOURCE, NULL);
 }
 
+/**
+ * ges_timeline_test_source_new_for_nick:
+ * @nick: the nickname for which to create the #GESTimelineTestSource
+ *
+ * Creates a new #GESTimelineTestSource for the provided @nick.
+ *
+ * Returns: The newly created #GESTimelineTestSource, or NULL if there was an
+ * error.
+ */
 GESTimelineTestSource *
 ges_timeline_test_source_new_for_nick (gchar * nick)
 {

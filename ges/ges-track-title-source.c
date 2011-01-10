@@ -253,6 +253,8 @@ ges_track_title_source_set_halignment (GESTrackTitleSource * self,
  * ges_track_title_source_get_text:
  * @source: a #GESTrackTitleSource
  *
+ * Get the text currently set on the @source.
+ *
  * Returns: (transfer none): The text currently set on the @source.
  */
 const gchar *
@@ -264,6 +266,8 @@ ges_track_title_source_get_text (GESTrackTitleSource * source)
 /**
  * ges_track_title_source_get_font_desc:
  * @source: a #GESTrackTitleSource
+ *
+ * Get the pango font description used by @source.
  *
  * Returns: (transfer none): The pango font description used by this
  * @source.
@@ -278,6 +282,8 @@ ges_track_title_source_get_font_desc (GESTrackTitleSource * source)
  * ges_track_title_source_get_halignment:
  * @source: a #GESTrackTitleSource
  *
+ * Get the horizontal aligment used by this source.
+ *
  * Returns: The horizontal aligment used by this source.
  */
 GESTextHAlign
@@ -290,6 +296,8 @@ ges_track_title_source_get_halignment (GESTrackTitleSource * source)
  * ges_track_title_source_get_valignment:
  * @source: a #GESTrackTitleSource
  *
+ * Get the vertical aligment used by this source.
+ *
  * Returns: The vertical aligment used by this source.
  */
 GESTextVAlign
@@ -299,6 +307,14 @@ ges_track_title_source_get_valignment (GESTrackTitleSource * source)
 }
 
 
+/**
+ * ges_track_title_source_new:
+ *
+ * Creates a new #GESTrackTitleSource.
+ *
+ * Returns: The newly created #GESTrackTitleSource, or %NULL if there was an
+ * error.
+ */
 GESTrackTitleSource *
 ges_track_title_source_new (void)
 {

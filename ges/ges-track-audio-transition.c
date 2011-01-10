@@ -290,6 +290,13 @@ ges_track_audio_transition_duration_changed (GESTrackObject * object,
   GST_LOG ("done updating controller");
 }
 
+/**
+ * ges_track_audio_transition_new:
+ *
+ * Creates a new #GESTrackAudioTransition.
+ *
+ * Returns: The newly created #GESTrackAudioTransition.
+ */
 GESTrackAudioTransition *
 ges_track_audio_transition_new (void)
 {

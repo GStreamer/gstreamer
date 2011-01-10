@@ -95,7 +95,9 @@ ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
  * ges_track_video_test_source_get_pattern:
  * @source: a #GESVideoTestPattern
  *
- * Returns: the video pattern used by the @source.
+ * Get the video pattern used by the @source.
+ *
+ * Returns: The video pattern used by the @source.
  */
 GESVideoTestPattern
 ges_track_video_test_source_get_pattern (GESTrackVideoTestSource * source)
@@ -103,6 +105,14 @@ ges_track_video_test_source_get_pattern (GESTrackVideoTestSource * source)
   return source->priv->pattern;
 }
 
+/**
+ * ges_track_video_test_source_new:
+ *
+ * Creates a new #GESTrackVideoTestSource.
+ *
+ * Returns: The newly created #GESTrackVideoTestSource, or %NULL if there was an
+ * error.
+ */
 GESTrackVideoTestSource *
 ges_track_video_test_source_new (void)
 {

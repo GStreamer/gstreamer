@@ -285,7 +285,6 @@ ges_timeline_filesource_set_supported_formats (GESTimelineFileSource * self,
  * @is_image: %TRUE if @self is a still image, %FALSE otherwize
  *
  * Sets whether the timeline object is a still image or not.
- *
  */
 void
 ges_timeline_filesource_set_is_image (GESTimelineFileSource * self,
@@ -298,8 +297,9 @@ ges_timeline_filesource_set_is_image (GESTimelineFileSource * self,
  * ges_timeline_filesource_is_muted:
  * @self: the #GESTimelineFileSource 
  *
- * Returns: %TRUE if the audio track of @self is muted, %FALSE otherwize.
+ * Lets you know if the audio track of @self is muted or not.
  *
+ * Returns: %TRUE if the audio track of @self is muted, %FALSE otherwize.
  */
 gboolean
 ges_timeline_filesource_is_muted (GESTimelineFileSource * self)
@@ -311,8 +311,9 @@ ges_timeline_filesource_is_muted (GESTimelineFileSource * self)
  * ges_timeline_filesource_get_max_duration:
  * @self: the #GESTimelineFileSource 
  *
- * Returns: The duration of @self.
+ * Get the duration of the object.
  *
+ * Returns: The duration of @self.
  */
 guint64
 ges_timeline_filesource_get_max_duration (GESTimelineFileSource * self)
@@ -324,8 +325,9 @@ ges_timeline_filesource_get_max_duration (GESTimelineFileSource * self)
  * ges_timeline_filesource_is_image:
  * @self: the #GESTimelineFileSource 
  *
- * Returns: %TRUE if @self is a still image %FALSE otherwize.
+ * Lets you know if @self is an image or not.
  *
+ * Returns: %TRUE if @self is a still image %FALSE otherwize.
  */
 gboolean
 ges_timeline_filesource_is_image (GESTimelineFileSource * self)
@@ -337,8 +339,9 @@ ges_timeline_filesource_is_image (GESTimelineFileSource * self)
  * ges_timeline_filesource_get_uri:
  * @self: the #GESTimelineFileSource 
  *
- * Returns: The location of the ressource.
+ * Get the location of the ressource.
  *
+ * Returns: The location of the ressource.
  */
 const gchar *
 ges_timeline_filesource_get_uri (GESTimelineFileSource * self)
@@ -350,8 +353,9 @@ ges_timeline_filesource_get_uri (GESTimelineFileSource * self)
  * ges_timeline_filesource_get_supported_formats:
  * @self: the #GESTimelineFileSource 
  *
- * Returns: The formats supported by @self.
+ * Get the formats supported by @self.
  *
+ * Returns: The formats supported by @self.
  */
 GESTrackType
 ges_timeline_filesource_get_supported_formats (GESTimelineFileSource * self)
