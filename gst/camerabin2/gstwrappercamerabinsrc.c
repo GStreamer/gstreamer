@@ -351,6 +351,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
 
   self->output_selector =
       gst_element_factory_make ("output-selector", "outsel");
+  g_object_set (self->output_selector, "pad-negotiation-mode", 0, NULL);
   gst_bin_add (GST_BIN (self), self->output_selector);
   {
     GstPad *pad = gst_element_get_static_pad (self->output_selector, "sink");
