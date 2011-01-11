@@ -50,7 +50,6 @@
 #endif
 
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
-#include <gst/pbutils/encoding-profile.h>
 #include "gstcamerabin2.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_camera_bin_debug);
@@ -69,7 +68,8 @@ enum
   PROP_IMAGE_CAPTURE_CAPS,
   PROP_VIDEO_CAPTURE_CAPS,
   PROP_POST_PREVIEWS,
-  PROP_PREVIEW_CAPS
+  PROP_PREVIEW_CAPS,
+  PROP_VIDEO_ENCODING_PROFILE
 };
 
 enum
@@ -345,6 +345,12 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           "The caps of the preview image to be posted",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_VIDEO_ENCODING_PROFILE,
+      gst_param_spec_mini_object ("video-profile", "Video Profile",
+          "The GstEncodingProfile to use for video recording",
+          GST_TYPE_ENCODING_PROFILE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstCameraBin::capture-start:
    * @camera: the camera bin element
@@ -421,7 +427,7 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     camera->imagebin = gst_element_factory_make ("imagecapturebin", "imagebin");
     g_object_set (camera->videosink, "async", FALSE, NULL);
 
-    {
+    if (camera->video_profile == NULL) {
       GstEncodingContainerProfile *prof;
       GstCaps *caps;
 
@@ -437,9 +443,10 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
         GST_WARNING_OBJECT (camera, "Failed to create encoding profiles");
       }
       gst_caps_unref (caps);
-      g_object_set (camera->encodebin, "profile", prof, NULL);
-      gst_encoding_profile_unref (prof);
+
+      camera->video_profile = (GstEncodingProfile *) prof;
     }
+    g_object_set (camera->encodebin, "profile", camera->video_profile, NULL);
 
     camera->videobin_queue =
         gst_element_factory_make ("queue", "videobin-queue");
@@ -672,6 +679,10 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
               "preview-caps"))
         g_object_set (camera->src, "preview-caps", camera->preview_caps, NULL);
       break;
+    case PROP_VIDEO_ENCODING_PROFILE:
+      camera->video_profile =
+          (GstEncodingProfile *) gst_value_dup_mini_object (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -753,6 +764,12 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
     case PROP_PREVIEW_CAPS:
       if (camera->preview_caps)
         gst_value_set_caps (value, camera->preview_caps);
+      break;
+    case PROP_VIDEO_ENCODING_PROFILE:
+      if (camera->video_profile) {
+        gst_value_set_mini_object (value,
+            (GstMiniObject *) camera->video_profile);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -20,6 +20,7 @@
 #define _GST_CAMERA_BIN_H_
 
 #include <gst/gst.h>
+#include <gst/pbutils/encoding-profile.h>
 
 G_BEGIN_DECLS
 
@@ -41,7 +42,6 @@ struct _GstCameraBin
   GstElement *user_src;
   gulong src_capture_notify_id;
 
-  //GstElement *videobin;
   GstElement *encodebin;
   GstElement *videosink;
   GstElement *videobin_queue;
@@ -64,6 +64,7 @@ struct _GstCameraBin
   gchar *image_location;
   gboolean post_previews;
   GstCaps *preview_caps;
+  GstEncodingProfile *video_profile;
 
   gboolean elements_created;
 };
