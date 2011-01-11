@@ -2106,6 +2106,14 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       break;
     }
 
+    /* move along with upstream timestamp (if any),
+     * but interpolate in between */
+    timestamp = gst_adapter_prev_timestamp (parse->adapter, NULL);
+    if (GST_CLOCK_TIME_IS_VALID (timestamp) &&
+        (parse->priv->prev_ts != timestamp)) {
+      parse->priv->prev_ts = parse->priv->next_ts = timestamp;
+    }
+
     /* FIXME: Would it be more efficient to make a subbuffer instead? */
     outbuf = gst_adapter_take_buffer (parse->adapter, fsize);
     outbuf = gst_buffer_make_metadata_writable (outbuf);
@@ -2114,14 +2122,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     GST_BUFFER_OFFSET (outbuf) = parse->priv->offset;
     parse->priv->offset += fsize;
     GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
-
-    /* move along with upstream timestamp (if any),
-     * but interpolate in between */
-    timestamp = gst_adapter_prev_timestamp (parse->adapter, NULL);
-    if (GST_CLOCK_TIME_IS_VALID (timestamp) &&
-        (parse->priv->prev_ts != timestamp)) {
-      parse->priv->prev_ts = parse->priv->next_ts = timestamp;
-    }
+    GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
 
     frame->buffer = outbuf;
     ret = gst_base_parse_handle_and_push_frame (parse, bclass, frame);
