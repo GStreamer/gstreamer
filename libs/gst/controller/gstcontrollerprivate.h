@@ -27,8 +27,8 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "gstcontroller.h"
-#include "gstcontrolsource.h"
+#include <gst/controller/gstcontroller.h>
+#include <gst/controller/gstcontrolsource.h>
 
 G_BEGIN_DECLS
 
