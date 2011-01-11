@@ -85,6 +85,7 @@ GstPbutils-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_MAJ
 		--add-include-path=$(srcdir)/../video \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
 		--library=libgstpbutils-0.10.la \
+		--library=gstreamer-0.10 \
 		--include=Gst-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
