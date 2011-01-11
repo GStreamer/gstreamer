@@ -7,6 +7,6 @@ includedir=${pcfiledir}/..
 Name: gst-editing-services
 Description: GStreamer Editing Services
 Version: @VERSION@
-Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-plugins-base-@GST_MAJORMINOR@
+Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@ gstreamer-controller-@GST_MAJORMINOR@ gstreamer-pbutils-@GST_MAJORMINOR@
 Libs: ${libdir}/libges-@GST_MAJORMINOR@
 Cflags: -I${includedir} -I@srcdir@/..
