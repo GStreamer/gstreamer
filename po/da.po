@@ -3,16 +3,38 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2009, 2010.
+# Joe Hansen <joedalton2@yahoo.dk>, 2009, 2010, 2011.
 #
 # capture -> optage
+# gain -> forstærkning
 # shutter -> lukketid
+#
+# Hej Torben, de fleste af dem her er vist afklaringen af hvorvidt det er et
+# udsagnsord eller navneord. Har du været i koden og kigge? Ville godt nok 
+# være ked af at rette alle dem her, for så bare at »opdage« at de var gode nok,
+# Nu har jeg haft src/gst-plugins-base/tags.c åben i en nylig version
+# (gst-blugins-base version 0.10.31), og jeg tror ikke strengene bruges,
+# mens der sker en aktiv handling.
+# I filen ser det således ud:
+#    /* photography tags */
+#    gst_tag_register (GST_TAG_CAPTURING_SHUTTER_SPEED,
+#       GST_TAG_FLAG_META,
+#       GST_TYPE_FRACTION,
+#       _("capturing shutter speed"),
+#       _("Shutter speed used when capturing an image,
+#          in seconds"), NULL);
+# Dette kan du se som en indgang i en tabel over strenge. Den første korte
+# streng er navnet på mærket, den anden er en beskrivelse af samme mærke.
+# Strengene er altså betegnelser/navneord. 
+#
+# brugt kunne erstattes med der blev brugt (men skal så rettes igennem for alle).
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 16:36+0000\n"
-"PO-Revision-Date: 2010-10-27 16:38+0100\n"
+"POT-Creation-Date: 2011-01-11 18:58+0000\n"
+"PO-Revision-Date: 2011-01-07 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -292,108 +314,119 @@ msgstr "spor TRM-id"
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-id"
 
+# nb ikke handling men navneord.
+# "optagelukkertid" / "optagerlukkertid"
+# Mogens: shutter speed = lukkerhastighed
 msgid "capturing shutter speed"
-msgstr "optager hastighed for lukketid"
+msgstr "optagerlukkertid"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Lukketidshastighed brug når et billede optages, i sekunder"
+msgstr "Lukketidshastighed brugt når et billede optages, i sekunder"
 
 msgid "capturing focal ratio"
-msgstr "optager brændforhold"
+msgstr "brændforhold for optager"
 
 msgid "Focal ratio (f-number) used when capturing the image"
 msgstr "Brændforhold (f-nummer) brugt under optagelse af billedet"
 
 msgid "capturing focal length"
-msgstr "optager brændvidde"
+msgstr "brændvidde for optager"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Brændvidde på linser brugt under optagelse af billedet, i mm"
+msgstr "Brændvidde på linse brugt under optagelse af billedet, i mm"
 
 msgid "capturing digital zoom ratio"
-msgstr "optager digitalt zoomforhold"
+msgstr "digitalt zoomforhold for optager"
 
 msgid "Digital zoom ratio used when capturing an image"
 msgstr "Digitalt zoomforhold brugt under optagelse af et billede"
 
 msgid "capturing iso speed"
-msgstr "optager iso-hastighed"
+msgstr "iso-hastighed for optager"
 
 msgid "The ISO speed used when capturing an image"
 msgstr "ISO-hastigheden brugt under optagelse af et billede"
 
 msgid "capturing exposure program"
-msgstr "optager belysningsprogram"
+msgstr "belysningsprogram for optagelse"
 
 msgid "The exposure program used when capturing an image"
 msgstr "Belysningsprogrammet brugt under optagelse af et billede"
 
 msgid "capturing exposure mode"
-msgstr "optager belysningstilstand"
+msgstr "belysningstilstand for optagelse"
 
 msgid "The exposure mode used when capturing an image"
 msgstr "Belysningstilstanden brugt under optagelse af et billede"
 
+# "optagelsestype for optagelse af scene" /
+# "optagelsestype for sceneoptagelse" /
+# "sceneoptagelsestype for optager" /
+# "optageroptagelsestype for scene"
+# De to første rammer vist forlægget mest præcist.
 msgid "capturing scene capture type"
-msgstr "optager optagelsestype for scene"
+msgstr "optagelsestype for optagelse af scene"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr "Optagelsestilstanden for scene under optagelse af et billede"
+msgstr "Sceneoptagelsestilstanden brugt da billedet blev optaget"
 
+# "justering af optageforstærkning" /
+# "justering af optagerforstærkning"
 msgid "capturing gain adjustment"
-msgstr "optager forøgelsesjustering"
+msgstr "justering af optageforstærkning"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr "Den samlede forøgelsesjustering brugt på et billede"
+msgstr "Den samlede optageforstærkning brugt på et billede"
 
 msgid "capturing white balance"
-msgstr "optager hvidbalance"
+msgstr "hvidbalance for optagelse"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Hvidbalancetilstanden angivet under optagelse af et billede"
 
+# kontrast for optagelse
 msgid "capturing contrast"
-msgstr "optager kontrast"
+msgstr "optagekontrast"
 
+# Jeg tror "direction" skal oversættes til "indstilling af"
+# (sml. "director" ~ "instruction" ~ "instruering" ~ "indstilling"
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Retningen på kontrastprocessen brugt under optagelse af et billede"
+msgstr "Indstilling af kontrastprocessen brugt under optagelse af et billede"
 
 msgid "capturing saturation"
-msgstr "optager farvemætning"
+msgstr "farvemætning for optagelse"
 
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr ""
-"Retningen på farvemætningsprocessen brugt under optagelse af et billede"
+"Indstillingen af farvemætningsprocessen brugt under optagelse af et billede"
 
 msgid "capturing sharpness"
-msgstr "optager skarphed"
+msgstr "optageskarphed"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "Retningen på skarphedsprocessen brugt under optagelse af et billede"
+msgstr "skarphedindstilling brugt under optagelse af et billede"
 
 msgid "capturing flash fired"
-msgstr "optager blitzen der blev brugt"
+msgstr "optagerblitzen der blev brugt"
 
 msgid "If the flash fired while capturing an image"
 msgstr "Hvorvidt blitzen blev brugt under optagelse af et billede"
 
 msgid "capturing flash mode"
-msgstr "optager blitztilstand"
+msgstr "optagererens blitztilstand"
 
 msgid "The selected flash mode while capturing an image"
 msgstr "Den valgte blitztilstand under optagelse af et billede"
 
 msgid "capturing metering mode"
-msgstr "optager måletilstanden"
+msgstr "optagerens måletilstand"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
-"Måletilstanden brugt under bestemmelse af belysning under optagelse af et "
-"billede"
+msgstr "Måletilstanden brugt da optagelsens belysning skulle bestemmes"
 
 msgid "capturing source"
-msgstr "optager kilde"
+msgstr "optagekilde"
 
 msgid "The source or type of device used for the capture"
 msgstr "Kilden eller typen af enhed brugt under optagelsen"
@@ -608,38 +641,3 @@ msgstr "Enheden \"%s\" er allerede i brug."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunne ikke tilgå enheden \"%s\"."
-
-#~ msgid "Can't display both text subtitles and subpictures."
-#~ msgstr "Kan ikke vise både undertekster og underbilleder."
-
-#~ msgid "No Temp directory specified."
-#~ msgstr "Ingen midlertidig mappe angivet."
-
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Kunne ikke oprette midlertidig fil \"%s\"."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Kunne ikke åbne fil \"%s\" til læsning."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Intern datastrømsfejl."
-
-# eller oprette (evt. sammensat).
-# beholdt danne og ikke sammensat da tillægsord.
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Kunne ikke danne et \"decodebin2\" element."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Kunne ikke danne et \"queue2\" element."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Kunne ikke danne et \"typefind\" element."
-
-#~ msgid "No file name specified."
-#~ msgstr "Intet filnavn angivet."
-
-#~ msgid "artist sortname"
-#~ msgstr "kunstner sorteringsnavn"
-
-#~ msgid "MusicBrainz artist sortname"
-#~ msgstr "MusicBrainz kunstner sorteringsnavn"

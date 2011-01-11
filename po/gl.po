@@ -1,21 +1,21 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2010 Fran Dieguez
 # This file is distributed under the same license as the gst-plugins-base package.
-# Fran Diéguez <frandieguez@ubuntu.com>, 2010.
+# Fran Diéguez <frandieguez@ubuntu.com>, 2010, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.29.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-08-19 15:01+0200\n"
+"POT-Creation-Date: 2011-01-11 18:58+0000\n"
+"PO-Revision-Date: 2011-01-09 21:20+0100\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
 "Language: gl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n!=1);\\\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
 "X-Poedit-Language: galego\n"
 
 msgid "Master"
@@ -291,119 +291,120 @@ msgid "MusicBrainz TRM ID"
 msgstr "ID TRM en MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "velocidade do obturador da toma"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Velocidade do obturador usada ao tomar unha imaxe, en segundos"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "taxa focal da toma"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Taxa focal (número-f) usada ao tomar a imaxe"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "lonxitude focal da toma"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Lonxitude focal da lente usada ao tomar a imaxe, en mm"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "taxa de ampliación dixital da toma"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Taxa de ampliación dixital usada ao tomar unha imaxe"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "velocidade ISO da toma"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "A velocidade de captura ISO usada ao tomar unha imaxe"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "programa de exposición da toma"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "O programa de exposición usado ao tomar unha imaxe"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "modo de exposición da toma"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "O modo de exposición usado ao tomar unha imaxe"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "tipo de escena usado na toma"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "O modo de captura usado ao tomar unha imaxe"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "axuste de ganancia da toma"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "O axuste xeral de ganancia aplicado nunha imaxe"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "balance de brancos da toma"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "O modo de balance de brancos usado ao tomar unha imaxe"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "contraste da toma"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "A dirección de contraste procesada aplicada ao tomar unha imaxe"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "saturación da toma"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "A dirección de saturación procesada aplicada ao tomar unha imaxe"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "nitidez da toma"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "A dirección de nitidez procesada aplicada ao tomar unha imaxe"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "disparo de flash da toma"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Se o flash se disparou ao capturar unha imaxe"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "modo de flash da toma"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "O modo de flash seleccionado ao tomar unha imaxe"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "modo de medición da toma"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
+"O modo de medición usado ao determinar a exposición ao tomar unha imaxe"
 
 msgid "capturing source"
-msgstr ""
+msgstr "orixe da toma"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "A orixe ou tipo de dispositivo usado para a toma"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "ppi horizontal da imaxe"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Densidade horizontal de píxeles, en ppi, do medio (imaxe ou vídeo)"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "ppi vertical da imaxe"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Densidade vertical de píxeles, en ppi, do medio (imaxe ou vídeo)"
 
 msgid "This CD has no audio tracks"
 msgstr "Este CD non contén pistas de son"
