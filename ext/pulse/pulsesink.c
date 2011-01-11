@@ -1092,7 +1092,7 @@ gst_pulseringbuffer_pause (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (psink, "pausing and corking");
   /* make sure the commit method stops writing */
   pbuf->paused = TRUE;
-  res = gst_pulsering_set_corked (pbuf, TRUE, FALSE);
+  res = gst_pulsering_set_corked (pbuf, TRUE, TRUE);
   if (pbuf->in_commit) {
     /* we are waiting in a commit, signal */
     GST_DEBUG_OBJECT (psink, "signal commit");
