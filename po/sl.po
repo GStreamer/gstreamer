@@ -2,15 +2,15 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 # Copyright (C) 2005 Free Software Foundation, Inc.
 #
-# Matej Urbančič <matej.urban@gmail.com>, 2010.
 # Robert Horvat <robi@hipnos.net>, 2010.
+# Matej Urbančič <matej.urban@gmail.com>, 2010 - 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 01:15+0000\n"
-"PO-Revision-Date: 2010-10-25 12:23+0100\n"
+"POT-Creation-Date: 2011-01-11 19:32+0000\n"
+"PO-Revision-Date: 2011-01-07 20:28+0100\n"
 "Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
@@ -64,7 +64,7 @@ msgid "Server sent bad data."
 msgstr "Strežnik je poslal slabe podatke."
 
 msgid "No URL set."
-msgstr "Ni nastavljen naslov URL."
+msgstr "Ni nastavljenega naslova URL."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Napaka vhodnega zvoka, AVI pretok bo pokvarjen."
@@ -79,7 +79,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Datoteka je pokvarjena, zato je ni mogoče predvajati."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Neveljavna velikost atoma"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Datoteka ni popolna, zato je ni mogoče predvajati."
@@ -89,7 +89,7 @@ msgstr "Video zapis v tej datoteki morda ne bo predvajan pravilno."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr "Datoteka vsebuje več pretokov. Predvajanje le prvih %d"
+msgstr "Datoteka vsebuje več pretokov. Predvajano bo le začetnih %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -634,16 +634,16 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Napaka med določanjem vhoda %d naprave %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Napaka med pridobivanjem vhodnega signala naprave '%s'. Morda je radijska "
+"Napaka med pridobivanjem odvodnega signala naprave '%s'. Morda je radijska "
 "naprava."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Napaka med določanjem vhoda %d naprave %s."
+msgstr "Napaka med določanjem odvoda %d naprave %s."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
@@ -679,7 +679,7 @@ msgid "Changing resolution at runtime is not yet supported."
 msgstr "Spreminjanje ločljivosti med delovanjem še ni podprto."
 
 msgid "Cannot operate without a clock"
-msgstr "Ni mogoče izvajati opravil brez ure"
+msgstr "Izvajanje opravil brez ure ni mogoče"
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Opisuje izbran vnosni predmet."

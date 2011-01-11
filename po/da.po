@@ -3,17 +3,17 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2010.
+# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2010, 2011.
 #
 # gain -> forhøjelse
 # boost -> øgning?
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 01:15+0000\n"
-"PO-Revision-Date: 2010-10-26 23:54+0200\n"
+"POT-Creation-Date: 2011-01-11 19:32+0000\n"
+"PO-Revision-Date: 2011-01-07 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -77,7 +77,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Denne fil er ødelagt og kan ikke afspilles."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Ugyldig atomstørrelse."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Denne fil er ufuldstændig og kan ikke afspilles."
@@ -637,15 +637,15 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Kunne ikke sætte inddata %d for enhed %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Kunne ikke hente nuværende inddata for enhed '%s'. Måske er det en radioenhed"
+"Kunne ikke hente nuværende uddata for enhed '%s'. Måske er det en radioenhed"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Kunne ikke sætte inddata %d for enhed %s."
+msgstr "Kunne ikke sætte uddata %d for enhed %s."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
