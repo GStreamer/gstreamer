@@ -25,7 +25,6 @@
 
 #include "gstviewfinderbin.h"
 #include "gstimagecapturebin.h"
-#include "gstvideorecordingbin.h"
 #include "gstwrappercamerabinsrc.h"
 #include "gstcamerabin2.h"
 
@@ -35,8 +34,6 @@ plugin_init (GstPlugin * plugin)
   if (!gst_viewfinder_bin_plugin_init (plugin))
     return FALSE;
   if (!gst_image_capture_bin_plugin_init (plugin))
-    return FALSE;
-  if (!gst_video_recording_bin_plugin_init (plugin))
     return FALSE;
   if (!gst_wrapper_camera_bin_src_plugin_init (plugin))
     return FALSE;
