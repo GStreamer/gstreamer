@@ -314,7 +314,7 @@ static gboolean
 stop_seek (GtkWidget * widget, gpointer user_data)
 {
   update_id =
-      g_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+      g_timeout_add (UPDATE_INTERVAL, (GSourceFunc) update_scale, pipeline);
 
   GST_DEBUG ("stop seek");
 
@@ -340,7 +340,7 @@ play_cb (GtkButton * button, gpointer data)
     gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     update_id =
-        g_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+        g_timeout_add (UPDATE_INTERVAL, (GSourceFunc) update_scale, pipeline);
   }
 }
 
@@ -507,13 +507,11 @@ main (int argc, char **argv)
           1.0, 1.0));
   hscale = gtk_hscale_new (adjustment);
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
-  gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
   sadjustment =
       GTK_ADJUSTMENT (gtk_adjustment_new (1.0, 0.0, 5.0, 0.1, 1.0, 0.0));
   shscale = gtk_hscale_new (sadjustment);
   gtk_scale_set_digits (GTK_SCALE (shscale), 2);
-  gtk_range_set_update_policy (GTK_RANGE (shscale), GTK_UPDATE_CONTINUOUS);
 
   schanged_id =
       g_signal_connect (shscale, "value_changed", G_CALLBACK (speed_cb),
