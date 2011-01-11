@@ -252,7 +252,7 @@ send_generic_response (GstRTSPClient * client, GstRTSPStatusCode code,
   send_response (client, NULL, &response);
 }
 
-static gboolean
+static void
 handle_unauthorized_request (GstRTSPClient * client, GstRTSPUrl * uri,
     GstRTSPSession * session, GstRTSPMessage * request)
 {
@@ -260,11 +260,14 @@ handle_unauthorized_request (GstRTSPClient * client, GstRTSPUrl * uri,
 
   gst_rtsp_message_init_response (&response, GST_RTSP_STS_UNAUTHORIZED,
       gst_rtsp_status_as_text (GST_RTSP_STS_UNAUTHORIZED), request);
-  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_WWW_AUTHENTICATE,
-      "Basic ");
+
+  if (client->auth) {
+    /* and let the authentication manager setup the auth tokens */
+    gst_rtsp_auth_setup_auth (client->auth, client, uri, session, request,
+        &response);
+  }
 
   send_response (client, session, &response);
-  return;
 }
 
 

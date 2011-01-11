@@ -36,6 +36,9 @@ static void gst_rtsp_auth_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_auth_finalize (GObject * obj);
 
+static gboolean default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
+    GstRTSPUrl * uri, GstRTSPSession * session, GstRTSPMessage * request,
+    GstRTSPMessage * response);
 static gboolean default_check_method (GstRTSPAuth * auth, GstRTSPMethod method,
     GstRTSPClient * client, GstRTSPUrl * uri, GstRTSPSession * session,
     GstRTSPMessage * request);
@@ -53,6 +56,7 @@ gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
   gobject_class->set_property = gst_rtsp_auth_set_property;
   gobject_class->finalize = gst_rtsp_auth_finalize;
 
+  klass->setup_auth = default_setup_auth;
   klass->check_method = default_check_method;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_auth_debug, "rtspauth", 0, "GstRTSPAuth");
@@ -133,6 +137,49 @@ gst_rtsp_auth_set_basic (GstRTSPAuth * auth, const gchar * basic)
 {
   g_free (auth->basic);
   auth->basic = g_strdup (basic);
+}
+
+static gboolean
+default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
+    GstRTSPUrl * uri, GstRTSPSession * session, GstRTSPMessage * request,
+    GstRTSPMessage * response)
+{
+  /* we only have Basic for now */
+  gst_rtsp_message_add_header (response, GST_RTSP_HDR_WWW_AUTHENTICATE,
+      "Basic ");
+
+  return TRUE;
+}
+
+/**
+ * gst_rtsp_auth_setup_auth:
+ * @auth: a #GstRTSPAuth
+ * @client: the client
+ * @uri: the requested uri
+ * @session: the session
+ * @request: the request
+ * @response: the response
+ *
+ * Add authentication tokens to @response.
+ *
+ * Returns: FALSE if something is wrong.
+ */
+gboolean
+gst_rtsp_auth_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
+    GstRTSPUrl * uri, GstRTSPSession * session, GstRTSPMessage * request,
+    GstRTSPMessage * response)
+{
+  gboolean result = FALSE;
+  GstRTSPAuthClass *klass;
+
+  klass = GST_RTSP_AUTH_GET_CLASS (auth);
+
+  GST_DEBUG_OBJECT (auth, "setup auth");
+
+  if (klass->setup_auth)
+    result = klass->setup_auth (auth, client, uri, session, request, response);
+
+  return result;
 }
 
 static gboolean
