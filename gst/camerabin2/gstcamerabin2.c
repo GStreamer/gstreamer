@@ -103,6 +103,11 @@ GType
 gst_camera_bin_get_type (void)
 {
   static GType gst_camera_bin_type = 0;
+  static const GInterfaceInfo camerabin_tagsetter_info = {
+    NULL,
+    NULL,
+    NULL,
+  };
 
   if (!gst_camera_bin_type) {
     static const GTypeInfo gst_camera_bin_info = {
@@ -121,6 +126,9 @@ gst_camera_bin_get_type (void)
     gst_camera_bin_type =
         g_type_register_static (GST_TYPE_PIPELINE, "GstCameraBin2",
         &gst_camera_bin_info, 0);
+
+    g_type_add_interface_static (gst_camera_bin_type, GST_TYPE_TAG_SETTER,
+        &camerabin_tagsetter_info);
   }
 
   return gst_camera_bin_type;
@@ -149,7 +157,30 @@ gst_camera_bin_new_event_renegotiate (void)
 static void
 gst_camera_bin_start_capture (GstCameraBin * camerabin)
 {
+  const GstTagList *taglist;
+
   GST_DEBUG_OBJECT (camerabin, "Received start-capture");
+
+  taglist = gst_tag_setter_get_tag_list (GST_TAG_SETTER (camerabin));
+  if (taglist) {
+    GstPad *active_pad;
+
+    GST_DEBUG_OBJECT (camerabin, "Pushing tags from application: %"
+        GST_PTR_FORMAT, taglist);
+
+    if (camerabin->mode == MODE_IMAGE) {
+      active_pad = gst_element_get_static_pad (camerabin->src,
+          GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME);
+    } else {
+      active_pad = gst_element_get_static_pad (camerabin->src,
+          GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
+    }
+
+    gst_pad_push_event (active_pad,
+        gst_event_new_tag (gst_tag_list_copy (taglist)));
+    gst_object_unref (active_pad);
+  }
+
   g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
 }
 
@@ -559,6 +590,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 
   switch (trans) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_tag_setter_reset_tags (GST_TAG_SETTER (camera));
       gst_element_set_state (camera->videosink, GST_STATE_READY);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:

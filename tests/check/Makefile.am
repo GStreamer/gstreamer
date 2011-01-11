@@ -201,6 +201,7 @@ elements_camerabin2_CFLAGS = \
 elements_camerabin2_LDADD = \
         $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
         $(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-@GST_MAJORMINOR@.la \
+        -lgstpbutils-$(GST_MAJORMINOR) \
         $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 elements_camerabin2_SOURCES = elements/camerabin2.c
 

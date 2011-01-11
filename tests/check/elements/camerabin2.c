@@ -31,6 +31,7 @@
 #include <gst/video/video.h>
 #include <gst/check/gstcheck.h>
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
+#include <gst/pbutils/encoding-profile.h>
 
 #define IMAGE_FILENAME "image"
 #define VIDEO_FILENAME "video"
@@ -171,6 +172,26 @@ guint32 test_id = 0;
 
 static GstBuffer *preview_buffer;
 static GstCaps *preview_caps;
+static GstTagList *tags_found;
+
+static gboolean
+validity_bus_cb (GstBus * bus, GstMessage * message, gpointer data);
+
+static void
+validate_taglist_foreach (const GstTagList * list, const gchar * tag,
+    gpointer user_data)
+{
+  GstTagList *other = GST_TAG_LIST (user_data);
+
+  const GValue *val1 = gst_tag_list_get_value_index (list, tag, 0);
+  const GValue *val2 = gst_tag_list_get_value_index (other, tag, 0);
+
+  fail_if (val1 == NULL);
+  fail_if (val2 == NULL);
+
+  fail_unless (gst_value_can_intersect (val1, val2));
+}
+
 
 /* helper function for filenames */
 static const gchar *
@@ -272,6 +293,31 @@ check_preview_image (void)
 }
 
 static void
+extract_jpeg_tags (const gchar * filename, gint num)
+{
+  GstBus *bus;
+  GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+  const gchar *filepath = make_test_file_name (filename, num);
+  gchar *pipeline_str = g_strdup_printf ("filesrc location=%s ! "
+      "jpegparse ! fakesink", filepath);
+  GstElement *pipeline;
+
+  pipeline = gst_parse_launch (pipeline_str, NULL);
+  fail_unless (pipeline != NULL);
+  g_free (pipeline_str);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  g_main_loop_run (loop);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+}
+
+static void
 setup_wrappercamerabinsrc_videotestsrc (void)
 {
   GstBus *bus;
@@ -334,6 +380,10 @@ teardown (void)
     gst_buffer_unref (preview_buffer);
   preview_buffer = NULL;
 
+  if (tags_found)
+    gst_tag_list_free (tags_found);
+  tags_found = NULL;
+
   GST_INFO ("done");
 }
 
@@ -360,9 +410,29 @@ validity_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
       g_main_loop_quit (loop);
       GST_DEBUG ("eos");
       break;
+    case GST_MESSAGE_TAG:{
+      GstTagList *taglist = NULL;
+
+      gst_message_parse_tag (message, &taglist);
+      if (tags_found) {
+        gst_tag_list_insert (tags_found, taglist, GST_TAG_MERGE_REPLACE);
+        gst_tag_list_free (taglist);
+      } else {
+        tags_found = taglist;
+      }
+    }
+      break;
     default:
       break;
   }
+  return TRUE;
+}
+
+/* checks that tags in @tags_a are in @tags_b */
+static gboolean
+taglist_is_subset (GstTagList * tags_a, GstTagList * tags_b)
+{
+  gst_tag_list_foreach (tags_a, validate_taglist_foreach, tags_b);
   return TRUE;
 }
 
@@ -416,6 +486,17 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
   gst_element_set_state (playbin, GST_STATE_PLAYING);
   g_main_loop_run (loop);
   gst_element_set_state (playbin, GST_STATE_NULL);
+
+  /* special handling for images (jpg) as jpegparse isn't plugged by
+   * default due to its current low rank */
+  if (taglist && strstr (filename, "image")) {
+    extract_jpeg_tags (filename, num);
+  }
+
+  if (taglist) {
+    fail_unless (tags_found != NULL);
+    fail_unless (taglist_is_subset (taglist, tags_found));
+  }
 
   g_free (uri);
   gst_object_unref (bus);
@@ -703,6 +784,150 @@ GST_START_TEST (test_image_capture_previews)
 GST_END_TEST;
 
 
+GST_START_TEST (test_image_capture_with_tags)
+{
+  gint i;
+  GstTagList *taglists[3];
+
+  if (!camera)
+    return;
+
+  taglists[0] = gst_tag_list_new_full (GST_TAG_COMMENT, "test1",
+      GST_TAG_GEO_LOCATION_LATITUDE, 36.6, GST_TAG_GEO_LOCATION_LONGITUDE,
+      -12.5,
+      GST_TAG_COPYRIGHT, "My copyright notice",
+      GST_TAG_DEVICE_MANUFACTURER, "MyFavoriteBrand",
+      GST_TAG_DEVICE_MODEL, "123v42.1",
+      GST_TAG_DESCRIPTION, "some description",
+      GST_TAG_APPLICATION_NAME, "camerabin2 test",
+      GST_TAG_GEO_LOCATION_ELEVATION, 300.85, NULL);
+  taglists[1] = gst_tag_list_new_full (GST_TAG_COMMENT, "test2",
+      GST_TAG_GEO_LOCATION_LATITUDE, 1.6, GST_TAG_GEO_LOCATION_LONGITUDE,
+      0.0,
+      GST_TAG_COPYRIGHT, "some cp",
+      GST_TAG_DEVICE_MANUFACTURER, "ABRAND",
+      GST_TAG_DEVICE_MODEL, "abcd",
+      GST_TAG_DESCRIPTION, "desc",
+      GST_TAG_APPLICATION_NAME, "another cam test",
+      GST_TAG_GEO_LOCATION_ELEVATION, 10.0, NULL);
+  taglists[2] = gst_tag_list_new_full (GST_TAG_COMMENT, "test3",
+      GST_TAG_GEO_LOCATION_LATITUDE, 1.3, GST_TAG_GEO_LOCATION_LONGITUDE,
+      -5.0,
+      GST_TAG_COPYRIGHT, "CC",
+      GST_TAG_DEVICE_MANUFACTURER, "Homemade",
+      GST_TAG_DEVICE_MODEL, "xpto",
+      GST_TAG_DESCRIPTION, "another  description",
+      GST_TAG_APPLICATION_NAME, "cam2 test",
+      GST_TAG_GEO_LOCATION_ELEVATION, 0.0, NULL);
+
+  /* set still image mode */
+  g_object_set (camera, "mode", 1,
+      "location", make_test_file_name (IMAGE_FILENAME, -1), NULL);
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
+  fail_unless (camera != NULL);
+  GST_INFO ("starting capture");
+
+  for (i = 0; i < 3; i++) {
+    gst_tag_setter_merge_tags (GST_TAG_SETTER (camera), taglists[i],
+        GST_TAG_MERGE_REPLACE);
+
+    g_signal_emit_by_name (camera, "start-capture", NULL);
+
+    g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
+    g_main_loop_run (main_loop);
+  }
+
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  for (i = 0; i < 2; i++) {
+    check_file_validity (IMAGE_FILENAME, i, taglists[i], 0, 0);
+    gst_tag_list_free (taglists[i]);
+  }
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_video_capture_with_tags)
+{
+  gint i;
+  GstTagList *taglists[3];
+
+  if (!camera)
+    return;
+
+  taglists[0] = gst_tag_list_new_full (GST_TAG_COMMENT, "test1", NULL);
+  taglists[1] = gst_tag_list_new_full (GST_TAG_COMMENT, "test2", NULL);
+  taglists[2] = gst_tag_list_new_full (GST_TAG_COMMENT, "test3", NULL);
+
+  /* set video mode */
+  g_object_set (camera, "mode", 2,
+      "location", make_test_file_name (VIDEO_FILENAME, -1), NULL);
+
+  /* set a profile that has xmp support for more tags being saved */
+  {
+    GstEncodingContainerProfile *profile;
+    GstCaps *caps;
+
+    caps =
+        gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING,
+        "apple", NULL);
+    profile = gst_encoding_container_profile_new ("qt", "jpeg+qt", caps, NULL);
+    gst_caps_unref (caps);
+
+    caps = gst_caps_new_simple ("image/jpeg", NULL);
+    if (!gst_encoding_container_profile_add_profile (profile,
+            (GstEncodingProfile *) gst_encoding_video_profile_new (caps,
+                NULL, NULL, 1))) {
+      GST_WARNING_OBJECT (camera, "Failed to create encoding profiles");
+    }
+    gst_caps_unref (caps);
+
+    g_object_set (camera, "video-profile", profile, NULL);
+    gst_encoding_profile_unref (profile);
+  }
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
+  fail_unless (camera != NULL);
+  GST_INFO ("starting capture");
+
+  for (i = 0; i < 3; i++) {
+    gst_tag_setter_merge_tags (GST_TAG_SETTER (camera), taglists[i],
+        GST_TAG_MERGE_REPLACE);
+
+    g_signal_emit_by_name (camera, "start-capture", NULL);
+
+    g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
+    g_main_loop_run (main_loop);
+
+    g_signal_emit_by_name (camera, "stop-capture", NULL);
+    g_usleep (G_USEC_PER_SEC * 3);
+  }
+
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  for (i = 0; i < 2; i++) {
+    check_file_validity (VIDEO_FILENAME, i, taglists[i], 0, 0);
+    gst_tag_list_free (taglists[i]);
+  }
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_supported_caps)
 {
   GstCaps *padcaps = NULL;
@@ -798,6 +1023,9 @@ camerabin_suite (void)
     tcase_add_test (tc_basic, test_multiple_video_recordings);
 
     tcase_add_test (tc_basic, test_image_capture_previews);
+    tcase_add_test (tc_basic, test_image_capture_with_tags);
+
+    tcase_add_test (tc_basic, test_video_capture_with_tags);
   }
 
 end:
