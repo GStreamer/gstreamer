@@ -2559,7 +2559,7 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
   GstBaseParseClass *klass;
   gboolean result = FALSE;
 
-  GST_DEBUG_OBJECT (parse, "activate");
+  GST_DEBUG_OBJECT (parse, "activate %d", active);
 
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
@@ -2577,7 +2577,7 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
 
     parse->priv->pad_mode = GST_ACTIVATE_NONE;
   }
-  GST_DEBUG_OBJECT (parse, "activate: %d", result);
+  GST_DEBUG_OBJECT (parse, "activate return: %d", result);
   return result;
 }
 
@@ -2597,14 +2597,14 @@ gst_base_parse_sink_activate_push (GstPad * pad, gboolean active)
 
   parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
 
-  GST_DEBUG_OBJECT (parse, "sink activate push");
+  GST_DEBUG_OBJECT (parse, "sink activate push %d", active);
 
   result = gst_base_parse_activate (parse, active);
 
   if (result)
     parse->priv->pad_mode = active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE;
 
-  GST_DEBUG_OBJECT (parse, "sink activate push: %d", result);
+  GST_DEBUG_OBJECT (parse, "sink activate push return: %d", result);
 
   gst_object_unref (parse);
   return result;
@@ -2626,7 +2626,7 @@ gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
 
   parse = GST_BASE_PARSE (gst_pad_get_parent (sinkpad));
 
-  GST_DEBUG_OBJECT (parse, "activate pull");
+  GST_DEBUG_OBJECT (parse, "activate pull %d", active);
 
   result = gst_base_parse_activate (parse, active);
 
@@ -2645,7 +2645,7 @@ gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
   if (result)
     parse->priv->pad_mode = active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE;
 
-  GST_DEBUG_OBJECT (parse, "sink activate pull: %d", result);
+  GST_DEBUG_OBJECT (parse, "sink activate pull return: %d", result);
 
   gst_object_unref (parse);
   return result;
