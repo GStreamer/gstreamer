@@ -216,6 +216,7 @@ gst_text_overlay_valign_get_type (void)
     {GST_TEXT_OVERLAY_VALIGN_BOTTOM, "bottom", "bottom"},
     {GST_TEXT_OVERLAY_VALIGN_TOP, "top", "top"},
     {GST_TEXT_OVERLAY_VALIGN_POS, "position", "position"},
+    {GST_TEXT_OVERLAY_VALIGN_CENTER, "center", "center"},
     {0, NULL, NULL},
   };
 
@@ -1797,6 +1798,9 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
     case GST_TEXT_OVERLAY_VALIGN_POS:
       ypos = (gint) (overlay->height * overlay->ypos) - height / 2;
       ypos = CLAMP (ypos, 0, overlay->height - height);
+      break;
+    case GST_TEXT_OVERLAY_VALIGN_CENTER:
+      ypos = (overlay->height - height) / 2;
       break;
     default:
       ypos = overlay->ypad;
