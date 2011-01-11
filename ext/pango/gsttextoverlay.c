@@ -143,6 +143,12 @@ GST_DEBUG_CATEGORY (pango_debug);
 	ret = (v0 * alpha + v1 * (255 - alpha)) / 255; \
 }
 
+#define OVER(ret, alphaA, Ca, alphaB, Cb, alphaNew)	\
+{ \
+    ret = (Ca * alphaA + Cb * alphaB * (255 - alphaA) / 255) / alphaNew; \
+    ret = CLAMP (ret, 0, 255); \
+}
+
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 # define CAIRO_ARGB_A 3
 # define CAIRO_ARGB_R 2
@@ -1617,7 +1623,7 @@ static inline void
 gst_text_overlay_blit_AYUV (GstTextOverlay * overlay,
     guint8 * rgb_pixels, gint xpos, gint ypos)
 {
-  int a, r, g, b;
+  int a, r, g, b, a1;
   int y, u, v;
   int i, j;
   int h, w;
@@ -1649,14 +1655,17 @@ gst_text_overlay_blit_AYUV (GstTextOverlay * overlay,
 
       CAIRO_UNPREMULTIPLY (a, r, g, b);
 
+      // convert background to yuv
       COMP_Y (y, r, g, b);
       COMP_U (u, r, g, b);
       COMP_V (v, r, g, b);
 
-      a = (a * dest[0] + 128) >> 8;
-      BLEND (dest[1], a, y, dest[1]);
-      BLEND (dest[2], a, u, dest[2]);
-      BLEND (dest[3], a, v, dest[3]);
+      // preform text "OVER" background alpha compositing
+      a1 = a + (dest[0] * (255 - a)) / 255 + 1; // add 1 to prevent divide by 0
+      OVER (dest[1], a, y, dest[0], dest[1], a1);
+      OVER (dest[2], a, u, dest[0], dest[2], a1);
+      OVER (dest[3], a, v, dest[0], dest[3], a1);
+      dest[0] = a1 - 1;         // remove the temporary 1 we added
 
       pimage += 4;
       dest += 4;
