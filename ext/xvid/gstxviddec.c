@@ -310,7 +310,7 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
   xvid_dec_frame_t xframe;
   xvid_dec_stats_t xstats;
   gint ret;
-  guint8 *data;
+  guint8 *data, *dupe = NULL;
   guint size;
   GstFlowReturn fret;
 
@@ -332,6 +332,16 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
 
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
+
+  /* xvidcore overreads the input buffer, we need to alloc some extra padding
+   * to make things work reliably */
+#define EXTRA_PADDING 16
+  if (EXTRA_PADDING > 0) {
+    dupe = g_malloc (size + EXTRA_PADDING);
+    memcpy (dupe, data, size);
+    memset (dupe + size, 0, EXTRA_PADDING);
+    data = dupe;
+  }
 
   do {                          /* loop needed because xvidcore may return vol information */
     /* decode and so ... */
@@ -412,6 +422,7 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
   }
 
 done:
+  g_free (dupe);
   gst_buffer_unref (buf);
 
   return fret;
