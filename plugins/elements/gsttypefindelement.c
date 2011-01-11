@@ -25,6 +25,9 @@
  * order of their rank. One the type has been deteted it sets its src pad caps
  * to the found media type.
  *
+ * Whenever a type is found the #GstTypeFindElement::have-type signal is
+ * emitted.
+ *
  * Plugins can register custom typefinders by using #GstTypeFindFactory.
  */
 
@@ -230,7 +233,7 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
    * @probability: the probability of the type found
    * @caps: the caps of the type found
    *
-   * This signal gets emitted when the type and its probability has 
+   * This signal gets emitted when the type and its probability has
    * been found.
    */
   gst_type_find_element_signals[HAVE_TYPE] = g_signal_new ("have_type",
