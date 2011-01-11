@@ -405,6 +405,7 @@ gst_clock_get_time
 gst_clock_new_single_shot_id
 gst_clock_new_periodic_id
 gst_clock_single_shot_id_reinit
+gst_clock_periodic_id_reinit
 gst_clock_get_internal_time
 gst_clock_adjust_unlocked
 gst_clock_unadjust_unlocked

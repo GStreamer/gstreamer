@@ -560,6 +560,10 @@ void			gst_clock_id_unschedule		(GstClockID id);
 gboolean                gst_clock_single_shot_id_reinit (GstClock * clock,
 							 GstClockID id,
 							 GstClockTime time);
+gboolean                gst_clock_periodic_id_reinit    (GstClock * clock,
+							 GstClockID id,
+							 GstClockTime start_time,
+							 GstClockTime interval);
 
 G_END_DECLS
 

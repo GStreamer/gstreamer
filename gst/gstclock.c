@@ -209,7 +209,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
   return (GstClockID) entry;
 }
 
-/* WARNING : Does not modify the refoucnt
+/* WARNING : Does not modify the refcount
  * WARNING : Do not use if a pending clock operation is happening on that entry */
 static gboolean
 gst_clock_entry_reinit (GstClock * clock, GstClockEntry * entry,
@@ -248,6 +248,30 @@ gst_clock_single_shot_id_reinit (GstClock * clock, GstClockID id,
 {
   return gst_clock_entry_reinit (clock, (GstClockEntry *) id, time,
       GST_CLOCK_TIME_NONE, GST_CLOCK_ENTRY_SINGLE);
+}
+
+/**
+ * gst_clock_periodic_id_reinit:
+ * @clock: a #GstClock
+ * @id: a #GstClockID
+ * @start_time: the requested start time
+ * @interval: the requested interval
+ *
+ * Reinitializes the provided periodic @id to the provided start time and
+ * interval. Does not modify the reference count.
+ *
+ * Returns: %TRUE if the GstClockID could be reinitialized to the provided
+ * @time, else %FALSE.
+ *
+ * Since: 0.10.33
+ *
+ */
+gboolean
+gst_clock_periodic_id_reinit (GstClock * clock, GstClockID id,
+    GstClockTime start_time, GstClockTime interval)
+{
+  return gst_clock_entry_reinit (clock, (GstClockEntry *) id, start_time,
+      interval, GST_CLOCK_ENTRY_PERIODIC);
 }
 
 /**
