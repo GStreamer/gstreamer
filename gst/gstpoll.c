@@ -689,7 +689,11 @@ gst_poll_get_read_gpollfd (GstPoll * set, GPollFD * fd)
 #ifndef G_OS_WIN32
   fd->fd = set->control_read_fd.fd;
 #else
-  fd->fd = set->wakeup_event;
+#if GLIB_SIZEOF_VOID_P == 8
+  fd->fd = (gint64) set->wakeup_event;
+#else
+  fd->fd = (gint) set->wakeup_event;
+#endif
 #endif
   fd->events = G_IO_IN | G_IO_HUP | G_IO_ERR;
   fd->revents = 0;
