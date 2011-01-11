@@ -1206,7 +1206,10 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
       gst_base_parse_post_bitrates (parse, FALSE, TRUE, FALSE);
   }
 
-  frame_bitrate = (8 * data_len * GST_SECOND) / frame_dur;
+  if (frame_dur)
+    frame_bitrate = (8 * data_len * GST_SECOND) / frame_dur;
+  else
+    return;
 
   GST_LOG_OBJECT (parse, "frame bitrate %u, avg bitrate %u", frame_bitrate,
       parse->priv->avg_bitrate);
