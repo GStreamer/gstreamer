@@ -169,6 +169,9 @@ static GstElement *camera;
 static GMainLoop *main_loop;
 guint32 test_id = 0;
 
+static GstBuffer *preview_buffer;
+static GstCaps *preview_caps;
+
 /* helper function for filenames */
 static const gchar *
 make_test_file_name (const gchar * base_name, gint num)
@@ -240,10 +243,32 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
         GST_INFO ("image captured");
         g_object_get (camera, "ready-for-capture", &ready, NULL);
         fail_if (!ready, "not ready for capture");
+      } else if (st && gst_structure_has_name (st,
+              GST_BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME)) {
+        GstBuffer *buf;
+        const GValue *value;
+
+        value = gst_structure_get_value (st, "buffer");
+        fail_unless (value != NULL);
+        buf = gst_value_get_buffer (value);
+
+        if (preview_buffer)
+          gst_buffer_unref (preview_buffer);
+        preview_buffer = gst_buffer_ref (buf);
       }
       break;
   }
   return TRUE;
+}
+
+static void
+check_preview_image (void)
+{
+  fail_unless (preview_buffer != NULL);
+  if (preview_caps) {
+    fail_unless (gst_caps_can_intersect (GST_BUFFER_CAPS (preview_buffer),
+            preview_caps));
+  }
 }
 
 static void
@@ -266,9 +291,13 @@ setup_wrappercamerabinsrc_videotestsrc (void)
   src = gst_element_factory_make ("wrappercamerabinsrc", NULL);
   testsrc = gst_element_factory_make ("videotestsrc", NULL);
 
+  preview_caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
+      320, "height", G_TYPE_INT, 240, NULL);
+
   g_object_set (G_OBJECT (testsrc), "is-live", TRUE, "peer-alloc", FALSE, NULL);
   g_object_set (G_OBJECT (src), "video-src", testsrc, NULL);
-  g_object_set (G_OBJECT (camera), "camera-src", src, NULL);
+  g_object_set (G_OBJECT (camera), "camera-src", src, "preview-caps",
+      preview_caps, NULL);
   gst_object_unref (src);
   gst_object_unref (testsrc);
 
@@ -291,6 +320,19 @@ teardown (void)
 
   if (camera)
     gst_check_teardown_element (camera);
+  camera = NULL;
+
+  if (main_loop)
+    g_main_loop_unref (main_loop);
+  main_loop = NULL;
+
+  if (preview_caps)
+    gst_caps_unref (preview_caps);
+  preview_caps = NULL;
+
+  if (preview_buffer)
+    gst_buffer_unref (preview_buffer);
+  preview_buffer = NULL;
 
   GST_INFO ("done");
 }
@@ -405,6 +447,9 @@ GST_START_TEST (test_single_image_capture)
   g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
   g_main_loop_run (main_loop);
 
+  /* check that we got a preview image */
+  check_preview_image ();
+
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
   check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0);
 }
@@ -448,6 +493,8 @@ GST_START_TEST (test_multiple_image_captures)
 
     g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
     g_main_loop_run (main_loop);
+
+    check_preview_image ();
   }
 
   g_usleep (G_USEC_PER_SEC * 3);
@@ -486,6 +533,8 @@ GST_START_TEST (test_single_video_recording)
   g_main_loop_run (main_loop);
 
   g_signal_emit_by_name (camera, "stop-capture", NULL);
+
+  check_preview_image ();
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
@@ -535,6 +584,8 @@ GST_START_TEST (test_multiple_video_recordings)
     g_main_loop_run (main_loop);
     g_signal_emit_by_name (camera, "stop-capture", NULL);
 
+    check_preview_image ();
+
     g_timeout_add_seconds (1, (GSourceFunc) g_main_loop_quit, main_loop);
     g_main_loop_run (main_loop);
   }
@@ -578,6 +629,8 @@ GST_START_TEST (test_image_video_cycle)
     g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
     g_main_loop_run (main_loop);
 
+    check_preview_image ();
+
     /* now go to video */
     g_object_set (camera, "mode", 2, NULL);
     g_signal_emit_by_name (camera, "start-capture", NULL);
@@ -585,6 +638,8 @@ GST_START_TEST (test_image_video_cycle)
         main_loop);
     g_main_loop_run (main_loop);
     g_signal_emit_by_name (camera, "stop-capture", NULL);
+
+    check_preview_image ();
 
     /* wait for capture to finish */
     g_usleep (G_USEC_PER_SEC);
@@ -599,6 +654,54 @@ GST_START_TEST (test_image_video_cycle)
 }
 
 GST_END_TEST;
+
+
+GST_START_TEST (test_image_capture_previews)
+{
+  gint i;
+  gint widths[] = { 800, 640, 1280 };
+  gint heights[] = { 600, 480, 1024 };
+
+  if (!camera)
+    return;
+
+  /* set still image mode */
+  g_object_set (camera, "mode", 1,
+      "location", make_test_file_name (IMAGE_FILENAME, -1), NULL);
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
+  fail_unless (camera != NULL);
+  GST_INFO ("starting capture");
+
+  for (i = 0; i < 3; i++) {
+    GstCaps *caps;
+
+    caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
+        widths[i], "height", G_TYPE_INT, heights[i], NULL);
+
+    g_object_set (camera, "preview-caps", caps, NULL);
+    gst_caps_replace (&preview_caps, caps);
+    gst_caps_unref (caps);
+
+    g_signal_emit_by_name (camera, "start-capture", NULL);
+
+    g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
+    g_main_loop_run (main_loop);
+
+    check_preview_image ();
+  }
+
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_supported_caps)
 {
@@ -693,6 +796,8 @@ camerabin_suite (void)
       GST_WARNING ("Skipping image capture test because -good 0.10.27 is "
           "needed");
     tcase_add_test (tc_basic, test_multiple_video_recordings);
+
+    tcase_add_test (tc_basic, test_image_capture_previews);
   }
 
 end:
