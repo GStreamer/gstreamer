@@ -177,9 +177,8 @@ save_keyfile (GESFormatter * keyfile_formatter, GESTimeline * timeline)
     g_list_free (objs);
   }
 
-  for (tmp = layers; tmp; tmp = g_list_next (tmp)) {
-    g_object_unref (tmp->data);
-  }
+  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_free (layers);
 
   data = g_key_file_to_data (kf, &length, NULL);
   ges_formatter_set_data (keyfile_formatter, data, length);

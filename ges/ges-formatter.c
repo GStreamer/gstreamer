@@ -309,9 +309,14 @@ gboolean
 ges_formatter_save (GESFormatter * formatter, GESTimeline * timeline)
 {
   GESFormatterClass *klass;
+  GList *layers;
 
   /* Saving an empty timeline is not allowed */
-  g_return_val_if_fail (ges_timeline_get_layers (timeline) != NULL, FALSE);
+  layers = ges_timeline_get_layers (timeline);
+
+  g_return_val_if_fail (layers != NULL, FALSE);
+  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_free (layers);
 
   klass = GES_FORMATTER_GET_CLASS (formatter);
 
