@@ -3653,6 +3653,7 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_CONTENT_ENCRYPTION:
     case ASF_OBJ_EXT_CONTENT_ENCRYPTION:
     case ASF_OBJ_DIGITAL_SIGNATURE_OBJECT:
+    case ASF_OBJ_UNKNOWN_ENCRYPTION_OBJECT:
       goto error_encrypted;
     case ASF_OBJ_CONCEAL_NONE:
     case ASF_OBJ_HEAD2:
