@@ -236,7 +236,7 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
    * This signal gets emitted when the type and its probability has
    * been found.
    */
-  gst_type_find_element_signals[HAVE_TYPE] = g_signal_new ("have_type",
+  gst_type_find_element_signals[HAVE_TYPE] = g_signal_new ("have-type",
       G_TYPE_FROM_CLASS (typefind_class), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstTypeFindElementClass, have_type), NULL, NULL,
       gst_marshal_VOID__UINT_BOXED, G_TYPE_NONE, 2,
