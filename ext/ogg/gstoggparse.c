@@ -281,29 +281,41 @@ gst_ogg_parse_dispose (GObject * object)
     G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-/* submit the given buffer to the ogg sync.
- *
- * Returns the number of bytes submited.
- */
-static gint
+/* submit the given buffer to the ogg sync */
+static GstFlowReturn
 gst_ogg_parse_submit_buffer (GstOggParse * ogg, GstBuffer * buffer)
 {
   guint size;
   guint8 *data;
   gchar *oggbuffer;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
-  /* We now have a buffer, submit it to the ogg sync layer */
-  oggbuffer = ogg_sync_buffer (&ogg->sync, size);
-  memcpy (oggbuffer, data, size);
-  ogg_sync_wrote (&ogg->sync, size);
+  GST_DEBUG_OBJECT (ogg, "submitting %u bytes", size);
+  if (G_UNLIKELY (size == 0))
+    goto done;
 
-  /* We've copied all the neccesary data, so we're done with the buffer */
+  oggbuffer = ogg_sync_buffer (&ogg->sync, size);
+  if (G_UNLIKELY (oggbuffer == NULL)) {
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
+        (NULL), ("failed to get ogg sync buffer"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+  memcpy (oggbuffer, data, size);
+  if (G_UNLIKELY (ogg_sync_wrote (&ogg->sync, size) < 0)) {
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
+        (NULL), ("failed to write %d bytes to the sync buffer", size));
+    ret = GST_FLOW_ERROR;
+  }
+
+done:
   gst_buffer_unref (buffer);
 
-  return size;
+  return ret;
 }
 
 static void
