@@ -515,10 +515,11 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
     /* Render odd line */
     state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x + 1;
     gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[1]);
-    /* Blend the accumulated UV compositing buffers onto the output */
-    gstspu_vobsub_blend_comp_buffers (state, planes);
 
     if (!clip) {
+      /* Blend the accumulated UV compositing buffers onto the output */
+      gstspu_vobsub_blend_comp_buffers (state, planes);
+
       /* Update all the output pointers */
       planes[0] += state->Y_stride;
       planes[1] += state->UV_stride;
