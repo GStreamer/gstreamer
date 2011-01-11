@@ -74,19 +74,19 @@ static GParamSpec *properties[PROP_LAST];
 static GstElement *ges_track_object_create_gnl_object_func (GESTrackObject *
     object);
 
-void gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg
+static void gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackObject * obj);
 
-void gnlobject_media_start_cb (GstElement * gnlobject, GParamSpec * arg
+static void gnlobject_media_start_cb (GstElement * gnlobject, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackObject * obj);
 
-void gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg
+static void gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackObject * obj);
 
-void gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
+static void gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackObject * obj);
 
-void gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg
+static void gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackObject * obj);
 
 static inline gboolean
@@ -436,7 +436,7 @@ ges_track_object_set_active (GESTrackObject * object, gboolean active)
 }
 
 /* Callbacks from the GNonLin object */
-void
+static void
 gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     GESTrackObject * obj)
 {
@@ -458,7 +458,7 @@ gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
 }
 
 /* Callbacks from the GNonLin object */
-void
+static void
 gnlobject_media_start_cb (GstElement * gnlobject,
     GParamSpec * arg G_GNUC_UNUSED, GESTrackObject * obj)
 {
@@ -479,7 +479,7 @@ gnlobject_media_start_cb (GstElement * gnlobject,
   }
 }
 
-void
+static void
 gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     GESTrackObject * obj)
 {
@@ -499,7 +499,7 @@ gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
   }
 }
 
-void
+static void
 gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     GESTrackObject * obj)
 {
@@ -520,7 +520,7 @@ gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
   }
 }
 
-void
+static void
 gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     GESTrackObject * obj)
 {

@@ -82,7 +82,7 @@ static GstBinClass *parent_class;
 
 static guint ges_timeline_signals[LAST_SIGNAL] = { 0 };
 
-gint custom_find_track (TrackPrivate * tr_priv, GESTrack * track);
+static gint custom_find_track (TrackPrivate * tr_priv, GESTrack * track);
 static GstStateChangeReturn
 ges_timeline_change_state (GstElement * element, GstStateChange transition);
 static void
@@ -769,7 +769,7 @@ pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
   tr_priv->pad = NULL;
 }
 
-gint
+static gint
 custom_find_track (TrackPrivate * tr_priv, GESTrack * track)
 {
   if (tr_priv->track == track)
