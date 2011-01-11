@@ -1291,6 +1291,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 out_flushing:
   {
     GST_DEBUG_OBJECT (queue, "we are flushing");
+    gst_buffer_unref (buf);
     return GST_FLOW_WRONG_STATE;
   }
 read_error:
