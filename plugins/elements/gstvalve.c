@@ -23,19 +23,19 @@
 /**
  * SECTION:element-valve
  *
- * The valve is a simple element that drops buffers when the #GstValve::drop
+ * The valve is a simple element that drops buffers when the #GstValve:drop
  * property is set to %TRUE and lets then through otherwise.
  *
- * Any downstream error received while the #GstValve::drop property is %FALSE
+ * Any downstream error received while the #GstValve:drop property is %FALSE
  * is ignored. So downstream element can be set to  %GST_STATE_NULL and removed,
  * without using pad blocking.
  *
  * This element was previously part of gst-plugins-farsight, and then
  * gst-plugins-bad.
  *
- * Since: 0.10.32
- *
  * Documentation last reviewed on 2010-12-30 (0.10.31)
+ *
+ * Since: 0.10.32
  */
 
 #ifdef HAVE_CONFIG_H
