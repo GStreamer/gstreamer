@@ -51,7 +51,6 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges.h					\
 	ges-enums.h				\
 	ges-custom-timeline-source.h		\
-	ges-internal.h				\
 	ges-simple-timeline-layer.h		\
 	ges-timeline.h				\
 	ges-timeline-layer.h			\
@@ -83,6 +82,9 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-formatter.h				\
 	ges-keyfile-formatter.h			\
 	ges-utils.h
+
+noinst_HEADERS = \
+	ges-internal.h
 
 libges_@GST_MAJORMINOR@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) $(GST_VIDEO_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libges_@GST_MAJORMINOR@_la_LIBADD = $(GST_PBUTILS_LIBS) $(GST_VIDEO_LIBS) $(GST_CONTROLLER_LIBS) $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) 

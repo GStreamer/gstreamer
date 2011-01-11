@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 
-GST_DEBUG_CATEGORY_EXTERN (ges_debug);
-#define GST_CAT_DEFAULT ges_debug
+GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
+#define GST_CAT_DEFAULT _ges_debug
 
 #endif /* __GES_INTERNAL_H__ */
