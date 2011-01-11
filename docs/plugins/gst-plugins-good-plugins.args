@@ -765,7 +765,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>UDP Buffer Size</NICK>
 <BLURB>Size of the kernel UDP receive buffer in bytes, 0=default.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>524288</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2526,6 +2526,16 @@
 <NICK>Send Duplicates</NICK>
 <BLURB>When a distination/port pair is added multiple times, send packets multiple times as well.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of the kernel send buffer in bytes, 0=default.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20355,7 +20365,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Method</NICK>
 <BLURB>Deinterlace Method.</BLURB>
-<DEFAULT>Motion Adaptive: Advanced Detection</DEFAULT>
+<DEFAULT>Television: Full resolution</DEFAULT>
 </ARG>
 
 <ARG>

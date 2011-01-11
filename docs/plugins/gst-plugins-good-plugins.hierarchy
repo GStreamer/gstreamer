@@ -4,6 +4,8 @@ GObject
   GstCmmlTagHead
   GstCmmlTagStream
   GstColorBalanceChannel
+  GstMixerTrack
+    GstMixerOptions
   GstObject
     GstBus
     GstClock
@@ -106,7 +108,6 @@ GObject
         GstTest
         GstVideoSink
           GstGdkPixbufSink
-          GstV4l2Sink
       GstBaseSrc
         GstPushSrc
           GstBaseAudioSrc
@@ -223,7 +224,6 @@ GObject
       GstMatroskaDemux
       GstMatroskaMux
         GstWebMMux
-      GstMonoscope
       GstMuLawDec
       GstMuLawEnc
       GstMultipartDemux
@@ -290,7 +290,6 @@ GInterface
   GstColorBalance
   GstImplementsInterface
   GstMixer
-  GstNavigation
   GstPreset
   GstPropertyProbe
   GstStreamVolume
@@ -298,4 +297,3 @@ GInterface
   GstTuner
   GstURIHandler
   GstVideoOrientation
-  GstXOverlay
