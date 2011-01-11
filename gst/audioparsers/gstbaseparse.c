@@ -274,7 +274,7 @@ struct _GstBaseParsePrivate
   GstClockTimeDiff idx_interval;
   /* ts and offset of last entry added */
   GstClockTime index_last_ts;
-  guint64 index_last_offset;
+  gint64 index_last_offset;
   gboolean index_last_valid;
 
   /* timestamps currently produced are accurate, e.g. started from 0 onwards */
@@ -589,8 +589,8 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->avg_bitrate = 0;
   parse->priv->posted_avg_bitrate = 0;
 
-  parse->priv->index_last_ts = 0;
-  parse->priv->index_last_offset = 0;
+  parse->priv->index_last_ts = GST_CLOCK_TIME_NONE;
+  parse->priv->index_last_offset = -1;
   parse->priv->index_last_valid = TRUE;
   parse->priv->upstream_seekable = FALSE;
   parse->priv->upstream_size = 0;
@@ -1283,13 +1283,14 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
 
     /* FIXME need better helper data structure that handles these issues
      * related to ongoing collecting of index entries */
-    if (parse->priv->index_last_offset >= offset) {
+    if (parse->priv->index_last_offset >= (gint64) offset) {
       GST_DEBUG_OBJECT (parse, "already have entries up to offset "
           "0x%08" G_GINT64_MODIFIER "x", parse->priv->index_last_offset);
       goto exit;
     }
 
-    if (GST_CLOCK_DIFF (parse->priv->index_last_ts, ts) <
+    if (GST_CLOCK_TIME_IS_VALID (parse->priv->index_last_ts) &&
+        GST_CLOCK_DIFF (parse->priv->index_last_ts, ts) <
         parse->priv->idx_interval) {
       GST_DEBUG_OBJECT (parse, "entry too close to last time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (parse->priv->index_last_ts));
