@@ -1,5 +1,6 @@
 public_headers = \
 		rtsp-funnel.h \
+		rtsp-auth.h \
 		rtsp-params.h \
 		rtsp-sdp.h \
 		rtsp-media.h \
@@ -13,6 +14,7 @@ public_headers = \
 
 c_sources = \
 	rtsp-funnel.c \
+	rtsp-auth.c \
 	rtsp-params.c \
 	rtsp-sdp.c \
 	rtsp-media.c \

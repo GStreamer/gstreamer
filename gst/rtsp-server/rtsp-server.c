@@ -17,6 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <sys/ioctl.h>
+
 #include "rtsp-server.h"
 #include "rtsp-client.h"
 
@@ -370,6 +372,54 @@ gst_rtsp_server_get_media_mapping (GstRTSPServer * server)
   return result;
 }
 
+/**
+ * gst_rtsp_server_set_auth:
+ * @server: a #GstRTSPServer
+ * @auth: a #GstRTSPAuth
+ *
+ * configure @auth to be used as the authentication manager of @server.
+ */
+void
+gst_rtsp_server_set_auth (GstRTSPServer * server, GstRTSPAuth * auth)
+{
+  GstRTSPAuth *old;
+
+  g_return_if_fail (GST_IS_RTSP_SERVER (server));
+
+  old = server->auth;
+
+  if (old != auth) {
+    if (auth)
+      g_object_ref (auth);
+    server->auth = auth;
+    if (old)
+      g_object_unref (old);
+  }
+}
+
+
+/**
+ * gst_rtsp_server_get_auth:
+ * @server: a #GstRTSPServer
+ *
+ * Get the #GstRTSPAuth used as the authentication manager of @server.
+ *
+ * Returns: the #GstRTSPAuth of @server. g_object_unref() after
+ * usage.
+ */
+GstRTSPAuth *
+gst_rtsp_server_get_auth (GstRTSPServer * server)
+{
+  GstRTSPAuth *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
+
+  if ((result = server->auth))
+    g_object_ref (result);
+
+  return result;
+}
+
 static void
 gst_rtsp_server_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec)
@@ -580,6 +630,8 @@ default_accept_client (GstRTSPServer * server, GIOChannel * channel)
   gst_rtsp_client_set_session_pool (client, server->session_pool);
   /* set the media mapping that this client should use */
   gst_rtsp_client_set_media_mapping (client, server->media_mapping);
+  /* set authentication manager */
+  gst_rtsp_client_set_auth (client, server->auth);
 
   /* accept connections for that client, this function returns after accepting
    * the connection and will run the remainder of the communication with the

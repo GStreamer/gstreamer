@@ -41,6 +41,8 @@ main (int argc, char *argv[])
   GstRTSPServer *server;
   GstRTSPMediaMapping *mapping;
   GstRTSPMediaFactory *factory;
+  GstRTSPAuth *auth;
+  gchar *basic;
 
   gst_init (&argc, &argv);
 
@@ -52,6 +54,14 @@ main (int argc, char *argv[])
   /* get the mapping for this server, every server has a default mapper object
    * that be used to map uri mount points to media factories */
   mapping = gst_rtsp_server_get_media_mapping (server);
+
+  /* make a new authentication manager */
+  auth = gst_rtsp_auth_new ();
+  basic = gst_rtsp_auth_make_basic ("user", "admin");
+  gst_rtsp_auth_set_basic (auth, basic);
+  g_free (basic);
+  /* configure in the server */
+  gst_rtsp_server_set_auth (server, auth);
 
   /* make a media factory for a test stream. The default media factory can use
    * gst-launch syntax to create pipelines. 

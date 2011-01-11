@@ -253,6 +253,22 @@ send_generic_response (GstRTSPClient * client, GstRTSPStatusCode code,
 }
 
 static gboolean
+handle_unauthorized_request (GstRTSPClient * client, GstRTSPUrl * uri,
+    GstRTSPSession * session, GstRTSPMessage * request)
+{
+  GstRTSPMessage response = { 0 };
+
+  gst_rtsp_message_init_response (&response, GST_RTSP_STS_UNAUTHORIZED,
+      gst_rtsp_status_as_text (GST_RTSP_STS_UNAUTHORIZED), request);
+  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_WWW_AUTHENTICATE,
+      "Basic ");
+
+  send_response (client, session, &response);
+  return;
+}
+
+
+static gboolean
 compare_uri (const GstRTSPUrl * uri1, const GstRTSPUrl * uri2)
 {
   if (uri1 == NULL || uri2 == NULL)
@@ -1277,6 +1293,12 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   } else
     session = NULL;
 
+  if (client->auth) {
+    if (!gst_rtsp_auth_check_method (client->auth, method, client, uri, session,
+            request))
+      goto not_authorized;
+  }
+
   /* now see what is asked and dispatch to a dedicated handler */
   switch (method) {
     case GST_RTSP_OPTIONS:
@@ -1328,6 +1350,11 @@ no_pool:
 session_not_found:
   {
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, request);
+    return;
+  }
+not_authorized:
+  {
+    handle_unauthorized_request (client, uri, session, request);
     return;
   }
 }
@@ -1471,6 +1498,54 @@ gst_rtsp_client_get_media_mapping (GstRTSPClient * client)
   GstRTSPMediaMapping *result;
 
   if ((result = client->media_mapping))
+    g_object_ref (result);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_client_set_auth:
+ * @client: a #GstRTSPClient
+ * @auth: a #GstRTSPAuth
+ *
+ * configure @auth to be used as the authentication manager of @client.
+ */
+void
+gst_rtsp_client_set_auth (GstRTSPClient * client, GstRTSPAuth * auth)
+{
+  GstRTSPAuth *old;
+
+  g_return_if_fail (GST_IS_RTSP_CLIENT (client));
+
+  old = client->auth;
+
+  if (old != auth) {
+    if (auth)
+      g_object_ref (auth);
+    client->auth = auth;
+    if (old)
+      g_object_unref (old);
+  }
+}
+
+
+/**
+ * gst_rtsp_client_get_auth:
+ * @client: a #GstRTSPClient
+ *
+ * Get the #GstRTSPAuth used as the authentication manager of @client.
+ *
+ * Returns: the #GstRTSPAuth of @client. g_object_unref() after
+ * usage.
+ */
+GstRTSPAuth *
+gst_rtsp_client_get_auth (GstRTSPClient * client)
+{
+  GstRTSPAuth *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
+
+  if ((result = client->auth))
     g_object_ref (result);
 
   return result;

@@ -37,6 +37,7 @@
 #include "rtsp-media-mapping.h"
 #include "rtsp-media-factory-uri.h"
 #include "rtsp-client.h"
+#include "rtsp-auth.h"
 
 #ifndef __GST_RTSP_SERVER_H__
 #define __GST_RTSP_SERVER_H__
@@ -75,6 +76,9 @@ struct _GstRTSPServer {
 
   /* media mapper for this server */
   GstRTSPMediaMapping *media_mapping;
+
+  /* authentication manager */
+  GstRTSPAuth *auth;
 };
 
 /**
@@ -109,6 +113,9 @@ GstRTSPSessionPool *  gst_rtsp_server_get_session_pool     (GstRTSPServer *serve
 
 void                  gst_rtsp_server_set_media_mapping    (GstRTSPServer *server, GstRTSPMediaMapping *mapping);
 GstRTSPMediaMapping * gst_rtsp_server_get_media_mapping    (GstRTSPServer *server);
+
+void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
+GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server);
 
 gboolean              gst_rtsp_server_io_func              (GIOChannel *channel, GIOCondition condition,
                                                             GstRTSPServer *server);
