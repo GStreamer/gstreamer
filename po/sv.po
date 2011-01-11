@@ -1,15 +1,15 @@
 # Swedish messages for gstreamer.
-# Copyright (C) 2004-2010 Free Software Foundation, Inc.
+# Copyright (C) 2004-2011 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
-# Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010.
+# Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.29.2\n"
+"Project-Id-Version: gstreamer 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 00:12+0100\n"
-"PO-Revision-Date: 2010-08-09 11:02+0100\n"
+"POT-Creation-Date: 2011-01-11 18:34+0000\n"
+"PO-Revision-Date: 2011-01-09 19:46+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -159,7 +159,7 @@ msgid "Could not configure supporting library."
 msgstr "Kunde inte konfigurera stödbibliotek."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Kodningsfel."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer stötte på ett allmänt resursfel."
@@ -307,13 +307,11 @@ msgstr "datum"
 msgid "date the data was created (as a GDate structure)"
 msgstr "datum då dessa data skapades (som en GDate-struktur)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "datum"
+msgstr "datumtid"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "datum då dessa data skapades (som en GDate-struktur)"
+msgstr "datum och tid då dessa data skapades (som en GstDateTime-struktur)"
 
 msgid "genre"
 msgstr "genre"
@@ -654,12 +652,11 @@ msgstr ""
 "en plats inom en stad där mediet har producerats eller skapats (t.ex. "
 "närområde)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "geografiskt platsnamn"
+msgstr "fel i horisontell geografisk plats"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "förväntat fel i horisontell positioneringsmätning (i meter)"
 
 msgid "geo location movement speed"
 msgstr "förflyttningshastighet för geografisk plats"
@@ -765,19 +762,17 @@ msgstr "enhetsmodell"
 msgid "Model of the device used to create this media"
 msgstr "Modell av enheten som använts för att skapa detta media"
 
-#, fuzzy
 msgid "application name"
-msgstr "geografiskt platsnamn"
+msgstr "programnamn"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "Modell av enheten som använts för att skapa detta media"
+msgstr "Programmet som använts för att skapa detta media"
 
 msgid "application data"
-msgstr ""
+msgstr "programdata"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Godtycklig programdata att serialisera inuti detta media"
 
 msgid "image orientation"
 msgstr "bildorientering"
@@ -966,13 +961,13 @@ msgid "controllable"
 msgstr "kontrollerbar"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "ändringsbart i tillstånden NULL, READY, PAUSED eller PLAYING"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "ändringsbart endast i tillstånden NULL, READY eller PAUSED"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "ändringsbart endast i tillstånden NULL eller READY"
 
 msgid "Blacklisted files:"
 msgstr "Svartlistade filer:"
