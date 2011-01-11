@@ -985,8 +985,6 @@ gst_base_parse_src_event (GstPad * pad, GstEvent * event)
 
   if (!handled)
     ret = gst_pad_event_default (pad, event);
-  else
-    gst_event_unref (event);
 
   gst_object_unref (parse);
   return ret;
@@ -3273,11 +3271,12 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
    * it fails upstream */
   if (format != GST_FORMAT_TIME) {
     /* default action delegates to upstream */
-    return FALSE;
+    res = FALSE;
+    goto done;
   } else {
     gst_event_ref (event);
-    if (gst_pad_push_event (parse->sinkpad, event)) {
-      return TRUE;
+    if ((res = gst_pad_push_event (parse->sinkpad, event))) {
+      goto done;
     }
   }
 
@@ -3439,6 +3438,9 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
         (GstTaskFunction) gst_base_parse_loop, parse->sinkpad);
 
     GST_PAD_STREAM_UNLOCK (parse->sinkpad);
+
+    /* handled seek */
+    res = TRUE;
   } else {
     GstEvent *new_event;
     GstBaseParseSeek *seek;
@@ -3479,6 +3481,9 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   }
 
 done:
+  /* handled event is ours to free */
+  if (res)
+    gst_event_unref (event);
   return res;
 
   /* ERRORS */
