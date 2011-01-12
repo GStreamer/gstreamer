@@ -94,6 +94,7 @@ struct _GstKateTiger
   gboolean swap_rgb;
 
   GMutex *mutex;
+  GCond *cond;
 
   GstSegment video_segment;
   gboolean video_flushing;

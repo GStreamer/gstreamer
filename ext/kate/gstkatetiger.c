@@ -309,6 +309,7 @@ gst_kate_tiger_init (GstKateTiger * tiger, GstKateTigerClass * gclass)
   GST_DEBUG_OBJECT (tiger, "gst_kate_tiger_init");
 
   tiger->mutex = g_mutex_new ();
+  tiger->cond = g_cond_new ();
 
   tiger->katesinkpad =
       gst_pad_new_from_static_template (&kate_sink_factory, "subtitle_sink");
@@ -370,6 +371,9 @@ gst_kate_tiger_dispose (GObject * object)
     g_free (tiger->default_font_desc);
     tiger->default_font_desc = NULL;
   }
+
+  g_cond_free (tiger->cond);
+  tiger->cond = NULL;
 
   g_mutex_free (tiger->mutex);
   tiger->mutex = NULL;
@@ -631,6 +635,34 @@ gst_kate_tiger_kate_chain (GstPad * pad, GstBuffer * buf)
     gst_object_unref (tagpad);
   }
 
+  /* we want to avoid shooting ahead of the video stream, or we will
+     get segment updates which will place us ahead of it, and we won't
+     be able to convert a video timestamp back into a kate timestamp */
+  if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
+    while (1) {
+      gint64 kate_time, video_time;
+      kate_time =
+          gst_segment_to_running_time (&tiger->decoder.kate_segment,
+          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
+      video_time =
+          gst_segment_to_running_time (&tiger->video_segment, GST_FORMAT_TIME,
+          tiger->video_segment.last_stop);
+      GST_DEBUG_OBJECT (tiger, "Kate time %.2f, video time %.2f (kts %ld)",
+          kate_time / (float) GST_SECOND, video_time / (float) GST_SECOND,
+          (long) GST_BUFFER_TIMESTAMP (buf));
+      if (kate_time <= video_time) {
+        break;
+      }
+      GST_LOG_OBJECT (tiger, "Waiting to return from chain function");
+      g_cond_wait (tiger->cond, tiger->mutex);
+      if (tiger->decoder.kate_flushing) {
+        GST_DEBUG_OBJECT (tiger, "Flushing while waiting");
+        break;
+      }
+      GST_LOG_OBJECT (tiger, "Woken up, checking time again");
+    }
+  }
+
   GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
 
   gst_object_unref (tiger);
@@ -669,8 +701,13 @@ gst_kate_tiger_video_set_caps (GstPad * pad, GstCaps * caps)
 static gdouble
 gst_kate_tiger_get_time (GstKateTiger * tiger)
 {
-  return gst_segment_to_running_time (&tiger->video_segment, GST_FORMAT_TIME,
-      tiger->video_segment.last_stop) / (gdouble) GST_SECOND;
+  gint64 rt =
+      gst_segment_to_running_time (&tiger->video_segment, GST_FORMAT_TIME,
+      tiger->video_segment.last_stop);
+  gint64 pos =
+      gst_segment_to_position (&tiger->decoder.kate_segment, GST_FORMAT_TIME,
+      rt);
+  return pos / (gdouble) GST_SECOND;
 }
 
 static GstFlowReturn
@@ -695,6 +732,7 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
   if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
     gst_segment_set_last_stop (&tiger->video_segment, GST_FORMAT_TIME,
         GST_BUFFER_TIMESTAMP (buf));
+    g_cond_broadcast (tiger->cond);
   }
 
   /* draw on it */
@@ -755,6 +793,8 @@ gst_kate_tiger_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (tiger, "PAUSED -> READY, clearing kate state");
       GST_KATE_TIGER_MUTEX_LOCK (tiger);
+      gst_kate_util_decoder_base_set_flushing (&tiger->decoder, TRUE);
+      g_cond_broadcast (tiger->cond);
       if (tiger->tr) {
         tiger_renderer_destroy (tiger->tr);
         tiger->tr = NULL;
@@ -904,6 +944,7 @@ gst_kate_tiger_handle_kate_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
       GST_INFO_OBJECT (tiger, "New segment on Kate pad");
       GST_KATE_TIGER_MUTEX_LOCK (tiger);
+      g_cond_broadcast (tiger->cond);
       gst_kate_util_decoder_base_new_segment_event (&tiger->decoder, event);
       GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
       gst_event_unref (event);
@@ -912,6 +953,7 @@ gst_kate_tiger_handle_kate_event (GstPad * pad, GstEvent * event)
       GST_KATE_TIGER_MUTEX_LOCK (tiger);
       gst_kate_util_decoder_base_set_flushing (&tiger->decoder, TRUE);
       GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+      g_cond_broadcast (tiger->cond);
       gst_event_unref (event);
       break;
     case GST_EVENT_FLUSH_STOP:
@@ -924,6 +966,9 @@ gst_kate_tiger_handle_kate_event (GstPad * pad, GstEvent * event)
       /* we ignore this, it just means we don't have anymore Kate packets, but
          the Tiger renderer will still draw (if appropriate) on incoming video */
       GST_INFO_OBJECT (tiger, "EOS on Kate pad");
+      GST_KATE_TIGER_MUTEX_LOCK (tiger);
+      g_cond_broadcast (tiger->cond);
+      GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
       gst_event_unref (event);
       break;
     default:
@@ -1000,6 +1045,7 @@ gst_kate_tiger_handle_video_event (GstPad * pad, GstEvent * event)
       gst_segment_init (&tiger->video_segment, GST_FORMAT_UNDEFINED);
       tiger->video_flushing = TRUE;
       GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+      g_cond_broadcast (tiger->cond);
       res = gst_pad_event_default (pad, event);
       break;
     case GST_EVENT_FLUSH_STOP:

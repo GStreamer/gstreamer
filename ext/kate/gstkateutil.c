@@ -454,8 +454,14 @@ gst_kate_util_decoder_base_new_segment_event (GstKateDecoderBase * decoder,
       " %" GST_TIME_FORMAT " position %" GST_TIME_FORMAT,
       update, rate, arate, format, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop), GST_TIME_ARGS (time));
-  gst_segment_set_newsegment_full (&decoder->kate_segment, update, rate,
-      arate, format, start, stop, time);
+  if (!update) {
+    /* Tiger uses this segment is used to remap the video running time to the
+       Kate running time. The sending of segment updates to keep streams in sync
+       does kinda rain on our parade though, and since we don't need these,
+       we just ignore those here */
+    gst_segment_set_newsegment_full (&decoder->kate_segment, update, rate,
+        arate, format, start, stop, time);
+  }
 }
 
 gboolean
