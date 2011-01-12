@@ -114,6 +114,13 @@ TESTS_ENVIRONMENT = PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$
 	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py $*
 	@rm -fr *.pyc
 
+%.forever: %
+	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/cleanup.py
+	@while true; do \
+	PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) \
+	$(PYTHON) $(srcdir)/runtests.py $* || break; done
+	@rm -fr *.pyc
+
 # valgrind all tests
 valgrind: $(tests)
 	@echo "Valgrinding tests ..."
