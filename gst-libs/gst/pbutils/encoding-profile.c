@@ -893,6 +893,8 @@ gst_encoding_profile_get_type_nick (GstEncodingProfile * profile)
  * Find the #GstEncodingProfile with the specified name and category.
  *
  * Returns: (transfer full): The matching #GstEncodingProfile or %NULL.
+ *
+ * Since: 0.10.32
  */
 GstEncodingProfile *
 gst_encoding_profile_find (const gchar * targetname, const gchar * profilename,

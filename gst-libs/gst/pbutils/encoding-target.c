@@ -991,7 +991,9 @@ get_categories (gchar * path)
  *
  * Returns: (transfer full) (element-type gchar*): A list
  * of #GstEncodingTarget categories.
-*/
+ *
+ * Since: 0.10.32
+ */
 GList *
 gst_encoding_list_available_categories (void)
 {
@@ -1105,6 +1107,8 @@ compare_targets (const GstEncodingTarget * ta, const GstEncodingTarget * tb)
  * if @categoryname is %NULL.
  *
  * Returns: (transfer full) (element-type GstEncodingTarget): The list of #GstEncodingTarget
+ *
+ * Since: 0.10.32
  */
 GList *
 gst_encoding_list_all_targets (const gchar * categoryname)
