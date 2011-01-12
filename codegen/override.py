@@ -220,7 +220,7 @@ class Overrides:
         return 0
 
     def is_type_ignored(self, name):
-        return name in self.type_ignores
+        return name.rstrip('*') in self.type_ignores
 
     def is_overriden(self, name):
         return self.overrides.has_key(name)
