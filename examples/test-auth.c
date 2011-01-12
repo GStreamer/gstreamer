@@ -41,10 +41,8 @@ main (int argc, char *argv[])
   GstRTSPServer *server;
   GstRTSPMediaMapping *mapping;
   GstRTSPMediaFactory *factory;
-#if 0
   GstRTSPAuth *auth;
   gchar *basic;
-#endif
 
   gst_init (&argc, &argv);
 
@@ -57,15 +55,6 @@ main (int argc, char *argv[])
    * that be used to map uri mount points to media factories */
   mapping = gst_rtsp_server_get_media_mapping (server);
 
-#if 0
-  /* make a new authentication manager */
-  auth = gst_rtsp_auth_new ();
-  basic = gst_rtsp_auth_make_basic ("user", "admin");
-  gst_rtsp_auth_set_basic (auth, basic);
-  g_free (basic);
-  /* configure in the server */
-  gst_rtsp_server_set_auth (server, auth);
-#endif
 
   /* make a media factory for a test stream. The default media factory can use
    * gst-launch syntax to create pipelines. 
@@ -78,8 +67,30 @@ main (int argc, char *argv[])
       "audiotestsrc ! audio/x-raw-int,rate=8000 ! "
       "alawenc ! rtppcmapay name=pay1 pt=97 " ")");
 
+  /* make a new authentication manager */
+  auth = gst_rtsp_auth_new ();
+  basic = gst_rtsp_auth_make_basic ("user", "admin");
+  gst_rtsp_auth_set_basic (auth, basic);
+  g_free (basic);
+  gst_rtsp_media_factory_set_auth (factory, auth);
+  g_object_unref (auth);
   /* attach the test factory to the /test url */
   gst_rtsp_media_mapping_add_factory (mapping, "/test", factory);
+
+  /* make another factory */
+  factory = gst_rtsp_media_factory_new ();
+  gst_rtsp_media_factory_set_launch (factory, "( "
+      "videotestsrc ! video/x-raw-yuv,width=352,height=288,framerate=30/1 ! "
+      "x264enc ! rtph264pay name=pay0 pt=96 )");
+  /* make a new authentication manager */
+  auth = gst_rtsp_auth_new ();
+  basic = gst_rtsp_auth_make_basic ("user2", "admin2");
+  gst_rtsp_auth_set_basic (auth, basic);
+  g_free (basic);
+  gst_rtsp_media_factory_set_auth (factory, auth);
+  g_object_unref (auth);
+  /* attach the test factory to the /test url */
+  gst_rtsp_media_mapping_add_factory (mapping, "/test2", factory);
 
   /* don't need the ref to the mapper anymore */
   g_object_unref (mapping);

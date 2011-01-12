@@ -21,8 +21,6 @@
 
 #include <gst/rtsp/gstrtsptransport.h>
 
-#include "rtsp-media.h"
-
 #ifndef __GST_RTSP_SESSION_H__
 #define __GST_RTSP_SESSION_H__
 
@@ -42,6 +40,8 @@ typedef struct _GstRTSPSessionClass GstRTSPSessionClass;
 
 typedef struct _GstRTSPSessionStream GstRTSPSessionStream;
 typedef struct _GstRTSPSessionMedia GstRTSPSessionMedia;
+
+#include "rtsp-media.h"
 
 /**
  * GstRTSPSessionStream:

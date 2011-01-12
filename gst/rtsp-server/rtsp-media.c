@@ -523,6 +523,54 @@ gst_rtsp_media_is_eos_shutdown (GstRTSPMedia * media)
 }
 
 /**
+ * gst_rtsp_media_set_auth:
+ * @media: a #GstRTSPMedia
+ * @auth: a #GstRTSPAuth
+ *
+ * configure @auth to be used as the authentication manager of @media.
+ */
+void
+gst_rtsp_media_set_auth (GstRTSPMedia * media, GstRTSPAuth * auth)
+{
+  GstRTSPAuth *old;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  old = media->auth;
+
+  if (old != auth) {
+    if (auth)
+      g_object_ref (auth);
+    media->auth = auth;
+    if (old)
+      g_object_unref (old);
+  }
+}
+
+/**
+ * gst_rtsp_media_get_auth:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the #GstRTSPAuth used as the authentication manager of @media.
+ *
+ * Returns: the #GstRTSPAuth of @media. g_object_unref() after
+ * usage.
+ */
+GstRTSPAuth *
+gst_rtsp_media_get_auth (GstRTSPMedia * media)
+{
+  GstRTSPAuth *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+
+  if ((result = media->auth))
+    g_object_ref (result);
+
+  return result;
+}
+
+
+/**
  * gst_rtsp_media_n_streams:
  * @media: a #GstRTSPMedia
  *

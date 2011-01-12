@@ -354,7 +354,6 @@ gst_rtsp_media_factory_set_auth (GstRTSPMediaFactory * factory,
   }
 }
 
-
 /**
  * gst_rtsp_media_factory_get_auth:
  * @factory: a #GstRTSPMediaFactory
@@ -365,7 +364,7 @@ gst_rtsp_media_factory_set_auth (GstRTSPMediaFactory * factory,
  * usage.
  */
 GstRTSPAuth *
-gst_rtsp_factory_get_auth (GstRTSPMediaFactory * factory)
+gst_rtsp_media_factory_get_auth (GstRTSPMediaFactory * factory)
 {
   GstRTSPAuth *result;
 
@@ -376,7 +375,6 @@ gst_rtsp_factory_get_auth (GstRTSPMediaFactory * factory)
 
   return result;
 }
-
 
 static gboolean
 compare_media (gpointer key, GstRTSPMedia * media1, GstRTSPMedia * media2)
@@ -660,6 +658,7 @@ static void
 default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
 {
   gboolean shared, eos_shutdown;
+  GstRTSPAuth *auth;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -669,4 +668,9 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
 
   gst_rtsp_media_set_shared (media, shared);
   gst_rtsp_media_set_eos_shutdown (media, eos_shutdown);
+
+  if ((auth = gst_rtsp_media_factory_get_auth (factory))) {
+    gst_rtsp_media_set_auth (media, auth);
+    g_object_unref (auth);
+  }
 }

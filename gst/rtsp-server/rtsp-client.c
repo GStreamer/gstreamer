@@ -255,7 +255,8 @@ send_generic_response (GstRTSPClient * client, GstRTSPStatusCode code,
 }
 
 static void
-handle_unauthorized_request (GstRTSPClient * client, GstRTSPClientState * state)
+handle_unauthorized_request (GstRTSPClient * client, GstRTSPAuth * auth,
+    GstRTSPClientState * state)
 {
   GstRTSPMessage response = { 0 };
 
@@ -264,9 +265,9 @@ handle_unauthorized_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   state->response = &response;
 
-  if (client->auth) {
+  if (auth) {
     /* and let the authentication manager setup the auth tokens */
-    gst_rtsp_auth_setup_auth (client->auth, client, state);
+    gst_rtsp_auth_setup_auth (auth, client, 0, state);
   }
 
   send_response (client, state->session, &response);
@@ -293,6 +294,7 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
 {
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
+  GstRTSPAuth *auth;
 
   if (!compare_uri (client->uri, state->uri)) {
     /* remove any previously cached values before we try to construct a new
@@ -315,9 +317,19 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
 
     state->factory = factory;
 
+    /* check if we have access to the factory */
+    if ((auth = gst_rtsp_media_factory_get_auth (factory))) {
+      if (!gst_rtsp_auth_check (auth, client, 0, state))
+        goto not_allowed;
+
+      g_object_unref (auth);
+    }
+
     /* prepare the media and add it to the pipeline */
     if (!(media = gst_rtsp_media_factory_construct (factory, state->uri)))
       goto no_media;
+
+    g_object_unref (factory);
 
     /* set ipv6 on the media before preparing */
     media->is_ipv6 = client->is_ipv6;
@@ -351,6 +363,13 @@ no_mapping:
 no_factory:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
+    return NULL;
+  }
+not_allowed:
+  {
+    handle_unauthorized_request (client, auth, state);
+    g_object_unref (factory);
+    g_object_unref (auth);
     return NULL;
   }
 no_media:
@@ -1389,7 +1408,7 @@ session_not_found:
   }
 not_authorized:
   {
-    handle_unauthorized_request (client, &state);
+    handle_unauthorized_request (client, client->auth, &state);
     return;
   }
 }

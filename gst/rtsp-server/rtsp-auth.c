@@ -37,9 +37,9 @@ static void gst_rtsp_auth_set_property (GObject * object, guint propid,
 static void gst_rtsp_auth_finalize (GObject * obj);
 
 static gboolean default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPClientState * state);
+    GQuark hint, GstRTSPClientState * state);
 static gboolean default_check_method (GstRTSPAuth * auth,
-    GstRTSPClient * client, GstRTSPClientState * state);
+    GstRTSPClient * client, GQuark hint, GstRTSPClientState * state);
 
 G_DEFINE_TYPE (GstRTSPAuth, gst_rtsp_auth, G_TYPE_OBJECT);
 
@@ -140,7 +140,7 @@ gst_rtsp_auth_set_basic (GstRTSPAuth * auth, const gchar * basic)
 
 static gboolean
 default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPClientState * state)
+    GQuark hint, GstRTSPClientState * state)
 {
   if (state->response == NULL)
     return FALSE;
@@ -167,7 +167,7 @@ default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
  */
 gboolean
 gst_rtsp_auth_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPClientState * state)
+    GQuark hint, GstRTSPClientState * state)
 {
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
@@ -177,14 +177,14 @@ gst_rtsp_auth_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
   GST_DEBUG_OBJECT (auth, "setup auth");
 
   if (klass->setup_auth)
-    result = klass->setup_auth (auth, client, state);
+    result = klass->setup_auth (auth, client, hint, state);
 
   return result;
 }
 
 static gboolean
 default_check_method (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPClientState * state)
+    GQuark hint, GstRTSPClientState * state)
 {
   gboolean result = TRUE;
   GstRTSPResult res;
@@ -224,6 +224,7 @@ no_auth:
  * gst_rtsp_auth_check_method:
  * @auth: a #GstRTSPAuth
  * @client: the client
+ * @hint: a hint
  * @state: client state
  *
  * Check if @client is allowed to perform the actions of @state.
@@ -232,7 +233,7 @@ no_auth:
  */
 gboolean
 gst_rtsp_auth_check (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPClientState * state)
+    GQuark hint, GstRTSPClientState * state)
 {
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
@@ -242,7 +243,7 @@ gst_rtsp_auth_check (GstRTSPAuth * auth, GstRTSPClient * client,
   GST_DEBUG_OBJECT (auth, "check state");
 
   if (klass->check_method)
-    result = klass->check_method (auth, client, state);
+    result = klass->check_method (auth, client, hint, state);
 
   return result;
 }
