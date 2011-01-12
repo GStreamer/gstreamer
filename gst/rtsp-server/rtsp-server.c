@@ -498,9 +498,17 @@ gst_rtsp_server_set_property (GObject * object, guint propid,
   }
 }
 
-/* Prepare a server socket for @server and make it listen on the configured port */
-static GIOChannel *
-gst_rtsp_server_sink_init_send (GstRTSPServer * server)
+/**
+ * gst_rtsp_server_get_io_channel:
+ * @server: a #GstRTSPServer
+ *
+ * Create a #GIOChannel for @server. The io channel will listen on the
+ * configured service.
+ *
+ * Returns: the GIOChannel for @server or NULL when an error occured.
+ */
+GIOChannel *
+gst_rtsp_server_get_io_channel (GstRTSPServer * server)
 {
   GIOChannel *channel;
   int ret, sockfd;
@@ -509,6 +517,8 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
 #ifdef USE_SOLINGER
   struct linger linger;
 #endif
+
+  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
   memset (&hints, 0, sizeof (struct addrinfo));
   hints.ai_family = AF_UNSPEC;  /* Allow IPv4 or IPv6 */
@@ -758,33 +768,6 @@ accept_failed:
     GST_ERROR_OBJECT (server, "failed to accept client");
     gst_object_unref (client);
     return FALSE;
-  }
-}
-
-/**
- * gst_rtsp_server_get_io_channel:
- * @server: a #GstRTSPServer
- *
- * Create a #GIOChannel for @server.
- *
- * Returns: the GIOChannel for @server or NULL when an error occured.
- */
-GIOChannel *
-gst_rtsp_server_get_io_channel (GstRTSPServer * server)
-{
-  GIOChannel *channel;
-
-  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
-
-  if (!(channel = gst_rtsp_server_sink_init_send (server)))
-    goto init_failed;
-
-  return channel;
-
-init_failed:
-  {
-    GST_ERROR_OBJECT (server, "failed to initialize server");
-    return NULL;
   }
 }
 
