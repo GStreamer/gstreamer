@@ -623,16 +623,30 @@ close_error:
   }
 }
 
+static void
+unmanage_client (GstRTSPClient * client, GstRTSPServer * server)
+{
+  GST_DEBUG_OBJECT (server, "unmanage client %p", client);
+
+  g_mutex_lock (server->lock);
+  server->clients = g_list_remove (server->clients, client);
+  g_mutex_unlock (server->lock);
+
+  g_object_unref (client);
+}
+
 /* add the client to the active list of clients, takes ownership of
  * the client */
 static void
 manage_client (GstRTSPServer * server, GstRTSPClient * client)
 {
+  GST_DEBUG_OBJECT (server, "manage client %p", client);
   gst_rtsp_client_set_server (client, server);
 
-  /* can unref the client now, when the request is finished, it will be
-   * unreffed async. */
-  gst_object_unref (client);
+  g_mutex_lock (server->lock);
+  g_signal_connect (client, "closed", (GCallback) unmanage_client, server);
+  server->clients = g_list_prepend (server->clients, client);
+  g_mutex_unlock (server->lock);
 }
 
 static GstRTSPClient *
