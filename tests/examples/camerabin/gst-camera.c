@@ -65,8 +65,7 @@ gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
 
 #define PREVIEW_TIME_MS (2 * 1000)
 #define N_BURST_IMAGES 10
-#define DEFAULT_UI_FILE "gst-camera.ui"
-#define SHARED_UI_FILE CAMERA_APPS_UIDIR"/"DEFAULT_UI_FILE
+#define UI_FILE CAMERA_APPS_UIDIR G_DIR_SEPARATOR_S "gst-camera.ui"
 
 /* Names of default elements */
 #define CAMERA_APP_VIDEOSRC "v4l2src"
@@ -762,7 +761,7 @@ set_metadata (void)
   /* for more information about image metadata tags, see:
    * http://webcvs.freedesktop.org/gstreamer/gst-plugins-bad/tests/icles/metadata_editor.c
    * and for the mapping:
-   * http://webcvs.freedesktop.org/gstreamer/gst-plugins-bad/ext/metadata/metadata_mapping.htm?view=co 
+   * http://webcvs.freedesktop.org/gstreamer/gst-plugins-bad/ext/metadata/metadata_mapping.htm?view=co
    */
 
   GstTagSetter *setter = GST_TAG_SETTER (gst_camera_bin);
@@ -1622,14 +1621,9 @@ static gboolean
 ui_create (void)
 {
   GError *error = NULL;
-  const gchar *uifile = DEFAULT_UI_FILE;
-
-  if (!g_file_test (uifile, G_FILE_TEST_EXISTS)) {
-    uifile = SHARED_UI_FILE;
-  }
 
   builder = gtk_builder_new ();
-  if (!gtk_builder_add_from_file (builder, uifile, &error)) {
+  if (!gtk_builder_add_from_file (builder, UI_FILE, &error)) {
     g_warning ("Couldn't load builder file: %s", error->message);
     g_error_free (error);
     goto done;

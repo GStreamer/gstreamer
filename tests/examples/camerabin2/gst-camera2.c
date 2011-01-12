@@ -37,7 +37,7 @@
 #include <gdk/gdkx.h>
 #include <gdk/gdkkeysyms.h>
 
-#define UI_FILE "gst-camera2.ui"
+#define UI_FILE CAMERA_APPS_UIDIR G_DIR_SEPARATOR_S "gst-camera2.ui"
 
 static GstElement *camera;
 static GtkBuilder *builder;

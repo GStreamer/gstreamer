@@ -21,7 +21,7 @@ gst_camera2_LDADD   = \
 
 noinst_DATA = $(GST_CAMERABIN_UI_FILES)
 
-INCLUDES = -DCAMERA_APPS_UIDIR=\""$(uidir)"\"
+INCLUDES = -DCAMERA_APPS_UIDIR=\""$(srcdir)"\"
 
 else
 GST_CAMERABIN_GTK_EXAMPLES =
