@@ -37,8 +37,6 @@ static gboolean seenerrors = FALSE;
 gboolean pattern_source_fill_func (GESTimelineObject * object, GESTrackObject
     * trobject, GstElement * gnlobj, gpointer user_data);
 
-void print_transition_list (void);
-
 gboolean check_path (char *path);
 
 GESTimelineObject *pattern_source_new (guint pattern);
@@ -46,8 +44,6 @@ GESTimelineObject *pattern_source_new (guint pattern);
 gboolean check_time (char *time);
 
 guint64 str_to_time (char *time);
-
-void print_pattern_list (void);
 
 gboolean thumbnail_cb (gpointer pipeline);
 
@@ -380,58 +376,31 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
   }
 }
 
-void
-print_transition_list (void)
+static void
+print_enum (GType enum_type)
 {
-  GEnumClass *smpte_class;
-  GESTimelineStandardTransition *tr;
-  GESTimelineStandardTransitionClass *klass;
-  GParamSpec *pspec;
-  GEnumValue *v;
+  GEnumClass *enum_class = G_ENUM_CLASS (g_type_class_ref (enum_type));
+  guint i;
 
-  tr = ges_timeline_standard_transition_new
-      (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
-  klass = GES_TIMELINE_STANDARD_TRANSITION_GET_CLASS (tr);
+  GST_ERROR ("%d", enum_class->n_values);
 
-  if ((pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vtype"))) {
-
-    smpte_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
-
-    for (v = smpte_class->values; v->value != 0; v++) {
-      g_print ("%s\n", v->value_nick);
-    }
-
-    g_type_class_unref (smpte_class);
+  for (i = 0; i < enum_class->n_values; i++) {
+    g_print ("%s\n", enum_class->values[i].value_nick);
   }
 
-  g_object_unref (tr);
+  g_type_class_unref (enum_class);
 }
 
-void
+static void
+print_transition_list (void)
+{
+  print_enum (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
+}
+
+static void
 print_pattern_list (void)
 {
-  GEnumClass *enum_class;
-  GESTimelineTestSource *tr;
-  GESTimelineTestSourceClass *klass;
-  GParamSpec *pspec;
-  GEnumValue *v;
-
-  tr = ges_timeline_test_source_new ();
-  klass = GES_TIMELINE_TEST_SOURCE_GET_CLASS (tr);
-
-  if ((pspec =
-          g_object_class_find_property (G_OBJECT_CLASS (klass), "vpattern"))) {
-
-    enum_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
-
-    for (v = enum_class->values; v->value_nick != NULL; v++) {
-      g_print ("%s\n", v->value_nick);
-    }
-
-    g_type_class_unref (enum_class);
-  }
-  g_object_unref (tr);
-
+  print_enum (GES_VIDEO_TEST_PATTERN_TYPE);
 }
 
 int
@@ -506,6 +475,9 @@ main (int argc, gchar ** argv)
     exit (1);
   }
 
+  /* Initialize the GStreamer Editing Services */
+  ges_init ();
+
   if (list_transitions) {
     print_transition_list ();
     exit (0);
@@ -523,8 +495,6 @@ main (int argc, gchar ** argv)
   }
 
   g_option_context_free (ctx);
-  /* Initialize the GStreamer Editing Services */
-  ges_init ();
 
   /* Create the pipeline */
   pipeline = create_pipeline (load_path, save_path, argc - 1, argv + 1);
