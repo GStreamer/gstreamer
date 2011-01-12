@@ -286,6 +286,7 @@ common/m4/Makefile
 gst/Makefile
 gst/rtsp-server/Makefile
 examples/Makefile
+tests/Makefile
 bindings/Makefile
 bindings/python/Makefile
 bindings/python/codegen/Makefile

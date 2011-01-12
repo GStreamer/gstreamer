@@ -6,7 +6,8 @@ SUBDIRS = 		\
 	common \
 	pkgconfig \
 	docs \
-	examples
+	examples \
+	tests
 
 DIST_SUBDIRS = $(SUBDIRS)
 
