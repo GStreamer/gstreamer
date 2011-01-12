@@ -724,7 +724,8 @@ class Wrapper:
         # First, get methods from the defs files
         for func in self.parser.find_functions():
             funcname = func.c_name
-            if self.overrides.is_ignored(funcname):
+            if self.overrides.is_ignored(funcname) or \
+               self.overrides.is_type_ignored(func.ret):
                 continue
             try:
                 if self.overrides.is_overriden(funcname):
