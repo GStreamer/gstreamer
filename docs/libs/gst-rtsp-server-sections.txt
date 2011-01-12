@@ -129,6 +129,8 @@ gst_rtsp_server_set_session_pool
 gst_rtsp_server_get_session_pool
 gst_rtsp_server_set_media_mapping
 gst_rtsp_server_get_media_mapping
+gst_rtsp_server_get_auth
+gst_rtsp_server_set_auth
 gst_rtsp_server_io_func
 gst_rtsp_server_get_io_channel
 gst_rtsp_server_create_watch
@@ -213,15 +215,41 @@ GST_RTSP_SESSION_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>rtsp-auth</FILE>
+<TITLE>GstRTSPAuth</TITLE>
+GstRTSPAuth
+GstRTSPAuthClass
+gst_rtsp_auth_new
+gst_rtsp_auth_set_basic
+gst_rtsp_auth_setup_auth
+gst_rtsp_auth_check_method
+gst_rtsp_auth_make_basic
+<SUBSECTION Standard>
+GST_IS_RTSP_AUTH
+GST_IS_RTSP_AUTH_CLASS
+GST_RTSP_AUTH
+GST_RTSP_AUTH_CAST
+GST_RTSP_AUTH_CLASS
+GST_RTSP_AUTH_CLASS_CAST
+GST_RTSP_AUTH_GET_CLASS
+GST_TYPE_RTSP_AUTH
+gst_rtsp_auth_get_type
+</SECTION>
+
+<SECTION>
 <FILE>rtsp-client</FILE>
 <TITLE>GstRTSPClient</TITLE>
 GstRTSPClient
 GstRTSPClientClass
 gst_rtsp_client_new
+gst_rtsp_client_set_server
+gst_rtsp_client_get_server
 gst_rtsp_client_set_session_pool
 gst_rtsp_client_get_session_pool
 gst_rtsp_client_set_media_mapping
 gst_rtsp_client_get_media_mapping
+gst_rtsp_client_set_auth
+gst_rtsp_client_get_auth
 gst_rtsp_client_accept
 <SUBSECTION Standard>
 GST_RTSP_CLIENT_CLASS
