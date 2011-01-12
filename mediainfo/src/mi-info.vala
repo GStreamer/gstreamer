@@ -51,6 +51,7 @@ public class MediaInfo.Info : VPaned
 
   private HashMap<string, string> resolutions;
   private HashSet<string> tag_black_list;
+  private HashMap<string, string> wikilinks;
 
   public Info ()
   {
@@ -100,6 +101,13 @@ public class MediaInfo.Info : VPaned
     tag_black_list.add ("duration");
     tag_black_list.add ("nominal-bitrate");
     tag_black_list.add ("maximum-bitrate");
+    
+    // map from media-type to wikipedia-articles, prefix with http://en.wikipedia.org/wiki/
+    // TODO: add more
+    wikilinks = new HashMap<string, string> ();
+    wikilinks["application/ogg"] = "Ogg";
+    wikilinks["application/x-annodex"] = "Ogg";
+    wikilinks["video/x-msvideo"] = "Audio_Video_Interleave";
 
     // add widgets
     // FIXME: handle aspect ratio (AspectFrame.ratio)
@@ -136,6 +144,7 @@ public class MediaInfo.Info : VPaned
     container_name = new Label (null);
     container_name.set_alignment (0.0f, 0.5f);
     container_name.set_selectable(true);
+    container_name.set_use_markup(true);
     table.attach (container_name, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
@@ -276,7 +285,15 @@ public class MediaInfo.Info : VPaned
         }
         */
         sinfo = info.get_stream_info ();
-        container_name.set_text (pb_utils_get_codec_description (sinfo.get_caps ()));
+        Caps caps = sinfo.get_caps ();
+        string wikilink = wikilinks[caps.get_structure(0).get_name()];
+        str = pb_utils_get_codec_description (caps);
+        if (wikilink != null) {
+          // FIXME: make prefix and link translatable
+          container_name.set_markup ("<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str));
+        } else {
+          container_name.set_text (str);
+        }
           
         // get stream info
         while (video_streams.get_n_pages() > 0) {
