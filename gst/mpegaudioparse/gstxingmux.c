@@ -165,7 +165,7 @@ parse_header (guint32 header, guint * ret_size, guint * ret_spf,
   bitrate = (header >> 12) & 0xF;
   bitrate = mp3types_bitrates[lsf][layer - 1][bitrate] * 1000;
   if (bitrate == 0)
-    return 0;
+    return FALSE;
 
   samplerate = (header >> 10) & 0x3;
   samplerate = mp3types_freqs[lsf + mpg25][samplerate];
