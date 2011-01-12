@@ -23,11 +23,16 @@
 #ifndef __GST_RTSP_CLIENT_H__
 #define __GST_RTSP_CLIENT_H__
 
+G_BEGIN_DECLS
+
+typedef struct _GstRTSPClient GstRTSPClient;
+typedef struct _GstRTSPClientClass GstRTSPClientClass;
+
+#include "rtsp-server.h"
 #include "rtsp-media.h"
 #include "rtsp-media-mapping.h"
 #include "rtsp-session-pool.h"
-
-G_BEGIN_DECLS
+#include "rtsp-auth.h"
 
 #define GST_TYPE_RTSP_CLIENT              (gst_rtsp_client_get_type ())
 #define GST_IS_RTSP_CLIENT(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_CLIENT))
@@ -38,10 +43,6 @@ G_BEGIN_DECLS
 #define GST_RTSP_CLIENT_CAST(obj)         ((GstRTSPClient*)(obj))
 #define GST_RTSP_CLIENT_CLASS_CAST(klass) ((GstRTSPClientClass*)(klass))
 
-typedef struct _GstRTSPClient GstRTSPClient;
-typedef struct _GstRTSPClientClass GstRTSPClientClass;
-
-#include "rtsp-auth.h"
 
 /**
  * GstRTSPClient:
@@ -68,6 +69,7 @@ struct _GstRTSPClient {
   gchar             *server_ip;
   gboolean           is_ipv6;
 
+  GstRTSPServer        *server;
   GstRTSPSessionPool   *session_pool;
   GstRTSPMediaMapping  *media_mapping;
   GstRTSPAuth          *auth;
@@ -86,6 +88,9 @@ struct _GstRTSPClientClass {
 GType                 gst_rtsp_client_get_type          (void);
 
 GstRTSPClient *       gst_rtsp_client_new               (void);
+
+void                  gst_rtsp_client_set_server        (GstRTSPClient * client, GstRTSPServer * server);
+GstRTSPServer *       gst_rtsp_client_get_server        (GstRTSPClient * client);
 
 void                  gst_rtsp_client_set_session_pool  (GstRTSPClient *client,
                                                          GstRTSPSessionPool *pool);

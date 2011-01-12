@@ -1462,6 +1462,47 @@ gst_rtsp_client_get_session_pool (GstRTSPClient * client)
 }
 
 /**
+ * gst_rtsp_client_set_server:
+ * @client: a #GstRTSPClient
+ * @server: a #GstRTSPServer
+ *
+ * Set @server as the server that created @client.
+ */
+void
+gst_rtsp_client_set_server (GstRTSPClient * client, GstRTSPServer * server)
+{
+  GstRTSPServer *old;
+
+  old = client->server;
+  if (old != server) {
+    if (server)
+      g_object_ref (server);
+    client->server = server;
+    if (old)
+      g_object_unref (old);
+  }
+}
+
+/**
+ * gst_rtsp_client_get_server:
+ * @client: a #GstRTSPClient
+ *
+ * Get the #GstRTSPServer object that @client was created from.
+ *
+ * Returns: a #GstRTSPServer, unref after usage.
+ */
+GstRTSPServer *
+gst_rtsp_client_get_server (GstRTSPClient * client)
+{
+  GstRTSPServer *result;
+
+  if ((result = client->server))
+    g_object_ref (result);
+
+  return result;
+}
+
+/**
  * gst_rtsp_client_set_media_mapping:
  * @client: a #GstRTSPClient
  * @mapping: a #GstRTSPMediaMapping
