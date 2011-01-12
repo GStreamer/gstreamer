@@ -53,6 +53,9 @@
  *    is assumed that the peer element is happy with whatever format we
  *    eventually read.
  *
+ * By default it tries to do pull based typefinding (this avoid joining received
+ * buffers and holding them back in store.)
+ *
  * When the element has no connected srcpad, and the sinkpad can operate in
  * getrange based mode, the element starts its own task to figure out the
  * type of the stream.
@@ -646,15 +649,14 @@ gst_type_find_element_setcaps (GstPad * pad, GstCaps * caps)
     gst_type_find_element_send_cached_events (typefind);
     GST_OBJECT_LOCK (typefind);
     if (typefind->store) {
-      GstBuffer *store = typefind->store;
+      GstBuffer *store;
 
+      store = gst_buffer_make_metadata_writable (typefind->store);
       typefind->store = NULL;
-      GST_DEBUG_OBJECT (typefind, "Pushing store: %d", GST_BUFFER_SIZE (store));
-
-      store = gst_buffer_make_metadata_writable (store);
       gst_buffer_set_caps (store, typefind->caps);
       GST_OBJECT_UNLOCK (typefind);
 
+      GST_DEBUG_OBJECT (typefind, "Pushing store: %d", GST_BUFFER_SIZE (store));
       gst_pad_push (typefind->src, store);
     } else {
       GST_OBJECT_UNLOCK (typefind);
@@ -926,6 +928,8 @@ gst_type_find_element_activate (GstPad * pad)
     start_typefinding (typefind);
     return gst_pad_activate_push (pad, TRUE);
   }
+
+  GST_DEBUG_OBJECT (typefind, "find type in pull mode");
 
   /* 2 */
   {
