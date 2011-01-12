@@ -919,7 +919,7 @@ gst_asf_mux_write_string_with_size (GstAsfMux * asfmux,
   if (error) {
     GST_WARNING_OBJECT (asfmux, "Error converting string "
         "to UTF-16: %s - %s", str, error->message);
-    g_free (error);
+    g_error_free (error);
     memset (str_buf, 0, str_size);
   } else {
     /* HACK: g_convert seems to add only a single byte null char to
