@@ -156,6 +156,9 @@ gst_rtsp_server_finalize (GObject * object)
 
   g_object_unref (server->session_pool);
   g_object_unref (server->media_mapping);
+
+  if (server->auth)
+    g_object_unref (server->auth);
 }
 
 /**
