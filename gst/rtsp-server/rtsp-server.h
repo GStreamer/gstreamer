@@ -42,6 +42,10 @@ typedef struct _GstRTSPServerClass GstRTSPServerClass;
 #define GST_RTSP_SERVER_CAST(obj)         ((GstRTSPServer*)(obj))
 #define GST_RTSP_SERVER_CLASS_CAST(klass) ((GstRTSPServerClass*)(klass))
 
+#define GST_RTSP_SERVER_GET_LOCK(server)  (GST_RTSP_SERVER_CAST(server)->lock)
+#define GST_RTSP_SERVER_LOCK(server)      (g_mutex_lock(GST_RTSP_SERVER_GET_LOCK(server)))
+#define GST_RTSP_SERVER_UNLOCK(server)    (g_mutex_unlock(GST_RTSP_SERVER_GET_LOCK(server)))
+
 /**
  * GstRTSPServer:
  *

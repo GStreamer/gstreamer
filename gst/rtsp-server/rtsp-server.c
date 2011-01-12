@@ -165,7 +165,6 @@ gst_rtsp_server_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (server, "finalize server");
 
-  g_mutex_free (server->lock);
   g_free (server->address);
   g_free (server->service);
 
@@ -174,6 +173,8 @@ gst_rtsp_server_finalize (GObject * object)
 
   if (server->auth)
     g_object_unref (server->auth);
+
+  g_mutex_free (server->lock);
 
   G_OBJECT_CLASS (gst_rtsp_server_parent_class)->finalize (object);
 }
@@ -208,8 +209,10 @@ gst_rtsp_server_set_address (GstRTSPServer * server, const gchar * address)
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
   g_return_if_fail (address != NULL);
 
+  GST_RTSP_SERVER_LOCK (server);
   g_free (server->address);
   server->address = g_strdup (address);
+  GST_RTSP_SERVER_UNLOCK (server);
 }
 
 /**
@@ -223,9 +226,14 @@ gst_rtsp_server_set_address (GstRTSPServer * server, const gchar * address)
 gchar *
 gst_rtsp_server_get_address (GstRTSPServer * server)
 {
+  gchar *result;
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
-  return g_strdup (server->address);
+  GST_RTSP_SERVER_LOCK (server);
+  result = g_strdup (server->address);
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  return result;
 }
 
 /**
@@ -245,8 +253,10 @@ gst_rtsp_server_set_service (GstRTSPServer * server, const gchar * service)
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
   g_return_if_fail (service != NULL);
 
+  GST_RTSP_SERVER_LOCK (server);
   g_free (server->service);
   server->service = g_strdup (service);
+  GST_RTSP_SERVER_UNLOCK (server);
 }
 
 /**
@@ -260,9 +270,15 @@ gst_rtsp_server_set_service (GstRTSPServer * server, const gchar * service)
 gchar *
 gst_rtsp_server_get_service (GstRTSPServer * server)
 {
+  gchar *result;
+
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
-  return g_strdup (server->service);
+  GST_RTSP_SERVER_LOCK (server);
+  result = g_strdup (server->service);
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  return result;
 }
 
 /**
@@ -280,7 +296,9 @@ gst_rtsp_server_set_backlog (GstRTSPServer * server, gint backlog)
 {
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
+  GST_RTSP_SERVER_LOCK (server);
   server->backlog = backlog;
+  GST_RTSP_SERVER_UNLOCK (server);
 }
 
 /**
@@ -294,9 +312,15 @@ gst_rtsp_server_set_backlog (GstRTSPServer * server, gint backlog)
 gint
 gst_rtsp_server_get_backlog (GstRTSPServer * server)
 {
+  gint result;
+
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), -1);
 
-  return server->backlog;
+  GST_RTSP_SERVER_LOCK (server);
+  result = server->backlog;
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  return result;
 }
 
 /**
@@ -314,15 +338,16 @@ gst_rtsp_server_set_session_pool (GstRTSPServer * server,
 
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
-  old = server->session_pool;
+  if (pool)
+    g_object_ref (pool);
 
-  if (old != pool) {
-    if (pool)
-      g_object_ref (pool);
-    server->session_pool = pool;
-    if (old)
-      g_object_unref (old);
-  }
+  GST_RTSP_SERVER_LOCK (server);
+  old = server->session_pool;
+  server->session_pool = pool;
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  if (old)
+    g_object_unref (old);
 }
 
 /**
@@ -341,8 +366,10 @@ gst_rtsp_server_get_session_pool (GstRTSPServer * server)
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
+  GST_RTSP_SERVER_LOCK (server);
   if ((result = server->session_pool))
     g_object_ref (result);
+  GST_RTSP_SERVER_UNLOCK (server);
 
   return result;
 }
@@ -362,15 +389,16 @@ gst_rtsp_server_set_media_mapping (GstRTSPServer * server,
 
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
-  old = server->media_mapping;
+  if (mapping)
+    g_object_ref (mapping);
 
-  if (old != mapping) {
-    if (mapping)
-      g_object_ref (mapping);
-    server->media_mapping = mapping;
-    if (old)
-      g_object_unref (old);
-  }
+  GST_RTSP_SERVER_LOCK (server);
+  old = server->media_mapping;
+  server->media_mapping = mapping;
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  if (old)
+    g_object_unref (old);
 }
 
 
@@ -390,8 +418,10 @@ gst_rtsp_server_get_media_mapping (GstRTSPServer * server)
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
+  GST_RTSP_SERVER_LOCK (server);
   if ((result = server->media_mapping))
     g_object_ref (result);
+  GST_RTSP_SERVER_UNLOCK (server);
 
   return result;
 }
@@ -410,15 +440,16 @@ gst_rtsp_server_set_auth (GstRTSPServer * server, GstRTSPAuth * auth)
 
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
-  old = server->auth;
+  if (auth)
+    g_object_ref (auth);
 
-  if (old != auth) {
-    if (auth)
-      g_object_ref (auth);
-    server->auth = auth;
-    if (old)
-      g_object_unref (old);
-  }
+  GST_RTSP_SERVER_LOCK (server);
+  old = server->auth;
+  server->auth = auth;
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  if (old)
+    g_object_unref (old);
 }
 
 
@@ -438,8 +469,10 @@ gst_rtsp_server_get_auth (GstRTSPServer * server)
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
+  GST_RTSP_SERVER_LOCK (server);
   if ((result = server->auth))
     g_object_ref (result);
+  GST_RTSP_SERVER_UNLOCK (server);
 
   return result;
 }
@@ -511,7 +544,7 @@ GIOChannel *
 gst_rtsp_server_get_io_channel (GstRTSPServer * server)
 {
   GIOChannel *channel;
-  int ret, sockfd;
+  int ret, sockfd = -1;
   struct addrinfo hints;
   struct addrinfo *result, *rp;
 #ifdef USE_SOLINGER
@@ -532,6 +565,7 @@ gst_rtsp_server_get_io_channel (GstRTSPServer * server)
   GST_DEBUG_OBJECT (server, "getting address info of %s/%s", server->address,
       server->service);
 
+  GST_RTSP_SERVER_LOCK (server);
   /* resolve the server IP address */
   if ((ret =
           getaddrinfo (server->address, server->service, &hints, &result)) != 0)
@@ -564,10 +598,11 @@ gst_rtsp_server_get_io_channel (GstRTSPServer * server)
     GST_DEBUG_OBJECT (server, "failed to bind socket (%s), try next",
         g_strerror (errno));
     close (sockfd);
+    sockfd = -1;
   }
   freeaddrinfo (result);
 
-  if (rp == NULL)
+  if (sockfd == -1)
     goto no_socket;
 
   GST_DEBUG_OBJECT (server, "opened sending server socket with fd %d", sockfd);
@@ -605,6 +640,7 @@ gst_rtsp_server_get_io_channel (GstRTSPServer * server)
   g_io_channel_set_close_on_unref (channel, TRUE);
 
   GST_INFO_OBJECT (server, "listening on service %s", server->service);
+  GST_RTSP_SERVER_UNLOCK (server);
 
   return channel;
 
@@ -613,13 +649,13 @@ no_address:
   {
     GST_ERROR_OBJECT (server, "failed to resolve address: %s",
         gai_strerror (ret));
-    return NULL;
+    goto close_error;
   }
 no_socket:
   {
     GST_ERROR_OBJECT (server, "failed to create socket: %s",
         g_strerror (errno));
-    return NULL;
+    goto close_error;
   }
 keepalive_failed:
   {
@@ -646,6 +682,7 @@ close_error:
     if (sockfd >= 0) {
       close (sockfd);
     }
+    GST_RTSP_SERVER_UNLOCK (server);
     return NULL;
   }
 }
@@ -655,9 +692,11 @@ unmanage_client (GstRTSPClient * client, GstRTSPServer * server)
 {
   GST_DEBUG_OBJECT (server, "unmanage client %p", client);
 
-  g_mutex_lock (server->lock);
+  gst_rtsp_client_set_server (client, NULL);
+
+  GST_RTSP_SERVER_LOCK (server);
   server->clients = g_list_remove (server->clients, client);
-  g_mutex_unlock (server->lock);
+  GST_RTSP_SERVER_UNLOCK (server);
 
   g_object_unref (client);
 }
@@ -670,10 +709,10 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
   GST_DEBUG_OBJECT (server, "manage client %p", client);
   gst_rtsp_client_set_server (client, server);
 
-  g_mutex_lock (server->lock);
+  GST_RTSP_SERVER_LOCK (server);
   g_signal_connect (client, "closed", (GCallback) unmanage_client, server);
   server->clients = g_list_prepend (server->clients, client);
-  g_mutex_unlock (server->lock);
+  GST_RTSP_SERVER_UNLOCK (server);
 }
 
 static GstRTSPClient *
@@ -685,11 +724,13 @@ default_create_client (GstRTSPServer * server)
   client = gst_rtsp_client_new ();
 
   /* set the session pool that this client should use */
+  GST_RTSP_SERVER_LOCK (server);
   gst_rtsp_client_set_session_pool (client, server->session_pool);
   /* set the media mapping that this client should use */
   gst_rtsp_client_set_media_mapping (client, server->media_mapping);
   /* set authentication manager */
   gst_rtsp_client_set_auth (client, server->auth);
+  GST_RTSP_SERVER_UNLOCK (server);
 
   return client;
 }
