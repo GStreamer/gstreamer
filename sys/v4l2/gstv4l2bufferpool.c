@@ -40,6 +40,14 @@
 #include "v4l2_calls.h"
 #include "gst/gst-i18n-plugin.h"
 
+/* videodev2.h is not versioned and we can't easily check for the presence
+ * of enum values at compile time, but the V4L2_CAP_VIDEO_OUTPUT_OVERLAY define
+ * was added in the same commit as V4L2_FIELD_INTERLACED_{TB,BT} (b2787845) */
+#ifndef V4L2_CAP_VIDEO_OUTPUT_OVERLAY
+#define V4L2_FIELD_INTERLACED_TB 8
+#define V4L2_FIELD_INTERLACED_BT 9
+#endif
+
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define GST_CAT_DEFAULT v4l2_debug
