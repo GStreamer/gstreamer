@@ -162,7 +162,7 @@ main (int argc, char *argv[])
   builder = gtk_builder_new ();
   if (!gtk_builder_add_from_file (builder, UI_FILE, &error)) {
     g_warning ("Error: %s", error->message);
-    g_free (error);
+    g_error_free (error);
     return 1;
   }
 
