@@ -31,21 +31,8 @@
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
-GESTimelinePipeline *pipeline = NULL;
+static GESTimelinePipeline *pipeline = NULL;
 static gboolean seenerrors = FALSE;
-
-gboolean pattern_source_fill_func (GESTimelineObject * object, GESTrackObject
-    * trobject, GstElement * gnlobj, gpointer user_data);
-
-gboolean check_path (char *path);
-
-GESTimelineObject *pattern_source_new (guint pattern);
-
-gboolean check_time (char *time);
-
-guint64 str_to_time (char *time);
-
-gboolean thumbnail_cb (gpointer pipeline);
 
 static gchar *
 ensure_uri (gchar * location)
@@ -70,7 +57,7 @@ ensure_uri (gchar * location)
   return res;
 }
 
-gboolean
+static gboolean
 thumbnail_cb (gpointer pipeline)
 {
   static int i = 0;
@@ -88,38 +75,7 @@ thumbnail_cb (gpointer pipeline)
   return res;
 }
 
-gboolean
-pattern_source_fill_func (GESTimelineObject * object,
-    GESTrackObject * trobject, GstElement * gnlobj, gpointer user_data)
-{
-  guint pattern = GPOINTER_TO_UINT (user_data);
-  GESTrack *track = ges_track_object_get_track (trobject);
-  GstElement *testsrc;
-
-  g_assert (track);
-
-  if ((track->type) == GES_TRACK_TYPE_VIDEO) {
-    testsrc = gst_element_factory_make ("videotestsrc", NULL);
-    g_object_set (testsrc, "pattern", pattern, NULL);
-  } else if ((track->type) == GES_TRACK_TYPE_AUDIO) {
-    testsrc = gst_element_factory_make ("audiotestsrc", NULL);
-    g_object_set (testsrc, "volume", (gdouble) 0, NULL);
-  } else
-    return FALSE;
-
-  return gst_bin_add (GST_BIN (gnlobj), testsrc);
-}
-
-GESTimelineObject *
-pattern_source_new (guint pattern)
-{
-  GESTimelineObject *ret;
-  ret = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
-  g_object_set (ret, "vpattern", pattern, NULL);
-  return ret;
-}
-
-gboolean
+static gboolean
 check_path (char *path)
 {
   FILE *fp = fopen (path, "r");
@@ -131,7 +87,7 @@ check_path (char *path)
   return FALSE;
 }
 
-gboolean
+static gboolean
 check_time (char *time)
 {
   static regex_t re;
@@ -147,7 +103,7 @@ check_time (char *time)
   return FALSE;
 }
 
-guint64
+static guint64
 str_to_time (char *time)
 {
   if (check_time (time)) {
