@@ -144,6 +144,8 @@ gst_rtsp_client_finalize (GObject * obj)
     g_object_unref (client->session_pool);
   if (client->media_mapping)
     g_object_unref (client->media_mapping);
+  if (client->auth)
+    g_object_unref (client->auth);
 
   if (client->uri)
     gst_rtsp_url_free (client->uri);
