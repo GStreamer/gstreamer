@@ -37,11 +37,9 @@ static void gst_rtsp_auth_set_property (GObject * object, guint propid,
 static void gst_rtsp_auth_finalize (GObject * obj);
 
 static gboolean default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPUrl * uri, GstRTSPSession * session, GstRTSPMessage * request,
-    GstRTSPMessage * response);
-static gboolean default_check_method (GstRTSPAuth * auth, GstRTSPMethod method,
-    GstRTSPClient * client, GstRTSPUrl * uri, GstRTSPSession * session,
-    GstRTSPMessage * request);
+    GstRTSPClientState * state);
+static gboolean default_check_method (GstRTSPAuth * auth,
+    GstRTSPClient * client, GstRTSPClientState * state);
 
 G_DEFINE_TYPE (GstRTSPAuth, gst_rtsp_auth, G_TYPE_OBJECT);
 
@@ -142,11 +140,13 @@ gst_rtsp_auth_set_basic (GstRTSPAuth * auth, const gchar * basic)
 
 static gboolean
 default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPUrl * uri, GstRTSPSession * session, GstRTSPMessage * request,
-    GstRTSPMessage * response)
+    GstRTSPClientState * state)
 {
+  if (state->response == NULL)
+    return FALSE;
+
   /* we only have Basic for now */
-  gst_rtsp_message_add_header (response, GST_RTSP_HDR_WWW_AUTHENTICATE,
+  gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
       "Basic ");
 
   return TRUE;
@@ -167,8 +167,7 @@ default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
  */
 gboolean
 gst_rtsp_auth_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPUrl * uri, GstRTSPSession * session, GstRTSPMessage * request,
-    GstRTSPMessage * response)
+    GstRTSPClientState * state)
 {
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
@@ -178,26 +177,25 @@ gst_rtsp_auth_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
   GST_DEBUG_OBJECT (auth, "setup auth");
 
   if (klass->setup_auth)
-    result = klass->setup_auth (auth, client, uri, session, request, response);
+    result = klass->setup_auth (auth, client, state);
 
   return result;
 }
 
 static gboolean
-default_check_method (GstRTSPAuth * auth, GstRTSPMethod method,
-    GstRTSPClient * client, GstRTSPUrl * uri, GstRTSPSession * session,
-    GstRTSPMessage * request)
+default_check_method (GstRTSPAuth * auth, GstRTSPClient * client,
+    GstRTSPClientState * state)
 {
   gboolean result = TRUE;
   GstRTSPResult res;
 
-  if (method & auth->methods != 0) {
+  if (state->method & auth->methods != 0) {
     gchar *authorization;
 
     result = FALSE;
 
     res =
-        gst_rtsp_message_get_header (request, GST_RTSP_HDR_AUTHORIZATION,
+        gst_rtsp_message_get_header (state->request, GST_RTSP_HDR_AUTHORIZATION,
         &authorization, 0);
     if (res < 0)
       goto no_auth;
@@ -225,31 +223,26 @@ no_auth:
 /**
  * gst_rtsp_auth_check_method:
  * @auth: a #GstRTSPAuth
- * @method: method to check
  * @client: the client
- * @uri: the requested uri
- * @session: the session
- * @request: the request
+ * @state: client state
  *
- * Check if @client is allowed to perform @method for the @uri in
- * @session and with @request.
+ * Check if @client is allowed to perform the actions of @state.
  *
- * Returns: FALSE if the method is not allowed.
+ * Returns: FALSE if the action is not allowed.
  */
 gboolean
-gst_rtsp_auth_check_method (GstRTSPAuth * auth, GstRTSPMethod method,
-    GstRTSPClient * client, GstRTSPUrl * uri, GstRTSPSession * session,
-    GstRTSPMessage * request)
+gst_rtsp_auth_check (GstRTSPAuth * auth, GstRTSPClient * client,
+    GstRTSPClientState * state)
 {
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
 
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
 
-  GST_DEBUG_OBJECT (auth, "check method %d", method);
+  GST_DEBUG_OBJECT (auth, "check state");
 
   if (klass->check_method)
-    result = klass->check_method (auth, method, client, uri, session, request);
+    result = klass->check_method (auth, client, state);
 
   return result;
 }

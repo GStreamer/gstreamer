@@ -56,13 +56,8 @@ struct _GstRTSPAuth {
 struct _GstRTSPAuthClass {
   GObjectClass  parent_class;
 
-  gboolean (*setup_auth) (GstRTSPAuth *auth, GstRTSPClient * client,
-      GstRTSPUrl * uri, GstRTSPSession * session, GstRTSPMessage * request,
-      GstRTSPMessage *response);
-
-  gboolean (*check_method) (GstRTSPAuth *auth, GstRTSPMethod method,
-          GstRTSPClient * client, GstRTSPUrl * uri,
-          GstRTSPSession * session, GstRTSPMessage * request);
+  gboolean (*setup_auth)   (GstRTSPAuth *auth, GstRTSPClient * client, GstRTSPClientState *state);
+  gboolean (*check_method) (GstRTSPAuth *auth, GstRTSPClient * client, GstRTSPClientState *state);
 };
 
 GType               gst_rtsp_auth_get_type          (void);
@@ -72,12 +67,9 @@ GstRTSPAuth *       gst_rtsp_auth_new               (void);
 void                gst_rtsp_auth_set_basic         (GstRTSPAuth *auth, const gchar * basic);
 
 gboolean            gst_rtsp_auth_setup_auth        (GstRTSPAuth *auth, GstRTSPClient * client,
-                                                     GstRTSPUrl * uri, GstRTSPSession * session,
-                                                     GstRTSPMessage * request, GstRTSPMessage *response);
-gboolean            gst_rtsp_auth_check_method      (GstRTSPAuth *auth, GstRTSPMethod method,
-                                                     GstRTSPClient * client, GstRTSPUrl * uri,
-                                                     GstRTSPSession * session, GstRTSPMessage * request);
-
+                                                     GstRTSPClientState *state);
+gboolean            gst_rtsp_auth_check_method      (GstRTSPAuth *auth, GstRTSPClient * client,
+                                                     GstRTSPClientState *state);
 /* helpers */
 gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const gchar * pass);
 

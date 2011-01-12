@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPClient GstRTSPClient;
 typedef struct _GstRTSPClientClass GstRTSPClientClass;
+typedef struct _GstRTSPClientState GstRTSPClientState;
 
 #include "rtsp-server.h"
 #include "rtsp-media.h"
@@ -43,6 +44,29 @@ typedef struct _GstRTSPClientClass GstRTSPClientClass;
 #define GST_RTSP_CLIENT_CAST(obj)         ((GstRTSPClient*)(obj))
 #define GST_RTSP_CLIENT_CLASS_CAST(klass) ((GstRTSPClientClass*)(klass))
 
+/**
+ * GstRTSPClientState:
+ * @request: the complete request
+ * @uri: the complete url parsed from @request
+ * @method: the parsed method of @uri
+ * @session: the session, can be NULL
+ * @sessmedia: the session media for the url can be NULL
+ * @factory: the media factory for the url, can be NULL.
+ * @media: the session media for the url can be NULL
+ * @response: the response
+ *
+ * Information passed around containing the client state of a request.
+ */
+struct _GstRTSPClientState{
+  GstRTSPMessage      *request;
+  GstRTSPUrl          *uri;
+  GstRTSPMethod        method;
+  GstRTSPSession      *session;
+  GstRTSPSessionMedia *sessmedia;
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia        *media;
+  GstRTSPMessage      *response;
+};
 
 /**
  * GstRTSPClient:
