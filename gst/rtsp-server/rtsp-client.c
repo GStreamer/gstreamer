@@ -50,8 +50,16 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  SIGNAL_CLOSED,
+  SIGNAL_LAST
+};
+
 GST_DEBUG_CATEGORY_STATIC (rtsp_client_debug);
 #define GST_CAT_DEFAULT rtsp_client_debug
+
+static guint gst_rtsp_client_signals[SIGNAL_LAST] = { 0 };
 
 static void gst_rtsp_client_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec);
@@ -88,6 +96,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
           "The media mapping to use for client session",
           GST_TYPE_RTSP_MEDIA_MAPPING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_rtsp_client_signals[SIGNAL_CLOSED] =
+      g_signal_new ("closed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstRTSPClientClass, closed), NULL, NULL,
+      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   tunnels =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
@@ -1882,6 +1895,7 @@ client_watch_notify (GstRTSPClient * client)
   GST_INFO ("client %p: watch destroyed", client);
   client->watchid = 0;
   client->watch = NULL;
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
   g_object_unref (client);
 }
 

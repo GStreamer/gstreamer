@@ -107,6 +107,9 @@ struct _GstRTSPClient {
 
 struct _GstRTSPClientClass {
   GObjectClass  parent_class;
+
+  /* signals */
+  void     (*closed)        (GstRTSPClient *client);
 };
 
 GType                 gst_rtsp_client_get_type          (void);
