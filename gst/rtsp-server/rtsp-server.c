@@ -775,6 +775,7 @@ static void
 watch_destroyed (GstRTSPServer * server)
 {
   GST_DEBUG_OBJECT (server, "source destroyed");
+  g_object_unref (server);
 }
 
 /**
@@ -805,7 +806,7 @@ gst_rtsp_server_create_watch (GstRTSPServer * server)
 
   /* configure the callback */
   g_source_set_callback (source,
-      (GSourceFunc) gst_rtsp_server_io_func, server,
+      (GSourceFunc) gst_rtsp_server_io_func, g_object_ref (server),
       (GDestroyNotify) watch_destroyed);
 
   return source;
