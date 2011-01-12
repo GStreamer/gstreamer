@@ -765,10 +765,9 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
       /* we should already have called GST_ELEMENT_ERROR */
       return GST_FLOW_ERROR;
     case MODE_NORMAL:
-      GST_OBJECT_LOCK (typefind);
+      /* don't take object lock as typefind->caps should not change anymore */
       buffer = gst_buffer_make_metadata_writable (buffer);
       gst_buffer_set_caps (buffer, typefind->caps);
-      GST_OBJECT_UNLOCK (typefind);
       return gst_pad_push (typefind->src, buffer);
     case MODE_TYPEFIND:{
       GST_OBJECT_LOCK (typefind);
@@ -874,11 +873,9 @@ gst_type_find_element_getrange (GstPad * srcpad,
   ret = gst_pad_pull_range (typefind->sink, offset, length, buffer);
 
   if (ret == GST_FLOW_OK && buffer && *buffer) {
-    GST_OBJECT_LOCK (typefind);
-
+    /* don't take object lock as typefind->caps should not change anymore */
     /* we assume that pulled buffers are meta-data writable */
     gst_buffer_set_caps (*buffer, typefind->caps);
-    GST_OBJECT_UNLOCK (typefind);
   }
 
   return ret;
