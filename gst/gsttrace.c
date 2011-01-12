@@ -105,7 +105,7 @@ gint _gst_trace_on = 1;
  * @filename: a filename
  * @size: the max size of the file
  *
- * Create a ringbuffer of @size in the file with @filename to 
+ * Create a ringbuffer of @size in the file with @filename to
  * store trace results in.
  *
  * Free-function: gst_trace_destroy
@@ -183,7 +183,7 @@ gst_trace_flush (GstTrace * trace)
  * gst_trace_text_flush:
  * @trace: the #GstTrace to flush.
  *
- * Flush any pending trace entries in @trace to the trace file, 
+ * Flush any pending trace entries in @trace to the trace file,
  * formatted as a text line with timestamp and sequence numbers.
  * @trace can be NULL in which case the default #GstTrace will be
  * flushed.
@@ -241,6 +241,7 @@ _gst_trace_add_entry (GstTrace * trace, guint32 seq, guint32 data, gchar * msg)
   entry->sequence = seq;
   entry->data = data;
   strncpy (entry->message, msg, 112);
+  entry->message[111] = '\0';
   trace->bufoffset++;
 
   gst_trace_flush (trace);
