@@ -80,6 +80,7 @@ gst_rtsp_auth_finalize (GObject * obj)
   GstRTSPAuth *auth = GST_RTSP_AUTH (obj);
 
   GST_INFO ("finalize auth %p", auth);
+  g_free (auth->basic);
 
   G_OBJECT_CLASS (gst_rtsp_auth_parent_class)->finalize (obj);
 }
@@ -253,6 +254,16 @@ gst_rtsp_auth_check_method (GstRTSPAuth * auth, GstRTSPMethod method,
   return result;
 }
 
+/**
+ * gst_rtsp_auth_make_basic:
+ * @user: a userid
+ * @pass: a password
+ *
+ * Construct a Basic authorisation token from @user and @pass.
+ *
+ * Returns: the base64 encoding of the string @user:@pass. g_free()
+ *    after usage.
+ */
 gchar *
 gst_rtsp_auth_make_basic (const gchar * user, const gchar * pass)
 {
