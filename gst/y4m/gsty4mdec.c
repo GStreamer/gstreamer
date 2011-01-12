@@ -280,7 +280,7 @@ static gboolean
 gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
 {
   char *end;
-  int format = -1;
+  int format = 420;
   int interlaced_char = 0;
 
   if (memcmp (header, "YUV4MPEG2 ", 10) != 0) {
