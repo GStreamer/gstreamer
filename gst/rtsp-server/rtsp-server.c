@@ -55,8 +55,9 @@ static void gst_rtsp_server_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_server_finalize (GObject * object);
 
-static GstRTSPClient *default_accept_client (GstRTSPServer * server,
-    GIOChannel * channel);
+static GstRTSPClient *default_create_client (GstRTSPServer * server);
+static gboolean default_accept_client (GstRTSPServer * server,
+    GstRTSPClient * client, GIOChannel * channel);
 
 static void
 gst_rtsp_server_class_init (GstRTSPServerClass * klass)
@@ -127,6 +128,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
           GST_TYPE_RTSP_MEDIA_MAPPING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  klass->create_client = default_create_client;
   klass->accept_client = default_accept_client;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_server_debug, "rtspserver", 0, "GstRTSPServer");
@@ -135,6 +137,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 static void
 gst_rtsp_server_init (GstRTSPServer * server)
 {
+  server->lock = g_mutex_new ();
   server->address = g_strdup (DEFAULT_ADDRESS);
   server->service = g_strdup (DEFAULT_SERVICE);
   server->backlog = DEFAULT_BACKLOG;
@@ -147,6 +150,7 @@ gst_rtsp_server_finalize (GObject * object)
 {
   GstRTSPServer *server = GST_RTSP_SERVER (object);
 
+  g_mutex_free (server->lock);
   g_free (server->address);
   g_free (server->service);
 
@@ -616,10 +620,20 @@ close_error:
   }
 }
 
-/* default method for creating a new client object in the server to accept and
- * handle a client connection on this server */
+/* add the client to the active list of clients, takes ownership of
+ * the client */
+static void
+manage_client (GstRTSPServer * server, GstRTSPClient * client)
+{
+  gst_rtsp_client_set_server (client, server);
+
+  /* can unref the client now, when the request is finished, it will be
+   * unreffed async. */
+  gst_object_unref (client);
+}
+
 static GstRTSPClient *
-default_accept_client (GstRTSPServer * server, GIOChannel * channel)
+default_create_client (GstRTSPServer * server)
 {
   GstRTSPClient *client;
 
@@ -633,13 +647,22 @@ default_accept_client (GstRTSPServer * server, GIOChannel * channel)
   /* set authentication manager */
   gst_rtsp_client_set_auth (client, server->auth);
 
+  return client;
+}
+
+/* default method for creating a new client object in the server to accept and
+ * handle a client connection on this server */
+static gboolean
+default_accept_client (GstRTSPServer * server, GstRTSPClient * client,
+    GIOChannel * channel)
+{
   /* accept connections for that client, this function returns after accepting
    * the connection and will run the remainder of the communication with the
    * client asyncronously. */
   if (!gst_rtsp_client_accept (client, channel))
     goto accept_failed;
 
-  return client;
+  return TRUE;
 
   /* ERRORS */
 accept_failed:
@@ -647,8 +670,7 @@ accept_failed:
     GST_ERROR_OBJECT (server,
         "Could not accept client on server socket %d: %s (%d)",
         server->server_sock.fd, g_strerror (errno), errno);
-    gst_object_unref (client);
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -666,21 +688,26 @@ gboolean
 gst_rtsp_server_io_func (GIOChannel * channel, GIOCondition condition,
     GstRTSPServer * server)
 {
+  gboolean result;
   GstRTSPClient *client = NULL;
   GstRTSPServerClass *klass;
 
   if (condition & G_IO_IN) {
     klass = GST_RTSP_SERVER_GET_CLASS (server);
 
-    /* a new client connected, create a client object to handle the client. */
-    if (klass->accept_client)
-      client = klass->accept_client (server, channel);
+    if (klass->create_client)
+      client = klass->create_client (server);
     if (client == NULL)
       goto client_failed;
 
-    /* can unref the client now, when the request is finished, it will be
-     * unreffed async. */
-    gst_object_unref (client);
+    /* a new client connected, create a client object to handle the client. */
+    if (klass->accept_client)
+      result = klass->accept_client (server, client, channel);
+    if (!result)
+      goto accept_failed;
+
+    /* manage the client connection */
+    manage_client (server, client);
   } else {
     GST_WARNING_OBJECT (server, "received unknown event %08x", condition);
   }
@@ -690,6 +717,12 @@ gst_rtsp_server_io_func (GIOChannel * channel, GIOCondition condition,
 client_failed:
   {
     GST_ERROR_OBJECT (server, "failed to create a client");
+    return FALSE;
+  }
+accept_failed:
+  {
+    GST_ERROR_OBJECT (server, "failed to accept client");
+    gst_object_unref (client);
     return FALSE;
   }
 }

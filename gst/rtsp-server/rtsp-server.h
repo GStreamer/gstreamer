@@ -31,18 +31,21 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 
+#ifndef __GST_RTSP_SERVER_H__
+#define __GST_RTSP_SERVER_H__
+
 #include <gst/gst.h>
+
+G_BEGIN_DECLS
+
+typedef struct _GstRTSPServer GstRTSPServer;
+typedef struct _GstRTSPServerClass GstRTSPServerClass;
 
 #include "rtsp-session-pool.h"
 #include "rtsp-media-mapping.h"
 #include "rtsp-media-factory-uri.h"
 #include "rtsp-client.h"
 #include "rtsp-auth.h"
-
-#ifndef __GST_RTSP_SERVER_H__
-#define __GST_RTSP_SERVER_H__
-
-G_BEGIN_DECLS
 
 #define GST_TYPE_RTSP_SERVER              (gst_rtsp_server_get_type ())
 #define GST_IS_RTSP_SERVER(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_SERVER))
@@ -53,16 +56,21 @@ G_BEGIN_DECLS
 #define GST_RTSP_SERVER_CAST(obj)         ((GstRTSPServer*)(obj))
 #define GST_RTSP_SERVER_CLASS_CAST(klass) ((GstRTSPServerClass*)(klass))
 
-typedef struct _GstRTSPServer GstRTSPServer;
-typedef struct _GstRTSPServerClass GstRTSPServerClass;
-
+/**
+ * GstRTSPServer:
+ *
+ * This object listens on a port, creates and manages the clients connected to
+ * it.
+ */
 struct _GstRTSPServer {
-  GObject       parent;
+  GObject      parent;
+
+  GMutex      *lock;
 
   /* server information */
-  gchar *address;
-  gchar *service;
-  gint   backlog;
+  gchar       *address;
+  gchar       *service;
+  gint         backlog;
 
   struct  sockaddr_in server_sin;
 
@@ -79,20 +87,25 @@ struct _GstRTSPServer {
 
   /* authentication manager */
   GstRTSPAuth *auth;
+
+  /* the clients that are connected */
+  GList   *clients;
 };
 
 /**
  * GstRTSPServerClass:
  *
- * @accept_client: Create, configure, accept and return a new GstRTSPClient 
- *   object that handles the new connection on @channel.
+ * @create_client: Create, configure a new GstRTSPClient
+ *          object that handles the new connection on @channel.
+ * @accept_client: accept a new GstRTSPClient
  *
  * The RTSP server class structure
  */
 struct _GstRTSPServerClass {
   GObjectClass  parent_class;
 
-  GstRTSPClient * (*accept_client) (GstRTSPServer *server, GIOChannel *channel);
+  GstRTSPClient * (*create_client) (GstRTSPServer *server);
+  gboolean        (*accept_client) (GstRTSPServer *server, GstRTSPClient *client, GIOChannel *channel);
 };
 
 GType                 gst_rtsp_server_get_type             (void);
