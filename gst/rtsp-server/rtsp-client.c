@@ -259,31 +259,25 @@ static void
 send_generic_response (GstRTSPClient * client, GstRTSPStatusCode code,
     GstRTSPClientState * state)
 {
-  GstRTSPMessage response = { 0 };
-
-  gst_rtsp_message_init_response (&response, code,
+  gst_rtsp_message_init_response (state->response, code,
       gst_rtsp_status_as_text (code), state->request);
 
-  send_response (client, NULL, &response);
+  send_response (client, NULL, state->response);
 }
 
 static void
 handle_unauthorized_request (GstRTSPClient * client, GstRTSPAuth * auth,
     GstRTSPClientState * state)
 {
-  GstRTSPMessage response = { 0 };
-
-  gst_rtsp_message_init_response (&response, GST_RTSP_STS_UNAUTHORIZED,
+  gst_rtsp_message_init_response (state->response, GST_RTSP_STS_UNAUTHORIZED,
       gst_rtsp_status_as_text (GST_RTSP_STS_UNAUTHORIZED), state->request);
-
-  state->response = &response;
 
   if (auth) {
     /* and let the authentication manager setup the auth tokens */
     gst_rtsp_auth_setup_auth (auth, client, 0, state);
   }
 
-  send_response (client, state->session, &response);
+  send_response (client, state->session, state->response);
 }
 
 
@@ -519,7 +513,6 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
   GstRTSPSession *session;
   GstRTSPSessionMedia *media;
-  GstRTSPMessage response = { 0 };
   GstRTSPStatusCode code;
 
   if (!state->session)
@@ -552,12 +545,13 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
   }
   /* construct the response now */
   code = GST_RTSP_STS_OK;
-  gst_rtsp_message_init_response (&response, code,
+  gst_rtsp_message_init_response (state->response, code,
       gst_rtsp_status_as_text (code), state->request);
 
-  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONNECTION, "close");
+  gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_CONNECTION,
+      "close");
 
-  send_response (client, session, &response);
+  send_response (client, session, state->response);
 
   close_connection (client);
 
@@ -591,17 +585,12 @@ handle_get_param_request (GstRTSPClient * client, GstRTSPClientState * state)
     /* no body, keep-alive request */
     send_generic_response (client, GST_RTSP_STS_OK, state);
   } else {
-    /* there is a body */
-    GstRTSPMessage response = { 0 };
-
-    state->response = &response;
-
     /* there is a body, handle the params */
     res = gst_rtsp_params_get (client, state);
     if (res != GST_RTSP_OK)
       goto bad_request;
 
-    send_response (client, state->session, &response);
+    send_response (client, state->session, state->response);
   }
   return TRUE;
 
@@ -628,16 +617,12 @@ handle_set_param_request (GstRTSPClient * client, GstRTSPClientState * state)
     /* no body, keep-alive request */
     send_generic_response (client, GST_RTSP_STS_OK, state);
   } else {
-    GstRTSPMessage response = { 0 };
-
-    state->response = &response;
-
     /* there is a body, handle the params */
     res = gst_rtsp_params_set (client, state);
     if (res != GST_RTSP_OK)
       goto bad_request;
 
-    send_response (client, state->session, &response);
+    send_response (client, state->session, state->response);
   }
   return TRUE;
 
@@ -654,7 +639,6 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
   GstRTSPSession *session;
   GstRTSPSessionMedia *media;
-  GstRTSPMessage response = { 0 };
   GstRTSPStatusCode code;
 
   if (!(session = state->session))
@@ -680,10 +664,10 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
-  gst_rtsp_message_init_response (&response, code,
+  gst_rtsp_message_init_response (state->response, code,
       gst_rtsp_status_as_text (code), state->request);
 
-  send_response (client, session, &response);
+  send_response (client, session, state->response);
 
   /* the state is now READY */
   media->state = GST_RTSP_STATE_READY;
@@ -714,7 +698,6 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
   GstRTSPSession *session;
   GstRTSPSessionMedia *media;
-  GstRTSPMessage response = { 0 };
   GstRTSPStatusCode code;
   GString *rtpinfo;
   guint n_streams, i, infocount;
@@ -802,22 +785,22 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
-  gst_rtsp_message_init_response (&response, code,
+  gst_rtsp_message_init_response (state->response, code,
       gst_rtsp_status_as_text (code), state->request);
 
   /* add the RTP-Info header */
   if (infocount > 0) {
     str = g_string_free (rtpinfo, FALSE);
-    gst_rtsp_message_take_header (&response, GST_RTSP_HDR_RTP_INFO, str);
+    gst_rtsp_message_take_header (state->response, GST_RTSP_HDR_RTP_INFO, str);
   } else {
     g_string_free (rtpinfo, TRUE);
   }
 
   /* add the range */
   str = gst_rtsp_media_get_range_string (media->media, TRUE);
-  gst_rtsp_message_take_header (&response, GST_RTSP_HDR_RANGE, str);
+  gst_rtsp_message_take_header (state->response, GST_RTSP_HDR_RANGE, str);
 
-  send_response (client, session, &response);
+  send_response (client, session, state->response);
 
   /* start playing after sending the request */
   gst_rtsp_session_media_set_state (media, GST_STATE_PLAYING);
@@ -863,7 +846,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPTransport *ct, *st;
   gint i;
   GstRTSPLowerTrans supported;
-  GstRTSPMessage response = { 0 };
   GstRTSPStatusCode code;
   GstRTSPSession *session;
   GstRTSPSessionStream *stream;
@@ -1014,13 +996,14 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
-  gst_rtsp_message_init_response (&response, code,
+  gst_rtsp_message_init_response (state->response, code,
       gst_rtsp_status_as_text (code), state->request);
 
-  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_TRANSPORT, trans_str);
+  gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_TRANSPORT,
+      trans_str);
   g_free (trans_str);
 
-  send_response (client, session, &response);
+  send_response (client, session, state->response);
 
   /* update the state */
   switch (media->state) {
@@ -1130,7 +1113,6 @@ no_sdp:
 static gboolean
 handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
-  GstRTSPMessage response = { 0 };
   GstRTSPResult res;
   GstSDPMessage *sdp;
   guint i, str_len;
@@ -1162,10 +1144,10 @@ handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   g_object_unref (media);
 
-  gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK,
+  gst_rtsp_message_init_response (state->response, GST_RTSP_STS_OK,
       gst_rtsp_status_as_text (GST_RTSP_STS_OK), state->request);
 
-  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONTENT_TYPE,
+  gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_CONTENT_TYPE,
       "application/sdp");
 
   /* content base for some clients that might screw up creating the setup uri */
@@ -1185,16 +1167,16 @@ handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   GST_INFO ("adding content-base: %s", content_base);
 
-  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONTENT_BASE,
+  gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_CONTENT_BASE,
       content_base);
   g_free (content_base);
 
   /* add SDP to the response body */
   str = gst_sdp_message_as_text (sdp);
-  gst_rtsp_message_take_body (&response, (guint8 *) str, strlen (str));
+  gst_rtsp_message_take_body (state->response, (guint8 *) str, strlen (str));
   gst_sdp_message_free (sdp);
 
-  send_response (client, state->session, &response);
+  send_response (client, state->session, state->response);
 
   return TRUE;
 
@@ -1215,7 +1197,6 @@ no_sdp:
 static gboolean
 handle_options_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
-  GstRTSPMessage response = { 0 };
   GstRTSPMethod options;
   gchar *str;
 
@@ -1228,13 +1209,13 @@ handle_options_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   str = gst_rtsp_options_as_text (options);
 
-  gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK,
+  gst_rtsp_message_init_response (state->response, GST_RTSP_STS_OK,
       gst_rtsp_status_as_text (GST_RTSP_STS_OK), state->request);
 
-  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_PUBLIC, str);
+  gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_PUBLIC, str);
   g_free (str);
 
-  send_response (client, state->session, &response);
+  send_response (client, state->session, state->response);
 
   return TRUE;
 }
@@ -1312,9 +1293,11 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   GstRTSPResult res;
   GstRTSPSession *session;
   GstRTSPClientState state = { NULL };
+  GstRTSPMessage response = { 0 };
   gchar *sessid;
 
   state.request = request;
+  state.response = &response;
 
   if (gst_debug_category_get_threshold (rtsp_client_debug) >= GST_LEVEL_LOG) {
     gst_rtsp_message_dump (request);
