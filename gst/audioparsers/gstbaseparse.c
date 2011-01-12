@@ -1958,7 +1958,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *outbuf = NULL;
   GstBuffer *tmpbuf = NULL;
-  guint fsize = 0;
+  guint fsize = 1;
   gint skip = -1;
   const guint8 *data;
   guint old_min_size = 0, min_size, av;
@@ -2293,7 +2293,7 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
 {
   GstBuffer *buffer, *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint fsize = 0, min_size, old_min_size = 0;
+  guint fsize = 1, min_size, old_min_size = 0;
   gint skip = 0;
 
   g_return_val_if_fail (frame != NULL, GST_FLOW_ERROR);
