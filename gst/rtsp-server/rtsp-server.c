@@ -159,6 +159,8 @@ gst_rtsp_server_finalize (GObject * object)
 
   if (server->auth)
     g_object_unref (server->auth);
+
+  G_OBJECT_CLASS (gst_rtsp_server_parent_class)->finalize (object);
 }
 
 /**
