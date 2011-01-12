@@ -66,6 +66,7 @@ static const FormatInfo formats[] = {
   {"application/ogg", "Ogg", FLAG_CONTAINER},
   {"application/mxf", "Material eXchange Format (MXF)", FLAG_CONTAINER},
   {"application/vnd.rn-realmedia", "Realmedia", FLAG_CONTAINER},
+  {"application/x-annodex", "Ogg", FLAG_CONTAINER},
   {"application/x-id3", N_("ID3 tag"), FLAG_CONTAINER},
   {"application/x-ape", N_("APE tag"), FLAG_CONTAINER},
   {"application/x-apetag", N_("APE tag"), FLAG_CONTAINER},
