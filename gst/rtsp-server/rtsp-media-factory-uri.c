@@ -60,7 +60,7 @@ free_data (FactoryData * data)
 
 static const gchar *factory_key = "GstRTSPMediaFactoryURI";
 
-GST_DEBUG_CATEGORY (rtsp_media_factory_uri_debug);
+GST_DEBUG_CATEGORY_STATIC (rtsp_media_factory_uri_debug);
 #define GST_CAT_DEFAULT rtsp_media_factory_uri_debug
 
 static void gst_rtsp_media_factory_uri_get_property (GObject * object,

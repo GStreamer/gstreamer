@@ -30,7 +30,7 @@ enum
   PROP_LAST
 };
 
-GST_DEBUG_CATEGORY (rtsp_session_debug);
+GST_DEBUG_CATEGORY_STATIC (rtsp_session_debug);
 #define GST_CAT_DEFAULT rtsp_session_debug
 
 static void gst_rtsp_session_pool_get_property (GObject * object, guint propid,
@@ -62,8 +62,8 @@ gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
 
   klass->create_session_id = create_session_id;
 
-  GST_DEBUG_CATEGORY_INIT (rtsp_session_debug, "rtspsession", 0,
-      "GstRTSPSession");
+  GST_DEBUG_CATEGORY_INIT (rtsp_session_debug, "rtspsessionpool", 0,
+      "GstRTSPSessionPool");
 }
 
 static void

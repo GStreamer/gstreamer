@@ -32,7 +32,7 @@ enum
   PROP_LAST
 };
 
-GST_DEBUG_CATEGORY_EXTERN (rtsp_session_debug);
+GST_DEBUG_CATEGORY_STATIC (rtsp_session_debug);
 #define GST_CAT_DEFAULT rtsp_session_debug
 
 static void gst_rtsp_session_get_property (GObject * object, guint propid,
@@ -63,6 +63,9 @@ gst_rtsp_session_class_init (GstRTSPSessionClass * klass)
       g_param_spec_uint ("timeout", "timeout",
           "the timeout of the session (0 = never)", 0, G_MAXUINT,
           DEFAULT_TIMEOUT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_DEBUG_CATEGORY_INIT (rtsp_session_debug, "rtspsession", 0,
+      "GstRTSPSession");
 }
 
 static void

@@ -32,7 +32,7 @@ enum
   PROP_LAST
 };
 
-GST_DEBUG_CATEGORY (rtsp_media_debug);
+GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
 #define GST_CAT_DEFAULT rtsp_media_debug
 
 static void gst_rtsp_media_factory_get_property (GObject * object, guint propid,
@@ -102,7 +102,8 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
   klass->configure = default_configure;
   klass->create_pipeline = default_create_pipeline;
 
-  GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
+  GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmediafactory", 0,
+      "GstRTSPMediaFactory");
 }
 
 static void

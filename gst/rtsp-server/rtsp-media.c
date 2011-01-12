@@ -53,7 +53,7 @@ enum
   SIGNAL_LAST
 };
 
-GST_DEBUG_CATEGORY_EXTERN (rtsp_media_debug);
+GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
 #define GST_CAT_DEFAULT rtsp_media_debug
 
 static GQuark ssrc_stream_map_key;
@@ -134,6 +134,8 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   ssrc_stream_map_key = g_quark_from_static_string ("GstRTSPServer.stream");
 
   gst_element_register (NULL, "rtspfunnel", GST_RANK_NONE, RTSP_TYPE_FUNNEL);
+
+  GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
 }
 
 static void
