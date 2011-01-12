@@ -127,6 +127,8 @@ gst_rtsp_media_factory_finalize (GObject * obj)
   g_mutex_free (factory->medias_lock);
   g_free (factory->launch);
   g_mutex_free (factory->lock);
+  if (factory->auth)
+    g_object_unref (factory->auth);
 
   G_OBJECT_CLASS (gst_rtsp_media_factory_parent_class)->finalize (obj);
 }
@@ -325,6 +327,56 @@ gst_rtsp_media_factory_is_eos_shutdown (GstRTSPMediaFactory * factory)
 
   return result;
 }
+
+/**
+ * gst_rtsp_media_factory_set_auth:
+ * @factory: a #GstRTSPMediaFactory
+ * @auth: a #GstRTSPAuth
+ *
+ * configure @auth to be used as the authentication manager of @factory.
+ */
+void
+gst_rtsp_media_factory_set_auth (GstRTSPMediaFactory * factory,
+    GstRTSPAuth * auth)
+{
+  GstRTSPAuth *old;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  old = factory->auth;
+
+  if (old != auth) {
+    if (auth)
+      g_object_ref (auth);
+    factory->auth = auth;
+    if (old)
+      g_object_unref (old);
+  }
+}
+
+
+/**
+ * gst_rtsp_media_factory_get_auth:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get the #GstRTSPAuth used as the authentication manager of @factory.
+ *
+ * Returns: the #GstRTSPAuth of @factory. g_object_unref() after
+ * usage.
+ */
+GstRTSPAuth *
+gst_rtsp_factory_get_auth (GstRTSPMediaFactory * factory)
+{
+  GstRTSPAuth *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
+
+  if ((result = factory->auth))
+    g_object_ref (result);
+
+  return result;
+}
+
 
 static gboolean
 compare_media (gpointer key, GstRTSPMedia * media1, GstRTSPMedia * media2)
