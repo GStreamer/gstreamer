@@ -17,20 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
-
 #ifndef __GST_RTSP_SERVER_H__
 #define __GST_RTSP_SERVER_H__
 
@@ -71,13 +57,6 @@ struct _GstRTSPServer {
   gchar       *address;
   gchar       *service;
   gint         backlog;
-
-  struct  sockaddr_in server_sin;
-
-  /* socket and channels */
-  GstPollFD    server_sock;
-  GIOChannel  *io_channel;
-  GSource     *io_watch;
 
   /* sessions on this server */
   GstRTSPSessionPool  *session_pool;

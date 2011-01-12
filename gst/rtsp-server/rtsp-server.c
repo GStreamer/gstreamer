@@ -17,6 +17,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <arpa/inet.h>
 #include <sys/ioctl.h>
 
 #include "rtsp-server.h"
@@ -149,6 +162,8 @@ static void
 gst_rtsp_server_finalize (GObject * object)
 {
   GstRTSPServer *server = GST_RTSP_SERVER (object);
+
+  GST_DEBUG_OBJECT (server, "finalize server");
 
   g_mutex_free (server->lock);
   g_free (server->address);
@@ -484,9 +499,10 @@ gst_rtsp_server_set_property (GObject * object, guint propid,
 }
 
 /* Prepare a server socket for @server and make it listen on the configured port */
-static gboolean
+static GIOChannel *
 gst_rtsp_server_sink_init_send (GstRTSPServer * server)
 {
+  GIOChannel *channel;
   int ret, sockfd;
   struct addrinfo hints;
   struct addrinfo *result, *rp;
@@ -544,14 +560,11 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
   if (rp == NULL)
     goto no_socket;
 
-  server->server_sock.fd = sockfd;
-
-  GST_DEBUG_OBJECT (server, "opened sending server socket with fd %d",
-      server->server_sock.fd);
+  GST_DEBUG_OBJECT (server, "opened sending server socket with fd %d", sockfd);
 
   /* keep connection alive; avoids SIGPIPE during write */
   ret = 1;
-  if (setsockopt (server->server_sock.fd, SOL_SOCKET, SO_KEEPALIVE,
+  if (setsockopt (sockfd, SOL_SOCKET, SO_KEEPALIVE,
           (void *) &ret, sizeof (ret)) < 0)
     goto keepalive_failed;
 
@@ -561,39 +574,42 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
    * client. */
   linger.l_onoff = 1;
   linger.l_linger = 5;
-  if (setsockopt (server->server_sock.fd, SOL_SOCKET, SO_LINGER,
+  if (setsockopt (sockfd, SOL_SOCKET, SO_LINGER,
           (void *) &linger, sizeof (linger)) < 0)
     goto linger_failed;
 #endif
 
   /* set the server socket to nonblocking */
-  fcntl (server->server_sock.fd, F_SETFL, O_NONBLOCK);
+  fcntl (sockfd, F_SETFL, O_NONBLOCK);
 
   GST_DEBUG_OBJECT (server, "listening on server socket %d with queue of %d",
-      server->server_sock.fd, server->backlog);
-  if (listen (server->server_sock.fd, server->backlog) == -1)
+      sockfd, server->backlog);
+  if (listen (sockfd, server->backlog) == -1)
     goto listen_failed;
 
   GST_DEBUG_OBJECT (server,
-      "listened on server socket %d, returning from connection setup",
-      server->server_sock.fd);
+      "listened on server socket %d, returning from connection setup", sockfd);
+
+  /* create IO channel for the socket */
+  channel = g_io_channel_unix_new (sockfd);
+  g_io_channel_set_close_on_unref (channel, TRUE);
 
   GST_INFO_OBJECT (server, "listening on service %s", server->service);
 
-  return TRUE;
+  return channel;
 
   /* ERRORS */
 no_address:
   {
     GST_ERROR_OBJECT (server, "failed to resolve address: %s",
         gai_strerror (ret));
-    return FALSE;
+    return NULL;
   }
 no_socket:
   {
     GST_ERROR_OBJECT (server, "failed to create socket: %s",
         g_strerror (errno));
-    return FALSE;
+    return NULL;
   }
 keepalive_failed:
   {
@@ -617,11 +633,10 @@ listen_failed:
   }
 close_error:
   {
-    if (server->server_sock.fd >= 0) {
-      close (server->server_sock.fd);
-      server->server_sock.fd = -1;
+    if (sockfd >= 0) {
+      close (sockfd);
     }
-    return FALSE;
+    return NULL;
   }
 }
 
@@ -687,8 +702,8 @@ default_accept_client (GstRTSPServer * server, GstRTSPClient * client,
 accept_failed:
   {
     GST_ERROR_OBJECT (server,
-        "Could not accept client on server socket %d: %s (%d)",
-        server->server_sock.fd, g_strerror (errno), errno);
+        "Could not accept client on server : %s (%d)", g_strerror (errno),
+        errno);
     return FALSE;
   }
 }
@@ -757,22 +772,26 @@ accept_failed:
 GIOChannel *
 gst_rtsp_server_get_io_channel (GstRTSPServer * server)
 {
+  GIOChannel *channel;
+
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
-  if (server->io_channel == NULL) {
-    if (!gst_rtsp_server_sink_init_send (server))
-      goto init_failed;
+  if (!(channel = gst_rtsp_server_sink_init_send (server)))
+    goto init_failed;
 
-    /* create IO channel for the socket */
-    server->io_channel = g_io_channel_unix_new (server->server_sock.fd);
-  }
-  return server->io_channel;
+  return channel;
 
 init_failed:
   {
     GST_ERROR_OBJECT (server, "failed to initialize server");
     return NULL;
   }
+}
+
+static void
+watch_destroyed (GstRTSPServer * server)
+{
+  GST_DEBUG_OBJECT (server, "source destroyed");
 }
 
 /**
@@ -787,24 +806,26 @@ init_failed:
 GSource *
 gst_rtsp_server_create_watch (GstRTSPServer * server)
 {
+  GIOChannel *channel;
+  GSource *source;
+
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
-  if (server->io_watch == NULL) {
-    GIOChannel *channel;
+  channel = gst_rtsp_server_get_io_channel (server);
+  if (channel == NULL)
+    goto no_channel;
 
-    channel = gst_rtsp_server_get_io_channel (server);
-    if (channel == NULL)
-      goto no_channel;
+  /* create a watch for reads (new connections) and possible errors */
+  source = g_io_create_watch (channel, G_IO_IN |
+      G_IO_ERR | G_IO_HUP | G_IO_NVAL);
+  g_io_channel_unref (channel);
 
-    /* create a watch for reads (new connections) and possible errors */
-    server->io_watch = g_io_create_watch (channel, G_IO_IN |
-        G_IO_ERR | G_IO_HUP | G_IO_NVAL);
+  /* configure the callback */
+  g_source_set_callback (source,
+      (GSourceFunc) gst_rtsp_server_io_func, server,
+      (GDestroyNotify) watch_destroyed);
 
-    /* configure the callback */
-    g_source_set_callback (server->io_watch,
-        (GSourceFunc) gst_rtsp_server_io_func, server, NULL);
-  }
-  return server->io_watch;
+  return source;
 
 no_channel:
   {
@@ -839,6 +860,7 @@ gst_rtsp_server_attach (GstRTSPServer * server, GMainContext * context)
     goto no_source;
 
   res = g_source_attach (source, context);
+  g_source_unref (source);
 
   return res;
 
