@@ -307,132 +307,84 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
   GstDeinterlaceScanlineData scanlines;
-  guint8 *out = GST_BUFFER_DATA (outbuf);
-  const guint8 *field0 = NULL, *field1 = NULL, *field2 = NULL, *field3 = NULL;
+  guint8 *dest;
+  const guint8 *field0, *field1, *field2, *field3;
   gint cur_field_idx = history_count - dm_class->fields_required;
   guint cur_field_flags = history[cur_field_idx].flags;
-  gint line;
-  gint field_height = self->parent.frame_height / 2;
-  gint row_stride = self->parent.row_stride[0];
-  gint field_stride = self->parent.row_stride[0] * 2;
+  gint i;
+  gint frame_height = self->parent.frame_height;
+  gint stride = self->parent.row_stride[0];
 
   g_assert (self->interpolate_scanline_packed != NULL);
   g_assert (self->copy_scanline_packed != NULL);
 
+  dest = GST_BUFFER_DATA (outbuf);
   field0 = GST_BUFFER_DATA (history[cur_field_idx].buf);
-  if (history[cur_field_idx].flags & PICTURE_INTERLACED_BOTTOM)
-    field0 += row_stride;
 
   g_assert (dm_class->fields_required <= 4);
 
   if (dm_class->fields_required >= 2) {
     field1 = GST_BUFFER_DATA (history[cur_field_idx + 1].buf);
-    if (history[cur_field_idx + 1].flags & PICTURE_INTERLACED_BOTTOM)
-      field1 += row_stride;
+  } else {
+    field1 = NULL;
   }
 
   if (dm_class->fields_required >= 3) {
     field2 = GST_BUFFER_DATA (history[cur_field_idx + 2].buf);
-    if (history[cur_field_idx + 2].flags & PICTURE_INTERLACED_BOTTOM)
-      field2 += row_stride;
+  } else {
+    field2 = NULL;
   }
 
   if (dm_class->fields_required >= 4) {
     field3 = GST_BUFFER_DATA (history[cur_field_idx + 3].buf);
-    if (history[cur_field_idx + 3].flags & PICTURE_INTERLACED_BOTTOM)
-      field3 += row_stride;
+  } else {
+    field3 = NULL;
   }
 
-  if (cur_field_flags == PICTURE_INTERLACED_BOTTOM) {
-    /* double the first scanline of the bottom field */
-    memcpy (out, field0, row_stride);
-    out += row_stride;
-  }
+#define CLAMP_LOW(i) (((i)<0) ? (i+2) : (i))
+#define CLAMP_HI(i) (((i)>=(frame_height)) ? (i-2) : (i))
+#define LINE(x,i) ((x) + CLAMP_HI(CLAMP_LOW(i)) * (stride))
+#define LINE2(x,i) ((x) ? LINE(x,i) : NULL)
 
-  memcpy (out, field0, row_stride);
-  out += row_stride;
-
-  for (line = 2; line <= field_height; line++) {
-
+  for (i = 0; i < frame_height; i++) {
     memset (&scanlines, 0, sizeof (scanlines));
     scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
 
-    /* interp. scanline */
-    scanlines.t0 = field0;
-    scanlines.b0 = field0 + field_stride;
+    if (!((i & 1) ^ (cur_field_flags == PICTURE_INTERLACED_BOTTOM))) {
+      /* copying */
+      scanlines.tt0 = LINE2 (field0, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m0 = LINE2 (field0, i);
+      scanlines.bb0 = LINE2 (field0, (i + 2 < frame_height ? i + 2 : i));
 
-    if (field1 != NULL) {
-      scanlines.tt1 = field1;
-      scanlines.m1 = field1 + field_stride;
-      scanlines.bb1 = field1 + field_stride * 2;
-      field1 += field_stride;
+      scanlines.t1 = LINE2 (field1, i - 1);
+      scanlines.b1 = LINE2 (field1, i + 1);
+
+      scanlines.tt2 = LINE2 (field2, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m2 = LINE2 (field2, i);
+      scanlines.bb2 = LINE2 (field2, (i + 2 < frame_height ? i + 2 : i));
+
+      scanlines.t3 = LINE2 (field3, i - 1);
+      scanlines.b3 = LINE2 (field3, i + 1);
+
+      self->copy_scanline_packed (self, LINE (dest, i), &scanlines);
+    } else {
+      /* interpolating */
+      scanlines.t0 = LINE2 (field0, i - 1);
+      scanlines.b0 = LINE2 (field0, i + 1);
+
+      scanlines.tt1 = LINE2 (field1, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m1 = LINE2 (field1, i);
+      scanlines.bb1 = LINE2 (field1, (i + 2 < frame_height ? i + 2 : i));
+
+      scanlines.t2 = LINE2 (field2, i - 1);
+      scanlines.b2 = LINE2 (field2, i + 1);
+
+      scanlines.tt3 = LINE2 (field3, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m3 = LINE2 (field3, i);
+      scanlines.bb3 = LINE2 (field3, (i + 2 < frame_height ? i + 2 : i));
+
+      self->interpolate_scanline_packed (self, LINE (dest, i), &scanlines);
     }
-
-    if (field2 != NULL) {
-      scanlines.t2 = field2;
-      scanlines.b2 = field2 + field_stride;
-    }
-
-    if (field3 != NULL) {
-      scanlines.tt3 = field3;
-      scanlines.m3 = field3 + field_stride;
-      scanlines.bb3 = field3 + field_stride * 2;
-      field3 += field_stride;
-    }
-
-    /* set valid data for corner cases */
-    if (line == 2) {
-      scanlines.tt1 = scanlines.bb1;
-      scanlines.tt3 = scanlines.bb3;
-    } else if (line == field_height) {
-      scanlines.bb1 = scanlines.tt1;
-      scanlines.bb3 = scanlines.tt3;
-    }
-
-    self->interpolate_scanline_packed (self, out, &scanlines);
-    out += row_stride;
-
-    memset (&scanlines, 0, sizeof (scanlines));
-    scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
-
-    /* copy a scanline */
-    scanlines.tt0 = field0;
-    scanlines.m0 = field0 + field_stride;
-    scanlines.bb0 = field0 + field_stride * 2;
-    field0 += field_stride;
-
-    if (field1 != NULL) {
-      scanlines.t1 = field1;
-      scanlines.b1 = field1 + field_stride;
-    }
-
-    if (field2 != NULL) {
-      scanlines.tt2 = field2;
-      scanlines.m2 = field2 + field_stride;
-      scanlines.bb2 = field2 + field_stride * 2;
-      field2 += field_stride;
-    }
-
-    if (field3 != NULL) {
-      scanlines.t3 = field3;
-      scanlines.b3 = field3 + field_stride;
-    }
-
-    /* set valid data for corner cases */
-    if (line == field_height) {
-      scanlines.bb0 = scanlines.tt0;
-      scanlines.b1 = scanlines.t1;
-      scanlines.bb2 = scanlines.tt2;
-      scanlines.b3 = scanlines.t3;
-    }
-
-    self->copy_scanline_packed (self, out, &scanlines);
-    out += row_stride;
-  }
-
-  if (cur_field_flags == PICTURE_INTERLACED_TOP) {
-    /* double the last scanline of the top field */
-    memcpy (out, field0, row_stride);
   }
 }
 
@@ -483,111 +435,59 @@ gst_deinterlace_simple_method_copy_scanline_planar_v (GstDeinterlaceSimpleMethod
 
 static void
     gst_deinterlace_simple_method_deinterlace_frame_planar_plane
-    (GstDeinterlaceSimpleMethod * self, guint8 * out, const guint8 * field0,
+    (GstDeinterlaceSimpleMethod * self, guint8 * dest, const guint8 * field0,
     const guint8 * field1, const guint8 * field2, const guint8 * field3,
     guint cur_field_flags,
     gint plane, GstDeinterlaceSimpleMethodFunction copy_scanline,
     GstDeinterlaceSimpleMethodFunction interpolate_scanline)
 {
   GstDeinterlaceScanlineData scanlines;
-  gint line;
-  gint field_height = self->parent.height[plane] / 2;
-  gint row_stride = self->parent.row_stride[plane];
-  gint field_stride = self->parent.row_stride[plane] * 2;
+  gint i;
+  gint frame_height = self->parent.height[plane];
+  gint stride = self->parent.row_stride[plane];
 
   g_assert (interpolate_scanline != NULL);
   g_assert (copy_scanline != NULL);
 
-  if (cur_field_flags == PICTURE_INTERLACED_BOTTOM) {
-    /* double the first scanline of the bottom field */
-    memcpy (out, field0, row_stride);
-    out += row_stride;
-  }
-
-  memcpy (out, field0, row_stride);
-  out += row_stride;
-
-  for (line = 2; line <= field_height; line++) {
-
+  for (i = 0; i < frame_height; i++) {
     memset (&scanlines, 0, sizeof (scanlines));
     scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
 
-    /* interp. scanline */
-    scanlines.t0 = field0;
-    scanlines.b0 = field0 + field_stride;
+    if (!((i & 1) ^ (cur_field_flags == PICTURE_INTERLACED_BOTTOM))) {
+      /* copying */
+      scanlines.tt0 = LINE2 (field0, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m0 = LINE2 (field0, i);
+      scanlines.bb0 = LINE2 (field0, (i + 2 < frame_height ? i + 2 : i));
 
-    if (field1 != NULL) {
-      scanlines.tt1 = field1;
-      scanlines.m1 = field1 + field_stride;
-      scanlines.bb1 = field1 + field_stride * 2;
-      field1 += field_stride;
+      scanlines.t1 = LINE2 (field1, i - 1);
+      scanlines.b1 = LINE2 (field1, i + 1);
+
+      scanlines.tt2 = LINE2 (field2, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m2 = LINE2 (field2, i);
+      scanlines.bb2 = LINE2 (field2, (i + 2 < frame_height ? i + 2 : i));
+
+      scanlines.t3 = LINE2 (field3, i - 1);
+      scanlines.b3 = LINE2 (field3, i + 1);
+
+      copy_scanline (self, LINE (dest, i), &scanlines);
+    } else {
+      /* interpolating */
+      scanlines.t0 = LINE2 (field0, i - 1);
+      scanlines.b0 = LINE2 (field0, i + 1);
+
+      scanlines.tt1 = LINE2 (field1, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m1 = LINE2 (field1, i);
+      scanlines.bb1 = LINE2 (field1, (i + 2 < frame_height ? i + 2 : i));
+
+      scanlines.t2 = LINE2 (field2, i - 1);
+      scanlines.b2 = LINE2 (field2, i + 1);
+
+      scanlines.tt3 = LINE2 (field3, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m3 = LINE2 (field3, i);
+      scanlines.bb3 = LINE2 (field3, (i + 2 < frame_height ? i + 2 : i));
+
+      interpolate_scanline (self, LINE (dest, i), &scanlines);
     }
-
-    if (field2 != NULL) {
-      scanlines.t2 = field2;
-      scanlines.b2 = field2 + field_stride;
-    }
-
-    if (field3 != NULL) {
-      scanlines.tt3 = field3;
-      scanlines.m3 = field3 + field_stride;
-      scanlines.bb3 = field3 + field_stride * 2;
-      field3 += field_stride;
-    }
-
-    /* set valid data for corner cases */
-    if (line == 2) {
-      scanlines.tt1 = scanlines.bb1;
-      scanlines.tt3 = scanlines.bb3;
-    } else if (line == field_height) {
-      scanlines.bb1 = scanlines.tt1;
-      scanlines.bb3 = scanlines.tt3;
-    }
-
-    interpolate_scanline (self, out, &scanlines);
-    out += row_stride;
-
-    memset (&scanlines, 0, sizeof (scanlines));
-    scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
-
-    /* copy a scanline */
-    scanlines.tt0 = field0;
-    scanlines.m0 = field0 + field_stride;
-    scanlines.bb0 = field0 + field_stride * 2;
-    field0 += field_stride;
-
-    if (field1 != NULL) {
-      scanlines.t1 = field1;
-      scanlines.b1 = field1 + field_stride;
-    }
-
-    if (field2 != NULL) {
-      scanlines.tt2 = field2;
-      scanlines.m2 = field2 + field_stride;
-      scanlines.bb2 = field2 + field_stride * 2;
-      field2 += field_stride;
-    }
-
-    if (field3 != NULL) {
-      scanlines.t3 = field3;
-      scanlines.b3 = field3 + field_stride;
-    }
-
-    /* set valid data for corner cases */
-    if (line == field_height) {
-      scanlines.bb0 = scanlines.tt0;
-      scanlines.b1 = scanlines.t1;
-      scanlines.bb2 = scanlines.tt2;
-      scanlines.b3 = scanlines.t3;
-    }
-
-    copy_scanline (self, out, &scanlines);
-    out += row_stride;
-  }
-
-  if (cur_field_flags == PICTURE_INTERLACED_TOP) {
-    /* double the last scanline of the top field */
-    memcpy (out, field0, row_stride);
   }
 }
 
@@ -599,10 +499,10 @@ gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
   guint8 *out;
-  const guint8 *field0 = NULL, *field1 = NULL, *field2 = NULL, *field3 = NULL;
+  const guint8 *field0, *field1, *field2, *field3;
   gint cur_field_idx = history_count - dm_class->fields_required;
   guint cur_field_flags = history[cur_field_idx].flags;
-  gint i, row_stride, offset;
+  gint i, offset;
   GstDeinterlaceSimpleMethodFunction copy_scanline;
   GstDeinterlaceSimpleMethodFunction interpolate_scanline;
 
@@ -614,7 +514,6 @@ gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
   g_assert (self->copy_scanline_planar[2] != NULL);
 
   for (i = 0; i < 3; i++) {
-    row_stride = self->parent.row_stride[i];
     offset = self->parent.offset[i];
     copy_scanline = self->copy_scanline_planar[i];
     interpolate_scanline = self->interpolate_scanline_planar[i];
@@ -622,27 +521,22 @@ gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
     out = GST_BUFFER_DATA (outbuf) + offset;
 
     field0 = GST_BUFFER_DATA (history[cur_field_idx].buf) + offset;
-    if (history[cur_field_idx].flags & PICTURE_INTERLACED_BOTTOM)
-      field0 += row_stride;
 
     g_assert (dm_class->fields_required <= 4);
 
+    field1 = NULL;
     if (dm_class->fields_required >= 2) {
       field1 = GST_BUFFER_DATA (history[cur_field_idx + 1].buf) + offset;
-      if (history[cur_field_idx + 1].flags & PICTURE_INTERLACED_BOTTOM)
-        field1 += row_stride;
     }
 
+    field2 = NULL;
     if (dm_class->fields_required >= 3) {
       field2 = GST_BUFFER_DATA (history[cur_field_idx + 2].buf) + offset;
-      if (history[cur_field_idx + 2].flags & PICTURE_INTERLACED_BOTTOM)
-        field2 += row_stride;
     }
 
+    field3 = NULL;
     if (dm_class->fields_required >= 4) {
       field3 = GST_BUFFER_DATA (history[cur_field_idx + 3].buf) + offset;
-      if (history[cur_field_idx + 3].flags & PICTURE_INTERLACED_BOTTOM)
-        field3 += row_stride;
     }
 
     gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self, out,
