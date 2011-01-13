@@ -189,6 +189,10 @@ gst_ogg_pad_init (GstOggPad * pad)
   pad->continued = NULL;
   pad->map.headers = NULL;
   pad->map.queued = NULL;
+
+  pad->map.granulerate_n = 0;
+  pad->map.granulerate_d = 0;
+  pad->map.granuleshift = -1;
 }
 
 static void

@@ -1160,13 +1160,23 @@ gst_ogg_map_add_fisbone (GstOggStream * pad, GstOggStream * skel_pad,
 
   pad->have_fisbone = TRUE;
 
-  /* we just overwrite whatever was set before by the format-specific setup */
-  pad->granulerate_n = GST_READ_UINT64_LE (data);
-  pad->granulerate_d = GST_READ_UINT64_LE (data + 8);
+  /* We don't overwrite whatever was set before by the format-specific
+     setup: skeleton contains wrong information sometimes, and the codec
+     headers are authoritative.
+     So we only gather information that was not already filled out by
+     the mapper setup. This should hopefully allow handling unknown
+     streams a bit better, while not trashing correct setup from bad
+     skeleton data. */
+  if (pad->granulerate_n == 0 || pad->granulerate_d == 0) {
+    pad->granulerate_n = GST_READ_UINT64_LE (data);
+    pad->granulerate_d = GST_READ_UINT64_LE (data + 8);
+  }
+  if (pad->granuleshift < 0) {
+    pad->granuleshift = GST_READ_UINT8 (data + 28);
+  }
 
   start_granule = GST_READ_UINT64_LE (data + 16);
   pad->preroll = GST_READ_UINT32_LE (data + 24);
-  pad->granuleshift = GST_READ_UINT8 (data + 28);
 
   start_time = granulepos_to_granule_default (pad, start_granule);
 
