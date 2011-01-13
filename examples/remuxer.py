@@ -546,7 +546,7 @@ class RemuxBin(gst.Bin):
             self.async_error("Unsupported media type: %s", format)
             return
 
-        queue = gst.element_factory_make('queue', 'queue_' + format)
+        queue = gst.element_factory_make('queue', None);
         queue.set_property('max-size-buffers', 1000)
         parser = gst.element_factory_make(self.parsefactories[format])
         self.add(queue)
