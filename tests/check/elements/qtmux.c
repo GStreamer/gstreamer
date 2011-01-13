@@ -355,6 +355,36 @@ GST_START_TEST (test_audio_pad_frag_streamable)
 GST_END_TEST;
 
 
+GST_START_TEST (test_reuse)
+{
+  GstElement *qtmux = setup_qtmux (&srcvideotemplate, "video_%d");
+  GstBuffer *inbuffer;
+  GstCaps *caps;
+
+  gst_element_set_state (qtmux, GST_STATE_PLAYING);
+  gst_element_set_state (qtmux, GST_STATE_NULL);
+  gst_element_set_state (qtmux, GST_STATE_PLAYING);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  inbuffer = gst_buffer_new_and_alloc (1);
+  fail_unless (inbuffer != NULL);
+  caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  GST_BUFFER_DURATION (inbuffer) = 40 * GST_MSECOND;
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+
+  /* send eos to have all written */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
+
+  cleanup_qtmux (qtmux, "video_%d");
+}
+
+GST_END_TEST;
+
 static Suite *
 qtmux_suite (void)
 {
@@ -368,6 +398,8 @@ qtmux_suite (void)
   tcase_add_test (tc_chain, test_audio_pad_frag);
   tcase_add_test (tc_chain, test_video_pad_frag_streamable);
   tcase_add_test (tc_chain, test_audio_pad_frag_streamable);
+
+  tcase_add_test (tc_chain, test_reuse);
 
   return s;
 }
