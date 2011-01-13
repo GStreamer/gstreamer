@@ -709,7 +709,7 @@ class PlayerWindow(gtk.Window):
         chooser.add_filter(f)
         f = gtk.FileFilter()
         f.set_name("Ogg files")
-        f.add_pattern("*.ogg") # as long as this is the only thing we
+        f.add_pattern("*.og[gvax]") # as long as this is the only thing we
                                # support...
         chooser.add_filter(f)
         chooser.set_filter(f)
