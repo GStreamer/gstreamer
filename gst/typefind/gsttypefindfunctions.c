@@ -1432,10 +1432,11 @@ dts_type_find (GstTypeFind * tf, gpointer unused)
 
       if (chans > 0) {
         gst_type_find_suggest_simple (tf, prob, "audio/x-dts",
-            "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, chans, NULL);
+            "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, chans,
+            "framed", G_TYPE_BOOLEAN, FALSE, NULL);
       } else {
         gst_type_find_suggest_simple (tf, prob, "audio/x-dts",
-            "rate", G_TYPE_INT, rate, NULL);
+            "rate", G_TYPE_INT, rate, "framed", G_TYPE_BOOLEAN, FALSE, NULL);
       }
 
       return;
