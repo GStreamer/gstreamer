@@ -116,13 +116,13 @@ public class MediaInfo.Info : VPaned
     wikilinks["audio/x-vorbis"] = "Vorbis";
     wikilinks["audio/x-wav"] = "WAV";
     // video codecs
-    wikilinks["video/x-theora"] = "Theora"; // FIXME: check
+    wikilinks["video/x-theora"] = "Theora";
 
     int screen_height = Gdk.Screen.get_default().get_height();
     if (screen_height <= 600) {
       compact_mode = true;
     }
-			
+
     // add widgets
     // FIXME: handle aspect ratio (AspectFrame.ratio)
     drawing_area = new DrawingArea ();
