@@ -722,7 +722,7 @@ class PlayerWindow(gtk.Window):
         uri = chooser.get_uri()
         chooser.destroy()
 
-        if resp == SUCCESS:
+        if resp == SUCCESS and uri != None:
             self.load_file(uri)
             return True
         else:
