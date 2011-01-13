@@ -124,6 +124,8 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   klass->context = g_main_context_new ();
   klass->loop = g_main_loop_new (klass->context, TRUE);
 
+  GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
+
   klass->thread = g_thread_create ((GThreadFunc) do_loop, klass, TRUE, &error);
   if (error != NULL) {
     g_critical ("could not start bus thread: %s", error->message);
@@ -135,7 +137,6 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 
   gst_element_register (NULL, "rtspfunnel", GST_RANK_NONE, RTSP_TYPE_FUNNEL);
 
-  GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
 }
 
 static void
