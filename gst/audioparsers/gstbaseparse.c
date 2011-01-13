@@ -2590,8 +2590,8 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
 }
 
 /**
- * gst_base_transform_set_passthrough:
- * @trans: the #GstBaseParse to set
+ * gst_base_parse_set_passthrough:
+ * @parse: the #GstBaseParse to set
  * @passthrough: boolean indicating passthrough mode.
  *
  * Set passthrough mode for this parser.  If operating in passthrough,
@@ -2609,7 +2609,7 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
 }
 
 /**
- * gst_base_transform_set_frame_props:
+ * gst_base_parse_set_frame_props:
  * @parse: the #GstBaseParse to set
  * @fps_num: frames per second (numerator).
  * @fps_den: frames per second (denominator).
@@ -2658,7 +2658,7 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
 }
 
 /**
- * gst_base_transform_get_sync:
+ * gst_base_parse_get_sync:
  * @parse: the #GstBaseParse to query
  *
  * Returns: TRUE if parser is considered 'in sync'.  That is, frames have been
@@ -2681,7 +2681,7 @@ gst_base_parse_get_sync (GstBaseParse * parse)
 }
 
 /**
- * gst_base_transform_get_drain:
+ * gst_base_parse_get_drain:
  * @parse: the #GstBaseParse to query
  *
  * Returns: TRUE if parser is currently 'draining'.  That is, leftover data
