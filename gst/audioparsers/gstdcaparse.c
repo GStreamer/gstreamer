@@ -246,7 +246,7 @@ gst_dca_parse_find_sync (GstDcaParse * dcaparse, GstByteReader * reader,
 
   /* FIXME: verify syncs via _parse_header() here already */
 
-  /* Raw big endian */
+  /* Raw little endian */
   off = gst_byte_reader_masked_scan_uint32 (reader, 0xffffffff, 0xfe7f0180,
       0, GST_BUFFER_SIZE (buf));
   if (off >= 0 && off < best_offset) {
@@ -254,7 +254,7 @@ gst_dca_parse_find_sync (GstDcaParse * dcaparse, GstByteReader * reader,
     best_sync = 0xfe7f0180;
   }
 
-  /* Raw little endian */
+  /* Raw big endian */
   off = gst_byte_reader_masked_scan_uint32 (reader, 0xffffffff, 0x7ffe8001,
       0, GST_BUFFER_SIZE (buf));
   if (off >= 0 && off < best_offset) {
@@ -265,15 +265,15 @@ gst_dca_parse_find_sync (GstDcaParse * dcaparse, GstByteReader * reader,
   /* FIXME: check next 2 bytes as well for 14-bit formats (but then don't
    * forget to adjust the *skipsize= in _check_valid_frame() */
 
-  /* 14-bit big endian  */
-  off = gst_byte_reader_masked_scan_uint32 (reader, 0xffffffff, 0xfe7f0180,
+  /* 14-bit little endian  */
+  off = gst_byte_reader_masked_scan_uint32 (reader, 0xffffffff, 0xff1f00e8,
       0, GST_BUFFER_SIZE (buf));
   if (off >= 0 && off < best_offset) {
     best_offset = off;
-    best_sync = 0xfe7f0180;
+    best_sync = 0xff1f00e8;
   }
 
-  /* 14-bit little endian  */
+  /* 14-bit big endian  */
   off = gst_byte_reader_masked_scan_uint32 (reader, 0xffffffff, 0x1fffe800,
       0, GST_BUFFER_SIZE (buf));
   if (off >= 0 && off < best_offset) {
@@ -317,6 +317,7 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
   /* didn't find anything that looks like a sync word, skip */
   if (off < 0) {
     *skipsize = GST_BUFFER_SIZE (buf) - 3;
+    GST_DEBUG_OBJECT (dcaparse, "no sync, skipping %d bytes", *skipsize);
     return FALSE;
   }
 
