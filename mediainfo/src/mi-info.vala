@@ -105,9 +105,15 @@ public class MediaInfo.Info : VPaned
     // map from media-type to wikipedia-articles, prefix with http://en.wikipedia.org/wiki/
     // TODO: add more
     wikilinks = new HashMap<string, string> ();
+    // container/tag formats
     wikilinks["application/ogg"] = "Ogg";
     wikilinks["application/x-annodex"] = "Ogg";
     wikilinks["video/x-msvideo"] = "Audio_Video_Interleave";
+    // audio codecs
+    wikilinks["audio/x-vorbis"] = "Vorbis";
+    wikilinks["audio/x-wav"] = "WAV";
+    // video codecs
+    wikilinks["video/x-theora"] = "Theora"; // FIXME: check
 
     // add widgets
     // FIXME: handle aspect ratio (AspectFrame.ratio)
@@ -252,7 +258,8 @@ public class MediaInfo.Info : VPaned
         uint row;
         AttachOptions fill = AttachOptions.FILL;
         AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
-        string str;
+        string str, wikilink;
+        Caps caps;
         Structure s;
 
         info = dc.discover_uri (uri);
@@ -285,8 +292,8 @@ public class MediaInfo.Info : VPaned
         }
         */
         sinfo = info.get_stream_info ();
-        Caps caps = sinfo.get_caps ();
-        string wikilink = wikilinks[caps.get_structure(0).get_name()];
+        caps = sinfo.get_caps ();
+        wikilink = wikilinks[caps.get_structure(0).get_name()];
         str = pb_utils_get_codec_description (caps);
         if (wikilink != null) {
           // FIXME: make prefix and link translatable
@@ -303,11 +310,12 @@ public class MediaInfo.Info : VPaned
         have_video = (l.length () > 0);
         for (int i = 0; i < l.length (); i++) {
           sinfo = l.nth_data (i);
+	      caps = sinfo.get_caps ();
 
           row = 0;
           table = new Table (2, 8, false);
 
-          label = new Label(sinfo.get_caps ().to_string ());
+          label = new Label(caps.to_string ());
           label.set_ellipsize (Pango.EllipsizeMode.END);
           label.set_alignment (0.0f, 0.5f);
           label.set_selectable(true);
@@ -317,10 +325,16 @@ public class MediaInfo.Info : VPaned
           label = new Label ("Codec:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = pb_utils_get_codec_description (sinfo.get_caps ());
+          wikilink = wikilinks[caps.get_structure(0).get_name()];
+          str = pb_utils_get_codec_description (caps);
+          if (wikilink != null) {
+            // FIXME: make prefix and link translatable
+            str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
+          } 
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           label.set_selectable(true);
+          label.set_use_markup(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -420,11 +434,12 @@ public class MediaInfo.Info : VPaned
         l = info.get_audio_streams ();
         for (int i = 0; i < l.length (); i++) {
           sinfo = l.nth_data (i);
+	      caps = sinfo.get_caps ();
 
           row = 0;
           table = new Table (2, 7, false);
 
-          label = new Label(sinfo.get_caps ().to_string ());
+          label = new Label(caps.to_string ());
           label.set_ellipsize (Pango.EllipsizeMode.END);
           label.set_alignment (0.0f, 0.5f);
           label.set_selectable(true);
@@ -434,10 +449,16 @@ public class MediaInfo.Info : VPaned
           label = new Label ("Codec:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = pb_utils_get_codec_description (sinfo.get_caps ());
+          wikilink = wikilinks[caps.get_structure(0).get_name()];
+          str = pb_utils_get_codec_description (caps);
+          if (wikilink != null) {
+            // FIXME: make prefix and link translatable
+            str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
+          } 
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           label.set_selectable(true);
+          label.set_use_markup(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
