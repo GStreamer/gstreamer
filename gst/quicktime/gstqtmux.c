@@ -469,13 +469,9 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
 {
   GstElementClass *klass = GST_ELEMENT_CLASS (qtmux_klass);
   GstPadTemplate *templ;
-  GstCaps *caps;
 
   templ = gst_element_class_get_pad_template (klass, "src");
   qtmux->srcpad = gst_pad_new_from_template (templ, "src");
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (qtmux->srcpad));
-  gst_pad_set_caps (qtmux->srcpad, caps);
-  gst_caps_unref (caps);
   gst_pad_use_fixed_caps (qtmux->srcpad);
   gst_element_add_pad (GST_ELEMENT (qtmux), qtmux->srcpad);
 
@@ -1578,8 +1574,13 @@ static GstFlowReturn
 gst_qt_mux_start_file (GstQTMux * qtmux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  GstCaps *caps;
 
   GST_DEBUG_OBJECT (qtmux, "starting file");
+
+  caps = gst_caps_copy (gst_pad_get_pad_template_caps (qtmux->srcpad));
+  gst_pad_set_caps (qtmux->srcpad, caps);
+  gst_caps_unref (caps);
 
   /* let downstream know we think in BYTES and expect to do seeking later on */
   gst_pad_push_event (qtmux->srcpad,
