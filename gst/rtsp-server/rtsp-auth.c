@@ -147,7 +147,7 @@ default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
 
   /* we only have Basic for now */
   gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
-      "Basic ");
+      "Basic realm=\"GStreamer RTSP Server\"");
 
   return TRUE;
 }
