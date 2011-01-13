@@ -36,17 +36,17 @@ public class MediaInfo.App : Window
     set_title (_("GStreamer Media Info"));
     set_default_size (500, 350);
     destroy.connect (Gtk.main_quit);
-    
+
     VBox vbox = new VBox( false, 0);
     add (vbox);
-    
+
     // add a menubar
     vbox.pack_start (create_menu(), false, false, 0);
 
     HPaned paned = new HPaned ();
     paned.set_border_width (0);
     vbox.pack_start (paned, true, true, 3);
-    
+
     // add a file-chooser with info pane as preview widget
     chooser = new FileChooserWidget (FileChooserAction.OPEN);
     paned.pack1 (chooser, true, true);
@@ -70,20 +70,20 @@ public class MediaInfo.App : Window
     MenuItem item;
     Menu sub_menu;
     AccelGroup accel_group;
-    
+
     accel_group = new AccelGroup ();
     this.add_accel_group (accel_group);
-    
+
     item = new MenuItem.with_label (_("File"));
     menu_bar.append (item);
-    
+
     sub_menu = new Menu ();
     item.set_submenu (sub_menu);
 
     // TODO: add "open uri" item
     // -> dialog with text entry
     // -> discover that uri and clear selection in browser
-    
+
     item = new ImageMenuItem.from_stock (STOCK_QUIT, accel_group);
     sub_menu.append (item);
     item.activate.connect (Gtk.main_quit);
@@ -91,23 +91,32 @@ public class MediaInfo.App : Window
     item = new MenuItem.with_label (_("View"));
     //item.set_accel_path ("<GstMi-Main>/MainMenu/View");
     menu_bar.append (item);
-    
+
     sub_menu = new Menu ();
     item.set_submenu (sub_menu);
- 
+
     CheckMenuItem citem = new CheckMenuItem.with_label (_("Full Screen"));
     // see http://bugzilla.gnome.org/show_bug.cgi?id=551184
     // FIXME: we're also not getting a proper accelerator shown in the menu item
     citem.add_accelerator("activate", accel_group, Gdk.keyval_from_name ("F11"), 0, 0);
     //citem.set_accel_path ("<GstMi-Main>/MainMenu/View/FullScreen");
     //AccelMap.add_entry ("<GstMi-Main>/MainMenu/View/FullScreen", 0xffc8, 0);
- 
+
     sub_menu.append (citem);
     citem.toggled.connect (on_fullscreen_toggled);
 
-    // TODO: add "help" menu with "about" item
+    // add "help" menu with "about" item
+    item = new MenuItem.with_label (_("Help"));
+    menu_bar.append (item);
 
-    return (menu_bar);  
+    sub_menu = new Menu ();
+    item.set_submenu (sub_menu);
+
+    item = new ImageMenuItem.from_stock (STOCK_ABOUT, accel_group);
+    sub_menu.append (item);
+    item.activate.connect (on_about_clicked);
+
+    return (menu_bar);
   }
 
   // signal handler
@@ -122,7 +131,7 @@ public class MediaInfo.App : Window
     }
     chooser.set_preview_widget_active (res);
   }
-  
+
   private void on_fullscreen_toggled (CheckMenuItem item)
   {
     if (item.active) {
@@ -130,6 +139,18 @@ public class MediaInfo.App : Window
     } else {
       unfullscreen();
     }
+  }
+
+  private void on_about_clicked (MenuItem item)
+  {
+    AboutDialog dlg = new AboutDialog ();
+
+    dlg.set_version(Config.PACKAGE_VERSION);
+    dlg.set_program_name("GStreamer Media Info");
+    dlg.set_comments(_("Quickly browse, play and analyze media files."));
+    dlg.set_copyright("Stefan Sauer <ensonic@users.sf.net>");
+    dlg.run();
+    dlg.hide();
   }
 }
 
