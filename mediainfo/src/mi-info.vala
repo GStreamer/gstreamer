@@ -36,12 +36,15 @@ sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala-0.10/vapi/
 
 public class MediaInfo.Info : VPaned
 {
+  // layout
+  private bool compact_mode = false;
   // ui components
   private Label container_name;
   private Label mime_type;
   private Label duration;
   private Image icon_image;
-  private Notebook video_streams;
+  private Notebook all_streams;    // there is either all or separate a/mediainfo/v
+  private Notebook video_streams;  // depending on  sreen resolution
   private Notebook audio_streams;
   private DrawingArea drawing_area;
   // gstreamer objects
@@ -115,6 +118,11 @@ public class MediaInfo.Info : VPaned
     // video codecs
     wikilinks["video/x-theora"] = "Theora"; // FIXME: check
 
+    int screen_height = Gdk.Screen.get_default().get_height();
+    if (screen_height <= 600) {
+      compact_mode = true;
+    }
+			
     // add widgets
     // FIXME: handle aspect ratio (AspectFrame.ratio)
     drawing_area = new DrawingArea ();
@@ -172,31 +180,41 @@ public class MediaInfo.Info : VPaned
     table.attach (duration, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
-    /* TODO: if screen-height<600 use a *single* notebook for both audio and
-     * video streams
-     * - this needs a bit of cleverness when switching streams
-     */
-    label = new Label (null);
-    label.set_markup("<b>Video Streams</b>");
-    label.set_alignment (0.0f, 0.5f);
-    table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
-    row++;
+    if (compact_mode) {
+      label = new Label (null);
+      label.set_markup("<b>Streams</b>");
+      label.set_alignment (0.0f, 0.5f);
+      table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
+      row++;
 
-    video_streams = new Notebook ();
-    video_streams.switch_page.connect (on_video_stream_switched);
-    table.attach (video_streams, 0, 3, row, row+1, fill_exp, 0, 0, 1);
-    row++;
+      all_streams = new Notebook ();
+      // TODO: needs a bit of cleverness when switching streams
+			//all_streams.switch_page.connect (on_stream_switched);
+      table.attach (all_streams, 0, 3, row, row+1, fill_exp, 0, 0, 1);
+      row++;
+    } else {
+      label = new Label (null);
+      label.set_markup("<b>Video Streams</b>");
+      label.set_alignment (0.0f, 0.5f);
+      table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
+      row++;
 
-    label = new Label (null);
-    label.set_markup("<b>Audio Streams</b>");
-    label.set_alignment (0.0f, 0.5f);
-    table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
-    row++;
+      video_streams = new Notebook ();
+      video_streams.switch_page.connect (on_video_stream_switched);
+      table.attach (video_streams, 0, 3, row, row+1, fill_exp, 0, 0, 1);
+      row++;
 
-    audio_streams = new Notebook ();
-    audio_streams.switch_page.connect (on_audio_stream_switched);
-    table.attach (audio_streams, 0, 3, row, row+1, fill_exp, 0, 0, 1);
-    row++;
+      label = new Label (null);
+      label.set_markup("<b>Audio Streams</b>");
+      label.set_alignment (0.0f, 0.5f);
+      table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
+      row++;
+
+      audio_streams = new Notebook ();
+      audio_streams.switch_page.connect (on_audio_stream_switched);
+      table.attach (audio_streams, 0, 3, row, row+1, fill_exp, 0, 0, 1);
+      row++;
+    }
 
     // TODO: add container stream info widgets
 
@@ -255,6 +273,7 @@ public class MediaInfo.Info : VPaned
         //DiscovererAudioInfo ainfo;
         Table table;
         Label label;
+        Notebook nb;
         uint row;
         AttachOptions fill = AttachOptions.FILL;
         AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
@@ -301,16 +320,28 @@ public class MediaInfo.Info : VPaned
         } else {
           container_name.set_text (str);
         }
-          
-        // get stream info
-        while (video_streams.get_n_pages() > 0) {
-          video_streams.remove_page (-1);
+
+			  // reset notebooks
+        if (compact_mode) {
+          while (all_streams.get_n_pages() > 0) {
+            all_streams.remove_page (-1);
+          }
+				} else {
+          while (video_streams.get_n_pages() > 0) {
+            video_streams.remove_page (-1);
+          }
+          while (audio_streams.get_n_pages() > 0) {
+            audio_streams.remove_page (-1);
+          }
         }
+					
+        // get stream info
+        nb = compact_mode ? all_streams : video_streams;
         l = info.get_video_streams ();
         have_video = (l.length () > 0);
         for (int i = 0; i < l.length (); i++) {
           sinfo = l.nth_data (i);
-	      caps = sinfo.get_caps ();
+          caps = sinfo.get_caps ();
 
           row = 0;
           table = new Table (2, 8, false);
@@ -424,17 +455,15 @@ public class MediaInfo.Info : VPaned
             row++;
           }
 
-          video_streams.append_page (table, new Label (@"video $i"));
+          nb.append_page (table, new Label (@"video $i"));
         }
-        video_streams.show_all();
+        nb.show_all();
 
-        while (audio_streams.get_n_pages() > 0) {
-          audio_streams.remove_page (-1);
-        }
+        nb = compact_mode ? all_streams : audio_streams;
         l = info.get_audio_streams ();
         for (int i = 0; i < l.length (); i++) {
           sinfo = l.nth_data (i);
-	      caps = sinfo.get_caps ();
+          caps = sinfo.get_caps ();
 
           row = 0;
           table = new Table (2, 7, false);
@@ -530,9 +559,10 @@ public class MediaInfo.Info : VPaned
             row++;
           }
 
-          audio_streams.append_page (table, new Label (@"audio $i"));
+          nb.append_page (table, new Label (@"audio $i"));
         }
-        audio_streams.show_all();
+        nb.show_all();
+
         //l = info.get_container_streams ();
         
       } catch (Error e) {
