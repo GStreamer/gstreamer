@@ -51,6 +51,10 @@ public class MediaInfo.Info : VPaned
   private Discoverer dc;
   private Pipeline pb;
   private bool have_video = false;
+  private uint num_video_streams;
+  private uint cur_video_stream;
+  private uint num_audio_streams;
+  private uint cur_audio_stream;
 
   private HashMap<string, string> resolutions;
   private HashSet<string> tag_black_list;
@@ -104,7 +108,7 @@ public class MediaInfo.Info : VPaned
     tag_black_list.add ("duration");
     tag_black_list.add ("nominal-bitrate");
     tag_black_list.add ("maximum-bitrate");
-    
+
     // map from media-type to wikipedia-articles, prefix with http://en.wikipedia.org/wiki/
     // TODO: add more
     wikilinks = new HashMap<string, string> ();
@@ -131,7 +135,7 @@ public class MediaInfo.Info : VPaned
     drawing_area.realize.connect (on_drawing_area_realize);
     drawing_area.unrealize.connect (on_drawing_area_unrealize);
     pack1 (drawing_area, true, true);
-    
+
     ScrolledWindow sw = new ScrolledWindow (null, null);
     sw.set_policy (PolicyType.NEVER, PolicyType.ALWAYS);
     pack2 (sw, true, true);
@@ -188,8 +192,7 @@ public class MediaInfo.Info : VPaned
       row++;
 
       all_streams = new Notebook ();
-      // TODO: needs a bit of cleverness when switching streams
-			//all_streams.switch_page.connect (on_stream_switched);
+      all_streams.switch_page.connect (on_stream_switched);
       table.attach (all_streams, 0, 3, row, row+1, fill_exp, 0, 0, 1);
       row++;
     } else {
@@ -220,8 +223,8 @@ public class MediaInfo.Info : VPaned
 
     // TODO: add tag list widget
 
-    // TODO: add message list widget    
-    
+    // TODO: add message list widget
+
     show_all ();
 
     // set up the gstreamer components
@@ -264,7 +267,7 @@ public class MediaInfo.Info : VPaned
         icon_image.set_from_gicon ((Icon) finfo.get_attribute_object (FILE_ATTRIBUTE_STANDARD_ICON), IconSize.DIALOG);
       } catch (Error e) {
         debug ("Failed to query file info from %s: %s: %s", uri, e.domain.to_string (), e.message);
-      } 
+      }
 
       try {
         GLib.List<DiscovererStreamInfo> l;
@@ -334,12 +337,13 @@ public class MediaInfo.Info : VPaned
             audio_streams.remove_page (-1);
           }
         }
-					
+
         // get stream info
         nb = compact_mode ? all_streams : video_streams;
         l = info.get_video_streams ();
-        have_video = (l.length () > 0);
-        for (int i = 0; i < l.length (); i++) {
+        num_video_streams = l.length ();
+        have_video = (num_video_streams > 0);
+        for (int i = 0; i < num_video_streams; i++) {
           sinfo = l.nth_data (i);
           caps = sinfo.get_caps ();
 
@@ -361,7 +365,7 @@ public class MediaInfo.Info : VPaned
           if (wikilink != null) {
             // FIXME: make prefix and link translatable
             str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
-          } 
+          }
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           label.set_selectable(true);
@@ -461,7 +465,8 @@ public class MediaInfo.Info : VPaned
 
         nb = compact_mode ? all_streams : audio_streams;
         l = info.get_audio_streams ();
-        for (int i = 0; i < l.length (); i++) {
+        num_audio_streams = l.length ();
+        for (int i = 0; i < num_audio_streams; i++) {
           sinfo = l.nth_data (i);
           caps = sinfo.get_caps ();
 
@@ -483,7 +488,7 @@ public class MediaInfo.Info : VPaned
           if (wikilink != null) {
             // FIXME: make prefix and link translatable
             str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
-          } 
+          }
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           label.set_selectable(true);
@@ -531,7 +536,7 @@ public class MediaInfo.Info : VPaned
           label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
-  
+
           if ((s = sinfo.get_misc ()) != null) {
             label = new Label ("Details:");
             label.set_alignment (1.0f, 0.5f);
@@ -564,18 +569,19 @@ public class MediaInfo.Info : VPaned
         nb.show_all();
 
         //l = info.get_container_streams ();
-        
+
       } catch (Error e) {
         debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
       }
 
       // play file
+      cur_video_stream = cur_audio_stream = 0;
       ((GLib.Object)pb).set_property ("uri", uri);
       pb.set_state (State.PLAYING);
 
       res = true;
     }
-    
+
     return (res);
   }
 
@@ -625,7 +631,7 @@ public class MediaInfo.Info : VPaned
   /* FIXME: discoverer not neccesarily return the stream in the same order as
    * playbin2 sees them: https://bugzilla.gnome.org/show_bug.cgi?id=634407
    */
-  private void on_video_stream_switched (NotebookPage page, uint page_num)
+  private void on_video_stream_switched (Notebook nb, NotebookPage page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
       stdout.printf ("Switching video to: %u\n", page_num);
@@ -633,11 +639,25 @@ public class MediaInfo.Info : VPaned
     }
   }
 
-  private void on_audio_stream_switched (NotebookPage page, uint page_num)
+  private void on_audio_stream_switched (Notebook nb, NotebookPage page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
       stdout.printf ("Switching audio to: %u\n", page_num);
       ((GLib.Object)pb).set_property ("current-audio", (int)page_num);
+    }
+  }
+
+  private void on_stream_switched (Notebook nb, NotebookPage page, uint page_num)
+  {
+    if (pb.current_state > State.PAUSED) {
+      if (page_num < num_video_streams) {
+        stdout.printf ("Switching video to: %u\n", page_num);
+        ((GLib.Object)pb).set_property ("current-video", (int)page_num);
+      } else {
+        page_num -= num_video_streams;
+        stdout.printf ("Switching audio to: %u\n", page_num);
+        ((GLib.Object)pb).set_property ("current-audio", (int)page_num);
+      }
     }
   }
 
