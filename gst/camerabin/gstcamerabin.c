@@ -615,6 +615,9 @@ camerabin_create_src_elements (GstCameraBin * camera)
           gst_camerabin_create_and_add_element (cbin, "output-selector")))
     goto done;
 
+  /* Set pad-negotiation-mode to active */
+  g_object_set (camera->src_out_sel, "pad-negotiation-mode", 2, NULL);
+
   /* Set default "driver-name" for v4l2camsrc if not set */
   /* FIXME: v4l2camsrc specific */
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src_vid_src),
