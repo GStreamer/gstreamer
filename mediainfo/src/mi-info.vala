@@ -58,6 +58,8 @@ public class MediaInfo.Info : VPaned
   private uint cur_video_stream;
   private uint num_audio_streams;
   private uint cur_audio_stream;
+  // stream data
+  private Gdk.Pixbuf album_art = null;
 
   private HashMap<string, string> resolutions;
   private HashSet<string> tag_black_list;
@@ -259,7 +261,9 @@ public class MediaInfo.Info : VPaned
     bool res = true;
 
     // stop previous playback
-    pb.set_state (State.NULL);
+    pb.set_state (State.READY);
+    album_art = null;
+    drawing_area.queue_draw();
 
     if (uri != null) {
       DiscovererInfo info;
@@ -595,14 +599,46 @@ public class MediaInfo.Info : VPaned
   {
     // redraw if not playing and if there is no video
     if (pb.current_state < State.PAUSED || !have_video) {
-      Gdk.Window w = widget.get_window();
       Gtk.Allocation a;
       widget.get_allocation(out a);
-      Cairo.Context cr = Gdk.cairo_create (w);
+      Cairo.Context cr = Gdk.cairo_create (widget.get_window());
 
       cr.set_source_rgb (0, 0, 0);
       cr.rectangle (0, 0, a.width, a.height);
       cr.fill ();
+      if (album_art != null) {
+        int sw=album_art.get_width();
+        int sh=album_art.get_height();
+        double sr = (double)sw / (double)sh;
+        double dr = (double)a.width / (double)a.height;
+        double wr = (double)sw / (double)a.width;
+        double hr = (double)sh / (double)a.height;
+        int x,y,w,h;
+
+        // stdout.printf("s: %d x %d : %f -> d: %d x %d : %f\n",sw,sh,sr,a.width,a.height,dr);
+        if (sr > dr) {
+          w = a.width;
+          h = (int)(w / sr);
+          x = 0;
+          y = (a.height - h) / 2;
+        } else if (sr < dr) {
+          h = a.height;
+          w = (int)(h * sr);
+          x = (a.width - w) / 2;
+          y = 0;
+        } else {
+          w = a.width;
+          h = a.height;
+          x = 0;
+          y = 0;
+        }
+        // stdout.printf("r: %d x %d\n",w,h);
+
+        Gdk.Pixbuf pb = album_art.scale_simple(w,h,Gdk.InterpType.BILINEAR);
+        Gdk.cairo_set_source_pixbuf(cr,pb,x,y);
+        cr.rectangle (x, y, w, h);
+        cr.fill ();
+      }
     }
     return false;
   }
@@ -680,20 +716,38 @@ public class MediaInfo.Info : VPaned
       if (fn.has_prefix("private-"))
         continue;
 
-      // skip buffers (usualy images)
-      // TODO: decode images,
-      // - need to figure a way to return them
-      // - need to find a place where we show them
-      v = s.get_value (fn);
-      if (v.holds(typeof(Gst.Buffer)))
-        continue;
-
       if (str.length > 0)
         str += "\n";
 
-      vstr = v.serialize ().compress ();
-      if (vstr.has_prefix("http://") || vstr.has_prefix("https://")) {
-        vstr = "<a href=\"" + vstr + "\">" + vstr + "</a>";
+      // TODO: decode images:
+      /*
+      GInputStream is = g_memory_input_stream_new_from_data(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf,NULL);
+      GdkPixbuf pb = gdk_pixbuf_new_from_stream(is, NULL, NULL);
+      g_input_stream_close(is,NULL,NULL);
+      res = gdk_pixbuf_scale_simple(pb, w, h, GDK_INTERP_BILINEAR);
+      */
+      // - need to figure a way to return them
+      // - where we show them -> in the drawing area
+      v = s.get_value (fn);
+      if (v.holds(typeof(Gst.Buffer))) {
+        Gst.Buffer buf = v.get_buffer();
+        Caps c = buf.get_caps();
+
+        try {
+          InputStream is = new MemoryInputStream.from_data (buf.data,buf.size,null);
+          album_art = new Gdk.Pixbuf.from_stream (is, null);
+          is.close();
+        } catch (Error e) {
+          debug ("Decoding album art failed: %s: %s", e.domain.to_string (), e.message);
+        }
+
+        // FIXME: having the actual resolution here would be nice
+        vstr = c.to_string();
+      } else  {
+        vstr = v.serialize ().compress ();
+        if (vstr.has_prefix("http://") || vstr.has_prefix("https://")) {
+          vstr = "<a href=\"" + vstr + "\">" + vstr + "</a>";
+        }
       }
       str += fn + " = " + vstr;
     }

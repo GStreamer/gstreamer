@@ -15,7 +15,7 @@ files.
 - offer several commands in addition (see below)
 
 example output from commandline tool:
-> gst-discoverer -v /home/ensonic/Musik/xotox-hypnocat.mp3 
+> gst-discoverer -v /home/ensonic/Musik/xotox-hypnocat.mp3
 
 Topology:
   audio: audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)3, rate=(int)44100, channels=(int)2, parsed=(boolean)true
@@ -74,7 +74,6 @@ Properties:
   - if there is a "language-code" in the tags (or subtitles?) use flag icons
     - deluge installs some under: /usr/share/pyshared/deluge/data/mediainfo/pixmaps/flags/
     - famfamfam-flag-png: locale/usr/share/flags/countries/
-  - handle album art in tag lists
   - geo-tags: map-widget?, link to google-maps?
   - artist: links to {last.fm,wikipedia}
   - format dates nicely
@@ -160,7 +159,7 @@ app                   disco
  |<---------------------|
  |     ::finisheded     |
  |<---------------------|
- | 
+ |
 
 == sync deep-scan ==
 - same as "sync quick-scan", no intermediate result
@@ -189,5 +188,5 @@ app                   disco
  |<---------------------|
  |     ::finisheded     |
  |<---------------------|
- | 
+ |
 
