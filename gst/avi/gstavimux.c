@@ -1673,6 +1673,7 @@ gst_avi_mux_start_file (GstAviMux * avimux)
   GstFlowReturn res;
   GstBuffer *header;
   GSList *node;
+  GstCaps *caps;
 
   avimux->total_data = 0;
   avimux->total_frames = 0;
@@ -1714,6 +1715,10 @@ gst_avi_mux_start_file (GstAviMux * avimux)
       avipad->idx_tag = g_strdup_printf ("ix%02u", avimux->video_pads++);
     }
   }
+
+  caps = gst_caps_copy (gst_pad_get_pad_template_caps (avimux->srcpad));
+  gst_pad_set_caps (avimux->srcpad, caps);
+  gst_caps_unref (caps);
 
   /* let downstream know we think in BYTES and expect to do seeking later on */
   gst_pad_push_event (avimux->srcpad,
