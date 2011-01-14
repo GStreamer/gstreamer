@@ -15,6 +15,7 @@ EXTRA_DIST = debugutils-marshal.list
 plugin_LTLIBRARIES = libgstdebugutilsbad.la
 
 libgstdebugutilsbad_la_SOURCES = \
+	gstdebugspy.c \
 	fpsdisplaysink.c \
 	debugutilsbad.c \
 	gstchecksumsink.c \
