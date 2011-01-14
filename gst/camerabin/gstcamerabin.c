@@ -1760,7 +1760,7 @@ camerabin_pad_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
 static gboolean
 gst_camerabin_send_preview (GstCameraBin * camera, GstBuffer * buffer)
 {
-  GstElement *pipeline;
+  GstCameraBinPreviewPipelineData *data;
   GstBuffer *prev = NULL;
   GstStructure *s;
   GstMessage *msg;
@@ -1768,9 +1768,9 @@ gst_camerabin_send_preview (GstCameraBin * camera, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (camera, "creating preview");
 
-  pipeline = (camera->mode == MODE_IMAGE) ?
+  data = (camera->mode == MODE_IMAGE) ?
       camera->preview_pipeline : camera->video_preview_pipeline;
-  prev = gst_camerabin_preview_convert (camera, pipeline, buffer);
+  prev = gst_camerabin_preview_convert (data, buffer);
 
   GST_DEBUG_OBJECT (camera, "preview created: %p", prev);
 
@@ -1865,12 +1865,11 @@ gst_camerabin_have_img_buffer (GstPad * pad, GstMiniObject * obj,
 
     /* forward tag events to preview pipeline */
     if (camera->preview_caps && GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
-      GstElement *pipeline;
+      GstCameraBinPreviewPipelineData *data;
 
-      pipeline = (camera->mode == MODE_IMAGE) ?
+      data = (camera->mode == MODE_IMAGE) ?
           camera->preview_pipeline : camera->video_preview_pipeline;
-      gst_camerabin_preview_send_event (camera, pipeline,
-          gst_event_ref (event));
+      gst_camerabin_preview_send_event (data, gst_event_ref (event));
     }
   }
 
@@ -3373,12 +3372,11 @@ gst_camerabin_dispose (GObject * object)
   gst_object_unref (camera->vidbin);
 
   if (camera->preview_pipeline) {
-    gst_camerabin_preview_destroy_pipeline (camera, camera->preview_pipeline);
+    gst_camerabin_preview_destroy_pipeline (camera->preview_pipeline);
     camera->preview_pipeline = NULL;
   }
   if (camera->video_preview_pipeline) {
-    gst_camerabin_preview_destroy_pipeline (camera,
-        camera->video_preview_pipeline);
+    gst_camerabin_preview_destroy_pipeline (camera->video_preview_pipeline);
     camera->video_preview_pipeline = NULL;
   }
 
@@ -3525,7 +3523,7 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       break;
     case ARG_PREVIEW_CAPS:
     {
-      GstElement **prev_pipe = NULL;
+      GstCameraBinPreviewPipelineData **prev_pipe = NULL;
       GstElement **preview_source_filter = NULL;
       GstCaps **prev_caps = NULL;
       GstCaps *new_caps = NULL;
@@ -3545,19 +3543,20 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       if (prev_caps && !gst_caps_is_equal (*prev_caps, new_caps)) {
         GST_DEBUG_OBJECT (camera,
             "setting preview caps: %" GST_PTR_FORMAT, new_caps);
-        if (*prev_pipe) {
-          gst_camerabin_preview_destroy_pipeline (camera, *prev_pipe);
-          *prev_pipe = NULL;
-        }
+
         GST_OBJECT_LOCK (camera);
         gst_caps_replace (prev_caps, new_caps);
         GST_OBJECT_UNLOCK (camera);
 
         if (new_caps && !gst_caps_is_any (new_caps) &&
             !gst_caps_is_empty (new_caps)) {
-          *prev_pipe =
-              gst_camerabin_preview_create_pipeline (camera, new_caps,
-              *preview_source_filter);
+          if (!*prev_pipe) {
+            *prev_pipe =
+                gst_camerabin_preview_create_pipeline (GST_ELEMENT (camera),
+                new_caps, *preview_source_filter);
+          } else {
+            gst_camerabin_preview_set_caps (*prev_pipe, new_caps);
+          }
         }
       }
       break;
@@ -3568,7 +3567,7 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
             ("camerabin must be in NULL state when setting the preview source filter element"),
             (NULL));
       } else {
-        GstElement **preview_pipe = NULL;
+        GstCameraBinPreviewPipelineData **preview_pipe = NULL;
         GstElement **preview_source_filter = NULL;
         GstCaps *preview_caps = NULL;
 
@@ -3587,10 +3586,10 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
         *preview_source_filter = g_value_dup_object (value);
 
         if (*preview_pipe) {
-          gst_camerabin_preview_destroy_pipeline (camera, *preview_pipe);
+          gst_camerabin_preview_destroy_pipeline (*preview_pipe);
           *preview_pipe =
-              gst_camerabin_preview_create_pipeline (camera, preview_caps,
-              *preview_source_filter);
+              gst_camerabin_preview_create_pipeline (GST_ELEMENT (camera),
+              preview_caps, *preview_source_filter);
         }
       }
       break;

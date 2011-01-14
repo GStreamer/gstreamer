@@ -31,6 +31,7 @@
 #include "gstcamerabin-enum.h"
 #include "camerabinimage.h"
 #include "camerabinvideo.h"
+#include "camerabinpreview.h"
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -147,8 +148,10 @@ struct _GstCameraBin
   GstElement *imgbin;           /* bin that holds image capturing elements */
   GstElement *vidbin;           /*  bin that holds video capturing elements */
   GstElement *active_bin;       /* image or video bin that is currently in use */
-  GstElement *preview_pipeline; /* pipeline for creating preview images */
-  GstElement *video_preview_pipeline;   /* pipeline for creating video preview image */
+  /* pipeline for creating preview images */
+  GstCameraBinPreviewPipelineData *preview_pipeline;
+  /* pipeline for creating video preview image */
+  GstCameraBinPreviewPipelineData *video_preview_pipeline;
 
   GstBuffer *video_preview_buffer;      /* buffer for storing video preview */
 

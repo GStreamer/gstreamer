@@ -23,20 +23,35 @@
 
 #include <gst/gst.h>
 
-#include "gstcamerabin.h"
-
 G_BEGIN_DECLS
-    GstElement * gst_camerabin_preview_create_pipeline (GstCameraBin * camera,
-    GstCaps * caps, GstElement * src_filter);
 
-void gst_camerabin_preview_destroy_pipeline (GstCameraBin * camera,
-    GstElement * pipeline);
+typedef struct
+{
+  GstElement *pipeline;
 
-GstBuffer *gst_camerabin_preview_convert (GstCameraBin * camera,
-    GstElement * pipeline, GstBuffer * buf);
+  GstElement *appsrc;
+  GstElement *capsfilter;
+  GstElement *appsink;
 
-gboolean gst_camerabin_preview_send_event (GstCameraBin * camera,
-    GstElement * pipeline, GstEvent * event);
+  GstElement *element;
+} GstCameraBinPreviewPipelineData;
+
+
+GstCameraBinPreviewPipelineData * gst_camerabin_preview_create_pipeline (
+    GstElement *element, GstCaps *caps, GstElement *src_filter);
+
+void gst_camerabin_preview_destroy_pipeline (
+    GstCameraBinPreviewPipelineData *data);
+
+GstBuffer *gst_camerabin_preview_convert (
+    GstCameraBinPreviewPipelineData *data, GstBuffer *buf);
+
+gboolean gst_camerabin_preview_send_event (
+    GstCameraBinPreviewPipelineData *pipeline, GstEvent *event);
+
+void gst_camerabin_preview_set_caps (
+    GstCameraBinPreviewPipelineData *pipeline, GstCaps *caps);
 
 G_END_DECLS
+
 #endif                          /* __CAMERABINPREVIEW_H__ */
