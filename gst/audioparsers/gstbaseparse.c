@@ -285,6 +285,7 @@ struct _GstBaseParsePrivate
   /* reverse playback */
   GSList *buffers_pending;
   GSList *buffers_queued;
+  GSList *buffers_send;
   GstClockTime last_ts;
   gint64 last_offset;
 };
@@ -394,6 +395,9 @@ gst_base_parse_clear_queues (GstBaseParse * parse)
       NULL);
   g_slist_free (parse->priv->buffers_pending);
   parse->priv->buffers_pending = NULL;
+  g_slist_foreach (parse->priv->buffers_send, (GFunc) gst_buffer_unref, NULL);
+  g_slist_free (parse->priv->buffers_send);
+  parse->priv->buffers_send = NULL;
 }
 
 static void
@@ -1820,6 +1824,50 @@ gst_base_parse_drain (GstBaseParse * parse)
  * gst_base_parse_process_fragment:
  * @parse: #GstBaseParse.
  *
+ * Sends buffers collected in send_buffers downstream, and ensures that list
+ * is empty at the end (errors or not).
+ */
+static GstFlowReturn
+gst_base_parse_send_buffers (GstBaseParse * parse)
+{
+  GSList *send = NULL;
+  GstBuffer *buf;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  send = parse->priv->buffers_send;
+
+  /* send buffers */
+  while (send) {
+    buf = GST_BUFFER_CAST (send->data);
+    GST_LOG_OBJECT (parse, "pushing buffer %p, timestamp %"
+        GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
+        ", offset %" G_GINT64_FORMAT, buf,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf));
+
+    /* iterate output queue an push downstream */
+    ret = gst_pad_push (parse->srcpad, buf);
+    send = g_slist_delete_link (send, send);
+
+    /* clear any leftover if error */
+    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+      while (send) {
+        buf = GST_BUFFER_CAST (send->data);
+        gst_buffer_unref (buf);
+        send = g_slist_delete_link (send, send);
+      }
+    }
+  }
+
+  parse->priv->buffers_send = send;
+
+  return ret;
+}
+
+/**
+ * gst_base_parse_process_fragment:
+ * @parse: #GstBaseParse.
+ *
  * Processes a reverse playback (forward) fragment:
  * - append head of last fragment that was skipped to current fragment data
  * - drain the resulting current fragment data (i.e. repeated chain)
@@ -1831,7 +1879,7 @@ gst_base_parse_process_fragment (GstBaseParse * parse, gboolean push_only)
 {
   GstBuffer *buf;
   GstFlowReturn ret = GST_FLOW_OK;
-  GSList *send = NULL;
+  gboolean seen_key = FALSE, seen_delta = FALSE;
 
   if (push_only)
     goto push;
@@ -1861,6 +1909,11 @@ gst_base_parse_process_fragment (GstBaseParse * parse, gboolean push_only)
   gst_base_parse_drain (parse);
 
 push:
+  if (parse->priv->buffers_send) {
+    buf = GST_BUFFER_CAST (parse->priv->buffers_send->data);
+    seen_key |= !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
+
   /* add metadata (if needed to queued buffers */
   GST_LOG_OBJECT (parse, "last timestamp: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (parse->priv->last_ts));
@@ -1885,38 +1938,39 @@ push:
       GST_WARNING_OBJECT (parse, "could not determine time for buffer");
     }
 
+    parse->priv->last_ts = GST_BUFFER_TIMESTAMP (buf);
+
     /* reverse order for ascending sending */
-    send = g_slist_prepend (send, buf);
+    /* send downstream at keyframe not preceded by a keyframe
+     * (e.g. that should identify start of collection of IDR nals) */
+    if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
+      if (seen_key) {
+        ret = gst_base_parse_send_buffers (parse);
+        /* if a problem, throw all to sending */
+        if (ret != GST_FLOW_OK) {
+          parse->priv->buffers_send =
+              g_slist_reverse (parse->priv->buffers_queued);
+          parse->priv->buffers_queued = NULL;
+          break;
+        }
+        seen_key = FALSE;
+      }
+    } else {
+      seen_delta = TRUE;
+    }
+
+    seen_key |= !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+    parse->priv->buffers_send =
+        g_slist_prepend (parse->priv->buffers_send, buf);
     parse->priv->buffers_queued =
         g_slist_delete_link (parse->priv->buffers_queued,
         parse->priv->buffers_queued);
   }
 
-  /* send buffers */
-  while (send) {
-    buf = GST_BUFFER_CAST (send->data);
-    GST_LOG_OBJECT (parse, "pushing buffer %p, timestamp %"
-        GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
-        ", offset %" G_GINT64_FORMAT, buf,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf));
-
-    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (parse->priv->last_ts)))
-      parse->priv->last_ts = GST_BUFFER_TIMESTAMP (buf);
-
-    /* iterate output queue an push downstream */
-    ret = gst_pad_push (parse->srcpad, buf);
-    send = g_slist_delete_link (send, send);
-
-    /* clear any leftover if error */
-    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-      while (send) {
-        buf = GST_BUFFER_CAST (send->data);
-        gst_buffer_unref (buf);
-        send = g_slist_delete_link (send, send);
-      }
-    }
-  }
+  /* audio may have all marked as keyframe, so arrange to send here */
+  if (!seen_delta)
+    ret = gst_base_parse_send_buffers (parse);
 
   /* any trailing unused no longer usable (ideally none) */
   if (G_UNLIKELY (gst_adapter_available (parse->adapter))) {
@@ -3494,7 +3548,7 @@ done:
   /* ERRORS */
 negative_rate:
   {
-    GST_DEBUG_OBJECT (parse, "negative playback rates are not supported yet.");
+    GST_DEBUG_OBJECT (parse, "negative playback rates delegated upstream.");
     res = FALSE;
     goto done;
   }
