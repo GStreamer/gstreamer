@@ -2025,9 +2025,9 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GTimeVal time = { 0, 0 };
 
   if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
-    ebml->caps = gst_caps_from_string ("video/webm");
+    ebml->caps = gst_caps_new_simple ("video/webm", NULL);
   } else {
-    ebml->caps = gst_caps_from_string ("video/x-matroska");
+    ebml->caps = gst_caps_new_simple ("video/x-matroska", NULL);
   }
   /* we start with a EBML header */
   doctype = mux->doctype;
