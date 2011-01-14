@@ -603,6 +603,8 @@ public class MediaInfo.Info : VPaned
       widget.get_allocation(out a);
       Cairo.Context cr = Gdk.cairo_create (widget.get_window());
 
+      widget.set_flags(Gtk.WidgetFlags.DOUBLE_BUFFERED);
+
       cr.set_source_rgb (0, 0, 0);
       cr.rectangle (0, 0, a.width, a.height);
       cr.fill ();
@@ -611,8 +613,6 @@ public class MediaInfo.Info : VPaned
         int sh=album_art.get_height();
         double sr = (double)sw / (double)sh;
         double dr = (double)a.width / (double)a.height;
-        double wr = (double)sw / (double)a.width;
-        double hr = (double)sh / (double)a.height;
         int x,y,w,h;
 
         // stdout.printf("s: %d x %d : %f -> d: %d x %d : %f\n",sw,sh,sr,a.width,a.height,dr);
@@ -639,6 +639,8 @@ public class MediaInfo.Info : VPaned
         cr.rectangle (x, y, w, h);
         cr.fill ();
       }
+    } else {
+      widget.unset_flags(Gtk.WidgetFlags.DOUBLE_BUFFERED);
     }
     return false;
   }
@@ -736,7 +738,7 @@ public class MediaInfo.Info : VPaned
         try {
           InputStream is = new MemoryInputStream.from_data (buf.data,buf.size,null);
           album_art = new Gdk.Pixbuf.from_stream (is, null);
-          is.close();
+          is.close(null);
         } catch (Error e) {
           debug ("Decoding album art failed: %s: %s", e.domain.to_string (), e.message);
         }
