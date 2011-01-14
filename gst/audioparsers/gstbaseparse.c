@@ -738,7 +738,10 @@ gst_base_parse_sink_event (GstPad * pad, GstEvent * event)
  *
  * Element-level event handler function.
  *
- * Returns: TRUE if the event was handled and not need forwarding.
+ * The event will be unreffed only if it has been handled and this
+ * function returns %TRUE
+ *
+ * Returns: %TRUE if the event was handled and not need forwarding.
  */
 static gboolean
 gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
@@ -858,7 +861,9 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 
     case GST_EVENT_FLUSH_START:
       parse->priv->flushing = TRUE;
-      handled = gst_pad_push_event (parse->srcpad, event);
+      handled = gst_pad_push_event (parse->srcpad, gst_event_ref (event));
+      if (handled)
+        gst_event_unref (event);
       /* Wait for _chain() to exit by taking the srcpad STREAM_LOCK */
       GST_PAD_STREAM_LOCK (parse->srcpad);
       GST_PAD_STREAM_UNLOCK (parse->srcpad);
