@@ -2236,9 +2236,15 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
     }
   }
 
-  if (fsize <= GST_BUFFER_SIZE (buffer)) {
-    outbuf = gst_buffer_create_sub (buffer, 0, fsize);
-    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer);
+  /* Does the subclass want to skip too? */
+  if (skip > 0)
+    parse->priv->offset += skip;
+  else if (skip < 0)
+    skip = 0;
+
+  if (fsize + skip <= GST_BUFFER_SIZE (buffer)) {
+    outbuf = gst_buffer_create_sub (buffer, skip, fsize);
+    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + skip;
     GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
     gst_buffer_unref (buffer);
   } else {
@@ -2253,10 +2259,6 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
   }
 
   parse->priv->offset += fsize;
-
-  /* Does the subclass want to skip too? */
-  if (skip > 0)
-    parse->priv->offset += skip;
 
   *buf = outbuf;
 
