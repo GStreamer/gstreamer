@@ -86,7 +86,7 @@ public class MediaInfo.App : Window
     item.set_submenu (sub_menu);
 
     // TODO: add "open uri" item
-    // -> dialog with text entry
+    // -> dialog with text entry (pre-file with clipboard content)
     // -> discover that uri and clear selection in browser
 
     item = new ImageMenuItem.from_stock (STOCK_QUIT, accel_group);
