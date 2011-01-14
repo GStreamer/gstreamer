@@ -357,7 +357,7 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf)
     stride_in =
         gst_video_format_get_row_stride (dec->format, c, dec->decoded_width);
     c_height =
-        gst_video_format_get_component_width (dec->format, c, dec->height);
+        gst_video_format_get_component_height (dec->format, c, dec->height);
     c_width = gst_video_format_get_component_width (dec->format, c, dec->width);
 
     for (line = 0; line < c_height; line++) {
