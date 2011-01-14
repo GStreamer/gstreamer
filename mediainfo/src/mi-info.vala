@@ -113,6 +113,7 @@ public class MediaInfo.Info : VPaned
     tag_black_list.add ("maximum-bitrate");
 
     // map from media-type to wikipedia-articles, prefix with http://en.wikipedia.org/wiki/
+    // alternative source could be http://codecdictionary.com/
     // TODO: add more
     wikilinks = new HashMap<string, string> ();
     // container/tag formats
