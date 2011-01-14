@@ -22,7 +22,19 @@ gst_mi_LDADD = \
 pixmapsdir=$(pkgdatadir)/ui/icons
 pixmaps_DATA=gst-mi.png
 
-EXTRA_DIST = gst-mi.png
+iconsdir=$(datadir)/pixmaps/
+icons_DATA=gst-mi.png
+
+desktopdir = $(datadir)/applications/
+desktop_DATA = gst-mi.desktop
+@INTLTOOL_DESKTOP_RULE@
+
+install-data-hook:
+	test -z "$(UPDATE_DESKTOP_DATABASE)" || $(UPDATE_DESKTOP_DATABASE) "$(DESTDIR)$(desktopdir)";
+uninstall-local:
+	test -z "$(UPDATE_DESKTOP_DATABASE)" || $(UPDATE_DESKTOP_DATABASE) "$(DESTDIR)$(desktopdir)";
+
+EXTRA_DIST = gst-mi.png gst-mi.desktop
 
 BUILT_SOURCES = $(gst_mi_SOURCES:.vala=.c)
 

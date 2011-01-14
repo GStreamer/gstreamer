@@ -1,0 +1,8 @@
+[Desktop Entry]
+_Name=GStreamer Media Info
+_Comment=Quickly browse, play and analyze media files
+StartupNotify=true
+Exec=gst-mi
+Icon=gst-mi
+Type=Application
+Categories=GNOME;GTK;AudioVideo;

@@ -29,6 +29,10 @@ AC_SUBST(GETTEXT_PACKAGE)
 AM_GNU_GETTEXT_VERSION([0.18.1])
 AM_GNU_GETTEXT([external])
 
+dnl check for desktop utilities
+AC_PATH_PROG(UPDATE_DESKTOP_DATABASE, update-desktop-database)
+
+
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile

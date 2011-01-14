@@ -1,4 +1,4 @@
 [encoding: UTF-8]
+src/gst-mi.desktop.in
 src/mi.vala
 src/mi-app.vala
-
