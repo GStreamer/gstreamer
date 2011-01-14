@@ -12,3 +12,6 @@ capture.
 * Capture signals
 The signals were renamed from capture-start/stop to start/stop-capture as
 this is the usual naming on actions.
+
+* image-done
+In camerabin, image-done is a signal, in camerabin2, it is a bus message

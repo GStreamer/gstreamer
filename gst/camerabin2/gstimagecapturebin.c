@@ -297,7 +297,7 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
     goto error;
 
   g_object_set (imagebin->sink, "location", imagebin->location, "async", FALSE,
-      NULL);
+      "post-messages", TRUE, NULL);
 
   /* add ghostpad */
   pad = gst_element_get_static_pad (colorspace, "sink");

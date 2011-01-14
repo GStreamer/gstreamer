@@ -99,6 +99,8 @@ static void gst_camera_bin_init (GstCameraBin * camera);
 static void gst_camera_bin_dispose (GObject * object);
 static void gst_camera_bin_finalize (GObject * object);
 
+static void gst_camera_bin_handle_message (GstBin * bin, GstMessage * message);
+
 GType
 gst_camera_bin_get_type (void)
 {
@@ -300,10 +302,12 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
 {
   GObjectClass *object_class;
   GstElementClass *element_class;
+  GstBinClass *bin_class;
 
   parent_class = g_type_class_peek_parent (klass);
   object_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
+  bin_class = GST_BIN_CLASS (klass);
 
   object_class->dispose = gst_camera_bin_dispose;
   object_class->finalize = gst_camera_bin_finalize;
@@ -311,6 +315,8 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
   object_class->get_property = gst_camera_bin_get_property;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_camera_bin_change_state);
+
+  bin_class->handle_message = gst_camera_bin_handle_message;
 
   klass->start_capture = gst_camera_bin_start_capture;
   klass->stop_capture = gst_camera_bin_stop_capture;
@@ -431,6 +437,40 @@ gst_camera_bin_init (GstCameraBin * camera)
       gst_object_ref (camera->videobin_capsfilter),
       gst_object_ref (camera->imagebin_capsfilter),
       gst_object_ref (camera->viewfinderbin_capsfilter), NULL);
+}
+
+static void
+gst_image_capture_bin_post_image_done (GstCameraBin * camera,
+    const gchar * filename)
+{
+  GstMessage *msg;
+
+  g_return_if_fail (filename != NULL);
+
+  msg = gst_message_new_element (GST_OBJECT_CAST (camera),
+      gst_structure_new ("image-done", "filename", G_TYPE_STRING,
+          filename, NULL));
+
+  if (!gst_element_post_message (GST_ELEMENT_CAST (camera), msg))
+    GST_WARNING_OBJECT (camera, "Failed to post image-done message");
+}
+
+static void
+gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
+{
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) {
+    const GstStructure *structure = gst_message_get_structure (message);
+    const gchar *filename;
+
+    if (gst_structure_has_name (structure, "GstMultiFileSink")) {
+      filename = gst_structure_get_string (structure, "filename");
+      if (filename) {
+        gst_image_capture_bin_post_image_done (GST_CAMERA_BIN_CAST (bin),
+            filename);
+      }
+    }
+  }
+  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
 /**
