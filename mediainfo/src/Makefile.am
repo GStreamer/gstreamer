@@ -18,7 +18,12 @@ gst_mi_SOURCES = \
 
 gst_mi_LDADD = \
 	$(MI_LIBS) -lgstinterfaces-0.10 -lgstpbutils-0.10
-	
+
+pixmapsdir=$(pkgdatadir)/ui/icons
+pixmaps_DATA=gst-mi.png
+
+EXTRA_DIST = gst-mi.png
+
 BUILT_SOURCES = $(gst_mi_SOURCES:.vala=.c)
 
 CLEANFILES = \

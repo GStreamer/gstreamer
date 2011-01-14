@@ -35,6 +35,11 @@ public class MediaInfo.App : Window
     // configure the window
     set_title (_("GStreamer Media Info"));
     set_default_size (500, 350);
+    try {
+      set_default_icon_from_file (Config.PKGDATADIR + "/ui/icons/gst-mi.png");
+    } catch (Error e) {
+      debug ("Application icon missing: %s: %s", e.domain.to_string (), e.message);
+    }
     destroy.connect (Gtk.main_quit);
 
     VBox vbox = new VBox( false, 0);
