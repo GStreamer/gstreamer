@@ -671,9 +671,6 @@ public class MediaInfo.Info : VPaned
     string str, fn, vstr;
     Gst.Value v;
 
-    // TODO: add special handling for certain tags
-    // image, uris, ...
-
     str = "";
     for (i = 0; i < s.n_fields(); i++) {
       fn = s.nth_field_name (i);
@@ -683,9 +680,17 @@ public class MediaInfo.Info : VPaned
       if (fn.has_prefix("private-"))
         continue;
 
+      // skip buffers (usualy images)
+      // TODO: decode images,
+      // - need to figure a way to return them
+      // - need to find a place where we show them
+      v = s.get_value (fn);
+      if (v.holds(typeof(Gst.Buffer)))
+        continue;
+
       if (str.length > 0)
         str += "\n";
-      v = s.get_value (fn);
+
       vstr = v.serialize ().compress ();
       if (vstr.has_prefix("http://") || vstr.has_prefix("https://")) {
         vstr = "<a href=\"" + vstr + "\">" + vstr + "</a>";
