@@ -3032,6 +3032,7 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
           gst_util_uint64_scale (hpos - lpos, time - ltime, htime - ltime) +
           lpos - chunk;
     } else {
+      /* should mean lpos == hpos, since lpos <= hpos is invariant */
       newpos = lpos;
       /* we check this case once, but not forever, so break loop */
       cont = FALSE;
@@ -3065,8 +3066,7 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
       break;
     } else if (newtime > time) {
       /* overshoot */
-      newpos -= newpos == hpos ? chunk : 0;
-      hpos = CLAMP (newpos, lpos, hpos);
+      hpos = (newpos >= hpos) ? MAX (lpos, hpos - chunk) : MAX (lpos, newpos);
       htime = newtime;
     } else if (newtime + tolerance > time) {
       /* close enough undershoot */
@@ -3076,9 +3076,10 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
     } else if (newtime < ltime) {
       /* so a position beyond lpos resulted in earlier time than ltime ... */
       GST_DEBUG_OBJECT (parse, "non-ascending time; aborting");
+      break;
     } else {
       /* undershoot too far */
-      newpos += newpos == hpos ? chunk : 0;
+      newpos += newpos == lpos ? chunk : 0;
       lpos = CLAMP (newpos, lpos, hpos);
       ltime = newtime;
     }
