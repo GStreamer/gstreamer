@@ -34,12 +34,12 @@ install-data-hook:
 uninstall-local:
 	test -z "$(UPDATE_DESKTOP_DATABASE)" || $(UPDATE_DESKTOP_DATABASE) "$(DESTDIR)$(desktopdir)";
 
-EXTRA_DIST = gst-mi.png gst-mi.desktop
+EXTRA_DIST = gst-mi.png gst-mi.desktop.in
 
 BUILT_SOURCES = $(gst_mi_SOURCES:.vala=.c)
 
 CLEANFILES = \
-  $(BUILT_SOURCES) gst_mi_vala.stamp
+  $(BUILT_SOURCES) gst_mi_vala.stamp gst-mi.desktop
 
 -include $(top_srcdir)/git.mk
 
