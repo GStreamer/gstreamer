@@ -529,11 +529,14 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       const char *s = NULL;
 
       s = g_value_get_string (value);
-      if (s != NULL)
+      if (s != NULL) {
         object->pol = (s[0] == 'h' || s[0] == 'H') ? DVB_POL_H : DVB_POL_V;
-    }
-      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_POLARITY");
+        GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_POLARITY");
+        GST_INFO_OBJECT (object, "\t%s", (s[0] == 'h'
+                || s[0] == 'H') ? "DVB_POL_H" : "DVB_POL_V");
+      }
       break;
+    }
     case ARG_DVBSRC_PIDS:
     {
       gchar *pid_string;
@@ -565,7 +568,7 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
         while (*pids != NULL && pid_count < MAX_FILTERS) {
           pid = strtol (*pids, NULL, 0);
           if (pid > 1 && pid <= 8192) {
-            GST_INFO_OBJECT (object, "Parsed Pid: %d", pid);
+            GST_INFO_OBJECT (object, "\tParsed Pid: %d", pid);
             object->pids[pid_count] = pid;
             pid_count++;
           }
