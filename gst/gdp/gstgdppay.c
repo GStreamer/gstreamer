@@ -475,6 +475,8 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
   GST_DEBUG_OBJECT (this, "Setting caps on src pad %" GST_PTR_FORMAT, caps);
   gst_pad_set_caps (this->srcpad, caps);
   gst_buffer_set_caps (this->caps_buf, caps);
+  this->new_segment_buf =
+      gst_buffer_make_metadata_writable (this->new_segment_buf);
   gst_buffer_set_caps (this->new_segment_buf, caps);
 
   /* if these are our first ever buffers, send out new_segment first */
