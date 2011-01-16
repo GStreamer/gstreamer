@@ -1466,6 +1466,10 @@ theora_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SPEEDLEVEL:
       enc->speed_level = g_value_get_int (value);
+      if (enc->encoder) {
+        th_encode_ctl (enc->encoder, TH_ENCCTL_SET_SPLEVEL, &enc->speed_level,
+            sizeof (enc->speed_level));
+      }
       break;
     case PROP_VP3_COMPATIBLE:
       enc->vp3_compatible = g_value_get_boolean (value);
