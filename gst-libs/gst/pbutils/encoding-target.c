@@ -409,6 +409,22 @@ serialize_stream_profiles (GKeyFile * out, GstEncodingProfile * sprof,
   return TRUE;
 }
 
+static gchar *
+get_locale (void)
+{
+  const char *loc = setlocale (LC_MESSAGES, NULL);
+  gchar *ret;
+
+  if (loc == NULL || g_ascii_strncasecmp (loc, "en", 2) == 0)
+    return NULL;
+
+  /* en_GB.UTF-8 => en */
+  ret = g_ascii_strdown (loc, -1);
+  ret = g_strcanon (ret, "abcdefghijklmnopqrstuvwxyz", '\0');
+  GST_LOG ("using locale: %s", ret);
+  return ret;
+}
+
 /* Serialize the top-level profiles
  * Note: They don't have to be containerprofiles */
 static gboolean
@@ -434,9 +450,18 @@ serialize_encoding_profile (GKeyFile * out, GstEncodingProfile * prof)
   g_key_file_set_value (out, profgroupname, "type",
       gst_encoding_profile_get_type_nick (prof));
 
-  if (profdesc)
-    g_key_file_set_locale_string (out, profgroupname, "description",
-        setlocale (LC_ALL, NULL), profdesc);
+  if (profdesc) {
+    gchar *locale;
+
+    locale = get_locale ();
+    if (locale != NULL) {
+      g_key_file_set_locale_string (out, profgroupname, "description",
+          locale, profdesc);
+      g_free (locale);
+    } else {
+      g_key_file_set_string (out, profgroupname, "description", profdesc);
+    }
+  }
   if (profformat) {
     gchar *tmpc = gst_caps_to_string (profformat);
     g_key_file_set_string (out, profgroupname, "format", tmpc);
@@ -534,11 +559,25 @@ parse_encoding_profile (GKeyFile * in, gchar * parentprofilename,
   pname = g_key_file_get_value (in, profilename, "name", NULL);
 
   /* First try to get localized description */
-  description =
-      g_key_file_get_locale_string (in, profilename, "description",
-      setlocale (LC_ALL, NULL), NULL);
-  if (description == NULL)
-    description = g_key_file_get_value (in, profilename, "description", NULL);
+  {
+    gchar *locale;
+
+    locale = get_locale ();
+    if (locale != NULL) {
+      /* will try to fall back to untranslated string if no translation found */
+      description = g_key_file_get_locale_string (in, profilename,
+          "description", locale, NULL);
+      g_free (locale);
+    } else {
+      description =
+          g_key_file_get_string (in, profilename, "description", NULL);
+    }
+  }
+
+  /* Note: a missing description is normal for non-container profiles */
+  if (description == NULL) {
+    GST_LOG ("Missing 'description' field for streamprofile %s", profilename);
+  }
 
   /* Parse the remaining fields */
   proftype = g_key_file_get_value (in, profilename, "type", NULL);
