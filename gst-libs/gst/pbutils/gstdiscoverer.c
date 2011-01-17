@@ -393,10 +393,15 @@ _event_probe (GstPad * pad, GstEvent * event, PrivateStream * ps)
     gst_event_parse_tag (event, &tl);
     GST_DEBUG_OBJECT (pad, "tags %" GST_PTR_FORMAT, tl);
     DISCO_LOCK (ps->dc);
-    tmp = gst_tag_list_merge (ps->tags, tl, GST_TAG_MERGE_APPEND);
-    if (ps->tags)
-      gst_tag_list_free (ps->tags);
-    ps->tags = tmp;
+    /* If preroll is complete, drop these tags - the collected information is
+     * possibly already being processed and adding more tags would be racy */
+    if (G_LIKELY (ps->dc->priv->processing)) {
+      tmp = gst_tag_list_merge (ps->tags, tl, GST_TAG_MERGE_APPEND);
+      if (ps->tags)
+        gst_tag_list_free (ps->tags);
+      ps->tags = tmp;
+    } else
+      GST_DEBUG_OBJECT (ps->dc, "Dropping tags since preroll is done");
     DISCO_UNLOCK (ps->dc);
   }
 
@@ -1143,7 +1148,10 @@ discoverer_bus_cb (GstBus * bus, GstMessage * msg, GstDiscoverer * dc)
   if (dc->priv->processing) {
     if (handle_message (dc, msg)) {
       GST_DEBUG ("Stopping asynchronously");
+      /* Serialise with _event_probe() */
+      DISCO_LOCK (dc);
       dc->priv->processing = FALSE;
+      DISCO_UNLOCK (dc);
       discoverer_collect (dc);
       discoverer_cleanup (dc);
     }
