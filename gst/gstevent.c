@@ -109,6 +109,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_NAVIGATION, "navigation", 0},
   {GST_EVENT_LATENCY, "latency", 0},
   {GST_EVENT_STEP, "step", 0},
+  {GST_EVENT_RENEGOTIATE, "renegotiate", 0},
   {GST_EVENT_CUSTOM_UPSTREAM, "custom-upstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM, "custom-downstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM_OOB, "custom-downstream-oob", 0},
@@ -1279,6 +1280,29 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
   if (intermediate)
     *intermediate = g_value_get_boolean (gst_structure_id_get_value (structure,
             GST_QUARK (INTERMEDIATE)));
+}
+
+/**
+ * gst_event_new_renegotiate:
+
+ * Create a new renegotiate event. The purpose of the step event is to travel
+ * upstream and make elements renegotiate its caps. This is useful when changing
+ * properties or elements on the pipeline.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ *
+ * Since: 0.10.33
+ */
+GstEvent *
+gst_event_new_renegotiate (void)
+{
+  GstEvent *event;
+
+  GST_CAT_INFO (GST_CAT_EVENT, "creating renegotiate event");
+
+  event = gst_event_new_custom (GST_EVENT_RENEGOTIATE, NULL);
+
+  return event;
 }
 
 /**

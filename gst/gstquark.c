@@ -52,7 +52,7 @@ static const gchar *_quark_strings[] = {
   "quality", "processed", "dropped", "buffering-ranges", "GstMessageProgress",
   "code", "text", "percent", "timeout", "GstBufferPoolConfig", "caps", "size",
   "min-buffers", "max-buffers", "prefix", "postfix", "align", "time",
-  "GstQueryAllocation", "need-pool", "meta", "pool", "GstEventCaps"
+  "GstQueryAllocation", "need-pool", "meta", "pool", "GstEventCaps", "GstEventRenegotiate"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];
