@@ -136,6 +136,9 @@ make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
   caps = gst_caps_from_string (video);
   stream = (GstEncodingProfile *)
       gst_encoding_video_profile_new (caps, NULL, NULL, 0);
+  if (video_restriction)
+    gst_encoding_profile_set_restriction (stream,
+        gst_caps_from_string (video_restriction));
   gst_encoding_container_profile_add_profile (profile, stream);
   gst_caps_unref (caps);
 
