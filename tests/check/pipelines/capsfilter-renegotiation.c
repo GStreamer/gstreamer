@@ -88,7 +88,11 @@ buffer_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
   return TRUE;
 }
 
-GST_START_TEST (test_capsfilter_renegotiation)
+/* launch line is a pipeline that must have a capsfilter named 'cf' that
+ * will be used to trigger the renegotiation */
+static void
+run_capsfilter_renegotiation (const gchar * launch_line,
+    gboolean reset_buffer_alloc)
 {
   GstElement *capsfilter;
   GstElement *sink;
@@ -96,6 +100,7 @@ GST_START_TEST (test_capsfilter_renegotiation)
   GstBus *bus;
   GstMessage *msg;
   GstPad *pad;
+  GstPad *sinkpad;
 
   caps_change = 0;
   buffer_count = 0;
@@ -103,12 +108,17 @@ GST_START_TEST (test_capsfilter_renegotiation)
     gst_caps_unref (current_caps);
   current_caps = NULL;
 
-  pipeline = gst_parse_launch ("videotestsrc num-buffers=200 ! capsfilter "
-      "caps=\"" FIRST_CAPS "\" name=cf ! fakesink name=sink", NULL);
+  pipeline = gst_parse_launch (launch_line, NULL);
   g_assert (pipeline);
 
   capsfilter = gst_bin_get_by_name (GST_BIN (pipeline), "cf");
   g_assert (capsfilter);
+
+  if (reset_buffer_alloc) {
+    sinkpad = gst_element_get_static_pad (capsfilter, "sink");
+    gst_pad_set_bufferalloc_function (sinkpad, NULL);
+    gst_object_unref (sinkpad);
+  }
 
   sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
   g_assert (sink);
@@ -126,16 +136,30 @@ GST_START_TEST (test_capsfilter_renegotiation)
       GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
 
   g_assert (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
-
   g_assert (caps_change == 4);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   if (current_caps)
     gst_caps_unref (current_caps);
+  current_caps = NULL;
   gst_message_unref (msg);
   g_object_unref (bus);
   g_object_unref (G_OBJECT (pipeline));
+}
+
+GST_START_TEST (test_capsfilter_renegotiation)
+{
+  run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=true"
+      " ! capsfilter caps=\"" FIRST_CAPS "\" name=cf ! fakesink name=sink",
+      FALSE);
+  run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=false"
+      " ! capsfilter caps=\"" FIRST_CAPS "\" name=cf ! fakesink name=sink",
+      FALSE);
+  run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=false"
+      " ! capsfilter caps=\"video/x-raw-yuv, format=(fourcc)I420, width=(int)100, height=(int)100\" "
+      " ! ffmpegcolorspace ! videoscale ! capsfilter caps=\"" FIRST_CAPS
+      "\" name=cf " " ! fakesink name=sink", TRUE);
 }
 
 GST_END_TEST;
