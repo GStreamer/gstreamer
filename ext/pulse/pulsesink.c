@@ -2637,6 +2637,11 @@ gst_pulsesink_flush_ringbuffer (GstPulseSink * psink)
 
   gst_pulsering_flush (pbuf);
 
+  /* Uncork if we haven't already (happens when waiting to get enough data
+   * to send out the first time) */
+  if (pbuf->corked)
+    gst_pulsering_set_corked (pbuf, FALSE, FALSE);
+
   /* We're not interested if this operation failed or not */
 unlock:
   pa_threaded_mainloop_unlock (mainloop);
