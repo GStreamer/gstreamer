@@ -304,7 +304,8 @@ discoverer_reset (GstDiscoverer * dc)
     dc->priv->pending_uris = NULL;
   }
 
-  gst_element_set_state ((GstElement *) dc->priv->pipeline, GST_STATE_NULL);
+  if (dc->priv->pipeline)
+    gst_element_set_state ((GstElement *) dc->priv->pipeline, GST_STATE_NULL);
 }
 
 static void
@@ -324,6 +325,8 @@ gst_discoverer_dispose (GObject * obj)
     dc->priv->uridecodebin = NULL;
     dc->priv->bus = NULL;
   }
+
+  gst_discoverer_stop (dc);
 
   if (dc->priv->lock) {
     g_mutex_free (dc->priv->lock);
@@ -1271,9 +1274,11 @@ gst_discoverer_stop (GstDiscoverer * discoverer)
     /* We prevent any further processing by setting the bus to
      * flushing and setting the pipeline to READY.
      * _reset() will take care of the rest of the cleanup */
-    gst_bus_set_flushing (discoverer->priv->bus, TRUE);
-    gst_element_set_state ((GstElement *) discoverer->priv->pipeline,
-        GST_STATE_READY);
+    if (discoverer->priv->bus)
+      gst_bus_set_flushing (discoverer->priv->bus, TRUE);
+    if (discoverer->priv->pipeline)
+      gst_element_set_state ((GstElement *) discoverer->priv->pipeline,
+          GST_STATE_READY);
   }
   discoverer->priv->running = FALSE;
   DISCO_UNLOCK (discoverer);
