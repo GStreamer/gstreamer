@@ -1844,6 +1844,9 @@ gst_base_transform_src_eventfunc (GstBaseTransform * trans, GstEvent * event)
       gst_base_transform_update_qos (trans, proportion, diff, timestamp);
       break;
     }
+    case GST_EVENT_RENEGOTIATE:
+      gst_pad_set_caps (GST_BASE_TRANSFORM_SINK_PAD (trans), NULL);
+      break;
     default:
       break;
   }
@@ -2579,6 +2582,11 @@ gst_base_transform_suggest (GstBaseTransform * trans, GstCaps * caps,
   trans->priv->suggest_pending = TRUE;
   GST_DEBUG_OBJECT (trans, "new suggest %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (trans->sinkpad);
+
+  /* push the renegotiate event */
+  if (!gst_pad_push_event (GST_BASE_TRANSFORM_SINK_PAD (trans),
+          gst_event_new_renegotiate ()))
+    GST_DEBUG_OBJECT (trans, "Renegotiate event wasn't handled");
 }
 
 /**
