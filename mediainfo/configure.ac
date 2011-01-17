@@ -1,6 +1,6 @@
 # configure.ac
 
-AC_INIT([gst-mediainfo], [0.1])
+AC_INIT([gst-mediainfo], [0.1.1])
 AC_CONFIG_SRCDIR([src/mi.vala])
 AC_CONFIG_HEADERS([config.h])
 
