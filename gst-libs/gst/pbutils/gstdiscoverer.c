@@ -1153,12 +1153,14 @@ discoverer_bus_cb (GstBus * bus, GstMessage * msg, GstDiscoverer * dc)
 static gboolean
 async_timeout_cb (GstDiscoverer * dc)
 {
-  dc->priv->timeoutid = 0;
-  GST_DEBUG ("Setting result to TIMEOUT");
-  dc->priv->current_info->result = GST_DISCOVERER_TIMEOUT;
-  dc->priv->processing = FALSE;
-  discoverer_collect (dc);
-  discoverer_cleanup (dc);
+  if (!g_source_is_destroyed (g_main_current_source ())) {
+    dc->priv->timeoutid = 0;
+    GST_DEBUG ("Setting result to TIMEOUT");
+    dc->priv->current_info->result = GST_DISCOVERER_TIMEOUT;
+    dc->priv->processing = FALSE;
+    discoverer_collect (dc);
+    discoverer_cleanup (dc);
+  }
   return FALSE;
 }
 
