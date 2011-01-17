@@ -110,7 +110,7 @@ str_to_time (char *time)
   if (check_time (time)) {
     return (guint64) (atof (time) * GST_SECOND);
   }
-  g_error ("%s not a valid time", time);
+  GST_ERROR ("%s not a valid time", time);
   return 0;
 }
 
@@ -166,7 +166,7 @@ create_timeline (int nbargs, gchar ** argv)
   if (!ges_timeline_add_layer (timeline, layer) ||
       !ges_timeline_add_track (timeline, tracka) ||
       !ges_timeline_add_track (timeline, trackv))
-    return NULL;
+    goto build_failure;
 
   /* Here we've finished initializing our timeline, we're 
    * ready to start using it... by solely working with the layer !*/
@@ -180,30 +180,36 @@ create_timeline (int nbargs, gchar ** argv)
 
     if (!g_strcmp0 ("+pattern", source)) {
       obj = GES_TIMELINE_OBJECT (ges_timeline_test_source_new_for_nick (arg0));
-      if (!obj)
-        g_error ("%s invalid pattern!", arg0);
+      if (!obj) {
+        g_error ("%s is an invalid pattern name!\n", arg0);
+        goto build_failure;
+      }
 
       g_object_set (G_OBJECT (obj), "duration", duration, NULL);
 
-      g_printerr ("Adding <pattern:%s> duration %" GST_TIME_FORMAT "\n",
-          arg0, GST_TIME_ARGS (duration));
+      g_printf ("Adding <pattern:%s> duration %" GST_TIME_FORMAT "\n", arg0,
+          GST_TIME_ARGS (duration));
     }
 
     else if (!g_strcmp0 ("+transition", source)) {
+      if (duration <= 0) {
+        g_error ("durations must be greater than 0");
+        goto build_failure;
+      }
+
       obj =
           GES_TIMELINE_OBJECT (ges_timeline_standard_transition_new_for_nick
           (arg0));
 
-      if (!obj)
+      if (!obj) {
         g_error ("invalid transition type\n");
-
-      if (duration <= 0)
-        g_error ("durations must be greater than 0");
+        goto build_failure;
+      }
 
       g_object_set (G_OBJECT (obj), "duration", duration, NULL);
 
-      g_printerr ("Adding <transition:%s> duration %" GST_TIME_FORMAT "\n",
-          arg0, GST_TIME_ARGS (duration));
+      g_printf ("Adding <transition:%s> duration %" GST_TIME_FORMAT "\n", arg0,
+          GST_TIME_ARGS (duration));
 
     }
 
@@ -212,36 +218,35 @@ create_timeline (int nbargs, gchar ** argv)
 
       g_object_set (obj, "duration", duration, "text", arg0, NULL);
 
-      g_printerr ("Adding <title:%s> duration %" GST_TIME_FORMAT "\n",
-          arg0, GST_TIME_ARGS (duration));
+      g_printf ("Adding <title:%s> duration %" GST_TIME_FORMAT "\n", arg0,
+          GST_TIME_ARGS (duration));
     }
 
     else {
       gchar *uri;
       guint64 inpoint;
 
-      if (!check_path (source))
+      if (!check_path (source)) {
         g_error ("'%s': could not open path!", source);
+        goto build_failure;
+      }
 
       if (!(uri = ensure_uri (source))) {
         GST_ERROR ("couldn't create uri for '%s'", source);
-        exit (-1);
+        goto build_failure;
       }
-      inpoint = str_to_time (argv[i * 3 + 1]);
 
+      inpoint = str_to_time (argv[i * 3 + 1]);
       obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
       g_object_set (obj,
           "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
 
-      g_printerr ("Adding %s inpoint:%" GST_TIME_FORMAT " duration:%"
+      g_printf ("Adding clip %s inpoint:%" GST_TIME_FORMAT " duration:%"
           GST_TIME_FORMAT "\n", uri, GST_TIME_ARGS (inpoint),
           GST_TIME_ARGS (duration));
 
       g_free (uri);
-
     }
-
-    g_assert (obj);
 
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
@@ -249,61 +254,72 @@ create_timeline (int nbargs, gchar ** argv)
   }
 
   return timeline;
+
+build_failure:
+  {
+    g_object_unref (timeline);
+    return NULL;
+  }
 }
 
 static GESTimelinePipeline *
 create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv)
 {
-  GESTimelinePipeline *pipeline;
-  GESTimeline *timeline;
+  GESTimelinePipeline *pipeline = NULL;
+  GESTimeline *timeline = NULL;
 
-  g_printf ("save_path: %s\n", save_path);
-  g_printf ("load_path: %s\n", load_path);
-
+  /* Timeline creation */
   if (load_path) {
     gchar *uri;
-    g_printf ("got here\n");
+
+    g_printf ("Loading project from : %s\n", load_path);
 
     if (!(uri = ensure_uri (load_path))) {
-      GST_ERROR ("couldn't create uri for '%s'", load_path);
-      exit (-1);
+      g_error ("couldn't create uri for '%s'", load_path);
+      goto failure;
     }
     g_printf ("reading from '%s' (arguments ignored)\n", load_path);
     if (!(timeline = ges_timeline_new_from_uri (uri))) {
-      GST_ERROR ("failed to create timeline from file '%s'", load_path);
-      exit (-1);
+      g_error ("failed to create timeline from file '%s'", load_path);
+      goto failure;
     }
-    g_printf ("loaded project %p\n", timeline);
+    g_printf ("loaded project successfully\n");
     g_free (uri);
-  } else {
+  } else
+    /* Normal timeline creation */
+  if (!(timeline = create_timeline (argc, argv)))
+    goto failure;
 
-    timeline = create_timeline (argc, argv);
-
-    /* save project if path is given. we do this now in case GES crashes or
-     * hangs during playback. */
-
-    if (save_path) {
-      gchar *uri;
-      if (!(uri = ensure_uri (save_path))) {
-        GST_ERROR ("couldn't create uri for '%s", save_path);
-        exit (-1);
-      }
-      ges_timeline_save_to_uri (timeline, uri);
-      g_free (uri);
+  /* save project if path is given. we do this now in case GES crashes or
+   * hangs during playback. */
+  if (save_path) {
+    gchar *uri;
+    if (!(uri = ensure_uri (save_path))) {
+      g_error ("couldn't create uri for '%s", save_path);
+      goto failure;
     }
-
+    ges_timeline_save_to_uri (timeline, uri);
+    g_free (uri);
   }
 
   /* In order to view our timeline, let's grab a convenience pipeline to put
    * our timeline in. */
-
   pipeline = ges_timeline_pipeline_new ();
 
   /* Add the timeline to that pipeline */
   if (!ges_timeline_pipeline_add_timeline (pipeline, timeline))
-    return NULL;
+    goto failure;
 
   return pipeline;
+
+failure:
+  {
+    if (timeline)
+      g_object_unref (timeline);
+    if (pipeline)
+      g_object_unref (pipeline);
+    return NULL;
+  }
 }
 
 static void
@@ -345,7 +361,7 @@ print_enum (GType enum_type)
   GST_ERROR ("%d", enum_class->n_values);
 
   for (i = 0; i < enum_class->n_values; i++) {
-    g_print ("%s\n", enum_class->values[i].value_nick);
+    g_printf ("%s\n", enum_class->values[i].value_nick);
   }
 
   g_type_class_unref (enum_class);
@@ -452,7 +468,7 @@ main (int argc, gchar ** argv)
   }
 
   if (((!load_path && (argc < 4))) || (outputuri && (!render && !smartrender))) {
-    g_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
+    g_printf ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
     exit (1);
   }
@@ -486,7 +502,7 @@ main (int argc, gchar ** argv)
   mainloop = g_main_loop_new (NULL, FALSE);
 
   if (thumbinterval != 0.0) {
-    g_print ("thumbnailing every %f seconds\n", thumbinterval);
+    g_printf ("thumbnailing every %f seconds\n", thumbinterval);
     g_timeout_add (1000 * thumbinterval, thumbnail_cb, pipeline);
   }
 
@@ -496,7 +512,7 @@ main (int argc, gchar ** argv)
 
   if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-    g_printerr ("Failed to start the encoding\n");
+    g_error ("Failed to start the encoding\n");
     return 1;
   }
   g_main_loop_run (mainloop);
