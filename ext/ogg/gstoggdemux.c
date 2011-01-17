@@ -1765,7 +1765,6 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
   /* first add the pads */
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad;
-    GstStructure *structure;
 
     pad = g_array_index (chain->streams, GstOggPad *, i);
 
@@ -1782,8 +1781,6 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       continue;
 
     GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
-
-    structure = gst_caps_get_structure (GST_PAD_CAPS (pad), 0);
 
     /* activate first */
     gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
