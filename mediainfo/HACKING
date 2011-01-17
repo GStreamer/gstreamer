@@ -1,5 +1,31 @@
 
 = Releases =
 
-scp gst-mediainfo-0.1.tar.gz ensonic@people.freedesktop.org:public_html/files/
+- bump version in configure.ac
+  0.1.1 -> 0.2
+
+- update NEWS
+
+- commit
+  git add configure.ac NEWS
+  git commit -m"release: prepare for release"
+
+- dist
+  make dist
+
+- tag
+  git tag -a RELEASE-0.2 -m"release: 0.2"
+  git push origin RELEASE-0.2
+
+- release
+  scp gst-mediainfo-0.2.tar.gz ensonic@people.freedesktop.org:public_html/files/
+
+- bump versions in configure.ac
+  0.2 -> 0.2.1
+
+- commit
+  git add configure.ac
+  git commit -m"release: bump versions and back to development"
+
+- update web-page
 
