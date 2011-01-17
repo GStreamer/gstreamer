@@ -41,7 +41,7 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   if (argc != 2) {
-    g_print ("usage: %s <uri>\n Writes snapshot.png in the current directory",
+    g_print ("usage: %s <uri>\n Writes snapshot.png in the current directory\n",
         argv[0]);
     exit (-1);
   }
@@ -53,7 +53,7 @@ main (int argc, char *argv[])
   pipeline = gst_parse_launch (descr, &error);
 
   if (error != NULL) {
-    g_print ("could not construct pipeline: %s", error->message);
+    g_print ("could not construct pipeline: %s\n", error->message);
     g_error_free (error);
     exit (-1);
   }
