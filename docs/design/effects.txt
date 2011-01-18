@@ -156,7 +156,7 @@ C. Keyframes
                                               const gchar *property_name,
                                               GValue * value);
 
-  B. GESTimelineSource new API
+  B. GESTimelineObject new API
 
       signals:
       -------
@@ -165,25 +165,25 @@ C. Keyframes
         * effect-moved: emited when an effect is moved
 
       /**
-      * ges_timeline_source_add_effect:
+      * ges_timeline_object_add_effect:
       *
-      * @object: The origin #GESTimelineSource
+      * @object: The origin #GESTimelineObject
       * @effect_material: The #GESMaterial from which to create the effect
       * @position: The top position you want to give to the effect,
       * -1 if you want it to be added at the end of effects.
       *
-      * Adds a new effect corresponding to @material to the #GESTimelineSource
+      * Adds a new effect corresponding to @material to the #GESTimelineObject
       *
       * Returns: The newly created #GESTrackEffect, or %NULL if there was an error.
       */
-      GESTrackEffect *ges_timeline_source_add_effect (GESTimelineSource *object,
+      GESTrackEffect *ges_timeline_object_add_effect (GESTimelineObject *object,
                                                       GESMaterial *effect_material,
                                                       gint position);
 
       /**
-      * ges_timeline_source_get_effects:
+      * ges_timeline_object_get_effects:
       *
-      * @object: The origin #GESTimelineSource
+      * @object: The origin #GESTimelineObject
       *
       * Returns: a #GList of the #GESTrackEffect that are applied on
       * @object order by ascendant priorities.
@@ -191,21 +191,21 @@ C. Keyframes
       * unref each #GESTrackOperation and free the #GList.
       */
       GList *
-      ges_timeline_source_get_effects (GESTimelineSource *object);
+      ges_timeline_object_get_effects (GESTimelineObject *object);
         -> Usecases:
           + First step to allow the configuration of effects (UC-3)
 
       /**
-      * ges_timeline_source_set_top_effect_position:
+      * ges_timeline_object_set_top_effect_position:
       *
-      * @object: The origin #GESTimelineSource
+      * @object: The origin #GESTimelineObject
       * @effect: The #GESTrackEffect to move
       * @newposition: the new position at which to move the @effect
       *
       * Returns: %TRUE if @effect was successfuly moved, %FALSE otherwize.
       */
       gboolean
-      ges_timeline_source_set_top_effect_position (GESTimelineSource *object,
+      ges_timeline_object_set_top_effect_position (GESTimelineObject *object,
             GESTrackEffect *effect, guint newposition);
 
   C - The GESTrackEffect API:
