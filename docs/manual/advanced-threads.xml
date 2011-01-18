@@ -63,9 +63,9 @@
       means to make data throughput between threads threadsafe, and it can
       also act as a buffer. Queues have several <classname>GObject</classname>
       properties to be configured for specific uses. For example, you can set
-      lower and upper tresholds for the element. If there's less data than
-      the lower treshold (default: disabled), it will block output. If
-      there's more data than the upper treshold, it will block input or
+      lower and upper thresholds for the element. If there's less data than
+      the lower threshold (default: disabled), it will block output. If
+      there's more data than the upper threshold, it will block input or
       (if configured to do so) drop data.
     </para>
     <para>
