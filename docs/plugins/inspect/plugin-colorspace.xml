@@ -3,7 +3,7 @@
   <description>Colorspace conversion</description>
   <filename>../../gst/colorspace/.libs/libgstcolorspace.so</filename>
   <basename>libgstcolorspace.so</basename>
-  <version>0.10.20.2</version>
+  <version>0.10.20.4</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package></package>
