@@ -511,7 +511,7 @@ GST_END_TEST;
 
 
 static const gchar *profile_string = "\
-[_gstencodingtarget_]\n\
+[GStreamer Encoding Target]\n\
 name=myponytarget\n\
 category=herding\n\
 description=Plenty of pony glitter profiles\n\

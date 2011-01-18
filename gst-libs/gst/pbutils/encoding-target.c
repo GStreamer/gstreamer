@@ -31,7 +31,7 @@
  *
  * GKeyFile style.
  *
- * [_gstencodingtarget_]
+ * [GStreamer Encoding Target]
  * name : <name>
  * category : <category>
  * description : <description> #translatable
@@ -68,7 +68,7 @@
  */
 
 
-#define GST_ENCODING_TARGET_HEADER "_gstencodingtarget_"
+#define GST_ENCODING_TARGET_HEADER "GStreamer Encoding Target"
 #define GST_ENCODING_TARGET_DIRECTORY "encoding-profiles"
 #define GST_ENCODING_TARGET_SUFFIX ".gep"
 
