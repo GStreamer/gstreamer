@@ -27,7 +27,7 @@ GST_START_TEST (test_effect_basic)
 
   ges_init ();
 
-  effect = ges_track_effect_new ("identity");
+  effect = ges_track_effect_new_from_bin_desc ("identity");
   fail_unless (effect != NULL);
   g_object_unref (effect);
 }
@@ -39,9 +39,8 @@ GST_START_TEST (test_add_effect_to_tl_object)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track_audio, *track_video;
-  GESTrackEffect *effect_track;
+  GESTrackEffect *track_effect;
   GESTimelineTestSource *source;
-  gboolean effect_added = FALSE;
 
   ges_init ();
 
@@ -61,20 +60,22 @@ GST_START_TEST (test_add_effect_to_tl_object)
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
       (GESTimelineObject *) source, 0);
 
-  GST_DEBUG ("Adding effect");
-  ges_timeline_object_add_effect (GES_TIMELINE_OBJECT (source),
-      "identity", track_video);
 
-  effect_track =
-      GES_TRACK_EFFECT (ges_timeline_object_find_track_object
-      (GES_TIMELINE_OBJECT (source), track_video, GES_TYPE_TRACK_EFFECT));
+  GST_DEBUG ("Create effect");
+  track_effect = ges_track_effect_new_from_bin_desc ("identity");
 
-  assert_equals_int (GES_TRACK_OBJECT (effect_track)->active, TRUE);
-  fail_unless (GES_IS_TRACK_EFFECT (effect_track));
+  fail_unless (GES_IS_TRACK_EFFECT (track_effect));
+
+
+  fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
+          (source), GES_TRACK_OBJECT (track_effect)));
+  fail_unless (ges_track_add_object (track_video,
+          GES_TRACK_OBJECT (track_effect)));
+
+  assert_equals_int (GES_TRACK_OBJECT (track_effect)->active, TRUE);
 
   ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
 
-  g_object_unref (effect_track);
   g_object_unref (timeline);
 }
 

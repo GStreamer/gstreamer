@@ -66,7 +66,7 @@ struct _GESTrackEffectClass
 
 GType ges_track_effect_get_type (void);
 
-GESTrackEffect *ges_track_effect_new (const gchar * bin_description);
+GESTrackEffect *ges_track_effect_new_from_bin_desc (const gchar * bin_description);
 
 G_END_DECLS
 #endif /* _GES_TRACK_EFFECT */

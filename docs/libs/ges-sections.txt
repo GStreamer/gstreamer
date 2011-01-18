@@ -703,8 +703,7 @@ ges_keyfile_formatter_get_type
 <TITLE>GESTrackEffect</TITLE>
 GESTrackEffect
 GESTrackEffectClass
-ges_track_effect_new
-ges_track_effect_new_with_name 
+ges_track_effect_new_from_bin_desc
 <SUBSECTION Standard>
 GES_IS_TRACK_EFFECT
 GES_IS_TRACK_EFFECT_CLASS

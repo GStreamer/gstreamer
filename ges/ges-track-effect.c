@@ -81,8 +81,6 @@ ges_track_effect_class_init (GESTrackEffectClass * klass)
 
   g_type_class_add_private (klass, sizeof (GESTrackEffectPrivate));
 
-  g_type_class_add_private (klass, sizeof (GESTrackEffectPrivate));
-
   object_class->get_property = ges_track_effect_get_property;
   object_class->set_property = ges_track_effect_set_property;
   object_class->dispose = ges_track_effect_dispose;
@@ -102,7 +100,6 @@ ges_track_effect_class_init (GESTrackEffectClass * klass)
           "bin description",
           "Bin description of the effect",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-
 }
 
 static void
@@ -158,8 +155,8 @@ ges_track_effect_create_element (GESTrackOperation * object)
   src = gst_ghost_pad_new ("src", src_target);
   sink = gst_ghost_pad_new ("video_sink", sink_target);
 
-  g_object_unref (src_target);
-  g_object_unref (sink_target);
+  gst_object_unref (src_target);
+  gst_object_unref (sink_target);
 
   gst_element_add_pad (ret, src);
   gst_element_add_pad (ret, sink);
@@ -170,7 +167,7 @@ ges_track_effect_create_element (GESTrackOperation * object)
 }
 
 GESTrackEffect *
-ges_track_effect_new (const gchar * bin_description)
+ges_track_effect_new_from_bin_desc (const gchar * bin_description)
 {
   return g_object_new (GES_TYPE_TRACK_EFFECT, "bin-description",
       bin_description, NULL);
