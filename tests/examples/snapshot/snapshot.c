@@ -99,8 +99,8 @@ main (int argc, char *argv[])
    * by seeking to somewhere else we have a bigger chance of getting something
    * more interesting. An optimisation would be to detect black images and then
    * seek a little more */
-  gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
-      position);
+  gst_element_seek_simple (pipeline, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH, position);
 
   /* get the preroll buffer from appsink, this block untils appsink really
    * prerolls */
