@@ -198,23 +198,24 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-
-#define GST_TYPE_APP_STREAM_TYPE (stream_type_get_type ())
-static GType
-stream_type_get_type (void)
+GType
+gst_app_stream_type_get_type (void)
 {
-  static GType stream_type_type = 0;
+  static volatile gsize stream_type_type = 0;
   static const GEnumValue stream_type[] = {
-    {GST_APP_STREAM_TYPE_STREAM, "Stream", "stream"},
-    {GST_APP_STREAM_TYPE_SEEKABLE, "Seekable", "seekable"},
-    {GST_APP_STREAM_TYPE_RANDOM_ACCESS, "Random Access", "random-access"},
-    {0, NULL, NULL},
+    {GST_APP_STREAM_TYPE_STREAM, "GST_APP_STREAM_TYPE_STREAM", "stream"},
+    {GST_APP_STREAM_TYPE_SEEKABLE, "GST_APP_STREAM_TYPE_SEEKABLE", "seekable"},
+    {GST_APP_STREAM_TYPE_RANDOM_ACCESS, "GST_APP_STREAM_TYPE_RANDOM_ACCESS",
+        "random-access"},
+    {0, NULL, NULL}
   };
 
-  if (!stream_type_type) {
-    stream_type_type = g_enum_register_static ("GstAppStreamType", stream_type);
+  if (g_once_init_enter (&stream_type_type)) {
+    GType tmp = g_enum_register_static ("GstAppStreamType", stream_type);
+    g_once_init_leave (&stream_type_type, tmp);
   }
-  return stream_type_type;
+
+  return (GType) stream_type_type;
 }
 
 static void gst_app_src_uri_handler_init (gpointer g_iface,
