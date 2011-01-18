@@ -591,21 +591,26 @@ camerabin_create_src_elements (GstCameraBin * camera)
       goto done;
   }
   if (camera->flags & GST_CAMERABIN_FLAG_SOURCE_COLOR_CONVERSION) {
-    if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace"))
+    if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
+            "src-ffmpegcolorspace"))
       goto done;
   }
   if (!(camera->src_filter =
-          gst_camerabin_create_and_add_element (cbin, "capsfilter")))
+          gst_camerabin_create_and_add_element (cbin, "capsfilter",
+              "src-capsfilter")))
     goto done;
   if (camera->flags & GST_CAMERABIN_FLAG_SOURCE_RESIZE) {
     if (!(camera->src_zoom_crop =
-            gst_camerabin_create_and_add_element (cbin, "videocrop")))
+            gst_camerabin_create_and_add_element (cbin, "videocrop",
+                "src-videocrop")))
       goto done;
     if (!(camera->src_zoom_scale =
-            gst_camerabin_create_and_add_element (cbin, "videoscale")))
+            gst_camerabin_create_and_add_element (cbin, "videoscale",
+                "src-videoscale")))
       goto done;
     if (!(camera->src_zoom_filter =
-            gst_camerabin_create_and_add_element (cbin, "capsfilter")))
+            gst_camerabin_create_and_add_element (cbin, "capsfilter",
+                "src-resize-capsfilter")))
       goto done;
   }
   if (camera->app_video_filter) {
@@ -614,7 +619,7 @@ camerabin_create_src_elements (GstCameraBin * camera)
     }
   }
   if (!(camera->src_out_sel =
-          gst_camerabin_create_and_add_element (cbin, "output-selector")))
+          gst_camerabin_create_and_add_element (cbin, "output-selector", NULL)))
     goto done;
 
   /* Set pad-negotiation-mode to active */
@@ -681,7 +686,8 @@ camerabin_create_view_elements (GstCameraBin * camera)
   GstBin *cbin = GST_BIN (camera);
 
   if (!(camera->view_in_sel =
-          gst_camerabin_create_and_add_element (cbin, "input-selector"))) {
+          gst_camerabin_create_and_add_element (cbin, "input-selector",
+              NULL))) {
     goto error;
   }
 
@@ -696,18 +702,21 @@ camerabin_create_view_elements (GstCameraBin * camera)
   /* Add videoscale in case we need to downscale frame for view finder */
   if (camera->flags & GST_CAMERABIN_FLAG_VIEWFINDER_SCALE) {
     if (!(camera->view_scale =
-            gst_camerabin_create_and_add_element (cbin, "videoscale"))) {
+            gst_camerabin_create_and_add_element (cbin, "videoscale",
+                "vf-videoscale"))) {
       goto error;
     }
 
     /* Add capsfilter to maintain aspect ratio while scaling */
     if (!(camera->aspect_filter =
-            gst_camerabin_create_and_add_element (cbin, "capsfilter"))) {
+            gst_camerabin_create_and_add_element (cbin, "capsfilter",
+                "vf-scale-capsfilter"))) {
       goto error;
     }
   }
   if (camera->flags & GST_CAMERABIN_FLAG_VIEWFINDER_COLOR_CONVERSION) {
-    if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace")) {
+    if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
+            "vf-ffmpegcolorspace")) {
       goto error;
     }
   }

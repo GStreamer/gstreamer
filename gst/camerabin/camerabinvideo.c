@@ -542,7 +542,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   }
 
   /* Add tee element */
-  if (!(vid->tee = gst_camerabin_create_and_add_element (vidbin, "tee"))) {
+  if (!(vid->tee =
+          gst_camerabin_create_and_add_element (vidbin, "tee", "video-tee"))) {
     goto error;
   }
 
@@ -569,7 +570,7 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   if (vid->flags & GST_CAMERABIN_FLAG_VIDEO_COLOR_CONVERSION) {
     /* Add colorspace converter */
     if (gst_camerabin_create_and_add_element (vidbin,
-            "ffmpegcolorspace") == NULL) {
+            "ffmpegcolorspace", "video-ffmpegcolorspace") == NULL) {
       goto error;
     }
   }
@@ -581,7 +582,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
       goto error;
     }
   } else if (!(vid->vid_enc =
-          gst_camerabin_create_and_add_element (vidbin, DEFAULT_VID_ENC))) {
+          gst_camerabin_create_and_add_element (vidbin, DEFAULT_VID_ENC,
+              "video-encoder"))) {
     goto error;
   }
 
@@ -592,13 +594,15 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
       goto error;
     }
   } else if (!(vid->muxer =
-          gst_camerabin_create_and_add_element (vidbin, DEFAULT_MUX))) {
+          gst_camerabin_create_and_add_element (vidbin, DEFAULT_MUX,
+              "video-muxer"))) {
     goto error;
   }
 
   /* Add sink element for storing the video */
   if (!(vid->sink =
-          gst_camerabin_create_and_add_element (vidbin, DEFAULT_SINK))) {
+          gst_camerabin_create_and_add_element (vidbin, DEFAULT_SINK,
+              "video-sink"))) {
     goto error;
   }
   g_object_set (G_OBJECT (vid->sink), "location", vid->filename->str, "buffer-mode", 2, /* non buffered io */
@@ -648,7 +652,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
         goto error;
       }
     } else if (!(vid->aud_enc =
-            gst_camerabin_create_and_add_element (vidbin, DEFAULT_AUD_ENC))) {
+            gst_camerabin_create_and_add_element (vidbin, DEFAULT_AUD_ENC,
+                "audio-encoder"))) {
       goto error;
     }
 
