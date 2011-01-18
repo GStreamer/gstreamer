@@ -2071,7 +2071,7 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
           /* assuming we'll be able to get an index ... */
           seekable = demux->seekable;
         } else {
-          seekable = ! !demux->index;
+          seekable = TRUE;
         }
 
         gst_query_set_seeking (query, GST_FORMAT_TIME, seekable,
