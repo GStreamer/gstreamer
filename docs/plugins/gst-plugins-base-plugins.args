@@ -3255,7 +3255,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Stream Type</NICK>
 <BLURB>the type of the stream.</BLURB>
-<DEFAULT>Stream</DEFAULT>
+<DEFAULT>GST_APP_STREAM_TYPE_STREAM</DEFAULT>
 </ARG>
 
 <ARG>
