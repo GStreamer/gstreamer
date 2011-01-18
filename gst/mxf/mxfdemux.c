@@ -805,6 +805,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
               g_strdup_printf ("application/x-mxf-%s-%s", essence_container,
               essence_compression);
         } else {
+          name = NULL;
           g_assert_not_reached ();
         }
 
