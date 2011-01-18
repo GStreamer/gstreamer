@@ -12,41 +12,45 @@ Summary
 4. Use-cases
 5. API draft
 
-The goal of this proposal is to find a simple way to handle effects through an
-API which would allow developers to handle any use-case
+The goal of this proposal is to design a simple way to handle effects through an
+API which would allow developers to handle any use-cases.
 
 1. Basic ideas
 ----------------
 
-  * Effects are actually descendant of GESTrackOperation
+  * GESTrackEffects are subclasses of GESTrackOperation
 
   * You can add effects on any clip or layer
 
-  * You can add effects between several clips and control them as a unique effect.
+  * You can add effects over several clips and control them as a unique effect.
 
-  * Effects are configurable and those could change during time
+  * Effects are configurable and those properties can change during time
 
-  * We should be able to handle the gnome-video-effects standard. We should also offer
-    a system to be able to handle any other effect system.
+  * We must be able to handle third-party effect providers, like the
+    gnome-video-effects standard.
 
-  * We can implement complexe effects. It means effects that are more
+  * We must be able to implement complex effects. This means effects that are more
     than adding GstElement-s to the timeline. It can also mean effects
-    that are both: video and audio at the same time
+    that apply both video and audio changes.
 
 2. Problems
 ----------
-  * We should be able to handle list of available effects on the system at
+  * We must be able to provide a list of effects available on the system at
     runtime.
 
-  * We should be able to configure effects through an API in GES and
+  * We must be able to configure effects through an API in GES and
     not directly configuring the corresponding GstElement properties.
+
+    ==> EDWARD : The wording makes it a bit confusing. Here one could
+        read that we'll be offering an API to get/change properties
+        which is completely different from the standard GObject API.
 
   * We should also expose the GstElement-s contained in an effect so
     it is possible for people to control their properties as they wish.
 
-  * We should be able to implement and handle complexe effects directly in GES
+  * We must be able to implement and handle complexe effects directly in GES
 
-  * We should be able to configure effects in the time -> Keyframes without
+  * We must be able to configure effects through time -> Keyframes without
     duplicating code from GStreamer
 
 
@@ -67,11 +71,12 @@ B. Effects configurability
   The idea to be able to configure effects through a simple API in GES would
   be to add an API in GESTrackObject to access the gst-object properties that
   user would like to configure.
-  We would also have a method to set those properties easily
+  We would also have a method to set those properties easily.
 
-  We should also find a way to handle that in thecase of systems such as gnome-effects
+  We should also find a way to handle that in the case of systems such as gnome-effects
 
 C. Keyframes
+
   We may want to handle this use-case directly in GES and for any kind of
   time related configuration? FIXME
     => Special specifications for that?
@@ -81,11 +86,15 @@ C. Keyframes
 
   UC-1. The user wants to add an effect to an entire clip => GESTimelineObject new API
 
-  UC-2. The developer wants to allow his users to configure effects => New 
+  UC-2. The developer wants to allow users to configure effects => New 
   GESTrackOperation API
 
   UC-3. The user wants to add an effect on a special portion of a clip, we should
   allow him to configure that thanks to a system of keyframes. FIXME
+
+    ==> EDWARD : Just change the in-point/duration/start of that
+        effect within the TrackObject. See the mapping document and
+        feature within GESTimelineObject.
 
   UC-4. We want to implement an effect which isn't only composed by a bin, but is more
   complexe than that (ex: "effect '24'") => we have the GESTrackOperation
@@ -111,6 +120,15 @@ C. Keyframes
       -------
         * property-changed: emited when a property of the GESTrackObject gst element
           is changed
+
+        ==> EDWARD : So this would be exactly the same signal as
+        GObject's 'notify' ? Or at least it's very similar to
+        GstObject's deep-notify feature. Might want to look into
+        that (not for using it, but for how it's implemented).
+
+        Same comment about the set/get properties. Maybe the
+        GstChildProxy interface would be worth a look also.
+            
 
       /**
       * ges_track_object_list_gst_properties:
@@ -163,6 +181,8 @@ C. Keyframes
         * effect-added: emited when an effect is added
         * effect-removed: emited when an effect is removed
         * effect-moved: emited when an effect is moved
+
+        ==> EDWARD : What do you mean by 'moved' ?
 
       /**
       * ges_timeline_object_add_effect:
@@ -245,7 +265,7 @@ C. Keyframes
 =================
   TODO GESRegistry API:
       This should be a singleton since we don't want an app to instanciate more
-      than one registry. It should be able to get effects from various sources.
+      than one registry. It must be able to get effects from various sources.
       We should also make sure any custom effect is detected.
 
       /**
