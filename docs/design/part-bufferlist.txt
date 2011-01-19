@@ -14,7 +14,7 @@ organized in a list) to be treated as a multiple groups of GstBuffers. This allo
 for the following extra functionality:
 
  - A logical GstBuffer (called a group) can consist of disjoint memory each with
-   their own copy/free and metadata. Logicallty the group should be treated as
+   their own copy/free and metadata. Logically the group should be treated as
    one single GstBuffer.
  - Multiple groups can be put into one bufferlist. This allows for a single
    method call to pass multiple (logical) buffers downstream.

@@ -6,7 +6,7 @@ has been queued on the input pad or pads. This process is called prerolling
 and is needed to fill the pipeline with buffers so that the transition to
 PLAYING goes as fast as possible with no visual delay for the user.
 
-Preroll is also crucial in maintaining correct audio and video synchronsation
+Preroll is also crucial in maintaining correct audio and video synchronisation
 and ensuring that no buffers are dropped in the sinks.
 
 After receiving a buffer (or EOS) on a pad the chain/event function should

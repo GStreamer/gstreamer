@@ -24,9 +24,9 @@ Typical stream
 ~~~~~~~~~~~~~~
 
  A typical stream starts with a newsegment event that marks the
- buffer timestamp range. After that buffers are send one after the
+ buffer timestamp range. After that buffers are sent one after the
  other. After the last buffer an EOS marks the end of the stream. No
- more buffer are to be processed after the EOS event.
+ more buffers are to be processed after the EOS event.
 
   +--+ +-++-+     +-+ +---+
   |NS| |B||B| ... |B| |EOS|

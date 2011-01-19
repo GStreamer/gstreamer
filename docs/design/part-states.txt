@@ -48,7 +48,7 @@ the following state changes are possible:
  PAUSED -> PLAYING
    - Most elements ignore this state change.
    - The pipeline selects a clock and distributes this to all the children
-     before setting them to PLAYING. This means that it is only alowed to
+     before setting them to PLAYING. This means that it is only allowed to
      synchronize on the clock in the PLAYING state.
    - The pipeline uses the clock and the running_time to calculate the base_time.
      The base_time is distributed to all children when performing the state
@@ -113,7 +113,7 @@ _set_state(), called the STATE_LOCK.
 Setting state on elements
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The state of an element can be changed with _element_set_state(). When chaning
+The state of an element can be changed with _element_set_state(). When changing
 the state of an element all intermediate states will also be set on the element
 until the final desired state is set.
 
@@ -125,7 +125,7 @@ The _set_state() function can return 3 possible values:
   GST_STATE_SUCCESS: The state change is completed successfully.
 
   GST_STATE_ASYNC:   The state change will complete later on. This can happen 
-                     When the element needs a long time to perform the state
+                     when the element needs a long time to perform the state
 		     change or for sinks that need to receive the first buffer
 		     before they can complete the state change (preroll).
 
@@ -143,7 +143,7 @@ When setting the state of an element, the STATE_PENDING is set to the required
 state. Then the state change function of the element is called and the result of 
 that function is used to update the STATE and STATE_RETURN fields, STATE_NEXT,
 STATE_PENDING and STATE_RETURN fields. If the function returned ASYNC, this result
-is immediatly returned to the caller.
+is immediately returned to the caller.
 
 
 Getting state of elements

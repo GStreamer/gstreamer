@@ -38,7 +38,7 @@ is called or the sync block returned) no data is flowing in elem2.sink.
 In this situation, the streaming thread is blocked on a GCond and is
 waiting to be unblocked.
 
-When sending a flushing seek upstream on elem1.src, the FLUSH_START and
+When sending a flushing seek upstream on elem1.src, the FLUSH_START event
 will temporary unblock the streaming thread and make all pad functions that
 triggers a block (_push/_alloc_buffer/_push_event/_pull_range) return
 GST_FLOW_WRONG_STATE. This will then eventually pause the streaming thread

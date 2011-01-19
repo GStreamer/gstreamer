@@ -55,7 +55,7 @@ to PAUSED and restores this time based on the current absolute_time when going
 back to PLAYING. This allows for both clocks that progress when in the PAUSED
 state (systemclock) and clocks that don't (audioclock).
 
-The clock and pipeline now provides a running_time to all elements that want to
+The clock and pipeline now provide a running_time to all elements that want to
 perform synchronisation. Indeed, the running time can be observed in each
 element (during the PLAYING state) as:
   

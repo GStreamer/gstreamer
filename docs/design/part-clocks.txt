@@ -5,7 +5,7 @@ The GstClock returns a monotonically increasing time with the method
 _get_time(). Its accuracy and base time depends on the specific clock 
 implementation but time is always expessed in nanoseconds. Since the
 baseline of the clock is undefined, the clock time returned is not
-meaningfull in itself, what matters are the deltas between two clock
+meaningful in itself, what matters are the deltas between two clock
 times.
 The time reported by the clock is called the absolute_time.
 

@@ -8,7 +8,7 @@ driving force in the pipeline as it initiates data transport.
 
 It is also possible for an element to pull data from an upstream element.
 The downstream element does this by calling gst_pad_pull_range() on one
-of its sinkpads. In this mode, the upstream element is the driving force 
+of its sinkpads. In this mode, the downstream element is the driving force 
 in the pipeline as it initiates data transfer.
 
 It is important that the elements are in the correct state to handle a

@@ -11,15 +11,15 @@ pipeline. Sending the seek event to a bin will by default forward
 the event to all sinks in the bin.
 
 When performing a seek, the start and stop values of the segment can be
-specified as absoulte positions or relative to the currently configured
+specified as absolute positions or relative to the currently configured
 playback segment. Note that it is not possible to seek relative to the current
 playback position. To seek relative to the current playback position, one must
 query the position first and then perform an absolute seek to the desired
 position.
 
-Feedback of the seek operation can be immediatly using the GST_SEEK_FLAG_FLUSH
+Feedback of the seek operation can be immediately using the GST_SEEK_FLAG_FLUSH
 flag. With this flag, all pending data in the pipeline is discarded and playback
-starts from the new position immediatly.
+starts from the new position immediately.
 
 When the FLUSH flag is not set, the seek will be queued and executed as
 soon as possible, which might be after all queues are emptied.
@@ -47,7 +47,7 @@ application has some time to issue a new seek to make the transition seamless.
 Typically the allowed delay is defined by the buffer sizes of the sinks as well
 as the size of any queues in the pipeline.
 
-The seek can also  change the playback speed of the configured segment.
+The seek can also change the playback speed of the configured segment.
 A speed of 1.0 is normal speed, 2.0 is double speed. Negative values
 mean backward playback.
 
@@ -83,8 +83,8 @@ FLUSH seeking
 ^^^^^^^^^^^^^
 
 This is the most common way of performing a seek in a playback application.
-The application issues a seek on the pipeline and the new media is immediatly
-played after the seek calls returns.
+The application issues a seek on the pipeline and the new media is immediately
+played after the seek call returns.
 
 
 seeking without FLUSH
