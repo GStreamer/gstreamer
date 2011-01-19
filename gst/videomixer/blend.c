@@ -41,9 +41,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_videomixer_blend_debug);
 /* Below are the implementations of everything */
 
 /* A32 is for AYUV, ARGB and BGRA */
-#define BLEND_A32(name, LOOP) \
+#define BLEND_A32(name, method, LOOP)		\
 static void \
-blend_##name (const guint8 * src, gint xpos, gint ypos, \
+method##_ ##name (const guint8 * src, gint xpos, gint ypos, \
     gint src_width, gint src_height, gdouble src_alpha, \
     guint8 * dest, gint dest_width, gint dest_height) \
 { \
@@ -83,25 +83,31 @@ blend_##name (const guint8 * src, gint xpos, gint ypos, \
   LOOP (dest, src, src_height, src_width, src_stride, dest_stride, s_alpha); \
 }
 
-#define BLEND_A32_LOOP(name) \
+#define BLEND_A32_LOOP(name, method)			\
 static inline void \
-_blend_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
+_##method##_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
     gint src_width, gint src_stride, gint dest_stride, guint s_alpha) \
 { \
   s_alpha = MIN (255, s_alpha); \
-  orc_blend_##name (dest, dest_stride, src, src_stride, \
+  orc_##method##_##name (dest, dest_stride, src, src_stride, \
       s_alpha, src_width, src_height); \
 }
 
-BLEND_A32_LOOP (argb);
-BLEND_A32_LOOP (bgra);
+BLEND_A32_LOOP (argb, blend);
+BLEND_A32_LOOP (bgra, blend);
+BLEND_A32_LOOP (argb, overlay);
+BLEND_A32_LOOP (bgra, overlay);
 
 #if G_BYTE_ORDER == LITTLE_ENDIAN
-BLEND_A32 (argb, _blend_loop_argb);
-BLEND_A32 (bgra, _blend_loop_bgra);
+BLEND_A32 (argb, blend, _blend_loop_argb);
+BLEND_A32 (bgra, blend, _blend_loop_bgra);
+BLEND_A32 (argb, overlay, _overlay_loop_argb);
+BLEND_A32 (bgra, overlay, _overlay_loop_bgra);
 #else
-BLEND_A32 (argb, _blend_loop_bgra);
-BLEND_A32 (bgra, _blend_loop_argb);
+BLEND_A32 (argb, blend, _blend_loop_bgra);
+BLEND_A32 (bgra, blend, _blend_loop_argb);
+BLEND_A32 (argb, overlay, _overlay_loop_bgra);
+BLEND_A32 (bgra, overlay, _overlay_loop_argb);
 #endif
 
 #define A32_CHECKER_C(name, RGB, A, C1, C2, C3) \
@@ -666,6 +672,8 @@ PACKED_422_FILL_COLOR (uyvy, 16, 24, 0, 8);
 /* Init function */
 BlendFunction gst_video_mixer_blend_argb;
 BlendFunction gst_video_mixer_blend_bgra;
+BlendFunction gst_video_mixer_overlay_argb;
+BlendFunction gst_video_mixer_overlay_bgra;
 /* AYUV/ABGR is equal to ARGB, RGBA is equal to BGRA */
 BlendFunction gst_video_mixer_blend_y444;
 BlendFunction gst_video_mixer_blend_y42b;
@@ -724,6 +732,8 @@ gst_video_mixer_init_blend (void)
 
   gst_video_mixer_blend_argb = blend_argb;
   gst_video_mixer_blend_bgra = blend_bgra;
+  gst_video_mixer_overlay_argb = overlay_argb;
+  gst_video_mixer_overlay_bgra = overlay_bgra;
   gst_video_mixer_blend_i420 = blend_i420;
   gst_video_mixer_blend_y444 = blend_y444;
   gst_video_mixer_blend_y42b = blend_y42b;
