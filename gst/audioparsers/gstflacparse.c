@@ -961,6 +961,7 @@ gst_flac_parse_handle_headers (GstFlacParse * flacparse)
   GValue array = { 0, };
   GstCaps *caps;
   GList *l;
+  gboolean res = TRUE;
 
   caps = gst_caps_new_simple ("audio/x-flac",
       "channels", G_TYPE_INT, flacparse->channels,
@@ -1040,23 +1041,27 @@ push_headers:
 
   /* push header buffers; update caps, so when we push the first buffer the
    * negotiated caps will change to caps that include the streamheader field */
-  for (l = flacparse->headers; l != NULL; l = l->next) {
-    GstBuffer *buf = GST_BUFFER (l->data);
+  while (flacparse->headers) {
+    GstBuffer *buf = GST_BUFFER (flacparse->headers->data);
     GstFlowReturn ret;
 
-    l->data = NULL;
+    flacparse->headers =
+        g_list_delete_link (flacparse->headers, flacparse->headers);
     buf = gst_buffer_make_metadata_writable (buf);
     gst_buffer_set_caps (buf,
         GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (flacparse))));
 
     ret = gst_base_parse_push_buffer (GST_BASE_PARSE (flacparse), buf);
-    if (ret != GST_FLOW_OK)
-      return FALSE;
+    if (ret != GST_FLOW_OK) {
+      res = FALSE;
+      break;
+    }
   }
+  g_list_foreach (flacparse->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (flacparse->headers);
   flacparse->headers = NULL;
 
-  return TRUE;
+  return res;
 }
 
 static gboolean
