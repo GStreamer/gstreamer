@@ -865,7 +865,8 @@ no_channel:
  * @context: a #GMainContext
  *
  * Attaches @server to @context. When the mainloop for @context is run, the
- * server will be dispatched.
+ * server will be dispatched. When @context is NULL, the default context will be
+ * used).
  *
  * This function should be called when the server properties and urls are fully
  * configured and the server is ready to start.
