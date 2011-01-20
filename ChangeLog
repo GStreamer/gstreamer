@@ -1,9 +1,166 @@
-=== release 0.10.20 ===
+=== release 0.10.21 ===
 
-2010-12-01  Edward Hervey <bilboed@bilboed.com>
+2011-01-20  Edward Hervey <bilboed@bilboed.com>
 
 	* configure.ac:
-	  releasing 0.10.20, "What Abitbol said before dying"
+	  releasing 0.10.21, "She used to be an ironhorse, twenty years ago"
+
+2011-01-06 17:40:28 +0000  christian schaller <christian.schaller@collabora.co.uk>
+
+	* gst-python.spec.in:
+	  Update spec file with latest changes
+
+2011-01-16 14:58:37 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstmodule.c:
+	  gstmodule: Add tags introduced in 0.10.31
+	  Fixes #639632
+
+2011-01-16 14:55:26 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstmodule.c:
+	  gstmodule: Use a macro to register tags
+	  Avoids human error when registering them (like USER_RATING previously
+	  being TRACK_PEAK).
+
+2011-01-12 18:12:29 +0530  Arun Raghavan <ford_prefect@gentoo.org>
+
+	* codegen/codegen.py:
+	  codegen: Ignore functions whose return type is ignored
+	  This makes sure that if X is an ignored type, then functions that return
+	  an object of type X (or a pointer type based on X) are also ignored.
+	  Fixes #639293
+
+2011-01-12 18:11:23 +0530  Arun Raghavan <ford_prefect@gentoo.org>
+
+	* codegen/override.py:
+	  codegen: Handle pointer types in is_type_ignored()
+	  This ensures that if type X is ignored, then pointers to X (and pointers
+	  to pointers to X, etc.) are also ignored.
+	  Caveat: this also means that ignore-type should only be used with base
+	  types and not pointer types.
+	  Fixes #639293
+
+2011-01-12 15:01:39 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* testsuite/Makefile.am:
+	  testsuite: Add a make command to run tests forever
+	  And will stop once they fail. Useful to debug racy tests.
+
+2011-01-11 20:31:59 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  0.10.20.3 pre-release
+
+2011-01-11 15:51:55 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From e572c87 to f94d739
+
+2011-01-10 16:38:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ccbaa85 to e572c87
+
+2011-01-10 14:55:31 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 46445ad to ccbaa85
+
+2011-01-07 21:52:03 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/pbutils.defs:
+	  pbutils: Fix discoverer miniobject methods
+	  They were declared as functions and not methods :(
+
+2011-01-07 17:20:44 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  0.10.20.2 pre-release
+
+2011-01-07 17:17:05 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/pbutils.override:
+	  pbutils: Add overrides for new API
+
+2011-01-05 22:18:46 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/pbutils.defs:
+	  encoding: encoding_profile_get_output_caps => _get_input_caps
+
+2011-01-05 21:28:12 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gst-0.10.32.ignore:
+	* gst/gst.defs:
+	  gst: update for latest API addition
+
+2011-01-05 21:25:37 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gst-pb-0.10.32.ignore:
+	* gst/pbutils.defs:
+	  pbutils: Update .defs for latest addition
+
+2011-01-05 15:04:05 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.32.ignore:
+	* gst/gst-pb-0.10.32.ignore:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gstversion.override.in:
+	* gst/pbutils.defs:
+	* gst/video.defs:
+	  gst: Update to 0.10.32 core/base API
+
+2011-01-05 15:04:25 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/arg-types.py:
+	  arg-types: Properly handle const-GstCaps* return values
+
+2010-12-20 17:48:03 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 169462a to 46445ad
+
+2010-12-15 14:57:05 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 20742ae to 169462a
+
+2010-12-13 16:24:39 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 011bcc8 to 20742ae
+
+2010-12-05 14:08:05 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* testsuite/test_pad.py:
+	  test_pad: Fix pad refcount checking due to fix in core
+	  The event source wasn't previously set correctly. Now that it is,
+	  check the refcount on the proper pad.
+
+2010-12-03 14:49:13 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: back to development
+	  And the crowd goes mad \o/
+
+=== release 0.10.20 ===
+
+2010-12-01 23:43:57 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Release 0.10.20
 
 2010-11-22 13:27:15 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
@@ -5071,4 +5228,16 @@
 	  back to HEAD
 	  Original commit message from CVS:
 	  back to HEAD
+
+=== release 0.10.0 ===
+
+2005-12-05 18:04:34 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  releasing 0.10.0
+	  Original commit message from CVS:
+	  releasing 0.10.0
 

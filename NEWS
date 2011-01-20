@@ -1,4 +1,9 @@
-This is GStreamer Python Bindings 0.10.20, "What Abitbol said before dying"
+This is GStreamer Python Bindings 0.10.21, "She used to be an ironhorse, twenty years ago"
+
+Changes since 0.10.21:
+
+      * gstreamer core/base 0.10.32 API additions
+      * Fix GstDiscover methods
 
 Changes since 0.10.19:
 

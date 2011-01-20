@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Python bindings 0.10.20 "What Abitbol said before dying"
+Release notes for GStreamer Python bindings 0.10.21 "She used to be an ironhorse, twenty years ago"
         
 
 
@@ -17,25 +17,13 @@ It is, however, parallel installable with the 0.8.x series.
 
 Features of this release
     
-      * Parallel installability with 0.8.x series
-      * libpython loading fixes
-      * MacOSX standard python support
-      * Threadsafe design and API
+      * gstreamer core/base 0.10.32 API additions
+      * Fix GstDiscover methods
 
 Bugs fixed in this release
      
-      * 339772 : Python example showing segment seeking and looping
-      * 402044 : Doesn't compile with some features disabled in core
-      * 590348 : [audio (and other modules)] can't use pygstminiobject !
-      * 620067 : Add bindings gst.util_uint64_scale_ceil and friends
-      * 623105 : gstpythonplugin.c does not import user's gobject module
-      * 624592 : gst-python: plugin: attempt to load plugin " python " fails with KeyError
-      * 624882 : Add support for gst.Fraction property getters
-      * 625660 : gstpythonplugin: fails to refresh plugin registry when installed Python plugins change
-      * 633033 : filesrc.py example segfaults
-      * 633141 : MSVC cannot compile gstpythonplugin.c
-      * 633555 : discoverer: use specific types in getters, rename some boolean getters
-      * 634365 : gst.pbutils.get_codec_description segfaults
+      * 639293 : gst-python 0.10.20 does not build with gstreamer < 0.10.31
+      * 639632 : GST_TAG_APPLICATION_NAME not bound
 
 Download
 
@@ -64,14 +52,9 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * David Hoyt
-      * David Schleef
+      * Arun Raghavan
       * Edward Hervey
-      * Jan Schmidt
-      * Leo Singer
-      * Sebastian Dröge
       * Stefan Kost
-      * Thiago Santos
       * Tim-Philipp Müller
+      * christian schaller
  
