@@ -114,6 +114,7 @@ GST_DEBUG_CATEGORY (pango_debug);
 #define DEFAULT_PROP_AUTO_ADJUST_SIZE TRUE
 #define DEFAULT_PROP_VERTICAL_RENDER  FALSE
 #define DEFAULT_PROP_COLOR      0xffffffff
+#define DEFAULT_PROP_OUTLINE_COLOR 0xff000000
 
 /* make a property of me */
 #define DEFAULT_SHADING_VALUE    -80
@@ -187,6 +188,7 @@ enum
   PROP_VERTICAL_RENDER,
   PROP_COLOR,
   PROP_SHADOW,
+  PROP_OUTLINE_COLOR,
   PROP_LAST
 };
 
@@ -511,6 +513,18 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
           "Color to use for text (big-endian ARGB).", 0, G_MAXUINT32,
           DEFAULT_PROP_COLOR,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstTextOverlay:outline-color
+   *
+   * Color of the outline of the rendered text.
+   *
+   * Since: 0.10.35
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_OUTLINE_COLOR,
+      g_param_spec_uint ("outline-color", "Text Outline Color",
+          "Color to use for outline the text (big-endian ARGB).", 0,
+          G_MAXUINT32, DEFAULT_PROP_OUTLINE_COLOR,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstTextOverlay:line-alignment
@@ -656,6 +670,7 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   gst_text_overlay_adjust_values_with_fontdesc (overlay, desc);
 
   overlay->color = DEFAULT_PROP_COLOR;
+  overlay->outline_color = DEFAULT_PROP_OUTLINE_COLOR;
   overlay->halign = DEFAULT_PROP_HALIGNMENT;
   overlay->valign = DEFAULT_PROP_VALIGNMENT;
   overlay->xpad = DEFAULT_PROP_XPAD;
@@ -896,6 +911,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
     case PROP_COLOR:
       overlay->color = g_value_get_uint (value);
       break;
+    case PROP_OUTLINE_COLOR:
+      overlay->outline_color = g_value_get_uint (value);
+      break;
     case PROP_SILENT:
       overlay->silent = g_value_get_boolean (value);
       break;
@@ -990,6 +1008,9 @@ gst_text_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_COLOR:
       g_value_set_uint (value, overlay->color);
+      break;
+    case PROP_OUTLINE_COLOR:
+      g_value_set_uint (value, overlay->outline_color);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1402,9 +1423,14 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
     cairo_restore (cr);
   }
 
+  a = (overlay->outline_color >> 24) & 0xff;
+  r = (overlay->outline_color >> 16) & 0xff;
+  g = (overlay->outline_color >> 8) & 0xff;
+  b = (overlay->outline_color >> 0) & 0xff;
+
   /* draw outline text */
   cairo_save (cr);
-  cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+  cairo_set_source_rgba (cr, r / 255.0, g / 255.0, b / 255.0, a / 255.0);
   cairo_set_line_width (cr, overlay->outline_offset);
   pango_cairo_layout_path (cr, overlay->layout);
   cairo_stroke (cr);
