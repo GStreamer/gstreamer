@@ -942,8 +942,9 @@ array_has_uri_value (const gchar * values[], const gchar * value)
 
 /* list of URIs that we consider to be streams and that need buffering.
  * We have no mechanism yet to figure this out with a query. */
-static const gchar *stream_uris[] = { "http://", "mms://", "mmsh://",
-  "mmsu://", "mmst://", "fd://", "myth://", "ssh://", "ftp://", "sftp://",
+static const gchar *stream_uris[] = { "http://", "https://", "mms://",
+  "mmsh://", "mmsu://", "mmst://", "fd://", "myth://", "ssh://",
+  "ftp://", "sftp://",
   NULL
 };
 
