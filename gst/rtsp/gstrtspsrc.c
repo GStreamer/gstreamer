@@ -528,6 +528,7 @@ gst_rtspsrc_finalize (GObject * object)
   gst_rtsp_ext_list_free (rtspsrc->extensions);
   g_free (rtspsrc->conninfo.location);
   gst_rtsp_url_free (rtspsrc->conninfo.url);
+  g_free (rtspsrc->conninfo.url_str);
   g_free (rtspsrc->user_id);
   g_free (rtspsrc->user_pw);
 
