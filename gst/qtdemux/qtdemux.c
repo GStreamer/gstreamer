@@ -7004,31 +7004,34 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           guint32 headerlen;
 
           waveheadernode = qtdemux_tree_get_child_by_type (wavenode, fourcc);
-          waveheader = (const guint8 *) waveheadernode->data;
-          headerlen = QT_UINT32 (waveheader);
+          if (waveheadernode) {
+            waveheader = (const guint8 *) waveheadernode->data;
+            headerlen = QT_UINT32 (waveheader);
 
-          if (headerlen > 8) {
-            gst_riff_strf_auds *header = NULL;
-            GstBuffer *headerbuf;
-            GstBuffer *extra;
+            if (headerlen > 8) {
+              gst_riff_strf_auds *header = NULL;
+              GstBuffer *headerbuf;
+              GstBuffer *extra;
 
-            waveheader += 8;
-            headerlen -= 8;
+              waveheader += 8;
+              headerlen -= 8;
 
-            headerbuf = gst_buffer_new ();
-            GST_BUFFER_DATA (headerbuf) = (guint8 *) waveheader;
-            GST_BUFFER_SIZE (headerbuf) = headerlen;
+              headerbuf = gst_buffer_new ();
+              GST_BUFFER_DATA (headerbuf) = (guint8 *) waveheader;
+              GST_BUFFER_SIZE (headerbuf) = headerlen;
 
-            if (gst_riff_parse_strf_auds (GST_ELEMENT_CAST (qtdemux),
-                    headerbuf, &header, &extra)) {
-              gst_caps_unref (stream->caps);
-              stream->caps = gst_riff_create_audio_caps (header->format, NULL,
-                  header, extra, NULL, NULL);
+              if (gst_riff_parse_strf_auds (GST_ELEMENT_CAST (qtdemux),
+                      headerbuf, &header, &extra)) {
+                gst_caps_unref (stream->caps);
+                stream->caps = gst_riff_create_audio_caps (header->format, NULL,
+                    header, extra, NULL, NULL);
 
-              if (extra)
-                gst_buffer_unref (extra);
+                if (extra)
+                  gst_buffer_unref (extra);
+              }
             }
-          }
+          } else
+            GST_DEBUG ("Didn't find waveheadernode for this codec");
         }
         g_node_destroy (wavenode);
       }
