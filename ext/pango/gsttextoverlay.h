@@ -140,6 +140,7 @@ struct _GstTextOverlay {
 
     PangoLayout             *layout;
     gdouble                  shadow_offset;
+    gboolean                 want_shadow;
     gdouble                  outline_offset;
     guchar                  *text_image;
     gint                     image_width;

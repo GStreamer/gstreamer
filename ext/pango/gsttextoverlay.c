@@ -95,6 +95,7 @@ GST_DEBUG_CATEGORY (pango_debug);
 
 #define DEFAULT_PROP_TEXT 	""
 #define DEFAULT_PROP_SHADING	FALSE
+#define DEFAULT_PROP_SHADOW	TRUE
 #define DEFAULT_PROP_VALIGNMENT	GST_TEXT_OVERLAY_VALIGN_BASELINE
 #define DEFAULT_PROP_HALIGNMENT	GST_TEXT_OVERLAY_HALIGN_CENTER
 #define DEFAULT_PROP_VALIGN	"baseline"
@@ -185,6 +186,7 @@ enum
   PROP_AUTO_ADJUST_SIZE,
   PROP_VERTICAL_RENDER,
   PROP_COLOR,
+  PROP_SHADOW,
   PROP_LAST
 };
 
@@ -418,6 +420,17 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
       g_param_spec_boolean ("shaded-background", "shaded background",
           "Whether to shade the background under the text area",
           DEFAULT_PROP_SHADING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstTextOverlay:shadow
+   *
+   * Whether to display a shadow of each letter under the text.
+   *
+   * Since: 0.10.35
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHADOW,
+      g_param_spec_boolean ("shadow", "create shadow of text",
+          "Whether to create a shadow of the letters under the text",
+          DEFAULT_PROP_SHADOW, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGNMENT,
       g_param_spec_enum ("valignment", "vertical alignment",
           "Vertical alignment of the text", GST_TYPE_TEXT_OVERLAY_VALIGN,
@@ -655,6 +668,7 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   overlay->wrap_mode = DEFAULT_PROP_WRAP_MODE;
 
   overlay->want_shading = DEFAULT_PROP_SHADING;
+  overlay->want_shadow = DEFAULT_PROP_SHADOW;
   overlay->shading_value = DEFAULT_SHADING_VALUE;
   overlay->silent = DEFAULT_PROP_SILENT;
   overlay->wait_text = DEFAULT_PROP_WAIT_TEXT;
@@ -798,6 +812,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
     case PROP_SHADING:
       overlay->want_shading = g_value_get_boolean (value);
       break;
+    case PROP_SHADOW:
+      overlay->want_shadow = g_value_get_boolean (value);
+      break;
     case PROP_XPAD:
       overlay->xpad = g_value_get_int (value);
       break;
@@ -925,6 +942,9 @@ gst_text_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SHADING:
       g_value_set_boolean (value, overlay->want_shading);
+      break;
+    case PROP_SHADOW:
+      g_value_set_boolean (value, overlay->want_shadow);
       break;
     case PROP_XPAD:
       g_value_set_int (value, overlay->xpad);
@@ -1374,11 +1394,13 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
    */
 
   /* draw shadow text */
-  cairo_save (cr);
-  cairo_translate (cr, overlay->shadow_offset, overlay->shadow_offset);
-  cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.5);
-  pango_cairo_show_layout (cr, overlay->layout);
-  cairo_restore (cr);
+  if (overlay->want_shadow) {
+    cairo_save (cr);
+    cairo_translate (cr, overlay->shadow_offset, overlay->shadow_offset);
+    cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.5);
+    pango_cairo_show_layout (cr, overlay->layout);
+    cairo_restore (cr);
+  }
 
   /* draw outline text */
   cairo_save (cr);
