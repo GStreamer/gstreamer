@@ -3018,9 +3018,16 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     start = MIN (segment->media_start + seg_time, stop);
     time = offset;
   } else {
-    start = segment->media_start;
+    if (segment->media_start >= qtdemux->segment.start) {
+      start = segment->media_start;
+      time = segment->time;
+    } else {
+      start = qtdemux->segment.start;
+      time = segment->time + (qtdemux->segment.start - segment->media_start);
+    }
+
+    start = MAX (segment->media_start, qtdemux->segment.start);
     stop = MIN (segment->media_start + seg_time, stop);
-    time = segment->time;
   }
 
   GST_DEBUG_OBJECT (qtdemux, "newsegment %d from %" GST_TIME_FORMAT
