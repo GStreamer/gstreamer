@@ -1273,15 +1273,6 @@ gst_avdtp_sink_transport_parse_property (GstAvdtpSink * self,
 
       break;
     }
-    case DBUS_TYPE_UINT16:{
-      uint16_t value;
-      dbus_message_iter_get_basic (&variant_i, &value);
-
-      if (g_str_equal (key, "OMTU") == TRUE)
-        self->data->link_mtu = value;
-
-      break;
-    }
     case DBUS_TYPE_STRING:{
       const char *value;
       dbus_message_iter_get_basic (&variant_i, &value);
@@ -1322,6 +1313,7 @@ gst_avdtp_sink_transport_acquire (GstAvdtpSink * self)
   DBusError err;
   const char *access_type = "w";
   int fd;
+  uint16_t imtu, omtu;
 
   dbus_error_init (&err);
 
@@ -1341,7 +1333,8 @@ gst_avdtp_sink_transport_acquire (GstAvdtpSink * self)
     goto fail;
 
   if (dbus_message_get_args (reply, &err, DBUS_TYPE_UNIX_FD, &fd,
-          DBUS_TYPE_INVALID) == FALSE)
+          DBUS_TYPE_UINT16, &imtu,
+          DBUS_TYPE_UINT16, &omtu, DBUS_TYPE_INVALID) == FALSE)
     goto fail;
 
   dbus_message_unref (reply);
@@ -1349,7 +1342,8 @@ gst_avdtp_sink_transport_acquire (GstAvdtpSink * self)
   self->stream = g_io_channel_unix_new (fd);
   g_io_channel_set_encoding (self->stream, NULL, NULL);
   g_io_channel_set_close_on_unref (self->stream, TRUE);
-  GST_DEBUG_OBJECT (self, "stream_fd=%d", fd);
+  self->data->link_mtu = omtu;
+  GST_DEBUG_OBJECT (self, "stream_fd=%d mtu=%d", fd, omtu);
 
   return TRUE;
 
