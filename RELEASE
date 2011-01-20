@@ -1,0 +1,68 @@
+
+Release notes for GStreamer Editing Services 0.10.1 "This is Scandinavian one-o-one"
+        
+
+
+The GStreamer team is proud to announce the first release
+in the 0.10.x stable series of the GStreamer Editing Services.
+
+
+  
+
+Features of this release
+    
+      * Highly portable and lightweight, written in C/GObject
+      * High-level API for simple applications
+      * Full-depth API for advanced applications
+      * gobject-introspection support for easy language bindings creation
+      * Audio/Video/Image file support
+      * Audio/Video Transitions
+      * Title/Credits
+      * Title overlay
+      * Saving/Loading of timelines to custom file format
+      * Playback/Rendering of timelines with convenience GstPipeline
+      * 
+
+Bugs fixed in this release
+     
+      * 639218 : Exports private symbols
+      * 639219 : ges-internal.h shouldn't be installed
+      * 639222 : Rename ges-launch to ges-launch-0.10
+
+Download
+
+You can find source releases of gst-editing-services in the download directory:
+http://gstreamer.freedesktop.org/src/gst-editing-services/
+
+GStreamer Homepage
+
+More details can be found on the project's website:
+http://gstreamer.freedesktop.org/
+
+Support and Bugs
+
+We use GNOME's bugzilla for bug reports and feature requests:
+http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+
+Developers
+
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
+Interested developers of the core library, plug-ins, and applications should
+subscribe to the gstreamer-devel list. If there is sufficient interest we
+will create more lists as necessary.
+
+        
+Applications
+  
+Contributors to this release
+    
+      * Brandon Lewis
+      * Edward Hervey
+      * Jarkko Pallviainen
+      * Mark Nauwelaerts
+      * Sebastian Dröge
+      * Stefan Kost
+      * Thiago Santos
+      * Thibault Saunier
+      * Tim-Philipp Müller
+ 

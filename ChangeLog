@@ -1,0 +1,5574 @@
+=== release 0.10.1 ===
+
+2011-01-20  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  releasing 0.10.1, "This is Scandinavian one-o-one"
+
+2011-01-18 19:06:45 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/random/design:
+	  random: Update goals/features document
+	  So that everybody can know what features we want.
+
+2011-01-17 14:01:28 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: 0.10.0.4 pre-release
+
+2011-01-17 13:59:44 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  ges-launch: Set restriction on video profile if present
+
+2011-01-12 17:52:10 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  ges-launch: Remove dead code and make functions/variables static
+
+2011-01-12 17:45:23 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  ges-launch: Fix and cleanup enum listing
+	  It wasn't displaying anything lately.
+
+2011-01-11 20:28:25 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  0.10.0.3 pre-release
+
+2011-01-11 16:57:45 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tools/.gitignore:
+	* tools/Makefile.am:
+	  ges-launch: Add GStreamer major/minor version to the executable filename
+	  https://bugzilla.gnome.org/show_bug.cgi?id=639222
+
+2011-01-11 18:14:41 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-formatter.c:
+	* ges/ges-keyfile-formatter.c:
+	  ges: Fix more ges_timeline_get_layers() usage memory leaks
+
+2011-01-11 17:19:54 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-internal.h:
+	* ges/ges.c:
+	  ges: Don't install ges-internal.h and hide the GES debug category symbols
+	  Fixes bug #639219.
+
+2011-01-11 17:55:25 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-utils.c:
+	  ges-utils: minor doc update
+
+2011-01-11 16:32:56 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ges/Makefile.am:
+	  ges: Only export symbols starting with ges_ or GES_
+	  https://bugzilla.gnome.org/show_bug.cgi?id=639218
+
+2011-01-11 16:35:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	* ges/ges-track-object.c:
+	  ges: Mark some private symbols static
+	  https://bugzilla.gnome.org/show_bug.cgi?id=639218
+
+2011-01-11 15:32:51 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Require G-I 0.9.6 for the --identifier-prefix parameter
+
+2011-01-11 15:29:01 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* pkgconfig/gst-editing-services-uninstalled.pc.in:
+	* pkgconfig/gst-editing-services.pc.in:
+	  pkg-config: Require gstreamer-controller and gstreamer-pbutils
+	  Their headers are included by public GES headers
+
+2011-01-11 15:26:08 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Add parameter to select GTK+ version to use and default to 2.0
+
+2011-01-11 15:52:57 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From e572c87 to f94d739
+
+2011-01-10 16:40:02 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 8b72fde to e572c87
+
+2011-01-10 16:51:34 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  common: Update to current master
+
+2011-01-10 16:50:51 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  TimelinePipeline: minor doc fix
+
+2011-01-10 16:50:41 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/Makefile.am:
+	  docs: Fix image inclusion
+
+2011-01-10 15:49:42 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: 0.10.0.2 pre-release
+
+2011-01-10 15:24:13 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/Makefile.am:
+	  docs: Fix for uploading docs
+
+2011-01-10 14:28:35 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* ges/ges-formatter.c:
+	* ges/ges-keyfile-formatter.c:
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-standard-transition.c:
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-filesource.c:
+	* ges/ges-track-image-source.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track-text-overlay.c:
+	* ges/ges-track-text-overlay.h:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-video-test-source.c:
+	* ges/ges-track-video-transition.c:
+	* ges/ges-track.c:
+	  docs: Document all the undocumented public functions
+
+2011-01-10 15:10:01 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	  TrackObject: Small cleanup
+
+2011-01-10 15:09:40 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	  TrackObject: Remove deprecated FIXME
+	  You just need to connect to the notify signal to get updates
+
+2011-01-10 11:18:27 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/basic.c:
+	  tests: Unref the GList returned by ges_timeline_get_layers...
+	  ... in addition to the content themselves
+
+2011-01-10 11:13:13 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  docs: Fixup the sections for missing/renamed/removed symbols
+
+2011-01-10 11:12:55 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track.h:
+	  Track: Mark as private the instance private structure
+
+2011-01-10 11:12:38 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  Timeline: Fix documentation of return value
+
+2011-01-08 16:01:31 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* ges/ges-formatter.c:
+	* ges/ges-formatter.h:
+	  GESFormatter: Add private instance and move private variables to it
+
+2011-01-08 15:25:22 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-file-source.h:
+	* ges/ges-timeline.c:
+	* tests/examples/ges-ui.c:
+	  TimelineFileSource: Create instance private and move private variables to it
+	  Fixe/Add getter and setters methods for those variables
+	  Fixup documentation
+
+2011-01-08 11:22:36 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-formatter.c:
+	* ges/ges-keyfile-formatter.c:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/save_and_load.c:
+	  Timeline: Add instance private and Move private variables to it
+	  Fixe/Add getter methods to get those variables
+	  Fixup documentation
+
+2011-01-07 19:36:31 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-test-source.h:
+	* tests/check/ges/backgroundsource.c:
+	* tests/examples/ges-ui.c:
+	  TimelineTestSource: Move private variables to instance private
+	  Fixe/Add getter and setter methods for those variables
+	  Fixup documentation
+
+2011-01-07 14:37:56 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-text-overlay.h:
+	* ges/ges-track-text-overlay.c:
+	  TimelineTextOverlay: Move private variables to instance private
+	  Fixe/Add getter and setter methods for those variables
+	  Fixup documentation
+
+2011-01-07 13:48:53 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-title-source.h:
+	* tests/examples/ges-ui.c:
+	  TimelineTitleSource: Move private variables to instance private
+	  Fixe/Add getter and setters methods for those variables
+	  Fixup documentation
+
+2011-01-06 16:59:52 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-audio-test-source.h:
+	* tests/check/ges/backgroundsource.c:
+	  TrackAudioTestSource: Move private variables to instance private
+	  Add getter methods to get those variables
+	  Fixup documentation
+
+2011-01-06 16:35:20 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-audio-transition.h:
+	  TrackAudioTransition: : Move private variables to instance private
+
+2011-01-06 15:35:42 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-text-overlay.c:
+	* ges/ges-track-text-overlay.h:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/text_properties.c:
+	  TrackTextOverlay: Move private variables to instance private
+	  Add getter methods to get those variables
+	  Add/Fixup documentation
+
+2011-01-08 01:40:18 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  test: make unit tests compile and work in uninstalled setup
+
+2011-01-08 01:36:13 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* ges/Makefile.am:
+	  gobject-introspection: fix g-i build for uninstalled setup
+	  Requires gst-plugins-base git (> 0.10.31.2) to actually work.
+
+2011-01-06 12:06:24 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-enums.c:
+	* ges/ges-timeline-standard-transition.c:
+	  enums: Fix transition enum
+	  Leftovers from when we were using the old name
+
+2011-01-06 12:04:53 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-title-source.h:
+	* tests/check/ges/titles.c:
+	  TrackTitleSource: Move private variables to instance private
+	  Add getter methods to get those variables
+	  Add/Fixup documentation
+
+2011-01-06 11:30:26 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	  TimelinePipeline: Fix thumbnail method docs and arguments
+	  The provided gchar* aren't modified
+
+2011-01-06 11:29:44 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-video-test-source.c:
+	* ges/ges-track-video-test-source.h:
+	* tests/check/ges/backgroundsource.c:
+	  TrackVideoTestSource: Move private data to instance private
+	  Add a getter for the pattern
+	  Document methods
+
+2011-01-06 10:55:37 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-standard-transition.c:
+	* ges/ges-track-video-transition.c:
+	* ges/ges-track-video-transition.h:
+	* tests/check/ges/transition.c:
+	  TrackVideoTransition: Move private variable to instance private
+	  Also add/fixup methods to get/set the transition type and document them.
+
+2011-01-06 10:55:06 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  TimelinePipeline: Updates for pbutils API change
+
+2011-01-05 11:32:29 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: Require core git
+
+2010-12-21 15:24:26 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-audio-transition.c:
+	  GESTrackAudioTransition: Fix empty if() body
+
+2010-12-20 19:09:48 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Fix usage of encodebin
+	  The property name is now avoid-reencoding
+
+2010-12-20 12:02:40 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: minor cleanup
+
+2010-12-20 12:01:04 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/layer.c:
+	  GESTimelineObject: Subclass from GInitiallyUnowned
+	  The floating reference will be owned by the Layer
+
+2010-12-20 12:00:06 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-layer.h:
+	* ges/ges-timeline.c:
+	* tests/check/ges/layer.c:
+	  GESTimelineLayer: Subclass from GInitiallyUnowned
+	  The floating reference will be owned by the Timeline
+
+2010-12-20 11:58:21 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track.c:
+	  GESTrackObject: Subclass from GInitiallyUnowned
+	  The floating reference will be owned by the Track
+
+2010-12-20 11:56:37 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/filesource.c:
+	  TimelineObject: Hold a reference to the controlled TrackObject
+
+2010-12-20 11:38:31 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/filesource.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/save_and_load.c:
+	* tests/check/ges/simplelayer.c:
+	* tests/check/ges/text_properties.c:
+	* tests/check/ges/timelineobject.c:
+	* tests/check/ges/titles.c:
+	* tests/check/ges/transition.c:
+	  tests: Put clearer names on tests
+	  Makes it easier to figure out which test failed :)
+
+2010-12-18 11:40:19 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Update common submodule
+
+2010-12-17 11:27:37 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	* ges/ges-track-object.c:
+	  GES*Object: only use g_object_notify_by_pspec if available
+
+2010-12-17 11:27:23 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	  GESTrackObject: Remove unused quarks
+
+2010-12-17 11:26:49 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: Require GLib 2.22
+	  Same requirement as for GStreamer
+
+2010-12-16 19:36:15 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	  GESSimpleTimelineLayer: reverting const-ification
+
+2010-12-16 16:47:54 +0000  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  GESSimpleTimelineLayer: add test for _index() method
+
+2010-12-16 16:50:35 +0000  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	  GESSimpleTimelineLayer: add _index() method
+
+2010-12-16 19:29:14 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-pipeline.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/timelineobject.c:
+	  GESTimelineObject: Add mapping/offset support [start/priority properties]
+	  Allows moving independently (or not) timelineobjects and trackobjects and
+	  have them synchronized with the offsets taken into account.
+	  Right now only the start and priority properties are synchronized. The duration
+	  and in-point properties will require more thoughts.
+
+2010-12-16 19:24:52 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/random/mapping.txt:
+	  random: Add explanation about TimelineObject<=>TrackObject mapping
+
+2010-12-16 19:24:25 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	  GESTrackObject: priority offset is handled by the TimelineObject
+
+2010-12-16 18:20:47 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-object.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	  GESTrackObject: re-factor property setting code
+	  And make sure notifications are emitted at the right time
+
+2010-12-16 16:27:26 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-object.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* tests/check/ges/timelineobject.c:
+	  GESTrackObject: Add a 'locked' property for position synchronization
+	  And update all code using it
+
+2010-12-16 15:05:29 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/#ges-sections.txt#:
+	* docs/libs/.#ges-sections.txt:
+	* docs/libs/ges-decl-list.txt.bak:
+	* docs/libs/ges-decl.txt.bak:
+	  docs: Remove more bogus files
+
+2010-12-16 15:00:46 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/#ges-sections.txt#:
+	* docs/libs/.#ges-sections.txt:
+	* docs/libs/ges-decl-list.txt.bak:
+	* docs/libs/ges-decl.txt.bak:
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-filesource.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track-video-test-source.c:
+	* ges/ges-track-video-transition.c:
+	* ges/ges-track.c:
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/filesource.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/timelineobject.c:
+	* tests/check/ges/titles.c:
+	* tests/check/ges/transition.c:
+	* tests/examples/overlays.c:
+	* tests/examples/test1.c:
+	* tests/examples/text_properties.c:
+	* tests/examples/transition.c:
+	* tools/ges-launch.c:
+	  GESTrackObject: Hide more variables and provide accessors for them
+
+2010-12-16 12:46:48 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: Remove useless variable
+
+2010-12-16 12:41:26 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-keyfile-formatter.c:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-layer.h:
+	* ges/ges-timeline-pipeline.c:
+	* tests/check/ges/layer.c:
+	  GESTimelineLayer: Hide the object list and priority
+	  Add needed setters/getters
+
+2010-12-15 19:40:11 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline.c:
+	  ges: Add more documentation and annotations
+	  This should make GES gobject-introspection compliant now.
+
+2010-12-15 19:18:42 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-object.h:
+	  TimelineObject: Put more function name in sync with others
+
+2010-12-15 19:18:16 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	* tests/check/ges/simplelayer.c:
+	  GESSimpleTimelineLayer: _nth() returns a const
+	  The refcount isn't incremented.
+
+2010-12-15 19:05:48 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-keyfile-formatter.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/save_and_load.c:
+	  GESTrack: Make more properties private
+	  And ensure exported symbols are properly documented and have
+	  argument checking.
+
+2010-12-15 15:50:44 +0000  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  GESSimpleTimelineLayer: add test for _nth() method
+
+2010-12-15 16:40:59 +0000  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  GESSimpleTimelineLayer: ensure the object can be located before "object-added" fires
+
+2010-12-15 15:51:23 +0000  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	  GESSimpleTimelineLayer: add _nth() method
+
+2010-12-15 15:56:38 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/text_properties.c:
+	  test: Disable the text_properties_in_layer test until it's properly implemented
+
+2010-12-15 15:52:03 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* .gitignore:
+	* ges/.gitignore:
+	* pkgconfig/.gitignore:
+	  all: add/extend more .gitignore
+
+2010-12-15 15:51:41 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* Makefile.am:
+	* configure.ac:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gst-editing-services-uninstalled.pc.in:
+	* pkgconfig/gst-editing-services.pc.in:
+	  Add .pc files
+
+2010-12-15 13:29:53 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-decl-list.txt.bak:
+	* docs/libs/ges-decl.txt.bak:
+	  docs: Remove .bak files
+	  Added by error when I added the doc system
+
+2010-12-15 13:27:39 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-decl-list.txt.bak:
+	* docs/libs/ges-decl.txt.bak:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	* ges/ges-custom-timeline-source.c:
+	* ges/ges-custom-timeline-source.h:
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-file-source.h:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-text-overlay.h:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-title-source.h:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-title-source.h:
+	* ges/ges-track-video-transition.h:
+	  ges: Don't shorten symbol names
+	  It wasn't making us gain anything, and confuses the hell out of g-ir-scanner.
+
+2010-12-15 12:58:26 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* ges/Makefile.am:
+	  ges: Add gobject-introspection support
+
+2010-12-15 12:36:25 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* ges/Makefile.am:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	* tests/examples/Makefile.am:
+	* tests/examples/concatenate.c:
+	* tests/examples/test4.c:
+	* tests/examples/thumbnails.c:
+	* tools/Makefile.am:
+	* tools/ges-launch.c:
+	  ges: Switch to encoding-profile API from base
+	  Remove dependency on gst-convenience.
+
+2010-12-15 11:17:21 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/random/mapping.txt:
+	  random: Add notes about Track mapping
+
+2010-12-14 17:38:55 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	  GESTrackObject: Make base_priority/priority-offset a private field
+
+2010-12-14 17:37:13 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/random/mapping.txt:
+	  random: Add brainstorming about Timeline<=>Track object mapping
+
+2010-12-10 12:15:54 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-image-source.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track-operation.c:
+	* ges/ges-track-operation.h:
+	* ges/ges-track-source.c:
+	* ges/ges-track-source.h:
+	* ges/ges-track-text-overlay.c:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	* ges/ges-track-video-test-source.c:
+	* ges/ges-track-video-transition.c:
+	  GESTrackObject: Add create_element vmethod
+	  API: GESTrackObjectClass::gnlobject_factorytype
+	  API: GESTrackObjectClass::create_element
+	  Most track objects are only specific by the contents of the gnlobject,
+	  therefore move the 'create_element' vmethod which was already present
+	  in some subclasses to the top-level class.
+	  Also make the code more robust
+
+2010-12-10 12:14:32 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  GESTrackTransition: Make it a subclass of GESTrackOperation
+
+2010-12-09 19:36:44 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-source.h:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/save_and_load.c:
+	* tests/check/ges/simplelayer.c:
+	* tests/check/ges/text_properties.c:
+	  GESTimelineSource: Remove textoverlay properties
+	  This will be made more generic by allowing any overlay/effect to
+	  be put on any source object.
+
+2010-12-09 18:53:29 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/random/lifecycle:
+	  random: Add lifecycle document
+
+2010-12-09 17:43:08 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/basic.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/simplelayer.c:
+	* tests/check/ges/timelineobject.c:
+	  tests: Make sure gst_bin_add succeeds
+	  And detect when we're trying to add contents to a gnlsource which
+	  already has something
+
+2010-12-09 17:09:11 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	* ges/Makefile.am:
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-standard-transition.c:
+	* ges/ges-timeline-standard-transition.h:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	* ges/ges-track-operation.c:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-video-transition.c:
+	* ges/ges-track-video-transition.h:
+	* ges/ges-types.h:
+	* ges/ges.c:
+	* ges/ges.h:
+	* tests/check/ges/save_and_load.c:
+	* tests/check/ges/simplelayer.c:
+	* tests/check/ges/transition.c:
+	* tests/examples/ges-ui.c:
+	* tests/examples/transition.c:
+	* tools/ges-launch.c:
+	  GESTransition: Make it a base class and add GESTimelineStandardTransition
+	  This is to ensure people can create their own Layer Transition subclass.
+	  API : GESTimelineTransition is now GESTimelineStandardTransition
+
+2010-12-09 15:21:10 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-formatter.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-track-object.c:
+	  ges: Make some classes abstract with G_DEFINE_ABSTRACT_TYPE
+
+2010-12-09 15:13:27 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-transition.c:
+	  ges: Avoid leaking a GList of GESTrackObject
+
+2010-12-09 15:12:34 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-custom-timeline-source.c:
+	* ges/ges-keyfile-formatter.c:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-filesource.c:
+	* ges/ges-track-image-source.c:
+	* ges/ges-track-operation.c:
+	* ges/ges-track-source.c:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-video-test-source.c:
+	  ges: Remove unused GObject vmethods
+
+2010-12-09 14:25:22 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	* ges/Makefile.am:
+	* ges/ges-timeline-operation.c:
+	* ges/ges-timeline-operation.h:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-timeline-overlay.h:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  GESTimelineOperation: New abstract class for operations
+	  This is a new class for all timeline objects that both produce and
+	  consume data.
+	  The existing subclasses of it are now:
+	  * GESTimelineOverlay
+	  * GESTimelineTransition
+
+2010-12-09 12:53:07 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	  GESTimelineObject: Clarify usage of create_track_object(s) by subclasses
+
+2010-12-09 12:52:15 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-source.c:
+	  GESTimelineSource: Remove empty create_track_object vmethod
+	  The parent class will check if it is present or not, and call
+	  track_objects if needed.
+
+2010-12-09 11:56:00 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-formatter.h:
+	  GESFormatter: Hide the save/load vmethod from the docs
+	  We need to deprecated them before API/ABI freeze
+
+2010-12-08 16:09:35 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-custom-timeline-source.c:
+	* ges/ges-timeline-source.c:
+	* ges/ges-track-operation.h:
+	* ges/ges-track-source.c:
+	* ges/ges-track-source.h:
+	  ges: Remove creators for base classes
+
+2010-12-08 15:48:55 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-source.h:
+	  GESTimelineSource: Remove _new() since it's a base class
+
+2010-12-08 15:36:55 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-custom-timeline-source.h:
+	* ges/ges-formatter.c:
+	* ges/ges-keyfile-formatter.h:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	* ges/ges-timeline-file-source.h:
+	* ges/ges-timeline-layer.h:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-overlay.h:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	* ges/ges-timeline-source.h:
+	* ges/ges-timeline-test-source.h:
+	* ges/ges-timeline-text-overlay.h:
+	* ges/ges-timeline-title-source.h:
+	* ges/ges-timeline-transition.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track-audio-test-source.h:
+	* ges/ges-track-audio-transition.h:
+	* ges/ges-track-filesource.h:
+	* ges/ges-track-image-source.h:
+	* ges/ges-track-object.h:
+	* ges/ges-track-operation.h:
+	* ges/ges-track-source.h:
+	* ges/ges-track-text-overlay.h:
+	* ges/ges-track-transition.h:
+	* ges/ges-track-video-test-source.h:
+	* ges/ges-track.h:
+	  docs: A round of updates
+
+2010-12-08 15:36:00 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	  docs: expose the TrackImageSource docs
+
+2010-12-08 15:32:05 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges.types:
+	  docs: Update ges.types with all types
+
+2010-11-28 13:24:07 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/save_and_load.c:
+	* tests/check/ges/simplelayer.c:
+	* tests/examples/overlays.c:
+	* tests/examples/text_properties.c:
+	* tests/examples/transition.c:
+	  GESTimelineObject: add private structure
+
+2010-11-17 19:53:32 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	* tests/examples/ges-ui.c:
+	  GESSimpleTimelineLayer: add private structure
+
+2010-12-04 19:54:13 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-layer.h:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-timeline-overlay.h:
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-source.h:
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-test-source.h:
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-text-overlay.h:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-title-source.h:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-audio-test-source.h:
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-audio-transition.h:
+	* ges/ges-track-filesource.c:
+	* ges/ges-track-filesource.h:
+	* ges/ges-track-image-source.c:
+	* ges/ges-track-image-source.h:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track-operation.c:
+	* ges/ges-track-operation.h:
+	* ges/ges-track-source.c:
+	* ges/ges-track-source.h:
+	* ges/ges-track-text-overlay.c:
+	* ges/ges-track-text-overlay.h:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-title-source.h:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	* ges/ges-track-video-test-source.c:
+	* ges/ges-track-video-test-source.h:
+	* ges/ges-track-video-transition.c:
+	* ges/ges-track-video-transition.h:
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  ges: Add instance private structures
+
+2010-11-28 16:40:15 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	  GESTimelinePipeline: add a private structure
+
+2010-11-26 18:43:36 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-custom-timeline-source.c:
+	* ges/ges-custom-timeline-source.h:
+	  GESCustomTimelineSource: add private structure
+
+2010-12-02 19:47:23 +0000  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/save_and_load.c:
+	  Tests: fix CMP_FAIL on 32-bit machines
+
+2010-11-10 19:52:16 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/random/design:
+	  docs: TODO idea dumping
+	  Only the beginning
+
+2010-12-02 12:28:15 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/save_and_load.c:
+	  tests: Make sure we specify guint64 with g_object_set arguments
+	  Yup, had missed those because of weird macros :(
+
+2010-12-01 12:16:37 +0100  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	* tests/check/ges/simplelayer.c:
+	  SimpleTimelineLayer: Remove bogus check and extend unit test to validate it
+
+2010-12-02 11:54:03 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/save_and_load.c:
+	  tests: Make sure we specify guint64 with g_object_set arguments
+	  Avoids crashers on 32bit machines
+
+2010-11-29 13:24:13 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-custom-timeline-source.h:
+	* ges/ges-formatter.h:
+	* ges/ges-keyfile-formatter.h:
+	* ges/ges-simple-timeline-layer.h:
+	* ges/ges-timeline-file-source.h:
+	* ges/ges-timeline-layer.h:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-overlay.h:
+	* ges/ges-timeline-pipeline.h:
+	* ges/ges-timeline-source.h:
+	* ges/ges-timeline-test-source.h:
+	* ges/ges-timeline-text-overlay.h:
+	* ges/ges-timeline-title-source.h:
+	* ges/ges-timeline-transition.h:
+	* ges/ges-timeline.h:
+	* ges/ges-track-audio-test-source.h:
+	* ges/ges-track-audio-transition.h:
+	* ges/ges-track-filesource.h:
+	* ges/ges-track-image-source.h:
+	* ges/ges-track-object.h:
+	* ges/ges-track-operation.h:
+	* ges/ges-track-source.h:
+	* ges/ges-track-text-overlay.h:
+	* ges/ges-track-title-source.h:
+	* ges/ges-track-transition.h:
+	* ges/ges-track-video-test-source.h:
+	* ges/ges-track-video-transition.h:
+	* ges/ges-track.h:
+	* ges/ges-types.h:
+	  ges: Add padding to all public structures
+	  This will give us margin for API expansion without breaking ABI.
+	  The ABI restriction will only come in place once we do the first
+	  official release (i.e. 0.x.0).
+
+2010-11-27 18:38:06 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Update common
+
+2010-10-22 15:57:45 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  ges-ui: allow enabling/disabling audio/video tracks
+
+2010-10-11 11:53:35 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  ges-ui: implement save as command in gtk demo
+
+2010-10-11 11:38:11 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  ges-ui: implement load command
+
+2010-10-11 11:37:51 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  ges-ui: don't assume we always have 1 layer and two tracks
+
+2010-10-08 12:32:15 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  ges-ui: add new command, remove quit command (closing last window quits app)
+
+2010-11-27 16:56:10 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  test: Fix typo in simplelayer test
+
+2010-11-27 16:55:49 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/save_and_load.c:
+	  check: Small cleanup of the save/load test
+
+2010-11-26 18:39:26 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-formatter.c:
+	* ges/ges-formatter.h:
+	* ges/ges-keyfile-formatter.c:
+	  Formatter: Extend and fixup documentation
+
+2010-11-26 18:38:49 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  Timeline: Add doc and more comments/fixmes
+
+2010-11-27 18:11:56 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-formatter.c:
+	  GESTimeline: Prevent saving timelines without any layers
+
+2010-11-26 13:02:48 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-layer.c:
+	  TimelineLayer: Add debug statement regarding priorities
+
+2010-10-20 18:01:37 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-formatter.c:
+	* ges/ges-formatter.h:
+	* ges/ges-keyfile-formatter.h:
+	  GESFormatter: fix a few typos in documention
+
+2010-10-19 13:35:58 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: add more fixmes
+
+2010-10-07 16:52:51 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/save_and_load.c:
+	  tests: add save->load test case
+
+2010-10-07 16:51:38 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-keyfile-formatter.c:
+	  GESKeyFileFormatter: use ges_formatter_get/set data
+
+2010-10-07 14:55:14 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/save_and_load.c:
+	  tests: use ges_formatter_{get,set}_data accessors in unit tests
+
+2010-10-07 14:25:22 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-formatter.c:
+	* ges/ges-formatter.h:
+	  GESFormatter: Add data-related methods
+
+2010-10-07 14:07:18 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/save_and_load.c:
+	  tests: update unit tests
+
+2010-10-07 13:49:15 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	* ges/Makefile.am:
+	* ges/ges-formatter.c:
+	* ges/ges-formatter.h:
+	* ges/ges-keyfile-formatter.c:
+	* ges/ges-keyfile-formatter.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  GESKeyFileFormatter: New GKeyFile GESFormatter
+
+2010-09-24 19:31:53 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  tools: add project file support to ges-launch
+
+2010-09-29 12:43:47 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	  GESTimeline: implementation of save_to/load_from uri
+
+2010-09-21 15:39:07 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/.gitignore:
+	* tests/check/ges/save_and_load.c:
+	  tests: Add save/load tests
+
+2010-09-13 16:21:15 -0700  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	* ges/Makefile.am:
+	* ges/ges-formatter.c:
+	* ges/ges-formatter.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  GESFormatter: Project file format support
+
+2010-10-22 15:58:22 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: set track state to NULL before removing from timeline
+
+2010-10-07 12:29:05 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: release timeline objects when a layer is removed
+
+2010-10-22 14:02:29 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  GESTrack: keep track of trackobjects and remove/release them in dispose
+
+2010-10-22 14:01:34 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/basic.c:
+	  tests: test for track removal while timeline contains timeline objects
+
+2010-10-20 16:23:22 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/basic.c:
+	  tests: test that adding tracks after adding layers works
+
+2010-10-19 17:56:37 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/basic.c:
+	  tests: unit test to check that objects in layers are properly added to the timeline
+
+2010-09-22 12:32:47 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  GESSimpleTimelineLayer: override get_objects () virtual method
+
+2010-09-22 12:29:26 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-layer.h:
+	  GESTimelineLayer: add get_objects virtual method
+
+2010-10-20 18:00:24 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: allow adding tracks after layers
+
+2010-10-19 16:39:43 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: add existing timeline objects when adding layers
+
+2010-09-23 14:49:04 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges.c:
+	  ges: ensure built-in timeline object classes are registered
+
+2010-09-23 14:47:48 +0100  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: remove layers before removing tracks in dispose ()
+
+2010-11-25 14:03:07 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  ges-launch: Gracefully handle missing properties
+
+2010-11-25 14:02:26 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  Timeline: Remove unneeded variable
+
+2010-11-25 14:01:15 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	  TimelineObject: Forgot a break in a switch/case
+
+2010-11-23 18:24:38 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Make sure playsink events are sent to all incoming streams
+	  PlaySink will not send seek events to all incoming streams since it assumes that
+	  they all come from the same source (like a file).
+	  When used with multiple gnonlin compositions we need to make sure those seek events
+	  are sent to all of them.
+
+2010-11-23 17:34:07 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* .gitignore:
+	  ges: Ignore more
+
+2010-11-23 17:33:32 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/.gitignore:
+	* tests/examples/.gitignore:
+	  tests: Ignore more files
+
+2010-10-23 17:38:31 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-video-transition.c:
+	  GesTrackVideoTransition: Prefer videomixer2 to videomixer
+	  If present
+
+2010-11-10 16:13:07 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* AUTHORS:
+	* README:
+	  AUTHORS/README: cleanup
+
+2010-11-11 17:39:32 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  ges-launch: g_print => g_printerr for relevant messages
+
+2010-11-09 16:27:06 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/concatenate.c:
+	  examples: Fix for latest GstDiscoverer API changes
+
+2010-11-04 12:29:20 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: Require GStreamer core/base 0.10.30.4
+
+2010-11-04 12:28:46 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: Change for updated GstDiscoverer API
+
+2010-09-28 16:30:30 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* ges/Makefile.am:
+	  Add gstvideo in build dependencies
+
+2010-09-23 18:39:01 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  common: Update to master
+
+2010-09-23 18:33:27 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* docs/libs/Makefile.am:
+	* ges/Makefile.am:
+	* ges/ges-screenshot.c:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	* tests/check/Makefile.am:
+	* tests/examples/Makefile.am:
+	* tests/examples/concatenate.c:
+	* tools/Makefile.am:
+	  all: Changes for discoverer being merged upstream
+	  Along with a whole bunch of Makefile fixups
+
+2010-09-16 09:07:05 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  ges-launch: Return 0 if no errors, else 1
+
+2010-09-16 08:42:50 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Update common
+
+2010-09-14 16:04:02 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-screenshot.c:
+	* ges/ges-screenshot.h:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	* ges/ges-timeline.c:
+	* tests/examples/concatenate.c:
+	* tests/examples/test4.c:
+	* tests/examples/thumbnails.c:
+	* tools/ges-launch.c:
+	  Update for factorylist/convertframe being merged to gst core/base
+
+2010-08-20 12:40:05 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* ges/Makefile.am:
+	* ges/ges-screenshot.c:
+	* ges/ges-timeline-pipeline.h:
+	* ges/ges-timeline.c:
+	* tests/examples/concatenate.c:
+	* tests/examples/test4.c:
+	* tests/examples/thumbnails.c:
+	* tools/ges-launch.c:
+	  Update to moved gst-convenience
+
+2010-09-02 18:19:51 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  common: Update to latest version
+
+2010-08-05 18:32:17 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  relax restrictions on adding transitions
+	  We don't need these any more: the valid property tells us whether it is safe
+	  to go to GST_STATE_PLAYING or not.
+
+2010-08-05 18:11:49 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  move a callback into the proper section of the file
+
+2010-08-05 17:50:48 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  fix bug in time format regex
+
+2010-08-05 17:48:07 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  show duration text entry for all object types
+
+2010-08-05 16:19:35 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  connect to delete event instead of destroy
+
+2010-08-05 16:14:09 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  hide empty menus
+
+2010-08-05 16:12:45 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  ignore some UI signals when selection changes
+
+2010-08-05 15:46:34 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  disable playback when layer is in invalid state
+
+2010-08-05 15:46:02 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	* tests/check/ges/simplelayer.c:
+	  layer is also invalid when there are transitoins at the beginning/end
+
+2010-08-05 15:21:57 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	* tests/check/ges/simplelayer.c:
+	  add vaid property and unit tests
+
+2010-08-05 15:21:04 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  add doc comment for object-moved signal
+
+2010-08-05 12:52:13 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  update list store layer emits object-moved
+
+2010-08-05 12:51:31 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  add unit tests for 'object-moved' signal
+
+2010-08-05 12:50:19 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	* ges/gesmarshal.list:
+	  add object-moved signal to simple timeline layer
+
+2010-08-04 18:49:19 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  implement move up/down commands
+
+2010-08-04 18:31:34 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  connect to move_{up,down actions
+
+2010-08-04 18:25:24 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  also disallow moving past the start or end of timeline
+
+2010-08-04 18:02:14 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  can move only when exactly one clip is selected (and not in playback/paused)
+
+2010-08-04 17:48:12 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  add move up/down actions
+
+2010-08-04 17:43:35 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  re-arrange tool-bar buttons
+
+2010-08-04 17:34:51 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  don't allow changes to timeline if we're paused
+
+2010-08-04 17:27:01 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  implement the stop button
+
+2010-08-04 17:17:59 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  add stop button
+
+2010-08-04 16:57:18 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  code clean-up and comments
+
+2010-08-04 16:36:15 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  eliminate unecessary function prototypes
+
+2010-08-04 16:26:39 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  move UI callbacks to end of file
+
+2010-08-04 16:25:00 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  clean up application struct
+
+2010-08-03 19:53:34 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  more xml tweaks
+
+2010-08-03 19:42:35 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  don't connect to selected objects unless selection is homogenous
+
+2010-08-03 19:38:13 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  UI layout tweaks
+
+2010-08-03 19:31:23 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  only allow transitions to be added when the last object isn't a transition
+
+2010-08-03 16:19:01 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  use a private struct with get_selection_foreach
+
+2010-08-03 15:59:38 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  disable add_transition
+
+2010-08-03 15:54:25 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  get add_transition action from xml
+
+2010-08-03 15:51:29 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  menu/toolbar for adding transitions
+
+2010-08-03 15:40:44 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  allow multiple selections
+
+2010-08-03 15:17:25 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  set pipeline to ready on EOS
+
+2010-08-03 15:03:24 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  make sure all actions that mutate timeline are disabled during playback
+
+2010-08-03 14:58:15 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  set frequency property when spin button changed
+
+2010-08-03 14:53:22 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  update frequency spin button when selection changed
+
+2010-08-03 14:46:21 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  add frequency and volume widgets, with signal handlers
+
+2010-08-03 14:43:41 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  update source volume when slider is moved
+
+2010-08-03 14:39:56 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  update volume slider when volume changes
+
+2010-08-03 14:38:42 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  get freq/volume widgets
+
+2010-08-02 19:06:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  implement background widget
+
+2010-08-02 17:26:24 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  fill backround type table from enum values
+
+2010-08-02 17:25:26 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  adjust visibility calculations
+
+2010-08-02 17:24:24 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  allow adding test sources
+
+2010-08-02 17:22:39 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  get background widgets from xml
+
+2010-08-02 17:21:36 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  test sources
+
+2010-07-27 15:25:20 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  add text box to set durations from formatted strings
+
+2010-07-26 20:40:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  set sate of pipeline to NULL prior to exit
+
+2010-07-23 19:14:21 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  update text property from text widget
+
+2010-07-23 18:59:40 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  call ges_simple_timeline_layer_add_object intead of base method
+
+2010-07-23 18:59:11 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  completely hide properties widgets when nothign is selected
+
+2010-07-23 18:56:48 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  refactor connecto_to_* family of functions
+
+2010-07-23 18:43:37 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  connect to text property widgets
+
+2010-07-23 18:42:53 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  add widgets to UI for editing text properties
+
+2010-07-23 18:42:13 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  add signal handlers for text properties
+
+2010-07-23 18:38:46 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  keep track of the type of selected objects
+
+2010-07-23 18:36:54 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  add title source when action activates
+
+2010-07-23 10:58:11 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  add text properties to UI
+
+2010-07-22 18:07:26 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  allow multiple files to be added
+
+2010-07-22 17:58:00 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  use file-chooser dialog when adding files
+
+2010-07-22 13:13:20 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  disable playback when there's nothing in the timeline
+
+2010-07-22 12:54:01 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  disable add_file during playback
+
+2010-07-22 12:51:07 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  disable delete during playback
+
+2010-07-22 12:48:34 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  disable properties during playback
+
+2010-07-22 12:43:13 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  update state from bus; set button icon from playback state
+
+2010-07-22 12:20:59 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  set the action sensitivity, not the menu item
+
+2010-07-22 12:17:24 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  toggle playback when button clicked
+
+2010-07-22 12:08:28 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  fix signal handler signatures
+
+2010-07-22 12:05:09 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  add play action/controls
+
+2010-07-22 11:00:15 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  add toolbar; connect to action signals instead of menu items directly
+
+2010-07-22 10:18:41 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  also set state of delete menu item
+
+2010-07-21 20:21:01 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  update in-point from in-point slider
+
+2010-07-21 19:02:09 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  add in-point slider
+
+2010-07-21 19:01:33 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  format duration nicely
+
+2010-07-21 18:15:56 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  set slider range before setting duration
+
+2010-07-21 18:15:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  remove some unneeded function protos
+
+2010-07-21 18:03:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  slider updates duration of selected object now
+
+2010-07-21 17:00:35 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  connect to duration and max-duration changed of filesources
+
+2010-07-21 16:29:12 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  do housekeeping each time selection is updated
+
+2010-07-21 15:43:28 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  clean up the create_ui function a bit
+
+2010-07-21 15:23:18 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  disable properties editor when nothing is selected
+
+2010-07-21 15:22:29 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  rename a few attributes
+
+2010-07-21 13:54:24 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  update list model when objects are removed from layer
+
+2010-07-21 13:53:54 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  delete selected objects from layer when user issues delete command
+
+2010-07-21 13:53:01 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  store a pointer to the list selection
+
+2010-07-21 11:40:18 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  display filename and duration of added clip
+
+2010-07-21 11:36:41 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.glade:
+	  don't create tree model in XML
+
+2010-07-20 19:41:58 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	  make sure we get everythign we need from the XML file
+
+2010-07-20 19:13:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  connect to layer object-{added,removed} and display message
+
+2010-07-20 19:05:15 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  add some simple code to add a source to the timeline
+
+2010-07-20 18:53:15 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  add liscence and some organizational comments
+
+2010-07-20 18:38:54 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  we don't have to free all that much, in fact
+
+2010-07-20 18:24:14 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  create a simple timeline layer
+
+2010-07-20 17:59:59 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  pass app instance to signal handlers
+
+2010-07-20 17:55:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  move app data to private struct
+
+2010-07-20 17:52:24 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	  export dynamic symbols in examples so signal autoconnect works
+
+2010-07-20 17:05:26 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	  add protos so it builds under c90 mode
+
+2010-07-20 16:44:01 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	  add ges-ui.c to build system
+
+2010-07-20 16:43:03 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* configure.ac:
+	  add GTK+ to configure.ac as optional dependency for examples UI
+
+2010-07-20 16:23:40 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/ges-ui.c:
+	* tests/examples/ges-ui.glade:
+	* tools/ges-ui.c:
+	* tools/ges-ui.glade:
+	  move ui to tests/examples
+
+2010-07-20 15:56:12 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-ui.c:
+	* tools/ges-ui.glade:
+	  add 'add_file' menu item
+
+2010-07-20 13:57:28 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-ui.c:
+	* tools/ges-ui.glade:
+	  flesh out ui design a bit more
+
+2010-07-19 19:39:26 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-ui.c:
+	* tools/ges-ui.glade:
+	  quit when main window closes
+
+2010-07-19 19:02:41 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-ui.c:
+	  check in UI implementation
+
+2010-07-19 18:09:32 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-ui.glade:
+	  check in ui file
+
+2010-09-02 17:55:20 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	  GESTrackObject: Fix debug statement
+
+2010-09-02 17:54:48 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/filesource.c:
+	  tests: Fix a leak in test_filesource_images
+
+2010-09-01 17:04:26 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-source.c:
+	  GESTimelineFileSource: Don't leak strings
+
+2010-07-16 16:43:38 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  update unit tests to catch an earlier bug
+
+2010-07-14 16:50:16 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	* tests/examples/text_properties.c:
+	  check in text properties example
+
+2010-07-14 16:14:19 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-source.c:
+	  deactivate overlay when no text is present
+
+2010-07-14 16:12:56 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/text_properties.c:
+	  add unit tests for text properties
+
+2010-07-14 15:23:35 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-source.h:
+	  expose text, font-desc, and alignment properties in GESTimelineSource
+
+2010-07-14 15:19:30 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-text-overlay.c:
+	  fix typo in docstring
+
+2010-07-14 13:18:57 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-text-overlay.c:
+	  add conversion elements to TrackTextOverlay
+
+2010-07-14 13:14:54 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  tweak gstl recalculate: cur track object sets priority for next transition
+
+2010-07-13 18:44:41 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/titles.c:
+	  supply type param to _find_track_objects in unit tests
+
+2010-07-13 18:42:46 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	  add type argument to ges_timeline_object_find_track_objects()
+
+2010-07-13 18:14:33 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  unref timeline in unit test
+
+2010-07-13 18:12:34 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-source.c:
+	  don't add the same track object twice
+
+2010-07-13 17:13:02 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	  check for proper instance type in _set_* functions
+
+2010-07-13 12:11:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-object.h:
+	  fix documentation comment
+
+2010-07-09 18:59:41 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-source.c:
+	  create a text overlay with default text for every TimelineSource
+
+2010-07-09 18:29:27 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-source.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/simplelayer.c:
+	  increase default priority offset for sources; update unit tests
+
+2010-07-09 18:27:19 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  move this commit down where it belongs
+
+2010-07-09 18:26:56 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-source.c:
+	  override create_track_objects (plural) in TimelineSource
+
+2010-07-09 15:59:44 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/layer.c:
+	  test height notification
+
+2010-07-09 13:49:23 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	  update height when track object priority offset changes
+
+2010-07-09 13:48:19 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	  reword priority documentation comments
+
+2010-07-09 12:10:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  use object height in gstl recalcuate
+
+2010-07-09 12:09:29 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	  initialize height to 1
+
+2010-07-09 12:09:08 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-object.h:
+	  add accessor macro
+
+2010-07-09 11:51:21 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	  add height property
+
+2010-07-09 11:50:31 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	  document timelineobject::priority
+
+2010-07-08 19:01:46 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	* tests/check/ges/layer.c:
+	  expose priority-offset as a property
+
+2010-07-08 18:52:15 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* tests/check/ges/layer.c:
+	  update documentation and unit tests
+
+2010-07-08 18:51:38 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	  distinguish between base_priority, priority_offset, and gnl_priority
+
+2010-07-07 17:07:33 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	  split timeline_object_add_track_object out of create_track_object
+
+2010-07-07 16:51:39 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline.c:
+	  add create_track_objects
+
+2010-07-07 15:47:51 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-object.h:
+	  add create_track_objects declarations
+
+2010-07-07 15:47:12 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline.c:
+	  call create_track_objects in timeline.c
+
+2010-08-31 13:49:21 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	  GESTimelineTransition: Remove unneeded variable
+
+2010-08-31 13:29:37 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  ges-launch: Fix memory leak
+
+2010-08-12 15:45:15 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-image-source.c:
+	  allow borders on still image videoscale
+
+2010-08-12 15:44:47 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  always support audio on still images
+
+2010-08-11 18:23:17 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-image-source.c:
+	  remove ffmpegcolorspace after freeze (see 626518)
+
+2010-08-10 16:17:07 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  don't set max duration on still images
+
+2010-08-10 10:54:04 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-image-source.c:
+	  implement still image sources
+
+2010-08-09 18:36:00 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-image-source.c:
+	  naive implementation of still images (seems broken)
+
+2010-08-09 18:35:26 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-file-source.c:
+	* tests/check/ges/filesource.c:
+	  create GESTrackAudioTestSource for audio tracks when is-image is true
+
+2010-08-09 18:34:35 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  set 'is-image' property true when source has an image stream type
+
+2010-08-09 13:27:25 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/filesource.c:
+	  set supported formats in new unit test
+
+2010-08-09 13:26:20 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-file-source.c:
+	  create image sources when is_image is set to true
+
+2010-08-09 12:01:34 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-file-source.h:
+	  Add "is-image" property to GESTimelineFileSource
+
+2010-08-09 11:59:04 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/filesource.c:
+	  unit test for image sources
+
+2010-08-06 12:58:08 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-track-image-source.c:
+	* ges/ges-track-image-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  check in GESTrackImageSource
+
+2010-08-05 12:19:32 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/Makefile.am:
+	  ges: Also dist the generated files
+
+2010-08-05 11:40:49 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/Makefile.am:
+	  marshal: Fix typo in the Makefile that prevented marshal .c being built
+
+2010-07-23 18:22:31 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-title-source.c:
+	  link to the right sink pad on textoverlay object
+
+2010-07-16 18:41:02 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  fwrite doesn't return the number of bytes written. check that fwrite is non-zero and that ferror() isn't set instead.
+
+2010-07-16 18:39:07 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-screenshot.c:
+	  don't plug encoders when raw caps are given
+
+2010-07-16 18:37:54 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	* tests/examples/thumbnails.c:
+	  add thumbnailing example which tests rest of thumbnailing api
+
+2010-07-16 17:38:44 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  ges_caps_set_simple was being called incorrectly
+
+2010-07-16 18:17:27 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/Makefile.am:
+	  docs: Use the proper location for header files
+
+2010-07-16 18:00:05 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/Makefile.am:
+	  ges: Don't forget to dist ges-timeline-overlay.h
+
+2010-07-16 17:29:05 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  TimelinePipeline: Make sure fwrite completes successfully
+
+2010-07-15 19:50:22 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  add option to ges-launch to save thumbnails periodicaly
+
+2010-07-15 19:49:53 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  update documentation
+
+2010-07-15 19:49:28 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	  add routine to save a thumbnail in the specified encoding
+
+2010-07-15 19:19:57 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-screenshot.c:
+	  add todo item
+
+2010-07-15 19:12:53 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-screenshot.c:
+	  factor encoder-finding code into separate function
+
+2010-07-15 18:59:50 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-screenshot.c:
+	  use gstprofile to plug an encoder and encode the current frame
+
+2010-07-15 16:58:22 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	  add methods to retreive the current frame as a thumbnail
+
+2010-07-15 16:56:00 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-screenshot.c:
+	* ges/ges-screenshot.h:
+	  duplicate code from gstscreenshot.{c,h} and gstplaysink.{c,h}
+
+2010-07-15 12:09:26 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Use smartencoder feature from encodebin
+
+2010-07-14 13:29:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Require new core/base for fast pad linking
+
+2010-07-14 13:29:23 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-video-transition.c:
+	  GES: Switch to new fast pad linking
+
+2010-07-08 17:10:19 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/transition.c:
+	  fix mem leak in unit test
+
+2010-07-08 16:35:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-timeline-test-source.c:
+	  Don't expose test source enum value table
+
+2010-07-08 15:54:46 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	  don't expose transition enum value table
+
+2010-07-08 15:54:27 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	  use gtype to get the enum value for the nick
+
+2010-07-08 13:20:56 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	* ges/ges-track-video-transition.c:
+	* ges/ges-track-video-transition.h:
+	  check whether setting vtype property actually succeeds
+
+2010-07-07 18:00:21 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	* ges/ges-track-video-transition.c:
+	  initialize transitions to type _TRANSITION_TYPE_NONE
+
+2010-07-08 13:41:12 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	  add new invalid enum type
+
+2010-07-08 13:20:56 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-video-transition.c:
+	  refactor duration_changed method as this is now a TrackObjectClass method
+
+2010-07-08 13:20:08 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  remove notify::duration signal handler
+
+2010-07-08 12:35:41 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	  add track object virtual methods for property change notifications
+
+2010-07-07 17:58:59 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-video-transition.c:
+	  remove unneeded assertions
+
+2010-07-07 17:34:58 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-timeline-overlay.h:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-track-operation.c:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  remove unneeded _new methods on certain base classes
+
+2010-07-06 19:08:56 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  docs: Add ges_track_video_test_source_set_pattern
+
+2010-07-06 19:07:50 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  TrackTransition: Don't return anything for unhandled tracks
+
+2010-07-06 19:06:24 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	* ges/ges-track-video-transition.c:
+	  TrackTransition: Remove second argument from duration_changed vmethod
+	  And get properties directly from parent classes instead
+
+2010-07-06 19:05:38 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-video-test-source.c:
+	  GES: whitespace fixes
+
+2010-07-06 19:04:42 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	  GES: Simplify loops
+
+2010-07-06 19:03:52 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	  GES: Remove un-needed branches
+	  res it initialized to NULL
+
+2010-07-06 19:03:05 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	  GES: Fix initialization values
+
+2010-07-06 19:02:02 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-transition.c:
+	  GES: Remove useless variables
+
+2010-07-06 19:00:50 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-track-video-test-source.h:
+	  GES: Fix function prototypes
+
+2010-07-06 18:58:16 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-test-source.c:
+	  TimelineTestSource: Set freq/volume whether mute or not
+
+2010-07-06 18:57:22 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-overlay.c:
+	  TimelineOverlay: Fix doc
+
+2010-07-06 18:54:33 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-video-transition.c:
+	* tests/check/ges/transition.c:
+	  TrackVideoTransition: Avoid switching from crossfade to other types
+	  This now exposes a bug in the TimelineTransition, since it will have
+	  a transition type different from its track objects.
+
+2010-07-06 16:27:21 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  SimpleTimelineLayer: Fix top-level doc
+
+2010-07-06 16:27:08 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-layer.c:
+	  TimelineLayer: Document _set_priority
+
+2010-07-06 16:26:48 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-video-transition.c:
+	* ges/ges-track-video-transition.h:
+	  TrackVideoTransition: Use proper transition type
+
+2010-07-06 16:26:26 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-utils.c:
+	  utils: Document timeline_new_audio_video
+
+2010-07-06 16:25:50 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	  docs: hide _get_type/TYPE in private sections
+
+2010-07-02 16:39:33 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-transition.h:
+	  make type field of video transition private
+
+2010-07-02 16:23:41 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges.types:
+	* ges/ges-timeline-overlay.h:
+	* ges/ges-timeline-test-source.h:
+	* ges/ges-timeline-text-overlay.h:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-title-source.h:
+	* ges/ges-track-audio-test-source.h:
+	* ges/ges-track-audio-transition.h:
+	* ges/ges-track-text-overlay.h:
+	* ges/ges-track-title-source.h:
+	* ges/ges-track-transition.h:
+	* ges/ges-track-video-test-source.h:
+	* ges/ges-track-video-transition.h:
+	* ges/ges.h:
+	  another massive documentation update
+
+2010-07-02 15:42:48 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-test-source.h:
+	* ges/ges-track-audio-test-source.c:
+	* tests/check/ges/backgroundsource.c:
+	  expose freq and volume props in GESTimelineTestSource
+
+2010-07-02 14:46:09 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-audio-test-source.h:
+	  add routines to AudioTestSource to set freq and volume
+
+2010-07-02 13:14:19 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-text-overlay.c:
+	* tests/check/ges/overlays.c:
+	  remove 'mute' property from GESTimelineTextOverlay
+
+2010-07-02 12:57:38 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-enums.c:
+	  fix incorrect type name strings
+
+2010-07-02 12:48:11 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges.types:
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-test-source.h:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-video-test-source.c:
+	* ges/ges-track-video-test-source.h:
+	* tests/check/ges/backgroundsource.c:
+	  convert rest of code to use GESVideoTestPattern
+
+2010-07-02 12:47:31 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	  add GESVideoTestPattern enum
+
+2010-07-02 12:26:55 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/titles.c:
+	  update unit tests
+
+2010-07-02 12:26:42 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	  make sure to set properties on new track objects
+
+2010-07-02 12:25:58 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-text-overlay.c:
+	* ges/ges-track-text-overlay.h:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-title-source.h:
+	  replace existing text position enums
+
+2010-07-02 12:25:12 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-text-overlay.h:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-title-source.h:
+	  replace existing text position enums
+
+2010-07-02 12:12:30 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	  add text positioning enums
+
+2010-07-01 18:53:08 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  move missing symbol to enums section
+
+2010-07-01 18:50:55 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	  update documentation files
+
+2010-07-01 18:50:30 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	* ges/ges-track-video-transition.c:
+	* tests/check/ges/simplelayer.c:
+	* tests/check/ges/transition.c:
+	* tools/ges-launch.c:
+	  move and rename TRANSITION_VTYPE into enums.h and rename
+
+2010-07-01 17:24:49 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  move track type enum to ges-enums.{h,c}
+
+2010-07-01 17:03:55 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges.h:
+	  check in skeletal ges-enums.{c,h}
+
+2010-07-01 16:48:45 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-timeline-overlay.h:
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-filesource.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track-operation.c:
+	* ges/ges-track-operation.h:
+	* ges/ges-track-source.h:
+	* ges/ges-track-text-overlay.c:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-video-test-source.c:
+	* ges/ges-track-video-transition.c:
+	  massive documentation updates
+
+2010-07-01 12:35:31 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-text-overlay.h:
+	  GESTimelineTextOverlay inherits from GESTimelineOverlay
+
+2010-07-01 12:34:46 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-timeline-overlay.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  check in emtpy GESTimelineOverlay class
+
+2010-07-01 11:17:46 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-timeline-overlay.h:
+	* ges/ges-timeline-text-overlay.c:
+	* ges/ges-timeline-text-overlay.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	* tests/check/ges/overlays.c:
+	* tests/examples/overlays.c:
+	  GESTimelineOverlay -> GESTimelineTextOverlay
+
+2010-06-30 20:25:18 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-timeline-background-source.c:
+	* ges/ges-timeline-background-source.h:
+	* ges/ges-timeline-test-source.c:
+	* ges/ges-timeline-test-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	* tests/check/ges/backgroundsource.c:
+	* tools/ges-launch.c:
+	  GESTimelineBackgroundSource -> GESTimelineTestSource
+
+2010-06-30 20:01:18 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-timeline-background-source.c:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-audio-test-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  GESTrackAudioBackgroundSource -> GESTrackAudioTestSource
+
+2010-06-30 19:34:29 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-timeline-background-source.c:
+	* ges/ges-track-audio-background-source.c:
+	* ges/ges-track-audio-background-source.h:
+	* ges/ges-track-audio-test-source.c:
+	* ges/ges-track-audio-test-source.h:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-video-background-source.c:
+	* ges/ges-track-video-background-source.h:
+	* ges/ges-track-video-test-source.c:
+	* ges/ges-track-video-test-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	* tests/check/ges/backgroundsource.c:
+	  GESTrackVideoBackgroundSource -> GESTrackVideoTestSource
+
+2010-06-30 18:13:35 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-track-text-overlay.c:
+	* ges/ges-track-text-overlay.h:
+	* ges/ges-track-video-overlay.c:
+	* ges/ges-track-video-overlay.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	* tests/check/ges/overlays.c:
+	  GESTrackVideoOverlay -> GESTrackTextOverlay
+
+2010-06-30 18:02:49 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-track-overlay.c:
+	* ges/ges-track-overlay.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  remove GESTrackOverlay
+
+2010-06-30 17:59:17 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-track-video-overlay.c:
+	* ges/ges-track-video-overlay.h:
+	* tests/check/ges/overlays.c:
+	  GESTrackVideoOverlay inherits directly from GESTrackOperation
+
+2010-06-30 17:50:49 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-track-operation.c:
+	* ges/ges-track-operation.h:
+	* ges/ges-types.h:
+	  check in GESTrackOperation
+
+2010-06-30 17:34:54 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	* ges/ges-track-video-background-source.h:
+	  documentation fixes
+
+2010-06-30 17:29:32 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  update documentation
+
+2010-06-30 17:29:21 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-track-overlay.c:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-title-source.h:
+	* ges/ges-track-video-overlay.c:
+	* ges/ges-track-video-overlay.h:
+	* ges/ges-types.h:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/titles.c:
+	  GESTrackVideoTitleSource -> GESTrackTitleSource
+
+2010-06-30 17:02:10 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-track-overlay.c:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-title-source.h:
+	* ges/ges-track-video-overlay.c:
+	* ges/ges-track-video-overlay.h:
+	* ges/ges-track-video-title-source.c:
+	* ges/ges-track-video-title-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  remove GESTrackTitleSource
+
+2010-06-30 16:47:29 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-source.h:
+	  fix doc comments
+
+2010-06-30 16:47:12 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-track-video-title-source.c:
+	* ges/ges-track-video-title-source.h:
+	  GESTrackVideoTitleSource inherits directly from GESTrackObject
+
+2010-06-30 16:34:47 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-timeline-background-source.c:
+	* ges/ges-track-audio-background-source.h:
+	* ges/ges-track-background-source.c:
+	* ges/ges-track-background-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  remove GESTrackBackgroundSource class
+
+2010-06-30 16:29:04 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-audio-background-source.c:
+	* ges/ges-track-audio-background-source.h:
+	  GESTrackAudioBackgroundSource inherits from GESTrackSource
+
+2010-06-30 16:25:01 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-background-source.c:
+	* ges/ges-track-video-background-source.h:
+	  GESTrackVideoBackgroundSource inherits directly from track object
+
+2010-06-30 15:40:31 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-source.c:
+	* ges/ges-track-source.h:
+	  move create_element virtual method up to TimelineSource class
+
+2010-06-30 15:39:24 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  fix documentation mistake
+
+2010-06-30 13:22:04 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-track-audio-title-source.c:
+	* ges/ges-track-audio-title-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  remove GESTrackAudioTitleSource
+
+2010-06-28 18:24:12 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	  create test track object instead of audio-title-source
+
+2010-06-28 18:23:37 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-transition.c:
+	  keep track of and release request pads for smpte also
+
+2010-06-28 18:20:15 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-transition.c:
+	  free mixer in dispose separately from sink pads
+
+2010-06-28 17:33:53 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/.gitignore:
+	  examples: Ignore files
+
+2010-06-28 17:33:34 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/.gitignore:
+	  check: Ignore files
+
+2010-06-28 17:24:25 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	  docs: Add links to all new documentation files
+
+2010-06-28 17:23:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/overlays.c:
+	  tests: Add <stdlib.h> for exit usage
+
+2010-06-25 12:04:47 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-overlay.c:
+	  don't forget to unref pad targets
+
+2010-06-23 18:23:31 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-overlay.c:
+	  rough overlay implementation
+
+2010-06-23 18:22:56 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	* tests/examples/overlays.c:
+	  check in overlay test app
+
+2010-06-23 16:42:14 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-overlay.c:
+	  activate property setting functions
+
+2010-06-23 16:38:45 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/overlays.c:
+	  activate remaining overlay tests
+
+2010-06-23 16:38:19 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges.h:
+	  add video overlays to main header
+
+2010-06-23 16:32:25 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-overlay.c:
+	  create timeline-overly creates appropriate track object
+
+2010-06-23 16:30:18 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-track-video-overlay.c:
+	* ges/ges-track-video-overlay.h:
+	* ges/ges-types.h:
+	  check in GESTrackVideoOverlay
+
+2010-06-21 16:22:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-track-overlay.c:
+	* ges/ges-track-overlay.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  check in ges-track-overlay.{c,h}
+
+2010-06-21 16:04:22 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/overlays.c:
+	  check in overlay unit tests
+
+2010-06-21 15:47:04 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-timeline-overlay.c:
+	* ges/ges-timeline-overlay.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  check in timelineoverlay, structural copy of GESTimelineTitleSource
+
+2010-06-21 16:04:50 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-transition.h:
+	  update doc comment
+
+2010-06-18 16:36:54 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	* ges/ges-track-video-transition.c:
+	  remove unneeded paramenter to create_element
+
+2010-06-18 16:26:24 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/transition.c:
+	  update unit tests
+
+2010-06-18 16:22:38 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  update documentation
+
+2010-06-18 16:22:21 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	* ges/ges-track-video-transition.c:
+	* ges/ges-track-video-transition.h:
+	  push struct fields down to VideoTransition
+
+2010-06-18 15:54:37 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-video-transition.c:
+	  push make_video_bin() down into subclass
+
+2010-06-18 15:21:02 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-audio-transition.h:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  push relevant struct fields into AudioTransition
+
+2010-06-18 15:20:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  update documentation
+
+2010-06-18 15:04:50 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-transition.c:
+	  push make_audio_bin down into subclass
+
+2010-06-18 13:42:47 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  add duration_changed virtual method to GESTrackTransition
+
+2010-06-18 12:55:30 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  add create_element vmethod to GESTrackTransition
+
+2010-06-18 11:50:08 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	  create transition subtype according to track type
+
+2010-06-18 11:24:07 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-track-video-transition.c:
+	* ges/ges-track-video-transition.h:
+	* ges/ges-types.h:
+	  check in GESTrackVideoTransition, empty subclass of TrackTransition
+
+2010-06-18 11:09:28 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-track-audio-transition.c:
+	* ges/ges-track-audio-transition.h:
+	* ges/ges-types.h:
+	  check in GESTrackAudioTransition, empyt subclass of TrackTransition
+
+2010-06-17 18:31:07 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-title-source.c:
+	* ges/ges-track-video-title-source.h:
+	  fix header file param names
+
+2010-06-17 12:25:27 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-title-source.c:
+	  fix stupid copy/paste typo
+
+2010-06-17 11:22:30 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-track-video-title-source.c:
+	  free existing strings before assigning new ones
+
+2010-06-17 11:21:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/titles.c:
+	  clean up some memory leaks in the titles unit test
+
+2010-06-16 19:04:53 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/titles.c:
+	  unit tests for {h,v}alignment properties
+
+2010-06-16 19:03:51 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-title-source.h:
+	  implement {h,v}alignment property for timeline titles
+
+2010-06-16 19:02:40 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  documentation
+
+2010-06-16 19:01:48 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-title-source.c:
+	* ges/ges-track-video-title-source.h:
+	  add ..._set_{h,v}alignment() methods to video titles
+
+2010-06-16 16:58:42 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-title-source.h:
+	  add font-desc property to TimelineTitleSource
+
+2010-06-16 16:58:13 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-video-title-source.c:
+	* ges/ges-track-video-title-source.h:
+	  add ...set_font_desc() method to VideoTitleSource
+
+2010-06-16 13:27:35 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-title-source.c:
+	  set black background on titles by default
+
+2010-06-16 13:22:15 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  add title sources to ges-launch
+
+2010-06-16 13:21:19 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	  have timeline title source create audio title sources
+
+2010-06-16 13:20:54 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-track-audio-title-source.c:
+	* ges/ges-track-audio-title-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  check in ges-track-audio-title-source.{c,h}
+
+2010-06-15 19:22:04 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-title-source.c:
+	  don't forget to check for null
+
+2010-06-15 19:21:37 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-title-source.h:
+	  set text on video track objects when text property changes
+
+2010-06-15 19:20:17 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	  implement ges_timeline_title_source_create_track_object
+
+2010-06-15 17:10:17 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-background-source.h:
+	  remove trailing '$' accidentally pasted
+
+2010-06-15 17:09:50 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  update documentation
+
+2010-06-15 17:09:31 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-title-source.c:
+	* ges/ges-track-video-title-source.h:
+	  these should have been checked in before
+
+2010-06-15 13:16:28 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-title-source.c:
+	  add text property to GESTimelineTitleSource
+
+2010-06-15 13:14:14 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/titles.c:
+	  check in unit tests for titles
+
+2010-06-14 19:19:23 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-background-source.c:
+	* ges/ges-timeline-background-source.h:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-title-source.h:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-track-audio-background-source.c:
+	* ges/ges-track-audio-background-source.h:
+	* ges/ges-track-background-source.c:
+	* ges/ges-track-background-source.h:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-title-source.h:
+	* ges/ges-track-video-background-source.c:
+	* ges/ges-track-video-background-source.h:
+	  massive update to doc comments
+
+2010-06-14 19:18:46 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-background-source.c:
+	* ges/ges-track-video-background-source.h:
+	  remove the zone plate and gamut enum values
+
+2010-06-14 17:52:29 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  massive update to documentation
+
+2010-06-14 17:52:09 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-track-video-background-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  check in skeletal GESTrackVideoTitleSource
+
+2010-06-14 15:34:08 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-track-title-source.c:
+	* ges/ges-track-title-source.h:
+	* ges/ges-types.h:
+	  check in skeletal GESTrackTitleSource
+
+2010-06-14 13:31:15 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-timeline-title-source.c:
+	* ges/ges-timeline-title-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  check in sekeletal GESTimelineTitleSource
+
+2010-06-11 17:57:20 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/backgroundsource.c:
+	  don't forget to unref objects in unit tests
+
+2010-06-11 17:21:45 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges.h:
+	* tests/check/ges/backgroundsource.c:
+	  test vpatern property in unit tests
+
+2010-06-11 17:02:55 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-audio-background-source.c:
+	  make audio background-sources output silence
+
+2010-06-11 16:55:31 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  use ges_timeline_background_source_new_for_nick when creating pattern sources
+
+2010-06-11 16:53:03 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-background-source.c:
+	  don't initialize vpattern field
+
+2010-06-11 16:51:44 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-background-source.c:
+	* ges/ges-timeline-background-source.h:
+	  implement ges_timeline_background_source_new_for_nick()
+
+2010-06-11 16:50:07 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-background-source.c:
+	  move enum table into file scope
+
+2010-06-11 15:28:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  rewrite print_pattern_list to use GEnumValues
+
+2010-06-11 15:28:17 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  remove unnecessary g_print
+
+2010-06-11 15:19:28 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  switch to using GESTimelineBackgroundSource objects for patterns
+
+2010-06-11 15:18:17 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-background-source.c:
+	  set pattern on newly-created video track objects
+
+2010-06-11 15:17:42 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-background-source.c:
+	  implement vpattern gobject property of tl background source
+
+2010-06-11 15:16:40 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-background-source.c:
+	  add big blob of pattern enum values copied from videotestsrc
+
+2010-06-11 15:15:59 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-background-source.h:
+	  add vpattern field to GESTimelineBackground source
+
+2010-06-11 15:14:40 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-background-source.c:
+	* ges/ges-track-video-background-source.h:
+	  implement setting pattern on video background sources
+
+2010-06-11 13:44:40 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-background-source.c:
+	* ges/ges-track-video-background-source.h:
+	  add routines to set track object pattern
+
+2010-06-11 13:41:44 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-background-source.h:
+	  add enum for video patterns
+
+2010-06-11 13:40:54 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/backgroundsource.c:
+	  test Backgroudn sources in layers
+
+2010-06-11 10:42:00 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-background-source.c:
+	  implment GESTimelineBackground source create_track_object
+
+2010-06-11 10:40:02 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	  add audio background source to build system
+
+2010-06-11 10:39:14 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-types.h:
+	  add audio background source to types.h
+
+2010-06-11 10:37:49 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-audio-background-source.c:
+	* ges/ges-track-audio-background-source.h:
+	  check in audio background source
+
+2010-06-10 17:44:17 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-types.h:
+	  add ges video-track background to build system
+
+2010-06-10 13:21:47 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-video-background-source.c:
+	* ges/ges-track-video-background-source.h:
+	  check in ges-track-video-background-source.{c,h}
+
+2010-06-10 13:29:22 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	  add GESTrackBackgroundSource to build system
+
+2010-06-10 17:42:09 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges.h:
+	  add track background source to header
+
+2010-06-10 17:43:56 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-types.h:
+	  add track background source to ges-types.h
+
+2010-06-10 13:51:33 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-background-source.c:
+	* ges/ges-track-background-source.h:
+	  check in GESTrackBackgroundSource
+
+2010-06-10 13:23:59 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-types.h:
+	  add GESTimelineBackgroundSource to build system
+
+2010-06-10 17:41:57 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges.h:
+	  add timeline background source to header
+
+2010-06-10 13:22:36 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/backgroundsource.c:
+	  check in background source unit test
+
+2010-06-10 13:21:06 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-background-source.c:
+	* ges/ges-timeline-background-source.h:
+	  check in ges-timeline-background-source.{c,h}
+
+2010-06-28 17:23:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/simple1.c:
+	* tests/examples/transition.c:
+	  tests: Add <stdlib.h> for exit usage
+
+2010-07-07 01:21:38 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* docs/libs/Makefile.am:
+	* tests/examples/simple1.c:
+	* tests/examples/transition.c:
+	* tools/ges-launch.c:
+	  Fix building issues
+	  Adds missing headers to some files and needed cflags to gtk-doc
+	  scanner build
+
+2010-06-28 17:08:08 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Fix leaked caps
+
+2010-06-21 11:54:01 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: unref all pads
+
+2010-06-21 11:53:30 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Make a copy of the provided GstEncodingProfile
+
+2010-06-21 11:52:49 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Properly release playsink and encodebin
+
+2010-06-21 11:52:01 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: finalize => dispose
+	  We want to release our objects before the parent GstBin class does so.
+
+2010-06-21 11:47:44 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Don't leak caps
+
+2010-06-21 11:47:21 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Properly free profile and outputuri
+
+2010-06-17 11:45:27 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* tools/ges-launch.c:
+	  ges-launch: Cleanup profile
+
+2010-06-14 19:40:50 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-track-transition.c:
+	  GESTrackTransition: Release all pads.
+	  Whether calling get_request_pad or get_static_pad we always end up
+	  with an extra reference.
+	  Also keep a reference on videomixer so it doesn't go away before we
+	  call _release_request_pad() on it with the proper pads to release.
+
+2010-06-14 19:12:42 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Update to latest common
+
+2010-06-11 19:34:39 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  examples: Fix debug statement
+
+2010-06-10 16:19:11 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  release the request pads in dispose
+
+2010-06-10 16:14:20 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  don't keep an extra reference to vsmpte
+
+2010-06-10 12:52:41 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  add elemt. to bin in arbitrary_fill_track_func
+
+2010-06-09 18:57:59 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  fix typos in comment block
+
+2010-06-09 18:56:55 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  gstl_recalculate() won't set priorities to -1
+
+2010-06-09 16:35:17 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-transition.h:
+	  ges/ges-track-transition.h: add missing function prototype
+
+2010-06-09 17:11:56 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tools/ges-launch.c:
+	  tools/ges-launch.c: C90 fixes
+
+2010-06-09 17:09:10 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  tests/examples/transition.c: C90 fixes
+
+2010-06-09 17:08:31 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/test4.c:
+	  tests/examples/test4.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/examples/concatenate.c:
+	  tests/check/ges/concatenate.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/transition.c:
+	  tests/check/ges/transition.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  tests/check/ges/simplelayer.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* tests/check/ges/filesource.c:
+	  tests/check/ges/filesource.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-utils.h:
+	  ges/ges-utils.h: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track.h:
+	  ges/ges-track.h: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track.c:
+	  ges/ges-track.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  ges/ges-track-transition.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	  ges/ges-track-object.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	  ges/ges-timeline-transition.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	  ges/ges-timeline-object.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-layer.c:
+	  ges/ges-timeline-layer.c: C90 fixes
+
+2010-06-09 16:27:43 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  ges/ges-simple-timeline-layer.c: C90 fixes
+
+2010-06-09 13:53:32 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: Actually use the WARNING/ERROR CFLAGS
+	  We weren't detecting all these issues previously
+
+2010-06-09 13:53:07 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  GESTrackTransition: Fix debug statement
+
+2010-06-09 13:52:35 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: Remove all tracks/layers when being disposed
+
+2010-06-09 13:52:08 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-layer.c:
+	  GESTimelineLayer: Release all layer/tracks when being disposed
+
+2010-06-09 11:22:05 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  ges/ges-track-transition.c: set referece to vsmpte to NULL after freeing
+
+2010-06-09 11:21:26 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  ges/ges-track-transition.c: was freeing same GstController twice in _dispose()
+
+2010-06-09 11:17:08 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  common: Update to latest submodule revision
+
+2010-06-08 18:38:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  check: Check that all objects are removed from the layer
+	  This currently fails
+
+2010-06-08 18:37:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/transition.c:
+	  check: Use release_track_object instead of unref
+
+2010-06-08 18:37:01 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  GESTrackTransition: Unref the ControlSource in dispose
+
+2010-06-08 18:36:37 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges.c:
+	  ges: Initialize GstController in ges_init
+
+2010-06-04 19:53:35 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  ges/ges-simple-timeline-layer.c: print a warning when transitions overlap
+
+2010-06-04 18:31:25 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	  ges/ges-timeline-transition.c: can't set enums by nick
+
+2010-06-04 18:07:39 +0200  Brandon Lewis <brandon@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	  ges/ges-timeline-transition.c: initialize vtype enum type from static list of GEnumValues
+
+2010-06-04 17:53:15 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/.gitignore:
+	* tools/.gitignore:
+	  tools/examples: Ignore more files
+
+2010-06-04 17:50:42 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* Makefile.am:
+	* configure.ac:
+	* tests/examples/Makefile.am:
+	* tests/examples/playlist.c:
+	* tools/Makefile.am:
+	* tools/ges-launch.c:
+	  tools: Moving playlist from examples and making it installable
+	  It is now called ges-launch
+
+2010-06-04 12:17:56 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  tests/examples/playlist.c: allow file / pattern durations to be 0 (but not transitions)
+
+2010-06-04 12:17:28 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  tests/examples/playlist.c: clean up playlist help text
+
+2010-06-03 19:14:41 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  tests/examples/playlist.c: better sanity checking of arguments
+
+2010-06-03 19:13:42 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  tests/examples/playlist.c: add option to print avail. transitions/patterns. update help strings
+
+2010-06-03 19:04:11 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	* tests/check/ges/transition.c:
+	  tests/check/ges/{simplelayer.c,transition.c}: update unit tests
+
+2010-06-03 19:02:58 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  ges/ges-track-transition.c: adjust to the change in VTYPE_CROSSFADE
+
+2010-06-03 19:01:21 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	  ges/ges-timeline-transition.{c,h}: value for VTYPE_CROSSFADE changed to 512 and exported in ges-timeline-transition.h
+
+2010-06-02 18:58:14 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/check/ges/transition.c:
+	  tests/check/ges/transition.c: test that changing timeline vtype sets trackobj vtype
+
+2010-06-02 18:57:10 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	  ges/ges-timeline-transition.c: implement vtype gobject property on GESTimelineTransitions
+
+2010-06-02 18:55:52 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  ges/ges-track-transition.{c,h}: add ability to change smptealpha type
+
+2010-06-02 16:52:02 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	* tests/check/ges/transition.c:
+	  tests/check/ges/{simplelayer.c,tests/check/ges/transition.c}: sync with previous api change
+
+2010-06-02 16:50:07 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	  ges/ges-timeline-transition.{c,h}: api change, pass gint instead of GEnumValue to new()
+
+2010-06-02 16:43:10 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	* tests/check/ges/transition.c:
+	  ges/ges-timeline-transition.{c,h},tests/.../transition.c: type change of vtype to gint from GEnumValue
+
+2010-06-02 16:35:57 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	  ges/ges-timeline-transition.c: sync with API change in previous commit
+
+2010-06-02 16:27:58 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  ges/ges-track-transition.{c,h}: api change: pass gint instead of GEnumValue
+
+2010-06-02 15:18:55 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	* tests/check/ges/transition.c:
+	  ges/ges-track-transition.{c,h}, tests/check/ges/transition.c: change vtype from GEnumValue to simple gint;
+
+2010-06-02 13:50:06 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/check/ges/transition.c:
+	  tests/check/ges/transition.c: make sure unit tests work properly
+
+2010-06-02 13:20:09 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/check/ges/transition.c:
+	  tests/check/ges/transition.c: oops, unit tests using wrong api
+
+2010-06-02 12:46:05 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  tests/check/Makefile.am: add transition unit tests to make check
+
+2010-06-02 12:34:57 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/check/ges/transition.c:
+	  tests/check/ges/transition.c: check in transition unit tests
+
+2010-06-01 13:22:05 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-filesource.h:
+	  ges/ges-track-filesource.h: fix typo in documentation commments
+
+2010-06-01 11:57:42 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-filesource.h:
+	  ges/ges-track-filesource.h: fix incorrect definition of GESTrackFileSource structs.
+
+2010-05-31 18:59:12 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-custom-timeline-source.h:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-file-source.h:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-layer.h:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-pipeline.h:
+	* ges/ges-timeline-source.h:
+	* ges/ges-timeline-transition.h:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	* ges/ges-track-filesource.h:
+	* ges/ges-track-object.h:
+	* ges/ges-track-source.h:
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	* ges/ges-track.h:
+	  Add missing documentation
+
+2010-05-31 15:42:23 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	* tests/examples/transition.c:
+	  tests/check/ges/{simplelayer.c,transition.c}: create audio tracks in demos
+
+2010-05-31 15:40:52 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  ges/ges-track-transition.c: implement audio crossfades
+
+2010-05-31 15:38:14 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  ges/ges-track-transition.{c,h}: add fields for audio interpolation to obj
+
+2010-05-28 11:42:29 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	* tests/check/ges/simplelayer.c:
+	  fix bugs
+
+2010-05-28 03:02:49 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  ges/ges-track-transition.{c,h}: rename some members of ges-track-transition struct to separate between audio and video objects.
+
+2010-05-28 02:31:42 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  ges/ges-track-transition.c: factor out code which produces video bin into a seprate routine
+
+2010-05-28 00:19:24 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  tests/examples/playlist.c: make audio stream of audiotestsrc silent (it's much less annoying).
+
+2010-05-28 00:16:28 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  tests/examples/playlist.c: fix inappropriate down-casts in playlist.py
+
+2010-05-28 00:12:45 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  ges/ges-track-transition.c: give gnloperations a unique name
+
+2010-05-28 00:11:51 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  ges/ges-simple-timeline-layer.c: also error when transition duration exceeds that of its neighbors
+
+2010-05-27 23:37:11 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  ges/ges-simple-timeline-layer.c: don't allow user to create timelines with adjacent transitions
+
+2010-05-27 23:36:10 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  ges/ges-simple-timeline-layer.c: implement simple stair-step like priority management scheme.
+
+2010-05-27 23:10:04 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	  tests/check/ges/simplelayer.c: check in massive unit test case for GSTL with transitions
+
+2010-05-27 12:06:00 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  tests/examples/playlist.c: add transitions to playlist example
+
+2010-05-27 12:04:05 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  tests/examples/transition.c: use ges_timeline_transition_new_from_nick()
+
+2010-05-27 12:02:10 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	  ges/ges-timeline-transition.{c,h}: add convenience routine for creating transitions docs/libs/ges-sections.txt: add routine to documentation
+
+2010-05-26 18:19:41 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  tests/examples/playlist.c: re-work pattern command line syntax
+
+2010-05-26 16:57:59 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  ests/examples/transition.c: create transition with specified type
+
+2010-05-26 16:36:24 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  ges/ges-track-transition.{c,h}: add support for other wipes with smptealpha
+
+2010-05-26 16:33:44 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	  ges/ges-timeline-transition.{c,h}: add a type field
+
+2010-05-26 13:27:46 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  tests/examples/transition.c: pass transition type to make_timeline
+
+2010-05-26 13:05:18 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  tests/examples/transition.c: make -t option work with values supported by smpte + "crossfade"
+
+2010-05-26 13:04:06 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  tests/examples/transition.c: add routines for identifying transitions
+
+2010-05-26 11:38:19 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  tests/examples/transition.c: split out "make_timeline" into separate routine
+
+2010-05-26 10:48:13 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  tests/examples/transition.c: remove some cruft from transition example
+
+2010-05-25 19:10:27 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  tests/examples/transition.c: print values in seconds not nseconds
+
+2010-05-25 19:07:21 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  ges-track-transition.c: set interpolation control points properly from gnlobject properties
+
+2010-05-25 19:06:10 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.h:
+	  ges-track-transition.c: GstControlSource -> GstInterpolationControlSource
+
+2010-05-25 16:44:58 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  tests/examples/transition.c: cast arguments to g_object_set
+
+2010-05-25 16:42:47 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	  ges-track-transition.c: create gst-controller for transition
+
+2010-05-25 16:41:53 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  ges-track-transition.c: add controller and control-source members
+
+2010-05-25 16:35:16 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* configure.ac:
+	* ges/Makefile.am:
+	  depend on GST_CONTROLLER
+
+2010-05-25 13:44:57 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-track-transition.c:
+	* tests/examples/transition.c:
+	  hacking
+
+2010-05-24 17:51:31 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  tests/examples/transition.c: create transition when duration > 0
+
+2010-05-24 17:39:45 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	  dist transition.c
+
+2010-05-24 17:39:07 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/transition.c:
+	  check in single transition demo
+
+2010-05-24 14:58:55 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-types.h:
+	  ges/ges-types.h: add typedefs for GESTrackTransition[Class] structs
+
+2010-05-24 14:57:12 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.h:
+	  ges-track-transition.h: fix typo
+
+2010-05-24 14:55:53 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/Makefile.am:
+	  ges/Makefile.am: dist ges-track-transition.c,h
+
+2010-05-24 13:08:32 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.c:
+	* ges/ges-track-transition.h:
+	  skeletal implementation of GESTrackTransition
+
+2010-05-24 12:34:36 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* ges/ges-track-transition.h:
+	  check-in ges-track-transition.h
+
+2010-05-24 10:59:43 +0200  Brandon Lewis <brandon.lewis@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  playlist.c: working pattern sources
+
+2010-06-02 11:49:08 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  examples: Add a looping feature to playlist example
+	  Allows playing the timeline repeatedly a certain number of times
+
+2010-05-25 16:22:58 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: Freeze state of Tracks when doing an async state change
+
+2010-05-20 10:46:38 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/.gitignore:
+	* tests/examples/Makefile.am:
+	* tests/examples/concatenate.c:
+	  examples: New concatenate examples.
+	  Allows concatenating several files of the same type together
+
+2010-05-20 10:44:01 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-utils.c:
+	* ges/ges-utils.h:
+	* ges/ges.h:
+	  GES: Add a new utility file
+	  API : ges_timeline_new_audio_video()
+
+2010-05-11 15:03:33 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/.gitignore:
+	  examples: Ignore some files
+
+2010-05-20 12:29:30 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Only remove the playsink if it was used
+
+2010-05-19 15:50:51 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/Makefile.am:
+	  docs: Use proper CFLAGS/LIBS when building docs
+
+2010-05-19 15:50:41 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: Remove unused variable
+
+2010-05-19 12:39:23 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/.gitignore:
+	* tests/examples/.gitignore:
+	  tests: ignore more files
+
+2010-05-19 12:38:21 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  examples: Allow setting null duration on files
+	  This will make the timeline use GstDiscoverer to analyze the file.
+
+2010-05-19 12:36:11 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	  GESTimeline: Use GstDiscoverer for incomplete filesources
+	  If a GESTimelineFileSource is added to a layer and:
+	  * It doesn't have specified supported formats
+	  * OR it doesn't have a specified maximum duration
+	  * OR it doesn't have a specifed duration
+	  Then we asynchronously send it to the GstDiscoverer.
+	  If this happens, the state change of the timeline from READY to
+	  PAUSED will happen asynchronously and be completed when everything
+	  has been properly discovered.
+	  Part 2 of GstDiscoverer integration
+
+2010-05-19 12:24:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-file-source.h:
+	* tests/check/ges/filesource.c:
+	  GESTimelineFileSource: Add 'max-duration' and 'supported-formats' properties
+	  * max-duration is the total length of the File.
+	  * supported-formats is the various track types this filesource can produce
+	  trackobjects for. This should maybe be moved to parent classes in the
+	  future
+	  Step 1 of GstDiscoverer integration
+
+2010-05-19 12:19:37 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	  GESTimelineObject: Properly set default duration
+	  Set it in the instance_init to GST_SECOND, But let the subclasses override
+	  it.
+	  This allows subclasses to set a different default duration
+
+2010-05-19 12:14:34 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	  GESSimpleTimelineLayer: Recalculate positions when object duration change
+	  This ensures that if someone changes the duration, the clips still remain
+	  contiguous and in the proper order.
+
+2010-05-18 19:07:27 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* ges/Makefile.am:
+	  configure: Depend on gstreamer-discoverer
+
+2010-05-18 17:43:28 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  GESTrack: Make GESTrackType a flag, and add GES_TRACK_TYPE_UNKNOWN
+	  Also add a bit more documentation about it.
+
+2010-05-18 15:19:06 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/.gitignore:
+	* docs/libs/doc-registry.xml:
+	* docs/libs/ges-decl-list.txt.bak:
+	* docs/libs/ges-decl.txt.bak:
+	* docs/libs/html/GESCustomTimelineSource.html:
+	* docs/libs/html/GESSimpleTimelineLayer.html:
+	* docs/libs/html/GESTimeline.html:
+	* docs/libs/html/GESTimelineFileSource.html:
+	* docs/libs/html/GESTimelineLayer.html:
+	* docs/libs/html/GESTimelineObject.html:
+	* docs/libs/html/GESTimelinePipeline.html:
+	* docs/libs/html/GESTimelineSource.html:
+	* docs/libs/html/GESTimelineTransition.html:
+	* docs/libs/html/GESTrack.html:
+	* docs/libs/html/GESTrackFileSource.html:
+	* docs/libs/html/GESTrackObject.html:
+	* docs/libs/html/GESTrackSource.html:
+	* docs/libs/html/api-index-full.html:
+	* docs/libs/html/architecture.xml:
+	* docs/libs/html/ch01.html:
+	* docs/libs/html/ch02.html:
+	* docs/libs/html/ch03.html:
+	* docs/libs/html/ch04.html:
+	* docs/libs/html/ges-Initialization.html:
+	* docs/libs/html/ges-architecture.html:
+	* docs/libs/html/ges-hierarchy.html:
+	* docs/libs/html/ges.devhelp:
+	* docs/libs/html/ges.devhelp2:
+	* docs/libs/html/home.png:
+	* docs/libs/html/index.html:
+	* docs/libs/html/index.sgml:
+	* docs/libs/html/layer_track_overview.png:
+	* docs/libs/html/left.png:
+	* docs/libs/html/right.png:
+	* docs/libs/html/style.css:
+	* docs/libs/html/up.png:
+	* docs/libs/tmpl/ges-common.sgml:
+	* docs/libs/tmpl/ges-common.sgml.bak:
+	* docs/libs/tmpl/ges-custom-timeline-source.sgml:
+	* docs/libs/tmpl/ges-custom-timeline-source.sgml.bak:
+	* docs/libs/tmpl/ges-simple-timeline-layer.sgml:
+	* docs/libs/tmpl/ges-simple-timeline-layer.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-filesource.sgml:
+	* docs/libs/tmpl/ges-timeline-filesource.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-layer.sgml:
+	* docs/libs/tmpl/ges-timeline-layer.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-object.sgml:
+	* docs/libs/tmpl/ges-timeline-object.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-pipeline.sgml:
+	* docs/libs/tmpl/ges-timeline-pipeline.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-source.sgml:
+	* docs/libs/tmpl/ges-timeline-source.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-transition.sgml:
+	* docs/libs/tmpl/ges-timeline-transition.sgml.bak:
+	* docs/libs/tmpl/ges-timeline.sgml:
+	* docs/libs/tmpl/ges-timeline.sgml.bak:
+	* docs/libs/tmpl/ges-track-filesource.sgml:
+	* docs/libs/tmpl/ges-track-filesource.sgml.bak:
+	* docs/libs/tmpl/ges-track-object.sgml:
+	* docs/libs/tmpl/ges-track-object.sgml.bak:
+	* docs/libs/tmpl/ges-track-source.sgml:
+	* docs/libs/tmpl/ges-track-source.sgml.bak:
+	* docs/libs/tmpl/ges-track.sgml:
+	* docs/libs/tmpl/ges-track.sgml.bak:
+	* docs/libs/tmpl/ges-unused.sgml:
+	* docs/libs/xml/api-index-deprecated.xml:
+	* docs/libs/xml/api-index-full.xml:
+	* docs/libs/xml/ges-common.xml:
+	* docs/libs/xml/ges-custom-timeline-source.xml:
+	* docs/libs/xml/ges-doc.bottom:
+	* docs/libs/xml/ges-doc.top:
+	* docs/libs/xml/ges-simple-timeline-layer.xml:
+	* docs/libs/xml/ges-timeline-filesource.xml:
+	* docs/libs/xml/ges-timeline-layer.xml:
+	* docs/libs/xml/ges-timeline-object.xml:
+	* docs/libs/xml/ges-timeline-pipeline.xml:
+	* docs/libs/xml/ges-timeline-source.xml:
+	* docs/libs/xml/ges-timeline-transition.xml:
+	* docs/libs/xml/ges-timeline.xml:
+	* docs/libs/xml/ges-track-filesource.xml:
+	* docs/libs/xml/ges-track-object.xml:
+	* docs/libs/xml/ges-track-source.xml:
+	* docs/libs/xml/ges-track.xml:
+	* docs/libs/xml/object_index.sgml:
+	* docs/libs/xml/tree_index.sgml:
+	* docs/libs/xml/version.entities:
+	  docs: And remove all the stuff that's meant to be generated at runtime
+
+2010-05-18 12:56:24 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/doc-registry.xml:
+	* docs/libs/ges-decl-list.txt.bak:
+	* docs/libs/ges-decl.txt.bak:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/html/GESCustomTimelineSource.html:
+	* docs/libs/html/GESSimpleTimelineLayer.html:
+	* docs/libs/html/GESTimeline.html:
+	* docs/libs/html/GESTimelineFileSource.html:
+	* docs/libs/html/GESTimelineLayer.html:
+	* docs/libs/html/GESTimelineObject.html:
+	* docs/libs/html/GESTimelinePipeline.html:
+	* docs/libs/html/GESTimelineSource.html:
+	* docs/libs/html/GESTimelineTransition.html:
+	* docs/libs/html/GESTrack.html:
+	* docs/libs/html/GESTrackFileSource.html:
+	* docs/libs/html/GESTrackObject.html:
+	* docs/libs/html/GESTrackSource.html:
+	* docs/libs/html/api-index-full.html:
+	* docs/libs/html/architecture.xml:
+	* docs/libs/html/ch01.html:
+	* docs/libs/html/ch02.html:
+	* docs/libs/html/ch03.html:
+	* docs/libs/html/ch04.html:
+	* docs/libs/html/ges-Initialization.html:
+	* docs/libs/html/ges-architecture.html:
+	* docs/libs/html/ges-hierarchy.html:
+	* docs/libs/html/ges.devhelp:
+	* docs/libs/html/ges.devhelp2:
+	* docs/libs/html/home.png:
+	* docs/libs/html/index.html:
+	* docs/libs/html/index.sgml:
+	* docs/libs/html/layer_track_overview.png:
+	* docs/libs/html/left.png:
+	* docs/libs/html/right.png:
+	* docs/libs/html/style.css:
+	* docs/libs/html/up.png:
+	* docs/libs/tmpl/ges-common.sgml:
+	* docs/libs/tmpl/ges-common.sgml.bak:
+	* docs/libs/tmpl/ges-custom-timeline-source.sgml:
+	* docs/libs/tmpl/ges-custom-timeline-source.sgml.bak:
+	* docs/libs/tmpl/ges-simple-timeline-layer.sgml:
+	* docs/libs/tmpl/ges-simple-timeline-layer.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-filesource.sgml:
+	* docs/libs/tmpl/ges-timeline-filesource.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-layer.sgml:
+	* docs/libs/tmpl/ges-timeline-layer.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-object.sgml:
+	* docs/libs/tmpl/ges-timeline-object.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-pipeline.sgml:
+	* docs/libs/tmpl/ges-timeline-pipeline.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-source.sgml:
+	* docs/libs/tmpl/ges-timeline-source.sgml.bak:
+	* docs/libs/tmpl/ges-timeline-transition.sgml:
+	* docs/libs/tmpl/ges-timeline-transition.sgml.bak:
+	* docs/libs/tmpl/ges-timeline.sgml:
+	* docs/libs/tmpl/ges-timeline.sgml.bak:
+	* docs/libs/tmpl/ges-track-filesource.sgml:
+	* docs/libs/tmpl/ges-track-filesource.sgml.bak:
+	* docs/libs/tmpl/ges-track-object.sgml:
+	* docs/libs/tmpl/ges-track-object.sgml.bak:
+	* docs/libs/tmpl/ges-track-source.sgml:
+	* docs/libs/tmpl/ges-track-source.sgml.bak:
+	* docs/libs/tmpl/ges-track.sgml:
+	* docs/libs/tmpl/ges-track.sgml.bak:
+	* docs/libs/tmpl/ges-unused.sgml:
+	* docs/libs/xml/api-index-deprecated.xml:
+	* docs/libs/xml/api-index-full.xml:
+	* docs/libs/xml/ges-common.xml:
+	* docs/libs/xml/ges-custom-timeline-source.xml:
+	* docs/libs/xml/ges-doc.bottom:
+	* docs/libs/xml/ges-doc.top:
+	* docs/libs/xml/ges-simple-timeline-layer.xml:
+	* docs/libs/xml/ges-timeline-filesource.xml:
+	* docs/libs/xml/ges-timeline-layer.xml:
+	* docs/libs/xml/ges-timeline-object.xml:
+	* docs/libs/xml/ges-timeline-pipeline.xml:
+	* docs/libs/xml/ges-timeline-source.xml:
+	* docs/libs/xml/ges-timeline-transition.xml:
+	* docs/libs/xml/ges-timeline.xml:
+	* docs/libs/xml/ges-track-filesource.xml:
+	* docs/libs/xml/ges-track-object.xml:
+	* docs/libs/xml/ges-track-source.xml:
+	* docs/libs/xml/ges-track.xml:
+	* docs/libs/xml/object_index.sgml:
+	* docs/libs/xml/tree_index.sgml:
+	* docs/libs/xml/version.entities:
+	* ges/ges-timeline-object.h:
+	  GESTimelineObject: Document CreateTrackObjectFunc vmethod
+
+2010-05-18 12:32:31 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	* docs/libs/scanobj-build.stamp:
+	  docs: Make sure hierarchy/properties/signals get built for all classes
+
+2010-05-10 12:44:56 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Fix 32bit runtime issues
+
+2010-05-07 13:30:07 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Limit encodebin buffering to 1 buffer
+	  We don't need to queue more than that since we only need thread decoupling
+	  and the various streams going into encodebin are guaranteed to come
+	  from different streaming threads (since they're separate gnlcomposition).
+
+2010-05-06 19:57:25 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/playlist.c:
+	  examples: Add option to specify video restriction
+	  Some encoders don't handle _get_caps() properly :(
+
+2010-04-27 11:45:15 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Remove unused variable/label.
+
+2010-04-20 13:41:20 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Cleanup properly when pads are removed
+
+2010-04-20 13:26:00 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Implement smart rendering
+
+2010-04-20 13:08:27 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	* tests/examples/playlist.c:
+	  examples: New playlist examples
+	  Allows giving lists of file/start/duration triplets and testing the
+	  various timeline-pipeline modes (preview, render, smart-render)
+
+2010-04-20 13:04:31 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  check: Use GST_CFLAGS so we get new compilation flags
+
+2010-04-20 13:00:38 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	  GESTimelinePipeline: Store encoding profile
+
+2010-04-20 12:59:26 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.h:
+	  GESTimelinePipeline: New Smart Render mode
+
+2010-04-20 12:57:53 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: new functions to search/create OutputChain
+
+2010-04-20 12:53:51 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Remove unused code
+
+2010-04-20 12:50:34 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track.c:
+	  GESTrack: set caps on the composition
+	  This will allow them to be propagated to all objects contained within
+
+2010-04-20 12:50:09 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline.c:
+	  GESTimeLine(PipeLine): remove additional unref
+
+2010-04-20 12:47:22 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac : round of cleanup
+	  Add extra CFLAGS
+	  Change GST_CVS to GST_GIT
+	  Add -DGST_USE_UNSTABLE_API for gstprofile, since we know it's unstable.
+
+2010-04-20 12:28:59 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/Makefile.am:
+	  ges: Link gstprofile
+
+2010-04-20 11:48:21 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	  GESTimeline: New method ges_timeline_get_tracks
+
+2010-03-13 16:43:59 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/examples/Makefile.am:
+	* tests/examples/simple1.c:
+	  examples: Simple Audio/Video example
+	  Currently one can:
+	  * Give a multimedia file
+	  * modify the inpoint
+	  * modify the duration
+	  * mute the audio
+
+2010-03-13 16:05:37 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Fix minor bug in get_compatible_unlinked_pad
+	  We weren't breaking and ended up doing a fallthrough to the loop
+	  completion.
+
+2010-03-13 15:53:16 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-timeline-object.h:
+	  GESTimelineObject: Fix doc of priority property
+
+2010-03-13 15:51:16 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-track-filesource.c:
+	  GESTrackFileSource: Don't forget to free the URI string
+
+2010-03-12 19:07:15 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/layer.c:
+	  tests: Add unit test for layer property.
+	  Still needs more work though
+
+2010-03-12 19:06:42 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-layer.h:
+	  GESTimelineLayer: Add a 'priority' property
+
+2010-03-12 18:42:28 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: Properly iterate TrackObject lists when removing them
+
+2010-03-12 19:05:36 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/check/ges/basic.c:
+	  tests: Check refcount of created trackobjects
+
+2010-03-13 15:52:14 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ges/ges-timeline-object.c:
+	* tests/check/ges/filesource.c:
+	  GESTimelineObject: Don't leak a reference when creating TrackObject
+
+2010-03-12 17:17:30 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	  GESTimelineObject: new API : _find_track_object
+	  This allows getting the TrackObject for a corresponding TimelineObject
+	  and Track combination
+
+2010-03-12 17:08:00 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* Makefile.am:
+	* configure.ac:
+	  configure: use automake 1. 11 silent rules instead of shave if available
+
+2010-03-12 17:09:03 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  common: Update to latest common
+
+2010-03-11 11:06:50 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* .gitignore:
+	* tests/check/ges/.gitignore:
+	* tests/examples/.gitignore:
+	  ignore more files
+
+2010-03-05 16:10:13 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	  examples: Fix linking/include order
+
+2010-03-05 15:50:49 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/filesource.c:
+	  check: Add a test for checking timelinefilesource properties
+	  This include the mute feature
+
+2010-02-09 17:45:42 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	  examples: Use profile LIBS
+	  and fix a typo with GST_LIBS
+
+2010-02-09 17:44:54 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: gst-profile is now a standalone pkgconfig
+
+2010-01-20 11:09:56 +0100  Jarkko Pallviainen <ext-jarkko.palviainen@nokia.com>
+
+	* tests/examples/test1.c:
+	  examples: Fix build on 32bit systems
+
+2010-01-08 18:21:08 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Add comment for _set_render_settings
+
+2010-01-08 18:16:16 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	* tests/examples/test4.c:
+	  examples: test4: variant of test3 with rendering.
+	  Usage: ./test4 output_uri audio_files
+	  This will render in ogg/vorbis the first seconds of all the provided
+	  audio files to the output_uri
+	  Ex : ./test4 file:///data/audio1s.ogg /data/music/*.ogg
+
+2010-01-08 18:14:46 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Also get static pads for static pads from encodebin.
+	  This is for the cases where the provided GstStreamEncodingProfile has
+	  a non-zero presence.
+
+2010-01-08 17:05:01 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: detect gst-convenience
+
+2009-12-11 15:24:56 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-custom-timeline-source.h:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-track-object.h:
+	  ges: Small doc fixups
+
+2009-12-11 15:17:02 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/timelineobject.c:
+	  tests: Fix macro by making it use the proper argument types
+
+2009-12-11 15:16:26 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  tests: Fix linking order.
+	  This ensures that "make check" will run with the local libraries and not
+	  the system-wide ones
+
+2009-12-11 15:15:29 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	  GESTimelineObject: Move property setting to an earlier stage.
+	  This ensures that any properties set on the TimelineObject will be
+	  propagated to the created TrackObjects just after they're created
+
+2009-12-11 15:13:19 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	  GESTrackObject: Store pending values when GnlObject isn't created yet
+
+2009-12-11 15:17:25 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Sync state of newly added element to container
+
+2009-12-09 15:03:30 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Don't forget to remember the mode
+
+2009-12-09 15:03:15 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-file-source.c:
+	  GESTimelineFileSource: Properly handle mute
+	  mute != active
+
+2009-12-09 12:22:34 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: More render support
+
+2009-12-04 10:49:32 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	  GESTimelinePipeline: beginning of render support
+
+2009-11-30 15:14:25 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-custom-timeline-source.c:
+	* ges/ges-custom-timeline-source.h:
+	* ges/ges-internal.h:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-file-source.h:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-layer.h:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-source.h:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	* ges/ges-track-filesource.c:
+	* ges/ges-track-filesource.h:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track-source.c:
+	* ges/ges-track-source.h:
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	* ges/ges-types.h:
+	* ges/ges.c:
+	* ges/ges.h:
+	  ges/: Fix copyright in headers
+
+2009-11-30 15:14:06 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* AUTHORS:
+	  AUTHORS: Add myself
+
+2009-11-25 13:13:49 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-file-source.c:
+	  timelinefilesource: Free URI when finalizing
+
+2009-11-25 13:11:32 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	  trackobject: priority is a uint32
+
+2009-11-25 12:53:13 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/timelineobject.c:
+	  tests: release TrackObject when we're done with it
+
+2009-11-25 12:52:50 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/simplelayer.c:
+	* tests/check/ges/timelineobject.c:
+	  tests: Don't forget to cast to guint64 when using g_object_set
+	  ... else total failure ensues on 32bit machines
+
+2009-11-25 11:56:58 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	  TimelineObject: Add missing argument to printf statement
+
+2009-11-25 11:55:50 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-custom-timeline-source.c:
+	  customtimelinesource: Fix indentation
+
+2009-11-25 11:14:02 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/working-diagrams.svg:
+	  docs: updates to working diagram, still needs more love
+
+2009-11-15 18:23:33 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* docs/libs/Makefile.am:
+	* docs/libs/architecture.xml:
+	* docs/libs/layer_track_overview.png:
+	* docs/working-diagrams.svg:
+	  docs: Improve docs some more
+
+2009-11-12 20:11:28 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	* docs/libs/Makefile.am:
+	* docs/libs/architecture.xml:
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	* ges/ges.c:
+	  docs: Add overview and architecture document and cleanup docs more.
+
+2009-11-12 19:14:35 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/design/gstprofile.h:
+	  docs: Update to gstprofile header
+
+2009-11-09 15:55:06 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* .gitignore:
+	  ignore more files
+
+2009-11-09 15:54:18 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* m4/Makefile.am:
+	* m4/codeset.m4:
+	* m4/gettext.m4:
+	* m4/glibc2.m4:
+	* m4/glibc21.m4:
+	* m4/iconv.m4:
+	* m4/intdiv0.m4:
+	* m4/intl.m4:
+	* m4/intldir.m4:
+	* m4/intlmacosx.m4:
+	* m4/intmax.m4:
+	* m4/inttypes-pri.m4:
+	* m4/inttypes_h.m4:
+	* m4/lcmessage.m4:
+	* m4/lib-ld.m4:
+	* m4/lib-link.m4:
+	* m4/lib-prefix.m4:
+	* m4/libtool.m4:
+	* m4/lock.m4:
+	* m4/longlong.m4:
+	* m4/ltoptions.m4:
+	* m4/ltsugar.m4:
+	* m4/ltversion.m4:
+	* m4/lt~obsolete.m4:
+	* m4/nls.m4:
+	* m4/po.m4:
+	* m4/printf-posix.m4:
+	* m4/progtest.m4:
+	* m4/size_max.m4:
+	* m4/stdint_h.m4:
+	* m4/uintmax_t.m4:
+	* m4/visibility.m4:
+	* m4/wchar_t.m4:
+	* m4/wint_t.m4:
+	* m4/xsize.m4:
+	  remove m4/*.m4, will be automatically created by autogen.sh
+
+2009-11-05 10:22:57 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  update common submodule version used
+
+2009-10-22 17:37:54 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	  docs: Add missing symbol to documentation
+
+2009-10-19 18:32:23 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/design/encoding-research.txt:
+	* docs/design/encoding.txt:
+	* docs/design/gstprofile.h:
+	  docs/design: Fixups/additions based on feedback
+
+2009-10-07 16:23:22 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/design/encoding-research.txt:
+	* docs/design/encoding.txt:
+	* docs/design/gstencodebin.h:
+	* docs/design/gstprofile.h:
+	  docs/design: Add encoding/profile proposal/design
+
+2009-09-30 16:45:13 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/timelineobject.c:
+	  tests: New unit test for GESTimelineObject
+
+2009-09-30 16:44:41 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	  GESTimelineObject: First set the duration and priority before the inpoint.
+
+2009-09-30 16:44:12 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-file-source.h:
+	  GESTimelineFileSource: Add a 'mute' property.
+	  This property deactivates the audio trackobjects if set to TRUE
+
+2009-09-30 16:43:12 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	  GESTrackObject: Listen to property change from gnlobject
+	  TODO: add/emit the 'changed' signal
+
+2009-09-30 16:42:31 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.h:
+	  GESTrackObject: Add convenience macros for accessing properties
+
+2009-09-30 16:42:08 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	  GESTrackObject: Set sane default values
+
+2009-09-30 16:40:59 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	  GESTrackObject: Add 'active' property.
+	  This property allows (de)activating a track object
+
+2009-09-29 15:32:23 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	* tests/examples/test3.c:
+	  tests/examples: test3, same as test2, but uses a SimpleTimelineLayer
+
+2009-09-29 15:29:11 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/simplelayer.c:
+	  tests/check: Add test for GESSimpleTimelineLayer
+
+2009-09-29 15:27:55 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	  GESSimpleTimelineLayer: Implement add()/move() and parent class changes
+	  If changes happen when accessing the GESTimelineLayer API, they will be taken
+	  into account.
+
+2009-09-29 15:27:17 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-layer.h:
+	  ges-timeline-layer.h: Add comment
+
+2009-09-29 15:25:54 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline-object.h:
+	  ges-timeline-object: Add convenience macros
+
+2009-09-21 18:11:19 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/Makefile.am:
+	* tests/examples/test2.c:
+	  tests/example: New small example of timeline file sources.
+	  This examples takes a list of files with audio tracks, and plays the first
+	  second of each.
+	  This demonstrates the usage of GESTimelineFileSource
+
+2009-09-21 18:08:51 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/filesource.c:
+	  tests/check: New test for GESTimelineFileSource
+
+2009-09-21 12:51:16 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* ges/Makefile.am:
+	* ges/ges-timeline-file-source.c:
+	* ges/ges-timeline-file-source.h:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-track-filesource.c:
+	* ges/ges-track-filesource.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  New GESTimelineFileSource and GESTrackFileSource classes
+
+2009-09-16 12:37:45 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-custom-timeline-source.c:
+	* ges/ges-custom-timeline-source.h:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline.c:
+	  Finish public API documentation
+
+2009-09-16 12:37:13 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	  docs: Add index and object hierarchy
+
+2009-09-14 19:45:43 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/basic.c:
+	  tests: Make basic test check for proper reference counting.
+
+2009-09-14 19:44:03 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track.c:
+	  GESTrack: The track steals the refcount to the caps. document that.
+
+2009-09-14 19:42:58 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/.gitignore:
+	  docs/libs: ignore more files
+
+2009-09-14 19:24:28 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: Fix reference counting of tracks, add docs.
+
+2009-09-14 19:23:52 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-layer.c:
+	  GESTimelineLayer: Fix reference handling of objects, add docs.
+
+2009-09-14 19:23:21 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: Require latest gst-plugins-base for 'playsink'
+
+2009-09-14 17:00:13 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.h:
+	  GESTimeline: start more documentation
+
+2009-09-14 16:33:25 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	  GESTrackObject: Document some more
+
+2009-09-14 15:51:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-track.c:
+	  GESTrack: document more
+
+2009-09-10 18:17:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/libs/Makefile.am:
+	* docs/libs/ges.types:
+	  docs: fix gtk-doc build and make distcheck for me
+
+2009-09-10 18:53:31 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/test1.c:
+	  Document first high-level demo.
+
+2009-09-10 18:40:51 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* ges/ges-custom-timeline-source.c:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track-source.c:
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	* ges/ges.c:
+	  More documentation. Coverage now at 25%
+
+2009-09-10 16:23:12 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/random/scenarios:
+	* docs/scenarios:
+	  docs: move working document
+
+2009-09-10 16:22:00 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* Makefile.am:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/libs/Makefile.am:
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/scanobj-build.stamp:
+	* docs/version.entities.in:
+	  docs: Add gtk-doc API documentation
+	  current coverage : 8%
+
+2009-09-09 15:53:53 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/test1.c:
+	  test1: Expand example to also use an audio track.
+
+2009-09-09 15:51:52 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  GESTimeline: Make sure added ghostpads are unique.
+
+2009-09-09 13:57:37 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/test1.c:
+	  test1: Actually change videotestsrc patterns to make changes obvious.
+
+2009-09-09 13:55:30 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/test1.c:
+	  test1: Use mainloop, required for proper gnonlin behaviour.
+
+2009-09-09 12:42:29 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	  GESTimelinePipeline: Reconfigure playsink once we've added a pad.
+
+2009-09-08 19:46:54 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/examples/test1.c:
+	  examples: Add timeline to pipeline and set it to playing.
+	  ... and now we need to go an fix playsink :)
+
+2009-09-08 19:46:26 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/basic.c:
+	  test/ges/basic: Adapt to API changes.
+
+2009-09-08 19:45:08 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	  GESTimelinePipeline: Use 'playsink', track added/removed pads.
+	  Also add a method to set a GESTimeline on the pipeline.
+
+2009-09-08 19:44:03 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	  GESTimeline: Track internal pads and tracks in sync.
+	  Add method to get the Track associated to a ghostpad.
+
+2009-09-08 18:55:41 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* .gitignore:
+	  gitignore: Ignore more files
+
+2009-09-08 18:49:22 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  GESTrack: Add TrackType enum and constructor property.
+	  This allows us to speed up detection of track content type.
+
+2009-09-08 18:47:46 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-custom-timeline-source.c:
+	  CustomTimelineSource: Fix typo in debug statement
+
+2009-09-07 15:46:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	  GESTimelinePipeline: Fix typo
+
+2009-08-07 20:33:40 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	  TrackObject: Add debugging and make default duration 1s
+
+2009-08-07 20:33:18 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	  TimelineObject: Add start/inpoint/duration/priority properties and propagate them
+
+2009-08-07 20:32:47 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  Track: Handle pads
+
+2009-08-07 20:32:29 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  Track: Add convenience methods for creating a raw Audio or Video track.
+
+2009-08-07 20:31:11 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-custom-timeline-source.c:
+	* ges/ges-custom-timeline-source.h:
+	* tests/check/ges/basic.c:
+	  CustomTimelineSource: Allow giving user_data to the callback
+
+2009-08-07 20:29:35 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* tests/Makefile.am:
+	* tests/examples/Makefile.am:
+	* tests/examples/test1.c:
+	  Add directory for examples along with a minimalistic first example.
+
+2009-08-07 18:18:42 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	* tests/check/ges/basic.c:
+	  Add 'caps' property on Track
+
+2009-08-07 17:09:59 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* COPYING:
+	* COPYING.LIB:
+	* INSTALL:
+	* Makefile.am:
+	* RELEASE:
+	* ges/Makefile.am:
+	* gst-editing-services.doap:
+	  Fix build. Can now run make distcheck.
+
+2009-08-07 16:51:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track.c:
+	  Track: Add/Remove the GnlComposition from ourself.
+
+2009-08-07 16:47:18 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/basic.c:
+	  tests/ges/basic: Extend test to remove the object.
+
+2009-08-07 16:46:57 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-source.h:
+	  TrackSource: Include TrackObject header file
+
+2009-08-07 16:46:35 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges.c:
+	  ges.c: Add debug line to inform of initialization
+
+2009-08-07 16:45:16 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-custom-timeline-source.c:
+	* ges/ges-custom-timeline-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  New CustomTimelineSource class.
+
+2009-08-07 16:43:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  Track: Implement remove_object()
+
+2009-08-07 16:43:01 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	  TrackObject: Add 'valid' property, Make _set_track() return a bool
+
+2009-08-07 16:41:23 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline.c:
+	  Timeline: Implement remove_track, remove_layer, and _layer_object_removed_cb
+
+2009-08-07 16:40:51 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-source.h:
+	  TimelineSource: Implenent _create_track_object() virtual-method
+
+2009-08-07 16:39:45 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	  TimelineObject: Implement _release_track_object()
+
+2009-08-07 16:39:09 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-layer.h:
+	  TimelineLayer: Implement _remove_object()
+
+2009-08-06 20:04:59 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/ges/basic.c:
+	  tests: Add a simple scenario
+
+2009-08-06 19:59:25 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track.c:
+	  ges: Remove unused private structures. We'll re-add on a per-case basis.
+
+2009-08-06 19:51:29 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* Makefile.am:
+	* configure.ac:
+	* ges/Makefile.am:
+	* ges/ges-internal.h:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track-source.c:
+	* ges/ges-track.c:
+	* ges/ges.c:
+	* ges/ges.h:
+	* tests/Makefile.am:
+	* tests/check/Makefile.am:
+	* tests/check/ges/basic.c:
+	  Add unit test system. Adjust GST_DEBUG usage.
+
+2009-08-06 18:54:01 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-track-source.c:
+	* ges/ges-track-source.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  Add new GESTrackSource
+
+2009-08-06 17:38:43 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/scenarios:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-layer.h:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-source.h:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  intermediary commit. Still need to fill in more blanks :(
+
+2009-08-06 12:47:38 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/gesmarshal.list:
+	  Add signal marshalling code
+
+2009-08-06 12:14:37 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* Makefile.am:
+	* autogen.sh:
+	* configure.ac:
+	* ges/Makefile.am:
+	* ges/ges-simple-timeline-layer.h:
+	* ges/ges-timeline-layer.h:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-pipeline.h:
+	* ges/ges-timeline-source.h:
+	* ges/ges-timeline-transition.h:
+	* ges/ges-timeline.h:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track.h:
+	* ges/ges-types.h:
+	* ges/ges.h:
+	  build fixed again. Moved type declarations in a standalone file.
+
+2009-08-06 11:24:04 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ges/Makefile.am:
+	* ges/ges-simple-timeline-layer.c:
+	* ges/ges-simple-timeline-layer.h:
+	* ges/ges-timeline-layer.c:
+	* ges/ges-timeline-layer.h:
+	* ges/ges-timeline-object.c:
+	* ges/ges-timeline-object.h:
+	* ges/ges-timeline-pipeline.c:
+	* ges/ges-timeline-pipeline.h:
+	* ges/ges-timeline-source.c:
+	* ges/ges-timeline-source.h:
+	* ges/ges-timeline-transition.c:
+	* ges/ges-timeline-transition.h:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	* ges/ges-track-object.c:
+	* ges/ges-track-object.h:
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	* ges/ges.c:
+	* ges/ges.h:
+	* src/Makefile.am:
+	* src/ges-simple-timeline-layer.c:
+	* src/ges-simple-timeline-layer.h:
+	* src/ges-timeline-layer.c:
+	* src/ges-timeline-layer.h:
+	* src/ges-timeline-object.c:
+	* src/ges-timeline-object.h:
+	* src/ges-timeline-pipeline.c:
+	* src/ges-timeline-pipeline.h:
+	* src/ges-timeline-source.c:
+	* src/ges-timeline-source.h:
+	* src/ges-timeline-transition.c:
+	* src/ges-timeline-transition.h:
+	* src/ges-timeline.c:
+	* src/ges-timeline.h:
+	* src/ges-track-object.c:
+	* src/ges-track-object.h:
+	* src/ges-track.c:
+	* src/ges-track.h:
+	* src/ges.c:
+	* src/ges.h:
+	  src/ => ges/
+
+2009-08-06 11:23:01 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/scenarios:
+	* src/Makefile.am:
+	* src/ges-simple-timeline-layer.h:
+	* src/ges-timeline-object.c:
+	* src/ges-timeline-object.h:
+	* src/ges-timeline.h:
+	* src/ges-track-object.c:
+	* src/ges-track-object.h:
+	* src/ges-track.h:
+	* src/ges.c:
+	* src/ges.h:
+	  MORE HACKING
+
+2009-08-04 19:27:07 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* README:
+	  README: Mention license
+
+2009-08-04 19:21:49 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* .gitignore:
+	  .gitignore: ignore cruft
+
+2009-08-04 17:16:31 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* .gitmodules:
+	* AUTHORS:
+	* ChangeLog:
+	* Makefile.am:
+	* NEWS:
+	* autogen.sh:
+	* common:
+	* configure.ac:
+	* gst-editing-services.spec.in:
+	* m4/Makefile.am:
+	* m4/codeset.m4:
+	* m4/gettext.m4:
+	* m4/glibc2.m4:
+	* m4/glibc21.m4:
+	* m4/iconv.m4:
+	* m4/intdiv0.m4:
+	* m4/intl.m4:
+	* m4/intldir.m4:
+	* m4/intlmacosx.m4:
+	* m4/intmax.m4:
+	* m4/inttypes-pri.m4:
+	* m4/inttypes_h.m4:
+	* m4/lcmessage.m4:
+	* m4/lib-ld.m4:
+	* m4/lib-link.m4:
+	* m4/lib-prefix.m4:
+	* m4/libtool.m4:
+	* m4/lock.m4:
+	* m4/longlong.m4:
+	* m4/ltoptions.m4:
+	* m4/ltsugar.m4:
+	* m4/ltversion.m4:
+	* m4/lt~obsolete.m4:
+	* m4/nls.m4:
+	* m4/po.m4:
+	* m4/printf-posix.m4:
+	* m4/progtest.m4:
+	* m4/size_max.m4:
+	* m4/stdint_h.m4:
+	* m4/uintmax_t.m4:
+	* m4/visibility.m4:
+	* m4/wchar_t.m4:
+	* m4/wint_t.m4:
+	* m4/xsize.m4:
+	* src/Makefile.am:
+	* src/ges-simple-timeline-layer.c:
+	* src/ges-simple-timeline-layer.h:
+	* src/ges-timeline-layer.c:
+	* src/ges-timeline-layer.h:
+	* src/ges-timeline-object.c:
+	* src/ges-timeline-object.h:
+	* src/ges-timeline-pipeline.c:
+	* src/ges-timeline-pipeline.h:
+	* src/ges-timeline-source.c:
+	* src/ges-timeline-source.h:
+	* src/ges-timeline-transition.c:
+	* src/ges-timeline-transition.h:
+	* src/ges-timeline.c:
+	* src/ges-timeline.h:
+	* src/ges-track-object.c:
+	* src/ges-track-object.h:
+	* src/ges-track.c:
+	* src/ges-track.h:
+	  It builds !!!! :)
+
