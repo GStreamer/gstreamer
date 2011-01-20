@@ -62,6 +62,12 @@ struct _GstCameraBin
   GstElement *user_image_filter;
   GstElement *user_viewfinder_filter;
 
+  GstElement *audio_src;
+  GstElement *user_audio_src;
+  GstElement *audio_queue;
+  GstElement *audio_capsfilter;
+  GstElement *audio_convert;
+
   /* Index of the auto incrementing file index for video recordings */
   gint video_index;
 
