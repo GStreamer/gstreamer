@@ -103,6 +103,7 @@ gst_v4l2sink_iface_supported (GstImplementsInterface * iface, GType iface_type)
 
 #ifdef HAVE_XVIDEO
   g_assert (iface_type == GST_TYPE_X_OVERLAY ||
+      iface_type == GST_TYPE_NAVIGATION ||
       iface_type == GST_TYPE_COLOR_BALANCE ||
       iface_type == GST_TYPE_VIDEO_ORIENTATION);
 #else
