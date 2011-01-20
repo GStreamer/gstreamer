@@ -445,6 +445,7 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
     gst_caps_set_simple (srccaps,
         "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+    gst_buffer_unref (codec_data);
   }
 
   gst_caps_set_simple (srccaps, "stream-format", G_TYPE_STRING,
