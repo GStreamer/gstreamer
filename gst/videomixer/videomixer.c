@@ -533,6 +533,8 @@ gst_video_mixer_background_get_type (void)
     {VIDEO_MIXER_BACKGROUND_CHECKER, "Checker pattern", "checker"},
     {VIDEO_MIXER_BACKGROUND_BLACK, "Black", "black"},
     {VIDEO_MIXER_BACKGROUND_WHITE, "White", "white"},
+    {VIDEO_MIXER_BACKGROUND_TRANSPARENT,
+        "Transparent Background to enable further mixing", "transparent"},
     {0, NULL, NULL},
   };
 
@@ -1025,6 +1027,7 @@ gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
   GST_INFO_OBJECT (mixer, "set src caps: %" GST_PTR_FORMAT, caps);
 
   mixer->blend = NULL;
+  mixer->overlay = NULL;
   mixer->fill_checker = NULL;
   mixer->fill_color = NULL;
 
@@ -1034,114 +1037,133 @@ gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
   switch (mixer->fmt) {
     case GST_VIDEO_FORMAT_AYUV:
       mixer->blend = gst_video_mixer_blend_ayuv;
+      mixer->overlay = gst_video_mixer_overlay_ayuv;
       mixer->fill_checker = gst_video_mixer_fill_checker_ayuv;
       mixer->fill_color = gst_video_mixer_fill_color_ayuv;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_ARGB:
       mixer->blend = gst_video_mixer_blend_argb;
+      mixer->overlay = gst_video_mixer_overlay_argb;
       mixer->fill_checker = gst_video_mixer_fill_checker_argb;
       mixer->fill_color = gst_video_mixer_fill_color_argb;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_BGRA:
       mixer->blend = gst_video_mixer_blend_bgra;
+      mixer->overlay = gst_video_mixer_overlay_bgra;
       mixer->fill_checker = gst_video_mixer_fill_checker_bgra;
       mixer->fill_color = gst_video_mixer_fill_color_bgra;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_ABGR:
       mixer->blend = gst_video_mixer_blend_abgr;
+      mixer->overlay = gst_video_mixer_overlay_abgr;
       mixer->fill_checker = gst_video_mixer_fill_checker_abgr;
       mixer->fill_color = gst_video_mixer_fill_color_abgr;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_RGBA:
       mixer->blend = gst_video_mixer_blend_rgba;
+      mixer->overlay = gst_video_mixer_overlay_rgba;
       mixer->fill_checker = gst_video_mixer_fill_checker_rgba;
       mixer->fill_color = gst_video_mixer_fill_color_rgba;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_Y444:
       mixer->blend = gst_video_mixer_blend_y444;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_y444;
       mixer->fill_color = gst_video_mixer_fill_color_y444;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_Y42B:
       mixer->blend = gst_video_mixer_blend_y42b;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_y42b;
       mixer->fill_color = gst_video_mixer_fill_color_y42b;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_YUY2:
       mixer->blend = gst_video_mixer_blend_yuy2;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_yuy2;
       mixer->fill_color = gst_video_mixer_fill_color_yuy2;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_UYVY:
       mixer->blend = gst_video_mixer_blend_uyvy;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_uyvy;
       mixer->fill_color = gst_video_mixer_fill_color_uyvy;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_YVYU:
       mixer->blend = gst_video_mixer_blend_yvyu;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_yvyu;
       mixer->fill_color = gst_video_mixer_fill_color_yvyu;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_I420:
       mixer->blend = gst_video_mixer_blend_i420;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_i420;
       mixer->fill_color = gst_video_mixer_fill_color_i420;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_YV12:
       mixer->blend = gst_video_mixer_blend_yv12;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_yv12;
       mixer->fill_color = gst_video_mixer_fill_color_yv12;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_Y41B:
       mixer->blend = gst_video_mixer_blend_y41b;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_y41b;
       mixer->fill_color = gst_video_mixer_fill_color_y41b;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_RGB:
       mixer->blend = gst_video_mixer_blend_rgb;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_rgb;
       mixer->fill_color = gst_video_mixer_fill_color_rgb;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_BGR:
       mixer->blend = gst_video_mixer_blend_bgr;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_bgr;
       mixer->fill_color = gst_video_mixer_fill_color_bgr;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_xRGB:
       mixer->blend = gst_video_mixer_blend_xrgb;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_xrgb;
       mixer->fill_color = gst_video_mixer_fill_color_xrgb;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_xBGR:
       mixer->blend = gst_video_mixer_blend_xbgr;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_xbgr;
       mixer->fill_color = gst_video_mixer_fill_color_xbgr;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_RGBx:
       mixer->blend = gst_video_mixer_blend_rgbx;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_rgbx;
       mixer->fill_color = gst_video_mixer_fill_color_rgbx;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_BGRx:
       mixer->blend = gst_video_mixer_blend_bgrx;
+      mixer->overlay = mixer->blend;
       mixer->fill_checker = gst_video_mixer_fill_checker_bgrx;
       mixer->fill_color = gst_video_mixer_fill_color_bgrx;
       ret = TRUE;
@@ -1387,6 +1409,13 @@ static void
 gst_videomixer_blend_buffers (GstVideoMixer * mix, GstBuffer * outbuf)
 {
   GSList *walk;
+  BlendFunction blend;
+  if (mix->background == VIDEO_MIXER_BACKGROUND_TRANSPARENT) {
+    blend = mix->overlay;
+  } else {
+    blend = mix->blend;
+  }
+
 
   walk = mix->sinkpads;
   while (walk) {                /* We walk with this list because it's ordered */
@@ -1411,7 +1440,7 @@ gst_videomixer_blend_buffers (GstVideoMixer * mix, GstBuffer * outbuf)
       if (GST_CLOCK_TIME_IS_VALID (stream_time))
         gst_object_sync_values (G_OBJECT (pad), stream_time);
 
-      mix->blend (GST_BUFFER_DATA (mixcol->buffer),
+      blend (GST_BUFFER_DATA (mixcol->buffer),
           pad->xpos, pad->ypos, pad->in_width, pad->in_height, pad->alpha,
           GST_BUFFER_DATA (outbuf), mix->out_width, mix->out_height);
     }
@@ -1579,6 +1608,11 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
     case VIDEO_MIXER_BACKGROUND_WHITE:
       mix->fill_color (GST_BUFFER_DATA (outbuf), mix->out_width,
           mix->out_height, 240, 128, 128);
+      break;
+    case VIDEO_MIXER_BACKGROUND_TRANSPARENT:
+      memset (GST_BUFFER_DATA (outbuf), 0,
+          gst_video_format_get_row_stride (mix->fmt, 0,
+              mix->out_width) * mix->out_height);
       break;
   }
 
