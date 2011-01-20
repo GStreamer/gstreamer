@@ -339,9 +339,9 @@ plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
 
   plugin->basename = g_path_get_basename (plugin->filename);
   plugin->desc.name = g_intern_string (plugin->basename);
-  plugin->desc.description = g_strdup_printf ("Plugin for blacklisted file");
-  plugin->desc.version = g_intern_string ("0.0.0");
-  plugin->desc.license = g_intern_string ("BLACKLIST");
+  plugin->desc.description = "Plugin for blacklisted file";
+  plugin->desc.version = "0.0.0";
+  plugin->desc.license = "BLACKLIST";
   plugin->desc.source = plugin->desc.license;
   plugin->desc.package = plugin->desc.license;
   plugin->desc.origin = plugin->desc.license;
