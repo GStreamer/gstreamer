@@ -132,8 +132,8 @@ grep -A 10000 '^% includes' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 
 cat <<EOF
 #include "gstreplace.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_replace_debug);
-#define GST_CAT_DEFAULT gst_replace_debug
+GST_DEBUG_CATEGORY_STATIC (gst_replace_debug_category);
+#define GST_CAT_DEFAULT gst_replace_debug_category
 
 /* prototypes */
 
@@ -167,7 +167,7 @@ cat <<EOF
 /* class initialization */
 
 #define DEBUG_INIT(bla) \\
-  GST_DEBUG_CATEGORY_INIT (gst_replace_debug, "replace", 0, \\
+  GST_DEBUG_CATEGORY_INIT (gst_replace_debug_category, "replace", 0, \\
       "debug category for replace element");
 
 GST_BOILERPLATE_FULL (GstReplace, gst_replace, GstBaseReplace,
@@ -177,9 +177,6 @@ static void
 gst_replace_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  GST_DEBUG_CATEGORY_INIT (gst_replace_debug_category, "replace", 0,
-      "replace element");
 
 EOF
 
