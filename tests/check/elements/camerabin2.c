@@ -439,9 +439,11 @@ taglist_is_subset (GstTagList * tags_a, GstTagList * tags_b)
 
 /* Validate captured files by playing them with playbin
  * and checking that no errors occur. */
+#define WITH_AUDIO TRUE
+#define NO_AUDIO FALSE
 static gboolean
 check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
-    gint width, gint height)
+    gint width, gint height, gboolean has_audio)
 {
   GstBus *bus;
   GstPad *pad;
@@ -464,10 +466,9 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
   gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
 
   gst_element_set_state (playbin, GST_STATE_PAUSED);
+  gst_element_get_state (playbin, &state, NULL, GST_SECOND * 3);
 
   if (width != 0 && height != 0) {
-    gst_element_get_state (playbin, &state, NULL, GST_SECOND * 3);
-
     g_signal_emit_by_name (playbin, "get-video-pad", 0, &pad, NULL);
     g_assert (pad != NULL);
     caps = gst_pad_get_negotiated_caps (pad);
@@ -481,6 +482,11 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
     g_assert (height == caps_height);
 
     gst_caps_unref (caps);
+    gst_object_unref (pad);
+  }
+  if (has_audio) {
+    g_signal_emit_by_name (playbin, "get-audio-pad", 0, &pad, NULL);
+    g_assert (pad != NULL);
     gst_object_unref (pad);
   }
 
@@ -543,7 +549,7 @@ GST_START_TEST (test_single_image_capture)
   check_preview_image ();
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
-  check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0);
+  check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0, NO_AUDIO);
 }
 
 GST_END_TEST;
@@ -592,7 +598,8 @@ GST_START_TEST (test_multiple_image_captures)
   g_usleep (G_USEC_PER_SEC * 3);
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
   for (i = 0; i < 3; i++) {
-    check_file_validity (IMAGE_FILENAME, i, NULL, widths[i], heights[i]);
+    check_file_validity (IMAGE_FILENAME, i, NULL, widths[i], heights[i],
+        NO_AUDIO);
   }
 }
 
@@ -630,7 +637,7 @@ GST_START_TEST (test_single_video_recording)
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
-  check_file_validity (VIDEO_FILENAME, 0, NULL, 0, 0);
+  check_file_validity (VIDEO_FILENAME, 0, NULL, 0, 0, WITH_AUDIO);
 }
 
 GST_END_TEST;
@@ -684,7 +691,8 @@ GST_START_TEST (test_multiple_video_recordings)
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
   for (i = 0; i < 3; i++) {
-    check_file_validity (VIDEO_FILENAME, i, NULL, widths[i], heights[i]);
+    check_file_validity (VIDEO_FILENAME, i, NULL, widths[i], heights[i],
+        WITH_AUDIO);
   }
 }
 
@@ -740,8 +748,8 @@ GST_START_TEST (test_image_video_cycle)
 
   /* validate all the files */
   for (i = 0; i < 2; i++) {
-    check_file_validity (IMAGE_FILENAME, i, NULL, 0, 0);
-    check_file_validity (VIDEO_FILENAME, i, NULL, 0, 0);
+    check_file_validity (IMAGE_FILENAME, i, NULL, 0, 0, NO_AUDIO);
+    check_file_validity (VIDEO_FILENAME, i, NULL, 0, 0, WITH_AUDIO);
   }
 }
 
@@ -863,7 +871,7 @@ GST_START_TEST (test_image_capture_with_tags)
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
   for (i = 0; i < 3; i++) {
-    check_file_validity (IMAGE_FILENAME, i, taglists[i], 0, 0);
+    check_file_validity (IMAGE_FILENAME, i, taglists[i], 0, 0, NO_AUDIO);
     gst_tag_list_free (taglists[i]);
   }
 }
@@ -936,7 +944,7 @@ GST_START_TEST (test_video_capture_with_tags)
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
   for (i = 0; i < 2; i++) {
-    check_file_validity (VIDEO_FILENAME, i, taglists[i], 0, 0);
+    check_file_validity (VIDEO_FILENAME, i, taglists[i], 0, 0, NO_AUDIO);
     gst_tag_list_free (taglists[i]);
   }
 }
@@ -1050,7 +1058,7 @@ GST_START_TEST (test_image_custom_filter)
   check_preview_image ();
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
-  check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0);
+  check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0, NO_AUDIO);
 
   fail_unless (vf_probe_counter > 0);
   fail_unless (image_probe_counter == 1);
@@ -1122,7 +1130,7 @@ GST_START_TEST (test_video_custom_filter)
   check_preview_image ();
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
-  check_file_validity (VIDEO_FILENAME, 0, NULL, 0, 0);
+  check_file_validity (VIDEO_FILENAME, 0, NULL, 0, 0, WITH_AUDIO);
 
   fail_unless (vf_probe_counter > 0);
   fail_unless (video_probe_counter > 0);
