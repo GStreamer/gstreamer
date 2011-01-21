@@ -29,8 +29,8 @@ API which would allow developers to handle any use-cases.
   * We must be able to handle third-party effect providers, like the
     gnome-video-effects standard.
 
-  * We must be able to implement complex effects. This means effects that are more
-    than adding GstElement-s to the timeline. It can also mean effects
+  * We must be able to implement complex effects. This means effects that are
+    more than adding GstElement-s to the timeline. It can also mean effects
     that apply both video and audio changes.
 
 2. Problems
@@ -38,12 +38,8 @@ API which would allow developers to handle any use-cases.
   * We must be able to provide a list of effects available on the system at
     runtime.
 
-  * We must be able to configure effects through an API in GES and
-    not directly configuring the corresponding GstElement properties.
-
-    ==> EDWARD : The wording makes it a bit confusing. Here one could
-        read that we'll be offering an API to get/change properties
-        which is completely different from the standard GObject API.
+  * We must be able to configure effects through an API in GES
+    withtout having to access the GstElements properties directly.
 
   * We should also expose the GstElement-s contained in an effect so
     it is possible for people to control their properties as they wish.
@@ -73,7 +69,8 @@ B. Effects configurability
   user would like to configure.
   We would also have a method to set those properties easily.
 
-  We should also find a way to handle that in the case of systems such as gnome-effects
+  We should also find a way to handle that in the case of systems such as
+  gnome-effects
 
 C. Keyframes
 
@@ -84,31 +81,32 @@ C. Keyframes
 4. Use-cases
 -----------
 
-  UC-1. The user wants to add an effect to an entire clip => GESTimelineObject new API
+  UC-1. The user wants to add an effect to an entire clip => GESTimelineObject
+        new API
 
-  UC-2. The developer wants to allow users to configure effects => New 
+  UC-2. The developer wants to allow users to configure effects => New
   GESTrackOperation API
 
-  UC-3. The user wants to add an effect on a special portion of a clip, we should
-  allow him to configure that thanks to a system of keyframes. FIXME
+  UC-3. The user wants to add an effect on a specific portion of a clip, we
+  should allow him to specify a portion of the clip where the effect should be
+  applied.
 
-    ==> EDWARD : Just change the in-point/duration/start of that
-        effect within the TrackObject. See the mapping document and
-        feature within GESTimelineObject.
+  UC-4. We want to implement an effect which isn't only composed by a bin, but
+  is more complexe than that (ex: "effect '24'") => we have the
+  GESTrackOperation which is the base class (abstract) for this kind of
+  implementation. This class should implement vmethods to get/set configurable
+  properties.
 
-  UC-4. We want to implement an effect which isn't only composed by a bin, but is more
-  complexe than that (ex: "effect '24'") => we have the GESTrackOperation
-  which is the base class (abstract) for this kind of implementation. This class should 
-  implement vmethods to get/set configurable properties.
+  UC-5. A developer wants to implement effect which handle music and video at
+        the same time, Would the solution be to implement a GESTimelineEffect
+        to handle this special usecase? FIXME
 
-  UC-5. A developer wants to implement effect which handle music and video at the same
-  time, Would the solution be to implement a GESTimelineEffect to handle this
-  special usecase? FIXME
-
-  UC-6. The developers wants to configure each elements of an effect the way he wants
+  UC-6. The developers wants to configure each elements of an effect the way
+  he wants
   with a full control over it.
 
-  UC-7. Developers want to expose all effects present on the system to the end-user
+  UC-7. Developers want to expose all effects present on the system to the
+        end-user
 
 5. API draft
 ------------
@@ -118,35 +116,27 @@ C. Keyframes
 
       signals:
       -------
-        * property-changed: emited when a property of the GESTrackObject gst element
-          is changed
-
-        ==> EDWARD : So this would be exactly the same signal as
-        GObject's 'notify' ? Or at least it's very similar to
-        GstObject's deep-notify feature. Might want to look into
-        that (not for using it, but for how it's implemented).
-
-        Same comment about the set/get properties. Maybe the
-        GstChildProxy interface would be worth a look also.
-            
+        * property-changed: emited when a usefull property of a GstElement
+        contained in the GESTrackObject changes
 
       /**
-      * ges_track_object_list_gst_properties:
+      * ges_track_object_list_children_properties:
       *
       * @object: The origin #GESTrackObject
       *
-      * Get all the usefull configurable properties of the GstElement contained in @object.
+      * Get all the usefull configurable properties of the GstElement contained
+      * in @object.
       *
       * Returns: an array of GParamSpec of the configurable properties of the
       * GstElement-s contained in @object
       */
       GParamSpec **
-      ges_track_object_list_gst_properties (GESTrackObject *object);
+      ges_track_object_list_children_properties (GESTrackObject *object);
 
       -> Usecases: Let user know all the property he can configure.
 
       /**
-      * ges_track_object_set_gst_property:
+      * ges_track_object_set_child_property:
       *
       * @object: The origin #GESTrackObject
       * @property_name: The name of the property
@@ -155,14 +145,14 @@ C. Keyframes
       * Sets a property of a GstElement contained in @object.
       *
       */
-      void ges_track_object_set_gst_property (GESTrackObject *object,
+      void ges_track_object_set_child_property (GESTrackObject *object,
                                               const gchar *property_name,
                                               GValue * value);
         -> Usecases:
           + Let user configure effects easily (UC-3)
 
       /**
-      * ges_track_object_get_gst_property:
+      * ges_track_object_get_child_property:
       *
       * @object: The origin #GESTrackObject
       * @property_name: The name of the property
@@ -170,7 +160,7 @@ C. Keyframes
       *
       * Gets a property of a GstElement contained in @object.
       */
-      void ges_track_object_get_gst_property (GESTrackObject *object,
+      void ges_track_object_get_child_property (GESTrackObject *object,
                                               const gchar *property_name,
                                               GValue * value);
 
@@ -180,9 +170,7 @@ C. Keyframes
       -------
         * effect-added: emited when an effect is added
         * effect-removed: emited when an effect is removed
-        * effect-moved: emited when an effect is moved
-
-        ==> EDWARD : What do you mean by 'moved' ?
+        * effect-priority-changed: emited when an effect priority-changed
 
       /**
       * ges_timeline_object_add_effect:
@@ -194,11 +182,12 @@ C. Keyframes
       *
       * Adds a new effect corresponding to @material to the #GESTimelineObject
       *
-      * Returns: The newly created #GESTrackEffect, or %NULL if there was an error.
+      * Returns: The newly created #GESTrackEffect, or %NULL if there was an
+      * error.
       */
       GESTrackEffect *ges_timeline_object_add_effect (GESTimelineObject *object,
-                                                      GESMaterial *effect_material,
-                                                      gint position);
+                                                  GESMaterial *effect_material,
+                                                  gint position);
 
       /**
       * ges_timeline_object_get_effects:
@@ -237,30 +226,35 @@ C. Keyframes
       *
       * Creates a new #GESTrackEffect from a #GESMaterial
       *
-      * Returns: a newly created #GESTrackEffect, or %NULL if something went wrong.
+      * Returns: a newly created #GESTrackEffect, or %NULL if something went
+      * wrong.
       */
-    GESTrackEffect *ges_track_effect_new_from_material(GESTrackEffect *effect, GESMaterial *material);
+    GESTrackEffect *ges_track_effect_new_from_material(GESTrackEffect *effect,
+                                                       GESMaterial *material);
 
       /**
       * ges_track_effect_new_from_bin_desc:
       *
       * @bin_dec: The gst-launch like bin description of the effect
       *
-      * Creates a new #GESTrackEffect from the description of the bin. This is a 
-      * convenience method for testing puposes.
+      * Creates a new #GESTrackEffect from the description of the bin. This is
+      * a convenience method for testing puposes.
       *
-      * Returns: a newly created #GESTrackEffect, or %NULL if something went wrong.
+      * Returns: a newly created #GESTrackEffect, or %NULL if something went
+      * wrong.
       */
     GESTrackEffect *ges_track_effect_new_from_bin_desc(GESTrackEffect *effect,
                                                        const gchar *bin_desc);
 
   D - The GESTimelineEffect API:
 
-  The GESTimelineEffect basically doesn't have anything else but what GESTimelineObject has.
+  The GESTimelineEffect basically doesn't have anything else but what
+  GESTimelineObject has.
 
-    -> Usecases: The user wants to control multiple effects in sync. The user wants to add
-                 an effect to the whole timeline. The user wants to had an effect to a 
-                 segment of the timeline without caring about what clip it is applied on.
+    -> Usecases: The user wants to control multiple effects in sync. The user
+                 wants to add an effect to the whole timeline. The user wants
+                 to had an effect to a segment of the timeline without caring
+                 bout what clip it is applied on.
 
 =================
   TODO GESRegistry API:
@@ -271,7 +265,8 @@ C. Keyframes
       /**
       * ges_registry_get_default:
       *
-      * Returns a newly created #GESEffectRegistry or the existing one increasing
+      * Returns a newly created #GESEffectRegistry or the existing one
+      * increasing
       * its refcount
       */
       GESEffectRegistry *
