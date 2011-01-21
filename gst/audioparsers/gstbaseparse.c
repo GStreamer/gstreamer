@@ -225,7 +225,7 @@ struct _GstBaseParsePrivate
   guint min_frame_size;
   guint format;
   guint fps_num, fps_den;
-  guint update_interval;
+  gint update_interval;
   guint bitrate;
   guint lead_in, lead_out;
   GstClockTime lead_in_ts, lead_out_ts;
@@ -570,7 +570,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->flushing = FALSE;
   parse->priv->offset = 0;
   parse->priv->sync_offset = 0;
-  parse->priv->update_interval = 50;
+  parse->priv->update_interval = -1;
   parse->priv->fps_num = parse->priv->fps_den = 0;
   parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
   parse->priv->lead_in = parse->priv->lead_out = 0;
@@ -1127,8 +1127,12 @@ gst_base_parse_update_duration (GstBaseParse * aacparse)
     gst_object_unref (GST_OBJECT (peer));
     if (qres) {
       if (gst_base_parse_convert (parse, pformat, ptot,
-              GST_FORMAT_TIME, &dest_value))
+              GST_FORMAT_TIME, &dest_value)) {
         parse->priv->estimated_duration = dest_value;
+        GST_LOG_OBJECT (parse,
+            "updated estimated duration to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (dest_value));
+      }
     }
   }
 }
@@ -1589,7 +1593,10 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       parse->priv->acc_duration += GST_BUFFER_DURATION (buffer);
     }
   }
-  if (parse->priv->update_interval &&
+  /* 0 means disabled */
+  if (parse->priv->update_interval < 0)
+    parse->priv->update_interval = 50;
+  else if (parse->priv->update_interval > 0 &&
       (parse->priv->framecount % parse->priv->update_interval) == 0)
     gst_base_parse_update_duration (parse);
 
@@ -2851,6 +2858,12 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
         gst_util_uint64_scale (GST_SECOND, fps_den * lead_in, fps_num);
     parse->priv->lead_out_ts =
         gst_util_uint64_scale (GST_SECOND, fps_den * lead_out, fps_num);
+    /* aim for about 1.5s to estimate duration */
+    if (parse->priv->update_interval < 0) {
+      parse->priv->update_interval = fps_num * 3 / (fps_den * 2);
+      GST_LOG_OBJECT (parse, "estimated update interval to %d frames",
+          parse->priv->update_interval);
+    }
   }
   GST_LOG_OBJECT (parse, "set fps: %d/%d => duration: %" G_GINT64_FORMAT " ms",
       fps_num, fps_den, parse->priv->frame_duration / GST_MSECOND);
