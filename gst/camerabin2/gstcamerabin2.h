@@ -65,6 +65,7 @@ struct _GstCameraBin
   GstElement *audio_src;
   GstElement *user_audio_src;
   GstElement *audio_queue;
+  GstElement *audio_volume;
   GstElement *audio_capsfilter;
   GstElement *audio_convert;
 

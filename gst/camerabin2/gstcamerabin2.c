@@ -81,7 +81,11 @@ enum
   PROP_PREVIEW_FILTER,
   PROP_VIEWFINDER_SINK,
   PROP_VIEWFINDER_SUPPORTED_CAPS,
-  PROP_VIEWFINDER_CAPS
+  PROP_VIEWFINDER_CAPS,
+  PROP_AUDIO_SRC,
+  PROP_MUTE_AUDIO,
+  PROP_AUDIO_CAPTURE_SUPPORTED_CAPS,
+  PROP_AUDIO_CAPTURE_CAPS
 };
 
 enum
@@ -98,6 +102,7 @@ static guint camerabin_signals[LAST_SIGNAL];
 #define DEFAULT_VID_LOCATION "vid_%d"
 #define DEFAULT_IMG_LOCATION "img_%d"
 #define DEFAULT_POST_PREVIEWS TRUE
+#define DEFAULT_MUTE_AUDIO FALSE
 
 #define DEFAULT_AUDIO_SRC "autoaudiosrc"
 
@@ -401,6 +406,32 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           "The camera source element to be used",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_AUDIO_SRC,
+      g_param_spec_object ("audio-src", "Audio source",
+          "The audio source element to be used on video recordings",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_MUTE_AUDIO,
+      g_param_spec_boolean ("mute", "Mute",
+          "If the audio recording should be muted. Note that this still "
+          "saves audio data to the resulting file, but they are silent. Use "
+          "a video-profile without audio to disable audio completely",
+          DEFAULT_MUTE_AUDIO, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class,
+      PROP_AUDIO_CAPTURE_SUPPORTED_CAPS,
+      g_param_spec_boxed ("audio-capture-supported-caps",
+          "Audio capture supported caps",
+          "Formats supported for capturing audio represented as GstCaps",
+          GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class,
+      PROP_AUDIO_CAPTURE_CAPS,
+      g_param_spec_boxed ("audio-capture-caps",
+          "Audio capture caps",
+          "Format to capture audio for video recording represented as GstCaps",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (object_class,
       PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
       g_param_spec_boxed ("image-capture-supported-caps",
@@ -441,8 +472,8 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
 
   g_object_class_install_property (object_class, PROP_VIDEO_ENCODING_PROFILE,
       gst_param_spec_mini_object ("video-profile", "Video Profile",
-          "The GstEncodingProfile to use for video recording",
-          GST_TYPE_ENCODING_PROFILE,
+          "The GstEncodingProfile to use for video recording. Audio is enabled "
+          "when this profile supports audio.", GST_TYPE_ENCODING_PROFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_IMAGE_FILTER,
@@ -546,9 +577,10 @@ gst_camera_bin_init (GstCameraBin * camera)
       gst_object_ref (camera->imagebin_capsfilter),
       gst_object_ref (camera->viewfinderbin_capsfilter), NULL);
 
-  /* this element is only added if it is going to be used */
+  /* these elements are only added if they are going to be used */
   camera->audio_capsfilter = gst_element_factory_make ("capsfilter",
       "audio-capsfilter");
+  camera->audio_volume = gst_element_factory_make ("volume", "audio-volume");
 }
 
 static void
@@ -886,6 +918,7 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
         || !has_audio) {
       gst_bin_remove (GST_BIN_CAST (camera), camera->audio_src);
       gst_bin_remove (GST_BIN_CAST (camera), camera->audio_queue);
+      gst_bin_remove (GST_BIN_CAST (camera), camera->audio_volume);
       gst_bin_remove (GST_BIN_CAST (camera), camera->audio_capsfilter);
       gst_bin_remove (GST_BIN_CAST (camera), camera->audio_convert);
       gst_object_unref (camera->audio_src);
@@ -908,11 +941,13 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   if (new_audio_src) {
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->audio_src));
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->audio_queue));
+    gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->audio_volume));
     gst_bin_add (GST_BIN_CAST (camera),
         gst_object_ref (camera->audio_capsfilter));
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->audio_convert));
 
     gst_element_link_many (camera->audio_src, camera->audio_queue,
+        camera->audio_volume,
         camera->audio_capsfilter, camera->audio_convert, NULL);
     {
       GstPad *srcpad;
@@ -987,6 +1022,20 @@ gst_camera_bin_set_location (GstCameraBin * camera, const gchar * location)
 }
 
 static void
+gst_camera_bin_set_audio_src (GstCameraBin * camera, GstElement * src)
+{
+  GST_DEBUG_OBJECT (GST_OBJECT (camera),
+      "Setting audio source %" GST_PTR_FORMAT, src);
+
+  if (camera->user_audio_src)
+    g_object_unref (camera->user_audio_src);
+
+  if (src)
+    g_object_ref (src);
+  camera->user_audio_src = src;
+}
+
+static void
 gst_camera_bin_set_camera_src (GstCameraBin * camera, GstElement * src)
 {
   GST_DEBUG_OBJECT (GST_OBJECT (camera),
@@ -1015,6 +1064,22 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CAMERA_SRC:
       gst_camera_bin_set_camera_src (camera, g_value_get_object (value));
+      break;
+    case PROP_AUDIO_SRC:
+      gst_camera_bin_set_audio_src (camera, g_value_get_object (value));
+      break;
+    case PROP_MUTE_AUDIO:
+      g_object_set (camera->audio_volume, "mute", g_value_get_boolean (value),
+          NULL);
+      break;
+    case PROP_AUDIO_CAPTURE_CAPS:{
+      GST_DEBUG_OBJECT (camera,
+          "Setting audio capture caps to %" GST_PTR_FORMAT,
+          gst_value_get_caps (value));
+
+      g_object_set (camera->audio_capsfilter, "caps",
+          gst_value_get_caps (value), NULL);
+    }
       break;
     case PROP_IMAGE_CAPTURE_CAPS:{
       GstPad *pad = NULL;
@@ -1164,23 +1229,41 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
     case PROP_CAMERA_SRC:
       g_value_set_object (value, camera->src);
       break;
+    case PROP_AUDIO_SRC:
+      g_value_set_object (value, camera->audio_src);
+      break;
+    case PROP_MUTE_AUDIO:{
+      gboolean mute;
+
+      g_object_get (camera->audio_volume, "mute", &mute, NULL);
+      g_value_set_boolean (value, mute);
+      break;
+    }
+    case PROP_AUDIO_CAPTURE_SUPPORTED_CAPS:
     case PROP_VIDEO_CAPTURE_SUPPORTED_CAPS:
     case PROP_VIEWFINDER_SUPPORTED_CAPS:
     case PROP_IMAGE_CAPTURE_SUPPORTED_CAPS:{
       GstPad *pad;
+      GstElement *element;
       GstCaps *caps;
       const gchar *padname;
 
       if (prop_id == PROP_VIDEO_CAPTURE_SUPPORTED_CAPS) {
+        element = camera->src;
         padname = GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME;
       } else if (prop_id == PROP_IMAGE_CAPTURE_SUPPORTED_CAPS) {
+        element = camera->src;
         padname = GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME;
-      } else {
+      } else if (prop_id == PROP_VIEWFINDER_SUPPORTED_CAPS) {
+        element = camera->src;
         padname = GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME;
+      } else {
+        element = camera->audio_src;
+        padname = "src";
       }
 
-      if (camera->src) {
-        pad = gst_element_get_static_pad (camera->src, padname);
+      if (element) {
+        pad = gst_element_get_static_pad (element, padname);
 
         g_assert (pad != NULL);
 
@@ -1197,9 +1280,16 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
 
         gst_object_unref (pad);
       } else {
-        GST_DEBUG_OBJECT (camera, "Camera source not created, can't get "
+        GST_DEBUG_OBJECT (camera, "Source not created, can't get "
             "supported caps");
       }
+    }
+      break;
+    case PROP_AUDIO_CAPTURE_CAPS:{
+      GstCaps *caps = NULL;
+      g_object_get (camera->audio_capsfilter, "caps", &caps, NULL);
+      gst_value_set_caps (value, caps);
+      gst_caps_unref (caps);
     }
       break;
     case PROP_IMAGE_CAPTURE_CAPS:{
