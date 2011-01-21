@@ -1,5 +1,5 @@
 /* GStreamer Editing Services
- * Copyright (C) 2010 Thibault Saunier <tsaunier@gnome.org>
+ * Copyright (C) 2010 Thibault Saunier <thibault.saunier@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
