@@ -394,6 +394,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       oggpad->new_page = TRUE;
       oggpad->first_delta = FALSE;
       oggpad->prev_delta = FALSE;
+      oggpad->data_pushed = FALSE;
       oggpad->pagebuffers = g_queue_new ();
 
       oggpad->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
@@ -1306,11 +1307,15 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
     }
 
     if (GST_BUFFER_IS_DISCONT (buf)) {
-      GST_LOG_OBJECT (pad->collect.pad, "got discont");
-      packet.packetno++;
-      /* No public API for this; hack things in */
-      pad->stream.pageno++;
-      force_flush = TRUE;
+      if (pad->data_pushed) {
+        GST_LOG_OBJECT (pad->collect.pad, "got discont");
+        packet.packetno++;
+        /* No public API for this; hack things in */
+        pad->stream.pageno++;
+        force_flush = TRUE;
+      } else {
+        GST_LOG_OBJECT (pad->collect.pad, "discont at stream start");
+      }
     }
 
     /* flush the currently built page if necessary */
@@ -1364,6 +1369,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
       GST_DEBUG_OBJECT (pad->collect.pad, "swapping in BOS packet");
 
     ogg_stream_packetin (&pad->stream, &packet);
+    pad->data_pushed = TRUE;
 
     gp_time = GST_BUFFER_OFFSET (pad->buffer);
     granulepos = GST_BUFFER_OFFSET_END (pad->buffer);
@@ -1607,6 +1613,7 @@ gst_ogg_mux_init_collectpads (GstCollectPads * collect)
     oggpad->new_page = TRUE;
     oggpad->first_delta = FALSE;
     oggpad->prev_delta = FALSE;
+    oggpad->data_pushed = FALSE;
     oggpad->pagebuffers = g_queue_new ();
 
     walk = g_slist_next (walk);
