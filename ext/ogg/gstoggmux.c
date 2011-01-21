@@ -781,7 +781,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
             buf = NULL;
           } else {
             GST_DEBUG_OBJECT (ogg_mux,
-                "got data buffer in control state, switching " "to data mode");
+                "got data buffer in control state, switching to data mode");
             /* this is a data buffer so switch to data state */
             pad->state = GST_OGG_PAD_STATE_DATA;
           }
@@ -1106,7 +1106,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       if (hwalk == NULL) {
         GST_LOG_OBJECT (mux,
             "flushing page as packet %" G_GUINT64_FORMAT " is first or "
-            "last packet", pad->packetno);
+            "last packet", packet.packetno);
         while (ogg_stream_flush (&pad->stream, &page)) {
           GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
 
