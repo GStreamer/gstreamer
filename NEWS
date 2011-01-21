@@ -1,4 +1,196 @@
-This is GStreamer Bad Plug-ins 0.10.20, "For it is a Human Number"
+This is GStreamer Bad Plug-ins 0.10.21, "Pink Noise"
+
+Changes since 0.10.20:
+
+      * alsaspdif: removed alsaspdifsink element (replaced by alsasink device=spdif)
+      * metadata: remove metadata plugin
+      * jack: jack plugin has moved to gst-plugins-good (0.10.27)
+      * selector: input-selector and output-selector have moved to GStreamer core (0.10.32)
+      * valve: has moved to gstreamer core (0.10.32)
+      * applemedia: new plugin for Apple multimedia APIs (avfvideosrc, celvideosrc, qtkitvideosrc, miovideosrc, vth264decbin, vth264encbin, vtdec, vtenc)
+      * applemedia: new iOS video source based on AVFoundation
+      * y4mdec: new y4mdec element
+      * dcaparse: new dts/dca audio parser
+      * camerabin2: new camerabin element (work-in-progress, experimental)
+      * opencv: new plugin with elements facedetect, faceblur, edgedetect, cvsobel, cvsmooth, cvlaplace, cverode, cvequalizehist, cvdilate, textwrite, templatematch, pyramidsegment
+      * interlace: new element
+      * geometrictransform: new rotate element
+      * jp2kdecimator: add a JPEG2000 decimator element (drop details without reencoding)
+      * audioparsers: add dcaparse, a dts/dca parser, and mpegaudioparse (mp3parse replacement)
+      * autoconvert: add autovideoconvert, an autoconvert based video format converter
+      * checksumsink, chopmydata: new debug elements
+      * dvbsuboverlay: new element to overlay DVB subtitle
+      * rsvgoverlay: new element for scalable and relative svg overlay with cairo
+      * qtmux: add new ismlmux element, for fragmented isml major brand
+      * ac3parse: properly parse E-AC3 frame header and use proper EAC-3 caps
+      * ac3parse: relax BSID checking, performance improvements
+      * applemedia mtapi: update to reflect new API on iOS 4.x
+      * applemedia vtenc: bump H.264 level from 1.3 to 3.0
+      * applemedia vtenc: remove keyframe enforcement workaround
+      * applemedia celapi: update to reflect new API on iOS 4.x
+      * applemedia cvapi: add wrapper for IO surface access
+      * audioparse: add support for setting the channel-positions
+      * audioparsers: increase ranks to enable auto-plugging (incl. new mp3 parser)
+      * baseparse: enhancements for timestamp marked framed formats
+      * baseparse: increase keyframe awareness
+      * baseparse: perform bitrate handling and posting after newsegment sending
+      * baseparse: post duration message if average bitrates is updated
+      * baseparse: prevent indefinite resyncing
+      * baseparse: add index support, seek table and accurate seek support
+      * baseparse: support reverse playback
+      * baseparse: use determined seekability in answering SEEKING query
+      * basevideo: Add handling of GstForceKeyUnit events
+      * basevideodecoder: add capture pattern handling; don't blow away field information
+      * bayer2rgb: add format=bggr/etc. to caps, add framerate to the sink caps
+      * camerabin: add "preview-source-filter","ready-for-capture", "idle" properties
+      * camerabin: change "zoom" property from int to float
+      * camerabin: enable all conversion flags by default to make it work out-of-the-box everywhere
+      * coloreffects: Add chromahold effect
+      * cog: improvements in colorspace and scaler; add fast paths for colorspace conversion
+      * colorspace: revive element and add support for many more pixellayouts/colorspaces
+      * colorspace: add support for SDTV/HDTV YUV conversions
+      * dtmfsrc: Make the dtmfsrc accept events sent with gst_element_send_event
+      * tools: misc. improvements to element-maker tool
+      * faac: handle trailing encoder output
+      * faad: support reverse playback; cater for decoder delay and renegotiation
+      * faad: tweak output buffer timestamping
+      * flacparse: don't drop the last frame if it is followed by garbage
+      * flacparse: don't parse the complete FLAC frames but only look for valid frame headers (for performance)
+      * flacparse: fix picture parsing, fix parsing with unknown framesizes
+      * flacparse: parse seektable
+      * frei0r: add support for the FREI0R_PATH environment variable
+      * frei0r: fix crashes if plugins don't provide correct property information
+      * frei0r: fix scanning of plugin subdirectories and support different vendors
+      * frei0r: update frei0r interface specification to 1.2
+      * gaudieffects: avoid divide by 0 in burn element, make filter parameters dynamic and controllable
+      * id3mux: map GST_TAG_ALBUM_ARTIST, give PRIMARY rank
+      * invtelecine: Fix name of 30p/60i pattern
+      * jasperdec: don't fail hard on decoding error
+      * jifmux: detect EOI correctly; do not limit the size of the image on 16bits
+      * jp2kenc: Emit SOP markers in every codestream packet
+      * jpegparse: avoid infinite loop when resyncing; discard incomplete image
+      * kate: add segment tracking, and various other improvements
+      * kate: ensure the kate pad does not shoot ahead of the video pad
+      * mpegtsdemux: extract language for DVB subtitle streams
+      * mpegtsdemux: enable gather_pes only for DVB subtitle private streams
+      * mpegtsdemux: fix re-syncing on invalid data after seek
+      * mpegtsmux: Initialize PES packet before getting the header size
+      * mpegtsmux: Set adaptation flag when appropriate
+      * mpegtsmux: Set random_access_indicator for keyframes
+      * mpegtsparse: send TDT tables messages in a serialized event downstream
+      * ofa: Call g_object_notify() after the fingerprint was created
+      * pcapparse: Add support for Linux Cooked Capture (SLL) frames
+      * photography: add missing property and cabability flag for noise reduction
+      * photography: Add "zoom" and "image-preview-supported-caps" interface properties
+      * photography: add gst_photography_{set,get}_noise_reduction() and CAPS_NOISE_REDUCTION flag
+      * qtmux: add support for fragmented mp4
+      * qtmux: add "streamable" property to avoid building fragmented mfra index
+      * qtmux: timestamp tracking fixes and many other fixes
+      * resindvd: attempt to use glib language setting for DVD menus/audio
+      * resindvd: improve error messages on read errors; button state tracking fixes
+      * rfbsrc: fail more gracefully if source gets disconnected or geometry changes
+      * sdlvideosink: re-enable YVYU and UYVY support
+      * sdpdemux: error out if no streams found in sdp message
+      * sdpdemux: redirect SDP with an rtsp control URL and add property to disable redirect
+      * ssim: add I420 support
+      * tiger: outline text by default, to make it easier to read
+      * winks: add property probing support; fix framerate fraction range mapping
+      * winks: ignore unsupported formats; work around shutdown deadlock
+      * winks: performance improvements
+      * zbar: make scanner cache optional, disable it by default
+      * zbar: use correct strides, support more formats
+
+Bugs fixed since 0.10.20:
+
+      * 628609 : The qtwrapperaudiodec_samr decoder doesn't handle buffers containing many AMR frames properly
+      * 639296 : [y4mdec] Doesn't handle files which don't specify a colorspace
+      * 613379 : camerabin: Do not use audio clock after stopping video capture
+      * 636279 : REGRESSION: Video often freezes during playback of mpeg2 files
+      * 630255 : [examples] camerabin example still uses old GstXOverlay interface
+      * 631232 : [colorspace] AYUV/ARGB handling broken on big endian systems
+      * 627229 : fpsdisplaysink should not measure fps relative to pipeline clock
+      * 435120 : cairosvgoverlay
+      * 486659 : xmp/exif metadata handling
+      * 578629 : libgstphotography missing exports for MSVC
+      * 587223 : mpegtsdemux seg.fault due to invalid PMT_pid
+      * 598078 : osxvideosrc doesn't build in snow leopard x86_64
+      * 600929 : [kate] tiger element doesn't handle segments and text/video synchronization properly
+      * 603063 : camerabin example fails to start recording
+      * 611428 : [gdiscreencapsrc] leaks memory (ICONINFO)
+      * 613633 : [resindvd] scrambled DVDs yield useless generic error message if dvdcss is not available
+      * 616814 : Photography interface extension: colour tone mode and noise reduction settings
+      * 616923 : camerabin: remove photography interface implementation
+      * 618045 : [cogcolorspace] No Y41B support
+      * 618542 : DVB subtitles support
+      * 625558 : [basevideoencoder] [vp8] encoder timestamps are wrong when there are gaps
+      * 626425 : cog_virt_frame_new_convert_u8 has bogus source data
+      * 627134 : photography interface: add API for capture correction
+      * 627211 : jpegformat: Push tags after setting srcpad caps
+      * 627253 : [mpegtsparse] Post tags of channel and currently running event
+      * 627992 : dtmfsrc doesn't support gst_element_send_event
+      * 628326 : vdpau: don't change structure in setcaps function
+      * 628527 : videoanalyse: classificication is wrong
+      * 628548 : [mpegtsmux] Initialize PES packet before getting the header size
+      * 628570 : cogcolorspace: element classificication is wrong
+      * 629554 : dvbsrc: Fix example usage, bandwidth=8 not 8MHz
+      * 629897 : [cog] Ignores --disable-orc and always requires orc
+      * 629910 : jpegparse: properly clean up comment string
+      * 629917 : [output-selector] Recheck pending_pad after pushing a buffer
+      * 630046 : sdpdemux: Add optional support for rtspsrc as session element
+      * 630253 : [sdl] Still uses old GstXOverlay interface
+      * 630254 : [vdpau] Still uses old GstXOverlay interface
+      * 630783 : [frei0r] Crashes if broken plugins don't give correct property information
+      * 630808 : valve: move to core
+      * 631200 : flacparse: major performance improvements
+      * 631389 : [flacparse] backport/check corner case fixes done in flacdec
+      * 631449 : [audioparse] doest not support several channel numbers
+      * 631501 : [faad] failed to dynamically switch from 2 audio channels to 6
+      * 631814 : [flacparse] unit test failures
+      * 631993 : [flacparse] imperfect timestamping
+      * 632070 : qtmux: infinite loop
+      * 632668 : Gaudi Effects [review]
+      * 632885 : Gaudi Effects dynamically controllable parameters [review]
+      * 632911 : qtmux: add fragmented mp4 support (isml brand)
+      * 633466 : [katedec] Pushes events before the final caps are known
+      * 633917 : [mpegtsparse] [PATCH] Send TDT messages in an serialized event downstream
+      * 635200 : [dvbbasebin] [PATCH] Add TDT to the initial pids filter for dvbsrc
+      * 635202 : mpeg4videoparse: Minor fixes
+      * 635204 : mpeg4videoparse: Set srcpad caps before forwarding newsegment
+      * 635205 : h264parse: Set srcpad caps before forwarding newsegment
+      * 635229 : celtenc: uninitialized tags variable can cause segfault
+      * 635304 : [opencv] fix caps issues and extend supported caps for some elements [PATCH]
+      * 635397 : rfbsrc: avoid infinite loop if source gets disconnected and  don't crash if frame geometry changes
+      * 635529 : interlace: Add pattern offset and fix timestamps
+      * 635720 : vp8enc incorrectly sets timestamps based on theoretical framerate
+      * 635786 : [audioparse] Fix division-by-zero exception
+      * 635878 : [qtmux] gst_qtmux_check_difference subtract 2 unsigned numbers without taking care of the result sign
+      * 636106 : autocolorspace: new plugin for auto space convertor selection
+      * 636109 : [SSIM] klass should be Filter/Effect/Video
+      * 636185 : qtmux: msvc incompatibility
+      * 637062 : [ac3parse] parse problems on some MTS streams
+      * 637224 : [bayer2rgb] missing framerate in sink caps
+      * 637308 : gst-plugins-bad did not find xvidcore on my box
+      * 637359 : Internal GStreamer error, during pcap to mp4 conversion
+      * 637403 : qtmux do not store 1st TS when detect 1st buffer
+      * 637486 : qtmux: error if no buffers have arrived to one pad at EOS
+      * 637532 : applemedia: redundant declaration of 'parent_class'
+      * 637590 : [PATCH] fix gst-plugins-bad compile against latest gtk+
+      * 637824 : mpeg4videoparse: gst_buffer_is_metadata_writable warning (regression)
+      * 637929 : mve: do not use the pad buffer allocation functions in demuxers
+      * 637931 : mpegdemux: do not use the pad buffer allocation functions in demuxers
+      * 638004 : tiger: fallback on headers in caps to initialize if headers are absent
+      * 638288 : qtmux: fails to handle out-of-order buffers without duration
+      * 638412 : kate: reenable the sending of a message for tags
+      * 638527 : tiger: outline text by default, to make it easier to read
+      * 638604 : basecamerasrc isn't build by default but camerabin2 is and requires it
+      * 639063 : mpegtsparse: fix (re)sync with invalid data at beginning
+      * 639338 : [qtmux] Protect against copying a null caps
+      * 639413 : Camerabin should use output-selector:pad-negotiation-mode=active
+      * 639456 : [camerabin] Should have all conversion flags enabled by default
+      * 639555 : [audioparsers] Be careful to not lose the event ref
+      * 639950 : flacparse: avoid unref'ing NULL buffer
+      * 630830 : zbar: Fixes, single frame scan and width/stride fix
+      * 635281 : [mpegtsparse] TDT packets are only parsed for odd hours
 
 Changes since 0.10.19:
 
