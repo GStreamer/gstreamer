@@ -28,6 +28,8 @@ import unittest
 
 SKIP_FILES = ['common', 'runtests']
 
+os.environ['LC_MESSAGES'] = 'C'
+
 def gettestnames(which):
     if not which:
         dir = os.path.split(os.path.abspath(__file__))[0]
