@@ -337,6 +337,34 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_ogg_mux_is_serialno_present (GstOggMux * ogg_mux, guint32 serialno)
+{
+  GSList *walk;
+
+  walk = ogg_mux->collect->data;
+  while (walk) {
+    GstOggPadData *pad = (GstOggPadData *) walk->data;
+    if (pad->map.serialno == serialno)
+      return TRUE;
+    walk = walk->next;
+  }
+
+  return FALSE;
+}
+
+static guint32
+gst_ogg_mux_generate_serialno (GstOggMux * ogg_mux)
+{
+  guint32 serialno;
+
+  do {
+    serialno = g_random_int_range (0, G_MAXINT32);
+  } while (gst_ogg_mux_is_serialno_present (ogg_mux, serialno));
+
+  return serialno;
+}
+
 static GstPad *
 gst_ogg_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * req_name)
@@ -364,7 +392,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
 
     if (req_name == NULL || strlen (req_name) < 6) {
       /* no name given when requesting the pad, use random serial number */
-      serial = rand ();
+      serial = gst_ogg_mux_generate_serialno (ogg_mux);
     } else {
       /* parse serial number from requested padname */
       serial = atoi (&req_name[5]);
