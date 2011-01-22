@@ -1496,19 +1496,22 @@ gst_x264_enc_sink_event (GstPad * pad, GstEvent * event)
       gst_x264_enc_flush_frames (encoder, TRUE);
       break;
     case GST_EVENT_TAG:{
-        GstTagList *tags = NULL;
+      GstTagList *tags = NULL;
 
-        gst_event_parse_tag (event, &tags);
-        /* drop codec/video-codec and replace encoder/encoder-version */
-        gst_tag_list_remove_tag (tags, GST_TAG_VIDEO_CODEC);
-        gst_tag_list_remove_tag (tags, GST_TAG_CODEC);
-        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, "x264",
-            GST_TAG_ENCODER_VERSION, X264_BUILD, NULL);
-        /* push is done below */
-      }
+      event =
+          GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+
+      gst_event_parse_tag (event, &tags);
+      /* drop codec/video-codec and replace encoder/encoder-version */
+      gst_tag_list_remove_tag (tags, GST_TAG_VIDEO_CODEC);
+      gst_tag_list_remove_tag (tags, GST_TAG_CODEC);
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, "x264",
+          GST_TAG_ENCODER_VERSION, X264_BUILD, NULL);
+      /* push is done below */
       break;
       /* no flushing if flush received,
        * buffers in encoder are considered (in the) past */
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:{
       const GstStructure *s;
       s = gst_event_get_structure (event);
