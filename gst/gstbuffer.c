@@ -340,7 +340,7 @@ gst_buffer_new (void)
 
 /**
  * gst_buffer_new_and_alloc:
- * @size: the size of the new buffer's data.
+ * @size: the size in bytes of the new buffer's data.
  *
  * Creates a newly allocated buffer with data of the given size.
  * The buffer memory is not cleared. If the requested amount of
@@ -389,7 +389,7 @@ gst_buffer_new_and_alloc (guint size)
 
 /**
  * gst_buffer_try_new_and_alloc:
- * @size: the size of the new buffer's data.
+ * @size: the size in bytes of the new buffer's data.
  *
  * Tries to create a newly allocated buffer with data of the given size. If
  * the requested amount of memory can't be allocated, NULL will be returned.
