@@ -628,9 +628,12 @@ gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
       GstClockTime min_latency, max_latency;
       GstRingBufferSpec *spec;
 
+      GST_OBJECT_LOCK (src);
       if (G_UNLIKELY (src->ringbuffer == NULL
-              || src->ringbuffer->spec.rate == 0))
+              || src->ringbuffer->spec.rate == 0)) {
+        GST_OBJECT_UNLOCK (src);
         goto done;
+      }
 
       spec = &src->ringbuffer->spec;
 
@@ -642,6 +645,7 @@ gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
       max_latency =
           gst_util_uint64_scale_int (spec->segtotal * spec->segsize, GST_SECOND,
           spec->rate * spec->bytes_per_sample);
+      GST_OBJECT_UNLOCK (src);
 
       GST_DEBUG_OBJECT (src,
           "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
