@@ -37,10 +37,10 @@ struct _GstRtpVP8Pay
   GstBaseRTPPayload parent;
   gboolean is_keyframe;
   gint n_partitions;
-  guint header_size;
-  /* Add the end offset for easier implementation */
-  guint partition_offset[9];
-  guint partition_size[8];
+  /* Treat frame header & tag & partition size block as the first partition,
+   * folowed by max. 8 data partitions. last offset is the end of the buffer */
+  guint partition_offset[10];
+  guint partition_size[9];
 };
 
 GType gst_rtp_vp8_pay_get_type (void);

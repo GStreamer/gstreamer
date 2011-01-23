@@ -264,7 +264,7 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   if (!gst_bit_reader_get_bits_uint8 (reader, &tmp8, 2))
     goto error;
 
-  self->n_partitions = partitions = 1 << tmp8;
+  partitions = 1 << tmp8;
 
   /* Check if things are still sensible */
   if (header_size + (partitions - 1) * 3 >= GST_BUFFER_SIZE (buffer))
@@ -273,12 +273,14 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   /* partition data is right after the frame header */
   data = GST_BUFFER_DATA (buffer) + header_size;
 
-  self->partition_offset[0] = header_size + (partitions - 1) * 3;
+  /* Set up mapping, count the initial header as a partition to make other
+   * sections of the code easier */
+  self->n_partitions = partitions + 1;
+  self->partition_offset[0] = 0;
+  self->partition_size[0] = header_size + (partitions - 1) * 3;
 
-  /* Include partition data in the header for RTP purposes */
-  self->header_size = self->partition_offset[0];
-
-  for (i = 0; i < (partitions - 1); i++) {
+  self->partition_offset[1] = self->partition_size[0];
+  for (i = 1; i < partitions; i++) {
     guint size = (data[2] << 16 | data[1] << 8 | data[0]);
 
     data += 3;
@@ -313,15 +315,6 @@ gst_rtp_vp8_fit_partitions (GstRtpVP8Pay * self, gint first, gsize available)
 
   g_assert (first < self->n_partitions);
 
-  if (first < 0) {
-    if (self->header_size > available)
-      return 0;
-
-    available -= self->header_size;
-    num++;
-    first = 0;
-  }
-
   for (i = first;
       i < self->n_partitions && self->partition_size[i] < available; i++) {
     num++;
@@ -333,16 +326,10 @@ gst_rtp_vp8_fit_partitions (GstRtpVP8Pay * self, gint first, gsize available)
 
 static GstBuffer *
 gst_rtp_vp8_create_sub (GstRtpVP8Pay * self,
-    GstBuffer * buffer, gint current, guint num)
+    GstBuffer * buffer, guint current, guint num)
 {
-  guint offset = 0;
-  guint size;
-
-  if (current >= 0) {
-    offset = self->partition_offset[current];
-  }
-
-  size = self->partition_offset[current + num] - offset;
+  guint offset = self->partition_offset[current];
+  guint size = self->partition_offset[current + num] - offset;
 
   return gst_buffer_create_sub (buffer, offset, size);
 }
@@ -350,7 +337,7 @@ gst_rtp_vp8_create_sub (GstRtpVP8Pay * self,
 
 static guint
 gst_rtp_vp8_payload_next (GstRtpVP8Pay * self,
-    GstBufferListIterator * it, gint first, GstBuffer * buffer)
+    GstBufferListIterator * it, guint first, GstBuffer * buffer)
 {
   guint num;
   GstBuffer *header;
@@ -358,7 +345,7 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self,
   gboolean mark;
   gsize available = gst_rtp_vp8_calc_payload_len (GST_BASE_RTP_PAYLOAD (self));
 
-  g_assert (first < 8);
+  g_assert (first < 9);
 
   /* How many partitions can we fit */
   num = gst_rtp_vp8_fit_partitions (self, first, available);
@@ -366,7 +353,7 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self,
   if (num > 0) {
     mark = (first + num == self->n_partitions);
     /* whole set of partitions, payload them and done */
-    header = gst_rtp_vp8_create_header_buffer (first == -1, mark,
+    header = gst_rtp_vp8_create_header_buffer (first == 0, mark,
         FI_FRAG_UNFRAGMENTED, buffer);
     sub = gst_rtp_vp8_create_sub (self, buffer, first, num);
 
@@ -375,18 +362,11 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self,
     gst_buffer_list_iterator_add (it, sub);
   } else {
     /* Fragmented packets */
-    guint left;
-    guint offset;
+    guint offset = self->partition_offset[first];
+    guint left = self->partition_size[first];
+    gboolean start = (first == 0);
 
-    if (first >= 0) {
-      offset = self->partition_offset[first];
-      left = self->partition_size[first];
-    } else {
-      offset = 0;
-      left = self->header_size;
-    }
-
-    header = gst_rtp_vp8_create_header_buffer (first == -1, FALSE,
+    header = gst_rtp_vp8_create_header_buffer (start, FALSE,
         FI_FRAG_START, buffer);
     sub = gst_buffer_create_sub (buffer, offset, available);
     offset += available;
@@ -398,7 +378,7 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self,
     left -= available;
 
     for (; left > available; left -= available) {
-      header = gst_rtp_vp8_create_header_buffer (first == -1, FALSE,
+      header = gst_rtp_vp8_create_header_buffer (start, FALSE,
           FI_FRAG_MIDDLE, buffer);
 
       sub = gst_buffer_create_sub (buffer, offset, available);
@@ -411,7 +391,7 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self,
 
     mark = (first + 1 == self->n_partitions);
 
-    header = gst_rtp_vp8_create_header_buffer (first == -1, mark,
+    header = gst_rtp_vp8_create_header_buffer (start, mark,
         FI_FRAG_END, buffer);
     sub = gst_buffer_create_sub (buffer, offset, left);
 
@@ -433,7 +413,7 @@ gst_rtp_vp8_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   GstFlowReturn ret;
   GstBufferList *list;
   GstBufferListIterator *it;
-  gint current;
+  guint current;
 
   if (G_UNLIKELY (!gst_rtp_vp8_pay_parse_frame (self, buffer))) {
     /* FIXME throw flow error */
@@ -444,7 +424,7 @@ gst_rtp_vp8_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   list = gst_buffer_list_new ();
   it = gst_buffer_list_iterate (list);
 
-  for (current = -1; current < self->n_partitions;) {
+  for (current = 0; current < self->n_partitions;) {
     guint n;
 
     n = gst_rtp_vp8_payload_next (self, it, current, buffer);
