@@ -79,9 +79,6 @@ dnl find a compiler
 AC_PROG_CC
 AC_PROG_CC_STDC
 
-# FIXME: is this line needed?
-AS="${CC}"
-
 dnl check if the compiler supports '-c' and '-o' options
 AM_PROG_CC_C_O
 
