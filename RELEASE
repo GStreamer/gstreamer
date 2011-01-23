@@ -35,7 +35,7 @@ Features of this release
       * New core element: valve (moved from -bad)
       * New core element: input-selector (N.B. without "select-all" property, use fsfunnel instead) (moved from -bad)
       * New core element: output-selector (with different negotiation behaviour by default, set pad-negotiation-mode=active for previous behaviour) (moved from -bad)
-      * Performance improvements for many heavily-used code paths: GstPad, GstPoll, GstClock, GstTask, basesink, basesrc, queue2, multiqueue (use atomic ops make many code-paths
+      * Performance improvements for many heavily-used code paths: GstPad, GstPoll, GstClock, GstTask, basesink, basesrc, queue2, multiqueue
       * gobject-introspection: add annotations for most core API
       * clock: make sync clock wait lockfree
       * fdsrc/fdsink: reenable on MSVC
