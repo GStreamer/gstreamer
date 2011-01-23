@@ -121,6 +121,7 @@ gst_rtp_vp8_depay_process (GstBaseRTPDepayload * depay, GstBuffer * buf)
     self->started = FALSE;
   }
 
+  /* At least one header and one vp8 byte */
   if (G_UNLIKELY (size < 2))
     goto too_small;
 
@@ -140,13 +141,13 @@ gst_rtp_vp8_depay_process (GstBaseRTPDepayload * depay, GstBuffer * buf)
     for (; (data[offset] & 0x80) != 0; offset++) {
       /* should be at least one more pictureID byte and at least one byte in
        * the vp8 payload */
-      if (offset + 2 >= size)
+      if (G_UNLIKELY (offset + 2 >= size))
         goto too_small;
     }
     offset++;
   }
 
-  if (offset + 1 >= size)
+  if (G_UNLIKELY (offset >= size))
     goto too_small;
 
   payload = gst_rtp_buffer_get_payload_subbuffer (buf, offset, -1);
