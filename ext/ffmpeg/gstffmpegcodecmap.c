@@ -943,6 +943,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp6-alpha", NULL);
       break;
 
+    case CODEC_ID_VP8:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp8", NULL);
+      break;
+
     case CODEC_ID_THEORA:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-theora", NULL);
       break;
@@ -1180,6 +1184,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_ZMBV:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-zmbv", NULL);
+      break;
+
+    case CODEC_ID_LAGARITH:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-lagarith", NULL);
       break;
 
 
@@ -1428,6 +1436,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_AMR_WB:
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/AMR-WB", NULL);
+      break;
+
+    case CODEC_ID_GSM:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-gsm", NULL);
+      break;
+
+    case CODEC_ID_GSM_MS:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/ms-gsm", NULL);
       break;
 
     case CODEC_ID_NELLYMOSER:
@@ -3072,6 +3088,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-vp6-alpha")) {
     id = CODEC_ID_VP6A;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-vp8")) {
+    id = CODEC_ID_VP8;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-flash-screen")) {
     id = CODEC_ID_FLASHSV;
