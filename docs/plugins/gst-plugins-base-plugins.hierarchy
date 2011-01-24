@@ -3,7 +3,6 @@ GObject
   GOutputStream
   GstColorBalanceChannel
   GstMixerTrack
-    GstMixerOptions
   GstObject
     GstBus
     GstClock
