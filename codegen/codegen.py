@@ -1461,6 +1461,8 @@ def write_registers(parser, overrides, fp):
     #TODO: register mini-objects
     miniobjects = parser.miniobjects[:]
     for obj in miniobjects:
+        if overrides.is_type_ignored(obj.c_name):
+            continue
         bases = []
         if obj.parent != None:
             bases.append(obj.parent)
