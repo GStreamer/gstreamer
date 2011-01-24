@@ -31,7 +31,7 @@ vala-gen-introspect gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10
 vapigen --vapidir . --library gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.gi
 git diff packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.metadata >vapi.gstreamer-pbutils-0.10.patch
 
-# suse
+# suse, meego
 sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala/mediainfo/vapi/
 # ubuntu
 sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala-0.10/vapi/

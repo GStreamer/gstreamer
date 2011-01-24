@@ -122,12 +122,14 @@ Properties:
       - uridecodebin_pad_added_cb() has raw pads :/
       - look at uridecodebin_element_added_cb()
     - the pads on uri-decodebin are sufficient to get keyframes and disconts
+    - qtdemux could return stsz table to get bitrate profile
+      http://wiki.multimedia.cx/index.php?title=QuickTime_container#stsz
 - get duration per stream
   - this would need individual queries on the demuxer src pads
   - or duration as part of per stream tags
 - errors/warnings about files/stream processing
   - we'd like to know about fixable, unfixable issues in the file/stream
-  - many elements do this already
+  - many elements do this already (178 uses in 89 files)
   - the pipeline and thus the bus is internal to discoverer, so it would be nice
     if it could gather the messages and offer them
   - having them globaly should be enough
