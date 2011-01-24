@@ -183,6 +183,8 @@ static gchar *preview_caps_name = NULL;
 static Display *display = NULL;
 static Window window = 0;
 
+GTimer *timer = NULL;
+
 /*
  * Prototypes
  */
@@ -266,14 +268,14 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             size = GST_BUFFER_SIZE (buf);
             preview_filename = g_strdup_printf ("test_vga.rgb");
             caps_string = gst_caps_to_string (GST_BUFFER_CAPS (buf));
-            g_print ("writing buffer to %s, buffer caps: %s\n",
-                preview_filename, caps_string);
+            g_print ("writing buffer to %s, elapsed: %.2fs, buffer caps: %s\n",
+                preview_filename, g_timer_elapsed (timer, NULL), caps_string);
             g_free (caps_string);
             f = g_fopen (preview_filename, "w");
             if (f) {
               written = fwrite (data_buf, size, 1, f);
               if (!written) {
-                g_print ("errro writing file\n");
+                g_print ("error writing file\n");
               }
               fclose (f);
             } else {
@@ -668,6 +670,7 @@ run_pipeline (gpointer user_data)
   g_object_set (camera_bin, "zoom", zoom / 100.0f, NULL);
 
   capture_count++;
+  g_timer_start (timer);
   g_signal_emit_by_name (camera_bin, "capture-start", 0);
 
 
@@ -808,6 +811,8 @@ main (int argc, char *argv[])
   if (filename->len == 0)
     filename = g_string_append (filename, ".");
 
+  timer = g_timer_new ();
+
   /* init */
   if (setup_pipeline ()) {
     loop = g_main_loop_new (NULL, FALSE);
@@ -830,6 +835,7 @@ main (int argc, char *argv[])
   g_free (src_csp);
   g_free (src_format);
   g_free (target_times);
+  g_timer_destroy (timer);
 
   if (window)
     XDestroyWindow (display, window);
