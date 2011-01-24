@@ -239,6 +239,8 @@ gst_clock_entry_reinit (GstClock * clock, GstClockEntry * entry,
  *
  * Returns: %TRUE if the GstClockID could be reinitialized to the provided
  * @time, else %FALSE.
+ *
+ * Since: 0.10.32
  */
 gboolean
 gst_clock_single_shot_id_reinit (GstClock * clock, GstClockID id,

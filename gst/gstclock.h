@@ -260,7 +260,7 @@ typedef gboolean	(*GstClockCallback)	(GstClock *clock, GstClockTime time,
  * @GST_CLOCK_BADTIME: A bad time was provided to a function.
  * @GST_CLOCK_ERROR: An error occurred
  * @GST_CLOCK_UNSUPPORTED: Operation is not supported
- * @GST_CLOCK_DONE: The ClockID is done waiting
+ * @GST_CLOCK_DONE: The ClockID is done waiting (Since: 0.10.32)
  *
  * The return value of a clock operation.
  */
