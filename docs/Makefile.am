@@ -9,3 +9,12 @@ DIST_SUBDIRS = libs
 
 EXTRA_DIST = \
 	version.entities.in
+
+upload:
+	@if test "x$(SUBDIRS)" != x; then \
+	  for a in $(SUBDIRS); do \
+	    cd $$a; \
+	    make upload; \
+	    cd ..; \
+	  done; \
+	fi
