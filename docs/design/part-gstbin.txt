@@ -35,7 +35,7 @@ operations on itself to all of its children. This includes:
 
  - state changes
  - index get/set
- - clock gst/set
+ - clock get/set
 
 The state change distribution is the most complex and is explained in 
 part-states.txt.
