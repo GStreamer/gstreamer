@@ -101,6 +101,8 @@ class Overrides:
         else:
             line = buffer ; rest = ''
         words = string.split(line)
+        if len(words) == 0:
+            return
         command = words[0]
         if (command == 'ignore' or
             command == 'ignore-' + sys.platform):
