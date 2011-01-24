@@ -380,14 +380,28 @@ GST_END_TEST;
 static Suite *
 imagecapturebin_suite (void)
 {
+  GstElementFactory *jpegenc_factory;
+
   Suite *s = suite_create ("imagecapturebin");
   TCase *tc_chain = tcase_create ("general");
 
+  jpegenc_factory = gst_element_factory_find ("jpegenc");
+
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_simple_capture);
-  tcase_add_test (tc_chain, test_multiple_captures_different_caps);
-  tcase_add_test (tc_chain, test_setting_encoder);
-  tcase_add_test (tc_chain, test_setting_muxer);
+  if (jpegenc_factory) {
+    tcase_add_test (tc_chain, test_simple_capture);
+
+    /* only adds this test if jpegenc contains the fix for its getcaps
+     * The fix on good: dcbba0932dc579abd6aab4460fa1a416374eda1b */
+    if (gst_plugin_feature_check_version (jpegenc_factory, 0, 10, 27))
+      tcase_add_test (tc_chain, test_multiple_captures_different_caps);
+    else
+      GST_WARNING ("Skipped test that needs gst-plugins-good 0.10.27");
+
+    tcase_add_test (tc_chain, test_setting_encoder);
+    tcase_add_test (tc_chain, test_setting_muxer);
+  } else
+    GST_WARNING ("Skipped imagecapturebin tests because jpegenc is missing");
 
   return s;
 }
