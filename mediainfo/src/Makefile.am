@@ -19,11 +19,11 @@ gst_mi_SOURCES = \
 gst_mi_LDADD = \
 	$(MI_LIBS) -lgstinterfaces-0.10 -lgstpbutils-0.10
 
-pixmapsdir=$(pkgdatadir)/ui/icons
-pixmaps_DATA=gst-mi.png
+pixmapsdir = $(pkgdatadir)/ui/icons
+pixmaps_DATA = gst-mi.png
 
-iconsdir=$(datadir)/pixmaps/
-icons_DATA=gst-mi.png
+iconsdir = $(datadir)/pixmaps/
+icons_DATA = gst-mi.png
 
 desktopdir = $(datadir)/applications/
 desktop_DATA = gst-mi.desktop
