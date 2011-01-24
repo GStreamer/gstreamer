@@ -42,7 +42,6 @@ enum
   PROP_PREVIEW_CAPS
 };
 
-#define CAMERABIN_DEFAULT_VF_CAPS "video/x-raw-yuv,format=(fourcc)I420"
 #define DEFAULT_POST_PREVIEWS TRUE
 
 /* Using "bilinear" as default zoom method */
