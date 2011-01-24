@@ -321,6 +321,12 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
       } else if (!strcmp (tag_name, "AspectRatioY")) {
         demux->par_y = d;
         demux->got_par = TRUE;
+      } else if (!strcmp (tag_name, "width")) {
+        demux->w = d;
+      } else if (!strcmp (tag_name, "height")) {
+        demux->h = d;
+      } else if (!strcmp (tag_name, "framerate")) {
+        demux->framerate = d;
       } else {
         GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
       }
@@ -1074,6 +1080,37 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
   gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
       demux->par_x, demux->par_y, NULL);
 
+  if (G_LIKELY (demux->w)) {
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, demux->w, NULL);
+  }
+
+  if (G_LIKELY (demux->h)) {
+    gst_caps_set_simple (caps, "height", G_TYPE_INT, demux->h, NULL);
+  }
+
+  if (G_LIKELY (demux->framerate)) {
+    GValue fps_double = { 0, };
+    GValue fps_fraction = { 0, };
+    gint num = 0;
+    gint den = 0;
+
+    g_value_init (&fps_double, G_TYPE_DOUBLE);
+    g_value_init (&fps_fraction, GST_TYPE_FRACTION);
+    g_value_set_double (&fps_double, demux->framerate);
+    g_value_transform (&fps_double, &fps_fraction);
+    num = gst_value_get_fraction_numerator (&fps_fraction);
+    den = gst_value_get_fraction_denominator (&fps_fraction);
+
+    GST_DEBUG_OBJECT (demux->video_pad,
+        "fps to be used on caps %f (as a fraction = %d/%d)", demux->framerate,
+        num, den);
+
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, num, den, NULL);
+
+    g_value_unset (&fps_double);
+    g_value_unset (&fps_fraction);
+  }
+
   if (demux->video_codec_data) {
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER,
         demux->video_codec_data, NULL);
@@ -1602,6 +1639,7 @@ gst_flv_demux_cleanup (GstFlvDemux * demux)
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
   demux->w = demux->h = 0;
+  demux->framerate = 0.0;
   demux->par_x = demux->par_y = 1;
   demux->video_offset = 0;
   demux->audio_offset = 0;
