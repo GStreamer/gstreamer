@@ -647,9 +647,16 @@ TestCaseDef tests[] = {
 static Suite *
 camerabin_suite (void)
 {
+  GstElementFactory *jpegenc_factory;
   Suite *s = suite_create ("camerabin2");
   gint i;
   TCase *tc_generic = tcase_create ("generic");
+
+  jpegenc_factory = gst_element_factory_find ("jpegenc");
+  if (jpegenc_factory == NULL) {
+    GST_WARNING ("Skipping camerabin2 tests because jpegenc is missing");
+    goto end;
+  }
 
   suite_add_tcase (s, tc_generic);
   tcase_add_checked_fixture (tc_generic, setup_wrappercamerabinsrc_videotestsrc,
@@ -667,10 +674,15 @@ camerabin_suite (void)
     tcase_add_test (tc_basic, test_single_image_capture);
     tcase_add_test (tc_basic, test_single_video_recording);
     tcase_add_test (tc_basic, test_image_video_cycle);
-    tcase_add_test (tc_basic, test_multiple_image_captures);
+    if (gst_plugin_feature_check_version (jpegenc_factory, 0, 10, 27))
+      tcase_add_test (tc_basic, test_multiple_image_captures);
+    else
+      GST_WARNING ("Skipping image capture test because -good 0.10.27 is "
+          "needed");
     tcase_add_test (tc_basic, test_multiple_video_recordings);
   }
 
+end:
   return s;
 }
 
