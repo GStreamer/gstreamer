@@ -350,7 +350,7 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
     memset (&scanlines, 0, sizeof (scanlines));
     scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
 
-    if (!((i & 1) ^ (cur_field_flags == PICTURE_INTERLACED_BOTTOM))) {
+    if (!((i & 1) ^ scanlines.bottom_field)) {
       /* copying */
       scanlines.tt0 = LINE2 (field0, (i - 2 >= 0) ? i - 2 : i);
       scanlines.m0 = LINE2 (field0, i);
@@ -453,7 +453,7 @@ static void
     memset (&scanlines, 0, sizeof (scanlines));
     scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
 
-    if (!((i & 1) ^ (cur_field_flags == PICTURE_INTERLACED_BOTTOM))) {
+    if (!((i & 1) ^ scanlines.bottom_field)) {
       /* copying */
       scanlines.tt0 = LINE2 (field0, (i - 2 >= 0) ? i - 2 : i);
       scanlines.m0 = LINE2 (field0, i);

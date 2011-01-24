@@ -770,8 +770,8 @@ gst_deinterlace_pop_history (GstDeinterlace * self)
 
   self->history_count--;
 
-  GST_DEBUG_OBJECT (self, "Returning buffer: %" GST_TIME_FORMAT
-      " with duration %" GST_TIME_FORMAT " and size %u",
+  GST_DEBUG_OBJECT (self, "Returning buffer: %p %" GST_TIME_FORMAT
+      " with duration %" GST_TIME_FORMAT " and size %u", buffer,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)), GST_BUFFER_SIZE (buffer));
 
