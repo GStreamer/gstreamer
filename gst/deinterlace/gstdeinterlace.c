@@ -286,6 +286,7 @@ gst_deinterlace_set_method (GstDeinterlace * self, GstDeinterlaceMethods method)
               self->height)) {
         GST_DEBUG_OBJECT (self, "Using method %d", i);
         method_type = tmp;
+        method = i;
         break;
       }
     }
