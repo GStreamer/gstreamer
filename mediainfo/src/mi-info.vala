@@ -119,13 +119,29 @@ public class MediaInfo.Info : VPaned
     // TODO: add more
     wikilinks = new HashMap<string, string> ();
     // container/tag formats
+    wikilinks["application/mxf"] = "Material_Exchange_Format";
     wikilinks["application/ogg"] = "Ogg";
+    wikilinks["application/vnd.rn-realmedia"] = "RealMedia";
+    wikilinks["application/x-3gp"] = "3GP_and_3G2";
     wikilinks["application/x-annodex"] = "Ogg";
+    wikilinks["application/x-id3"] = "ID3";
+    wikilinks["application/x-pn-realaudio"] = "RealAudio";
+    wikilinks["video/x-flv"] = "Flash_Video";
+    wikilinks["video/x-matroska"] = "Matroska";
+    wikilinks["video/webm"] = "WebM";
+    wikilinks["video/x-ms-asf"] = "Advanced_Systems_Format";
     wikilinks["video/x-msvideo"] = "Audio_Video_Interleave";
+    wikilinks["video/x-quicktime"] = "QuickTime_File_Format";
+    wikilinks["video/quicktime"] = "QuickTime_File_Format";
     // audio codecs
+    wikilinks["audio/mpeg"] = "MP3";
+    wikilinks["audio/x-m4a"] = "Advanced_Audio_Coding";
     wikilinks["audio/x-vorbis"] = "Vorbis";
     wikilinks["audio/x-wav"] = "WAV";
     // video codecs
+    wikilinks["video/x-divx"] = "MPEG-4_Part_2";
+    wikilinks["video/x-h264"] = "H.264/MPEG-4_AVC";
+    wikilinks["video/x-msmpeg"] = "MPEG-4_Part_2";
     wikilinks["video/x-theora"] = "Theora";
 
     int screen_height = Gdk.Screen.get_default().get_height();
