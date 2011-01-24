@@ -957,15 +957,6 @@ struct _GstXmpNamespaceMap
   const gchar *original_ns;
   gchar *gstreamer_ns;
 };
-static GstXmpNamespaceMap ns_map[] = {
-  {"dc", NULL},
-  {"exif", NULL},
-  {"tiff", NULL},
-  {"xap", NULL},
-  {"photoshop", NULL},
-  {"Iptc4xmpCore", NULL},
-  {NULL, NULL}
-};
 
 /* parsing */
 
@@ -1152,6 +1143,16 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
   const gchar *last_tag = NULL;
   XmpTag *last_xmp_tag = NULL;
   GSList *pending_tags = NULL;
+
+  GstXmpNamespaceMap ns_map[] = {
+    {"dc", NULL},
+    {"exif", NULL},
+    {"tiff", NULL},
+    {"xap", NULL},
+    {"photoshop", NULL},
+    {"Iptc4xmpCore", NULL},
+    {NULL, NULL}
+  };
 
   xmp_tags_initialize ();
 
