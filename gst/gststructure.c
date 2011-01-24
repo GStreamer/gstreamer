@@ -1429,6 +1429,8 @@ gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
  * Returns: TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain a data, this function
  * returns FALSE.
+ *
+ * Since: 0.10.31
  */
 gboolean
 gst_structure_get_date_time (const GstStructure * structure,
