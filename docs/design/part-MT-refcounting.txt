@@ -55,7 +55,7 @@ Shared data structures and writability:
   The advantage of this method is that no reader/writers locks are needed. all
   threads can concurrently read but writes happen locally on a new copy. In most
   cases _get_writable() can avoid a real copy because the calling method is the
-  only one holding a reference, wich makes read/writes very cheap.
+  only one holding a reference, which makes read/write very cheap.
 
   The drawback is that sometimes 1 needless copy can be done. This would happen
   when N threads call _get_writable() at the same time, all seeing that N
@@ -193,7 +193,7 @@ Objects
   disposed it has to unset itself as the parent of the object before disposing
   itself, else the child object holds a parent pointer to invalid memory.
   
-  The responsibilites for an object that sinks other objects are summarised as:
+  The responsibilities for an object that sinks other objects are summarised as:
 
    - taking ownership of the object
      - call _object_set_parent() to set itself as the object parent, this call
