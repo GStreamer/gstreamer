@@ -252,6 +252,7 @@ public class MediaInfo.Info : VPaned
     // set up the gstreamer components
     try {
       dc = new Discoverer ((ClockTime)(Gst.SECOND * 10));
+      dc.discovered.connect (on_uri_discovered);
     } catch (Error e) {
       debug ("Failed to create the discoverer: %s: %s", e.domain.to_string (), e.message);
     }
@@ -276,14 +277,13 @@ public class MediaInfo.Info : VPaned
   {
     bool res = true;
 
-    // stop previous playback
-    pb.set_state (State.READY);
-    album_art = null;
-    drawing_area.queue_draw();
-
     if (uri != null) {
-      DiscovererInfo info;
       File file = File.new_for_uri(uri);
+
+      // stop previous playback
+      pb.set_state (State.READY);
+      album_art = null;
+      drawing_area.queue_draw();
 
       try {
         FileInfo finfo = file.query_info ("standard::*", FileQueryInfoFlags.NONE, null);
@@ -293,320 +293,343 @@ public class MediaInfo.Info : VPaned
         debug ("Failed to query file info from %s: %s: %s", uri, e.domain.to_string (), e.message);
       }
 
-      try {
-        GLib.List<DiscovererStreamInfo> l;
-        DiscovererStreamInfo sinfo;
-        //DiscovererVideoInfo vinfo;
-        //DiscovererAudioInfo ainfo;
-        Table table;
-        Label label;
-        Notebook nb;
-        uint row;
-        AttachOptions fill = AttachOptions.FILL;
-        AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
-        string str, wikilink;
-        Caps caps;
-        Structure s;
-
-        info = dc.discover_uri (uri);
-
-        ClockTime dur = info.get_duration ();
-        str = "%u:%02u:%02u.%09u".printf (
-          (uint) (dur / (SECOND * 60 * 60)),
-          (uint) ((dur / (SECOND * 60)) % 60),
-          (uint) ((dur / SECOND) % 60),
-          (uint) ((dur) % SECOND));
-        this.duration.set_text (str);
-        //stdout.printf ("Duration: %s\n", dur_str);
-
-        /*
-        < ensonic> bilboed-pi: is gst_discoverer_info_get_container_streams() containing the info for the conatiner or can those be multiple ones as well?
-        < bilboed-pi> ensonic, if you have DV system-stream in MXF .... you'll have two container streams
-        < bilboed-pi> (yes, they exist)
-        < bilboed-pi> I'd recommend grabbing the top-level stream_info and walking your way down
-        */
-        /*
-        l = info.get_container_streams ();
-        for (int i = 0; i < l.length (); i++) {
-          sinfo = l.nth_data (i);
-          stdout.printf ("container[%d]: %s\n", i, sinfo.get_caps ().to_string ());
+      if (true) {
+        /* sync API */
+        try {
+          on_uri_discovered (dc.discover_uri (uri), null);
+        } catch (Error e) {
+          debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
         }
-        l = info.get_stream_list ();
-        for (int i = 0; i < l.length (); i++) {
-          sinfo = l.nth_data (i);
-          stdout.printf ("stream[%d:%s]: %s\n", i, sinfo.get_stream_type_nick(), sinfo.get_caps ().to_string ());
-        }
-        */
-        sinfo = info.get_stream_info ();
-        caps = sinfo.get_caps ();
-        wikilink = wikilinks[caps.get_structure(0).get_name()];
-        str = pb_utils_get_codec_description (caps);
-        if (wikilink != null) {
-          // FIXME: make prefix and link translatable
-          container_name.set_markup ("<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str));
-        } else {
-          container_name.set_text (str);
-        }
-
-			  // reset notebooks
-        if (compact_mode) {
-          while (all_streams.get_n_pages() > 0) {
-            all_streams.remove_page (-1);
-          }
-				} else {
-          while (video_streams.get_n_pages() > 0) {
-            video_streams.remove_page (-1);
-          }
-          while (audio_streams.get_n_pages() > 0) {
-            audio_streams.remove_page (-1);
-          }
-        }
-
-        // get stream info
-        nb = compact_mode ? all_streams : video_streams;
-        l = info.get_video_streams ();
-        num_video_streams = l.length ();
-        have_video = (num_video_streams > 0);
-        for (int i = 0; i < num_video_streams; i++) {
-          sinfo = l.nth_data (i);
-          caps = sinfo.get_caps ();
-
-          row = 0;
-          table = new Table (2, 8, false);
-
-          label = new Label(caps.to_string ());
-          label.set_ellipsize (Pango.EllipsizeMode.END);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
-          row++;
-
-          label = new Label ("Codec:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          wikilink = wikilinks[caps.get_structure(0).get_name()];
-          str = pb_utils_get_codec_description (caps);
-          if (wikilink != null) {
-            // FIXME: make prefix and link translatable
-            str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
-          }
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          label.set_use_markup(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          label = new Label ("Bitrate:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u / %u bits/second".printf (((DiscovererVideoInfo)sinfo).get_bitrate(),((DiscovererVideoInfo)sinfo).get_max_bitrate());
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          // add named resolutions: (640x480=VGA)
-          label = new Label ("Resolution:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          string resolution = "%u x %u".printf (((DiscovererVideoInfo)sinfo).get_width(),((DiscovererVideoInfo)sinfo).get_height());
-          string named_res = resolutions[resolution];
-          if (named_res != null) {
-            str = "%s (%s)".printf (named_res, resolution);
-          } else {
-            str = resolution;
-          }
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          label = new Label ("Framerate:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          double fps_num = (double)((DiscovererVideoInfo)sinfo).get_framerate_num();
-          double fps_denom = (double)((DiscovererVideoInfo)sinfo).get_framerate_denom();
-          str = "%.3lf frames/second".printf (fps_num/fps_denom);
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          label = new Label ("PixelAspect:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u : %u".printf (((DiscovererVideoInfo)sinfo).get_par_num(),((DiscovererVideoInfo)sinfo).get_par_denom());
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          label = new Label ("Bitdepth:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u bits/pixel".printf (((DiscovererVideoInfo)sinfo).get_depth());
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          if ((s = sinfo.get_misc ()) != null) {
-            label = new Label ("Details:");
-            label.set_alignment (1.0f, 0.5f);
-            table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-            label = new Label(s.to_string ());
-            label.set_ellipsize (Pango.EllipsizeMode.END);
-            label.set_alignment (0.0f, 0.5f);
-            label.set_selectable(true);
-            table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
-            row++;
-          }
-
-          if ((s = (Structure)sinfo.get_tags ()) != null) {
-            // FIXME: use treeview inside scrolled window
-            label = new Label ("Tags:");
-            label.set_alignment (1.0f, 0.0f);
-            table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
-            str = build_taglist_info (s);
-            label = new Label(str);
-            label.set_ellipsize (Pango.EllipsizeMode.END);
-            label.set_alignment (0.0f, 0.5f);
-            label.set_selectable(true);
-            label.set_use_markup(true);
-            table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
-            row++;
-          }
-
-          nb.append_page (table, new Label (@"video $i"));
-        }
-        nb.show_all();
-
-        nb = compact_mode ? all_streams : audio_streams;
-        l = info.get_audio_streams ();
-        num_audio_streams = l.length ();
-        for (int i = 0; i < num_audio_streams; i++) {
-          sinfo = l.nth_data (i);
-          caps = sinfo.get_caps ();
-
-          row = 0;
-          table = new Table (2, 7, false);
-
-          label = new Label(caps.to_string ());
-          label.set_ellipsize (Pango.EllipsizeMode.END);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
-          row++;
-
-          label = new Label ("Codec:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          wikilink = wikilinks[caps.get_structure(0).get_name()];
-          str = pb_utils_get_codec_description (caps);
-          if (wikilink != null) {
-            // FIXME: make prefix and link translatable
-            str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
-          }
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          label.set_use_markup(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          label = new Label ("Bitrate:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u / %u bits/second".printf (((DiscovererAudioInfo)sinfo).get_bitrate(),((DiscovererAudioInfo)sinfo).get_max_bitrate());
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          label = new Label ("Samplerate:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u samples/second".printf (((DiscovererAudioInfo)sinfo).get_sample_rate());
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          // TODO: check channel layouts, can we have some nice names here ?
-          label = new Label ("Channels:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u".printf (((DiscovererAudioInfo)sinfo).get_channels());
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          label = new Label ("Bitdepth:");
-          label.set_alignment (1.0f, 0.5f);
-          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u bits/sample".printf (((DiscovererAudioInfo)sinfo).get_depth());
-          label = new Label (str);
-          label.set_alignment (0.0f, 0.5f);
-          label.set_selectable(true);
-          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-          row++;
-
-          if ((s = sinfo.get_misc ()) != null) {
-            label = new Label ("Details:");
-            label.set_alignment (1.0f, 0.5f);
-            table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-            label = new Label(s.to_string ());
-            label.set_ellipsize (Pango.EllipsizeMode.END);
-            label.set_alignment (0.0f, 0.5f);
-            label.set_selectable(true);
-            table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
-            row++;
-          }
-
-          if ((s = (Structure)sinfo.get_tags ()) != null) {
-            // FIXME: use treeview inside scrolled window
-            label = new Label ("Tags:");
-            label.set_alignment (1.0f, 0.0f);
-            table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
-            str = build_taglist_info (s);
-            label = new Label(str);
-            label.set_ellipsize (Pango.EllipsizeMode.END);
-            label.set_alignment (0.0f, 0.5f);
-            label.set_selectable(true);
-            label.set_use_markup(true);
-            table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
-            row++;
-          }
-
-          nb.append_page (table, new Label (@"audio $i"));
-        }
-        nb.show_all();
-
-        //l = info.get_container_streams ();
-
-      } catch (Error e) {
-        debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
+      } else {
+        /* async API */
+        stdout.printf ("Stop current discover\n");
+        dc.stop();
+        stdout.printf ("Enqueue uri\n");
+        dc.discover_uri_async (uri);
+        stdout.printf ("Start discover\n");
+        dc.start();
+        stdout.printf ("Started discover\n");
       }
+    }
+    return (res);
+  }
 
-      // play file
-      cur_video_stream = cur_audio_stream = 0;
-      ((GLib.Object)pb).set_property ("uri", uri);
-      pb.set_state (State.PLAYING);
+  private void on_uri_discovered (DiscovererInfo info, Error e)
+  {
+    string uri = info.get_uri();
+    GLib.List<DiscovererStreamInfo> l;
+    DiscovererStreamInfo sinfo;
+    //DiscovererVideoInfo vinfo;
+    //DiscovererAudioInfo ainfo;
+    Table table;
+    Label label;
+    Notebook nb;
+    uint row;
+    AttachOptions fill = AttachOptions.FILL;
+    AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
+    string str, wikilink;
+    Caps caps;
+    Structure s;
 
-      res = true;
+    stdout.printf ("uri has been discovered\n");
+
+    if (e != null) {
+      debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
+    }
+    if (info == null) {
+      return;
     }
 
-    return (res);
+    ClockTime dur = info.get_duration ();
+    str = "%u:%02u:%02u.%09u".printf (
+      (uint) (dur / (SECOND * 60 * 60)),
+      (uint) ((dur / (SECOND * 60)) % 60),
+      (uint) ((dur / SECOND) % 60),
+      (uint) ((dur) % SECOND));
+    this.duration.set_text (str);
+    //stdout.printf ("Duration: %s\n", dur_str);
+
+    /*
+    < ensonic> bilboed-pi: is gst_discoverer_info_get_container_streams() containing the info for the conatiner or can those be multiple ones as well?
+    < bilboed-pi> ensonic, if you have DV system-stream in MXF .... you'll have two container streams
+    < bilboed-pi> (yes, they exist)
+    < bilboed-pi> I'd recommend grabbing the top-level stream_info and walking your way down
+    */
+    /*
+    l = info.get_container_streams ();
+    for (int i = 0; i < l.length (); i++) {
+      sinfo = l.nth_data (i);
+      stdout.printf ("container[%d]: %s\n", i, sinfo.get_caps ().to_string ());
+    }
+    l = info.get_stream_list ();
+    for (int i = 0; i < l.length (); i++) {
+      sinfo = l.nth_data (i);
+      stdout.printf ("stream[%d:%s]: %s\n", i, sinfo.get_stream_type_nick(), sinfo.get_caps ().to_string ());
+    }
+    */
+    sinfo = info.get_stream_info ();
+    if (sinfo != null) {
+      caps = sinfo.get_caps ();
+      wikilink = wikilinks[caps.get_structure(0).get_name()];
+      str = pb_utils_get_codec_description (caps);
+      if (wikilink != null) {
+        // FIXME: make prefix and link translatable
+        container_name.set_markup ("<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str));
+      } else {
+        container_name.set_text (str);
+      }
+    }
+
+		  // reset notebooks
+    if (compact_mode) {
+      while (all_streams.get_n_pages() > 0) {
+        all_streams.remove_page (-1);
+      }
+			} else {
+      while (video_streams.get_n_pages() > 0) {
+        video_streams.remove_page (-1);
+      }
+      while (audio_streams.get_n_pages() > 0) {
+        audio_streams.remove_page (-1);
+      }
+    }
+
+    // get stream info
+    nb = compact_mode ? all_streams : video_streams;
+    l = info.get_video_streams ();
+    num_video_streams = l.length ();
+    have_video = (num_video_streams > 0);
+    for (int i = 0; i < num_video_streams; i++) {
+      sinfo = l.nth_data (i);
+      caps = sinfo.get_caps ();
+
+      row = 0;
+      table = new Table (2, 8, false);
+
+      label = new Label(caps.to_string ());
+      label.set_ellipsize (Pango.EllipsizeMode.END);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+      row++;
+
+      label = new Label ("Codec:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      wikilink = wikilinks[caps.get_structure(0).get_name()];
+      str = pb_utils_get_codec_description (caps);
+      if (wikilink != null) {
+        // FIXME: make prefix and link translatable
+        str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
+      }
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      label.set_use_markup(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      label = new Label ("Bitrate:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      str = "%u / %u bits/second".printf (((DiscovererVideoInfo)sinfo).get_bitrate(),((DiscovererVideoInfo)sinfo).get_max_bitrate());
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      // add named resolutions: (640x480=VGA)
+      label = new Label ("Resolution:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      string resolution = "%u x %u".printf (((DiscovererVideoInfo)sinfo).get_width(),((DiscovererVideoInfo)sinfo).get_height());
+      string named_res = resolutions[resolution];
+      if (named_res != null) {
+        str = "%s (%s)".printf (named_res, resolution);
+      } else {
+        str = resolution;
+      }
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      label = new Label ("Framerate:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      double fps_num = (double)((DiscovererVideoInfo)sinfo).get_framerate_num();
+      double fps_denom = (double)((DiscovererVideoInfo)sinfo).get_framerate_denom();
+      str = "%.3lf frames/second".printf (fps_num/fps_denom);
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      label = new Label ("PixelAspect:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      str = "%u : %u".printf (((DiscovererVideoInfo)sinfo).get_par_num(),((DiscovererVideoInfo)sinfo).get_par_denom());
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      label = new Label ("Bitdepth:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      str = "%u bits/pixel".printf (((DiscovererVideoInfo)sinfo).get_depth());
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      if ((s = sinfo.get_misc ()) != null) {
+        label = new Label ("Details:");
+        label.set_alignment (1.0f, 0.5f);
+        table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+        label = new Label(s.to_string ());
+        label.set_ellipsize (Pango.EllipsizeMode.END);
+        label.set_alignment (0.0f, 0.5f);
+        label.set_selectable(true);
+        table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
+        row++;
+      }
+
+      if ((s = (Structure)sinfo.get_tags ()) != null) {
+        // FIXME: use treeview inside scrolled window
+        label = new Label ("Tags:");
+        label.set_alignment (1.0f, 0.0f);
+        table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
+        str = build_taglist_info (s);
+        label = new Label(str);
+        label.set_ellipsize (Pango.EllipsizeMode.END);
+        label.set_alignment (0.0f, 0.5f);
+        label.set_selectable(true);
+        label.set_use_markup(true);
+        table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
+        row++;
+      }
+
+      nb.append_page (table, new Label (@"video $i"));
+    }
+    nb.show_all();
+
+    nb = compact_mode ? all_streams : audio_streams;
+    l = info.get_audio_streams ();
+    num_audio_streams = l.length ();
+    for (int i = 0; i < num_audio_streams; i++) {
+      sinfo = l.nth_data (i);
+      caps = sinfo.get_caps ();
+
+      row = 0;
+      table = new Table (2, 7, false);
+
+      label = new Label(caps.to_string ());
+      label.set_ellipsize (Pango.EllipsizeMode.END);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+      row++;
+
+      label = new Label ("Codec:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      wikilink = wikilinks[caps.get_structure(0).get_name()];
+      str = pb_utils_get_codec_description (caps);
+      if (wikilink != null) {
+        // FIXME: make prefix and link translatable
+        str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
+      }
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      label.set_use_markup(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      label = new Label ("Bitrate:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      str = "%u / %u bits/second".printf (((DiscovererAudioInfo)sinfo).get_bitrate(),((DiscovererAudioInfo)sinfo).get_max_bitrate());
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      label = new Label ("Samplerate:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      str = "%u samples/second".printf (((DiscovererAudioInfo)sinfo).get_sample_rate());
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      // TODO: check channel layouts, can we have some nice names here ?
+      label = new Label ("Channels:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      str = "%u".printf (((DiscovererAudioInfo)sinfo).get_channels());
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      label = new Label ("Bitdepth:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      str = "%u bits/sample".printf (((DiscovererAudioInfo)sinfo).get_depth());
+      label = new Label (str);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable(true);
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      if ((s = sinfo.get_misc ()) != null) {
+        label = new Label ("Details:");
+        label.set_alignment (1.0f, 0.5f);
+        table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+        label = new Label(s.to_string ());
+        label.set_ellipsize (Pango.EllipsizeMode.END);
+        label.set_alignment (0.0f, 0.5f);
+        label.set_selectable(true);
+        table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
+        row++;
+      }
+
+      if ((s = (Structure)sinfo.get_tags ()) != null) {
+        // FIXME: use treeview inside scrolled window
+        label = new Label ("Tags:");
+        label.set_alignment (1.0f, 0.0f);
+        table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
+        str = build_taglist_info (s);
+        label = new Label(str);
+        label.set_ellipsize (Pango.EllipsizeMode.END);
+        label.set_alignment (0.0f, 0.5f);
+        label.set_selectable(true);
+        label.set_use_markup(true);
+        table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
+        row++;
+      }
+
+      nb.append_page (table, new Label (@"audio $i"));
+    }
+    nb.show_all();
+
+    //l = info.get_container_streams ();
+
+    // play file
+    cur_video_stream = cur_audio_stream = 0;
+    ((GLib.Object)pb).set_property ("uri", uri);
+    pb.set_state (State.PLAYING);
   }
 
   // signal handlers
