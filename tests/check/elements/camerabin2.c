@@ -674,7 +674,8 @@ camerabin_suite (void)
     tcase_add_test (tc_basic, test_single_image_capture);
     tcase_add_test (tc_basic, test_single_video_recording);
     tcase_add_test (tc_basic, test_image_video_cycle);
-    if (gst_plugin_feature_check_version (jpegenc_factory, 0, 10, 27))
+    if (gst_plugin_feature_check_version ((GstPluginFeature *) jpegenc_factory,
+            0, 10, 27))
       tcase_add_test (tc_basic, test_multiple_image_captures);
     else
       GST_WARNING ("Skipping image capture test because -good 0.10.27 is "

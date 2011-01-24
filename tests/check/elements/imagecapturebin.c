@@ -393,7 +393,8 @@ imagecapturebin_suite (void)
 
     /* only adds this test if jpegenc contains the fix for its getcaps
      * The fix on good: dcbba0932dc579abd6aab4460fa1a416374eda1b */
-    if (gst_plugin_feature_check_version (jpegenc_factory, 0, 10, 27))
+    if (gst_plugin_feature_check_version ((GstPluginFeature *) jpegenc_factory,
+            0, 10, 27))
       tcase_add_test (tc_chain, test_multiple_captures_different_caps);
     else
       GST_WARNING ("Skipped test that needs gst-plugins-good 0.10.27");
