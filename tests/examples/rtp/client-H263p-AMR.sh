@@ -10,7 +10,7 @@ VIDEO_DEC="rtph263pdepay ! ffdec_h263"
 AUDIO_DEC="rtpamrdepay ! amrnbdec"
 
 VIDEO_SINK="ffmpegcolorspace ! autovideosink"
-AUDIO_SINK="audioconvert ! audioresample ! autoaudisink"
+AUDIO_SINK="audioconvert ! audioresample ! autoaudiosink"
 
 gst-launch -v gstrtpbin name=rtpbin latency=100                                    \
            udpsrc caps=$VIDEO_CAPS port=5000 ! rtpbin.recv_rtp_sink_0              \

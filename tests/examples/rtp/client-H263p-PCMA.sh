@@ -13,7 +13,7 @@ VIDEO_DEC="rtph263pdepay ! ffdec_h263"
 AUDIO_DEC="rtppcmadepay ! alawdec"
 
 VIDEO_SINK="ffmpegcolorspace ! autovideosink"
-AUDIO_SINK="audioconvert ! audioresample ! autoaudisink"
+AUDIO_SINK="audioconvert ! audioresample ! autoaudiosink"
 
 LATENCY=100
 

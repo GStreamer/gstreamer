@@ -25,7 +25,7 @@ AUDIO_CAPS="application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-
 
 AUDIO_DEC="rtppcmadepay ! alawdec"
 
-AUDIO_SINK="audioconvert ! audioresample ! autoaudisink"
+AUDIO_SINK="audioconvert ! audioresample ! autoaudiosink"
 
 # the destination machine to send RTCP to. This is the address of the sender and
 # is used to send back the RTCP reports of this receiver. If the data is sent
