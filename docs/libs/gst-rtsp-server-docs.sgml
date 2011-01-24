@@ -9,7 +9,7 @@
   <bookinfo>
     <title>GStreamer RTSP Server Reference Manual</title>
     <releaseinfo>
-      for GStreamer RTSP Server &GST_MAJORMINOR;
+      for GStreamer RTSP Server &GST_VERSION;
     </releaseinfo>
   </bookinfo>
 
