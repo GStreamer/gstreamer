@@ -1190,6 +1190,15 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-lagarith", NULL);
       break;
 
+    case CODEC_ID_CSCD:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-camstudio", NULL);
+      if (context) {
+        gst_caps_set_simple (caps,
+            "depth", G_TYPE_INT, (gint) context->bits_per_coded_sample, NULL);
+      } else {
+        gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 8, 32, NULL);
+      }
+      break;
 
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
@@ -1209,7 +1218,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_MP3ADU:
     case CODEC_ID_MP3ON4:
     case CODEC_ID_WESTWOOD_SND1:
-    case CODEC_ID_CSCD:
     case CODEC_ID_MMVIDEO:
     case CODEC_ID_AVS:
     case CODEC_ID_CAVS:
@@ -2381,6 +2389,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     case CODEC_ID_MSRLE:
     case CODEC_ID_QTRLE:
     case CODEC_ID_TSCC:
+    case CODEC_ID_CSCD:
     case CODEC_ID_APE:
     {
       gint depth;
