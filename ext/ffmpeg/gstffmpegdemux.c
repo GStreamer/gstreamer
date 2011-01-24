@@ -1896,13 +1896,18 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
       goto next;
 
     /* no network demuxers */
-    if (!strcmp (in_plugin->name, "sdp") || !strcmp (in_plugin->name, "rtsp"))
+    if (!strcmp (in_plugin->name, "sdp") ||
+        !strcmp (in_plugin->name, "rtsp") ||
+        !strcmp (in_plugin->name, "applehttp")
+        )
       goto next;
 
     /* these don't do what one would expect or
      * are only partially functional/useful */
     if (!strcmp (in_plugin->name, "aac") ||
-        !strcmp (in_plugin->name, "wv") || !strcmp (in_plugin->name, "ass"))
+        !strcmp (in_plugin->name, "wv") ||
+        !strcmp (in_plugin->name, "ass") ||
+        !strcmp (in_plugin->name, "ffmetadata"))
       goto next;
 
     /* Don't use the typefind functions of formats for which we already have
@@ -1914,6 +1919,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mpegvideo") ||
         !strcmp (in_plugin->name, "mp3") ||
         !strcmp (in_plugin->name, "matroska") ||
+        !strcmp (in_plugin->name, "matroska_webm") ||
         !strcmp (in_plugin->name, "mpeg") ||
         !strcmp (in_plugin->name, "wav") ||
         !strcmp (in_plugin->name, "au") ||
