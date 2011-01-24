@@ -108,6 +108,7 @@ static GstFlowReturn gst_text_overlay_collected (GstCollectPads * pads,
     gpointer data);
 static void gst_text_overlay_finalize (GObject * object);
 static void gst_text_overlay_font_init (GstCairoTextOverlay * overlay);
+static gboolean gst_text_overlay_src_event (GstPad * pad, GstEvent * event);
 
 /* These macros are adapted from videotestsrc.c */
 #define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
@@ -248,6 +249,8 @@ gst_text_overlay_init (GstCairoTextOverlay * overlay,
       (&cairo_text_overlay_src_template_factory, "src");
   gst_pad_set_getcaps_function (overlay->srcpad,
       GST_DEBUG_FUNCPTR (gst_text_overlay_getcaps));
+  gst_pad_set_event_function (overlay->srcpad,
+      GST_DEBUG_FUNCPTR (gst_text_overlay_src_event));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
   overlay->halign = GST_CAIRO_TEXT_OVERLAY_HALIGN_CENTER;
@@ -940,6 +943,24 @@ done:
 
     return ret;
   }
+}
+
+static gboolean
+gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
+{
+  GstCairoTextOverlay *overlay =
+      GST_CAIRO_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  gboolean ret = TRUE;
+
+  /* forward events to the video sink, and, if it is linked, the text sink */
+  if (overlay->text_collect_data) {
+    gst_event_ref (event);
+    ret &= gst_pad_push_event (overlay->text_sinkpad, event);
+  }
+  ret &= gst_pad_push_event (overlay->video_sinkpad, event);
+
+  gst_object_unref (overlay);
+  return ret;
 }
 
 static GstStateChangeReturn
