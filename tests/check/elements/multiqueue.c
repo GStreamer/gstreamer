@@ -188,11 +188,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_request_pads)
 {
-  gboolean change_state_before_cleanup = TRUE;
   GstElement *mq;
   GstPad *sink1, *sink2;
-
-again:
 
   mq = gst_element_factory_make ("multiqueue", NULL);
 
@@ -218,28 +215,10 @@ again:
 
   fail_unless (sink1 != sink2);
 
-  if (change_state_before_cleanup) {
-    /* FIXME: if we don't change state, it will deadlock forever when unref'ing
-     * the queue (waiting for pad tasks to join) */
-    GST_LOG ("Changing state to PLAYING");
-    gst_element_set_state (mq, GST_STATE_PLAYING);
-    g_usleep (G_USEC_PER_SEC);
-    GST_LOG ("Changing state to NULL");
-    gst_element_set_state (mq, GST_STATE_NULL);
-  }
-
   GST_LOG ("Cleaning up");
   gst_object_unref (sink1);
   gst_object_unref (sink2);
   gst_object_unref (mq);
-
-  /* FIXME: this should work without state change before cleanup as well,
-   * but currently doesn't, see above, so disable this for now */
-  if (change_state_before_cleanup && 0) {
-    change_state_before_cleanup = FALSE;
-    goto again;
-  }
-
 }
 
 GST_END_TEST;
@@ -672,7 +651,6 @@ multiqueue_suite (void)
   tcase_add_test (tc_chain, test_simple_pipeline);
   tcase_add_test (tc_chain, test_simple_shutdown_while_running);
 
-  /* FIXME: test_request_pads() needs some more fixes, see comments there */
   tcase_add_test (tc_chain, test_request_pads);
 
   tcase_add_test (tc_chain, test_output_order);
