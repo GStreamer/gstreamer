@@ -9,7 +9,7 @@ Add interface to control the level of output, both compile- and run-time
 
 (done) Make sure the build is capable of being run without any debugging noise
 
-Make sure that the absense of any of the optional libraries will not be fatal
+Make sure that the absence of any of the optional libraries will not be fatal
 
 Make sure all the old plugins don't build normally, via some configure option?
 
