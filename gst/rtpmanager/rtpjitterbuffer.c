@@ -283,7 +283,7 @@ update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
   if (post) {
     gint perc;
 
-    if (jbuf->buffering) {
+    if (jbuf->buffering && (jbuf->high_level != 0)) {
       perc = (level * 100 / jbuf->high_level);
       perc = MIN (perc, 100);
     } else {
