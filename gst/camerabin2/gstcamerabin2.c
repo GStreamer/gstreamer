@@ -630,8 +630,10 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 
   switch (trans) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (GST_STATE (camera->videosink) >= GST_STATE_PAUSED)
+        gst_element_set_state (camera->videosink, GST_STATE_READY);
+
       gst_tag_setter_reset_tags (GST_TAG_SETTER (camera));
-      gst_element_set_state (camera->videosink, GST_STATE_READY);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_element_set_state (camera->videosink, GST_STATE_NULL);
