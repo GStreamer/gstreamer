@@ -126,10 +126,14 @@ gst_rsvg_overlay_set_svg_data (GstRsvgOverlay * overlay, const gchar * data,
       else
         overlay->handle =
             rsvg_handle_new_from_data ((guint8 *) data, size, &error);
-      if (error) {
-        GST_ERROR_OBJECT (overlay, "Cannot read SVG data: %s\n%s",
-            error->message, data);
-        g_error_free (error);
+      if (error || overlay->handle == NULL) {
+        if (error) {
+          GST_ERROR_OBJECT (overlay, "Cannot read SVG data: %s\n%s",
+              error->message, data);
+          g_error_free (error);
+        } else {
+          GST_ERROR_OBJECT (overlay, "Cannot read SVG data: %s", data);
+        }
       } else {
         /* Get SVG dimension. */
         RsvgDimensionData svg_dimension;
