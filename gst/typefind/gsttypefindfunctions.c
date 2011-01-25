@@ -3911,6 +3911,54 @@ windows_icon_typefind (GstTypeFind * find, gpointer user_data)
       "image/vnd.microsoft.icon", NULL);
 }
 
+
+/*** DEGAS Atari images (also to avoid false positives, see #625129) ***/
+static void
+degas_type_find (GstTypeFind * tf, gpointer private)
+{
+  /* No magic, but it should have a fixed size and a few invalid values */
+  /* http://www.fileformat.info/format/atari/spec/6ecf9f6eb5be494284a47feb8a214687/view.htm */
+  gint64 len;
+  const guint8 *data;
+  guint16 resolution;
+  int n;
+
+  len = gst_type_find_get_length (tf);
+  if (len < 34)                 /* smallest header of the lot */
+    return;
+  data = gst_type_find_peek (tf, 0, 4);
+  resolution = GST_READ_UINT16_BE (data);
+  if (len == 32034) {
+    /* could be DEGAS */
+    if (resolution <= 2)
+      gst_type_find_suggest_simple (tf, GST_TYPE_FIND_POSSIBLE + 5,
+          "image/x-degas", NULL);
+  } else if (len == 32066) {
+    /* could be DEGAS Elite */
+    if (resolution <= 2) {
+      data = gst_type_find_peek (tf, len - 16, 8);
+      for (n = 0; n < 4; n++) {
+        if (GST_READ_UINT16_BE (data + n * 2) > 2)
+          return;
+      }
+      gst_type_find_suggest_simple (tf, GST_TYPE_FIND_POSSIBLE + 5,
+          "image/x-degas", NULL);
+    }
+  } else if (len >= 66 && len < 32066) {
+    /* could be compressed DEGAS Elite, but it's compressed and so we can't rely on size,
+       it does have 4 16 bytes values near the end that are 0-2 though. */
+    if ((resolution & 0x8000) && (resolution & 0x7fff) <= 2) {
+      data = gst_type_find_peek (tf, len - 16, 8);
+      for (n = 0; n < 4; n++) {
+        if (GST_READ_UINT16_BE (data + n * 2) > 2)
+          return;
+      }
+      gst_type_find_suggest_simple (tf, GST_TYPE_FIND_POSSIBLE + 5,
+          "image/x-degas", NULL);
+    }
+  }
+}
+
 /*** generic typefind for streams that have some data at a specific position***/
 typedef struct
 {
@@ -4381,6 +4429,9 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "xdgmime-base", GST_RANK_MARGINAL,
       xdgmime_typefind, NULL, NULL, NULL, NULL);
 #endif
+
+  TYPE_FIND_REGISTER (plugin, "image/x-degas", GST_RANK_MARGINAL,
+      degas_type_find, NULL, NULL, NULL, NULL);
 
   return TRUE;
 }
