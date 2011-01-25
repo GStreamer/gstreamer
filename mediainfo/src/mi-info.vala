@@ -293,7 +293,7 @@ public class MediaInfo.Info : VPaned
         debug ("Failed to query file info from %s: %s: %s", uri, e.domain.to_string (), e.message);
       }
 
-      if (true) {
+      if (false) {
         /* sync API */
         try {
           on_uri_discovered (dc.discover_uri (uri), null);
@@ -302,13 +302,9 @@ public class MediaInfo.Info : VPaned
         }
       } else {
         /* async API */
-        stdout.printf ("Stop current discover\n");
         dc.stop();
-        stdout.printf ("Enqueue uri\n");
-        dc.discover_uri_async (uri);
-        stdout.printf ("Start discover\n");
         dc.start();
-        stdout.printf ("Started discover\n");
+        dc.discover_uri_async (uri);
       }
     }
     return (res);
@@ -330,8 +326,6 @@ public class MediaInfo.Info : VPaned
     string str, wikilink;
     Caps caps;
     Structure s;
-
-    stdout.printf ("uri has been discovered\n");
 
     if (e != null) {
       debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
