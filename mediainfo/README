@@ -133,6 +133,9 @@ Properties:
   - the pipeline and thus the bus is internal to discoverer, so it would be nice
     if it could gather the messages and offer them
   - having them globaly should be enough
+- CBR/VBR type for each stream
+  - can we derive that from the bitrate tags (no min/max bitrate set)?
+  find . -name "*.c" -exec egrep -Hn "GST_TAG[A-Z_]*_BITRATE" {} \;
 
 = discoverer workflow =
 == sync quick-scan ==
