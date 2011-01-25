@@ -26,7 +26,9 @@
  * to the found media type.
  *
  * Whenever a type is found the #GstTypeFindElement::have-type signal is
- * emitted.
+ * emitted, either from the streaming thread or the application thread
+ * (the latter may happen when typefinding is done pull-based from the
+ * state change function).
  *
  * Plugins can register custom typefinders by using #GstTypeFindFactory.
  */
@@ -53,8 +55,8 @@
  *    is assumed that the peer element is happy with whatever format we
  *    eventually read.
  *
- * By default it tries to do pull based typefinding (this avoid joining received
- * buffers and holding them back in store.)
+ * By default it tries to do pull based typefinding (this avoids joining
+ * received buffers and holding them back in store.)
  *
  * When the element has no connected srcpad, and the sinkpad can operate in
  * getrange based mode, the element starts its own task to figure out the
