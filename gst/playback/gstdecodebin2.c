@@ -667,11 +667,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * This function is emited when an array of possible factories for @caps on
    * @pad is needed. Decodebin2 will by default return an array with all
-   * compatible factories, sorted by rank. 
+   * compatible factories, sorted by rank.
    *
    * If this function returns NULL, @pad will be exposed as a final caps.
    *
-   * If this function returns an empty array, the pad will be considered as 
+   * If this function returns an empty array, the pad will be considered as
    * having an unhandled type media type.
    *
    * Returns: a #GValueArray* with a list of factories to try. The factories are
@@ -867,7 +867,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * If set to %FALSE, then only the streams that can be decoded to the final
    * caps (see 'caps' property) will have a pad exposed. Streams that do not
    * match those caps but could have been decoded will not have decoder plugged
-   * in internally and will not have a pad exposed. 
+   * in internally and will not have a pad exposed.
    *
    * Since: 0.10.30
    */
@@ -1362,6 +1362,8 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     GstDecodeGroup *group;
     GstDecodeChain *oldchain = chain;
 
+    /* we are adding a new pad for a demuxer (see is_demuxer_element(),
+     * start a new chain for it */
     CHAIN_MUTEX_LOCK (oldchain);
     group = gst_decode_chain_get_current_group (chain);
     if (group) {
@@ -1446,7 +1448,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     GST_DEBUG ("Checking if we can abort early");
 
     /* 1.e Do an early check to see if the candidates are potential decoders, but
-     * due to the fact that they decode to a mediatype that is not final we don't 
+     * due to the fact that they decode to a mediatype that is not final we don't
      * need them */
 
     for (i = 0; i < factories->n_values && !dontuse; i++) {
@@ -2150,7 +2152,7 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstDecodeChain * chain)
   gst_object_unref (element);
 }
 
-/* Decide whether an element is a demuxer based on the 
+/* Decide whether an element is a demuxer based on the
  * klass and number/type of src pad templates it has */
 static gboolean
 is_demuxer_element (GstElement * srcelement)
@@ -2202,7 +2204,7 @@ is_demuxer_element (GstElement * srcelement)
 
 /* Returns TRUE if the caps are compatible with the caps specified in the 'caps'
  * property (which by default are the raw caps)
- * 
+ *
  * The decodebin_lock should be taken !
  */
 static gboolean
@@ -2431,7 +2433,7 @@ gst_decode_chain_new (GstDecodeBin * dbin, GstDecodeGroup * parent,
 /* The overrun callback is used to expose groups that have not yet had their
  * no_more_pads called while the (large) multiqueue overflowed. When this
  * happens we must assume that the no_more_pads will not arrive anymore and we
- * must expose the pads that we have. 
+ * must expose the pads that we have.
  */
 static void
 multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
@@ -2536,7 +2538,7 @@ gst_decode_group_free (GstDecodeGroup * group)
  * unrefed here.
  *
  * Can be called from streaming threads.
- * 
+ *
  * Not MT-safe, call with parent's chain lock!
  */
 static void
@@ -2760,7 +2762,7 @@ out:
   return complete;
 }
 
-/* check if the group is drained, meaning all pads have seen an EOS 
+/* check if the group is drained, meaning all pads have seen an EOS
  * event.  */
 static void
 gst_decode_pad_handle_eos (GstDecodePad * pad)
@@ -2773,7 +2775,7 @@ gst_decode_pad_handle_eos (GstDecodePad * pad)
 }
 
 /* gst_decode_chain_handle_eos:
- * 
+ *
  * Checks if there are next groups in any parent chain
  * to which we can switch or if everything is drained.
  *
