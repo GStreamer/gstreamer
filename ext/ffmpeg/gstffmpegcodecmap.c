@@ -1293,6 +1293,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-alaw", NULL);
       break;
 
+    case CODEC_ID_ADPCM_G722:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/G722", NULL);
+      if (context)
+        gst_caps_set_simple (caps,
+            "block_align", G_TYPE_INT, context->block_align,
+            "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+      break;
+
     case CODEC_ID_ADPCM_G726:
     {
       /* the G726 decoder can also handle G721 */
