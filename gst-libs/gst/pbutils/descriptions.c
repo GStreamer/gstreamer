@@ -217,6 +217,7 @@ static const FormatInfo formats[] = {
   {"image/svg+xml", "Scalable Vector Graphics (SVG)", 0},
   {"image/tiff", "TIFF", 0},
   {"image/x-cmu-raster", "CMU Raster Format", 0},
+  {"image/x-degas", "DEGAS", 0},
   {"image/x-icon", "ICO", 0},
   {"image/x-j2c", "JPEG 2000", 0},
   {"image/x-jpc", "JPEG 2000", 0},
