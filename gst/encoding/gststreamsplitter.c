@@ -88,6 +88,11 @@ gst_stream_splitter_dispose (GObject * object)
     stream_splitter->lock = NULL;
   }
 
+  g_list_foreach (stream_splitter->pending_events, (GFunc) gst_event_unref,
+      NULL);
+  g_list_free (stream_splitter->pending_events);
+  stream_splitter->pending_events = NULL;
+
   G_OBJECT_CLASS (gst_stream_splitter_parent_class)->dispose (object);
 }
 
@@ -173,9 +178,8 @@ gst_stream_splitter_sink_event (GstPad * pad, GstEvent * event)
   }
 
   if (flushpending) {
-    GList *tmp;
-    for (tmp = stream_splitter->pending_events; tmp; tmp = tmp->next)
-      gst_event_unref ((GstEvent *) tmp->data);
+    g_list_foreach (stream_splitter->pending_events, (GFunc) gst_event_unref,
+        NULL);
     g_list_free (stream_splitter->pending_events);
     stream_splitter->pending_events = NULL;
   }
