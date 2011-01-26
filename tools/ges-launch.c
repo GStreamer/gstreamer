@@ -414,9 +414,9 @@ main (int argc, gchar ** argv)
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
-  ctx = g_option_context_new ("- plays or render a timeline.");
+  ctx = g_option_context_new ("- plays or renders a timeline.");
   g_option_context_set_summary (ctx,
-      "A timline is a sequence of files, patterns, and transitions.\n"
+      "A timeline is a sequence of files, patterns, and transitions.\n"
       "Transitions can only go between patterns or files.\n\n"
       "A file is a tripplet of:\n"
       " * filename\n"
