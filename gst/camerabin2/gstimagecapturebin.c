@@ -261,7 +261,7 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
   /* create elements */
   colorspace =
       gst_camerabin_create_and_add_element (GST_BIN (imagebin),
-      DEFAULT_COLORSPACE);
+      DEFAULT_COLORSPACE, "imagebin-colorspace");
   if (!colorspace)
     goto error;
 
@@ -273,7 +273,7 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
   } else {
     imagebin->encoder =
         gst_camerabin_create_and_add_element (GST_BIN (imagebin),
-        DEFAULT_ENCODER);
+        DEFAULT_ENCODER, "imagebin-encoder");
     if (!imagebin->encoder)
       goto error;
   }
@@ -286,13 +286,14 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
   } else {
     imagebin->muxer =
         gst_camerabin_create_and_add_element (GST_BIN (imagebin),
-        DEFAULT_MUXER);
+        DEFAULT_MUXER, "imagebin-muxer");
     if (!imagebin->muxer)
       goto error;
   }
 
   imagebin->sink =
-      gst_camerabin_create_and_add_element (GST_BIN (imagebin), DEFAULT_SINK);
+      gst_camerabin_create_and_add_element (GST_BIN (imagebin), DEFAULT_SINK,
+      "imagebin-sink");
   if (!imagebin->sink)
     goto error;
 

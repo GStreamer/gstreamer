@@ -138,6 +138,7 @@ gst_camerabin_try_add_element (GstBin * bin, const gchar * srcpad,
  * gst_camerabin_create_and_add_element:
  * @bin: tries adding an element to this bin
  * @elem_name: name of the element to be created
+ * @instance_name: name of the instance of the element to be created
  *
  * Creates an element according to given name and
  * adds it to given @bin. Looks for an unconnected src pad
@@ -146,14 +147,15 @@ gst_camerabin_try_add_element (GstBin * bin, const gchar * srcpad,
  * Returns: pointer to the new element if successful, NULL otherwise.
  */
 GstElement *
-gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name)
+gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name,
+    const gchar * instance_name)
 {
   GstElement *new_elem;
 
   g_return_val_if_fail (bin, FALSE);
   g_return_val_if_fail (elem_name, FALSE);
 
-  new_elem = gst_element_factory_make (elem_name, NULL);
+  new_elem = gst_element_factory_make (elem_name, instance_name);
   if (!new_elem) {
     GST_ELEMENT_ERROR (bin, CORE, MISSING_PLUGIN, (NULL),
         ("could not create \"%s\" element.", elem_name));
@@ -187,7 +189,8 @@ try_element (GstElement * bin, GstElement * element, gboolean unref)
 
 GstElement *
 gst_camerabin_setup_default_element (GstBin * bin, GstElement * user_elem,
-    const gchar * auto_elem_name, const gchar * default_elem_name)
+    const gchar * auto_elem_name, const gchar * default_elem_name,
+    const gchar * instance_name)
 {
   GstElement *elem;
 
@@ -197,13 +200,13 @@ gst_camerabin_setup_default_element (GstBin * bin, GstElement * user_elem,
   } else {
     /* only try fallback if no specific sink was chosen */
     GST_DEBUG_OBJECT (bin, "trying %s", auto_elem_name);
-    elem = gst_element_factory_make (auto_elem_name, NULL);
+    elem = gst_element_factory_make (auto_elem_name, instance_name);
     elem = try_element (GST_ELEMENT_CAST (bin), elem, TRUE);
     if (elem == NULL) {
       /* if default sink from config.h is different then try it too */
       if (strcmp (default_elem_name, auto_elem_name)) {
         GST_DEBUG_OBJECT (bin, "trying %s", default_elem_name);
-        elem = gst_element_factory_make (default_elem_name, NULL);
+        elem = gst_element_factory_make (default_elem_name, instance_name);
         elem = try_element (GST_ELEMENT_CAST (bin), elem, TRUE);
       }
     }

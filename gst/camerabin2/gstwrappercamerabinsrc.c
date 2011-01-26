@@ -298,7 +298,8 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
 
   /* Add application set or default video src element */
   if (!(self->src_vid_src = gst_camerabin_setup_default_element (cbin,
-              self->app_vid_src, "autovideosrc", DEFAULT_VIDEOSRC))) {
+              self->app_vid_src, "autovideosrc", DEFAULT_VIDEOSRC,
+              "camerasrc-real-src"))) {
     self->src_vid_src = NULL;
     goto done;
   } else {
@@ -319,24 +320,30 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     gst_object_unref (pad);
   }
 
-  if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace"))
+  if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
+          "src-colorspace"))
     goto done;
 
   if (!(self->src_filter =
-          gst_camerabin_create_and_add_element (cbin, "capsfilter")))
+          gst_camerabin_create_and_add_element (cbin, "capsfilter",
+              "src-capsfilter")))
     goto done;
 
   if (!(self->src_zoom_crop =
-          gst_camerabin_create_and_add_element (cbin, "videocrop")))
+          gst_camerabin_create_and_add_element (cbin, "videocrop",
+              "zoom-crop")))
     goto done;
   if (!(self->src_zoom_scale =
-          gst_camerabin_create_and_add_element (cbin, "videoscale")))
+          gst_camerabin_create_and_add_element (cbin, "videoscale",
+              "zoom-scale")))
     goto done;
   if (!(self->src_zoom_filter =
-          gst_camerabin_create_and_add_element (cbin, "capsfilter")))
+          gst_camerabin_create_and_add_element (cbin, "capsfilter",
+              "zoom-capsfilter")))
     goto done;
 
-  if (!(tee = gst_camerabin_create_and_add_element (cbin, "tee")))
+  if (!(tee =
+          gst_camerabin_create_and_add_element (cbin, "tee", "camerasrc-tee")))
     goto done;
 
   /* viewfinder pad */
@@ -345,9 +352,12 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   gst_object_unref (vf_pad);
 
   /* the viewfinder should always work, so we add some converters to it */
-  if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace"))
+  if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
+          "viewfinder-colorspace"))
     goto done;
-  if (!(videoscale = gst_camerabin_create_and_add_element (cbin, "videoscale")))
+  if (!(videoscale =
+          gst_camerabin_create_and_add_element (cbin, "videoscale",
+              "viewfinder-scale")))
     goto done;
 
   /* image/video pad from tee */

@@ -43,9 +43,10 @@ gboolean gst_camerabin_try_add_element (GstBin * bin, const gchar * srcpad, GstE
 gboolean gst_camerabin_add_element (GstBin * bin, GstElement * new_elem);
 gboolean gst_camerabin_add_element_full (GstBin * bin, const gchar * srcpad, GstElement * new_elem, const gchar * dstpad);
 
-GstElement *gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name);
+GstElement *gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name, const gchar * instance_name);
 
-GstElement * gst_camerabin_setup_default_element (GstBin * bin, GstElement *user_elem, const gchar *auto_elem_name, const gchar *default_elem_name);
+GstElement * gst_camerabin_setup_default_element (GstBin * bin, GstElement *user_elem, const gchar *auto_elem_name, const gchar *default_elem_name,
+    const gchar * instance_elem_name);
 
 void gst_camerabin_remove_elements_from_bin (GstBin * bin);
 
