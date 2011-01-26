@@ -32,6 +32,9 @@
 #define WINVER 0x0501
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#ifndef socklen_t
+#define socklen_t int
+#endif
 
 /* Needed for GstObject and GST_WARNING_OBJECT */
 #include <gst/gstobject.h>

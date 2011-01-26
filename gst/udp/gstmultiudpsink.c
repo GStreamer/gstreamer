@@ -913,11 +913,7 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   GList *clients;
   GstUDPClient *client;
   int sndsize, ret;
-#ifdef G_OS_WIN32
-  gint len;
-#else
-  guint len;
-#endif
+  socklen_t len;
 
   if (sink->sockfd == -1) {
     GST_DEBUG_OBJECT (sink, "creating sockets");

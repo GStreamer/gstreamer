@@ -117,9 +117,6 @@
 #endif
 
 #include <gst/netbuffer/gstnetbuffer.h>
-#ifdef G_OS_WIN32
-typedef int socklen_t;
-#endif
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
 #include <sys/filio.h>
@@ -778,11 +775,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   gint ret;
   int rcvsize;
   struct sockaddr_storage bind_address;
-#ifdef G_OS_WIN32
-  gint len;
-#else
-  guint len;
-#endif
+  socklen_t len;
   src = GST_UDPSRC (bsrc);
 
   if (src->sockfd == -1) {
