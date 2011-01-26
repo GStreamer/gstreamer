@@ -846,7 +846,7 @@ GST_START_TEST (test_image_capture_with_tags)
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < 3; i++) {
     check_file_validity (IMAGE_FILENAME, i, taglists[i], 0, 0);
     gst_tag_list_free (taglists[i]);
   }
