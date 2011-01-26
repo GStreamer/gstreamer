@@ -77,6 +77,16 @@ else
 check_theora =
 endif
 
+if USE_VORBIS
+if USE_THEORA
+check_encodebin = elements/encodebin
+else
+check_encodebin =
+endif
+else
+check_encodebin =
+endif
+
 if USE_PLUGIN_SUBPARSE
 check_subparse = elements/subparse
 else
@@ -106,7 +116,7 @@ check_PROGRAMS = \
 	elements/audiotestsrc \
 	elements/decodebin \
 	elements/decodebin2 \
-	elements/encodebin \
+	$(check_encodebin) \
 	elements/ffmpegcolorspace \
 	elements/gdpdepay \
 	elements/gdppay \
