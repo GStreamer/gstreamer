@@ -271,7 +271,8 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_EMIT_SIGNALS,
       g_param_spec_boolean ("emit-signals", "Emit signals",
-          "Emit new-preroll and new-buffer signals", DEFAULT_PROP_EMIT_SIGNALS,
+          "Emit new-preroll, new-buffer and new-buffer-list signals",
+          DEFAULT_PROP_EMIT_SIGNALS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAX_BUFFERS,
@@ -780,6 +781,8 @@ restart:
   if (is_list) {
     if (priv->callbacks.new_buffer_list)
       priv->callbacks.new_buffer_list (appsink, priv->user_data);
+    else if (emit)
+      g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_BUFFER_LIST], 0);
   } else {
     if (priv->callbacks.new_buffer)
       priv->callbacks.new_buffer (appsink, priv->user_data);
