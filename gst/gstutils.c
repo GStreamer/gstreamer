@@ -1117,15 +1117,24 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
       {
         GstPad *peer;
         GstPad *current;
+        GstPad *srcpad;
+        GstPad *sinkpad;
 
         current = GST_PAD (padptr);
 
         GST_CAT_LOG (GST_CAT_ELEMENT_PADS, "examining pad %s:%s",
             GST_DEBUG_PAD_NAME (current));
 
+        if (GST_PAD_IS_SRC (current)) {
+          srcpad = current;
+          sinkpad = pad;
+        } else {
+          srcpad = pad;
+          sinkpad = current;
+        }
         peer = gst_pad_get_peer (current);
 
-        if (peer == NULL && gst_pad_check_link (pad, current)) {
+        if (peer == NULL && gst_pad_check_link (srcpad, sinkpad)) {
           GstCaps *temp, *intersection;
           gboolean compatible;
 
