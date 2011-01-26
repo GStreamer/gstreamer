@@ -278,6 +278,12 @@ gst_camera_bin_dispose (GObject * object)
   if (camerabin->imagebin_capsfilter)
     gst_object_unref (camerabin->imagebin_capsfilter);
 
+  if (camerabin->video_profile)
+    gst_encoding_profile_unref (camerabin->video_profile);
+
+  if (camerabin->preview_caps)
+    gst_caps_replace (&camerabin->preview_caps, NULL);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 

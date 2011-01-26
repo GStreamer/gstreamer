@@ -71,6 +71,9 @@ gst_wrapper_camera_bin_src_dispose (GObject * object)
     self->preview_pipeline = NULL;
   }
 
+  if (self->preview_caps)
+    gst_caps_replace (&self->preview_caps, NULL);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
