@@ -40,7 +40,10 @@
  *                 have room to set the destination filename).
  *                 There is no problem to leave it on playing after an EOS, so
  *                 no action is taken on stop-capture.
+ *
  * - TODO: What happens when an error pops?
+ * - TODO: Should we split properties in image/video variants? We already do so
+ *         for some of them
  *
  *
  */
@@ -69,7 +72,10 @@ enum
   PROP_VIDEO_CAPTURE_CAPS,
   PROP_POST_PREVIEWS,
   PROP_PREVIEW_CAPS,
-  PROP_VIDEO_ENCODING_PROFILE
+  PROP_VIDEO_ENCODING_PROFILE,
+  PROP_IMAGE_FILTER,
+  PROP_VIDEO_FILTER,
+  PROP_VIEWFINDER_FILTER
 };
 
 enum
@@ -278,6 +284,20 @@ gst_camera_bin_dispose (GObject * object)
   if (camerabin->imagebin_capsfilter)
     gst_object_unref (camerabin->imagebin_capsfilter);
 
+  if (camerabin->video_filter)
+    gst_object_unref (camerabin->video_filter);
+  if (camerabin->image_filter)
+    gst_object_unref (camerabin->image_filter);
+  if (camerabin->viewfinder_filter)
+    gst_object_unref (camerabin->viewfinder_filter);
+
+  if (camerabin->user_video_filter)
+    gst_object_unref (camerabin->user_video_filter);
+  if (camerabin->user_image_filter)
+    gst_object_unref (camerabin->user_image_filter);
+  if (camerabin->user_viewfinder_filter)
+    gst_object_unref (camerabin->user_viewfinder_filter);
+
   if (camerabin->video_profile)
     gst_encoding_profile_unref (camerabin->video_profile);
 
@@ -394,6 +414,25 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           GST_TYPE_ENCODING_PROFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_IMAGE_FILTER,
+      g_param_spec_object ("image-filter", "Image filter",
+          "The element that will process captured image frames. (Should be"
+          " set on NULL state)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_VIDEO_FILTER,
+      g_param_spec_object ("video-filter", "Video filter",
+          "The element that will process captured video frames. (Should be"
+          " set on NULL state)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_VIEWFINDER_FILTER,
+      g_param_spec_object ("viewfinder-filter", "Viewfinder filter",
+          "The element that will process frames going to the viewfinder."
+          " (Should be set on NULL state)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
   /**
    * GstCameraBin::capture-start:
    * @camera: the camera bin element
@@ -477,6 +516,48 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
     }
   }
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+}
+
+/*
+ * Transforms:
+ * ... ! previous_element [ ! current_filter ] ! next_element ! ...
+ *
+ * into:
+ * ... ! previous_element [ ! new_filter ] ! next_element ! ...
+ *
+ * Where current_filter and new_filter might or might not be NULL
+ */
+static void
+gst_camera_bin_check_and_replace_filter (GstCameraBin * camera,
+    GstElement ** current_filter, GstElement * new_filter,
+    GstElement * previous_element, GstElement * next_element)
+{
+  if (*current_filter == new_filter) {
+    GST_DEBUG_OBJECT (camera, "Current filter is the same as the previous, "
+        "no switch needed.");
+    return;
+  }
+
+  GST_DEBUG_OBJECT (camera, "Replacing current filter (%s) with new filter "
+      "(%s)", *current_filter ? GST_ELEMENT_NAME (*current_filter) : "null",
+      new_filter ? GST_ELEMENT_NAME (new_filter) : "null");
+
+  if (*current_filter) {
+    gst_bin_remove (GST_BIN_CAST (camera), *current_filter);
+    gst_object_unref (*current_filter);
+    *current_filter = NULL;
+  } else {
+    /* unlink the pads */
+    gst_element_unlink (previous_element, next_element);
+  }
+
+  if (new_filter) {
+    *current_filter = gst_object_ref (new_filter);
+    gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (new_filter));
+    gst_element_link_many (previous_element, new_filter, next_element, NULL);
+  } else {
+    gst_element_link (previous_element, next_element);
+  }
 }
 
 /**
@@ -611,6 +692,16 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     gst_element_link_pads (camera->src, "vidsrc", camera->videobin_queue,
         "sink");
   }
+
+  gst_camera_bin_check_and_replace_filter (camera, &camera->image_filter,
+      camera->user_image_filter, camera->imagebin_queue,
+      camera->imagebin_capsfilter);
+  gst_camera_bin_check_and_replace_filter (camera, &camera->video_filter,
+      camera->user_video_filter, camera->videobin_queue,
+      camera->videobin_capsfilter);
+  gst_camera_bin_check_and_replace_filter (camera, &camera->viewfinder_filter,
+      camera->user_viewfinder_filter, camera->viewfinderbin_queue,
+      camera->viewfinderbin_capsfilter);
 
   camera->elements_created = TRUE;
   return TRUE;
@@ -763,6 +854,24 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       camera->video_profile =
           (GstEncodingProfile *) gst_value_dup_mini_object (value);
       break;
+    case PROP_IMAGE_FILTER:
+      if (camera->user_image_filter)
+        g_object_unref (camera->user_image_filter);
+
+      camera->user_image_filter = g_value_dup_object (value);
+      break;
+    case PROP_VIDEO_FILTER:
+      if (camera->user_video_filter)
+        g_object_unref (camera->user_video_filter);
+
+      camera->user_video_filter = g_value_dup_object (value);
+      break;
+    case PROP_VIEWFINDER_FILTER:
+      if (camera->user_viewfinder_filter)
+        g_object_unref (camera->user_viewfinder_filter);
+
+      camera->user_viewfinder_filter = g_value_dup_object (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -850,6 +959,18 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
         gst_value_set_mini_object (value,
             (GstMiniObject *) camera->video_profile);
       }
+      break;
+    case PROP_VIDEO_FILTER:
+      if (camera->video_filter)
+        g_value_set_object (value, camera->video_filter);
+      break;
+    case PROP_IMAGE_FILTER:
+      if (camera->image_filter)
+        g_value_set_object (value, camera->image_filter);
+      break;
+    case PROP_VIEWFINDER_FILTER:
+      if (camera->viewfinder_filter)
+        g_value_set_object (value, camera->viewfinder_filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
