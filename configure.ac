@@ -112,10 +112,10 @@ fi
 AM_CHECK_PYTHON_HEADERS([HAVE_PYTHON_HEADERS=yes],[HAVE_PYTHON_HEADERS=no])
 
 dnl check for pygobject (optional, used in the bindings)
+PYGOBJECT_REQ=2.11.2
 PKG_CHECK_MODULES(PYGOBJECT, pygobject-2.0 >= $PYGOBJECT_REQ,
   [HAVE_PYGOBJECT="yes"], [HAVE_PYGOBJECT="no"])
 AC_SUBST(PYGOBJECT_CFLAGS)
-AC_SUBST(PYGOBJECT_REQ, 2.11.2)
 
 dnl check for gst-python
 PKG_CHECK_MODULES(PYGST, gst-python-0.10,
