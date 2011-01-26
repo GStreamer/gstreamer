@@ -1076,15 +1076,54 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = FALSE;
   GstPad *otherpad;
+  GstInputSelector *sel;
+  GstIterator *iter;
+  gboolean done;
+  gpointer nextpad;
 
+  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
   otherpad = gst_input_selector_get_linked_pad (pad, TRUE);
 
   if (otherpad) {
     res = gst_pad_push_event (otherpad, event);
 
     gst_object_unref (otherpad);
+  } else if (sel->select_all) {
+
+    /* If select-all is set, we should push the event to all pads.
+     * The result will be TRUE if the push works for any of the pads, even if a
+     * push fails. This is coherent with the way camerabin uses input-selector,
+     * but might not be for other uses of it. */
+
+    iter = gst_element_iterate_sink_pads (GST_ELEMENT (sel));
+
+    done = FALSE;
+    while (!done) {
+      switch (gst_iterator_next (iter, &nextpad)) {
+        case GST_ITERATOR_OK:
+          res |= gst_pad_push_event (nextpad, gst_event_ref (event));
+          gst_object_unref (nextpad);
+          break;
+        case GST_ITERATOR_RESYNC:
+          gst_iterator_resync (iter);
+          break;
+        case GST_ITERATOR_ERROR:
+          GST_WARNING_OBJECT (sel,
+              "Wrong parameters when retrieving sink pads");
+          done = TRUE;
+          break;
+        case GST_ITERATOR_DONE:
+          done = TRUE;
+          break;
+      }
+    }
+    gst_event_unref (event);
+    gst_iterator_free (iter);
   } else
     gst_event_unref (event);
+
+  gst_object_unref (sel);
+
   return res;
 }
 
