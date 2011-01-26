@@ -3908,7 +3908,7 @@ windows_icon_typefind (GstTypeFind * find, gpointer user_data)
     return;
 
   gst_type_find_suggest_simple (find, GST_TYPE_FIND_NEARLY_CERTAIN,
-      "image/vnd.microsoft.icon", NULL);
+      "image/x-icon", NULL);
 }
 
 
@@ -4422,7 +4422,7 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-yuv4mpeg",
       GST_RANK_SECONDARY, y4m_exts, "YUV4MPEG2 ", 10, GST_TYPE_FIND_LIKELY);
-  TYPE_FIND_REGISTER (plugin, "image/vnd.microsoft.icon", GST_RANK_MARGINAL,
+  TYPE_FIND_REGISTER (plugin, "image/x-icon", GST_RANK_MARGINAL,
       windows_icon_typefind, NULL, NULL, NULL, NULL);
 
 #ifdef USE_GIO
