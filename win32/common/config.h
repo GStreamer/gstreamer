@@ -20,7 +20,7 @@
 #undef CDPARANOIA_HEADERS_IN_DIR
 
 /* Default audio sink */
-#define DEFAULT_AUDIOSINK "directaudiosink"
+#define DEFAULT_AUDIOSINK "directsoundsink"
 
 /* Default audio source */
 #undef DEFAULT_AUDIOSRC
@@ -81,7 +81,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-01-23T23:47Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-01-27T15:23Z"
 
 /* I know the API is subject to change. */
 #undef G_UDEV_API_IS_SUBJECT_TO_CHANGE
