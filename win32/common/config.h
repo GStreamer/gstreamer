@@ -9,7 +9,7 @@
 #undef AC_APPLE_UNIVERSAL_BUILD
 
 /* Default audio sink */
-#define DEFAULT_AUDIOSINK "directaudiosink"
+#define DEFAULT_AUDIOSINK "directsoundsink"
 
 /* Default audio source */
 #define DEFAULT_AUDIOSRC "audiotestsrc"
@@ -49,7 +49,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-01-24T00:02Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-01-27T15:30Z"
 
 /* struct v4l2_buffer missing */
 #undef GST_V4L2_MISSING_BUFDECL
