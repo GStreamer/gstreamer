@@ -308,7 +308,6 @@ AG_GST_CHECK_PLUGIN(freeze)
 AG_GST_CHECK_PLUGIN(frei0r)
 AG_GST_CHECK_PLUGIN(gaudieffects)
 AG_GST_CHECK_PLUGIN(geometrictransform)
-AG_GST_CHECK_PLUGIN(h263parse)
 AG_GST_CHECK_PLUGIN(h264parse)
 AG_GST_CHECK_PLUGIN(hdvparse)
 AG_GST_CHECK_PLUGIN(id3tag)
@@ -345,6 +344,7 @@ AG_GST_CHECK_PLUGIN(stereo)
 AG_GST_CHECK_PLUGIN(tta)
 AG_GST_CHECK_PLUGIN(videomaxrate)
 AG_GST_CHECK_PLUGIN(videomeasure)
+AG_GST_CHECK_PLUGIN(videoparsers)
 AG_GST_CHECK_PLUGIN(videosignal)
 AG_GST_CHECK_PLUGIN(vmnc)
 AG_GST_CHECK_PLUGIN(y4m)
@@ -1728,7 +1728,6 @@ gst/freeze/Makefile
 gst/frei0r/Makefile
 gst/gaudieffects/Makefile
 gst/geometrictransform/Makefile
-gst/h263parse/Makefile
 gst/h264parse/Makefile
 gst/hdvparse/Makefile
 gst/id3tag/Makefile
@@ -1766,6 +1765,7 @@ gst/stereo/Makefile
 gst/tta/Makefile
 gst/videomaxrate/Makefile
 gst/videomeasure/Makefile
+gst/videoparsers/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile
 gst/y4m/Makefile

@@ -329,7 +329,7 @@ gst_base_parse_get_type (void)
     };
 
     base_parse_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstH263BaseParseBad", &base_parse_info, G_TYPE_FLAG_ABSTRACT);
+        "GstBaseVideoParseBad", &base_parse_info, G_TYPE_FLAG_ABSTRACT);
   }
   return base_parse_type;
 }
@@ -460,7 +460,7 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   klass->src_event = gst_base_parse_src_eventfunc;
   klass->convert = gst_base_parse_convert_default;
 
-  GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "h263baseparse", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "basevideoparse", 0,
       "baseparse element");
 }
 

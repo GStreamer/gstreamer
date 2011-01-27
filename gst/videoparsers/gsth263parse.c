@@ -357,16 +357,3 @@ out:
   g_free (params);
   return res;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "h263parse",
-      GST_RANK_NONE, GST_TYPE_H263PARSE);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "h263parse",
-    "Element for parsing raw h263 streams",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
