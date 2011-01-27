@@ -696,7 +696,7 @@ gst_avi_demux_seek_streams_index (GstAviDemux * avi, guint64 offset,
   GstAviIndexEntry *entry;
   gint i;
   gint64 val, min = offset;
-  guint index;
+  guint index = 0;
 
   for (i = 0; i < avi->num_streams; i++) {
     stream = &avi->stream[i];
