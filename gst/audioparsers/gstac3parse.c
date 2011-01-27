@@ -466,8 +466,17 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GST_LOG_OBJECT (parse, "size: %u, rate: %u, chans: %u", fsize, rate, chans);
 
   if (G_UNLIKELY (sid)) {
+    /* dependent frame, no need to (ac)count for or consider further */
     GST_LOG_OBJECT (parse, "sid: %d", sid);
     frame->flags |= GST_BASE_PARSE_FRAME_FLAG_NO_FRAME;
+    /* TODO maybe also mark as DELTA_UNIT,
+     * if that does not surprise baseparse elsewhere */
+    /* occupies same time space as previous base frame */
+    if (G_LIKELY (GST_BUFFER_TIMESTAMP (buf) >= GST_BUFFER_DURATION (buf)))
+      GST_BUFFER_TIMESTAMP (buf) -= GST_BUFFER_DURATION (buf);
+    /* only return if we already arranged for caps */
+    if (G_LIKELY (ac3parse->sample_rate > 0))
+      return GST_FLOW_OK;
   }
 
   if (G_UNLIKELY (ac3parse->sample_rate != rate || ac3parse->channels != chans
