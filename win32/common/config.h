@@ -9,7 +9,7 @@
 #undef AC_APPLE_UNIVERSAL_BUILD
 
 /* Default audio sink */
-#define DEFAULT_AUDIOSINK "directaudiosink"
+#define DEFAULT_AUDIOSINK "directsoundsink"
 
 /* Default audio source */
 #define DEFAULT_AUDIOSRC "audiotestsrc"
