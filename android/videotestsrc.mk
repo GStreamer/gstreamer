@@ -4,27 +4,25 @@ include $(CLEAR_VARS)
 
 LOCAL_ARM_MODE := arm
 
-audioconvert_LOCAL_SRC_FILES:= \
-	gst/audioconvert/gstaudioconvert.c \
-	gst/audioconvert/audioconvert.c \
-	gst/audioconvert/gstaudioconvertorc-dist.c \
-	gst/audioconvert/gstchannelmix.c \
-	gst/audioconvert/gstaudioquantize.c \
-	gst/audioconvert/plugin.c 
+videotestsrc_LOCAL_SRC_FILES:= \
+	gst/videotestsrc/gstvideotestsrc.c \
+	gst/videotestsrc/videotestsrc.c \
+	gst/videotestsrc/gstvideotestsrcorc-dist.c \
 
-LOCAL_SRC_FILES:= $(addprefix ../,$(audioconvert_LOCAL_SRC_FILES))
+
+LOCAL_SRC_FILES:= $(addprefix ../,$(videotestsrc_LOCAL_SRC_FILES))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstaudio-0.10        \
+    libgstcontroller-0.10   \
+    libgstvideo-0.10        \
     libgstreamer-0.10       \
     libgstbase-0.10         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
-    libgobject-2.0 			\
-    libgstpbutils-0.10
+    libgobject-2.0
 
-LOCAL_MODULE:= libgstaudioconvert
+LOCAL_MODULE:= libgstvideotestsrc
 
 LOCAL_CFLAGS := -DHAVE_CONFIG_H -DGSTREAMER_BUILT_FOR_ANDROID \
 	$(GST_PLUGINS_BASE_CFLAGS)

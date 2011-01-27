@@ -20,7 +20,7 @@
 #ifndef __GST_FFMPEG_CODECMAP_H__
 #define __GST_FFMPEG_CODECMAP_H__
 
-#include <avcodec.h>
+#include "avcodec.h"
 #include <gst/gst.h>
 
 /*

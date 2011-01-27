@@ -79,3 +79,17 @@ ISO_CODE_PROGS =
 endif
 
 noinst_PROGRAMS = $(ISO_CODE_PROGS)
+
+Android.mk: Makefile.am
+	androgenizer -:PROJECT libgsttag -:SHARED libgsttag-@GST_MAJORMINOR@ \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgsttag_@GST_MAJORMINOR@_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(libgsttag_@GST_MAJORMINOR@_la_CFLAGS) \
+	 -:LDFLAGS $(libgsttag_@GST_MAJORMINOR@_la_LDFLAGS) \
+	           $(libgsttag_@GST_MAJORMINOR@_la_LIBADD) \
+	           -ldl \
+	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/tag \
+	 -:HEADERS $(libgsttaginclude_HEADERS) \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+	> $@

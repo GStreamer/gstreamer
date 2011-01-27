@@ -32,22 +32,8 @@ LOCAL_MODULE:= libgstalsa
 
 LOCAL_WHOLE_STATIC_LIBRARIES := libasound
 
-LOCAL_C_INCLUDES := \
-    $(LOCAL_PATH)/../ext/alsa 			\
-    $(LOCAL_PATH)/../gst-libs      		\
-    $(LOCAL_PATH)/..         			\
-    $(LOCAL_PATH)   	  				\
-    $(TARGET_OUT_HEADERS)/gstreamer-0.10 \
-	$(TARGET_OUT_HEADERS)/glib-2.0 		\
-    $(TARGET_OUT_HEADERS)/glib-2.0/glib \
-	external/libxml2/include 			\
-    external/alsa-lib/include      
-
-ifeq ($(STECONF_ANDROID_VERSION),"FROYO")
-LOCAL_SHARED_LIBRARIES += libicuuc 
-LOCAL_C_INCLUDES += external/icu4c/common
-endif
-LOCAL_CFLAGS := -DHAVE_CONFIG_H	-DGSTREAMER_BUILT_FOR_ANDROID
+LOCAL_CFLAGS := -DHAVE_CONFIG_H	-DGSTREAMER_BUILT_FOR_ANDROID \
+	$(GST_PLUGINS_BASE_CFLAGS)
 #
 # define LOCAL_PRELINK_MODULE to false to not use pre-link map
 #
