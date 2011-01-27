@@ -869,7 +869,10 @@ gst_nal_decode_slice_header (GstH264Parse * h, GstNalBs * bs)
   return TRUE;
 }
 
-GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
+typedef GstH264Parse GstLegacyH264Parse;
+typedef GstH264ParseClass GstLegacyH264ParseClass;
+GST_BOILERPLATE (GstLegacyH264Parse, gst_h264_parse, GstElement,
+    GST_TYPE_ELEMENT);
 
 static void gst_h264_parse_reset (GstH264Parse * h264parse);
 static void gst_h264_parse_finalize (GObject * object);
@@ -900,7 +903,8 @@ gst_h264_parse_base_init (gpointer g_class)
       "Michal Benes <michal.benes@itonis.tv>,"
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  GST_DEBUG_CATEGORY_INIT (h264_parse_debug, "h264parse", 0, "h264 parser");
+  GST_DEBUG_CATEGORY_INIT (h264_parse_debug, "legacy h264parse", 0,
+      "legacy h264 parser");
 }
 
 static void
@@ -2695,7 +2699,7 @@ gst_h264_parse_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "h264parse",
+  return gst_element_register (plugin, "legacyh264parse",
       GST_RANK_NONE, GST_TYPE_H264PARSE);
 }
 
