@@ -68,7 +68,7 @@ make_profile_from_info (GstDiscovererInfo * info)
     /* For each on the formats add stream profiles */
     for (tmp = substreams; tmp; tmp = tmp->next) {
       GstDiscovererStreamInfo *stream = GST_DISCOVERER_STREAM_INFO (tmp->data);
-      GstEncodingProfile *sprof;
+      GstEncodingProfile *sprof = NULL;
 
       if (GST_IS_DISCOVERER_VIDEO_INFO (stream)) {
         sprof = (GstEncodingProfile *)
@@ -78,10 +78,12 @@ make_profile_from_info (GstDiscovererInfo * info)
         sprof = (GstEncodingProfile *)
             gst_encoding_audio_profile_new (gst_discoverer_stream_info_get_caps
             (stream), NULL, NULL, 1);
-      } else
+      } else {
         GST_WARNING ("Unsupported streams");
+      }
 
-      gst_encoding_container_profile_add_profile (profile, sprof);
+      if (sprof)
+        gst_encoding_container_profile_add_profile (profile, sprof);
     }
     if (substreams)
       gst_discoverer_stream_info_list_free (substreams);
