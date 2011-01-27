@@ -82,6 +82,21 @@ LDADD = $(GLIB_ONLY_LIBS)
 # due to depcomp not using AM_CFLAGS for rh9/yd3, we also set AM_CPPFLAGS
 AM_CPPFLAGS = $(GLIB_ONLY_CFLAGS)
 
+Android.mk: Makefile.am
+	androgenizer -:PROJECT gstreamer \
+	 -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:EXECUTABLE gst-inspect -:TAGS eng debug \
+	 -:SOURCES $(gst_inspect_@GST_MAJORMINOR@_SOURCES) \
+	 -:CFLAGS $(DEFS) $(gst_inspect_@GST_MAJORMINOR@_CFLAGS) \
+	 -:LDFLAGS $(gst_inspect_@GST_MAJORMINOR@_LDADD) \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+	 -:EXECUTABLE gst-launch -:TAGS eng debug \
+	 -:SOURCES $(gst_launch_@GST_MAJORMINOR@_SOURCES) \
+	 -:CFLAGS $(DEFS) $(gst_launch_@GST_MAJORMINOR@_CFLAGS) \
+	 -:LDFLAGS $(gst_launch_@GST_MAJORMINOR@_LDADD) \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+	> $@
+
 ### man pages we want to install
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_MAN=

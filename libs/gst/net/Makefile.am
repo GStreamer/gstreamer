@@ -23,6 +23,19 @@ CLEANFILES = *.gcno *.gcda *.gcov
 
 gcov: $(libgstnet_@GST_MAJORMINOR@_la_SOURCES:=.gcov)
 
+Android.mk: Makefile.am
+	androgenizer -:PROJECT gstreamer -:SHARED libgstnet-@GST_MAJORMINOR@ -:TAGS eng debug \
+	 -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstnet_@GST_MAJORMINOR@_la_SOURCES) \
+	 -:CFLAGS $(libgstnet_@GST_MAJORMINOR@_la_CFLAGS) \
+	 -:LDFLAGS $(libgstnet_@GST_MAJORMINOR@_la_LDFLAGS) \
+	           $(libgstnet_@GST_MAJORMINOR@_la_LIBADD) \
+	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/net \
+	 -:HEADERS $(libgstnet_@GST_MAJORMINOR@_include_HEADERS) \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+	> $@
+
+
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstNet-@GST_MAJORMINOR@.gir
 
