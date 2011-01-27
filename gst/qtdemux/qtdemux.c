@@ -848,7 +848,8 @@ gst_qtdemux_find_index (GstQTDemux * qtdemux, QtDemuxStream * str,
   guint32 index;
 
   /* convert media_time to mov format */
-  media_time = gst_util_uint64_scale (media_time, str->timescale, GST_SECOND);
+  media_time =
+      gst_util_uint64_scale_ceil (media_time, str->timescale, GST_SECOND);
 
   result = gst_util_array_binary_search (str->samples, str->stbl_index + 1,
       sizeof (QtDemuxSample), (GCompareDataFunc) find_func,
