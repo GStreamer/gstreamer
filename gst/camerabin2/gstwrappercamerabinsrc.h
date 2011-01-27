@@ -113,6 +113,8 @@ struct _GstWrapperCameraBinSrc
   GstCameraBinPreviewPipelineData *preview_pipeline;
   gboolean post_previews;
   GstCaps *preview_caps;
+  GstElement *preview_filter;
+  gboolean preview_filter_changed;
 };
 
 

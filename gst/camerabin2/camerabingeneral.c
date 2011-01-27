@@ -320,6 +320,7 @@ gst_camerabin_preview_pipeline_new_buffer (GstAppSink * appsink,
 /**
  * gst_camerabin_create_preview_pipeline:
  * @element: Owner of this pipeline
+ * @filter: Custom filter to process preview data (an extra ref is taken)
  *
  * Creates a new previewing pipeline that can receive buffers
  * to be posted as camerabin preview messages for @element
@@ -327,7 +328,8 @@ gst_camerabin_preview_pipeline_new_buffer (GstAppSink * appsink,
  * Returns: The newly created #GstCameraBinPreviewPipelineData
  */
 GstCameraBinPreviewPipelineData *
-gst_camerabin_create_preview_pipeline (GstElement * element)
+gst_camerabin_create_preview_pipeline (GstElement * element,
+    GstElement * filter)
 {
   GstCameraBinPreviewPipelineData *data;
   GstElement *csp;
@@ -354,11 +356,19 @@ gst_camerabin_create_preview_pipeline (GstElement * element)
 
   gst_bin_add_many (GST_BIN (data->pipeline), data->appsrc, data->capsfilter,
       data->appsink, csp, csp2, vscale, NULL);
+  if (filter)
+    gst_bin_add (GST_BIN (data->pipeline), gst_object_ref (filter));
   added = TRUE;
 
-  if (!gst_element_link_many (data->appsrc, csp, vscale, csp2, data->capsfilter,
-          data->appsink, NULL))
-    goto error;
+  if (filter) {
+    if (!gst_element_link_many (data->appsrc, filter, csp, vscale, csp2,
+            data->capsfilter, data->appsink, NULL))
+      goto error;
+  } else {
+    if (!gst_element_link_many (data->appsrc, csp, vscale, csp2,
+            data->capsfilter, data->appsink, NULL))
+      goto error;
+  }
 
   callbacks.new_preroll = gst_camerabin_preview_pipeline_new_preroll;
   callbacks.new_buffer = gst_camerabin_preview_pipeline_new_buffer;
@@ -366,6 +376,7 @@ gst_camerabin_create_preview_pipeline (GstElement * element)
       NULL);
 
   data->element = element;
+  data->filter = filter;
 
   return data;
 error:

@@ -75,7 +75,8 @@ enum
   PROP_VIDEO_ENCODING_PROFILE,
   PROP_IMAGE_FILTER,
   PROP_VIDEO_FILTER,
-  PROP_VIEWFINDER_FILTER
+  PROP_VIEWFINDER_FILTER,
+  PROP_PREVIEW_FILTER
 };
 
 enum
@@ -303,6 +304,10 @@ gst_camera_bin_dispose (GObject * object)
 
   if (camerabin->preview_caps)
     gst_caps_replace (&camerabin->preview_caps, NULL);
+  if (camerabin->preview_filter) {
+    gst_object_unref (camerabin->preview_filter);
+    camerabin->preview_filter = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -429,6 +434,12 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (object_class, PROP_VIEWFINDER_FILTER,
       g_param_spec_object ("viewfinder-filter", "Viewfinder filter",
           "The element that will process frames going to the viewfinder."
+          " (Should be set on NULL state)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_PREVIEW_FILTER,
+      g_param_spec_object ("preview-filter", "Preview filter",
+          "The element that will process preview buffers."
           " (Should be set on NULL state)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -678,7 +689,8 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
       && g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src),
           "preview-caps")) {
     g_object_set (camera->src, "post-previews", camera->post_previews,
-        "preview-caps", camera->preview_caps, NULL);
+        "preview-caps", camera->preview_caps, "preview-filter",
+        camera->preview_filter, NULL);
   }
   if (new_src) {
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->src));
@@ -872,6 +884,17 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
 
       camera->user_viewfinder_filter = g_value_dup_object (value);
       break;
+    case PROP_PREVIEW_FILTER:
+      if (camera->preview_filter)
+        g_object_unref (camera->preview_filter);
+
+      camera->preview_filter = g_value_dup_object (value);
+      if (camera->src
+          && g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src),
+              "preview-filter"))
+        g_object_set (camera->src, "preview-filter", camera->preview_filter,
+            NULL);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -971,6 +994,10 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
     case PROP_VIEWFINDER_FILTER:
       if (camera->viewfinder_filter)
         g_value_set_object (value, camera->viewfinder_filter);
+      break;
+    case PROP_PREVIEW_FILTER:
+      if (camera->preview_filter)
+        g_value_set_object (value, camera->preview_filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

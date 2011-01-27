@@ -39,7 +39,8 @@ enum
   PROP_0,
   PROP_VIDEO_SRC,
   PROP_POST_PREVIEWS,
-  PROP_PREVIEW_CAPS
+  PROP_PREVIEW_CAPS,
+  PROP_PREVIEW_FILTER
 };
 
 #define DEFAULT_POST_PREVIEWS TRUE
@@ -73,6 +74,11 @@ gst_wrapper_camera_bin_src_dispose (GObject * object)
 
   if (self->preview_caps)
     gst_caps_replace (&self->preview_caps, NULL);
+
+  if (self->preview_filter) {
+    gst_object_unref (self->preview_filter);
+    self->preview_filter = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -113,6 +119,12 @@ gst_wrapper_camera_bin_src_set_property (GObject * object,
         gst_camerabin_preview_set_caps (self->preview_pipeline,
             (GstCaps *) gst_value_get_caps (value));
       break;
+    case PROP_PREVIEW_FILTER:
+      if (self->preview_filter)
+        gst_object_unref (self->preview_filter);
+      self->preview_filter = g_value_dup_object (value);
+      self->preview_filter_changed = TRUE;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
       break;
@@ -138,6 +150,10 @@ gst_wrapper_camera_bin_src_get_property (GObject * object,
     case PROP_PREVIEW_CAPS:
       if (self->preview_caps)
         gst_value_set_caps (value, self->preview_caps);
+      break;
+    case PROP_PREVIEW_FILTER:
+      if (self->preview_filter)
+        g_value_set_object (value, self->preview_filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -294,127 +310,138 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   GstPad *vf_pad;
   GstPad *tee_capture_pad;
 
-  if (self->elements_created)
-    return TRUE;
+  if (!self->elements_created) {
 
-  GST_DEBUG_OBJECT (self, "constructing pipeline");
+    GST_DEBUG_OBJECT (self, "constructing pipeline");
 
-  /* Add application set or default video src element */
-  if (!(self->src_vid_src = gst_camerabin_setup_default_element (cbin,
-              self->app_vid_src, "autovideosrc", DEFAULT_VIDEOSRC,
-              "camerasrc-real-src"))) {
-    self->src_vid_src = NULL;
-    goto done;
-  } else {
-    if (!gst_camerabin_add_element (cbin, self->src_vid_src)) {
+    /* Add application set or default video src element */
+    if (!(self->src_vid_src = gst_camerabin_setup_default_element (cbin,
+                self->app_vid_src, "autovideosrc", DEFAULT_VIDEOSRC,
+                "camerasrc-real-src"))) {
+      self->src_vid_src = NULL;
       goto done;
+    } else {
+      if (!gst_camerabin_add_element (cbin, self->src_vid_src)) {
+        goto done;
+      }
     }
+    /* we lost the reference */
+    self->app_vid_src = NULL;
+
+    /* add a buffer probe to the src elemento to drop EOS from READY->NULL */
+    {
+      GstPad *pad;
+      pad = gst_element_get_static_pad (self->src_vid_src, "src");
+
+      self->src_event_probe_id = gst_pad_add_event_probe (pad,
+          (GCallback) gst_camerabin_drop_eos_probe, NULL);
+      gst_object_unref (pad);
+    }
+
+    if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
+            "src-colorspace"))
+      goto done;
+
+    if (!(self->src_filter =
+            gst_camerabin_create_and_add_element (cbin, "capsfilter",
+                "src-capsfilter")))
+      goto done;
+
+    if (!(self->src_zoom_crop =
+            gst_camerabin_create_and_add_element (cbin, "videocrop",
+                "zoom-crop")))
+      goto done;
+    if (!(self->src_zoom_scale =
+            gst_camerabin_create_and_add_element (cbin, "videoscale",
+                "zoom-scale")))
+      goto done;
+    if (!(self->src_zoom_filter =
+            gst_camerabin_create_and_add_element (cbin, "capsfilter",
+                "zoom-capsfilter")))
+      goto done;
+
+    if (!(tee =
+            gst_camerabin_create_and_add_element (cbin, "tee",
+                "camerasrc-tee")))
+      goto done;
+
+    /* viewfinder pad */
+    vf_pad = gst_element_get_request_pad (tee, "src%d");
+    g_object_set (tee, "alloc-pad", vf_pad, NULL);
+    gst_object_unref (vf_pad);
+
+    /* the viewfinder should always work, so we add some converters to it */
+    if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
+            "viewfinder-colorspace"))
+      goto done;
+    if (!(videoscale =
+            gst_camerabin_create_and_add_element (cbin, "videoscale",
+                "viewfinder-scale")))
+      goto done;
+
+    /* image/video pad from tee */
+    tee_capture_pad = gst_element_get_request_pad (tee, "src%d");
+
+    self->output_selector =
+        gst_element_factory_make ("output-selector", "outsel");
+    g_object_set (self->output_selector, "pad-negotiation-mode", 0, NULL);
+    gst_bin_add (GST_BIN (self), self->output_selector);
+    {
+      GstPad *pad = gst_element_get_static_pad (self->output_selector, "sink");
+
+      /* check return TODO */
+      gst_pad_link (tee_capture_pad, pad);
+      gst_object_unref (pad);
+    }
+    gst_object_unref (tee_capture_pad);
+
+    /* Create the 2 output pads for video and image */
+    self->outsel_vidpad =
+        gst_element_get_request_pad (self->output_selector, "src%d");
+    self->outsel_imgpad =
+        gst_element_get_request_pad (self->output_selector, "src%d");
+
+    g_assert (self->outsel_vidpad != NULL);
+    g_assert (self->outsel_imgpad != NULL);
+
+    gst_pad_add_buffer_probe (self->outsel_imgpad,
+        G_CALLBACK (gst_wrapper_camera_bin_src_imgsrc_probe), self);
+    gst_pad_add_buffer_probe (self->outsel_vidpad,
+        G_CALLBACK (gst_wrapper_camera_bin_src_vidsrc_probe), self);
+    gst_ghost_pad_set_target (GST_GHOST_PAD (self->imgsrc),
+        self->outsel_imgpad);
+    gst_ghost_pad_set_target (GST_GHOST_PAD (self->vidsrc),
+        self->outsel_vidpad);
+
+    if (bcamsrc->mode == MODE_IMAGE) {
+      g_object_set (self->output_selector, "active-pad", self->outsel_imgpad,
+          NULL);
+    } else {
+      g_object_set (self->output_selector, "active-pad", self->outsel_vidpad,
+          NULL);
+    }
+
+    /* hook-up the vf ghostpad */
+    vf_pad = gst_element_get_static_pad (videoscale, "src");
+    gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), vf_pad);
+    gst_object_unref (vf_pad);
+
+    gst_pad_set_active (self->vfsrc, TRUE);
+    gst_pad_set_active (self->imgsrc, TRUE);    /* XXX ??? */
+    gst_pad_set_active (self->vidsrc, TRUE);    /* XXX ??? */
   }
-  /* we lost the reference */
-  self->app_vid_src = NULL;
-
-  /* add a buffer probe to the src elemento to drop EOS from READY->NULL */
-  {
-    GstPad *pad;
-    pad = gst_element_get_static_pad (self->src_vid_src, "src");
-
-    self->src_event_probe_id = gst_pad_add_event_probe (pad,
-        (GCallback) gst_camerabin_drop_eos_probe, NULL);
-    gst_object_unref (pad);
+  /* recreate the preview pipeline */
+  if (self->preview_pipeline && self->preview_filter_changed) {
+    gst_camerabin_destroy_preview_pipeline (self->preview_pipeline);
   }
 
-  if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
-          "src-colorspace"))
-    goto done;
+  if (self->preview_pipeline == NULL)
+    self->preview_pipeline =
+        gst_camerabin_create_preview_pipeline (GST_ELEMENT_CAST (self),
+        self->preview_filter);
 
-  if (!(self->src_filter =
-          gst_camerabin_create_and_add_element (cbin, "capsfilter",
-              "src-capsfilter")))
-    goto done;
-
-  if (!(self->src_zoom_crop =
-          gst_camerabin_create_and_add_element (cbin, "videocrop",
-              "zoom-crop")))
-    goto done;
-  if (!(self->src_zoom_scale =
-          gst_camerabin_create_and_add_element (cbin, "videoscale",
-              "zoom-scale")))
-    goto done;
-  if (!(self->src_zoom_filter =
-          gst_camerabin_create_and_add_element (cbin, "capsfilter",
-              "zoom-capsfilter")))
-    goto done;
-
-  if (!(tee =
-          gst_camerabin_create_and_add_element (cbin, "tee", "camerasrc-tee")))
-    goto done;
-
-  /* viewfinder pad */
-  vf_pad = gst_element_get_request_pad (tee, "src%d");
-  g_object_set (tee, "alloc-pad", vf_pad, NULL);
-  gst_object_unref (vf_pad);
-
-  /* the viewfinder should always work, so we add some converters to it */
-  if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
-          "viewfinder-colorspace"))
-    goto done;
-  if (!(videoscale =
-          gst_camerabin_create_and_add_element (cbin, "videoscale",
-              "viewfinder-scale")))
-    goto done;
-
-  /* image/video pad from tee */
-  tee_capture_pad = gst_element_get_request_pad (tee, "src%d");
-
-  self->output_selector =
-      gst_element_factory_make ("output-selector", "outsel");
-  g_object_set (self->output_selector, "pad-negotiation-mode", 0, NULL);
-  gst_bin_add (GST_BIN (self), self->output_selector);
-  {
-    GstPad *pad = gst_element_get_static_pad (self->output_selector, "sink");
-
-    /* check return TODO */
-    gst_pad_link (tee_capture_pad, pad);
-    gst_object_unref (pad);
-  }
-  gst_object_unref (tee_capture_pad);
-
-  /* Create the 2 output pads for video and image */
-  self->outsel_vidpad =
-      gst_element_get_request_pad (self->output_selector, "src%d");
-  self->outsel_imgpad =
-      gst_element_get_request_pad (self->output_selector, "src%d");
-
-  g_assert (self->outsel_vidpad != NULL);
-  g_assert (self->outsel_imgpad != NULL);
-
-  gst_pad_add_buffer_probe (self->outsel_imgpad,
-      G_CALLBACK (gst_wrapper_camera_bin_src_imgsrc_probe), self);
-  gst_pad_add_buffer_probe (self->outsel_vidpad,
-      G_CALLBACK (gst_wrapper_camera_bin_src_vidsrc_probe), self);
-  gst_ghost_pad_set_target (GST_GHOST_PAD (self->imgsrc), self->outsel_imgpad);
-  gst_ghost_pad_set_target (GST_GHOST_PAD (self->vidsrc), self->outsel_vidpad);
-
-  if (bcamsrc->mode == MODE_IMAGE) {
-    g_object_set (self->output_selector, "active-pad", self->outsel_imgpad,
-        NULL);
-  } else {
-    g_object_set (self->output_selector, "active-pad", self->outsel_vidpad,
-        NULL);
-  }
-
-  /* hook-up the vf ghostpad */
-  vf_pad = gst_element_get_static_pad (videoscale, "src");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), vf_pad);
-  gst_object_unref (vf_pad);
-
-  gst_pad_set_active (self->vfsrc, TRUE);
-  gst_pad_set_active (self->imgsrc, TRUE);      /* XXX ??? */
-  gst_pad_set_active (self->vidsrc, TRUE);      /* XXX ??? */
-
-  /* create the preview pipeline */
-  self->preview_pipeline =
-      gst_camerabin_create_preview_pipeline (GST_ELEMENT_CAST (self));
+  g_assert (self->preview_pipeline != NULL);
+  self->preview_filter_changed = FALSE;
   if (self->preview_caps)
     gst_camerabin_preview_set_caps (self->preview_pipeline, self->preview_caps);
 
@@ -1024,6 +1051,11 @@ gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
       g_param_spec_boxed ("preview-caps", "Preview caps",
           "The caps of the preview image to be posted",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_PREVIEW_FILTER,
+      g_param_spec_object ("preview-filter", "Preview filter",
+          "A custom preview filter to process preview image data",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_wrapper_camera_bin_src_change_state;
 

@@ -28,13 +28,14 @@ typedef struct
   GstElement *pipeline;
 
   GstElement *appsrc;
+  GstElement *filter;
   GstElement *capsfilter;
   GstElement *appsink;
 
   GstElement *element;
 } GstCameraBinPreviewPipelineData;
 
-GstCameraBinPreviewPipelineData *gst_camerabin_create_preview_pipeline (GstElement * element);
+GstCameraBinPreviewPipelineData *gst_camerabin_create_preview_pipeline (GstElement * element, GstElement * filter);
 void gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData * preview);
 gboolean gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview, GstBuffer * buffer);
 void gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview, GstCaps * caps);

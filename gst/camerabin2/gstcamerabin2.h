@@ -71,6 +71,7 @@ struct _GstCameraBin
   gchar *image_location;
   gboolean post_previews;
   GstCaps *preview_caps;
+  GstElement *preview_filter;
   GstEncodingProfile *video_profile;
 
   gboolean elements_created;
