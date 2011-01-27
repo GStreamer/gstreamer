@@ -505,6 +505,16 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
   return TRUE;
 }
 
+static gboolean
+filter_buffer_count (GstPad * pad, GstMiniObject * obj, gpointer data)
+{
+  gint *counter = data;
+
+  (*counter)++;
+
+  return TRUE;
+}
+
 GST_START_TEST (test_single_image_capture)
 {
   if (!camera)
@@ -974,6 +984,120 @@ GST_START_TEST (test_supported_caps)
 GST_END_TEST;
 
 
+GST_START_TEST (test_image_custom_filter)
+{
+  GstElement *vf_filter;
+  GstElement *image_filter;
+  GstPad *pad;
+  gint vf_probe_counter = 0;
+  gint image_probe_counter = 0;
+
+  if (!camera)
+    return;
+
+  vf_filter = gst_element_factory_make ("identity", "vf-filter");
+  image_filter = gst_element_factory_make ("identity", "img-filter");
+
+  pad = gst_element_get_static_pad (vf_filter, "src");
+  gst_pad_add_buffer_probe (pad, (GCallback) filter_buffer_count,
+      &vf_probe_counter);
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (image_filter, "src");
+  gst_pad_add_buffer_probe (pad, (GCallback) filter_buffer_count,
+      &image_probe_counter);
+  gst_object_unref (pad);
+
+  /* set still image mode and filters */
+  g_object_set (camera, "mode", 1,
+      "location", make_test_file_name (IMAGE_FILENAME, -1),
+      "viewfinder-filter", vf_filter, "image-filter", image_filter, NULL);
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
+  GST_INFO ("starting capture");
+  fail_unless (camera != NULL);
+  g_signal_emit_by_name (camera, "start-capture", NULL);
+
+  g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
+  g_main_loop_run (main_loop);
+
+  /* check that we got a preview image */
+  check_preview_image ();
+
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+  check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0);
+
+  fail_unless (vf_probe_counter > 0);
+  fail_unless (image_probe_counter == 1);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_video_custom_filter)
+{
+  GstElement *vf_filter;
+  GstElement *video_filter;
+  GstPad *pad;
+  gint vf_probe_counter = 0;
+  gint video_probe_counter = 0;
+
+  if (!camera)
+    return;
+
+  vf_filter = gst_element_factory_make ("identity", "vf-filter");
+  video_filter = gst_element_factory_make ("identity", "video-filter");
+
+  pad = gst_element_get_static_pad (vf_filter, "src");
+  gst_pad_add_buffer_probe (pad, (GCallback) filter_buffer_count,
+      &vf_probe_counter);
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (video_filter, "src");
+  gst_pad_add_buffer_probe (pad, (GCallback) filter_buffer_count,
+      &video_probe_counter);
+  gst_object_unref (pad);
+
+  /* set still image mode and filters */
+  g_object_set (camera, "mode", 2,
+      "location", make_test_file_name (VIDEO_FILENAME, -1),
+      "viewfinder-filter", vf_filter, "video-filter", video_filter, NULL);
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
+  GST_INFO ("starting capture");
+  fail_unless (camera != NULL);
+  g_signal_emit_by_name (camera, "start-capture", NULL);
+
+  g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
+      main_loop);
+  g_main_loop_run (main_loop);
+  g_signal_emit_by_name (camera, "stop-capture", NULL);
+
+  /* check that we got a preview image */
+  check_preview_image ();
+
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+  check_file_validity (VIDEO_FILENAME, 0, NULL, 0, 0);
+
+  fail_unless (vf_probe_counter > 0);
+  fail_unless (video_probe_counter > 0);
+}
+
+GST_END_TEST;
+
+
 typedef struct _TestCaseDef
 {
   const gchar *name;
@@ -1026,6 +1150,9 @@ camerabin_suite (void)
     tcase_add_test (tc_basic, test_image_capture_with_tags);
 
     tcase_add_test (tc_basic, test_video_capture_with_tags);
+
+    tcase_add_test (tc_basic, test_image_custom_filter);
+    tcase_add_test (tc_basic, test_video_custom_filter);
   }
 
 end:
