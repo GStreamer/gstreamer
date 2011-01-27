@@ -401,8 +401,8 @@ load_keyfile (GESFormatter * keyfile_formatter, GESTimeline * timeline)
   data = ges_formatter_get_data (keyfile_formatter, &length);
   if (!g_key_file_load_from_data (kf, data, length, G_KEY_FILE_NONE, &error)) {
     ret = FALSE;
-    GST_ERROR (error->message);
-    GST_INFO (data);
+    GST_ERROR ("%s", error->message);
+    GST_INFO ("%s", data);
     goto free_kf;
   }
 
