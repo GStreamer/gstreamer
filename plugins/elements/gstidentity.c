@@ -548,6 +548,40 @@ gst_identity_check_imperfect_offset (GstIdentity * identity, GstBuffer * buf)
   }
 }
 
+static const gchar *
+print_pretty_time (gchar * ts_str, gsize ts_str_len, GstClockTime ts)
+{
+  if (ts == GST_CLOCK_TIME_NONE)
+    return "none";
+
+  g_snprintf (ts_str, ts_str_len, "%" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+  return ts_str;
+}
+
+static void
+gst_identity_update_last_message_for_buffer (GstIdentity * identity,
+    const gchar * action, GstBuffer * buf)
+{
+  gchar ts_str[64], dur_str[64];
+
+  GST_OBJECT_LOCK (identity);
+
+  g_free (identity->last_message);
+  identity->last_message = g_strdup_printf ("%s   ******* (%s:%s)i "
+      "(%u bytes, timestamp: %s, duration: %s, offset: %" G_GINT64_FORMAT ", "
+      "offset_end: % " G_GINT64_FORMAT ", flags: %d) %p", action,
+      GST_DEBUG_PAD_NAME (GST_BASE_TRANSFORM_CAST (identity)->sinkpad),
+      GST_BUFFER_SIZE (buf),
+      print_pretty_time (ts_str, sizeof (ts_str), GST_BUFFER_TIMESTAMP (buf)),
+      print_pretty_time (dur_str, sizeof (dur_str), GST_BUFFER_DURATION (buf)),
+      GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
+      GST_BUFFER_FLAGS (buf), buf);
+
+  GST_OBJECT_UNLOCK (identity);
+
+  gst_identity_notify_last_message (identity);
+}
+
 static GstFlowReturn
 gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
@@ -580,19 +614,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   if (identity->drop_probability > 0.0) {
     if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability) {
       if (!identity->silent) {
-        GST_OBJECT_LOCK (identity);
-        g_free (identity->last_message);
-        identity->last_message =
-            g_strdup_printf
-            ("dropping   ******* (%s:%s)i (%d bytes, timestamp: %"
-            GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
-            G_GINT64_FORMAT ", offset_end: % " G_GINT64_FORMAT
-            ", flags: %d) %p", GST_DEBUG_PAD_NAME (trans->sinkpad),
-            GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-            GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
-            GST_BUFFER_OFFSET_END (buf), GST_BUFFER_FLAGS (buf), buf);
-        GST_OBJECT_UNLOCK (identity);
-        gst_identity_notify_last_message (identity);
+        gst_identity_update_last_message_for_buffer (identity, "dropping", buf);
       }
       /* return DROPPED to basetransform. */
       return GST_BASE_TRANSFORM_FLOW_DROPPED;
@@ -604,19 +626,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   }
 
   if (!identity->silent) {
-    GST_OBJECT_LOCK (identity);
-    g_free (identity->last_message);
-    identity->last_message =
-        g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, timestamp: %"
-        GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
-        G_GINT64_FORMAT ", offset_end: % " G_GINT64_FORMAT ", flags: %d) %p",
-        GST_DEBUG_PAD_NAME (trans->sinkpad), GST_BUFFER_SIZE (buf),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
-        GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
-        GST_BUFFER_FLAGS (buf), buf);
-    GST_OBJECT_UNLOCK (identity);
-    gst_identity_notify_last_message (identity);
+    gst_identity_update_last_message_for_buffer (identity, "chain", buf);
   }
 
   if (identity->datarate > 0) {
