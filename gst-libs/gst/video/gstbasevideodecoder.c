@@ -319,7 +319,7 @@ gst_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
       GstSeekFlags flags;
       GstSeekType cur_type, stop_type;
       gint64 cur, stop;
-      gint64 tcur, tstop;
+      gint64 tcur = -1, tstop = -1;
 
       GST_DEBUG ("seek event");
 
