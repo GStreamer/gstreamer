@@ -379,7 +379,7 @@ else
      if test -z "$srcdir" -o "$srcdir" = .; then
        confcmd=./configure
      else
-       confcmd="$origdir"/"$ac_top_srcdir"/gst-libs/ext/libav/configure
+       confcmd="$ac_abs_top_srcdir"/gst-libs/ext/libav/configure
      fi
 
      AS_MKDIR_P(["$ac_top_build_prefix"gst-libs/ext/libav])
