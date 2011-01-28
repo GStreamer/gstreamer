@@ -126,7 +126,6 @@ pygst_fraction_to_value (GValue * value, PyObject * object)
   gst_value_set_fraction (value,
       PyLong_AsLong (numerator), PyLong_AsLong (denominator));
 
-out:
   return 0;
 
 fail:
