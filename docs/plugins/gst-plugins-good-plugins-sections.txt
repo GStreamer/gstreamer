@@ -466,6 +466,18 @@ gst_cairo_render_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-cairooverlay</FILE>
+<TITLE>cairooverlay</TITLE>
+GstCairoOverlay
+<SUBSECTION Standard>
+GstCairoOverlayClass
+GST_TYPE_CAIRO_OVERLAY
+GST_CAIRO_OVERLAY
+GST_CAIRO_OVERLAY_CLASS
+gst_cairo_overlay_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-capssetter</FILE>
 <TITLE>capssetter</TITLE>
 GstCapsSetter

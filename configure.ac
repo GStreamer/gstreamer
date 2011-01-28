@@ -715,6 +715,13 @@ AG_GST_CHECK_FEATURE(CAIRO, [Cairo graphics rendering], cairo, [
   AG_GST_PKG_CHECK_MODULES(CAIRO, cairo >= 1.0.0)
 ])
 
+dnl *** cairo-gobject ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO_GOBJECT, true)
+AG_GST_CHECK_FEATURE(CAIRO_GOBJECT, 
+  [Cairo graphics rendering gobject bindings], cairooverlay, [
+  AG_GST_PKG_CHECK_MODULES(CAIRO_GOBJECT, cairo-gobject >= 1.10.0)
+])
+
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
 AG_GST_CHECK_FEATURE(ESD, [ESounD sound daemon], esdsink, [
@@ -1021,6 +1028,7 @@ AM_CONDITIONAL(USE_AALIB, false)
 AM_CONDITIONAL(USE_ANNODEX, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CAIRO, false)
+AM_CONDITIONAL(USE_CAIRO_GOBJECT, false)
 AM_CONDITIONAL(USE_DIRECTSOUND, false)
 AM_CONDITIONAL(USE_DV1394, false)
 AM_CONDITIONAL(USE_ESD, false)
@@ -1191,6 +1199,7 @@ tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
 tests/examples/audiofx/Makefile
+tests/examples/cairo/Makefile
 tests/examples/equalizer/Makefile
 tests/examples/jack/Makefile
 tests/examples/level/Makefile
