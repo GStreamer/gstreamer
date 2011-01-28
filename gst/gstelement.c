@@ -1053,7 +1053,8 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
 
             /* it's an int */
             tmp = strtol (data, &endptr, 10);
-            if (endptr && *endptr == '\0') {
+            if (tmp != G_MINLONG && tmp != G_MAXLONG && endptr &&
+                *endptr == '\0') {
               templ_found = TRUE;
               req_name = name;
               break;
