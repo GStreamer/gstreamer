@@ -184,6 +184,7 @@ gst_valve_chain (GstPad * pad, GstBuffer * buffer)
     if (valve->discont) {
       buffer = gst_buffer_make_metadata_writable (buffer);
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+      valve->discont = FALSE;
     }
 
     ret = gst_pad_push (valve->srcpad, buffer);
