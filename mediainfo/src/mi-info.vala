@@ -329,8 +329,12 @@ public class MediaInfo.Info : VPaned
 
     if (e != null) {
       debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
+      container_name.set_text ("");
+      duration.set_text ("");
     }
     if (info == null) {
+      container_name.set_text ("");
+      duration.set_text ("");
       return;
     }
 
@@ -340,7 +344,7 @@ public class MediaInfo.Info : VPaned
       (uint) ((dur / (SECOND * 60)) % 60),
       (uint) ((dur / SECOND) % 60),
       (uint) ((dur) % SECOND));
-    this.duration.set_text (str);
+    duration.set_text (str);
     //stdout.printf ("Duration: %s\n", dur_str);
 
     /*
