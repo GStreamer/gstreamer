@@ -1012,7 +1012,7 @@ read_one_tag (GstTagList * list, const gchar * tag, XmpTag * xmptag,
           gint num_digits = 0;
 
           /* find the number of digits */
-          while (isdigit (usec_str[num_digits++]) && num_digits < 6);
+          while (isdigit ((gint) usec_str[num_digits++]) && num_digits < 6);
 
           if (num_digits > 0) {
             /* fill up to 6 digits with 0 */
