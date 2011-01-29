@@ -352,7 +352,7 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
 {
   gint ru;
   struct sockaddr_in my_addr;
-  guint len;
+  socklen_t len;
   int port;
   gint ret;
   GError *error;
@@ -387,13 +387,7 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
     goto bind_error;
 
   len = sizeof (my_addr);
-#ifdef G_OS_WIN32
-  ret =
-      getsockname (self->priv->sock.fd, (struct sockaddr *) &my_addr,
-      (gint *) & len);
-#else
   ret = getsockname (self->priv->sock.fd, (struct sockaddr *) &my_addr, &len);
-#endif
   if (ret < 0)
     goto getsockname_error;
 
