@@ -71,15 +71,6 @@ enum
   LAST_SIGNAL
 };
 
-/* we tollerate half a second diff before we start resyncing. This
- * should be enough to compensate for various rounding errors in the timestamp
- * and sample offset position.
- * This is an emergency resync fallback since buffers marked as DISCONT will
- * always lock to the correct timestamp immediatly and buffers not marked as
- * DISCONT are contiguous by definition.
- */
-#define DIFF_TOLERANCE  2
-
 /* FIXME: 0.11, store the buffer_time and latency_time in nanoseconds */
 #define DEFAULT_BUFFER_TIME     ((200 * GST_MSECOND) / GST_USECOND)
 #define DEFAULT_LATENCY_TIME    ((10 * GST_MSECOND) / GST_USECOND)
@@ -89,7 +80,7 @@ enum
 /* FIXME, enable pull mode when clock slaving and trick modes are figured out */
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE
 
-/* when timestamps or clock slaving drift for more than 20ms we resync. This is
+/* when timestamps or clock slaving drift for more than 40ms we resync. This is
  * a reasonable default */
 #define DEFAULT_DRIFT_TOLERANCE   ((40 * GST_MSECOND) / GST_USECOND)
 
