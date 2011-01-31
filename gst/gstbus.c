@@ -831,6 +831,7 @@ static guint
 gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
     GstBusFunc func, gpointer user_data, GDestroyNotify notify)
 {
+  GMainContext *ctx;
   guint id;
   GSource *source;
 
@@ -847,7 +848,8 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
 
   g_source_set_callback (source, (GSourceFunc) func, user_data, notify);
 
-  id = g_source_attach (source, NULL);
+  ctx = g_main_context_get_thread_default ();
+  id = g_source_attach (source, ctx);
   g_source_unref (source);
 
   if (id) {
@@ -867,7 +869,11 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
  * @notify: the function to call when the source is removed.
  *
  * Adds a bus watch to the default main context with the given @priority (e.g.
- * %G_PRIORITY_DEFAULT).
+ * %G_PRIORITY_DEFAULT). Since 0.10.33 it is also possible to use a non-default
+ * main context set up using g_main_context_push_thread_default() (before
+ * one had to create a bus watch source and attach it to the desired main
+ * context 'manually').
+ *
  * This function is used to receive asynchronous messages in the main loop.
  * There can only be a single bus watch per bus, you must remove it before you
  * can set a new one.
@@ -904,7 +910,11 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * @user_data: user data passed to @func.
  *
  * Adds a bus watch to the default main context with the default priority
- * (%G_PRIORITY_DEFAULT).
+ * (%G_PRIORITY_DEFAULT). Since 0.10.33 it is also possible to use a non-default
+ * main context set up using g_main_context_push_thread_default() (before
+ * one had to create a bus watch source and attach it to the desired main
+ * context 'manually').
+ *
  * This function is used to receive asynchronous messages in the main loop.
  * There can only be a single bus watch per bus, you must remove it before you
  * can set a new one.
@@ -1195,7 +1205,11 @@ gst_bus_disable_sync_message_emission (GstBus * bus)
  * @priority: The priority of the watch.
  *
  * Adds a bus signal watch to the default main context with the given @priority
- * (e.g. %G_PRIORITY_DEFAULT).
+ * (e.g. %G_PRIORITY_DEFAULT). Since 0.10.33 it is also possible to use a
+ * non-default main context set up using g_main_context_push_thread_default()
+ * (before one had to create a bus watch source and attach it to the desired
+ * main context 'manually').
+ *
  * After calling this statement, the bus will emit the "message" signal for each
  * message posted on the bus when the main loop is running.
  *
@@ -1250,7 +1264,11 @@ add_failed:
  * @bus: a #GstBus on which you want to receive the "message" signal
  *
  * Adds a bus signal watch to the default main context with the default priority
- * (%G_PRIORITY_DEFAULT).
+ * (%G_PRIORITY_DEFAULT). Since 0.10.33 it is also possible to use a non-default
+ * main context set up using g_main_context_push_thread_default() (before
+ * one had to create a bus watch source and attach it to the desired main
+ * context 'manually').
+ *
  * After calling this statement, the bus will emit the "message" signal for each
  * message posted on the bus.
  *
