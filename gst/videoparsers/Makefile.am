@@ -8,5 +8,5 @@ libgsth263parse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgsth263parse_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gsth263parse.h h263parse.h \
-	gsth264parse.h gsth264parse.h \
+	gsth264parse.h gsth264parse.h h264parse.h \
 	gstbaseparse.h
