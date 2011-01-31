@@ -317,7 +317,7 @@ C. Keyframes
       GESEffectRegistry *
       ges_registry_get_default (void);
         -> Usecases:
-          + Have a registry of all effects that are on the système (UC-8)
+          + Have a registry of all effects that are on the system (UC-8)
 
       /**
       * ges_effect_registry_get_effect_list:
@@ -329,4 +329,4 @@ C. Keyframes
       GList *
       ges_registry_get_effect_list (GESEffectRegistry *self);
         -> Usecases:
-          + Get all effects descriptors that are on the système (UC-8)
+          + Get all effects descriptors that are on the system (UC-8)
