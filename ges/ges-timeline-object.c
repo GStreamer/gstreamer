@@ -794,8 +794,9 @@ sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object)
 
 /**
 * ges_timeline_object_get_effects:
-*
 * @object: The origin #GESTimelineObject
+*
+* Get effects applied on @object
 *
 * Returns: a #GList of the #GESTrackOperation that are applied on
 * @object order by ascendant priorities.
@@ -824,7 +825,6 @@ ges_timeline_object_get_effects (GESTimelineObject * object)
 
 /**
 * ges_timeline_object_get_top_effect_position:
-*
 * @object: The origin #GESTimelineObject
 * @effect: The #GESTrackEffect we want to get the top position from
 *
