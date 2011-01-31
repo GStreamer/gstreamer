@@ -822,6 +822,24 @@ ges_timeline_object_get_effects (GESTimelineObject * object)
   return ret;
 }
 
+/**
+* ges_timeline_object_get_top_effect_position:
+*
+* @object: The origin #GESTimelineObject
+* @effect: The #GESTrackEffect we want to get the top position from
+*
+* Gets the top position of an effect.
+*
+* Returns: The top position of the effect, -1 if something went wrong.
+*/
+gint
+ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
+    GESTrackOperation * effect)
+{
+  return find_object_mapping (object,
+      GES_TRACK_OBJECT (effect))->priority_offset;
+}
+
 /*
  * PROPERTY NOTIFICATIONS FROM TRACK OBJECTS
  */

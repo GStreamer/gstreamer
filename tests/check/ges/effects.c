@@ -135,7 +135,10 @@ GST_START_TEST (test_get_effects_from_tl)
   effects = ges_timeline_object_get_effects (GES_TIMELINE_OBJECT (source));
 
   for (tmp = effects; tmp; tmp = tmp->next) {
-    int priority = GES_TRACK_OBJECT (tmp->data)->priority;
+    gint priority =
+        ges_timeline_object_get_top_effect_position (GES_TIMELINE_OBJECT
+        (source),
+        GES_TRACK_OPERATION (tmp->data));
     fail_unless (priority > effect_prio);
     fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
     effect_prio = priority;
