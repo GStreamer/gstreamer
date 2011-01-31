@@ -64,6 +64,7 @@ struct _GstRTSPMediaFactory {
   gboolean      shared;
   gboolean      eos_shutdown;
   GstRTSPAuth  *auth;
+  guint         buffer_size;
 
   GMutex       *medias_lock;
   GHashTable   *medias;
@@ -120,6 +121,9 @@ gboolean              gst_rtsp_media_factory_is_eos_shutdown    (GstRTSPMediaFac
 
 void                  gst_rtsp_media_factory_set_auth     (GstRTSPMediaFactory *factory, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_media_factory_get_auth     (GstRTSPMediaFactory *factory);
+
+void                  gst_rtsp_media_factory_set_buffer_size    (GstRTSPMediaFactory * factory, guint size);
+guint                 gst_rtsp_media_factory_get_buffer_size    (GstRTSPMediaFactory * factory);
 
 
 /* creating the media from the factory and a url */
