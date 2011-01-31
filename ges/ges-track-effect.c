@@ -32,7 +32,7 @@ G_DEFINE_TYPE (GESTrackEffect, ges_track_effect, GES_TYPE_TRACK_OPERATION);
 
 static void ges_track_effect_dispose (GObject * object);
 static void ges_track_effect_finalize (GObject * object);
-static GstElement *ges_track_effect_create_element (GESTrackOperation * self);
+static GstElement *ges_track_effect_create_element (GESTrackObject * self);
 
 struct _GESTrackEffectPrivate
 {
@@ -128,7 +128,7 @@ ges_track_effect_finalize (GObject * object)
 }
 
 static GstElement *
-ges_track_effect_create_element (GESTrackOperation * object)
+ges_track_effect_create_element (GESTrackObject * object)
 {
   GstElement *csp, *ret, *effect;
   GstPad *src_target, *sink_target;
