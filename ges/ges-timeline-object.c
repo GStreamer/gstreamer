@@ -93,6 +93,8 @@ struct _GESTimelineObjectPrivate
   gboolean ignore_notifies;
 
   GList *mappings;
+
+  guint nb_effects;
 };
 
 enum
@@ -255,6 +257,7 @@ ges_timeline_object_init (GESTimelineObject * self)
   self->height = 1;
   self->priv->trackobjects = NULL;
   self->priv->layer = NULL;
+  self->priv->nb_effects = 0;
 }
 
 /**
