@@ -22,7 +22,7 @@
 #define DEFAULT_LAUNCH         NULL
 #define DEFAULT_SHARED         FALSE
 #define DEFAULT_EOS_SHUTDOWN   FALSE
-#define DEFAULT_BUFFER_SIZE    0x800000
+#define DEFAULT_BUFFER_SIZE    0x80000
 
 enum
 {
