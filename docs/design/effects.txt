@@ -231,6 +231,20 @@ C. Keyframes
       ges_timeline_object_set_top_effect_position (GESTimelineObject *object,
             GESTrackEffect *effect, guint newposition);
 
+      /**
+      * ges_timeline_object_get_top_effect_position:
+      *
+      * @object: The origin #GESTimelineObject
+      * @effect: The #GESTrackEffect we want to get the top position from
+      *
+      * Gets the top position of an effect.
+      *
+      * Returns: The top position of the effect, -1 if something went wrong.
+      */
+      gint 
+      ges_timeline_object_get_top_effect_position (GESTimelineObject *object,
+            GESTrackEffect *effect);
+
   C - The GESTrackEffect API:
 
       /**
