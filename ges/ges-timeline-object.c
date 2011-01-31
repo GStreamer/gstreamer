@@ -54,6 +54,8 @@ static void
 track_object_priority_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
 
+gint sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object);
+
 G_DEFINE_ABSTRACT_TYPE (GESTimelineObject, ges_timeline_object,
     G_TYPE_INITIALLY_UNOWNED);
 
@@ -736,6 +738,30 @@ ges_timeline_object_get_track_objects (GESTimelineObject * object)
   }
 
   return ret;
+}
+
+gint
+sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object)
+{
+  guint prio_offset_a, prio_offset_b;
+  ObjectMapping *map_a, *map_b;
+  GESTrackObject *obj_a, *obj_b;
+
+  obj_a = GES_TRACK_OBJECT (a);
+  obj_b = GES_TRACK_OBJECT (b);
+
+  map_a = find_object_mapping (object, obj_a);
+  map_b = find_object_mapping (object, obj_b);
+
+  prio_offset_a = map_a->priority_offset;
+  prio_offset_b = map_b->priority_offset;
+
+  if ((gint) prio_offset_a > (guint) prio_offset_b)
+    return 1;
+  if ((guint) prio_offset_a < (guint) prio_offset_b)
+    return -1;
+
+  return 0;
 }
 
 
