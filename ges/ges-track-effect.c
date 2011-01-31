@@ -166,6 +166,16 @@ ges_track_effect_create_element (GESTrackObject * object)
   return ret;
 }
 
+/**
+* ges_track_effect_new_from_bin_desc:
+* @bin_description: The gst-launch like bin description of the effect
+*
+* Creates a new #GESTrackEffect from the description of the bin. This is
+* a convenience method for testing puposes.
+*
+* Returns: a newly created #GESTrackEffect, or %NULL if something went
+* wrong.
+*/
 GESTrackEffect *
 ges_track_effect_new_from_bin_desc (const gchar * bin_description)
 {
