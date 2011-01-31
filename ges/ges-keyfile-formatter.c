@@ -302,7 +302,7 @@ create_object (GKeyFile * kf, gchar * group, GESTimelineLayer * layer)
     goto fail_free_keys;
   }
 
-  GST_DEBUG ("processing parameter list", group);
+  GST_DEBUG ("processing parameter list '%s'", group);
 
   for (p = params, i = 1; i < n_keys; i++, p++) {
     gchar *value;

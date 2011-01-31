@@ -250,7 +250,8 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
         start = pos;
 
         if (end > start) {
-          GST_ERROR ("%d, %d: overlapping transitions!", start, end);
+          GST_ERROR ("%" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ": "
+              "overlapping transitions!", start, end);
           valid = FALSE;
         }
       }
@@ -265,7 +266,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
     valid = FALSE;
   }
 
-  GST_DEBUG ("Finished recalculating: final start pos is: " GST_TIME_FORMAT,
+  GST_DEBUG ("Finished recalculating: final start pos is: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (pos));
 
   GES_TIMELINE_LAYER (self)->max_gnl_priority = priority;

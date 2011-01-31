@@ -234,7 +234,7 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
   tl_obj_layer = ges_timeline_object_get_layer (object);
 
   if (G_UNLIKELY (tl_obj_layer)) {
-    GST_WARNING ("TimelineObject %p already belongs to another layer");
+    GST_WARNING ("TimelineObject %p already belongs to another layer", object);
     g_object_unref (tl_obj_layer);
     return FALSE;
   }
