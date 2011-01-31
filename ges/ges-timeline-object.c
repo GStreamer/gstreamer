@@ -726,7 +726,7 @@ ges_timeline_object_find_track_object (GESTimelineObject * object,
  * Note: The reference count of the returned #GESTimelineLayer will be increased,
  * The user is responsible for unreffing it.
  *
- * Returns: (transfer full): The #GESTimelineLayer where this @object is being used, #NULL if 
+ * Returns: (transfer full): The #GESTimelineLayer where this @object is being used, #NULL if
  * it is not used on any layer.
  */
 GESTimelineLayer *
@@ -748,7 +748,7 @@ ges_timeline_object_get_layer (GESTimelineObject * object)
  *
  * Returns: (transfer full) (element-type GESTrackObject): The list of
  * trackobject contained in @object.
- * The user is responsible for unreffing the contained objects 
+ * The user is responsible for unreffing the contained objects
  * and freeing the list.
  */
 GList *

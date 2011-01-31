@@ -280,7 +280,7 @@ ges_timeline_object_set_duration
 ges_timeline_object_get_layer
 ges_timeline_object_find_track_object
 ges_timeline_object_add_track_object
-ges_timeline_object_get_effects 
+ges_timeline_object_get_effects
 <SUBSECTION Standard>
 GES_TIMELINE_OBJECT_DURATION
 GES_TIMELINE_OBJECT_INPOINT
