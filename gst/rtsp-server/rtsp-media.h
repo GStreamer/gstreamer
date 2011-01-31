@@ -206,6 +206,7 @@ struct _GstRTSPMedia {
   gboolean           reused;
   gboolean           is_ipv6;
   gboolean           eos_shutdown;
+  guint              buffer_size;
   GstRTSPAuth       *auth;
 
   GstElement        *element;
@@ -282,6 +283,9 @@ gboolean              gst_rtsp_media_is_eos_shutdown  (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_auth         (GstRTSPMedia *media, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_media_get_auth         (GstRTSPMedia *media);
+
+void                  gst_rtsp_media_set_buffer_size  (GstRTSPMedia *media, guint size);
+guint                 gst_rtsp_media_get_buffer_size  (GstRTSPMedia *media);
 
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);

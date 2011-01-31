@@ -31,6 +31,7 @@
 #define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
 //#define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP_MCAST
 #define DEFAULT_EOS_SHUTDOWN   FALSE
+#define DEFAULT_BUFFER_SIZE    0x800000
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
@@ -42,6 +43,7 @@ enum
   PROP_REUSABLE,
   PROP_PROTOCOLS,
   PROP_EOS_SHUTDOWN,
+  PROP_BUFFER_SIZE,
   PROP_LAST
 };
 
@@ -106,6 +108,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "Send an EOS event to the pipeline before unpreparing",
           DEFAULT_EOS_SHUTDOWN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
+      g_param_spec_uint ("buffer-size", "Buffer Size",
+          "The kernel UDP buffer size to use", 0, G_MAXUINT,
+          DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_PREPARED] =
       g_signal_new ("prepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, prepared), NULL, NULL,
@@ -150,6 +157,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   media->reusable = DEFAULT_REUSABLE;
   media->protocols = DEFAULT_PROTOCOLS;
   media->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
+  media->buffer_size = DEFAULT_BUFFER_SIZE;
 }
 
 /* FIXME. this should be done in multiudpsink */
@@ -289,6 +297,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_EOS_SHUTDOWN:
       g_value_set_boolean (value, gst_rtsp_media_is_eos_shutdown (media));
       break;
+    case PROP_BUFFER_SIZE:
+      g_value_set_uint (value, gst_rtsp_media_get_buffer_size (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -312,6 +323,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_EOS_SHUTDOWN:
       gst_rtsp_media_set_eos_shutdown (media, g_value_get_boolean (value));
+      break;
+    case PROP_BUFFER_SIZE:
+      gst_rtsp_media_set_buffer_size (media, g_value_get_uint (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -523,6 +537,37 @@ gst_rtsp_media_is_eos_shutdown (GstRTSPMedia * media)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
   return media->eos_shutdown;
+}
+
+/**
+ * gst_rtsp_media_set_buffer_size:
+ * @media: a #GstRTSPMedia
+ * @size: the new value
+ *
+ * Set the kernel UDP buffer size.
+ */
+void
+gst_rtsp_media_set_buffer_size (GstRTSPMedia * media, guint size)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  media->buffer_size = size;
+}
+
+/**
+ * gst_rtsp_media_get_buffer_size:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the kernel UDP buffer size.
+ *
+ * Returns: the kernel UDP buffer size.
+ */
+guint
+gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
+{
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  return media->buffer_size;
 }
 
 /**
@@ -906,7 +951,7 @@ again:
 
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (udpsink0),
           "buffer-size")) {
-    g_object_set (G_OBJECT (udpsink0), "buffer-size", 0x80000, NULL);
+    g_object_set (G_OBJECT (udpsink0), "buffer-size", media->buffer_size, NULL);
   } else {
     GST_WARNING ("multiudpsink version found without buffer-size property");
   }
