@@ -792,6 +792,35 @@ sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object)
   return 0;
 }
 
+/**
+* ges_timeline_object_get_effects:
+*
+* @object: The origin #GESTimelineObject
+*
+* Returns: a #GList of the #GESTrackOperation that are applied on
+* @object order by ascendant priorities.
+* The refcount of the objects will be increased. The user will have to
+* unref each #GESTrackOperation and free the #GList.
+*/
+GList *
+ges_timeline_object_get_effects (GESTimelineObject * object)
+{
+  GList *tmp, *ret;
+  guint i;
+
+  ret = NULL;
+
+  for (tmp = object->priv->trackobjects, i = 0;
+      i < object->priv->nb_effects; tmp = tmp->next, i++) {
+    if (GES_IS_TRACK_EFFECT (tmp->data)) {
+      ret = g_list_insert_sorted_with_data (ret, tmp->data,
+          (GCompareDataFunc) sort_track_effects, object);
+      g_object_ref (tmp->data);
+    }
+  }
+
+  return ret;
+}
 
 /*
  * PROPERTY NOTIFICATIONS FROM TRACK OBJECTS

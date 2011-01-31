@@ -241,6 +241,9 @@ gboolean
 ges_timeline_object_add_track_object (GESTimelineObject *object, GESTrackObject
     *trobj);
 
+GList *
+ges_timeline_object_get_effects (GESTimelineObject *object);
+
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_OBJECT */

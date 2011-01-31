@@ -81,6 +81,76 @@ GST_START_TEST (test_add_effect_to_tl_object)
 
 GST_END_TEST;
 
+GST_START_TEST (test_get_effects_from_tl)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrack *track_video;
+  GESTrackEffect *track_effect, *track_effect1, *track_effect2;
+  GESTimelineTestSource *source;
+  GList *effects, *tmp = NULL;
+  gint effect_prio = -1;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  track_video = ges_track_video_raw_new ();
+
+  ges_timeline_add_track (timeline, track_video);
+  ges_timeline_add_layer (timeline, layer);
+
+  source = ges_timeline_test_source_new ();
+
+  g_object_set (source, "duration", 10 * GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+      (GESTimelineObject *) source, 0);
+
+
+  GST_DEBUG ("Create effect");
+  track_effect = ges_track_effect_new_from_bin_desc ("identity");
+  track_effect1 = ges_track_effect_new_from_bin_desc ("identity");
+  track_effect2 = ges_track_effect_new_from_bin_desc ("identity");
+
+  fail_unless (GES_IS_TRACK_EFFECT (track_effect));
+  fail_unless (GES_IS_TRACK_EFFECT (track_effect1));
+  fail_unless (GES_IS_TRACK_EFFECT (track_effect2));
+
+  fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
+          (source), GES_TRACK_OBJECT (track_effect)));
+  fail_unless (ges_track_add_object (track_video,
+          GES_TRACK_OBJECT (track_effect)));
+
+  fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
+          (source), GES_TRACK_OBJECT (track_effect1)));
+  fail_unless (ges_track_add_object (track_video,
+          GES_TRACK_OBJECT (track_effect1)));
+
+  fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
+          (source), GES_TRACK_OBJECT (track_effect2)));
+  fail_unless (ges_track_add_object (track_video,
+          GES_TRACK_OBJECT (track_effect2)));
+
+  effects = ges_timeline_object_get_effects (GES_TIMELINE_OBJECT (source));
+
+  for (tmp = effects; tmp; tmp = tmp->next) {
+    int priority = GES_TRACK_OBJECT (tmp->data)->priority;
+    fail_unless (priority > effect_prio);
+    fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
+    effect_prio = priority;
+
+    g_object_unref (tmp->data);
+  }
+  g_list_free (effects);
+
+  ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
+
+  g_object_unref (timeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -91,6 +161,7 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, test_effect_basic);
   tcase_add_test (tc_chain, test_add_effect_to_tl_object);
+  tcase_add_test (tc_chain, test_get_effects_from_tl);
 
   return s;
 }
