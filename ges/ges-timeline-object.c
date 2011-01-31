@@ -360,9 +360,11 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
     * trobj)
 {
   ObjectMapping *mapping;
+  GList *tmp;
+  GESTimelineObjectPrivate *priv = object->priv;
 
   GST_LOG ("Got a TrackObject : %p , setting the timeline object as its"
-      "creator", trobj);
+      "creator. Is a TrackOperation %i", trobj, GES_IS_TRACK_OPERATION (trobj));
 
   if (!trobj)
     return FALSE;
@@ -372,17 +374,43 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
 
   mapping = g_slice_new0 (ObjectMapping);
   mapping->object = trobj;
-  object->priv->mappings = g_list_append (object->priv->mappings, mapping);
+  priv->mappings = g_list_append (priv->mappings, mapping);
 
   GST_DEBUG ("Adding TrackObject to the list of controlled track objects");
   /* We steal the initial reference */
-  object->priv->trackobjects =
-      g_list_append (object->priv->trackobjects, trobj);
 
   GST_DEBUG ("Setting properties on newly created TrackObject");
 
+  mapping->priority_offset = priv->nb_effects;
+  ges_track_object_set_priority (trobj,
+      object->priority + mapping->priority_offset);
+
+
+  /* If the trackobject is an operation:
+   *  - We add it on top of the list of TrackOperation
+   *  - We put all TrackObject present in the TimelineObject 
+   *    which are not TrackEffect on top of them
+   *
+   * FIXME: Let the full control over priorities to the user
+   */
+  if (GES_IS_TRACK_OPERATION (trobj)) {
+    for (tmp = g_list_nth (priv->trackobjects, priv->nb_effects); tmp;
+        tmp = tmp->next) {
+      GESTrackObject *tmpo = GES_TRACK_OBJECT (tmp->data);
+
+      /* We make sure not to move the entire #TimelineObject */
+      ges_track_object_set_locked (tmpo, FALSE);
+      ges_track_object_set_priority (tmpo, tmpo->priority + 1);
+      ges_track_object_set_locked (tmpo, TRUE);
+    }
+    priv->nb_effects++;
+  }
+
+  object->priv->trackobjects =
+      g_list_insert_sorted_with_data (object->priv->trackobjects, trobj,
+      (GCompareDataFunc) sort_track_effects, object);
+
   ges_track_object_set_start (trobj, object->start);
-  ges_track_object_set_priority (trobj, object->priority);
   ges_track_object_set_duration (trobj, object->duration);
   ges_track_object_set_inpoint (trobj, object->inpoint);
 
