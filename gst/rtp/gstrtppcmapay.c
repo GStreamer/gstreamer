@@ -53,7 +53,7 @@ static GstStaticPadTemplate gst_rtp_pcma_pay_src_template =
 static gboolean gst_rtp_pcma_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRtpPmcaPay, gst_rtp_pcma_pay, GstBaseRTPAudioPayload,
+GST_BOILERPLATE (GstRtpPcmaPay, gst_rtp_pcma_pay, GstBaseRTPAudioPayload,
     GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
 
 static void
@@ -72,7 +72,7 @@ gst_rtp_pcma_pay_base_init (gpointer klass)
 }
 
 static void
-gst_rtp_pcma_pay_class_init (GstRtpPmcaPayClass * klass)
+gst_rtp_pcma_pay_class_init (GstRtpPcmaPayClass * klass)
 {
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
@@ -82,7 +82,7 @@ gst_rtp_pcma_pay_class_init (GstRtpPmcaPayClass * klass)
 }
 
 static void
-gst_rtp_pcma_pay_init (GstRtpPmcaPay * rtppcmapay, GstRtpPmcaPayClass * klass)
+gst_rtp_pcma_pay_init (GstRtpPcmaPay * rtppcmapay, GstRtpPcmaPayClass * klass)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
 
