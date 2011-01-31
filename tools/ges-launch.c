@@ -223,7 +223,7 @@ create_timeline (int nbargs, gchar ** argv)
         g_error ("'%s': could not open path!", source);
 
       if (!(uri = ensure_uri (source))) {
-        GST_ERROR ("couldn't create uri for '%'s", source);
+        GST_ERROR ("couldn't create uri for '%s'", source);
         exit (-1);
       }
       inpoint = str_to_time (argv[i * 3 + 1]);
