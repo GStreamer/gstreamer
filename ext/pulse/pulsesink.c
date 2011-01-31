@@ -1339,11 +1339,11 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
     towrite = out_samples * bps;
 
-    /* Only ever write segsize bytes at once. This will
-     * also limit the PA shm buffer to segsize
+    /* Only ever write bufsize bytes at once. This will
+     * also limit the PA shm buffer to bufsize
      */
-    if (towrite > buf->spec.segsize)
-      towrite = buf->spec.segsize;
+    if (towrite > bufsize)
+      towrite = bufsize;
 
     if ((pbuf->m_writable < towrite) || (offset != pbuf->m_lastoffset)) {
       /* if no room left or discontinuity in offset,
@@ -1392,9 +1392,9 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       }
 
       /* make sure we only buffer up latency-time samples */
-      if (pbuf->m_writable > buf->spec.segsize) {
+      if (pbuf->m_writable > bufsize) {
         /* limit buffering to latency-time value */
-        pbuf->m_writable = buf->spec.segsize;
+        pbuf->m_writable = bufsize;
 
         GST_LOG_OBJECT (psink, "Limiting buffering to %" G_GSIZE_FORMAT,
             pbuf->m_writable);
@@ -1413,9 +1413,9 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
           pbuf->m_writable);
 
       /* Just to make sure that we didn't get more than requested */
-      if (pbuf->m_writable > buf->spec.segsize) {
+      if (pbuf->m_writable > bufsize) {
         /* limit buffering to latency-time value */
-        pbuf->m_writable = buf->spec.segsize;
+        pbuf->m_writable = bufsize;
       }
     }
 
