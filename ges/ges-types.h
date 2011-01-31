@@ -50,6 +50,9 @@ typedef struct _GESTimelinePipelineClass GESTimelinePipelineClass;
 typedef struct _GESTimelineSource GESTimelineSource;
 typedef struct _GESTimelineSourceClass GESTimelineSourceClass;
 
+typedef struct _GESTimelineEffect GESTimelineEffect;
+typedef struct _GESTimelineEffectClass GESTimelineEffectClass;
+
 typedef struct _GESTimelineFileSource GESTimelineFileSource;
 typedef struct _GESTimelineFileSourceClass GESTimelineFileSourceClass;
 

@@ -423,6 +423,23 @@ GES_TIMELINE_TRANSITION_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>ges-timeline-effect</FILE>
+<TITLE>GESTimelineEffect</TITLE>
+GESTimelineEffect
+ges_timeline_effect_new_from_bin_desc
+<SUBSECTION Standard>
+GESTimelineEffectClass
+GESTimelineEffectPrivate
+GES_TIMELINE_EFFECT
+GES_IS_TIMELINE_EFFECT
+GES_TYPE_TIMELINE_EFFECT
+ges_timeline_effect_get_type
+GES_TIMELINE_EFFECT_CLASS
+GES_IS_TIMELINE_EFFECT_CLASS
+GES_TIMELINE_EFFECT_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>ges-timeline-standard-transition</FILE>
 <TITLE>GESTimelineStandardTransition</TITLE>
 GESTimelineStandardTransition
@@ -704,9 +721,10 @@ ges_keyfile_formatter_get_type
 <FILE>ges-track-effect</FILE>
 <TITLE>GESTrackEffect</TITLE>
 GESTrackEffect
-GESTrackEffectClass
 ges_track_effect_new_from_bin_desc
 <SUBSECTION Standard>
+GESTrackEffectClass
+GESTrackEffectPrivate
 GES_IS_TRACK_EFFECT
 GES_IS_TRACK_EFFECT_CLASS
 GES_TRACK_EFFECT
