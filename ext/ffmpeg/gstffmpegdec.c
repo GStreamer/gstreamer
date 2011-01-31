@@ -1294,9 +1294,22 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   /* ERRORS */
 no_caps:
   {
-    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-        ("could not find caps for codec (%s), unknown type",
-            oclass->in_plugin->name));
+#ifdef HAVE_FFMPEG_UNINSTALLED
+    /* using internal ffmpeg snapshot */
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
+        ("Could not find GStreamer caps mapping for FFmpeg codec '%s'.",
+            oclass->in_plugin->name), (NULL));
+#else
+    /* using external ffmpeg */
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
+        ("Could not find GStreamer caps mapping for FFmpeg codec '%s', and "
+            "you are using an external libavcodec. This is most likely due to "
+            "a packaging problem and/or libavcodec having been upgraded to a "
+            "version that is not compatible with this version of "
+            "gstreamer-ffmpeg. Make sure your gstreamer-ffmpeg and libavcodec "
+            "packages come from the same source/repository.",
+            oclass->in_plugin->name), (NULL));
+#endif
     return FALSE;
   }
 caps_failed:
