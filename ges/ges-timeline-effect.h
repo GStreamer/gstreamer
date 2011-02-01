@@ -73,9 +73,8 @@ struct _GESTimelineEffectClass {
 
 GType ges_timeline_effect_get_type (void);
 
-GESTimelineEffect *
-ges_timeline_effect_new_from_bin_desc(const gchar *bin_description);
+GESTimelineEffect *ges_timeline_effect_new_from_bin_desc (const gchar *
+    video_bin_description, const gchar * audio_bin_description);
 
 G_END_DECLS
-
 #endif /* _GES_TIMELINE_EFFECT */

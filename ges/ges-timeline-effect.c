@@ -38,13 +38,15 @@ G_DEFINE_TYPE (GESTimelineEffect, ges_timeline_effect,
 
 struct _GESTimelineEffectPrivate
 {
-  gchar *bin_description;
+  gchar *video_bin_description;
+  gchar *audio_bin_description;
 };
 
 enum
 {
   PROP_0,
-  PROP_BIN_DESCRIPTION,
+  PROP_VIDEO_BIN_DESCRIPTION,
+  PROP_AUDIO_BIN_DESCRIPTION,
 };
 
 static GESTrackObject *ges_tl_effect_create_track_object (GESTimelineObject
@@ -67,8 +69,11 @@ ges_timeline_effect_set_property (GObject * object,
   GESTimelineEffect *self = GES_TIMELINE_EFFECT (object);
 
   switch (property_id) {
-    case PROP_BIN_DESCRIPTION:
-      self->priv->bin_description = g_value_dup_string (value);
+    case PROP_VIDEO_BIN_DESCRIPTION:
+      self->priv->video_bin_description = g_value_dup_string (value);
+      break;
+    case PROP_AUDIO_BIN_DESCRIPTION:
+      self->priv->audio_bin_description = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -87,16 +92,29 @@ ges_timeline_effect_class_init (GESTimelineEffectClass * klass)
   object_class->set_property = ges_timeline_effect_set_property;
 
   /**
-   * GESTrackEffect:bin_description:
+   * GESTimelineEffect:video_bin_description:
    *
-   * The description of the effect bin with a gst-launch-style
-   * pipeline description.
+   * The description of the video track of the effect bin with a gst-launch-style
+   * pipeline description. This should be used for test purposes.
    * exemple: videobalance saturation=1.5 hue=+0.5
    */
-  g_object_class_install_property (object_class, PROP_BIN_DESCRIPTION,
-      g_param_spec_string ("bin-description",
+  g_object_class_install_property (object_class, PROP_VIDEO_BIN_DESCRIPTION,
+      g_param_spec_string ("video-bin-description",
+          "Video bin description",
+          "Description of the video track of the effect",
+          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+  /**
+   * GESTimelineEffect:audio_bin_description:
+   *
+   * The description of the audio track of the effect bin with a gst-launch-style
+   * pipeline description. This should be used for test purposes.
+   * exemple: videobalance saturation=1.5 hue=+0.5
+   */
+  g_object_class_install_property (object_class, PROP_AUDIO_BIN_DESCRIPTION,
+      g_param_spec_string ("audio-bin-description",
           "bin description",
-          "Bin description of the effect",
+          "Bin description of the audio track of the effect",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   timobj_class->create_track_object = ges_tl_effect_create_track_object;
@@ -119,7 +137,8 @@ ges_tl_effect_create_track_object (GESTimelineObject * self, GESTrack * track)
 
 /**
 * ges_timeline_effect_new_from_bin_desc:
-* @bin_description: The gst-launch like bin description of the effect
+* @video_bin_description: The gst-launch like bin description of the effect
+* @audio_bin_description: The gst-launch like bin description of the effect
 *
 * Creates a new #GESTimelineEffect from the description of the bin. This is
 * a convenience method for testing puposes.
@@ -128,8 +147,10 @@ ges_tl_effect_create_track_object (GESTimelineObject * self, GESTrack * track)
 * wrong.
 */
 GESTimelineEffect *
-ges_timeline_effect_new_from_bin_desc (const gchar * bin_description)
+ges_timeline_effect_new_from_bin_desc (const gchar * video_bin_description,
+    const gchar * audio_bin_description)
 {
-  return g_object_new (GES_TYPE_TIMELINE_EFFECT, "bin-description",
-      bin_description, NULL);
+  return g_object_new (GES_TYPE_TIMELINE_EFFECT,
+      "video-bin-description", video_bin_description,
+      "audio-bin-description", audio_bin_description, NULL);
 }
