@@ -90,6 +90,7 @@ GST_START_TEST (test_get_effects_from_tl)
   GESTimelineTestSource *source;
   GList *effects, *tmp = NULL;
   gint effect_prio = -1;
+  guint tl_object_height = 0;
 
   ges_init ();
 
@@ -132,8 +133,10 @@ GST_START_TEST (test_get_effects_from_tl)
   fail_unless (ges_track_add_object (track_video,
           GES_TRACK_OBJECT (track_effect2)));
 
-  effects = ges_timeline_object_get_effects (GES_TIMELINE_OBJECT (source));
+  g_object_get (G_OBJECT (source), "height", &tl_object_height, NULL);
+  fail_unless (tl_object_height == 4);
 
+  effects = ges_timeline_object_get_effects (GES_TIMELINE_OBJECT (source));
   for (tmp = effects; tmp; tmp = tmp->next) {
     gint priority =
         ges_timeline_object_get_top_effect_position (GES_TIMELINE_OBJECT
