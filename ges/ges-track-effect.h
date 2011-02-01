@@ -46,10 +46,12 @@ typedef struct _GESTrackEffectPrivate   GESTrackEffectPrivate;
  */
 struct _GESTrackEffect
 {
-  GESTrackOperation parent;
-
   /*< private > */
+  GESTrackOperation parent;
   GESTrackEffectPrivate *priv;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -59,9 +61,11 @@ struct _GESTrackEffect
 
 struct _GESTrackEffectClass
 {
-  GESTrackOperationClass parent_class;
-
   /*< private > */
+  GESTrackOperationClass parent_class;
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
+
 };
 
 GType ges_track_effect_get_type (void);
