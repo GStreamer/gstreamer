@@ -53,6 +53,7 @@ track_object_duration_changed_cb (GESTrackObject * child,
 static void
 track_object_priority_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
+static void update_height (GESTimelineObject * object);
 
 gint sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object);
 
@@ -403,6 +404,8 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
       ges_track_object_set_priority (tmpo, tmpo->priority + 1);
       ges_track_object_set_locked (tmpo, TRUE);
     }
+
+    update_height (object);
     priv->nb_effects++;
   }
 
@@ -840,6 +843,34 @@ ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
       GES_TRACK_OBJECT (effect))->priority_offset;
 }
 
+static void
+update_height (GESTimelineObject * object)
+{
+  GList *tmp;
+  guint32 min_prio = G_MAXUINT32, max_prio = 0;
+
+  GST_DEBUG ("Updating height");
+  /* Go over all childs and check if height has changed */
+  for (tmp = object->priv->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *tmpo = (GESTrackObject *) tmp->data;
+
+    if (tmpo->priority < min_prio)
+      min_prio = tmpo->priority;
+    if (tmpo->priority > max_prio)
+      max_prio = tmpo->priority;
+  }
+
+  /* FIXME : We only grow the height */
+  if (object->height < (max_prio - min_prio + 1)) {
+    object->height = max_prio - min_prio + 1;
+#if GLIB_CHECK_VERSION(2,26,0)
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_HEIGHT]);
+#else
+    g_object_notify (G_OBJECT (object), "height");
+#endif
+  }
+}
+
 /*
  * PROPERTY NOTIFICATIONS FROM TRACK OBJECTS
  */
@@ -900,31 +931,11 @@ track_object_priority_changed_cb (GESTrackObject * child,
     return;
 
   if (!ges_track_object_is_locked (child)) {
-    GList *tmp;
-    guint32 min_prio = G_MAXUINT32, max_prio = 0;
 
     /* Update the internal priority_offset */
     map->priority_offset = object->priority - child->priority;
+    update_height (object);
 
-    /* Go over all childs and check if height has changed */
-    for (tmp = object->priv->trackobjects; tmp; tmp = tmp->next) {
-      GESTrackObject *tmpo = (GESTrackObject *) tmp->data;
-
-      if (tmpo->priority < min_prio)
-        min_prio = tmpo->priority;
-      if (tmpo->priority > max_prio)
-        max_prio = tmpo->priority;
-    }
-
-    /* FIXME : We only grow the height */
-    if (object->height < (max_prio - min_prio + 1)) {
-      object->height = max_prio - min_prio + 1;
-#if GLIB_CHECK_VERSION(2,26,0)
-      g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_HEIGHT]);
-#else
-      g_object_notify (G_OBJECT (object), "height");
-#endif
-    }
   } else {
     /* Or update the parent priority */
     ges_timeline_object_set_priority (object,
