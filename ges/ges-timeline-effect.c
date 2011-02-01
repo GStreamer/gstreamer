@@ -21,7 +21,7 @@
  * SECTION: ges-timeline-effect
  * @short_description: An effect in a #GESTimelineLayer
  *
- * The effect will be applied on the sources that have lower priorities 
+ * The effect will be applied on the sources that have lower priorities
  * (higher number) between the inpoint and the end of it.
  *
  * In a #GESSimpleTimelineLayer, the priorities will be set for you but if
@@ -132,6 +132,29 @@ ges_timeline_effect_init (GESTimelineEffect * self)
 static GESTrackObject *
 ges_tl_effect_create_track_object (GESTimelineObject * self, GESTrack * track)
 {
+  GESTimelineEffect *effect = GES_TIMELINE_EFFECT (self);
+
+
+  if (track->type == GES_TRACK_TYPE_VIDEO) {
+    if (effect->priv->video_bin_description != NULL) {
+      GST_DEBUG ("Creating a GESTrackEffect for the video track");
+      return GES_TRACK_OBJECT (ges_track_effect_new_from_bin_desc
+          (effect->priv->video_bin_description));
+    }
+    GST_DEBUG ("Can't create the track Object, the\
+                 video_bin_description is not set");
+  }
+  if (track->type == GES_TRACK_TYPE_AUDIO) {
+    if (effect->priv->audio_bin_description != NULL) {
+      GST_DEBUG ("Creating a GESTrackEffect for the audio track");
+      return GES_TRACK_OBJECT (ges_track_effect_new_from_bin_desc
+          (effect->priv->audio_bin_description));
+    }
+    GST_DEBUG ("Can't create the track Object, the\
+                 audio_bin_description is not set");
+  }
+
+  GST_WARNING ("Effect doesn't handle this track type");
   return NULL;
 }
 

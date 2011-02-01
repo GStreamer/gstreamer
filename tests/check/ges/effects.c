@@ -11,7 +11,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
- * You should have received track_audio copy of the GNU Library General Public
+ * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
@@ -157,6 +157,63 @@ GST_START_TEST (test_get_effects_from_tl)
 
 GST_END_TEST;
 
+GST_START_TEST (test_tl_effect)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrack *track_audio, *track_video;
+  GESTimelineEffect *tl_effect;
+  GList *effects, *tmp;
+  gint i, tl_object_height;
+  gint effect_prio = -1;
+  /* FIXME the order of track type is not well defined */
+  guint track_type[2] = { GES_TRACK_TYPE_AUDIO, GES_TRACK_TYPE_VIDEO };
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  track_audio = ges_track_audio_raw_new ();
+  track_video = ges_track_video_raw_new ();
+
+  ges_timeline_add_track (timeline, track_audio);
+  ges_timeline_add_track (timeline, track_video);
+  ges_timeline_add_layer (timeline, layer);
+
+  GST_DEBUG ("Create effect");
+  tl_effect = ges_timeline_effect_new_from_bin_desc ("identity", "identity");
+
+  g_object_set (tl_effect, "duration", 25 * GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+      (GESTimelineObject *) tl_effect, 0);
+
+  g_object_get (tl_effect, "height", &tl_object_height, NULL);
+  fail_unless (tl_object_height == 2);
+
+  effects = ges_timeline_object_get_effects (GES_TIMELINE_OBJECT (tl_effect));
+  for (tmp = effects, i = 0; tmp; tmp = tmp->next, i++) {
+    gint priority =
+        ges_timeline_object_get_top_effect_position (GES_TIMELINE_OBJECT
+        (tl_effect),
+        GES_TRACK_OPERATION (tmp->data));
+    fail_unless (priority > effect_prio);
+    fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
+    fail_unless (ges_track_object_get_track (GES_TRACK_OBJECT (tmp->data))->
+        type == track_type[i]);
+    effect_prio = priority;
+
+    g_object_unref (tmp->data);
+  }
+  g_list_free (effects);
+
+  ges_timeline_layer_remove_object (layer, (GESTimelineObject *) tl_effect);
+
+  g_object_unref (timeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -168,6 +225,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_effect_basic);
   tcase_add_test (tc_chain, test_add_effect_to_tl_object);
   tcase_add_test (tc_chain, test_get_effects_from_tl);
+  tcase_add_test (tc_chain, test_tl_effect);
 
   return s;
 }
