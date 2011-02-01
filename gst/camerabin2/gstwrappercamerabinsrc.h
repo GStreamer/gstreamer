@@ -88,6 +88,9 @@ struct _GstWrapperCameraBinSrc
 
   GstPadEventFunction srcpad_event_func;
 
+  /* For changing caps without losing timestamps */
+  gboolean drop_newseg;
+
   /* Application configurable elements */
   GstElement *app_vid_src;
 

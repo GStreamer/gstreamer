@@ -165,12 +165,50 @@ static void
 gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
     GstCaps * caps)
 {
+  GstClock *clock;
+  gint64 base_time;
+
   GST_DEBUG_OBJECT (self, "Resetting src caps to %" GST_PTR_FORMAT, caps);
   if (self->src_vid_src) {
+    clock = gst_element_get_clock (self->src_vid_src);
+    base_time = gst_element_get_base_time (self->src_vid_src);
+
     gst_element_set_state (self->src_vid_src, GST_STATE_NULL);
     set_capsfilter_caps (self, caps);
+
+    self->drop_newseg = TRUE;
+
     GST_DEBUG_OBJECT (self, "Bringing source up");
     gst_element_sync_state_with_parent (self->src_vid_src);
+
+    gst_element_set_clock (self->src_vid_src, clock);
+    gst_element_set_base_time (self->src_vid_src, base_time);
+
+    if (GST_IS_BIN (self->src_vid_src)) {
+      GstIterator *it = gst_bin_iterate_elements (GST_BIN (self->src_vid_src));
+      gpointer item = NULL;
+      gboolean done = FALSE;
+      while (!done) {
+        switch (gst_iterator_next (it, &item)) {
+          case GST_ITERATOR_OK:
+            gst_element_set_base_time (GST_ELEMENT (item), base_time);
+            gst_object_unref (item);
+            break;
+          case GST_ITERATOR_RESYNC:
+            gst_iterator_resync (it);
+            break;
+          case GST_ITERATOR_ERROR:
+            done = TRUE;
+            break;
+          case GST_ITERATOR_DONE:
+            done = TRUE;
+            break;
+        }
+      }
+      gst_iterator_free (it);
+    }
+
+    gst_object_unref (clock);
   }
 }
 
@@ -286,6 +324,30 @@ gst_wrapper_camera_bin_src_event (GstPad * pad, GstEvent * event)
   return src->srcpad_event_func (pad, event);
 }
 
+static gboolean
+gst_wrapper_camera_src_src_event_probe (GstPad * pad, GstEvent * evt,
+    gpointer udata)
+{
+  gboolean ret = TRUE;
+  GstWrapperCameraBinSrc *self = udata;
+
+  switch (GST_EVENT_TYPE (evt)) {
+    case GST_EVENT_EOS:
+      /* drop */
+      ret = FALSE;
+      break;
+    case GST_EVENT_NEWSEGMENT:
+      if (self->drop_newseg) {
+        ret = FALSE;
+        self->drop_newseg = FALSE;
+      }
+      break;
+    default:
+      break;
+  }
+  return ret;
+}
+
 /**
  * gst_wrapper_camera_bin_src_construct_pipeline:
  * @bcamsrc: camerasrc object
@@ -334,7 +396,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       pad = gst_element_get_static_pad (self->src_vid_src, "src");
 
       self->src_event_probe_id = gst_pad_add_event_probe (pad,
-          (GCallback) gst_camerabin_drop_eos_probe, NULL);
+          (GCallback) gst_wrapper_camera_src_src_event_probe, self);
       gst_object_unref (pad);
     }
 
@@ -991,6 +1053,9 @@ gst_wrapper_camera_bin_src_change_state (GstElement * element,
     goto end;
 
   switch (trans) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      self->drop_newseg = FALSE;
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_element_set_state (self->preview_pipeline->pipeline, GST_STATE_NULL);
       break;
