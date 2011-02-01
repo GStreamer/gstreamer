@@ -287,6 +287,7 @@ check_preview_image (void)
 {
   fail_unless (preview_buffer != NULL);
   if (preview_caps) {
+    fail_unless (GST_BUFFER_CAPS (preview_buffer) != NULL);
     fail_unless (gst_caps_can_intersect (GST_BUFFER_CAPS (preview_buffer),
             preview_caps));
   }
@@ -786,6 +787,11 @@ GST_START_TEST (test_image_capture_previews)
     g_main_loop_run (main_loop);
 
     check_preview_image ();
+
+    if (preview_buffer)
+      gst_buffer_unref (preview_buffer);
+    preview_buffer = NULL;
+    gst_caps_replace (&preview_caps, NULL);
   }
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
