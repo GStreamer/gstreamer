@@ -115,9 +115,13 @@ gst_wrapper_camera_bin_src_set_property (GObject * object,
     case PROP_PREVIEW_CAPS:
       gst_caps_replace (&self->preview_caps,
           (GstCaps *) gst_value_get_caps (value));
-      if (self->preview_pipeline)
+      if (self->preview_pipeline) {
+        GST_DEBUG_OBJECT (self,
+            "Setting preview pipeline caps %" GST_PTR_FORMAT,
+            self->preview_caps);
         gst_camerabin_preview_set_caps (self->preview_pipeline,
             (GstCaps *) gst_value_get_caps (value));
+      }
       break;
     case PROP_PREVIEW_FILTER:
       if (self->preview_filter)
@@ -236,8 +240,10 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
     /* post preview */
     /* TODO This can likely be optimized if the viewfinder caps is the same as
      * the preview caps, avoiding another scaling of the same buffer. */
-    if (self->post_previews)
+    if (self->post_previews) {
+      GST_DEBUG_OBJECT (self, "Posting preview for image");
       gst_camerabin_preview_pipeline_post (self->preview_pipeline, buffer);
+    }
 
     if (self->image_capture_count == 0) {
       gst_base_camera_src_finish_capture (camerasrc);
@@ -285,8 +291,10 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_RUNNING;
 
     /* post preview */
-    if (self->post_previews)
+    if (self->post_previews) {
+      GST_DEBUG_OBJECT (self, "Posting preview for video");
       gst_camerabin_preview_pipeline_post (self->preview_pipeline, buffer);
+    }
 
     ret = TRUE;
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_FINISHING) {
@@ -504,8 +512,11 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
 
   g_assert (self->preview_pipeline != NULL);
   self->preview_filter_changed = FALSE;
-  if (self->preview_caps)
+  if (self->preview_caps) {
+    GST_DEBUG_OBJECT (self, "Setting preview pipeline caps %" GST_PTR_FORMAT,
+        self->preview_caps);
     gst_camerabin_preview_set_caps (self->preview_pipeline, self->preview_caps);
+  }
 
   ret = TRUE;
   self->elements_created = TRUE;

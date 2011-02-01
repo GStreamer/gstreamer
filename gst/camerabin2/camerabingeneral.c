@@ -375,6 +375,8 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
   gst_app_sink_set_callbacks ((GstAppSink *) data->appsink, &callbacks, data,
       NULL);
 
+  g_object_set (data->appsink, "sync", FALSE, NULL);
+
   data->element = element;
   data->filter = filter;
 
