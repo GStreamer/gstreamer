@@ -73,6 +73,7 @@ typedef enum
   J2K_MARKER_SOC = 0x4F,
   J2K_MARKER_SOT = 0x90,
   J2K_MARKER_SOP = 0x91,
+  J2K_MARKER_EPH = 0x92,
   J2K_MARKER_SOD = 0x93,
   J2K_MARKER_EOC = 0xD9
 } RtpJ2KMarker;
@@ -235,6 +236,10 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
           if (cut_sop)
             return offset - 2;
           cut_sop = TRUE;
+          break;
+        case J2K_MARKER_EPH:
+          /* just skip over EPH */
+          GST_LOG_OBJECT (pay, "found EPH at %u", offset);
           break;
         default:
           if (offset >= state->next_sot) {
