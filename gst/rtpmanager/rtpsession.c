@@ -2809,11 +2809,10 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
         data.rtcp, data.is_early, &do_not_suppress);
 
     if (sess->callbacks.send_rtcp && (do_not_suppress || !data.may_suppress)) {
+      guint packet_size;
+
       /* close the RTCP packet */
       gst_rtcp_buffer_end (data.rtcp);
-
-    if (sess->callbacks.send_rtcp) {
-      guint packet_size;
 
       packet_size = GST_BUFFER_SIZE (data.rtcp) + sess->header_len;
 
