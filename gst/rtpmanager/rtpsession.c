@@ -2177,27 +2177,29 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
   GstRTCPFBType fbtype = gst_rtcp_packet_fb_get_type (packet);
   guint32 sender_ssrc = gst_rtcp_packet_fb_get_sender_ssrc (packet);
   guint32 media_ssrc = gst_rtcp_packet_fb_get_media_ssrc (packet);
-  guint length = 4 * (gst_rtcp_packet_get_length (packet) - 2);
+  guint8 *fci_data = gst_rtcp_packet_fb_get_fci (packet);
+  guint fci_length = 4 * gst_rtcp_packet_fb_get_fci_length (packet);
 
-  GST_DEBUG ("received feedback %d:%d from %08X about %08X"
-      " with FCI of length %d", type, fbtype, sender_ssrc, media_ssrc, length);
+  GST_DEBUG ("received feedback %d:%d from %08X about %08X with FCI of "
+      "length %d", type, fbtype, sender_ssrc, media_ssrc, fci_length);
 
   if (g_signal_has_handler_pending (sess,
           rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP], 0, TRUE)) {
-    GstBuffer *fci = NULL;
+    GstBuffer *fci_buffer = NULL;
 
-    if (length) {
-      fci = gst_buffer_create_sub (packet->buffer, packet->offset + 72, length);
-      GST_BUFFER_TIMESTAMP (fci) = arrival->running_time;
+    if (fci_length > 0) {
+      fci_buffer = gst_buffer_create_sub (packet->buffer,
+          fci_data - GST_BUFFER_DATA (packet->buffer), fci_length);
+      GST_BUFFER_TIMESTAMP (fci_buffer) = arrival->running_time;
     }
 
     RTP_SESSION_UNLOCK (sess);
     g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP], 0,
-        type, fbtype, sender_ssrc, media_ssrc, fci);
+        type, fbtype, sender_ssrc, media_ssrc, fci_buffer);
     RTP_SESSION_LOCK (sess);
 
-    if (fci)
-      gst_buffer_unref (fci);
+    if (fci_buffer)
+      gst_buffer_unref (fci_buffer);
   }
 
   if (sess->rtcp_feedback_retention_window) {
