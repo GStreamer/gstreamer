@@ -302,39 +302,33 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   g_object_class_install_property (gobject_class, PROP_SPEEDLEVEL,
       g_param_spec_int ("speed-level", "Speed level",
           "Controls the amount of motion vector searching done while "
-          "encoding.  This property requires libtheora version >= 1.0",
-          0, 3, THEORA_DEF_SPEEDLEVEL,
+          "encoding", 0, 3, THEORA_DEF_SPEEDLEVEL,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_VP3_COMPATIBLE,
       g_param_spec_boolean ("vp3-compatible", "VP3 Compatible",
-          "Disables non-VP3 compatible features."
-          "  This property requires libtheora version >= 1.1",
+          "Disables non-VP3 compatible features",
           THEORA_DEF_VP3_COMPATIBLE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DROP_FRAMES,
       g_param_spec_boolean ("drop-frames", "VP3 Compatible",
-          "Allow or disallow frame dropping."
-          "  This property requires libtheora version >= 1.1",
+          "Allow or disallow frame dropping",
           THEORA_DEF_DROP_FRAMES,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAP_OVERFLOW,
       g_param_spec_boolean ("cap-overflow", "VP3 Compatible",
-          "Enable capping of bit reservoir overflows."
-          "  This property requires libtheora version >= 1.1",
+          "Enable capping of bit reservoir overflows",
           THEORA_DEF_CAP_OVERFLOW,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAP_UNDERFLOW,
       g_param_spec_boolean ("cap-underflow", "VP3 Compatible",
-          "Enable capping of bit reservoir underflows."
-          "  This property requires libtheora version >= 1.1",
+          "Enable capping of bit reservoir underflows",
           THEORA_DEF_CAP_UNDERFLOW,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RATE_BUFFER,
       g_param_spec_int ("rate-buffer", "Rate Control Buffer",
           "Sets the size of the rate control buffer, in units of frames.  "
           "The default value of 0 instructs the encoder to automatically "
-          "select an appropriate value."
-          "  This property requires libtheora version >= 1.1",
+          "select an appropriate value",
           0, 1000, THEORA_DEF_RATE_BUFFER,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MULTIPASS_CACHE_FILE,
