@@ -1361,7 +1361,7 @@ rtp_source_process_sr (RTPSource * src, GstClockTime time, guint64 ntptime,
  * Update the report block in @src.
  */
 void
-rtp_source_process_rb (RTPSource * src, GstClockTime ntpnstime,
+rtp_source_process_rb (RTPSource * src, guint64 ntpnstime,
     guint8 fractionlost, gint32 packetslost, guint32 exthighestseq,
     guint32 jitter, guint32 lsr, guint32 dlsr)
 {
