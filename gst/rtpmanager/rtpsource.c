@@ -1350,7 +1350,7 @@ rtp_source_process_sr (RTPSource * src, GstClockTime time, guint64 ntptime,
 /**
  * rtp_source_process_rb:
  * @src: an #RTPSource
- * @time: the current time in nanoseconds since 1970
+ * @ntpnstime: the current time in nanoseconds since 1970
  * @fractionlost: fraction lost since last SR/RR
  * @packetslost: the cumululative number of packets lost
  * @exthighestseq: the extended last sequence number received
@@ -1361,13 +1361,14 @@ rtp_source_process_sr (RTPSource * src, GstClockTime time, guint64 ntptime,
  * Update the report block in @src.
  */
 void
-rtp_source_process_rb (RTPSource * src, GstClockTime time, guint8 fractionlost,
-    gint32 packetslost, guint32 exthighestseq, guint32 jitter, guint32 lsr,
-    guint32 dlsr)
+rtp_source_process_rb (RTPSource * src, GstClockTime ntpnstime,
+    guint8 fractionlost, gint32 packetslost, guint32 exthighestseq,
+    guint32 jitter, guint32 lsr, guint32 dlsr)
 {
   RTPReceiverReport *curr;
   gint curridx;
   guint32 ntp, A;
+  guint64 f_ntp;
 
   g_return_if_fail (RTP_IS_SOURCE (src));
 
@@ -1388,8 +1389,11 @@ rtp_source_process_rb (RTPSource * src, GstClockTime time, guint8 fractionlost,
   curr->lsr = lsr;
   curr->dlsr = dlsr;
 
+  /* convert the NTP time in nanoseconds to 32.32 fixed point */
+  f_ntp = gst_util_uint64_scale (ntpnstime, (1LL << 32), GST_SECOND);
   /* calculate round trip, round the time up */
-  ntp = ((gst_rtcp_unix_to_ntp (time) + 0xffff) >> 16) & 0xffffffff;
+  ntp = ((f_ntp + 0xffff) >> 16) & 0xffffffff;
+
   A = dlsr + lsr;
   if (A > 0 && ntp > A)
     A = ntp - A;

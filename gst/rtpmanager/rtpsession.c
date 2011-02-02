@@ -1598,11 +1598,12 @@ rtp_session_create_source (RTPSession * sess)
 static void
 update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
     gboolean rtp, GstBuffer * buffer, GstClockTime current_time,
-    GstClockTime running_time)
+    GstClockTime running_time, guint64 ntpnstime)
 {
   /* get time of arrival */
   arrival->current_time = current_time;
   arrival->running_time = running_time;
+  arrival->ntpnstime = ntpnstime;
 
   /* get packet size including header overhead */
   arrival->bytes = GST_BUFFER_SIZE (buffer) + sess->header_len;
@@ -1657,7 +1658,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   RTP_SESSION_LOCK (sess);
   /* update arrival stats */
   update_arrival_stats (sess, &arrival, TRUE, buffer, current_time,
-      running_time);
+      running_time, -1);
 
   /* ignore more RTP packets when we left the session */
   if (sess->source->received_bye)
@@ -1778,7 +1779,7 @@ rtp_session_process_rb (RTPSession * sess, RTPSource * source,
       /* only deal with report blocks for our session, we update the stats of
        * the sender of the RTCP message. We could also compare our stats against
        * the other sender to see if we are better or worse. */
-      rtp_source_process_rb (source, arrival->current_time, fractionlost,
+      rtp_source_process_rb (source, arrival->ntpnstime, fractionlost,
           packetslost, exthighestseq, jitter, lsr, dlsr);
     }
   }
@@ -2153,6 +2154,7 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
  * @sess: and #RTPSession
  * @buffer: an RTCP buffer
  * @current_time: the current system time
+ * @ntpnstime: the current NTP time in nanoseconds
  *
  * Process an RTCP buffer in the session manager. This function takes ownership
  * of @buffer.
@@ -2161,7 +2163,7 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
  */
 GstFlowReturn
 rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
-    GstClockTime current_time)
+    GstClockTime current_time, guint64 ntpnstime)
 {
   GstRTCPPacket packet;
   gboolean more, is_bye = FALSE, do_sync = FALSE;
@@ -2178,7 +2180,8 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
   RTP_SESSION_LOCK (sess);
   /* update arrival stats */
-  update_arrival_stats (sess, &arrival, FALSE, buffer, current_time, -1);
+  update_arrival_stats (sess, &arrival, FALSE, buffer, current_time, -1,
+      ntpnstime);
 
   if (sess->sent_bye)
     goto ignore;

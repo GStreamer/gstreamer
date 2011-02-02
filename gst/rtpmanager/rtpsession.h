@@ -326,7 +326,8 @@ GstFlowReturn   rtp_session_process_rtp            (RTPSession *sess, GstBuffer 
                                                     GstClockTime current_time,
 						    GstClockTime running_time);
 GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer *buffer,
-                                                    GstClockTime current_time);
+                                                    GstClockTime current_time,
+                                                    guint64 ntpnstime);
 
 /* processing packets for sending */
 GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, gpointer data, gboolean is_list,
