@@ -834,27 +834,7 @@ AG_GST_CHECK_FEATURE(PULSE, [pulseaudio plug-in], pulseaudio, [
   dnl used in ext/pulse/pulseutil.c
   AC_CHECK_HEADERS([process.h])
 
-  AG_GST_PKG_CHECK_MODULES(PULSE, libpulse >= 0.9.10)
-  AG_GST_PKG_CHECK_MODULES(PULSE_0_9_11, libpulse >= 0.9.11)
-  if test x$HAVE_PULSE_0_9_11 = xyes; then
-    AC_DEFINE(HAVE_PULSE_0_9_11, 1, [defined if pulseaudio >= 0.9.11 is available])
-  fi
-  AG_GST_PKG_CHECK_MODULES(PULSE_0_9_12, libpulse >= 0.9.12)
-  if test x$HAVE_PULSE_0_9_12 = xyes; then
-    AC_DEFINE(HAVE_PULSE_0_9_12, 1, [defined if pulseaudio >= 0.9.12 is available])
-  fi
-  AG_GST_PKG_CHECK_MODULES(PULSE_0_9_13, libpulse >= 0.9.13)
-  if test x$HAVE_PULSE_0_9_13 = xyes; then
-    AC_DEFINE(HAVE_PULSE_0_9_13, 1, [defined if pulseaudio >= 0.9.13 is available])
-  fi
-  AG_GST_PKG_CHECK_MODULES(PULSE_0_9_15, libpulse >= 0.9.15)
-  if test x$HAVE_PULSE_0_9_15 = xyes; then
-    AC_DEFINE(HAVE_PULSE_0_9_15, 1, [defined if pulseaudio >= 0.9.15 is available])
-  fi
-  AG_GST_PKG_CHECK_MODULES(PULSE_0_9_16, libpulse >= 0.9.16)
-  if test x$HAVE_PULSE_0_9_16 = xyes; then
-    AC_DEFINE(HAVE_PULSE_0_9_16, 1, [defined if pulseaudio >= 0.9.16 is available])
-  fi
+  AG_GST_PKG_CHECK_MODULES(PULSE, libpulse >= 0.9.16)
   AG_GST_PKG_CHECK_MODULES(PULSE_0_9_20, libpulse >= 0.9.20)
   if test x$HAVE_PULSE_0_9_20 = xyes; then
     AC_DEFINE(HAVE_PULSE_0_9_20, 1, [defined if pulseaudio >= 0.9.20 is available])
