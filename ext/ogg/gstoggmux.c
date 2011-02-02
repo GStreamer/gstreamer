@@ -283,6 +283,7 @@ gst_ogg_mux_ogg_pad_destroy_notify (GstCollectData * data)
   GstBuffer *buf;
 
   ogg_stream_clear (&oggpad->map.stream);
+  gst_caps_replace (&oggpad->map.caps, NULL);
 
   if (oggpad->pagebuffers) {
     while ((buf = g_queue_pop_head (oggpad->pagebuffers)) != NULL) {
