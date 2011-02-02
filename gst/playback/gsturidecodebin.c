@@ -407,7 +407,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstQueue2:ring-buffer-max-size
+   * GstURIDecodeBin::ring-buffer-max-size
    *
    * The maximum size of the ring buffer in kilobytes. If set to 0, the ring
    * buffer is disabled. Default is 0.
