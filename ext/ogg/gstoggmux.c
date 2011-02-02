@@ -775,25 +775,34 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
         if (pad->state == GST_OGG_PAD_STATE_CONTROL) {
           /* and we have one */
           ogg_packet packet;
+          gboolean is_header;
+
           packet.packet = GST_BUFFER_DATA (buf);
           packet.bytes = GST_BUFFER_SIZE (buf);
-          packet.granulepos = GST_BUFFER_OFFSET_END (buf);
-          if (packet.granulepos == -1)
+
+          if (GST_BUFFER_OFFSET_END_IS_VALID (buf))
+            packet.granulepos = GST_BUFFER_OFFSET_END (buf);
+          else
             packet.granulepos = 0;
 
           /* if we're not yet in data mode, ensure we're setup on the first packet */
           if (!pad->have_type) {
             pad->have_type = gst_ogg_stream_setup_map (&pad->map, &packet);
             if (!pad->have_type) {
-              pad->map.caps =
-                  gst_caps_new_simple ("application/x-unknown", NULL);
+              GST_ERROR_OBJECT (pad, "mapper didn't recognise input stream "
+                  "(pad caps: %" GST_PTR_FORMAT ")", GST_PAD_CAPS (pad));
+            } else {
+              GST_DEBUG_OBJECT (pad, "caps detected: %" GST_PTR_FORMAT,
+                  pad->map.caps);
             }
-            GST_DEBUG_OBJECT (ogg_mux, "New pad has caps: %s",
-                gst_caps_to_string (pad->map.caps));
           }
 
+          if (pad->have_type)
+            is_header = gst_ogg_stream_packet_is_header (&pad->map, &packet);
+          else                  /* fallback (FIXME 0.11: remove IN_CAPS hack) */
+            is_header = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
-          if (gst_ogg_stream_packet_is_header (&pad->map, &packet)) {
+          if (is_header) {
             GST_DEBUG_OBJECT (ogg_mux,
                 "got header buffer in control state, ignoring");
             /* just ignore */
