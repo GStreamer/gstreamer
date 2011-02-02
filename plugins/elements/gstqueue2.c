@@ -1927,6 +1927,8 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
   } else if (GST_IS_EVENT (item)) {
     GstEvent *event = GST_EVENT_CAST (item);
 
+    *is_buffer = FALSE;
+
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "retrieved event %p from queue", event);
 
