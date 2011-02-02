@@ -40,6 +40,7 @@ VERSION=`echo $0 | sed s/.*gst-//g`
 
 # base path under which dirs are installed
 GST=$MYGST/$VERSION
+GST_PREFIX=$GST/prefix
 if test ! -e $GST; then
   echo "$GST does not exist !"
   exit
@@ -52,12 +53,12 @@ $GST/gst-plugins-base/tools:\
 $GST/gst-player/src:\
 $GST/gst-editor/src:\
 $GST/gstreamer-sharp/tools:\
-$GST/prefix/bin:\
+$GST_PREFIX/bin:\
 $PATH"
 
 # /some/path: makes the dynamic linker look in . too, so avoid this
-LD_LIBRARY_PATH=$GST/prefix/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-DYLD_LIBRARY_PATH=$GST/prefix/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
+LD_LIBRARY_PATH=$GST_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+DYLD_LIBRARY_PATH=$GST_PREFIX/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
 
 # GStreamer rtsp server library
 LD_LIBRARY_PATH=$GST/gst-rtsp-server/gst/rtsp-server/.libs:$LD_LIBRARY_PATH
@@ -89,7 +90,7 @@ export LD_LIBRARY_PATH
 export DYLD_LIBRARY_PATH
   
 export PKG_CONFIG_PATH="\
-$GST/prefix/lib/pkgconfig\
+$GST_PREFIX/lib/pkgconfig\
 :$GST/gstreamer/pkgconfig\
 :$GST/gst-plugins-base/pkgconfig\
 :$GST/gst-plugins-good/pkgconfig\
@@ -135,9 +136,9 @@ export GST_PLUGIN_SCANNER=$GST/gstreamer/libs/gst/helpers/gst-plugin-scanner
 # in the system-configured man paths from man.config
 # this still doesn't make it work for the uninstalled case, since man goes
 # look for a man directory "nearby" instead of the directory I'm telling it to
-export MANPATH=$GST/gstreamer/tools:$GST/prefix/share/man:$MANPATH
+export MANPATH=$GST/gstreamer/tools:$GST_PREFIX/share/man:$MANPATH
 pythonver=`python -c "import sys; print sys.version[:3]"`
-export PYTHONPATH=$GST/gst-python:$GST/prefix/lib/python$pythonver/site-packages${PYTHONPATH:+:$PYTHONPATH}
+export PYTHONPATH=$GST/gst-python:$GST_PREFIX/lib/python$pythonver/site-packages${PYTHONPATH:+:$PYTHONPATH}
 
 # totem-pl-parser
 export PKG_CONFIG_PATH=$GST/totem-pl-parser:$PKG_CONFIG_PATH
