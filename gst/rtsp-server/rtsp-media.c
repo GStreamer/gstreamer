@@ -160,45 +160,6 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   media->buffer_size = DEFAULT_BUFFER_SIZE;
 }
 
-/* FIXME. this should be done in multiudpsink */
-typedef struct
-{
-  gint count;
-  gchar *dest;
-  gint min, max;
-} RTSPDestination;
-
-static gint
-dest_compare (RTSPDestination * a, RTSPDestination * b)
-{
-  if ((a->min == b->min) && (a->max == b->max)
-      && (strcmp (a->dest, b->dest) == 0))
-    return 0;
-
-  return 1;
-}
-
-static RTSPDestination *
-create_destination (const gchar * dest, gint min, gint max)
-{
-  RTSPDestination *res;
-
-  res = g_slice_new (RTSPDestination);
-  res->count = 1;
-  res->dest = g_strdup (dest);
-  res->min = min;
-  res->max = max;
-
-  return res;
-}
-
-static void
-free_destination (RTSPDestination * dest)
-{
-  g_free (dest->dest);
-  g_slice_free (RTSPDestination, dest);
-}
-
 void
 gst_rtsp_media_trans_cleanup (GstRTSPMediaTrans * trans)
 {
@@ -1852,9 +1813,6 @@ static void
 add_udp_destination (GstRTSPMedia * media, GstRTSPMediaStream * stream,
     gchar * dest, gint min, gint max)
 {
-  gboolean do_add = TRUE;
-  RTSPDestination *ndest;
-
   GST_INFO ("adding %s:%d-%d", dest, min, max);
   g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
   g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
@@ -1864,10 +1822,6 @@ static void
 remove_udp_destination (GstRTSPMedia * media, GstRTSPMediaStream * stream,
     gchar * dest, gint min, gint max)
 {
-  gboolean do_remove = TRUE;
-  RTSPDestination *ndest = NULL;
-  GList *find = NULL;
-
   GST_INFO ("removing %s:%d-%d", dest, min, max);
   g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
   g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
