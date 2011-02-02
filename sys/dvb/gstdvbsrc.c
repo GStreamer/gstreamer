@@ -117,7 +117,7 @@ gst_dvbsrc_code_rate_get_type (void)
 {
   static GType dvbsrc_code_rate_type = 0;
   static GEnumValue code_rate_types[] = {
-    {FEC_NONE, "NONE", "NONE"},
+    {FEC_NONE, "NONE", "none"},
     {FEC_1_2, "1/2", "1/2"},
     {FEC_2_3, "2/3", "2/3"},
     {FEC_3_4, "3/4", "3/4"},
@@ -126,7 +126,7 @@ gst_dvbsrc_code_rate_get_type (void)
     {FEC_6_7, "6/7", "6/7"},
     {FEC_7_8, "7/8", "7/8"},
     {FEC_8_9, "8/9", "8/9"},
-    {FEC_AUTO, "AUTO", ""},
+    {FEC_AUTO, "AUTO", "auto"},
     {0, NULL, NULL},
   };
 
@@ -143,15 +143,15 @@ gst_dvbsrc_modulation_get_type (void)
 {
   static GType dvbsrc_modulation_type = 0;
   static GEnumValue modulation_types[] = {
-    {QPSK, "QPSK", "QPSK"},
-    {QAM_16, "QAM 16", "QAM 16"},
-    {QAM_32, "QAM 32", "QAM 32"},
-    {QAM_64, "QAM 64", "QAM 64"},
-    {QAM_128, "QAM 128", "QAM 128"},
-    {QAM_256, "QAM 256", "QAM 256"},
-    {QAM_AUTO, "AUTO", "AUTO"},
-    {VSB_8, "8VSB", "8VSB"},
-    {VSB_16, "16VSB", "16VSB"},
+    {QPSK, "QPSK", "qpsk"},
+    {QAM_16, "QAM 16", "qam-16"},
+    {QAM_32, "QAM 32", "qam-32"},
+    {QAM_64, "QAM 64", "qam-64"},
+    {QAM_128, "QAM 128", "qam-128"},
+    {QAM_256, "QAM 256", "qam-256"},
+    {QAM_AUTO, "AUTO", "auto"},
+    {VSB_8, "8VSB", "8vsb"},
+    {VSB_16, "16VSB", "16vsb"},
     {0, NULL, NULL},
   };
 
@@ -168,9 +168,9 @@ gst_dvbsrc_transmission_mode_get_type (void)
 {
   static GType dvbsrc_transmission_mode_type = 0;
   static GEnumValue transmission_mode_types[] = {
-    {TRANSMISSION_MODE_2K, "2k", "2k"},
-    {TRANSMISSION_MODE_8K, "8k", "8k"},
-    {TRANSMISSION_MODE_AUTO, "AUTO", "AUTO"},
+    {TRANSMISSION_MODE_2K, "2K", "2k"},
+    {TRANSMISSION_MODE_8K, "8K", "8k"},
+    {TRANSMISSION_MODE_AUTO, "AUTO", "auto"},
     {0, NULL, NULL},
   };
 
@@ -212,7 +212,7 @@ gst_dvbsrc_guard_get_type (void)
     {GUARD_INTERVAL_1_16, "16", "16"},
     {GUARD_INTERVAL_1_8, "8", "8"},
     {GUARD_INTERVAL_1_4, "4", "4"},
-    {GUARD_INTERVAL_AUTO, "AUTO", "AUTO"},
+    {GUARD_INTERVAL_AUTO, "AUTO", "auto"},
     {0, NULL, NULL},
   };
 
@@ -228,11 +228,11 @@ gst_dvbsrc_hierarchy_get_type (void)
 {
   static GType dvbsrc_hierarchy_type = 0;
   static GEnumValue hierarchy_types[] = {
-    {HIERARCHY_NONE, "NONE", "NONE"},
+    {HIERARCHY_NONE, "NONE", "none"},
     {HIERARCHY_1, "1", "1"},
     {HIERARCHY_2, "2", "2"},
     {HIERARCHY_4, "4", "4"},
-    {HIERARCHY_AUTO, "AUTO", "AUTO"},
+    {HIERARCHY_AUTO, "AUTO", "auto"},
     {0, NULL, NULL},
   };
 
@@ -249,9 +249,9 @@ gst_dvbsrc_inversion_get_type (void)
 {
   static GType dvbsrc_inversion_type = 0;
   static GEnumValue inversion_types[] = {
-    {INVERSION_OFF, "OFF", "OFF"},
-    {INVERSION_ON, "ON", "ON"},
-    {INVERSION_AUTO, "AUTO", "AUTO"},
+    {INVERSION_OFF, "OFF", "off"},
+    {INVERSION_ON, "ON", "on"},
+    {INVERSION_AUTO, "AUTO", "auto"},
     {0, NULL, NULL},
   };
 
