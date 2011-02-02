@@ -142,11 +142,6 @@ struct _GstRTSPMediaStream {
 
   /* transports we stream to */
   GList        *transports;
-
-  /* to filter out duplicate destinations in case multiudpsink is too old to do
-   * this for us */
-  gboolean      filter_duplicates;
-  GList        *destinations;
 };
 
 /**

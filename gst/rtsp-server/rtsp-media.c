@@ -234,9 +234,6 @@ gst_rtsp_media_stream_free (GstRTSPMediaStream * stream)
 
   g_list_free (stream->transports);
 
-  g_list_foreach (stream->destinations, (GFunc) free_destination, NULL);
-  g_list_free (stream->destinations);
-
   g_free (stream);
 }
 
@@ -943,10 +940,9 @@ again:
           "send-duplicates")) {
     g_object_set (G_OBJECT (udpsink0), "send-duplicates", FALSE, NULL);
     g_object_set (G_OBJECT (udpsink1), "send-duplicates", FALSE, NULL);
-    stream->filter_duplicates = FALSE;
   } else {
-    GST_WARNING ("multiudpsink version found without send-duplicates property");
-    stream->filter_duplicates = TRUE;
+    g_warning
+        ("old multiudpsink version found without send-duplicates property");
   }
 
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (udpsink0),
@@ -1859,38 +1855,9 @@ add_udp_destination (GstRTSPMedia * media, GstRTSPMediaStream * stream,
   gboolean do_add = TRUE;
   RTSPDestination *ndest;
 
-  if (stream->filter_duplicates) {
-    RTSPDestination fdest;
-    GList *find;
-
-    fdest.dest = dest;
-    fdest.min = min;
-    fdest.max = max;
-
-    /* first see if we already added this destination */
-    find =
-        g_list_find_custom (stream->destinations, &fdest,
-        (GCompareFunc) dest_compare);
-    if (find) {
-      ndest = (RTSPDestination *) find->data;
-
-      GST_INFO ("already streaming to %s:%d-%d with %d clients", dest, min, max,
-          ndest->count);
-      ndest->count++;
-      do_add = FALSE;
-    }
-  }
-
-  if (do_add) {
-    GST_INFO ("adding %s:%d-%d", dest, min, max);
-    g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
-    g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
-
-    if (stream->filter_duplicates) {
-      ndest = create_destination (dest, min, max);
-      stream->destinations = g_list_prepend (stream->destinations, ndest);
-    }
-  }
+  GST_INFO ("adding %s:%d-%d", dest, min, max);
+  g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
+  g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
 }
 
 static void
@@ -1901,38 +1868,9 @@ remove_udp_destination (GstRTSPMedia * media, GstRTSPMediaStream * stream,
   RTSPDestination *ndest = NULL;
   GList *find = NULL;
 
-  if (stream->filter_duplicates) {
-    RTSPDestination fdest;
-
-    fdest.dest = dest;
-    fdest.min = min;
-    fdest.max = max;
-
-    /* first see if we already added this destination */
-    find =
-        g_list_find_custom (stream->destinations, &fdest,
-        (GCompareFunc) dest_compare);
-    if (!find)
-      return;
-
-    ndest = (RTSPDestination *) find->data;
-    if (--ndest->count > 0) {
-      do_remove = FALSE;
-      GST_INFO ("still streaming to %s:%d-%d with %d clients", dest, min, max,
-          ndest->count);
-    }
-  }
-
-  if (do_remove) {
-    GST_INFO ("removing %s:%d-%d", dest, min, max);
-    g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
-    g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
-
-    if (stream->filter_duplicates) {
-      stream->destinations = g_list_delete_link (stream->destinations, find);
-      free_destination (ndest);
-    }
-  }
+  GST_INFO ("removing %s:%d-%d", dest, min, max);
+  g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
+  g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
 }
 
 /**
