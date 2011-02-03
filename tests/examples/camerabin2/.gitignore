@@ -1,4 +1,5 @@
 gst-camera2
+gst-camerabin2-test
 test_*.jpg
 vid_*
 img_*
