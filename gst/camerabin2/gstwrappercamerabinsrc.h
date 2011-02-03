@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
+#include <gst/basecamerabinsrc/gstcamerabinpreview.h>
 #include "camerabingeneral.h"
 
 G_BEGIN_DECLS
