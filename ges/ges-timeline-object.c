@@ -383,13 +383,10 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   GST_DEBUG ("Setting properties on newly created TrackObject");
 
   mapping->priority_offset = priv->nb_effects;
-  ges_track_object_set_priority (trobj,
-      object->priority + mapping->priority_offset);
-
 
   /* If the trackobject is an operation:
    *  - We add it on top of the list of TrackOperation
-   *  - We put all TrackObject present in the TimelineObject 
+   *  - We put all TrackObject present in the TimelineObject
    *    which are not TrackEffect on top of them
    *
    * FIXME: Let the full control over priorities to the user
@@ -404,11 +401,11 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
 
       /* We make sure not to move the entire #TimelineObject */
       ges_track_object_set_locked (tmpo, FALSE);
-      ges_track_object_set_priority (tmpo, tmpo->priority + 1);
+      ges_track_object_set_priority (tmpo,
+          ges_track_object_get_priority (tmpo) + 1);
       ges_track_object_set_locked (tmpo, TRUE);
     }
 
-    update_height (object);
     priv->nb_effects++;
   }
 
@@ -433,6 +430,9 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   mapping->priority_notifyid =
       g_signal_connect (G_OBJECT (trobj), "notify::priority",
       G_CALLBACK (track_object_priority_changed_cb), object);
+
+  ges_track_object_set_priority (trobj,
+      object->priority + mapping->priority_offset);
 
   GST_DEBUG ("Returning trobj:%p", trobj);
 
@@ -854,12 +854,13 @@ update_height (GESTimelineObject * object)
 
   /* Go over all childs and check if height has changed */
   for (tmp = object->priv->trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *tmpo = (GESTrackObject *) tmp->data;
+    guint tck_priority =
+        ges_track_object_get_priority (GES_TRACK_OBJECT (tmp->data));
 
-    if (tmpo->priority < min_prio)
-      min_prio = tmpo->priority;
-    if (tmpo->priority > max_prio)
-      max_prio = tmpo->priority;
+    if (tck_priority < min_prio)
+      min_prio = tck_priority;
+    if (tck_priority > max_prio)
+      max_prio = tck_priority;
   }
 
   /* FIXME : We only grow the height */
@@ -924,27 +925,26 @@ track_object_priority_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
 {
   ObjectMapping *map;
+  guint tck_priority = ges_track_object_get_priority (child);
+
   GST_DEBUG ("Priority changed");
 
   if (object->priv->ignore_notifies)
     return;
 
+  update_height (object);
   map = find_object_mapping (object, child);
   if (G_UNLIKELY (map == NULL))
     /* something massively screwed up if we get this */
     return;
 
   if (!ges_track_object_is_locked (child)) {
-
     /* Update the internal priority_offset */
-    map->priority_offset = object->priority - child->priority;
-    update_height (object);
-
-  } else {
-    /* Or update the parent priority */
+    map->priority_offset = object->priority - tck_priority;
+  } else if (tck_priority < object->priority) {
+    /* Or update the parent priority, the object priority is always the
+     * highest priority (smaller number) */
     ges_timeline_object_set_priority (object,
-        child->priority + map->priority_offset);
-    /* For the locked situation, we don't need to check the height,
-     * since all object priorities are moving together */
+        tck_priority + map->priority_offset);
   }
 }
