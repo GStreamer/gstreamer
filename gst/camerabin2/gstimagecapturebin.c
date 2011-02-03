@@ -117,8 +117,9 @@ gst_image_capture_bin_set_property (GObject * object, guint prop_id,
     case PROP_LOCATION:
       g_free (imagebin->location);
       imagebin->location = g_value_dup_string (value);
+      GST_DEBUG_OBJECT (imagebin, "setting location to %s", imagebin->location);
       if (imagebin->sink) {
-        g_object_set (imagebin, "location", imagebin->location, NULL);
+        g_object_set (imagebin->sink, "location", imagebin->location, NULL);
       }
       break;
     case PROP_ENCODER:
