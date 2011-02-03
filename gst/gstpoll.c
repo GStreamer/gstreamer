@@ -582,6 +582,9 @@ gst_poll_new (gboolean controllable)
   nset->wakeup_event = CreateEvent (NULL, TRUE, FALSE, NULL);
 #endif
 
+  /* ensure (re)build, though already sneakily set in non-windows case */
+  MARK_REBUILD (nset);
+
   nset->controllable = controllable;
 
   return nset;
