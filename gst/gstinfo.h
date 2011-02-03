@@ -337,8 +337,23 @@ G_CONST_RETURN gchar *
 
 void            gst_debug_add_log_function            (GstLogFunction func,
                                                        gpointer       data);
+
 guint           gst_debug_remove_log_function         (GstLogFunction func);
 guint           gst_debug_remove_log_function_by_data (gpointer       data);
+
+#define gst_debug_add_log_function(func,data) \
+G_STMT_START{                                 \
+  if (func == gst_debug_log_default) {        \
+    gst_debug_add_log_function(NULL,data);    \
+  } else {                                    \
+    gst_debug_add_log_function(func,data);    \
+  }                                           \
+}G_STMT_END
+
+#define gst_debug_remove_log_function(func)   \
+    (func == gst_debug_log_default) ?         \
+        gst_debug_remove_log_function(NULL) : \
+        gst_debug_remove_log_function(func)
 
 void            gst_debug_set_active  (gboolean active);
 gboolean        gst_debug_is_active   (void);

@@ -90,6 +90,9 @@
 #include "gst_private.h"
 #include "gstinfo.h"
 
+#undef gst_debug_remove_log_function
+#undef gst_debug_add_log_function
+
 #ifndef GST_DISABLE_GST_DEBUG
 
 #ifdef HAVE_DLFCN_H
@@ -1064,7 +1067,8 @@ gst_debug_add_log_function (GstLogFunction func, gpointer data)
   LogFuncEntry *entry;
   GSList *list;
 
-  g_return_if_fail (func != NULL);
+  if (func == NULL)
+    func = gst_debug_log_default;
 
   entry = g_slice_new (LogFuncEntry);
   entry->func = func;
@@ -1140,7 +1144,8 @@ gst_debug_remove_log_function (GstLogFunction func)
 {
   guint removals;
 
-  g_return_val_if_fail (func != NULL, 0);
+  if (func == NULL)
+    func = gst_debug_log_default;
 
   removals =
       gst_debug_remove_with_compare_func
