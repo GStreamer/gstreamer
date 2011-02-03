@@ -163,11 +163,15 @@ GST_START_TEST (test_tl_effect)
   GESTimelineLayer *layer;
   GESTrack *track_audio, *track_video;
   GESTimelineEffect *tl_effect;
+  GESTrackEffect *tck_effect, *tck_effect1;
   GList *effects, *tmp;
   gint i, tl_object_height;
   gint effect_prio = -1;
   /* FIXME the order of track type is not well defined */
-  guint track_type[2] = { GES_TRACK_TYPE_AUDIO, GES_TRACK_TYPE_VIDEO };
+  guint track_type[4] = { GES_TRACK_TYPE_AUDIO,
+    GES_TRACK_TYPE_VIDEO, GES_TRACK_TYPE_VIDEO,
+    GES_TRACK_TYPE_AUDIO
+  };
 
   ges_init ();
 
@@ -188,8 +192,23 @@ GST_START_TEST (test_tl_effect)
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
       (GESTimelineObject *) tl_effect, 0);
 
+  tck_effect = ges_track_effect_new_from_bin_desc ("identity");
+  fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
+          (tl_effect), GES_TRACK_OBJECT (tck_effect)));
+  fail_unless (ges_track_add_object (track_video,
+          GES_TRACK_OBJECT (tck_effect)));
+
   g_object_get (tl_effect, "height", &tl_object_height, NULL);
-  fail_unless (tl_object_height == 2);
+  fail_unless (tl_object_height == 3);
+
+  tck_effect1 = ges_track_effect_new_from_bin_desc ("identity");
+  fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
+          (tl_effect), GES_TRACK_OBJECT (tck_effect1)));
+  fail_unless (ges_track_add_object (track_audio,
+          GES_TRACK_OBJECT (tck_effect1)));
+
+  g_object_get (tl_effect, "height", &tl_object_height, NULL);
+  fail_unless (tl_object_height == 4);
 
   effects = ges_timeline_object_get_effects (GES_TIMELINE_OBJECT (tl_effect));
   for (tmp = effects, i = 0; tmp; tmp = tmp->next, i++) {
@@ -199,8 +218,8 @@ GST_START_TEST (test_tl_effect)
         GES_TRACK_OPERATION (tmp->data));
     fail_unless (priority > effect_prio);
     fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
-    fail_unless (ges_track_object_get_track (GES_TRACK_OBJECT (tmp->data))->
-        type == track_type[i]);
+    fail_unless (ges_track_object_get_track (GES_TRACK_OBJECT (tmp->
+                data))->type == track_type[i]);
     effect_prio = priority;
 
     g_object_unref (tmp->data);
