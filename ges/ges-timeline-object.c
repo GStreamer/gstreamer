@@ -395,6 +395,9 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
    * FIXME: Let the full control over priorities to the user
    */
   if (GES_IS_TRACK_OPERATION (trobj)) {
+    GST_DEBUG
+        ("Moving non on top effect under other TrackObject-s, nb effects %i",
+        priv->nb_effects);
     for (tmp = g_list_nth (priv->trackobjects, priv->nb_effects); tmp;
         tmp = tmp->next) {
       GESTrackObject *tmpo = GES_TRACK_OBJECT (tmp->data);
@@ -417,8 +420,6 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   ges_track_object_set_duration (trobj, object->duration);
   ges_track_object_set_inpoint (trobj, object->inpoint);
 
-  GST_DEBUG ("Returning trobj:%p", trobj);
-
   /* Listen to all property changes */
   mapping->start_notifyid =
       g_signal_connect (G_OBJECT (trobj), "notify::start",
@@ -432,6 +433,8 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   mapping->priority_notifyid =
       g_signal_connect (G_OBJECT (trobj), "notify::priority",
       G_CALLBACK (track_object_priority_changed_cb), object);
+
+  GST_DEBUG ("Returning trobj:%p", trobj);
 
   return TRUE;
 }
@@ -849,7 +852,6 @@ update_height (GESTimelineObject * object)
   GList *tmp;
   guint32 min_prio = G_MAXUINT32, max_prio = 0;
 
-  GST_DEBUG ("Updating height");
   /* Go over all childs and check if height has changed */
   for (tmp = object->priv->trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *tmpo = (GESTrackObject *) tmp->data;
@@ -863,6 +865,7 @@ update_height (GESTimelineObject * object)
   /* FIXME : We only grow the height */
   if (object->height < (max_prio - min_prio + 1)) {
     object->height = max_prio - min_prio + 1;
+    GST_DEBUG ("Updating height %i", object->height);
 #if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_HEIGHT]);
 #else
@@ -921,6 +924,7 @@ track_object_priority_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
 {
   ObjectMapping *map;
+  GST_DEBUG ("Priority changed");
 
   if (object->priv->ignore_notifies)
     return;
