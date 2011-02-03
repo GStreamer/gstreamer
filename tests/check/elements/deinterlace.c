@@ -53,6 +53,9 @@ GST_END_TEST;
 #define CAPS_VIDEO_COMMON \
     "width=(int)800, height=(int)600, framerate=(fraction)15/1"
 
+#define CAPS_IMAGE_COMMON \
+    "width=(int)3200, height=(int)3400, framerate=(fraction)0/1"
+
 #define CAPS_YUY2 \
     "video/x-raw-yuv, " \
     CAPS_VIDEO_COMMON ", " \
@@ -69,6 +72,24 @@ GST_END_TEST;
 
 #define CAPS_YVYU_INTERLACED \
     CAPS_YVYU ", " \
+    "interlaced=(boolean)true"
+
+#define CAPS_YUY2_IMAGE \
+    "video/x-raw-yuv, " \
+    CAPS_IMAGE_COMMON ", " \
+    "format=(fourcc)YUY2"
+
+#define CAPS_YUY2_INTERLACED_IMAGE \
+    CAPS_YUY2_IMAGE ", " \
+    "interlaced=(boolean)true"
+
+#define CAPS_YVYU_IMAGE \
+    "video/x-raw-yuv, " \
+    CAPS_IMAGE_COMMON ", " \
+    "format=(fourcc)YVYU"
+
+#define CAPS_YVYU_INTERLACED_IMAGE \
+    CAPS_YVYU_IMAGE ", " \
     "interlaced=(boolean)true"
 
 static GstElement *deinterlace;
@@ -295,10 +316,14 @@ GST_START_TEST (test_mode_auto_accept_caps)
   /* try to set non interlaced caps */
   deinterlace_set_string_caps_and_check (CAPS_YVYU, FALSE);
   deinterlace_set_string_caps_and_check (CAPS_YUY2, FALSE);
+  deinterlace_set_string_caps_and_check (CAPS_YVYU_IMAGE, FALSE);
+  deinterlace_set_string_caps_and_check (CAPS_YUY2_IMAGE, FALSE);
 
   /* now try to set interlaced caps */
   deinterlace_set_string_caps_and_check (CAPS_YVYU_INTERLACED, TRUE);
   deinterlace_set_string_caps_and_check (CAPS_YUY2_INTERLACED, TRUE);
+  deinterlace_set_string_caps_and_check (CAPS_YVYU_INTERLACED_IMAGE, TRUE);
+  deinterlace_set_string_caps_and_check (CAPS_YUY2_INTERLACED_IMAGE, TRUE);
 
   /* cleanup */
   gst_object_unref (sinkpad);
@@ -322,10 +347,14 @@ GST_START_TEST (test_mode_forced_accept_caps)
   /* try to set non interlaced caps */
   deinterlace_set_string_caps_and_check (CAPS_YVYU, TRUE);
   deinterlace_set_string_caps_and_check (CAPS_YUY2, TRUE);
+  deinterlace_set_string_caps_and_check (CAPS_YVYU_IMAGE, TRUE);
+  deinterlace_set_string_caps_and_check (CAPS_YUY2_IMAGE, TRUE);
 
   /* now try to set interlaced caps */
   deinterlace_set_string_caps_and_check (CAPS_YVYU_INTERLACED, TRUE);
   deinterlace_set_string_caps_and_check (CAPS_YUY2_INTERLACED, TRUE);
+  deinterlace_set_string_caps_and_check (CAPS_YVYU_INTERLACED_IMAGE, TRUE);
+  deinterlace_set_string_caps_and_check (CAPS_YUY2_INTERLACED_IMAGE, TRUE);
 
   /* cleanup */
   gst_object_unref (sinkpad);
@@ -349,10 +378,14 @@ GST_START_TEST (test_mode_disabled_accept_caps)
   /* try to set non interlaced caps */
   deinterlace_set_string_caps_and_check (CAPS_YVYU, FALSE);
   deinterlace_set_string_caps_and_check (CAPS_YUY2, FALSE);
+  deinterlace_set_string_caps_and_check (CAPS_YVYU_IMAGE, FALSE);
+  deinterlace_set_string_caps_and_check (CAPS_YUY2_IMAGE, FALSE);
 
   /* now try to set interlaced caps */
   deinterlace_set_string_caps_and_check (CAPS_YVYU_INTERLACED, FALSE);
   deinterlace_set_string_caps_and_check (CAPS_YUY2_INTERLACED, FALSE);
+  deinterlace_set_string_caps_and_check (CAPS_YVYU_INTERLACED_IMAGE, FALSE);
+  deinterlace_set_string_caps_and_check (CAPS_YUY2_INTERLACED_IMAGE, FALSE);
 
   /* cleanup */
   gst_object_unref (sinkpad);
@@ -371,6 +404,11 @@ GST_START_TEST (test_mode_disabled_passthrough)
   deinterlace_check_passthrough (2, CAPS_YVYU_INTERLACED);
   deinterlace_check_passthrough (2, CAPS_YUY2);
   deinterlace_check_passthrough (2, CAPS_YVYU);
+
+  deinterlace_check_passthrough (2, CAPS_YUY2_INTERLACED_IMAGE);
+  deinterlace_check_passthrough (2, CAPS_YVYU_INTERLACED_IMAGE);
+  deinterlace_check_passthrough (2, CAPS_YUY2_IMAGE);
+  deinterlace_check_passthrough (2, CAPS_YVYU_IMAGE);
 }
 
 GST_END_TEST;
@@ -380,6 +418,8 @@ GST_START_TEST (test_mode_auto_deinterlaced_passthrough)
   /* 0 is auto mode */
   deinterlace_check_passthrough (0, CAPS_YUY2);
   deinterlace_check_passthrough (0, CAPS_YVYU);
+  deinterlace_check_passthrough (0, CAPS_YUY2_IMAGE);
+  deinterlace_check_passthrough (0, CAPS_YVYU_IMAGE);
 }
 
 GST_END_TEST;

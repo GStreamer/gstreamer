@@ -1433,12 +1433,16 @@ gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps)
   self->frame_size =
       gst_video_format_get_size (self->format, self->width, self->height);
 
-  if (self->fields == GST_DEINTERLACE_ALL && otherpad == self->srcpad)
-    self->field_duration =
-        gst_util_uint64_scale (GST_SECOND, self->fps_d, self->fps_n);
-  else
-    self->field_duration =
-        gst_util_uint64_scale (GST_SECOND, self->fps_d, 2 * self->fps_n);
+  if (G_LIKELY (self->fps_n != 0)) {
+    if (self->fields == GST_DEINTERLACE_ALL && otherpad == self->srcpad)
+      self->field_duration =
+          gst_util_uint64_scale (GST_SECOND, self->fps_d, self->fps_n);
+    else
+      self->field_duration =
+          gst_util_uint64_scale (GST_SECOND, self->fps_d, 2 * self->fps_n);
+  } else {
+    self->field_duration = 0;
+  }
 
   if (pad == self->sinkpad) {
     gst_caps_replace (&self->sink_caps, caps);
