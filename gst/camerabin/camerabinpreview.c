@@ -73,7 +73,7 @@ GstCameraBinPreviewPipelineData *
 gst_camerabin_preview_create_pipeline (GstElement * element, GstCaps * caps,
     GstElement * src_filter)
 {
-  GstElement *csp, *vscale;
+  GstElement *csp = NULL, *vscale = NULL;
   GError *error = NULL;
   GstCameraBinPreviewPipelineData *data;
 
