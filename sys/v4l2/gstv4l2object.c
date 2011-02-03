@@ -2019,7 +2019,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
     /* ideally we would differentiate between types of interlaced video
      * but there is not sufficient information in the caps..
      */
-    field = V4L2_FIELD_SEQ_TB;
+    field = V4L2_FIELD_INTERLACED;
   } else {
     GST_DEBUG_OBJECT (v4l2object->element, "progressive video");
     field = V4L2_FIELD_NONE;
