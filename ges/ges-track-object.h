@@ -152,6 +152,12 @@ void ges_track_object_set_inpoint (GESTrackObject * object, guint64 inpoint);
 void ges_track_object_set_duration (GESTrackObject * object, guint64 duration);
 void ges_track_object_set_priority (GESTrackObject * object, guint32 priority);
 
+guint64 ges_track_object_get_start (GESTrackObject * object);
+guint64 ges_track_object_get_inpoint (GESTrackObject * object);
+guint64 ges_track_object_get_duration (GESTrackObject * object);
+guint32 ges_track_object_get_priority (GESTrackObject * object);
+gboolean ges_track_object_is_active (GESTrackObject * object);
+
 gboolean ges_track_object_set_active (GESTrackObject * object, gboolean active);
 G_END_DECLS
 

@@ -107,19 +107,19 @@ ges_track_object_get_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_START:
-      g_value_set_uint64 (value, tobj->start);
+      g_value_set_uint64 (value, ges_track_object_get_start (tobj));
       break;
     case PROP_INPOINT:
-      g_value_set_uint64 (value, tobj->inpoint);
+      g_value_set_uint64 (value, ges_track_object_get_inpoint (tobj));
       break;
     case PROP_DURATION:
-      g_value_set_uint64 (value, tobj->duration);
+      g_value_set_uint64 (value, ges_track_object_get_duration (tobj));
       break;
     case PROP_PRIORITY:
-      g_value_set_uint (value, tobj->priority);
+      g_value_set_uint (value, ges_track_object_get_priority (tobj));
       break;
     case PROP_ACTIVE:
-      g_value_set_boolean (value, tobj->active);
+      g_value_set_boolean (value, ges_track_object_is_active (tobj));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -810,4 +810,91 @@ gboolean
 ges_track_object_is_locked (GESTrackObject * object)
 {
   return object->priv->locked;
+}
+
+/**
+ * ges_track_object_get_start:
+ * @object: a #GESTrackObject
+ *
+ * Get the position of the object in the container #GESTrack.
+ *
+ * Returns: the start position (in #GstClockTime)
+ */
+guint64
+ges_track_object_get_start (GESTrackObject * object)
+{
+  if (G_UNLIKELY (object->priv->gnlobject == NULL))
+    return object->priv->pending_start;
+  else
+    return object->start;
+}
+
+/**
+ * ges_track_object_get_inpoint:
+ * @object: a #GESTrackObject
+ *
+ * Get the offset within the contents of this #GESTrackObject
+ *
+ * Returns: the in-point (in #GstClockTime)
+ */
+guint64
+ges_track_object_get_inpoint (GESTrackObject * object)
+{
+  if (G_UNLIKELY (object->priv->gnlobject == NULL))
+    return object->priv->pending_inpoint;
+  else
+    return object->inpoint;
+}
+
+/**
+ * ges_track_object_get_duration:
+ * @object: a #GESTrackObject
+ *
+ * Get the duration which will be used in the container #GESTrack
+ * starting from the 'in-point'
+ *
+ * Returns: the duration (in #GstClockTime)
+ */
+guint64
+ges_track_object_get_duration (GESTrackObject * object)
+{
+  if (G_UNLIKELY (object->priv->gnlobject == NULL))
+    return object->priv->pending_duration;
+  else
+    return object->duration;
+}
+
+/**
+ * ges_track_object_get_priority:
+ * @object: a #GESTrackObject
+ *
+ * Get the priority of the object withing the containing #GESTrack.
+ *
+ * Returns: the priority of @object
+ */
+guint32
+ges_track_object_get_priority (GESTrackObject * object)
+{
+  if (G_UNLIKELY (object->priv->gnlobject == NULL))
+    return object->priv->pending_priority;
+  else
+    return object->priority;
+}
+
+/**
+ * ges_track_object_is_active:
+ * @object: a #GESTrackObject
+ *
+ * Lets you know if @object will be used for playback and rendering,
+ * or not.
+ *
+ * Returns: %TRUE if @object is active, %FALSE otherwize
+ */
+gboolean
+ges_track_object_is_active (GESTrackObject * object)
+{
+  if (G_UNLIKELY (object->priv->gnlobject == NULL))
+    return object->priv->pending_active;
+  else
+    return object->active;
 }
