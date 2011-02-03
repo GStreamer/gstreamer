@@ -65,6 +65,47 @@ GST_START_TEST (test_format)
 
 GST_END_TEST;
 
+GST_START_TEST (test_caps_proxy)
+{
+  GstElement *bin;
+  GstPad *pad;
+  gchar *pipe_str;
+  GstBuffer *buffer;
+  GError *error = NULL;
+
+  pipe_str = g_strdup_printf ("audiotestsrc num-buffers=1 "
+      "! audio/x-raw-int,rate=48000,channels=1 "
+      "! audioresample "
+      "! lamemp3enc ! audio/mpeg,rate=(int){22050,44100} ! fakesink");
+
+  bin = gst_parse_launch (pipe_str, &error);
+  fail_unless (bin != NULL, "Error parsing pipeline: %s",
+      error ? error->message : "(invalid error)");
+  g_free (pipe_str);
+
+  /* get the pad */
+  {
+    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink0");
+
+    fail_unless (sink != NULL, "Could not get fakesink out of bin");
+    pad = gst_element_get_static_pad (sink, "sink");
+    fail_unless (pad != NULL, "Could not get pad out of fakesink");
+    gst_object_unref (sink);
+  }
+
+  gst_buffer_straw_start_pipeline (bin, pad);
+
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
+
+  gst_buffer_straw_stop_pipeline (bin, pad);
+
+  gst_buffer_unref (buffer);
+  gst_object_unref (pad);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 #endif /* #ifndef GST_DISABLE_PARSE */
 
 Suite *
@@ -77,6 +118,7 @@ lame_suite (void)
 
 #ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_format);
+  tcase_add_test (tc_chain, test_caps_proxy);
 #endif
 
   return s;
