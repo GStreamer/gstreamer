@@ -813,12 +813,10 @@ GList *
 ges_timeline_object_get_effects (GESTimelineObject * object)
 {
   GList *tmp, *ret;
-  guint i;
 
   ret = NULL;
 
-  for (tmp = object->priv->trackobjects, i = 0;
-      i < object->priv->nb_effects; tmp = tmp->next, i++) {
+  for (tmp = object->priv->trackobjects; tmp; tmp = tmp->next) {
     if (GES_IS_TRACK_EFFECT (tmp->data)) {
       ret = g_list_insert_sorted_with_data (ret, tmp->data,
           (GCompareDataFunc) sort_track_effects, object);
