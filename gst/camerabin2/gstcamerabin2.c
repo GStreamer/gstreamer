@@ -76,7 +76,8 @@ enum
   PROP_IMAGE_FILTER,
   PROP_VIDEO_FILTER,
   PROP_VIEWFINDER_FILTER,
-  PROP_PREVIEW_FILTER
+  PROP_PREVIEW_FILTER,
+  PROP_VIEWFINDER_SINK
 };
 
 enum
@@ -443,6 +444,10 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           " (Should be set on NULL state)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_VIEWFINDER_SINK,
+      g_param_spec_object ("viewfinder-sink", "Viewfinder sink",
+          "The video sink of the viewfinder.",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin::capture-start:
@@ -895,6 +900,10 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
         g_object_set (camera->src, "preview-filter", camera->preview_filter,
             NULL);
       break;
+    case PROP_VIEWFINDER_SINK:
+      g_object_set (camera->viewfinderbin, "video-sink",
+          g_value_get_object (value), NULL);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -999,6 +1008,13 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       if (camera->preview_filter)
         g_value_set_object (value, camera->preview_filter);
       break;
+    case PROP_VIEWFINDER_SINK:{
+      GstElement *sink;
+
+      g_object_get (camera->viewfinderbin, "video-sink", &sink, NULL);
+      g_value_take_object (value, sink);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
