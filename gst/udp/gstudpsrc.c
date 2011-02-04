@@ -41,8 +41,8 @@
  * for RTP implementations where the contents of the UDP packets is transfered
  * out-of-bounds using SDP or other means.
  *
- * The #GstUDPSrc:buffer property is used to change the default kernel buffer
- * sizes used for receiving packets. The buffer size may be increased for
+ * The #GstUDPSrc:buffer-size property is used to change the default kernel
+ * buffersizes used for receiving packets. The buffer size may be increased for
  * high-volume connections, or may be decreased to limit the possible backlog of
  * incoming data. The system places an absolute limit on these values, on Linux,
  * for example, the default buffer size is typically 50K and can be increased to
@@ -50,7 +50,7 @@
  *
  * The #GstUDPSrc:skip-first-bytes property is used to strip off an arbitrary
  * number of bytes from the start of the raw udp packet and can be used to strip
- * off proprietary header, for example. 
+ * off proprietary header, for example.
  *
  * The udpsrc is always a live source. It does however not provide a #GstClock,
  * this is left for upstream elements such as an RTP session manager or demuxer
@@ -78,7 +78,7 @@
  * because it is blocked by a firewall.
  * </para>
  * <para>
- * A custom file descriptor can be configured with the 
+ * A custom file descriptor can be configured with the
  * #GstUDPSrc:sockfd property. The socket will be closed when setting the
  * element to READY by default. This behaviour can be
  * overriden with the #GstUDPSrc:closefd property, in which case the application
