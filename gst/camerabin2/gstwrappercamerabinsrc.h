@@ -112,13 +112,6 @@ struct _GstWrapperCameraBinSrc
   GstCaps *image_capture_caps;
   gboolean image_renegotiate;
   gboolean video_renegotiate;
-
-  /* Preview convert pipeline */
-  GstCameraBinPreviewPipelineData *preview_pipeline;
-  gboolean post_previews;
-  GstCaps *preview_caps;
-  GstElement *preview_filter;
-  gboolean preview_filter_changed;
 };
 
 

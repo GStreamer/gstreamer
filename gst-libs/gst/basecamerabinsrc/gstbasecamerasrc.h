@@ -27,6 +27,7 @@
 #include <gst/interfaces/photography.h>
 #include <gst/interfaces/colorbalance.h>
 #include "gstcamerabin-enum.h"
+#include "gstcamerabinpreview.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_BASE_CAMERA_SRC \
@@ -65,6 +66,13 @@ struct _GstBaseCameraSrc
 
   gboolean capturing;
   GMutex *capturing_mutex;
+
+  /* Preview convert pipeline */
+  GstCaps *preview_caps;
+  gboolean post_preview;
+  GstElement *preview_filter;
+  GstCameraBinPreviewPipelineData *preview_pipeline;
+  gboolean preview_filter_changed;
 
   /* Resolution of the buffers configured to camerabin */
   gint width;
@@ -126,6 +134,7 @@ GstCaps * gst_base_camera_src_get_allowed_input_caps (GstBaseCameraSrc * self);
 void gst_base_camera_src_finish_capture (GstBaseCameraSrc *self);
 
 
+void gst_base_camera_src_post_preview (GstBaseCameraSrc *self, GstBuffer * buf);
 // XXX add methods to get/set img capture and vid capture caps..
 
 #endif /* __GST_BASE_CAMERA_SRC_H__ */
