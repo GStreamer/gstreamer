@@ -1816,16 +1816,16 @@ gst_camerabin_have_img_buffer (GstPad * pad, GstMiniObject * obj,
 
     GST_LOG ("got buffer %p with size %d", buffer, GST_BUFFER_SIZE (buffer));
 
+    if (camera->preview_caps) {
+      gst_camerabin_send_preview (camera, buffer);
+    }
+
     /* Image filename should be set by now */
     if (g_str_equal (camera->filename->str, "")) {
       GST_DEBUG_OBJECT (camera, "filename not set, dropping buffer");
       ret = FALSE;
       CAMERABIN_PROCESSING_DEC_UNLOCKED (camera);
       goto done;
-    }
-
-    if (camera->preview_caps) {
-      gst_camerabin_send_preview (camera, buffer);
     }
 
     gst_camerabin_rewrite_tags (camera);
@@ -4045,11 +4045,14 @@ gst_camerabin_capture_start (GstCameraBin * camera)
     }
   }
 
-  if (g_str_equal (camera->filename->str, "")) {
-    GST_ELEMENT_ERROR (camera, CORE, FAILED,
-        ("set filename before starting capture"), (NULL));
-    return;
-  }
+  /* We need a filename unless it's a photo and preview_caps is set */
+
+  if (g_str_equal (camera->filename->str, ""))
+    if (camera->active_bin == camera->vidbin || !camera->preview_caps) {
+      GST_ELEMENT_ERROR (camera, CORE, FAILED,
+          ("set filename before starting capture"), (NULL));
+      return;
+    }
 
   g_mutex_lock (camera->capture_mutex);
   if (camera->capturing) {
