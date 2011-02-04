@@ -844,6 +844,55 @@ ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
       GES_TRACK_OBJECT (effect))->priority_offset;
 }
 
+/**
+* ges_timeline_object_set_top_effect_priority:
+*
+* @object: The origin #GESTimelineObject
+* @effect: The #GESTrackEffect to move
+* @newpriority: the new position at which to move the @effect inside this
+* #GESTimelineObject
+*
+* This is a convenience method that lets you set the priority of a top effect.
+*
+* Returns: %TRUE if @effect was successfuly moved, %FALSE otherwize.
+*/
+gboolean
+ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
+    GESTrackOperation * effect, guint newpriority)
+{
+  GList *tmp;
+  guint inc;
+  GESTrackObject *tck_obj = GES_TRACK_OBJECT (effect);
+  GESTimelineObjectPrivate *priv = object->priv;
+
+  /*  We don't change the priority */
+  if (tck_obj->priority == newpriority ||
+      (newpriority > (object->priv->nb_effects - 1)) ||
+      (G_UNLIKELY (ges_track_object_get_timeline_object (tck_obj) != object))) {
+    return FALSE;
+  } else if (tck_obj->priority < newpriority)
+    inc = -1;
+  else
+    inc = +1;
+
+  ges_track_object_set_priority (tck_obj, newpriority);
+  for (tmp = priv->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *tmpo = GES_TRACK_OBJECT (tmp->data);
+    guint tck_priority = ges_track_object_get_priority (tmpo);
+
+    if ((inc == +1 && tck_priority >= newpriority) ||
+        (inc == -1 && tck_priority <= newpriority)) {
+      ges_track_object_set_priority (tmpo, tck_priority + inc);
+    }
+  }
+
+  /*  We keep the list of trackobjects sorted */
+  priv->trackobjects = g_list_sort_with_data (priv->trackobjects,
+      (GCompareDataFunc) sort_track_effects, object);
+
+  return TRUE;
+}
+
 static void
 update_height (GESTimelineObject * object)
 {
