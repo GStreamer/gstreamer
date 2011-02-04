@@ -53,6 +53,7 @@ struct _GstOggStream
   /* for oggparse */
   gboolean in_headers;
   GList *unknown_pages;
+  GList *stored_buffers;
 
   gint map;
   gboolean is_skeleton;
