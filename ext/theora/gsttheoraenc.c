@@ -298,6 +298,8 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   int default_speed_level = THEORA_DEF_SPEEDLEVEL;
   int max_speed_level = default_speed_level;
 
+  GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");
+
   th_ctx = dummy_encode_ctx ();
   if (th_ctx) {
     if (!check_speed_level (th_ctx, &default_speed_level, &max_speed_level))
@@ -410,7 +412,6 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = theora_enc_change_state;
-  GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");
 }
 
 static void
