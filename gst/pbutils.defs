@@ -378,7 +378,7 @@
   (c-name "gst_encoding_profile_set_name")
   (return-type "none")
   (parameters
-    '("const-gchar*" "name")
+    '("const-gchar*" "name" (null-ok) (default "NULL"))
   )
 )
 
@@ -387,7 +387,7 @@
   (c-name "gst_encoding_profile_set_description")
   (return-type "none")
   (parameters
-    '("const-gchar*" "description")
+    '("const-gchar*" "description" (null-ok) (default "NULL"))
   )
 )
 
@@ -405,7 +405,7 @@
   (c-name "gst_encoding_profile_set_preset")
   (return-type "none")
   (parameters
-    '("const-gchar*" "preset")
+    '("const-gchar*" "preset" (null-ok) (default "NULL"))
   )
 )
 
@@ -414,7 +414,7 @@
   (c-name "gst_encoding_profile_set_restriction")
   (return-type "none")
   (parameters
-    '("GstCaps*" "restriction")
+    '("GstCaps*" "restriction" (null-ok) (default "NULL"))
   )
 )
 
@@ -454,7 +454,7 @@
   (parameters
     '("const-gchar*" "targetname")
     '("const-gchar*" "profilename")
-    '("const-gchar*" "category")
+    '("const-gchar*" "category" (null-ok) (default "NULL"))
   )
 )
 
@@ -487,10 +487,10 @@
   (is-constructor-of "GstEncodingContainerProfile")
   (return-type "GstEncodingContainerProfile*")
   (parameters
-    '("const-gchar*" "name")
-    '("const-gchar*" "description")
+    '("const-gchar*" "name" (null-ok) (default "NULL"))
+    '("const-gchar*" "description" (null-ok) (default "NULL"))
     '("GstCaps*" "format")
-    '("const-gchar*" "preset")
+    '("const-gchar*" "preset"(null-ok) (default "NULL"))
   )
 )
 
@@ -500,7 +500,7 @@
   (return-type "GstEncodingVideoProfile*")
   (parameters
     '("GstCaps*" "format")
-    '("const-gchar*" "preset")
+    '("const-gchar*" "preset" (null-ok) (default "NULL"))
     '("GstCaps*" "restriction")
     '("guint" "presence")
   )
@@ -512,7 +512,7 @@
   (return-type "GstEncodingAudioProfile*")
   (parameters
     '("GstCaps*" "format")
-    '("const-gchar*" "preset")
+    '("const-gchar*" "preset" (null-ok) (default "NULL"))
     '("GstCaps*" "restriction")
     '("guint" "presence")
   )
