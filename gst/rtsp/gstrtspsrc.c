@@ -56,14 +56,14 @@
  * For each stream listed in the SDP a new rtp_stream%d pad will be created
  * with caps derived from the SDP media description. This is a caps of mime type
  * "application/x-rtp" that can be connected to any available RTP depayloader
- * element. 
+ * element.
  *
  * rtspsrc will internally instantiate an RTP session manager element
  * that will handle the RTCP messages to and from the server, jitter removal,
- * packet reordering along with providing a clock for the pipeline. 
+ * packet reordering along with providing a clock for the pipeline.
  * This feature is implemented using the gstrtpbin element.
  *
- * rtspsrc acts like a live source and will therefore only generate data in the 
+ * rtspsrc acts like a live source and will therefore only generate data in the
  * PLAYING state.
  *
  * <refsect2>
@@ -1309,7 +1309,7 @@ gst_rtspsrc_sdp_attributes_to_caps (GArray * attributes, GstCaps * caps)
 /*
  *  Mapping of caps to and from SDP fields:
  *
- *   m=<media> <UDP port> RTP/AVP <payload> 
+ *   m=<media> <UDP port> RTP/AVP <payload>
  *   a=rtpmap:<payload> <encoding_name>/<clock_rate>[/<encoding_params>]
  *   a=fmtp:<payload> <param>[=<value>];...
  */
@@ -4133,11 +4133,11 @@ gst_rtspsrc_parse_digest_challenge (GstRTSPConnection * conn,
   g_slist_free (list);
 }
 
-/* Parse a WWW-Authenticate Response header and determine the 
+/* Parse a WWW-Authenticate Response header and determine the
  * available authentication methods
  *
  * This code should also cope with the fact that each WWW-Authenticate
- * header can contain multiple challenge methods + tokens 
+ * header can contain multiple challenge methods + tokens
  *
  * At the moment, for Basic auth, we just do a minimal check and don't
  * even parse out the realm */
@@ -4166,8 +4166,8 @@ gst_rtspsrc_parse_auth_hdr (gchar * hdr, GstRTSPAuthMethod * methods,
  * gst_rtspsrc_setup_auth:
  * @src: the rtsp source
  *
- * Configure a username and password and auth method on the 
- * connection object based on a response we received from the 
+ * Configure a username and password and auth method on the
+ * connection object based on a response we received from the
  * peer.
  *
  * Currently, this requires that a username and password were supplied
@@ -5672,7 +5672,7 @@ not_supported:
  *
  * url=<URL>;[seq=<seqbase>;rtptime=<timebase>] [, url=...]
  *
- * rtptime corresponds to the timestamp for the NPT time given in the header 
+ * rtptime corresponds to the timestamp for the NPT time given in the header
  * seqbase corresponds to the next sequence number we received. This number
  * indicates the first seqnum after the seek and should be used to discard
  * packets that are from before the seek.
