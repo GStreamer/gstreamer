@@ -983,13 +983,33 @@ discoverer_collect (GstDiscoverer * dc)
 }
 
 static void
+get_async_cb (gpointer cb_data, GSource * source, GSourceFunc * func,
+    gpointer * data)
+{
+  *func = (GSourceFunc) async_timeout_cb;
+  *data = cb_data;
+}
+
+/* Wrapper since GSourceCallbackFuncs don't expect a return value from ref() */
+static void
+_void_g_object_ref (gpointer object)
+{
+  g_object_ref (G_OBJECT (object));
+}
+
+static void
 handle_current_async (GstDiscoverer * dc)
 {
   GSource *source;
+  static GSourceCallbackFuncs cb_funcs = {
+    .ref = _void_g_object_ref,
+    .unref = g_object_unref,
+    .get = get_async_cb,
+  };
 
   /* Attach a timeout to the main context */
   source = g_timeout_source_new (dc->priv->timeout / GST_MSECOND);
-  g_source_set_callback (source, (GSourceFunc) async_timeout_cb, dc, NULL);
+  g_source_set_callback_indirect (source, g_object_ref (dc), &cb_funcs);
   dc->priv->timeoutid = g_source_attach (source, dc->priv->ctx);
   g_source_unref (source);
 }
