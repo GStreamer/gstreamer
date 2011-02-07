@@ -781,10 +781,6 @@ main (int argc, char *argv[])
   GOptionContext *ctx;
   GError *err = NULL;
 
-  /* if we fail to create xwindow should we care? */
-  if (!no_xwindow)
-    create_host_window ();
-
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
@@ -796,6 +792,10 @@ main (int argc, char *argv[])
     exit (1);
   }
   g_option_context_free (ctx);
+
+  /* if we fail to create xwindow should we care? */
+  if (!no_xwindow)
+    create_host_window ();
 
   GST_DEBUG_CATEGORY_INIT (camerabin_test, "camerabin-test", 0,
       "camerabin test");
