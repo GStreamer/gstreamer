@@ -821,9 +821,11 @@ gst_directdraw_sink_draw_borders (GstDirectDrawSink * ddrawsink, RECT dst_rect)
   OffsetRect (&win_rect, win_point.x, win_point.y);
 
   /* We acquire a drawing context */
-  if (IDirectDrawSurface7_GetDC (ddrawsink->primary_surface, &hdc) == DD_OK) {
+  if ((hdc = GetDC (ddrawsink->video_window))) {
     HBRUSH brush = CreateSolidBrush (RGB (0, 0, 0));
 
+    /* arrange for logical coordinates that match screen coordinates */
+    SetWindowOrgEx (hdc, win_point.x, win_point.y, NULL);
     /* Left border */
     if (dst_rect.left > win_rect.left) {
       fill_rect.left = win_rect.left;
@@ -857,7 +859,7 @@ gst_directdraw_sink_draw_borders (GstDirectDrawSink * ddrawsink, RECT dst_rect)
       FillRect (hdc, &fill_rect, brush);
     }
     DeleteObject (brush);
-    IDirectDrawSurface7_ReleaseDC (ddrawsink->primary_surface, hdc);
+    ReleaseDC (ddrawsink->video_window, hdc);
   }
 }
 
