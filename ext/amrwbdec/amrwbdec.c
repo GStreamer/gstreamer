@@ -63,7 +63,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_amrwbdec_debug);
 
 static const unsigned char block_size[16] =
     { 18, 24, 33, 37, 41, 47, 51, 59, 61,
-  6, 6, 0, 0, 0, 1, 1
+  6, 0, 0, 0, 0, 1, 1
 };
 
 static gboolean gst_amrwbdec_event (GstPad * pad, GstEvent * event);
@@ -285,7 +285,13 @@ gst_amrwbdec_chain (GstPad * pad, GstBuffer * buffer)
 
     GST_DEBUG_OBJECT (amrwbdec, "mode %d, block %d", mode, block);
 
-    if (!block || gst_adapter_available (amrwbdec->adapter) < block)
+    if (!block) {
+      GST_LOG_OBJECT (amrwbdec, "skipping byte");
+      gst_adapter_flush (amrwbdec->adapter, 1);
+      continue;
+    }
+
+    if (gst_adapter_available (amrwbdec->adapter) < block)
       break;
 
     /* the library seems to write into the source data, hence the copy. */
