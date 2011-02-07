@@ -63,7 +63,7 @@
 
 G_BEGIN_DECLS
 
-void ges_init (void);
+gboolean ges_init (void);
 
 G_END_DECLS
 

@@ -22,12 +22,32 @@
 #include <gst/controller/gstcontroller.h>
 #include "ges-internal.h"
 
+#define GES_GNONLIN_VERSION_NEEDED_MAJOR 0
+#define GES_GNONLIN_VERSION_NEEDED_MINOR 10
+#define GES_GNONLIN_VERSION_NEEDED_MICRO 16
+
 GST_DEBUG_CATEGORY (_ges_debug);
 
 /**
  * SECTION:ges-common
  * @short_description: Initialization.
  */
+
+static gboolean
+ges_check_gnonlin_availability (void)
+{
+  gboolean ret = TRUE;
+  if (!gst_default_registry_check_feature_version ("gnlcomposition",
+          GES_GNONLIN_VERSION_NEEDED_MAJOR, GES_GNONLIN_VERSION_NEEDED_MINOR,
+          GES_GNONLIN_VERSION_NEEDED_MICRO)) {
+    GST_ERROR
+        ("GNonLin plugins not found, or not at least version %u.%u.%u",
+        GES_GNONLIN_VERSION_NEEDED_MAJOR,
+        GES_GNONLIN_VERSION_NEEDED_MINOR, GES_GNONLIN_VERSION_NEEDED_MICRO);
+    ret = FALSE;
+  }
+  return ret;
+}
 
 /**
  * ges_init:
@@ -36,7 +56,7 @@ GST_DEBUG_CATEGORY (_ges_debug);
  * GES.
  */
 
-void
+gboolean
 ges_init (void)
 {
   /* initialize debugging category */
@@ -52,7 +72,13 @@ ges_init (void)
   GES_TYPE_TIMELINE_STANDARD_TRANSITION;
   GES_TYPE_TIMELINE_OVERLAY;
 
+  /* check the gnonlin elements are available */
+  if (!ges_check_gnonlin_availability ())
+    return FALSE;
+
   /* TODO: user-defined types? */
 
   GST_DEBUG ("GStreamer Editing Services initialized");
+
+  return TRUE;
 }

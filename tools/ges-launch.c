@@ -435,7 +435,10 @@ main (int argc, gchar ** argv)
   }
 
   /* Initialize the GStreamer Editing Services */
-  ges_init ();
+  if (!ges_init ()) {
+    g_printerr ("Error initializing GES\n");
+    exit (1);
+  }
 
   if (list_transitions) {
     print_transition_list ();
