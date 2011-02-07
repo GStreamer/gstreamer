@@ -1691,6 +1691,13 @@ dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
 AC_SUBST(GST_ALL_LDFLAGS)
 
+dnl GST_LIB_LDFLAGS
+dnl linker flags shared by all libraries
+dnl LDFLAGS modifier defining exported symbols from built libraries
+dnl (export _gst_foo but not __gst_foo)
+GST_LIB_LDFLAGS="-export-symbols-regex ^_?\(gst_\|Gst\|GST_\).*"
+AC_SUBST(GST_LIB_LDFLAGS)
+
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
