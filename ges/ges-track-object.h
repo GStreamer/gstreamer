@@ -118,6 +118,7 @@ struct _GESTrackObjectClass {
   const gchar *gnlobject_factorytype;
   GstElement* (*create_gnl_object) (GESTrackObject * object);
   GstElement* (*create_element) (GESTrackObject * object);
+  GHashTable* (*get_props_hastable) (GESTrackObject * object);
 
   void (*start_changed) (GESTrackObject *object, guint64 start);
   void (*media_start_changed) (GESTrackObject *object, guint64 media_start);

@@ -49,6 +49,11 @@ struct _GESTrackObjectPrivate
   GstElement *gnlobject;        /* The GnlObject */
   GstElement *element;          /* The element contained in the gnlobject (can be NULL) */
 
+  /* We keep a link between properties name and elements internally
+   * The hashtable should look like
+   * {'ClassName-propertyName' ---> element,}*/
+  GHashTable *properties_hashtable;
+
   GESTimelineObject *timelineobj;
   GESTrack *track;
 
@@ -156,6 +161,10 @@ ges_track_object_set_property (GObject * object, guint property_id,
 static void
 ges_track_object_dispose (GObject * object)
 {
+  GESTrackObjectPrivate *priv = GES_TRACK_OBJECT (object)->priv;
+  if (priv->properties_hashtable)
+    g_hash_table_destroy (priv->properties_hashtable);
+
   G_OBJECT_CLASS (ges_track_object_parent_class)->dispose (object);
 }
 
@@ -259,6 +268,7 @@ ges_track_object_init (GESTrackObject * self)
   self->priv->pending_priority = 1;
   self->priv->pending_active = TRUE;
   self->priv->locked = TRUE;
+  self->priv->properties_hashtable = NULL;
 }
 
 static inline gboolean
@@ -625,6 +635,7 @@ ensure_gnl_object (GESTrackObject * object)
 {
   GESTrackObjectClass *class;
   GstElement *gnlobject;
+  GHashTable *props_hash;
   gboolean res = FALSE;
 
   if (object->priv->gnlobject && object->priv->valid)
@@ -684,6 +695,17 @@ ensure_gnl_object (GESTrackObject * object)
           "priority", object->priv->pending_priority,
           "active", object->priv->pending_active, NULL);
 
+      /*  We feed up the props_hashtable if possible */
+      if (class->get_props_hastable) {
+        props_hash = class->get_props_hastable (object);
+
+        if (props_hash == NULL) {
+          GST_DEBUG ("'get_props_hastable' implementation returned TRUE but no\
+                 properties_hashtable is available");
+        } else {
+          object->priv->properties_hashtable = props_hash;
+        }
+      }
     }
   }
 
