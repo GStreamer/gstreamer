@@ -2806,13 +2806,11 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
       goto no_sink_element;
 
     /* don't join multicast group, we will have the source socket do that */
-    g_object_set (G_OBJECT (stream->udpsink[0]), "auto-multicast", FALSE, NULL);
+    /* no sync or async state changes needed */
+    g_object_set (G_OBJECT (stream->udpsink[0]), "auto-multicast", FALSE,
+        "loop", FALSE, "sync", FALSE, "async", FALSE, NULL);
     if (ttl > 0)
       g_object_set (G_OBJECT (stream->udpsink[0]), "ttl", ttl, NULL);
-    g_object_set (G_OBJECT (stream->udpsink[0]), "loop", FALSE, NULL);
-    /* no sync or async state changes needed */
-    g_object_set (G_OBJECT (stream->udpsink[0]), "sync", FALSE, "async", FALSE,
-        NULL);
 
     if (stream->udpsrc[0]) {
       /* configure socket, we give it the same UDP socket as the udpsrc for RTP
@@ -2821,8 +2819,8 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
       GST_DEBUG_OBJECT (src, "RTP UDP src has sock %d", sockfd);
       /* configure socket and make sure udpsink does not close it when shutting
        * down, it belongs to udpsrc after all. */
-      g_object_set (G_OBJECT (stream->udpsink[0]), "sockfd", sockfd, NULL);
-      g_object_set (G_OBJECT (stream->udpsink[0]), "closefd", FALSE, NULL);
+      g_object_set (G_OBJECT (stream->udpsink[0]), "sockfd", sockfd,
+          "closefd", FALSE, NULL);
     }
 
     /* the source for the dummy packets to open up NAT */
@@ -2832,9 +2830,7 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
 
     /* random data in 5 buffers, a size of 200 bytes should be fine */
     g_object_set (G_OBJECT (stream->fakesrc), "filltype", 3, "num-buffers", 5,
-        NULL);
-    g_object_set (G_OBJECT (stream->fakesrc), "sizetype", 2, "sizemax", 200,
-        "silent", TRUE, NULL);
+        "sizetype", 2, "sizemax", 200, "silent", TRUE, NULL);
 
     /* we don't want to consider this a sink */
     GST_OBJECT_FLAG_UNSET (stream->udpsink[0], GST_ELEMENT_IS_SINK);
@@ -2861,14 +2857,11 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
       goto no_sink_element;
 
     /* don't join multicast group, we will have the source socket do that */
-    g_object_set (G_OBJECT (stream->udpsink[1]), "auto-multicast", FALSE, NULL);
+    /* no sync or async state changes needed */
+    g_object_set (G_OBJECT (stream->udpsink[1]), "auto-multicast", FALSE,
+        "loop", FALSE, "sync", FALSE, "async", FALSE, NULL);
     if (ttl > 0)
       g_object_set (G_OBJECT (stream->udpsink[0]), "ttl", ttl, NULL);
-    g_object_set (G_OBJECT (stream->udpsink[1]), "loop", FALSE, NULL);
-    /* no sync needed */
-    g_object_set (G_OBJECT (stream->udpsink[1]), "sync", FALSE, NULL);
-    /* no async state changes needed */
-    g_object_set (G_OBJECT (stream->udpsink[1]), "async", FALSE, NULL);
 
     if (stream->udpsrc[1]) {
       /* configure socket, we give it the same UDP socket as the udpsrc for RTCP
@@ -2878,8 +2871,8 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
       GST_DEBUG_OBJECT (src, "RTCP UDP src has sock %d", sockfd);
       /* configure socket and make sure udpsink does not close it when shutting
        * down, it belongs to udpsrc after all. */
-      g_object_set (G_OBJECT (stream->udpsink[1]), "sockfd", sockfd, NULL);
-      g_object_set (G_OBJECT (stream->udpsink[1]), "closefd", FALSE, NULL);
+      g_object_set (G_OBJECT (stream->udpsink[1]), "sockfd", sockfd,
+          "closefd", FALSE, NULL);
     }
 
     /* we don't want to consider this a sink */
