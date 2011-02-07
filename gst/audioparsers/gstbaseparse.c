@@ -3016,7 +3016,9 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
         if (!(res && seekable)) {
           if (!gst_base_parse_get_duration (parse, GST_FORMAT_TIME, &duration)
               || duration == -1) {
-            seekable = FALSE;
+            /* seekable if we still have a chance to get duration later on */
+            seekable =
+                parse->priv->upstream_seekable && parse->priv->update_interval;
           } else {
             seekable = parse->priv->upstream_seekable;
             GST_LOG_OBJECT (parse, "already determine upstream seekabled: %d",
