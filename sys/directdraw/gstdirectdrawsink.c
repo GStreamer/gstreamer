@@ -904,6 +904,19 @@ gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   GetClientRect (ddrawsink->video_window, &destsurf_rect);
   OffsetRect (&destsurf_rect, dest_surf_point.x, dest_surf_point.y);
 
+  /* Check to see if we have an area to draw to.
+   * When the window is minimized, it will trigger the
+   * "IDirectDrawSurface7_Blt (object's offscreen surface)" warning,
+   * with a msg that the rectangle is invalid */
+  if (destsurf_rect.right <= destsurf_rect.left ||
+      destsurf_rect.bottom <= destsurf_rect.top) {
+    GST_OBJECT_UNLOCK (ddrawsink);
+    GST_DEBUG_OBJECT (ddrawsink, "invalid rendering window rectangle "
+        "(%ld, %ld), (%ld, %ld)", destsurf_rect.left, destsurf_rect.top,
+        destsurf_rect.right, destsurf_rect.bottom);
+    goto beach;
+  }
+
   if (ddrawsink->keep_aspect_ratio) {
     /* center image to dest image keeping aspect ratio */
     src_rect.top = 0;
@@ -1004,6 +1017,7 @@ gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
           "returned %s", DDErrorString (hRes));
   }
 
+beach:
   return GST_FLOW_OK;
 }
 
