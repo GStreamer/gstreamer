@@ -108,6 +108,12 @@ struct _GstDiscovererPrivate
 
   /* reusable queries */
   GstQuery *seeking_query;
+
+  /* Handler ids for various callbacks */
+  gulong pad_added_id;
+  gulong pad_remove_id;
+  gulong element_added_id;
+  gulong bus_cb_id;
 };
 
 #define DISCO_LOCK(dc) g_mutex_lock (dc->priv->lock);
@@ -267,24 +273,28 @@ gst_discoverer_init (GstDiscoverer * dc)
   GST_LOG_OBJECT (dc, "Adding uridecodebin to pipeline");
   gst_bin_add (dc->priv->pipeline, dc->priv->uridecodebin);
 
-  g_signal_connect (dc->priv->uridecodebin, "pad-added",
-      G_CALLBACK (uridecodebin_pad_added_cb), dc);
-  g_signal_connect (dc->priv->uridecodebin, "pad-removed",
-      G_CALLBACK (uridecodebin_pad_removed_cb), dc);
+  dc->priv->pad_added_id =
+      g_signal_connect_object (dc->priv->uridecodebin, "pad-added",
+      G_CALLBACK (uridecodebin_pad_added_cb), dc, 0);
+  dc->priv->pad_remove_id =
+      g_signal_connect_object (dc->priv->uridecodebin, "pad-removed",
+      G_CALLBACK (uridecodebin_pad_removed_cb), dc, 0);
 
   GST_LOG_OBJECT (dc, "Getting pipeline bus");
   dc->priv->bus = gst_pipeline_get_bus ((GstPipeline *) dc->priv->pipeline);
 
-  g_signal_connect (dc->priv->bus, "message", G_CALLBACK (discoverer_bus_cb),
-      dc);
+  dc->priv->bus_cb_id =
+      g_signal_connect_object (dc->priv->bus, "message",
+      G_CALLBACK (discoverer_bus_cb), dc, 0);
 
   GST_DEBUG_OBJECT (dc, "Done initializing Discoverer");
 
   /* This is ugly. We get the GType of decodebin2 so we can quickly detect
    * when a decodebin2 is added to uridecodebin so we can set the
    * post-stream-topology setting to TRUE */
-  g_signal_connect (dc->priv->uridecodebin, "element-added",
-      G_CALLBACK (uridecodebin_element_added_cb), dc);
+  dc->priv->element_added_id =
+      g_signal_connect_object (dc->priv->uridecodebin, "element-added",
+      G_CALLBACK (uridecodebin_element_added_cb), dc, 0);
   tmp = gst_element_factory_make ("decodebin2", NULL);
   dc->priv->decodebin2_type = G_OBJECT_TYPE (tmp);
   gst_object_unref (tmp);
@@ -308,6 +318,12 @@ discoverer_reset (GstDiscoverer * dc)
     gst_element_set_state ((GstElement *) dc->priv->pipeline, GST_STATE_NULL);
 }
 
+#define DISCONNECT_SIGNAL(o,i) G_STMT_START{           \
+  if ((i) && g_signal_handler_is_connected ((o), (i))) \
+    g_signal_handler_disconnect ((o), (i));            \
+  (i) = 0;                                             \
+}G_STMT_END
+
 static void
 gst_discoverer_dispose (GObject * obj)
 {
@@ -318,9 +334,16 @@ gst_discoverer_dispose (GObject * obj)
   discoverer_reset (dc);
 
   if (G_LIKELY (dc->priv->pipeline)) {
+    /* Workaround for bug #118536 */
+    DISCONNECT_SIGNAL (dc->priv->uridecodebin, dc->priv->pad_added_id);
+    DISCONNECT_SIGNAL (dc->priv->uridecodebin, dc->priv->pad_remove_id);
+    DISCONNECT_SIGNAL (dc->priv->uridecodebin, dc->priv->element_added_id);
+    DISCONNECT_SIGNAL (dc->priv->bus, dc->priv->bus_cb_id);
+
     /* pipeline was set to NULL in _reset */
     gst_object_unref (dc->priv->pipeline);
     gst_object_unref (dc->priv->bus);
+
     dc->priv->pipeline = NULL;
     dc->priv->uridecodebin = NULL;
     dc->priv->bus = NULL;
