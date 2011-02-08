@@ -24,6 +24,9 @@
 void
 effect_added_cb (GESTimelineObject * obj, GESTrackOperation * trop,
     gpointer data);
+void
+deep_prop_changed_cb (GESTrackObject * obj, GstElement * element,
+    GParamSpec * spec);
 
 GST_START_TEST (test_effect_basic)
 {
@@ -374,6 +377,15 @@ effect_added_cb (GESTimelineObject * obj, GESTrackOperation * trop,
   fail_unless (GES_IS_TRACK_OPERATION (trop));
 }
 
+void
+deep_prop_changed_cb (GESTrackObject * obj, GstElement * element,
+    GParamSpec * spec)
+{
+  GST_DEBUG ("%s property changed", g_param_spec_get_name (spec));
+  fail_unless (GES_IS_TRACK_OBJECT (obj));
+  fail_unless (GST_IS_ELEMENT (element));
+}
+
 GST_START_TEST (test_tl_obj_signals)
 {
   GESTimeline *timeline;
@@ -408,6 +420,8 @@ GST_START_TEST (test_tl_obj_signals)
           (tl_effect), GES_TRACK_OBJECT (tck_effect)));
   fail_unless (ges_track_add_object (track_video,
           GES_TRACK_OBJECT (tck_effect)));
+  g_signal_connect (tck_effect, "deep-notify", (GCallback) deep_prop_changed_cb,
+      tck_effect);
 
   g_value_init (&value, G_TYPE_UINT);
   g_value_set_uint (&value, 17);

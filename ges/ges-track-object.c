@@ -31,6 +31,7 @@
  */
 
 #include "ges-internal.h"
+#include "gesmarshal.h"
 #include "ges-track-object.h"
 #include "ges-timeline-object.h"
 
@@ -76,6 +77,14 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
+enum
+{
+  DEEP_NOTIFY,
+  LAST_SIGNAL
+};
+
+static guint ges_track_object_signals[LAST_SIGNAL] = { 0 };
+
 static GstElement *ges_track_object_create_gnl_object_func (GESTrackObject *
     object);
 
@@ -92,6 +101,11 @@ static void gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackObject * obj);
 
 static void gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg
+    G_GNUC_UNUSED, GESTrackObject * obj);
+
+static void connect_properties_signals (GESTrackObject * object);
+static void connect_signal (gpointer key, gpointer value, gpointer user_data);
+static void gst_element_prop_changed_cb (GstElement * element, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackObject * obj);
 
 static inline gboolean
@@ -251,6 +265,21 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_ACTIVE,
       properties[PROP_ACTIVE]);
+
+  /**
+   * GESTrackObject::deep-notify:
+   * @track_object: a #GESTrackObject
+   * @prop_object: the object that originated the signal
+   * @prop: the property that changed
+   *
+   * The deep notify signal is used to be notified of property changes of all
+   * the childs of @track_object
+   */
+  ges_track_object_signals[DEEP_NOTIFY] =
+      g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
+      G_SIGNAL_NO_HOOKS, 0, NULL, NULL, gst_marshal_VOID__OBJECT_PARAM,
+      G_TYPE_NONE, 2, GST_TYPE_ELEMENT, G_TYPE_PARAM);
 
   klass->create_gnl_object = ges_track_object_create_gnl_object_func;
 }
@@ -464,6 +493,40 @@ gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     if (klass->start_changed)
       klass->start_changed (obj, start);
   }
+}
+
+static void
+gst_element_prop_changed_cb (GstElement * element, GParamSpec * arg
+    G_GNUC_UNUSED, GESTrackObject * obj)
+{
+  g_signal_emit (obj, ges_track_object_signals[DEEP_NOTIFY], 0,
+      GST_ELEMENT (element), arg);
+}
+
+static void
+connect_signal (gpointer key, gpointer value, gpointer user_data)
+{
+  gchar **name = g_strsplit ((char *) key, "-", 2);
+  gchar *signame = g_strconcat ("notify::", (gchar *) name[1], NULL);
+  g_strfreev (name);
+
+  g_signal_connect (G_OBJECT (value),
+      signame, G_CALLBACK (gst_element_prop_changed_cb),
+      GES_TRACK_OBJECT (user_data));
+
+  g_free (signame);
+}
+
+static void
+connect_properties_signals (GESTrackObject * object)
+{
+  if (G_UNLIKELY (object->priv->properties_hashtable)) {
+    GST_WARNING ("The properties_hashtable hasn't been set");
+  }
+
+  g_hash_table_foreach (object->priv->properties_hashtable,
+      (GHFunc) connect_signal, object);
+
 }
 
 /* Callbacks from the GNonLin object */
@@ -704,6 +767,7 @@ ensure_gnl_object (GESTrackObject * object)
                  properties_hashtable is available");
         } else {
           object->priv->properties_hashtable = props_hash;
+          connect_properties_signals (object);
         }
       }
     }
