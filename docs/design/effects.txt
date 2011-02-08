@@ -118,6 +118,7 @@ C. Keyframes
       -------
         * property-changed: emited when a usefull property of a GstElement
         contained in the GESTrackObject changes
+            => DONE
 
       /**
       * ges_track_object_list_children_properties:
@@ -134,6 +135,7 @@ C. Keyframes
       ges_track_object_list_children_properties (GESTrackObject *object);
 
       -> Usecases: Let user know all the property he can configure.
+            => Waiting for GESMaterial
 
       /**
       * ges_track_object_set_child_property:
@@ -150,6 +152,7 @@ C. Keyframes
                                               GValue * value);
         -> Usecases:
           + Let user configure effects easily (UC-3)
+            => DONE
 
       /**
       * ges_track_object_get_child_property:
@@ -163,6 +166,7 @@ C. Keyframes
       void ges_track_object_get_child_property (GESTrackObject *object,
                                               const gchar *property_name,
                                               gpointer value);
+            => DONE
 
       /**
       * ges_track_object_get_material:
@@ -176,6 +180,7 @@ C. Keyframes
       * if @object has been made by another mean
       */
       GESMaterial *ges_track_object_get_material (GESTrackObject *object);
+            => Waiting for GESMaterial
 
   B. GESTimelineObject new API
 
@@ -183,7 +188,7 @@ C. Keyframes
       -------
         * effect-added: emited when an effect is added
         * effect-removed: emited when an effect is removed
-        * effect-priority-changed: emited when an effect priority-changed
+            => DONE
 
       /**
       * ges_timeline_object_add_effect:
@@ -202,6 +207,7 @@ C. Keyframes
       GESTrackEffect *ges_timeline_object_add_effect (GESTimelineObject *object,
                                                   GESEffect *effect_material,
                                                   gint position);
+            => DONE
 
       /**
       * ges_timeline_object_get_effects:
@@ -217,6 +223,7 @@ C. Keyframes
       ges_timeline_object_get_effects (GESTimelineObject *object);
         -> Usecases:
           + First step to allow the configuration of effects (UC-3)
+            => DONE
 
       /**
       * ges_timeline_object_set_top_effect_position:
@@ -230,6 +237,7 @@ C. Keyframes
       gboolean
       ges_timeline_object_set_top_effect_position (GESTimelineObject *object,
             GESTrackEffect *effect, guint newposition);
+            => DONE
 
       /**
       * ges_timeline_object_get_top_effect_position:
@@ -244,6 +252,7 @@ C. Keyframes
       gint 
       ges_timeline_object_get_top_effect_position (GESTimelineObject *object,
             GESTrackEffect *effect);
+            => DONE
 
   C - The GESTrackEffect API:
 
@@ -260,6 +269,7 @@ C. Keyframes
       */
     GESTrackEffect *ges_track_effect_new_from_material(GESTrackEffect *effect,
                                                    GESEffect *effect_material);
+            => Waiting for GESMaterial
 
       /**
       * ges_track_effect_new_from_bin_desc:
@@ -274,6 +284,7 @@ C. Keyframes
       */
     GESTrackEffect *ges_track_effect_new_from_bin_desc(GESTrackEffect *effect,
                                                        const gchar *bin_desc);
+            => DONE
 
   D - The GESTimelineEffect API:
 
@@ -284,6 +295,7 @@ C. Keyframes
                  wants to add an effect to the whole timeline. The user wants
                  to had an effect to a segment of the timeline without caring
                  bout what clip it is applied on.
+            => DONE
 
   E - The GESEffect:
 
@@ -300,6 +312,8 @@ C. Keyframes
       * ...
 
   We should also be able to list properties of the effect from the GESMaterial.
+
+            => Waiting for GESMaterial
   
 =================
   TODO GESRegistry API:
