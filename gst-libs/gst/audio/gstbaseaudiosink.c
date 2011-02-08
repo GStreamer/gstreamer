@@ -1319,6 +1319,56 @@ flushing:
   }
 }
 
+static gint64
+gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink, GstClockTime sample_offset)
+{
+  GstRingBuffer *ringbuf = sink->ringbuffer;
+  gint64 align;
+  gint64 diff;
+  gint64 maxdrift;
+  gint segdone = g_atomic_int_get (&ringbuf->segdone) - ringbuf->segbase;
+  gint64 samples_done = segdone * ringbuf->samples_per_seg;
+  gint64 headroom = sample_offset - samples_done;
+  gboolean allow_align = TRUE;
+
+  /* now try to align the sample to the previous one, first see how big the
+   * difference is. */
+  if (sample_offset >= sink->next_sample)
+    diff = sample_offset - sink->next_sample;
+  else
+    diff = sink->next_sample - sample_offset;
+
+  /* calculate the max allowed drift in units of samples. By default this is
+   * 20ms and should be anough to compensate for timestamp rounding errors. */
+  maxdrift = (ringbuf->spec.rate * sink->priv->drift_tolerance) / GST_MSECOND;
+
+  /* calc align with previous sample */
+  align = sink->next_sample - sample_offset;
+
+  /* don't align if it means writing behind the read-segment */
+  if (diff > headroom && align < 0)
+    allow_align = FALSE;
+
+  if (G_LIKELY (diff < maxdrift && allow_align)) {
+    GST_DEBUG_OBJECT (sink,
+        "align with prev sample, ABS (%" G_GINT64_FORMAT ") < %"
+        G_GINT64_FORMAT, align, maxdrift);
+  } else {
+    /* calculate sample diff in seconds for error message */
+    gint64 diff_s = gst_util_uint64_scale_int (diff, GST_SECOND, ringbuf->spec.rate);
+    /* timestamps drifted apart from previous samples too much, we need to
+     * resync. We log this as an element warning. */
+    GST_WARNING_OBJECT (sink,
+        "Unexpected discontinuity in audio timestamps of "
+        "%s%" GST_TIME_FORMAT ", resyncing",
+        sample_offset > sink->next_sample ? "+" : "-",
+        GST_TIME_ARGS (diff_s));
+    align = 0;
+  }
+
+  return align;
+}
+
 static GstFlowReturn
 gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
@@ -1340,7 +1390,6 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstFlowReturn ret;
   GstSegment clip_seg;
   gint64 time_offset;
-  gint64 maxdrift;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
@@ -1574,29 +1623,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     goto no_align;
   }
 
-  /* now try to align the sample to the previous one, first see how big the
-   * difference is. */
-  if (sample_offset >= sink->next_sample)
-    diff = sample_offset - sink->next_sample;
-  else
-    diff = sink->next_sample - sample_offset;
-
-  /* calculate the max allowed drift in units of samples. By default this is
-   * 20ms and should be anough to compensate for timestamp rounding errors. */
-  maxdrift = (ringbuf->spec.rate * sink->priv->drift_tolerance) / GST_MSECOND;
-
-  if (G_LIKELY (diff < maxdrift)) {
-    /* calc align with previous sample */
-    align = sink->next_sample - sample_offset;
-    GST_DEBUG_OBJECT (sink,
-        "align with prev sample, ABS (%" G_GINT64_FORMAT ") < %"
-        G_GINT64_FORMAT, align, maxdrift);
-  } else {
-    GST_DEBUG_OBJECT (sink,
-        "discont timestamp (%" G_GINT64_FORMAT ") >= %" G_GINT64_FORMAT, diff,
-        maxdrift);
-    align = 0;
-  }
+  align = gst_base_audio_sink_get_alignment (sink, sample_offset);
   sink->priv->last_align = align;
 
   /* apply alignment */
