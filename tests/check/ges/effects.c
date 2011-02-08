@@ -21,6 +21,10 @@
 #include <ges/ges-track-operation.h>
 #include <gst/check/gstcheck.h>
 
+void
+effect_added_cb (GESTimelineObject * obj, GESTrackOperation * trop,
+    gpointer data);
+
 GST_START_TEST (test_effect_basic)
 {
   GESTrackEffect *effect;
@@ -361,6 +365,64 @@ GST_START_TEST (test_track_effect_set_properties)
 
 GST_END_TEST;
 
+void
+effect_added_cb (GESTimelineObject * obj, GESTrackOperation * trop,
+    gpointer data)
+{
+  GST_DEBUG ("Effect added");
+  fail_unless (GES_IS_TIMELINE_OBJECT (obj));
+  fail_unless (GES_IS_TRACK_OPERATION (trop));
+}
+
+GST_START_TEST (test_tl_obj_signals)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrack *track_video;
+  GESTimelineEffect *tl_effect;
+  GESTrackEffect *tck_effect;
+  GValue value = { 0 };
+  guint val;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  track_video = ges_track_video_raw_new ();
+
+  ges_timeline_add_track (timeline, track_video);
+  ges_timeline_add_layer (timeline, layer);
+
+  GST_DEBUG ("Create effect");
+  tl_effect = ges_timeline_effect_new_from_bin_desc ("agingtv", NULL);
+  g_signal_connect (tl_effect, "effect-added", (GCallback) effect_added_cb,
+      tl_effect);
+
+  g_object_set (tl_effect, "duration", 25 * GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+      (GESTimelineObject *) tl_effect, 0);
+
+  tck_effect = ges_track_effect_new_from_bin_desc ("agingtv");
+  fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
+          (tl_effect), GES_TRACK_OBJECT (tck_effect)));
+  fail_unless (ges_track_add_object (track_video,
+          GES_TRACK_OBJECT (tck_effect)));
+
+  g_value_init (&value, G_TYPE_UINT);
+  g_value_set_uint (&value, 17);
+  ges_track_object_set_child_property (GES_TRACK_OBJECT (tck_effect),
+      "GstAgingTV-scratch-lines", &value);
+  ges_track_object_get_child_property (GES_TRACK_OBJECT (tck_effect),
+      "GstAgingTV-scratch-lines", &val);
+  fail_unless (val == 17);
+
+  ges_timeline_layer_remove_object (layer, (GESTimelineObject *) tl_effect);
+
+  g_object_unref (timeline);
+}
+
+GST_END_TEST;
 static Suite *
 ges_suite (void)
 {
@@ -375,6 +437,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_tl_effect);
   tcase_add_test (tc_chain, test_priorities_tl_object);
   tcase_add_test (tc_chain, test_track_effect_set_properties);
+  tcase_add_test (tc_chain, test_tl_obj_signals);
 
   return s;
 }

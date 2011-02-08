@@ -31,6 +31,7 @@
 
 #include "ges-timeline-object.h"
 #include "ges.h"
+#include "gesmarshal.h"
 #include "ges-internal.h"
 
 gboolean
@@ -80,6 +81,15 @@ typedef struct
 
   /* track mapping ?? */
 } ObjectMapping;
+
+enum
+{
+  EFFECT_ADDED,
+  EFFECT_REMOVED,
+  LAST_SIGNAL
+};
+
+static guint ges_timeline_object_signals[LAST_SIGNAL] = { 0 };
 
 struct _GESTimelineObjectPrivate
 {
@@ -248,6 +258,30 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   g_object_class_install_property (object_class, PROP_LAYER,
       properties[PROP_LAYER]);
 
+  /**
+   * GESTimelineObject::effect-added
+   * @object: the #GESTimelineObject
+   * @efect: the #GESTrackOperation that was added.
+   *
+   * Will be emitted after an effect was added to the object.
+   */
+  ges_timeline_object_signals[EFFECT_ADDED] =
+      g_signal_new ("effect-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, GES_TYPE_TRACK_OPERATION);
+
+  /**
+   * GESTimelineObject::effect-removed
+   * @object: the #GESTimelineObject
+   * @efect: the #GESTrackOperation that was added.
+   *
+   * Will be emitted after an effect was remove from the object.
+   */
+  ges_timeline_object_signals[EFFECT_REMOVED] =
+      g_signal_new ("effect-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, GES_TYPE_TRACK_OPERATION);
+
   klass->need_fill_track = TRUE;
 }
 
@@ -407,6 +441,10 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
     }
 
     priv->nb_effects++;
+
+    /* emit 'effect-added' */
+    g_signal_emit (object, ges_timeline_object_signals[EFFECT_ADDED], 0,
+        GES_TRACK_OPERATION (trobj));
   }
 
   object->priv->trackobjects =
@@ -486,6 +524,12 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
 
   object->priv->trackobjects =
       g_list_remove (object->priv->trackobjects, trackobject);
+
+  if (GES_IS_TRACK_OPERATION (trackobject)) {
+    /* emit 'object-removed' */
+    g_signal_emit (object, ges_timeline_object_signals[EFFECT_REMOVED], 0,
+        GES_TRACK_OPERATION (trackobject));
+  }
 
   ges_track_object_set_timeline_object (trackobject, NULL);
 
