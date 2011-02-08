@@ -123,7 +123,7 @@ gst_base_camera_src_get_photography (GstBaseCameraSrc * self)
   }
 
   if (elem) {
-    return GST_PHOTOGRAPHY (self);
+    return GST_PHOTOGRAPHY (elem);
   }
 
   return NULL;
