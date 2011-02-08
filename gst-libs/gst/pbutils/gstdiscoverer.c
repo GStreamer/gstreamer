@@ -360,6 +360,8 @@ gst_discoverer_dispose (GObject * obj)
     gst_query_unref (dc->priv->seeking_query);
     dc->priv->seeking_query = NULL;
   }
+
+  G_OBJECT_CLASS (gst_discoverer_parent_class)->dispose (obj);
 }
 
 static void
