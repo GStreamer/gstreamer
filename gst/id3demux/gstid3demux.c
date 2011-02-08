@@ -25,7 +25,7 @@
  * id3demux accepts data streams with either (or both) ID3v2 regions at the
  * start, or ID3v1 at the end. The mime type of the data between the tag blocks
  * is detected using typefind functions, and the appropriate output mime type
- * set on outgoing buffers. 
+ * set on outgoing buffers.
  *
  * The element is only able to read ID3v1 tags from a seekable stream, because
  * they are at the end of the stream. That is, when get_range mode is supported
@@ -183,6 +183,8 @@ gst_id3demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
     res = id3demux_read_id3v2_tag (buffer, tag_size, tags);
 
     if (G_LIKELY (res == ID3TAGS_READ_TAG)) {
+      if (*tags == NULL)
+        *tags = gst_tag_list_new ();
       gst_id3demux_add_container_format (*tags);
       return GST_TAG_DEMUX_RESULT_OK;
     } else {
@@ -191,9 +193,8 @@ gst_id3demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
   } else {
     *tags = gst_tag_list_new_from_id3v1 (GST_BUFFER_DATA (buffer));
 
-    if (G_UNLIKELY (*tags == NULL))
-      return GST_TAG_DEMUX_RESULT_BROKEN_TAG;
-
+    if (*tags == NULL)
+      *tags = gst_tag_list_new ();
     gst_id3demux_add_container_format (*tags);
     *tag_size = ID3V1_TAG_SIZE;
     return GST_TAG_DEMUX_RESULT_OK;
