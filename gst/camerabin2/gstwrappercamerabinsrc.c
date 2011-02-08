@@ -185,34 +185,37 @@ gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
     GST_DEBUG_OBJECT (self, "Bringing source up");
     gst_element_sync_state_with_parent (self->src_vid_src);
 
-    gst_element_set_clock (self->src_vid_src, clock);
-    gst_element_set_base_time (self->src_vid_src, base_time);
+    if (clock) {
+      gst_element_set_clock (self->src_vid_src, clock);
+      gst_element_set_base_time (self->src_vid_src, base_time);
 
-    if (GST_IS_BIN (self->src_vid_src)) {
-      GstIterator *it = gst_bin_iterate_elements (GST_BIN (self->src_vid_src));
-      gpointer item = NULL;
-      gboolean done = FALSE;
-      while (!done) {
-        switch (gst_iterator_next (it, &item)) {
-          case GST_ITERATOR_OK:
-            gst_element_set_base_time (GST_ELEMENT (item), base_time);
-            gst_object_unref (item);
-            break;
-          case GST_ITERATOR_RESYNC:
-            gst_iterator_resync (it);
-            break;
-          case GST_ITERATOR_ERROR:
-            done = TRUE;
-            break;
-          case GST_ITERATOR_DONE:
-            done = TRUE;
-            break;
+      if (GST_IS_BIN (self->src_vid_src)) {
+        GstIterator *it =
+            gst_bin_iterate_elements (GST_BIN (self->src_vid_src));
+        gpointer item = NULL;
+        gboolean done = FALSE;
+        while (!done) {
+          switch (gst_iterator_next (it, &item)) {
+            case GST_ITERATOR_OK:
+              gst_element_set_base_time (GST_ELEMENT (item), base_time);
+              gst_object_unref (item);
+              break;
+            case GST_ITERATOR_RESYNC:
+              gst_iterator_resync (it);
+              break;
+            case GST_ITERATOR_ERROR:
+              done = TRUE;
+              break;
+            case GST_ITERATOR_DONE:
+              done = TRUE;
+              break;
+          }
         }
+        gst_iterator_free (it);
       }
-      gst_iterator_free (it);
-    }
 
-    gst_object_unref (clock);
+      gst_object_unref (clock);
+    }
   }
 }
 
