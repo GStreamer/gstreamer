@@ -162,7 +162,7 @@ C. Keyframes
       */
       void ges_track_object_get_child_property (GESTrackObject *object,
                                               const gchar *property_name,
-                                              GValue * value);
+                                              gpointer value);
 
       /**
       * ges_track_object_get_material:

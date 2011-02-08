@@ -321,6 +321,7 @@ GST_START_TEST (test_track_effect_set_properties)
   GESTimelineEffect *tl_effect;
   GESTrackEffect *tck_effect;
   GValue value = { 0 };
+  guint val;
 
   ges_init ();
 
@@ -347,9 +348,11 @@ GST_START_TEST (test_track_effect_set_properties)
 
   g_value_init (&value, G_TYPE_UINT);
   g_value_set_uint (&value, 17);
-
   ges_track_object_set_child_property (GES_TRACK_OBJECT (tck_effect),
       "GstAgingTV-scratch-lines", &value);
+  ges_track_object_get_child_property (GES_TRACK_OBJECT (tck_effect),
+      "GstAgingTV-scratch-lines", &val);
+  fail_unless (val == 17);
 
   ges_timeline_layer_remove_object (layer, (GESTimelineObject *) tl_effect);
 

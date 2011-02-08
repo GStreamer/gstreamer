@@ -952,3 +952,34 @@ ges_track_object_set_child_property (GESTrackObject * object,
     GST_DEBUG ("The child properties haven't been set on %p", object);
   }
 }
+
+/**
+* ges_track_object_get_child_property:
+* @object: The origin #GESTrackObject
+* @property_name: The name of the property
+* @value: return location for the property value
+*
+* Gets a property of a child of @object.
+*/
+void
+ges_track_object_get_child_property (GESTrackObject * object,
+    const gchar * property_name, gpointer value)
+{
+  GESTrackObjectPrivate *priv = object->priv;
+
+  if (priv->properties_hashtable) {
+    GstElement *element;
+    gchar **prop_name;
+
+    element = g_hash_table_lookup (priv->properties_hashtable, property_name);
+    if (element) {
+      prop_name = g_strsplit (property_name, "-", 2);
+      g_object_get (G_OBJECT (element), prop_name[1], value, NULL);
+      g_strfreev (prop_name);
+    } else {
+      GST_ERROR ("The %s property doesn't exist", property_name);
+    }
+  } else {
+    GST_DEBUG ("The child properties haven't been set on %p", object);
+  }
+}

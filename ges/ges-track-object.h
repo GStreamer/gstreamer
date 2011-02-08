@@ -162,5 +162,8 @@ gboolean ges_track_object_is_active (GESTrackObject * object);
 
 void ges_track_object_set_child_property (GESTrackObject * object,
     const gchar * property_name, GValue * value);
+void ges_track_object_get_child_property (GESTrackObject *object,
+                                          const gchar *property_name,
+                                          gpointer value);
 G_END_DECLS
 #endif /* _GES_TRACK_OBJECT */
