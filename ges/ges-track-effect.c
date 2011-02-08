@@ -33,6 +33,10 @@ G_DEFINE_TYPE (GESTrackEffect, ges_track_effect, GES_TYPE_TRACK_OPERATION);
 static void ges_track_effect_dispose (GObject * object);
 static void ges_track_effect_finalize (GObject * object);
 static GstElement *ges_track_effect_create_element (GESTrackObject * self);
+static GHashTable *ges_track_effect_get_props_hashtable (GESTrackObject * self);
+static GHashTable
+    * ges_track_effect_get_props_hashtable_from_bin_desc (GESTrackObject *
+    self);
 
 struct _GESTrackEffectPrivate
 {
@@ -87,6 +91,7 @@ ges_track_effect_class_init (GESTrackEffectClass * klass)
   object_class->finalize = ges_track_effect_finalize;
 
   obj_bg_class->create_element = ges_track_effect_create_element;
+  obj_bg_class->get_props_hastable = ges_track_effect_get_props_hashtable;
 
   /**
    * GESTrackEffect:bin_description:
@@ -125,6 +130,94 @@ ges_track_effect_finalize (GObject * object)
     g_free (self->priv->bin_description);
 
   G_OBJECT_CLASS (ges_track_effect_parent_class)->finalize (object);
+}
+
+/* This function is more for testing puposes */
+static GHashTable *
+ges_track_effect_get_props_hashtable_from_bin_desc (GESTrackObject * self)
+{
+  gpointer data;
+  GstIterator *it;
+  GParamSpec **parray;
+  GObjectClass *class;
+  guint i, nb_specs;
+  const gchar *name, *klass;
+  GstElementFactory *factory;
+  GstElement *child, *element;
+  gchar **categories, *categorie;
+
+  gboolean done = FALSE;
+  GHashTable *ret = NULL;
+
+  element = ges_track_object_get_element (self);
+
+  ret = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
+
+  /*  We go over child elements recursivly, and add writable properties to the
+   *  hashtable
+   *  FIXME: Add a blacklist of properties */
+  it = gst_bin_iterate_recurse (GST_BIN (element));
+  while (!done) {
+    switch (gst_iterator_next (it, &data)) {
+      case GST_ITERATOR_OK:
+        child = GST_ELEMENT_CAST (data);
+        factory = gst_element_get_factory (child);
+        klass = gst_element_factory_get_klass (factory);
+        categories = g_strsplit (klass, "/", 0);
+
+        i = 0;
+        for (categorie = categories[0]; categorie;) {
+          if (g_strcmp0 (categorie, "Effect") == 0) {
+
+            class = G_OBJECT_GET_CLASS (child);
+            parray = g_object_class_list_properties (class, &nb_specs);
+            for (i = 0; i < nb_specs; i++) {
+              if (parray[i]->flags & G_PARAM_WRITABLE) {
+                name = g_param_spec_get_name (parray[i]);
+                g_hash_table_insert (ret,
+                    g_strconcat (G_OBJECT_CLASS_NAME (class),
+                        "-", name, NULL), g_object_ref (child));
+              }
+            }
+            GST_DEBUG ("%i configurable properties added to %p", child,
+                nb_specs);
+            gst_object_unref (child);
+            break;
+          }
+          i++;
+          categorie = categories[i];
+        }
+        g_strfreev (categories);
+        break;
+
+      case GST_ITERATOR_RESYNC:
+        GST_DEBUG ("iterator resync");
+        gst_iterator_resync (it);
+        break;
+
+      case GST_ITERATOR_DONE:
+        GST_DEBUG ("iterator done");
+        done = TRUE;
+        break;
+
+      default:
+        break;
+    }
+  }
+  gst_iterator_free (it);
+
+  return ret;
+}
+
+/*  Virtual methods */
+static GHashTable *
+ges_track_effect_get_props_hashtable (GESTrackObject * self)
+{
+
+  if (GES_TRACK_EFFECT (self)->priv->bin_description)
+    return ges_track_effect_get_props_hashtable_from_bin_desc (self);
+
+  return NULL;
 }
 
 static GstElement *
