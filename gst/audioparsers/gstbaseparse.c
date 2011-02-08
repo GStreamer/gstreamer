@@ -1227,7 +1227,9 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
   } else if (parse->priv->framecount == MIN_FRAMES_TO_POST_BITRATE) {
     /* always post all at threshold time */
     update_min = update_max = update_avg = TRUE;
-  } else {
+  }
+
+  if (G_LIKELY (parse->priv->framecount >= MIN_FRAMES_TO_POST_BITRATE)) {
     if (frame_bitrate < parse->priv->min_bitrate) {
       parse->priv->min_bitrate = frame_bitrate;
       update_min = TRUE;
