@@ -3064,13 +3064,15 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   for (; l && l->next; l = l->next) {
     GstCaps *caps = _gst_element_get_linked_caps (l->next->data, l->data);
 
-    s = gst_structure_id_empty_new (topology_structure_name);
-    gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
-    gst_caps_unref (caps);
+    if (caps) {
+      s = gst_structure_id_empty_new (topology_structure_name);
+      gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
+      gst_caps_unref (caps);
 
-    gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
-    gst_structure_free (u);
-    u = s;
+      gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
+      gst_structure_free (u);
+      u = s;
+    }
   }
 
   /* Caps that resulted in this chain */
