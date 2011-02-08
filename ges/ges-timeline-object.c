@@ -846,7 +846,6 @@ ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
 
 /**
 * ges_timeline_object_set_top_effect_priority:
-*
 * @object: The origin #GESTimelineObject
 * @effect: The #GESTrackEffect to move
 * @newpriority: the new position at which to move the @effect inside this
