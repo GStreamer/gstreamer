@@ -27,7 +27,7 @@ GST_START_TEST (test_effect_basic)
 
   ges_init ();
 
-  effect = ges_track_effect_new_from_bin_desc ("identity");
+  effect = ges_track_effect_new_from_bin_desc ("agingtv");
   fail_unless (effect != NULL);
   g_object_unref (effect);
 }
@@ -62,7 +62,7 @@ GST_START_TEST (test_add_effect_to_tl_object)
 
 
   GST_DEBUG ("Create effect");
-  track_effect = ges_track_effect_new_from_bin_desc ("identity");
+  track_effect = ges_track_effect_new_from_bin_desc ("agingtv");
 
   fail_unless (GES_IS_TRACK_EFFECT (track_effect));
 
@@ -110,9 +110,9 @@ GST_START_TEST (test_get_effects_from_tl)
 
 
   GST_DEBUG ("Create effect");
-  track_effect = ges_track_effect_new_from_bin_desc ("identity");
-  track_effect1 = ges_track_effect_new_from_bin_desc ("identity");
-  track_effect2 = ges_track_effect_new_from_bin_desc ("identity");
+  track_effect = ges_track_effect_new_from_bin_desc ("agingtv");
+  track_effect1 = ges_track_effect_new_from_bin_desc ("agingtv");
+  track_effect2 = ges_track_effect_new_from_bin_desc ("agingtv");
 
   fail_unless (GES_IS_TRACK_EFFECT (track_effect));
   fail_unless (GES_IS_TRACK_EFFECT (track_effect1));
