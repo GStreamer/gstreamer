@@ -189,6 +189,8 @@ gst_mpeg_audio_parse_reset (GstMpegAudioParse * mp3parse)
   mp3parse->last_posted_crc = CRC_UNKNOWN;
   mp3parse->last_posted_channel_mode = MPEG_AUDIO_CHANNEL_MODE_UNKNOWN;
 
+  mp3parse->hdr_bitrate = 0;
+
   mp3parse->xing_flags = 0;
   mp3parse->xing_bitrate = 0;
   mp3parse->xing_frames = 0;
@@ -958,6 +960,8 @@ gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
         (version == 1) ? 10 : 30, 2);
   }
 
+  mp3parse->hdr_bitrate = bitrate;
+
   /* For first frame; check for seek tables and output a codec tag */
   gst_mpeg_audio_parse_handle_first_frame (mp3parse, buf);
 
@@ -1148,6 +1152,13 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
     taglist = gst_tag_list_new ();
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_AUDIO_CODEC, codec, NULL);
+    if (mp3parse->hdr_bitrate > 0 && mp3parse->xing_bitrate == 0 &&
+        mp3parse->vbri_bitrate == 0) {
+      /* We don't have a VBR bitrate, so post the available bitrate as
+       * nominal and let baseparse calculate the real bitrate */
+      gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_NOMINAL_BITRATE, mp3parse->hdr_bitrate, NULL);
+    }
     gst_element_found_tags_for_pad (GST_ELEMENT (mp3parse),
         GST_BASE_PARSE_SRC_PAD (mp3parse), taglist);
     g_free (codec);

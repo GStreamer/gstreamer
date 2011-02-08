@@ -65,6 +65,9 @@ struct _GstMpegAudioParse {
   gint         last_posted_crc, last_crc;
   guint        last_posted_channel_mode, last_mode;
 
+  /* Bitrate from non-vbr headers */
+  guint32      hdr_bitrate;
+
   /* Xing info */
   guint32      xing_flags;
   guint32      xing_frames;
