@@ -218,8 +218,8 @@ GST_START_TEST (test_tl_effect)
         GES_TRACK_OPERATION (tmp->data));
     fail_unless (priority > effect_prio);
     fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
-    fail_unless (ges_track_object_get_track (GES_TRACK_OBJECT (tmp->data))->
-        type == track_type[i]);
+    fail_unless (ges_track_object_get_track (GES_TRACK_OBJECT (tmp->
+                data))->type == track_type[i]);
     effect_prio = priority;
 
     g_object_unref (tmp->data);
@@ -313,6 +313,51 @@ GST_START_TEST (test_priorities_tl_object)
 
 GST_END_TEST;
 
+GST_START_TEST (test_track_effect_set_properties)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrack *track_video;
+  GESTimelineEffect *tl_effect;
+  GESTrackEffect *tck_effect;
+  GValue value = { 0 };
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  track_video = ges_track_video_raw_new ();
+
+  ges_timeline_add_track (timeline, track_video);
+  ges_timeline_add_layer (timeline, layer);
+
+  GST_DEBUG ("Create effect");
+  tl_effect = ges_timeline_effect_new_from_bin_desc ("agingtv", NULL);
+
+  g_object_set (tl_effect, "duration", 25 * GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+      (GESTimelineObject *) tl_effect, 0);
+
+  tck_effect = ges_track_effect_new_from_bin_desc ("agingtv");
+  fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
+          (tl_effect), GES_TRACK_OBJECT (tck_effect)));
+  fail_unless (ges_track_add_object (track_video,
+          GES_TRACK_OBJECT (tck_effect)));
+
+  g_value_init (&value, G_TYPE_UINT);
+  g_value_set_uint (&value, 17);
+
+  ges_track_object_set_child_property (GES_TRACK_OBJECT (tck_effect),
+      "GstAgingTV-scratch-lines", &value);
+
+  ges_timeline_layer_remove_object (layer, (GESTimelineObject *) tl_effect);
+
+  g_object_unref (timeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -326,6 +371,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_get_effects_from_tl);
   tcase_add_test (tc_chain, test_tl_effect);
   tcase_add_test (tc_chain, test_priorities_tl_object);
+  tcase_add_test (tc_chain, test_track_effect_set_properties);
 
   return s;
 }

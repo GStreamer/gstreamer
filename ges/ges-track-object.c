@@ -920,3 +920,35 @@ ges_track_object_is_active (GESTrackObject * object)
   else
     return object->active;
 }
+
+/**
+ * ges_track_object_set_child_property:
+ * @object: a #GESTrackObject
+ * @property_name: The name of the property to set
+ * @value: the value
+ *
+ * Sets a property of a child of @object. The property name
+ * should look like ClasseName-property-name
+ */
+void
+ges_track_object_set_child_property (GESTrackObject * object,
+    const gchar * property_name, GValue * value)
+{
+  GESTrackObjectPrivate *priv = object->priv;
+
+  if (priv->properties_hashtable) {
+    GstElement *element;
+    gchar **prop_name;
+
+    element = g_hash_table_lookup (priv->properties_hashtable, property_name);
+    if (element) {
+      prop_name = g_strsplit (property_name, "-", 2);
+      g_object_set_property (G_OBJECT (element), prop_name[1], value);
+      g_strfreev (prop_name);
+    } else {
+      GST_ERROR ("The %s property doesn't exist", property_name);
+    }
+  } else {
+    GST_DEBUG ("The child properties haven't been set on %p", object);
+  }
+}

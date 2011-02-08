@@ -83,6 +83,7 @@ ges_track_object_get_inpoint
 ges_track_object_get_duration
 ges_track_object_get_priority
 ges_track_object_is_active
+ges_track_object_set_child_property
 <SUBSECTION Standard>
 GES_TRACK_OBJECT_DURATION
 GES_TRACK_OBJECT_INPOINT

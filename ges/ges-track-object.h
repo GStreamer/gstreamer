@@ -152,6 +152,7 @@ void ges_track_object_set_start (GESTrackObject * object, guint64 start);
 void ges_track_object_set_inpoint (GESTrackObject * object, guint64 inpoint);
 void ges_track_object_set_duration (GESTrackObject * object, guint64 duration);
 void ges_track_object_set_priority (GESTrackObject * object, guint32 priority);
+gboolean ges_track_object_set_active (GESTrackObject * object, gboolean active);
 
 guint64 ges_track_object_get_start (GESTrackObject * object);
 guint64 ges_track_object_get_inpoint (GESTrackObject * object);
@@ -159,7 +160,7 @@ guint64 ges_track_object_get_duration (GESTrackObject * object);
 guint32 ges_track_object_get_priority (GESTrackObject * object);
 gboolean ges_track_object_is_active (GESTrackObject * object);
 
-gboolean ges_track_object_set_active (GESTrackObject * object, gboolean active);
+void ges_track_object_set_child_property (GESTrackObject * object,
+    const gchar * property_name, GValue * value);
 G_END_DECLS
-
 #endif /* _GES_TRACK_OBJECT */
