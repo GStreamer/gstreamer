@@ -605,9 +605,6 @@ start_image_capture (GstWrapperCameraBinSrc * self)
 
     caps = gst_pad_get_allowed_caps (self->imgsrc);
 
-    caps = gst_caps_make_writable (caps);
-    gst_pad_fixate_caps (self->imgsrc, caps);
-
     gst_caps_replace (&self->image_capture_caps, caps);
     gst_caps_unref (caps);
 
@@ -942,10 +939,9 @@ gst_wrapper_camera_bin_src_start_capture (GstBaseCameraSrc * camerasrc)
       if (src->src_zoom_filter)
         g_object_set (src->src_zoom_filter, "caps", NULL, NULL);
 
+      GST_DEBUG_OBJECT (src, "Getting allowed videosrc caps");
       caps = gst_pad_get_allowed_caps (src->vidsrc);
-      caps = gst_caps_make_writable (caps);
-      gst_pad_fixate_caps (src->vidsrc, caps);
-      GST_DEBUG_OBJECT (src, "Vidsrc caps fixated to %" GST_PTR_FORMAT, caps);
+      GST_DEBUG_OBJECT (src, "Video src caps %" GST_PTR_FORMAT, caps);
 
       src->video_renegotiate = FALSE;
       g_mutex_unlock (camerasrc->capturing_mutex);
