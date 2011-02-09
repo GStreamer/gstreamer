@@ -111,10 +111,10 @@ static GMainLoop *loop = NULL;
 static gchar *videosrc_name = NULL;
 static gchar *imagepp_name = NULL;
 static gchar *vfsink_name = NULL;
-static gint image_width = 1280;
-static gint image_height = 720;
-static gint view_framerate_num = 2825;
-static gint view_framerate_den = 100;
+static gint image_width = 0;
+static gint image_height = 0;
+static gint view_framerate_num = 0;
+static gint view_framerate_den = 0;
 static gboolean no_xwindow = FALSE;
 
 #define MODE_VIDEO 2
@@ -380,6 +380,9 @@ setup_pipeline_element (GstElement * element, const gchar * property_name,
   if (element_name) {
     elem = gst_element_factory_make (element_name, NULL);
     if (elem) {
+      if (g_object_class_find_property (G_OBJECT_GET_CLASS (elem), "device")) {
+        g_object_set (elem, "device", "/dev/video1", NULL);
+      }
       g_object_set (element, property_name, elem, NULL);
     } else {
       GST_WARNING ("can't create element '%s' for property '%s'", element_name,
@@ -450,39 +453,41 @@ setup_pipeline (void)
   GST_INFO_OBJECT (camerabin, "elements configured");
 
   /* configure a resolution and framerate */
-  if (mode == MODE_VIDEO) {
-    GstCaps *caps = NULL;
-    if (view_framerate_num > 0)
-      caps = gst_caps_new_full (gst_structure_new ("video/x-raw-yuv",
-              "width", G_TYPE_INT, image_width,
-              "height", G_TYPE_INT, image_height,
-              "framerate", GST_TYPE_FRACTION, view_framerate_num,
-              view_framerate_den, NULL),
-          gst_structure_new ("video/x-raw-rgb",
-              "width", G_TYPE_INT, image_width,
-              "height", G_TYPE_INT, image_height,
-              "framerate", GST_TYPE_FRACTION, view_framerate_num,
-              view_framerate_den, NULL), NULL);
-    else
-      caps = gst_caps_new_full (gst_structure_new ("video/x-raw-yuv",
+  if (image_width > 0 && image_height > 0) {
+    if (mode == MODE_VIDEO) {
+      GstCaps *caps = NULL;
+      if (view_framerate_num > 0)
+        caps = gst_caps_new_full (gst_structure_new ("video/x-raw-yuv",
+                "width", G_TYPE_INT, image_width,
+                "height", G_TYPE_INT, image_height,
+                "framerate", GST_TYPE_FRACTION, view_framerate_num,
+                view_framerate_den, NULL),
+            gst_structure_new ("video/x-raw-rgb",
+                "width", G_TYPE_INT, image_width,
+                "height", G_TYPE_INT, image_height,
+                "framerate", GST_TYPE_FRACTION, view_framerate_num,
+                view_framerate_den, NULL), NULL);
+      else
+        caps = gst_caps_new_full (gst_structure_new ("video/x-raw-yuv",
+                "width", G_TYPE_INT, image_width,
+                "height", G_TYPE_INT, image_height, NULL),
+            gst_structure_new ("video/x-raw-rgb",
+                "width", G_TYPE_INT, image_width,
+                "height", G_TYPE_INT, image_height, NULL), NULL);
+
+      g_object_set (camerabin, "video-capture-caps", caps, NULL);
+      gst_caps_unref (caps);
+    } else {
+      GstCaps *caps = gst_caps_new_full (gst_structure_new ("video/x-raw-yuv",
               "width", G_TYPE_INT, image_width,
               "height", G_TYPE_INT, image_height, NULL),
           gst_structure_new ("video/x-raw-rgb",
               "width", G_TYPE_INT, image_width,
               "height", G_TYPE_INT, image_height, NULL), NULL);
 
-    g_object_set (camerabin, "video-capture-caps", caps, NULL);
-    gst_caps_unref (caps);
-  } else {
-    GstCaps *caps = gst_caps_new_full (gst_structure_new ("video/x-raw-yuv",
-            "width", G_TYPE_INT, image_width,
-            "height", G_TYPE_INT, image_height, NULL),
-        gst_structure_new ("video/x-raw-rgb",
-            "width", G_TYPE_INT, image_width,
-            "height", G_TYPE_INT, image_height, NULL), NULL);
-
-    g_object_set (camerabin, "image-capture-caps", caps, NULL);
-    gst_caps_unref (caps);
+      g_object_set (camerabin, "image-capture-caps", caps, NULL);
+      gst_caps_unref (caps);
+    }
   }
 
   if (GST_STATE_CHANGE_FAILURE ==
