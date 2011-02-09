@@ -226,21 +226,22 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    *
    * The span of layer priorities which this object occupies.
    */
-
+  properties[PROP_HEIGHT] = g_param_spec_uint ("height", "Height",
+      "The span of priorities this object occupies", 0, G_MAXUINT, 1,
+      G_PARAM_READABLE);
   g_object_class_install_property (object_class, PROP_HEIGHT,
-      g_param_spec_uint ("height", "Height",
-          "The span of priorities this object occupies", 0, G_MAXUINT, 1,
-          G_PARAM_READABLE));
+      properties[PROP_HEIGHT]);
 
-  /* GESSimpleTimelineLayer:layer
+  /**
+   * GESTimelineObject:layer
    *
    * The GESTimelineLayer where this object is being used.
    */
-
+  properties[PROP_LAYER] = g_param_spec_object ("layer", "Layer",
+      "The GESTimelineLayer where this object is being used.",
+      GES_TYPE_TIMELINE_LAYER, G_PARAM_READABLE);
   g_object_class_install_property (object_class, PROP_LAYER,
-      g_param_spec_object ("layer", "Layer",
-          "The GESTimelineLayer where this object is being used.",
-          GES_TYPE_TIMELINE_LAYER, G_PARAM_READABLE));
+      properties[PROP_LAYER]);
 
   klass->need_fill_track = TRUE;
 }
