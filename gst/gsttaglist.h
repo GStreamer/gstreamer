@@ -667,7 +667,8 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
 /**
  * GST_TAG_NOMINAL_BITRATE:
  *
- * nominal bitrate in bits/s (unsigned integer)
+ * nominal bitrate in bits/s (unsigned integer). The actual bitrate might be
+ * different from this target bitrate.
  */
 #define GST_TAG_NOMINAL_BITRATE        "nominal-bitrate"
 /**
