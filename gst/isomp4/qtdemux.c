@@ -5306,8 +5306,13 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   GST_LOG_OBJECT (qtdemux, "%u timestamp blocks", stream->n_sample_times);
 
   /* make sure there's enough data */
-  if (!qt_atom_parser_has_chunks (&stream->stts, stream->n_sample_times, 2 * 4))
-    goto corrupt_file;
+  if (!qt_atom_parser_has_chunks (&stream->stts, stream->n_sample_times, 8)) {
+    stream->n_sample_times = gst_byte_reader_get_remaining (&stream->stts) / 8;
+    GST_LOG_OBJECT (qtdemux, "overriding to %u timestamp blocks",
+        stream->n_sample_times);
+    if (!stream->n_sample_times)
+      goto corrupt_file;
+  }
 
   /* sync sample atom */
   stream->stps_present = FALSE;
