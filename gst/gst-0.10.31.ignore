@@ -9,6 +9,8 @@ ignore
   gst_element_factory_list_is_type
   gst_element_factory_list_get_elements
   gst_element_factory_list_filter
+  gst_element_factory_get_documentation_uri
+  gst_element_factory_get_icon_name
   gst_plugin_Feature_rank_compare_func
   gst_query_add_buffering_range
   gst_query_get_n_buffering_ranges
