@@ -2353,13 +2353,13 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     GST_DEBUG_OBJECT (demux, "read buffer size %d at offset %" G_GINT64_FORMAT,
         GST_BUFFER_SIZE (buf), newpos);
     gst_byte_reader_init_from_buffer (&reader, buf);
-    cluster_pos = 0;
   resume:
     cluster_pos = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
-        GST_MATROSKA_ID_CLUSTER, cluster_pos,
-        GST_BUFFER_SIZE (buf) - cluster_pos);
+        GST_MATROSKA_ID_CLUSTER, 0, gst_byte_reader_get_remaining (&reader));
     if (cluster_pos >= 0) {
       newpos += cluster_pos;
+      /* prepare resuming at next byte */
+      gst_byte_reader_skip (&reader, cluster_pos + 1);
       GST_DEBUG_OBJECT (demux,
           "found cluster ebml id at offset %" G_GINT64_FORMAT, newpos);
       /* extra checks whether we really sync'ed to a cluster:
@@ -2399,7 +2399,7 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
       goto resume;
     } else {
       /* partial cluster id may have been in tail of buffer */
-      newpos += MAX (GST_BUFFER_SIZE (buf), 4) - 3;
+      newpos += MAX (gst_byte_reader_get_remaining (&reader), 4) - 3;
       gst_buffer_unref (buf);
       buf = NULL;
     }
