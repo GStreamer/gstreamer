@@ -635,17 +635,18 @@ gst_wrapper_camera_bin_src_set_mode (GstBaseCameraSrc * bcamsrc,
   GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
 
-  self->mode = mode;
-
   if (self->output_selector) {
     if (mode == MODE_IMAGE) {
+      self->image_renegotiate = TRUE;
       g_object_set (self->output_selector, "active-pad", self->outsel_imgpad,
           NULL);
     } else {
+      self->video_renegotiate = TRUE;
       g_object_set (self->output_selector, "active-pad", self->outsel_vidpad,
           NULL);
     }
   }
+  self->mode = mode;
 
   if (photography) {
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (photography),
@@ -993,6 +994,8 @@ gst_wrapper_camera_bin_src_change_state (GstElement * element,
 
   switch (trans) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      self->video_renegotiate = TRUE;
+      self->image_renegotiate = TRUE;
       self->drop_newseg = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -1085,8 +1088,8 @@ gst_wrapper_camera_bin_src_init (GstWrapperCameraBinSrc * self,
   /* TODO where are variables reset? */
   self->image_capture_count = 0;
   self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
-  self->video_renegotiate = FALSE;
-  self->image_renegotiate = FALSE;
+  self->video_renegotiate = TRUE;
+  self->image_renegotiate = TRUE;
   self->mode = GST_BASE_CAMERA_SRC_CAST (self)->mode;
 }
 
