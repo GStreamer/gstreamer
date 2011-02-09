@@ -2125,6 +2125,59 @@ mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** video/x-h263 H263 video stream ***/
+static GstStaticCaps h263_video_caps = GST_STATIC_CAPS ("video/x-h263");
+
+#define H263_VIDEO_CAPS gst_static_caps_get(&h263_video_caps)
+
+#define H263_MAX_PROBE_LENGTH (128 * 1024)
+
+static void
+h263_video_type_find (GstTypeFind * tf, gpointer unused)
+{
+  DataScanCtx c = { 0, NULL, 0 };
+  guint64 data = 0;
+  guint64 psc = 0;
+  guint8 tr = 0;
+  guint format;
+  guint good = 0;
+  guint bad = 0;
+
+  while (c.offset < H263_MAX_PROBE_LENGTH) {
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 4)))
+      break;
+
+    /* Find the picture start code */
+    data = (data << 8) + c.data[0];
+    psc = data & 0xfffffc0000;
+    if (psc == 0x800000) {
+      /* Found PSC */
+      /* TR */
+      tr = (data & 0x3fc) >> 2;
+      /* Source Format */
+      format = tr & 0x07;
+
+      /* Now that we have a Valid PSC, check if we also have a valid PTYPE and
+         the Source Format, which should range between 1 and 5 */
+      if (((tr >> 6) == 0x2) && (format > 0 && format < 6))
+        good++;
+      else
+        bad++;
+
+      /* FIXME: maybe bail out early if we get mostly bad syncs ? */
+    }
+
+    data_scan_ctx_advance (tf, &c, 1);
+  }
+
+  if (good > 0 && bad == 0)
+    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, H263_VIDEO_CAPS);
+  else if (good > 2 * bad)
+    gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, H263_VIDEO_CAPS);
+
+  return;
+}
+
 /*** video/x-h264 H264 elementary video stream ***/
 
 static GstStaticCaps h264_video_caps =
@@ -4140,6 +4193,7 @@ plugin_init (GstPlugin * plugin)
   };
   static const gchar *flv_exts[] = { "flv", NULL };
   static const gchar *m4v_exts[] = { "m4v", NULL };
+  static const gchar *h263_exts[] = { "h263", "263", NULL };
   static const gchar *h264_exts[] = { "h264", "x264", "264", NULL };
   static const gchar *nuv_exts[] = { "nuv", NULL };
   static const gchar *vivo_exts[] = { "viv", NULL };
@@ -4227,6 +4281,8 @@ plugin_init (GstPlugin * plugin)
       NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg4", GST_RANK_PRIMARY,
       mpeg4_video_type_find, m4v_exts, MPEG_VIDEO_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/x-h263", GST_RANK_SECONDARY,
+      h263_video_type_find, h263_exts, H263_VIDEO_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-h264", GST_RANK_PRIMARY,
       h264_video_type_find, h264_exts, H264_VIDEO_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-nuv", GST_RANK_SECONDARY, nuv_type_find,
