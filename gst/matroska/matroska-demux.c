@@ -399,6 +399,11 @@ gst_matroska_demux_reset (GstElement * element)
     demux->index = NULL;
   }
 
+  if (demux->clusters) {
+    g_array_free (demux->clusters, TRUE);
+    demux->clusters = NULL;
+  }
+
   /* reset timers */
   demux->clock = NULL;
   demux->time_scale = 1000000;
@@ -2326,6 +2331,17 @@ gst_matroska_demux_move_to_entry (GstMatroskaDemux * demux,
   return TRUE;
 }
 
+static gint
+gst_matroska_cluster_compare (gint64 * i1, gint64 * i2)
+{
+  if (*i1 < *i2)
+    return -1;
+  else if (*i1 > *i2)
+    return 1;
+  else
+    return 0;
+}
+
 /* searches for a cluster start from @pos,
  * return GST_FLOW_OK and cluster position in @pos if found */
 static GstFlowReturn
@@ -2341,6 +2357,30 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
   guint needed;
 
   orig_offset = demux->offset;
+
+  GST_LOG_OBJECT (demux, "searching cluster following offset %" G_GINT64_FORMAT,
+      *pos);
+
+  if (demux->clusters) {
+    gint64 *cpos;
+
+    cpos = gst_util_array_binary_search (demux->clusters->data,
+        demux->clusters->len, sizeof (gint64),
+        (GCompareDataFunc) gst_matroska_cluster_compare,
+        GST_SEARCH_MODE_AFTER, pos, NULL);
+    /* sanity check */
+    if (cpos) {
+      GST_DEBUG_OBJECT (demux,
+          "cluster reported at offset %" G_GINT64_FORMAT, *cpos);
+      demux->offset = *cpos;
+      ret =
+          gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
+      if (ret == GST_FLOW_OK && id == GST_MATROSKA_ID_CLUSTER) {
+        newpos = *cpos;
+        goto exit;
+      }
+    }
+  }
 
   /* read in at newpos and scan for ebml cluster id */
   while (1) {
@@ -2410,6 +2450,7 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     buf = NULL;
   }
 
+exit:
   demux->offset = orig_offset;
   *pos = newpos;
   return ret;
@@ -5383,6 +5424,17 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       break;
     }
 
+    case GST_MATROSKA_ID_CLUSTER:
+    {
+      guint64 pos = seek_pos + demux->ebml_segment_start;
+
+      GST_LOG_OBJECT (demux, "Cluster position");
+      if (G_UNLIKELY (!demux->clusters))
+        demux->clusters = g_array_sized_new (TRUE, TRUE, sizeof (guint64), 100);
+      g_array_append_val (demux->clusters, pos);
+      break;
+    }
+
     default:
       GST_DEBUG_OBJECT (demux, "Ignoring Seek entry for ID=0x%x", seek_id);
       break;
@@ -5428,6 +5480,9 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   }
 
   DEBUG_ELEMENT_STOP (demux, ebml, "SeekHead", ret);
+
+  /* Sort clusters by position for easier searching */
+  g_array_sort (demux->clusters, (GCompareFunc) gst_matroska_cluster_compare);
 
   return ret;
 }
