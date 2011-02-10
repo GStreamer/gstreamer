@@ -313,7 +313,7 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (flash_mode, GstFlashMode);
  *
  * Since: 0.10.21
  */
-GST_PHOTOGRAPHY_FUNC_TEMPLATE (noise_reduction, guint);
+GST_PHOTOGRAPHY_FUNC_TEMPLATE (noise_reduction, GstPhotographyNoiseReduction);
 
 /**
  * gst_photography_set_zoom:

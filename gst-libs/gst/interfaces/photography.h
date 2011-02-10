@@ -217,7 +217,7 @@ typedef struct
   gfloat zoom;
   GstFlickerReductionMode flicker_mode;
   GstFocusMode focus_mode;
-  guint noise_reduction;
+  GstPhotographyNoiseReduction noise_reduction;
 } GstPhotoSettings;
 
 /**
@@ -341,7 +341,7 @@ gboolean gst_photography_get_scene_mode (GstPhotography * photo,
 gboolean gst_photography_get_flash_mode (GstPhotography * photo,
     GstFlashMode * flash_mode);
 gboolean gst_photography_get_noise_reduction (GstPhotography * photo,
-    guint * noise_reduction);
+    GstPhotographyNoiseReduction * noise_reduction);
 gboolean gst_photography_get_zoom (GstPhotography * photo, gfloat * zoom);
 gboolean gst_photography_get_flicker_mode (GstPhotography * photo,
     GstFlickerReductionMode *mode);
@@ -363,7 +363,7 @@ gboolean gst_photography_set_scene_mode (GstPhotography * photo,
 gboolean gst_photography_set_flash_mode (GstPhotography * photo,
     GstFlashMode flash_mode);
 gboolean gst_photography_set_noise_reduction (GstPhotography * photo,
-    guint noise_reduction);
+    GstPhotographyNoiseReduction noise_reduction);
 gboolean gst_photography_set_zoom (GstPhotography * photo, gfloat zoom);
 gboolean gst_photography_set_flicker_mode (GstPhotography * photo,
     GstFlickerReductionMode mode);
