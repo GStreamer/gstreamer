@@ -729,7 +729,6 @@ ges_keyfile_formatter_get_type
 <FILE>ges-track-effect</FILE>
 <TITLE>GESTrackEffect</TITLE>
 GESTrackEffect
-ges_track_effect_new_from_bin_desc
 <SUBSECTION Standard>
 GESTrackEffectClass
 GESTrackEffectPrivate
@@ -740,4 +739,21 @@ GES_TRACK_EFFECT_CLASS
 GES_TRACK_EFFECT_GET_CLASS
 GES_TYPE_TRACK_EFFECT
 ges_track_effect_get_type
+</SECTION>
+
+<SECTION>
+<FILE>ges-track-parse-launch-effect</FILE>
+<TITLE>GESTrackParseLaunchEffect</TITLE>
+GESTrackParseLaunchEffect
+ges_track_parse_launch_effect_new_from_bin_desc
+<SUBSECTION Standard>
+GESTrackParseLaunchEffectClass
+GESTrackParseLaunchEffectPrivate
+GES_IS_TRACK_PARSE_LAUNCH_EFFECT
+GES_IS_TRACK_PARSE_LAUNCH_EFFECT_CLASS
+GES_TRACK_PARSE_LAUNCH_EFFECT
+GES_TRACK_PARSE_LAUNCH_EFFECT_CLASS
+GES_TRACK_PARSE_LAUNCH_EFFECT_GET_CLASS
+GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT
+ges_track_parse_launch_effect_get_type
 </SECTION>

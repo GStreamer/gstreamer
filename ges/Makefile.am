@@ -41,6 +41,7 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-track-title-source.c		\
 	ges-track-text-overlay.c		\
 	ges-track-effect.c		\
+	ges-track-parse-launch-effect.c		\
 	ges-screenshot.c			\
 	ges-formatter.c				\
 	ges-keyfile-formatter.c			\
@@ -69,6 +70,7 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-timeline-overlay.h			\
 	ges-timeline-text-overlay.h		\
 	ges-track-effect.h		\
+	ges-track-parse-launch-effect.h		\
 	ges-track.h				\
 	ges-track-object.h			\
 	ges-track-source.h			\

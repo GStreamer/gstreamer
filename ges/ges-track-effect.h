@@ -25,6 +25,7 @@
 #include <ges/ges-track-operation.h>
 
 G_BEGIN_DECLS
+
 #define GES_TYPE_TRACK_EFFECT ges_track_effect_get_type()
 #define GES_TRACK_EFFECT(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_EFFECT, GESTrackEffect))
@@ -69,8 +70,6 @@ struct _GESTrackEffectClass
 };
 
 GType ges_track_effect_get_type (void);
-
-GESTrackEffect *ges_track_effect_new_from_bin_desc (const gchar * bin_description);
 
 G_END_DECLS
 #endif /* _GES_TRACK_EFFECT */

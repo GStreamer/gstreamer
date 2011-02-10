@@ -30,11 +30,11 @@ deep_prop_changed_cb (GESTrackObject * obj, GstElement * element,
 
 GST_START_TEST (test_effect_basic)
 {
-  GESTrackEffect *effect;
+  GESTrackParseLaunchEffect *effect;
 
   ges_init ();
 
-  effect = ges_track_effect_new_from_bin_desc ("agingtv");
+  effect = ges_track_parse_launch_effect_new_from_bin_desc ("agingtv");
   fail_unless (effect != NULL);
   g_object_unref (effect);
 }
@@ -46,7 +46,7 @@ GST_START_TEST (test_add_effect_to_tl_object)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track_audio, *track_video;
-  GESTrackEffect *track_effect;
+  GESTrackParseLaunchEffect *track_effect;
   GESTimelineTestSource *source;
 
   ges_init ();
@@ -69,7 +69,7 @@ GST_START_TEST (test_add_effect_to_tl_object)
 
 
   GST_DEBUG ("Create effect");
-  track_effect = ges_track_effect_new_from_bin_desc ("agingtv");
+  track_effect = ges_track_parse_launch_effect_new_from_bin_desc ("agingtv");
 
   fail_unless (GES_IS_TRACK_EFFECT (track_effect));
 
@@ -93,7 +93,7 @@ GST_START_TEST (test_get_effects_from_tl)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track_video;
-  GESTrackEffect *track_effect, *track_effect1, *track_effect2;
+  GESTrackParseLaunchEffect *track_effect, *track_effect1, *track_effect2;
   GESTimelineTestSource *source;
   GList *effects, *tmp = NULL;
   gint effect_prio = -1;
@@ -117,9 +117,9 @@ GST_START_TEST (test_get_effects_from_tl)
 
 
   GST_DEBUG ("Create effect");
-  track_effect = ges_track_effect_new_from_bin_desc ("agingtv");
-  track_effect1 = ges_track_effect_new_from_bin_desc ("agingtv");
-  track_effect2 = ges_track_effect_new_from_bin_desc ("agingtv");
+  track_effect = ges_track_parse_launch_effect_new_from_bin_desc ("agingtv");
+  track_effect1 = ges_track_parse_launch_effect_new_from_bin_desc ("agingtv");
+  track_effect2 = ges_track_parse_launch_effect_new_from_bin_desc ("agingtv");
 
   fail_unless (GES_IS_TRACK_EFFECT (track_effect));
   fail_unless (GES_IS_TRACK_EFFECT (track_effect1));
@@ -170,7 +170,7 @@ GST_START_TEST (test_tl_effect)
   GESTimelineLayer *layer;
   GESTrack *track_audio, *track_video;
   GESTimelineEffect *tl_effect;
-  GESTrackEffect *tck_effect, *tck_effect1;
+  GESTrackParseLaunchEffect *tck_effect, *tck_effect1;
   GList *effects, *tmp;
   gint i, tl_object_height;
   gint effect_prio = -1;
@@ -199,7 +199,7 @@ GST_START_TEST (test_tl_effect)
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
       (GESTimelineObject *) tl_effect, 0);
 
-  tck_effect = ges_track_effect_new_from_bin_desc ("identity");
+  tck_effect = ges_track_parse_launch_effect_new_from_bin_desc ("identity");
   fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
           (tl_effect), GES_TRACK_OBJECT (tck_effect)));
   fail_unless (ges_track_add_object (track_video,
@@ -208,7 +208,7 @@ GST_START_TEST (test_tl_effect)
   g_object_get (tl_effect, "height", &tl_object_height, NULL);
   fail_unless (tl_object_height == 3);
 
-  tck_effect1 = ges_track_effect_new_from_bin_desc ("identity");
+  tck_effect1 = ges_track_parse_launch_effect_new_from_bin_desc ("identity");
   fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
           (tl_effect), GES_TRACK_OBJECT (tck_effect1)));
   fail_unless (ges_track_add_object (track_audio,
@@ -246,7 +246,7 @@ GST_START_TEST (test_priorities_tl_object)
   GESTimelineLayer *layer;
   GESTrack *track_audio, *track_video;
   GESTimelineEffect *tl_effect;
-  GESTrackEffect *tck_effect, *tck_effect1;
+  GESTrackParseLaunchEffect *tck_effect, *tck_effect1;
   GList *effects, *tmp;
   gint i, tl_object_height;
   gint effect_prio = -1;
@@ -270,7 +270,7 @@ GST_START_TEST (test_priorities_tl_object)
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
       (GESTimelineObject *) tl_effect, 0);
 
-  tck_effect = ges_track_effect_new_from_bin_desc ("identity");
+  tck_effect = ges_track_parse_launch_effect_new_from_bin_desc ("identity");
   fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
           (tl_effect), GES_TRACK_OBJECT (tck_effect)));
   fail_unless (ges_track_add_object (track_video,
@@ -279,7 +279,7 @@ GST_START_TEST (test_priorities_tl_object)
   g_object_get (tl_effect, "height", &tl_object_height, NULL);
   fail_unless (tl_object_height == 3);
 
-  tck_effect1 = ges_track_effect_new_from_bin_desc ("identity");
+  tck_effect1 = ges_track_parse_launch_effect_new_from_bin_desc ("identity");
   fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
           (tl_effect), GES_TRACK_OBJECT (tck_effect1)));
   fail_unless (ges_track_add_object (track_audio,
@@ -326,7 +326,7 @@ GST_START_TEST (test_track_effect_set_properties)
   GESTimelineLayer *layer;
   GESTrack *track_video;
   GESTimelineEffect *tl_effect;
-  GESTrackEffect *tck_effect;
+  GESTrackParseLaunchEffect *tck_effect;
   GValue value = { 0 };
   guint val;
 
@@ -347,7 +347,7 @@ GST_START_TEST (test_track_effect_set_properties)
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
       (GESTimelineObject *) tl_effect, 0);
 
-  tck_effect = ges_track_effect_new_from_bin_desc ("agingtv");
+  tck_effect = ges_track_parse_launch_effect_new_from_bin_desc ("agingtv");
   fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
           (tl_effect), GES_TRACK_OBJECT (tck_effect)));
   fail_unless (ges_track_add_object (track_video,
@@ -392,7 +392,7 @@ GST_START_TEST (test_tl_obj_signals)
   GESTimelineLayer *layer;
   GESTrack *track_video;
   GESTimelineEffect *tl_effect;
-  GESTrackEffect *tck_effect;
+  GESTrackParseLaunchEffect *tck_effect;
   GValue value = { 0 };
   guint val;
 
@@ -415,7 +415,7 @@ GST_START_TEST (test_tl_obj_signals)
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
       (GESTimelineObject *) tl_effect, 0);
 
-  tck_effect = ges_track_effect_new_from_bin_desc ("agingtv");
+  tck_effect = ges_track_parse_launch_effect_new_from_bin_desc ("agingtv");
   fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
           (tl_effect), GES_TRACK_OBJECT (tck_effect)));
   fail_unless (ges_track_add_object (track_video,
