@@ -799,11 +799,47 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
  * @diff: The time difference of the last Clock sync
  * @timestamp: The timestamp of the buffer
  *
+ * Allocate a new qos event with the given values. This function calls
+ * gst_event_new_qos_full() with the type set to #GST_QOS_TYPE_OVERFLOW
+ * when diff is negative (buffers are in time) and #GST_QOS_TYPE_UNDERFLOW
+ * when @diff is positive (buffers are late).
+ *
+ * Returns: (transfer full): a new QOS event.
+ */
+GstEvent *
+gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
+    GstClockTime timestamp)
+{
+  GstQOSType type;
+
+  if (diff <= 0)
+    type = GST_QOS_TYPE_OVERFLOW;
+  else
+    type = GST_QOS_TYPE_UNDERFLOW;
+
+  return gst_event_new_qos_full (type, proportion, diff, timestamp);
+}
+
+/**
+ * gst_event_new_qos_full:
+ * @type: the QoS type
+ * @proportion: the proportion of the qos message
+ * @diff: The time difference of the last Clock sync
+ * @timestamp: The timestamp of the buffer
+ *
  * Allocate a new qos event with the given values.
  * The QOS event is generated in an element that wants an upstream
  * element to either reduce or increase its rate because of
- * high/low CPU load or other resource usage such as network performance.
- * Typically sinks generate these events for each buffer they receive.
+ * high/low CPU load or other resource usage such as network performance or
+ * throttling. Typically sinks generate these events for each buffer
+ * they receive.
+ *
+ * @type indicates the reason for the QoS event. #GST_QOS_TYPE_OVERFLOW is
+ * used when a buffer arrived in time or when the sink cannot keep up with
+ * the upstream datarate. #GST_QOS_TYPE_UNDERFLOW is when the sink is not
+ * receiving buffers fast enough and thus has to drop late buffers. 
+ * #GST_QOS_TYPE_THROTTLE is used when the datarate is artificially limited
+ * by the application, for example to reduce power consumption.
  *
  * @proportion indicates the real-time performance of the streaming in the
  * element that generated the QoS event (usually the sink). The value is
@@ -818,7 +854,8 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
  * @diff is the difference against the clock in running time of the last
  * buffer that caused the element to generate the QOS event. A negative value
  * means that the buffer with @timestamp arrived in time. A positive value
- * indicates how late the buffer with @timestamp was.
+ * indicates how late the buffer with @timestamp was. When throttling is
+ * enabled, @diff will be set to the requested throttling interval.
  *
  * @timestamp is the timestamp of the last buffer that cause the element
  * to generate the QOS event. It is expressed in running time and thus an ever
@@ -834,10 +871,12 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
  * event and implement custom application specific QoS handling.
  *
  * Returns: (transfer full): a new QOS event.
+ *
+ * Since: 0.10.33
  */
 GstEvent *
-gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
-    GstClockTime timestamp)
+gst_event_new_qos_full (GstQOSType type, gdouble proportion,
+    GstClockTimeDiff diff, GstClockTime timestamp)
 {
   GstEvent *event;
   GstStructure *structure;
@@ -846,11 +885,12 @@ gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
   g_return_val_if_fail (diff >= 0 || -diff <= timestamp, NULL);
 
   GST_CAT_INFO (GST_CAT_EVENT,
-      "creating qos proportion %lf, diff %" G_GINT64_FORMAT
-      ", timestamp %" GST_TIME_FORMAT, proportion,
+      "creating qos type %d, proportion %lf, diff %" G_GINT64_FORMAT
+      ", timestamp %" GST_TIME_FORMAT, type, proportion,
       diff, GST_TIME_ARGS (timestamp));
 
   structure = gst_structure_id_new (GST_QUARK (EVENT_QOS),
+      GST_QUARK (TYPE), GST_TYPE_QOS_TYPE, type,
       GST_QUARK (PROPORTION), G_TYPE_DOUBLE, proportion,
       GST_QUARK (DIFF), G_TYPE_INT64, diff,
       GST_QUARK (TIMESTAMP), G_TYPE_UINT64, timestamp, NULL);
@@ -873,12 +913,36 @@ void
 gst_event_parse_qos (GstEvent * event, gdouble * proportion,
     GstClockTimeDiff * diff, GstClockTime * timestamp)
 {
+  gst_event_parse_qos_full (event, NULL, proportion, diff, timestamp);
+}
+
+/**
+ * gst_event_parse_qos_full:
+ * @event: The event to query
+ * @type: (out): A pointer to store the QoS type in
+ * @proportion: (out): A pointer to store the proportion in
+ * @diff: (out): A pointer to store the diff in
+ * @timestamp: (out): A pointer to store the timestamp in
+ *
+ * Get the type, proportion, diff and timestamp in the qos event. See
+ * gst_event_new_qos_full() for more information about the different QoS values.
+ *
+ * Since: 0.10.33
+ */
+void
+gst_event_parse_qos_full (GstEvent * event, GstQOSType * type,
+    gdouble * proportion, GstClockTimeDiff * diff, GstClockTime * timestamp)
+{
   const GstStructure *structure;
 
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_QOS);
 
   structure = event->structure;
+  if (type)
+    *type =
+        g_value_get_enum (gst_structure_id_get_value (structure,
+            GST_QUARK (TYPE)));
   if (proportion)
     *proportion =
         g_value_get_double (gst_structure_id_get_value (structure,

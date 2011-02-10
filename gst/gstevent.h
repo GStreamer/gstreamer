@@ -94,8 +94,8 @@ typedef enum {
  *                          send messages that should be emitted in sync with
  *                          rendering.
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
- *                 that the downstream elements are being starved of or
- *                 flooded with data.
+ *                 that the downstream elements should adjust their processing
+ *                 rate.
  * @GST_EVENT_SEEK: A request for a new playback position and rate.
  * @GST_EVENT_NAVIGATION: Navigation events are usually used for communicating
  *                        user requests, such as mouse or keyboard movements,
@@ -309,6 +309,29 @@ typedef enum {
 } GstSeekFlags;
 
 /**
+ * GstQOSType:
+ * @GST_QOS_TYPE_OVERFLOW: The QoS event type that is produced when downstream
+ *    elements are producing data too quickly and the element can't keep up
+ *    processing the data. Upstream should reduce their processing rate. This
+ *    type is also used when buffers arrive early or in time.
+ * @GST_QOS_TYPE_UNDERFLOW: The QoS event type that is produced when downstream
+ *    elements are producing data too slowly and need to speed up their processing
+ *    rate. 
+ * @GST_QOS_TYPE_THROTTLE: The QoS event type that is produced when the
+ *    application enabled throttling to limit the datarate.
+ *
+ * The different types of QoS events that can be given to the 
+ * gst_event_new_qos_full() method. 
+ *
+ * Since: 0.10.33
+ */
+typedef enum {
+  GST_QOS_TYPE_OVERFLOW        = 0,
+  GST_QOS_TYPE_UNDERFLOW       = 1,
+  GST_QOS_TYPE_THROTTLE        = 2
+} GstQOSType;
+
+/**
  * GstEvent:
  * @mini_object: the parent structure
  * @type: the #GstEventType of the event
@@ -461,7 +484,12 @@ void            gst_event_parse_buffer_size     (GstEvent *event, GstFormat *for
 /* QOS events */
 GstEvent*       gst_event_new_qos               (gdouble proportion, GstClockTimeDiff diff,
                                                  GstClockTime timestamp);
+GstEvent*       gst_event_new_qos_full          (GstQOSType type, gdouble proportion,
+                                                 GstClockTimeDiff diff, GstClockTime timestamp);
 void            gst_event_parse_qos             (GstEvent *event, gdouble *proportion, GstClockTimeDiff *diff,
+                                                 GstClockTime *timestamp);
+void            gst_event_parse_qos_full        (GstEvent *event, GstQOSType *type,
+                                                 gdouble *proportion, GstClockTimeDiff *diff,
                                                  GstClockTime *timestamp);
 /* seek event */
 GstEvent*       gst_event_new_seek              (gdouble rate, GstFormat format, GstSeekFlags flags,

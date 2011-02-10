@@ -392,6 +392,7 @@ EXPORTS
 	gst_event_new_new_segment
 	gst_event_new_new_segment_full
 	gst_event_new_qos
+	gst_event_new_qos_full
 	gst_event_new_seek
 	gst_event_new_sink_message
 	gst_event_new_step
@@ -401,6 +402,7 @@ EXPORTS
 	gst_event_parse_new_segment
 	gst_event_parse_new_segment_full
 	gst_event_parse_qos
+	gst_event_parse_qos_full
 	gst_event_parse_seek
 	gst_event_parse_sink_message
 	gst_event_parse_step
@@ -812,6 +814,7 @@ EXPORTS
 	gst_print_element_args
 	gst_print_pad_caps
 	gst_proxy_pad_get_type
+	gst_qos_type_get_type
 	gst_query_add_buffering_range
 	gst_query_get_n_buffering_ranges
 	gst_query_get_structure
