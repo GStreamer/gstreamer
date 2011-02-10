@@ -1194,6 +1194,14 @@ had_parent:
  * If the element's pads are linked to other pads, the pads will be unlinked
  * before the element is added to the bin.
  *
+ * <note>
+ * When you add an element to an already-running pipeline, you will have to
+ * take care to set the state of the newly-added element to the desired
+ * state (usually PLAYING or PAUSED, same you set the pipeline to originally)
+ * with gst_element_set_state(), or use gst_element_sync_state_with_parent().
+ * The bin or pipeline will not take care of this for you.
+ * </note>
+ *
  * MT safe.
  *
  * Returns: TRUE if the element could be added, FALSE if

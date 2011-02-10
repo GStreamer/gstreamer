@@ -202,7 +202,11 @@ gst_element_class_init (GstElementClass * klass)
    * @gstelement: the object which received the signal
    * @new_pad: the pad that has been added
    *
-   * a new #GstPad has been added to the element.
+   * a new #GstPad has been added to the element. Note that this signal will
+   * usually be emitted from the context of the streaming thread. Also keep in
+   * mind that if you add new elements to the pipeline in the signal handler
+   * you will need to set them to the desired target state with
+   * gst_element_set() or gst_element_sync_state_with_parent().
    */
   gst_element_signals[PAD_ADDED] =
       g_signal_new ("pad-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -224,6 +228,8 @@ gst_element_class_init (GstElementClass * klass)
    * @gstelement: the object which received the signal
    *
    * This signals that the element will not generate more dynamic pads.
+   * Note that this signal will usually be emitted from the context of
+   * the streaming thread.
    */
   gst_element_signals[NO_MORE_PADS] =
       g_signal_new ("no-more-pads", G_TYPE_FROM_CLASS (klass),

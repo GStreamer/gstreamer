@@ -118,6 +118,14 @@ main (int   argc,
 <!-- example-begin pad.c d -->
 }
       <!-- example-end pad.c d --></programlisting>
+      <para>
+        It is not uncommon to add elements to the pipeline only from within
+        the "pad-added" or "new-decoded-pad" callback. If you do this, don't
+        forget to set the state of the newly-added elements to the target
+        state of the pipeline using
+        <function>gst_element_set_state ()</function> or
+        <function>gst_element_sync_state_with_parent ()</function>.
+      </para>
     </sect2>
 
     <sect2 id="section-pads-request">
