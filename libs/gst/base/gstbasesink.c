@@ -2590,7 +2590,7 @@ preroll_failed:
 }
 
 static gboolean
-gst_base_sink_send_qos (GstBaseSink * basesink,
+gst_base_sink_send_qos (GstBaseSink * basesink, GstQOSType type,
     gdouble proportion, GstClockTime time, GstClockTimeDiff diff)
 {
   GstEvent *event;
@@ -2598,10 +2598,10 @@ gst_base_sink_send_qos (GstBaseSink * basesink,
 
   /* generate Quality-of-Service event */
   GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
-      "qos: proportion: %lf, diff %" G_GINT64_FORMAT ", timestamp %"
-      GST_TIME_FORMAT, proportion, diff, GST_TIME_ARGS (time));
+      "qos: type %d, proportion: %lf, diff %" G_GINT64_FORMAT ", timestamp %"
+      GST_TIME_FORMAT, type, proportion, diff, GST_TIME_ARGS (time));
 
-  event = gst_event_new_qos (proportion, diff, time);
+  event = gst_event_new_qos_full (type, proportion, diff, time);
 
   /* send upstream */
   res = gst_pad_push_event (basesink->sinkpad, event);
@@ -2715,6 +2715,9 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
 
 
   if (priv->avg_rate >= 0.0) {
+    GstQOSType type;
+    GstClockTimeDiff diff;
+
     /* if we have a valid rate, start sending QoS messages */
     if (priv->current_jitter < 0) {
       /* make sure we never go below 0 when adding the jitter to the
@@ -2722,8 +2725,20 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
       if (priv->current_rstart < -priv->current_jitter)
         priv->current_jitter = -priv->current_rstart;
     }
-    gst_base_sink_send_qos (sink, priv->avg_rate, priv->current_rstart,
-        priv->current_jitter);
+
+    if (priv->throttle_time > 0) {
+      diff = priv->throttle_time;
+      type = GST_QOS_TYPE_THROTTLE;
+    } else {
+      diff = priv->current_jitter;
+      if (diff <= 0)
+        type = GST_QOS_TYPE_OVERFLOW;
+      else
+        type = GST_QOS_TYPE_UNDERFLOW;
+    }
+
+    gst_base_sink_send_qos (sink, type, priv->avg_rate, priv->current_rstart,
+        diff);
   }
 
   /* record when this buffer will leave us */
