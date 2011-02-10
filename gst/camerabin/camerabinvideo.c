@@ -215,27 +215,38 @@ gst_camerabin_video_dispose (GstCameraBinVideo * vid)
     vid->vid_sink_probe_id = 0;
   }
 
+  /* Note: if videobin was never set to READY state the
+     ownership of elements created by application were never
+     taken by bin and therefore gst_object_sink is called for
+     these elements (they may still be in floating state
+     and not unreffed properly without sinking first)
+   */
   if (vid->app_post) {
+    gst_object_sink (vid->app_post);
     gst_object_unref (vid->app_post);
     vid->app_post = NULL;
   }
 
   if (vid->app_vid_enc) {
+    gst_object_sink (vid->app_vid_enc);
     gst_object_unref (vid->app_vid_enc);
     vid->app_vid_enc = NULL;
   }
 
   if (vid->app_aud_enc) {
+    gst_object_sink (vid->app_aud_enc);
     gst_object_unref (vid->app_aud_enc);
     vid->app_aud_enc = NULL;
   }
 
   if (vid->app_aud_src) {
+    gst_object_sink (vid->app_aud_src);
     gst_object_unref (vid->app_aud_src);
     vid->app_aud_src = NULL;
   }
 
   if (vid->app_mux) {
+    gst_object_sink (vid->app_mux);
     gst_object_unref (vid->app_mux);
     vid->app_mux = NULL;
   }
