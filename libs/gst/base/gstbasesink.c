@@ -402,7 +402,7 @@ static GstFlowReturn gst_base_sink_pad_buffer_alloc (GstPad * pad,
 
 /* check if an object was too late */
 static gboolean gst_base_sink_is_too_late (GstBaseSink * basesink,
-    GstMiniObject * obj, GstClockTime start, GstClockTime stop,
+    GstMiniObject * obj, GstClockTime rstart, GstClockTime rstop,
     GstClockReturn status, GstClockTimeDiff jitter);
 static GstFlowReturn gst_base_sink_preroll_object (GstBaseSink * basesink,
     guint8 obj_type, GstMiniObject * obj);
@@ -2778,7 +2778,7 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
 
 /* Checks if the object was scheduled too late.
  *
- * start/stop contain the raw timestamp start and stop values
+ * rstart/rstop contain the running_time start and stop values
  * of the object.
  *
  * status and jitter contain the return values from the clock wait.
@@ -2787,7 +2787,7 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
  */
 static gboolean
 gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
-    GstClockTime start, GstClockTime stop,
+    GstClockTime rstart, GstClockTime rstop,
     GstClockReturn status, GstClockTimeDiff jitter)
 {
   gboolean late;
@@ -2813,25 +2813,25 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
     goto not_buffer;
 
   /* can't do check if we don't have a timestamp */
-  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (start)))
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (rstart)))
     goto no_timestamp;
 
   /* we can add a valid stop time */
-  if (GST_CLOCK_TIME_IS_VALID (stop))
-    max_lateness += stop;
+  if (GST_CLOCK_TIME_IS_VALID (rstop))
+    max_lateness += rstop;
   else
-    max_lateness += start;
+    max_lateness += rstart;
 
   /* if the jitter bigger than duration and lateness we are too late */
-  if ((late = start + jitter > max_lateness)) {
+  if ((late = rstart + jitter > max_lateness)) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, basesink,
         "buffer is too late %" GST_TIME_FORMAT
-        " > %" GST_TIME_FORMAT, GST_TIME_ARGS (start + jitter),
+        " > %" GST_TIME_FORMAT, GST_TIME_ARGS (rstart + jitter),
         GST_TIME_ARGS (max_lateness));
     /* !!emergency!!, if we did not receive anything valid for more than a
      * second, render it anyway so the user sees something */
     if (GST_CLOCK_TIME_IS_VALID (priv->last_in_time) &&
-        start - priv->last_in_time > GST_SECOND) {
+        rstart - priv->last_in_time > GST_SECOND) {
       late = FALSE;
       GST_ELEMENT_WARNING (basesink, CORE, CLOCK,
           (_("A lot of buffers are being dropped.")),
@@ -2844,10 +2844,10 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
 
 done:
   if (!late || !GST_CLOCK_TIME_IS_VALID (priv->last_in_time)) {
-    priv->last_in_time = start;
+    priv->last_in_time = rstart;
     /* the next allowed input timestamp */
     if (priv->throttle_time > 0)
-      priv->earliest_in_time = start + priv->throttle_time;
+      priv->earliest_in_time = rstart + priv->throttle_time;
   }
   return late;
 
