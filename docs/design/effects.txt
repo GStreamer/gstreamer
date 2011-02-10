@@ -116,7 +116,7 @@ C. Keyframes
 
       signals:
       -------
-        * property-changed: emited when a usefull property of a GstElement
+        * deep-notify: emited when a usefull property of a GstElement
         contained in the GESTrackObject changes
             => DONE
 
@@ -207,7 +207,7 @@ C. Keyframes
       GESTrackEffect *ges_timeline_object_add_effect (GESTimelineObject *object,
                                                   GESEffect *effect_material,
                                                   gint position);
-            => DONE
+            => Waiting for GESMaterial
 
       /**
       * ges_timeline_object_get_effects:
@@ -249,30 +249,20 @@ C. Keyframes
       *
       * Returns: The top position of the effect, -1 if something went wrong.
       */
-      gint 
+      gint
       ges_timeline_object_get_top_effect_position (GESTimelineObject *object,
             GESTrackEffect *effect);
             => DONE
 
   C - The GESTrackEffect API:
+      -> This is an empty abstract class
+        => DONE
+
+  D - The GESTrackParseLaunchEffect API:
+      This is a parse-launch based implementation of TrackEffect.
 
       /**
-      * ges_track_effect_new_from_material:
-      *
-      * @effect_material: The #GESEffect from which to create this
-      * #GESTrackEffect
-      *
-      * Creates a new #GESTrackEffect from a #GESEffect
-      *
-      * Returns: a newly created #GESTrackEffect, or %NULL if something went
-      * wrong.
-      */
-    GESTrackEffect *ges_track_effect_new_from_material(GESTrackEffect *effect,
-                                                   GESEffect *effect_material);
-            => Waiting for GESMaterial
-
-      /**
-      * ges_track_effect_new_from_bin_desc:
+      * ges_track_parse_launch_effect_new:
       *
       * @bin_dec: The gst-launch like bin description of the effect
       *
@@ -282,27 +272,61 @@ C. Keyframes
       * Returns: a newly created #GESTrackEffect, or %NULL if something went
       * wrong.
       */
-    GESTrackEffect *ges_track_effect_new_from_bin_desc(GESTrackEffect *effect,
+    GESTrackEffect *ges_track_parse_launch_effect_new (GESTrackEffect *effect,
                                                        const gchar *bin_desc);
             => DONE
 
-  D - The GESTimelineEffect API:
+  E - The GESTrackMaterialEffect API:
+      /**
+      * ges_track_material_effect:
+      *
+      * @effect_material: The #GESEffect from which to create this
+      * #GESTrackEffect
+      *
+      * Creates a new #GESTrackEffect from a #GESEffect
+      *
+      * Returns: a newly created #GESTrackEffect, or %NULL if something went
+      * wrong.
+      */
+    GESTrackEffect *ges_track_material_effect_new (GESTrackEffect *effect,
+                                                   GESEffect *effect_material);
+            => Waiting for GESMaterial
 
-  The GESTimelineEffect basically doesn't have anything else but what
-  GESTimelineObject has.
+  F - The GESTimelineEffect API:
+      -> This is an empty abstract class
+        => DONE
 
     -> Usecases: The user wants to control multiple effects in sync. The user
                  wants to add an effect to the whole timeline. The user wants
                  to had an effect to a segment of the timeline without caring
                  bout what clip it is applied on.
+
+  G - The GESTimelineParseLaunchEffect API:
+    This is a parse-launch based implementation of TimelineEffect.
+
+    /**
+    * ges_timeline_parse_launch_effect_new_from_bin_desc:
+    * @video_bin_description: The gst-launch like bin description of the effect
+    * @audio_bin_description: The gst-launch like bin description of the effect
+    *
+    * Creates a new #GESTimelineParseLaunchEffect from the description of the bin.
+    *
+    * Returns: a newly created #GESTimelineParseLaunchEffect, or %NULL if something went
+    * wrong.
+    */
+    GESTimelineParseLaunchEffect *
+    ges_timeline_parse_launch_effect_new (const gchar * video_bin_description,
+        const gchar * audio_bin_description)
+
             => DONE
 
-  E - The GESEffect:
 
-  The GESEffect class is a subclass of GESMaterial, it is used to describe 
+  H - The GESEffect:
+
+  The GESEffect class is a subclass of GESMaterial, it is used to describe
   effects independently of the usage which is made of it in the timeline.
 
-  A GESEffect can specify a GESTrackOperation class to use in a 
+  A GESEffect can specify a GESTrackOperation class to use in a
   TimelineObject.
 
   All important properties are inherited from GESMaterial such as:
@@ -314,7 +338,7 @@ C. Keyframes
   We should also be able to list properties of the effect from the GESMaterial.
 
             => Waiting for GESMaterial
-  
+
 =================
   TODO GESRegistry API:
       This should be a singleton since we don't want an app to instanciate more
