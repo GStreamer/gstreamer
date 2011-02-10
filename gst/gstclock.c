@@ -440,7 +440,7 @@ gst_clock_id_get_time (GstClockID id)
 /**
  * gst_clock_id_wait
  * @id: The #GstClockID to wait on
- * @jitter (out) (allow-none): a pointer that will contain the jitter,
+ * @jitter: (out) (allow-none): a pointer that will contain the jitter,
  *     can be %NULL.
  *
  * Perform a blocking wait on @id. 
