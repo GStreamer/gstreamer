@@ -57,9 +57,10 @@ travels upstream and contains the following fields:
  - jitter, G_TYPE_INT64:
       The difference of that timestamp against the current clock time.  Negative
       values mean the timestamp was on time. Positive values indicate the
-      timestamp was late by that amount. 
+      timestamp was late by that amount. When buffers are received in time and 
+      throttling is not enabled, the QoS type field is set to OVERFLOW.
       When throttling, the jitter contains the throttling delay added by the 
-      application.
+      application and the type is set to THROTTLE.
 
  - proportion, G_TYPE_DOUBLE:
       Long term prediction of the ideal rate relative to normal rate to get
