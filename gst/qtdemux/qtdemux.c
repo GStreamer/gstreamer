@@ -425,7 +425,7 @@ static GstCaps *qtdemux_sub_caps (GstQTDemux * qtdemux,
     gchar ** codec_name);
 static gboolean qtdemux_parse_samples (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 n);
-static void qtdemux_expose_streams (GstQTDemux * qtdemux);
+static GstFlowReturn qtdemux_expose_streams (GstQTDemux * qtdemux);
 
 
 static void
@@ -2765,7 +2765,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
 beach:
   if (ret == GST_FLOW_UNEXPECTED && qtdemux->got_moov) {
     /* digested all data, show what we have */
-    qtdemux_expose_streams (qtdemux);
+    ret = qtdemux_expose_streams (qtdemux);
 
     /* Only post, event on pads is done after newsegment */
     qtdemux_post_global_tags (qtdemux);
@@ -2773,7 +2773,7 @@ beach:
     qtdemux->state = QTDEMUX_STATE_MOVIE;
     GST_DEBUG_OBJECT (qtdemux, "switching state to STATE_MOVIE (%d)",
         qtdemux->state);
-    return GST_FLOW_OK;
+    return ret;
   }
   return ret;
 }
@@ -5116,20 +5116,20 @@ locate_failed:
 
 /* should only do something in pull mode */
 /* call with OBJECT lock */
-static gboolean
+static GstFlowReturn
 qtdemux_add_fragmented_samples (GstQTDemux * qtdemux)
 {
   guint64 length, offset;
   GstBuffer *buf = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean res = TRUE;
+  GstFlowReturn res = TRUE;
 
   offset = qtdemux->moof_offset;
   GST_DEBUG_OBJECT (qtdemux, "next moof at offset %" G_GUINT64_FORMAT, offset);
 
   if (!offset) {
     GST_DEBUG_OBJECT (qtdemux, "no next moof");
-    return FALSE;
+    return GST_FLOW_UNEXPECTED;
   }
 
   /* best not do pull etc with lock held */
@@ -5169,7 +5169,7 @@ parse_failed:
   {
     GST_DEBUG_OBJECT (qtdemux, "failed to parse moof");
     offset = 0;
-    res = FALSE;
+    res = GST_FLOW_ERROR;
     goto exit;
   }
 flow_failed:
@@ -5182,7 +5182,7 @@ flow_failed:
       GST_DEBUG_OBJECT (qtdemux, "upstream WRONG_STATE");
       /* resume at current position next time */
     }
-    res = FALSE;
+    res = ret;
     goto exit;
   }
 }
@@ -5772,7 +5772,7 @@ done:
     GST_DEBUG_OBJECT (qtdemux,
         "parsed all available samples; checking for more");
     while (n + 1 == stream->n_samples)
-      if (!qtdemux_add_fragmented_samples (qtdemux))
+      if (qtdemux_add_fragmented_samples (qtdemux) != GST_FLOW_OK)
         break;
   }
   GST_OBJECT_UNLOCK (qtdemux);
@@ -7323,14 +7323,15 @@ too_many_streams:
   }
 }
 
-static void
+static GstFlowReturn
 qtdemux_expose_streams (GstQTDemux * qtdemux)
 {
   gint i;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (qtdemux, "exposing streams");
 
-  for (i = 0; i < qtdemux->n_streams; i++) {
+  for (i = 0; ret == GST_FLOW_OK && i < qtdemux->n_streams; i++) {
     QtDemuxStream *stream = qtdemux->streams[i];
     guint32 sample_num = 0;
     guint samples = 20;
@@ -7344,13 +7345,17 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
       /* need all moov samples first */
       GST_OBJECT_LOCK (qtdemux);
       while (stream->n_samples == 0)
-        if (!qtdemux_add_fragmented_samples (qtdemux))
+        if ((ret = qtdemux_add_fragmented_samples (qtdemux)) != GST_FLOW_OK)
           break;
       GST_OBJECT_UNLOCK (qtdemux);
     } else {
       /* discard any stray moof */
       qtdemux->moof_offset = 0;
     }
+
+    /* prepare braking */
+    if (ret != GST_FLOW_ERROR)
+      ret = GST_FLOW_OK;
 
     /* in pull mode, we should have parsed some sample info by now;
      * and quite some code will not handle no samples.
@@ -7411,6 +7416,8 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     gst_element_post_message (GST_ELEMENT_CAST (qtdemux), m);
     qtdemux->posted_redirect = TRUE;
   }
+
+  return ret;
 }
 
 /* check if major or compatible brand is 3GP */
