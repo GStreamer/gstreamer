@@ -7362,6 +7362,7 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
           sizeof (QtDemuxStream *) * (GST_QTDEMUX_MAX_STREAMS - i - 1));
       qtdemux->streams[GST_QTDEMUX_MAX_STREAMS - 1] = NULL;
       qtdemux->n_streams--;
+      i--;
       continue;
     }
 
