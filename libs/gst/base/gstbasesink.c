@@ -260,7 +260,8 @@ struct _GstBaseSinkPrivate
   /* Cached GstClockID */
   GstClockID cached_clock_id;
 
-  /* for throttling */
+  /* for throttling and QoS */
+  GstClockTime earliest_in_time;
   GstClockTime throttle_time;
 };
 
@@ -2490,6 +2491,10 @@ do_step:
   /* save sync time for eos when the previous object needed sync */
   priv->eos_rtime = (do_sync ? priv->current_rstop : GST_CLOCK_TIME_NONE);
 
+  if (G_UNLIKELY (priv->earliest_in_time != -1
+          && rstart < priv->earliest_in_time))
+    goto qos_dropped;
+
 again:
   /* first do preroll, this makes sure we commit our state
    * to PAUSED and can continue to PLAYING. We cannot perform
@@ -2574,6 +2579,12 @@ step_skipped:
 not_syncable:
   {
     GST_DEBUG_OBJECT (basesink, "non syncable object %p", obj);
+    return GST_FLOW_OK;
+  }
+qos_dropped:
+  {
+    GST_DEBUG_OBJECT (basesink, "dropped because of QoS %p", obj);
+    *late = TRUE;
     return GST_FLOW_OK;
   }
 flushing:
@@ -2754,6 +2765,7 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
   priv = sink->priv;
 
   priv->last_in_time = GST_CLOCK_TIME_NONE;
+  priv->earliest_in_time = GST_CLOCK_TIME_NONE;
   priv->last_left = GST_CLOCK_TIME_NONE;
   priv->avg_duration = GST_CLOCK_TIME_NONE;
   priv->avg_pt = GST_CLOCK_TIME_NONE;
@@ -2833,6 +2845,9 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
 done:
   if (!late || !GST_CLOCK_TIME_IS_VALID (priv->last_in_time)) {
     priv->last_in_time = start;
+    /* the next allowed input timestamp */
+    if (priv->throttle_time > 0)
+      priv->earliest_in_time = start + priv->throttle_time;
   }
   return late;
 
