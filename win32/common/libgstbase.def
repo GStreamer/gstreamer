@@ -21,6 +21,7 @@ EXPORTS
 	gst_base_sink_get_max_lateness
 	gst_base_sink_get_render_delay
 	gst_base_sink_get_sync
+	gst_base_sink_get_throttle_time
 	gst_base_sink_get_ts_offset
 	gst_base_sink_get_type
 	gst_base_sink_is_async_enabled
@@ -34,6 +35,7 @@ EXPORTS
 	gst_base_sink_set_qos_enabled
 	gst_base_sink_set_render_delay
 	gst_base_sink_set_sync
+	gst_base_sink_set_throttle_time
 	gst_base_sink_set_ts_offset
 	gst_base_sink_wait_clock
 	gst_base_sink_wait_eos

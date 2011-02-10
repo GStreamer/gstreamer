@@ -259,6 +259,9 @@ struct _GstBaseSinkPrivate
 
   /* Cached GstClockID */
   GstClockID cached_clock_id;
+
+  /* for throttling */
+  GstClockTime throttle_time;
 };
 
 #define DO_RUNNING_AVG(avg,val,size) (((val) + ((size)-1) * (avg)) / (size))
@@ -299,6 +302,7 @@ enum
 #define DEFAULT_BLOCKSIZE           4096
 #define DEFAULT_RENDER_DELAY        0
 #define DEFAULT_ENABLE_LAST_BUFFER  TRUE
+#define DEFAULT_THROTTLE_TIME       0
 
 enum
 {
@@ -313,6 +317,7 @@ enum
   PROP_LAST_BUFFER,
   PROP_BLOCKSIZE,
   PROP_RENDER_DELAY,
+  PROP_THROTTLE_TIME,
   PROP_LAST
 };
 
@@ -524,6 +529,19 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
       g_param_spec_uint64 ("render-delay", "Render Delay",
           "Additional render delay of the sink in nanoseconds", 0, G_MAXUINT64,
           DEFAULT_RENDER_DELAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstBaseSink:throttle-time
+   *
+   * The time to insert between buffers. This property can be used to control
+   * the maximum amount of buffers per second to render. Setting this property
+   * to a value bigger than 0 will make the sink create THROTTLE QoS events.
+   *
+   * Since: 0.10.33
+   */
+  g_object_class_install_property (gobject_class, PROP_THROTTLE_TIME,
+      g_param_spec_uint64 ("throttle-time", "Throttle time",
+          "The time to keep between rendered buffers (unused)", 0, G_MAXUINT64,
+          DEFAULT_THROTTLE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
@@ -689,6 +707,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   priv->blocksize = DEFAULT_BLOCKSIZE;
   priv->cached_clock_id = NULL;
   g_atomic_int_set (&priv->enable_last_buffer, DEFAULT_ENABLE_LAST_BUFFER);
+  priv->throttle_time = DEFAULT_THROTTLE_TIME;
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }
@@ -1283,6 +1302,53 @@ gst_base_sink_get_blocksize (GstBaseSink * sink)
   return res;
 }
 
+/**
+ * gst_base_sink_set_throttle_time:
+ * @sink: a #GstBaseSink
+ * @throttle: the throttle time in nanoseconds
+ *
+ * Set the time that will be inserted between rendered buffers. This
+ * can be used to control the maximum buffers per second that the sink
+ * will render. 
+ *
+ * Since: 0.10.33
+ */
+void
+gst_base_sink_set_throttle_time (GstBaseSink * sink, guint64 throttle)
+{
+  g_return_if_fail (GST_IS_BASE_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  sink->priv->throttle_time = throttle;
+  GST_LOG_OBJECT (sink, "set throttle_time to %" G_GUINT64_FORMAT, throttle);
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_sink_get_throttle_time:
+ * @sink: a #GstBaseSink
+ *
+ * Get the time that will be inserted between frames to control the 
+ * maximum buffers per second.
+ *
+ * Returns: the number of nanoseconds @sink will put between frames.
+ *
+ * Since: 0.10.33
+ */
+guint64
+gst_base_sink_get_throttle_time (GstBaseSink * sink)
+{
+  guint64 res;
+
+  g_return_val_if_fail (GST_IS_BASE_SINK (sink), 0);
+
+  GST_OBJECT_LOCK (sink);
+  res = sink->priv->throttle_time;
+  GST_OBJECT_UNLOCK (sink);
+
+  return res;
+}
+
 static void
 gst_base_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1319,6 +1385,9 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ENABLE_LAST_BUFFER:
       gst_base_sink_set_last_buffer_enabled (sink, g_value_get_boolean (value));
+      break;
+    case PROP_THROTTLE_TIME:
+      gst_base_sink_set_throttle_time (sink, g_value_get_uint64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1362,6 +1431,9 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_RENDER_DELAY:
       g_value_set_uint64 (value, gst_base_sink_get_render_delay (sink));
+      break;
+    case PROP_THROTTLE_TIME:
+      g_value_set_uint64 (value, gst_base_sink_get_throttle_time (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
