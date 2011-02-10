@@ -683,7 +683,8 @@ gst_event_parse_new_segment_full (GstEvent * event, gboolean * update,
 
 /**
  * gst_event_new_tag:
- * @taglist: metadata list. The event will take ownership of @taglist.
+ * @taglist: (transfer full): metadata list. The event will take ownership
+ *     of the taglist.
  *
  * Generates a metadata tag event from the given @taglist.
  *
@@ -703,6 +704,9 @@ gst_event_new_tag (GstTagList * taglist)
  * @taglist: (out) (transfer none): pointer to metadata list
  *
  * Parses a tag @event and stores the results in the given @taglist location.
+ * No reference to the taglist will be returned, it remains valid only until
+ * the @event is freed. Don't modify or free the taglist, make a copy if you
+ * want to modify it or store it for later use.
  */
 void
 gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
@@ -1194,6 +1198,7 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
  *
  * Since: 0.10.26
  */
+/* FIXME 0.11: take ownership of msg for consistency? */
 GstEvent *
 gst_event_new_sink_message (GstMessage * msg)
 {
