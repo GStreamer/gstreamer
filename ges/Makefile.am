@@ -19,6 +19,7 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-timeline-pipeline.c			\
 	ges-timeline-source.c			\
 	ges-timeline-effect.c		\
+	ges-timeline-parse-launch-effect.c		\
 	ges-timeline-file-source.c		\
 	ges-timeline-operation.c		\
 	ges-timeline-transition.c		\
@@ -62,6 +63,7 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-timeline-source.h			\
 	ges-timeline-file-source.h		\
 	ges-timeline-effect.h		\
+	ges-timeline-parse-launch-effect.h		\
 	ges-timeline-operation.h		\
 	ges-timeline-transition.h		\
 	ges-timeline-standard-transition.h	\

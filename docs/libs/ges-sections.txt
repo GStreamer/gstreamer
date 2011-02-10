@@ -434,7 +434,6 @@ GES_TIMELINE_TRANSITION_GET_CLASS
 <FILE>ges-timeline-effect</FILE>
 <TITLE>GESTimelineEffect</TITLE>
 GESTimelineEffect
-ges_timeline_effect_new_from_bin_desc
 <SUBSECTION Standard>
 GESTimelineEffectClass
 GESTimelineEffectPrivate
@@ -445,6 +444,23 @@ ges_timeline_effect_get_type
 GES_TIMELINE_EFFECT_CLASS
 GES_IS_TIMELINE_EFFECT_CLASS
 GES_TIMELINE_EFFECT_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>ges-timeline-parse-launch-effect</FILE>
+<TITLE>GESTimelineParseLaunchEffect</TITLE>
+GESTimelineParseLaunchEffect
+ges_timeline_parse_launch_effect_new
+<SUBSECTION Standard>
+GESTimelineParseLaunchEffectClass
+GESTimelineParseLaunchEffectPrivate
+GES_TIMELINE_PARSE_LAUNCH_EFFECT
+GES_IS_TIMELINE_PARSE_LAUNCH_EFFECT
+GES_TYPE_TIMELINE_PARSE_LAUNCH_EFFECT
+ges_timeline_parse_launch_effect_get_type
+GES_TIMELINE_PARSE_LAUNCH_EFFECT_CLASS_
+GES_IS_TIMELINE_PARSE_LAUNCH_EFFECT_CLASS
+GES_TIMELINE_PARSE_LAUNCH_EFFECT_GET_CLASS
 </SECTION>
 
 <SECTION>

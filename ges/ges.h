@@ -40,6 +40,7 @@
 #include <ges/ges-timeline-text-overlay.h>
 #include <ges/ges-timeline-transition.h>
 #include <ges/ges-timeline-standard-transition.h>
+#include <ges/ges-timeline-parse-launch-effect.h>
 #include <ges/ges-track.h>
 #include <ges/ges-track-object.h>
 #include <ges/ges-track-source.h>

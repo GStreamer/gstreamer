@@ -40,6 +40,7 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-timeline-source.xml"/>
     <xi:include href="xml/ges-timeline-operation.xml"/>
     <xi:include href="xml/ges-timeline-overlay.xml"/>
+    <xi:include href="xml/ges-timeline-effect.xml"/>
     <xi:include href="xml/ges-track.xml"/>
     <xi:include href="xml/ges-track-object.xml"/>
     <xi:include href="xml/ges-track-source.xml"/>
@@ -50,12 +51,12 @@ platform as well as Windows. It is released under the GNU Library General Public
 
   <chapter>
     <title>Timeline objects</title>
-    <xi:include href="xml/ges-timeline-effect.xml"/>
     <xi:include href="xml/ges-timeline-filesource.xml"/>
     <xi:include href="xml/ges-timeline-title-source.xml"/>
     <xi:include href="xml/ges-timeline-test-source.xml"/>
     <xi:include href="xml/ges-timeline-text-overlay.xml"/>
     <xi:include href="xml/ges-timeline-standard-transition.xml"/>
+    <xi:include href="xml/ges-timeline-parse-launch-effect.xml"/>
   </chapter>
 
   <chapter>
