@@ -78,7 +78,7 @@ GstBufferPool
  returned to the pool.
 
  The default implementation of the bufferpool is able to allocate buffers
- from main memmory with arbirary alignment and padding/prefix.
+ from main memory with arbitrary alignment and padding/prefix.
 
  Custom implementations of the bufferpool can override the allocation and
  free algorithms of the buffers from the pool. This should allow for
@@ -102,7 +102,7 @@ GstPad
  This function should return a bufferpool object with the
  GstBufferPoolConfig set to the desired parameters of the buffers that will be
  handled by the given pad. This function can only be called on a sinkpad and
- will usualy be called by the peer srcpad with the convenience method:
+ will usually be called by the peer srcpad with the convenience method:
 
    GstBufferPool * gst_pad_peer_query_bufferpool (GstPad * pad);
  
@@ -220,8 +220,8 @@ of a caps change), alignment or number of buffers.
   need to create a new bufferpool for the new configuration while we let the
   old pool drain.
 
-  Implementations can choose to reuse the same bufferpool object and wait for the
-  drain to finish before reconfiguring the pool.
+  Implementations can choose to reuse the same bufferpool object and wait for
+  the drain to finish before reconfiguring the pool.
 
   The element that wants to renegotiate a new bufferpool uses exactly the same
   algorithm as when it first started.
@@ -238,8 +238,8 @@ of a caps change), alignment or number of buffers.
   caps.
 
   A RECONFIGURE event tags each pad it travels on as needing reconfiguration.
-  The next buffer allocation will then require the renegotiation or reconfiguration
-  of a pool.
+  The next buffer allocation will then require the renegotiation or
+  reconfiguration of a pool.
 
   If downstream has specified a RENEGOTIATE flag, it must be prepared to
   received NOT_NEGOTIATED results when allocating buffers, which instructs
@@ -337,7 +337,7 @@ Use cases
  3 frames, the next call to gst_buffer_pool_acquire_buffer() will block
  (assuming the GST_BUFFER_POOL_FLAG_WAIT is specified).
 
- When the queues pushes out buffers and the sink has rendered them, the
+ When the queue has pushed out a buffer and the sink has rendered it, the
  refcount of the buffer reaches 0 and the buffer is recycled in the pool.
  This will wake up the videotestsrc that was blocked, waiting for more
  buffers and will make it produce the next buffer. 
