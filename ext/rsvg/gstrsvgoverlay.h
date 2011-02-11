@@ -50,13 +50,18 @@ struct _GstRsvgOverlay
   RsvgHandle *handle;
 
   /* width and height of the SVG data */
-  int width;
-  int height;
-  /* Should we fit the SVG to the dimension ? */
-  gboolean fit_to_frame;
+  int svg_width;
+  int svg_height;
 
   int x_offset;
   int y_offset;
+  float x_relative;
+  float y_relative;
+
+  int width;
+  int height;
+  float width_relative;
+  float height_relative;
 
   GstVideoFormat caps_format;
   int caps_width;

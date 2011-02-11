@@ -24,19 +24,34 @@
  * either be specified through properties, or fed through the
  * data-sink pad.
  *
- * Note: setting the x or y parameter to a non-zero value will implicitly disable the fit-to-frame behaviour.
+ * Position and dimension of the SVG graphics can be achieved by
+ * specifying appropriate dimensions in the SVG file itself, but
+ * shortcuts are provided by the element to specify x/y position and
+ * width/height dimension, both in absolute form (pixels) and in
+ * relative form (percentage of video dimension).
+ *
+ * For any measure (x/y/width/height), the absolute value (in pixels)
+ * takes precedence over the relative one if both are
+ * specified. Absolute values must be set to 0 to disable them.
+ *
+ * If all parameters are 0, the image is displayed without rescaling
+ * at (0, 0) position.
+ *
+ * The fit-to-frame property is a shortcut for displaying the SVG
+ * overlay at (0, 0) position filling the whole screen. It modifies
+ * the values of the x/y/width/height attributes, by setting
+ * height-/width-relative to 1.0. and all other attributes to 0.
  *
  * <refsect2>
- * 
  * <title>Example launch lines</title>
  * |[
  * gst-launch -v videotestsrc ! ffmpegcolorspace ! rsvgoverlay location=foo.svg ! ffmpegcolorspace ! autovideosink
- * ]| specifies the SVG location through the filename property. 
+ * ]| specifies the SVG location through the filename property.
  * |[
  * gst-launch -v videotestsrc ! ffmpegcolorspace ! rsvgoverlay name=overlay ! ffmpegcolorspace ! autovideosink filesrc location=foo.svg ! image/svg ! overlay.data_sink
  * ]| does the same by feeding data through the data_sink pad. You can also specify the SVG data itself as parameter:
  * |[
- * gst-launch -v videotestsrc ! ffmpegcolorspace ! rsvgoverlay data='<svg viewBox="0 0 800 600"><image x="80%" y="80%" width="10%" height="10%" xlink:href="foo.jpg" /></svg>' ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v videotestsrc ! ffmpegcolorspace ! rsvgoverlay data='&lt;svg viewBox="0 0 800 600"&gt;&lt;image x="80%" y="80%" width="10%" height="10%" xlink:href="foo.jpg" /&gt;&lt;/svg&gt;' ! ffmpegcolorspace ! autovideosink
  * ]|
  * </refsect2>
  */
@@ -61,6 +76,12 @@ enum
   PROP_FIT_TO_FRAME,
   PROP_X,
   PROP_Y,
+  PROP_X_RELATIVE,
+  PROP_Y_RELATIVE,
+  PROP_WIDTH,
+  PROP_HEIGHT,
+  PROP_WIDTH_RELATIVE,
+  PROP_HEIGHT_RELATIVE
 };
 
 #define GST_RSVG_LOCK(overlay) G_STMT_START { \
@@ -138,8 +159,8 @@ gst_rsvg_overlay_set_svg_data (GstRsvgOverlay * overlay, const gchar * data,
         /* Get SVG dimension. */
         RsvgDimensionData svg_dimension;
         rsvg_handle_get_dimensions (overlay->handle, &svg_dimension);
-        overlay->width = svg_dimension.width;
-        overlay->height = svg_dimension.height;
+        overlay->svg_width = svg_dimension.width;
+        overlay->svg_height = svg_dimension.height;
         gst_base_transform_set_passthrough (btrans, FALSE);
       }
     }
@@ -168,7 +189,19 @@ gst_rsvg_overlay_set_property (GObject * object, guint prop_id,
     }
     case PROP_FIT_TO_FRAME:
     {
-      overlay->fit_to_frame = g_value_get_boolean (value);
+      if (g_value_get_boolean (value)) {
+        overlay->x_offset = 0;
+        overlay->y_offset = 0;
+        overlay->x_relative = 0.0;
+        overlay->y_relative = 0.0;
+        overlay->width = 0;
+        overlay->height = 0;
+        overlay->width_relative = 1.0;
+        overlay->height_relative = 1.0;
+      } else {
+        overlay->width_relative = 0;
+        overlay->height_relative = 0;
+      }
       break;
     }
     case PROP_X:
@@ -179,6 +212,37 @@ gst_rsvg_overlay_set_property (GObject * object, guint prop_id,
     case PROP_Y:
     {
       overlay->y_offset = g_value_get_int (value);
+      break;
+    }
+    case PROP_X_RELATIVE:
+    {
+      overlay->x_relative = g_value_get_float (value);
+      break;
+    }
+    case PROP_Y_RELATIVE:
+    {
+      overlay->y_relative = g_value_get_float (value);
+      break;
+    }
+
+    case PROP_WIDTH:
+    {
+      overlay->width = g_value_get_int (value);
+      break;
+    }
+    case PROP_HEIGHT:
+    {
+      overlay->height = g_value_get_int (value);
+      break;
+    }
+    case PROP_WIDTH_RELATIVE:
+    {
+      overlay->width_relative = g_value_get_float (value);
+      break;
+    }
+    case PROP_HEIGHT_RELATIVE:
+    {
+      overlay->height_relative = g_value_get_float (value);
       break;
     }
 
@@ -205,8 +269,29 @@ gst_rsvg_overlay_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_Y:
       g_value_set_int (value, overlay->y_offset);
       break;
+    case PROP_X_RELATIVE:
+      g_value_set_float (value, overlay->x_relative);
+      break;
+    case PROP_Y_RELATIVE:
+      g_value_set_float (value, overlay->y_relative);
+      break;
+
+    case PROP_WIDTH:
+      g_value_set_int (value, overlay->width);
+      break;
+    case PROP_HEIGHT:
+      g_value_set_int (value, overlay->height);
+      break;
+    case PROP_WIDTH_RELATIVE:
+      g_value_set_float (value, overlay->width_relative);
+      break;
+    case PROP_HEIGHT_RELATIVE:
+      g_value_set_float (value, overlay->height_relative);
+      break;
+
     case PROP_FIT_TO_FRAME:
-      g_value_set_boolean (value, overlay->fit_to_frame);
+      g_value_set_boolean (value, (overlay->width_relative == 1.0
+              && overlay->height_relative == 1.0));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -278,6 +363,10 @@ gst_rsvg_overlay_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   GstRsvgOverlay *overlay = GST_RSVG_OVERLAY (btrans);
   cairo_surface_t *surface;
   cairo_t *cr;
+  double applied_x_offset = (double) overlay->x_offset;
+  double applied_y_offset = (double) overlay->y_offset;
+  int applied_width = overlay->width;
+  int applied_height = overlay->height;
 
   GST_RSVG_LOCK (overlay);
   if (!overlay->handle) {
@@ -298,14 +387,37 @@ gst_rsvg_overlay_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
     return GST_FLOW_ERROR;
   }
 
-  /* If x or y offset is specified, do not fit-to-frame. */
-  if (overlay->x_offset || overlay->y_offset)
-    cairo_translate (cr, (double) overlay->x_offset,
-        (double) overlay->y_offset);
-  else if (overlay->fit_to_frame && overlay->width && overlay->height)
-    cairo_scale (cr, (float) overlay->caps_width / overlay->width,
-        (float) overlay->caps_height / overlay->height);
+  /* Compute relative dimensions if absolute dimensions are not set */
+  if (!applied_x_offset && overlay->x_relative) {
+    applied_x_offset = overlay->x_relative * overlay->caps_width;
+  }
+  if (!applied_y_offset && overlay->y_relative) {
+    applied_y_offset = overlay->y_relative * overlay->caps_height;
+  }
+  if (!applied_width && overlay->width_relative) {
+    applied_width = (int) (overlay->width_relative * overlay->caps_width);
+  }
+  if (!applied_height && overlay->height_relative) {
+    applied_height = (int) (overlay->height_relative * overlay->caps_height);
+  }
 
+  if (applied_x_offset || applied_y_offset) {
+    cairo_translate (cr, applied_x_offset, applied_y_offset);
+  }
+
+  /* Scale when necessary, i.e. an absolute or relative dimension has been specified. */
+  if ((applied_width || applied_height) && overlay->svg_width
+      && overlay->svg_height) {
+    /* If may happen that only one of the dimension is specified. Use
+       the original SVG size for the other dimension. */
+    if (!applied_width)
+      applied_width = overlay->svg_width;
+    if (!applied_height)
+      applied_height = overlay->svg_height;
+
+    cairo_scale (cr, (double) applied_width / overlay->svg_width,
+        (double) applied_height / overlay->svg_height);
+  }
   rsvg_handle_render_cairo (overlay->handle, cr);
   GST_RSVG_UNLOCK (overlay);
 
@@ -366,6 +478,7 @@ gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
       g_param_spec_boolean ("fit-to-frame", "fit to frame",
           "Fit the SVG to fill the whole frame.", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_X,
       g_param_spec_int ("x", "x offset",
           "Specify an x offset.", 0, G_MAXINT, 0,
@@ -373,6 +486,31 @@ gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_Y,
       g_param_spec_int ("y", "y offset",
           "Specify a y offset.", 0, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_X_RELATIVE,
+      g_param_spec_float ("x-relative", "x relative offset",
+          "Specify an x offset relative to the display size.", 0, G_MAXFLOAT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_Y_RELATIVE,
+      g_param_spec_float ("y-relative", "y relative offset",
+          "Specify a y offset relative to the display size.", 0, G_MAXFLOAT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WIDTH,
+      g_param_spec_int ("width", "width",
+          "Specify a width in pixels.", 0, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HEIGHT,
+      g_param_spec_int ("height", "height",
+          "Specify a height in pixels.", 0, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WIDTH_RELATIVE,
+      g_param_spec_float ("width-relative", "relative width",
+          "Specify a width relative to the display size.", 0, G_MAXFLOAT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HEIGHT_RELATIVE,
+      g_param_spec_float ("height-relative", "relative height",
+          "Specify a height relative to the display size.", 0, G_MAXFLOAT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   basetransform_class->set_caps = gst_rsvg_overlay_set_caps;
@@ -384,7 +522,15 @@ gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
 static void
 gst_rsvg_overlay_init (GstRsvgOverlay * overlay, GstRsvgOverlayClass * klass)
 {
-  overlay->fit_to_frame = 1;
+  overlay->x_offset = 0;
+  overlay->y_offset = 0;
+  overlay->x_relative = 0.0;
+  overlay->y_relative = 0.0;
+  overlay->width = 0;
+  overlay->height = 0;
+  overlay->width_relative = 0.0;
+  overlay->height_relative = 0.0;
+
   overlay->adapter = gst_adapter_new ();
 
   /* data sink */
