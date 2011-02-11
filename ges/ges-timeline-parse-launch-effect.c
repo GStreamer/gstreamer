@@ -158,7 +158,7 @@ ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     if (effect->priv->video_bin_description != NULL) {
       GST_DEBUG ("Creating a GESTrackEffect for the video track");
-      return GES_TRACK_OBJECT (ges_track_parse_launch_effect_new_from_bin_desc
+      return GES_TRACK_OBJECT (ges_track_parse_launch_effect_new
           (effect->priv->video_bin_description));
     }
     GST_DEBUG ("Can't create the track Object, the\
@@ -167,7 +167,7 @@ ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
   if (track->type == GES_TRACK_TYPE_AUDIO) {
     if (effect->priv->audio_bin_description != NULL) {
       GST_DEBUG ("Creating a GESTrackEffect for the audio track");
-      return GES_TRACK_OBJECT (ges_track_parse_launch_effect_new_from_bin_desc
+      return GES_TRACK_OBJECT (ges_track_parse_launch_effect_new
           (effect->priv->audio_bin_description));
     }
     GST_DEBUG ("Can't create the track Object, the\

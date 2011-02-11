@@ -252,7 +252,7 @@ ges_track_parse_launch_effect_create_element (GESTrackObject * object)
 }
 
 /**
-* ges_track_parse_launch_effect_new_from_bin_desc:
+* ges_track_parse_launch_effect_new:
 * @bin_description: The gst-launch like bin description of the effect
 *
 * Creates a new #GESTrackParseLaunchEffect from the description of the bin.
@@ -261,7 +261,7 @@ ges_track_parse_launch_effect_create_element (GESTrackObject * object)
 * wrong.
 */
 GESTrackParseLaunchEffect *
-ges_track_parse_launch_effect_new_from_bin_desc (const gchar * bin_description)
+ges_track_parse_launch_effect_new (const gchar * bin_description)
 {
   return g_object_new (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT, "bin-description",
       bin_description, NULL);
