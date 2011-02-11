@@ -179,7 +179,7 @@ ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
 }
 
 /**
-* ges_timeline_parse_launch_effect_new_from_bin_desc:
+* ges_timeline_parse_launch_effect_new:
 * @video_bin_description: The gst-launch like bin description of the effect
 * @audio_bin_description: The gst-launch like bin description of the effect
 *
