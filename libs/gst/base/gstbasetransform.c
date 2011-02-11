@@ -1757,6 +1757,20 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
         if (gst_caps_is_empty (sink_suggest))
           goto not_supported;
 
+        /* try the alloc caps if it is still not fixed */
+        if (!gst_caps_is_fixed (sink_suggest)) {
+          GstCaps *intersect;
+
+          GST_DEBUG_OBJECT (trans, "Checking if the input caps is compatible "
+              "with the non-fixed caps suggestion");
+          intersect = gst_caps_intersect (sink_suggest, caps);
+          if (!gst_caps_is_empty (intersect)) {
+            GST_DEBUG_OBJECT (trans, "It is, using it");
+            gst_caps_replace (&sink_suggest, caps);
+          }
+          gst_caps_unref (intersect);
+        }
+
         /* be safe and call default fixate */
         sink_suggest = gst_caps_make_writable (sink_suggest);
         gst_pad_fixate_caps (GST_BASE_TRANSFORM_SINK_PAD (trans), sink_suggest);
