@@ -1372,13 +1372,12 @@ theora_enc_set_property (GObject * object, guint prop_id,
     case PROP_BITRATE:
       GST_OBJECT_LOCK (enc);
       enc->video_bitrate = g_value_get_int (value) * 1000;
-      enc->video_quality = 0;
       enc->bitrate_changed = TRUE;
       GST_OBJECT_UNLOCK (enc);
       break;
     case PROP_QUALITY:
       GST_OBJECT_LOCK (enc);
-      if (GST_STATE (enc) >= GST_STATE_PAUSED && enc->video_quality == 0) {
+      if (GST_STATE (enc) >= GST_STATE_PAUSED && enc->video_bitrate > 0) {
         GST_WARNING_OBJECT (object, "Can't change from bitrate to quality mode"
             " while playing");
       } else {
