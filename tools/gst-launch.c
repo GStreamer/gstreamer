@@ -296,6 +296,31 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
       } else {
         str = g_strdup ("NULL buffer");
       }
+    } else if (gst_tag_get_type (tag) == GST_TYPE_DATE_TIME) {
+      GstDateTime *dt = NULL;
+
+      gst_tag_list_get_date_time_index (list, tag, i, &dt);
+      if (gst_date_time_get_hour (dt) < 0) {
+        str = g_strdup_printf ("%02u-%02u-%04u", gst_date_time_get_day (dt),
+            gst_date_time_get_month (dt), gst_date_time_get_year (dt));
+      } else {
+        gdouble tz_offset = gst_date_time_get_time_zone_offset (dt);
+        gchar tz_str[32];
+
+        if (tz_offset != 0.0) {
+          g_snprintf (tz_str, sizeof (tz_str), "(UTC %s%gh)",
+              (tz_offset > 0.0) ? "+" : "", tz_offset);
+        } else {
+          g_snprintf (tz_str, sizeof (tz_str), "(UTC)");
+        }
+
+        str = g_strdup_printf ("%04u-%02u-%02u %02u:%02u:%02u %s",
+            gst_date_time_get_year (dt), gst_date_time_get_month (dt),
+            gst_date_time_get_day (dt), gst_date_time_get_hour (dt),
+            gst_date_time_get_minute (dt), gst_date_time_get_second (dt),
+            tz_str);
+      }
+      gst_date_time_unref (dt);
     } else {
       str =
           g_strdup_value_contents (gst_tag_list_get_value_index (list, tag, i));
