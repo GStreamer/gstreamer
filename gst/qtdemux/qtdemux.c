@@ -466,6 +466,8 @@ gst_qtdemux_class_init (GstQTDemuxClass * klass)
 
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_qtdemux_set_index);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_qtdemux_get_index);
+
+  gst_tag_register_musicbrainz_tags ();
 }
 
 static void
@@ -8023,14 +8025,18 @@ qtdemux_tag_add_revdns (GstQTDemux * demux, const char *tag,
   if (strncmp (meanstr, "com.apple.iTunes", meansize - 12) == 0) {
     static const struct
     {
-      const gchar name[24];
-      const gchar tag[24];
+      const gchar name[28];
+      const gchar tag[28];
     } tags[] = {
       {
       "replaygain_track_gain", GST_TAG_TRACK_GAIN}, {
       "replaygain_track_peak", GST_TAG_TRACK_PEAK}, {
       "replaygain_album_gain", GST_TAG_ALBUM_GAIN}, {
-      "replaygain_album_peak", GST_TAG_ALBUM_PEAK}
+      "replaygain_album_peak", GST_TAG_ALBUM_PEAK}, {
+      "MusicBrainz Track Id", GST_TAG_MUSICBRAINZ_TRACKID}, {
+      "MusicBrainz Artist Id", GST_TAG_MUSICBRAINZ_ARTISTID}, {
+      "MusicBrainz Album Id", GST_TAG_MUSICBRAINZ_ALBUMID}, {
+      "MusicBrainz Album Artist Id", GST_TAG_MUSICBRAINZ_ALBUMARTISTID}
     };
     int i;
 
@@ -8040,6 +8046,9 @@ qtdemux_tag_add_revdns (GstQTDemux * demux, const char *tag,
           case G_TYPE_DOUBLE:
             qtdemux_add_double_tag_from_str (demux, tags[i].tag,
                 ((guint8 *) data->data) + 16, datasize - 16);
+            break;
+          case G_TYPE_STRING:
+            qtdemux_tag_add_str (demux, tags[i].tag, NULL, node);
             break;
           default:
             /* not reached */
