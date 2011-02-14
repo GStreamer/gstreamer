@@ -1756,6 +1756,7 @@ gst/gaudieffects/Makefile
 gst/geometrictransform/Makefile
 gst/h264parse/Makefile
 gst/hdvparse/Makefile
+gst/hls/Makefile
 gst/id3tag/Makefile
 gst/interlace/Makefile
 gst/invtelecine/Makefile
