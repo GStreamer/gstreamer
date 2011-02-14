@@ -62,7 +62,7 @@ struct _GstSbcParseClass {
 	GstElementClass parent_class;
 };
 
-//GType gst_sbc_parse_get_type(void);
+GType gst_sbc_parse_get_type(void);
 
 gboolean gst_sbc_parse_plugin_init(GstPlugin *plugin);
 

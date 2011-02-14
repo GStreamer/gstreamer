@@ -59,7 +59,7 @@ struct _GstSbcDecClass {
 	GstElementClass parent_class;
 };
 
-//GType gst_sbc_dec_get_type(void);
+GType gst_sbc_dec_get_type(void);
 
 gboolean gst_sbc_dec_plugin_init(GstPlugin *plugin);
 

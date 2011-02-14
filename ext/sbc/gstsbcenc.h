@@ -68,7 +68,7 @@ struct _GstSbcEncClass {
 	GstElementClass parent_class;
 };
 
-//GType gst_sbc_enc_get_type(void);
+GType gst_sbc_enc_get_type(void);
 
 gboolean gst_sbc_enc_plugin_init(GstPlugin *plugin);
 
