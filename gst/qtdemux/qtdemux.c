@@ -8021,26 +8021,35 @@ qtdemux_tag_add_revdns (GstQTDemux * demux, const char *tag,
   datatype = QT_UINT32 (((gchar *) data->data) + 8) & 0xFFFFFF;
 
   if (strncmp (meanstr, "com.apple.iTunes", meansize - 12) == 0) {
-    if (strncmp (namestr, "replaygain_track_gain", namesize - 12) == 0) {
-      qtdemux_add_double_tag_from_str (demux,
-          GST_TAG_TRACK_GAIN, ((guint8 *) data->data) + 16, datasize - 16);
+    static const struct
+    {
+      const gchar name[24];
+      const gchar tag[24];
+    } tags[] = {
+      {
+      "replaygain_track_gain", GST_TAG_TRACK_GAIN}, {
+      "replaygain_track_peak", GST_TAG_TRACK_PEAK}, {
+      "replaygain_album_gain", GST_TAG_ALBUM_GAIN}, {
+      "replaygain_album_peak", GST_TAG_ALBUM_PEAK}
+    };
+    int i;
 
-    } else if (strncmp (namestr, "replaygain_track_peak", namesize - 12) == 0) {
-      qtdemux_add_double_tag_from_str (demux,
-          GST_TAG_TRACK_PEAK, ((guint8 *) data->data) + 16, datasize - 16);
-
-    } else if (strncmp (namestr, "replaygain_album_gain", namesize - 12) == 0) {
-      qtdemux_add_double_tag_from_str (demux,
-          GST_TAG_ALBUM_GAIN, ((guint8 *) data->data) + 16, datasize - 16);
-
-    } else if (strncmp (namestr, "replaygain_album_peak", namesize - 12) == 0) {
-      qtdemux_add_double_tag_from_str (demux,
-          GST_TAG_ALBUM_PEAK, ((guint8 *) data->data) + 16, datasize - 16);
-
-    } else {
-      goto unknown_tag;
+    for (i = 0; i < G_N_ELEMENTS (tags); ++i) {
+      if (!g_ascii_strncasecmp (tags[i].name, namestr, namesize - 12)) {
+        switch (gst_tag_get_type (tags[i].tag)) {
+          case G_TYPE_DOUBLE:
+            qtdemux_add_double_tag_from_str (demux, tags[i].tag,
+                ((guint8 *) data->data) + 16, datasize - 16);
+            break;
+          default:
+            /* not reached */
+            break;
+        }
+        break;
+      }
     }
-
+    if (i == G_N_ELEMENTS (tags))
+      goto unknown_tag;
   } else {
     goto unknown_tag;
   }
