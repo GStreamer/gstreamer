@@ -4658,6 +4658,8 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   peer = cache->peer;
 
   GST_PAD_STREAM_LOCK (peer);
+  if (G_UNLIKELY (g_atomic_pointer_get (cache_ptr) == PAD_CACHE_INVALID))
+    goto invalid;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "calling chainfunction &%s",
       GST_DEBUG_FUNCPTR_NAME (GST_PAD_CHAINFUNC (peer)));
@@ -4696,6 +4698,12 @@ slow_path:
       pad_put_cache (pad, ncache, cache_ptr);
     }
     return ret;
+  }
+invalid:
+  {
+    pad_free_cache (cache);
+    GST_PAD_STREAM_UNLOCK (peer);
+    goto slow_path;
   }
 }
 
@@ -4770,6 +4778,8 @@ gst_pad_push_list (GstPad * pad, GstBufferList * list)
   peer = cache->peer;
 
   GST_PAD_STREAM_LOCK (peer);
+  if (G_UNLIKELY (g_atomic_pointer_get (cache_ptr) == PAD_CACHE_INVALID))
+    goto invalid;
 
   ret = GST_PAD_CHAINLISTFUNC (peer) (peer, list);
 
@@ -4800,6 +4810,12 @@ slow_path:
       pad_put_cache (pad, ncache, cache_ptr);
     }
     return ret;
+  }
+invalid:
+  {
+    pad_free_cache (cache);
+    GST_PAD_STREAM_UNLOCK (peer);
+    goto slow_path;
   }
 }
 
