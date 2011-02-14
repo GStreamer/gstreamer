@@ -376,7 +376,7 @@ gst_x264_enc_tune_get_type (void)
   static GType tune_type = 0;
 
   if (!tune_type) {
-    tune_type = g_flags_register_static ("GstX264EncTune", tune_types);
+    tune_type = g_flags_register_static ("GstX264EncTune", tune_types + 1);
   }
   return tune_type;
 }
