@@ -266,6 +266,50 @@ uri_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** plaulist/m3u8 ***/
+
+static GstStaticCaps m3u8_caps = GST_STATIC_CAPS ("playlist/m3u8");
+
+#define M3U8_CAPS (gst_static_caps_get(&m3u8_caps))
+#define M3U8_BUFFER_SIZE 24
+#define M3U8_INC_BUFFER {                                               \
+  pos++;                                                                \
+  if (pos == M3U8_BUFFER_SIZE) {                                        \
+    pos = 0;                                                            \
+    offset += M3U8_BUFFER_SIZE;                                         \
+    data = gst_type_find_peek (tf, offset, M3U8_BUFFER_SIZE);           \
+    if (data == NULL) return;                                           \
+  } else {                                                              \
+    data++;                                                             \
+  }                                                                     \
+}
+
+static void
+m3u8_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint pos = 0;
+  guint offset = 0;
+  guint8 *data = gst_type_find_peek (tf, 0, 7);
+
+  if (memcmp (data, "#EXTM3U", 7))
+    return;
+  M3U8_INC_BUFFER;
+
+  while (data) {
+    /* Search for # comment lines */
+    while (*data != '#') {
+      M3U8_INC_BUFFER;
+    }
+
+    if (memcmp (data, "#EXT-X-TARGETDURATION", 21) == 0 ||
+        memcmp (data, "#EXT-X-STREAM-INF", 17) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, M3U8_CAPS);
+      return;
+    }
+    M3U8_INC_BUFFER;
+  }
+}
+
 
 /*** application/xml **********************************************************/
 
@@ -4162,6 +4206,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *shn_exts[] = { "shn", NULL };
   static const gchar *ape_exts[] = { "ape", NULL };
   static const gchar *uri_exts[] = { "ram", NULL };
+  static const gchar *m3u8_exts[] = { "m3u8", NULL };
   static const gchar *sdp_exts[] = { "sdp", NULL };
   static const gchar *smil_exts[] = { "smil", NULL };
   static const gchar *html_exts[] = { "htm", "html", NULL };
@@ -4325,6 +4370,8 @@ plugin_init (GstPlugin * plugin)
       utf8_exts, UTF8_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "text/uri-list", GST_RANK_MARGINAL, uri_type_find,
       uri_exts, URI_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "playlist/m3u8", GST_RANK_MARGINAL,
+      m3u8_type_find, m3u8_exts, M3U8_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/sdp", GST_RANK_SECONDARY,
       sdp_type_find, sdp_exts, SDP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/smil", GST_RANK_SECONDARY,
