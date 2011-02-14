@@ -2660,7 +2660,7 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
   }
 
   /* calculate duration of the buffer */
-  if (GST_CLOCK_TIME_IS_VALID (stop))
+  if (GST_CLOCK_TIME_IS_VALID (stop) && stop != start)
     duration = stop - start;
   else
     duration = GST_CLOCK_TIME_NONE;
@@ -2678,11 +2678,11 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
   }
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, sink, "start: %" GST_TIME_FORMAT
-      ", entered %" GST_TIME_FORMAT ", left %" GST_TIME_FORMAT ", pt: %"
-      GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ",jitter %"
-      G_GINT64_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (entered),
-      GST_TIME_ARGS (left), GST_TIME_ARGS (pt), GST_TIME_ARGS (duration),
-      jitter);
+      ", stop %" GST_TIME_FORMAT ", entered %" GST_TIME_FORMAT ", left %"
+      GST_TIME_FORMAT ", pt: %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
+      ",jitter %" G_GINT64_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+      GST_TIME_ARGS (entered), GST_TIME_ARGS (left), GST_TIME_ARGS (pt),
+      GST_TIME_ARGS (duration), jitter);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, sink, "avg_duration: %" GST_TIME_FORMAT
       ", avg_pt: %" GST_TIME_FORMAT ", avg_rate: %g",
