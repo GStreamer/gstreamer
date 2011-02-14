@@ -501,7 +501,7 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     to_free = payload;
   }
 
-  GST_DEBUG_OBJECT (depayload, "assemble done");
+  GST_DEBUG_OBJECT (depayload, "assemble done, payload_len %d", payload_len);
 
   /* we not assembling anymore now */
   rtptheoradepay->assembling = FALSE;
@@ -524,7 +524,7 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
    */
   timestamp = gst_rtp_buffer_get_timestamp (buf);
 
-  while (payload_len > 2) {
+  while (payload_len >= 2) {
     guint16 length;
 
     length = GST_READ_UINT16_BE (payload);
@@ -559,7 +559,7 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       memcpy (GST_BUFFER_DATA (outbuf), payload, length);
     }
 
-    if ((payload[0] & 0xC0) == 0x0)
+    if (payload_len > 0 && (payload[0] & 0xC0) == 0x0)
       rtptheoradepay->needs_keyframe = FALSE;
 
     payload += length;

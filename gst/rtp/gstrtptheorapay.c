@@ -563,7 +563,7 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
 
   /* put buffer in packet, it either fits completely or needs to be fragmented
    * over multiple RTP packets. */
-  while (size) {
+  do {
     plen = MIN (rtptheorapay->payload_left - 2, size);
 
     GST_DEBUG_OBJECT (rtptheorapay, "append %u bytes", plen);
@@ -571,7 +571,8 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
     /* data is copied in the payload with a 2 byte length header */
     ppos[0] = ((plen - not_in_length) >> 8) & 0xff;
     ppos[1] = ((plen - not_in_length) & 0xff);
-    memcpy (&ppos[2], data, plen);
+    if (plen)
+      memcpy (&ppos[2], data, plen);
 
     /* only first (only) configuration cuts length field */
     /* NOTE: spec (if any) is not clear on this ... */
@@ -617,7 +618,7 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
       if (duration != GST_CLOCK_TIME_NONE)
         rtptheorapay->payload_duration += duration;
     }
-  }
+  } while (size);
 
   return ret;
 }
@@ -644,11 +645,14 @@ gst_rtp_theora_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GST_DEBUG_OBJECT (rtptheorapay, "size %u, duration %" GST_TIME_FORMAT,
       size, GST_TIME_ARGS (duration));
 
-  if (G_UNLIKELY (size < 1 || size > 0xffff))
+  if (G_UNLIKELY (size > 0xffff))
     goto wrong_size;
 
   /* find packet type */
-  if (data[0] & 0x80) {
+  if (size == 0) {
+    TDT = 0;
+    keyframe = FALSE;
+  } else if (data[0] & 0x80) {
     /* header */
     if (data[0] == 0x80) {
       /* identification, we need to parse this in order to get the clock rate.
@@ -743,7 +747,7 @@ done:
 wrong_size:
   {
     GST_ELEMENT_WARNING (rtptheorapay, STREAM, DECODE,
-        ("Invalid packet size (1 < %d <= 0xffff)", size), (NULL));
+        ("Invalid packet size (%d <= 0xffff)", size), (NULL));
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
