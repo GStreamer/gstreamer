@@ -73,7 +73,7 @@ struct _GstA2dpSinkClass {
 	GstBinClass parent_class;
 };
 
-//GType gst_a2dp_sink_get_type(void);
+GType gst_a2dp_sink_get_type(void);
 
 gboolean gst_a2dp_sink_plugin_init (GstPlugin * plugin);
 
