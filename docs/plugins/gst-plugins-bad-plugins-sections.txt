@@ -1189,6 +1189,34 @@ gst_qt_mux_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-rsvgoverlay</FILE>
+<TITLE>rsvgoverlay</TITLE>
+GstRsvgOverlay
+<SUBSECTION Standard>
+GstRsvgOverlayClass
+GST_RSVG_OVERLAY
+GST_RSVG_OVERLAY_CLASS
+GST_IS_RSVG_OVERLAY
+GST_IS_RSVG_OVERLAY_CLASS
+GST_TYPE_RSVG_OVERLAY
+gst_rsvg_overlay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rsvgdec</FILE>
+<TITLE>rsvgdec</TITLE>
+GstRsvgDec
+<SUBSECTION Standard>
+GstRsvgDecClass
+GST_RSVG_DEC
+GST_RSVG_DEC_CLASS
+GST_IS_RSVG_DEC
+GST_IS_RSVG_DEC_CLASS
+GST_TYPE_RSVG_DEC
+gst_rsvg_dec_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rtpdtmfdepay</FILE>
 <TITLE>rtpdtmfdepay</TITLE>
 GstRtpDTMFDepay

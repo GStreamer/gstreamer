@@ -69,7 +69,7 @@ SCANOBJ_DEPS = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = 
+IGNORE_HFILES =
 IGNORE_CFILES =
 
 # we add all .h files of elements that have signals/args we want
@@ -83,7 +83,7 @@ IGNORE_CFILES =
 # -> it just works (TM) (ensonic)
 
 # FIXME: not ported yet
-#	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.c 
+#	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.c
 
 # example code that needs to be converted to xml and placed in xml/
 EXAMPLE_CFILES = \
@@ -124,6 +124,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/opencv/gstpyramidsegment.h \
 	$(top_srcdir)/ext/opencv/gsttemplatematch.h \
 	$(top_srcdir)/ext/opencv/gsttextwrite.h \
+	$(top_srcdir)/ext/rsvg/gstrsvgdec.h \
+	$(top_srcdir)/ext/rsvg/gstrsvgoverlay.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
 	$(top_srcdir)/ext/sdl/sdlvideosink.h \
 	$(top_srcdir)/ext/theora/theoradec.h \
