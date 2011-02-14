@@ -59,7 +59,7 @@ struct _GstRtpSBCPayClass {
 	GstBaseRTPPayloadClass parent_class;
 };
 
-//GType gst_rtp_sbc_pay_get_type(void);
+GType gst_rtp_sbc_pay_get_type(void);
 
 gboolean gst_rtp_sbc_pay_plugin_init (GstPlugin * plugin);
 
