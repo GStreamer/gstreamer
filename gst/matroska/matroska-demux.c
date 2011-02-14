@@ -5482,7 +5482,8 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   DEBUG_ELEMENT_STOP (demux, ebml, "SeekHead", ret);
 
   /* Sort clusters by position for easier searching */
-  g_array_sort (demux->clusters, (GCompareFunc) gst_matroska_cluster_compare);
+  if (demux->clusters)
+    g_array_sort (demux->clusters, (GCompareFunc) gst_matroska_cluster_compare);
 
   return ret;
 }
