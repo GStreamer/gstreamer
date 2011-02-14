@@ -2706,7 +2706,7 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
         gst_guint64_to_gdouble (priv->avg_pt) /
         gst_guint64_to_gdouble (priv->avg_duration);
   else
-    rate = 0.0;
+    rate = 1.0;
 
   if (GST_CLOCK_TIME_IS_VALID (priv->last_left)) {
     if (dropped || priv->avg_rate < 0.0) {
