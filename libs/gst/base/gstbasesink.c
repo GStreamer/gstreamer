@@ -196,6 +196,8 @@ struct _GstBaseSinkPrivate
   GstClockTime current_rstart;
   GstClockTime current_rstop;
   GstClockTimeDiff current_jitter;
+  /* the running time of the previous buffer */
+  GstClockTime prev_rstart;
 
   /* EOS sync time in running time */
   GstClockTime eos_rtime;
@@ -209,6 +211,7 @@ struct _GstBaseSinkPrivate
   GstClockTime avg_pt;
   GstClockTime avg_duration;
   gdouble avg_rate;
+  GstClockTime avg_in_diff;
 
   /* these are done on system time. avg_jitter and avg_render are
    * compared to eachother to see if the rendering time takes a
@@ -2491,6 +2494,23 @@ do_step:
   /* save sync time for eos when the previous object needed sync */
   priv->eos_rtime = (do_sync ? priv->current_rstop : GST_CLOCK_TIME_NONE);
 
+  /* calculate inter frame spacing */
+  if (G_UNLIKELY (priv->prev_rstart != -1 && priv->prev_rstart < rstart)) {
+    GstClockTime in_diff;
+
+    in_diff = rstart - priv->prev_rstart;
+
+    if (priv->avg_in_diff == -1)
+      priv->avg_in_diff = in_diff;
+    else
+      priv->avg_in_diff = UPDATE_RUNNING_AVG (priv->avg_in_diff, in_diff);
+
+    GST_LOG_OBJECT (basesink, "avg frame diff %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (priv->avg_in_diff));
+
+  }
+  priv->prev_rstart = rstart;
+
   if (G_UNLIKELY (priv->earliest_in_time != -1
           && rstart < priv->earliest_in_time))
     goto qos_dropped;
@@ -2663,7 +2683,7 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
   if (GST_CLOCK_TIME_IS_VALID (stop) && stop != start)
     duration = stop - start;
   else
-    duration = GST_CLOCK_TIME_NONE;
+    duration = priv->avg_in_diff;
 
   /* if we have the time when the last buffer left us, calculate
    * processing time */
@@ -2765,12 +2785,14 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
   priv = sink->priv;
 
   priv->last_render_time = GST_CLOCK_TIME_NONE;
+  priv->prev_rstart = GST_CLOCK_TIME_NONE;
   priv->earliest_in_time = GST_CLOCK_TIME_NONE;
   priv->last_left = GST_CLOCK_TIME_NONE;
   priv->avg_duration = GST_CLOCK_TIME_NONE;
   priv->avg_pt = GST_CLOCK_TIME_NONE;
   priv->avg_rate = -1.0;
   priv->avg_render = GST_CLOCK_TIME_NONE;
+  priv->avg_in_diff = GST_CLOCK_TIME_NONE;
   priv->rendered = 0;
   priv->dropped = 0;
 
@@ -2819,8 +2841,12 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
   /* we can add a valid stop time */
   if (GST_CLOCK_TIME_IS_VALID (rstop))
     max_lateness += rstop;
-  else
+  else {
     max_lateness += rstart;
+    /* no stop time, use avg frame diff */
+    if (priv->avg_in_diff != -1)
+      max_lateness += priv->avg_in_diff;
+  }
 
   /* if the jitter bigger than duration and lateness we are too late */
   if ((late = rstart + jitter > max_lateness)) {
