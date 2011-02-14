@@ -201,7 +201,7 @@ struct _GstBaseSinkPrivate
   GstClockTime eos_rtime;
 
   /* last buffer that arrived in time, running time */
-  GstClockTime last_in_time;
+  GstClockTime last_render_time;
   /* when the last buffer left the sink, running time */
   GstClockTime last_left;
 
@@ -2764,7 +2764,7 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
 
   priv = sink->priv;
 
-  priv->last_in_time = GST_CLOCK_TIME_NONE;
+  priv->last_render_time = GST_CLOCK_TIME_NONE;
   priv->earliest_in_time = GST_CLOCK_TIME_NONE;
   priv->last_left = GST_CLOCK_TIME_NONE;
   priv->avg_duration = GST_CLOCK_TIME_NONE;
@@ -2830,21 +2830,21 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
         GST_TIME_ARGS (max_lateness));
     /* !!emergency!!, if we did not receive anything valid for more than a
      * second, render it anyway so the user sees something */
-    if (GST_CLOCK_TIME_IS_VALID (priv->last_in_time) &&
-        rstart - priv->last_in_time > GST_SECOND) {
+    if (GST_CLOCK_TIME_IS_VALID (priv->last_render_time) &&
+        rstart - priv->last_render_time > GST_SECOND) {
       late = FALSE;
       GST_ELEMENT_WARNING (basesink, CORE, CLOCK,
           (_("A lot of buffers are being dropped.")),
           ("There may be a timestamping problem, or this computer is too slow."));
       GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, basesink,
           "**emergency** last buffer at %" GST_TIME_FORMAT " > GST_SECOND",
-          GST_TIME_ARGS (priv->last_in_time));
+          GST_TIME_ARGS (priv->last_render_time));
     }
   }
 
 done:
-  if (!late || !GST_CLOCK_TIME_IS_VALID (priv->last_in_time)) {
-    priv->last_in_time = rstart;
+  if (!late || !GST_CLOCK_TIME_IS_VALID (priv->last_render_time)) {
+    priv->last_render_time = rstart;
     /* the next allowed input timestamp */
     if (priv->throttle_time > 0)
       priv->earliest_in_time = rstart + priv->throttle_time;
