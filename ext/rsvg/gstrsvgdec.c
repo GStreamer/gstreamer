@@ -16,6 +16,18 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-rsvgdec
+ *
+ * This elements renders SVG graphics.
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
+ * |[
+ * gst-launch filesrc location=image.svg ! rsvgdec ! imagefreeze ! ffmpegcolorspace ! autovideosink
+ * ]| render and show a svg image.
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
