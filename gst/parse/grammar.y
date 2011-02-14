@@ -582,7 +582,7 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
       }
     }
   }
-  if (g_slist_length (link->src_pads) != g_slist_length (link->src_pads)) {
+  if (g_slist_length (link->src_pads) != g_slist_length (link->sink_pads)) {
     goto error;
   }
   while (srcs && sinks) {
