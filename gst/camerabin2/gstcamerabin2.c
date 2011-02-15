@@ -202,10 +202,23 @@ gst_camera_bin_start_capture (GstCameraBin * camerabin)
     gst_object_unref (active_pad);
   }
 
-  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src)
-    gst_element_set_state (camerabin->audio_src, GST_STATE_PLAYING);
+  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
+    gst_element_set_state (camerabin->audio_src, GST_STATE_READY);
+    /* need to reset eos status (pads could be flushing) */
+    gst_element_set_state (camerabin->audio_queue, GST_STATE_READY);
+    gst_element_set_state (camerabin->audio_convert, GST_STATE_READY);
+    gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
+    gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
+
+    gst_element_sync_state_with_parent (camerabin->audio_queue);
+    gst_element_sync_state_with_parent (camerabin->audio_convert);
+    gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
+    gst_element_sync_state_with_parent (camerabin->audio_volume);
+  }
 
   g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
+  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src)
+    gst_element_set_state (camerabin->audio_src, GST_STATE_PLAYING);
 }
 
 static void
@@ -992,11 +1005,24 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
         gst_element_set_state (camera->audio_src, GST_STATE_READY);
 
       gst_tag_setter_reset_tags (GST_TAG_SETTER (camera));
+
+      /* explicitly set to READY as they might be outside of the bin */
+      gst_element_set_state (camera->audio_queue, GST_STATE_READY);
+      gst_element_set_state (camera->audio_volume, GST_STATE_READY);
+      gst_element_set_state (camera->audio_capsfilter, GST_STATE_READY);
+      gst_element_set_state (camera->audio_convert, GST_STATE_READY);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_element_set_state (camera->videosink, GST_STATE_NULL);
       if (camera->audio_src)
         gst_element_set_state (camera->audio_src, GST_STATE_NULL);
+
+      /* explicitly set to NULL as they might be outside of the bin */
+      gst_element_set_state (camera->audio_queue, GST_STATE_NULL);
+      gst_element_set_state (camera->audio_volume, GST_STATE_NULL);
+      gst_element_set_state (camera->audio_capsfilter, GST_STATE_NULL);
+      gst_element_set_state (camera->audio_convert, GST_STATE_NULL);
+
       break;
     default:
       break;
