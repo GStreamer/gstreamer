@@ -81,6 +81,7 @@ struct _GstHLSDemux
   GCond *fetcher_cond;
   GTimeVal *timeout;
   gboolean fetcher_error;
+  gboolean stopping_fetcher;
   GstBuffer *downloaded_uri;
 
 };

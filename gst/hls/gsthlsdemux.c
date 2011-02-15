@@ -418,10 +418,11 @@ gst_hls_demux_stop_fetcher (GstHLSDemux * demux, gboolean cancelled)
 {
   GstPad *pad;
 
-  if (demux->fetcher == NULL)
+  if (demux->fetcher == NULL || demux->stopping_fetcher)
     return;
 
   GST_DEBUG_OBJECT (demux, "Stopping fetcher.");
+  demux->stopping_fetcher = TRUE;
   gst_element_set_state (demux->fetcher, GST_STATE_NULL);
   pad = gst_pad_get_peer (demux->fetcherpad);
   if (pad) {
@@ -534,6 +535,7 @@ gst_hls_demux_make_fetcher (GstHLSDemux * demux, const gchar * uri)
     return FALSE;
 
   demux->fetcher_error = FALSE;
+  demux->stopping_fetcher = FALSE;
   gst_element_set_bus (GST_ELEMENT (demux->fetcher), demux->fetcher_bus);
 
   g_object_set (G_OBJECT (demux->fetcher), "location", uri, NULL);
@@ -717,6 +719,11 @@ gst_hls_demux_fetch_location (GstHLSDemux * demux, const gchar * uri)
   /* wait until we have fetched the element */
   GST_DEBUG_OBJECT (demux, "Waiting to fetch the URI");
   g_cond_wait (demux->fetcher_cond, demux->fetcher_lock);
+
+  if (demux->stopping_fetcher) {
+    ret = FALSE;
+    goto quit;
+  }
 
   gst_hls_demux_stop_fetcher (demux, FALSE);
 
