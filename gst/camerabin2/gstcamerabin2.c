@@ -629,6 +629,9 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     camera->viewfinderbin_queue =
         gst_element_factory_make ("queue", "viewfinderbin-queue");
 
+    g_object_set (camera->viewfinderbin_queue, "leaky", 2, NULL);
+    g_object_set (camera->imagebin_queue, "max-size-time", (guint64) 0, NULL);
+
     gst_bin_add_many (GST_BIN_CAST (camera),
         gst_object_ref (camera->encodebin),
         gst_object_ref (camera->videosink),
