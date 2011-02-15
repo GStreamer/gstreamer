@@ -27,6 +27,18 @@
  *
  * GstIndex is used to generate a stream index of one or more elements
  * in a pipeline.
+ *
+ * Elements will overload the set_index and get_index virtual methods in
+ * #GstElement. When streaming data, the element will add index entries if it
+ * has an index set.
+ *
+ * Each element that adds to the index will do that using a writer_id. The
+ * writer_id is obtained from gst_index_get_writer_id().
+ *
+ * The application that wants to index the stream will create a new index object
+ * using gst_index_new() or gst_index_factory_make(). The index is assigned to a
+ * specific element, a bin or the whole pipeline. This will cause indexable
+ * elements to add entires to the index while playing.
  */
 
 /* FIXME: complete gobject annotations */
@@ -281,7 +293,9 @@ gst_index_group_free (GstIndexGroup * group)
 /**
  * gst_index_new:
  *
- * Create a new tileindex object
+ * Create a new dummy index object. Use gst_element_set_index() to assign that
+ * to an element or pipeline. This index is not storeing anything, but will
+ * still emit e.g. the #GstIndex::entry-added signal.
  *
  * Returns: (transfer full): a new index object
  */
