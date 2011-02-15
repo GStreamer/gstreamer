@@ -580,8 +580,10 @@ gst_qtdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
   GstQTDemux *qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
   gint32 index;
 
-  if (stream->subtype != FOURCC_vide)
-    return FALSE;
+  if (stream->subtype != FOURCC_vide) {
+    res = FALSE;
+    goto done;
+  }
 
   switch (src_format) {
     case GST_FORMAT_TIME:
@@ -629,6 +631,9 @@ gst_qtdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
     default:
       res = FALSE;
   }
+
+done:
+  gst_object_unref (qtdemux);
 
   return res;
 }
@@ -1492,6 +1497,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
 
   gst_object_unref (qtdemux);
 
+done:
   return res;
 
   /* ERRORS */
@@ -1499,7 +1505,8 @@ index_failed:
   {
     GST_ERROR_OBJECT (qtdemux, "Index failed");
     gst_event_unref (event);
-    return FALSE;
+    res = FALSE;
+    goto done;
   }
 }
 
@@ -4102,8 +4109,10 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           if (demux->got_moov && demux->fragmented) {
             GST_DEBUG_OBJECT (demux, "Parsing [moof]");
             if (!qtdemux_parse_moof (demux, data, demux->neededbytes,
-                    demux->offset, NULL))
-              return GST_FLOW_ERROR;
+                    demux->offset, NULL)) {
+              ret = GST_FLOW_ERROR;
+              goto done;
+            }
           } else {
             GST_DEBUG_OBJECT (demux, "Discarding [moof]");
           }
