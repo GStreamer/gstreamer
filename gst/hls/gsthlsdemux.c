@@ -336,8 +336,14 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
 
       playlist = g_strndup ((gchar *) GST_BUFFER_DATA (demux->playlist),
           GST_BUFFER_SIZE (demux->playlist));
-      gst_m3u8_client_update (demux->client, playlist);
       gst_buffer_unref (demux->playlist);
+      if (!gst_m3u8_client_update (demux->client, playlist)) {
+        /* In most cases, this will happen when if we set a wrong url in the
+         * source element and we have received the 404 HTML response instead of
+         * the playlist */
+        GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Invalid playlist."), NULL);
+        return FALSE;
+      }
 
       if (!ret && gst_m3u8_client_is_live (demux->client)) {
         GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
