@@ -285,6 +285,14 @@ GST_START_TEST (test_uri_interface)
   fail_unless_equals_string (location, "/foo/baz");
   g_free (location);
 
+  /* should escape non-uri characters for the URI but not for the location */
+  g_object_set (G_OBJECT (filesink), "location", "/foo/b?r", NULL);
+  g_object_get (G_OBJECT (filesink), "location", &location, NULL);
+  fail_unless_equals_string (location, "/foo/b?r");
+  g_free (location);
+  location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (filesink));
+  fail_unless_equals_string (location, "file:///foo/b%3Fr");
+
   /* should fail with other hostnames */
   fail_if (gst_uri_handler_set_uri (GST_URI_HANDLER (filesink),
           "file://hostname/foo/foo"));
