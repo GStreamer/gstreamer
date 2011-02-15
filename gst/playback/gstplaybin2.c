@@ -2930,7 +2930,7 @@ static gboolean
 autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     GstSourceGroup * group)
 {
-  GstCaps *subcaps = NULL;
+  GstCaps *stopcaps = NULL;
   gboolean ret = FALSE;
   GstElement *text_sink;
   GstPad *text_sinkpad = NULL;
@@ -2942,26 +2942,66 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     text_sinkpad = gst_element_get_static_pad (text_sink, "sink");
 
   if (text_sinkpad) {
-    subcaps = gst_pad_get_caps_reffed (text_sinkpad);
+    stopcaps = gst_pad_get_caps_reffed (text_sinkpad);
     gst_object_unref (text_sinkpad);
 
     /* If the textsink claims to support ANY subcaps,
      * go the save way and only use the plaintext caps */
-    if (gst_caps_is_any (subcaps)) {
+    if (gst_caps_is_any (stopcaps)) {
       GST_WARNING_OBJECT (group->playbin, "Text sink '%s' accepts ANY caps",
           GST_OBJECT_NAME (text_sink));
-      gst_caps_unref (subcaps);
-      subcaps = gst_static_caps_get (&sub_plaintext_caps);
+      gst_caps_unref (stopcaps);
+      stopcaps = gst_static_caps_get (&sub_plaintext_caps);
     }
   } else {
-    subcaps = gst_subtitle_overlay_create_factory_caps ();
+    stopcaps = gst_subtitle_overlay_create_factory_caps ();
   }
 
   if (text_sink)
     gst_object_unref (text_sink);
 
-  ret = !gst_caps_can_intersect (subcaps, caps);
-  gst_caps_unref (subcaps);
+  GST_PLAY_BIN_LOCK (group->playbin);
+  GST_SOURCE_GROUP_LOCK (group);
+  if (group->playbin->audio_sink) {
+    GstCaps *audio_sinkcaps;
+    GstPad *audio_sinkpad = NULL;
+
+    audio_sinkpad =
+        gst_element_get_static_pad (group->playbin->audio_sink, "sink");
+    if (audio_sinkpad) {
+      audio_sinkcaps = gst_pad_get_caps (audio_sinkpad);
+      gst_object_unref (audio_sinkpad);
+
+      stopcaps = gst_caps_make_writable (stopcaps);
+      if (!gst_caps_is_any (audio_sinkcaps))
+        gst_caps_merge (stopcaps, audio_sinkcaps);
+      else
+        gst_caps_unref (audio_sinkcaps);
+    }
+  }
+
+  if (group->playbin->video_sink) {
+    GstCaps *video_sinkcaps;
+    GstPad *video_sinkpad = NULL;
+
+    video_sinkpad =
+        gst_element_get_static_pad (group->playbin->video_sink, "sink");
+    if (video_sinkpad) {
+      video_sinkcaps = gst_pad_get_caps (video_sinkpad);
+      gst_object_unref (video_sinkpad);
+
+      stopcaps = gst_caps_make_writable (stopcaps);
+      if (!gst_caps_is_any (video_sinkcaps))
+        gst_caps_merge (stopcaps, video_sinkcaps);
+      else
+        gst_caps_unref (video_sinkcaps);
+    }
+  }
+  GST_SOURCE_GROUP_UNLOCK (group);
+  GST_PLAY_BIN_UNLOCK (group->playbin);
+
+  ret = !gst_caps_can_intersect (stopcaps, caps);
+  gst_caps_unref (stopcaps);
 
   GST_DEBUG_OBJECT (group->playbin,
       "continue autoplugging group %p for %s:%s, %" GST_PTR_FORMAT ": %d",
