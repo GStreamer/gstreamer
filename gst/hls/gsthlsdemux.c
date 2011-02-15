@@ -103,7 +103,7 @@ static gboolean gst_hls_demux_schedule (GstHLSDemux * demux);
 static gboolean gst_hls_demux_switch_playlist (GstHLSDemux * demux);
 static gboolean gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry);
 static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean retry);
-static void gst_hls_demux_reset (GstHLSDemux * demux);
+static void gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose);
 static gboolean gst_hls_demux_set_location (GstHLSDemux * demux, const gchar * uri);
 
 static void
@@ -142,11 +142,6 @@ gst_hls_demux_dispose (GObject * obj)
   g_cond_free (demux->fetcher_cond);
   g_mutex_free (demux->fetcher_lock);
 
-  if (demux->client) {
-    gst_m3u8_client_free (demux->client);
-    demux->client = NULL;
-  }
-
   g_cond_free (demux->thread_cond);
   g_mutex_free (demux->thread_lock);
 
@@ -157,14 +152,10 @@ gst_hls_demux_dispose (GObject * obj)
   gst_object_unref (demux->task);
   g_static_rec_mutex_free (&demux->task_lock);
 
-  while (!g_queue_is_empty (demux->queue)) {
-    GstBuffer *buf = g_queue_pop_head (demux->queue);
-    gst_buffer_unref (buf);
-  }
-  g_queue_free (demux->queue);
-
   gst_object_unref (demux->fetcher_bus);
   gst_object_unref (demux->fetcherpad);
+
+  gst_hls_demux_reset (demux, TRUE);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
@@ -238,8 +229,6 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
   g_static_rec_mutex_init (&demux->task_lock);
   demux->task = gst_task_create ((GstTaskFunction) gst_hls_demux_loop, demux);
   gst_task_set_lock (demux->task, &demux->task_lock);
-
-  gst_hls_demux_reset (demux);
 }
 
 static void
@@ -288,7 +277,7 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      gst_hls_demux_reset (demux);
+      gst_hls_demux_reset (demux, FALSE);
       break;
     default:
       break;
@@ -577,7 +566,7 @@ gst_hls_demux_make_fetcher (GstHLSDemux * demux, const gchar * uri)
 }
 
 static void
-gst_hls_demux_reset (GstHLSDemux * demux)
+gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
 {
   demux->need_cache = TRUE;
   demux->thread_return = FALSE;
@@ -601,7 +590,10 @@ gst_hls_demux_reset (GstHLSDemux * demux)
 
   if (demux->client)
     gst_m3u8_client_free (demux->client);
-  demux->client = gst_m3u8_client_new ("");
+
+  if (!dispose) {
+    demux->client = gst_m3u8_client_new ("");
+  }
 
   while (!g_queue_is_empty (demux->queue)) {
     GstBuffer *buf = g_queue_pop_head (demux->queue);
