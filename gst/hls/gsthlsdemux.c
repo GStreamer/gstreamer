@@ -304,6 +304,7 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX (gst_pad_get_parent (pad));
   GstQuery *query;
+  gboolean ret;
   gchar *uri;
 
 
@@ -318,17 +319,20 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
 
       GST_DEBUG_OBJECT (demux, "Got EOS on the sink pad: main playlist fetched");
 
+      query = gst_query_new_uri ();
+      ret = gst_pad_peer_query (demux->sinkpad, query);
+      if (ret) {
+        gst_query_parse_uri (query, &uri);
+        gst_hls_demux_set_location (demux, uri);
+        g_free (uri);
+      }
+
       playlist = g_strndup ((gchar *) GST_BUFFER_DATA (demux->playlist),
           GST_BUFFER_SIZE (demux->playlist));
       gst_m3u8_client_update (demux->client, playlist);
       gst_buffer_unref (demux->playlist);
 
-      query = gst_query_new_uri ();
-      if (gst_pad_peer_query (demux->sinkpad, query)) {
-        gst_query_parse_uri (query, &uri);
-        gst_hls_demux_set_location (demux, uri);
-        g_free (uri);
-      } else if (gst_m3u8_client_is_live (demux->client)) {
+      if (!ret && gst_m3u8_client_is_live (demux->client)) {
         GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
             ("Failed querying the playlist uri, "
                 "required for live sources."), NULL);
