@@ -370,7 +370,7 @@ gst_file_src_set_location (GstFileSrc * src, const gchar * location)
     /* we store the filename as received by the application. On Windoes this
      * should be UTF8 */
     src->filename = g_strdup (location);
-    src->uri = gst_uri_construct ("file", src->filename);
+    src->uri = g_filename_to_uri (src->filename, NULL, NULL);
   }
   g_object_notify (G_OBJECT (src), "location");
   gst_uri_handler_new_uri (GST_URI_HANDLER (src), src->uri);
