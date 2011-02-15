@@ -158,6 +158,12 @@ Messages
       - GST_PROGRESS_TYPE_CANCELED, GST_PROGRESS_TYPE_ERROR and
         GST_PROGRESS_TYPE_COMPLETE always have a 100% value.
 
+  - "timeout", G_TYPE_INT  in milliseconds
+
+     The timeout of the async operation. -1 if unknown/unlimited..
+     This field can be interesting to the application when it wants to display
+     some sort of progress indication.
+
   - ....
 
      Depending on the code, more fields can be put here.
