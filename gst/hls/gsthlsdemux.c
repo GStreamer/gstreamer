@@ -474,11 +474,9 @@ gst_hls_demux_loop (GstHLSDemux * demux)
    * when we reached the end of the playlist  */
 
   if (G_UNLIKELY (demux->need_cache)) {
-    gboolean ret;
-    ret = gst_hls_demux_cache_fragments (demux);
-    if (!ret) {
+    if (!gst_hls_demux_cache_fragments (demux))
       goto cache_error;
-    }
+
     /* we can start now the updates thread */
     gst_hls_demux_start_update (demux);
     GST_INFO_OBJECT (demux, "First fragments cached successfully");
@@ -739,6 +737,7 @@ static gboolean
 gst_hls_demux_fetch_location (GstHLSDemux * demux, const gchar * uri)
 {
   GstStateChangeReturn ret;
+  gboolean bret = FALSE;
 
   g_mutex_lock (demux->fetcher_lock);
 
@@ -754,19 +753,12 @@ gst_hls_demux_fetch_location (GstHLSDemux * demux, const gchar * uri)
   GST_DEBUG_OBJECT (demux, "Waiting to fetch the URI");
   g_cond_wait (demux->fetcher_cond, demux->fetcher_lock);
 
-  if (demux->stopping_fetcher) {
-    ret = FALSE;
-    goto quit;
-  }
-
   gst_hls_demux_stop_fetcher (demux, FALSE);
 
   if (demux->downloaded_uri != NULL) {
     GST_INFO_OBJECT (demux, "URI fetched successfully");
-    ret = TRUE;
-    goto quit;
+    bret = TRUE;
   }
-  ret = FALSE;
   goto quit;
 
 uri_error:
@@ -774,7 +766,7 @@ uri_error:
     GST_ELEMENT_ERROR (demux, RESOURCE, OPEN_READ,
         ("Could not create an element to fetch the given URI."), ("URI: \"%s\"",
             uri));
-    ret = FALSE;
+    bret = FALSE;
     goto quit;
   }
 
@@ -782,14 +774,14 @@ state_change_error:
   {
     GST_ELEMENT_ERROR (demux, CORE, STATE_CHANGE,
         ("Error changing state of the fetcher element."), NULL);
-    ret = FALSE;
+    bret = FALSE;
     goto quit;
   }
 
 quit:
   {
     g_mutex_unlock (demux->fetcher_lock);
-    return ret;
+    return bret;
   }
 }
 
