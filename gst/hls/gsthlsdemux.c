@@ -287,6 +287,7 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      demux->cancelled = TRUE;
       gst_hls_demux_stop_fetcher (demux, TRUE);
       break;
     default:
@@ -361,7 +362,8 @@ gst_hls_demux_fetcher_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:{
       GST_DEBUG_OBJECT (demux, "Got EOS on the fetcher pad");
       /* signal we have fetched the URI */
-      g_cond_signal (demux->fetcher_cond);
+      if (!demux->cancelled)
+        g_cond_signal (demux->fetcher_cond);
     }
     default:
       break;
@@ -572,6 +574,7 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
   demux->thread_return = FALSE;
   demux->accumulated_delay = 0;
   demux->end_of_playlist = FALSE;
+  demux->cancelled = FALSE;
 
   if (demux->input_caps) {
     gst_caps_unref (demux->input_caps);
@@ -721,9 +724,13 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
   /* Cache the first fragments */
   for (i = 0; i < demux->fragments_cache - 1; i++) {
     if (!gst_hls_demux_get_next_fragment (demux, FALSE)) {
-      GST_ERROR_OBJECT (demux, "Error caching the first fragments");
+      if (!demux->cancelled)
+        GST_ERROR_OBJECT (demux, "Error caching the first fragments");
       return FALSE;
     }
+    /* make sure we stop caching fragments if something cancelled it */
+    if (demux->cancelled)
+      return FALSE;
   }
 
   g_get_current_time (&demux->next_update);
