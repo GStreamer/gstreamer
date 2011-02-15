@@ -139,7 +139,6 @@ gst_hls_demux_dispose (GObject * obj)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX (obj);
 
-  gst_hls_demux_stop_fetcher (demux, TRUE);
   g_cond_free (demux->fetcher_cond);
   g_mutex_free (demux->fetcher_lock);
 
@@ -296,6 +295,14 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_hls_demux_stop_fetcher (demux, TRUE);
+      break;
+    default:
+      break;
+  }
   return ret;
 }
 
