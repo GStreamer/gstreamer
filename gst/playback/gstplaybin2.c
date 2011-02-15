@@ -2930,78 +2930,87 @@ static gboolean
 autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     GstSourceGroup * group)
 {
-  GstCaps *stopcaps = NULL;
   gboolean ret = FALSE;
-  GstElement *text_sink;
-  GstPad *text_sinkpad = NULL;
-
-  text_sink =
-      (group->playbin->text_sink) ? gst_object_ref (group->
-      playbin->text_sink) : NULL;
-  if (text_sink)
-    text_sinkpad = gst_element_get_static_pad (text_sink, "sink");
-
-  if (text_sinkpad) {
-    stopcaps = gst_pad_get_caps_reffed (text_sinkpad);
-    gst_object_unref (text_sinkpad);
-
-    /* If the textsink claims to support ANY subcaps,
-     * go the save way and only use the plaintext caps */
-    if (gst_caps_is_any (stopcaps)) {
-      GST_WARNING_OBJECT (group->playbin, "Text sink '%s' accepts ANY caps",
-          GST_OBJECT_NAME (text_sink));
-      gst_caps_unref (stopcaps);
-      stopcaps = gst_static_caps_get (&sub_plaintext_caps);
-    }
-  } else {
-    stopcaps = gst_subtitle_overlay_create_factory_caps ();
-  }
-
-  if (text_sink)
-    gst_object_unref (text_sink);
+  GstElement *sink;
+  GstPad *sinkpad = NULL;
+  GstCaps *sinkcaps = NULL;
 
   GST_PLAY_BIN_LOCK (group->playbin);
   GST_SOURCE_GROUP_LOCK (group);
-  if (group->playbin->audio_sink) {
-    GstCaps *audio_sinkcaps;
-    GstPad *audio_sinkpad = NULL;
 
-    audio_sinkpad =
-        gst_element_get_static_pad (group->playbin->audio_sink, "sink");
-    if (audio_sinkpad) {
-      audio_sinkcaps = gst_pad_get_caps (audio_sinkpad);
-      gst_object_unref (audio_sinkpad);
+  if ((sink = group->playbin->text_sink))
+    sinkpad = gst_element_get_static_pad (sink, "sink");
+  if (sinkpad) {
+    sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+    gst_object_unref (sinkpad);
 
-      stopcaps = gst_caps_make_writable (stopcaps);
-      if (!gst_caps_is_any (audio_sinkcaps))
-        gst_caps_merge (stopcaps, audio_sinkcaps);
-      else
-        gst_caps_unref (audio_sinkcaps);
+    /* If the textsink claims to support ANY subcaps,
+     * go the safe way and only use the plaintext caps */
+    if (gst_caps_is_any (sinkcaps)) {
+      GST_WARNING_OBJECT (group->playbin, "Text sink '%s' accepts ANY caps",
+          GST_OBJECT_NAME (sink));
+      gst_caps_unref (sinkcaps);
+      sinkcaps = gst_static_caps_get (&sub_plaintext_caps);
+    }
+  } else {
+    sinkcaps = gst_subtitle_overlay_create_factory_caps ();
+  }
+  ret = !gst_caps_can_intersect (caps, sinkcaps);
+  gst_caps_unref (sinkcaps);
+  sinkcaps = NULL;
+  if (!ret)
+    goto done;
+
+  if ((sink = group->playbin->audio_sink)) {
+    sinkpad = gst_element_get_static_pad (sink, "sink");
+    if (sinkpad) {
+      sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+      gst_object_unref (sinkpad);
+
+      /* If the audio sink claims to support ANY caps go
+       * the safe way and only use the raw audio caps
+       * that decodebin2 already has */
+      if (gst_caps_is_any (sinkcaps)) {
+        GST_WARNING_OBJECT (group->playbin, "Audio sink '%s' accepts ANY caps",
+            GST_OBJECT_NAME (sink));
+        gst_caps_unref (sinkcaps);
+        sinkcaps = NULL;
+      }
     }
   }
+  if (sinkcaps) {
+    ret = !gst_caps_can_intersect (caps, sinkcaps);
+    gst_caps_unref (sinkcaps);
+    sinkcaps = NULL;
+  }
+  if (!ret)
+    goto done;
 
-  if (group->playbin->video_sink) {
-    GstCaps *video_sinkcaps;
-    GstPad *video_sinkpad = NULL;
+  if ((sink = group->playbin->video_sink)) {
+    sinkpad = gst_element_get_static_pad (sink, "sink");
+    if (sinkpad) {
+      sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+      gst_object_unref (sinkpad);
 
-    video_sinkpad =
-        gst_element_get_static_pad (group->playbin->video_sink, "sink");
-    if (video_sinkpad) {
-      video_sinkcaps = gst_pad_get_caps (video_sinkpad);
-      gst_object_unref (video_sinkpad);
-
-      stopcaps = gst_caps_make_writable (stopcaps);
-      if (!gst_caps_is_any (video_sinkcaps))
-        gst_caps_merge (stopcaps, video_sinkcaps);
-      else
-        gst_caps_unref (video_sinkcaps);
+      /* If the video sink claims to support ANY caps go
+       * the safe way and only use the raw video caps
+       * that decodebin2 already has */
+      if (gst_caps_is_any (sinkcaps)) {
+        GST_WARNING_OBJECT (group->playbin, "Video sink '%s' accepts ANY caps",
+            GST_OBJECT_NAME (sink));
+        gst_caps_unref (sinkcaps);
+        sinkcaps = NULL;
+      }
     }
   }
+  if (sinkcaps) {
+    ret = !gst_caps_can_intersect (caps, sinkcaps);
+    gst_caps_unref (sinkcaps);
+  }
+
+done:
   GST_SOURCE_GROUP_UNLOCK (group);
   GST_PLAY_BIN_UNLOCK (group->playbin);
-
-  ret = !gst_caps_can_intersect (stopcaps, caps);
-  gst_caps_unref (stopcaps);
 
   GST_DEBUG_OBJECT (group->playbin,
       "continue autoplugging group %p for %s:%s, %" GST_PTR_FORMAT ": %d",
