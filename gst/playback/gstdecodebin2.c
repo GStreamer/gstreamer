@@ -1761,6 +1761,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         tmp = chain->elements->data;
         gst_element_set_state (tmp, GST_STATE_NULL);
         gst_bin_remove (GST_BIN (dbin), tmp);
+        gst_object_unref (tmp);
         chain->elements = g_list_delete_link (chain->elements, chain->elements);
       } while (tmp != element);
       CHAIN_MUTEX_UNLOCK (chain);
