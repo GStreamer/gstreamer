@@ -2657,6 +2657,14 @@ gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
       goto out_unexpected;
   }
 
+  if (G_UNLIKELY (offset + length > queue->upstream_size)) {
+    gst_queue2_update_upstream_size (queue);
+    if (queue->upstream_size > 0 && offset + length >= queue->upstream_size) {
+      length = queue->upstream_size - offset;
+      GST_DEBUG_OBJECT (queue, "adjusting length downto %d", length);
+    }
+  }
+
   /* FIXME - function will block when the range is not yet available */
   ret = gst_queue2_create_read (queue, offset, length, buffer);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
