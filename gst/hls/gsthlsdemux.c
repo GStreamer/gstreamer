@@ -40,13 +40,13 @@
 
 
 #include <string.h>
+#include <gst/base/gsttypefindhelper.h>
 #include "gsthlsdemux.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/mpegts, systemstream=(boolean)true; "
-        "video/webm"));
+    GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -128,7 +128,7 @@ gst_hls_demux_base_init (gpointer g_class)
 
   gst_element_class_set_details_simple (element_class,
       "HLS Source",
-      "Decoder",
+      "Demuxer/URIList",
       "HTTP Live Streaming source",
       "Marc-Andre Lureau <marcandre.lureau@gmail.com>\n"
       "Andoni Morales Alastruey <ylatuya@gmail.com>");
@@ -584,6 +584,11 @@ gst_hls_demux_reset (GstHLSDemux * demux)
   demux->accumulated_delay = 0;
   demux->end_of_playlist = FALSE;
 
+  if (demux->input_caps) {
+    gst_caps_unref (demux->input_caps);
+    demux->input_caps = NULL;
+  }
+
   if (demux->playlist) {
     gst_buffer_unref (demux->playlist);
     demux->playlist = NULL;
@@ -894,6 +899,7 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
 static gboolean
 gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
 {
+  GstBuffer *buf;
   const gchar *next_fragment_uri;
   gboolean discont;
 
@@ -911,12 +917,23 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
   if (!gst_hls_demux_fetch_location (demux, next_fragment_uri))
     return FALSE;
 
-  if (discont) {
-    GST_DEBUG_OBJECT (demux, "Marking fragment as discontinuous");
-    GST_BUFFER_FLAG_SET (demux->downloaded_uri, GST_BUFFER_FLAG_DISCONT);
+  buf = demux->downloaded_uri;
+
+  if (G_UNLIKELY (demux->input_caps == NULL)) {
+    demux->input_caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);
+    if (demux->input_caps) {
+      gst_pad_set_caps (demux->srcpad, demux->input_caps);
+      GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
+          demux->input_caps);
+    }
   }
 
-  g_queue_push_tail (demux->queue, demux->downloaded_uri);
+  if (discont) {
+    GST_DEBUG_OBJECT (demux, "Marking fragment as discontinuous");
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+  }
+
+  g_queue_push_tail (demux->queue, buf);
   GST_TASK_SIGNAL (demux->task);
   demux->downloaded_uri = NULL;
   return TRUE;

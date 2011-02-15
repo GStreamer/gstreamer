@@ -55,6 +55,7 @@ struct _GstHLSDemux
   GstPad *srcpad;
   GstPad *sinkpad;
   GstBuffer *playlist;
+  GstCaps *input_caps;
   GstM3U8Client *client;        /* M3U8 client */
   GQueue *queue;                /* Queue storing the fetched fragments */
   gboolean need_cache;          /* Wheter we need to cache some fragments before starting to push data */
