@@ -338,7 +338,7 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
           GST_BUFFER_SIZE (demux->playlist));
       gst_buffer_unref (demux->playlist);
       if (!gst_m3u8_client_update (demux->client, playlist)) {
-        /* In most cases, this will happen when if we set a wrong url in the
+        /* In most cases, this will happen if we set a wrong url in the
          * source element and we have received the 404 HTML response instead of
          * the playlist */
         GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Invalid playlist."), NULL);
@@ -407,14 +407,15 @@ gst_hls_demux_fetcher_chain (GstPad * pad, GstBuffer * buf)
   /* The source element can be an http source element. In case we get a 404,
    * the html response will be sent downstream and demux->downloaded_uri
    * will not be null, which might make us think that the request proceed
-   * successfully. But it it will also post an error message in the bus that
+   * successfully. But it will also post an error message in the bus that
    * is handled synchronously and that will set demux->fetcher_error to TRUE,
    * which is used to discard this buffer with the html response. */
   if (demux->fetcher_error) {
     goto done;
   }
 
-  GST_LOG_OBJECT (demux, "Received new buffer in the fecther");
+  GST_LOG_OBJECT (demux, "The uri fetcher received a new buffer of size %lld",
+      GST_BUFFER_SIZE (buf));
   if (demux->downloaded_uri == NULL)
     demux->downloaded_uri = buf;
   else
@@ -431,22 +432,31 @@ gst_hls_demux_stop_fetcher (GstHLSDemux * demux, gboolean cancelled)
 {
   GstPad *pad;
 
+  /* When the fetcher is stopped while it's downloading, we will get an EOS that
+   * unblocks the fetcher thread and tries to stop it again from that thread.
+   * Here we check if the fetcher as already been stopped before continuing */
   if (demux->fetcher == NULL || demux->stopping_fetcher)
     return;
 
   GST_DEBUG_OBJECT (demux, "Stopping fetcher.");
   demux->stopping_fetcher = TRUE;
+  /* set the element state to NULL */
   gst_element_set_state (demux->fetcher, GST_STATE_NULL);
+  /* unlink it from the internal pad */
   pad = gst_pad_get_peer (demux->fetcherpad);
   if (pad) {
     gst_pad_unlink (pad, demux->fetcherpad);
     gst_object_unref (pad);
   }
+  /* and finally unref it */
   gst_object_unref (demux->fetcher);
   demux->fetcher = NULL;
+
+  /* if we stopped it to cancell a download, free the cached buffer */
   if (cancelled && demux->downloaded_uri != NULL) {
     gst_buffer_unref (demux->downloaded_uri);
     demux->downloaded_uri = NULL;
+    /* signal the fetcher thread that the download has finished/cancelled */
     g_cond_signal (demux->fetcher_cond);
   }
 }
@@ -466,13 +476,19 @@ gst_hls_demux_loop (GstHLSDemux * demux)
   GstBuffer *buf;
   GstFlowReturn ret;
 
-  /* cache the first fragments if we need it */
+  /* Loop for the source pad task. The task is started when we have
+   * received the main playlist from the source element. It tries first to
+   * cache the first fragments and then it waits until it has more data in the
+   * queue. This task is woken up when we push a new fragment to the queue or
+   * when we reached the end of the playlist  */
+
   if (G_UNLIKELY (demux->need_cache)) {
     gboolean ret;
     ret = gst_hls_demux_cache_fragments (demux);
     if (!ret) {
       goto cache_error;
     }
+    /* we can start now the updates thread */
     gst_hls_demux_start_update (demux);
     GST_INFO_OBJECT (demux, "First fragments cached successfully");
   }
@@ -602,6 +618,12 @@ gst_hls_demux_set_location (GstHLSDemux * demux, const gchar * uri)
 static gboolean
 gst_hls_demux_update_thread (GstHLSDemux * demux)
 {
+  /* Loop for the updates. It's started when the first fragments are cached and
+   * schedules the next update of the playlist (for lives sources) and the next
+   * update of fragments. When a new fragment is downloaded, it compares the
+   * download time with the next scheduled update to check if we can or should
+   * switch to a different bitrate */
+
   g_mutex_lock (demux->thread_lock);
   while (TRUE) {
     /* block until the next scheduled update or the signal to quit this thread */
@@ -622,7 +644,7 @@ gst_hls_demux_update_thread (GstHLSDemux * demux)
     gst_hls_demux_schedule (demux);
 
     /* if it's a live source and the playlist couldn't be updated, there aren't
-     * more fragments in the playlist so we just wait for the next schedulled
+     * more fragments in the playlist, so we just wait for the next schedulled
      * update */
     if (gst_m3u8_client_is_live (demux->client) &&
         demux->client->update_failed_count > 0) {
@@ -655,8 +677,7 @@ gst_hls_demux_start_update (GstHLSDemux * demux)
 {
   GError *error;
 
-  /* create a new thread for the updates so that we don't block in the streaming
-   * thread */
+  /* creates a new thread for the updates */
   demux->updates_thread = g_thread_create (
       (GThreadFunc) gst_hls_demux_update_thread, demux, TRUE, &error);
   return (error != NULL);
@@ -678,7 +699,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
     }
   }
 
-  /* If this playlist is a list of playlists, select the first one
+  /* If this playlist is a variant playlist, select the first one
    * and update it */
   if (gst_m3u8_client_has_variant_playlist (demux->client)) {
     GstM3U8 *child = demux->client->main->lists->data;
@@ -729,7 +750,7 @@ gst_hls_demux_fetch_location (GstHLSDemux * demux, const gchar * uri)
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto state_change_error;
 
-  /* wait until we have fetched the element */
+  /* wait until we have fetched the uri */
   GST_DEBUG_OBJECT (demux, "Waiting to fetch the URI");
   g_cond_wait (demux->fetcher_cond, demux->fetcher_lock);
 
@@ -858,7 +879,7 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
   if (diff > limit) {
     gst_hls_demux_change_playlist (demux, TRUE);
   } else if (diff < 0) {
-    /* if the client is to slow wait until it has accumulate a certain delay to
+    /* if the client is too slow wait until it has accumulated a certain delay to
      * switch to a lower bitrate */
     demux->accumulated_delay -= diff;
     if (demux->accumulated_delay >= limit) {
@@ -891,7 +912,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
     return FALSE;
 
   if (discont) {
-    GST_DEBUG_OBJECT (demux, "Marking fragment has discontinuous");
+    GST_DEBUG_OBJECT (demux, "Marking fragment as discontinuous");
     GST_BUFFER_FLAG_SET (demux->downloaded_uri, GST_BUFFER_FLAG_DISCONT);
   }
 
