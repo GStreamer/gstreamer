@@ -2104,7 +2104,7 @@ gst_message_new_progress (GstObject * src, GstProgressType type,
 {
   GstMessage *message;
   GstStructure *structure;
-  gint percent = 100;
+  gint percent = 100, timeout = -1;
 
   g_return_val_if_fail (code != NULL, NULL);
   g_return_val_if_fail (text != NULL, NULL);
@@ -2116,7 +2116,8 @@ gst_message_new_progress (GstObject * src, GstProgressType type,
       GST_QUARK (TYPE), GST_TYPE_PROGRESS_TYPE, type,
       GST_QUARK (CODE), G_TYPE_STRING, code,
       GST_QUARK (TEXT), G_TYPE_STRING, text,
-      GST_QUARK (PERCENT), G_TYPE_INT, percent, NULL);
+      GST_QUARK (PERCENT), G_TYPE_INT, percent,
+      GST_QUARK (TIMEOUT), G_TYPE_INT, timeout, NULL);
   message = gst_message_new_custom (GST_MESSAGE_PROGRESS, src, structure);
 
   return message;
