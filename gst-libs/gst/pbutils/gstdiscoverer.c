@@ -846,15 +846,20 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
     res = (GstDiscovererStreamInfo *) cont;
 
     if (gst_structure_id_has_field (topology, _TAGS_QUARK)) {
+      GstTagList *tmp;
+
       gst_structure_id_get (topology, _TAGS_QUARK,
           GST_TYPE_STRUCTURE, &tags, NULL);
 
       GST_DEBUG ("Merge tags %" GST_PTR_FORMAT, tags);
 
-      cont->parent.tags =
+      tmp =
           gst_tag_list_merge (cont->parent.tags, (GstTagList *) tags,
           GST_TAG_MERGE_APPEND);
       gst_tag_list_free (tags);
+      if (cont->parent.tags)
+        gst_tag_list_free (cont->parent.tags);
+      cont->parent.tags = tmp;
       GST_DEBUG ("Container info tags %" GST_PTR_FORMAT, tmp);
     }
 
