@@ -119,6 +119,9 @@ struct _GstURIDecodeBinClass
   /* signal fired to get a list of factories to try to autoplug */
   GValueArray *(*autoplug_factories) (GstElement * element, GstPad * pad,
       GstCaps * caps);
+  /* signal fired to sort the factories */
+  GValueArray *(*autoplug_sort) (GstElement * element, GstPad * pad,
+      GstCaps * caps, GValueArray * factories);
   /* signal fired to select from the proposed list of factories */
     GstAutoplugSelectResult (*autoplug_select) (GstElement * element,
       GstPad * pad, GstCaps * caps, GValueArray * factories);
@@ -145,6 +148,7 @@ enum
   SIGNAL_AUTOPLUG_FACTORIES,
   SIGNAL_AUTOPLUG_SELECT,
   SIGNAL_DRAINED,
+  SIGNAL_AUTOPLUG_SORT,
   LAST_SIGNAL
 };
 
@@ -251,6 +255,22 @@ _gst_select_accumulator (GSignalInvocationHint * ihint,
 }
 
 static gboolean
+_gst_array_hasvalue_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  gpointer array;
+
+  array = g_value_get_boxed (handler_return);
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boxed (return_accu, array);
+
+  if (array != NULL)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_uri_decode_bin_autoplug_continue (GstElement * element, GstPad * pad,
     GstCaps * caps)
 {
@@ -309,6 +329,19 @@ gst_uri_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
   return result;
 }
 
+static GValueArray *
+gst_uri_decode_bin_autoplug_sort (GstElement * element, GstPad * pad,
+    GstCaps * caps, GValueArray * factories)
+{
+  GValueArray *result;
+
+  result = g_value_array_copy (factories);
+
+  GST_DEBUG_OBJECT (element, "autoplug-sort returns %p", result);
+
+  /* return input */
+  return result;
+}
 
 static void
 gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
@@ -485,6 +518,31 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
+   * GstURIDecodeBin::autoplug-sort:
+   * @bin: The decodebin
+   * @pad: The #GstPad.
+   * @caps: The #GstCaps.
+   * @factories: A #GValueArray of possible #GstElementFactory to use.
+   *
+   * Once decodebin2 has found the possible #GstElementFactory objects to try
+   * for @caps on @pad, this signal is emited. The purpose of the signal is for
+   * the application to perform additional sorting or filtering on the element
+   * factory array.
+   *
+   * The callee should copy and modify @factories.
+   *
+   * Returns: A new sorted array of #GstElementFactory objects.
+   *
+   * Since: 0.10.33
+   */
+  gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SORT] =
+      g_signal_new ("autoplug-sort", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass, autoplug_sort),
+      _gst_array_hasvalue_accumulator, NULL,
+      gst_play_marshal_BOXED__OBJECT_BOXED_BOXED, G_TYPE_VALUE_ARRAY, 3,
+      GST_TYPE_PAD, GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
+
+  /**
    * GstURIDecodeBin::autoplug-select:
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
@@ -539,6 +597,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_continue);
   klass->autoplug_factories =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_factories);
+  klass->autoplug_sort = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_sort);
 }
 
 static void
@@ -1369,6 +1428,21 @@ proxy_autoplug_factories_signal (GstElement * element, GstPad * pad,
   return result;
 }
 
+static GValueArray *
+proxy_autoplug_sort_signal (GstElement * element, GstPad * pad,
+    GstCaps * caps, GValueArray * factories, GstURIDecodeBin * dec)
+{
+  GValueArray *result;
+
+  g_signal_emit (dec,
+      gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SORT], 0, pad, caps,
+      factories, &result);
+
+  GST_DEBUG_OBJECT (dec, "autoplug-sort returned %p", result);
+
+  return result;
+}
+
 static GstAutoplugSelectResult
 proxy_autoplug_select_signal (GstElement * element, GstPad * pad,
     GstCaps * caps, GstElementFactory * factory, GstURIDecodeBin * dec)
@@ -1420,6 +1494,8 @@ make_decoder (GstURIDecodeBin * decoder)
         G_CALLBACK (proxy_autoplug_continue_signal), decoder);
     g_signal_connect (decodebin, "autoplug-factories",
         G_CALLBACK (proxy_autoplug_factories_signal), decoder);
+    g_signal_connect (decodebin, "autoplug-sort",
+        G_CALLBACK (proxy_autoplug_sort_signal), decoder);
     g_signal_connect (decodebin, "autoplug-select",
         G_CALLBACK (proxy_autoplug_select_signal), decoder);
     g_signal_connect (decodebin, "drained",
