@@ -64,7 +64,8 @@ CRUFT_FILES = \
 	$(top_builddir)/tests/examples/jack/jack_client \
 	$(top_builddir)/tests/examples/switch/switcher \
 	$(top_builddir)/tests/icles/output-selector-test \
-	$(top_builddir)/tests/icles/test-oss4
+	$(top_builddir)/tests/icles/test-oss4 \
+	$(top_builddir)/tests/icles/equalizer-test
 
 CRUFT_DIRS = \
 	$(top_srcdir)/gst/aacparse \
