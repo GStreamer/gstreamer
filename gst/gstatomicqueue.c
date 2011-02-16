@@ -21,8 +21,22 @@
  */
 
 #include <string.h>
+
+#include "gst_private.h"
+
 #include <gst/gst.h>
 #include "gstatomicqueue.h"
+
+/**
+ * SECTION:gstatomicqueue
+ * @title: GstAtomicQueue
+ * @short_description: An atomic queue implementation
+ *
+ * The #GstAtomicQueue object implements a queue that can be used from multiple
+ * threads without performing any blocking operations.
+ *
+ * Since: 0.10.33
+ */
 
 /* By default the queue uses 2 * sizeof(gpointer) * clp2 (max_items) of
  * memory. clp2(x) is the next power of two >= than x.
@@ -84,6 +98,7 @@ free_queue_mem (GstAQueueMem * mem)
 
 struct _GstAtomicQueue
 {
+  volatile gint refcount;
 #ifdef LOW_MEM
   gint num_readers;
 #endif
@@ -123,6 +138,17 @@ clear_free_list (GstAtomicQueue * queue)
   }
 }
 
+/**
+ * gst_atomic_queue_new:
+ * @initial_size: initial queue size
+ *
+ * Create a new atomic queue instance. @initial_size will be rounded up to the
+ * nearest power of 2 and used as the initial size of the queue.
+ *
+ * Returns: a new #GstAtomicQueue
+ *
+ * Since: 0.10.33
+ */
 GstAtomicQueue *
 gst_atomic_queue_new (guint initial_size)
 {
@@ -130,6 +156,7 @@ gst_atomic_queue_new (guint initial_size)
 
   queue = g_new (GstAtomicQueue, 1);
 
+  queue->refcount = 1;
 #ifdef LOW_MEM
   queue->num_readers = 0;
 #endif
@@ -139,7 +166,21 @@ gst_atomic_queue_new (guint initial_size)
   return queue;
 }
 
+/**
+ * gst_atomic_queue_ref:
+ * @queue: a #GstAtomicQueue
+ *
+ * Increase the refcount of @queue.
+ */
 void
+gst_atomic_queue_ref (GstAtomicQueue * queue)
+{
+  g_return_if_fail (queue != NULL);
+
+  g_atomic_int_inc (&queue->refcount);
+}
+
+static void
 gst_atomic_queue_free (GstAtomicQueue * queue)
 {
   free_queue_mem (queue->head_mem);
@@ -149,11 +190,36 @@ gst_atomic_queue_free (GstAtomicQueue * queue)
   g_free (queue);
 }
 
+/**
+ * gst_atomic_queue_unref:
+ * @queue: a #GstAtomicQueue
+ *
+ * Unref @queue and free the memory when the refcount reaches 0.
+ */
+void
+gst_atomic_queue_unref (GstAtomicQueue * queue)
+{
+  g_return_if_fail (queue != NULL);
+
+  if (g_atomic_int_dec_and_test (&queue->refcount))
+    gst_atomic_queue_free (queue);
+}
+
+/**
+ * gst_atomic_queue_peek:
+ * @queue: a #GstAtomicQueue
+ *
+ * Peek the head element of the queue without removing it from the queue.
+ *
+ * Returns: the head element of @queue or NULL when the queue is empty.
+ */
 gpointer
 gst_atomic_queue_peek (GstAtomicQueue * queue)
 {
   GstAQueueMem *head_mem;
   gint head, tail, size;
+
+  g_return_val_if_fail (queue != NULL, NULL);
 
   while (TRUE) {
     GstAQueueMem *next;
@@ -188,12 +254,22 @@ gst_atomic_queue_peek (GstAtomicQueue * queue)
   return head_mem->array[head & size];
 }
 
+/**
+ * gst_atomic_queue_pop:
+ * @queue: a #GstAtomicQueue
+ *
+ * Get the head element of the queue.
+ *
+ * Returns: the head element of @queue or NULL when the queue is empty.
+ */
 gpointer
 gst_atomic_queue_pop (GstAtomicQueue * queue)
 {
   gpointer ret;
   GstAQueueMem *head_mem;
   gint head, tail, size;
+
+  g_return_val_if_fail (queue != NULL, NULL);
 
 #ifdef LOW_MEM
   g_atomic_int_inc (&queue->num_readers);
@@ -244,11 +320,20 @@ gst_atomic_queue_pop (GstAtomicQueue * queue)
   return ret;
 }
 
+/**
+ * gst_atomic_queue_push:
+ * @queue: a #GstAtomicQueue
+ * @data: the data
+ *
+ * Append @data to the tail of the queue.
+ */
 void
 gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
 {
   GstAQueueMem *tail_mem;
   gint head, tail, size;
+
+  g_return_if_fail (queue != NULL);
 
   do {
     while (TRUE) {
@@ -286,11 +371,22 @@ gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
   tail_mem->array[tail & size] = data;
 }
 
+/**
+ * gst_atomic_queue_length:
+ * @queue: a #GstAtomicQueue
+ * @data: the data
+ *
+ * Get the amount of items in the queue.
+ *
+ * Returns: the number of elements in the queue.
+ */
 guint
 gst_atomic_queue_length (GstAtomicQueue * queue)
 {
   GstAQueueMem *head_mem, *tail_mem;
   gint head, tail;
+
+  g_return_val_if_fail (queue != NULL, 0);
 
 #ifdef LOW_MEM
   g_atomic_int_inc (&queue->num_readers);

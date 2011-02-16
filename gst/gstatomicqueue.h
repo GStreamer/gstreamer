@@ -25,12 +25,21 @@
 #ifndef __GST_ATOMIC_QUEUE_H__
 #define __GST_ATOMIC_QUEUE_H__
 
-typedef struct _GstAtomicQueue GstAtomicQueue;
-
 G_BEGIN_DECLS
 
+/**
+ * GstAtomicQueue:
+ * Opaque atomic data queue.
+ *
+ * Use the acessor functions to get the stored values.
+ */
+typedef struct _GstAtomicQueue GstAtomicQueue;
+
+
 GstAtomicQueue *   gst_atomic_queue_new         (guint initial_size);
-void               gst_atomic_queue_free        (GstAtomicQueue * queue);
+
+void               gst_atomic_queue_ref         (GstAtomicQueue * queue);
+void               gst_atomic_queue_unref       (GstAtomicQueue * queue);
 
 void               gst_atomic_queue_push        (GstAtomicQueue* queue, gpointer data);
 gpointer           gst_atomic_queue_pop         (GstAtomicQueue* queue);

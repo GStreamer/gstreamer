@@ -39,6 +39,22 @@ GstPluginLoaderFuncs
 </SECTION>
 
 <SECTION>
+<FILE>gstatomicqueue</FILE>
+<TITLE>GstAtomicQueue</TITLE>
+GstAtomicQueue
+gst_atomic_queue_new
+
+gst_atomic_queue_ref
+gst_atomic_queue_unref
+
+gst_atomic_queue_push
+gst_atomic_queue_peek
+gst_atomic_queue_pop
+
+gst_atomic_queue_length
+</SECTION>
+
+<SECTION>
 <FILE>gstbin</FILE>
 <TITLE>GstBin</TITLE>
 GstBin
