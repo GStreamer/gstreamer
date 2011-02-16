@@ -431,6 +431,7 @@ gst_hls_demux_stop_fetcher (GstHLSDemux * demux, gboolean cancelled)
   demux->stopping_fetcher = TRUE;
   /* set the element state to NULL */
   gst_element_set_state (demux->fetcher, GST_STATE_NULL);
+  gst_element_get_state (demux->fetcher, NULL, NULL, GST_CLOCK_TIME_NONE);
   /* unlink it from the internal pad */
   pad = gst_pad_get_peer (demux->fetcherpad);
   if (pad) {
