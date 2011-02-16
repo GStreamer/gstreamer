@@ -407,7 +407,14 @@ gst_csp_base_init (gpointer klass)
 static void
 gst_csp_finalize (GObject * obj)
 {
+  GstCsp *space = GST_CSP (obj);
+
+  if (space->convert) {
+    colorspace_convert_free (space->convert);
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (obj);
+
 }
 
 static void
