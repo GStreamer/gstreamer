@@ -909,16 +909,27 @@ ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
     GESTrackEffect * effect, guint newpriority)
 {
   GList *tmp;
-  guint inc;
+  gint inc;
   GESTrackObject *tck_obj = GES_TRACK_OBJECT (effect);
   GESTimelineObjectPrivate *priv = object->priv;
 
+  guint current_prio = ges_track_object_get_priority (tck_obj);
   /*  We don't change the priority */
-  if (tck_obj->priority == newpriority ||
-      (newpriority > (object->priv->nb_effects - 1)) ||
-      (G_UNLIKELY (ges_track_object_get_timeline_object (tck_obj) != object))) {
+  if (current_prio == newpriority ||
+      (G_UNLIKELY (ges_track_object_get_timeline_object (tck_obj) != object)))
     return FALSE;
-  } else if (tck_obj->priority < newpriority)
+
+  if (newpriority > (object->priv->nb_effects - 1)) {
+    GST_DEBUG ("You are trying to make %p not a top effect", effect);
+    return FALSE;
+  }
+
+  if (current_prio > object->priv->nb_effects) {
+    GST_DEBUG ("%p is not a top effect");
+    return FALSE;
+  }
+
+  if (tck_obj->priority < newpriority)
     inc = -1;
   else
     inc = +1;
