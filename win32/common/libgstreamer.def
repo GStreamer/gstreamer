@@ -63,6 +63,13 @@ EXPORTS
 	gst_alloc_trace_set_flags_all
 	gst_assoc_flags_get_type
 	gst_atomic_int_set
+	gst_atomic_queue_length
+	gst_atomic_queue_new
+	gst_atomic_queue_peek
+	gst_atomic_queue_pop
+	gst_atomic_queue_push
+	gst_atomic_queue_ref
+	gst_atomic_queue_unref
 	gst_bin_add
 	gst_bin_add_many
 	gst_bin_find_unconnected_pad
