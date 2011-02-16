@@ -56,7 +56,8 @@ track_object_priority_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
 static void update_height (GESTimelineObject * object);
 
-gint sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object);
+static gint sort_track_effects (gpointer a, gpointer b,
+    GESTimelineObject * object);
 
 G_DEFINE_ABSTRACT_TYPE (GESTimelineObject, ges_timeline_object,
     G_TYPE_INITIALLY_UNOWNED);
@@ -97,7 +98,8 @@ struct _GESTimelineObjectPrivate
   GESTimelineLayer *layer;
 
   /*< private > */
-  /* A list of TrackObject controlled by this TimelineObject */
+  /* A list of TrackObject controlled by this TimelineObject sorted by
+   * priority */
   GList *trackobjects;
 
   /* Set to TRUE when the timelineobject is doing updates of track object
@@ -706,12 +708,13 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
   GList *tmp;
   GESTrackObject *tr;
   ObjectMapping *map;
+  GESTimelineObjectPrivate *priv = object->priv;
 
   GST_DEBUG ("object:%p, priority:%" G_GUINT32_FORMAT, object, priority);
 
-  object->priv->ignore_notifies = TRUE;
+  priv->ignore_notifies = TRUE;
 
-  for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
     tr = (GESTrackObject *) tmp->data;
     map = find_object_mapping (object, tr);
 
@@ -724,7 +727,9 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
     }
   }
 
-  object->priv->ignore_notifies = FALSE;
+  priv->trackobjects = g_list_sort_with_data (priv->trackobjects,
+      (GCompareDataFunc) sort_track_effects, object);
+  priv->ignore_notifies = FALSE;
 
   object->priority = priority;
 }
@@ -819,7 +824,7 @@ ges_timeline_object_get_track_objects (GESTimelineObject * object)
   return ret;
 }
 
-gint
+static gint
 sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object)
 {
   guint prio_offset_a, prio_offset_b;
@@ -863,8 +868,7 @@ ges_timeline_object_get_effects (GESTimelineObject * object)
 
   for (tmp = object->priv->trackobjects; tmp; tmp = tmp->next) {
     if (GES_IS_TRACK_EFFECT (tmp->data)) {
-      ret = g_list_insert_sorted_with_data (ret, tmp->data,
-          (GCompareDataFunc) sort_track_effects, object);
+      ret = g_list_append (ret, tmp->data);
       g_object_ref (tmp->data);
     }
   }
@@ -930,7 +934,6 @@ ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
     }
   }
 
-  /*  We keep the list of trackobjects sorted */
   priv->trackobjects = g_list_sort_with_data (priv->trackobjects,
       (GCompareDataFunc) sort_track_effects, object);
 
