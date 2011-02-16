@@ -257,7 +257,7 @@ ges_timeline_new (void)
  */
 
 GESTimeline *
-ges_timeline_new_from_uri (gchar * uri)
+ges_timeline_new_from_uri (const gchar * uri)
 {
   GESTimeline *ret;
 
@@ -288,7 +288,7 @@ ges_timeline_new_from_uri (gchar * uri)
  */
 
 gboolean
-ges_timeline_load_from_uri (GESTimeline * timeline, gchar * uri)
+ges_timeline_load_from_uri (GESTimeline * timeline, const gchar * uri)
 {
   GESFormatter *p = NULL;
   gboolean ret = FALSE;
@@ -327,7 +327,7 @@ fail:
  */
 
 gboolean
-ges_timeline_save_to_uri (GESTimeline * timeline, gchar * uri)
+ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri)
 {
   GESFormatter *p = NULL;
   gboolean ret = FALSE;

@@ -83,10 +83,10 @@ struct _GESTimelineClass {
 GType ges_timeline_get_type (void);
 
 GESTimeline* ges_timeline_new (void);
-GESTimeline* ges_timeline_new_from_uri (gchar *uri);
+GESTimeline* ges_timeline_new_from_uri (const gchar *uri);
 
-gboolean ges_timeline_load_from_uri (GESTimeline *timeline, gchar *uri);
-gboolean ges_timeline_save_to_uri (GESTimeline *timeline, gchar *uri);
+gboolean ges_timeline_load_from_uri (GESTimeline *timeline, const gchar *uri);
+gboolean ges_timeline_save_to_uri (GESTimeline *timeline, const gchar *uri);
 
 gboolean ges_timeline_add_layer (GESTimeline *timeline, GESTimelineLayer *layer);
 gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESTimelineLayer *layer);

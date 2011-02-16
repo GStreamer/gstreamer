@@ -56,11 +56,11 @@ struct _GESFormatterPrivate
 
 static void ges_formatter_dispose (GObject * object);
 static gboolean load_from_uri (GESFormatter * formatter, GESTimeline *
-    timeline, gchar * uri);
+    timeline, const gchar * uri);
 static gboolean save_to_uri (GESFormatter * formatter, GESTimeline *
-    timeline, gchar * uri);
-static gboolean default_can_load_uri (gchar * uri);
-static gboolean default_can_save_uri (gchar * uri);
+    timeline, const gchar * uri);
+static gboolean default_can_load_uri (const gchar * uri);
+static gboolean default_can_save_uri (const gchar * uri);
 
 static void
 ges_formatter_class_init (GESFormatterClass * klass)
@@ -105,7 +105,7 @@ ges_formatter_dispose (GObject * object)
  */
 
 GESFormatter *
-ges_formatter_new_for_uri (gchar * uri)
+ges_formatter_new_for_uri (const gchar * uri)
 {
   if (ges_formatter_can_load_uri (uri))
     return GES_FORMATTER (ges_keyfile_formatter_new ());
@@ -128,14 +128,14 @@ ges_default_formatter_new (void)
 }
 
 static gboolean
-default_can_load_uri (gchar * uri)
+default_can_load_uri (const gchar * uri)
 {
   GST_ERROR ("No 'can_load_uri' vmethod implementation");
   return FALSE;
 }
 
 static gboolean
-default_can_save_uri (gchar * uri)
+default_can_save_uri (const gchar * uri)
 {
   GST_ERROR ("No 'can_save_uri' vmethod implementation");
   return FALSE;
@@ -153,7 +153,7 @@ default_can_save_uri (gchar * uri)
  */
 
 gboolean
-ges_formatter_can_load_uri (gchar * uri)
+ges_formatter_can_load_uri (const gchar * uri)
 {
   if (!(gst_uri_is_valid (uri))) {
     GST_ERROR ("Invalid uri!");
@@ -185,7 +185,7 @@ ges_formatter_can_load_uri (gchar * uri)
  */
 
 gboolean
-ges_formatter_can_save_uri (gchar * uri)
+ges_formatter_can_save_uri (const gchar * uri)
 {
   if (!(gst_uri_is_valid (uri))) {
     GST_ERROR ("Invalid uri!");
@@ -342,7 +342,7 @@ ges_formatter_save (GESFormatter * formatter, GESTimeline * timeline)
 
 gboolean
 ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
-    gchar * uri)
+    const gchar * uri)
 {
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
 
@@ -353,7 +353,8 @@ ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
 }
 
 static gboolean
-load_from_uri (GESFormatter * formatter, GESTimeline * timeline, gchar * uri)
+load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
+    const gchar * uri)
 {
   gchar *location;
   GError *e = NULL;
@@ -400,7 +401,7 @@ load_from_uri (GESFormatter * formatter, GESTimeline * timeline, gchar * uri)
 
 gboolean
 ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
-    timeline, gchar * uri)
+    timeline, const gchar * uri)
 {
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
   GList *layers, *tmp;
@@ -420,7 +421,8 @@ ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
 }
 
 static gboolean
-save_to_uri (GESFormatter * formatter, GESTimeline * timeline, gchar * uri)
+save_to_uri (GESFormatter * formatter, GESTimeline * timeline,
+    const gchar * uri)
 {
   gchar *location;
   GError *e = NULL;

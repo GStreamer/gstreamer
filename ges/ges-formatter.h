@@ -59,8 +59,8 @@ struct _GESFormatter {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-typedef gboolean (*GESFormatterCanLoadURIMethod) (gchar * uri);
-typedef gboolean (*GESFormatterCanSaveURIMethod) (gchar * uri);
+typedef gboolean (*GESFormatterCanLoadURIMethod) (const gchar * uri);
+typedef gboolean (*GESFormatterCanSaveURIMethod) (const gchar * uri);
 
 /**
  * GESFormatterLoadFromURIMethod:
@@ -77,7 +77,7 @@ typedef gboolean (*GESFormatterCanSaveURIMethod) (gchar * uri);
  **/
 typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
 						     GESTimeline *timeline,
-						     gchar * uri);
+						     const gchar * uri);
 
 /**
  * GESFormatterSaveToURIMethod:
@@ -94,7 +94,7 @@ typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
  */
 typedef gboolean (*GESFormatterSaveToURIMethod) (GESFormatter *formatter,
 						   GESTimeline *timeline,
-						   gchar * uri);
+						   const gchar * uri);
 typedef gboolean (*GESFormatterSaveMethod) (GESFormatter * formatter,
 					      GESTimeline * timeline);
 typedef gboolean (*GESFormatterLoadMethod) (GESFormatter * formatter,
@@ -134,19 +134,19 @@ struct _GESFormatterClass {
 GType ges_formatter_get_type (void);
 
 /* Main Formatter methods */
-GESFormatter *ges_formatter_new_for_uri (gchar *uri);
+GESFormatter *ges_formatter_new_for_uri (const gchar *uri);
 GESFormatter *ges_default_formatter_new (void);
 
-gboolean ges_formatter_can_load_uri     (gchar * uri);
-gboolean ges_formatter_can_save_uri     (gchar * uri);
+gboolean ges_formatter_can_load_uri     (const gchar * uri);
+gboolean ges_formatter_can_save_uri     (const gchar * uri);
 
 gboolean ges_formatter_load_from_uri    (GESFormatter * formatter,
 					 GESTimeline  *timeline,
-					 gchar *uri);
+					 const gchar *uri);
 
 gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
 					 GESTimeline *timeline,
-					 gchar *uri);
+					 const gchar *uri);
 
 /* Non-standard methods. WILL BE DEPRECATED */
 gboolean ges_formatter_load             (GESFormatter * formatter,
