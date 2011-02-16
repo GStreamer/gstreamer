@@ -39,6 +39,7 @@
 
 #include "gstfakesink.h"
 #include <gst/gstmarshal.h>
+#include <string.h>
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -480,6 +481,7 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   if (!sink->silent) {
     gchar ts_str[64], dur_str[64];
+    gchar flag_str[100];
 
     GST_OBJECT_LOCK (sink);
     g_free (sink->last_message);
@@ -498,12 +500,32 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       g_strlcpy (dur_str, "none", sizeof (dur_str));
     }
 
+    {
+      const char *flag_list[12] = {
+        "ro", "", "", "",
+        "preroll", "discont", "incaps", "gap",
+        "delta_unit", "media1", "media2", "media3"
+      };
+      int i;
+      char *end = flag_str;
+      end[0] = '\0';
+      for (i = 0; i < 12; i++) {
+        if (GST_MINI_OBJECT_CAST (buf)->flags & (1 << i)) {
+          strcpy (end, flag_list[i]);
+          end += strlen (end);
+          end[0] = ' ';
+          end[1] = '\0';
+          end++;
+        }
+      }
+    }
+
     sink->last_message =
         g_strdup_printf ("chain   ******* < (%5d bytes, timestamp: %s"
         ", duration: %s, offset: %" G_GINT64_FORMAT ", offset_end: %"
-        G_GINT64_FORMAT ", flags: %d) %p", GST_BUFFER_SIZE (buf), ts_str,
+        G_GINT64_FORMAT ", flags: %d %s) %p", GST_BUFFER_SIZE (buf), ts_str,
         dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
-        GST_MINI_OBJECT_CAST (buf)->flags, buf);
+        GST_MINI_OBJECT_CAST (buf)->flags, flag_str, buf);
     GST_OBJECT_UNLOCK (sink);
 
     gst_fake_sink_notify_last_message (sink);
