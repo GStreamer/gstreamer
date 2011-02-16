@@ -36,7 +36,7 @@
  * asks for the discovery to begin (through gst_discoverer_start()).
  *
  * All the information is returned in a #GstDiscovererInfo structure.
- * 
+ *
  * Since: 0.10.31
  */
 
@@ -396,12 +396,16 @@ _event_probe (GstPad * pad, GstEvent * event, PrivateStream * ps)
     /* If preroll is complete, drop these tags - the collected information is
      * possibly already being processed and adding more tags would be racy */
     if (G_LIKELY (ps->dc->priv->processing)) {
+      GST_DEBUG_OBJECT (pad, "private stream %p old tags %" GST_PTR_FORMAT, ps,
+          ps->tags);
       tmp = gst_tag_list_merge (ps->tags, tl, GST_TAG_MERGE_APPEND);
       if (ps->tags)
         gst_tag_list_free (ps->tags);
       ps->tags = tmp;
+      GST_DEBUG_OBJECT (pad, "private stream %p new tags %" GST_PTR_FORMAT, ps,
+          tmp);
     } else
-      GST_DEBUG_OBJECT (ps->dc, "Dropping tags since preroll is done");
+      GST_DEBUG_OBJECT (pad, "Dropping tags since preroll is done");
     DISCO_UNLOCK (ps->dc);
   }
 
@@ -844,10 +848,14 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
     if (gst_structure_id_has_field (topology, _TAGS_QUARK)) {
       gst_structure_id_get (topology, _TAGS_QUARK,
           GST_TYPE_STRUCTURE, &tags, NULL);
+
+      GST_DEBUG ("Merge tags %" GST_PTR_FORMAT, tags);
+
       cont->parent.tags =
           gst_tag_list_merge (cont->parent.tags, (GstTagList *) tags,
           GST_TAG_MERGE_APPEND);
       gst_tag_list_free (tags);
+      GST_DEBUG ("Container info tags %" GST_PTR_FORMAT, tmp);
     }
 
     for (i = 0; i < len; i++) {
@@ -965,7 +973,8 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
 {
   gboolean done = FALSE;
 
-  GST_DEBUG ("got a %s message", GST_MESSAGE_TYPE_NAME (msg));
+  GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "got a %s message",
+      GST_MESSAGE_TYPE_NAME (msg));
 
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ERROR:{
@@ -973,8 +982,8 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       gchar *debug;
 
       gst_message_parse_error (msg, &gerr, &debug);
-      GST_WARNING ("Got an error [debug:%s]", debug);
-      GST_WARNING ("Got an error [message:%s]", gerr->message);
+      GST_WARNING_OBJECT (GST_MESSAGE_SRC (msg),
+          "Got an error [debug:%s], [message:%s]", debug, gerr->message);
       dc->priv->current_error = gerr;
       g_free (debug);
 
@@ -1005,7 +1014,8 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
           "structure %" GST_PTR_FORMAT, msg->structure);
       if (sttype == _MISSING_PLUGIN_QUARK) {
-        GST_DEBUG ("Setting result to MISSING_PLUGINS");
+        GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
+            "Setting result to MISSING_PLUGINS");
         dc->priv->current_info->result = GST_DISCOVERER_MISSING_PLUGINS;
         dc->priv->current_info->misc = gst_structure_copy (msg->structure);
       } else if (sttype == _STREAM_TOPOLOGY_QUARK) {
@@ -1019,7 +1029,7 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       GstTagList *tl, *tmp;
 
       gst_message_parse_tag (msg, &tl);
-      GST_DEBUG ("Got tags %" GST_PTR_FORMAT, tl);
+      GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "Got tags %" GST_PTR_FORMAT, tl);
       /* Merge with current tags */
       tmp =
           gst_tag_list_merge (dc->priv->current_info->tags, tl,
@@ -1028,6 +1038,8 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       if (dc->priv->current_info->tags)
         gst_tag_list_free (dc->priv->current_info->tags);
       dc->priv->current_info->tags = tmp;
+      GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "Current info %p, tags %"
+          GST_PTR_FORMAT, dc->priv->current_info, tmp);
     }
       break;
 
@@ -1221,11 +1233,11 @@ beach:
 /**
  * gst_discoverer_start:
  * @discoverer: A #GstDiscoverer
- * 
+ *
  * Allow asynchronous discovering of URIs to take place.
  * A #GMainLoop must be available for #GstDiscoverer to properly work in
  * asynchronous mode.
- * 
+ *
  * Since: 0.10.31
  */
 void
@@ -1267,7 +1279,7 @@ gst_discoverer_start (GstDiscoverer * discoverer)
  *
  * Stop the discovery of any pending URIs and clears the list of
  * pending URIS (if any).
- * 
+ *
  * Since: 0.10.31
  */
 void
@@ -1331,7 +1343,7 @@ gst_discoverer_stop (GstDiscoverer * discoverer)
  *
  * Returns: %TRUE if the @uri was succesfully appended to the list of pending
  * uris, else %FALSE
- * 
+ *
  * Since: 0.10.31
  */
 gboolean
@@ -1369,7 +1381,7 @@ gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
  *
  * Returns: (transfer full): the result of the scanning. Can be %NULL if an
  * error occurred.
- * 
+ *
  * Since: 0.10.31
  */
 GstDiscovererInfo *
@@ -1424,7 +1436,7 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
  * If an error occurred when creating the discoverer, @err will be set
  * accordingly and %NULL will be returned. If @err is set, the caller must
  * free it when no longer needed using g_error_free().
- * 
+ *
  * Since: 0.10.31
  */
 GstDiscoverer *
