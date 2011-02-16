@@ -589,6 +589,7 @@ GST_START_TEST (test_custom_main_context)
   source = gst_bus_create_watch (bus);
   g_source_attach (source, ctx);
   g_source_set_callback (source, (GSourceFunc) cb_bus_call, loop, NULL);
+  g_source_unref (source);
   gst_object_unref (bus);
 
   GST_INFO ("starting pipeline");
