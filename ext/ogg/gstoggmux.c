@@ -292,6 +292,11 @@ gst_ogg_mux_ogg_pad_destroy_notify (GstCollectData * data)
     g_queue_free (oggpad->pagebuffers);
     oggpad->pagebuffers = NULL;
   }
+
+  if (oggpad->segment) {
+    gst_segment_free (oggpad->segment);
+    oggpad->segment = NULL;
+  }
 }
 
 static GstPadLinkReturn
@@ -319,11 +324,28 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_PAD_NAME (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-      /* We don't support NEWSEGMENT events */
-      gst_event_unref (event);
-      ret = FALSE;
+    case GST_EVENT_NEWSEGMENT:{
+      gboolean update;
+      gdouble rate;
+      gdouble applied_rate;
+      GstFormat format;
+      gint64 start, stop, position;
+
+      g_return_val_if_fail (ogg_pad->segment != NULL, FALSE);
+
+      gst_event_parse_new_segment_full (event, &update, &rate,
+          &applied_rate, &format, &start, &stop, &position);
+
+      /* We don't support non time NEWSEGMENT events */
+      if (format != GST_FORMAT_TIME) {
+        gst_event_unref (event);
+        return FALSE;
+      }
+      gst_segment_set_newsegment_full (ogg_pad->segment, update, rate,
+          applied_rate, format, start, stop, position);
+
       break;
+    }
     default:
       ret = TRUE;
       break;
@@ -427,6 +449,9 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       oggpad->pagebuffers = g_queue_new ();
       oggpad->map.headers = NULL;
       oggpad->map.queued = NULL;
+      oggpad->segment = gst_segment_new ();
+      gst_segment_set_newsegment (oggpad->segment, FALSE, 1, GST_FORMAT_TIME,
+          0, -1, 0);
 
       oggpad->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
       gst_pad_set_event_function (newpad,
@@ -1674,6 +1699,9 @@ gst_ogg_mux_init_collectpads (GstCollectPads * collect)
     oggpad->prev_delta = FALSE;
     oggpad->data_pushed = FALSE;
     oggpad->pagebuffers = g_queue_new ();
+    oggpad->segment = gst_segment_new ();
+    gst_segment_set_newsegment (oggpad->segment, FALSE, 1, GST_FORMAT_TIME,
+        0, -1, 0);
 
     walk = g_slist_next (walk);
   }

@@ -53,6 +53,8 @@ typedef struct
   GstOggStream map;
   gboolean have_type;
 
+  GstSegment *segment;
+
   /* These two buffers make a very simple queue - they enter as 'next_buffer'
    * and (usually) leave as 'buffer', except at EOS, when buffer will be NULL */
   GstBuffer *buffer;            /* the first waiting buffer for the pad */
