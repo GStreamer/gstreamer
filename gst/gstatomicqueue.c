@@ -65,7 +65,7 @@ new_queue_mem (guint size, gint pos)
   mem = g_new (GstAQueueMem, 1);
 
   /* we keep the size as a mask for performance */
-  mem->size = clp2 (size) - 1;
+  mem->size = clp2 (MAX (size, 16)) - 1;
   mem->array = g_new0 (gpointer, mem->size);
   mem->head = pos;
   mem->tail = pos;
