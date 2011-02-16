@@ -1,0 +1,117 @@
+mpegtsparse rebasing
+--------------------
+
+Rationale :
+-----------
+
+  mpegtsparse code is more sane to handle and work with.
+
+  We need a modular demuxer
+
+  We need to avoid duplicating code regarding mpeg-ts in a gazillion
+  elements and allow easy creatiof new elements.
+
+
+Battleplan :
+------------
+* Figure out code from mpegtsparse which would be also needed for a
+mpeg-ts demuxer (ex: packet/psi/pcr parsing).
+* Extract common code into a base mpegtsbase class.
+* Refactor mpegtsparse to subclass that base class.
+* Create a minimalistic demuxer that creates pads (based on PSI info)
+and outputs ES packets (let's say mpeg audio and video to start with)
+
+Potential subclasses :
+----------------------
+* MpegTSParse : Program splitter. Given an incoming multi-program
+  mpeg-ts stream, it can provide request pads for each program. Each
+  of those pads will contain the ts packets specific to that program.
+
+* TSDemux : Program demuxer. Given an incoming single or multi-program
+  mpeg-ts stream, it will reconstruct the original Program Streams of
+  the selected program and output them on dynamically created pads.
+
+* HDVSplitter : Given an incoming HDV mpeg-ts stream, it will locate
+  the beginning of new scenes and output a mpeg-ts stream with the
+  PAT/PMT/AUX packets properly ordered and marked with DISCONT, so
+  that the following pipeline will automatically cut up a tape dump
+  into individual scenes:
+   filesrc ! hdvsplit ! multifilesink next-file=discont
+
+Code/Design common to a program-spliter and a demuxer :
+-------------------------------------------------------
+* Parsing TS packets
+* Establishing PAT/PMT mapping
+* Handling the notions of Programs/Streams
+* Seeking ?
+
+  One proposal... would be to have the base class automatically create
+  all the structures (and relationships) for the following objects:
+
+  * Programs (from PAT/PMT, dunno if it could come from something
+  else)
+    * Program id
+    * Streams contained in that program (with links to them)
+    * Which stream contains the PCR
+    * Metadata ?
+  * Streams (ideally... in a table for fast access)
+    * We want to be able to have stream-type specific information
+      easily accessible also (like mpeg video specific data)
+  * Maybe some other info ???
+  
+  The subclasses would then be able to make their own decision based
+  on those objects.
+  Maybe we could have some virtual methods that will be called when a
+  new program is detected, a new stream is added, etc...
+
+  It is the subclass who decides what's to do with a given packet once
+  it's been parsed.
+  tsparse : forward it as-is to the pad corresponding to the program
+  tsdemux : forward it to the proper PS parser
+  hdvsplit : ?
+
+
+Ideas to be taken into account for a proper demuxer :
+-----------------------------------------------------
+* Push-based (with inacurrate seeking)
+* Pull-based (with fast *AND* accurate seeking)
+* Modular system to add stream-type specific helper parsing
+  * Doesn't have to be fully fledged, just enough to help any kind of
+  seeking and scanning code.
+* ...
+
+Problems to figure out :
+------------------------
+* clock
+  Needed for proper dvb playback. mpegtsdemux currently does internal
+  clock estimation... to provide a clock with PCR estimations.
+  A proper way to solve that would be to timestamp the buffers at the
+  source element using the system clock, and then adjusting the PCR
+  against those values. (i.e. doing the opposite of what's done in
+  mpegtsdemux, but it will be more accurate since the timestamping is
+  done at the source).
+  
+
+Bugs that need fixing :
+-----------------------
+* Perfomance : Creation/Destruction of buffers is slow
+  * => This is due to g_type_instance_create using a dogslow rwlock
+  which take up to 50% of gst_adapter_take_buffer()
+  => Bugzilla #585375 (performance and contention problems)
+
+Code structure:
+
+  MpegTSBase
+  +--- MpegTSParse
+  +--- TSDemux
+
+
+Known limitations and problems :
+--------------------------------
+* mpegtspacketizer
+  * Assumes 188 bytes packets. It should support all modes.
+  * offset/timestamp of incoming buffers need to be carried on to the
+  sub-buffers in order for several demuxer features to work correctly.
+* mpegtsparser
+  * SERIOUS room for improvement performance-wise (see callgrind)
+
