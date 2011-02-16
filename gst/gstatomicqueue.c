@@ -80,7 +80,7 @@ new_queue_mem (guint size, gint pos)
 
   /* we keep the size as a mask for performance */
   mem->size = clp2 (MAX (size, 16)) - 1;
-  mem->array = g_new0 (gpointer, mem->size);
+  mem->array = g_new0 (gpointer, mem->size + 1);
   mem->head = pos;
   mem->tail = pos;
   mem->next = NULL;
@@ -345,7 +345,7 @@ gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
       size = tail_mem->size;
 
       /* we're not full, continue */
-      if (tail - head < size)
+      if (tail - head <= size)
         break;
 
       /* else we need to grow the array, we store a mask so we have to add 1 */
