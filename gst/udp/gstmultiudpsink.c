@@ -44,6 +44,8 @@
 GST_DEBUG_CATEGORY_STATIC (multiudpsink_debug);
 #define GST_CAT_DEFAULT (multiudpsink_debug)
 
+#define UDP_MAX_SIZE 65507
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -496,6 +498,11 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
+  if (size > UDP_MAX_SIZE) {
+    GST_WARNING ("Attempting to send a UDP packet larger than maximum "
+        "size (%d > %d)", size, UDP_MAX_SIZE);
+  }
+
   sink->bytes_to_serve += size;
 
   /* grab lock while iterating and sending to clients, this should be
@@ -586,6 +593,11 @@ gst_multiudpsink_render_list (GstBaseSink * bsink, GstBufferList * list)
     msg.msg_iov = iov;
 
     while ((buf = gst_buffer_list_iterator_next (it))) {
+      if (GST_BUFFER_SIZE (buf) > UDP_MAX_SIZE) {
+        GST_WARNING ("Attempting to send a UDP packet larger than maximum "
+            "size (%d > %d)", GST_BUFFER_SIZE (buf), UDP_MAX_SIZE);
+      }
+
       msg.msg_iov[msg.msg_iovlen].iov_len = GST_BUFFER_SIZE (buf);
       msg.msg_iov[msg.msg_iovlen].iov_base = GST_BUFFER_DATA (buf);
       msg.msg_iovlen++;
