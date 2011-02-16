@@ -141,7 +141,8 @@ GST_START_TEST (test_get_effects_from_tl)
   g_object_get (G_OBJECT (source), "height", &tl_object_height, NULL);
   fail_unless (tl_object_height == 4);
 
-  effects = ges_timeline_object_get_effects (GES_TIMELINE_OBJECT (source));
+  effects = ges_timeline_object_get_top_effects (GES_TIMELINE_OBJECT (source));
+  fail_unless (g_list_length (effects) == 3);
   for (tmp = effects; tmp; tmp = tmp->next) {
     gint priority =
         ges_timeline_object_get_top_effect_position (GES_TIMELINE_OBJECT
@@ -215,7 +216,8 @@ GST_START_TEST (test_tl_effect)
   g_object_get (tl_effect, "height", &tl_object_height, NULL);
   fail_unless (tl_object_height == 4);
 
-  effects = ges_timeline_object_get_effects (GES_TIMELINE_OBJECT (tl_effect));
+  effects =
+      ges_timeline_object_get_top_effects (GES_TIMELINE_OBJECT (tl_effect));
   for (tmp = effects, i = 0; tmp; tmp = tmp->next, i++) {
     gint priority =
         ges_timeline_object_get_top_effect_position (GES_TIMELINE_OBJECT
@@ -297,7 +299,8 @@ GST_START_TEST (test_priorities_tl_object)
   g_object_get (tl_effect, "height", &tl_object_height, NULL);
   fail_unless (tl_object_height == 4);
 
-  effects = ges_timeline_object_get_effects (GES_TIMELINE_OBJECT (tl_effect));
+  effects =
+      ges_timeline_object_get_top_effects (GES_TIMELINE_OBJECT (tl_effect));
   for (tmp = effects, i = 0; tmp; tmp = tmp->next, i++) {
     gint priority =
         ges_timeline_object_get_top_effect_position (GES_TIMELINE_OBJECT

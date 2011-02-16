@@ -242,7 +242,7 @@ ges_timeline_object_add_track_object (GESTimelineObject *object, GESTrackObject
     *trobj);
 
 GList *
-ges_timeline_object_get_effects (GESTimelineObject *object);
+ges_timeline_object_get_top_effects (GESTimelineObject *object);
 
 gint 
 ges_timeline_object_get_top_effect_position (GESTimelineObject *object,

@@ -849,7 +849,7 @@ sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object)
 }
 
 /**
-* ges_timeline_object_get_effects:
+* ges_timeline_object_get_top_effects:
 * @object: The origin #GESTimelineObject
 *
 * Get effects applied on @object
@@ -860,17 +860,17 @@ sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object)
 * unref each #GESTrackEffect and free the #GList.
 */
 GList *
-ges_timeline_object_get_effects (GESTimelineObject * object)
+ges_timeline_object_get_top_effects (GESTimelineObject * object)
 {
   GList *tmp, *ret;
+  guint i;
 
   ret = NULL;
 
-  for (tmp = object->priv->trackobjects; tmp; tmp = tmp->next) {
-    if (GES_IS_TRACK_EFFECT (tmp->data)) {
-      ret = g_list_append (ret, tmp->data);
-      g_object_ref (tmp->data);
-    }
+  for (tmp = object->priv->trackobjects, i = 0; i < object->priv->nb_effects;
+      tmp = tmp->next, i++) {
+    ret = g_list_append (ret, tmp->data);
+    g_object_ref (tmp->data);
   }
 
   return ret;
