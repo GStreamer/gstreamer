@@ -282,6 +282,8 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       G_TYPE_NONE, 2, GST_TYPE_ELEMENT, G_TYPE_PARAM);
 
   klass->create_gnl_object = ges_track_object_create_gnl_object_func;
+  /*  There is no 'get_props_hastable' default implementation */
+  klass->get_props_hastable = NULL;
 }
 
 static void

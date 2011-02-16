@@ -97,6 +97,7 @@ struct _GESTrackObject {
  * GESTrackObjectClass:
  * @gnlobject_factorytype: name of the GNonLin GStElementFactory type to use.
  * @create_gnl_object: method to create the GNonLin container object.
+ * @get_props_hastable: method to list child properties that user could like to configure.
  * The default implementation will create an object of type @gnlobject_factorytype
  * and call @create_element.
  * @create_element: method to return the GstElement to put in the gnlobject.
