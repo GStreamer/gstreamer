@@ -246,11 +246,11 @@ ges_timeline_object_get_effects (GESTimelineObject *object);
 
 gint 
 ges_timeline_object_get_top_effect_position (GESTimelineObject *object,
-            GESTrackOperation *effect);
+            GESTrackEffect *effect);
 
 gboolean
 ges_timeline_object_set_top_effect_priority (GESTimelineObject *object,
-      GESTrackOperation *effect, guint newpriority);
+      GESTrackEffect *effect, guint newpriority);
 
 G_END_DECLS
 

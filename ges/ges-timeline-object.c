@@ -261,26 +261,26 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   /**
    * GESTimelineObject::effect-added
    * @object: the #GESTimelineObject
-   * @efect: the #GESTrackOperation that was added.
+   * @effect: the #GESTrackEffect that was added.
    *
    * Will be emitted after an effect was added to the object.
    */
   ges_timeline_object_signals[EFFECT_ADDED] =
       g_signal_new ("effect-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
-      G_TYPE_NONE, 1, GES_TYPE_TRACK_OPERATION);
+      G_TYPE_NONE, 1, GES_TYPE_TRACK_EFFECT);
 
   /**
    * GESTimelineObject::effect-removed
    * @object: the #GESTimelineObject
-   * @efect: the #GESTrackOperation that was added.
+   * @effect: the #GESTrackEffect that was added.
    *
    * Will be emitted after an effect was remove from the object.
    */
   ges_timeline_object_signals[EFFECT_REMOVED] =
       g_signal_new ("effect-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
-      G_TYPE_NONE, 1, GES_TYPE_TRACK_OPERATION);
+      G_TYPE_NONE, 1, GES_TYPE_TRACK_EFFECT);
 
   klass->need_fill_track = TRUE;
 }
@@ -397,9 +397,10 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   ObjectMapping *mapping;
   GList *tmp;
   GESTimelineObjectPrivate *priv = object->priv;
+  gboolean is_effect = GES_IS_TRACK_EFFECT (trobj);
 
   GST_LOG ("Got a TrackObject : %p , setting the timeline object as its"
-      "creator. Is a TrackOperation %i", trobj, GES_IS_TRACK_OPERATION (trobj));
+      "creator. Is a TrackEffect %i", trobj, is_effect);
 
   if (!trobj)
     return FALSE;
@@ -418,14 +419,14 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
 
   mapping->priority_offset = priv->nb_effects;
 
-  /* If the trackobject is an operation:
-   *  - We add it on top of the list of TrackOperation
+  /* If the trackobject is an effect:
+   *  - We add it on top of the list of TrackEffect
    *  - We put all TrackObject present in the TimelineObject
    *    which are not TrackEffect on top of them
    *
    * FIXME: Let the full control over priorities to the user
    */
-  if (GES_IS_TRACK_OPERATION (trobj)) {
+  if (is_effect) {
     GST_DEBUG
         ("Moving non on top effect under other TrackObject-s, nb effects %i",
         priv->nb_effects);
@@ -444,7 +445,7 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
 
     /* emit 'effect-added' */
     g_signal_emit (object, ges_timeline_object_signals[EFFECT_ADDED], 0,
-        GES_TRACK_OPERATION (trobj));
+        GES_TRACK_EFFECT (trobj));
   }
 
   object->priv->trackobjects =
@@ -525,10 +526,10 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
   object->priv->trackobjects =
       g_list_remove (object->priv->trackobjects, trackobject);
 
-  if (GES_IS_TRACK_OPERATION (trackobject)) {
+  if (GES_IS_TRACK_EFFECT (trackobject)) {
     /* emit 'object-removed' */
     g_signal_emit (object, ges_timeline_object_signals[EFFECT_REMOVED], 0,
-        GES_TRACK_OPERATION (trackobject));
+        GES_TRACK_EFFECT (trackobject));
   }
 
   ges_track_object_set_timeline_object (trackobject, NULL);
@@ -848,10 +849,10 @@ sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object)
 *
 * Get effects applied on @object
 *
-* Returns: a #GList of the #GESTrackOperation that are applied on
+* Returns: a #GList of the #GESTrackEffect that are applied on
 * @object order by ascendant priorities.
 * The refcount of the objects will be increased. The user will have to
-* unref each #GESTrackOperation and free the #GList.
+* unref each #GESTrackEffect and free the #GList.
 */
 GList *
 ges_timeline_object_get_effects (GESTimelineObject * object)
@@ -882,7 +883,7 @@ ges_timeline_object_get_effects (GESTimelineObject * object)
 */
 gint
 ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
-    GESTrackOperation * effect)
+    GESTrackEffect * effect)
 {
   return find_object_mapping (object,
       GES_TRACK_OBJECT (effect))->priority_offset;
@@ -901,7 +902,7 @@ ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
 */
 gboolean
 ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
-    GESTrackOperation * effect, guint newpriority)
+    GESTrackEffect * effect, guint newpriority)
 {
   GList *tmp;
   guint inc;

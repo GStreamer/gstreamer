@@ -18,12 +18,10 @@
  */
 
 #include <ges/ges.h>
-#include <ges/ges-track-operation.h>
 #include <gst/check/gstcheck.h>
 
 void
-effect_added_cb (GESTimelineObject * obj, GESTrackOperation * trop,
-    gpointer data);
+effect_added_cb (GESTimelineObject * obj, GESTrackEffect * trop, gpointer data);
 void
 deep_prop_changed_cb (GESTrackObject * obj, GstElement * element,
     GParamSpec * spec);
@@ -148,7 +146,7 @@ GST_START_TEST (test_get_effects_from_tl)
     gint priority =
         ges_timeline_object_get_top_effect_position (GES_TIMELINE_OBJECT
         (source),
-        GES_TRACK_OPERATION (tmp->data));
+        GES_TRACK_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
     fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
     effect_prio = priority;
@@ -222,11 +220,11 @@ GST_START_TEST (test_tl_effect)
     gint priority =
         ges_timeline_object_get_top_effect_position (GES_TIMELINE_OBJECT
         (tl_effect),
-        GES_TRACK_OPERATION (tmp->data));
+        GES_TRACK_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
     fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
-    fail_unless (ges_track_object_get_track (GES_TRACK_OBJECT (tmp->
-                data))->type == track_type[i]);
+    fail_unless (ges_track_object_get_track (GES_TRACK_OBJECT (tmp->data))->
+        type == track_type[i]);
     effect_prio = priority;
 
     g_object_unref (tmp->data);
@@ -286,13 +284,13 @@ GST_START_TEST (test_priorities_tl_object)
           GES_TRACK_OBJECT (tck_effect1)));
 
   fail_unless (ges_timeline_object_set_top_effect_priority (GES_TIMELINE_OBJECT
-          (tl_effect), GES_TRACK_OPERATION (tck_effect1), 0));
+          (tl_effect), GES_TRACK_EFFECT (tck_effect1), 0));
 
   fail_unless (ges_track_object_get_priority (GES_TRACK_OBJECT (tck_effect)) ==
       3);
 
   fail_unless (ges_timeline_object_set_top_effect_priority (GES_TIMELINE_OBJECT
-          (tl_effect), GES_TRACK_OPERATION (tck_effect1), 3));
+          (tl_effect), GES_TRACK_EFFECT (tck_effect1), 3));
   fail_unless (ges_track_object_get_priority (GES_TRACK_OBJECT (tck_effect)) ==
       2);
 
@@ -304,7 +302,7 @@ GST_START_TEST (test_priorities_tl_object)
     gint priority =
         ges_timeline_object_get_top_effect_position (GES_TIMELINE_OBJECT
         (tl_effect),
-        GES_TRACK_OPERATION (tmp->data));
+        GES_TRACK_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
     fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
     effect_prio = priority;
@@ -369,12 +367,11 @@ GST_START_TEST (test_track_effect_set_properties)
 GST_END_TEST;
 
 void
-effect_added_cb (GESTimelineObject * obj, GESTrackOperation * trop,
-    gpointer data)
+effect_added_cb (GESTimelineObject * obj, GESTrackEffect * trop, gpointer data)
 {
   GST_DEBUG ("Effect added");
   fail_unless (GES_IS_TIMELINE_OBJECT (obj));
-  fail_unless (GES_IS_TRACK_OPERATION (trop));
+  fail_unless (GES_IS_TRACK_EFFECT (trop));
 }
 
 void
