@@ -1896,7 +1896,7 @@ static GstStaticCaps mpegts_caps = GST_STATIC_CAPS ("video/mpegts, "
 /* Check for sync byte, error_indicator == 0 and packet has payload */
 #define IS_MPEGTS_HEADER(data) (((data)[0] == 0x47) && \
                                 (((data)[1] & 0x80) == 0x00) && \
-                                (((data)[3] & 0x10) == 0x10))
+                                (((data)[3] & 0x30) != 0x00))
 
 /* Helper function to search ahead at intervals of packet_size for mpegts
  * headers */
