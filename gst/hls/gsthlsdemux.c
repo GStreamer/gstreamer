@@ -378,12 +378,10 @@ gst_hls_demux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX (gst_pad_get_parent (pad));
 
-  if (demux->playlist == NULL) {
-    gst_buffer_ref (buf);
+  if (demux->playlist == NULL)
     demux->playlist = buf;
-  } else {
+  else
     demux->playlist = gst_buffer_join (demux->playlist, buf);
-  }
 
   gst_object_unref (demux);
 
