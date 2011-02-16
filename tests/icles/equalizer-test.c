@@ -182,8 +182,6 @@ main (int argc, char **argv)
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
-  GST_DEBUG_CATEGORY_INIT (equalizer_test_debug, "equalizertest", 0, "eqtest");
-
   /* command line option parsing */
   ctx = g_option_context_new ("FILENAME");
   g_option_context_add_group (ctx, gst_init_get_option_group ());
@@ -193,6 +191,8 @@ main (int argc, char **argv)
     g_error ("Error parsing command line options: %s", opt_err->message);
     return -1;
   }
+
+  GST_DEBUG_CATEGORY_INIT (equalizer_test_debug, "equalizertest", 0, "eqtest");
 
   if (filenames == NULL || *filenames == NULL) {
     g_printerr ("Please specify a file to play back\n");
