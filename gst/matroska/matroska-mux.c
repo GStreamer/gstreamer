@@ -46,6 +46,7 @@
 #endif
 
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <gst/riff/riff-media.h>
@@ -89,7 +90,7 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
   "width = (int) [ 16, 4096 ], " \
   "height = (int) [ 16, 4096 ] "
 
-/* FIXME: 
+/* FIXME:
  * * require codec data, etc as needed
  */
 
@@ -571,7 +572,7 @@ gst_matroska_mux_reset (GstElement * element)
  * @pad: Pad which received the event.
  * @event: Received event.
  *
- * handle events - copied from oggmux without understanding 
+ * handle events - copied from oggmux without understanding
  *
  * Returns: #TRUE on success.
  */
@@ -1790,32 +1791,55 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
  */
 static GstPad *
 gst_matroska_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * pad_name)
+    GstPadTemplate * templ, const gchar * req_name)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
   GstMatroskaMux *mux = GST_MATROSKA_MUX (element);
   GstMatroskaPad *collect_pad;
   GstPad *newpad = NULL;
   gchar *name = NULL;
+  const gchar *pad_name = NULL;
   GstPadSetCapsFunction setcapsfunc = NULL;
   GstMatroskaTrackContext *context = NULL;
+  gint pad_id;
 
   if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
-    name = g_strdup_printf ("audio_%d", mux->num_a_streams++);
+    /* don't mix named and unnamed pads, if the pad already exists we fail when
+     * trying to add it */
+    if (req_name != NULL && sscanf (req_name, "audio_%d", &pad_id) == 1) {
+      pad_name = req_name;
+    } else {
+      name = g_strdup_printf ("audio_%d", mux->num_a_streams++);
+      pad_name = name;
+    }
     setcapsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_audio_pad_setcaps);
     context = (GstMatroskaTrackContext *)
         g_new0 (GstMatroskaTrackAudioContext, 1);
     context->type = GST_MATROSKA_TRACK_TYPE_AUDIO;
     context->name = g_strdup ("Audio");
   } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
-    name = g_strdup_printf ("video_%d", mux->num_v_streams++);
+    /* don't mix named and unnamed pads, if the pad already exists we fail when
+     * trying to add it */
+    if (req_name != NULL && sscanf (req_name, "video_%d", &pad_id) == 1) {
+      pad_name = req_name;
+    } else {
+      name = g_strdup_printf ("video_%d", mux->num_v_streams++);
+      pad_name = name;
+    }
     setcapsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_video_pad_setcaps);
     context = (GstMatroskaTrackContext *)
         g_new0 (GstMatroskaTrackVideoContext, 1);
     context->type = GST_MATROSKA_TRACK_TYPE_VIDEO;
     context->name = g_strdup ("Video");
   } else if (templ == gst_element_class_get_pad_template (klass, "subtitle_%d")) {
-    name = g_strdup_printf ("subtitle_%d", mux->num_t_streams++);
+    /* don't mix named and unnamed pads, if the pad already exists we fail when
+     * trying to add it */
+    if (req_name != NULL && sscanf (req_name, "subtitle_%d", &pad_id) == 1) {
+      pad_name = req_name;
+    } else {
+      name = g_strdup_printf ("subtitle_%d", mux->num_t_streams++);
+      pad_name = name;
+    }
     setcapsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_subtitle_pad_setcaps);
     context = (GstMatroskaTrackContext *)
         g_new0 (GstMatroskaTrackSubtitleContext, 1);
@@ -1826,7 +1850,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     return NULL;
   }
 
-  newpad = gst_pad_new_from_template (templ, name);
+  newpad = gst_pad_new_from_template (templ, pad_name);
   g_free (name);
   collect_pad = (GstMatroskaPad *)
       gst_collect_pads_add_pad_full (mux->collect, newpad,
@@ -1850,10 +1874,22 @@ gst_matroska_mux_request_new_pad (GstElement * element,
 
   gst_pad_set_setcaps_function (newpad, setcapsfunc);
   gst_pad_set_active (newpad, TRUE);
-  gst_element_add_pad (element, newpad);
+  if (!gst_element_add_pad (element, newpad))
+    goto pad_add_failed;
+
   mux->num_streams++;
 
+  GST_DEBUG_OBJECT (newpad, "Added new request pad");
+
   return newpad;
+
+  /* ERROR cases */
+pad_add_failed:
+  {
+    GST_WARNING_OBJECT (mux, "Adding the new pad '%s' failed", pad_name);
+    gst_object_unref (newpad);
+    return NULL;
+  }
 }
 
 /**
@@ -2350,7 +2386,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
  * @mux: #GstMatroskaMux
  * @popped: True if at least one buffer was popped from #GstCollectPads
  *
- * Find a pad with the oldest data 
+ * Find a pad with the oldest data
  * (data from this pad should be written first).
  *
  * Returns: Selected pad.
@@ -2397,7 +2433,7 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux, gboolean * popped)
  * @flags: Buffer flags.
  *
  * Create a buffer containing buffer header.
- * 
+ *
  * Returns: New buffer.
  */
 static GstBuffer *
