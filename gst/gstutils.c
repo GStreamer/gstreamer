@@ -1593,8 +1593,9 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
         return FALSE;
       }
       if (GST_PAD_PEER (srcpad) != NULL) {
-        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is already linked",
-            GST_DEBUG_PAD_NAME (srcpad));
+        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+            "pad %s:%s is already linked to %s:%s", GST_DEBUG_PAD_NAME (srcpad),
+            GST_DEBUG_PAD_NAME (GST_PAD_PEER (srcpad)));
         gst_object_unref (srcpad);
         return FALSE;
       }
@@ -1627,8 +1628,10 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
         return FALSE;
       }
       if (GST_PAD_PEER (destpad) != NULL) {
-        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is already linked",
-            GST_DEBUG_PAD_NAME (destpad));
+        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+            "pad %s:%s is already linked to %s:%s",
+            GST_DEBUG_PAD_NAME (destpad),
+            GST_DEBUG_PAD_NAME (GST_PAD_PEER (destpad)));
         gst_object_unref (destpad);
         return FALSE;
       }
