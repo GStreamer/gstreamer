@@ -1111,6 +1111,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_uri_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_parse_error_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_param_spec_fraction_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_progress_type_get_type ()));
 
   gst_deinitialized = TRUE;
   GST_INFO ("deinitialized GStreamer");
