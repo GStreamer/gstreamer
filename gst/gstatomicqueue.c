@@ -374,7 +374,6 @@ gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
 /**
  * gst_atomic_queue_length:
  * @queue: a #GstAtomicQueue
- * @data: the data
  *
  * Get the amount of items in the queue.
  *
