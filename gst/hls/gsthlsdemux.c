@@ -649,7 +649,7 @@ gst_hls_demux_update_thread (GstHLSDemux * demux)
 
     /* fetch the next fragment */
     if (!gst_hls_demux_get_next_fragment (demux, TRUE)) {
-      if (!demux->end_of_playlist)
+      if (!demux->end_of_playlist && !demux->cancelled)
         GST_ERROR_OBJECT (demux, "Could not fetch the next fragment");
       goto quit;
     }
