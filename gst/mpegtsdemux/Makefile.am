@@ -22,6 +22,6 @@ noinst_HEADERS = \
 	gstmpegdesc.h   \
 	mpegtsbase.h	\
 	mpegtspacketizer.h \
-	mpegtsparse.c \
+	mpegtsparse.h \
 	tsdemux.h
 
