@@ -764,7 +764,6 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
 encode_failed:
   {
     GST_ELEMENT_ERROR (faac, LIBRARY, ENCODE, (NULL), (NULL));
-    gst_buffer_unref (outbuf);
     return GST_FLOW_ERROR;
   }
 }
