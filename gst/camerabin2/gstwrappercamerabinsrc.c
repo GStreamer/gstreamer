@@ -238,7 +238,7 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
 
     /* send the newseg */
     GST_DEBUG_OBJECT (self, "Starting video recording, pushing newsegment");
-    gst_pad_push_event (pad, gst_event_new_new_segment (FALSE, 1.0,
+    gst_pad_push_event (pad, gst_event_new_new_segment (TRUE, 1.0,
             GST_FORMAT_TIME, start, -1, 0));
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_RUNNING;
 
