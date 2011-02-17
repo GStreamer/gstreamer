@@ -1858,6 +1858,11 @@ gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
       GST_LOG_OBJECT (avi, "Added pad %s with caps %" GST_PTR_FORMAT,
           GST_PAD_NAME (stream->pad), GST_PAD_CAPS (stream->pad));
       gst_element_add_pad ((GstElement *) avi, stream->pad);
+
+      if (avi->element_index)
+        gst_index_get_writer_id (avi->element_index,
+            GST_OBJECT_CAST (stream->pad), &stream->index_id);
+
       stream->exposed = TRUE;
       if (avi->main_stream == -1)
         avi->main_stream = i;
@@ -2264,10 +2269,6 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   gst_pad_set_convert_function (pad,
       GST_DEBUG_FUNCPTR (gst_avi_demux_src_convert));
 #endif
-
-  if (avi->element_index)
-    gst_index_get_writer_id (avi->element_index, GST_OBJECT_CAST (stream->pad),
-        &stream->index_id);
 
   stream->num = avi->num_streams;
 
