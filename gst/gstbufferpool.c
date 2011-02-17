@@ -35,6 +35,7 @@
 #include <sys/types.h>
 
 #include "gstinfo.h"
+#include "gstquark.h"
 
 #include "gstbufferpool.h"
 
@@ -92,12 +93,13 @@ gst_buffer_pool_init (GstBufferPool * pool)
 {
   pool->priv = GST_BUFFER_POOL_GET_PRIVATE (pool);
 
-  pool->config = gst_structure_new ("GstBufferPoolConfig",
-      "size", G_TYPE_UINT, 0,
-      "min-buffers", G_TYPE_UINT, 0,
-      "max-buffers", G_TYPE_UINT, 0,
-      "prefix", G_TYPE_UINT, 0,
-      "postfix", G_TYPE_UINT, 0, "align", G_TYPE_UINT, 1, NULL);
+  pool->config = gst_structure_id_new (GST_QUARK (BUFFER_POOL_CONFIG),
+      GST_QUARK (SIZE), G_TYPE_UINT, 0,
+      GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, 0,
+      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, 0,
+      GST_QUARK (PREFIX), G_TYPE_UINT, 0,
+      GST_QUARK (POSTFIX), G_TYPE_UINT, 0,
+      GST_QUARK (ALIGN), G_TYPE_UINT, 1, NULL);
   pool->poll = gst_poll_new_timer ();
   pool->queue = gst_atomic_queue_new (10);
   default_set_flushing (pool, TRUE);
@@ -289,12 +291,13 @@ gst_buffer_pool_config_set (GstStructure * config, guint size,
 {
   g_return_if_fail (config != NULL);
 
-  gst_structure_set (config,
-      "size", G_TYPE_UINT, size,
-      "min-buffers", G_TYPE_UINT, min_buffers,
-      "max-buffers", G_TYPE_UINT, max_buffers,
-      "prefix", G_TYPE_UINT, prefix,
-      "postfix", G_TYPE_UINT, postfix, "align", G_TYPE_UINT, align, NULL);
+  gst_structure_id_set (config,
+      GST_QUARK (SIZE), G_TYPE_UINT, size,
+      GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
+      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
+      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
+      GST_QUARK (POSTFIX), G_TYPE_UINT, postfix,
+      GST_QUARK (ALIGN), G_TYPE_UINT, align, NULL);
 }
 
 /**
@@ -316,12 +319,13 @@ gst_buffer_pool_config_get (GstStructure * config, guint * size,
 {
   g_return_val_if_fail (config != NULL, FALSE);
 
-  return gst_structure_get (config,
-      "size", G_TYPE_UINT, size,
-      "min-buffers", G_TYPE_UINT, min_buffers,
-      "max-buffers", G_TYPE_UINT, max_buffers,
-      "prefix", G_TYPE_UINT, prefix,
-      "postfix", G_TYPE_UINT, postfix, "align", G_TYPE_UINT, align, NULL);
+  return gst_structure_id_get (config,
+      GST_QUARK (SIZE), G_TYPE_UINT, size,
+      GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
+      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
+      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
+      GST_QUARK (POSTFIX), G_TYPE_UINT, postfix,
+      GST_QUARK (ALIGN), G_TYPE_UINT, align, NULL);
 }
 
 static GstFlowReturn
