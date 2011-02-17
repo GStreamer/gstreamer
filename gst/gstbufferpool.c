@@ -146,18 +146,33 @@ flush_buffers (GstBufferPool * pool)
   }
 }
 
+/* the default implementation for allocating and freeing the
+ * buffers when changing the flushing state */
 static void
 default_set_flushing (GstBufferPool * pool, gboolean flushing)
 {
-  g_atomic_int_set (&pool->flushing, flushing);
+  guint i;
+  GstBufferPoolPrivate *priv = pool->priv;
 
   if (flushing) {
-    /* write the control socket so that waiters get woken up and can check the
-     * flushing flag we set above */
-    gst_poll_write_control (pool->poll);
+    /* clear the pool */
     flush_buffers (pool);
   } else {
-    gst_poll_read_control (pool->poll);
+    GstBufferPoolClass *pclass;
+
+    pclass = GST_BUFFER_POOL_GET_CLASS (pool);
+
+    if (G_LIKELY (pclass->alloc_buffer)) {
+      /* we need to prealloc buffers */
+      for (i = priv->min_buffers; i > 0; i--) {
+        GstBuffer *buffer;
+
+        if (pclass->alloc_buffer (pool, &buffer, NULL) == GST_FLOW_OK) {
+          /* store in the queue */
+          gst_buffer_pool_release_buffer (pool, buffer);
+        }
+      }
+    }
   }
 }
 
@@ -178,37 +193,27 @@ gst_buffer_pool_set_flushing (GstBufferPool * pool, gboolean flushing)
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
+  if (!g_atomic_int_compare_and_exchange (&pool->flushing, !flushing, flushing))
+    return;
+
+  if (flushing)
+    gst_poll_write_control (pool->poll);
+
   if (G_LIKELY (pclass->set_flushing))
     pclass->set_flushing (pool, flushing);
+
+  if (!flushing)
+    gst_poll_read_control (pool->poll);
 }
 
 static gboolean
 default_set_config (GstBufferPool * pool, GstStructure * config)
 {
-  guint i;
-  GstBufferPoolClass *pclass;
   GstBufferPoolPrivate *priv = pool->priv;
-
-  pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
   /* parse the config and keep around */
   gst_buffer_pool_config_get (config, &priv->size, &priv->min_buffers,
       &priv->max_buffers, &priv->prefix, &priv->postfix, &priv->align);
-
-  /* we need to prealloc buffers */
-  for (i = priv->min_buffers; i > 0; i--) {
-    GstBuffer *buffer;
-
-    if (G_LIKELY (pclass->alloc_buffer)) {
-      if (!pclass->alloc_buffer (pool, &buffer, NULL))
-        return FALSE;
-    } else
-      return FALSE;
-
-    /* store in the queue */
-    gst_atomic_queue_push (pool->queue, buffer);
-    gst_poll_write_control (pool->poll);
-  }
 
   return TRUE;
 }
