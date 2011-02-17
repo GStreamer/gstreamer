@@ -129,8 +129,9 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
   associations[1].value = pos;
 
   gst_index_add_associationv (demux->index, demux->index_id,
-      (keyframe) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
-      2, (const GstIndexAssociation *) &associations);
+      (keyframe) ? GST_ASSOCIATION_FLAG_KEY_UNIT :
+      GST_ASSOCIATION_FLAG_DELTA_UNIT, 2,
+      (const GstIndexAssociation *) &associations);
 
   if (pos > demux->index_max_pos)
     demux->index_max_pos = pos;
