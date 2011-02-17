@@ -633,20 +633,23 @@ gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
   g_return_val_if_fail (writer != NULL, FALSE);
 
   if (GST_IS_PAD (writer)) {
-    GstElement *element =
-        (GstElement *) gst_object_get_parent (GST_OBJECT (writer));
+    GstObject *element = gst_object_get_parent (GST_OBJECT (writer));
     gchar *name;
 
     name = gst_object_get_name (writer);
-    *writer_string = g_strdup_printf ("%s.%s",
-        g_type_name (G_OBJECT_TYPE (element)), name);
+    if (element) {
+      *writer_string = g_strdup_printf ("%s.%s",
+          G_OBJECT_TYPE_NAME (element), name);
+      gst_object_unref (element);
+    } else {
+      *writer_string = name;
+      name = NULL;
+    }
 
-    gst_object_unref (element);
     g_free (name);
 
   } else {
-    *writer_string =
-        g_strdup_printf ("%s", g_type_name (G_OBJECT_TYPE (writer)));
+    *writer_string = g_strdup (G_OBJECT_TYPE_NAME (writer));
   }
 
   return TRUE;
