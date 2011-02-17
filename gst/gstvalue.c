@@ -2017,6 +2017,12 @@ CREATE_USERIALIZATION (uint, UINT);
 CREATE_USERIALIZATION (uint64, UINT64);
 CREATE_USERIALIZATION (ulong, ULONG);
 
+/* FIXME 0.11: remove this again, plugins shouldn't have uchar properties */
+#ifndef G_MAXUCHAR
+#define G_MAXUCHAR 255
+#endif
+CREATE_USERIALIZATION (uchar, UCHAR);
+
 /**********
  * double *
  **********/
@@ -4930,6 +4936,8 @@ _gst_value_initialize (void)
   REGISTER_SERIALIZATION (G_TYPE_UINT, uint);
   REGISTER_SERIALIZATION (G_TYPE_UINT64, uint64);
   REGISTER_SERIALIZATION (G_TYPE_ULONG, ulong);
+
+  REGISTER_SERIALIZATION (G_TYPE_UCHAR, uchar);
 
   g_value_register_transform_func (GST_TYPE_FOURCC, G_TYPE_STRING,
       gst_value_transform_fourcc_string);
