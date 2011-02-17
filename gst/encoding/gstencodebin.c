@@ -1203,26 +1203,30 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     last = cspace;
 
   } else if (GST_IS_ENCODING_AUDIO_PROFILE (sprof)) {
-    GstElement *aconv, *ares, *arate;
+    GstElement *aconv, *ares, *arate, *aconv2;
 
     GST_LOG ("Adding conversion elements for audio stream");
 
     arate = gst_element_factory_make ("audiorate", NULL);
     g_object_set (arate, "tolerance", (guint64) ebin->tolerance, NULL);
     aconv = gst_element_factory_make ("audioconvert", NULL);
+    aconv2 = gst_element_factory_make ("audioconvert", NULL);
     ares = gst_element_factory_make ("audioresample", NULL);
 
-    gst_bin_add_many ((GstBin *) ebin, arate, aconv, ares, NULL);
+    gst_bin_add_many ((GstBin *) ebin, arate, aconv, ares, aconv2, NULL);
     tosync = g_list_append (tosync, arate);
     tosync = g_list_append (tosync, aconv);
     tosync = g_list_append (tosync, ares);
+    tosync = g_list_append (tosync, aconv2);
     if (!fast_element_link (arate, aconv) ||
-        !fast_element_link (aconv, ares) || !fast_element_link (ares, last))
+        !fast_element_link (aconv, ares) ||
+        !fast_element_link (ares, aconv2) || !fast_element_link (aconv2, last))
       goto converter_link_failure;
 
     sgroup->converters = g_list_prepend (sgroup->converters, arate);
     sgroup->converters = g_list_prepend (sgroup->converters, aconv);
     sgroup->converters = g_list_prepend (sgroup->converters, ares);
+    sgroup->converters = g_list_prepend (sgroup->converters, aconv2);
 
     last = arate;
   }
