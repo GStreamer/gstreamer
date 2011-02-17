@@ -251,14 +251,6 @@ struct _GstBaseParse {
  *                  STREAM_LOCK held.
  * @convert:        Optional.
  *                  Convert between formats.
- * @find_frame:     Optional.
- *                  Finds a frame. Gets a position passed and should return
- *                  TRUE and the offset in bytes where this position is.
- *                  Will only be called in pull mode and the subclass can pull
- *                  whatever it wants from upstream. If not implemented,
- *                  the base class will implement it by calling
- *                  @check_valid_frame and @parse_frame to find the wanted
- *                  frame and build a seek table.
  * @event:          Optional.
  *                  Event handler on the sink pad. This function should return
  *                  TRUE if the event was handled and can be dropped.
@@ -266,13 +258,7 @@ struct _GstBaseParse {
  *                  Event handler on the source pad. Should return TRUE
  *                  if the event was handled and can be dropped.
  *
- * @get_frame_overhead: Finds the metadata overhead for the given frame. This
- *                      is used to enable more accurate bitrate computations.
- *                      If NULL, the per-frame overhead is assumed to be 0. If
- *                      this returns -1, it is assumed that this frame should
- *                      be skipped in bitrate calculation.
- *
- * @pre_push_buffer: Optional.
+ * @pre_push_frame: Optional.
  *                   Called just prior to pushing a frame (after any pending
  *                   events have been sent) to give subclass a chance to perform
  *                   additional actions at this time (e.g. tag sending) or to
