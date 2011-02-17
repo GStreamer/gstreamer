@@ -377,7 +377,7 @@ gst-indent $gstreplace.c
 
 echo pkg is $pkg
 
-gcc -Wall $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o $gstreplace.o $gstreplace.c
+gcc -Wall -fPIC $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o $gstreplace.o $gstreplace.c
 gcc -shared -o $gstreplace.so $gstreplace.o $(pkg-config --libs gstreamer-0.10 $pkg)
 
 
