@@ -1741,7 +1741,8 @@ gst_qtdemux_set_index (GstElement * element, GstIndex * index)
   /* object lock might be taken again */
   if (index)
     gst_index_get_writer_id (index, GST_OBJECT (element), &demux->index_id);
-  GST_DEBUG_OBJECT (demux, "Set index %" GST_PTR_FORMAT, demux->element_index);
+  GST_DEBUG_OBJECT (demux, "Set index %" GST_PTR_FORMAT "for writer id %d",
+      demux->element_index, demux->index_id);
 }
 
 static GstIndex *
@@ -3623,7 +3624,7 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
       gst_index_add_association (qtdemux->element_index,
           qtdemux->index_id,
           keyframe ? GST_ASSOCIATION_FLAG_KEY_UNIT :
-          GST_ASSOCIATION_FLAG_NONE, GST_FORMAT_TIME, stream_time,
+          GST_ASSOCIATION_FLAG_DELTA_UNIT, GST_FORMAT_TIME, stream_time,
           GST_FORMAT_BYTES, byte_position, NULL);
     }
   }
