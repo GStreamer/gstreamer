@@ -3980,7 +3980,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   GstAviStream *stream;
 
   seek_time = segment->last_stop;
-  keyframe = ! !(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = !!(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
 
   GST_DEBUG_OBJECT (avi, "seek to: %" GST_TIME_FORMAT
       " keyframe seeking:%d", GST_TIME_ARGS (seek_time), keyframe);
@@ -4246,7 +4246,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_segment_set_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
   cur = seeksegment.last_stop;
 
   GST_DEBUG_OBJECT (avi,

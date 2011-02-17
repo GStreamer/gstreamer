@@ -519,7 +519,7 @@ gst_flv_demux_parse_tag_script (GstFlvDemux * demux, GstBuffer * buffer)
             return GST_FLOW_OK;
           }
 
-          /* The number of elements is just a hint, some files have 
+          /* The number of elements is just a hint, some files have
              nb_elements == 0 and actually contain items. */
           GST_DEBUG_OBJECT (demux, "there are approx. %d elements in the array",
               nb_elems);
@@ -830,7 +830,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
         gst_object_ref (demux->audio_pad));
 
     /* We only emit no more pads when we have audio and video. Indeed we can
-     * not trust the FLV header to tell us if there will be only audio or 
+     * not trust the FLV header to tell us if there will be only audio or
      * only video and we would just break discovery of some files */
     if (demux->audio_pad && demux->video_pad) {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
@@ -1148,7 +1148,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
       goto beach;
     }
 
-    /* When we ve set pixel-aspect-ratio we use that boolean to detect a 
+    /* When we ve set pixel-aspect-ratio we use that boolean to detect a
      * metadata tag that would come later and trigger a caps change */
     demux->got_par = FALSE;
 
@@ -1173,7 +1173,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
         gst_object_ref (demux->video_pad));
 
     /* We only emit no more pads when we have audio and video. Indeed we can
-     * not trust the FLV header to tell us if there will be only audio or 
+     * not trust the FLV header to tell us if there will be only audio or
      * only video and we would just break discovery of some files */
     if (demux->audio_pad && demux->video_pad) {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
@@ -1193,7 +1193,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
       goto beach;
     }
 
-    /* When we ve set pixel-aspect-ratio we use that boolean to detect a 
+    /* When we ve set pixel-aspect-ratio we use that boolean to detect a
      * metadata tag that would come later and trigger a caps change */
     demux->got_par = FALSE;
   }
