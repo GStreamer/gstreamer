@@ -1038,10 +1038,10 @@ gst_mad_check_restart (GstMad * mad)
 }
 
 
-/* The following code has been taken from 
+/* The following code has been taken from
  * rhythmbox/metadata/monkey-media/stream-info-impl/id3-vfs/mp3bitrate.c
  * which took it from xine-lib/src/demuxers/demux_mpgaudio.c
- * This code has been kindly relicensed to LGPL by Thibaut Mattern and 
+ * This code has been kindly relicensed to LGPL by Thibaut Mattern and
  * Bastien Nocera
  */
 #define BE_32(x) GST_READ_UINT32_BE(x)
@@ -1642,11 +1642,11 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 
           /* We are using the incoming timestamps to generate the outgoing ones
            * if available. However some muxing formats are not precise enough
-           * to allow us to generate a perfect stream. When converting the 
+           * to allow us to generate a perfect stream. When converting the
            * timestamp to a number of encoded samples so far we are introducing
-           * a lot of potential error compared to our accumulated number of 
-           * samples encoded. If the difference between those 2 numbers is 
-           * bigger than half a frame we then use the incoming timestamp 
+           * a lot of potential error compared to our accumulated number of
+           * samples encoded. If the difference between those 2 numbers is
+           * bigger than half a frame we then use the incoming timestamp
            * as a reference, otherwise we continue using our accumulated samples
            * counter */
           if (ABS (mad->total_samples - total) > nsamples / 2) {

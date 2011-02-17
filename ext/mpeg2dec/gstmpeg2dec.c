@@ -612,7 +612,7 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 
   init_dummybuf (mpeg2dec);
 
-  /* Pump in some null buffers, because otherwise libmpeg2 doesn't 
+  /* Pump in some null buffers, because otherwise libmpeg2 doesn't
    * initialise the discard_fbuf->id */
   mpeg2_set_buf (mpeg2dec->decoder, mpeg2dec->dummybuf, NULL);
   mpeg2_set_buf (mpeg2dec->decoder, mpeg2dec->dummybuf, NULL);
