@@ -1030,9 +1030,11 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
       outstream->scr_offs = 0;
 
     if (mpeg_demux->index != NULL) {
-      /* Register a new index position. */
+      /* Register a new index position.
+       * FIXME: check for keyframes
+       */
       gst_index_add_association (mpeg_demux->index,
-          outstream->index_id, 0,
+          outstream->index_id, GST_ASSOCIATION_FLAG_DELTA_UNIT,
           GST_FORMAT_BYTES,
           GST_BUFFER_OFFSET (buffer), GST_FORMAT_TIME, timestamp, 0);
     }

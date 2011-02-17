@@ -1676,7 +1676,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
       if (mad->index) {
         guint64 x_bytes = mad->base_byte_offset + mad->bytes_consumed;
 
-        gst_index_add_association (mad->index, mad->index_id, 0,
+        gst_index_add_association (mad->index, mad->index_id,
+            GST_ASSOCIATION_FLAG_DELTA_UNIT,
             GST_FORMAT_BYTES, x_bytes, GST_FORMAT_TIME, time_offset, NULL);
       }
 #endif

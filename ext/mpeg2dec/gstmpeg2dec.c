@@ -890,7 +890,8 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 #ifndef GST_DISABLE_INDEX
   if (mpeg2dec->index) {
     gst_index_add_association (mpeg2dec->index, mpeg2dec->index_id,
-        (key_frame ? GST_ASSOCIATION_FLAG_KEY_UNIT : 0),
+        (key_frame ? GST_ASSOCIATION_FLAG_KEY_UNIT :
+            GST_ASSOCIATION_FLAG_DELTA_UNIT),
         GST_FORMAT_BYTES, GST_BUFFER_OFFSET (outbuf),
         GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf), 0);
   }
