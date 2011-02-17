@@ -155,14 +155,14 @@ struct _QtDemuxSample
  *         .-----------------------------------------------------------.
  * track:  | K.....K.........K........K.......K.......K...........K... |
  *         '-----------------------------------------------------------'
- *         0              1              2              3              4    
+ *         0              1              2              3              4
  *           .------------^              ^   .----------^              ^
  *          /              .-------------'  /       .------------------'
  *         /              /          .-----'       /
  *         .--------------.         .--------------.
  *         | segment 1    |         | segment 2    |
  *         '--------------'         '--------------'
- *       
+ *
  * The challenge here is to cut out the right pieces of the track for each of
  * the playback segments. This fortunatly can easily be done with the SEGMENT
  * events of gstreamer.
@@ -174,7 +174,7 @@ struct _QtDemuxSample
  *
  * We then proceed to push data from keyframe (a) to frame (b). The decoder
  * decodes but clips all before media_time 1.
- * 
+ *
  * After finishing a segment, we push out a new SEGMENT event with the clipping
  * boundaries of the new data.
  *
@@ -1054,7 +1054,7 @@ gst_qtdemux_move_stream (GstQTDemux * qtdemux, QtDemuxStream * str,
 
   /* position changed, we have a discont */
   str->sample_index = index;
-  /* Each time we move in the stream we store the position where we are 
+  /* Each time we move in the stream we store the position where we are
    * starting from */
   str->from_sample = index;
   str->discont = TRUE;
@@ -2787,8 +2787,8 @@ beach:
   return ret;
 }
 
-/* Seeks to the previous keyframe of the indexed stream and 
- * aligns other streams with respect to the keyframe timestamp 
+/* Seeks to the previous keyframe of the indexed stream and
+ * aligns other streams with respect to the keyframe timestamp
  * of indexed stream. Only called in case of Reverse Playback
  */
 static GstFlowReturn
@@ -2803,7 +2803,7 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
   guint64 seg_media_start_mov;  /* segment media start time in mov format */
 
   /* Now we choose an arbitrary stream, get the previous keyframe timestamp
-   * and finally align all the other streams on that timestamp with their 
+   * and finally align all the other streams on that timestamp with their
    * respective keyframes */
   for (n = 0; n < qtdemux->n_streams; n++) {
     QtDemuxStream *str = qtdemux->streams[n];
@@ -3011,7 +3011,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   /* qtdemux->segment.stop is in outside-time-realm, whereas
    * segment->media_stop is in track-time-realm.
-   * 
+   *
    * In order to compare the two, we need to bring segment.stop
    * into the track-time-realm */
 
@@ -3328,7 +3328,7 @@ gst_qtdemux_sync_streams (GstQTDemux * demux)
 }
 
 /* UNEXPECTED and NOT_LINKED need to be combined. This means that we return:
- *  
+ *
  *  GST_FLOW_NOT_LINKED: when all pads NOT_LINKED.
  *  GST_FLOW_UNEXPECTED: when all pads UNEXPECTED or NOT_LINKED.
  */
@@ -3828,7 +3828,7 @@ pause:
         gint64 stop;
 
         /* FIXME: I am not sure this is the right fix. If the sinks are
-         * supposed to detect the segment is complete and accumulate 
+         * supposed to detect the segment is complete and accumulate
          * automatically, it does not seem to work here. Need more work */
         qtdemux->segment_running = TRUE;
 
@@ -5224,7 +5224,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* sync sample atom */
   stream->stps_present = FALSE;
   if ((stream->stss_present =
-          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
@@ -5242,7 +5242,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* partial sync sample atom */
     if ((stream->stps_present =
-            ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
       stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
@@ -5361,7 +5361,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
   /* composition time-to-sample */
   if ((stream->ctts_present =
-          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
@@ -6068,7 +6068,7 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
             GST_DEBUG_OBJECT (qtdemux, "Found hndl atom");
 
             /* skip data reference handle bytes and the
-             * following pascal string and some extra 4 
+             * following pascal string and some extra 4
              * bytes I have no idea what are */
             if (!gst_byte_reader_skip (&dref, 4) ||
                 !gst_byte_reader_get_uint8 (&dref, &string_len) ||
