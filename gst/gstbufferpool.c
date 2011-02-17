@@ -38,6 +38,20 @@
 
 #include "gstbufferpool.h"
 
+
+#define GST_BUFFER_POOL_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BUFFER_POOL, GstBufferPoolPrivate))
+
+struct _GstBufferPoolPrivate
+{
+  guint min_buffers;
+  guint max_buffers;
+  guint size;
+  guint prefix;
+  guint postfix;
+  guint align;
+};
+
 enum
 {
   /* add more above */
@@ -50,10 +64,9 @@ G_DEFINE_TYPE (GstBufferPool, gst_buffer_pool, GST_TYPE_OBJECT);
 
 static void default_set_flushing (GstBufferPool * pool, gboolean flushing);
 static gboolean default_set_config (GstBufferPool * pool,
-    GstBufferPoolConfig * config);
+    GstStructure * config);
 static GstFlowReturn default_alloc_buffer (GstBufferPool * pool,
-    GstBuffer ** buffer, GstBufferPoolConfig * config,
-    GstBufferPoolParams * params);
+    GstBuffer ** buffer, GstBufferPoolParams * params);
 static GstFlowReturn default_acquire_buffer (GstBufferPool * pool,
     GstBuffer ** buffer, GstBufferPoolParams * params);
 static void default_free_buffer (GstBufferPool * pool, GstBuffer * buffer);
@@ -77,7 +90,14 @@ gst_buffer_pool_class_init (GstBufferPoolClass * klass)
 static void
 gst_buffer_pool_init (GstBufferPool * pool)
 {
-  pool->config.align = 1;
+  pool->priv = GST_BUFFER_POOL_GET_PRIVATE (pool);
+
+  pool->config = gst_structure_new ("GstBufferPoolConfig",
+      "size", G_TYPE_UINT, 0,
+      "min-buffers", G_TYPE_UINT, 0,
+      "max-buffers", G_TYPE_UINT, 0,
+      "prefix", G_TYPE_UINT, 0,
+      "postfix", G_TYPE_UINT, 0, "align", G_TYPE_UINT, 1, NULL);
   pool->poll = gst_poll_new_timer ();
   pool->queue = gst_atomic_queue_new (10);
   default_set_flushing (pool, TRUE);
@@ -161,19 +181,24 @@ gst_buffer_pool_set_flushing (GstBufferPool * pool, gboolean flushing)
 }
 
 static gboolean
-default_set_config (GstBufferPool * pool, GstBufferPoolConfig * config)
+default_set_config (GstBufferPool * pool, GstStructure * config)
 {
   guint i;
   GstBufferPoolClass *pclass;
+  GstBufferPoolPrivate *priv = pool->priv;
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
+  /* parse the config and keep around */
+  gst_buffer_pool_config_get (config, &priv->size, &priv->min_buffers,
+      &priv->max_buffers, &priv->prefix, &priv->postfix, &priv->align);
+
   /* we need to prealloc buffers */
-  for (i = config->min_buffers; i > 0; i--) {
+  for (i = priv->min_buffers; i > 0; i--) {
     GstBuffer *buffer;
 
     if (G_LIKELY (pclass->alloc_buffer)) {
-      if (!pclass->alloc_buffer (pool, &buffer, config, NULL))
+      if (!pclass->alloc_buffer (pool, &buffer, NULL))
         return FALSE;
     } else
       return FALSE;
@@ -189,15 +214,19 @@ default_set_config (GstBufferPool * pool, GstBufferPoolConfig * config)
 /**
  * gst_buffer_pool_set_config:
  * @pool: a #GstBufferPool
- * @config: a #GstBufferPoolConfig
+ * @config: a #GstStructure
  *
  * Set the configuration of the pool. The pool must be flushing or else this
  * function will do nothing and return FALSE.
  *
+ * @condfig is a #GstStructure that contains the configuration parameters for
+ * the pool. A default and mandatory set of parameters can be configured with
+ * gst_buffer_pool_config_set().
+ *
  * Returns: TRUE when the configuration could be set.
  */
 gboolean
-gst_buffer_pool_set_config (GstBufferPool * pool, GstBufferPoolConfig * config)
+gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
   gboolean result;
   GstBufferPoolClass *pclass;
@@ -216,8 +245,11 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstBufferPoolConfig * config)
   else
     result = FALSE;
 
-  if (result)
-    pool->config = *config;
+  if (result) {
+    if (pool->config)
+      gst_structure_free (pool->config);
+    pool->config = config;
+  }
 
   return result;
 }
@@ -225,34 +257,92 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstBufferPoolConfig * config)
 /**
  * gst_buffer_pool_get_config:
  * @pool: a #GstBufferPool
- * @config: a #GstBufferPoolConfig
  *
- * Get the current configuration of the pool.
+ * Get the current configuration of the pool. This configuration is read-only,
+ * use gst_structure_copy() to make a writable copy.
+ */
+const GstStructure *
+gst_buffer_pool_get_config (GstBufferPool * pool)
+{
+  g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), NULL);
+
+  return pool->config;
+}
+
+
+/**
+ * gst_buffer_pool_config_set:
+ * @pool: a #GstBufferPool
+ * @size: the size of each buffer, not including pre and post fix
+ * @min_buffers: the minimum amount of buffers to allocate.
+ * @max_buffers: the maximum amount of buffers to allocate or 0 for unlimited.
+ * @prefix: prefix each buffer with this many bytes
+ * @postfix: postfix each buffer with this many bytes
+ * @align: alignment of the buffer data.
+ *
+ * Configure @config with the given parameters.
  */
 void
-gst_buffer_pool_get_config (GstBufferPool * pool, GstBufferPoolConfig * config)
+gst_buffer_pool_config_set (GstStructure * config, guint size,
+    guint min_buffers, guint max_buffers, guint prefix, guint postfix,
+    guint align)
 {
-  *config = pool->config;
+  g_return_if_fail (config != NULL);
+
+  gst_structure_set (config,
+      "size", G_TYPE_UINT, size,
+      "min-buffers", G_TYPE_UINT, min_buffers,
+      "max-buffers", G_TYPE_UINT, max_buffers,
+      "prefix", G_TYPE_UINT, prefix,
+      "postfix", G_TYPE_UINT, postfix, "align", G_TYPE_UINT, align, NULL);
+}
+
+/**
+ * gst_buffer_pool_config_get:
+ * @pool: a #GstBufferPool
+ * @size: the size of each buffer, not including pre and post fix
+ * @min_buffers: the minimum amount of buffers to allocate.
+ * @max_buffers: the maximum amount of buffers to allocate or 0 for unlimited.
+ * @prefix: prefix each buffer with this many bytes
+ * @postfix: postfix each buffer with this many bytes
+ * @align: alignment of the buffer data.
+ *
+ * Get the configuration values from @config.
+ */
+gboolean
+gst_buffer_pool_config_get (GstStructure * config, guint * size,
+    guint * min_buffers, guint * max_buffers, guint * prefix, guint * postfix,
+    guint * align)
+{
+  g_return_val_if_fail (config != NULL, FALSE);
+
+  return gst_structure_get (config,
+      "size", G_TYPE_UINT, size,
+      "min-buffers", G_TYPE_UINT, min_buffers,
+      "max-buffers", G_TYPE_UINT, max_buffers,
+      "prefix", G_TYPE_UINT, prefix,
+      "postfix", G_TYPE_UINT, postfix, "align", G_TYPE_UINT, align, NULL);
 }
 
 static GstFlowReturn
 default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
-    GstBufferPoolConfig * config, GstBufferPoolParams * params)
+    GstBufferPoolParams * params)
 {
   guint size, align;
+  GstBufferPoolPrivate *priv = pool->priv;
 
   *buffer = gst_buffer_new ();
 
-  align = config->align - 1;
-  size = config->prefix + config->postfix + config->size + align;
+  align = priv->align - 1;
+  size = priv->prefix + priv->postfix + priv->size + align;
   if (size > 0) {
     guint8 *memptr;
 
     memptr = g_malloc (size);
     GST_BUFFER_MALLOCDATA (*buffer) = memptr;
     memptr = (guint8 *) ((guintptr) (memptr + align) & ~align);
-    GST_BUFFER_DATA (*buffer) = memptr + config->prefix;
-    GST_BUFFER_SIZE (*buffer) = config->size;
+    GST_BUFFER_DATA (*buffer) = memptr + priv->prefix;
+    GST_BUFFER_SIZE (*buffer) = priv->size;
   }
 
   return GST_FLOW_OK;
@@ -264,6 +354,7 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 {
   GstFlowReturn result;
   GstBufferPoolClass *pclass;
+  GstBufferPoolPrivate *priv = pool->priv;
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
@@ -281,10 +372,10 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     }
 
     /* no buffer */
-    if (pool->config.max_buffers == 0) {
+    if (priv->max_buffers == 0) {
       /* no max_buffers, we allocate some more */
       if (G_LIKELY (pclass->alloc_buffer))
-        result = pclass->alloc_buffer (pool, buffer, &pool->config, params);
+        result = pclass->alloc_buffer (pool, buffer, params);
       else
         result = GST_FLOW_NOT_SUPPORTED;
       break;
@@ -322,6 +413,9 @@ gst_buffer_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 {
   GstBufferPoolClass *pclass;
   GstFlowReturn result;
+
+  g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), GST_FLOW_ERROR);
+  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
@@ -368,6 +462,9 @@ void
 gst_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
   GstBufferPoolClass *pclass;
+
+  g_return_if_fail (GST_IS_BUFFER_POOL (pool));
+  g_return_if_fail (buffer != NULL);
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 

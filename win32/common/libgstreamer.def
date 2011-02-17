@@ -125,6 +125,8 @@ EXPORTS
 	gst_buffer_new_and_alloc
 	gst_buffer_remove_meta
 	gst_buffer_pool_acquire_buffer
+	gst_buffer_pool_config_get
+	gst_buffer_pool_config_set
 	gst_buffer_pool_flags_get_type
 	gst_buffer_pool_get_config
 	gst_buffer_pool_get_type

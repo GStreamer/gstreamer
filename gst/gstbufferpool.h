@@ -33,6 +33,7 @@
 G_BEGIN_DECLS
 
 typedef struct _GstBufferPool GstBufferPool;
+typedef struct _GstBufferPoolPrivate GstBufferPoolPrivate;
 typedef struct _GstBufferPoolClass GstBufferPoolClass;
 
 /**
@@ -85,28 +86,6 @@ typedef struct _GstBufferPoolParams {
 } GstBufferPoolParams;
 
 /**
- * GstBufferPoolAlloc:
- * @min_buffers: the minimum amount of buffers to allocate.
- * @max_buffers: the maximum amount of buffers to allocate or 0 for unlimited.
- * @size: the size of each buffer, not including pre and post fix
- * @prefix: prefix each buffer with this many bytes
- * @postfix: postfix each buffer with this many bytes
- * @align: alignment of the buffer data.
- *
- * Properties for controlling the allocation of buffers. Buffer memory will be
- * allocated with the given alignment and the returned buffers will have their
- * data pointer set to this memory + prefix.
- */
-typedef struct _GstBufferPoolConfig {
-  guint              min_buffers;
-  guint              max_buffers;
-  guint              size;
-  guint              prefix;
-  guint              postfix;
-  guint              align;
-} GstBufferPoolConfig;
-
-/**
  * GstBufferPool:
  * @mini_object: the parent structure
  *
@@ -121,7 +100,9 @@ struct _GstBufferPool {
   GstAtomicQueue      *queue;
   GstPoll             *poll;
 
-  GstBufferPoolConfig  config;
+  GstStructure        *config;
+
+  GstBufferPoolPrivate *priv;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -131,12 +112,11 @@ struct _GstBufferPoolClass {
 
   /* vmethods */
   void           (*set_flushing)   (GstBufferPool *pool, gboolean flushing);
-  gboolean       (*set_config)     (GstBufferPool *pool, GstBufferPoolConfig *config);
+  gboolean       (*set_config)     (GstBufferPool *pool, GstStructure *config);
 
   GstFlowReturn  (*acquire_buffer) (GstBufferPool *pool, GstBuffer **buffer,
                                     GstBufferPoolParams *params);
   GstFlowReturn  (*alloc_buffer)   (GstBufferPool *pool, GstBuffer **buffer,
-                                    GstBufferPoolConfig *config,
                                     GstBufferPoolParams *params);
   void           (*release_buffer) (GstBufferPool *pool, GstBuffer *buffer);
   void           (*free_buffer)    (GstBufferPool *pool, GstBuffer *buffer);
@@ -147,18 +127,26 @@ struct _GstBufferPoolClass {
 GType       gst_buffer_pool_get_type (void);
 
 /* allocation */
-GstBufferPool * gst_buffer_pool_new  (void);
-
+GstBufferPool *       gst_buffer_pool_new  (void);
 
 /* state management */
-void            gst_buffer_pool_set_flushing    (GstBufferPool *pool, gboolean flushing);
+void                  gst_buffer_pool_set_flushing    (GstBufferPool *pool, gboolean flushing);
 
-gboolean        gst_buffer_pool_set_config      (GstBufferPool *pool, GstBufferPoolConfig *config);
-void            gst_buffer_pool_get_config      (GstBufferPool *pool, GstBufferPoolConfig *config);
+gboolean              gst_buffer_pool_set_config      (GstBufferPool *pool, GstStructure *config);
+const GstStructure *  gst_buffer_pool_get_config      (GstBufferPool *pool);
+
+/* helpers for configuring the config structure */
+void                  gst_buffer_pool_config_set      (GstStructure *config, guint size,
+                                                       guint min_buffers, guint max_buffers,
+                                                       guint prefix, guint postfix, guint align);
+gboolean              gst_buffer_pool_config_get      (GstStructure *config, guint *size,
+                                                       guint *min_buffers, guint *max_buffers,
+                                                       guint *prefix, guint *postfix, guint *align);
 
 /* buffer management */
-GstFlowReturn   gst_buffer_pool_acquire_buffer  (GstBufferPool *pool, GstBuffer **buffer, GstBufferPoolParams *params);
-void            gst_buffer_pool_release_buffer  (GstBufferPool *pool, GstBuffer *buffer);
+GstFlowReturn         gst_buffer_pool_acquire_buffer  (GstBufferPool *pool, GstBuffer **buffer,
+                                                       GstBufferPoolParams *params);
+void                  gst_buffer_pool_release_buffer  (GstBufferPool *pool, GstBuffer *buffer);
 
 G_END_DECLS
 
