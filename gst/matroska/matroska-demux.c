@@ -229,10 +229,6 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
-  /* parser helper separate debug */
-  GST_DEBUG_CATEGORY_INIT (ebmlread_debug, "ebmlread",
-      0, "EBML stream helper class");
-
   GST_DEBUG_CATEGORY_INIT (matroskademux_debug, "matroskademux", 0,
       "Matroska demuxer");
 
@@ -2693,8 +2689,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
         entry->pos + demux->ebml_segment_start);
   }
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     GST_DEBUG_OBJECT (demux, "Starting flush");
@@ -7107,6 +7103,10 @@ gboolean
 gst_matroska_demux_plugin_init (GstPlugin * plugin)
 {
   gst_riff_init ();
+
+  /* parser helper separate debug */
+  GST_DEBUG_CATEGORY_INIT (ebmlread_debug, "ebmlread",
+      0, "EBML stream helper class");
 
   /* create an elementfactory for the matroska_demux element */
   if (!gst_element_register (plugin, "matroskademux",
