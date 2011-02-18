@@ -1334,7 +1334,7 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
   /* index might change on-the-fly, although that would be nutty app ... */
   GST_OBJECT_LOCK (parse);
   gst_index_add_associationv (parse->priv->index, parse->priv->index_id,
-      (key) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
+      (key) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_DELTA_UNIT,
       2, (const GstIndexAssociation *) &associations);
   GST_OBJECT_UNLOCK (parse);
 
