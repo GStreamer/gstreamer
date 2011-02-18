@@ -1434,8 +1434,10 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   g_signal_emit (G_OBJECT (dbin),
       gst_decode_bin_signals[SIGNAL_AUTOPLUG_SORT], 0, dpad, caps, factories,
       &result);
-  g_value_array_free (factories);
-  factories = result;
+  if (result) {
+    g_value_array_free (factories);
+    factories = result;
+  }
 
   /* At this point we have a potential decoder, but we might not need it
    * if it doesn't match the output caps  */
