@@ -63,7 +63,7 @@ static void gst_buffer_pool_finalize (GObject * object);
 
 G_DEFINE_TYPE (GstBufferPool, gst_buffer_pool, GST_TYPE_OBJECT);
 
-static void default_set_active (GstBufferPool * pool, gboolean active);
+static gboolean default_set_active (GstBufferPool * pool, gboolean active);
 static gboolean default_set_config (GstBufferPool * pool,
     GstStructure * config);
 static GstFlowReturn default_alloc_buffer (GstBufferPool * pool,
@@ -110,6 +110,17 @@ gst_buffer_pool_init (GstBufferPool * pool)
 static void
 gst_buffer_pool_finalize (GObject * object)
 {
+  GstBufferPool *pool;
+
+  pool = GST_BUFFER_POOL_CAST (object);
+
+  GST_DEBUG_OBJECT (pool, "finalize");
+
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_atomic_queue_unref (pool->queue);
+  gst_poll_free (pool->poll);
+  gst_structure_free (pool->config);
+
   G_OBJECT_CLASS (gst_buffer_pool_parent_class)->finalize (object);
 }
 
@@ -132,48 +143,59 @@ gst_buffer_pool_new (void)
 }
 
 static void
-flush_buffers (GstBufferPool * pool)
+default_free_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
-  GstBuffer *buffer;
+  gst_buffer_unref (buffer);
+}
+
+static void
+free_buffer (GstBufferPool * pool, GstBuffer * buffer)
+{
   GstBufferPoolClass *pclass;
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
-  while ((buffer = gst_atomic_queue_pop (pool->queue))) {
-    gst_poll_read_control (pool->poll);
-    if (G_LIKELY (pclass->free_buffer))
-      pclass->free_buffer (pool, buffer);
-  }
+  if (G_LIKELY (pclass->free_buffer))
+    pclass->free_buffer (pool, buffer);
 }
 
 /* the default implementation for allocating and freeing the
  * buffers when changing the active state */
-static void
+static gboolean
 default_set_active (GstBufferPool * pool, gboolean active)
 {
   guint i;
   GstBufferPoolPrivate *priv = pool->priv;
 
-  if (!active) {
-    /* clear the pool */
-    flush_buffers (pool);
-  } else {
+  if (active) {
     GstBufferPoolClass *pclass;
 
     pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
-    if (G_LIKELY (pclass->alloc_buffer)) {
-      /* we need to prealloc buffers */
-      for (i = priv->min_buffers; i > 0; i--) {
-        GstBuffer *buffer;
+    if (G_UNLIKELY (pclass->alloc_buffer == NULL))
+      return TRUE;
 
-        if (pclass->alloc_buffer (pool, &buffer, NULL) == GST_FLOW_OK) {
-          /* store in the queue */
-          gst_buffer_pool_release_buffer (pool, buffer);
-        }
-      }
+    /* we need to prealloc buffers */
+    for (i = priv->min_buffers; i > 0; i--) {
+      GstBuffer *buffer;
+
+      if (pclass->alloc_buffer (pool, &buffer, NULL) != GST_FLOW_OK)
+        return FALSE;
+
+      /* store in the queue */
+      gst_atomic_queue_push (pool->queue, buffer);
+      gst_poll_write_control (pool->poll);
+    }
+  } else {
+    GstBuffer *buffer;
+
+    /* clear the pool */
+    while ((buffer = gst_atomic_queue_pop (pool->queue))) {
+      gst_poll_read_control (pool->poll);
+      free_buffer (pool, buffer);
     }
   }
+  return TRUE;
 }
 
 /**
@@ -183,27 +205,40 @@ default_set_active (GstBufferPool * pool, gboolean active)
  *
  * Control the active state of @pool. When the pool is active, new calls to
  * gst_buffer_pool_acquire_buffer() will return with GST_FLOW_WRONG_STATE.
+ *
+ * Returns: %FALSE when the pool was not configured or when preallocation of the
+ * buffers failed.
  */
-void
+gboolean
 gst_buffer_pool_set_active (GstBufferPool * pool, gboolean active)
 {
   GstBufferPoolClass *pclass;
+  gboolean res;
 
-  g_return_if_fail (GST_IS_BUFFER_POOL (pool));
+  g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), FALSE);
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
+  /* just return if we are already in the right state */
   if (!g_atomic_int_compare_and_exchange (&pool->active, !active, active))
-    return;
+    return TRUE;
+
+  /* we need to be configured */
+  if (!g_atomic_int_get (&pool->configured))
+    return FALSE;
 
   if (!active)
     gst_poll_write_control (pool->poll);
 
   if (G_LIKELY (pclass->set_active))
-    pclass->set_active (pool, active);
+    res = pclass->set_active (pool, active);
+  else
+    res = TRUE;
 
   if (active)
     gst_poll_read_control (pool->poll);
+
+  return res;
 }
 
 static gboolean
@@ -223,12 +258,13 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
  * @pool: a #GstBufferPool
  * @config: a #GstStructure
  *
- * Set the configuration of the pool. The pool must be inactive or else this
- * function will do nothing and return FALSE.
+ * Set the configuration of the pool. The pool must be inactive and all buffers
+ * allocated form this pool must be returned or else this function will do
+ * nothing and return FALSE.
  *
  * @condfig is a #GstStructure that contains the configuration parameters for
  * the pool. A default and mandatory set of parameters can be configured with
- * gst_buffer_pool_config_set().
+ * gst_buffer_pool_config_set(). This function takes ownership of @config.
  *
  * Returns: TRUE when the configuration could be set.
  */
@@ -241,7 +277,12 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), FALSE);
   g_return_val_if_fail (config != NULL, FALSE);
 
+  /* can't change the settings when active */
   if (g_atomic_int_get (&pool->active))
+    return FALSE;
+
+  /* we can't change when outstanding buffers */
+  if (g_atomic_int_get (&pool->outstanding) != 0)
     return FALSE;
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
@@ -256,6 +297,9 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     if (pool->config)
       gst_structure_free (pool->config);
     pool->config = config;
+
+    /* now we are configured */
+    g_atomic_int_set (&pool->configured, 1);
   }
 
   return result;
@@ -275,7 +319,6 @@ gst_buffer_pool_get_config (GstBufferPool * pool)
 
   return pool->config;
 }
-
 
 /**
  * gst_buffer_pool_config_set:
@@ -374,7 +417,6 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     /* try to get a buffer from the queue */
     *buffer = gst_atomic_queue_pop (pool->queue);
     if (*buffer) {
-      /* FIXME check the size of the buffer */
       gst_poll_read_control (pool->poll);
       result = GST_FLOW_OK;
       break;
@@ -383,9 +425,9 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     /* no buffer */
     if (priv->max_buffers == 0) {
       /* no max_buffers, we allocate some more */
-      if (G_LIKELY (pclass->alloc_buffer))
+      if (G_LIKELY (pclass->alloc_buffer)) {
         result = pclass->alloc_buffer (pool, buffer, params);
-      else
+      } else
         result = GST_FLOW_NOT_SUPPORTED;
       break;
     }
@@ -399,6 +441,7 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     /* now wait */
     gst_poll_wait (pool->poll, GST_CLOCK_TIME_NONE);
   }
+
   return result;
 }
 
@@ -433,26 +476,22 @@ gst_buffer_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   else
     result = GST_FLOW_NOT_SUPPORTED;
 
-  return result;
-}
+  if (G_LIKELY (result == GST_FLOW_OK && *buffer))
+    g_atomic_int_inc (&pool->outstanding);
 
-static void
-default_free_buffer (GstBufferPool * pool, GstBuffer * buffer)
-{
-  gst_buffer_unref (buffer);
+  return result;
 }
 
 static void
 default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
-  /* keep it around in our queue, we might be inactive but that's ok because we
-   * handle that unlikely case below. */
-  gst_atomic_queue_push (pool->queue, buffer);
-  gst_poll_write_control (pool->poll);
-
   if (G_UNLIKELY (!g_atomic_int_get (&pool->active))) {
-    /* we are inactive, remove the buffers again */
-    flush_buffers (pool);
+    /* we are inactive, remove the buffer again */
+    free_buffer (pool, buffer);
+  } else {
+    /* keep it around in our queue */
+    gst_atomic_queue_push (pool->queue, buffer);
+    gst_poll_write_control (pool->poll);
   }
 }
 
@@ -479,4 +518,6 @@ gst_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 
   if (G_LIKELY (pclass->release_buffer))
     pclass->release_buffer (pool, buffer);
+
+  g_atomic_int_exchange_and_add (&pool->outstanding, -1);
 }
