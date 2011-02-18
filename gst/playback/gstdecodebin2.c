@@ -1758,9 +1758,40 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
        * other thread could've added elements in the meantime */
       CHAIN_MUTEX_LOCK (chain);
       do {
+        GList *l;
+
         tmp = chain->elements->data;
-        gst_element_set_state (tmp, GST_STATE_NULL);
+
+        /* Disconnect any signal handlers that might be connected
+         * in connect_element() or analyze_pad() */
+        g_signal_handlers_disconnect_by_func (tmp, pad_added_cb, chain);
+        g_signal_handlers_disconnect_by_func (tmp, pad_removed_cb, chain);
+        g_signal_handlers_disconnect_by_func (tmp, no_more_pads_cb, chain);
+
+        for (l = chain->pending_pads; l;) {
+          GstPendingPad *pp = l->data;
+          GList *n;
+
+          if (GST_PAD_PARENT (pp->pad) != tmp) {
+            l = l->next;
+            continue;
+          }
+
+          g_signal_handlers_disconnect_by_func (pp->pad, caps_notify_cb, chain);
+          gst_pad_remove_event_probe (pp->pad, pp->event_probe_id);
+          gst_object_unref (pp->pad);
+          g_slice_free (GstPendingPad, pp);
+
+          /* Remove element from the list, update list head and go to the
+           * next element in the list */
+          n = l->next;
+          chain->pending_pads = g_list_delete_link (chain->pending_pads, l);
+          l = n;
+        }
+
         gst_bin_remove (GST_BIN (dbin), tmp);
+        gst_element_set_state (tmp, GST_STATE_NULL);
+
         gst_object_unref (tmp);
         chain->elements = g_list_delete_link (chain->elements, chain->elements);
       } while (tmp != element);
