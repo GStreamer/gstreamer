@@ -24,6 +24,7 @@
 #endif
 
 #include "matroska-demux.h"
+#include "matroska-parse.h"
 #include "matroska-mux.h"
 #include "matroska-ids.h"
 #include "webm-mux.h"
@@ -40,6 +41,7 @@ plugin_init (GstPlugin * plugin)
   gst_matroska_register_tags ();
 
   ret = gst_matroska_demux_plugin_init (plugin);
+  ret &= gst_matroska_parse_plugin_init (plugin);
   ret &= gst_element_register (plugin, "matroskamux", GST_RANK_PRIMARY,
       GST_TYPE_MATROSKA_MUX);
   ret &= gst_element_register (plugin, "webmmux", GST_RANK_PRIMARY,

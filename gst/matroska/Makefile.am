@@ -5,6 +5,7 @@ libgstmatroska_la_SOURCES = \
 	ebml-write.c \
 	matroska.c \
 	matroska-demux.c \
+	matroska-parse.c \
 	matroska-ids.c \
 	matroska-mux.c \
 	webm-mux.c \
@@ -15,6 +16,7 @@ noinst_HEADERS = \
 	ebml-read.h \
 	ebml-write.h \
 	matroska-demux.h \
+	matroska-parse.h \
 	matroska-ids.h \
 	matroska-mux.h \
 	webm-mux.h \
