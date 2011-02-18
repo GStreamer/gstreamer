@@ -5,22 +5,22 @@ This document describes the design and use cases for the progress reporting
 messages.
 
 PROGRESS messages are posted on the bus to inform the application about the
-progress of asynchonous operations in the pipeline. This should not be confused
+progress of asynchronous operations in the pipeline. This should not be confused
 with asynchronous state changes.
 
-We accomodate for the following requirements:
+We accommodate for the following requirements:
 
  - Application is informed when an async operation starts and completes.
  - It should be possible for the application to generically detect common
    operations and incorporate their progress into the GUI.
  - Applications can cancel pending operations by doing regular state changes.
- - Applications should be abe able to wait for completion of async operations.
+ - Applications should be able to wait for completion of async operations.
 
 We allow for the following scenarios:
 
  - Elements want to inform the application about asynchronous DNS lookups and
    pending network requests. This includes starting and completing the lookup.
- - Elements opening devices and resources assynchronously.
+ - Elements opening devices and resources asynchronously.
  - Applications having more freedom to implement timeout and cancelation of
    operations that currently block the state changes or happen invisibly behind
    the scenes.
@@ -29,9 +29,9 @@ We allow for the following scenarios:
 Rationale
 ~~~~~~~~~
 
-The main reason for adding these extra progress notifications is twofold: 
+The main reason for adding these extra progress notifications is twofold:
 
- 1) to give the application more information of what is going on 
+ 1) to give the application more information of what is going on
 
     When there are well defined progress information codes, applications
     can let the user know about the status of the progress. We anticipate to
@@ -48,7 +48,7 @@ The main reason for adding these extra progress notifications is twofold:
     We would like to make the state change function, instead, start a separate
     thread that performs the blocking operations in a cancelable way. When going
     back to the NULL state, all pending operations would be canceled immediately.
-    
+
     For downward state changes, we want to let the application implement its own
     timeout mechanism. For example: when stopping an RTSP stream, the clients
     needs to send a TEARDOWN request to the server. This can however take an
@@ -66,7 +66,7 @@ Async state changes
 ~~~~~~~~~~~~~~~~~~~
 
 GStreamer currently has a GST_STATE_CHANGE_ASYNC return value to note to the
-application that a state change is happening assynchronously. 
+application that a state change is happening asynchronously.
 
 The main purpose of this return value is to make the pipeline wait for preroll
 and delay a future (upwards) state changes until the sinks are prerolled.
@@ -74,34 +74,35 @@ and delay a future (upwards) state changes until the sinks are prerolled.
 In the case of async operations on source, this will automatically force sinks
 to stay async because they will not preroll before the source can produce data.
 
-The fact that other asynchonous operations happen behind the scnes is irrelevant
-for the prerolling process so it is not implemented with the ASYNC state change
-return value in order to not complicate the state changes and mix concepts.
+The fact that other asynchronous operations happen behind the scenes is
+irrelevant for the prerolling process so it is not implemented with the ASYNC
+state change return value in order to not complicate the state changes and mix
+concepts.
 
 
 Use cases
 ~~~~~~~~~
- 
+
  * RTSP client (but also HTTP, MMS, ...)
 
   When the client goes from the READY to the PAUSED state, it opens a socket,
-  performs a DNS lookup, retieves the SDP and negotiates the streams. All these
-  operations currently block the state change function for an undefinite amount
+  performs a DNS lookup, retrieves the SDP and negotiates the streams. All these
+  operations currently block the state change function for an indefinite amount
   of time and while they are blocking cannot be canceled.
 
-  Instead, a thread would be started to perform these operations assynchronously
+  Instead, a thread would be started to perform these operations asynchronously
   and the state change would complete with the usual NO_PREROLL return value.
   Before starting the thread a PROGRESS message would be posted to mark the
   start of the async operation.
 
-  As the DNS lookup completes and the connection is established, PROGRESS messages
-  are posted on the bus to inform the application of the progress. When
+  As the DNS lookup completes and the connection is established, PROGRESS
+  messages are posted on the bus to inform the application of the progress. When
   something fails, an error is posted and a PROGRESS CANCELED message is posted.
   The application can then stop the pipeline.
 
   If there are no errors and the setup of the streams completed successfully, a
   PROGRESS COMPLETED is posted on the bus. The thread then goes to sleep and the
-  assynchronous operation completed.
+  asynchronous operation completed.
 
   The RTSP protocol requires to send a TEARDOWN request to the server
   before closing the connection and destroying the socket. A state change to the
@@ -117,7 +118,7 @@ Use cases
 
   DNS lookup and connection times can be measured by calculating the elapsed
   time between the various PROGRESS messages.
-  
+
 
 
 Messages
@@ -212,7 +213,7 @@ Categories
 ~~~~~~~~~~
 
  We want to propose some standard codes here:
- 
+
   "open" : A resource is being opened
   "close" : A resource is being closed
 
