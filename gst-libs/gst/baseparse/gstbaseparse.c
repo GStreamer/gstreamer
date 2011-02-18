@@ -24,7 +24,7 @@
  * @short_description: Base class for stream parsers
  * @see_also: #GstBaseTransform
  *
- * This base class is for parser elements that process data and splits it 
+ * This base class is for parser elements that process data and splits it
  * into separate audio/video/whatever frames.
  *
  * It provides for:
@@ -58,7 +58,7 @@
  *   </para></listitem>
  *   <listitem><para>
  *      At least in this point subclass needs to tell the GstBaseParse class
- *      how big data chunks it wants to receive (min_frame_size). It can do 
+ *      how big data chunks it wants to receive (min_frame_size). It can do
  *      this with @gst_base_parse_set_min_frame_size.
  *   </para></listitem>
  *   <listitem><para>
@@ -71,7 +71,7 @@
  *   <itemizedlist>
  *   <title>Parsing phase</title>
  *     <listitem><para>
- *       GstBaseParse gathers at least min_frame_size bytes of data either 
+ *       GstBaseParse gathers at least min_frame_size bytes of data either
  *       by pulling it from upstream or collecting buffers into internal
  *       #GstAdapter.
  *     </para></listitem>
@@ -123,8 +123,8 @@
  * </orderedlist>
  *
  * Subclass is responsible for providing pad template caps for
- * source and sink pads. The pads need to be named "sink" and "src". It also 
- * needs to set the fixed caps on srcpad, when the format is ensured (e.g. 
+ * source and sink pads. The pads need to be named "sink" and "src". It also
+ * needs to set the fixed caps on srcpad, when the format is ensured (e.g.
  * when base class calls subclass' @set_sink_caps function).
  *
  * This base class uses GST_FORMAT_DEFAULT as a meaning of frames. So,
@@ -637,7 +637,7 @@ gst_base_parse_reset (GstBaseParse * parse)
  *            in order to find the following frame header.
  *
  * Default callback for check_valid_frame.
- * 
+ *
  * Returns: Always TRUE.
  */
 static gboolean
@@ -874,7 +874,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
             "start = %" GST_TIME_FORMAT ", stop = %" GST_TIME_FORMAT,
             GST_TIME_ARGS (seg_start), GST_TIME_ARGS (seg_stop));
       } else if (format != GST_FORMAT_TIME) {
-        /* Unknown incoming segment format. Output a default open-ended 
+        /* Unknown incoming segment format. Output a default open-ended
          * TIME segment */
         gst_event_unref (event);
         event = gst_event_new_new_segment_full (update, rate, applied_rate,
