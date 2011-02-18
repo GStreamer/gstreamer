@@ -2921,9 +2921,6 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   return result;
 }
 
-static GstStaticCaps sub_plaintext_caps =
-    GST_STATIC_CAPS ("text/x-pango-markup; text/plain");
-
 /* autoplug-continue decides, if a pad has raw caps that can be exposed
  * directly or if further decoding is necessary. We use this to expose
  * supported subtitles directly */
@@ -2931,10 +2928,9 @@ static gboolean
 autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     GstSourceGroup * group)
 {
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
   GstElement *sink;
   GstPad *sinkpad = NULL;
-  GstCaps *sinkcaps = NULL;
 
   GST_PLAY_BIN_LOCK (group->playbin);
   GST_SOURCE_GROUP_LOCK (group);
@@ -2942,47 +2938,22 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   if ((sink = group->playbin->text_sink))
     sinkpad = gst_element_get_static_pad (sink, "sink");
   if (sinkpad) {
-    sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+    ret = !gst_pad_accept_caps (sinkpad, caps);
     gst_object_unref (sinkpad);
-
-    /* If the textsink claims to support ANY subcaps,
-     * go the safe way and only use the plaintext caps */
-    if (gst_caps_is_any (sinkcaps)) {
-      GST_WARNING_OBJECT (group->playbin, "Text sink '%s' accepts ANY caps",
-          GST_OBJECT_NAME (sink));
-      gst_caps_unref (sinkcaps);
-      sinkcaps = gst_static_caps_get (&sub_plaintext_caps);
-    }
   } else {
-    sinkcaps = gst_subtitle_overlay_create_factory_caps ();
+    GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
+    ret = !gst_caps_can_intersect (caps, subcaps);
+    gst_caps_unref (subcaps);
   }
-  ret = !gst_caps_can_intersect (caps, sinkcaps);
-  gst_caps_unref (sinkcaps);
-  sinkcaps = NULL;
   if (!ret)
     goto done;
 
   if ((sink = group->playbin->audio_sink)) {
     sinkpad = gst_element_get_static_pad (sink, "sink");
     if (sinkpad) {
-      sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+      ret = !gst_pad_accept_caps (sinkpad, caps);
       gst_object_unref (sinkpad);
-
-      /* If the audio sink claims to support ANY caps go
-       * the safe way and only use the raw audio caps
-       * that decodebin2 already has */
-      if (gst_caps_is_any (sinkcaps)) {
-        GST_WARNING_OBJECT (group->playbin, "Audio sink '%s' accepts ANY caps",
-            GST_OBJECT_NAME (sink));
-        gst_caps_unref (sinkcaps);
-        sinkcaps = NULL;
-      }
     }
-  }
-  if (sinkcaps) {
-    ret = !gst_caps_can_intersect (caps, sinkcaps);
-    gst_caps_unref (sinkcaps);
-    sinkcaps = NULL;
   }
   if (!ret)
     goto done;
@@ -2990,23 +2961,9 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   if ((sink = group->playbin->video_sink)) {
     sinkpad = gst_element_get_static_pad (sink, "sink");
     if (sinkpad) {
-      sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+      ret = !gst_pad_accept_caps (sinkpad, caps);
       gst_object_unref (sinkpad);
-
-      /* If the video sink claims to support ANY caps go
-       * the safe way and only use the raw video caps
-       * that decodebin2 already has */
-      if (gst_caps_is_any (sinkcaps)) {
-        GST_WARNING_OBJECT (group->playbin, "Video sink '%s' accepts ANY caps",
-            GST_OBJECT_NAME (sink));
-        gst_caps_unref (sinkcaps);
-        sinkcaps = NULL;
-      }
     }
-  }
-  if (sinkcaps) {
-    ret = !gst_caps_can_intersect (caps, sinkcaps);
-    gst_caps_unref (sinkcaps);
   }
 
 done:
