@@ -246,6 +246,9 @@ GstFlowReturn   gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc,
 GstCaps *       gst_base_audio_encoder_proxy_getcaps (GstBaseAudioEncoder * enc,
                                                       GstCaps * caps);
 
+GstCaps *       gst_base_audio_encoder_add_streamheader (GstCaps * caps,
+                                                         GstBuffer * buf, ...);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_AUDIO_ENCODER_H__ */

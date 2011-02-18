@@ -1591,3 +1591,53 @@ gst_base_audio_encoder_sink_activate_push (GstPad * pad, gboolean active)
   gst_object_unref (enc);
   return result;
 }
+
+/** gst_base_audio_encoder_add_streamheader:
+ * @caps: a #GstCaps
+ * @buf: header buffers
+ *
+ * Adds given buffers to an array of buffers set as streamheader field
+ * on the given @caps.  List of buffer arguments must be NULL-terminated.
+ *
+ * Returns: input caps with a streamheader field added, or NULL if some error
+ */
+GstCaps *
+gst_base_audio_encoder_add_streamheader (GstCaps * caps, GstBuffer * buf, ...)
+{
+  GstStructure *structure = NULL;
+  va_list va;
+  GValue array = { 0 };
+  GValue value = { 0 };
+
+  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
+
+  caps = gst_caps_make_writable (caps);
+  structure = gst_caps_get_structure (caps, 0);
+
+  g_value_init (&array, GST_TYPE_ARRAY);
+
+  va_start (va, buf);
+  /* put buffers in a fixed list */
+  while (buf) {
+    g_assert (gst_buffer_is_metadata_writable (buf));
+
+    /* mark buffer */
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+
+    g_value_init (&value, GST_TYPE_BUFFER);
+    buf = gst_buffer_copy (buf);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    gst_value_set_buffer (&value, buf);
+    gst_buffer_unref (buf);
+    gst_value_array_append_value (&array, &value);
+    g_value_unset (&value);
+
+    buf = va_arg (va, GstBuffer *);
+  }
+
+  gst_structure_set_value (structure, "streamheader", &array);
+  g_value_unset (&array);
+
+  return caps;
+}
