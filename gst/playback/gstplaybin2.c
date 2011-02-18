@@ -322,9 +322,9 @@ struct _GstSourceGroup
   GstSourceSelect selector[GST_PLAY_SINK_TYPE_LAST];
 };
 
-#define GST_PLAY_BIN_GET_LOCK(bin) (((GstPlayBin*)(bin))->lock)
-#define GST_PLAY_BIN_LOCK(bin) (g_mutex_lock (GST_PLAY_BIN_GET_LOCK(bin)))
-#define GST_PLAY_BIN_UNLOCK(bin) (g_mutex_unlock (GST_PLAY_BIN_GET_LOCK(bin)))
+#define GST_PLAY_BIN_GET_LOCK(bin) (&((GstPlayBin*)(bin))->lock)
+#define GST_PLAY_BIN_LOCK(bin) (g_static_rec_mutex_lock (GST_PLAY_BIN_GET_LOCK(bin)))
+#define GST_PLAY_BIN_UNLOCK(bin) (g_static_rec_mutex_unlock (GST_PLAY_BIN_GET_LOCK(bin)))
 
 /* lock to protect dynamic callbacks, like no-more-pads */
 #define GST_PLAY_BIN_DYN_LOCK(bin)    g_mutex_lock ((bin)->dyn_lock)
@@ -355,7 +355,7 @@ struct _GstPlayBin
 {
   GstPipeline parent;
 
-  GMutex *lock;                 /* to protect group switching */
+  GStaticRecMutex lock;         /* to protect group switching */
 
   /* the groups, we use a double buffer to switch between current and next */
   GstSourceGroup groups[2];     /* array with group info */
@@ -1174,7 +1174,7 @@ gst_play_bin_update_elements_list (GstPlayBin * playbin)
 static void
 gst_play_bin_init (GstPlayBin * playbin)
 {
-  playbin->lock = g_mutex_new ();
+  g_static_rec_mutex_init (&playbin->lock);
   playbin->dyn_lock = g_mutex_new ();
 
   /* assume we can create a selector */
@@ -1229,7 +1229,8 @@ gst_play_bin_finalize (GObject * object)
 
   if (playbin->elements)
     gst_plugin_feature_list_free (playbin->elements);
-  g_mutex_free (playbin->lock);
+
+  g_static_rec_mutex_free (&playbin->lock);
   g_mutex_free (playbin->dyn_lock);
   g_mutex_free (playbin->elements_lock);
 
