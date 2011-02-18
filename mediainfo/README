@@ -85,7 +85,7 @@ Properties:
 - get bit-rate over time
   - specify window size, get min,max,avg bitrate for each window
   - gst-mi can draw them as a graph
-- get key-frame statistics
+- get key-frame statistics (using gst-index)
   - number of keyframes
   - min,max,avg keyframe interval
 - disconts
@@ -136,6 +136,17 @@ Properties:
 - CBR/VBR type for each stream
   - can we derive that from the bitrate tags (no min/max bitrate set)?
   find . -name "*.c" -exec egrep -Hn "GST_TAG[A-Z_]*_BITRATE" {} \;
+  - formats
+    - all raw files are cbr
+    - some codecs are cbr only (some speech codecs)
+    - audio
+      - in an MP3 file, if there is no VBRI or Xing,
+        it probably is not a vbr stream
+      -
+- lossy/lossless compression
+  - all raw formats are lossless (well rgb->yuv is lossy, but ...)
+  - some audio formats are lossless (flac, wavpack, ...)
+  - some video formats can be lossless (dirac,
 
 = discoverer workflow =
 == sync quick-scan ==
