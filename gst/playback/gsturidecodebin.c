@@ -456,8 +456,8 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::unknown-type:
-   * @bin: The uridecodebin
-   * @pad: the new pad containing caps that cannot be resolved to a 'final'
+   * @bin: The uridecodebin.
+   * @pad: the new pad containing caps that cannot be resolved to a 'final'.
    * stream type.
    * @caps: the #GstCaps of the pad that cannot be resolved.
    *
@@ -472,12 +472,18 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::autoplug-continue:
-   * @bin: The uridecodebin
+   * @bin: The uridecodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
    * This signal is emitted whenever uridecodebin finds a new stream. It is
    * emitted before looking for any elements that can handle that stream.
+   *
+   * <note>
+   *   Invocation of signal handlers stops after the first signal handler
+   *   returns #FALSE. Signal handlers are invoked in the order they were
+   *   connected in.
+   * </note>
    *
    * Returns: #TRUE if you wish uridecodebin to look for elements that can
    * handle the given @caps. If #FALSE, those caps will be considered as
@@ -493,7 +499,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::autoplug-factories:
-   * @bin: The decodebin
+   * @bin: The uridecodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
@@ -505,6 +511,12 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    *
    * If this function returns an empty array, the pad will be considered as
    * having an unhandled type media type.
+   *
+   * <note>
+   *   Only the signal handler that is connected first will ever by invoked.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: a #GValueArray* with a list of factories to try. The factories are
    * by default tried in the returned order or based on the index returned by
@@ -519,7 +531,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::autoplug-sort:
-   * @bin: The decodebin
+   * @bin: The uridecodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
    * @factories: A #GValueArray of possible #GstElementFactory to use.
@@ -529,7 +541,16 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * the application to perform additional sorting or filtering on the element
    * factory array.
    *
-   * The callee should copy and modify @factories.
+   * The callee should copy and modify @factories or return #NULL if the
+   * order should not change.
+   *
+   * <note>
+   *   Invocation of signal handlers stops after one signal handler has
+   *   returned something else than #NULL. Signal handlers are invoked in
+   *   the order they were connected in.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: A new sorted array of #GstElementFactory objects.
    *
@@ -544,9 +565,10 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::autoplug-select:
+   * @bin: The uridecodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
-   * @factory: A #GstElementFactory to use
+   * @factory: A #GstElementFactory to use.
    *
    * This signal is emitted once uridecodebin has found all the possible
    * #GstElementFactory that can be used to handle the given @caps. For each of
@@ -563,6 +585,12 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    *
    * A value of #GST_AUTOPLUG_SELECT_SKIP will skip @factory and move to the
    * next factory.
+   *
+   * <note>
+   *   Only the signal handler that is connected first will ever by invoked.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: a #GST_TYPE_AUTOPLUG_SELECT_RESULT that indicates the required
    * operation. The default handler will always return
