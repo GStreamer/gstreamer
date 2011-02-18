@@ -590,8 +590,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::new-decoded-pad:
-   * @bin: The decodebin
-   * @pad: The newly created pad
+   * @bin: The decodebin.
+   * @pad: The newly created pad.
    * @islast: #TRUE if this is the last pad to be added. Deprecated.
    *
    * This signal gets emitted as soon as a new pad of the same type as one of
@@ -609,8 +609,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::removed-decoded-pad:
-   * @bin: The decodebin
-   * @pad: The pad that was removed
+   * @bin: The decodebin.
+   * @pad: The pad that was removed.
    *
    * This signal is emitted when a 'final' caps pad has been removed.
    *
@@ -625,7 +625,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::unknown-type:
-   * @bin: The decodebin
+   * @bin: The decodebin.
    * @pad: The new pad containing caps that cannot be resolved to a 'final'
    *       stream type.
    * @caps: The #GstCaps of the pad that cannot be resolved.
@@ -641,12 +641,18 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-continue:
-   * @bin: The decodebin
+   * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
    * This signal is emitted whenever decodebin2 finds a new stream. It is
    * emitted before looking for any elements that can handle that stream.
+   *
+   * <note>
+   *   Invocation of signal handlers stops after the first signal handler
+   *   returns #FALSE. Signal handlers are invoked in the order they were
+   *   connected in.
+   * </note>
    *
    * Returns: #TRUE if you wish decodebin2 to look for elements that can
    * handle the given @caps. If #FALSE, those caps will be considered as
@@ -661,7 +667,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-factories:
-   * @bin: The decodebin
+   * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
@@ -672,7 +678,13 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * If this function returns NULL, @pad will be exposed as a final caps.
    *
    * If this function returns an empty array, the pad will be considered as
-   * having an unhandled type media type.
+   * having an unhandled type media type. 
+   *
+   * <note>
+   *   Only the signal handler that is connected first will ever by invoked.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: a #GValueArray* with a list of factories to try. The factories are
    * by default tried in the returned order or based on the index returned by
@@ -687,7 +699,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-sort:
-   * @bin: The decodebin
+   * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
    * @factories: A #GValueArray of possible #GstElementFactory to use.
@@ -697,7 +709,16 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * the application to perform additional sorting or filtering on the element
    * factory array.
    *
-   * The callee should copy and modify @factories.
+   * The callee should copy and modify @factories or return #NULL if the
+   * order should not change.
+   *
+   * <note>
+   *   Invocation of signal handlers stops after one signal handler has
+   *   returned something else than #NULL. Signal handlers are invoked in
+   *   the order they were connected in.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: A new sorted array of #GstElementFactory objects.
    */
@@ -710,10 +731,10 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-select:
-   * @bin: The decodebin
+   * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
-   * @factory: A #GstElementFactory to use
+   * @factory: A #GstElementFactory to use.
    *
    * This signal is emitted once decodebin2 has found all the possible
    * #GstElementFactory that can be used to handle the given @caps. For each of
@@ -730,6 +751,12 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * A value of #GST_AUTOPLUG_SELECT_SKIP will skip @factory and move to the
    * next factory.
+   *
+   * <note>
+   *   Only the signal handler that is connected first will ever by invoked.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: a #GST_TYPE_AUTOPLUG_SELECT_RESULT that indicates the required
    * operation. the default handler will always return
