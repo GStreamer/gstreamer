@@ -481,37 +481,37 @@ gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_X,
       g_param_spec_int ("x", "x offset",
-          "Specify an x offset.", 0, G_MAXINT, 0,
+          "Specify an x offset.", -G_MAXINT, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_Y,
       g_param_spec_int ("y", "y offset",
-          "Specify a y offset.", 0, G_MAXINT, 0,
+          "Specify a y offset.", -G_MAXINT, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_X_RELATIVE,
       g_param_spec_float ("x-relative", "x relative offset",
-          "Specify an x offset relative to the display size.", 0, G_MAXFLOAT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Specify an x offset relative to the display size.", -G_MAXFLOAT,
+          G_MAXFLOAT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_Y_RELATIVE,
       g_param_spec_float ("y-relative", "y relative offset",
-          "Specify a y offset relative to the display size.", 0, G_MAXFLOAT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Specify a y offset relative to the display size.", -G_MAXFLOAT,
+          G_MAXFLOAT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WIDTH,
       g_param_spec_int ("width", "width",
-          "Specify a width in pixels.", 0, G_MAXINT, 0,
+          "Specify a width in pixels.", -G_MAXINT, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HEIGHT,
       g_param_spec_int ("height", "height",
-          "Specify a height in pixels.", 0, G_MAXINT, 0,
+          "Specify a height in pixels.", -G_MAXINT, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WIDTH_RELATIVE,
       g_param_spec_float ("width-relative", "relative width",
-          "Specify a width relative to the display size.", 0, G_MAXFLOAT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Specify a width relative to the display size.", -G_MAXFLOAT,
+          G_MAXFLOAT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HEIGHT_RELATIVE,
       g_param_spec_float ("height-relative", "relative height",
-          "Specify a height relative to the display size.", 0, G_MAXFLOAT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Specify a height relative to the display size.", -G_MAXFLOAT,
+          G_MAXFLOAT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   basetransform_class->set_caps = gst_rsvg_overlay_set_caps;
   basetransform_class->transform_ip = gst_rsvg_overlay_transform_ip;
