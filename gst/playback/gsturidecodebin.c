@@ -333,14 +333,7 @@ static GValueArray *
 gst_uri_decode_bin_autoplug_sort (GstElement * element, GstPad * pad,
     GstCaps * caps, GValueArray * factories)
 {
-  GValueArray *result;
-
-  result = g_value_array_copy (factories);
-
-  GST_DEBUG_OBJECT (element, "autoplug-sort returns %p", result);
-
-  /* return input */
-  return result;
+  return NULL;
 }
 
 static void
