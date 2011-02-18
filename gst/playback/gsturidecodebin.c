@@ -124,7 +124,7 @@ struct _GstURIDecodeBinClass
       GstCaps * caps, GValueArray * factories);
   /* signal fired to select from the proposed list of factories */
     GstAutoplugSelectResult (*autoplug_select) (GstElement * element,
-      GstPad * pad, GstCaps * caps, GValueArray * factories);
+      GstPad * pad, GstCaps * caps, GstElementFactory * factory);
 
   /* emited when all data is decoded */
   void (*drained) (GstElement * element);
@@ -334,6 +334,16 @@ gst_uri_decode_bin_autoplug_sort (GstElement * element, GstPad * pad,
     GstCaps * caps, GValueArray * factories)
 {
   return NULL;
+}
+
+static GstAutoplugSelectResult
+gst_uri_decode_bin_autoplug_select (GstElement * element, GstPad * pad,
+    GstCaps * caps, GstElementFactory * factory)
+{
+  GST_DEBUG_OBJECT (element, "default autoplug-select returns TRY");
+
+  /* Try factory. */
+  return GST_AUTOPLUG_SELECT_TRY;
 }
 
 static void
@@ -619,6 +629,8 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   klass->autoplug_factories =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_factories);
   klass->autoplug_sort = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_sort);
+  klass->autoplug_select =
+      GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_select);
 }
 
 static void
