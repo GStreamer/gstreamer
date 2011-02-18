@@ -63,7 +63,7 @@ static void gst_buffer_pool_finalize (GObject * object);
 
 G_DEFINE_TYPE (GstBufferPool, gst_buffer_pool, GST_TYPE_OBJECT);
 
-static void default_set_flushing (GstBufferPool * pool, gboolean flushing);
+static void default_set_active (GstBufferPool * pool, gboolean active);
 static gboolean default_set_config (GstBufferPool * pool,
     GstStructure * config);
 static GstFlowReturn default_alloc_buffer (GstBufferPool * pool,
@@ -80,7 +80,7 @@ gst_buffer_pool_class_init (GstBufferPoolClass * klass)
 
   gobject_class->finalize = gst_buffer_pool_finalize;
 
-  klass->set_flushing = default_set_flushing;
+  klass->set_active = default_set_active;
   klass->set_config = default_set_config;
   klass->acquire_buffer = default_acquire_buffer;
   klass->alloc_buffer = default_alloc_buffer;
@@ -102,7 +102,7 @@ gst_buffer_pool_init (GstBufferPool * pool)
       GST_QUARK (ALIGN), G_TYPE_UINT, 1, NULL);
   pool->poll = gst_poll_new_timer ();
   pool->queue = gst_atomic_queue_new (10);
-  default_set_flushing (pool, TRUE);
+  default_set_active (pool, FALSE);
 
   GST_DEBUG_OBJECT (pool, "created");
 }
@@ -147,14 +147,14 @@ flush_buffers (GstBufferPool * pool)
 }
 
 /* the default implementation for allocating and freeing the
- * buffers when changing the flushing state */
+ * buffers when changing the active state */
 static void
-default_set_flushing (GstBufferPool * pool, gboolean flushing)
+default_set_active (GstBufferPool * pool, gboolean active)
 {
   guint i;
   GstBufferPoolPrivate *priv = pool->priv;
 
-  if (flushing) {
+  if (!active) {
     /* clear the pool */
     flush_buffers (pool);
   } else {
@@ -177,15 +177,15 @@ default_set_flushing (GstBufferPool * pool, gboolean flushing)
 }
 
 /**
- * gst_buffer_pool_set_flushing:
+ * gst_buffer_pool_set_active:
  * @pool: a #GstBufferPool
- * @flushing: the new flushing state
+ * @active: the new active state
  *
- * Control the flushing state of @pool. When the pool is flushing, new calls to
+ * Control the active state of @pool. When the pool is active, new calls to
  * gst_buffer_pool_acquire_buffer() will return with GST_FLOW_WRONG_STATE.
  */
 void
-gst_buffer_pool_set_flushing (GstBufferPool * pool, gboolean flushing)
+gst_buffer_pool_set_active (GstBufferPool * pool, gboolean active)
 {
   GstBufferPoolClass *pclass;
 
@@ -193,16 +193,16 @@ gst_buffer_pool_set_flushing (GstBufferPool * pool, gboolean flushing)
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
-  if (!g_atomic_int_compare_and_exchange (&pool->flushing, !flushing, flushing))
+  if (!g_atomic_int_compare_and_exchange (&pool->active, !active, active))
     return;
 
-  if (flushing)
+  if (!active)
     gst_poll_write_control (pool->poll);
 
-  if (G_LIKELY (pclass->set_flushing))
-    pclass->set_flushing (pool, flushing);
+  if (G_LIKELY (pclass->set_active))
+    pclass->set_active (pool, active);
 
-  if (!flushing)
+  if (active)
     gst_poll_read_control (pool->poll);
 }
 
@@ -223,7 +223,7 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
  * @pool: a #GstBufferPool
  * @config: a #GstStructure
  *
- * Set the configuration of the pool. The pool must be flushing or else this
+ * Set the configuration of the pool. The pool must be inactive or else this
  * function will do nothing and return FALSE.
  *
  * @condfig is a #GstStructure that contains the configuration parameters for
@@ -241,12 +241,12 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), FALSE);
   g_return_val_if_fail (config != NULL, FALSE);
 
-  if (!g_atomic_int_get (&pool->flushing))
+  if (g_atomic_int_get (&pool->active))
     return FALSE;
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
-  /* free the buffer when we are flushing */
+  /* free the buffer when we are inactive */
   if (G_LIKELY (pclass->set_config))
     result = pclass->set_config (pool, config);
   else
@@ -368,7 +368,7 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
   while (TRUE) {
-    if (g_atomic_int_get (&pool->flushing))
+    if (!g_atomic_int_get (&pool->active))
       return GST_FLOW_WRONG_STATE;
 
     /* try to get a buffer from the queue */
@@ -414,7 +414,7 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
  * @params can be NULL or contain optional parameters to influence the allocation.
  *
  * Returns: a #GstFlowReturn such as GST_FLOW_WRONG_STATE when the pool is
- * flushing.
+ * inactive.
  */
 GstFlowReturn
 gst_buffer_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
@@ -445,13 +445,13 @@ default_free_buffer (GstBufferPool * pool, GstBuffer * buffer)
 static void
 default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
-  /* keep it around in our queue, we might be flushing but that's ok because we
+  /* keep it around in our queue, we might be inactive but that's ok because we
    * handle that unlikely case below. */
   gst_atomic_queue_push (pool->queue, buffer);
   gst_poll_write_control (pool->poll);
 
-  if (G_UNLIKELY (g_atomic_int_get (&pool->flushing))) {
-    /* we are flushing, remove the buffers again */
+  if (G_UNLIKELY (!g_atomic_int_get (&pool->active))) {
+    /* we are inactive, remove the buffers again */
     flush_buffers (pool);
   }
 }
