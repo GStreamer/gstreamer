@@ -54,6 +54,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/selector/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/shapewipe/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/valve/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/videoparsers/.libs/libgsth263parse* \
 	$(top_builddir)/sys/oss4/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/tests/check/elements/autocolorspace \
 	$(top_builddir)/tests/check/elements/capssetter \
