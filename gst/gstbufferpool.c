@@ -433,7 +433,7 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     }
 
     /* check if we need to wait */
-    if (!(params->flags & GST_BUFFER_POOL_FLAG_WAIT)) {
+    if (params && !(params->flags & GST_BUFFER_POOL_FLAG_WAIT)) {
       result = GST_FLOW_UNEXPECTED;
       break;
     }
