@@ -2114,6 +2114,7 @@ GstEncodingProfile
 gst_encoding_profile_unref
 gst_encoding_profile_ref
 gst_encoding_profile_find
+gst_encoding_profile_from_discoverer
 gst_encoding_profile_get_name
 gst_encoding_profile_get_description
 gst_encoding_profile_get_format
