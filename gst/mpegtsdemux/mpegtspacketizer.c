@@ -2177,7 +2177,7 @@ mpegts_try_discover_packet_size (MpegTSPacketizer2 * packetizer)
         packetizer->know_packet_size, packetizer->packet_size);
     /* flush to sync byte */
     if (pos > 0) {
-      GST_DEBUG ("Flushing out %d bytes");
+      GST_DEBUG ("Flushing out %d bytes", pos);
       gst_adapter_flush (packetizer->adapter, pos);
       packetizer->offset += pos;
     } else if (!packetizer->know_packet_size) {
