@@ -2924,6 +2924,10 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
 /* autoplug-continue decides, if a pad has raw caps that can be exposed
  * directly or if further decoding is necessary. We use this to expose
  * supported subtitles directly */
+
+/* FIXME 0.11: Remove the checks for ANY caps, a sink should specify
+ * explicitely the caps it supports and if it claims to support ANY
+ * caps it really should support everything */
 static gboolean
 autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     GstSourceGroup * group)
@@ -2938,7 +2942,11 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   if ((sink = group->playbin->text_sink))
     sinkpad = gst_element_get_static_pad (sink, "sink");
   if (sinkpad) {
-    ret = !gst_pad_accept_caps (sinkpad, caps);
+    GstCaps *sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+
+    if (!gst_caps_is_any (sinkcaps))
+      ret = !gst_pad_accept_caps (sinkpad, caps);
+    gst_caps_unref (sinkcaps);
     gst_object_unref (sinkpad);
   } else {
     GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
@@ -2951,7 +2959,11 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   if ((sink = group->playbin->audio_sink)) {
     sinkpad = gst_element_get_static_pad (sink, "sink");
     if (sinkpad) {
-      ret = !gst_pad_accept_caps (sinkpad, caps);
+      GstCaps *sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+
+      if (!gst_caps_is_any (sinkcaps))
+        ret = !gst_pad_accept_caps (sinkpad, caps);
+      gst_caps_unref (sinkcaps);
       gst_object_unref (sinkpad);
     }
   }
@@ -2961,7 +2973,11 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   if ((sink = group->playbin->video_sink)) {
     sinkpad = gst_element_get_static_pad (sink, "sink");
     if (sinkpad) {
-      ret = !gst_pad_accept_caps (sinkpad, caps);
+      GstCaps *sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+
+      if (!gst_caps_is_any (sinkcaps))
+        ret = !gst_pad_accept_caps (sinkpad, caps);
+      gst_caps_unref (sinkcaps);
       gst_object_unref (sinkpad);
     }
   }
