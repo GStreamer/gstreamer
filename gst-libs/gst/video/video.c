@@ -1164,6 +1164,73 @@ gst_video_format_has_alpha (GstVideoFormat format)
 }
 
 /**
+ * gst_video_format_get_component_depth:
+ * @format: a #GstVideoFormat
+ * 
+ * Returns the number of bits used to encode an individual pixel of
+ * a given component.  Typically this is 8, although higher and lower
+ * values are possible for some formats.
+ *
+ * Since: 0.10.33
+ *
+ * Returns: depth of component
+ */
+int
+gst_video_format_get_component_depth (GstVideoFormat format, int component)
+{
+  if (component == 3 && !gst_video_format_has_alpha (format))
+    return 0;
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_BGR16:
+      if (component == 1)
+        return 6;
+      return 5;
+    case GST_VIDEO_FORMAT_RGB15:
+    case GST_VIDEO_FORMAT_BGR15:
+      return 5;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_v308:
+    case GST_VIDEO_FORMAT_Y800:
+    case GST_VIDEO_FORMAT_YUV9:
+    case GST_VIDEO_FORMAT_YVU9:
+    case GST_VIDEO_FORMAT_IYU1:
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    default:
+      return 8;
+    case GST_VIDEO_FORMAT_v210:
+    case GST_VIDEO_FORMAT_UYVP:
+      return 10;
+    case GST_VIDEO_FORMAT_Y16:
+    case GST_VIDEO_FORMAT_v216:
+      return 16;
+  }
+
+}
+
+/**
  * gst_video_format_get_row_stride:
  * @format: a #GstVideoFormat
  * @component: the component index

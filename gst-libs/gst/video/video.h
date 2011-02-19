@@ -421,6 +421,7 @@ gboolean gst_video_format_is_rgb (GstVideoFormat format);
 gboolean gst_video_format_is_yuv (GstVideoFormat format);
 gboolean gst_video_format_is_gray (GstVideoFormat format);
 gboolean gst_video_format_has_alpha (GstVideoFormat format);
+int gst_video_format_get_component_depth (GstVideoFormat format, int component);
 int gst_video_format_get_row_stride (GstVideoFormat format, int component,
     int width);
 int gst_video_format_get_pixel_stride (GstVideoFormat format, int component);
