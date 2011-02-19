@@ -82,11 +82,18 @@ gst_pngdec_get_type (void)
   return pngdec_type;
 }
 
+/* FIXME remove this after -good depends on -base-0.10.33 */
+#ifdef GST_VIDEO_CAPS_ARGB_64
+#define CAPS GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_ARGB_64
+#else
+#define CAPS GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB
+#endif
+
 static GstStaticPadTemplate gst_pngdec_src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (CAPS)
     );
 
 static GstStaticPadTemplate gst_pngdec_sink_pad_template =
@@ -370,12 +377,10 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
 
   /* Get bits per channel */
   bpc = png_get_bit_depth (pngdec->png, pngdec->info);
-
-  /* We don't handle 16 bits per color, strip down to 8 */
-  if (bpc == 16) {
-    GST_LOG_OBJECT (pngdec,
-        "this is a 16 bits per channel PNG image, strip down to 8 bits");
-    png_set_strip_16 (pngdec->png);
+  if (bpc > 8) {
+    /* Add alpha channel if 16-bit depth */
+    png_set_add_alpha (pngdec->png, 0xffff, PNG_FILLER_BEFORE);
+    png_set_swap (pngdec->png);
   }
 
   /* Get Color type */
@@ -428,11 +433,11 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   switch (pngdec->color_type) {
     case PNG_COLOR_TYPE_RGB:
       GST_LOG_OBJECT (pngdec, "we have no alpha channel, depth is 24 bits");
-      pngdec->bpp = 24;
+      pngdec->bpp = 3 * bpc;
       break;
     case PNG_COLOR_TYPE_RGB_ALPHA:
       GST_LOG_OBJECT (pngdec, "we have an alpha channel, depth is 32 bits");
-      pngdec->bpp = 32;
+      pngdec->bpp = 4 * bpc;
       break;
     default:
       GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
