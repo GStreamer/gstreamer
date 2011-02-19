@@ -43,6 +43,7 @@ struct _ColorspaceComponent {
 struct _ColorspaceConvert {
   gint width, height;
   gboolean interlaced;
+  gboolean use_16bit;
 
   GstVideoFormat from_format;
   ColorSpaceColorSpec from_spec;
@@ -51,6 +52,7 @@ struct _ColorspaceConvert {
   guint32 *palette;
 
   guint8 *tmpline;
+  guint16 *tmpline16;
 
   int dest_offset[4];
   int dest_stride[4];
@@ -61,6 +63,10 @@ struct _ColorspaceConvert {
   void (*getline) (ColorspaceConvert *convert, guint8 *dest, const guint8 *src, int j);
   void (*putline) (ColorspaceConvert *convert, guint8 *dest, const guint8 *src, int j);
   void (*matrix) (ColorspaceConvert *convert);
+
+  void (*getline16) (ColorspaceConvert *convert, guint16 *dest, const guint8 *src, int j);
+  void (*putline16) (ColorspaceConvert *convert, guint8 *dest, const guint16 *src, int j);
+  void (*matrix16) (ColorspaceConvert *convert);
 };
 
 ColorspaceConvert * colorspace_convert_new (GstVideoFormat to_format,
