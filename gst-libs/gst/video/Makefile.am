@@ -7,16 +7,14 @@ libgstbasevideo_@GST_MAJORMINOR@_la_SOURCES = \
 	gstbasevideoutils.c \
 	gstbasevideocodec.c \
 	gstbasevideodecoder.c \
-	gstbasevideoencoder.c \
-	gstbasevideoparse.c
+	gstbasevideoencoder.c
 
 libgstbasevideo_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
 libgstbasevideo_@GST_MAJORMINOR@include_HEADERS = \
 	gstbasevideoutils.h \
 	gstbasevideocodec.h \
 	gstbasevideodecoder.h \
-	gstbasevideoencoder.h \
-	gstbasevideoparse.h
+	gstbasevideoencoder.h
 
 libgstbasevideo_@GST_MAJORMINOR@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
