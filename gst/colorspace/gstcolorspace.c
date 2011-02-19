@@ -229,6 +229,10 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   space = GST_CSP (btrans);
 
+  if (space->convert) {
+    colorspace_convert_free (space->convert);
+  }
+
   /* input caps */
 
   ret = gst_video_format_parse_caps (incaps, &in_format, &in_width, &in_height);
