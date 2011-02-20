@@ -26,7 +26,6 @@
 #endif
 
 #include <gst/video/gstbasevideocodec.h>
-#include <gst/video/gstbasevideoutils.h>
 
 G_BEGIN_DECLS
 

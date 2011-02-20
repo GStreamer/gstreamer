@@ -26,7 +26,8 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/video/gstbasevideoutils.h>
+#include <gst/base/gstadapter.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -78,8 +79,59 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_VIDEO_CODEC_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
+typedef struct _GstVideoState GstVideoState;
+typedef struct _GstVideoFrame GstVideoFrame;
 typedef struct _GstBaseVideoCodec GstBaseVideoCodec;
 typedef struct _GstBaseVideoCodecClass GstBaseVideoCodecClass;
+
+struct _GstVideoState
+{
+  GstVideoFormat format;
+  int width, height;
+  int fps_n, fps_d;
+  int par_n, par_d;
+
+  gboolean have_interlaced;
+  gboolean interlaced;
+  gboolean top_field_first;
+
+  int clean_width, clean_height;
+  int clean_offset_left, clean_offset_top;
+
+  int bytes_per_picture;
+
+  //GstSegment segment;
+
+  int picture_number;
+  GstBuffer *codec_data;
+
+};
+
+struct _GstVideoFrame
+{
+  GstClockTime decode_timestamp;
+  GstClockTime presentation_timestamp;
+  GstClockTime presentation_duration;
+
+  gint system_frame_number;
+  gint decode_frame_number;
+  gint presentation_frame_number;
+
+  int distance_from_sync;
+  gboolean is_sync_point;
+  gboolean is_eos;
+
+  GstBuffer *sink_buffer;
+  GstBuffer *src_buffer;
+
+  int field_index;
+  int n_fields;
+
+  void *coder_hook;
+  GstClockTime deadline;
+
+  gboolean force_keyframe;
+};
 
 struct _GstBaseVideoCodec
 {
@@ -126,6 +178,16 @@ GType gst_base_video_codec_get_type (void);
 GstVideoFrame * gst_base_video_codec_new_frame (GstBaseVideoCodec *base_video_codec);
 void gst_base_video_codec_free_frame (GstVideoFrame *frame);
 
+
+gboolean gst_base_video_rawvideo_convert (GstVideoState *state,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 *dest_value);
+gboolean gst_base_video_encoded_video_convert (GstVideoState *state,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 *dest_value);
+
+GstClockTime gst_video_state_get_timestamp (const GstVideoState *state,
+    GstSegment *segment, int frame_number);
 
 G_END_DECLS
 

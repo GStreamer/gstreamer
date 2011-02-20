@@ -22,7 +22,6 @@
 #endif
 
 #include "gstbasevideoencoder.h"
-#include "gstbasevideoutils.h"
 
 GST_DEBUG_CATEGORY (basevideoencoder_debug);
 #define GST_CAT_DEFAULT basevideoencoder_debug
