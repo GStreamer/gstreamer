@@ -379,3 +379,44 @@ vs_fill_borders_RGB555 (const VSImage * dest, const uint8_t * val)
     data += stride;
   }
 }
+
+void
+vs_fill_borders_AYUV64 (const VSImage * dest, const uint8_t * val)
+{
+  int i;
+  int top = dest->border_top, bottom = dest->border_bottom;
+  int left = dest->border_left, right = dest->border_right;
+  int width = dest->width;
+  int height = dest->height;
+  int real_width = dest->real_width;
+  int stride = dest->stride;
+  int tmp, tmp2;
+  uint8_t *data;
+  uint64_t v;
+
+  v = (val[0] << 8) | (val[1] << 24) | (((guint64) val[2]) << 40) | (((guint64)
+          val[3]) << 56);
+
+  data = dest->real_pixels;
+  for (i = 0; i < top; i++) {
+    orc_splat_u64 ((uint64_t *) data, v, real_width);
+    data += stride;
+  }
+
+  if (left || right) {
+    tmp = height;
+    tmp2 = (left + width) * 8;
+    for (i = 0; i < tmp; i++) {
+      orc_splat_u64 ((uint64_t *) data, v, left);
+      orc_splat_u64 ((uint64_t *) (data + tmp2), v, right);
+      data += stride;
+    }
+  } else {
+    data += stride * height;
+  }
+
+  for (i = 0; i < bottom; i++) {
+    orc_splat_u64 ((uint64_t *) data, v, real_width);
+    data += stride;
+  }
+}

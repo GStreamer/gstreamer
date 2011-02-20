@@ -32,6 +32,7 @@ typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
 #define ORC_UINT64_C(x) (x##Ui64)
+#define inline __inline
 #else
 #include <limits.h>
 typedef signed char orc_int8;
@@ -78,6 +79,7 @@ void orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1,
     const orc_uint16 * s2, int p1, int p2, int n);
 void orc_splat_u16 (orc_uint16 * d1, int p1, int n);
 void orc_splat_u32 (orc_uint32 * d1, int p1, int n);
+void orc_splat_u64 (orc_uint64 * d1, orc_int64 p1, int n);
 void orc_downsample_u8 (guint8 * d1, const guint8 * s1, int n);
 void orc_downsample_u16 (guint16 * d1, const guint16 * s1, int n);
 void gst_videoscale_orc_downsample_u32 (guint8 * d1, const guint8 * s1, int n);
@@ -171,7 +173,7 @@ orc_merge_linear_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
   /* 6: loadpw */
   var38.i = p1;
   /* 8: loadpw */
-  var39.i = 0x00000080;         /* 128 or 6.32404e-322f */
+  var39.i = (int) 0x00000080;   /* 128 or 6.32404e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -229,7 +231,7 @@ _backup_orc_merge_linear_u8 (OrcExecutor * ORC_RESTRICT ex)
   /* 6: loadpw */
   var38.i = ex->params[24];
   /* 8: loadpw */
-  var39.i = 0x00000080;         /* 128 or 6.32404e-322f */
+  var39.i = (int) 0x00000080;   /* 128 or 6.32404e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -533,6 +535,81 @@ orc_splat_u32 (orc_uint32 * d1, int p1, int n)
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->params[ORC_VAR_P1] = p1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_splat_u64 */
+#ifdef DISABLE_ORC
+void
+orc_splat_u64 (orc_uint64 * d1, orc_int64 p1, int n)
+{
+  int i;
+  orc_union64 *ORC_RESTRICT ptr0;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *) d1;
+
+  /* 0: loadpq */
+  var32.i = p1;
+
+  for (i = 0; i < n; i++) {
+    /* 1: copyq */
+    var33.i = var32.i;
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+#else
+static void
+_backup_orc_splat_u64 (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union64 *ORC_RESTRICT ptr0;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *) ex->arrays[0];
+
+  /* 0: loadpq */
+  var32.i =
+      (ex->params[24] & 0xffffffff) | ((orc_uint64) (ex->params[24 +
+              (ORC_VAR_T1 - ORC_VAR_P1)]) << 32);
+
+  for (i = 0; i < n; i++) {
+    /* 1: copyq */
+    var33.i = var32.i;
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_splat_u64;
+void
+orc_splat_u64 (orc_uint64 * d1, orc_int64 p1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_splat_u64;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  {
+    orc_union64 tmp;
+    tmp.i = p1;
+    ex->params[ORC_VAR_P1] = tmp.x2[0];
+    ex->params[ORC_VAR_T1] = tmp.x2[1];
+  }
 
   func = p->code_exec;
   func (ex);
@@ -1510,7 +1587,7 @@ gst_videoscale_orc_merge_bicubic_u8 (guint8 * d1, const guint8 * s1,
   /* 12: loadpb */
   var41 = p4;
   /* 15: loadpw */
-  var42.i = 0x00000020;         /* 32 or 1.58101e-322f */
+  var42.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -1593,7 +1670,7 @@ _backup_gst_videoscale_orc_merge_bicubic_u8 (OrcExecutor * ORC_RESTRICT ex)
   /* 12: loadpb */
   var41 = ex->params[27];
   /* 15: loadpw */
-  var42.i = 0x00000020;         /* 32 or 1.58101e-322f */
+  var42.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -1769,6 +1846,24 @@ gst_videoscale_orc_init (void)
     result = orc_program_compile (p);
 
     _orc_program_orc_splat_u32 = p;
+  }
+  {
+    /* orc_splat_u64 */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_splat_u64");
+    orc_program_set_backup_function (p, _backup_orc_splat_u64);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_parameter_int64 (p, 8, "p1");
+
+    orc_program_append_2 (p, "copyq", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_splat_u64 = p;
   }
   {
     /* orc_downsample_u8 */

@@ -129,7 +129,9 @@ static GstStaticCaps gst_video_scale_format_caps[] = {
   GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY8),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y800")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y8  ")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("GREY"))
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("GREY")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AY64")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB_64)
 };
 
 #define GST_TYPE_VIDEO_SCALE_METHOD (gst_video_scale_method_get_type())
@@ -422,9 +424,7 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 
   if (videoscale->tmp_buf)
     g_free (videoscale->tmp_buf);
-  videoscale->tmp_buf =
-      g_malloc (gst_video_format_get_row_stride (videoscale->format, 0,
-          videoscale->to_width) * 4);
+  videoscale->tmp_buf = g_malloc (videoscale->to_width * 8 * 4);
 
   gst_base_transform_set_passthrough (trans,
       (videoscale->from_width == videoscale->to_width
@@ -960,6 +960,7 @@ _get_black_for_format (GstVideoFormat format)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_ARGB64:
       return black[0];
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_BGRA:
@@ -967,6 +968,7 @@ _get_black_for_format (GstVideoFormat format)
     case GST_VIDEO_FORMAT_BGRx:
       return black[1];
     case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_AYUV64:
       return black[2];
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
@@ -1067,6 +1069,24 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           break;
         case GST_VIDEO_SCALE_4TAP:
           vs_image_scale_4tap_RGBA (&dest, &src, videoscale->tmp_buf);
+          break;
+        default:
+          goto unknown_mode;
+      }
+      break;
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
+      if (add_borders)
+        vs_fill_borders_AYUV64 (&dest, black);
+      switch (method) {
+        case GST_VIDEO_SCALE_NEAREST:
+          vs_image_scale_nearest_AYUV64 (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_BILINEAR:
+          vs_image_scale_linear_AYUV64 (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_4TAP:
+          vs_image_scale_4tap_AYUV64 (&dest, &src, videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;

@@ -54,6 +54,13 @@ copyw d1, p1
 copyl d1, p1
 
 
+.function orc_splat_u64
+.dest 8 d1
+.longparam 8 p1
+
+copyq d1, p1
+
+
 .function orc_downsample_u8
 .dest 1 d1 guint8
 .source 2 s1 guint8

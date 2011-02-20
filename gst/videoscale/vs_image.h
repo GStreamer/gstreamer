@@ -84,5 +84,15 @@ void vs_image_scale_nearest_Y16 (const VSImage *dest, const VSImage *src,
 void vs_image_scale_linear_Y16 (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);
 
+void vs_image_scale_nearest_AYUV16 (const VSImage *dest, const VSImage *src,
+    uint8_t *tmpbuf);
+void vs_image_scale_linear_AYUV16 (const VSImage *dest, const VSImage *src,
+    uint8_t *tmpbuf);
+
+void vs_image_scale_nearest_AYUV64 (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf8);
+void vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf8);
+
 #endif
 

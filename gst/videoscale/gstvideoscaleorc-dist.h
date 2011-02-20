@@ -37,6 +37,7 @@ typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
 #define ORC_UINT64_C(x) (x##Ui64)
+#define inline __inline
 #else
 #include <limits.h>
 typedef signed char orc_int8;
@@ -63,6 +64,7 @@ void orc_merge_linear_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 
 void orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1, const orc_uint16 * s2, int p1, int p2, int n);
 void orc_splat_u16 (orc_uint16 * d1, int p1, int n);
 void orc_splat_u32 (orc_uint32 * d1, int p1, int n);
+void orc_splat_u64 (orc_uint64 * d1, orc_int64 p1, int n);
 void orc_downsample_u8 (guint8 * d1, const guint8 * s1, int n);
 void orc_downsample_u16 (guint16 * d1, const guint16 * s1, int n);
 void gst_videoscale_orc_downsample_u32 (guint8 * d1, const guint8 * s1, int n);
