@@ -588,7 +588,8 @@ getline_Y41B (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
 {
   cogorc_getline_YUV9 (dest,
       FRAME_GET_LINE (src, 0, j),
-      FRAME_GET_LINE (src, 1, j), FRAME_GET_LINE (src, 2, j), convert->width);
+      FRAME_GET_LINE (src, 1, j), FRAME_GET_LINE (src, 2, j),
+      convert->width / 2);
 }
 
 static void
@@ -1053,7 +1054,7 @@ getline_YUV9 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
   cogorc_getline_YUV9 (dest,
       FRAME_GET_LINE (src, 0, j),
       FRAME_GET_LINE (src, 1, j >> 2),
-      FRAME_GET_LINE (src, 2, j >> 2), convert->width);
+      FRAME_GET_LINE (src, 2, j >> 2), convert->width / 2);
 }
 
 static void
