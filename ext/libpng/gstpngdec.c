@@ -82,18 +82,12 @@ gst_pngdec_get_type (void)
   return pngdec_type;
 }
 
-/* FIXME remove this after -good depends on -base-0.10.33 */
-#ifdef GST_VIDEO_CAPS_ARGB_64
-#define CAPS GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_ARGB_64
-#else
-#define CAPS GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB
-#endif
-
 static GstStaticPadTemplate gst_pngdec_src_pad_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (CAPS)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB ";"
+        GST_VIDEO_CAPS_ARGB_64)
     );
 
 static GstStaticPadTemplate gst_pngdec_sink_pad_template =
