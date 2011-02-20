@@ -1384,7 +1384,8 @@ x2 mergewl ayuv, ayay, uvuv
 .temp 4 ayay
 .temp 4 uvuv
 
-x2 splitwb yy, uv, uyvy
+x2 splitwb uv, yy, uyvy
+swapw uv, uv
 x2 mergebw ayay, c255, yy
 mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
