@@ -1253,7 +1253,9 @@ gst_ssim_release_pad (GstElement * element, GstPad * pad)
 
   GST_DEBUG_OBJECT (ssim, "release pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  gst_collect_pads_remove_pad (ssim->collect, pad);
+  if (ssim->collect) {
+    gst_collect_pads_remove_pad (ssim->collect, pad);
+  }
   gst_element_remove_pad (element, pad);
 }
 

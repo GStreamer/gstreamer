@@ -588,7 +588,9 @@ mpegpsmux_release_pad (GstElement * element, GstPad * pad)
   }
   GST_OBJECT_UNLOCK (pad);
 
-  gst_collect_pads_remove_pad (mux->collect, pad);
+  if (mux->collect) {
+    gst_collect_pads_remove_pad (mux->collect, pad);
+  }
 }
 
 static gboolean
