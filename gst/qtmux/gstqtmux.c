@@ -503,7 +503,6 @@ gst_qt_mux_finalize (GObject * object)
 
   atoms_context_free (qtmux->context);
   gst_object_unref (qtmux->collect);
-  qtmux->collect = NULL;
 
   g_slist_free (qtmux->sinkpads);
 
@@ -3166,9 +3165,7 @@ gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
     }
   }
 
-  if (mux->collect) {
-    gst_collect_pads_remove_pad (mux->collect, pad);
-  }
+  gst_collect_pads_remove_pad (mux->collect, pad);
 }
 
 static GstPad *
