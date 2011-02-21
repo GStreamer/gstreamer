@@ -335,8 +335,6 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
 
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad))
-      == GST_PAD_REQUEST);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
@@ -2960,9 +2958,6 @@ gst_element_dispose (GObject * object)
   GstElement *element = GST_ELEMENT_CAST (object);
   GstClock **clock_p;
   GstBus **bus_p;
-  GstElementClass *oclass;
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
 
@@ -2973,15 +2968,8 @@ gst_element_dispose (GObject * object)
       "removing %d pads", g_list_length (element->pads));
   /* first we break all our links with the outside */
   while (element->pads && element->pads->data) {
-    GstPad *pad = GST_PAD_CAST (element->pads->data);
-
     /* don't call _remove_pad with NULL */
-    if (oclass->release_pad && GST_PAD_PAD_TEMPLATE (pad) &&
-        GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad))
-        == GST_PAD_REQUEST)
-      (oclass->release_pad) (element, GST_PAD_CAST (element->pads->data));
-    else
-      gst_element_remove_pad (element, GST_PAD_CAST (element->pads->data));
+    gst_element_remove_pad (element, GST_PAD_CAST (element->pads->data));
   }
   if (G_UNLIKELY (element->pads != NULL)) {
     g_critical ("could not remove pads from element %s",
