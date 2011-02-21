@@ -45,7 +45,7 @@ G_BEGIN_DECLS
 typedef struct _GstMpeg2dec GstMpeg2dec;
 typedef struct _GstMpeg2decClass GstMpeg2decClass;
 
-typedef enum 
+typedef enum
 {
   MPEG2DEC_DISC_NONE            = 0,
   MPEG2DEC_DISC_NEW_PICTURE,
@@ -95,17 +95,15 @@ struct _GstMpeg2dec {
   gint           v_offs;
   guint8        *dummybuf[4];
 
-  
+
   guint64        offset;
   gint           fps_n;
   gint           fps_d;
   gboolean       need_sequence;
 
-#ifndef GST_DISABLE_INDEX
   GstIndex      *index;
   gint           index_id;
-#endif
-  
+
   gint           error_count;
   gboolean       can_allocate_aligned;
 

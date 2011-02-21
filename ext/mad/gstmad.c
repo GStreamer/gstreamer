@@ -100,10 +100,8 @@ static GstFlowReturn gst_mad_chain_reverse (GstMad * mad, GstBuffer * buf);
 static GstStateChangeReturn gst_mad_change_state (GstElement * element,
     GstStateChange transition);
 
-#ifndef GST_DISABLE_INDEX
 static void gst_mad_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mad_get_index (GstElement * element);
-#endif
 
 static GstTagList *gst_mad_id3_to_tag_list (const struct id3_tag *tag);
 
@@ -200,10 +198,8 @@ gst_mad_class_init (GstMadClass * klass)
   gobject_class->dispose = gst_mad_dispose;
 
   gstelement_class->change_state = gst_mad_change_state;
-#ifndef GST_DISABLE_INDEX
   gstelement_class->set_index = gst_mad_set_index;
   gstelement_class->get_index = gst_mad_get_index;
-#endif
 
   /* init properties */
   /* currently, string representations are used, we might want to change that */
@@ -287,9 +283,7 @@ gst_mad_dispose (GObject * object)
 {
   GstMad *mad = GST_MAD (object);
 
-#ifndef GST_DISABLE_INDEX
   gst_mad_set_index (GST_ELEMENT (object), NULL);
-#endif
 
   g_free (mad->tempbuffer);
   mad->tempbuffer = NULL;
@@ -301,7 +295,6 @@ gst_mad_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-#ifndef GST_DISABLE_INDEX
 static void
 gst_mad_set_index (GstElement * element, GstIndex * index)
 {
@@ -320,7 +313,6 @@ gst_mad_get_index (GstElement * element)
 
   return mad->index;
 }
-#endif
 
 static gboolean
 gst_mad_convert_sink (GstPad * pad, GstFormat src_format, gint64 src_value,
@@ -604,7 +596,6 @@ error:
   return FALSE;
 }
 
-#ifndef GST_DISABLE_INDEX
 static gboolean
 index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 {
@@ -681,7 +672,6 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 
   return FALSE;
 }
-#endif
 
 static gboolean
 normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
@@ -807,11 +797,9 @@ gst_mad_src_event (GstPad * pad, GstEvent * event)
       /* the all-formats seek logic, ref the event, we need it later */
       gst_event_ref (event);
       if (!(res = gst_pad_push_event (mad->sinkpad, event))) {
-#ifndef GST_DISABLE_INDEX
         if (mad->index)
           res = index_seek (mad, pad, event);
         else
-#endif
           res = normal_seek (mad, pad, event);
       }
       gst_event_unref (event);
@@ -1672,7 +1660,6 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
             GST_SECOND, mad->rate) - time_offset;
       }
 
-#ifndef GST_DISABLE_INDEX
       if (mad->index) {
         guint64 x_bytes = mad->base_byte_offset + mad->bytes_consumed;
 
@@ -1680,7 +1667,6 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
             GST_ASSOCIATION_FLAG_DELTA_UNIT,
             GST_FORMAT_BYTES, x_bytes, GST_FORMAT_TIME, time_offset, NULL);
       }
-#endif
 
       if (mad->segment_start <= (time_offset ==
               GST_CLOCK_TIME_NONE ? 0 : time_offset)) {
