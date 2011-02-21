@@ -42,6 +42,18 @@
  */
 
 /* FIXME: complete gobject annotations */
+/* FIXME-0.11: cleanup API
+ * - no one seems to use GstIndexGroup, GstIndexCertainty
+ *
+ * - the API for application to use the index is mostly missing
+ *   - apps need to get a list of writers
+ *   - apps need to be able to iterate over each writers index entry collection
+ * - gst_index_get_assoc_entry() should pass ownership
+ *   - the GstIndexEntry structure is large and contains repetitive information
+ *   - we want to allow Indexers to implement a saner storage and create
+ *     GstIndexEntries on demand (the app has to free them), might even make
+ *     sense to ask the app to provide a ptr and fill it.
+ */
 
 #include "gst_private.h"
 
