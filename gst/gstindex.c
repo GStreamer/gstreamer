@@ -306,7 +306,7 @@ gst_index_group_free (GstIndexGroup * group)
  * gst_index_new:
  *
  * Create a new dummy index object. Use gst_element_set_index() to assign that
- * to an element or pipeline. This index is not storeing anything, but will
+ * to an element or pipeline. This index is not storing anything, but will
  * still emit e.g. the #GstIndex::entry-added signal.
  *
  * Returns: (transfer full): a new index object
