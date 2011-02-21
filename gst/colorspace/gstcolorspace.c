@@ -46,6 +46,12 @@ GST_DEBUG_CATEGORY (colorspace_debug);
 #define GST_CAT_DEFAULT colorspace_debug
 GST_DEBUG_CATEGORY (colorspace_performance);
 
+enum
+{
+  PROP_0,
+  PROP_DITHER
+};
+
 #define CSP_VIDEO_CAPS						\
   "video/x-raw-yuv, width = "GST_VIDEO_SIZE_RANGE" , "			\
   "height="GST_VIDEO_SIZE_RANGE",framerate="GST_VIDEO_FPS_RANGE","	\
@@ -86,6 +92,12 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 GType gst_csp_get_type (void);
 
+static void gst_csp_set_property (GObject * object,
+    guint property_id, const GValue * value, GParamSpec * pspec);
+static void gst_csp_get_property (GObject * object,
+    guint property_id, GValue * value, GParamSpec * pspec);
+static void gst_csp_dispose (GObject * object);
+
 static gboolean gst_csp_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
 static gboolean gst_csp_get_unit_size (GstBaseTransform * btrans,
@@ -96,6 +108,25 @@ static GstFlowReturn gst_csp_transform (GstBaseTransform * btrans,
 static GQuark _QRAWRGB;         /* "video/x-raw-rgb" */
 static GQuark _QRAWYUV;         /* "video/x-raw-yuv" */
 static GQuark _QALPHAMASK;      /* "alpha_mask" */
+
+
+static GType
+dither_method_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {DITHER_NONE, "No dithering (default)", "none"},
+      {DITHER_VERTERR, "Vertical error propogation", "verterr"},
+      {DITHER_HALFTONE, "Half-tone", "halftone"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstColorspaceDitherMethod", values);
+  }
+  return gtype;
+}
 
 /* copies the given caps */
 static GstCaps *
@@ -395,6 +426,19 @@ gst_csp_base_init (gpointer klass)
   _QALPHAMASK = g_quark_from_string ("alpha_mask");
 }
 
+void
+gst_csp_dispose (GObject * object)
+{
+  GstCsp *csp;
+
+  g_return_if_fail (GST_IS_CSP (object));
+  csp = GST_CSP (object);
+
+  /* clean up as possible.  may be called multiple times */
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
 static void
 gst_csp_finalize (GObject * obj)
 {
@@ -415,6 +459,9 @@ gst_csp_class_init (GstCspClass * klass)
   GstBaseTransformClass *gstbasetransform_class =
       (GstBaseTransformClass *) klass;
 
+  gobject_class->set_property = gst_csp_set_property;
+  gobject_class->get_property = gst_csp_get_property;
+  gobject_class->dispose = gst_csp_dispose;
   gobject_class->finalize = gst_csp_finalize;
 
   gstbasetransform_class->transform_caps =
@@ -425,6 +472,12 @@ gst_csp_class_init (GstCspClass * klass)
   gstbasetransform_class->transform = GST_DEBUG_FUNCPTR (gst_csp_transform);
 
   gstbasetransform_class->passthrough_on_same_caps = TRUE;
+
+  g_object_class_install_property (gobject_class, PROP_DITHER,
+      g_param_spec_enum ("dither", "Dither", "Apply dithering while converting",
+          dither_method_get_type (), DITHER_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
 
 static void
@@ -432,6 +485,44 @@ gst_csp_init (GstCsp * space, GstCspClass * klass)
 {
   space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
   space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+void
+gst_csp_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstCsp *csp;
+
+  g_return_if_fail (GST_IS_CSP (object));
+  csp = GST_CSP (object);
+
+  switch (property_id) {
+    case PROP_DITHER:
+      csp->dither = g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+}
+
+void
+gst_csp_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstCsp *csp;
+
+  g_return_if_fail (GST_IS_CSP (object));
+  csp = GST_CSP (object);
+
+  switch (property_id) {
+    case PROP_DITHER:
+      g_value_set_enum (value, csp->dither);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
 }
 
 static gboolean
@@ -464,6 +555,12 @@ gst_csp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
   if (G_UNLIKELY (space->from_format == GST_VIDEO_FORMAT_UNKNOWN ||
           space->to_format == GST_VIDEO_FORMAT_UNKNOWN))
     goto unknown_format;
+
+  if (space->dither) {
+    colorspace_convert_set_dither (space->convert, 1);
+  } else {
+    colorspace_convert_set_dither (space->convert, 0);
+  }
 
   colorspace_convert_convert (space->convert, GST_BUFFER_DATA (outbuf),
       GST_BUFFER_DATA (inbuf));

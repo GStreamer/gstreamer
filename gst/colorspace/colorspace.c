@@ -32,6 +32,9 @@ static void colorspace_convert_generic (ColorspaceConvert * convert,
     guint8 * dest, const guint8 * src);
 static void colorspace_convert_lookup_fastpath (ColorspaceConvert * convert);
 static void colorspace_convert_lookup_getput (ColorspaceConvert * convert);
+static void colorspace_dither_none (ColorspaceConvert * convert, int j);
+static void colorspace_dither_verterr (ColorspaceConvert * convert, int j);
+static void colorspace_dither_halftone (ColorspaceConvert * convert, int j);
 
 
 ColorspaceConvert *
@@ -72,6 +75,7 @@ colorspace_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
   convert->height = height;
   convert->width = width;
   convert->convert = colorspace_convert_generic;
+  convert->dither16 = colorspace_dither_none;
 
   if (gst_video_format_get_component_depth (to_format, 0) > 8 ||
       gst_video_format_get_component_depth (from_format, 0) > 8) {
@@ -105,6 +109,7 @@ colorspace_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
 
   convert->tmpline = g_malloc (sizeof (guint8) * (width + 8) * 4);
   convert->tmpline16 = g_malloc (sizeof (guint16) * (width + 8) * 4);
+  convert->errline = g_malloc (sizeof (guint16) * width * 4);
 
   if (to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
     /* build poor man's palette, taken from ffmpegcolorspace */
@@ -137,6 +142,7 @@ colorspace_convert_free (ColorspaceConvert * convert)
   g_free (convert->palette);
   g_free (convert->tmpline);
   g_free (convert->tmpline16);
+  g_free (convert->errline);
 
   g_free (convert);
 }
@@ -146,6 +152,23 @@ colorspace_convert_set_interlaced (ColorspaceConvert * convert,
     gboolean interlaced)
 {
   convert->interlaced = interlaced;
+}
+
+void
+colorspace_convert_set_dither (ColorspaceConvert * convert, int type)
+{
+  switch (type) {
+    case 0:
+    default:
+      convert->dither16 = colorspace_dither_none;
+      break;
+    case 1:
+      convert->dither16 = colorspace_dither_verterr;
+      break;
+    case 2:
+      convert->dither16 = colorspace_dither_halftone;
+      break;
+  }
 }
 
 void
@@ -1681,6 +1704,7 @@ colorspace_convert_generic (ColorspaceConvert * convert, guint8 * dest,
     for (j = 0; j < convert->height; j++) {
       convert->getline16 (convert, convert->tmpline16, src, j);
       convert->matrix16 (convert);
+      convert->dither16 (convert, j);
       convert->putline16 (convert, dest, convert->tmpline16, j);
     }
   } else {
@@ -1692,6 +1716,44 @@ colorspace_convert_generic (ColorspaceConvert * convert, guint8 * dest,
   }
 }
 
+static void
+colorspace_dither_none (ColorspaceConvert * convert, int j)
+{
+}
+
+static void
+colorspace_dither_verterr (ColorspaceConvert * convert, int j)
+{
+  int i;
+  guint16 *tmpline = convert->tmpline16;
+  guint16 *errline = convert->errline;
+
+  for (i = 0; i < 4 * convert->width; i++) {
+    tmpline[i] += errline[i];
+    errline[i] = tmpline[i] & 0xff;
+  }
+}
+
+static void
+colorspace_dither_halftone (ColorspaceConvert * convert, int j)
+{
+  int i;
+  guint16 *tmpline = convert->tmpline16;
+  static guint16 halftone[8][8] = {
+    {0, 128, 32, 160, 8, 136, 40, 168},
+    {192, 64, 224, 96, 200, 72, 232, 104},
+    {48, 176, 16, 144, 56, 184, 24, 152},
+    {240, 112, 208, 80, 248, 120, 216, 88},
+    {12, 240, 44, 172, 4, 132, 36, 164},
+    {204, 76, 236, 108, 196, 68, 228, 100},
+    {60, 188, 28, 156, 52, 180, 20, 148},
+    {252, 142, 220, 92, 244, 116, 212, 84}
+  };
+
+  for (i = 0; i < convert->width * 4; i++) {
+    tmpline[i] += halftone[(i >> 2) & 7][j & 7];
+  }
+}
 
 /* Fast paths */
 
