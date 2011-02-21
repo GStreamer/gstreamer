@@ -285,6 +285,7 @@ gst_avi_mux_finalize (GObject * object)
   mux->idx = NULL;
 
   gst_object_unref (mux->collect);
+  mux->collect = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1089,7 +1090,9 @@ gst_avi_mux_release_pad (GstElement * element, GstPad * pad)
        * as it also represent number of streams present */
       avipad->collect = NULL;
       GST_DEBUG_OBJECT (avimux, "removed pad '%s'", GST_PAD_NAME (pad));
-      gst_collect_pads_remove_pad (avimux->collect, pad);
+      if (avimux->collect) {
+        gst_collect_pads_remove_pad (avimux->collect, pad);
+      }
       gst_element_remove_pad (element, pad);
       /* if not started yet, we can remove any sign this pad ever existed */
       /* in this case _start will take care of the real pad count */
