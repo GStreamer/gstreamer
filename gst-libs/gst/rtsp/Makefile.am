@@ -56,8 +56,8 @@ gir_headers=$(patsubst %,$(srcdir)/%, $(libgstrtspinclude_HEADERS))
 gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstrtspinclude_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstrtsp_@GST_MAJORMINOR@_la_SOURCES))
 gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstrtsp_@GST_MAJORMINOR@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstrtspinclude_HEADERS))
-gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstrtspinclude_HEADERS))
+gir_cincludes=$(patsubst %,--c-include='gst/rtsp/%',$(libgstrtspinclude_HEADERS))
+gir_cincludes+=$(patsubst %,--c-include='gst/rtsp/%',$(nodist_libgstrtspinclude_HEADERS))
 
 GstRtsp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_MAJORMINOR@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
