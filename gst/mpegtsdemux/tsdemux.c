@@ -526,6 +526,10 @@ create_pad_for_stream (GstTSDemux * demux, MpegTSBaseStream * bstream,
     case ST_PRIVATE_SECTIONS:
     case ST_MHEG:
     case ST_DSMCC:
+    case ST_DSMCC_A:
+    case ST_DSMCC_B:
+    case ST_DSMCC_C:
+    case ST_DSMCC_D:
       break;
     case ST_AUDIO_AAC:
       template = gst_static_pad_template_get (&audio_template);
