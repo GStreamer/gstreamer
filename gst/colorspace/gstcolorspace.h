@@ -56,6 +56,7 @@ struct _GstCsp {
   ColorSpaceColorSpec to_spec;
 
   ColorspaceConvert *convert;
+  gboolean dither;
 };
 
 struct _GstCspClass
