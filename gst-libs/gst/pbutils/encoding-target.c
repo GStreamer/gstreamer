@@ -707,6 +707,9 @@ load_file_and_read_header (const gchar * path, gchar ** targetname,
 {
   GKeyFile *in;
   gboolean res;
+  GError *key_error = NULL;
+
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
   in = g_key_file_new ();
 
@@ -714,12 +717,13 @@ load_file_and_read_header (const gchar * path, gchar ** targetname,
 
   res =
       g_key_file_load_from_file (in, path,
-      G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, error);
-  if (!res || error != NULL)
+      G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &key_error);
+  if (!res || key_error != NULL)
     goto load_error;
 
+  key_error = NULL;
   *targetname =
-      g_key_file_get_value (in, GST_ENCODING_TARGET_HEADER, "name", error);
+      g_key_file_get_value (in, GST_ENCODING_TARGET_HEADER, "name", &key_error);
   if (!*targetname)
     goto empty_name;
 
@@ -734,14 +738,16 @@ load_file_and_read_header (const gchar * path, gchar ** targetname,
 load_error:
   {
     GST_WARNING ("Unable to read GstEncodingTarget file %s: %s",
-        path, (*error)->message);
+        path, key_error->message);
+    g_propagate_error (error, key_error);
     g_key_file_free (in);
     return NULL;
   }
 
 empty_name:
   {
-    GST_WARNING ("Wrong header in file %s: %s", path, (*error)->message);
+    GST_WARNING ("Wrong header in file %s: %s", path, key_error->message);
+    g_propagate_error (error, key_error);
     g_key_file_free (in);
     return NULL;
   }
