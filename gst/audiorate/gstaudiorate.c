@@ -78,6 +78,7 @@ enum
 
 #define DEFAULT_SILENT     TRUE
 #define DEFAULT_TOLERANCE  0
+#define DEFAULT_SKIP_TO_FIRST FALSE
 
 enum
 {
@@ -88,7 +89,7 @@ enum
   ARG_DROP,
   ARG_SILENT,
   ARG_TOLERANCE,
-  /* FILL ME */
+  ARG_SKIP_TO_FIRST
 };
 
 static GstStaticPadTemplate gst_audio_rate_src_template =
@@ -211,6 +212,18 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
           "Only act if timestamp jitter/imperfection exceeds indicated tolerance (ns)",
           0, G_MAXUINT64, DEFAULT_TOLERANCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstAudioRate:skip-to-first:
+   *
+   * Don't produce buffers before the first one we receive.
+   *
+   * Since: 0.10.33
+   **/
+  g_object_class_install_property (object_class, ARG_SKIP_TO_FIRST,
+      g_param_spec_boolean ("skip-to-first", "Skip to first buffer",
+          "Don't produce buffers before the first one we receive",
+          DEFAULT_SKIP_TO_FIRST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = gst_audio_rate_change_state;
 }
@@ -556,6 +569,16 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     audiorate->next_offset = pos;
     audiorate->next_ts = gst_util_uint64_scale_int (audiorate->next_offset,
         GST_SECOND, audiorate->rate);
+
+    if (audiorate->skip_to_first && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+      GST_DEBUG_OBJECT (audiorate, "but skipping to first buffer instead");
+      pos = gst_util_uint64_scale_int (GST_BUFFER_TIMESTAMP (buf),
+          audiorate->rate, GST_SECOND);
+      GST_DEBUG_OBJECT (audiorate, "so resync to offset %" G_GINT64_FORMAT,
+          pos);
+      audiorate->next_offset = pos;
+      audiorate->next_ts = GST_BUFFER_TIMESTAMP (buf);
+    }
   }
 
   audiorate->in++;
@@ -768,6 +791,9 @@ gst_audio_rate_set_property (GObject * object,
     case ARG_TOLERANCE:
       audiorate->tolerance = g_value_get_uint64 (value);
       break;
+    case ARG_SKIP_TO_FIRST:
+      audiorate->skip_to_first = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -798,6 +824,9 @@ gst_audio_rate_get_property (GObject * object,
       break;
     case ARG_TOLERANCE:
       g_value_set_uint64 (value, audiorate->tolerance);
+      break;
+    case ARG_SKIP_TO_FIRST:
+      g_value_set_boolean (value, audiorate->skip_to_first);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
