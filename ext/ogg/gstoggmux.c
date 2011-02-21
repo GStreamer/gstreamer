@@ -462,7 +462,9 @@ gst_ogg_mux_release_pad (GstElement * element, GstPad * pad)
 
   ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
 
-  gst_collect_pads_remove_pad (ogg_mux->collect, pad);
+  if (ogg_mux->collect) {
+    gst_collect_pads_remove_pad (ogg_mux->collect, pad);
+  }
   gst_element_remove_pad (element, pad);
 
   gst_object_unref (ogg_mux);
