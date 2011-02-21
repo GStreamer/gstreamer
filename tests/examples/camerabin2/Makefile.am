@@ -36,6 +36,7 @@ gst_camerabin2_test_CFLAGS  = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_PLU
 gst_camerabin2_test_LDADD   = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
 	-lgstinterfaces-@GST_MAJORMINOR@ \
+	-lgstpbutils-$(GST_MAJORMINOR) \
 	$(GST_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(X11_LIBS)

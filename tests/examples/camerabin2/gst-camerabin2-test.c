@@ -63,6 +63,9 @@
     --x-width                         X window width (default = 320)
     --x-height                        X window height (default = 240)
     --no-xwindow                      Do not create XWindow
+    --encoding-target                 Video encoding target name
+    --encoding-profile                Video encoding profile name
+    --encoding-profile-filename       Video encoding profile filename
 
   */
 
@@ -85,7 +88,8 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <glib/gstdio.h>
-
+#include <gst/pbutils/encoding-profile.h>
+#include <gst/pbutils/encoding-target.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 /*
@@ -116,6 +120,10 @@ static gint image_height = 0;
 static gint view_framerate_num = 0;
 static gint view_framerate_den = 0;
 static gboolean no_xwindow = FALSE;
+static gchar *gep_targetname = NULL;
+static gchar *gep_profilename = NULL;
+static gchar *gep_filename = NULL;
+
 
 #define MODE_VIDEO 2
 #define MODE_IMAGE 1
@@ -370,6 +378,47 @@ create_ipp_bin (void)
   return bin;
 }
 
+static GstEncodingProfile *
+load_encoding_profile (void)
+{
+  GstEncodingProfile *prof = NULL;
+  GstEncodingTarget *target = NULL;
+  GError *error = NULL;
+
+  /* if profile file was given, try to load profile from there */
+  if (gep_filename && gep_profilename) {
+    target = gst_encoding_target_load_from_file (gep_filename, &error);
+    if (!target) {
+      GST_WARNING ("Could not load target %s from file %s", gep_targetname,
+          gep_filename);
+      if (error) {
+        GST_WARNING ("Error from file loading: %s", error->message);
+        g_error_free (error);
+        error = NULL;
+      }
+    } else {
+      prof = gst_encoding_target_get_profile (target, gep_profilename);
+      if (prof)
+        GST_DEBUG ("Loaded encoding profile %s from %s", gep_profilename,
+            gep_filename);
+      else
+        GST_WARNING
+            ("Could not load specified encoding profile %s from file %s",
+            gep_profilename, gep_filename);
+    }
+    /* if we could not load profile from file then try to find one from system */
+  } else if (gep_profilename && gep_targetname) {
+    prof = gst_encoding_profile_find (gep_targetname, gep_profilename, NULL);
+    if (prof)
+      GST_DEBUG ("Loaded encoding profile %s from target %s", gep_profilename,
+          gep_targetname);
+  } else
+    GST_DEBUG
+        ("Encoding profile not set, using camerabin2 default encoding profile");
+
+  return prof;
+}
+
 static gboolean
 setup_pipeline_element (GstElement * element, const gchar * property_name,
     const gchar * element_name, GstElement ** res_elem)
@@ -404,7 +453,7 @@ setup_pipeline (void)
   gboolean res = TRUE;
   GstBus *bus;
   GstElement *sink = NULL, *ipp = NULL;
-
+  GstEncodingProfile *prof = NULL;
   camerabin = gst_element_factory_make ("camerabin2", NULL);
   if (NULL == camerabin) {
     g_warning ("can't create camerabin element\n");
@@ -444,6 +493,10 @@ setup_pipeline (void)
     else
       GST_WARNING ("Could not create ipp elements");
   }
+
+  prof = load_encoding_profile ();
+  if (prof)
+    g_object_set (G_OBJECT (camerabin), "video-profile", prof, NULL);
 
   GST_INFO_OBJECT (camerabin, "elements created");
 
@@ -693,6 +746,12 @@ main (int argc, char *argv[])
         "X window height (default = 240)", NULL},
     {"no-xwindow", '\0', 0, G_OPTION_ARG_NONE, &no_xwindow,
         "Do not create XWindow", NULL},
+    {"encoding-target", '\0', 0, G_OPTION_ARG_STRING, &gep_targetname,
+        "Video encoding target name", NULL},
+    {"encoding-profile", '\0', 0, G_OPTION_ARG_STRING, &gep_profilename,
+        "Video encoding profile name", NULL},
+    {"encoding-profile-filename", '\0', 0, G_OPTION_ARG_STRING, &gep_filename,
+        "Video encoding profile filename", NULL},
     {NULL}
   };
 
@@ -746,6 +805,9 @@ main (int argc, char *argv[])
   g_free (imagepp_name);
   g_free (vfsink_name);
   g_free (target_times);
+  g_free (gep_targetname);
+  g_free (gep_profilename);
+  g_free (gep_filename);
   g_timer_destroy (timer);
 
   if (window)
