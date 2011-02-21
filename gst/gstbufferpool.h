@@ -97,6 +97,7 @@ struct _GstBufferPool {
 
   /*< private >*/
   gboolean             active;
+  gboolean             flushing;
   gint                 outstanding;
   GstAtomicQueue      *queue;
   GstPoll             *poll;
@@ -135,7 +136,7 @@ GstBufferPool *       gst_buffer_pool_new  (void);
 gboolean              gst_buffer_pool_set_active      (GstBufferPool *pool, gboolean active);
 
 gboolean              gst_buffer_pool_set_config      (GstBufferPool *pool, GstStructure *config);
-const GstStructure *  gst_buffer_pool_get_config      (GstBufferPool *pool);
+GstStructure *        gst_buffer_pool_get_config      (GstBufferPool *pool);
 
 /* helpers for configuring the config structure */
 void                  gst_buffer_pool_config_set      (GstStructure *config, guint size,
