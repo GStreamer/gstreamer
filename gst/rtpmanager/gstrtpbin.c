@@ -1767,11 +1767,13 @@ gst_rtp_bin_set_sdes_struct (GstRtpBin * bin, const GstStructure * sdes)
   if (bin->sdes)
     gst_structure_free (bin->sdes);
   bin->sdes = gst_structure_copy (sdes);
+  GST_OBJECT_UNLOCK (bin);
 
   /* store in all sessions */
-  for (item = bin->sessions; item; item = g_slist_next (item))
-    g_object_set (item->data, "sdes", sdes, NULL);
-  GST_OBJECT_UNLOCK (bin);
+  for (item = bin->sessions; item; item = g_slist_next (item)) {
+    GstRtpBinSession *session = item->data;
+    g_object_set (session->session, "sdes", sdes, NULL);
+  }
 
   GST_RTP_BIN_UNLOCK (bin);
 }
