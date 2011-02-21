@@ -502,7 +502,7 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
     {
       const char *flag_list[12] = {
-        "ro", "", "", "",
+        "ro", "media4", "", "",
         "preroll", "discont", "incaps", "gap",
         "delta_unit", "media1", "media2", "media3"
       };
