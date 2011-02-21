@@ -1539,9 +1539,9 @@ matrix16_yuv_bt470_6_to_rgb (ColorspaceConvert * convert)
     g = (298 * y - 100 * u - 208 * v + 34707 * 256) >> 8;
     b = (298 * y + 516 * u - 70870 * 256) >> 8;
 
-    tmpline[i * 4 + 1] = CLAMP (y, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (u, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (v, 0, 65535);
+    tmpline[i * 4 + 1] = CLAMP (r, 0, 65535);
+    tmpline[i * 4 + 2] = CLAMP (g, 0, 65535);
+    tmpline[i * 4 + 3] = CLAMP (b, 0, 65535);
   }
 }
 
@@ -1562,9 +1562,9 @@ matrix16_yuv_bt709_to_rgb (ColorspaceConvert * convert)
     g = (298 * y - 55 * u - 136 * v + 19681 * 256) >> 8;
     b = (298 * y + 541 * u - 73988 * 256) >> 8;
 
-    tmpline[i * 4 + 1] = CLAMP (y, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (u, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (v, 0, 65535);
+    tmpline[i * 4 + 1] = CLAMP (r, 0, 65535);
+    tmpline[i * 4 + 2] = CLAMP (g, 0, 65535);
+    tmpline[i * 4 + 3] = CLAMP (b, 0, 65535);
   }
 }
 
@@ -1585,9 +1585,9 @@ matrix16_yuv_bt709_to_yuv_bt470_6 (ColorspaceConvert * convert)
     g = (253 * u - 28 * v + 3958 * 256) >> 8;
     b = (-19 * u + 252 * v + 2918 * 256) >> 8;
 
-    tmpline[i * 4 + 1] = CLAMP (y, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (u, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (v, 0, 65535);
+    tmpline[i * 4 + 1] = CLAMP (r, 0, 65535);
+    tmpline[i * 4 + 2] = CLAMP (g, 0, 65535);
+    tmpline[i * 4 + 3] = CLAMP (b, 0, 65535);
   }
 }
 
@@ -1608,9 +1608,9 @@ matrix16_yuv_bt470_6_to_yuv_bt709 (ColorspaceConvert * convert)
     g = (261 * u + 29 * v - 4367 * 256) >> 8;
     b = (19 * u + 262 * v - 3289 * 256) >> 8;
 
-    tmpline[i * 4 + 1] = CLAMP (y, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (u, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (v, 0, 65535);
+    tmpline[i * 4 + 1] = CLAMP (r, 0, 65535);
+    tmpline[i * 4 + 2] = CLAMP (g, 0, 65535);
+    tmpline[i * 4 + 3] = CLAMP (b, 0, 65535);
   }
 }
 
