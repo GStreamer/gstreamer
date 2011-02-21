@@ -98,6 +98,7 @@ struct _GstBufferPool {
   /*< private >*/
   gboolean             active;
   gboolean             flushing;
+  gboolean             started;
   gint                 outstanding;
   GstAtomicQueue      *queue;
   GstPoll             *poll;
@@ -114,8 +115,10 @@ struct _GstBufferPoolClass {
   GstObjectClass    object_class;
 
   /* vmethods */
-  gboolean       (*set_active)     (GstBufferPool *pool, gboolean active);
   gboolean       (*set_config)     (GstBufferPool *pool, GstStructure *config);
+
+  gboolean       (*start)          (GstBufferPool *pool);
+  gboolean       (*stop)           (GstBufferPool *pool);
 
   GstFlowReturn  (*acquire_buffer) (GstBufferPool *pool, GstBuffer **buffer,
                                     GstBufferPoolParams *params);
