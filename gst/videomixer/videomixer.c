@@ -777,7 +777,6 @@ gst_videomixer_finalize (GObject * object)
   GstVideoMixer *mix = GST_VIDEO_MIXER (object);
 
   gst_object_unref (mix->collect);
-  mix->collect = NULL;
   g_mutex_free (mix->state_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -1252,9 +1251,7 @@ gst_videomixer_release_pad (GstElement * element, GstPad * pad)
 
   mix->sinkpads = g_slist_remove (mix->sinkpads, pad);
   gst_videomixer_collect_free (mixpad->mixcol);
-  if (mix->collect) {
-    gst_collect_pads_remove_pad (mix->collect, pad);
-  }
+  gst_collect_pads_remove_pad (mix->collect, pad);
   gst_child_proxy_child_removed (GST_OBJECT (mix), GST_OBJECT (mixpad));
   /* determine possibly new geometry and master */
   gst_videomixer_set_master_geometry (mix);

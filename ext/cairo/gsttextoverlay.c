@@ -208,7 +208,6 @@ gst_text_overlay_finalize (GObject * object)
 
   gst_collect_pads_stop (overlay->collect);
   gst_object_unref (overlay->collect);
-  overlay->collect = NULL;
 
   g_free (overlay->text_fill_image);
   g_free (overlay->text_outline_image);
@@ -632,9 +631,7 @@ gst_text_overlay_text_pad_unlinked (GstPad * pad)
   GST_DEBUG_OBJECT (overlay, "Text pad unlinked");
 
   if (overlay->text_collect_data) {
-    if (overlay->collect) {
-      gst_collect_pads_remove_pad (overlay->collect, overlay->text_sinkpad);
-    }
+    gst_collect_pads_remove_pad (overlay->collect, overlay->text_sinkpad);
     overlay->text_collect_data = NULL;
   }
 

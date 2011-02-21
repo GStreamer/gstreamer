@@ -385,7 +385,6 @@ gst_matroska_mux_finalize (GObject * object)
   GstMatroskaMux *mux = GST_MATROSKA_MUX (object);
 
   gst_object_unref (mux->collect);
-  mux->collect = NULL;
   gst_object_unref (mux->ebml_write);
   if (mux->writing_app)
     g_free (mux->writing_app);
@@ -1930,9 +1929,7 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
     }
   }
 
-  if (mux->collect) {
-    gst_collect_pads_remove_pad (mux->collect, pad);
-  }
+  gst_collect_pads_remove_pad (mux->collect, pad);
   if (gst_element_remove_pad (element, pad))
     mux->num_streams--;
 }

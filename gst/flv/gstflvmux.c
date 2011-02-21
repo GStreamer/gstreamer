@@ -207,7 +207,6 @@ gst_flv_mux_finalize (GObject * object)
   GstFlvMux *mux = GST_FLV_MUX (object);
 
   gst_object_unref (mux->collect);
-  mux->collect = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -560,9 +559,7 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
   if (cpad && cpad->video_codec_data)
     gst_buffer_unref (cpad->video_codec_data);
 
-  if (mux->collect) {
-    gst_collect_pads_remove_pad (mux->collect, pad);
-  }
+  gst_collect_pads_remove_pad (mux->collect, pad);
   gst_element_remove_pad (element, pad);
 }
 
