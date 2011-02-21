@@ -733,9 +733,9 @@ mpegts_base_apply_pmt (MpegTSBase * base,
 
     gst_structure_id_get (stream, QUARK_PID, G_TYPE_UINT, &pid,
         QUARK_STREAM_TYPE, G_TYPE_UINT, &stream_type, NULL);
+    base->is_pes[pid] = TRUE;
     mpegts_base_program_add_stream (base, program,
         (guint16) pid, (guint8) stream_type, stream);
-    base->is_pes[pid] = TRUE;
 
   }
 
@@ -1079,7 +1079,7 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
       /* we need to push section packet downstream */
       res = mpegts_base_push (base, &packet, &section);
 
-    } else {
+    } else if (base->is_pes[packet.pid]) {
       /* push the packet downstream */
       res = mpegts_base_push (base, &packet, NULL);
     }

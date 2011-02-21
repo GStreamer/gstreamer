@@ -424,7 +424,7 @@ done:
 }
 
 static GstPad *
-create_pad_for_stream (GstTSDemux * demux, MpegTSBaseStream * bstream,
+create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     MpegTSBaseProgram * program)
 {
   TSDemuxStream *stream = (TSDemuxStream *) bstream;
@@ -530,6 +530,7 @@ create_pad_for_stream (GstTSDemux * demux, MpegTSBaseStream * bstream,
     case ST_DSMCC_B:
     case ST_DSMCC_C:
     case ST_DSMCC_D:
+      base->is_pes[bstream->pid] = FALSE;
       break;
     case ST_AUDIO_AAC:
       template = gst_static_pad_template_get (&audio_template);
@@ -681,13 +682,12 @@ static void
 gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     MpegTSBaseProgram * program)
 {
-  GstTSDemux *tsdemux = (GstTSDemux *) base;
   TSDemuxStream *stream = (TSDemuxStream *) bstream;
 
   if (!stream->pad) {
     /* Create the pad */
     if (bstream->stream_type != 0xff)
-      stream->pad = create_pad_for_stream (tsdemux, bstream, program);
+      stream->pad = create_pad_for_stream (base, bstream, program);
     stream->pts = GST_CLOCK_TIME_NONE;
   }
   stream->flow_return = GST_FLOW_OK;
@@ -1161,7 +1161,8 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
   data += 4;
   length -= 4;
   if (G_UNLIKELY ((psc_stid & 0xffffff00) != 0x00000100)) {
-    GST_WARNING ("WRONG PACKET START CODE !");
+    GST_WARNING ("WRONG PACKET START CODE! pid: 0x%x stream_type: 0x%x",
+        stream->stream.pid, stream->stream.stream_type);
     goto discont;
   }
   stid = psc_stid & 0x000000ff;
@@ -1441,6 +1442,8 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
   if (section) {
     GST_DEBUG ("section complete:%d, buffer size %d",
         section->complete, GST_BUFFER_SIZE (section->buffer));
+    gst_buffer_unref (packet->buffer);
+    return res;
   }
 
   if (G_UNLIKELY (packet->payload_unit_start_indicator))
