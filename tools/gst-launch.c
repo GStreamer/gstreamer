@@ -250,6 +250,159 @@ fault_setup (void)
 }
 #endif /* DISABLE_FAULT_HANDLER */
 
+typedef struct _GstIndexStats
+{
+  gint id;
+  gchar *desc;
+
+  guint num_frames;
+  guint num_keyframes;
+  guint num_dltframes;
+  GstClockTime last_keyframe;
+  GstClockTime last_dltframe;
+  GstClockTime min_keyframe_gap;
+  GstClockTime max_keyframe_gap;
+  GstClockTime avg_keyframe_gap;
+} GstIndexStats;
+
+static void
+entry_added (GstIndex * index, GstIndexEntry * entry, gpointer user_data)
+{
+  GPtrArray *index_stats = (GPtrArray *) user_data;
+  GstIndexStats *s;
+
+  switch (entry->type) {
+    case GST_INDEX_ENTRY_ID:
+      /* we have a new writer */
+      GST_DEBUG_OBJECT (index, "id %d: describes writer %s", entry->id,
+          GST_INDEX_ID_DESCRIPTION (entry));
+      if (entry->id >= index_stats->len) {
+        g_ptr_array_set_size (index_stats, entry->id + 1);
+      }
+      s = g_new (GstIndexStats, 1);
+      s->id = entry->id;
+      s->desc = g_strdup (GST_INDEX_ID_DESCRIPTION (entry));
+      s->num_frames = s->num_keyframes = s->num_dltframes = 0;
+      s->last_keyframe = s->last_dltframe = GST_CLOCK_TIME_NONE;
+      s->min_keyframe_gap = s->max_keyframe_gap = s->avg_keyframe_gap =
+          GST_CLOCK_TIME_NONE;
+      g_ptr_array_index (index_stats, entry->id) = s;
+      break;
+    case GST_INDEX_ENTRY_FORMAT:
+      /* have not found any code calling this */
+      GST_DEBUG_OBJECT (index, "id %d: registered format %d for %s\n",
+          entry->id, GST_INDEX_FORMAT_FORMAT (entry),
+          GST_INDEX_FORMAT_KEY (entry));
+      break;
+    case GST_INDEX_ENTRY_ASSOCIATION:
+    {
+      gint64 ts;
+      GstAssocFlags flags = GST_INDEX_ASSOC_FLAGS (entry);
+
+      s = g_ptr_array_index (index_stats, entry->id);
+      gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &ts);
+
+      if (flags & GST_ASSOCIATION_FLAG_KEY_UNIT) {
+        s->num_keyframes++;
+
+        if (GST_CLOCK_TIME_IS_VALID (ts)) {
+          if (GST_CLOCK_TIME_IS_VALID (s->last_keyframe)) {
+            GstClockTimeDiff d = GST_CLOCK_DIFF (s->last_keyframe, ts);
+
+            if (G_UNLIKELY (d < 0)) {
+              GST_WARNING ("received out-of-order keyframe at %"
+                  GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+              /* FIXME: does it still make sense to use that for the statistics */
+              d = GST_CLOCK_DIFF (ts, s->last_keyframe);
+            }
+
+            if (GST_CLOCK_TIME_IS_VALID (s->min_keyframe_gap)) {
+              if (d < s->min_keyframe_gap)
+                s->min_keyframe_gap = d;
+            } else {
+              s->min_keyframe_gap = d;
+            }
+            if (GST_CLOCK_TIME_IS_VALID (s->max_keyframe_gap)) {
+              if (d > s->max_keyframe_gap)
+                s->max_keyframe_gap = d;
+            } else {
+              s->max_keyframe_gap = d;
+            }
+            if (GST_CLOCK_TIME_IS_VALID (s->avg_keyframe_gap)) {
+              s->avg_keyframe_gap = (d + s->num_frames * s->avg_keyframe_gap) /
+                  (s->num_frames + 1);
+            } else {
+              s->avg_keyframe_gap = d;
+            }
+          }
+          s->last_keyframe = ts;
+        }
+      }
+      if (flags & GST_ASSOCIATION_FLAG_DELTA_UNIT) {
+        s->num_dltframes++;
+        if (GST_CLOCK_TIME_IS_VALID (ts)) {
+          s->last_dltframe = ts;
+        }
+      }
+      s->num_frames++;
+
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+/* print statistics from the entry_added callback, free the entries */
+static void
+print_index_stats (GPtrArray * index_stats)
+{
+  gint i;
+
+  if (index_stats->len) {
+    g_print (_("Index statistics\n"));
+  }
+
+  for (i = 0; i < index_stats->len; i++) {
+    GstIndexStats *s = g_ptr_array_index (index_stats, i);
+    if (s) {
+      g_print ("id %d, %s\n", s->id, s->desc);
+      if (s->num_frames) {
+        GstClockTime last_frame = s->last_keyframe;
+
+        if (GST_CLOCK_TIME_IS_VALID (s->last_dltframe)) {
+          if (!GST_CLOCK_TIME_IS_VALID (last_frame) ||
+              (s->last_dltframe > last_frame))
+            last_frame = s->last_dltframe;
+        }
+
+        if (GST_CLOCK_TIME_IS_VALID (last_frame)) {
+          g_print ("  total time               = %" GST_TIME_FORMAT "\n",
+              GST_TIME_ARGS (last_frame));
+        }
+        g_print ("  frame/keyframe rate      = %u / %u = ", s->num_frames,
+            s->num_keyframes);
+        if (s->num_keyframes)
+          g_print ("%lf\n", s->num_frames / (gdouble) s->num_keyframes);
+        else
+          g_print ("-\n");
+        if (s->num_keyframes) {
+          g_print ("  min/avg/max keyframe gap = %" GST_TIME_FORMAT ", %"
+              GST_TIME_FORMAT ", %" GST_TIME_FORMAT "\n",
+              GST_TIME_ARGS (s->min_keyframe_gap),
+              GST_TIME_ARGS (s->avg_keyframe_gap),
+              GST_TIME_ARGS (s->max_keyframe_gap));
+        }
+      } else {
+        g_print ("  no stats\n");
+      }
+
+      g_free (s->desc);
+      g_free (s);
+    }
+  }
+}
+
 static void
 print_error_message (GstMessage * msg)
 {
@@ -741,6 +894,7 @@ main (int argc, char *argv[])
   gboolean no_sigusr_handler = FALSE;
   gboolean trace = FALSE;
   gboolean eos_on_shutdown = FALSE;
+  gboolean check_index = FALSE;
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
 #ifndef GST_DISABLE_OPTION_PARSING
@@ -767,12 +921,16 @@ main (int argc, char *argv[])
         N_("Print alloc trace (if enabled at compile time)"), NULL},
     {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
         N_("Force EOS on sources before shutting the pipeline down"), NULL},
+    {"index", 'i', 0, G_OPTION_ARG_NONE, &check_index,
+        N_("Gather and print index statistics"), NULL},
     GST_TOOLS_GOPTION_VERSION,
     {NULL}
   };
   GOptionContext *ctx;
   GError *err = NULL;
 #endif
+  GstIndex *index;
+  GPtrArray *index_stats = NULL;
   gchar **argvn;
   GError *error = NULL;
   gint res = 0;
@@ -893,6 +1051,21 @@ main (int argc, char *argv[])
       pipeline = real_pipeline;
     }
 
+    if (check_index) {
+      /* gst_index_new() creates a null-index, it does not store anything, but
+       * the entry-added signal works and this is what we use to build the
+       * statistics */
+      index = gst_index_new ();
+      if (index) {
+        index_stats = g_ptr_array_new ();
+        g_signal_connect (G_OBJECT (index), "entry-added",
+            G_CALLBACK (entry_added), index_stats);
+        g_object_set (G_OBJECT (index), "resolver", GST_INDEX_RESOLVER_GTYPE,
+            NULL);
+        gst_element_set_index (pipeline, index);
+      }
+    }
+
     bus = gst_element_get_bus (pipeline);
     gst_bus_set_sync_handler (bus, bus_sync_handler, (gpointer) pipeline);
     gst_object_unref (bus);
@@ -984,6 +1157,11 @@ main (int argc, char *argv[])
     PRINT (_("Setting pipeline to READY ...\n"));
     gst_element_set_state (pipeline, GST_STATE_READY);
     gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
+
+    if (check_index) {
+      print_index_stats (index_stats);
+      g_ptr_array_free (index_stats, TRUE);
+    }
 
   end:
     PRINT (_("Setting pipeline to NULL ...\n"));
