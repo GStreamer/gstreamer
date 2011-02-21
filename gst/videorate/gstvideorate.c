@@ -795,11 +795,9 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
       /* new buffer, we expect to output a buffer that matches the first
        * timestamp in the segment */
       if (videorate->skip_to_first) {
-        videorate->next_ts = in_ts;
-        videorate->out_frame_count = gst_util_uint64_scale (in_ts,
-            videorate->to_rate_numerator,
-            videorate->to_rate_denominator * GST_SECOND) -
-            (videorate->segment.accum + videorate->segment.start);
+        videorate->next_ts = intime;
+        videorate->base_ts = in_ts - videorate->segment.start;
+        videorate->out_frame_count = 0;
       } else {
         videorate->next_ts =
             videorate->segment.start + videorate->segment.accum;
