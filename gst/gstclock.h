@@ -468,12 +468,11 @@ struct _GstClock {
  *                     be acceptable. The new resolution should be returned.
  * @get_resolution: get the resolution of the clock.
  * @get_internal_time: get the internal unadjusted time of the clock.
- * @wait: perform a blocking wait for the given #GstClockEntry. Deprecated,
  *        implement @wait_jitter instead.
+ * @wait: perform a blocking wait on the given #GstClockEntry and return
+ *               the jitter.
  * @wait_async: perform an asynchronous wait for the given #GstClockEntry.
  * @unschedule: unblock a blocking or async wait operation.
- * @wait_jitter: perform a blocking wait on the given #GstClockEntry and return
- *               the jitter. (Since: 0.10.10)
  *
  * GStreamer clock class. Override the vmethods to implement the clock
  * functionality.
@@ -491,15 +490,13 @@ struct _GstClockClass {
   GstClockTime		(*get_internal_time)	(GstClock *clock);
 
   /* waiting on an ID */
-  GstClockReturn        (*wait)			(GstClock *clock, GstClockEntry *entry);
+  GstClockReturn        (*wait)                 (GstClock *clock, GstClockEntry *entry,
+		                                 GstClockTimeDiff *jitter);
   GstClockReturn        (*wait_async)           (GstClock *clock, GstClockEntry *entry);
   void                  (*unschedule)		(GstClock *clock, GstClockEntry *entry);
 
-  /* ABI added to replace the deprecated wait */
-  GstClockReturn        (*wait_jitter)		(GstClock *clock, GstClockEntry *entry,
-		  				 GstClockTimeDiff *jitter);
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType			gst_clock_get_type		(void);

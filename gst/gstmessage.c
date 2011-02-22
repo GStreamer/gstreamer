@@ -60,8 +60,6 @@
 #include "gstquark.h"
 
 
-#define GST_MESSAGE_SEQNUM(e) ((GstMessage*)e)->abidata.ABI.seqnum
-
 static void gst_message_finalize (GstMessage * message);
 static GstMessage *_gst_message_copy (GstMessage * message);
 

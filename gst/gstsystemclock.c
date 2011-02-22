@@ -152,7 +152,7 @@ gst_system_clock_class_init (GstSystemClockClass * klass)
 
   gstclock_class->get_internal_time = gst_system_clock_get_internal_time;
   gstclock_class->get_resolution = gst_system_clock_get_resolution;
-  gstclock_class->wait_jitter = gst_system_clock_id_wait_jitter;
+  gstclock_class->wait = gst_system_clock_id_wait_jitter;
   gstclock_class->wait_async = gst_system_clock_id_wait_async;
   gstclock_class->unschedule = gst_system_clock_id_unschedule;
 }

@@ -117,7 +117,7 @@ struct _GstBin {
   /*< private >*/
   GstBinPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -156,7 +156,7 @@ struct _GstBinClass {
   gboolean	(*do_latency)           (GstBin *bin);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType		gst_bin_get_type		(void);

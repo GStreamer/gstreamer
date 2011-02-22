@@ -201,6 +201,14 @@ typedef struct _GstEventClass GstEventClass;
 #define GST_EVENT_SRC(event)            (GST_EVENT_CAST(event)->src)
 
 /**
+ * GST_EVENT_SEQNUM:
+ * @event: the event to query
+ *
+ * The sequence number of @event.
+ */
+#define GST_EVENT_SEQNUM(event)         (GST_EVENT_CAST(event)->seqnum)
+
+/**
  * GST_EVENT_IS_UPSTREAM:
  * @ev: the event to query
  *
@@ -347,15 +355,13 @@ struct _GstEvent {
   /*< public >*/ /* with COW */
   GstEventType  type;
   guint64       timestamp;
-  GstObject     *src;
+  GstObject    *src;
+  guint32       seqnum;
 
   GstStructure  *structure;
 
   /*< private >*/
-  union {
-    guint32 seqnum;
-    gpointer _gst_reserved;
-  } abidata;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstEventClass {

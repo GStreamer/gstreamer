@@ -175,7 +175,7 @@ struct _GstPluginDesc {
   const gchar *origin;
   const gchar *release_datetime;
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 
@@ -213,7 +213,7 @@ struct _GstPlugin {
                                  * that matches the plugin's basename */
 
   GstPluginPrivate *priv;
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPluginClass {

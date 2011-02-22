@@ -489,26 +489,10 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "waiting on clock entry %p", id);
 
   /* if we have a wait_jitter function, use that */
-  if (G_LIKELY (cclass->wait_jitter)) {
-    res = cclass->wait_jitter (clock, entry, jitter);
-  } else {
-    /* check if we have a simple _wait function otherwise. The function without
-     * the jitter arg is less optimal as we need to do an additional _get_time()
-     * which is not atomic with the _wait() and a typical _wait() function does
-     * yet another _get_time() anyway. */
-    if (G_UNLIKELY (cclass->wait == NULL))
-      goto not_supported;
+  if (G_UNLIKELY (cclass->wait == NULL))
+    goto not_supported;
 
-    if (jitter) {
-      GstClockTime now = gst_clock_get_time (clock);
-
-      /* jitter is the diff against the clock when this entry is scheduled. Negative
-       * values mean that the entry was in time, a positive value means that the
-       * entry was too late. */
-      *jitter = GST_CLOCK_DIFF (requested, now);
-    }
-    res = cclass->wait (clock, entry);
-  }
+  res = cclass->wait (clock, entry, jitter);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
       "done waiting entry %p, res: %d", id, res);

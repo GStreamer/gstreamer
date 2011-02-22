@@ -85,8 +85,6 @@
 #include "gstutils.h"
 #include "gstquark.h"
 
-#define GST_EVENT_SEQNUM(e) ((GstEvent*)e)->abidata.seqnum
-
 static void gst_event_finalize (GstEvent * event);
 static GstEvent *_gst_event_copy (GstEvent * event);
 

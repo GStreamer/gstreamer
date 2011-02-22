@@ -185,7 +185,7 @@ gst_task_init (GstTask * task)
 
   task->priv = GST_TASK_GET_PRIVATE (task);
   task->running = FALSE;
-  task->abidata.ABI.thread = NULL;
+  task->thread = NULL;
   task->lock = NULL;
   task->cond = g_cond_new ();
   SET_TASK_STATE (task, GST_TASK_STOPPED);
@@ -274,7 +274,7 @@ gst_task_func (GstTask * task)
   lock = GST_TASK_GET_LOCK (task);
   if (G_UNLIKELY (lock == NULL))
     goto no_lock;
-  task->abidata.ABI.thread = tself;
+  task->thread = tself;
   /* only update the priority when it was changed */
   if (priv->prio_set)
     g_thread_set_priority (tself, priv->priority);
@@ -321,7 +321,7 @@ done:
   g_static_rec_mutex_unlock (lock);
 
   GST_OBJECT_LOCK (task);
-  task->abidata.ABI.thread = NULL;
+  task->thread = NULL;
 
 exit:
   if (priv->thr_callbacks.leave_thread) {
@@ -471,7 +471,7 @@ gst_task_set_priority (GstTask * task, GThreadPriority priority)
   GST_OBJECT_LOCK (task);
   priv->prio_set = TRUE;
   priv->priority = priority;
-  thread = task->abidata.ABI.thread;
+  thread = task->thread;
   if (thread != NULL) {
     /* if this task already has a thread, we can configure the priority right
      * away, else we do that when we assign a thread to the task. */
@@ -812,7 +812,7 @@ gst_task_join (GstTask * task)
   /* we don't use a real thread join here because we are using
    * thread pools */
   GST_OBJECT_LOCK (task);
-  if (G_UNLIKELY (tself == task->abidata.ABI.thread))
+  if (G_UNLIKELY (tself == task->thread))
     goto joining_self;
   SET_TASK_STATE (task, GST_TASK_STOPPED);
   /* signal the state change for when it was blocked in PAUSED. */
@@ -823,7 +823,7 @@ gst_task_join (GstTask * task)
   while (G_LIKELY (task->running))
     GST_TASK_WAIT (task);
   /* clean the thread */
-  task->abidata.ABI.thread = NULL;
+  task->thread = NULL;
   /* get the id and pool to join */
   pool = priv->pool_id;
   id = priv->id;

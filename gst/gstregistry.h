@@ -66,7 +66,7 @@ struct _GstRegistry {
   GstRegistryPrivate *priv;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-3];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRegistryClass {

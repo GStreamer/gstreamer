@@ -53,6 +53,7 @@ struct _GstSegment {
   /*< public >*/
   gdouble        rate;
   gdouble        abs_rate;
+  gdouble        applied_rate;
   GstFormat      format;
   GstSeekFlags   flags;
   gint64         start;
@@ -63,12 +64,8 @@ struct _GstSegment {
   gint64         last_stop;
   gint64         duration;
 
-  /* API added 0.10.6 */
-  gdouble        applied_rate;
-
   /*< private >*/
-  /*gpointer _gst_reserved[GST_PADDING-2];*/
-  guint8 _gst_reserved[(sizeof (gpointer) * GST_PADDING) - sizeof (gdouble)];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType        gst_segment_get_type            (void);

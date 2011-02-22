@@ -288,7 +288,7 @@ struct _GstBuffer {
   GstBuffer             *parent;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 2];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBufferClass {

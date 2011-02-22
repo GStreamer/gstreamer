@@ -190,6 +190,15 @@ typedef enum
  * Get the object that posted @message.
  */
 #define GST_MESSAGE_SRC(message)        (GST_MESSAGE_CAST(message)->src)
+
+/**
+ * GST_MESSAGE_SEQNUM:
+ * @message: a #GstMessage
+ *
+ * Get the sequence number of @message.
+ */
+#define GST_MESSAGE_SEQNUM(message)     (GST_MESSAGE_CAST(message)->seqnum)
+
 /**
  * GST_MESSAGE_SRC_NAME:
  * @message: a #GstMessage
@@ -286,17 +295,12 @@ struct _GstMessage
   GstMessageType type;
   guint64 timestamp;
   GstObject *src;
+  guint32 seqnum;
 
   GstStructure *structure;
 
   /*< private >*/
-  union {
-    struct {
-      guint32 seqnum;
-    } ABI;
-    /* + 0 to mark ABI change for future greppage */
-    gpointer _gst_reserved[GST_PADDING + 0];
-  } abidata;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstMessageClass {
