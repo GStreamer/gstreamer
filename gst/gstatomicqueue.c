@@ -171,6 +171,8 @@ gst_atomic_queue_new (guint initial_size)
  * @queue: a #GstAtomicQueue
  *
  * Increase the refcount of @queue.
+ *
+ * Since: 0.10.33
  */
 void
 gst_atomic_queue_ref (GstAtomicQueue * queue)
@@ -195,6 +197,8 @@ gst_atomic_queue_free (GstAtomicQueue * queue)
  * @queue: a #GstAtomicQueue
  *
  * Unref @queue and free the memory when the refcount reaches 0.
+ *
+ * Since: 0.10.33
  */
 void
 gst_atomic_queue_unref (GstAtomicQueue * queue)
@@ -212,6 +216,8 @@ gst_atomic_queue_unref (GstAtomicQueue * queue)
  * Peek the head element of the queue without removing it from the queue.
  *
  * Returns: the head element of @queue or NULL when the queue is empty.
+ *
+ * Since: 0.10.33
  */
 gpointer
 gst_atomic_queue_peek (GstAtomicQueue * queue)
@@ -261,6 +267,8 @@ gst_atomic_queue_peek (GstAtomicQueue * queue)
  * Get the head element of the queue.
  *
  * Returns: the head element of @queue or NULL when the queue is empty.
+ *
+ * Since: 0.10.33
  */
 gpointer
 gst_atomic_queue_pop (GstAtomicQueue * queue)
@@ -326,6 +334,8 @@ gst_atomic_queue_pop (GstAtomicQueue * queue)
  * @data: the data
  *
  * Append @data to the tail of the queue.
+ *
+ * Since: 0.10.33
  */
 void
 gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
@@ -378,6 +388,8 @@ gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
  * Get the amount of items in the queue.
  *
  * Returns: the number of elements in the queue.
+ *
+ * Since: 0.10.33
  */
 guint
 gst_atomic_queue_length (GstAtomicQueue * queue)

@@ -27,9 +27,33 @@
  *
  * GstIndex is used to generate a stream index of one or more elements
  * in a pipeline.
+ *
+ * Elements will overload the set_index and get_index virtual methods in
+ * #GstElement. When streaming data, the element will add index entries if it
+ * has an index set.
+ *
+ * Each element that adds to the index will do that using a writer_id. The
+ * writer_id is obtained from gst_index_get_writer_id().
+ *
+ * The application that wants to index the stream will create a new index object
+ * using gst_index_new() or gst_index_factory_make(). The index is assigned to a
+ * specific element, a bin or the whole pipeline. This will cause indexable
+ * elements to add entires to the index while playing.
  */
 
 /* FIXME: complete gobject annotations */
+/* FIXME-0.11: cleanup API
+ * - no one seems to use GstIndexGroup, GstIndexCertainty
+ *
+ * - the API for application to use the index is mostly missing
+ *   - apps need to get a list of writers
+ *   - apps need to be able to iterate over each writers index entry collection
+ * - gst_index_get_assoc_entry() should pass ownership
+ *   - the GstIndexEntry structure is large and contains repetitive information
+ *   - we want to allow Indexers to implement a saner storage and create
+ *     GstIndexEntries on demand (the app has to free them), might even make
+ *     sense to ask the app to provide a ptr and fill it.
+ */
 
 #include "gst_private.h"
 
@@ -281,7 +305,9 @@ gst_index_group_free (GstIndexGroup * group)
 /**
  * gst_index_new:
  *
- * Create a new tileindex object
+ * Create a new dummy index object. Use gst_element_set_index() to assign that
+ * to an element or pipeline. This index is not storing anything, but will
+ * still emit e.g. the #GstIndex::entry-added signal.
  *
  * Returns: (transfer full): a new index object
  */
@@ -633,20 +659,23 @@ gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
   g_return_val_if_fail (writer != NULL, FALSE);
 
   if (GST_IS_PAD (writer)) {
-    GstElement *element =
-        (GstElement *) gst_object_get_parent (GST_OBJECT (writer));
+    GstObject *element = gst_object_get_parent (GST_OBJECT (writer));
     gchar *name;
 
     name = gst_object_get_name (writer);
-    *writer_string = g_strdup_printf ("%s.%s",
-        g_type_name (G_OBJECT_TYPE (element)), name);
+    if (element) {
+      *writer_string = g_strdup_printf ("%s.%s",
+          G_OBJECT_TYPE_NAME (element), name);
+      gst_object_unref (element);
+    } else {
+      *writer_string = name;
+      name = NULL;
+    }
 
-    gst_object_unref (element);
     g_free (name);
 
   } else {
-    *writer_string =
-        g_strdup_printf ("%s", g_type_name (G_OBJECT_TYPE (writer)));
+    *writer_string = g_strdup (G_OBJECT_TYPE_NAME (writer));
   }
 
   return TRUE;

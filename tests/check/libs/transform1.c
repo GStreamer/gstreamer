@@ -1191,6 +1191,10 @@ GST_START_TEST (basetransform_chain_ct3)
   fail_unless (res == GST_FLOW_OK);
   fail_if (buffer == NULL);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+  /* if we don't push here, basetransform will think it doesn't need do a
+   * pad alloc for downstream caps suggestions */
+  res = gst_test_trans_push (trans, buffer);
+  buffer = gst_test_trans_pop (trans);
   gst_buffer_unref (buffer);
   /* FIXME should not call the pad-alloc function but it currently does */
   fail_unless (buffer_alloc_ct2_called == FALSE);

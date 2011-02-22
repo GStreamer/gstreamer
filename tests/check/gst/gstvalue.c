@@ -245,6 +245,51 @@ GST_START_TEST (test_deserialize_guint64)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deserialize_guchar)
+{
+  GValue value = { 0 };
+  const char *strings[] = {
+    "0xff",
+    "255",
+    "-1",
+    "1",
+    "-0",
+  };
+  guchar results[] = {
+    0xff,
+    255,
+    (guchar) - 1,
+    1,
+    0,
+  };
+  int i;
+
+  g_value_init (&value, G_TYPE_UCHAR);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_unless (gst_value_deserialize (&value, strings[i]),
+        "could not deserialize %s (%d)", strings[i], i);
+    fail_unless (g_value_get_uchar (&value) == results[i],
+        "resulting value is %u not %u, for string %s (%d)",
+        g_value_get_uchar (&value), results[i], strings[i], i);
+  }
+
+  /* test serialisation as well while we're at it */
+  {
+    gchar *str;
+    GValue value = { 0 };
+    g_value_init (&value, G_TYPE_UCHAR);
+
+    g_value_set_uchar (&value, 255);
+    str = gst_value_serialize (&value);
+
+    fail_unless_equals_string (str, "255");
+    g_free (str);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_deserialize_gstfraction)
 {
   GValue value = { 0 };
@@ -2565,6 +2610,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_guint_failures);
   tcase_add_test (tc_chain, test_deserialize_gint64);
   tcase_add_test (tc_chain, test_deserialize_guint64);
+  tcase_add_test (tc_chain, test_deserialize_guchar);
   tcase_add_test (tc_chain, test_deserialize_gstfraction);
   tcase_add_test (tc_chain, test_serialize_flags);
   tcase_add_test (tc_chain, test_deserialize_flags);

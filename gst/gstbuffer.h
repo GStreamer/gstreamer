@@ -217,12 +217,14 @@ typedef struct _GstBufferClass GstBufferClass;
  * @GST_BUFFER_FLAG_MEDIA1: a flag whose use is specific to the caps of the buffer. Since: 0.10.23.
  * @GST_BUFFER_FLAG_MEDIA2: a flag whose use is specific to the caps of the buffer. Since: 0.10.23.
  * @GST_BUFFER_FLAG_MEDIA3: a flag whose use is specific to the caps of the buffer. Since: 0.10.23.
+ * @GST_BUFFER_FLAG_MEDIA4: a flag whose use is specific to the caps of the buffer. Since: 0.10.33.
  * @GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
  *
  * A set of buffer flags used to describe properties of a #GstBuffer.
  */
 typedef enum {
   GST_BUFFER_FLAG_READONLY   = GST_MINI_OBJECT_FLAG_READONLY,
+  GST_BUFFER_FLAG_MEDIA4     = GST_MINI_OBJECT_FLAG_RESERVED1,
   GST_BUFFER_FLAG_PREROLL    = (GST_MINI_OBJECT_FLAG_LAST << 0),
   GST_BUFFER_FLAG_DISCONT    = (GST_MINI_OBJECT_FLAG_LAST << 1),
   GST_BUFFER_FLAG_IN_CAPS    = (GST_MINI_OBJECT_FLAG_LAST << 2),
