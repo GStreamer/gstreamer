@@ -30,9 +30,10 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstBuffer GstBuffer;
-
 extern GType _gst_buffer_type;
+
+typedef struct _GstBuffer GstBuffer;
+typedef struct _GstBufferPool GstBufferPool;
 
 /**
  * GST_BUFFER_TRACE_NAME:
@@ -284,6 +285,7 @@ struct _GstBuffer {
   /* ABI Added */
   GFreeFunc              free_func;
   GstBuffer             *parent;
+  GstBufferPool         *pool;
   gpointer               priv;
 };
 

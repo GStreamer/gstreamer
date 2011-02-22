@@ -32,7 +32,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstBufferPool GstBufferPool;
 typedef struct _GstBufferPoolPrivate GstBufferPoolPrivate;
 typedef struct _GstBufferPoolClass GstBufferPoolClass;
 

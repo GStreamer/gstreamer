@@ -123,6 +123,7 @@
 #endif
 
 #include "gstbuffer.h"
+#include "gstbufferpool.h"
 #include "gstinfo.h"
 #include "gstutils.h"
 #include "gstminiobject.h"
@@ -290,6 +291,7 @@ static void
 _gst_buffer_free (GstBuffer * buffer)
 {
   GstMetaItem *walk, *next;
+  GstBufferPool *pool;
 
   g_return_if_fail (buffer != NULL);
 

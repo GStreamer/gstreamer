@@ -633,8 +633,13 @@ gst_buffer_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   else
     result = GST_FLOW_NOT_SUPPORTED;
 
-  if (G_UNLIKELY (result != GST_FLOW_OK))
+  if (G_LIKELY (result == GST_FLOW_OK)) {
+    /* all buffers from the pool point to the pool and have the refcount of the
+     * pool incremented */
+    (*buffer)->pool = gst_object_ref (pool);
+  } else {
     dec_outstanding (pool);
+  }
 
   return result;
 }
@@ -666,10 +671,19 @@ gst_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
   g_return_if_fail (GST_IS_BUFFER_POOL (pool));
   g_return_if_fail (buffer != NULL);
 
+  /* check that the buffer is ours, all buffers returned to the pool have the
+   * pool member set to NULL and the pool refcount decreased */
+  if (!g_atomic_pointer_compare_and_exchange ((gpointer *) & buffer->pool, pool,
+          NULL))
+    return;
+
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
   if (G_LIKELY (pclass->release_buffer))
     pclass->release_buffer (pool, buffer);
 
   dec_outstanding (pool);
+
+  /* decrease the refcount that the buffer had to us */
+  gst_object_unref (pool);
 }
