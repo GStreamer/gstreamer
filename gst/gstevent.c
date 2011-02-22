@@ -1289,9 +1289,12 @@ gst_event_new_sink_message (GstMessage * msg)
 void
 gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
 {
+  const GstStructure *structure;
+
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SINK_MESSAGE);
 
+  structure = event->structure;
   if (msg)
     *msg =
         GST_MESSAGE (g_value_dup_boxed (gst_structure_id_get_value
