@@ -2020,10 +2020,12 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
             res =
                 gst_riff_parse_strf_auds (element, sub, &stream->strf.auds,
                 &stream->extradata);
+            sub = NULL;
+            if (!res)
+              break;
             stream->is_vbr = (stream->strh->samplesize == 0)
                 && stream->strh->scale > 1
                 && stream->strf.auds->blockalign != 1;
-            sub = NULL;
             GST_DEBUG_OBJECT (element, "marking audio as VBR:%d, res %d",
                 stream->is_vbr, res);
             /* we need these or we have no way to come up with timestamps */
