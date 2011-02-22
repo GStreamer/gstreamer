@@ -50,7 +50,7 @@ AOFFSET=0
 VELEM="v4l2src"
 #VELEM="videotestsrc is-live=1"
 VCAPS="video/x-raw-yuv,width=352,height=288,framerate=15/1"
-VSOURCE="$VELEM ! $VCAPS ! queue ! videorate ! ffmpegcolorspace"
+VSOURCE="$VELEM ! queue ! videorate ! ffmpegcolorspace ! $VCAPS"
 VENC="x264enc tune=zerolatency byte-stream=true bitrate=300 ! rtph264pay"
 
 VRTPSINK="udpsink port=5000 host=$DEST ts-offset=$VOFFSET name=vrtpsink"
