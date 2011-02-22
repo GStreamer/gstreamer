@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# A simple RTP receiver 
+# A simple RTP receiver
 #
 #  receives H264 encoded RTP video on port 5000, RTCP is received on  port 5001.
 #  the receiver RTCP reports are sent to port 5005
@@ -11,27 +11,27 @@
 #  RTP        |udpsrc |      | rtpbin   |     |h264depay|   |h264dec|   |xvimagesink|
 #  port=5000  |      src->recv_rtp recv_rtp->sink     src->sink   src->sink         |
 #             '-------'      |          |     '---------'   '-------'   '-----------'
-#                            |          |      
+#                            |          |
 #                            |          |     .-------.
 #                            |          |     |udpsink|  RTCP
 #                            |    send_rtcp->sink     | port=5005
 #             .-------.      |          |     '-------' sync=false
 #  RTCP       |udpsrc |      |          |               async=false
-#  port=5001  |     src->recv_rtcp      |                       
-#             '-------'      |          |              
+#  port=5001  |     src->recv_rtcp      |
+#             '-------'      |          |
 #                            |          |
-#             .-------.      |          |     .---------.   .-------.   .--------.
+#             .-------.      |          |     .---------.   .-------.   .-------------.
 #  RTP        |udpsrc |      | rtpbin   |     |pcmadepay|   |alawdec|   |autoaudiosink|
-#  port=5002  |      src->recv_rtp recv_rtp->sink     src->sink   src->sink      |
-#             '-------'      |          |     '---------'   '-------'   '--------'
-#                            |          |      
+#  port=5002  |      src->recv_rtp recv_rtp->sink     src->sink   src->sink           |
+#             '-------'      |          |     '---------'   '-------'   '-------------'
+#                            |          |
 #                            |          |     .-------.
 #                            |          |     |udpsink|  RTCP
 #                            |    send_rtcp->sink     | port=5007
 #             .-------.      |          |     '-------' sync=false
 #  RTCP       |udpsrc |      |          |               async=false
-#  port=5003  |     src->recv_rtcp      |                       
-#             '-------'      '----------'              
+#  port=5003  |     src->recv_rtcp      |
+#             '-------'      '----------'
 
 # the destination machine to send RTCP to. This is the address of the sender and
 # is used to send back the RTCP reports of this receiver. If the data is sent

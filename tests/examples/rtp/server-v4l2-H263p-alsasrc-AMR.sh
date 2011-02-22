@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# A simple RTP server 
+# A simple RTP server
 #
 
 # change these to change the server sync. This causes the server to send the
