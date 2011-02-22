@@ -1208,10 +1208,12 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (adder->segment_rate > 0.0) {
     GST_BUFFER_TIMESTAMP (outbuf) = adder->timestamp;
     GST_BUFFER_OFFSET (outbuf) = adder->offset;
+    GST_BUFFER_OFFSET_END (outbuf) = next_offset;
     GST_BUFFER_DURATION (outbuf) = next_timestamp - adder->timestamp;
   } else {
     GST_BUFFER_TIMESTAMP (outbuf) = next_timestamp;
     GST_BUFFER_OFFSET (outbuf) = next_offset;
+    GST_BUFFER_OFFSET_END (outbuf) = adder->offset;
     GST_BUFFER_DURATION (outbuf) = adder->timestamp - next_timestamp;
   }
 
