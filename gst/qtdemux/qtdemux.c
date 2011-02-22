@@ -703,7 +703,7 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_CONVERT:{
       GstFormat src_fmt, dest_fmt;
-      gint64 src_value, dest_value;
+      gint64 src_value, dest_value = 0;
 
       gst_query_parse_convert (query, &src_fmt, &src_value, &dest_fmt, NULL);
 
