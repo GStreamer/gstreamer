@@ -436,7 +436,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->clock_id = NULL;
   /* we operate in BYTES by default */
   gst_base_src_set_format (basesrc, GST_FORMAT_BYTES);
-  basesrc->data.ABI.typefind = DEFAULT_TYPEFIND;
+  basesrc->typefind = DEFAULT_TYPEFIND;
   basesrc->priv->do_timestamp = DEFAULT_DO_TIMESTAMP;
   g_atomic_int_set (&basesrc->priv->have_tags, FALSE);
 
@@ -457,7 +457,7 @@ gst_base_src_finalize (GObject * object)
   g_mutex_free (basesrc->live_lock);
   g_cond_free (basesrc->live_cond);
 
-  event_p = &basesrc->data.ABI.pending_seek;
+  event_p = &basesrc->pending_seek;
   gst_event_replace (event_p, NULL);
 
   if (basesrc->priv->pending_tags) {
@@ -755,7 +755,7 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
       GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
 
   GST_OBJECT_LOCK (src);
-  if (src->data.ABI.running && !src->priv->newsegment_pending) {
+  if (src->running && !src->priv->newsegment_pending) {
     if (src->priv->close_segment)
       gst_event_unref (src->priv->close_segment);
     src->priv->close_segment =
@@ -785,7 +785,7 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
   GST_OBJECT_UNLOCK (src);
 
   src->priv->discont = TRUE;
-  src->data.ABI.running = TRUE;
+  src->running = TRUE;
 
   return res;
 }
@@ -1409,7 +1409,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     /* send flush stop, peer will accept data and events again. We
      * are not yet providing data as we still have the STREAM_LOCK. */
     gst_pad_push_event (src->srcpad, tevent);
-  } else if (res && src->data.ABI.running) {
+  } else if (res && src->running) {
     /* we are running the current segment and doing a non-flushing seek,
      * close the segment first based on the last_stop. */
     GST_DEBUG_OBJECT (src, "closing running segment %" G_GINT64_FORMAT
@@ -1480,7 +1480,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   }
 
   src->priv->discont = TRUE;
-  src->data.ABI.running = TRUE;
+  src->running = TRUE;
   /* and restart the task in case it got paused explicitly or by
    * the FLUSH_START event we pushed out. */
   tres = gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
@@ -1624,7 +1624,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
          * get activated */
         GST_OBJECT_LOCK (src);
         GST_DEBUG_OBJECT (src, "queueing seek");
-        event_p = &src->data.ABI.pending_seek;
+        event_p = &src->pending_seek;
         gst_event_replace ((GstEvent **) event_p, event);
         GST_OBJECT_UNLOCK (src);
         /* assume the seek will work */
@@ -1795,7 +1795,7 @@ gst_base_src_set_property (GObject * object, guint prop_id,
       src->num_buffers = g_value_get_int (value);
       break;
     case PROP_TYPEFIND:
-      src->data.ABI.typefind = g_value_get_boolean (value);
+      src->typefind = g_value_get_boolean (value);
       break;
     case PROP_DO_TIMESTAMP:
       gst_base_src_set_do_timestamp (src, g_value_get_boolean (value));
@@ -1822,7 +1822,7 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, src->num_buffers);
       break;
     case PROP_TYPEFIND:
-      g_value_set_boolean (value, src->data.ABI.typefind);
+      g_value_set_boolean (value, src->typefind);
       break;
     case PROP_DO_TIMESTAMP:
       g_value_set_boolean (value, gst_base_src_get_do_timestamp (src));
@@ -2535,7 +2535,7 @@ pause:
     GstEvent *event;
 
     GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
-    src->data.ABI.running = FALSE;
+    src->running = FALSE;
     gst_pad_pause_task (pad);
     if (ret == GST_FLOW_UNEXPECTED) {
       gboolean flag_segment;
@@ -2699,7 +2699,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   gst_segment_init (&basesrc->segment, basesrc->segment.format);
   GST_OBJECT_UNLOCK (basesrc);
 
-  basesrc->data.ABI.running = FALSE;
+  basesrc->running = FALSE;
   basesrc->priv->newsegment_pending = FALSE;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
@@ -2748,7 +2748,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   GST_DEBUG_OBJECT (basesrc, "is random_access: %d", basesrc->random_access);
 
   /* run typefind if we are random_access and the typefinding is enabled. */
-  if (basesrc->random_access && basesrc->data.ABI.typefind && size != -1) {
+  if (basesrc->random_access && basesrc->typefind && size != -1) {
     GstCaps *caps;
 
     if (!(caps = gst_type_find_helper (basesrc->srcpad, size)))
@@ -2939,8 +2939,8 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
 
     /* do initial seek, which will start the task */
     GST_OBJECT_LOCK (basesrc);
-    event = basesrc->data.ABI.pending_seek;
-    basesrc->data.ABI.pending_seek = NULL;
+    event = basesrc->pending_seek;
+    basesrc->pending_seek = NULL;
     GST_OBJECT_UNLOCK (basesrc);
 
     /* no need to unlock anything, the task is certainly
@@ -3104,7 +3104,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
         basesrc->priv->last_sent_eos = TRUE;
       }
       g_atomic_int_set (&basesrc->priv->pending_eos, FALSE);
-      event_p = &basesrc->data.ABI.pending_seek;
+      event_p = &basesrc->pending_seek;
       gst_event_replace (event_p, NULL);
       event_p = &basesrc->priv->close_segment;
       gst_event_replace (event_p, NULL);

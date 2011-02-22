@@ -80,26 +80,21 @@ struct _GstBaseSink {
   /*< protected >*/ /* with STREAM_LOCK */
   gboolean       have_newsegment;
   GstSegment     segment;
+  GstSegment    *clip_segment;
 
   /*< private >*/ /* with LOCK */
   GstClockID     clock_id;
   GstClockTime   end_time;
   gboolean       sync;
   gboolean       flushing;
+  gboolean       running;
+
+  gint64         max_lateness;
 
   /*< private >*/
-  union {
-    struct {
-      /* segment used for clipping incoming buffers */
-      GstSegment    *clip_segment;
-      /* max amount of time a buffer can be late, -1 no limit. */
-      gint64         max_lateness;
-      gboolean       running;
-    } ABI;
-    gpointer _gst_reserved[GST_PADDING_LARGE - 1];
-  } abidata;
-
   GstBaseSinkPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
@@ -146,6 +141,11 @@ struct _GstBaseSinkClass {
   /* notify subclass of new caps */
   gboolean      (*set_caps)     (GstBaseSink *sink, GstCaps *caps);
 
+  /* fixate sink caps during pull-mode negotiation */
+  void          (*fixate)       (GstBaseSink *sink, GstCaps *caps);
+  /* start or stop a pulling thread */
+  gboolean      (*activate_pull)(GstBaseSink *sink, gboolean active);
+
   /* allocate a new buffer with given caps */
   GstFlowReturn (*buffer_alloc) (GstBaseSink *sink, guint64 offset, guint size,
                                  GstCaps *caps, GstBuffer **buf);
@@ -161,33 +161,21 @@ struct _GstBaseSinkClass {
   /* unlock any pending access to the resource. subclasses should unlock
    * any function ASAP. */
   gboolean      (*unlock)       (GstBaseSink *sink);
-
-  /* notify subclass of event, preroll buffer or real buffer */
-  gboolean      (*event)        (GstBaseSink *sink, GstEvent *event);
-  GstFlowReturn (*preroll)      (GstBaseSink *sink, GstBuffer *buffer);
-  GstFlowReturn (*render)       (GstBaseSink *sink, GstBuffer *buffer);
-
-  /* ABI additions */
-
-  /* when an ASYNC state change to PLAYING happens */ /* with LOCK */
-  GstStateChangeReturn (*async_play)   (GstBaseSink *sink);
-
-  /* start or stop a pulling thread */
-  gboolean      (*activate_pull)(GstBaseSink *sink, gboolean active);
-
-  /* fixate sink caps during pull-mode negotiation */
-  void          (*fixate)       (GstBaseSink *sink, GstCaps *caps);
-
   /* Clear a previously indicated unlock request not that unlocking is
    * complete. Sub-classes should clear any command queue or indicator they
    * set during unlock */
   gboolean      (*unlock_stop)  (GstBaseSink *sink);
 
+  /* notify subclass of event, preroll buffer or real buffer */
+  gboolean      (*event)        (GstBaseSink *sink, GstEvent *event);
+
+  GstFlowReturn (*preroll)      (GstBaseSink *sink, GstBuffer *buffer);
+  GstFlowReturn (*render)       (GstBaseSink *sink, GstBuffer *buffer);
   /* Render a BufferList */
   GstFlowReturn (*render_list)  (GstBaseSink *sink, GstBufferList *buffer_list);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-5];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType gst_base_sink_get_type(void);

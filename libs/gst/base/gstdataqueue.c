@@ -277,7 +277,7 @@ gst_data_queue_locked_flush (GstDataQueue * queue)
   gst_data_queue_cleanup (queue);
   STATUS (queue, "after flushing");
   /* we deleted something... */
-  if (queue->abidata.ABI.waiting_del)
+  if (queue->waiting_del)
     g_cond_signal (queue->item_del);
 }
 
@@ -384,9 +384,9 @@ gst_data_queue_set_flushing (GstDataQueue * queue, gboolean flushing)
   queue->flushing = flushing;
   if (flushing) {
     /* release push/pop functions */
-    if (queue->abidata.ABI.waiting_add)
+    if (queue->waiting_add)
       g_cond_signal (queue->item_add);
-    if (queue->abidata.ABI.waiting_del)
+    if (queue->waiting_del)
       g_cond_signal (queue->item_del);
   }
   GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
@@ -432,9 +432,9 @@ gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
 
     /* signal might have removed some items */
     while (gst_data_queue_locked_is_full (queue)) {
-      queue->abidata.ABI.waiting_del = TRUE;
+      queue->waiting_del = TRUE;
       g_cond_wait (queue->item_del, queue->qlock);
-      queue->abidata.ABI.waiting_del = FALSE;
+      queue->waiting_del = FALSE;
       if (queue->flushing)
         goto flushing;
     }
@@ -448,7 +448,7 @@ gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
   queue->cur_level.time += item->duration;
 
   STATUS (queue, "after pushing");
-  if (queue->abidata.ABI.waiting_add)
+  if (queue->waiting_add)
     g_cond_signal (queue->item_add);
 
   GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
@@ -497,9 +497,9 @@ gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
     GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
 
     while (gst_data_queue_locked_is_empty (queue)) {
-      queue->abidata.ABI.waiting_add = TRUE;
+      queue->waiting_add = TRUE;
       g_cond_wait (queue->item_add, queue->qlock);
-      queue->abidata.ABI.waiting_add = FALSE;
+      queue->waiting_add = FALSE;
       if (queue->flushing)
         goto flushing;
     }
@@ -515,7 +515,7 @@ gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
   queue->cur_level.time -= (*item)->duration;
 
   STATUS (queue, "after popping");
-  if (queue->abidata.ABI.waiting_del)
+  if (queue->waiting_del)
     g_cond_signal (queue->item_del);
 
   GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
@@ -600,7 +600,7 @@ gst_data_queue_limits_changed (GstDataQueue * queue)
   g_return_if_fail (GST_IS_DATA_QUEUE (queue));
 
   GST_DATA_QUEUE_MUTEX_LOCK (queue);
-  if (queue->abidata.ABI.waiting_del) {
+  if (queue->waiting_del) {
     GST_DEBUG ("signal del");
     g_cond_signal (queue->item_del);
   }

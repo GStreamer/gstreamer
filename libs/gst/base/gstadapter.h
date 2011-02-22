@@ -52,6 +52,7 @@ struct _GstAdapter {
 
   /*< private >*/
   GSList *      buflist;
+  GSList *      buflist_end;
   guint         size;
   guint         skip;
 
@@ -60,14 +61,9 @@ struct _GstAdapter {
   guint         assembled_size;
   guint         assembled_len;
 
-  /* ABI added */
-  /* Remember where the end of our buffer list is to
-   * speed up the push */
-  GSList *buflist_end;
-
   GstAdapterPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING - 2];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstAdapterClass {

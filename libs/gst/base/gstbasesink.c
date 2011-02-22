@@ -696,14 +696,14 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
 
   basesink->pad_mode = GST_ACTIVATE_NONE;
   basesink->preroll_queue = g_queue_new ();
-  basesink->abidata.ABI.clip_segment = gst_segment_new ();
+  basesink->clip_segment = gst_segment_new ();
   priv->have_latency = FALSE;
 
   basesink->can_activate_push = DEFAULT_CAN_ACTIVATE_PUSH;
   basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
 
   basesink->sync = DEFAULT_SYNC;
-  basesink->abidata.ABI.max_lateness = DEFAULT_MAX_LATENESS;
+  basesink->max_lateness = DEFAULT_MAX_LATENESS;
   g_atomic_int_set (&priv->qos_enabled, DEFAULT_QOS);
   priv->async_enabled = DEFAULT_ASYNC;
   priv->ts_offset = DEFAULT_TS_OFFSET;
@@ -724,7 +724,7 @@ gst_base_sink_finalize (GObject * object)
   basesink = GST_BASE_SINK (object);
 
   g_queue_free (basesink->preroll_queue);
-  gst_segment_free (basesink->abidata.ABI.clip_segment);
+  gst_segment_free (basesink->clip_segment);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -795,7 +795,7 @@ gst_base_sink_set_max_lateness (GstBaseSink * sink, gint64 max_lateness)
   g_return_if_fail (GST_IS_BASE_SINK (sink));
 
   GST_OBJECT_LOCK (sink);
-  sink->abidata.ABI.max_lateness = max_lateness;
+  sink->max_lateness = max_lateness;
   GST_OBJECT_UNLOCK (sink);
 }
 
@@ -820,7 +820,7 @@ gst_base_sink_get_max_lateness (GstBaseSink * sink)
   g_return_val_if_fail (GST_IS_BASE_SINK (sink), -1);
 
   GST_OBJECT_LOCK (sink);
-  res = sink->abidata.ABI.max_lateness;
+  res = sink->max_lateness;
   GST_OBJECT_UNLOCK (sink);
 
   return res;
@@ -1564,7 +1564,6 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
     case GST_STATE_PLAYING:
     {
       GstBaseSinkClass *bclass;
-      GstStateChangeReturn ret;
 
       bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
@@ -1577,14 +1576,6 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
       /* post PAUSED too when we were READY */
       if (current == GST_STATE_READY) {
         post_paused = TRUE;
-      }
-
-      /* make sure we notify the subclass of async playing */
-      if (bclass->async_play) {
-        GST_WARNING_OBJECT (basesink, "deprecated async_play");
-        ret = bclass->async_play (basesink);
-        if (ret == GST_STATE_CHANGE_FAILURE)
-          goto async_failed;
       }
       break;
     }
@@ -1667,13 +1658,6 @@ stopping:
     GST_DEBUG_OBJECT (basesink, "stopping");
     basesink->need_preroll = FALSE;
     basesink->flushing = TRUE;
-    GST_OBJECT_UNLOCK (basesink);
-    return FALSE;
-  }
-async_failed:
-  {
-    GST_DEBUG_OBJECT (basesink, "async commit failed");
-    GST_STATE_RETURN (basesink) = GST_STATE_CHANGE_FAILURE;
     GST_OBJECT_UNLOCK (basesink);
     return FALSE;
   }
@@ -1803,7 +1787,7 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
     segment->start = current->start_start;
 
   /* the clip segment is used for position report in paused... */
-  memcpy (sink->abidata.ABI.clip_segment, segment, sizeof (GstSegment));
+  memcpy (sink->clip_segment, segment, sizeof (GstSegment));
 
   /* post the step done when we know the stepped duration in TIME */
   message =
@@ -2824,7 +2808,7 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
   if (G_LIKELY (status != GST_CLOCK_EARLY))
     goto in_time;
 
-  max_lateness = basesink->abidata.ABI.max_lateness;
+  max_lateness = basesink->max_lateness;
 
   /* check if frame dropping is enabled */
   if (max_lateness == -1)
@@ -3401,7 +3385,7 @@ gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad)
     /* we need new segment info after the flush. */
     basesink->have_newsegment = FALSE;
     gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
-    gst_segment_init (basesink->abidata.ABI.clip_segment, GST_FORMAT_UNDEFINED);
+    gst_segment_init (basesink->clip_segment, GST_FORMAT_UNDEFINED);
   }
   GST_OBJECT_UNLOCK (basesink);
 }
@@ -3471,7 +3455,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
          * we need to configure the current clipping segment and insert the event
          * in the queue to serialize it with the buffers for rendering. */
         gst_base_sink_configure_segment (basesink, pad, event,
-            basesink->abidata.ABI.clip_segment);
+            basesink->clip_segment);
 
         ret =
             gst_base_sink_queue_object_unlocked (basesink, pad,
@@ -3608,7 +3592,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   }
 
   /* for code clarity */
-  clip_segment = basesink->abidata.ABI.clip_segment;
+  clip_segment = basesink->clip_segment;
 
   if (G_UNLIKELY (!basesink->have_newsegment)) {
     gboolean sync;
@@ -3933,7 +3917,7 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
     GST_DEBUG_OBJECT (sink, "stop flushing upstream");
     gst_pad_push_event (pad, gst_event_new_flush_stop ());
     gst_base_sink_flush_stop (sink, pad);
-  } else if (res && sink->abidata.ABI.running) {
+  } else if (res && sink->running) {
     /* we are running the current segment and doing a non-flushing seek,
      * close the segment first based on the last_stop. */
     GST_DEBUG_OBJECT (sink, "closing running segment %" G_GINT64_FORMAT
@@ -3961,7 +3945,7 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   }
 
   sink->priv->discont = TRUE;
-  sink->abidata.ABI.running = TRUE;
+  sink->running = TRUE;
 
   GST_PAD_STREAM_UNLOCK (pad);
 
@@ -4393,7 +4377,7 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
     format = GST_FORMAT_BYTES;
 
     gst_segment_init (&basesink->segment, format);
-    gst_segment_init (basesink->abidata.ABI.clip_segment, format);
+    gst_segment_init (basesink->clip_segment, format);
     GST_OBJECT_LOCK (basesink);
     basesink->have_newsegment = TRUE;
     GST_OBJECT_UNLOCK (basesink);
@@ -4403,8 +4387,7 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
     if (result) {
       GST_DEBUG_OBJECT (basesink,
           "setting duration in bytes to %" G_GINT64_FORMAT, duration);
-      gst_segment_set_duration (basesink->abidata.ABI.clip_segment, format,
-          duration);
+      gst_segment_set_duration (basesink->clip_segment, format, duration);
       gst_segment_set_duration (&basesink->segment, format, duration);
     } else {
       GST_DEBUG_OBJECT (basesink, "unknown duration");
@@ -4548,7 +4531,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
    * main segment directly with the new segment values without it having to be
    * activated by the rendering after preroll */
   if (basesink->pad_mode == GST_ACTIVATE_PUSH)
-    segment = basesink->abidata.ABI.clip_segment;
+    segment = basesink->clip_segment;
   else
     segment = &basesink->segment;
 
@@ -4943,8 +4926,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (basesink, "READY to PAUSED");
       basesink->have_newsegment = FALSE;
       gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
-      gst_segment_init (basesink->abidata.ABI.clip_segment,
-          GST_FORMAT_UNDEFINED);
+      gst_segment_init (basesink->clip_segment, GST_FORMAT_UNDEFINED);
       basesink->offset = 0;
       basesink->have_preroll = FALSE;
       priv->step_unlock = FALSE;

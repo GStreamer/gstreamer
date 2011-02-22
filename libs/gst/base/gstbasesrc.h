@@ -101,18 +101,14 @@ struct _GstBaseSrc {
   gint           num_buffers;
   gint           num_buffers_left;
 
-  /*< private >*/
-  union {
-    struct {
-      /* FIXME: those fields should be moved into the private struct */
-      gboolean  typefind;
-      gboolean  running;
-      GstEvent *pending_seek;
-    } ABI;
-    gpointer       _gst_reserved[GST_PADDING_LARGE-1];
-  } data;
+  gboolean       typefind;
+  gboolean       running;
+  GstEvent      *pending_seek;
 
   GstBaseSrcPrivate *priv;
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
@@ -178,9 +174,8 @@ struct _GstBaseSrcClass {
 
   /* decide on caps */
   gboolean      (*negotiate)    (GstBaseSrc *src);
-
-  /* generate and send a newsegment (UNUSED) */
-  gboolean      (*newsegment)   (GstBaseSrc *src);
+  /* called if, in negotiation, caps need fixating */
+  void          (*fixate)       (GstBaseSrc *src, GstCaps *caps);
 
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseSrc *src);
@@ -196,23 +191,6 @@ struct _GstBaseSrcClass {
 
   /* check if the resource is seekable */
   gboolean      (*is_seekable)  (GstBaseSrc *src);
-  /* unlock any pending access to the resource. subclasses should unlock
-   * any function ASAP. */
-  gboolean      (*unlock)       (GstBaseSrc *src);
-
-  /* notify subclasses of an event */
-  gboolean      (*event)        (GstBaseSrc *src, GstEvent *event);
-
-  /* ask the subclass to create a buffer with offset and size */
-  GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size,
-                                 GstBuffer **buf);
-
-  /* additions that change padding... */
-  /* notify subclasses of a seek */
-  gboolean      (*do_seek)      (GstBaseSrc *src, GstSegment *segment);
-  /* notify subclasses of a query */
-  gboolean      (*query)        (GstBaseSrc *src, GstQuery *query);
-
   /* check whether the source would support pull-based operation if
    * it were to be opened now. This vfunc is optional, but should be
    * implemented if possible to avoid unnecessary start/stop cycles.
@@ -221,19 +199,31 @@ struct _GstBaseSrcClass {
    * undesirable. */
   gboolean      (*check_get_range) (GstBaseSrc *src);
 
-  /* called if, in negotiation, caps need fixating */
-  void          (*fixate)       (GstBaseSrc *src, GstCaps *caps);
-
-  /* Clear any pending unlock request, as we succeeded in unlocking */
-  gboolean      (*unlock_stop)  (GstBaseSrc *src);
-
   /* Prepare the segment on which to perform do_seek(), converting to the
    * current basesrc format. */
   gboolean      (*prepare_seek_segment) (GstBaseSrc *src, GstEvent *seek,
                                          GstSegment *segment);
+  /* notify subclasses of a seek */
+  gboolean      (*do_seek)      (GstBaseSrc *src, GstSegment *segment);
+
+  /* unlock any pending access to the resource. subclasses should unlock
+   * any function ASAP. */
+  gboolean      (*unlock)       (GstBaseSrc *src);
+  /* Clear any pending unlock request, as we succeeded in unlocking */
+  gboolean      (*unlock_stop)  (GstBaseSrc *src);
+
+  /* notify subclasses of a query */
+  gboolean      (*query)        (GstBaseSrc *src, GstQuery *query);
+
+  /* notify subclasses of an event */
+  gboolean      (*event)        (GstBaseSrc *src, GstEvent *event);
+
+  /* ask the subclass to create a buffer with offset and size */
+  GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size,
+                                 GstBuffer **buf);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 6];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType gst_base_src_get_type (void);

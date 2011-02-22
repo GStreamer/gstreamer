@@ -138,7 +138,7 @@ struct _GstBaseTransform {
   /*< private >*/
   GstBaseTransformPrivate *priv;
 
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 1];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
@@ -199,8 +199,9 @@ struct _GstBaseTransformClass {
   GstElementClass parent_class;
 
   /*< public >*/
-  /* virtual methods for subclasses */
+  gboolean       passthrough_on_same_caps;
 
+  /* virtual methods for subclasses */
   GstCaps*	(*transform_caps) (GstBaseTransform *trans,
                                    GstPadDirection direction,
                                    GstCaps *caps);
@@ -208,6 +209,12 @@ struct _GstBaseTransformClass {
   void		(*fixate_caps)	  (GstBaseTransform *trans,
                                    GstPadDirection direction, GstCaps *caps,
                                    GstCaps *othercaps);
+  gboolean      (*accept_caps)    (GstBaseTransform *trans, GstPadDirection direction,
+                                   GstCaps *caps);
+
+  gboolean      (*set_caps)       (GstBaseTransform *trans, GstCaps *incaps,
+                                   GstCaps *outcaps);
+
 
   gboolean      (*transform_size) (GstBaseTransform *trans,
                                    GstPadDirection direction,
@@ -217,34 +224,24 @@ struct _GstBaseTransformClass {
   gboolean      (*get_unit_size)  (GstBaseTransform *trans, GstCaps *caps,
                                    guint *size);
 
-  gboolean      (*set_caps)     (GstBaseTransform *trans, GstCaps *incaps,
-                                 GstCaps *outcaps);
-
   gboolean      (*start)        (GstBaseTransform *trans);
   gboolean      (*stop)         (GstBaseTransform *trans);
 
   gboolean      (*event)        (GstBaseTransform *trans, GstEvent *event);
+  /* src event */
+  gboolean      (*src_event)    (GstBaseTransform *trans, GstEvent *event);
+
+  GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans,
+     GstBuffer *input, gint size, GstCaps *caps, GstBuffer **buf);
+
+  void          (*before_transform)  (GstBaseTransform *trans, GstBuffer *buffer);
 
   GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf,
                                  GstBuffer *outbuf);
   GstFlowReturn (*transform_ip) (GstBaseTransform *trans, GstBuffer *buf);
 
-  /* FIXME: When adjusting the padding, move these to nicer places in the class */
-  gboolean       passthrough_on_same_caps;
-
-  GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans,
-     GstBuffer *input, gint size, GstCaps *caps, GstBuffer **buf);
-
-  /* src event */
-  gboolean      (*src_event)      (GstBaseTransform *trans, GstEvent *event);
-
-  void          (*before_transform)  (GstBaseTransform *trans, GstBuffer *buffer);
-
-  gboolean      (*accept_caps)  (GstBaseTransform *trans, GstPadDirection direction,
-                                         GstCaps *caps);
-
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 3];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType           gst_base_transform_get_type         (void);
