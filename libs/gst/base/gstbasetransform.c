@@ -1489,6 +1489,12 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
         gst_buffer_unref (*out_buf);
       *out_buf = NULL;
     }
+  } else if (outsize != newsize) {
+    GST_WARNING_OBJECT (trans, "Caps did not change but allocated size does "
+        "not match expected size (%d != %d)", newsize, outsize);
+    if (in_buf != *out_buf)
+      gst_buffer_unref (*out_buf);
+    *out_buf = NULL;
   }
 
   /* these are the final output caps */
@@ -1749,6 +1755,20 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
         if (gst_caps_is_empty (sink_suggest))
           goto not_supported;
+
+        /* try the alloc caps if it is still not fixed */
+        if (!gst_caps_is_fixed (sink_suggest)) {
+          GstCaps *intersect;
+
+          GST_DEBUG_OBJECT (trans, "Checking if the input caps is compatible "
+              "with the non-fixed caps suggestion");
+          intersect = gst_caps_intersect (sink_suggest, caps);
+          if (!gst_caps_is_empty (intersect)) {
+            GST_DEBUG_OBJECT (trans, "It is, using it");
+            gst_caps_replace (&sink_suggest, caps);
+          }
+          gst_caps_unref (intersect);
+        }
 
         /* be safe and call default fixate */
         sink_suggest = gst_caps_make_writable (sink_suggest);
@@ -2757,7 +2777,7 @@ gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
 /**
  * gst_base_transform_suggest:
  * @trans: a #GstBaseTransform
- * @caps: caps to suggest
+ * @caps: (transfer none): caps to suggest
  * @size: buffer size to suggest
  *
  * Instructs @trans to suggest new @caps upstream. A copy of @caps will be

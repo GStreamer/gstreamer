@@ -344,13 +344,13 @@ GST_START_TEST (test_uri_interface)
   g_free (location);
 
   location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
-  fail_unless_equals_string (location, "file://%2Fi%2Fdo%2Fnot%2Fexist");
+  fail_unless_equals_string (location, "file:///i/do/not/exist");
 
   /* should accept file:///foo/bar URIs */
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (src),
           "file:///foo/bar"));
   location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
-  fail_unless_equals_string (location, "file://%2Ffoo%2Fbar");
+  fail_unless_equals_string (location, "file:///foo/bar");
   g_object_get (G_OBJECT (src), "location", &location, NULL);
   fail_unless_equals_string (location, "/foo/bar");
   g_free (location);
@@ -359,10 +359,18 @@ GST_START_TEST (test_uri_interface)
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (src),
           "file://localhost/foo/baz"));
   location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
-  fail_unless_equals_string (location, "file://%2Ffoo%2Fbaz");
+  fail_unless_equals_string (location, "file:///foo/baz");
   g_object_get (G_OBJECT (src), "location", &location, NULL);
   fail_unless_equals_string (location, "/foo/baz");
   g_free (location);
+
+  /* should escape non-uri characters for the URI but not for the location */
+  g_object_set (G_OBJECT (src), "location", "/foo/b?r", NULL);
+  g_object_get (G_OBJECT (src), "location", &location, NULL);
+  fail_unless_equals_string (location, "/foo/b?r");
+  g_free (location);
+  location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
+  fail_unless_equals_string (location, "file:///foo/b%3Fr");
 
   /* should fail with other hostnames */
   fail_if (gst_uri_handler_set_uri (GST_URI_HANDLER (src),

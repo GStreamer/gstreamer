@@ -104,7 +104,7 @@ factory:
 The static autoplugger has to be carefull when connecting the mpg123
 element with the audiosink because it is theoretically possible that
 the mpg123 element outputs raw audio with a rate that cannot be
-handled by the audiosink (ex. 4000KHz). In the absense of another
+handled by the audiosink (ex. 4000KHz). In the absence of another
 audiosink with more capabilities, the autoplugging of this simple 
 pipeline will not be possible and would fail.
 

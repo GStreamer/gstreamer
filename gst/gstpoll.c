@@ -376,6 +376,7 @@ fd_set_to_pollfd (GstPoll * set, fd_set * readfds, fd_set * writefds,
     struct pollfd *pfd = &g_array_index (set->active_fds, struct pollfd, i);
 
     if (pfd->fd < FD_SETSIZE) {
+      pfd->revents = 0;
       if (FD_ISSET (pfd->fd, readfds))
         pfd->revents |= POLLIN;
       if (FD_ISSET (pfd->fd, writefds))
@@ -533,8 +534,10 @@ gst_poll_collect_winsock_events (GstPoll * set)
  * is possible to restart or flush a call to gst_poll_wait() with
  * gst_poll_restart() and gst_poll_set_flushing() respectively.
  *
- * Returns: a new #GstPoll, or %NULL in case of an error. Free with
- * gst_poll_free().
+ * Free-function: gst_poll_free
+ *
+ * Returns: (transfer full): a new #GstPoll, or %NULL in case of an error.
+ *     Free with gst_poll_free().
  *
  * Since: 0.10.18
  */
@@ -579,6 +582,9 @@ gst_poll_new (gboolean controllable)
   nset->wakeup_event = CreateEvent (NULL, TRUE, FALSE, NULL);
 #endif
 
+  /* ensure (re)build, though already sneakily set in non-windows case */
+  MARK_REBUILD (nset);
+
   nset->controllable = controllable;
 
   return nset;
@@ -603,8 +609,10 @@ no_socket_pair:
  * A timeout is performed with gst_poll_wait(). Multiple timeouts can be
  * performed from different threads. 
  *
- * Returns: a new #GstPoll, or %NULL in case of an error. Free with
- * gst_poll_free().
+ * Free-function: gst_poll_free
+ *
+ * Returns: (transfer full): a new #GstPoll, or %NULL in case of an error.
+ *     Free with gst_poll_free().
  *
  * Since: 0.10.23
  */
@@ -626,7 +634,7 @@ done:
 
 /**
  * gst_poll_free:
- * @set: a file descriptor set.
+ * @set: (transfer full): a file descriptor set.
  *
  * Free a file descriptor set.
  *
@@ -684,7 +692,11 @@ gst_poll_get_read_gpollfd (GstPoll * set, GPollFD * fd)
 #ifndef G_OS_WIN32
   fd->fd = set->control_read_fd.fd;
 #else
-  fd->fd = set->wakeup_event;
+#if GLIB_SIZEOF_VOID_P == 8
+  fd->fd = (gint64) set->wakeup_event;
+#else
+  fd->fd = (gint) set->wakeup_event;
+#endif
 #endif
   fd->events = G_IO_IN | G_IO_HUP | G_IO_ERR;
   fd->revents = 0;

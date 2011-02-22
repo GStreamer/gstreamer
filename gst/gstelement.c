@@ -186,7 +186,11 @@ gst_element_class_init (GstElementClass * klass)
    * @gstelement: the object which received the signal
    * @new_pad: the pad that has been added
    *
-   * a new #GstPad has been added to the element.
+   * a new #GstPad has been added to the element. Note that this signal will
+   * usually be emitted from the context of the streaming thread. Also keep in
+   * mind that if you add new elements to the pipeline in the signal handler
+   * you will need to set them to the desired target state with
+   * gst_element_set() or gst_element_sync_state_with_parent().
    */
   gst_element_signals[PAD_ADDED] =
       g_signal_new ("pad-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -208,6 +212,8 @@ gst_element_class_init (GstElementClass * klass)
    * @gstelement: the object which received the signal
    *
    * This signals that the element will not generate more dynamic pads.
+   * Note that this signal will usually be emitted from the context of
+   * the streaming thread.
    */
   gst_element_signals[NO_MORE_PADS] =
       g_signal_new ("no-more-pads", G_TYPE_FROM_CLASS (klass),
@@ -367,7 +373,7 @@ gst_element_provides_clock (GstElement * element)
  * <note>An element is only required to provide a clock in the PAUSED
  * state. Some elements can provide a clock in other states.</note>
  *
- * Returns: the GstClock provided by the element or %NULL
+ * Returns: (transfer full): the GstClock provided by the element or %NULL
  * if no clock could be provided.  Unref after usage.
  *
  * MT safe.
@@ -437,7 +443,7 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
  * Gets the currently configured clock of the element. This is the clock as was
  * last set with gst_element_set_clock().
  *
- * Returns: the #GstClock of the element. unref after usage.
+ * Returns: (transfer full): the #GstClock of the element. unref after usage.
  *
  * MT safe.
  */
@@ -601,7 +607,7 @@ gst_element_is_indexable (GstElement * element)
 /**
  * gst_element_set_index:
  * @element: a #GstElement.
- * @index: a #GstIndex.
+ * @index: (transfer none): a #GstIndex.
  *
  * Set @index on the element. The refcount of the index
  * will be increased, any previously set index is unreffed.
@@ -628,7 +634,7 @@ gst_element_set_index (GstElement * element, GstIndex * index)
  *
  * Gets the index from the element.
  *
- * Returns: a #GstIndex or %NULL when no index was set on the
+ * Returns: (transfer full): a #GstIndex or %NULL when no index was set on the
  * element. unref after usage.
  *
  * MT safe.
@@ -652,7 +658,7 @@ gst_element_get_index (GstElement * element)
 /**
  * gst_element_add_pad:
  * @element: a #GstElement to add the pad to.
- * @pad: the #GstPad to add to the element.
+ * @pad: (transfer full): the #GstPad to add to the element.
  *
  * Adds a pad (link point) to @element. @pad's parent will be set to @element;
  * see gst_object_set_parent() for refcounting information.
@@ -768,7 +774,7 @@ no_direction:
 /**
  * gst_element_remove_pad:
  * @element: a #GstElement to remove pad from.
- * @pad: the #GstPad to remove from the element.
+ * @pad: (transfer none): the #GstPad to remove from the element.
  *
  * Removes @pad from @element. @pad will be destroyed if it has not been
  * referenced elsewhere using gst_object_unparent().
@@ -904,8 +910,8 @@ pad_compare_name (GstPad * pad1, const gchar * name)
  * Retrieves a pad from @element by name. This version only retrieves
  * already-existing (i.e. 'static') pads.
  *
- * Returns: the requested #GstPad if found, otherwise %NULL. unref after
- * usage.
+ * Returns: (transfer full): the requested #GstPad if found, otherwise %NULL.
+ *     unref after usage.
  *
  * MT safe.
  */
@@ -939,15 +945,17 @@ gst_element_get_static_pad (GstElement * element, const gchar * name)
 }
 
 static GstPad *
-gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * name)
+_gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * name, const GstCaps * caps)
 {
   GstPad *newpad = NULL;
   GstElementClass *oclass;
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  if (oclass->request_new_pad)
+  if (oclass->request_new_pad_full)
+    newpad = (oclass->request_new_pad_full) (element, templ, name, caps);
+  else if (oclass->request_new_pad)
     newpad = (oclass->request_new_pad) (element, templ, name);
 
   if (newpad)
@@ -965,7 +973,11 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * request pads. The pad should be released with
  * gst_element_release_request_pad().
  *
- * Returns: requested #GstPad if found, otherwise %NULL. Release after usage.
+ * This method is slow and will be deprecated in the future. New code should
+ * use gst_element_request_pad() with the requested template.
+ *
+ * Returns: (transfer full): requested #GstPad if found, otherwise %NULL.
+ *     Release after usage.
  */
 GstPad *
 gst_element_get_request_pad (GstElement * element, const gchar * name)
@@ -1018,7 +1030,8 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
 
             /* it's an int */
             tmp = strtol (data, &endptr, 10);
-            if (endptr && *endptr == '\0') {
+            if (tmp != G_MINLONG && tmp != G_MAXLONG && endptr &&
+                *endptr == '\0') {
               templ_found = TRUE;
               req_name = name;
               break;
@@ -1038,10 +1051,78 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
   if (!templ_found)
     return NULL;
 
-  pad = gst_element_request_pad (element, templ, req_name);
+  pad = _gst_element_request_pad (element, templ, req_name, NULL);
 
   return pad;
 }
+
+/**
+ * gst_element_request_pad:
+ * @element: a #GstElement to find a request pad of.
+ * @templ: a #GstPadTemplate of which we want a pad of.
+ * @name: (transfer none) (allow-none): the name of the request #GstPad
+ * to retrieve. Can be %NULL.
+ * @caps: (transfer none) (allow-none): the caps of the pad we want to
+ * request. Can be %NULL.
+ *
+ * Retrieves a request pad from the element according to the provided template.
+ *
+ * If the @caps are specified and the element implements thew new
+ * request_new_pad_full virtual method, the element will use them to select
+ * which pad to create.
+ *
+ * The pad should be released with gst_element_release_request_pad().
+ *
+ * Returns: (transfer full): requested #GstPad if found, otherwise %NULL.
+ *     Release after usage.
+ *
+ * Since: 0.10.32
+ */
+GstPad *
+gst_element_request_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (templ != NULL, NULL);
+
+  return _gst_element_request_pad (element, templ, name, caps);
+}
+
+/**
+ * gst_element_get_pad:
+ * @element: a #GstElement.
+ * @name: the name of the pad to retrieve.
+ *
+ * Retrieves a pad from @element by name. Tries gst_element_get_static_pad()
+ * first, then gst_element_get_request_pad().
+ *
+ * Deprecated: This function is deprecated as it's unclear if the reference
+ * to the result pad should be released with gst_object_unref() in case of a static pad
+ * or gst_element_release_request_pad() in case of a request pad.
+ * Use gst_element_get_static_pad() or gst_element_get_request_pad() instead.
+ *
+ * Returns: (transfer full): the #GstPad if found, otherwise %NULL. Unref or Release after usage,
+ * depending on the type of the pad.
+ */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+GstPad *gst_element_get_pad (GstElement * element, const gchar * name);
+#endif
+GstPad *
+gst_element_get_pad (GstElement * element, const gchar * name)
+{
+  GstPad *pad;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  pad = gst_element_get_static_pad (element, name);
+  if (!pad)
+    pad = gst_element_get_request_pad (element, name);
+
+  return pad;
+}
+#endif /* GST_REMOVE_DEPRECATED */
 
 static GstIteratorItem
 iterate_pad (GstIterator * it, GstPad * pad)
@@ -1076,7 +1157,8 @@ gst_element_iterate_pad_list (GstElement * element, GList ** padlist)
  * Retrieves an iterattor of @element's pads. The iterator should
  * be freed after usage.
  *
- * Returns: the #GstIterator of #GstPad. Unref each pad after use.
+ * Returns: (transfer full): the #GstIterator of #GstPad. Unref each pad
+ *     after use.
  *
  * MT safe.
  */
@@ -1094,7 +1176,8 @@ gst_element_iterate_pads (GstElement * element)
  *
  * Retrieves an iterator of @element's source pads.
  *
- * Returns: the #GstIterator of #GstPad. Unref each pad after use.
+ * Returns: (transfer full): the #GstIterator of #GstPad. Unref each pad
+ *     after use.
  *
  * MT safe.
  */
@@ -1112,7 +1195,8 @@ gst_element_iterate_src_pads (GstElement * element)
  *
  * Retrieves an iterator of @element's sink pads.
  *
- * Returns: the #GstIterator of #GstPad. Unref each pad after use.
+ * Returns: (transfer full): the #GstIterator of #GstPad. Unref each pad
+ *     after use.
  *
  * MT safe.
  */
@@ -1127,7 +1211,7 @@ gst_element_iterate_sink_pads (GstElement * element)
 /**
  * gst_element_class_add_pad_template:
  * @klass: the #GstElementClass to add the pad template to.
- * @templ: a #GstPadTemplate to add to the element class.
+ * @templ: (transfer none): a #GstPadTemplate to add to the element class.
  *
  * Adds a padtemplate to an element class. This is mainly used in the _base_init
  * functions of classes.
@@ -1213,7 +1297,8 @@ gst_element_class_set_metadata (GstElementClass * klass,
  * that has subclasses, make sure to pass the g_class parameter of the
  * #GInstanceInitFunc here.</note>
  *
- * Returns: the #GList of padtemplates.
+ * Returns: (transfer none) (element-type Gst.PadTemplate): the #GList of
+ *     pad templates.
  */
 GList *
 gst_element_class_get_pad_template_list (GstElementClass * element_class)
@@ -1233,8 +1318,8 @@ gst_element_class_get_pad_template_list (GstElementClass * element_class)
  * that has subclasses, make sure to pass the g_class parameter of the
  * #GInstanceInitFunc here.</note>
  *
- * Returns: the #GstPadTemplate with the given name, or %NULL if none was found.
- * No unreferencing is necessary.
+ * Returns: (transfer none): the #GstPadTemplate with the given name, or %NULL
+ *     if none was found. No unreferencing is necessary.
  */
 GstPadTemplate *
 gst_element_class_get_pad_template (GstElementClass * element_class,
@@ -1363,7 +1448,7 @@ gst_element_default_send_event (GstElement * element, GstEvent * event)
 /**
  * gst_element_send_event:
  * @element: a #GstElement to send the event to.
- * @event: the #GstEvent to send to the element.
+ * @event: (transfer full): the #GstEvent to send to the element.
  *
  * Sends an event to an element. If the element doesn't implement an
  * event handler, the event will be pushed on a random linked sink pad for
@@ -1508,7 +1593,7 @@ gst_element_default_query (GstElement * element, GstQuery * query)
 /**
  * gst_element_query:
  * @element: a #GstElement to perform the query on.
- * @query: the #GstQuery.
+ * @query: (transfer none): the #GstQuery.
  *
  * Performs a query on the given element.
  *
@@ -1546,7 +1631,7 @@ gst_element_query (GstElement * element, GstQuery * query)
 /**
  * gst_element_post_message:
  * @element: a #GstElement posting the message
- * @message: a #GstMessage to post
+ * @message: (transfer full): a #GstMessage to post
  *
  * Post a message on the element's #GstBus. This function takes ownership of the
  * message; if you want to access the message after this call, you should add an
@@ -1599,7 +1684,8 @@ no_bus:
  *
  * This function is only used internally by the gst_element_error() macro.
  *
- * Returns: a newly allocated string, or %NULL if the format was %NULL or ""
+ * Returns: (transfer full): a newly allocated string, or %NULL if the format
+ *     was %NULL or ""
  *
  * MT safe.
  */
@@ -1626,10 +1712,12 @@ _gst_element_error_printf (const gchar * format, ...)
  * @type:     the #GstMessageType
  * @domain:   the GStreamer GError domain this message belongs to
  * @code:     the GError code belonging to the domain
- * @text:     an allocated text string to be used as a replacement for the
- *            default message connected to code, or %NULL
- * @debug:    an allocated debug message to be used as a replacement for the
- *            default debugging information, or %NULL
+ * @text:     (allow-none) (transfer full): an allocated text string to be used
+ *            as a replacement for the default message connected to code,
+ *            or %NULL
+ * @debug:    (allow-none) (transfer full): an allocated debug message to be
+ *            used as a replacement for the default debugging information,
+ *            or %NULL
  * @file:     the source code file where the error was generated
  * @function: the source code function where the error was generated
  * @line:     the source code line where the error was generated
@@ -1968,9 +2056,10 @@ interrupted:
 /**
  * gst_element_get_state:
  * @element: a #GstElement to get the state of.
- * @state: (out): a pointer to #GstState to hold the state. Can be %NULL.
- * @pending: (out): a pointer to #GstState to hold the pending state.
- *                  Can be %NULL.
+ * @state: (out) (allow-none): a pointer to #GstState to hold the state.
+ *     Can be %NULL.
+ * @pending: (out) (allow-none): a pointer to #GstState to hold the pending
+ *     state. Can be %NULL.
  * @timeout: a #GstClockTime to specify the timeout for an async
  *           state change or %GST_CLOCK_TIME_NONE for infinite timeout.
  *
@@ -2756,8 +2845,8 @@ was_ok:
  *
  * Retrieves the factory that was used to create this element.
  *
- * Returns: the #GstElementFactory used for creating this element.
- * no refcounting is needed.
+ * Returns: (transfer none): the #GstElementFactory used for creating this
+ *     element. no refcounting is needed.
  */
 GstElementFactory *
 gst_element_get_factory (GstElement * element)
@@ -2863,7 +2952,7 @@ gst_element_set_bus_func (GstElement * element, GstBus * bus)
 /**
  * gst_element_set_bus:
  * @element: a #GstElement to set the bus of.
- * @bus: the #GstBus to set.
+ * @bus: (transfer none): the #GstBus to set.
  *
  * Sets the bus of the element. Increases the refcount on the bus.
  * For internal use only, unless you're testing elements.
@@ -2890,7 +2979,7 @@ gst_element_set_bus (GstElement * element, GstBus * bus)
  * Returns the bus of the element. Note that only a #GstPipeline will provide a
  * bus for the application.
  *
- * Returns: the element's #GstBus. unref after usage.
+ * Returns: (transfer full): the element's #GstBus. unref after usage.
  *
  * MT safe.
  */

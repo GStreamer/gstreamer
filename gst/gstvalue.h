@@ -352,7 +352,9 @@ typedef gint     (* GstValueCompareFunc)     (const GValue *value1,
  *
  * Used by gst_value_serialize() to obtain a non-binary form of the #GValue.
  *
- * Returns: the string representation of the value
+ * Free-function: g_free
+ *
+ * Returns: (transfer full): the string representation of the value
  */
 typedef gchar *  (* GstValueSerializeFunc)   (const GValue *value1);
 
@@ -385,7 +387,7 @@ typedef gboolean (* GstValueUnionFunc)       (GValue       *dest,
 
 /**
  * GstValueIntersectFunc:
- * @dest: a #GValue for the result
+ * @dest: (out caller-allocates): a #GValue for the result
  * @value1: a #GValue operand
  * @value2: a #GValue operand
  *
@@ -403,7 +405,7 @@ typedef gboolean (* GstValueIntersectFunc)   (GValue       *dest,
 
 /**
  * GstValueSubtractFunc:
- * @dest: a #GValue for the result
+ * @dest: (out caller-allocates): a #GValue for the result
  * @minuend: a #GValue operand
  * @subtrahend: a #GValue operand
  *
@@ -462,6 +464,9 @@ void		gst_value_list_append_value	(GValue		*value,
 void		gst_value_list_prepend_value	(GValue		*value,
 						 const GValue	*prepend_value);
 void		gst_value_list_concat		(GValue		*dest,
+						 const GValue   *value1,
+						 const GValue	*value2);
+void		gst_value_list_merge		(GValue		*dest,
 						 const GValue   *value1,
 						 const GValue	*value2);
 guint		gst_value_list_get_size		(const GValue	*value);

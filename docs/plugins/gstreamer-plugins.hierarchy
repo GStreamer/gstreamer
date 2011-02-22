@@ -17,11 +17,14 @@ GObject
         GstIdentity
       GstBin
         GstPipeline
+      GstInputSelector
       GstMultiQueue
+      GstOutputSelector
       GstQueue
       GstQueue2
       GstTee
       GstTypeFindElement
+      GstValve
     GstIndex
       GstFileIndex
       GstMemIndex

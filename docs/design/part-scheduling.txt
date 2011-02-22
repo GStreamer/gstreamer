@@ -33,7 +33,7 @@ push function to push the result to the peer sinkpad.
 Deciding the scheduling mode
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When tha pad is activated, the _activate() function is called. The pad can then
+When a pad is activated, the _activate() function is called. The pad can then
 choose to activate itself in push or pull mode depending on upstream
 capabilities.
 
@@ -43,13 +43,13 @@ activate function for the pad.
 The chain function
 ~~~~~~~~~~~~~~~~~~
 
-The chain function will be called when a upstream element perform a _push() on the pad.
+The chain function will be called when a upstream element performs a _push() on the pad.
 The upstream element can be another chain based element or a pushing source.
 
 The getrange function
 ~~~~~~~~~~~~~~~~~~~~~
 
-The getrange function is called when a peer pad perform a _pull_range() on the pad. This
+The getrange function is called when a peer pad performs a _pull_range() on the pad. This
 downstream pad can be a pulling element or another _pull_range() based element.
 
 Plug-in techniques

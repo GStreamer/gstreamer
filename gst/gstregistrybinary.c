@@ -349,7 +349,7 @@ gst_registry_binary_initialize_magic (GstBinaryRegistryMagic * m)
  * @location: a filename
  *
  * Write the @registry to a cache to file at given @location.
- * 
+ *
  * Returns: %TRUE on success.
  */
 gboolean
@@ -617,9 +617,6 @@ done:
   /* TODO: once we re-use the pointers to registry contents, return here */
 
 Error:
-  if (err)
-    g_error_free (err);
-
 #ifndef GST_DISABLE_GST_DEBUG
   g_timer_destroy (timer);
 #endif

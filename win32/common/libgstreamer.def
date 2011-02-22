@@ -212,6 +212,7 @@ EXPORTS
 	gst_clock_id_wait_async_full
 	gst_clock_new_periodic_id
 	gst_clock_new_single_shot_id
+	gst_clock_periodic_id_reinit
 	gst_clock_return_get_type
 	gst_clock_set_calibration
 	gst_clock_set_master
@@ -342,6 +343,7 @@ EXPORTS
 	gst_element_register
 	gst_element_release_request_pad
 	gst_element_remove_pad
+	gst_element_request_pad
 	gst_element_requires_clock
 	gst_element_seek
 	gst_element_seek_simple
@@ -374,6 +376,7 @@ EXPORTS
 	gst_event_new_new_segment
 	gst_event_new_new_segment_full
 	gst_event_new_qos
+	gst_event_new_qos_full
 	gst_event_new_seek
 	gst_event_new_sink_message
 	gst_event_new_step
@@ -383,6 +386,7 @@ EXPORTS
 	gst_event_parse_new_segment
 	gst_event_parse_new_segment_full
 	gst_event_parse_qos
+	gst_event_parse_qos_full
 	gst_event_parse_seek
 	gst_event_parse_sink_message
 	gst_event_parse_step
@@ -511,6 +515,7 @@ EXPORTS
 	gst_message_new_info
 	gst_message_new_latency
 	gst_message_new_new_clock
+	gst_message_new_progress
 	gst_message_new_qos
 	gst_message_new_request_state
 	gst_message_new_segment_done
@@ -533,6 +538,7 @@ EXPORTS
 	gst_message_parse_error
 	gst_message_parse_info
 	gst_message_parse_new_clock
+	gst_message_parse_progress
 	gst_message_parse_qos
 	gst_message_parse_qos_stats
 	gst_message_parse_qos_values
@@ -780,7 +786,9 @@ EXPORTS
 	gst_preset_set_meta
 	gst_print_element_args
 	gst_print_pad_caps
+	gst_progress_type_get_type
 	gst_proxy_pad_get_type
+	gst_qos_type_get_type
 	gst_query_add_buffering_range
 	gst_query_get_n_buffering_ranges
 	gst_query_get_structure
@@ -1133,6 +1141,7 @@ EXPORTS
 	gst_value_list_get_size
 	gst_value_list_get_type
 	gst_value_list_get_value
+	gst_value_list_merge
 	gst_value_list_prepend_value
 	gst_value_register
 	gst_value_register_intersect_func

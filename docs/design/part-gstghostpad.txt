@@ -55,7 +55,7 @@ Some design requirements
           +----* internal |     
 	     (------------)
 
-  Which we will abreviate to:
+  Which we will abbreviate to:
 
 	(- X --------)      
 	|            |     

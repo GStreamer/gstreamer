@@ -61,8 +61,12 @@ GstBase-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_MAJORMINO
 		--strip-prefix=Gst \
 		-I$(top_srcdir) \
 		-I$(top_srcdir)/libs \
+		-I$(top_builddir) \
+		-I$(top_builddir)/libs \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
+		--library-path=$(top_builddir)/gst \
+		--library=$(top_builddir)/gst/libgstreamer-0.11.la \
 		--library=libgstbase-0.11.la \
 		--include=Gst-0.11 \
 		--libtool="$(top_builddir)/libtool" \

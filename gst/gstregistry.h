@@ -119,7 +119,7 @@ GstPluginFeature * 	gst_registry_lookup_feature 	(GstRegistry *registry, const c
 
 /**
  * gst_default_registry_add_plugin:
- * @plugin: the plugin to add
+ * @plugin: (transfer full): the plugin to add
  *
  * Add the plugin to the default registry.
  * The plugin-added signal will be emitted.
@@ -145,7 +145,8 @@ GstPluginFeature * 	gst_registry_lookup_feature 	(GstRegistry *registry, const c
  *
  * Get the list of paths for the default registry.
  *
- * Returns: A Glist of paths as strings. g_list_free after use.
+ * Returns: (transfer container) (element-type char*): a #GList of paths as
+ *     strings. g_list_free() after use.
  */
 #define gst_default_registry_get_path_list() \
   gst_registry_get_path_list (gst_registry_get_default())
@@ -155,7 +156,8 @@ GstPluginFeature * 	gst_registry_lookup_feature 	(GstRegistry *registry, const c
  *
  * Get a copy of all plugins registered in the default registry.
  *
- * Returns: a copy of the list. Free after use.
+ * Returns: (transfer full) (element-type Gst.Plugin): a copy of the list.
+ *     Free after use.
  */
 #define gst_default_registry_get_plugin_list() \
   gst_registry_get_plugin_list (gst_registry_get_default())
@@ -167,8 +169,8 @@ GstPluginFeature * 	gst_registry_lookup_feature 	(GstRegistry *registry, const c
  *
  * Find the pluginfeature with the given name and type in the default registry.
  *
- * Returns: The pluginfeature with the given name and type or NULL
- * if the plugin was not found.
+ * Returns: (transfer full): the pluginfeature with the given name and type or
+ *    NULL if the plugin was not found.
  */
 #define gst_default_registry_find_feature(name,type) \
   gst_registry_find_feature (gst_registry_get_default(),name,type)
@@ -180,7 +182,8 @@ GstPluginFeature * 	gst_registry_lookup_feature 	(GstRegistry *registry, const c
  * Find the plugin with the given name in the default registry.
  * The plugin will be reffed; caller is responsible for unreffing.
  *
- * Returns: The plugin with the given name or NULL if the plugin was not found.
+ * Returns: (transfer full): The plugin with the given name or NULL if the
+ *     plugin was not found.
  */
 #define gst_default_registry_find_plugin(name) \
   gst_registry_find_plugin (gst_registry_get_default(),name)
@@ -196,7 +199,8 @@ GstPluginFeature * 	gst_registry_lookup_feature 	(GstRegistry *registry, const c
  * If the first flag is set, only the first match is
  * returned (as a list with a single object).
  *
- * Returns: a GList of plugin features, gst_plugin_feature_list_free after use.
+ * Returns: (transfer full) (element-type Gst.PluginFeature): a #GList of
+ *     plugin features, gst_plugin_feature_list_free after use.
  */
 #define gst_default_registry_feature_filter(filter,first,user_data) \
   gst_registry_feature_filter (gst_registry_get_default(),filter,first,user_data)

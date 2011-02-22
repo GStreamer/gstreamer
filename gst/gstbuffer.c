@@ -323,7 +323,8 @@ gst_buffer_init (GstBuffer * buffer)
  * Creates a newly allocated buffer without any data.
  *
  * MT safe.
- * Returns: the new #GstBuffer.
+ *
+ * Returns: (transfer full): the new #GstBuffer.
  */
 GstBuffer *
 gst_buffer_new (void)
@@ -339,7 +340,7 @@ gst_buffer_new (void)
 
 /**
  * gst_buffer_new_and_alloc:
- * @size: the size of the new buffer's data.
+ * @size: the size in bytes of the new buffer's data.
  *
  * Creates a newly allocated buffer with data of the given size.
  * The buffer memory is not cleared. If the requested amount of
@@ -352,7 +353,8 @@ gst_buffer_new (void)
  * Note that when @size == 0, the buffer data pointer will be NULL.
  *
  * MT safe.
- * Returns: the new #GstBuffer.
+ *
+ * Returns: (transfer full): the new #GstBuffer.
  */
 GstBuffer *
 gst_buffer_new_and_alloc (guint size)
@@ -387,7 +389,7 @@ gst_buffer_new_and_alloc (guint size)
 
 /**
  * gst_buffer_try_new_and_alloc:
- * @size: the size of the new buffer's data.
+ * @size: the size in bytes of the new buffer's data.
  *
  * Tries to create a newly allocated buffer with data of the given size. If
  * the requested amount of memory can't be allocated, NULL will be returned.
@@ -397,7 +399,8 @@ gst_buffer_new_and_alloc (guint size)
  *
  * MT safe.
  *
- * Returns: a new #GstBuffer, or NULL if the memory couldn't be allocated.
+ * Returns: (transfer full): a new #GstBuffer, or NULL if the memory couldn't
+ *     be allocated.
  *
  * Since: 0.10.13
  */
@@ -448,7 +451,7 @@ gst_buffer_try_new_and_alloc (guint size)
  * Gets the media type of the buffer. This can be NULL if there
  * is no media type attached to this buffer.
  *
- * Returns: a reference to the #GstCaps. unref after usage.
+ * Returns: (transfer full): a reference to the #GstCaps. unref after usage.
  * Returns NULL if there were no caps on this buffer.
  */
 /* this is not made atomic because if the buffer were reffed from multiple
@@ -472,7 +475,7 @@ gst_buffer_get_caps (GstBuffer * buffer)
 /**
  * gst_buffer_set_caps:
  * @buffer: a #GstBuffer.
- * @caps: a #GstCaps.
+ * @caps: (transfer none): a #GstCaps.
  *
  * Sets the media type on the buffer. The refcount of the caps will
  * be increased and any previous caps on the buffer will be
@@ -514,7 +517,7 @@ gst_buffer_is_metadata_writable (GstBuffer * buf)
 
 /**
  * gst_buffer_make_metadata_writable:
- * @buf: a #GstBuffer
+ * @buf: (transfer full): a #GstBuffer
  *
  * Similar to gst_buffer_make_writable, but does not ensure that the buffer
  * data array is writable. Instead, this just ensures that the returned buffer
@@ -524,7 +527,8 @@ gst_buffer_is_metadata_writable (GstBuffer * buf)
  * After calling this function, @buf should not be referenced anymore. The
  * result of this function has guaranteed writable metadata.
  *
- * Returns: A new #GstBuffer with writable metadata.
+ * Returns: (transfer full): a new #GstBuffer with writable metadata, which
+ *     may or may not be the same as @buf.
  */
 GstBuffer *
 gst_buffer_make_metadata_writable (GstBuffer * buf)
@@ -561,8 +565,9 @@ gst_buffer_make_metadata_writable (GstBuffer * buf)
  * to #GST_CLOCK_TIME_NONE and #GST_BUFFER_OFFSET_NONE.
  *
  * MT safe.
- * Returns: the new #GstBuffer.
- * Returns NULL if the arguments were invalid.
+ *
+ * Returns: (transfer full): the new #GstBuffer or NULL if the arguments were
+ *     invalid.
  */
 GstBuffer *
 gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
@@ -572,7 +577,7 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
   gboolean complete;
 
   g_return_val_if_fail (buffer != NULL, NULL);
-  g_return_val_if_fail (buffer->mini_object.refcount, NULL);
+  g_return_val_if_fail (buffer->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (buffer->size >= offset + size, NULL);
 
   /* find real parent */
@@ -652,8 +657,8 @@ gboolean
 gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
 {
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, FALSE);
-  g_return_val_if_fail (buf1->mini_object.refcount, FALSE);
-  g_return_val_if_fail (buf2->mini_object.refcount, FALSE);
+  g_return_val_if_fail (buf1->mini_object.refcount > 0, FALSE);
+  g_return_val_if_fail (buf2->mini_object.refcount > 0, FALSE);
 
   /* it's only fast if we have subbuffers of the same parent */
   return (GST_IS_SUBBUFFER (buf1) &&
@@ -680,8 +685,9 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
  * gst_buffer_is_span_fast() to determine if a memcpy will be needed.
  *
  * MT safe.
- * Returns: the new #GstBuffer that spans the two source buffers.
- * Returns NULL if the arguments are invalid.
+ *
+ * Returns: (transfer full): the new #GstBuffer that spans the two source
+ *     buffers, or NULL if the arguments are invalid.
  */
 GstBuffer *
 gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
@@ -690,9 +696,9 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
   GstBuffer *newbuf;
 
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, NULL);
-  g_return_val_if_fail (buf1->mini_object.refcount, NULL);
-  g_return_val_if_fail (buf2->mini_object.refcount, NULL);
-  g_return_val_if_fail (len, NULL);
+  g_return_val_if_fail (buf1->mini_object.refcount > 0, NULL);
+  g_return_val_if_fail (buf2->mini_object.refcount > 0, NULL);
+  g_return_val_if_fail (len > 0, NULL);
   g_return_val_if_fail (len <= buf1->size + buf2->size - offset, NULL);
 
   /* if the two buffers have the same parent and are adjacent */

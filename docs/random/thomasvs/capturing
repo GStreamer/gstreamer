@@ -60,7 +60,7 @@ ELEMENTS (v4lsrc, alsasrc, osssrc)
 
 - a second element can be responsible for making the stream time-contiguous.
   (ie, T1 + D1 = T2 for all buffers).  This way they are made
-  acceptible for gapless presentation (which is useful for audio).
+  acceptable for gapless presentation (which is useful for audio).
   - The element treats the incoming stream as data-contiguous but not
     necessarily time-contiguous.
   - If the timestamps are contiguous as well, then everything is fine and

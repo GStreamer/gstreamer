@@ -291,7 +291,7 @@ void gst_byte_writer_put_float64_le_unchecked (GstByteWriter *writer, gdouble va
 /**
  * gst_byte_writer_put_data_unchecked:
  * @writer: #GstByteWriter instance
- * @data: Data to write
+ * @data: (in) (transfer none) (array length=size): Data to write
  * @size: Size of @data in bytes
  *
  * Writes @size bytes of @data to @writer without

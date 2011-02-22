@@ -28,7 +28,7 @@ BUILT_GIRSOURCES = GstNet-@GST_MAJORMINOR@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstnet_@GST_MAJORMINOR@_include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstnet_@GST_MAJORMINOR@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/net/%',$(libgstbase_@GST_MAJORMINOR@_include_HEADERS))
+gir_cincludes=--c-include="gst/net/gstnet.h"
 
 GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
@@ -37,8 +37,12 @@ GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@
 		--nsversion=@GST_MAJORMINOR@ \
 		-I$(top_srcdir) \
 		-I$(top_srcdir)/libs \
+		-I$(top_builddir) \
+		-I$(top_builddir)/libs \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
+		--library-path=$(top_builddir)/gst \
+		--library=$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la \
 		--library=libgstnet-@GST_MAJORMINOR@.la \
 		--include=Gst-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \

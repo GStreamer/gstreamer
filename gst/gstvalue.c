@@ -336,7 +336,7 @@ gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
 
 /**
  * gst_value_list_concat:
- * @dest: an uninitialized #GValue to take the result
+ * @dest: (out caller-allocates): an uninitialized #GValue to take the result
  * @value1: a #GValue
  * @value2: a #GValue
  *
@@ -385,6 +385,109 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
 }
 
 /**
+ * gst_value_list_merge:
+ * @dest: (out caller-allocates): an uninitialized #GValue to take the result
+ * @value1: a #GValue
+ * @value2: a #GValue
+ *
+ * Merges copies of @value1 and @value2.  Values that are not
+ * of type #GST_TYPE_LIST are treated as if they were lists of length 1.
+ *
+ * The result will be put into @dest and will either be a list that will not
+ * contain any duplicates, or a non-list type (if @value1 and @value2
+ * were equal).
+ *
+ * Since: 0.10.32
+ */
+void
+gst_value_list_merge (GValue * dest, const GValue * value1,
+    const GValue * value2)
+{
+  guint i, j, k, value1_length, value2_length, skipped;
+  const GValue *src;
+  gboolean skip;
+  GArray *array;
+
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (G_VALUE_TYPE (dest) == 0);
+  g_return_if_fail (G_IS_VALUE (value1));
+  g_return_if_fail (G_IS_VALUE (value2));
+
+  value1_length =
+      (GST_VALUE_HOLDS_LIST (value1) ? VALUE_LIST_SIZE (value1) : 1);
+  value2_length =
+      (GST_VALUE_HOLDS_LIST (value2) ? VALUE_LIST_SIZE (value2) : 1);
+  g_value_init (dest, GST_TYPE_LIST);
+  array = (GArray *) dest->data[0].v_pointer;
+  g_array_set_size (array, value1_length + value2_length);
+
+  if (GST_VALUE_HOLDS_LIST (value1)) {
+    for (i = 0; i < value1_length; i++) {
+      gst_value_init_and_copy (&g_array_index (array, GValue, i),
+          VALUE_LIST_GET_VALUE (value1, i));
+    }
+  } else {
+    gst_value_init_and_copy (&g_array_index (array, GValue, 0), value1);
+  }
+
+  j = value1_length;
+  skipped = 0;
+  if (GST_VALUE_HOLDS_LIST (value2)) {
+    for (i = 0; i < value2_length; i++) {
+      skip = FALSE;
+      src = VALUE_LIST_GET_VALUE (value2, i);
+      for (k = 0; k < value1_length; k++) {
+        if (gst_value_compare (&g_array_index (array, GValue, k),
+                src) == GST_VALUE_EQUAL) {
+          skip = TRUE;
+          skipped++;
+          break;
+        }
+      }
+      if (!skip) {
+        gst_value_init_and_copy (&g_array_index (array, GValue, j), src);
+        j++;
+      }
+    }
+  } else {
+    skip = FALSE;
+    for (k = 0; k < value1_length; k++) {
+      if (gst_value_compare (&g_array_index (array, GValue, k),
+              value2) == GST_VALUE_EQUAL) {
+        skip = TRUE;
+        skipped++;
+        break;
+      }
+    }
+    if (!skip) {
+      gst_value_init_and_copy (&g_array_index (array, GValue, j), value2);
+    }
+  }
+  if (skipped) {
+    guint new_size = value1_length + (value2_length - skipped);
+
+    if (new_size > 1) {
+      /* shrink list */
+      g_array_set_size (array, new_size);
+    } else {
+      GValue single_dest;
+
+      /* size is 1, take single value in list and make it new dest */
+      single_dest = g_array_index (array, GValue, 0);
+
+      /* clean up old value allocations: must set array size to 0, because
+       * allocated values are not inited meaning g_value_unset() will not
+       * work on them */
+      g_array_set_size (array, 0);
+      g_value_unset (dest);
+
+      /* the single value is our new result */
+      *dest = single_dest;
+    }
+  }
+}
+
+/**
  * gst_value_list_get_size:
  * @value: a #GValue of type #GST_TYPE_LIST
  *
@@ -408,7 +511,7 @@ gst_value_list_get_size (const GValue * value)
  * Gets the value that is a member of the list contained in @value and
  * has the index @index.
  *
- * Returns: the value at the given index
+ * Returns: (transfer none): the value at the given index
  */
 const GValue *
 gst_value_list_get_value (const GValue * value, guint index)
@@ -482,7 +585,7 @@ gst_value_array_get_size (const GValue * value)
  * Gets the value that is a member of the array contained in @value and
  * has the index @index.
  *
- * Returns: the value at the given index
+ * Returns: (transfer none): the value at the given index
  */
 const GValue *
 gst_value_array_get_value (const GValue * value, guint index)
@@ -1480,7 +1583,7 @@ gst_value_deserialize_fraction_range (GValue * dest, const gchar * s)
 /**
  * gst_value_set_caps:
  * @value: a GValue initialized to GST_TYPE_CAPS
- * @caps: the caps to set the value to
+ * @caps: (transfer none): the caps to set the value to
  *
  * Sets the contents of @value to @caps. A reference to the
  * provided @caps will be taken by the @value.
@@ -1503,7 +1606,7 @@ gst_value_set_caps (GValue * value, const GstCaps * caps)
  * #GstCaps will not be modified, therefore the caller must take one
  * before getting rid of the @value.
  *
- * Returns: the contents of @value
+ * Returns: (transfer none): the contents of @value
  */
 const GstCaps *
 gst_value_get_caps (const GValue * value)
@@ -1565,7 +1668,7 @@ gst_value_set_structure (GValue * value, const GstStructure * structure)
  *
  * Gets the contents of @value.
  *
- * Returns: the contents of @value
+ * Returns: (transfer none): the contents of @value
  *
  * Since: 0.10.15
  */
@@ -3370,7 +3473,7 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_union:
- * @dest: the destination value
+ * @dest: (out caller-allocates): the destination value
  * @value1: a value to union
  * @value2: another value to union
  *
@@ -3489,7 +3592,7 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_intersect:
- * @dest: a uninitialized #GValue that will hold the calculated
+ * @dest: (out caller-allocates): a uninitialized #GValue that will hold the calculated
  * intersection value
  * @value1: a value to intersect
  * @value2: another value to intersect
@@ -3575,7 +3678,8 @@ gst_value_register_intersect_func (GType type1, GType type2,
 
 /**
  * gst_value_subtract:
- * @dest: the destination value for the result if the subtraction is not empty
+ * @dest: (out caller-allocates): the destination value for the result if the
+ *     subtraction is not empty
  * @minuend: the value to subtract from
  * @subtrahend: the value to subtract
  *
@@ -3732,7 +3836,7 @@ gst_value_register (const GstValueTable * table)
 
 /**
  * gst_value_init_and_copy:
- * @dest: the target value
+ * @dest: (out caller-allocates): the target value
  * @src: the source value
  *
  * Initialises the target value to be of the same type as source and then copies
@@ -3755,7 +3859,9 @@ gst_value_init_and_copy (GValue * dest, const GValue * src)
  * tries to transform the given @value into a string representation that allows
  * getting back this string later on using gst_value_deserialize().
  *
- * Returns: the serialization for @value or NULL if none exists
+ * Free-function: g_free
+ *
+ * Returns: (transfer full): the serialization for @value or NULL if none exists
  */
 gchar *
 gst_value_serialize (const GValue * value)
@@ -3799,7 +3905,8 @@ gst_value_serialize (const GValue * value)
 
 /**
  * gst_value_deserialize:
- * @dest: #GValue to fill with contents of deserialization
+ * @dest: (out caller-allocates): #GValue to fill with contents of
+ *     deserialization
  * @src: string to deserialize
  *
  * Tries to deserialize a string into the type specified by the given GValue.
@@ -4261,7 +4368,7 @@ gst_value_set_date (GValue * value, const GDate * date)
  *
  * Gets the contents of @value.
  *
- * Returns: the contents of @value
+ * Returns: (transfer none): the contents of @value
  */
 const GDate *
 gst_value_get_date (const GValue * value)

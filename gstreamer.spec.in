@@ -101,7 +101,7 @@ with different major/minor versions of GStreamer.
   --enable-debug \
   --enable-gtk-doc \
   --enable-docbook \
-  --enable-introspection=no
+  --enable-introspection=yes
 
 #make %{?_smp_mflags}
 # FIXME: docs building doesn't work with smp yet
@@ -159,6 +159,16 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/manual
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/pwg
 %doc %{_datadir}/doc/gstreamer-%{majorminor}/faq/
+%{_libdir}/girepository-1.0/Gst-0.10.typelib
+%{_libdir}/girepository-1.0/GstBase-0.10.typelib
+%{_libdir}/girepository-1.0/GstCheck-0.10.typelib
+%{_libdir}/girepository-1.0/GstController-0.10.typelib
+%{_libdir}/girepository-1.0/GstNet-0.10.typelib
+%{_datadir}/gir-1.0/Gst-0.10.gir
+%{_datadir}/gir-1.0/GstBase-0.10.gir
+%{_datadir}/gir-1.0/GstCheck-0.10.gir
+%{_datadir}/gir-1.0/GstController-0.10.gir
+%{_datadir}/gir-1.0/GstNet-0.10.gir
 
 %files -n gstreamer-tools
 %defattr(-, root, root, -)

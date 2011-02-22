@@ -310,7 +310,7 @@ reset_start_time (GstPipeline * pipeline)
  *
  * Create a new pipeline with the given name.
  *
- * Returns: newly created GstPipeline
+ * Returns: (transfer full): newly created GstPipeline
  *
  * MT safe.
  */
@@ -594,7 +594,7 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
  * Gets the #GstBus of @pipeline. The bus allows applications to receive
  * #GstMessage packets.
  *
- * Returns: a #GstBus, unref after usage.
+ * Returns: (transfer full): a #GstBus, unref after usage.
  *
  * MT safe.
  */
@@ -646,7 +646,7 @@ gst_pipeline_provide_clock_func (GstElement * element)
  *
  * Gets the current clock used by @pipeline.
  *
- * Returns: a #GstClock, unref after usage.
+ * Returns: (transfer full): a #GstClock, unref after usage.
  */
 GstClock *
 gst_pipeline_get_clock (GstPipeline * pipeline)
@@ -660,7 +660,7 @@ gst_pipeline_get_clock (GstPipeline * pipeline)
 /**
  * gst_pipeline_use_clock:
  * @pipeline: a #GstPipeline
- * @clock: the clock to use
+ * @clock: (transfer none): the clock to use
  *
  * Force @pipeline to use the given @clock. The pipeline will
  * always use the given clock even if new clock providers are added
@@ -692,7 +692,7 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
 /**
  * gst_pipeline_set_clock:
  * @pipeline: a #GstPipeline
- * @clock: the clock to set
+ * @clock: (transfer none): the clock to set
  *
  * Set the clock for @pipeline. The clock will be distributed
  * to all the elements managed by the pipeline.

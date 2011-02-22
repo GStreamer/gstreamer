@@ -84,8 +84,10 @@ REGISTRY_CHECKS =				\
 	elements/filesrc			\
 	elements/identity			\
 	elements/multiqueue			\
+	elements/selector			\
 	elements/tee			  	\
 	elements/queue                          \
+	elements/valve                          \
 	libs/basesrc				\
 	libs/basesink				\
 	libs/controller				\
@@ -159,8 +161,8 @@ noinst_HEADERS = \
 EXTRA_DIST = \
 	libs/test_transform.c
 
-AM_CFLAGS = $(GST_OBJ_CFLAGS)
-AM_CXXFLAGS = $(GST_OBJ_CXXFLAGS)
+AM_CFLAGS = $(GST_OBJ_CFLAGS) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
+AM_CXXFLAGS = $(GST_OBJ_CXXFLAGS) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS)
@@ -175,8 +177,10 @@ libs_gdp_LDADD = \
 	$(top_builddir)/libs/gst/dataprotocol/libgstdataprotocol-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
-elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
-elements_filesrc_CFLAGS=$(GST_OBJ_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
+elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) $(AM_CFLAGS) \
+	-DTESTFILE=\"$(top_srcdir)/configure.ac\"
+elements_filesrc_CFLAGS=$(GST_OBJ_CFLAGS) $(AM_CFLAGS) \
+	-DTESTFILE=\"$(top_srcdir)/configure.ac\"
 
 libs_controller_LDADD = \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \

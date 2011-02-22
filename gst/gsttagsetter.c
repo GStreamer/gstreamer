@@ -368,8 +368,8 @@ gst_tag_setter_add_tag_value (GstTagSetter * setter,
  *
  * This function is not thread-safe.
  *
- * Returns: a current snapshot of the taglist used in the setter
- *          or NULL if none is used.
+ * Returns: (transfer none): a current snapshot of the taglist used in the
+ *          setter or NULL if none is used.
  */
 G_CONST_RETURN GstTagList *
 gst_tag_setter_get_tag_list (GstTagSetter * setter)

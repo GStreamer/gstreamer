@@ -322,6 +322,30 @@ GST_START_TEST (test_parsing)
 
     gst_message_unref (message);
   }
+  /* GST_MESSAGE_PROGRESS   */
+  {
+    GstProgressType type;
+    gchar *category, *text;
+
+    message =
+        gst_message_new_progress (NULL, GST_PROGRESS_TYPE_START, "connecting",
+        "Connecting to youtbue.com");
+    fail_if (message == NULL);
+    fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_PROGRESS);
+    fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    /* set some wrong values to check if the parse method overwrites them
+     * with the good values */
+    type = GST_PROGRESS_TYPE_ERROR;
+    gst_message_parse_progress (message, &type, &category, &text);
+    fail_unless (type == GST_PROGRESS_TYPE_START);
+    fail_unless (!strcmp (category, "connecting"));
+    fail_unless (!strcmp (text, "Connecting to youtbue.com"));
+    g_free (category);
+    g_free (text);
+
+    gst_message_unref (message);
+  }
 }
 
 GST_END_TEST;

@@ -268,7 +268,7 @@ gst_system_clock_get_property (GObject * object, guint prop_id, GValue * value,
  * clock will be increased so you need to unref the clock after
  * usage.
  *
- * Returns: the default clock.
+ * Returns: (transfer full): the default clock.
  *
  * MT safe.
  */
@@ -339,7 +339,7 @@ gst_system_clock_add_wakeup (GstSystemClock * sysclock)
 static void
 gst_system_clock_wait_wakeup (GstSystemClock * sysclock)
 {
-  while (sysclock->priv->wakeup_count) {
+  while (sysclock->priv->wakeup_count > 0) {
     GST_CLOCK_WAIT (sysclock);
   }
 }

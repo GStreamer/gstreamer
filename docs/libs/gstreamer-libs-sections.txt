@@ -275,6 +275,8 @@ gst_base_sink_is_last_buffer_enabled
 gst_base_sink_get_last_buffer
 gst_base_sink_set_blocksize
 gst_base_sink_get_blocksize
+gst_base_sink_get_throttle_time
+gst_base_sink_set_throttle_time
 
 GST_BASE_SINK_PAD
 

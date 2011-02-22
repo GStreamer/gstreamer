@@ -297,7 +297,7 @@ DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  * threading system as one of the very first things in your program
  * (see the example at the beginning of this section).
  *
- * Returns: a pointer to GStreamer's option group.
+ * Returns: (transfer full): a pointer to GStreamer's option group.
  */
 
 GOptionGroup *
@@ -398,7 +398,7 @@ gst_init_get_option_group (void)
 
 /**
  * gst_init_check:
- * @argc: (inout): pointer to application's argc
+ * @argc: (inout) (allow-none): pointer to application's argc
  * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
  * @err: pointer to a #GError to which a message will be posted on error
  *
@@ -457,7 +457,7 @@ gst_init_check (int *argc, char **argv[], GError ** err)
 
 /**
  * gst_init:
- * @argc: (inout): pointer to application's argc
+ * @argc: (inout) (allow-none): pointer to application's argc
  * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
  *
  * Initializes the GStreamer library, setting up internal path lists,
@@ -570,16 +570,6 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
   if (gst_initialized) {
     GST_DEBUG ("already initialized");
     return TRUE;
-  }
-
-  /* GStreamer was built against a GLib >= 2.8 and is therefore not doing
-   * the refcount hack. Check that it isn't being run against an older GLib */
-  if (glib_major_version < 2 ||
-      (glib_major_version == 2 && glib_minor_version < 8)) {
-    g_warning ("GStreamer was compiled against GLib %d.%d.%d but is running"
-        " against %d.%d.%d. This will cause reference counting issues",
-        GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION, GLIB_MICRO_VERSION,
-        glib_major_version, glib_minor_version, glib_micro_version);
   }
 
   g_type_init ();
@@ -715,6 +705,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_event_type_get_type ());
   g_type_class_ref (gst_seek_type_get_type ());
   g_type_class_ref (gst_seek_flags_get_type ());
+  g_type_class_ref (gst_qos_type_get_type ());
   g_type_class_ref (gst_format_get_type ());
   g_type_class_ref (gst_index_certainty_get_type ());
   g_type_class_ref (gst_index_entry_type_get_type ());
@@ -755,6 +746,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_parse_error_get_type ());
   g_type_class_ref (gst_parse_flags_get_type ());
   g_type_class_ref (gst_search_mode_get_type ());
+  g_type_class_ref (gst_progress_type_get_type ());
 
   gst_structure_get_type ();
   _gst_value_initialize ();
@@ -1081,6 +1073,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_event_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_seek_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_seek_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_qos_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_format_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_index_certainty_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_index_entry_type_get_type ()));
@@ -1118,6 +1111,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_uri_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_parse_error_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_param_spec_fraction_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_progress_type_get_type ()));
 
   gst_deinitialized = TRUE;
   GST_INFO ("deinitialized GStreamer");
@@ -1125,10 +1119,10 @@ gst_deinit (void)
 
 /**
  * gst_version:
- * @major: pointer to a guint to store the major version number
- * @minor: pointer to a guint to store the minor version number
- * @micro: pointer to a guint to store the micro version number
- * @nano:  pointer to a guint to store the nano version number
+ * @major: (out): pointer to a guint to store the major version number
+ * @minor: (out): pointer to a guint to store the minor version number
+ * @micro: (out): pointer to a guint to store the micro version number
+ * @nano:  (out): pointer to a guint to store the nano version number
  *
  * Gets the version number of the GStreamer library.
  */
@@ -1152,7 +1146,8 @@ gst_version (guint * major, guint * minor, guint * micro, guint * nano)
  * This function returns a string that is useful for describing this version
  * of GStreamer to the outside world: user agent strings, logging, ...
  *
- * Returns: a newly allocated string describing this version of GStreamer.
+ * Returns: (transfer full): a newly allocated string describing this version
+ *     of GStreamer.
  */
 
 gchar *

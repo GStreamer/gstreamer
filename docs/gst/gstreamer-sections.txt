@@ -39,6 +39,22 @@ GstPluginLoaderFuncs
 </SECTION>
 
 <SECTION>
+<FILE>gstatomicqueue</FILE>
+<TITLE>GstAtomicQueue</TITLE>
+GstAtomicQueue
+gst_atomic_queue_new
+
+gst_atomic_queue_ref
+gst_atomic_queue_unref
+
+gst_atomic_queue_push
+gst_atomic_queue_peek
+gst_atomic_queue_pop
+
+gst_atomic_queue_length
+</SECTION>
+
+<SECTION>
 <FILE>gstbin</FILE>
 <TITLE>GstBin</TITLE>
 GstBin
@@ -400,6 +416,7 @@ gst_clock_get_time
 gst_clock_new_single_shot_id
 gst_clock_new_periodic_id
 gst_clock_single_shot_id_reinit
+gst_clock_periodic_id_reinit
 gst_clock_get_internal_time
 gst_clock_adjust_unlocked
 gst_clock_unadjust_unlocked
@@ -522,6 +539,7 @@ gst_element_get_compatible_pad
 gst_element_get_compatible_pad_template
 gst_element_get_request_pad
 gst_element_get_static_pad
+gst_element_request_pad
 gst_element_no_more_pads
 gst_element_release_request_pad
 gst_element_remove_pad
@@ -785,8 +803,11 @@ gst_event_parse_tag
 gst_event_new_buffer_size
 gst_event_parse_buffer_size
 
+GstQOSType
 gst_event_new_qos
+gst_event_new_qos_full
 gst_event_parse_qos
+gst_event_parse_qos_full
 
 GstSeekType
 GstSeekFlags
@@ -815,6 +836,7 @@ GST_TYPE_EVENT
 GST_TYPE_EVENT_TYPE
 GST_TYPE_SEEK_TYPE
 GST_TYPE_SEEK_FLAGS
+GST_TYPE_QOS_TYPE
 GST_TYPE_EVENT_TYPE_FLAGS
 <SUBSECTION Private>
 GST_EVENT_TYPE_SHIFT
@@ -823,6 +845,7 @@ gst_event_get_type
 gst_event_type_get_type
 gst_seek_type_get_type
 gst_seek_flags_get_type
+gst_qos_type_get_type
 gst_event_type_flags_get_type
 </SECTION>
 
@@ -1232,6 +1255,10 @@ gst_message_parse_stream_status
 gst_message_set_stream_status_object
 gst_message_get_stream_status_object
 
+GstProgressType
+gst_message_new_progress
+gst_message_parse_progress
+
 <SUBSECTION Standard>
 GstMessageClass
 GST_MESSAGE
@@ -1244,11 +1271,13 @@ GST_MESSAGE_GET_CLASS
 GST_TYPE_MESSAGE_TYPE
 GST_TYPE_STRUCTURE_CHANGE_TYPE
 GST_TYPE_STREAM_STATUS_TYPE
+GST_TYPE_PROGRESS_TYPE
 <SUBSECTION Private>
 gst_message_get_type
 gst_message_type_get_type
 gst_structure_change_type_get_type
 gst_stream_status_type_get_type
+gst_progress_type_get_type
 GST_MESSAGE_COND
 GST_MESSAGE_GET_LOCK
 GST_MESSAGE_LOCK
@@ -2181,6 +2210,7 @@ GST_TAG_ISRC
 GST_TAG_ORGANIZATION
 GST_TAG_COPYRIGHT
 GST_TAG_COPYRIGHT_URI
+GST_TAG_ENCODED_BY
 GST_TAG_COMPOSER
 GST_TAG_CONTACT
 GST_TAG_LICENSE
@@ -2677,6 +2707,7 @@ GST_TYPE_ARRAY
 gst_value_list_append_value
 gst_value_list_prepend_value
 gst_value_list_concat
+gst_value_list_merge
 gst_value_list_get_size
 gst_value_list_get_value
 

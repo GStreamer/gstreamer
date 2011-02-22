@@ -30,8 +30,8 @@
 #include <glib/gprintf.h>
 #include <gst/gst.h>
 
-#include "gstcontrolsource.h"
-#include "gstinterpolationcontrolsource.h"
+#include <gst/controller/gstcontrolsource.h>
+#include <gst/controller/gstinterpolationcontrolsource.h>
 
 G_BEGIN_DECLS
 

@@ -281,8 +281,6 @@ gst_queue2_class_init (GstQueue2Class * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = gst_queue2_set_property;
   gobject_class->get_property = gst_queue2_get_property;
 
@@ -365,7 +363,7 @@ gst_queue2_class_init (GstQueue2Class * klass)
    * The maximum size of the ring buffer in bytes. If set to 0, the ring
    * buffer is disabled. Default 0.
    *
-   * Since: 0.10.30
+   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_RING_BUFFER_MAX_SIZE,
       g_param_spec_uint64 ("ring-buffer-max-size",
@@ -1929,6 +1927,8 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
   } else if (GST_IS_EVENT (item)) {
     GstEvent *event = GST_EVENT_CAST (item);
 
+    *is_buffer = FALSE;
+
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "retrieved event %p from queue", event);
 
@@ -2657,6 +2657,14 @@ gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
       goto out_unexpected;
   }
 
+  if (G_UNLIKELY (offset + length > queue->upstream_size)) {
+    gst_queue2_update_upstream_size (queue);
+    if (queue->upstream_size > 0 && offset + length >= queue->upstream_size) {
+      length = queue->upstream_size - offset;
+      GST_DEBUG_OBJECT (queue, "adjusting length downto %d", length);
+    }
+  }
+
   /* FIXME - function will block when the range is not yet available */
   ret = gst_queue2_create_read (queue, offset, length, buffer);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
@@ -2788,7 +2796,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = ! !queue->ring_buffer;
+        result = !!queue->ring_buffer;
       } else {
         result = TRUE;
       }

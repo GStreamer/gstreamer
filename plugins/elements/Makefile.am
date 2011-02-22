@@ -1,30 +1,25 @@
 
 plugin_LTLIBRARIES = libgstcoreelements.la
 
-if HAVE_SYS_SOCKET_H
-GSTFDSRC = gstfdsrc.c
-GSTFDSINK = gstfdsink.c
-else
-GSTFDSRC =
-GSTFDSINK =
-endif
-
 libgstcoreelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
 libgstcoreelements_la_SOURCES =	\
 	gstcapsfilter.c		\
 	gstelements.c		\
 	gstfakesrc.c		\
 	gstfakesink.c		\
-	$(GSTFDSRC)		\
-	$(GSTFDSINK)		\
+	gstfdsrc.c		\
+	gstfdsink.c		\
 	gstfilesink.c		\
 	gstfilesrc.c		\
 	gstidentity.c		\
+	gstinputselector.c	\
+	gstoutputselector.c	\
+	gstmultiqueue.c		\
 	gstqueue.c		\
 	gstqueue2.c		\
 	gsttee.c		\
 	gsttypefindelement.c	\
-	gstmultiqueue.c
+	gstvalve.c
 
 libgstcoreelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstcoreelements_la_LIBADD = \
@@ -42,11 +37,14 @@ noinst_HEADERS =		\
 	gstfilesink.h		\
 	gstfilesrc.h		\
 	gstidentity.h		\
+	gstinputselector.h	\
+	gstoutputselector.h	\
+	gstmultiqueue.h		\
 	gstqueue.h		\
 	gstqueue2.h		\
 	gsttee.h		\
 	gsttypefindelement.h	\
-	gstmultiqueue.h
+	gstvalve.h
 
 EXTRA_DIST = gstfdsrc.c \
 	     gstfdsink.c

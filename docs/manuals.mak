@@ -89,6 +89,7 @@ $(BUILDDIR)/$(MAIN): $(XML) $(CSS) $(EXTRA_SRC)
 
 # we should switch to xsltproc
 # docbook2html aka jade can't add the encoding easily to the html meta
+# (but we are lazy and just abuse sed to add it)
 # jw -f docbook -b html -d pwg.dsl -o ../html -V '%use-id-as-filename%' $(MAIN)
 # this is a starting point
 # xsltproc --nonet /usr/share/xml/docbook/stylesheet/nwalsh/html/docbook.xsl pwg.xml
@@ -98,7 +99,8 @@ html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
 	@echo "*** Generating HTML output ***"
 	@-mkdir -p html
 	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
-	@cd $(BUILDDIR) && docbook2html -o ../html -V '%use-id-as-filename%' $(MAIN)
+	@cd $(BUILDDIR) && SP_ENCODING="UTF-8" docbook2html -o ../html -V '%use-id-as-filename%' $(MAIN)
+	@$(SED) -i -e 's/\(^CONTENT.*\)\(.>\)/\1;charset=UTF-8\2/' html/*html
 	@test "x$(CSS)" != "x" && \
           echo "Copying .css files: $(CSS)" && \
           cp $(srcdir)/$(CSS) html
@@ -111,7 +113,7 @@ $(DOC).ps: $(BUILDDIR)/$(MAIN) $(EPS_BUILT) $(PNG_SRC) $(FIG_SRC)
 	@$(MAKE) check-local
 	@echo "*** Generating PS output ***"
 	@cp -f $(srcdir)/../image-eps $(BUILDDIR)/image.entities
-	cd $(BUILDDIR) && docbook2ps -o .. $(MAIN)
+	cd $(BUILDDIR) && SP_ENCODING="UTF-8" docbook2ps -o .. $(MAIN)
 #	export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(MAIN)
 
 $(DOC).pdf: $(DOC).ps

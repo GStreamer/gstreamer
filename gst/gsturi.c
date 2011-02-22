@@ -101,7 +101,7 @@ gst_uri_handler_base_init (gpointer g_class)
     /**
      * GstURIHandler::new-uri:
      * @handler: The #GstURIHandler which emitted the signal
-     * @uri: The new URI, or NULL if the URI was removed
+     * @uri: (transfer none): The new URI, or NULL if the URI was removed
      *
      * The URI of the given @handler has changed.
      */
@@ -208,8 +208,7 @@ escape_string_internal (const gchar * string, UnsafeCharacterSet mask)
   return result;
 }
 
-/**
- * escape_string:
+/* escape_string:
  * @string: string to be escaped
  *
  * Escapes @string, replacing any and all special characters
@@ -251,8 +250,7 @@ unescape_character (const char *scanner)
   return (first_digit << 4) | second_digit;
 }
 
-/**
- * unescape_string:
+/* unescape_string:
  * @escaped_string: an escaped URI, path, or other string
  * @illegal_characters: a string containing a sequence of characters
  * considered "illegal", '\0' is automatically in this list.
@@ -388,7 +386,7 @@ gst_uri_get_protocol (const gchar * uri)
 
 /**
  * gst_uri_has_protocol:
- * @uri: an URI string
+ * @uri: a URI string
  * @protocol: a protocol string (e.g. "http")
  *
  * Checks if the protocol of a given valid URI matches @protocol.
@@ -423,8 +421,11 @@ gst_uri_has_protocol (const gchar * uri, const gchar * protocol)
  * the hostname if one is specified. The returned string must be freed using
  * g_free().
  *
- * Returns: The location for this URI. Returns NULL if the URI isn't valid. If
- * the URI does not contain a location, an empty string is returned.
+ * Free-function: g_free
+ *
+ * Returns: (transfer full) (array zero-terminated=1): the location for this
+ *     URI. Returns NULL if the URI isn't valid. If the URI does not contain
+ *     a location, an empty string is returned.
  */
 gchar *
 gst_uri_get_location (const gchar * uri)
@@ -463,12 +464,15 @@ gst_uri_get_location (const gchar * uri)
 /**
  * gst_uri_construct:
  * @protocol: Protocol for URI
- * @location: Location for URI
+ * @location: (array zero-terminated=1) (transfer none): Location for URI
  *
  * Constructs a URI for a given valid protocol and location.
  *
- * Returns: a new string for this URI. Returns NULL if the given URI protocol
- * is not valid, or the given location is NULL.
+ * Free-function: g_free
+ *
+ * Returns: (transfer full) (array zero-terminated=1): a new string for this
+ *     URI. Returns NULL if the given URI protocol is not valid, or the given
+ *     location is NULL.
  */
 gchar *
 gst_uri_construct (const gchar * protocol, const gchar * location)
@@ -582,11 +586,11 @@ gst_uri_protocol_is_supported (const GstURIType type, const gchar * protocol)
  * gst_element_make_from_uri:
  * @type: Whether to create a source or a sink
  * @uri: URI to create an element for
- * @elementname: Name of created element, can be NULL.
+ * @elementname: (allow-none): Name of created element, can be NULL.
  *
  * Creates an element for handling the given URI.
  *
- * Returns: a new element or NULL if none could be created
+ * Returns: (transfer full): a new element or NULL if none could be created
  */
 GstElement *
 gst_element_make_from_uri (const GstURIType type, const gchar * uri,
@@ -669,9 +673,9 @@ gst_uri_handler_get_uri_type (GstURIHandler * handler)
  * Gets the list of protocols supported by @handler. This list may not be
  * modified.
  *
- * Returns: the supported protocols.
- * Returns NULL if the @handler isn't implemented properly, or the @handler
- * doesn't support any protocols.
+ * Returns: (transfer none) (array zero-terminated=1) (element-type utf8): the
+ *     supported protocols. Returns NULL if the @handler isn't implemented
+ *     properly, or the @handler doesn't support any protocols.
  */
 gchar **
 gst_uri_handler_get_protocols (GstURIHandler * handler)
@@ -702,9 +706,9 @@ gst_uri_handler_get_protocols (GstURIHandler * handler)
  *
  * Gets the currently handled URI.
  *
- * Returns: the URI currently handled by the @handler.
- * Returns NULL if there are no URI currently handled. The returned
- * string must not be modified or freed.
+ * Returns: (transfer none): the URI currently handled by the @handler.
+ *   Returns NULL if there are no URI currently handled. The
+ *   returned string must not be modified or freed.
  */
 G_CONST_RETURN gchar *
 gst_uri_handler_get_uri (GstURIHandler * handler)

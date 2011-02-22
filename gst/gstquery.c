@@ -334,7 +334,9 @@ gst_query_type_get_details (GstQueryType type)
  * Get a #GstIterator of all the registered query types. The definitions
  * iterated over are read only.
  *
- * Returns: A #GstIterator of #GstQueryTypeDefinition.
+ * Free-function: gst_iterator_free
+ *
+ * Returns: (transfer full): a #GstIterator of #GstQueryTypeDefinition.
  */
 GstIterator *
 gst_query_type_iterate_definitions (void)
@@ -381,7 +383,9 @@ gst_query_new (GstQueryType type, GstStructure * structure)
  * when done with it. A position query is used to query the current position
  * of playback in the streams, in some format.
  *
- * Returns: A #GstQuery
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
  */
 GstQuery *
 gst_query_new_position (GstFormat format)
@@ -419,8 +423,9 @@ gst_query_set_position (GstQuery * query, GstFormat format, gint64 cur)
 /**
  * gst_query_parse_position:
  * @query: a #GstQuery
- * @format: (out): the storage for the #GstFormat of the position values (may be NULL)
- * @cur: (out): the storage for the current position (may be NULL)
+ * @format: (out) (allow-none): the storage for the #GstFormat of the
+ *     position values (may be NULL)
+ * @cur: (out) (allow-none): the storage for the current position (may be NULL)
  *
  * Parse a position query, writing the format into @format, and the position
  * into @cur, if the respective parameters are non-NULL.
@@ -450,7 +455,9 @@ gst_query_parse_position (GstQuery * query, GstFormat * format, gint64 * cur)
  * Use gst_query_unref() when done with it. A duration query will give the
  * total length of the stream.
  *
- * Returns: A #GstQuery
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
  */
 GstQuery *
 gst_query_new_duration (GstFormat format)
@@ -488,8 +495,9 @@ gst_query_set_duration (GstQuery * query, GstFormat format, gint64 duration)
 /**
  * gst_query_parse_duration:
  * @query: a #GstQuery
- * @format: (out): the storage for the #GstFormat of the duration value, or NULL.
- * @duration: (out): the storage for the total duration, or NULL.
+ * @format: (out) (allow-none): the storage for the #GstFormat of the duration
+ *     value, or NULL.
+ * @duration: (out) (allow-none): the storage for the total duration, or NULL.
  *
  * Parse a duration query answer. Write the format of the duration into @format,
  * and the value into @duration, if the respective variables are non-NULL.
@@ -519,7 +527,9 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
  * by sinks to compensate for additional latency introduced by elements in the
  * pipeline.
  *
- * Returns: A #GstQuery
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a #GstQuery
  *
  * Since: 0.10.12
  */
@@ -565,9 +575,9 @@ gst_query_set_latency (GstQuery * query, gboolean live,
 /**
  * gst_query_parse_latency:
  * @query: a #GstQuery
- * @live: (out): storage for live or NULL
- * @min_latency: (out): the storage for the min latency or NULL
- * @max_latency: (out): the storage for the max latency or NULL
+ * @live: (out) (allow-none): storage for live or NULL
+ * @min_latency: (out) (allow-none): the storage for the min latency or NULL
+ * @max_latency: (out) (allow-none): the storage for the max latency or NULL
  *
  * Parse a latency query answer.
  *
@@ -604,7 +614,9 @@ gst_query_parse_latency (GstQuery * query, gboolean * live,
  * when done with it. A convert query is used to ask for a conversion between
  * one format and another.
  *
- * Returns: A #GstQuery
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a #GstQuery
  */
 GstQuery *
 gst_query_new_convert (GstFormat src_format, gint64 value,
@@ -650,10 +662,13 @@ gst_query_set_convert (GstQuery * query, GstFormat src_format, gint64 src_value,
 /**
  * gst_query_parse_convert:
  * @query: a #GstQuery
- * @src_format: (out): the storage for the #GstFormat of the source value, or NULL
- * @src_value: (out): the storage for the source value, or NULL
- * @dest_format: (out): the storage for the #GstFormat of the destination value, or NULL
- * @dest_value: (out): the storage for the destination value, or NULL
+ * @src_format: (out) (allow-none): the storage for the #GstFormat of the
+ *     source value, or NULL
+ * @src_value: (out) (allow-none): the storage for the source value, or NULL
+ * @dest_format: (out) (allow-none): the storage for the #GstFormat of the
+ *     destination value, or NULL
+ * @dest_value: (out) (allow-none): the storage for the destination value,
+ *     or NULL
  *
  * Parse a convert query answer. Any of @src_format, @src_value, @dest_format,
  * and @dest_value may be NULL, in which case that value is omitted.
@@ -689,7 +704,9 @@ gst_query_parse_convert (GstQuery * query, GstFormat * src_format,
  * when done with it. A segment query is used to discover information about the
  * currently configured segment for playback.
  *
- * Returns: a #GstQuery
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
  */
 GstQuery *
 gst_query_new_segment (GstFormat format)
@@ -744,10 +761,11 @@ gst_query_set_segment (GstQuery * query, gdouble rate, GstFormat format,
 /**
  * gst_query_parse_segment:
  * @query: a #GstQuery
- * @rate: (out): the storage for the rate of the segment, or NULL
- * @format: (out): the storage for the #GstFormat of the values, or NULL
- * @start_value: (out): the storage for the start value, or NULL
- * @stop_value: (out): the storage for the stop value, or NULL
+ * @rate: (out) (allow-none): the storage for the rate of the segment, or NULL
+ * @format: (out) (allow-none): the storage for the #GstFormat of the values,
+ *     or NULL
+ * @start_value: (out) (allow-none): the storage for the start value, or NULL
+ * @stop_value: (out) (allow-none): the storage for the stop value, or NULL
  *
  * Parse a segment query answer. Any of @rate, @format, @start_value, and
  * @stop_value may be NULL, which will cause this value to be omitted.
@@ -785,7 +803,9 @@ gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
  * Constructs a new custom application query object. Use gst_query_unref()
  * when done with it.
  *
- * Returns: a #GstQuery
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
  */
 GstQuery *
 gst_query_new_application (GstQueryType type, GstStructure * structure)
@@ -802,8 +822,9 @@ gst_query_new_application (GstQueryType type, GstStructure * structure)
  *
  * Get the structure of a query.
  *
- * Returns: The #GstStructure of the query. The structure is still owned
- * by the query and will therefore be freed when the query is unreffed.
+ * Returns: (transfer none): the #GstStructure of the query. The structure is
+ *     still owned by the query and will therefore be freed when the query
+ *     is unreffed.
  */
 GstStructure *
 gst_query_get_structure (GstQuery * query)
@@ -820,7 +841,9 @@ gst_query_get_structure (GstQuery * query)
  * Constructs a new query object for querying seeking properties of
  * the stream.
  *
- * Returns: A #GstQuery
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
  */
 GstQuery *
 gst_query_new_seeking (GstFormat format)
@@ -865,10 +888,11 @@ gst_query_set_seeking (GstQuery * query, GstFormat format,
 /**
  * gst_query_parse_seeking:
  * @query: a GST_QUERY_SEEKING type query #GstQuery
- * @format: (out): the format to set for the @segment_start and @segment_end values
- * @seekable: (out): the seekable flag to set
- * @segment_start: (out): the segment_start to set
- * @segment_end: (out): the segment_end to set
+ * @format: (out) (allow-none): the format to set for the @segment_start
+ *     and @segment_end values, or NULL
+ * @seekable: (out) (allow-none): the seekable flag to set, or NULL
+ * @segment_start: (out) (allow-none): the segment_start to set, or NULL
+ * @segment_end: (out) (allow-none): the segment_end to set, or NULL
  *
  * Parse a seeking query, writing the format into @format, and
  * other results into the passed parameters, if the respective parameters
@@ -903,7 +927,9 @@ gst_query_parse_seeking (GstQuery * query, GstFormat * format,
  * Constructs a new query object for querying formats of
  * the stream.
  *
- * Returns: A #GstQuery
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
  *
  * Since: 0.10.4
  */
@@ -966,7 +992,8 @@ gst_query_set_formats (GstQuery * query, gint n_formats, ...)
  * gst_query_set_formatsv:
  * @query: a #GstQuery
  * @n_formats: the number of formats to set.
- * @formats: An array containing @n_formats @GstFormat values.
+ * @formats: (in) (array length=n_formats): an array containing @n_formats
+ *     @GstFormat values.
  *
  * Set the formats query result fields in @query. The number of formats passed
  * in the @formats array must be equal to @n_formats.
@@ -1054,7 +1081,9 @@ gst_query_parse_formats_nth (GstQuery * query, guint nth, GstFormat * format)
  * Constructs a new query object for querying the buffering status of
  * a stream.
  *
- * Returns: A #GstQuery
+ * Free-function: gst_query_new
+ *
+ * Returns: (transfer full): a new #GstQuery
  *
  * Since: 0.10.20
  */
@@ -1108,8 +1137,8 @@ gst_query_set_buffering_percent (GstQuery * query, gboolean busy, gint percent)
 /**
  * gst_query_parse_buffering_percent
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
- * @busy: (out): if buffering is busy
- * @percent: (out): a buffering percent
+ * @busy: (out) (allow-none): if buffering is busy, or NULL
+ * @percent: (out) (allow-none): a buffering percent, or NULL
  *
  * Get the percentage of buffered data. This is a value between 0 and 100.
  * The @busy indicator is %TRUE when the buffering is in progress.
@@ -1158,10 +1187,10 @@ gst_query_set_buffering_stats (GstQuery * query, GstBufferingMode mode,
 /**
  * gst_query_parse_buffering_stats:
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
- * @mode: (out): a buffering mode
- * @avg_in: (out): the average input rate
- * @avg_out: (out): the average output rate
- * @buffering_left: (out): amount of buffering time left
+ * @mode: (out) (allow-none): a buffering mode, or NULL
+ * @avg_in: (out) (allow-none): the average input rate, or NULL
+ * @avg_out: (out) (allow-none): the average output rat, or NULLe
+ * @buffering_left: (out) (allow-none): amount of buffering time left, or NULL
  *
  * Extracts the buffering stats values from @query.
  *
@@ -1218,10 +1247,12 @@ gst_query_set_buffering_range (GstQuery * query, GstFormat format,
 /**
  * gst_query_parse_buffering_range:
  * @query: a GST_QUERY_BUFFERING type query #GstQuery
- * @format: (out): the format to set for the @segment_start and @segment_end values
- * @start: (out): the start to set
- * @stop: (out): the stop to set
- * @estimated_total: (out): estimated total amount of download time
+ * @format: (out) (allow-none): the format to set for the @segment_start
+ *     and @segment_end values, or NULL
+ * @start: (out) (allow-none): the start to set, or NULL
+ * @stop: (out) (allow-none): the stop to set, or NULL
+ * @estimated_total: (out) (allow-none): estimated total amount of download
+ *     time, or NULL
  *
  * Parse an available query, writing the format into @format, and
  * other results into the passed parameters, if the respective parameters
@@ -1344,8 +1375,8 @@ gst_query_get_n_buffering_ranges (GstQuery * query)
  * gst_query_parse_nth_buffering_range
  * @query: a GST_QUERY_BUFFERING type query #GstQuery
  * @index: position in the buffered-ranges array to read
- * @start: (out): the start position to set
- * @stop: (out): the stop position to set
+ * @start: (out) (allow-none): the start position to set, or NULL
+ * @stop: (out) (allow-none): the stop position to set, or NULL
  *
  * Parse an available query and get the start and stop values stored
  * at the @index of the buffered ranges array.
@@ -1389,7 +1420,9 @@ gst_query_parse_nth_buffering_range (GstQuery * query, guint index,
  * when done with it. An URI query is used to query the current URI
  * that is used by the source or sink.
  *
- * Returns: A #GstQuery
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
  *
  * Since: 0.10.22
  */
@@ -1429,7 +1462,8 @@ gst_query_set_uri (GstQuery * query, const gchar * uri)
 /**
  * gst_query_parse_uri:
  * @query: a #GstQuery
- * @uri: (out): the storage for the current URI (may be NULL)
+ * @uri: (out callee-allocates) (allow-none): the storage for the current URI
+ *     (may be NULL)
  *
  * Parse an URI query, writing the URI into @uri as a newly
  * allocated string, if the respective parameters are non-NULL.

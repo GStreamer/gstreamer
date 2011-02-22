@@ -184,6 +184,7 @@ gst_clock_return_get_type (void)
     {C_ENUM (GST_CLOCK_BADTIME), "GST_CLOCK_BADTIME", "badtime"},
     {C_ENUM (GST_CLOCK_ERROR), "GST_CLOCK_ERROR", "error"},
     {C_ENUM (GST_CLOCK_UNSUPPORTED), "GST_CLOCK_UNSUPPORTED", "unsupported"},
+    {C_ENUM (GST_CLOCK_DONE), "GST_CLOCK_DONE", "done"},
     {0, NULL, NULL}
   };
 

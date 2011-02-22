@@ -521,7 +521,7 @@ gst_fd_sink_do_seek (GstFdSink * fdsink, guint64 new_offset)
 
   fdsink->current_pos = new_offset;
 
-  GST_DEBUG_OBJECT (fdsink, "File desciptor %d to seek to position "
+  GST_DEBUG_OBJECT (fdsink, "File descriptor %d to seek to position "
       "%" G_GUINT64_FORMAT, fdsink->fd, fdsink->current_pos);
 
   return TRUE;
@@ -529,7 +529,7 @@ gst_fd_sink_do_seek (GstFdSink * fdsink, guint64 new_offset)
   /* ERRORS */
 seek_failed:
   {
-    GST_DEBUG_OBJECT (fdsink, "File desciptor %d failed to seek to position "
+    GST_DEBUG_OBJECT (fdsink, "File descriptor %d failed to seek to position "
         "%" G_GUINT64_FORMAT, fdsink->fd, new_offset);
     return FALSE;
   }

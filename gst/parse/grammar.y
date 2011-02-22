@@ -24,7 +24,7 @@
  * Don't start the message with a capital, and don't end them with a period,
  * as they will be presented inside a sentence/error.
  */
-  
+
 #define YYERROR_VERBOSE 1
 #define YYLEX_PARAM scanner
 
@@ -50,7 +50,7 @@ static guint __chains;
 gchar *
 __gst_parse_strdup (gchar *org)
 {
-  gchar *ret; 
+  gchar *ret;
   __strings++;
   ret = g_strdup (org);
   /* g_print ("ALLOCATED STR   (%3u): %p %s\n", __strings, ret, ret); */
@@ -155,7 +155,7 @@ SET_ERROR (GError **error, gint type, const char *format, ...)
       va_start (varargs, format);
       string = g_strdup_vprintf (format, varargs);
       va_end (varargs);
-      
+
       g_set_error (error, GST_PARSE_ERROR, type, string);
 
       g_free (string);
@@ -195,7 +195,7 @@ YYPRINTF(const char *format, ...)
 {
   va_list varargs;
   gchar *temp;
-  
+
   va_start (varargs, format);
   temp = g_strdup_vprintf (format, varargs);
   GST_CAT_LOG (GST_CAT_PIPELINE, "%s", temp);
@@ -293,21 +293,21 @@ static void
 gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *value_str)
 {
   DelayedSet *data = g_slice_new0 (DelayedSet);
-  
+
   GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, element, "delaying property set %s to %s",
     name, value_str);
-  
+
   data->name = g_strdup(name);
   data->value_str = g_strdup(value_str);
   data->signal_id = g_signal_connect_data(element, "child-added",
       G_CALLBACK (gst_parse_new_child), data, (GClosureNotify)
       gst_parse_free_delayed_set, (GConnectFlags) 0);
-      
+
   /* FIXME: we would need to listen on all intermediate bins too */
   if (GST_IS_BIN (element)) {
     gchar **names, **current;
     GstElement *parent, *child;
-    
+
     current = names = g_strsplit (name, "::", -1);
     parent = gst_bin_get_by_name (GST_BIN_CAST (element), current[0]);
     current++;
@@ -315,7 +315,7 @@ gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *value_str)
       child = gst_bin_get_by_name (GST_BIN (parent), current[0]);
       if (!child && current[1]) {
         char *sub_name = g_strjoinv ("::", &current[0]);
-        
+
         gst_parse_add_delayed_set(parent, sub_name, value_str);
         g_free (sub_name);
       }
@@ -331,14 +331,14 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
 {
   DelayedSet *set = (DelayedSet *) data;
   GParamSpec *pspec;
-  GValue v = { 0, }; 
+  GValue v = { 0, };
   GstObject *target = NULL;
   GType value_type;
-  
+
   GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, child_proxy, "new child %s, checking property %s",
       GST_OBJECT_NAME(object), set->name);
 
-  if (gst_child_proxy_lookup (GST_OBJECT (child_proxy), set->name, &target, &pspec)) { 
+  if (gst_child_proxy_lookup (GST_OBJECT (child_proxy), set->name, &target, &pspec)) {
     gboolean got_value = FALSE;
 
     value_type = pspec->value_type;
@@ -350,7 +350,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
       got_value = TRUE;
     else if (g_type_is_a (value_type, GST_TYPE_ELEMENT)) {
        GstElement *bin;
-       
+
        bin = gst_parse_bin_from_description (set->value_str, TRUE, NULL);
        if (bin) {
          g_value_set_object (&v, bin);
@@ -389,7 +389,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
 {
   GParamSpec *pspec;
   gchar *pos = value;
-  GValue v = { 0, }; 
+  GValue v = { 0, };
   GstObject *target = NULL;
   GType value_type;
 
@@ -399,23 +399,23 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
 
   /* parse the string, so the property name is null-terminated an pos points
      to the beginning of the value */
-  while (!g_ascii_isspace (*pos) && (*pos != '=')) pos++; 
-  if (*pos == '=') { 
-    *pos = '\0'; 
-  } else { 
-    *pos = '\0'; 
+  while (!g_ascii_isspace (*pos) && (*pos != '=')) pos++;
+  if (*pos == '=') {
+    *pos = '\0';
+  } else {
+    *pos = '\0';
     pos++;
-    while (g_ascii_isspace (*pos)) pos++; 
-  } 
-  pos++; 
-  while (g_ascii_isspace (*pos)) pos++; 
+    while (g_ascii_isspace (*pos)) pos++;
+  }
+  pos++;
+  while (g_ascii_isspace (*pos)) pos++;
   if (*pos == '"') {
     pos++;
     pos[strlen (pos) - 1] = '\0';
   }
   gst_parse_unescape (pos);
 
-  if (gst_child_proxy_lookup (GST_OBJECT (element), value, &target, &pspec)) { 
+  if (gst_child_proxy_lookup (GST_OBJECT (element), value, &target, &pspec)) {
     gboolean got_value = FALSE;
 
     value_type = pspec->value_type;
@@ -427,7 +427,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
       got_value = TRUE;
     else if (g_type_is_a (value_type, GST_TYPE_ELEMENT)) {
        GstElement *bin;
-       
+
        bin = gst_parse_bin_from_description (pos, TRUE, NULL);
        if (bin) {
          g_value_set_object (&v, bin);
@@ -437,7 +437,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     if (!got_value)
       goto error;
     g_object_set_property (G_OBJECT (target), pspec->name, &v);
-  } else { 
+  } else {
     /* do a delayed set */
     if (GST_IS_CHILD_PROXY (element)) {
       gst_parse_add_delayed_set (element, value, pos);
@@ -456,11 +456,11 @@ out:
   if (target)
     gst_object_unref (target);
   return;
-  
+
 error:
   SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
-         _("could not set property \"%s\" in element \"%s\" to \"%s\""), 
-	 value, GST_ELEMENT_NAME (element), pos); 
+         _("could not set property \"%s\" in element \"%s\" to \"%s\""),
+	 value, GST_ELEMENT_NAME (element), pos);
   goto out;
 }
 
@@ -474,7 +474,7 @@ gst_parse_free_link (link_t *link)
   g_slist_free (link->src_pads);
   g_slist_free (link->sink_pads);
   if (link->caps) gst_caps_unref (link->caps);
-  gst_parse_link_free (link);  
+  gst_parse_link_free (link);
 }
 
 static void
@@ -491,7 +491,7 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 {
   DelayedLink *link = data;
 
-  GST_CAT_INFO (GST_CAT_PIPELINE, "trying delayed linking %s:%s to %s:%s", 
+  GST_CAT_INFO (GST_CAT_PIPELINE, "trying delayed linking %s:%s to %s:%s",
                 GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
                 GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
 
@@ -499,7 +499,7 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
       link->sink_pad, link->caps)) {
     /* do this here, we don't want to get any problems later on when
      * unlocking states */
-    GST_CAT_DEBUG (GST_CAT_PIPELINE, "delayed linking %s:%s to %s:%s worked", 
+    GST_CAT_DEBUG (GST_CAT_PIPELINE, "delayed linking %s:%s to %s:%s worked",
                	   GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
                	   GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
     g_signal_handler_disconnect (src, link->signal_id);
@@ -508,23 +508,23 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 
 /* both padnames and the caps may be NULL */
 static gboolean
-gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad, 
+gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
                                 GstElement *sink, const gchar *sink_pad,
                                 GstCaps *caps)
 {
   GList *templs = gst_element_class_get_pad_template_list (
       GST_ELEMENT_GET_CLASS (src));
-	 
+
   for (; templs; templs = templs->next) {
     GstPadTemplate *templ = (GstPadTemplate *) templs->data;
     if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) &&
         (GST_PAD_TEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
     {
-      DelayedLink *data = g_slice_new (DelayedLink); 
-      
+      DelayedLink *data = g_slice_new (DelayedLink);
+
       /* TODO: maybe we should check if src_pad matches this template's names */
 
-      GST_CAT_DEBUG (GST_CAT_PIPELINE, "trying delayed link %s:%s to %s:%s", 
+      GST_CAT_DEBUG (GST_CAT_PIPELINE, "trying delayed link %s:%s to %s:%s",
                      GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (src_pad),
                      GST_STR_NULL (GST_ELEMENT_NAME (sink)), GST_STR_NULL (sink_pad));
 
@@ -560,9 +560,9 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
   GSList *sinks = link->sink_pads;
   g_assert (GST_IS_ELEMENT (src));
   g_assert (GST_IS_ELEMENT (sink));
-  
+
   GST_CAT_INFO (GST_CAT_PIPELINE,
-      "linking %s:%s to %s:%s (%u/%u) with caps \"%" GST_PTR_FORMAT "\"", 
+      "linking %s:%s to %s:%s (%u/%u) with caps \"%" GST_PTR_FORMAT "\"",
       GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "(any)",
       GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "(any)",
       g_slist_length (srcs), g_slist_length (sinks), link->caps);
@@ -582,7 +582,7 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
       }
     }
   }
-  if (g_slist_length (link->src_pads) != g_slist_length (link->src_pads)) {
+  if (g_slist_length (link->src_pads) != g_slist_length (link->sink_pads)) {
     goto error;
   }
   while (srcs && sinks) {
@@ -603,11 +603,11 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
       }
     }
   }
-  
+
 success:
   gst_parse_free_link (link);
   return 0;
-  
+
 error:
   SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
       _("could not link %s to %s"), GST_ELEMENT_NAME (src),
@@ -640,7 +640,7 @@ static int yyerror (void *scanner, graph_t *graph, const char *s);
 %type <l> reference
 %type <l> linkpart link
 %type <p> linklist
-%type <e> element 
+%type <e> element
 %type <p> padlist pads assignments
 
 %left '(' ')'
@@ -655,7 +655,7 @@ static int yyerror (void *scanner, graph_t *graph, const char *s);
 %start graph
 %%
 
-element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL); 
+element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL);
 						if ($$ == NULL) {
 						  ADD_MISSING_ELEMENT (graph, $1);
 						  SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, _("no element \"%s\""), $1);
@@ -675,7 +675,7 @@ element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL);
 	;
 assignments:	/* NOP */		      { $$ = NULL; }
 	|	assignments ASSIGNMENT	      { $$ = g_slist_prepend ($1, $2); }
-	;		
+	;
 bin:	        '(' assignments chain ')' { GST_BIN_MAKE ($$, "bin", $3, $2, no_free); }
         |       BINREF assignments chain ')'  { GST_BIN_MAKE ($$, $1, $3, $2, gst_parse_strfree);
 						gst_parse_strfree ($1);
@@ -687,16 +687,16 @@ bin:	        '(' assignments chain ')' { GST_BIN_MAKE ($$, "bin", $3, $2, no_fre
 						gst_parse_strfree ($1);
 					      }
 	;
-	
+
 pads:		PADREF 			      { $$ = g_slist_prepend (NULL, $1); }
 	|	PADREF padlist		      { $$ = $2;
 						$$ = g_slist_prepend ($$, $1);
-					      }				     
+					      }
 	;
 padlist:	',' IDENTIFIER		      { $$ = g_slist_prepend (NULL, $2); }
 	|	',' IDENTIFIER padlist	      { $$ = g_slist_prepend ($3, $2); }
 	;
-	
+
 reference:	REF 			      { MAKE_REF ($$, $1, NULL); }
 	|	REF padlist		      { MAKE_REF ($$, $1, $2); }
 	;
@@ -705,7 +705,7 @@ linkpart:	reference		      { $$ = $1; }
 	|	pads			      { MAKE_REF ($$, NULL, $1); }
 	|	/* NOP */		      { MAKE_REF ($$, NULL, NULL); }
 	;
-	
+
 link:		linkpart LINK linkpart	      { $$ = $1;
 						if ($2) {
 						  $$->caps = gst_caps_from_string ($2);
@@ -718,11 +718,11 @@ link:		linkpart LINK linkpart	      { $$ = $1;
 						gst_parse_link_free ($3);
 					      }
 	;
-	
+
 linklist:	link			      { $$ = g_slist_prepend (NULL, $1); }
 	|	link linklist		      { $$ = g_slist_prepend ($2, $1); }
 	|	linklist error		      { $$ = $1; }
-	;	
+	;
 
 chain:   	element			      { $$ = gst_parse_chain_new ();
 						$$->first = $$->last = $1;
@@ -754,7 +754,7 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						  }
 						  $1->back = $2->front;
 						}
-						
+
 						if ($1->back) {
 						  graph->links = g_slist_prepend (graph->links, $1->back);
 						}
@@ -772,7 +772,7 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						} else {
 						  if (!((link_t *) $2->data)->src_name) {
 						    ((link_t *) $2->data)->src = $1->last;
-						  }						  
+						  }
 						}
 						for (walk = $2; walk; walk = walk->next) {
 						  link_t *link = (link_t *) walk->data;
@@ -810,10 +810,10 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 					      }
 	|	PARSE_URL chain		      { $$ = $2;
 						if ($$->front) {
-						  GstElement *element = 
+						  GstElement *element =
 							  gst_element_make_from_uri (GST_URI_SRC, $1, NULL);
 						  if (!element) {
-						    SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, 
+						    SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
 							    _("no source element for URI \"%s\""), $1);
 						  } else {
 						    $$->front->src = element;
@@ -823,7 +823,7 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						    $$->elements = g_slist_prepend ($$->elements, element);
 						  }
 						} else {
-						  SET_ERROR (graph->error, GST_PARSE_ERROR_LINK, 
+						  SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
 							  _("no element to link URI \"%s\" to"), $1);
 						}
 						g_free ($1);
@@ -831,14 +831,14 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 	|	link PARSE_URL		      { GstElement *element =
 							  gst_element_make_from_uri (GST_URI_SINK, $2, NULL);
 						if (!element) {
-						  SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, 
+						  SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
 							  _("no sink element for URI \"%s\""), $2);
 						  gst_parse_link_free ($1);
 						  g_free ($2);
 						  YYERROR;
 						} else if ($1->sink_name || $1->sink_pads) {
                                                   gst_object_unref (element);
-						  SET_ERROR (graph->error, GST_PARSE_ERROR_LINK, 
+						  SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
 							  _("could not link sink element for URI \"%s\""), $2);
 						  gst_parse_link_free ($1);
 						  g_free ($2);
@@ -910,7 +910,7 @@ _gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
   g.error = error;
   g.ctx = ctx;
   g.flags = flags;
-  
+
 #ifdef __GST_PARSE_TRACE
   GST_CAT_DEBUG (GST_CAT_PIPELINE, "TRACE: tracing enabled");
   __strings = __chains = __links = 0;
@@ -927,43 +927,43 @@ _gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
   if (yyparse (scanner, &g) != 0) {
     SET_ERROR (error, GST_PARSE_ERROR_SYNTAX,
         "Unrecoverable syntax error while parsing pipeline %s", str);
-    
+
     _gst_parse_yylex_destroy (scanner);
     g_free (dstr);
-  
+
     goto error1;
   }
   _gst_parse_yylex_destroy (scanner);
   g_free (dstr);
-  
+
   GST_CAT_DEBUG (GST_CAT_PIPELINE, "got %u elements and %u links",
       g.chain ? g_slist_length (g.chain->elements) : 0,
       g_slist_length (g.links));
-  
+
   if (!g.chain) {
     ret = NULL;
   } else if (!g.chain->elements->next) {
-    /* only one toplevel element */  
+    /* only one toplevel element */
     ret = (GstElement *) g.chain->elements->data;
     g_slist_free (g.chain->elements);
     if (GST_IS_BIN (ret))
       bin = GST_BIN (ret);
     gst_parse_chain_free (g.chain);
-  } else {  
+  } else {
     /* put all elements in our bin */
     bin = GST_BIN (gst_element_factory_make ("pipeline", NULL));
     g_assert (bin);
-    
+
     for (walk = g.chain->elements; walk; walk = walk->next) {
       if (walk->data != NULL)
         gst_bin_add (bin, GST_ELEMENT (walk->data));
     }
-    
+
     g_slist_free (g.chain->elements);
     ret = GST_ELEMENT (bin);
     gst_parse_chain_free (g.chain);
   }
-  
+
   /* remove links */
   for (walk = g.links; walk; walk = walk->next) {
     link_t *l = (link_t *) walk->data;
@@ -1025,7 +1025,7 @@ out:
 #endif /* __GST_PARSE_TRACE */
 
   return ret;
-  
+
 error1:
   if (g.chain) {
     g_slist_foreach (g.chain->elements, (GFunc)gst_object_unref, NULL);
@@ -1035,10 +1035,10 @@ error1:
 
   g_slist_foreach (g.links, (GFunc)gst_parse_free_link, NULL);
   g_slist_free (g.links);
-  
+
   if (error)
     g_assert (*error);
   ret = NULL;
-  
+
   goto out;
 }

@@ -333,7 +333,7 @@ G_STMT_START {                                          \
  * GstBuffer instances can potentially increase the number
  * of memcpy operations in a pipeline.
  *
- * Returns: @buf
+ * Returns: (transfer full): @buf
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstBuffer * gst_buffer_ref (GstBuffer * buf);
@@ -347,7 +347,7 @@ gst_buffer_ref (GstBuffer * buf)
 
 /**
  * gst_buffer_unref:
- * @buf: a #GstBuffer.
+ * @buf: (transfer full): a #GstBuffer.
  *
  * Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
  * will be freed. If GST_BUFFER_MALLOCDATA() is non-NULL, this pointer will
@@ -371,7 +371,7 @@ gst_buffer_unref (GstBuffer * buf)
  * Create a copy of the given buffer. This will also make a newly allocated
  * copy of the data the source buffer contains.
  *
- * Returns: a new copy of @buf.
+ * Returns: (transfer full): a new copy of @buf.
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstBuffer * gst_buffer_copy (const GstBuffer * buf);
@@ -428,11 +428,14 @@ void            gst_buffer_copy_metadata        (GstBuffer *dest, const GstBuffe
 #define         gst_buffer_is_writable(buf)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (buf))
 /**
  * gst_buffer_make_writable:
- * @buf: a #GstBuffer
+ * @buf: (transfer full): a #GstBuffer
  *
  * Makes a writable buffer from the given buffer. If the source buffer is
  * already writable, this will simply return the same buffer. A copy will
  * otherwise be made using gst_buffer_copy().
+ *
+ * Returns: (transfer full): a writable buffer which may or may not be the
+ *     same as @buf
  */
 #define         gst_buffer_make_writable(buf)   GST_BUFFER_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (buf)))
 
@@ -443,9 +446,10 @@ GstBuffer*      gst_buffer_make_metadata_writable (GstBuffer *buf);
 
 /**
  * gst_buffer_replace:
- * @obuf: pointer to a pointer to a #GstBuffer to be replaced.
- * @nbuf: pointer to a #GstBuffer that will replace the buffer pointed to by
- *        @obuf.
+ * @obuf: (inout) (transfer full): pointer to a pointer to a #GstBuffer to be
+ *     replaced.
+ * @nbuf: (transfer none) (allow-none): pointer to a #GstBuffer that will
+ *     replace the buffer pointed to by @obuf.
  *
  * Modifies a pointer to a #GstBuffer to point to a different #GstBuffer. The
  * modification is done atomically (so this is useful for ensuring thread safety
@@ -474,7 +478,7 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset
 /**
  * gst_value_set_buffer:
  * @v: a #GValue to receive the data
- * @b: a #GstBuffer to assign to the GstValue
+ * @b: (transfer none): a #GstBuffer to assign to the GstValue
  *
  * Sets @b as the value of @v.  Caller retains reference to buffer.
  */
@@ -482,7 +486,7 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset
 /**
  * gst_value_take_buffer:
  * @v: a #GValue to receive the data
- * @b: a #GstBuffer to assign to the GstValue
+ * @b: (transfer full): a #GstBuffer to assign to the GstValue
  *
  * Sets @b as the value of @v.  Caller gives away reference to buffer.
  */
@@ -494,6 +498,8 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset
  * Receives a #GstBuffer as the value of @v. Does not return a reference to
  * the buffer, so the pointer is only valid for as long as the caller owns
  * a reference to @v.
+ *
+ * Returns: (transfer none): buffer
  */
 #define         gst_value_get_buffer(v)         GST_BUFFER_CAST (gst_value_get_mini_object(v))
 

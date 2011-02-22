@@ -352,7 +352,7 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
 {
   gint ru;
   struct sockaddr_in my_addr;
-  guint len;
+  socklen_t len;
   int port;
   gint ret;
   GError *error;
@@ -373,8 +373,11 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
   my_addr.sin_family = AF_INET; /* host byte order */
   my_addr.sin_port = htons ((gint16) self->port);       /* short, network byte order */
   my_addr.sin_addr.s_addr = INADDR_ANY;
-  if (self->address)
-    inet_aton (self->address, &my_addr.sin_addr);
+  if (self->address) {
+    ret = inet_aton (self->address, &my_addr.sin_addr);
+    if (ret == 0)
+      goto invalid_address_error;
+  }
 
   GST_DEBUG_OBJECT (self, "binding on port %d", self->port);
   ret =
@@ -384,13 +387,7 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
     goto bind_error;
 
   len = sizeof (my_addr);
-#ifdef G_OS_WIN32
-  ret =
-      getsockname (self->priv->sock.fd, (struct sockaddr *) &my_addr,
-      (gint *) & len);
-#else
   ret = getsockname (self->priv->sock.fd, (struct sockaddr *) &my_addr, &len);
-#endif
   if (ret < 0)
     goto getsockname_error;
 
@@ -426,6 +423,14 @@ setsockopt_error:
     self->priv->sock.fd = -1;
     GST_ERROR_OBJECT (self, "setsockopt failed %d: %s (%d)", ret,
         g_strerror (errno), errno);
+    return FALSE;
+  }
+invalid_address_error:
+  {
+    close (self->priv->sock.fd);
+    self->priv->sock.fd = -1;
+    GST_ERROR_OBJECT (self, "invalid network address %s: %s (%d)",
+        self->address, g_strerror (errno), errno);
     return FALSE;
   }
 bind_error:

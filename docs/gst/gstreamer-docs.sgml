@@ -57,6 +57,7 @@ Windows.  It is released under the GNU Library General Public License
     </para>
 
     <xi:include href="xml/gst.xml" />
+    <xi:include href="xml/gstatomicqueue.xml" />
     <xi:include href="xml/gstbin.xml" />
     <xi:include href="xml/gstbuffer.xml" />
     <xi:include href="xml/gstbufferlist.xml" />

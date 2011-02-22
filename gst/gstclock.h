@@ -260,7 +260,7 @@ typedef gboolean	(*GstClockCallback)	(GstClock *clock, GstClockTime time,
  * @GST_CLOCK_BADTIME: A bad time was provided to a function.
  * @GST_CLOCK_ERROR: An error occurred
  * @GST_CLOCK_UNSUPPORTED: Operation is not supported
- * @GST_CLOCK_DONE: The ClockID is done waiting
+ * @GST_CLOCK_DONE: The ClockID is done waiting (Since: 0.10.32)
  *
  * The return value of a clock operation.
  */
@@ -560,6 +560,10 @@ void			gst_clock_id_unschedule		(GstClockID id);
 gboolean                gst_clock_single_shot_id_reinit (GstClock * clock,
 							 GstClockID id,
 							 GstClockTime time);
+gboolean                gst_clock_periodic_id_reinit    (GstClock * clock,
+							 GstClockID id,
+							 GstClockTime start_time,
+							 GstClockTime interval);
 
 G_END_DECLS
 

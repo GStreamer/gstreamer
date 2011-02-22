@@ -26,7 +26,7 @@ hierarchy, and a set of media-agnostic core elements.
  <category></category>
  <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gstreamer+%28core%29" />
  <screenshots></screenshots>
- <mailing-list rdf:resource="http://lists.sourceforge.net/lists/listinfo/gstreamer-devel/" />
+ <mailing-list rdf:resource="http://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
  <programming-language>C</programming-language>
  <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl" />
  <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
@@ -37,6 +37,17 @@ hierarchy, and a set of media-agnostic core elements.
      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gstreamer"/>
    </GitRepository>
  </repository> 
+
+ <release>
+  <Version>
+   <revision>0.10.32</revision>
+   <branch>0.10</branch>
+   <name>Take Me to the Bonus Level</name>
+   <created>2011-01-21</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.32.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.32.tar.gz" />
+  </Version>
+ </release>
 
  <release>
   <Version>

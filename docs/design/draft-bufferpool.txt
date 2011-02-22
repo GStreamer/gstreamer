@@ -1,0 +1,415 @@
+Bufferpool
+----------
+
+This document details a possible design for how buffers can be allocated
+and managed in pools.
+
+Bufferpools should increase performance by reducing allocation overhead and
+improving possibilities to implement zero-copy memory transfer.
+
+
+Current Situation
+-----------------
+
+ - elements can choose to implement a pool of buffers. These pools
+   can contain buffers for both source and sink pad buffers.
+
+ - elements can provide buffers to upstream elements when the upstream element
+   requests a buffer with gst_pad_alloc_buffer().
+
+ - The buffer pool can preallocate a certain amount of buffers to avoid
+   runtime allocation. pad_alloc_buffer() is allowed to block the upstream
+   element until buffers are recycled in the pool.
+
+ - the pad_alloc_buffer function call can be passed downstream to the sink
+   that actually will perform the allocation. A fallback option exists to use
+   a default memory bufferpool whe there is no alloc_buffer function installed
+   on a pad.
+
+ - Upstream renegotiation is performed by making the pad_alloc_buffer function
+   return a buffer with new caps.
+
+
+Problems
+--------
+
+ - There is currently no helper base class to implement efficient buffer pools
+   meaning that each element has to implement its own version.
+
+ - There is no negotiation between elements about their buffer requirements.
+   Upstream elements that decide to use pad_alloc_buffer() can find that the
+   buffer they received is not appropriate at all. The most common problem
+   is that the buffers don't have the right alignment or insufficient padding.
+
+ - There is no negotiation of minimum and maximum amounts of preallocated
+   buffers. In order to not avoid deadlocks, this means that buffer pool
+   implementations should be able to allocate unlimited amounts of buffers and
+   are never allowed to block in pad_alloc_buffer()
+
+
+Requirements
+------------
+
+ - maintain and reuse a list of buffers in a reusable base GstBufferPool
+   object
+
+ - negotiate allocation configuration between source and sink pad.
+   - have minimum and maximum amount of buffers with the option of 
+     preallocating buffers.
+   - alignment and padding support
+   - arbitrary extra options
+
+ - integrate with dynamic caps renegotiation
+
+ - dynamically change bufferpool configuration based on pipeline changes.
+
+ - allow the application to control buffer allocation
+
+
+GstBufferPool
+-------------
+
+ The bufferpool object manages a list of buffers with the same properties such
+ as size, padding and alignment.
+
+ The bufferpool has two states: flushing and non-flushing. In the flushing
+ state, the bufferpool can be configured with the required allocation
+ preferences. In the non-flushing state, buffers can be retrieved from and
+ returned to the pool.
+
+ The default implementation of the bufferpool is able to allocate buffers
+ from main memory with arbitrary alignment and padding/prefix.
+
+ Custom implementations of the bufferpool can override the allocation and
+ free algorithms of the buffers from the pool. This should allow for
+ different allocation strategies such as using shared memory or hardware
+ mapped memory.
+
+ The bufferpool object is also used to perform the negotiation of configuration
+ between elements.
+
+
+GstPad
+------
+
+ The GstPad has a method to query a GstBufferPool and its configuration.
+
+   GstBufferPool * gst_pad_query_bufferpool (GstPad * pad);
+
+ This function can return a handle to a bufferpool object or NULL when no
+ bufferpool object can be provided by the pad.
+
+ This function should return a bufferpool object with the
+ GstBufferPoolConfig set to the desired parameters of the buffers that will be
+ handled by the given pad. This function can only be called on a sinkpad and
+ will usually be called by the peer srcpad with the convenience method:
+
+   GstBufferPool * gst_pad_peer_query_bufferpool (GstPad * pad);
+ 
+ 
+ There is also a new function to configure a bufferpool on a pad and its peer
+ pad:
+
+   gboolean gst_pad_set_bufferpool (GstPad * pad, GstBufferPool *pool);
+ 
+ This function is to inform a pad and its peer pad that a bufferpool should
+ be used for allocation (on source pads) and that bufferpool is used by the
+ upstream element (on sinkpads).
+
+ The currently configured bufferpool can be retrieved with:
+
+   GstBufferPool * gst_pad_get_bufferpool (GstPad * pad);
+
+ New functions exist to configure these bufferpool functions on pads:
+ gst_pad_set_querybufferpool_function and gst_pad_set_setbufferpool_function.
+ 
+
+negotiating pool and config
+---------------------------
+
+Since upstream needs to allocate buffers from a buffer pool, it should first
+negotiate a buffer pool with the downstream element. We propose a simple
+scheme where a sink can propose a bufferpool and some configuration and where
+the source can choose to use this allocator or use its own.
+
+The algorithm for doing this is rougly like this:
+
+
+   /* srcpad knows media type and size of buffers and is ready to
+    * prepare an output buffer but has no pool yet */
+
+   /* first get the pool from the downstream peer */
+   pool = gst_pad_peer_query_bufferpool (srcpad);
+
+   if (pool != NULL) {
+     GstBufferPoolConfig config;
+
+     /* clear the pool so that we can reconfigure it */
+     gst_buffer_pool_set_flushing (pool, TRUE);
+
+     do {
+       /* get the config */
+       gst_buffer_pool_get_config (pool, &config);
+
+       /* check and modify the config to match our requirements */
+       if (!tweak_config (&config)) {
+         /* we can't tweak the config any more, exit and fail */
+         gst_object_unref (pool);
+         pool = NULL;
+         break;
+       } 
+     }
+     /* update the config */
+     while (!gst_buffer_pool_set_config (pool, &config));
+
+     /* we managed to update the config, all is fine now */
+     /* set the pool to non-flushing to make it allocate things */
+     gst_buffer_pool_set_flushing (pool, FALSE);
+   }
+
+   if (pool == NULL) {
+     /* still no pool, we create one ourself with our ideal config */
+     pool = gst_buffer_pool_new (...);
+   }
+
+   /* now set the pool on this pad and the peer pad */
+   gst_pad_set_bufferpool (pad, pool);
+
+
+Negotiation is the same for both push and pull mode. In the case of pull
+mode scheduling, the srcpad will perform the negotiation of the pool
+when it receives the first pull request.
+
+
+Allocating from pool
+--------------------
+
+ Buffers are allocated from the pool of a pad:
+
+  res = gst_buffer_pool_acquire_buffer (pool, &buffer, &params);
+
+ convenience functions to automatically get the pool from a pad can be made:
+  
+  res = gst_pad_acquire_buffer (pad, &buffer, &params);
+
+ Buffers are refcounted in te usual way. When the refcount of the buffer
+ reaches 0, the buffer is automatically returned to the pool. This is achieved
+ by setting and reffing the pool as a new buffer member.
+
+ Since all the buffers allocated from the pool keep a reference to the pool,
+ when nothing else is holding a refcount to the pool, it will be finalized
+ when all the buffers from the pool are unreffed. By setting the pool to
+ the flushing state we can drain all buffers from the pool. 
+
+
+Renegotiation
+-------------
+
+Renegotiation of the bufferpool might need to be performed when the
+configuration of the pool changes. Changes can be in the buffer size (because
+of a caps change), alignment or number of buffers. 
+
+* downstream
+
+  When the upstream element wants to negotiate a new format, it might need
+  to renegotiate a new bufferpool configuration with the downstream element.
+  This can, for example, happen when the buffer size changes.
+
+  We can not just reconfigure the existing bufferpool because there might
+  still be outstanding buffers from the pool in the pipeline. Therefore we
+  need to create a new bufferpool for the new configuration while we let the
+  old pool drain.
+
+  Implementations can choose to reuse the same bufferpool object and wait for
+  the drain to finish before reconfiguring the pool.
+
+  The element that wants to renegotiate a new bufferpool uses exactly the same
+  algorithm as when it first started.
+  
+* upstream 
+
+  When a downstream element wants to negotiate a new format, it will send a 
+  RECONFIGURE event upstream. This instructs upstream to renegotiate both
+  the format and the bufferpool when needed.
+
+  A pipeline reconfiguration is when new elements are added or removed from
+  the pipeline or when the topology of the pipeline changes. Pipeline
+  reconfiguration also triggers possible renegotiation of the bufferpool and
+  caps.
+
+  A RECONFIGURE event tags each pad it travels on as needing reconfiguration.
+  The next buffer allocation will then require the renegotiation or
+  reconfiguration of a pool.
+
+  If downstream has specified a RENEGOTIATE flag, it must be prepared to
+  received NOT_NEGOTIATED results when allocating buffers, which instructs
+  it to start caps and bufferpool renegotiation. When using this flag, 
+  upstream can more quickly react to downstream format or size changes.
+
+
+Shutting down
+-------------
+
+ In push mode, a source pad is responsible for setting the pool to the
+ flushing state when streaming stops. The flush will unblock any pending
+ allocations so that the element can shut down.
+
+ In pull mode, the sink element should set the pool to the flushing state when
+ shutting down so that the peer _get_range() function can unblock.
+
+ In the flushing state, all the buffers that are returned to the pool will
+ be automatically freed by the pool and new allocations will fail.
+
+ 
+
+
+Use cases
+---------
+
+1)  videotestsrc ! xvimagesink
+
+ Before videotestsrc can output a buffer, it needs to negotiate caps and
+ a bufferpool with the downstream peer pad.
+
+ First it will negotiate a suitable format with downstream according to the
+ normal rules.
+
+ Then it does gst_pad_peer_query_bufferpool() which triggers the querybufferpool
+ function installed on the xvimagesink pad. This bufferpool is currently in
+ the flushing state and thus has no buffers allocated.
+
+ videotestsrc gets the configuration of the bufferpool object. This
+ configuration lists the desired configuration of the xvimagesink, which can
+ have specific alignment and/or min/max amount of buffers.
+
+ videotestsrc updates the configuration of the bufferpool, it will likely
+ set the min buffers to 1 and the size of the desired buffers. It then
+ updates the bufferpool configuration with the new properties.
+
+ When the configuration is successfully updated, videotestsrc sets the 
+ bufferpool on its source pad, this will also set the pool on the peer 
+ sinkpad.
+
+ It then sets the bufferpool to the non-flushing state. This preallocates
+ the buffers in the pool (if needed). This operation can fail when there
+ is not enough memory available. Since the bufferpool is provided by
+ xvimagesink, it will allocate buffers backed by an XvImage and pointing
+ to shared memory with the X server.
+
+ If the bufferpool is successfully activated, videotestsrc can acquire a
+ buffer from the pool, set the caps on it, fill in the data and push it
+ out to xvimagesink.
+
+ xvimagesink can know that the buffer originated from its pool by following
+ the pool member or checking the specific GType of it GstBuffer subclass.
+ It might need to get the parent buffer first in case of subbuffers.
+
+ when shutting down, videotestsrc will set the pool to the flushing state,
+ this will cause further allocations to fail and currently allocated buffers
+ to be freed. videotestsrc will then free the pool and stop streaming.
+
+
+2) videotestsrc ! queue ! myvideosink
+
+ In this second use case we have a videosink that can at most allocate
+ 3 video buffers.
+
+ Again videotestsrc will have to negotiate a bufferpool with the peer 
+ element. For this it will perform gst_pad_peer_query_bufferpool() which
+ queue will proxy to its downstream peer element.
+
+ The bufferpool returned from myvideosink will have a max_buffers set to 3.
+ queue and videotestsrc can operate with this upper limit because none of
+ those elements require more than that amount of buffers for temporary
+ storage.
+
+ The bufferpool of myvideosink will then be configured with the size of the
+ buffers for the negotiated format and according to the padding and alignment
+ rules. When videotestsrc sets the pool to non-flushing, the 3 video
+ buffers will be preallocated in the pool.
+
+ The pool will then be configured on the src of videotestsrc and the
+ sinkpad of the queue. The queue will proxy the setbufferpool method to
+ its srcpad, which finally configures the pool all the way to the sink.
+
+ videotestsrc acquires a buffer from the configured pool on its srcpad and
+ pushes this into the queue. When the videotestsrc has acquired and pushed
+ 3 frames, the next call to gst_buffer_pool_acquire_buffer() will block
+ (assuming the GST_BUFFER_POOL_FLAG_WAIT is specified).
+
+ When the queue has pushed out a buffer and the sink has rendered it, the
+ refcount of the buffer reaches 0 and the buffer is recycled in the pool.
+ This will wake up the videotestsrc that was blocked, waiting for more
+ buffers and will make it produce the next buffer. 
+
+ In this setup, there are at most 3 buffers active in the pipeline and
+ the videotestsrc is rate limited by the rate at which buffers are recycled
+ in the bufferpool.
+
+ When shutting down, videotestsrc will first set the bufferpool on the srcpad
+ to flushing. This causes any pending (blocked) acquire to return with a 
+ WRONG_STATE result and causes the streaming thread to pause.
+
+ 
+3) .. ! myvideodecoder ! queue ! fakesink 
+
+ In this case, the myvideodecoder requires buffers to be aligned to 128
+ bytes and padded with 4096 bytes. The pipeline starts out with the
+ decoder linked to a fakesink but we will then dynamically change the
+ sink to one that can provide a bufferpool.
+
+ When it negotiates the size with the downstream element fakesink, it will
+ receive a NULL bufferpool because fakesink does not provide a bufferpool.
+ It will then select it own custom bufferpool to start the datatransfer.
+
+ At some point we block the queue srcpad, unlink the queue from the 
+ fakesink, link a new sink, set the new sink to the PLAYING state and send
+ the right newsegment event to the sink. Linking the new sink would 
+ automatically send a RENEGOTIATE event upstream and, through queue, inform
+ myvideodecoder that it should renegotiate its bufferpool because downstream
+ has been reconfigured.
+
+ Before pushing the next buffer, myvideodecoder would renegotiate a new
+ bufferpool. To do this, it performs the usual bufferpool negotiation
+ algorithm. If it can obtain and configure a new bufferpool from downstream,
+ it sets its own (old) pool to flushing and unrefs it. This will eventually
+ drain and unref the old bufferpool.
+
+ The new bufferpool is set as the new bufferpool for the srcpad and sinkpad
+ of the queue and set to the non-flushing state.
+
+
+4) .. ! myvideodecoder ! queue ! myvideosink 
+
+ myvideodecoder has negotiated a bufferpool with the downstream myvideosink
+ to handle buffers of size 320x240. It has now detected a change in the 
+ video format and need to renegotiate to a resolution of 640x480. This
+ requires it to negotiate a new bufferpool with a larger buffersize.
+
+ When myvideodecoder needs to get the bigger buffer, it starts the 
+ negotiation of a new bufferpool. It queries a bufferpool from downstream,
+ reconfigures it with the new configuration (which includes the bigger buffer
+ size), it sets the bufferpool to non-flushing and sets the bufferpool as
+ the new pool for the srcpad and its peer. This automatically flushes the
+ old pool and unrefs it, which causes the old format to drain.
+
+ It then uses the new bufferpool for allocating new buffers of the new 
+ dimension.
+
+ If at some point, the decoder wants to switch to a lower resolution again,
+ it can choose to use the current pool (which has buffers that are larger
+ than the required size) or it can choose to renegotiate a new bufferpool.
+
+
+5) .. ! myvideodecoder ! videoscale ! myvideosink 
+
+ myvideosink is providing a bufferpool for upstream elements and wants to
+ change the resolution.
+
+ myvideosink sends a RENEGOTIATE event upstream to notify upstream that a
+ new format is desirable. upstream elements try to negotiate a new format
+ and bufferpool before pushing out a new buffer. The old bufferpools are
+ drained in the regular way.
+
+
+

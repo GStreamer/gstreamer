@@ -379,7 +379,7 @@ gst_task_cleanup_all (void)
 /**
  * gst_task_create:
  * @func: The #GstTaskFunction to use
- * @data: User data to pass to @func
+ * @data: (closure): User data to pass to @func
  *
  * Create a new Task that will repeatedly call the provided @func
  * with @data as a parameter. Typically the task will run in
@@ -395,7 +395,7 @@ gst_task_cleanup_all (void)
  * gst_task_set_lock() function. This lock will always be acquired while
  * @func is called.
  *
- * Returns: A new #GstTask.
+ * Returns: (transfer full): A new #GstTask.
  *
  * MT safe.
  */
@@ -489,7 +489,7 @@ gst_task_set_priority (GstTask * task, GThreadPriority priority)
  *
  * MT safe.
  *
- * Returns: the #GstTaskPool used by @task. gst_object_unref()
+ * Returns: (transfer full): the #GstTaskPool used by @task. gst_object_unref()
  * after usage.
  *
  * Since: 0.10.24
@@ -514,7 +514,7 @@ gst_task_get_pool (GstTask * task)
 /**
  * gst_task_set_pool:
  * @task: a #GstTask
- * @pool: a #GstTaskPool
+ * @pool: (transfer none): a #GstTaskPool
  *
  * Set @pool as the new GstTaskPool for @task. Any new streaming threads that
  * will be created by @task will now use @pool.
@@ -550,8 +550,8 @@ gst_task_set_pool (GstTask * task, GstTaskPool * pool)
 /**
  * gst_task_set_thread_callbacks:
  * @task: The #GstTask to use
- * @callbacks: a #GstTaskThreadCallbacks pointer
- * @user_data: user data passed to the callbacks
+ * @callbacks: (in): a #GstTaskThreadCallbacks pointer
+ * @user_data: (closure): user data passed to the callbacks
  * @notify: called when @user_data is no longer referenced
  *
  * Set callbacks which will be executed when a new thread is needed, the thread

@@ -44,7 +44,8 @@ Some use cases:
      posted, which instructs the application to continue playback.
    - When during playback, the low watermark is hit, the queue will start posting
      BUFFERING messages again, making the application PAUSE the pipeline again
-     until the high watermark is hit again.
+     until the high watermark is hit again. This is called the rebuffering
+     stage.
    - during playback, the queue level will fluctuate between the high and the
      low watermark as a way to compensate for network irregularities.
 
@@ -246,4 +247,62 @@ A GstBaseSrc in push mode replies to the BUFFERING query with:
   "start" = current position
   "stop" = current position
   "estimated-total" = -1
+
+
+Buffering strategies
+~~~~~~~~~~~~~~~~~~~~
+
+ Buffering strategies are specific implementations based on the buffering
+ message and query described above.
+
+ Most strategies have to balance buffering time versus maximal playback
+ experience.
+
+ * simple buffering
+
+   NON-live pipelines are kept in the paused state while buffering messages with
+   a percent < 100% are received.
+
+   This buffering strategy relies on the buffer size and low/high watermarks of
+   the element. It can work with a fixed size buffer in memory or on disk.
+
+   The size of the buffer is usually expressed in a fixed amount of time units
+   and the estimated bitrate of the upstream source is used to convert this time
+   to bytes.
+
+   All GStreamer applications must implement this strategy. Failure to do so
+   will result in starvation at the sink.
+
+ * no-rebuffer strategy
+
+   This strategy tries to buffer as much data as possible so that playback can
+   continue without any further rebuffering.
+
+   This strategy is initially similar to simple buffering, the difference is in
+   deciding on the condition to continue playback. When a 100% buffering message
+   has been received, the application will not yet start the playback but it will
+   start a periodic buffering query, which will return the estimated amount of
+   buffering time left. When the estimated time left is less than the remaining
+   playback time, playback can continue.
+
+   This strategy requires a unlimited buffer size in memory or on disk, such as
+   provided by elements that implement the incremental download buffering mode.
+
+   Usually, the application can choose to start playback even before the
+   remaining buffer time elapsed in order to more quickly start the playback at
+   the expense of a possible rebuffering phase.
+
+ * Incremental rebuffering
+
+   The application implements the simple buffering strategy but with each
+   rebuffering phase, it increases the size of the buffer. 
+
+   This strategy has quick, fixed time startup times but incrementally longer
+   rebuffering times if the network is slower than the media bitrate.
+
+   
+
+
+
+
 

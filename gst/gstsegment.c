@@ -86,11 +86,13 @@
 
 /**
  * gst_segment_copy:
- * @segment: a #GstSegment
+ * @segment: (transfer none): a #GstSegment
  *
  * Create a copy of given @segment.
  *
- * Returns: a new #GstSegment, free with gst_segment_free().
+ * Free-function: gst_segment_free
+ *
+ * Returns: (transfer full): a new #GstSegment, free with gst_segment_free().
  *
  * Since: 0.10.20
  */
@@ -124,7 +126,9 @@ gst_segment_get_type (void)
  * Allocate a new #GstSegment structure and initialize it using 
  * gst_segment_init().
  *
- * Returns: a new #GstSegment, free with gst_segment_free().
+ * Free-function: gst_segment_free
+ *
+ * Returns: (transfer full): a new #GstSegment, free with gst_segment_free().
  */
 GstSegment *
 gst_segment_new (void)
@@ -139,7 +143,7 @@ gst_segment_new (void)
 
 /**
  * gst_segment_free:
- * @segment: a #GstSegment
+ * @segment: (in) (transfer full): a #GstSegment
  *
  * Free the allocated segment @segment.
  */
@@ -699,8 +703,8 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
  * @format: the format of the segment.
  * @start: the start position in the segment
  * @stop: the stop position in the segment
- * @clip_start: the clipped start position in the segment
- * @clip_stop: the clipped stop position in the segment
+ * @clip_start: (out) (allow-none): the clipped start position in the segment
+ * @clip_stop: (out) (allow-none): the clipped stop position in the segment
  *
  * Clip the given @start and @stop values to the segment boundaries given
  * in @segment. @start and @stop are compared and clipped to @segment 

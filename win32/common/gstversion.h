@@ -57,7 +57,7 @@ G_BEGIN_DECLS
  *
  * The micro version of GStreamer at compile time:
  */
-#define GST_VERSION_MICRO (31)
+#define GST_VERSION_MICRO (32)
 /**
  * GST_VERSION_NANO:
  *
@@ -81,7 +81,9 @@ G_BEGIN_DECLS
     (GST_VERSION_MAJOR > (major) || \
      (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR > (minor)) || \
      (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR == (minor) && \
-      GST_VERSION_MICRO >= (micro)))
+      GST_VERSION_MICRO >= (micro)) || \
+     (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR == (minor) && \
+      GST_VERSION_MICRO + 1 == (micro) && GST_VERSION_NANO > 0))
 
 G_END_DECLS
 

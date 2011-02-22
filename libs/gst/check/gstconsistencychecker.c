@@ -79,6 +79,7 @@ source_pad_data_cb (GstPad * pad, GstMiniObject * data,
         break;
       case GST_EVENT_TAG:
         GST_DEBUG_OBJECT (pad, "tag %" GST_PTR_FORMAT, event->structure);
+        /* fall through */
       default:
         if (GST_EVENT_IS_SERIALIZED (event) && GST_EVENT_IS_DOWNSTREAM (event)) {
           fail_if (consist->eos, "Event received after EOS");

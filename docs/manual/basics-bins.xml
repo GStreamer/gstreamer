@@ -136,6 +136,10 @@ main (int   argc,
 }
     </programlisting>
     <para>
+      (This is a silly example of course, there already exists a much more
+      powerful and versatile custom bin like this: the playbin2 element.)
+    </para>
+    <para>
       Custom bins can be created with a plugin or an XML description. You
       will find more information about creating custom bin in the <ulink
       type="http"
@@ -143,10 +147,31 @@ main (int   argc,
       Writers Guide</ulink>.
     </para>
     <para>
-      Examples of such custom bins are the playbin and decodebin elements from<ulink
+      Examples of such custom bins are the playbin2 and uridecodebin elements from<ulink
       type="http"
       url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/index.html">
       gst-plugins-base</ulink>.
+    </para>
+  </sect1>
+  <sect1 id="section-bin-state-change-handling">
+    <title>Bins manage states of their children</title>
+    <para>
+      Bins manage the state of all elements contained in them. If you set
+      a bin (or a pipeline, which is a special top-level type of bin) to
+      a certain target state using <function>gst_element_set_state ()</function>,
+      it will make sure all elements contained within it will also be set
+      to this state. This means it's usually only necessary to set the state
+      of the top-level pipeline to start up the pipeline or shut it down.
+    </para>
+    <para>
+      Note, however, that if elements are added to a bin or pipeline that's
+      already running, , e.g. from within a "pad-added" or "new-decoded-pad"
+      signal callback, its state will not automatically be brought in line with
+      the current state or target state of the bin or pipeline it was added to.
+      Instead, you have to need to set it to the desired target state yourself
+      using <function>gst_element_set_state ()</function> or
+      <function>gst_element_sync_state_with_parent ()</function> when adding
+      elements to an already-running pipeline.
     </para>
   </sect1>
 </chapter>

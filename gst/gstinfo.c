@@ -90,6 +90,9 @@
 #include "gst_private.h"
 #include "gstinfo.h"
 
+#undef gst_debug_remove_log_function
+#undef gst_debug_add_log_function
+
 #ifndef GST_DISABLE_GST_DEBUG
 
 #ifdef HAVE_DLFCN_H
@@ -439,7 +442,8 @@ _gst_debug_init (void)
  * @file: the file that emitted the message, usually the __FILE__ identifier
  * @function: the function that emitted the message
  * @line: the line from that the message was emitted, usually __LINE__
- * @object: the object this message relates to or NULL if none
+ * @object: (transfer none) (allow-none): the object this message relates to,
+ *     or NULL if none
  * @format: a printf style format string
  * @...: optional arguments for the format
  *
@@ -458,6 +462,31 @@ gst_debug_log (GstDebugCategory * category, GstDebugLevel level,
   va_end (var_args);
 }
 
+#ifdef _MSC_VER
+/* based on g_basename(), which we can't use because it was deprecated */
+static inline const gchar *
+gst_path_basename (const gchar * file_name)
+{
+  register const gchar *base;
+
+  base = strrchr (file_name, G_DIR_SEPARATOR);
+
+  {
+    const gchar *q = strrchr (file_name, '/');
+    if (base == NULL || (q != NULL && q > base))
+      base = q;
+  }
+
+  if (base)
+    return base + 1;
+
+  if (g_ascii_isalpha (file_name[0]) && file_name[1] == ':')
+    return file_name + 2;
+
+  return file_name;
+}
+#endif
+
 /**
  * gst_debug_log_valist:
  * @category: category to log
@@ -465,7 +494,8 @@ gst_debug_log (GstDebugCategory * category, GstDebugLevel level,
  * @file: the file that emitted the message, usually the __FILE__ identifier
  * @function: the function that emitted the message
  * @line: the line from that the message was emitted, usually __LINE__
- * @object: the object this message relates to or NULL if none
+ * @object: (transfer none) (allow-none): the object this message relates to,
+ *     or NULL if none
  * @format: a printf style format string
  * @args: optional arguments for the format
  *
@@ -480,22 +510,16 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
   LogFuncEntry *entry;
   GSList *handler;
 
-#ifdef _MSC_VER
-  gchar *file_basename;
-#endif
-
   g_return_if_fail (category != NULL);
   g_return_if_fail (file != NULL);
   g_return_if_fail (function != NULL);
   g_return_if_fail (format != NULL);
 
-#ifdef _MSC_VER
-  /*
-   * The predefined macro __FILE__ is always the exact path given to the
+  /* The predefined macro __FILE__ is always the exact path given to the
    * compiler with MSVC, which may or may not be the basename.  We work
-   * around it at runtime to improve the readability.
-   */
-  file = file_basename = g_path_get_basename (file);
+   * around it at runtime to improve the readability. */
+#ifdef _MSC_VER
+  file = gst_path_basename (file);
 #endif
 
   message.message = NULL;
@@ -511,10 +535,6 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
   }
   g_free (message.message);
   va_end (message.arguments);
-
-#ifdef _MSC_VER
-  g_free (file_basename);
-#endif
 }
 
 /**
@@ -734,7 +754,8 @@ gst_debug_print_segment (gpointer ptr)
  * terminals.
  * You need to free the string after use.
  *
- * Returns: a string containing the color definition
+ * Returns: (transfer full) (type gchar*): a string containing the color
+ *     definition
  */
 gchar *
 gst_debug_construct_term_color (guint colorinfo)
@@ -883,7 +904,8 @@ static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
  * @function: the function that emitted the message
  * @line: the line from that the message was emitted, usually __LINE__
  * @message: the actual message
- * @object: the object this message relates to or NULL if none
+ * @object: (transfer none) (allow-none): the object this message relates to,
+ *     or NULL if none
  * @unused: an unused variable, reserved for some user_data.
  *
  * The default logging handler used by GStreamer. Logging functions get called
@@ -1034,7 +1056,7 @@ gst_debug_level_get_name (GstDebugLevel level)
 /**
  * gst_debug_add_log_function:
  * @func: the function to use
- * @data: user data
+ * @data: (closure): user data
  *
  * Adds the logging function to the list of logging functions.
  * Be sure to use #G_GNUC_NO_INSTRUMENT on that function, it is needed.
@@ -1045,7 +1067,8 @@ gst_debug_add_log_function (GstLogFunction func, gpointer data)
   LogFuncEntry *entry;
   GSList *list;
 
-  g_return_if_fail (func != NULL);
+  if (func == NULL)
+    func = gst_debug_log_default;
 
   entry = g_slice_new (LogFuncEntry);
   entry->func = func;
@@ -1121,7 +1144,8 @@ gst_debug_remove_log_function (GstLogFunction func)
 {
   guint removals;
 
-  g_return_val_if_fail (func != NULL, 0);
+  if (func == NULL)
+    func = gst_debug_log_default;
 
   removals =
       gst_debug_remove_with_compare_func
@@ -1509,7 +1533,8 @@ gst_debug_category_get_description (GstDebugCategory * category)
  * may change anytime.
  * The caller has to free the list after use.
  *
- * Returns: the list of categories
+ * Returns: (transfer container) (element-type Gst.DebugCategory): the list of
+ *     debug categories
  */
 GSList *
 gst_debug_get_all_categories (void)

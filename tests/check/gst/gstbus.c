@@ -241,6 +241,48 @@ GST_START_TEST (test_watch_with_custom_context)
 
 GST_END_TEST;
 
+/* test if adding a signal watch for different message types calls the
+ * respective callbacks. */
+GST_START_TEST (test_add_watch_with_custom_context)
+{
+  GMainContext *ctx;
+  GSource *source;
+  guint num_eos = 0;
+  guint num_app = 0;
+
+  test_bus = gst_bus_new ();
+
+  ctx = g_main_context_new ();
+  main_loop = g_main_loop_new (ctx, FALSE);
+
+  g_main_context_push_thread_default (ctx);
+  gst_bus_add_signal_watch (test_bus);
+  g_main_context_pop_thread_default (ctx);
+
+  g_signal_connect (test_bus, "message::eos", (GCallback) message_func_eos,
+      &num_eos);
+  g_signal_connect (test_bus, "message::application",
+      (GCallback) message_func_app, &num_app);
+
+  source = g_idle_source_new ();
+  g_source_set_callback (source, (GSourceFunc) send_messages, NULL, NULL);
+  g_source_attach (source, ctx);
+  g_source_unref (source);
+
+  while (g_main_context_pending (ctx))
+    g_main_context_iteration (ctx, FALSE);
+
+  fail_unless_equals_int (num_eos, 10);
+  fail_unless_equals_int (num_app, 10);
+
+  g_main_loop_unref (main_loop);
+  g_main_context_unref (ctx);
+
+  gst_object_unref (test_bus);
+}
+
+GST_END_TEST;
+
 static gint messages_seen;
 
 static void
@@ -547,6 +589,7 @@ GST_START_TEST (test_custom_main_context)
   source = gst_bus_create_watch (bus);
   g_source_attach (source, ctx);
   g_source_set_callback (source, (GSourceFunc) cb_bus_call, loop, NULL);
+  g_source_unref (source);
   gst_object_unref (bus);
 
   GST_INFO ("starting pipeline");
@@ -581,6 +624,7 @@ gst_bus_suite (void)
   tcase_add_test (tc_chain, test_watch);
   tcase_add_test (tc_chain, test_watch_with_poll);
   tcase_add_test (tc_chain, test_watch_with_custom_context);
+  tcase_add_test (tc_chain, test_add_watch_with_custom_context);
   tcase_add_test (tc_chain, test_timed_pop);
   tcase_add_test (tc_chain, test_timed_pop_thread);
   tcase_add_test (tc_chain, test_timed_pop_filtered);

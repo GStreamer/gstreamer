@@ -339,9 +339,9 @@ plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
 
   plugin->basename = g_path_get_basename (plugin->filename);
   plugin->desc.name = g_intern_string (plugin->basename);
-  plugin->desc.description = g_strdup_printf ("Plugin for blacklisted file");
-  plugin->desc.version = g_intern_string ("0.0.0");
-  plugin->desc.license = g_intern_string ("BLACKLIST");
+  plugin->desc.description = "Plugin for blacklisted file";
+  plugin->desc.version = "0.0.0";
+  plugin->desc.license = "BLACKLIST";
   plugin->desc.source = plugin->desc.license;
   plugin->desc.package = plugin->desc.license;
   plugin->desc.origin = plugin->desc.license;
@@ -725,11 +725,10 @@ handle_rx_packet (GstPluginLoader * l,
     case PACKET_EXIT:
       gst_poll_fd_ctl_read (l->fdset, &l->fd_r, FALSE);
       if (l->is_child) {
-        /* Respond, then we keep looping until the parent closes the fd */
+        /* Respond */
         put_packet (l, PACKET_EXIT, 0, NULL, 0);
-      } else {
-        l->rx_done = TRUE;      /* All done reading from child */
       }
+      l->rx_done = TRUE;
       return TRUE;
     case PACKET_LOAD_PLUGIN:{
       if (!l->is_child)

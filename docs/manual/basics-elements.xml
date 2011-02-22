@@ -554,5 +554,16 @@ main (int   argc,
       url="&URLAPI;GstBus.html"><classname>GstBus</classname></ulink>. See
       <xref linkend="chapter-bus"/> for details.
     </para>
+    <para>
+      When you set a bin or pipeline to a certain target state, it will usually
+      propagate the state change to all elements within the bin or pipeline
+      automatically, so it's usually only necessary to set the state of the
+      top-level pipeline to start up the pipeline or shut it down. However,
+      when adding elements dynamically to an already-running pipeline, e.g.
+      from within a "pad-added" or "new-decoded-pad" signal callback, you
+      need to set it to the desired target state yourself using
+      <function>gst_element_set_state ()</function> or
+      <function>gst_element_sync_state_with_parent ()</function>.
+    </para>
   </sect1>
 </chapter>

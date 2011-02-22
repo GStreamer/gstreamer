@@ -1,0 +1,1234 @@
+# Greek translation for gstreamer.
+# Copyright (C) 2010 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gstreamer package. 
+# Michael Kotsarinis <mk73628@gmail.com>, 2010
+msgid ""
+msgstr ""
+"Project-Id-Version: gstreamer-0.10.30.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2011-01-06 17:41+0000\n"
+"PO-Revision-Date: 2010-11-29 11:14+0200\n"
+"Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
+"Language-Team: Greek <team@lists.gnome.gr>\n"
+"Language: el\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!= 1)\n"
+"X-Poedit-Language: Greek\n"
+"X-Poedit-Country: GREECE\n"
+
+msgid "Print the GStreamer version"
+msgstr "Εμφάνιση της έκδοσης του GStreamer"
+
+msgid "Make all warnings fatal"
+msgstr "Να γίνουν όλες οι προειδοποιήσεις κρίσιμες"
+
+msgid "Print available debug categories and exit"
+msgstr "Εμφάνιση διαθέσιμων κατηγοριών σφαλμάτων και έξοδος"
+
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Προεπιλεγμένο επίπεδο αποσφαλμάτωσης από 1 (μόνο λάθος) έως 5 (οτιδήποτε) ή "
+"0 για καθόλου αποτέλεσμα"
+
+msgid "LEVEL"
+msgstr "LEVEL"
+
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Λίστα διαχωρισμένη με κόμματα των ζευγαριών όνομα κατηγορίας:επίπεδο "
+"(category_name:level) για καθορισμό συγκεκριμένων επιπέδων για καθεμιά "
+"κατηγορία. Παράδειγμα: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+
+msgid "LIST"
+msgstr "LIST"
+
+msgid "Disable colored debugging output"
+msgstr "Απενεργοποίηση έγχρωμων αποτελεσμάτων αποσφαλμάτωσης"
+
+msgid "Disable debugging"
+msgstr "Απενεργοποίηση αποσφαλμάτωσης"
+
+msgid "Enable verbose plugin loading diagnostics"
+msgstr "Ενεργοποίηση αναλυτικών διαγνωστικών φόρτωσης πρόσθετου"
+
+msgid "Colon-separated paths containing plugins"
+msgstr "Διαχωρισμένες με άνω-κάτω τελεία διαδρομές που περιέχουν πρόσθετα"
+
+msgid "PATHS"
+msgstr "PATHS"
+
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Διαχωρισμένη με κόμμα λίστα προσθέτων για προφόρτωση επιπλέον της λίστας που "
+"είναι αποθηκευμένη στη μεταβλητή περιβάλλοντος GST_PLUGIN_PATH"
+
+msgid "PLUGINS"
+msgstr "PLUGINS"
+
+msgid "Disable trapping of segmentation faults during plugin loading"
+msgstr ""
+"Απενεργοποίηση παγίδευσης σφαλμάτων διαχωρισμού κατά τη φόρτωση προσθέτου"
+
+msgid "Disable updating the registry"
+msgstr "Απενεργοποίηση ενημέρωσης του μητρώου"
+
+msgid "Disable spawning a helper process while scanning the registry"
+msgstr ""
+"Απενεργοποίηση εκκίνησης βοηθητικής διεργασίας κατά τη σάρωση του μητρώου"
+
+msgid "GStreamer Options"
+msgstr "Επιλογές του GStreamer"
+
+msgid "Show GStreamer Options"
+msgstr "Εμφάνιση επιλογών του GStreamer"
+
+msgid "Unknown option"
+msgstr "Άγνωστη επιλογή"
+
+msgid "GStreamer encountered a general core library error."
+msgstr "Το GStreamer αντιμετώπισε ένα γενικό σφάλμα βασικής βιβλιοθήκης."
+
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+"Οι προγραμματιστές του GStreamer τεμπέλιασαν και δεν αντιστοίχισαν κωδικό "
+"σφάλματος στο σφάλμα αυτό."
+
+msgid "Internal GStreamer error: code not implemented."
+msgstr "Εσωτερικό σφάλμα GStreamer: ο κώδικας δεν υλοποιήθηκε."
+
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
+"Σφάλμα GStreamer: αποτυχία αλλαγής κατάστασης και κάποιο στοιχείο απέτυχε να "
+"αναρτήσει σωστό μήνυμα σφάλματος με την αιτία της αποτυχίας."
+
+msgid "Internal GStreamer error: pad problem."
+msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα pad."
+
+msgid "Internal GStreamer error: thread problem."
+msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα νήματος."
+
+msgid "Internal GStreamer error: negotiation problem."
+msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα συνεννόησης."
+
+msgid "Internal GStreamer error: event problem."
+msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα γεγονότος."
+
+msgid "Internal GStreamer error: seek problem."
+msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα αναζήτησης."
+
+msgid "Internal GStreamer error: caps problem."
+msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα δυνατοτήτων."
+
+msgid "Internal GStreamer error: tag problem."
+msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα ετικέτας."
+
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr "Από την εγκατάστασή σας του GStreamer λείπει ένα πρόσθετο."
+
+msgid "Internal GStreamer error: clock problem."
+msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα ρολογιού."
+
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr ""
+"Αυτή η εφαρμογή προσπαθεί να χρησιμοποιήσει λειτουργία του GStreamer που "
+"έχει απενεργοποιηθεί."
+
+msgid "GStreamer encountered a general supporting library error."
+msgstr "Το GStreamer συνάντησε ένα γενικό σφάλμα βιβλιοθήκης υποστήριξης."
+
+msgid "Could not initialize supporting library."
+msgstr "Αδυναμία αρχικοποίησης υποστηρικτικής βιβλιοθήκης."
+
+msgid "Could not close supporting library."
+msgstr "Αδυναμία κλεισίματος υποστηρικτικής βιβλιοθήκης."
+
+msgid "Could not configure supporting library."
+msgstr "Αδυναμία διαμόρφωσης υποστηρικτικής βιβλιοθήκης."
+
+msgid "Encoding error."
+msgstr "Σφάλμα κωδικοποίησης."
+
+msgid "GStreamer encountered a general resource error."
+msgstr "Το GStreamer συνάντησε ένα γενικό σφάλμα πόρων."
+
+msgid "Resource not found."
+msgstr "Δεν βρέθηκε ο πόρος."
+
+msgid "Resource busy or not available."
+msgstr "Ο πόρος είναι απασχολημένος ή μη διαθέσιμος."
+
+msgid "Could not open resource for reading."
+msgstr "Αδυναμία ανοίγματος πόρου για ανάγνωση."
+
+msgid "Could not open resource for writing."
+msgstr "Αδυναμία ανοίγματος πόρου για εγγραφή."
+
+msgid "Could not open resource for reading and writing."
+msgstr "Αδυναμία ανοίγματος πόρου για ανάγνωση και εγγραφή."
+
+msgid "Could not close resource."
+msgstr "Αδυναμία κλεισίματος πόρου."
+
+msgid "Could not read from resource."
+msgstr "Αδυναμία ανάγνωσης από τον πόρο."
+
+msgid "Could not write to resource."
+msgstr "Αδυναμία εγγραφής στον πόρο."
+
+msgid "Could not perform seek on resource."
+msgstr "Αδυναμία εκτέλεσης αναζήτησης στον πόρο."
+
+msgid "Could not synchronize on resource."
+msgstr "Αδυναμία συγχρονισμού με τον πόρο."
+
+msgid "Could not get/set settings from/on resource."
+msgstr "Αδυναμία λήψης/ορισμού ρυθμίσεων από τον/στον πόρο."
+
+msgid "No space left on the resource."
+msgstr "Δεν έχει μείνει χώρος στον πόρο."
+
+msgid "GStreamer encountered a general stream error."
+msgstr "Το GStreamer συνάντησε ένα γενικό σφάλμα ροής."
+
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr ""
+"Το στοιχείο δεν υλοποιεί χειρισμό αυτή της ροής. Παρακαλούμε αναφέρετε το "
+"σφάλμα."
+
+msgid "Could not determine type of stream."
+msgstr "Αδυναμία καθορισμού του τύπου της ροής."
+
+msgid "The stream is of a different type than handled by this element."
+msgstr ""
+"Η ροή είναι διαφορετικού τύπου από αυτόν που χειρίζεται αυτό το στοιχείο."
+
+msgid "There is no codec present that can handle the stream's type."
+msgstr ""
+"Δεν υπάρχει παρών κωδικοποιητής που να μπορεί να χειριστεί τον τύπο της ροής."
+
+msgid "Could not decode stream."
+msgstr "Αδυναμία αποκωδικοποίησης ροής."
+
+msgid "Could not encode stream."
+msgstr "Αδυναμία κωδικοποίησης ροής."
+
+msgid "Could not demultiplex stream."
+msgstr "Αδυναμία από-πολύπλεξης ροής."
+
+msgid "Could not multiplex stream."
+msgstr "Αδυναμία πολύπλεξης ροής."
+
+msgid "The stream is in the wrong format."
+msgstr "Η ροή είναι λανθασμένης μορφής."
+
+msgid "The stream is encrypted and decryption is not supported."
+msgstr "Η ροή είναι κρυπτογραφημένη και δεν υποστηρίζεται αποκρυπτογράφηση."
+
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+"Η ροή είναι κρυπτογραφημένη και δεν μπορεί να αποκρυπτογραφηθεί επειδή δεν "
+"έχει δοθεί κατάλληλος κωδικός."
+
+#, c-format
+msgid "No error message for domain %s."
+msgstr "Δεν υπάρχει μήνυμα σφάλματος για τον τομέα %s."
+
+#, c-format
+msgid "No standard error message for domain %s and code %d."
+msgstr ""
+"Δεν υπάρχει τυποποιημένο μήνυμα σφάλματος για τον τομέα %s και τον κώδικα %d."
+
+msgid "Selected clock cannot be used in pipeline."
+msgstr "Το επιλεγμένο ρολόι δεν μπορεί να χρησιμοποιηθεί στη διασωλήνωση."
+
+msgid "title"
+msgstr "τίτλος"
+
+msgid "commonly used title"
+msgstr "ο τίτλος που συνήθως χρησιμοποιείται"
+
+msgid "title sortname"
+msgstr "όνομα ταξινόμησης τίτλου"
+
+msgid "commonly used title for sorting purposes"
+msgstr "ο συνήθης τίτλος για σκοπούς ταξινόμησης"
+
+msgid "artist"
+msgstr "καλλιτέχνης"
+
+msgid "person(s) responsible for the recording"
+msgstr "πρόσωπο(α) υπεύθυνο για την ηχογράφηση"
+
+msgid "artist sortname"
+msgstr "όνομα ταξινόμησης καλλιτέχνη"
+
+msgid "person(s) responsible for the recording for sorting purposes"
+msgstr "πρόσωπο(α) υπεύθυνο για την εγγραφή για σκοπούς ταξινόμησης"
+
+msgid "album"
+msgstr "δίσκος"
+
+msgid "album containing this data"
+msgstr "δίσκος που περιέχει αυτά τα δεδομένα"
+
+msgid "album sortname"
+msgstr "όνομα ταξινόμησης δίσκου"
+
+msgid "album containing this data for sorting purposes"
+msgstr "δίσκος που περιέχει αυτά τα δεδομένα για σκοπούς ταξινόμησης"
+
+msgid "album artist"
+msgstr "καλλιτέχνης δίσκου"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr "Ο καλλιτέχνης ολόκληρου του δίσκου, όπως θα πρέπει να εμφανίζεται"
+
+msgid "album artist sortname"
+msgstr "όνομα ταξινόμησης καλλιτέχνη δίσκου"
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr "Ο καλλιτέχνης ολόκληρου του δίσκου, όπως θα πρέπει να ταξινομείται."
+
+msgid "date"
+msgstr "ημερομηνία"
+
+msgid "date the data was created (as a GDate structure)"
+msgstr "ημερομηνία δημιουργίας των δεδομένων (ως μια δομή GDate)"
+
+msgid "datetime"
+msgstr "datetime"
+
+msgid "date and time the data was created (as a GstDateTime structure)"
+msgstr "ημερομηνία και ώρα δημιουρίας των δεδομένων (δομημένες ως GstDateTime)"
+
+msgid "genre"
+msgstr "είδος"
+
+msgid "genre this data belongs to"
+msgstr "είδος που ανήκουν αυτά τα δεδομένα"
+
+msgid "comment"
+msgstr "σχόλιο"
+
+msgid "free text commenting the data"
+msgstr "ελεύθερο κείμενο σχολιασμού των δεδομένων"
+
+msgid "extended comment"
+msgstr "εκτεταμένο σχόλιο"
+
+msgid "free text commenting the data in key=value or key[en]=comment form"
+msgstr ""
+"ελεύθερο κείμενο σχολιασμού των δεδομένων της μορφής key=value ή key[en]"
+"=comment"
+
+msgid "track number"
+msgstr "αριθμός κομματιού"
+
+msgid "track number inside a collection"
+msgstr "αριθμός κομματιών μέσα σε μια συλλογή"
+
+msgid "track count"
+msgstr "καταμέτρηση κομματιών"
+
+msgid "count of tracks inside collection this track belongs to"
+msgstr ""
+"η καταμέτρηση των κομματιών μέσα στη συλλογή στην οποία ανήκει αυτό το "
+"κομμάτι"
+
+msgid "disc number"
+msgstr "αριθμός δίσκου"
+
+msgid "disc number inside a collection"
+msgstr "αριθμός δίσκου μέσα σε μια συλλογή"
+
+msgid "disc count"
+msgstr "καταμέτρηση δίσκων"
+
+msgid "count of discs inside collection this disc belongs to"
+msgstr "η καταμέτρηση των δίσκων μέσα στη συλλογή που ανήκει αυτός ο δίσκος"
+
+msgid "location"
+msgstr "τοποθεσία"
+
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr ""
+"Προέλευση του μέσου ως URI (τοποθεσία, όπου φιλοξενείται το πρωτότυπο του "
+"αρχείου ή της ροής)"
+
+msgid "homepage"
+msgstr "αρχική σελίδα"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr ""
+"Η αρχική σελίδα για αυτό το μέσο (π.χ. η αρχική σελίδα της ταινίας ή του "
+"καλλιτέχνη)"
+
+msgid "description"
+msgstr "περιγραφή"
+
+msgid "short text describing the content of the data"
+msgstr "σύντομο κείμενο που περιγράφει το περιεχόμενο των δεδομένων"
+
+msgid "version"
+msgstr "έκδοση"
+
+msgid "version of this data"
+msgstr "έκδοση αυτών των δεδομένων"
+
+msgid "ISRC"
+msgstr "ISRC"
+
+msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
+msgstr ""
+"International Standard Recording Code - βλέπε http://www.ifpi.org/isrc/"
+
+msgid "organization"
+msgstr "οργανισμός"
+
+msgid "copyright"
+msgstr "πνευματικά δικαιώματα"
+
+msgid "copyright notice of the data"
+msgstr "σημείωμα πνευματικών δικαιωμάτων των δεδομενων"
+
+msgid "copyright uri"
+msgstr "uri πνευματικών δικαιωμάτων"
+
+msgid "URI to the copyright notice of the data"
+msgstr "URI για το σημείωμα πνευματικών δικαιωμάτων των δεδομένων"
+
+msgid "contact"
+msgstr "επικοινωνία"
+
+msgid "contact information"
+msgstr "πληροφορίες επικοινωνίας"
+
+msgid "license"
+msgstr "άδεια"
+
+msgid "license of data"
+msgstr "άδεια των δεδομένων"
+
+msgid "license uri"
+msgstr "uri άδειας"
+
+msgid "URI to the license of the data"
+msgstr "URI της άδειας των δεδομένων"
+
+msgid "performer"
+msgstr "εκτελεστής"
+
+msgid "person(s) performing"
+msgstr "πρόσωπο(α) που παίζει"
+
+msgid "composer"
+msgstr "συνθέτης"
+
+msgid "person(s) who composed the recording"
+msgstr "πρόσωπο(α) που συνέθεσε την ηχογράφηση."
+
+msgid "duration"
+msgstr "διάρκεια"
+
+msgid "length in GStreamer time units (nanoseconds)"
+msgstr "μήκος σε μονάδες χρόνου του GStreamer (nanoseconds)"
+
+msgid "codec"
+msgstr "κωδικοποιητής"
+
+msgid "codec the data is stored in"
+msgstr "η κωδικοποίηση αποθήκευσης των δεδομένων"
+
+msgid "video codec"
+msgstr "κωδικοποιητής βίντεο"
+
+msgid "codec the video data is stored in"
+msgstr "κωδικοποιητής βίντεο της αποθήκευσης  των δεδομένων"
+
+msgid "audio codec"
+msgstr "κωδικοποιητής ήχου"
+
+msgid "codec the audio data is stored in"
+msgstr "κωδικοποιητής αποθήκευσης των ηχητικών δεδομένων"
+
+msgid "subtitle codec"
+msgstr "κωδικοποιητής υποτίτλων"
+
+msgid "codec the subtitle data is stored in"
+msgstr "κωδικοποιητής αποθήκευσης των υποτίτλων"
+
+msgid "container format"
+msgstr "τύπος περιέκτη"
+
+msgid "container format the data is stored in"
+msgstr "ο τύπος του περιέκτη στον οποίο αποθηκεύονται τα δεδομένα"
+
+msgid "bitrate"
+msgstr "ρυθμός μετάδοσης"
+
+msgid "exact or average bitrate in bits/s"
+msgstr "ακριβής ή μέσος ρυθμός σε bits/s"
+
+msgid "nominal bitrate"
+msgstr "ονομαστικός ρυθμός"
+
+msgid "nominal bitrate in bits/s"
+msgstr "ονομαστικός ρυθμός σε bits/s"
+
+msgid "minimum bitrate"
+msgstr "ελάχιστος ρυθμός"
+
+msgid "minimum bitrate in bits/s"
+msgstr "ελάχιστος ρυθμός σε bits/s"
+
+msgid "maximum bitrate"
+msgstr "μέγιστος ρυθμός"
+
+msgid "maximum bitrate in bits/s"
+msgstr "μέγιστος ρυθμός σε bits/s"
+
+msgid "encoder"
+msgstr "κωδικοποιητής"
+
+msgid "encoder used to encode this stream"
+msgstr "κωδικοποιητής που χρησιμοποιήθηκε για την κωδικοποίηση αυτής της ροής"
+
+msgid "encoder version"
+msgstr "έκδοση κωδικοποιητή"
+
+msgid "version of the encoder used to encode this stream"
+msgstr ""
+"έκδοση του κωδικοποιητή που χρησιμοποιήθηκε για την κωδικοποίηση αυτής της "
+"ροής"
+
+msgid "serial"
+msgstr "σειριακός"
+
+msgid "serial number of track"
+msgstr "σειριακός αριθμός του κομματιού"
+
+msgid "replaygain track gain"
+msgstr "κέρδος κομματιού replaygain"
+
+msgid "track gain in db"
+msgstr "κέρδος κομματιού σε db"
+
+msgid "replaygain track peak"
+msgstr "κορυφή κομματιού replaygain"
+
+msgid "peak of the track"
+msgstr "κορύφωση του κομματιού"
+
+msgid "replaygain album gain"
+msgstr "κέρδος δίσκου replaygain"
+
+msgid "album gain in db"
+msgstr "κέρδος δίσκου σε db"
+
+msgid "replaygain album peak"
+msgstr "κορυφή δίσκου replaygain"
+
+msgid "peak of the album"
+msgstr "κορύφωση του δίσκου"
+
+msgid "replaygain reference level"
+msgstr "επίπεδο αναφοράς replaygain"
+
+msgid "reference level of track and album gain values"
+msgstr "επίπεδο αναφοράς των τιμών κέρδους κομματιού και δίσκου"
+
+msgid "language code"
+msgstr "κωδικός γλώσσας"
+
+msgid "language code for this stream, conforming to ISO-639-1"
+msgstr "κωδικός γλώσσας γι' αυτή τη ροή, συμμορφούμενος με το ISO-639-1"
+
+msgid "image"
+msgstr "εικόνα"
+
+msgid "image related to this stream"
+msgstr "εικόνα που σχετίζεται με αυτή τη ροή"
+
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
+msgid "preview image"
+msgstr "εικόνα προεπισκόπησης"
+
+msgid "preview image related to this stream"
+msgstr "εικόνα προεπισκόπησης που σχετίζεται με αυτή τη ροή"
+
+msgid "attachment"
+msgstr "συνημμένο"
+
+msgid "file attached to this stream"
+msgstr "αρχείο συνημμένο σε αυτή τη ροή"
+
+msgid "beats per minute"
+msgstr "χτύποι ανά λεπτό"
+
+msgid "number of beats per minute in audio"
+msgstr "αριθμός των χτύπων ανά λεπτό στον ήχο"
+
+msgid "keywords"
+msgstr "λέξεις κλειδιά"
+
+msgid "comma separated keywords describing the content"
+msgstr ""
+"λέξεις κλειδιά διαχωρισμένες με κόμματα, που περιγράφουν το περιεχόμενο"
+
+msgid "geo location name"
+msgstr "όνομα γεωγραφικού εντοπισμού"
+
+msgid ""
+"human readable descriptive location of where the media has been recorded or "
+"produced"
+msgstr "ανθρώπινα κατανοητή περιγραφή τοποθεσίας εγγραφής ή παραγωγής"
+
+msgid "geo location latitude"
+msgstr "γεωγραφικός εντοπισμός πλάτους"
+
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+"γεωγραφικό πλάτος της τοποθεσίας, όπου εγγράφηκε ή παρήχθη το μέσο, σε "
+"μοίρες σύμφωνα με το WGS84 (μηδέν στον ισημερινό, αρνητικές τιμές για πλάτη "
+"στο νότιο ημισφαίριο)"
+
+msgid "geo location longitude"
+msgstr "γεωγραφικός εντοπισμός μήκους"
+
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+"γεωγραφικό μήκος της τοποθεσίας, όπου εγγράφηκε ή παρήχθη το μέσο, σε μοίρες "
+"σύμφωνα με το WGS84 (μηδέν στον πρώτο μεσημβρινό στο Greenwich/UK, αρνητικές "
+"τιμές για μήκη στο δυτικό ημισφαίριο)"
+
+msgid "geo location elevation"
+msgstr "γεωγραφικός εντοπισμός υψομέτρου"
+
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+"υψόμετρο της τοποθεσίας, όπου εγγράφηκε ή παρήχθη το μέσο, σε μέτρα σύμφωνα "
+"με το WGS84 (μηδέν στο επίπεδο της θάλασσας)"
+
+msgid "geo location country"
+msgstr "γεωγραφικός εντοπισμός χώρας"
+
+msgid "country (english name) where the media has been recorded or produced"
+msgstr "χώρα (αγγλικό όνομα) όπου έχει εγγραφεί ή παραχθεί το μέσο"
+
+msgid "geo location city"
+msgstr "γεωγραφικός εντοπισμός πόλης"
+
+msgid "city (english name) where the media has been recorded or produced"
+msgstr "πόλη (αγγλικό όνομα) όπου το μέσο εγγράφηκε ή παρήχθη"
+
+msgid "geo location sublocation"
+msgstr "γεωγραφικός εντοπισμός υποτοποθεσίας"
+
+msgid ""
+"a location whithin a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr ""
+"τοποθεσία μέσα σε μια πόλη όπου το μέσο παρήχθη ή δημιουργήθηκε (π.χ. η "
+"γειτονιά)"
+
+msgid "geo location horizontal error"
+msgstr "γεωγραφικός εντοπισμός οριζόντιου σφάλματος"
+
+msgid "expected error of the horizontal positioning measures (in meters)"
+msgstr "αναμενόμενο σφάλμα των μετρήσεων οριζόντιας τοποθέτησης (σε μέτρα)"
+
+msgid "geo location movement speed"
+msgstr "γεωγραφικός εντοπισμός ταχύτητας κίνησης "
+
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr ""
+"ταχύτητα κίνησης της συσκευής σύλληψης κατά τη διάρκεια εγγραφής σε m/s"
+
+msgid "geo location movement direction"
+msgstr "γεωγραφικός εντοπισμός διεύθυνσης κίνησης "
+
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+"υποδεικνύει την κατεύθυνση κίνησης της συσκευής που συλλαμβάνει ένα μέσο. "
+"Αναγράφεται ως μοίρες με δεκαδικά, το 0 δείχνει το γεωγραφικό βορρά και "
+"αυξάνει δεξιόστροφα"
+
+msgid "geo location capture direction"
+msgstr "γεωγραφικός εντοπισμός κατεύθυνσης σύλληψης"
+
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+"υποδεικνύει την κατεύθυνση που δείχνει η συσκευή κατά τη σύλληψη ενός μέσου. "
+"Αναγράφεται σε μοίρες με δεκαδικά, το 0 υποδεικνύει το γεωγραφικό βορρά και "
+"αυξάνει δεξιόστροφα"
+
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
+msgid "show name"
+msgstr "όνομα εκπομπής"
+
+msgid "Name of the tv/podcast/series show the media is from"
+msgstr ""
+"Όνομα της τηλεοπτικής/φορητής (podcast)/σειράς εκπομπής από την οποία είναι "
+"το μέσο"
+
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
+msgid "show sortname"
+msgstr "όνομα ταξινόμησης εκπομπής"
+
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+"Όνομα της τηλεοπτικής/φορητής (podcast)/σειράς εκπομπής από την οποία είναι "
+"το μέσο, για σκοπούς ταξινόμησης"
+
+msgid "episode number"
+msgstr "αριθμός επεισοδίου"
+
+msgid "The episode number in the season the media is part of"
+msgstr "Ο αριθμός επεισοδίου του κύκλου στο οποίο ανήκει το μέσο"
+
+msgid "season number"
+msgstr "αριθμός κύκλου"
+
+msgid "The season number of the show the media is part of"
+msgstr "Ο αριθμός κύκλου της εκπομπής στην οποία ανήκει το μέσο"
+
+msgid "lyrics"
+msgstr "στίχοι"
+
+msgid "The lyrics of the media, commonly used for songs"
+msgstr "Οι στίχοι του μέσου, συνήθως χρησιμοποιείται για τραγούδια"
+
+msgid "composer sortname"
+msgstr "όνομα ταξινόμησης συνθέτη"
+
+msgid "person(s) who composed the recording, for sorting purposes"
+msgstr "πρόσωπο(α) που συνέθεσε την ηχογράφηση, για σκοπούς ταξινόμησης"
+
+msgid "grouping"
+msgstr "ομαδοποίηση"
+
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+"Ομαδοποιεί σχετιζόμενα μέσα που καλύπτουν πολλαπλά κομμάτια, όπως τα "
+"διαφορετικά μέρη ενός κονσέρτου. Είναι υψηλότερο επίπεδο από το κομμάτι αλλά "
+"χαμηλότερο από το δίσκο"
+
+msgid "user rating"
+msgstr "βαθμολογία χρήστη"
+
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
+msgstr ""
+"Η βαθμολογία που απονεμήθηκε από ένα χρήστη. Όσο υψηλότερη, τόσο περισσότερο "
+"αρέσει στο χρήστη το μέσο"
+
+msgid "device manufacturer"
+msgstr "κατασκευαστής συσκευής"
+
+msgid "Manufacturer of the device used to create this media"
+msgstr ""
+"Κατασκευαστής της συσκευής που χρησιμοποιήθηκε για τη δημιουργία αυτού του "
+"μέσου"
+
+msgid "device model"
+msgstr "μοντέλο συσκευής"
+
+msgid "Model of the device used to create this media"
+msgstr "Μοντέλο της συσκευής που χρησιμοποιήθηκε για τη δημιουργία του μέσου"
+
+msgid "application name"
+msgstr "όνομα εφαρμογής"
+
+msgid "Application used to create the media"
+msgstr "Η εφαρμογή που χρησιμοποιήθηκε για τη δημιουργία  του μέσου"
+
+msgid "application data"
+msgstr "δεδομένα εφαρμογής"
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr "Αυθαίρετα δεδομένα εφαρμογής να ενσωματωθούν σειριακά στο μέσο"
+
+msgid "image orientation"
+msgstr "προσανατολισμός εικόνας"
+
+msgid "How the image should be rotated or flipped before display"
+msgstr ""
+"Πως θα πρέπει να περιστραφεί ή καθρεφτιστεί η εικόνα πριν την εμφάνισή της"
+
+msgid ", "
+msgstr ", "
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "ERROR: από στοιχείο %s: %s\n"
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Επιπλέον πληροφορίες αποσφαλμάτωσης:\n"
+"%s\n"
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "ο καθορισμένος άδειος περιέκτης «%s», δεν επιτρέπεται"
+
+#, c-format
+msgid "no bin \"%s\", skipping"
+msgstr "δεν υπάρχει περιέκτης «%s», παράβλεψη"
+
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr "δεν υπάρχει ιδιότητα «%s» στο στοιχείο «%s»"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "αδυναμία ορισμού ιδιότητας «%s» στο στοιχείο «%s» σε «%s»"
+
+#, c-format
+msgid "could not link %s to %s"
+msgstr "αδυναμία σύνδεσης %s σε %s"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "δεν υπάρχει στοιχείο «%s»"
+
+#, c-format
+msgid "could not parse caps \"%s\""
+msgstr "αδυναμία ανάλυσης δυνατοτήτων «%s»"
+
+msgid "link without source element"
+msgstr "σύνδεση χωρίς στοιχείο προέλευσης"
+
+msgid "link without sink element"
+msgstr "σύνδεση χωρίς στοιχείο προορισμού"
+
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr "δεν υπάρχει στοιχείο προέλευσης για το URI «%s»"
+
+#, c-format
+msgid "no element to link URI \"%s\" to"
+msgstr "δεν υπάρχει στοιχείο για τη σύνδεση του URI «%s» σε"
+
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr "δεν υπάρχει στοιχείο προορισμού για το URI «%s»"
+
+#, c-format
+msgid "could not link sink element for URI \"%s\""
+msgstr "αδυναμία σύνδεσης στοιχείου προορισμού για το URI «%s»"
+
+msgid "empty pipeline not allowed"
+msgstr "δεν επιτρέπεται κενή διασωλήνωση"
+
+msgid "Internal clock error."
+msgstr "Σφάλμα εσωτερικού ρολογιού."
+
+msgid "Internal data flow error."
+msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
+
+msgid "A lot of buffers are being dropped."
+msgstr "Πολλές ενδιάμεσες αποθηκεύσεις απορρίπτονται."
+
+msgid "Internal data flow problem."
+msgstr "Εσωτερικό πρόβλημα ροής δεδομένων."
+
+msgid "Internal data stream error."
+msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
+
+msgid "Filter caps"
+msgstr "Φιλτράρισμα δυνατοτήτων"
+
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+"Περιορισμός των πιθανών επιτρεπόμενων δυνατοτήτων (NULL σημαίνει ANY). Η "
+"ρύθμιση αυτής της ιδιότητας απαιτεί μια αναφορά στο παρεχόμενο αντικείμενο "
+"GstCaps."
+
+msgid "No file name specified for writing."
+msgstr "Δεν έχει καθορισθεί όνομα αρχείου για εγγραφή."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Αδυναμία ανοίγματος αρχείου «%s» για εγγραφή."
+
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Σφάλμα κλεισίματος αρχείου «%s»."
+
+#, c-format
+msgid "Error while seeking in file \"%s\"."
+msgstr "Σφάλμα κατά την αναζήτηση στο αρχείο «%s»."
+
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Σφάλμα κατά την εγγραφή στο αρχείο «%s»."
+
+msgid "No file name specified for reading."
+msgstr "Δεν καθορίσθηκε όνομα αρχείου για ανάγνωση."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Αδυναμία ανοίγματος αρχείου «%s» για ανάγνωση."
+
+#, c-format
+msgid "Could not get info on \"%s\"."
+msgstr "Αδυναμία λήψης πληροφοριών για «%s»."
+
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr "Το «%s» είναι κατάλογος."
+
+#, c-format
+msgid "File \"%s\" is a socket."
+msgstr "Το αρχείο «%s» είναι μια υποδοχή."
+
+msgid "Failed after iterations as requested."
+msgstr "Αποτυχία κατόπιν επαναλήψεων ως ζητήθηκε."
+
+msgid "No Temp directory specified."
+msgstr "Δεν ορίσθηκε προσωρινός κατάλογος (Temp)."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Αδυναμία δημιουργίας προσωρινού αρχείου (temp) «%s»."
+
+msgid "Error while writing to download file."
+msgstr "Σφάλμα κατά την εγγραφή στο αρχείο μεταφόρτωσης."
+
+msgid "caps"
+msgstr "δυνατότητες"
+
+msgid "detected capabilities in stream"
+msgstr "ανιχνεύθηκαν δυνατότητες στη ροή"
+
+msgid "minimum"
+msgstr "ελάχιστο"
+
+msgid "maximum"
+msgstr "μέγιστο"
+
+msgid "force caps"
+msgstr "επιβολή δυνατοτήτων"
+
+msgid "force caps without doing a typefind"
+msgstr "επιβολή δυνατοτήτων χωρίς εκτέλεση typefind"
+
+msgid "Stream contains no data."
+msgstr "Η ροή δεν περιέχει δεδομένα."
+
+msgid "Implemented Interfaces:\n"
+msgstr "Υλοποιημένες διεπαφές:\n"
+
+msgid "readable"
+msgstr "αναγνώσιμο"
+
+msgid "writable"
+msgstr "εγγράψιμο"
+
+msgid "controllable"
+msgstr "ελεγχόμενο"
+
+msgid "changeable in NULL, READY, PAUSED or PLAYING state"
+msgstr "μπορεί να αλλάξει σε κατάσταση NULL, READY, PAUSED ή PLAYING"
+
+msgid "changeable only in NULL, READY or PAUSED state"
+msgstr "μπορεί να αλλάξει μόνο σε κατάσταση NULL, READY ή PAUSED"
+
+msgid "changeable only in NULL or READY state"
+msgstr "μπορεί να αλλάξει μόνο σε κατάσταση NULL ή READY"
+
+msgid "Blacklisted files:"
+msgstr "Αρχεία στη μαύρη λίστα:"
+
+msgid "Total count: "
+msgstr "Συνολική καταμέτρηση:"
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] "%d αρχείο στη μαύρη λίστα"
+msgstr[1] "%d αρχεία στη μαύρη λίστα"
+
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] "%d πρόσθετο"
+msgstr[1] "%d πρόσθετα"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] "%d καταχώρηση στη μαύρη λίστα"
+msgstr[1] "%d καταχωρήσεις στη μαύρη λίστα"
+
+#, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "%d χαρακτηριστικό"
+msgstr[1] "%d χαρακτηριστικά"
+
+msgid "Print all elements"
+msgstr "Εμφάνιση όλων των στοιχείων"
+
+msgid "Print list of blacklisted files"
+msgstr "Εμφάνιση λίστας των αρχείων στη μαύρη λίστα"
+
+msgid ""
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
+msgstr ""
+"Εμφάνιση μιας λίστας που μπορεί να αναλυθεί από υπολογιστή με τα "
+"χαρακτηριστικά που παρέχει το επιλεγμένο πρόσθετο ή όλα τα πρόσθετα.\n"
+"                                       Χρήσιμο σε συνδυασμό με εξωτερικούς "
+"μηχανισμούς αυτόματης εγκατάστασης προσθέτων"
+
+msgid "List the plugin contents"
+msgstr "Απαρίθμηση των περιεχομένων του προσθέτου"
+
+msgid "Print supported URI schemes, with the elements that implement them"
+msgstr "Εμφάνιση υποστηριζόμενων μορφών URI, με τα στοιχεία που τις υλοποιούν"
+
+#, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "Αδυναμία φόρτωσης αρχείου προσθέτου: %s\n"
+
+#, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "Δεν υπάρχει τέτοιο στοιχείο ή πρόσθετο '%s'\n"
+
+msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+msgstr "Χρήση: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+
+#, c-format
+msgid "ERROR: parse of xml file '%s' failed.\n"
+msgstr "ERROR: αποτυχία ανάλυσης αρχείου xml '%s'.\n"
+
+#, c-format
+msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+msgstr ""
+"ERROR: δεν υπάρχει στοιχείο διασωλήνωσης στο ανώτερο επίπεδο στο αρχείο "
+"'%s'.\n"
+
+msgid "WARNING: only one toplevel element is supported at this time.\n"
+msgstr ""
+"WARNING: μόνο ένα στοιχείο σε ανώτερο επίπεδο υποστηρίζεται αυτή τη στιγμή.\n"
+
+#, c-format
+msgid "ERROR: could not parse command line argument %d: %s.\n"
+msgstr "ERROR: αδυναμία ανάλυσης ορίσματος γραμμής εντολής %d: %s.\n"
+
+#, c-format
+msgid "WARNING: element named '%s' not found.\n"
+msgstr "WARNING: το στοιχείο με το όνομα '%s' δεν βρέθηκε.\n"
+
+#, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Ελήφθη το μήνυμα  #%u από το στοιχείο «%s» (%s): "
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Ελήφθη το μήνυμα  #%u από το pad «%s:%s» (%s): "
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Ελήφθη το μήνυμα  #%u από το αντικείμενο «%s» (%s): "
+
+#, c-format
+msgid "Got message #%u (%s): "
+msgstr "Ελήφθη το μήνυμα  #%u (%s): "
+
+#, c-format
+msgid "Got EOS from element \"%s\".\n"
+msgstr "Ελήφθη EOS από το στοιχείο «%s».\n"
+
+#, c-format
+msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr "FOUND TAG      : εύρεση κατά στοιχείο «%s».\n"
+
+#, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "FOUND TAG      : εύρεση κατά pad «%s:%s».\n"
+
+#, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "FOUND TAG      : εύρεση κατά αντικείμενο «%s».\n"
+
+msgid "FOUND TAG\n"
+msgstr "FOUND TAG\n"
+
+#, c-format
+msgid ""
+"INFO:\n"
+"%s\n"
+msgstr ""
+"INFO:\n"
+"%s\n"
+
+#, c-format
+msgid "WARNING: from element %s: %s\n"
+msgstr "WARNING: από το στοιχείο %s: %s\n"
+
+msgid "Prerolled, waiting for buffering to finish...\n"
+msgstr "Προτυλιγμένο, αναμονή για ολοκλήρωση η αποθήκευση ροής…\n"
+
+msgid "buffering..."
+msgstr "προσωρινή αποθήκευση…"
+
+msgid "Done buffering, setting pipeline to PLAYING ...\n"
+msgstr "Αποθήκευση ολοκληρώθηκε, ορισμός διασωλήνωσης σε PLAYING …\n"
+
+msgid "Buffering, setting pipeline to PAUSED ...\n"
+msgstr "Αποθήκευση, ορισμός διασωλήνωσης σε PAUSED …\n"
+
+msgid "Redistribute latency...\n"
+msgstr "Καθυστέρηση αναδιανομής…\n"
+
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr "Ορισμός κατάστασης σε %s όπως ζητήθηκε από %s…\n"
+
+msgid "Interrupt: Stopping pipeline ...\n"
+msgstr "Διακοπή: Τερματισμός διασωλήνωσης…\n"
+
+msgid "Output tags (also known as metadata)"
+msgstr "Ετικέτες εξόδου (επίσης γνωστές ως μεταδεδομένα)"
+
+msgid "Output status information and property notifications"
+msgstr "Πληροφορίες κατάστασης εξόδου και ειδοποιήσεις ιδιοτήτων"
+
+msgid "Do not print any progress information"
+msgstr "Να μην εμφανισθεί καμμία πληροφορία προόδου"
+
+msgid "Output messages"
+msgstr "Μηνύματα εξόδου"
+
+msgid "Do not output status information of TYPE"
+msgstr "Να μην εξάγεται πληροφορία κατάστασης εξόδου του TYPE"
+
+msgid "TYPE1,TYPE2,..."
+msgstr "TYPE1,TYPE2,…"
+
+msgid "Save xml representation of pipeline to FILE and exit"
+msgstr "Αποθήκευση xml αναπαράστασης της διασωλήνωσης στο FILE και έξοδος"
+
+msgid "FILE"
+msgstr "FILE"
+
+msgid "Do not install a fault handler"
+msgstr "Να μην εγκατασταθεί χειριστής σφαλμάτων"
+
+msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+msgstr "Να μην εγκατασταθούν χειριστές σημάτων για SIGUSR1 και SIGUSR2"
+
+msgid "Print alloc trace (if enabled at compile time)"
+msgstr ""
+"Εμφάνιση ίχνους αντιστοίχισης (αν είναι ενεργοποιημένο κατά τη μεταγλώττιση "
+"κώδικα)"
+
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr "Εξαναγκασμός του EOS στις πηγές πριν το κλείσιμο της διασωλήνωσης"
+
+#, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "ERROR: αδυναμία κατασκευής διασωλήνωσης: %s.\n"
+
+msgid "ERROR: pipeline could not be constructed.\n"
+msgstr "ERROR: αδυναμία κατασκευής διασωλήνωσης.\n"
+
+#, c-format
+msgid "WARNING: erroneous pipeline: %s\n"
+msgstr "WARNING: εσφαλμένη διασωλήνωση: %s\n"
+
+msgid "ERROR: the 'pipeline' element wasn't found.\n"
+msgstr "ERROR: το στοιχείο 'διασωλήνωση' δεν βρέθηκε.\n"
+
+msgid "Setting pipeline to PAUSED ...\n"
+msgstr "Ορισμός διασωλήνωσης σε PAUSED …\n"
+
+msgid "ERROR: Pipeline doesn't want to pause.\n"
+msgstr "ERROR: Η διασωλήνωση δεν θέλει να παύσει.\n"
+
+msgid "Pipeline is live and does not need PREROLL ...\n"
+msgstr "Η διασωλήνωση είναι ενεργή και δεν χρειάζεται PREROLL … \n"
+
+msgid "Pipeline is PREROLLING ...\n"
+msgstr "Η διασωλήνωση είναι σε PREROLLING …\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ERROR: η διασωλήνωση δεν θέλει να προτυλιχθεί.\n"
+
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Η διασωλήνωση είναι PREROLLED …\n"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Ορισμός διασωλήνωσης σε PLAYING …\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ERROR: η διασωλήνωση δεν θέλει να αναπαραχθεί.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+"Ενεργοποίηση του EOS κατά τον τερματισμό -- Επιβολή του EOS στη διασωλήνωση\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Αναμονή για EOS…\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Λήψη EOS - διακοπή διασωλήνωσης…\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Προέκυψε σφάλμα κατά την αναμονή για EOS\n"
+
+msgid "Execution ended after %"
+msgstr "Η εκτέλεση τελείωσε μετά %"
+
+msgid "Setting pipeline to READY ...\n"
+msgstr "Ορισμός διασωλήνωσης σε READY …\n"
+
+msgid "Setting pipeline to NULL ...\n"
+msgstr "Ορισμός διασωλήνωσης σε NULL …\n"
+
+msgid "Freeing pipeline ...\n"
+msgstr "Αποδέσμευση της διασωλήνωσης …\n"

@@ -43,12 +43,15 @@
 
 /**
  * gst_byte_reader_new:
- * @data: Data from which the #GstByteReader should read
+ * @data: (in) (transfer none) (array length=size): data from which the
+ *     #GstByteReader should read
  * @size: Size of @data in bytes
  *
  * Create a new #GstByteReader instance, which will read from @data.
  *
- * Returns: a new #GstByteReader instance
+ * Free-function: gst_byte_reader_free
+ *
+ * Returns: (transfer full): a new #GstByteReader instance
  *
  * Since: 0.10.22
  */
@@ -65,12 +68,14 @@ gst_byte_reader_new (const guint8 * data, guint size)
 
 /**
  * gst_byte_reader_new_from_buffer:
- * @buffer: Buffer from which the #GstByteReader should read
+ * @buffer: (transfer none): Buffer from which the #GstByteReader should read
  *
  * Create a new #GstByteReader instance, which will read from the
  * #GstBuffer @buffer.
  *
- * Returns: a new #GstByteReader instance
+ * Free-function: gst_byte_reader_free
+ *
+ * Returns: (transfer full): a new #GstByteReader instance
  *
  * Since: 0.10.22
  */
@@ -85,7 +90,7 @@ gst_byte_reader_new_from_buffer (const GstBuffer * buffer)
 
 /**
  * gst_byte_reader_free:
- * @reader: a #GstByteReader instance
+ * @reader: (in) (transfer full): a #GstByteReader instance
  *
  * Frees a #GstByteReader instance, which was previously allocated by
  * gst_byte_reader_new() or gst_byte_reader_new_from_buffer().
@@ -103,7 +108,8 @@ gst_byte_reader_free (GstByteReader * reader)
 /**
  * gst_byte_reader_init:
  * @reader: a #GstByteReader instance
- * @data: Data from which the #GstByteReader should read
+ * @data: (in) (transfer none) (array length=size): data from which
+ *     the #GstByteReader should read
  * @size: Size of @data in bytes
  *
  * Initializes a #GstByteReader instance to read from @data. This function
@@ -124,7 +130,7 @@ gst_byte_reader_init (GstByteReader * reader, const guint8 * data, guint size)
 /**
  * gst_byte_reader_init_from_buffer:
  * @reader: a #GstByteReader instance
- * @buffer: Buffer from which the #GstByteReader should read
+ * @buffer: (transfer none): Buffer from which the #GstByteReader should read
  *
  * Initializes a #GstByteReader instance to read from @buffer. This function
  * can be called on already initialized instances.
@@ -852,7 +858,8 @@ GST_BYTE_READER_PEEK_GET(64,gdouble,float64_be)
  * gst_byte_reader_get_data:
  * @reader: a #GstByteReader instance
  * @size: Size in bytes
- * @val: Pointer to a #guint8 to store the result
+ * @val: (out) (transfer none) (array length=size): address of a
+ *     #guint8 pointer variable in which to store the result
  *
  * Returns a constant pointer to the current data
  * position if at least @size bytes are left and
@@ -874,7 +881,8 @@ gst_byte_reader_get_data (GstByteReader * reader, guint size,
  * gst_byte_reader_peek_data:
  * @reader: a #GstByteReader instance
  * @size: Size in bytes
- * @val: Pointer to a #guint8 to store the result
+ * @val: (out) (transfer none) (array length=size): address of a
+ *     #guint8 pointer variable in which to store the result
  *
  * Returns a constant pointer to the current data
  * position if at least @size bytes are left and
@@ -896,11 +904,14 @@ gst_byte_reader_peek_data (const GstByteReader * reader, guint size,
  * gst_byte_reader_dup_data:
  * @reader: a #GstByteReader instance
  * @size: Size in bytes
- * @val: Pointer to a #guint8 to store the result
+ * @val: (out) (transfer full) (array length=size): address of a
+ *     #guint8 pointer variable in which to store the result
+ *
+ * Free-function: g_free
  *
  * Returns a newly-allocated copy of the current data
  * position if at least @size bytes are left and
- * updates the current position.
+ * updates the current position. Free with g_free() when no longer needed.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
  *
@@ -1107,7 +1118,8 @@ GST_BYTE_READER_SKIP_STRING (32);
 /**
  * gst_byte_reader_peek_string:
  * @reader: a #GstByteReader instance
- * @str: Pointer to a #gchar to store the result
+ * @str: (out) (transfer none) (array zero-terminated=1): address of a
+ *     #gchar pointer varieble in which to store the result
  *
  * Returns a constant pointer to the current data position if there is
  * a NUL-terminated string in the data (this could be just a NUL terminator).
@@ -1124,7 +1136,8 @@ GST_BYTE_READER_SKIP_STRING (32);
 /**
  * gst_byte_reader_peek_string_utf8:
  * @reader: a #GstByteReader instance
- * @str: Pointer to a #gchar to store the result
+ * @str: (out) (transfer none) (array zero-terminated=1): address of a
+ *     #gchar pointer varieble in which to store the result
  *
  * Returns a constant pointer to the current data position if there is
  * a NUL-terminated string in the data (this could be just a NUL terminator).
@@ -1158,7 +1171,8 @@ gst_byte_reader_peek_string_utf8 (const GstByteReader * reader,
 /**
  * gst_byte_reader_get_string_utf8:
  * @reader: a #GstByteReader instance
- * @str: Pointer to a #gchar to store the result
+ * @str: (out) (transfer none) (array zero-terminated=1): address of a
+ *     #gchar pointer varieble in which to store the result
  *
  * Returns a constant pointer to the current data position if there is
  * a NUL-terminated string in the data (this could be just a NUL terminator),
@@ -1215,7 +1229,10 @@ gst_byte_reader_dup_string_utf##bits (GstByteReader * reader, type ** str) \
 /**
  * gst_byte_reader_dup_string_utf8:
  * @reader: a #GstByteReader instance
- * @str: address of a string pointer to store the result
+ * @str: (out) (transfer full) (array zero-terminated=1): address of a
+ *     #gchar pointer varieble in which to store the result
+ *
+ * Free-function: g_free
  *
  * FIXME:Reads (copies) a NUL-terminated string in the #GstByteReader instance,
  * advancing the current position to the byte after the string. This will work
@@ -1234,7 +1251,10 @@ GST_BYTE_READER_DUP_STRING (8, gchar);
 /**
  * gst_byte_reader_dup_string_utf16:
  * @reader: a #GstByteReader instance
- * @str: address of a #guint16 pointer to store the result
+ * @str: (out) (transfer full) (array zero-terminated=1): address of a
+ *     #guint16 pointer varieble in which to store the result
+ *
+ * Free-function: g_free
  *
  * Returns a newly-allocated copy of the current data position if there is
  * a NUL-terminated UTF-16 string in the data (this could be an empty string
@@ -1259,7 +1279,10 @@ GST_BYTE_READER_DUP_STRING (16, guint16);
 /**
  * gst_byte_reader_dup_string_utf32:
  * @reader: a #GstByteReader instance
- * @str: address of a #guint32 pointer to store the result
+ * @str: (out) (transfer full) (array zero-terminated=1): address of a
+ *     #guint32 pointer varieble in which to store the result
+ *
+ * Free-function: g_free
  *
  * Returns a newly-allocated copy of the current data position if there is
  * a NUL-terminated UTF-32 string in the data (this could be an empty string

@@ -632,6 +632,17 @@ GST_START_TEST (test_flags)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parsing)
+{
+  GstElement *pipeline;
+
+  /* make sure we don't read beyond the end of the string */
+  pipeline = gst_parse_launch_full ("filesrc location=x\\", NULL, 0, NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 parse_suite (void)
 {
@@ -649,6 +660,7 @@ parse_suite (void)
   tcase_add_test (tc_chain, delayed_link);
   tcase_add_test (tc_chain, test_flags);
   tcase_add_test (tc_chain, test_missing_elements);
+  tcase_add_test (tc_chain, test_parsing);
   return s;
 }
 

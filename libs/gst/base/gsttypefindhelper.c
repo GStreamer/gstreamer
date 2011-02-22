@@ -217,11 +217,12 @@ helper_find_get_length (gpointer data)
 /**
  * gst_type_find_helper_get_range_ext:
  * @obj: A #GstObject that will be passed as first argument to @func
- * @func: A generic #GstTypeFindHelperGetRangeFunction that will be used
- *        to access data at random offsets when doing the typefinding
+ * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
+ *        be used to access data at random offsets when doing the typefinding
  * @size: The length in bytes
- * @extension: extenstion of the media
- * @prob: location to store the probability of the found caps, or #NULL
+ * @extension: extension of the media
+ * @prob: (out) (allow-none): location to store the probability of the found
+ *     caps, or #NULL
  *
  * Utility function to do pull-based typefinding. Unlike gst_type_find_helper()
  * however, this function will use the specified function @func to obtain the
@@ -236,8 +237,10 @@ helper_find_get_length (gpointer data)
  * functions for the given extension, which might speed up the typefinding
  * in many cases.
  *
- * Returns: The #GstCaps corresponding to the data stream.
- * Returns #NULL if no #GstCaps matches the data stream.
+ * Free-function: gst_caps_unref
+ *
+ * Returns: (transfer full): the #GstCaps corresponding to the data stream.
+ *     Returns #NULL if no #GstCaps matches the data stream.
  *
  * Since: 0.10.26
  */
@@ -345,10 +348,11 @@ gst_type_find_helper_get_range_ext (GstObject * obj,
 /**
  * gst_type_find_helper_get_range:
  * @obj: A #GstObject that will be passed as first argument to @func
- * @func: A generic #GstTypeFindHelperGetRangeFunction that will be used
- *        to access data at random offsets when doing the typefinding
+ * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
+ *        be used to access data at random offsets when doing the typefinding
  * @size: The length in bytes
- * @prob: location to store the probability of the found caps, or #NULL
+ * @prob: (out) (allow-none): location to store the probability of the found
+ *     caps, or #NULL
  *
  * Utility function to do pull-based typefinding. Unlike gst_type_find_helper()
  * however, this function will use the specified function @func to obtain the
@@ -359,8 +363,10 @@ gst_type_find_helper_get_range_ext (GstObject * obj,
  * callback can then call the upstream peer pad with offsets adjusted for the
  * tag size, for example).
  *
- * Returns: The #GstCaps corresponding to the data stream.
- * Returns #NULL if no #GstCaps matches the data stream.
+ * Free-function: gst_caps_unref
+ *
+ * Returns: (transfer full): the #GstCaps corresponding to the data stream.
+ *     Returns #NULL if no #GstCaps matches the data stream.
  */
 GstCaps *
 gst_type_find_helper_get_range (GstObject * obj,
@@ -377,8 +383,10 @@ gst_type_find_helper_get_range (GstObject * obj,
  *
  * Tries to find what type of data is flowing from the given source #GstPad.
  *
- * Returns: The #GstCaps corresponding to the data stream.
- * Returns #NULL if no #GstCaps matches the data stream.
+ * Free-function: gst_caps_unref
+ *
+ * Returns: (transfer full): the #GstCaps corresponding to the data stream.
+ *     Returns #NULL if no #GstCaps matches the data stream.
  */
 
 GstCaps *
@@ -471,8 +479,9 @@ buf_helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
 /**
  * gst_type_find_helper_for_buffer:
  * @obj: object doing the typefinding, or NULL (used for logging)
- * @buf: a #GstBuffer with data to typefind
- * @prob: location to store the probability of the found caps, or #NULL
+ * @buf: (in) (transfer none): a #GstBuffer with data to typefind
+ * @prob: (out) (allow-none): location to store the probability of the found
+ *     caps, or #NULL
  *
  * Tries to find what type of data is contained in the given #GstBuffer, the
  * assumption being that the buffer represents the beginning of the stream or
@@ -485,8 +494,11 @@ buf_helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
  * and the caps with the highest probability will be returned, or #NULL if
  * the content of the buffer could not be identified.
  *
- * Returns: The #GstCaps corresponding to the data, or #NULL if no type could
- * be found. The caller should free the caps returned with gst_caps_unref().
+ * Free-function: gst_caps_unref
+ *
+ * Returns: (transfer full): the #GstCaps corresponding to the data, or #NULL
+ *     if no type could be found. The caller should free the caps returned
+ *     with gst_caps_unref().
  */
 GstCaps *
 gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
@@ -540,7 +552,7 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
 
 /**
  * gst_type_find_helper_for_extension:
- * @obj: object doing the typefinding, or NULL (used for logging)
+ * @obj: (allow-none): object doing the typefinding, or NULL (used for logging)
  * @extension: an extension
  *
  * Tries to find the best #GstCaps associated with @extension.
@@ -549,8 +561,11 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
  * of rank. The caps of the first typefinder that can handle @extension will be
  * returned.
  *
- * Returns: The #GstCaps corresponding to @extension, or #NULL if no type could
- * be found. The caller should free the caps returned with gst_caps_unref().
+ * Free-function: gst_caps_unref
+ *
+ * Returns: (transfer full): the #GstCaps corresponding to @extension, or
+ *     #NULL if no type could be found. The caller should free the caps
+ *     returned with gst_caps_unref().
  * 
  * Since: 0.10.23
  */

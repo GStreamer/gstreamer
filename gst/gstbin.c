@@ -561,7 +561,7 @@ gst_bin_dispose (GObject * object)
  *
  * Creates a new bin with the given name.
  *
- * Returns: a new #GstBin
+ * Returns: (transfer full): a new #GstBin
  */
 GstElement *
 gst_bin_new (const gchar * name)
@@ -1159,13 +1159,21 @@ had_parent:
 /**
  * gst_bin_add:
  * @bin: a #GstBin
- * @element: the #GstElement to add
+ * @element: (transfer full): the #GstElement to add
  *
  * Adds the given element to the bin.  Sets the element's parent, and thus
  * takes ownership of the element. An element can only be added to one bin.
  *
  * If the element's pads are linked to other pads, the pads will be unlinked
  * before the element is added to the bin.
+ *
+ * <note>
+ * When you add an element to an already-running pipeline, you will have to
+ * take care to set the state of the newly-added element to the desired
+ * state (usually PLAYING or PAUSED, same you set the pipeline to originally)
+ * with gst_element_set_state(), or use gst_element_sync_state_with_parent().
+ * The bin or pipeline will not take care of this for you.
+ * </note>
  *
  * MT safe.
  *
@@ -1455,7 +1463,7 @@ already_removing:
 /**
  * gst_bin_remove:
  * @bin: a #GstBin
- * @element: the #GstElement to remove
+ * @element: (transfer none): the #GstElement to remove
  *
  * Removes the element from the bin, unparenting it as well.
  * Unparenting the element means that the element will be dereferenced,
@@ -1520,7 +1528,7 @@ iterate_child (GstIterator * it, GstElement * child)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: a #GstIterator of #GstElement, or NULL
+ * Returns: (transfer full): a #GstIterator of #GstElement, or NULL
  */
 GstIterator *
 gst_bin_iterate_elements (GstBin * bin)
@@ -1570,7 +1578,7 @@ iterate_child_recurse (GstIterator * it, GstElement * child)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: a #GstIterator of #GstElement, or NULL
+ * Returns: (transfer full): a #GstIterator of #GstElement, or NULL
  */
 GstIterator *
 gst_bin_iterate_recurse (GstBin * bin)
@@ -1641,7 +1649,7 @@ sink_iterator_filter (GstElement * child, GstBin * bin)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: a #GstIterator of #GstElement, or NULL
+ * Returns: (transfer full): a #GstIterator of #GstElement, or NULL
  */
 GstIterator *
 gst_bin_iterate_sinks (GstBin * bin)
@@ -1703,7 +1711,7 @@ src_iterator_filter (GstElement * child, GstBin * bin)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: a #GstIterator of #GstElement, or NULL
+ * Returns: (transfer full): a #GstIterator of #GstElement, or NULL
  */
 GstIterator *
 gst_bin_iterate_sources (GstBin * bin)
@@ -2056,7 +2064,7 @@ gst_bin_sort_iterator_new (GstBin * bin)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: a #GstIterator of #GstElement, or NULL
+ * Returns: (transfer full): a #GstIterator of #GstElement, or NULL
  */
 GstIterator *
 gst_bin_iterate_sorted (GstBin * bin)
@@ -3661,7 +3669,7 @@ compare_name (GstElement * element, const gchar * name)
  *
  * MT safe.  Caller owns returned reference.
  *
- * Returns: the #GstElement with the given name, or NULL
+ * Returns: (transfer full): the #GstElement with the given name, or NULL
  */
 GstElement *
 gst_bin_get_by_name (GstBin * bin, const gchar * name)
@@ -3695,7 +3703,7 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
  *
  * MT safe.  Caller owns returned reference.
  *
- * Returns: the #GstElement with the given name, or NULL
+ * Returns: (transfer full): the #GstElement with the given name, or NULL
  */
 GstElement *
 gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
@@ -3752,7 +3760,7 @@ compare_interface (GstElement * element, gpointer interface)
  *
  * MT safe.  Caller owns returned reference.
  *
- * Returns: A #GstElement inside the bin implementing the interface
+ * Returns: (transfer full): A #GstElement inside the bin implementing the interface
  */
 GstElement *
 gst_bin_get_by_interface (GstBin * bin, GType iface)
@@ -3786,8 +3794,8 @@ gst_bin_get_by_interface (GstBin * bin, GType iface)
  *
  * MT safe.  Caller owns returned value.
  *
- * Returns: a #GstIterator of #GstElement for all elements in the bin
- *          implementing the given interface, or NULL
+ * Returns: (transfer full): a #GstIterator of #GstElement for all elements
+ *          in the bin implementing the given interface, or NULL
  */
 GstIterator *
 gst_bin_iterate_all_by_interface (GstBin * bin, GType iface)

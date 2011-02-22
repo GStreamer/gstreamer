@@ -152,7 +152,9 @@
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @secs. The #GstDateTime is in the local timezone.
  *
- * Return value: the newly created #GstDateTime
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime
  *
  * Since: 0.10.31
  */
@@ -164,7 +166,9 @@
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @secs. The #GstDateTime is in the UTC timezone.
  *
- * Return value: the newly created #GstDateTime
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime
  *
  * Since: 0.10.31
  */
@@ -176,17 +180,17 @@
  * @day: the day of the gregorian month
  * @hour: the hour of the day
  * @minute: the minute of the hour
- * @second: the second of the minute
- * @microsecond: the microsecond of the second
+ * @seconds: the second of the minute
  *
  * Creates a new #GstDateTime using the date and times in the gregorian calendar
  * in the local timezone.
  *
  * @year should be from 1 to 9999, @month should be from 1 to 12, @day from
- * 1 to 31, @hour from 0 to 23, @minutes and @seconds from 0 to 59 and
- * @microsecond from 0 to 999999.
+ * 1 to 31, @hour from 0 to 23, @minutes and @seconds from 0 to 59.
  *
- * Return value: the newly created #GstDateTime
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime
  *
  * Since: 0.10.31
  */
@@ -199,21 +203,21 @@
  * @day: the day of the gregorian month
  * @hour: the hour of the day
  * @minute: the minute of the hour
- * @second: the second of the minute
- * @microsecond: the microsecond of the second
+ * @seconds: the second of the minute
  *
  * Creates a new #GstDateTime using the date and times in the gregorian calendar
  * in the supplied timezone.
  *
  * @year should be from 1 to 9999, @month should be from 1 to 12, @day from
- * 1 to 31, @hour from 0 to 23, @minutes and @seconds from 0 to 59 and
- * @microsecond from 0 to 999999.
+ * 1 to 31, @hour from 0 to 23, @minutes and @seconds from 0 to 59.
  *
  * Note that @tzoffset is a float and was chosen so for being able to handle
  * some fractional timezones, while it still keeps the readability of
  * represeting it in hours for most timezones.
  *
- * Return value: the newly created #GstDateTime
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime
  *
  * Since: 0.10.31
  */
@@ -223,8 +227,10 @@
  *
  * Creates a new #GstDateTime representing the current date and time.
  *
- * Return value: the newly created #GstDateTime which should be freed with
- *   gst_date_time_unref().
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime which should
+ *     be freed with gst_date_time_unref().
  *
  * Since: 0.10.31
  */
@@ -235,8 +241,10 @@
  * Creates a new #GstDateTime that represents the current instant at Universal
  * coordinated time.
  *
- * Return value: the newly created #GstDateTime which should be freed with
- *   gst_date_time_unref().
+ * Free-function: gst_date_time_unref
+ *
+ * Return value: (transfer full): the newly created #GstDateTime which should
+ *   be freed with gst_date_time_unref().
  *
  * Since: 0.10.31
  */
@@ -248,6 +256,14 @@
 #define GST_DATE_TIME_USEC_PER_MINUTE      (G_GINT64_CONSTANT (60000000))
 #define GST_DATE_TIME_USEC_PER_SECOND      (G_GINT64_CONSTANT (1000000))
 #define GST_DATE_TIME_USEC_PER_MILLISECOND (G_GINT64_CONSTANT (1000))
+
+/* Jan 5th 2011 (Edward) : GLib's GDateTime is broken in regards to gmt offset
+ * on macosx. Re-enable it once the following bug is fixed:
+ * https://bugzilla.gnome.org/show_bug.cgi?id=638666 */
+#ifdef HAVE_OSX
+#undef GLIB_HAS_GDATETIME
+#endif
+
 
 #ifndef GLIB_HAS_GDATETIME
 
@@ -767,7 +783,7 @@ gst_date_time_free (GstDateTime * datetime)
  *
  * Atomically increments the reference count of @datetime by one.
  *
- * Return value: the reference @datetime
+ * Return value: (transfer full): the reference @datetime
  *
  * Since: 0.10.31
  */
@@ -782,7 +798,7 @@ gst_date_time_ref (GstDateTime * datetime)
 
 /**
  * gst_date_time_unref:
- * @datetime: a #GstDateTime
+ * @datetime: (transfer full): a #GstDateTime
  *
  * Atomically decrements the reference count of @datetime by one.  When the
  * reference count reaches zero, the structure is freed.

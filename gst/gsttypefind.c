@@ -56,7 +56,8 @@ gst_type_find_get_type (void)
  * @name: The name for registering
  * @rank: The rank (or importance) of this typefind function
  * @func: The #GstTypeFindFunction to use
- * @extensions: Optional extensions that could belong to this type
+ * @extensions: (transfer none) (array zero-terminated=1) (element-type utf8):
+ *     Optional extensions that could belong to this type
  * @possible_caps: Optionally the caps that could be returned when typefinding
  *                 succeeds
  * @data: Optional user data. This user data must be available until the plugin
@@ -123,7 +124,8 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
  * the stream. The returned memory is valid until the typefinding function
  * returns and must not be freed.
  *
- * Returns: the requested data, or NULL if that data is not available.
+ * Returns: (transfer none) (array length=size): the requested data, or NULL
+ *     if that data is not available.
  */
 guint8 *
 gst_type_find_peek (GstTypeFind * find, gint64 offset, guint size)

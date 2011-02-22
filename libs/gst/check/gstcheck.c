@@ -571,19 +571,22 @@ gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes)
 gint
 gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
 {
+  SRunner *sr;
+  gchar *xmlfilename = NULL;
   gint nf;
 
-  SRunner *sr = srunner_create (suite);
+  sr = srunner_create (suite);
 
   if (g_getenv ("GST_CHECK_XML")) {
     /* how lucky we are to have __FILE__ end in .c */
-    gchar *xmlfilename = g_strdup_printf ("%sheck.xml", fname);
+    xmlfilename = g_strdup_printf ("%sheck.xml", fname);
 
     srunner_set_xml (sr, xmlfilename);
   }
 
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);
+  g_free (xmlfilename);
   srunner_free (sr);
   return nf;
 }

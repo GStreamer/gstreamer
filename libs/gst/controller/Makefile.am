@@ -45,10 +45,15 @@ GstController-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@G
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		-I$(top_srcdir) \
+		-I$(top_srcdir)/libs \
+		-I$(top_builddir) \
+		-I$(top_builddir)/libs \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
-		--library=libgstcontroller-@GST_MAJORMINOR@.la \
-		--include=Gst-@GST_MAJORMINOR@ \
+		--library-path=$(top_builddir)/gst \
+		--library=$(top_builddir)/gst/libgstreamer-0.11.la \
+		--library=libgstcontroller-0.11.la \
+		--include=Gst-0.11 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_MAJORMINOR@ \
 		--pkg-export gstreamer-controller-@GST_MAJORMINOR@ \

@@ -228,7 +228,9 @@ gst_query_unref (GstQuery * q)
  *
  * Copies the given query using the copy function of the parent #GstStructure.
  *
- * Returns: a new copy of @q.
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new copy of @q.
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstQuery * gst_query_copy (const GstQuery * q);
@@ -242,9 +244,11 @@ gst_query_copy (const GstQuery * q)
 
 /**
  * gst_query_make_writable:
- * @q: a #GstQuery to make writable
+ * @q: (transfer full): a #GstQuery to make writable
  *
  * Makes a writable query from the given query.
+ *
+ * Returns: (transfer full): a new writable query (possibly same as @q)
  */
 #define         gst_query_make_writable(q)      GST_QUERY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (q)))
 

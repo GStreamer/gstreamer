@@ -608,7 +608,7 @@ gdouble gst_byte_reader_peek_float64_be_unchecked (GstByteReader * reader);
  * gst_byte_reader_peek_data_unchecked:
  * @reader: a #GstByteReader instance
  *
- * Returns: a constant pointer to the current data position
+ * Returns: (transfer none): a constant pointer to the current data position
  *
  * Since: 0.10.25
  */
@@ -622,7 +622,8 @@ const guint8 * gst_byte_reader_peek_data_unchecked (GstByteReader * reader);
  * if at least @size bytes are left. Advances the current read position by
  * @size bytes.
  *
- * Returns: a constant pointer to the current data position.
+ * Returns: (transfer none) (array length=size): a constant pointer to the
+ *     current data position.
  *
  * Since: 0.10.25
  */
@@ -636,8 +637,10 @@ const guint8 * gst_byte_reader_get_data_unchecked (GstByteReader * reader, guint
  * without checking if at least @size bytes are left. Advances the current read
  * position by @size bytes.
  *
- * Returns: a newly-allocated copy of the data @size bytes in size. Free with
- *     g_free() when no longer needed.
+ * Free-function: g_free
+ *
+ * Returns: (transfer full) (array length=size): a newly-allocated copy of the
+ *     data @size bytes in size. Free with g_free() when no longer needed.
  *
  * Since: 0.10.25
  */

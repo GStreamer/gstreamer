@@ -3,7 +3,7 @@ Introduction (1)
 	GStreamer is a library and set of tools to build arbitrary,
 	 reconfigurable filter graphs.  It derives from the OGI Pipeline
 	 and DirectShow (docs, no experience), and is in its second
-	 generation (first was completed/abandonded *in* Atlanta on the
+	 generation (first was completed/abandoned *in* Atlanta on the
 	 way to the Linux Expo).
 	0.1.0 release is scheduled for Oct 31, 1999.
 	Will cover Background, Goals, Design, and Futures

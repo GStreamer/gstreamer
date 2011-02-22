@@ -35,7 +35,7 @@ operations on itself to all of its children. This includes:
 
  - state changes
  - index get/set
- - clock gst/set
+ - clock get/set
 
 The state change distribution is the most complex and is explained in 
 part-states.txt.
@@ -107,7 +107,7 @@ Subclassing
 
 Subclasses of GstBin are free to implement their own add/remove implementations.
 It is a good idea to update the GList of children so that the _iterate() functions
-can still be used if the custom bin allows acces to its children.
+can still be used if the custom bin allows access to its children.
 
 Any bin subclass can also implement a custom message handler by overriding the
 default message handler.

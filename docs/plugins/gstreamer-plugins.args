@@ -998,3 +998,73 @@
 <DEFAULT>0</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstValve::drop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop buffers and events</NICK>
+<BLURB>Whether to drop buffers and events or let them through.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOutputSelector::active-pad</NAME>
+<TYPE>GstPad*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Active pad</NICK>
+<BLURB>Currently active src pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOutputSelector::resend-latest</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Resend latest buffer</NICK>
+<BLURB>Resend latest buffer after a switch to a new pad.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOutputSelector::pad-negotiation-mode</NAME>
+<TYPE>GstOutputSelectorPadNegotiationMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pad negotiation mode</NICK>
+<BLURB>The mode to be used for pad negotiation.</BLURB>
+<DEFAULT>All</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInputSelector::active-pad</NAME>
+<TYPE>GstPad*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Active pad</NICK>
+<BLURB>The currently active sink pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInputSelector::n-pads</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Number of Pads</NICK>
+<BLURB>The number of sink pads.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInputSelector::select-all</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Select all mode</NICK>
+<BLURB>Forwards data from all input pads.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+

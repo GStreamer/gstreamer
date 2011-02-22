@@ -174,7 +174,7 @@ gst_plugin_error_quark (void)
  *     library-specific namespace prefix in order to avoid name conflicts in
  *     case a similar plugin with the same name ever gets added to GStreamer)
  * @description: description of the plugin
- * @init_func: pointer to the init function of this plugin.
+ * @init_func: (scope call): pointer to the init function of this plugin.
  * @version: version string of the plugin
  * @license: effective license of plugin. Must be one of the approved licenses
  *     (see #GstPluginDesc above) or the plugin will not be registered.
@@ -237,7 +237,8 @@ gst_plugin_register_static (gint major_version, gint minor_version,
  *     library-specific namespace prefix in order to avoid name conflicts in
  *     case a similar plugin with the same name ever gets added to GStreamer)
  * @description: description of the plugin
- * @init_full_func: pointer to the init function with user data of this plugin.
+ * @init_full_func: (scope call): pointer to the init function with user data
+ *     of this plugin.
  * @version: version string of the plugin
  * @license: effective license of plugin. Must be one of the approved licenses
  *     (see #GstPluginDesc above) or the plugin will not be registered.
@@ -667,8 +668,8 @@ static GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
  *
  * Loads the given plugin and refs it.  Caller needs to unref after use.
  *
- * Returns: a reference to the existing loaded GstPlugin, a reference to the
- * newly-loaded GstPlugin, or NULL if an error occurred.
+ * Returns: (transfer full): a reference to the existing loaded GstPlugin, a 
+ * reference to the newly-loaded GstPlugin, or NULL if an error occurred.
  */
 GstPlugin *
 gst_plugin_load_file (const gchar * filename, GError ** error)
@@ -993,8 +994,8 @@ gst_plugin_get_origin (GstPlugin * plugin)
  * Gets the #GModule of the plugin. If the plugin isn't loaded yet, NULL is
  * returned.
  *
- * Returns: module belonging to the plugin or NULL if the plugin isn't
- *          loaded yet.
+ * Returns: (transfer none): module belonging to the plugin or NULL if the
+ *          plugin isn't loaded yet.
  */
 GModule *
 gst_plugin_get_module (GstPlugin * plugin)
@@ -1027,7 +1028,7 @@ gst_plugin_is_loaded (GstPlugin * plugin)
  * Gets the plugin specific data cache. If it is %NULL there is no cached data
  * stored. This is the case when the registry is getting rebuilt.
  *
- * Returns: The cached data as a #GstStructure or %NULL.
+ * Returns: (transfer none): The cached data as a #GstStructure or %NULL.
  *
  * Since: 0.10.24
  */
@@ -1042,7 +1043,7 @@ gst_plugin_get_cache_data (GstPlugin * plugin)
 /**
  * gst_plugin_set_cache_data:
  * @plugin: a plugin
- * @cache_data: a structure containing the data to cache
+ * @cache_data: (transfer full): a structure containing the data to cache
  *
  * Adds plugin specific data to cache. Passes the ownership of the structure to
  * the @plugin.
@@ -1249,7 +1250,7 @@ gst_plugin_find_feature_by_name (GstPlugin * plugin, const gchar * name)
  *
  * Load the named plugin. Refs the plugin.
  *
- * Returns: A reference to a loaded plugin, or NULL on error.
+ * Returns: (transfer full): a reference to a loaded plugin, or NULL on error.
  */
 GstPlugin *
 gst_plugin_load_by_name (const gchar * name)
@@ -1279,7 +1280,7 @@ gst_plugin_load_by_name (const gchar * name)
 
 /**
  * gst_plugin_load:
- * @plugin: plugin to load
+ * @plugin: (transfer none): plugin to load
  *
  * Loads @plugin. Note that the *return value* is the loaded plugin; @plugin is
  * untouched. The normal use pattern of this function goes like this:
@@ -1292,7 +1293,7 @@ gst_plugin_load_by_name (const gchar * name)
  * plugin = loaded_plugin;
  * </programlisting>
  *
- * Returns: A reference to a loaded plugin, or NULL on error.
+ * Returns: (transfer full): a reference to a loaded plugin, or NULL on error.
  */
 GstPlugin *
 gst_plugin_load (GstPlugin * plugin)
@@ -1319,7 +1320,7 @@ load_error:
 
 /**
  * gst_plugin_list_free:
- * @list: list of #GstPlugin
+ * @list: (transfer full) (element-type Gst.Plugin): list of #GstPlugin
  *
  * Unrefs each member of @list, then frees the list.
  */

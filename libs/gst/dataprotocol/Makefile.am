@@ -35,8 +35,11 @@ GstDataprotocol-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstdataprotoco
 		--strip-prefix=Gst \
 		--nsversion=@GST_MAJORMINOR@ \
 		-I$(top_srcdir) \
+		-I$(top_builddir) \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
+		--library-path=$(top_builddir)/gst \
+		--library=$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la \
 		--library=libgstdataprotocol-@GST_MAJORMINOR@.la \
 		--include=Gst-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \

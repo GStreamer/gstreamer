@@ -752,7 +752,7 @@ gst_controller_get_value_arrays (GstController * self,
  *
  * All fields of @value_array must be filled correctly. Especially the
  * @value_array->values array must be big enough to keep the requested amount
- * of values.
+ * of values (as indicated by the nbsamples field).
  *
  * The type of the values in the array is the same as the property's type.
  *

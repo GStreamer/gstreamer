@@ -75,8 +75,12 @@ gst_parse_unescape (gchar *str)
   walk = str;
 
   while (*walk) {
-    if (*walk == '\\')
+    if (*walk == '\\') {
       walk++;
+      /* make sure we don't read beyond the end of the string */
+      if (*walk == '\0')
+        break;
+    }
     *str = *walk;
     str++;
     walk++;

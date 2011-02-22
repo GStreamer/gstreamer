@@ -71,7 +71,8 @@ static guint signals[LAST_SIGNAL] = { 0 };
  *
  * Implementors can use #GstObject together with gst_object_get_name()
  *
- * Returns: the child object or %NULL if not found. Unref after usage.
+ * Returns: (transfer full): the child object or %NULL if not found. Unref
+ *     after usage.
  *
  * MT safe.
  */
@@ -120,8 +121,8 @@ gst_child_proxy_get_child_by_name (GstChildProxy * parent, const gchar * name)
  *
  * Fetches a child by its number.
  *
- * Returns: the child object or %NULL if not found (index too high). Unref
- * after usage.
+ * Returns: (transfer full): the child object or %NULL if not found (index
+ *     too high). Unref after usage.
  *
  * MT safe.
  */
@@ -156,8 +157,10 @@ gst_child_proxy_get_children_count (GstChildProxy * parent)
  * gst_child_proxy_lookup:
  * @object: object to lookup the property in
  * @name: name of the property to look up
- * @target: pointer to a #GstObject that takes the real object to set property on
- * @pspec: pointer to take the #GParamSpec describing the property
+ * @target: (out) (allow-none) (transfer full): pointer to a #GstObject that
+ *     takes the real object to set property on
+ * @pspec: (out) (allow-none) (transfer full): pointer to take the #GParamSpec
+ *     describing the property
  *
  * Looks up which object and #GParamSpec would be effected by the given @name.
  *
@@ -223,7 +226,7 @@ gst_child_proxy_lookup (GstObject * object, const gchar * name,
  * gst_child_proxy_get_property:
  * @object: object to query
  * @name: name of the property
- * @value: a #GValue that should take the result.
+ * @value: (out caller-allocates): a #GValue that should take the result.
  *
  * Gets a single property using the GstChildProxy mechanism.
  * You are responsible for for freeing it by calling g_value_unset()

@@ -53,7 +53,7 @@ The task of the application is to construct a pipeline as above using existing
 elements. This is further explained in the pipeline building topic.
 
 The application does not have to manage any of the complexities of the
-actual dataflow/decoding/conversions/synchronsiation etc. but only calls high
+actual dataflow/decoding/conversions/synchronisation etc. but only calls high
 level functions on the pipeline object such as PLAY/PAUSE/STOP.
 
 The application also receives messages and notifications from the pipeline such
@@ -249,7 +249,7 @@ Dataflow and events
 Parallel to the dataflow is a flow of events. Unlike the buffers, events can pass
 both upstream and downstream. Some events only travel upstream others only downstream.
 
-the events are used to denote special conditions in the dataflow such as EOS or 
+The events are used to denote special conditions in the dataflow such as EOS or 
 to inform plugins of special events such as flushing or seeking.
 
 Some events must be serialized with the buffer flow, others don't. Serialized 
@@ -491,7 +491,7 @@ element performs the following steps.
   5) send NEWSEGMENT event to inform all elements of the new position and to complete
      the seek.
 
-In step 1) all dowstream elements have to return from any blocking operations
+In step 1) all downstream elements have to return from any blocking operations
 and have to refuse any further buffers or events different from a FLUSH done.
 
 The first step ensures that the streaming thread eventually unblocks and that

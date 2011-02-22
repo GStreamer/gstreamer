@@ -248,7 +248,10 @@ gst_buffer_list_class_init (GstBufferListClass * list_class)
  * Creates a new, empty #GstBufferList. The caller is responsible for unreffing
  * the returned #GstBufferList.
  *
- * Returns: the new #GstBufferList. gst_buffer_list_unref() after usage.
+ * Free-function: gst_buffer_list_unref
+ *
+ * Returns: (transfer full): the new #GstBufferList. gst_buffer_list_unref()
+ *     after usage.
  *
  * Since: 0.10.24
  */
@@ -297,7 +300,7 @@ gst_buffer_list_n_groups (GstBufferList * list)
 /**
  * gst_buffer_list_foreach:
  * @list: a #GstBufferList
- * @func: a #GstBufferListFunc to call
+ * @func: (scope call): a #GstBufferListFunc to call
  * @user_data: user data passed to @func
  *
  * Call @func with @data for each buffer in @list.
@@ -377,8 +380,8 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
  * Note that this function is not efficient for iterating over the entire list.
  * Use an iterator or gst_buffer_list_foreach() instead.
  *
- * Returns: the buffer at @idx in @group or NULL when there is no buffer. The
- * buffer remains valid as long as @list is valid.
+ * Returns: (transfer none): the buffer at @idx in @group or NULL when there
+ *     is no buffer. The buffer remains valid as long as @list is valid.
  *
  * Since: 0.10.24
  */
@@ -426,8 +429,10 @@ gst_buffer_list_get (GstBufferList * list, guint group, guint idx)
  * Iterate the buffers in @list. The owner of the iterator must also be the
  * owner of a reference to @list while the returned iterator is in use.
  *
- * Returns: a new #GstBufferListIterator of the buffers in @list.
- * gst_buffer_list_iterator_free() after usage
+ * Free-function: gst_buffer_list_iterator_free
+ *
+ * Returns: (transfer full): a new #GstBufferListIterator of the buffers in
+ *     @list. gst_buffer_list_iterator_free() after usage
  *
  * Since: 0.10.24
  */
@@ -448,7 +453,7 @@ gst_buffer_list_iterate (GstBufferList * list)
 
 /**
  * gst_buffer_list_iterator_free:
- * @it: the #GstBufferListIterator to free
+ * @it: (transfer full): the #GstBufferListIterator to free
  *
  * Free the iterator.
  *
@@ -500,7 +505,7 @@ gst_buffer_list_iterator_n_buffers (const GstBufferListIterator * it)
 /**
  * gst_buffer_list_iterator_add:
  * @it: a #GstBufferListIterator
- * @buffer: a #GstBuffer
+ * @buffer: (transfer full): a #GstBuffer
  *
  * Inserts @buffer into the #GstBufferList iterated with @it. The buffer is
  * inserted into the current group, immediately before the buffer that would be
@@ -529,7 +534,7 @@ gst_buffer_list_iterator_add (GstBufferListIterator * it, GstBuffer * buffer)
 /**
  * gst_buffer_list_iterator_add_list:
  * @it: a #GstBufferListIterator
- * @list: a #GList
+ * @list: (transfer full) (element-type Gst.Buffer): a #GList of buffers
  *
  * Inserts @list of buffers into the #GstBufferList iterated with @it. The list is
  * inserted into the current group, immediately before the buffer that would be
@@ -610,7 +615,8 @@ gst_buffer_list_iterator_add_group (GstBufferListIterator * it)
  * The caller will not get a new ref to the returned #GstBuffer and must not
  * unref it.
  *
- * Returns: the next buffer in the current group of the buffer list, or NULL
+ * Returns: (transfer none): the next buffer in the current group of the
+ *     buffer list, or NULL
  *
  * Since: 0.10.24
  */
@@ -707,7 +713,7 @@ gst_buffer_list_iterator_remove (GstBufferListIterator * it)
 /**
  * gst_buffer_list_iterator_take:
  * @it: a #GstBufferListIterator
- * @buffer: a #GstBuffer
+ * @buffer: (transfer full): a #GstBuffer
  *
  * Replaces the last buffer returned by gst_buffer_list_iterator_next() with
  * @buffer in the #GstBufferList iterated with @it and takes ownership of
@@ -718,6 +724,8 @@ gst_buffer_list_iterator_remove (GstBufferListIterator * it)
  * This function unrefs the replaced buffer if it has not been stolen with
  * gst_buffer_list_iterator_steal() and takes ownership of @buffer (i.e. the
  * refcount of @buffer is not increased).
+ *
+ * FIXME 0.11: this conditional taking-ownership is not good for bindings
  *
  * Since: 0.10.24
  */
@@ -742,7 +750,8 @@ gst_buffer_list_iterator_take (GstBufferListIterator * it, GstBuffer * buffer)
  * Returns the last buffer returned by gst_buffer_list_iterator_next() without
  * modifying the refcount of the buffer.
  *
- * Returns: the last buffer returned by gst_buffer_list_iterator_next()
+ * Returns: (transfer none): the last buffer returned by
+ *     gst_buffer_list_iterator_next()
  *
  * Since: 0.10.24
  */
@@ -776,7 +785,7 @@ gst_buffer_list_iterator_steal (GstBufferListIterator * it)
  *
  * See #GstBufferListDoFunction for more details.
  *
- * Returns: the return value from @do_func
+ * Returns: (transfer none): the return value from @do_func
  *
  * Since: 0.10.24
  */
@@ -818,7 +827,8 @@ gst_buffer_list_iterator_do (GstBufferListIterator * it,
  * This function will not move the implicit cursor or in any other way affect
  * the state of the iterator @it or the list.
  *
- * Returns: a new #GstBuffer, gst_buffer_unref() after usage, or NULL
+ * Returns: (transfer full): a new #GstBuffer, gst_buffer_unref() after usage,
+ *     or NULL
  *
  * Since: 0.10.24
  */
