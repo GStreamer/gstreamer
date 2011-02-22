@@ -2087,6 +2087,24 @@ mpegts_packetizer_clear (MpegTSPacketizer2 * packetizer)
 }
 
 void
+mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer)
+{
+  if (packetizer->streams) {
+    int i;
+    for (i = 0; i < 8192; i++) {
+      if (packetizer->streams[i]) {
+        gst_adapter_flush (packetizer->streams[i]->section_adapter,
+            packetizer->streams[i]->section_adapter->size);
+      }
+    }
+  }
+  gst_adapter_flush (packetizer->adapter, packetizer->adapter->size);
+
+  packetizer->offset = 0;
+  packetizer->empty = TRUE;
+}
+
+void
 mpegts_packetizer_remove_stream (MpegTSPacketizer2 * packetizer, gint16 pid)
 {
   MpegTSPacketizerStream *stream = packetizer->streams[pid];

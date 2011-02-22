@@ -138,6 +138,7 @@ GType mpegts_packetizer_get_type(void);
 
 MpegTSPacketizer2 *mpegts_packetizer_new (void);
 void mpegts_packetizer_clear (MpegTSPacketizer2 *packetizer);
+void mpegts_packetizer_flush (MpegTSPacketizer2 *packetizer);
 void mpegts_packetizer_push (MpegTSPacketizer2 *packetizer, GstBuffer *buffer);
 gboolean mpegts_packetizer_has_packets (MpegTSPacketizer2 *packetizer);
 MpegTSPacketizerPacketReturn mpegts_packetizer_next_packet (MpegTSPacketizer2 *packetizer,
