@@ -51,8 +51,9 @@
     --capture-time                    Time to capture video in seconds (default = 10)
     --capture-total                   Total number of captures to be done (default = 1)
     --zoom                            Zoom (100 = 1x (default), 200 = 2x etc.)
-    --video-src                       Video source used in still capture and video recording
-    --image-pp                        Image post-processing element
+    --wrapper-source                  Camera source wrapper used for setting the video source
+    --video-source                    Video source used in still capture and video recording
+    --image-pp                        List of image post-processing elements separated with comma
     --viewfinder-sink                 Viewfinder sink (default = fakesink)
     --image-width                     Width for image capture
     --image-height                    Height for image capture
@@ -113,6 +114,7 @@ static GMainLoop *loop = NULL;
 
 /* commandline options */
 static gchar *videosrc_name = NULL;
+static gchar *wrappersrc_name = NULL;
 static gchar *imagepp_name = NULL;
 static gchar *vfsink_name = NULL;
 static gint image_width = 0;
@@ -472,7 +474,11 @@ setup_pipeline (void)
   if (videosrc_name) {
     GstElement *wrapper;
 
-    wrapper = gst_element_factory_make ("wrappercamerabinsrc", NULL);
+    if (wrappersrc_name)
+      wrapper = gst_element_factory_make (wrappersrc_name, NULL);
+    else
+      wrapper = gst_element_factory_make ("wrappercamerabinsrc", NULL);
+
     if (setup_pipeline_element (wrapper, "video-src", videosrc_name, NULL)) {
       g_object_set (camerabin, "camera-src", wrapper, NULL);
     } else {
@@ -720,7 +726,10 @@ main (int argc, char *argv[])
         "Total number of captures to be done (default = 1)", NULL},
     {"zoom", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_INT, &zoom,
         "Zoom (100 = 1x (default), 200 = 2x etc.)", NULL},
-    {"video-src", '\0', 0, G_OPTION_ARG_STRING, &videosrc_name,
+    {"wrapper-source", '\0', 0, G_OPTION_ARG_STRING, &wrappersrc_name,
+          "Camera source wrapper used for setting the video source (default is wrappercamerabinsrc)",
+        NULL},
+    {"video-source", '\0', 0, G_OPTION_ARG_STRING, &videosrc_name,
         "Video source used in still capture and video recording", NULL},
     {"image-pp", '\0', 0, G_OPTION_ARG_STRING, &imagepp_name,
         "List of image post-processing elements separated with comma", NULL},
@@ -736,8 +745,6 @@ main (int argc, char *argv[])
         "Framerate denominator for viewfinder", NULL},
     {"preview-caps", '\0', 0, G_OPTION_ARG_STRING, &preview_caps_name,
         "Preview caps (e.g. video/x-raw-rgb,width=320,height=240)", NULL},
-    {"video-source", '\0', 0, G_OPTION_ARG_STRING, &videosrc_name,
-        "The video source element", NULL},
     {"viewfinder-filter", '\0', 0, G_OPTION_ARG_STRING, &viewfinder_filter,
         "Filter to process all frames going to viewfinder sink", NULL},
     {"x-width", '\0', 0, G_OPTION_ARG_INT, &x_width,
@@ -801,6 +808,7 @@ main (int argc, char *argv[])
   /* free */
   g_string_free (filename, TRUE);
   g_free (ev_option);
+  g_free (wrappersrc_name);
   g_free (videosrc_name);
   g_free (imagepp_name);
   g_free (vfsink_name);
