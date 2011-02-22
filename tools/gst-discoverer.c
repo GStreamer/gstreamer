@@ -204,8 +204,10 @@ print_stream_info (GstDiscovererStreamInfo * info, void *depth)
       desc =
           gst_stream_video_information_to_string (info,
           GPOINTER_TO_INT (depth) + 1);
-    g_print ("%s", desc);
-    g_free (desc);
+    if (desc) {
+      g_print ("%s", desc);
+      g_free (desc);
+    }
   }
 }
 
