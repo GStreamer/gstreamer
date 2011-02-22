@@ -1336,10 +1336,12 @@ free_stream (GstRtpBinStream * stream)
   g_signal_handler_disconnect (stream->buffer, stream->buffer_ptreq_sig);
   g_signal_handler_disconnect (stream->buffer, stream->buffer_ntpstop_sig);
 
-  gst_element_set_locked_state (stream->demux, TRUE);
+  if (stream->demux)
+    gst_element_set_locked_state (stream->demux, TRUE);
   gst_element_set_locked_state (stream->buffer, TRUE);
 
-  gst_element_set_state (stream->demux, GST_STATE_NULL);
+  if (stream->demux)
+    gst_element_set_state (stream->demux, GST_STATE_NULL);
   gst_element_set_state (stream->buffer, GST_STATE_NULL);
 
   /* now remove this signal, we need this while going to NULL because it to
