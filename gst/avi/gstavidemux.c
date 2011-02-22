@@ -1270,6 +1270,11 @@ gst_avi_demux_parse_superindex (GstAviDemux * avi,
 
   GST_DEBUG_OBJECT (avi, "got %d indexes", num);
 
+  /* this can't work out well ... */
+  if (num > G_MAXUINT32 >> 1 || bpe < 8) {
+    goto invalid_params;
+  }
+
   indexes = g_new (guint64, num + 1);
   for (i = 0; i < num; i++) {
     if (size < 24 + bpe * (i + 1))
@@ -1289,6 +1294,14 @@ too_small:
   {
     GST_ERROR_OBJECT (avi,
         "Not enough data to parse superindex (%d available, 24 needed)", size);
+    if (buf)
+      gst_buffer_unref (buf);
+    return FALSE;
+  }
+invalid_params:
+  {
+    GST_ERROR_OBJECT (avi, "invalid index parameters (num = %d, bpe = %d)",
+        num, bpe);
     if (buf)
       gst_buffer_unref (buf);
     return FALSE;
