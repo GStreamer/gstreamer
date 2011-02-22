@@ -149,6 +149,7 @@ enum
   SIGNAL_AUTOPLUG_SELECT,
   SIGNAL_DRAINED,
   SIGNAL_AUTOPLUG_SORT,
+  SIGNAL_SOURCE_SETUP,
   LAST_SIGNAL
 };
 
@@ -617,6 +618,24 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstURIDecodeBinClass, drained), NULL, NULL,
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+  /**
+   * GstURIDecodeBin::source-setup:
+   * @bin: the uridecodebin.
+   * @source: source element
+   *
+   * This signal is emitted after the source element has been created, so
+   * it can be configured by setting additional properties (e.g. set a
+   * proxy server for an http source, or set the device and read speed for
+   * an audio cd source). This is functionally equivalent to connecting to
+   * the notify::source signal, but more convenient.
+   *
+   * Since: 0.10.33
+   */
+  gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP] =
+      g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_query);
   gstelement_class->change_state =
@@ -1876,6 +1895,9 @@ setup_source (GstURIDecodeBin * decoder)
 
   /* notify of the new source used */
   g_object_notify (G_OBJECT (decoder), "source");
+
+  g_signal_emit (decoder, gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP],
+      0, decoder->source);
 
   /* remove the old decoders now, if any */
   remove_decoders (decoder, FALSE);

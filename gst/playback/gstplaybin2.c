@@ -509,6 +509,7 @@ enum
   SIGNAL_GET_VIDEO_PAD,
   SIGNAL_GET_AUDIO_PAD,
   SIGNAL_GET_TEXT_PAD,
+  SIGNAL_SOURCE_SETUP,
   LAST_SIGNAL
 };
 
@@ -909,6 +910,24 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBinClass, text_tags_changed), NULL, NULL,
       gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+
+  /**
+   * GstPlayBin2::source-setup:
+   * @playbin: a #GstPlayBin2
+   * @source: source element
+   *
+   * This signal is emitted after the source element has been created, so
+   * it can be configured by setting additional properties (e.g. set a
+   * proxy server for an http source, or set the device and read speed for
+   * an audio cd source). This is functionally equivalent to connecting to
+   * the notify::source signal, but more convenient.
+   *
+   * Since: 0.10.33
+   */
+  gst_play_bin_signals[SIGNAL_SOURCE_SETUP] =
+      g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
    * GstPlayBin2::get-video-tags
@@ -3121,6 +3140,9 @@ notify_source_cb (GstElement * uridecodebin, GParamSpec * pspec,
   GST_OBJECT_UNLOCK (playbin);
 
   g_object_notify (G_OBJECT (playbin), "source");
+
+  g_signal_emit (playbin, gst_play_bin_signals[SIGNAL_SOURCE_SETUP],
+      0, playbin->source);
 }
 
 /* must be called with the group lock */
