@@ -464,6 +464,49 @@ GST_START_TEST (test_refcount)
 
 GST_END_TEST;
 
+static void
+source_setup (GstElement * playbin, GstElement * source, GstElement ** p_src)
+{
+  GST_LOG ("source-setup called, source = %s", G_OBJECT_TYPE_NAME (source));
+  *p_src = gst_object_ref (source);
+  GST_LOG ("here");
+}
+
+GST_START_TEST (test_source_setup)
+{
+  GstElement *playbin, *videosink;
+  GstElement *src = NULL;
+
+  if (!gst_default_registry_check_feature_version ("redvideosrc", 0, 10, 0)) {
+    fail_unless (gst_element_register (NULL, "redvideosrc", GST_RANK_PRIMARY,
+            gst_red_video_src_get_type ()));
+  }
+
+  playbin = gst_element_factory_make ("playbin2", NULL);
+  g_object_set (playbin, "uri", "redvideo://", NULL);
+
+  videosink = gst_element_factory_make ("fakesink", "myvideosink");
+  g_object_set (playbin, "video-sink", videosink, NULL);
+
+  g_signal_connect (playbin, "source-setup", G_CALLBACK (source_setup), &src);
+
+  fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless_equals_int (gst_element_get_state (playbin, NULL, NULL,
+          GST_CLOCK_TIME_NONE), GST_STATE_CHANGE_SUCCESS);
+
+  fail_unless (src != NULL);
+  fail_unless (G_OBJECT_TYPE (src) == gst_red_video_src_get_type ());
+
+  fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (playbin);
+  gst_object_unref (src);
+}
+
+GST_END_TEST;
+
 /*** redvideo:// source ***/
 
 static GstURIType
@@ -696,6 +739,7 @@ playbin2_suite (void)
   tcase_add_test (tc_chain, test_missing_suburisource_handler);
   tcase_add_test (tc_chain, test_missing_primary_decoder);
   tcase_add_test (tc_chain, test_refcount);
+  tcase_add_test (tc_chain, test_source_setup);
 
   /* one day we might also want to have the following checks:
    * tcase_add_test (tc_chain, test_missing_secondary_decoder_one_fatal);
