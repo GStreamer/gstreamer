@@ -560,13 +560,19 @@ gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   spec->buffer_time = src->buffer_time;
   spec->latency_time = src->latency_time;
 
+  GST_OBJECT_LOCK (src);
   if (!gst_ring_buffer_parse_caps (spec, caps))
+  {
+    GST_OBJECT_UNLOCK (src);
     goto parse_error;
+  }
 
   /* calculate suggested segsize and segtotal */
   spec->segsize =
       spec->rate * spec->bytes_per_sample * spec->latency_time / GST_MSECOND;
   spec->segtotal = spec->buffer_time / spec->latency_time;
+
+  GST_OBJECT_UNLOCK (src);
 
   GST_DEBUG ("release old ringbuffer");
 
