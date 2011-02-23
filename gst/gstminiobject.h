@@ -107,8 +107,6 @@ typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
 /**
  * GstMiniObjectFlags:
  * @GST_MINI_OBJECT_FLAG_READONLY: is the miniobject readonly or writable
- * @GST_MINI_OBJECT_FLAG_RESERVED1: a flag reserved for internal use e.g. as
- *     GST_BUFFER_FLAG_MEDIA4. Since: 0.10.33.
  * @GST_MINI_OBJECT_FLAG_LAST: first flag that can be used by subclasses.
  *
  * Flags for the mini object
@@ -116,7 +114,6 @@ typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
 typedef enum
 {
   GST_MINI_OBJECT_FLAG_READONLY = (1<<0),
-  GST_MINI_OBJECT_FLAG_RESERVED1 = (1<<1),
   /* padding */
   GST_MINI_OBJECT_FLAG_LAST = (1<<4)
 } GstMiniObjectFlags;
