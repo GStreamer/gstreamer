@@ -199,6 +199,21 @@ mpegts_packetizer_finalize (GObject * object)
     G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize (object);
 }
 
+guint64
+mpegts_packetizer_compute_pcr (const guint8 * data)
+{
+  guint32 pcr1;
+  guint16 pcr2;
+  guint64 pcr, pcr_ext;
+
+  pcr1 = GST_READ_UINT32_BE (data);
+  pcr2 = GST_READ_UINT16_BE (data + 4);
+  pcr = ((guint64) pcr1) << 1;
+  pcr |= (pcr2 & 0x8000) >> 15;
+  pcr_ext = (pcr2 & 0x01ff);
+  return pcr * 300 + pcr_ext % 300;
+}
+
 static gboolean
 mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
     packetizer, MpegTSPacketizerPacket * packet)
@@ -240,31 +255,13 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
 
   /* PCR */
   if (afcflags & MPEGTS_AFC_PCR_FLAG) {
-    guint32 pcr1;
-    guint16 pcr2;
-    guint64 pcr, pcr_ext;
-
-    pcr1 = GST_READ_UINT32_BE (data);
-    pcr2 = GST_READ_UINT16_BE (data + 4);
-    pcr = ((guint64) pcr1) << 1;
-    pcr |= (pcr2 & 0x8000) >> 15;
-    pcr_ext = (pcr2 & 0x01ff);
-    packet->pcr = pcr * 300 + pcr_ext % 300;;
+    packet->pcr = mpegts_packetizer_compute_pcr (data);
     *data += 6;
   }
 
   /* OPCR */
   if (afcflags & MPEGTS_AFC_OPCR_FLAG) {
-    guint32 pcr1;
-    guint16 pcr2;
-    guint64 pcr, pcr_ext;
-
-    pcr1 = GST_READ_UINT32_BE (data);
-    pcr2 = GST_READ_UINT16_BE (data + 4);
-    pcr = ((guint64) pcr1) << 1;
-    pcr |= (pcr2 & 0x8000) >> 15;
-    pcr_ext = (pcr2 & 0x01ff);
-    packet->opcr = pcr * 300 + pcr_ext % 300;;
+    packet->opcr = mpegts_packetizer_compute_pcr (data);
     *data += 6;
   }
 

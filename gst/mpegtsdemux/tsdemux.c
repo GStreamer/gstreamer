@@ -997,20 +997,13 @@ process_pcr (MpegTSBase * base, guint64 initoff, GstClockTime * pcr,
 /*      GST_DEBUG ("offset %" G_GUINT64_FORMAT, GST_BUFFER_OFFSET (buf) + offset);
       GST_MEMDUMP ("something", GST_BUFFER_DATA (buf) + offset, 16);*/
       if ((*(br.data + offset + 5)) & 0x10) {
-        guint16 pcr2;
-        guint64 pcr, pcr_ext;
+        guint64 lpcr = mpegts_packetizer_compute_pcr (br.data + offset + 6);
 
-        pcr = ((guint64) GST_READ_UINT32_BE (br.data + offset + 6)) << 1;
-        pcr2 = GST_READ_UINT16_BE (br.data + offset + 10);
-        pcr |= (pcr2 & 0x8000) >> 15;
-        pcr_ext = (pcr2 & 0x01ff);
-        pcr = pcr * 300 + pcr_ext % 300;
-
-        GST_DEBUG ("Found PCR %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT
-            " at offset %" G_GUINT64_FORMAT, pcr,
-            GST_TIME_ARGS (PCRTIME_TO_GSTTIME (pcr)),
+        GST_INFO ("Found PCR %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT
+            " at offset %" G_GUINT64_FORMAT, lpcr,
+            GST_TIME_ARGS (PCRTIME_TO_GSTTIME (lpcr)),
             GST_BUFFER_OFFSET (buf) + offset);
-        pcrs[nbpcr] = pcr;
+        pcrs[nbpcr] = lpcr;
         pcroffs[nbpcr] = GST_BUFFER_OFFSET (buf) + offset;
         /* Safeguard against bogus PCR (by detecting if it's the same as the
          * previous one or wheter the difference with the previous one is

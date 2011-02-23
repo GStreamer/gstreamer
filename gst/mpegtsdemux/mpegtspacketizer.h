@@ -161,6 +161,7 @@ GstStructure *mpegts_packetizer_parse_eit (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
 GstStructure *mpegts_packetizer_parse_tdt (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
+guint64 mpegts_packetizer_compute_pcr(const guint8 * data);
 
 G_END_DECLS
 
