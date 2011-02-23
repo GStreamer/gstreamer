@@ -43,7 +43,7 @@ G_BEGIN_DECLS
 #define GST_IS_ENCODING_PROFILE(obj)			\
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ENCODING_PROFILE))
 typedef struct _GstEncodingProfile GstEncodingProfile;
-typedef GstMiniObjectClass GstEncodingProfileClass;
+typedef GObjectClass GstEncodingProfileClass;
 GType gst_encoding_profile_get_type (void);
 
 
@@ -115,7 +115,7 @@ GType gst_encoding_audio_profile_get_type (void);
  *
  * Since: 0.10.32
  */
-#define gst_encoding_profile_unref(profile) (gst_mini_object_unref ((GstMiniObject*) profile))
+#define gst_encoding_profile_unref(profile) (g_object_unref ((GObject*) profile))
 
 /**
  * gst_encoding_profile_ref:
@@ -125,7 +125,7 @@ GType gst_encoding_audio_profile_get_type (void);
  *
  * Since: 0.10.32
  */
-#define gst_encoding_profile_ref(profile) (gst_mini_object_ref ((GstMiniObject*) profile))
+#define gst_encoding_profile_ref(profile) (g_object_ref ((GObject*) profile))
 
 const gchar *	gst_encoding_profile_get_name(GstEncodingProfile *profile);
 const gchar *	gst_encoding_profile_get_description(GstEncodingProfile *profile);

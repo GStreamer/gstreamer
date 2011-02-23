@@ -74,7 +74,7 @@
 
 struct _GstEncodingTarget
 {
-  GstMiniObject parent;
+  GObject parent;
 
   gchar *name;
   gchar *category;
@@ -85,7 +85,7 @@ struct _GstEncodingTarget
   gchar *keyfile;
 };
 
-G_DEFINE_TYPE (GstEncodingTarget, gst_encoding_target, GST_TYPE_MINI_OBJECT);
+G_DEFINE_TYPE (GstEncodingTarget, gst_encoding_target, G_TYPE_OBJECT);
 
 static void
 gst_encoding_target_init (GstEncodingTarget * target)
@@ -94,8 +94,10 @@ gst_encoding_target_init (GstEncodingTarget * target)
 }
 
 static void
-gst_encoding_target_finalize (GstEncodingTarget * target)
+gst_encoding_target_finalize (GObject * object)
 {
+  GstEncodingTarget *target = (GstEncodingTarget *) object;
+
   GST_DEBUG ("Finalizing");
 
   if (target->name)
@@ -110,10 +112,9 @@ gst_encoding_target_finalize (GstEncodingTarget * target)
 }
 
 static void
-gst_encoding_target_class_init (GstMiniObjectClass * klass)
+gst_encoding_target_class_init (GObjectClass * klass)
 {
-  klass->finalize =
-      (GstMiniObjectFinalizeFunction) gst_encoding_target_finalize;
+  klass->finalize = gst_encoding_target_finalize;
 }
 
 /**
@@ -281,7 +282,7 @@ gst_encoding_target_new (const gchar * name, const gchar * category,
   if (!validate_name (category))
     goto invalid_category;
 
-  res = (GstEncodingTarget *) gst_mini_object_new (GST_TYPE_ENCODING_TARGET);
+  res = (GstEncodingTarget *) g_object_new (GST_TYPE_ENCODING_TARGET, NULL);
   res->name = g_strdup (name);
   res->category = g_strdup (category);
   res->description = g_strdup (description);

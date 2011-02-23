@@ -89,7 +89,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ENCODING_TARGET))
 
 typedef struct _GstEncodingTarget GstEncodingTarget;
-typedef GstMiniObjectClass GstEncodingTargetClass;
+typedef GObjectClass GstEncodingTargetClass;
 
 GType gst_encoding_target_get_type (void);
 
@@ -102,7 +102,7 @@ GType gst_encoding_target_get_type (void);
  * Since: 0.10.32
  */
 #define gst_encoding_target_unref(target) \
-  (gst_mini_object_unref ((GstMiniObject*) target))
+  (g_object_unref ((GObject*) target))
 
 /**
  * gst_encoding_target_ref:
@@ -113,7 +113,7 @@ GType gst_encoding_target_get_type (void);
  * Since: 0.10.32
  */
 #define gst_encoding_target_ref(target) \
-  (gst_mini_object_ref ((GstMiniObject*) target))
+  (g_object_ref ((GObject*) target))
 
 GstEncodingTarget *
 gst_encoding_target_new (const gchar *name, const gchar *category,

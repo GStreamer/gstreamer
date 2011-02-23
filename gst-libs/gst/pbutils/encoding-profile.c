@@ -133,7 +133,7 @@
 
 struct _GstEncodingProfile
 {
-  GstMiniObject parent;
+  GObject parent;
 
   /*< public > */
   gchar *name;
@@ -165,8 +165,7 @@ gst_encoding_profile_get_type (void)
   static volatile gsize g_define_type_id__volatile = 0;
 
   if (g_once_init_enter (&g_define_type_id__volatile)) {
-    GType g_define_type_id =
-        g_type_register_static_simple (GST_TYPE_MINI_OBJECT,
+    GType g_define_type_id = g_type_register_static_simple (G_TYPE_OBJECT,
         g_intern_static_string ("GstEncodingProfile"),
         sizeof (GstEncodingProfileClass),
         (GClassInitFunc) gst_encoding_profile_class_intern_init,
@@ -194,8 +193,9 @@ gst_encoding_profile_get_type (void)
 }
 
 static void
-gst_encoding_profile_finalize (GstEncodingProfile * prof)
+gst_encoding_profile_finalize (GObject * object)
 {
+  GstEncodingProfile *prof = (GstEncodingProfile *) object;
   if (prof->name)
     g_free (prof->name);
   if (prof->format)
@@ -209,10 +209,9 @@ gst_encoding_profile_finalize (GstEncodingProfile * prof)
 }
 
 static void
-gst_encoding_profile_class_init (GstMiniObjectClass * klass)
+gst_encoding_profile_class_init (GObjectClass * klass)
 {
-  klass->finalize =
-      (GstMiniObjectFinalizeFunction) gst_encoding_profile_finalize;
+  klass->finalize = gst_encoding_profile_finalize;
 }
 
 /**
@@ -432,20 +431,21 @@ gst_encoding_container_profile_init (GstEncodingContainerProfile * prof)
 }
 
 static void
-gst_encoding_container_profile_finalize (GstEncodingContainerProfile * prof)
+gst_encoding_container_profile_finalize (GObject * object)
 {
+  GstEncodingContainerProfile *prof = (GstEncodingContainerProfile *) object;
+
   g_list_foreach (prof->encodingprofiles, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (prof->encodingprofiles);
 
-  GST_MINI_OBJECT_CLASS (gst_encoding_container_profile_parent_class)->finalize
-      ((GstMiniObject *) prof);
+  G_OBJECT_CLASS (gst_encoding_container_profile_parent_class)->finalize
+      ((GObject *) prof);
 }
 
 static void
-gst_encoding_container_profile_class_init (GstMiniObjectClass * klass)
+gst_encoding_container_profile_class_init (GObjectClass * klass)
 {
-  klass->finalize =
-      (GstMiniObjectFinalizeFunction) gst_encoding_container_profile_finalize;
+  klass->finalize = gst_encoding_container_profile_finalize;
 }
 
 const GList *
@@ -475,7 +475,7 @@ gst_encoding_video_profile_init (GstEncodingVideoProfile * prof)
 }
 
 static void
-gst_encoding_video_profile_class_init (GstMiniObjectClass * klass)
+gst_encoding_video_profile_class_init (GObjectClass * klass)
 {
 }
 
@@ -562,7 +562,7 @@ gst_encoding_audio_profile_init (GstEncodingAudioProfile * prof)
 }
 
 static void
-gst_encoding_audio_profile_class_init (GstMiniObjectClass * klass)
+gst_encoding_audio_profile_class_init (GObjectClass * klass)
 {
 }
 
@@ -688,7 +688,7 @@ common_creation (GType objtype, GstCaps * format, const gchar * preset,
 {
   GstEncodingProfile *prof;
 
-  prof = (GstEncodingProfile *) gst_mini_object_new (objtype);
+  prof = (GstEncodingProfile *) g_object_new (objtype, NULL);
 
   if (name)
     prof->name = g_strdup (name);
@@ -947,7 +947,7 @@ string_to_profile_transform (const GValue * src_value, GValue * dest_value)
   profile = combo_search (profilename);
 
   if (profile)
-    gst_value_take_mini_object (dest_value, (GstMiniObject *) profile);
+    g_value_take_object (dest_value, (GObject *) profile);
 }
 
 static gboolean
@@ -958,7 +958,7 @@ gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
   profile = combo_search (s);
 
   if (profile) {
-    gst_value_take_mini_object (value, (GstMiniObject *) profile);
+    g_value_take_object (value, (GObject *) profile);
     return TRUE;
   }
 

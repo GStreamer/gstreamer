@@ -597,7 +597,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       return parent;
     else
       return (GstDiscovererStreamInfo *)
-          gst_mini_object_new (GST_TYPE_DISCOVERER_STREAM_INFO);
+          g_object_new (GST_TYPE_DISCOVERER_STREAM_INFO, NULL);
   }
 
   gst_structure_id_get (st, _CAPS_QUARK, GST_TYPE_CAPS, &caps, NULL);
@@ -611,7 +611,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info = (GstDiscovererAudioInfo *) parent;
     else {
       info = (GstDiscovererAudioInfo *)
-          gst_mini_object_new (GST_TYPE_DISCOVERER_AUDIO_INFO);
+          g_object_new (GST_TYPE_DISCOVERER_AUDIO_INFO, NULL);
       info->parent.caps = caps;
     }
 
@@ -652,7 +652,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info = (GstDiscovererVideoInfo *) parent;
     else {
       info = (GstDiscovererVideoInfo *)
-          gst_mini_object_new (GST_TYPE_DISCOVERER_VIDEO_INFO);
+          g_object_new (GST_TYPE_DISCOVERER_VIDEO_INFO, NULL);
       info->parent.caps = caps;
     }
 
@@ -703,7 +703,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info = parent;
     else {
       info = (GstDiscovererStreamInfo *)
-          gst_mini_object_new (GST_TYPE_DISCOVERER_STREAM_INFO);
+          g_object_new (GST_TYPE_DISCOVERER_STREAM_INFO, NULL);
       info->caps = caps;
     }
 
@@ -866,7 +866,7 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
     GST_DEBUG ("next is a list of %d entries", len);
 
     cont = (GstDiscovererContainerInfo *)
-        gst_mini_object_new (GST_TYPE_DISCOVERER_CONTAINER_INFO);
+        g_object_new (GST_TYPE_DISCOVERER_CONTAINER_INFO, NULL);
     cont->parent.caps = caps;
     res = (GstDiscovererStreamInfo *) cont;
 
@@ -1143,7 +1143,7 @@ _setup_locked (GstDiscoverer * dc)
 
   /* Pop URI off the pending URI list */
   dc->priv->current_info =
-      (GstDiscovererInfo *) gst_mini_object_new (GST_TYPE_DISCOVERER_INFO);
+      (GstDiscovererInfo *) g_object_new (GST_TYPE_DISCOVERER_INFO, NULL);
   dc->priv->current_info->uri = (gchar *) dc->priv->pending_uris->data;
   dc->priv->pending_uris =
       g_list_delete_link (dc->priv->pending_uris, dc->priv->pending_uris);

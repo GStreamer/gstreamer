@@ -19,7 +19,7 @@
  */
 
 struct _GstDiscovererStreamInfo {
-  GstMiniObject          parent;
+  GObject                parent;
 
   GstDiscovererStreamInfo *previous;  /* NULL for starting points */
   GstDiscovererStreamInfo *next; /* NULL for containers */
@@ -65,7 +65,7 @@ struct _GstDiscovererVideoInfo {
 };
 
 struct _GstDiscovererInfo {
-  GstMiniObject parent;
+  GObject parent;
 
   gchar *uri;
   GstDiscovererResult result;

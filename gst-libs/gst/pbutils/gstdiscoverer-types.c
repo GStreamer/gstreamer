@@ -42,7 +42,7 @@ static GstDiscovererVideoInfo
 /* Per-stream information */
 
 G_DEFINE_TYPE (GstDiscovererStreamInfo, gst_discoverer_stream_info,
-    GST_TYPE_MINI_OBJECT);
+    G_TYPE_OBJECT);
 
 static void
 gst_discoverer_stream_info_init (GstDiscovererStreamInfo * info)
@@ -51,10 +51,12 @@ gst_discoverer_stream_info_init (GstDiscovererStreamInfo * info)
 }
 
 static void
-gst_discoverer_stream_info_finalize (GstDiscovererStreamInfo * info)
+gst_discoverer_stream_info_finalize (GObject * object)
 {
+  GstDiscovererStreamInfo *info = (GstDiscovererStreamInfo *) object;
+
   if (info->next)
-    gst_mini_object_unref ((GstMiniObject *) info->next);
+    g_object_unref ((GObject *) info->next);
 
   if (info->caps)
     gst_caps_unref (info->caps);
@@ -66,25 +68,17 @@ gst_discoverer_stream_info_finalize (GstDiscovererStreamInfo * info)
     gst_structure_free (info->misc);
 }
 
-static GstDiscovererStreamInfo *
-gst_discoverer_stream_info_copy (GstDiscovererStreamInfo * info)
-{
-  return gst_discoverer_info_copy_int (info, NULL);
-}
-
 static void
-gst_discoverer_stream_info_class_init (GstMiniObjectClass * klass)
+gst_discoverer_stream_info_class_init (GObjectClass * klass)
 {
-  klass->finalize =
-      (GstMiniObjectFinalizeFunction) gst_discoverer_stream_info_finalize;
-  klass->copy = (GstMiniObjectCopyFunction) gst_discoverer_stream_info_copy;
+  klass->finalize = gst_discoverer_stream_info_finalize;
 }
 
 static GstDiscovererStreamInfo *
 gst_discoverer_stream_info_new (void)
 {
   return (GstDiscovererStreamInfo *)
-      gst_mini_object_new (GST_TYPE_DISCOVERER_STREAM_INFO);
+      g_object_new (GST_TYPE_DISCOVERER_STREAM_INFO, NULL);
 }
 
 static GstDiscovererStreamInfo *
@@ -147,28 +141,28 @@ static GstDiscovererContainerInfo *
 gst_discoverer_container_info_new (void)
 {
   return (GstDiscovererContainerInfo *)
-      gst_mini_object_new (GST_TYPE_DISCOVERER_CONTAINER_INFO);
+      g_object_new (GST_TYPE_DISCOVERER_CONTAINER_INFO, NULL);
 }
 
 static void
-gst_discoverer_container_info_finalize (GstDiscovererContainerInfo * info)
+gst_discoverer_container_info_finalize (GObject * object)
 {
+  GstDiscovererContainerInfo *info = (GstDiscovererContainerInfo *) object;
   GList *tmp;
 
   for (tmp = ((GstDiscovererContainerInfo *) info)->streams; tmp;
       tmp = tmp->next)
-    gst_mini_object_unref ((GstMiniObject *) tmp->data);
+    g_object_unref ((GObject *) tmp->data);
 
   gst_discoverer_stream_info_list_free (info->streams);
 
-  gst_discoverer_stream_info_finalize ((GstDiscovererStreamInfo *) info);
+  gst_discoverer_stream_info_finalize ((GObject *) info);
 }
 
 static void
-gst_discoverer_container_info_class_init (GstMiniObjectClass * klass)
+gst_discoverer_container_info_class_init (GObjectClass * klass)
 {
-  klass->finalize =
-      (GstMiniObjectFinalizeFunction) gst_discoverer_container_info_finalize;
+  klass->finalize = gst_discoverer_container_info_finalize;
 }
 
 static GstDiscovererContainerInfo *
@@ -214,7 +208,7 @@ static GstDiscovererAudioInfo *
 gst_discoverer_audio_info_new (void)
 {
   return (GstDiscovererAudioInfo *)
-      gst_mini_object_new (GST_TYPE_DISCOVERER_AUDIO_INFO);
+      g_object_new (GST_TYPE_DISCOVERER_AUDIO_INFO, NULL);
 }
 
 static GstDiscovererAudioInfo *
@@ -238,7 +232,7 @@ G_DEFINE_TYPE (GstDiscovererVideoInfo, gst_discoverer_video_info,
     GST_TYPE_DISCOVERER_STREAM_INFO);
 
 static void
-gst_discoverer_video_info_class_init (GstMiniObjectClass * klass)
+gst_discoverer_video_info_class_init (GObjectClass * klass)
 {
   /* Nothing to initialize */
 }
@@ -253,7 +247,7 @@ static GstDiscovererVideoInfo *
 gst_discoverer_video_info_new (void)
 {
   return (GstDiscovererVideoInfo *)
-      gst_mini_object_new (GST_TYPE_DISCOVERER_VIDEO_INFO);
+      g_object_new (GST_TYPE_DISCOVERER_VIDEO_INFO, NULL);
 }
 
 static GstDiscovererVideoInfo *
@@ -279,7 +273,7 @@ gst_discoverer_video_info_copy_int (GstDiscovererVideoInfo * ptr)
 }
 
 /* Global stream information */
-G_DEFINE_TYPE (GstDiscovererInfo, gst_discoverer_info, GST_TYPE_MINI_OBJECT);
+G_DEFINE_TYPE (GstDiscovererInfo, gst_discoverer_info, G_TYPE_OBJECT);
 
 static void
 gst_discoverer_info_init (GstDiscovererInfo * info)
@@ -288,12 +282,13 @@ gst_discoverer_info_init (GstDiscovererInfo * info)
 }
 
 static void
-gst_discoverer_info_finalize (GstDiscovererInfo * info)
+gst_discoverer_info_finalize (GObject * object)
 {
+  GstDiscovererInfo *info = (GstDiscovererInfo *) object;
   g_free (info->uri);
 
   if (info->stream_info)
-    gst_mini_object_unref ((GstMiniObject *) info->stream_info);
+    g_object_unref ((GObject *) info->stream_info);
 
   if (info->misc)
     gst_structure_free (info->misc);
@@ -307,7 +302,7 @@ gst_discoverer_info_finalize (GstDiscovererInfo * info)
 static GstDiscovererInfo *
 gst_discoverer_info_new (void)
 {
-  return (GstDiscovererInfo *) gst_mini_object_new (GST_TYPE_DISCOVERER_INFO);
+  return (GstDiscovererInfo *) g_object_new (GST_TYPE_DISCOVERER_INFO, NULL);
 }
 
 GstDiscovererInfo *
@@ -350,11 +345,9 @@ gst_discoverer_info_copy (GstDiscovererInfo * ptr)
 }
 
 static void
-gst_discoverer_info_class_init (GstMiniObjectClass * klass)
+gst_discoverer_info_class_init (GObjectClass * klass)
 {
-  klass->finalize =
-      (GstMiniObjectFinalizeFunction) gst_discoverer_info_finalize;
-  klass->copy = (GstMiniObjectCopyFunction) gst_discoverer_info_copy;
+  klass->finalize = gst_discoverer_info_finalize;
 }
 
 /**

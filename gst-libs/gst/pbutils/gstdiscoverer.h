@@ -32,7 +32,7 @@ G_BEGIN_DECLS
 #define GST_IS_DISCOVERER_STREAM_INFO(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_STREAM_INFO))
 typedef struct _GstDiscovererStreamInfo GstDiscovererStreamInfo;
-typedef GstMiniObjectClass GstDiscovererStreamInfoClass;
+typedef GObjectClass GstDiscovererStreamInfoClass;
 GType gst_discoverer_stream_info_get_type (void);
 
 /**
@@ -56,8 +56,8 @@ GType gst_discoverer_stream_info_get_type (void);
  *
  * Since: 0.10.31
  */
-#define gst_discoverer_stream_info_ref(info) ((GstDiscovererStreamInfo*) gst_mini_object_ref((GstMiniObject*) info))
-#define gst_discoverer_stream_info_unref(info) (gst_mini_object_unref((GstMiniObject*) info))
+#define gst_discoverer_stream_info_ref(info) ((GstDiscovererStreamInfo*) g_object_ref((GObject*) info))
+#define gst_discoverer_stream_info_unref(info) (g_object_unref((GObject*) info))
 
 GstDiscovererStreamInfo* gst_discoverer_stream_info_get_previous(GstDiscovererStreamInfo* info);
 GstDiscovererStreamInfo* gst_discoverer_stream_info_get_next(GstDiscovererStreamInfo* info);
@@ -80,7 +80,7 @@ const gchar *            gst_discoverer_stream_info_get_stream_type_nick(GstDisc
 #define GST_IS_DISCOVERER_CONTAINER_INFO(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_CONTAINER_INFO))
 typedef struct _GstDiscovererContainerInfo GstDiscovererContainerInfo;
-typedef GstMiniObjectClass GstDiscovererContainerInfoClass;
+typedef GObjectClass GstDiscovererContainerInfoClass;
 
 GType gst_discoverer_container_info_get_type (void);
 
@@ -101,7 +101,7 @@ GList *gst_discoverer_container_info_get_streams(GstDiscovererContainerInfo *inf
 #define GST_IS_DISCOVERER_AUDIO_INFO(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_AUDIO_INFO))
 typedef struct _GstDiscovererAudioInfo GstDiscovererAudioInfo;
-typedef GstMiniObjectClass GstDiscovererAudioInfoClass;
+typedef GObjectClass GstDiscovererAudioInfoClass;
 
 GType gst_discoverer_audio_info_get_type (void);
 
@@ -125,7 +125,7 @@ guint gst_discoverer_audio_info_get_max_bitrate(const GstDiscovererAudioInfo* in
 #define GST_IS_DISCOVERER_VIDEO_INFO(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_VIDEO_INFO))
 typedef struct _GstDiscovererVideoInfo GstDiscovererVideoInfo;
-typedef GstMiniObjectClass GstDiscovererVideoInfoClass;
+typedef GObjectClass GstDiscovererVideoInfoClass;
 GType gst_discoverer_video_info_get_type (void);
 
 guint           gst_discoverer_video_info_get_width(const GstDiscovererVideoInfo* info);
@@ -178,11 +178,11 @@ typedef struct _GstDiscovererInfo GstDiscovererInfo;
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DISCOVERER_INFO, GstDiscovererInfo))
 #define GST_IS_DISCOVERER_INFO(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_INFO))
-typedef GstMiniObjectClass GstDiscovererInfoClass;
+typedef GObjectClass GstDiscovererInfoClass;
 GType gst_discoverer_info_get_type (void);
 
-#define gst_discoverer_info_unref(info) (gst_mini_object_unref((GstMiniObject*)info))
-#define gst_discoverer_info_ref(info) (gst_mini_object_ref((GstMiniObject*)info))
+#define gst_discoverer_info_unref(info) (g_object_unref((GObject*)info))
+#define gst_discoverer_info_ref(info) (g_object_ref((Gbject*)info))
 
 GstDiscovererInfo*        gst_discoverer_info_copy (GstDiscovererInfo * ptr);
 
