@@ -1961,6 +1961,8 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
        * re-generate the chain */
       if (chain->volume == NULL) {
         GST_DEBUG_OBJECT (playsink, "no existing volume element to re-use");
+        /* undo background state change done earlier */
+        gst_element_set_state (chain->sink, GST_STATE_NULL);
         return FALSE;
       }
 
