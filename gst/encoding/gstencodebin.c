@@ -301,7 +301,7 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
    * to %GST_STATE_PAUSED or higher.
    */
   g_object_class_install_property (gobject_klass, PROP_PROFILE,
-      gst_param_spec_mini_object ("profile", "Profile",
+      g_param_spec_object ("profile", "Profile",
           "The GstEncodingProfile to use", GST_TYPE_ENCODING_PROFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -456,7 +456,7 @@ gst_encode_bin_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PROFILE:
       gst_encode_bin_set_profile (ebin,
-          (GstEncodingProfile *) gst_value_get_mini_object (value));
+          (GstEncodingProfile *) g_value_get_object (value));
       break;
     case PROP_QUEUE_BUFFERS_MAX:
       ebin->queue_buffers_max = g_value_get_uint (value);
@@ -487,7 +487,7 @@ gst_encode_bin_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PROFILE:
-      gst_value_set_mini_object (value, (GstMiniObject *) ebin->profile);
+      g_value_set_object (value, (GObject *) ebin->profile);
       break;
     case PROP_QUEUE_BUFFERS_MAX:
       g_value_set_uint (value, ebin->queue_buffers_max);

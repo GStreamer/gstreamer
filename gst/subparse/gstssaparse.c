@@ -152,7 +152,7 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   parse->framed = TRUE;
   parse->send_tags = TRUE;
 
-  priv = (GstBuffer *) gst_value_get_mini_object (val);
+  priv = (GstBuffer *) g_value_get_boxed (val);
   g_return_val_if_fail (priv != NULL, FALSE);
 
   gst_buffer_ref (priv);

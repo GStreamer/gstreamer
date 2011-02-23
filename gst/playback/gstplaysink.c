@@ -365,7 +365,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
    * Since: 0.10.30
    */
   g_object_class_install_property (gobject_klass, PROP_FRAME,
-      gst_param_spec_mini_object ("frame", "Frame",
+      g_param_spec_boxed ("frame", "Frame",
           "The last frame (NULL = no video available)",
           GST_TYPE_BUFFER, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
