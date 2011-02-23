@@ -64,10 +64,17 @@ The 0.11 porting guide
 
     GstParamSpecMiniObject is removed, use boxed param spec now with the GType
     of the specific GstMiniObject derived type. Also
-    gst_param_spec_mini_object()
+    gst_param_spec_mini_object().
+
+    gst_param_spec_mini_object() -> g_param_spec_boxed()
 
     The specific gst_value_*_mini_object() methods are removed, used the generic
     boxed methods instead.
+
+    gst_value_set_mini_object() -> g_value_set_boxed()
+    gst_value_take_mini_object() -> g_value_take_boxed()
+    gst_value_take_get_object() -> g_value_get_boxed()
+    gst_value_take_dup_object() -> g_value_dup_boxed()
 
 * GstBuffer
     A GstBuffer is now a simple boxed type this means that subclassing is not
