@@ -243,8 +243,9 @@ plugins frequently, it will save time when doing gst_init().
 Useful Orc environment variable. Set ORC_CODE=debug to enable debuggers
 such as gdb to create useful backtraces from Orc-generated code.  Set
 ORC_CODE=backup or ORC_CODE=emulate if you suspect Orc's SIMD code
-generator is producing incorrect code.  (Quite a few important
+generator is producing incorrect code (Quite a few important
 GStreamer plugins like videotestsrc, audioconvert or audioresample use Orc).
+One can also combine flags like ORC_CODE=backup,debug.
   </para>
 
 </formalpara>
