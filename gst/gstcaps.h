@@ -266,7 +266,7 @@ GstCaps *         gst_caps_new_full_valist         (GstStructure  *structure,
                                                     va_list        var_args);
 
 /* reference counting */
-GstCaps *         gst_caps_make_writable           (GstCaps       *caps);
+GstCaps *         gst_caps_make_writable           (GstCaps       *caps) G_GNUC_WARN_UNUSED_RESULT;
 
 GType             gst_static_caps_get_type         (void);
 GstCaps *         gst_static_caps_get              (GstStaticCaps *static_caps);
