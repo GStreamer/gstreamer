@@ -3271,6 +3271,21 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
       }
       do_async_done (playsink);
+      /* when going to READY, keep elements around as long as possible,
+       * so they may be re-used faster next time/url around.
+       * when really going to NULL, clean up everything completely. */
+      if (transition == GST_STATE_CHANGE_READY_TO_NULL) {
+        free_chain ((GstPlayChain *) playsink->videodeinterlacechain);
+        playsink->videodeinterlacechain = NULL;
+        free_chain ((GstPlayChain *) playsink->videochain);
+        playsink->videochain = NULL;
+        free_chain ((GstPlayChain *) playsink->audiochain);
+        playsink->audiochain = NULL;
+        free_chain ((GstPlayChain *) playsink->vischain);
+        playsink->vischain = NULL;
+        free_chain ((GstPlayChain *) playsink->textchain);
+        playsink->textchain = NULL;
+      }
       break;
     default:
       break;
