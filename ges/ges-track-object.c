@@ -52,7 +52,7 @@ struct _GESTrackObjectPrivate
 
   /* We keep a link between properties name and elements internally
    * The hashtable should look like
-   * {'ClassName-propertyName' ---> element,}*/
+   * {GParamaSpec ---> element,}*/
   GHashTable *properties_hashtable;
 
   GESTimelineObject *timelineobj;

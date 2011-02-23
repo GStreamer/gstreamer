@@ -24,6 +24,9 @@
  *
  */
 
+#include <glib/gprintf.h>
+#include <string.h>
+
 #include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-track-effect.h"
@@ -32,6 +35,9 @@ G_DEFINE_ABSTRACT_TYPE (GESTrackEffect, ges_track_effect,
     GES_TYPE_TRACK_OPERATION);
 
 static GHashTable *ges_track_effect_get_props_hashtable (GESTrackObject * self);
+guint pspec_hash (gconstpointer key_spec);
+static gboolean pspec_equal (gconstpointer key_spec_1,
+    gconstpointer key_spec_2);
 
 struct _GESTrackEffectPrivate
 {
@@ -56,6 +62,29 @@ ges_track_effect_init (GESTrackEffect * self)
       GESTrackEffectPrivate);
 }
 
+static gboolean
+pspec_equal (gconstpointer key_spec_1, gconstpointer key_spec_2)
+{
+  const GParamSpec *key1 = key_spec_1;
+  const GParamSpec *key2 = key_spec_2;
+
+  return (key1->owner_type == key2->owner_type &&
+      strcmp (key1->name, key2->name) == 0);
+}
+
+guint
+pspec_hash (gconstpointer key_spec)
+{
+  const GParamSpec *key = key_spec;
+  const gchar *p;
+  guint h = key->owner_type;
+
+  for (p = key->name; *p; p++)
+    h = (h << 5) - h + *p;
+
+  return h;
+}
+
 /*  Virtual methods */
 static GHashTable *
 ges_track_effect_get_props_hashtable (GESTrackObject * self)
@@ -65,7 +94,7 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
   GParamSpec **parray;
   GObjectClass *class;
   guint i, nb_specs;
-  const gchar *name, *klass;
+  const gchar *klass;
   GstElementFactory *factory;
   GstElement *child, *element;
   gchar **categories, *categorie;
@@ -80,7 +109,8 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
     return NULL;
   }
 
-  ret = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
+  ret = g_hash_table_new_full ((GHashFunc) pspec_hash, pspec_equal,
+      (GDestroyNotify) g_param_spec_unref, g_object_unref);
 
   /*  We go over child elements recursivly, and add writable properties to the
    *  hashtable
@@ -102,10 +132,8 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
             parray = g_object_class_list_properties (class, &nb_specs);
             for (i = 0; i < nb_specs; i++) {
               if (parray[i]->flags & G_PARAM_WRITABLE) {
-                name = g_param_spec_get_name (parray[i]);
-                g_hash_table_insert (ret,
-                    g_strconcat (G_OBJECT_CLASS_NAME (class),
-                        "-", name, NULL), g_object_ref (child));
+                g_hash_table_insert (ret, g_param_spec_ref (parray[i]),
+                    g_object_ref (child));
               }
             }
             GST_DEBUG ("%i configurable properties added to %p", child,
