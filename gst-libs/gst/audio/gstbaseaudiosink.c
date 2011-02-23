@@ -133,8 +133,10 @@ static void gst_base_audio_sink_set_property (GObject * object, guint prop_id,
 static void gst_base_audio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+#if 0
 static GstStateChangeReturn gst_base_audio_sink_async_play (GstBaseSink *
     basesink);
+#endif
 static GstStateChangeReturn gst_base_audio_sink_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_base_audio_sink_activate_pull (GstBaseSink * basesink,
@@ -241,8 +243,10 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_times);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_sink_setcaps);
   gstbasesink_class->fixate = GST_DEBUG_FUNCPTR (gst_base_audio_sink_fixate);
+#if 0
   gstbasesink_class->async_play =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_async_play);
+#endif
   gstbasesink_class->activate_pull =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_activate_pull);
 
@@ -1849,6 +1853,7 @@ gst_base_audio_sink_activate_pull (GstBaseSink * basesink, gboolean active)
   return ret;
 }
 
+#if 0
 /* should be called with the LOCK */
 static GstStateChangeReturn
 gst_base_audio_sink_async_play (GstBaseSink * basesink)
@@ -1867,6 +1872,7 @@ gst_base_audio_sink_async_play (GstBaseSink * basesink)
 
   return GST_STATE_CHANGE_SUCCESS;
 }
+#endif
 
 static GstStateChangeReturn
 gst_base_audio_sink_change_state (GstElement * element,
