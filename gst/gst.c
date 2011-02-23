@@ -751,12 +751,12 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_progress_type_get_type ());
 
   gst_structure_get_type ();
-  _gst_value_initialize ();
-  g_type_class_ref (gst_param_spec_fraction_get_type ());
   _gst_event_initialize ();
   _gst_buffer_initialize ();
-  _gst_buffer_list_initialize ();
   _gst_message_initialize ();
+  _gst_buffer_list_initialize ();
+  _gst_value_initialize ();
+  g_type_class_ref (gst_param_spec_fraction_get_type ());
   _gst_tag_initialize ();
 
   _gst_plugin_initialize ();
