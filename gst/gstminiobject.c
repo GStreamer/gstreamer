@@ -107,6 +107,7 @@ gst_mini_object_init (GstMiniObject * mini_object, GType type, gsize size)
 {
   mini_object->type = type;
   mini_object->refcount = 1;
+  mini_object->flags = 0;
   mini_object->size = size;
 }
 
