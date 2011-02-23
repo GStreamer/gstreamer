@@ -34,6 +34,7 @@
 
 #include "gstnetbuffer.h"
 
+#if 0
 static void gst_netbuffer_finalize (GstNetBuffer * nbuf);
 static GstNetBuffer *gst_netbuffer_copy (GstNetBuffer * nbuf);
 
@@ -104,6 +105,7 @@ gst_netbuffer_new (void)
 
   return buf;
 }
+#endif
 
 /**
  * gst_netaddress_set_ip4_address:

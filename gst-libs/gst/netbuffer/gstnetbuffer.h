@@ -24,16 +24,20 @@
 
 G_BEGIN_DECLS
 
+#if 0
 typedef struct _GstNetBuffer GstNetBuffer;
 typedef struct _GstNetBufferClass GstNetBufferClass;
+#endif
 typedef struct _GstNetAddress GstNetAddress;
 
+#if 0
 #define GST_TYPE_NETBUFFER            (gst_netbuffer_get_type())
 #define GST_IS_NETBUFFER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_NETBUFFER))
 #define GST_IS_NETBUFFER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_NETBUFFER))
 #define GST_NETBUFFER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_NETBUFFER, GstNetBufferClass))
 #define GST_NETBUFFER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_NETBUFFER, GstNetBuffer))
 #define GST_NETBUFFER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_NETBUFFER, GstNetBufferClass))
+#endif
 
 /**
  * GstNetType:
@@ -76,6 +80,7 @@ struct _GstNetAddress {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+#if 0
 /**
  * GstNetBuffer:
  * @buffer: the parent #GstBuffer
@@ -106,6 +111,7 @@ struct _GstNetBufferClass {
 GType           gst_netbuffer_get_type           (void);
 
 GstNetBuffer*   gst_netbuffer_new                (void);
+#endif
 
 /* address operations */
 void            gst_netaddress_set_ip4_address   (GstNetAddress *naddr, guint32 address, guint16 port);
