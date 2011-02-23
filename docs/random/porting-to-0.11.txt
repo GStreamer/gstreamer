@@ -50,3 +50,41 @@ The 0.11 porting guide
     A similar change was done for gst_pad_peer_get_caps() and
     gst_pad_peer_get_caps_reffed()
 
+* GstMiniObject
+    A miniobject is now a simple refcounted structure holding the information
+    common to buffers, events, messages, queries and caps.
+
+    There is no more GST_TYPE_MINIOBJECT as the type for subclasses.
+    G_TYPE_BOXED can be used as the type of all GstMiniObject based types such
+    as buffers, events, messages, caps, etc. Signals, for example, would use the
+    boxed type if the argument include GstMiniObject derived types.
+
+    gst_mini_object_new() is removed. You would allocate memory with the the
+    methods specific for the derived type.
+
+    GstParamSpecMiniObject is removed, use boxed param spec now with the GType
+    of the specific GstMiniObject derived type. Also
+    gst_param_spec_mini_object()
+
+    The specific gst_value_*_mini_object() methods are removed, used the generic
+    boxed methods instead.
+
+* GstBuffer
+    A GstBuffer is now a simple boxed type this means that subclassing is not
+    possible anymore. To add more data to the buffer, you have to use the
+    metadata feature of buffers.
+
+* GstEvent
+* GstQuery
+    Boxed types derived from GstMiniObject.
+
+* GstBufferList
+    Is now a boxed type derived from GstMiniObject.
+
+* GstMessage
+    Is now a boxed type derived from GstMiniObject
+
+* GstCaps
+    Is now a boxed type derived from GstMiniObject. 
+
+
