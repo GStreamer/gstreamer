@@ -2217,6 +2217,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
     if (!playsink->videochain)
       playsink->videochain = gen_video_chain (playsink, raw, async);
+    if (!playsink->videochain)
+      goto no_chain;
 
     if (!playsink->video_sinkpad_stream_synchronizer) {
       GstIterator *it;
@@ -2241,6 +2243,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       if (!playsink->videodeinterlacechain)
         playsink->videodeinterlacechain =
             gen_video_deinterlace_chain (playsink);
+      if (!playsink->videodeinterlacechain)
+        goto no_chain;
 
       GST_DEBUG_OBJECT (playsink, "adding video deinterlace chain");
 
@@ -2574,6 +2578,15 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   GST_PLAY_SINK_UNLOCK (playsink);
 
   return TRUE;
+
+  /* ERRORS */
+no_chain:
+  {
+    /* gen_ chain already posted error */
+    GST_DEBUG_OBJECT (playsink, "failed to setup chain");
+    GST_PLAY_SINK_UNLOCK (playsink);
+    return FALSE;
+  }
 }
 
 /**
