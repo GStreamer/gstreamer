@@ -35,6 +35,9 @@ EXPORTS
 	__gst_debug_min DATA
 	_gst_alloc_trace_register
 	_gst_buffer_list_initialize
+	_gst_buffer_list_type DATA
+	_gst_buffer_type DATA
+	_gst_caps_type DATA
 	_gst_debug_bin_to_dot_file
 	_gst_debug_bin_to_dot_file_with_ts
 	_gst_debug_category_new
@@ -61,6 +64,13 @@ EXPORTS
 	gst_alloc_trace_set_flags
 	gst_alloc_trace_set_flags_all
 	gst_assoc_flags_get_type
+	gst_atomic_queue_length
+	gst_atomic_queue_new
+	gst_atomic_queue_peek
+	gst_atomic_queue_pop
+	gst_atomic_queue_push
+	gst_atomic_queue_ref
+	gst_atomic_queue_unref
 	gst_bin_add
 	gst_bin_add_many
 	gst_bin_find_unlinked_pad
@@ -84,13 +94,11 @@ EXPORTS
 	gst_buffer_create_sub
 	gst_buffer_flag_get_type
 	gst_buffer_get_caps
-	gst_buffer_get_type
 	gst_buffer_is_metadata_writable
 	gst_buffer_is_span_fast
 	gst_buffer_join
 	gst_buffer_list_foreach
 	gst_buffer_list_get
-	gst_buffer_list_get_type
 	gst_buffer_list_item_get_type
 	gst_buffer_list_iterate
 	gst_buffer_list_iterator_add
@@ -142,14 +150,12 @@ EXPORTS
 	gst_caps_append
 	gst_caps_append_structure
 	gst_caps_can_intersect
-	gst_caps_copy
 	gst_caps_copy_nth
 	gst_caps_do_simplify
 	gst_caps_flags_get_type
 	gst_caps_from_string
 	gst_caps_get_size
 	gst_caps_get_structure
-	gst_caps_get_type
 	gst_caps_intersect
 	gst_caps_is_always_compatible
 	gst_caps_is_any
@@ -167,7 +173,6 @@ EXPORTS
 	gst_caps_new_full_valist
 	gst_caps_new_simple
 	gst_caps_normalize
-	gst_caps_ref
 	gst_caps_remove_structure
 	gst_caps_replace
 	gst_caps_set_simple
@@ -178,7 +183,6 @@ EXPORTS
 	gst_caps_to_string
 	gst_caps_truncate
 	gst_caps_union
-	gst_caps_unref
 	gst_child_proxy_child_added
 	gst_child_proxy_child_removed
 	gst_child_proxy_get
@@ -310,6 +314,7 @@ EXPORTS
 	gst_element_get_compatible_pad_template
 	gst_element_get_factory
 	gst_element_get_index
+	gst_element_get_pad
 	gst_element_get_query_types
 	gst_element_get_request_pad
 	gst_element_get_start_time
@@ -481,6 +486,7 @@ EXPORTS
 	gst_iterator_resync
 	gst_library_error_get_type
 	gst_library_error_quark
+	gst_marshal_BOOLEAN__BOXED
 	gst_marshal_BOOLEAN__POINTER
 	gst_marshal_BOOLEAN__VOID
 	gst_marshal_BOXED__BOXED
@@ -563,11 +569,11 @@ EXPORTS
 	gst_message_type_to_quark
 	gst_mini_object_copy
 	gst_mini_object_flags_get_type
-	gst_mini_object_get_type
+	gst_mini_object_init
 	gst_mini_object_is_writable
 	gst_mini_object_make_writable
-	gst_mini_object_new
 	gst_mini_object_ref
+	gst_mini_object_register
 	gst_mini_object_replace
 	gst_mini_object_unref
 	gst_object_check_uniqueness
@@ -691,8 +697,6 @@ EXPORTS
 	gst_pad_use_fixed_caps
 	gst_param_spec_fraction
 	gst_param_spec_fraction_get_type
-	gst_param_spec_mini_object
-	gst_param_spec_mini_object_get_type
 	gst_parse_bin_from_description
 	gst_parse_bin_from_description_full
 	gst_parse_context_free
@@ -1115,7 +1119,6 @@ EXPORTS
 	gst_value_can_union
 	gst_value_compare
 	gst_value_deserialize
-	gst_value_dup_mini_object
 	gst_value_fraction_multiply
 	gst_value_fraction_subtract
 	gst_value_get_caps
@@ -1131,7 +1134,6 @@ EXPORTS
 	gst_value_get_int64_range_min
 	gst_value_get_int_range_max
 	gst_value_get_int_range_min
-	gst_value_get_mini_object
 	gst_value_get_structure
 	gst_value_init_and_copy
 	gst_value_intersect
@@ -1157,10 +1159,8 @@ EXPORTS
 	gst_value_set_fraction_range_full
 	gst_value_set_int64_range
 	gst_value_set_int_range
-	gst_value_set_mini_object
 	gst_value_set_structure
 	gst_value_subtract
-	gst_value_take_mini_object
 	gst_value_union
 	gst_version
 	gst_version_string
