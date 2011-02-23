@@ -267,7 +267,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
     newt->direction = templ->direction;
     newt->presence = templ->presence;
     newt->static_caps.caps.mini_object.refcount = 0;
-    newt->static_caps.string = gst_caps_to_string (templ->caps);
+    newt->static_caps.string = g_intern_string (caps_string);
     factory->staticpadtemplates =
         g_list_append (factory->staticpadtemplates, newt);
 
