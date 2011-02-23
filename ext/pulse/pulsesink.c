@@ -452,6 +452,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
     pbuf->context_name = g_strdup (psink->client_name);
 
   pa_threaded_mainloop_lock (mainloop);
+
   g_mutex_lock (pa_shared_resource_mutex);
 
   pctx = g_hash_table_lookup (gst_pulse_shared_contexts, pbuf->context_name);
@@ -490,6 +491,8 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
     pctx->ring_buffers = g_slist_prepend (pctx->ring_buffers, pbuf);
   }
 
+  g_mutex_unlock (pa_shared_resource_mutex);
+
   /* context created or shared okay */
   pbuf->context = pa_context_ref (pctx->context);
 
@@ -513,7 +516,6 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
 
   GST_LOG_OBJECT (psink, "opened the device");
 
-  g_mutex_unlock (pa_shared_resource_mutex);
   pa_threaded_mainloop_unlock (mainloop);
 
   return TRUE;
@@ -521,9 +523,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   /* ERRORS */
 unlock_and_fail:
   {
-    g_mutex_unlock (pa_shared_resource_mutex);
     gst_pulsering_destroy_context (pbuf);
-
     pa_threaded_mainloop_unlock (mainloop);
     return FALSE;
   }
