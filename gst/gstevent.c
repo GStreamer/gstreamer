@@ -216,10 +216,10 @@ _gst_event_free (GstEvent * event)
     gst_structure_free (event->structure);
   }
 
-  g_slice_free (GstEvent, event);
+  g_slice_free1 (GST_MINI_OBJECT_SIZE (event), event);
 }
 
-static void gst_event_init (GstEvent * event, GstEventType type);
+static void gst_event_init (GstEvent * event, gsize size, GstEventType type);
 
 static GstEvent *
 _gst_event_copy (GstEvent * event)
@@ -228,7 +228,7 @@ _gst_event_copy (GstEvent * event)
 
   copy = g_slice_new0 (GstEvent);
 
-  gst_event_init (copy, GST_EVENT_TYPE (event));
+  gst_event_init (copy, sizeof (GstEvent), GST_EVENT_TYPE (event));
 
   GST_EVENT_TIMESTAMP (copy) = GST_EVENT_TIMESTAMP (event);
   GST_EVENT_SEQNUM (copy) = GST_EVENT_SEQNUM (event);
@@ -245,10 +245,9 @@ _gst_event_copy (GstEvent * event)
 }
 
 static void
-gst_event_init (GstEvent * event, GstEventType type)
+gst_event_init (GstEvent * event, gsize size, GstEventType type)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (event),
-      _gst_event_type, sizeof (GstEvent));
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (event), _gst_event_type, size);
 
   event->mini_object.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
   event->mini_object.free = (GstMiniObjectFreeFunction) _gst_event_free;
@@ -268,7 +267,7 @@ gst_event_new (GstEventType type)
   GST_CAT_DEBUG (GST_CAT_EVENT, "creating new event %p %s %d", event,
       gst_event_type_get_name (type), type);
 
-  gst_event_init (event, type);
+  gst_event_init (event, sizeof (GstEvent), type);
 
   return event;
 }

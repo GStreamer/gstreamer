@@ -134,6 +134,14 @@ typedef enum
 #define GST_MINI_OBJECT_REFCOUNT_VALUE(obj)     (g_atomic_int_get (&(GST_MINI_OBJECT_CAST(obj))->refcount))
 
 /**
+ * GST_MINI_OBJECT_SIZE:
+ * @obj: a #GstMiniObject
+ *
+ * Get the allocated size of @obj.
+ */
+#define GST_MINI_OBJECT_SIZE(obj)              ((GST_MINI_OBJECT_CAST(obj))->size)
+
+/**
  * GstMiniObject:
  * @instance: type instance
  * @refcount: atomic refcount

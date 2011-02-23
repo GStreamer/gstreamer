@@ -212,7 +212,17 @@ _gst_buffer_list_free (GstBufferList * list)
   }
   g_list_free (list->buffers);
 
-  g_slice_free (GstBufferList, list);
+  g_slice_free1 (GST_MINI_OBJECT_SIZE (list), list);
+}
+
+static void
+gst_buffer_list_init (GstBufferList * list, gsize size)
+{
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (list), _gst_buffer_list_type,
+      size);
+
+  list->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_list_copy;
+  list->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_list_free;
 }
 
 /**
@@ -235,13 +245,9 @@ gst_buffer_list_new (void)
 
   list = g_slice_new0 (GstBufferList);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (list), _gst_buffer_list_type,
-      sizeof (GstBufferList));
-
-  list->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_list_copy;
-  list->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_list_free;
-
   GST_LOG ("new %p", list);
+
+  gst_buffer_list_init (list, sizeof (GstBufferList));
 
   return list;
 }

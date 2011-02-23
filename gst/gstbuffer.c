@@ -282,7 +282,22 @@ _gst_buffer_free (GstBuffer * buffer)
   if (buffer->parent)
     gst_buffer_unref (buffer->parent);
 
-  g_slice_free (GstBuffer, buffer);
+  g_slice_free1 (GST_MINI_OBJECT_SIZE (buffer), buffer);
+}
+
+static void
+gst_buffer_init (GstBuffer * buffer, gsize size)
+{
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (buffer), _gst_buffer_type, size);
+
+  buffer->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_copy;
+  buffer->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_free;
+
+  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_FREE_FUNC (buffer) = g_free;
 }
 
 /**
@@ -302,17 +317,7 @@ gst_buffer_new (void)
   newbuf = g_slice_new0 (GstBuffer);
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p", newbuf);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (newbuf),
-      _gst_buffer_type, sizeof (GstBuffer));
-
-  newbuf->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_copy;
-  newbuf->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_free;
-
-  GST_BUFFER_TIMESTAMP (newbuf) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (newbuf) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_OFFSET_END (newbuf) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_FREE_FUNC (newbuf) = g_free;
+  gst_buffer_init (newbuf, sizeof (GstBuffer));
 
   return newbuf;
 }

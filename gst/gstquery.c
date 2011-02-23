@@ -319,7 +319,7 @@ _gst_query_free (GstQuery * query)
     gst_structure_free (query->structure);
   }
 
-  g_slice_free (GstQuery, query);
+  g_slice_free1 (GST_MINI_OBJECT_SIZE (query), query);
 }
 
 static GstQuery *gst_query_new (GstQueryType type, GstStructure * structure);

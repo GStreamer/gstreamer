@@ -181,14 +181,13 @@ _gst_caps_free (GstCaps * caps)
 #ifdef DEBUG_REFCOUNT
   GST_CAT_LOG (GST_CAT_CAPS, "freeing caps %p", caps);
 #endif
-  g_slice_free (GstCaps, caps);
+  g_slice_free1 (GST_MINI_OBJECT_SIZE (caps), caps);
 }
 
 static void
-gst_caps_init (GstCaps * caps)
+gst_caps_init (GstCaps * caps, gsize size)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps),
-      _gst_caps_type, sizeof (GstCaps));
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps), _gst_caps_type, size);
 
   caps->mini_object.copy = (GstMiniObjectCopyFunction) _gst_caps_copy;
   caps->mini_object.dispose = NULL;
@@ -218,7 +217,7 @@ gst_caps_new_empty (void)
 
   caps = g_slice_new (GstCaps);
 
-  gst_caps_init (caps);
+  gst_caps_init (caps, sizeof (GstCaps));
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_LOG (GST_CAT_CAPS, "created caps %p", caps);
@@ -415,13 +414,13 @@ gst_static_caps_get (GstStaticCaps * static_caps)
      * real caps, refcount last. We do this because we must leave the refcount
      * of the result caps to 0 so that other threads don't run away with the
      * caps while we are constructing it. */
-    gst_caps_init (&temp);
+    gst_caps_init (&temp, sizeof (GstCaps));
 
     /* convert to string */
     if (G_UNLIKELY (!gst_caps_from_string_inplace (&temp, string)))
       g_critical ("Could not convert static caps \"%s\"", string);
 
-    gst_caps_init (caps);
+    gst_caps_init (caps, sizeof (GstCaps));
     /* now copy stuff over to the real caps. */
     GST_CAPS_FLAGS (caps) = GST_CAPS_FLAGS (&temp);
     caps->structs = temp.structs;

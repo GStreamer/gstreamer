@@ -191,7 +191,7 @@ _gst_message_free (GstMessage * message)
     gst_structure_free (message->structure);
   }
 
-  g_slice_free (GstMessage, message);
+  g_slice_free1 (GST_MINI_OBJECT_SIZE (message), message);
 }
 
 static GstMessage *
