@@ -58,8 +58,7 @@ G_BEGIN_DECLS
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 typedef struct _GstXvImageFormat GstXvImageFormat;
-typedef struct _GstXvImageBuffer GstXvImageBuffer;
-typedef struct _GstXvImageBufferClass GstXvImageBufferClass;
+typedef struct _GstXvImageData GstXvImageData;
 
 typedef struct _GstXvImageSink GstXvImageSink;
 typedef struct _GstXvImageSinkClass GstXvImageSinkClass;
@@ -163,7 +162,7 @@ struct _GstXvImageFormat {
 };
 
 /**
- * GstXImageBuffer:
+ * GstXImageData:
  * @xvimagesink: a reference to our #GstXvImageSink
  * @xvimage: the XvImage of this buffer
  * @width: the width in pixels of XvImage @xvimage
@@ -171,11 +170,9 @@ struct _GstXvImageFormat {
  * @im_format: the image format of XvImage @xvimage
  * @size: the size in bytes of XvImage @xvimage
  *
- * Subclass of #GstBuffer containing additional information about an XvImage.
+ * Structure with additional information about an XvImage.
  */
-struct _GstXvImageBuffer {
-  GstBuffer   buffer;
-
+struct _GstXvImageData {
   /* Reference to the xvimagesink we belong to */
   GstXvImageSink *xvimagesink;
 
@@ -234,12 +231,13 @@ struct _GstXvImageSink {
 
   GstXContext *xcontext;
   GstXWindow *xwindow;
-  GstXvImageBuffer *xvimage;
-  GstXvImageBuffer *cur_image;
+  GstBuffer *xvimage;
+  GstBuffer *cur_image;
 
   GThread *event_thread;
   gboolean running;
 
+  /* Framerate numerator and denominator */
   gint fps_n;
   gint fps_d;
 

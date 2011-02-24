@@ -52,8 +52,7 @@ G_BEGIN_DECLS
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 
-typedef struct _GstXImageBuffer GstXImageBuffer;
-typedef struct _GstXImageBufferClass GstXImageBufferClass;
+typedef struct _GstXImageData GstXImageData;
 
 typedef struct _GstXImageSink GstXImageSink;
 typedef struct _GstXImageSinkClass GstXImageSinkClass;
@@ -129,20 +128,19 @@ struct _GstXWindow
   GC gc;
 };
 
+
 /**
- * GstXImageBuffer:
+ * GstXImageData:
  * @ximagesink: a reference to our #GstXImageSink
  * @ximage: the XImage of this buffer
  * @width: the width in pixels of XImage @ximage
  * @height: the height in pixels of XImage @ximage
  * @size: the size in bytes of XImage @ximage
  *
- * Subclass of #GstBuffer containing additional information about an XImage.
+ * Structure with additional information about an XImage.
  */
-struct _GstXImageBuffer
+struct _GstXImageData
 {
-  GstBuffer buffer;
-
   /* Reference to the ximagesink we belong to */
   GstXImageSink *ximagesink;
 
@@ -194,8 +192,8 @@ struct _GstXImageSink
 
   GstXContext *xcontext;
   GstXWindow *xwindow;
-  GstXImageBuffer *ximage;
-  GstXImageBuffer *cur_image;
+  GstBuffer *ximage;
+  GstBuffer *cur_image;
 
   GThread *event_thread;
   gboolean running;
