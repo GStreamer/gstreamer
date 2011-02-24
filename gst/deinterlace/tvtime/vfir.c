@@ -260,6 +260,7 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
     dism_class->interpolate_scanline_yvyu = deinterlace_line_packed_mmx;
     dism_class->interpolate_scanline_uyvy = deinterlace_line_packed_mmx;
     dism_class->interpolate_scanline_nv12 = deinterlace_line_packed_mmx;
+    dism_class->interpolate_scanline_nv21 = deinterlace_line_packed_mmx;
     dism_class->interpolate_scanline_argb = deinterlace_line_packed_mmx;
     dism_class->interpolate_scanline_abgr = deinterlace_line_packed_mmx;
     dism_class->interpolate_scanline_rgba = deinterlace_line_packed_mmx;
@@ -275,6 +276,7 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
     dism_class->interpolate_scanline_uyvy = deinterlace_line_packed_c;
     dism_class->interpolate_scanline_ayuv = deinterlace_line_packed_c;
     dism_class->interpolate_scanline_nv12 = deinterlace_line_packed_c;
+    dism_class->interpolate_scanline_nv21 = deinterlace_line_packed_c;
     dism_class->interpolate_scanline_argb = deinterlace_line_packed_c;
     dism_class->interpolate_scanline_abgr = deinterlace_line_packed_c;
     dism_class->interpolate_scanline_rgba = deinterlace_line_packed_c;
@@ -291,6 +293,7 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
   dism_class->interpolate_scanline_yvyu = deinterlace_line_packed_c;
   dism_class->interpolate_scanline_uyvy = deinterlace_line_packed_c;
   dism_class->interpolate_scanline_nv12 = deinterlace_line_packed_c;
+  dism_class->interpolate_scanline_nv21 = deinterlace_line_packed_c;
   dism_class->interpolate_scanline_argb = deinterlace_line_packed_c;
   dism_class->interpolate_scanline_abgr = deinterlace_line_packed_c;
   dism_class->interpolate_scanline_rgba = deinterlace_line_packed_c;

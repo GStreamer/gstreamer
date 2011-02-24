@@ -71,6 +71,8 @@ gst_deinterlace_method_supported_impl (GstDeinterlaceMethodClass * klass,
       return (klass->deinterlace_frame_ayuv != NULL);
     case GST_VIDEO_FORMAT_NV12:
       return (klass->deinterlace_frame_nv12 != NULL);
+    case GST_VIDEO_FORMAT_NV21:
+      return (klass->deinterlace_frame_nv21 != NULL);
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_xRGB:
       return (klass->deinterlace_frame_argb != NULL);
@@ -156,6 +158,9 @@ gst_deinterlace_method_setup_impl (GstDeinterlaceMethod * self,
       break;
     case GST_VIDEO_FORMAT_NV12:
       self->deinterlace_frame = klass->deinterlace_frame_nv12;
+      break;
+    case GST_VIDEO_FORMAT_NV21:
+      self->deinterlace_frame = klass->deinterlace_frame_nv21;
       break;
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_xRGB:
@@ -276,6 +281,9 @@ gst_deinterlace_simple_method_supported (GstDeinterlaceMethodClass * mklass,
     case GST_VIDEO_FORMAT_NV12:
       return (klass->interpolate_scanline_nv12 != NULL
           && klass->copy_scanline_nv12 != NULL);
+    case GST_VIDEO_FORMAT_NV21:
+      return (klass->interpolate_scanline_nv21 != NULL
+          && klass->copy_scanline_nv21 != NULL);
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
@@ -673,6 +681,10 @@ gst_deinterlace_simple_method_setup (GstDeinterlaceMethod * method,
       self->interpolate_scanline_packed = klass->interpolate_scanline_nv12;
       self->copy_scanline_packed = klass->copy_scanline_nv12;
       break;
+    case GST_VIDEO_FORMAT_NV21:
+      self->interpolate_scanline_packed = klass->interpolate_scanline_nv21;
+      self->copy_scanline_packed = klass->copy_scanline_nv21;
+      break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
@@ -730,6 +742,8 @@ gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass
   dm_class->deinterlace_frame_y41b =
       gst_deinterlace_simple_method_deinterlace_frame_planar;
   dm_class->deinterlace_frame_nv12 =
+      gst_deinterlace_simple_method_deinterlace_frame_nv12;
+  dm_class->deinterlace_frame_nv21 =
       gst_deinterlace_simple_method_deinterlace_frame_nv12;
   dm_class->fields_required = 2;
   dm_class->setup = gst_deinterlace_simple_method_setup;
