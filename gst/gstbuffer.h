@@ -285,6 +285,8 @@ struct _GstBuffer {
   GFreeFunc              free_func;
   GstBuffer             *parent;
 
+  gpointer               owner_priv;
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
