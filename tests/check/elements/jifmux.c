@@ -942,9 +942,10 @@ generate_jif_file_with_tags_from_taglist (GstTagList * taglist,
   fail_if (gst_element_set_state (pipeline, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE);
 
-  msg = gst_bus_timed_pop_filtered (bus, GST_SECOND * 5, GST_MESSAGE_EOS |
+  msg = gst_bus_timed_pop_filtered (bus, GST_SECOND * 10, GST_MESSAGE_EOS |
       GST_MESSAGE_ERROR);
-  fail_if (!msg || GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
+  fail_if (!msg);
+  fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
 
   gst_message_unref (msg);
   gst_object_unref (bus);
