@@ -670,7 +670,9 @@ gst_encode_bin_request_new_pad (GstElement * element,
 static GstPad *
 gst_encode_bin_request_pad_signal (GstEncodeBin * encodebin, GstCaps * caps)
 {
-  return request_pad_for_stream (encodebin, G_TYPE_NONE, NULL, caps);
+  GstPad *pad = request_pad_for_stream (encodebin, G_TYPE_NONE, NULL, caps);
+
+  return pad ? GST_PAD_CAST (gst_object_ref (pad)) : NULL;
 }
 
 static inline StreamGroup *
