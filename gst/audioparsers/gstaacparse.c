@@ -58,7 +58,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
-        "framed = (boolean) false, " "mpegversion = (int) { 2, 4 };"));
+        "framed = (boolean) { true, false}, " "mpegversion = (int) { 2, 4 };"));
 
 GST_DEBUG_CATEGORY_STATIC (gst_aacparse_debug);
 #define GST_CAT_DEFAULT gst_aacparse_debug
