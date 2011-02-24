@@ -4,7 +4,6 @@
 
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
-#include <gst/app/gstappbuffer.h>
 
 /* these are the caps we are going to pass through the appsink and appsrc */
 const gchar *audio_caps =
@@ -34,9 +33,9 @@ on_new_buffer_from_source (GstElement * elt, ProgramData * data)
    * the retrieved buffer from appsink into appsrc just fine.  */
   size = GST_BUFFER_SIZE (buffer);
   g_print ("Pushing a buffer of size %d\n", size);
-  raw_buffer = g_malloc0 (size);
+  app_buffer = gst_buffer_new_and_alloc (size);
+  raw_buffer = GST_BUFFER_DATA (app_buffer);
   memcpy (raw_buffer, GST_BUFFER_DATA (buffer), size);
-  app_buffer = gst_app_buffer_new (raw_buffer, size, g_free, raw_buffer);
 
   /* newer basesrc will set caps for use automatically but it does not really
    * hurt to set it on the buffer again */

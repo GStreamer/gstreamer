@@ -6,7 +6,6 @@
 
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
-#include <gst/app/gstappbuffer.h>
 #include <gst/app/gstappsink.h>
 
 #include <stdio.h>
@@ -24,8 +23,6 @@ struct _App
 };
 
 App s_app;
-
-static void dont_eat_my_chicken_wings (void *priv);
 
 int
 main (int argc, char *argv[])
@@ -59,11 +56,11 @@ main (int argc, char *argv[])
     GstBuffer *buf;
     void *data;
 
-    data = malloc (100);
+    buf = gst_buffer_new_and_alloc (100);
+    data = GST_BUFFER_DATA (buf);
     memset (data, i, 100);
 
-    buf = gst_app_buffer_new (data, 100, dont_eat_my_chicken_wings, data);
-    printf ("%d: creating buffer for pointer %p, %p\n", i, data, buf);
+    printf ("%d: pushing buffer for pointer %p, %p\n", i, data, buf);
     gst_app_src_push_buffer (GST_APP_SRC (app->src), buf);
   }
 
@@ -85,11 +82,4 @@ main (int argc, char *argv[])
   gst_element_set_state (app->pipe, GST_STATE_NULL);
 
   return 0;
-}
-
-static void
-dont_eat_my_chicken_wings (void *priv)
-{
-  printf ("freeing buffer for pointer %p\n", priv);
-  free (priv);
 }
