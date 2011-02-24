@@ -368,7 +368,7 @@ add_id3v2frame_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
     GstBuffer *buf;
 
     val = gst_tag_list_get_value_index (list, tag, i);
-    buf = (GstBuffer *) gst_value_get_mini_object (val);
+    buf = (GstBuffer *) g_value_get_boxed (val);
 
     if (buf && GST_BUFFER_CAPS (buf)) {
       GstStructure *s;
@@ -403,7 +403,7 @@ add_image_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
     GST_DEBUG ("image %u/%u", n + 1, num_tags);
 
     val = gst_tag_list_get_value_index (list, tag, n);
-    image = (GstBuffer *) gst_value_get_mini_object (val);
+    image = (GstBuffer *) g_value_get_boxed (val);
 
     if (GST_IS_BUFFER (image) && GST_BUFFER_SIZE (image) > 0 &&
         GST_BUFFER_CAPS (image) != NULL &&
