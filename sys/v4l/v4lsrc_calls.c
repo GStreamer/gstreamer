@@ -616,78 +616,25 @@ gst_v4lsrc_get_fps_list (GstV4lSrc * v4lsrc)
   }
 }
 
-#define GST_TYPE_V4LSRC_BUFFER (gst_v4lsrc_buffer_get_type())
-#define GST_IS_V4LSRC_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4LSRC_BUFFER))
-#define GST_V4LSRC_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4LSRC_BUFFER, GstV4lSrcBuffer))
+#define GET_V4LSRC_DATA(buf) ((GstV4lSrcData *) (GST_BUFFER_CAST(buf)->owner_priv))
 
-typedef struct _GstV4lSrcBuffer
+typedef struct _GstV4lSrcData
 {
-  GstBuffer buffer;
-
   GstV4lSrc *v4lsrc;
-
   gint num;
-} GstV4lSrcBuffer;
-
-static void gst_v4lsrc_buffer_class_init (gpointer g_class,
-    gpointer class_data);
-static void gst_v4lsrc_buffer_init (GTypeInstance * instance, gpointer g_class);
-static void gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer);
-
-static GstBufferClass *v4lbuffer_parent_class = NULL;
-
-static GType
-gst_v4lsrc_buffer_get_type (void)
-{
-  static GType _gst_v4lsrc_buffer_type;
-
-  if (G_UNLIKELY (_gst_v4lsrc_buffer_type == 0)) {
-    static const GTypeInfo v4lsrc_buffer_info = {
-      sizeof (GstBufferClass),
-      NULL,
-      NULL,
-      gst_v4lsrc_buffer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstV4lSrcBuffer),
-      0,
-      gst_v4lsrc_buffer_init,
-      NULL
-    };
-    _gst_v4lsrc_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstV4lSrcBuffer", &v4lsrc_buffer_info, 0);
-  }
-  return _gst_v4lsrc_buffer_type;
-}
+} GstV4lSrcData;
 
 static void
-gst_v4lsrc_buffer_class_init (gpointer g_class, gpointer class_data)
+gst_v4lsrc_buffer_dispose (GstBuffer * buffer)
 {
-  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
-
-  v4lbuffer_parent_class = g_type_class_peek_parent (g_class);
-
-  mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
-      gst_v4lsrc_buffer_finalize;
-}
-
-static void
-gst_v4lsrc_buffer_init (GTypeInstance * instance, gpointer g_class)
-{
-
-}
-
-static void
-gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer)
-{
-  GstMiniObjectClass *miniobject_class;
+  GstV4lSrcData *data = GET_V4LSRC_DATA (buffer);
   GstV4lSrc *v4lsrc;
   gint num;
 
-  v4lsrc = v4lsrc_buffer->v4lsrc;
-  num = v4lsrc_buffer->num;
+  v4lsrc = data->v4lsrc;
+  num = data->num;
 
-  GST_LOG_OBJECT (v4lsrc, "freeing buffer %p for frame %d", v4lsrc_buffer, num);
+  GST_LOG_OBJECT (v4lsrc, "freeing buffer %p for frame %d", buffer, num);
 
   /* only requeue if we still have an mmap buffer */
   if (GST_V4LELEMENT (v4lsrc)->buffer) {
@@ -695,16 +642,17 @@ gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer)
     gst_v4lsrc_requeue_frame (v4lsrc, num);
   }
 
+  /* free data */
   gst_object_unref (v4lsrc);
-
-  miniobject_class = (GstMiniObjectClass *) v4lbuffer_parent_class;
-  miniobject_class->finalize (GST_MINI_OBJECT_CAST (v4lsrc_buffer));
+  g_slice_free (GstV4lSrcData, data);
+  buffer->owner_priv = NULL;
 }
 
 /* Create a V4lSrc buffer from our mmap'd data area */
 GstBuffer *
 gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
 {
+  GstV4lSrcData *data;
   GstClockTime duration, timestamp, latency;
   GstBuffer *buf;
   GstClock *clock;
@@ -715,10 +663,14 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
   if (!(gst_v4lsrc_get_fps (v4lsrc, &fps_n, &fps_d)))
     return NULL;
 
-  buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_V4LSRC_BUFFER);
+  buf = gst_buffer_new ();
+  data = g_slice_new (GstV4lSrcData);
+  buf->owner_priv = data;
+  GST_MINI_OBJECT_CAST (buf)->dispose =
+      (GstMiniObjectDisposeFunction) gst_v4lsrc_buffer_dispose;
 
-  GST_V4LSRC_BUFFER (buf)->num = num;
-  GST_V4LSRC_BUFFER (buf)->v4lsrc = gst_object_ref (v4lsrc);
+  data->num = num;
+  data->v4lsrc = gst_object_ref (v4lsrc);
 
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
   GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
