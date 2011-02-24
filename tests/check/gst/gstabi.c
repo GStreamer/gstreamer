@@ -59,6 +59,7 @@
 #endif
 #endif
 #endif
+#endif
 
 GST_START_TEST (test_ABI)
 {
