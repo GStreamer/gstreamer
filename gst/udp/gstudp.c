@@ -36,9 +36,11 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 #endif
 
+#if 0
   /* register type of the netbuffer so that we can use it from multiple threads
    * right away. Note that the plugin loading is always serialized */
   gst_netbuffer_get_type ();
+#endif
 
   if (!gst_element_register (plugin, "udpsink", GST_RANK_NONE,
           GST_TYPE_UDPSINK))

@@ -211,16 +211,19 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstDynUDPSink *sink;
   gint ret, size;
   guint8 *data;
-  GstNetBuffer *netbuf;
+  GstBuffer *netbuf;
   struct sockaddr_in theiraddr;
   guint16 destport;
   guint32 destaddr;
 
   memset (&theiraddr, 0, sizeof (theiraddr));
 
+#if 0
   if (GST_IS_NETBUFFER (buffer)) {
     netbuf = GST_NETBUFFER (buffer);
-  } else {
+  } else
+#endif
+  {
     GST_DEBUG ("Received buffer is not a GstNetBuffer, skipping");
     return GST_FLOW_OK;
   }
@@ -232,8 +235,10 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   GST_DEBUG ("about to send %d bytes", size);
 
+#if 0
   // let's get the address from the netbuffer
   gst_netaddress_get_ip4_address (&netbuf->to, &destaddr, &destport);
+#endif
 
   GST_DEBUG ("sending %d bytes to client %d port %d", size, destaddr, destport);
 

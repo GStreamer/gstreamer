@@ -409,7 +409,10 @@ static GstFlowReturn
 gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstUDPSrc *udpsrc;
+#if 0
   GstNetBuffer *outbuf;
+#endif
+  GstBuffer *outbuf;
   union gst_sockaddr
   {
     struct sockaddr sa;
@@ -527,8 +530,8 @@ no_select:
       break;
   }
 
-  /* special case buffer so receivers can also track the address */
-  outbuf = gst_netbuffer_new ();
+  /* FIXME use buffer metadata so receivers can also track the address */
+  outbuf = gst_buffer_new ();
   GST_BUFFER_MALLOCDATA (outbuf) = pktdata;
 
   /* patch pktdata and len when stripping off the headers */
@@ -542,6 +545,7 @@ no_select:
   GST_BUFFER_DATA (outbuf) = pktdata;
   GST_BUFFER_SIZE (outbuf) = ret;
 
+#if 0
   switch (sa.sa.sa_family) {
     case AF_INET:
     {
@@ -565,6 +569,7 @@ no_select:
 #endif
       goto receive_error;
   }
+#endif
   GST_LOG_OBJECT (udpsrc, "read %d bytes", (int) readsize);
 
   *buf = GST_BUFFER_CAST (outbuf);

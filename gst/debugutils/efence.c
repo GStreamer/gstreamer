@@ -84,26 +84,22 @@ static gboolean gst_efence_activate_src_pull (GstPad * pad, gboolean active);
 
 static GstElementClass *parent_class = NULL;
 
-typedef struct _GstFencedBuffer GstFencedBuffer;
-struct _GstFencedBuffer
+typedef struct _GstFencedData
 {
-  GstBuffer buffer;
   void *region;
   unsigned int length;
-};
+} GstFencedData;
 
-GType gst_fenced_buffer_get_type (void);
-static void gst_fenced_buffer_finalize (GstFencedBuffer * buf);
-static GstFencedBuffer *gst_fenced_buffer_copy (const GstBuffer * buffer);
+static void gst_fenced_buffer_dispose (GstBuffer * buf);
+static GstBuffer *gst_fenced_buffer_copy (const GstBuffer * buffer);
 static void *gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
     gboolean fence_top);
+#if 0
 static GstFlowReturn gst_efence_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
+#endif
 
-#define GST_TYPE_FENCED_BUFFER (gst_fenced_buffer_get_type())
-
-#define GST_IS_FENCED_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_FENCED_BUFFER))
-#define GST_FENCED_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_FENCED_BUFFER, GstFencedBuffer))
+#define GET_FENCED_DATA(buf) ((GstFencedData *) (GST_BUFFER_CAST(buf)->owner_priv))
 
 GType
 gst_gst_efence_get_type (void)
@@ -182,8 +178,10 @@ gst_efence_init (GstEFence * filter)
       GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_efence_chain));
+#if 0
   gst_pad_set_bufferalloc_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_efence_buffer_alloc));
+#endif
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   filter->srcpad =
@@ -217,11 +215,13 @@ gst_efence_chain (GstPad * pad, GstBuffer * buffer)
   efence = GST_EFENCE (GST_OBJECT_PARENT (pad));
   g_return_val_if_fail (GST_IS_EFENCE (efence), GST_FLOW_ERROR);
 
+#if 0
   if (GST_IS_FENCED_BUFFER (buffer)) {
     GST_DEBUG_OBJECT (efence, "Passing on existing fenced buffer with caps %"
         GST_PTR_FORMAT, GST_BUFFER_CAPS (buffer));
     return gst_pad_push (efence->srcpad, buffer);
   }
+#endif
 
   copy = (GstBuffer *) gst_fenced_buffer_copy (buffer);
 
@@ -277,6 +277,7 @@ gst_efence_activate_src_pull (GstPad * pad, gboolean active)
   return gst_pad_activate_pull (efence->sinkpad, active);
 }
 
+#if 0
 static GstFlowReturn
 gst_efence_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf)
@@ -306,6 +307,7 @@ gst_efence_buffer_alloc (GstPad * pad, guint64 offset,
 
   return GST_FLOW_OK;
 }
+#endif
 
 static void
 gst_efence_set_property (GObject * object, guint prop_id,
@@ -374,29 +376,25 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
 
-static GstBufferClass *fenced_buffer_parent_class = NULL;
-
 static void
-gst_fenced_buffer_finalize (GstFencedBuffer * buffer)
+gst_fenced_buffer_dispose (GstBuffer * buffer)
 {
-  GstFencedBuffer *fenced_buffer;
+  GstFencedData *data;
+
+  data = GET_FENCED_DATA (buffer);
 
   GST_DEBUG ("free buffer=%p", buffer);
 
-  fenced_buffer = GST_FENCED_BUFFER (buffer);
-
   /* free our data */
   if (GST_BUFFER_DATA (buffer)) {
-    GST_DEBUG ("free region %p %d", fenced_buffer->region,
-        fenced_buffer->length);
-    munmap (fenced_buffer->region, fenced_buffer->length);
+    GST_DEBUG ("free region %p %d", data->region, data->length);
+    munmap (data->region, data->length);
   }
-
-  GST_MINI_OBJECT_CLASS (fenced_buffer_parent_class)->finalize (GST_MINI_OBJECT
-      (buffer));
+  g_slice_free (GstFencedData, data);
+  buffer->owner_priv = NULL;
 }
 
-static GstFencedBuffer *
+static GstBuffer *
 gst_fenced_buffer_copy (const GstBuffer * buffer)
 {
   GstBuffer *copy;
@@ -406,11 +404,10 @@ gst_fenced_buffer_copy (const GstBuffer * buffer)
   g_return_val_if_fail (buffer != NULL, NULL);
 
   /* create a fresh new buffer */
-  copy = (GstBuffer *) gst_mini_object_new (GST_TYPE_FENCED_BUFFER);
+  copy = gst_buffer_new ();
 
   /* we simply copy everything from our parent */
-  ptr = gst_fenced_buffer_alloc (GST_BUFFER (copy),
-      GST_BUFFER_SIZE (buffer), TRUE);
+  ptr = gst_fenced_buffer_alloc (copy, GST_BUFFER_SIZE (buffer), TRUE);
   memcpy (ptr, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
 
   /* copy relevant flags */
@@ -434,7 +431,7 @@ gst_fenced_buffer_copy (const GstBuffer * buffer)
       ", caps: %" GST_PTR_FORMAT, buffer,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (copy)), GST_BUFFER_CAPS (copy));
 
-  return GST_FENCED_BUFFER (copy);
+  return copy;
 }
 
 void *
@@ -443,13 +440,14 @@ gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
 {
   int alloc_size;
   void *region;
-  GstFencedBuffer *fenced_buffer = (GstFencedBuffer *) buffer;
+  GstFencedData *data;
   int page_size;
 
   GST_DEBUG ("buffer=%p length=%d fence_top=%d", buffer, length, fence_top);
 
   if (length == 0)
     return NULL;
+
 
 #ifdef _SC_PAGESIZE
   page_size = sysconf (_SC_PAGESIZE);
@@ -467,21 +465,29 @@ gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
     g_warning ("mmap failed");
     return NULL;
   }
+
+  data = g_slice_new (GstFencedData);
+  buffer->owner_priv = data;
+  GST_MINI_OBJECT_CAST (buffer)->dispose =
+      (GstMiniObjectDisposeFunction) gst_fenced_buffer_dispose;
+  GST_MINI_OBJECT_CAST (buffer)->copy =
+      (GstMiniObjectCopyFunction) gst_fenced_buffer_copy;
+
 #if 0
   munmap (region, page_size);
   munmap (region + alloc_size - page_size, page_size);
 
-  fenced_buffer->region = region + page_size;
-  fenced_buffer->length = alloc_size - page_size;
+  data->region = region + page_size;
+  data->length = alloc_size - page_size;
 #else
   mprotect (region, page_size, PROT_NONE);
   mprotect ((char *) region + alloc_size - page_size, page_size, PROT_NONE);
 
-  fenced_buffer->region = region;
-  fenced_buffer->length = alloc_size;
+  data->region = region;
+  data->length = alloc_size;
 #endif
 
-  GST_DEBUG ("new region %p %d", fenced_buffer->region, fenced_buffer->length);
+  GST_DEBUG ("new region %p %d", data->region, data->length);
 
   if (fence_top) {
     int offset;
@@ -493,40 +499,4 @@ gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
   } else {
     return (void *) ((char *) region + page_size);
   }
-}
-
-static void
-gst_fenced_buffer_class_init (gpointer g_class, gpointer class_data)
-{
-  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
-
-  fenced_buffer_parent_class = g_type_class_peek_parent (g_class);
-
-  mini_object_class->finalize =
-      (GstMiniObjectFinalizeFunction) gst_fenced_buffer_finalize;
-  mini_object_class->copy = (GstMiniObjectCopyFunction) gst_fenced_buffer_copy;
-}
-
-GType
-gst_fenced_buffer_get_type (void)
-{
-  static GType fenced_buf_type = 0;
-
-  if (G_UNLIKELY (!fenced_buf_type)) {
-    static const GTypeInfo fenced_buf_info = {
-      sizeof (GstBufferClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_fenced_buffer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstFencedBuffer),
-      0,
-      NULL,
-    };
-
-    fenced_buf_type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstFencedBuffer", &fenced_buf_info, 0);
-  }
-  return fenced_buf_type;
 }
