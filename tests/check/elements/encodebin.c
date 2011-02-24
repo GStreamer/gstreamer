@@ -110,7 +110,7 @@ GST_START_TEST (test_encodebin_states)
   /* At this point, the ghostpad has *NO* target */
   target = gst_ghost_pad_get_target (GST_GHOST_PAD (srcpad));
   fail_unless (target == NULL);
-  g_object_unref (srcpad);
+  gst_object_unref (srcpad);
 
   /* No profile,
    * switching to READY should succeed,
@@ -146,8 +146,8 @@ GST_START_TEST (test_encodebin_states)
   fail_unless (srcpad != NULL);
   target = gst_ghost_pad_get_target (GST_GHOST_PAD (srcpad));
   fail_unless (target != NULL);
-  g_object_unref (target);
-  g_object_unref (srcpad);
+  gst_object_unref (target);
+  gst_object_unref (srcpad);
 
 
   /* Set back to NULL */
@@ -183,12 +183,12 @@ GST_START_TEST (test_encodebin_sink_pads_static)
   /* Check if the source pad was properly created */
   srcpad = gst_element_get_static_pad (ebin, "src");
   fail_unless (srcpad != NULL);
-  g_object_unref (srcpad);
+  gst_object_unref (srcpad);
 
   /* Check if the audio sink pad was properly created */
   sinkpad = gst_element_get_static_pad (ebin, "audio_0");
   fail_unless (sinkpad != NULL);
-  g_object_unref (sinkpad);
+  gst_object_unref (sinkpad);
 
   /* Set back to NULL */
   fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_NULL),
@@ -251,12 +251,13 @@ GST_START_TEST (test_encodebin_sink_pads_dynamic)
   /* Check if the source pad was properly created */
   srcpad = gst_element_get_static_pad (ebin, "src");
   fail_unless (srcpad != NULL);
-  g_object_unref (srcpad);
+  gst_object_unref (srcpad);
 
   /* Check if the audio sink pad can be requested */
   sinkpad = gst_element_get_request_pad (ebin, "audio_0");
   fail_unless (sinkpad != NULL);
   gst_element_release_request_pad (ebin, sinkpad);
+  gst_object_unref (sinkpad);
   sinkpad = NULL;
 
   /* Check again with the 'request-pad' signal */
@@ -265,6 +266,8 @@ GST_START_TEST (test_encodebin_sink_pads_dynamic)
   gst_caps_unref (sinkcaps);
   fail_unless (sinkpad != NULL);
   gst_element_release_request_pad (ebin, sinkpad);
+  gst_object_unref (sinkpad);
+  sinkpad = NULL;
 
   fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_PAUSED),
       GST_STATE_CHANGE_SUCCESS);
@@ -301,17 +304,17 @@ GST_START_TEST (test_encodebin_sink_pads_multiple_static)
   /* Check if the source pad was properly created */
   srcpad = gst_element_get_static_pad (ebin, "src");
   fail_unless (srcpad != NULL);
-  g_object_unref (srcpad);
+  gst_object_unref (srcpad);
 
   /* Check if the audio sink pad was properly created */
   sinkpadvorbis = gst_element_get_static_pad (ebin, "audio_0");
   fail_unless (sinkpadvorbis != NULL);
-  g_object_unref (sinkpadvorbis);
+  gst_object_unref (sinkpadvorbis);
 
   /* Check if the video sink pad was properly created */
   sinkpadtheora = gst_element_get_static_pad (ebin, "video_1");
   fail_unless (sinkpadtheora != NULL);
-  g_object_unref (sinkpadtheora);
+  gst_object_unref (sinkpadtheora);
 
   /* Set back to NULL */
   fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_NULL),
@@ -343,20 +346,25 @@ GST_START_TEST (test_encodebin_sink_pads_multiple_dynamic)
   /* Check if the source pad was properly created */
   srcpad = gst_element_get_static_pad (ebin, "src");
   fail_unless (srcpad != NULL);
-  g_object_unref (srcpad);
+  gst_object_unref (srcpad);
 
   /* Check if the audio sink pad was properly created */
   sinkpadvorbis = gst_element_get_request_pad (ebin, "audio_0");
   fail_unless (sinkpadvorbis != NULL);
-  g_object_unref (sinkpadvorbis);
+  gst_object_unref (sinkpadvorbis);
 
   /* Check if the video sink pad was properly created */
   sinkpadtheora = gst_element_get_request_pad (ebin, "video_1");
   fail_unless (sinkpadtheora != NULL);
-  g_object_unref (sinkpadtheora);
+  gst_object_unref (sinkpadtheora);
 
   fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_PAUSED),
       GST_STATE_CHANGE_SUCCESS);
+
+  gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpadvorbis);
+  gst_object_unref (sinkpadvorbis);
+  gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpadtheora);
+  gst_object_unref (sinkpadtheora);
 
   /* Set back to NULL */
   fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_NULL),
@@ -389,7 +397,7 @@ GST_START_TEST (test_encodebin_sink_pads_dynamic_encoder)
   /* Check if the source pad was properly created */
   srcpad = gst_element_get_static_pad (ebin, "src");
   fail_unless (srcpad != NULL);
-  g_object_unref (srcpad);
+  gst_object_unref (srcpad);
 
   /* Check if the audio sink pad was properly created */
   vorbiscaps = gst_caps_from_string ("audio/x-vorbis,channels=2,rate=44100");
@@ -397,6 +405,7 @@ GST_START_TEST (test_encodebin_sink_pads_dynamic_encoder)
   gst_caps_unref (vorbiscaps);
   fail_unless (sinkpad != NULL);
   gst_element_release_request_pad (ebin, sinkpad);
+  gst_object_unref (sinkpad);
 
   fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_PAUSED),
       GST_STATE_CHANGE_SUCCESS);
@@ -462,7 +471,7 @@ GST_START_TEST (test_encodebin_render_audio_static)
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
 
-  g_object_unref (bus);
+  gst_object_unref (bus);
 
   gst_object_unref (pipeline);
 }
@@ -530,7 +539,7 @@ GST_START_TEST (test_encodebin_render_audio_only_static)
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
 
-  g_object_unref (bus);
+  gst_object_unref (bus);
 
   gst_object_unref (pipeline);
 }
@@ -569,8 +578,7 @@ GST_START_TEST (test_encodebin_render_audio_dynamic)
 
   fail_unless_equals_int (gst_pad_link (srcpad, sinkpad), GST_PAD_LINK_OK);
 
-  g_object_unref (srcpad);
-  g_object_unref (sinkpad);
+  gst_object_unref (srcpad);
 
   fail_unless (gst_element_link (ebin, fakesink));
 
@@ -597,11 +605,14 @@ GST_START_TEST (test_encodebin_render_audio_dynamic)
     }
   }
 
+  gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpad);
+  gst_object_unref (sinkpad);
+
   /* Set back to NULL */
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
 
-  g_object_unref (bus);
+  gst_object_unref (bus);
 
   gst_object_unref (pipeline);
 }
@@ -664,7 +675,7 @@ GST_START_TEST (test_encodebin_render_audio_video_static)
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
 
-  g_object_unref (bus);
+  gst_object_unref (bus);
 
   gst_object_unref (pipeline);
 }
@@ -677,7 +688,7 @@ GST_START_TEST (test_encodebin_render_audio_video_dynamic)
   GstEncodingProfile *prof;
   GstBus *bus;
   gboolean done = FALSE;
-  GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad1, *sinkpad2, *srcpad;
 
   /* Create an encodebin and render 5s of vorbis/ogg */
 
@@ -701,18 +712,16 @@ GST_START_TEST (test_encodebin_render_audio_video_dynamic)
   fail_unless (gst_element_link (ebin, fakesink));
 
   srcpad = gst_element_get_static_pad (audiotestsrc, "src");
-  sinkpad = gst_element_get_request_pad (ebin, "audio_0");
+  sinkpad1 = gst_element_get_request_pad (ebin, "audio_0");
   fail_unless (srcpad != NULL);
-  fail_unless (sinkpad != NULL);
-  fail_unless_equals_int (gst_pad_link (srcpad, sinkpad), GST_PAD_LINK_OK);
-  g_object_unref (srcpad);
-  g_object_unref (sinkpad);
+  fail_unless (sinkpad1 != NULL);
+  fail_unless_equals_int (gst_pad_link (srcpad, sinkpad1), GST_PAD_LINK_OK);
+  gst_object_unref (srcpad);
 
   srcpad = gst_element_get_static_pad (videotestsrc, "src");
-  sinkpad = gst_element_get_request_pad (ebin, "video_1");
-  fail_unless_equals_int (gst_pad_link (srcpad, sinkpad), GST_PAD_LINK_OK);
-  g_object_unref (srcpad);
-  g_object_unref (sinkpad);
+  sinkpad2 = gst_element_get_request_pad (ebin, "video_1");
+  fail_unless_equals_int (gst_pad_link (srcpad, sinkpad2), GST_PAD_LINK_OK);
+  gst_object_unref (srcpad);
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
       GST_STATE_CHANGE_ASYNC);
@@ -737,11 +746,16 @@ GST_START_TEST (test_encodebin_render_audio_video_dynamic)
     }
   }
 
+  gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpad1);
+  gst_object_unref (sinkpad1);
+  gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpad2);
+  gst_object_unref (sinkpad2);
+
   /* Set back to NULL */
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
 
-  g_object_unref (bus);
+  gst_object_unref (bus);
 
   gst_object_unref (pipeline);
 }
