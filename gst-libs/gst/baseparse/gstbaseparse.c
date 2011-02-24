@@ -1725,6 +1725,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
   /* decorate */
+  buffer = gst_buffer_make_metadata_writable (buffer);
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
 
   parse->priv->seen_keyframe |= parse->priv->is_video &&
