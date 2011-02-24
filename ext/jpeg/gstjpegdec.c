@@ -1061,7 +1061,7 @@ gst_jpeg_dec_update_qos (GstJpegDec * dec, gdouble proportion,
   GST_OBJECT_LOCK (dec);
   dec->proportion = proportion;
   if (G_LIKELY (ts != GST_CLOCK_TIME_NONE)) {
-    if (G_UNLIKELY (diff > 0))
+    if (G_UNLIKELY (diff > dec->qos_duration))
       dec->earliest_time = ts + 2 * diff + dec->qos_duration;
     else
       dec->earliest_time = ts + diff;
