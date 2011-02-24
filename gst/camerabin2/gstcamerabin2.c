@@ -77,7 +77,9 @@ enum
   PROP_VIDEO_FILTER,
   PROP_VIEWFINDER_FILTER,
   PROP_PREVIEW_FILTER,
-  PROP_VIEWFINDER_SINK
+  PROP_VIEWFINDER_SINK,
+  PROP_VIEWFINDER_SUPPORTED_CAPS,
+  PROP_VIEWFINDER_CAPS
 };
 
 enum
@@ -448,6 +450,28 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
       g_param_spec_object ("viewfinder-sink", "Viewfinder sink",
           "The video sink of the viewfinder.",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class,
+      PROP_VIEWFINDER_CAPS,
+      g_param_spec_boxed ("viewfinder-caps",
+          "Viewfinder caps",
+          "Restricts the caps that can be used on the viewfinder",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /* TODO review before going stable
+   * We have viewfinder-supported-caps that returns the caps that the
+   * camerasrc can produce on its viewfinder pad, this could easily be
+   * confused with what the viewfinder-sink accepts.
+   *
+   * Do we want to add a 'viewfinder-sink-supported-caps' or maybe change
+   * the name of this property?
+   */
+  g_object_class_install_property (object_class,
+      PROP_VIEWFINDER_SUPPORTED_CAPS,
+      g_param_spec_boxed ("viewfinder-supported-caps",
+          "Camera source Viewfinder pad supported caps",
+          "The caps that the camera source can produce on the viewfinder pad",
+          GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin::capture-start:
@@ -854,6 +878,29 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       }
     }
       break;
+    case PROP_VIEWFINDER_CAPS:{
+      GstPad *pad = NULL;
+
+      if (camera->src)
+        pad =
+            gst_element_get_static_pad (camera->src,
+            GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME);
+
+      GST_DEBUG_OBJECT (camera,
+          "Setting viewfinder capture caps to %" GST_PTR_FORMAT,
+          gst_value_get_caps (value));
+
+      /* set the capsfilter caps and notify the src to renegotiate */
+      g_object_set (camera->viewfinderbin_capsfilter, "caps",
+          gst_value_get_caps (value), NULL);
+      if (pad) {
+        GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
+            GST_PAD_NAME (pad));
+        GST_PAD_EVENTFUNC (pad) (pad, gst_camera_bin_new_event_renegotiate ());
+        gst_object_unref (pad);
+      }
+    }
+      break;
     case PROP_POST_PREVIEWS:
       camera->post_previews = g_value_get_boolean (value);
       if (camera->src
@@ -934,6 +981,7 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       g_value_set_object (value, camera->src);
       break;
     case PROP_VIDEO_CAPTURE_SUPPORTED_CAPS:
+    case PROP_VIEWFINDER_SUPPORTED_CAPS:
     case PROP_IMAGE_CAPTURE_SUPPORTED_CAPS:{
       GstPad *pad;
       GstCaps *caps;
@@ -941,8 +989,10 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
 
       if (prop_id == PROP_VIDEO_CAPTURE_SUPPORTED_CAPS) {
         padname = GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME;
-      } else {
+      } else if (prop_id == PROP_IMAGE_CAPTURE_SUPPORTED_CAPS) {
         padname = GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME;
+      } else {
+        padname = GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME;
       }
 
       if (camera->src) {
@@ -978,6 +1028,13 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
     case PROP_VIDEO_CAPTURE_CAPS:{
       GstCaps *caps = NULL;
       g_object_get (camera->videobin_capsfilter, "caps", &caps, NULL);
+      gst_value_set_caps (value, caps);
+      gst_caps_unref (caps);
+    }
+      break;
+    case PROP_VIEWFINDER_CAPS:{
+      GstCaps *caps = NULL;
+      g_object_get (camera->viewfinderbin_capsfilter, "caps", &caps, NULL);
       gst_value_set_caps (value, caps);
       gst_caps_unref (caps);
     }
