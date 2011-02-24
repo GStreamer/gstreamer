@@ -109,6 +109,10 @@ struct _GstBaseCameraSrcClass
   gboolean    (*set_mode)            (GstBaseCameraSrc *self,
                                       GstCameraBinMode mode);
 
+  /* set preview caps */
+  gboolean    (*set_preview)         (GstBaseCameraSrc *self,
+                                      GstCaps *preview_caps);
+
   /* */
   GstCaps *   (*get_allowed_input_caps) (GstBaseCameraSrc * self);
 
@@ -130,6 +134,7 @@ GstColorBalance * gst_base_camera_src_get_color_balance (GstBaseCameraSrc *self)
 
 gboolean gst_base_camera_src_set_mode (GstBaseCameraSrc *self, GstCameraBinMode mode);
 void gst_base_camera_src_setup_zoom (GstBaseCameraSrc * self);
+void gst_base_camera_src_setup_preview (GstBaseCameraSrc * self, GstCaps * preview_caps);
 GstCaps * gst_base_camera_src_get_allowed_input_caps (GstBaseCameraSrc * self);
 void gst_base_camera_src_finish_capture (GstBaseCameraSrc *self);
 

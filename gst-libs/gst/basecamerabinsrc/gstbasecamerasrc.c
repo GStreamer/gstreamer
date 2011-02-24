@@ -201,6 +201,28 @@ gst_base_camera_src_setup_zoom (GstBaseCameraSrc * self)
   bclass->set_zoom (self, zoom);
 }
 
+/**
+ * gst_base_camera_src_setup_preview:
+ * @self: camerasrc bin
+ * @preview_caps: preview caps to set
+ *
+ * Apply preview caps to preview pipeline and to video source.
+ */
+void
+gst_base_camera_src_setup_preview (GstBaseCameraSrc * self,
+    GstCaps * preview_caps)
+{
+  GstBaseCameraSrcClass *bclass = GST_BASE_CAMERA_SRC_GET_CLASS (self);
+
+  if (self->preview_pipeline) {
+    GST_DEBUG_OBJECT (self,
+        "Setting preview pipeline caps %" GST_PTR_FORMAT, self->preview_caps);
+    gst_camerabin_preview_set_caps (self->preview_pipeline, preview_caps);
+  }
+
+  if (bclass->set_preview)
+    bclass->set_preview (self, preview_caps);
+}
 
 /**
  * gst_base_camera_src_get_allowed_input_caps:
@@ -327,13 +349,8 @@ gst_base_camera_src_set_property (GObject * object,
     case PROP_PREVIEW_CAPS:
       gst_caps_replace (&self->preview_caps,
           (GstCaps *) gst_value_get_caps (value));
-      if (self->preview_pipeline) {
-        GST_DEBUG_OBJECT (self,
-            "Setting preview pipeline caps %" GST_PTR_FORMAT,
-            self->preview_caps);
-        gst_camerabin_preview_set_caps (self->preview_pipeline,
-            (GstCaps *) gst_value_get_caps (value));
-      }
+      gst_base_camera_src_setup_preview (self,
+          (GstCaps *) gst_value_get_caps (value));
       break;
     case PROP_PREVIEW_FILTER:
       if (self->preview_filter)
