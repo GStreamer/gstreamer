@@ -895,17 +895,13 @@ gst_dvdemux_convert_segment (GstDVDemux * dvdemux, GstSegment * src,
  *
  * Convert the time seek to a bytes seek and send it
  * upstream
- *
- * FIXME, upstream might be able to perform time based
- * seek too.
- *
  * Does not take ownership of the event.
  */
 static gboolean
 gst_dvdemux_handle_push_seek (GstDVDemux * dvdemux, GstPad * pad,
     GstEvent * event)
 {
-  gboolean res;
+  gboolean res = FALSE;
   gdouble rate;
   GstSeekFlags flags;
   GstFormat format;
@@ -917,19 +913,24 @@ gst_dvdemux_handle_push_seek (GstDVDemux * dvdemux, GstPad * pad,
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
 
-  /* we convert the start/stop on the srcpad to the byte format
-   * on the sinkpad and forward the event */
-  res = gst_dvdemux_convert_src_to_sink (dvdemux, pad,
-      format, cur, stop, GST_FORMAT_BYTES, &start_position, &end_position);
-  if (!res)
-    goto done;
+  /* First try if upstream can handle time based seeks */
+  if (format == GST_FORMAT_TIME)
+    res = gst_pad_push_event (dvdemux->sinkpad, event);
 
-  /* now this is the updated seek event on bytes */
-  newevent = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
-      cur_type, start_position, stop_type, end_position);
+  if (!res) {
+    /* we convert the start/stop on the srcpad to the byte format
+     * on the sinkpad and forward the event */
+    res = gst_dvdemux_convert_src_to_sink (dvdemux, pad,
+        format, cur, stop, GST_FORMAT_BYTES, &start_position, &end_position);
+    if (!res)
+      goto done;
 
-  res = gst_pad_push_event (dvdemux->sinkpad, newevent);
+    /* now this is the updated seek event on bytes */
+    newevent = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
+        cur_type, start_position, stop_type, end_position);
 
+    res = gst_pad_push_event (dvdemux->sinkpad, newevent);
+  }
 done:
   return res;
 }
