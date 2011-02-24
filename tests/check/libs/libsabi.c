@@ -59,6 +59,10 @@
 #include "struct_sparc.h"
 #define HAVE_ABI_SIZES TRUE
 #else
+#ifdef HAVE_CPU_ARM
+#include "struct_arm.h"
+#define HAVE_ABI_SIZES TRUE
+#else
 /* in case someone wants to generate a new arch */
 #include "struct_i386.h"
 #define HAVE_ABI_SIZES FALSE
