@@ -75,20 +75,6 @@
 
 #define DEBUG_REFCOUNT
 
-#define CAPS_POISON(caps) G_STMT_START{ \
-  if (caps) { \
-    GstCaps *_newcaps = _gst_caps_copy (caps); \
-    gst_caps_unref(caps); \
-    caps = _newcaps; \
-  } \
-} G_STMT_END
-#define STRUCTURE_POISON(structure) G_STMT_START{ \
-  if (structure) { \
-    GstStructure *_newstruct = gst_structure_copy (structure); \
-    gst_structure_free(structure); \
-    structure = _newstruct; \
-  } \
-} G_STMT_END
 #define IS_WRITABLE(caps) \
   (GST_CAPS_REFCOUNT_VALUE (caps) == 1)
 
@@ -174,9 +160,6 @@ _gst_caps_free (GstCaps * caps)
     gst_structure_free (structure);
   }
   g_ptr_array_free (caps->structs, TRUE);
-#ifdef USE_POISONING
-  memset (caps, 0xff, sizeof (GstCaps));
-#endif
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_LOG (GST_CAT_CAPS, "freeing caps %p", caps);
@@ -576,9 +559,6 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
   g_return_if_fail (IS_WRITABLE (caps1));
   g_return_if_fail (IS_WRITABLE (caps2));
 
-#ifdef USE_POISONING
-  CAPS_POISON (caps2);
-#endif
   if (G_UNLIKELY (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2))) {
     /* FIXME: this leaks */
     GST_CAPS_FLAGS (caps1) |= GST_CAPS_FLAGS_ANY;
@@ -618,9 +598,6 @@ gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
   g_return_if_fail (IS_WRITABLE (caps1));
   g_return_if_fail (IS_WRITABLE (caps2));
 
-#ifdef USE_POISONING
-  CAPS_POISON (caps2);
-#endif
   if (G_UNLIKELY (CAPS_IS_ANY (caps1))) {
     for (i = caps2->structs->len - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps2, i);
@@ -666,11 +643,6 @@ gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
 
   if (G_LIKELY (structure)) {
     g_return_if_fail (structure->parent_refcount == NULL);
-#if 0
-#ifdef USE_POISONING
-    STRUCTURE_POISON (structure);
-#endif
-#endif
     gst_caps_append_structure_unchecked (caps, structure);
   }
 }
@@ -716,11 +688,6 @@ gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
     gboolean unique = TRUE;
 
     g_return_if_fail (structure->parent_refcount == NULL);
-#if 0
-#ifdef USE_POISONING
-    STRUCTURE_POISON (structure);
-#endif
-#endif
     /* check each structure */
     for (i = caps->structs->len - 1; i >= 0; i--) {
       structure1 = gst_caps_get_structure_unchecked (caps, i);
