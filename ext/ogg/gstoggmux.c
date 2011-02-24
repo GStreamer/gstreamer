@@ -1068,10 +1068,10 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       gst_buffer_ref (buf);
     } else {
       /* fixme -- should be caught in the previous list traversal. */
-      GST_OBJECT_LOCK (pad);
+      GST_OBJECT_LOCK (thepad);
       g_critical ("No headers or buffers on pad %s:%s",
-          GST_DEBUG_PAD_NAME (pad));
-      GST_OBJECT_UNLOCK (pad);
+          GST_DEBUG_PAD_NAME (thepad));
+      GST_OBJECT_UNLOCK (thepad);
       continue;
     }
 
