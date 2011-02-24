@@ -351,12 +351,10 @@ GST_START_TEST (test_encodebin_sink_pads_multiple_dynamic)
   /* Check if the audio sink pad was properly created */
   sinkpadvorbis = gst_element_get_request_pad (ebin, "audio_0");
   fail_unless (sinkpadvorbis != NULL);
-  gst_object_unref (sinkpadvorbis);
 
   /* Check if the video sink pad was properly created */
   sinkpadtheora = gst_element_get_request_pad (ebin, "video_1");
   fail_unless (sinkpadtheora != NULL);
-  gst_object_unref (sinkpadtheora);
 
   fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_PAUSED),
       GST_STATE_CHANGE_SUCCESS);
