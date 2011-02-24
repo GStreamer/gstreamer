@@ -789,6 +789,13 @@ gst_file_utils_canonicalise_path (const gchar * path)
 {
   gchar **parts, **p, *clean_path;
 
+#ifdef G_OS_WIN32
+  {
+    GST_WARNING ("FIXME: canonicalise win32 path");
+    return g_strdup (path);
+  }
+#endif
+
   parts = g_strsplit (path, "/", -1);
 
   p = parts;
@@ -877,15 +884,10 @@ gst_filename_to_uri (const gchar * filename, GError ** error)
   }
 
   /* path is now absolute, but contains '.' or '..' */
-#ifndef G_OS_WIN32
   abs_clean = gst_file_utils_canonicalise_path (abs_location);
   GST_LOG ("'%s' -> '%s' -> '%s'", filename, abs_location, abs_clean);
   uri = g_filename_to_uri (abs_clean, NULL, error);
   g_free (abs_clean);
-#else
-  GST_WARNING ("FIXME: canonicalise win32 path");
-  uri = g_filename_to_uri (abs_location, NULL, error);
-#endif
 
 beach:
 
