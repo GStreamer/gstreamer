@@ -46,12 +46,12 @@ GType gst_v4l2_buffer_pool_get_type (void);
 
 
 typedef struct _GstV4l2BufferPool GstV4l2BufferPool;
-typedef struct _GstV4l2Buffer GstV4l2Buffer;
+typedef struct _GstV4l2Data GstV4l2Data;
 
 
 struct _GstV4l2BufferPool
 {
-  GstMiniObject parent;
+  GObject parent;
 
   GstElement *v4l2elem;      /* the v4l2 src/sink that owns us.. maybe we should be owned by v4l2object? */
   gboolean requeuebuf;       /* if true, unusued buffers are automatically re-QBUF'd */
@@ -63,12 +63,12 @@ struct _GstV4l2BufferPool
   GAsyncQueue* avail_buffers;/* pool of available buffers, not with the driver and which aren't held outside the bufferpool */
   gint video_fd;             /* a dup(2) of the v4l2object's video_fd */
   guint buffer_count;
-  GstV4l2Buffer **buffers;
+  GstBuffer **buffers;
 };
 
-struct _GstV4l2Buffer {
-  GstBuffer   buffer;
+#define GST_V4L2_GET_DATA(buf) ((GstV4l2Data *) (GST_BUFFER_CAST (buf)->owner_priv))
 
+struct _GstV4l2Data {
   struct v4l2_buffer vbuffer;
 
   /* FIXME: have GstV4l2Src* instead, as this has GstV4l2BufferPool* */
@@ -82,9 +82,9 @@ void gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
 GstV4l2BufferPool *gst_v4l2_buffer_pool_new (GstElement *v4l2elem, gint fd, gint num_buffers, GstCaps * caps, gboolean requeuebuf, enum v4l2_buf_type type);
 
 
-GstV4l2Buffer *gst_v4l2_buffer_pool_get (GstV4l2BufferPool *pool, gboolean blocking);
-gboolean gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool *pool, GstV4l2Buffer *buf);
-GstV4l2Buffer *gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool *pool);
+GstBuffer *gst_v4l2_buffer_pool_get (GstV4l2BufferPool *pool, gboolean blocking);
+gboolean gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool *pool, GstBuffer *buf);
+GstBuffer *gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool *pool);
 
 gint gst_v4l2_buffer_pool_available_buffers (GstV4l2BufferPool *pool);
 

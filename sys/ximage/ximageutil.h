@@ -43,7 +43,7 @@ G_BEGIN_DECLS
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 typedef struct _GstXImage GstXImage;
-typedef struct _GstXImageSrcBuffer GstXImageSrcBuffer;
+typedef struct _GstXImageData GstXImageData;
 
 /* Global X Context stuff */
 /**
@@ -130,21 +130,20 @@ void ximageutil_calculate_pixel_aspect_ratio (GstXContext * xcontext);
 /* custom ximagesrc buffer, copied from ximagesink */
 
 /* BufferReturnFunc is called when a buffer is finalised */
-typedef void (*BufferReturnFunc) (GstElement *parent, GstXImageSrcBuffer *buf);
+typedef void (*BufferReturnFunc) (GstElement *parent, GstBuffer *buf);
 
+#define GST_XIMAGE_GET_DATA(buf) ((GstXImageData *) (GST_BUFFER_CAST(buf)->owner_priv))
 /**
- * GstXImageSrcBuffer:
+ * GstXImageData:
  * @parent: a reference to the element we belong to
  * @ximage: the XImage of this buffer
  * @width: the width in pixels of XImage @ximage
  * @height: the height in pixels of XImage @ximage
  * @size: the size in bytes of XImage @ximage
  *
- * Subclass of #GstBuffer containing additional information about an XImage.
+ * Extra data attached to buffers containing additional information about an XImage.
  */
-struct _GstXImageSrcBuffer {
-  GstBuffer buffer;
-
+struct _GstXImageData {
   /* Reference to the ximagesrc we belong to */
   GstElement *parent;
 
@@ -156,26 +155,19 @@ struct _GstXImageSrcBuffer {
 
   gint width, height;
   size_t size;
-  
+
   BufferReturnFunc return_func;
 };
 
 
-GstXImageSrcBuffer *gst_ximageutil_ximage_new (GstXContext *xcontext,
+GstBuffer *gst_ximageutil_ximage_new (GstXContext *xcontext,
   GstElement *parent, int width, int height, BufferReturnFunc return_func);
 
 void gst_ximageutil_ximage_destroy (GstXContext *xcontext, 
-  GstXImageSrcBuffer * ximage);
+  GstBuffer * ximage);
   
 /* Call to manually release a buffer */
-void gst_ximage_buffer_free (GstXImageSrcBuffer *ximage);
-
-#define GST_TYPE_XIMAGESRC_BUFFER            (gst_ximagesrc_buffer_get_type())
-#define GST_IS_XIMAGESRC_BUFFER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XIMAGESRC_BUFFER))
-#define GST_IS_XIMAGESRC_BUFFER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_XIMAGESRC_BUFFER))
-#define GST_XIMAGESRC_BUFFER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_XIMAGESRC_BUFFER, GstXImageSrcBuffer))
-#define GST_XIMAGESRC_BUFFER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_XIMAGESRC_BUFFER, GstXImageSrcBufferClass))
-#define GST_XIMAGESRC_BUFFER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_XIMAGESRC_BUFFER, GstXImageSrcBufferClass))
+void gst_ximage_buffer_free (GstBuffer *ximage);
 
 G_END_DECLS 
 

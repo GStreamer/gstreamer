@@ -66,7 +66,7 @@ static gboolean
 gst_v4l2src_buffer_pool_activate (GstV4l2BufferPool * pool,
     GstV4l2Src * v4l2src)
 {
-  GstV4l2Buffer *buf;
+  GstBuffer *buf;
 
   while ((buf = gst_v4l2_buffer_pool_get (pool, FALSE)) != NULL)
     if (!gst_v4l2_buffer_pool_qbuf (pool, buf))
@@ -81,7 +81,8 @@ queue_failed:
         (_("Could not enqueue buffers in device '%s'."),
             v4l2src->v4l2object->videodev),
         ("enqueing buffer %d/%d failed: %s",
-            buf->vbuffer.index, v4l2src->num_buffers, g_strerror (errno)));
+            GST_V4L2_GET_DATA (buf)->vbuffer.index, v4l2src->num_buffers,
+            g_strerror (errno)));
     return FALSE;
   }
 }

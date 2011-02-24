@@ -52,23 +52,24 @@
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define GST_CAT_DEFAULT v4l2_debug
 
-
 /*
  * GstV4l2Buffer:
  */
 
-static GstBufferClass *v4l2buffer_parent_class = NULL;
-
 static void
-gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
+gst_v4l2_buffer_dispose (GstBuffer * buffer)
 {
+  GstV4l2Data *data;
   GstV4l2BufferPool *pool;
   gboolean resuscitated = FALSE;
   gint index;
 
-  pool = buffer->pool;
+  data = GST_V4L2_GET_DATA (buffer);
+  g_assert (data != NULL);
 
-  index = buffer->vbuffer.index;
+  pool = data->pool;
+
+  index = data->vbuffer.index;
 
   GST_LOG_OBJECT (pool->v4l2elem, "finalizing buffer %p %d", buffer, index);
 
@@ -95,7 +96,7 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
   if (resuscitated) {
     /* FIXME: check that the caps didn't change */
     GST_LOG_OBJECT (pool->v4l2elem, "reviving buffer %p, %d", buffer, index);
-    gst_buffer_ref (GST_BUFFER (buffer));
+    gst_buffer_ref (buffer);
     GST_BUFFER_SIZE (buffer) = 0;
     pool->buffers[index] = buffer;
   }
@@ -105,96 +106,65 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
   if (!resuscitated) {
     GST_LOG_OBJECT (pool->v4l2elem,
         "buffer %p (data %p, len %u) not recovered, unmapping",
-        buffer, GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
-    gst_mini_object_unref (GST_MINI_OBJECT (pool));
-    v4l2_munmap ((void *) GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
+        buffer, GST_BUFFER_DATA (buffer), data->vbuffer.length);
+    v4l2_munmap ((void *) GST_BUFFER_DATA (buffer), data->vbuffer.length);
 
-    GST_MINI_OBJECT_CLASS (v4l2buffer_parent_class)->finalize (GST_MINI_OBJECT
-        (buffer));
+    g_object_unref (pool);
+    g_slice_free (GstV4l2Data, data);
+    buffer->owner_priv = NULL;
   }
 }
 
-static void
-gst_v4l2_buffer_class_init (gpointer g_class, gpointer class_data)
-{
-  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
-
-  v4l2buffer_parent_class = g_type_class_peek_parent (g_class);
-
-  mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
-      gst_v4l2_buffer_finalize;
-}
-
-GType
-gst_v4l2_buffer_get_type (void)
-{
-  static GType _gst_v4l2_buffer_type;
-
-  if (G_UNLIKELY (_gst_v4l2_buffer_type == 0)) {
-    static const GTypeInfo v4l2_buffer_info = {
-      sizeof (GstBufferClass),
-      NULL,
-      NULL,
-      gst_v4l2_buffer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstV4l2Buffer),
-      0,
-      NULL,
-      NULL
-    };
-    _gst_v4l2_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstV4l2Buffer", &v4l2_buffer_info, 0);
-  }
-  return _gst_v4l2_buffer_type;
-}
-
-static GstV4l2Buffer *
+static GstBuffer *
 gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
 {
-  GstV4l2Buffer *ret;
-  guint8 *data;
+  GstV4l2Data *data;
+  GstBuffer *ret;
+  guint8 *mem;
 
-  ret = (GstV4l2Buffer *) gst_mini_object_new (GST_TYPE_V4L2_BUFFER);
+  ret = gst_buffer_new ();
+  data = g_slice_new (GstV4l2Data);
+  ret->owner_priv = data;
+  GST_MINI_OBJECT_CAST (ret)->dispose =
+      (GstMiniObjectDisposeFunction) gst_v4l2_buffer_dispose;
 
   GST_LOG_OBJECT (pool->v4l2elem, "creating buffer %u, %p in pool %p", index,
       ret, pool);
 
-  ret->pool =
-      (GstV4l2BufferPool *) gst_mini_object_ref (GST_MINI_OBJECT (pool));
+  data->pool = (GstV4l2BufferPool *) g_object_ref (pool);
 
-  ret->vbuffer.index = index;
-  ret->vbuffer.type = pool->type;
-  ret->vbuffer.memory = V4L2_MEMORY_MMAP;
+  data->vbuffer.index = index;
+  data->vbuffer.type = pool->type;
+  data->vbuffer.memory = V4L2_MEMORY_MMAP;
 
-  if (v4l2_ioctl (pool->video_fd, VIDIOC_QUERYBUF, &ret->vbuffer) < 0)
+  if (v4l2_ioctl (pool->video_fd, VIDIOC_QUERYBUF, &data->vbuffer) < 0)
     goto querybuf_failed;
 
-  GST_LOG_OBJECT (pool->v4l2elem, "  index:     %u", ret->vbuffer.index);
-  GST_LOG_OBJECT (pool->v4l2elem, "  type:      %d", ret->vbuffer.type);
-  GST_LOG_OBJECT (pool->v4l2elem, "  bytesused: %u", ret->vbuffer.bytesused);
-  GST_LOG_OBJECT (pool->v4l2elem, "  flags:     %08x", ret->vbuffer.flags);
-  GST_LOG_OBJECT (pool->v4l2elem, "  field:     %d", ret->vbuffer.field);
-  GST_LOG_OBJECT (pool->v4l2elem, "  memory:    %d", ret->vbuffer.memory);
-  if (ret->vbuffer.memory == V4L2_MEMORY_MMAP)
+  GST_LOG_OBJECT (pool->v4l2elem, "  index:     %u", data->vbuffer.index);
+  GST_LOG_OBJECT (pool->v4l2elem, "  type:      %d", data->vbuffer.type);
+  GST_LOG_OBJECT (pool->v4l2elem, "  bytesused: %u", data->vbuffer.bytesused);
+  GST_LOG_OBJECT (pool->v4l2elem, "  flags:     %08x", data->vbuffer.flags);
+  GST_LOG_OBJECT (pool->v4l2elem, "  field:     %d", data->vbuffer.field);
+  GST_LOG_OBJECT (pool->v4l2elem, "  memory:    %d", data->vbuffer.memory);
+  if (data->vbuffer.memory == V4L2_MEMORY_MMAP)
     GST_LOG_OBJECT (pool->v4l2elem, "  MMAP offset:  %u",
-        ret->vbuffer.m.offset);
-  GST_LOG_OBJECT (pool->v4l2elem, "  length:    %u", ret->vbuffer.length);
-  GST_LOG_OBJECT (pool->v4l2elem, "  input:     %u", ret->vbuffer.input);
+        data->vbuffer.m.offset);
+  GST_LOG_OBJECT (pool->v4l2elem, "  length:    %u", data->vbuffer.length);
+  GST_LOG_OBJECT (pool->v4l2elem, "  input:     %u", data->vbuffer.input);
 
-  data = (guint8 *) v4l2_mmap (0, ret->vbuffer.length,
+  mem = (guint8 *) v4l2_mmap (0, data->vbuffer.length,
       PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
-      ret->vbuffer.m.offset);
+      data->vbuffer.m.offset);
 
-  if (data == MAP_FAILED)
+  if (mem == MAP_FAILED)
     goto mmap_failed;
 
-  GST_BUFFER_DATA (ret) = data;
-  GST_BUFFER_SIZE (ret) = ret->vbuffer.length;
+  GST_BUFFER_DATA (ret) = mem;
+  GST_BUFFER_SIZE (ret) = data->vbuffer.length;
 
   GST_BUFFER_FLAG_SET (ret, GST_BUFFER_FLAG_READONLY);
 
-  gst_buffer_set_caps (GST_BUFFER (ret), caps);
+  gst_buffer_set_caps (ret, caps);
 
   return ret;
 
@@ -204,7 +174,7 @@ querybuf_failed:
     gint errnosave = errno;
 
     GST_WARNING ("Failed QUERYBUF: %s", g_strerror (errnosave));
-    gst_buffer_unref (GST_BUFFER (ret));
+    gst_buffer_unref (ret);
     errno = errnosave;
     return NULL;
   }
@@ -213,7 +183,7 @@ mmap_failed:
     gint errnosave = errno;
 
     GST_WARNING ("Failed to mmap: %s", g_strerror (errnosave));
-    gst_buffer_unref (GST_BUFFER (ret));
+    gst_buffer_unref (ret);
     errno = errnosave;
     return NULL;
   }
@@ -224,11 +194,13 @@ mmap_failed:
  * GstV4l2BufferPool:
  */
 
-static GstMiniObjectClass *buffer_pool_parent_class = NULL;
+static GObjectClass *buffer_pool_parent_class = NULL;
 
 static void
-gst_v4l2_buffer_pool_finalize (GstV4l2BufferPool * pool)
+gst_v4l2_buffer_pool_finalize (GObject * object)
 {
+  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (object);
+
   g_mutex_free (pool->lock);
   pool->lock = NULL;
 
@@ -243,8 +215,7 @@ gst_v4l2_buffer_pool_finalize (GstV4l2BufferPool * pool)
     pool->buffers = NULL;
   }
 
-  GST_MINI_OBJECT_CLASS (buffer_pool_parent_class)->finalize (GST_MINI_OBJECT
-      (pool));
+  buffer_pool_parent_class->finalize (object);
 }
 
 static void
@@ -258,12 +229,11 @@ gst_v4l2_buffer_pool_init (GstV4l2BufferPool * pool, gpointer g_class)
 static void
 gst_v4l2_buffer_pool_class_init (gpointer g_class, gpointer class_data)
 {
-  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
 
   buffer_pool_parent_class = g_type_class_peek_parent (g_class);
 
-  mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
-      gst_v4l2_buffer_pool_finalize;
+  object_class->finalize = gst_v4l2_buffer_pool_finalize;
 }
 
 GType
@@ -273,7 +243,7 @@ gst_v4l2_buffer_pool_get_type (void)
 
   if (G_UNLIKELY (_gst_v4l2_buffer_pool_type == 0)) {
     static const GTypeInfo v4l2_buffer_pool_info = {
-      sizeof (GstMiniObjectClass),
+      sizeof (GObjectClass),
       NULL,
       NULL,
       gst_v4l2_buffer_pool_class_init,
@@ -284,7 +254,7 @@ gst_v4l2_buffer_pool_get_type (void)
       (GInstanceInitFunc) gst_v4l2_buffer_pool_init,
       NULL
     };
-    _gst_v4l2_buffer_pool_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
+    _gst_v4l2_buffer_pool_type = g_type_register_static (G_TYPE_OBJECT,
         "GstV4l2BufferPool", &v4l2_buffer_pool_info, 0);
   }
   return _gst_v4l2_buffer_pool_type;
@@ -335,7 +305,7 @@ gst_v4l2_buffer_pool_new (GstElement * v4l2elem, gint fd, gint num_buffers,
   gint n;
   struct v4l2_requestbuffers breq;
 
-  pool = (GstV4l2BufferPool *) gst_mini_object_new (GST_TYPE_V4L2_BUFFER_POOL);
+  pool = (GstV4l2BufferPool *) g_object_new (GST_TYPE_V4L2_BUFFER_POOL, NULL);
 
   pool->video_fd = v4l2_dup (fd);
   if (pool->video_fd < 0)
@@ -370,7 +340,7 @@ gst_v4l2_buffer_pool_new (GstElement * v4l2elem, gint fd, gint num_buffers,
   pool->requeuebuf = requeuebuf;
   pool->type = type;
   pool->buffer_count = num_buffers;
-  pool->buffers = g_new0 (GstV4l2Buffer *, num_buffers);
+  pool->buffers = g_new0 (GstBuffer *, num_buffers);
   pool->avail_buffers = g_async_queue_new ();
 
   /* now, map the buffers: */
@@ -389,7 +359,7 @@ dup_failed:
   {
     gint errnosave = errno;
 
-    gst_mini_object_unref (GST_MINI_OBJECT (pool));
+    g_object_unref (pool);
 
     errno = errnosave;
 
@@ -461,7 +431,7 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
       gst_buffer_unref (buf);
   }
 
-  gst_mini_object_unref (GST_MINI_OBJECT (pool));
+  g_object_unref (pool);
 }
 
 /**
@@ -472,10 +442,10 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
  *
  * Get an available buffer in the pool
  */
-GstV4l2Buffer *
+GstBuffer *
 gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool, gboolean blocking)
 {
-  GstV4l2Buffer *buf;
+  GstBuffer *buf;
 
   if (blocking) {
     buf = g_async_queue_pop (pool->avail_buffers);
@@ -485,7 +455,7 @@ gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool, gboolean blocking)
 
   if (buf) {
     GST_V4L2_BUFFER_POOL_LOCK (pool);
-    GST_BUFFER_SIZE (buf) = buf->vbuffer.length;
+    GST_BUFFER_SIZE (buf) = GST_V4L2_GET_DATA (buf)->vbuffer.length;
     GST_BUFFER_FLAG_UNSET (buf, 0xffffffff);
     GST_V4L2_BUFFER_POOL_UNLOCK (pool);
   }
@@ -506,11 +476,14 @@ gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool, gboolean blocking)
  * Returns: %TRUE for success
  */
 gboolean
-gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstV4l2Buffer * buf)
+gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 {
-  GST_LOG_OBJECT (pool->v4l2elem, "enqueue pool buffer %d", buf->vbuffer.index);
+  GstV4l2Data *data = GST_V4L2_GET_DATA (buf);
 
-  if (v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, &buf->vbuffer) < 0)
+  GST_LOG_OBJECT (pool->v4l2elem, "enqueue pool buffer %d",
+      data->vbuffer.index);
+
+  if (v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, &data->vbuffer) < 0)
     return FALSE;
 
   pool->num_live_buffers--;
@@ -530,17 +503,16 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstV4l2Buffer * buf)
  *
  * Returns: a buffer
  */
-GstV4l2Buffer *
+GstBuffer *
 gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool)
 {
   GstV4l2Object *v4l2object = get_v4l2_object (pool->v4l2elem);
-  GstV4l2Buffer *pool_buffer;
+  GstBuffer *pool_buffer;
   struct v4l2_buffer buffer;
 
   memset (&buffer, 0x00, sizeof (buffer));
   buffer.type = pool->type;
   buffer.memory = V4L2_MEMORY_MMAP;
-
 
   if (v4l2_ioctl (pool->video_fd, VIDIOC_DQBUF, &buffer) >= 0) {
 
