@@ -285,8 +285,6 @@ struct _GstBuffer {
   GFreeFunc              free_func;
   GstBuffer             *parent;
   gpointer               priv;
-
-  gpointer               owner_priv;
 };
 
 /* allocation */

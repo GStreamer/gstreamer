@@ -304,7 +304,6 @@ _gst_buffer_free (GstBuffer * buffer)
   if (buffer->parent)
     gst_buffer_unref (buffer->parent);
 
-
   /* free metadata */
   for (walk = buffer->priv; walk; walk = next) {
     GstMeta *meta = &walk->meta;
