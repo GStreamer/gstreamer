@@ -158,7 +158,7 @@ struct _GstMetaXImage
 
 const GstMetaInfo * gst_meta_ximage_get_info (void);
 
-#define GST_META_XIMAGE_GET(buf,create) ((GstMetaXImage *)gst_buffer_get_meta(buf,gst_meta_ximage_get_info(),create));
+#define GST_META_XIMAGE_GET(buf,create) ((GstMetaXImage *)gst_buffer_get_meta(buf,gst_meta_ximage_get_info(),create))
 
 /**
  * GstXImageSink:
