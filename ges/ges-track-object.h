@@ -161,8 +161,9 @@ guint64 ges_track_object_get_duration (GESTrackObject * object);
 guint32 ges_track_object_get_priority (GESTrackObject * object);
 gboolean ges_track_object_is_active (GESTrackObject * object);
 
-void ges_track_object_set_child_property (GESTrackObject * object,
-    const gchar * property_name, GValue * value);
+gboolean ges_track_object_lookup_child (GESTrackObject *object,
+     const gchar *prop_name, GstElement **element, GParamSpec **pspec);
+
 void ges_track_object_get_child_property (GESTrackObject *object,
                                           const gchar *property_name,
                                           gpointer value);

@@ -988,6 +988,68 @@ ges_track_object_is_active (GESTrackObject * object)
     return object->active;
 }
 
+/*
+ * ges_track_object_lookup_child:
+ * @object: object to lookup the property in
+ * @prop_name: name of the property to look up. You can specify the name of the
+ *     class as such: ClassName::property-name, to guarantee that you get the
+ *     proper GParamSpec in case various GstElement-s contain the same property
+ *     name. If you don't do so, you will get the first element found, having
+ *     this property and the and the corresponding GParamSpec.
+ * @element: (out) (allow-none) (transfer full): pointer to a #GstElement that
+ *     takes the real object to set property on
+ * @pspec: (out) (allow-none) (transfer full): pointer to take the #GParamSpec
+ *     describing the property
+ *
+ * Looks up which @element and @pspec would be effected by the given @name. If various
+ * contained elements have this property name you will get the first one, unless you
+ * specify the class name in @name.
+ *
+ * Returns: TRUE if @element and @pspec could be found. FALSE otherwise. In that
+ * case the values for @pspec and @element are not modified. Unref @element after
+ * usage.
+ */
+gboolean
+ges_track_object_lookup_child (GESTrackObject * object, const gchar * prop_name,
+    GstElement ** element, GParamSpec ** pspec)
+{
+  GHashTableIter iter;
+  gpointer key, value;
+  gchar **names, *name, *classename;
+  gboolean res;
+  GESTrackObjectPrivate *priv = object->priv;
+
+  classename = NULL;
+  res = FALSE;
+
+  names = g_strsplit (prop_name, "::", 2);
+  if (names[1] != NULL) {
+    classename = names[0];
+    name = names[1];
+  } else
+    name = names[0];
+
+  g_hash_table_iter_init (&iter, priv->properties_hashtable);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    if (g_strcmp0 (G_PARAM_SPEC (key)->name, name) == 0) {
+      if (classename == NULL ||
+          g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (value)), classename) == 0) {
+        GST_DEBUG ("The %s property from %s has been found in %s", name,
+            classename, GST_OBJECT_NAME (GST_OBJECT (element)));
+        if (element)
+          *element = g_object_ref (value);
+
+        *pspec = g_param_spec_ref (key);
+        res = TRUE;
+        break;
+      }
+    }
+  }
+  g_strfreev (names);
+
+  return res;
+}
+
 /**
  * ges_track_object_set_child_property:
  * @object: a #GESTrackObject
