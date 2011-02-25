@@ -36,7 +36,6 @@ EXPORTS
 	_gst_alloc_trace_register
 	_gst_buffer_list_initialize
 	_gst_buffer_list_type DATA
-	_gst_buffer_meta_init
 	_gst_buffer_type DATA
 	_gst_caps_type DATA
 	_gst_debug_bin_to_dot_file
@@ -96,6 +95,7 @@ EXPORTS
 	gst_buffer_flag_get_type
 	gst_buffer_get_caps
 	gst_buffer_get_meta
+	gst_buffer_get_meta_by_api
 	gst_buffer_is_metadata_writable
 	gst_buffer_is_span_fast
 	gst_buffer_iterate_meta
@@ -120,8 +120,6 @@ EXPORTS
 	gst_buffer_list_new
 	gst_buffer_make_metadata_writable
 	gst_buffer_merge
-	gst_buffer_meta_get_info
-	gst_buffer_meta_register_info
 	gst_buffer_new
 	gst_buffer_new_and_alloc
 	gst_buffer_remove_meta
@@ -573,6 +571,8 @@ EXPORTS
 	gst_message_type_get_name
 	gst_message_type_get_type
 	gst_message_type_to_quark
+	gst_meta_get_info
+	gst_meta_register
 	gst_mini_object_copy
 	gst_mini_object_flags_get_type
 	gst_mini_object_init
