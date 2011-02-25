@@ -522,8 +522,9 @@ connect_signal (gpointer key, gpointer value, gpointer user_data)
 static void
 connect_properties_signals (GESTrackObject * object)
 {
-  if (G_UNLIKELY (object->priv->properties_hashtable)) {
+  if (G_UNLIKELY (!object->priv->properties_hashtable)) {
     GST_WARNING ("The properties_hashtable hasn't been set");
+    return;
   }
 
   g_hash_table_foreach (object->priv->properties_hashtable,
@@ -801,7 +802,7 @@ ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
  * ges_track_object_get_track:
  * @object: a #GESTrackObject
  *
- * Get the #GESTrack to which this object belongs. 
+ * Get the #GESTrack to which this object belongs.
  *
  * Returns: (transfer none): The #GESTrack to which this object belongs. Can be %NULL if it
  * is not in any track
