@@ -143,7 +143,8 @@ Or another example for the buffer memory region
 GstBufferMetaInfo will point to more information about the metadata and looks like this:
 
   struct _GstBufferMetaInfo {
-    GQuark                     tag;       /* tag name */
+    GQuark                     api;       /* api name */
+    GQuark                     impl;      /* implementation name */
     gsize                      size;      /* size of the structure */
 
     GstMetaInitFunction        init_func;
