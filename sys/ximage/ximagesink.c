@@ -1634,6 +1634,7 @@ static GstFlowReturn
 gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstXImageSink *ximagesink;
+  GstMetaXImage *meta;
 
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
@@ -1644,16 +1645,15 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   if (!ximagesink->xcontext)
     return GST_FLOW_ERROR;
 
-#if 0
-  /* If this buffer has been allocated using our buffer management we simply
-     put the ximage which is in the PRIVATE pointer */
-  if (GST_IS_XIMAGE_BUFFER (buf)) {
+  meta = GST_META_XIMAGE_GET (buf, FALSE);
+
+  if (meta) {
+    /* If this buffer has been allocated using our buffer management we simply
+       put the ximage which is in the PRIVATE pointer */
     GST_LOG_OBJECT (ximagesink, "buffer from our pool, writing directly");
-    if (!gst_ximagesink_ximage_put (ximagesink, GST_XIMAGE_BUFFER (buf)))
+    if (!gst_ximagesink_ximage_put (ximagesink, buf))
       goto no_window;
-  } else
-#endif
-  {
+  } else {
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
     GST_LOG_OBJECT (ximagesink, "normal buffer, copying from it");
@@ -1666,7 +1666,7 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
         goto no_ximage;
 
       if (GST_BUFFER_SIZE (ximagesink->ximage) < GST_BUFFER_SIZE (buf)) {
-        GstMetaXImage *meta = GST_META_XIMAGE_GET (ximagesink->ximage, FALSE);
+        meta = GST_META_XIMAGE_GET (ximagesink->ximage, FALSE);
 
         GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
             ("Failed to create output image buffer of %dx%d pixels",
@@ -1733,7 +1733,6 @@ gst_ximagesink_event (GstBaseSink * sink, GstEvent * event)
     return TRUE;
 }
 
-#if 0
 /* Buffer management
  *
  * The buffer_alloc function must either return a buffer with given size and
@@ -1749,7 +1748,8 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   GstXImageSink *ximagesink;
-  GstXImageBuffer *ximage = NULL;
+  GstMetaXImage *meta = NULL;
+  GstBuffer *ximage = NULL;
   GstStructure *structure = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *alloc_caps;
@@ -1880,15 +1880,17 @@ alloc:
   /* Inspect our buffer pool */
   g_mutex_lock (ximagesink->pool_lock);
   while (ximagesink->buffer_pool) {
-    ximage = (GstXImageBuffer *) ximagesink->buffer_pool->data;
+    ximage = ximagesink->buffer_pool->data;
 
     if (ximage) {
+      meta = GST_META_XIMAGE_GET (ximage, FALSE);
+
       /* Removing from the pool */
       ximagesink->buffer_pool = g_slist_delete_link (ximagesink->buffer_pool,
           ximagesink->buffer_pool);
 
       /* If the ximage is invalid for our need, destroy */
-      if ((ximage->width != width) || (ximage->height != height)) {
+      if ((meta->width != width) || (meta->height != height)) {
         gst_ximage_buffer_free (ximage);
         ximage = NULL;
       } else {
@@ -1907,19 +1909,18 @@ alloc:
   if (ximage) {
     /* Make sure the buffer is cleared of any previously used flags */
     GST_MINI_OBJECT_CAST (ximage)->flags = 0;
-    gst_buffer_set_caps (GST_BUFFER_CAST (ximage), alloc_caps);
+    gst_buffer_set_caps (ximage, alloc_caps);
   }
 
   /* could be our new reffed suggestion or the original unreffed caps */
   if (alloc_unref)
     gst_caps_unref (alloc_caps);
 
-  *buf = GST_BUFFER_CAST (ximage);
+  *buf = ximage;
 
 beach:
   return ret;
 }
-#endif
 
 /* Interfaces stuff */
 
@@ -2418,10 +2419,8 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_ximagesink_getcaps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_ximagesink_setcaps);
-#if 0
   gstbasesink_class->buffer_alloc =
       GST_DEBUG_FUNCPTR (gst_ximagesink_buffer_alloc);
-#endif
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_ximagesink_get_times);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_ximagesink_event);
 

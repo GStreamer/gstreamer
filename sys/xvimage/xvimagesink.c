@@ -2333,20 +2333,19 @@ static GstFlowReturn
 gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstXvImageSink *xvimagesink;
+  GstMetaXvImage *meta;
 
   xvimagesink = GST_XVIMAGESINK (vsink);
 
-#if 0
-  /* If this buffer has been allocated using our buffer management we simply
-     put the ximage which is in the PRIVATE pointer */
-  if (GST_IS_XVIMAGE_BUFFER (buf)) {
+  meta = GST_META_XVIMAGE_GET (buf, FALSE);
+
+  if (meta) {
+    /* If this buffer has been allocated using our buffer management we simply
+       put the ximage which is in the PRIVATE pointer */
     GST_LOG_OBJECT (xvimagesink, "fast put of bufferpool buffer %p", buf);
-    if (!gst_xvimagesink_xvimage_put (xvimagesink,
-            GST_XVIMAGE_BUFFER_CAST (buf)))
+    if (!gst_xvimagesink_xvimage_put (xvimagesink, buf))
       goto no_window;
-  } else
-#endif
-  {
+  } else {
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, xvimagesink,
         "slow copy into bufferpool buffer %p", buf);
     /* Else we have to copy the data into our private image, */
@@ -2362,8 +2361,7 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
         goto no_image;
 
       if (GST_BUFFER_SIZE (xvimagesink->xvimage) < GST_BUFFER_SIZE (buf)) {
-        GstMetaXvImage *meta =
-            GST_META_XVIMAGE_GET (xvimagesink->xvimage, FALSE);
+        meta = GST_META_XVIMAGE_GET (xvimagesink->xvimage, FALSE);
 
         GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
             ("Failed to create output image buffer of %dx%d pixels",
@@ -2432,9 +2430,7 @@ gst_xvimagesink_event (GstBaseSink * sink, GstEvent * event)
     return TRUE;
 }
 
-#if 0
 /* Buffer management */
-
 static GstCaps *
 gst_xvimage_sink_different_size_suggestion (GstXvImageSink * xvimagesink,
     GstCaps * caps)
@@ -2489,7 +2485,8 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstXvImageSink *xvimagesink;
-  GstMetaXvImage *xvimage = NULL;
+  GstBuffer *xvimage = NULL;
+  GstMetaXvImage *meta = NULL;
   GstCaps *intersection = NULL;
   GstStructure *structure = NULL;
   gint width, height, image_format;
@@ -2623,13 +2620,15 @@ reuse_last_caps:
     xvimage = xvimagesink->image_pool->data;
 
     if (xvimage) {
+      meta = GST_META_XVIMAGE_GET (xvimage, FALSE);
+
       /* Removing from the pool */
       xvimagesink->image_pool = g_slist_delete_link (xvimagesink->image_pool,
           xvimagesink->image_pool);
 
       /* We check for geometry or image format changes */
-      if ((xvimage->width != width) ||
-          (xvimage->height != height) || (xvimage->im_format != image_format)) {
+      if ((meta->width != width) ||
+          (meta->height != height) || (meta->im_format != image_format)) {
         /* This image is unusable. Destroying... */
         gst_xvimage_buffer_free (xvimage);
         xvimage = NULL;
@@ -2654,7 +2653,7 @@ reuse_last_caps:
     gst_buffer_set_caps (GST_BUFFER_CAST (xvimage), intersection);
   }
 
-  *buf = GST_BUFFER_CAST (xvimage);
+  *buf = xvimage;
 
 beach:
   if (intersection) {
@@ -2690,7 +2689,6 @@ invalid_caps:
     goto beach;
   }
 }
-#endif
 
 /* Interfaces stuff */
 
@@ -3656,10 +3654,8 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_xvimagesink_getcaps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_xvimagesink_setcaps);
-#if 0
   gstbasesink_class->buffer_alloc =
       GST_DEBUG_FUNCPTR (gst_xvimagesink_buffer_alloc);
-#endif
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_xvimagesink_get_times);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_xvimagesink_event);
 
