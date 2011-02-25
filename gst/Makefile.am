@@ -51,7 +51,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstbin.c		\
 	gstbuffer.c		\
 	gstbufferlist.c		\
-	gstbuffermeta.c		\
 	gstbus.c		\
 	gstcaps.c		\
 	gstchildproxy.c		\
@@ -72,6 +71,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstiterator.c		\
 	gstatomicqueue.c	\
 	gstmessage.c		\
+	gstmeta.c		\
 	gstminiobject.c		\
 	gstpad.c		\
 	gstpadtemplate.c	\
@@ -143,7 +143,6 @@ gst_headers =			\
 	gstbin.h		\
 	gstbuffer.h		\
 	gstbufferlist.h		\
-	gstbuffermeta.h		\
 	gstbus.h		\
 	gstcaps.h		\
 	gstchildproxy.h		\
@@ -166,6 +165,7 @@ gst_headers =			\
 	gstatomicqueue.h	\
 	gstmacros.h		\
 	gstmessage.h		\
+	gstmeta.h		\
 	gstminiobject.h		\
 	gstpad.h		\
 	gstpadtemplate.h	\

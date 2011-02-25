@@ -209,24 +209,10 @@ gst_buffer_span
 gst_buffer_join
 gst_buffer_merge
 
-GstBufferMeta
-GST_BUFFER_META_TRACE_NAME
-
+gst_buffer_get_meta_by_api
 gst_buffer_get_meta
 gst_buffer_remove_meta
 gst_buffer_iterate_meta
-
-GstBufferMetaInfo
-
-GstMetaInitFunction
-GstMetaFreeFunction
-GstMetaCopyFunction
-GstMetaSubFunction
-GstMetaSerializeFunction
-GstMetaDeserializeFunction
-
-gst_buffer_meta_get_info
-gst_buffer_meta_register_info
 
 <SUBSECTION Standard>
 GstBufferClass
@@ -243,6 +229,22 @@ GST_BUFFER_CAST
 gst_buffer_get_type
 gst_buffer_flag_get_type
 gst_buffer_copy_flags_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstmeta</FILE>
+<TITLE>GstMeta</TITLE>
+GstMeta
+GstMetaInfo
+GST_META_TRACE_NAME
+GstMetaInitFunction
+GstMetaFreeFunction
+GstMetaCopyFunction
+GstMetaSubFunction
+GstMetaSerializeFunction
+GstMetaDeserializeFunction
+gst_meta_register
+gst_meta_get_info
 </SECTION>
 
 <SECTION>

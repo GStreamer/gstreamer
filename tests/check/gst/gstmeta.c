@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * unit test for GstBufferMeta
+ * unit test for GstMeta
  *
  * Copyright (C) <2009> Wim Taymans <wim.taymans@gmail.com>
  *
@@ -35,7 +35,7 @@
 /* test metadata for PTS/DTS and duration */
 typedef struct
 {
-  GstBufferMeta meta;
+  GstMeta meta;
 
   GstClockTime pts;
   GstClockTime dts;
@@ -43,7 +43,7 @@ typedef struct
   GstClockTime clock_rate;
 } GstTestMeta;
 
-static const GstBufferMetaInfo *gst_test_meta_get_info (void);
+static const GstMetaInfo *gst_test_meta_get_info (void);
 
 #define GST_TEST_META_GET(buf,create) ((GstTestMeta *)gst_buffer_get_meta(buf,gst_test_meta_get_info(),create));
 
@@ -120,23 +120,18 @@ test_sub_func (GstBuffer * sub, GstTestMeta * meta, GstBuffer * buffer,
   test->clock_rate = meta->clock_rate;
 }
 
-static const GstBufferMetaInfo *
+static const GstMetaInfo *
 gst_test_meta_get_info (void)
 {
-  static const GstBufferMetaInfo *test_meta_info = NULL;
+  static const GstMetaInfo *test_meta_info = NULL;
 
   if (test_meta_info == NULL) {
-    static const GstBufferMetaInfo info = {
-      "GstTestMeta",
-      sizeof (GstTestMeta),
-      (GstMetaInitFunction) test_init_func,
-      (GstMetaFreeFunction) test_free_func,
-      (GstMetaCopyFunction) test_copy_func,
-      (GstMetaSubFunction) test_sub_func,
-      NULL,
-      NULL
-    };
-    test_meta_info = gst_buffer_meta_register_info (&info);
+    test_meta_info = gst_meta_register ("GstTestMeta", "GstTestMeta",
+        sizeof (GstTestMeta),
+        (GstMetaInitFunction) test_init_func,
+        (GstMetaFreeFunction) test_free_func,
+        (GstMetaCopyFunction) test_copy_func,
+        (GstMetaSubFunction) test_sub_func, NULL, NULL);
   }
   return test_meta_info;
 }
@@ -201,7 +196,7 @@ GST_END_TEST;
 static Suite *
 gst_buffermeta_suite (void)
 {
-  Suite *s = suite_create ("GstBufferMeta");
+  Suite *s = suite_create ("GstMeta");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);

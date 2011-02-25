@@ -470,13 +470,14 @@ gboolean        gst_buffer_is_span_fast         (GstBuffer *buf1, GstBuffer *buf
 GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
 
 /* metadata */
-#include <gst/gstbuffermeta.h>
+#include <gst/gstmeta.h>
 
-GstBufferMeta * gst_buffer_get_meta             (GstBuffer *buffer, const GstBufferMetaInfo *info,
-                                                 gboolean create);
-gboolean        gst_buffer_remove_meta          (GstBuffer *buffer, const GstBufferMetaInfo *info);
+GstMeta *       gst_buffer_get_meta_by_api      (GstBuffer *buffer, GQuark api);
 
-GstBufferMeta * gst_buffer_iterate_meta         (GstBuffer *buffer, gpointer *state);
+GstMeta *       gst_buffer_get_meta             (GstBuffer *buffer, const GstMetaInfo *info, gboolean create);
+gboolean        gst_buffer_remove_meta          (GstBuffer *buffer, GstMeta *meta);
+
+GstMeta *       gst_buffer_iterate_meta         (GstBuffer *buffer, gpointer *state);
 
 /**
  * gst_value_set_buffer:

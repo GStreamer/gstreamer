@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2009 Wim Taymans <wim.taymans@gmail.be>
  *
- * gstbuffermeta.h: Header for Buffer Metadata structures
+ * gstmeta.h: Header for Metadata structures
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,31 +20,31 @@
  */
 
 
-#ifndef __GST_BUFFER_META_H__
-#define __GST_BUFFER_META_H__
+#ifndef __GST_META_H__
+#define __GST_META_H__
 
 G_BEGIN_DECLS
 
-typedef struct _GstBufferMeta GstBufferMeta;
-typedef struct _GstBufferMetaInfo GstBufferMetaInfo;
+typedef struct _GstMeta GstMeta;
+typedef struct _GstMetaInfo GstMetaInfo;
 
 /**
- * GstBufferMeta:
- * @info: pointer to the #GstBufferMetaInfo
+ * GstMeta:
+ * @info: pointer to the #GstMetaInfo
  *
- * Base structure for buffer metadata. Custom metadata will put this structure
+ * Base structure for metadata. Custom metadata will put this structure
  * as the first member of their structure.
  */
-struct _GstBufferMeta {
-  const GstBufferMetaInfo *info;
+struct _GstMeta {
+  const GstMetaInfo *info;
 };
 
 /**
- * GST_BUFFER_META_TRACE_NAME:
+ * GST_META_TRACE_NAME:
  *
  * The name used for tracing memory allocations.
  */
-#define GST_BUFFER_META_TRACE_NAME           "GstBufferMeta"
+#define GST_META_TRACE_NAME           "GstMeta"
 
 /**
  * GstMetaInitFunction:
@@ -53,7 +53,7 @@ struct _GstBufferMeta {
  *
  * Function called when @meta is initialized in @buffer.
  */
-typedef void (*GstMetaInitFunction)     (GstBufferMeta *meta, GstBuffer *buffer);
+typedef void (*GstMetaInitFunction)     (GstMeta *meta, GstBuffer *buffer);
 
 /**
  * GstMetaFreeFunction:
@@ -62,7 +62,7 @@ typedef void (*GstMetaInitFunction)     (GstBufferMeta *meta, GstBuffer *buffer)
  *
  * Function called when @meta is freed in @buffer.
  */
-typedef void (*GstMetaFreeFunction)     (GstBufferMeta *meta, GstBuffer *buffer);
+typedef void (*GstMetaFreeFunction)     (GstMeta *meta, GstBuffer *buffer);
 
 /**
  * GstMetaCopyFunction:
@@ -73,7 +73,7 @@ typedef void (*GstMetaFreeFunction)     (GstBufferMeta *meta, GstBuffer *buffer)
  * Function called when a copy of @buffer is made and @meta should be copied to
  * @copy.
  */
-typedef void (*GstMetaCopyFunction)     (GstBuffer *copy, GstBufferMeta *meta,
+typedef void (*GstMetaCopyFunction)     (GstBuffer *copy, GstMeta *meta,
                                          const GstBuffer *buffer);
 /**
  * GstMetaSubFunction:
@@ -87,25 +87,26 @@ typedef void (*GstMetaCopyFunction)     (GstBuffer *copy, GstBufferMeta *meta,
  * subbuffer @subbuf from @buffer at @offset and with @size. An
  * implementation could decide to copy and update the metadata on @subbuf.
  */
-typedef void (*GstMetaSubFunction)      (GstBuffer *subbuf, GstBufferMeta *meta,
+typedef void (*GstMetaSubFunction)      (GstBuffer *subbuf, GstMeta *meta,
                                          GstBuffer *buffer, guint offset, guint size);
 
 /**
  * GstMetaSerializeFunction:
  * @meta: a #GstMeta
  */
-typedef gchar * (*GstMetaSerializeFunction) (GstBufferMeta *meta);
+typedef gchar * (*GstMetaSerializeFunction) (GstMeta *meta);
 
 /**
  * GstMetaDeserializeFunction:
  * @meta: a #GstMeta
  */
-typedef gboolean (*GstMetaDeserializeFunction) (GstBufferMeta *meta, 
+typedef gboolean (*GstMetaDeserializeFunction) (GstMeta *meta,
                                                 const gchar *s);
 
 /**
- * GstBufferMetaInfo:
- * @name: tag indentifying the metadata
+ * GstMetaInfo:
+ * @api: tag indentifying the metadata structure and api
+ * @impl: tag indentifying the implementor of the api
  * @size: size of the metadata
  * @init_func: function for initializing the metadata
  * @free_func: function for freeing the metadata
@@ -114,11 +115,12 @@ typedef gboolean (*GstMetaDeserializeFunction) (GstBufferMeta *meta,
  * @serialize_func: function for serializing
  * @deserialize_func: function for deserializing
  *
- * The #GstBufferMetaInfo provides information about a specific metadata
+ * The #GstMetaInfo provides information about a specific metadata
  * structure.
  */
-struct _GstBufferMetaInfo {
-  const gchar               *name;
+struct _GstMetaInfo {
+  GQuark                     api;
+  GQuark                     impl;
   gsize                      size;
 
   GstMetaInitFunction        init_func;
@@ -129,11 +131,18 @@ struct _GstBufferMetaInfo {
   GstMetaDeserializeFunction deserialize_func;
 };
 
-void _gst_buffer_meta_init (void);
+void _gst_meta_init (void);
 
-const GstBufferMetaInfo *  gst_buffer_meta_register_info   (const GstBufferMetaInfo *info);
-const GstBufferMetaInfo *  gst_buffer_meta_get_info        (const gchar * name);
+const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *impl,
+                                               gsize size,
+                                               GstMetaInitFunction        init_func,
+                                               GstMetaFreeFunction        free_func,
+                                               GstMetaCopyFunction        copy_func,
+                                               GstMetaSubFunction         sub_func,
+                                               GstMetaSerializeFunction   serialize_func,
+                                               GstMetaDeserializeFunction deserialize_func);
+const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
 
 G_END_DECLS
 
-#endif /* __GST_BUFFER_META_H__ */
+#endif /* __GST_META_H__ */
