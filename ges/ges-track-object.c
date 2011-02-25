@@ -34,6 +34,7 @@
 #include "gesmarshal.h"
 #include "ges-track-object.h"
 #include "ges-timeline-object.h"
+#include <gobject/gvaluecollector.h>
 
 G_DEFINE_ABSTRACT_TYPE (GESTrackObject, ges_track_object,
     G_TYPE_INITIALLY_UNOWNED);
@@ -1051,64 +1052,250 @@ ges_track_object_lookup_child (GESTrackObject * object, const gchar * prop_name,
 }
 
 /**
- * ges_track_object_set_child_property:
+ * ges_track_object_set_child_property_by_pspec:
  * @object: a #GESTrackObject
- * @property_name: The name of the property to set
+ * @pspec: The #GParamSpec that specifies the property you want to set
  * @value: the value
  *
- * Sets a property of a child of @object. The property name
- * should look like ClasseName-property-name
+ * Sets a property of a child of @object.
  */
 void
-ges_track_object_set_child_property (GESTrackObject * object,
-    const gchar * property_name, GValue * value)
+ges_track_object_set_child_property_by_pspec (GESTrackObject * object,
+    GParamSpec * pspec, GValue * value)
 {
+  GstElement *element;
+
   GESTrackObjectPrivate *priv = object->priv;
 
-  if (priv->properties_hashtable) {
-    GstElement *element;
-    gchar **prop_name;
+  if (!priv->properties_hashtable)
+    goto prop_hash_not_set;
 
-    element = g_hash_table_lookup (priv->properties_hashtable, property_name);
-    if (element) {
-      prop_name = g_strsplit (property_name, "-", 2);
-      g_object_set_property (G_OBJECT (element), prop_name[1], value);
-      g_strfreev (prop_name);
-    } else {
-      GST_ERROR ("The %s property doesn't exist", property_name);
-    }
-  } else {
+  element = g_hash_table_lookup (priv->properties_hashtable, pspec);
+  if (!element)
+    goto not_found;
+
+  g_object_set_property (G_OBJECT (element), pspec->name, value);
+
+  return;
+
+not_found:
+  {
+    GST_ERROR ("The %s property doesn't exist", pspec->name);
+    return;
+  }
+prop_hash_not_set:
+  {
     GST_DEBUG ("The child properties haven't been set on %p", object);
+    return;
   }
 }
 
 /**
-* ges_track_object_get_child_property:
-* @object: The origin #GESTrackObject
-* @property_name: The name of the property
-* @value: return location for the property value
-*
-* Gets a property of a child of @object.
-*/
+ * ges_track_object_set_child_property_valist:
+ * @object: The #GESTrackObject parent object
+ * @first_property_name: The name of the first property to set
+ * @var_args: value for the first property, followed optionally by more
+ * name/return location pairs, followed by NULL
+ *
+ * Sets a property of a child of @object. If there are various child elements
+ * that have the same property name, you can distinguish them using the following
+ * synthaxe: 'ClasseName::property_name' as property name. If you don't, the
+ * corresponding property of the first element found will be set.
+ */
+void
+ges_track_object_set_child_property_valist (GESTrackObject * object,
+    const gchar * first_property_name, va_list var_args)
+{
+  const gchar *name;
+  GParamSpec *pspec;
+  GstElement *element;
+
+  gchar *error = NULL;
+  GValue value = { 0, };
+
+  g_return_if_fail (G_IS_OBJECT (object));
+
+  name = first_property_name;
+
+  /* Note: This part is in big part copied from the gst_child_object_set_valist
+   * method. */
+
+  /* iterate over pairs */
+  while (name) {
+    if (!ges_track_object_lookup_child (object, name, &element, &pspec))
+      goto not_found;
+
+#if GLIB_CHECK_VERSION(2,23,3)
+    G_VALUE_COLLECT_INIT (&value, pspec->value_type, var_args,
+        G_VALUE_NOCOPY_CONTENTS, &error);
+#else
+    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    G_VALUE_COLLECT (&value, var_args, G_VALUE_NOCOPY_CONTENTS, &error);
+#endif
+
+    if (error)
+      goto cant_copy;
+
+    g_object_set_property (G_OBJECT (element), pspec->name, &value);
+
+    g_object_unref (element);
+    g_value_unset (&value);
+
+    name = va_arg (var_args, gchar *);
+  }
+  return;
+
+not_found:
+  {
+    GST_WARNING ("No property %s in OBJECT\n", name);
+    return;
+  }
+cant_copy:
+  {
+    GST_WARNING ("error copying value %s in object %p: %s", pspec->name, object,
+        error);
+    g_value_unset (&value);
+    return;
+  }
+}
+
+/**
+ * ges_track_object_set_child_property:
+ * @object: The #GESTrackObject parent object
+ * @first_property_name: The name of the first property to set
+ * @...: value for the first property, followed optionally by more
+ * name/return location pairs, followed by NULL
+ *
+ * Sets a property of a child of @object. If there are various child elements
+ * that have the same property name, you can distinguish them using the following
+ * synthaxe: 'ClasseName::property_name' as property name. If you don't, the
+ * corresponding property of the first element found will be set.
+ */
+void
+ges_track_object_set_child_property (GESTrackObject * object,
+    const gchar * first_property_name, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, first_property_name);
+  ges_track_object_set_child_property_valist (object, first_property_name,
+      var_args);
+  va_end (var_args);
+}
+
+/**
+ * ges_track_object_get_child_property_valist:
+ * @object: The #GESTrackObject parent object
+ * @first_property_name: The name of the first property to get
+ * @var_args: value for the first property, followed optionally by more
+ * name/return location pairs, followed by NULL
+ *
+ * Gets a property of a child of @object. If there are various child elements
+ * that have the same property name, you can distinguish them using the following
+ * synthaxe: 'ClasseName::property_name' as property name. If you don't, the
+ * corresponding property of the first element found will be set.
+ */
+void
+ges_track_object_get_child_property_valist (GESTrackObject * object,
+    const gchar * first_property_name, va_list var_args)
+{
+  const gchar *name;
+  gchar *error = NULL;
+  GValue value = { 0, };
+  GParamSpec *pspec;
+  GstElement *element;
+
+  g_return_if_fail (G_IS_OBJECT (object));
+
+  name = first_property_name;
+
+  /* This part is in big part copied from the gst_child_object_get_valist method */
+  while (name) {
+    if (!ges_track_object_lookup_child (object, name, &element, &pspec))
+      goto not_found;
+
+    g_value_init (&value, pspec->value_type);
+    g_object_get_property (G_OBJECT (element), pspec->name, &value);
+    g_object_unref (element);
+
+    G_VALUE_LCOPY (&value, var_args, 0, &error);
+    if (error)
+      goto cant_copy;
+    g_value_unset (&value);
+    name = va_arg (var_args, gchar *);
+  }
+  return;
+
+not_found:
+  {
+    GST_WARNING ("no property %s in object", name);
+    return;
+  }
+cant_copy:
+  {
+    GST_WARNING ("error copying value %s in object %p: %s", pspec->name, object,
+        error);
+    g_value_unset (&value);
+    return;
+  }
+}
+
+/**
+ * ges_track_object_get_child_property:
+ * @object: The origin #GESTrackObject
+ * @first_property_name: The name of the first property to get
+ * @...: return location for the first property, followed optionally by more
+ * name/return location pairs, followed by NULL
+ *
+ * Gets properties of a child of @object.
+ */
 void
 ges_track_object_get_child_property (GESTrackObject * object,
-    const gchar * property_name, gpointer value)
+    const gchar * first_property_name, ...)
 {
+  va_list var_args;
+
+  va_start (var_args, first_property_name);
+  ges_track_object_get_child_property_valist (object, first_property_name,
+      var_args);
+  va_end (var_args);
+}
+
+/**
+ * ges_track_object_get_child_property_by_pspec:
+ * @object: a #GESTrackObject
+ * @pspec: The #GParamSpec that specifies the property you want to get
+ * @value: return location for the value
+ *
+ * Gets a property of a child of @object.
+ */
+void
+ges_track_object_get_child_property_by_pspec (GESTrackObject * object,
+    GParamSpec * pspec, GValue * value)
+{
+  GstElement *element;
+
   GESTrackObjectPrivate *priv = object->priv;
 
-  if (priv->properties_hashtable) {
-    GstElement *element;
-    gchar **prop_name;
+  if (!priv->properties_hashtable)
+    goto prop_hash_not_set;
 
-    element = g_hash_table_lookup (priv->properties_hashtable, property_name);
-    if (element) {
-      prop_name = g_strsplit (property_name, "-", 2);
-      g_object_get (G_OBJECT (element), prop_name[1], value, NULL);
-      g_strfreev (prop_name);
-    } else {
-      GST_ERROR ("The %s property doesn't exist", property_name);
-    }
-  } else {
-    GST_DEBUG ("The child properties haven't been set on %p", object);
+  element = g_hash_table_lookup (priv->properties_hashtable, pspec);
+  if (!element)
+    goto not_found;
+
+  g_object_get_property (G_OBJECT (element), pspec->name, value);
+
+  return;
+
+not_found:
+  {
+    GST_ERROR ("The %s property doesn't exist", pspec->name);
+    return;
+  }
+prop_hash_not_set:
+  {
+    GST_ERROR ("The child properties haven't been set on %p", object);
+    return;
   }
 }

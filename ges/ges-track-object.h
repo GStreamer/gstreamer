@@ -164,8 +164,19 @@ gboolean ges_track_object_is_active (GESTrackObject * object);
 gboolean ges_track_object_lookup_child (GESTrackObject *object,
      const gchar *prop_name, GstElement **element, GParamSpec **pspec);
 
+void ges_track_object_get_child_property_by_pspec (GESTrackObject * object,
+     GParamSpec * pspec, GValue * value);
+void ges_track_object_get_child_property_valist (GESTrackObject * object,
+    const gchar * first_property_name, va_list var_args);
 void ges_track_object_get_child_property (GESTrackObject *object,
-                                          const gchar *property_name,
-                                          gpointer value);
+    const gchar * first_property_name, ...)  G_GNUC_NULL_TERMINATED;
+
+void ges_track_object_set_child_property_valist (GESTrackObject * object,
+      const gchar * first_property_name, va_list var_args);
+void ges_track_object_set_child_property_by_pspec (GESTrackObject * object,
+    GParamSpec * pspec, GValue * value);
+void ges_track_object_set_child_property (GESTrackObject * object,
+    const gchar * first_property_name, ...) G_GNUC_NULL_TERMINATED;
+
 G_END_DECLS
 #endif /* _GES_TRACK_OBJECT */
