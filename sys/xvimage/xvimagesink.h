@@ -58,7 +58,7 @@ G_BEGIN_DECLS
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 typedef struct _GstXvImageFormat GstXvImageFormat;
-typedef struct _GstXvImageData GstXvImageData;
+typedef struct _GstMetaXvImage GstMetaXvImage;
 
 typedef struct _GstXvImageSink GstXvImageSink;
 typedef struct _GstXvImageSinkClass GstXvImageSinkClass;
@@ -172,7 +172,9 @@ struct _GstXvImageFormat {
  *
  * Structure with additional information about an XvImage.
  */
-struct _GstXvImageData {
+struct _GstMetaXvImage {
+  GstMeta meta;
+
   /* Reference to the xvimagesink we belong to */
   GstXvImageSink *xvimagesink;
 
@@ -185,6 +187,11 @@ struct _GstXvImageData {
   gint width, height, im_format;
   size_t size;
 };
+
+const GstMetaInfo * gst_meta_xvimage_get_info (void);
+
+#define GST_META_XVIMAGE_GET(buf,create) ((GstMetaXvImage *)gst_buffer_get_meta(buf,gst_meta_xvimage_get_info(),create));
+
 
 /**
  * GstXvImageSink:

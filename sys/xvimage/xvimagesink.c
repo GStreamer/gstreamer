@@ -198,16 +198,31 @@ static GstVideoSinkClass *parent_class = NULL;
 /* ============================================================= */
 
 /* xvimage buffers */
-#define GET_XVDATA(buf) ((GstXvImageData *) (GST_BUFFER_CAST(buf)->owner_priv))
+const GstMetaInfo *
+gst_meta_xvimage_get_info (void)
+{
+  static const GstMetaInfo *meta_xvimage_info = NULL;
+
+  if (meta_xvimage_info == NULL) {
+    meta_xvimage_info = gst_meta_register ("GstMetaXvImage", "GstMetaXvImage",
+        sizeof (GstMetaXvImage),
+        (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) NULL,
+        (GstMetaCopyFunction) NULL,
+        (GstMetaSubFunction) NULL,
+        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+  }
+  return meta_xvimage_info;
+}
 
 static void
 gst_xvimage_buffer_dispose (GstBuffer * xvimage)
 {
-  GstXvImageData *data = NULL;
+  GstMetaXvImage *data = NULL;
   GstXvImageSink *xvimagesink;
   gboolean running;
 
-  data = GET_XVDATA (xvimage);
+  data = GST_META_XVIMAGE_GET (xvimage, FALSE);
   g_return_if_fail (data != NULL);
 
   xvimagesink = data->xvimagesink;
@@ -253,7 +268,7 @@ no_sink:
 static void
 gst_xvimage_buffer_free (GstBuffer * xvimage)
 {
-  GstXvImageData *data = GET_XVDATA (xvimage);
+  GstMetaXvImage *data = GST_META_XVIMAGE_GET (xvimage, FALSE);
 
   g_return_if_fail (data != NULL);
 
@@ -387,7 +402,7 @@ static GstBuffer *
 gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
 {
   GstBuffer *buffer = NULL;
-  GstXvImageData *data = NULL;
+  GstMetaXvImage *data = NULL;
   GstStructure *structure = NULL;
   gboolean succeeded = FALSE;
   int (*handler) (Display *, XErrorEvent *);
@@ -397,17 +412,16 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
   if (caps == NULL)
     return NULL;
 
-  data = g_slice_new0 (GstXvImageData);
-#ifdef HAVE_XSHM
-  data->SHMInfo.shmaddr = ((void *) -1);
-  data->SHMInfo.shmid = -1;
-#endif
-
   buffer = gst_buffer_new ();
   GST_DEBUG_OBJECT (xvimagesink, "Creating new XvImageBuffer");
   GST_MINI_OBJECT_CAST (buffer)->dispose =
       (GstMiniObjectDisposeFunction) gst_xvimage_buffer_dispose;
-  buffer->owner_priv = data;
+
+  data = GST_META_XVIMAGE_GET (buffer, TRUE);
+#ifdef HAVE_XSHM
+  data->SHMInfo.shmaddr = ((void *) -1);
+  data->SHMInfo.shmid = -1;
+#endif
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -611,14 +625,14 @@ static void
 gst_xvimagesink_xvimage_destroy (GstXvImageSink * xvimagesink,
     GstBuffer * xvimage)
 {
-  GstXvImageData *data = NULL;
+  GstMetaXvImage *data = NULL;
 
   GST_DEBUG_OBJECT (xvimage, "Destroying buffer");
 
   g_return_if_fail (xvimage != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
 
-  data = GET_XVDATA (xvimage);
+  data = GST_META_XVIMAGE_GET (xvimage, FALSE);
   g_return_if_fail (data != NULL);
 
   GST_OBJECT_LOCK (xvimagesink);
@@ -675,9 +689,6 @@ beach:
   data->xvimagesink = NULL;
   gst_object_unref (xvimagesink);
 
-  g_slice_free (GstXvImageData, data);
-  xvimage->owner_priv = NULL;
-
   return;
 }
 
@@ -730,7 +741,7 @@ gst_xvimagesink_xwindow_draw_borders (GstXvImageSink * xvimagesink,
 static gboolean
 gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
 {
-  GstXvImageData *data;
+  GstMetaXvImage *data;
   GstVideoRectangle result;
   gboolean draw_border = FALSE;
 
@@ -795,7 +806,8 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
     xvimagesink->redraw_border = FALSE;
   }
 
-  data = GET_XVDATA (xvimage);
+  data = GST_META_XVIMAGE_GET (xvimage, FALSE);
+  g_assert (data != NULL);
 
   /* We scale to the window's geometry */
 #ifdef HAVE_XSHM
@@ -2174,7 +2186,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   /* We renew our xvimage only if size or format changed;
    * the xvimage is the same size as the video pixel size */
   if ((xvimagesink->xvimage)) {
-    GstXvImageData *data = GET_XVDATA (xvimagesink->xvimage);
+    GstMetaXvImage *data = GST_META_XVIMAGE_GET (xvimagesink->xvimage, FALSE);
 
     if (((im_format != data->im_format) ||
             (video_width != data->width) || (video_height != data->height))) {
@@ -2350,10 +2362,12 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
         goto no_image;
 
       if (GST_BUFFER_SIZE (xvimagesink->xvimage) < GST_BUFFER_SIZE (buf)) {
+        GstMetaXvImage *meta =
+            GST_META_XVIMAGE_GET (xvimagesink->xvimage, FALSE);
+
         GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
             ("Failed to create output image buffer of %dx%d pixels",
-                GET_XVDATA (xvimagesink->xvimage)->width,
-                GET_XVDATA (xvimagesink->xvimage)->height),
+                meta->width, meta->height),
             ("XServer allocated buffer size did not match input buffer"));
 
         gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
@@ -2475,7 +2489,7 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstXvImageSink *xvimagesink;
-  GstXvImageData *xvimage = NULL;
+  GstMetaXvImage *xvimage = NULL;
   GstCaps *intersection = NULL;
   GstStructure *structure = NULL;
   gint width, height, image_format;

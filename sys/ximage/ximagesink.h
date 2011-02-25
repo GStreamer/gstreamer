@@ -52,7 +52,7 @@ G_BEGIN_DECLS
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 
-typedef struct _GstXImageData GstXImageData;
+typedef struct _GstMetaXImage GstMetaXImage;
 
 typedef struct _GstXImageSink GstXImageSink;
 typedef struct _GstXImageSinkClass GstXImageSinkClass;
@@ -130,7 +130,7 @@ struct _GstXWindow
 
 
 /**
- * GstXImageData:
+ * GstMetaXImage:
  * @ximagesink: a reference to our #GstXImageSink
  * @ximage: the XImage of this buffer
  * @width: the width in pixels of XImage @ximage
@@ -139,8 +139,10 @@ struct _GstXWindow
  *
  * Structure with additional information about an XImage.
  */
-struct _GstXImageData
+struct _GstMetaXImage
 {
+  GstMeta meta;
+
   /* Reference to the ximagesink we belong to */
   GstXImageSink *ximagesink;
 
@@ -153,6 +155,10 @@ struct _GstXImageData
   gint width, height;
   size_t size;
 };
+
+const GstMetaInfo * gst_meta_ximage_get_info (void);
+
+#define GST_META_XIMAGE_GET(buf,create) ((GstMetaXImage *)gst_buffer_get_meta(buf,gst_meta_ximage_get_info(),create));
 
 /**
  * GstXImageSink:

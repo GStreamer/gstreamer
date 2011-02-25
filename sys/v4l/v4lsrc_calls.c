@@ -616,23 +616,24 @@ gst_v4lsrc_get_fps_list (GstV4lSrc * v4lsrc)
   }
 }
 
-#define GET_V4LSRC_DATA(buf) ((GstV4lSrcData *) (GST_BUFFER_CAST(buf)->owner_priv))
-
-typedef struct _GstV4lSrcData
+typedef struct _GstMetaV4lSrc
 {
+  GstMeta meta;
+
   GstV4lSrc *v4lsrc;
   gint num;
-} GstV4lSrcData;
+} GstMetaV4lSrc;
+
+#define GST_META_V4LSRC_GET(buf,create) ((GstMetaV4lSrc *)gst_buffer_get_meta(buf,gst_meta_v4lsrc_get_info(),create));
 
 static void
-gst_v4lsrc_buffer_dispose (GstBuffer * buffer)
+meta_v4lsrc_free (GstMetaV4lSrc * meta, GstBuffer * buffer)
 {
-  GstV4lSrcData *data = GET_V4LSRC_DATA (buffer);
   GstV4lSrc *v4lsrc;
   gint num;
 
-  v4lsrc = data->v4lsrc;
-  num = data->num;
+  v4lsrc = meta->v4lsrc;
+  num = meta->num;
 
   GST_LOG_OBJECT (v4lsrc, "freeing buffer %p for frame %d", buffer, num);
 
@@ -642,17 +643,32 @@ gst_v4lsrc_buffer_dispose (GstBuffer * buffer)
     gst_v4lsrc_requeue_frame (v4lsrc, num);
   }
 
-  /* free data */
   gst_object_unref (v4lsrc);
-  g_slice_free (GstV4lSrcData, data);
-  buffer->owner_priv = NULL;
 }
+
+static const GstMetaInfo *
+gst_meta_v4lsrc_get_info (void)
+{
+  static const GstMetaInfo *meta_v4lsrc_info = NULL;
+
+  if (meta_v4lsrc_info == NULL) {
+    meta_v4lsrc_info = gst_meta_register ("GstMetaV4lSrc", "GstMetaV4lSrc",
+        sizeof (GstMetaV4lSrc),
+        (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) meta_v4lsrc_free,
+        (GstMetaCopyFunction) NULL,
+        (GstMetaSubFunction) NULL,
+        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+  }
+  return meta_v4lsrc_info;
+}
+
 
 /* Create a V4lSrc buffer from our mmap'd data area */
 GstBuffer *
 gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
 {
-  GstV4lSrcData *data;
+  GstMetaV4lSrc *meta;
   GstClockTime duration, timestamp, latency;
   GstBuffer *buf;
   GstClock *clock;
@@ -664,13 +680,11 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
     return NULL;
 
   buf = gst_buffer_new ();
-  data = g_slice_new (GstV4lSrcData);
-  buf->owner_priv = data;
-  GST_MINI_OBJECT_CAST (buf)->dispose =
-      (GstMiniObjectDisposeFunction) gst_v4lsrc_buffer_dispose;
 
-  data->num = num;
-  data->v4lsrc = gst_object_ref (v4lsrc);
+  /* attach private metadata with the frame num and v4lsrc element */
+  meta = GST_META_V4LSRC_GET (buf, TRUE);
+  meta->num = num;
+  meta->v4lsrc = gst_object_ref (v4lsrc);
 
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
   GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
