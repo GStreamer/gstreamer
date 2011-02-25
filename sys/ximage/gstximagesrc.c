@@ -82,16 +82,15 @@ static void gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc);
 static void
 gst_ximage_src_return_buf (GstXImageSrc * ximagesrc, GstBuffer * ximage)
 {
-  GstXImageData *data = GST_XIMAGE_GET_DATA (ximage);
+  GstMetaXImage *meta = GST_META_XIMAGE_GET (ximage, FALSE);
 
   /* If our geometry changed we can't reuse that image. */
-  if ((data->width != ximagesrc->width) || (data->height != ximagesrc->height)) {
+  if ((meta->width != ximagesrc->width) || (meta->height != ximagesrc->height)) {
     GST_DEBUG_OBJECT (ximagesrc,
         "destroy image %p as its size changed %dx%d vs current %dx%d",
-        ximage, data->width, data->height, ximagesrc->width, ximagesrc->height);
+        ximage, meta->width, meta->height, ximagesrc->width, ximagesrc->height);
     g_mutex_lock (ximagesrc->x_lock);
     gst_ximageutil_ximage_destroy (ximagesrc->xcontext, ximage);
-    g_slice_free (GstXImageData, data);
     g_mutex_unlock (ximagesrc->x_lock);
   } else {
     /* In that case we can reuse the image and add it to our image pool. */
@@ -362,16 +361,16 @@ static GstBuffer *
 gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 {
   GstBuffer *ximage = NULL;
-  GstXImageData *data;
+  GstMetaXImage *meta;
 
   g_mutex_lock (ximagesrc->pool_lock);
   while (ximagesrc->buffer_pool != NULL) {
     ximage = ximagesrc->buffer_pool->data;
 
-    data = GST_XIMAGE_GET_DATA (ximage);
+    meta = GST_META_XIMAGE_GET (ximage, FALSE);
 
-    if ((data->width != ximagesrc->width) ||
-        (data->height != ximagesrc->height)) {
+    if ((meta->width != ximagesrc->width) ||
+        (meta->height != ximagesrc->height)) {
       gst_ximage_buffer_free (ximage);
     }
 
@@ -424,7 +423,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
   g_return_val_if_fail (GST_IS_XIMAGE_SRC (ximagesrc), NULL);
 
-  data = GST_XIMAGE_GET_DATA (ximage);
+  meta = GST_META_XIMAGE_GET (ximage, FALSE);
 
 #ifdef HAVE_XDAMAGE
   if (ximagesrc->have_xdamage && ximagesrc->use_damage &&
@@ -498,7 +497,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
                     startx, starty, width, height);
                 XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
                     startx, starty, width, height, AllPlanes, ZPixmap,
-                    data->ximage, startx - ximagesrc->startx,
+                    meta->ximage, startx - ximagesrc->startx,
                     starty - ximagesrc->starty);
               }
             } else {
@@ -510,7 +509,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
               XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
                   rects[i].x, rects[i].y,
                   rects[i].width, rects[i].height,
-                  AllPlanes, ZPixmap, data->ximage, rects[i].x, rects[i].y);
+                  AllPlanes, ZPixmap, meta->ximage, rects[i].x, rects[i].y);
             }
           }
           free (rects);
@@ -572,14 +571,14 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
           GST_DEBUG_OBJECT (ximagesrc, "Removing cursor from %d,%d", x, y);
           XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
               startx, starty, iwidth, iheight, AllPlanes, ZPixmap,
-              data->ximage, startx - ximagesrc->startx,
+              meta->ximage, startx - ximagesrc->startx,
               starty - ximagesrc->starty);
         }
       } else {
 
         GST_DEBUG_OBJECT (ximagesrc, "Removing cursor from %d,%d", x, y);
         XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-            x, y, width, height, AllPlanes, ZPixmap, data->ximage, x, y);
+            x, y, width, height, AllPlanes, ZPixmap, meta->ximage, x, y);
       }
     }
 #endif
@@ -592,7 +591,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     if (ximagesrc->xcontext->use_xshm) {
       GST_DEBUG_OBJECT (ximagesrc, "Retrieving screen using XShm");
       XShmGetImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-          data->ximage, ximagesrc->startx, ximagesrc->starty, AllPlanes);
+          meta->ximage, ximagesrc->startx, ximagesrc->starty, AllPlanes);
 
     } else
 #endif /* HAVE_XSHM */
@@ -601,9 +600,9 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
       if (ximagesrc->remote) {
         XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
             ximagesrc->startx, ximagesrc->starty, ximagesrc->width,
-            ximagesrc->height, AllPlanes, ZPixmap, data->ximage, 0, 0);
+            ximagesrc->height, AllPlanes, ZPixmap, meta->ximage, 0, 0);
       } else {
-        data->ximage =
+        meta->ximage =
             XGetImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
             ximagesrc->startx, ximagesrc->starty, ximagesrc->width,
             ximagesrc->height, AllPlanes, ZPixmap);
@@ -683,7 +682,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
                 (guint8 *) & (ximagesrc->cursor_image->pixels[((j -
                             cy) * ximagesrc->cursor_image->width + (i - cx))]);
             dest =
-                (guint8 *) & (data->ximage->data[((j -
+                (guint8 *) & (meta->ximage->data[((j -
                             ximagesrc->starty) * ximagesrc->width + (i -
                             ximagesrc->startx)) * (ximagesrc->xcontext->bpp /
                         8)]);

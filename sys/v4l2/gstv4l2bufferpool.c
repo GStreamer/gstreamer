@@ -59,17 +59,16 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 static void
 gst_v4l2_buffer_dispose (GstBuffer * buffer)
 {
-  GstV4l2Data *data;
   GstV4l2BufferPool *pool;
   gboolean resuscitated = FALSE;
   gint index;
+  GstMetaV4l2 *meta;
 
-  data = GST_V4L2_GET_DATA (buffer);
-  g_assert (data != NULL);
+  meta = GST_META_V4L2_GET (buffer, FALSE);
+  g_assert (meta != NULL);
 
-  pool = data->pool;
-
-  index = data->vbuffer.index;
+  pool = meta->pool;
+  index = meta->vbuffer.index;
 
   GST_LOG_OBJECT (pool->v4l2elem, "finalizing buffer %p %d", buffer, index);
 
@@ -106,61 +105,59 @@ gst_v4l2_buffer_dispose (GstBuffer * buffer)
   if (!resuscitated) {
     GST_LOG_OBJECT (pool->v4l2elem,
         "buffer %p (data %p, len %u) not recovered, unmapping",
-        buffer, GST_BUFFER_DATA (buffer), data->vbuffer.length);
-    v4l2_munmap ((void *) GST_BUFFER_DATA (buffer), data->vbuffer.length);
+        buffer, GST_BUFFER_DATA (buffer), meta->vbuffer.length);
+    v4l2_munmap ((void *) GST_BUFFER_DATA (buffer), meta->vbuffer.length);
 
     g_object_unref (pool);
-    g_slice_free (GstV4l2Data, data);
-    buffer->owner_priv = NULL;
   }
 }
 
 static GstBuffer *
 gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
 {
-  GstV4l2Data *data;
   GstBuffer *ret;
   guint8 *mem;
+  GstMetaV4l2 *meta;
 
   ret = gst_buffer_new ();
-  data = g_slice_new (GstV4l2Data);
-  ret->owner_priv = data;
   GST_MINI_OBJECT_CAST (ret)->dispose =
       (GstMiniObjectDisposeFunction) gst_v4l2_buffer_dispose;
+
+  meta = GST_META_V4L2_GET (ret, TRUE);
 
   GST_LOG_OBJECT (pool->v4l2elem, "creating buffer %u, %p in pool %p", index,
       ret, pool);
 
-  data->pool = (GstV4l2BufferPool *) g_object_ref (pool);
+  meta->pool = (GstV4l2BufferPool *) g_object_ref (pool);
 
-  data->vbuffer.index = index;
-  data->vbuffer.type = pool->type;
-  data->vbuffer.memory = V4L2_MEMORY_MMAP;
+  meta->vbuffer.index = index;
+  meta->vbuffer.type = pool->type;
+  meta->vbuffer.memory = V4L2_MEMORY_MMAP;
 
-  if (v4l2_ioctl (pool->video_fd, VIDIOC_QUERYBUF, &data->vbuffer) < 0)
+  if (v4l2_ioctl (pool->video_fd, VIDIOC_QUERYBUF, &meta->vbuffer) < 0)
     goto querybuf_failed;
 
-  GST_LOG_OBJECT (pool->v4l2elem, "  index:     %u", data->vbuffer.index);
-  GST_LOG_OBJECT (pool->v4l2elem, "  type:      %d", data->vbuffer.type);
-  GST_LOG_OBJECT (pool->v4l2elem, "  bytesused: %u", data->vbuffer.bytesused);
-  GST_LOG_OBJECT (pool->v4l2elem, "  flags:     %08x", data->vbuffer.flags);
-  GST_LOG_OBJECT (pool->v4l2elem, "  field:     %d", data->vbuffer.field);
-  GST_LOG_OBJECT (pool->v4l2elem, "  memory:    %d", data->vbuffer.memory);
-  if (data->vbuffer.memory == V4L2_MEMORY_MMAP)
+  GST_LOG_OBJECT (pool->v4l2elem, "  index:     %u", meta->vbuffer.index);
+  GST_LOG_OBJECT (pool->v4l2elem, "  type:      %d", meta->vbuffer.type);
+  GST_LOG_OBJECT (pool->v4l2elem, "  bytesused: %u", meta->vbuffer.bytesused);
+  GST_LOG_OBJECT (pool->v4l2elem, "  flags:     %08x", meta->vbuffer.flags);
+  GST_LOG_OBJECT (pool->v4l2elem, "  field:     %d", meta->vbuffer.field);
+  GST_LOG_OBJECT (pool->v4l2elem, "  memory:    %d", meta->vbuffer.memory);
+  if (meta->vbuffer.memory == V4L2_MEMORY_MMAP)
     GST_LOG_OBJECT (pool->v4l2elem, "  MMAP offset:  %u",
-        data->vbuffer.m.offset);
-  GST_LOG_OBJECT (pool->v4l2elem, "  length:    %u", data->vbuffer.length);
-  GST_LOG_OBJECT (pool->v4l2elem, "  input:     %u", data->vbuffer.input);
+        meta->vbuffer.m.offset);
+  GST_LOG_OBJECT (pool->v4l2elem, "  length:    %u", meta->vbuffer.length);
+  GST_LOG_OBJECT (pool->v4l2elem, "  input:     %u", meta->vbuffer.input);
 
-  mem = (guint8 *) v4l2_mmap (0, data->vbuffer.length,
+  mem = (guint8 *) v4l2_mmap (0, meta->vbuffer.length,
       PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
-      data->vbuffer.m.offset);
+      meta->vbuffer.m.offset);
 
   if (mem == MAP_FAILED)
     goto mmap_failed;
 
   GST_BUFFER_DATA (ret) = mem;
-  GST_BUFFER_SIZE (ret) = data->vbuffer.length;
+  GST_BUFFER_SIZE (ret) = meta->vbuffer.length;
 
   GST_BUFFER_FLAG_SET (ret, GST_BUFFER_FLAG_READONLY);
 
@@ -454,8 +451,10 @@ gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool, gboolean blocking)
   }
 
   if (buf) {
+    GstMetaV4l2 *meta = GST_META_V4L2_GET (buf, FALSE);
+
     GST_V4L2_BUFFER_POOL_LOCK (pool);
-    GST_BUFFER_SIZE (buf) = GST_V4L2_GET_DATA (buf)->vbuffer.length;
+    GST_BUFFER_SIZE (buf) = meta->vbuffer.length;
     GST_BUFFER_FLAG_UNSET (buf, 0xffffffff);
     GST_V4L2_BUFFER_POOL_UNLOCK (pool);
   }
@@ -478,12 +477,14 @@ gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool, gboolean blocking)
 gboolean
 gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 {
-  GstV4l2Data *data = GST_V4L2_GET_DATA (buf);
+  GstMetaV4l2 *meta;
+
+  meta = GST_META_V4L2_GET (buf, FALSE);
 
   GST_LOG_OBJECT (pool->v4l2elem, "enqueue pool buffer %d",
-      data->vbuffer.index);
+      meta->vbuffer.index);
 
-  if (v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, &data->vbuffer) < 0)
+  if (v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, &meta->vbuffer) < 0)
     return FALSE;
 
   pool->num_live_buffers--;

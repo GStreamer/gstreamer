@@ -23,6 +23,22 @@
 
 #include "ximageutil.h"
 
+const GstMetaInfo *
+gst_meta_ximage_get_info (void)
+{
+  static const GstMetaInfo *meta_ximage_info = NULL;
+
+  if (meta_ximage_info == NULL) {
+    meta_ximage_info =
+        gst_meta_register ("GstMetaXImageSrc", "GstMetaXImageSrc",
+        sizeof (GstMetaXImage), (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
+        (GstMetaSubFunction) NULL, (GstMetaSerializeFunction) NULL,
+        (GstMetaDeserializeFunction) NULL);
+  }
+  return meta_ximage_info;
+}
+
 #ifdef HAVE_XSHM
 static gboolean error_caught = FALSE;
 
@@ -300,18 +316,20 @@ static void
 gst_ximagesrc_buffer_dispose (GstBuffer * ximage)
 {
   GstElement *parent;
-  GstXImageData *data = GST_XIMAGE_GET_DATA (ximage);
+  GstMetaXImage *meta;
 
   g_return_if_fail (ximage != NULL);
 
-  parent = data->parent;
+  meta = GST_META_XIMAGE_GET (ximage, FALSE);
+
+  parent = meta->parent;
   if (parent == NULL) {
     g_warning ("XImageSrcBuffer->ximagesrc == NULL");
     goto beach;
   }
 
-  if (data->return_func)
-    data->return_func (parent, ximage);
+  if (meta->return_func)
+    meta->return_func (parent, ximage);
 
 beach:
   return;
@@ -320,10 +338,13 @@ beach:
 void
 gst_ximage_buffer_free (GstBuffer * ximage)
 {
-  GstXImageData *data = GST_XIMAGE_GET_DATA (ximage);
+  GstMetaXImage *meta;
+
+  meta = GST_META_XIMAGE_GET (ximage, FALSE);
+
   /* make sure it is not recycled */
-  data->width = -1;
-  data->height = -1;
+  meta->width = -1;
+  meta->height = -1;
   gst_buffer_unref (ximage);
 }
 
@@ -333,75 +354,74 @@ gst_ximageutil_ximage_new (GstXContext * xcontext,
     GstElement * parent, int width, int height, BufferReturnFunc return_func)
 {
   GstBuffer *ximage = NULL;
-  GstXImageData *data;
+  GstMetaXImage *meta;
   gboolean succeeded = FALSE;
 
   ximage = gst_buffer_new ();
-  data = g_slice_new (GstXImageData);
-  ximage->owner_priv = data;
   GST_MINI_OBJECT_CAST (ximage)->dispose =
       (GstMiniObjectDisposeFunction) gst_ximagesrc_buffer_dispose;
 
-  data->width = width;
-  data->height = height;
+  meta = GST_META_XIMAGE_GET (ximage, TRUE);
+  meta->width = width;
+  meta->height = height;
 
 #ifdef HAVE_XSHM
-  data->SHMInfo.shmaddr = ((void *) -1);
-  data->SHMInfo.shmid = -1;
+  meta->SHMInfo.shmaddr = ((void *) -1);
+  meta->SHMInfo.shmid = -1;
 
   if (xcontext->use_xshm) {
-    data->ximage = XShmCreateImage (xcontext->disp,
+    meta->ximage = XShmCreateImage (xcontext->disp,
         xcontext->visual, xcontext->depth,
-        ZPixmap, NULL, &data->SHMInfo, data->width, data->height);
-    if (!data->ximage) {
+        ZPixmap, NULL, &meta->SHMInfo, meta->width, meta->height);
+    if (!meta->ximage) {
       goto beach;
     }
 
     /* we have to use the returned bytes_per_line for our shm size */
-    data->size = data->ximage->bytes_per_line * data->ximage->height;
-    data->SHMInfo.shmid = shmget (IPC_PRIVATE, data->size, IPC_CREAT | 0777);
-    if (data->SHMInfo.shmid == -1)
+    meta->size = meta->ximage->bytes_per_line * meta->ximage->height;
+    meta->SHMInfo.shmid = shmget (IPC_PRIVATE, meta->size, IPC_CREAT | 0777);
+    if (meta->SHMInfo.shmid == -1)
       goto beach;
 
-    data->SHMInfo.shmaddr = shmat (data->SHMInfo.shmid, 0, 0);
-    if (data->SHMInfo.shmaddr == ((void *) -1))
+    meta->SHMInfo.shmaddr = shmat (meta->SHMInfo.shmid, 0, 0);
+    if (meta->SHMInfo.shmaddr == ((void *) -1))
       goto beach;
 
     /* Delete the SHM segment. It will actually go away automatically
      * when we detach now */
-    shmctl (data->SHMInfo.shmid, IPC_RMID, 0);
+    shmctl (meta->SHMInfo.shmid, IPC_RMID, 0);
 
-    data->ximage->data = data->SHMInfo.shmaddr;
-    data->SHMInfo.readOnly = FALSE;
+    meta->ximage->data = meta->SHMInfo.shmaddr;
+    meta->SHMInfo.readOnly = FALSE;
 
-    if (XShmAttach (xcontext->disp, &data->SHMInfo) == 0)
+    if (XShmAttach (xcontext->disp, &meta->SHMInfo) == 0)
       goto beach;
 
     XSync (xcontext->disp, FALSE);
   } else
 #endif /* HAVE_XSHM */
   {
-    data->ximage = XCreateImage (xcontext->disp,
+    meta->ximage = XCreateImage (xcontext->disp,
         xcontext->visual,
         xcontext->depth,
-        ZPixmap, 0, NULL, data->width, data->height, xcontext->bpp, 0);
-    if (!data->ximage)
+        ZPixmap, 0, NULL, meta->width, meta->height, xcontext->bpp, 0);
+    if (!meta->ximage)
       goto beach;
 
     /* we have to use the returned bytes_per_line for our image size */
-    data->size = data->ximage->bytes_per_line * data->ximage->height;
-    data->ximage->data = g_malloc (data->size);
+    meta->size = meta->ximage->bytes_per_line * meta->ximage->height;
+    meta->ximage->data = g_malloc (meta->size);
 
     XSync (xcontext->disp, FALSE);
   }
   succeeded = TRUE;
 
-  GST_BUFFER_DATA (ximage) = (guchar *) data->ximage->data;
-  GST_BUFFER_SIZE (ximage) = data->size;
+  GST_BUFFER_DATA (ximage) = (guchar *) meta->ximage->data;
+  GST_BUFFER_SIZE (ximage) = meta->size;
 
   /* Keep a ref to our src */
-  data->parent = gst_object_ref (parent);
-  data->return_func = return_func;
+  meta->parent = gst_object_ref (parent);
+  meta->return_func = return_func;
 beach:
   if (!succeeded) {
     gst_ximage_buffer_free (ximage);
@@ -415,9 +435,9 @@ beach:
 void
 gst_ximageutil_ximage_destroy (GstXContext * xcontext, GstBuffer * ximage)
 {
-  GstXImageData *data;
+  GstMetaXImage *meta;
 
-  data = GST_XIMAGE_GET_DATA (ximage);
+  meta = GST_META_XIMAGE_GET (ximage, FALSE);
 
   /* We might have some buffers destroyed after changing state to NULL */
   if (!xcontext)
@@ -427,28 +447,28 @@ gst_ximageutil_ximage_destroy (GstXContext * xcontext, GstBuffer * ximage)
 
 #ifdef HAVE_XSHM
   if (xcontext->use_xshm) {
-    if (data->SHMInfo.shmaddr != ((void *) -1)) {
-      XShmDetach (xcontext->disp, &data->SHMInfo);
+    if (meta->SHMInfo.shmaddr != ((void *) -1)) {
+      XShmDetach (xcontext->disp, &meta->SHMInfo);
       XSync (xcontext->disp, 0);
-      shmdt (data->SHMInfo.shmaddr);
+      shmdt (meta->SHMInfo.shmaddr);
     }
-    if (data->ximage)
-      XDestroyImage (data->ximage);
+    if (meta->ximage)
+      XDestroyImage (meta->ximage);
 
   } else
 #endif /* HAVE_XSHM */
   {
-    if (data->ximage) {
-      XDestroyImage (data->ximage);
+    if (meta->ximage) {
+      XDestroyImage (meta->ximage);
     }
   }
 
   XSync (xcontext->disp, FALSE);
 beach:
-  if (data->parent) {
+  if (meta->parent) {
     /* Release the ref to our parent */
-    gst_object_unref (data->parent);
-    data->parent = NULL;
+    gst_object_unref (meta->parent);
+    meta->parent = NULL;
   }
 
   return;

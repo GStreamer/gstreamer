@@ -84,11 +84,32 @@ static gboolean gst_efence_activate_src_pull (GstPad * pad, gboolean active);
 
 static GstElementClass *parent_class = NULL;
 
-typedef struct _GstFencedData
+typedef struct _GstMetaFenced
 {
+  GstMeta meta;
+
   void *region;
   unsigned int length;
-} GstFencedData;
+} GstMetaFenced;
+
+static const GstMetaInfo *
+gst_meta_fenced_get_info (void)
+{
+  static const GstMetaInfo *meta_fenced_info = NULL;
+
+  if (meta_fenced_info == NULL) {
+    meta_fenced_info = gst_meta_register ("GstMetaFenced", "GstMetaFenced",
+        sizeof (GstMetaFenced),
+        (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) NULL,
+        (GstMetaCopyFunction) NULL,
+        (GstMetaSubFunction) NULL,
+        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+  }
+  return meta_fenced_info;
+}
+
+#define GST_META_FENCED_GET(buf,create) ((GstMetaFenced *)gst_buffer_get_meta(buf,gst_meta_fenced_get_info(),create));
 
 static void gst_fenced_buffer_dispose (GstBuffer * buf);
 static GstBuffer *gst_fenced_buffer_copy (const GstBuffer * buffer);
@@ -98,8 +119,6 @@ static void *gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
 static GstFlowReturn gst_efence_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
 #endif
-
-#define GET_FENCED_DATA(buf) ((GstFencedData *) (GST_BUFFER_CAST(buf)->owner_priv))
 
 GType
 gst_gst_efence_get_type (void)
@@ -379,19 +398,17 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 static void
 gst_fenced_buffer_dispose (GstBuffer * buffer)
 {
-  GstFencedData *data;
+  GstMetaFenced *meta;
 
-  data = GET_FENCED_DATA (buffer);
+  meta = GST_META_FENCED_GET (buffer, FALSE);
 
   GST_DEBUG ("free buffer=%p", buffer);
 
   /* free our data */
   if (GST_BUFFER_DATA (buffer)) {
-    GST_DEBUG ("free region %p %d", data->region, data->length);
-    munmap (data->region, data->length);
+    GST_DEBUG ("free region %p %d", meta->region, meta->length);
+    munmap (meta->region, meta->length);
   }
-  g_slice_free (GstFencedData, data);
-  buffer->owner_priv = NULL;
 }
 
 static GstBuffer *
@@ -440,14 +457,13 @@ gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
 {
   int alloc_size;
   void *region;
-  GstFencedData *data;
+  GstMetaFenced *meta;
   int page_size;
 
   GST_DEBUG ("buffer=%p length=%d fence_top=%d", buffer, length, fence_top);
 
   if (length == 0)
     return NULL;
-
 
 #ifdef _SC_PAGESIZE
   page_size = sysconf (_SC_PAGESIZE);
@@ -466,28 +482,28 @@ gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
     return NULL;
   }
 
-  data = g_slice_new (GstFencedData);
-  buffer->owner_priv = data;
   GST_MINI_OBJECT_CAST (buffer)->dispose =
       (GstMiniObjectDisposeFunction) gst_fenced_buffer_dispose;
   GST_MINI_OBJECT_CAST (buffer)->copy =
       (GstMiniObjectCopyFunction) gst_fenced_buffer_copy;
 
+  meta = GST_META_FENCED_GET (buffer, TRUE);
+
 #if 0
   munmap (region, page_size);
   munmap (region + alloc_size - page_size, page_size);
 
-  data->region = region + page_size;
-  data->length = alloc_size - page_size;
+  meta->region = region + page_size;
+  meta->length = alloc_size - page_size;
 #else
   mprotect (region, page_size, PROT_NONE);
   mprotect ((char *) region + alloc_size - page_size, page_size, PROT_NONE);
 
-  data->region = region;
-  data->length = alloc_size;
+  meta->region = region;
+  meta->length = alloc_size;
 #endif
 
-  GST_DEBUG ("new region %p %d", data->region, data->length);
+  GST_DEBUG ("new region %p %d", meta->region, meta->length);
 
   if (fence_top) {
     int offset;

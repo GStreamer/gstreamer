@@ -46,7 +46,7 @@ GType gst_v4l2_buffer_pool_get_type (void);
 
 
 typedef struct _GstV4l2BufferPool GstV4l2BufferPool;
-typedef struct _GstV4l2Data GstV4l2Data;
+typedef struct _GstMetaV4l2 GstMetaV4l2;
 
 
 struct _GstV4l2BufferPool
@@ -66,9 +66,9 @@ struct _GstV4l2BufferPool
   GstBuffer **buffers;
 };
 
-#define GST_V4L2_GET_DATA(buf) ((GstV4l2Data *) (GST_BUFFER_CAST (buf)->owner_priv))
+struct _GstMetaV4l2 {
+  GstMeta meta;
 
-struct _GstV4l2Data {
   struct v4l2_buffer vbuffer;
 
   /* FIXME: have GstV4l2Src* instead, as this has GstV4l2BufferPool* */
@@ -77,6 +77,9 @@ struct _GstV4l2Data {
    */
   GstV4l2BufferPool *pool;
 };
+
+const GstMetaInfo * gst_meta_v4l2_get_info (void);
+#define GST_META_V4L2_GET(buf,create) ((GstMetaV4l2 *)gst_buffer_get_meta(buf,gst_meta_v4l2_get_info(),create))
 
 void gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
 GstV4l2BufferPool *gst_v4l2_buffer_pool_new (GstElement *v4l2elem, gint fd, gint num_buffers, GstCaps * caps, gboolean requeuebuf, enum v4l2_buf_type type);

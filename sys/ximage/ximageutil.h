@@ -43,7 +43,7 @@ G_BEGIN_DECLS
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 typedef struct _GstXImage GstXImage;
-typedef struct _GstXImageData GstXImageData;
+typedef struct _GstMetaXImage GstMetaXImage;
 
 /* Global X Context stuff */
 /**
@@ -134,7 +134,7 @@ typedef void (*BufferReturnFunc) (GstElement *parent, GstBuffer *buf);
 
 #define GST_XIMAGE_GET_DATA(buf) ((GstXImageData *) (GST_BUFFER_CAST(buf)->owner_priv))
 /**
- * GstXImageData:
+ * GstMetaXImage:
  * @parent: a reference to the element we belong to
  * @ximage: the XImage of this buffer
  * @width: the width in pixels of XImage @ximage
@@ -143,7 +143,9 @@ typedef void (*BufferReturnFunc) (GstElement *parent, GstBuffer *buf);
  *
  * Extra data attached to buffers containing additional information about an XImage.
  */
-struct _GstXImageData {
+struct _GstMetaXImage {
+  GstMeta meta;
+
   /* Reference to the ximagesrc we belong to */
   GstElement *parent;
 
@@ -159,6 +161,8 @@ struct _GstXImageData {
   BufferReturnFunc return_func;
 };
 
+const GstMetaInfo * gst_meta_ximage_get_info (void);
+#define GST_META_XIMAGE_GET(buf,create) ((GstMetaXImage *)gst_buffer_get_meta(buf,gst_meta_ximage_get_info(),create));
 
 GstBuffer *gst_ximageutil_ximage_new (GstXContext *xcontext,
   GstElement *parent, int width, int height, BufferReturnFunc return_func);
