@@ -97,7 +97,10 @@ struct _GESTrackObject {
  * GESTrackObjectClass:
  * @gnlobject_factorytype: name of the GNonLin GStElementFactory type to use.
  * @create_gnl_object: method to create the GNonLin container object.
- * @get_props_hastable: method to list child properties that user could like to configure.
+ * @get_props_hastable: method to list children properties that user could like to
+ *    configure.
+ * @list_children_properties: method to get children properties that user could like to
+ *  configure.
  * The default implementation will create an object of type @gnlobject_factorytype
  * and call @create_element.
  * @create_element: method to return the GstElement to put in the gnlobject.
@@ -120,6 +123,7 @@ struct _GESTrackObjectClass {
   GstElement* (*create_gnl_object) (GESTrackObject * object);
   GstElement* (*create_element) (GESTrackObject * object);
   GHashTable* (*get_props_hastable) (GESTrackObject * object);
+  GParamSpec** (*list_children_properties) (GESTrackObject *object, guint *n_properties);
 
   void (*start_changed) (GESTrackObject *object, guint64 start);
   void (*media_start_changed) (GESTrackObject *object, guint64 media_start);
@@ -161,6 +165,8 @@ guint64 ges_track_object_get_duration (GESTrackObject * object);
 guint32 ges_track_object_get_priority (GESTrackObject * object);
 gboolean ges_track_object_is_active (GESTrackObject * object);
 
+GParamSpec ** ges_track_object_list_children_properties (GESTrackObject *object,
+                                                guint *n_properties);
 gboolean ges_track_object_lookup_child (GESTrackObject *object,
      const gchar *prop_name, GstElement **element, GParamSpec **pspec);
 

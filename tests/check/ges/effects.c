@@ -327,9 +327,12 @@ GST_START_TEST (test_track_effect_set_properties)
   GESTimelineLayer *layer;
   GESTrack *track_video;
   GESTimelineParseLaunchEffect *tl_effect;
-  GESTrackParseLaunchEffect *tck_effect;
-  guint scratch_line;
+  GESTrackObject *tck_effect;
+  guint scratch_line, n_props, i;
   gboolean color_aging;
+  GParamSpec **pspecs, *spec;
+  GValue val = { 0 };
+  GValue nval = { 0 };
 
   ges_init ();
 
@@ -348,19 +351,39 @@ GST_START_TEST (test_track_effect_set_properties)
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
       (GESTimelineObject *) tl_effect, 0);
 
-  tck_effect = ges_track_parse_launch_effect_new ("agingtv");
+  tck_effect = GES_TRACK_OBJECT (ges_track_parse_launch_effect_new ("agingtv"));
   fail_unless (ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT
-          (tl_effect), GES_TRACK_OBJECT (tck_effect)));
-  fail_unless (ges_track_add_object (track_video,
-          GES_TRACK_OBJECT (tck_effect)));
+          (tl_effect), tck_effect));
+  fail_unless (ges_track_add_object (track_video, tck_effect));
 
-  ges_track_object_set_child_property (GES_TRACK_OBJECT (tck_effect),
+  ges_track_object_set_child_property (tck_effect,
       "GstAgingTV::scratch-lines", 17, "color-aging", FALSE, NULL);
-  ges_track_object_get_child_property (GES_TRACK_OBJECT (tck_effect),
+  ges_track_object_get_child_property (tck_effect,
       "GstAgingTV::scratch-lines", &scratch_line,
       "color-aging", &color_aging, NULL);
   fail_unless (scratch_line == 17);
   fail_unless (color_aging == FALSE);
+
+  pspecs = ges_track_object_list_children_properties (tck_effect, &n_props);
+  fail_unless (n_props == 6);
+
+  spec = pspecs[0];
+  i = 1;
+  while (g_strcmp0 (spec->name, "scratch-lines")) {
+    spec = pspecs[i++];
+  }
+
+  g_value_init (&val, G_TYPE_UINT);
+  g_value_init (&nval, G_TYPE_UINT);
+  g_value_set_uint (&val, 10);
+
+  ges_track_object_set_child_property_by_pspec (tck_effect, spec, &val);
+  ges_track_object_get_child_property_by_pspec (tck_effect, spec, &nval);
+  fail_unless (g_value_get_uint (&nval) == 10);
+
+  for (i = 0; i < n_props; i++) {
+    g_param_spec_unref (pspecs[i]);
+  }
 
   ges_timeline_layer_remove_object (layer, (GESTimelineObject *) tl_effect);
 

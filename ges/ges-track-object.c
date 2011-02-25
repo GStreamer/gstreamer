@@ -119,6 +119,9 @@ static inline gboolean ges_track_object_set_duration_internal (GESTrackObject *
 static inline gboolean ges_track_object_set_priority_internal (GESTrackObject *
     object, guint32 priority);
 
+GParamSpec **default_list_children_properties (GESTrackObject * object,
+    guint * n_properties);
+
 static void
 ges_track_object_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -285,6 +288,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
   klass->create_gnl_object = ges_track_object_create_gnl_object_func;
   /*  There is no 'get_props_hastable' default implementation */
   klass->get_props_hastable = NULL;
+  klass->list_children_properties = default_list_children_properties;
 }
 
 static void
@@ -1241,6 +1245,27 @@ cant_copy:
 }
 
 /**
+ * ges_track_object_list_children_properties:
+ * @object: The #GESTrackObject to get the list of children properties from
+ * @n_properties: return location for the length of the returned array
+ *
+ * Gets an array of #GParamSpec* for all configurable properties of the
+ * children of @object.
+ *
+ * Returns: an array of #GParamSpec* which should be freed after use or %NULL
+ * if something went wrong
+ */
+GParamSpec **
+ges_track_object_list_children_properties (GESTrackObject * object,
+    guint * n_properties)
+{
+  GESTrackObjectClass *class;
+  class = GES_TRACK_OBJECT_GET_CLASS (object);
+
+  return class->list_children_properties (object, n_properties);
+}
+
+/**
  * ges_track_object_get_child_property:
  * @object: The origin #GESTrackObject
  * @first_property_name: The name of the first property to get
@@ -1297,5 +1322,36 @@ prop_hash_not_set:
   {
     GST_ERROR ("The child properties haven't been set on %p", object);
     return;
+  }
+}
+
+GParamSpec **
+default_list_children_properties (GESTrackObject * object, guint * n_properties)
+{
+  GParamSpec **pspec, *spec;
+  GHashTableIter iter;
+  gpointer key, value;
+
+  guint i = 0;
+
+  if (!object->priv->properties_hashtable)
+    goto prop_hash_not_set;
+
+  *n_properties = g_hash_table_size (object->priv->properties_hashtable);
+  pspec = g_new (GParamSpec *, *n_properties);
+
+  g_hash_table_iter_init (&iter, object->priv->properties_hashtable);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    spec = G_PARAM_SPEC (key);
+    pspec[i] = g_param_spec_ref (spec);
+    i++;
+  }
+
+  return pspec;
+
+prop_hash_not_set:
+  {
+    GST_ERROR ("The child properties haven't been set on %p", object);
+    return NULL;
   }
 }
