@@ -557,11 +557,7 @@ gst_csp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
           space->to_format == GST_VIDEO_FORMAT_UNKNOWN))
     goto unknown_format;
 
-  if (space->dither) {
-    colorspace_convert_set_dither (space->convert, 1);
-  } else {
-    colorspace_convert_set_dither (space->convert, 0);
-  }
+  colorspace_convert_set_dither (space->convert, space->dither);
 
   colorspace_convert_convert (space->convert, GST_BUFFER_DATA (outbuf),
       GST_BUFFER_DATA (inbuf));
