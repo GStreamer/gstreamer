@@ -123,13 +123,16 @@ static GstFlowReturn
 rsn_parsetter_chain (GstPad * pad, GstBuffer * buf)
 {
   RsnParSetter *parset = RSN_PARSETTER (GST_OBJECT_PARENT (pad));
+  RsnMetaWrapped *meta;
+
+  meta = RSN_META_WRAPPED_GET (buf, FALSE);
 
   /* If this is a buffer we wrapped up earlier, unwrap it now */
-  if (RSN_IS_WRAPPEDBUFFER (buf)) {
-    RsnWrappedBuffer *wrap_buf = RSN_WRAPPEDBUFFER (buf);
+  if (meta != NULL) {
+    GstBuffer *wrap_buf = buf;
 
-    if (wrap_buf->owner == GST_ELEMENT (parset)) {
-      buf = rsn_wrappedbuffer_unwrap_and_unref (wrap_buf);
+    if (meta->owner == GST_ELEMENT (parset)) {
+      buf = rsn_meta_wrapped_unwrap_and_unref (wrap_buf, meta);
       GST_DEBUG_OBJECT (parset, "Unwrapping %p yields buffer %p with caps %"
           GST_PTR_FORMAT, wrap_buf, buf, GST_BUFFER_CAPS (buf));
     }
@@ -378,14 +381,11 @@ rsn_parsetter_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
     if (ret != GST_FLOW_OK)
       return ret;
 
-    outbuf = (GstBuffer *) rsn_wrapped_buffer_new (orig_buf);
+    outbuf = rsn_wrapped_buffer_new (orig_buf, GST_ELEMENT_CAST (parset));
     if (!outbuf) {
       /* FIXME: Throw error */
       return GST_FLOW_ERROR;
     }
-
-    rsn_wrapped_buffer_set_owner (RSN_WRAPPEDBUFFER (outbuf),
-        GST_ELEMENT (parset));
 
     gst_buffer_set_caps (outbuf, caps);
 

@@ -26,53 +26,19 @@
 
 #include "rsnwrappedbuffer.h"
 
-G_DEFINE_TYPE (RsnWrappedBuffer, rsn_wrappedbuffer, GST_TYPE_BUFFER);
-
-static gboolean
-rsn_wrapped_buffer_default_release (GstElement * owner, RsnWrappedBuffer * buf);
-
-static void rsn_wrapped_buffer_finalize (RsnWrappedBuffer * wrap_buf);
-
-static void
-rsn_wrappedbuffer_class_init (RsnWrappedBufferClass * klass)
+GstBuffer *
+rsn_wrapped_buffer_new (GstBuffer * buf_to_wrap, GstElement * owner)
 {
-  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (klass);
+  GstBuffer *buf;
+  RsnMetaWrapped *meta;
 
-  mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
-      rsn_wrapped_buffer_finalize;
-}
-
-static void
-rsn_wrappedbuffer_init (RsnWrappedBuffer * self)
-{
-  self->release = rsn_wrapped_buffer_default_release;
-}
-
-static void
-rsn_wrapped_buffer_finalize (RsnWrappedBuffer * wrap_buf)
-{
-  if (wrap_buf->release) {
-    /* Release might increment the refcount to recycle and return TRUE,
-     * in which case, exit without chaining up */
-    if (wrap_buf->release (wrap_buf->owner, wrap_buf))
-      return;
-  }
-
-  GST_MINI_OBJECT_CLASS (rsn_wrappedbuffer_parent_class)->finalize
-      (GST_MINI_OBJECT (wrap_buf));
-}
-
-RsnWrappedBuffer *
-rsn_wrapped_buffer_new (GstBuffer * buf_to_wrap)
-{
-  RsnWrappedBuffer *buf;
   g_return_val_if_fail (buf_to_wrap, NULL);
 
-  buf = (RsnWrappedBuffer *) gst_mini_object_new (RSN_TYPE_WRAPPEDBUFFER);
-  if (buf == NULL)
-    return NULL;
+  buf = gst_buffer_new ();
+  meta = RSN_META_WRAPPED_GET (buf, TRUE);
 
-  buf->wrapped_buffer = buf_to_wrap;
+  meta->wrapped_buffer = buf_to_wrap;
+  meta->owner = gst_object_ref (owner);
 
   GST_BUFFER_DATA (buf) = GST_BUFFER_DATA (buf_to_wrap);
   GST_BUFFER_SIZE (buf) = GST_BUFFER_SIZE (buf_to_wrap);
@@ -86,52 +52,29 @@ rsn_wrapped_buffer_new (GstBuffer * buf_to_wrap)
 }
 
 void
-rsn_wrapped_buffer_set_owner (RsnWrappedBuffer * wrapped_buf,
-    GstElement * owner)
+rsn_meta_wrapped_set_owner (RsnMetaWrapped * meta, GstElement * owner)
 {
-  g_return_if_fail (wrapped_buf != NULL);
+  g_return_if_fail (meta != NULL);
 
-  if (wrapped_buf->owner)
-    gst_object_unref (wrapped_buf->owner);
+  if (meta->owner)
+    gst_object_unref (meta->owner);
 
   if (owner)
-    wrapped_buf->owner = gst_object_ref (owner);
-  else
-    wrapped_buf->owner = NULL;
-}
+    gst_object_ref (owner);
 
-void
-rsn_wrapped_buffer_set_releasefunc (RsnWrappedBuffer * wrapped_buf,
-    RsnWrappedBufferReleaseFunc release_func)
-{
-  g_return_if_fail (wrapped_buf != NULL);
-
-  wrapped_buf->release = release_func;
-}
-
-static gboolean
-rsn_wrapped_buffer_default_release (GstElement * owner, RsnWrappedBuffer * buf)
-{
-  g_return_val_if_fail (buf != NULL, FALSE);
-  g_return_val_if_fail (buf->wrapped_buffer != NULL, FALSE);
-
-  gst_buffer_unref (buf->wrapped_buffer);
-  if (buf->owner)
-    gst_object_unref (buf->owner);
-
-  return FALSE;
+  meta->owner = owner;
 }
 
 GstBuffer *
-rsn_wrappedbuffer_unwrap_and_unref (RsnWrappedBuffer * wrap_buf)
+rsn_meta_wrapped_unwrap_and_unref (GstBuffer * wrap_buf, RsnMetaWrapped * meta)
 {
   GstBuffer *buf;
   gboolean is_readonly;
 
   g_return_val_if_fail (wrap_buf != NULL, NULL);
-  g_return_val_if_fail (wrap_buf->wrapped_buffer != NULL, NULL);
+  g_return_val_if_fail (meta->wrapped_buffer != NULL, NULL);
 
-  buf = gst_buffer_ref (wrap_buf->wrapped_buffer);
+  buf = gst_buffer_ref (meta->wrapped_buffer);
 
   /* Copy changed metadata back to the wrapped buffer from the wrapper,
    * except the the read-only flag and the caps. */
@@ -141,7 +84,38 @@ rsn_wrappedbuffer_unwrap_and_unref (RsnWrappedBuffer * wrap_buf)
   if (!is_readonly)
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_READONLY);
 
-  gst_buffer_unref (GST_BUFFER (wrap_buf));
+  gst_buffer_unref (wrap_buf);
 
   return buf;
+}
+
+static void
+rsn_meta_wrapped_init (RsnMetaWrapped * meta, GstBuffer * buffer)
+{
+  meta->owner = NULL;
+}
+
+static void
+rsn_meta_wrapped_free (RsnMetaWrapped * meta, GstBuffer * buffer)
+{
+  gst_buffer_unref (meta->wrapped_buffer);
+  if (meta->owner)
+    gst_object_unref (meta->owner);
+}
+
+const GstMetaInfo *
+rsn_meta_wrapped_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (meta_info == NULL) {
+    meta_info = gst_meta_register ("RsnMetaWrapped", "RsnMetaWrapped",
+        sizeof (RsnMetaWrapped),
+        (GstMetaInitFunction) rsn_meta_wrapped_init,
+        (GstMetaFreeFunction) rsn_meta_wrapped_free,
+        (GstMetaCopyFunction) NULL,
+        (GstMetaSubFunction) NULL,
+        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+  }
+  return meta_info;
 }

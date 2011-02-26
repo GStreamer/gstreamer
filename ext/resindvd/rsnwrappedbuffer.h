@@ -24,45 +24,24 @@
 
 G_BEGIN_DECLS
 
-#define RSN_TYPE_WRAPPEDBUFFER (rsn_wrappedbuffer_get_type())
-#define RSN_WRAPPEDBUFFER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), RSN_TYPE_WRAPPEDBUFFER, \
-   RsnWrappedBuffer))
-#define RSN_WRAPPEDBUFFER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), RSN_TYPE_WRAPPEDBUFFER, \
-   RsnWrappedBufferClass))
-#define RSN_IS_WRAPPEDBUFFER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), RSN_TYPE_WRAPPEDBUFFER))
-#define RSN_IS_WRAPPEDBUFFER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), RSN_TYPE_WRAPPEDBUFFER))
+typedef struct _RsnMetaWrapped RsnMetaWrapped;
 
-typedef struct _RsnWrappedBuffer RsnWrappedBuffer;
-typedef struct _RsnWrappedBufferClass RsnWrappedBufferClass;
-
-typedef gboolean (*RsnWrappedBufferReleaseFunc)(GstElement *owner,
-    RsnWrappedBuffer *buf);
-
-struct _RsnWrappedBuffer {
-  GstBuffer     buffer;
+struct _RsnMetaWrapped {
+  GstMeta       meta;
   GstBuffer    *wrapped_buffer;
 
   GstElement   *owner;
-  RsnWrappedBufferReleaseFunc  release;
 };
 
-struct _RsnWrappedBufferClass 
-{
-  GstBufferClass parent_class;
-};
+GstBuffer *rsn_wrapped_buffer_new (GstBuffer *buf_to_wrap, GstElement *owner);
 
-RsnWrappedBuffer *rsn_wrapped_buffer_new (GstBuffer *buf_to_wrap);
-GstBuffer *rsn_wrappedbuffer_unwrap_and_unref (RsnWrappedBuffer *wrap_buf);
-void rsn_wrapped_buffer_set_owner (RsnWrappedBuffer *wrapped_buf,
-    GstElement *owner);
-void rsn_wrapped_buffer_set_releasefunc (RsnWrappedBuffer *wrapped_buf,
-    RsnWrappedBufferReleaseFunc release_func);
+GstBuffer *rsn_meta_wrapped_unwrap_and_unref (GstBuffer *wrap_buf, RsnMetaWrapped *meta);
 
-GType rsn_wrappedbuffer_get_type (void);
+void rsn_meta_wrapped_set_owner (RsnMetaWrapped *meta, GstElement *owner);
+
+const GstMetaInfo * rsn_meta_wrapped_get_info (void);
+
+#define RSN_META_WRAPPED_GET(buf,create) ((RsnMetaWrapped *)gst_buffer_get_meta(buf,rsn_meta_wrapped_get_info(),create))
 
 G_END_DECLS
 
