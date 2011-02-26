@@ -1251,6 +1251,71 @@ putline16_AY64 (ColorspaceConvert * convert, guint8 * dest, const guint16 * src,
 }
 
 static void
+getline_r210 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  const guint8 *srcline = FRAME_GET_LINE (src, 0, j);
+  for (i = 0; i < convert->width; i++) {
+    guint8 x;
+    dest[i * 4 + 0] = 0xff;
+    x = GST_READ_UINT32_BE (srcline + i * 4);
+    dest[i * 4 + 1] = (x >> 22) & 0xff;
+    dest[i * 4 + 2] = (x >> 12) & 0xff;
+    dest[i * 4 + 3] = (x >> 2) & 0xff;
+  }
+}
+
+static void
+putline_r210 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  guint8 *destline = FRAME_GET_LINE (dest, 0, j);
+  for (i = 0; i < convert->width / 2; i++) {
+    guint32 x = 0;
+    x |= src[i * 4 + 1] << 22;
+    x |= (src[i * 4 + 1] & 0xc0) << 14;
+    x |= src[i * 4 + 2] << 12;
+    x |= (src[i * 4 + 2] & 0xc0) << 10;
+    x |= src[i * 4 + 3] << 2;
+    x |= (src[i * 4 + 3] & 0xc0) >> 6;
+    GST_WRITE_UINT32_BE (destline + i * 4, x);
+  }
+}
+
+static void
+getline16_r210 (ColorspaceConvert * convert, guint16 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  const guint8 *srcline = FRAME_GET_LINE (src, 0, j);
+  for (i = 0; i < convert->width; i++) {
+    guint32 x;
+    dest[i * 4 + 0] = 0xffff;
+    x = GST_READ_UINT32_BE (srcline + i * 4);
+    dest[i * 4 + 1] = ((x >> 14) & 0xffc0) | (x >> 24);
+    dest[i * 4 + 2] = ((x >> 4) & 0xffc0) | ((x >> 14) & 0x3f);
+    dest[i * 4 + 3] = ((x << 6) & 0xffc0) | ((x >> 4) & 0x3f);
+  }
+}
+
+static void
+putline16_r210 (ColorspaceConvert * convert, guint8 * dest, const guint16 * src,
+    int j)
+{
+  int i;
+  guint8 *destline = FRAME_GET_LINE (dest, 0, j);
+  for (i = 0; i < convert->width / 2; i++) {
+    guint32 x = 0;
+    x |= (src[i * 4 + 1] & 0xffc0) << 14;
+    x |= (src[i * 4 + 2] & 0xffc0) << 4;
+    x |= (src[i * 4 + 3] & 0xffc0) >> 6;
+    GST_WRITE_UINT32_BE (destline + i * 4, x);
+  }
+}
+
+static void
 getline16_convert (ColorspaceConvert * convert, guint16 * dest,
     const guint8 * src, int j)
 {
@@ -1329,7 +1394,9 @@ static const ColorspaceLine lines[] = {
   {GST_VIDEO_FORMAT_ARGB64, getline_AY64, putline_AY64, getline16_AY64,
       putline16_AY64},
   {GST_VIDEO_FORMAT_AYUV64, getline_AY64, putline_AY64, getline16_AY64,
-      putline16_AY64}
+      putline16_AY64},
+  {GST_VIDEO_FORMAT_r210, getline_r210, putline_r210, getline16_r210,
+      putline16_r210}
 };
 
 static void
