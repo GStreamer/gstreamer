@@ -239,7 +239,7 @@ mxf_jpeg2000_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   }
 
   ret = (MXFMetadataRGBAPictureEssenceDescriptor *)
-      gst_mini_object_new (MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR);
+      g_object_new (MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR, NULL);
 
   memcpy (&ret->parent.parent.essence_container, &jpeg2000_essence_container_ul,
       16);
@@ -270,7 +270,7 @@ mxf_jpeg2000_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 
   if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
           caps)) {
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    g_object_unref (ret);
     return NULL;
   }
 

@@ -167,14 +167,14 @@ G_DEFINE_ABSTRACT_TYPE (MXFDMS1Thesaurus, mxf_dms1_thesaurus,
     MXF_TYPE_DMS1_TEXT_LANGUAGE);
 
 static void
-mxf_dms1_thesaurus_finalize (GstMiniObject * object)
+mxf_dms1_thesaurus_finalize (GObject * object)
 {
   MXFDMS1Thesaurus *self = MXF_DMS1_THESAURUS (object);
 
   g_free (self->thesaurus_name);
   self->thesaurus_name = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_thesaurus_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_thesaurus_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -215,10 +215,10 @@ mxf_dms1_thesaurus_init (MXFDMS1Thesaurus * self)
 static void
 mxf_dms1_thesaurus_class_init (MXFDMS1ThesaurusClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_thesaurus_finalize;
+  object_class->finalize = mxf_dms1_thesaurus_finalize;
   metadatabase_class->handle_tag = mxf_dms1_thesaurus_handle_tag;
 }
 
@@ -233,7 +233,7 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (MXFDMS1Framework, mxf_dms1_framework,
         mxf_dms1_framework_interface_init));
 
 static void
-mxf_dms1_framework_finalize (GstMiniObject * object)
+mxf_dms1_framework_finalize (GObject * object)
 {
   MXFDMS1Framework *self = MXF_DMS1_FRAMEWORK (object);
 
@@ -270,7 +270,7 @@ mxf_dms1_framework_finalize (GstMiniObject * object)
   g_free (self->location_sets);
   self->location_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_framework_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_framework_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -545,10 +545,10 @@ mxf_dms1_framework_init (MXFDMS1Framework * self)
 static void
 mxf_dms1_framework_class_init (MXFDMS1FrameworkClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_framework_finalize;
+  object_class->finalize = mxf_dms1_framework_finalize;
   metadatabase_class->handle_tag = mxf_dms1_framework_handle_tag;
   metadatabase_class->resolve = mxf_dms1_framework_resolve;
 }
@@ -557,7 +557,7 @@ G_DEFINE_ABSTRACT_TYPE (MXFDMS1ProductionClipFramework,
     mxf_dms1_production_clip_framework, MXF_TYPE_DMS1_FRAMEWORK);
 
 static void
-mxf_dms1_production_clip_framework_finalize (GstMiniObject * object)
+mxf_dms1_production_clip_framework_finalize (GObject * object)
 {
   MXFDMS1ProductionClipFramework *self =
       MXF_DMS1_PRODUCTION_CLIP_FRAMEWORK (object);
@@ -574,7 +574,7 @@ mxf_dms1_production_clip_framework_finalize (GstMiniObject * object)
   g_free (self->contract_sets);
   self->contract_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS
+  G_OBJECT_CLASS
       (mxf_dms1_production_clip_framework_parent_class)->finalize (object);
 }
 
@@ -737,10 +737,10 @@ static void
     mxf_dms1_production_clip_framework_class_init
     (MXFDMS1ProductionClipFrameworkClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_production_clip_framework_finalize;
+  object_class->finalize = mxf_dms1_production_clip_framework_finalize;
   metadatabase_class->handle_tag =
       mxf_dms1_production_clip_framework_handle_tag;
   metadatabase_class->resolve = mxf_dms1_production_clip_framework_resolve;
@@ -750,7 +750,7 @@ G_DEFINE_TYPE (MXFDMS1ProductionFramework, mxf_dms1_production_framework,
     MXF_TYPE_DMS1_PRODUCTION_CLIP_FRAMEWORK);
 
 static void
-mxf_dms1_production_framework_finalize (GstMiniObject * object)
+mxf_dms1_production_framework_finalize (GObject * object)
 {
   MXFDMS1ProductionFramework *self = MXF_DMS1_PRODUCTION_FRAMEWORK (object);
 
@@ -793,7 +793,7 @@ mxf_dms1_production_framework_finalize (GstMiniObject * object)
   g_free (self->setting_period_sets);
   self->setting_period_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_production_framework_parent_class)->finalize
+  G_OBJECT_CLASS (mxf_dms1_production_framework_parent_class)->finalize
       (object);
 }
 
@@ -1055,11 +1055,11 @@ static void
 mxf_dms1_production_framework_class_init (MXFDMS1ProductionFrameworkClass *
     klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_production_framework_finalize;
+  object_class->finalize = mxf_dms1_production_framework_finalize;
   metadatabase_class->handle_tag = mxf_dms1_production_framework_handle_tag;
   metadatabase_class->resolve = mxf_dms1_production_framework_resolve;
 
@@ -1070,7 +1070,7 @@ G_DEFINE_TYPE (MXFDMS1ClipFramework, mxf_dms1_clip_framework,
     MXF_TYPE_DMS1_PRODUCTION_CLIP_FRAMEWORK);
 
 static void
-mxf_dms1_clip_framework_finalize (GstMiniObject * object)
+mxf_dms1_clip_framework_finalize (GObject * object)
 {
   MXFDMS1ClipFramework *self = MXF_DMS1_CLIP_FRAMEWORK (object);
 
@@ -1098,8 +1098,7 @@ mxf_dms1_clip_framework_finalize (GstMiniObject * object)
   g_free (self->device_parameters_sets);
   self->device_parameters_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_clip_framework_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (mxf_dms1_clip_framework_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -1329,11 +1328,11 @@ mxf_dms1_clip_framework_init (MXFDMS1ClipFramework * self)
 static void
 mxf_dms1_clip_framework_class_init (MXFDMS1ClipFrameworkClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_clip_framework_finalize;
+  object_class->finalize = mxf_dms1_clip_framework_finalize;
   metadatabase_class->handle_tag = mxf_dms1_clip_framework_handle_tag;
   metadatabase_class->resolve = mxf_dms1_clip_framework_resolve;
   dm_class->type = 0x010200;
@@ -1343,7 +1342,7 @@ G_DEFINE_TYPE (MXFDMS1SceneFramework, mxf_dms1_scene_framework,
     MXF_TYPE_DMS1_FRAMEWORK);
 
 static void
-mxf_dms1_scene_framework_finalize (GstMiniObject * object)
+mxf_dms1_scene_framework_finalize (GObject * object)
 {
   MXFDMS1SceneFramework *self = MXF_DMS1_SCENE_FRAMEWORK (object);
 
@@ -1359,8 +1358,7 @@ mxf_dms1_scene_framework_finalize (GstMiniObject * object)
   g_free (self->shot_scene_sets);
   self->shot_scene_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_scene_framework_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (mxf_dms1_scene_framework_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -1492,11 +1490,11 @@ mxf_dms1_scene_framework_init (MXFDMS1SceneFramework * self)
 static void
 mxf_dms1_scene_framework_class_init (MXFDMS1SceneFrameworkClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_scene_framework_finalize;
+  object_class->finalize = mxf_dms1_scene_framework_finalize;
   metadatabase_class->handle_tag = mxf_dms1_scene_framework_handle_tag;
   metadatabase_class->resolve = mxf_dms1_scene_framework_resolve;
   dm_class->type = 0x010300;
@@ -1505,7 +1503,7 @@ mxf_dms1_scene_framework_class_init (MXFDMS1SceneFrameworkClass * klass)
 G_DEFINE_TYPE (MXFDMS1Titles, mxf_dms1_titles, MXF_TYPE_DMS1_TEXT_LANGUAGE);
 
 static void
-mxf_dms1_titles_finalize (GstMiniObject * object)
+mxf_dms1_titles_finalize (GObject * object)
 {
   MXFDMS1Titles *self = MXF_DMS1_TITLES (object);
 
@@ -1524,7 +1522,7 @@ mxf_dms1_titles_finalize (GstMiniObject * object)
   g_free (self->version_title);
   self->version_title = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_titles_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_titles_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -1592,11 +1590,11 @@ mxf_dms1_titles_init (MXFDMS1Titles * self)
 static void
 mxf_dms1_titles_class_init (MXFDMS1TitlesClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_titles_finalize;
+  object_class->finalize = mxf_dms1_titles_finalize;
   metadatabase_class->handle_tag = mxf_dms1_titles_handle_tag;
   dm_class->type = 0x100100;
 }
@@ -1605,7 +1603,7 @@ G_DEFINE_TYPE (MXFDMS1Identification, mxf_dms1_identification,
     MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_identification_finalize (GstMiniObject * object)
+mxf_dms1_identification_finalize (GObject * object)
 {
   MXFDMS1Identification *self = MXF_DMS1_IDENTIFICATION (object);
 
@@ -1615,8 +1613,7 @@ mxf_dms1_identification_finalize (GstMiniObject * object)
   g_free (self->identification_issuing_authority);
   self->identification_issuing_authority = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_identification_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (mxf_dms1_identification_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -1700,11 +1697,11 @@ mxf_dms1_identification_init (MXFDMS1Identification * self)
 static void
 mxf_dms1_identification_class_init (MXFDMS1IdentificationClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_identification_finalize;
+  object_class->finalize = mxf_dms1_identification_finalize;
   metadatabase_class->handle_tag = mxf_dms1_identification_handle_tag;
   dm_class->type = 0x110100;
 }
@@ -1713,7 +1710,7 @@ G_DEFINE_TYPE (MXFDMS1GroupRelationship, mxf_dms1_group_relationship,
     MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_group_relationship_finalize (GstMiniObject * object)
+mxf_dms1_group_relationship_finalize (GObject * object)
 {
   MXFDMS1GroupRelationship *self = MXF_DMS1_GROUP_RELATIONSHIP (object);
 
@@ -1726,8 +1723,7 @@ mxf_dms1_group_relationship_finalize (GstMiniObject * object)
   g_free (self->group_synopsis);
   self->group_synopsis = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_group_relationship_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (mxf_dms1_group_relationship_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -1834,11 +1830,11 @@ mxf_dms1_group_relationship_init (MXFDMS1GroupRelationship * self)
 static void
 mxf_dms1_group_relationship_class_init (MXFDMS1GroupRelationshipClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_group_relationship_finalize;
+  object_class->finalize = mxf_dms1_group_relationship_finalize;
   metadatabase_class->handle_tag = mxf_dms1_group_relationship_handle_tag;
   dm_class->type = 0x120100;
 }
@@ -1846,7 +1842,7 @@ mxf_dms1_group_relationship_class_init (MXFDMS1GroupRelationshipClass * klass)
 G_DEFINE_TYPE (MXFDMS1Branding, mxf_dms1_branding, MXF_TYPE_DMS1_TEXT_LANGUAGE);
 
 static void
-mxf_dms1_branding_finalize (GstMiniObject * object)
+mxf_dms1_branding_finalize (GObject * object)
 {
   MXFDMS1Branding *self = MXF_DMS1_BRANDING (object);
 
@@ -1856,7 +1852,7 @@ mxf_dms1_branding_finalize (GstMiniObject * object)
   g_free (self->brand_original_title);
   self->brand_original_title = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_branding_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_branding_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -1906,11 +1902,11 @@ mxf_dms1_branding_init (MXFDMS1Branding * self)
 static void
 mxf_dms1_branding_class_init (MXFDMS1BrandingClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_branding_finalize;
+  object_class->finalize = mxf_dms1_branding_finalize;
   metadatabase_class->handle_tag = mxf_dms1_branding_handle_tag;
   dm_class->type = 0x130100;
 }
@@ -1918,7 +1914,7 @@ mxf_dms1_branding_class_init (MXFDMS1BrandingClass * klass)
 G_DEFINE_TYPE (MXFDMS1Event, mxf_dms1_event, MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_event_finalize (GstMiniObject * object)
+mxf_dms1_event_finalize (GObject * object)
 {
   MXFDMS1Event *self = MXF_DMS1_EVENT (object);
 
@@ -1937,7 +1933,7 @@ mxf_dms1_event_finalize (GstMiniObject * object)
   g_free (self->annotation_sets);
   self->annotation_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_event_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_event_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -2083,11 +2079,11 @@ mxf_dms1_event_init (MXFDMS1Event * self)
 static void
 mxf_dms1_event_class_init (MXFDMS1EventClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_event_finalize;
+  object_class->finalize = mxf_dms1_event_finalize;
   metadatabase_class->handle_tag = mxf_dms1_event_handle_tag;
   metadatabase_class->resolve = mxf_dms1_event_resolve;
   dm_class->type = 0x140100;
@@ -2096,7 +2092,7 @@ mxf_dms1_event_class_init (MXFDMS1EventClass * klass)
 G_DEFINE_TYPE (MXFDMS1Publication, mxf_dms1_publication, MXF_TYPE_DMS1);
 
 static void
-mxf_dms1_publication_finalize (GstMiniObject * object)
+mxf_dms1_publication_finalize (GObject * object)
 {
   MXFDMS1Publication *self = MXF_DMS1_PUBLICATION (object);
 
@@ -2112,7 +2108,7 @@ mxf_dms1_publication_finalize (GstMiniObject * object)
   g_free (self->publication_region);
   self->publication_region = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_publication_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_publication_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -2179,11 +2175,11 @@ mxf_dms1_publication_init (MXFDMS1Publication * self)
 static void
 mxf_dms1_publication_class_init (MXFDMS1PublicationClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_publication_finalize;
+  object_class->finalize = mxf_dms1_publication_finalize;
   metadatabase_class->handle_tag = mxf_dms1_publication_handle_tag;
   dm_class->type = 0x140200;
 }
@@ -2191,7 +2187,7 @@ mxf_dms1_publication_class_init (MXFDMS1PublicationClass * klass)
 G_DEFINE_TYPE (MXFDMS1Award, mxf_dms1_award, MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_award_finalize (GstMiniObject * object)
+mxf_dms1_award_finalize (GObject * object)
 {
   MXFDMS1Award *self = MXF_DMS1_AWARD (object);
 
@@ -2213,7 +2209,7 @@ mxf_dms1_award_finalize (GstMiniObject * object)
   g_free (self->participant_sets);
   self->participant_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_award_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_award_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -2339,11 +2335,11 @@ mxf_dms1_award_init (MXFDMS1Award * self)
 static void
 mxf_dms1_award_class_init (MXFDMS1AwardClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_award_finalize;
+  object_class->finalize = mxf_dms1_award_finalize;
   metadatabase_class->handle_tag = mxf_dms1_award_handle_tag;
   metadatabase_class->resolve = mxf_dms1_award_resolve;
   dm_class->type = 0x150100;
@@ -2353,14 +2349,14 @@ G_DEFINE_TYPE (MXFDMS1CaptionsDescription, mxf_dms1_captions_description,
     MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_captions_description_finalize (GstMiniObject * object)
+mxf_dms1_captions_description_finalize (GObject * object)
 {
   MXFDMS1CaptionsDescription *self = MXF_DMS1_CAPTIONS_DESCRIPTION (object);
 
   g_free (self->caption_kind);
   self->caption_kind = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_captions_description_parent_class)->finalize
+  G_OBJECT_CLASS (mxf_dms1_captions_description_parent_class)->finalize
       (object);
 }
 
@@ -2422,11 +2418,11 @@ static void
 mxf_dms1_captions_description_class_init (MXFDMS1CaptionsDescriptionClass *
     klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_captions_description_finalize;
+  object_class->finalize = mxf_dms1_captions_description_finalize;
   metadatabase_class->handle_tag = mxf_dms1_captions_description_handle_tag;
   dm_class->type = 0x160100;
 }
@@ -2434,7 +2430,7 @@ mxf_dms1_captions_description_class_init (MXFDMS1CaptionsDescriptionClass *
 G_DEFINE_TYPE (MXFDMS1Annotation, mxf_dms1_annotation, MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_annotation_finalize (GstMiniObject * object)
+mxf_dms1_annotation_finalize (GObject * object)
 {
   MXFDMS1Annotation *self = MXF_DMS1_ANNOTATION (object);
 
@@ -2465,7 +2461,7 @@ mxf_dms1_annotation_finalize (GstMiniObject * object)
   g_free (self->participant_sets);
   self->participant_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_annotation_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_annotation_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -2652,11 +2648,11 @@ mxf_dms1_annotation_init (MXFDMS1Annotation * self)
 static void
 mxf_dms1_annotation_class_init (MXFDMS1AnnotationClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_annotation_finalize;
+  object_class->finalize = mxf_dms1_annotation_finalize;
   metadatabase_class->handle_tag = mxf_dms1_annotation_handle_tag;
   metadatabase_class->resolve = mxf_dms1_annotation_resolve;
   dm_class->type = 0x170100;
@@ -2666,7 +2662,7 @@ G_DEFINE_TYPE (MXFDMS1SettingPeriod, mxf_dms1_setting_period,
     MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_setting_period_finalize (GstMiniObject * object)
+mxf_dms1_setting_period_finalize (GObject * object)
 {
   MXFDMS1SettingPeriod *self = MXF_DMS1_SETTING_PERIOD (object);
 
@@ -2676,8 +2672,7 @@ mxf_dms1_setting_period_finalize (GstMiniObject * object)
   g_free (self->setting_period_description);
   self->setting_period_description = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_setting_period_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (mxf_dms1_setting_period_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -2748,11 +2743,11 @@ mxf_dms1_setting_period_init (MXFDMS1SettingPeriod * self)
 static void
 mxf_dms1_setting_period_class_init (MXFDMS1SettingPeriodClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_setting_period_finalize;
+  object_class->finalize = mxf_dms1_setting_period_finalize;
   metadatabase_class->handle_tag = mxf_dms1_setting_period_handle_tag;
   dm_class->type = 0x170200;
 }
@@ -2760,7 +2755,7 @@ mxf_dms1_setting_period_class_init (MXFDMS1SettingPeriodClass * klass)
 G_DEFINE_TYPE (MXFDMS1Scripting, mxf_dms1_scripting, MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_scripting_finalize (GstMiniObject * object)
+mxf_dms1_scripting_finalize (GObject * object)
 {
   MXFDMS1Scripting *self = MXF_DMS1_SCRIPTING (object);
 
@@ -2773,7 +2768,7 @@ mxf_dms1_scripting_finalize (GstMiniObject * object)
   g_free (self->scripting_locators);
   self->scripting_locators = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_scripting_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_scripting_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -2851,11 +2846,11 @@ mxf_dms1_scripting_init (MXFDMS1Scripting * self)
 static void
 mxf_dms1_scripting_class_init (MXFDMS1ScriptingClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_scripting_finalize;
+  object_class->finalize = mxf_dms1_scripting_finalize;
   metadatabase_class->handle_tag = mxf_dms1_scripting_handle_tag;
   dm_class->type = 0x170300;
 }
@@ -2864,7 +2859,7 @@ G_DEFINE_TYPE (MXFDMS1Classification, mxf_dms1_classification,
     MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_classification_finalize (GstMiniObject * object)
+mxf_dms1_classification_finalize (GObject * object)
 {
   MXFDMS1Classification *self = MXF_DMS1_CLASSIFICATION (object);
 
@@ -2874,8 +2869,7 @@ mxf_dms1_classification_finalize (GstMiniObject * object)
   g_free (self->name_value_sets);
   self->name_value_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_classification_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (mxf_dms1_classification_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -2974,11 +2968,11 @@ mxf_dms1_classification_init (MXFDMS1Classification * self)
 static void
 mxf_dms1_classification_class_init (MXFDMS1ClassificationClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_classification_finalize;
+  object_class->finalize = mxf_dms1_classification_finalize;
   metadatabase_class->handle_tag = mxf_dms1_classification_handle_tag;
   metadatabase_class->resolve = mxf_dms1_classification_resolve;
   dm_class->type = 0x170400;
@@ -2987,7 +2981,7 @@ mxf_dms1_classification_class_init (MXFDMS1ClassificationClass * klass)
 G_DEFINE_TYPE (MXFDMS1Shot, mxf_dms1_shot, MXF_TYPE_DMS1_TEXT_LANGUAGE);
 
 static void
-mxf_dms1_shot_finalize (GstMiniObject * object)
+mxf_dms1_shot_finalize (GObject * object)
 {
   MXFDMS1Shot *self = MXF_DMS1_SHOT (object);
 
@@ -3009,7 +3003,7 @@ mxf_dms1_shot_finalize (GstMiniObject * object)
   g_free (self->key_point_sets);
   self->key_point_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_shot_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_shot_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -3182,11 +3176,11 @@ mxf_dms1_shot_init (MXFDMS1Shot * self)
 static void
 mxf_dms1_shot_class_init (MXFDMS1ShotClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_shot_finalize;
+  object_class->finalize = mxf_dms1_shot_finalize;
   metadatabase_class->handle_tag = mxf_dms1_shot_handle_tag;
   metadatabase_class->resolve = mxf_dms1_shot_resolve;
   dm_class->type = 0x170500;
@@ -3195,7 +3189,7 @@ mxf_dms1_shot_class_init (MXFDMS1ShotClass * klass)
 G_DEFINE_TYPE (MXFDMS1KeyPoint, mxf_dms1_key_point, MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_key_point_finalize (GstMiniObject * object)
+mxf_dms1_key_point_finalize (GObject * object)
 {
   MXFDMS1KeyPoint *self = MXF_DMS1_KEY_POINT (object);
 
@@ -3205,7 +3199,7 @@ mxf_dms1_key_point_finalize (GstMiniObject * object)
   g_free (self->keypoint_value);
   self->keypoint_value = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_key_point_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_key_point_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -3271,11 +3265,11 @@ mxf_dms1_key_point_init (MXFDMS1KeyPoint * self)
 static void
 mxf_dms1_key_point_class_init (MXFDMS1KeyPointClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_key_point_finalize;
+  object_class->finalize = mxf_dms1_key_point_finalize;
   metadatabase_class->handle_tag = mxf_dms1_key_point_handle_tag;
   dm_class->type = 0x170600;
 }
@@ -3284,7 +3278,7 @@ G_DEFINE_TYPE (MXFDMS1Participant, mxf_dms1_participant,
     MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_participant_finalize (GstMiniObject * object)
+mxf_dms1_participant_finalize (GObject * object)
 {
   MXFDMS1Participant *self = MXF_DMS1_PARTICIPANT (object);
 
@@ -3309,7 +3303,7 @@ mxf_dms1_participant_finalize (GstMiniObject * object)
   g_free (self->organisation_sets);
   self->organisation_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_participant_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_participant_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -3471,11 +3465,11 @@ mxf_dms1_participant_init (MXFDMS1Participant * self)
 static void
 mxf_dms1_participant_class_init (MXFDMS1ParticipantClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_participant_finalize;
+  object_class->finalize = mxf_dms1_participant_finalize;
   metadatabase_class->handle_tag = mxf_dms1_participant_handle_tag;
   metadatabase_class->resolve = mxf_dms1_participant_resolve;
   dm_class->type = 0x180100;
@@ -3485,7 +3479,7 @@ G_DEFINE_ABSTRACT_TYPE (MXFDMS1Contact, mxf_dms1_contact,
     MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_contact_finalize (GstMiniObject * object)
+mxf_dms1_contact_finalize (GObject * object)
 {
   MXFDMS1Contact *self = MXF_DMS1_CONTACT (object);
 
@@ -3501,7 +3495,7 @@ mxf_dms1_contact_finalize (GstMiniObject * object)
   g_free (self->address_sets);
   self->address_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_contact_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_contact_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -3627,10 +3621,10 @@ mxf_dms1_contact_init (MXFDMS1Contact * self)
 static void
 mxf_dms1_contact_class_init (MXFDMS1ContactClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_contact_finalize;
+  object_class->finalize = mxf_dms1_contact_finalize;
   metadatabase_class->handle_tag = mxf_dms1_contact_handle_tag;
   metadatabase_class->resolve = mxf_dms1_contact_resolve;
 }
@@ -3638,7 +3632,7 @@ mxf_dms1_contact_class_init (MXFDMS1ContactClass * klass)
 G_DEFINE_TYPE (MXFDMS1Person, mxf_dms1_person, MXF_TYPE_DMS1_CONTACT);
 
 static void
-mxf_dms1_person_finalize (GstMiniObject * object)
+mxf_dms1_person_finalize (GObject * object)
 {
   MXFDMS1Person *self = MXF_DMS1_PERSON (object);
 
@@ -3684,7 +3678,7 @@ mxf_dms1_person_finalize (GstMiniObject * object)
   g_free (self->organisation_sets);
   self->organisation_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_person_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_person_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -3858,11 +3852,11 @@ mxf_dms1_person_init (MXFDMS1Person * self)
 static void
 mxf_dms1_person_class_init (MXFDMS1PersonClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_person_finalize;
+  object_class->finalize = mxf_dms1_person_finalize;
   metadatabase_class->handle_tag = mxf_dms1_person_handle_tag;
   metadatabase_class->resolve = mxf_dms1_person_resolve;
   dm_class->type = 0x1a0200;
@@ -3872,7 +3866,7 @@ G_DEFINE_TYPE (MXFDMS1Organisation, mxf_dms1_organisation,
     MXF_TYPE_DMS1_CONTACT);
 
 static void
-mxf_dms1_organisation_finalize (GstMiniObject * object)
+mxf_dms1_organisation_finalize (GObject * object)
 {
   MXFDMS1Organisation *self = MXF_DMS1_ORGANISATION (object);
 
@@ -3888,7 +3882,7 @@ mxf_dms1_organisation_finalize (GstMiniObject * object)
   g_free (self->contact_department);
   self->contact_department = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_organisation_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_organisation_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -3954,11 +3948,11 @@ mxf_dms1_organisation_init (MXFDMS1Organisation * self)
 static void
 mxf_dms1_organisation_class_init (MXFDMS1OrganisationClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_organisation_finalize;
+  object_class->finalize = mxf_dms1_organisation_finalize;
   metadatabase_class->handle_tag = mxf_dms1_organisation_handle_tag;
   dm_class->type = 0x1a0300;
 }
@@ -3966,7 +3960,7 @@ mxf_dms1_organisation_class_init (MXFDMS1OrganisationClass * klass)
 G_DEFINE_TYPE (MXFDMS1Location, mxf_dms1_location, MXF_TYPE_DMS1_CONTACT);
 
 static void
-mxf_dms1_location_finalize (GstMiniObject * object)
+mxf_dms1_location_finalize (GObject * object)
 {
   MXFDMS1Location *self = MXF_DMS1_LOCATION (object);
 
@@ -3976,7 +3970,7 @@ mxf_dms1_location_finalize (GstMiniObject * object)
   g_free (self->location_description);
   self->location_description = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_location_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_location_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -4025,11 +4019,11 @@ mxf_dms1_location_init (MXFDMS1Location * self)
 static void
 mxf_dms1_location_class_init (MXFDMS1LocationClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_location_finalize;
+  object_class->finalize = mxf_dms1_location_finalize;
   metadatabase_class->handle_tag = mxf_dms1_location_handle_tag;
   dm_class->type = 0x1a0400;
 }
@@ -4037,7 +4031,7 @@ mxf_dms1_location_class_init (MXFDMS1LocationClass * klass)
 G_DEFINE_TYPE (MXFDMS1Address, mxf_dms1_address, MXF_TYPE_DMS1);
 
 static void
-mxf_dms1_address_finalize (GstMiniObject * object)
+mxf_dms1_address_finalize (GObject * object)
 {
   MXFDMS1Address *self = MXF_DMS1_ADDRESS (object);
 
@@ -4086,7 +4080,7 @@ mxf_dms1_address_finalize (GstMiniObject * object)
   g_free (self->name_value_sets);
   self->name_value_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_address_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_address_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -4303,11 +4297,11 @@ mxf_dms1_address_init (MXFDMS1Address * self)
 static void
 mxf_dms1_address_class_init (MXFDMS1AddressClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_address_finalize;
+  object_class->finalize = mxf_dms1_address_finalize;
   metadatabase_class->handle_tag = mxf_dms1_address_handle_tag;
   metadatabase_class->resolve = mxf_dms1_address_resolve;
   dm_class->type = 0x1b0100;
@@ -4316,7 +4310,7 @@ mxf_dms1_address_class_init (MXFDMS1AddressClass * klass)
 G_DEFINE_TYPE (MXFDMS1Communications, mxf_dms1_communications, MXF_TYPE_DMS1);
 
 static void
-mxf_dms1_communications_finalize (GstMiniObject * object)
+mxf_dms1_communications_finalize (GObject * object)
 {
   MXFDMS1Communications *self = MXF_DMS1_COMMUNICATIONS (object);
 
@@ -4326,8 +4320,7 @@ mxf_dms1_communications_finalize (GstMiniObject * object)
   g_free (self->web_page);
   self->web_page = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_communications_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (mxf_dms1_communications_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -4424,11 +4417,11 @@ mxf_dms1_communications_init (MXFDMS1Communications * self)
 static void
 mxf_dms1_communications_class_init (MXFDMS1CommunicationsClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_communications_finalize;
+  object_class->finalize = mxf_dms1_communications_finalize;
   metadatabase_class->handle_tag = mxf_dms1_communications_handle_tag;
   dm_class->type = 0x1b0200;
 }
@@ -4436,7 +4429,7 @@ mxf_dms1_communications_class_init (MXFDMS1CommunicationsClass * klass)
 G_DEFINE_TYPE (MXFDMS1Contract, mxf_dms1_contract, MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_contract_finalize (GstMiniObject * object)
+mxf_dms1_contract_finalize (GObject * object)
 {
   MXFDMS1Contract *self = MXF_DMS1_CONTRACT (object);
 
@@ -4452,7 +4445,7 @@ mxf_dms1_contract_finalize (GstMiniObject * object)
   g_free (self->participant_sets);
   self->participant_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_contract_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_contract_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -4579,11 +4572,11 @@ mxf_dms1_contract_init (MXFDMS1Contract * self)
 static void
 mxf_dms1_contract_class_init (MXFDMS1ContractClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_contract_finalize;
+  object_class->finalize = mxf_dms1_contract_finalize;
   metadatabase_class->handle_tag = mxf_dms1_contract_handle_tag;
   metadatabase_class->resolve = mxf_dms1_contract_resolve;
   dm_class->type = 0x1c0100;
@@ -4592,7 +4585,7 @@ mxf_dms1_contract_class_init (MXFDMS1ContractClass * klass)
 G_DEFINE_TYPE (MXFDMS1Rights, mxf_dms1_rights, MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_rights_finalize (GstMiniObject * object)
+mxf_dms1_rights_finalize (GObject * object)
 {
   MXFDMS1Rights *self = MXF_DMS1_RIGHTS (object);
 
@@ -4620,7 +4613,7 @@ mxf_dms1_rights_finalize (GstMiniObject * object)
   g_free (self->intellectual_property_right);
   self->intellectual_property_right = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_rights_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_rights_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -4755,11 +4748,11 @@ mxf_dms1_rights_init (MXFDMS1Rights * self)
 static void
 mxf_dms1_rights_class_init (MXFDMS1RightsClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_rights_finalize;
+  object_class->finalize = mxf_dms1_rights_finalize;
   metadatabase_class->handle_tag = mxf_dms1_rights_handle_tag;
   dm_class->type = 0x1c0200;
 }
@@ -4767,15 +4760,14 @@ mxf_dms1_rights_class_init (MXFDMS1RightsClass * klass)
 G_DEFINE_TYPE (MXFDMS1PictureFormat, mxf_dms1_picture_format, MXF_TYPE_DMS1);
 
 static void
-mxf_dms1_picture_format_finalize (GstMiniObject * object)
+mxf_dms1_picture_format_finalize (GObject * object)
 {
   MXFDMS1PictureFormat *self = MXF_DMS1_PICTURE_FORMAT (object);
 
   g_free (self->colour_descriptor);
   self->colour_descriptor = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_picture_format_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (mxf_dms1_picture_format_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -4846,11 +4838,11 @@ mxf_dms1_picture_format_init (MXFDMS1PictureFormat * self)
 static void
 mxf_dms1_picture_format_class_init (MXFDMS1PictureFormatClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_picture_format_finalize;
+  object_class->finalize = mxf_dms1_picture_format_finalize;
   metadatabase_class->handle_tag = mxf_dms1_picture_format_handle_tag;
   dm_class->type = 0x1d0100;
 }
@@ -4859,7 +4851,7 @@ G_DEFINE_TYPE (MXFDMS1DeviceParameters, mxf_dms1_device_parameters,
     MXF_TYPE_DMS1_THESAURUS);
 
 static void
-mxf_dms1_device_parameters_finalize (GstMiniObject * object)
+mxf_dms1_device_parameters_finalize (GObject * object)
 {
   MXFDMS1DeviceParameters *self = MXF_DMS1_DEVICE_PARAMETERS (object);
 
@@ -4884,8 +4876,7 @@ mxf_dms1_device_parameters_finalize (GstMiniObject * object)
   g_free (self->name_value_sets);
   self->name_value_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_device_parameters_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (mxf_dms1_device_parameters_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -5050,11 +5041,11 @@ mxf_dms1_device_parameters_init (MXFDMS1DeviceParameters * self)
 static void
 mxf_dms1_device_parameters_class_init (MXFDMS1DeviceParametersClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_device_parameters_finalize;
+  object_class->finalize = mxf_dms1_device_parameters_finalize;
   metadatabase_class->handle_tag = mxf_dms1_device_parameters_handle_tag;
   metadatabase_class->resolve = mxf_dms1_device_parameters_resolve;
   dm_class->type = 0x1e0100;
@@ -5063,7 +5054,7 @@ mxf_dms1_device_parameters_class_init (MXFDMS1DeviceParametersClass * klass)
 G_DEFINE_TYPE (MXFDMS1NameValue, mxf_dms1_name_value, MXF_TYPE_DMS1);
 
 static void
-mxf_dms1_name_value_finalize (GstMiniObject * object)
+mxf_dms1_name_value_finalize (GObject * object)
 {
   MXFDMS1NameValue *self = MXF_DMS1_NAME_VALUE (object);
 
@@ -5073,7 +5064,7 @@ mxf_dms1_name_value_finalize (GstMiniObject * object)
   g_free (self->item_value);
   self->item_value = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_name_value_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_name_value_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -5142,11 +5133,11 @@ mxf_dms1_name_value_init (MXFDMS1NameValue * self)
 static void
 mxf_dms1_name_value_class_init (MXFDMS1NameValueClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_name_value_finalize;
+  object_class->finalize = mxf_dms1_name_value_finalize;
   metadatabase_class->handle_tag = mxf_dms1_name_value_handle_tag;
   dm_class->type = 0x1f0100;
 }
@@ -5154,7 +5145,7 @@ mxf_dms1_name_value_class_init (MXFDMS1NameValueClass * klass)
 G_DEFINE_TYPE (MXFDMS1Processing, mxf_dms1_processing, MXF_TYPE_DMS1);
 
 static void
-mxf_dms1_processing_finalize (GstMiniObject * object)
+mxf_dms1_processing_finalize (GObject * object)
 {
   MXFDMS1Processing *self = MXF_DMS1_PROCESSING (object);
 
@@ -5164,7 +5155,7 @@ mxf_dms1_processing_finalize (GstMiniObject * object)
   g_free (self->graphic_usage_type);
   self->graphic_usage_type = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_processing_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_processing_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -5271,11 +5262,11 @@ mxf_dms1_processing_init (MXFDMS1Processing * self)
 static void
 mxf_dms1_processing_class_init (MXFDMS1ProcessingClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_processing_finalize;
+  object_class->finalize = mxf_dms1_processing_finalize;
   metadatabase_class->handle_tag = mxf_dms1_processing_handle_tag;
   dm_class->type = 0x200100;
 }
@@ -5283,14 +5274,14 @@ mxf_dms1_processing_class_init (MXFDMS1ProcessingClass * klass)
 G_DEFINE_TYPE (MXFDMS1Project, mxf_dms1_project, MXF_TYPE_DMS1);
 
 static void
-mxf_dms1_project_finalize (GstMiniObject * object)
+mxf_dms1_project_finalize (GObject * object)
 {
   MXFDMS1Project *self = MXF_DMS1_PROJECT (object);
 
   g_free (self->project_name_or_title);
   self->project_name_or_title = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_project_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_project_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -5348,11 +5339,11 @@ mxf_dms1_project_init (MXFDMS1Project * self)
 static void
 mxf_dms1_project_class_init (MXFDMS1ProjectClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_project_finalize;
+  object_class->finalize = mxf_dms1_project_finalize;
   metadatabase_class->handle_tag = mxf_dms1_project_handle_tag;
   dm_class->type = 0x200200;
 }
@@ -5360,7 +5351,7 @@ mxf_dms1_project_class_init (MXFDMS1ProjectClass * klass)
 G_DEFINE_TYPE (MXFDMS1ContactsList, mxf_dms1_contacts_list, MXF_TYPE_DMS1);
 
 static void
-mxf_dms1_contacts_list_finalize (GstMiniObject * object)
+mxf_dms1_contacts_list_finalize (GObject * object)
 {
   MXFDMS1ContactsList *self = MXF_DMS1_CONTACTS_LIST (object);
 
@@ -5382,8 +5373,7 @@ mxf_dms1_contacts_list_finalize (GstMiniObject * object)
   g_free (self->location_sets);
   self->location_sets = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_contacts_list_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (mxf_dms1_contacts_list_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -5532,11 +5522,11 @@ mxf_dms1_contacts_list_init (MXFDMS1ContactsList * self)
 static void
 mxf_dms1_contacts_list_class_init (MXFDMS1ContactsListClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_contacts_list_finalize;
+  object_class->finalize = mxf_dms1_contacts_list_finalize;
   metadatabase_class->handle_tag = mxf_dms1_contacts_list_handle_tag;
   metadatabase_class->resolve = mxf_dms1_contacts_list_resolve;
   dm_class->type = 0x190100;
@@ -5546,7 +5536,7 @@ G_DEFINE_TYPE (MXFDMS1CueWords, mxf_dms1_cue_words,
     MXF_TYPE_DMS1_TEXT_LANGUAGE);
 
 static void
-mxf_dms1_cue_words_finalize (GstMiniObject * object)
+mxf_dms1_cue_words_finalize (GObject * object)
 {
   MXFDMS1CueWords *self = MXF_DMS1_CUE_WORDS (object);
 
@@ -5556,7 +5546,7 @@ mxf_dms1_cue_words_finalize (GstMiniObject * object)
   g_free (self->out_cue_words);
   self->out_cue_words = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_dms1_cue_words_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mxf_dms1_cue_words_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -5604,11 +5594,11 @@ mxf_dms1_cue_words_init (MXFDMS1CueWords * self)
 static void
 mxf_dms1_cue_words_class_init (MXFDMS1CueWordsClass * klass)
 {
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  GObjectClass *object_class = (GObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
   MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
-  miniobject_class->finalize = mxf_dms1_cue_words_finalize;
+  object_class->finalize = mxf_dms1_cue_words_finalize;
   metadatabase_class->handle_tag = mxf_dms1_cue_words_handle_tag;
   dm_class->type = 0x170800;
 }

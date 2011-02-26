@@ -404,7 +404,7 @@ mxf_up_get_rgba_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   *mapping_data = md;
 
   ret = (MXFMetadataRGBAPictureEssenceDescriptor *)
-      gst_mini_object_new (MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR);
+      g_object_new (MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR, NULL);
 
   for (i = 0; i < G_N_ELEMENTS (_rgba_mapping_table); i++) {
     tmp = gst_caps_from_string (_rgba_mapping_table[i].caps);
@@ -426,7 +426,7 @@ mxf_up_get_rgba_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 
   if (md->fourcc == 0) {
     GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    g_object_unref (ret);
     return NULL;
   }
 
@@ -435,7 +435,7 @@ mxf_up_get_rgba_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 
   if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
           caps)) {
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    g_object_unref (ret);
     return NULL;
   }
 
@@ -459,7 +459,7 @@ mxf_up_get_cdci_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   *mapping_data = md;
 
   ret = (MXFMetadataCDCIPictureEssenceDescriptor *)
-      gst_mini_object_new (MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
+      g_object_new (MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR, NULL);
 
   for (i = 0; i < G_N_ELEMENTS (_cdci_mapping_table); i++) {
     tmp = gst_caps_from_string (_cdci_mapping_table[i].caps);
@@ -481,7 +481,7 @@ mxf_up_get_cdci_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 
   if (md->fourcc == 0) {
     GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    g_object_unref (ret);
     return NULL;
   }
 
@@ -489,7 +489,7 @@ mxf_up_get_cdci_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 
   if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
           caps)) {
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    g_object_unref (ret);
     return NULL;
   }
 

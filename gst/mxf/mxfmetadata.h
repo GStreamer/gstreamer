@@ -368,7 +368,7 @@ typedef enum {
 } MXFMetadataBaseResolveState;
 
 struct _MXFMetadataBase {
-  GstMiniObject parent;
+  GObject parent;
 
   MXFUUID instance_uid;
   MXFUUID generation_uid;
@@ -381,7 +381,7 @@ struct _MXFMetadataBase {
 };
 
 struct _MXFMetadataBaseClass {
-  GstMiniObjectClass parent;
+  GObjectClass parent;
 
   gboolean (*handle_tag) (MXFMetadataBase *self, MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint tag_size);
   gboolean (*resolve) (MXFMetadataBase *self, GHashTable *metadata);

@@ -201,9 +201,10 @@ gst_camerabin_image_dispose (GstCameraBinImage * img)
      taken by bin and therefore gst_object_sink is called for
      these elements (they may still be in floating state
      and not unreffed properly without sinking first)
+     FIXME, something else is wrong if you have to sink here
    */
   if (img->app_enc) {
-    gst_object_sink (img->app_enc);
+    //gst_object_ref_sink (img->app_enc);
     GST_LOG_OBJECT (img, "disposing %s with refcount %d",
         GST_ELEMENT_NAME (img->app_enc),
         GST_OBJECT_REFCOUNT_VALUE (img->app_enc));
@@ -212,7 +213,7 @@ gst_camerabin_image_dispose (GstCameraBinImage * img)
   }
 
   if (img->post) {
-    gst_object_sink (img->post);
+    //gst_object_ref_sink (img->post);
     GST_LOG_OBJECT (img, "disposing %s with refcount %d",
         GST_ELEMENT_NAME (img->post), GST_OBJECT_REFCOUNT_VALUE (img->post));
     gst_object_unref (img->post);

@@ -1081,7 +1081,7 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
       GstCaps *caps = NULL;
 
       val = gst_tag_list_get_value_index (list, GST_QT_DEMUX_PRIVATE_TAG, i);
-      buf = (GstBuffer *) gst_value_get_mini_object (val);
+      buf = gst_value_get_buffer (val);
 
       if (buf && (caps = gst_buffer_get_caps (buf))) {
         GstStructure *s;

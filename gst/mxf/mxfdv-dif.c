@@ -175,14 +175,14 @@ mxf_dv_dif_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   MXFMetadataCDCIPictureEssenceDescriptor *ret;
 
   ret = (MXFMetadataCDCIPictureEssenceDescriptor *)
-      gst_mini_object_new (MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
+      g_object_new (MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR, NULL);
 
   memcpy (&ret->parent.parent.essence_container, &dv_dif_essence_container_ul,
       16);
 
   if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
           caps)) {
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    g_object_unref (ret);
     return NULL;
   }
   *handler = mxf_dv_dif_write_func;

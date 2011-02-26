@@ -474,7 +474,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
 
   /* Preface */
   mux->preface =
-      (MXFMetadataPreface *) gst_mini_object_new (MXF_TYPE_METADATA_PREFACE);
+      (MXFMetadataPreface *) g_object_new (MXF_TYPE_METADATA_PREFACE, NULL);
   mxf_uuid_init (&MXF_METADATA_BASE (mux->preface)->instance_uid,
       mux->metadata);
   g_hash_table_insert (mux->metadata,
@@ -530,7 +530,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
     mux->preface->identifications = g_new0 (MXFMetadataIdentification *, 1);
     identification = mux->preface->identifications[0] =
         (MXFMetadataIdentification *)
-        gst_mini_object_new (MXF_TYPE_METADATA_IDENTIFICATION);
+        g_object_new (MXF_TYPE_METADATA_IDENTIFICATION, NULL);
 
     mxf_uuid_init (&MXF_METADATA_BASE (identification)->instance_uid,
         mux->metadata);
@@ -589,7 +589,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
     guint i;
 
     cstorage = mux->preface->content_storage = (MXFMetadataContentStorage *)
-        gst_mini_object_new (MXF_TYPE_METADATA_CONTENT_STORAGE);
+        g_object_new (MXF_TYPE_METADATA_CONTENT_STORAGE, NULL);
     mxf_uuid_init (&MXF_METADATA_BASE (cstorage)->instance_uid, mux->metadata);
     g_hash_table_insert (mux->metadata,
         &MXF_METADATA_BASE (cstorage)->instance_uid, cstorage);
@@ -603,7 +603,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
       MXFMetadataSourcePackage *p;
 
       cstorage->packages[1] = (MXFMetadataGenericPackage *)
-          gst_mini_object_new (MXF_TYPE_METADATA_SOURCE_PACKAGE);
+          g_object_new (MXF_TYPE_METADATA_SOURCE_PACKAGE, NULL);
       mxf_uuid_init (&MXF_METADATA_BASE (cstorage->packages[1])->instance_uid,
           mux->metadata);
       g_hash_table_insert (mux->metadata,
@@ -627,7 +627,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
         MXFMetadataMultipleDescriptor *d;
 
         p->descriptor = (MXFMetadataGenericDescriptor *)
-            gst_mini_object_new (MXF_TYPE_METADATA_MULTIPLE_DESCRIPTOR);
+            g_object_new (MXF_TYPE_METADATA_MULTIPLE_DESCRIPTOR, NULL);
         d = (MXFMetadataMultipleDescriptor *) p->descriptor;
         d->n_sub_descriptors = p->parent.n_tracks;
         d->sub_descriptors =
@@ -651,7 +651,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
           MXFMetadataSourceClip *clip;
 
           p->parent.tracks[n] = (MXFMetadataTrack *)
-              gst_mini_object_new (MXF_TYPE_METADATA_TIMELINE_TRACK);
+              g_object_new (MXF_TYPE_METADATA_TIMELINE_TRACK, NULL);
           track = (MXFMetadataTimelineTrack *) p->parent.tracks[n];
           mxf_uuid_init (&MXF_METADATA_BASE (track)->instance_uid,
               mux->metadata);
@@ -669,7 +669,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               cpad->collect.buffer, p, track, &track->edit_rate);
 
           sequence = track->parent.sequence = (MXFMetadataSequence *)
-              gst_mini_object_new (MXF_TYPE_METADATA_SEQUENCE);
+              g_object_new (MXF_TYPE_METADATA_SEQUENCE, NULL);
           mxf_uuid_init (&MXF_METADATA_BASE (sequence)->instance_uid,
               mux->metadata);
           g_hash_table_insert (mux->metadata,
@@ -684,7 +684,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               g_new0 (MXFMetadataStructuralComponent *, 1);
 
           clip = (MXFMetadataSourceClip *)
-              gst_mini_object_new (MXF_TYPE_METADATA_SOURCE_CLIP);
+              g_object_new (MXF_TYPE_METADATA_SOURCE_CLIP, NULL);
           sequence->structural_components[0] =
               (MXFMetadataStructuralComponent *) clip;
           mxf_uuid_init (&MXF_METADATA_BASE (clip)->instance_uid,
@@ -720,7 +720,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
       gdouble min_edit_rate_d = G_MAXDOUBLE;
 
       cstorage->packages[0] = (MXFMetadataGenericPackage *)
-          gst_mini_object_new (MXF_TYPE_METADATA_MATERIAL_PACKAGE);
+          g_object_new (MXF_TYPE_METADATA_MATERIAL_PACKAGE, NULL);
       memcpy (&MXF_METADATA_BASE (cstorage->packages[0])->instance_uid,
           &mux->preface->primary_package_uid, 16);
       g_hash_table_insert (mux->metadata,
@@ -759,7 +759,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
                   1]);
 
           p->tracks[n] = (MXFMetadataTrack *)
-              gst_mini_object_new (MXF_TYPE_METADATA_TIMELINE_TRACK);
+              g_object_new (MXF_TYPE_METADATA_TIMELINE_TRACK, NULL);
           track = (MXFMetadataTimelineTrack *) p->tracks[n];
           mxf_uuid_init (&MXF_METADATA_BASE (track)->instance_uid,
               mux->metadata);
@@ -794,7 +794,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
           }
 
           sequence = track->parent.sequence = (MXFMetadataSequence *)
-              gst_mini_object_new (MXF_TYPE_METADATA_SEQUENCE);
+              g_object_new (MXF_TYPE_METADATA_SEQUENCE, NULL);
           mxf_uuid_init (&MXF_METADATA_BASE (sequence)->instance_uid,
               mux->metadata);
           g_hash_table_insert (mux->metadata,
@@ -808,7 +808,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               g_new0 (MXFMetadataStructuralComponent *, 1);
 
           clip = (MXFMetadataSourceClip *)
-              gst_mini_object_new (MXF_TYPE_METADATA_SOURCE_CLIP);
+              g_object_new (MXF_TYPE_METADATA_SOURCE_CLIP, NULL);
           sequence->structural_components[0] =
               (MXFMetadataStructuralComponent *) clip;
           mxf_uuid_init (&MXF_METADATA_BASE (clip)->instance_uid,
@@ -836,7 +836,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
           MXFMetadataTimecodeComponent *component;
 
           p->tracks[n] = (MXFMetadataTrack *)
-              gst_mini_object_new (MXF_TYPE_METADATA_TIMELINE_TRACK);
+              g_object_new (MXF_TYPE_METADATA_TIMELINE_TRACK, NULL);
           track = (MXFMetadataTimelineTrack *) p->tracks[n];
           mxf_uuid_init (&MXF_METADATA_BASE (track)->instance_uid,
               mux->metadata);
@@ -851,7 +851,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
           memcpy (&track->edit_rate, &min_edit_rate, sizeof (MXFFraction));
 
           sequence = track->parent.sequence = (MXFMetadataSequence *)
-              gst_mini_object_new (MXF_TYPE_METADATA_SEQUENCE);
+              g_object_new (MXF_TYPE_METADATA_SEQUENCE, NULL);
           mxf_uuid_init (&MXF_METADATA_BASE (sequence)->instance_uid,
               mux->metadata);
           g_hash_table_insert (mux->metadata,
@@ -867,7 +867,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               g_new0 (MXFMetadataStructuralComponent *, 1);
 
           component = (MXFMetadataTimecodeComponent *)
-              gst_mini_object_new (MXF_TYPE_METADATA_TIMECODE_COMPONENT);
+              g_object_new (MXF_TYPE_METADATA_TIMECODE_COMPONENT, NULL);
           sequence->structural_components[0] =
               (MXFMetadataStructuralComponent *) component;
           mxf_uuid_init (&MXF_METADATA_BASE (component)->instance_uid,
@@ -925,7 +925,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
     cstorage->essence_container_data =
         g_new0 (MXFMetadataEssenceContainerData *, 1);
     cstorage->essence_container_data[0] = (MXFMetadataEssenceContainerData *)
-        gst_mini_object_new (MXF_TYPE_METADATA_ESSENCE_CONTAINER_DATA);
+        g_object_new (MXF_TYPE_METADATA_ESSENCE_CONTAINER_DATA, NULL);
     mxf_uuid_init (&MXF_METADATA_BASE (cstorage->essence_container_data[0])->
         instance_uid, mux->metadata);
     g_hash_table_insert (mux->metadata,
