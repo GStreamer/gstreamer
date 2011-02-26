@@ -2293,7 +2293,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     guint size;
     guint8 *data;
 
-    buf = GST_BUFFER_CAST (gst_value_get_mini_object (value));
+    buf = gst_value_get_buffer (value);
     size = GST_BUFFER_SIZE (buf);
     data = GST_BUFFER_DATA (buf);
 
