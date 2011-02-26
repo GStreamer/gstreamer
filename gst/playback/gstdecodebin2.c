@@ -1692,7 +1692,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
       if (gst_element_get_factory (otherelement) == factory) {
         skip = TRUE;
-        continue;
+        break;
       }
     }
     CHAIN_MUTEX_UNLOCK (chain);
