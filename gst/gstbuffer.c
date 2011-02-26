@@ -772,42 +772,6 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
   return newbuf;
 }
 
-
-/**
- * gst_buffer_get_meta_by_api:
- * @buffer: a #GstBuffer
- * @api: a #GQuark
- *
- * Retrieve the metadata for @api on @buffer. @api is the #GQuark of the
- * metadata structure API.
- *
- * If there is no metadata for @api on @buffer, this function will return
- * %NULL.
- *
- * Returns: the metadata for @api on @buffer or %NULL when there is no such
- * metadata on @buffer.
- */
-GstMeta *
-gst_buffer_get_meta_by_api (GstBuffer * buffer, GQuark api)
-{
-  GstMetaItem *walk;
-  GstMeta *result = NULL;
-
-  g_return_val_if_fail (buffer != NULL, NULL);
-  g_return_val_if_fail (api != 0, NULL);
-
-  /* loop over the metadata items until we find the one with the
-   * requested info. FIXME, naive implementation using a list */
-  for (walk = buffer->priv; walk; walk = walk->next) {
-    GstMeta *meta = &walk->meta;
-    if (meta->info->api == api) {
-      result = meta;
-      break;
-    }
-  }
-  return result;
-}
-
 /**
  * gst_buffer_get_meta:
  * @buffer: a #GstBuffer
@@ -827,13 +791,21 @@ GstMeta *
 gst_buffer_get_meta (GstBuffer * buffer, const GstMetaInfo * info,
     gboolean create)
 {
+  GstMetaItem *walk;
   GstMeta *result = NULL;
   GstMetaItem *item;
 
   g_return_val_if_fail (buffer != NULL, NULL);
-  g_return_val_if_fail (info != 0, NULL);
+  g_return_val_if_fail (info != NULL, NULL);
 
-  result = gst_buffer_get_meta_by_api (buffer, info->api);
+  /* find GstMeta of the requested API */
+  for (walk = buffer->priv; walk; walk = walk->next) {
+    GstMeta *meta = &walk->meta;
+    if (meta->info->api == info->api) {
+      result = meta;
+      break;
+    }
+  }
 
   if (result == NULL && create) {
     /* create a new slice */

@@ -470,9 +470,8 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset
 /* metadata */
 #include <gst/gstmeta.h>
 
-GstMeta *       gst_buffer_get_meta_by_api      (GstBuffer *buffer, GQuark api);
-
-GstMeta *       gst_buffer_get_meta             (GstBuffer *buffer, const GstMetaInfo *info, gboolean create);
+GstMeta *       gst_buffer_get_meta             (GstBuffer *buffer, const GstMetaInfo *info,
+                                                 gboolean create);
 gboolean        gst_buffer_remove_meta          (GstBuffer *buffer, GstMeta *meta);
 
 GstMeta *       gst_buffer_iterate_meta         (GstBuffer *buffer, gpointer *state);
