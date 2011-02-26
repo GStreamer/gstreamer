@@ -157,8 +157,14 @@ struct _GstMetaXImage
 };
 
 const GstMetaInfo * gst_meta_ximage_get_info (void);
+#define GST_META_INFO_XIMAGE  (gst_meta_ximage_get_info())
 
-#define GST_META_XIMAGE_GET(buf,create) ((GstMetaXImage *)gst_buffer_get_meta(buf,gst_meta_ximage_get_info(),create))
+#define GST_META_GET(b,t,i,c) ((t *)gst_buffer_get_meta((b),(i),(c)))
+#define GST_META_XIMAGE_GET(b,c) GST_META_GET(b,GstMetaXImage,GST_META_INFO_XIMAGE,c)
+
+#define GST_META_XIMAGE_ADD(buf)  GST_META_XIMAGE_GET(buf,TRUE)
+#define GST_META_XIMAGE_FIND(buf) GST_META_XIMAGE_GET(buf,FALSE)
+
 
 /**
  * GstXImageSink:

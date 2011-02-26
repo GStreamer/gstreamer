@@ -190,7 +190,7 @@ gst_ximage_buffer_dispose (GstBuffer * ximage)
   gboolean recycled = FALSE;
   gboolean running;
 
-  meta = GST_META_XIMAGE_GET (ximage, FALSE);
+  meta = GST_META_XIMAGE_FIND (ximage);
   g_return_if_fail (meta != NULL);
 
   ximagesink = meta->ximagesink;
@@ -238,7 +238,7 @@ no_sink:
 static void
 gst_ximage_buffer_free (GstBuffer * ximage)
 {
-  GstMetaXImage *meta = GST_META_XIMAGE_GET (ximage, FALSE);
+  GstMetaXImage *meta = GST_META_XIMAGE_FIND (ximage);
   g_return_if_fail (meta != NULL);
 
   /* make sure it is not recycled */
@@ -375,7 +375,7 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
   buffer = gst_buffer_new ();
   GST_MINI_OBJECT_CAST (buffer)->dispose =
       (GstMiniObjectDisposeFunction) gst_ximage_buffer_dispose;
-  meta = GST_META_XIMAGE_GET (buffer, TRUE);
+  meta = GST_META_XIMAGE_ADD (buffer);
 #ifdef HAVE_XSHM
   meta->SHMInfo.shmaddr = ((void *) -1);
   meta->SHMInfo.shmid = -1;
@@ -546,7 +546,7 @@ gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink, GstBuffer * ximage)
   g_return_if_fail (ximage != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
 
-  meta = GST_META_XIMAGE_GET (ximage, FALSE);
+  meta = GST_META_XIMAGE_FIND (ximage);
   g_return_if_fail (meta != NULL);
 
   /* Hold the object lock to ensure the XContext doesn't disappear */
@@ -686,7 +686,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstBuffer * ximage)
     }
   }
 
-  meta = GST_META_XIMAGE_GET (ximage, FALSE);
+  meta = GST_META_XIMAGE_FIND (ximage);
   src.w = meta->width;
   src.h = meta->height;
   dst.w = ximagesink->xwindow->width;
@@ -1515,7 +1515,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   /* If our ximage has changed we destroy it, next chain iteration will create
      a new one */
   if ((ximagesink->ximage)) {
-    GstMetaXImage *meta = GST_META_XIMAGE_GET (ximagesink->ximage, FALSE);
+    GstMetaXImage *meta = GST_META_XIMAGE_FIND (ximagesink->ximage);
 
     if (((GST_VIDEO_SINK_WIDTH (ximagesink) != meta->width) ||
             (GST_VIDEO_SINK_HEIGHT (ximagesink) != meta->height))) {
@@ -1645,7 +1645,7 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   if (!ximagesink->xcontext)
     return GST_FLOW_ERROR;
 
-  meta = GST_META_XIMAGE_GET (buf, FALSE);
+  meta = GST_META_XIMAGE_FIND (buf);
 
   if (meta) {
     /* If this buffer has been allocated using our buffer management we simply
@@ -1666,7 +1666,7 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
         goto no_ximage;
 
       if (GST_BUFFER_SIZE (ximagesink->ximage) < GST_BUFFER_SIZE (buf)) {
-        meta = GST_META_XIMAGE_GET (ximagesink->ximage, FALSE);
+        meta = GST_META_XIMAGE_FIND (ximagesink->ximage);
 
         GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
             ("Failed to create output image buffer of %dx%d pixels",
@@ -1883,7 +1883,7 @@ alloc:
     ximage = ximagesink->buffer_pool->data;
 
     if (ximage) {
-      meta = GST_META_XIMAGE_GET (ximage, FALSE);
+      meta = GST_META_XIMAGE_FIND (ximage);
 
       /* Removing from the pool */
       ximagesink->buffer_pool = g_slist_delete_link (ximagesink->buffer_pool,
