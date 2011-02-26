@@ -1667,6 +1667,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GstElement *element;
     GstPad *sinkpad;
     gboolean subtitle;
+    gboolean skip = FALSE;
+    GList *l;
 
     /* Set dpad target to pad again, it might've been unset
      * below but we came back here because something failed
@@ -1677,6 +1679,29 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     factory = g_value_get_object (g_value_array_get_nth (factories, 0));
     /* Remove selected factory from the list. */
     g_value_array_remove (factories, 0);
+
+    /* First check if this is a factory for which we have already
+     * created an element in this chain. If we have, we skip this
+     * factory because it will lead to an infinite loop. Examples
+     * for this are parsers that accept their own src caps on the
+     * sinkpad again.
+     */
+    CHAIN_MUTEX_LOCK (chain);
+    for (l = chain->elements; l; l = l->next) {
+      GstElement *otherelement = GST_ELEMENT_CAST (l->data);
+
+      if (gst_element_get_factory (otherelement) == factory) {
+        skip = TRUE;
+        continue;
+      }
+    }
+    CHAIN_MUTEX_UNLOCK (chain);
+    if (skip) {
+      GST_DEBUG_OBJECT (dbin,
+          "Skipping factory '%s' because it was already used in this chain",
+          gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory)));
+      continue;
+    }
 
     /* emit autoplug-select to see what we should do with it. */
     g_signal_emit (G_OBJECT (dbin),
