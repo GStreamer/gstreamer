@@ -1463,7 +1463,6 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
    * if it doesn't match the output caps  */
   if (!dbin->expose_allstreams) {
     guint i;
-    GstCaps *rawcaps = gst_static_caps_get (&default_raw_caps);
     const GList *tmps;
     gboolean dontuse = FALSE;
 
@@ -1492,13 +1491,21 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
           if (st->direction != GST_PAD_SRC)
             continue;
           tcaps = gst_static_pad_template_get_caps (st);
-          if (!gst_caps_can_intersect (tcaps, dbin->caps))
+
+          apcontinue = TRUE;
+
+          /* Emit autoplug-continue to see if the caps are considered to be raw caps */
+          g_signal_emit (G_OBJECT (dbin),
+              gst_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE], 0, dpad, tcaps,
+              &apcontinue);
+
+          /* If autoplug-continue returns TRUE and the caps are not final, don't use them */
+          if (apcontinue && !are_final_caps (dbin, tcaps))
             dontuse = TRUE;
           gst_caps_unref (tcaps);
         }
       }
     }
-    gst_caps_unref (rawcaps);
 
     if (dontuse) {
       gst_object_unref (dpad);
