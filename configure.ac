@@ -653,6 +653,17 @@ AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
   AC_SUBST(COG_LIBS)
 ])
 
+dnl *** Curl ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CURL, true)
+AG_GST_CHECK_FEATURE(CURL, [Curl plugin], curl, [
+  PKG_CHECK_MODULES(CURL, libcurl >= 7.21.0, HAVE_CURL="yes", [
+    HAVE_CURL="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(CURL_CFLAGS)
+  AC_SUBST(CURL_LIBS)
+])
+
 dnl *** dc1394  ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DC1394, true)
 AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
@@ -1592,6 +1603,7 @@ AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CDAUDIO, false)
 AM_CONDITIONAL(USE_CELT, false)
 AM_CONDITIONAL(USE_COG, false)
+AM_CONDITIONAL(USE_CURL, false)
 AM_CONDITIONAL(USE_DC1394, false)
 AM_CONDITIONAL(USE_DIRECTFB, false)
 AM_CONDITIONAL(USE_DIRAC, false)
@@ -1828,6 +1840,7 @@ ext/bz2/Makefile
 ext/cdaudio/Makefile
 ext/celt/Makefile
 ext/cog/Makefile
+ext/curl/Makefile
 ext/dc1394/Makefile
 ext/dirac/Makefile
 ext/directfb/Makefile
