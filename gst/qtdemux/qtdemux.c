@@ -8944,7 +8944,6 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "red_mask", G_TYPE_INT, 0x3ff00000,
           "green_mask", G_TYPE_INT, 0x000ffc00,
           "blue_mask", G_TYPE_INT, 0x000003ff, NULL);
-      GST_ERROR ("caps %P", caps);
       break;
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
     case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
