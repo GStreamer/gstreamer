@@ -71,6 +71,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_IYU1: packed 4:1:1 YUV (Cb-Y0-Y1-Cr-Y2-Y3 ...) (Since: 0.10.32)
  * @GST_VIDEO_FORMAT_ARGB64: rgb with alpha channel first, 16 bits per channel (Since: 0.10.33)
  * @GST_VIDEO_FORMAT_AY64: packed 4:4:4 YUV with alpha channel, 16 bits per channel (A0-Y0-U0-V0 ...) (Since: 0.10.33)
+ * @GST_VIDEO_FORMAT_r210: packed 4:4:4 RGB, 10 bits per channel (Since: 0.10.33)
  *
  * Enum value describing the most common video formats.
  */
@@ -116,7 +117,8 @@ typedef enum {
   GST_VIDEO_FORMAT_YVU9,
   GST_VIDEO_FORMAT_IYU1,
   GST_VIDEO_FORMAT_ARGB64,
-  GST_VIDEO_FORMAT_AYUV64
+  GST_VIDEO_FORMAT_AYUV64,
+  GST_VIDEO_FORMAT_r210
 } GstVideoFormat;
 
 #define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
@@ -312,6 +314,19 @@ typedef enum {
 
 #define GST_VIDEO_CAPS_BGR_15 \
     __GST_VIDEO_CAPS_MAKE_15 (3, 2, 1)
+
+/* 30 bit */
+#define GST_VIDEO_CAPS_r210 \
+    "video/x-raw-rgb, "                                                 \
+    "bpp = (int) 32, "                                                  \
+    "depth = (int) 30, "                                                \
+    "endianness = (int) BIG_ENDIAN, "                                   \
+    "red_mask = (int) 0x3ff00000, "                                     \
+    "green_mask = (int) 0x000ffc00, "                                   \
+    "blue_mask = (int) 0x000003ff, "                                    \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE
 
 /* 64 bit alpha */
 

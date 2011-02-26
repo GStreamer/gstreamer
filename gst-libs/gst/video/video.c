@@ -367,7 +367,9 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
       }
       have_alpha = gst_structure_get_int (structure, "alpha_mask", &alpha_mask);
 
-      if (depth == 24 && bpp == 32 && endianness == G_BIG_ENDIAN) {
+      if (depth == 30 && bpp == 32 && endianness == G_BIG_ENDIAN) {
+        *format = GST_VIDEO_FORMAT_r210;
+      } else if (depth == 24 && bpp == 32 && endianness == G_BIG_ENDIAN) {
         *format = gst_video_format_from_rgb32_masks (red_mask, green_mask,
             blue_mask);
         if (*format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -629,10 +631,20 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
         depth = 64;
         have_alpha = TRUE;
         break;
+      case GST_VIDEO_FORMAT_r210:
+        bpp = 32;
+        depth = 30;
+        have_alpha = FALSE;
+        break;
       default:
         return NULL;
     }
-    if (bpp == 32 || bpp == 24 || bpp == 64) {
+    if (bpp == 32 && depth == 30) {
+      red_mask = 0x3ff00000;
+      green_mask = 0x000ffc00;
+      blue_mask = 0x000003ff;
+      have_alpha = FALSE;
+    } else if (bpp == 32 || bpp == 24 || bpp == 64) {
       if (bpp == 32) {
         mask = 0xff000000;
       } else {
@@ -1036,6 +1048,7 @@ gst_video_format_is_rgb (GstVideoFormat format)
     case GST_VIDEO_FORMAT_BGR15:
     case GST_VIDEO_FORMAT_RGB8_PALETTED:
     case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_r210:
       return TRUE;
     default:
       return FALSE;
@@ -1095,6 +1108,7 @@ gst_video_format_is_yuv (GstVideoFormat format)
     case GST_VIDEO_FORMAT_BGR15:
     case GST_VIDEO_FORMAT_RGB8_PALETTED:
     case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_r210:
       return FALSE;
     default:
       return FALSE;
@@ -1181,6 +1195,7 @@ gst_video_format_has_alpha (GstVideoFormat format)
     case GST_VIDEO_FORMAT_BGR16:
     case GST_VIDEO_FORMAT_RGB15:
     case GST_VIDEO_FORMAT_BGR15:
+    case GST_VIDEO_FORMAT_r210:
       return FALSE;
     default:
       return FALSE;
@@ -1246,6 +1261,7 @@ gst_video_format_get_component_depth (GstVideoFormat format, int component)
       return 8;
     case GST_VIDEO_FORMAT_v210:
     case GST_VIDEO_FORMAT_UYVP:
+    case GST_VIDEO_FORMAT_r210:
       return 10;
     case GST_VIDEO_FORMAT_Y16:
     case GST_VIDEO_FORMAT_v216:
@@ -1303,6 +1319,7 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_r210:
       return width * 4;
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
@@ -1420,6 +1437,7 @@ gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_r210:
       return 4;
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
@@ -1539,6 +1557,7 @@ gst_video_format_get_component_width (GstVideoFormat format,
     case GST_VIDEO_FORMAT_RGB8_PALETTED:
     case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_AYUV64:
+    case GST_VIDEO_FORMAT_r210:
       return width;
     case GST_VIDEO_FORMAT_A420:
       if (component == 0 || component == 3) {
@@ -1617,6 +1636,7 @@ gst_video_format_get_component_height (GstVideoFormat format,
     case GST_VIDEO_FORMAT_IYU1:
     case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_AYUV64:
+    case GST_VIDEO_FORMAT_r210:
       return height;
     case GST_VIDEO_FORMAT_A420:
       if (component == 0 || component == 3) {
@@ -1800,6 +1820,7 @@ gst_video_format_get_component_offset (GstVideoFormat format,
     case GST_VIDEO_FORMAT_Y444:
       return GST_ROUND_UP_4 (width) * height * component;
     case GST_VIDEO_FORMAT_v210:
+    case GST_VIDEO_FORMAT_r210:
       /* v210 is bit-packed, so this doesn't make sense */
       return 0;
     case GST_VIDEO_FORMAT_v216:
@@ -1939,6 +1960,7 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_r210:
       return width * 4 * height;
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
