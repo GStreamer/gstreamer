@@ -332,6 +332,7 @@ AG_GST_CHECK_PLUGIN(mve)
 AG_GST_CHECK_PLUGIN(mxf)
 AG_GST_CHECK_PLUGIN(nsf)
 AG_GST_CHECK_PLUGIN(nuvdemux)
+AG_GST_CHECK_PLUGIN(patchdetect)
 AG_GST_CHECK_PLUGIN(pcapparse)
 AG_GST_CHECK_PLUGIN(pnm)
 AG_GST_CHECK_PLUGIN(qtmux)
@@ -1773,6 +1774,7 @@ gst/mve/Makefile
 gst/mxf/Makefile
 gst/nsf/Makefile
 gst/nuvdemux/Makefile
+gst/patchdetect/Makefile
 gst/pcapparse/Makefile
 gst/pnm/Makefile
 gst/qtmux/Makefile
