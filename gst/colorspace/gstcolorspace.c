@@ -74,6 +74,7 @@ enum
   GST_VIDEO_CAPS_GRAY8";"						\
   GST_VIDEO_CAPS_GRAY16("BIG_ENDIAN")";"				\
   GST_VIDEO_CAPS_GRAY16("LITTLE_ENDIAN")";"                             \
+  GST_VIDEO_CAPS_r210";"                                                \
   GST_VIDEO_CAPS_ARGB_64
 
 static GstStaticPadTemplate gst_csp_src_template =
