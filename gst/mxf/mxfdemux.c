@@ -1261,7 +1261,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
         mxf_uuid_to_string (&MXF_METADATA_BASE (metadata)->instance_uid, str),
         g_type_name (G_TYPE_FROM_INSTANCE (old)),
         g_type_name (G_TYPE_FROM_INSTANCE (metadata)));
-    gst_mini_object_unref (GST_MINI_OBJECT (metadata));
+    g_object_unref (metadata);
     return GST_FLOW_ERROR;
   } else if (old
       && MXF_METADATA_BASE (old)->offset >=
@@ -1273,7 +1273,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     GST_DEBUG_OBJECT (demux,
         "Metadata with instance uid %s already exists and is newer",
         mxf_uuid_to_string (&MXF_METADATA_BASE (metadata)->instance_uid, str));
-    gst_mini_object_unref (GST_MINI_OBJECT (metadata));
+    g_object_unref (metadata);
     return GST_FLOW_OK;
   }
 
@@ -1351,7 +1351,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
         mxf_uuid_to_string (&MXF_METADATA_BASE (m)->instance_uid, str),
         g_type_name (G_TYPE_FROM_INSTANCE (old)),
         g_type_name (G_TYPE_FROM_INSTANCE (m)));
-    gst_mini_object_unref (GST_MINI_OBJECT (m));
+    g_object_unref (m);
     return GST_FLOW_ERROR;
   } else if (old
       && MXF_METADATA_BASE (old)->offset >= MXF_METADATA_BASE (m)->offset) {
@@ -1362,7 +1362,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
     GST_DEBUG_OBJECT (demux,
         "Metadata with instance uid %s already exists and is newer",
         mxf_uuid_to_string (&MXF_METADATA_BASE (m)->instance_uid, str));
-    gst_mini_object_unref (GST_MINI_OBJECT (m));
+    g_object_unref (m);
     return GST_FLOW_OK;
   }
 

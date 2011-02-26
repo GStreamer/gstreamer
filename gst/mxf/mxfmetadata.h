@@ -739,7 +739,7 @@ struct _MXFDescriptiveMetadata {
 };
 
 struct _MXFDescriptiveMetadataClass {
-  MXFMetadataBase parent;
+  MXFMetadataBaseClass parent;
 
   guint8 scheme;
   guint32 type;
