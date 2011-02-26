@@ -8923,6 +8923,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           NULL);
       break;
     case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):
+    case GST_MAKE_FOURCC ('2', 'V', 'u', 'y'):
       _codec ("Raw packed YUV 4:2:2");
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'),
@@ -8933,6 +8934,17 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('v', '2', '1', '0'),
           NULL);
+      break;
+    case GST_MAKE_FOURCC ('r', '2', '1', '0'):
+      _codec ("Raw packed RGB 10-bit 4:4:4");
+      caps = gst_caps_new_simple ("video/x-raw-rgb",
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN, "depth", G_TYPE_INT, 30,
+          "bpp", G_TYPE_INT, 32,
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+          "red_mask", G_TYPE_INT, 0x3ff00000,
+          "green_mask", G_TYPE_INT, 0x000ffc00,
+          "blue_mask", G_TYPE_INT, 0x000003ff, NULL);
+      GST_ERROR ("caps %P", caps);
       break;
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
     case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
