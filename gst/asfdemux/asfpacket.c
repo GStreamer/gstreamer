@@ -226,8 +226,10 @@ asf_payload_parse_replicated_data_extensions (AsfStream * stream,
     switch (ext->id) {
       case ASF_PAYLOAD_EXTENSION_DURATION:
         if (G_LIKELY (ext->len == 2)) {
-          payload->duration =
-              GST_READ_UINT16_LE (payload->rep_data + off) * GST_MSECOND;
+          guint16 tdur = GST_READ_UINT16_LE (payload->rep_data + off);
+          /* packet durations of 1ms are mostly invalid */
+          if (tdur != 1)
+            payload->duration = tdur * GST_MSECOND;
         } else {
           GST_WARNING ("unexpected DURATION extensions len %u", ext->len);
         }

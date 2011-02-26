@@ -389,6 +389,61 @@ setup_failed:
   }
 }
 
+static GstCaps *
+gst_lamemp3enc_sink_getcaps (GstPad * pad)
+{
+  const GstCaps *templ_caps;
+  GstLameMP3Enc *lame;
+  GstCaps *allowed = NULL;
+  GstCaps *caps, *filter_caps;
+  gint i, j;
+
+  lame = GST_LAMEMP3ENC (gst_pad_get_parent (pad));
+
+  /* we want to be able to communicate to upstream elements like audioconvert
+   * and audioresample any rate/channel restrictions downstream (e.g. muxer
+   * only accepting certain sample rates) */
+  templ_caps = gst_pad_get_pad_template_caps (pad);
+  allowed = gst_pad_get_allowed_caps (lame->srcpad);
+  if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
+    caps = gst_caps_copy (templ_caps);
+    goto done;
+  }
+
+  filter_caps = gst_caps_new_empty ();
+
+  for (i = 0; i < gst_caps_get_size (templ_caps); i++) {
+    GQuark q_name;
+
+    q_name = gst_structure_get_name_id (gst_caps_get_structure (templ_caps, i));
+
+    /* pick rate + channel fields from allowed caps */
+    for (j = 0; j < gst_caps_get_size (allowed); j++) {
+      const GstStructure *allowed_s = gst_caps_get_structure (allowed, j);
+      const GValue *val;
+      GstStructure *s;
+
+      s = gst_structure_id_empty_new (q_name);
+      if ((val = gst_structure_get_value (allowed_s, "rate")))
+        gst_structure_set_value (s, "rate", val);
+      if ((val = gst_structure_get_value (allowed_s, "channels")))
+        gst_structure_set_value (s, "channels", val);
+
+      gst_caps_merge_structure (filter_caps, s);
+    }
+  }
+
+  caps = gst_caps_intersect (filter_caps, templ_caps);
+  gst_caps_unref (filter_caps);
+
+done:
+
+  gst_caps_replace (&allowed, NULL);
+  gst_object_unref (lame);
+
+  return caps;
+}
+
 static gint64
 gst_lamemp3enc_get_latency (GstLameMP3Enc * lame)
 {
@@ -453,6 +508,8 @@ gst_lamemp3enc_init (GstLameMP3Enc * lame)
       GST_DEBUG_FUNCPTR (gst_lamemp3enc_chain));
   gst_pad_set_setcaps_function (lame->sinkpad,
       GST_DEBUG_FUNCPTR (gst_lamemp3enc_sink_setcaps));
+  gst_pad_set_getcaps_function (lame->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_lamemp3enc_sink_getcaps));
   gst_element_add_pad (GST_ELEMENT (lame), lame->sinkpad);
 
   lame->srcpad =

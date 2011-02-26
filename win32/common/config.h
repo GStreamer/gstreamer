@@ -9,7 +9,7 @@
 #undef AC_APPLE_UNIVERSAL_BUILD
 
 /* Default audio sink */
-#define DEFAULT_AUDIOSINK "directaudiosink"
+#define DEFAULT_AUDIOSINK "directsoundsink"
 
 /* Default audio source */
 #define DEFAULT_AUDIOSRC "audiotestsrc"
@@ -50,6 +50,9 @@
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
+
+/* GStreamer package release date/time for plugins as YYYY-MM-DD */
+#undef GST_PACKAGE_RELEASE_DATETIME
 
 /* Define to enable a52dec (used by a52dec). */
 #undef HAVE_A52DEC
@@ -230,7 +233,7 @@
 #define PACKAGE_NAME "GStreamer Ugly Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Ugly Plug-ins 0.10.16.1"
+#define PACKAGE_STRING "GStreamer Ugly Plug-ins 0.10.17.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-ugly"
@@ -239,7 +242,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.16.1"
+#define PACKAGE_VERSION "0.10.17.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -267,7 +270,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.16.1"
+#define VERSION "0.10.17.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

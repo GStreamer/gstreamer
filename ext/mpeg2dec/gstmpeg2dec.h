@@ -47,15 +47,6 @@ typedef struct _GstMpeg2decClass GstMpeg2decClass;
 
 typedef enum
 {
-  MPEG2DEC_FORMAT_NONE,
-  MPEG2DEC_FORMAT_I422,
-  MPEG2DEC_FORMAT_I420,
-  MPEG2DEC_FORMAT_YV12,
-  MPEG2DEC_FORMAT_Y444
-} Mpeg2decFormat;
-
-typedef enum 
-{
   MPEG2DEC_DISC_NONE            = 0,
   MPEG2DEC_DISC_NEW_PICTURE,
   MPEG2DEC_DISC_NEW_KEYFRAME
@@ -87,7 +78,7 @@ struct _GstMpeg2dec {
   GstSegment     segment;
 
   /* video state */
-  Mpeg2decFormat format;
+  GstVideoFormat format;
   gint           width;
   gint           height;
   gint           decoded_width;
@@ -104,17 +95,15 @@ struct _GstMpeg2dec {
   gint           v_offs;
   guint8        *dummybuf[4];
 
-  
+
   guint64        offset;
   gint           fps_n;
   gint           fps_d;
   gboolean       need_sequence;
 
-#ifndef GST_DISABLE_INDEX
   GstIndex      *index;
   gint           index_id;
-#endif
-  
+
   gint           error_count;
   gboolean       can_allocate_aligned;
 

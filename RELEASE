@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.16 "Because He Knows the Time is Short"
+Release notes for GStreamer Ugly Plug-ins 0.10.17 "Raised by Wolves"
         
 
 The GStreamer team is proud to announce a new release
@@ -8,8 +8,6 @@ GStreamer Ugly Plug-ins.
 
 
 The 0.10.x series is a stable series targeted at end users.
-It is not API or ABI compatible with the stable 0.8.x series.
-It is, however, parallel installable with the 0.8.x series.
 
 
 
@@ -55,38 +53,40 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * refactor x264enc to use current x264 API correctly, add new properties and new defaults
-      * liboil is no longer required, but orc is now required
-      * build: require orc >= 0.4.5, GLib >= 2.20, automake >= 1.10, autoconf >= 2.60; liboil is no longer required
-      * asfdemux: fix playback of files or streams that are shorter than the advertised preroll value
-      * asfdemux: fix sending eos event for chained asfs in pull mode (exotic)
-      * asfdemux: fix playback of files or streams that advertise miniscule preroll values
-      * lamemp3enc: implement latency query
-      * rmdemux: fix playback of sipro audio streams
-      * x264enc: refactor code in preparation for presets/tunings
-      * x264enc: add "profile" property (and default to MAIN profile)
-      * x264enc: improve defaults: medium speed/quality preset; auto mode for threads
-      * x264enc: add "speed-preset", "tune" and "psy-tune" properties
-      * x264enc: add "option-string" property to specify advanced parameters
-      * x264enc: set time base if needed, fixes visual artifacts
-      * x264enc: add "sliced-threads", "sync-lookahead", "intra-refresh", "mb-tree", and "rc-lookahead" properties
-      * x264enc: fix compilation against ancient x264 versions (X264_BUILD <= 75)
-      * x264enc: speed up first pass of multi-pass encoding (has no impact on quality)
-      * x264enc: fix flushing of delayed frames with new default settings
+      * asfdemux: Handle new type of DRM'd asf files
+      * dvdreadsrc: fix handling of multi-angle streams
+      * dvdreadsrc: improve error messages on read errors
+      * mad: if gst_pad_alloc_buffer() returns a buffer with the wrong size allocate a new one
+      * mad: support reverse playback
+      * mpeg2dec: convert the position to stream time before answering to a position query
+      * mpeg2dec: fix position query by trusting upstream
+      * mpeg2dec: refactor cropping code to use libgstvideo functions
+      * mpeg2dec: use gst_pad_alloc_buffer() when cropping buffers
+      * mpegparse: re-fix flow return handling
+      * rmdemux: set GST_BUFFER_FLAG_DELTA_UNIT properly
+      * x264enc: add a note to the docs about encoder latency and queues
+      * x264enc: also accept YV12 input
+      * x264enc: Handle codec/encoder tags
+      * x264enc: Work around a rate control issue in libx264
+      * x264: use pkg-config to locate libx264
+      * x264: vbv-buf-capacity should have a minimum of 0
+      * xingmux: Don't ignore WRONG_STATE and NOT_LINKED when pushing data downstream
 
 Bugs fixed in this release
      
-      * 599718 : [asf] support chained asfs
-      * 600412 : [asfdemux] Wrong handling of downstream GstFlowReturn
-      * 607798 : x264enc needs updating to support new features and use x264 correctly
-      * 618896 : lamemp3enc doesn't implement latency query
-      * 620007 : Gibberish sound when playing a certain RealMedia file of Sipro/ACELP.net audio codec
-      * 620344 : Update gst-plugins-ugly docs on website
-      * 622407 : [asfdemux] doesn't detect some streams if preroll value is very small
-      * 624786 : x264enc time base is wrong
-      * 625557 : x264enc doesn't flush delayed frames properly
-      * 626577 : [x264enc] regression: doesn't work with older versions of x264
-      * 627946 : mp3parse misuses GST_FLOW_IS_FATAL, doesn't forward GST_FLOW_UNEXPECTED upstream
+      * 539254 : [dvdreadsrc] DVDs with multiple angles switch angles during read
+      * 571146 : mpeg2dec: possibly uses wrong strides for 4:2:2 and 4:4:4 YUV with unusual display width or height
+      * 599515 : Fix dvb for DVB API 3.3
+      * 621465 : [x264enc] Video codec information copied incorrectly to output
+      * 632549 : [mpeg2dec] answers to position queries are wrong for DVDs
+      * 632861 : [x264enc] really bad quality with tune=zerolatency
+      * 634840 : x264: use pkg-config to locate dependencies for plugin
+      * 635291 : x264enc: " vbv-buf-capacity " property should have minimum value of 0
+      * 635461 : Crash in mad decoder when changing number of audio output channels in Totem while media is running
+      * 636107 : x264enc: docs should indicate specifics of using with queues
+      * 637093 : rmdemux: set GST_BUFFER_FLAG_DELTA_UNIT properly
+      * 637932 : realmedia: do not use the pad buffer allocation functions in demuxers
+      * 639226 : [asfdemux] Doesn't handle new PlayReady DRM files
 
 Download
 
@@ -115,17 +115,21 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * David Hoyt
+      * Benjamin Gaignard
       * David Schleef
       * Edward Hervey
+      * Guillaume Emont
+      * Jan Schmidt
+      * Leo Singer
       * Mark Nauwelaerts
-      * Olivier Crête
+      * Rob Clark
       * Robert Swain
       * Sebastian Dröge
       * Stefan Kost
       * Thiago Santos
+      * Thomas Green
       * Tim-Philipp Müller
       * Tristan Matthews
+      * Vincent Penquerc'h
       * Wim Taymans
  

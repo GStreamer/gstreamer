@@ -46,6 +46,17 @@
  * applied, followed by the user-set properties, fast first pass restrictions and
  * finally the profile restrictions.
  *
+ * <note>Some settings, including the default settings, may lead to quite
+ * some latency (i.e. frame buffering) in the encoder. This may cause problems
+ * with pipeline stalling in non-trivial pipelines, because the encoder latency
+ * is often considerably higher than the default size of a simple queue
+ * element. Such problems are caused by one of the queues in the other
+ * non-x264enc streams/branches filling up and blocking upstream. They can
+ * be fixed by relaxing the default time/size/buffer limits on the queue
+ * elements in the non-x264 branches, or using a (single) multiqueue element
+ * for all branches. Also see the last example below.
+ * </note>
+ *
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
@@ -66,6 +77,14 @@
  * constant quality at around Q25 using the 'medium' speed/quality preset and
  * restricting the options used so that the output is H.264 Baseline Profile
  * compliant and finally multiplexing the output in Quicktime mov format.
+ * |[
+ * gst-launch -v videotestsrc num-buffers=1000 ! tee name=t ! queue ! xvimagesink \
+ *   t. ! queue ! x264enc rc-lookahead=5 ! fakesink
+ * ]| This example pipeline will encode a test video source to H264 while
+ * displaying the input material at the same time.  As mentioned above,
+ * specific settings are needed in this case to avoid pipeline stalling.
+ * Depending on goals and context, other approaches are possible, e.g.
+ * tune=zerolatency might be configured, or queue sizes increased.
  * </refsect2>
  */
 
@@ -357,7 +376,7 @@ gst_x264_enc_tune_get_type (void)
   static GType tune_type = 0;
 
   if (!tune_type) {
-    tune_type = g_flags_register_static ("GstX264EncTune", tune_types);
+    tune_type = g_flags_register_static ("GstX264EncTune", tune_types + 1);
   }
   return tune_type;
 }
@@ -430,7 +449,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) I420, "
+        "format = (fourcc) { I420, YV12 }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
     );
@@ -559,7 +578,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_VBV_BUF_CAPACITY,
       g_param_spec_uint ("vbv-buf-capacity", "VBV buffer capacity",
           "Size of the VBV buffer in milliseconds",
-          300, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT,
+          0, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #ifdef X264_PRESETS
@@ -1365,15 +1384,14 @@ static gboolean
 gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstX264Enc *encoder = GST_X264_ENC (GST_OBJECT_PARENT (pad));
+  GstVideoFormat format;
   gint width, height;
   gint fps_num, fps_den;
   gint par_num, par_den;
   gint i;
 
   /* get info from caps */
-  /* only I420 supported for now; so apparently claims x264enc ? */
-  if (!gst_video_format_parse_caps (caps, &encoder->format, &width, &height) ||
-      encoder->format != GST_VIDEO_FORMAT_I420)
+  if (!gst_video_format_parse_caps (caps, &format, &width, &height))
     return FALSE;
   if (!gst_video_parse_caps_framerate (caps, &fps_num, &fps_den))
     return FALSE;
@@ -1382,8 +1400,8 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
     par_den = 1;
   }
 
-  /* If the encoder is initialized, do not
-     reinitialize it again if not necessary */
+  /* If the encoder is initialized, do not reinitialize it again if not
+   * necessary */
   if (encoder->x264enc) {
     if (width == encoder->width && height == encoder->height
         && fps_num == encoder->fps_num && fps_den == encoder->fps_den
@@ -1397,6 +1415,7 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   }
 
   /* store input description */
+  encoder->format = format;
   encoder->width = width;
   encoder->height = height;
   encoder->fps_num = fps_num;
@@ -1404,11 +1423,12 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   encoder->par_num = par_num;
   encoder->par_den = par_den;
 
-  /* prepare a cached image description  */
+  /* prepare a cached image description */
   encoder->image_size = gst_video_format_get_size (encoder->format, width,
       height);
   for (i = 0; i < 3; ++i) {
-    /* only offsets now, is shifted later */
+    /* only offsets now, is shifted later. Offsets will be for Y, U, V so we
+     * can just feed YV12 as I420 to the decoder later */
     encoder->offset[i] = gst_video_format_get_component_offset (encoder->format,
         i, width, height);
     encoder->stride[i] = gst_video_format_get_row_stride (encoder->format,
@@ -1475,8 +1495,23 @@ gst_x264_enc_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       gst_x264_enc_flush_frames (encoder, TRUE);
       break;
+    case GST_EVENT_TAG:{
+      GstTagList *tags = NULL;
+
+      event =
+          GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+
+      gst_event_parse_tag (event, &tags);
+      /* drop codec/video-codec and replace encoder/encoder-version */
+      gst_tag_list_remove_tag (tags, GST_TAG_VIDEO_CODEC);
+      gst_tag_list_remove_tag (tags, GST_TAG_CODEC);
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, "x264",
+          GST_TAG_ENCODER_VERSION, X264_BUILD, NULL);
+      /* push is done below */
+      break;
       /* no flushing if flush received,
        * buffers in encoder are considered (in the) past */
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:{
       const GstStructure *s;
       s = gst_event_get_structure (event);

@@ -1,4 +1,41 @@
-This is GStreamer Ugly Plug-ins 0.10.16 "Because He Knows the Time is Short"
+This is GStreamer Ugly Plug-ins 0.10.17 "Raised by Wolves"
+
+Changes since 0.10.16:
+
+      * asfdemux: Handle new type of DRM'd asf files
+      * dvdreadsrc: fix handling of multi-angle streams
+      * dvdreadsrc: improve error messages on read errors
+      * mad: if gst_pad_alloc_buffer() returns a buffer with the wrong size allocate a new one
+      * mad: support reverse playback
+      * mpeg2dec: convert the position to stream time before answering to a position query
+      * mpeg2dec: fix position query by trusting upstream
+      * mpeg2dec: refactor cropping code to use libgstvideo functions
+      * mpeg2dec: use gst_pad_alloc_buffer() when cropping buffers
+      * mpegparse: re-fix flow return handling
+      * rmdemux: set GST_BUFFER_FLAG_DELTA_UNIT properly
+      * x264enc: add a note to the docs about encoder latency and queues
+      * x264enc: also accept YV12 input
+      * x264enc: Handle codec/encoder tags
+      * x264enc: Work around a rate control issue in libx264
+      * x264: use pkg-config to locate libx264
+      * x264: vbv-buf-capacity should have a minimum of 0
+      * xingmux: Don't ignore WRONG_STATE and NOT_LINKED when pushing data downstream
+
+Bugs fixed since 0.10.16:
+
+      * 539254 : [dvdreadsrc] DVDs with multiple angles switch angles during read
+      * 571146 : mpeg2dec: possibly uses wrong strides for 4:2:2 and 4:4:4 YUV with unusual display width or height
+      * 599515 : Fix dvb for DVB API 3.3
+      * 621465 : [x264enc] Video codec information copied incorrectly to output
+      * 632549 : [mpeg2dec] answers to position queries are wrong for DVDs
+      * 632861 : [x264enc] really bad quality with tune=zerolatency
+      * 634840 : x264: use pkg-config to locate dependencies for plugin
+      * 635291 : x264enc: " vbv-buf-capacity " property should have minimum value of 0
+      * 635461 : Crash in mad decoder when changing number of audio output channels in Totem while media is running
+      * 636107 : x264enc: docs should indicate specifics of using with queues
+      * 637093 : rmdemux: set GST_BUFFER_FLAG_DELTA_UNIT properly
+      * 637932 : realmedia: do not use the pad buffer allocation functions in demuxers
+      * 639226 : [asfdemux] Doesn't handle new PlayReady DRM files
 
 Changes since 0.10.15:
 

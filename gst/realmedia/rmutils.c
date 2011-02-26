@@ -145,7 +145,7 @@ gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf)
 static void
 gst_rm_utils_swap_nibbles (guint8 * data, gint idx1, gint idx2, gint len)
 {
-  guint8 *d1, *d2, tmp1, tmp2, tmp1n, tmp2n;
+  guint8 *d1, *d2, tmp1 = 0, tmp2, tmp1n, tmp2n;
 
   if ((idx2 & 1) && !(idx1 & 1)) {
     /* align destination to a byte by swapping the indexes */

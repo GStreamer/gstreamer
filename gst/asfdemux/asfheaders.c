@@ -151,6 +151,13 @@ const ASFGuidHash asf_object_guids[] = {
   {ASF_OBJ_MARKER, "ASF_OBJ_MARKER",
         {0xf487cd01, 0x11cfa951, 0xc000e68e, 0x6553200c}
       },
+  /* This guid is definitely used for encryption (mentioned in MS smooth
+   * streaming docs) in new PlayReady (c) (tm) (wtf) system, but I haven't
+   * found a proper name for it.
+   * (Edward Jan 11 2011).*/
+  {ASF_OBJ_UNKNOWN_ENCRYPTION_OBJECT, "ASF_OBJ_UNKNOWN_ENCRYPTION_OBJECT",
+        {0x9a04f079, 0x42869840, 0x5be692ab, 0x955f88e0}
+      },
   {ASF_OBJ_UNDEFINED, "ASF_OBJ_UNDEFINED",
         {0, 0, 0, 0}
       }

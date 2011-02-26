@@ -250,7 +250,7 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
 AG_GST_CHECK_FEATURE(AMRNB, [amrnb library], amrnb, [
   PKG_CHECK_MODULES(AMRNB, opencore-amrnb, HAVE_AMRNB="yes",
       [ AG_GST_CHECK_LIBHEADER(AMRNB, opencore-amrnb,
-		           Decoder_Interface_init, -lm,
+		           Decoder_Interface_init, $LIBM,
 		           opencore-amrnb/interf_dec.h,
 			   AMRNB_LIBS="-lopencore-amrnb")
       ])
@@ -287,10 +287,10 @@ AG_GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
 AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
-  AG_GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h,
+  AG_GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, $LIBM, lame/lame.h,
   [
     HAVE_LAME="yes"
-    LAME_LIBS="-lmp3lame -lm"
+    LAME_LIBS="-lmp3lame $LIBM"
     dnl is lame presets available
     LAME_CFLAGS=""
     AC_TRY_COMPILE([#include <lame/lame.h>], [ int preset = MEDIUM ],
@@ -371,24 +371,7 @@ AG_GST_CHECK_FEATURE(TWOLAME, [twolame], twolame, [
 dnl *** x264 (MPEG-4 part 10/h.264/AVC encoder) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_X264, true)
 AG_GST_CHECK_FEATURE(X264, [x264 plug-in], x264, [
-  AG_GST_CHECK_LIBHEADER(X264, x264, x264_encoder_encode, -lm, x264.h,
-      AC_MSG_CHECKING([for uptodate x264 API version])
-      dnl _stdint not yet generated, so no compiling
-      AC_TRY_CPP([
-        #include <x264.h>
-        #if X264_BUILD < 55
-        #error "x264 build too old"
-        #endif
-      ], [
-        AC_MSG_RESULT(yes)
-        X264_LIBS="$LDFLAGS -lx264 -lm"
-        X264_CFLAGS="$CFLAGS"
-        AC_SUBST(X264_LIBS)
-        AC_SUBST(X264_CFLAGS)
-      ], [
-        AC_MSG_RESULT(no)
-        HAVE_X264=no
-      ]))
+  AG_GST_PKG_CHECK_MODULES(X264, x264 >= 0.55.0)
 ])
 
 else
@@ -536,7 +519,7 @@ sed \
     -e 's/.* PLUGINDIR$/#ifdef _DEBUG\n#  define PLUGINDIR PREFIX "\\\\debug\\\\lib\\\\gstreamer-0.11"\n#else\n#  define PLUGINDIR PREFIX "\\\\lib\\\\gstreamer-0.11"\n#endif/' \
     -e 's/.* USE_BINARY_REGISTRY$/#define USE_BINARY_REGISTRY/' \
     -e 's/.* VERSION$/#define VERSION "'$VERSION'"/' \
-    -e "s/.* DEFAULT_AUDIOSINK$/#define DEFAULT_AUDIOSINK \"directaudiosink\"/" \
+    -e "s/.* DEFAULT_AUDIOSINK$/#define DEFAULT_AUDIOSINK \"directsoundsink\"/" \
     -e "s/.* DEFAULT_AUDIOSRC$/#define DEFAULT_AUDIOSRC \"audiotestsrc\"/" \
     -e "s/.* DEFAULT_VIDEOSRC$/#define DEFAULT_VIDEOSRC \"videotestsrc\"/" \
     -e "s/.* DEFAULT_VISUALIZER$/#define DEFAULT_VISUALIZER \"goom\"/" \
