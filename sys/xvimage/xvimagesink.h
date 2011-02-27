@@ -190,7 +190,8 @@ struct _GstMetaXvImage {
 
 const GstMetaInfo * gst_meta_xvimage_get_info (void);
 
-#define GST_META_XVIMAGE_GET(buf,create) ((GstMetaXvImage *)gst_buffer_get_meta(buf,gst_meta_xvimage_get_info(),create))
+#define GST_META_XVIMAGE_GET(buf) ((GstMetaXvImage *)gst_buffer_get_meta(buf,gst_meta_xvimage_get_info()))
+#define GST_META_XVIMAGE_ADD(buf) ((GstMetaXvImage *)gst_buffer_add_meta(buf,gst_meta_xvimage_get_info(), NULL))
 
 
 /**

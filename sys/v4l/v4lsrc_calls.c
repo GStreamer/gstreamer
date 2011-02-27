@@ -624,7 +624,8 @@ typedef struct _GstMetaV4lSrc
   gint num;
 } GstMetaV4lSrc;
 
-#define GST_META_V4LSRC_GET(buf,create) ((GstMetaV4lSrc *)gst_buffer_get_meta(buf,gst_meta_v4lsrc_get_info(),create));
+#define GST_META_V4LSRC_GET(buf) ((GstMetaV4lSrc *)gst_buffer_get_meta(buf,gst_meta_v4lsrc_get_info()))
+#define GST_META_V4LSRC_ADD(buf) ((GstMetaV4lSrc *)gst_buffer_add_meta(buf,gst_meta_v4lsrc_get_info(), NULL))
 
 static void
 meta_v4lsrc_free (GstMetaV4lSrc * meta, GstBuffer * buffer)
@@ -682,7 +683,7 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
   buf = gst_buffer_new ();
 
   /* attach private metadata with the frame num and v4lsrc element */
-  meta = GST_META_V4LSRC_GET (buf, TRUE);
+  meta = GST_META_V4LSRC_ADD (buf);
   meta->num = num;
   meta->v4lsrc = gst_object_ref (v4lsrc);
 

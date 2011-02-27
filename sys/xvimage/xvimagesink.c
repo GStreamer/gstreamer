@@ -222,7 +222,7 @@ gst_xvimage_buffer_dispose (GstBuffer * xvimage)
   GstXvImageSink *xvimagesink;
   gboolean running;
 
-  data = GST_META_XVIMAGE_GET (xvimage, FALSE);
+  data = GST_META_XVIMAGE_GET (xvimage);
   g_return_if_fail (data != NULL);
 
   xvimagesink = data->xvimagesink;
@@ -268,7 +268,7 @@ no_sink:
 static void
 gst_xvimage_buffer_free (GstBuffer * xvimage)
 {
-  GstMetaXvImage *data = GST_META_XVIMAGE_GET (xvimage, FALSE);
+  GstMetaXvImage *data = GST_META_XVIMAGE_GET (xvimage);
 
   g_return_if_fail (data != NULL);
 
@@ -417,7 +417,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
   GST_MINI_OBJECT_CAST (buffer)->dispose =
       (GstMiniObjectDisposeFunction) gst_xvimage_buffer_dispose;
 
-  data = GST_META_XVIMAGE_GET (buffer, TRUE);
+  data = GST_META_XVIMAGE_ADD (buffer);
 #ifdef HAVE_XSHM
   data->SHMInfo.shmaddr = ((void *) -1);
   data->SHMInfo.shmid = -1;
@@ -632,7 +632,7 @@ gst_xvimagesink_xvimage_destroy (GstXvImageSink * xvimagesink,
   g_return_if_fail (xvimage != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
 
-  data = GST_META_XVIMAGE_GET (xvimage, FALSE);
+  data = GST_META_XVIMAGE_GET (xvimage);
   g_return_if_fail (data != NULL);
 
   GST_OBJECT_LOCK (xvimagesink);
@@ -806,7 +806,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
     xvimagesink->redraw_border = FALSE;
   }
 
-  data = GST_META_XVIMAGE_GET (xvimage, FALSE);
+  data = GST_META_XVIMAGE_GET (xvimage);
   g_assert (data != NULL);
 
   /* We scale to the window's geometry */
@@ -2186,7 +2186,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   /* We renew our xvimage only if size or format changed;
    * the xvimage is the same size as the video pixel size */
   if ((xvimagesink->xvimage)) {
-    GstMetaXvImage *data = GST_META_XVIMAGE_GET (xvimagesink->xvimage, FALSE);
+    GstMetaXvImage *data = GST_META_XVIMAGE_GET (xvimagesink->xvimage);
 
     if (((im_format != data->im_format) ||
             (video_width != data->width) || (video_height != data->height))) {
@@ -2337,7 +2337,7 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   xvimagesink = GST_XVIMAGESINK (vsink);
 
-  meta = GST_META_XVIMAGE_GET (buf, FALSE);
+  meta = GST_META_XVIMAGE_GET (buf);
 
   if (meta) {
     /* If this buffer has been allocated using our buffer management we simply
@@ -2361,7 +2361,7 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
         goto no_image;
 
       if (GST_BUFFER_SIZE (xvimagesink->xvimage) < GST_BUFFER_SIZE (buf)) {
-        meta = GST_META_XVIMAGE_GET (xvimagesink->xvimage, FALSE);
+        meta = GST_META_XVIMAGE_GET (xvimagesink->xvimage);
 
         GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
             ("Failed to create output image buffer of %dx%d pixels",
@@ -2620,7 +2620,7 @@ reuse_last_caps:
     xvimage = xvimagesink->image_pool->data;
 
     if (xvimage) {
-      meta = GST_META_XVIMAGE_GET (xvimage, FALSE);
+      meta = GST_META_XVIMAGE_GET (xvimage);
 
       /* Removing from the pool */
       xvimagesink->image_pool = g_slist_delete_link (xvimagesink->image_pool,
