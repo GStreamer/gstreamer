@@ -694,6 +694,15 @@ AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
    AC_SUBST(LIBDC1394_LIBS)
 ])
 
+dnl *** decklink  ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DECKLINK, true)
+AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
+   HAVE_DECKLINK=yes
+   DECKLINK_CXXFLAGS=
+   DECKLINK_LIBS=
+   AC_SUBST(DECKLINK_CXXFLAGS)
+   AC_SUBST(DECKLINK_LIBS)
+])
 
 dnl **** DirectFB ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
@@ -1799,6 +1808,7 @@ sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
 sys/acmmp3dec/Makefile
 sys/applemedia/Makefile
+sys/decklink/Makefile
 sys/directdraw/Makefile
 sys/directsound/Makefile
 sys/dshowsrcwrapper/Makefile
