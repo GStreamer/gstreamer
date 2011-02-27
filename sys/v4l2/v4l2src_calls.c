@@ -81,7 +81,7 @@ queue_failed:
         (_("Could not enqueue buffers in device '%s'."),
             v4l2src->v4l2object->videodev),
         ("enqueing buffer %d/%d failed: %s",
-            GST_META_V4L2_GET (buf, FALSE)->vbuffer.index, v4l2src->num_buffers,
+            GST_META_V4L2_GET (buf)->vbuffer.index, v4l2src->num_buffers,
             g_strerror (errno)));
     return FALSE;
   }

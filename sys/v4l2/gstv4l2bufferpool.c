@@ -64,7 +64,7 @@ gst_v4l2_buffer_dispose (GstBuffer * buffer)
   gint index;
   GstMetaV4l2 *meta;
 
-  meta = GST_META_V4L2_GET (buffer, FALSE);
+  meta = GST_META_V4L2_GET (buffer);
   g_assert (meta != NULL);
 
   pool = meta->pool;
@@ -123,7 +123,7 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
   GST_MINI_OBJECT_CAST (ret)->dispose =
       (GstMiniObjectDisposeFunction) gst_v4l2_buffer_dispose;
 
-  meta = GST_META_V4L2_GET (ret, TRUE);
+  meta = GST_META_V4L2_ADD (ret);
 
   GST_LOG_OBJECT (pool->v4l2elem, "creating buffer %u, %p in pool %p", index,
       ret, pool);
@@ -451,7 +451,7 @@ gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool, gboolean blocking)
   }
 
   if (buf) {
-    GstMetaV4l2 *meta = GST_META_V4L2_GET (buf, FALSE);
+    GstMetaV4l2 *meta = GST_META_V4L2_GET (buf);
 
     GST_V4L2_BUFFER_POOL_LOCK (pool);
     GST_BUFFER_SIZE (buf) = meta->vbuffer.length;
@@ -479,7 +479,7 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 {
   GstMetaV4l2 *meta;
 
-  meta = GST_META_V4L2_GET (buf, FALSE);
+  meta = GST_META_V4L2_GET (buf);
 
   GST_LOG_OBJECT (pool->v4l2elem, "enqueue pool buffer %d",
       meta->vbuffer.index);

@@ -82,7 +82,7 @@ static void gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc);
 static void
 gst_ximage_src_return_buf (GstXImageSrc * ximagesrc, GstBuffer * ximage)
 {
-  GstMetaXImage *meta = GST_META_XIMAGE_GET (ximage, FALSE);
+  GstMetaXImage *meta = GST_META_XIMAGE_GET (ximage);
 
   /* If our geometry changed we can't reuse that image. */
   if ((meta->width != ximagesrc->width) || (meta->height != ximagesrc->height)) {
@@ -367,7 +367,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
   while (ximagesrc->buffer_pool != NULL) {
     ximage = ximagesrc->buffer_pool->data;
 
-    meta = GST_META_XIMAGE_GET (ximage, FALSE);
+    meta = GST_META_XIMAGE_GET (ximage);
 
     if ((meta->width != ximagesrc->width) ||
         (meta->height != ximagesrc->height)) {
@@ -423,7 +423,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
   g_return_val_if_fail (GST_IS_XIMAGE_SRC (ximagesrc), NULL);
 
-  meta = GST_META_XIMAGE_GET (ximage, FALSE);
+  meta = GST_META_XIMAGE_GET (ximage);
 
 #ifdef HAVE_XDAMAGE
   if (ximagesrc->have_xdamage && ximagesrc->use_damage &&

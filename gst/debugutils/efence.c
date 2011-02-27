@@ -109,7 +109,8 @@ gst_meta_fenced_get_info (void)
   return meta_fenced_info;
 }
 
-#define GST_META_FENCED_GET(buf,create) ((GstMetaFenced *)gst_buffer_get_meta(buf,gst_meta_fenced_get_info(),create));
+#define GST_META_FENCED_GET(buf) ((GstMetaFenced *)gst_buffer_get_meta(buf,gst_meta_fenced_get_info()))
+#define GST_META_FENCED_ADD(buf) ((GstMetaFenced *)gst_buffer_add_meta(buf,gst_meta_fenced_get_info(),NULL))
 
 static void gst_fenced_buffer_dispose (GstBuffer * buf);
 static GstBuffer *gst_fenced_buffer_copy (const GstBuffer * buffer);
@@ -400,7 +401,7 @@ gst_fenced_buffer_dispose (GstBuffer * buffer)
 {
   GstMetaFenced *meta;
 
-  meta = GST_META_FENCED_GET (buffer, FALSE);
+  meta = GST_META_FENCED_GET (buffer);
 
   GST_DEBUG ("free buffer=%p", buffer);
 
@@ -487,7 +488,7 @@ gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
   GST_MINI_OBJECT_CAST (buffer)->copy =
       (GstMiniObjectCopyFunction) gst_fenced_buffer_copy;
 
-  meta = GST_META_FENCED_GET (buffer, TRUE);
+  meta = GST_META_FENCED_ADD (buffer);
 
 #if 0
   munmap (region, page_size);

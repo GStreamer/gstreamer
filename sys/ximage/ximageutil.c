@@ -320,7 +320,7 @@ gst_ximagesrc_buffer_dispose (GstBuffer * ximage)
 
   g_return_if_fail (ximage != NULL);
 
-  meta = GST_META_XIMAGE_GET (ximage, FALSE);
+  meta = GST_META_XIMAGE_GET (ximage);
 
   parent = meta->parent;
   if (parent == NULL) {
@@ -340,7 +340,7 @@ gst_ximage_buffer_free (GstBuffer * ximage)
 {
   GstMetaXImage *meta;
 
-  meta = GST_META_XIMAGE_GET (ximage, FALSE);
+  meta = GST_META_XIMAGE_GET (ximage);
 
   /* make sure it is not recycled */
   meta->width = -1;
@@ -361,7 +361,7 @@ gst_ximageutil_ximage_new (GstXContext * xcontext,
   GST_MINI_OBJECT_CAST (ximage)->dispose =
       (GstMiniObjectDisposeFunction) gst_ximagesrc_buffer_dispose;
 
-  meta = GST_META_XIMAGE_GET (ximage, TRUE);
+  meta = GST_META_XIMAGE_ADD (ximage);
   meta->width = width;
   meta->height = height;
 
@@ -437,7 +437,7 @@ gst_ximageutil_ximage_destroy (GstXContext * xcontext, GstBuffer * ximage)
 {
   GstMetaXImage *meta;
 
-  meta = GST_META_XIMAGE_GET (ximage, FALSE);
+  meta = GST_META_XIMAGE_GET (ximage);
 
   /* We might have some buffers destroyed after changing state to NULL */
   if (!xcontext)
