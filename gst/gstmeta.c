@@ -123,15 +123,17 @@ typedef struct
 } GstMetaMemoryImpl;
 
 static gpointer
-meta_memory_mmap (GstMetaMemoryImpl * meta, gsize offset, gsize * size,
+meta_memory_mmap (GstMetaMemory * meta, gsize offset, gsize * size,
     GstMetaMapFlags flags)
 {
-  *size = meta->params.size - offset;
-  return meta->params.data + offset;
+  GstMetaMemoryImpl *impl = (GstMetaMemoryImpl *) meta;
+
+  *size = impl->params.size - offset;
+  return impl->params.data + offset;
 }
 
 static gboolean
-meta_memory_munmap (GstMetaMemoryImpl * meta, gpointer data, gsize size)
+meta_memory_munmap (GstMetaMemory * meta, gpointer data, gsize size)
 {
   return TRUE;
 }
@@ -140,8 +142,8 @@ static gboolean
 meta_memory_init (GstMetaMemoryImpl * meta, GstMetaMemoryParams * params,
     GstBuffer * buffer)
 {
-  meta->memory.mmap_func = (GstMetaMapFunc) meta_memory_mmap;
-  meta->memory.munmap_func = (GstMetaUnmapFunc) meta_memory_munmap;
+  meta->memory.mmap_func = meta_memory_mmap;
+  meta->memory.munmap_func = meta_memory_munmap;
   meta->params = *params;
   return TRUE;
 }
