@@ -35,7 +35,7 @@ rsn_wrapped_buffer_new (GstBuffer * buf_to_wrap, GstElement * owner)
   g_return_val_if_fail (buf_to_wrap, NULL);
 
   buf = gst_buffer_new ();
-  meta = RSN_META_WRAPPED_GET (buf, TRUE);
+  meta = RSN_META_WRAPPED_ADD (buf);
 
   meta->wrapped_buffer = buf_to_wrap;
   meta->owner = gst_object_ref (owner);

@@ -125,7 +125,7 @@ rsn_parsetter_chain (GstPad * pad, GstBuffer * buf)
   RsnParSetter *parset = RSN_PARSETTER (GST_OBJECT_PARENT (pad));
   RsnMetaWrapped *meta;
 
-  meta = RSN_META_WRAPPED_GET (buf, FALSE);
+  meta = RSN_META_WRAPPED_GET (buf);
 
   /* If this is a buffer we wrapped up earlier, unwrap it now */
   if (meta != NULL) {

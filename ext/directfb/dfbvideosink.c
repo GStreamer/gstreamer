@@ -195,7 +195,7 @@ gst_dfbsurface_dispose (GstBuffer * surface)
 
   g_return_if_fail (surface != NULL);
 
-  meta = GST_META_DFBSURFACE_GET (surface, FALSE);
+  meta = GST_META_DFBSURFACE_GET (surface);
 
   dfbvideosink = meta->dfbvideosink;
   if (!dfbvideosink) {
@@ -245,7 +245,7 @@ gst_dfbvideosink_surface_create (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
   surface = gst_buffer_new ();
   GST_MINI_OBJECT_CAST (surface)->dispose =
       (GstMiniObjectDisposeFunction) gst_dfbsurface_dispose;
-  meta = GST_META_DFBSURFACE_GET (surface, TRUE);
+  meta = GST_META_DFBSURFACE_ADD (surface);
 
   /* Keep a ref to our sink */
   meta->dfbvideosink = gst_object_ref (dfbvideosink);
@@ -357,7 +357,7 @@ gst_dfbvideosink_surface_destroy (GstDfbVideoSink * dfbvideosink,
 
   g_return_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink));
 
-  meta = GST_META_DFBSURFACE_GET (surface, FALSE);
+  meta = GST_META_DFBSURFACE_GET (surface);
 
   /* Release our internal surface */
   if (meta->surface) {
@@ -1557,7 +1557,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     goto beach;
   }
 
-  meta = GST_META_DFBSURFACE_GET (buf, FALSE);
+  meta = GST_META_DFBSURFACE_GET (buf);
 
   /* Is that a buffer we allocated ourselves ? */
   if (meta != NULL) {
@@ -1840,7 +1840,7 @@ alloc:
           g_slist_delete_link (dfbvideosink->buffer_pool,
           dfbvideosink->buffer_pool);
 
-      meta = GST_META_DFBSURFACE_GET (surface, FALSE);
+      meta = GST_META_DFBSURFACE_GET (surface);
 
       /* If the surface is invalid for our need, destroy */
       if ((meta->width != width) ||

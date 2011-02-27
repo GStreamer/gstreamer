@@ -39,7 +39,8 @@ typedef struct _GstMetaDfbSurface GstMetaDfbSurface;
 
 const GstMetaInfo * gst_meta_dfbsurface_get_info (void);
 
-#define GST_META_DFBSURFACE_GET(buf,create) ((GstMetaDfbSurface *)gst_buffer_get_meta(buf,gst_meta_dfbsurface_get_info(),create))
+#define GST_META_DFBSURFACE_GET(buf) ((GstMetaDfbSurface *)gst_buffer_get_meta(buf,gst_meta_dfbsurface_get_info()))
+#define GST_META_DFBSURFACE_ADD(buf) ((GstMetaDfbSurface *)gst_buffer_add_meta(buf,gst_meta_dfbsurface_get_info(),NULL))
 
 struct _GstMetaDfbSurface {
   GstMeta meta;

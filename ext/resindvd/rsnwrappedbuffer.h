@@ -41,7 +41,8 @@ void rsn_meta_wrapped_set_owner (RsnMetaWrapped *meta, GstElement *owner);
 
 const GstMetaInfo * rsn_meta_wrapped_get_info (void);
 
-#define RSN_META_WRAPPED_GET(buf,create) ((RsnMetaWrapped *)gst_buffer_get_meta(buf,rsn_meta_wrapped_get_info(),create))
+#define RSN_META_WRAPPED_GET(buf) ((RsnMetaWrapped *)gst_buffer_get_meta(buf,rsn_meta_wrapped_get_info()))
+#define RSN_META_WRAPPED_ADD(buf) ((RsnMetaWrapped *)gst_buffer_add_meta(buf,rsn_meta_wrapped_get_info(),NULL))
 
 G_END_DECLS
 
