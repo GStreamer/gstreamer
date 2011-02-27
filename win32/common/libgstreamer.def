@@ -90,6 +90,7 @@ EXPORTS
 	gst_bin_remove
 	gst_bin_remove_many
 	gst_buffer_add_meta
+	gst_buffer_add_meta_memory
 	gst_buffer_copy_flags_get_type
 	gst_buffer_copy_metadata
 	gst_buffer_create_sub
@@ -573,6 +574,7 @@ EXPORTS
 	gst_message_type_to_quark
 	gst_meta_get_info
 	gst_meta_map_flags_get_type
+	gst_meta_memory_get_info
 	gst_meta_register
 	gst_mini_object_copy
 	gst_mini_object_flags_get_type

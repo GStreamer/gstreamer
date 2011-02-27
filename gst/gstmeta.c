@@ -107,3 +107,99 @@ gst_meta_get_info (const gchar * impl)
 
   return info;
 }
+
+typedef struct
+{
+  guint8 *data;
+  GFreeFunc free_func;
+  gsize size;
+  gsize offset;
+} GstMetaMemoryParams;
+
+typedef struct
+{
+  GstMetaMemory memory;
+  GstMetaMemoryParams params;
+} GstMetaMemoryImpl;
+
+static gpointer
+meta_memory_mmap (GstMetaMemoryImpl * meta, gsize offset, gsize * size,
+    GstMetaMapFlags flags)
+{
+  *size = meta->params.size - offset;
+  return meta->params.data + offset;
+}
+
+static gboolean
+meta_memory_munmap (GstMetaMemoryImpl * meta, gpointer data, gsize size)
+{
+  return TRUE;
+}
+
+static gboolean
+meta_memory_init (GstMetaMemoryImpl * meta, GstMetaMemoryParams * params,
+    GstBuffer * buffer)
+{
+  meta->memory.mmap_func = (GstMetaMapFunc) meta_memory_mmap;
+  meta->memory.munmap_func = (GstMetaUnmapFunc) meta_memory_munmap;
+  meta->params = *params;
+  return TRUE;
+}
+
+static void
+meta_memory_free (GstMetaMemoryImpl * meta, GstBuffer * buffer)
+{
+  if (meta->params.free_func)
+    meta->params.free_func (meta->params.data);
+}
+
+static void
+meta_memory_copy (GstBuffer * copy, GstMetaMemoryImpl * meta,
+    const GstBuffer * buffer)
+{
+  gst_buffer_add_meta_memory (copy,
+      g_memdup (meta->params.data, meta->params.size),
+      g_free, meta->params.size, meta->params.offset);
+}
+
+static void
+meta_memory_sub (GstBuffer * subbuf, GstMetaMemoryImpl * meta,
+    GstBuffer * buffer, guint offset, guint size)
+{
+  gst_buffer_add_meta_memory (subbuf,
+      meta->params.data, NULL, size, meta->params.offset + offset);
+}
+
+const GstMetaInfo *
+gst_meta_memory_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (meta_info == NULL) {
+    meta_info = gst_meta_register ("GstMetaMemory", "GstMetaMemoryImpl",
+        sizeof (GstMetaMemoryImpl),
+        (GstMetaInitFunction) meta_memory_init,
+        (GstMetaFreeFunction) meta_memory_free,
+        (GstMetaCopyFunction) meta_memory_copy,
+        (GstMetaSubFunction) meta_memory_sub,
+        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+  }
+  return meta_info;
+}
+
+GstMetaMemory *
+gst_buffer_add_meta_memory (GstBuffer * buffer, gpointer data,
+    GFreeFunc free_func, gsize size, gsize offset)
+{
+  GstMeta *meta;
+  GstMetaMemoryParams params;
+
+  params.data = data;
+  params.free_func = free_func;
+  params.size = size;
+  params.offset = offset;
+
+  meta = gst_buffer_add_meta (buffer, GST_META_MEMORY_INFO, &params);
+
+  return (GstMetaMemory *) meta;
+}

@@ -148,9 +148,9 @@ const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
 typedef struct _GstMetaMemory GstMetaMemory;
 
 typedef enum {
-  GST_META_MAP_NONE,
-  GST_META_MAP_READ,
-  GST_META_MAP_WRITE
+  GST_META_MAP_NONE  = 0,
+  GST_META_MAP_READ  = (1 << 0),
+  GST_META_MAP_WRITE = (1 << 1)
 } GstMetaMapFlags;
 
 typedef gpointer (*GstMetaMapFunc)     (GstMetaMemory *meta, guint offset, guint *size,
@@ -170,6 +170,10 @@ struct _GstMetaMemory
 
 const GstMetaInfo *gst_meta_memory_get_info(void);
 #define GST_META_MEMORY_INFO (gst_meta_memory_get_info())
+
+GstMetaMemory * gst_buffer_add_meta_memory (GstBuffer *buffer, gpointer data,
+                                            GFreeFunc free_func,
+                                            gsize size, gsize offset);
 
 G_END_DECLS
 
