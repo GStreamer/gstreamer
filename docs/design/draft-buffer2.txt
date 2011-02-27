@@ -34,10 +34,7 @@ Requirements
    or ABI.
  - It plays nice with subbuffers. When a subbuffer is created, the various
    buffer metadata should be copied/updated correctly.
- - We should be able to pass metadata in pad_alloc() and get_range() functions
-   to specify extra allocation parameters.
- - We should be able to attach statically allocated metadata to a buffer. This
-   is for metadata that does not change much.
+ - We should be able to negotiate metadata between elements
 
 Use cases
 ---------
@@ -67,8 +64,10 @@ struct _GstMiniObject {
   /* refcounting */
   gint       refcount;
   guint      flags;
+  gsize      size;
 
   GstMiniObjectCopyFunction copy;
+  GstMiniObjectDisposeFunction dispose;
   GstMiniObjectFreeFunction free;
 }
 
@@ -98,8 +97,6 @@ regular C structure.
 
 struct _GstBuffer {
   GstMiniObject          mini_object;
-
-  gsize                  free_size;
 
   GstCaps               *caps;
   GstBuffer             *parent;
@@ -139,21 +136,21 @@ is assumed that more specialized elements can deal with the different memory
 metadata structures in order to optimize access to the memory.
 
 
-GstBufferMeta
-~~~~~~~~~~~~~
+GstMeta
+~~~~~~~
 
-A GstBufferMeta is a structure as follows:
+A GstMeta is a structure as follows:
 
-  struct _GstBufferMeta {
-    GstBufferMetaInfo *info;    /* tag and info for the meta item */
+  struct _GstMeta {
+    GstMetaInfo *info;    /* tag and info for the meta item */
   };
 
 The purpose of the this structure is to serve as a common header for all metadata
 information that we can attach to a buffer. Specific metadata, such as timing metadata,
 will have this structure as the first field. For example:
 
-  struct _GstBufferMetaTiming {
-    GstBufferMeta  meta;        /* common meta header */
+  struct _GstMetaTiming {
+    GstMeta        meta;        /* common meta header */
  
     GstClockTime   dts;         /* decoding timestamp */
     GstClockTime   pts;         /* presentation timestamp */
@@ -161,12 +158,30 @@ will have this structure as the first field. For example:
     GstClockTime   clock_rate;  /* clock rate for the above values */
   };
 
-Or another example for the buffer memory region
+Or another example for the buffer memory region that consists of some methods
+only.
 
-  struct _GstBufferMetaMemory {
-    GstBufferMeta      meta;
+  struct _GstMetaMemory {
+    GstMeta            meta;
    
-    /* pointer to data and its size */
+    GstMetaMemoryMap       mmap_func;
+    GstMetaMemoryUnmap     munmap_func;
+  };
+
+  gpointer gst_meta_memory_map   (GstMetaMemory *, guint offset, guint *size, GstBufferMapFlags);
+  gboolean gst_meta_memory_unmap (GstMetaMemory *, gpointer data,  guint size);
+
+
+GstMeta derived structures define the API of the metadata. The API can consist of
+fields and/or methods. It is possible to have different implementations for the
+same GstMeta structure.
+
+The implementation of the GstMeta api would typically add more fields to the
+public structure that allow it to implement the API. For example:
+
+  struct _GstMetaMemoryImpl {
+    GstMetaMemory      memory;
+   
     gpointer          *data;
     guint              size;
     gpointer          *data_orig;
@@ -174,13 +189,13 @@ Or another example for the buffer memory region
     gpointer           data_user;
   };
 
-GstBufferMetaInfo will point to more information about the metadata and looks like this:
 
-  struct _GstBufferMetaInfo {
+GstMetaInfo will point to more information about the metadata and looks like this:
+
+  struct _GstMetaInfo {
     GQuark                     api;       /* api name */
     GQuark                     impl;      /* implementation name */
     gsize                      size;      /* size of the structure */
-    GstBufferMetaInfo         *parent     /* parent info */
 
     GstMetaInitFunction        init_func;
     GstMetaFreeFunction        free_func;
@@ -191,14 +206,17 @@ GstBufferMetaInfo will point to more information about the metadata and looks li
     GstMetaConvFunction        conv_func;
   };
 
-Tag will contain a GQuark of the metadata name. We will be able to refer to specific
-metadata by name or by its (cached) GQuark.  A repository of registered MetaInfo
+api will contain a GQuark of the metadata api. A repository of registered MetaInfo
 will be maintained by the core. We will register some common metadata structures
 in core and some media specific info for audio/video/text in -base. Plugins can
 register additional custom metadata.
 
+For each implementation of api, there will thus be a unique GstMetaInfo. In the
+case of metadata with a well defined API, the implementation specific init
+function will setup the methods in the metadata structure.
+
 Along with the metadata description we will have functions to initialize/free (and/or refcount)
-a specific GstBufferMeta instance. We also have the possibility to add a custom subbuffer
+a specific GstMeta instance. We also have the possibility to add a custom subbuffer
 function that can be used to modify the metadata when a subbuffer is taken.
 
 We also add serialize and deserialize function for the metadata in case we need special
@@ -220,25 +238,26 @@ The complete buffer with metadata would then look as follows:
 
                          +-------------------------------------+
 GstMiniObject            |     GType (GstBuffer)               |
-                         |     refcount, flags, copy/free      |
+                         |     refcount, flags, copy/disp/free |
                          +-------------------------------------+
-GstBuffer                |     caps, parent, subfunc           |
+GstBuffer                |     caps, parent                    |
                          +.....................................+
                          |     next                           ---+
-                         |     parent                         ------> NULL
-                      +- |     info                           ------> GstBufferMetaInfo
-GstBufferMetaTiming   |  |                                     | |
+                      +- |     info                           ------> GstMetaInfo
+GstMetaTiming         |  |                                     | |
                       |  |     dts                             | |
                       |  |     pts                             | |
                       |  |     duration                        | |
                       +- |     clock_rate                      | |
                          + . . . . . . . . . . . . . . . . . . + |
                          |     next                           <--+
-                         |     parent                         ------> NULL
-GstBufferMetaMemory   +- |     info                           ------> GstBufferMetaInfo
-                      |  |                                     | |
+GstMetaMemory      +- +- |     info                           ------> GstMetaInfo
+                   |  |  |                                     | |
+                   |  |  |     mmap                            | |
+                   |  |  |     munmap                          | |
+                   +- |  |                                     | |
                       |  |     data                            | |
-                      |  |     size                            | |
+GstMetaMemoryImpl     |  |     size                            | |
                       |  |     mallocdata                      | |
                       |  |     data_free                       | |
                       +- |     data_user                       | |
@@ -251,65 +270,62 @@ API examples
 
 Buffers are created using the normal gst_buffer_new functions. The standard fields
 are initialized as usual. A memory area that is bigger than the structure size
-is allocated for the buffer metadata. The remaining free area is stored in the
-free_size field.
+is allocated for the buffer metadata.
 
   gst_buffer_new ();
 
-After creating a buffer, the application can set caps. and add other metadata
+After creating a buffer, the application can set caps and add metadata
 information. 
 
-In order to modify metadata, a reference to the MetaInfo should be obtained.
-This can be done like this:
+To add or retrieve metadata, a handle to a GstMetaInfo structure needs to be
+obtained. This defines the implementation and API of the metadata. Usually, a
+handle to this info structure can be obtained by callnig a public _get_info()
+method from a shared library (for shared metadata).
 
-  GstBufferMetaInfo *info;
+The following defines can usually be found in the shared .h file.
 
-  info = gst_buffer_meta_get_info (GQuark tag);
+  GstMetaInfo * gst_meta_timing_get_info();
+  #define GST_META_TIMING_INFO  (gst_meta_timing_get_info())
 
-Usually the info will be obtained only once in order to avoid lock contention on
-the global pool of meta info. The core will also provide convenience functions
-for the core metainfo.
+Retrieving and/or creating the metadata on a buffer can be done with the
+gst_buffer_meta_get() method. This function retrieves an existing metadata
+conforming to the API spcified in the given info. When no such metadata exists
+and the last gboolean argument is true, a new metadata item will be created from
+the info and added to the buffer.
+
+  GstMetaTiming *timing;
+
+  timing = gst_buffer_get_meta (buffer, GST_META_TIMING_INFO, TRUE);
 
 Once a reference to the info has been obtained, the associated metadata can be
 added or modified on a buffer.
 
-For example, to modify the timing info on a buffer, one could use the following
-sequence:
-
-  GstBufferMetaInfo *info;
-  GstBufferMetaTiming *timing;
-
-  info = gst_buffer_meta_get_info (GST_META_TIMING_QUARK);
-  
-  timing = gst_buffer_get_meta (buffer, info, TRUE); /* TRUE = create if absent */
   timing->timestamp = 0;
   timing->duration = 20 * GST_MSECOND;
 
-The _get_meta() function returns a pointer to the metadata structure associated
-with the GST_META_TIMING_QUARK info.
+Other convenience macros can be made to simplify the above code:
 
-For the core meta info, we will provide convenience code that uses the cached
-GstBufferMetaInfo, making the above code a little more simple.
+ #define gst_buffer_get_meta_timing(b,c) \
+    ((GstMetaTiming *) gst_buffer_get_meta ((b), GST_META_TIMING_INFO, (c))
 
-  GstBufferMetaTiming *timing;
+This makes the code look like this:
+
+  GstMetaTiming *timing;
 
   timing = gst_buffer_get_meta_timing (buffer, TRUE); /* TRUE = create if absent */
   timing->timestamp = 0;
   timing->duration = 20 * GST_MSECOND;
  
-Note that for each of the metadata that we will add to buffers, we need a struct
-definition and a registered MetaInfo. 
-
 
 We will also provide an API to iterate the different metainfo structures. A
 possible simple API would look like this:
 
- GstBufferMeta *current = NULL;
+ GstMeta *current = NULL;
 
  /* passing NULL gives the first entry */ 
  current = gst_buffer_meta_get_next (buffer, current);
 
- /* passing a GstBufferMeta returns the next */
+ /* passing a GstMeta returns the next */
  current = gst_buffer_meta_get_next (buffer, current);
 
 
@@ -320,8 +336,7 @@ Memory management
 * allocation
 
   We will initially allocate a reasonable sized GstBuffer structure (say 512
-  bytes) and we will set the free_size to the maximum amount of metadata we can
-  store.
+  bytes).
 
   Since the complete buffer structure, including a large area for metadata, is
   allocated in one go, we can reduce the number of memory allocations while still
@@ -339,7 +354,7 @@ Memory management
   structure. This can be useful when a structure is shared between buffers.
 
   When the free_size of the GstBuffer is exhausted, we will allocate new memory
-  for each newly added BufferMeta and use the next pointers to point to this. It
+  for each newly added Meta and use the next pointers to point to this. It
   is expected that this does not occur often and we might be able to optimize
   this transparently in the future.
 
@@ -409,14 +424,14 @@ so on).
 Other use cases
 ~~~~~~~~~~~~~~~
 
-Making the GstBufferMetaMemory (for making the buffer point to the associated
+Making the GstMetaMemory (for making the buffer point to the associated
 memory region) as metadata on a GstBuffer, as opposed to making it an integral
 part of GstBuffer, allows for some more interesting ways to transfer data.
 
-We could for example make a new GstBufferMetaIOVec metadata structure like this:
+We could for example make a new GstMetaIOVec metadata structure like this:
 
-  struct _GstBufferMetaIOVec {
-    GstBufferMeta  meta;
+  struct _GstMetaIOVec {
+    GstMeta  meta;
    
     /* pointer to data and its size */
     GFreeFunc       data_free;
@@ -460,19 +475,11 @@ We need to make sure that elements exchange metadata that they both understand,
 This is particulary important when the metadata describes the data layout in
 memory (such as strides).
 
-Currently the only way to communicate buffer formats between elements is by
-using caps. We would like to use the caps system to negotiate the metadata that
-will be put on buffers.
+We would like to use the bufferpool negotiation system to negotiate the possible
+metadata that can be exchanged between elements.
 
-We would like to add to the caps on the buffer (and pad) an array of metadata
-structures (as strings) that is on the buffer. This way, an element can
-quickly know what metadata to look for.
-
-In order to remain compatibility with older plugins we need to convert buffers
-that use metadata to specify a non-standard data layout to the old format. We
-need to do this before handing buffers to old elements. We will require elements
-that are metadata aware to set a flag on their pads; any buffer passed on that
-pad will be converted to the old layout when the flag is not set.
+When deciding the allocation properties, we will also negotiate the buffer
+metadata structures that we can exchange.
 
 
 Notes
@@ -508,7 +515,7 @@ Video Buffers
  };
 
  struct GstBufferVideoMeta {
-   GstBufferMeta       meta
+   GstMeta       meta
 
    GstBufferVideoFlags flags
 

@@ -95,7 +95,6 @@ EXPORTS
 	gst_buffer_flag_get_type
 	gst_buffer_get_caps
 	gst_buffer_get_meta
-	gst_buffer_get_meta_by_api
 	gst_buffer_is_metadata_writable
 	gst_buffer_is_span_fast
 	gst_buffer_iterate_meta

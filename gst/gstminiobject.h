@@ -153,8 +153,8 @@ typedef enum
  * Base class for refcounted lightweight objects.
  * Ref Func: gst_mini_object_ref
  * Unref Func: gst_mini_object_unref
- * Set Value Func: gst_value_set_mini_object
- * Get Value Func: gst_value_get_mini_object
+ * Set Value Func: g_value_set_boxed
+ * Get Value Func: g_value_get_boxed
  */
 struct _GstMiniObject {
   GType   type;
