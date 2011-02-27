@@ -1667,8 +1667,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GstElement *element;
     GstPad *sinkpad;
     gboolean subtitle;
-    gboolean skip = FALSE;
-    GList *l;
 
     /* Set dpad target to pad again, it might've been unset
      * below but we came back here because something failed
@@ -1680,27 +1678,35 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* Remove selected factory from the list. */
     g_value_array_remove (factories, 0);
 
-    /* First check if this is a factory for which we have already
-     * created an element in this chain. If we have, we skip this
-     * factory because it will lead to an infinite loop. Examples
-     * for this are parsers that accept their own src caps on the
-     * sinkpad again.
+    /* If the factory is for a parser we first check if the factory
+     * was already used for the current chain. If it was used already
+     * we would otherwise create an infinite loop here because the
+     * parser apparently accepts its own output as input.
+     * This is only done for parsers because it's perfectly valid
+     * to have other element classes after each other because a
+     * parser is the only one that does not change the data. A
+     * valid example for this would be multiple id3demux in a row.
      */
-    CHAIN_MUTEX_LOCK (chain);
-    for (l = chain->elements; l; l = l->next) {
-      GstElement *otherelement = GST_ELEMENT_CAST (l->data);
+    if (strstr (gst_element_factory_get_klass (factory), "Parser")) {
+      gboolean skip = FALSE;
+      GList *l;
 
-      if (gst_element_get_factory (otherelement) == factory) {
-        skip = TRUE;
-        break;
+      CHAIN_MUTEX_LOCK (chain);
+      for (l = chain->elements; l; l = l->next) {
+        GstElement *otherelement = GST_ELEMENT_CAST (l->data);
+
+        if (gst_element_get_factory (otherelement) == factory) {
+          skip = TRUE;
+          break;
+        }
       }
-    }
-    CHAIN_MUTEX_UNLOCK (chain);
-    if (skip) {
-      GST_DEBUG_OBJECT (dbin,
-          "Skipping factory '%s' because it was already used in this chain",
-          gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory)));
-      continue;
+      CHAIN_MUTEX_UNLOCK (chain);
+      if (skip) {
+        GST_DEBUG_OBJECT (dbin,
+            "Skipping factory '%s' because it was already used in this chain",
+            gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory)));
+        continue;
+      }
     }
 
     /* emit autoplug-select to see what we should do with it. */
