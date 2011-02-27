@@ -776,52 +776,79 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
  * gst_buffer_get_meta:
  * @buffer: a #GstBuffer
  * @info: a #GstMetaInfo
- * @create: create when needed
  *
  * Get the metadata for the api in @info on buffer. When there is no such
- * metadata and @create is TRUE, a new metadata form @info is created and added
- * to @buffer.
+ * metadata, NULL is returned.
  *
- * Note that the result metadata might not be of the implementation @info when
- * it was already on the buffer.
+ * Note that the result metadata might not be of the implementation @info.
  *
- * Returns: the metadata for @info on @buffer.
+ * Returns: the metadata for the api in @info on @buffer.
  */
 GstMeta *
-gst_buffer_get_meta (GstBuffer * buffer, const GstMetaInfo * info,
-    gboolean create)
+gst_buffer_get_meta (GstBuffer * buffer, const GstMetaInfo * info)
 {
-  GstMetaItem *walk;
-  GstMeta *result = NULL;
   GstMetaItem *item;
+  GstMeta *result = NULL;
 
   g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (info != NULL, NULL);
 
   /* find GstMeta of the requested API */
-  for (walk = buffer->priv; walk; walk = walk->next) {
-    GstMeta *meta = &walk->meta;
+  for (item = buffer->priv; item; item = item->next) {
+    GstMeta *meta = &item->meta;
     if (meta->info->api == info->api) {
       result = meta;
       break;
     }
   }
+  return result;
+}
 
-  if (result == NULL && create) {
-    /* create a new slice */
-    GST_DEBUG ("alloc metadata of size %" G_GSIZE_FORMAT, info->size);
-    item = g_slice_alloc (ITEM_SIZE (info));
-    result = &item->meta;
-    result->info = info;
-    /* call the init_func when needed */
-    if (info->init_func)
-      info->init_func (result, buffer);
-    /* and add to the list of metadata */
-    item->next = buffer->priv;
-    buffer->priv = item;
-  }
+/**
+ * gst_buffer_add_meta:
+ * @buffer: a #GstBuffer
+ * @info: a #GstMetaInfo
+ * @params: params for @info
+ *
+ * Add metadata for @info to @buffer using the parameters in @params.
+ *
+ * Returns: the metadata for the api in @info on @buffer.
+ */
+GstMeta *
+gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
+    gpointer params)
+{
+  GstMetaItem *item;
+  GstMeta *result = NULL;
+  gsize size;
+
+  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (info != NULL, NULL);
+
+  /* create a new slice */
+  GST_DEBUG ("alloc metadata of size %" G_GSIZE_FORMAT, info->size);
+
+  size = ITEM_SIZE (info);
+  item = g_slice_alloc (size);
+  result = &item->meta;
+  result->info = info;
+
+  /* call the init_func when needed */
+  if (info->init_func)
+    if (!info->init_func (result, params, buffer))
+      goto init_failed;
+
+  /* and add to the list of metadata */
+  item->next = buffer->priv;
+  buffer->priv = item;
 
   return result;
+
+init_failed:
+  {
+    g_slice_free1 (size, item);
+    return NULL;
+  }
 }
 
 /**

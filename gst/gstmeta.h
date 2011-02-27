@@ -53,7 +53,7 @@ struct _GstMeta {
  *
  * Function called when @meta is initialized in @buffer.
  */
-typedef void (*GstMetaInitFunction)     (GstMeta *meta, GstBuffer *buffer);
+typedef gboolean (*GstMetaInitFunction) (GstMeta *meta, gpointer params, GstBuffer *buffer);
 
 /**
  * GstMetaFreeFunction:
@@ -142,6 +142,34 @@ const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *im
                                                GstMetaSerializeFunction   serialize_func,
                                                GstMetaDeserializeFunction deserialize_func);
 const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
+
+/* default metadata */
+
+typedef struct _GstMetaMemory GstMetaMemory;
+
+typedef enum {
+  GST_META_MAP_NONE,
+  GST_META_MAP_READ,
+  GST_META_MAP_WRITE
+} GstMetaMapFlags;
+
+typedef gpointer (*GstMetaMapFunc)     (GstMetaMemory *meta, guint offset, guint *size,
+                                        GstMetaMapFlags flags);
+typedef gboolean (*GstMetaUnmapFunc)   (GstMetaMemory *meta, gpointer data,  guint size);
+
+struct _GstMetaMemory
+{
+  GstMeta           meta;
+
+  GstMetaMapFunc    mmap_func;
+  GstMetaUnmapFunc  munmap_func;
+};
+
+#define gst_meta_memory_map(m,o,s,f)   ((m)->mmap_func(m, o, s, f))
+#define gst_meta_memory_unmap(m,d,s)   ((m)->munmap_func(m, d, s))
+
+const GstMetaInfo *gst_meta_memory_get_info(void);
+#define GST_META_MEMORY_INFO (gst_meta_memory_get_info())
 
 G_END_DECLS
 

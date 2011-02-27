@@ -45,7 +45,8 @@ typedef struct
 
 static const GstMetaInfo *gst_test_meta_get_info (void);
 
-#define GST_TEST_META_GET(buf,create) ((GstTestMeta *)gst_buffer_get_meta(buf,gst_test_meta_get_info(),create));
+#define GST_TEST_META_GET(buf) ((GstTestMeta *)gst_buffer_get_meta(buf,gst_test_meta_get_info()))
+#define GST_TEST_META_ADD(buf) ((GstTestMeta *)gst_buffer_add_meta(buf,gst_test_meta_get_info(),NULL))
 
 #if 0
 /* unused currently. This is a user function to fill the metadata with default
@@ -84,7 +85,7 @@ test_copy_func (GstBuffer * copy, GstTestMeta * meta, GstBuffer * buffer)
 
   GST_DEBUG ("copy called from buffer %p to %p, meta %p", buffer, copy, meta);
 
-  test = GST_TEST_META_GET (copy, TRUE);
+  test = GST_TEST_META_ADD (copy);
   test->pts = meta->pts;
   test->dts = meta->dts;
   test->duration = meta->duration;
@@ -100,7 +101,7 @@ test_sub_func (GstBuffer * sub, GstTestMeta * meta, GstBuffer * buffer,
   GST_DEBUG ("sub called from buffer %p to %p, meta %p, %u-%u", buffer, sub,
       meta, offset, size);
 
-  test = GST_TEST_META_GET (sub, TRUE);
+  test = GST_TEST_META_ADD (sub);
   if (offset == 0) {
     /* same offset, copy timestamps */
     test->pts = meta->pts;
@@ -145,7 +146,7 @@ GST_START_TEST (test_metadata)
   memset (GST_BUFFER_DATA (buffer), 0, 4);
 
   /* add some metadata */
-  meta = GST_TEST_META_GET (buffer, TRUE);
+  meta = GST_TEST_META_ADD (buffer);
   fail_if (meta == NULL);
   /* fill some values */
   meta->pts = 1000;
@@ -156,7 +157,7 @@ GST_START_TEST (test_metadata)
   /* copy of the buffer */
   copy = gst_buffer_copy (buffer);
   /* get metadata of the buffer */
-  meta = GST_TEST_META_GET (copy, FALSE);
+  meta = GST_TEST_META_GET (copy);
   fail_if (meta == NULL);
   fail_if (meta->pts != 1000);
   fail_if (meta->dts != 2000);
@@ -167,7 +168,7 @@ GST_START_TEST (test_metadata)
   /* make subbuffer */
   subbuf = gst_buffer_create_sub (buffer, 0, 1);
   /* get metadata of the buffer */
-  meta = GST_TEST_META_GET (subbuf, FALSE);
+  meta = GST_TEST_META_GET (subbuf);
   fail_if (meta == NULL);
   fail_if (meta->pts != 1000);
   fail_if (meta->dts != 2000);
@@ -178,7 +179,7 @@ GST_START_TEST (test_metadata)
   /* make another subbuffer */
   subbuf = gst_buffer_create_sub (buffer, 1, 3);
   /* get metadata of the buffer */
-  meta = GST_TEST_META_GET (subbuf, FALSE);
+  meta = GST_TEST_META_GET (subbuf);
   fail_if (meta == NULL);
   fail_if (meta->pts != -1);
   fail_if (meta->dts != -1);
