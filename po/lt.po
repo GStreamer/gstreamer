@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-07-16 19:34+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -72,11 +72,14 @@ msgstr "Šiame faile nėra atkurtinų srautų."
 msgid "This file is invalid and cannot be played."
 msgstr "Failas netinkamas ir negali būti atkurtas."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Failas nebaigtas ir negali būti atkurtas."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Failas sugadintas ir negali būti atkurtas."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Failas nebaigtas ir negali būti atkurtas."
 
 msgid "The video in this file might not play correctly."
 msgstr "Šiame faile esantis vaizdo įrašas gali būti atkurtas nekorektiškai."
@@ -622,6 +625,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Nepavyko nustatyti įvesties %d įrenginyje %s."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Nepavyko gauti dabartinės įvesties įrenginyje „%s“. Galbūt tai radijo "
+"įrenginys"
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Nepavyko nustatyti įvesties %d įrenginyje %s."
 
 #, c-format

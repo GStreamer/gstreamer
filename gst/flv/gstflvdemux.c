@@ -40,6 +40,7 @@
 #include <string.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/pbutils/descriptions.h>
+#include <gst/pbutils/pbutils.h>
 
 static GstStaticPadTemplate flv_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -128,8 +129,9 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
   associations[1].value = pos;
 
   gst_index_add_associationv (demux->index, demux->index_id,
-      (keyframe) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
-      2, (const GstIndexAssociation *) &associations);
+      (keyframe) ? GST_ASSOCIATION_FLAG_KEY_UNIT :
+      GST_ASSOCIATION_FLAG_DELTA_UNIT, 2,
+      (const GstIndexAssociation *) &associations);
 
   if (pos > demux->index_max_pos)
     demux->index_max_pos = pos;
@@ -517,7 +519,7 @@ gst_flv_demux_parse_tag_script (GstFlvDemux * demux, GstBuffer * buffer)
             return GST_FLOW_OK;
           }
 
-          /* The number of elements is just a hint, some files have 
+          /* The number of elements is just a hint, some files have
              nb_elements == 0 and actually contain items. */
           GST_DEBUG_OBJECT (demux, "there are approx. %d elements in the array",
               nb_elems);
@@ -575,6 +577,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
   GstCaps *caps = NULL;
   gchar *codec_name = NULL;
   gboolean ret = FALSE;
+  guint adjusted_rate = rate;
 
   switch (codec_tag) {
     case 1:
@@ -603,9 +606,29 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       caps = gst_caps_new_simple ("audio/x-nellymoser", NULL);
       break;
     case 10:
+    {
+      /* use codec-data to extract and verify samplerate */
+      if (demux->audio_codec_data &&
+          GST_BUFFER_SIZE (demux->audio_codec_data) >= 2) {
+        gint freq_index;
+
+        freq_index =
+            ((GST_READ_UINT16_BE (GST_BUFFER_DATA (demux->audio_codec_data))));
+        freq_index = (freq_index & 0x0780) >> 7;
+        adjusted_rate =
+            gst_codec_utils_aac_get_sample_rate_from_index (freq_index);
+
+        if (adjusted_rate && (rate != adjusted_rate)) {
+          GST_LOG_OBJECT (demux, "Ajusting AAC sample rate %d -> %d", rate,
+              adjusted_rate);
+        } else {
+          adjusted_rate = rate;
+        }
+      }
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
+    }
     case 7:
       caps = gst_caps_new_simple ("audio/x-alaw", NULL);
       break;
@@ -624,8 +647,8 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     goto beach;
   }
 
-  gst_caps_set_simple (caps,
-      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
+  gst_caps_set_simple (caps, "rate", G_TYPE_INT, adjusted_rate,
+      "channels", G_TYPE_INT, channels, NULL);
 
   if (demux->audio_codec_data) {
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER,
@@ -635,7 +658,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
   ret = gst_pad_set_caps (demux->audio_pad, caps);
 
   if (G_LIKELY (ret)) {
-    /* Store the caps we have set */
+    /* Store the caps we got from tags */
     demux->audio_codec_tag = codec_tag;
     demux->rate = rate;
     demux->channels = channels;
@@ -807,7 +830,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
         gst_object_ref (demux->audio_pad));
 
     /* We only emit no more pads when we have audio and video. Indeed we can
-     * not trust the FLV header to tell us if there will be only audio or 
+     * not trust the FLV header to tell us if there will be only audio or
      * only video and we would just break discovery of some files */
     if (demux->audio_pad && demux->video_pad) {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
@@ -851,7 +874,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     switch (aac_packet_type) {
       case 0:
       {
-        /* AudioSpecificConfic data */
+        /* AudioSpecificConfig data */
         GST_LOG_OBJECT (demux, "got an AAC codec data packet");
         if (demux->audio_codec_data) {
           gst_buffer_unref (demux->audio_codec_data);
@@ -1125,7 +1148,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
       goto beach;
     }
 
-    /* When we ve set pixel-aspect-ratio we use that boolean to detect a 
+    /* When we ve set pixel-aspect-ratio we use that boolean to detect a
      * metadata tag that would come later and trigger a caps change */
     demux->got_par = FALSE;
 
@@ -1150,7 +1173,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
         gst_object_ref (demux->video_pad));
 
     /* We only emit no more pads when we have audio and video. Indeed we can
-     * not trust the FLV header to tell us if there will be only audio or 
+     * not trust the FLV header to tell us if there will be only audio or
      * only video and we would just break discovery of some files */
     if (demux->audio_pad && demux->video_pad) {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
@@ -1170,7 +1193,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
       goto beach;
     }
 
-    /* When we ve set pixel-aspect-ratio we use that boolean to detect a 
+    /* When we ve set pixel-aspect-ratio we use that boolean to detect a
      * metadata tag that would come later and trigger a caps change */
     demux->got_par = FALSE;
   }

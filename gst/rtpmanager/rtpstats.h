@@ -58,6 +58,7 @@ typedef struct {
  * RTPArrivalStats:
  * @current_time: current time according to the system clock
  * @running_time: arrival time of a packet as buffer running_time
+ * @ntpnstime: arrival time of a packet NTP time in nanoseconds
  * @have_address: if the @address field contains a valid address
  * @address: address of the sender of the packet
  * @bytes: bytes of the packet including lowlevel overhead
@@ -68,6 +69,7 @@ typedef struct {
 typedef struct {
   GstClockTime  current_time;
   GstClockTime  running_time;
+  guint64       ntpnstime;
   gboolean      have_address;
   GstNetAddress address;
   guint         bytes;
@@ -195,4 +197,7 @@ GstClockTime   rtp_stats_calculate_rtcp_interval    (RTPSessionStats *stats, gbo
 GstClockTime   rtp_stats_add_rtcp_jitter            (RTPSessionStats *stats, GstClockTime interval);
 GstClockTime   rtp_stats_calculate_bye_interval     (RTPSessionStats *stats);
 gint64         rtp_stats_get_packets_lost           (const RTPSourceStats *stats);
+
+void           rtp_stats_set_min_interval           (RTPSessionStats *stats,
+                                                     gdouble min_interval);
 #endif /* __RTP_STATS_H__ */

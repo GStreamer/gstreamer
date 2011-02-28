@@ -167,6 +167,10 @@ static void
       deinterlace_scanline_linear_blend_packed_c;
   dism_class->interpolate_scanline_bgr =
       deinterlace_scanline_linear_blend_packed_c;
+  dism_class->interpolate_scanline_nv12 =
+      deinterlace_scanline_linear_blend_packed_c;
+  dism_class->interpolate_scanline_nv21 =
+      deinterlace_scanline_linear_blend_packed_c;
 
   dism_class->interpolate_scanline_planar_y =
       deinterlace_scanline_linear_blend_planar_y_c;

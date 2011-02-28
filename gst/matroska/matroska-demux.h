@@ -92,6 +92,8 @@ typedef struct _GstMatroskaDemux {
 
   /* a cue (index) table */
   GArray                  *index;
+  /* cluster positions (optional) */
+  GArray                  *clusters;
 
   /* timescale in the file */
   guint64                  time_scale;

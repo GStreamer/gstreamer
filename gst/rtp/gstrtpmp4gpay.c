@@ -82,6 +82,7 @@ static gboolean gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
+static gboolean gst_rtp_mp4g_pay_handle_event (GstPad * pad, GstEvent * event);
 
 GST_BOILERPLATE (GstRtpMP4GPay, gst_rtp_mp4g_pay, GstBaseRTPPayload,
     GST_TYPE_BASE_RTP_PAYLOAD)
@@ -96,7 +97,7 @@ GST_BOILERPLATE (GstRtpMP4GPay, gst_rtp_mp4g_pay, GstBaseRTPPayload,
       gst_static_pad_template_get (&gst_rtp_mp4g_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class, "RTP MPEG4 ES payloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Payload MPEG4 elementary streams as RTP packets (RFC 3640)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -118,6 +119,7 @@ gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass)
 
   gstbasertppayload_class->set_caps = gst_rtp_mp4g_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_mp4g_pay_handle_buffer;
+  gstbasertppayload_class->handle_event = gst_rtp_mp4g_pay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtpmp4gpay_debug, "rtpmp4gpay", 0,
       "MP4-generic RTP Payloader");
@@ -135,6 +137,13 @@ gst_rtp_mp4g_pay_reset (GstRtpMP4GPay * rtpmp4gpay)
   GST_DEBUG_OBJECT (rtpmp4gpay, "reset");
 
   gst_adapter_clear (rtpmp4gpay->adapter);
+  rtpmp4gpay->offset = 0;
+}
+
+static void
+gst_rtp_mp4g_pay_cleanup (GstRtpMP4GPay * rtpmp4gpay)
+{
+  gst_rtp_mp4g_pay_reset (rtpmp4gpay);
 
   g_free (rtpmp4gpay->params);
   rtpmp4gpay->params = NULL;
@@ -150,7 +159,6 @@ gst_rtp_mp4g_pay_reset (GstRtpMP4GPay * rtpmp4gpay)
   rtpmp4gpay->mode = NULL;
 
   rtpmp4gpay->frame_len = 0;
-  rtpmp4gpay->offset = 0;
 }
 
 static void
@@ -160,7 +168,7 @@ gst_rtp_mp4g_pay_finalize (GObject * object)
 
   rtpmp4gpay = GST_RTP_MP4G_PAY (object);
 
-  gst_rtp_mp4g_pay_reset (rtpmp4gpay);
+  gst_rtp_mp4g_pay_cleanup (rtpmp4gpay);
 
   g_object_unref (rtpmp4gpay->adapter);
   rtpmp4gpay->adapter = NULL;
@@ -561,6 +569,35 @@ gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   return gst_rtp_mp4g_pay_flush (rtpmp4gpay);
 }
 
+static gboolean
+gst_rtp_mp4g_pay_handle_event (GstPad * pad, GstEvent * event)
+{
+  GstRtpMP4GPay *rtpmp4gpay;
+
+  rtpmp4gpay = GST_RTP_MP4G_PAY (gst_pad_get_parent (pad));
+
+  GST_DEBUG ("Got event: %s", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_EOS:
+      /* This flush call makes sure that the last buffer is always pushed
+       * to the base payloader */
+      gst_rtp_mp4g_pay_flush (rtpmp4gpay);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_mp4g_pay_reset (rtpmp4gpay);
+      break;
+    default:
+      break;
+  }
+
+  g_object_unref (rtpmp4gpay);
+
+  /* let parent handle event too */
+  return FALSE;
+}
+
 static GstStateChangeReturn
 gst_rtp_mp4g_pay_change_state (GstElement * element, GstStateChange transition)
 {
@@ -571,13 +608,21 @@ gst_rtp_mp4g_pay_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_rtp_mp4g_pay_reset (rtpmp4gpay);
+      gst_rtp_mp4g_pay_cleanup (rtpmp4gpay);
       break;
     default:
       break;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_rtp_mp4g_pay_cleanup (rtpmp4gpay);
+      break;
+    default:
+      break;
+  }
 
   return ret;
 }
@@ -586,5 +631,5 @@ gboolean
 gst_rtp_mp4g_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp4gpay",
-      GST_RANK_NONE, GST_TYPE_RTP_MP4G_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MP4G_PAY);
 }

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-11-01 18:05+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -70,11 +70,14 @@ msgstr "Este archivo no contiene flujos reproducibles."
 msgid "This file is invalid and cannot be played."
 msgstr "Este archivo no es válido y no se puede reproducir."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Este archivo está incompleto y no se puede reproducir."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Este archivo está corrupto y no se puede reproducir."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Este archivo está incompleto y no se puede reproducir."
 
 msgid "The video in this file might not play correctly."
 msgstr ""
@@ -634,6 +637,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Falló al establecer la entrada %d en el dispositivo %s."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Falló al obtener la entrada actual en el dispositivo «%s». Quizá sea un "
+"dispositivo de radio."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Falló al establecer la entrada %d en el dispositivo %s."
 
 #, c-format

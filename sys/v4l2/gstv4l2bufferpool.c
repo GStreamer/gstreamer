@@ -34,9 +34,19 @@
 
 #include <gstv4l2bufferpool.h>
 #include "gstv4l2src.h"
+#ifdef HAVE_EXPERIMENTAL
 #include "gstv4l2sink.h"
+#endif
 #include "v4l2_calls.h"
 #include "gst/gst-i18n-plugin.h"
+
+/* videodev2.h is not versioned and we can't easily check for the presence
+ * of enum values at compile time, but the V4L2_CAP_VIDEO_OUTPUT_OVERLAY define
+ * was added in the same commit as V4L2_FIELD_INTERLACED_{TB,BT} (b2787845) */
+#ifndef V4L2_CAP_VIDEO_OUTPUT_OVERLAY
+#define V4L2_FIELD_INTERLACED_TB 8
+#define V4L2_FIELD_INTERLACED_BT 9
+#endif
 
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
@@ -263,7 +273,7 @@ gst_v4l2_buffer_pool_get_type (void)
 
   if (G_UNLIKELY (_gst_v4l2_buffer_pool_type == 0)) {
     static const GTypeInfo v4l2_buffer_pool_info = {
-      sizeof (GstBufferClass),
+      sizeof (GstMiniObjectClass),
       NULL,
       NULL,
       gst_v4l2_buffer_pool_class_init,
@@ -290,8 +300,10 @@ get_v4l2_object (GstElement * v4l2elem)
   GstV4l2Object *v4l2object = NULL;
   if (GST_IS_V4L2SRC (v4l2elem)) {
     v4l2object = (GST_V4L2SRC (v4l2elem))->v4l2object;
+#ifdef HAVE_EXPERIMENTAL
   } else if (GST_IS_V4L2SINK (v4l2elem)) {
     v4l2object = (GST_V4L2SINK (v4l2elem))->v4l2object;
+#endif
   } else {
     GST_ERROR_OBJECT (v4l2elem, "unknown v4l2 element");
   }
@@ -454,17 +466,29 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
 
 /**
  * gst_v4l2_buffer_pool_get:
- * @pool: the pool
+ * @pool:   the "this" object
+ * @blocking:  should this call suspend until there is a buffer available
+ *    in the buffer pool?
  *
  * Get an available buffer in the pool
  */
 GstV4l2Buffer *
-gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool)
+gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool, gboolean blocking)
 {
-  GstV4l2Buffer *buf = g_async_queue_try_pop (pool->avail_buffers);
+  GstV4l2Buffer *buf;
 
-  if (buf)
+  if (blocking) {
+    buf = g_async_queue_pop (pool->avail_buffers);
+  } else {
+    buf = g_async_queue_try_pop (pool->avail_buffers);
+  }
+
+  if (buf) {
+    GST_V4L2_BUFFER_POOL_LOCK (pool);
     GST_BUFFER_SIZE (buf) = buf->vbuffer.length;
+    GST_BUFFER_FLAG_UNSET (buf, 0xffffffff);
+    GST_V4L2_BUFFER_POOL_UNLOCK (pool);
+  }
 
   pool->running = TRUE;
 
@@ -545,8 +569,6 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool)
     GST_DEBUG_OBJECT (pool->v4l2elem, "num_live_buffers++: %d",
         pool->num_live_buffers);
 
-    GST_V4L2_BUFFER_POOL_UNLOCK (pool);
-
     /* set top/bottom field first if v4l2_buffer has the information */
     if (buffer.field == V4L2_FIELD_INTERLACED_TB)
       GST_BUFFER_FLAG_SET (pool_buffer, GST_VIDEO_BUFFER_TFF);
@@ -555,6 +577,8 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool)
 
     /* this can change at every frame, esp. with jpeg */
     GST_BUFFER_SIZE (pool_buffer) = buffer.bytesused;
+
+    GST_V4L2_BUFFER_POOL_UNLOCK (pool);
 
     return pool_buffer;
   }

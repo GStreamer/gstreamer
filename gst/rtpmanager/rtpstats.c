@@ -166,7 +166,7 @@ rtp_stats_calculate_rtcp_interval (RTPSessionStats * stats, gboolean we_send,
   if (rtcp_bw <= 0.00001)
     return GST_CLOCK_TIME_NONE;
 
-  avg_rtcp_size = stats->avg_rtcp_packet_size / 16.0;
+  avg_rtcp_size = stats->avg_rtcp_packet_size;
   /*
    * The effective number of sites times the average packet size is
    * the total number of octets sent when each site sends a report.
@@ -176,6 +176,7 @@ rtp_stats_calculate_rtcp_interval (RTPSessionStats * stats, gboolean we_send,
    * time interval we send one report so this time is also our
    * average time between reports.
    */
+  GST_DEBUG ("avg size %f, n %f, rtcp_bw %f", avg_rtcp_size, n, rtcp_bw);
   interval = avg_rtcp_size * n / rtcp_bw;
   if (interval < rtcp_min_time)
     interval = rtcp_min_time;
@@ -245,7 +246,7 @@ rtp_stats_calculate_bye_interval (RTPSessionStats * stats)
   if (rtcp_bw <= 0.0001)
     return GST_CLOCK_TIME_NONE;
 
-  avg_rtcp_size = stats->avg_rtcp_packet_size / 16.0;
+  avg_rtcp_size = stats->avg_rtcp_packet_size;
   /*
    * The effective number of sites times the average packet size is
    * the total number of octets sent when each site sends a report.
@@ -274,7 +275,7 @@ rtp_stats_calculate_bye_interval (RTPSessionStats * stats)
  * Returns: total RTP packets lost.
  */
 gint64
-rtp_stats_get_packets_lost (const RTPSourceStats *stats)
+rtp_stats_get_packets_lost (const RTPSourceStats * stats)
 {
   gint64 lost;
   guint64 extended_max, expected;
@@ -284,4 +285,10 @@ rtp_stats_get_packets_lost (const RTPSourceStats *stats)
   lost = expected - stats->packets_received;
 
   return lost;
+}
+
+void
+rtp_stats_set_min_interval (RTPSessionStats * stats, gdouble min_interval)
+{
+  stats->min_interval = min_interval;
 }

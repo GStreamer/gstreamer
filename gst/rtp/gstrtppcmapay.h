@@ -21,26 +21,26 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstRtpPmcaPay GstRtpPmcaPay;
-typedef struct _GstRtpPmcaPayClass GstRtpPmcaPayClass;
+typedef struct _GstRtpPcmaPay GstRtpPcmaPay;
+typedef struct _GstRtpPcmaPayClass GstRtpPcmaPayClass;
 
 #define GST_TYPE_RTP_PCMA_PAY \
   (gst_rtp_pcma_pay_get_type())
 #define GST_RTP_PCMA_PAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_PCMA_PAY,GstRtpPmcaPay))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_PCMA_PAY,GstRtpPcmaPay))
 #define GST_RTP_PCMA_PAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_PCMA_PAY,GstRtpPmcaPayClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_PCMA_PAY,GstRtpPcmaPayClass))
 #define GST_IS_RTP_PCMA_PAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_PCMA_PAY))
 #define GST_IS_RTP_PCMA_PAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_PCMA_PAY))
 
-struct _GstRtpPmcaPay
+struct _GstRtpPcmaPay
 {
   GstBaseRTPAudioPayload audiopayload;
 };
 
-struct _GstRtpPmcaPayClass
+struct _GstRtpPcmaPayClass
 {
   GstBaseRTPAudioPayloadClass parent_class;
 };

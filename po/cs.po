@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-10-31 10:21+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -70,11 +70,14 @@ msgstr "Tento soubor neobsahuje hratelné proudy."
 msgid "This file is invalid and cannot be played."
 msgstr "Tento soubor je neplatný a nelze jej přehrát."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Tento soubor není úplný a nelze jej přehrát."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Tento soubor je poškozen a nelze jej přehrát."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Tento soubor není úplný a nelze jej přehrát."
 
 msgid "The video in this file might not play correctly."
 msgstr "Video v tomto souboru se nemusí přehrát správně."
@@ -627,6 +630,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Nezdařilo se nastavení vstupu \"%d\" na zařízení \"%s\"."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Nezdařilo se získání aktuálního vstupu na zařízení \"%s\". Možná se jedná o "
+"radiopřijímač."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Nezdařilo se nastavení vstupu \"%d\" na zařízení \"%s\"."
 
 #, c-format

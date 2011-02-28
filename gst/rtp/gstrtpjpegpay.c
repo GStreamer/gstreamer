@@ -248,7 +248,7 @@ gst_rtp_jpeg_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_jpeg_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class, "RTP JPEG payloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Payload-encodes JPEG pictures into RTP packets (RFC 2435)",
       "Axis Communications <dev-gstreamer@axis.com>");
 }
@@ -926,6 +926,6 @@ gst_rtp_jpeg_pay_get_property (GObject * object, guint prop_id,
 gboolean
 gst_rtp_jpeg_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpjpegpay", GST_RANK_NONE,
+  return gst_element_register (plugin, "rtpjpegpay", GST_RANK_SECONDARY,
       GST_TYPE_RTP_JPEG_PAY);
 }

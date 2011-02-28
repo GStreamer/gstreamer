@@ -64,7 +64,7 @@ gst_rtp_siren_pay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_siren_pay_src_template));
   gst_element_class_set_details_simple (element_class,
-      "RTP Payloader for Siren Audio", "Codec/Payloader/Network",
+      "RTP Payloader for Siren Audio", "Codec/Payloader/Network/RTP",
       "Packetize Siren audio streams into RTP packets",
       "Youness Alaoui <kakaroto@kakaroto.homelinux.net>");
 }
@@ -148,5 +148,5 @@ gboolean
 gst_rtp_siren_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpsirenpay",
-      GST_RANK_NONE, GST_TYPE_RTP_SIREN_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_SIREN_PAY);
 }

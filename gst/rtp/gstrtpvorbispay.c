@@ -67,6 +67,8 @@ static GstStateChangeReturn gst_rtp_vorbis_pay_change_state (GstElement *
     element, GstStateChange transition);
 static GstFlowReturn gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * pad,
     GstBuffer * buffer);
+static gboolean gst_rtp_vorbis_pay_handle_event (GstPad * pad,
+    GstEvent * event);
 
 static void
 gst_rtp_vorbis_pay_base_init (gpointer klass)
@@ -79,7 +81,7 @@ gst_rtp_vorbis_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_vorbis_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class, "RTP Vorbis depayloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Payload-encode Vorbis audio into RTP packets (RFC 5215)",
       "Wim Taymans <wimi.taymans@gmail.com>");
 }
@@ -97,6 +99,7 @@ gst_rtp_vorbis_pay_class_init (GstRtpVorbisPayClass * klass)
 
   gstbasertppayload_class->set_caps = gst_rtp_vorbis_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_vorbis_pay_handle_buffer;
+  gstbasertppayload_class->handle_event = gst_rtp_vorbis_pay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtpvorbispay_debug, "rtpvorbispay", 0,
       "Vorbis RTP Payloader");
@@ -110,15 +113,21 @@ gst_rtp_vorbis_pay_init (GstRtpVorbisPay * rtpvorbispay,
 }
 
 static void
+gst_rtp_vorbis_pay_clear_packet (GstRtpVorbisPay * rtpvorbispay)
+{
+  if (rtpvorbispay->packet)
+    gst_buffer_unref (rtpvorbispay->packet);
+  rtpvorbispay->packet = NULL;
+}
+
+static void
 gst_rtp_vorbis_pay_cleanup (GstRtpVorbisPay * rtpvorbispay)
 {
   g_list_foreach (rtpvorbispay->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (rtpvorbispay->headers);
   rtpvorbispay->headers = NULL;
 
-  if (rtpvorbispay->packet)
-    gst_buffer_unref (rtpvorbispay->packet);
-  rtpvorbispay->packet = NULL;
+  gst_rtp_vorbis_pay_clear_packet (rtpvorbispay);
 }
 
 static gboolean
@@ -635,6 +644,22 @@ header_error:
   }
 }
 
+static gboolean
+gst_rtp_vorbis_pay_handle_event (GstPad * pad, GstEvent * event)
+{
+  GstRtpVorbisPay *rtpvorbispay = GST_RTP_VORBIS_PAY (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_vorbis_pay_clear_packet (rtpvorbispay);
+      break;
+    default:
+      break;
+  }
+  /* false to let parent handle event as well */
+  return FALSE;
+}
+
 static GstStateChangeReturn
 gst_rtp_vorbis_pay_change_state (GstElement * element,
     GstStateChange transition)
@@ -665,5 +690,5 @@ gboolean
 gst_rtp_vorbis_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpvorbispay",
-      GST_RANK_NONE, GST_TYPE_RTP_VORBIS_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_VORBIS_PAY);
 }

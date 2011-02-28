@@ -107,7 +107,7 @@ gst_rtp_h264_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_h264_depay_sink_template));
 
   gst_element_class_set_details_simple (element_class, "RTP H264 depayloader",
-      "Codec/Depayloader/Network",
+      "Codec/Depayloader/Network/RTP",
       "Extracts H264 video from RTP packets (RFC 3984)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -130,12 +130,12 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTE_STREAM,
       g_param_spec_boolean ("byte-stream", "Byte Stream",
-          "Generate byte stream format of NALU", DEFAULT_BYTE_STREAM,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Generate byte stream format of NALU (deprecated; use caps)",
+          DEFAULT_BYTE_STREAM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ACCESS_UNIT,
       g_param_spec_boolean ("access-unit", "Access Unit",
-          "Merge NALU into AU (picture)", DEFAULT_ACCESS_UNIT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Merge NALU into AU (picture) (deprecated; use caps)",
+          DEFAULT_ACCESS_UNIT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_rtp_h264_depay_change_state;
 
@@ -214,6 +214,65 @@ gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
   }
 }
 
+static void
+gst_rtp_h264_depay_negotiate (GstRtpH264Depay * rtph264depay)
+{
+  GstCaps *caps;
+  gint byte_stream = -1;
+  gint merge = -1;
+
+  caps =
+      gst_pad_get_allowed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (rtph264depay));
+
+  GST_DEBUG_OBJECT (rtph264depay, "allowed caps: %" GST_PTR_FORMAT, caps);
+
+  if (caps) {
+    if (gst_caps_get_size (caps) > 0) {
+      GstStructure *s = gst_caps_get_structure (caps, 0);
+      const gchar *str = NULL;
+
+      if ((str = gst_structure_get_string (s, "stream-format"))) {
+        if (strcmp (str, "avc") == 0) {
+          byte_stream = FALSE;
+        } else if (strcmp (str, "byte-stream") == 0) {
+          byte_stream = TRUE;
+        } else {
+          GST_DEBUG_OBJECT (rtph264depay, "unknown stream-format: %s", str);
+        }
+      }
+
+      if ((str = gst_structure_get_string (s, "alignment"))) {
+        if (strcmp (str, "au") == 0) {
+          merge = TRUE;
+        } else if (strcmp (str, "nal") == 0) {
+          merge = FALSE;
+        } else {
+          GST_DEBUG_OBJECT (rtph264depay, "unknown alignment: %s", str);
+        }
+      }
+    }
+    gst_caps_unref (caps);
+  }
+
+  if (byte_stream >= 0) {
+    GST_DEBUG_OBJECT (rtph264depay, "downstream requires byte-stream %d",
+        byte_stream);
+    if (rtph264depay->byte_stream != byte_stream) {
+      GST_WARNING_OBJECT (rtph264depay,
+          "overriding property setting based on caps");
+      rtph264depay->byte_stream = byte_stream;
+    }
+  }
+  if (merge >= 0) {
+    GST_DEBUG_OBJECT (rtph264depay, "downstream requires merge %d", merge);
+    if (rtph264depay->merge != merge) {
+      GST_WARNING_OBJECT (rtph264depay,
+          "overriding property setting based on caps");
+      rtph264depay->merge = merge;
+    }
+  }
+}
+
 static gboolean
 gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
@@ -238,6 +297,9 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   ps = gst_structure_get_string (structure, "sprop-parameter-sets");
   /* hex: AVCProfileIndication:8 | profile_compat:8 | AVCLevelIndication:8 */
   profile = gst_structure_get_string (structure, "profile-level-id");
+
+  /* negotiate with downstream w.r.t. output format and alignment */
+  gst_rtp_h264_depay_negotiate (rtph264depay);
 
   if (rtph264depay->byte_stream && ps != NULL) {
     /* for bytestream we only need the parameter sets but we don't error out
@@ -383,7 +445,12 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
     gst_caps_set_simple (srccaps,
         "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+    gst_buffer_unref (codec_data);
   }
+
+  gst_caps_set_simple (srccaps, "stream-format", G_TYPE_STRING,
+      rtph264depay->byte_stream ? "byte-stream" : "avc",
+      "alignment", G_TYPE_STRING, rtph264depay->merge ? "au" : "nal", NULL);
 
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
@@ -806,5 +873,5 @@ gboolean
 gst_rtp_h264_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtph264depay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_H264_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_H264_DEPAY);
 }

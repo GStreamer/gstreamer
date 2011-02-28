@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# A simple RTP server 
+# A simple RTP server
 #  sends the output of v4l2src as h264 encoded RTP on port 5000, RTCP is sent on
 #  port 5001. The destination is 127.0.0.1.
 #  the video receiver RTCP reports are received on port 5005
@@ -8,31 +8,31 @@
 #  port 5003. The destination is 127.0.0.1.
 #  the receiver RTCP reports are received on port 5007
 #
-# .-------.    .-------.    .-------.      .----------.     .-------.
-# |v4lssrc|    |h264enc|    |h264pay|      | rtpbin   |     |udpsink|  RTP
-# |      src->sink    src->sink    src->send_rtp send_rtp->sink     | port=5000
-# '-------'    '-------'    '-------'      |          |     '-------'
-#                                          |          |      
-#                                          |          |     .-------.
-#                                          |          |     |udpsink|  RTCP
-#                                          |    send_rtcp->sink     | port=5001
-#                           .-------.      |          |     '-------' sync=false
-#                RTCP       |udpsrc |      |          |               async=false
-#              port=5005    |     src->recv_rtcp      |                       
-#                           '-------'      |          |              
-#                                          |          |
-# .-------.    .-------.    .-------.      |          |     .-------.
-# |autoaudiosrc|    |alawenc|    |pcmapay|      | rtpbin   |     |udpsink|  RTP
-# |      src->sink    src->sink    src->send_rtp send_rtp->sink     | port=5002
-# '-------'    '-------'    '-------'      |          |     '-------'
-#                                          |          |      
-#                                          |          |     .-------.
-#                                          |          |     |udpsink|  RTCP
-#                                          |    send_rtcp->sink     | port=5003
-#                           .-------.      |          |     '-------' sync=false
-#                RTCP       |udpsrc |      |          |               async=false
-#              port=5007    |     src->recv_rtcp      |                       
-#                           '-------'      '----------'              
+#  .-------.    .-------.    .-------.      .----------.     .-------.
+#  |v4lssrc|    |h264enc|    |h264pay|      | rtpbin   |     |udpsink|  RTP
+#  |      src->sink    src->sink    src->send_rtp send_rtp->sink     | port=5000
+#  '-------'    '-------'    '-------'      |          |     '-------'
+#                                           |          |
+#                                           |          |     .-------.
+#                                           |          |     |udpsink|  RTCP
+#                                           |    send_rtcp->sink     | port=5001
+#                            .-------.      |          |     '-------' sync=false
+#                 RTCP       |udpsrc |      |          |               async=false
+#               port=5005    |     src->recv_rtcp      |
+#                            '-------'      |          |
+#                                           |          |
+# .--------.    .-------.    .-------.      |          |     .-------.
+# |audiosrc|    |alawenc|    |pcmapay|      | rtpbin   |     |udpsink|  RTP
+# |       src->sink    src->sink    src->send_rtp send_rtp->sink     | port=5002
+# '--------'    '-------'    '-------'      |          |     '-------'
+#                                           |          |
+#                                           |          |     .-------.
+#                                           |          |     |udpsink|  RTCP
+#                                           |    send_rtcp->sink     | port=5003
+#                            .-------.      |          |     '-------' sync=false
+#                 RTCP       |udpsrc |      |          |               async=false
+#               port=5007    |     src->recv_rtcp      |
+#                            '-------'      '----------'
 #
 # ideally we should transport the properties on the RTP udpsink pads to the
 # receiver in order to transmit the SPS and PPS earlier.
@@ -41,7 +41,7 @@
 DEST=127.0.0.1
 
 # tuning parameters to make the sender send the streams out of sync. Can be used
-# ot test the client RTCP synchronisation. 
+# ot test the client RTCP synchronisation.
 #VOFFSET=900000000
 VOFFSET=0
 AOFFSET=0
@@ -50,7 +50,7 @@ AOFFSET=0
 VELEM="v4l2src"
 #VELEM="videotestsrc is-live=1"
 VCAPS="video/x-raw-yuv,width=352,height=288,framerate=15/1"
-VSOURCE="$VELEM ! $VCAPS ! queue ! videorate ! ffmpegcolorspace"
+VSOURCE="$VELEM ! queue ! videorate ! ffmpegcolorspace ! $VCAPS"
 VENC="x264enc tune=zerolatency byte-stream=true bitrate=300 ! rtph264pay"
 
 VRTPSINK="udpsink port=5000 host=$DEST ts-offset=$VOFFSET name=vrtpsink"

@@ -745,7 +745,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Buffer Mode</NICK>
 <BLURB>Control the buffering algorithm in use.</BLURB>
-<DEFAULT>Slave receiver to sender clock</DEFAULT>
+<DEFAULT>Choose mode depending on stream live</DEFAULT>
 </ARG>
 
 <ARG>
@@ -765,7 +765,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>UDP Buffer Size</NICK>
 <BLURB>Size of the kernel UDP receive buffer in bytes, 0=default.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>524288</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1999,6 +1999,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstProgressReport::do-query</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use a query instead of buffer metadata to determine stream position</NICK>
+<BLURB>Use a query instead of buffer metadata to determine stream position.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstNavSeek::seek-offset</NAME>
 <TYPE>gdouble</TYPE>
 <RANGE>>= 0</RANGE>
@@ -2519,6 +2529,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiUDPSink::buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of the kernel send buffer in bytes, 0=default.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstCmmlDec::wait-clip-end-time</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -2689,6 +2709,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstXImageSrc::remote</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Remote dispay</NICK>
+<BLURB>Whether the display is remote.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstVideoBalance::brightness</NAME>
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
@@ -2766,6 +2796,16 @@
 <NICK>IDCT Method</NICK>
 <BLURB>The IDCT algorithm to use.</BLURB>
 <DEFAULT>Faster, less accurate integer method</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJpegDec::max-errors</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Consecutive Decoding Errors</NICK>
+<BLURB>Error out after receiving N consecutive decoding errors (-1 = never fail, 0 = automatic, 1 = fail on first error).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19674,7 +19714,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Byte Stream</NICK>
-<BLURB>Generate byte stream format of NALU.</BLURB>
+<BLURB>Generate byte stream format of NALU (deprecated; use caps).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -19684,7 +19724,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Access Unit</NICK>
-<BLURB>Merge NALU into AU (picture).</BLURB>
+<BLURB>Merge NALU into AU (picture) (deprecated; use caps).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -19836,6 +19876,16 @@
 <NICK>stream properties</NICK>
 <BLURB>list of pulseaudio stream properties.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseSrc::client</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Client</NICK>
+<BLURB>The PulseAudio client_name_to_use.</BLURB>
+<DEFAULT>"<unknown>"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20315,7 +20365,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Method</NICK>
 <BLURB>Deinterlace Method.</BLURB>
-<DEFAULT>Motion Adaptive: Advanced Detection</DEFAULT>
+<DEFAULT>Television: Full resolution</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20805,7 +20855,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Queue size</NICK>
 <BLURB>Number of buffers to be enqueud in the driver in streaming mode.</BLURB>
-<DEFAULT>8</DEFAULT>
+<DEFAULT>12</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20846,6 +20896,56 @@
 <NICK>Saturation</NICK>
 <BLURB>Picture color saturation or chroma gain.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::crop-height</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Crop height</NICK>
+<BLURB>The height of the video crop; default is equal to negotiated image height.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::crop-left</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Crop left</NICK>
+<BLURB>The leftmost (x) coordinate of the video crop; top left corner of image is 0,0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::crop-top</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Crop top</NICK>
+<BLURB>The topmost (y) coordinate of the video crop; top left corner of image is 0,0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::crop-width</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Crop width</NICK>
+<BLURB>The width of the video crop; default is equal to negotiated image width.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::min-queued-bufs</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 16</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum queued bufs</NICK>
+<BLURB>Minimum number of queued bufs; v4l2sink won't dqbuf if the driver doesn't have more than this number (which normally you shouldn't change).</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21016,5 +21116,85 @@
 <NICK>Background</NICK>
 <BLURB>Background type.</BLURB>
 <DEFAULT>Checker pattern</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJ2KPay::buffer-list</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer List</NICK>
+<BLURB>Use Buffer Lists.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJ2KDepay::buffer-list</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer List</NICK>
+<BLURB>Use Buffer Lists.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSrc::client</NAME>
+<TYPE>JackClient*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>JackClient</NICK>
+<BLURB>Handle for jack client.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSrc::connect</NAME>
+<TYPE>GstJackConnect</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connect</NICK>
+<BLURB>Specify how the input ports will be connected.</BLURB>
+<DEFAULT>Automatically connect ports to physical ports</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSrc::server</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Server</NICK>
+<BLURB>The Jack server to connect to (NULL = default).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSink::client</NAME>
+<TYPE>JackClient*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>JackClient</NICK>
+<BLURB>Handle for jack client.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSink::connect</NAME>
+<TYPE>GstJackConnect</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connect</NICK>
+<BLURB>Specify how the output ports will be connected.</BLURB>
+<DEFAULT>Automatically connect ports to physical ports</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSink::server</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Server</NICK>
+<BLURB>The Jack server to connect to (NULL = default).</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 

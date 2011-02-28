@@ -133,6 +133,12 @@ gst_ebml_write_reset (GstEbmlWrite * ebml)
     gst_byte_writer_free (ebml->cache);
     ebml->cache = NULL;
   }
+
+  if (ebml->caps) {
+    gst_caps_unref (ebml->caps);
+    ebml->caps = NULL;
+  }
+
   ebml->last_write_result = GST_FLOW_OK;
   ebml->timestamp = GST_CLOCK_TIME_NONE;
 }

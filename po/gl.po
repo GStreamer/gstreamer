@@ -1,21 +1,21 @@
 # Galician translation of gst-plugins-good.
 # Copyright (C) 2009 gst-plugins-good's COPYRIGHT HOLDER
 # This file is distributed under the same license as the gst-plugins-good package.
-# Fran Diéguez <frandieguez@ubuntu.com>, 2009, 2010.
+# Fran Diéguez <frandieguez@ubuntu.com>, 2009, 2010, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-08-12 15:46+0200\n"
+"POT-Creation-Date: 2011-01-11 19:32+0000\n"
+"PO-Revision-Date: 2011-01-09 21:20+0100\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
 "Language: gl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n!=1);\\\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
 
 msgid "Could not establish connection to sound server"
 msgstr "Non foi posíbel estabelecer a conexión co servidor de son"
@@ -38,28 +38,28 @@ msgid "Could not connect to server"
 msgstr "Non foi posíbel conectarse ao servidor"
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "O servidor non admite a busca."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Non foi posíbel conectarse ao servidor"
+msgstr "Non foi posíbel resolver o nome do servidor."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Non foi posíbel estabelecer a conexión co servidor de son"
+msgstr "Non foi posíbel estabelecer a conexión co servidor."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Produciuse un fallo de configuración da conexión segura."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
+"Produciuse un erro de rede ou o servidor pechou a conexión de forma "
+"inesperada."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "O servidor enviou datos erróneos."
 
 msgid "No URL set."
-msgstr ""
+msgstr "No existe un URL estabelecido."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "O audio non existe ou non é válido, o fluxo AVI está corrompido."
@@ -70,11 +70,14 @@ msgstr "Este ficheiro non contén ningún fluxo reproducíbel."
 msgid "This file is invalid and cannot be played."
 msgstr "Este ficheiro é incorrecto e non pode reproducirse."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Este ficheiro está incompleto e non pode reproducirse."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Este ficheiro está danado e non pode reproducirse."
+
+msgid "Invalid atom size."
+msgstr "Tamaño atom non válido."
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Este ficheiro está incompleto e non pode reproducirse."
 
 msgid "The video in this file might not play correctly."
 msgstr "Este vídeo neste ficheiro podería non reproducirse correctamente."
@@ -205,44 +208,41 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Non foi posíbel abrir o dispositivo de son para a gravación."
 
-#, fuzzy
 msgid "Could not open audio device for mixer control handling."
-msgstr "Non foi posíbel abrir o dispositivo de son para a gravación."
+msgstr ""
+"Non foi posíbel abrir o dispositivo de son para a súa xestión polo control "
+"de misturado."
 
-#, fuzzy
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
-"Non foi posíbel abrir o dispositivo de son para a gravación. Vostede non ten "
-"permisos para abrir o dispositivo."
+"Non foi posíbel abrir o dispositivo de son para a súa xestión polo control "
+"de misturado. Este elemento non admite esta versión do Open Sound System."
 
 msgid "Master"
-msgstr ""
+msgstr "Mestre"
 
 msgid "Front"
-msgstr ""
+msgstr "Frontal"
 
-#, fuzzy
 msgid "Rear"
-msgstr "Gravar"
+msgstr "Treseiro"
 
-#, fuzzy
 msgid "Headphones"
-msgstr "Cascos"
+msgstr "Auriculares"
 
 msgid "Center"
-msgstr ""
+msgstr "Centro"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
 msgid "Surround"
-msgstr ""
+msgstr "Envolvente"
 
-#, fuzzy
 msgid "Side"
-msgstr "Vídeo"
+msgstr "Lateral"
 
 msgid "Built-in Speaker"
 msgstr "Altofalante interno"
@@ -253,308 +253,286 @@ msgstr "Saída AUX 1"
 msgid "AUX 2 Out"
 msgstr "Saída AUX 2"
 
-#, fuzzy
 msgid "AUX Out"
-msgstr "Saída AUX 1"
+msgstr "Saída AUX"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "Profundidade 3D"
 
 msgid "3D Center"
-msgstr ""
+msgstr "Centro 3D"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "Mellora 3D"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Cascos"
+msgstr "Teléfono"
 
 msgid "Line Out"
 msgstr "Liña de saída"
 
-#, fuzzy
 msgid "Line In"
 msgstr "Liña de entrada"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "CD interno"
 
-#, fuzzy
 msgid "Video In"
-msgstr "Vídeo"
+msgstr "Entrada de vídeo"
 
-#, fuzzy
 msgid "AUX 1 In"
-msgstr "Saída AUX 1"
+msgstr "Entrada AUX 1"
 
-#, fuzzy
 msgid "AUX 2 In"
-msgstr "Saída AUX 2"
+msgstr "Entrada AUX 2"
 
 msgid "AUX In"
-msgstr ""
+msgstr "Entrada AUX"
 
-#, fuzzy
 msgid "Record Gain"
-msgstr "Gravar"
+msgstr "Ganancia de gravación"
 
-#, fuzzy
 msgid "Output Gain"
 msgstr "Ganancia de saída"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Micrófono"
+msgstr "Aumento do micrófono"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Bucle local"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Diagnóstico"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Aumento de baixos"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Portos de reprodución"
 
 msgid "Input"
-msgstr ""
+msgstr "Entrada"
 
-#, fuzzy
 msgid "Record Source"
-msgstr "Gravar"
+msgstr "Orixe da gravación"
 
-#, fuzzy
 msgid "Monitor Source"
-msgstr "Monitor"
+msgstr "Monitor de orixe"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Pitido de teclado"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Simular estéreo"
 
 msgid "Stereo"
-msgstr ""
+msgstr "Estéreo"
 
 msgid "Surround Sound"
-msgstr ""
+msgstr "Son envolvente"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Micrófono"
+msgstr "Ganancia do micrófono"
 
-#, fuzzy
 msgid "Speaker Source"
-msgstr "Altofalante"
+msgstr "Altofalante de orixe"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Micrófono"
+msgstr "Micrófono de orixe"
 
 msgid "Jack"
-msgstr ""
+msgstr "Jack"
 
 msgid "Center / LFE"
-msgstr ""
+msgstr "Centro / LFE"
 
 msgid "Stereo Mix"
-msgstr ""
+msgstr "Misturador estéreo"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Misturador mono"
 
 msgid "Input Mix"
-msgstr ""
+msgstr "Misturador de entrada"
 
-#, fuzzy
 msgid "SPDIF In"
-msgstr "Saída SPDIF"
+msgstr "Entrada SPDIF"
 
 msgid "SPDIF Out"
 msgstr "Saída SPDIF"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Micrófono"
+msgstr "Micrófono 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Micrófono"
+msgstr "Micrófono 2"
 
-#, fuzzy
 msgid "Digital Out"
-msgstr "Dixital 1"
+msgstr "Saída dixital"
 
-#, fuzzy
 msgid "Digital In"
-msgstr "Dixital 1"
+msgstr "Entrada dixital"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Módem"
 
 msgid "Handset"
-msgstr ""
+msgstr "Auriculares"
 
 msgid "Other"
-msgstr ""
+msgstr "Outro"
 
 msgid "None"
-msgstr ""
+msgstr "Ningún"
 
 msgid "On"
-msgstr ""
+msgstr "Acendido"
 
 msgid "Off"
-msgstr ""
+msgstr "Apagado"
 
 msgid "Mute"
-msgstr ""
+msgstr "Silenciar"
 
 msgid "Fast"
-msgstr ""
+msgstr "Rápido"
 
 #. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
-msgstr ""
+msgstr "Moi baixo"
 
 #. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
-msgstr ""
+msgstr "Baixo"
 
 #. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
-msgstr ""
+msgstr "Medio"
 
 #. TRANSLATORS: "High" is a quality setting here
 msgid "High"
-msgstr ""
+msgstr "Alto"
 
 #. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
-msgstr ""
+msgstr "Moi alto"
 
 #. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
-msgstr ""
+msgstr "Produción"
 
-#, fuzzy
 msgid "Front Panel Microphone"
-msgstr "Micrófono"
+msgstr "Micrófono do panel frontal"
 
 msgid "Front Panel Line In"
-msgstr ""
+msgstr "Entrada do panel frontal"
 
 msgid "Front Panel Headphones"
-msgstr ""
+msgstr "Auriculares do panel frontal"
 
 msgid "Front Panel Line Out"
-msgstr ""
+msgstr "Saída do panel frontal"
 
 msgid "Green Connector"
-msgstr ""
+msgstr "Conectador verde"
 
 msgid "Pink Connector"
-msgstr ""
+msgstr "Conectador rosa"
 
 msgid "Blue Connector"
-msgstr ""
+msgstr "Conectador azul"
 
 msgid "White Connector"
-msgstr ""
+msgstr "Conectador branco"
 
 msgid "Black Connector"
-msgstr ""
+msgstr "Conectador negro"
 
 msgid "Gray Connector"
-msgstr ""
+msgstr "Conectador gris"
 
 msgid "Orange Connector"
-msgstr ""
+msgstr "Conectador laranxa"
 
 msgid "Red Connector"
-msgstr ""
+msgstr "Conectador vermello"
 
 msgid "Yellow Connector"
-msgstr ""
+msgstr "Conectador amarelo"
 
 msgid "Green Front Panel Connector"
-msgstr ""
+msgstr "Conectador verde do panel frontal"
 
 msgid "Pink Front Panel Connector"
-msgstr ""
+msgstr "Conectador rosa do panel frontal"
 
 msgid "Blue Front Panel Connector"
-msgstr ""
+msgstr "Conectador azul do panel frontal"
 
 msgid "White Front Panel Connector"
-msgstr ""
+msgstr "Conectador branco do panel frontal"
 
 msgid "Black Front Panel Connector"
-msgstr ""
+msgstr "Conectador negro do panel frontal"
 
 msgid "Gray Front Panel Connector"
-msgstr ""
+msgstr "Conectador gris do panel frontal"
 
 msgid "Orange Front Panel Connector"
-msgstr ""
+msgstr "Conectador laranxado panel frontal"
 
 msgid "Red Front Panel Connector"
-msgstr ""
+msgstr "Conectador vermello do panel frontal"
 
 msgid "Yellow Front Panel Connector"
-msgstr ""
+msgstr "Conectador amarelo do panel frontal"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Expandir saída"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Redución de canles"
 
 msgid "Virtual Mixer Input"
-msgstr ""
+msgstr "Entrada do misturador virtual"
 
 msgid "Virtual Mixer Output"
-msgstr ""
+msgstr "Saída do misturador virtual"
 
 msgid "Virtual Mixer Channels"
-msgstr ""
+msgstr "Canles do misturador virtual"
 
 #. TRANSLATORS: name + number of a volume mixer control
 #, c-format
 msgid "%s %d Function"
-msgstr ""
+msgstr "Función %s %d"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "Función %s"
 
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Non foi posíbel abrir o dispositivo de son. Vostede non ten permisos para "
-"abrir o dispositivo."
+"Non foi posíbel abrir o dispositivo de son para a reprodución. Esta versión "
+"do Open Sound System non está admitida por este elemento."
 
 msgid "Playback is not supported by this audio device."
-msgstr ""
+msgstr "Este dispositivo de son non admite a reprodución."
 
 msgid "Audio playback error."
-msgstr ""
+msgstr "Erro de reprodución de son."
 
 msgid "Recording is not supported by this audio device."
-msgstr ""
+msgstr "Este dispositivo de son non admite a gravación."
 
-#, fuzzy
 msgid "Error recording from audio device."
-msgstr "Produciuse un erro ao ler %d bytes desde o dispositivo «%s»."
+msgstr "Erro ao gravar do dispositivo de son."
 
 msgid "Gain"
 msgstr "Ganancia"
@@ -662,6 +640,17 @@ msgstr ""
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Produciuse un fallo ao estabelecer a entrada %d no dispositivo %s."
+
+#, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Produciuse un fallo ao obter a entrada actual no dispositivo «%s». Quizais "
+"sexa un dispositivo de radio"
+
+#, c-format
+msgid "Failed to set output %d on device %s."
+msgstr "Produciuse un fallo ao estabelecer a saída %d no dispositivo %s."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."

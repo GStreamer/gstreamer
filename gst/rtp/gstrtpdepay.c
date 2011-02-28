@@ -72,7 +72,7 @@ gst_rtp_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_depay_sink_rtcp_template));
   gst_element_class_set_details_simple (gstelement_class,
-      "Dummy RTP session manager", "Codec/Depayloader/Network",
+      "Dummy RTP session manager", "Codec/Depayloader/Network/RTP",
       "Accepts raw RTP and RTCP packets and sends them forward",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -158,5 +158,5 @@ gboolean
 gst_rtp_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_DEPAY);
 }

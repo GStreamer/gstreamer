@@ -55,6 +55,48 @@
  * from another machine, change this address. */
 #define DEST_HOST "127.0.0.1"
 
+/* print the stats of a source */
+static void
+print_source_stats (GObject * source)
+{
+  GstStructure *stats;
+  gchar *str;
+
+  g_return_if_fail (source != NULL);
+
+  /* get the source stats */
+  g_object_get (source, "stats", &stats, NULL);
+
+  /* simply dump the stats structure */
+  str = gst_structure_to_string (stats);
+  g_print ("source stats: %s\n", str);
+
+  gst_structure_free (stats);
+  g_free (str);
+}
+
+/* will be called when gstrtpbin signals on-ssrc-active. It means that an RTCP
+ * packet was received from another source. */
+static void
+on_ssrc_active_cb (GstElement * rtpbin, guint sessid, guint ssrc,
+    GstElement * depay)
+{
+  GObject *session, *isrc, *osrc;
+
+  g_print ("got RTCP from session %u, SSRC %u\n", sessid, ssrc);
+
+  /* get the right session */
+  g_signal_emit_by_name (rtpbin, "get-internal-session", sessid, &session);
+
+  /* get the internal source (the SSRC allocated to us, the receiver */
+  g_object_get (session, "internal-source", &isrc, NULL);
+  print_source_stats (isrc);
+
+  /* get the remote source that sent us RTCP */
+  g_signal_emit_by_name (session, "get-source-by-ssrc", ssrc, &osrc);
+  print_source_stats (osrc);
+}
+
 /* will be called when rtpbin has validated a payload that we can depayload */
 static void
 pad_added_cb (GstElement * rtpbin, GstPad * new_pad, GstElement * depay)
@@ -173,6 +215,10 @@ main (int argc, char *argv[])
    * dynamically so we connect to the pad-added signal, pass the depayloader as
    * user_data so that we can link to it. */
   g_signal_connect (rtpbin, "pad-added", G_CALLBACK (pad_added_cb), audiodepay);
+
+  /* give some stats when we receive RTCP */
+  g_signal_connect (rtpbin, "on-ssrc-active", G_CALLBACK (on_ssrc_active_cb),
+      audiodepay);
 
   /* set the pipeline to playing */
   g_print ("starting receiver pipeline\n");

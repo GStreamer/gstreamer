@@ -262,7 +262,8 @@ gst_ebml_read_master (GstEbmlRead * ebml, guint32 * id)
     return ret;
 
   /* we just at least peeked the id */
-  g_assert (gst_byte_reader_skip (gst_ebml_read_br (ebml), prefix));
+  if (!gst_byte_reader_skip (gst_ebml_read_br (ebml), prefix))
+    return GST_FLOW_ERROR;      /* FIXME: do proper error handling */
 
   m.offset = gst_ebml_read_get_pos (ebml);
   if (!gst_byte_reader_get_data (gst_ebml_read_br (ebml), length, &data))
@@ -329,7 +330,8 @@ gst_ebml_read_buffer (GstEbmlRead * ebml, guint32 * id, GstBuffer ** buf)
     return ret;
 
   /* we just at least peeked the id */
-  g_assert (gst_byte_reader_skip (gst_ebml_read_br (ebml), prefix));
+  if (!gst_byte_reader_skip (gst_ebml_read_br (ebml), prefix))
+    return GST_FLOW_ERROR;      /* FIXME: do proper error handling */
 
   if (G_LIKELY (length > 0)) {
     guint offset;
@@ -367,7 +369,8 @@ gst_ebml_read_bytes (GstEbmlRead * ebml, guint32 * id, const guint8 ** data,
     return ret;
 
   /* we just at least peeked the id */
-  g_assert (gst_byte_reader_skip (gst_ebml_read_br (ebml), prefix));
+  if (!gst_byte_reader_skip (gst_ebml_read_br (ebml), prefix))
+    return GST_FLOW_ERROR;      /* FIXME: do proper error handling */
 
   *data = NULL;
   if (G_LIKELY (length >= 0)) {

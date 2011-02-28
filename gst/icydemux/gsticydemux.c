@@ -301,6 +301,7 @@ gst_icydemux_unicodify (const gchar * str)
   return gst_tag_freeform_string_to_utf8 (str, -1, env_vars);
 }
 
+/* takes ownership of tag list */
 static gboolean
 gst_icydemux_tag_found (GstICYDemux * icydemux, GstTagList * tags)
 {
@@ -309,10 +310,13 @@ gst_icydemux_tag_found (GstICYDemux * icydemux, GstTagList * tags)
     return gst_icydemux_send_tag_event (icydemux, tags);
 
   /* if we haven't a source pad yet, cache the tags */
-  if (!icydemux->cached_tags)
-    icydemux->cached_tags = gst_tag_list_new ();
-
-  gst_tag_list_insert (icydemux->cached_tags, tags, GST_TAG_MERGE_REPLACE_ALL);
+  if (!icydemux->cached_tags) {
+    icydemux->cached_tags = tags;
+  } else {
+    gst_tag_list_insert (icydemux->cached_tags, tags,
+        GST_TAG_MERGE_REPLACE_ALL);
+    gst_tag_list_free (tags);
+  }
 
   return TRUE;
 }
@@ -320,12 +324,11 @@ gst_icydemux_tag_found (GstICYDemux * icydemux, GstTagList * tags)
 static void
 gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
 {
-  GstTagList *tags = gst_tag_list_new ();
+  GstTagList *tags;
   const guint8 *data;
   int length, i;
   gchar *buffer;
   gchar **strings;
-  gboolean found_tag = FALSE;
 
   length = gst_adapter_available (icydemux->meta_adapter);
 
@@ -333,10 +336,9 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
 
   /* Now, copy this to a buffer where we can NULL-terminate it to make things
    * a bit easier, then do that parsing. */
-  buffer = g_malloc (length + 1);
-  memcpy (buffer, data, length);
-  buffer[length] = 0;
+  buffer = g_strndup ((const gchar *) data, length);
 
+  tags = gst_tag_list_new ();
   strings = g_strsplit (buffer, "';", 0);
 
   for (i = 0; strings[i]; i++) {
@@ -347,7 +349,6 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
         gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
             title, NULL);
         g_free (title);
-        found_tag = TRUE;
       }
     } else if (!g_ascii_strncasecmp (strings[i], "StreamUrl=", 10)) {
       char *url = gst_icydemux_unicodify (strings[i] + 11);
@@ -356,7 +357,6 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
         gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_HOMEPAGE,
             url, NULL);
         g_free (url);
-        found_tag = TRUE;
       }
     }
   }
@@ -365,8 +365,10 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
   g_free (buffer);
   gst_adapter_clear (icydemux->meta_adapter);
 
-  if (found_tag)
+  if (!gst_tag_list_is_empty (tags))
     gst_icydemux_tag_found (icydemux, tags);
+  else
+    gst_tag_list_free (tags);
 }
 
 static gboolean
@@ -379,7 +381,7 @@ gst_icydemux_handle_event (GstPad * pad, GstEvent * event)
     GstTagList *tags;
 
     gst_event_parse_tag (event, &tags);
-    result = gst_icydemux_tag_found (icydemux, tags);
+    result = gst_icydemux_tag_found (icydemux, gst_tag_list_copy (tags));
     gst_event_unref (event);
     return result;
   }
@@ -617,6 +619,7 @@ gst_icydemux_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+/* takes ownership of tag list */
 static gboolean
 gst_icydemux_send_tag_event (GstICYDemux * icydemux, GstTagList * tags)
 {

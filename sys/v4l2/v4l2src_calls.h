@@ -31,7 +31,8 @@ gboolean   gst_v4l2src_get_capture       (GstV4l2Src * v4l2src);
 gboolean   gst_v4l2src_set_capture       (GstV4l2Src * v4l2src,
                                           guint32 pixelformat,
                                           guint32 width, guint32 height,
-				          guint32 fps_n, guint32 fps_d);
+                                          gboolean interlaced,
+                                          guint32 fps_n, guint32 fps_d);
 
 gboolean   gst_v4l2src_capture_init      (GstV4l2Src * v4l2src, GstCaps *caps);
 gboolean   gst_v4l2src_capture_start     (GstV4l2Src * v4l2src);

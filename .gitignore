@@ -43,3 +43,5 @@ gst/deinterlace/tvtime.h
 
 tmp-orc.c
 *orc.h
+
+/tests/examples/jack/jack_client

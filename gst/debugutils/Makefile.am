@@ -46,8 +46,6 @@ libgstdebug_la_SOURCES = \
 	cpureport.c \
 	testplugin.c
 
-# 	negotiation.c
-
 libgstdebug_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
 libgstdebug_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
 libgstdebug_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

@@ -52,7 +52,7 @@ GST_DEBUG_CATEGORY_STATIC (deinterlace_debug);
 /* Properties */
 
 #define DEFAULT_MODE            GST_DEINTERLACE_MODE_AUTO
-#define DEFAULT_METHOD          GST_DEINTERLACE_GREEDY_H
+#define DEFAULT_METHOD          GST_DEINTERLACE_LINEAR
 #define DEFAULT_FIELDS          GST_DEINTERLACE_ALL
 #define DEFAULT_FIELD_LAYOUT    GST_DEINTERLACE_LAYOUT_AUTO
 
@@ -160,34 +160,24 @@ gst_deinterlace_modes_get_type (void)
   return deinterlace_modes_type;
 }
 
+#define DEINTERLACE_CAPS \
+    GST_VIDEO_CAPS_YUV ("{ AYUV, Y444, YUY2, YVYU, UYVY, Y42B, I420, YV12, Y41B, NV12, NV21 }") ";" \
+    GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";" \
+    GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";" \
+    GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";" \
+    GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";" \
+    GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR
+
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_YUV ("Y444")
-        ";" GST_VIDEO_CAPS_YUV ("YUY2") ";" GST_VIDEO_CAPS_YUV ("YVYU") ";"
-        GST_VIDEO_CAPS_YUV ("UYVY") ";"
-        GST_VIDEO_CAPS_YUV ("Y42B") ";" GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("Y41B") ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR)
+    GST_STATIC_CAPS (DEINTERLACE_CAPS)
     );
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_YUV ("Y444")
-        ";" GST_VIDEO_CAPS_YUV ("YUY2") ";" GST_VIDEO_CAPS_YUV ("YVYU") ";"
-        GST_VIDEO_CAPS_YUV ("UYVY") ";"
-        GST_VIDEO_CAPS_YUV ("Y42B") ";" GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("Y41B") ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR)
+    GST_STATIC_CAPS (DEINTERLACE_CAPS)
     );
 
 static void gst_deinterlace_finalize (GObject * self);
@@ -296,6 +286,7 @@ gst_deinterlace_set_method (GstDeinterlace * self, GstDeinterlaceMethods method)
               self->height)) {
         GST_DEBUG_OBJECT (self, "Using method %d", i);
         method_type = tmp;
+        method = i;
         break;
       }
     }
@@ -369,7 +360,7 @@ gst_deinterlace_base_init (gpointer klass)
 
   gst_element_class_set_details_simple (element_class,
       "Deinterlacer",
-      "Filter/Video",
+      "Filter/Effect/Video/Deinterlace",
       "Deinterlace Methods ported from DScaler/TvTime",
       "Martin Eikermann <meiker@upb.de>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
@@ -573,8 +564,6 @@ gst_deinterlace_init (GstDeinterlace * self, GstDeinterlaceClass * klass)
       GST_DEBUG_FUNCPTR (gst_deinterlace_src_query));
   gst_pad_set_getcaps_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_deinterlace_getcaps));
-  gst_pad_set_setcaps_function (self->srcpad,
-      GST_DEBUG_FUNCPTR (gst_deinterlace_setcaps));
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   self->mode = DEFAULT_MODE;
@@ -593,6 +582,16 @@ gst_deinterlace_reset_history (GstDeinterlace * self, gboolean drop_all)
 {
   gint i;
 
+  if (!drop_all) {
+    GST_DEBUG_OBJECT (self, "Flushing history (count %d)", self->history_count);
+    while (self->history_count > 0) {
+      if (gst_deinterlace_output_frame (self, TRUE) != GST_FLOW_OK) {
+        /* Encountered error, or flushing -> skip and drop all remaining */
+        drop_all = TRUE;
+        break;
+      }
+    }
+  }
   if (drop_all) {
     GST_DEBUG_OBJECT (self, "Resetting history (count %d)",
         self->history_count);
@@ -603,10 +602,6 @@ gst_deinterlace_reset_history (GstDeinterlace * self, gboolean drop_all)
         self->field_history[i].buf = NULL;
       }
     }
-  } else {
-    GST_DEBUG_OBJECT (self, "Flushing history (count %d)", self->history_count);
-    while (self->history_count > 0)
-      gst_deinterlace_output_frame (self, TRUE);
   }
   memset (self->field_history, 0,
       GST_DEINTERLACE_MAX_FIELD_HISTORY * sizeof (GstDeinterlaceField));
@@ -647,14 +642,6 @@ gst_deinterlace_reset (GstDeinterlace * self)
   self->new_fields = -1;
 
   gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
-
-  if (self->sink_caps)
-    gst_caps_unref (self->sink_caps);
-  self->sink_caps = NULL;
-
-  if (self->src_caps)
-    gst_caps_unref (self->src_caps);
-  self->src_caps = NULL;
 
   if (self->request_caps)
     gst_caps_unref (self->request_caps);
@@ -773,8 +760,8 @@ gst_deinterlace_pop_history (GstDeinterlace * self)
 
   self->history_count--;
 
-  GST_DEBUG_OBJECT (self, "Returning buffer: %" GST_TIME_FORMAT
-      " with duration %" GST_TIME_FORMAT " and size %u",
+  GST_DEBUG_OBJECT (self, "Returning buffer: %p %" GST_TIME_FORMAT
+      " with duration %" GST_TIME_FORMAT " and size %u", buffer,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)), GST_BUFFER_SIZE (buffer));
 
@@ -1005,13 +992,15 @@ gst_deinterlace_output_frame (GstDeinterlace * self, gboolean flushing)
       GST_DEBUG_OBJECT (self, "deinterlacing top field");
 
       /* create new buffer */
-      ret = gst_pad_alloc_buffer (self->srcpad,
-          GST_BUFFER_OFFSET_NONE, self->frame_size, self->src_caps, &outbuf);
+      ret =
+          gst_pad_alloc_buffer (self->srcpad, GST_BUFFER_OFFSET_NONE,
+          self->frame_size, GST_PAD_CAPS (self->srcpad), &outbuf);
       if (ret != GST_FLOW_OK)
         return ret;
 
-      if (self->src_caps != GST_BUFFER_CAPS (outbuf) &&
-          !gst_caps_is_equal (self->src_caps, GST_BUFFER_CAPS (outbuf))) {
+      if (GST_PAD_CAPS (self->srcpad) != GST_BUFFER_CAPS (outbuf)
+          && !gst_caps_is_equal (GST_PAD_CAPS (self->srcpad),
+              GST_BUFFER_CAPS (outbuf))) {
         gst_caps_replace (&self->request_caps, GST_BUFFER_CAPS (outbuf));
         GST_DEBUG_OBJECT (self, "Upstream wants new caps %" GST_PTR_FORMAT,
             self->request_caps);
@@ -1022,7 +1011,7 @@ gst_deinterlace_output_frame (GstDeinterlace * self, gboolean flushing)
         if (!outbuf)
           return GST_FLOW_ERROR;
 
-        gst_buffer_set_caps (outbuf, self->src_caps);
+        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (self->srcpad));
       }
 
       g_return_val_if_fail (self->history_count - 1 -
@@ -1083,13 +1072,15 @@ gst_deinterlace_output_frame (GstDeinterlace * self, gboolean flushing)
       GST_DEBUG_OBJECT (self, "deinterlacing bottom field");
 
       /* create new buffer */
-      ret = gst_pad_alloc_buffer (self->srcpad,
-          GST_BUFFER_OFFSET_NONE, self->frame_size, self->src_caps, &outbuf);
+      ret =
+          gst_pad_alloc_buffer (self->srcpad, GST_BUFFER_OFFSET_NONE,
+          self->frame_size, GST_PAD_CAPS (self->srcpad), &outbuf);
       if (ret != GST_FLOW_OK)
         return ret;
 
-      if (self->src_caps != GST_BUFFER_CAPS (outbuf) &&
-          !gst_caps_is_equal (self->src_caps, GST_BUFFER_CAPS (outbuf))) {
+      if (GST_PAD_CAPS (self->srcpad) != GST_BUFFER_CAPS (outbuf)
+          && !gst_caps_is_equal (GST_PAD_CAPS (self->srcpad),
+              GST_BUFFER_CAPS (outbuf))) {
         gst_caps_replace (&self->request_caps, GST_BUFFER_CAPS (outbuf));
         GST_DEBUG_OBJECT (self, "Upstream wants new caps %" GST_PTR_FORMAT,
             self->request_caps);
@@ -1100,7 +1091,7 @@ gst_deinterlace_output_frame (GstDeinterlace * self, gboolean flushing)
         if (!outbuf)
           return GST_FLOW_ERROR;
 
-        gst_buffer_set_caps (outbuf, self->src_caps);
+        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (self->srcpad));
       }
 
       g_return_val_if_fail (self->history_count - 1 -
@@ -1394,10 +1385,7 @@ gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps)
 {
   gboolean res = TRUE;
   GstDeinterlace *self = GST_DEINTERLACE (gst_pad_get_parent (pad));
-  GstPad *otherpad;
-  GstCaps *othercaps;
-
-  otherpad = (pad == self->srcpad) ? self->sinkpad : self->srcpad;
+  GstCaps *srccaps;
 
   res =
       gst_video_format_parse_caps (caps, &self->format, &self->width,
@@ -1413,53 +1401,45 @@ gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps)
   if (!self->passthrough && self->fields == GST_DEINTERLACE_ALL) {
     gint fps_n = self->fps_n, fps_d = self->fps_d;
 
-    if (!gst_fraction_double (&fps_n, &fps_d, otherpad != self->srcpad))
+    if (!gst_fraction_double (&fps_n, &fps_d, FALSE))
       goto invalid_caps;
 
-    othercaps = gst_caps_copy (caps);
+    srccaps = gst_caps_copy (caps);
 
-    gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION, fps_n,
+    gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, fps_n,
         fps_d, NULL);
   } else {
-    othercaps = gst_caps_ref (caps);
+    srccaps = gst_caps_ref (caps);
   }
 
-  if (otherpad == self->srcpad && self->mode != GST_DEINTERLACE_MODE_DISABLED) {
-    othercaps = gst_caps_make_writable (othercaps);
-    gst_caps_set_simple (othercaps, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+  if (self->mode != GST_DEINTERLACE_MODE_DISABLED) {
+    srccaps = gst_caps_make_writable (srccaps);
+    gst_caps_set_simple (srccaps, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
   }
 
   gst_deinterlace_reset_history (self, FALSE);
 
-  if (!gst_pad_set_caps (otherpad, othercaps))
+  if (!gst_pad_set_caps (self->srcpad, srccaps))
     goto caps_not_accepted;
 
   self->frame_size =
       gst_video_format_get_size (self->format, self->width, self->height);
 
-  if (self->fields == GST_DEINTERLACE_ALL && otherpad == self->srcpad)
-    self->field_duration =
-        gst_util_uint64_scale (GST_SECOND, self->fps_d, self->fps_n);
-  else
+  if (G_LIKELY (self->fps_n != 0)) {
     self->field_duration =
         gst_util_uint64_scale (GST_SECOND, self->fps_d, 2 * self->fps_n);
-
-  if (pad == self->sinkpad) {
-    gst_caps_replace (&self->sink_caps, caps);
-    gst_caps_replace (&self->src_caps, othercaps);
   } else {
-    gst_caps_replace (&self->src_caps, caps);
-    gst_caps_replace (&self->sink_caps, othercaps);
+    self->field_duration = 0;
   }
 
   gst_deinterlace_set_method (self, self->method_id);
   gst_deinterlace_method_setup (self->method, self->format, self->width,
       self->height);
 
-  GST_DEBUG_OBJECT (pad, "Set caps: %" GST_PTR_FORMAT, caps);
-  GST_DEBUG_OBJECT (pad, "Other caps: %" GST_PTR_FORMAT, othercaps);
+  GST_DEBUG_OBJECT (pad, "Sink caps: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (pad, "Src  caps: %" GST_PTR_FORMAT, srccaps);
 
-  gst_caps_unref (othercaps);
+  gst_caps_unref (srccaps);
 
 done:
 
@@ -1473,8 +1453,8 @@ invalid_caps:
 
 caps_not_accepted:
   res = FALSE;
-  GST_ERROR_OBJECT (pad, "Caps not accepted: %" GST_PTR_FORMAT, othercaps);
-  gst_caps_unref (othercaps);
+  GST_ERROR_OBJECT (pad, "Caps not accepted: %" GST_PTR_FORMAT, srccaps);
+  gst_caps_unref (srccaps);
   goto done;
 }
 

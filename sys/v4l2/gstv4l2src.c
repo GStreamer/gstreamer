@@ -44,6 +44,8 @@
 #include <config.h>
 #endif
 
+#undef HAVE_XVIDEO
+
 #include <string.h>
 #include <sys/time.h>
 #include "v4l2src_calls.h"
@@ -51,7 +53,7 @@
 
 #include "gstv4l2colorbalance.h"
 #include "gstv4l2tuner.h"
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
 #include "gstv4l2xoverlay.h"
 #endif
 #include "gstv4l2vidorient.h"
@@ -79,7 +81,7 @@ enum
 GST_IMPLEMENT_V4L2_PROBE_METHODS (GstV4l2SrcClass, gst_v4l2src);
 GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Src, gst_v4l2src);
 GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Src, gst_v4l2src);
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
 GST_IMPLEMENT_V4L2_XOVERLAY_METHODS (GstV4l2Src, gst_v4l2src);
 #endif
 GST_IMPLEMENT_V4L2_VIDORIENT_METHODS (GstV4l2Src, gst_v4l2src);
@@ -92,7 +94,7 @@ gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
   GstV4l2Object *v4l2object = GST_V4L2SRC (iface)->v4l2object;
 
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
   g_assert (iface_type == GST_TYPE_TUNER ||
       iface_type == GST_TYPE_X_OVERLAY ||
       iface_type == GST_TYPE_COLOR_BALANCE ||
@@ -106,7 +108,7 @@ gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
   if (v4l2object->video_fd == -1)
     return FALSE;
 
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
   if (iface_type == GST_TYPE_X_OVERLAY && !GST_V4L2_IS_OVERLAY (v4l2object))
     return FALSE;
 #endif
@@ -142,7 +144,8 @@ gst_v4l2src_init_interfaces (GType type)
     NULL,
     NULL,
   };
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
+  /* FIXME: does GstXOverlay for v4l2src make sense in a GStreamer context? */
   static const GInterfaceInfo v4l2_xoverlay_info = {
     (GInterfaceInitFunc) gst_v4l2src_xoverlay_interface_init,
     NULL,
@@ -169,7 +172,7 @@ gst_v4l2src_init_interfaces (GType type)
   g_type_add_interface_static (type,
       GST_TYPE_IMPLEMENTS_INTERFACE, &v4l2iface_info);
   g_type_add_interface_static (type, GST_TYPE_TUNER, &v4l2_tuner_info);
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &v4l2_xoverlay_info);
 #endif
   g_type_add_interface_static (type,
@@ -611,6 +614,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 {
   GstV4l2Src *v4l2src;
   gint w = 0, h = 0;
+  gboolean interlaced;
   struct v4l2_fmtdesc *format;
   guint fps_n, fps_d;
   guint size;
@@ -632,7 +636,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 
   /* we want our own v4l2 type of fourcc codes */
   if (!gst_v4l2_object_get_caps_info (v4l2src->v4l2object, caps, &format, &w,
-          &h, &fps_n, &fps_d, &size)) {
+          &h, &interlaced, &fps_n, &fps_d, &size)) {
     GST_INFO_OBJECT (v4l2src,
         "can't get capture format from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
@@ -641,8 +645,8 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
   GST_DEBUG_OBJECT (v4l2src, "trying to set_capture %dx%d at %d/%d fps, "
       "format %s", w, h, fps_n, fps_d, format->description);
 
-  if (!gst_v4l2src_set_capture (v4l2src, format->pixelformat, w, h, fps_n,
-          fps_d))
+  if (!gst_v4l2src_set_capture (v4l2src, format->pixelformat, w, h,
+          interlaced, fps_n, fps_d))
     /* error already posted */
     return FALSE;
 

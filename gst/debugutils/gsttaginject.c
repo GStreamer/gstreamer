@@ -168,6 +168,9 @@ gst_tag_inject_set_property (GObject * object, guint prop_id,
       if (!(self->tags = gst_structure_from_string (structure, NULL))) {
         GST_WARNING ("unparsable taglist = '%s'", structure);
       }
+
+      /* make sure that tags will be send */
+      self->tags_sent = FALSE;
       g_free (structure);
       break;
     }

@@ -199,6 +199,7 @@ enum
 #define DEFAULT_NUM_SOURCES          0
 #define DEFAULT_NUM_ACTIVE_SOURCES   0
 #define DEFAULT_USE_PIPELINE_CLOCK   FALSE
+#define DEFAULT_RTCP_MIN_INTERVAL    (RTP_STATS_MIN_INTERVAL * GST_SECOND)
 
 enum
 {
@@ -213,6 +214,7 @@ enum
   PROP_NUM_ACTIVE_SOURCES,
   PROP_INTERNAL_SESSION,
   PROP_USE_PIPELINE_CLOCK,
+  PROP_RTCP_MIN_INTERVAL,
   PROP_LAST
 };
 
@@ -255,6 +257,10 @@ static GstFlowReturn gst_rtp_session_sync_rtcp (RTPSession * sess,
 static gint gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
     gpointer user_data);
 static void gst_rtp_session_reconsider (RTPSession * sess, gpointer user_data);
+static void gst_rtp_session_request_key_unit (RTPSession * sess,
+    gboolean all_headers, gpointer user_data);
+static GstClockTime gst_rtp_session_request_time (RTPSession * session,
+    gpointer user_data);
 
 static RTPSessionCallbacks callbacks = {
   gst_rtp_session_process_rtp,
@@ -262,7 +268,9 @@ static RTPSessionCallbacks callbacks = {
   gst_rtp_session_sync_rtcp,
   gst_rtp_session_send_rtcp,
   gst_rtp_session_clock_rate,
-  gst_rtp_session_reconsider
+  gst_rtp_session_reconsider,
+  gst_rtp_session_request_key_unit,
+  gst_rtp_session_request_time
 };
 
 /* GObject vmethods */
@@ -588,6 +596,12 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           DEFAULT_USE_PIPELINE_CLOCK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RTCP_MIN_INTERVAL,
+      g_param_spec_uint64 ("rtcp-min-interval", "Minimum RTCP interval",
+          "Minimum interval between Regular RTCP packet (in ns)",
+          0, G_MAXUINT64, DEFAULT_RTCP_MIN_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -693,6 +707,10 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_USE_PIPELINE_CLOCK:
       priv->use_pipeline_clock = g_value_get_boolean (value);
       break;
+    case PROP_RTCP_MIN_INTERVAL:
+      g_object_set_property (G_OBJECT (priv->session), "rtcp-min-interval",
+          value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -744,6 +762,10 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_PIPELINE_CLOCK:
       g_value_set_boolean (value, priv->use_pipeline_clock);
+      break;
+    case PROP_RTCP_MIN_INTERVAL:
+      g_object_get_property (G_OBJECT (priv->session), "rtcp-min-interval",
+          value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1215,8 +1237,12 @@ gst_rtp_session_get_caps_for_pt (GstRtpSession * rtpsession, guint payload)
   g_value_init (&ret, GST_TYPE_CAPS);
   g_value_set_boxed (&ret, NULL);
 
+  GST_RTP_SESSION_UNLOCK (rtpsession);
+
   g_signal_emitv (args, gst_rtp_session_signals[SIGNAL_REQUEST_PT_MAP], 0,
       &ret);
+
+  GST_RTP_SESSION_LOCK (rtpsession);
 
   g_value_unset (&args[0]);
   g_value_unset (&args[1]);
@@ -1350,6 +1376,90 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
 
 }
 
+static gboolean
+gst_rtp_session_request_remote_key_unit (GstRtpSession * rtpsession,
+    guint32 ssrc, guint payload, gboolean all_headers)
+{
+  GstCaps *caps;
+  gboolean requested = FALSE;
+
+  caps = gst_rtp_session_get_caps_for_pt (rtpsession, payload);
+
+  if (caps) {
+    gboolean fir, pli;
+    const GstStructure *s = gst_caps_get_structure (caps, 0);
+
+    if (!gst_structure_get_boolean (s, "rtcp-fb-nack-fir", &fir))
+      fir = FALSE;
+
+    if (!gst_structure_get_boolean (s, "rtcp-fb-nack-pli", &pli))
+      pli = FALSE;
+
+    gst_caps_unref (caps);
+
+    if (!pli && !fir)
+      goto out;
+
+    /* When we need all headers, use FIR if possible falling back to PLI if
+     * it's available */
+    if (all_headers) {
+      /* 500 ms acceptable delay for urgent request is a guesstimate, it could
+       * be made configurable if needed
+       */
+      /* If we don't have fir, fall back to pli */
+      rtp_session_request_key_unit (rtpsession->priv->session, ssrc, fir);
+      rtp_session_request_early_rtcp (rtpsession->priv->session,
+          gst_clock_get_time (rtpsession->priv->sysclock), 500 * GST_MSECOND);
+      requested = TRUE;
+    } else if (pli) {
+      rtp_session_request_key_unit (rtpsession->priv->session, ssrc, FALSE);
+      requested = TRUE;
+    }
+  }
+
+out:
+  return requested;
+}
+
+static gboolean
+gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstEvent * event)
+{
+  GstRtpSession *rtpsession;
+  gboolean forward = TRUE;
+  gboolean ret = TRUE;
+  const GstStructure *s;
+  guint32 ssrc;
+  guint pt;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+      s = gst_event_get_structure (event);
+      if (gst_structure_has_name (s, "GstForceKeyUnit") &&
+          gst_structure_get_uint (s, "ssrc", &ssrc) &&
+          gst_structure_get_uint (s, "payload", &pt)) {
+        gboolean all_headers = FALSE;
+
+        gst_structure_get_boolean (s, "all-headers", &all_headers);
+        if (gst_rtp_session_request_remote_key_unit (rtpsession, ssrc, pt,
+                all_headers))
+          forward = FALSE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  if (forward)
+    ret = gst_pad_push_event (rtpsession->recv_rtp_sink, event);
+
+  gst_object_unref (rtpsession);
+
+  return ret;
+}
+
+
 static GstIterator *
 gst_rtp_session_iterate_internal_links (GstPad * pad)
 {
@@ -1471,6 +1581,7 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
   GstRtpSession *rtpsession;
   GstRtpSessionPrivate *priv;
   GstClockTime current_time;
+  guint64 ntpnstime;
   GstFlowReturn ret;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
@@ -1479,7 +1590,10 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
   GST_LOG_OBJECT (rtpsession, "received RTCP packet");
 
   current_time = gst_clock_get_time (priv->sysclock);
-  ret = rtp_session_process_rtcp (priv->session, buffer, current_time);
+  get_current_times (rtpsession, NULL, &ntpnstime);
+
+  ret =
+      rtp_session_process_rtcp (priv->session, buffer, current_time, ntpnstime);
 
   gst_object_unref (rtpsession);
 
@@ -1760,6 +1874,8 @@ create_recv_rtp_sink (GstRtpSession * rtpsession)
   rtpsession->recv_rtp_src =
       gst_pad_new_from_static_template (&rtpsession_recv_rtp_src_template,
       "recv_rtp_src");
+  gst_pad_set_event_function (rtpsession->recv_rtp_src,
+      (GstPadEventFunction) gst_rtp_session_event_recv_rtp_src);
   gst_pad_set_iterate_internal_links_function (rtpsession->recv_rtp_src,
       gst_rtp_session_iterate_internal_links);
   gst_pad_use_fixed_caps (rtpsession->recv_rtp_src);
@@ -2036,4 +2152,25 @@ wrong_pad:
     g_warning ("gstrtpsession: asked to release an unknown pad");
     return;
   }
+}
+
+static void
+gst_rtp_session_request_key_unit (RTPSession * sess,
+    gboolean all_headers, gpointer user_data)
+{
+  GstRtpSession *rtpsession = GST_RTP_SESSION (user_data);
+  GstEvent *event;
+
+  event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+      gst_structure_new ("GstForceKeyUnit",
+          "all-headers", G_TYPE_BOOLEAN, all_headers, NULL));
+  gst_pad_push_event (rtpsession->send_rtp_sink, event);
+}
+
+static GstClockTime
+gst_rtp_session_request_time (RTPSession * session, gpointer user_data)
+{
+  GstRtpSession *rtpsession = GST_RTP_SESSION (user_data);
+
+  return gst_clock_get_time (rtpsession->priv->sysclock);
 }

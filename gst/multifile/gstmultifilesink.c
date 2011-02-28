@@ -146,6 +146,8 @@ static void gst_multi_file_sink_get_property (GObject * object, guint prop_id,
 static gboolean gst_multi_file_sink_stop (GstBaseSink * sink);
 static GstFlowReturn gst_multi_file_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
+static gboolean gst_multi_file_sink_set_caps (GstBaseSink * sink,
+    GstCaps * caps);
 
 #define GST_TYPE_MULTI_FILE_SINK_NEXT (gst_multi_file_sink_next_get_type ())
 static GType
@@ -237,6 +239,8 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
   gstbasesink_class->get_times = NULL;
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_multi_file_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_file_sink_render);
+  gstbasesink_class->set_caps =
+      GST_DEBUG_FUNCPTR (gst_multi_file_sink_set_caps);
 }
 
 static void
@@ -327,12 +331,20 @@ static gboolean
 gst_multi_file_sink_stop (GstBaseSink * sink)
 {
   GstMultiFileSink *multifilesink;
+  int i;
 
   multifilesink = GST_MULTI_FILE_SINK (sink);
 
   if (multifilesink->file != NULL) {
     fclose (multifilesink->file);
     multifilesink->file = NULL;
+  }
+
+  if (multifilesink->streamheaders) {
+    for (i = 0; i < multifilesink->n_streamheaders; i++) {
+      gst_buffer_unref (multifilesink->streamheaders[i]);
+    }
+    g_free (multifilesink->streamheaders);
   }
 
   return TRUE;
@@ -462,6 +474,8 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
       }
 
       if (multifilesink->file == NULL) {
+        int i;
+
         filename = g_strdup_printf (multifilesink->filename,
             multifilesink->index);
         multifilesink->file = g_fopen (filename, "wb");
@@ -469,6 +483,16 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
         if (multifilesink->file == NULL)
           goto stdio_write_error;
+
+        if (multifilesink->streamheaders) {
+          for (i = 0; i < multifilesink->n_streamheaders; i++) {
+            ret = fwrite (GST_BUFFER_DATA (multifilesink->streamheaders[i]),
+                GST_BUFFER_SIZE (multifilesink->streamheaders[i]), 1,
+                multifilesink->file);
+            if (ret != 1)
+              goto stdio_write_error;
+          }
+        }
       }
 
       ret = fwrite (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 1,
@@ -507,4 +531,43 @@ stdio_write_error:
   GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
       ("Error while writing to file."), (NULL));
   return GST_FLOW_ERROR;
+}
+
+static gboolean
+gst_multi_file_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
+{
+  GstMultiFileSink *multifilesink;
+  GstStructure *structure;
+
+  multifilesink = GST_MULTI_FILE_SINK (sink);
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (structure) {
+    const GValue *value;
+
+    value = gst_structure_get_value (structure, "streamheader");
+
+    if (GST_VALUE_HOLDS_ARRAY (value)) {
+      int i;
+
+      if (multifilesink->streamheaders) {
+        for (i = 0; i < multifilesink->n_streamheaders; i++) {
+          gst_buffer_unref (multifilesink->streamheaders[i]);
+        }
+        g_free (multifilesink->streamheaders);
+      }
+
+      multifilesink->n_streamheaders = gst_value_array_get_size (value);
+      multifilesink->streamheaders =
+          g_malloc (sizeof (GstBuffer *) * multifilesink->n_streamheaders);
+
+      for (i = 0; i < multifilesink->n_streamheaders; i++) {
+        multifilesink->streamheaders[i] =
+            gst_buffer_ref (gst_value_get_buffer (gst_value_array_get_value
+                (value, i)));
+      }
+    }
+  }
+
+  return TRUE;
 }

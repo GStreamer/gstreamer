@@ -333,12 +333,20 @@ gst_avi_subtitle_class_init (GstAviSubtitleClass * klass)
 static void
 gst_avi_subtitle_init (GstAviSubtitle * self, GstAviSubtitleClass * klass)
 {
+  GstCaps *caps;
+
   self->src = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (self), self->src);
 
   self->sink = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (self->sink,
       GST_DEBUG_FUNCPTR (gst_avi_subtitle_chain));
+
+  caps = gst_static_pad_template_get_caps (&src_template);
+  gst_pad_set_caps (self->src, caps);
+  gst_caps_unref (caps);
+
+  gst_pad_use_fixed_caps (self->src);
   gst_element_add_pad (GST_ELEMENT (self), self->sink);
 
   self->subfile = NULL;

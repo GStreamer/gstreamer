@@ -44,20 +44,13 @@
 #include "config.h"
 #endif
 
+#include <gst/math-compat.h>
+
 #include "gstvideobalance.h"
 #include <string.h>
-#include <math.h>
 
 #include <gst/controller/gstcontroller.h>
 #include <gst/interfaces/colorbalance.h>
-
-#ifndef M_PI
-#define M_PI  3.14159265358979323846
-#endif
-
-#ifdef WIN32
-#define rint(x) (floor((x)+0.5))
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (videobalance_debug);
 #define GST_CAT_DEFAULT videobalance_debug
@@ -170,8 +163,8 @@ gst_video_balance_update_tables (GstVideoBalance * vb)
     vb->tabley[i] = rint (y);
   }
 
-  hue_cos = cos (M_PI * vb->hue);
-  hue_sin = sin (M_PI * vb->hue);
+  hue_cos = cos (G_PI * vb->hue);
+  hue_sin = sin (G_PI * vb->hue);
 
   /* U/V lookup tables are 2D, since we need both U/V for each table
    * separately. */

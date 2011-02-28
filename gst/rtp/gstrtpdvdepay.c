@@ -93,7 +93,7 @@ GST_BOILERPLATE (GstRTPDVDepay, gst_rtp_dv_depay, GstBaseRTPDepayload,
       gst_static_pad_template_get (&sink_factory));
 
   gst_element_class_set_details_simple (element_class, "RTP DV Depayloader",
-      "Codec/Depayloader/Network",
+      "Codec/Depayloader/Network/RTP",
       "Depayloads DV from RTP packets (RFC 3189)",
       "Marcel Moreaux <marcelm@spacelabs.nl>, Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -411,5 +411,5 @@ gboolean
 gst_rtp_dv_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpdvdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_DV_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_DV_DEPAY);
 }

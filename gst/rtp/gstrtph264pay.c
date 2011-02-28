@@ -130,7 +130,7 @@ gst_rtp_h264_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_h264_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class, "RTP H264 payloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Payload-encode H264 video into RTP packets (RFC 3984)",
       "Laurent Glayal <spglegle@yahoo.fr>");
 }
@@ -1114,11 +1114,12 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   return ret;
 
 caps_rejected:
-
-  GST_WARNING_OBJECT (basepayload, "Could not set outcaps");
-  g_array_set_size (nal_queue, 0);
-  gst_buffer_unref (buffer);
-  return GST_FLOW_NOT_NEGOTIATED;
+  {
+    GST_WARNING_OBJECT (basepayload, "Could not set outcaps");
+    g_array_set_size (nal_queue, 0);
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static gboolean
@@ -1128,6 +1129,9 @@ gst_rtp_h264_pay_handle_event (GstPad * pad, GstEvent * event)
   GstRtpH264Pay *rtph264pay = GST_RTP_H264_PAY (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_adapter_clear (rtph264pay->adapter);
+      break;
     case GST_EVENT_CUSTOM_DOWNSTREAM:
       s = gst_event_get_structure (event);
       if (gst_structure_has_name (s, "GstForceKeyUnit")) {
@@ -1230,5 +1234,5 @@ gboolean
 gst_rtp_h264_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtph264pay",
-      GST_RANK_NONE, GST_TYPE_RTP_H264_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_H264_PAY);
 }

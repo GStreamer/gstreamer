@@ -1092,7 +1092,7 @@ gst_pulseringbuffer_pause (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (psink, "pausing and corking");
   /* make sure the commit method stops writing */
   pbuf->paused = TRUE;
-  res = gst_pulsering_set_corked (pbuf, TRUE, FALSE);
+  res = gst_pulsering_set_corked (pbuf, TRUE, TRUE);
   if (pbuf->in_commit) {
     /* we are waiting in a commit, signal */
     GST_DEBUG_OBJECT (psink, "signal commit");
@@ -1339,11 +1339,11 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
     towrite = out_samples * bps;
 
-    /* Only ever write segsize bytes at once. This will
-     * also limit the PA shm buffer to segsize
+    /* Only ever write bufsize bytes at once. This will
+     * also limit the PA shm buffer to bufsize
      */
-    if (towrite > buf->spec.segsize)
-      towrite = buf->spec.segsize;
+    if (towrite > bufsize)
+      towrite = bufsize;
 
     if ((pbuf->m_writable < towrite) || (offset != pbuf->m_lastoffset)) {
       /* if no room left or discontinuity in offset,
@@ -1392,9 +1392,9 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       }
 
       /* make sure we only buffer up latency-time samples */
-      if (pbuf->m_writable > buf->spec.segsize) {
+      if (pbuf->m_writable > bufsize) {
         /* limit buffering to latency-time value */
-        pbuf->m_writable = buf->spec.segsize;
+        pbuf->m_writable = bufsize;
 
         GST_LOG_OBJECT (psink, "Limiting buffering to %" G_GSIZE_FORMAT,
             pbuf->m_writable);
@@ -1413,9 +1413,9 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
           pbuf->m_writable);
 
       /* Just to make sure that we didn't get more than requested */
-      if (pbuf->m_writable > buf->spec.segsize) {
+      if (pbuf->m_writable > bufsize) {
         /* limit buffering to latency-time value */
-        pbuf->m_writable = buf->spec.segsize;
+        pbuf->m_writable = bufsize;
       }
     }
 
@@ -1647,6 +1647,50 @@ write_failed:
             pa_strerror (pa_context_errno (pbuf->context))), (NULL));
     goto unlock_and_fail;
   }
+}
+
+/* write pending local samples, must be called with the mainloop lock */
+static void
+gst_pulsering_flush (GstPulseRingBuffer * pbuf)
+{
+#ifdef HAVE_PULSE_0_9_16
+  GstPulseSink *psink;
+
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+  GST_DEBUG_OBJECT (psink, "entering flush");
+
+  /* flush the buffer if possible */
+  if (pbuf->stream && (pbuf->m_data != NULL) && (pbuf->m_towrite > 0)) {
+#ifndef GST_DISABLE_GST_DEBUG
+    gint bps;
+
+    bps = (GST_RING_BUFFER_CAST (pbuf))->spec.bytes_per_sample;
+    GST_LOG_OBJECT (psink,
+        "flushing %u samples at offset %" G_GINT64_FORMAT,
+        (guint) pbuf->m_towrite / bps, pbuf->m_offset);
+#endif
+
+    if (pa_stream_write (pbuf->stream, (uint8_t *) pbuf->m_data,
+            pbuf->m_towrite, NULL, pbuf->m_offset, PA_SEEK_ABSOLUTE) < 0) {
+      goto write_failed;
+    }
+
+    pbuf->m_towrite = 0;
+    pbuf->m_offset += pbuf->m_towrite;  /* keep track of current offset */
+  }
+
+done:
+  return;
+
+  /* ERRORS */
+write_failed:
+  {
+    GST_ELEMENT_ERROR (psink, RESOURCE, FAILED,
+        ("pa_stream_write() failed: %s",
+            pa_strerror (pa_context_errno (pbuf->context))), (NULL));
+    goto done;
+  }
+#endif
 }
 
 static void gst_pulsesink_set_property (GObject * object, guint prop_id,
@@ -2579,6 +2623,39 @@ update_failed:
 }
 #endif
 
+static void
+gst_pulsesink_flush_ringbuffer (GstPulseSink * psink)
+{
+  GstPulseRingBuffer *pbuf;
+
+  pa_threaded_mainloop_lock (mainloop);
+
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+
+  if (pbuf == NULL || pbuf->stream == NULL)
+    goto no_buffer;
+
+  gst_pulsering_flush (pbuf);
+
+  /* Uncork if we haven't already (happens when waiting to get enough data
+   * to send out the first time) */
+  if (pbuf->corked)
+    gst_pulsering_set_corked (pbuf, FALSE, FALSE);
+
+  /* We're not interested if this operation failed or not */
+unlock:
+  pa_threaded_mainloop_unlock (mainloop);
+
+  return;
+
+  /* ERRORS */
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
+    goto unlock;
+  }
+}
+
 static gboolean
 gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
 {
@@ -2626,6 +2703,9 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
 
       break;
     }
+    case GST_EVENT_EOS:
+      gst_pulsesink_flush_ringbuffer (pulsesink);
+      break;
     default:
       ;
   }

@@ -46,6 +46,12 @@ else
 HAL_DIR =
 endif
 
+if USE_JACK
+JACK_DIR=jack
+else
+JACK_DIR=
+endif
+
 if USE_JPEG
 JPEG_DIR = jpeg
 else
@@ -135,6 +141,7 @@ SUBDIRS = \
 	$(GCONF_DIR) \
 	$(GDK_PIXBUF_DIR) \
 	$(HAL_DIR) \
+	$(JACK_DIR) \
 	$(JPEG_DIR) \
 	$(LIBCACA_DIR) \
 	$(LIBDV_DIR) \
@@ -158,6 +165,7 @@ DIST_SUBDIRS = \
 	gconf \
 	gdk_pixbuf \
 	hal \
+	jack \
 	jpeg \
 	libcaca \
 	libpng \

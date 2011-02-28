@@ -66,7 +66,7 @@ gst_rtp_ilbc_pay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_ilbc_pay_src_template));
   gst_element_class_set_details_simple (element_class, "RTP iLBC Payloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Packetize iLBC audio streams into RTP packets",
       "Philippe Kalaf <philippe.kalaf@collabora.co.uk>");
 }
@@ -212,5 +212,5 @@ gboolean
 gst_rtp_ilbc_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpilbcpay",
-      GST_RANK_NONE, GST_TYPE_RTP_ILBC_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_ILBC_PAY);
 }

@@ -239,7 +239,7 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
       (self->mode == MODE_LOW_PASS) ? "low-pass" : "high-pass");
 
   /* fill the kernel */
-  w = 2 * M_PI * (self->cutoff / GST_AUDIO_FILTER (self)->format.rate);
+  w = 2 * G_PI * (self->cutoff / GST_AUDIO_FILTER (self)->format.rate);
 
   kernel = g_new (gdouble, len);
 
@@ -250,10 +250,10 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
       kernel[i] = sin (w * (i - len / 2)) / (i - len / 2);
     /* windowing */
     if (self->window == WINDOW_HAMMING)
-      kernel[i] *= (0.54 - 0.46 * cos (2 * M_PI * i / len));
+      kernel[i] *= (0.54 - 0.46 * cos (2 * G_PI * i / len));
     else
-      kernel[i] *= (0.42 - 0.5 * cos (2 * M_PI * i / len) +
-          0.08 * cos (4 * M_PI * i / len));
+      kernel[i] *= (0.42 - 0.5 * cos (2 * G_PI * i / len) +
+          0.08 * cos (4 * G_PI * i / len));
   }
 
   /* normalize for unity gain at DC */

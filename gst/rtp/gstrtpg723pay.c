@@ -80,7 +80,7 @@ gst_rtp_g723_pay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_g723_pay_src_template));
   gst_element_class_set_details_simple (element_class, "RTP G.723 payloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Packetize G.723 audio into RTP packets",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -311,6 +311,6 @@ gst_rtp_g723_pay_change_state (GstElement * element, GstStateChange transition)
 gboolean
 gst_rtp_g723_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpg723pay", GST_RANK_NONE,
+  return gst_element_register (plugin, "rtpg723pay", GST_RANK_SECONDARY,
       gst_rtp_g723_pay_get_type ());
 }

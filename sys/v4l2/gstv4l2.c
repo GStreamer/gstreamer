@@ -32,7 +32,9 @@
 
 #include "gstv4l2object.h"
 #include "gstv4l2src.h"
+#ifdef HAVE_EXPERIMENTAL
 #include "gstv4l2sink.h"
+#endif
 /* #include "gstv4l2jpegsrc.h" */
 /* #include "gstv4l2mjpegsrc.h" */
 /* #include "gstv4l2mjpegsink.h" */
@@ -52,8 +54,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "v4l2src", GST_RANK_PRIMARY,
           GST_TYPE_V4L2SRC) ||
+#ifdef HAVE_EXPERIMENTAL
       !gst_element_register (plugin, "v4l2sink", GST_RANK_NONE,
           GST_TYPE_V4L2SINK) ||
+#endif
       /*       !gst_element_register (plugin, "v4l2jpegsrc", */
       /*           GST_RANK_NONE, GST_TYPE_V4L2JPEGSRC) || */
       /*       !gst_element_register (plugin, "v4l2mjpegsrc", */

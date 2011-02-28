@@ -222,7 +222,7 @@ generate_biquad_coefficients (GstAudioChebLimit * filter,
 
   /* Calculate pole location for lowpass at frequency 1 */
   {
-    gdouble angle = (M_PI / 2.0) * (2.0 * p - 1) / np;
+    gdouble angle = (G_PI / 2.0) * (2.0 * p - 1) / np;
 
     rp = -sin (angle);
     ip = cos (angle);
@@ -259,7 +259,7 @@ generate_biquad_coefficients (GstAudioChebLimit * filter,
   /* Calculate zero location for frequency 1 on the
    * unit circle for type 2 */
   if (type == 2) {
-    gdouble angle = M_PI / (np * 2.0) + ((p - 1) * M_PI) / (np);
+    gdouble angle = G_PI / (np * 2.0) + ((p - 1) * G_PI) / (np);
     gdouble mag2;
 
     iz = cos (angle);
@@ -324,7 +324,7 @@ generate_biquad_coefficients (GstAudioChebLimit * filter,
   {
     gdouble k, d;
     gdouble omega =
-        2.0 * M_PI * (filter->cutoff / GST_AUDIO_FILTER (filter)->format.rate);
+        2.0 * G_PI * (filter->cutoff / GST_AUDIO_FILTER (filter)->format.rate);
 
     if (filter->mode == MODE_LOW_PASS)
       k = sin ((1.0 - omega) / 2.0) / sin ((1.0 + omega) / 2.0);
@@ -456,7 +456,7 @@ generate_coefficients (GstAudioChebLimit * filter)
 #ifndef GST_DISABLE_GST_DEBUG
     {
       gdouble wc =
-          2.0 * M_PI * (filter->cutoff /
+          2.0 * G_PI * (filter->cutoff /
           GST_AUDIO_FILTER (filter)->format.rate);
       gdouble zr = cos (wc), zi = sin (wc);
 

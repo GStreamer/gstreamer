@@ -30,6 +30,7 @@ GObject
         GstRtpG723Depay
         GstRtpG726Depay
         GstRtpG729Depay
+        GstRtpGSTDepay
         GstRtpH263Depay
         GstRtpH263PDepay
         GstRtpH264Depay
@@ -70,8 +71,10 @@ GObject
         GstRTPGSMPay
         GstRTPMP2TPay
         GstRTPMPVPay
+        GstRtpAC3Pay
         GstRtpAMRPay
         GstRtpCELTPay
+        GstRtpGSTPay
         GstRtpH263PPay
         GstRtpH263Pay
         GstRtpH264Pay
@@ -92,6 +95,7 @@ GObject
             GstEsdSink
             GstOss4Sink
             GstOssSink
+          GstJackAudioSink
           GstPulseSink
         GstCACASink
         GstDynUDPSink
@@ -110,6 +114,7 @@ GObject
               GstOss4Source
               GstOssSrc
               GstPulseSrc
+            GstJackAudioSrc
           GstDV1394Src
           GstHDV1394Src
           GstMultiFileSrc
@@ -218,6 +223,7 @@ GObject
       GstMatroskaDemux
       GstMatroskaMux
         GstWebMMux
+      GstMonoscope
       GstMuLawDec
       GstMuLawEnc
       GstMultipartDemux
@@ -269,6 +275,8 @@ GObject
     GstRingBuffer
       GstAudioSinkRingBuffer
       GstAudioSrcRingBuffer
+      GstJackAudioSinkRingBuffer
+      GstJackAudioSrcRingBuffer
     GstTask
     GstTaskPool
   GstSignalObject
@@ -282,6 +290,7 @@ GInterface
   GstColorBalance
   GstImplementsInterface
   GstMixer
+  GstNavigation
   GstPreset
   GstPropertyProbe
   GstStreamVolume
@@ -289,3 +298,4 @@ GInterface
   GstTuner
   GstURIHandler
   GstVideoOrientation
+  GstXOverlay

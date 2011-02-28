@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-10-24 21:53+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -66,10 +66,13 @@ msgstr ""
 msgid "This file is invalid and cannot be played."
 msgstr ""
 
-msgid "This file is incomplete and cannot be played."
+msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-msgid "This file is corrupt and cannot be played."
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
 msgstr ""
 
 msgid "The video in this file might not play correctly."
@@ -601,6 +604,15 @@ msgstr ""
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr ""
+
+#, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
+msgstr "Kunne ikke lukke VFS-fil «%s»."
 
 #, fuzzy, c-format
 msgid "Could not enqueue buffers in device '%s'."

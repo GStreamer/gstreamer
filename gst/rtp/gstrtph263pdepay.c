@@ -103,7 +103,7 @@ gst_rtp_h263p_depay_base_init (gpointer klass)
 
 
   gst_element_class_set_details_simple (element_class, "RTP H263 depayloader",
-      "Codec/Depayloader/Network",
+      "Codec/Depayloader/Network/RTP",
       "Extracts H263/+/++ video from RTP packets (RFC 4629)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -395,5 +395,5 @@ gboolean
 gst_rtp_h263p_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtph263pdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_H263P_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_H263P_DEPAY);
 }

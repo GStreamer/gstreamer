@@ -61,6 +61,8 @@ gst_pulsemixer_ctrl_sink_info_cb (pa_context * context, const pa_sink_info * i,
     int eol, void *userdata)
 {
   GstPulseMixerCtrl *c = userdata;
+  gboolean vol_chg = FALSE;
+  gboolean old_mute;
 
   /* Called from the background thread! */
 
@@ -90,8 +92,10 @@ gst_pulsemixer_ctrl_sink_info_cb (pa_context * context, const pa_sink_info * i,
   c->description = g_strdup (i->description);
   c->index = i->index;
   c->channel_map = i->channel_map;
+  vol_chg = !pa_cvolume_equal (&c->volume, &i->volume);
   c->volume = i->volume;
-  c->muted = ! !i->mute;
+  old_mute = c->muted;
+  c->muted = !!i->mute;
   c->type = GST_PULSEMIXER_SINK;
 
   if (c->track) {
@@ -104,6 +108,19 @@ gst_pulsemixer_ctrl_sink_info_cb (pa_context * context, const pa_sink_info * i,
 
   c->operation_success = TRUE;
   pa_threaded_mainloop_signal (c->mainloop, 0);
+
+  if (vol_chg && c->track) {
+    gint volumes[PA_CHANNELS_MAX];
+    gint i;
+    for (i = 0; i < c->volume.channels; i++)
+      volumes[i] = (gint) (c->volume.values[i]);
+    GST_LOG_OBJECT (c->object, "Sending volume change notification");
+    gst_mixer_volume_changed (GST_MIXER (c->object), c->track, volumes);
+  }
+  if ((c->muted != old_mute) && c->track) {
+    GST_LOG_OBJECT (c->object, "Sending mute toggled notification");
+    gst_mixer_mute_toggled (GST_MIXER (c->object), c->track, c->muted);
+  }
 }
 
 static void
@@ -111,6 +128,8 @@ gst_pulsemixer_ctrl_source_info_cb (pa_context * context,
     const pa_source_info * i, int eol, void *userdata)
 {
   GstPulseMixerCtrl *c = userdata;
+  gboolean vol_chg = FALSE;
+  gboolean old_mute;
 
   /* Called from the background thread! */
 
@@ -140,8 +159,10 @@ gst_pulsemixer_ctrl_source_info_cb (pa_context * context,
   c->description = g_strdup (i->description);
   c->index = i->index;
   c->channel_map = i->channel_map;
+  vol_chg = !pa_cvolume_equal (&c->volume, &i->volume);
   c->volume = i->volume;
-  c->muted = ! !i->mute;
+  old_mute = c->muted;
+  c->muted = !!i->mute;
   c->type = GST_PULSEMIXER_SOURCE;
 
   if (c->track) {
@@ -154,6 +175,19 @@ gst_pulsemixer_ctrl_source_info_cb (pa_context * context,
 
   c->operation_success = TRUE;
   pa_threaded_mainloop_signal (c->mainloop, 0);
+
+  if (vol_chg && c->track) {
+    gint volumes[PA_CHANNELS_MAX];
+    gint i;
+    for (i = 0; i < c->volume.channels; i++)
+      volumes[i] = (gint) (c->volume.values[i]);
+    GST_LOG_OBJECT (c->object, "Sending volume change notification");
+    gst_mixer_volume_changed (GST_MIXER (c->object), c->track, volumes);
+  }
+  if ((c->muted != old_mute) && c->track) {
+    GST_LOG_OBJECT (c->object, "Sending mute toggled notification");
+    gst_mixer_mute_toggled (GST_MIXER (c->object), c->track, c->muted);
+  }
 }
 
 static void
@@ -195,7 +229,7 @@ gst_pulsemixer_ctrl_success_cb (pa_context * context, int success,
 {
   GstPulseMixerCtrl *c = (GstPulseMixerCtrl *) userdata;
 
-  c->operation_success = ! !success;
+  c->operation_success = !!success;
   pa_threaded_mainloop_signal (c->mainloop, 0);
 }
 
@@ -395,6 +429,8 @@ gst_pulsemixer_ctrl_new (GObject * object, const gchar * server,
     const gchar * device, GstPulseMixerType type)
 {
   GstPulseMixerCtrl *c = NULL;
+  g_return_val_if_fail (G_TYPE_CHECK_INSTANCE_TYPE ((object),
+          GST_TYPE_MIXER), c);
 
   GST_DEBUG_OBJECT (object, "new mixer ctrl for %s", device);
   c = g_new (GstPulseMixerCtrl, 1);
@@ -595,4 +631,10 @@ gst_pulsemixer_ctrl_set_mute (GstPulseMixerCtrl * c, GstMixerTrack * track,
   restart_time_event (c);
 
   pa_threaded_mainloop_unlock (c->mainloop);
+}
+
+GstMixerFlags
+gst_pulsemixer_ctrl_get_mixer_flags (GstPulseMixerCtrl * mixer)
+{
+  return GST_MIXER_FLAG_AUTO_NOTIFICATIONS;
 }

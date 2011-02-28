@@ -159,7 +159,7 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
     GST_WARNING ("ID3v2 tag is from revision 2.%d.%d, "
         "but decoder only supports 2.%d.%d. Ignoring as per spec.",
         version >> 8, version & 0xff, ID3V2_VERSION >> 8, ID3V2_VERSION & 0xff);
-    return ID3TAGS_READ_TAG;
+    return ID3TAGS_BROKEN_TAG;
   }
 
   GST_DEBUG ("ID3v2 header flags: %s %s %s %s",

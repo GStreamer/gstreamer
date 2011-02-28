@@ -67,6 +67,8 @@ static gboolean gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
+static gboolean gst_rtp_theora_depay_packet_lost (GstBaseRTPDepayload *
+    depayload, GstEvent * event);
 
 static void gst_rtp_theora_depay_finalize (GObject * object);
 
@@ -82,7 +84,7 @@ gst_rtp_theora_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_theora_depay_src_template));
 
   gst_element_class_set_details_simple (element_class, "RTP Theora depayloader",
-      "Codec/Depayloader/Network",
+      "Codec/Depayloader/Network/RTP",
       "Extracts Theora video from RTP packets (draft-01 of RFC XXXX)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -100,6 +102,7 @@ gst_rtp_theora_depay_class_init (GstRtpTheoraDepayClass * klass)
 
   gstbasertpdepayload_class->process = gst_rtp_theora_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_theora_depay_setcaps;
+  gstbasertpdepayload_class->packet_lost = gst_rtp_theora_depay_packet_lost;
 
   GST_DEBUG_CATEGORY_INIT (rtptheoradepay_debug, "rtptheoradepay", 0,
       "Theora RTP Depayloader");
@@ -308,6 +311,8 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   rtptheoradepay = GST_RTP_THEORA_DEPAY (depayload);
 
+  rtptheoradepay->needs_keyframe = FALSE;
+
   structure = gst_caps_get_structure (caps, 0);
 
   /* read and parse configuration string */
@@ -496,7 +501,7 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     to_free = payload;
   }
 
-  GST_DEBUG_OBJECT (depayload, "assemble done");
+  GST_DEBUG_OBJECT (depayload, "assemble done, payload_len %d", payload_len);
 
   /* we not assembling anymore now */
   rtptheoradepay->assembling = FALSE;
@@ -519,7 +524,7 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
    */
   timestamp = gst_rtp_buffer_get_timestamp (buf);
 
-  while (payload_len > 2) {
+  while (payload_len >= 2) {
     guint16 length;
 
     length = GST_READ_UINT16_BE (payload);
@@ -554,6 +559,9 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       memcpy (GST_BUFFER_DATA (outbuf), payload, length);
     }
 
+    if (payload_len > 0 && (payload[0] & 0xC0) == 0x0)
+      rtptheoradepay->needs_keyframe = FALSE;
+
     payload += length;
     payload_len -= length;
 
@@ -573,6 +581,9 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   g_free (to_free);
 
+  if (rtptheoradepay->needs_keyframe)
+    goto request_keyframe;
+
   return NULL;
 
 no_output:
@@ -584,13 +595,13 @@ switch_failed:
   {
     GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,
         (NULL), ("Could not switch codebooks"));
-    return NULL;
+    goto request_config;
   }
 packet_short:
   {
     GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,
         (NULL), ("Packet was too short (%d < 4)", payload_len));
-    return NULL;
+    goto request_keyframe;
   }
 ignore_reserved:
   {
@@ -601,13 +612,29 @@ length_short:
   {
     GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,
         (NULL), ("Packet contains invalid data"));
-    return NULL;
+    goto request_keyframe;
   }
 invalid_configuration:
   {
     /* fatal, as we otherwise risk carrying on without output */
     GST_ELEMENT_ERROR (rtptheoradepay, STREAM, DECODE,
         (NULL), ("Packet contains invalid configuration"));
+    goto request_config;
+  }
+request_config:
+  {
+    gst_pad_push_event (GST_BASE_RTP_DEPAYLOAD_SINKPAD (depayload),
+        gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+            gst_structure_new ("GstForceKeyUnit",
+                "all-headers", G_TYPE_BOOLEAN, TRUE, NULL)));
+    return NULL;
+  }
+request_keyframe:
+  {
+    rtptheoradepay->needs_keyframe = TRUE;
+    gst_pad_push_event (GST_BASE_RTP_DEPAYLOAD_SINKPAD (depayload),
+        gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+            gst_structure_new ("GstForceKeyUnit", NULL)));
     return NULL;
   }
 }
@@ -616,5 +643,24 @@ gboolean
 gst_rtp_theora_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtptheoradepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_THEORA_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_THEORA_DEPAY);
+}
+
+static gboolean
+gst_rtp_theora_depay_packet_lost (GstBaseRTPDepayload * depayload,
+    GstEvent * event)
+{
+  GstRtpTheoraDepay *rtptheoradepay = GST_RTP_THEORA_DEPAY (depayload);
+  guint seqnum = 0;
+
+  gst_structure_get_uint (event->structure, "seqnum", &seqnum);
+  GST_LOG_OBJECT (depayload, "Requested keyframe because frame with seqnum %u"
+      " is missing", seqnum);
+  rtptheoradepay->needs_keyframe = TRUE;
+
+  gst_pad_push_event (GST_BASE_RTP_DEPAYLOAD_SINKPAD (depayload),
+      gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+          gst_structure_new ("GstForceKeyUnit", NULL)));
+
+  return TRUE;
 }

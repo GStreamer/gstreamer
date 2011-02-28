@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -72,11 +72,14 @@ msgstr "Acest fișier nu conține fluxuri ce pot fi redate."
 msgid "This file is invalid and cannot be played."
 msgstr "Fișierul nu este valid și nu poate fi redat."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Acest fișier nu este complet și nu poate fi redat."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Acest fișier este corupt și nu poate fi redat."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Acest fișier nu este complet și nu poate fi redat."
 
 msgid "The video in this file might not play correctly."
 msgstr "Este posibil ca fișierul video să nu fie redat corect."
@@ -631,6 +634,17 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Obținerea intrări curente pentru dispozitivul „%s” a eșuat. Posibil să fie "
+"un dispozitiv radio."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
 
 #, c-format

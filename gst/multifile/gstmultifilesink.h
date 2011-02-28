@@ -69,6 +69,9 @@ struct _GstMultiFileSink
   FILE *file;
 
   gint64 next_segment;
+
+  int n_streamheaders;
+  GstBuffer **streamheaders;
 };
 
 struct _GstMultiFileSinkClass

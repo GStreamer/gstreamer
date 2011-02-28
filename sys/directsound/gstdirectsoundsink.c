@@ -56,6 +56,13 @@
 
 #include <math.h>
 
+#ifdef __CYGWIN__
+#include <unistd.h>
+#ifndef _swab
+#define _swab swab
+#endif
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (directsoundsink_debug);
 #define GST_CAT_DEFAULT directsoundsink_debug
 

@@ -3,7 +3,7 @@
   <description>Deinterlacer</description>
   <filename>../../gst/deinterlace/.libs/libgstdeinterlace.so</filename>
   <basename>libgstdeinterlace.so</basename>
-  <version>0.10.26.1</version>
+  <version>0.10.27.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins git</package>
@@ -12,7 +12,7 @@
     <element>
       <name>deinterlace</name>
       <longname>Deinterlacer</longname>
-      <class>Filter/Video</class>
+      <class>Filter/Effect/Video/Deinterlace</class>
       <description>Deinterlace Methods ported from DScaler/TvTime</description>
       <author>Martin Eikermann &lt;meiker@upb.de&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>

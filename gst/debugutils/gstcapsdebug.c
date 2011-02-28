@@ -26,6 +26,9 @@
 #include <gst/gst.h>
 #include "gstcapsdebug.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_caps_debug_debug);
+#define GST_CAT_DEFAULT gst_caps_debug_debug
+
 /* prototypes */
 
 
@@ -67,7 +70,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 /* class initialization */
 
-GST_BOILERPLATE (GstCapsDebug, gst_caps_debug, GstElement, GST_TYPE_ELEMENT);
+#define DEBUG_INIT(bla) \
+  GST_DEBUG_CATEGORY_INIT (gst_caps_debug_debug, "capsdebug", 0, \
+      "debug category for capsdebug element");
+
+GST_BOILERPLATE_FULL (GstCapsDebug, gst_caps_debug, GstElement,
+    GST_TYPE_ELEMENT, DEBUG_INIT);
 
 static void
 gst_caps_debug_base_init (gpointer g_class)
@@ -103,8 +111,7 @@ gst_caps_debug_init (GstCapsDebug * capsdebug,
 {
 
   capsdebug->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_caps_debug_src_template), "src");
+      gst_pad_new_from_static_template (&gst_caps_debug_src_template, "src");
   gst_pad_set_getcaps_function (capsdebug->srcpad,
       GST_DEBUG_FUNCPTR (gst_caps_debug_getcaps));
   gst_pad_set_acceptcaps_function (capsdebug->srcpad,
@@ -112,8 +119,7 @@ gst_caps_debug_init (GstCapsDebug * capsdebug,
   gst_element_add_pad (GST_ELEMENT (capsdebug), capsdebug->srcpad);
 
   capsdebug->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_caps_debug_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_caps_debug_sink_template, "sink");
   gst_pad_set_chain_function (capsdebug->sinkpad,
       GST_DEBUG_FUNCPTR (gst_caps_debug_sink_chain));
   gst_pad_set_bufferalloc_function (capsdebug->sinkpad,

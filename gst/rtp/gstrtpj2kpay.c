@@ -73,6 +73,7 @@ typedef enum
   J2K_MARKER_SOC = 0x4F,
   J2K_MARKER_SOT = 0x90,
   J2K_MARKER_SOP = 0x91,
+  J2K_MARKER_EPH = 0x92,
   J2K_MARKER_SOD = 0x93,
   J2K_MARKER_EOC = 0xD9
 } RtpJ2KMarker;
@@ -86,47 +87,18 @@ enum
   PROP_LAST
 };
 
-/*
- * RtpJ2KHeader:
- * @tp: type (0 progressive, 1 odd field, 2 even field)
- * @MHF: Main Header Flag
- * @mh_id: Main Header Identification
- * @T: Tile field invalidation flag
- * @priority: priority
- * @tile number: the tile number of the payload
- * @reserved: set to 0
- * @fragment offset: the byte offset of the current payload
- *
- *  0                   1                   2                   3
- *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |tp |MHF|mh_id|T|     priority  |           tile number         |
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |reserved       |             fragment offset                   |
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- */
 typedef struct
 {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  guint T:1;
-  guint mh_id:3;
-  guint MHF:2;
-  guint tp:2;
-#elif G_BYTE_ORDER == G_BIG_ENDIAN
   guint tp:2;
   guint MHF:2;
   guint mh_id:3;
   guint T:1;
-#else
-#error "G_BYTE_ORDER should be big or little endian."
-#endif
   guint priority:8;
   guint tile:16;
-  guint reserved:8;
   guint offset:24;
 } RtpJ2KHeader;
 
-#define HEADER_SIZE sizeof(RtpJ2KHeader)
+#define HEADER_SIZE 8
 
 static void gst_rtp_j2k_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -153,7 +125,7 @@ gst_rtp_j2k_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_j2k_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP JPEG 2000 payloader", "Codec/Payloader/Network",
+      "RTP JPEG 2000 payloader", "Codec/Payloader/Network/RTP",
       "Payload-encodes JPEG 2000 pictures into RTP packets (RFC 5371)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -265,13 +237,17 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
             return offset - 2;
           cut_sop = TRUE;
           break;
+        case J2K_MARKER_EPH:
+          /* just skip over EPH */
+          GST_LOG_OBJECT (pay, "found EPH at %u", offset);
+          break;
         default:
           if (offset >= state->next_sot) {
             GST_LOG_OBJECT (pay, "reached next SOT at %u", offset);
             state->bitstream = FALSE;
             state->force_packet = TRUE;
-            if (marker == J2K_MARKER_EOC)
-              /* include EOC */
+            if (marker == J2K_MARKER_EOC && state->next_sot + 2 <= size)
+              /* include EOC but never go past the max size */
               return state->next_sot + 2;
             else
               return state->next_sot;
@@ -388,7 +364,7 @@ gst_rtp_j2k_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   state.header.T = 1;           /* invalid tile */
   state.header.priority = 255;  /* always 255 for now */
   state.header.tile = 0;        /* no tile number */
-  state.header.reserved = 0;
+  state.header.offset = 0;      /* offset of 0 */
   state.bitstream = FALSE;
   state.n_tiles = 0;
   state.next_sot = 0;
@@ -437,6 +413,11 @@ gst_rtp_j2k_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       }
 
       pos = end;
+
+      /* exit when finished */
+      if (pos == size)
+        break;
+
       /* scan next packetization unit and fill in the header */
       end = find_pu_end (pay, data, size, pos, &state);
     } while (TRUE);
@@ -488,14 +469,34 @@ gst_rtp_j2k_pay_handle_buffer (GstBaseRTPPayload * basepayload,
           gst_rtp_buffer_set_marker (outbuf, TRUE);
       }
 
-      /* copy the header and push the packet */
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-      state.header.offset = ((offset & 0x0000FF) << 16) |
-          ((offset & 0xFF0000) >> 16) | (offset & 0x00FF00);
-#else
-      state.header.offset = offset;
-#endif
-      memcpy (header, &state.header, HEADER_SIZE);
+      /*
+       * RtpJ2KHeader:
+       * @tp: type (0 progressive, 1 odd field, 2 even field)
+       * @MHF: Main Header Flag
+       * @mh_id: Main Header Identification
+       * @T: Tile field invalidation flag
+       * @priority: priority
+       * @tile number: the tile number of the payload
+       * @reserved: set to 0
+       * @fragment offset: the byte offset of the current payload
+       *
+       *  0                   1                   2                   3
+       *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       * |tp |MHF|mh_id|T|     priority  |           tile number         |
+       * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       * |reserved       |             fragment offset                   |
+       * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       */
+      header[0] = (state.header.tp << 6) | (state.header.MHF << 4) |
+          (state.header.mh_id << 1) | state.header.T;
+      header[1] = state.header.priority;
+      header[2] = state.header.tile >> 8;
+      header[3] = state.header.tile & 0xff;
+      header[4] = 0;
+      header[5] = state.header.offset >> 16;
+      header[6] = (state.header.offset >> 8) & 0xff;
+      header[7] = state.header.offset & 0xff;
 
       if (pay->buffer_list) {
         GstBuffer *paybuf;
@@ -579,6 +580,6 @@ gst_rtp_j2k_pay_get_property (GObject * object, guint prop_id,
 gboolean
 gst_rtp_j2k_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpj2kpay", GST_RANK_NONE,
+  return gst_element_register (plugin, "rtpj2kpay", GST_RANK_SECONDARY,
       GST_TYPE_RTP_J2K_PAY);
 }

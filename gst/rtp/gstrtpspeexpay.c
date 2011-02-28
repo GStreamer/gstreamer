@@ -73,7 +73,7 @@ gst_rtp_speex_pay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_speex_pay_src_template));
   gst_element_class_set_details_simple (element_class, "RTP Speex payloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Payload-encodes Speex audio into a RTP packet",
       "Edgard Lima <edgard.lima@indt.org.br>");
 
@@ -332,5 +332,5 @@ gboolean
 gst_rtp_speex_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpspeexpay",
-      GST_RANK_NONE, GST_TYPE_RTP_SPEEX_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_SPEEX_PAY);
 }

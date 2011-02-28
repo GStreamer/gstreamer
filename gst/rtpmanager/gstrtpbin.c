@@ -58,6 +58,11 @@
  * mapping. One can clear the cached values with the #GstRtpSession::clear-pt-map
  * signal.
  *
+ * Access to the internal statistics of gstrtpbin is provided with the
+ * get-internal-session property. This action signal gives access to the
+ * RTPSession object which further provides action signals to retrieve the
+ * internal source and other sources.
+ *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
@@ -1331,10 +1336,12 @@ free_stream (GstRtpBinStream * stream)
   g_signal_handler_disconnect (stream->buffer, stream->buffer_ptreq_sig);
   g_signal_handler_disconnect (stream->buffer, stream->buffer_ntpstop_sig);
 
-  gst_element_set_locked_state (stream->demux, TRUE);
+  if (stream->demux)
+    gst_element_set_locked_state (stream->demux, TRUE);
   gst_element_set_locked_state (stream->buffer, TRUE);
 
-  gst_element_set_state (stream->demux, GST_STATE_NULL);
+  if (stream->demux)
+    gst_element_set_state (stream->demux, GST_STATE_NULL);
   gst_element_set_state (stream->buffer, GST_STATE_NULL);
 
   /* now remove this signal, we need this while going to NULL because it to
@@ -1762,11 +1769,13 @@ gst_rtp_bin_set_sdes_struct (GstRtpBin * bin, const GstStructure * sdes)
   if (bin->sdes)
     gst_structure_free (bin->sdes);
   bin->sdes = gst_structure_copy (sdes);
+  GST_OBJECT_UNLOCK (bin);
 
   /* store in all sessions */
-  for (item = bin->sessions; item; item = g_slist_next (item))
-    g_object_set (item->data, "sdes", sdes, NULL);
-  GST_OBJECT_UNLOCK (bin);
+  for (item = bin->sessions; item; item = g_slist_next (item)) {
+    GstRtpBinSession *session = item->data;
+    g_object_set (session->session, "sdes", sdes, NULL);
+  }
 
   GST_RTP_BIN_UNLOCK (bin);
 }
@@ -1927,8 +1936,13 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
       GstRtpBinStream *stream;
       gboolean change = FALSE, active = FALSE;
       GstClockTime min_out_time;
+      GstBufferingMode mode;
+      gint avg_in, avg_out;
+      gint64 buffering_left;
 
       gst_message_parse_buffering (message, &percent);
+      gst_message_parse_buffering_stats (message, &mode, &avg_in, &avg_out,
+          &buffering_left);
 
       stream =
           g_object_get_data (G_OBJECT (GST_MESSAGE_SRC (message)),
@@ -1990,6 +2004,8 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
         /* make a new buffering message with the min value */
         message =
             gst_message_new_buffering (GST_OBJECT_CAST (bin), min_percent);
+        gst_message_set_buffering_stats (message, mode, avg_in, avg_out,
+            buffering_left);
 
         if (G_UNLIKELY (change)) {
           GstClock *clock;

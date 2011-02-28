@@ -52,11 +52,13 @@
         (((struct GstJpegDecSourceMgr*)((cinfo_ptr)->src))->dec)
 
 #define JPEG_DEFAULT_IDCT_METHOD	JDCT_FASTEST
+#define JPEG_DEFAULT_MAX_ERRORS 	0
 
 enum
 {
   PROP_0,
-  PROP_IDCT_METHOD
+  PROP_IDCT_METHOD,
+  PROP_MAX_ERRORS
 };
 
 /* *INDENT-OFF* */
@@ -192,11 +194,101 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
           JPEG_DEFAULT_IDCT_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstJpegDec:max-errors
+   *
+   * Error out after receiving N consecutive decoding errors
+   * (-1 = never error out, 0 = automatic, 1 = fail on first error, etc.)
+   *
+   * Since: 0.10.27
+   **/
+  g_object_class_install_property (gobject_class, PROP_MAX_ERRORS,
+      g_param_spec_int ("max-errors", "Maximum Consecutive Decoding Errors",
+          "Error out after receiving N consecutive decoding errors "
+          "(-1 = never fail, 0 = automatic, 1 = fail on first error)",
+          -1, G_MAXINT, JPEG_DEFAULT_MAX_ERRORS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_change_state);
 
   GST_DEBUG_CATEGORY_INIT (jpeg_dec_debug, "jpegdec", 0, "JPEG decoder");
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
+}
+
+static void
+gst_jpeg_dec_clear_error (GstJpegDec * dec)
+{
+  g_free (dec->error_msg);
+  dec->error_msg = NULL;
+  dec->error_line = 0;
+  dec->error_func = NULL;
+}
+
+static void
+gst_jpeg_dec_set_error_va (GstJpegDec * dec, const gchar * func, gint line,
+    const gchar * debug_msg_format, va_list args)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_WARNING, __FILE__, func,
+      line, (GObject *) dec, debug_msg_format, args);
+#endif
+
+  g_free (dec->error_msg);
+  if (debug_msg_format)
+    dec->error_msg = g_strdup_vprintf (debug_msg_format, args);
+  else
+    dec->error_msg = NULL;
+
+  dec->error_line = line;
+  dec->error_func = func;
+}
+
+static void
+gst_jpeg_dec_set_error (GstJpegDec * dec, const gchar * func, gint line,
+    const gchar * debug_msg_format, ...)
+{
+  va_list va;
+
+  va_start (va, debug_msg_format);
+  gst_jpeg_dec_set_error_va (dec, func, line, debug_msg_format, va);
+  va_end (va);
+}
+
+static GstFlowReturn
+gst_jpeg_dec_post_error_or_warning (GstJpegDec * dec)
+{
+  GstFlowReturn ret;
+  int max_errors;
+
+  ++dec->error_count;
+  max_errors = g_atomic_int_get (&dec->max_errors);
+
+  if (max_errors < 0) {
+    ret = GST_FLOW_OK;
+  } else if (max_errors == 0) {
+    /* FIXME: do something more clever in "automatic mode" */
+    if (dec->packetized) {
+      ret = (dec->error_count < 3) ? GST_FLOW_OK : GST_FLOW_ERROR;
+    } else {
+      ret = GST_FLOW_ERROR;
+    }
+  } else {
+    ret = (dec->error_count < max_errors) ? GST_FLOW_OK : GST_FLOW_ERROR;
+  }
+
+  GST_INFO_OBJECT (dec, "decoding error %d/%d (%s)", dec->error_count,
+      max_errors, (ret == GST_FLOW_OK) ? "ignoring error" : "erroring out");
+
+  gst_element_message_full (GST_ELEMENT (dec),
+      (ret == GST_FLOW_OK) ? GST_MESSAGE_WARNING : GST_MESSAGE_ERROR,
+      GST_STREAM_ERROR, GST_STREAM_ERROR_DECODE,
+      g_strdup (_("Failed to decode JPEG image")), dec->error_msg,
+      __FILE__, dec->error_func, dec->error_line);
+
+  dec->error_msg = NULL;
+  gst_jpeg_dec_clear_error (dec);
+  return ret;
 }
 
 static boolean
@@ -346,6 +438,7 @@ gst_jpeg_dec_init (GstJpegDec * dec)
 
   /* init properties */
   dec->idct_method = JPEG_DEFAULT_IDCT_METHOD;
+  dec->max_errors = JPEG_DEFAULT_MAX_ERRORS;
 
   dec->adapter = gst_adapter_new ();
 }
@@ -954,10 +1047,9 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
 
 format_not_supported:
   {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        (_("Failed to decode JPEG image")),
-        ("Unsupported subsampling schema: v_samp factors: %u %u %u",
-            v_samp[0], v_samp[1], v_samp[2]));
+    gst_jpeg_dec_set_error (dec, GST_FUNCTION, __LINE__,
+        "Unsupported subsampling schema: v_samp factors: %u %u %u",
+        v_samp[0], v_samp[1], v_samp[2]);
     return GST_FLOW_ERROR;
   }
 }
@@ -1440,6 +1532,11 @@ again:
       goto drop_buffer;
   }
 
+  /* reset error count on successful decode */
+  dec->error_count = 0;
+
+  ++dec->good_count;
+
   GST_LOG_OBJECT (dec, "pushing buffer (ts=%" GST_TIME_FORMAT ", dur=%"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
@@ -1451,6 +1548,11 @@ done:
   gst_adapter_flush (dec->adapter, dec->rem_img_len);
 
 exit:
+
+  if (G_UNLIKELY (ret == GST_FLOW_ERROR)) {
+    jpeg_abort_decompress (&dec->cinfo);
+    ret = gst_jpeg_dec_post_error_or_warning (dec);
+  }
 
   return ret;
 
@@ -1468,9 +1570,8 @@ need_more_data:
   /* ERRORS */
 wrong_size:
   {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        ("Picture is too small or too big (%ux%u)", width, height),
-        ("Picture is too small or too big (%ux%u)", width, height));
+    gst_jpeg_dec_set_error (dec, GST_FUNCTION, __LINE__,
+        "Picture is too small or too big (%ux%u)", width, height);
     ret = GST_FLOW_ERROR;
     goto done;
   }
@@ -1480,8 +1581,9 @@ decode_error:
 
     dec->jerr.pub.format_message ((j_common_ptr) (&dec->cinfo), err_msg);
 
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        (_("Failed to decode JPEG image")), ("Error #%u: %s", code, err_msg));
+    gst_jpeg_dec_set_error (dec, GST_FUNCTION, __LINE__,
+        "Decode error #%u: %s", code, err_msg);
+
     if (outbuf) {
       gst_buffer_unref (outbuf);
       outbuf = NULL;
@@ -1507,9 +1609,8 @@ alloc_failed:
     jpeg_abort_decompress (&dec->cinfo);
     if (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_WRONG_STATE &&
         ret != GST_FLOW_NOT_LINKED) {
-      GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-          ("Buffer allocation failed, reason: %s", reason),
-          ("Buffer allocation failed, reason: %s", reason));
+      gst_jpeg_dec_set_error (dec, GST_FUNCTION, __LINE__,
+          "Buffer allocation failed, reason: %s", reason);
     }
     goto exit;
   }
@@ -1522,22 +1623,22 @@ drop_buffer:
   }
 components_not_supported:
   {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-        ("more components than supported: %d > 3", dec->cinfo.num_components));
+    gst_jpeg_dec_set_error (dec, GST_FUNCTION, __LINE__,
+        "more components than supported: %d > 3", dec->cinfo.num_components);
     ret = GST_FLOW_ERROR;
     goto done;
   }
 unsupported_colorspace:
   {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-        ("Picture has unknown or unsupported colourspace"));
+    gst_jpeg_dec_set_error (dec, GST_FUNCTION, __LINE__,
+        "Picture has unknown or unsupported colourspace");
     ret = GST_FLOW_ERROR;
     goto done;
   }
 invalid_yuvrgbgrayscale:
   {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-        ("Picture is corrupt or unhandled YUV/RGB/grayscale layout"));
+    gst_jpeg_dec_set_error (dec, GST_FUNCTION, __LINE__,
+        "Picture is corrupt or unhandled YUV/RGB/grayscale layout");
     ret = GST_FLOW_ERROR;
     goto done;
   }
@@ -1632,6 +1733,9 @@ gst_jpeg_dec_set_property (GObject * object, guint prop_id,
     case PROP_IDCT_METHOD:
       dec->idct_method = g_value_get_enum (value);
       break;
+    case PROP_MAX_ERRORS:
+      g_atomic_int_set (&dec->max_errors, g_value_get_int (value));
+      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1651,6 +1755,9 @@ gst_jpeg_dec_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_IDCT_METHOD:
       g_value_set_enum (value, dec->idct_method);
       break;
+    case PROP_MAX_ERRORS:
+      g_value_set_int (value, g_atomic_int_get (&dec->max_errors));
+      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1668,6 +1775,8 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      dec->error_count = 0;
+      dec->good_count = 0;
       dec->framerate_numerator = 0;
       dec->framerate_denominator = 1;
       dec->caps_framerate_numerator = dec->caps_framerate_denominator = 0;

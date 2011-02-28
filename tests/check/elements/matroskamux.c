@@ -387,6 +387,56 @@ GST_START_TEST (test_block_group)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reset)
+{
+  GstElement *matroskamux;
+  GstBuffer *inbuffer;
+  GstBuffer *outbuffer;
+  int num_buffers;
+  int i;
+
+  matroskamux = setup_matroskamux (&srcac3template);
+  fail_unless (gst_element_set_state (matroskamux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (1);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  num_buffers = g_list_length (buffers);
+  fail_unless (num_buffers >= 1,
+      "expected at least 1 buffer, but got only %d", num_buffers);
+
+  fail_unless (gst_element_set_state (matroskamux,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+  fail_unless (gst_element_set_state (matroskamux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (1);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  num_buffers = g_list_length (buffers);
+  fail_unless (num_buffers >= 2,
+      "expected at least 2 buffers, but got only %d", num_buffers);
+
+  for (i = 0; i < num_buffers; ++i) {
+    outbuffer = GST_BUFFER (buffers->data);
+    fail_if (outbuffer == NULL);
+    buffers = g_list_remove (buffers, outbuffer);
+
+    ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
+    gst_buffer_unref (outbuffer);
+  }
+
+  cleanup_matroskamux (matroskamux);
+  g_list_free (buffers);
+  buffers = NULL;
+}
+
+GST_END_TEST;
+
 static Suite *
 matroskamux_suite (void)
 {
@@ -397,6 +447,7 @@ matroskamux_suite (void)
   tcase_add_test (tc_chain, test_ebml_header);
   tcase_add_test (tc_chain, test_vorbis_header);
   tcase_add_test (tc_chain, test_block_group);
+  tcase_add_test (tc_chain, test_reset);
 
   return s;
 }

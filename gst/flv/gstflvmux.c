@@ -685,9 +685,11 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
   /* Some players expect the 'duration' to be always set. Fill it out later,
      after querying the pads or after getting EOS */
-  tmp = gst_flv_mux_create_number_script_value ("duration", 0);
-  script_tag = gst_buffer_join (script_tag, tmp);
-  tags_written++;
+  if (!mux->streamable) {
+    tmp = gst_flv_mux_create_number_script_value ("duration", 86400);
+    script_tag = gst_buffer_join (script_tag, tmp);
+    tags_written++;
+  }
 
   /* Sometimes the information about the total file size is useful for the
      player. It will be filled later, after getting EOS */

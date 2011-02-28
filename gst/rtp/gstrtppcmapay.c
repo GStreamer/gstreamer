@@ -53,7 +53,7 @@ static GstStaticPadTemplate gst_rtp_pcma_pay_src_template =
 static gboolean gst_rtp_pcma_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRtpPmcaPay, gst_rtp_pcma_pay, GstBaseRTPAudioPayload,
+GST_BOILERPLATE (GstRtpPcmaPay, gst_rtp_pcma_pay, GstBaseRTPAudioPayload,
     GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
 
 static void
@@ -66,13 +66,13 @@ gst_rtp_pcma_pay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_pcma_pay_src_template));
   gst_element_class_set_details_simple (element_class, "RTP PCMA payloader",
-      "Codec/Payloader/Network",
+      "Codec/Payloader/Network/RTP",
       "Payload-encodes PCMA audio into a RTP packet",
       "Edgard Lima <edgard.lima@indt.org.br>");
 }
 
 static void
-gst_rtp_pcma_pay_class_init (GstRtpPmcaPayClass * klass)
+gst_rtp_pcma_pay_class_init (GstRtpPcmaPayClass * klass)
 {
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
@@ -82,7 +82,7 @@ gst_rtp_pcma_pay_class_init (GstRtpPmcaPayClass * klass)
 }
 
 static void
-gst_rtp_pcma_pay_init (GstRtpPmcaPay * rtppcmapay, GstRtpPmcaPayClass * klass)
+gst_rtp_pcma_pay_init (GstRtpPcmaPay * rtppcmapay, GstRtpPcmaPayClass * klass)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
 
@@ -114,5 +114,5 @@ gboolean
 gst_rtp_pcma_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtppcmapay",
-      GST_RANK_NONE, GST_TYPE_RTP_PCMA_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_PCMA_PAY);
 }

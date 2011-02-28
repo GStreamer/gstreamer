@@ -58,6 +58,9 @@ static GstBuffer *gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload,
 static GstStateChangeReturn gst_rtp_vraw_depay_change_state (GstElement *
     element, GstStateChange transition);
 
+static gboolean gst_rtp_vraw_depay_handle_event (GstBaseRTPDepayload * filter,
+    GstEvent * event);
+
 static void
 gst_rtp_vraw_depay_base_init (gpointer klass)
 {
@@ -69,7 +72,7 @@ gst_rtp_vraw_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_vraw_depay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP Raw Video depayloader", "Codec/Depayloader/Network",
+      "RTP Raw Video depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts raw video from RTP packets (RFC 4175)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -87,6 +90,7 @@ gst_rtp_vraw_depay_class_init (GstRtpVRawDepayClass * klass)
 
   gstbasertpdepayload_class->set_caps = gst_rtp_vraw_depay_setcaps;
   gstbasertpdepayload_class->process = gst_rtp_vraw_depay_process;
+  gstbasertpdepayload_class->handle_event = gst_rtp_vraw_depay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtpvrawdepay_debug, "rtpvrawdepay", 0,
       "raw video RTP Depayloader");
@@ -97,6 +101,16 @@ gst_rtp_vraw_depay_init (GstRtpVRawDepay * rtpvrawdepay,
     GstRtpVRawDepayClass * klass)
 {
   /* needed because of GST_BOILERPLATE */
+}
+
+static void
+gst_rtp_vraw_depay_reset (GstRtpVRawDepay * rtpvrawdepay)
+{
+  if (rtpvrawdepay->outbuf) {
+    gst_buffer_unref (rtpvrawdepay->outbuf);
+    rtpvrawdepay->outbuf = NULL;
+  }
+  rtpvrawdepay->timestamp = -1;
 }
 
 static gboolean
@@ -228,6 +242,7 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GST_DEBUG_OBJECT (depayload, "width %d, height %d, format %d", width, height,
       format);
   GST_DEBUG_OBJECT (depayload, "yp %d, up %d, vp %d", yp, up, vp);
+  GST_DEBUG_OBJECT (depayload, "xinc %d, yinc %d", xinc, yinc);
   GST_DEBUG_OBJECT (depayload, "pgroup %d, ystride %d, uvstride %d", pgroup,
       ystride, uvstride);
   GST_DEBUG_OBJECT (depayload, "outsize %u", outsize);
@@ -372,10 +387,10 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     }
 
     /* calculate the maximim amount of bytes we can use per line */
-    if (offs + ((length / pgroup) * xinc) > (width - xinc)) {
+    if (offs + ((length / pgroup) * xinc) > width) {
       plen = ((width - offs) * pgroup) / xinc;
-      GST_WARNING_OBJECT (depayload, "clipping length %d, offset %d", length,
-          offs);
+      GST_WARNING_OBJECT (depayload, "clipping length %d, offset %d, plen %d",
+          length, offs, plen);
     } else
       plen = length;
 
@@ -513,6 +528,28 @@ short_packet:
   }
 }
 
+static gboolean
+gst_rtp_vraw_depay_handle_event (GstBaseRTPDepayload * filter, GstEvent * event)
+{
+  gboolean ret;
+  GstRtpVRawDepay *rtpvrawdepay;
+
+  rtpvrawdepay = GST_RTP_VRAW_DEPAY (filter);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_vraw_depay_reset (rtpvrawdepay);
+      break;
+    default:
+      break;
+  }
+
+  ret =
+      GST_BASE_RTP_DEPAYLOAD_CLASS (parent_class)->handle_event (filter, event);
+
+  return ret;
+}
+
 static GstStateChangeReturn
 gst_rtp_vraw_depay_change_state (GstElement * element,
     GstStateChange transition)
@@ -526,7 +563,7 @@ gst_rtp_vraw_depay_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      rtpvrawdepay->timestamp = -1;
+      gst_rtp_vraw_depay_reset (rtpvrawdepay);
       break;
     default:
       break;
@@ -536,10 +573,7 @@ gst_rtp_vraw_depay_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (rtpvrawdepay->outbuf) {
-        gst_buffer_unref (rtpvrawdepay->outbuf);
-        rtpvrawdepay->outbuf = NULL;
-      }
+      gst_rtp_vraw_depay_reset (rtpvrawdepay);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -553,5 +587,5 @@ gboolean
 gst_rtp_vraw_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpvrawdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_VRAW_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_VRAW_DEPAY);
 }

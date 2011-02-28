@@ -31,11 +31,11 @@ GST_DEBUG_CATEGORY_STATIC (rtpmp4vpay_debug);
 #define GST_CAT_DEFAULT (rtpmp4vpay_debug)
 
 static GstStaticPadTemplate gst_rtp_mp4v_pay_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg,"
-        "mpegversion=(int) 4," "systemstream=(boolean)false")
+        "mpegversion=(int) 4," "systemstream=(boolean)false;" "video/x-xvid")
     );
 
 static GstStaticPadTemplate gst_rtp_mp4v_pay_src_template =
@@ -78,7 +78,7 @@ static gboolean gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
-static gboolean gst_rtp_mp4v_pay_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rtp_mp4v_pay_handle_event (GstPad * pad, GstEvent * event);
 
 GST_BOILERPLATE (GstRtpMP4VPay, gst_rtp_mp4v_pay, GstBaseRTPPayload,
     GST_TYPE_BASE_RTP_PAYLOAD)
@@ -93,7 +93,7 @@ GST_BOILERPLATE (GstRtpMP4VPay, gst_rtp_mp4v_pay, GstBaseRTPPayload,
       gst_static_pad_template_get (&gst_rtp_mp4v_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP MPEG4 Video payloader", "Codec/Payloader/Network",
+      "RTP MPEG4 Video payloader", "Codec/Payloader/Network/RTP",
       "Payload MPEG-4 video as RTP packets (RFC 3016)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -132,6 +132,7 @@ gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
 
   gstbasertppayload_class->set_caps = gst_rtp_mp4v_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_mp4v_pay_handle_buffer;
+  gstbasertppayload_class->handle_event = gst_rtp_mp4v_pay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtpmp4vpay_debug, "rtpmp4vpay", 0,
       "MP4 video RTP Payloader");
@@ -154,9 +155,6 @@ gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay, GstRtpMP4VPayClass * klass)
   rtpmp4vpay->config = NULL;
 
   sinkpad = GST_BASE_RTP_PAYLOAD_SINKPAD (rtpmp4vpay);
-
-  rtpmp4vpay->old_event_func = sinkpad->eventfunc;
-  gst_pad_set_event_function (sinkpad, gst_rtp_mp4v_pay_event);
 }
 
 static void
@@ -596,10 +594,9 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 }
 
 static gboolean
-gst_rtp_mp4v_pay_event (GstPad * pad, GstEvent * event)
+gst_rtp_mp4v_pay_handle_event (GstPad * pad, GstEvent * event)
 {
   GstRtpMP4VPay *rtpmp4vpay;
-  gboolean ret;
 
   rtpmp4vpay = GST_RTP_MP4V_PAY (gst_pad_get_parent (pad));
 
@@ -619,11 +616,10 @@ gst_rtp_mp4v_pay_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  ret = rtpmp4vpay->old_event_func (pad, event);
-
   g_object_unref (rtpmp4vpay);
 
-  return ret;
+  /* let parent handle event too */
+  return FALSE;
 }
 
 static void
@@ -676,5 +672,5 @@ gboolean
 gst_rtp_mp4v_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp4vpay",
-      GST_RANK_NONE, GST_TYPE_RTP_MP4V_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MP4V_PAY);
 }

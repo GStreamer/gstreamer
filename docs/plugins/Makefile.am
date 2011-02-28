@@ -94,6 +94,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/gdk_pixbuf/gstgdkpixbufsink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosrc.h \
+	$(top_srcdir)/ext/jack/gstjackaudiosrc.h \
+	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
 	$(top_srcdir)/ext/jpeg/gstjpegdec.h \
 	$(top_srcdir)/ext/jpeg/gstjpegenc.h \
 	$(top_srcdir)/ext/jpeg/gstsmokedec.h \

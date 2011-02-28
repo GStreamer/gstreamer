@@ -229,7 +229,7 @@ generate_biquad_coefficients (GstAudioChebBand * filter,
 
   /* Calculate pole location for lowpass at frequency 1 */
   {
-    gdouble angle = (M_PI / 2.0) * (2.0 * p - 1) / np;
+    gdouble angle = (G_PI / 2.0) * (2.0 * p - 1) / np;
 
     rp = -sin (angle);
     ip = cos (angle);
@@ -266,7 +266,7 @@ generate_biquad_coefficients (GstAudioChebBand * filter,
   /* Calculate zero location for frequency 1 on the
    * unit circle for type 2 */
   if (type == 2) {
-    gdouble angle = M_PI / (np * 2.0) + ((p - 1) * M_PI) / (np);
+    gdouble angle = G_PI / (np * 2.0) + ((p - 1) * G_PI) / (np);
     gdouble mag2;
 
     iz = cos (angle);
@@ -339,10 +339,10 @@ generate_biquad_coefficients (GstAudioChebBand * filter,
     gdouble a, b, d;
     gdouble alpha, beta;
     gdouble w0 =
-        2.0 * M_PI * (filter->lower_frequency /
+        2.0 * G_PI * (filter->lower_frequency /
         GST_AUDIO_FILTER (filter)->format.rate);
     gdouble w1 =
-        2.0 * M_PI * (filter->upper_frequency /
+        2.0 * G_PI * (filter->upper_frequency /
         GST_AUDIO_FILTER (filter)->format.rate);
 
     if (filter->mode == MODE_BAND_PASS) {
@@ -498,10 +498,10 @@ generate_coefficients (GstAudioChebBand * filter)
       /* gain is H(wc), wc = center frequency */
 
       gdouble w1 =
-          2.0 * M_PI * (filter->lower_frequency /
+          2.0 * G_PI * (filter->lower_frequency /
           GST_AUDIO_FILTER (filter)->format.rate);
       gdouble w2 =
-          2.0 * M_PI * (filter->upper_frequency /
+          2.0 * G_PI * (filter->upper_frequency /
           GST_AUDIO_FILTER (filter)->format.rate);
       gdouble w0 = (w2 + w1) / 2.0;
       gdouble zr = cos (w0), zi = sin (w0);
@@ -530,10 +530,10 @@ generate_coefficients (GstAudioChebBand * filter)
                 np + 1, 1.0, 0.0)));
     {
       gdouble w1 =
-          2.0 * M_PI * (filter->lower_frequency /
+          2.0 * G_PI * (filter->lower_frequency /
           GST_AUDIO_FILTER (filter)->format.rate);
       gdouble w2 =
-          2.0 * M_PI * (filter->upper_frequency /
+          2.0 * G_PI * (filter->upper_frequency /
           GST_AUDIO_FILTER (filter)->format.rate);
       gdouble w0 = (w2 + w1) / 2.0;
       gdouble zr, zi;

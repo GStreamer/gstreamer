@@ -81,7 +81,7 @@ gst_rtp_mp1s_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_mp1s_depay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP MPEG1 System Stream depayloader", "Codec/Depayloader/Network",
+      "RTP MPEG1 System Stream depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts MPEG1 System Streams from RTP packets (RFC 3555)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -141,5 +141,5 @@ gboolean
 gst_rtp_mp1s_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp1sdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_MP1S_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MP1S_DEPAY);
 }

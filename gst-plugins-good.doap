@@ -20,7 +20,7 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
  <category></category>
  <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-plugins-good" />
  <screenshots></screenshots>
- <mailing-list rdf:resource="http://lists.sourceforge.net/lists/listinfo/gstreamer-devel/" />
+ <mailing-list rdf:resource="http://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
  <programming-language>C</programming-language>
  <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl"/>
  <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
@@ -31,6 +31,17 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-good"/>
    </GitRepository>
  </repository> 
+
+ <release>
+  <Version>
+   <revision>0.10.27</revision>
+   <branch>0.10</branch>
+   <name>Some Kind of Temporal Blend</name>
+   <created>2011-01-21</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.27.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.27.tar.gz" />
+  </Version>
+ </release>
 
  <release>
   <Version>

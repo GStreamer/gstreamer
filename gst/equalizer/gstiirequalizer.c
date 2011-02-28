@@ -441,11 +441,11 @@ calculate_omega (gdouble freq, gint rate)
   gdouble omega;
 
   if (freq / rate >= 0.5)
-    omega = M_PI;
+    omega = G_PI;
   else if (freq <= 0.0)
     omega = 0.0;
   else
-    omega = 2.0 * M_PI * (freq / rate);
+    omega = 2.0 * G_PI * (freq / rate);
 
   return omega;
 }
@@ -456,10 +456,10 @@ calculate_bw (GstIirEqualizerBand * band, gint rate)
   gdouble bw = 0.0;
 
   if (band->width / rate >= 0.5) {
-    /* If bandwidth == 0.5 the calculation below fails as tan(M_PI/2)
+    /* If bandwidth == 0.5 the calculation below fails as tan(G_PI/2)
      * is undefined. So set the bandwidth to a slightly smaller value.
      */
-    bw = M_PI - 0.00000001;
+    bw = G_PI - 0.00000001;
   } else if (band->width <= 0.0) {
     /* If bandwidth == 0 this band won't change anything so set
      * the coefficients accordingly. The coefficient calculation
@@ -472,7 +472,7 @@ calculate_bw (GstIirEqualizerBand * band, gint rate)
     band->b1 = 0.0;
     band->b2 = 0.0;
   } else {
-    bw = 2.0 * M_PI * (band->width / rate);
+    bw = 2.0 * G_PI * (band->width / rate);
   }
   return bw;
 }

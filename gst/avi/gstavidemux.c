@@ -696,7 +696,7 @@ gst_avi_demux_seek_streams_index (GstAviDemux * avi, guint64 offset,
   GstAviIndexEntry *entry;
   gint i;
   gint64 val, min = offset;
-  guint index;
+  guint index = 0;
 
   for (i = 0; i < avi->num_streams; i++) {
     stream = &avi->stream[i];
@@ -1270,6 +1270,11 @@ gst_avi_demux_parse_superindex (GstAviDemux * avi,
 
   GST_DEBUG_OBJECT (avi, "got %d indexes", num);
 
+  /* this can't work out well ... */
+  if (num > G_MAXUINT32 >> 1 || bpe < 8) {
+    goto invalid_params;
+  }
+
   indexes = g_new (guint64, num + 1);
   for (i = 0; i < num; i++) {
     if (size < 24 + bpe * (i + 1))
@@ -1289,6 +1294,14 @@ too_small:
   {
     GST_ERROR_OBJECT (avi,
         "Not enough data to parse superindex (%d available, 24 needed)", size);
+    if (buf)
+      gst_buffer_unref (buf);
+    return FALSE;
+  }
+invalid_params:
+  {
+    GST_ERROR_OBJECT (avi, "invalid index parameters (num = %d, bpe = %d)",
+        num, bpe);
     if (buf)
       gst_buffer_unref (buf);
     return FALSE;
@@ -1858,6 +1871,11 @@ gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
       GST_LOG_OBJECT (avi, "Added pad %s with caps %" GST_PTR_FORMAT,
           GST_PAD_NAME (stream->pad), GST_PAD_CAPS (stream->pad));
       gst_element_add_pad ((GstElement *) avi, stream->pad);
+
+      if (avi->element_index)
+        gst_index_get_writer_id (avi->element_index,
+            GST_OBJECT_CAST (stream->pad), &stream->index_id);
+
       stream->exposed = TRUE;
       if (avi->main_stream == -1)
         avi->main_stream = i;
@@ -2015,10 +2033,12 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
             res =
                 gst_riff_parse_strf_auds (element, sub, &stream->strf.auds,
                 &stream->extradata);
+            sub = NULL;
+            if (!res)
+              break;
             stream->is_vbr = (stream->strh->samplesize == 0)
                 && stream->strh->scale > 1
                 && stream->strf.auds->blockalign != 1;
-            sub = NULL;
             GST_DEBUG_OBJECT (element, "marking audio as VBR:%d, res %d",
                 stream->is_vbr, res);
             /* we need these or we have no way to come up with timestamps */
@@ -2264,10 +2284,6 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   gst_pad_set_convert_function (pad,
       GST_DEBUG_FUNCPTR (gst_avi_demux_src_convert));
 #endif
-
-  if (avi->element_index)
-    gst_index_get_writer_id (avi->element_index, GST_OBJECT_CAST (stream->pad),
-        &stream->index_id);
 
   stream->num = avi->num_streams;
 
@@ -3980,7 +3996,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   GstAviStream *stream;
 
   seek_time = segment->last_stop;
-  keyframe = ! !(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = !!(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
 
   GST_DEBUG_OBJECT (avi, "seek to: %" GST_TIME_FORMAT
       " keyframe seeking:%d", GST_TIME_ARGS (seek_time), keyframe);
@@ -4246,7 +4262,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_segment_set_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
   cur = seeksegment.last_stop;
 
   GST_DEBUG_OBJECT (avi,
@@ -4417,9 +4433,10 @@ swap_line (guint8 * d1, guint8 * d2, guint8 * tmp, gint bytes)
 
 
 #define gst_avi_demux_is_uncompressed(fourcc)		\
-  (fourcc == GST_RIFF_DIB ||				\
-   fourcc == GST_RIFF_rgb ||				\
-   fourcc == GST_RIFF_RGB || fourcc == GST_RIFF_RAW)
+  (fourcc &&						\
+    (fourcc == GST_RIFF_DIB ||				\
+     fourcc == GST_RIFF_rgb ||				\
+     fourcc == GST_RIFF_RGB || fourcc == GST_RIFF_RAW))
 
 /*
  * Invert DIB buffers... Takes existing buffer and
@@ -4484,13 +4501,15 @@ gst_avi_demux_add_assoc (GstAviDemux * avi, GstAviStream * stream,
     GST_LOG_OBJECT (avi, "adding association %" GST_TIME_FORMAT "-> %"
         G_GUINT64_FORMAT, GST_TIME_ARGS (timestamp), offset);
     gst_index_add_association (avi->element_index, avi->index_id,
-        keyframe ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
-        GST_FORMAT_TIME, timestamp, GST_FORMAT_BYTES, offset, NULL);
-    /* well, current_total determines TIME and entry DEFAULT (frame #) ... */
+        keyframe ? GST_ASSOCIATION_FLAG_KEY_UNIT :
+        GST_ASSOCIATION_FLAG_DELTA_UNIT, GST_FORMAT_TIME, timestamp,
+        GST_FORMAT_BYTES, offset, NULL);
+    /* current_entry is DEFAULT (frame #) */
     gst_index_add_association (avi->element_index, stream->index_id,
-        GST_ASSOCIATION_FLAG_NONE,
-        GST_FORMAT_TIME, stream->current_total, GST_FORMAT_BYTES, offset,
-        GST_FORMAT_DEFAULT, stream->current_entry, NULL);
+        keyframe ? GST_ASSOCIATION_FLAG_KEY_UNIT :
+        GST_ASSOCIATION_FLAG_DELTA_UNIT, GST_FORMAT_TIME, timestamp,
+        GST_FORMAT_BYTES, offset, GST_FORMAT_DEFAULT, stream->current_entry,
+        NULL);
   }
 }
 

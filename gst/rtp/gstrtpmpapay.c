@@ -27,6 +27,9 @@
 
 #include "gstrtpmpapay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtpmpapay_debug);
+#define GST_CAT_DEFAULT (rtpmpapay_debug)
+
 static GstStaticPadTemplate gst_rtp_mpa_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -50,8 +53,13 @@ static GstStaticPadTemplate gst_rtp_mpa_pay_src_template =
 
 static void gst_rtp_mpa_pay_finalize (GObject * object);
 
+static GstStateChangeReturn gst_rtp_mpa_pay_change_state (GstElement * element,
+    GstStateChange transition);
+
 static gboolean gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
+static gboolean gst_rtp_mpa_pay_handle_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay);
 static GstFlowReturn gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * payload,
     GstBuffer * buffer);
 
@@ -68,7 +76,7 @@ GST_BOILERPLATE (GstRtpMPAPay, gst_rtp_mpa_pay, GstBaseRTPPayload,
       gst_static_pad_template_get (&gst_rtp_mpa_pay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP MPEG audio payloader", "Codec/Payloader/Network",
+      "RTP MPEG audio payloader", "Codec/Payloader/Network/RTP",
       "Payload MPEG audio as RTP packets (RFC 2038)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -77,15 +85,23 @@ static void
 gst_rtp_mpa_pay_class_init (GstRtpMPAPayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_mpa_pay_finalize;
 
+  gstelement_class->change_state = gst_rtp_mpa_pay_change_state;
+
   gstbasertppayload_class->set_caps = gst_rtp_mpa_pay_setcaps;
+  gstbasertppayload_class->handle_event = gst_rtp_mpa_pay_handle_event;
   gstbasertppayload_class->handle_buffer = gst_rtp_mpa_pay_handle_buffer;
+
+  GST_DEBUG_CATEGORY_INIT (rtpmpapay_debug, "rtpmpapay", 0,
+      "MPEG Audio RTP Depayloader");
 }
 
 static void
@@ -107,6 +123,15 @@ gst_rtp_mpa_pay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_rtp_mpa_pay_reset (GstRtpMPAPay * pay)
+{
+  pay->first_ts = -1;
+  pay->duration = 0;
+  gst_adapter_clear (pay->adapter);
+  GST_DEBUG_OBJECT (pay, "reset depayloader");
+}
+
 static gboolean
 gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
@@ -116,6 +141,31 @@ gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   res = gst_basertppayload_set_outcaps (payload, NULL);
 
   return res;
+}
+
+static gboolean
+gst_rtp_mpa_pay_handle_event (GstPad * pad, GstEvent * event)
+{
+  GstRtpMPAPay *rtpmpapay;
+
+  rtpmpapay = GST_RTP_MPA_PAY (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      /* make sure we push the last packets in the adapter on EOS */
+      gst_rtp_mpa_pay_flush (rtpmpapay);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_mpa_pay_reset (rtpmpapay);
+      break;
+    default:
+      break;
+  }
+
+  gst_object_unref (rtpmpapay);
+
+  /* FALSE to let the parent handle the event as well */
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -143,7 +193,7 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     guint payload_len;
     guint packet_len;
 
-    /* this will be the total lenght of the packet */
+    /* this will be the total length of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (4 + avail, 0, 0);
 
     /* fill one MTU or all available bytes */
@@ -198,18 +248,20 @@ gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstFlowReturn ret;
   guint size, avail;
   guint packet_len;
-  GstClockTime duration;
+  GstClockTime duration, timestamp;
 
   rtpmpapay = GST_RTP_MPA_PAY (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
   duration = GST_BUFFER_DURATION (buffer);
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+  if (GST_BUFFER_IS_DISCONT (buffer)) {
+    GST_DEBUG_OBJECT (rtpmpapay, "DISCONT");
+    gst_rtp_mpa_pay_reset (rtpmpapay);
+  }
 
   avail = gst_adapter_available (rtpmpapay->adapter);
-  if (avail == 0) {
-    rtpmpapay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtpmpapay->duration = 0;
-  }
 
   /* get packet length of previous data and this new data,
    * payload length includes a 4 byte header */
@@ -220,15 +272,50 @@ gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   if (gst_basertppayload_is_filled (basepayload,
           packet_len, rtpmpapay->duration + duration)) {
     ret = gst_rtp_mpa_pay_flush (rtpmpapay);
-    rtpmpapay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtpmpapay->duration = 0;
+    avail = 0;
   } else {
     ret = GST_FLOW_OK;
   }
 
-  gst_adapter_push (rtpmpapay->adapter, buffer);
-  rtpmpapay->duration += duration;
+  if (avail == 0) {
+    GST_DEBUG_OBJECT (rtpmpapay,
+        "first packet, save timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+    rtpmpapay->first_ts = timestamp;
+    rtpmpapay->duration = 0;
+  }
 
+  gst_adapter_push (rtpmpapay->adapter, buffer);
+  rtpmpapay->duration = duration;
+
+  return ret;
+}
+
+static GstStateChangeReturn
+gst_rtp_mpa_pay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstRtpMPAPay *rtpmpapay;
+  GstStateChangeReturn ret;
+
+  rtpmpapay = GST_RTP_MPA_PAY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_rtp_mpa_pay_reset (rtpmpapay);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_rtp_mpa_pay_reset (rtpmpapay);
+      break;
+    default:
+      break;
+  }
   return ret;
 }
 
@@ -236,5 +323,5 @@ gboolean
 gst_rtp_mpa_pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmpapay",
-      GST_RANK_NONE, GST_TYPE_RTP_MPA_PAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MPA_PAY);
 }

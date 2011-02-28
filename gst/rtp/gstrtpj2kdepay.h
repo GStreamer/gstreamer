@@ -44,9 +44,21 @@ struct _GstRtpJ2KDepay
 {
   GstBaseRTPDepayload depayload;
 
-  GstAdapter *adapter;
-  gboolean need_header;
+  guint64 last_rtptime;
+  guint last_mh_id;
+  guint last_tile;
 
+  GstBuffer *MH[8];
+
+  guint pu_MHF;
+  GstAdapter *pu_adapter;
+  GstAdapter *t_adapter;
+  GstAdapter *f_adapter;
+
+  guint next_frag;
+  gboolean have_sync;
+
+  gboolean buffer_list;
   gint width, height;
 };
 

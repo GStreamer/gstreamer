@@ -54,6 +54,8 @@ struct _GstRtpTheoraDepay
 
   GstAdapter         *adapter;
   gboolean            assembling;
+
+  gboolean            needs_keyframe;
 };
 
 struct _GstRtpTheoraDepayClass

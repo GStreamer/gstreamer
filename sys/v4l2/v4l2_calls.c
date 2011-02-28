@@ -46,7 +46,10 @@
 #include "gstv4l2colorbalance.h"
 
 #include "gstv4l2src.h"
+
+#ifdef HAVE_EXPERIMENTAL
 #include "gstv4l2sink.h"
+#endif
 
 #include "gst/gst-i18n-plugin.h"
 
@@ -462,9 +465,11 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
       !(v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE))
     goto not_capture;
 
+#ifdef HAVE_EXPERIMENTAL
   if (GST_IS_V4L2SINK (v4l2object->element) &&
       !(v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT))
     goto not_output;
+#endif
 
   /* create enumerations, posts errors. */
   if (!gst_v4l2_fill_lists (v4l2object))
@@ -510,6 +515,7 @@ not_capture:
         ("Capabilities: 0x%x", v4l2object->vcap.capabilities));
     goto error;
   }
+#ifdef HAVE_EXPERIMENTAL
 not_output:
   {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
@@ -518,6 +524,7 @@ not_output:
         ("Capabilities: 0x%x", v4l2object->vcap.capabilities));
     goto error;
   }
+#endif
 error:
   {
     if (GST_V4L2_IS_OPEN (v4l2object)) {
@@ -824,11 +831,14 @@ gst_v4l2_get_input (GstV4l2Object * v4l2object, gint * input)
 
   /* ERRORS */
 input_failed:
-  {
+  if (v4l2object->vcap.capabilities & V4L2_CAP_TUNER) {
+    /* only give a warning message if driver actually claims to have tuner
+     * support
+     */
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
         (_("Failed to get current input on device '%s'. May be it is a radio device"), v4l2object->videodev), GST_ERROR_SYSTEM);
-    return FALSE;
   }
+  return FALSE;
 }
 
 gboolean
@@ -846,10 +856,70 @@ gst_v4l2_set_input (GstV4l2Object * v4l2object, gint input)
 
   /* ERRORS */
 input_failed:
-  {
+  if (v4l2object->vcap.capabilities & V4L2_CAP_TUNER) {
+    /* only give a warning message if driver actually claims to have tuner
+     * support
+     */
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
         (_("Failed to set input %d on device %s."),
             input, v4l2object->videodev), GST_ERROR_SYSTEM);
-    return FALSE;
   }
+  return FALSE;
+}
+
+gboolean
+gst_v4l2_get_output (GstV4l2Object * v4l2object, gint * output)
+{
+  gint n;
+
+  GST_DEBUG_OBJECT (v4l2object->element, "trying to get output");
+
+  if (!GST_V4L2_IS_OPEN (v4l2object))
+    return FALSE;
+
+  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_OUTPUT, &n) < 0)
+    goto output_failed;
+
+  *output = n;
+
+  GST_DEBUG_OBJECT (v4l2object->element, "output: %d", n);
+
+  return TRUE;
+
+  /* ERRORS */
+output_failed:
+  if (v4l2object->vcap.capabilities & V4L2_CAP_TUNER) {
+    /* only give a warning message if driver actually claims to have tuner
+     * support
+     */
+    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Failed to get current output on device '%s'. May be it is a radio device"), v4l2object->videodev), GST_ERROR_SYSTEM);
+  }
+  return FALSE;
+}
+
+gboolean
+gst_v4l2_set_output (GstV4l2Object * v4l2object, gint output)
+{
+  GST_DEBUG_OBJECT (v4l2object->element, "trying to set output to %d", output);
+
+  if (!GST_V4L2_IS_OPEN (v4l2object))
+    return FALSE;
+
+  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_S_OUTPUT, &output) < 0)
+    goto output_failed;
+
+  return TRUE;
+
+  /* ERRORS */
+output_failed:
+  if (v4l2object->vcap.capabilities & V4L2_CAP_TUNER) {
+    /* only give a warning message if driver actually claims to have tuner
+     * support
+     */
+    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Failed to set output %d on device %s."),
+            output, v4l2object->videodev), GST_ERROR_SYSTEM);
+  }
+  return FALSE;
 }

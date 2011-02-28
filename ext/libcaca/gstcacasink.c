@@ -209,12 +209,14 @@ gst_cacasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
 {
   GstCACASink *cacasink;
   GstStructure *structure;
+  gint endianness;
 
   cacasink = GST_CACASINK (basesink);
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &(cacasink->width));
   gst_structure_get_int (structure, "height", &(cacasink->height));
+  gst_structure_get_int (structure, "endianness", &endianness);
   gst_structure_get_int (structure, "bpp", (int *) &cacasink->bpp);
   gst_structure_get_int (structure, "red_mask", (int *) &cacasink->red_mask);
   gst_structure_get_int (structure, "green_mask",
@@ -233,10 +235,16 @@ gst_cacasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
     cacasink->blue_mask = GUINT32_FROM_BE (cacasink->blue_mask);
   }
 
-  else if (cacasink->bpp == 16 || cacasink->bpp == 15) {
-    cacasink->red_mask = GUINT16_FROM_BE (cacasink->red_mask);
-    cacasink->green_mask = GUINT16_FROM_BE (cacasink->green_mask);
-    cacasink->blue_mask = GUINT16_FROM_BE (cacasink->blue_mask);
+  else if (cacasink->bpp == 16) {
+    if (endianness == G_BIG_ENDIAN) {
+      cacasink->red_mask = GUINT16_FROM_BE (cacasink->red_mask);
+      cacasink->green_mask = GUINT16_FROM_BE (cacasink->green_mask);
+      cacasink->blue_mask = GUINT16_FROM_BE (cacasink->blue_mask);
+    } else {
+      cacasink->red_mask = GUINT16_FROM_LE (cacasink->red_mask);
+      cacasink->green_mask = GUINT16_FROM_LE (cacasink->green_mask);
+      cacasink->blue_mask = GUINT16_FROM_LE (cacasink->blue_mask);
+    }
   }
 
   if (cacasink->bitmap) {
@@ -246,7 +254,7 @@ gst_cacasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
   cacasink->bitmap = caca_create_bitmap (cacasink->bpp,
       cacasink->width,
       cacasink->height,
-      cacasink->width * cacasink->bpp / 8,
+      GST_ROUND_UP_4 (cacasink->width * cacasink->bpp / 8),
       cacasink->red_mask, cacasink->green_mask, cacasink->blue_mask, 0);
 
   if (!cacasink->bitmap) {

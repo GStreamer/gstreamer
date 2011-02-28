@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -71,10 +71,13 @@ msgstr ""
 msgid "This file is invalid and cannot be played."
 msgstr ""
 
-msgid "This file is incomplete and cannot be played."
+msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-msgid "This file is corrupt and cannot be played."
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
 msgstr ""
 
 msgid "The video in this file might not play correctly."
@@ -625,6 +628,15 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "\"%s\" audio avadanlığı bağlana bilmədi."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "\"%s\" audio avadanlığı bağlana bilmədi."
 
 #, fuzzy, c-format

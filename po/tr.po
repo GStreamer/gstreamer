@@ -1,12 +1,13 @@
-# translation of gst-plugins-good-0.10.25.3.po to Turkish
+# translation of gst-plugins-good-0.10.26.2.po to Turkish
 # This file is put in the public domain.
 # Server Acim <serveracim@gmail.com>, 2010.
+# Server Acim <serveracim@gmail.com>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-18 00:43+0000\n"
-"PO-Revision-Date: 2010-11-16 16:41+0200\n"
+"POT-Creation-Date: 2011-01-11 19:32+0000\n"
+"PO-Revision-Date: 2011-01-08 00:03+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
@@ -67,11 +68,14 @@ msgstr "Dosya çalınabilir akışlar içermiyor."
 msgid "This file is invalid and cannot be played."
 msgstr "Bu dosya geçersiz ve oynatılamaz."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Dosya eksik ve oynatılamaz."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Bu dosya bozuk ve oynatılamaz."
+
+msgid "Invalid atom size."
+msgstr "Geçersiz atom boyutu"
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Dosya eksik ve oynatılamaz."
 
 msgid "The video in this file might not play correctly."
 msgstr "Bu dosyadaki vidyo doğru oynatılamıyabilir."
@@ -614,6 +618,16 @@ msgstr ""
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Giriş değeri olarak bu %d şu aygıtta %s ayarlanamadı."
+
+#, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Şu aygıtta '%s' geçerli giriş elde edilemedi. O bir radyo aygıtı olabilir."
+
+#, c-format
+msgid "Failed to set output %d on device %s."
+msgstr "Çıkış değeri olarak %d şu aygıtta %s elde edilemedi."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-18 00:43+0000\n"
+"POT-Creation-Date: 2011-01-07 01:15+0000\n"
 "PO-Revision-Date: 2010-11-04 14:23+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -69,11 +69,14 @@ msgstr "Този файл не съдържа изпълними потоци."
 msgid "This file is invalid and cannot be played."
 msgstr "Този файл е повреден и не може да бъде изпълнен."
 
-msgid "This file is incomplete and cannot be played."
-msgstr "Този файл е непълен и не може да бъде изпълнен."
-
 msgid "This file is corrupt and cannot be played."
 msgstr "Този файл е повреден и не може да бъде изпълнен."
+
+msgid "Invalid atom size."
+msgstr ""
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Този файл е непълен и не може да бъде изпълнен."
 
 msgid "The video in this file might not play correctly."
 msgstr "Видео потокът в този файл може да не се покаже правилно."
@@ -625,6 +628,16 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
+msgstr "Неуспех при задаването на вход %d на устройство „%s“."
+
+#, fuzzy, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Неуспех при получаването на текущия вход на устройство „%s“. Може би е радио."
+
+#, fuzzy, c-format
+msgid "Failed to set output %d on device %s."
 msgstr "Неуспех при задаването на вход %d на устройство „%s“."
 
 #, c-format

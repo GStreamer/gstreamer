@@ -264,52 +264,63 @@ gst_cairo_render_setcaps_sink (GstPad * pad, GstCaps * caps)
   return TRUE;
 }
 
-static GstStaticPadTemplate t_src = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS (
+
+#define SIZE_CAPS "width = (int) [ 1, MAX], height = (int) [ 1, MAX] "
 #if CAIRO_HAS_PDF_SURFACE
-        "application/pdf, "
-        "width = (int) [ 1, MAX], " "height = (int) [ 1, MAX] "
+#define PDF_CAPS "application/pdf, " SIZE_CAPS
+#else
+#define PDF_CAPS
 #endif
 #if CAIRO_HAS_PDF_SURFACE && (CAIRO_HAS_PS_SURFACE || CAIRO_HAS_SVG_SURFACE || CAIRO_HAS_PNG_FUNCTIONS)
-        ";"
+#define JOIN1 ";"
+#else
+#define JOIN1
 #endif
 #if CAIRO_HAS_PS_SURFACE
-        "application/postscript, "
-        "width = (int) [ 1, MAX], " "height = (int) [ 1, MAX] "
+#define PS_CAPS "application/postscript, " SIZE_CAPS
+#else
+#define PS_CAPS
 #endif
 #if (CAIRO_HAS_PDF_SURFACE || CAIRO_HAS_PS_SURFACE) && (CAIRO_HAS_SVG_SURFACE || CAIRO_HAS_PNG_FUNCTIONS)
-        ";"
+#define JOIN2 ";"
+#else
+#define JOIN2
 #endif
 #if CAIRO_HAS_SVG_SURFACE
-        "image/svg+xml, "
-        "width = (int) [ 1, MAX], " "height = (int) [ 1, MAX] "
+#define SVG_CAPS "image/svg+xml, " SIZE_CAPS
+#else
+#define SVG_CAPS
 #endif
 #if (CAIRO_HAS_PDF_SURFACE || CAIRO_HAS_PS_SURFACE || CAIRO_HAS_SVG_SURFACE) && CAIRO_HAS_PNG_FUNCTIONS
-        ";"
+#define JOIN3 ";"
+#else
+#define JOIN3
 #endif
 #if CAIRO_HAS_PNG_FUNCTIONS
-        "image/png, " "width = (int) [ 1, MAX], " "height = (int) [ 1, MAX] "
-#endif
-    ));
-static GstStaticPadTemplate t_snk = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS (
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-        GST_VIDEO_CAPS_BGRx " ; " GST_VIDEO_CAPS_BGRA " ; "
+#define PNG_CAPS "image/png, " SIZE_CAPS
+#define PNG_CAPS2 "; image/png, " SIZE_CAPS
 #else
-        GST_VIDEO_CAPS_xRGB " ; " GST_VIDEO_CAPS_ARGB " ; "
+#define PNG_CAPS
+#define PNG_CAPS2
 #endif
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define ARGB_CAPS GST_VIDEO_CAPS_BGRx " ; " GST_VIDEO_CAPS_BGRA " ; "
+#else
+#define ARGB_CAPS GST_VIDEO_CAPS_xRGB " ; " GST_VIDEO_CAPS_ARGB " ; "
+#endif
+static GstStaticPadTemplate t_src = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (PDF_CAPS JOIN1 PS_CAPS JOIN2 SVG_CAPS JOIN3 PNG_CAPS));
+static GstStaticPadTemplate t_snk = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS (ARGB_CAPS
         GST_VIDEO_CAPS_YUV ("Y800") " ; "
         "video/x-raw-gray, "
         "bpp = 8, "
         "depth = 8, "
         "width = " GST_VIDEO_SIZE_RANGE ", "
         "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE
-        " ; "
-#if CAIRO_HAS_PNG_FUNCTIONS
-        "image/png, "
-        "width = " GST_VIDEO_SIZE_RANGE ", " "height = " GST_VIDEO_SIZE_RANGE
-#endif
-    ));
+        PNG_CAPS2));
 
 GST_BOILERPLATE (GstCairoRender, gst_cairo_render, GstElement,
     GST_TYPE_ELEMENT);

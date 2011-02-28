@@ -90,6 +90,7 @@ void gst_pulsemixer_ctrl_set_mute (GstPulseMixerCtrl * mixer,
     GstMixerTrack * track, gboolean mute);
 void gst_pulsemixer_ctrl_set_record (GstPulseMixerCtrl * mixer,
     GstMixerTrack * track, gboolean record);
+GstMixerFlags gst_pulsemixer_ctrl_get_mixer_flags (GstPulseMixerCtrl * mixer);
 
 #define GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS(Type, interface_as_function)     \
 static const GList*                                                             \
@@ -146,6 +147,16 @@ interface_as_function ## _set_mute (GstMixer * mixer, GstMixerTrack * track,    
                                                                                 \
   gst_pulsemixer_ctrl_set_mute (this->mixer, track, mute);                      \
 }                                                                               \
+static GstMixerFlags                                                            \
+interface_as_function ## _get_mixer_flags (GstMixer * mixer)                    \
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_val_if_fail (this != NULL, GST_MIXER_FLAG_NONE);                     \
+  g_return_val_if_fail (this->mixer != NULL, GST_MIXER_FLAG_NONE);              \
+                                                                                \
+  return gst_pulsemixer_ctrl_get_mixer_flags (this->mixer);                          \
+} \
 static void                                                                     \
 interface_as_function ## _mixer_interface_init (GstMixerClass * klass)          \
 {                                                                               \
@@ -156,6 +167,7 @@ interface_as_function ## _mixer_interface_init (GstMixerClass * klass)          
   klass->get_volume  = interface_as_function ## _get_volume;                    \
   klass->set_mute    = interface_as_function ## _set_mute;                      \
   klass->set_record  = interface_as_function ## _set_record;                    \
+  klass->get_mixer_flags = interface_as_function ## _get_mixer_flags; \
 }
 
 G_END_DECLS

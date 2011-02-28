@@ -135,6 +135,8 @@ static gboolean gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
+static gboolean gst_rtp_mp4g_depay_handle_event (GstBaseRTPDepayload * filter,
+    GstEvent * event);
 
 static GstStateChangeReturn gst_rtp_mp4g_depay_change_state (GstElement *
     element, GstStateChange transition);
@@ -151,7 +153,7 @@ gst_rtp_mp4g_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_mp4g_depay_sink_template));
 
   gst_element_class_set_details_simple (element_class,
-      "RTP MPEG4 ES depayloader", "Codec/Depayloader/Network",
+      "RTP MPEG4 ES depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts MPEG4 elementary streams from RTP packets (RFC 3640)",
       "Wim Taymans <wim.taymans@gmail.com>");
 }
@@ -173,6 +175,7 @@ gst_rtp_mp4g_depay_class_init (GstRtpMP4GDepayClass * klass)
 
   gstbasertpdepayload_class->process = gst_rtp_mp4g_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_mp4g_depay_setcaps;
+  gstbasertpdepayload_class->handle_event = gst_rtp_mp4g_depay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtpmp4gdepay_debug, "rtpmp4gdepay", 0,
       "MP4-generic RTP Depayloader");
@@ -313,6 +316,18 @@ gst_rtp_mp4g_depay_clear_queue (GstRtpMP4GDepay * rtpmp4gdepay)
 
   while ((outbuf = g_queue_pop_head (rtpmp4gdepay->packets)))
     gst_buffer_unref (outbuf);
+}
+
+static void
+gst_rtp_mp4g_depay_reset (GstRtpMP4GDepay * rtpmp4gdepay)
+{
+  gst_adapter_clear (rtpmp4gdepay->adapter);
+  rtpmp4gdepay->max_AU_index = -1;
+  rtpmp4gdepay->next_AU_index = -1;
+  rtpmp4gdepay->prev_AU_index = -1;
+  rtpmp4gdepay->prev_rtptime = -1;
+  rtpmp4gdepay->last_AU_index = -1;
+  gst_rtp_mp4g_depay_clear_queue (rtpmp4gdepay);
 }
 
 static void
@@ -699,6 +714,28 @@ short_payload:
   }
 }
 
+static gboolean
+gst_rtp_mp4g_depay_handle_event (GstBaseRTPDepayload * filter, GstEvent * event)
+{
+  gboolean ret;
+  GstRtpMP4GDepay *rtpmp4gdepay;
+
+  rtpmp4gdepay = GST_RTP_MP4G_DEPAY (filter);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_mp4g_depay_reset (rtpmp4gdepay);
+      break;
+    default:
+      break;
+  }
+
+  ret =
+      GST_BASE_RTP_DEPAYLOAD_CLASS (parent_class)->handle_event (filter, event);
+
+  return ret;
+}
+
 static GstStateChangeReturn
 gst_rtp_mp4g_depay_change_state (GstElement * element,
     GstStateChange transition)
@@ -710,13 +747,7 @@ gst_rtp_mp4g_depay_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_adapter_clear (rtpmp4gdepay->adapter);
-      rtpmp4gdepay->max_AU_index = -1;
-      rtpmp4gdepay->next_AU_index = -1;
-      rtpmp4gdepay->prev_AU_index = -1;
-      rtpmp4gdepay->prev_rtptime = -1;
-      rtpmp4gdepay->last_AU_index = -1;
-      rtpmp4gdepay->prev_AU_num = -1;
+      gst_rtp_mp4g_depay_reset (rtpmp4gdepay);
       break;
     default:
       break;
@@ -726,8 +757,7 @@ gst_rtp_mp4g_depay_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_adapter_clear (rtpmp4gdepay->adapter);
-      gst_rtp_mp4g_depay_clear_queue (rtpmp4gdepay);
+      gst_rtp_mp4g_depay_reset (rtpmp4gdepay);
       break;
     default:
       break;
@@ -739,5 +769,5 @@ gboolean
 gst_rtp_mp4g_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp4gdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_MP4G_DEPAY);
+      GST_RANK_SECONDARY, GST_TYPE_RTP_MP4G_DEPAY);
 }
