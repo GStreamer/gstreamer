@@ -145,6 +145,7 @@ const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
 
 /* default metadata */
 
+/* memory metadata */
 typedef struct _GstMetaMemory GstMetaMemory;
 
 const GstMetaInfo *gst_meta_memory_get_info(void);
@@ -169,10 +170,26 @@ struct _GstMetaMemory
 #define gst_meta_memory_unmap(m,d,s)   ((m)->munmap_func(m, d, s))
 
 #define gst_buffer_get_meta_memory(b)  ((GstMetaMemory*)gst_buffer_get_meta((b),GST_META_MEMORY_INFO))
-
 GstMetaMemory * gst_buffer_add_meta_memory (GstBuffer *buffer, gpointer data,
                                             GFreeFunc free_func,
                                             gsize size, gsize offset);
+/* timing metadata */
+typedef struct _GstMetaTiming GstMetaTiming;
+
+const GstMetaInfo *gst_meta_timing_get_info(void);
+#define GST_META_TIMING_INFO (gst_meta_timing_get_info())
+
+struct _GstMetaTiming {
+  GstMeta        meta;        /* common meta header */
+
+  GstClockTime   dts;         /* decoding timestamp */
+  GstClockTime   pts;         /* presentation timestamp */
+  GstClockTime   duration;    /* duration of the data */
+  GstClockTime   clock_rate;  /* clock rate for the above values */
+};
+
+#define gst_buffer_get_meta_timing(b)  ((GstMetaTiming*)gst_buffer_get_meta((b),GST_META_TIMING_INFO))
+#define gst_buffer_add_meta_timing(b)  ((GstMetaTiming*)gst_buffer_add_meta((b),GST_META_TIMING_INFO,NULL))
 
 G_END_DECLS
 

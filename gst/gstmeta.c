@@ -108,6 +108,7 @@ gst_meta_get_info (const gchar * impl)
   return info;
 }
 
+/* Memory metadata */
 typedef struct
 {
   guint8 *data;
@@ -204,4 +205,65 @@ gst_buffer_add_meta_memory (GstBuffer * buffer, gpointer data,
   meta = gst_buffer_add_meta (buffer, GST_META_MEMORY_INFO, &params);
 
   return (GstMetaMemory *) meta;
+}
+
+/* Timing metadata */
+static void
+meta_timing_copy (GstBuffer * copy, GstMetaTiming * meta, GstBuffer * buffer)
+{
+  GstMetaTiming *timing;
+
+  GST_DEBUG ("copy called from buffer %p to %p, meta %p", buffer, copy, meta);
+
+  timing = gst_buffer_add_meta_timing (copy);
+  timing->pts = meta->pts;
+  timing->dts = meta->dts;
+  timing->duration = meta->duration;
+  timing->clock_rate = meta->clock_rate;
+}
+
+static void
+meta_timing_sub (GstBuffer * sub, GstMetaTiming * meta, GstBuffer * buffer,
+    guint offset, guint size)
+{
+  GstMetaTiming *timing;
+
+  GST_DEBUG ("sub called from buffer %p to %p, meta %p, %u-%u", buffer, sub,
+      meta, offset, size);
+
+  timing = gst_buffer_add_meta_timing (sub);
+  if (offset == 0) {
+    /* same offset, copy timestamps */
+    timing->pts = meta->pts;
+    timing->dts = meta->dts;
+    if (size == GST_BUFFER_SIZE (buffer)) {
+      /* same size, copy duration */
+      timing->duration = meta->duration;
+    } else {
+      /* else clear */
+      timing->duration = GST_CLOCK_TIME_NONE;
+    }
+  } else {
+    timing->pts = -1;
+    timing->dts = -1;
+    timing->duration = -1;
+  }
+  timing->clock_rate = meta->clock_rate;
+}
+
+const GstMetaInfo *
+gst_meta_timing_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (meta_info == NULL) {
+    meta_info = gst_meta_register ("GstMetaTiming", "GstMetaTiming",
+        sizeof (GstMetaTiming),
+        (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) NULL,
+        (GstMetaCopyFunction) meta_timing_copy,
+        (GstMetaSubFunction) meta_timing_sub,
+        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+  }
+  return meta_info;
 }
