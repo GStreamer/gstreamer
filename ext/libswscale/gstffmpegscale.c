@@ -88,13 +88,13 @@ GST_DEBUG_CATEGORY (ffmpegscale_debug);
         GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; " \
         GST_VIDEO_CAPS_xRGB "; " GST_VIDEO_CAPS_xBGR "; " \
         GST_VIDEO_CAPS_ARGB "; " GST_VIDEO_CAPS_ABGR "; " \
-        GST_VIDEO_CAPS_YUV ("{ I420, YUY2, Y41B, Y42B }")
+        GST_VIDEO_CAPS_YUV ("{ I420, YUY2, UYVY, Y41B, Y42B }")
 #else
 #define VIDEO_CAPS \
         GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; " \
         GST_VIDEO_CAPS_RGBx "; " GST_VIDEO_CAPS_BGRx "; " \
         GST_VIDEO_CAPS_RGBA "; " GST_VIDEO_CAPS_BGRA "; " \
-        GST_VIDEO_CAPS_YUV ("{ I420, YUY2, Y41B, Y42B }")
+        GST_VIDEO_CAPS_YUV ("{ I420, YUY2, UYVY, Y41B, Y42B }")
 #endif
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -510,6 +510,9 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps)
       switch (fourcc) {
         case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
           pix_fmt = PIX_FMT_YUYV422;
+          break;
+        case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
+          pix_fmt = PIX_FMT_UYVY422;
           break;
         case GST_MAKE_FOURCC ('I', '4', '2', '0'):
           pix_fmt = PIX_FMT_YUV420P;

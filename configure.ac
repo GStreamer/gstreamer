@@ -261,8 +261,9 @@ else
   AC_MSG_NOTICE([Using ffmpeg revision $FFMPEG_REVISION])
   
   dnl libgstffmpeg.la: include dirs
-  FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
-                 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
+  FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
+  		 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcore \
+  		 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec \
 		 -I \$(top_srcdir)/gst-libs/ext/ffmpeg \
 		 -I \$(top_builddir)/gst-libs/ext/ffmpeg \
@@ -271,7 +272,8 @@ else
   dnl libgstffmpeg.la: libs to statically link to        
   FFMPEG_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libavformat/libavformat.a \
                \$(top_builddir)/gst-libs/ext/ffmpeg/libavcodec/libavcodec.a \
-               \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a"
+               \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a \
+               \$(top_builddir)/gst-libs/ext/ffmpeg/libavcore/libavcore.a"
   dnl
   POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libpostproc	\
                    -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil 	\

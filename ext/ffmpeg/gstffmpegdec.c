@@ -96,7 +96,8 @@ struct _GstFFMpegDec
   gboolean has_b_frames;
   gboolean reordered_in;
   GstClockTime last_in;
-  GstClockTime next_in;
+  GstClockTime last_diff;
+  guint last_frames;
   gboolean reordered_out;
   GstClockTime last_out;
   GstClockTime next_out;
@@ -498,7 +499,8 @@ static void
 gst_ffmpegdec_reset_ts (GstFFMpegDec * ffmpegdec)
 {
   ffmpegdec->last_in = GST_CLOCK_TIME_NONE;
-  ffmpegdec->next_in = GST_CLOCK_TIME_NONE;
+  ffmpegdec->last_diff = GST_CLOCK_TIME_NONE;
+  ffmpegdec->last_frames = 0;
   ffmpegdec->last_out = GST_CLOCK_TIME_NONE;
   ffmpegdec->next_out = GST_CLOCK_TIME_NONE;
   ffmpegdec->reordered_in = FALSE;
@@ -1292,9 +1294,22 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   /* ERRORS */
 no_caps:
   {
-    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-        ("could not find caps for codec (%s), unknown type",
-            oclass->in_plugin->name));
+#ifdef HAVE_FFMPEG_UNINSTALLED
+    /* using internal ffmpeg snapshot */
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
+        ("Could not find GStreamer caps mapping for FFmpeg codec '%s'.",
+            oclass->in_plugin->name), (NULL));
+#else
+    /* using external ffmpeg */
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
+        ("Could not find GStreamer caps mapping for FFmpeg codec '%s', and "
+            "you are using an external libavcodec. This is most likely due to "
+            "a packaging problem and/or libavcodec having been upgraded to a "
+            "version that is not compatible with this version of "
+            "gstreamer-ffmpeg. Make sure your gstreamer-ffmpeg and libavcodec "
+            "packages come from the same source/repository.",
+            oclass->in_plugin->name), (NULL));
+#endif
     return FALSE;
   }
 caps_failed:
@@ -1872,6 +1887,9 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   } else if (GST_CLOCK_TIME_IS_VALID (dec_info->duration)) {
     GST_LOG_OBJECT (ffmpegdec, "using in_duration");
     out_duration = dec_info->duration;
+  } else if (GST_CLOCK_TIME_IS_VALID (ffmpegdec->last_diff)) {
+    GST_LOG_OBJECT (ffmpegdec, "using last-diff");
+    out_duration = ffmpegdec->last_diff;
   } else {
     /* if we have an input framerate, use that */
     if (ffmpegdec->format.video.fps_n != -1 &&
@@ -2281,6 +2299,22 @@ gst_ffmpegdec_drain (GstFFMpegDec * ffmpegdec)
 static void
 gst_ffmpegdec_flush_pcache (GstFFMpegDec * ffmpegdec)
 {
+  if (ffmpegdec->pctx) {
+    gint res, size, bsize;
+    guint8 *data;
+    guint8 bdata[FF_INPUT_BUFFER_PADDING_SIZE];
+
+    bsize = FF_INPUT_BUFFER_PADDING_SIZE;
+    memset (bdata, 0, bsize);
+
+    /* parse some dummy data to work around some ffmpeg weirdness where it keeps
+     * the previous pts around */
+    res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
+        &data, &size, bdata, bsize, -1, -1);
+    ffmpegdec->pctx->pts = -1;
+    ffmpegdec->pctx->dts = -1;
+  }
+
   if (ffmpegdec->pcache) {
     gst_buffer_unref (ffmpegdec->pcache);
     ffmpegdec->pcache = NULL;
@@ -2482,13 +2516,28 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   if (in_timestamp != -1) {
     /* check for increasing timestamps if they are jumping backwards, we
      * probably are dealing with PTS as timestamps */
-    if (!ffmpegdec->reordered_in && ffmpegdec->last_in != -1
-        && in_timestamp < ffmpegdec->last_in) {
-      GST_LOG_OBJECT (ffmpegdec, "detected reordered input timestamps");
-      ffmpegdec->reordered_in = TRUE;
+    if (!ffmpegdec->reordered_in && ffmpegdec->last_in != -1) {
+      if (in_timestamp < ffmpegdec->last_in) {
+        GST_LOG_OBJECT (ffmpegdec, "detected reordered input timestamps");
+        ffmpegdec->reordered_in = TRUE;
+        ffmpegdec->last_diff = GST_CLOCK_TIME_NONE;
+      } else if (in_timestamp > ffmpegdec->last_in) {
+        GstClockTime diff;
+        /* keep track of timestamp diff to estimate duration */
+        diff = in_timestamp - ffmpegdec->last_in;
+        /* need to scale with amount of frames in the interval */
+        if (ffmpegdec->last_frames)
+          diff /= ffmpegdec->last_frames;
+
+        GST_LOG_OBJECT (ffmpegdec, "estimated duration %" GST_TIME_FORMAT " %u",
+            GST_TIME_ARGS (diff), ffmpegdec->last_frames);
+
+        ffmpegdec->last_diff = diff;
+      }
     }
     ffmpegdec->last_in = in_timestamp;
   }
+  ffmpegdec->last_frames = 0;
 
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %u, offset:%" G_GUINT64_FORMAT ", ts:%"
@@ -2515,7 +2564,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 
       GST_LOG_OBJECT (ffmpegdec,
           "Calling av_parser_parse with offset %" G_GINT64_FORMAT ", ts:%"
-          GST_TIME_FORMAT, in_offset, GST_TIME_ARGS (in_timestamp));
+          GST_TIME_FORMAT " size %d", in_offset, GST_TIME_ARGS (in_timestamp),
+          bsize);
 
       /* feed the parser. We pass the timestamp info so that we can recover all
        * info again later */
@@ -2523,10 +2573,19 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
           &data, &size, bdata, bsize, in_info->idx, in_info->idx);
 
       GST_LOG_OBJECT (ffmpegdec,
-          "parser returned res %d and size %d", res, size);
+          "parser returned res %d and size %d, id %" G_GINT64_FORMAT, res, size,
+          ffmpegdec->pctx->pts);
 
       /* store pts for decoding */
-      dec_info = gst_ts_info_get (ffmpegdec, ffmpegdec->pctx->pts);
+      if (ffmpegdec->pctx->pts != -1)
+        dec_info = gst_ts_info_get (ffmpegdec, ffmpegdec->pctx->pts);
+      else {
+        /* ffmpeg sometimes loses track after a flush, help it by feeding a
+         * valid start time */
+        ffmpegdec->pctx->pts = in_info->idx;
+        ffmpegdec->pctx->dts = in_info->idx;
+        dec_info = in_info;
+      }
 
       GST_LOG_OBJECT (ffmpegdec, "consuming %d bytes. id %d", size,
           dec_info->idx);
@@ -2626,6 +2685,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     } else {
       ffmpegdec->clear_ts = TRUE;
     }
+    ffmpegdec->last_frames++;
 
     GST_LOG_OBJECT (ffmpegdec, "Before (while bsize>0).  bsize:%d , bdata:%p",
         bsize, bdata);
@@ -2888,6 +2948,9 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_DVVIDEO:
       case CODEC_ID_SIPR:
         rank = GST_RANK_SECONDARY;
+        break;
+      case CODEC_ID_MP3:
+        rank = GST_RANK_NONE;
         break;
       default:
         rank = GST_RANK_MARGINAL;

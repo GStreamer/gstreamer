@@ -943,6 +943,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp6-alpha", NULL);
       break;
 
+    case CODEC_ID_VP8:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp8", NULL);
+      break;
+
     case CODEC_ID_THEORA:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-theora", NULL);
       break;
@@ -1182,6 +1186,19 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-zmbv", NULL);
       break;
 
+    case CODEC_ID_LAGARITH:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-lagarith", NULL);
+      break;
+
+    case CODEC_ID_CSCD:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-camstudio", NULL);
+      if (context) {
+        gst_caps_set_simple (caps,
+            "depth", G_TYPE_INT, (gint) context->bits_per_coded_sample, NULL);
+      } else {
+        gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 8, 32, NULL);
+      }
+      break;
 
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
@@ -1201,7 +1218,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_MP3ADU:
     case CODEC_ID_MP3ON4:
     case CODEC_ID_WESTWOOD_SND1:
-    case CODEC_ID_CSCD:
     case CODEC_ID_MMVIDEO:
     case CODEC_ID_AVS:
     case CODEC_ID_CAVS:
@@ -1275,6 +1291,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_PCM_ALAW:
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-alaw", NULL);
+      break;
+
+    case CODEC_ID_ADPCM_G722:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/G722", NULL);
+      if (context)
+        gst_caps_set_simple (caps,
+            "block_align", G_TYPE_INT, context->block_align,
+            "bitrate", G_TYPE_INT, context->bit_rate, NULL);
       break;
 
     case CODEC_ID_ADPCM_G726:
@@ -1428,6 +1452,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_AMR_WB:
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/AMR-WB", NULL);
+      break;
+
+    case CODEC_ID_GSM:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-gsm", NULL);
+      break;
+
+    case CODEC_ID_GSM_MS:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/ms-gsm", NULL);
       break;
 
     case CODEC_ID_NELLYMOSER:
@@ -2365,6 +2397,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     case CODEC_ID_MSRLE:
     case CODEC_ID_QTRLE:
     case CODEC_ID_TSCC:
+    case CODEC_ID_CSCD:
     case CODEC_ID_APE:
     {
       gint depth;
@@ -3072,6 +3105,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-vp6-alpha")) {
     id = CODEC_ID_VP6A;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-vp8")) {
+    id = CODEC_ID_VP8;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-flash-screen")) {
     id = CODEC_ID_FLASHSV;

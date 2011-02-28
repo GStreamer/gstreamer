@@ -154,7 +154,7 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
 }
 
 static int
-gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
+gst_ffmpegdata_write (URLContext * h, const unsigned char *buf, int size)
 {
   GstProtocolInfo *info;
   GstBuffer *outbuf;
