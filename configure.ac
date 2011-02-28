@@ -43,6 +43,8 @@ dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
 
+AG_GST_LIBTOOL_PREPARE
+
 dnl FIXME: this macro doesn't actually work;
 dnl the generated libtool script has no support for the listed tags.
 dnl So this needs to be fixed first if we want to use this
