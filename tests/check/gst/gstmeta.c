@@ -41,19 +41,20 @@ typedef struct
   GstClockTime dts;
   GstClockTime duration;
   GstClockTime clock_rate;
-} GstTestMeta;
+} GstMetaTest;
 
-static const GstMetaInfo *gst_test_meta_get_info (void);
+static const GstMetaInfo *gst_meta_test_get_info (void);
+#define GST_META_TEST_INFO (gst_meta_test_get_info())
 
-#define GST_TEST_META_GET(buf) ((GstTestMeta *)gst_buffer_get_meta(buf,gst_test_meta_get_info()))
-#define GST_TEST_META_ADD(buf) ((GstTestMeta *)gst_buffer_add_meta(buf,gst_test_meta_get_info(),NULL))
+#define GST_META_TEST_GET(buf) ((GstMetaTest *)gst_buffer_get_meta(buf,GST_META_TEST_INFO))
+#define GST_META_TEST_ADD(buf) ((GstMetaTest *)gst_buffer_add_meta(buf,GST_META_TEST_INFO,NULL))
 
 #if 0
 /* unused currently. This is a user function to fill the metadata with default
  * values. We don't call this from the init function because the user is mostly
  * likely going to override the values immediately after */
 static void
-gst_test_meta_init (GstTestMeta * meta)
+gst_meta_test_init (GstMetaTest * meta)
 {
   meta->pts = GST_CLOCK_TIME_NONE;
   meta->dts = GST_CLOCK_TIME_NONE;
@@ -63,7 +64,7 @@ gst_test_meta_init (GstTestMeta * meta)
 #endif
 
 static void
-test_init_func (GstTestMeta * meta, GstBuffer * buffer)
+test_init_func (GstMetaTest * meta, GstBuffer * buffer)
 {
   GST_DEBUG ("init called on buffer %p, meta %p", buffer, meta);
   /* nothing to init really, the init function is mostly for allocating
@@ -72,20 +73,20 @@ test_init_func (GstTestMeta * meta, GstBuffer * buffer)
 }
 
 static void
-test_free_func (GstTestMeta * meta, GstBuffer * buffer)
+test_free_func (GstMetaTest * meta, GstBuffer * buffer)
 {
   GST_DEBUG ("free called on buffer %p, meta %p", buffer, meta);
   /* nothing to free really */
 }
 
 static void
-test_copy_func (GstBuffer * copy, GstTestMeta * meta, GstBuffer * buffer)
+test_copy_func (GstBuffer * copy, GstMetaTest * meta, GstBuffer * buffer)
 {
-  GstTestMeta *test;
+  GstMetaTest *test;
 
   GST_DEBUG ("copy called from buffer %p to %p, meta %p", buffer, copy, meta);
 
-  test = GST_TEST_META_ADD (copy);
+  test = GST_META_TEST_ADD (copy);
   test->pts = meta->pts;
   test->dts = meta->dts;
   test->duration = meta->duration;
@@ -93,15 +94,15 @@ test_copy_func (GstBuffer * copy, GstTestMeta * meta, GstBuffer * buffer)
 }
 
 static void
-test_sub_func (GstBuffer * sub, GstTestMeta * meta, GstBuffer * buffer,
+test_sub_func (GstBuffer * sub, GstMetaTest * meta, GstBuffer * buffer,
     guint offset, guint size)
 {
-  GstTestMeta *test;
+  GstMetaTest *test;
 
   GST_DEBUG ("sub called from buffer %p to %p, meta %p, %u-%u", buffer, sub,
       meta, offset, size);
 
-  test = GST_TEST_META_ADD (sub);
+  test = GST_META_TEST_ADD (sub);
   if (offset == 0) {
     /* same offset, copy timestamps */
     test->pts = meta->pts;
@@ -122,31 +123,31 @@ test_sub_func (GstBuffer * sub, GstTestMeta * meta, GstBuffer * buffer,
 }
 
 static const GstMetaInfo *
-gst_test_meta_get_info (void)
+gst_meta_test_get_info (void)
 {
-  static const GstMetaInfo *test_meta_info = NULL;
+  static const GstMetaInfo *meta_test_info = NULL;
 
-  if (test_meta_info == NULL) {
-    test_meta_info = gst_meta_register ("GstTestMeta", "GstTestMeta",
-        sizeof (GstTestMeta),
+  if (meta_test_info == NULL) {
+    meta_test_info = gst_meta_register ("GstMetaTest", "GstMetaTest",
+        sizeof (GstMetaTest),
         (GstMetaInitFunction) test_init_func,
         (GstMetaFreeFunction) test_free_func,
         (GstMetaCopyFunction) test_copy_func,
         (GstMetaSubFunction) test_sub_func, NULL, NULL);
   }
-  return test_meta_info;
+  return meta_test_info;
 }
 
-GST_START_TEST (test_metadata)
+GST_START_TEST (test_meta_test)
 {
   GstBuffer *buffer, *copy, *subbuf;
-  GstTestMeta *meta;
+  GstMetaTest *meta;
 
   buffer = gst_buffer_new_and_alloc (4);
   memset (GST_BUFFER_DATA (buffer), 0, 4);
 
   /* add some metadata */
-  meta = GST_TEST_META_ADD (buffer);
+  meta = GST_META_TEST_ADD (buffer);
   fail_if (meta == NULL);
   /* fill some values */
   meta->pts = 1000;
@@ -157,7 +158,7 @@ GST_START_TEST (test_metadata)
   /* copy of the buffer */
   copy = gst_buffer_copy (buffer);
   /* get metadata of the buffer */
-  meta = GST_TEST_META_GET (copy);
+  meta = GST_META_TEST_GET (copy);
   fail_if (meta == NULL);
   fail_if (meta->pts != 1000);
   fail_if (meta->dts != 2000);
@@ -168,7 +169,7 @@ GST_START_TEST (test_metadata)
   /* make subbuffer */
   subbuf = gst_buffer_create_sub (buffer, 0, 1);
   /* get metadata of the buffer */
-  meta = GST_TEST_META_GET (subbuf);
+  meta = GST_META_TEST_GET (subbuf);
   fail_if (meta == NULL);
   fail_if (meta->pts != 1000);
   fail_if (meta->dts != 2000);
@@ -179,7 +180,7 @@ GST_START_TEST (test_metadata)
   /* make another subbuffer */
   subbuf = gst_buffer_create_sub (buffer, 1, 3);
   /* get metadata of the buffer */
-  meta = GST_TEST_META_GET (subbuf);
+  meta = GST_META_TEST_GET (subbuf);
   fail_if (meta == NULL);
   fail_if (meta->pts != -1);
   fail_if (meta->dts != -1);
@@ -193,6 +194,74 @@ GST_START_TEST (test_metadata)
 
 GST_END_TEST;
 
+GST_START_TEST (test_meta_memory)
+{
+  GstBuffer *buffer, *copy;
+  GstMetaMemory *meta;
+  guint8 *data;
+  gsize size;
+  guint i;
+
+  buffer = gst_buffer_new ();
+
+  /* add some memory metadata */
+  meta = gst_buffer_add_meta_memory (buffer, g_malloc (4), g_free, 4, 0);
+  fail_if (meta == NULL);
+  fail_if (meta->mmap_func == NULL);
+  fail_if (meta->munmap_func == NULL);
+
+  /* prepare for writing */
+  data = gst_meta_memory_map (meta, 0, &size, GST_META_MAP_WRITE);
+  fail_if (data == NULL);
+  fail_if (size != 4);
+  for (i = 0; i < 4; i++)
+    data[i] = i;
+  gst_meta_memory_unmap (meta, data, size);
+
+  /* reading */
+  meta = gst_buffer_get_meta_memory (buffer);
+  fail_if (meta == NULL);
+
+  data = gst_meta_memory_map (meta, 0, &size, GST_META_MAP_READ);
+  fail_if (data == NULL);
+  fail_if (size != 4);
+  for (i = 0; i < 4; i++)
+    fail_if (data[i] != i);
+  gst_meta_memory_unmap (meta, data, size);
+
+  /* copy of the buffer */
+  copy = gst_buffer_copy (buffer);
+  /* get metadata of the buffer */
+  meta = gst_buffer_get_meta_memory (copy);
+  fail_if (meta == NULL);
+  data = gst_meta_memory_map (meta, 0, &size, GST_META_MAP_READ);
+  fail_if (data == NULL);
+  fail_if (size != 4);
+  for (i = 0; i < 4; i++)
+    fail_if (data[i] != i);
+  gst_meta_memory_unmap (meta, data, size);
+  gst_buffer_unref (copy);
+
+#if 0
+  /* FIXME, does not work yet */
+  /* make a subbuffer */
+  subbuf = gst_buffer_create_sub (buffer, 1, 3);
+  meta = gst_buffer_get_meta_memory (subbuf);
+  fail_if (meta == NULL);
+  data = gst_meta_memory_map (meta, 0, &size, GST_META_MAP_READ);
+  fail_if (data == NULL);
+  fail_if (size != 3);
+  for (i = 0; i < 3; i++)
+    fail_if (data[i] != i + 1);
+  gst_meta_memory_unmap (meta, data, size);
+  gst_buffer_unref (subbuf);
+#endif
+
+  /* clean up */
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_buffermeta_suite (void)
@@ -201,7 +270,8 @@ gst_buffermeta_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_metadata);
+  tcase_add_test (tc_chain, test_meta_test);
+  tcase_add_test (tc_chain, test_meta_memory);
 
   return s;
 }
