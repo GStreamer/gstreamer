@@ -41,7 +41,7 @@
 <ARG>
 <NAME>GstXvidEnc::averaging-period</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Averaging Period</NICK>
 <BLURB>[CBR] Number of frames for which XviD averages bitrate.</BLURB>
@@ -91,7 +91,7 @@
 <ARG>
 <NAME>GstXvidEnc::buffer</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer Size</NICK>
 <BLURB>[CBR] Size of the video buffers.</BLURB>
@@ -121,7 +121,7 @@
 <ARG>
 <NAME>GstXvidEnc::container-frame-overhead</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Container Frame Overhead</NICK>
 <BLURB>[PASS2] Average container overhead per frame.</BLURB>
@@ -151,7 +151,7 @@
 <ARG>
 <NAME>GstXvidEnc::flow-control-strength</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flow Control Strength</NICK>
 <BLURB>[PASS2] Overflow control strength per frame.</BLURB>
@@ -211,7 +211,7 @@
 <ARG>
 <NAME>GstXvidEnc::keyframe-reduction</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe Reduction</NICK>
 <BLURB>[PASS2] Keyframe size reduction in % of those within threshold.</BLURB>
@@ -221,7 +221,7 @@
 <ARG>
 <NAME>GstXvidEnc::keyframe-threshold</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe Threshold</NICK>
 <BLURB>[PASS2] Distance between keyframes not to be subject to reduction.</BLURB>
@@ -281,7 +281,7 @@
 <ARG>
 <NAME>GstXvidEnc::max-overflow-degradation</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Overflow Degradation</NICK>
 <BLURB>[PASS2] Amount in % that flow control can decrease frame size compared to ideal curve.</BLURB>
@@ -291,7 +291,7 @@
 <ARG>
 <NAME>GstXvidEnc::max-overflow-improvement</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Overflow Improvement</NICK>
 <BLURB>[PASS2] Amount in % that flow control can increase frame size compared to ideal curve.</BLURB>
@@ -421,7 +421,7 @@
 <ARG>
 <NAME>GstXvidEnc::reaction-delay-factor</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Reaction Delay Factor</NICK>
 <BLURB>[CBR] Reaction delay factor.</BLURB>
@@ -1539,36 +1539,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstJackAudioSink::connect</NAME>
-<TYPE>GstJackConnect</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Connect</NICK>
-<BLURB>Specify how the output ports will be connected.</BLURB>
-<DEFAULT>Automatically connect ports to physical ports</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstJackAudioSink::server</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Server</NICK>
-<BLURB>The Jack server to connect to (NULL = default).</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstJackAudioSink::client</NAME>
-<TYPE>JackClient*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>JackClient</NICK>
-<BLURB>Handle for jack client.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>GstDvbSrc::bandwidth</NAME>
 <TYPE>GstDvbSrcBandwidth</TYPE>
 <RANGE></RANGE>
@@ -1731,7 +1701,7 @@
 <ARG>
 <NAME>GstDvbSrc::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -17175,7 +17145,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17215,7 +17185,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17871,7 +17841,7 @@
 <ARG>
 <NAME>DvbBaseBin::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -18019,6 +17989,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstSDPDemux::redirect</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Redirect</NICK>
+<BLURB>Sends a redirection message instead of using a custom session element.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSpeexResample::quality</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[0,10]</RANGE>
@@ -18096,6 +18076,16 @@
 <NICK>Width</NICK>
 <BLURB>Width of audio samples in raw stream.</BLURB>
 <DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioParse::channel-positions</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions</NICK>
+<BLURB>Channel positions used on the output.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -18451,56 +18441,6 @@
 <NICK>mythtv-version</NICK>
 <BLURB>Change MythTV version.</BLURB>
 <DEFAULT>26</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstInputSelector::active-pad</NAME>
-<TYPE>GstPad*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Active pad</NICK>
-<BLURB>The currently active sink pad.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstInputSelector::n-pads</NAME>
-<TYPE>guint</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>Number of Pads</NICK>
-<BLURB>The number of sink pads.</BLURB>
-<DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstInputSelector::select-all</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Select all mode</NICK>
-<BLURB>Forwards data from all input pads.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstOutputSelector::active-pad</NAME>
-<TYPE>GstPad*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Active pad</NICK>
-<BLURB>Currently active src pad.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstOutputSelector::resend-latest</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Resend latest buffer</NICK>
-<BLURB>Resend latest buffer after a switch to a new pad.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21916,11 +21856,11 @@
 <ARG>
 <NAME>GstCeltEnc::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[10,320]</RANGE>
+<RANGE>[10000,320000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Encoding Bit-rate</NICK>
-<BLURB>Specify an encoding bit-rate (in Kbps).</BLURB>
-<DEFAULT>64</DEFAULT>
+<BLURB>Specify an encoding bit-rate (in bps).</BLURB>
+<DEFAULT>64000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21956,11 +21896,11 @@
 <ARG>
 <NAME>GstCeltEnc::max-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[10,320]</RANGE>
+<RANGE>[10000,320000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum Encoding Bit-rate</NICK>
-<BLURB>Specify a maximum encoding bit rate (in Kbps) for variable bit rate encoding.</BLURB>
-<DEFAULT>64</DEFAULT>
+<BLURB>Specify a maximum encoding bit rate (in bps) for variable bit rate encoding.</BLURB>
+<DEFAULT>64000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21981,36 +21921,6 @@
 <NICK>Start Band</NICK>
 <BLURB>Controls the start band that should be used.</BLURB>
 <DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstJackAudioSrc::connect</NAME>
-<TYPE>GstJackConnect</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Connect</NICK>
-<BLURB>Specify how the input ports will be connected.</BLURB>
-<DEFAULT>Automatically connect ports to physical ports</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstJackAudioSrc::server</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Server</NICK>
-<BLURB>The Jack server to connect to (NULL = default).</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstJackAudioSrc::client</NAME>
-<TYPE>JackClient*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>JackClient</NICK>
-<BLURB>Handle for jack client.</BLURB>
-<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -22066,7 +21976,7 @@
 <ARG>
 <NAME>GstDCCPClientSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22106,7 +22016,7 @@
 <ARG>
 <NAME>GstDCCPServerSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22166,7 +22076,7 @@
 <ARG>
 <NAME>GstDCCPClientSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22226,7 +22136,7 @@
 <ARG>
 <NAME>GstDCCPServerSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22286,7 +22196,7 @@
 <ARG>
 <NAME>GstMpegTSDemux::program-number</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Program Number</NICK>
 <BLURB>Program number to demux for (-1 to ignore).</BLURB>
@@ -22346,7 +22256,7 @@
 <ARG>
 <NAME>GstPcapParse::dst-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Destination port</NICK>
 <BLURB>Destination port to restrict to.</BLURB>
@@ -22366,11 +22276,21 @@
 <ARG>
 <NAME>GstPcapParse::src-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Source port</NICK>
 <BLURB>Source port to restrict to.</BLURB>
 <DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPcapParse::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>The caps of the source pad.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -22524,6 +22444,46 @@
 </ARG>
 
 <ARG>
+<NAME>GstMJ2Mux::fragment-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Fragment duration</NICK>
+<BLURB>Fragment durations in ms (produce a fragmented file if > 0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::trak-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Track timescale</NICK>
+<BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>delta/duration</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGPPMux::faststart</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -22581,6 +22541,46 @@
 <NICK>File to store data for posterior moov atom recovery</NICK>
 <BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::fragment-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Fragment duration</NICK>
+<BLURB>Fragment durations in ms (produce a fragmented file if > 0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::trak-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Track timescale</NICK>
+<BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>delta/duration</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22644,6 +22644,46 @@
 </ARG>
 
 <ARG>
+<NAME>GstMP4Mux::fragment-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Fragment duration</NICK>
+<BLURB>Fragment durations in ms (produce a fragmented file if > 0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::trak-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Track timescale</NICK>
+<BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>delta/duration</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQTMux::faststart</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -22701,6 +22741,46 @@
 <NICK>File to store data for posterior moov atom recovery</NICK>
 <BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::fragment-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Fragment duration</NICK>
+<BLURB>Fragment durations in ms (produce a fragmented file if > 0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::trak-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Track timescale</NICK>
+<BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>delta/duration</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22895,12 +22975,12 @@
 
 <ARG>
 <NAME>GstCameraBin::zoom</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[100,1000]</RANGE>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Zoom</NICK>
-<BLURB>The zoom. 100 for 1x, 200 for 2x and so on.</BLURB>
-<DEFAULT>100</DEFAULT>
+<BLURB>The zoom. 1.0 for 1x, 2.0 for 2x and so on.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23020,7 +23100,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Flags</NICK>
 <BLURB>Flags to control behaviour.</BLURB>
-<DEFAULT>Enable source crop and scale|Enable scale for viewfinder|Enable colorspace conversion for still image</DEFAULT>
+<DEFAULT>Enable source crop and scale|Enable scale for viewfinder|Enable audio conversion for video capture|Enable colorspace conversion for still image|Enable colorspace conversion for video capture</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23104,6 +23184,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstCameraBin::idle</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Indicates if data is being processed (recording/capturing/saving)</NICK>
+<BLURB>Indicates if data is being processed (recording/capturing/saving).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::preview-source-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>preview source filter element</NICK>
+<BLURB>Optional preview source filter GStreamer element.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::ready-for-capture</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Indicates if preparing a new capture is possible</NICK>
+<BLURB>Indicates if preparing a new capture is possible.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDTMFSrc::interval</NAME>
 <TYPE>guint</TYPE>
 <RANGE>[10,50]</RANGE>
@@ -23166,7 +23276,7 @@
 <ARG>
 <NAME>GstRTPDTMFSrc::seqnum-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sequence number Offset</NICK>
 <BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
@@ -23196,7 +23306,7 @@
 <ARG>
 <NAME>GstRTPDTMFSrc::timestamp-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
 <BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
@@ -23246,7 +23356,7 @@
 <ARG>
 <NAME>GstRTPMux::seqnum-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sequence number Offset</NICK>
 <BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
@@ -23266,21 +23376,11 @@
 <ARG>
 <NAME>GstRTPMux::timestamp-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
 <BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
 <DEFAULT>-1</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstValve::drop</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Drops all buffers if TRUE</NICK>
-<BLURB>If this property if TRUE, the element will drop all buffers, if its FALSE, it will let them through.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26410,7 +26510,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>8.20075e-304</DEFAULT>
+<DEFAULT>4.63015e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26450,7 +26550,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.7486e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26460,7 +26560,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>4.77773e-299</DEFAULT>
+<DEFAULT>4.62957e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26490,7 +26590,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>8.0843e+44</DEFAULT>
+<DEFAULT>2.31928e-310</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26500,7 +26600,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>9.3207e+68</DEFAULT>
+<DEFAULT>2.31928e-310</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26510,7 +26610,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>1.18576e-322</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26910,7 +27010,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>1.34037e-317</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27080,7 +27180,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>7.75038e-304</DEFAULT>
+<DEFAULT>-6.17056e+303</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27090,7 +27190,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>5.12056e+199</DEFAULT>
+<DEFAULT>7.7486e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27270,7 +27370,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>2.07558e-316</DEFAULT>
+<DEFAULT>2.38039e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27620,7 +27720,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Default font effect</NICK>
 <BLURB>Whether to apply an effect to text by default, for increased readability.</BLURB>
-<DEFAULT>none</DEFAULT>
+<DEFAULT>outline</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28471,146 +28571,6 @@
 <NICK>ASCII Encoding</NICK>
 <BLURB>The output will be ASCII encoded.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpBin::do-lost</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Do Lost</NICK>
-<BLURB>Send an event downstream when a packet is lost.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpBin::latency</NAME>
-<TYPE>guint</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Buffer latency in ms</NICK>
-<BLURB>Default amount of ms to buffer in the jitterbuffers.</BLURB>
-<DEFAULT>200</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpBin::sdes</NAME>
-<TYPE>GstStructure*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>SDES</NICK>
-<BLURB>The SDES items of this session.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpJitterBuffer::do-lost</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Do Lost</NICK>
-<BLURB>Send an event downstream when a packet is lost.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpJitterBuffer::drop-on-latency</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Drop buffers when maximum latency is reached</NICK>
-<BLURB>Tells the jitterbuffer to never exceed the given latency in size.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpJitterBuffer::latency</NAME>
-<TYPE>guint</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Buffer latency in ms</NICK>
-<BLURB>Amount of ms to buffer.</BLURB>
-<DEFAULT>200</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpJitterBuffer::ts-offset</NAME>
-<TYPE>gint64</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Timestamp Offset</NICK>
-<BLURB>Adjust buffer timestamps with offset in nanoseconds.</BLURB>
-<DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpSession::bandwidth</NAME>
-<TYPE>gdouble</TYPE>
-<RANGE>>= 0</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Bandwidth</NICK>
-<BLURB>The bandwidth of the session.</BLURB>
-<DEFAULT>64000</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpSession::internal-session</NAME>
-<TYPE>RTPSession*</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>Internal Session</NICK>
-<BLURB>The internal RTPSession object.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpSession::ntp-ns-base</NAME>
-<TYPE>guint64</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>NTP base time</NICK>
-<BLURB>The NTP base time corresponding to running_time 0.</BLURB>
-<DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpSession::num-active-sources</NAME>
-<TYPE>guint</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>Num Active Sources</NICK>
-<BLURB>The number of active sources in the session.</BLURB>
-<DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpSession::num-sources</NAME>
-<TYPE>guint</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>Num Sources</NICK>
-<BLURB>The number of sources in the session.</BLURB>
-<DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpSession::rtcp-fraction</NAME>
-<TYPE>gdouble</TYPE>
-<RANGE>>= 0</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>RTCP Fraction</NICK>
-<BLURB>The fraction of the bandwidth used for RTCP.</BLURB>
-<DEFAULT>3000</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRtpSession::sdes</NAME>
-<TYPE>GstStructure*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>SDES</NICK>
-<BLURB>The SDES items of this session.</BLURB>
-<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -43118,9 +43078,19 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>mesage</NICK>
+<NICK>message</NICK>
 <BLURB>Post a barcode message for each detected code.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstZBar::cache</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>cache</NICK>
+<BLURB>Enable or disable the inter-image result cache.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -45754,6 +45724,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstPhotography::image-preview-supported-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Image preview supported caps</NICK>
+<BLURB>Caps describing supported image preview formats.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::noise-reduction</NAME>
+<TYPE>GstPhotographyNoiseReduction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Reduction settings</NICK>
+<BLURB>Which noise reduction modes are enabled (0 = disabled).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::zoom</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Zoom property</NICK>
+<BLURB>How much the resulted image will be zoomed.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstWaterRipple::amplitude</NAME>
 <TYPE>gdouble</TYPE>
 <RANGE></RANGE>
@@ -45946,7 +45946,7 @@
 <ARG>
 <NAME>GstVideoMaxRate::average-period</NAME>
 <TYPE>guint64</TYPE>
-<RANGE>[1,G_MAXINT64]</RANGE>
+<RANGE>[1,G_MAXLONG]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Period over which to average</NICK>
 <BLURB>Period over which to average the framerate (in ns).</BLURB>
@@ -46114,6 +46114,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstSolarize::end</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 256</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>End</NICK>
+<BLURB>End parameter.</BLURB>
+<DEFAULT>185</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSolarize::start</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 256</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start</NICK>
+<BLURB>Start parameter.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSolarize::threshold</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 256</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>Threshold parameter.</BLURB>
+<DEFAULT>127</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstExclusion::silent</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -46121,6 +46151,16 @@
 <NICK>Silent</NICK>
 <BLURB>Produce verbose output ?.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstExclusion::factor</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 175</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Factor</NICK>
+<BLURB>Exclusion factor parameter.</BLURB>
+<DEFAULT>175</DEFAULT>
 </ARG>
 
 <ARG>
@@ -46144,6 +46184,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDilate::erode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Erode</NICK>
+<BLURB>Erode parameter.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstChromium::silent</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -46154,6 +46204,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstChromium::edge-a</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 256</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Edge A</NICK>
+<BLURB>First edge parameter.</BLURB>
+<DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChromium::edge-b</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 256</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Edge B</NICK>
+<BLURB>Second edge parameter.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstBurn::silent</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -46161,6 +46231,16 @@
 <NICK>Silent</NICK>
 <BLURB>Produce verbose output ?.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBurn::adjustment</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 256</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Adjustment</NICK>
+<BLURB>Adjustment parameter.</BLURB>
+<DEFAULT>175</DEFAULT>
 </ARG>
 
 <ARG>
@@ -46301,6 +46381,36 @@
 <NICK>top field first</NICK>
 <BLURB>Interlaced stream should be top field first.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterlace::allow-rff</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Allow Repeat-First-Field flags</NICK>
+<BLURB>Allow generation of buffers with RFF flag set, i.e., duration of 3 fields.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterlace::field-pattern</NAME>
+<TYPE>GstInterlacePattern</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Field pattern</NICK>
+<BLURB>The output field pattern.</BLURB>
+<DEFAULT>2:3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterlace::pattern-offset</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 12</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pattern offset</NICK>
+<BLURB>The initial field pattern offset. Counts from 0.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -46484,6 +46594,56 @@
 </ARG>
 
 <ARG>
+<NAME>Gstfacedetect::flags</NAME>
+<TYPE>GstOpencvFaceDetectFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags to cvHaarDetectObjects.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gstfacedetect::min-neighbors</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mininum neighbors</NICK>
+<BLURB>Minimum number (minus 1) of neighbor rectangles that makes up an object.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gstfacedetect::min-size-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum size height</NICK>
+<BLURB>Minimum window height size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gstfacedetect::min-size-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum size width</NICK>
+<BLURB>Minimum window width size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gstfacedetect::scale-factor</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[1.1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scale factor</NICK>
+<BLURB>Factor by which the windows is scaled after each scan.</BLURB>
+<DEFAULT>1.1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>Gstfaceblur::profile</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -46546,7 +46706,7 @@
 <ARG>
 <NAME>GstCvSobel::x-order</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>x order</NICK>
 <BLURB>Order of the derivative x.</BLURB>
@@ -46556,7 +46716,7 @@
 <ARG>
 <NAME>GstCvSobel::y-order</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>y order</NICK>
 <BLURB>Order of the derivative y.</BLURB>
@@ -46621,5 +46781,275 @@
 <NICK>aperture size</NICK>
 <BLURB>Size of the extended Laplace Kernel (1, 3, 5 or 7).</BLURB>
 <DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRotate::angle</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>angle</NICK>
+<BLURB>Angle at which the arc starts in radians.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJP2kDecimator::max-decomposition-levels</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,32]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Number of Decomposition Levels</NICK>
+<BLURB>Maximum number of decomposition levels to keep (-1 == all).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJP2kDecimator::max-layers</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Number of Layers</NICK>
+<BLURB>Maximum number of layers to keep (0 == all).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::faststart</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format file to faststart</NICK>
+<BLURB>If the file should be formated for faststart (headers first). .</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::faststart-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to use for storing buffers</NICK>
+<BLURB>File that will be used temporarily to store data from the stream when creating a faststart file. If null a filepath will be created automatically.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::fragment-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Fragment duration</NICK>
+<BLURB>Fragment durations in ms (produce a fragmented file if > 0).</BLURB>
+<DEFAULT>2000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::large-file</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Support for large files</NICK>
+<BLURB>Uses 64bits to some fields instead of 32bits, providing support for large files.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::moov-recovery-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to store data for posterior moov atom recovery</NICK>
+<BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::movie-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Movie timescale</NICK>
+<BLURB>Timescale to use in the movie (units per second).</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::presentation-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Include presentation-time info</NICK>
+<BLURB>Calculate and include presentation/composition time (in addition to decoding time) (use with caution).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::trak-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Track timescale</NICK>
+<BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>delta/duration</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChopMyData::max-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>max-size</NICK>
+<BLURB>Maximum size of outgoing buffers.</BLURB>
+<DEFAULT>4096</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChopMyData::min-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>max-size</NICK>
+<BLURB>Minimum size of outgoing buffers.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChopMyData::step-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>step-size</NICK>
+<BLURB>Step increment for random buffer sizes.</BLURB>
+<DEFAULT>4096</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChromaHold::target-b</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 255</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target Blue</NICK>
+<BLURB>The Blue target.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChromaHold::target-g</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 255</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target Green</NICK>
+<BLURB>The Green target.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChromaHold::target-r</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 255</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target Red</NICK>
+<BLURB>The Red target.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChromaHold::tolerance</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 180</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tolerance</NICK>
+<BLURB>Tolerance for the target color.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDVBSubOverlay::enable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Enable</NICK>
+<BLURB>Enable rendering of subtitles.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDVBSubOverlay::max-page-timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>max-page-timeout</NICK>
+<BLURB>Limit maximum display time of a subtitle page (0 - disabled, value in seconds).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::data</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>data</NICK>
+<BLURB>SVG data.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::fit-to-frame</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>fit to frame</NICK>
+<BLURB>Fit the SVG to fill the whole frame.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>location</NICK>
+<BLURB>SVG file location.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::x</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>x offset</NICK>
+<BLURB>Specify an x offset.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::y</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>y offset</NICK>
+<BLURB>Specify a y offset.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

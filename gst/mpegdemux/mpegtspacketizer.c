@@ -2089,15 +2089,11 @@ mpegts_try_discover_packet_size (MpegTSPacketizer * packetizer)
         if (dest[i] == 0x47 && dest[i + packetsize] == 0x47 &&
             dest[i + packetsize * 2] == 0x47 &&
             dest[i + packetsize * 3] == 0x47) {
-          gchar *str;
           packetizer->know_packet_size = TRUE;
           packetizer->packet_size = packetsize;
-          str =
-              g_strdup_printf
-              ("video/mpegts, systemstream=(boolean)true, packetsize=%d",
-              packetsize);
-          packetizer->caps = gst_caps_from_string ((const gchar *) str);
-          g_free (str);
+          packetizer->caps = gst_caps_new_simple ("video/mpegts",
+              "systemstream", G_TYPE_BOOLEAN, TRUE,
+              "packetsize", G_TYPE_INT, packetsize, NULL);
           pos = i;
           break;
         }
@@ -2107,9 +2103,13 @@ mpegts_try_discover_packet_size (MpegTSPacketizer * packetizer)
   }
   GST_DEBUG ("have packetsize detected: %d of %u bytes",
       packetizer->know_packet_size, packetizer->packet_size);
-  /* flush to sync byte */
-  if (pos > 0)
+  if (pos > 0) {
+    /* flush to sync byte */
     gst_adapter_flush (packetizer->adapter, pos);
+  } else if (!packetizer->know_packet_size) {
+    /* drop invalid data and move to the next possible packets */
+    gst_adapter_flush (packetizer->adapter, MPEGTS_MAX_PACKETSIZE);
+  }
   g_free (dest);
 }
 

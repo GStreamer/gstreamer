@@ -139,7 +139,7 @@ struct _GstBayer2RGBClass
   GST_VIDEO_CAPS_BGR
 
 #define SINK_CAPS "video/x-raw-bayer,format=(string){bggr,grbg,gbrg,rggb}," \
-  "width=(int)[1,MAX],height=(int)[1,MAX]"
+  "width=(int)[1,MAX],height=(int)[1,MAX],framerate=(fraction)[0/1,MAX]"
 
 enum
 {

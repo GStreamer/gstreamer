@@ -65,8 +65,7 @@ gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
 
 #define PREVIEW_TIME_MS (2 * 1000)
 #define N_BURST_IMAGES 10
-#define DEFAULT_UI_FILE "gst-camera.ui"
-#define SHARED_UI_FILE CAMERA_APPS_UIDIR"/"DEFAULT_UI_FILE
+#define UI_FILE CAMERA_APPS_UIDIR G_DIR_SEPARATOR_S "gst-camera.ui"
 
 /* Names of default elements */
 #define CAMERA_APP_VIDEOSRC "v4l2src"
@@ -276,7 +275,11 @@ my_bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
 
   /* FIXME: make sure to get XID in main thread */
   gst_x_overlay_set_window_handle (GST_X_OVERLAY (message->src),
+#if GTK_CHECK_VERSION (2, 91, 6)
+      GDK_WINDOW_XID (gtk_widget_get_window (ui_drawing));
+#else
       GDK_WINDOW_XWINDOW (gtk_widget_get_window (ui_drawing)));
+#endif
 
   gst_message_unref (message);
   return GST_BUS_DROP;
@@ -758,7 +761,7 @@ set_metadata (void)
   /* for more information about image metadata tags, see:
    * http://webcvs.freedesktop.org/gstreamer/gst-plugins-bad/tests/icles/metadata_editor.c
    * and for the mapping:
-   * http://webcvs.freedesktop.org/gstreamer/gst-plugins-bad/ext/metadata/metadata_mapping.htm?view=co 
+   * http://webcvs.freedesktop.org/gstreamer/gst-plugins-bad/ext/metadata/metadata_mapping.htm?view=co
    */
 
   GstTagSetter *setter = GST_TAG_SETTER (gst_camera_bin);
@@ -1101,6 +1104,7 @@ format_value_callback (GtkScale * scale, gdouble value, gpointer user_data)
 static gint
 create_menu_items_from_structure (GstStructure * structure)
 {
+  GtkListStore *store;
   const GValue *framerate_list = NULL;
   const gchar *structure_name;
   GString *item_str = NULL;
@@ -1155,8 +1159,10 @@ create_menu_items_from_structure (GstStructure * structure)
       goto range_found;
     }
 
+    store = GTK_LIST_STORE (gtk_combo_box_get_model (ui_cbbox_resolution));
     for (j = 0; j < num_framerates; j++) {
       GstCaps *video_caps;
+      GtkTreeIter iter;
 
       if (framerate_list) {
         const GValue *item = gst_value_list_get_value (framerate_list, j);
@@ -1167,7 +1173,8 @@ create_menu_items_from_structure (GstStructure * structure)
       g_string_append_printf (item_str, " (%" GST_FOURCC_FORMAT ")",
           GST_FOURCC_ARGS (fourcc));
       g_string_append_printf (item_str, ", %dx%d at %d/%d", w, h, n, d);
-      gtk_combo_box_append_text (ui_cbbox_resolution, item_str->str);
+      gtk_list_store_append (store, &iter);
+      gtk_list_store_set (store, &iter, 0, item_str->str, -1);
 
       video_caps =
           gst_caps_new_simple (structure_name, "format", GST_TYPE_FOURCC,
@@ -1614,14 +1621,9 @@ static gboolean
 ui_create (void)
 {
   GError *error = NULL;
-  const gchar *uifile = DEFAULT_UI_FILE;
-
-  if (!g_file_test (uifile, G_FILE_TEST_EXISTS)) {
-    uifile = SHARED_UI_FILE;
-  }
 
   builder = gtk_builder_new ();
-  if (!gtk_builder_add_from_file (builder, uifile, &error)) {
+  if (!gtk_builder_add_from_file (builder, UI_FILE, &error)) {
     g_warning ("Couldn't load builder file: %s", error->message);
     g_error_free (error);
     goto done;

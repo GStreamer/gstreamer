@@ -869,7 +869,10 @@ gst_nal_decode_slice_header (GstH264Parse * h, GstNalBs * bs)
   return TRUE;
 }
 
-GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
+typedef GstH264Parse GstLegacyH264Parse;
+typedef GstH264ParseClass GstLegacyH264ParseClass;
+GST_BOILERPLATE (GstLegacyH264Parse, gst_h264_parse, GstElement,
+    GST_TYPE_ELEMENT);
 
 static void gst_h264_parse_reset (GstH264Parse * h264parse);
 static void gst_h264_parse_finalize (GObject * object);
@@ -900,7 +903,8 @@ gst_h264_parse_base_init (gpointer g_class)
       "Michal Benes <michal.benes@itonis.tv>,"
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  GST_DEBUG_CATEGORY_INIT (h264_parse_debug, "h264parse", 0, "h264 parser");
+  GST_DEBUG_CATEGORY_INIT (h264_parse_debug, "legacy h264parse", 0,
+      "legacy h264 parser");
 }
 
 static void
@@ -1016,6 +1020,14 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   h264parse->picture_start = FALSE;
   h264parse->idr_offset = -1;
 
+  if (h264parse->pending_segment)
+    gst_event_unref (h264parse->pending_segment);
+  h264parse->pending_segment = NULL;
+
+  g_list_foreach (h264parse->pending_events, (GFunc) gst_event_unref, NULL);
+  g_list_free (h264parse->pending_events);
+  h264parse->pending_events = NULL;
+
   gst_caps_replace (&h264parse->src_caps, NULL);
 }
 
@@ -1023,22 +1035,13 @@ static void
 gst_h264_parse_finalize (GObject * object)
 {
   GstH264Parse *h264parse;
-  gint i;
 
   h264parse = GST_H264PARSE (object);
 
+  gst_h264_parse_reset (h264parse);
+
   g_object_unref (h264parse->adapter);
   g_object_unref (h264parse->picture_adapter);
-
-  for (i = 0; i < MAX_SPS_COUNT; i++) {
-    if (h264parse->sps_buffers[i] != NULL)
-      g_slice_free (GstH264Sps, h264parse->sps_buffers[i]);
-  }
-
-  for (i = 0; i < MAX_PPS_COUNT; i++) {
-    if (h264parse->pps_buffers[i] != NULL)
-      g_slice_free (GstH264Pps, h264parse->pps_buffers[i]);
-  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1598,6 +1601,23 @@ static GstFlowReturn
 gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+
+  /* We can send pending events if this is the first call, since we now have
+   * caps for the srcpad */
+  if (G_UNLIKELY (h264parse->pending_segment != NULL)) {
+    gst_pad_push_event (h264parse->srcpad, h264parse->pending_segment);
+    h264parse->pending_segment = NULL;
+
+    if (G_UNLIKELY (h264parse->pending_events != NULL)) {
+      GList *l;
+
+      for (l = h264parse->pending_events; l != NULL; l = l->next)
+        gst_pad_push_event (h264parse->srcpad, GST_EVENT (l->data));
+
+      g_list_free (h264parse->pending_events);
+      h264parse->pending_events = NULL;
+    }
+  }
 
   /* start of picture is good time to slip in codec_data NALUs
    * (when outputting NALS and transforming to bytestream) */
@@ -2583,6 +2603,11 @@ gst_h264_parse_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_EOS:
       GST_DEBUG_OBJECT (h264parse, "received EOS");
+      if (h264parse->pending_segment) {
+        /* Send pending newsegment before EOS */
+        gst_pad_push_event (h264parse->srcpad, h264parse->pending_segment);
+        h264parse->pending_segment = NULL;
+      }
       if (h264parse->segment.rate < 0.0) {
         gst_h264_parse_chain_reverse (h264parse, TRUE, NULL);
         gst_h264_parse_flush_decode (h264parse);
@@ -2595,6 +2620,7 @@ gst_h264_parse_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 start, stop, pos;
       gboolean update;
+      GstEvent **ev;
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &pos);
@@ -2604,17 +2630,35 @@ gst_h264_parse_sink_event (GstPad * pad, GstEvent * event)
           rate, applied_rate, format, start, stop, pos);
 
       GST_DEBUG_OBJECT (h264parse,
-          "Pushing newseg rate %g, applied rate %g, format %d, start %"
+          "Keeping newseg rate %g, applied rate %g, format %d, start %"
           G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", pos %" G_GINT64_FORMAT,
           rate, applied_rate, format, start, stop, pos);
 
+      ev = &h264parse->pending_segment;
+      gst_event_replace (ev, event);
+      gst_event_unref (event);
+      res = TRUE;
+      break;
+    }
+    case GST_EVENT_FLUSH_START:
+    {
       res = gst_pad_push_event (h264parse->srcpad, event);
       break;
     }
     default:
-      res = gst_pad_push_event (h264parse->srcpad, event);
-      break;
+    {
+      if (G_UNLIKELY (h264parse->src_caps == NULL ||
+              h264parse->pending_segment)) {
+        /* We don't yet have enough data to set caps on the srcpad, so collect
+         * non-critical events till we do */
+        h264parse->pending_events = g_list_append (h264parse->pending_events,
+            event);
+        res = TRUE;
+      } else
+        res = gst_pad_push_event (h264parse->srcpad, event);
 
+      break;
+    }
   }
   gst_object_unref (h264parse);
 
@@ -2655,7 +2699,7 @@ gst_h264_parse_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "h264parse",
+  return gst_element_register (plugin, "legacyh264parse",
       GST_RANK_NONE, GST_TYPE_H264PARSE);
 }
 

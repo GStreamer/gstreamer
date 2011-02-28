@@ -1,20 +1,29 @@
 
+templatefiles=\
+	element-templates/audiofilter \
+	element-templates/audiosink \
+	element-templates/audiosrc \
+	element-templates/base \
+	element-templates/baseaudiosink \
+	element-templates/baseaudiosrc \
+	element-templates/basertpdepayload \
+	element-templates/basertppayload \
+	element-templates/basesink \
+	element-templates/basesrc \
+	element-templates/basetransform \
+	element-templates/cddabasesrc \
+	element-templates/element \
+	element-templates/gobject \
+	element-templates/pushsrc \
+	element-templates/sinkpad \
+	element-templates/sinkpad-simple \
+	element-templates/srcpad \
+	element-templates/srcpad-simple \
+	element-templates/tagdemux \
+	element-templates/videosink
+
 EXTRA_DIST = \
-	element-maker \
-	base.c \
-	gobject.c \
-	gstaudiofilter.c \
-	gstaudiosink.c \
-	gstaudiosrc.c \
-	gstbaseaudiosink.c \
-	gstbaseaudiosrc.c \
-	gstbasertpdepayload.c \
-	gstbasertppayload.c \
-	gstbasesink.c \
-	gstbasesrc.c \
-	gstbasetransform.c \
-	gstcddabasesrc.c \
-	gstelement.c \
-	gstpushsrc.c \
-	gsttagdemux.c \
-	gstvideosink.c
+	gst-element-maker \
+	gst-app-maker \
+	$(templatefiles)
+

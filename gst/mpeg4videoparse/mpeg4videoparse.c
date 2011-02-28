@@ -65,9 +65,15 @@ gst_mpeg4vparse_set_new_caps (GstMpeg4VParse * parse,
     gint aspect_ratio_width, gint aspect_ratio_height, gint width, gint height)
 {
   gboolean res;
-  GstCaps *out_caps = gst_caps_new_simple ("video/mpeg",
-      "mpegversion", G_TYPE_INT, 4,
-      "systemstream", G_TYPE_BOOLEAN, FALSE,
+  GstCaps *out_caps;
+
+  if (parse->sink_caps) {
+    out_caps = gst_caps_copy (parse->sink_caps);
+  } else {
+    out_caps = gst_caps_new_simple ("video/mpeg",
+        "mpegversion", G_TYPE_INT, 4, NULL);
+  }
+  gst_caps_set_simple (out_caps, "systemstream", G_TYPE_BOOLEAN, FALSE,
       "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   if (parse->profile != 0) {
@@ -112,6 +118,22 @@ gst_mpeg4vparse_set_new_caps (GstMpeg4VParse * parse,
   res = gst_pad_set_caps (parse->srcpad, out_caps);
   gst_caps_unref (out_caps);
 
+  parse->have_src_caps = TRUE;
+  if (parse->pending_segment != NULL) {
+    /* We can send pending events  since we now have caps for the srcpad */
+    gst_pad_push_event (parse->srcpad, parse->pending_segment);
+    parse->pending_segment = NULL;
+
+    if (G_UNLIKELY (parse->pending_events != NULL)) {
+      GList *l;
+
+      for (l = parse->pending_events; l != NULL; l = l->next)
+        gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
+
+      g_list_free (parse->pending_events);
+      parse->pending_events = NULL;
+    }
+  }
   return res;
 }
 
@@ -480,9 +502,11 @@ gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
     GstBuffer *out_buf;
 
     out_buf = gst_adapter_take_buffer (parse->adapter, parse->offset);
-    GST_BUFFER_TIMESTAMP (out_buf) = parse->timestamp;
 
     if (G_LIKELY (out_buf)) {
+      out_buf = gst_buffer_make_metadata_writable (out_buf);
+      GST_BUFFER_TIMESTAMP (out_buf) = parse->timestamp;
+
       /* Set GST_BUFFER_FLAG_DELTA_UNIT if it's not an intra frame */
       if (!parse->intra_frame) {
         GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -517,10 +541,10 @@ gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
 
           /* insert header */
           superbuf = gst_buffer_merge (parse->config, out_buf);
-
-          GST_BUFFER_TIMESTAMP (superbuf) = timestamp;
           gst_buffer_unref (out_buf);
-          out_buf = superbuf;
+
+          out_buf = gst_buffer_make_metadata_writable (superbuf);
+          GST_BUFFER_TIMESTAMP (out_buf) = timestamp;
 
           if (G_UNLIKELY (timestamp != -1)) {
             parse->last_report = timestamp;
@@ -710,6 +734,7 @@ gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
   const GValue *value;
 
   GST_DEBUG_OBJECT (parse, "setcaps called with %" GST_PTR_FORMAT, caps);
+  parse->sink_caps = gst_caps_ref (caps);
 
   s = gst_caps_get_structure (caps, 0);
 
@@ -731,6 +756,7 @@ gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
     } else {
       const guint8 *data = GST_BUFFER_DATA (buf);
 
+      res = FALSE;
       if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
         if (data[3] == VOS_STARTCODE) {
           /* Usually the codec data will be a visual object sequence, containing
@@ -745,6 +771,8 @@ gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
           res = gst_mpeg4vparse_handle_vo (parse, data, GST_BUFFER_SIZE (buf),
               FALSE);
         }
+        if (!res)
+          goto failed_parse;
       } else {
         GST_WARNING_OBJECT (parse,
             "codec_data does not begin with start code, invalid");
@@ -784,6 +812,11 @@ gst_mpeg4vparse_sink_event (GstPad * pad, GstEvent * event)
       parse->offset = 0;
       break;
     case GST_EVENT_EOS:
+      if (parse->pending_segment != NULL) {
+        /* Send pending newsegment before EOS */
+        gst_pad_push_event (parse->srcpad, parse->pending_segment);
+        parse->pending_segment = NULL;
+      }
       if (parse->state == PARSE_VOP_FOUND) {
         /* If we've found the start of the VOP assume what's left in the
          * adapter is the complete VOP. This might cause us to send an
@@ -792,11 +825,25 @@ gst_mpeg4vparse_sink_event (GstPad * pad, GstEvent * event)
         gst_mpeg4vparse_push (parse, gst_adapter_available (parse->adapter));
       }
       /* fallthrough */
+    case GST_EVENT_FLUSH_START:
+      res = gst_pad_event_default (pad, event);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+      gst_event_replace (&parse->pending_segment, event);
+      gst_event_unref (event);
+      res = TRUE;
+      break;
     default:
+      if (G_UNLIKELY (!parse->have_src_caps || parse->pending_segment)) {
+        /* We don't yet have enough data to set caps on the srcpad, so collect
+         * non-critical events till we do */
+        parse->pending_events = g_list_append (parse->pending_events, event);
+        res = TRUE;
+      } else
+        res = gst_pad_event_default (pad, event);
       break;
   }
 
-  res = gst_pad_event_default (pad, event);
   gst_object_unref (parse);
 
   return res;
@@ -857,6 +904,10 @@ gst_mpeg4vparse_src_query (GstPad * pad, GstQuery * query)
 static void
 gst_mpeg4vparse_cleanup (GstMpeg4VParse * parse)
 {
+  if (parse->sink_caps) {
+    gst_caps_unref (parse->sink_caps);
+    parse->sink_caps = NULL;
+  }
   if (parse->adapter) {
     gst_adapter_clear (parse->adapter);
   }
@@ -864,6 +915,16 @@ gst_mpeg4vparse_cleanup (GstMpeg4VParse * parse)
     gst_buffer_unref (parse->config);
     parse->config = NULL;
   }
+
+  if (parse->pending_segment)
+    gst_event_unref (parse->pending_segment);
+  parse->pending_segment = NULL;
+
+  g_list_foreach (parse->pending_events, (GFunc) gst_event_unref, NULL);
+  g_list_free (parse->pending_events);
+  parse->pending_events = NULL;
+
+  parse->have_src_caps = FALSE;
 
   parse->state = PARSE_NEED_START;
   parse->have_config = FALSE;
@@ -891,20 +952,18 @@ gst_mpeg4vparse_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
-gst_mpeg4vparse_dispose (GObject * object)
+gst_mpeg4vparse_finalize (GObject * object)
 {
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (object);
+
+  gst_mpeg4vparse_cleanup (parse);
 
   if (parse->adapter) {
     g_object_unref (parse->adapter);
     parse->adapter = NULL;
   }
-  if (parse->config != NULL) {
-    gst_buffer_unref (parse->config);
-    parse->config = NULL;
-  }
 
-  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
 static void
@@ -969,7 +1028,7 @@ gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_finalize);
 
   gobject_class->set_property = gst_mpeg4vparse_set_property;
   gobject_class->get_property = gst_mpeg4vparse_get_property;

@@ -137,6 +137,9 @@ struct _GstH264Parse
   GstBuffer *pps_nals[MAX_PPS_COUNT];
 
   GstCaps *src_caps;
+
+  GstEvent *pending_segment;
+  GList *pending_events;
 };
 
 struct _GstH264ParseClass

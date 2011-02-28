@@ -68,13 +68,11 @@ typedef struct _GstKateTigerClass GstKateTigerClass;
 
 struct _GstKateTiger
 {
-  GstElement element;
+  GstKateDecoderBase decoder;
 
   GstPad *katesinkpad;
   GstPad *videosinkpad;
   GstPad *srcpad;
-
-  GstKateDecoderBase decoder;
 
   tiger_renderer *tr;
 
@@ -93,8 +91,14 @@ struct _GstKateTiger
 
   gint video_width;
   gint video_height;
+  gboolean swap_rgb;
 
   GMutex *mutex;
+  GCond *cond;
+
+  GstSegment video_segment;
+  gboolean video_flushing;
+  gboolean seen_header;
 };
 
 struct _GstKateTigerClass

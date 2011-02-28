@@ -255,11 +255,6 @@ gst_kate_parse_push_buffer (GstKateParse * parse, GstBuffer * buf,
   GST_BUFFER_OFFSET_END (buf) = granulepos;
   GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_OFFSET (buf);
 
-  /* Hack to flush each packet on its own page - taken off the CMML encoder element */
-  /* TODO: this is shite and needs to go once I find a way to tell Ogg to flush
-     as it messes up Matroska's track duration */
-  GST_BUFFER_DURATION (buf) = G_MAXINT64;
-
   gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
 
   return gst_pad_push (parse->srcpad, buf);

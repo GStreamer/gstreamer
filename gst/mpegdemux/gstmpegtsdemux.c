@@ -671,7 +671,7 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
               DESC_DVB_SUBTITLING)) {
         template = klass->private_template;
         name = g_strdup_printf ("private_%04x", stream->PID);
-        caps = gst_caps_new_simple ("private/x-dvbsub", NULL);
+        caps = gst_caps_new_simple ("subpicture/x-dvb", NULL);
       }
       break;
     case ST_HDV_AUX_V:
@@ -946,31 +946,36 @@ gst_mpegts_demux_send_tags_for_stream (GstMpegTSDemux * demux,
     GstMpegTSStream * stream)
 {
   GstTagList *list = NULL;
+  gint i;
 
   if (stream->ES_info) {
-    guint8 *iso639_languages =
-        gst_mpeg_descriptor_find (stream->ES_info, DESC_ISO_639_LANGUAGE);
-    if (iso639_languages) {
-      if (DESC_ISO_639_LANGUAGE_codes_n (iso639_languages)) {
-        const gchar *lc;
-        gchar lang_code[4];
-        gchar *language_n;
+    static const guint8 lang_descs[] =
+        { DESC_ISO_639_LANGUAGE, DESC_DVB_SUBTITLING };
+    for (i = 0; i < G_N_ELEMENTS (lang_descs); i++) {
+      guint8 *iso639_languages =
+          gst_mpeg_descriptor_find (stream->ES_info, lang_descs[i]);
+      if (iso639_languages) {
+        if (DESC_ISO_639_LANGUAGE_codes_n (iso639_languages)) {
+          const gchar *lc;
+          gchar lang_code[4];
+          gchar *language_n;
 
-        language_n = (gchar *)
-            DESC_ISO_639_LANGUAGE_language_code_nth (iso639_languages, 0);
+          language_n = (gchar *)
+              DESC_ISO_639_LANGUAGE_language_code_nth (iso639_languages, 0);
 
-        lang_code[0] = language_n[0];
-        lang_code[1] = language_n[1];
-        lang_code[2] = language_n[2];
-        lang_code[3] = 0;
+          lang_code[0] = language_n[0];
+          lang_code[1] = language_n[1];
+          lang_code[2] = language_n[2];
+          lang_code[3] = 0;
 
-        if (!list)
-          list = gst_tag_list_new ();
+          if (!list)
+            list = gst_tag_list_new ();
 
-        /* descriptor contains ISO 639-2 code, we want the ISO 639-1 code */
-        lc = gst_tag_get_language_code (lang_code);
-        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-            GST_TAG_LANGUAGE_CODE, (lc) ? lc : lang_code, NULL);
+          /* descriptor contains ISO 639-2 code, we want the ISO 639-1 code */
+          lc = gst_tag_get_language_code (lang_code);
+          gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+              GST_TAG_LANGUAGE_CODE, (lc) ? lc : lang_code, NULL);
+        }
       }
     }
   }
@@ -1469,7 +1474,21 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
           ES_stream->flags |= MPEGTS_STREAM_FLAG_IS_VIDEO;
 
         /* set adaptor */
+        GST_LOG ("Initializing PES filter for PID %u", ES_stream->PID);
         gst_pes_filter_init (&ES_stream->filter, NULL, NULL);
+
+        if (ES_stream->stream_type == ST_PRIVATE_DATA) {
+          guint8 *dvb_sub_desc = gst_mpeg_descriptor_find (ES_stream->ES_info,
+              DESC_DVB_SUBTITLING);
+
+          /* enable gather PES for DVB subtitles since the dvbsuboverlay
+           * expects complete PES packets */
+          if (dvb_sub_desc) {
+            /* FIXME: There's another place where pes filters could get
+             * initialized. Might need similar temporary hack there as well */
+            ES_stream->filter.gather_pes = TRUE;
+          }
+        }
         gst_pes_filter_set_callbacks (&ES_stream->filter,
             (GstPESFilterData) gst_mpegts_demux_data_cb,
             (GstPESFilterResync) gst_mpegts_demux_resync_cb, ES_stream);
@@ -1598,11 +1617,9 @@ gst_mpegts_stream_parse_private_section (GstMpegTSStream * stream,
       goto wrong_crc;
 
   /* just dump this down the pad */
-  if (gst_pad_alloc_buffer (stream->pad, 0, datalen, NULL, &buffer) ==
-      GST_FLOW_OK) {
-    memcpy (buffer->data, data, datalen);
-    gst_pad_push (stream->pad, buffer);
-  }
+  buffer = gst_buffer_new_and_alloc (datalen);
+  memcpy (buffer->data, data, datalen);
+  gst_pad_push (stream->pad, buffer);
 
   GST_DEBUG_OBJECT (demux, "parsing private section");
   return TRUE;
@@ -2298,6 +2315,7 @@ gst_mpegts_demux_parse_stream (GstMpegTSDemux * demux, GstMpegTSStream * stream,
         }
 
         /* Initialise our PES filter */
+        GST_LOG ("Initializing PES filter for PID %u", stream->PID);
         gst_pes_filter_init (&stream->filter, NULL, NULL);
         gst_pes_filter_set_callbacks (&stream->filter,
             (GstPESFilterData) gst_mpegts_demux_data_cb,
@@ -3119,6 +3137,7 @@ mpegts_demux_build_pat_info (GstMpegTSDemux * demux)
     g_value_init (&v, G_TYPE_OBJECT);
     g_value_take_object (&v, info_obj);
     g_value_array_append (vals, &v);
+    g_value_unset (&v);
   }
   return vals;
 }

@@ -24,7 +24,7 @@
 #define __GST_MPEG_AUDIO_PARSE_H__
 
 #include <gst/gst.h>
-#include "gstbaseparse.h"
+#include <gst/baseparse/gstbaseparse.h>
 
 G_BEGIN_DECLS
 
@@ -64,6 +64,9 @@ struct _GstMpegAudioParse {
   guint        last_posted_bitrate;
   gint         last_posted_crc, last_crc;
   guint        last_posted_channel_mode, last_mode;
+
+  /* Bitrate from non-vbr headers */
+  guint32      hdr_bitrate;
 
   /* Xing info */
   guint32      xing_flags;

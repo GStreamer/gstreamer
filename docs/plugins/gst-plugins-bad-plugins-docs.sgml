@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 <!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
@@ -68,10 +68,7 @@
     <xi:include href="xml/element-fpsdisplaysink.xml" />
     <xi:include href="xml/element-freeze.xml" />
     <xi:include href="xml/element-gaussianblur.xml" />
-    <xi:include href="xml/element-input-selector.xml" />
     <xi:include href="xml/element-ivfparse.xml" />
-    <xi:include href="xml/element-jackaudiosrc.xml" />
-    <xi:include href="xml/element-jackaudiosink.xml" />
     <xi:include href="xml/element-jpegparse.xml" />
     <xi:include href="xml/element-kaleidoscope.xml" />
     <xi:include href="xml/element-kateenc.xml" />
@@ -93,11 +90,12 @@
     <xi:include href="xml/element-mxfdemux.xml" />
     <xi:include href="xml/element-mxfmux.xml" />
     <xi:include href="xml/element-nuvdemux.xml" />
-    <xi:include href="xml/element-output-selector.xml" />
     <xi:include href="xml/element-pcapparse.xml" />
     <xi:include href="xml/element-pinch.xml" />
     <xi:include href="xml/element-pyramidsegment.xml" />
     <xi:include href="xml/element-qtmux.xml" />
+    <xi:include href="xml/element-rsvgdec.xml" />
+    <xi:include href="xml/element-rsvgoverlay.xml" />
     <xi:include href="xml/element-rtpdtmfdepay.xml" />
     <xi:include href="xml/element-rtpdtmfsrc.xml" />
     <xi:include href="xml/element-rtpdtmfmux.xml" />
@@ -122,7 +120,6 @@
     <xi:include href="xml/element-trm.xml" />
     <xi:include href="xml/element-tunnel.xml" />
     <xi:include href="xml/element-twirl.xml" />
-    <xi:include href="xml/element-valve.xml" />
     <xi:include href="xml/element-videoanalyse.xml" />
     <xi:include href="xml/element-videodetect.xml" />
     <xi:include href="xml/element-videomark.xml" />
@@ -172,7 +169,6 @@
     <xi:include href="xml/plugin-gsm.xml" />
     <xi:include href="xml/plugin-h264parse.xml" />
     <xi:include href="xml/plugin-ivfparse.xml" />
-    <xi:include href="xml/plugin-jack.xml" />
     <xi:include href="xml/plugin-jpegformat.xml" />
     <xi:include href="xml/plugin-kate.xml" />
     <xi:include href="xml/plugin-ladspa.xml" />
@@ -201,11 +197,11 @@
     <xi:include href="xml/plugin-rawparse.xml" />
     <xi:include href="xml/plugin-real.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />
+    <xi:include href="xml/plugin-rsvg.xml" />
     <xi:include href="xml/plugin-rtpmux.xml" />
     <xi:include href="xml/plugin-scaletempo.xml" />
     <xi:include href="xml/plugin-sdl.xml" />
     <xi:include href="xml/plugin-sdp.xml" />
-    <xi:include href="xml/plugin-selector.xml" />
     <xi:include href="xml/plugin-shm.xml" />
     <xi:include href="xml/plugin-sndfile.xml" />
     <xi:include href="xml/plugin-soundtouch.xml" />
@@ -215,7 +211,6 @@
     <xi:include href="xml/plugin-swfdec.xml" />
     <xi:include href="xml/plugin-timidity.xml" />
     <xi:include href="xml/plugin-tta.xml" />
-    <xi:include href="xml/plugin-valve.xml" />
     <xi:include href="xml/plugin-vcdsrc.xml" />
     <xi:include href="xml/plugin-videomaxrate.xml" />
     <xi:include href="xml/plugin-videosignal.xml" />

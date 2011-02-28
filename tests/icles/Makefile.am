@@ -25,17 +25,5 @@ endif
 GST_METADATA_TESTS =
 #endif
 
-equalizer_test_SOURCES = equalizer-test.c
-equalizer_test_CFLAGS  = $(GST_CFLAGS)
-equalizer_test_LDADD   = $(GST_LIBS)
-equalizer_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-
-output_selector_test_SOURCES = output-selector-test.c
-output_selector_test_CFLAGS  = $(GST_CFLAGS)
-output_selector_test_LDADD   = $(GST_LIBS)
-output_selector_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-
-
-noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) $(GST_METADATA_TESTS) \
-	equalizer-test output-selector-test
+noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) $(GST_METADATA_TESTS)
 

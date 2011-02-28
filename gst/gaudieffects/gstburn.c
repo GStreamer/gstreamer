@@ -96,7 +96,6 @@ enum
 
 #define DEFAULT_ADJUSTMENT 175
 
-static gint gate_int (gint value, gint min, gint max);
 static void transform (guint32 * src, guint32 * dest, gint video_area,
     gint adjustment);
 
@@ -289,24 +288,13 @@ gst_burn_plugin_init (GstPlugin * burn)
 }
 
 /*** Now the image processing work.... ***/
-/* Keep the values inbounds. */
-static gint
-gate_int (gint value, gint min, gint max)
-{
-  if (value < min) {
-    return min;
-  } else if (value > max) {
-    return max;
-  } else {
-    return value;
-  }
-}
 
 /* Transform processes each frame. */
 static void
 transform (guint32 * src, guint32 * dest, gint video_area, gint adjustment)
 {
-  guint32 in, red, green, blue;
+  guint32 in;
+  gint red, green, blue, c;
   gint x;
 
   for (x = 0; x < video_area; x++) {
@@ -316,13 +304,16 @@ transform (guint32 * src, guint32 * dest, gint video_area, gint adjustment)
     green = (in >> 8) & 0xff;
     blue = (in) & 0xff;
 
-    red = 256 - ((256 * (255 - red)) / (red + adjustment));
-    green = 256 - ((256 * (255 - green)) / (green + adjustment));
-    blue = 256 - ((256 * (255 - blue)) / (blue + adjustment));
+    c = (red + adjustment);
+    red = c ? (256 - (256 * (255 - red) / c)) : 0;
+    c = (green + adjustment);
+    green = c ? (256 - (256 * (255 - green) / c)) : 0;
+    c = (blue + adjustment);
+    blue = c ? (256 - (256 * (255 - blue) / c)) : 0;
 
-    red = gate_int (red, 0, 255);
-    green = gate_int (green, 0, 255);
-    blue = gate_int (blue, 0, 255);
+    red = CLAMP (red, 0, 255);
+    green = CLAMP (green, 0, 255);
+    blue = CLAMP (blue, 0, 255);
 
     *dest++ = (red << 16) | (green << 8) | blue;
   }

@@ -1,0 +1,383 @@
+#!/bin/sh
+
+
+prefix=gst
+templatedir=element-templates
+
+while [ "$1" ] ; do
+  case $1 in
+    --help)
+      cat <<-EOF
+Usage: element-maker [OPTIONS] ELEMENT_NAME BASE_CLASS
+Create a GStreamer element that subclasses BASE_CLASS.
+Options:
+  --help             Print this information
+  --prefix PREFIX    Use PREFIX instead of "gst"
+Example: 'element-maker my_element basetransform' will create the files
+  gstmyelement.c and gstmyelement.h that implement GstMyElement, a
+  subclass of GstBaseTransform, as an element named myelement.
+EOF
+      exit 0
+      ;;
+    --prefix)
+      shift
+      prefix=$1
+      ;;
+    -*)
+      echo Unknown option: $1
+      exit 1
+      ;;
+    *)
+      if [ "$name" = "" ]; then
+        name=$1
+      elif [ "$class" = "" ]; then
+        class=$1
+      else
+        echo Ignored: $1
+      fi
+  esac
+  shift
+done
+
+if [ "$name" = "" -o "$class" = "" ] ; then
+  echo "Usage: element-maker [OPTIONS] ELEMENT_NAME BASE_CLASS"
+  exit 1
+fi
+
+if [ ! -f "element-templates/$class" ] ; then
+  echo "Template file for $class not found."
+  exit 1
+fi
+
+
+PREFIX=$(echo $prefix | sed -e 's/\(.*\)/\U\1/')
+NAME=$(echo $name | sed -e 's/\(.*\)/\U\1/')
+Prefix=$(echo $prefix | sed -e 's/_\(.\)/\U\1/g' -e 's/^\(.\)/\U\1/')
+Name=$(echo $name | sed -e 's/_\(.\)/\U\1/g' -e 's/^\(.\)/\U\1/')
+
+GST_IS_REPLACE=${PREFIX}_IS_${NAME}
+GST_REPLACE=${PREFIX}_${NAME}
+GST_TYPE_REPLACE=${PREFIX}_TYPE_${NAME}
+GstReplace=${Prefix}${Name}
+gst_replace=${prefix}_${name}
+gstreplace=${prefix}$(echo $name | sed -e 's/_//g')
+replace=$(echo $name | sed -e 's/_//g')
+
+if [ "$REAL_NAME" = "" ] ; then
+  REAL_NAME=FIXME
+fi
+if [ "$EMAIL_ADDRESS" = "" ] ; then
+  EMAIL_ADDRESS=fixme@example.com
+fi
+
+
+pkg=`grep -A 10000 '^% pkg-config' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+GST_TYPE_BASE_REPLACE=`grep -A 10000 '^% TYPE_CLASS_NAME' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+GstBaseReplace=`grep -A 10000 '^% ClassName' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+pads=`grep -A 10000 '^% pads' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+
+generate ()
+{
+
+cat <<-EOF
+/* GStreamer
+ * Copyright (C) $(date +%Y) $REAL_NAME <$EMAIL_ADDRESS>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Suite 500,
+ * Boston, MA 02110-1335, USA.
+ */
+EOF
+
+cat <<-EOF
+/**
+ * SECTION:element-$gstreplace
+ *
+ * The $replace element does FIXME stuff.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v fakesrc ! $replace ! FIXME ! fakesink
+ * ]|
+ * FIXME Describe what the pipeline does.
+ * </refsect2>
+ */
+EOF
+
+
+cat <<EOF
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <gst/gst.h>
+EOF
+
+grep -A 10000 '^% includes' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+cat <<EOF
+#include "gstreplace.h"
+
+GST_DEBUG_CATEGORY_STATIC (gst_replace_debug_category);
+#define GST_CAT_DEFAULT gst_replace_debug_category
+
+/* prototypes */
+
+EOF
+
+grep -A 10000 '^% prototypes' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% prototypes' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+for each in $pads
+do
+  grep -A 10000 '^% prototypes' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+done
+
+cat <<EOF
+
+enum
+{
+  PROP_0
+};
+
+/* pad templates */
+
+EOF
+
+for each in $pads
+do
+  grep -A 10000 '^% pad-template' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+done
+
+cat <<EOF
+
+/* class initialization */
+
+#define DEBUG_INIT(bla) \\
+  GST_DEBUG_CATEGORY_INIT (gst_replace_debug_category, "replace", 0, \\
+      "debug category for replace element");
+
+GST_BOILERPLATE_FULL (GstReplace, gst_replace, GstBaseReplace,
+    GST_TYPE_BASE_REPLACE, DEBUG_INIT);
+
+static void
+gst_replace_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+EOF
+
+for each in $pads
+do
+  grep -A 10000 '^% base-init' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+done
+
+cat <<EOF
+
+  gst_element_class_set_details_simple (element_class, "FIXME Long name",
+      "Generic", "FIXME Description", "$REAL_NAME <$EMAIL_ADDRESS>");
+}
+
+static void
+gst_replace_class_init (GstReplaceClass * klass)
+{
+EOF
+grep -A 10000 '^% declare-class' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% declare-class' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+echo
+
+grep -A 10000 '^% set-methods' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% set-methods' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+cat <<EOF
+
+}
+
+static void
+gst_replace_init (GstReplace * replace, GstReplaceClass * replace_class)
+{
+EOF
+
+for each in $pads
+do
+  grep -A 10000 '^% instance-init' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+done
+
+
+cat <<EOF
+}
+EOF
+
+
+grep -A 10000 '^% methods' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% methods' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+for each in $pads
+do
+  grep -A 10000 '^% methods' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+done
+
+
+cat <<EOF
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+
+  gst_element_register (plugin, "replace", GST_RANK_NONE,
+      gst_replace_get_type ());
+
+  return TRUE;
+}
+
+#ifndef VERSION
+#define VERSION "0.0.FIXME"
+#endif
+#ifndef PACKAGE
+#define PACKAGE "FIXME_package"
+#endif
+#ifndef PACKAGE_NAME
+#define PACKAGE_NAME "FIXME_package_name"
+#endif
+#ifndef GST_PACKAGE_ORIGIN
+#define GST_PACKAGE_ORIGIN "http://FIXME.org/"
+#endif
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "replace",
+    "FIXME plugin description",
+    plugin_init, VERSION, "LGPL", PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+
+EOF
+
+
+}
+
+generate_header ()
+{
+
+cat <<-EOF
+/* GStreamer
+ * Copyright (C) $(date +%Y) $REAL_NAME <$EMAIL_ADDRESS>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+EOF
+
+cat <<EOF
+#ifndef _GST_REPLACE_H_
+#define _GST_REPLACE_H_
+
+EOF
+
+grep -A 10000 '^% includes' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+cat <<EOF
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_REPLACE \
+  (gst_replace_get_type())
+#define GST_REPLACE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_REPLACE,GstReplace))
+#define GST_REPLACE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_REPLACE,GstReplaceClass))
+#define GST_IS_REPLACE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_REPLACE))
+#define GST_IS_REPLACE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_REPLACE))
+
+typedef struct _GstReplace GstReplace;
+typedef struct _GstReplaceClass GstReplaceClass;
+
+struct _GstReplace
+{
+  GstBaseReplace base_replace;
+
+EOF
+
+for each in $pads
+do
+  grep -A 10000 '^% instance-members' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+done
+
+cat <<EOF
+};
+
+struct _GstReplaceClass
+{
+  GstBaseReplaceClass base_replace_class;
+};
+
+GType gst_replace_get_type (void);
+
+G_END_DECLS
+
+#endif
+EOF
+
+
+}
+
+
+generate | sed \
+  -e "s/GST_BASE_REPLACE/$GST_BASE_REPLACE/g" \
+  -e "s/GST_TYPE_BASE_REPLACE/$GST_TYPE_BASE_REPLACE/g" \
+  -e "s/GstBaseReplace/$GstBaseReplace/g" \
+  -e "s/GST_IS_REPLACE/$GST_IS_REPLACE/g" \
+  -e "s/GST_REPLACE/$GST_REPLACE/g" \
+  -e "s/GST_TYPE_REPLACE/$GST_TYPE_REPLACE/g" \
+  -e "s/GstReplace/$GstReplace/g" \
+  -e "s/gst_replace/$gst_replace/g" \
+  -e "s/gstreplace/$gstreplace/g" \
+  -e "s/replace/$replace/g" >$gstreplace.c
+
+generate_header | sed \
+  -e "s/GST_BASE_REPLACE/$GST_BASE_REPLACE/g" \
+  -e "s/GST_TYPE_BASE_REPLACE/$GST_TYPE_BASE_REPLACE/g" \
+  -e "s/GstBaseReplace/$GstBaseReplace/g" \
+  -e "s/GST_IS_REPLACE/$GST_IS_REPLACE/g" \
+  -e "s/GST_REPLACE/$GST_REPLACE/g" \
+  -e "s/GST_TYPE_REPLACE/$GST_TYPE_REPLACE/g" \
+  -e "s/GstReplace/$GstReplace/g" \
+  -e "s/gst_replace/$gst_replace/g" \
+  -e "s/gstreplace/$gstreplace/g" \
+  -e "s/replace/$replace/g" >$gstreplace.h
+
+gst-indent $gstreplace.c
+
+echo pkg is $pkg
+
+gcc -Wall -fPIC $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o $gstreplace.o $gstreplace.c
+gcc -shared -o $gstreplace.so $gstreplace.o $(pkg-config --libs gstreamer-0.10 $pkg)
+
+

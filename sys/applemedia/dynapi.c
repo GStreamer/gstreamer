@@ -142,9 +142,10 @@ _gst_dyn_api_new (GType derived_type, const gchar * filename,
   names_not_found = g_array_new (TRUE, FALSE, sizeof (gchar *));
 
   for (i = 0; symbols[i].name != NULL; i++) {
-    if (!g_module_symbol (priv->module, symbols[i].name,
-            (gpointer *) (((guint8 *) api) + symbols[i].offset))) {
-      g_array_append_val (names_not_found, symbols[i].name);
+    const GstDynSymSpec *s = &symbols[i];
+    if (!g_module_symbol (priv->module, s->name,
+            (gpointer *) (((guint8 *) api) + s->offset)) && s->is_required) {
+      g_array_append_val (names_not_found, s->name);
     }
   }
 

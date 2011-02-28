@@ -3,7 +3,7 @@
   <description>Quicktime Muxer plugin</description>
   <filename>../../gst/qtmux/.libs/libgstqtmux.so</filename>
   <basename>libgstqtmux.so</basename>
-  <version>0.10.20.1</version>
+  <version>0.10.21.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -33,6 +33,33 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/quicktime, variant=(string)3gpp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ismlmux</name>
+      <longname>ISML Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>Multiplex audio and video into a ISML file</description>
+      <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>video_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/quicktime, variant=(string)iso</details>
         </caps>
       </pads>
     </element>

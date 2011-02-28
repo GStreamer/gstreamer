@@ -91,7 +91,7 @@ setup_dynamic_linking (GstElement * pipeline,
   link->pipeline = pipeline;
   link->index = index;
 
-  g_signal_connect (G_OBJECT (element), "new_pad", G_CALLBACK (dynamic_link),
+  g_signal_connect (G_OBJECT (element), "new-pad", G_CALLBACK (dynamic_link),
       link);
 }
 
@@ -225,7 +225,7 @@ main (gint argc, gchar * argv[])
   index = gst_index_factory_make ("memindex");
   if (index) {
     if (verbose)
-      g_signal_connect (G_OBJECT (index), "entry_added",
+      g_signal_connect (G_OBJECT (index), "entry-added",
           G_CALLBACK (entry_added), NULL);
 
     g_object_set (G_OBJECT (index), "resolver", 1, NULL);
@@ -245,7 +245,7 @@ main (gint argc, gchar * argv[])
   }
 
   /* setup some default info/error handlers */
-  g_signal_connect (G_OBJECT (pipeline), "deep_notify",
+  g_signal_connect (G_OBJECT (pipeline), "deep-notify",
       G_CALLBACK (gst_element_default_deep_notify), NULL);
   g_signal_connect (G_OBJECT (pipeline), "error",
       G_CALLBACK (gst_element_default_error), NULL);

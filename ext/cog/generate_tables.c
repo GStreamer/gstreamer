@@ -2,6 +2,7 @@
 #include "config.h"
 
 #include <glib.h>
+#include <gst/math-compat.h>
 #include <math.h>
 
 #include "gstcms.h"

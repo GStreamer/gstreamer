@@ -547,8 +547,8 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
   GstElement *element = NULL;
   GstPad *internal_sinkpad = NULL;
   GstPad *internal_srcpad = NULL;
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstPad *sinkpad = NULL;
+  GstPad *srcpad = NULL;
   GstPadLinkReturn padlinkret;
 
   GST_DEBUG_OBJECT (autoconvert, "Adding element %s to the autoconvert bin",
@@ -587,6 +587,10 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
 
   if (!internal_sinkpad || !internal_srcpad) {
     GST_ERROR_OBJECT (autoconvert, "Could not create internal pads");
+    if (internal_srcpad)
+      gst_object_unref (internal_srcpad);
+    if (internal_sinkpad)
+      gst_object_unref (internal_sinkpad);
     goto error;
   }
 
@@ -652,10 +656,18 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
   /* Increment the reference count we will return to the caller */
   gst_object_ref (element);
 
+  /* unref sink and src pad */
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
   return element;
 
 error:
   gst_bin_remove (GST_BIN (autoconvert), element);
+
+  if (srcpad)
+    gst_object_unref (srcpad);
+  if (sinkpad)
+    gst_object_unref (sinkpad);
 
   return NULL;
 }
@@ -707,8 +719,8 @@ factory_can_intersect (GstAutoConvert * autoconvert,
     GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
 
     if (template->direction == direction) {
-      GstCaps *intersect = NULL;
       GstCaps *tmpl_caps = NULL;
+      gboolean intersect;
 
       /* If there is more than one pad in this direction, we return FALSE
        * Only transform elements (with one sink and one source pad)
@@ -723,18 +735,14 @@ factory_can_intersect (GstAutoConvert * autoconvert,
       has_direction = TRUE;
 
       tmpl_caps = gst_static_caps_get (&template->static_caps);
-      intersect = gst_caps_intersect (tmpl_caps, caps);
-      GST_DEBUG_OBJECT (autoconvert, "Intersection of factory %" GST_PTR_FORMAT
+      intersect = gst_caps_can_intersect (tmpl_caps, caps);
+      GST_DEBUG_OBJECT (autoconvert, "Factories %" GST_PTR_FORMAT
           " static caps %" GST_PTR_FORMAT " and caps %" GST_PTR_FORMAT
-          " is %" GST_PTR_FORMAT, factory, tmpl_caps, caps, intersect);
+          " can%s intersect", factory, tmpl_caps, caps,
+          intersect ? "" : " not");
       gst_caps_unref (tmpl_caps);
 
-      if (intersect) {
-        if (!gst_caps_is_empty (intersect))
-          ret = TRUE;
-
-        gst_caps_unref (intersect);
-      }
+      ret |= intersect;
     }
     templates = g_list_next (templates);
   }
@@ -883,6 +891,8 @@ gst_auto_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
     /* And make it the current child */
     if (gst_auto_convert_activate_element (autoconvert, element, caps))
       break;
+    else
+      gst_object_unref (element);
   }
 
 get_out:
@@ -1552,6 +1562,7 @@ gst_auto_convert_internal_src_query_type (GstPad * pad)
   return ret;
 }
 
+/*
 static gboolean
 gst_auto_convert_plugin_init (GstPlugin * plugin)
 {
@@ -1565,3 +1576,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "Selects convertor element based on caps",
     gst_auto_convert_plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME,
     GST_PACKAGE_ORIGIN)
+*/

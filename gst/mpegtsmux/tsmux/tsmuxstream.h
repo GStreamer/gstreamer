@@ -201,7 +201,8 @@ void 		tsmux_stream_set_buffer_release_func 	(TsMuxStream *stream,
 /* Add a new buffer to the pool of available bytes. If pts or dts are not -1, they
  * indicate the PTS or DTS of the first access unit within this packet */
 void 		tsmux_stream_add_data 		(TsMuxStream *stream, guint8 *data, guint len, 
-       						 void *user_data, gint64 pts, gint64 dts);
+       						 void *user_data, gint64 pts, gint64 dts,
+                                                 gboolean random_access);
 
 void 		tsmux_stream_pcr_ref 		(TsMuxStream *stream);
 void 		tsmux_stream_pcr_unref  	(TsMuxStream *stream);

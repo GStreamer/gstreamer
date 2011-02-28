@@ -16,6 +16,7 @@ plugin_LTLIBRARIES = libgstcamerabin.la
 
 libgstcamerabin_la_SOURCES = gstcamerabin.c             \
 			  gstcamerabincolorbalance.c \
+			  gstinputselector.c         \
 			  camerabinimage.c           \
 			  camerabinvideo.c           \
 			  camerabingeneral.c         \
@@ -37,6 +38,7 @@ libgstcamerabin_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstcamerabin.h             \
 		 gstcamerabincolorbalance.h \
+		 gstinputselector.h         \
 		 camerabinimage.h           \
 		 camerabinvideo.h           \
 		 camerabindebug.h           \

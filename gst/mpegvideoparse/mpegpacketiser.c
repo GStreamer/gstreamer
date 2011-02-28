@@ -636,9 +636,7 @@ mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end)
   /* Skip the start code */
   data += 4;
 
-  hdr->temp_ref = (data[0] << 2) | (data[1] >> 6);
   hdr->pic_type = (data[1] >> 3) & 0x07;
-
   if (hdr->pic_type == 0 || hdr->pic_type > 4)
     return FALSE;               /* Corrupted picture packet */
 

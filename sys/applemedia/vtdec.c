@@ -45,7 +45,7 @@ static VTDecompressionSessionRef gst_vtdec_create_session (GstVTDec * self,
 static void gst_vtdec_destroy_session (GstVTDec * self,
     VTDecompressionSessionRef * session);
 static GstFlowReturn gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf);
-static void gst_vtdec_output_frame (void *data, gsize unk1, VTStatus result,
+static void gst_vtdec_enqueue_frame (void *data, gsize unk1, VTStatus result,
     gsize unk2, CVBufferRef cvbuf);
 
 static CMSampleBufferRef gst_vtdec_sample_buffer_from (GstVTDec * self,
@@ -358,7 +358,7 @@ gst_vtdec_create_session (GstVTDec * self, CMFormatDescriptionRef fmt_desc)
   gst_vtutil_dict_set_i32 (pb_attrs,
       *(cv->kCVPixelBufferBytesPerRowAlignmentKey), 2 * self->negotiated_width);
 
-  callback.func = gst_vtdec_output_frame;
+  callback.func = gst_vtdec_enqueue_frame;
   callback.data = self;
 
   status = self->ctx->vt->VTDecompressionSessionCreate (NULL, fmt_desc,
@@ -407,13 +407,20 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
   self->cur_inbuf = NULL;
   gst_buffer_unref (buf);
 
+  if (self->cur_outbufs->len > 0) {
+    if (!gst_vtdec_negotiate_downstream (self))
+      ret = GST_FLOW_NOT_NEGOTIATED;
+  }
+
   for (i = 0; i != self->cur_outbufs->len; i++) {
     GstBuffer *buf = g_ptr_array_index (self->cur_outbufs, i);
 
-    if (ret == GST_FLOW_OK)
+    if (ret == GST_FLOW_OK) {
+      gst_buffer_set_caps (buf, GST_PAD_CAPS (self->srcpad));
       ret = gst_pad_push (self->srcpad, buf);
-    else
+    } else {
       gst_buffer_unref (buf);
+    }
   }
   g_ptr_array_set_size (self->cur_outbufs, 0);
 
@@ -421,7 +428,7 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
 }
 
 static void
-gst_vtdec_output_frame (void *data, gsize unk1, VTStatus result, gsize unk2,
+gst_vtdec_enqueue_frame (void *data, gsize unk1, VTStatus result, gsize unk2,
     CVBufferRef cvbuf)
 {
   GstVTDec *self = GST_VTDEC_CAST (data);
@@ -430,11 +437,7 @@ gst_vtdec_output_frame (void *data, gsize unk1, VTStatus result, gsize unk2,
   if (result != kVTSuccess)
     goto beach;
 
-  if (!gst_vtdec_negotiate_downstream (self))
-    goto beach;
-
   buf = gst_core_video_buffer_new (self->ctx, cvbuf);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (self->srcpad));
   gst_buffer_copy_metadata (buf, self->cur_inbuf,
       GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
 

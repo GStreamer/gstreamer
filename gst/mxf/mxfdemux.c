@@ -611,11 +611,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -775,8 +775,8 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
             essence_container);
 
         if (track->parent.type == MXF_METADATA_TRACK_PICTURE_ESSENCE) {
-          if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
-                  descriptor[0]))
+          if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+                  parent.descriptor[0]))
             mxf_ul_to_string (&MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR
                 (track->parent.descriptor[0])->picture_essence_coding,
                 essence_compression);
@@ -785,8 +785,8 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
               g_strdup_printf ("video/x-mxf-%s-%s", essence_container,
               essence_compression);
         } else if (track->parent.type == MXF_METADATA_TRACK_SOUND_ESSENCE) {
-          if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-                  descriptor[0]))
+          if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+                  parent.descriptor[0]))
             mxf_ul_to_string (&MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR
                 (track->parent.descriptor[0])->sound_essence_compression,
                 essence_compression);
@@ -795,8 +795,8 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
               g_strdup_printf ("audio/x-mxf-%s-%s", essence_container,
               essence_compression);
         } else if (track->parent.type == MXF_METADATA_TRACK_DATA_ESSENCE) {
-          if (MXF_IS_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR (track->parent.
-                  descriptor[0]))
+          if (MXF_IS_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR (track->
+                  parent.descriptor[0]))
             mxf_ul_to_string (&MXF_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR
                 (track->parent.descriptor[0])->data_essence_coding,
                 essence_compression);
@@ -805,6 +805,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
               g_strdup_printf ("application/x-mxf-%s-%s", essence_container,
               essence_compression);
         } else {
+          name = NULL;
           g_assert_not_reached ();
         }
 
@@ -1420,8 +1421,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
-          current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->
+      structural_components[pad->current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1429,8 +1430,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
-          source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->
+          current_component->source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -2997,8 +2998,8 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
   for (i = 0; i < p->material_track->parent.sequence->n_structural_components;
       i++) {
     clip =
-        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.sequence->
-        structural_components[i]);
+        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.
+        sequence->structural_components[i]);
 
     if (clip->parent.duration <= 0)
       break;
@@ -3076,8 +3077,8 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
@@ -3209,8 +3210,8 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   if (rate <= 0.0)
     goto wrong_rate;
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     GstEvent *e;

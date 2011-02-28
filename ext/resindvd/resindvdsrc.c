@@ -36,6 +36,7 @@ GST_DEBUG_CATEGORY_STATIC (rsndvdsrc_debug);
 
 #define DEFAULT_DEVICE "/dev/dvd"
 #define DEFAULT_FASTSTART TRUE
+#define DEFAULT_LANG "en"
 
 #define GST_FLOW_WOULD_BLOCK GST_FLOW_CUSTOM_SUCCESS
 
@@ -61,7 +62,7 @@ typedef enum
   RSN_BTN_LEFT = 0x01,
   RSN_BTN_RIGHT = 0x02,
   RSN_BTN_UP = 0x04,
-  RSN_BTN_DOWN = 0x04
+  RSN_BTN_DOWN = 0x08
 } RsnBtnMask;
 
 enum
@@ -354,6 +355,8 @@ static gboolean
 rsn_dvdsrc_start (GstBaseSrc * bsrc)
 {
   resinDvdSrc *src = RESINDVDSRC (bsrc);
+  const gchar *const *langs, *const *cur;
+  gchar lang[8];
 
   g_mutex_lock (src->dvd_lock);
   if (!read_vts_info (src)) {
@@ -374,6 +377,21 @@ rsn_dvdsrc_start (GstBaseSrc * bsrc)
     goto fail;
   }
 
+  /* Attempt to set DVD menu, audio and spu languages */
+  langs = g_get_language_names ();
+  strncpy (lang, DEFAULT_LANG, 8);
+  for (cur = langs; *cur != NULL; cur++) {
+    /* Look for a 2 char iso-639 lang */
+    if (strlen (*cur) == 2) {
+      strncpy (lang, *cur, 8);
+      break;
+    }
+  }
+  /* Set the user's preferred language */
+  dvdnav_menu_language_select (src->dvdnav, lang);
+  dvdnav_audio_language_select (src->dvdnav, lang);
+  dvdnav_spu_language_select (src->dvdnav, lang);
+
   if (src->faststart) {
     if (dvdnav_title_play (src->dvdnav, 1) != DVDNAV_STATUS_OK ||
         (dvdnav_menu_call (src->dvdnav, DVD_MENU_Title) != DVDNAV_STATUS_OK &&
@@ -391,6 +409,7 @@ rsn_dvdsrc_start (GstBaseSrc * bsrc)
   src->branching = FALSE;
   src->discont = TRUE;
   src->need_segment = TRUE;
+  src->need_tag_update = TRUE;
 
   src->cur_position = GST_CLOCK_TIME_NONE;
   src->pgc_duration = GST_CLOCK_TIME_NONE;
@@ -792,8 +811,8 @@ get_current_pgc (resinDvdSrc * src)
   return pgc;
 }
 
-static void
-update_title_info (resinDvdSrc * src)
+static GstTagList *
+update_title_info (resinDvdSrc * src, gboolean force)
 {
   gint n_angles, cur_agl;
   gint title_n, part_n;
@@ -807,14 +826,14 @@ update_title_info (resinDvdSrc * src)
   if (dvdnav_current_title_info (src->dvdnav, &title_n,
           &part_n) != DVDNAV_STATUS_OK) {
     if (!src->in_menu)
-      return;                   /* Can't update now */
+      return NULL;              /* Can't update now */
     /* Must be in the first play sequence */
     title_n = -1;
     part_n = 0;
   }
 
   if (title_n != src->title_n || part_n != src->part_n ||
-      src->n_angles != n_angles || src->cur_angle != cur_agl) {
+      src->n_angles != n_angles || src->cur_angle != cur_agl || force) {
     gchar *title_str = NULL;
 
     src->title_n = title_n;
@@ -852,9 +871,11 @@ update_title_info (resinDvdSrc * src)
       gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
           title_str, NULL);
       g_free (title_str);
-      gst_element_found_tags (GST_ELEMENT_CAST (src), tags);
+      return tags;
     }
   }
+
+  return NULL;
 }
 
 /* we don't cache the result on purpose */
@@ -1028,8 +1049,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
           GST_TIME_ARGS (src->cur_position));
 
       rsn_dvdsrc_prepare_streamsinfo_event (src);
-
-      update_title_info (src);
+      src->need_tag_update = TRUE;
 
       break;
     }
@@ -1058,11 +1078,11 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       dvdnav_audio_stream_change_event_t *event =
           (dvdnav_audio_stream_change_event_t *) data;
 
+      rsn_dvdsrc_prepare_audio_stream_event (src,
+          event->logical, event->physical);
       GST_DEBUG_OBJECT (src, "  physical: %d", event->physical);
       GST_DEBUG_OBJECT (src, "  logical: %d", event->logical);
 
-      rsn_dvdsrc_prepare_audio_stream_event (src,
-          event->logical, event->physical);
       break;
     }
     case DVDNAV_SPU_STREAM_CHANGE:{
@@ -1276,6 +1296,7 @@ rsn_dvdsrc_create (GstBaseSrc * bsrc, guint64 offset,
   GstEvent *audio_select_event = NULL;
   GstEvent *highlight_event = NULL;
   GstMessage *angles_msg = NULL;
+  GstTagList *tags = NULL;
   gboolean cmds_changed = FALSE;
 
   *outbuf = NULL;
@@ -1312,6 +1333,11 @@ rsn_dvdsrc_create (GstBaseSrc * bsrc, guint64 offset,
 
   cmds_changed = src->commands_changed;
   src->commands_changed = FALSE;
+
+  if (src->need_tag_update) {
+    tags = update_title_info (src, FALSE);
+    src->need_tag_update = FALSE;
+  }
 
   g_mutex_unlock (src->dvd_lock);
 
@@ -1359,6 +1385,11 @@ rsn_dvdsrc_create (GstBaseSrc * bsrc, guint64 offset,
   if (src->cur_end_ts != GST_CLOCK_TIME_NONE)
     gst_segment_set_last_stop (segment, GST_FORMAT_TIME, src->cur_end_ts);
 
+  if (tags) {
+    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (src),
+        GST_BASE_SRC_PAD (src), tags);
+    tags = NULL;
+  }
   g_mutex_lock (src->dvd_lock);
 
   if (src->next_buf != NULL) {
@@ -1766,7 +1797,7 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
       }
       src->angles_changed = FALSE;
 
-      update_title_info (src);
+      src->need_tag_update = TRUE;
     }
 
     cmds_changed = src->commands_changed;
@@ -2369,7 +2400,7 @@ rsn_dvdsrc_src_event (GstBaseSrc * basesrc, GstEvent * event)
       GST_LOG_OBJECT (src, "handling seek event");
 
       gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
-      src->flushing_seek = ! !(flags & GST_SEEK_FLAG_FLUSH);
+      src->flushing_seek = !!(flags & GST_SEEK_FLAG_FLUSH);
       GST_DEBUG_OBJECT (src, "%s seek event",
           src->flushing_seek ? "flushing" : "non-flushing");
 

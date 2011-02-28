@@ -78,6 +78,8 @@ typedef struct _GstQTPad GstQTPad;
 typedef GstBuffer * (*GstQTPadPrepareBufferFunc) (GstQTPad * pad,
     GstBuffer * buf, GstQTMux * qtmux);
 
+#define QTMUX_NO_OF_TS   10
+
 struct _GstQTPad
 {
   GstCollectData collect;       /* we extend the CollectData */
@@ -102,6 +104,11 @@ struct _GstQTPad
   /* store the first timestamp for comparing with other streams and
    * know if there are late streams */
   GstClockTime first_ts;
+  GstClockTime ts_entries[QTMUX_NO_OF_TS + 2];
+  guint ts_n_entries;
+  GstBuffer *buf_entries[QTMUX_NO_OF_TS + 2];
+  guint buf_head;
+  guint buf_tail;
 
   /* all the atom and chunk book-keeping is delegated here
    * unowned/uncounted reference, parent MOOV owns */
@@ -173,8 +180,8 @@ struct _GstQTMux
   guint32 trak_timescale;
   AtomsTreeFlavor flavor;
   gboolean fast_start;
-  gboolean large_file;
   gboolean guess_pts;
+  gint dts_method;
   gchar *fast_start_file_path;
   gchar *moov_recov_file_path;
   guint32 fragment_duration;

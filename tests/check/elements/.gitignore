@@ -5,7 +5,9 @@ amrparse
 asfmux
 assrender
 autoconvert
+autovideoconvert
 camerabin
+camerabin2
 deinterleave
 dataurisrc
 faac
@@ -14,6 +16,7 @@ flacparse
 gdpdepay
 gdppay
 id3mux
+imagecapturebin
 interleave
 jifmux
 jpegparse
@@ -31,11 +34,12 @@ rganalysis
 rglimiter
 rgvolume
 rtpmux
-selector
+schroenc
 spectrum
 timidity
 y4menc
-valve
+videorecordingbin
+viewfinderbin
 vp8dec
 vp8enc
 zbar

@@ -821,9 +821,11 @@ gst_directdraw_sink_draw_borders (GstDirectDrawSink * ddrawsink, RECT dst_rect)
   OffsetRect (&win_rect, win_point.x, win_point.y);
 
   /* We acquire a drawing context */
-  if (IDirectDrawSurface7_GetDC (ddrawsink->primary_surface, &hdc) == DD_OK) {
+  if ((hdc = GetDC (ddrawsink->video_window))) {
     HBRUSH brush = CreateSolidBrush (RGB (0, 0, 0));
 
+    /* arrange for logical coordinates that match screen coordinates */
+    SetWindowOrgEx (hdc, win_point.x, win_point.y, NULL);
     /* Left border */
     if (dst_rect.left > win_rect.left) {
       fill_rect.left = win_rect.left;
@@ -857,7 +859,7 @@ gst_directdraw_sink_draw_borders (GstDirectDrawSink * ddrawsink, RECT dst_rect)
       FillRect (hdc, &fill_rect, brush);
     }
     DeleteObject (brush);
-    IDirectDrawSurface7_ReleaseDC (ddrawsink->primary_surface, hdc);
+    ReleaseDC (ddrawsink->video_window, hdc);
   }
 }
 
@@ -903,6 +905,19 @@ gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   ClientToScreen (ddrawsink->video_window, &dest_surf_point);
   GetClientRect (ddrawsink->video_window, &destsurf_rect);
   OffsetRect (&destsurf_rect, dest_surf_point.x, dest_surf_point.y);
+
+  /* Check to see if we have an area to draw to.
+   * When the window is minimized, it will trigger the
+   * "IDirectDrawSurface7_Blt (object's offscreen surface)" warning,
+   * with a msg that the rectangle is invalid */
+  if (destsurf_rect.right <= destsurf_rect.left ||
+      destsurf_rect.bottom <= destsurf_rect.top) {
+    GST_OBJECT_UNLOCK (ddrawsink);
+    GST_DEBUG_OBJECT (ddrawsink, "invalid rendering window rectangle "
+        "(%ld, %ld), (%ld, %ld)", destsurf_rect.left, destsurf_rect.top,
+        destsurf_rect.right, destsurf_rect.bottom);
+    goto beach;
+  }
 
   if (ddrawsink->keep_aspect_ratio) {
     /* center image to dest image keeping aspect ratio */
@@ -1004,6 +1019,7 @@ gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
           "returned %s", DDErrorString (hRes));
   }
 
+beach:
   return GST_FLOW_OK;
 }
 

@@ -215,27 +215,38 @@ gst_camerabin_video_dispose (GstCameraBinVideo * vid)
     vid->vid_sink_probe_id = 0;
   }
 
+  /* Note: if videobin was never set to READY state the
+     ownership of elements created by application were never
+     taken by bin and therefore gst_object_sink is called for
+     these elements (they may still be in floating state
+     and not unreffed properly without sinking first)
+   */
   if (vid->app_post) {
+    gst_object_sink (vid->app_post);
     gst_object_unref (vid->app_post);
     vid->app_post = NULL;
   }
 
   if (vid->app_vid_enc) {
+    gst_object_sink (vid->app_vid_enc);
     gst_object_unref (vid->app_vid_enc);
     vid->app_vid_enc = NULL;
   }
 
   if (vid->app_aud_enc) {
+    gst_object_sink (vid->app_aud_enc);
     gst_object_unref (vid->app_aud_enc);
     vid->app_aud_enc = NULL;
   }
 
   if (vid->app_aud_src) {
+    gst_object_sink (vid->app_aud_src);
     gst_object_unref (vid->app_aud_src);
     vid->app_aud_src = NULL;
   }
 
   if (vid->app_mux) {
+    gst_object_sink (vid->app_mux);
     gst_object_unref (vid->app_mux);
     vid->app_mux = NULL;
   }
@@ -542,7 +553,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   }
 
   /* Add tee element */
-  if (!(vid->tee = gst_camerabin_create_and_add_element (vidbin, "tee"))) {
+  if (!(vid->tee =
+          gst_camerabin_create_and_add_element (vidbin, "tee", "video-tee"))) {
     goto error;
   }
 
@@ -569,7 +581,7 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   if (vid->flags & GST_CAMERABIN_FLAG_VIDEO_COLOR_CONVERSION) {
     /* Add colorspace converter */
     if (gst_camerabin_create_and_add_element (vidbin,
-            "ffmpegcolorspace") == NULL) {
+            "ffmpegcolorspace", "video-ffmpegcolorspace") == NULL) {
       goto error;
     }
   }
@@ -581,7 +593,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
       goto error;
     }
   } else if (!(vid->vid_enc =
-          gst_camerabin_create_and_add_element (vidbin, DEFAULT_VID_ENC))) {
+          gst_camerabin_create_and_add_element (vidbin, DEFAULT_VID_ENC,
+              "video-encoder"))) {
     goto error;
   }
 
@@ -592,13 +605,15 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
       goto error;
     }
   } else if (!(vid->muxer =
-          gst_camerabin_create_and_add_element (vidbin, DEFAULT_MUX))) {
+          gst_camerabin_create_and_add_element (vidbin, DEFAULT_MUX,
+              "video-muxer"))) {
     goto error;
   }
 
   /* Add sink element for storing the video */
   if (!(vid->sink =
-          gst_camerabin_create_and_add_element (vidbin, DEFAULT_SINK))) {
+          gst_camerabin_create_and_add_element (vidbin, DEFAULT_SINK,
+              "video-sink"))) {
     goto error;
   }
   g_object_set (G_OBJECT (vid->sink), "location", vid->filename->str, "buffer-mode", 2, /* non buffered io */
@@ -648,7 +663,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
         goto error;
       }
     } else if (!(vid->aud_enc =
-            gst_camerabin_create_and_add_element (vidbin, DEFAULT_AUD_ENC))) {
+            gst_camerabin_create_and_add_element (vidbin, DEFAULT_AUD_ENC,
+                "audio-encoder"))) {
       goto error;
     }
 

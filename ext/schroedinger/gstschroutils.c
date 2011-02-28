@@ -95,6 +95,7 @@ gst_schro_buffer_wrap (GstBuffer * buf, GstVideoFormat format, int width,
 #endif
     default:
       g_assert_not_reached ();
+      return NULL;
   }
   schro_frame_set_free_callback (frame, gst_schro_frame_free, buf);
 

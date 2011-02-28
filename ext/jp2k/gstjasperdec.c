@@ -65,7 +65,7 @@ static GstStaticPadTemplate gst_jasper_dec_src_template =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; "
         GST_VIDEO_CAPS_RGBx "; " GST_VIDEO_CAPS_xRGB "; "
         GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_xBGR "; "
-        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, Y41B, Y42B }"))
+        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, Y41B, Y42B, v308 }"))
     );
 
 static void gst_jasper_dec_set_property (GObject * object, guint prop_id,
@@ -535,8 +535,8 @@ fail:
     if (*outbuf)
       gst_buffer_unref (*outbuf);
     *outbuf = NULL;
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), (NULL));
-    ret = GST_FLOW_ERROR;
+    GST_ELEMENT_WARNING (dec, STREAM, DECODE, (NULL), (NULL));
+    ret = GST_FLOW_OK;
     goto done;
   }
 no_buffer:

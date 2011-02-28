@@ -95,7 +95,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg4videoparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfbdevsink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
-%{_libdir}/gstreamer-%{majorminor}/libgstselector.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
 %{_libdir}/gstreamer-%{majorminor}/libresindvd.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaiff.so
@@ -104,6 +103,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstscaletempoplugin.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegdemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegtsdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstjp2k.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapexsink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstqtmux.so
@@ -111,7 +111,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmxf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvmnc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideosignal.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvalve.so
 %{_libdir}/gstreamer-%{majorminor}/libgstautoconvert.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdtmf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstliveadder.so
@@ -167,7 +166,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 @USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
 @USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
-@USE_JACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjack.so
 @USE_SNDFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
 @USE_CELT_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcelt.so
 @USE_MPEG2ENC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so

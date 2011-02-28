@@ -88,6 +88,19 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_katetiger_debug);
 #define GST_CAT_DEFAULT gst_katetiger_debug
 
+#define GST_KATE_TIGER_MUTEX_LOCK(element) \
+  do { \
+    /*GST_LOG_OBJECT ((element), "locking from %s:%d\n",__FILE__,__LINE__);*/ \
+    g_mutex_lock ((element)->mutex); \
+    /*GST_LOG_OBJECT ((element), "ready from %s:%d\n",__FILE__,__LINE__);*/ \
+  } while(0)
+
+#define GST_KATE_TIGER_MUTEX_UNLOCK(element) \
+  do { \
+    /*GST_LOG_OBJECT ((element), "unlocking from %s:%d\n",__FILE__,__LINE__);*/ \
+    g_mutex_unlock ((element)->mutex); \
+  } while(0)
+
 /* Filter signals and args */
 enum
 {
@@ -118,18 +131,26 @@ static GstStaticPadTemplate kate_sink_factory =
     GST_STATIC_CAPS ("subtitle/x-kate; application/x-kate")
     );
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define TIGER_VIDEO_CAPS \
+    GST_VIDEO_CAPS_xRGB ", endianness = (int)1234; " \
+    GST_VIDEO_CAPS_BGRx ", endianness = (int)4321"
+#else
+#define TIGER_VIDEO_CAPS \
+    GST_VIDEO_CAPS_BGRx ", endianness = (int)4321; " \
+    GST_VIDEO_CAPS_xRGB ", endianness = (int)1234"
+#endif
+
 static GstStaticPadTemplate video_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, bpp=(int)32, depth=(int)24")
-    );
+    GST_STATIC_CAPS (TIGER_VIDEO_CAPS));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, bpp=(int)32, depth=(int)24")
-    );
+    GST_STATIC_CAPS (TIGER_VIDEO_CAPS));
 
 GST_BOILERPLATE (GstKateTiger, gst_kate_tiger, GstElement, GST_TYPE_ELEMENT);
 
@@ -163,6 +184,7 @@ static GstStateChangeReturn gst_kate_tiger_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_kate_tiger_kate_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_kate_tiger_kate_event (GstPad * pad, GstEvent * event);
+static gboolean gst_kate_tiger_video_event (GstPad * pad, GstEvent * event);
 static gboolean gst_kate_tiger_video_set_caps (GstPad * pad, GstCaps * caps);
 static gboolean gst_kate_tiger_source_event (GstPad * pad, GstEvent * event);
 
@@ -214,7 +236,7 @@ gst_kate_tiger_class_init (GstKateTigerClass * klass)
       g_param_spec_enum ("default-font-effect", "Default font effect",
           "Whether to apply an effect to text by default, for increased readability",
           gst_kate_tiger_font_effect_get_type (),
-          tiger_font_plain,
+          tiger_font_outline,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
@@ -287,6 +309,7 @@ gst_kate_tiger_init (GstKateTiger * tiger, GstKateTigerClass * gclass)
   GST_DEBUG_OBJECT (tiger, "gst_kate_tiger_init");
 
   tiger->mutex = g_mutex_new ();
+  tiger->cond = g_cond_new ();
 
   tiger->katesinkpad =
       gst_pad_new_from_static_template (&kate_sink_factory, "subtitle_sink");
@@ -302,25 +325,25 @@ gst_kate_tiger_init (GstKateTiger * tiger, GstKateTigerClass * gclass)
       gst_pad_new_from_static_template (&video_sink_factory, "video_sink");
   gst_pad_set_chain_function (tiger->videosinkpad,
       GST_DEBUG_FUNCPTR (gst_kate_tiger_video_chain));
-  //gst_pad_set_query_function (tiger->videosinkpad, GST_DEBUG_FUNCPTR (gst_kate_tiger_video_sink_query));
   gst_pad_use_fixed_caps (tiger->videosinkpad);
-  gst_pad_set_caps (tiger->videosinkpad,
-      gst_static_pad_template_get_caps (&video_sink_factory));
   gst_pad_set_setcaps_function (tiger->videosinkpad,
       GST_DEBUG_FUNCPTR (gst_kate_tiger_video_set_caps));
+  gst_pad_set_event_function (tiger->videosinkpad,
+      GST_DEBUG_FUNCPTR (gst_kate_tiger_video_event));
   gst_element_add_pad (GST_ELEMENT (tiger), tiger->videosinkpad);
 
   tiger->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_event_function (tiger->srcpad, gst_kate_tiger_source_event);
+  gst_pad_use_fixed_caps (tiger->srcpad);
   gst_element_add_pad (GST_ELEMENT (tiger), tiger->srcpad);
 
-  gst_kate_util_decode_base_init (&tiger->decoder);
+  gst_kate_util_decode_base_init (&tiger->decoder, FALSE);
 
   tiger->tr = NULL;
 
   tiger->default_font_desc = NULL;
   tiger->quality = -1.0;
-  tiger->default_font_effect = tiger_font_plain;
+  tiger->default_font_effect = tiger_font_outline;
   tiger->default_font_effect_strength = 0.5;
   tiger->default_font_r = 255;
   tiger->default_font_g = 255;
@@ -333,6 +356,8 @@ gst_kate_tiger_init (GstKateTiger * tiger, GstKateTigerClass * gclass)
 
   tiger->video_width = 0;
   tiger->video_height = 0;
+
+  tiger->seen_header = FALSE;
 }
 
 static void
@@ -346,6 +371,9 @@ gst_kate_tiger_dispose (GObject * object)
     g_free (tiger->default_font_desc);
     tiger->default_font_desc = NULL;
   }
+
+  g_cond_free (tiger->cond);
+  tiger->cond = NULL;
 
   g_mutex_free (tiger->mutex);
   tiger->mutex = NULL;
@@ -400,7 +428,7 @@ gst_kate_tiger_set_property (GObject * object, guint prop_id,
   GstKateTiger *tiger = GST_KATE_TIGER (object);
   const char *str;
 
-  g_mutex_lock (tiger->mutex);
+  GST_KATE_TIGER_MUTEX_LOCK (tiger);
 
   switch (prop_id) {
     case ARG_DEFAULT_FONT_DESC:
@@ -465,7 +493,7 @@ gst_kate_tiger_set_property (GObject * object, guint prop_id,
       break;
   }
 
-  g_mutex_unlock (tiger->mutex);
+  GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
 }
 
 static void
@@ -474,7 +502,7 @@ gst_kate_tiger_get_property (GObject * object, guint prop_id,
 {
   GstKateTiger *tiger = GST_KATE_TIGER (object);
 
-  g_mutex_lock (tiger->mutex);
+  GST_KATE_TIGER_MUTEX_LOCK (tiger);
 
   switch (prop_id) {
     case ARG_DEFAULT_FONT_DESC:
@@ -522,7 +550,7 @@ gst_kate_tiger_get_property (GObject * object, guint prop_id,
       break;
   }
 
-  g_mutex_unlock (tiger->mutex);
+  GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
 }
 
 /* GstElement vmethod implementations */
@@ -538,29 +566,107 @@ gst_kate_tiger_kate_chain (GstPad * pad, GstBuffer * buf)
   const kate_event *ev = NULL;
   GstFlowReturn rflow = GST_FLOW_OK;
 
-  g_mutex_lock (tiger->mutex);
+  GST_KATE_TIGER_MUTEX_LOCK (tiger);
 
-  GST_LOG_OBJECT (tiger, "Got kate buffer");
+  GST_LOG_OBJECT (tiger, "Got kate buffer, caps %" GST_PTR_FORMAT,
+      GST_BUFFER_CAPS (buf));
 
-  rflow =
-      gst_kate_util_decoder_base_chain_kate_packet (&tiger->decoder,
-      GST_ELEMENT_CAST (tiger), pad, buf, tiger->srcpad, &ev);
-  if (G_LIKELY (rflow == GST_FLOW_OK)) {
-    if (ev) {
-      int ret = tiger_renderer_add_event (tiger->tr, ev->ki, ev);
-      GST_INFO_OBJECT (tiger, "adding event for %p from %f to %f: %p, \"%s\"",
-          ev->ki, ev->start_time, ev->end_time, ev->bitmap, ev->text);
-      if (G_UNLIKELY (ret < 0)) {
-        GST_WARNING_OBJECT (tiger,
-            "failed to add Kate event to Tiger renderer: %d", ret);
+  /* Unfortunately, it can happen that the start of the stream is not sent,
+     for instance if there's a stream selector upstream, which is switched
+     from another Kate stream. If this happens, then we can fallback on the
+     headers stored in the caps (if any). */
+  if (!tiger->seen_header) {
+    if (GST_BUFFER_SIZE (buf) == 0 || (GST_BUFFER_DATA (buf)[0] & 0x80) == 0) {
+      /* Not a header, try to fall back on caps */
+      GstStructure *s;
+      const GValue *streamheader;
+
+      GST_INFO_OBJECT (tiger, "Headers not seen, start of stream is cut off");
+      s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+      streamheader = gst_structure_get_value (s, "streamheader");
+      if (streamheader && G_VALUE_TYPE (streamheader) == GST_TYPE_ARRAY) {
+        GstPad *tagpad = gst_pad_get_peer (pad);
+        GArray *array;
+        gint i;
+
+        GST_INFO_OBJECT (tiger, "Falling back on caps to initialize decoder");
+        array = g_value_peek_pointer (streamheader);
+        for (i = 0; i < array->len; i++) {
+          GValue *value = &g_array_index (array, GValue, i);
+          if (G_VALUE_TYPE (value) == GST_TYPE_BUFFER) {
+            GstBuffer *hbuf = g_value_peek_pointer (value);
+            gst_buffer_ref (hbuf);
+            rflow =
+                gst_kate_util_decoder_base_chain_kate_packet (&tiger->decoder,
+                GST_ELEMENT_CAST (tiger), pad, hbuf, tiger->srcpad, tagpad,
+                NULL, NULL);
+          } else {
+            GST_WARNING_OBJECT (tiger,
+                "Streamheader index %d does not hold a buffer", i);
+          }
+        }
+        gst_object_unref (tagpad);
+        tiger->seen_header = TRUE;
+      } else {
+        GST_WARNING_OBJECT (tiger, "No headers seen, and no headers on caps");
       }
+    } else {
+      tiger->seen_header = TRUE;
     }
   }
 
+  if (gst_kate_util_decoder_base_update_segment (&tiger->decoder,
+          GST_ELEMENT_CAST (tiger), buf)) {
+    GstPad *tagpad = gst_pad_get_peer (pad);
+    rflow =
+        gst_kate_util_decoder_base_chain_kate_packet (&tiger->decoder,
+        GST_ELEMENT_CAST (tiger), pad, buf, tiger->srcpad, tagpad, NULL, &ev);
+    if (G_LIKELY (rflow == GST_FLOW_OK)) {
+      if (ev) {
+        int ret = tiger_renderer_add_event (tiger->tr, ev->ki, ev);
+        GST_INFO_OBJECT (tiger, "adding event for %p from %f to %f: %p, \"%s\"",
+            ev->ki, ev->start_time, ev->end_time, ev->bitmap, ev->text);
+        if (G_UNLIKELY (ret < 0)) {
+          GST_WARNING_OBJECT (tiger,
+              "failed to add Kate event to Tiger renderer: %d", ret);
+        }
+      }
+    }
+    gst_object_unref (tagpad);
+  }
+
+  /* we want to avoid shooting ahead of the video stream, or we will
+     get segment updates which will place us ahead of it, and we won't
+     be able to convert a video timestamp back into a kate timestamp */
+  if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
+    while (1) {
+      gint64 kate_time, video_time;
+      kate_time =
+          gst_segment_to_running_time (&tiger->decoder.kate_segment,
+          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
+      video_time =
+          gst_segment_to_running_time (&tiger->video_segment, GST_FORMAT_TIME,
+          tiger->video_segment.last_stop);
+      GST_DEBUG_OBJECT (tiger, "Kate time %.2f, video time %.2f (kts %ld)",
+          kate_time / (float) GST_SECOND, video_time / (float) GST_SECOND,
+          (long) GST_BUFFER_TIMESTAMP (buf));
+      if (kate_time <= video_time) {
+        break;
+      }
+      GST_LOG_OBJECT (tiger, "Waiting to return from chain function");
+      g_cond_wait (tiger->cond, tiger->mutex);
+      if (tiger->decoder.kate_flushing) {
+        GST_DEBUG_OBJECT (tiger, "Flushing while waiting");
+        break;
+      }
+      GST_LOG_OBJECT (tiger, "Woken up, checking time again");
+    }
+  }
+
+  GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+
   gst_object_unref (tiger);
   gst_buffer_unref (buf);
-
-  g_mutex_unlock (tiger->mutex);
 
   return rflow;
 }
@@ -569,26 +675,39 @@ static gboolean
 gst_kate_tiger_video_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstKateTiger *tiger = GST_KATE_TIGER (gst_pad_get_parent (pad));
-  GstStructure *s;
+  GstVideoFormat format;
   gint w, h;
-  gboolean res = FALSE;
 
-  g_mutex_lock (tiger->mutex);
+  GST_KATE_TIGER_MUTEX_LOCK (tiger);
 
-  s = gst_caps_get_structure (caps, 0);
+  /* Cairo expects ARGB in native endianness, and that's what we get
+     as we've forced it in the caps. We might allow swapped red/blue
+     at some point, and get tiger to swap, to make some cases faster */
+  tiger->swap_rgb = FALSE;
 
-  if (G_LIKELY (gst_structure_get_int (s, "width", &w))
-      && G_LIKELY (gst_structure_get_int (s, "height", &h))) {
-    GST_INFO_OBJECT (tiger, "video sink: %d %d", w, h);
+  if (gst_video_format_parse_caps (caps, &format, &w, &h)) {
     tiger->video_width = w;
     tiger->video_height = h;
-    res = TRUE;
   }
 
-  g_mutex_unlock (tiger->mutex);
+  GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+
+  gst_pad_set_caps (tiger->srcpad, caps);
 
   gst_object_unref (tiger);
   return TRUE;
+}
+
+static gdouble
+gst_kate_tiger_get_time (GstKateTiger * tiger)
+{
+  gint64 rt =
+      gst_segment_to_running_time (&tiger->video_segment, GST_FORMAT_TIME,
+      tiger->video_segment.last_stop);
+  gint64 pos =
+      gst_segment_to_position (&tiger->decoder.kate_segment, GST_FORMAT_TIME,
+      rt);
+  return pos / (gdouble) GST_SECOND;
 }
 
 static GstFlowReturn
@@ -599,9 +718,22 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
   unsigned char *ptr;
   int ret;
 
-  g_mutex_lock (tiger->mutex);
+  GST_KATE_TIGER_MUTEX_LOCK (tiger);
 
   GST_LOG_OBJECT (tiger, "got video frame, %u bytes", GST_BUFFER_SIZE (buf));
+
+  if (G_UNLIKELY (tiger->video_flushing)) {
+    GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+    gst_object_unref (tiger);
+    gst_buffer_unref (buf);
+    return GST_FLOW_WRONG_STATE;
+  }
+
+  if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
+    gst_segment_set_last_stop (&tiger->video_segment, GST_FORMAT_TIME,
+        GST_BUFFER_TIMESTAMP (buf));
+    g_cond_broadcast (tiger->cond);
+  }
 
   /* draw on it */
   buf = gst_buffer_make_writable (buf);
@@ -613,12 +745,17 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
       GST_WARNING_OBJECT (tiger,
           "Failed to get a pointer to video buffer data");
     } else {
-      ret = tiger_renderer_set_buffer (tiger->tr, ptr, tiger->video_width, tiger->video_height, tiger->video_width * 4, 0);     // TODO: stride ?
+      ret =
+          tiger_renderer_set_buffer (tiger->tr, ptr, tiger->video_width,
+          tiger->video_height, tiger->video_width * 4, tiger->swap_rgb);
       if (G_UNLIKELY (ret < 0)) {
         GST_WARNING_OBJECT (tiger,
             "Tiger renderer failed to set buffer to video frame: %d", ret);
       } else {
-        kate_float t = GST_BUFFER_TIMESTAMP (buf) / (gdouble) GST_SECOND;
+        kate_float t = gst_kate_tiger_get_time (tiger);
+        GST_LOG_OBJECT (tiger, "Video segment calc: last stop %ld, time %.3f",
+            (long) tiger->video_segment.last_stop, t);
+
         ret = tiger_renderer_update (tiger->tr, t, 1);
         if (G_UNLIKELY (ret < 0)) {
           GST_WARNING_OBJECT (tiger, "Tiger renderer failed to update: %d",
@@ -636,11 +773,12 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
       }
     }
   }
+
+  GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+
   rflow = gst_pad_push (tiger->srcpad, buf);
 
   gst_object_unref (tiger);
-
-  g_mutex_unlock (tiger->mutex);
 
   return rflow;
 }
@@ -654,12 +792,16 @@ gst_kate_tiger_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (tiger, "PAUSED -> READY, clearing kate state");
-      g_mutex_lock (tiger->mutex);
+      GST_KATE_TIGER_MUTEX_LOCK (tiger);
+      gst_kate_util_decoder_base_set_flushing (&tiger->decoder, TRUE);
+      g_cond_broadcast (tiger->cond);
       if (tiger->tr) {
         tiger_renderer_destroy (tiger->tr);
         tiger->tr = NULL;
       }
-      g_mutex_unlock (tiger->mutex);
+      gst_segment_init (&tiger->video_segment, GST_FORMAT_UNDEFINED);
+      tiger->video_flushing = TRUE;
+      GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
       break;
     default:
       break;
@@ -672,7 +814,7 @@ gst_kate_tiger_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (tiger, "READY -> PAUSED, initializing kate state");
-      g_mutex_lock (tiger->mutex);
+      GST_KATE_TIGER_MUTEX_LOCK (tiger);
       if (tiger->decoder.initialized) {
         int ret = tiger_renderer_create (&tiger->tr);
         if (ret < 0) {
@@ -692,7 +834,10 @@ gst_kate_tiger_change_state (GstElement * element, GstStateChange transition)
           gst_kate_tiger_update_quality (tiger);
         }
       }
-      g_mutex_unlock (tiger->mutex);
+      gst_segment_init (&tiger->video_segment, GST_FORMAT_UNDEFINED);
+      tiger->video_flushing = FALSE;
+      tiger->seen_header = FALSE;
+      GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
       break;
     default:
       break;
@@ -713,18 +858,44 @@ gst_kate_tiger_seek (GstKateTiger * tiger, GstPad * pad, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
 
+  GST_KATE_TIGER_MUTEX_LOCK (tiger);
+  tiger->video_flushing = TRUE;
+  gst_kate_util_decoder_base_set_flushing (&tiger->decoder, TRUE);
+  GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+
+  if (format == GST_FORMAT_TIME) {
+    /* if seeking in time, we can update tiger to remove any appropriate events */
+    kate_float target;
+    switch (cur_type) {
+      case GST_SEEK_TYPE_SET:
+        target = cur / (float) GST_SECOND;
+        break;
+      case GST_SEEK_TYPE_CUR:
+        GST_WARNING_OBJECT (tiger,
+            "Seeking from the current segment, cannot work out target so flushing everything");
+        target = (kate_float) 0;
+        break;
+      case GST_SEEK_TYPE_END:
+        GST_WARNING_OBJECT (tiger,
+            "Seeking from the end, cannot work out target so flushing everything");
+        target = (kate_float) 0;
+        break;
+      default:
+        GST_WARNING_OBJECT (tiger, "Unexpected seek type");
+        target = (kate_float) 0;
+        break;
+    }
+    GST_INFO_OBJECT (tiger, "Seeking in time to %f", target);
+    GST_KATE_TIGER_MUTEX_LOCK (tiger);
+    tiger_renderer_seek (tiger->tr, target);
+    GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+  }
+
   /* forward to both sinks */
   gst_event_ref (event);
   if (gst_pad_push_event (tiger->videosinkpad, event)) {
-    if (gst_pad_push_event (tiger->katesinkpad, event)) {
-      if (format == GST_FORMAT_TIME) {
-        /* if seeking in time, we can update tiger to remove any appropriate events */
-        kate_float target = cur / (gdouble) GST_SECOND;
-        GST_INFO_OBJECT (tiger, "Seeking in time to %f", target);
-        g_mutex_lock (tiger->mutex);
-        tiger_renderer_seek (tiger->tr, target);
-        g_mutex_unlock (tiger->mutex);
-      }
+    int ret = gst_pad_push_event (tiger->katesinkpad, event);
+    if (ret) {
       return TRUE;
     } else {
       return FALSE;
@@ -744,10 +915,61 @@ gst_kate_tiger_source_event (GstPad * pad, GstEvent * event)
 
   g_return_val_if_fail (tiger != NULL, FALSE);
 
+  GST_LOG_OBJECT (tiger, "Event on source pad: %s",
+      GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       GST_INFO_OBJECT (tiger, "Seek on source pad");
       res = gst_kate_tiger_seek (tiger, pad, event);
+      break;
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (tiger);
+
+  return res;
+}
+
+static gboolean
+gst_kate_tiger_handle_kate_event (GstPad * pad, GstEvent * event)
+{
+  GstKateTiger *tiger =
+      (GstKateTiger *) (gst_object_get_parent (GST_OBJECT (pad)));
+  gboolean res = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      GST_INFO_OBJECT (tiger, "New segment on Kate pad");
+      GST_KATE_TIGER_MUTEX_LOCK (tiger);
+      g_cond_broadcast (tiger->cond);
+      gst_kate_util_decoder_base_new_segment_event (&tiger->decoder, event);
+      GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+      gst_event_unref (event);
+      break;
+    case GST_EVENT_FLUSH_START:
+      GST_KATE_TIGER_MUTEX_LOCK (tiger);
+      gst_kate_util_decoder_base_set_flushing (&tiger->decoder, TRUE);
+      GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+      g_cond_broadcast (tiger->cond);
+      gst_event_unref (event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_KATE_TIGER_MUTEX_LOCK (tiger);
+      gst_kate_util_decoder_base_set_flushing (&tiger->decoder, FALSE);
+      GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+      gst_event_unref (event);
+      break;
+    case GST_EVENT_EOS:
+      /* we ignore this, it just means we don't have anymore Kate packets, but
+         the Tiger renderer will still draw (if appropriate) on incoming video */
+      GST_INFO_OBJECT (tiger, "EOS on Kate pad");
+      GST_KATE_TIGER_MUTEX_LOCK (tiger);
+      g_cond_broadcast (tiger->cond);
+      GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+      gst_event_unref (event);
       break;
     default:
       res = gst_pad_event_default (pad, event);
@@ -768,21 +990,94 @@ gst_kate_tiger_kate_event (GstPad * pad, GstEvent * event)
 
   g_return_val_if_fail (tiger != NULL, FALSE);
 
+  GST_LOG_OBJECT (tiger, "Event on Kate pad: %s", GST_EVENT_TYPE_NAME (event));
+
+  /* Delay events till we've set caps */
+  if (gst_kate_util_decoder_base_queue_event (&tiger->decoder, event,
+          &gst_kate_tiger_handle_kate_event, pad)) {
+    gst_object_unref (tiger);
+    return TRUE;
+  }
+
+  res = gst_kate_tiger_handle_kate_event (pad, event);
+
+  gst_object_unref (tiger);
+
+  return res;
+}
+
+static gboolean
+gst_kate_tiger_handle_video_event (GstPad * pad, GstEvent * event)
+{
+  GstKateTiger *tiger =
+      (GstKateTiger *) (gst_object_get_parent (GST_OBJECT (pad)));
+  gboolean res = TRUE;
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-      GST_INFO_OBJECT (tiger, "New segment on Kate pad");
-      gst_event_unref (event);
+    {
+      gboolean update;
+      gdouble rate, arate;
+      GstFormat format;
+      gint64 start, stop, time;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+
+      if (format == GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (tiger, "video pad segment:"
+            " Update %d, rate %g arate %g format %d start %" GST_TIME_FORMAT
+            " %" GST_TIME_FORMAT " position %" GST_TIME_FORMAT,
+            update, rate, arate, format, GST_TIME_ARGS (start),
+            GST_TIME_ARGS (stop), GST_TIME_ARGS (time));
+
+        GST_KATE_TIGER_MUTEX_LOCK (tiger);
+        gst_segment_set_newsegment_full (&tiger->video_segment, update, rate,
+            arate, format, start, stop, time);
+        GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+      }
+
+      res = gst_pad_event_default (pad, event);
       break;
-    case GST_EVENT_EOS:
-      /* we ignore this, it just means we don't have anymore Kate packets, but
-         the Tiger renderer will still draw (if appropriate) on incoming video */
-      GST_INFO_OBJECT (tiger, "EOS on Kate pad");
-      gst_event_unref (event);
+    }
+    case GST_EVENT_FLUSH_START:
+      GST_KATE_TIGER_MUTEX_LOCK (tiger);
+      gst_segment_init (&tiger->video_segment, GST_FORMAT_UNDEFINED);
+      tiger->video_flushing = TRUE;
+      GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+      g_cond_broadcast (tiger->cond);
+      res = gst_pad_event_default (pad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_KATE_TIGER_MUTEX_LOCK (tiger);
+      gst_segment_init (&tiger->video_segment, GST_FORMAT_UNDEFINED);
+      tiger->video_flushing = FALSE;
+      GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
+      res = gst_pad_event_default (pad, event);
       break;
     default:
       res = gst_pad_event_default (pad, event);
       break;
   }
+
+  gst_object_unref (tiger);
+
+  return res;
+}
+
+static gboolean
+gst_kate_tiger_video_event (GstPad * pad, GstEvent * event)
+{
+  GstKateTiger *tiger =
+      (GstKateTiger *) (gst_object_get_parent (GST_OBJECT (pad)));
+  gboolean res = TRUE;
+
+  g_return_val_if_fail (tiger != NULL, FALSE);
+
+  GST_INFO_OBJECT (tiger, "Event on video pad: %s",
+      GST_EVENT_TYPE_NAME (event));
+
+  res = gst_kate_tiger_handle_video_event (pad, event);
 
   gst_object_unref (tiger);
 
@@ -795,6 +1090,7 @@ gst_kate_tiger_kate_sink_query (GstPad * pad, GstQuery * query)
   GstKateTiger *tiger = GST_KATE_TIGER (gst_pad_get_parent (pad));
   gboolean res = gst_kate_decoder_base_sink_query (&tiger->decoder,
       GST_ELEMENT_CAST (tiger), pad, query);
+  GST_INFO_OBJECT (tiger, "Query on Kate pad");
   gst_object_unref (tiger);
   return res;
 }

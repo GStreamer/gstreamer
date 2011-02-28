@@ -792,26 +792,6 @@ gst_gauss_blur_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-input-selector</FILE>
-<TITLE>input-selector</TITLE>
-GstInputSelector
-<SUBSECTION Standard>
-GstInputSelectorClass
-GST_INPUT_SELECTOR
-GST_INPUT_SELECTOR_CLASS
-GST_IS_INPUT_SELECTOR
-GST_IS_INPUT_SELECTOR_CLASS
-GST_TYPE_INPUT_SELECTOR
-gst_input_selector_get_type
-GST_INPUT_SELECTOR_BROADCAST
-GST_INPUT_SELECTOR_GET_COND
-GST_INPUT_SELECTOR_GET_LOCK
-GST_INPUT_SELECTOR_LOCK
-GST_INPUT_SELECTOR_UNLOCK
-GST_INPUT_SELECTOR_WAIT
-</SECTION>
-
-<SECTION>
 <FILE>element-ivfparse</FILE>
 <TITLE>ivfparse</TITLE>
 GstIvfParse
@@ -824,36 +804,6 @@ GST_IS_IVF_PARSE
 GST_IS_IVF_PARSE_CLASS
 GST_TYPE_IVF_PARSE
 gst_ivf_parse_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-jackaudiosrc</FILE>
-<TITLE>jackaudiosrc</TITLE>
-GstJackAudioSrc
-<SUBSECTION Standard>
-GstJackAudioSrcClass
-GST_JACK_AUDIO_SRC
-GST_JACK_AUDIO_SRC_CLASS
-GST_JACK_AUDIO_SRC_GET_CLASS
-GST_IS_JACK_AUDIO_SRC
-GST_IS_JACK_AUDIO_SRC_CLASS
-GST_TYPE_JACK_AUDIO_SRC
-gst_jack_audio_src_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-jackaudiosink</FILE>
-<TITLE>jackaudiosink</TITLE>
-GstJackAudioSink
-<SUBSECTION Standard>
-GstJackAudioSinkClass
-GST_JACK_AUDIO_SINK
-GST_JACK_AUDIO_SINK_CLASS
-GST_JACK_AUDIO_SINK_GET_CLASS
-GST_IS_JACK_AUDIO_SINK
-GST_IS_JACK_AUDIO_SINK_CLASS
-GST_TYPE_JACK_AUDIO_SINK
-gst_jack_audio_sink_get_type
 </SECTION>
 
 <SECTION>
@@ -1180,20 +1130,6 @@ gst_nuv_demux_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-output-selector</FILE>
-<TITLE>output-selector</TITLE>
-GstOutputSelector
-<SUBSECTION Standard>
-GstOutputSelectorClass
-GST_OUTPUT_SELECTOR
-GST_OUTPUT_SELECTOR_CLASS
-GST_IS_OUTPUT_SELECTOR
-GST_IS_OUTPUT_SELECTOR_CLASS
-GST_TYPE_OUTPUT_SELECTOR
-gst_output_selector_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-pcapparse</FILE>
 <TITLE>pcapparse</TITLE>
 GstPcapParse
@@ -1250,6 +1186,34 @@ GST_IS_QT_MUX
 GST_IS_QT_MUX_CLASS
 GST_TYPE_QT_MUX
 gst_qt_mux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rsvgoverlay</FILE>
+<TITLE>rsvgoverlay</TITLE>
+GstRsvgOverlay
+<SUBSECTION Standard>
+GstRsvgOverlayClass
+GST_RSVG_OVERLAY
+GST_RSVG_OVERLAY_CLASS
+GST_IS_RSVG_OVERLAY
+GST_IS_RSVG_OVERLAY_CLASS
+GST_TYPE_RSVG_OVERLAY
+gst_rsvg_overlay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rsvgdec</FILE>
+<TITLE>rsvgdec</TITLE>
+GstRsvgDec
+<SUBSECTION Standard>
+GstRsvgDecClass
+GST_RSVG_DEC
+GST_RSVG_DEC_CLASS
+GST_IS_RSVG_DEC
+GST_IS_RSVG_DEC_CLASS
+GST_TYPE_RSVG_DEC
+gst_rsvg_dec_get_type
 </SECTION>
 
 <SECTION>
@@ -1600,21 +1564,6 @@ GST_IS_TWIRL_CLASS
 GST_TYPE_TWIRL
 gst_twirl_get_type
 gst_twirl_plugin_init
-</SECTION>
-
-<SECTION>
-<FILE>element-valve</FILE>
-<TITLE>valve</TITLE>
-GstValve
-<SUBSECTION Standard>
-GstValveClass
-GstValvePrivate
-gst_valve_get_type
-GST_IS_VALVE
-GST_IS_VALVE_CLASS
-GST_TYPE_VALVE
-GST_VALVE
-GST_VALVE_CLASS
 </SECTION>
 
 <SECTION>

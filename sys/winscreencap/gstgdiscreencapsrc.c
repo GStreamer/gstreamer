@@ -541,12 +541,16 @@ gst_gdiscreencapsrc_screen_capture (GstGDIScreenCapSrc * src, GstBuffer * buf)
     GetCursorInfo (&ci);
     if (ci.flags & CURSOR_SHOWING) {
       ICONINFO ii;
+
       GetIconInfo (ci.hCursor, &ii);
 
       DrawIconEx (src->memDC,
           ci.ptScreenPos.x - src->src_rect.left - ii.xHotspot,
           ci.ptScreenPos.y - src->src_rect.top - ii.yHotspot, ci.hCursor, 0, 0,
           0, NULL, DI_DEFAULTSIZE | DI_NORMAL | DI_COMPAT);
+
+      DeleteObject (ii.hbmColor);
+      DeleteObject (ii.hbmMask);
     }
   }
 

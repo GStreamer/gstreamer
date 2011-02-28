@@ -48,4 +48,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "asfmux",
     "ASF Muxer Plugin",
-    plugin_init, VERSION, "LGPL", "gsoc2009 package", "embedded.ufcg.edu.br")
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

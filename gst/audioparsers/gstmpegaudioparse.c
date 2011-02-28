@@ -82,11 +82,11 @@ static void gst_mpeg_audio_parse_finalize (GObject * object);
 static gboolean gst_mpeg_audio_parse_start (GstBaseParse * parse);
 static gboolean gst_mpeg_audio_parse_stop (GstBaseParse * parse);
 static gboolean gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * size, gint * skipsize);
+    GstBaseParseFrame * frame, guint * size, gint * skipsize);
 static GstFlowReturn gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
-    GstBuffer * buf);
-static GstFlowReturn gst_mpeg_audio_parse_pre_push_buffer (GstBaseParse * parse,
-    GstBuffer * buf);
+    GstBaseParseFrame * frame);
+static GstFlowReturn gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 static gboolean gst_mpeg_audio_parse_convert (GstBaseParse * parse,
     GstFormat src_format, gint64 src_value,
     GstFormat dest_format, gint64 * dest_value);
@@ -164,8 +164,8 @@ gst_mpeg_audio_parse_class_init (GstMpegAudioParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_check_valid_frame);
   parse_class->parse_frame =
       GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_parse_frame);
-  parse_class->pre_push_buffer =
-      GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_pre_push_buffer);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_pre_push_frame);
   parse_class->convert = GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_convert);
 
   /* register tags */
@@ -188,6 +188,8 @@ gst_mpeg_audio_parse_reset (GstMpegAudioParse * mp3parse)
   mp3parse->sent_codec_tag = FALSE;
   mp3parse->last_posted_crc = CRC_UNKNOWN;
   mp3parse->last_posted_channel_mode = MPEG_AUDIO_CHANNEL_MODE_UNKNOWN;
+
+  mp3parse->hdr_bitrate = 0;
 
   mp3parse->xing_flags = 0;
   mp3parse->xing_bitrate = 0;
@@ -470,11 +472,12 @@ gst_mpeg_audio_parse_head_check (GstMpegAudioParse * mp3parse,
 }
 
 static gboolean
-gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
-    guint * framesize, gint * skipsize)
+gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   GstMpegAudioParse *mp3parse = GST_MPEG_AUDIO_PARSE (parse);
+  GstBuffer *buf = frame->buffer;
+  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   gint off, bpf;
   gboolean sync, drain, valid, caps_change;
   guint32 header;
@@ -519,8 +522,8 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
   else
     caps_change = FALSE;
 
-  sync = gst_base_parse_get_sync (parse);
-  drain = gst_base_parse_get_drain (parse);
+  sync = GST_BASE_PARSE_FRAME_SYNC (frame);
+  drain = GST_BASE_PARSE_FRAME_DRAIN (frame);
 
   if (!drain && (!sync || caps_change)) {
     if (!gst_mp3parse_validate_extended (mp3parse, buf, header, bpf, drain,
@@ -900,9 +903,11 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
 }
 
 static GstFlowReturn
-gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
+gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame)
 {
   GstMpegAudioParse *mp3parse = GST_MPEG_AUDIO_PARSE (parse);
+  GstBuffer *buf = frame->buffer;
   guint bitrate, layer, rate, channels, version, mode, crc;
 
   g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= 4, GST_FLOW_ERROR);
@@ -954,6 +959,8 @@ gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
     gst_base_parse_set_frame_props (parse, mp3parse->rate, mp3parse->spf,
         (version == 1) ? 10 : 30, 2);
   }
+
+  mp3parse->hdr_bitrate = bitrate;
 
   /* For first frame; check for seek tables and output a codec tag */
   gst_mpeg_audio_parse_handle_first_frame (mp3parse, buf);
@@ -1122,7 +1129,8 @@ gst_mpeg_audio_parse_convert (GstBaseParse * parse, GstFormat src_format,
 }
 
 static GstFlowReturn
-gst_mpeg_audio_parse_pre_push_buffer (GstBaseParse * parse, GstBuffer * buf)
+gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame)
 {
   GstMpegAudioParse *mp3parse = GST_MPEG_AUDIO_PARSE (parse);
   GstTagList *taglist;
@@ -1144,6 +1152,13 @@ gst_mpeg_audio_parse_pre_push_buffer (GstBaseParse * parse, GstBuffer * buf)
     taglist = gst_tag_list_new ();
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_AUDIO_CODEC, codec, NULL);
+    if (mp3parse->hdr_bitrate > 0 && mp3parse->xing_bitrate == 0 &&
+        mp3parse->vbri_bitrate == 0) {
+      /* We don't have a VBR bitrate, so post the available bitrate as
+       * nominal and let baseparse calculate the real bitrate */
+      gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_NOMINAL_BITRATE, mp3parse->hdr_bitrate, NULL);
+    }
     gst_element_found_tags_for_pad (GST_ELEMENT (mp3parse),
         GST_BASE_PARSE_SRC_PAD (mp3parse), taglist);
     g_free (codec);
@@ -1188,5 +1203,7 @@ gst_mpeg_audio_parse_pre_push_buffer (GstBaseParse * parse, GstBuffer * buf)
   }
 
   /* usual clipping applies */
-  return GST_BASE_PARSE_FLOW_CLIP;
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
+
+  return GST_FLOW_OK;
 }

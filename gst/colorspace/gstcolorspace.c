@@ -40,26 +40,22 @@
 #include "gstcolorspace.h"
 #include <gst/video/video.h>
 
-/* For GST_CHECK_PLUGINS_BASE_VERSION() */
-#include <gst/pbutils/pbutils.h>
-
 #include <string.h>
 
 GST_DEBUG_CATEGORY (colorspace_debug);
 #define GST_CAT_DEFAULT colorspace_debug
 GST_DEBUG_CATEGORY (colorspace_performance);
 
-#if GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
-#define VIDEO_CAPS_RGB8_PALETTED \
-  GST_VIDEO_CAPS_RGB8_PALETTED "; "
-#else
-#define VIDEO_CAPS_RGB8_PALETTED        /* no-op */
-#endif
+enum
+{
+  PROP_0,
+  PROP_DITHER
+};
 
 #define CSP_VIDEO_CAPS						\
   "video/x-raw-yuv, width = "GST_VIDEO_SIZE_RANGE" , "			\
   "height="GST_VIDEO_SIZE_RANGE",framerate="GST_VIDEO_FPS_RANGE","	\
-  "format= (fourcc) { I420 , NV12 , NV21 , YV12 , YUY2 , Y42B , Y444 , YUV9 , YVU9 , Y41B , Y800 , Y8 , GREY , Y16 , UYVY , YVYU , IYU1 , v308 , AYUV, v210, A420 } ;" \
+  "format= (fourcc) { I420 , NV12 , NV21 , YV12 , YUY2 , Y42B , Y444 , YUV9 , YVU9 , Y41B , Y800 , Y8 , GREY , Y16 , UYVY , YVYU , IYU1 , v308 , AYUV, v210, v216, A420, AY64 } ;" \
   GST_VIDEO_CAPS_RGB";"							\
   GST_VIDEO_CAPS_BGR";"							\
   GST_VIDEO_CAPS_RGBx";"						\
@@ -74,10 +70,12 @@ GST_DEBUG_CATEGORY (colorspace_performance);
   GST_VIDEO_CAPS_BGR_16";"						\
   GST_VIDEO_CAPS_RGB_15";"						\
   GST_VIDEO_CAPS_BGR_15";"						\
-  VIDEO_CAPS_RGB8_PALETTED                                              \
+  GST_VIDEO_CAPS_RGB8_PALETTED "; "                                     \
   GST_VIDEO_CAPS_GRAY8";"						\
   GST_VIDEO_CAPS_GRAY16("BIG_ENDIAN")";"				\
-  GST_VIDEO_CAPS_GRAY16("LITTLE_ENDIAN")";"
+  GST_VIDEO_CAPS_GRAY16("LITTLE_ENDIAN")";"                             \
+  GST_VIDEO_CAPS_r210";"                                                \
+  GST_VIDEO_CAPS_ARGB_64
 
 static GstStaticPadTemplate gst_csp_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -95,6 +93,12 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 GType gst_csp_get_type (void);
 
+static void gst_csp_set_property (GObject * object,
+    guint property_id, const GValue * value, GParamSpec * pspec);
+static void gst_csp_get_property (GObject * object,
+    guint property_id, GValue * value, GParamSpec * pspec);
+static void gst_csp_dispose (GObject * object);
+
 static gboolean gst_csp_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
 static gboolean gst_csp_get_unit_size (GstBaseTransform * btrans,
@@ -105,6 +109,25 @@ static GstFlowReturn gst_csp_transform (GstBaseTransform * btrans,
 static GQuark _QRAWRGB;         /* "video/x-raw-rgb" */
 static GQuark _QRAWYUV;         /* "video/x-raw-yuv" */
 static GQuark _QALPHAMASK;      /* "alpha_mask" */
+
+
+static GType
+dither_method_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {DITHER_NONE, "No dithering (default)", "none"},
+      {DITHER_VERTERR, "Vertical error propogation", "verterr"},
+      {DITHER_HALFTONE, "Half-tone", "halftone"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstColorspaceDitherMethod", values);
+  }
+  return gtype;
+}
 
 /* copies the given caps */
 static GstCaps *
@@ -229,6 +252,10 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   space = GST_CSP (btrans);
 
+  if (space->convert) {
+    colorspace_convert_free (space->convert);
+  }
+
   /* input caps */
 
   ret = gst_video_format_parse_caps (incaps, &in_format, &in_width, &in_height);
@@ -315,7 +342,6 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   if (space->convert) {
     colorspace_convert_set_interlaced (space->convert, in_interlaced);
   }
-#if GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
   /* palette, only for from data */
   if (space->from_format == GST_VIDEO_FORMAT_RGB8_PALETTED &&
       space->to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
@@ -343,7 +369,6 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     gst_caps_set_simple (outcaps, "palette_data", GST_TYPE_BUFFER, p_buf, NULL);
     gst_buffer_unref (p_buf);
   }
-#endif
 
   GST_DEBUG ("reconfigured %d %d", space->from_format, space->to_format);
 
@@ -371,7 +396,6 @@ format_mismatch:
     space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
   }
-#if GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
 invalid_palette:
   {
     GST_ERROR_OBJECT (space, "invalid palette");
@@ -379,7 +403,6 @@ invalid_palette:
     space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
   }
-#endif
 }
 
 GST_BOILERPLATE (GstCsp, gst_csp, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
@@ -404,10 +427,30 @@ gst_csp_base_init (gpointer klass)
   _QALPHAMASK = g_quark_from_string ("alpha_mask");
 }
 
+void
+gst_csp_dispose (GObject * object)
+{
+  GstCsp *csp;
+
+  g_return_if_fail (GST_IS_CSP (object));
+  csp = GST_CSP (object);
+
+  /* clean up as possible.  may be called multiple times */
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
 static void
 gst_csp_finalize (GObject * obj)
 {
+  GstCsp *space = GST_CSP (obj);
+
+  if (space->convert) {
+    colorspace_convert_free (space->convert);
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (obj);
+
 }
 
 static void
@@ -417,6 +460,9 @@ gst_csp_class_init (GstCspClass * klass)
   GstBaseTransformClass *gstbasetransform_class =
       (GstBaseTransformClass *) klass;
 
+  gobject_class->set_property = gst_csp_set_property;
+  gobject_class->get_property = gst_csp_get_property;
+  gobject_class->dispose = gst_csp_dispose;
   gobject_class->finalize = gst_csp_finalize;
 
   gstbasetransform_class->transform_caps =
@@ -427,6 +473,12 @@ gst_csp_class_init (GstCspClass * klass)
   gstbasetransform_class->transform = GST_DEBUG_FUNCPTR (gst_csp_transform);
 
   gstbasetransform_class->passthrough_on_same_caps = TRUE;
+
+  g_object_class_install_property (gobject_class, PROP_DITHER,
+      g_param_spec_enum ("dither", "Dither", "Apply dithering while converting",
+          dither_method_get_type (), DITHER_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
 
 static void
@@ -434,6 +486,44 @@ gst_csp_init (GstCsp * space, GstCspClass * klass)
 {
   space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
   space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+void
+gst_csp_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstCsp *csp;
+
+  g_return_if_fail (GST_IS_CSP (object));
+  csp = GST_CSP (object);
+
+  switch (property_id) {
+    case PROP_DITHER:
+      csp->dither = g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+}
+
+void
+gst_csp_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstCsp *csp;
+
+  g_return_if_fail (GST_IS_CSP (object));
+  csp = GST_CSP (object);
+
+  switch (property_id) {
+    case PROP_DITHER:
+      g_value_set_enum (value, csp->dither);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
 }
 
 static gboolean
@@ -466,6 +556,8 @@ gst_csp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
   if (G_UNLIKELY (space->from_format == GST_VIDEO_FORMAT_UNKNOWN ||
           space->to_format == GST_VIDEO_FORMAT_UNKNOWN))
     goto unknown_format;
+
+  colorspace_convert_set_dither (space->convert, space->dither);
 
   colorspace_convert_convert (space->convert, GST_BUFFER_DATA (outbuf),
       GST_BUFFER_DATA (inbuf));

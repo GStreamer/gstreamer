@@ -3,7 +3,7 @@
   <description>Selects convertor element based on caps</description>
   <filename>../../gst/autoconvert/.libs/libgstautoconvert.so</filename>
   <basename>libgstautoconvert.so</basename>
-  <version>0.10.20.1</version>
+  <version>0.10.21.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -15,6 +15,27 @@
       <class>Generic/Bin</class>
       <description>Selects the right transform element based on the caps</description>
       <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>autovideoconvert</name>
+      <longname>Select color space convertor based on caps</longname>
+      <class>Generic/Bin</class>
+      <description>Selects the right color space convertor based on the caps</description>
+      <author>Benjamin Gaignard &lt;benjamin.gaignard@stericsson.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

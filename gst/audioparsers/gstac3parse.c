@@ -160,9 +160,9 @@ static void gst_ac3_parse_finalize (GObject * object);
 static gboolean gst_ac3_parse_start (GstBaseParse * parse);
 static gboolean gst_ac3_parse_stop (GstBaseParse * parse);
 static gboolean gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * size, gint * skipsize);
+    GstBaseParseFrame * frame, guint * size, gint * skipsize);
 static GstFlowReturn gst_ac3_parse_parse_frame (GstBaseParse * parse,
-    GstBuffer * buf);
+    GstBaseParseFrame * frame);
 
 GST_BOILERPLATE (GstAc3Parse, gst_ac3_parse, GstBaseParse, GST_TYPE_BASE_PARSE);
 
@@ -262,10 +262,13 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   bsmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
   acmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
 
-  /* FIXME: are other bsids ok as well? check spec */
-  if (bsid != 8 && bsid != 6) {
+  /* spec not quite clear here: decoder should decode if less than 8,
+   * but seemingly only defines 6 and 8 cases */
+  if (bsid > 8) {
     GST_DEBUG_OBJECT (ac3parse, "unexpected bsid=%d", bsid);
     return FALSE;
+  } else if (bsid != 8 && bsid != 6) {
+    GST_DEBUG_OBJECT (ac3parse, "undefined bsid=%d", bsid);
   }
 
   if ((acmod & 0x1) && (acmod != 0x1))  /* 3 front channels */
@@ -381,11 +384,12 @@ gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf,
 }
 
 static gboolean
-gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
-    guint * framesize, gint * skipsize)
+gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
+  GstBuffer *buf = frame->buffer;
+  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   gint off;
   gboolean sync, drain;
 
@@ -418,8 +422,8 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
 
   GST_LOG_OBJECT (parse, "got frame");
 
-  sync = gst_base_parse_get_sync (parse);
-  drain = gst_base_parse_get_drain (parse);
+  sync = GST_BASE_PARSE_FRAME_SYNC (frame);
+  drain = GST_BASE_PARSE_FRAME_DRAIN (frame);
 
   if (!sync && !drain) {
     guint16 word = 0;
@@ -448,9 +452,10 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
 }
 
 static GstFlowReturn
-gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
+gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
+  GstBuffer *buf = frame->buffer;
   guint fsize, rate, chans, blocks, sid;
   gboolean eac;
 
@@ -461,8 +466,17 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
   GST_LOG_OBJECT (parse, "size: %u, rate: %u, chans: %u", fsize, rate, chans);
 
   if (G_UNLIKELY (sid)) {
+    /* dependent frame, no need to (ac)count for or consider further */
     GST_LOG_OBJECT (parse, "sid: %d", sid);
-    GST_BUFFER_FLAG_SET (buf, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME);
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_NO_FRAME;
+    /* TODO maybe also mark as DELTA_UNIT,
+     * if that does not surprise baseparse elsewhere */
+    /* occupies same time space as previous base frame */
+    if (G_LIKELY (GST_BUFFER_TIMESTAMP (buf) >= GST_BUFFER_DURATION (buf)))
+      GST_BUFFER_TIMESTAMP (buf) -= GST_BUFFER_DURATION (buf);
+    /* only return if we already arranged for caps */
+    if (G_LIKELY (ac3parse->sample_rate > 0))
+      return GST_FLOW_OK;
   }
 
   if (G_UNLIKELY (ac3parse->sample_rate != rate || ac3parse->channels != chans

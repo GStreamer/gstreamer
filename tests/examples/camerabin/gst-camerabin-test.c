@@ -136,15 +136,6 @@ static gint view_framerate_num = 2825;
 static gint view_framerate_den = 100;
 static gboolean no_xwindow = FALSE;
 
-/* photography interface command line options */
-static gfloat ev_compensation = 0.0;
-static gint aperture = 0;
-static gint flash_mode = 0;
-static gint scene_mode = 6;
-static gint64 exposure = 0;
-static gint iso_speed = 0;
-static gint wb_mode = 0;
-static gint color_mode = 0;
 static gint mode = 1;
 static gint flags = 0x4f;
 static gboolean mute = FALSE;
@@ -153,6 +144,24 @@ static gint zoom = 100;
 static gint capture_time = 10;
 static gint capture_count = 0;
 static gint capture_total = 1;
+
+/* photography interface command line options */
+#define EV_COMPENSATION_NONE -G_MAXFLOAT
+#define APERTURE_NONE -G_MAXINT
+#define FLASH_MODE_NONE -G_MAXINT
+#define SCENE_MODE_NONE -G_MAXINT
+#define EXPOSURE_NONE -G_MAXINT64
+#define ISO_SPEED_NONE -G_MAXINT
+#define WHITE_BALANCE_MODE_NONE -G_MAXINT
+#define COLOR_TONE_MODE_NONE -G_MAXINT
+static gfloat ev_compensation = EV_COMPENSATION_NONE;
+static gint aperture = APERTURE_NONE;
+static gint flash_mode = FLASH_MODE_NONE;
+static gint scene_mode = SCENE_MODE_NONE;
+static gint64 exposure = EXPOSURE_NONE;
+static gint iso_speed = ISO_SPEED_NONE;
+static gint wb_mode = WHITE_BALANCE_MODE_NONE;
+static gint color_mode = COLOR_TONE_MODE_NONE;
 
 /* audio capsfilter options */
 static gint audio_bitrate = 128000;
@@ -173,6 +182,8 @@ static gchar *preview_caps_name = NULL;
 /* X window variables */
 static Display *display = NULL;
 static Window window = 0;
+
+GTimer *timer = NULL;
 
 /*
  * Prototypes
@@ -257,14 +268,14 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             size = GST_BUFFER_SIZE (buf);
             preview_filename = g_strdup_printf ("test_vga.rgb");
             caps_string = gst_caps_to_string (GST_BUFFER_CAPS (buf));
-            g_print ("writing buffer to %s, buffer caps: %s\n",
-                preview_filename, caps_string);
+            g_print ("writing buffer to %s, elapsed: %.2fs, buffer caps: %s\n",
+                preview_filename, g_timer_elapsed (timer, NULL), caps_string);
             g_free (caps_string);
             f = g_fopen (preview_filename, "w");
             if (f) {
               written = fwrite (data_buf, size, 1, f);
               if (!written) {
-                g_print ("errro writing file\n");
+                g_print ("error writing file\n");
               }
               fclose (f);
             } else {
@@ -634,14 +645,24 @@ run_pipeline (gpointer user_data)
   if (video_source) {
     if (GST_IS_ELEMENT (video_source) &&
         gst_element_implements_interface (video_source, GST_TYPE_PHOTOGRAPHY)) {
-      g_object_set (video_source, "ev-compensation", ev_compensation, NULL);
-      g_object_set (video_source, "aperture", aperture, NULL);
-      g_object_set (video_source, "flash-mode", flash_mode, NULL);
-      g_object_set (video_source, "scene-mode", scene_mode, NULL);
-      g_object_set (video_source, "exposure", exposure, NULL);
-      g_object_set (video_source, "iso-speed", iso_speed, NULL);
-      g_object_set (video_source, "white-balance-mode", wb_mode, NULL);
-      g_object_set (video_source, "colour-tone-mode", color_mode, NULL);
+      /* Set GstPhotography interface options. If option not given as
+         command-line parameter use default of the source element. */
+      if (scene_mode != SCENE_MODE_NONE)
+        g_object_set (video_source, "scene-mode", scene_mode, NULL);
+      if (ev_compensation != EV_COMPENSATION_NONE)
+        g_object_set (video_source, "ev-compensation", ev_compensation, NULL);
+      if (aperture != APERTURE_NONE)
+        g_object_set (video_source, "aperture", aperture, NULL);
+      if (flash_mode != FLASH_MODE_NONE)
+        g_object_set (video_source, "flash-mode", flash_mode, NULL);
+      if (exposure != EXPOSURE_NONE)
+        g_object_set (video_source, "exposure", exposure, NULL);
+      if (iso_speed != ISO_SPEED_NONE)
+        g_object_set (video_source, "iso-speed", iso_speed, NULL);
+      if (wb_mode != WHITE_BALANCE_MODE_NONE)
+        g_object_set (video_source, "white-balance-mode", wb_mode, NULL);
+      if (color_mode != COLOR_TONE_MODE_NONE)
+        g_object_set (video_source, "colour-tone-mode", color_mode, NULL);
     }
     g_object_unref (video_source);
   }
@@ -649,6 +670,7 @@ run_pipeline (gpointer user_data)
   g_object_set (camera_bin, "zoom", zoom / 100.0f, NULL);
 
   capture_count++;
+  g_timer_start (timer);
   g_signal_emit_by_name (camera_bin, "capture-start", 0);
 
 
@@ -669,27 +691,29 @@ main (int argc, char *argv[])
   GOptionEntry options[] = {
     {"ev-compensation", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_STRING,
           &ev_option,
-        "EV compensation (-2.5..2.5, default = 0)", NULL},
+        "EV compensation for source element GstPhotography interface", NULL},
     {"aperture", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_INT, &aperture,
-        "Aperture (size of lens opening, default = 0 (auto))", NULL},
+          "Aperture (size of lens opening) for source element GstPhotography interface",
+        NULL},
     {"flash-mode", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_INT,
           &flash_mode,
-        "Flash mode (default = 0 (auto))", NULL},
+        "Flash mode for source element GstPhotography interface", NULL},
     {"scene-mode", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_INT,
           &scene_mode,
-        "Scene mode (default = 6 (auto))", NULL},
+        "Scene mode for source element GstPhotography interface", NULL},
     {"exposure", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_INT64,
           &exposure,
-        "Exposure (default = 0 (auto))", NULL},
+          "Exposure time (in ms) for source element GstPhotography interface",
+        NULL},
     {"iso-speed", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_INT,
           &iso_speed,
-        "ISO speed (default = 0 (auto))", NULL},
+        "ISO speed for source element GstPhotography interface", NULL},
     {"white-balance-mode", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_INT,
           &wb_mode,
-        "White balance mode (default = 0 (auto))", NULL},
+        "White balance mode for source element GstPhotography interface", NULL},
     {"colour-tone-mode", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_INT,
           &color_mode,
-        "Colour tone mode (default = 0 (auto))", NULL},
+        "Colour tone mode for source element GstPhotography interface", NULL},
     {"directory", '\0', 0, G_OPTION_ARG_STRING, &fn_option,
         "Directory for capture file(s) (default is current directory)", NULL},
     {"mode", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_INT, &mode,
@@ -757,10 +781,6 @@ main (int argc, char *argv[])
   GOptionContext *ctx;
   GError *err = NULL;
 
-  /* if we fail to create xwindow should we care? */
-  if (!no_xwindow)
-    create_host_window ();
-
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
@@ -772,6 +792,10 @@ main (int argc, char *argv[])
     exit (1);
   }
   g_option_context_free (ctx);
+
+  /* if we fail to create xwindow should we care? */
+  if (!no_xwindow)
+    create_host_window ();
 
   GST_DEBUG_CATEGORY_INIT (camerabin_test, "camerabin-test", 0,
       "camerabin test");
@@ -786,6 +810,8 @@ main (int argc, char *argv[])
   filename = g_string_new (fn_option);
   if (filename->len == 0)
     filename = g_string_append (filename, ".");
+
+  timer = g_timer_new ();
 
   /* init */
   if (setup_pipeline ()) {
@@ -809,6 +835,7 @@ main (int argc, char *argv[])
   g_free (src_csp);
   g_free (src_format);
   g_free (target_times);
+  g_timer_destroy (timer);
 
   if (window)
     XDestroyWindow (display, window);

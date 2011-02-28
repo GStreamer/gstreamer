@@ -37,8 +37,6 @@ xvid             libxvidcore      (http://www.xvid.org/)
 Plugins derived from GPL code are as follows:
 
 dvdreadsrc       libdvdread       (http://www.dtek.chalmers.se/groups/dvd/)
-jack             libjack          (http://jackit.sourceforge.net/)
-                                   Note libjack is LGPL, but plugin is GPL.
 monoscope        None             (Algorithm by Ralph Loader, Joerg Walter,
                                    Richard Boulton, and Andy Lo A Foe)
 rtjpeg           None             (Erik Walthinsen's algorithm)

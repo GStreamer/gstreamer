@@ -289,9 +289,10 @@ gst_jpeg_parse_parse_tag_has_entropy_segment (guint8 tag)
   return FALSE;
 }
 
-/* returns image length in bytes if parsed
- * successfully, otherwise 0 if not enough data */
-static guint
+/* returns image length in bytes if parsed successfully,
+ * otherwise 0 if more data needed,
+ * if < 0 the absolute value needs to be flushed */
+static gint
 gst_jpeg_parse_get_image_length (GstJpegParse * parse)
 {
   guint size;
@@ -353,6 +354,13 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse)
       parse->priv->last_resync = FALSE;
       parse->priv->last_offset = 0;
       return (offset + 4);
+    } else if (value == 0xd8) {
+      /* Skip this frame if we found another SOI marker */
+      GST_DEBUG ("0x%08x: SOI marker before EOI, skipping", offset + 2);
+      /* clear parse state */
+      parse->priv->last_resync = FALSE;
+      parse->priv->last_offset = 0;
+      return -(offset + 2);
     }
 
     if (value >= 0xd0 && value <= 0xd7)
@@ -406,6 +414,7 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse)
       if (noffset < 0) {
         /* ignore and continue resyncing until we hit the end
          * of our data or find a sync point that looks okay */
+        offset++;
         continue;
       }
       GST_DEBUG ("found sync at 0x%x", offset + 2);
@@ -506,7 +515,7 @@ static inline gboolean
 gst_jpeg_parse_skip_marker (GstJpegParse * parse,
     GstByteReader * reader, guint8 marker)
 {
-  guint16 size;
+  guint16 size = 0;
 
   if (!gst_byte_reader_get_uint16_be (reader, &size))
     return FALSE;
@@ -553,16 +562,26 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 
       case COM:{               /* read comment and post as tag */
         const guint8 *comment = NULL;
+        gchar *comm;
+        const gchar *env_vars[] = { "GST_JPEG_TAG_ENCODING",
+          "GST_TAG_ENCODING", NULL
+        };
 
         if (!gst_byte_reader_get_uint16_be (&reader, &size))
           goto error;
         if (!gst_byte_reader_get_data (&reader, size - 2, &comment))
           goto error;
 
-        if (!parse->priv->tags)
-          parse->priv->tags = gst_tag_list_new ();
-        gst_tag_list_add (parse->priv->tags, GST_TAG_MERGE_REPLACE,
-            GST_TAG_COMMENT, comment, NULL);
+        comm = (gchar *) comment;
+        comm = gst_tag_freeform_string_to_utf8 (comm, size - 2, env_vars);
+
+        if (comm) {
+          if (!parse->priv->tags)
+            parse->priv->tags = gst_tag_list_new ();
+          gst_tag_list_add (parse->priv->tags, GST_TAG_MERGE_REPLACE,
+              GST_TAG_COMMENT, comm, NULL);
+          g_free (comm);
+        }
         break;
       }
 
@@ -845,7 +864,7 @@ static GstFlowReturn
 gst_jpeg_parse_chain (GstPad * pad, GstBuffer * buf)
 {
   GstJpegParse *parse;
-  guint len;
+  gint len;
   GstClockTime timestamp, duration;
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -864,8 +883,12 @@ gst_jpeg_parse_chain (GstPad * pad, GstBuffer * buf)
 
     /* check if we already have a EOI */
     len = gst_jpeg_parse_get_image_length (parse);
-    if (len == 0)
+    if (len == 0) {
       return GST_FLOW_OK;
+    } else if (len < 0) {
+      gst_adapter_flush (parse->priv->adapter, -len);
+      continue;
+    }
 
     GST_LOG_OBJECT (parse, "parsed image of size %d", len);
 
@@ -911,15 +934,17 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event)
       parse->priv->new_segment = TRUE;
       break;
     case GST_EVENT_TAG:{
-      GstTagList *taglist = NULL;
-      gst_event_parse_tag (event, &taglist);
       if (!parse->priv->new_segment)
         res = gst_pad_event_default (pad, event);
       else {
+        GstTagList *taglist = NULL;
+
+        gst_event_parse_tag (event, &taglist);
         /* Hold on to the tags till the srcpad caps are definitely set */
         if (!parse->priv->tags)
           parse->priv->tags = gst_tag_list_new ();
         gst_tag_list_insert (parse->priv->tags, taglist, GST_TAG_MERGE_REPLACE);
+        gst_event_unref (event);
       }
       break;
     }

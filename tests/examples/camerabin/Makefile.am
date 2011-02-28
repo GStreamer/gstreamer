@@ -21,7 +21,7 @@ gst_camera_LDADD   = \
 
 noinst_DATA = $(GST_CAMERABIN_UI_FILES)
 
-INCLUDES = -DCAMERA_APPS_UIDIR=\""$(uidir)"\"
+INCLUDES = -DCAMERA_APPS_UIDIR=\""$(srcdir)"\"
 
 else
 GST_CAMERABIN_GTK_EXAMPLES =
@@ -29,7 +29,7 @@ endif
 
 gst_camera_perf_SOURCES = gst-camera-perf.c
 gst_camera_perf_CFLAGS  = $(GST_CFLAGS)
-gst_camera_perf_LDADD = $(GST_LIBS) 
+gst_camera_perf_LDADD = $(GST_LIBS)
 
 if HAVE_X11
 

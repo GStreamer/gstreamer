@@ -178,7 +178,7 @@ AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
 AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.20])
+AG_GST_GLIB_CHECK([2.22])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
@@ -266,7 +266,7 @@ dnl -Waggregate-return - libexif returns aggregates
 dnl -Wundef - Windows headers check _MSC_VER unconditionally
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
-    -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition
+    -Wwrite-strings -Wformat-security -Wold-style-definition
     -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
     -Wnested-externs])
 
@@ -293,6 +293,7 @@ AG_GST_CHECK_PLUGIN(audioparsers)
 AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(camerabin)
+AG_GST_CHECK_PLUGIN(camerabin2)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(coloreffects)
 AG_GST_CHECK_PLUGIN(colorspace)
@@ -300,6 +301,7 @@ AG_GST_CHECK_PLUGIN(dataurisrc)
 AG_GST_CHECK_PLUGIN(dccp)
 AG_GST_CHECK_PLUGIN(debugutils)
 AG_GST_CHECK_PLUGIN(dtmf)
+AG_GST_CHECK_PLUGIN(dvbsuboverlay)
 AG_GST_CHECK_PLUGIN(dvdspu)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(freeze)
@@ -318,6 +320,7 @@ AG_GST_CHECK_PLUGIN(legacyresample)
 AG_GST_CHECK_PLUGIN(librfb)
 AG_GST_CHECK_PLUGIN(liveadder)
 AG_GST_CHECK_PLUGIN(mpegdemux)
+AG_GST_CHECK_PLUGIN(mpegtsdemux)
 AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpegpsmux)
 AG_GST_CHECK_PLUGIN(mpeg4videoparse)
@@ -332,20 +335,21 @@ AG_GST_CHECK_PLUGIN(qtmux)
 AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(real)
 AG_GST_CHECK_PLUGIN(rtpmux)
+AG_GST_CHECK_PLUGIN(rtpvp8)
 AG_GST_CHECK_PLUGIN(scaletempo)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
-AG_GST_CHECK_PLUGIN(selector)
 AG_GST_CHECK_PLUGIN(siren)
 AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
 AG_GST_CHECK_PLUGIN(tta)
-AG_GST_CHECK_PLUGIN(valve)
 AG_GST_CHECK_PLUGIN(videomaxrate)
 AG_GST_CHECK_PLUGIN(videomeasure)
+AG_GST_CHECK_PLUGIN(videoparsers)
 AG_GST_CHECK_PLUGIN(videosignal)
 AG_GST_CHECK_PLUGIN(vmnc)
+AG_GST_CHECK_PLUGIN(y4m)
 
 dnl *** plug-ins to exclude ***
 
@@ -356,8 +360,9 @@ if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
 fi
 
 dnl disable experimental plug-ins
-dnl if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
-dnl fi
+if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
+  AG_GST_DISABLE_PLUGIN(camerabin2)
+fi
 
 # This will always succeed because we depend on GLib >= 2.16
 PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.16, HAVE_GIO=yes, HAVE_GIO=no)
@@ -687,11 +692,11 @@ dnl *** DTS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DTS, true)
 AG_GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
   HAVE_DTS="yes"
-  AG_GST_CHECK_LIBHEADER(DTS, dca, dca_init, -lm, dca.h,
-    DTS_LIBS="-ldca -lm", HAVE_DTS="no")
+  AG_GST_CHECK_LIBHEADER(DTS, dca, dca_init, $LIBM, dca.h,
+    DTS_LIBS="-ldca $LIBM", HAVE_DTS="no")
   if test $HAVE_DTS = "no"; then
-    AG_GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, -lm, dts.h,
-      [ DTS_LIBS="-ldts_pic -lm"
+    AG_GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, $LIBM, dts.h,
+      [ DTS_LIBS="-ldts_pic $LIBM"
         AC_DEFINE(DTS_OLD, 1, [Define if an old libdts is used])
       ])
   fi
@@ -748,7 +753,7 @@ return 0;
       AC_MSG_WARN([Wrong version of divx4linux installed])
     ])
   fi
-  LIBS="-lm"
+  LIBS="$LIBM"
   if test x$HAVE_DIVX = xyes; then
     AC_CHECK_LIB(divxencore, encore, , [
       AC_MSG_WARN([Divx4linux encore libs not found])
@@ -762,8 +767,8 @@ return 0;
   ])
   fi
   if test x$HAVE_DIVX = xyes; then
-    DIVXENC_LIBS="-ldivxencore -lm"
-    DIVXDEC_LIBS="-ldivxdecore -lm"
+    DIVXENC_LIBS="-ldivxencore $LIBM"
+    DIVXDEC_LIBS="-ldivxdecore $LIBM"
     AC_SUBST(DIVXENC_LIBS)
     AC_SUBST(DIVXDEC_LIBS)
   fi
@@ -790,8 +795,8 @@ AG_GST_CHECK_FEATURE(EXIF, [exif], exif, [
 dnl **** Free AAC Encoder (FAAC) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
 AG_GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
-  AG_GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, -lm, faac.h,
-    FAAC_LIBS="-lfaac -lm")
+  AG_GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, $LIBM, faac.h,
+    FAAC_LIBS="-lfaac $LIBM")
   AS_SCRUB_INCLUDE(FAAC_CFLAGS)
   AC_SUBST(FAAC_LIBS)
 ])
@@ -801,11 +806,11 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
 AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   HAVE_FAAD="yes"
   faad_hdr=""
-  AG_GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h,
-    FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
+  AG_GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, $LIBM, faad.h,
+    FAAD_LIBS="-lfaad $LIBM", HAVE_FAAD="no")
   if test $HAVE_FAAD = "no"; then
-    AG_GST_CHECK_LIBHEADER(FAAD, faad, NeAACDecOpen, -lm, neaacdec.h,
-      [ FAAD_LIBS="-lfaad -lm"
+    AG_GST_CHECK_LIBHEADER(FAAD, faad, NeAACDecOpen, $LIBM, neaacdec.h,
+      [ FAAD_LIBS="-lfaad $LIBM"
         AC_DEFINE(FAAD_IS_NEAAC, 1, [Define if AAC is using new api prefix])
         faad_hdr="neaacdec.h"
       ], [
@@ -866,8 +871,8 @@ AG_GST_CHECK_FEATURE(FBDEV, [linux framebuffer], fbdevsink, [
 dnl *** flite ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLITE, true)
 AG_GST_CHECK_FEATURE(FLITE, [Flite plugin], flite, [
-  AG_GST_CHECK_LIBHEADER(FLITE, flite, flite_init, -lm, flite/flite.h,
-    FLITE_LIBS="-lflite -lflite_cmu_us_kal -lflite_usenglish -lflite_cmulex -lm")
+  AG_GST_CHECK_LIBHEADER(FLITE, flite, flite_init, $LIBM, flite/flite.h,
+    FLITE_LIBS="-lflite -lflite_cmu_us_kal -lflite_usenglish -lflite_cmulex $LIBM")
 
   AC_SUBST(FLITE_CFLAGS)
   AC_SUBST(FLITE_LIBS)
@@ -884,14 +889,6 @@ AG_GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
     fi
   fi
   AC_SUBST(GSM_LIBS)
-])
-
-dnl *** Jack ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
-AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
-  PKG_CHECK_MODULES(JACK, jack >= 0.99.10, HAVE_JACK="yes", HAVE_JACK="no")
-  AC_SUBST(JACK_CFLAGS)
-  AC_SUBST(JACK_LIBS)
 ])
 
 dnl *** jp2k ***
@@ -997,7 +994,7 @@ PKG_CHECK_EXISTS(mjpegtools >= 1.6.1.93 mjpegtools < 1.8.0, [
       OLD_CFLAGS="$CFLAGS"
       OLD_LIBS="$LIBS"
       CFLAGS="$MJPEG_CFLAGS"
-      LIBS="$LIBS $MJPEG_LIBS -lmjpegutils -lm -lpthread"
+      LIBS="$LIBS $MJPEG_LIBS -lmjpegutils $LIBM -lpthread"
       AC_CHECK_FUNC(mjpeg_loglev_t, [
         mjpegtools_api=10903
         ], [
@@ -1034,7 +1031,7 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
       dnl check headers
       mpeg2enc_headers_ok=no
       AC_CHECK_HEADER([mpeg2encoder.hh], [
-        MPEG2ENC_LIBS="$MPEG2ENC_LIBS -lmpeg2encpp -lm -lpthread"
+        MPEG2ENC_LIBS="$MPEG2ENC_LIBS -lmpeg2encpp $LIBM -lpthread"
         OLD_LIBS="$LIBS"
         LIBS="$LIBS $MPEG2ENC_LIBS"
         AC_MSG_CHECKING([for valid mpeg2enc objects])
@@ -1102,7 +1099,7 @@ AG_GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [
       OLD_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$CPPFLAGS $MPLEX_CFLAGS"
       AC_CHECK_HEADER(interact.hpp, [
-        MPLEX_LIBS="$MPLEX_LIBS -lmplex2 -lm"
+        MPLEX_LIBS="$MPLEX_LIBS -lmplex2 $LIBM"
         OLD_LIBS="$LIBS"
         LIBS="$LIBS $MPLEX_LIBS"
         OLD_LDFLAGS="$LDFLAGS"
@@ -1433,7 +1430,7 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
   HAVE_XVID=no
   AC_CHECK_HEADER(xvid.h, [
     OLD_LIBS="$LIBS"
-    LIBS="-lm"
+    LIBS="-lpthread $LIBM"
     AC_CHECK_LIB(xvidcore, xvid_encore, [
       AC_CHECK_LIB(xvidcore, xvid_decore, [
         AC_CHECK_LIB(xvidcore, xvid_global, [
@@ -1443,7 +1440,7 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
               #error "Incompatible XviD API version"
               #endif
           ],[ AC_MSG_RESULT(yes)
-            XVID_LIBS="-lxvidcore -lm"
+            XVID_LIBS="-lxvidcore $LIBM"
             AC_SUBST(XVID_LIBS)
             HAVE_XVID=yes
           ], AC_MSG_RESULT(no) )
@@ -1550,7 +1547,7 @@ AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
     HAVE_VP8_DECODER=no
 
     OLD_LIBS="$LIBS"
-    LIBS="$LIBS -lm -lpthread"
+    LIBS="$LIBS $LIBM -lpthread"
     AC_CHECK_LIB(vpx, vpx_codec_vp8_cx_algo, [
       HAVE_VP8=yes
       AC_DEFINE(HAVE_VP8_ENCODER, 1, [Defined if the VP8 encoder is available])
@@ -1605,7 +1602,6 @@ AM_CONDITIONAL(USE_FAAD, false)
 AM_CONDITIONAL(USE_FBDEV, false)
 AM_CONDITIONAL(USE_FLITE, false)
 AM_CONDITIONAL(USE_GSM, false)
-AM_CONDITIONAL(USE_JACK, false)
 AM_CONDITIONAL(USE_JP2K, false)
 AM_CONDITIONAL(USE_KATE, false)
 AM_CONDITIONAL(USE_TIGER, false)
@@ -1622,6 +1618,7 @@ AM_CONDITIONAL(USE_MYTHTV, false)
 AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
+AM_CONDITIONAL(USE_OPENCV, false)
 AM_CONDITIONAL(USE_RSVG, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -1695,6 +1692,13 @@ dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
 AC_SUBST(GST_ALL_LDFLAGS)
 
+dnl GST_LIB_LDFLAGS
+dnl linker flags shared by all libraries
+dnl LDFLAGS modifier defining exported symbols from built libraries
+dnl (export _gst_foo but not __gst_foo)
+GST_LIB_LDFLAGS="-export-symbols-regex ^_?\(gst_\|Gst\|GST_\).*"
+AC_SUBST(GST_LIB_LDFLAGS)
+
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
@@ -1718,6 +1722,7 @@ gst/audioparsers/Makefile
 gst/autoconvert/Makefile
 gst/bayer/Makefile
 gst/camerabin/Makefile
+gst/camerabin2/Makefile
 gst/cdxaparse/Makefile
 gst/colorspace/Makefile
 gst/coloreffects/Makefile
@@ -1725,6 +1730,7 @@ gst/dataurisrc/Makefile
 gst/dccp/Makefile
 gst/debugutils/Makefile
 gst/dtmf/Makefile
+gst/dvbsuboverlay/Makefile
 gst/dvdspu/Makefile
 gst/festival/Makefile
 gst/freeze/Makefile
@@ -1743,6 +1749,7 @@ gst/legacyresample/Makefile
 gst/librfb/Makefile
 gst/liveadder/Makefile
 gst/mpegdemux/Makefile
+gst/mpegtsdemux/Makefile
 gst/mpegtsmux/Makefile
 gst/mpegtsmux/tsmux/Makefile
 gst/mpegpsmux/Makefile
@@ -1758,22 +1765,25 @@ gst/qtmux/Makefile
 gst/rawparse/Makefile
 gst/real/Makefile
 gst/rtpmux/Makefile
+gst/rtpvp8/Makefile
 gst/scaletempo/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
-gst/selector/Makefile
 gst/siren/Makefile
 gst/speed/Makefile
 gst/subenc/Makefile
 gst/stereo/Makefile
 gst/tta/Makefile
-gst/valve/Makefile
 gst/videomaxrate/Makefile
 gst/videomeasure/Makefile
+gst/videoparsers/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile
+gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
+gst-libs/gst/basecamerabinsrc/Makefile
+gst-libs/gst/baseparse/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/signalprocessor/Makefile
 gst-libs/gst/video/Makefile
@@ -1804,11 +1814,10 @@ tests/check/Makefile
 tests/files/Makefile
 tests/examples/Makefile
 tests/examples/camerabin/Makefile
+tests/examples/camerabin2/Makefile
 tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile
-tests/examples/switch/Makefile
-tests/examples/jack/Makefile
 tests/icles/Makefile
 ext/amrwbenc/Makefile
 ext/assrender/Makefile
@@ -1826,7 +1835,6 @@ ext/faac/Makefile
 ext/faad/Makefile
 ext/flite/Makefile
 ext/gsm/Makefile
-ext/jack/Makefile
 ext/jp2k/Makefile
 ext/kate/Makefile
 ext/ladspa/Makefile

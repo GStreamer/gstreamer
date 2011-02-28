@@ -248,6 +248,9 @@ gst_vdp_vpp_get_required_pictures (GstVdpVideoPostProcess * vpp)
     case GST_VDP_DEINTERLACE_METHOD_TEMPORAL_SPATIAL:
       ret = 2;
       break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
 
   return ret;

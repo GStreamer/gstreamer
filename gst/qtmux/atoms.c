@@ -538,6 +538,7 @@ atom_ctts_init (AtomCTTS * ctts)
 
   atom_full_init (&ctts->header, FOURCC_ctts, 0, 0, 0, flags);
   atom_array_init (&ctts->entries, 128);
+  ctts->do_pts = FALSE;
 }
 
 static AtomCTTS *
@@ -613,7 +614,7 @@ atom_co64_init (AtomSTCO64 * co64)
 {
   guint8 flags[3] = { 0, 0, 0 };
 
-  atom_full_init (&co64->header, FOURCC_co64, 0, 0, 0, flags);
+  atom_full_init (&co64->header, FOURCC_stco, 0, 0, 0, flags);
   atom_array_init (&co64->entries, 256);
 }
 
@@ -2019,7 +2020,7 @@ atom_stbl_copy_data (AtomSTBL * stbl, guint8 ** buffer, guint64 * size,
   if (!atom_stsz_copy_data (&stbl->stsz, buffer, size, offset)) {
     return 0;
   }
-  if (stbl->ctts) {
+  if (stbl->ctts && stbl->ctts->do_pts) {
     if (!atom_ctts_copy_data (stbl->ctts, buffer, size, offset)) {
       return 0;
     }
@@ -2520,6 +2521,8 @@ static void
 atom_stco64_add_entry (AtomSTCO64 * stco64, guint64 entry)
 {
   atom_array_append (&stco64->entries, entry, 256);
+  if (entry > G_MAXUINT32)
+    stco64->header.header.type = FOURCC_co64;
 }
 
 static void
@@ -2551,6 +2554,8 @@ atom_ctts_add_entry (AtomCTTS * ctts, guint32 nsamples, guint32 offset)
     nentry.samplecount = nsamples;
     nentry.sampleoffset = offset;
     atom_array_append (&ctts->entries, nentry, 256);
+    if (offset != 0)
+      ctts->do_pts = TRUE;
   } else {
     entry->samplecount += nsamples;
   }
@@ -2567,8 +2572,7 @@ atom_stbl_add_ctts_entry (AtomSTBL * stbl, guint32 nsamples, guint32 offset)
 
 void
 atom_stbl_add_samples (AtomSTBL * stbl, guint32 nsamples, guint32 delta,
-    guint32 size, guint64 chunk_offset, gboolean sync,
-    gboolean do_pts, gint64 pts_offset)
+    guint32 size, guint64 chunk_offset, gboolean sync, gint64 pts_offset)
 {
   atom_stts_add_entry (&stbl->stts, nsamples, delta);
   atom_stsz_add_entry (&stbl->stsz, nsamples, size);
@@ -2577,18 +2581,17 @@ atom_stbl_add_samples (AtomSTBL * stbl, guint32 nsamples, guint32 delta,
       atom_stco64_get_entry_count (&stbl->stco64), nsamples);
   if (sync)
     atom_stbl_add_stss_entry (stbl);
-  if (do_pts)
-    atom_stbl_add_ctts_entry (stbl, nsamples, pts_offset);
+  /* always store to arrange for consistent content */
+  atom_stbl_add_ctts_entry (stbl, nsamples, pts_offset);
 }
 
 void
 atom_trak_add_samples (AtomTRAK * trak, guint32 nsamples, guint32 delta,
-    guint32 size, guint64 chunk_offset, gboolean sync,
-    gboolean do_pts, gint64 pts_offset)
+    guint32 size, guint64 chunk_offset, gboolean sync, gint64 pts_offset)
 {
   AtomSTBL *stbl = &trak->mdia.minf.stbl;
   atom_stbl_add_samples (stbl, nsamples, delta, size, chunk_offset, sync,
-      do_pts, pts_offset);
+      pts_offset);
 }
 
 /* trak and moov molding */
@@ -2706,41 +2709,6 @@ atom_moov_update_duration (AtomMOOV * moov)
   }
   moov->mvhd.time_info.duration = duration;
   moov->mvex.mehd.fragment_duration = duration;
-}
-
-static void
-atom_set_type (Atom * atom, guint32 fourcc)
-{
-  atom->type = fourcc;
-}
-
-static void
-atom_stbl_set_64bits (AtomSTBL * stbl, gboolean use)
-{
-  if (use) {
-    atom_set_type (&stbl->stco64.header.header, FOURCC_co64);
-  } else {
-    atom_set_type (&stbl->stco64.header.header, FOURCC_stco);
-  }
-}
-
-static void
-atom_trak_set_64bits (AtomTRAK * trak, gboolean use)
-{
-  atom_stbl_set_64bits (&trak->mdia.minf.stbl, use);
-}
-
-void
-atom_moov_set_64bits (AtomMOOV * moov, gboolean large_file)
-{
-  GList *traks = moov->traks;
-
-  while (traks) {
-    AtomTRAK *trak = (AtomTRAK *) traks->data;
-
-    atom_trak_set_64bits (trak, large_file);
-    traks = g_list_next (traks);
-  }
 }
 
 void
@@ -3626,18 +3594,17 @@ atom_sdtp_add_samples (AtomSDTP * sdtp, guint8 val)
 
 static void
 atom_trun_add_samples (AtomTRUN * trun, guint32 delta, guint32 size,
-    guint32 flags, gboolean do_pts, gint64 pts_offset)
+    guint32 flags, gint64 pts_offset)
 {
   TRUNSampleEntry nentry;
 
-  if (do_pts) {
+  if (pts_offset != 0)
     trun->header.flags[1] |= TR_COMPOSITION_TIME_OFFSETS;
-  }
 
   nentry.sample_duration = delta;
   nentry.sample_size = size;
   nentry.sample_flags = flags;
-  nentry.sample_composition_time_offset = do_pts ? pts_offset : 0;
+  nentry.sample_composition_time_offset = pts_offset;
   atom_array_append (&trun->entries, nentry, 256);
   trun->sample_count++;
 }
@@ -3670,7 +3637,7 @@ atom_traf_add_trun (AtomTRAF * traf, AtomTRUN * trun)
 
 void
 atom_traf_add_samples (AtomTRAF * traf, guint32 delta, guint32 size,
-    gboolean sync, gboolean do_pts, gint64 pts_offset, gboolean sdtp_sync)
+    gboolean sync, gint64 pts_offset, gboolean sdtp_sync)
 {
   AtomTRUN *trun;
   guint32 flags;
@@ -3716,8 +3683,7 @@ atom_traf_add_samples (AtomTRAF * traf, guint32 delta, guint32 size,
     }
   }
 
-  atom_trun_add_samples (traf->truns->data, delta, size, flags, do_pts,
-      pts_offset);
+  atom_trun_add_samples (traf->truns->data, delta, size, flags, pts_offset);
 
   if (traf->sdtps)
     atom_sdtp_add_samples (traf->sdtps->data, 0x10 | ((flags & 0xff) >> 4));

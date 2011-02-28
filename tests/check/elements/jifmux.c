@@ -807,6 +807,7 @@ check_content (ExifContent * content, void *user_data)
 
       fail_unless (strcmp (str, taglist_str) == 0);
       test_data->result = TRUE;
+      g_free (taglist_str);
     }
       break;
     case EXIF_TYPE_RATIONAL:{
@@ -886,6 +887,7 @@ check_content (ExifContent * content, void *user_data)
       }
 
       test_data->result = TRUE;
+      gst_buffer_unref (buf);
     }
       break;
     default:
@@ -927,6 +929,7 @@ generate_jif_file_with_tags_from_taglist (GstTagList * taglist,
 
   pipeline = gst_parse_launch (launchline, NULL);
   fail_unless (pipeline != NULL);
+  g_free (launchline);
 
   jifmux = gst_bin_get_by_name (GST_BIN (pipeline), "jifmux0");
   fail_unless (jifmux != NULL);
@@ -939,9 +942,10 @@ generate_jif_file_with_tags_from_taglist (GstTagList * taglist,
   fail_if (gst_element_set_state (pipeline, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE);
 
-  msg = gst_bus_timed_pop_filtered (bus, GST_SECOND * 5, GST_MESSAGE_EOS |
+  msg = gst_bus_timed_pop_filtered (bus, GST_SECOND * 10, GST_MESSAGE_EOS |
       GST_MESSAGE_ERROR);
-  fail_if (!msg || GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
+  fail_if (!msg);
+  fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
 
   gst_message_unref (msg);
   gst_object_unref (bus);

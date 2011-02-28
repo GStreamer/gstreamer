@@ -3,11 +3,11 @@
   <description>ASF Muxer Plugin</description>
   <filename>../../gst/asfmux/.libs/libgstasfmux.so</filename>
   <basename>libgstasfmux.so</basename>
-  <version>0.10.20.1</version>
+  <version>0.10.21.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>gsoc2009 package</package>
-  <origin>embedded.ufcg.edu.br</origin>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>asfmux</name>

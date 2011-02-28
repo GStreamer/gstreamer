@@ -64,6 +64,7 @@ GST_DEBUG_CATEGORY (gst_katedec_debug);
 GST_DEBUG_CATEGORY (gst_kateenc_debug);
 GST_DEBUG_CATEGORY (gst_kateparse_debug);
 GST_DEBUG_CATEGORY (gst_katetag_debug);
+GST_DEBUG_CATEGORY (gst_kateutil_debug);
 #ifdef HAVE_TIGER
 GST_DEBUG_CATEGORY (gst_katetiger_debug);
 #endif
@@ -75,6 +76,8 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_kateenc_debug, "kateenc", 0, "Kate encoder");
   GST_DEBUG_CATEGORY_INIT (gst_kateparse_debug, "kateparse", 0, "Kate parser");
   GST_DEBUG_CATEGORY_INIT (gst_katetag_debug, "katetag", 0, "Kate tagger");
+  GST_DEBUG_CATEGORY_INIT (gst_kateutil_debug, "kateutil", 0,
+      "Kate utility functions");
 #ifdef HAVE_TIGER
   GST_DEBUG_CATEGORY_INIT (gst_katetiger_debug, "tiger", 0,
       "Kate Tiger renderer");
@@ -97,7 +100,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
 #ifdef HAVE_TIGER
-  if (!gst_element_register (plugin, "tiger", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "tiger", GST_RANK_PRIMARY,
           GST_TYPE_KATE_TIGER))
     return FALSE;
 #endif

@@ -37,15 +37,33 @@ gstspu_vobsub_recalc_palette (GstDVDSpu * dvdspu,
   SpuState *state = &dvdspu->spu_state;
   gint i;
 
-  for (i = 0; i < 4; i++, dest++) {
-    guint32 col = state->vobsub.current_clut[idx[i]];
+  if (state->vobsub.current_clut[idx[0]] != 0) {
+    for (i = 0; i < 4; i++, dest++) {
+      guint32 col = state->vobsub.current_clut[idx[i]];
 
-    /* Convert incoming 4-bit alpha to 8 bit for blending */
-    dest->A = (alpha[i] << 4) | alpha[i];
-    dest->Y = ((guint16) ((col >> 16) & 0xff)) * dest->A;
-    /* U/V are stored as V/U in the clut words, so switch them */
-    dest->V = ((guint16) ((col >> 8) & 0xff)) * dest->A;
-    dest->U = ((guint16) (col & 0xff)) * dest->A;
+      /* Convert incoming 4-bit alpha to 8 bit for blending */
+      dest->A = (alpha[i] << 4) | alpha[i];
+      dest->Y = ((guint16) ((col >> 16) & 0xff)) * dest->A;
+      /* U/V are stored as V/U in the clut words, so switch them */
+      dest->V = ((guint16) ((col >> 8) & 0xff)) * dest->A;
+      dest->U = ((guint16) (col & 0xff)) * dest->A;
+    }
+  } else {
+    int y = 240;
+
+    /* The CLUT presumably hasn't been set, so we'll just guess some
+     * values for the non-transparent colors (white, grey, black) */
+    for (i = 0; i < 4; i++, dest++) {
+      dest->A = (alpha[i] << 4) | alpha[i];
+      if (alpha[i] != 0) {
+        dest[0].Y = y * dest[0].A;
+        y -= 112;
+        if (y < 0)
+          y = 0;
+      }
+      dest[0].U = 128 * dest[0].A;
+      dest[0].V = 128 * dest[0].A;
+    }
   }
 }
 
@@ -515,10 +533,11 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
     /* Render odd line */
     state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x + 1;
     gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[1]);
-    /* Blend the accumulated UV compositing buffers onto the output */
-    gstspu_vobsub_blend_comp_buffers (state, planes);
 
     if (!clip) {
+      /* Blend the accumulated UV compositing buffers onto the output */
+      gstspu_vobsub_blend_comp_buffers (state, planes);
+
       /* Update all the output pointers */
       planes[0] += state->Y_stride;
       planes[1] += state->UV_stride;

@@ -60,124 +60,133 @@ create_element (const gchar * factory_name, const gchar * elem_name,
 
 /**
  * gst_camerabin_preview_create_pipeline:
+ * @element: #GstCameraBin element
  * @caps: pointer to the caps used in pipeline
+ * @src_filter: source filter element
  *
  * Create a preview converter pipeline that outputs the format defined in
  * @caps parameter.
  *
- * Returns: New pipeline, or NULL if error occured.
+ * Returns: New pipeline data structure, or NULL if error occured.
  */
-GstElement *
-gst_camerabin_preview_create_pipeline (GstCameraBin * camera, GstCaps * caps,
+GstCameraBinPreviewPipelineData *
+gst_camerabin_preview_create_pipeline (GstElement * element, GstCaps * caps,
     GstElement * src_filter)
 {
-  GstElement *pipe, *src, *csp, *filter, *vscale, *sink;
+  GstElement *csp = NULL, *vscale = NULL;
   GError *error = NULL;
+  GstCameraBinPreviewPipelineData *data;
 
-  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (caps != NULL, NULL);
 
   GST_DEBUG ("creating elements");
 
-  if (!create_element ("appsrc", "prev_src", &src, &error) ||
-      !create_element ("videoscale", NULL, &vscale, &error) ||
-      !create_element ("ffmpegcolorspace", NULL, &csp, &error) ||
-      !create_element ("capsfilter", NULL, &filter, &error) ||
-      !create_element ("fakesink", "prev_sink", &sink, &error))
-    goto no_elements;
+  data = g_new (GstCameraBinPreviewPipelineData, 1);
 
   /* We have multiple pipelines created by using this function, so we can't
    * give a name to them. Another way would to ensure the uniqueness of the
    * name here*/
-  pipe = gst_pipeline_new (NULL);
-  if (pipe == NULL)
-    goto no_pipeline;
+  data->pipeline = gst_pipeline_new (NULL);
+  if (!data->pipeline)
+    goto create_error;
+
+  if (!create_element ("appsrc", "prev_src", &data->appsrc, &error) ||
+      !create_element ("videoscale", NULL, &vscale, &error) ||
+      !create_element ("ffmpegcolorspace", NULL, &csp, &error) ||
+      !create_element ("capsfilter", NULL, &data->capsfilter, &error) ||
+      !create_element ("fakesink", "prev_sink", &data->appsink, &error))
+    goto create_error;
 
   GST_DEBUG ("adding elements");
-  gst_bin_add_many (GST_BIN (pipe), src, csp, filter, vscale, sink, NULL);
+  gst_bin_add_many (GST_BIN (data->pipeline), data->appsrc, csp,
+      data->capsfilter, vscale, data->appsink, NULL);
   if (src_filter) {
-    gst_bin_add (GST_BIN (pipe), src_filter);
+    gst_bin_add (GST_BIN (data->pipeline), src_filter);
   }
+
+  data->element = element;
 
   GST_DEBUG ("preview format is: %" GST_PTR_FORMAT, caps);
 
-  g_object_set (filter, "caps", caps, NULL);
-  g_object_set (sink, "preroll-queue-len", 1, "signal-handoffs", TRUE, NULL);
+  g_object_set (data->capsfilter, "caps", caps, NULL);
+  g_object_set (data->appsink, "preroll-queue-len", 1, "signal-handoffs", TRUE,
+      NULL);
   g_object_set (vscale, "method", 0, NULL);
 
-  /* FIXME: linking is still way too expensive, profile this properly */
   GST_DEBUG ("linking src->vscale");
-  if (!gst_element_link_pads_full (src, "src", vscale, "sink",
-          GST_PAD_LINK_CHECK_CAPS))
-    return FALSE;
+  if (!gst_element_link_pads (data->appsrc, "src", vscale, "sink"))
+    goto link_error;
 
   if (src_filter) {
-    GST_DEBUG ("linking vscale->filter");
-    if (!gst_element_link_pads_full (vscale, "src", src_filter, "sink",
-            GST_PAD_LINK_CHECK_CAPS)) {
-      return FALSE;
+    GST_DEBUG ("linking vscale->src_filter");
+    if (!gst_element_link_pads (vscale, "src", src_filter, "sink")) {
+      goto link_error;
     }
     GST_DEBUG ("linking filter->csp");
-    if (!gst_element_link_pads_full (src_filter, "src", csp, "sink",
-            GST_PAD_LINK_CHECK_CAPS)) {
-      return FALSE;
+    if (!gst_element_link_pads (src_filter, "src", csp, "sink")) {
+      goto link_error;
     }
   } else {
     GST_DEBUG ("linking vscale->csp");
-    if (!gst_element_link_pads_full (vscale, "src", csp, "sink",
-            GST_PAD_LINK_CHECK_CAPS))
-      return FALSE;
+    if (!gst_element_link_pads (vscale, "src", csp, "sink"))
+      goto link_error;
   }
 
   GST_DEBUG ("linking csp->capsfilter");
-  if (!gst_element_link_pads_full (csp, "src", filter, "sink",
-          GST_PAD_LINK_CHECK_CAPS))
-    return FALSE;
+  if (!gst_element_link_pads (csp, "src", data->capsfilter, "sink"))
+    goto link_error;
 
   GST_DEBUG ("linking capsfilter->sink");
-  if (!gst_element_link_pads_full (filter, "src", sink, "sink",
-          GST_PAD_LINK_CHECK_CAPS))
-    return FALSE;
+  if (!gst_element_link_pads (data->capsfilter, "src", data->appsink, "sink"))
+    goto link_error;
 
-  return pipe;
+  return data;
 
-  /* ERRORS */
-no_elements:
-  {
-    g_warning ("Could not make preview pipeline: %s", error->message);
+create_error:
+  if (error) {
+    GST_WARNING ("Preview pipeline element creation failed: %s",
+        error->message);
     g_error_free (error);
-    return NULL;
   }
-no_pipeline:
-  {
-    g_warning ("Could not make preview pipeline: %s",
-        "no pipeline (unknown error)");
-    return NULL;
-  }
+  if (csp)
+    gst_object_unref (csp);
+  if (vscale)
+    gst_object_unref (vscale);
+  if (data->appsrc)
+    gst_object_unref (data->appsrc);
+  if (data->capsfilter)
+    gst_object_unref (data->capsfilter);
+  if (data->appsink)
+    gst_object_unref (data->appsink);
+
+link_error:
+  GST_WARNING ("Could not create preview pipeline");
+  gst_camerabin_preview_destroy_pipeline (data);
+
+  return NULL;
 }
 
 
 /**
  * gst_camerabin_preview_destroy_pipeline:
- * @camera: camerabin object
- * @pipeline: the pipeline to be destroyed
+ * @data: the pipeline data to be destroyed
  *
  * Destroy preview converter pipeline.
  */
 void
-gst_camerabin_preview_destroy_pipeline (GstCameraBin * camera,
-    GstElement * pipeline)
+gst_camerabin_preview_destroy_pipeline (GstCameraBinPreviewPipelineData * data)
 {
-  g_return_if_fail (pipeline != NULL);
-
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (pipeline);
+  if (data->pipeline) {
+    gst_element_set_state (data->pipeline, GST_STATE_NULL);
+    gst_object_unref (data->pipeline);
+  }
+  g_free (data);
 }
 
 
 /**
  * gst_camerabin_preview_convert:
- * @camera: camerabin object
- * @pipeline: preview pipeline to use
+ * @data: preview pipeline data to use
  * @buf: #GstBuffer that contains the frame to be converted
  *
  * Create a preview image of the given frame.
@@ -185,8 +194,8 @@ gst_camerabin_preview_destroy_pipeline (GstCameraBin * camera,
  * Returns: converted preview image, or NULL if operation failed.
  */
 GstBuffer *
-gst_camerabin_preview_convert (GstCameraBin * camera,
-    GstElement * pipeline, GstBuffer * buf)
+gst_camerabin_preview_convert (GstCameraBinPreviewPipelineData * data,
+    GstBuffer * buf)
 {
   GstMessage *msg;
   GstBuffer *result = NULL;
@@ -198,13 +207,13 @@ gst_camerabin_preview_convert (GstCameraBin * camera,
 
   g_return_val_if_fail (GST_BUFFER_CAPS (buf) != NULL, NULL);
 
-  if (pipeline == NULL) {
+  if (data->pipeline == NULL) {
     GST_WARNING ("pipeline is NULL");
     goto no_pipeline;
   }
 
-  src = gst_bin_get_by_name (GST_BIN (pipeline), "prev_src");
-  sink = gst_bin_get_by_name (GST_BIN (pipeline), "prev_sink");
+  src = gst_bin_get_by_name (GST_BIN (data->pipeline), "prev_src");
+  sink = gst_bin_get_by_name (GST_BIN (data->pipeline), "prev_sink");
 
   if (!src || !sink) {
     GST_WARNING ("pipeline doesn't have src / sink elements");
@@ -222,11 +231,11 @@ gst_camerabin_preview_convert (GstCameraBin * camera,
 
   GST_DEBUG ("running conversion pipeline, source is: %" GST_PTR_FORMAT,
       GST_BUFFER_CAPS (buf));
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
 
   g_signal_emit_by_name (src, "push-buffer", buf, &fret);
 
-  bus = gst_element_get_bus (pipeline);
+  bus = gst_element_get_bus (data->pipeline);
   msg = gst_bus_timed_pop_filtered (bus, (25 * GST_SECOND),
       GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
   gst_object_unref (bus);
@@ -268,7 +277,7 @@ gst_camerabin_preview_convert (GstCameraBin * camera,
 
   g_signal_handlers_disconnect_by_func (sink, G_CALLBACK (save_result),
       &result);
-  gst_element_set_state (pipeline, GST_STATE_READY);
+  gst_element_set_state (data->pipeline, GST_STATE_READY);
 
   GST_BUFFER_FLAGS (buf) = bflags;
 
@@ -297,7 +306,7 @@ no_pipeline:
 
 /**
  * gst_camerabin_preview_send_event:
- * @camera: the #GstCameraBin
+ * @data: preview pipeline data to use
  * @evt: The #GstEvent to be pushed, takes ownership
  *
  * Pushes an event to the preview pipeline.
@@ -305,21 +314,50 @@ no_pipeline:
  * Returns: True if the event was handled
  */
 gboolean
-gst_camerabin_preview_send_event (GstCameraBin * camera, GstElement * pipeline,
+gst_camerabin_preview_send_event (GstCameraBinPreviewPipelineData * data,
     GstEvent * evt)
 {
   GstElement *src;
-  gboolean ret = FALSE;
 
-  src = gst_bin_get_by_name (GST_BIN (pipeline), "prev_src");
+  src = gst_bin_get_by_name (GST_BIN (data->pipeline), "prev_src");
   if (!src) {
     GST_WARNING ("Preview pipeline doesn't have src element, can't push event");
     gst_event_unref (evt);
-  } else {
-    GST_DEBUG_OBJECT (camera, "Pushing event %p to preview pipeline", evt);
-    ret = gst_element_send_event (src, evt);
-    gst_object_unref (src);
+    return FALSE;
   }
 
-  return ret;
+  GST_DEBUG_OBJECT (data->element, "Pushing event %p to preview pipeline", evt);
+
+  return gst_element_send_event (src, evt);
+}
+
+/**
+ * gst_camerabin_preview_set_caps:
+ * @data: preview pipeline data to use
+ * @caps: New #GstCaps to be set for the pipeline
+ *
+ * Sets new caps for the preview pipeline
+ */
+void
+gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * data,
+    GstCaps * caps)
+{
+  GstState state, pending;
+  GstStateChangeReturn ret;
+
+  g_return_if_fail (data->pipeline != NULL);
+  g_return_if_fail (caps != NULL);
+
+  ret = gst_element_get_state (data->pipeline, &state, &pending, 0);
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    /* make it try again */
+    state = GST_STATE_PLAYING;
+    pending = GST_STATE_VOID_PENDING;
+  }
+
+  gst_element_set_state (data->pipeline, GST_STATE_NULL);
+  g_object_set (data->capsfilter, "caps", caps, NULL);
+  if (pending != GST_STATE_VOID_PENDING)
+    state = pending;
+  gst_element_set_state (data->pipeline, state);
 }

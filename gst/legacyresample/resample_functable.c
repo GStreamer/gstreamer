@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#include <gst/math-compat.h>
+
 #include "_stdint.h"
 
 #include "resample.h"

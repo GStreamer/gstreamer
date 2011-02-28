@@ -8,7 +8,6 @@ libgstschro_la_SOURCES = \
 	gstschro.c \
 	gstschrodec.c \
 	gstschroenc.c \
-	gstschroparse.c \
 	gstschroutils.c
 libgstschro_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \

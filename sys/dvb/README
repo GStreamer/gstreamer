@@ -5,10 +5,10 @@ GstDvbSrc makes it possible to view Digital TV with gstreamer.
 
 Try:
 
-     gst-launch dvbsrc freq=11954 pol=h srate=27500 pids=210:220
-           ! flutsdemux es-pids=210:220 name=demux !  queue ! mpeg2dec ! 
-	     xvimagesink }
-           demux. ! queue ! mad ! osssink
+     gst-launch dvbsrc frequency=11954 polarity=h symbol-rate=27500 pids=210:220
+         ! mpegtsdemux es-pids=210:220 name=demux ! queue ! mpeg2dec
+         ! xvimagesink demux. ! queue ! mad ! audioconvert ! autoaudiosink
+
 
 
 

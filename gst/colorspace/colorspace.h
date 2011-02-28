@@ -35,6 +35,12 @@ typedef enum {
   COLOR_SPEC_YUV_BT709
 } ColorSpaceColorSpec;
 
+typedef enum {
+  DITHER_NONE,
+  DITHER_VERTERR,
+  DITHER_HALFTONE
+} ColorSpaceDitherMethod;
+
 struct _ColorspaceComponent {
   int offset;
   int stride;
@@ -43,6 +49,8 @@ struct _ColorspaceComponent {
 struct _ColorspaceConvert {
   gint width, height;
   gboolean interlaced;
+  gboolean use_16bit;
+  gboolean dither;
 
   GstVideoFormat from_format;
   ColorSpaceColorSpec from_spec;
@@ -51,6 +59,8 @@ struct _ColorspaceConvert {
   guint32 *palette;
 
   guint8 *tmpline;
+  guint16 *tmpline16;
+  guint16 *errline;
 
   int dest_offset[4];
   int dest_stride[4];
@@ -61,11 +71,17 @@ struct _ColorspaceConvert {
   void (*getline) (ColorspaceConvert *convert, guint8 *dest, const guint8 *src, int j);
   void (*putline) (ColorspaceConvert *convert, guint8 *dest, const guint8 *src, int j);
   void (*matrix) (ColorspaceConvert *convert);
+
+  void (*getline16) (ColorspaceConvert *convert, guint16 *dest, const guint8 *src, int j);
+  void (*putline16) (ColorspaceConvert *convert, guint8 *dest, const guint16 *src, int j);
+  void (*matrix16) (ColorspaceConvert *convert);
+  void (*dither16) (ColorspaceConvert *convert, int j);
 };
 
 ColorspaceConvert * colorspace_convert_new (GstVideoFormat to_format,
     ColorSpaceColorSpec from_spec, GstVideoFormat from_format,
     ColorSpaceColorSpec to_spec, int width, int height);
+void colorspace_convert_set_dither (ColorspaceConvert * convert, int type);
 void colorspace_convert_set_interlaced (ColorspaceConvert *convert,
     gboolean interlaced);
 void colorspace_convert_set_palette (ColorspaceConvert *convert,

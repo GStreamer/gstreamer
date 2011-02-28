@@ -1,7 +1,9 @@
 /* Quicktime muxer plugin for GStreamer
  * Copyright (C) 2008-2010 Thiago Santos <thiagoss@embedded.ufcg.edu.br>
  * Copyright (C) 2008 Mark Nauwelaerts <mnauw@users.sf.net>
- *
+ * Copyright (C) 2010 Nokia Corporation. All rights reserved.
+ * Contact: Stefan Kost <stefan.kost@nokia.com>
+
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -62,6 +64,36 @@
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
+ * A few properties (<link linkend="GstQTMux--movie-timescale">movie-timescale</link>,
+ * <link linkend="GstQTMux--trak-timescale">trak-timescale</link>) allow adjusting
+ * some technical parameters, which might be useful in (rare) cases to resolve
+ * compatibility issues in some situations.
+ *
+ * Some other properties influence the result more fundamentally.
+ * A typical mov/mp4 file's metadata (aka moov) is located at the end of the file,
+ * somewhat contrary to this usually being called "the header".
+ * However, a <link linkend="GstQTMux--faststart">faststart</link> file will
+ * (with some effort) arrange this to be located near start of the file,
+ * which then allows it e.g. to be played while downloading.
+ * Alternatively, rather than having one chunk of metadata at start (or end),
+ * there can be some metadata at start and most of the other data can be spread
+ * out into fragments of <link linkend="GstQTMux--fragment-duration">fragment-duration</link>.
+ * If such fragmented layout is intended for streaming purposes, then
+ * <link linkend="GstQTMux--streamable">streamable</link> allows foregoing to add
+ * index metadata (at the end of file).
+ *
+ * <link linkend="GstQTMux--dts-method">dts-method</link> allows selecting a
+ * method for managing input timestamps (stay tuned for 0.11 to have this
+ * automagically settled).  The default delta/duration method should handle nice
+ * (aka perfect streams) just fine, but may experience problems otherwise
+ * (e.g. input stream with re-ordered B-frames and/or with frame dropping).
+ * The re-ordering approach re-assigns incoming timestamps in ascending order
+ * to incoming buffers and offers an alternative in such cases.  In cases where
+ * that might fail, the remaining method can be tried, which is exact and
+ * according to specs, but might experience playback on not so spec-wise players.
+ * Note that this latter approach also requires one to enable
+ * <link linkend="GstQTMux--presentation-timestamp">presentation-timestamp</link>.
+ *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
@@ -108,6 +140,36 @@
 GST_DEBUG_CATEGORY_STATIC (gst_qt_mux_debug);
 #define GST_CAT_DEFAULT gst_qt_mux_debug
 
+enum
+{
+  DTS_METHOD_DD,
+  DTS_METHOD_REORDER,
+  DTS_METHOD_ASC
+};
+
+static GType
+gst_qt_mux_dts_method_get_type (void)
+{
+  static GType gst_qt_mux_dts_method = 0;
+
+  if (!gst_qt_mux_dts_method) {
+    static const GEnumValue dts_methods[] = {
+      {DTS_METHOD_DD, "delta/duration", "dd"},
+      {DTS_METHOD_REORDER, "reorder", "reorder"},
+      {DTS_METHOD_ASC, "ascending", "asc"},
+      {0, NULL, NULL},
+    };
+
+    gst_qt_mux_dts_method =
+        g_enum_register_static ("GstQTMuxDtsMethods", dts_methods);
+  }
+
+  return gst_qt_mux_dts_method;
+}
+
+#define GST_TYPE_QT_MUX_DTS_METHOD \
+  (gst_qt_mux_dts_method_get_type ())
+
 /* QTMux signals and args */
 enum
 {
@@ -118,22 +180,21 @@ enum
 enum
 {
   PROP_0,
-  PROP_LARGE_FILE,
   PROP_MOVIE_TIMESCALE,
   PROP_TRAK_TIMESCALE,
-  PROP_DO_CTTS,
   PROP_FAST_START,
   PROP_FAST_START_TEMP_FILE,
   PROP_MOOV_RECOV_FILE,
   PROP_FRAGMENT_DURATION,
-  PROP_STREAMABLE
+  PROP_STREAMABLE,
+  PROP_DTS_METHOD,
+  PROP_DO_CTTS,
 };
 
 /* some spare for header size as well */
 #define MDAT_LARGE_FILE_LIMIT           ((guint64) 1024 * 1024 * 1024 * 2)
 #define MAX_TOLERATED_LATENESS          (GST_SECOND / 10)
 
-#define DEFAULT_LARGE_FILE              FALSE
 #define DEFAULT_MOVIE_TIMESCALE         1000
 #define DEFAULT_TRAK_TIMESCALE          0
 #define DEFAULT_DO_CTTS                 FALSE
@@ -142,6 +203,7 @@ enum
 #define DEFAULT_MOOV_RECOV_FILE         NULL
 #define DEFAULT_FRAGMENT_DURATION       0
 #define DEFAULT_STREAMABLE              FALSE
+#define DEFAULT_DTS_METHOD              DTS_METHOD_DD
 
 
 static void gst_qt_mux_finalize (GObject * object);
@@ -229,11 +291,6 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
   gobject_class->get_property = gst_qt_mux_get_property;
   gobject_class->set_property = gst_qt_mux_set_property;
 
-  g_object_class_install_property (gobject_class, PROP_LARGE_FILE,
-      g_param_spec_boolean ("large-file", "Support for large files",
-          "Uses 64bits to some fields instead of 32bits, "
-          "providing support for large files",
-          DEFAULT_LARGE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MOVIE_TIMESCALE,
       g_param_spec_uint ("movie-timescale", "Movie timescale",
           "Timescale to use in the movie (units per second)",
@@ -250,6 +307,11 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           "Calculate and include presentation/composition time "
           "(in addition to decoding time) (use with caution)",
           DEFAULT_DO_CTTS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DTS_METHOD,
+      g_param_spec_enum ("dts-method", "dts-method",
+          "Method to determine DTS time",
+          GST_TYPE_QT_MUX_DTS_METHOD, DEFAULT_DTS_METHOD,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FAST_START,
       g_param_spec_boolean ("faststart", "Format file to faststart",
@@ -291,6 +353,8 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
 static void
 gst_qt_mux_pad_reset (GstQTPad * qtpad)
 {
+  gint i;
+
   qtpad->fourcc = 0;
   qtpad->is_out_of_order = FALSE;
   qtpad->have_dts = FALSE;
@@ -301,6 +365,16 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->prepare_buf_func = NULL;
   qtpad->avg_bitrate = 0;
   qtpad->max_bitrate = 0;
+  qtpad->ts_n_entries = 0;
+
+  qtpad->buf_head = 0;
+  qtpad->buf_tail = 0;
+  for (i = 0; i < G_N_ELEMENTS (qtpad->buf_entries); i++) {
+    if (qtpad->buf_entries[i]) {
+      gst_buffer_unref (qtpad->buf_entries[i]);
+      qtpad->buf_entries[i] = NULL;
+    }
+  }
 
   if (qtpad->last_buf)
     gst_buffer_replace (&qtpad->last_buf, NULL);
@@ -359,6 +433,7 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   for (walk = qtmux->extra_atoms; walk; walk = g_slist_next (walk)) {
     AtomInfo *ainfo = (AtomInfo *) walk->data;
     ainfo->free_func (ainfo->atom);
+    g_free (ainfo);
   }
   g_slist_free (qtmux->extra_atoms);
   qtmux->extra_atoms = NULL;
@@ -394,13 +469,9 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
 {
   GstElementClass *klass = GST_ELEMENT_CLASS (qtmux_klass);
   GstPadTemplate *templ;
-  GstCaps *caps;
 
   templ = gst_element_class_get_pad_template (klass, "src");
   qtmux->srcpad = gst_pad_new_from_template (templ, "src");
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (qtmux->srcpad));
-  gst_pad_set_caps (qtmux->srcpad, caps);
-  gst_caps_unref (caps);
   gst_pad_use_fixed_caps (qtmux->srcpad);
   gst_element_add_pad (GST_ELEMENT (qtmux), qtmux->srcpad);
 
@@ -723,6 +794,7 @@ gst_qt_mux_add_3gp_keywords (GstQTMux * qtmux, const GstTagList * list,
     return;
 
   kwds = g_strsplit (keywords, ",", 0);
+  g_free (keywords);
 
   size = 0;
   for (i = 0; kwds[i]; i++) {
@@ -1403,23 +1475,20 @@ gst_qt_mux_set_header_on_caps (GstQTMux * mux, GstBuffer * buf)
 static void
 gst_qt_mux_configure_moov (GstQTMux * qtmux, guint32 * _timescale)
 {
-  gboolean large_file, fragmented;
+  gboolean fragmented;
   guint32 timescale;
 
   GST_OBJECT_LOCK (qtmux);
   timescale = qtmux->timescale;
-  large_file = qtmux->large_file;
   fragmented = qtmux->fragment_sequence > 0;
   GST_OBJECT_UNLOCK (qtmux);
 
   /* inform lower layers of our property wishes, and determine duration.
    * Let moov take care of this using its list of traks;
    * so that released pads are also included */
-  GST_DEBUG_OBJECT (qtmux, "Large file support: %d", large_file);
   GST_DEBUG_OBJECT (qtmux, "Updating timescale to %" G_GUINT32_FORMAT,
       timescale);
   atom_moov_update_timescale (qtmux->moov, timescale);
-  atom_moov_set_64bits (qtmux->moov, large_file);
   atom_moov_set_fragmented (qtmux->moov, fragmented);
 
   atom_moov_update_duration (qtmux->moov);
@@ -1505,8 +1574,13 @@ static GstFlowReturn
 gst_qt_mux_start_file (GstQTMux * qtmux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  GstCaps *caps;
 
   GST_DEBUG_OBJECT (qtmux, "starting file");
+
+  caps = gst_caps_copy (gst_pad_get_pad_template_caps (qtmux->srcpad));
+  gst_pad_set_caps (qtmux->srcpad, caps);
+  gst_caps_unref (caps);
 
   /* let downstream know we think in BYTES and expect to do seeking later on */
   gst_pad_push_event (qtmux->srcpad,
@@ -1645,6 +1719,11 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     GstCollectData *cdata = (GstCollectData *) walk->data;
     GstQTPad *qtpad = (GstQTPad *) cdata;
 
+    if (!qtpad->last_buf) {
+      GST_DEBUG_OBJECT (qtmux, "Pad %s has no buffers",
+          GST_PAD_NAME (qtpad->collect.pad));
+      continue;
+    }
     /* send last buffer */
     GST_DEBUG_OBJECT (qtmux, "Sending the last buffer for pad %s",
         GST_PAD_NAME (qtpad->collect.pad));
@@ -1821,8 +1900,7 @@ ftyp_error:
 static GstFlowReturn
 gst_qt_mux_pad_fragment_add_buffer (GstQTMux * qtmux, GstQTPad * pad,
     GstBuffer * buf, gboolean force, guint32 nsamples, gint64 dts,
-    guint32 delta, guint32 size, gboolean sync, gboolean do_pts,
-    gint64 pts_offset)
+    guint32 delta, guint32 size, gboolean sync, gint64 pts_offset)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -1896,7 +1974,7 @@ init:
   }
 
   /* add buffer and metadata */
-  atom_traf_add_samples (pad->traf, delta, size, sync, do_pts, pts_offset,
+  atom_traf_add_samples (pad->traf, delta, size, sync, pts_offset,
       pad->sync && sync);
   atom_array_append (&pad->fragment_buffers, buf, 256);
   pad->fragment_duration -= delta;
@@ -1914,12 +1992,50 @@ init:
   return ret;
 }
 
-/* check whether @a differs from @b by order of @magn */
-static gboolean inline
-gst_qtmux_check_difference (GstQTMux * qtmux, GstClockTime a,
-    GstClockTime b, GstClockTime magn)
+/* sigh, tiny list helpers to re-order stuff */
+static void
+gst_qt_mux_push_ts (GstQTMux * qtmux, GstQTPad * pad, GstClockTime ts)
 {
-  return ((a >= b) ? (a - b >= (magn >> 1)) : (b - a >= (magn >> 1)));
+  gint i;
+
+  for (i = 0; (i < QTMUX_NO_OF_TS) && (i < pad->ts_n_entries); i++) {
+    if (ts > pad->ts_entries[i])
+      break;
+  }
+  memmove (&pad->ts_entries[i + 1], &pad->ts_entries[i],
+      sizeof (GstClockTime) * (pad->ts_n_entries - i));
+  pad->ts_entries[i] = ts;
+  pad->ts_n_entries++;
+}
+
+/* takes ownership of @buf */
+static GstBuffer *
+gst_qt_mux_get_asc_buffer_ts (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
+{
+  const gint wrap = G_N_ELEMENTS (pad->buf_entries);
+  GstClockTime ts;
+
+  /* store buffer and ts, latter ordered */
+  if (buf) {
+    pad->buf_entries[pad->buf_tail++] = buf;
+    pad->buf_tail %= wrap;
+    gst_qt_mux_push_ts (qtmux, pad, GST_BUFFER_TIMESTAMP (buf));
+  }
+
+  if (pad->ts_n_entries && (!buf || pad->ts_n_entries >= QTMUX_NO_OF_TS)) {
+    ts = pad->ts_entries[--pad->ts_n_entries];
+    buf = pad->buf_entries[pad->buf_head];
+    pad->buf_entries[pad->buf_head++] = NULL;
+    pad->buf_head %= wrap;
+    buf = gst_buffer_make_metadata_writable (buf);
+    GST_BUFFER_TIMESTAMP (buf) = ts;
+    GST_DEBUG_OBJECT (qtmux, "next buffer uses reordered ts %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (ts));
+  } else {
+    buf = NULL;
+  }
+
+  return buf;
 }
 
 /*
@@ -1931,10 +2047,12 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   GstBuffer *last_buf = NULL;
   GstClockTime duration;
   guint nsamples, sample_size;
-  guint64 scaled_duration, chunk_offset;
-  gint64 last_dts;
+  guint64 chunk_offset;
+  gint64 last_dts, scaled_duration;
   gint64 pts_offset = 0;
   gboolean sync = FALSE, do_pts = FALSE;
+  gboolean drain = (buf == NULL);
+  GstFlowReturn ret;
 
   if (!pad->fourcc)
     goto not_negotiated;
@@ -1942,6 +2060,15 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   /* if this pad has a prepare function, call it */
   if (pad->prepare_buf_func != NULL) {
     buf = pad->prepare_buf_func (pad, buf, qtmux);
+  }
+
+again:
+  if (G_UNLIKELY (qtmux->dts_method == DTS_METHOD_REORDER)) {
+    buf = gst_qt_mux_get_asc_buffer_ts (qtmux, pad, buf);
+    if (!buf) {
+      GST_DEBUG_OBJECT (qtmux, "no reordered buffer yet");
+      return GST_FLOW_OK;
+    }
   }
 
   last_buf = pad->last_buf;
@@ -1963,27 +2090,34 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     gst_buffer_ref (last_buf);
 
   /* nasty heuristic mess to guestimate dealing with DTS/PTS,
-   * while also trying to stay close to input ts to preserve sync, so:
+   * while also trying to stay close to input ts to preserve sync,
+   * so in DTS_METHOD_DD:
    * - prefer using input ts where possible
-   * - if those detected out-of-order (*), and input duration available,
-   *   mark as out-of-order and fallback to duration
-   * - if in out-of-order, need to preserve sync between streams, and adding
-   *   durations might drift, so try to resync when we expect
-   *   input ts == (sum of durations), which is at some keyframe input frame.
+   * - if those detected out-of-order (*), mark as out-of-order
+   * - if in out-of-order, then
+   *   - if duration available, use that as delta
+   *     Also mind to preserve sync between streams, and adding
+   *     durations might drift, so try to resync when we expect
+   *     input ts == (sum of durations), which is at some keyframe input frame.
+   *   - if no duration available, we are actually in serious trouble and need
+   *     to hack around that, so we fail.
+   * To remedy failure, alternatively, in DTS_METHOD_REORDER:
+   * - collect some buffers and re-order timestamp,
+   *   then process the oldest buffer with smallest timestamps.
+   *   This should typically compensate for some codec's handywork with ts.
+   * ... but in case this makes ts end up where not expected:
+   * - keep each ts with its buffer and still keep a list of most recent X ts,
+   *   use the (ascending) minimum of those as DTS (and the difference as ts delta),
+   *   and use this DTS as a basis to obtain a (positive) CTS offset.
+   *   This should yield exact PTS == buffer ts, but it seems not all players
+   *   out there are aware of ctts pts ...
    *
-   * (*) if input ts out-of-order, or if ts differs from (sum of durations)
-   *     by an (approx) order-of-duration magnitude
+   * 0.11 Phew, can we (pretty) please please sort out DTS/PTS on buffers ...
    */
   if (G_LIKELY (buf) && !pad->is_out_of_order) {
     if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (last_buf) &&
             GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
-      if ((GST_BUFFER_TIMESTAMP (buf) < GST_BUFFER_TIMESTAMP (last_buf)) ||
-          (!GST_CLOCK_TIME_IS_VALID (pad->first_ts) &&
-              GST_BUFFER_DURATION_IS_VALID (last_buf) &&
-              gst_qtmux_check_difference (qtmux,
-                  GST_BUFFER_TIMESTAMP (last_buf) +
-                  GST_BUFFER_DURATION (last_buf), GST_BUFFER_TIMESTAMP (buf),
-                  GST_BUFFER_DURATION (last_buf)))) {
+      if ((GST_BUFFER_TIMESTAMP (buf) < GST_BUFFER_TIMESTAMP (last_buf))) {
         GST_DEBUG_OBJECT (qtmux, "detected out-of-order input");
         pad->is_out_of_order = TRUE;
       }
@@ -1995,9 +2129,16 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     }
   }
 
+  /* would have to be some unusual input, but not impossible */
+  if (G_UNLIKELY (qtmux->dts_method == DTS_METHOD_REORDER &&
+          pad->is_out_of_order)) {
+    goto no_order;
+  }
+
   /* fall back to duration if last buffer or
    * out-of-order (determined previously), otherwise use input ts */
-  if (buf == NULL || pad->is_out_of_order) {
+  if (buf == NULL ||
+      (pad->is_out_of_order && qtmux->dts_method == DTS_METHOD_DD)) {
     if (!GST_BUFFER_DURATION_IS_VALID (last_buf)) {
       /* be forgiving for some possibly last upstream flushed buffer */
       if (buf)
@@ -2010,9 +2151,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       /* avoid drift in sum timestamps,
        * so use input timestamp for suitable keyframe */
       if (buf && !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) &&
-          GST_BUFFER_TIMESTAMP (buf) >= pad->last_dts &&
-          !gst_qtmux_check_difference (qtmux, pad->last_dts + duration,
-              GST_BUFFER_TIMESTAMP (buf), duration)) {
+          GST_BUFFER_TIMESTAMP (buf) >= pad->last_dts) {
         GST_DEBUG_OBJECT (qtmux, "resyncing out-of-order input to ts; "
             "replacing %" GST_TIME_FORMAT " by %" GST_TIME_FORMAT,
             GST_TIME_ARGS (pad->last_dts + duration),
@@ -2020,8 +2159,37 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
         duration = GST_BUFFER_TIMESTAMP (buf) - pad->last_dts;
       }
     }
-  } else {
+  } else if (qtmux->dts_method != DTS_METHOD_ASC) {
     duration = GST_BUFFER_TIMESTAMP (buf) - GST_BUFFER_TIMESTAMP (last_buf);
+  } else {
+    GstClockTime ts;
+
+    g_assert (qtmux->dts_method == DTS_METHOD_ASC);
+    if (!qtmux->guess_pts)
+      goto need_pts;
+
+    /* add timestamp to queue; keeps in descending order */
+    gst_qt_mux_push_ts (qtmux, pad, GST_BUFFER_TIMESTAMP (last_buf));
+    /* chuck out smallest/last one if we have enough */
+    if (G_LIKELY (pad->ts_n_entries > QTMUX_NO_OF_TS))
+      pad->ts_n_entries--;
+    /* peek the now smallest timestamp */
+    ts = pad->ts_entries[pad->ts_n_entries - 1];
+    /* these tails are expected to be (strictly) ascending with
+     * large enough history */
+    GST_DEBUG_OBJECT (qtmux, "ASC method; base timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (ts));
+    if (ts >= pad->last_dts) {
+      duration = ts - pad->last_dts;
+    } else {
+      /* fallback to previous value, negative ct offset might handle */
+      GST_WARNING_OBJECT (qtmux, "unexpected decrease in timestamp");
+      duration = 0;
+    }
+    /* arrange for small non-zero duration/delta << expected frame time */
+    ts = gst_util_uint64_scale (10, GST_SECOND,
+        atom_trak_get_timescale (pad->trak));
+    duration = MAX (duration, ts);
   }
 
   gst_buffer_replace (&pad->last_buf, buf);
@@ -2142,8 +2310,8 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   /* note that a new chunk is started each time (not fancy but works) */
   if (qtmux->moov_recov_file) {
     if (!atoms_recov_write_trak_samples (qtmux->moov_recov_file, pad->trak,
-            nsamples, scaled_duration, sample_size, chunk_offset, sync, do_pts,
-            pts_offset)) {
+            nsamples, (gint32) scaled_duration, sample_size, chunk_offset, sync,
+            do_pts, pts_offset)) {
       GST_WARNING_OBJECT (qtmux, "Failed to write sample information to "
           "recovery file, disabling recovery");
       fclose (qtmux->moov_recov_file);
@@ -2156,14 +2324,22 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   if (qtmux->fragment_sequence) {
     /* ensure that always sync samples are marked as such */
-    return gst_qt_mux_pad_fragment_add_buffer (qtmux, pad, last_buf,
-        buf == NULL, nsamples, last_dts, scaled_duration, sample_size,
-        !pad->sync || sync, do_pts, pts_offset);
+    ret = gst_qt_mux_pad_fragment_add_buffer (qtmux, pad, last_buf,
+        buf == NULL, nsamples, last_dts, (gint32) scaled_duration, sample_size,
+        !pad->sync || sync, pts_offset);
   } else {
-    atom_trak_add_samples (pad->trak, nsamples, scaled_duration, sample_size,
-        chunk_offset, sync, do_pts, pts_offset);
-    return gst_qt_mux_send_buffer (qtmux, last_buf, &qtmux->mdat_size, TRUE);
+    atom_trak_add_samples (pad->trak, nsamples, (gint32) scaled_duration,
+        sample_size, chunk_offset, sync, pts_offset);
+    ret = gst_qt_mux_send_buffer (qtmux, last_buf, &qtmux->mdat_size, TRUE);
   }
+
+  if (G_UNLIKELY (drain && qtmux->dts_method == DTS_METHOD_REORDER &&
+          ret == GST_FLOW_OK)) {
+    buf = NULL;
+    goto again;
+  }
+
+  return ret;
 
   /* ERRORS */
 bail:
@@ -2177,6 +2353,18 @@ no_time:
   {
     GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
         ("Received buffer without timestamp/duration."));
+    goto bail;
+  }
+no_order:
+  {
+    GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+        ("DTS method failed to re-order timestamps."));
+    goto bail;
+  }
+need_pts:
+  {
+    GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+        ("Selected DTS method also needs PTS enabled."));
     goto bail;
   }
 fragmented_sample:
@@ -3068,9 +3256,6 @@ gst_qt_mux_get_property (GObject * object,
 
   GST_OBJECT_LOCK (qtmux);
   switch (prop_id) {
-    case PROP_LARGE_FILE:
-      g_value_set_boolean (value, qtmux->large_file);
-      break;
     case PROP_MOVIE_TIMESCALE:
       g_value_set_uint (value, qtmux->timescale);
       break;
@@ -3079,6 +3264,9 @@ gst_qt_mux_get_property (GObject * object,
       break;
     case PROP_DO_CTTS:
       g_value_set_boolean (value, qtmux->guess_pts);
+      break;
+    case PROP_DTS_METHOD:
+      g_value_set_enum (value, qtmux->dts_method);
       break;
     case PROP_FAST_START:
       g_value_set_boolean (value, qtmux->fast_start);
@@ -3123,9 +3311,6 @@ gst_qt_mux_set_property (GObject * object,
 
   GST_OBJECT_LOCK (qtmux);
   switch (prop_id) {
-    case PROP_LARGE_FILE:
-      qtmux->large_file = g_value_get_boolean (value);
-      break;
     case PROP_MOVIE_TIMESCALE:
       qtmux->timescale = g_value_get_uint (value);
       break;
@@ -3134,6 +3319,9 @@ gst_qt_mux_set_property (GObject * object,
       break;
     case PROP_DO_CTTS:
       qtmux->guess_pts = g_value_get_boolean (value);
+      break;
+    case PROP_DTS_METHOD:
+      qtmux->dts_method = g_value_get_enum (value);
       break;
     case PROP_FAST_START:
       qtmux->fast_start = g_value_get_boolean (value);

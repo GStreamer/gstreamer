@@ -804,14 +804,6 @@ gst_kate_spu_encode_spu (GstKateDec * kd, const kate_event * ev)
   bytes[nbytes++] =
       ((kp->colors[palette[1]].a / 17) << 4) | (kp->colors[palette[0]].a / 17);
 
-#if 0
-  // move to top left - avoids a crash in dvdspu when overlaying on a small video :/
-  right -= left;
-  bottom -= top;
-  left = 0;
-  top = 0;
-#endif
-
   CHKBUFSPC (7 * 2);
   bytes[nbytes++] = SPU_CMD_SET_DAREA;
   bytes[nbytes++] = left >> 4;

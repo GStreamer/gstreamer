@@ -3,7 +3,7 @@
   <description>Collection of elements that may or may not be useful for debugging</description>
   <filename>../../gst/debugutils/.libs/libgstdebugutilsbad.so</filename>
   <basename>libgstdebugutilsbad.so</basename>
-  <version>0.10.20.1</version>
+  <version>0.10.21.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -14,6 +14,27 @@
       <longname>Checksum sink</longname>
       <class>Debug/Sink</class>
       <description>Calculates a checksum for buffers</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>chopmydata</name>
+      <longname>FIXME</longname>
+      <class>Generic</class>
+      <description>FIXME</description>
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>

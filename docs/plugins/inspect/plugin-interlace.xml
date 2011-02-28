@@ -3,7 +3,7 @@
   <description>Create an interlaced video stream</description>
   <filename>../../gst/interlace/.libs/libgstinterlace.so</filename>
   <basename>libgstinterlace.so</basename>
-  <version>0.10.20.1</version>
+  <version>0.10.21.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -11,10 +11,10 @@
   <elements>
     <element>
       <name>interlace</name>
-      <longname>Inverse Telecine filter</longname>
+      <longname>Interlace filter</longname>
       <class>Filter/Video</class>
-      <description>Detects and reconstructs progressive content from telecine video</description>
-      <author>Entropy Wave &lt;ds@entropywave.com&gt;</author>
+      <description>Creates an interlaced video from progressive frames</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

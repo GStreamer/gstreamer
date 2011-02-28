@@ -86,7 +86,8 @@ typedef enum _QueueState {
   HAS_FRAME_OR_STOP_REQUEST,
 } QueueState;
 
-static GstPushSrcClass * parent_class;
+GST_BOILERPLATE (GstQTKitVideoSrc, gst_qtkit_video_src, GstPushSrc,
+    GST_TYPE_PUSH_SRC);
 
 @interface GstQTKitVideoSrcImpl : NSObject {
   GstElement *element;
@@ -241,8 +242,11 @@ openFailed:
   GstStructure *s;
   NSDictionary *outputAttrs;
   BOOL success;
+  NSRunLoop *mainRunLoop;
 
   g_assert (device != nil);
+
+  GST_INFO ("setting up session");
 
   s = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (s, "width", &width);
@@ -275,6 +279,16 @@ openFailed:
 
   [output setDelegate:self];
   [session startRunning];
+
+  mainRunLoop = [NSRunLoop mainRunLoop];
+  if ([mainRunLoop currentMode] == nil) {
+    /* QTCaptureSession::addInput and QTCaptureSession::addOutput call
+     * NSObject::performSelectorOnMainThread internally. If the mainRunLoop is
+     * not running we need to run it for a while for those methods to complete
+     */
+    GST_INFO ("mainRunLoop not running");
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
+  }
 
   return YES;
 }
@@ -340,7 +354,7 @@ openFailed:
 {
   [queueLock lock];
   stopRequest = NO;
-  [queueLock unlock];
+  [queueLock unlockWithCondition:NO_FRAMES];
 
   return YES;
 }
@@ -373,6 +387,8 @@ openFailed:
     [queueLock unlock];
     return;
   }
+
+  GST_INFO ("got new frame");
 
   if ([queue count] == FRAME_QUEUE_SIZE)
     [queue removeLastObject];
@@ -450,9 +466,6 @@ enum
   PROP_0,
   PROP_DEVICE_INDEX
 };
-
-GST_BOILERPLATE (GstQTKitVideoSrc, gst_qtkit_video_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC);
 
 static void gst_qtkit_video_src_finalize (GObject * obj);
 static void gst_qtkit_video_src_get_property (GObject * object, guint prop_id,

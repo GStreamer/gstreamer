@@ -37,6 +37,7 @@ gst_cv_api_class_init (GstCVApiClass * klass)
 }
 
 #define SYM_SPEC(name) GST_DYN_SYM_SPEC (GstCVApi, name)
+#define SYM_SPEC_OPTIONAL(name) GST_DYN_SYM_SPEC_OPTIONAL (GstCVApi, name)
 
 GstCVApi *
 gst_cv_api_obtain (GError ** error)
@@ -53,7 +54,7 @@ gst_cv_api_obtain (GError ** error)
     SYM_SPEC (CVPixelBufferGetBytesPerRowOfPlane),
     SYM_SPEC (CVPixelBufferGetHeight),
     SYM_SPEC (CVPixelBufferGetHeightOfPlane),
-    SYM_SPEC (CVPixelBufferGetIOSurface),
+    SYM_SPEC_OPTIONAL (CVPixelBufferGetIOSurface),
     SYM_SPEC (CVPixelBufferGetPlaneCount),
     SYM_SPEC (CVPixelBufferGetTypeID),
     SYM_SPEC (CVPixelBufferIsPlanar),

@@ -20,7 +20,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #include <gst/gst.h>
@@ -77,6 +77,8 @@ set_autoconvert_factories (GstElement * autoconvert)
   }
 
   g_object_set (G_OBJECT (autoconvert), "factories", factories, NULL);
+
+  g_list_free (factories);
 }
 
 typedef struct

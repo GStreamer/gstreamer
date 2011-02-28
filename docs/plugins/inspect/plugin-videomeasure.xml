@@ -3,7 +3,7 @@
   <description>Various video measurers</description>
   <filename>../../gst/videomeasure/.libs/libgstvideomeasure.so</filename>
   <basename>libgstvideomeasure.so</basename>
-  <version>0.10.20.1</version>
+  <version>0.10.21.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -33,7 +33,7 @@
     <element>
       <name>ssim</name>
       <longname>SSim</longname>
-      <class>Filter/Converter/Video</class>
+      <class>Filter/Analyzer/Video</class>
       <description>Calculate Y-SSIM for n+2 YUV video streams</description>
       <author>Руслан Ижбулатов &lt;lrn1986 _at_ gmail _dot_ com&gt;</author>
       <pads>

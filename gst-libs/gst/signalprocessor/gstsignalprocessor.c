@@ -115,6 +115,8 @@ gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
       "name", name, "name-template", name,
       "direction", direction, "presence", GST_PAD_ALWAYS, "caps", caps, NULL);
 
+  gst_caps_unref (caps);
+
   GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (new)->index = index;
   GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (new)->channels = channels;
 
