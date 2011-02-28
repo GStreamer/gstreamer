@@ -148,8 +148,8 @@ plugin_init (GstPlugin * plugin)
 #endif
 #if 0
   gst_ffmpegcsp_register (plugin);
-#endif
   gst_ffmpegaudioresample_register (plugin);
+#endif
 
   register_protocol (&gstreamer_protocol);
   register_protocol (&gstpipe_protocol);
