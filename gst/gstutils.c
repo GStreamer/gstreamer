@@ -1554,7 +1554,7 @@ pad_link_maybe_ghosting (GstPad * src, GstPad * sink, GstPadLinkCheck flags)
  * is the same as calling gst_element_link_pads() and the recommended way of
  * linking pads with safety checks applied.
  *
- * This is a convinience function for gst_pad_link_full().
+ * This is a convenience function for gst_pad_link_full().
  *
  * Returns: TRUE if the pads could be linked, FALSE otherwise.
  *
@@ -2015,7 +2015,7 @@ gst_element_link_filtered (GstElement * src, GstElement * dest,
  *
  * Unlinks the two named pads of the source and destination elements.
  *
- * This is a convinience function for gst_pad_unlink().
+ * This is a convenience function for gst_pad_unlink().
  */
 void
 gst_element_unlink_pads (GstElement * src, const gchar * srcpadname,

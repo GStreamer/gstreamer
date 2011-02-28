@@ -123,7 +123,7 @@ gboolean 		gst_registry_xml_read_cache 	(GstRegistry * registry, const char *loc
 gboolean 		gst_registry_xml_write_cache 	(GstRegistry * registry, const char *location);
 #endif
 
-/* convinience defines for the default registry */
+/* convenience defines for the default registry */
 
 /**
  * gst_default_registry_add_plugin:

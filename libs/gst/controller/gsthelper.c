@@ -22,7 +22,7 @@
 
 /**
  * SECTION:gstcontrollergobject
- * @short_description: #GObject convinience methods for using dynamic properties
+ * @short_description: #GObject convenience methods for using dynamic properties
  * @see_also: #GstController
  *
  * These methods allow to use some #GstController functionallity directly from
