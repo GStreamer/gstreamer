@@ -22,7 +22,7 @@ A wide range of video and audio decoders, encoders, and filters are included.
  <category></category>
  <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-plugins-base" />
  <screenshots></screenshots>
- <mailing-list rdf:resource="http://lists.sourceforge.net/lists/listinfo/gstreamer-devel/" />
+ <mailing-list rdf:resource="http://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
  <programming-language>C</programming-language>
  <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl"/>
  <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
@@ -33,6 +33,17 @@ A wide range of video and audio decoders, encoders, and filters are included.
      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-base"/>
    </GitRepository>
  </repository> 
+
+ <release>
+  <Version>
+   <revision>0.10.32</revision>
+   <branch>0.10</branch>
+   <name>Your Life You Like It Well</name>
+   <created>2011-01-21</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.32.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.32.tar.gz" />
+  </Version>
+ </release>
 
  <release>
   <Version>

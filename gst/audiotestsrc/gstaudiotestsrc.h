@@ -127,6 +127,7 @@ struct _GstAudioTestSrc {
   gboolean reverse;                  /* play backwards */
   
   /* waveform specific context data */
+  GRand *gen;               /* random number generator */
   gdouble accumulator;			/* phase angle */
   GstPinkNoise pink;
   gdouble wave_table[1024];

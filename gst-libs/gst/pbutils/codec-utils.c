@@ -25,9 +25,8 @@
  *
  * <refsect2>
  * <para>
- * Provides numerous codec-specific ulility functions such as functions to
- * provide the codec profile and level in human-readable string form from
- * header data.
+ * Provides codec-specific ulility functions such as functions to provide the
+ * codec profile and level in human-readable string form from header data.
  * </para>
  * </refsect2>
  */
@@ -87,7 +86,7 @@ gst_codec_utils_aac_get_sample_rate_from_index (guint sr_idx)
  * gst_codec_utils_aac_get_profile:
  * @audio_config: a pointer to the AudioSpecificConfig as specified in the
  *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1 (see
- *                below for a more details).
+ *                gst_codec_utils_aac_get_level() for a more details).
  * @len: Length of @audio_config in bytes
  *
  * Returns the profile of the given AAC stream as a string. The profile is
@@ -98,7 +97,7 @@ gst_codec_utils_aac_get_sample_rate_from_index (guint sr_idx)
  * HE-AAC support has not yet been implemented.
  * </note>
  *
- * Returns: The profile as a const string and NULL if the profile could not be
+ * Returns: The profile as a const string and %NULL if the profile could not be
  * determined.
  *
  * Since: 0.10.31
@@ -134,8 +133,7 @@ gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len)
 /**
  * gst_codec_utils_aac_get_level:
  * @audio_config: a pointer to the AudioSpecificConfig as specified in the
- *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1 (see
- *                below for a more detailed description).
+ *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1.
  * @len: Length of @audio_config in bytes
  *
  * Determines the level of a stream as defined in ISO/IEC 14496-3. For AAC LC
@@ -145,17 +143,25 @@ gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len)
  * The @audio_config parameter follows the following format, starting from the
  * most significant bit of the first byte:
  *
- * Bit 0:4 contains the AudioObjectType
- * Bit 5:8 contains the sample frequency index (if this is 0xf, then the next
- *         24 bits define the actual sample frequency, and subsequent fields
- *         are appropriately shifted).
- * Bit 9:12 contains the channel configuration
+ * <itemizedlist>
+ *   <listitem><para>
+ *     Bit 0:4 contains the AudioObjectType
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Bit 5:8 contains the sample frequency index (if this is 0xf, then the
+ *             next 24 bits define the actual sample frequency, and subsequent
+ *             fields are appropriately shifted).
+ *    </para></listitem>
+ *   <listitem><para>
+ *     Bit 9:12 contains the channel configuration
+ *   </para></listitem>
+ * </itemizedlist>
  *
  * <note>
  * HE-AAC support has not yet been implemented.
  * </note>
  *
- * Returns: The level as a const string and NULL if the level could not be
+ * Returns: The level as a const string and %NULL if the level could not be
  * determined.
  *
  * Since: 0.10.31
@@ -325,12 +331,12 @@ gst_codec_utils_aac_get_level (const guint8 * audio_config, guint len)
  * @len: Length of @audio_config in bytes
  *
  * Sets the level and profile on @caps if it can be determined from
- * @audio_config. See #gst_codec_utils_aac_get_level() and
+ * @audio_config. See gst_codec_utils_aac_get_level() and
  * gst_codec_utils_aac_get_profile() for more details on the parameters.
  * @caps must be audio/mpeg caps with an "mpegversion" field of either 2 or 4.
  * If mpegversion is 4, the "base-profile" field is also set in @caps.
  *
- * Returns: TRUE if the level and profile could be set, FALSE otherwise.
+ * Returns: %TRUE if the level and profile could be set, %FALSE otherwise.
  *
  * Since: 0.10.31
  */
@@ -386,16 +392,18 @@ gst_codec_utils_aac_caps_set_level_and_profile (GstCaps * caps,
  * as a bitstream here, with bit 0 being the most significant bit of the first
  * byte.
  *
- * Bit 0:7   - Profile indication
- * Bit 8     - constraint_set0_flag
- * Bit 9     - constraint_set1_flag
- * Bit 10    - constraint_set2_flag
- * Bit 11    - constraint_set3_flag
- * Bit 12    - constraint_set3_flag
- * Bit 13:15 - Reserved
- * Bit 16:24 - Level indication
+ * <itemizedlist>
+ * <listitem><para>Bit 0:7   - Profile indication</para></listitem>
+ * <listitem><para>Bit 8     - constraint_set0_flag</para></listitem>
+ * <listitem><para>Bit 9     - constraint_set1_flag</para></listitem>
+ * <listitem><para>Bit 10    - constraint_set2_flag</para></listitem>
+ * <listitem><para>Bit 11    - constraint_set3_flag</para></listitem>
+ * <listitem><para>Bit 12    - constraint_set3_flag</para></listitem>
+ * <listitem><para>Bit 13:15 - Reserved</para></listitem>
+ * <listitem><para>Bit 16:24 - Level indication</para></listitem>
+ * </itemizedlist>
  *
- * Returns: The profile as a const string, or NULL if there is an error.
+ * Returns: The profile as a const string, or %NULL if there is an error.
  *
  * Since: 0.10.31
  */
@@ -466,9 +474,9 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
  *
  * Converts the level indication (level_idc) in the stream's
  * sequence parameter set into a string. The SPS is expected to have the
- * same format as for @gst_codec_utils_aac_get_profile().
+ * same format as for gst_codec_utils_h264_get_profile().
  *
- * Returns: The level as a const string, or NULL if there is an error.
+ * Returns: The level as a const string, or %NULL if there is an error.
  *
  * Since: 0.10.31
  */
@@ -525,10 +533,10 @@ gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
  * @len: Length of the data available in @sps.
  *
  * Sets the level and profile in @caps if it can be determined from @sps. See
- * #gst_codec_utils_h264_get_level() and #gst_codec_utils_h264_get_profile()
+ * gst_codec_utils_h264_get_level() and gst_codec_utils_h264_get_profile()
  * for more details on the parameters.
  *
- * Returns: TRUE if the level and profile could be set, FALSE otherwise.
+ * Returns: %TRUE if the level and profile could be set, %FALSE otherwise.
  *
  * Since: 0.10.31
  */
@@ -724,11 +732,11 @@ gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
  * @len: Length of the data available in @sps.
  *
  * Sets the level and profile in @caps if it can be determined from
- * @vis_obj_seq. See #gst_codec_utils_mpeg4video_get_level() and
- * #gst_codec_utils_mpeg4video_get_profile() for more details on the
+ * @vis_obj_seq. See gst_codec_utils_mpeg4video_get_level() and
+ * gst_codec_utils_mpeg4video_get_profile() for more details on the
  * parameters.
  *
- * Returns: TRUE if the level and profile could be set, FALSE otherwise.
+ * Returns: %TRUE if the level and profile could be set, %FALSE otherwise.
  *
  * Since: 0.10.31
  */

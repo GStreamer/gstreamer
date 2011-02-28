@@ -15,12 +15,14 @@ libgstpango_la_SOURCES = \
 libgstpango_la_CFLAGS = \
         $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
+	$(GST_CONTROLLER_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(PANGO_CFLAGS)
 libgstpango_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_MAJORMINOR).la \
 	$(GST_BASE_LIBS) \
+	$(GST_CONTROLLER_LIBS) \
 	$(GST_LIBS) \
 	$(PANGO_LIBS)
 libgstpango_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

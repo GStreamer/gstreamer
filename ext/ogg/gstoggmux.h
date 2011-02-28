@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
+#include "gstoggstream.h"
 
 G_BEGIN_DECLS
 
@@ -49,13 +50,14 @@ typedef struct
 {
   GstCollectData collect;       /* we extend the CollectData */
 
+  GstOggStream map;
+  gboolean have_type;
+
   /* These two buffers make a very simple queue - they enter as 'next_buffer'
    * and (usually) leave as 'buffer', except at EOS, when buffer will be NULL */
   GstBuffer *buffer;            /* the first waiting buffer for the pad */
   GstBuffer *next_buffer;       /* the second waiting buffer for the pad */
 
-  gint serial;
-  ogg_stream_state stream;
   gint64 packetno;              /* number of next packet */
   gint64 pageno;                /* number of next page */
   guint64 duration;             /* duration of current page */
@@ -71,13 +73,12 @@ typedef struct
 
   GstOggPadState state;         /* state of the pad */
 
-  GList *headers;
-
   GQueue *pagebuffers;          /* List of pages in buffers ready for pushing */
 
   gboolean new_page;            /* starting a new page */
   gboolean first_delta;         /* was the first packet in the page a delta */
   gboolean prev_delta;          /* was the previous buffer a delta frame */
+  gboolean data_pushed;         /* whether we pushed data already */
 
   GstPadEventFunction collect_event;
 

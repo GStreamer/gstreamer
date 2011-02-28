@@ -37,9 +37,9 @@ static GstBufferClass *parent_class;
 GType
 gst_app_buffer_get_type (void)
 {
-  static GType _gst_app_buffer_type;
+  static volatile gsize app_buffer_type = 0;
 
-  if (G_UNLIKELY (_gst_app_buffer_type == 0)) {
+  if (g_once_init_enter (&app_buffer_type)) {
     static const GTypeInfo app_buffer_info = {
       sizeof (GstBufferClass),
       NULL,
@@ -52,10 +52,12 @@ gst_app_buffer_get_type (void)
       (GInstanceInitFunc) gst_app_buffer_init,
       NULL
     };
-    _gst_app_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstAppBuffer", &app_buffer_info, 0);
+    GType tmp = g_type_register_static (GST_TYPE_BUFFER, "GstAppBuffer",
+        &app_buffer_info, 0);
+    g_once_init_leave (&app_buffer_type, tmp);
   }
-  return _gst_app_buffer_type;
+
+  return (GType) app_buffer_type;
 }
 
 static void

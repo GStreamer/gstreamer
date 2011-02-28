@@ -31,3 +31,4 @@ EXPORTS
 	gst_app_src_set_max_bytes
 	gst_app_src_set_size
 	gst_app_src_set_stream_type
+	gst_app_stream_type_get_type

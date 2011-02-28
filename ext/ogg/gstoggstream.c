@@ -255,6 +255,11 @@ granule_to_granulepos_default (GstOggStream * pad, gint64 granule,
   gint64 keyoffset;
 
   if (pad->granuleshift != 0) {
+    /* If we don't know where the previous keyframe is yet, assume it is
+       at 0 or 1, depending on bitstream version. If nothing else, this
+       avoids getting negative granpos back. */
+    if (keyframe_granule < 0)
+      keyframe_granule = pad->theora_has_zero_keyoffset ? 0 : 1;
     keyoffset = granule - keyframe_granule;
     return (keyframe_granule << pad->granuleshift) | keyoffset;
   } else {
@@ -342,9 +347,14 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
   guint w, h, par_d, par_n;
+  guint8 vmaj, vmin, vrev;
 
-  w = GST_READ_UINT24_BE (data + 14) & 0xFFFFF0;
-  h = GST_READ_UINT24_BE (data + 17) & 0xFFFFF0;
+  vmaj = data[7];
+  vmin = data[8];
+  vrev = data[9];
+
+  w = GST_READ_UINT24_BE (data + 14) & 0xFFFFFF;
+  h = GST_READ_UINT24_BE (data + 17) & 0xFFFFFF;
 
   pad->granulerate_n = GST_READ_UINT32_BE (data + 22);
   pad->granulerate_d = GST_READ_UINT32_BE (data + 26);
@@ -370,6 +380,12 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
     GST_WARNING ("frame rate %d/%d", pad->granulerate_n, pad->granulerate_d);
     return FALSE;
   }
+
+  /* The interpretation of the granule position has changed with 3.2.1.
+     The granule is now made from the number of frames encoded, rather than
+     the index of the frame being encoded - so there is a difference of 1. */
+  pad->theora_has_zero_keyoffset =
+      ((vmaj << 16) | (vmin << 8) | vrev) < 0x030201;
 
   pad->caps = gst_caps_new_simple ("video/x-theora", NULL);
 
@@ -398,9 +414,6 @@ granulepos_to_granule_theora (GstOggStream * pad, gint64 granulepos)
   if (pad->granuleshift != 0) {
     keyindex = granulepos >> pad->granuleshift;
     keyoffset = granulepos - (keyindex << pad->granuleshift);
-    if (keyoffset == 0) {
-      pad->theora_has_zero_keyoffset = TRUE;
-    }
     if (pad->theora_has_zero_keyoffset) {
       keyoffset++;
     }
@@ -1732,6 +1745,83 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   return TRUE;
 }
 
+static gint64
+packet_duration_kate (GstOggStream * pad, ogg_packet * packet)
+{
+  gint64 duration;
+
+  if (packet->bytes < 1)
+    return 0;
+
+  switch (packet->packet[0]) {
+    case 0x00:                 /* text data */
+      if (packet->bytes < 1 + 8 * 2) {
+        duration = 0;
+      } else {
+        duration = GST_READ_UINT64_LE (packet->packet + 1 + 8);
+        if (duration < 0)
+          duration = 0;
+      }
+      break;
+    default:
+      duration = GST_CLOCK_TIME_NONE;
+      break;
+  }
+
+  return duration;
+}
+
+static void
+extract_tags_kate (GstOggStream * pad, ogg_packet * packet)
+{
+  GstTagList *list = NULL;
+
+  if (packet->bytes <= 0)
+    return;
+
+  switch (packet->packet[0]) {
+    case 0x80:{
+      const gchar *canonical;
+      char language[16];
+
+      if (packet->bytes < 64) {
+        GST_WARNING ("Kate ID header packet is less than 64 bytes, ignored");
+        break;
+      }
+
+      /* the language tag is 16 bytes at offset 32, ensure NUL terminator */
+      memcpy (language, packet->packet + 32, 16);
+      language[15] = 0;
+
+      /* language is an ISO 639-1 code or RFC 3066 language code, we
+       * truncate to ISO 639-1 */
+      g_strdelimit (language, NULL, '\0');
+      canonical = gst_tag_get_language_code_iso_639_1 (language);
+      if (canonical) {
+        list = gst_tag_list_new_full (GST_TAG_LANGUAGE_CODE, canonical, NULL);
+      } else {
+        GST_WARNING ("Unknown or invalid language code %s, ignored", language);
+      }
+      break;
+    }
+    case 0x81:
+      tag_list_from_vorbiscomment_packet (packet,
+          (const guint8 *) "\201kate\0\0\0\0", 9, &list);
+      break;
+    default:
+      break;
+  }
+
+  if (list) {
+    if (pad->taglist) {
+      /* ensure the comment packet cannot override the category/language
+         from the identification header */
+      gst_tag_list_insert (pad->taglist, list, GST_TAG_MERGE_KEEP_ALL);
+    } else
+      pad->taglist = list;
+  }
+}
+
 
 /* *INDENT-OFF* */
 /* indent hates our freedoms */
@@ -1875,9 +1965,9 @@ const GstOggMap mappers[] = {
     granule_to_granulepos_default,
     NULL,
     is_header_count,
+    packet_duration_kate,
     NULL,
-    NULL,
-    NULL
+    extract_tags_kate
   },
   {
     "BBCD\0", 5, 13,

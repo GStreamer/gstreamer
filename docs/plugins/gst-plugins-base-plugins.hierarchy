@@ -56,6 +56,7 @@ GObject
       GstBin
         GstDecodeBin
         GstDecodeBin2
+        GstEncodeBin
         GstPipeline
           GstPlayBaseBin
             GstPlayBin
@@ -73,7 +74,6 @@ GObject
         GstOgmAudioParse
         GstOgmTextParse
         GstOgmVideoParse
-      GstPlaybin2InputSelector
       GstSsaParse
       GstStreamSelector
       GstSubParse
@@ -85,12 +85,20 @@ GObject
       GstTheoraEnc
       GstTheoraParse
       GstVideoRate
+      GstVisual
+        GstVisualbumpscope
+        GstVisualcorona
+        GstVisualinfinite
+        GstVisualjakdaw
+        GstVisualjess
+        GstVisuallv_analyzer
+        GstVisuallv_scope
+        GstVisualoinksie
       GstVorbisDec
       GstVorbisEnc
       GstVorbisParse
         GstVorbisTag
     GstPad
-      GstPlaybin2SelectorPad
     GstPadTemplate
     GstPlugin
     GstPluginFeature

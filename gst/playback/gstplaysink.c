@@ -1961,6 +1961,8 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
        * re-generate the chain */
       if (chain->volume == NULL) {
         GST_DEBUG_OBJECT (playsink, "no existing volume element to re-use");
+        /* undo background state change done earlier */
+        gst_element_set_state (chain->sink, GST_STATE_NULL);
         return FALSE;
       }
 
@@ -2217,6 +2219,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
     if (!playsink->videochain)
       playsink->videochain = gen_video_chain (playsink, raw, async);
+    if (!playsink->videochain)
+      goto no_chain;
 
     if (!playsink->video_sinkpad_stream_synchronizer) {
       GstIterator *it;
@@ -2241,6 +2245,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       if (!playsink->videodeinterlacechain)
         playsink->videodeinterlacechain =
             gen_video_deinterlace_chain (playsink);
+      if (!playsink->videodeinterlacechain)
+        goto no_chain;
 
       GST_DEBUG_OBJECT (playsink, "adding video deinterlace chain");
 
@@ -2574,6 +2580,15 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   GST_PLAY_SINK_UNLOCK (playsink);
 
   return TRUE;
+
+  /* ERRORS */
+no_chain:
+  {
+    /* gen_ chain already posted error */
+    GST_DEBUG_OBJECT (playsink, "failed to setup chain");
+    GST_PLAY_SINK_UNLOCK (playsink);
+    return FALSE;
+  }
 }
 
 /**
@@ -3256,6 +3271,21 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
       }
       do_async_done (playsink);
+      /* when going to READY, keep elements around as long as possible,
+       * so they may be re-used faster next time/url around.
+       * when really going to NULL, clean up everything completely. */
+      if (transition == GST_STATE_CHANGE_READY_TO_NULL) {
+        free_chain ((GstPlayChain *) playsink->videodeinterlacechain);
+        playsink->videodeinterlacechain = NULL;
+        free_chain ((GstPlayChain *) playsink->videochain);
+        playsink->videochain = NULL;
+        free_chain ((GstPlayChain *) playsink->audiochain);
+        playsink->audiochain = NULL;
+        free_chain ((GstPlayChain *) playsink->vischain);
+        playsink->vischain = NULL;
+        free_chain ((GstPlayChain *) playsink->textchain);
+        playsink->textchain = NULL;
+      }
       break;
     default:
       break;

@@ -590,12 +590,15 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::new-decoded-pad:
-   * @bin: The decodebin
-   * @pad: The newly created pad
+   * @bin: The decodebin.
+   * @pad: The newly created pad.
    * @islast: #TRUE if this is the last pad to be added. Deprecated.
    *
    * This signal gets emitted as soon as a new pad of the same type as one of
    * the valid 'raw' types is added.
+   *
+   * Deprecated: Use GstElement::pad-added instead of this signal.
+   *
    */
   gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD] =
       g_signal_new ("new-decoded-pad", G_TYPE_FROM_CLASS (klass),
@@ -606,10 +609,13 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::removed-decoded-pad:
-   * @bin: The decodebin
-   * @pad: The pad that was removed
+   * @bin: The decodebin.
+   * @pad: The pad that was removed.
    *
    * This signal is emitted when a 'final' caps pad has been removed.
+   *
+   * Deprecated: Use GstElement::pad-removed instead of this signal.
+   *
    */
   gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD] =
       g_signal_new ("removed-decoded-pad", G_TYPE_FROM_CLASS (klass),
@@ -619,7 +625,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::unknown-type:
-   * @bin: The decodebin
+   * @bin: The decodebin.
    * @pad: The new pad containing caps that cannot be resolved to a 'final'
    *       stream type.
    * @caps: The #GstCaps of the pad that cannot be resolved.
@@ -635,12 +641,18 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-continue:
-   * @bin: The decodebin
+   * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
    * This signal is emitted whenever decodebin2 finds a new stream. It is
    * emitted before looking for any elements that can handle that stream.
+   *
+   * <note>
+   *   Invocation of signal handlers stops after the first signal handler
+   *   returns #FALSE. Signal handlers are invoked in the order they were
+   *   connected in.
+   * </note>
    *
    * Returns: #TRUE if you wish decodebin2 to look for elements that can
    * handle the given @caps. If #FALSE, those caps will be considered as
@@ -655,18 +667,24 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-factories:
-   * @bin: The decodebin
+   * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
    * This function is emited when an array of possible factories for @caps on
    * @pad is needed. Decodebin2 will by default return an array with all
-   * compatible factories, sorted by rank. 
+   * compatible factories, sorted by rank.
    *
    * If this function returns NULL, @pad will be exposed as a final caps.
    *
-   * If this function returns an empty array, the pad will be considered as 
-   * having an unhandled type media type.
+   * If this function returns an empty array, the pad will be considered as
+   * having an unhandled type media type. 
+   *
+   * <note>
+   *   Only the signal handler that is connected first will ever by invoked.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: a #GValueArray* with a list of factories to try. The factories are
    * by default tried in the returned order or based on the index returned by
@@ -681,7 +699,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-sort:
-   * @bin: The decodebin
+   * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
    * @factories: A #GValueArray of possible #GstElementFactory to use.
@@ -691,7 +709,16 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * the application to perform additional sorting or filtering on the element
    * factory array.
    *
-   * The callee should copy and modify @factories.
+   * The callee should copy and modify @factories or return #NULL if the
+   * order should not change.
+   *
+   * <note>
+   *   Invocation of signal handlers stops after one signal handler has
+   *   returned something else than #NULL. Signal handlers are invoked in
+   *   the order they were connected in.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: A new sorted array of #GstElementFactory objects.
    */
@@ -704,10 +731,10 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-select:
-   * @bin: The decodebin
+   * @bin: The decodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
-   * @factory: A #GstElementFactory to use
+   * @factory: A #GstElementFactory to use.
    *
    * This signal is emitted once decodebin2 has found all the possible
    * #GstElementFactory that can be used to handle the given @caps. For each of
@@ -724,6 +751,12 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * A value of #GST_AUTOPLUG_SELECT_SKIP will skip @factory and move to the
    * next factory.
+   *
+   * <note>
+   *   Only the signal handler that is connected first will ever by invoked.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: a #GST_TYPE_AUTOPLUG_SELECT_RESULT that indicates the required
    * operation. the default handler will always return
@@ -861,7 +894,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * If set to %FALSE, then only the streams that can be decoded to the final
    * caps (see 'caps' property) will have a pad exposed. Streams that do not
    * match those caps but could have been decoded will not have decoder plugged
-   * in internally and will not have a pad exposed. 
+   * in internally and will not have a pad exposed.
    *
    * Since: 0.10.30
    */
@@ -1275,14 +1308,7 @@ static GValueArray *
 gst_decode_bin_autoplug_sort (GstElement * element, GstPad * pad,
     GstCaps * caps, GValueArray * factories)
 {
-  GValueArray *result;
-
-  result = g_value_array_copy (factories);
-
-  GST_DEBUG_OBJECT (element, "autoplug-sort returns %p", result);
-
-  /* return input */
-  return result;
+  return NULL;
 }
 
 static GstAutoplugSelectResult
@@ -1356,6 +1382,8 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     GstDecodeGroup *group;
     GstDecodeChain *oldchain = chain;
 
+    /* we are adding a new pad for a demuxer (see is_demuxer_element(),
+     * start a new chain for it */
     CHAIN_MUTEX_LOCK (oldchain);
     group = gst_decode_chain_get_current_group (chain);
     if (group) {
@@ -1426,21 +1454,22 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   g_signal_emit (G_OBJECT (dbin),
       gst_decode_bin_signals[SIGNAL_AUTOPLUG_SORT], 0, dpad, caps, factories,
       &result);
-  g_value_array_free (factories);
-  factories = result;
+  if (result) {
+    g_value_array_free (factories);
+    factories = result;
+  }
 
   /* At this point we have a potential decoder, but we might not need it
    * if it doesn't match the output caps  */
   if (!dbin->expose_allstreams) {
     guint i;
-    GstCaps *rawcaps = gst_static_caps_get (&default_raw_caps);
     const GList *tmps;
     gboolean dontuse = FALSE;
 
     GST_DEBUG ("Checking if we can abort early");
 
     /* 1.e Do an early check to see if the candidates are potential decoders, but
-     * due to the fact that they decode to a mediatype that is not final we don't 
+     * due to the fact that they decode to a mediatype that is not final we don't
      * need them */
 
     for (i = 0; i < factories->n_values && !dontuse; i++) {
@@ -1462,13 +1491,21 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
           if (st->direction != GST_PAD_SRC)
             continue;
           tcaps = gst_static_pad_template_get_caps (st);
-          if (!gst_caps_can_intersect (tcaps, dbin->caps))
+
+          apcontinue = TRUE;
+
+          /* Emit autoplug-continue to see if the caps are considered to be raw caps */
+          g_signal_emit (G_OBJECT (dbin),
+              gst_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE], 0, dpad, tcaps,
+              &apcontinue);
+
+          /* If autoplug-continue returns TRUE and the caps are not final, don't use them */
+          if (apcontinue && !are_final_caps (dbin, tcaps))
             dontuse = TRUE;
           gst_caps_unref (tcaps);
         }
       }
     }
-    gst_caps_unref (rawcaps);
 
     if (dontuse) {
       gst_object_unref (dpad);
@@ -1641,6 +1678,37 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* Remove selected factory from the list. */
     g_value_array_remove (factories, 0);
 
+    /* If the factory is for a parser we first check if the factory
+     * was already used for the current chain. If it was used already
+     * we would otherwise create an infinite loop here because the
+     * parser apparently accepts its own output as input.
+     * This is only done for parsers because it's perfectly valid
+     * to have other element classes after each other because a
+     * parser is the only one that does not change the data. A
+     * valid example for this would be multiple id3demux in a row.
+     */
+    if (strstr (gst_element_factory_get_klass (factory), "Parser")) {
+      gboolean skip = FALSE;
+      GList *l;
+
+      CHAIN_MUTEX_LOCK (chain);
+      for (l = chain->elements; l; l = l->next) {
+        GstElement *otherelement = GST_ELEMENT_CAST (l->data);
+
+        if (gst_element_get_factory (otherelement) == factory) {
+          skip = TRUE;
+          break;
+        }
+      }
+      CHAIN_MUTEX_UNLOCK (chain);
+      if (skip) {
+        GST_DEBUG_OBJECT (dbin,
+            "Skipping factory '%s' because it was already used in this chain",
+            gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory)));
+        continue;
+      }
+    }
+
     /* emit autoplug-select to see what we should do with it. */
     g_signal_emit (G_OBJECT (dbin),
         gst_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT],
@@ -1750,9 +1818,41 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
        * other thread could've added elements in the meantime */
       CHAIN_MUTEX_LOCK (chain);
       do {
+        GList *l;
+
         tmp = chain->elements->data;
-        gst_element_set_state (tmp, GST_STATE_NULL);
+
+        /* Disconnect any signal handlers that might be connected
+         * in connect_element() or analyze_pad() */
+        g_signal_handlers_disconnect_by_func (tmp, pad_added_cb, chain);
+        g_signal_handlers_disconnect_by_func (tmp, pad_removed_cb, chain);
+        g_signal_handlers_disconnect_by_func (tmp, no_more_pads_cb, chain);
+
+        for (l = chain->pending_pads; l;) {
+          GstPendingPad *pp = l->data;
+          GList *n;
+
+          if (GST_PAD_PARENT (pp->pad) != tmp) {
+            l = l->next;
+            continue;
+          }
+
+          g_signal_handlers_disconnect_by_func (pp->pad, caps_notify_cb, chain);
+          gst_pad_remove_event_probe (pp->pad, pp->event_probe_id);
+          gst_object_unref (pp->pad);
+          g_slice_free (GstPendingPad, pp);
+
+          /* Remove element from the list, update list head and go to the
+           * next element in the list */
+          n = l->next;
+          chain->pending_pads = g_list_delete_link (chain->pending_pads, l);
+          l = n;
+        }
+
         gst_bin_remove (GST_BIN (dbin), tmp);
+        gst_element_set_state (tmp, GST_STATE_NULL);
+
+        gst_object_unref (tmp);
         chain->elements = g_list_delete_link (chain->elements, chain->elements);
       } while (tmp != element);
       CHAIN_MUTEX_UNLOCK (chain);
@@ -2144,7 +2244,7 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstDecodeChain * chain)
   gst_object_unref (element);
 }
 
-/* Decide whether an element is a demuxer based on the 
+/* Decide whether an element is a demuxer based on the
  * klass and number/type of src pad templates it has */
 static gboolean
 is_demuxer_element (GstElement * srcelement)
@@ -2196,7 +2296,7 @@ is_demuxer_element (GstElement * srcelement)
 
 /* Returns TRUE if the caps are compatible with the caps specified in the 'caps'
  * property (which by default are the raw caps)
- * 
+ *
  * The decodebin_lock should be taken !
  */
 static gboolean
@@ -2346,9 +2446,12 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
   }
 
   if (chain->endpad) {
-    if (chain->endpad->exposed)
+    if (chain->endpad->exposed) {
       gst_element_remove_pad (GST_ELEMENT_CAST (chain->dbin),
           GST_PAD_CAST (chain->endpad));
+      g_signal_emit (G_OBJECT (chain->dbin),
+          gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD], 0, chain->endpad);
+    }
 
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (chain->endpad), NULL);
     chain->endpad->exposed = FALSE;
@@ -2422,7 +2525,7 @@ gst_decode_chain_new (GstDecodeBin * dbin, GstDecodeGroup * parent,
 /* The overrun callback is used to expose groups that have not yet had their
  * no_more_pads called while the (large) multiqueue overflowed. When this
  * happens we must assume that the no_more_pads will not arrive anymore and we
- * must expose the pads that we have. 
+ * must expose the pads that we have.
  */
 static void
 multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
@@ -2527,7 +2630,7 @@ gst_decode_group_free (GstDecodeGroup * group)
  * unrefed here.
  *
  * Can be called from streaming threads.
- * 
+ *
  * Not MT-safe, call with parent's chain lock!
  */
 static void
@@ -2751,7 +2854,7 @@ out:
   return complete;
 }
 
-/* check if the group is drained, meaning all pads have seen an EOS 
+/* check if the group is drained, meaning all pads have seen an EOS
  * event.  */
 static void
 gst_decode_pad_handle_eos (GstDecodePad * pad)
@@ -2764,7 +2867,7 @@ gst_decode_pad_handle_eos (GstDecodePad * pad)
 }
 
 /* gst_decode_chain_handle_eos:
- * 
+ *
  * Checks if there are next groups in any parent chain
  * to which we can switch or if everything is drained.
  *
@@ -3053,13 +3156,15 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   for (; l && l->next; l = l->next) {
     GstCaps *caps = _gst_element_get_linked_caps (l->next->data, l->data);
 
-    s = gst_structure_id_empty_new (topology_structure_name);
-    gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
-    gst_caps_unref (caps);
+    if (caps) {
+      s = gst_structure_id_empty_new (topology_structure_name);
+      gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
+      gst_caps_unref (caps);
 
-    gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
-    gst_structure_free (u);
-    u = s;
+      gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
+      gst_structure_free (u);
+      u = s;
+    }
   }
 
   /* Caps that resulted in this chain */

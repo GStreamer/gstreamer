@@ -6,7 +6,9 @@ mixer
 navigation
 netbuffer
 pbutils
+profile
 rtp
+rtsp
 tag
 utils
 video

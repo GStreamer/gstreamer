@@ -39,5 +39,6 @@ void vs_fill_borders_Y (const VSImage *dest, const uint8_t *val);
 void vs_fill_borders_Y16 (const VSImage *dest, const uint16_t val);
 void vs_fill_borders_RGB565 (const VSImage *dest, const uint8_t *val);
 void vs_fill_borders_RGB555 (const VSImage *dest, const uint8_t *val);
+void vs_fill_borders_AYUV64 (const VSImage *dest, const uint8_t *val);
 
 #endif /* __VS_FILL_BORDERS_H__ */

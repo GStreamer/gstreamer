@@ -78,6 +78,7 @@ struct _GstDiscovererInfo {
   GstClockTime duration;
   GstStructure *misc;
   GstTagList *tags;
+  gboolean seekable;
 };
 
 /* missing-plugins.c */

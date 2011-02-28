@@ -327,18 +327,18 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
 GST_START_TEST (test_discont_stream)
 {
   /* integral scalings */
-  test_discont_stream_instance (48000, 24000, 500, 20);
-  test_discont_stream_instance (48000, 12000, 500, 20);
-  test_discont_stream_instance (12000, 24000, 500, 20);
-  test_discont_stream_instance (12000, 48000, 500, 20);
+  test_discont_stream_instance (48000, 24000, 5000, 20);
+  test_discont_stream_instance (48000, 12000, 5000, 20);
+  test_discont_stream_instance (12000, 24000, 5000, 20);
+  test_discont_stream_instance (12000, 48000, 5000, 20);
 
   /* non-integral scalings */
-  test_discont_stream_instance (44100, 8000, 500, 20);
-  test_discont_stream_instance (8000, 44100, 500, 20);
+  test_discont_stream_instance (44100, 8000, 5000, 20);
+  test_discont_stream_instance (8000, 44100, 5000, 20);
 
   /* wacky scalings */
-  test_discont_stream_instance (12345, 54321, 500, 20);
-  test_discont_stream_instance (101, 99, 500, 20);
+  test_discont_stream_instance (12345, 54321, 5000, 20);
+  test_discont_stream_instance (101, 99, 5000, 20);
 }
 
 GST_END_TEST;

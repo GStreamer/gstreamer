@@ -68,6 +68,24 @@ on_sink_handoff (GstElement * element, GstBuffer * buffer, GstPad * pad,
   *n_buffers = *n_buffers + 1;
 }
 
+static gboolean
+caps_are_64bpp (const GstCaps * caps)
+{
+  GstVideoFormat fmt;
+  GstCaps *fmt_caps;
+
+  /* need fixed caps for _parse_caps */
+  fmt_caps = gst_caps_copy (caps);
+  gst_structure_remove_field (gst_caps_get_structure (fmt_caps, 0), "width");
+  gst_structure_remove_field (gst_caps_get_structure (fmt_caps, 0), "height");
+  gst_structure_remove_field (gst_caps_get_structure (fmt_caps, 0),
+      "framerate");
+
+  fail_unless (gst_video_format_parse_caps (fmt_caps, &fmt, NULL, NULL));
+  gst_caps_unref (fmt_caps);
+  return (fmt == GST_VIDEO_FORMAT_ARGB64 || fmt == GST_VIDEO_FORMAT_AYUV64);
+}
+
 static void
 run_test (const GstCaps * caps, gint src_width, gint src_height,
     gint dest_width, gint dest_height, gint method,
@@ -81,6 +99,10 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
   GstBus *bus;
   GstCaps *copy;
   guint n_buffers = 0;
+
+  /* skip formats that ffmpegcolorspace can't handle */
+  if (caps_are_64bpp (caps))
+    return;
 
   pipeline = gst_element_factory_make ("pipeline", "pipeline");
   fail_unless (pipeline != NULL);
@@ -198,6 +220,10 @@ GST_START_TEST (test_passthrough)
     GstCaps *caps = *p;
 
     for (method = 0; method < 3; method++) {
+      /* skip formats that ffmpegcolorspace can't handle */
+      if (caps_are_64bpp (caps))
+        continue;
+
       GST_DEBUG ("Running test for caps '%" GST_PTR_FORMAT "'"
           " from %dx%u to %dx%d with method %d", caps, src_width, src_height,
           dest_width, dest_height, method);
@@ -251,7 +277,6 @@ GST_START_TEST (name) \
     run_test (caps, src_width, src_height, \
         dest_width, dest_height, method, \
         NULL, NULL, NULL, NULL); \
-    \
     gst_caps_unref (caps); \
     p++; \
   } \
@@ -787,6 +812,7 @@ videoscale_suite (void)
   tcase_add_test (tc_chain, test_negotiation);
   tcase_add_test (tc_chain, test_reverse_negotiation);
 
+  GST_ERROR ("FIXME: test 64-bpp formats as well");
   return s;
 }
 

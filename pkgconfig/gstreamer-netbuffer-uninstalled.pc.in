@@ -4,6 +4,8 @@ exec_prefix=
 libdir=
 # includedir is builddir because it is used to find gstconfig.h in places
 includedir=@abs_top_builddir@/gst-libs
+girdir=@abs_top_builddir@/gst-libs/gst/netbuffer
+typelibdir=@abs_top_builddir@/gst-libs/gst/netbuffer
 
 Name: GStreamer Network Buffer Library, Uninstalled
 Description: Network buffer for use in network sources/sinks, uninstalled

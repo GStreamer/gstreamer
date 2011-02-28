@@ -23,7 +23,7 @@ BUILT_GIRSOURCES = GstTag-@GST_MAJORMINOR@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgsttaginclude_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgsttag_@GST_MAJORMINOR@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgsttainclude_HEADERS))
+gir_cincludes=$(patsubst %,--c-include='gst/tag/%',$(libgsttaginclude_HEADERS))
 
 GstTag-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgsttag-@GST_MAJORMINOR@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
@@ -54,7 +54,8 @@ typelibsdir = $(libdir)/girepository-1.0/
 typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 %.typelib: %.gir $(INTROSPECTION_COMPILER)
-	$(AM_V_GEN)$(INTROSPECTION_COMPILER) \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
+		$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
 		--includedir=$(builddir) \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \

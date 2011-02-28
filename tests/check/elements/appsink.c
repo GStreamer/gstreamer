@@ -317,6 +317,91 @@ GST_START_TEST (test_buffer_list)
 
 GST_END_TEST;
 
+static GstFlowReturn
+callback_function_buffer (GstAppSink * appsink, gpointer p_counter)
+{
+  GstBuffer *buf;
+  gint *p_int_counter = p_counter;
+
+  buf = gst_app_sink_pull_buffer (appsink);
+  fail_unless (GST_IS_BUFFER (buf));
+
+  /* buffer list has 3 buffers in two groups */
+  switch (*p_int_counter) {
+    case 0:
+      fail_unless_equals_int (GST_BUFFER_SIZE (buf), sizeof (gint));
+      fail_unless_equals_int ((((gint *) GST_BUFFER_DATA (buf))[0]), 1);
+      break;
+    case 1:
+      fail_unless_equals_int (GST_BUFFER_SIZE (buf), 2 * sizeof (gint));
+      fail_unless_equals_int ((((gint *) GST_BUFFER_DATA (buf))[0]), 2);
+      fail_unless_equals_int ((((gint *) GST_BUFFER_DATA (buf))[1]), 4);
+      break;
+    default:
+      g_warn_if_reached ();
+      break;
+  }
+
+  gst_buffer_unref (buf);
+
+  *p_int_counter += 1;
+
+  return GST_FLOW_OK;
+}
+
+GST_START_TEST (test_buffer_list_fallback)
+{
+  GstElement *sink;
+  GstBufferList *list;
+  GstAppSinkCallbacks callbacks = { NULL };
+  gint counter = 0;
+
+  sink = setup_appsink ();
+
+  callbacks.new_buffer = callback_function_buffer;
+
+  gst_app_sink_set_callbacks (GST_APP_SINK (sink), &callbacks, &counter, NULL);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  list = create_buffer_list ();
+  fail_unless (gst_pad_push_list (mysrcpad, list) == GST_FLOW_OK);
+
+  fail_unless_equals_int (counter, 2);
+
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_buffer_list_fallback_signal)
+{
+  GstElement *sink;
+  GstBufferList *list;
+  gint counter = 0;
+
+  sink = setup_appsink ();
+
+  /* C calling convention to the rescue.. */
+  g_signal_connect (sink, "new-buffer", G_CALLBACK (callback_function_buffer),
+      &counter);
+
+  g_object_set (sink, "emit-signals", TRUE, NULL);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  list = create_buffer_list ();
+  fail_unless (gst_pad_push_list (mysrcpad, list) == GST_FLOW_OK);
+
+  fail_unless_equals_int (counter, 2);
+
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsink_suite (void)
 {
@@ -329,6 +414,8 @@ appsink_suite (void)
   tcase_add_test (tc_chain, test_notify0);
   tcase_add_test (tc_chain, test_notify1);
   tcase_add_test (tc_chain, test_buffer_list);
+  tcase_add_test (tc_chain, test_buffer_list_fallback);
+  tcase_add_test (tc_chain, test_buffer_list_fallback_signal);
 
   return s;
 }

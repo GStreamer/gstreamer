@@ -827,7 +827,7 @@ vorbis_do_timestamps (GstVorbisDec * vd, GstBuffer * buf, gboolean reverse,
     GstClockTime timestamp, GstClockTime duration)
 {
   /* interpolate reverse */
-  if (vd->last_timestamp != -1 && reverse)
+  if (vd->last_timestamp != -1 && duration != -1 && reverse)
     vd->last_timestamp -= duration;
 
   /* take buffer timestamp, use interpolated timestamp otherwise */
@@ -837,11 +837,18 @@ vorbis_do_timestamps (GstVorbisDec * vd, GstBuffer * buf, gboolean reverse,
     timestamp = vd->last_timestamp;
 
   /* interpolate forwards */
-  if (vd->last_timestamp != -1 && !reverse)
+  if (vd->last_timestamp != -1 && duration != -1 && !reverse)
     vd->last_timestamp += duration;
 
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
-  GST_BUFFER_DURATION (buf) = duration;
+  GST_LOG_OBJECT (vd,
+      "keeping timestamp %" GST_TIME_FORMAT " ts %" GST_TIME_FORMAT " dur %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (vd->last_timestamp),
+      GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
+
+  if (buf) {
+    GST_BUFFER_TIMESTAMP (buf) = timestamp;
+    GST_BUFFER_DURATION (buf) = duration;
+  }
 }
 
 static GstFlowReturn
@@ -850,7 +857,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
 {
   vorbis_sample_t **pcm;
   guint sample_count;
-  GstBuffer *out;
+  GstBuffer *out = NULL;
   GstFlowReturn result;
   gint size;
 
@@ -910,6 +917,10 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
     result = vorbis_dec_push_reverse (vd, out);
 
 done:
+  if (out == NULL) {
+    /* no output, still keep track of timestamps */
+    vorbis_do_timestamps (vd, NULL, FALSE, timestamp, duration);
+  }
   vorbis_synthesis_read (&vd->vd, sample_count);
 
   return result;

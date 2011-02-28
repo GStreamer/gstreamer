@@ -73,6 +73,7 @@
 #define speex_resampler_get_output_stride CAT_PREFIX(RANDOM_PREFIX,_resampler_get_output_stride)
 #define speex_resampler_get_input_latency CAT_PREFIX(RANDOM_PREFIX,_resampler_get_input_latency)
 #define speex_resampler_get_output_latency CAT_PREFIX(RANDOM_PREFIX,_resampler_get_output_latency)
+#define speex_resampler_get_filt_len CAT_PREFIX(RANDOM_PREFIX,_resampler_get_filt_len)
 #define speex_resampler_skip_zeros CAT_PREFIX(RANDOM_PREFIX,_resampler_skip_zeros)
 #define speex_resampler_reset_mem CAT_PREFIX(RANDOM_PREFIX,_resampler_reset_mem)
 #define speex_resampler_strerror CAT_PREFIX(RANDOM_PREFIX,_resampler_strerror)
@@ -332,6 +333,11 @@ int speex_resampler_get_input_latency(SpeexResamplerState *st);
  * @param st Resampler state
  */
 int speex_resampler_get_output_latency(SpeexResamplerState *st);
+
+/** Get the length of the filter in input samples.
+ * @param st Resampler state
+ */
+int speex_resampler_get_filt_len(SpeexResamplerState *st);
 
 /** Make sure that the first samples to go out of the resamplers don't have 
  * leading zeros. This is only useful before starting to use a newly created 

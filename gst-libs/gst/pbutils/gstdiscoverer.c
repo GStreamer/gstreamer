@@ -36,8 +36,8 @@
  * asks for the discovery to begin (through gst_discoverer_start()).
  *
  * All the information is returned in a #GstDiscovererInfo structure.
- * 
- * Since 0.10.31
+ *
+ * Since: 0.10.31
  */
 
 #ifdef HAVE_CONFIG_H
@@ -105,6 +105,15 @@ struct _GstDiscovererPrivate
   GMainContext *ctx;
   guint sourceid;
   guint timeoutid;
+
+  /* reusable queries */
+  GstQuery *seeking_query;
+
+  /* Handler ids for various callbacks */
+  gulong pad_added_id;
+  gulong pad_remove_id;
+  gulong element_added_id;
+  gulong bus_cb_id;
 };
 
 #define DISCO_LOCK(dc) g_mutex_lock (dc->priv->lock);
@@ -215,7 +224,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
    * @discoverer: the #GstDiscoverer
    * @info: the results #GstDiscovererInfo
    * @error: (type GLib.Error): #GError, which will be non-NULL if an error
-   *                            occured during discovery
+   *                            occurred during discovery
    *
    * Will be emitted when all information on a URI could be discovered.
    */
@@ -242,6 +251,7 @@ static void
 gst_discoverer_init (GstDiscoverer * dc)
 {
   GstElement *tmp;
+  GstFormat format = GST_FORMAT_TIME;
 
   dc->priv = G_TYPE_INSTANCE_GET_PRIVATE (dc, GST_TYPE_DISCOVERER,
       GstDiscovererPrivate);
@@ -263,27 +273,34 @@ gst_discoverer_init (GstDiscoverer * dc)
   GST_LOG_OBJECT (dc, "Adding uridecodebin to pipeline");
   gst_bin_add (dc->priv->pipeline, dc->priv->uridecodebin);
 
-  g_signal_connect (dc->priv->uridecodebin, "pad-added",
-      G_CALLBACK (uridecodebin_pad_added_cb), dc);
-  g_signal_connect (dc->priv->uridecodebin, "pad-removed",
-      G_CALLBACK (uridecodebin_pad_removed_cb), dc);
+  dc->priv->pad_added_id =
+      g_signal_connect_object (dc->priv->uridecodebin, "pad-added",
+      G_CALLBACK (uridecodebin_pad_added_cb), dc, 0);
+  dc->priv->pad_remove_id =
+      g_signal_connect_object (dc->priv->uridecodebin, "pad-removed",
+      G_CALLBACK (uridecodebin_pad_removed_cb), dc, 0);
 
   GST_LOG_OBJECT (dc, "Getting pipeline bus");
   dc->priv->bus = gst_pipeline_get_bus ((GstPipeline *) dc->priv->pipeline);
 
-  g_signal_connect (dc->priv->bus, "message", G_CALLBACK (discoverer_bus_cb),
-      dc);
+  dc->priv->bus_cb_id =
+      g_signal_connect_object (dc->priv->bus, "message",
+      G_CALLBACK (discoverer_bus_cb), dc, 0);
 
   GST_DEBUG_OBJECT (dc, "Done initializing Discoverer");
 
   /* This is ugly. We get the GType of decodebin2 so we can quickly detect
    * when a decodebin2 is added to uridecodebin so we can set the
    * post-stream-topology setting to TRUE */
-  g_signal_connect (dc->priv->uridecodebin, "element-added",
-      G_CALLBACK (uridecodebin_element_added_cb), dc);
+  dc->priv->element_added_id =
+      g_signal_connect_object (dc->priv->uridecodebin, "element-added",
+      G_CALLBACK (uridecodebin_element_added_cb), dc, 0);
   tmp = gst_element_factory_make ("decodebin2", NULL);
   dc->priv->decodebin2_type = G_OBJECT_TYPE (tmp);
   gst_object_unref (tmp);
+
+  /* create queries */
+  dc->priv->seeking_query = gst_query_new_seeking (format);
 }
 
 static void
@@ -297,8 +314,15 @@ discoverer_reset (GstDiscoverer * dc)
     dc->priv->pending_uris = NULL;
   }
 
-  gst_element_set_state ((GstElement *) dc->priv->pipeline, GST_STATE_NULL);
+  if (dc->priv->pipeline)
+    gst_element_set_state ((GstElement *) dc->priv->pipeline, GST_STATE_NULL);
 }
+
+#define DISCONNECT_SIGNAL(o,i) G_STMT_START{           \
+  if ((i) && g_signal_handler_is_connected ((o), (i))) \
+    g_signal_handler_disconnect ((o), (i));            \
+  (i) = 0;                                             \
+}G_STMT_END
 
 static void
 gst_discoverer_dispose (GObject * obj)
@@ -310,18 +334,34 @@ gst_discoverer_dispose (GObject * obj)
   discoverer_reset (dc);
 
   if (G_LIKELY (dc->priv->pipeline)) {
+    /* Workaround for bug #118536 */
+    DISCONNECT_SIGNAL (dc->priv->uridecodebin, dc->priv->pad_added_id);
+    DISCONNECT_SIGNAL (dc->priv->uridecodebin, dc->priv->pad_remove_id);
+    DISCONNECT_SIGNAL (dc->priv->uridecodebin, dc->priv->element_added_id);
+    DISCONNECT_SIGNAL (dc->priv->bus, dc->priv->bus_cb_id);
+
     /* pipeline was set to NULL in _reset */
     gst_object_unref (dc->priv->pipeline);
     gst_object_unref (dc->priv->bus);
+
     dc->priv->pipeline = NULL;
     dc->priv->uridecodebin = NULL;
     dc->priv->bus = NULL;
   }
 
+  gst_discoverer_stop (dc);
+
   if (dc->priv->lock) {
     g_mutex_free (dc->priv->lock);
     dc->priv->lock = NULL;
   }
+
+  if (dc->priv->seeking_query) {
+    gst_query_unref (dc->priv->seeking_query);
+    dc->priv->seeking_query = NULL;
+  }
+
+  G_OBJECT_CLASS (gst_discoverer_parent_class)->dispose (obj);
 }
 
 static void
@@ -373,12 +413,24 @@ static gboolean
 _event_probe (GstPad * pad, GstEvent * event, PrivateStream * ps)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
-    GstTagList *tl = NULL;
+    GstTagList *tl = NULL, *tmp;
 
     gst_event_parse_tag (event, &tl);
     GST_DEBUG_OBJECT (pad, "tags %" GST_PTR_FORMAT, tl);
     DISCO_LOCK (ps->dc);
-    ps->tags = gst_tag_list_merge (ps->tags, tl, GST_TAG_MERGE_APPEND);
+    /* If preroll is complete, drop these tags - the collected information is
+     * possibly already being processed and adding more tags would be racy */
+    if (G_LIKELY (ps->dc->priv->processing)) {
+      GST_DEBUG_OBJECT (pad, "private stream %p old tags %" GST_PTR_FORMAT, ps,
+          ps->tags);
+      tmp = gst_tag_list_merge (ps->tags, tl, GST_TAG_MERGE_APPEND);
+      if (ps->tags)
+        gst_tag_list_free (ps->tags);
+      ps->tags = tmp;
+      GST_DEBUG_OBJECT (pad, "private stream %p new tags %" GST_PTR_FORMAT, ps,
+          tmp);
+    } else
+      GST_DEBUG_OBJECT (pad, "Dropping tags since preroll is done");
     DISCO_UNLOCK (ps->dc);
   }
 
@@ -575,7 +627,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
       gst_structure_id_get (st, _TAGS_QUARK,
           GST_TYPE_STRUCTURE, &tags_st, NULL);
-      if (gst_structure_get_uint (tags_st, GST_TAG_BITRATE, &utmp))
+      if (gst_structure_get_uint (tags_st, GST_TAG_BITRATE, &utmp) ||
+          gst_structure_get_uint (tags_st, GST_TAG_NOMINAL_BITRATE, &utmp))
         info->bitrate = utmp;
 
       if (gst_structure_get_uint (tags_st, GST_TAG_MAXIMUM_BITRATE, &utmp))
@@ -627,7 +680,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
       gst_structure_id_get (st, _TAGS_QUARK,
           GST_TYPE_STRUCTURE, &tags_st, NULL);
-      if (gst_structure_get_uint (tags_st, GST_TAG_BITRATE, &utmp))
+      if (gst_structure_get_uint (tags_st, GST_TAG_BITRATE, &utmp) ||
+          gst_structure_get_uint (tags_st, GST_TAG_NOMINAL_BITRATE, &utmp))
         info->bitrate = utmp;
 
       if (gst_structure_get_uint (tags_st, GST_TAG_MAXIMUM_BITRATE, &utmp))
@@ -817,12 +871,21 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
     res = (GstDiscovererStreamInfo *) cont;
 
     if (gst_structure_id_has_field (topology, _TAGS_QUARK)) {
+      GstTagList *tmp;
+
       gst_structure_id_get (topology, _TAGS_QUARK,
           GST_TYPE_STRUCTURE, &tags, NULL);
-      cont->parent.tags =
+
+      GST_DEBUG ("Merge tags %" GST_PTR_FORMAT, tags);
+
+      tmp =
           gst_tag_list_merge (cont->parent.tags, (GstTagList *) tags,
           GST_TAG_MERGE_APPEND);
       gst_tag_list_free (tags);
+      if (cont->parent.tags)
+        gst_tag_list_free (cont->parent.tags);
+      cont->parent.tags = tmp;
+      GST_DEBUG ("Container info tags %" GST_PTR_FORMAT, tmp);
     }
 
     for (i = 0; i < len; i++) {
@@ -859,16 +922,29 @@ discoverer_collect (GstDiscoverer * dc)
   if (dc->priv->streams) {
     /* FIXME : Make this querying optional */
     if (TRUE) {
+      GstElement *pipeline = (GstElement *) dc->priv->pipeline;
       GstFormat format = GST_FORMAT_TIME;
       gint64 dur;
 
       GST_DEBUG ("Attempting to query duration");
 
-      if (gst_element_query_duration ((GstElement *) dc->priv->pipeline,
-              &format, &dur)) {
+      if (gst_element_query_duration (pipeline, &format, &dur)) {
         if (format == GST_FORMAT_TIME) {
           GST_DEBUG ("Got duration %" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
           dc->priv->current_info->duration = (guint64) dur;
+        }
+      }
+
+      if (dc->priv->seeking_query) {
+        if (gst_element_query (pipeline, dc->priv->seeking_query)) {
+          gboolean seekable;
+
+          gst_query_parse_seeking (dc->priv->seeking_query, &format,
+              &seekable, NULL, NULL);
+          if (format == GST_FORMAT_TIME) {
+            GST_DEBUG ("Got seekable %d", seekable);
+            dc->priv->current_info->seekable = seekable;
+          }
         }
       }
     }
@@ -909,13 +985,33 @@ discoverer_collect (GstDiscoverer * dc)
 }
 
 static void
+get_async_cb (gpointer cb_data, GSource * source, GSourceFunc * func,
+    gpointer * data)
+{
+  *func = (GSourceFunc) async_timeout_cb;
+  *data = cb_data;
+}
+
+/* Wrapper since GSourceCallbackFuncs don't expect a return value from ref() */
+static void
+_void_g_object_ref (gpointer object)
+{
+  g_object_ref (G_OBJECT (object));
+}
+
+static void
 handle_current_async (GstDiscoverer * dc)
 {
   GSource *source;
+  static GSourceCallbackFuncs cb_funcs = {
+    .ref = _void_g_object_ref,
+    .unref = g_object_unref,
+    .get = get_async_cb,
+  };
 
   /* Attach a timeout to the main context */
   source = g_timeout_source_new (dc->priv->timeout / GST_MSECOND);
-  g_source_set_callback (source, (GSourceFunc) async_timeout_cb, dc, NULL);
+  g_source_set_callback_indirect (source, g_object_ref (dc), &cb_funcs);
   dc->priv->timeoutid = g_source_attach (source, dc->priv->ctx);
   g_source_unref (source);
 }
@@ -927,7 +1023,8 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
 {
   gboolean done = FALSE;
 
-  GST_DEBUG ("got a %s message", GST_MESSAGE_TYPE_NAME (msg));
+  GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "got a %s message",
+      GST_MESSAGE_TYPE_NAME (msg));
 
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ERROR:{
@@ -935,8 +1032,8 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       gchar *debug;
 
       gst_message_parse_error (msg, &gerr, &debug);
-      GST_WARNING ("Got an error [debug:%s]", debug);
-      GST_WARNING ("Got an error [message:%s]", gerr->message);
+      GST_WARNING_OBJECT (GST_MESSAGE_SRC (msg),
+          "Got an error [debug:%s], [message:%s]", debug, gerr->message);
       dc->priv->current_error = gerr;
       g_free (debug);
 
@@ -967,7 +1064,8 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
           "structure %" GST_PTR_FORMAT, msg->structure);
       if (sttype == _MISSING_PLUGIN_QUARK) {
-        GST_DEBUG ("Setting result to MISSING_PLUGINS");
+        GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
+            "Setting result to MISSING_PLUGINS");
         dc->priv->current_info->result = GST_DISCOVERER_MISSING_PLUGINS;
         dc->priv->current_info->misc = gst_structure_copy (msg->structure);
       } else if (sttype == _STREAM_TOPOLOGY_QUARK) {
@@ -978,15 +1076,20 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
 
     case GST_MESSAGE_TAG:
     {
-      GstTagList *tl;
+      GstTagList *tl, *tmp;
 
       gst_message_parse_tag (msg, &tl);
-      GST_DEBUG ("Got tags %" GST_PTR_FORMAT, tl);
+      GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "Got tags %" GST_PTR_FORMAT, tl);
       /* Merge with current tags */
-      dc->priv->current_info->tags =
+      tmp =
           gst_tag_list_merge (dc->priv->current_info->tags, tl,
           GST_TAG_MERGE_APPEND);
       gst_tag_list_free (tl);
+      if (dc->priv->current_info->tags)
+        gst_tag_list_free (dc->priv->current_info->tags);
+      dc->priv->current_info->tags = tmp;
+      GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "Current info %p, tags %"
+          GST_PTR_FORMAT, dc->priv->current_info, tmp);
     }
       break;
 
@@ -1109,7 +1212,10 @@ discoverer_bus_cb (GstBus * bus, GstMessage * msg, GstDiscoverer * dc)
   if (dc->priv->processing) {
     if (handle_message (dc, msg)) {
       GST_DEBUG ("Stopping asynchronously");
+      /* Serialise with _event_probe() */
+      DISCO_LOCK (dc);
       dc->priv->processing = FALSE;
+      DISCO_UNLOCK (dc);
       discoverer_collect (dc);
       discoverer_cleanup (dc);
     }
@@ -1119,12 +1225,14 @@ discoverer_bus_cb (GstBus * bus, GstMessage * msg, GstDiscoverer * dc)
 static gboolean
 async_timeout_cb (GstDiscoverer * dc)
 {
-  dc->priv->timeoutid = 0;
-  GST_DEBUG ("Setting result to TIMEOUT");
-  dc->priv->current_info->result = GST_DISCOVERER_TIMEOUT;
-  dc->priv->processing = FALSE;
-  discoverer_collect (dc);
-  discoverer_cleanup (dc);
+  if (!g_source_is_destroyed (g_main_current_source ())) {
+    dc->priv->timeoutid = 0;
+    GST_DEBUG ("Setting result to TIMEOUT");
+    dc->priv->current_info->result = GST_DISCOVERER_TIMEOUT;
+    dc->priv->processing = FALSE;
+    discoverer_collect (dc);
+    discoverer_cleanup (dc);
+  }
   return FALSE;
 }
 
@@ -1175,11 +1283,11 @@ beach:
 /**
  * gst_discoverer_start:
  * @discoverer: A #GstDiscoverer
- * 
+ *
  * Allow asynchronous discovering of URIs to take place.
  * A #GMainLoop must be available for #GstDiscoverer to properly work in
  * asynchronous mode.
- * 
+ *
  * Since: 0.10.31
  */
 void
@@ -1221,8 +1329,8 @@ gst_discoverer_start (GstDiscoverer * discoverer)
  *
  * Stop the discovery of any pending URIs and clears the list of
  * pending URIS (if any).
- * 
- * Since 0.10.31
+ *
+ * Since: 0.10.31
  */
 void
 gst_discoverer_stop (GstDiscoverer * discoverer)
@@ -1240,9 +1348,11 @@ gst_discoverer_stop (GstDiscoverer * discoverer)
     /* We prevent any further processing by setting the bus to
      * flushing and setting the pipeline to READY.
      * _reset() will take care of the rest of the cleanup */
-    gst_bus_set_flushing (discoverer->priv->bus, TRUE);
-    gst_element_set_state ((GstElement *) discoverer->priv->pipeline,
-        GST_STATE_READY);
+    if (discoverer->priv->bus)
+      gst_bus_set_flushing (discoverer->priv->bus, TRUE);
+    if (discoverer->priv->pipeline)
+      gst_element_set_state ((GstElement *) discoverer->priv->pipeline,
+          GST_STATE_READY);
   }
   discoverer->priv->running = FALSE;
   DISCO_UNLOCK (discoverer);
@@ -1278,11 +1388,12 @@ gst_discoverer_stop (GstDiscoverer * discoverer)
  * discovery of the @uri will only take place if gst_discoverer_start() has
  * been called.
  *
- * A copy of @uri will be done internally, the caller can safely g_free() afterwards.
+ * A copy of @uri will be made internally, so the caller can safely g_free()
+ * afterwards.
  *
  * Returns: %TRUE if the @uri was succesfully appended to the list of pending
  * uris, else %FALSE
- * 
+ *
  * Since: 0.10.31
  */
 gboolean
@@ -1311,14 +1422,16 @@ gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
  * gst_discoverer_discover_uri:
  * @discoverer: A #GstDiscoverer
  * @uri: The URI to run on.
- * @err: If an error occured, this field will be filled in.
+ * @err: If an error occurred, this field will be filled in.
  *
  * Synchronously discovers the given @uri.
  *
- * A copy of @uri will be done internally, the caller can safely g_free() afterwards.
+ * A copy of @uri will be made internally, so the caller can safely g_free()
+ * afterwards.
  *
- * Returns: see #GstDiscovererInfo. The caller must unref this structure after use.
- * 
+ * Returns: (transfer full): the result of the scanning. Can be %NULL if an
+ * error occurred.
+ *
  * Since: 0.10.31
  */
 GstDiscovererInfo *
@@ -1369,11 +1482,11 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
  *
  * Creates a new #GstDiscoverer with the provided timeout.
  *
- * Returns: The new #GstDiscoverer. Free with gst_object_unref() when done.
- * If an error happened when creating the discoverer, @err will be set
+ * Returns: (transfer full): The new #GstDiscoverer.
+ * If an error occurred when creating the discoverer, @err will be set
  * accordingly and %NULL will be returned. If @err is set, the caller must
  * free it when no longer needed using g_error_free().
- * 
+ *
  * Since: 0.10.31
  */
 GstDiscoverer *

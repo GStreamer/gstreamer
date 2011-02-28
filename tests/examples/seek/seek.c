@@ -1398,7 +1398,7 @@ set_update_fill (gboolean active)
   if (active) {
     if (fill_id == 0) {
       fill_id =
-          g_timeout_add (FILL_INTERVAL, (GtkFunction) update_fill, pipeline);
+          g_timeout_add (FILL_INTERVAL, (GSourceFunc) update_fill, pipeline);
     }
   } else {
     if (fill_id) {
@@ -1417,7 +1417,7 @@ set_update_scale (gboolean active)
   if (active) {
     if (update_id == 0) {
       update_id =
-          g_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+          g_timeout_add (UPDATE_INTERVAL, (GSourceFunc) update_scale, pipeline);
     }
   } else {
     if (update_id) {
@@ -2402,6 +2402,7 @@ msg_buffering (GstBus * bus, GstMessage * message, GstPipeline * data)
       do_download_buffering (percent);
       break;
     case GST_BUFFERING_LIVE:
+      is_live = TRUE;
     case GST_BUFFERING_TIMESHIFT:
     case GST_BUFFERING_STREAM:
       do_stream_buffering (percent);
@@ -2786,8 +2787,6 @@ main (int argc, char **argv)
     shuttle_hscale = gtk_hscale_new (shuttle_adjustment);
     gtk_scale_set_digits (GTK_SCALE (shuttle_hscale), 2);
     gtk_scale_set_value_pos (GTK_SCALE (shuttle_hscale), GTK_POS_TOP);
-    gtk_range_set_update_policy (GTK_RANGE (shuttle_hscale),
-        GTK_UPDATE_CONTINUOUS);
     g_signal_connect (shuttle_hscale, "value_changed",
         G_CALLBACK (shuttle_value_changed), pipeline);
     g_signal_connect (shuttle_hscale, "format_value",
@@ -2806,7 +2805,6 @@ main (int argc, char **argv)
   gtk_scale_set_value_pos (GTK_SCALE (hscale), GTK_POS_RIGHT);
   gtk_range_set_show_fill_level (GTK_RANGE (hscale), TRUE);
   gtk_range_set_fill_level (GTK_RANGE (hscale), N_GRAD);
-  gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
   g_signal_connect (hscale, "button_press_event", G_CALLBACK (start_seek),
       pipeline);

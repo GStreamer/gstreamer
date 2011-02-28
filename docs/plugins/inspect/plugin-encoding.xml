@@ -1,0 +1,46 @@
+<plugin>
+  <name>encoding</name>
+  <description>various encoding-related elements</description>
+  <filename>../../gst/encoding/.libs/libgstencodebin.so</filename>
+  <basename>libgstencodebin.so</basename>
+  <version>0.10.32.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>encodebin</name>
+      <longname>Encoder Bin</longname>
+      <class>Generic/Bin/Encoder</class>
+      <description>Convenience encoding/muxing element</description>
+      <author>Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>private_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

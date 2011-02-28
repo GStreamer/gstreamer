@@ -59,3 +59,14 @@ gst_video_sink_get_type
 
 #include <gst/pbutils/pbutils.h>
 gst_discoverer_get_type
+
+#include <gst/pbutils/encoding-profile.h>
+#include <gst/pbutils/encoding-target.h>
+gst_encoding_profile_get_type
+gst_encoding_video_profile_get_type
+gst_encoding_video_profile_get_type
+gst_encoding_audio_profile_get_type
+gst_encoding_container_profile_get_type
+gst_encoding_target_get_type
+
+

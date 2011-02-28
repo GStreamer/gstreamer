@@ -547,6 +547,7 @@ GST_MIXER_GET_CLASS
 GST_MIXER_TYPE
 GST_IS_MIXER
 GST_IS_MIXER_CLASS
+GST_TYPE_STREAM_VOLUME_FORMAT
 gst_mixer_get_type
 gst_mixer_type_get_type
 gst_mixer_flags_get_type
@@ -1098,6 +1099,7 @@ GST_BASE_RTP_DEPAYLOAD_SRCPAD
 
 gst_base_rtp_depayload_push
 gst_base_rtp_depayload_push_ts
+gst_base_rtp_depayload_push_list
 
 <SUBSECTION Standard>
 GstBaseRTPDepayloadPrivate
@@ -1573,6 +1575,7 @@ gst_rtsp_url_free
 gst_rtsp_url_get_request_uri
 gst_rtsp_url_set_port
 gst_rtsp_url_get_port
+gst_rtsp_url_decode_path_components
 <SUBSECTION Standard>
 gst_rtsp_url_get_type
 </SECTION>
@@ -1599,6 +1602,9 @@ GstSDPConnection
 GST_SDP_BWTYPE_CT
 GST_SDP_BWTYPE_AS
 GST_SDP_BWTYPE_EXT_PREFIX
+GST_SDP_BWTYPE_RR
+GST_SDP_BWTYPE_RS
+GST_SDP_BWTYPE_TIAS
 GstSDPBandwidth
 GstSDPTime
 GstSDPZone
@@ -1616,6 +1622,8 @@ gst_sdp_message_as_text
 
 gst_sdp_message_parse_uri
 gst_sdp_message_as_uri
+
+gst_sdp_address_is_multicast
 
 gst_sdp_message_get_version
 gst_sdp_message_set_version
@@ -1907,6 +1915,95 @@ gst_codec_utils_mpeg4video_get_level
 gst_codec_utils_mpeg4video_caps_set_level_and_profile
 </SECTION>
 
+<SECTION>
+<FILE>encoding-profile</FILE>
+<INCLUDE>gst/pbutils/encoding-profile.h</INCLUDE>
+GstEncodingProfile
+gst_encoding_profile_unref
+gst_encoding_profile_ref
+gst_encoding_profile_find
+gst_encoding_profile_get_name
+gst_encoding_profile_get_description
+gst_encoding_profile_get_format
+gst_encoding_profile_get_preset
+gst_encoding_profile_get_presence
+gst_encoding_profile_get_restriction
+gst_encoding_profile_set_name
+gst_encoding_profile_set_description
+gst_encoding_profile_set_format
+gst_encoding_profile_set_preset
+gst_encoding_profile_set_restriction
+gst_encoding_profile_set_presence
+gst_encoding_profile_is_equal
+gst_encoding_profile_get_input_caps
+gst_encoding_profile_get_type_nick
+<SUBSECTION container>
+GstEncodingContainerProfile
+gst_encoding_container_profile_new
+gst_encoding_container_profile_add_profile
+gst_encoding_container_profile_contains_profile
+gst_encoding_container_profile_get_profiles
+<SUBSECTION audio>
+GstEncodingAudioProfile
+gst_encoding_audio_profile_new
+<SUBSECTION video>
+GstEncodingVideoProfile
+gst_encoding_video_profile_new
+gst_encoding_video_profile_get_pass
+gst_encoding_video_profile_get_variableframerate
+gst_encoding_video_profile_set_pass
+gst_encoding_video_profile_set_variableframerate
+<SUBSECTION targets>
+GST_ENCODING_CATEGORY_DEVICE
+GST_ENCODING_CATEGORY_ONLINE_SERVICE
+GST_ENCODING_CATEGORY_STORAGE_EDITING
+GST_ENCODING_CATEGORY_CAPTURE
+GstEncodingTarget
+gst_encoding_target_unref
+gst_encoding_target_ref
+gst_encoding_target_new
+gst_encoding_target_get_name
+gst_encoding_target_get_category
+gst_encoding_target_get_description
+gst_encoding_target_get_profiles
+gst_encoding_target_get_profile
+gst_encoding_target_add_profile
+gst_encoding_target_save
+gst_encoding_target_save_to_file
+gst_encoding_target_load
+gst_encoding_target_load_from_file
+gst_encoding_list_all_targets
+gst_encoding_list_available_categories
+<SUBSECTION Standard>
+GST_ENCODING_PROFILE
+GST_IS_ENCODING_PROFILE
+GST_TYPE_ENCODING_PROFILE
+gst_encoding_profile_get_type
+GST_ENCODING_TARGET
+GST_IS_ENCODING_TARGET
+GST_TYPE_ENCODING_TARGET
+gst_encoding_target_get_type
+GstEncodingProfileClass
+GST_TYPE_ENCODING_CONTAINER_PROFILE
+GST_ENCODING_CONTAINER_PROFILE
+gst_encoding_container_profile_get_type
+GST_TYPE_ENCODING_VIDEO_PROFILE
+GST_ENCODING_VIDEO_PROFILE
+GST_IS_ENCODING_VIDEO_PROFILE
+GstEncodingVideoProfileClass
+gst_encoding_video_profile_get_type
+GST_TYPE_ENCODING_AUDIO_PROFILE
+GST_ENCODING_AUDIO_PROFILE
+GST_IS_ENCODING_AUDIO_PROFILE
+GstEncodingAudioProfileClass
+gst_encoding_audio_profile_get_type
+GST_IS_ENCODING_CONTAINER_PROFILE
+GstEncodingContainerProfileClass
+GstEncodingTargetClass
+</SECTION>
+
+
+
 # video
 
 <SECTION>
@@ -1945,6 +2042,9 @@ GST_VIDEO_CAPS_YUV
 GST_VIDEO_CAPS_xBGR
 GST_VIDEO_CAPS_xRGB
 GST_VIDEO_CAPS_xRGB_HOST_ENDIAN
+GST_VIDEO_CAPS_BGR_15
+GST_VIDEO_CAPS_BGR_16
+GST_VIDEO_CAPS_RGB8_PALETTED
 GST_VIDEO_CAPS_GRAY8
 GST_VIDEO_CAPS_GRAY16
 GST_VIDEO_FPS_RANGE
@@ -1985,6 +2085,7 @@ gst_video_parse_caps_framerate
 gst_video_parse_caps_pixel_aspect_ratio
 gst_video_parse_caps_color_matrix
 gst_video_parse_caps_chroma_site
+gst_video_parse_caps_palette
 GstVideoConvertFrameCallback
 gst_video_convert_frame
 gst_video_convert_frame_async
@@ -1992,6 +2093,7 @@ gst_video_event_new_still_frame
 gst_video_event_parse_still_frame
 <SUBSECTION Standard>
 gst_video_format_get_type
+GST_TYPE_VIDEO_FORMAT
 </SECTION>
 
 <SECTION>
@@ -2051,6 +2153,8 @@ gst_discoverer_info_get_stream_info
 gst_discoverer_info_get_stream_list
 gst_discoverer_info_get_tags
 gst_discoverer_info_get_uri
+gst_discoverer_info_get_seekable
+gst_discoverer_info_ref
 gst_discoverer_info_unref
 <SUBSECTION>
 GstDiscovererStreamInfo
@@ -2066,8 +2170,6 @@ gst_discoverer_stream_info_ref
 gst_discoverer_stream_info_unref
 gst_discoverer_stream_info_list_free
 gst_discoverer_stream_info_get_stream_type_nick
-gst_discoverer_info_copy
-gst_discoverer_info_ref
 gst_discoverer_info_get_audio_streams
 gst_discoverer_info_get_container_streams
 gst_discoverer_info_get_streams
@@ -2122,6 +2224,7 @@ gst_discoverer_audio_info_get_type
 gst_discoverer_container_info_get_type
 gst_discoverer_get_type
 gst_discoverer_info_get_type
+gst_discoverer_info_copy
 gst_discoverer_result_get_type
 gst_discoverer_stream_info_get_type
 gst_discoverer_video_info_get_type

@@ -149,7 +149,7 @@ gst_tcp_server_sink_handle_server_read (GstTCPServerSink * sink)
   /* new client */
   int client_sock_fd;
   struct sockaddr_in client_address;
-  unsigned int client_address_len;
+  socklen_t client_address_len;
 
   /* For some stupid reason, client_address and client_address_len has to be
    * zeroed */

@@ -71,15 +71,6 @@ enum
   LAST_SIGNAL
 };
 
-/* we tollerate half a second diff before we start resyncing. This
- * should be enough to compensate for various rounding errors in the timestamp
- * and sample offset position.
- * This is an emergency resync fallback since buffers marked as DISCONT will
- * always lock to the correct timestamp immediatly and buffers not marked as
- * DISCONT are contiguous by definition.
- */
-#define DIFF_TOLERANCE  2
-
 /* FIXME: 0.11, store the buffer_time and latency_time in nanoseconds */
 #define DEFAULT_BUFFER_TIME     ((200 * GST_MSECOND) / GST_USECOND)
 #define DEFAULT_LATENCY_TIME    ((10 * GST_MSECOND) / GST_USECOND)
@@ -89,7 +80,7 @@ enum
 /* FIXME, enable pull mode when clock slaving and trick modes are figured out */
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE
 
-/* when timestamps or clock slaving drift for more than 20ms we resync. This is
+/* when timestamps or clock slaving drift for more than 40ms we resync. This is
  * a reasonable default */
 #define DEFAULT_DRIFT_TOLERANCE   ((40 * GST_MSECOND) / GST_USECOND)
 
@@ -267,6 +258,7 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
     GstBaseAudioSinkClass * g_class)
 {
   GstPluginFeature *feature;
+  GstBaseSink *basesink;
 
   baseaudiosink->priv = GST_BASE_AUDIO_SINK_GET_PRIVATE (baseaudiosink);
 
@@ -274,13 +266,16 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
   baseaudiosink->latency_time = DEFAULT_LATENCY_TIME;
   baseaudiosink->provide_clock = DEFAULT_PROVIDE_CLOCK;
   baseaudiosink->priv->slave_method = DEFAULT_SLAVE_METHOD;
+  baseaudiosink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
 
   baseaudiosink->provided_clock = gst_audio_clock_new ("GstAudioSinkClock",
       (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
 
-  GST_BASE_SINK (baseaudiosink)->can_activate_push = TRUE;
-  GST_BASE_SINK (baseaudiosink)->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
-  baseaudiosink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
+  basesink = GST_BASE_SINK_CAST (baseaudiosink);
+  basesink->can_activate_push = TRUE;
+  basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
+
+  gst_base_sink_set_last_buffer_enabled (basesink, FALSE);
 
   /* install some custom pad_query functions */
   gst_pad_set_query_function (GST_BASE_SINK_PAD (baseaudiosink),
@@ -417,13 +412,6 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
 
       GST_DEBUG_OBJECT (basesink, "latency query");
 
-      if (!basesink->ringbuffer || !basesink->ringbuffer->spec.rate) {
-        GST_DEBUG_OBJECT (basesink,
-            "we are not yet negotiated, can't report latency yet");
-        res = FALSE;
-        goto done;
-      }
-
       /* ask parent first, it will do an upstream query for us. */
       if ((res =
               gst_base_sink_query_latency (GST_BASE_SINK_CAST (basesink), &live,
@@ -434,6 +422,15 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
         if (live && us_live) {
           GstRingBufferSpec *spec;
 
+          GST_OBJECT_LOCK (basesink);
+          if (!basesink->ringbuffer || !basesink->ringbuffer->spec.rate) {
+            GST_OBJECT_UNLOCK (basesink);
+
+            GST_DEBUG_OBJECT (basesink,
+                "we are not yet negotiated, can't report latency yet");
+            res = FALSE;
+            goto done;
+          }
           spec = &basesink->ringbuffer->spec;
 
           basesink->priv->us_latency = min_l;
@@ -441,6 +438,7 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
           min_latency =
               gst_util_uint64_scale_int (spec->seglatency * spec->segsize,
               GST_SECOND, spec->rate * spec->bytes_per_sample);
+          GST_OBJECT_UNLOCK (basesink);
 
           /* we cannot go lower than the buffer size and the min peer latency */
           min_latency = min_latency + min_l;

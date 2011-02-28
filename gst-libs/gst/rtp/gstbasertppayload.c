@@ -402,15 +402,25 @@ gst_basertppayload_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
     {
       gboolean update;
-      gdouble rate;
+      gdouble rate, arate;
       GstFormat fmt;
       gint64 start, stop, position;
+      GstSegment *segment;
 
-      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
-          &position);
-      gst_segment_set_newsegment (&basertppayload->segment, update, rate, fmt,
-          start, stop, position);
+      segment = &basertppayload->segment;
 
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
+          &start, &stop, &position);
+      gst_segment_set_newsegment_full (segment, update, rate, arate, fmt, start,
+          stop, position);
+
+      GST_DEBUG_OBJECT (basertppayload,
+          "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+          "format %d, "
+          "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
+          G_GINT64_FORMAT ", accum %" G_GINT64_FORMAT, update, rate, arate,
+          segment->format, segment->start, segment->stop, segment->time,
+          segment->accum);
       /* fallthrough */
     }
     default:
@@ -777,12 +787,16 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
     rtime = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
         data.timestamp);
 
-    GST_LOG_OBJECT (payload,
-        "Using running_time %" GST_TIME_FORMAT " for RTP timestamp",
-        GST_TIME_ARGS (rtime));
-
-    rtime = gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
-
+    if (rtime == -1) {
+      GST_LOG_OBJECT (payload, "Clipped timestamp, using base RTP timestamp");
+      rtime = 0;
+    } else {
+      GST_LOG_OBJECT (payload,
+          "Using running_time %" GST_TIME_FORMAT " for RTP timestamp",
+          GST_TIME_ARGS (rtime));
+      rtime =
+          gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
+    }
     /* add running_time in clock-rate units to the base timestamp */
     data.rtptime = payload->ts_base + rtime;
   } else {
@@ -810,8 +824,8 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
       GST_BUFFER_SIZE (GST_BUFFER (obj)), payload->seqnum, data.rtptime,
       GST_TIME_ARGS (data.timestamp));
 
-  if (g_atomic_int_compare_and_exchange (&payload->priv->
-          notified_first_timestamp, 1, 0)) {
+  if (g_atomic_int_compare_and_exchange (&payload->
+          priv->notified_first_timestamp, 1, 0)) {
     g_object_notify (G_OBJECT (payload), "timestamp");
     g_object_notify (G_OBJECT (payload), "seqnum");
   }

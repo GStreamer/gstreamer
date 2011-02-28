@@ -122,6 +122,9 @@ static GstFlowReturn gst_ogg_demux_combine_flows (GstOggDemux * ogg,
     GstOggPad * pad, GstFlowReturn ret);
 static void gst_ogg_demux_sync_streams (GstOggDemux * ogg);
 
+GstCaps *gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg,
+    GstCaps * caps, GList * headers);
+
 GType gst_ogg_pad_get_type (void);
 G_DEFINE_TYPE (GstOggPad, gst_ogg_pad, GST_TYPE_PAD);
 
@@ -449,6 +452,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   guint64 out_offset, out_offset_end;
   gboolean delta_unit = FALSE;
 
+  cret = GST_FLOW_OK;
+
   GST_DEBUG_OBJECT (ogg,
       "%p streaming to peer serial %08lx", pad, pad->map.serialno);
 
@@ -464,7 +469,6 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
 
     if ((data[0] & 1) || (data[0] & 3 && pad->map.is_ogm_text)) {
       /* We don't push header packets for OGM */
-      cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
     }
 
@@ -485,7 +489,6 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
         packet->b_o_s ||
         (packet->bytes >= 5 && memcmp (packet->packet, "OVP80", 5) == 0)) {
       /* We don't push header packets for VP8 */
-      cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
     }
     offset = 0;
@@ -540,7 +543,12 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       } else if (pad->map.is_sparse) {
         out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
             pad->current_granule);
-        out_duration = GST_CLOCK_TIME_NONE;
+        if (duration == GST_CLOCK_TIME_NONE) {
+          out_duration = GST_CLOCK_TIME_NONE;
+        } else {
+          out_duration = gst_util_uint64_scale (duration,
+              GST_SECOND * pad->map.granulerate_d, pad->map.granulerate_n);
+        }
       } else {
         out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
             pad->current_granule - duration);
@@ -562,15 +570,11 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       goto empty_packet;
   }
 
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (GST_PAD_CAST (pad),
-      GST_BUFFER_OFFSET_NONE, packet->bytes - offset - trim,
-      GST_PAD_CAPS (pad), &buf);
+  if (!pad->added)
+    goto not_added;
 
-  /* combine flows */
-  cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
-  if (ret != GST_FLOW_OK)
-    goto no_buffer;
+  buf = gst_buffer_new_and_alloc (packet->bytes - offset - trim);
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
 
   /* set delta flag for OGM content */
   if (delta_unit)
@@ -651,23 +655,17 @@ done:
 empty_packet:
   {
     GST_DEBUG_OBJECT (ogg, "Skipping empty packet");
-    cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
     goto done;
   }
 
 no_timestamp:
   {
     GST_DEBUG_OBJECT (ogg, "skipping packet: no valid granule found yet");
-    cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
     goto done;
   }
-
-no_buffer:
+not_added:
   {
-    GST_DEBUG_OBJECT (ogg,
-        "%p could not get buffer from peer %08lx, %d (%s), combined %d (%s)",
-        pad, pad->map.serialno, ret, gst_flow_get_name (ret),
-        cret, gst_flow_get_name (cret));
+    GST_DEBUG_OBJECT (ogg, "pad not added yet");
     goto done;
   }
 }
@@ -1398,10 +1396,7 @@ gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-/* submit the given buffer to the ogg sync.
- *
- * Returns the number of bytes submited.
- */
+/* submit the given buffer to the ogg sync */
 static GstFlowReturn
 gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
 {
@@ -1705,6 +1700,47 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   return TRUE;
 }
 
+GstCaps *
+gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg, GstCaps * caps,
+    GList * headers)
+{
+  GstStructure *structure;
+  GValue array = { 0 };
+
+  GST_LOG_OBJECT (ogg, "caps: %" GST_PTR_FORMAT, caps);
+
+  if (G_UNLIKELY (!caps))
+    return NULL;
+  if (G_UNLIKELY (!headers))
+    return NULL;
+
+  caps = gst_caps_make_writable (caps);
+  structure = gst_caps_get_structure (caps, 0);
+
+  g_value_init (&array, GST_TYPE_ARRAY);
+
+  while (headers) {
+    GValue value = { 0 };
+    GstBuffer *buffer;
+    ogg_packet *op = headers->data;
+    g_assert (op);
+    buffer = gst_buffer_new_and_alloc (op->bytes);
+    memcpy (GST_BUFFER_DATA (buffer), op->packet, op->bytes);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
+    g_value_init (&value, GST_TYPE_BUFFER);
+    gst_value_take_buffer (&value, buffer);
+    gst_value_array_append_value (&array, &value);
+    g_value_unset (&value);
+    headers = headers->next;
+  }
+
+  gst_structure_set_value (structure, "streamheader", &array);
+  g_value_unset (&array);
+  GST_LOG_OBJECT (ogg, "here are the newly set caps: %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
+
 static gboolean
 gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     GstEvent * event)
@@ -1728,7 +1764,6 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
   /* first add the pads */
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad;
-    GstStructure *structure;
 
     pad = g_array_index (chain->streams, GstOggPad *, i);
 
@@ -1745,8 +1780,6 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       continue;
 
     GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
-
-    structure = gst_caps_get_structure (GST_PAD_CAPS (pad), 0);
 
     /* activate first */
     gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
@@ -1789,6 +1822,11 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
           GST_PAD_CAST (pad), pad->map.taglist);
       pad->map.taglist = NULL;
     }
+
+    /* Set headers on caps */
+    pad->map.caps =
+        gst_ogg_demux_set_header_on_caps (ogg, pad->map.caps, pad->map.headers);
+    gst_pad_set_caps (GST_PAD_CAST (pad), pad->map.caps);
 
     GST_DEBUG_OBJECT (ogg, "pushing headers");
     /* push headers */
@@ -2068,7 +2106,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
       goto next;
 
     granulepos = ogg_page_granulepos (&og);
-    if (granulepos == -1) {
+    if (granulepos == -1 || granulepos == 0) {
       GST_LOG_OBJECT (ogg, "granulepos of next page is -1");
       continue;
     }

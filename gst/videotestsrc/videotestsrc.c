@@ -32,6 +32,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define TO_16(x) (((x)<<8) | (x))
+#define TO_10(x) (((x)<<2) | ((x)>>6))
+
 static void paint_tmpline_ARGB (paintinfo * p, int x, int w);
 static void paint_tmpline_AYUV (paintinfo * p, int x, int w);
 
@@ -144,6 +147,7 @@ static void paint_setup_v410 (paintinfo * p, unsigned char *dest);
 static void paint_setup_v216 (paintinfo * p, unsigned char *dest);
 static void paint_setup_v210 (paintinfo * p, unsigned char *dest);
 static void paint_setup_UYVP (paintinfo * p, unsigned char *dest);
+static void paint_setup_AY64 (paintinfo * p, unsigned char *dest);
 
 static void paint_setup_YUV9 (paintinfo * p, unsigned char *dest);
 static void paint_setup_YVU9 (paintinfo * p, unsigned char *dest);
@@ -159,6 +163,7 @@ static void paint_setup_RGB888 (paintinfo * p, unsigned char *dest);
 static void paint_setup_BGR888 (paintinfo * p, unsigned char *dest);
 static void paint_setup_RGB565 (paintinfo * p, unsigned char *dest);
 static void paint_setup_xRGB1555 (paintinfo * p, unsigned char *dest);
+static void paint_setup_ARGB64 (paintinfo * p, unsigned char *dest);
 
 static void paint_setup_bayer_bggr (paintinfo * p, unsigned char *dest);
 static void paint_setup_bayer_rggb (paintinfo * p, unsigned char *dest);
@@ -184,9 +189,11 @@ static void convert_hline_v410 (paintinfo * p, int y);
 static void convert_hline_v216 (paintinfo * p, int y);
 static void convert_hline_v210 (paintinfo * p, int y);
 static void convert_hline_UYVP (paintinfo * p, int y);
+static void convert_hline_AY64 (paintinfo * p, int y);
 
 static void convert_hline_YUV9 (paintinfo * p, int y);
 static void convert_hline_astr4 (paintinfo * p, int y);
+static void convert_hline_astr8 (paintinfo * p, int y);
 static void convert_hline_str4 (paintinfo * p, int y);
 static void convert_hline_str3 (paintinfo * p, int y);
 static void convert_hline_RGB565 (paintinfo * p, int y);
@@ -216,6 +223,7 @@ struct fourcc_list_struct fourcc_list[] = {
   {VTS_YUV, "v210", "v210", 21, paint_setup_v210, convert_hline_v210},
   {VTS_YUV, "v216", "v216", 32, paint_setup_v216, convert_hline_v216},
   {VTS_YUV, "UYVP", "UYVP", 20, paint_setup_UYVP, convert_hline_UYVP},
+  {VTS_YUV, "AY64", "AY64", 64, paint_setup_AY64, convert_hline_AY64},
 
 #ifdef disabled
   {VTS_YUV, "IYU2", "IYU2", 24, paint_setup_IYU2, convert_hline_IYU2},
@@ -283,6 +291,9 @@ struct fourcc_list_struct fourcc_list[] = {
         convert_hline_xRGB1555,
         15,
       0x00007c00, 0x000003e0, 0x0000001f},
+  {VTS_RGB, "RGB ", "ARGB8888", 64, paint_setup_ARGB64, convert_hline_astr8,
+        64,
+      0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000},
 
   {VTS_BAYER, "bggr", "Bayer", 8, paint_setup_bayer_bggr, convert_hline_bayer},
   {VTS_BAYER, "rggb", "Bayer", 8, paint_setup_bayer_rggb, convert_hline_bayer},
@@ -1839,6 +1850,19 @@ paint_setup_YVYU (paintinfo * p, unsigned char *dest)
 }
 
 static void
+paint_setup_AY64 (paintinfo * p, unsigned char *dest)
+{
+  p->ap = dest;
+  p->yp = dest + 2;
+  p->up = dest + 4;
+  p->vp = dest + 6;
+  p->ystride = p->width * 8;
+  p->ustride = p->width * 8;
+  p->vstride = p->width * 8;
+  p->endptr = dest + p->ystride * p->height;
+}
+
+static void
 convert_hline_v308 (paintinfo * p, int y)
 {
   int i;
@@ -1871,9 +1895,6 @@ convert_hline_AYUV (paintinfo * p, int y)
     V[i * 4] = ayuv[4 * i + 3];
   }
 }
-
-#define TO_16(x) (((x)<<8) | (x))
-#define TO_10(x) (((x)<<2) | ((x)>>6))
 
 static void
 convert_hline_v216 (paintinfo * p, int y)
@@ -2002,6 +2023,21 @@ convert_hline_YUY2 (paintinfo * p, int y)
   for (i = 0; i < (p->width + 1) / 2; i++) {
     U[4 * i] = (ayuv[4 * (i * 2) + 2] + ayuv[4 * (i * 2 + 1) + 2] + 1) >> 1;
     V[4 * i] = (ayuv[4 * (i * 2) + 3] + ayuv[4 * (i * 2 + 1) + 3] + 1) >> 1;
+  }
+}
+
+static void
+convert_hline_AY64 (paintinfo * p, int y)
+{
+  int i;
+  guint16 *ayuv16 = (guint16 *) (p->ap + y * p->ystride);
+  guint8 *ayuv = p->tmpline;
+
+  for (i = 0; i < p->width; i++) {
+    GST_WRITE_UINT16_LE (ayuv16 + i * 4 + 0, TO_16 (ayuv[4 * i + 0]));
+    GST_WRITE_UINT16_LE (ayuv16 + i * 4 + 1, TO_16 (ayuv[4 * i + 1]));
+    GST_WRITE_UINT16_LE (ayuv16 + i * 4 + 2, TO_16 (ayuv[4 * i + 2]));
+    GST_WRITE_UINT16_LE (ayuv16 + i * 4 + 3, TO_16 (ayuv[4 * i + 3]));
   }
 }
 
@@ -2295,6 +2331,19 @@ paint_setup_BGR888 (paintinfo * p, unsigned char *dest)
 }
 
 static void
+paint_setup_ARGB64 (paintinfo * p, unsigned char *dest)
+{
+  p->yp = dest + 2;
+  p->up = dest + 4;
+  p->vp = dest + 6;
+  p->ap = dest;
+  p->ystride = p->width * 8;
+  p->ustride = p->width * 8;
+  p->vstride = p->width * 8;
+  p->endptr = p->dest + p->ystride * p->height;
+}
+
+static void
 convert_hline_str4 (paintinfo * p, int y)
 {
   int i;
@@ -2327,6 +2376,24 @@ convert_hline_astr4 (paintinfo * p, int y)
     R[4 * i] = argb[4 * i + 1];
     G[4 * i] = argb[4 * i + 2];
     B[4 * i] = argb[4 * i + 3];
+  }
+}
+
+static void
+convert_hline_astr8 (paintinfo * p, int y)
+{
+  int i;
+  guint16 *A = (guint16 *) (p->ap + y * p->ystride);
+  guint16 *R = (guint16 *) (p->yp + y * p->ystride);
+  guint16 *G = (guint16 *) (p->up + y * p->ustride);
+  guint16 *B = (guint16 *) (p->vp + y * p->vstride);
+  guint8 *argb = p->tmpline;
+
+  for (i = 0; i < p->width; i++) {
+    A[4 * i] = TO_16 (argb[4 * i + 0]);
+    R[4 * i] = TO_16 (argb[4 * i + 1]);
+    G[4 * i] = TO_16 (argb[4 * i + 2]);
+    B[4 * i] = TO_16 (argb[4 * i + 3]);
   }
 }
 

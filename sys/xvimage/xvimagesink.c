@@ -2089,7 +2089,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       "In setcaps. Possible caps %" GST_PTR_FORMAT ", setting caps %"
       GST_PTR_FORMAT, xvimagesink->xcontext->caps, caps);
 
-  if (!gst_caps_intersect (xvimagesink->xcontext->caps, caps))
+  if (!gst_caps_can_intersect (xvimagesink->xcontext->caps, caps))
     goto incompatible_caps;
 
   structure = gst_caps_get_structure (caps, 0);

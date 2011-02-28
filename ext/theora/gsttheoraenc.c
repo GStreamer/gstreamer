@@ -175,6 +175,57 @@ granulepos_to_timestamp (GstTheoraEnc * theoraenc, ogg_int64_t granulepos)
       theoraenc->info.fps_numerator);
 }
 
+/* Generate a dummy encoder context for use in th_encode_ctl queries
+   Release with th_encode_free()
+   This and the next routine from theora/examples/libtheora_info.c */
+static th_enc_ctx *
+dummy_encode_ctx (void)
+{
+  th_enc_ctx *ctx;
+  th_info info;
+
+  /* set the minimal video parameters */
+  th_info_init (&info);
+  info.frame_width = 320;
+  info.frame_height = 240;
+  info.fps_numerator = 1;
+  info.fps_denominator = 1;
+
+  /* allocate and initialize a context object */
+  ctx = th_encode_alloc (&info);
+  if (!ctx)
+    GST_WARNING ("Failed to allocate dummy encoder context.");
+
+  /* clear the info struct */
+  th_info_clear (&info);
+
+  return ctx;
+}
+
+/* Query the current and maximum values for the 'speed level' setting.
+   This can be used to ask the encoder to trade off encoding quality
+   vs. performance cost, for example to adapt to realtime constraints. */
+static int
+check_speed_level (th_enc_ctx * ctx, int *current, int *max)
+{
+  int ret;
+
+  /* query the current speed level */
+  ret = th_encode_ctl (ctx, TH_ENCCTL_GET_SPLEVEL, current, sizeof (int));
+  if (ret) {
+    GST_WARNING ("Error %d getting current speed level.", ret);
+    return ret;
+  }
+  /* query the maximum speed level, which varies by encoder version */
+  ret = th_encode_ctl (ctx, TH_ENCCTL_GET_SPLEVEL_MAX, max, sizeof (int));
+  if (ret) {
+    GST_WARNING ("Error %d getting maximum speed level.", ret);
+    return ret;
+  }
+
+  return 0;
+}
+
 static GstStaticPadTemplate theora_enc_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -242,6 +293,21 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
+  /* query runtime encoder properties */
+  th_enc_ctx *th_ctx;
+  int default_speed_level = THEORA_DEF_SPEEDLEVEL;
+  int max_speed_level = default_speed_level;
+
+  GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");
+
+  th_ctx = dummy_encode_ctx ();
+  if (th_ctx) {
+    if (!check_speed_level (th_ctx, &default_speed_level, &max_speed_level))
+      GST_WARNING
+          ("Failed to determine settings for the speed-level property.");
+    th_encode_free (th_ctx);
+  }
+
   gobject_class->set_property = theora_enc_set_property;
   gobject_class->get_property = theora_enc_get_property;
   gobject_class->finalize = theora_enc_finalize;
@@ -301,40 +367,38 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SPEEDLEVEL,
       g_param_spec_int ("speed-level", "Speed level",
-          "Controls the amount of motion vector searching done while "
-          "encoding.  This property requires libtheora version >= 1.0",
-          0, 3, THEORA_DEF_SPEEDLEVEL,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Controls the amount of analysis performed when encoding."
+          " Higher values trade compression quality for speed."
+          " This property requires libtheora version >= 1.0"
+          ", and the maximum value may vary based on encoder version.",
+          0, max_speed_level, default_speed_level,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_VP3_COMPATIBLE,
       g_param_spec_boolean ("vp3-compatible", "VP3 Compatible",
-          "Disables non-VP3 compatible features."
-          "  This property requires libtheora version >= 1.1",
+          "Disables non-VP3 compatible features",
           THEORA_DEF_VP3_COMPATIBLE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DROP_FRAMES,
       g_param_spec_boolean ("drop-frames", "VP3 Compatible",
-          "Allow or disallow frame dropping."
-          "  This property requires libtheora version >= 1.1",
+          "Allow or disallow frame dropping",
           THEORA_DEF_DROP_FRAMES,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAP_OVERFLOW,
       g_param_spec_boolean ("cap-overflow", "VP3 Compatible",
-          "Enable capping of bit reservoir overflows."
-          "  This property requires libtheora version >= 1.1",
+          "Enable capping of bit reservoir overflows",
           THEORA_DEF_CAP_OVERFLOW,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAP_UNDERFLOW,
       g_param_spec_boolean ("cap-underflow", "VP3 Compatible",
-          "Enable capping of bit reservoir underflows."
-          "  This property requires libtheora version >= 1.1",
+          "Enable capping of bit reservoir underflows",
           THEORA_DEF_CAP_UNDERFLOW,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RATE_BUFFER,
       g_param_spec_int ("rate-buffer", "Rate Control Buffer",
           "Sets the size of the rate control buffer, in units of frames.  "
           "The default value of 0 instructs the encoder to automatically "
-          "select an appropriate value."
-          "  This property requires libtheora version >= 1.1",
+          "select an appropriate value",
           0, 1000, THEORA_DEF_RATE_BUFFER,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MULTIPASS_CACHE_FILE,
@@ -348,7 +412,6 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = theora_enc_change_state;
-  GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");
 }
 
 static void
@@ -377,7 +440,7 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
 
   enc->expected_ts = GST_CLOCK_TIME_NONE;
 
-  enc->speed_level = THEORA_DEF_SPEEDLEVEL;
+  /* enc->speed_level is set to the libtheora default by the constructor */
   enc->vp3_compatible = THEORA_DEF_VP3_COMPATIBLE;
   enc->drop_frames = THEORA_DEF_DROP_FRAMES;
   enc->cap_overflow = THEORA_DEF_CAP_OVERFLOW;
@@ -1378,13 +1441,12 @@ theora_enc_set_property (GObject * object, guint prop_id,
     case PROP_BITRATE:
       GST_OBJECT_LOCK (enc);
       enc->video_bitrate = g_value_get_int (value) * 1000;
-      enc->video_quality = 0;
       enc->bitrate_changed = TRUE;
       GST_OBJECT_UNLOCK (enc);
       break;
     case PROP_QUALITY:
       GST_OBJECT_LOCK (enc);
-      if (GST_STATE (enc) >= GST_STATE_PAUSED && enc->video_quality == 0) {
+      if (GST_STATE (enc) >= GST_STATE_PAUSED && enc->video_bitrate > 0) {
         GST_WARNING_OBJECT (object, "Can't change from bitrate to quality mode"
             " while playing");
       } else {
@@ -1405,6 +1467,10 @@ theora_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SPEEDLEVEL:
       enc->speed_level = g_value_get_int (value);
+      if (enc->encoder) {
+        th_encode_ctl (enc->encoder, TH_ENCCTL_SET_SPLEVEL, &enc->speed_level,
+            sizeof (enc->speed_level));
+      }
       break;
     case PROP_VP3_COMPATIBLE:
       enc->vp3_compatible = g_value_get_boolean (value);

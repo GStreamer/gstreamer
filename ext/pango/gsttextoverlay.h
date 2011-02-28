@@ -3,6 +3,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/controller/gstcontroller.h>
 #include <pango/pangocairo.h>
 
 G_BEGIN_DECLS
@@ -34,7 +35,8 @@ typedef enum {
     GST_TEXT_OVERLAY_VALIGN_BASELINE,
     GST_TEXT_OVERLAY_VALIGN_BOTTOM,
     GST_TEXT_OVERLAY_VALIGN_TOP,
-    GST_TEXT_OVERLAY_VALIGN_POS
+    GST_TEXT_OVERLAY_VALIGN_POS,
+    GST_TEXT_OVERLAY_VALIGN_CENTER
 } GstTextOverlayVAlign;
 
 /**

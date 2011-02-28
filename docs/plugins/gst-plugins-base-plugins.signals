@@ -471,3 +471,11 @@ GstPlaySink *gstplaysink
 GstCaps *arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstEncodeBin::request-pad</NAME>
+<RETURNS>GstPad*</RETURNS>
+<FLAGS>la</FLAGS>
+GstEncodeBin *gstencodebin
+GstCaps *arg1
+</SIGNAL>
+

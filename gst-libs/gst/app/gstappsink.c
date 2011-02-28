@@ -111,6 +111,8 @@ struct _GstAppSinkPrivate
   GstAppSinkCallbacks callbacks;
   gpointer user_data;
   GDestroyNotify notify;
+
+  gboolean buffer_lists_supported;
 };
 
 GST_DEBUG_CATEGORY_STATIC (app_sink_debug);
@@ -271,7 +273,8 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_EMIT_SIGNALS,
       g_param_spec_boolean ("emit-signals", "Emit signals",
-          "Emit new-preroll and new-buffer signals", DEFAULT_PROP_EMIT_SIGNALS,
+          "Emit new-preroll, new-buffer and new-buffer-list signals",
+          DEFAULT_PROP_EMIT_SIGNALS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAX_BUFFERS,
@@ -622,6 +625,21 @@ gst_app_sink_flush_unlocked (GstAppSink * appsink)
   g_cond_signal (priv->cond);
 }
 
+#define NEW_BUFFER_LIST_SIGID \
+    gst_app_sink_signals[SIGNAL_NEW_BUFFER_LIST]
+
+static gboolean
+gst_app_sink_check_buffer_lists_support (GstAppSink * appsink)
+{
+  gboolean ret;
+
+  ret = (appsink->priv->callbacks.new_buffer_list != NULL) ||
+      g_signal_has_handler_pending (appsink, NEW_BUFFER_LIST_SIGID, 0, FALSE);
+
+  GST_INFO_OBJECT (appsink, "application supports buffer lists: %d", ret);
+  return ret;
+}
+
 static gboolean
 gst_app_sink_start (GstBaseSink * psink)
 {
@@ -630,7 +648,10 @@ gst_app_sink_start (GstBaseSink * psink)
 
   g_mutex_lock (priv->mutex);
   GST_DEBUG_OBJECT (appsink, "starting");
+  priv->flushing = FALSE;
   priv->started = TRUE;
+  priv->buffer_lists_supported =
+      gst_app_sink_check_buffer_lists_support (appsink);
   g_mutex_unlock (priv->mutex);
 
   return TRUE;
@@ -779,6 +800,8 @@ restart:
   if (is_list) {
     if (priv->callbacks.new_buffer_list)
       priv->callbacks.new_buffer_list (appsink, priv->user_data);
+    else if (emit)
+      g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_BUFFER_LIST], 0);
   } else {
     if (priv->callbacks.new_buffer)
       priv->callbacks.new_buffer (appsink, priv->user_data);
@@ -808,9 +831,46 @@ gst_app_sink_render (GstBaseSink * psink, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_app_sink_render_list (GstBaseSink * psink, GstBufferList * list)
+gst_app_sink_render_list (GstBaseSink * sink, GstBufferList * list)
 {
-  return gst_app_sink_render_common (psink, GST_MINI_OBJECT_CAST (list), TRUE);
+  GstBufferListIterator *it;
+  GstFlowReturn flow;
+  GstAppSink *appsink;
+  GstBuffer *group;
+
+  appsink = GST_APP_SINK_CAST (sink);
+
+  if (appsink->priv->buffer_lists_supported)
+    return gst_app_sink_render_common (sink, GST_MINI_OBJECT_CAST (list), TRUE);
+
+  /* The application doesn't support buffer lists, extract individual buffers
+   * then and push them one-by-one */
+  GST_INFO_OBJECT (sink, "chaining each group in list as a merged buffer");
+
+  it = gst_buffer_list_iterate (list);
+
+  if (gst_buffer_list_iterator_next_group (it)) {
+    do {
+      group = gst_buffer_list_iterator_merge_group (it);
+      if (group == NULL) {
+        group = gst_buffer_new ();
+        GST_DEBUG_OBJECT (sink, "chaining empty group");
+      } else {
+        GST_DEBUG_OBJECT (sink, "chaining group");
+      }
+      flow = gst_app_sink_render (sink, group);
+      gst_buffer_unref (group);
+    } while (flow == GST_FLOW_OK && gst_buffer_list_iterator_next_group (it));
+  } else {
+    GST_DEBUG_OBJECT (sink, "chaining empty group");
+    group = gst_buffer_new ();
+    flow = gst_app_sink_render (sink, group);
+    gst_buffer_unref (group);
+  }
+
+  gst_buffer_list_iterator_free (it);
+
+  return flow;
 }
 
 static GstCaps *
@@ -1331,6 +1391,8 @@ gst_app_sink_set_callbacks (GstAppSink * appsink,
   priv->callbacks = *callbacks;
   priv->user_data = user_data;
   priv->notify = notify;
+  priv->buffer_lists_supported =
+      gst_app_sink_check_buffer_lists_support (appsink);
   GST_OBJECT_UNLOCK (appsink);
 }
 

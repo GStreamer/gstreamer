@@ -10,10 +10,10 @@
 # Suomennos: http://gnome.fi/
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-04-26 21:15+0300\n"
+"POT-Creation-Date: 2011-01-06 20:42+0000\n"
+"PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "Language: fi\n"
@@ -21,7 +21,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: KBabel 1.11.2\n"
 
 msgid "Master"
 msgstr "Pääkanava"
@@ -292,119 +291,119 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-tunniste"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "kuvaamisen suljinnopeus"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Suljinnopeus kuvattaessa, sekunteina"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "kuvaamisen aukkosuhde"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Aukkosuhde (f-luku) kuvattaessa"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "kuvaamisen polttoväli"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Linssin polttoväli kuvattaessa, millimetriä"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "kuvaamisen digitaalinen zoomaus"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Digitaalinen suurennuskerroin kuvattaessa"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "kuvaamisen ISO-nopeus"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "ISO-nopeus kuvattaessa"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "kuvaamisen valotusohjelma"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Valotusohjelma kuvattaessa"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "kuvaamisen valotustapa"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Valotustapa kuvattaessa"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "kuvaamisen kuvausmoodi"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Kuvausmoodi kuvattaessa"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "kuvaamisen kirkkauskorjaus"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Yleinen kirkkauskorjaus, joka kuvalle on tehty"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "kuvaamisen valkotasapaino"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Valittu valkotasapainotila kuvattaessa"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "kuvaamisen kontrasti"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Käytetty kontrastikäsittelyn suunta kuvattessa"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "kuvaamisen saturaatio"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "Käytetty saturaatiokäsittelyn suunta kuvattessa"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "kuvaamisen terävyys"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Käytetty terävyyskäsittelyn suunta kuvattessa"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "kuvaamisen salamankäyttö"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Syttyikö salama kuvattaessa"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "kuvaamisen salamamoodi"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Valittu salamamoodi kuvattessa"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "kuvaamisen mittausmoodi"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
+msgstr "Käytetty mittausmoodi päätettäessä valotusta kuvattaessa"
 
 msgid "capturing source"
-msgstr ""
+msgstr "kuvaamisen lähde"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Lähde tai laitetyyppi kuvattaessa"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "kuvan vaakasuora ppi"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Median (kuva tai video) tarkoitettu vaakasuora pikselitiheys ppi:nä"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "kuvan pystysuora ppi"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Median (kuva tai video) tarkoitettu pystysuora pikselitiheys ppi:nä"
 
 msgid "This CD has no audio tracks"
 msgstr "Tällä CD-levyllä ei ole ääniraitoja"

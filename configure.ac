@@ -49,7 +49,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 22, 0, 22)
+AS_LIBTOOL(GST, 23, 0, 23)
 
 dnl FIXME: this macro doesn't actually work;
 dnl the generated libtool script has no support for the listed tags.
@@ -151,7 +151,7 @@ AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
 dnl check for gobject-introspection
-GOBJECT_INTROSPECTION_CHECK([0.6.3])
+GOBJECT_INTROSPECTION_CHECK([0.9.12])
 
 dnl check for documentation tools
 GTK_DOC_CHECK([1.3])
@@ -337,6 +337,22 @@ AC_COMPILE_IFELSE(
 ])
 AM_CONDITIONAL(HAVE_LINUX_JOYSTICK_HEADERS, test "x$HAVE_LINUX_JOYSTICK_HEADERS" = "xyes")
 
+dnl Check for -Bsymbolic-functions linker flag used to avoid
+dnl intra-library PLT jumps, if available.
+AC_ARG_ENABLE(Bsymbolic,
+              [AC_HELP_STRING([--disable-Bsymbolic],
+                              [avoid linking with -Bsymbolic])],,
+              [SAVED_LDFLAGS="${LDFLAGS}"
+               AC_MSG_CHECKING([for -Bsymbolic-functions linker flag])
+               LDFLAGS=-Wl,-Bsymbolic-functions
+               AC_TRY_LINK([], [int main (void) { return 0; }],
+                           AC_MSG_RESULT(yes)
+                           enable_Bsymbolic=yes,
+                           AC_MSG_RESULT(no)
+                           enable_Bsymbolic=no)
+               LDFLAGS="${SAVED_LDFLAGS}"])
+
+
 dnl *** set variables based on configure arguments ***
 
 dnl set license and copyright notice
@@ -373,6 +389,11 @@ AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
 dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
 
+dnl needed for encoding-target
+GST_DATADIR="$GST_PREFIX/share"
+AC_DEFINE_UNQUOTED(GST_DATADIR, "$GST_DATADIR", [system wide data directory])
+AC_DEFINE_UNQUOTED(GST_MAJORMINOR, "$GST_MAJORMINOR", [major/minor version])
+
 dnl behaviour of speex based audio resampler
 AC_MSG_CHECKING(which audio resample format to use for integer)
 AC_ARG_WITH([audioresample_format],
@@ -401,6 +422,7 @@ AG_GST_CHECK_PLUGIN(app)
 AG_GST_CHECK_PLUGIN(audioconvert)
 AG_GST_CHECK_PLUGIN(audiorate)
 AG_GST_CHECK_PLUGIN(audiotestsrc)
+AG_GST_CHECK_PLUGIN(encoding)
 AG_GST_CHECK_PLUGIN(ffmpegcolorspace)
 AG_GST_CHECK_PLUGIN(gdp)
 AG_GST_CHECK_PLUGIN(playback)
@@ -870,6 +892,9 @@ AC_SUBST(GST_LIBS)
 dnl LDFLAGS really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
+if test "x${enable_Bsymbolic}" = "xyes"; then
+  GST_ALL_LDFLAGS="$GST_ALL_LDFLAGS -Wl,-Bsymbolic-functions"
+fi
 AC_SUBST(GST_ALL_LDFLAGS)
 
 dnl GST_LIB_LDFLAGS
@@ -895,6 +920,7 @@ gst/app/Makefile
 gst/audioconvert/Makefile
 gst/audiorate/Makefile
 gst/audiotestsrc/Makefile
+gst/encoding/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/gdp/Makefile
 gst/playback/Makefile
@@ -974,6 +1000,7 @@ tests/check/Makefile
 tests/examples/Makefile
 tests/examples/app/Makefile
 tests/examples/dynamic/Makefile
+tests/examples/encoding/Makefile
 tests/examples/gio/Makefile
 tests/examples/overlay/Makefile
 tests/examples/seek/Makefile
@@ -1034,7 +1061,7 @@ sed \
     -e 's/.* PLUGINDIR$/#ifdef _DEBUG\n#  define PLUGINDIR PREFIX "\\\\debug\\\\lib\\\\gstreamer-0.11"\n#else\n#  define PLUGINDIR PREFIX "\\\\lib\\\\gstreamer-0.11"\n#endif/' \
     -e 's/.* USE_BINARY_REGISTRY$/#define USE_BINARY_REGISTRY/' \
     -e 's/.* VERSION$/#define VERSION "'$VERSION'"/' \
-    -e "s/.* DEFAULT_AUDIOSINK$/#define DEFAULT_AUDIOSINK \"directaudiosink\"/" \
+    -e "s/.* DEFAULT_AUDIOSINK$/#define DEFAULT_AUDIOSINK \"directsoundsink\"/" \
     -e "s/.* DEFAULT_VIDEOSINK$/#define DEFAULT_VIDEOSINK \"directdrawsink\"/" \
     -e "s/.* DEFAULT_VISUALIZER$/#define DEFAULT_VISUALIZER \"goom\"/" \
     config.h.in >win32/common/config.h-new

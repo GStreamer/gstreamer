@@ -115,6 +115,7 @@ free_stream (GstOggStream * stream)
 {
   g_list_foreach (stream->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_foreach (stream->unknown_pages, (GFunc) gst_mini_object_unref, NULL);
+  g_list_foreach (stream->stored_buffers, (GFunc) gst_mini_object_unref, NULL);
 
   g_free (stream);
 }
@@ -281,29 +282,41 @@ gst_ogg_parse_dispose (GObject * object)
     G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-/* submit the given buffer to the ogg sync.
- *
- * Returns the number of bytes submited.
- */
-static gint
+/* submit the given buffer to the ogg sync */
+static GstFlowReturn
 gst_ogg_parse_submit_buffer (GstOggParse * ogg, GstBuffer * buffer)
 {
   guint size;
   guint8 *data;
   gchar *oggbuffer;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
-  /* We now have a buffer, submit it to the ogg sync layer */
-  oggbuffer = ogg_sync_buffer (&ogg->sync, size);
-  memcpy (oggbuffer, data, size);
-  ogg_sync_wrote (&ogg->sync, size);
+  GST_DEBUG_OBJECT (ogg, "submitting %u bytes", size);
+  if (G_UNLIKELY (size == 0))
+    goto done;
 
-  /* We've copied all the neccesary data, so we're done with the buffer */
+  oggbuffer = ogg_sync_buffer (&ogg->sync, size);
+  if (G_UNLIKELY (oggbuffer == NULL)) {
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
+        (NULL), ("failed to get ogg sync buffer"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+  memcpy (oggbuffer, data, size);
+  if (G_UNLIKELY (ogg_sync_wrote (&ogg->sync, size) < 0)) {
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
+        (NULL), ("failed to write %d bytes to the sync buffer", size));
+    ret = GST_FLOW_ERROR;
+  }
+
+done:
   gst_buffer_unref (buffer);
 
-  return size;
+  return ret;
 }
 
 static void
@@ -350,7 +363,7 @@ gst_ogg_parse_is_header (GstOggParse * ogg, GstOggStream * stream,
 
 static GstBuffer *
 gst_ogg_parse_buffer_from_page (ogg_page * page,
-    guint64 offset, gboolean keyframe, GstClockTime timestamp)
+    guint64 offset, GstClockTime timestamp)
 {
   int size = page->header_len + page->body_len;
   GstBuffer *buf = gst_buffer_new_and_alloc (size);
@@ -361,9 +374,6 @@ gst_ogg_parse_buffer_from_page (ogg_page * page,
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + size;
-  if (!keyframe) {
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-  }
 
   return buf;
 }
@@ -435,7 +445,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
         keyframe = TRUE;
       }
       pagebuffer = gst_ogg_parse_buffer_from_page (&page, startoffset,
-          keyframe, buffertimestamp);
+          buffertimestamp);
 
       /* We read out 'ret' bytes, so we set the next offset appropriately */
       ogg->offset += ret;
@@ -647,15 +657,42 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               g_list_free (stream->unknown_pages);
               stream->unknown_pages = NULL;
             }
+          }
 
-            gst_buffer_set_caps (pagebuffer, caps);
-
-            result = gst_pad_push (ogg->srcpad, GST_BUFFER (pagebuffer));
-            if (result != GST_FLOW_OK)
-              return result;
+          if (granule == -1) {
+            stream->stored_buffers = g_list_append (stream->stored_buffers,
+                pagebuffer);
           } else {
-            /* Normal data page, submit buffer */
+            if (stream->stored_buffers) {
+              int j;
+
+              for (j = 0; j < g_list_length (stream->stored_buffers); j++) {
+                GstBuffer *buf =
+                    GST_BUFFER (g_list_nth_data (stream->stored_buffers, j));
+
+                gst_buffer_set_caps (buf, ogg->caps);
+                GST_BUFFER_TIMESTAMP (buf) = buffertimestamp;
+                if (!keyframe) {
+                  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+                } else {
+                  keyframe = FALSE;
+                }
+
+                result = gst_pad_push (ogg->srcpad, buf);
+                if (result != GST_FLOW_OK)
+                  return result;
+              }
+              g_list_free (stream->stored_buffers);
+              stream->stored_buffers = NULL;
+            }
+
             gst_buffer_set_caps (pagebuffer, ogg->caps);
+            if (!keyframe) {
+              GST_BUFFER_FLAG_SET (pagebuffer, GST_BUFFER_FLAG_DELTA_UNIT);
+            } else {
+              keyframe = FALSE;
+            }
+
             result = gst_pad_push (ogg->srcpad, GST_BUFFER (pagebuffer));
             if (result != GST_FLOW_OK)
               return result;

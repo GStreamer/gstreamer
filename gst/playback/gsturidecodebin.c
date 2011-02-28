@@ -119,9 +119,12 @@ struct _GstURIDecodeBinClass
   /* signal fired to get a list of factories to try to autoplug */
   GValueArray *(*autoplug_factories) (GstElement * element, GstPad * pad,
       GstCaps * caps);
+  /* signal fired to sort the factories */
+  GValueArray *(*autoplug_sort) (GstElement * element, GstPad * pad,
+      GstCaps * caps, GValueArray * factories);
   /* signal fired to select from the proposed list of factories */
     GstAutoplugSelectResult (*autoplug_select) (GstElement * element,
-      GstPad * pad, GstCaps * caps, GValueArray * factories);
+      GstPad * pad, GstCaps * caps, GstElementFactory * factory);
 
   /* emited when all data is decoded */
   void (*drained) (GstElement * element);
@@ -145,6 +148,8 @@ enum
   SIGNAL_AUTOPLUG_FACTORIES,
   SIGNAL_AUTOPLUG_SELECT,
   SIGNAL_DRAINED,
+  SIGNAL_AUTOPLUG_SORT,
+  SIGNAL_SOURCE_SETUP,
   LAST_SIGNAL
 };
 
@@ -251,6 +256,22 @@ _gst_select_accumulator (GSignalInvocationHint * ihint,
 }
 
 static gboolean
+_gst_array_hasvalue_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  gpointer array;
+
+  array = g_value_get_boxed (handler_return);
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boxed (return_accu, array);
+
+  if (array != NULL)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_uri_decode_bin_autoplug_continue (GstElement * element, GstPad * pad,
     GstCaps * caps)
 {
@@ -309,6 +330,22 @@ gst_uri_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
   return result;
 }
 
+static GValueArray *
+gst_uri_decode_bin_autoplug_sort (GstElement * element, GstPad * pad,
+    GstCaps * caps, GValueArray * factories)
+{
+  return NULL;
+}
+
+static GstAutoplugSelectResult
+gst_uri_decode_bin_autoplug_select (GstElement * element, GstPad * pad,
+    GstCaps * caps, GstElementFactory * factory)
+{
+  GST_DEBUG_OBJECT (element, "default autoplug-select returns TRY");
+
+  /* Try factory. */
+  return GST_AUTOPLUG_SELECT_TRY;
+}
 
 static void
 gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
@@ -407,7 +444,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstQueue2:ring-buffer-max-size
+   * GstURIDecodeBin::ring-buffer-max-size
    *
    * The maximum size of the ring buffer in kilobytes. If set to 0, the ring
    * buffer is disabled. Default is 0.
@@ -423,8 +460,8 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::unknown-type:
-   * @bin: The uridecodebin
-   * @pad: the new pad containing caps that cannot be resolved to a 'final'
+   * @bin: The uridecodebin.
+   * @pad: the new pad containing caps that cannot be resolved to a 'final'.
    * stream type.
    * @caps: the #GstCaps of the pad that cannot be resolved.
    *
@@ -439,12 +476,18 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::autoplug-continue:
-   * @bin: The uridecodebin
+   * @bin: The uridecodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
    * This signal is emitted whenever uridecodebin finds a new stream. It is
    * emitted before looking for any elements that can handle that stream.
+   *
+   * <note>
+   *   Invocation of signal handlers stops after the first signal handler
+   *   returns #FALSE. Signal handlers are invoked in the order they were
+   *   connected in.
+   * </note>
    *
    * Returns: #TRUE if you wish uridecodebin to look for elements that can
    * handle the given @caps. If #FALSE, those caps will be considered as
@@ -460,7 +503,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::autoplug-factories:
-   * @bin: The decodebin
+   * @bin: The uridecodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
@@ -472,6 +515,12 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    *
    * If this function returns an empty array, the pad will be considered as
    * having an unhandled type media type.
+   *
+   * <note>
+   *   Only the signal handler that is connected first will ever by invoked.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: a #GValueArray* with a list of factories to try. The factories are
    * by default tried in the returned order or based on the index returned by
@@ -485,10 +534,45 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
-   * GstURIDecodeBin::autoplug-select:
+   * GstURIDecodeBin::autoplug-sort:
+   * @bin: The uridecodebin.
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
-   * @factory: A #GstElementFactory to use
+   * @factories: A #GValueArray of possible #GstElementFactory to use.
+   *
+   * Once decodebin2 has found the possible #GstElementFactory objects to try
+   * for @caps on @pad, this signal is emited. The purpose of the signal is for
+   * the application to perform additional sorting or filtering on the element
+   * factory array.
+   *
+   * The callee should copy and modify @factories or return #NULL if the
+   * order should not change.
+   *
+   * <note>
+   *   Invocation of signal handlers stops after one signal handler has
+   *   returned something else than #NULL. Signal handlers are invoked in
+   *   the order they were connected in.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
+   *
+   * Returns: A new sorted array of #GstElementFactory objects.
+   *
+   * Since: 0.10.33
+   */
+  gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SORT] =
+      g_signal_new ("autoplug-sort", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass, autoplug_sort),
+      _gst_array_hasvalue_accumulator, NULL,
+      gst_play_marshal_BOXED__OBJECT_BOXED_BOXED, G_TYPE_VALUE_ARRAY, 3,
+      GST_TYPE_PAD, GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
+
+  /**
+   * GstURIDecodeBin::autoplug-select:
+   * @bin: The uridecodebin.
+   * @pad: The #GstPad.
+   * @caps: The #GstCaps.
+   * @factory: A #GstElementFactory to use.
    *
    * This signal is emitted once uridecodebin has found all the possible
    * #GstElementFactory that can be used to handle the given @caps. For each of
@@ -505,6 +589,12 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    *
    * A value of #GST_AUTOPLUG_SELECT_SKIP will skip @factory and move to the
    * next factory.
+   *
+   * <note>
+   *   Only the signal handler that is connected first will ever by invoked.
+   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   *   signal, they will never be invoked!
+   * </note>
    *
    * Returns: a #GST_TYPE_AUTOPLUG_SELECT_RESULT that indicates the required
    * operation. The default handler will always return
@@ -529,6 +619,24 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       G_STRUCT_OFFSET (GstURIDecodeBinClass, drained), NULL, NULL,
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
+  /**
+   * GstURIDecodeBin::source-setup:
+   * @bin: the uridecodebin.
+   * @source: source element
+   *
+   * This signal is emitted after the source element has been created, so
+   * it can be configured by setting additional properties (e.g. set a
+   * proxy server for an http source, or set the device and read speed for
+   * an audio cd source). This is functionally equivalent to connecting to
+   * the notify::source signal, but more convenient.
+   *
+   * Since: 0.10.33
+   */
+  gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP] =
+      g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_query);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_change_state);
@@ -539,6 +647,9 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_continue);
   klass->autoplug_factories =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_factories);
+  klass->autoplug_sort = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_sort);
+  klass->autoplug_select =
+      GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_select);
 }
 
 static void
@@ -942,8 +1053,9 @@ array_has_uri_value (const gchar * values[], const gchar * value)
 
 /* list of URIs that we consider to be streams and that need buffering.
  * We have no mechanism yet to figure this out with a query. */
-static const gchar *stream_uris[] = { "http://", "mms://", "mmsh://",
-  "mmsu://", "mmst://", "fd://", "myth://", "ssh://", "ftp://", "sftp://",
+static const gchar *stream_uris[] = { "http://", "https://", "mms://",
+  "mmsh://", "mmsu://", "mmst://", "fd://", "myth://", "ssh://",
+  "ftp://", "sftp://",
   NULL
 };
 
@@ -1368,6 +1480,21 @@ proxy_autoplug_factories_signal (GstElement * element, GstPad * pad,
   return result;
 }
 
+static GValueArray *
+proxy_autoplug_sort_signal (GstElement * element, GstPad * pad,
+    GstCaps * caps, GValueArray * factories, GstURIDecodeBin * dec)
+{
+  GValueArray *result;
+
+  g_signal_emit (dec,
+      gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SORT], 0, pad, caps,
+      factories, &result);
+
+  GST_DEBUG_OBJECT (dec, "autoplug-sort returned %p", result);
+
+  return result;
+}
+
 static GstAutoplugSelectResult
 proxy_autoplug_select_signal (GstElement * element, GstPad * pad,
     GstCaps * caps, GstElementFactory * factory, GstURIDecodeBin * dec)
@@ -1419,6 +1546,8 @@ make_decoder (GstURIDecodeBin * decoder)
         G_CALLBACK (proxy_autoplug_continue_signal), decoder);
     g_signal_connect (decodebin, "autoplug-factories",
         G_CALLBACK (proxy_autoplug_factories_signal), decoder);
+    g_signal_connect (decodebin, "autoplug-sort",
+        G_CALLBACK (proxy_autoplug_sort_signal), decoder);
     g_signal_connect (decodebin, "autoplug-select",
         G_CALLBACK (proxy_autoplug_select_signal), decoder);
     g_signal_connect (decodebin, "drained",
@@ -1766,6 +1895,9 @@ setup_source (GstURIDecodeBin * decoder)
 
   /* notify of the new source used */
   g_object_notify (G_OBJECT (decoder), "source");
+
+  g_signal_emit (decoder, gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP],
+      0, decoder->source);
 
   /* remove the old decoders now, if any */
   remove_decoders (decoder, FALSE);

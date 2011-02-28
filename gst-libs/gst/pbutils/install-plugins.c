@@ -608,8 +608,8 @@ gst_install_plugins_installer_exited (GPid pid, gint status, gpointer data)
  * gst_install_plugins_async:
  * @details: NULL-terminated array of installer string details (see below)
  * @ctx: a #GstInstallPluginsContext, or NULL
- * @func: the function to call when the installer program returns
- * @user_data: the user data to pass to @func when called, or NULL
+ * @func: (scope async): the function to call when the installer program returns
+ * @user_data: (closure): the user data to pass to @func when called, or NULL
  * 
  * Requests plugin installation without blocking. Once the plugins have been
  * installed or installation has failed, @func will be called with the result

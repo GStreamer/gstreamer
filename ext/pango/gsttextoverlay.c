@@ -216,6 +216,7 @@ gst_text_overlay_valign_get_type (void)
     {GST_TEXT_OVERLAY_VALIGN_BOTTOM, "bottom", "bottom"},
     {GST_TEXT_OVERLAY_VALIGN_TOP, "top", "top"},
     {GST_TEXT_OVERLAY_VALIGN_POS, "position", "position"},
+    {GST_TEXT_OVERLAY_VALIGN_CENTER, "center", "center"},
     {0, NULL, NULL},
   };
 
@@ -382,7 +383,7 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT,
       g_param_spec_string ("text", "text",
           "Text to be display.", DEFAULT_PROP_TEXT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHADING,
       g_param_spec_boolean ("shaded-background", "shaded background",
           "Whether to shade the background under the text area",
@@ -430,7 +431,8 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_XPOS,
       g_param_spec_double ("xpos", "horizontal position",
           "Horizontal position when using position alignment", 0, 1.0,
-          DEFAULT_PROP_XPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_XPOS,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstTextOverlay:ypos
    *
@@ -441,7 +443,8 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_YPOS,
       g_param_spec_double ("ypos", "vertical position",
           "Vertical position when using position alignment", 0, 1.0,
-          DEFAULT_PROP_YPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_YPOS,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WRAP_MODE,
       g_param_spec_enum ("wrap-mode", "wrap mode",
           "Whether to wrap the text and if so how.",
@@ -463,7 +466,8 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COLOR,
       g_param_spec_uint ("color", "Color",
           "Color to use for text (big-endian ARGB).", 0, G_MAXUINT32,
-          DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_COLOR,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstTextOverlay:line-alignment
@@ -489,7 +493,8 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
       g_param_spec_boolean ("silent", "silent",
           "Whether to render the text string",
-          DEFAULT_PROP_SILENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_SILENT,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstTextOverlay:wait-text
    *
@@ -848,10 +853,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       overlay->wait_text = g_value_get_boolean (value);
       break;
     case PROP_AUTO_ADJUST_SIZE:
-    {
       overlay->auto_adjust_size = g_value_get_boolean (value);
       overlay->need_render = TRUE;
-    }
+      break;
     case PROP_VERTICAL_RENDER:
       overlay->use_vertical_render = g_value_get_boolean (value);
       gst_text_overlay_update_render_mode (overlay);
@@ -1795,6 +1799,9 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
       ypos = (gint) (overlay->height * overlay->ypos) - height / 2;
       ypos = CLAMP (ypos, 0, overlay->height - height);
       break;
+    case GST_TEXT_OVERLAY_VALIGN_CENTER:
+      ypos = (overlay->height - height) / 2;
+      break;
     default:
       ypos = overlay->ypad;
       break;
@@ -2248,6 +2255,8 @@ gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
     }
   }
 
+  gst_object_sync_values (G_OBJECT (overlay), GST_BUFFER_TIMESTAMP (buffer));
+
 wait_for_text_buf:
 
   GST_OBJECT_LOCK (overlay);
@@ -2532,6 +2541,8 @@ gst_text_overlay_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_controller_init (NULL, NULL);
+
   if (!gst_element_register (plugin, "textoverlay", GST_RANK_NONE,
           GST_TYPE_TEXT_OVERLAY) ||
       !gst_element_register (plugin, "timeoverlay", GST_RANK_NONE,

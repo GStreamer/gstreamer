@@ -52,6 +52,7 @@ typedef struct {
   void (*get_ratio) (SpeexResamplerState * st,
     guint32 * ratio_num, guint32 * ratio_den);
   int (*get_input_latency) (SpeexResamplerState * st);
+  int (*get_filt_len) (SpeexResamplerState * st);
   int (*set_quality) (SpeexResamplerState * st, gint quality);
   int (*reset_mem) (SpeexResamplerState * st);
   int (*skip_zeros) (SpeexResamplerState * st);
@@ -71,6 +72,7 @@ void resample_float_resampler_get_rate (SpeexResamplerState * st,
 void resample_float_resampler_get_ratio (SpeexResamplerState * st,
     guint32 * ratio_num, guint32 * ratio_den);
 int resample_float_resampler_get_input_latency (SpeexResamplerState * st);
+int resample_float_resampler_get_filt_len (SpeexResamplerState * st);
 int resample_float_resampler_set_quality (SpeexResamplerState * st, gint quality);
 int resample_float_resampler_reset_mem (SpeexResamplerState * st);
 int resample_float_resampler_skip_zeros (SpeexResamplerState * st);
@@ -85,6 +87,7 @@ static const SpeexResampleFuncs float_funcs =
   resample_float_resampler_get_rate,
   resample_float_resampler_get_ratio,
   resample_float_resampler_get_input_latency,
+  resample_float_resampler_get_filt_len,
   resample_float_resampler_set_quality,
   resample_float_resampler_reset_mem,
   resample_float_resampler_skip_zeros,
@@ -104,6 +107,7 @@ void resample_double_resampler_get_rate (SpeexResamplerState * st,
 void resample_double_resampler_get_ratio (SpeexResamplerState * st,
     guint32 * ratio_num, guint32 * ratio_den);
 int resample_double_resampler_get_input_latency (SpeexResamplerState * st);
+int resample_double_resampler_get_filt_len (SpeexResamplerState * st);
 int resample_double_resampler_set_quality (SpeexResamplerState * st, gint quality);
 int resample_double_resampler_reset_mem (SpeexResamplerState * st);
 int resample_double_resampler_skip_zeros (SpeexResamplerState * st);
@@ -118,6 +122,7 @@ static const SpeexResampleFuncs double_funcs =
   resample_double_resampler_get_rate,
   resample_double_resampler_get_ratio,
   resample_double_resampler_get_input_latency,
+  resample_double_resampler_get_filt_len,
   resample_double_resampler_set_quality,
   resample_double_resampler_reset_mem,
   resample_double_resampler_skip_zeros,
@@ -137,6 +142,7 @@ void resample_int_resampler_get_rate (SpeexResamplerState * st,
 void resample_int_resampler_get_ratio (SpeexResamplerState * st,
     guint32 * ratio_num, guint32 * ratio_den);
 int resample_int_resampler_get_input_latency (SpeexResamplerState * st);
+int resample_int_resampler_get_filt_len (SpeexResamplerState * st);
 int resample_int_resampler_set_quality (SpeexResamplerState * st, gint quality);
 int resample_int_resampler_reset_mem (SpeexResamplerState * st);
 int resample_int_resampler_skip_zeros (SpeexResamplerState * st);
@@ -151,6 +157,7 @@ static const SpeexResampleFuncs int_funcs =
   resample_int_resampler_get_rate,
   resample_int_resampler_get_ratio,
   resample_int_resampler_get_input_latency,
+  resample_int_resampler_get_filt_len,
   resample_int_resampler_set_quality,
   resample_int_resampler_reset_mem,
   resample_int_resampler_skip_zeros,

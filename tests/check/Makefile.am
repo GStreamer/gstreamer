@@ -37,7 +37,7 @@ endif
 if USE_GNOME_VFS
 check_gnomevfs = elements/gnomevfssink
 else
-check_gnomevfs = 
+check_gnomevfs =
 endif
 
 if USE_GIO
@@ -55,13 +55,13 @@ endif
 if USE_OGG
 check_ogg = pipelines/oggmux
 else
-check_ogg = 
+check_ogg =
 endif
 
 if USE_PANGO
 check_pango = elements/textoverlay
 else
-check_pango = 
+check_pango =
 endif
 
 if USE_VORBIS
@@ -75,6 +75,16 @@ if USE_THEORA
 check_theora = pipelines/theoraenc
 else
 check_theora =
+endif
+
+if USE_VORBIS
+if USE_THEORA
+check_encodebin = elements/encodebin
+else
+check_encodebin =
+endif
+else
+check_encodebin =
 endif
 
 if USE_PLUGIN_SUBPARSE
@@ -106,6 +116,7 @@ check_PROGRAMS = \
 	elements/audiotestsrc \
 	elements/decodebin \
 	elements/decodebin2 \
+	$(check_encodebin) \
 	elements/ffmpegcolorspace \
 	elements/gdpdepay \
 	elements/gdppay \
@@ -120,6 +131,7 @@ check_PROGRAMS = \
 	generic/clock-selection \
 	generic/states \
 	gst/typefindfunctions \
+	libs/libsabi \
 	libs/audio \
 	libs/cddabasesrc \
 	libs/fft \
@@ -127,7 +139,9 @@ check_PROGRAMS = \
 	libs/navigation \
 	libs/netbuffer \
 	libs/pbutils \
+	libs/profile \
 	libs/rtp \
+	libs/rtsp \
 	libs/tag \
 	libs/video \
 	$(check_orc) \
@@ -147,14 +161,44 @@ VALGRIND_TO_FIX = \
 # these tests don't even pass
 noinst_PROGRAMS = $(check_libvisual)
 
+noinst_HEADERS = \
+	libs/struct_i386.h
+#	libs/struct_arm.h \
+#	libs/struct_hppa.h \
+#	libs/struct_ppc32.h \
+#	libs/struct_ppc64.h \
+#	libs/struct_sparc.h \
+#	libs/struct_x86_64.h
+
 AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS) \
-	-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\""
+	-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
+	-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(GST_LIBS) $(GST_CHECK_LIBS)
 
 # valgrind testing
 VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-base.supp
+
+libs_libsabi_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+libs_libsabi_LDADD = \
+	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/netbuffer/libgstnetbuffer-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
 
 libs_audio_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -222,6 +266,13 @@ libs_rtp_LDADD = \
 	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
+libs_rtsp_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+libs_rtsp_LDADD = \
+	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) $(LDADD)
+
 libs_tag_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
@@ -237,6 +288,12 @@ libs_pbutils_LDADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) $(LDADD)
+
+libs_profile_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+libs_profile_LDADD = \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la $(LDADD)
 
 elements_appsink_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -290,6 +347,9 @@ elements_playbin2_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_decodebin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
+elements_encodebin_LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la $(GST_BASE_LIBS) $(LDADD)
+elements_encodebin_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin2_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_decodebin2_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)

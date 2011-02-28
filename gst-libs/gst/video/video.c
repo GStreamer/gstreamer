@@ -367,7 +367,9 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
       }
       have_alpha = gst_structure_get_int (structure, "alpha_mask", &alpha_mask);
 
-      if (depth == 24 && bpp == 32 && endianness == G_BIG_ENDIAN) {
+      if (depth == 30 && bpp == 32 && endianness == G_BIG_ENDIAN) {
+        *format = GST_VIDEO_FORMAT_r210;
+      } else if (depth == 24 && bpp == 32 && endianness == G_BIG_ENDIAN) {
         *format = gst_video_format_from_rgb32_masks (red_mask, green_mask,
             blue_mask);
         if (*format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -395,6 +397,15 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
         }
       } else if (depth == 8 && bpp == 8) {
         *format = GST_VIDEO_FORMAT_RGB8_PALETTED;
+      } else if (depth == 64 && bpp == 64) {
+        *format = gst_video_format_from_rgba32_masks (red_mask, green_mask,
+            blue_mask, alpha_mask);
+        if (*format == GST_VIDEO_FORMAT_ARGB) {
+          *format = GST_VIDEO_FORMAT_ARGB64;
+        } else {
+          *format = GST_VIDEO_FORMAT_UNKNOWN;
+          ok = FALSE;
+        }
       } else {
         ok = FALSE;
       }
@@ -566,9 +577,9 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
   }
   if (gst_video_format_is_rgb (format)) {
     GstCaps *caps;
-    int red_mask;
-    int blue_mask;
-    int green_mask;
+    int red_mask = 0;
+    int blue_mask = 0;
+    int green_mask = 0;
     int alpha_mask;
     int depth;
     int bpp;
@@ -615,10 +626,25 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
         depth = 8;
         have_alpha = FALSE;
         break;
+      case GST_VIDEO_FORMAT_ARGB64:
+        bpp = 64;
+        depth = 64;
+        have_alpha = TRUE;
+        break;
+      case GST_VIDEO_FORMAT_r210:
+        bpp = 32;
+        depth = 30;
+        have_alpha = FALSE;
+        break;
       default:
         return NULL;
     }
-    if (bpp == 32 || bpp == 24) {
+    if (bpp == 32 && depth == 30) {
+      red_mask = 0x3ff00000;
+      green_mask = 0x000ffc00;
+      blue_mask = 0x000003ff;
+      have_alpha = FALSE;
+    } else if (bpp == 32 || bpp == 24 || bpp == 64) {
       if (bpp == 32) {
         mask = 0xff000000;
       } else {
@@ -797,6 +823,8 @@ gst_video_format_from_fourcc (guint32 fourcc)
       return GST_VIDEO_FORMAT_YVU9;
     case GST_MAKE_FOURCC ('I', 'Y', 'U', '1'):
       return GST_VIDEO_FORMAT_IYU1;
+    case GST_MAKE_FOURCC ('A', 'Y', '6', '4'):
+      return GST_VIDEO_FORMAT_AYUV64;
     default:
       return GST_VIDEO_FORMAT_UNKNOWN;
   }
@@ -862,6 +890,8 @@ gst_video_format_to_fourcc (GstVideoFormat format)
       return GST_MAKE_FOURCC ('Y', 'V', 'U', '9');
     case GST_VIDEO_FORMAT_IYU1:
       return GST_MAKE_FOURCC ('I', 'Y', 'U', '1');
+    case GST_VIDEO_FORMAT_AYUV64:
+      return GST_MAKE_FOURCC ('A', 'Y', '6', '4');
     default:
       return 0;
   }
@@ -1000,6 +1030,7 @@ gst_video_format_is_rgb (GstVideoFormat format)
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
     case GST_VIDEO_FORMAT_IYU1:
+    case GST_VIDEO_FORMAT_AYUV64:
       return FALSE;
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
@@ -1016,6 +1047,8 @@ gst_video_format_is_rgb (GstVideoFormat format)
     case GST_VIDEO_FORMAT_RGB15:
     case GST_VIDEO_FORMAT_BGR15:
     case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_r210:
       return TRUE;
     default:
       return FALSE;
@@ -1057,6 +1090,7 @@ gst_video_format_is_yuv (GstVideoFormat format)
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
     case GST_VIDEO_FORMAT_IYU1:
+    case GST_VIDEO_FORMAT_AYUV64:
       return TRUE;
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
@@ -1073,6 +1107,8 @@ gst_video_format_is_yuv (GstVideoFormat format)
     case GST_VIDEO_FORMAT_RGB15:
     case GST_VIDEO_FORMAT_BGR15:
     case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_r210:
       return FALSE;
     default:
       return FALSE;
@@ -1146,6 +1182,8 @@ gst_video_format_has_alpha (GstVideoFormat format)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_A420:
     case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
       return TRUE;
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
@@ -1157,10 +1195,81 @@ gst_video_format_has_alpha (GstVideoFormat format)
     case GST_VIDEO_FORMAT_BGR16:
     case GST_VIDEO_FORMAT_RGB15:
     case GST_VIDEO_FORMAT_BGR15:
+    case GST_VIDEO_FORMAT_r210:
       return FALSE;
     default:
       return FALSE;
   }
+}
+
+/**
+ * gst_video_format_get_component_depth:
+ * @format: a #GstVideoFormat
+ * 
+ * Returns the number of bits used to encode an individual pixel of
+ * a given component.  Typically this is 8, although higher and lower
+ * values are possible for some formats.
+ *
+ * Since: 0.10.33
+ *
+ * Returns: depth of component
+ */
+int
+gst_video_format_get_component_depth (GstVideoFormat format, int component)
+{
+  if (component == 3 && !gst_video_format_has_alpha (format))
+    return 0;
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_BGR16:
+      if (component == 1)
+        return 6;
+      return 5;
+    case GST_VIDEO_FORMAT_RGB15:
+    case GST_VIDEO_FORMAT_BGR15:
+      return 5;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_v308:
+    case GST_VIDEO_FORMAT_Y800:
+    case GST_VIDEO_FORMAT_YUV9:
+    case GST_VIDEO_FORMAT_YVU9:
+    case GST_VIDEO_FORMAT_IYU1:
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    default:
+      return 8;
+    case GST_VIDEO_FORMAT_v210:
+    case GST_VIDEO_FORMAT_UYVP:
+    case GST_VIDEO_FORMAT_r210:
+      return 10;
+    case GST_VIDEO_FORMAT_Y16:
+    case GST_VIDEO_FORMAT_v216:
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
+      return 16;
+  }
+
 }
 
 /**
@@ -1210,6 +1319,7 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_r210:
       return width * 4;
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
@@ -1268,6 +1378,9 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
     case GST_VIDEO_FORMAT_IYU1:
       return GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) +
           GST_ROUND_UP_4 (width) / 2);
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
+      return width * 8;
     default:
       return 0;
   }
@@ -1324,6 +1437,7 @@ gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_r210:
       return 4;
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
@@ -1362,6 +1476,9 @@ gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
       return 0;
     case GST_VIDEO_FORMAT_RGB8_PALETTED:
       return 1;
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
+      return 8;
     default:
       return 0;
   }
@@ -1438,6 +1555,9 @@ gst_video_format_get_component_width (GstVideoFormat format,
     case GST_VIDEO_FORMAT_Y800:
     case GST_VIDEO_FORMAT_Y16:
     case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
+    case GST_VIDEO_FORMAT_r210:
       return width;
     case GST_VIDEO_FORMAT_A420:
       if (component == 0 || component == 3) {
@@ -1514,6 +1634,9 @@ gst_video_format_get_component_height (GstVideoFormat format,
     case GST_VIDEO_FORMAT_UYVP:
     case GST_VIDEO_FORMAT_RGB8_PALETTED:
     case GST_VIDEO_FORMAT_IYU1:
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
+    case GST_VIDEO_FORMAT_r210:
       return height;
     case GST_VIDEO_FORMAT_A420:
       if (component == 0 || component == 3) {
@@ -1697,6 +1820,7 @@ gst_video_format_get_component_offset (GstVideoFormat format,
     case GST_VIDEO_FORMAT_Y444:
       return GST_ROUND_UP_4 (width) * height * component;
     case GST_VIDEO_FORMAT_v210:
+    case GST_VIDEO_FORMAT_r210:
       /* v210 is bit-packed, so this doesn't make sense */
       return 0;
     case GST_VIDEO_FORMAT_v216:
@@ -1776,6 +1900,17 @@ gst_video_format_get_component_offset (GstVideoFormat format,
         return 0;
       if (component == 2)
         return 4;
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
+      if (component == 0)
+        return 2;
+      if (component == 1)
+        return 4;
+      if (component == 2)
+        return 6;
+      if (component == 3)
+        return 0;
+      return 0;
     default:
       return 0;
   }
@@ -1825,6 +1960,7 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_r210:
       return width * 4 * height;
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
@@ -1871,6 +2007,9 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
       size += GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
           (GST_ROUND_UP_4 (height) / 4) * 2;
       return size;
+    case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_AYUV64:
+      return width * 8 * height;
     default:
       return 0;
   }

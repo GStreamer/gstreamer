@@ -96,6 +96,9 @@ typedef enum {
 #define GST_TYPE_RTSP_LOWER_TRANS (gst_rtsp_lower_trans_get_type())
 GType gst_rtsp_lower_trans_get_type (void);
 
+typedef struct _GstRTSPRange GstRTSPRange;
+typedef struct _GstRTSPTransport GstRTSPTransport;
+
 /**
  * GstRTSPRange:
  * @min: minimum value of the range
@@ -103,10 +106,11 @@ GType gst_rtsp_lower_trans_get_type (void);
  *
  * A type to specify a range.
  */
-typedef struct _GstRTSPRange {
+
+struct _GstRTSPRange {
   gint min;
   gint max;
-} GstRTSPRange;
+};
 
 /**
  * GstRTSPTransport:
@@ -128,7 +132,8 @@ typedef struct _GstRTSPRange {
  *
  * A structure holding the RTSP transport values.
  */
-typedef struct _GstRTSPTransport {
+
+struct _GstRTSPTransport {
   GstRTSPTransMode  trans;
   GstRTSPProfile    profile;
   GstRTSPLowerTrans lower_transport;
@@ -151,7 +156,7 @@ typedef struct _GstRTSPTransport {
   /* RTP specific */
   guint          ssrc;
 
-} GstRTSPTransport;
+};
 
 GstRTSPResult      gst_rtsp_transport_new          (GstRTSPTransport **transport);
 GstRTSPResult      gst_rtsp_transport_init         (GstRTSPTransport *transport);

@@ -88,5 +88,12 @@ void vs_scanline_merge_4tap_Y16 (uint8_t *dest, uint8_t *src1, uint8_t *src2,
 void vs_image_scale_4tap_Y16 (const VSImage * dest, const VSImage * src,
     uint8_t * tmpbuf);
 
+void vs_scanline_resample_4tap_AYUV64 (uint16_t *dest, uint16_t *src,
+    int n, int src_width, int *xacc, int increment);
+void vs_scanline_merge_4tap_AYUV64 (uint16_t *dest, uint16_t *src1, uint16_t *src2,
+    uint16_t *src3, uint16_t *src4, int n, int acc);
+void vs_image_scale_4tap_AYUV64 (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf);
+
 #endif
 

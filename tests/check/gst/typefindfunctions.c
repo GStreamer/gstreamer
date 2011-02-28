@@ -174,6 +174,141 @@ GST_START_TEST (test_mpegts)
 
 GST_END_TEST;
 
+struct ac3_frmsize
+{
+  unsigned frmsizecod;
+  unsigned frmsize;
+};
+
+static void
+make_ac3_packet (guint8 * data, guint bytesize, guint bsid)
+{
+  /* Actually not a fully valid packet; if the typefinder starts to
+   * check e.g. the CRCs, this test needs to be improved as well. */
+  const guint8 ac3_header[] = {
+    0x0b, 0x77,                 /* syncword */
+    0x00, 0x00,                 /* crc1 */
+    0x00,                       /* fscod 0xc0, frmsizecod 0x3f */
+    0x00                        /* bsid 0xf8, bsmod 0x07 */
+  };
+  const struct ac3_frmsize frmsize[] = {
+    {17, 256}, {26, 640}        /* small subset of supported sizes */
+  };
+  guint wordsize = bytesize >> 1, frmsizecod = 0;
+  int i;
+
+  fail_unless ((bytesize & 0x01) == 0);
+  fail_unless (bytesize >= sizeof (ac3_header));
+
+  for (i = 0; i < G_N_ELEMENTS (frmsize); i++) {
+    if (frmsize[i].frmsize == wordsize) {
+      frmsizecod = frmsize[i].frmsizecod;
+      break;
+    }
+  }
+
+  fail_unless (frmsizecod);
+
+  memcpy (data, ac3_header, sizeof (ac3_header));
+  data[4] = (data[4] & ~0x3f) | (frmsizecod & 0x3f);
+  data[5] = (bsid & 0x1f) << 3;
+  memset (data + 6, 0, bytesize - 6);
+}
+
+GST_START_TEST (test_ac3)
+{
+  GstTypeFindProbability prob;
+  const gchar *type;
+  GstBuffer *buf;
+  GstCaps *caps = NULL;
+  guint bsid;
+
+  for (bsid = 0; bsid < 32; bsid++) {
+    buf = gst_buffer_new_and_alloc ((256 + 640) * 2);
+    make_ac3_packet (GST_BUFFER_DATA (buf), 256 * 2, bsid);
+    make_ac3_packet (GST_BUFFER_DATA (buf) + 256 * 2, 640 * 2, bsid);
+
+    caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
+    if (bsid <= 8) {
+      fail_unless (caps != NULL);
+      GST_LOG ("Found type for BSID %u: %" GST_PTR_FORMAT, bsid, caps);
+
+      type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+      fail_unless_equals_string (type, "audio/x-ac3");
+      fail_unless (prob > GST_TYPE_FIND_MINIMUM
+          && prob <= GST_TYPE_FIND_MAXIMUM);
+      gst_caps_unref (caps);
+    } else {
+      fail_unless (caps == NULL);
+    }
+
+    gst_buffer_unref (buf);
+  }
+}
+
+GST_END_TEST;
+
+static void
+make_eac3_packet (guint8 * data, guint bytesize, guint bsid)
+{
+  /* Actually not a fully valid packet; if the typefinder starts to
+   * check e.g. the CRCs, this test needs to be improved as well. */
+  const guint8 eac3_header[] = {
+    0x0b, 0x77,                 /* syncword */
+    0x00,                       /* strmtyp 0xc0, substreamid 0x38,
+                                 * frmsize 0x07 (3 high bits) */
+    0x00,                       /* frmsize (low bits -> 11 total) */
+    0x00,                       /* fscod 0xc0, fscod2/numblocks 0x30,
+                                 * acmod 0x0e, lfeon 0x01 */
+    0x00                        /* bsid 0xf8, dialnorm 0x07 (3 high bits) */
+  };
+  guint wordsize = bytesize >> 1;
+
+  fail_unless ((bytesize & 0x01) == 0);
+  fail_unless (bytesize >= sizeof (eac3_header));
+
+  memcpy (data, eac3_header, sizeof (eac3_header));
+  data[2] = (data[2] & ~0x07) | ((((wordsize - 1) & 0x700) >> 8) & 0xff);
+  data[3] = (wordsize - 1) & 0xff;
+  data[5] = (bsid & 0x1f) << 3;
+  memset (data + 6, 0, bytesize - 6);
+}
+
+GST_START_TEST (test_eac3)
+{
+  GstTypeFindProbability prob;
+  const gchar *type;
+  GstBuffer *buf;
+  GstCaps *caps = NULL;
+  guint bsid;
+
+  for (bsid = 0; bsid <= 32; bsid++) {
+    buf = gst_buffer_new_and_alloc (558 + 384);
+    make_eac3_packet (GST_BUFFER_DATA (buf), 558, bsid);
+    make_eac3_packet (GST_BUFFER_DATA (buf) + 558, 384, bsid);
+
+    caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
+    if (bsid > 10 && bsid <= 16) {
+      /* Only BSIs 11..16 are valid for Annex E */
+      fail_unless (caps != NULL);
+      GST_LOG ("Found type for BSID %u: %" GST_PTR_FORMAT, bsid, caps);
+
+      type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+      fail_unless_equals_string (type, "audio/x-eac3");
+      fail_unless (prob > GST_TYPE_FIND_MINIMUM
+          && prob <= GST_TYPE_FIND_MAXIMUM);
+      gst_caps_unref (caps);
+    } else {
+      /* Invalid E-AC-3 BSID, must not be detected as anything: */
+      fail_unless (caps == NULL);
+    }
+
+    gst_buffer_unref (buf);
+  }
+}
+
+GST_END_TEST;
+
 #define TEST_RANDOM_DATA_SIZE (4*1024)
 
 /* typefind random data, to make sure all typefinders are called */
@@ -231,6 +366,8 @@ typefindfunctions_suite (void)
   tcase_add_test (tc_chain, test_broken_flac_in_ogg);
   tcase_add_test (tc_chain, test_jpeg_not_ac3);
   tcase_add_test (tc_chain, test_mpegts);
+  tcase_add_test (tc_chain, test_ac3);
+  tcase_add_test (tc_chain, test_eac3);
   tcase_add_test (tc_chain, test_random_data);
 
   return s;
