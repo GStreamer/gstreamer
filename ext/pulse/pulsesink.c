@@ -124,7 +124,7 @@ static pa_threaded_mainloop *mainloop = NULL;
 static guint mainloop_ref_ct = 0;
 
 /* lock for access to shared resources */
-static GMutex *pa_shared_ressource_mutex = NULL;
+static GMutex *pa_shared_resource_mutex = NULL;
 
 /* We keep a custom ringbuffer that is backed up by data allocated by
  * pulseaudio. We must also overide the commit function to write into
@@ -181,8 +181,8 @@ G_DEFINE_TYPE (GstPulseRingBuffer, gst_pulseringbuffer, GST_TYPE_RING_BUFFER);
 static void
 gst_pulsesink_init_contexts (void)
 {
-  g_assert (pa_shared_ressource_mutex == NULL);
-  pa_shared_ressource_mutex = g_mutex_new ();
+  g_assert (pa_shared_resource_mutex == NULL);
+  pa_shared_resource_mutex = g_mutex_new ();
   gst_pulse_shared_contexts = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, NULL);
 }
@@ -284,7 +284,7 @@ gst_pulsering_destroy_stream (GstPulseRingBuffer * pbuf)
 static void
 gst_pulsering_destroy_context (GstPulseRingBuffer * pbuf)
 {
-  g_mutex_lock (pa_shared_ressource_mutex);
+  g_mutex_lock (pa_shared_resource_mutex);
 
   GST_DEBUG_OBJECT (pbuf, "destroying ringbuffer %p", pbuf);
 
@@ -327,7 +327,7 @@ gst_pulsering_destroy_context (GstPulseRingBuffer * pbuf)
     g_free (pbuf->context_name);
     pbuf->context_name = NULL;
   }
-  g_mutex_unlock (pa_shared_ressource_mutex);
+  g_mutex_unlock (pa_shared_resource_mutex);
 }
 
 static void
@@ -452,7 +452,8 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
     pbuf->context_name = g_strdup (psink->client_name);
 
   pa_threaded_mainloop_lock (mainloop);
-  g_mutex_lock (pa_shared_ressource_mutex);
+
+  g_mutex_lock (pa_shared_resource_mutex);
 
   pctx = g_hash_table_lookup (gst_pulse_shared_contexts, pbuf->context_name);
   if (pctx == NULL) {
@@ -490,6 +491,8 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
     pctx->ring_buffers = g_slist_prepend (pctx->ring_buffers, pbuf);
   }
 
+  g_mutex_unlock (pa_shared_resource_mutex);
+
   /* context created or shared okay */
   pbuf->context = pa_context_ref (pctx->context);
 
@@ -513,7 +516,6 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
 
   GST_LOG_OBJECT (psink, "opened the device");
 
-  g_mutex_unlock (pa_shared_ressource_mutex);
   pa_threaded_mainloop_unlock (mainloop);
 
   return TRUE;
@@ -521,9 +523,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   /* ERRORS */
 unlock_and_fail:
   {
-    g_mutex_unlock (pa_shared_ressource_mutex);
     gst_pulsering_destroy_context (pbuf);
-
     pa_threaded_mainloop_unlock (mainloop);
     return FALSE;
   }
@@ -2722,7 +2722,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      g_mutex_lock (pa_shared_ressource_mutex);
+      g_mutex_lock (pa_shared_resource_mutex);
       if (!mainloop_ref_ct) {
         GST_INFO_OBJECT (element, "new pa main loop thread");
         if (!(mainloop = pa_threaded_mainloop_new ()))
@@ -2730,11 +2730,11 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
         mainloop_ref_ct = 1;
         res = pa_threaded_mainloop_start (mainloop);
         g_assert (res == 0);
-        g_mutex_unlock (pa_shared_ressource_mutex);
+        g_mutex_unlock (pa_shared_resource_mutex);
       } else {
         GST_INFO_OBJECT (element, "reusing pa main loop thread");
         mainloop_ref_ct++;
-        g_mutex_unlock (pa_shared_ressource_mutex);
+        g_mutex_unlock (pa_shared_resource_mutex);
       }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -2758,7 +2758,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (mainloop) {
-        g_mutex_lock (pa_shared_ressource_mutex);
+        g_mutex_lock (pa_shared_resource_mutex);
         mainloop_ref_ct--;
         if (!mainloop_ref_ct) {
           GST_INFO_OBJECT (element, "terminating pa main loop thread");
@@ -2766,7 +2766,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
           pa_threaded_mainloop_free (mainloop);
           mainloop = NULL;
         }
-        g_mutex_unlock (pa_shared_ressource_mutex);
+        g_mutex_unlock (pa_shared_resource_mutex);
       }
       break;
     default:
@@ -2778,7 +2778,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
   /* ERRORS */
 mainloop_failed:
   {
-    g_mutex_unlock (pa_shared_ressource_mutex);
+    g_mutex_unlock (pa_shared_resource_mutex);
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
         ("pa_threaded_mainloop_new() failed"), (NULL));
     return GST_STATE_CHANGE_FAILURE;
@@ -2788,7 +2788,7 @@ state_failure:
     if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
       /* Clear the PA mainloop if baseaudiosink failed to open the ring_buffer */
       g_assert (mainloop);
-      g_mutex_lock (pa_shared_ressource_mutex);
+      g_mutex_lock (pa_shared_resource_mutex);
       mainloop_ref_ct--;
       if (!mainloop_ref_ct) {
         GST_INFO_OBJECT (element, "terminating pa main loop thread");
@@ -2796,7 +2796,7 @@ state_failure:
         pa_threaded_mainloop_free (mainloop);
         mainloop = NULL;
       }
-      g_mutex_unlock (pa_shared_ressource_mutex);
+      g_mutex_unlock (pa_shared_resource_mutex);
     }
     return ret;
   }
