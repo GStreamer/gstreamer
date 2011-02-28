@@ -149,7 +149,7 @@ typedef enum
  * @copy: a copy function
  * @dispose: a dispose function
  * @free: the free function
- * 
+ *
  * Base class for refcounted lightweight objects.
  * Ref Func: gst_mini_object_ref
  * Unref Func: gst_mini_object_unref
@@ -174,15 +174,15 @@ GType           gst_mini_object_register        (const gchar *name);
 void            gst_mini_object_init            (GstMiniObject *mini_object,
                                                  GType type, gsize size);
 
-GstMiniObject* 	gst_mini_object_copy 		(const GstMiniObject *mini_object);
-gboolean 	gst_mini_object_is_writable 	(const GstMiniObject *mini_object);
-GstMiniObject*  gst_mini_object_make_writable 	(GstMiniObject *mini_object);
+GstMiniObject*	gst_mini_object_copy		(const GstMiniObject *mini_object);
+gboolean	gst_mini_object_is_writable	(const GstMiniObject *mini_object);
+GstMiniObject*  gst_mini_object_make_writable	(GstMiniObject *mini_object);
 
 /* refcounting */
-GstMiniObject* 	gst_mini_object_ref 		(GstMiniObject *mini_object);
-void 		gst_mini_object_unref 		(GstMiniObject *mini_object);
+GstMiniObject*	gst_mini_object_ref		(GstMiniObject *mini_object);
+void		gst_mini_object_unref		(GstMiniObject *mini_object);
 
-void 		gst_mini_object_replace 	(GstMiniObject **olddata, GstMiniObject *newdata);
+void		gst_mini_object_replace         (GstMiniObject **olddata, GstMiniObject *newdata);
 
 
 G_END_DECLS
