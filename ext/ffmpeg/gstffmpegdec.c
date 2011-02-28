@@ -2119,7 +2119,8 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
     gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
 
     /* the next timestamp we'll use when interpolating */
-    ffmpegdec->next_out = out_timestamp + out_duration;
+    if (GST_CLOCK_TIME_IS_VALID (out_timestamp))
+      ffmpegdec->next_out = out_timestamp + out_duration;
 
     /* now see if we need to clip the buffer against the segment boundaries. */
     if (G_UNLIKELY (!clip_audio_buffer (ffmpegdec, *outbuf, out_timestamp,
