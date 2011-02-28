@@ -65,6 +65,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (fps_display_sink_debug);
 #define GST_CAT_DEFAULT fps_display_sink_debug
 
+#define DEFAULT_SYNC TRUE
+
 enum
 {
   /* FILL ME */
@@ -114,7 +116,7 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
   g_object_class_install_property (gobject_klass, ARG_SYNC,
       g_param_spec_boolean ("sync",
           "Sync", "Sync on the clock (if the internally used sink doesn't "
-          "have this property it will be ignored", TRUE,
+          "have this property it will be ignored", DEFAULT_SYNC,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_klass, ARG_TEXT_OVERLAY,
@@ -310,7 +312,7 @@ static void
 fps_display_sink_init (GstFPSDisplaySink * self,
     GstFPSDisplaySinkClass * g_class)
 {
-  self->sync = FALSE;
+  self->sync = DEFAULT_SYNC;
   self->signal_measurements = DEFAULT_SIGNAL_FPS_MEASUREMENTS;
   self->use_text_overlay = TRUE;
   self->fps_update_interval = GST_MSECOND * DEFAULT_FPS_UPDATE_INTERVAL_MS;
