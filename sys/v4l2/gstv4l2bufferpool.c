@@ -55,6 +55,21 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 /*
  * GstV4l2Buffer:
  */
+const GstMetaInfo *
+gst_meta_v4l2_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (meta_info == NULL) {
+    meta_info =
+        gst_meta_register ("GstMetaV4l2", "GstMetaV4l2",
+        sizeof (GstMetaV4l2), (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
+        (GstMetaSubFunction) NULL, (GstMetaSerializeFunction) NULL,
+        (GstMetaDeserializeFunction) NULL);
+  }
+  return meta_info;
+}
 
 static void
 gst_v4l2_buffer_dispose (GstBuffer * buffer)
