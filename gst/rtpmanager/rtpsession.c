@@ -1600,6 +1600,8 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
     gboolean rtp, GstBuffer * buffer, GstClockTime current_time,
     GstClockTime running_time, guint64 ntpnstime)
 {
+  GstMetaNetAddress *meta;
+
   /* get time of arrival */
   arrival->current_time = current_time;
   arrival->running_time = running_time;
@@ -1615,16 +1617,13 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
   }
 
   /* for netbuffer we can store the IP address to check for collisions */
-#if 0
-  arrival->have_address = GST_IS_NETBUFFER (buffer);
-  if (arrival->have_address) {
-    GstNetBuffer *netbuf = (GstNetBuffer *) buffer;
-
-    memcpy (&arrival->address, &netbuf->from, sizeof (GstNetAddress));
+  meta = gst_buffer_get_meta_net_address (buffer);
+  if (meta) {
+    arrival->have_address = TRUE;
+    memcpy (&arrival->address, &meta->naddr, sizeof (GstNetAddress));
+  } else {
+    arrival->have_address = FALSE;
   }
-#else
-  arrival->have_address = FALSE;
-#endif
 }
 
 /**
