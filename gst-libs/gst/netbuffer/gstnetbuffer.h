@@ -66,7 +66,7 @@ typedef enum {
 /**
  * GstNetAddress:
  *
- * An opaque network address as used in #GstNetBuffer.
+ * An opaque network address as used in #GstMetaNetAddress.
  */
 struct _GstNetAddress {
   /*< private >*/
@@ -80,38 +80,26 @@ struct _GstNetAddress {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-#if 0
+typedef struct _GstMetaNetAddress GstMetaNetAddress;
+
 /**
- * GstNetBuffer:
- * @buffer: the parent #GstBuffer
- * @from: the address where this buffer came from.
- * @to: the address where this buffer should go to.
+ * GstMetaNetAddress:
  *
- * buffer for use in network sources and sinks.
- * It contains the source or destination address of the buffer.
+ * Buffer metadata for network addresses.
  */
-struct _GstNetBuffer {
-  GstBuffer buffer;
+struct _GstMetaNetAddress {
+  GstMeta       meta;
 
-  GstNetAddress from;
-  GstNetAddress to;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  GstNetAddress naddr;
 };
 
-struct _GstNetBufferClass {
-  GstBufferClass  buffer_class;
+const GstMetaInfo *gst_meta_net_address_get_info (void);
+#define GST_META_NET_ADDRESS_INFO (gst_meta_net_address_get_info())
 
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-/* creating buffers */
-GType           gst_netbuffer_get_type           (void);
-
-GstNetBuffer*   gst_netbuffer_new                (void);
-#endif
+#define gst_buffer_get_meta_net_address(b) \
+  ((GstMetaNetAddress*)gst_buffer_get_meta((b),GST_META_NET_ADDRESS_INFO))
+#define gst_buffer_add_meta_net_address(b) \
+  ((GstMetaNetAddress*)gst_buffer_add_meta((b),GST_META_TIMING_INFO,NULL))
 
 /* address operations */
 void            gst_netaddress_set_ip4_address   (GstNetAddress *naddr, guint32 address, guint16 port);

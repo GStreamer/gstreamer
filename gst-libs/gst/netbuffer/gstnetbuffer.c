@@ -34,78 +34,47 @@
 
 #include "gstnetbuffer.h"
 
-#if 0
-static void gst_netbuffer_finalize (GstNetBuffer * nbuf);
-static GstNetBuffer *gst_netbuffer_copy (GstNetBuffer * nbuf);
-
-static GstBufferClass *parent_class;
-
-G_DEFINE_TYPE (GstNetBuffer, gst_netbuffer, GST_TYPE_BUFFER);
-
 static void
-gst_netbuffer_class_init (GstNetBufferClass * netbuffer_class)
+meta_net_address_copy (GstBuffer * copy, GstMetaNetAddress * meta,
+    GstBuffer * buffer)
 {
-  GstMiniObjectClass *mo_class = GST_MINI_OBJECT_CLASS (netbuffer_class);
+  GstMetaNetAddress *naddr;
 
-  parent_class = g_type_class_peek_parent (netbuffer_class);
+  GST_DEBUG ("copy called from buffer %p to %p, meta %p", buffer, copy, meta);
 
-  mo_class->copy = (GstMiniObjectCopyFunction) gst_netbuffer_copy;
-  mo_class->finalize = (GstMiniObjectFinalizeFunction) gst_netbuffer_finalize;
+  naddr = gst_buffer_add_meta_net_address (copy);
+  memcpy (&naddr->naddr, &meta->naddr, sizeof (meta->naddr));
 }
 
 static void
-gst_netbuffer_init (GstNetBuffer * instance)
+meta_net_address_sub (GstBuffer * sub, GstMetaNetAddress * meta,
+    GstBuffer * buffer, guint offset, guint size)
 {
+  GstMetaNetAddress *naddr;
+
+  GST_DEBUG ("sub called from buffer %p to %p, meta %p, %u-%u", buffer, sub,
+      meta, offset, size);
+
+  naddr = gst_buffer_add_meta_net_address (sub);
+  memcpy (&naddr->naddr, &meta->naddr, sizeof (meta->naddr));
 }
 
-static void
-gst_netbuffer_finalize (GstNetBuffer * nbuf)
+const GstMetaInfo *
+gst_meta_net_address_get_info (void)
 {
-  GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (nbuf));
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (meta_info == NULL) {
+    meta_info = gst_meta_register ("GstMetaNetAddress", "GstMetaNetAddress",
+        sizeof (GstMetaNetAddress),
+        (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) NULL,
+        (GstMetaCopyFunction) meta_net_address_copy,
+        (GstMetaSubFunction) meta_net_address_sub,
+        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+  }
+  return meta_info;
 }
-
-static GstNetBuffer *
-gst_netbuffer_copy (GstNetBuffer * nbuf)
-{
-  GstNetBuffer *copy;
-
-  copy = gst_netbuffer_new ();
-
-  /* we simply copy everything from our parent */
-  GST_BUFFER_DATA (copy) =
-      g_memdup (GST_BUFFER_DATA (nbuf), GST_BUFFER_SIZE (nbuf));
-  /* make sure it gets freed (even if the parent is subclassed, we return a
-     normal buffer) */
-  GST_BUFFER_MALLOCDATA (copy) = GST_BUFFER_DATA (copy);
-  GST_BUFFER_SIZE (copy) = GST_BUFFER_SIZE (nbuf);
-
-  memcpy (&copy->to, &nbuf->to, sizeof (nbuf->to));
-  memcpy (&copy->from, &nbuf->from, sizeof (nbuf->from));
-
-  /* copy metadata */
-  gst_buffer_copy_metadata (GST_BUFFER_CAST (copy),
-      GST_BUFFER_CAST (nbuf), GST_BUFFER_COPY_ALL);
-
-  return copy;
-}
-
-/**
- * gst_netbuffer_new:
- *
- * Create a new network buffer.
- *
- * Returns: a new #GstNetBuffer.
- */
-GstNetBuffer *
-gst_netbuffer_new (void)
-{
-  GstNetBuffer *buf;
-
-  buf = (GstNetBuffer *) gst_mini_object_new (GST_TYPE_NETBUFFER);
-
-  return buf;
-}
-#endif
 
 /**
  * gst_netaddress_set_ip4_address:
