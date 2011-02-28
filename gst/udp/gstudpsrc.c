@@ -409,9 +409,7 @@ static GstFlowReturn
 gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstUDPSrc *udpsrc;
-#if 0
-  GstNetBuffer *outbuf;
-#endif
+  GstMetaNetAddress *meta;
   GstBuffer *outbuf;
   union gst_sockaddr
   {
@@ -530,7 +528,6 @@ no_select:
       break;
   }
 
-  /* FIXME use buffer metadata so receivers can also track the address */
   outbuf = gst_buffer_new ();
   GST_BUFFER_MALLOCDATA (outbuf) = pktdata;
 
@@ -545,11 +542,13 @@ no_select:
   GST_BUFFER_DATA (outbuf) = pktdata;
   GST_BUFFER_SIZE (outbuf) = ret;
 
-#if 0
+  /* use buffer metadata so receivers can also track the address */
+  meta = gst_buffer_add_meta_net_address (outbuf);
+
   switch (sa.sa.sa_family) {
     case AF_INET:
     {
-      gst_netaddress_set_ip4_address (&outbuf->from, sa.sa_in.sin_addr.s_addr,
+      gst_netaddress_set_ip4_address (&meta->naddr, sa.sa_in.sin_addr.s_addr,
           sa.sa_in.sin_port);
     }
       break;
@@ -558,7 +557,7 @@ no_select:
       guint8 ip6[16];
 
       memcpy (ip6, &sa.sa_in6.sin6_addr, sizeof (ip6));
-      gst_netaddress_set_ip6_address (&outbuf->from, ip6, sa.sa_in6.sin6_port);
+      gst_netaddress_set_ip6_address (&meta->naddr, ip6, sa.sa_in6.sin6_port);
     }
       break;
     default:
@@ -569,7 +568,6 @@ no_select:
 #endif
       goto receive_error;
   }
-#endif
   GST_LOG_OBJECT (udpsrc, "read %d bytes", (int) readsize);
 
   *buf = GST_BUFFER_CAST (outbuf);
