@@ -199,6 +199,7 @@ gst_camera_bin_start_capture (GstCameraBin * camerabin)
 static void
 gst_camera_bin_stop_capture (GstCameraBin * camerabin)
 {
+  GST_DEBUG_OBJECT (camerabin, "Received stop-capture");
   if (camerabin->src)
     g_signal_emit_by_name (camerabin->src, "stop-capture", NULL);
 }
