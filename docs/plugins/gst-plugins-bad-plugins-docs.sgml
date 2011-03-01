@@ -33,6 +33,7 @@
     <xi:include href="xml/element-chromium.xml" />
     <xi:include href="xml/element-circle.xml" />
     <xi:include href="xml/element-coloreffects.xml" />
+    <xi:include href="xml/element-curlsink.xml" />
     <xi:include href="xml/element-cvdilate.xml" />
     <xi:include href="xml/element-cverode.xml" />
     <xi:include href="xml/element-cvequalizehist.xml" />
@@ -147,6 +148,7 @@
     <xi:include href="xml/plugin-cdxaparse.xml" />
     <xi:include href="xml/plugin-celt.xml" />
     <xi:include href="xml/plugin-coloreffects.xml" />
+    <xi:include href="xml/plugin-curl.xml" />
     <xi:include href="xml/plugin-dataurisrc.xml" />
     <xi:include href="xml/plugin-dccp.xml" />
     <xi:include href="xml/plugin-debugutilsbad.xml" />

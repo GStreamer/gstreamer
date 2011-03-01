@@ -245,6 +245,20 @@ gst_color_effects_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-curlsink</FILE>
+<TITLE>curlsink</TITLE>
+GstCurlSink
+<SUBSECTION Standard>
+GstCurlSinkClass
+GST_CURL_SINK
+GST_CURL_SINK_CLASS
+GST_IS_CURL_SINK
+GST_IS_CURL_SINK_CLASS
+GST_TYPE_CURL_SINK
+gst_curl_sink_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-cvdilate</FILE>
 <TITLE>cvdilate</TITLE>
 GstCvDilate

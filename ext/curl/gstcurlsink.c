@@ -17,6 +17,31 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-curlsink
+ * @short_description: sink that uploads data to a server using libcurl
+ * @see_also:
+ *
+ * This is a network sink that uses libcurl as a client to upload data to
+ * a server (e.g. a HTTP/FTP server).
+ *
+ * <refsect2>
+ * <title>Example launch line (upload a JPEG file to an HTTP server)</title>
+ * |[
+ * gst-launch filesrc filesrc location=image.jpg ! jpegparse ! curlsink  \
+ *     file-name=image.jpg  \
+ *     location=http://192.168.0.1:8080/cgi-bin/patupload.cgi/  \
+ *     user=test passwd=test  \
+ *     content-type=image/jpeg  \
+ *     use-content-length=false
+ * ]|
+ * </refsect2>
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <curl/curl.h>
 #include <string.h>
 #include <stdio.h>
@@ -30,9 +55,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include "gstcurlsink.h"
 
 /* Default values */
