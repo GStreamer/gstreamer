@@ -138,7 +138,8 @@ gst_curl_sink_base_init (gpointer g_class)
   gst_element_class_set_details_simple (element_class,
       "Curl sink",
       "Sink/Network",
-      "Send over network using curl", "Patricia Muscalu <patricia@axis.com>");
+      "Upload data over the network to a server using libcurl",
+      "Patricia Muscalu <patricia@axis.com>");
 }
 
 static void
@@ -146,79 +147,6 @@ gst_curl_sink_class_init (GstCurlSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseSinkClass *gstbasesink_class = (GstBaseSinkClass *) klass;
-  GParamSpec *loc_prspec = g_param_spec_string ("location",
-      "Location",
-      "URI location to write to",
-      NULL,
-      G_PARAM_READWRITE);
-  GParamSpec *user_prspec = g_param_spec_string ("user",
-      "User nanme)",
-      "User name to use for server authentication",
-      NULL,
-      G_PARAM_READWRITE);
-  GParamSpec *passwd_prspec = g_param_spec_string ("passwd",
-      "User password)",
-      "User password to use for server authentication",
-      NULL,
-      G_PARAM_READWRITE);
-  GParamSpec *proxy_prspec = g_param_spec_string ("proxy",
-      "proxy",
-      "HTTP proxy server URI",
-      NULL,
-      G_PARAM_READWRITE);
-
-  GParamSpec *proxy_port_prspec = g_param_spec_int ("proxy-port",
-      "proxy port",
-      "HTTP proxy server port",
-      0,
-      G_MAXINT,
-      DEFAULT_PROXY_PORT,
-      G_PARAM_READWRITE);
-  GParamSpec *proxy_user_prspec = g_param_spec_string ("proxy-user",
-      "Proxy user name)",
-      "Proxy user name to use for proxy authentication",
-      NULL,
-      G_PARAM_READWRITE);
-  GParamSpec *proxy_passwd_prspec = g_param_spec_string ("proxy-passwd",
-      "Prpxu user password)",
-      "Proxy user password to use for proxy authentication",
-      NULL,
-      G_PARAM_READWRITE);
-  GParamSpec *file_name_prspec = g_param_spec_string ("file-name",
-      "Base file name",
-      "The base file name for the uploaded images",
-      NULL,
-      G_PARAM_READWRITE);
-
-  GParamSpec *timeout_prspec = g_param_spec_int ("timeout",
-      "timeout",
-      "Number of seconds waiting to write before timeout",
-      0,
-      G_MAXINT,
-      DEFAULT_TIMEOUT,
-      G_PARAM_READWRITE);
-  GParamSpec *qos_dscp_prspec = g_param_spec_int ("qos-dscp",
-      "QoS diff srv code point",
-      "Quality of Service, differentiated services code point (0 default)",
-      DSCP_MIN,
-      DSCP_MAX,
-      DEFAULT_QOS_DSCP,
-      G_PARAM_READWRITE);
-  GParamSpec *self_cert_prspec = g_param_spec_boolean ("accept-self-signed",
-      "Accept self-signed certificates",
-      "Accept self-signed SSL/TLS certificates",
-      DEFAULT_ACCEPT_SELF_SIGNED,
-      G_PARAM_READWRITE);
-  GParamSpec *content_lngth_prspec = g_param_spec_boolean ("use-content-length",
-      "Use content length header",
-      "Use the Content-Length HTTP header instead of Transfer-Encoding header",
-      DEFAULT_USE_CONTENT_LENGTH,
-      G_PARAM_READWRITE);
-  GParamSpec *content_type_prspec = g_param_spec_string ("content-type",
-      "Content type header)",
-      "The mime type of the body of the request",
-      NULL,
-      G_PARAM_READWRITE);
 
   GST_DEBUG_OBJECT (klass, "class_init");
 
@@ -231,30 +159,67 @@ gst_curl_sink_class_init (GstCurlSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_curl_sink_unlock_stop);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_curl_sink_finalize);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_curl_sink_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_curl_sink_get_property);
-  g_object_class_install_property (gobject_class, PROP_LOCATION, loc_prspec);
-  g_object_class_install_property (gobject_class, PROP_USER_NAME, user_prspec);
+  gobject_class->set_property = gst_curl_sink_set_property;
+  gobject_class->get_property = gst_curl_sink_get_property;
+
+  /* FIXME: check against souphttpsrc and use same names for same properties */
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
+      g_param_spec_string ("location", "Location",
+          "URI location to write to", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_USER_NAME,
+      g_param_spec_string ("user", "User name",
+          "User name to use for server authentication", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_USER_PASSWD,
-      passwd_prspec);
-  g_object_class_install_property (gobject_class, PROP_PROXY, proxy_prspec);
+      g_param_spec_string ("passwd", "User password",
+          "User password to use for server authentication", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PROXY,
+      g_param_spec_string ("proxy", "Proxy", "HTTP proxy server URI", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PROXY_PORT,
-      proxy_port_prspec);
+      g_param_spec_int ("proxy-port", "Proxy port",
+          "HTTP proxy server port", 0, G_MAXINT, DEFAULT_PROXY_PORT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PROXY_USER_NAME,
-      proxy_user_prspec);
+      g_param_spec_string ("proxy-user", "Proxy user name",
+          "Proxy user name to use for proxy authentication",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PROXY_USER_PASSWD,
-      proxy_passwd_prspec);
+      g_param_spec_string ("proxy-passwd", "Proxy user password",
+          "Proxy user password to use for proxy authentication",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FILE_NAME,
-      file_name_prspec);
-  g_object_class_install_property (gobject_class, PROP_TIMEOUT, timeout_prspec);
+      g_param_spec_string ("file-name", "Base file name",
+          "The base file name for the uploaded images", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_TIMEOUT,
+      g_param_spec_int ("timeout", "Timeout",
+          "Number of seconds waiting to write before timeout",
+          0, G_MAXINT, DEFAULT_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_QOS_DSCP,
-      qos_dscp_prspec);
+      g_param_spec_int ("qos-dscp",
+          "QoS diff srv code point",
+          "Quality of Service, differentiated services code point (0 default)",
+          DSCP_MIN, DSCP_MAX, DEFAULT_QOS_DSCP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ACCEPT_SELF_SIGNED,
-      self_cert_prspec);
+      g_param_spec_boolean ("accept-self-signed",
+          "Accept self-signed certificates",
+          "Accept self-signed SSL/TLS certificates",
+          DEFAULT_ACCEPT_SELF_SIGNED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_USE_CONTENT_LENGTH,
-      content_lngth_prspec);
+      g_param_spec_boolean ("use-content-length", "Use content length header",
+          "Use the Content-Length HTTP header instead of "
+          "Transfer-Encoding header", DEFAULT_USE_CONTENT_LENGTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CONTENT_TYPE,
-      content_type_prspec);
+      g_param_spec_string ("content-type", "Content type",
+          "The mime type of the body of the request", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_type_class_add_private (klass, sizeof (GstCurlSinkPrivate));
 }
