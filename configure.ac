@@ -656,7 +656,13 @@ AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
 dnl *** Curl ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CURL, true)
 AG_GST_CHECK_FEATURE(CURL, [Curl plugin], curl, [
-  PKG_CHECK_MODULES(CURL, libcurl >= 7.21.0, HAVE_CURL="yes", [
+  PKG_CHECK_MODULES(CURL, libcurl >= 7.21.0, [
+    HAVE_CURL="yes"
+    AC_CHECK_HEADERS([unistd.h sys/socket.h sys/types.h netinet/in.h netinet/ip.h netinet/tcp.h fcntl.h],
+        [ ], [HAVE_CURL="no"])
+    AC_MSG_CHECKING([for socket support needed by curlsink])
+    AC_MSG_RESULT($HAVE_CURL)
+  ], [
     HAVE_CURL="no"
     AC_MSG_RESULT(no)
   ])
