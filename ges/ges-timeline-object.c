@@ -623,8 +623,7 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
   GESTrackObject *tr;
   ObjectMapping *map;
 
-  GST_DEBUG ("object:%p, priority:%" GST_TIME_FORMAT,
-      object, GST_TIME_ARGS (priority));
+  GST_DEBUG ("object:%p, priority:%" G_GUINT32_FORMAT, object, priority);
 
   object->priv->ignore_notifies = TRUE;
 

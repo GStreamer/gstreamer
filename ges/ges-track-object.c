@@ -372,8 +372,7 @@ static inline gboolean
 ges_track_object_set_priority_internal (GESTrackObject * object,
     guint32 priority)
 {
-  GST_DEBUG ("object:%p, priority:%" GST_TIME_FORMAT,
-      object, GST_TIME_ARGS (priority));
+  GST_DEBUG ("object:%p, priority:%" G_GUINT32_FORMAT, object, priority);
 
   if (object->priv->gnlobject != NULL) {
     if (G_UNLIKELY (priority == object->priority))
