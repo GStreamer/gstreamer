@@ -138,7 +138,12 @@ struct _GstPulseRingBuffer
   pa_context *context;
   pa_stream *stream;
 
+#if HAVE_PULSE_1_0
+  pa_format_info *format;
+  guint channels;
+#else
   pa_sample_spec sample_spec;
+#endif
 
   void *m_data;
   size_t m_towrite;
@@ -222,7 +227,12 @@ gst_pulseringbuffer_init (GstPulseRingBuffer * pbuf)
   pbuf->context = NULL;
   pbuf->stream = NULL;
 
+#ifdef HAVE_PULSE_1_0
+  pbuf->format = NULL;
+  pbuf->channels = 0;
+#else
   pa_sample_spec_init (&pbuf->sample_spec);
+#endif
 
   pbuf->m_data = NULL;
   pbuf->m_towrite = 0;
@@ -251,6 +261,13 @@ gst_pulsering_destroy_stream (GstPulseRingBuffer * pbuf)
       pbuf->m_offset = 0;
       pbuf->m_lastoffset = 0;
     }
+#ifdef HAVE_PULSE_1_0
+    if (pbuf->format) {
+      pa_format_info_free (pbuf->format);
+      pbuf->format = NULL;
+      pbuf->channels = 0;
+    }
+#endif
 
     pa_stream_disconnect (pbuf->stream);
 
@@ -718,14 +735,22 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   pa_stream_flags_t flags;
   const gchar *name;
   GstAudioClock *clock;
+#ifdef HAVE_PULSE_1_0
+  pa_format_info *formats[1];
+#endif
 
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (buf));
   pbuf = GST_PULSERING_BUFFER_CAST (buf);
 
   GST_LOG_OBJECT (psink, "creating sample spec");
   /* convert the gstreamer sample spec to the pulseaudio format */
+#ifdef HAVE_PULSE_1_0
+  if (!gst_pulse_fill_format_info (spec, &pbuf->format, &pbuf->channels))
+    goto invalid_spec;
+#else
   if (!gst_pulse_fill_sample_spec (spec, &pbuf->sample_spec))
     goto invalid_spec;
+#endif
 
   pa_threaded_mainloop_lock (mainloop);
 
@@ -742,7 +767,13 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   pa_operation_unref (o);
 
   /* initialize the channel map */
+#ifdef HAVE_PULSE_1_0
+  if (pa_format_info_is_pcm (pbuf->format) &&
+      gst_pulse_gst_to_channel_map (&channel_map, spec))
+    pa_format_info_set_channel_map (pbuf->format, &channel_map);
+#else
   gst_pulse_gst_to_channel_map (&channel_map, spec);
+#endif
 
   /* find a good name for the stream */
   if (psink->stream_name)
@@ -751,10 +782,17 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     name = "Playback Stream";
 
   /* create a stream */
+#ifdef HAVE_PULSE_1_0
+  formats[0] = pbuf->format;
+  if (!(pbuf->stream = pa_stream_new_extended (pbuf->context, name, formats, 1,
+              psink->proplist)))
+    goto stream_failed;
+#else
   GST_LOG_OBJECT (psink, "creating stream with name %s", name);
   if (!(pbuf->stream = pa_stream_new_with_proplist (pbuf->context, name,
               &pbuf->sample_spec, &channel_map, psink->proplist)))
     goto stream_failed;
+#endif
 
   /* install essential callbacks */
   pa_stream_set_state_callback (pbuf->stream,
@@ -792,8 +830,13 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   if (psink->volume_set) {
     GST_LOG_OBJECT (psink, "have volume of %f", psink->volume);
     pv = &v;
+#ifdef HAVE_PULSE_1_0
+    if (pa_format_info_is_pcm (pbuf->format))
+      gst_pulse_cvolume_from_linear (pv, pbuf->channels, psink->volume);
+#else
     gst_pulse_cvolume_from_linear (pv, pbuf->sample_spec.channels,
         psink->volume);
+#endif
   } else {
     pv = NULL;
   }
@@ -1923,7 +1966,12 @@ gst_pulsesink_set_volume (GstPulseSink * psink, gdouble volume)
   if ((idx = pa_stream_get_index (pbuf->stream)) == PA_INVALID_INDEX)
     goto no_index;
 
+#ifdef HAVE_PULSE_1_0
+  if (pa_format_info_is_pcm (pbuf->format))
+    gst_pulse_cvolume_from_linear (&v, pbuf->channels, volume);
+#else
   gst_pulse_cvolume_from_linear (&v, pbuf->sample_spec.channels, volume);
+#endif
 
   if (!(o = pa_context_set_sink_input_volume (pbuf->context, idx,
               &v, NULL, NULL)))

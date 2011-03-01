@@ -118,6 +118,81 @@ gst_pulse_fill_sample_spec (GstRingBufferSpec * spec, pa_sample_spec * ss)
   return TRUE;
 }
 
+#ifdef HAVE_PULSE_1_0
+gboolean
+gst_pulse_fill_format_info (GstRingBufferSpec * spec, pa_format_info ** f,
+    guint * channels)
+{
+  pa_format_info *format;
+  pa_sample_format_t sf = PA_SAMPLE_INVALID;
+
+  format = pa_format_info_new ();
+
+  if (spec->format == GST_MU_LAW && spec->width == 8) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_ULAW;
+  } else if (spec->format == GST_A_LAW && spec->width == 8) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_ALAW;
+  } else if (spec->format == GST_U8 && spec->width == 8) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_U8;
+  } else if (spec->format == GST_S16_LE && spec->width == 16) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_S16LE;
+  } else if (spec->format == GST_S16_BE && spec->width == 16) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_S16BE;
+  } else if (spec->format == GST_FLOAT32_LE && spec->width == 32) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_FLOAT32LE;
+  } else if (spec->format == GST_FLOAT32_BE && spec->width == 32) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_FLOAT32BE;
+  } else if (spec->format == GST_S32_LE && spec->width == 32) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_S32LE;
+  } else if (spec->format == GST_S32_BE && spec->width == 32) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_S32BE;
+  } else if (spec->format == GST_S24_3LE && spec->width == 24) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_S24LE;
+  } else if (spec->format == GST_S24_3BE && spec->width == 24) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_S24BE;
+  } else if (spec->format == GST_S24_LE && spec->width == 32) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_S24_32LE;
+  } else if (spec->format == GST_S24_BE && spec->width == 32) {
+    format->encoding = PA_ENCODING_PCM;
+    sf = PA_SAMPLE_S24_32BE;
+  } else {
+    goto fail;
+  }
+
+  if (format->encoding == PA_ENCODING_PCM) {
+    pa_format_info_set_sample_format (format, sf);
+    pa_format_info_set_channels (format, spec->channels);
+  }
+
+  pa_format_info_set_rate (format, spec->rate);
+
+  if (!pa_format_info_valid (format))
+    goto fail;
+
+  *f = format;
+  *channels = spec->channels;
+
+  return TRUE;
+
+fail:
+  if (format)
+    pa_format_info_free (format);
+  return FALSE;
+}
+#endif
+
 /* PATH_MAX is not defined everywhere, e.g. on GNU Hurd */
 #ifndef PATH_MAX
 #define PATH_MAX 4096
