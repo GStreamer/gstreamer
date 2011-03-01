@@ -783,12 +783,8 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   /* create a stream */
   GST_LOG_OBJECT (psink, "creating stream with name %s", name);
-  if (psink->proplist) {
-    if (!(pbuf->stream = pa_stream_new_with_proplist (pbuf->context,
-                name, &pbuf->sample_spec, &channel_map, psink->proplist)))
-      goto stream_failed;
-  } else if (!(pbuf->stream = pa_stream_new (pbuf->context,
-              name, &pbuf->sample_spec, &channel_map)))
+  if (!(pbuf->stream = pa_stream_new_with_proplist (pbuf->context, name,
+              &pbuf->sample_spec, &channel_map, psink->proplist)))
     goto stream_failed;
 
   /* install essential callbacks */
