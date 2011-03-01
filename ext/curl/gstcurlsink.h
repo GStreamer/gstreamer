@@ -39,7 +39,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstCurlSink GstCurlSink;
 typedef struct _GstCurlSinkClass GstCurlSinkClass;
-typedef struct _GstCurlSinkPrivate GstCurlSinkPrivate;
 
 typedef struct _TransferBuffer TransferBuffer;
 typedef struct _TransferCondition TransferCondition;
@@ -56,8 +55,11 @@ struct _TransferCondition {
   gboolean data_available;
 };
 
-struct _GstCurlSinkPrivate
+struct _GstCurlSink
 {
+  GstBaseSink parent;
+
+  /*< private >*/
   CURLM *multi_handle;
   CURL *curl;
   struct curl_slist *header_list;
@@ -84,14 +86,6 @@ struct _GstCurlSinkPrivate
   gboolean new_file;
   gchar *content_type;
   gboolean proxy_headers_set;
-};
-
-struct _GstCurlSink
-{
-  GstBaseSink parent;
-
-  /*< private >*/
-  GstCurlSinkPrivate *priv;
 };
 
 struct _GstCurlSinkClass

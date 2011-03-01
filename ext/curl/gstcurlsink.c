@@ -220,32 +220,27 @@ gst_curl_sink_class_init (GstCurlSinkClass * klass)
       g_param_spec_string ("content-type", "Content type",
           "The mime type of the body of the request", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_type_class_add_private (klass, sizeof (GstCurlSinkPrivate));
 }
 
 static void
 gst_curl_sink_init (GstCurlSink * sink, GstCurlSinkClass * klass)
 {
-  sink->priv = G_TYPE_INSTANCE_GET_PRIVATE (sink, GST_TYPE_CURL_SINK,
-      GstCurlSinkPrivate);
-
-  sink->priv->transfer_buf = g_malloc (sizeof (TransferBuffer));
-  sink->priv->transfer_cond = g_malloc (sizeof (TransferCondition));
-  sink->priv->transfer_cond->cond = g_cond_new ();
-  sink->priv->transfer_cond->data_sent = FALSE;
-  sink->priv->transfer_cond->data_available = FALSE;
-  sink->priv->timeout = DEFAULT_TIMEOUT;
-  sink->priv->proxy_port = DEFAULT_PROXY_PORT;
-  sink->priv->qos_dscp = DEFAULT_QOS_DSCP;
-  sink->priv->url = g_strdup (DEFAULT_URL);
-  sink->priv->header_list = NULL;
-  sink->priv->accept_self_signed = DEFAULT_ACCEPT_SELF_SIGNED;
-  sink->priv->use_content_length = DEFAULT_USE_CONTENT_LENGTH;
-  sink->priv->transfer_thread_close = FALSE;
-  sink->priv->new_file = TRUE;
-  sink->priv->proxy_headers_set = FALSE;
-  sink->priv->content_type = NULL;
+  sink->transfer_buf = g_malloc (sizeof (TransferBuffer));
+  sink->transfer_cond = g_malloc (sizeof (TransferCondition));
+  sink->transfer_cond->cond = g_cond_new ();
+  sink->transfer_cond->data_sent = FALSE;
+  sink->transfer_cond->data_available = FALSE;
+  sink->timeout = DEFAULT_TIMEOUT;
+  sink->proxy_port = DEFAULT_PROXY_PORT;
+  sink->qos_dscp = DEFAULT_QOS_DSCP;
+  sink->url = g_strdup (DEFAULT_URL);
+  sink->header_list = NULL;
+  sink->accept_self_signed = DEFAULT_ACCEPT_SELF_SIGNED;
+  sink->use_content_length = DEFAULT_USE_CONTENT_LENGTH;
+  sink->transfer_thread_close = FALSE;
+  sink->new_file = TRUE;
+  sink->proxy_headers_set = FALSE;
+  sink->content_type = NULL;
 }
 
 static void
@@ -254,33 +249,33 @@ gst_curl_sink_finalize (GObject * gobject)
   GstCurlSink *this = GST_CURL_SINK (gobject);
 
   GST_DEBUG ("finalizing curlsink");
-  if (this->priv->transfer_thread != NULL) {
-    g_thread_join (this->priv->transfer_thread);
+  if (this->transfer_thread != NULL) {
+    g_thread_join (this->transfer_thread);
   }
 
   gst_curl_sink_transfer_cleanup (this);
-  g_cond_free (this->priv->transfer_cond->cond);
-  g_free (this->priv->transfer_cond);
+  g_cond_free (this->transfer_cond->cond);
+  g_free (this->transfer_cond);
 
-  g_free (this->priv->transfer_buf);
+  g_free (this->transfer_buf);
 
-  g_free (this->priv->url);
-  g_free (this->priv->user);
-  g_free (this->priv->passwd);
-  g_free (this->priv->proxy);
-  g_free (this->priv->proxy_user);
-  g_free (this->priv->proxy_passwd);
-  g_free (this->priv->file_name);
-  g_free (this->priv->content_type);
+  g_free (this->url);
+  g_free (this->user);
+  g_free (this->passwd);
+  g_free (this->proxy);
+  g_free (this->proxy_user);
+  g_free (this->proxy_passwd);
+  g_free (this->file_name);
+  g_free (this->content_type);
 
-  if (this->priv->header_list) {
-    curl_slist_free_all (this->priv->header_list);
-    this->priv->header_list = NULL;
+  if (this->header_list) {
+    curl_slist_free_all (this->header_list);
+    this->header_list = NULL;
   }
 
-  if (this->priv->fdset != NULL) {
-    gst_poll_free (this->priv->fdset);
-    this->priv->fdset = NULL;
+  if (this->fdset != NULL) {
+    gst_poll_free (this->fdset);
+    this->fdset = NULL;
   }
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -299,7 +294,7 @@ gst_curl_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  if (sink->priv->content_type == NULL) {
+  if (sink->content_type == NULL) {
     GstCaps *caps;
     GstStructure *structure;
     const gchar *mime_type;
@@ -307,31 +302,31 @@ gst_curl_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     caps = buf->caps;
     structure = gst_caps_get_structure (caps, 0);
     mime_type = gst_structure_get_name (structure);
-    sink->priv->content_type = g_strdup (mime_type);
+    sink->content_type = g_strdup (mime_type);
   }
 
   GST_OBJECT_LOCK (sink);
 
   /* check if the transfer thread has encountered problems while the
    * pipeline thread was working elsewhere */
-  if (sink->priv->flow_ret != GST_FLOW_OK) {
+  if (sink->flow_ret != GST_FLOW_OK) {
     goto done;
   }
 
-  g_assert (sink->priv->transfer_cond->data_available == FALSE);
+  g_assert (sink->transfer_cond->data_available == FALSE);
 
   /* if there is no transfer thread created, lets create one */
-  if (sink->priv->transfer_thread == NULL) {
+  if (sink->transfer_thread == NULL) {
     if (!gst_curl_sink_transfer_start_unlocked (sink)) {
-      sink->priv->flow_ret = GST_FLOW_ERROR;
+      sink->flow_ret = GST_FLOW_ERROR;
       goto done;
     }
   }
 
   /* make data available for the transfer thread and notify */
-  sink->priv->transfer_buf->ptr = data;
-  sink->priv->transfer_buf->len = size;
-  sink->priv->transfer_buf->offset = 0;
+  sink->transfer_buf->ptr = data;
+  sink->transfer_buf->len = size;
+  sink->transfer_buf->offset = 0;
   gst_curl_sink_transfer_thread_notify_unlocked (sink);
 
   /* wait for the transfer thread to send the data. This will be notified
@@ -340,7 +335,7 @@ gst_curl_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   gst_curl_sink_wait_for_transfer_thread_to_send_unlocked (sink);
 
 done:
-  ret = sink->priv->flow_ret;
+  ret = sink->flow_ret;
   GST_OBJECT_UNLOCK (sink);
 
   GST_LOG ("exit render");
@@ -359,9 +354,9 @@ gst_curl_sink_event (GstBaseSink * bsink, GstEvent * event)
       GST_OBJECT_LOCK (sink);
       gst_curl_sink_transfer_thread_close_unlocked (sink);
       GST_OBJECT_UNLOCK (sink);
-      if (sink->priv->transfer_thread != NULL) {
-        g_thread_join (sink->priv->transfer_thread);
-        sink->priv->transfer_thread = NULL;
+      if (sink->transfer_thread != NULL) {
+        g_thread_join (sink->transfer_thread);
+        sink->transfer_thread = NULL;
       }
       break;
     default:
@@ -377,7 +372,7 @@ gst_curl_sink_start (GstBaseSink * bsink)
 
   sink = GST_CURL_SINK (bsink);
 
-  if ((sink->priv->fdset = gst_poll_new (TRUE)) == NULL) {
+  if ((sink->fdset = gst_poll_new (TRUE)) == NULL) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ_WRITE,
         ("gst_poll_new failed: %s", g_strerror (errno)), (NULL));
     return FALSE;
@@ -394,9 +389,9 @@ gst_curl_sink_stop (GstBaseSink * bsink)
   GST_OBJECT_LOCK (sink);
   gst_curl_sink_transfer_thread_close_unlocked (sink);
   GST_OBJECT_UNLOCK (sink);
-  if (sink->priv->fdset != NULL) {
-    gst_poll_free (sink->priv->fdset);
-    sink->priv->fdset = NULL;
+  if (sink->fdset != NULL) {
+    gst_poll_free (sink->fdset);
+    sink->fdset = NULL;
   }
 
   return TRUE;
@@ -410,7 +405,7 @@ gst_curl_sink_unlock (GstBaseSink * bsink)
   sink = GST_CURL_SINK (bsink);
 
   GST_LOG_OBJECT (sink, "Flushing");
-  gst_poll_set_flushing (sink->priv->fdset, TRUE);
+  gst_poll_set_flushing (sink->fdset, TRUE);
 
   return TRUE;
 }
@@ -423,7 +418,7 @@ gst_curl_sink_unlock_stop (GstBaseSink * bsink)
   sink = GST_CURL_SINK (bsink);
 
   GST_LOG_OBJECT (sink, "No longer flushing");
-  gst_poll_set_flushing (sink->priv->fdset, FALSE);
+  gst_poll_set_flushing (sink->fdset, FALSE);
 
   return TRUE;
 }
@@ -444,69 +439,67 @@ gst_curl_sink_set_property (GObject * object, guint prop_id,
 
     switch (prop_id) {
       case PROP_LOCATION:
-        g_free (sink->priv->url);
-        sink->priv->url = g_value_dup_string (value);
-        GST_DEBUG_OBJECT (sink, "url set to %s", sink->priv->url);
+        g_free (sink->url);
+        sink->url = g_value_dup_string (value);
+        GST_DEBUG_OBJECT (sink, "url set to %s", sink->url);
         break;
       case PROP_USER_NAME:
-        g_free (sink->priv->user);
-        sink->priv->user = g_value_dup_string (value);
-        GST_DEBUG_OBJECT (sink, "user set to %s", sink->priv->user);
+        g_free (sink->user);
+        sink->user = g_value_dup_string (value);
+        GST_DEBUG_OBJECT (sink, "user set to %s", sink->user);
         break;
       case PROP_USER_PASSWD:
-        g_free (sink->priv->passwd);
-        sink->priv->passwd = g_value_dup_string (value);
-        GST_DEBUG_OBJECT (sink, "passwd set to %s", sink->priv->passwd);
+        g_free (sink->passwd);
+        sink->passwd = g_value_dup_string (value);
+        GST_DEBUG_OBJECT (sink, "passwd set to %s", sink->passwd);
         break;
       case PROP_PROXY:
-        g_free (sink->priv->proxy);
-        sink->priv->proxy = g_value_dup_string (value);
-        GST_DEBUG_OBJECT (sink, "proxy set to %s", sink->priv->proxy);
+        g_free (sink->proxy);
+        sink->proxy = g_value_dup_string (value);
+        GST_DEBUG_OBJECT (sink, "proxy set to %s", sink->proxy);
         break;
       case PROP_PROXY_PORT:
-        sink->priv->proxy_port = g_value_get_int (value);
-        GST_DEBUG_OBJECT (sink, "proxy port set to %d", sink->priv->proxy_port);
+        sink->proxy_port = g_value_get_int (value);
+        GST_DEBUG_OBJECT (sink, "proxy port set to %d", sink->proxy_port);
         break;
       case PROP_PROXY_USER_NAME:
-        g_free (sink->priv->proxy_user);
-        sink->priv->proxy_user = g_value_dup_string (value);
-        GST_DEBUG_OBJECT (sink, "proxy user set to %s", sink->priv->proxy_user);
+        g_free (sink->proxy_user);
+        sink->proxy_user = g_value_dup_string (value);
+        GST_DEBUG_OBJECT (sink, "proxy user set to %s", sink->proxy_user);
         break;
       case PROP_PROXY_USER_PASSWD:
-        g_free (sink->priv->proxy_passwd);
-        sink->priv->proxy_passwd = g_value_dup_string (value);
-        GST_DEBUG_OBJECT (sink, "proxy password set to %s",
-            sink->priv->proxy_passwd);
+        g_free (sink->proxy_passwd);
+        sink->proxy_passwd = g_value_dup_string (value);
+        GST_DEBUG_OBJECT (sink, "proxy password set to %s", sink->proxy_passwd);
         break;
       case PROP_FILE_NAME:
-        g_free (sink->priv->file_name);
-        sink->priv->file_name = g_value_dup_string (value);
-        GST_DEBUG_OBJECT (sink, "file_name set to %s", sink->priv->file_name);
+        g_free (sink->file_name);
+        sink->file_name = g_value_dup_string (value);
+        GST_DEBUG_OBJECT (sink, "file_name set to %s", sink->file_name);
         break;
       case PROP_TIMEOUT:
-        sink->priv->timeout = g_value_get_int (value);
-        GST_DEBUG_OBJECT (sink, "timeout set to %d", sink->priv->timeout);
+        sink->timeout = g_value_get_int (value);
+        GST_DEBUG_OBJECT (sink, "timeout set to %d", sink->timeout);
         break;
       case PROP_QOS_DSCP:
-        sink->priv->qos_dscp = g_value_get_int (value);
+        sink->qos_dscp = g_value_get_int (value);
         gst_curl_sink_setup_dscp_unlocked (sink);
-        GST_DEBUG_OBJECT (sink, "dscp set to %d", sink->priv->qos_dscp);
+        GST_DEBUG_OBJECT (sink, "dscp set to %d", sink->qos_dscp);
         break;
       case PROP_ACCEPT_SELF_SIGNED:
-        sink->priv->accept_self_signed = g_value_get_boolean (value);
+        sink->accept_self_signed = g_value_get_boolean (value);
         GST_DEBUG_OBJECT (sink, "accept_self_signed set to %d",
-            sink->priv->accept_self_signed);
+            sink->accept_self_signed);
         break;
       case PROP_USE_CONTENT_LENGTH:
-        sink->priv->use_content_length = g_value_get_boolean (value);
+        sink->use_content_length = g_value_get_boolean (value);
         GST_DEBUG_OBJECT (sink, "use_content_length set to %d",
-            sink->priv->use_content_length);
+            sink->use_content_length);
         break;
       case PROP_CONTENT_TYPE:
-        g_free (sink->priv->content_type);
-        sink->priv->content_type = g_value_dup_string (value);
-        GST_DEBUG_OBJECT (sink, "content type set to %s",
-            sink->priv->content_type);
+        g_free (sink->content_type);
+        sink->content_type = g_value_dup_string (value);
+        GST_DEBUG_OBJECT (sink, "content type set to %s", sink->content_type);
         break;
       default:
         GST_DEBUG_OBJECT (sink, "invalid property id %d", prop_id);
@@ -523,25 +516,24 @@ gst_curl_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_FILE_NAME:
-      g_free (sink->priv->file_name);
-      sink->priv->file_name = g_value_dup_string (value);
-      GST_DEBUG_OBJECT (sink, "file_name set to %s", sink->priv->file_name);
+      g_free (sink->file_name);
+      sink->file_name = g_value_dup_string (value);
+      GST_DEBUG_OBJECT (sink, "file_name set to %s", sink->file_name);
       gst_curl_sink_new_file_notify_unlocked (sink);
       break;
     case PROP_TIMEOUT:
-      sink->priv->timeout = g_value_get_int (value);
-      GST_DEBUG_OBJECT (sink, "timeout set to %d", sink->priv->timeout);
+      sink->timeout = g_value_get_int (value);
+      GST_DEBUG_OBJECT (sink, "timeout set to %d", sink->timeout);
       break;
     case PROP_QOS_DSCP:
-      sink->priv->qos_dscp = g_value_get_int (value);
+      sink->qos_dscp = g_value_get_int (value);
       gst_curl_sink_setup_dscp_unlocked (sink);
-      GST_DEBUG_OBJECT (sink, "dscp set to %d", sink->priv->qos_dscp);
+      GST_DEBUG_OBJECT (sink, "dscp set to %d", sink->qos_dscp);
       break;
     case PROP_CONTENT_TYPE:
-      g_free (sink->priv->content_type);
-      sink->priv->content_type = g_value_dup_string (value);
-      GST_DEBUG_OBJECT (sink, "content type set to %s",
-          sink->priv->content_type);
+      g_free (sink->content_type);
+      sink->content_type = g_value_dup_string (value);
+      GST_DEBUG_OBJECT (sink, "content type set to %s", sink->content_type);
       break;
     default:
       GST_WARNING_OBJECT (sink, "cannot set property when PLAYING");
@@ -562,43 +554,43 @@ gst_curl_sink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
-      g_value_set_string (value, sink->priv->url);
+      g_value_set_string (value, sink->url);
       break;
     case PROP_USER_NAME:
-      g_value_set_string (value, sink->priv->user);
+      g_value_set_string (value, sink->user);
       break;
     case PROP_USER_PASSWD:
-      g_value_set_string (value, sink->priv->passwd);
+      g_value_set_string (value, sink->passwd);
       break;
     case PROP_PROXY:
-      g_value_set_string (value, sink->priv->proxy);
+      g_value_set_string (value, sink->proxy);
       break;
     case PROP_PROXY_PORT:
-      g_value_set_int (value, sink->priv->proxy_port);
+      g_value_set_int (value, sink->proxy_port);
       break;
     case PROP_PROXY_USER_NAME:
-      g_value_set_string (value, sink->priv->proxy_user);
+      g_value_set_string (value, sink->proxy_user);
       break;
     case PROP_PROXY_USER_PASSWD:
-      g_value_set_string (value, sink->priv->proxy_passwd);
+      g_value_set_string (value, sink->proxy_passwd);
       break;
     case PROP_FILE_NAME:
-      g_value_set_string (value, sink->priv->file_name);
+      g_value_set_string (value, sink->file_name);
       break;
     case PROP_TIMEOUT:
-      g_value_set_int (value, sink->priv->timeout);
+      g_value_set_int (value, sink->timeout);
       break;
     case PROP_QOS_DSCP:
-      g_value_set_int (value, sink->priv->qos_dscp);
+      g_value_set_int (value, sink->qos_dscp);
       break;
     case PROP_ACCEPT_SELF_SIGNED:
-      g_value_set_boolean (value, sink->priv->accept_self_signed);
+      g_value_set_boolean (value, sink->accept_self_signed);
       break;
     case PROP_USE_CONTENT_LENGTH:
-      g_value_set_boolean (value, sink->priv->use_content_length);
+      g_value_set_boolean (value, sink->use_content_length);
       break;
     case PROP_CONTENT_TYPE:
-      g_value_set_string (value, sink->priv->content_type);
+      g_value_set_string (value, sink->content_type);
       break;
     default:
       GST_DEBUG_OBJECT (sink, "invalid property id");
@@ -611,111 +603,103 @@ gst_curl_sink_set_http_header_unlocked (GstCurlSink * sink)
 {
   gchar *tmp;
 
-  if (sink->priv->header_list) {
-    curl_slist_free_all (sink->priv->header_list);
-    sink->priv->header_list = NULL;
+  if (sink->header_list) {
+    curl_slist_free_all (sink->header_list);
+    sink->header_list = NULL;
   }
 
-  if (proxy_auth && !sink->priv->proxy_headers_set && !proxy_conn_established) {
-    sink->priv->header_list =
-        curl_slist_append (sink->priv->header_list, "Content-Length: 0");
-    sink->priv->proxy_headers_set = TRUE;
+  if (proxy_auth && !sink->proxy_headers_set && !proxy_conn_established) {
+    sink->header_list =
+        curl_slist_append (sink->header_list, "Content-Length: 0");
+    sink->proxy_headers_set = TRUE;
     goto set_headers;
   }
-  if (sink->priv->use_content_length) {
+  if (sink->use_content_length) {
     /* if content length is used we assume that every buffer is one
      * entire file, which is the case when uploading several jpegs */
-    tmp =
-        g_strdup_printf ("Content-Length: %d",
-        (int) sink->priv->transfer_buf->len);
-    sink->priv->header_list = curl_slist_append (sink->priv->header_list, tmp);
+    tmp = g_strdup_printf ("Content-Length: %d", (int) sink->transfer_buf->len);
+    sink->header_list = curl_slist_append (sink->header_list, tmp);
     g_free (tmp);
   } else {
     /* when sending a POST request to a HTTP 1.1 server, you can send data
      * without knowing the size before starting the POST if you use chunked
      * encoding */
-    sink->priv->header_list = curl_slist_append (sink->priv->header_list,
+    sink->header_list = curl_slist_append (sink->header_list,
         "Transfer-Encoding: chunked");
   }
 
-  tmp = g_strdup_printf ("Content-Type: %s", sink->priv->content_type);
-  sink->priv->header_list = curl_slist_append (sink->priv->header_list, tmp);
+  tmp = g_strdup_printf ("Content-Type: %s", sink->content_type);
+  sink->header_list = curl_slist_append (sink->header_list, tmp);
   g_free (tmp);
 
 set_headers:
 
   tmp = g_strdup_printf ("Content-Disposition: attachment; filename="
-      "\"%s\"", sink->priv->file_name);
-  sink->priv->header_list = curl_slist_append (sink->priv->header_list, tmp);
+      "\"%s\"", sink->file_name);
+  sink->header_list = curl_slist_append (sink->header_list, tmp);
   g_free (tmp);
-  curl_easy_setopt (sink->priv->curl, CURLOPT_HTTPHEADER,
-      sink->priv->header_list);
+  curl_easy_setopt (sink->curl, CURLOPT_HTTPHEADER, sink->header_list);
 }
 
 static gboolean
 gst_curl_sink_transfer_set_options_unlocked (GstCurlSink * sink)
 {
 #ifdef DEBUG
-  curl_easy_setopt (sink->priv->curl, CURLOPT_VERBOSE, 1);
+  curl_easy_setopt (sink->curl, CURLOPT_VERBOSE, 1);
 #endif
 
-  curl_easy_setopt (sink->priv->curl, CURLOPT_URL, sink->priv->url);
-  curl_easy_setopt (sink->priv->curl, CURLOPT_CONNECTTIMEOUT,
-      sink->priv->timeout);
+  curl_easy_setopt (sink->curl, CURLOPT_URL, sink->url);
+  curl_easy_setopt (sink->curl, CURLOPT_CONNECTTIMEOUT, sink->timeout);
 
-  curl_easy_setopt (sink->priv->curl, CURLOPT_SOCKOPTDATA, sink);
-  curl_easy_setopt (sink->priv->curl, CURLOPT_SOCKOPTFUNCTION,
+  curl_easy_setopt (sink->curl, CURLOPT_SOCKOPTDATA, sink);
+  curl_easy_setopt (sink->curl, CURLOPT_SOCKOPTFUNCTION,
       gst_curl_sink_transfer_socket_cb);
 
-  if (sink->priv->user != NULL && strlen (sink->priv->user)) {
-    curl_easy_setopt (sink->priv->curl, CURLOPT_USERNAME, sink->priv->user);
-    curl_easy_setopt (sink->priv->curl, CURLOPT_PASSWORD, sink->priv->passwd);
-    curl_easy_setopt (sink->priv->curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+  if (sink->user != NULL && strlen (sink->user)) {
+    curl_easy_setopt (sink->curl, CURLOPT_USERNAME, sink->user);
+    curl_easy_setopt (sink->curl, CURLOPT_PASSWORD, sink->passwd);
+    curl_easy_setopt (sink->curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
   }
 
-  if (sink->priv->accept_self_signed && g_str_has_prefix (sink->priv->url,
-          "https")) {
+  if (sink->accept_self_signed && g_str_has_prefix (sink->url, "https")) {
     /* TODO verify the authenticity of the peer's certificate */
-    curl_easy_setopt (sink->priv->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt (sink->curl, CURLOPT_SSL_VERIFYPEER, 0L);
     /* TODO check the servers's claimed identity */
-    curl_easy_setopt (sink->priv->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    curl_easy_setopt (sink->curl, CURLOPT_SSL_VERIFYHOST, 0L);
   }
 
   /* proxy settings */
-  if (sink->priv->proxy != NULL && strlen (sink->priv->proxy)) {
-    if (curl_easy_setopt (sink->priv->curl, CURLOPT_PROXY, sink->priv->proxy)
+  if (sink->proxy != NULL && strlen (sink->proxy)) {
+    if (curl_easy_setopt (sink->curl, CURLOPT_PROXY, sink->proxy)
         != CURLE_OK) {
       return FALSE;
     }
-    if (curl_easy_setopt (sink->priv->curl, CURLOPT_PROXYPORT,
-            sink->priv->proxy_port)
+    if (curl_easy_setopt (sink->curl, CURLOPT_PROXYPORT, sink->proxy_port)
         != CURLE_OK) {
       return FALSE;
     }
-    if (sink->priv->proxy_user != NULL &&
-        strlen (sink->priv->proxy_user) &&
-        sink->priv->proxy_passwd != NULL && strlen (sink->priv->proxy_passwd)) {
-      curl_easy_setopt (sink->priv->curl, CURLOPT_PROXYUSERNAME,
-          sink->priv->proxy_user);
-      curl_easy_setopt (sink->priv->curl, CURLOPT_PROXYPASSWORD,
-          sink->priv->proxy_passwd);
-      curl_easy_setopt (sink->priv->curl, CURLOPT_PROXYAUTH, CURLAUTH_ANY);
+    if (sink->proxy_user != NULL &&
+        strlen (sink->proxy_user) &&
+        sink->proxy_passwd != NULL && strlen (sink->proxy_passwd)) {
+      curl_easy_setopt (sink->curl, CURLOPT_PROXYUSERNAME, sink->proxy_user);
+      curl_easy_setopt (sink->curl, CURLOPT_PROXYPASSWORD, sink->proxy_passwd);
+      curl_easy_setopt (sink->curl, CURLOPT_PROXYAUTH, CURLAUTH_ANY);
       proxy_auth = TRUE;
     }
     /* tunnel all operations through a given HTTP proxy */
-    if (curl_easy_setopt (sink->priv->curl, CURLOPT_HTTPPROXYTUNNEL, 1L)
+    if (curl_easy_setopt (sink->curl, CURLOPT_HTTPPROXYTUNNEL, 1L)
         != CURLE_OK) {
       return FALSE;
     }
   }
 
   /* POST options */
-  curl_easy_setopt (sink->priv->curl, CURLOPT_POST, 1L);
+  curl_easy_setopt (sink->curl, CURLOPT_POST, 1L);
 
-  curl_easy_setopt (sink->priv->curl, CURLOPT_READFUNCTION,
+  curl_easy_setopt (sink->curl, CURLOPT_READFUNCTION,
       gst_curl_sink_transfer_read_cb);
-  curl_easy_setopt (sink->priv->curl, CURLOPT_READDATA, sink);
-  curl_easy_setopt (sink->priv->curl, CURLOPT_WRITEFUNCTION,
+  curl_easy_setopt (sink->curl, CURLOPT_READDATA, sink);
+  curl_easy_setopt (sink->curl, CURLOPT_WRITEFUNCTION,
       gst_curl_sink_transfer_write_cb);
 
   return TRUE;
@@ -726,7 +710,6 @@ gst_curl_sink_transfer_read_cb (void *curl_ptr, size_t size, size_t nmemb,
     void *stream)
 {
   GstCurlSink *sink;
-  GstCurlSinkPrivate *pr;
   TransferBuffer *buffer;
   size_t max_bytes_to_send;
   guint buf_len;
@@ -745,8 +728,7 @@ gst_curl_sink_transfer_read_cb (void *curl_ptr, size_t size, size_t nmemb,
 
 
   max_bytes_to_send = size * nmemb;
-  pr = sink->priv;
-  buffer = pr->transfer_buf;
+  buffer = sink->transfer_buf;
 
   buf_len = buffer->len;
   GST_LOG ("write buf len=%d, offset=%d", buffer->len, buffer->offset);
@@ -800,7 +782,7 @@ gst_curl_sink_transfer_check (GstCurlSink * sink)
 
   do {
     easy = NULL;
-    while ((msg = curl_multi_info_read (sink->priv->multi_handle, &msgs_left))) {
+    while ((msg = curl_multi_info_read (sink->multi_handle, &msgs_left))) {
       if (msg->msg == CURLMSG_DONE) {
         easy = msg->easy_handle;
         code = msg->data.result;
@@ -829,34 +811,33 @@ gst_curl_sink_handle_transfer (GstCurlSink * sink)
   glong resp_proxy = -1;
 
   GST_OBJECT_LOCK (sink);
-  timeout = sink->priv->timeout;
+  timeout = sink->timeout;
   GST_OBJECT_UNLOCK (sink);
 
   /* Receiving CURLM_CALL_MULTI_PERFORM means that libcurl may have more data
      available to send or receive - call simply curl_multi_perform before
      poll() on more actions */
   do {
-    m_code = curl_multi_perform (sink->priv->multi_handle, &running_handles);
+    m_code = curl_multi_perform (sink->multi_handle, &running_handles);
   } while (m_code == CURLM_CALL_MULTI_PERFORM);
 
   while (running_handles && (m_code == CURLM_OK)) {
     if (!proxy_conn_established && (resp_proxy != RESPONSE_CONNECT_PROXY)
         && proxy_auth) {
-      curl_easy_getinfo (sink->priv->curl, CURLINFO_HTTP_CONNECTCODE,
-          &resp_proxy);
+      curl_easy_getinfo (sink->curl, CURLINFO_HTTP_CONNECTCODE, &resp_proxy);
       if ((resp_proxy == RESPONSE_CONNECT_PROXY)) {
         GST_LOG ("received HTTP/1.0 200 Connection Established");
         /* Workaround: redefine HTTP headers before connecting to HTTP server.
          * When talking to proxy, the Content-Length: 0 is send with the request.
          */
-        curl_multi_remove_handle (sink->priv->multi_handle, sink->priv->curl);
+        curl_multi_remove_handle (sink->multi_handle, sink->curl);
         gst_curl_sink_set_http_header_unlocked (sink);
-        curl_multi_add_handle (sink->priv->multi_handle, sink->priv->curl);
+        curl_multi_add_handle (sink->multi_handle, sink->curl);
         proxy_conn_established = TRUE;
       }
     }
 
-    retval = gst_poll_wait (sink->priv->fdset, timeout * GST_SECOND);
+    retval = gst_poll_wait (sink->fdset, timeout * GST_SECOND);
     if (G_UNLIKELY (retval == -1)) {
       if (errno == EAGAIN || errno == EINTR) {
         GST_DEBUG_OBJECT (sink, "interrupted by signal");
@@ -872,11 +853,11 @@ gst_curl_sink_handle_transfer (GstCurlSink * sink)
 
     /* readable/writable sockets */
     do {
-      m_code = curl_multi_perform (sink->priv->multi_handle, &running_handles);
+      m_code = curl_multi_perform (sink->multi_handle, &running_handles);
     } while (m_code == CURLM_CALL_MULTI_PERFORM);
 
     if (resp != RESPONSE_100_CONTINUE) {
-      curl_easy_getinfo (sink->priv->curl, CURLINFO_RESPONSE_CODE, &resp);
+      curl_easy_getinfo (sink->curl, CURLINFO_RESPONSE_CODE, &resp);
     }
   }
 
@@ -900,7 +881,7 @@ gst_curl_sink_handle_transfer (GstCurlSink * sink)
   }
 
   /* check response code */
-  curl_easy_getinfo (sink->priv->curl, CURLINFO_RESPONSE_CODE, &resp);
+  curl_easy_getinfo (sink->curl, CURLINFO_RESPONSE_CODE, &resp);
   GST_DEBUG_OBJECT (sink, "response code: %d", resp);
   if (resp < 200 || resp >= 300) {
     goto response_error;
@@ -982,13 +963,13 @@ gst_curl_sink_transfer_socket_cb (void *clientp, curl_socket_t curlfd,
     return 1;
   }
 
-  gst_poll_fd_init (&sink->priv->fd);
-  sink->priv->fd.fd = curlfd;
+  gst_poll_fd_init (&sink->fd);
+  sink->fd.fd = curlfd;
 
-  ret = ret && gst_poll_add_fd (sink->priv->fdset, &sink->priv->fd);
-  ret = ret && gst_poll_fd_ctl_write (sink->priv->fdset, &sink->priv->fd, TRUE);
-  ret = ret && gst_poll_fd_ctl_read (sink->priv->fdset, &sink->priv->fd, TRUE);
-  GST_DEBUG ("fd: %d", sink->priv->fd.fd);
+  ret = ret && gst_poll_add_fd (sink->fdset, &sink->fd);
+  ret = ret && gst_poll_fd_ctl_write (sink->fdset, &sink->fd, TRUE);
+  ret = ret && gst_poll_fd_ctl_read (sink->fdset, &sink->fd, TRUE);
+  GST_DEBUG ("fd: %d", sink->fd.fd);
   GST_OBJECT_LOCK (sink);
   gst_curl_sink_setup_dscp_unlocked (sink);
   GST_OBJECT_UNLOCK (sink);
@@ -1008,13 +989,13 @@ gst_curl_sink_transfer_start_unlocked (GstCurlSink * sink)
   gboolean ret = TRUE;
 
   GST_LOG ("creating transfer thread");
-  sink->priv->transfer_thread_close = FALSE;
-  sink->priv->new_file = TRUE;
-  sink->priv->transfer_thread =
+  sink->transfer_thread_close = FALSE;
+  sink->new_file = TRUE;
+  sink->transfer_thread =
       g_thread_create ((GThreadFunc) gst_curl_sink_transfer_thread_func, sink,
       TRUE, &error);
 
-  if (sink->priv->transfer_thread == NULL || error != NULL) {
+  if (sink->transfer_thread == NULL || error != NULL) {
     ret = FALSE;
     if (error) {
       GST_ERROR_OBJECT (sink, "could not create thread %s", error->message);
@@ -1039,15 +1020,14 @@ gst_curl_sink_transfer_thread_func (gpointer data)
   if (!gst_curl_sink_transfer_setup_unlocked (sink)) {
     GST_DEBUG_OBJECT (sink, "curl setup error");
     GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, ("curl setup error"), (NULL));
-    sink->priv->flow_ret = GST_FLOW_ERROR;
+    sink->flow_ret = GST_FLOW_ERROR;
     goto done;
   }
 
-  while (!sink->priv->transfer_thread_close &&
-      sink->priv->flow_ret == GST_FLOW_OK) {
+  while (!sink->transfer_thread_close && sink->flow_ret == GST_FLOW_OK) {
     /* we are working on a new file, clearing flag and setting file
      * name in http header */
-    sink->priv->new_file = FALSE;
+    sink->new_file = FALSE;
 
     /* wait for data to arrive for this new file, if we get a new file name
      * again before getting data we will simply skip transfering anything
@@ -1061,14 +1041,14 @@ gst_curl_sink_transfer_thread_func (gpointer data)
     GST_OBJECT_UNLOCK (sink);
 
     if (data_available) {
-      curl_multi_add_handle (sink->priv->multi_handle, sink->priv->curl);
+      curl_multi_add_handle (sink->multi_handle, sink->curl);
 
       /* Start driving the transfer. */
       ret = gst_curl_sink_handle_transfer (sink);
 
       /* easy handle will be possibly re-used for next transfer, thus it needs to
        * be removed from the multi stack and re-added again */
-      curl_multi_remove_handle (sink->priv->multi_handle, sink->priv->curl);
+      curl_multi_remove_handle (sink->multi_handle, sink->curl);
     }
 
     /* lock again before looping to check the thread closed flag */
@@ -1076,20 +1056,20 @@ gst_curl_sink_transfer_thread_func (gpointer data)
 
     /* if we have transfered data, then set the return code */
     if (data_available) {
-      sink->priv->flow_ret = ret;
+      sink->flow_ret = ret;
     }
   }
 
 done:
   /* if there is a flow error, always notify the render function so it
    * can return the flow error up along the pipeline */
-  if (sink->priv->flow_ret != GST_FLOW_OK) {
+  if (sink->flow_ret != GST_FLOW_OK) {
     gst_curl_sink_data_sent_notify_unlocked (sink);
   }
 
   GST_OBJECT_UNLOCK (sink);
   GST_DEBUG ("exit thread func - transfer thread close flag: %d",
-      sink->priv->transfer_thread_close);
+      sink->transfer_thread_close);
 
   return NULL;
 }
@@ -1099,9 +1079,9 @@ gst_curl_sink_transfer_setup_unlocked (GstCurlSink * sink)
 {
   g_assert (sink);
 
-  if (sink->priv->curl == NULL) {
+  if (sink->curl == NULL) {
     /* curl_easy_init automatically calls curl_global_init(3) */
-    if ((sink->priv->curl = curl_easy_init ()) == NULL) {
+    if ((sink->curl = curl_easy_init ()) == NULL) {
       g_warning ("Failed to init easy handle");
       return FALSE;
     }
@@ -1114,8 +1094,8 @@ gst_curl_sink_transfer_setup_unlocked (GstCurlSink * sink)
   }
 
   /* init a multi stack (non-blocking interface to liburl) */
-  if (sink->priv->multi_handle == NULL) {
-    if ((sink->priv->multi_handle = curl_multi_init ()) == NULL) {
+  if (sink->multi_handle == NULL) {
+    if ((sink->multi_handle = curl_multi_init ()) == NULL) {
       return FALSE;
     }
   }
@@ -1126,17 +1106,17 @@ gst_curl_sink_transfer_setup_unlocked (GstCurlSink * sink)
 static void
 gst_curl_sink_transfer_cleanup (GstCurlSink * sink)
 {
-  if (sink->priv->curl != NULL) {
-    if (sink->priv->multi_handle != NULL) {
-      curl_multi_remove_handle (sink->priv->multi_handle, sink->priv->curl);
+  if (sink->curl != NULL) {
+    if (sink->multi_handle != NULL) {
+      curl_multi_remove_handle (sink->multi_handle, sink->curl);
     }
-    curl_easy_cleanup (sink->priv->curl);
-    sink->priv->curl = NULL;
+    curl_easy_cleanup (sink->curl);
+    sink->curl = NULL;
   }
 
-  if (sink->priv->multi_handle != NULL) {
-    curl_multi_cleanup (sink->priv->multi_handle);
-    sink->priv->multi_handle = NULL;
+  if (sink->multi_handle != NULL) {
+    curl_multi_cleanup (sink->multi_handle);
+    sink->multi_handle = NULL;
   }
 }
 
@@ -1146,14 +1126,14 @@ gst_curl_sink_wait_for_data_unlocked (GstCurlSink * sink)
   gboolean data_available = FALSE;
 
   GST_LOG ("waiting for data");
-  while (!sink->priv->transfer_cond->data_available &&
-      !sink->priv->transfer_thread_close && !sink->priv->new_file) {
-    g_cond_wait (sink->priv->transfer_cond->cond, GST_OBJECT_GET_LOCK (sink));
+  while (!sink->transfer_cond->data_available &&
+      !sink->transfer_thread_close && !sink->new_file) {
+    g_cond_wait (sink->transfer_cond->cond, GST_OBJECT_GET_LOCK (sink));
   }
 
-  if (sink->priv->transfer_thread_close) {
+  if (sink->transfer_thread_close) {
     GST_LOG ("wait for data aborted due to thread close");
-  } else if (sink->priv->new_file) {
+  } else if (sink->new_file) {
     GST_LOG ("wait for data aborted due to new file name");
   } else {
     GST_LOG ("wait for data completed");
@@ -1167,25 +1147,25 @@ static void
 gst_curl_sink_transfer_thread_notify_unlocked (GstCurlSink * sink)
 {
   GST_LOG ("more data to send");
-  sink->priv->transfer_cond->data_available = TRUE;
-  sink->priv->transfer_cond->data_sent = FALSE;
-  g_cond_signal (sink->priv->transfer_cond->cond);
+  sink->transfer_cond->data_available = TRUE;
+  sink->transfer_cond->data_sent = FALSE;
+  g_cond_signal (sink->transfer_cond->cond);
 }
 
 static void
 gst_curl_sink_new_file_notify_unlocked (GstCurlSink * sink)
 {
   GST_LOG ("new file name");
-  sink->priv->new_file = TRUE;
-  g_cond_signal (sink->priv->transfer_cond->cond);
+  sink->new_file = TRUE;
+  g_cond_signal (sink->transfer_cond->cond);
 }
 
 static void
 gst_curl_sink_transfer_thread_close_unlocked (GstCurlSink * sink)
 {
   GST_LOG ("setting transfer thread close flag");
-  sink->priv->transfer_thread_close = TRUE;
-  g_cond_signal (sink->priv->transfer_cond->cond);
+  sink->transfer_thread_close = TRUE;
+  g_cond_signal (sink->transfer_cond->cond);
 }
 
 static void
@@ -1197,8 +1177,8 @@ gst_curl_sink_wait_for_transfer_thread_to_send_unlocked (GstCurlSink * sink)
    * since that flag only can be set by the EoS event (by the pipeline thread).
    * This can therefore never happen while this function is running since this
    * function also is called by the pipeline thread (in the render function) */
-  while (!sink->priv->transfer_cond->data_sent) {
-    g_cond_wait (sink->priv->transfer_cond->cond, GST_OBJECT_GET_LOCK (sink));
+  while (!sink->transfer_cond->data_sent) {
+    g_cond_wait (sink->transfer_cond->cond, GST_OBJECT_GET_LOCK (sink));
   }
   GST_LOG ("buffer send completed");
 }
@@ -1207,9 +1187,9 @@ static void
 gst_curl_sink_data_sent_notify_unlocked (GstCurlSink * sink)
 {
   GST_LOG ("transfer completed");
-  sink->priv->transfer_cond->data_available = FALSE;
-  sink->priv->transfer_cond->data_sent = TRUE;
-  g_cond_signal (sink->priv->transfer_cond->cond);
+  sink->transfer_cond->data_available = FALSE;
+  sink->transfer_cond->data_sent = TRUE;
+  g_cond_signal (sink->transfer_cond->cond);
 }
 
 static gint
@@ -1226,7 +1206,7 @@ gst_curl_sink_setup_dscp_unlocked (GstCurlSink * sink)
   } sa;
   socklen_t slen = sizeof (sa);
 
-  if (getsockname (sink->priv->fd.fd, &sa.sa, &slen) < 0) {
+  if (getsockname (sink->fd.fd, &sa.sa, &slen) < 0) {
     GST_DEBUG_OBJECT (sink, "could not get sockname: %s", g_strerror (errno));
     return ret;
   }
@@ -1241,16 +1221,15 @@ gst_curl_sink_setup_dscp_unlocked (GstCurlSink * sink)
     }
   }
   /* extract and shift 6 bits of the DSCP */
-  tos = (sink->priv->qos_dscp & 0x3f) << 2;
+  tos = (sink->qos_dscp & 0x3f) << 2;
 
   switch (af) {
     case AF_INET:
-      ret = setsockopt (sink->priv->fd.fd, IPPROTO_IP, IP_TOS, &tos,
-          sizeof (tos));
+      ret = setsockopt (sink->fd.fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos));
       break;
     case AF_INET6:
 #ifdef IPV6_TCLASS
-      ret = setsockopt (sink->priv->fd.fd, IPPROTO_IPV6, IPV6_TCLASS, &tos,
+      ret = setsockopt (sink->fd.fd, IPPROTO_IPV6, IPV6_TCLASS, &tos,
           sizeof (tos));
       break;
 #endif
