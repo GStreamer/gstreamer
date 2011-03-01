@@ -1,0 +1,28 @@
+<plugin>
+  <name>rtmpsrc</name>
+  <description>RTMP source</description>
+  <filename>../../ext/rtmp/.libs/libgstrtmp.so</filename>
+  <basename>libgstrtmp.so</basename>
+  <version>0.10.21.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>rtmpsrc</name>
+      <longname>RTMP Source</longname>
+      <class>Source/File</class>
+      <description>Read RTMP streams</description>
+      <author>Bastien Nocera &lt;hadess@hadess.net&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

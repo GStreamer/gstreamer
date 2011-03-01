@@ -1,0 +1,79 @@
+<plugin>
+  <name>mpegtsdemux</name>
+  <description>MPEG TS demuxer</description>
+  <filename>../../gst/mpegtsdemux/.libs/libgstmpegtsdemux.so</filename>
+  <basename>libgstmpegtsdemux.so</basename>
+  <version>0.10.21.1</version>
+  <license>unknown</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>tsdemux</name>
+      <longname>MPEG transport stream demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demuxes MPEG2 transport streams</description>
+      <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;; Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>audio_%04x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/mpeg, mpegversion=(int){ 1, 4 }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-private-ts-lpcm</details>
+        </caps>
+        <caps>
+          <name>private_%04x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>subpicture_%04x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>subpicture/x-pgs; video/x-dvd-subpicture</details>
+        </caps>
+        <caps>
+          <name>video_%04x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-h264; video/x-dirac; video/x-wmv, wmvversion=(int)3, format=(fourcc)WVC1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>tsparse</name>
+      <longname>MPEG transport stream parser</longname>
+      <class>Codec/Parser</class>
+      <description>Parses MPEG2 transport streams</description>
+      <author>Alessandro Decina &lt;alessandro@nnva.org&gt;, Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>program_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>request</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

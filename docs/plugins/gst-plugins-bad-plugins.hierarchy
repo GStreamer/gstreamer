@@ -14,17 +14,22 @@ GObject
       GstAsfMux
       GstAsfParse
       GstAssRender
-      GstAudioBaseParseBad
+      GstBaseParseBad
         GstAacParse
         GstAc3Parse
         GstAmrParse
         GstDcaParse
+        GstDiracParse
         GstFlacParse
+        GstH263Parse
+        GstH264Parse
         GstMpegAudioParse
       GstBaseRTPDepayload
         GstRtpDTMFDepay
+        GstRtpVP8Depay
       GstBaseRTPPayload
         GstRtpAsfPay
+        GstRtpVP8Pay
       GstBaseSink
         GstBaseAudioSink
           GstAudioSink
@@ -32,6 +37,7 @@ GObject
             GstNasSink
             GstSDLAudioSink
         GstChecksumSink
+        GstCurlSink
         GstDCCPClientSink
         GstDCCPServerSink
         GstFBDEVSink
@@ -52,6 +58,7 @@ GObject
           GstMMS
           GstMythtvSrc
           GstNeonhttpSrc
+          GstRTMPSrc
           GstRfbSrc
           GstShmSrc
           GstVCDSrc
@@ -181,8 +188,6 @@ GObject
           GstDiracEnc
           GstSchroEnc
           GstVP8Enc
-        GstBaseVideoParse
-          GstSchroParse
       GstBin
         DvbBaseBin
         GstAutoConvert
@@ -216,7 +221,6 @@ GObject
       GstGPPMux
       GstGSMDec
       GstGSMEnc
-      GstH264Parse
       GstISMLMux
       GstId3BaseMux
         GstId3Mux
@@ -231,6 +235,7 @@ GObject
       GstKateParse
         GstKateTag
       GstKateTiger
+      GstLegacyH264Parse
       GstLiveAdder
       GstMJ2Mux
       GstMP4Mux
@@ -436,6 +441,9 @@ GObject
       Gstpyramidsegment
       Gsttextwrite
       MpegPsMux
+      MpegTSBase
+        GstTSDemux
+        MpegTSParse2
       MpegTSParse
       MpegTsMux
       MpegVideoParse
