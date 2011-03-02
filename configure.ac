@@ -258,10 +258,13 @@ if test "x$BUILD_EXAMPLES" = "xyes"; then
      GTK_REQ=$GTK2_REQ])
   AC_MSG_RESULT([$with_gtk (>= $GTK_REQ)])
   PKG_CHECK_MODULES(GTK, gtk+-$with_gtk >= $GTK_REQ, HAVE_GTK=yes, HAVE_GTK=no)
+  dnl some examples need gtk+-x11
+  PKG_CHECK_MODULES(GTK_X11, gtk+-x11-$with_gtk >= $GTK_REQ, HAVE_GTK_X11=yes, HAVE_GTK_X11=no)
   AC_SUBST(GTK_LIBS)
   AC_SUBST(GTK_CFLAGS)
 fi
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
+AM_CONDITIONAL(HAVE_GTK_X11, test "x$HAVE_GTK_X11" = "xyes")
 
 dnl should we install schemas ?
 translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)

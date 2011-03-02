@@ -25,18 +25,16 @@
  * roughly based on gst_x_overlay documentation.
  */
 
-
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/interfaces/xoverlay.h>
 
-#include <gtk/gtk.h>
 #include <cairo.h>
 #include <cairo-gobject.h>
 
-#ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
-#endif
+
+#include <gtk/gtk.h>
 
 static gulong video_window_xid = 0;
 
@@ -64,9 +62,7 @@ bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
 static void
 video_widget_realize_cb (GtkWidget * widget, gpointer data)
 {
-#ifdef GDK_WINDOWING_X11
   video_window_xid = GDK_WINDOW_XID (widget->window);
-#endif
 }
 
 static GtkWidget *
@@ -187,7 +183,7 @@ main (int argc, char **argv)
   gst_init (&argc, &argv);
 
   window = setup_gtk_window ();
-  overlay_state = g_new (CairoOverlayState, 1);
+  overlay_state = g_new0 (CairoOverlayState, 1);
   pipeline = setup_gst_pipeline (overlay_state);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
