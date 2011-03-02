@@ -98,9 +98,9 @@
 #include <cairo.h>
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define ARGB_CAPS GST_VIDEO_CAPS_BGRx " ; " GST_VIDEO_CAPS_BGRA " ; "
+#define TEMPLATE_CAPS GST_VIDEO_CAPS_BGRx " ; " GST_VIDEO_CAPS_BGRA " ; "
 #else
-#define ARGB_CAPS GST_VIDEO_CAPS_xRGB " ; " GST_VIDEO_CAPS_ARGB " ; "
+#define TEMPLATE_CAPS GST_VIDEO_CAPS_xRGB " ; " GST_VIDEO_CAPS_ARGB " ; "
 
 #endif
 
@@ -108,14 +108,14 @@ static GstStaticPadTemplate gst_cairo_overlay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (ARGB_CAPS)
+    GST_STATIC_CAPS (TEMPLATE_CAPS)
     );
 
 static GstStaticPadTemplate gst_cairo_overlay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (ARGB_CAPS)
+    GST_STATIC_CAPS (TEMPLATE_CAPS)
     );
 
 
@@ -128,6 +128,7 @@ enum
   SIGNAL_CAPS_CHANGED,
   N_SIGNALS
 };
+
 static guint gst_cairo_overlay_signals[N_SIGNALS];
 
 static gboolean
@@ -135,17 +136,18 @@ gst_cairo_overlay_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (btrans);
-  GstStructure *s = gst_caps_get_structure (incaps, 0);
+  gboolean ret;
 
-  if (!gst_structure_get_int (s, "bpp", &(overlay->bpp))) {
+  ret =
+      gst_video_format_parse_caps (incaps, &overlay->format, &overlay->width,
+      &overlay->height);
+  if (G_UNLIKELY (!ret))
     return FALSE;
-  }
 
   g_signal_emit (overlay, gst_cairo_overlay_signals[SIGNAL_CAPS_CHANGED], 0,
       incaps, NULL);
 
-  return G_LIKELY (gst_video_format_parse_caps (incaps,
-          &overlay->caps_format, &overlay->caps_width, &overlay->caps_height));
+  return ret;
 }
 
 static GstFlowReturn
@@ -157,11 +159,13 @@ gst_cairo_overlay_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   cairo_t *cr;
   cairo_format_t format;
 
-  format = (overlay->bpp == 32) ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
+  format = (overlay->format == GST_VIDEO_FORMAT_ARGB
+      || overlay->format == GST_VIDEO_FORMAT_BGRA) ?
+      CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
 
   surface =
       cairo_image_surface_create_for_data (GST_BUFFER_DATA (buf), format,
-      overlay->caps_width, overlay->caps_height, overlay->caps_width * 4);
+      overlay->width, overlay->height, overlay->width * 4);
   if (G_UNLIKELY (!surface))
     return GST_FLOW_ERROR;
 
@@ -176,6 +180,7 @@ gst_cairo_overlay_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
 
   cairo_destroy (cr);
   cairo_surface_destroy (surface);
+
   return GST_FLOW_OK;
 }
 
@@ -209,8 +214,8 @@ gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
    * GstCairoOverlay::draw:
    * @overlay: Overlay element emitting the signal.
    * @cr: Cairo context to draw to.
-   * @timestamp: Timestamp (see GstClockTime) of the current buffer.
-   * @duration: Duration (see GstClockTime) of the current buffer.
+   * @timestamp: Timestamp (see #GstClockTime) of the current buffer.
+   * @duration: Duration (see #GstClockTime) of the current buffer.
    * 
    * This signal is emitted when the overlay should be drawn.
    */
@@ -227,7 +232,7 @@ gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
   /**
    * GstCairoOverlay::caps-changed:
    * @overlay: Overlay element emitting the signal.
-   * @caps: The caps of the element.
+   * @caps: The #GstCaps of the element.
    * 
    * This signal is emitted when the caps of the element has changed.
    */

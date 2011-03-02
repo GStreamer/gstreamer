@@ -40,18 +40,21 @@ G_BEGIN_DECLS
 #define GST_IS_CAIRO_OVERLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAIRO_OVERLAY))
 
-typedef struct _GstCairoOverlay {
-  GstVideoFilter parent_instance;
-  /* < private > */
-  GstVideoFormat caps_format;
-  int caps_width;
-  int caps_height;
-  int bpp;
-} GstCairoOverlay;
+typedef struct _GstCairoOverlay GstCairoOverlay;
+typedef struct _GstCairoOverlayClass GstCairoOverlayClass;
 
-typedef struct _GstCairoOverlayClass {
+struct _GstCairoOverlay {
+  GstVideoFilter parent_instance;
+
+  /* < private > */
+  GstVideoFormat format;
+  gint width;
+  gint height;
+};
+
+struct _GstCairoOverlayClass {
   GstVideoFilterClass parent_class;
-} GstCairoOverlayClass;
+};
 
 GType gst_cairo_overlay_get_type(void);
 
