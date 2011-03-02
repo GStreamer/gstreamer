@@ -119,8 +119,8 @@ monoscope_update (struct monoscope_state * stateptr, gint16 data[512])
     foo >>= 18;
     if (foo > 63)
       foo = 63;
-    if (foo < -64)
-      foo = -64;
+    if (foo < -63)
+      foo = -63;
     val = (i + ((foo + 64) << 8));
     bar = val;
     if ((bar > 0) && (bar < (256 * 128))) {
