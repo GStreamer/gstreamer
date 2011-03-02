@@ -73,8 +73,15 @@ monoscope_init (guint32 resx, guint32 resy)
   return stateptr;
 }
 
+void
+monoscope_close (struct monoscope_state *stateptr)
+{
+  convolve_close (stateptr->cstate);
+  free (stateptr);
+}
+
 guint32 *
-monoscope_update (struct monoscope_state * stateptr, gint16 data[512])
+monoscope_update (struct monoscope_state *stateptr, gint16 data[512])
 {
   /* Note that CONVOLVE_BIG must == data size here, ie 512. */
   /* Really, we want samples evenly spread over the available data.
@@ -154,9 +161,4 @@ monoscope_update (struct monoscope_state * stateptr, gint16 data[512])
   }
 
   return stateptr->display;
-}
-
-void
-monoscope_close (struct monoscope_state *stateptr)
-{
 }
