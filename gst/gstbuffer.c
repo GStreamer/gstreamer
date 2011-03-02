@@ -287,11 +287,25 @@ _gst_buffer_copy (GstBuffer * buffer)
   return copy;
 }
 
+/* the default dispose function revives the buffer and returns it to the
+ * pool when there is a pool */
+static void
+_gst_buffer_dispose (GstBuffer * buffer)
+{
+  GstBufferPool *pool;
+
+  if ((pool = buffer->pool) != NULL) {
+    /* keep the buffer alive */
+    gst_buffer_ref (buffer);
+    /* return the buffer to the pool */
+    gst_buffer_pool_release_buffer (pool, buffer);
+  }
+}
+
 static void
 _gst_buffer_free (GstBuffer * buffer)
 {
   GstMetaItem *walk, *next;
-  GstBufferPool *pool;
 
   g_return_if_fail (buffer != NULL);
 
@@ -328,6 +342,8 @@ gst_buffer_init (GstBuffer * buffer, gsize size)
   gst_mini_object_init (GST_MINI_OBJECT_CAST (buffer), _gst_buffer_type, size);
 
   buffer->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_copy;
+  buffer->mini_object.dispose =
+      (GstMiniObjectDisposeFunction) _gst_buffer_dispose;
   buffer->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_free;
 
   GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
