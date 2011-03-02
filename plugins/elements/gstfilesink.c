@@ -302,7 +302,9 @@ gst_file_sink_set_location (GstFileSink * sink, const gchar * location)
     /* we store the filename as we received it from the application. On Windows
      * this should be in UTF8 */
     sink->filename = g_strdup (location);
-    sink->uri = g_filename_to_uri (sink->filename, NULL, NULL);
+    sink->uri = gst_filename_to_uri (location, NULL);
+    GST_INFO ("filename : %s", sink->filename);
+    GST_INFO ("uri      : %s", sink->uri);
   } else {
     sink->filename = NULL;
     sink->uri = NULL;

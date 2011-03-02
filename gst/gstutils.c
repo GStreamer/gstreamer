@@ -1554,6 +1554,8 @@ pad_link_maybe_ghosting (GstPad * src, GstPad * sink, GstPadLinkCheck flags)
  * is the same as calling gst_element_link_pads() and the recommended way of
  * linking pads with safety checks applied.
  *
+ * This is a convenience function for gst_pad_link_full().
+ *
  * Returns: TRUE if the pads could be linked, FALSE otherwise.
  *
  * Since: 0.10.30
@@ -2012,6 +2014,8 @@ gst_element_link_filtered (GstElement * src, GstElement * dest,
  * @destpadname: the name of the #GstPad in destination element.
  *
  * Unlinks the two named pads of the source and destination elements.
+ *
+ * This is a convenience function for gst_pad_unlink().
  */
 void
 gst_element_unlink_pads (GstElement * src, const gchar * srcpadname,
@@ -2162,7 +2166,8 @@ gst_element_unlink (GstElement * src, GstElement * dest)
  * @cur: (out) (allow-none): a location in which to store the current
  *     position, or NULL.
  *
- * Queries an element for the stream position.
+ * Queries an element for the stream position. If one repeatedly calls this
+ * function one can also create and reuse it in gst_element_query().
  *
  * Returns: TRUE if the query could be performed.
  */

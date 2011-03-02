@@ -76,8 +76,8 @@ you will then have to provide them with:
 <listitem><para>your e-mail address</para></listitem>
 <listitem><para>a copy of your public sshv2 identity.
 If you do not have this yet, you can generate it by running
-"ssh-keygen -t dsa".  The resulting public key
-will be in <filename>.ssh/id_dsa.pub</filename></para></listitem>
+"ssh-keygen -t rsa -f ~/.ssh/id_rsa.pub-fdo".  The resulting public key
+will be in <filename>~/.ssh/id_rsa.pub-fdo</filename></para></listitem>
 <listitem><para>your GPG fingerprint.  This would allow you to
 add and remove ssh keys to your account.
 </para></listitem>

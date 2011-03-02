@@ -407,6 +407,7 @@ EXPORTS
 	gst_event_type_get_name
 	gst_event_type_get_type
 	gst_event_type_to_quark
+	gst_filename_to_uri
 	gst_filter_run
 	gst_flow_get_name
 	gst_flow_return_get_type

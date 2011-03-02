@@ -2551,6 +2551,7 @@ gst_uri_has_protocol
 gst_uri_get_protocol
 gst_uri_get_location
 gst_uri_construct
+gst_filename_to_uri
 gst_element_make_from_uri
 gst_uri_handler_get_uri_type
 gst_uri_handler_get_protocols

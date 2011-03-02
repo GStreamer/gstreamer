@@ -384,6 +384,67 @@ GST_START_TEST (test_uri_interface)
 
 GST_END_TEST;
 
+static void
+check_uri_for_location (GstElement * e, const gchar * location,
+    const gchar * uri)
+{
+  GstQuery *query;
+  gchar *query_uri = NULL;
+
+  g_object_set (e, "location", location, NULL);
+  query = gst_query_new_uri ();
+  fail_unless (gst_element_query (e, query));
+  gst_query_parse_uri (query, &query_uri);
+  gst_query_unref (query);
+
+  if (uri != NULL) {
+    fail_unless_equals_string (query_uri, uri);
+  } else {
+    gchar *fn;
+
+    fail_unless (gst_uri_is_valid (query_uri));
+    fn = g_filename_from_uri (query_uri, NULL, NULL);
+    fail_unless (g_path_is_absolute (fn));
+    fail_unless (fn != NULL);
+    g_free (fn);
+  }
+
+  g_free (query_uri);
+}
+
+GST_START_TEST (test_uri_query)
+{
+  GstElement *src;
+
+  src = setup_filesrc ();
+
+#ifdef G_OS_UNIX
+  {
+    GST_INFO ("*nix");
+    check_uri_for_location (src, "/i/do/not/exist", "file:///i/do/not/exist");
+    check_uri_for_location (src, "/i/do/not/../exist", "file:///i/do/exist");
+    check_uri_for_location (src, "/i/do/not/.././exist", "file:///i/do/exist");
+    check_uri_for_location (src, "/i/./do/not/../exist", "file:///i/do/exist");
+    check_uri_for_location (src, "/i/do/./not/../exist", "file:///i/do/exist");
+    check_uri_for_location (src, "/i/do/not/./../exist", "file:///i/do/exist");
+    check_uri_for_location (src, "/i/./do/./././././exist",
+        "file:///i/do/exist");
+    check_uri_for_location (src, "/i/do/not/../../exist", "file:///i/exist");
+    check_uri_for_location (src, "/i/../not/../exist", "file:///exist");
+    /* hard to test relative URIs, just make sure it returns an URI of sorts */
+    check_uri_for_location (src, "foo", NULL);
+    check_uri_for_location (src, "foo/../bar", NULL);
+    check_uri_for_location (src, "./foo", NULL);
+    check_uri_for_location (src, "../foo", NULL);
+    check_uri_for_location (src, "foo/./bar", NULL);
+  }
+#endif
+
+  cleanup_filesrc (src);
+}
+
+GST_END_TEST;
+
 static Suite *
 filesrc_suite (void)
 {
@@ -396,6 +457,7 @@ filesrc_suite (void)
   tcase_add_test (tc_chain, test_pull);
   tcase_add_test (tc_chain, test_coverage);
   tcase_add_test (tc_chain, test_uri_interface);
+  tcase_add_test (tc_chain, test_uri_query);
 
   return s;
 }

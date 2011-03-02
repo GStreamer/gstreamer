@@ -133,6 +133,9 @@ gchar *		gst_uri_get_location		(const gchar * uri);
 gchar *		gst_uri_construct		(const gchar * protocol,
 						 const gchar * location);
 
+gchar *         gst_filename_to_uri             (const gchar * filename,
+                                                 GError     ** error);
+
 GstElement *	gst_element_make_from_uri	(const GstURIType type,
 						 const gchar *    uri,
 						 const gchar *    elementname);

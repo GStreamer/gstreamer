@@ -865,13 +865,19 @@ print_pad_info (GstElement * element)
   }
 }
 
-#if 0
-static gint
-compare_signal_names (GSignalQuery * a, GSignalQuery * b)
+static gboolean
+has_sometimes_template (GstElement * element)
 {
-  return strcmp (a->signal_name, b->signal_name);
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+  GList *l;
+
+  for (l = klass->padtemplates; l != NULL; l = l->next) {
+    if (GST_PAD_TEMPLATE (l->data)->presence == GST_PAD_SOMETIMES)
+      return TRUE;
+  }
+
+  return FALSE;
 }
-#endif
 
 static void
 print_signal_info (GstElement * element)
@@ -886,6 +892,22 @@ print_signal_info (GstElement * element)
 
   for (k = 0; k < 2; k++) {
     found_signals = NULL;
+
+    /* For elements that have sometimes pads, also list a few useful GstElement
+     * signals. Put these first, so element-specific ones come later. */
+    if (k == 0 && has_sometimes_template (element)) {
+      query = g_new0 (GSignalQuery, 1);
+      g_signal_query (g_signal_lookup ("pad-added", GST_TYPE_ELEMENT), query);
+      found_signals = g_slist_append (found_signals, query);
+      query = g_new0 (GSignalQuery, 1);
+      g_signal_query (g_signal_lookup ("pad-removed", GST_TYPE_ELEMENT), query);
+      found_signals = g_slist_append (found_signals, query);
+      query = g_new0 (GSignalQuery, 1);
+      g_signal_query (g_signal_lookup ("no-more-pads", GST_TYPE_ELEMENT),
+          query);
+      found_signals = g_slist_append (found_signals, query);
+    }
+
     for (type = G_OBJECT_TYPE (element); type; type = g_type_parent (type)) {
       if (type == GST_TYPE_ELEMENT || type == GST_TYPE_OBJECT)
         break;
