@@ -123,7 +123,6 @@ EXPORTS
 	gst_buffer_merge
 	gst_buffer_new
 	gst_buffer_new_and_alloc
-	gst_buffer_remove_meta
 	gst_buffer_pool_acquire_buffer
 	gst_buffer_pool_config_get
 	gst_buffer_pool_config_set
@@ -134,6 +133,7 @@ EXPORTS
 	gst_buffer_pool_release_buffer
 	gst_buffer_pool_set_active
 	gst_buffer_pool_set_config
+	gst_buffer_remove_meta
 	gst_buffer_set_caps
 	gst_buffer_span
 	gst_buffer_try_new_and_alloc
@@ -587,6 +587,7 @@ EXPORTS
 	gst_meta_map_flags_get_type
 	gst_meta_memory_get_info
 	gst_meta_register
+	gst_meta_timing_get_info
 	gst_mini_object_copy
 	gst_mini_object_flags_get_type
 	gst_mini_object_init
