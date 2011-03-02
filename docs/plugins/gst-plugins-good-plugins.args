@@ -20769,6 +20769,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpSession::rtcp-min-interval</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum RTCP interval</NICK>
+<BLURB>Minimum interval between Regular RTCP packet (in ns).</BLURB>
+<DEFAULT>5000000000</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstV4l2Sink::device</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
