@@ -510,10 +510,15 @@ celt_dec_chain_parse_header (GstCeltDec * dec, GstBuffer * buf)
     goto mode_init_failed;
 
   /* initialize the decoder */
+#ifdef HAVE_CELT_0_11
+  dec->state =
+      celt_decoder_create_custom (dec->mode, dec->header.nb_channels, &error);
+#else
 #ifdef HAVE_CELT_0_7
   dec->state = celt_decoder_create (dec->mode, dec->header.nb_channels, &error);
 #else
   dec->state = celt_decoder_create (dec->mode);
+#endif
 #endif
   if (!dec->state)
     goto init_failed;

@@ -639,6 +639,13 @@ AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
           dnl to prevent an error
           true
   ])
+
+  PKG_CHECK_MODULES(CELT_0_11, celt >= 0.11.0, [
+          AC_DEFINE([HAVE_CELT_0_11], 1, [Define if libcelt 0.11 is installed])
+  ], [
+          dnl to prevent an error
+          true
+  ])
   AC_SUBST(CELT_CFLAGS)
   AC_SUBST(CELT_LIBS)
 ])
