@@ -179,7 +179,8 @@ out:
 }
 
 static void
-gst_h263_parse_set_src_caps (GstH263Parse * h263parse, H263Params * params)
+gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
+    const H263Params * params)
 {
   GstStructure *st;
   GstCaps *caps, *sink_caps;
@@ -283,7 +284,7 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse,
 
   /* If this is the first frame, parse and set srcpad caps */
   if (h263parse->state == PARSING) {
-    H263Params *params = NULL;
+    H263Params params = { 0, };
     GstFlowReturn res;
 
     res = gst_h263_parse_get_params (&params, buffer, FALSE, &h263parse->state);
@@ -293,11 +294,8 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse,
           GST_BASE_PARSE_FORMAT_PASSTHROUGH, TRUE);
     } else {
       /* Set srcpad caps since we now have sufficient information to do so */
-      gst_h263_parse_set_src_caps (h263parse, params);
+      gst_h263_parse_set_src_caps (h263parse, &params);
     }
-
-    if (params)
-      g_free (params);
   }
 
   *skipsize = psc_pos;
@@ -325,7 +323,7 @@ gst_h263_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstH263Parse *h263parse;
   GstBuffer *buffer;
   GstFlowReturn res;
-  H263Params *params = NULL;
+  H263Params params = { 0, };
 
   h263parse = GST_H263_PARSE (parse);
   buffer = frame->buffer;
@@ -348,12 +346,12 @@ gst_h263_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   gst_buffer_set_caps (buffer,
       GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (h263parse))));
 
-  if (gst_h263_parse_is_delta_unit (params))
+  if (gst_h263_parse_is_delta_unit (&params))
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   else
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
 out:
-  g_free (params);
+
   return res;
 }

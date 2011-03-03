@@ -133,7 +133,7 @@ struct _H263Params
 
 gboolean      gst_h263_parse_is_delta_unit (const H263Params * params);
 
-GstFlowReturn gst_h263_parse_get_params    (H263Params      ** params_p,
+GstFlowReturn gst_h263_parse_get_params    (H263Params       * params_p,
                                             GstBuffer        * buffer,
                                             gboolean           fast,
                                             H263ParseState   * state);

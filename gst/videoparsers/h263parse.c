@@ -40,7 +40,7 @@ gst_h263_parse_is_delta_unit (const H263Params * params)
  * extract a subset of the data (for now, it quits once we have the picture
  * type. */
 GstFlowReturn
-gst_h263_parse_get_params (H263Params ** params_p, GstBuffer * buffer,
+gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
     gboolean fast, H263ParseState * state)
 {
   static const guint8 partable[6][2] = {
@@ -72,15 +72,11 @@ gst_h263_parse_get_params (H263Params ** params_p, GstBuffer * buffer,
     "Extended PType"
   };
 
-  H263Params *params;
   GstBitReader br;
   guint8 tr;
   guint32 psc, temp32;
   guint8 temp8, pquant;
   gboolean hasplusptype;
-
-  *params_p = g_new0 (H263Params, 1);
-  params = *params_p;
 
   /* FIXME: we can optimise a little by checking the value of available
    * instead of calling using the bit reader's get_bits_* functions. */
