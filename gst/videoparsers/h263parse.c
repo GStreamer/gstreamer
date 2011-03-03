@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY_EXTERN (h263_parse_debug);
 #define GST_CAT_DEFAULT h263_parse_debug
 
 gboolean
-gst_h263_parse_is_delta_unit (H263Params * params)
+gst_h263_parse_is_delta_unit (const H263Params * params)
 {
   return (params->type == PICTURE_I);
 }
@@ -455,7 +455,7 @@ beach:
 }
 
 gint
-gst_h263_parse_get_profile (H263Params * params)
+gst_h263_parse_get_profile (const H263Params * params)
 {
   gboolean c, d, d1, d21, d22, e, f, f2, g, h, i, j, k, k0, k1, k2, l, m, n, o,
       p, q, r, s, t, u, v, w;
@@ -577,7 +577,7 @@ gst_h263_parse_get_profile (H263Params * params)
    (gst_value_compare (&(f1), &(f2)) == GST_VALUE_EQUAL))
 
 gint
-gst_h263_parse_get_level (H263Params * params, gint profile,
+gst_h263_parse_get_level (const H263Params * params, gint profile,
     guint bitrate, gint fps_num, gint fps_denom)
 {
   GValue fps15 = { 0, };
@@ -659,7 +659,8 @@ gst_h263_parse_get_level (H263Params * params, gint profile,
 }
 
 void
-gst_h263_parse_get_framerate (H263Params * params, gint * num, gint * denom)
+gst_h263_parse_get_framerate (const H263Params * params, gint * num,
+    gint * denom)
 {
   *num = params->pcfnum;
   *denom = params->pcfdenom;
