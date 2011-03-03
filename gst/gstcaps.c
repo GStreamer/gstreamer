@@ -225,7 +225,10 @@ gst_caps_new_simple (const char *media_type, const char *fieldname, ...)
   structure = gst_structure_new_valist (media_type, fieldname, var_args);
   va_end (var_args);
 
-  gst_caps_append_structure_unchecked (caps, structure);
+  if (structure)
+    gst_caps_append_structure_unchecked (caps, structure);
+  else
+    gst_caps_replace (&caps, NULL);
 
   return caps;
 }
