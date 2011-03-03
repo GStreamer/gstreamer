@@ -197,6 +197,7 @@ default_start (GstBufferPool * pool)
     if (pclass->alloc_buffer (pool, &buffer, NULL) != GST_FLOW_OK)
       goto alloc_failed;
 
+    GST_LOG_OBJECT (pool, "prealloced buffer %d: %p", i, buffer);
     /* store in the queue */
     gst_atomic_queue_push (pool->queue, buffer);
     gst_poll_write_control (pool->poll);
@@ -225,6 +226,7 @@ do_start (GstBufferPool * pool)
 
     pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
+    GST_LOG_OBJECT (pool, "starting");
     /* start the pool, subclasses should allocate buffers and put them
      * in the queue */
     if (G_LIKELY (pclass->start)) {
@@ -271,6 +273,7 @@ do_stop (GstBufferPool * pool)
 
     pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
+    GST_LOG_OBJECT (pool, "stopping");
     if (G_LIKELY (pclass->stop)) {
       if (!pclass->stop (pool))
         return FALSE;
@@ -300,6 +303,8 @@ gst_buffer_pool_set_active (GstBufferPool * pool, gboolean active)
   g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), FALSE);
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
+
+  GST_LOG_OBJECT (pool, "active %d", active);
 
   GST_BUFFER_POOL_LOCK (pool);
   /* just return if we are already in the right state */
