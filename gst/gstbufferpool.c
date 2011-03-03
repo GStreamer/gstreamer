@@ -83,6 +83,8 @@ gst_buffer_pool_class_init (GstBufferPoolClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
+  g_type_class_add_private (klass, sizeof (GstBufferPoolPrivate));
+
   gobject_class->finalize = gst_buffer_pool_finalize;
 
   klass->start = default_start;
@@ -108,7 +110,7 @@ gst_buffer_pool_init (GstBufferPool * pool)
   pool->configured = FALSE;
   pool->started = FALSE;
   pool->config = gst_structure_id_empty_new (GST_QUARK (BUFFER_POOL_CONFIG));
-  gst_buffer_pool_config_set (pool->config, 0, 0, 0, 0, 0, 1);
+  gst_buffer_pool_config_set (pool->config, NULL, 0, 0, 0, 0, 0, 1);
 
   GST_DEBUG_OBJECT (pool, "created");
 }
@@ -362,11 +364,12 @@ static gboolean
 default_set_config (GstBufferPool * pool, GstStructure * config)
 {
   GstBufferPoolPrivate *priv = pool->priv;
+  const GstCaps *caps;
   guint size, min_buffers, max_buffers;
   guint prefix, postfix, align;
 
   /* parse the config and keep around */
-  if (!gst_buffer_pool_config_get (config, &size, &min_buffers,
+  if (!gst_buffer_pool_config_get (config, &caps, &size, &min_buffers,
           &max_buffers, &prefix, &postfix, &align))
     goto wrong_config;
 
@@ -492,13 +495,14 @@ gst_buffer_pool_get_config (GstBufferPool * pool)
  * Configure @config with the given parameters.
  */
 void
-gst_buffer_pool_config_set (GstStructure * config, guint size,
-    guint min_buffers, guint max_buffers, guint prefix, guint postfix,
-    guint align)
+gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
+    guint size, guint min_buffers, guint max_buffers, guint prefix,
+    guint postfix, guint align)
 {
   g_return_if_fail (config != NULL);
 
   gst_structure_id_set (config,
+      GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
       GST_QUARK (SIZE), G_TYPE_UINT, size,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
       GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
@@ -520,13 +524,14 @@ gst_buffer_pool_config_set (GstStructure * config, guint size,
  * Get the configuration values from @config.
  */
 gboolean
-gst_buffer_pool_config_get (GstStructure * config, guint * size,
-    guint * min_buffers, guint * max_buffers, guint * prefix, guint * postfix,
-    guint * align)
+gst_buffer_pool_config_get (GstStructure * config, const GstCaps ** caps,
+    guint * size, guint * min_buffers, guint * max_buffers, guint * prefix,
+    guint * postfix, guint * align)
 {
   g_return_val_if_fail (config != NULL, FALSE);
 
   return gst_structure_id_get (config,
+      GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
       GST_QUARK (SIZE), G_TYPE_UINT, size,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
       GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
@@ -673,8 +678,8 @@ gst_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 
   /* check that the buffer is ours, all buffers returned to the pool have the
    * pool member set to NULL and the pool refcount decreased */
-  if (!g_atomic_pointer_compare_and_exchange ((gpointer *) & buffer->pool, pool,
-          NULL))
+  if (!g_atomic_pointer_compare_and_exchange ((gpointer *) & buffer->pool,
+          pool, NULL))
     return;
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
