@@ -420,6 +420,8 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       !gst_structure_get_int (structure, "height", &height))
     goto wrong_caps;
 
+  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, width, height, caps);
+
   /* keep track of the width and height and caps */
   if (priv->caps)
     gst_caps_unref (priv->caps);
@@ -489,6 +491,8 @@ gst_ximage_buffer_pool_new (GstXImageSink * ximagesink)
   pool = g_object_new (GST_TYPE_XIMAGE_BUFFER_POOL, NULL);
   pool->sink = gst_object_ref (ximagesink);
 
+  GST_LOG_OBJECT (pool, "new XImage buffer pool %p", pool);
+
   return GST_BUFFER_POOL_CAST (pool);
 }
 
@@ -519,7 +523,7 @@ gst_ximage_buffer_pool_finalize (GObject * object)
   GstXImageBufferPool *pool = GST_XIMAGE_BUFFER_POOL_CAST (object);
   GstXImageBufferPoolPrivate *priv = pool->priv;
 
-  GST_LOG_OBJECT (pool->sink, "finalize XImage buffer pool");
+  GST_LOG_OBJECT (pool, "finalize XImage buffer pool %p", pool);
 
   if (priv->caps)
     gst_caps_unref (priv->caps);
