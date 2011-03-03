@@ -30,7 +30,6 @@
 #  include <libv4l2.h>
 #else
 #  include <sys/ioctl.h>
-#  include <linux/videodev.h>
 #  include <linux/videodev2.h>
 #  define v4l2_fd_open(fd, flags) (fd)
 #  define v4l2_close    close
