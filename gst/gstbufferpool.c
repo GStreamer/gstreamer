@@ -39,6 +39,8 @@
 
 #include "gstbufferpool.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_buffer_pool_debug);
+#define GST_CAT_DEFAULT gst_buffer_pool_debug
 
 #define GST_BUFFER_POOL_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BUFFER_POOL, GstBufferPoolPrivate))
@@ -94,6 +96,9 @@ gst_buffer_pool_class_init (GstBufferPoolClass * klass)
   klass->alloc_buffer = default_alloc_buffer;
   klass->release_buffer = default_release_buffer;
   klass->free_buffer = default_free_buffer;
+
+  GST_DEBUG_CATEGORY_INIT (gst_buffer_pool_debug, "bufferpool", 0,
+      "bufferpool debug");
 }
 
 static void
