@@ -62,6 +62,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogg_mux_debug);
     ? GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf) \
     : GST_BUFFER_TIMESTAMP (buf))
 
+#define GST_BUFFER_RUNNING_TIME(buf, oggpad) \
+    (GST_BUFFER_DURATION_IS_VALID (buf) \
+    ? gst_segment_to_running_time ((oggpad)->segment, GST_FORMAT_TIME, \
+    GST_BUFFER_TIMESTAMP (buf)) : 0)
+
 #define GST_GP_FORMAT "[gp %8" G_GINT64_FORMAT "]"
 #define GST_GP_CAST(_gp) ((gint64) _gp)
 
@@ -538,7 +543,8 @@ gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page, gboolean delta)
 }
 
 static GstFlowReturn
-gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer)
+gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer,
+    GstOggPadData * oggpad)
 {
   GstCaps *caps;
 
@@ -549,11 +555,11 @@ gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer)
 
   /* Ensure we have monotonically increasing timestamps in the output. */
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
-    if (mux->last_ts != GST_CLOCK_TIME_NONE &&
-        GST_BUFFER_TIMESTAMP (buffer) < mux->last_ts)
+    gint64 run_time = GST_BUFFER_RUNNING_TIME (buffer, oggpad);
+    if (mux->last_ts != GST_CLOCK_TIME_NONE && run_time < mux->last_ts)
       GST_BUFFER_TIMESTAMP (buffer) = mux->last_ts;
     else
-      mux->last_ts = GST_BUFFER_TIMESTAMP (buffer);
+      mux->last_ts = run_time;
   }
 
   caps = gst_pad_get_negotiated_caps (mux->srcpad);
@@ -628,7 +634,7 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
     while (buf && GST_BUFFER_OFFSET_END (buf) == -1) {
       GST_LOG_OBJECT (pad->collect.pad, "[gp        -1] pushing page");
       g_queue_pop_head (pad->pagebuffers);
-      *flowret = gst_ogg_mux_push_buffer (mux, buf);
+      *flowret = gst_ogg_mux_push_buffer (mux, buf, pad);
       buf = g_queue_peek_head (pad->pagebuffers);
       ret = TRUE;
     }
@@ -662,7 +668,7 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
         GST_GP_FORMAT " pushing oldest page buffer %p (granulepos time %"
         GST_TIME_FORMAT ")", GST_BUFFER_OFFSET_END (buf), buf,
         GST_TIME_ARGS (GST_BUFFER_OFFSET (buf)));
-    *flowret = gst_ogg_mux_push_buffer (mux, buf);
+    *flowret = gst_ogg_mux_push_buffer (mux, buf, opad);
     ret = TRUE;
   }
 
@@ -752,6 +758,11 @@ gst_ogg_mux_compare_pads (GstOggMux * ogg_mux, GstOggPadData * first,
     secondtime = GST_BUFFER_TIMESTAMP (second->next_buffer);
   if (secondtime == GST_CLOCK_TIME_NONE)
     return 1;
+
+  firsttime = gst_segment_to_running_time (first->segment, GST_FORMAT_TIME,
+      firsttime);
+  secondtime = gst_segment_to_running_time (second->segment, GST_FORMAT_TIME,
+      secondtime);
 
   /* first buffer has higher timestamp, second one should go first */
   if (secondtime < firsttime)
@@ -1226,7 +1237,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
     hbufs = g_list_delete_link (hbufs, hbufs);
 
-    if ((ret = gst_ogg_mux_push_buffer (mux, buf)) != GST_FLOW_OK)
+    if ((ret = gst_ogg_mux_push_buffer (mux, buf, NULL)) != GST_FLOW_OK)
       break;
   }
   /* free any remaining nodes/buffers in case we couldn't push them */
