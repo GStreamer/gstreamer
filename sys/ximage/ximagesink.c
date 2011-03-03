@@ -129,8 +129,6 @@ MotifWmHints, MwmHints;
 #define MWM_HINTS_DECORATIONS   (1L << 1)
 
 static void gst_ximagesink_reset (GstXImageSink * ximagesink);
-static void gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
-    GstBuffer * ximage);
 static void gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink);
 static void gst_ximagesink_expose (GstXOverlay * overlay);
 
@@ -164,445 +162,7 @@ static GstVideoSinkClass *parent_class = NULL;
 /*                                                               */
 /* ============================================================= */
 
-/* ximage buffers */
-const GstMetaInfo *
-gst_meta_ximage_get_info (void)
-{
-  static const GstMetaInfo *meta_ximage_info = NULL;
-
-  if (meta_ximage_info == NULL) {
-    meta_ximage_info = gst_meta_register ("GstMetaXImage", "GstMetaXImage",
-        sizeof (GstMetaXImage),
-        (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL,
-        (GstMetaCopyFunction) NULL,
-        (GstMetaSubFunction) NULL,
-        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
-  }
-  return meta_ximage_info;
-}
-
-static void
-gst_ximage_buffer_dispose (GstBuffer * ximage)
-{
-  GstMetaXImage *meta = NULL;
-  GstXImageSink *ximagesink = NULL;
-  gboolean recycled = FALSE;
-  gboolean running;
-
-  meta = GST_META_XIMAGE_GET (ximage);
-  g_return_if_fail (meta != NULL);
-
-  ximagesink = meta->ximagesink;
-  if (G_UNLIKELY (ximagesink == NULL))
-    goto no_sink;
-
-  g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
-
-  GST_OBJECT_LOCK (ximagesink);
-  running = ximagesink->running;
-  GST_OBJECT_UNLOCK (ximagesink);
-
-  if (running == FALSE) {
-    /* If the sink is shutting down, need to clear the image */
-    GST_DEBUG_OBJECT (ximagesink,
-        "destroy image %p because the sink is shutting down", ximage);
-    gst_ximagesink_ximage_destroy (ximagesink, ximage);
-  } else if ((meta->width != GST_VIDEO_SINK_WIDTH (ximagesink)) ||
-      (meta->height != GST_VIDEO_SINK_HEIGHT (ximagesink))) {
-    /* If our geometry changed we can't reuse that image. */
-    GST_DEBUG_OBJECT (ximagesink,
-        "destroy image %p as its size changed %dx%d vs current %dx%d",
-        ximage, meta->width, meta->height,
-        GST_VIDEO_SINK_WIDTH (ximagesink), GST_VIDEO_SINK_HEIGHT (ximagesink));
-    gst_ximagesink_ximage_destroy (ximagesink, ximage);
-  } else {
-    /* In that case we can reuse the image and add it to our image pool. */
-    GST_LOG_OBJECT (ximagesink, "recycling image %p in pool", ximage);
-    /* need to increment the refcount again to recycle */
-    gst_buffer_ref (ximage);
-    g_mutex_lock (ximagesink->pool_lock);
-    ximagesink->buffer_pool = g_slist_prepend (ximagesink->buffer_pool, ximage);
-    g_mutex_unlock (ximagesink->pool_lock);
-    recycled = TRUE;
-  }
-  return;
-
-no_sink:
-  {
-    GST_WARNING ("no sink found");
-    return;
-  }
-}
-
-static void
-gst_ximage_buffer_free (GstBuffer * ximage)
-{
-  GstMetaXImage *meta = GST_META_XIMAGE_GET (ximage);
-  g_return_if_fail (meta != NULL);
-
-  /* make sure it is not recycled */
-  meta->width = -1;
-  meta->height = -1;
-  gst_buffer_unref (ximage);
-}
-
 /* X11 stuff */
-
-static gboolean error_caught = FALSE;
-
-static int
-gst_ximagesink_handle_xerror (Display * display, XErrorEvent * xevent)
-{
-  char error_msg[1024];
-
-  XGetErrorText (display, xevent->error_code, error_msg, 1024);
-  GST_DEBUG ("ximagesink triggered an XError. error: %s", error_msg);
-  error_caught = TRUE;
-  return 0;
-}
-
-#ifdef HAVE_XSHM                /* Check that XShm calls actually work */
-
-static gboolean
-gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
-    GstXContext * xcontext)
-{
-  XImage *ximage;
-  XShmSegmentInfo SHMInfo;
-  size_t size;
-  int (*handler) (Display *, XErrorEvent *);
-  gboolean result = FALSE;
-  gboolean did_attach = FALSE;
-
-  g_return_val_if_fail (xcontext != NULL, FALSE);
-
-  /* Sync to ensure any older errors are already processed */
-  XSync (xcontext->disp, FALSE);
-
-  /* Set defaults so we don't free these later unnecessarily */
-  SHMInfo.shmaddr = ((void *) -1);
-  SHMInfo.shmid = -1;
-
-  /* Setting an error handler to catch failure */
-  error_caught = FALSE;
-  handler = XSetErrorHandler (gst_ximagesink_handle_xerror);
-
-  /* Trying to create a 1x1 ximage */
-  GST_DEBUG ("XShmCreateImage of 1x1");
-
-  ximage = XShmCreateImage (xcontext->disp, xcontext->visual,
-      xcontext->depth, ZPixmap, NULL, &SHMInfo, 1, 1);
-
-  /* Might cause an error, sync to ensure it is noticed */
-  XSync (xcontext->disp, FALSE);
-  if (!ximage || error_caught) {
-    GST_WARNING ("could not XShmCreateImage a 1x1 image");
-    goto beach;
-  }
-  size = ximage->height * ximage->bytes_per_line;
-
-  SHMInfo.shmid = shmget (IPC_PRIVATE, size, IPC_CREAT | 0777);
-  if (SHMInfo.shmid == -1) {
-    GST_WARNING ("could not get shared memory of %" G_GSIZE_FORMAT " bytes",
-        size);
-    goto beach;
-  }
-
-  SHMInfo.shmaddr = shmat (SHMInfo.shmid, NULL, 0);
-  if (SHMInfo.shmaddr == ((void *) -1)) {
-    GST_WARNING ("Failed to shmat: %s", g_strerror (errno));
-    /* Clean up shm seg */
-    shmctl (SHMInfo.shmid, IPC_RMID, NULL);
-    goto beach;
-  }
-
-  ximage->data = SHMInfo.shmaddr;
-  SHMInfo.readOnly = FALSE;
-
-  if (XShmAttach (xcontext->disp, &SHMInfo) == 0) {
-    GST_WARNING ("Failed to XShmAttach");
-    /* Clean up shm seg */
-    shmctl (SHMInfo.shmid, IPC_RMID, NULL);
-    goto beach;
-  }
-
-  /* Sync to ensure we see any errors we caused */
-  XSync (xcontext->disp, FALSE);
-
-  /* Delete the shared memory segment as soon as everyone is attached. 
-   * This way, it will be deleted as soon as we detach later, and not
-   * leaked if we crash. */
-  shmctl (SHMInfo.shmid, IPC_RMID, NULL);
-
-  if (!error_caught) {
-    did_attach = TRUE;
-    /* store whether we succeeded in result */
-    result = TRUE;
-  }
-
-beach:
-  /* Sync to ensure we swallow any errors we caused and reset error_caught */
-  XSync (xcontext->disp, FALSE);
-  error_caught = FALSE;
-  XSetErrorHandler (handler);
-
-  if (did_attach) {
-    XShmDetach (xcontext->disp, &SHMInfo);
-    XSync (xcontext->disp, FALSE);
-  }
-  if (SHMInfo.shmaddr != ((void *) -1))
-    shmdt (SHMInfo.shmaddr);
-  if (ximage)
-    XDestroyImage (ximage);
-  return result;
-}
-#endif /* HAVE_XSHM */
-
-/* This function handles GstXImageBuffer creation depending on XShm availability */
-static GstBuffer *
-gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
-{
-  GstBuffer *buffer = NULL;
-  GstMetaXImage *meta = NULL;
-  GstStructure *structure = NULL;
-  gboolean succeeded = FALSE;
-  int (*handler) (Display *, XErrorEvent *);
-
-  g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
-
-
-  buffer = gst_buffer_new ();
-  GST_MINI_OBJECT_CAST (buffer)->dispose =
-      (GstMiniObjectDisposeFunction) gst_ximage_buffer_dispose;
-  meta = GST_META_XIMAGE_ADD (buffer);
-#ifdef HAVE_XSHM
-  meta->SHMInfo.shmaddr = ((void *) -1);
-  meta->SHMInfo.shmid = -1;
-#endif
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "width", &meta->width) ||
-      !gst_structure_get_int (structure, "height", &meta->height)) {
-    GST_WARNING ("failed getting geometry from caps %" GST_PTR_FORMAT, caps);
-  }
-
-  GST_DEBUG_OBJECT (ximagesink, "creating image %p (%dx%d)", buffer,
-      meta->width, meta->height);
-
-  g_mutex_lock (ximagesink->x_lock);
-
-  /* Setting an error handler to catch failure */
-  error_caught = FALSE;
-  handler = XSetErrorHandler (gst_ximagesink_handle_xerror);
-
-#ifdef HAVE_XSHM
-  if (ximagesink->xcontext->use_xshm) {
-    meta->ximage = XShmCreateImage (ximagesink->xcontext->disp,
-        ximagesink->xcontext->visual,
-        ximagesink->xcontext->depth,
-        ZPixmap, NULL, &meta->SHMInfo, meta->width, meta->height);
-    if (!meta->ximage || error_caught) {
-      g_mutex_unlock (ximagesink->x_lock);
-      /* Reset error handler */
-      error_caught = FALSE;
-      XSetErrorHandler (handler);
-      /* Push an error */
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
-          ("Failed to create output image buffer of %dx%d pixels",
-              meta->width, meta->height),
-          ("could not XShmCreateImage a %dx%d image",
-              meta->width, meta->height));
-      goto beach;
-    }
-
-    /* we have to use the returned bytes_per_line for our shm size */
-    meta->size = meta->ximage->bytes_per_line * meta->ximage->height;
-    GST_LOG_OBJECT (ximagesink,
-        "XShm image size is %" G_GSIZE_FORMAT ", width %d, stride %d",
-        meta->size, meta->width, meta->ximage->bytes_per_line);
-
-    meta->SHMInfo.shmid = shmget (IPC_PRIVATE, meta->size, IPC_CREAT | 0777);
-    if (meta->SHMInfo.shmid == -1) {
-      g_mutex_unlock (ximagesink->x_lock);
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
-          ("Failed to create output image buffer of %dx%d pixels",
-              meta->width, meta->height),
-          ("could not get shared memory of %" G_GSIZE_FORMAT " bytes",
-              meta->size));
-      goto beach;
-    }
-
-    meta->SHMInfo.shmaddr = shmat (meta->SHMInfo.shmid, NULL, 0);
-    if (meta->SHMInfo.shmaddr == ((void *) -1)) {
-      g_mutex_unlock (ximagesink->x_lock);
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
-          ("Failed to create output image buffer of %dx%d pixels",
-              meta->width, meta->height),
-          ("Failed to shmat: %s", g_strerror (errno)));
-      /* Clean up the shared memory segment */
-      shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
-      goto beach;
-    }
-
-    meta->ximage->data = meta->SHMInfo.shmaddr;
-    meta->SHMInfo.readOnly = FALSE;
-
-    if (XShmAttach (ximagesink->xcontext->disp, &meta->SHMInfo) == 0) {
-      /* Clean up shm seg */
-      shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
-
-      g_mutex_unlock (ximagesink->x_lock);
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
-          ("Failed to create output image buffer of %dx%d pixels",
-              meta->width, meta->height), ("Failed to XShmAttach"));
-      goto beach;
-    }
-
-    XSync (ximagesink->xcontext->disp, FALSE);
-
-    /* Now that everyone has attached, we can delete the shared memory segment.
-     * This way, it will be deleted as soon as we detach later, and not
-     * leaked if we crash. */
-    shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
-
-  } else
-#endif /* HAVE_XSHM */
-  {
-    guint allocsize;
-
-    meta->ximage = XCreateImage (ximagesink->xcontext->disp,
-        ximagesink->xcontext->visual,
-        ximagesink->xcontext->depth,
-        ZPixmap, 0, NULL,
-        meta->width, meta->height, ximagesink->xcontext->bpp, 0);
-    if (!meta->ximage || error_caught) {
-      g_mutex_unlock (ximagesink->x_lock);
-      /* Reset error handler */
-      error_caught = FALSE;
-      XSetErrorHandler (handler);
-      /* Push an error */
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
-          ("Failed to create output image buffer of %dx%d pixels",
-              meta->width, meta->height),
-          ("could not XCreateImage a %dx%d image", meta->width, meta->height));
-      goto beach;
-    }
-
-    /* upstream will assume that rowstrides are multiples of 4, but this
-     * doesn't always seem to be the case with XCreateImage() */
-    if ((meta->ximage->bytes_per_line % 4) != 0) {
-      GST_WARNING_OBJECT (ximagesink, "returned stride not a multiple of 4 as "
-          "usually assumed");
-    }
-
-    /* we have to use the returned bytes_per_line for our image size */
-    meta->size = meta->ximage->bytes_per_line * meta->ximage->height;
-
-    /* alloc a bit more for unexpected strides to avoid crashes upstream.
-     * FIXME: if we get an unrounded stride, the image will be displayed
-     * distorted, since all upstream elements assume a rounded stride */
-    allocsize =
-        GST_ROUND_UP_4 (meta->ximage->bytes_per_line) * meta->ximage->height;
-    meta->ximage->data = g_malloc (allocsize);
-    GST_LOG_OBJECT (ximagesink,
-        "non-XShm image size is %" G_GSIZE_FORMAT " (alloced: %u), width %d, "
-        "stride %d", meta->size, allocsize, meta->width,
-        meta->ximage->bytes_per_line);
-
-    XSync (ximagesink->xcontext->disp, FALSE);
-  }
-
-  /* Reset error handler */
-  error_caught = FALSE;
-  XSetErrorHandler (handler);
-
-  succeeded = TRUE;
-
-  /* Keep a ref to our sink */
-  meta->ximagesink = gst_object_ref (ximagesink);
-
-  GST_BUFFER_DATA (buffer) = (guchar *) meta->ximage->data;
-  GST_BUFFER_SIZE (buffer) = meta->size;
-
-  g_mutex_unlock (ximagesink->x_lock);
-
-beach:
-  if (!succeeded) {
-    gst_ximage_buffer_free (buffer);
-    buffer = NULL;
-  }
-
-  return buffer;
-}
-
-/* This function destroys a GstBuffer with GstXImageData handling XShm availability */
-static void
-gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink, GstBuffer * ximage)
-{
-  GstMetaXImage *meta;
-
-  g_return_if_fail (ximage != NULL);
-  g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
-
-  meta = GST_META_XIMAGE_GET (ximage);
-  g_return_if_fail (meta != NULL);
-
-  /* Hold the object lock to ensure the XContext doesn't disappear */
-  GST_OBJECT_LOCK (ximagesink);
-
-  /* If the destroyed image is the current one we destroy our reference too */
-  if (ximagesink->cur_image == ximage) {
-    ximagesink->cur_image = NULL;
-  }
-
-  /* We might have some buffers destroyed after changing state to NULL */
-  if (!ximagesink->xcontext) {
-    GST_DEBUG_OBJECT (ximagesink, "Destroying XImage after XContext");
-#ifdef HAVE_XSHM
-    if (meta->SHMInfo.shmaddr != ((void *) -1)) {
-      shmdt (meta->SHMInfo.shmaddr);
-    }
-#endif
-    goto beach;
-  }
-
-  g_mutex_lock (ximagesink->x_lock);
-
-#ifdef HAVE_XSHM
-  if (ximagesink->xcontext->use_xshm) {
-    if (meta->SHMInfo.shmaddr != ((void *) -1)) {
-      XShmDetach (ximagesink->xcontext->disp, &meta->SHMInfo);
-      XSync (ximagesink->xcontext->disp, 0);
-      shmdt (meta->SHMInfo.shmaddr);
-    }
-    if (meta->ximage)
-      XDestroyImage (meta->ximage);
-
-  } else
-#endif /* HAVE_XSHM */
-  {
-    if (meta->ximage) {
-      XDestroyImage (meta->ximage);
-    }
-  }
-
-  XSync (ximagesink->xcontext->disp, FALSE);
-
-  g_mutex_unlock (ximagesink->x_lock);
-
-beach:
-  GST_OBJECT_UNLOCK (ximagesink);
-
-  if (meta->ximagesink) {
-    /* Release the ref to our sink */
-    meta->ximagesink = NULL;
-    gst_object_unref (ximagesink);
-  }
-
-  return;
-}
 
 /* We are called with the x_lock taken */
 static void
@@ -1384,22 +944,6 @@ gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
   g_free (xcontext);
 }
 
-static void
-gst_ximagesink_bufferpool_clear (GstXImageSink * ximagesink)
-{
-  g_mutex_lock (ximagesink->pool_lock);
-
-  while (ximagesink->buffer_pool) {
-    GstBuffer *ximage = ximagesink->buffer_pool->data;
-
-    ximagesink->buffer_pool = g_slist_delete_link (ximagesink->buffer_pool,
-        ximagesink->buffer_pool);
-    gst_ximage_buffer_free (ximage);
-  }
-
-  g_mutex_unlock (ximagesink->pool_lock);
-}
-
 /* Element stuff */
 
 static GstCaps *
@@ -1440,6 +984,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstXImageSink *ximagesink;
   gboolean ret = TRUE;
   GstStructure *structure;
+  GstBufferPool *newpool, *oldpool;
   const GValue *par;
   gint new_width, new_height;
   const GValue *fps;
@@ -1497,11 +1042,8 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   /* Creating our window and our image */
   if (GST_VIDEO_SINK_WIDTH (ximagesink) <= 0 ||
-      GST_VIDEO_SINK_HEIGHT (ximagesink) <= 0) {
-    GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, (NULL),
-        ("Invalid image size."));
-    return FALSE;
-  }
+      GST_VIDEO_SINK_HEIGHT (ximagesink) <= 0)
+    goto invalid_size;
 
   g_mutex_lock (ximagesink->flow_lock);
   if (!ximagesink->xwindow) {
@@ -1512,20 +1054,26 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   ximagesink->draw_border = TRUE;
   g_mutex_unlock (ximagesink->flow_lock);
 
-  /* If our ximage has changed we destroy it, next chain iteration will create
-     a new one */
-  if ((ximagesink->ximage)) {
-    GstMetaXImage *meta = GST_META_XIMAGE_GET (ximagesink->ximage);
+  /* create a new pool for the new configuration */
+  newpool = gst_ximage_buffer_pool_new (ximagesink);
 
-    if (((GST_VIDEO_SINK_WIDTH (ximagesink) != meta->width) ||
-            (GST_VIDEO_SINK_HEIGHT (ximagesink) != meta->height))) {
-      GST_DEBUG_OBJECT (ximagesink, "our image is not usable anymore, unref %p",
-          ximagesink->ximage);
-      gst_buffer_unref (ximagesink->ximage);
-      ximagesink->ximage = NULL;
-    }
+  structure = gst_buffer_pool_get_config (newpool);
+  gst_buffer_pool_config_set (structure, caps, 0, 0, 0, 0, 0, 16);
+  if (!gst_buffer_pool_set_config (newpool, structure))
+    goto config_failed;
+
+  if (!gst_buffer_pool_set_active (newpool, TRUE))
+    goto activate_failed;
+
+  oldpool = ximagesink->pool;
+  ximagesink->pool = newpool;
+
+  /* unref the old sink */
+  if (oldpool) {
+    /* deactivate */
+    gst_buffer_pool_set_active (oldpool, FALSE);
+    gst_object_unref (oldpool);
   }
-
   return TRUE;
 
   /* ERRORS */
@@ -1537,6 +1085,22 @@ incompatible_caps:
 wrong_aspect:
   {
     GST_INFO_OBJECT (ximagesink, "pixel aspect ratio does not match");
+    return FALSE;
+  }
+invalid_size:
+  {
+    GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, (NULL),
+        ("Invalid image size."));
+    return FALSE;
+  }
+config_failed:
+  {
+    GST_ERROR_OBJECT (ximagesink, "failed to set config.");
+    return FALSE;
+  }
+activate_failed:
+  {
+    GST_ERROR_OBJECT (ximagesink, "failed to activate bufferpool.");
     return FALSE;
   }
 }
@@ -1633,6 +1197,7 @@ gst_ximagesink_get_times (GstBaseSink * bsink, GstBuffer * buf,
 static GstFlowReturn
 gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
+  GstFlowReturn res;
   GstXImageSink *ximagesink;
   GstMetaXImage *meta;
 
@@ -1651,46 +1216,56 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     /* If this buffer has been allocated using our buffer management we simply
        put the ximage which is in the PRIVATE pointer */
     GST_LOG_OBJECT (ximagesink, "buffer from our pool, writing directly");
-    if (!gst_ximagesink_ximage_put (ximagesink, buf))
-      goto no_window;
+    res = GST_FLOW_OK;
   } else {
+    GstBuffer *temp;
+
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
-    GST_LOG_OBJECT (ximagesink, "normal buffer, copying from it");
-    if (!ximagesink->ximage) {
-      GST_DEBUG_OBJECT (ximagesink, "creating our ximage");
-      ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
-          GST_BUFFER_CAPS (buf));
-      if (!ximagesink->ximage)
-        /* The create method should have posted an informative error */
-        goto no_ximage;
+    GST_LOG_OBJECT (ximagesink, "buffer not from our pool, copying");
 
-      if (GST_BUFFER_SIZE (ximagesink->ximage) < GST_BUFFER_SIZE (buf)) {
-        meta = GST_META_XIMAGE_GET (ximagesink->ximage);
+    /* we should have a pool, configured in setcaps */
+    if (ximagesink->pool == NULL)
+      goto no_pool;
 
-        GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
-            ("Failed to create output image buffer of %dx%d pixels",
-                meta->width, meta->height),
-            ("XServer allocated buffer size did not match input buffer"));
+    /* take a buffer form our pool */
+    res = gst_buffer_pool_acquire_buffer (ximagesink->pool, &temp, NULL);
+    if (res != GST_FLOW_OK)
+      goto no_buffer;
 
-        gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
-        ximagesink->ximage = NULL;
-        goto no_ximage;
-      }
-    }
-    memcpy (GST_BUFFER_DATA (ximagesink->ximage), GST_BUFFER_DATA (buf),
-        MIN (GST_BUFFER_SIZE (buf), GST_BUFFER_SIZE (ximagesink->ximage)));
-    if (!gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage))
-      goto no_window;
+    if (GST_BUFFER_SIZE (temp) < GST_BUFFER_SIZE (buf))
+      goto wrong_size;
+
+    memcpy (GST_BUFFER_DATA (temp), GST_BUFFER_DATA (buf),
+        MIN (GST_BUFFER_SIZE (temp), GST_BUFFER_SIZE (buf)));
+
+    buf = temp;
   }
 
-  return GST_FLOW_OK;
+  if (!gst_ximagesink_ximage_put (ximagesink, buf))
+    goto no_window;
+
+  return res;
 
   /* ERRORS */
-no_ximage:
+no_pool:
+  {
+    GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+        ("Internal error: can't allocate images"),
+        ("We don't have a bufferpool negotiated"));
+    return GST_FLOW_ERROR;
+  }
+no_buffer:
   {
     /* No image available. That's very bad ! */
     GST_WARNING_OBJECT (ximagesink, "could not create image");
+    return res;
+  }
+wrong_size:
+  {
+    GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+        ("Failed to create output image buffer"),
+        ("XServer allocated buffer size did not match input buffer"));
     return GST_FLOW_ERROR;
   }
 no_window:
@@ -1700,7 +1275,6 @@ no_window:
     return GST_FLOW_ERROR;
   }
 }
-
 
 static gboolean
 gst_ximagesink_event (GstBaseSink * sink, GstEvent * event)
@@ -1748,7 +1322,6 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   GstXImageSink *ximagesink;
-  GstMetaXImage *meta = NULL;
   GstBuffer *ximage = NULL;
   GstStructure *structure = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1877,34 +1450,21 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   }
 
 alloc:
-  /* Inspect our buffer pool */
-  g_mutex_lock (ximagesink->pool_lock);
-  while (ximagesink->buffer_pool) {
-    ximage = ximagesink->buffer_pool->data;
 
-    if (ximage) {
-      meta = GST_META_XIMAGE_GET (ximage);
-
-      /* Removing from the pool */
-      ximagesink->buffer_pool = g_slist_delete_link (ximagesink->buffer_pool,
-          ximagesink->buffer_pool);
-
-      /* If the ximage is invalid for our need, destroy */
-      if ((meta->width != width) || (meta->height != height)) {
-        gst_ximage_buffer_free (ximage);
-        ximage = NULL;
-      } else {
-        /* We found a suitable ximage */
-        break;
-      }
+  if (gst_caps_is_equal (GST_PAD_CAPS (bsink->sinkpad), alloc_caps)) {
+    /* we negotiated this format before, use the pool */
+    if (ximagesink->pool) {
+      GST_LOG_OBJECT (ximagesink, "retrieving buffer from pool");
+      ret = gst_buffer_pool_acquire_buffer (ximagesink->pool, &ximage, NULL);
     }
   }
-  g_mutex_unlock (ximagesink->pool_lock);
 
-  /* We haven't found anything, creating a new one */
-  if (!ximage) {
-    ximage = gst_ximagesink_ximage_new (ximagesink, alloc_caps);
+  if (ximage == NULL) {
+    /* Something new make a new image a new one */
+    GST_LOG_OBJECT (ximagesink, "allocating new image");
+    ximage = gst_ximage_buffer_new (ximagesink, width, height);
   }
+
   /* Now we should have a ximage, set appropriate caps on it */
   if (ximage) {
     /* Make sure the buffer is cleared of any previously used flags */
@@ -2247,16 +1807,13 @@ gst_ximagesink_reset (GstXImageSink * ximagesink)
   if (thread)
     g_thread_join (thread);
 
-  if (ximagesink->ximage) {
-    gst_buffer_unref (GST_BUFFER_CAST (ximagesink->ximage));
-    ximagesink->ximage = NULL;
-  }
   if (ximagesink->cur_image) {
     gst_buffer_unref (GST_BUFFER_CAST (ximagesink->cur_image));
     ximagesink->cur_image = NULL;
   }
-
+#if 0
   gst_ximagesink_bufferpool_clear (ximagesink);
+#endif
 
   g_mutex_lock (ximagesink->flow_lock);
   if (ximagesink->xwindow) {
@@ -2294,10 +1851,6 @@ gst_ximagesink_finalize (GObject * object)
     g_mutex_free (ximagesink->flow_lock);
     ximagesink->flow_lock = NULL;
   }
-  if (ximagesink->pool_lock) {
-    g_mutex_free (ximagesink->pool_lock);
-    ximagesink->pool_lock = NULL;
-  }
 
   g_free (ximagesink->media_title);
 
@@ -2310,7 +1863,6 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
   ximagesink->display_name = NULL;
   ximagesink->xcontext = NULL;
   ximagesink->xwindow = NULL;
-  ximagesink->ximage = NULL;
   ximagesink->cur_image = NULL;
 
   ximagesink->event_thread = NULL;
@@ -2324,8 +1876,7 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
 
   ximagesink->par = NULL;
 
-  ximagesink->pool_lock = g_mutex_new ();
-  ximagesink->buffer_pool = NULL;
+  ximagesink->pool = NULL;
 
   ximagesink->synchronous = FALSE;
   ximagesink->keep_aspect = FALSE;
@@ -2473,6 +2024,11 @@ gst_ximagesink_get_type (void)
         &navigation_info);
     g_type_add_interface_static (ximagesink_type, GST_TYPE_X_OVERLAY,
         &overlay_info);
+
+    /* register type and create class in a more safe place instead of at
+     * runtime since the type registration and class creation is not
+     * threadsafe. */
+    g_type_class_ref (gst_ximage_buffer_pool_get_type ());
   }
 
   return ximagesink_type;

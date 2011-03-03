@@ -25,6 +25,7 @@
 
 #include "ximagesink.h"
 
+GST_DEBUG_CATEGORY (gst_debug_ximagepool);
 GST_DEBUG_CATEGORY (gst_debug_ximagesink);
 
 static gboolean
@@ -36,6 +37,8 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_ximagesink, "ximagesink", 0,
       "ximagesink element");
+  GST_DEBUG_CATEGORY_INIT (gst_debug_ximagepool, "ximagepool", 0,
+      "ximagepool object");
 
   return TRUE;
 }

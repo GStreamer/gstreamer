@@ -49,13 +49,14 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_XIMAGESINK))
 #define GST_IS_XIMAGESINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_XIMAGESINK))
+
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 
-typedef struct _GstMetaXImage GstMetaXImage;
-
 typedef struct _GstXImageSink GstXImageSink;
 typedef struct _GstXImageSinkClass GstXImageSinkClass;
+
+#include "ximagepool.h"
 
 /*
  * GstXContext:
@@ -130,42 +131,6 @@ struct _GstXWindow
 
 
 /**
- * GstMetaXImage:
- * @ximagesink: a reference to our #GstXImageSink
- * @ximage: the XImage of this buffer
- * @width: the width in pixels of XImage @ximage
- * @height: the height in pixels of XImage @ximage
- * @size: the size in bytes of XImage @ximage
- *
- * Structure with additional information about an XImage.
- */
-struct _GstMetaXImage
-{
-  GstMeta meta;
-
-  /* Reference to the ximagesink we belong to */
-  GstXImageSink *ximagesink;
-
-  XImage *ximage;
-
-#ifdef HAVE_XSHM
-  XShmSegmentInfo SHMInfo;
-#endif                          /* HAVE_XSHM */
-
-  gint width, height;
-  size_t size;
-};
-
-const GstMetaInfo * gst_meta_ximage_get_info (void);
-#define GST_META_INFO_XIMAGE  (gst_meta_ximage_get_info())
-
-#define GST_META_GET(b,t,i) ((t *)gst_buffer_get_meta((b),(i)))
-#define GST_META_ADD(b,t,i,p) ((t *)gst_buffer_add_meta((b),(i),(p)))
-
-#define GST_META_XIMAGE_GET(b) GST_META_GET(b,GstMetaXImage,GST_META_INFO_XIMAGE)
-#define GST_META_XIMAGE_ADD(b) GST_META_ADD(b,GstMetaXImage,GST_META_INFO_XIMAGE,NULL)
-
-/**
  * GstXImageSink:
  * @display_name: the name of the Display we want to render to
  * @xcontext: our instance's #GstXContext
@@ -203,7 +168,6 @@ struct _GstXImageSink
 
   GstXContext *xcontext;
   GstXWindow *xwindow;
-  GstBuffer *ximage;
   GstBuffer *cur_image;
 
   GThread *event_thread;
@@ -219,8 +183,8 @@ struct _GstXImageSink
   /* object-set pixel aspect ratio */
   GValue *par;
 
-  GMutex *pool_lock;
-  GSList *buffer_pool;
+  /* the buffer pool */
+  GstBufferPool *pool;
 
   gboolean synchronous;
   gboolean keep_aspect;
