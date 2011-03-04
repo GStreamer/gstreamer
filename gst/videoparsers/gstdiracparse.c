@@ -272,7 +272,7 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
   drain = GST_BASE_PARSE_FRAME_DRAIN (frame);
 
   if (!sync && !drain) {
-    guint32 next_sync_word;
+    guint32 next_sync_word = 0;
 
     next_header = GST_READ_UINT32_BE (GST_BUFFER_DATA (frame->buffer) + 5);
     GST_LOG ("next header %d", next_header);

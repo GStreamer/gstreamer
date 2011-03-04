@@ -74,7 +74,7 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
 
   GstBitReader br;
   guint8 tr;
-  guint32 psc, temp32;
+  guint32 psc = 0, temp32;
   guint8 temp8, pquant;
   gboolean hasplusptype;
 
@@ -181,7 +181,7 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
   if (hasplusptype) {
     guint8 ufep;
     guint8 cpm;
-    guint32 opptype, mpptype;
+    guint32 opptype = 0, mpptype = 0;
 
     /* 5.1.4 PLUSPTYPE */
 
@@ -264,7 +264,7 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
     }
 
     if (ufep == 1) {
-      guint32 cpfmt;
+      guint32 cpfmt = 0;
 
       /* 5.1.5 CPFMT : Custom Picture Format (23 bits) */
       if (!gst_bit_reader_get_bits_uint32 (&br, &cpfmt, 23))
@@ -278,7 +278,7 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
       params->height = (cpfmt & 0x1f) * 4;
 
       if (temp8 == 0xf) {
-        guint32 epar;
+        guint32 epar = 0;
         /* 5.1.6 EPAR : Extended Pixel Aspect Ratio (16bits) */
         if (!gst_bit_reader_get_bits_uint32 (&br, &epar, 16))
           goto more;
