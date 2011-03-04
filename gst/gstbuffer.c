@@ -298,6 +298,7 @@ _gst_buffer_dispose (GstBuffer * buffer)
     /* keep the buffer alive */
     gst_buffer_ref (buffer);
     /* return the buffer to the pool */
+    GST_CAT_LOG (GST_CAT_BUFFER, "release %p to pool %p", buffer, pool);
     gst_buffer_pool_release_buffer (pool, buffer);
   }
 }
@@ -844,7 +845,8 @@ gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
   g_return_val_if_fail (info != NULL, NULL);
 
   /* create a new slice */
-  GST_DEBUG ("alloc metadata of size %" G_GSIZE_FORMAT, info->size);
+  GST_CAT_DEBUG (GST_CAT_BUFFER, "alloc metadata of size %" G_GSIZE_FORMAT,
+      info->size);
 
   size = ITEM_SIZE (info);
   item = g_slice_alloc (size);

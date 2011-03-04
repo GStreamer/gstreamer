@@ -562,13 +562,14 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 
   while (TRUE) {
     if (G_UNLIKELY (g_atomic_int_get (&pool->flushing)))
-      return GST_FLOW_WRONG_STATE;
+      goto flushing;
 
     /* try to get a buffer from the queue */
     *buffer = gst_atomic_queue_pop (pool->queue);
     if (G_LIKELY (*buffer)) {
       gst_poll_read_control (pool->poll);
       result = GST_FLOW_OK;
+      GST_LOG_OBJECT (pool, "acquired buffer %p", *buffer);
       break;
     }
 
@@ -579,20 +580,30 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
         result = pclass->alloc_buffer (pool, buffer, params);
       } else
         result = GST_FLOW_NOT_SUPPORTED;
+      GST_LOG_OBJECT (pool, "alloc buffer %p", *buffer);
       break;
     }
 
     /* check if we need to wait */
     if (params && !(params->flags & GST_BUFFER_POOL_FLAG_WAIT)) {
+      GST_LOG_OBJECT (pool, "no more buffers");
       result = GST_FLOW_UNEXPECTED;
       break;
     }
 
     /* now wait */
+    GST_LOG_OBJECT (pool, "waiting for free buffers");
     gst_poll_wait (pool->poll, GST_CLOCK_TIME_NONE);
   }
 
   return result;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG_OBJECT (pool, "we are flushing");
+    return GST_FLOW_WRONG_STATE;
+  }
 }
 
 static inline void
@@ -663,6 +674,7 @@ static void
 default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
   /* keep it around in our queue */
+  GST_LOG_OBJECT (pool, "released buffer %p", buffer);
   gst_atomic_queue_push (pool->queue, buffer);
   gst_poll_write_control (pool->poll);
 }
