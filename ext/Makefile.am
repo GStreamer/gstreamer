@@ -444,6 +444,7 @@ DIST_SUBDIRS = \
 	cdaudio \
 	celt \
 	cog \
+	curl \
 	dc1394 \
 	dirac \
 	directfb \
