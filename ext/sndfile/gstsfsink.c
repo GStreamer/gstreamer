@@ -415,9 +415,9 @@ gst_sf_sink_loop (GstPad * pad)
 
   basesink->offset += GST_BUFFER_SIZE (buf);
 
-  GST_PAD_PREROLL_LOCK (pad);
+  GST_BASE_SINK_PREROLL_LOCK (basesink);
   result = gst_sf_sink_render (basesink, buf);
-  GST_PAD_PREROLL_UNLOCK (pad);
+  GST_BASE_SINK_PREROLL_UNLOCK (basesink);
   if (G_UNLIKELY (result != GST_FLOW_OK))
     goto paused;
 
