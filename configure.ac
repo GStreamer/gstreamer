@@ -43,6 +43,8 @@ dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.11
 AC_SUBST(GST_MAJORMINOR)
 
+AG_GST_LIBTOOL_PREPARE
+
 dnl FIXME: this macro doesn't actually work;
 dnl the generated libtool script has no support for the listed tags.
 dnl So this needs to be fixed first if we want to use this
@@ -256,10 +258,13 @@ if test "x$BUILD_EXAMPLES" = "xyes"; then
      GTK_REQ=$GTK2_REQ])
   AC_MSG_RESULT([$with_gtk (>= $GTK_REQ)])
   PKG_CHECK_MODULES(GTK, gtk+-$with_gtk >= $GTK_REQ, HAVE_GTK=yes, HAVE_GTK=no)
+  dnl some examples need gtk+-x11
+  PKG_CHECK_MODULES(GTK_X11, gtk+-x11-$with_gtk >= $GTK_REQ, HAVE_GTK_X11=yes, HAVE_GTK_X11=no)
   AC_SUBST(GTK_LIBS)
   AC_SUBST(GTK_CFLAGS)
 fi
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
+AM_CONDITIONAL(HAVE_GTK_X11, test "x$HAVE_GTK_X11" = "xyes")
 
 dnl should we install schemas ?
 translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
@@ -713,6 +718,13 @@ AG_GST_CHECK_FEATURE(CAIRO, [Cairo graphics rendering], cairo, [
   AG_GST_PKG_CHECK_MODULES(CAIRO, cairo >= 1.0.0)
 ])
 
+dnl *** cairo-gobject ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO_GOBJECT, true)
+AG_GST_CHECK_FEATURE(CAIRO_GOBJECT, 
+  [Cairo graphics rendering gobject bindings], cairooverlay, [
+  AG_GST_PKG_CHECK_MODULES(CAIRO_GOBJECT, cairo-gobject >= 1.10.0)
+])
+
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
 AG_GST_CHECK_FEATURE(ESD, [ESounD sound daemon], esdsink, [
@@ -1019,6 +1031,7 @@ AM_CONDITIONAL(USE_AALIB, false)
 AM_CONDITIONAL(USE_ANNODEX, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CAIRO, false)
+AM_CONDITIONAL(USE_CAIRO_GOBJECT, false)
 AM_CONDITIONAL(USE_DIRECTSOUND, false)
 AM_CONDITIONAL(USE_DV1394, false)
 AM_CONDITIONAL(USE_ESD, false)
@@ -1103,7 +1116,7 @@ AC_SUBST(GST_ALL_LDFLAGS)
 
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc.*' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl *** output files ***
@@ -1189,6 +1202,7 @@ tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
 tests/examples/audiofx/Makefile
+tests/examples/cairo/Makefile
 tests/examples/equalizer/Makefile
 tests/examples/jack/Makefile
 tests/examples/level/Makefile

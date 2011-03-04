@@ -63,8 +63,8 @@ GObject
           GstRtpG722Pay
           GstRtpG726Pay
           GstRtpL16Pay
+          GstRtpPcmaPay
           GstRtpPcmuPay
-          GstRtpPmcaPay
         GstRTPDVPay
         GstRTPG723Pay
         GstRTPG729Pay
@@ -160,6 +160,7 @@ GObject
           GstAgingTV
           GstAlpha
           GstAlphaColor
+          GstCairoOverlay
           GstDiceTV
           GstEdgeTV
           GstGamma

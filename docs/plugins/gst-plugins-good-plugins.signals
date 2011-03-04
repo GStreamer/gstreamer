@@ -662,3 +662,21 @@ guint  arg1
 GstPad *arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstCairoOverlay::caps-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS></FLAGS>
+GstCairoOverlay *gstcairooverlay
+GstCaps *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCairoOverlay::draw</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS></FLAGS>
+GstCairoOverlay *gstcairooverlay
+CairoContext *arg1
+guint64  arg2
+guint64  arg3
+</SIGNAL>
+

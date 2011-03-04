@@ -547,10 +547,18 @@ gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
 
   /* Sanity check: catch bogus sizes (fuzzed/broken files) */
   if (G_UNLIKELY (size > QTDEMUX_MAX_ATOM_SIZE)) {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
-        (_("This file is invalid and cannot be played.")),
-        ("atom has bogus size %" G_GUINT64_FORMAT, size));
-    return GST_FLOW_ERROR;
+    if (qtdemux->state != QTDEMUX_STATE_MOVIE && qtdemux->got_moov) {
+      /* we're pulling header but already got most interesting bits,
+       * so never mind the rest (e.g. tags) (that much) */
+      GST_WARNING_OBJECT (qtdemux, "atom has bogus size %" G_GUINT64_FORMAT,
+          size);
+      return GST_FLOW_UNEXPECTED;
+    } else {
+      GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
+          (_("This file is invalid and cannot be played.")),
+          ("atom has bogus size %" G_GUINT64_FORMAT, size));
+      return GST_FLOW_ERROR;
+    }
   }
 
   flow = gst_pad_pull_range (qtdemux->sinkpad, offset, size, buf);
