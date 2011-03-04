@@ -1200,12 +1200,11 @@ gst_dvd_demux_synchronise_pads (GstMPEGDemux * mpeg_demux,
           ", threshold %" GST_TIME_FORMAT, i,
           GST_TIME_ARGS (dvd_demux->subpicture_stream[i]->cur_ts),
           GST_TIME_ARGS (threshold));
-    }
-    if (dvd_demux->subpicture_stream[i]
-        && (dvd_demux->subpicture_stream[i]->cur_ts < threshold)) {
-      DEMUX_CLASS (mpeg_demux)->sync_stream_to_time (mpeg_demux,
-          dvd_demux->subpicture_stream[i], new_ts);
-      dvd_demux->subpicture_stream[i]->cur_ts = new_ts;
+      if (dvd_demux->subpicture_stream[i]->cur_ts < threshold) {
+        DEMUX_CLASS (mpeg_demux)->sync_stream_to_time (mpeg_demux,
+            dvd_demux->subpicture_stream[i], new_ts);
+        dvd_demux->subpicture_stream[i]->cur_ts = new_ts;
+      }
     }
   }
 }
