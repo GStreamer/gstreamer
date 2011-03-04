@@ -117,6 +117,8 @@ Properties:
 - add deep-scan mode (see above)
   - add a mode property: quick-scan, deep-scan
    (or just a boolean for deep-scan that is false by default)
+  - gst-discoverer will use "-d" for deep-scan/details
+    (-a for anayze or -s for scan are used otherwise already)
   - in deep-scan, don't stop on handle_message::GST_MESSAGE_ASYNC_DONE
     - in deep-scan we need pad-probes for encoded data pads (to get bitrates)
       - uridecodebin_pad_added_cb() has raw pads :/
@@ -183,6 +185,7 @@ app                   disco
 == async deep-scan ==
 - same as "async quick-scan", but each discovered signal is followed by an
   "analyzed" signal with detailed information
+  - we could also just emit discovered twice.
 
 app                   disco
 ---                   -----
@@ -195,12 +198,12 @@ app                   disco
  |--------------------->|
  |     ::discovered     |
  |<---------------------|
- |     ::analzeded      |
+ |     ::analyzed       |
  |<---------------------|
  |         ...          |
  |     ::discovered     |
  |<---------------------|
- |     ::analzeded      |
+ |     ::analyzed       |
  |<---------------------|
  |     ::finisheded     |
  |<---------------------|
