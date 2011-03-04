@@ -1811,9 +1811,11 @@ gst_ximagesink_reset (GstXImageSink * ximagesink)
     gst_buffer_unref (GST_BUFFER_CAST (ximagesink->cur_image));
     ximagesink->cur_image = NULL;
   }
-#if 0
-  gst_ximagesink_bufferpool_clear (ximagesink);
-#endif
+
+  if (ximagesink->pool) {
+    gst_object_unref (ximagesink->pool);
+    ximagesink->pool = NULL;
+  }
 
   g_mutex_lock (ximagesink->flow_lock);
   if (ximagesink->xwindow) {
