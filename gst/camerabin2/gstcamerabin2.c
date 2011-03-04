@@ -313,6 +313,10 @@ gst_camera_bin_dispose (GObject * object)
   if (camerabin->viewfinderbin_capsfilter)
     gst_object_unref (camerabin->viewfinderbin_capsfilter);
 
+  if (camerabin->encodebin_signal_id)
+    g_signal_handler_disconnect (camerabin->encodebin,
+        camerabin->encodebin_signal_id);
+
   if (camerabin->videosink)
     gst_object_unref (camerabin->videosink);
   if (camerabin->encodebin)
@@ -672,6 +676,16 @@ gst_camera_bin_check_and_replace_filter (GstCameraBin * camera,
   }
 }
 
+static void
+encodebin_element_added (GstElement * encodebin, GstElement * new_element,
+    GstCameraBin * camera)
+{
+  if (g_str_has_prefix (gst_element_get_name (new_element), "audiorate") ||
+      g_str_has_prefix (gst_element_get_name (new_element), "videorate")) {
+    g_object_set (new_element, "skip-to-first", TRUE, NULL);
+  }
+}
+
 #define VIDEO_PAD 1
 #define AUDIO_PAD 2
 static GstPad *
@@ -775,6 +789,9 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   if (!camera->elements_created) {
 
     camera->encodebin = gst_element_factory_make ("encodebin", NULL);
+    camera->encodebin_signal_id = g_signal_connect (camera->encodebin,
+        "element-added", (GCallback) encodebin_element_added, camera);
+
     camera->videosink =
         gst_element_factory_make ("filesink", "videobin-filesink");
     camera->imagebin = gst_element_factory_make ("imagecapturebin", "imagebin");

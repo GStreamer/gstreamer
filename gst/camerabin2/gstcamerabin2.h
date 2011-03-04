@@ -43,6 +43,7 @@ struct _GstCameraBin
   gulong src_capture_notify_id;
 
   GstElement *encodebin;
+  gulong encodebin_signal_id;
   GstElement *videosink;
   GstElement *videobin_queue;
   GstElement *videobin_capsfilter;
