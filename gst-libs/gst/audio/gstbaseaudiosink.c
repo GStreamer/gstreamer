@@ -1762,7 +1762,7 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
       goto error;
   }
 
-  GST_PAD_PREROLL_LOCK (basesink->sinkpad);
+  GST_BASE_SINK_PREROLL_LOCK (basesink);
   if (basesink->flushing)
     goto flushing;
 
@@ -1781,7 +1781,7 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
   basesink->segment.last_stop += len;
 
   memcpy (data, GST_BUFFER_DATA (buf), len);
-  GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
+  GST_BASE_SINK_PREROLL_UNLOCK (basesink);
 
   GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
 
@@ -1811,7 +1811,7 @@ flushing:
   {
     GST_DEBUG_OBJECT (sink, "we are flushing");
     gst_ring_buffer_pause (rbuf);
-    GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
+    GST_BASE_SINK_PREROLL_UNLOCK (basesink);
     GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
     return;
   }
@@ -1819,7 +1819,7 @@ preroll_error:
   {
     GST_DEBUG_OBJECT (sink, "error %s", gst_flow_get_name (ret));
     gst_ring_buffer_pause (rbuf);
-    GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
+    GST_BASE_SINK_PREROLL_UNLOCK (basesink);
     GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
     return;
   }
