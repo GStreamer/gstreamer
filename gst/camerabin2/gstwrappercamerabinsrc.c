@@ -40,9 +40,6 @@ enum
   PROP_VIDEO_SRC
 };
 
-/* Using "bilinear" as default zoom method */
-#define CAMERABIN_DEFAULT_ZOOM_METHOD 1
-
 GST_DEBUG_CATEGORY (wrapper_camera_bin_src_debug);
 #define GST_CAT_DEFAULT wrapper_camera_bin_src_debug
 
