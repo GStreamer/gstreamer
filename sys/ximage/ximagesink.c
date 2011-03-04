@@ -246,7 +246,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstBuffer * ximage)
     }
   }
 
-  meta = GST_META_XIMAGE_GET (ximage);
+  meta = gst_buffer_get_meta_ximage (ximage);
   src.w = meta->width;
   src.h = meta->height;
   dst.w = ximagesink->xwindow->width;
@@ -1210,7 +1210,7 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   if (!ximagesink->xcontext)
     return GST_FLOW_ERROR;
 
-  meta = GST_META_XIMAGE_GET (buf);
+  meta = gst_buffer_get_meta_ximage (buf);
 
   if (meta) {
     /* If this buffer has been allocated using our buffer management we simply

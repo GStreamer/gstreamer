@@ -64,10 +64,10 @@ gst_ximagesink_handle_xerror (Display * display, XErrorEvent * xevent)
   return 0;
 }
 
-GstBuffer *
-gst_ximage_buffer_new (GstXImageSink * ximagesink, gint width, gint height)
+GstMetaXImage *
+gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
+    gint width, gint height)
 {
-  GstBuffer *ximage;
   int (*handler) (Display *, XErrorEvent *);
   gboolean success = FALSE;
   GstXContext *xcontext;
@@ -75,8 +75,9 @@ gst_ximage_buffer_new (GstXImageSink * ximagesink, gint width, gint height)
 
   xcontext = ximagesink->xcontext;
 
-  ximage = gst_buffer_new ();
-  meta = GST_META_XIMAGE_ADD (ximage);
+  meta =
+      (GstMetaXImage *) gst_buffer_add_meta (buffer, GST_META_INFO_XIMAGE,
+      NULL);
 #ifdef HAVE_XSHM
   meta->SHMInfo.shmaddr = ((void *) -1);
   meta->SHMInfo.shmid = -1;
@@ -85,7 +86,7 @@ gst_ximage_buffer_new (GstXImageSink * ximagesink, gint width, gint height)
   meta->height = height;
   meta->sink = gst_object_ref (ximagesink);
 
-  GST_DEBUG_OBJECT (ximagesink, "creating image %p (%dx%d)", ximage,
+  GST_DEBUG_OBJECT (ximagesink, "creating image %p (%dx%d)", buffer,
       meta->width, meta->height);
 
   g_mutex_lock (ximagesink->x_lock);
@@ -173,19 +174,18 @@ gst_ximage_buffer_new (GstXImageSink * ximagesink, gint width, gint height)
   error_caught = FALSE;
   XSetErrorHandler (handler);
 
-  GST_BUFFER_DATA (ximage) = (guchar *) meta->ximage->data;
-  GST_BUFFER_SIZE (ximage) = meta->size;
+  GST_BUFFER_DATA (buffer) = (guchar *) meta->ximage->data;
+  GST_BUFFER_SIZE (buffer) = meta->size;
 
   g_mutex_unlock (ximagesink->x_lock);
 
   success = TRUE;
 
 beach:
-  if (!success) {
-    gst_buffer_unref (GST_BUFFER_CAST (ximage));
-    ximage = NULL;
-  }
-  return ximage;
+  if (!success)
+    meta = NULL;
+
+  return meta;
 
   /* ERRORS */
 create_failed:
@@ -284,6 +284,21 @@ gst_meta_ximage_free (GstMetaXImage * meta, GstBuffer * buffer)
 
 beach:
   GST_OBJECT_UNLOCK (ximagesink);
+}
+
+GstBuffer *
+gst_ximage_buffer_new (GstXImageSink * ximagesink, gint width, gint height)
+{
+  GstBuffer *buffer;
+  GstMetaXImage *meta;
+
+  buffer = gst_buffer_new ();
+  meta = gst_buffer_add_meta_ximage (buffer, ximagesink, width, height);
+  if (meta == NULL) {
+    gst_buffer_unref (buffer);
+    buffer = NULL;
+  }
+  return buffer;
 }
 
 #ifdef HAVE_XSHM                /* Check that XShm calls actually work */

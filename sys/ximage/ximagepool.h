@@ -50,11 +50,9 @@ typedef struct _GstXImageBufferPoolPrivate GstXImageBufferPoolPrivate;
 const GstMetaInfo * gst_meta_ximage_get_info (void);
 #define GST_META_INFO_XIMAGE  (gst_meta_ximage_get_info())
 
-#define GST_META_GET(b,t,i) ((t *)gst_buffer_get_meta((b),(i)))
-#define GST_META_ADD(b,t,i,p) ((t *)gst_buffer_add_meta((b),(i),(p)))
-
-#define GST_META_XIMAGE_GET(b) GST_META_GET(b,GstMetaXImage,GST_META_INFO_XIMAGE)
-#define GST_META_XIMAGE_ADD(b) GST_META_ADD(b,GstMetaXImage,GST_META_INFO_XIMAGE,NULL)
+#define gst_buffer_get_meta_ximage(b) ((GstMetaXImage*)gst_buffer_get_meta((b),GST_META_INFO_XIMAGE))
+GstMetaXImage * gst_buffer_add_meta_ximage   (GstBuffer *buffer, GstXImageSink * ximagesink,
+                                              gint width, gint height);
 
 /**
  * GstMetaXImage:
