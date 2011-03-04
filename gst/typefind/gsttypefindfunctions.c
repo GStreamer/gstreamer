@@ -2149,7 +2149,7 @@ h263_video_type_find (GstTypeFind * tf, gpointer unused)
 
     /* Find the picture start code */
     data = (data << 8) + c.data[0];
-    psc = data & 0xfffffc0000;
+    psc = data & G_GUINT64_CONSTANT (0xfffffc0000);
     if (psc == 0x800000) {
       /* Found PSC */
       /* TR */

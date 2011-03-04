@@ -3194,31 +3194,21 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
     group->uridecodebin = gst_object_ref (uridecodebin);
   }
 
-  /* configure connection speed */
-  g_object_set (uridecodebin, "connection-speed",
-      playbin->connection_speed / 1000, NULL);
-
   flags = gst_play_sink_get_flags (playbin->playsink);
 
-  /* configure download buffering */
-  if (flags & GST_PLAY_FLAG_DOWNLOAD)
-    g_object_set (uridecodebin, "download", TRUE, NULL);
-  else
-    g_object_set (uridecodebin, "download", FALSE, NULL);
-
-  /* configure uri */
-  g_object_set (uridecodebin, "uri", group->uri, NULL);
-  /* configure buffering of demuxed/parsed data */
-  if (flags & GST_PLAY_FLAG_BUFFERING)
-    g_object_set (uridecodebin, "use-buffering", TRUE, NULL);
-  else
-    g_object_set (uridecodebin, "use-buffering", FALSE, NULL);
-  /* configure buffering parameters */
-  g_object_set (uridecodebin, "buffer-duration", playbin->buffer_duration,
-      NULL);
-  g_object_set (uridecodebin, "buffer-size", playbin->buffer_size, NULL);
-  g_object_set (uridecodebin, "ring-buffer-max-size",
-      playbin->ring_buffer_max_size, NULL);
+  g_object_set (uridecodebin,
+      /* configure connection speed */
+      "connection-speed", playbin->connection_speed / 1000,
+      /* configure uri */
+      "uri", group->uri,
+      /* configure download buffering */
+      "download", ((flags & GST_PLAY_FLAG_DOWNLOAD) != 0),
+      /* configure buffering of demuxed/parsed data */
+      "use-buffering", ((flags & GST_PLAY_FLAG_BUFFERING) != 0),
+      /* configure buffering parameters */
+      "buffer-duration", playbin->buffer_duration,
+      "buffer-size", playbin->buffer_size,
+      "ring-buffer-max-size", playbin->ring_buffer_max_size, NULL);
 
   /* connect pads and other things */
   group->pad_added_id = g_signal_connect (uridecodebin, "pad-added",
@@ -3268,11 +3258,11 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
       group->suburidecodebin = gst_object_ref (suburidecodebin);
     }
 
-    /* configure connection speed */
-    g_object_set (suburidecodebin, "connection-speed",
-        playbin->connection_speed, NULL);
-    /* configure uri */
-    g_object_set (suburidecodebin, "uri", group->suburi, NULL);
+    g_object_set (suburidecodebin,
+        /* configure connection speed */
+        "connection-speed", playbin->connection_speed,
+        /* configure uri */
+        "uri", group->suburi, NULL);
 
     /* connect pads and other things */
     group->sub_pad_added_id = g_signal_connect (suburidecodebin, "pad-added",
