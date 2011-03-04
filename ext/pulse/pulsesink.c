@@ -1915,7 +1915,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
    * GstPulseSink:stream-properties
    *
    * List of pulseaudio stream properties. A list of defined properties can be
-   * found in the <ulink href="http://0pointer.de/lennart/projects/pulseaudio/doxygen/proplist_8h.html">pulseaudio api docs</ulink>.
+   * found in the <ulink url="http://0pointer.de/lennart/projects/pulseaudio/doxygen/proplist_8h.html">pulseaudio api docs</ulink>.
    *
    * Below is an example for registering as a music application to pulseaudio.
    * |[
