@@ -51,26 +51,5 @@
         </caps>
       </pads>
     </element>
-    <element>
-      <name>schroparse</name>
-      <longname>Dirac Parser</longname>
-      <class>Codec/Parser/Video</class>
-      <description>Parse Dirac streams</description>
-      <author>David Schleef &lt;ds@schleef.org&gt;</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-dirac</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-dirac; video/x-qt-part; video/x-avi-part; video/x-mp4-part</details>
-        </caps>
-      </pads>
-    </element>
   </elements>
 </plugin>

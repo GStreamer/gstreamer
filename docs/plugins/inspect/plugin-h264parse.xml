@@ -10,7 +10,7 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>h264parse</name>
+      <name>legacyh264parse</name>
       <longname>H264Parse</longname>
       <class>Codec/Parser/Video</class>
       <description>Parses raw h264 stream</description>

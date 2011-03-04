@@ -1,0 +1,76 @@
+<plugin>
+  <name>videoparsersbad</name>
+  <description>videoparsers</description>
+  <filename>../../gst/videoparsers/.libs/libgstvideoparsersbad.so</filename>
+  <basename>libgstvideoparsersbad.so</basename>
+  <version>0.10.21.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>diracparse</name>
+      <longname>FIXME</longname>
+      <class>Generic</class>
+      <description>FIXME</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>h263parse</name>
+      <longname>H.263 parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>Parses H.263 streams</description>
+      <author>Arun Raghavan &lt;arun.raghavan@collabora.co.uk&gt;,Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-h263, variant=(string)itu, parsed=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-h263, variant=(string)itu, parsed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>h264parse</name>
+      <longname>H.264 parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>Parses H.264 streams</description>
+      <author>Mark Nauwelaerts &lt;mark.nauwelaerts@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-h264, parsed=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-h264, parsed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

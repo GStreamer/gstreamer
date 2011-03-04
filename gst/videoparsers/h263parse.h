@@ -131,14 +131,24 @@ struct _H263Params
   gint32 pcfnum, pcfdenom;
 };
 
-gboolean      gst_h263_parse_is_delta_unit (H263Params * params);
-GstFlowReturn gst_h263_parse_get_params (H263Params ** params_p,
-                  GstBuffer * buffer, gboolean fast, H263ParseState * state);
-void          gst_h263_parse_get_framerate (H263Params * params,
-                  gint * num, gint * denom);
-gint          gst_h263_parse_get_profile (H263Params * params);
-gint          gst_h263_parse_get_level (H263Params * params, gint profile,
-                  guint bitrate, gint fps_num, gint fps_denom);
+gboolean      gst_h263_parse_is_delta_unit (const H263Params * params);
+
+GstFlowReturn gst_h263_parse_get_params    (H263Params       * params_p,
+                                            GstBuffer        * buffer,
+                                            gboolean           fast,
+                                            H263ParseState   * state);
+
+void          gst_h263_parse_get_framerate (const H263Params * params,
+                                            gint             * num,
+                                            gint             * denom);
+
+gint          gst_h263_parse_get_profile   (const H263Params * params);
+
+gint          gst_h263_parse_get_level     (const H263Params * params,
+                                            gint               profile,
+                                            guint              bitrate,
+                                            gint               fps_num,
+                                            gint               fps_denom);
 
 G_END_DECLS
 #endif

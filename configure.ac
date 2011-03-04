@@ -41,6 +41,8 @@ dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.11
 AC_SUBST(GST_MAJORMINOR)
 
+AG_GST_LIBTOOL_PREPARE
+
 dnl FIXME: this macro doesn't actually work;
 dnl the generated libtool script has no support for the listed tags.
 dnl So this needs to be fixed first if we want to use this
@@ -304,6 +306,7 @@ AG_GST_CHECK_PLUGIN(dtmf)
 AG_GST_CHECK_PLUGIN(dvbsuboverlay)
 AG_GST_CHECK_PLUGIN(dvdspu)
 AG_GST_CHECK_PLUGIN(festival)
+AG_GST_CHECK_PLUGIN(fieldanalysis)
 AG_GST_CHECK_PLUGIN(freeze)
 AG_GST_CHECK_PLUGIN(frei0r)
 AG_GST_CHECK_PLUGIN(gaudieffects)
@@ -636,6 +639,13 @@ AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
           dnl to prevent an error
           true
   ])
+
+  PKG_CHECK_MODULES(CELT_0_11, celt >= 0.11.0, [
+          AC_DEFINE([HAVE_CELT_0_11], 1, [Define if libcelt 0.11 is installed])
+  ], [
+          dnl to prevent an error
+          true
+  ])
   AC_SUBST(CELT_CFLAGS)
   AC_SUBST(CELT_LIBS)
 ])
@@ -649,6 +659,23 @@ AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
   ])
   AC_SUBST(COG_CFLAGS)
   AC_SUBST(COG_LIBS)
+])
+
+dnl *** Curl ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CURL, true)
+AG_GST_CHECK_FEATURE(CURL, [Curl plugin], curl, [
+  PKG_CHECK_MODULES(CURL, libcurl >= 7.21.0, [
+    HAVE_CURL="yes"
+    AC_CHECK_HEADERS([unistd.h sys/socket.h sys/types.h netinet/in.h netinet/ip.h netinet/tcp.h fcntl.h],
+        [ ], [HAVE_CURL="no"])
+    AC_MSG_CHECKING([for socket support needed by curlsink])
+    AC_MSG_RESULT($HAVE_CURL)
+  ], [
+    HAVE_CURL="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(CURL_CFLAGS)
+  AC_SUBST(CURL_LIBS)
 ])
 
 dnl *** dc1394  ***
@@ -1590,6 +1617,7 @@ AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CDAUDIO, false)
 AM_CONDITIONAL(USE_CELT, false)
 AM_CONDITIONAL(USE_COG, false)
+AM_CONDITIONAL(USE_CURL, false)
 AM_CONDITIONAL(USE_DC1394, false)
 AM_CONDITIONAL(USE_DIRECTFB, false)
 AM_CONDITIONAL(USE_DIRAC, false)
@@ -1701,7 +1729,7 @@ AC_SUBST(GST_LIB_LDFLAGS)
 
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc.*' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl *** output files ***
@@ -1733,6 +1761,7 @@ gst/dtmf/Makefile
 gst/dvbsuboverlay/Makefile
 gst/dvdspu/Makefile
 gst/festival/Makefile
+gst/fieldanalysis/Makefile
 gst/freeze/Makefile
 gst/frei0r/Makefile
 gst/gaudieffects/Makefile
@@ -1826,6 +1855,7 @@ ext/bz2/Makefile
 ext/cdaudio/Makefile
 ext/celt/Makefile
 ext/cog/Makefile
+ext/curl/Makefile
 ext/dc1394/Makefile
 ext/dirac/Makefile
 ext/directfb/Makefile

@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY_EXTERN (h263_parse_debug);
 #define GST_CAT_DEFAULT h263_parse_debug
 
 gboolean
-gst_h263_parse_is_delta_unit (H263Params * params)
+gst_h263_parse_is_delta_unit (const H263Params * params)
 {
   return (params->type == PICTURE_I);
 }
@@ -40,7 +40,7 @@ gst_h263_parse_is_delta_unit (H263Params * params)
  * extract a subset of the data (for now, it quits once we have the picture
  * type. */
 GstFlowReturn
-gst_h263_parse_get_params (H263Params ** params_p, GstBuffer * buffer,
+gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
     gboolean fast, H263ParseState * state)
 {
   static const guint8 partable[6][2] = {
@@ -72,15 +72,11 @@ gst_h263_parse_get_params (H263Params ** params_p, GstBuffer * buffer,
     "Extended PType"
   };
 
-  H263Params *params;
   GstBitReader br;
   guint8 tr;
-  guint32 psc, temp32;
+  guint32 psc = 0, temp32;
   guint8 temp8, pquant;
   gboolean hasplusptype;
-
-  *params_p = g_new0 (H263Params, 1);
-  params = *params_p;
 
   /* FIXME: we can optimise a little by checking the value of available
    * instead of calling using the bit reader's get_bits_* functions. */
@@ -185,7 +181,7 @@ gst_h263_parse_get_params (H263Params ** params_p, GstBuffer * buffer,
   if (hasplusptype) {
     guint8 ufep;
     guint8 cpm;
-    guint32 opptype, mpptype;
+    guint32 opptype = 0, mpptype = 0;
 
     /* 5.1.4 PLUSPTYPE */
 
@@ -268,7 +264,7 @@ gst_h263_parse_get_params (H263Params ** params_p, GstBuffer * buffer,
     }
 
     if (ufep == 1) {
-      guint32 cpfmt;
+      guint32 cpfmt = 0;
 
       /* 5.1.5 CPFMT : Custom Picture Format (23 bits) */
       if (!gst_bit_reader_get_bits_uint32 (&br, &cpfmt, 23))
@@ -282,7 +278,7 @@ gst_h263_parse_get_params (H263Params ** params_p, GstBuffer * buffer,
       params->height = (cpfmt & 0x1f) * 4;
 
       if (temp8 == 0xf) {
-        guint32 epar;
+        guint32 epar = 0;
         /* 5.1.6 EPAR : Extended Pixel Aspect Ratio (16bits) */
         if (!gst_bit_reader_get_bits_uint32 (&br, &epar, 16))
           goto more;
@@ -455,7 +451,7 @@ beach:
 }
 
 gint
-gst_h263_parse_get_profile (H263Params * params)
+gst_h263_parse_get_profile (const H263Params * params)
 {
   gboolean c, d, d1, d21, d22, e, f, f2, g, h, i, j, k, k0, k1, k2, l, m, n, o,
       p, q, r, s, t, u, v, w;
@@ -577,7 +573,7 @@ gst_h263_parse_get_profile (H263Params * params)
    (gst_value_compare (&(f1), &(f2)) == GST_VALUE_EQUAL))
 
 gint
-gst_h263_parse_get_level (H263Params * params, gint profile,
+gst_h263_parse_get_level (const H263Params * params, gint profile,
     guint bitrate, gint fps_num, gint fps_denom)
 {
   GValue fps15 = { 0, };
@@ -659,7 +655,8 @@ gst_h263_parse_get_level (H263Params * params, gint profile,
 }
 
 void
-gst_h263_parse_get_framerate (H263Params * params, gint * num, gint * denom)
+gst_h263_parse_get_framerate (const H263Params * params, gint * num,
+    gint * denom)
 {
   *num = params->pcfnum;
   *denom = params->pcfdenom;

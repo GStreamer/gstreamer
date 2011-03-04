@@ -629,10 +629,14 @@ gst_celt_enc_setup (GstCeltEnc * enc)
   if (!enc->mode)
     goto mode_initialization_failed;
 
+#ifdef HAVE_CELT_0_11
+  celt_header_init (&enc->header, enc->mode, enc->frame_size, enc->channels);
+#else
 #ifdef HAVE_CELT_0_7
   celt_header_init (&enc->header, enc->mode, enc->channels);
 #else
   celt_header_init (&enc->header, enc->mode);
+#endif
 #endif
   enc->header.nb_channels = enc->channels;
 
@@ -642,10 +646,14 @@ gst_celt_enc_setup (GstCeltEnc * enc)
   celt_mode_info (enc->mode, CELT_GET_FRAME_SIZE, &enc->frame_size);
 #endif
 
+#ifdef HAVE_CELT_0_11
+  enc->state = celt_encoder_create_custom (enc->mode, enc->channels, &error);
+#else
 #ifdef HAVE_CELT_0_7
   enc->state = celt_encoder_create (enc->mode, enc->channels, &error);
 #else
   enc->state = celt_encoder_create (enc->mode);
+#endif
 #endif
   if (!enc->state)
     goto encoder_creation_failed;

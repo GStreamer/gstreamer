@@ -1,0 +1,28 @@
+<plugin>
+  <name>curl</name>
+  <description>libcurl-based elements</description>
+  <filename>../../ext/curl/.libs/libgstcurl.so</filename>
+  <basename>libgstcurl.so</basename>
+  <version>0.10.21.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>curlsink</name>
+      <longname>Curl sink</longname>
+      <class>Sink/Network</class>
+      <description>Upload data over the network to a server using libcurl</description>
+      <author>Patricia Muscalu &lt;patricia@axis.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

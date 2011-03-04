@@ -64,6 +64,12 @@ else
 COG_DIR=
 endif
 
+if USE_CURL
+CURL_DIR=curl
+else
+CURL_DIR=
+endif
+
 if USE_DC1394
 DC1394_DIR=dc1394
 else
@@ -379,6 +385,7 @@ SUBDIRS=\
 	$(CDAUDIO_DIR) \
 	$(CELT_DIR) \
 	$(COG_DIR) \
+	$(CURL_DIR) \
 	$(DC1394_DIR) \
 	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \

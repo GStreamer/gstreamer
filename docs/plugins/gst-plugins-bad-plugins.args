@@ -1675,7 +1675,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>trans-mode</NICK>
 <BLURB>Transmission Mode (DVB-T).</BLURB>
-<DEFAULT>8k</DEFAULT>
+<DEFAULT>8K</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17955,7 +17955,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>trans-mode</NICK>
 <BLURB>Transmission Mode (DVB-T).</BLURB>
-<DEFAULT>8k</DEFAULT>
+<DEFAULT>8K</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18322,7 +18322,7 @@
 <NAME>GstH264Parse::split-packetized</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Split packetized</NICK>
 <BLURB>Split NAL units of packetized streams.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
@@ -18352,7 +18352,7 @@
 <NAME>GstH264Parse::config-interval</NAME>
 <TYPE>guint</TYPE>
 <RANGE><= 3600</RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>SPS PPS Send Interval</NICK>
 <BLURB>Send SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
 <DEFAULT>0</DEFAULT>
@@ -26510,7 +26510,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>4.63015e-299</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26550,7 +26550,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>7.7486e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26560,7 +26560,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>4.62957e-299</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26590,7 +26590,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>2.31928e-310</DEFAULT>
+<DEFAULT>3.81574e-236</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26600,7 +26600,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>2.31928e-310</DEFAULT>
+<DEFAULT>2.58656e-231</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26610,7 +26610,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>-6.17189e+303</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26640,7 +26640,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.05334e-30</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26650,7 +26650,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.05334e-30</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26990,7 +26990,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>8.20251e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27000,7 +27000,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>6.9235e+228</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27010,7 +27010,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.74861e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27180,7 +27180,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>-6.17056e+303</DEFAULT>
+<DEFAULT>8.20251e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27190,7 +27190,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>7.7486e-304</DEFAULT>
+<DEFAULT>-5.83035e+303</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27370,7 +27370,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>2.38039e-316</DEFAULT>
+<DEFAULT>1.86264e-09</DEFAULT>
 </ARG>
 
 <ARG>
@@ -45499,7 +45499,7 @@
 <RANGE>[0,1000000000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bit rate</NICK>
-<BLURB>Bit rate.</BLURB>
+<BLURB>Bit rate (in bits/sec).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -47036,7 +47036,7 @@
 <ARG>
 <NAME>GstRsvgOverlay::x</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= -2147483647</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>x offset</NICK>
 <BLURB>Specify an x offset.</BLURB>
@@ -47046,10 +47046,280 @@
 <ARG>
 <NAME>GstRsvgOverlay::y</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= -2147483647</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>y offset</NICK>
 <BLURB>Specify a y offset.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -2147483647</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>height</NICK>
+<BLURB>Specify a height in pixels.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::height-relative</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>relative height</NICK>
+<BLURB>Specify a height relative to the display size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -2147483647</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>width</NICK>
+<BLURB>Specify a width in pixels.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::width-relative</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>relative width</NICK>
+<BLURB>Specify a width relative to the display size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::x-relative</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>x relative offset</NICK>
+<BLURB>Specify an x offset relative to the display size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRsvgOverlay::y-relative</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>y relative offset</NICK>
+<BLURB>Specify a y offset relative to the display size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLegacyH264Parse::access-unit</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Access Units</NICK>
+<BLURB>Output Acess Units rather than NALUs.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLegacyH264Parse::config-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 3600</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SPS PPS Send Interval</NICK>
+<BLURB>Send SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLegacyH264Parse::output-format</NAME>
+<TYPE>GstH264ParseFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Format</NICK>
+<BLURB>Output Format of stream (bytestream or otherwise).</BLURB>
+<DEFAULT>Input Format</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLegacyH264Parse::split-packetized</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Split packetized</NICK>
+<BLURB>Split NAL units of packetized streams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCsp::dither</NAME>
+<TYPE>GstColorspaceDitherMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dither</NICK>
+<BLURB>Apply dithering while converting.</BLURB>
+<DEFAULT>No dithering (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>MpegTSParse2::program-numbers</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Program Numbers</NICK>
+<BLURB>Colon separated list of programs.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTSDemux::emit-stats</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Emit statistics</NICK>
+<BLURB>Emit messages for every pcr/opcr/pts/dts.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTSDemux::program-number</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Program number</NICK>
+<BLURB>Program Number to demux for (-1 to ignore).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::accept-self-signed</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Accept self-signed certificates</NICK>
+<BLURB>Accept self-signed SSL/TLS certificates.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::content-type</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Content type</NICK>
+<BLURB>The mime type of the body of the request.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::file-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Base file name</NICK>
+<BLURB>The base file name for the uploaded images.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>URI location to write to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::passwd</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>User password</NICK>
+<BLURB>User password to use for server authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::proxy</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy</NICK>
+<BLURB>HTTP proxy server URI.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::proxy-passwd</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy user password</NICK>
+<BLURB>Proxy user password to use for proxy authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::proxy-port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy port</NICK>
+<BLURB>HTTP proxy server port.</BLURB>
+<DEFAULT>3128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::proxy-user</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy user name</NICK>
+<BLURB>Proxy user name to use for proxy authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::qos-dscp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,63]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>QoS diff srv code point</NICK>
+<BLURB>Quality of Service, differentiated services code point (0 default).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timeout</NICK>
+<BLURB>Number of seconds waiting to write before timeout.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::use-content-length</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use content length header</NICK>
+<BLURB>Use the Content-Length HTTP header instead of Transfer-Encoding header.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSink::user</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>User name</NICK>
+<BLURB>User name to use for server authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 

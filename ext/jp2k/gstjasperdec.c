@@ -256,12 +256,13 @@ refuse_caps:
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_jasper_dec_negotiate (GstJasperDec * dec, jas_image_t * image)
 {
+  GstFlowReturn flow_ret = GST_FLOW_OK;
   gint width, height, channels;
   gint i, j;
-  gboolean negotiate = FALSE, ret = TRUE;
+  gboolean negotiate = FALSE;
   jas_clrspc_t clrspc;
   GstCaps *allowed_caps, *caps;
 
@@ -316,7 +317,7 @@ gst_jasper_dec_negotiate (GstJasperDec * dec, jas_image_t * image)
     goto done;
 
   /* clear and refresh to new state */
-  ret = FALSE;
+  flow_ret = GST_FLOW_NOT_NEGOTIATED;
   dec->format = GST_VIDEO_FORMAT_UNKNOWN;
   dec->width = width;
   dec->height = height;
@@ -419,24 +420,30 @@ gst_jasper_dec_negotiate (GstJasperDec * dec, jas_image_t * image)
 
     GST_DEBUG_OBJECT (dec, "Set format to %d, size to %dx%d", dec->format,
         dec->width, dec->height);
-    ret = gst_pad_set_caps (dec->srcpad, caps);
+
+    if (!gst_pad_set_caps (dec->srcpad, caps))
+      flow_ret = GST_FLOW_NOT_NEGOTIATED;
+    else
+      flow_ret = GST_FLOW_OK;
+
     gst_caps_unref (caps);
   }
 
 done:
-  return ret;
+  return flow_ret;
 
   /* ERRORS */
 fail_image:
   {
     GST_DEBUG_OBJECT (dec, "Failed to process decoded image.");
-    ret = FALSE;
+    flow_ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }
 not_supported:
   {
     GST_DEBUG_OBJECT (dec, "Decoded image has unsupported colour space.");
-    ret = FALSE;
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), ("Unsupported colorspace"));
+    flow_ret = GST_FLOW_ERROR;
     goto done;
   }
 }
@@ -460,7 +467,8 @@ gst_jasper_dec_get_picture (GstJasperDec * dec, guint8 * data,
   if (!(image = jas_image_decode (stream, dec->fmt, (char *) "")))
     goto fail_decode;
 
-  if (!gst_jasper_dec_negotiate (dec, image))
+  ret = gst_jasper_dec_negotiate (dec, image);
+  if (ret != GST_FLOW_OK)
     goto fail_negotiate;
 
   ret = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
@@ -548,7 +556,6 @@ no_buffer:
 fail_negotiate:
   {
     GST_DEBUG_OBJECT (dec, "Failed to determine output caps.");
-    ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }
 }

@@ -127,7 +127,7 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   gboolean keyframe;
   guint32 header_size;
   guint8 version;
-  guint8 tmp8;
+  guint8 tmp8 = 0;
   guint8 *data;
   guint8 partitions;
 
