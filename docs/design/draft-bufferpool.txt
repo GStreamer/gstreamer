@@ -72,9 +72,9 @@ GstBufferPool
  The bufferpool object manages a list of buffers with the same properties such
  as size, padding and alignment.
 
- The bufferpool has two states: flushing and non-flushing. In the flushing
+ The bufferpool has two states: active and inactive. In the in-active
  state, the bufferpool can be configured with the required allocation
- preferences. In the non-flushing state, buffers can be retrieved from and
+ preferences. In the active state, buffers can be retrieved from and
  returned to the pool.
 
  The default implementation of the bufferpool is able to allocate buffers
@@ -92,37 +92,16 @@ GstBufferPool
 GstPad
 ------
 
- The GstPad has a method to query a GstBufferPool and its configuration.
+ A GstPad can query a new bufferpool from a peer element withe the BUFFERPOOL
+ query. 
 
-   GstBufferPool * gst_pad_query_bufferpool (GstPad * pad);
-
- This function can return a handle to a bufferpool object or NULL when no
- bufferpool object can be provided by the pad.
-
- This function should return a bufferpool object with the
- GstBufferPoolConfig set to the desired parameters of the buffers that will be
- handled by the given pad. This function can only be called on a sinkpad and
- will usually be called by the peer srcpad with the convenience method:
-
-   GstBufferPool * gst_pad_peer_query_bufferpool (GstPad * pad);
+ The returned bufferpool object can then be configured with the desired
+ parameters of the buffers it should provide.
  
- 
- There is also a new function to configure a bufferpool on a pad and its peer
- pad:
-
-   gboolean gst_pad_set_bufferpool (GstPad * pad, GstBufferPool *pool);
- 
- This function is to inform a pad and its peer pad that a bufferpool should
- be used for allocation (on source pads) and that bufferpool is used by the
- upstream element (on sinkpads).
-
- The currently configured bufferpool can be retrieved with:
-
-   GstBufferPool * gst_pad_get_bufferpool (GstPad * pad);
-
- New functions exist to configure these bufferpool functions on pads:
- gst_pad_set_querybufferpool_function and gst_pad_set_setbufferpool_function.
- 
+ When the bufferpool is configured, it must be pushed downstream with the
+ BUFFERPOOL event.  This is to inform a pad and its peer pad that a bufferpool
+ should be used for allocation (on source pads) and that bufferpool is used
+ by the upstream element (on sinkpads).
 
 negotiating pool and config
 ---------------------------
@@ -139,13 +118,13 @@ The algorithm for doing this is rougly like this:
     * prepare an output buffer but has no pool yet */
 
    /* first get the pool from the downstream peer */
-   pool = gst_pad_peer_query_bufferpool (srcpad);
+   res = gst_pad_query_bufferpool (srcpad, &pool);
 
    if (pool != NULL) {
      GstBufferPoolConfig config;
 
      /* clear the pool so that we can reconfigure it */
-     gst_buffer_pool_set_flushing (pool, TRUE);
+     gst_buffer_pool_set_active (pool, FALSE);
 
      do {
        /* get the config */
@@ -163,8 +142,8 @@ The algorithm for doing this is rougly like this:
      while (!gst_buffer_pool_set_config (pool, &config));
 
      /* we managed to update the config, all is fine now */
-     /* set the pool to non-flushing to make it allocate things */
-     gst_buffer_pool_set_flushing (pool, FALSE);
+     /* set the pool to active to make it allocate things */
+     gst_buffer_pool_set_active (pool, TRUE);
    }
 
    if (pool == NULL) {
@@ -173,7 +152,7 @@ The algorithm for doing this is rougly like this:
    }
 
    /* now set the pool on this pad and the peer pad */
-   gst_pad_set_bufferpool (pad, pool);
+   gst_pad_push_event (pad, gst_event_new_bufferpool (pool));
 
 
 Negotiation is the same for both push and pull mode. In the case of pull
@@ -199,7 +178,7 @@ Allocating from pool
  Since all the buffers allocated from the pool keep a reference to the pool,
  when nothing else is holding a refcount to the pool, it will be finalized
  when all the buffers from the pool are unreffed. By setting the pool to
- the flushing state we can drain all buffers from the pool. 
+ the inactive state we can drain all buffers from the pool. 
 
 
 Renegotiation
@@ -251,15 +230,14 @@ Shutting down
 -------------
 
  In push mode, a source pad is responsible for setting the pool to the
- flushing state when streaming stops. The flush will unblock any pending
+ inactive state when streaming stops. The inactive state will unblock any pending
  allocations so that the element can shut down.
 
- In pull mode, the sink element should set the pool to the flushing state when
+ In pull mode, the sink element should set the pool to the inactive state when
  shutting down so that the peer _get_range() function can unblock.
 
- In the flushing state, all the buffers that are returned to the pool will
- be automatically freed by the pool and new allocations will fail.
-
+ In the inactive state, all the buffers that are returned to the pool will
+ automatically be freed by the pool and new allocations will fail.
  
 
 
@@ -274,9 +252,9 @@ Use cases
  First it will negotiate a suitable format with downstream according to the
  normal rules.
 
- Then it does gst_pad_peer_query_bufferpool() which triggers the querybufferpool
- function installed on the xvimagesink pad. This bufferpool is currently in
- the flushing state and thus has no buffers allocated.
+ Then it does gst_pad_query_bufferpool() which triggers the BUFFERPOOL query.
+ This bufferpool is currently in the inactive state and thus has no buffers
+ allocated.
 
  videotestsrc gets the configuration of the bufferpool object. This
  configuration lists the desired configuration of the xvimagesink, which can
@@ -286,11 +264,10 @@ Use cases
  set the min buffers to 1 and the size of the desired buffers. It then
  updates the bufferpool configuration with the new properties.
 
- When the configuration is successfully updated, videotestsrc sets the 
- bufferpool on its source pad, this will also set the pool on the peer 
- sinkpad.
+ When the configuration is successfully updated, videotestsrc pushes the
+ bufferpool downstream with the BUFFERPOOL event.
 
- It then sets the bufferpool to the non-flushing state. This preallocates
+ It then sets the bufferpool to the active state. This preallocates
  the buffers in the pool (if needed). This operation can fail when there
  is not enough memory available. Since the bufferpool is provided by
  xvimagesink, it will allocate buffers backed by an XvImage and pointing
@@ -301,10 +278,10 @@ Use cases
  out to xvimagesink.
 
  xvimagesink can know that the buffer originated from its pool by following
- the pool member or checking the specific GType of it GstBuffer subclass.
- It might need to get the parent buffer first in case of subbuffers.
+ the pool member. It might need to get the parent buffer first in case of
+ subbuffers.
 
- when shutting down, videotestsrc will set the pool to the flushing state,
+ when shutting down, videotestsrc will set the pool to the inactive state,
  this will cause further allocations to fail and currently allocated buffers
  to be freed. videotestsrc will then free the pool and stop streaming.
 
@@ -315,7 +292,7 @@ Use cases
  3 video buffers.
 
  Again videotestsrc will have to negotiate a bufferpool with the peer 
- element. For this it will perform gst_pad_peer_query_bufferpool() which
+ element. For this it will perform gst_pad_query_bufferpool() which
  queue will proxy to its downstream peer element.
 
  The bufferpool returned from myvideosink will have a max_buffers set to 3.
@@ -325,12 +302,12 @@ Use cases
 
  The bufferpool of myvideosink will then be configured with the size of the
  buffers for the negotiated format and according to the padding and alignment
- rules. When videotestsrc sets the pool to non-flushing, the 3 video
+ rules. When videotestsrc sets the pool to active, the 3 video
  buffers will be preallocated in the pool.
 
- The pool will then be configured on the src of videotestsrc and the
- sinkpad of the queue. The queue will proxy the setbufferpool method to
- its srcpad, which finally configures the pool all the way to the sink.
+ The pool will then be configured to downstream elements with the BUFFERPOOL
+ event. The queue will proxy the BUFFERPOOL event to its srcpad, which
+ finally configures the pool all the way to the sink.
 
  videotestsrc acquires a buffer from the configured pool on its srcpad and
  pushes this into the queue. When the videotestsrc has acquired and pushed
@@ -347,7 +324,7 @@ Use cases
  in the bufferpool.
 
  When shutting down, videotestsrc will first set the bufferpool on the srcpad
- to flushing. This causes any pending (blocked) acquire to return with a 
+ to inactive. This causes any pending (blocked) acquire to return with a 
  WRONG_STATE result and causes the streaming thread to pause.
 
  
@@ -372,11 +349,11 @@ Use cases
  Before pushing the next buffer, myvideodecoder would renegotiate a new
  bufferpool. To do this, it performs the usual bufferpool negotiation
  algorithm. If it can obtain and configure a new bufferpool from downstream,
- it sets its own (old) pool to flushing and unrefs it. This will eventually
+ it sets its own (old) pool to inactive and unrefs it. This will eventually
  drain and unref the old bufferpool.
 
  The new bufferpool is set as the new bufferpool for the srcpad and sinkpad
- of the queue and set to the non-flushing state.
+ of the queue and set to the active state.
 
 
 4) .. ! myvideodecoder ! queue ! myvideosink 
@@ -389,9 +366,9 @@ Use cases
  When myvideodecoder needs to get the bigger buffer, it starts the 
  negotiation of a new bufferpool. It queries a bufferpool from downstream,
  reconfigures it with the new configuration (which includes the bigger buffer
- size), it sets the bufferpool to non-flushing and sets the bufferpool as
- the new pool for the srcpad and its peer. This automatically flushes the
- old pool and unrefs it, which causes the old format to drain.
+ size), it sets the bufferpool to active and pushes the bufferpool downstream.
+ This automatically inactivates the old pool and unrefs it, which causes the
+ old format to drain.
 
  It then uses the new bufferpool for allocating new buffers of the new 
  dimension.
