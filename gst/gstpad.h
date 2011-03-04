@@ -617,9 +617,6 @@ struct _GstPad {
   /* streaming rec_lock */
   GStaticRecMutex		*stream_rec_lock;
   GstTask			*task;
-  /*< public >*/ /* with PREROLL_LOCK */
-  GMutex			*preroll_lock;
-  GCond				*preroll_cond;
 
   /*< public >*/ /* with LOCK */
   /* block cond, mutex is from the object */
@@ -791,19 +788,6 @@ struct _GstPadClass {
  * @pad was locked.
  */
 #define GST_PAD_STREAM_UNLOCK_FULL(pad) (g_static_rec_mutex_unlock_full(GST_PAD_GET_STREAM_LOCK(pad)))
-
-#define GST_PAD_GET_PREROLL_LOCK(pad)   (GST_PAD_CAST(pad)->preroll_lock)
-#define GST_PAD_PREROLL_LOCK(pad)       (g_mutex_lock(GST_PAD_GET_PREROLL_LOCK(pad)))
-#define GST_PAD_PREROLL_TRYLOCK(pad)    (g_mutex_trylock(GST_PAD_GET_PREROLL_LOCK(pad)))
-#define GST_PAD_PREROLL_UNLOCK(pad)     (g_mutex_unlock(GST_PAD_GET_PREROLL_LOCK(pad)))
-
-#define GST_PAD_GET_PREROLL_COND(pad)   (GST_PAD_CAST(pad)->preroll_cond)
-#define GST_PAD_PREROLL_WAIT(pad)       \
-    g_cond_wait (GST_PAD_GET_PREROLL_COND (pad), GST_PAD_GET_PREROLL_LOCK (pad))
-#define GST_PAD_PREROLL_TIMED_WAIT(pad, timeval) \
-    g_cond_timed_wait (GST_PAD_GET_PREROLL_COND (pad), GST_PAD_GET_PREROLL_LOCK (pad), timeval)
-#define GST_PAD_PREROLL_SIGNAL(pad)     g_cond_signal (GST_PAD_GET_PREROLL_COND (pad));
-#define GST_PAD_PREROLL_BROADCAST(pad)  g_cond_broadcast (GST_PAD_GET_PREROLL_COND (pad));
 
 #define GST_PAD_BLOCK_GET_COND(pad)     (GST_PAD_CAST(pad)->block_cond)
 #define GST_PAD_BLOCK_WAIT(pad)         (g_cond_wait(GST_PAD_BLOCK_GET_COND (pad), GST_OBJECT_GET_LOCK (pad)))

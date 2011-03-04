@@ -366,9 +366,6 @@ gst_pad_init (GstPad * pad)
 
   GST_PAD_SET_FLUSHING (pad);
 
-  pad->preroll_lock = g_mutex_new ();
-  pad->preroll_cond = g_cond_new ();
-
   /* FIXME 0.11: Store this directly in the instance struct */
   pad->stream_rec_lock = g_slice_new (GStaticRecMutex);
   g_static_rec_mutex_init (pad->stream_rec_lock);
@@ -427,12 +424,6 @@ gst_pad_finalize (GObject * object)
     g_static_rec_mutex_free (pad->stream_rec_lock);
     g_slice_free (GStaticRecMutex, pad->stream_rec_lock);
     pad->stream_rec_lock = NULL;
-  }
-  if (pad->preroll_lock) {
-    g_mutex_free (pad->preroll_lock);
-    g_cond_free (pad->preroll_cond);
-    pad->preroll_lock = NULL;
-    pad->preroll_cond = NULL;
   }
   if (pad->block_cond) {
     g_cond_free (pad->block_cond);

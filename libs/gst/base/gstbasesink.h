@@ -44,6 +44,19 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_SINK_PAD(obj)          (GST_BASE_SINK_CAST (obj)->sinkpad)
 
+#define GST_BASE_SINK_GET_PREROLL_LOCK(pad)   (GST_BASE_SINK_CAST(pad)->preroll_lock)
+#define GST_BASE_SINK_PREROLL_LOCK(pad)       (g_mutex_lock(GST_BASE_SINK_GET_PREROLL_LOCK(pad)))
+#define GST_BASE_SINK_PREROLL_TRYLOCK(pad)    (g_mutex_trylock(GST_BASE_SINK_GET_PREROLL_LOCK(pad)))
+#define GST_BASE_SINK_PREROLL_UNLOCK(pad)     (g_mutex_unlock(GST_BASE_SINK_GET_PREROLL_LOCK(pad)))
+
+#define GST_BASE_SINK_GET_PREROLL_COND(pad)   (GST_BASE_SINK_CAST(pad)->preroll_cond)
+#define GST_BASE_SINK_PREROLL_WAIT(pad)       \
+      g_cond_wait (GST_BASE_SINK_GET_PREROLL_COND (pad), GST_BASE_SINK_GET_PREROLL_LOCK (pad))
+#define GST_BASE_SINK_PREROLL_TIMED_WAIT(pad, timeval) \
+      g_cond_timed_wait (GST_BASE_SINK_GET_PREROLL_COND (pad), GST_BASE_SINK_GET_PREROLL_LOCK (pad), timeval)
+#define GST_BASE_SINK_PREROLL_SIGNAL(pad)     g_cond_signal (GST_BASE_SINK_GET_PREROLL_COND (pad));
+#define GST_BASE_SINK_PREROLL_BROADCAST(pad)  g_cond_broadcast (GST_BASE_SINK_GET_PREROLL_COND (pad));
+
 typedef struct _GstBaseSink GstBaseSink;
 typedef struct _GstBaseSinkClass GstBaseSinkClass;
 typedef struct _GstBaseSinkPrivate GstBaseSinkPrivate;
@@ -66,6 +79,8 @@ struct _GstBaseSink {
   gboolean       can_activate_push;
 
   /*< protected >*/ /* with PREROLL_LOCK */
+  GMutex        *preroll_lock;
+  GCond         *preroll_cond;
   GQueue        *preroll_queue;
   gint           preroll_queue_max_len; /* FIXME-0.11: the property is guint */
   gint           preroll_queued;
