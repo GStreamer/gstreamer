@@ -86,6 +86,7 @@ libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 		-lgstaudio-@GST_MAJORMINOR@ \
                 -lgsttag-@GST_MAJORMINOR@ \
                 -lgstrtp-@GST_MAJORMINOR@ \
+                -lgstpbutils-@GST_MAJORMINOR@ \
 		$(GST_BASE_LIBS) $(GST_LIBS) \
 		$(WINSOCK2_LIBS) $(LIBM)
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
