@@ -519,6 +519,7 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
       g_param_spec_boolean ("vertical-render", "vertical render",
           "Vertical Render.", DEFAULT_PROP_VERTICAL_RENDER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
 
 static void
@@ -642,6 +643,23 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   overlay->text_linked = FALSE;
   overlay->cond = g_cond_new ();
   gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
+
+  /* FIXME: this is a hack to initialize the pango engine
+   * see http://bugzilla.gnome.org/show_bug.cgi?id=412678
+   * and http://bugzilla.gnome.org/show_bug.cgi?id=642960
+   */
+  {
+    PangoRectangle ink_rect, logical_rect;
+    static gsize init_cookie = 0;
+
+    if (g_once_init_enter (&init_cookie)) {
+      pango_layout_set_width (overlay->layout, -1);
+      pango_layout_set_markup (overlay->layout, " ", 1);
+      pango_layout_get_pixel_extents (overlay->layout, &ink_rect,
+          &logical_rect);
+      g_once_init_leave (&init_cookie, (gsize) 1);
+    }
+  }
 }
 
 static void
