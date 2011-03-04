@@ -41,7 +41,7 @@ Use cases
 
  * DSP vs CPU caches
 
- Both DSP and CPU have separate MMUs and memory caches. When we exchange buffers
+ Both DSP and CPU can have separate MMUs and memory caches. When we exchange buffers
  between two subsystems we need to flush caches so that one CPU can see the
  modifications done by the other CPU. These cashes must only be flushed when one
  CPU performed a write and the other CPU needs to do a read.
@@ -49,6 +49,29 @@ Use cases
  In order to implement this we need to be able to mark our read and write
  operations on the buffer data.
 
+ It might also be possible that buffers are not mapped into the address space of
+ the process normally and that an explicit mmap operation is needed to setup
+ the mapping tables for the physical memory.
+
+ * Video planes
+
+ Video data is sometimes allocated in non-contiguous planes for the Y and the UV
+ data. We need to be able to specify the data on a buffer using multiple
+ pointers in memory. We also need to be able to specify the stride for these
+ planes.
+
+ * Extra buffer data
+
+ Some elements might need to store extra data for a buffer. This is typically
+ done when the resources are allocated from another subsystem such as OMX or
+ X11. 
+
+ * Processing information
+
+ Pan and crop information can be added to the buffer data when the downstream
+ element can understand and use this metadata. An imagesink can, for example,
+ use the pan and cropping formation when it composites the image on the screen
+ with little overhead.
 
 
 GstMiniObject
@@ -100,11 +123,7 @@ struct _GstBuffer {
 
   GstCaps               *caps;
   GstBuffer             *parent;
-
-  GstBufferDataMap       mmap_func;
-  GstBufferDataUnmap     munmap_func;
-
-  gpointer _gst_padding[10];
+  GstBufferPool         *pool;
 };
 
 The Buffer object will contain a pointer to the parent buffer to allow for subbuffers
@@ -117,23 +136,8 @@ region of the buffer. The size of the free region is kept in the free_size field
 
 Buffers point to a GstCaps structure that contains the caps of the buffer data.
 
-We add two functions, map and unmap. We introduce explicit read and write transactions
-on the buffer data in order to be able to implement flushing of the data between
-different caches and mapping between different MMUs.
-
-  typedef enum {
-    GST_BUFFER_MAP_NONE,
-    GST_BUFFER_MAP_READ,
-    GST_BUFFER_MAP_WRITE,
-  } GstBufferMapFlags
-
-  gpointer gst_buffer_map   (GstBuffer *, guint offset, guint *size, GstBufferMapFlags);
-  gboolean gst_buffer_unmap (GstBuffer *, gpointer data,  guint size);
-
-The map functions always create a contiguous memory space for the requested
-area of the buffer. This might involve memcpy and other expensive operations. It
-is assumed that more specialized elements can deal with the different memory
-metadata structures in order to optimize access to the memory.
+The buffer contains GstMeta items describing the memory is wraps along with
+metadata for the timing information etc.
 
 
 GstMeta
@@ -167,6 +171,12 @@ only.
     GstMetaMemoryMap       mmap_func;
     GstMetaMemoryUnmap     munmap_func;
   };
+
+  typedef enum {
+    GST_BUFFER_MAP_NONE,
+    GST_BUFFER_MAP_READ,
+    GST_BUFFER_MAP_WRITE,
+  } GstBufferMapFlags
 
   gpointer gst_meta_memory_map   (GstMetaMemory *, guint offset, guint *size, GstBufferMapFlags);
   gboolean gst_meta_memory_unmap (GstMetaMemory *, gpointer data,  guint size);
@@ -240,7 +250,7 @@ The complete buffer with metadata would then look as follows:
 GstMiniObject            |     GType (GstBuffer)               |
                          |     refcount, flags, copy/disp/free |
                          +-------------------------------------+
-GstBuffer                |     caps, parent                    |
+GstBuffer                |     caps, parent, pool              |
                          +.....................................+
                          |     next                           ---+
                       +- |     info                           ------> GstMetaInfo
@@ -385,6 +395,11 @@ A pointer to the old and new memory location of the metadata is passed to the
 sub_func. The default implementation will simply copy the metadata. Custom
 implementations can adjust the values. For example, when making a subbuffer, the
 timing metadata needs to be reset to NONE when the start offset is different.
+
+Since the subbuffer expects an offset and size, it might not make sense to make
+subbuffers from arbitrary buffers. Video metadata that has data in muliple
+planes, for example, might need to copy the planes to its 'natural' contiguous
+representation for the subbuffer.
 
 
 Serialization
