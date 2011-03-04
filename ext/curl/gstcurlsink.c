@@ -753,7 +753,8 @@ gst_curl_sink_transfer_read_cb (void *curl_ptr, size_t size, size_t nmemb,
   buffer = sink->transfer_buf;
 
   buf_len = buffer->len;
-  GST_LOG ("write buf len=%d, offset=%d", buffer->len, buffer->offset);
+  GST_LOG ("write buf len=%" G_GSIZE_FORMAT ", offset=%" G_GSIZE_FORMAT,
+      buffer->len, buffer->offset);
 
   /* more data in buffer */
   if (buffer->len > 0) {
@@ -774,7 +775,7 @@ gst_curl_sink_transfer_read_cb (void *curl_ptr, size_t size, size_t nmemb,
       GST_OBJECT_UNLOCK (sink);
     }
 
-    GST_LOG ("sent : %d (%x)", bytes_to_send, bytes_to_send);
+    GST_LOG ("sent : %" G_GSIZE_FORMAT, bytes_to_send);
 
     return bytes_to_send;
   } else {
@@ -904,7 +905,7 @@ gst_curl_sink_handle_transfer (GstCurlSink * sink)
 
   /* check response code */
   curl_easy_getinfo (sink->curl, CURLINFO_RESPONSE_CODE, &resp);
-  GST_DEBUG_OBJECT (sink, "response code: %d", resp);
+  GST_DEBUG_OBJECT (sink, "response code: %ld", resp);
   if (resp < 200 || resp >= 300) {
     goto response_error;
   }
@@ -935,16 +936,16 @@ poll_timeout:
 curl_multi_error:
   {
     GST_DEBUG_OBJECT (sink, "curl multi error");
-    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (curl_multi_strerror (m_code)),
-        (NULL));
+    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, ("%s",
+            curl_multi_strerror (m_code)), (NULL));
     return GST_FLOW_ERROR;
   }
 
 curl_easy_error:
   {
     GST_DEBUG_OBJECT (sink, "curl easy error");
-    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (curl_easy_strerror (e_code)),
-        (NULL));
+    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, ("%s",
+            curl_easy_strerror (e_code)), (NULL));
     return GST_FLOW_ERROR;
   }
 
