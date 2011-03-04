@@ -76,11 +76,11 @@ else
 ACM_DIR=
 endif
 
-if USE_VDPAU
-VDPAU_DIR=vdpau
-else
-VDPAU_DIR=
-endif
+#if USE_VDPAU
+#VDPAU_DIR=vdpau
+#else
+#VDPAU_DIR=
+#endif
 
 if USE_SHM
 SHM_DIR=shm
