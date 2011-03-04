@@ -142,7 +142,9 @@ public class MediaInfo.Info : VPaned
     wikilinks["video/x-divx"] = "MPEG-4_Part_2";
     wikilinks["video/x-h264"] = "H.264/MPEG-4_AVC";
     wikilinks["video/x-msmpeg"] = "MPEG-4_Part_2";
+    wikilinks["video/x-svq"] = "Sorenson_codec";
     wikilinks["video/x-theora"] = "Theora";
+    wikilinks["video/x-xvid"] = "Xvid";
 
     int screen_height = Gdk.Screen.get_default().get_height();
     if (screen_height <= 600) {
