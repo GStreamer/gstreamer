@@ -19,73 +19,15 @@
 
 /*
  * Example showing usage of the cairooverlay element
- * 
- * Note: The example program not run on non-X11 platforms because
- * it is using the xvimageoverlay element. That part of the code was
- * roughly based on gst_x_overlay documentation.
  */
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/interfaces/xoverlay.h>
 
 #include <cairo.h>
 #include <cairo-gobject.h>
 
-#include <gdk/gdkx.h>
-
-#include <gtk/gtk.h>
-
-static gulong video_window_xid = 0;
-
-static GstBusSyncReply
-bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
-{
-  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
-    return GST_BUS_PASS;
-  if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
-    return GST_BUS_PASS;
-
-  if (video_window_xid != 0) {
-    GstXOverlay *xoverlay;
-
-    xoverlay = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
-    gst_x_overlay_set_window_handle (xoverlay, video_window_xid);
-  } else {
-    g_warning ("Should have obtained video_window_xid by now!");
-  }
-
-  gst_message_unref (message);
-  return GST_BUS_DROP;
-}
-
-static void
-video_widget_realize_cb (GtkWidget * widget, gpointer data)
-{
-  video_window_xid = GDK_WINDOW_XID (widget->window);
-}
-
-static GtkWidget *
-setup_gtk_window (void)
-{
-  GtkWidget *video_window;
-  GtkWidget *app_window;
-
-  app_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-
-  video_window = gtk_drawing_area_new ();
-  g_signal_connect (video_window, "realize",
-      G_CALLBACK (video_widget_realize_cb), NULL);
-  gtk_widget_set_double_buffered (video_window, FALSE);
-
-  gtk_container_add (GTK_CONTAINER (app_window), video_window);
-  gtk_widget_show_all (app_window);
-
-  gtk_widget_realize (app_window);
-  g_assert (video_window_xid != 0);
-
-  return app_window;
-}
+#include <glib.h>
 
 /* Datastructure to share the state we are interested in between
  * prepare and render function. */
@@ -137,7 +79,6 @@ setup_gst_pipeline (CairoOverlayState * overlay_state)
   GstElement *pipeline;
   GstElement *cairo_overlay;
   GstElement *source, *adaptor1, *adaptor2, *sink;
-  GstBus *bus;
 
   pipeline = gst_pipeline_new ("cairo-overlay-example");
 
@@ -146,7 +87,7 @@ setup_gst_pipeline (CairoOverlayState * overlay_state)
   adaptor1 = gst_element_factory_make ("ffmpegcolorspace", "adaptor1");
   cairo_overlay = gst_element_factory_make ("cairooverlay", "overlay");
   adaptor2 = gst_element_factory_make ("ffmpegcolorspace", "adaptor2");
-  sink = gst_element_factory_make ("xvimagesink", "sink");
+  sink = gst_element_factory_make ("autovideosink", "sink");
 
   /* If failing, the element could not be created */
   g_assert (cairo_overlay);
@@ -165,31 +106,25 @@ setup_gst_pipeline (CairoOverlayState * overlay_state)
     g_warning ("Failed to link elements!");
   }
 
-  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, NULL);
-  gst_object_unref (bus);
-
   return pipeline;
 }
 
 int
 main (int argc, char **argv)
 {
-  GtkWidget *window;
+  GMainLoop *loop;
   GstElement *pipeline;
   CairoOverlayState *overlay_state;
 
-  gtk_init (&argc, &argv);
   gst_init (&argc, &argv);
+  loop = g_main_loop_new (NULL, FALSE);
 
-  window = setup_gtk_window ();
   overlay_state = g_new0 (CairoOverlayState, 1);
   pipeline = setup_gst_pipeline (overlay_state);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  gtk_main ();
+  g_main_loop_run (loop);
 
   gst_object_unref (pipeline);
-  gtk_widget_destroy (GTK_WIDGET (window));
   g_free (overlay_state);
 }

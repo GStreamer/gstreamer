@@ -5,11 +5,7 @@ JACK_DIR=
 endif
 
 if USE_CAIRO_GOBJECT
-if HAVE_GTK_X11
 CAIRO_DIR=cairo
-else
-CAIRO_DIR=
-endif
 else
 CAIRO_DIR=
 endif
