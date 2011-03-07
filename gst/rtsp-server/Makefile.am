@@ -1,5 +1,4 @@
 public_headers = \
-		rtsp-funnel.h \
 		rtsp-auth.h \
 		rtsp-params.h \
 		rtsp-sdp.h \
@@ -25,6 +24,8 @@ c_sources = \
 	rtsp-session-pool.c \
 	rtsp-client.c \
 	rtsp-server.c
+
+noinst_HEADERS = rtsp-funnel.h
 
 lib_LTLIBRARIES = \
 	libgstrtspserver-@GST_MAJORMINOR@.la
