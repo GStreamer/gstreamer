@@ -795,6 +795,26 @@ GST_START_TEST (test_normalize)
 
 GST_END_TEST;
 
+GST_START_TEST (test_broken)
+{
+  GstCaps *c1;
+
+  /* NULL is not valid for media_type */
+  ASSERT_CRITICAL (c1 =
+      gst_caps_new_simple (NULL, "field", G_TYPE_INT, 1, NULL));
+  fail_if (c1);
+
+#ifndef G_DISABLE_CHECKS
+  /* such a name is not valid, see gst_structure_validate_name() */
+  ASSERT_CRITICAL (c1 =
+      gst_caps_new_simple ("1#@abc", "field", G_TYPE_INT, 1, NULL));
+  fail_if (c1);
+#endif
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_caps_suite (void)
 {
@@ -815,6 +835,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_intersect);
   tcase_add_test (tc_chain, test_intersect2);
   tcase_add_test (tc_chain, test_normalize);
+  tcase_add_test (tc_chain, test_broken);
 
   return s;
 }
