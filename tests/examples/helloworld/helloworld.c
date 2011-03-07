@@ -1,115 +1,80 @@
-#include <stdlib.h>
 #include <gst/gst.h>
 
-static void
-event_loop (GstElement * pipe)
+static gboolean
+bus_call (GstBus * bus, GstMessage * msg, gpointer data)
 {
-  GstBus *bus;
-  GstMessage *message = NULL;
-  gboolean running = TRUE;
+  GMainLoop *loop = (GMainLoop *) data;
 
-  bus = gst_element_get_bus (GST_ELEMENT (pipe));
-
-  while (running) {
-    message = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
-
-    g_assert (message != NULL);
-
-    switch (message->type) {
-      case GST_MESSAGE_EOS:
-        running = FALSE;
-        break;
-      case GST_MESSAGE_WARNING:{
-        GError *gerror;
-        gchar *debug;
-
-        gst_message_parse_warning (message, &gerror, &debug);
-        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
-        g_error_free (gerror);
-        g_free (debug);
-        break;
-      }
-      case GST_MESSAGE_ERROR:{
-        GError *gerror;
-        gchar *debug;
-
-        gst_message_parse_error (message, &gerror, &debug);
-        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
-        g_error_free (gerror);
-        g_free (debug);
-        running = FALSE;
-        break;
-      }
-      default:
-        break;
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_EOS:{
+      g_print ("End-of-stream\n");
+      g_main_loop_quit (loop);
+      break;
     }
-    gst_message_unref (message);
+    case GST_MESSAGE_ERROR:{
+      gchar *debug;
+      GError *err;
+
+      gst_message_parse_error (msg, &err, &debug);
+      g_free (debug);
+
+      g_print ("Error: %s\n", err->message);
+      g_error_free (err);
+
+      g_main_loop_quit (loop);
+
+      break;
+    }
+    default:
+      break;
   }
-  gst_object_unref (bus);
+  return TRUE;
 }
 
-int
-main (int argc, char *argv[])
+gint
+main (gint argc, gchar * argv[])
 {
-  GstElement *bin, *filesrc, *decoder, *audiosink;
-  GstElement *conv, *resample;
+  GstElement *playbin;
+  GMainLoop *loop;
+  GstBus *bus;
+  gchar *uri;
 
   gst_init (&argc, &argv);
 
-  if (argc != 2) {
-    g_print ("usage: %s <mp3 file>\n", argv[0]);
-    exit (-1);
+  if (argc < 2) {
+    g_print ("usage: %s <media file or uri>\n", argv[0]);
+    return 1;
   }
 
-  /* create a new bin to hold the elements */
-  bin = gst_pipeline_new ("pipeline");
-  g_assert (bin);
-
-  /* create a disk reader */
-  filesrc = gst_element_factory_make ("filesrc", "disk_source");
-  g_assert (filesrc);
-  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
-
-  /* now it's time to get the decoder */
-  decoder = gst_element_factory_make ("mad", "decode");
-  if (!decoder) {
-    g_print ("could not find plugin \"mad\"");
-    return -1;
+  playbin = gst_element_factory_make ("playbin2", NULL);
+  if (!playbin) {
+    g_print ("'playbin2' gstreamer plugin missing\n");
+    return 1;
   }
 
-  /* also, we need to add some converters to make sure the audio stream
-   * from the decoder is converted into a format the audio sink can
-   * understand (if necessary) */
-  conv = gst_element_factory_make ("audioconvert", "audioconvert");
-  if (!conv) {
-    g_print ("could not create \"audioconvert\" element!");
-    return -1;
-  }
-  resample = gst_element_factory_make ("audioresample", "audioresample");
-  if (!resample) {
-    g_print ("could not create \"audioresample\" element!");
-    return -1;
-  }
+  /* take the commandline argument and ensure that it is a uri */
+  if (gst_uri_is_valid (argv[1]))
+    uri = g_strdup (argv[1]);
+  else
+    uri = gst_filename_to_uri (argv[1], NULL);
+  g_object_set (playbin, "uri", uri, NULL);
+  g_free (uri);
 
-  /* and an audio sink */
-  audiosink = gst_element_factory_make ("alsasink", "play_audio");
-  g_assert (audiosink);
+  /* create and event loop and feed gstreamer bus mesages to it */
+  loop = g_main_loop_new (NULL, FALSE);
 
-  /* add objects to the main pipeline */
-  gst_bin_add_many (GST_BIN (bin), filesrc, decoder, conv,
-      resample, audiosink, NULL);
+  bus = gst_element_get_bus (playbin);
+  gst_bus_add_watch (bus, bus_call, loop);
+  g_object_unref (bus);
 
-  /* link the elements */
-  gst_element_link_many (filesrc, decoder, conv, resample, audiosink, NULL);
+  /* start play back and listed to events */
+  gst_element_set_state (playbin, GST_STATE_PLAYING);
+  g_main_loop_run (loop);
 
-  /* start playing */
-  gst_element_set_state (bin, GST_STATE_PLAYING);
+  /* cleanup */
+  gst_element_set_state (playbin, GST_STATE_NULL);
+  g_object_unref (playbin);
+  g_object_unref (loop);
 
-  /* Run event loop listening for bus messages until EOS or ERROR */
-  event_loop (bin);
-
-  /* stop the bin */
-  gst_element_set_state (bin, GST_STATE_NULL);
-
-  exit (0);
+  return 0;
 }
