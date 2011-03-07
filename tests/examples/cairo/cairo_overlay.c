@@ -29,6 +29,41 @@
 
 #include <glib.h>
 
+
+static gboolean
+on_message (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  GMainLoop *loop = (GMainLoop *) user_data;
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:{
+      GError *err = NULL;
+      gchar *debug;
+
+      gst_message_parse_error (message, &err, &debug);
+      g_critical ("Got ERROR: %s (%s)", err->message, GST_STR_NULL (debug));
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_WARNING:{
+      GError *err = NULL;
+      gchar *debug;
+
+      gst_message_parse_warning (message, &err, &debug);
+      g_warning ("Got WARNING: %s (%s)", err->message, GST_STR_NULL (debug));
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      g_main_loop_quit (loop);
+      break;
+    default:
+      break;
+  }
+
+  return TRUE;
+}
+
 /* Datastructure to share the state we are interested in between
  * prepare and render function. */
 typedef struct
@@ -114,17 +149,22 @@ main (int argc, char **argv)
 {
   GMainLoop *loop;
   GstElement *pipeline;
-  CairoOverlayState *overlay_state;
+  GstBus *bus;
+  CairoOverlayState overlay_state = { FALSE, 0, 0 };
 
   gst_init (&argc, &argv);
   loop = g_main_loop_new (NULL, FALSE);
 
-  overlay_state = g_new0 (CairoOverlayState, 1);
-  pipeline = setup_gst_pipeline (overlay_state);
+  pipeline = setup_gst_pipeline (&overlay_state);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (G_OBJECT (bus), "message", G_CALLBACK (on_message), loop);
+  gst_object_unref (GST_OBJECT (bus));
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
 
+  gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
-  g_free (overlay_state);
 }
