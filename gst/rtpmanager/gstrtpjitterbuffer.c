@@ -1873,17 +1873,25 @@ push_buffer:
 
     elapsed = compute_elapsed (jitterbuffer, outbuf);
 
-    if (elapsed > priv->last_elapsed) {
+    if (elapsed > priv->last_elapsed || !priv->last_elapsed) {
       guint64 left;
 
       priv->last_elapsed = elapsed;
 
       left = priv->npt_stop - priv->npt_start;
+      GST_LOG_OBJECT (jitterbuffer, "left %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (left));
 
       if (elapsed > 0)
         estimated = gst_util_uint64_scale (out_time, left, elapsed);
-      else
-        estimated = -1;
+      else {
+        /* if there is almost nothing left,
+         * we may never advance enough to end up in the above case */
+        if (left < GST_SECOND)
+          estimated = GST_SECOND;
+        else
+          estimated = -1;
+      }
 
       GST_LOG_OBJECT (jitterbuffer, "elapsed %" GST_TIME_FORMAT ", estimated %"
           GST_TIME_FORMAT, GST_TIME_ARGS (elapsed), GST_TIME_ARGS (estimated));
