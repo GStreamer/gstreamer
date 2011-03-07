@@ -44,6 +44,8 @@ const gchar * gst_codec_utils_h264_get_profile (const guint8 * sps, guint len);
 
 const gchar * gst_codec_utils_h264_get_level   (const guint8 * sps, guint len);
 
+guint8        gst_codec_utils_h264_get_level_idc (const gchar * level);
+
 gboolean      gst_codec_utils_h264_caps_set_level_and_profile (GstCaps      * caps,
                                                                const guint8 * sps,
                                                                guint          len);

@@ -37,6 +37,8 @@
 
 #include "pbutils.h"
 
+#include <string.h>
+
 #define GST_SIMPLE_CAPS_HAS_NAME(caps,name) \
     gst_structure_has_name(gst_caps_get_structure((caps),0),(name))
 
@@ -524,6 +526,57 @@ gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
         return NULL;
     }
   }
+}
+
+/**
+ * gst_codec_utils_h264_get_level_id:
+ * @level: A level string from caps
+ *
+ * Transform a level string from the caps into the level_idc
+ *
+ * Returns: the level_idc or 0 if the level is unknown
+ */
+
+guint8
+gst_codec_utils_h264_get_level_idc (const gchar * level)
+{
+  g_return_val_if_fail (level != NULL, 0);
+
+  if (!strcmp (level, "1"))
+    return 10;
+  else if (!strcmp (level, "1b"))
+    return 9;
+  else if (!strcmp (level, "1.1"))
+    return 11;
+  else if (!strcmp (level, "1.2"))
+    return 12;
+  else if (!strcmp (level, "1.3"))
+    return 13;
+  else if (!strcmp (level, "2"))
+    return 20;
+  else if (!strcmp (level, "2.1"))
+    return 21;
+  else if (!strcmp (level, "2.2"))
+    return 22;
+  else if (!strcmp (level, "3"))
+    return 30;
+  else if (!strcmp (level, "3.1"))
+    return 31;
+  else if (!strcmp (level, "3.2"))
+    return 32;
+  else if (!strcmp (level, "4"))
+    return 40;
+  else if (!strcmp (level, "4.1"))
+    return 41;
+  else if (!strcmp (level, "4.2"))
+    return 42;
+  else if (!strcmp (level, "5"))
+    return 50;
+  else if (!strcmp (level, "5.1"))
+    return 51;
+
+  GST_WARNING ("Invalid level %s", level);
+  return 0;
 }
 
 /**
