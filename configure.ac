@@ -1367,19 +1367,21 @@ AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
   dnl We check for libSoundTouch since Debian used it before upstream
   dnl added a pkgconfig file.
   HAVE_SOUNDTOUCH_1_4=yes
-  PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.4,
+  PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch,
     [HAVE_SOUNDTOUCH=yes],
-    [PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.0,
-      [HAVE_SOUNDTOUCH=yes
-        HAVE_SOUNDTOUCH_1_4=no
-        SOUNDTOUCH_LIBS="$SOUNDTOUCH_LIBS -lBPM"], 
-      [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch >= 1.4,
-        [HAVE_SOUNDTOUCH=yes],
-        [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch,
-          [HAVE_SOUNDTOUCH=yes
-            HAVE_SOUNDTOUCH_1_4=no
-            SOUNDTOUCH_LIBS="$SOUNDTOUCH_LIBS -lBPM"],
-          HAVE_SOUNDTOUCH=no)])])])
+    [PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.4,
+      [HAVE_SOUNDTOUCH=yes],
+      [PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.0,
+        [HAVE_SOUNDTOUCH=yes
+          HAVE_SOUNDTOUCH_1_4=no
+          SOUNDTOUCH_LIBS="$SOUNDTOUCH_LIBS -lBPM"], 
+        [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch >= 1.4,
+          [HAVE_SOUNDTOUCH=yes],
+          [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch,
+            [HAVE_SOUNDTOUCH=yes
+              HAVE_SOUNDTOUCH_1_4=no
+              SOUNDTOUCH_LIBS="$SOUNDTOUCH_LIBS -lBPM"],
+            HAVE_SOUNDTOUCH=no)])])])])
   AC_SUBST(SOUNDTOUCH_CFLAGS)
   AC_SUBST(SOUNDTOUCH_LIBS)
   if test "x$HAVE_CXX" != "xyes"; then
