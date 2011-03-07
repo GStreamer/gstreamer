@@ -4,4 +4,4 @@ endif
 
 cairo_overlay_SOURCES = cairo_overlay.c
 cairo_overlay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(CAIRO_CFLAGS)
-cairo_overlay_LDFLAGS = -lgstvideo-$(GST_MAJORMINOR) $(CAIRO_LIBS)
+cairo_overlay_LDADD = -lgstvideo-$(GST_MAJORMINOR) $(GST_LIBS) $(CAIRO_LIBS)
