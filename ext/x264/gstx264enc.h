@@ -115,6 +115,11 @@ struct _GstX264Enc
 
   /* configuration changed  while playing */
   gboolean reconfig;
+
+  /* from the downstream caps */
+  const gchar *peer_profile;
+  gboolean peer_intra_profile;
+  const x264_level_t *peer_level;
 };
 
 struct _GstX264EncClass
