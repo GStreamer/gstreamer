@@ -317,6 +317,13 @@ gst_ring_buffer_debug_spec_buff
 gst_ring_buffer_debug_spec_caps
 </SECTION>
 
+<SECTION>
+<FILE>gstaudioiec61937</FILE>
+<INCLUDE>gst/audio/gstaudioiec61937.h</INCLUDE>
+gst_audio_iec61937_frame_size
+gst_audio_iec61937_payload
+</SECTION>
+
 
 # cdda
 

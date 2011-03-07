@@ -26,7 +26,8 @@ libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
 	gstbaseaudiosrc.c \
 	gstaudiofilter.c \
 	gstaudiosink.c \
-	gstaudiosrc.c
+	gstaudiosrc.c \
+	gstaudioiec61937.c
 nodist_libgstaudio_@GST_MAJORMINOR@_la_SOURCES = $(built_sources) $(built_headers)
 
 libgstaudio_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/audio
@@ -40,7 +41,8 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	gstaudiosink.h \
 	gstaudiosrc.h \
 	mixerutils.h \
-	multichannel.h
+	multichannel.h \
+	gstaudioiec61937.h
 
 nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	audio-enumtypes.h
