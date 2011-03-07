@@ -1232,6 +1232,22 @@ parse_failed:
   }
 }
 
+/* call with jbuf lock held */
+static void
+check_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint * percent)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+
+  /* too short a stream, or too close to EOS will never really fill buffer */
+  if (*percent != -1 && priv->npt_stop != -1 &&
+      priv->npt_stop - priv->npt_start <=
+      rtp_jitter_buffer_get_delay (priv->jbuf)) {
+    GST_DEBUG_OBJECT (jitterbuffer, "short stream; faking full buffer");
+    rtp_jitter_buffer_set_buffering (priv->jbuf, FALSE);
+    *percent = 100;
+  }
+}
+
 static void
 post_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint percent)
 {
@@ -1405,6 +1421,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (jitterbuffer, "Pushed packet #%d, now %d packets, tail: %d",
       seqnum, rtp_jitter_buffer_num_packets (priv->jbuf), tail);
+
+  check_buffering_percent (jitterbuffer, &percent);
 
 finished:
   JBUF_UNLOCK (priv);
@@ -1835,6 +1853,8 @@ push_buffer:
 
   /* when we get here we are ready to pop and push the buffer */
   outbuf = rtp_jitter_buffer_pop (priv->jbuf, &percent);
+
+  check_buffering_percent (jitterbuffer, &percent);
 
   if (G_UNLIKELY (discont || priv->discont)) {
     /* set DISCONT flag when we missed a packet. We pushed the buffer writable
