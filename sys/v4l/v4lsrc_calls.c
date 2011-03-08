@@ -657,8 +657,7 @@ gst_meta_v4lsrc_get_info (void)
         sizeof (GstMetaV4lSrc),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) meta_v4lsrc_free,
-        (GstMetaCopyFunction) NULL,
-        (GstMetaSubFunction) NULL,
+        (GstMetaTransformFunction) NULL,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
   }
   return meta_v4lsrc_info;

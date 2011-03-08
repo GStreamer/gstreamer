@@ -35,28 +35,21 @@
 #include "gstnetbuffer.h"
 
 static void
-meta_net_address_copy (GstBuffer * copy, GstMetaNetAddress * meta,
-    GstBuffer * buffer)
+meta_net_address_transform (GstBuffer * transbuf, GstMetaNetAddress * meta,
+    GstBuffer * buffer, GstMetaTransformData * data)
 {
   GstMetaNetAddress *naddr;
 
-  GST_DEBUG ("copy called from buffer %p to %p, meta %p", buffer, copy, meta);
-
-  naddr = gst_buffer_add_meta_net_address (copy);
-  memcpy (&naddr->naddr, &meta->naddr, sizeof (meta->naddr));
-}
-
-static void
-meta_net_address_sub (GstBuffer * sub, GstMetaNetAddress * meta,
-    GstBuffer * buffer, guint offset, guint size)
-{
-  GstMetaNetAddress *naddr;
-
-  GST_DEBUG ("sub called from buffer %p to %p, meta %p, %u-%u", buffer, sub,
-      meta, offset, size);
-
-  naddr = gst_buffer_add_meta_net_address (sub);
-  memcpy (&naddr->naddr, &meta->naddr, sizeof (meta->naddr));
+  switch (data->type) {
+    case GST_META_TRANSFORM_TRIM:
+    case GST_META_TRANSFORM_MAKE_WRITABLE:
+    case GST_META_TRANSFORM_COPY:
+    default:
+      /* always copy */
+      naddr = gst_buffer_add_meta_net_address (transbuf);
+      memcpy (&naddr->naddr, &meta->naddr, sizeof (meta->naddr));
+      break;
+  }
 }
 
 const GstMetaInfo *
@@ -69,8 +62,7 @@ gst_meta_net_address_get_info (void)
         sizeof (GstMetaNetAddress),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
-        (GstMetaCopyFunction) meta_net_address_copy,
-        (GstMetaSubFunction) meta_net_address_sub,
+        (GstMetaTransformFunction) meta_net_address_transform,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
   }
   return meta_info;
