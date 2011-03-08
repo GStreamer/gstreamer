@@ -15,7 +15,8 @@ libgstvideofiltersbad_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	$(ORC_LIBS)
+	$(ORC_LIBS) \
+	$(LIBM)
 libgstvideofiltersbad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideofiltersbad_la_LIBTOOLFLAGS = --tag=disable-static
 
