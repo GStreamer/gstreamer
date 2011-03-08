@@ -77,6 +77,48 @@ GST_START_TEST (test_create)
 
 GST_END_TEST;
 
+/* test if the factory can accept some caps */
+GST_START_TEST (test_can_sink_any_caps)
+{
+  GstElementFactory *factory;
+  GstCaps *caps;
+  gboolean res;
+
+  factory = setup_factory ();
+  fail_if (factory == NULL);
+
+  caps = gst_caps_new_simple ("audio/x-raw-int", NULL);
+  fail_if (caps == NULL);
+  res = gst_element_factory_can_sink_any_caps (factory, caps);
+  fail_if (!res);
+  gst_caps_unref (caps);
+
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
+
+/* test if the factory is compabible with some caps */
+GST_START_TEST (test_can_sink_all_caps)
+{
+  GstElementFactory *factory;
+  GstCaps *caps;
+  gboolean res;
+
+  factory = setup_factory ();
+  fail_if (factory == NULL);
+
+  caps = gst_caps_new_simple ("audio/x-raw-int", NULL);
+  fail_if (caps == NULL);
+  res = gst_element_factory_can_sink_all_caps (factory, caps);
+  fail_if (res);
+  gst_caps_unref (caps);
+
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
+
 /* check if the elementfactory of a class is filled (see #131079) */
 GST_START_TEST (test_class)
 {
@@ -131,6 +173,8 @@ gst_element_factory_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_class);
   tcase_add_test (tc_chain, test_create);
+  tcase_add_test (tc_chain, test_can_sink_any_caps);
+  tcase_add_test (tc_chain, test_can_sink_all_caps);
 
   return s;
 }
