@@ -855,7 +855,7 @@ plugin_init (GstPlugin * plugin)
   output_class = slv2_value_new_uri (world, SLV2_PORT_CLASS_OUTPUT);
 
 #define NS_LV2 "http://lv2plug.in/ns/lv2core#"
-#define NS_PG  "http://lv2plug.in/ns/dev/port-groups#"
+#define NS_PG  "http://lv2plug.in/ns/ext/port-groups"
 
   integer_prop = slv2_value_new_uri (world, NS_LV2 "integer");
   toggled_prop = slv2_value_new_uri (world, NS_LV2 "toggled");
