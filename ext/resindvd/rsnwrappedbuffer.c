@@ -113,8 +113,7 @@ rsn_meta_wrapped_get_info (void)
         sizeof (RsnMetaWrapped),
         (GstMetaInitFunction) rsn_meta_wrapped_init,
         (GstMetaFreeFunction) rsn_meta_wrapped_free,
-        (GstMetaCopyFunction) NULL,
-        (GstMetaSubFunction) NULL,
+        (GstMetaTransformFunction) NULL,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
   }
   return meta_info;

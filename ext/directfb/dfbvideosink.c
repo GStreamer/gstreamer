@@ -1892,8 +1892,7 @@ gst_meta_dfbsurface_get_info (void)
         sizeof (GstMetaDfbSurface),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
-        (GstMetaCopyFunction) NULL,
-        (GstMetaSubFunction) NULL,
+        (GstMetaTransformFunction) NULL,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
   }
   return meta_info;
