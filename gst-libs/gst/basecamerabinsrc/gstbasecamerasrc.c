@@ -191,14 +191,11 @@ void
 gst_base_camera_src_setup_zoom (GstBaseCameraSrc * self)
 {
   GstBaseCameraSrcClass *bclass = GST_BASE_CAMERA_SRC_GET_CLASS (self);
-  gint zoom;
 
-  zoom = g_atomic_int_get (&self->zoom);
-
-  g_return_if_fail (zoom);
+  g_return_if_fail (self->zoom);
   g_return_if_fail (bclass->set_zoom);
 
-  bclass->set_zoom (self, zoom);
+  bclass->set_zoom (self, self->zoom);
 }
 
 /**
@@ -337,7 +334,7 @@ gst_base_camera_src_set_property (GObject * object,
           g_value_get_enum (value));
       break;
     case PROP_ZOOM:{
-      g_atomic_int_set (&self->zoom, g_value_get_int (value));
+      self->zoom = g_value_get_float (value);
       /* does not set it if in NULL, the src is not created yet */
       if (GST_STATE (self) != GST_STATE_NULL)
         gst_base_camera_src_setup_zoom (self);
@@ -378,7 +375,7 @@ gst_base_camera_src_get_property (GObject * object,
       g_value_set_boolean (value, !self->capturing);
       break;
     case PROP_ZOOM:
-      g_value_set_int (value, g_atomic_int_get (&self->zoom));
+      g_value_set_float (value, self->zoom);
       break;
     case PROP_POST_PREVIEW:
       g_value_set_boolean (value, self->post_preview);
@@ -521,6 +518,11 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
           "The capture mode (still image capture or video recording)",
           GST_TYPE_CAMERABIN_MODE, MODE_IMAGE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_ZOOM,
+      g_param_spec_float ("zoom", "Zoom",
+          "Digital zoom factor (e.g. 1.5 means 1.5x)", MIN_ZOOM, MAX_ZOOM,
+          DEFAULT_ZOOM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBaseCameraSrc:post-previews:

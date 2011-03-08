@@ -79,7 +79,7 @@ struct _GstBaseCameraSrc
   gint height;
 
   /* The digital zoom (from 100% to 1000%) */
-  gint zoom;
+  gfloat zoom;
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
@@ -103,7 +103,7 @@ struct _GstBaseCameraSrcClass
   gboolean    (*setup_pipeline)      (GstBaseCameraSrc *self);
 
   /* set the zoom */
-  void        (*set_zoom)            (GstBaseCameraSrc *self, gint zoom);
+  void        (*set_zoom)            (GstBaseCameraSrc *self, gfloat zoom);
 
   /* set the mode */
   gboolean    (*set_mode)            (GstBaseCameraSrc *self,
@@ -125,8 +125,8 @@ struct _GstBaseCameraSrcClass
 };
 
 
-#define MIN_ZOOM 100
-#define MAX_ZOOM 1000
+#define MIN_ZOOM 1.0f
+#define MAX_ZOOM 10.0f
 #define ZOOM_1X MIN_ZOOM
 
 GstPhotography * gst_base_camera_src_get_photography (GstBaseCameraSrc *self);

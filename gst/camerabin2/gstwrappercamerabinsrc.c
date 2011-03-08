@@ -295,6 +295,46 @@ gst_wrapper_camera_src_src_event_probe (GstPad * pad, GstEvent * evt,
   return ret;
 }
 
+static void
+gst_wrapper_camera_bin_src_caps_cb (GObject * gobject, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (user_data);
+  GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (user_data);
+  GstPad *src_caps_src_pad;
+  GstCaps *caps = NULL;
+  GstStructure *in_st = NULL;
+
+  /* get the new caps that were set on the capsfilter that configures the
+   * source */
+  src_caps_src_pad = gst_element_get_static_pad (self->src_filter, "src");
+  caps = gst_pad_get_caps_reffed (src_caps_src_pad);
+  gst_object_unref (src_caps_src_pad);
+  GST_DEBUG_OBJECT (self, "src-filter caps changed to %s",
+      gst_caps_to_string (caps));
+
+  if (gst_caps_get_size (caps)) {
+    in_st = gst_caps_get_structure (caps, 0);
+    if (in_st) {
+      gst_structure_get_int (in_st, "width", &bcamsrc->width);
+      gst_structure_get_int (in_st, "height", &bcamsrc->height);
+
+      GST_DEBUG_OBJECT (self, "Source dimensions now: %dx%d", bcamsrc->width,
+          bcamsrc->height);
+    }
+  }
+
+  /* Update zoom */
+  gst_base_camera_src_setup_zoom (bcamsrc);
+
+  /* Update post-zoom capsfilter */
+  if (self->src_zoom_filter)
+    g_object_set (G_OBJECT (self->src_zoom_filter), "caps", caps, NULL);
+
+  /* drop our ref on the caps */
+  gst_caps_unref (caps);
+};
+
 /**
  * gst_wrapper_camera_bin_src_construct_pipeline:
  * @bcamsrc: camerasrc object
@@ -318,6 +358,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   GstElement *videoscale;
   GstPad *vf_pad;
   GstPad *tee_capture_pad;
+  GstPad *src_caps_src_pad;
 
   if (!self->elements_created) {
 
@@ -355,6 +396,14 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
             gst_camerabin_create_and_add_element (cbin, "capsfilter",
                 "src-capsfilter")))
       goto done;
+
+    /* attach to notify::caps on the first capsfilter and use a callback
+     * to recalculate the zoom properties when these caps change and to
+     * propagate the caps to the second capsfilter */
+    src_caps_src_pad = gst_element_get_static_pad (self->src_filter, "src");
+    g_signal_connect (src_caps_src_pad, "notify::caps",
+        G_CALLBACK (gst_wrapper_camera_bin_src_caps_cb), self);
+    gst_object_unref (src_caps_src_pad);
 
     if (!(self->src_zoom_crop =
             gst_camerabin_create_and_add_element (cbin, "videocrop",
@@ -650,21 +699,20 @@ gst_wrapper_camera_bin_src_set_mode (GstBaseCameraSrc * bcamsrc,
 }
 
 static gboolean
-set_videosrc_zoom (GstWrapperCameraBinSrc * self, gint zoom)
+set_videosrc_zoom (GstWrapperCameraBinSrc * self, gfloat zoom)
 {
   gboolean ret = FALSE;
 
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (self->src_vid_src),
           "zoom")) {
-    g_object_set (G_OBJECT (self->src_vid_src), "zoom",
-        (gfloat) zoom / 100, NULL);
+    g_object_set (G_OBJECT (self->src_vid_src), "zoom", zoom, NULL);
     ret = TRUE;
   }
   return ret;
 }
 
 static gboolean
-set_element_zoom (GstWrapperCameraBinSrc * self, gint zoom)
+set_element_zoom (GstWrapperCameraBinSrc * self, gfloat zoom)
 {
   gboolean ret = FALSE;
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
@@ -677,12 +725,13 @@ set_element_zoom (GstWrapperCameraBinSrc * self, gint zoom)
 
   if (self->src_zoom_crop) {
     /* Update capsfilters to apply the zoom */
-    GST_INFO_OBJECT (self, "zoom: %d, orig size: %dx%d", zoom,
+    GST_INFO_OBJECT (self, "zoom: %f, orig size: %dx%d", zoom,
         bcamsrc->width, bcamsrc->height);
 
     if (zoom != ZOOM_1X) {
-      w2_crop = (bcamsrc->width - (bcamsrc->width * ZOOM_1X / zoom)) / 2;
-      h2_crop = (bcamsrc->height - (bcamsrc->height * ZOOM_1X / zoom)) / 2;
+      w2_crop = (bcamsrc->width - (gint) (bcamsrc->width * ZOOM_1X / zoom)) / 2;
+      h2_crop =
+          (bcamsrc->height - (gint) (bcamsrc->height * ZOOM_1X / zoom)) / 2;
 
       left += w2_crop;
       right += w2_crop;
@@ -711,11 +760,11 @@ set_element_zoom (GstWrapperCameraBinSrc * self, gint zoom)
 }
 
 static void
-gst_wrapper_camera_bin_src_set_zoom (GstBaseCameraSrc * bcamsrc, gint zoom)
+gst_wrapper_camera_bin_src_set_zoom (GstBaseCameraSrc * bcamsrc, gfloat zoom)
 {
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
 
-  GST_INFO_OBJECT (self, "setting zoom %d", zoom);
+  GST_INFO_OBJECT (self, "setting zoom %f", zoom);
 
   if (set_videosrc_zoom (self, zoom)) {
     set_element_zoom (self, ZOOM_1X);
@@ -904,7 +953,7 @@ set_capsfilter_caps (GstWrapperCameraBinSrc * self, GstCaps * new_caps)
   if (self->src_zoom_filter)
     g_object_set (G_OBJECT (self->src_zoom_filter), "caps", new_caps, NULL);
   update_aspect_filter (self, new_caps);
-  GST_INFO_OBJECT (self, "udpated");
+  GST_INFO_OBJECT (self, "updated");
 }
 
 static gboolean

@@ -666,9 +666,7 @@ run_pipeline (gpointer user_data)
     }
     g_object_unref (video_source);
   }
-#if 0
   g_object_set (camerabin, "zoom", zoom / 100.0f, NULL);
-#endif
 
   capture_count++;
   g_timer_start (timer);

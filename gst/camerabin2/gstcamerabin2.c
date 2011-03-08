@@ -85,7 +85,8 @@ enum
   PROP_AUDIO_SRC,
   PROP_MUTE_AUDIO,
   PROP_AUDIO_CAPTURE_SUPPORTED_CAPS,
-  PROP_AUDIO_CAPTURE_CAPS
+  PROP_AUDIO_CAPTURE_CAPS,
+  PROP_ZOOM
 };
 
 enum
@@ -531,6 +532,11 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           "Restricts the caps that can be used on the viewfinder",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_ZOOM,
+      g_param_spec_float ("zoom", "Zoom",
+          "Digital zoom factor (e.g. 1.5 means 1.5x)", MIN_ZOOM, MAX_ZOOM,
+          DEFAULT_ZOOM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /* TODO review before going stable
    * We have viewfinder-supported-caps that returns the caps that the
    * camerasrc can produce on its viewfinder pad, this could easily be
@@ -579,6 +585,7 @@ gst_camera_bin_init (GstCameraBin * camera)
   camera->video_location = g_strdup (DEFAULT_VID_LOCATION);
   camera->image_location = g_strdup (DEFAULT_IMG_LOCATION);
   camera->viewfinderbin = gst_element_factory_make ("viewfinderbin", "vf-bin");
+  camera->zoom = DEFAULT_ZOOM;
 
   /* capsfilters are created here as we proxy their caps properties and
    * this way we avoid having to store the caps while on NULL state to 
@@ -917,12 +924,14 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
 
   g_assert (camera->src != NULL);
   g_object_set (camera->src, "mode", camera->mode, NULL);
-  if (camera->src
-      && g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src),
-          "preview-caps")) {
-    g_object_set (camera->src, "post-previews", camera->post_previews,
-        "preview-caps", camera->preview_caps, "preview-filter",
-        camera->preview_filter, NULL);
+  if (camera->src) {
+    if (g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src),
+            "preview-caps")) {
+      g_object_set (camera->src, "post-previews", camera->post_previews,
+          "preview-caps", camera->preview_caps, "preview-filter",
+          camera->preview_filter, NULL);
+    }
+    g_object_set (camera->src, "zoom", camera->zoom, NULL);
   }
   if (new_src) {
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->src));
@@ -1252,6 +1261,11 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       g_object_set (camera->viewfinderbin, "video-sink",
           g_value_get_object (value), NULL);
       break;
+    case PROP_ZOOM:
+      camera->zoom = g_value_get_float (value);
+      if (camera->src)
+        g_object_set (camera->src, "zoom", camera->zoom, NULL);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1398,6 +1412,9 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       g_value_take_object (value, sink);
       break;
     }
+    case PROP_ZOOM:
+      g_value_set_float (value, camera->zoom);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
