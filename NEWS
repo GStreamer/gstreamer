@@ -1,4 +1,12 @@
-This is GStreamer Good Plug-ins 0.10.27, "Some Kind of Temporal Blend"
+This is GStreamer Good Plug-ins 0.10.28, "Inconvenienced by the Solar System"
+
+Changes since 0.10.27:
+
+      * Fix build issue with new kernels (with the old video4linux1 interface header removed)
+
+Bugs fixed since 0.10.27:
+
+      * 643716 : v4l2src: fails to build with newer kernels: ./v4l2_calls.h:33: fatal error: linux/videodev.h: No such file or directory
 
 Changes since 0.10.26:
 
