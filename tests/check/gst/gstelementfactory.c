@@ -21,6 +21,61 @@
 
 #include <gst/check/gstcheck.h>
 
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, " "channels = (int) [ 1, 6 ]")
+    );
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, " "channels = (int) [ 1, 6 ]")
+    );
+
+static void
+setup_pad_template (GstElementFactory * factory, GstStaticPadTemplate * tmpl)
+{
+  GstStaticPadTemplate *template;
+
+  template = g_slice_dup (GstStaticPadTemplate, tmpl);
+  factory->staticpadtemplates = g_list_append (factory->staticpadtemplates,
+      template);
+  factory->numpadtemplates++;
+}
+
+static GstElementFactory *
+setup_factory (void)
+{
+  GstPluginFeature *feature;
+  GstElementFactory *factory;
+
+  feature = g_object_newv (GST_TYPE_ELEMENT_FACTORY, 0, NULL);
+  gst_plugin_feature_set_name (feature, "test");
+
+  factory = GST_ELEMENT_FACTORY_CAST (feature);
+  factory->details.longname = g_strdup ("test");
+  factory->details.klass = g_strdup ("test");
+  factory->details.description = g_strdup ("test");
+  factory->details.author = g_strdup ("test");
+
+  setup_pad_template (factory, &sink_template);
+  setup_pad_template (factory, &src_template);
+
+  return factory;
+}
+
+/* create a basic factory */
+GST_START_TEST (test_create)
+{
+  GstElementFactory *factory;
+
+  factory = setup_factory ();
+  fail_if (factory == NULL);
+
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
 
 /* check if the elementfactory of a class is filled (see #131079) */
 GST_START_TEST (test_class)
@@ -75,6 +130,7 @@ gst_element_factory_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_class);
+  tcase_add_test (tc_chain, test_create);
 
   return s;
 }
