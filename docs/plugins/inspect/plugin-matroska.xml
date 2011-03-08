@@ -3,7 +3,7 @@
   <description>Matroska and WebM stream handling</description>
   <filename>../../gst/matroska/.libs/libgstmatroska.so</filename>
   <basename>libgstmatroska.so</basename>
-  <version>0.10.27.1</version>
+  <version>0.10.28.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins git</package>
@@ -72,6 +72,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-matroska</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>matroskaparse</name>
+      <longname>Matroska parser</longname>
+      <class>Codec/Parser</class>
+      <description>Parses Matroska/WebM streams into video/audio/subtitles</description>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-matroska; video/webm</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-matroska; video/webm</details>
         </caps>
       </pads>
     </element>

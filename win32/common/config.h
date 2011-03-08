@@ -49,7 +49,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-01-27T15:30Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-03-08T16:22Z"
 
 /* struct v4l2_buffer missing */
 #undef GST_V4L2_MISSING_BUFDECL
@@ -71,6 +71,10 @@
 
 /* Define to enable Cairo graphics rendering (used by cairo). */
 #undef HAVE_CAIRO
+
+/* Define to enable Cairo graphics rendering gobject bindings (used by
+   cairooverlay). */
+#undef HAVE_CAIRO_GOBJECT
 
 /* Define to 1 if you have the MacOS X function CFLocaleCopyCurrent in the
    CoreFoundation framework. */
@@ -386,7 +390,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.27.1"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.28.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -395,7 +399,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.27.1"
+#define PACKAGE_VERSION "0.10.28.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -426,7 +430,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.27.1"
+#define VERSION "0.10.28.1"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API
