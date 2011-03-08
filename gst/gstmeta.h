@@ -149,8 +149,7 @@ typedef gboolean (*GstMetaDeserializeFunction) (GstMeta *meta,
  * @size: size of the metadata
  * @init_func: function for initializing the metadata
  * @free_func: function for freeing the metadata
- * @copy_func: function for copying the metadata
- * @sub_func: function for when a subbuffer is taken
+ * @transform_func: function for transforming the metadata
  * @serialize_func: function for serializing
  * @deserialize_func: function for deserializing
  *
