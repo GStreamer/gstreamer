@@ -31,26 +31,26 @@
  * created (request or sometimes pads).
  *
  * Pad and PadTemplates have #GstCaps attached to it to describe the media type
- * they are capable of dealing with. gst_pad_template_get_caps() or 
- * GST_PAD_TEMPLATE_CAPS() are used to get the caps of a padtemplate. It's not 
+ * they are capable of dealing with. gst_pad_template_get_caps() or
+ * GST_PAD_TEMPLATE_CAPS() are used to get the caps of a padtemplate. It's not
  * possible to modify the caps of a padtemplate after creation.
  *
  * PadTemplates have a #GstPadPresence property which identifies the lifetime
- * of the pad and that can be retrieved with GST_PAD_TEMPLATE_PRESENCE(). Also 
- * the direction of the pad can be retrieved from the #GstPadTemplate with 
+ * of the pad and that can be retrieved with GST_PAD_TEMPLATE_PRESENCE(). Also
+ * the direction of the pad can be retrieved from the #GstPadTemplate with
  * GST_PAD_TEMPLATE_DIRECTION().
  *
  * The GST_PAD_TEMPLATE_NAME_TEMPLATE () is important for GST_PAD_REQUEST pads
  * because it has to be used as the name in the gst_element_get_request_pad()
  * call to instantiate a pad from this template.
  *
- * Padtemplates can be created with gst_pad_template_new() or with 
+ * Padtemplates can be created with gst_pad_template_new() or with
  * gst_static_pad_template_get (), which creates a #GstPadTemplate from a
  * #GstStaticPadTemplate that can be filled with the
- * convenient GST_STATIC_PAD_TEMPLATE() macro. 
+ * convenient GST_STATIC_PAD_TEMPLATE() macro.
  *
- * A padtemplate can be used to create a pad (see gst_pad_new_from_template() 
- * or gst_pad_new_from_static_template ()) or to add to an element class 
+ * A padtemplate can be used to create a pad (see gst_pad_new_from_template()
+ * or gst_pad_new_from_static_template ()) or to add to an element class
  * (see gst_element_class_add_pad_template ()).
  *
  * The following code example shows the code to create a pad from a padtemplate.
@@ -66,7 +66,7 @@
  *       "audio/x-raw-int, "
  *         "channels = (int) [ 1, 6 ]"
  *     )
- *   )
+ *   );
  *   void
  *   my_method (void)
  *   {
@@ -85,7 +85,7 @@
  *   my_element_base_init (gpointer g_class)
  *   {
  *     GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
- *    
+ *
  *     gst_element_class_add_pad_template (gstelement_class,
  *         gst_static_pad_template_get (&amp;my_template));
  *   }

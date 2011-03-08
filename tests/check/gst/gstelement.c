@@ -164,49 +164,6 @@ GST_START_TEST (test_link_no_pads)
 
 GST_END_TEST;
 
-/* check if the elementfactory of a class is filled (see #131079) */
-GST_START_TEST (test_class)
-{
-  GstElementClass *klass;
-  GstElementFactory *factory, *tmp;
-  GType type;
-
-  GST_DEBUG ("finding factory for queue");
-  factory = gst_element_factory_find ("queue");
-  fail_if (factory == NULL);
-
-  /* it may already be loaded if check is being run with CK_FORK=no */
-  if (!GST_PLUGIN_FEATURE (factory)->loaded) {
-    GST_DEBUG ("getting the type");
-    /* feature is not loaded, should return 0 as the type */
-    type = gst_element_factory_get_element_type (factory);
-    fail_if (type != 0);
-  }
-
-  GST_DEBUG ("now loading the plugin");
-  tmp =
-      GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
-          (factory)));
-  fail_if (tmp == NULL);
-
-  gst_object_unref (factory);
-  factory = tmp;
-
-  /* feature is now loaded */
-  type = gst_element_factory_get_element_type (factory);
-  fail_if (type == 0);
-
-  klass = g_type_class_ref (factory->type);
-  fail_if (klass == NULL);
-
-  GST_DEBUG ("checking the element factory class field");
-  /* and elementfactory is filled in */
-  fail_if (klass->elementfactory == NULL);
-  fail_if (klass->elementfactory != factory);
-
-}
-
-GST_END_TEST;
 
 static Suite *
 gst_element_suite (void)
@@ -220,7 +177,6 @@ gst_element_suite (void)
   tcase_add_test (tc_chain, test_error_no_bus);
   tcase_add_test (tc_chain, test_link);
   tcase_add_test (tc_chain, test_link_no_pads);
-  tcase_add_test (tc_chain, test_class);
 
   return s;
 }

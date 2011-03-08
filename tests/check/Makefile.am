@@ -65,6 +65,7 @@ REGISTRY_CHECKS =				\
 	gst/gstbin				\
 	gst/gstchildproxy			\
 	gst/gstelement				\
+	gst/gstelementfactory			\
 	gst/gstevent				\
 	gst/gstghostpad				\
 	gst/gstindex				\
@@ -132,12 +133,12 @@ check_PROGRAMS =				\
 	libs/bytewriter				\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider			\
-	libs/transform1				
+	libs/transform1
 
 # failing tests
 noinst_PROGRAMS =				\
 	gst/gstpipeline				\
-	libs/collectpads			
+	libs/collectpads
 
 # elements to ignore for the state tests
 # STATE_IGNORE_ELEMENTS =
@@ -169,7 +170,7 @@ AM_CXXFLAGS = $(GST_OBJ_CXXFLAGS) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS)
-	
+
 gst_gstcpp_SOURCES = gst/gstcpp.cc
 
 gst_gstutils_LDADD = $(LDADD) $(GSL_LIBS) $(GMP_LIBS)
