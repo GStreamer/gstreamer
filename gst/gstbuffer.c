@@ -241,9 +241,10 @@ gst_buffer_copy_metadata (GstBuffer * dest, const GstBuffer * src,
   for (walk = src->priv; walk; walk = walk->next) {
     GstMeta *meta = &walk->meta;
     const GstMetaInfo *info = meta->info;
+    GstMetaTransformData data = { GST_META_TRANSFORM_COPY };
 
-    if (info->copy_func)
-      info->copy_func (dest, meta, src);
+    if (info->transform_func)
+      info->transform_func (dest, meta, (GstBuffer *) src, &data);
   }
 }
 
@@ -679,9 +680,15 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
   for (walk = buffer->priv; walk; walk = walk->next) {
     GstMeta *meta = &walk->meta;
     const GstMetaInfo *info = meta->info;
+    GstMetaTransformSubbuffer subdata;
 
-    if (info->sub_func)
-      info->sub_func (subbuffer, meta, buffer, offset, size);
+    subdata.data.type = GST_META_TRANSFORM_TRIM;
+    subdata.offset = offset;
+    subdata.size = size;
+
+    if (info->transform_func)
+      info->transform_func (subbuffer, meta, buffer,
+          (GstMetaTransformData *) & subdata);
   }
   return subbuffer;
 }

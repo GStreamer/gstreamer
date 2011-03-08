@@ -65,30 +65,69 @@ typedef gboolean (*GstMetaInitFunction) (GstMeta *meta, gpointer params, GstBuff
 typedef void (*GstMetaFreeFunction)     (GstMeta *meta, GstBuffer *buffer);
 
 /**
- * GstMetaCopyFunction:
- * @copy: a #GstBuffer
- * @meta: a #GstMeta
- * @buffer: a #GstBuffer
+ * GstMetaTransformType:
+ * @GST_META_TRANSFORM_NONE: invalid transform type
+ * @GST_META_TRANSFORM_COPY: copy transform
+ * @GST_META_TRANSFORM_MAKE_WRITABLE: make writable type
+ * @GST_META_TRANSFORM_TRIM: trim buffer
+ * @GST_META_TRANSFORM_CUSTOM: start of custom transform types
  *
- * Function called when a copy of @buffer is made and @meta should be copied to
- * @copy.
+ * Different default transform types.
  */
-typedef void (*GstMetaCopyFunction)     (GstBuffer *copy, GstMeta *meta,
-                                         const GstBuffer *buffer);
+typedef enum {
+  GST_META_TRANSFORM_NONE = 0,
+  GST_META_TRANSFORM_COPY,
+  GST_META_TRANSFORM_MAKE_WRITABLE,
+  GST_META_TRANSFORM_TRIM,
+
+  GST_META_TRANSFORM_CUSTOM = 256 
+} GstMetaTransformType;
+
 /**
- * GstMetaSubFunction:
- * @subbuf: a #GstBuffer
+ * GstMetaTransformData:
+ * @type: a #GstMetaTransformType
+ *
+ * Common structure that should be put as the first field in the type specific
+ * structure for the #GstMetaTransformFunction. It contains the type of the
+ * transform that should be performed.
+ */
+typedef struct {
+  GstMetaTransformType type;
+} GstMetaTransformData;
+
+/**
+ * GstMetaTransformSubbuffer:
+ * @data: parent #GstMetaTransformData
+ * @offset: the offset of the subbuffer
+ * @size: the new size of the subbuffer
+ *
+ * The subbuffer specific extra info.
+ */
+typedef struct {
+  GstMetaTransformData data;
+  gsize offset;
+  gsize size;
+} GstMetaTransformSubbuffer;
+
+/**
+ * GstMetaTransformFunction:
+ * @transbuf: a #GstBuffer
  * @meta: a #GstMeta
  * @buffer: a #GstBuffer
- * @offset: subbuffer offset
- * @size: subbuffer size
+ * @data: transform specific data.
  *
- * Function called for each @meta in @buffer as a result from creating a
- * subbuffer @subbuf from @buffer at @offset and with @size. An
- * implementation could decide to copy and update the metadata on @subbuf.
+ * Function called for each @meta in @buffer as a result of performing a
+ * transformation on @transbuf. Additional type specific transform data
+ * is passed to the function.
+ *
+ * Implementations should check the type of the transform @data and parse
+ * additional type specific field that should be used to perform the transform.
+ *
+ * If @data is NULL, the metadata should be shallow copied. This is done when
+ * gst_buffer_make_metadata_writable() is called.
  */
-typedef void (*GstMetaSubFunction)      (GstBuffer *subbuf, GstMeta *meta,
-                                         GstBuffer *buffer, guint offset, guint size);
+typedef void (*GstMetaTransformFunction) (GstBuffer *transbuf, GstMeta *meta,
+                                          GstBuffer *buffer, GstMetaTransformData *data);
 
 /**
  * GstMetaSerializeFunction:
@@ -125,8 +164,7 @@ struct _GstMetaInfo {
 
   GstMetaInitFunction        init_func;
   GstMetaFreeFunction        free_func;
-  GstMetaCopyFunction        copy_func;
-  GstMetaSubFunction         sub_func;
+  GstMetaTransformFunction   transform_func;
   GstMetaSerializeFunction   serialize_func;
   GstMetaDeserializeFunction deserialize_func;
 };
@@ -137,8 +175,7 @@ const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *im
                                                gsize size,
                                                GstMetaInitFunction        init_func,
                                                GstMetaFreeFunction        free_func,
-                                               GstMetaCopyFunction        copy_func,
-                                               GstMetaSubFunction         sub_func,
+                                               GstMetaTransformFunction   transform_func,
                                                GstMetaSerializeFunction   serialize_func,
                                                GstMetaDeserializeFunction deserialize_func);
 const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);

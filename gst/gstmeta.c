@@ -54,7 +54,7 @@ _gst_meta_init (void)
 const GstMetaInfo *
 gst_meta_register (const gchar * api, const gchar * impl, gsize size,
     GstMetaInitFunction init_func, GstMetaFreeFunction free_func,
-    GstMetaCopyFunction copy_func, GstMetaSubFunction sub_func,
+    GstMetaTransformFunction transform_func,
     GstMetaSerializeFunction serialize_func,
     GstMetaDeserializeFunction deserialize_func)
 {
@@ -70,8 +70,7 @@ gst_meta_register (const gchar * api, const gchar * impl, gsize size,
   info->size = size;
   info->init_func = init_func;
   info->free_func = free_func;
-  info->copy_func = copy_func;
-  info->sub_func = sub_func;
+  info->transform_func = transform_func;
   info->serialize_func = serialize_func;
   info->deserialize_func = deserialize_func;
 
@@ -143,34 +142,60 @@ static gboolean
 meta_memory_init (GstMetaMemoryImpl * meta, GstMetaMemoryParams * params,
     GstBuffer * buffer)
 {
+  GST_DEBUG ("init %p", buffer);
   meta->memory.mmap_func = meta_memory_mmap;
   meta->memory.munmap_func = meta_memory_munmap;
   meta->params = *params;
+
+  /* FIXME, backwards compatibility */
+  //GST_BUFFER_DATA (buffer) = params->data + params->offset;
+  //GST_BUFFER_SIZE (buffer) = params->size;
+
   return TRUE;
 }
 
 static void
 meta_memory_free (GstMetaMemoryImpl * meta, GstBuffer * buffer)
 {
+  GST_DEBUG ("free buffer %p", buffer);
   if (meta->params.free_func)
     meta->params.free_func (meta->params.data);
 }
 
 static void
-meta_memory_copy (GstBuffer * copy, GstMetaMemoryImpl * meta,
-    const GstBuffer * buffer)
+meta_memory_transform (GstBuffer * transbuf, GstMetaMemoryImpl * meta,
+    GstBuffer * buffer, GstMetaTransformData * data)
 {
-  gst_buffer_add_meta_memory (copy,
-      g_memdup (meta->params.data, meta->params.size),
-      g_free, meta->params.size, meta->params.offset);
-}
+  switch (data->type) {
+    case GST_META_TRANSFORM_COPY:
+    {
+      GST_DEBUG ("copy %p to %p", buffer, transbuf);
+      gst_buffer_add_meta_memory (transbuf,
+          g_memdup (meta->params.data, meta->params.size),
+          g_free, meta->params.size, meta->params.offset);
+      break;
+    }
+    case GST_META_TRANSFORM_TRIM:
+    {
+      GstMetaTransformSubbuffer *subdata = (GstMetaTransformSubbuffer *) data;
 
-static void
-meta_memory_sub (GstBuffer * subbuf, GstMetaMemoryImpl * meta,
-    GstBuffer * buffer, guint offset, guint size)
-{
-  gst_buffer_add_meta_memory (subbuf,
-      meta->params.data, NULL, size, meta->params.offset + offset);
+      GST_DEBUG ("trim %p to %p", buffer, transbuf);
+      gst_buffer_add_meta_memory (transbuf,
+          meta->params.data, NULL, subdata->size,
+          meta->params.offset + subdata->offset);
+      break;
+    }
+    case GST_META_TRANSFORM_MAKE_WRITABLE:
+    {
+      GST_DEBUG ("make writable %p to %p", buffer, transbuf);
+      gst_buffer_add_meta_memory (transbuf,
+          meta->params.data, NULL, meta->params.size, meta->params.offset);
+      break;
+    }
+    default:
+      /* don't copy by default */
+      break;
+  }
 }
 
 const GstMetaInfo *
@@ -183,8 +208,7 @@ gst_meta_memory_get_info (void)
         sizeof (GstMetaMemoryImpl),
         (GstMetaInitFunction) meta_memory_init,
         (GstMetaFreeFunction) meta_memory_free,
-        (GstMetaCopyFunction) meta_memory_copy,
-        (GstMetaSubFunction) meta_memory_sub,
+        (GstMetaTransformFunction) meta_memory_transform,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
   }
   return meta_info;
@@ -195,12 +219,7 @@ gst_buffer_add_meta_memory (GstBuffer * buffer, gpointer data,
     GFreeFunc free_func, gsize size, gsize offset)
 {
   GstMeta *meta;
-  GstMetaMemoryParams params;
-
-  params.data = data;
-  params.free_func = free_func;
-  params.size = size;
-  params.offset = offset;
+  GstMetaMemoryParams params = { data, free_func, size, offset };
 
   meta = gst_buffer_add_meta (buffer, GST_META_MEMORY_INFO, &params);
 
@@ -209,29 +228,26 @@ gst_buffer_add_meta_memory (GstBuffer * buffer, gpointer data,
 
 /* Timing metadata */
 static void
-meta_timing_copy (GstBuffer * copy, GstMetaTiming * meta, GstBuffer * buffer)
+meta_timing_transform (GstBuffer * transbuf, GstMetaTiming * meta,
+    GstBuffer * buffer, GstMetaTransformData * data)
 {
   GstMetaTiming *timing;
+  guint offset;
+  guint size;
 
-  GST_DEBUG ("copy called from buffer %p to %p, meta %p", buffer, copy, meta);
+  if (data->type == GST_META_TRANSFORM_TRIM) {
+    GstMetaTransformSubbuffer *subdata = (GstMetaTransformSubbuffer *) data;
+    offset = subdata->offset;
+    size = subdata->size;
+  } else {
+    offset = 0;
+    size = GST_BUFFER_SIZE (buffer);
+  }
 
-  timing = gst_buffer_add_meta_timing (copy);
-  timing->pts = meta->pts;
-  timing->dts = meta->dts;
-  timing->duration = meta->duration;
-  timing->clock_rate = meta->clock_rate;
-}
+  GST_DEBUG ("trans called from buffer %p to %p, meta %p, %u-%u", buffer,
+      transbuf, meta, offset, size);
 
-static void
-meta_timing_sub (GstBuffer * sub, GstMetaTiming * meta, GstBuffer * buffer,
-    guint offset, guint size)
-{
-  GstMetaTiming *timing;
-
-  GST_DEBUG ("sub called from buffer %p to %p, meta %p, %u-%u", buffer, sub,
-      meta, offset, size);
-
-  timing = gst_buffer_add_meta_timing (sub);
+  timing = gst_buffer_add_meta_timing (transbuf);
   if (offset == 0) {
     /* same offset, copy timestamps */
     timing->pts = meta->pts;
@@ -261,8 +277,7 @@ gst_meta_timing_get_info (void)
         sizeof (GstMetaTiming),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
-        (GstMetaCopyFunction) meta_timing_copy,
-        (GstMetaSubFunction) meta_timing_sub,
+        (GstMetaTransformFunction) meta_timing_transform,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
   }
   return meta_info;

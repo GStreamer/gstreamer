@@ -80,29 +80,26 @@ test_free_func (GstMetaTest * meta, GstBuffer * buffer)
 }
 
 static void
-test_copy_func (GstBuffer * copy, GstMetaTest * meta, GstBuffer * buffer)
+test_transform_func (GstBuffer * transbuf, GstMetaTest * meta,
+    GstBuffer * buffer, GstMetaTransformData * data)
 {
   GstMetaTest *test;
+  guint offset;
+  guint size;
 
-  GST_DEBUG ("copy called from buffer %p to %p, meta %p", buffer, copy, meta);
+  if (data->type == GST_META_TRANSFORM_TRIM) {
+    GstMetaTransformSubbuffer *subdata = (GstMetaTransformSubbuffer *) data;
+    offset = subdata->offset;
+    size = subdata->size;
+  } else {
+    offset = 0;
+    size = GST_BUFFER_SIZE (buffer);
+  }
 
-  test = GST_META_TEST_ADD (copy);
-  test->pts = meta->pts;
-  test->dts = meta->dts;
-  test->duration = meta->duration;
-  test->clock_rate = meta->clock_rate;
-}
+  GST_DEBUG ("trans called from buffer %p to %p, meta %p, %u-%u", buffer,
+      transbuf, meta, offset, size);
 
-static void
-test_sub_func (GstBuffer * sub, GstMetaTest * meta, GstBuffer * buffer,
-    guint offset, guint size)
-{
-  GstMetaTest *test;
-
-  GST_DEBUG ("sub called from buffer %p to %p, meta %p, %u-%u", buffer, sub,
-      meta, offset, size);
-
-  test = GST_META_TEST_ADD (sub);
+  test = GST_META_TEST_ADD (transbuf);
   if (offset == 0) {
     /* same offset, copy timestamps */
     test->pts = meta->pts;
@@ -132,8 +129,7 @@ gst_meta_test_get_info (void)
         sizeof (GstMetaTest),
         (GstMetaInitFunction) test_init_func,
         (GstMetaFreeFunction) test_free_func,
-        (GstMetaCopyFunction) test_copy_func,
-        (GstMetaSubFunction) test_sub_func, NULL, NULL);
+        (GstMetaTransformFunction) test_transform_func, NULL, NULL);
   }
   return meta_test_info;
 }
