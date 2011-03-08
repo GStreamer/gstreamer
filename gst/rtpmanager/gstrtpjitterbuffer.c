@@ -881,6 +881,8 @@ static void
 gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
 {
   GstRtpJitterBufferPrivate *priv;
+  GstClock *clock;
+  GstClockTime ts;
 
   priv = jitterbuffer->priv;
 
@@ -902,6 +904,18 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf);
   rtp_jitter_buffer_reset_skew (priv->jbuf);
+  /* sync_time for scheduling timeouts needs proper element base_time
+   * However, following a seek new base_time only trickles down upon PLAYING
+   * upon which time quite some processing has already passed
+   * (which also needs correct base time) */
+  clock = gst_element_get_clock (GST_ELEMENT_CAST (jitterbuffer));
+  if (clock) {
+    ts = gst_clock_get_time (clock);
+    GST_DEBUG_OBJECT (jitterbuffer, "new base time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (ts));
+    gst_object_unref (clock);
+    gst_element_set_base_time (GST_ELEMENT_CAST (jitterbuffer), ts);
+  }
   JBUF_UNLOCK (priv);
 }
 
@@ -1218,6 +1232,22 @@ parse_failed:
   }
 }
 
+/* call with jbuf lock held */
+static void
+check_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint * percent)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+
+  /* too short a stream, or too close to EOS will never really fill buffer */
+  if (*percent != -1 && priv->npt_stop != -1 &&
+      priv->npt_stop - priv->npt_start <=
+      rtp_jitter_buffer_get_delay (priv->jbuf)) {
+    GST_DEBUG_OBJECT (jitterbuffer, "short stream; faking full buffer");
+    rtp_jitter_buffer_set_buffering (priv->jbuf, FALSE);
+    *percent = 100;
+  }
+}
+
 static void
 post_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint percent)
 {
@@ -1391,6 +1421,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (jitterbuffer, "Pushed packet #%d, now %d packets, tail: %d",
       seqnum, rtp_jitter_buffer_num_packets (priv->jbuf), tail);
+
+  check_buffering_percent (jitterbuffer, &percent);
 
 finished:
   JBUF_UNLOCK (priv);
@@ -1822,6 +1854,8 @@ push_buffer:
   /* when we get here we are ready to pop and push the buffer */
   outbuf = rtp_jitter_buffer_pop (priv->jbuf, &percent);
 
+  check_buffering_percent (jitterbuffer, &percent);
+
   if (G_UNLIKELY (discont || priv->discont)) {
     /* set DISCONT flag when we missed a packet. We pushed the buffer writable
      * into the jitterbuffer so we can modify now. */
@@ -1839,17 +1873,25 @@ push_buffer:
 
     elapsed = compute_elapsed (jitterbuffer, outbuf);
 
-    if (elapsed > priv->last_elapsed) {
+    if (elapsed > priv->last_elapsed || !priv->last_elapsed) {
       guint64 left;
 
       priv->last_elapsed = elapsed;
 
       left = priv->npt_stop - priv->npt_start;
+      GST_LOG_OBJECT (jitterbuffer, "left %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (left));
 
       if (elapsed > 0)
         estimated = gst_util_uint64_scale (out_time, left, elapsed);
-      else
-        estimated = -1;
+      else {
+        /* if there is almost nothing left,
+         * we may never advance enough to end up in the above case */
+        if (left < GST_SECOND)
+          estimated = GST_SECOND;
+        else
+          estimated = -1;
+      }
 
       GST_LOG_OBJECT (jitterbuffer, "elapsed %" GST_TIME_FORMAT ", estimated %"
           GST_TIME_FORMAT, GST_TIME_ARGS (elapsed), GST_TIME_ARGS (estimated));

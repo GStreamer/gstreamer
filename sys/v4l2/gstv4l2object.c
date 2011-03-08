@@ -774,7 +774,9 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   /* compressed formats */
   {V4L2_PIX_FMT_MJPEG, TRUE},
   {V4L2_PIX_FMT_JPEG, TRUE},
+#ifdef V4L2_PIX_FMT_PJPG
   {V4L2_PIX_FMT_PJPG, TRUE},
+#endif
   {V4L2_PIX_FMT_DV, TRUE},
   {V4L2_PIX_FMT_MPEG, FALSE},
 
@@ -815,10 +817,16 @@ gst_v4l2_object_get_format_from_fourcc (GstV4l2Object * v4l2object,
       return fmt;
     /* special case for jpeg */
     if (fmt->pixelformat == V4L2_PIX_FMT_MJPEG ||
-        fmt->pixelformat == V4L2_PIX_FMT_JPEG ||
-        fmt->pixelformat == V4L2_PIX_FMT_PJPG) {
-      if (fourcc == V4L2_PIX_FMT_JPEG
-          || fourcc == V4L2_PIX_FMT_MJPEG || fourcc == V4L2_PIX_FMT_PJPG) {
+        fmt->pixelformat == V4L2_PIX_FMT_JPEG
+#ifdef V4L2_PIX_FMT_PJPG
+        || fmt->pixelformat == V4L2_PIX_FMT_PJPG
+#endif
+        ) {
+      if (fourcc == V4L2_PIX_FMT_JPEG || fourcc == V4L2_PIX_FMT_MJPEG
+#ifdef V4L2_PIX_FMT_PJPG
+          || fourcc == V4L2_PIX_FMT_PJPG
+#endif
+          ) {
         return fmt;
       }
     }
@@ -858,9 +866,11 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
 
   switch (fourcc) {
     case V4L2_PIX_FMT_MJPEG:
+#ifdef V4L2_PIX_FMT_PJPG
     case V4L2_PIX_FMT_PJPG:
       rank = JPEG_BASE_RANK;
       break;
+#endif
     case V4L2_PIX_FMT_JPEG:
       rank = JPEG_BASE_RANK + 1;
       break;
@@ -1077,7 +1087,9 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
 
   switch (fourcc) {
     case V4L2_PIX_FMT_MJPEG:   /* Motion-JPEG */
+#ifdef V4L2_PIX_FMT_PJPG
     case V4L2_PIX_FMT_PJPG:    /* Progressive-JPEG */
+#endif
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
       structure = gst_structure_new ("image/jpeg", NULL);
       break;

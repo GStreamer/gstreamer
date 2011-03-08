@@ -90,6 +90,7 @@ struct _GstWavParse {
   gboolean vbr;
 
   guint bytes_per_sample;
+  guint max_buf_size;
 
   /* position in data part */
   guint64	offset;

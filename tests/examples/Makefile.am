@@ -5,11 +5,7 @@ JACK_DIR=
 endif
 
 if USE_CAIRO_GOBJECT
-if HAVE_GTK_X11
 CAIRO_DIR=cairo
-else
-CAIRO_DIR=
-endif
 else
 CAIRO_DIR=
 endif
@@ -18,6 +14,6 @@ SUBDIRS = audiofx equalizer $(JACK_DIR) level pulse \
 	rtp shapewipe spectrum v4l2 $(CAIRO_DIR)
 
 DIST_SUBDIRS = audiofx equalizer jack level pulse \
-	rtp shapewipe spectrum v4l2 $(CAIRO_DIR)
+	rtp shapewipe spectrum v4l2 cairo
 
 include $(top_srcdir)/common/parallel-subdirs.mak
