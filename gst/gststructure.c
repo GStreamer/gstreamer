@@ -29,7 +29,7 @@
  *
  * In addition to the key/value pairs, a #GstStructure also has a name. The name
  * starts with a letter and can be folled by letters, numbers and any of "/-_.:".
- * 
+ *
  * #GstStructure is used by various GStreamer subsystems to store information
  * in a flexible and extensible way. A #GstStructure does not have a refcount
  * because it usually is part of a higher level object such as #GstCaps. It
@@ -39,7 +39,7 @@
  * A #GstStructure can be created with gst_structure_empty_new() or
  * gst_structure_new(), which both take a name and an optional set of
  * key/value pairs along with the types of the values.
- * 
+ *
  * Field values can be changed with gst_structure_set_value() or
  * gst_structure_set().
  *
@@ -1466,7 +1466,7 @@ gst_structure_get_date_time (const GstStructure * structure,
  * and has the correct type.
  *
  * Returns: TRUE if the value could be set correctly. If there was no field
- * with @fieldname or the existing field did not contain a #GstClockTime, this 
+ * with @fieldname or the existing field did not contain a #GstClockTime, this
  * function returns FALSE.
  */
 gboolean
@@ -1502,7 +1502,7 @@ gst_structure_get_clock_time (const GstStructure * structure,
  * and has the correct type.
  *
  * Returns: TRUE if the value could be set correctly. If there was no field
- * with @fieldname or the existing field did not contain a double, this 
+ * with @fieldname or the existing field did not contain a double, this
  * function returns FALSE.
  */
 gboolean
@@ -1606,12 +1606,12 @@ gst_structure_get_enum (const GstStructure * structure,
  * @value_numerator: (out): a pointer to an int to set
  * @value_denominator: (out): a pointer to an int to set
  *
- * Sets the integers pointed to by @value_numerator and @value_denominator 
- * corresponding to the value of the given field.  Caller is responsible 
+ * Sets the integers pointed to by @value_numerator and @value_denominator
+ * corresponding to the value of the given field.  Caller is responsible
  * for making sure the field exists and has the correct type.
  *
  * Returns: TRUE if the values could be set correctly. If there was no field
- * with @fieldname or the existing field did not contain a GstFraction, this 
+ * with @fieldname or the existing field did not contain a GstFraction, this
  * function returns FALSE.
  */
 gboolean
@@ -2566,7 +2566,7 @@ gst_structure_fixate_field_string (GstStructure * structure,
  * @target_denominator: The denominator of the target value of the fixation
  *
  * Fixates a #GstStructure by changing the given field to the nearest
- * fraction to @target_numerator/@target_denominator that is a subset 
+ * fraction to @target_numerator/@target_denominator that is a subset
  * of the existing field.
  *
  * Returns: TRUE if the structure could be fixated
