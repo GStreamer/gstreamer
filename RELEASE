@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.27 "Some Kind of Temporal Blend"
+Release notes for GStreamer Good Plug-ins 0.10.28 "Inconvenienced by the Solar System"
         
 
 
@@ -52,106 +52,11 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * avidemux: add workaround for buggy list size; extract datetime tags
-      * cacasink: fix masks and strides
-      * deinterlace: change the default to linear
-      * deinterlace: avoid infinite loop draining
-      * deinterlace: rewrite/fix how neighboring scan lines are calculated
-      * flvdemux: use aac codec-data to adjust samplerate if needed
-      * flvmux: Fix for nellymoser codecid setting
-      * icydemux: Add 'StreamUrl' metadata as GST_TAG_HOMEPAGE tag
-      * id3demux: fix parsing of ID3v2.4 genre frames with multiple genres
-      * imagefreeze: pass along eos if received before buffer arrives
-      * jpegdec: add "max-errors" property to ignore decoding errors
-      * jpegdec: avoid infinite loop when resyncing; discard incomplete image
-      * matroskademux: add stream-format and alignment properties for h264
-      * matroskademux: assume matroska if no doctype is specified
-      * matroskademux: increase allowed max. block size for push mode from 10M to 15M
-      * matroskademux: normalize empty Cues to no Cues
-      * matroskamux: add support for DTS and E-AC3 audio
-      * matroskamux: try to write timestamps in all the outgoing buffers
-      * multifilesink: send stream headers in key-frame mode
-      * multiudpsink: add buffer-size property
-      * navseek: add basic support to change playback rate
-      * pulsemixer: Implement MIXER_FLAG_AUTO_NOTIFICATIONS
-      * pulsesink: flush remaining buffered samples on EOS
-      * pulsesink: make corking during pause synchronous; don't uncork in _start
-      * pulsesink: Uncork stream while flushing the ringbuffer
-      * pulsesrc: add "client" property
-      * qtdemux: add support for fragmented mp4
-      * qtdemux: add support for (E)AC-3, WMA and VC-1 audio
-      * qtdemux: allow pulling atoms with unknown size
-      * qtdemux: fix flow return aggregation and handling of near end-of-file corner cases
-      * qtdemux: parse and use creation time tag from mvhd
-      * rtpbin: copy buffering stats
-      * rtpbin: correctly calculate RTCP packet size
-      * rtp: fix rank of payloaders and depayloaders
-      * rtp: flush state on flush-stop for seek handling for many (de)payloaders
-      * rtp ac3pay: add AC3 payloader
-      * rtp h264depay: determine output h264 layout using caps negotiation
-      * rtp h264pay: implement full bytestream scan mode
-      * rtp j2kdepay: add support for buffer lists; make depayloader more resilient
-      * rtp j2kpay: use buffer lists for better performance
-      * rtp j2kpay: handle EOC correctly; stop scanning when we reached the end
-      * rtp j2kpay: use SOP markers to split bitstream
-      * rtp jitterbuffer: provide a clock; get better buffering level
-      * rtp jpegdepay: fix framerate parsing for locales that use a comma as floating point
-      * rtp mp4adepay: improve timestamps on outgoing packets
-      * rtpsession: also emit RTCP activity on SR
-      * rtpsession: remember last sent RB values
-      * rtspsrc: add and use auto buffering mode
-      * rtspsrc: degrade gracefully upon failing seek and tweak QUERY_SEEKING response
-      * rtspsrc: include range request for all streams with non-aggregate control
-      * rtspsrc: increase udp buffer size
-      * rtspsrc: reset session manager base time when flushing
-      * rtspsrc: select multicast transports in a smarter way
-      * souphttpsrc: don't send seeks behind the end of file to the server
-      * v4l2sink: add navigation support; properties to control crop
-      * vrawdepay: fix length check
-      * wavparse: detect DTS advertised as PCM correctly in some more cases
-      * ximagesrc: change from XGetImage to XGetSubImage dependant on a property
+      * Fix build issue with new kernels (with the old video4linux1 interface header removed)
 
 Bugs fixed in this release
      
-      * 596321 : qtdemux: add support for fragmented MP4 and " mfra " boxes
-      * 618389 : [pulsemixer] Should implement MIXER_FLAG_AUTO_NOTIFICATIONS interface
-      * 618652 : [effectv] Use of uninitialised value in unit test
-      * 620283 : Support for Adobe's F4F missing
-      * 621929 : [PLUGIN-MOVE] move jack plugin from -bad to -good
-      * 623178 : [matroskademux] error message for unrecognised FOURCC codes should be improved
-      * 625825 : cannot link rtpmp4adepay ! aacparse
-      * 629418 : progressreport: add support for determining stream position from buffer timestamps instead of using queries
-      * 631516 : [navseek] Add support to change playback rate
-      * 632654 : [matroskamux] try to write timestamps in most of the outgoing buffers
-      * 632897 : flvmux does not set the correct nellymoser codec id
-      * 633280 : [icydemux][PATCH] icydemux: Send 'StreamUrl' metadata as GST_TAG_HOMEPAGE tag
-      * 634314 : pngdec hangs on faulty pngs
-      * 634391 : [v4l2src] add interlaced field to caps
-      * 634393 : v4l2src: Set top field first for interlaced captures
-      * 634910 : [rtph264pay] Implement bytestream scan mode
-      * 634928 : [qtdemux] report creation/modification time via metadata tag
-      * 635734 : jpegdec: infinite loop when playing back motion jpeg stream
-      * 636049 : ximagesrc: fix remote X and off by ones
-      * 636172 : imagefreeze: eos is not passed before a buffer arrives
-      * 636234 : [wavparse] dts 6ch played as stereo 16 bit pcm if DTS frame starts at non-zero offset
-      * 636621 : flvdemux: doesn't set the right sample rate for aac audio
-      * 636784 : [qtdemux] GST_QUERY_CONVERT implementation for qtdemux
-      * 637060 : matroskademux: errors out on 13MB blocks when streaming
-      * 637686 : [jpegenc] Improve sinkpad getcaps results
-      * 638019 : [matroskademux] some matroska files are not specifying DocType
-      * 638072 : build failure: rtpsource.c: error: 'have_rb' may be used uninitialized in this function
-      * 638535 : id3demux: multiple genres as per ID3v2.4 not supported correctly
-      * 638569 : cacasink crashes when given 15-bit video.
-      * 639240 : pulsesink: PLAYING- > PAUSED- > PLAYING transition causes dropout
-      * 639321 : deinterlace: field{1,3} scanline pointers seem to be off by one field line
-      * 639339 : v4l2: fails to build with older kernels due to missing V4L_FIELD_INTERLACED_{TB,BT}
-      * 639516 : muxers: fix setting src pad caps
-      * 639740 : [pulsesink] doesn't uncork in some cases during reverse playback
-      * 640028 : [qtdemux] crash on malformed mov stream
-      * 640063 : rtph264depay: leaks codec data buffer in byte-stream=false mode
-      * 640064 : rtspsrc memory leak
-      * 640080 : rtspsrc: fails to error out properly on network failure
-      * 623063 : [jpegdec] add " max-errors " property
+      * 643716 : v4l2src: fails to build with newer kernels: ./v4l2_calls.h:33: fatal error: linux/videodev.h: No such file or directory
 
 Download
 
@@ -180,39 +85,5 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Andoni Morales Alastruey
-      * Andy Wingo
-      * Arun Raghavan
-      * Benjamin Gaignard
-      * Benjamin Otte
-      * Christian Schaller
-      * David Hoyt
-      * David Schleef
-      * Edward Hervey
-      * Erich Schubert
-      * Guillaume Emont
-      * Iain Holmes
-      * Jan Schmidt
-      * Janne Grunau
-      * Johan Dahlin
-      * Kishore Arepalli
-      * Leif Johnson
-      * Marc-André Lureau
-      * Mark Nauwelaerts
-      * Paul Davis
-      * Rob Clark
-      * Ronald S. Bultje
-      * Sebastian Dröge
-      * Stefan Kost
-      * Steve Baker
-      * Stéphane Loeuillet
-      * Tambet Ingo
-      * Thiago Santos
-      * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Tom Janiszewski
-      * Tristan Matthews
-      * Vincent Penquerc'h
-      * Wim Taymans
  
