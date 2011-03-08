@@ -12,6 +12,7 @@ gstcpp
 gstdata
 gstdatetime
 gstelement
+gstelementfactory
 gstevent
 gstghostpad
 gstiterator
