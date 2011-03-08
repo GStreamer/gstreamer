@@ -219,8 +219,6 @@ gst_structure_new (const gchar * name, const gchar * firstfield, ...)
   GstStructure *structure;
   va_list varargs;
 
-  g_return_val_if_fail (name != NULL, NULL);
-
   va_start (varargs, firstfield);
   structure = gst_structure_new_valist (name, firstfield, varargs);
   va_end (varargs);
@@ -249,8 +247,6 @@ gst_structure_new_valist (const gchar * name,
     const gchar * firstfield, va_list varargs)
 {
   GstStructure *structure;
-
-  g_return_val_if_fail (name != NULL, NULL);
 
   structure = gst_structure_empty_new (name);
 
