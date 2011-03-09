@@ -40,7 +40,7 @@ plugin_init (GstPlugin * plugin)
   ret &= gst_element_register (plugin, "ac3parse",
       GST_RANK_PRIMARY + 1, GST_TYPE_AC3_PARSE);
   ret &= gst_element_register (plugin, "dcaparse",
-      GST_RANK_NONE, GST_TYPE_DCA_PARSE);
+      GST_RANK_PRIMARY + 1, GST_TYPE_DCA_PARSE);
   ret &= gst_element_register (plugin, "flacparse",
       GST_RANK_PRIMARY + 1, GST_TYPE_FLAC_PARSE);
   ret &= gst_element_register (plugin, "mpegaudioparse",
