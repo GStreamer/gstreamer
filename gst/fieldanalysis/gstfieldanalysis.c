@@ -333,7 +333,9 @@ gst_field_analysis_reset (GstFieldAnalysis * filter)
   filter->first_buffer = TRUE;
   filter->width = 0;
   g_free (filter->comb_mask);
+  filter->comb_mask = NULL;
   g_free (filter->block_scores);
+  filter->block_scores = NULL;
 }
 
 static void
