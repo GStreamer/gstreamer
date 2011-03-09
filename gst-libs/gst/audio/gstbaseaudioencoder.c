@@ -940,9 +940,9 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   s = gst_caps_get_structure (caps, 0);
   /* parse caps here to save subclass the trouble */
   if (gst_structure_has_name (s, "audio/x-raw-int"))
-    state->xint = TRUE;
+    state->is_int = TRUE;
   else if (gst_structure_has_name (s, "audio/x-raw-float"))
-    state->xint = FALSE;
+    state->is_int = FALSE;
   else
     goto refuse_caps;
 
@@ -952,11 +952,11 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   CHECK_VALUE (res, state->channels, vi);
   res &= gst_structure_get_int (s, "width", &vi);
   CHECK_VALUE (res, state->width, vi);
-  res &= (!state->xint || gst_structure_get_int (s, "depth", &vi));
+  res &= (!state->is_int || gst_structure_get_int (s, "depth", &vi));
   CHECK_VALUE (res, state->depth, vi);
   res &= gst_structure_get_int (s, "endianness", &vi);
   CHECK_VALUE (res, state->endian, vi);
-  res &= (!state->xint || gst_structure_get_boolean (s, "signed", &vb));
+  res &= (!state->is_int || gst_structure_get_boolean (s, "signed", &vb));
   CHECK_VALUE (res, state->sign, vb);
 
   state->bpf = (state->width / 8) * state->channels;

@@ -98,7 +98,7 @@ typedef struct _GstBaseAudioEncoderContext GstBaseAudioEncoderContext;
  * @bpf: bytes per audio frame
  */
 typedef struct _GstAudioState {
-  gboolean xint;
+  gboolean is_int;
   gint  rate;
   gint  channels;
   gint  width;
