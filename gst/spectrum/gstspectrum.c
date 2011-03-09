@@ -601,7 +601,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   gfloat max_value =
       (1UL << (GST_AUDIO_FILTER (spectrum)->format.depth - 1)) - 1;
   guint width = GST_AUDIO_FILTER (spectrum)->format.width / 8;
-  gboolean fp = (GST_AUDIO_FILTER (spectrum)->format.type == GST_BUFTYPE_FLOAT);
+  gboolean is_float =
+      (GST_AUDIO_FILTER (spectrum)->format.type == GST_BUFTYPE_FLOAT);
   guint bands = spectrum->bands;
   guint nfft = 2 * bands - 2;
   guint input_pos;
@@ -650,38 +651,44 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
      * take the average of all channels
      */
     input[input_pos] = 0.0;
-    if (fp && width == 4) {
-      gfloat *in = (gfloat *) data;
-      for (i = 0; i < channels; i++)
-        input[input_pos] += in[i];
-    } else if (fp && width == 8) {
-      gdouble *in = (gdouble *) data;
-      for (i = 0; i < channels; i++)
-        input[input_pos] += in[i];
-    } else if (!fp && width == 4) {
-      gint32 *in = (gint32 *) data;
-      for (i = 0; i < channels; i++)
-        /* max_value will be 0 when depth is 1, interpret -1 and 0
-         * as -1 and +1 if that's the case.
-         */
-        input[input_pos] += max_value ? in[i] / max_value : in[i] * 2 + 1;
-    } else if (!fp && width == 3) {
-      for (i = 0; i < channels; i++) {
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-        gint32 value = GST_READ_UINT24_BE (data);
-#else
-        gint32 value = GST_READ_UINT24_LE (data);
-#endif
-        if (value & 0x00800000)
-          value |= 0xff000000;
-        input[input_pos] += max_value ? value / max_value : value * 2 + 1;
+    if (is_float) {
+      if (width == 4) {
+        gfloat *in = (gfloat *) data;
+        for (i = 0; i < channels; i++)
+          input[input_pos] += in[i];
+      } else if (width == 8) {
+        gdouble *in = (gdouble *) data;
+        for (i = 0; i < channels; i++)
+          input[input_pos] += in[i];
+      } else {
+        g_assert_not_reached ();
       }
-    } else if (!fp && width == 2) {
-      gint16 *in = (gint16 *) data;
-      for (i = 0; i < channels; i++)
-        input[input_pos] += max_value ? in[i] / max_value : in[i] * 2 + 1;
     } else {
-      g_assert_not_reached ();
+      if (width == 4) {
+        gint32 *in = (gint32 *) data;
+        for (i = 0; i < channels; i++)
+          /* max_value will be 0 when depth is 1, interpret -1 and 0
+           * as -1 and +1 if that's the case.
+           */
+          input[input_pos] += max_value ? in[i] / max_value : in[i] * 2 + 1;
+      } else if (width == 3) {
+        for (i = 0; i < channels; i++) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+          gint32 value = GST_READ_UINT24_BE (data);
+#else
+          gint32 value = GST_READ_UINT24_LE (data);
+#endif
+          if (value & 0x00800000)
+            value |= 0xff000000;
+          input[input_pos] += max_value ? value / max_value : value * 2 + 1;
+        }
+      } else if (width == 2) {
+        gint16 *in = (gint16 *) data;
+        for (i = 0; i < channels; i++)
+          input[input_pos] += max_value ? in[i] / max_value : in[i] * 2 + 1;
+      } else {
+        g_assert_not_reached ();
+      }
     }
     input[input_pos] /= channels;
 
