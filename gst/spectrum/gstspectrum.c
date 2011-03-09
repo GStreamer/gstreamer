@@ -71,7 +71,7 @@
  *   <classname>&quot;magnitude&quot;</classname>:
  *   the level for each frequency band in dB. All values below the value of the
  *   #GstSpectrum:threshold property will be set to the threshold. Only present
- *   if the message-magnitude property is true.
+ *   if the #GstSpectrum:message-magnitude property is %TRUE.
  *   </para>
  * </listitem>
  * <listitem>
@@ -79,7 +79,7 @@
  *   #GstValueList of #gfloat
  *   <classname>&quot;phase&quot;</classname>:
  *   The phase for each frequency band. The value is between -pi and pi. Only
- *   present if the message-phase property is true.
+ *   present if the #GstSpectrum:message-phase property is %TRUE.
  *   </para>
  * </listitem>
  * </itemizedlist>
