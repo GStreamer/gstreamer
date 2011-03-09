@@ -56,6 +56,7 @@ GstApp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstapp-@GST_MAJORMINOR@
 		--pkg gstreamer-@GST_MAJORMINOR@ \
 		--pkg gstreamer-base-@GST_MAJORMINOR@ \
 		--pkg-export gstreamer-app-@GST_MAJORMINOR@ \
+		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

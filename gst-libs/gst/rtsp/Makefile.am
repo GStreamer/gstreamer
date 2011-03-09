@@ -76,6 +76,7 @@ GstRtsp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_MAJORMINO
 		--pkg gstreamer-@GST_MAJORMINOR@ \
 		--pkg gstreamer-sdp-@GST_MAJORMINOR@ \
 		--pkg-export gstreamer-rtsp-@GST_MAJORMINOR@ \
+		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
