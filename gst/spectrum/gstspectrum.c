@@ -596,13 +596,12 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 {
   GstSpectrum *spectrum = GST_SPECTRUM (trans);
   guint i;
-  guint rate = GST_AUDIO_FILTER (spectrum)->format.rate;
-  guint channels = GST_AUDIO_FILTER (spectrum)->format.channels;
-  gfloat max_value =
-      (1UL << (GST_AUDIO_FILTER (spectrum)->format.depth - 1)) - 1;
-  guint width = GST_AUDIO_FILTER (spectrum)->format.width / 8;
-  gboolean is_float =
-      (GST_AUDIO_FILTER (spectrum)->format.type == GST_BUFTYPE_FLOAT);
+  GstRingBufferSpec *format = &GST_AUDIO_FILTER (spectrum)->format;
+  guint rate = format->rate;
+  guint channels = format->channels;
+  guint width = format->width / 8;
+  gboolean is_float = (format->type == GST_BUFTYPE_FLOAT);
+  gfloat max_value = (1UL << (format->depth - 1)) - 1;
   guint bands = spectrum->bands;
   guint nfft = 2 * bands - 2;
   guint input_pos;
