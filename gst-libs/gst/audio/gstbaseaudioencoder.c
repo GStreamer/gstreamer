@@ -116,6 +116,13 @@
  * or draining all currently remaining input data, depending on the direction
  * of the discontuinity.
  *
+ * If perfect timestamps are arranged, it is also possible to request baseclass
+ * (usually set by subclass) to provide additional buffer metadata (in OFFSET
+ * and OFFSET_END) fields according to granule defined semantics currently
+ * needed by oggmux.  Specifically, OFFSET is set to granulepos (= sample count
+ * including buffer) and OFFSET_END to corresponding timestamp (as determined
+ * by same sample count and sample rate).
+ *
  * Things that subclass need to take care of:
  * <itemizedlist>
  *   <listitem><para>Provide pad templates</para></listitem>
