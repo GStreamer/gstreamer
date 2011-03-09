@@ -100,20 +100,18 @@
  *
  * In particular, base class will either favor tracking upstream timestamps
  * (at the possible expense of jitter) or aim to arrange for a perfect stream of
- * output timestamps, depending on
- * <link linkend="GstBaseAudioEncoder--perfect-ts">perfect-ts</link>.
+ * output timestamps, depending on #GstBaseAudioEncoder:perfect-ts.
  * However, in the latter case, the input may not be so perfect or ideal, which
  * is handled as follows.  An input timestamp is compared with the expected
  * timestamp as dictated by input sample stream and if the deviation is less
- * than <link linkend="GstBaseAudioEncoder--tolerance">tolerance</link>,
- * the deviation is discarded.  Otherwise, it is considered
- * a discontuinity and subsequent output timestamp is resynced to the
- * new position after performing configured discontinuity processing.
- * In the non-perfect-ts case, an upstream variation exceeding tolerance
- * only leads to marking DISCONT on subsequent outgoing (while timestamps
- * are adjusted to upstream regardless of variation).
+ * than #GstBaseAudioEncoder:tolerance, the deviation is discarded.
+ * Otherwise, it is considered a discontuinity and subsequent output timestamp
+ * is resynced to the new position after performing configured discontinuity
+ * processing.  In the non-perfect-ts case, an upstream variation exceeding
+ * tolerance only leads to marking DISCONT on subsequent outgoing
+ * (while timestamps are adjusted to upstream regardless of variation).
  * While DISCONT is also marked in the perfect-ts case, this one optionally
- * (see <link linkend="GstBaseAudioEncoder--hard-resync">hard-resync</link>)
+ * (see #GstBaseAudioEncoder:hard-resync)
  * performs some additional steps, such as clipping of (early) input samples
  * or draining all currently remaining input data, depending on the direction
  * of the discontuinity.
@@ -428,7 +426,8 @@ gst_base_audio_encoder_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-/** gst_base_audio_encoder_finish_frame:
+/**
+ * gst_base_audio_encoder_finish_frame:
  * @enc: a #GstBaseAudioEncoder
  * @buffer: encoded data
  * @samples: number of samples (per channel) represented by encoded data
@@ -1013,7 +1012,8 @@ refuse_caps:
 }
 
 
-/** gst_base_audio_encoder_proxy_getcaps:
+/**
+ * gst_base_audio_encoder_proxy_getcaps:
  * @enc: a #GstBaseAudioEncoder
  * @caps: initial
  *
@@ -1593,7 +1593,8 @@ gst_base_audio_encoder_sink_activate_push (GstPad * pad, gboolean active)
   return result;
 }
 
-/** gst_base_audio_encoder_add_streamheader:
+/**
+ * gst_base_audio_encoder_add_streamheader:
  * @caps: a #GstCaps
  * @buf: header buffers
  *
