@@ -72,6 +72,13 @@ struct _GstPulseSink
 
   GstStructure *properties;
   pa_proplist *proplist;
+
+#ifdef HAVE_PULSE_1_0
+  GMutex *sink_formats_lock;
+  GList *sink_formats;
+  volatile gint format_lost;
+  GstClockTime format_lost_time;
+#endif
 };
 
 struct _GstPulseSinkClass

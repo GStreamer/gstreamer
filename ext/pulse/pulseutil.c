@@ -167,6 +167,14 @@ gst_pulse_fill_format_info (GstRingBufferSpec * spec, pa_format_info ** f,
   } else if (spec->format == GST_S24_BE && spec->width == 32) {
     format->encoding = PA_ENCODING_PCM;
     sf = PA_SAMPLE_S24_32BE;
+  } else if (spec->format == GST_AC3) {
+    format->encoding = PA_ENCODING_AC3_IEC61937;
+  } else if (spec->format == GST_EAC3) {
+    format->encoding = PA_ENCODING_EAC3_IEC61937;
+  } else if (spec->format == GST_DTS) {
+    format->encoding = PA_ENCODING_DTS_IEC61937;
+  } else if (spec->format == GST_MPEG) {
+    format->encoding = PA_ENCODING_MPEG_IEC61937;
   } else {
     goto fail;
   }
