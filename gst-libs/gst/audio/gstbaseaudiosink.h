@@ -141,6 +141,10 @@ struct _GstBaseAudioSink {
  * GstBaseAudioSinkClass:
  * @parent_class: the parent class.
  * @create_ringbuffer: create and return a #GstRingBuffer to write to.
+ * @payload: payload data in a format suitable to write to the sink. If no
+ *           payloading is required, returns a reffed copy of the original
+ *           buffer, else returns the payloaded buffer with all other metadata
+ *           copied. (Since: 0.10.35)
  *
  * #GstBaseAudioSink class. Override the vmethod to implement
  * functionality.
@@ -151,8 +155,12 @@ struct _GstBaseAudioSinkClass {
   /* subclass ringbuffer allocation */
   GstRingBuffer* (*create_ringbuffer)  (GstBaseAudioSink *sink);
 
+  /* subclass payloader */
+  GstBuffer*     (*payload)            (GstBaseAudioSink *sink,
+                                        GstBuffer        *buffer);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 GType gst_base_audio_sink_get_type(void);

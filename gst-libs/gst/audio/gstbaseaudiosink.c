@@ -1375,6 +1375,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   guint64 in_offset;
   GstClockTime time, stop, render_start, render_stop, sample_offset;
   GstClockTimeDiff sync_offset, ts_offset;
+  GstBaseAudioSinkClass *bclass;
   GstBaseAudioSink *sink;
   GstRingBuffer *ringbuf;
   gint64 diff, align, ctime, cstop;
@@ -1390,8 +1391,10 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstFlowReturn ret;
   GstSegment clip_seg;
   gint64 time_offset;
+  GstBuffer *out = NULL;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
+  bclass = GST_BASE_AUDIO_SINK_GET_CLASS (sink);
 
   ringbuf = sink->ringbuffer;
 
@@ -1413,6 +1416,17 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     sink->priv->sync_latency = FALSE;
   } else {
     GST_OBJECT_UNLOCK (sink);
+  }
+
+  /* Before we go on, let's see if we need to payload the data. If yes, we also
+   * need to unref the output buffer before leaving. */
+  if (bclass->payload) {
+    out = bclass->payload (sink, buf);
+
+    if (!out)
+      goto payload_failed;
+
+    buf = out;
   }
 
   bps = ringbuf->spec.bytes_per_sample;
@@ -1697,7 +1711,13 @@ no_sync:
     gst_ring_buffer_start (ringbuf);
   }
 
-  return GST_FLOW_OK;
+  ret = GST_FLOW_OK;
+
+done:
+  if (out)
+    gst_buffer_unref (out);
+
+  return ret;
 
   /* SPECIAL cases */
 out_of_segment:
@@ -1706,32 +1726,41 @@ out_of_segment:
         "dropping sample out of segment time %" GST_TIME_FORMAT ", start %"
         GST_TIME_FORMAT, GST_TIME_ARGS (time),
         GST_TIME_ARGS (bsink->segment.start));
-    return GST_FLOW_OK;
+    ret = GST_FLOW_OK;
+    goto done;
   }
   /* ERRORS */
+payload_failed:
+  {
+    GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL), ("failed to payload."));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 wrong_state:
   {
     GST_DEBUG_OBJECT (sink, "ringbuffer not negotiated");
     GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL), ("sink not negotiated."));
-    return GST_FLOW_NOT_NEGOTIATED;
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
   }
 wrong_size:
   {
     GST_DEBUG_OBJECT (sink, "wrong size");
     GST_ELEMENT_ERROR (sink, STREAM, WRONG_TYPE,
         (NULL), ("sink received buffer of wrong size."));
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 stopping:
   {
     GST_DEBUG_OBJECT (sink, "preroll got interrupted: %d (%s)", ret,
         gst_flow_get_name (ret));
-    return ret;
+    goto done;
   }
 sync_latency_failed:
   {
     GST_DEBUG_OBJECT (sink, "failed waiting for latency");
-    return ret;
+    goto done;
   }
 }
 
