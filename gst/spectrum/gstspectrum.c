@@ -335,7 +335,7 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
       guint64 interval = g_value_get_uint64 (value);
       if (filter->interval != interval) {
         GST_BASE_TRANSFORM_LOCK (filter);
-        filter->interval = g_value_get_uint64 (value);
+        filter->interval = interval;
         gst_spectrum_reset_state (filter);
         GST_BASE_TRANSFORM_UNLOCK (filter);
       }
