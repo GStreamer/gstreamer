@@ -79,17 +79,6 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_AUDIO_ENCODER_SEGMENT(obj)     (GST_BASE_AUDIO_ENCODER_CAST (obj)->segment)
 
-/**
- * GST_BASE_AUDIO_ENCODER_FLOW_DROPPED:
- *
- * A #GstFlowReturn that can be returned from parse_frame to
- * indicate that no output buffer was generated, or from pre_push_buffer to
- * to forego pushing buffer.
- *
- * Since: 0.10.x
- */
-#define GST_BASE_AUDIO_ENCODER_FLOW_DROPPED     GST_FLOW_CUSTOM_SUCCESS
-
 
 typedef struct _GstBaseAudioEncoder GstBaseAudioEncoder;
 typedef struct _GstBaseAudioEncoderClass GstBaseAudioEncoderClass;

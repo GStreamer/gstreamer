@@ -553,6 +553,7 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
   if (av) {
     GST_LOG_OBJECT (enc, "collecting all %d bytes for output", av);
     buf = gst_adapter_take_buffer (priv->adapter_out, av);
+    buf = gst_buffer_make_metadata_writable (buf);
 
     /* decorate */
     gst_buffer_set_caps (buf, GST_PAD_CAPS (enc->srcpad));
