@@ -35,6 +35,17 @@ G_BEGIN_DECLS
 #define GST_IS_SPECTRUM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_SPECTRUM))
 typedef struct _GstSpectrum GstSpectrum;
 typedef struct _GstSpectrumClass GstSpectrumClass;
+typedef struct _GstSpectrumChannel GstSpectrumChannel;
+
+struct _GstSpectrumChannel
+{
+  gfloat *input;
+  gfloat *input_tmp;
+  GstFFTF32Complex *freqdata;
+  gfloat *spect_magnitude;      /* accumulated mangitude and phase */
+  gfloat *spect_phase;          /* will be scaled by num_fft before sending */
+  GstFFTF32 *fft_ctx;
+};
 
 struct _GstSpectrum
 {
@@ -55,14 +66,9 @@ struct _GstSpectrum
   GstClockTime message_ts;      /* starttime for next message */
 
   /* <private> */
-  gfloat *input;
-  guint input_pos;
-  gfloat *input_tmp;
-  GstFFTF32Complex *freqdata;
-  gfloat *spect_magnitude;      /* accumulated mangitude and phase */
-  gfloat *spect_phase;          /* will be scaled by num_fft before sending */
-  GstFFTF32 *fft_ctx;
+  GstSpectrumChannel *channel_data;
 
+  guint input_pos;
   guint64 error_per_interval;
   guint64 accumulated_error;
 };

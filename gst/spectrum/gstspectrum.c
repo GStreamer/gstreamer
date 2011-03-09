@@ -273,6 +273,56 @@ gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
 }
 
 static void
+gst_spectrum_alloc_channel_data (GstSpectrum * spectrum)
+{
+  gint i;
+  GstSpectrumChannel *cd;
+  guint bands = spectrum->bands;
+  guint nfft = 2 * bands - 2;
+  guint channels = (spectrum->multi_channel) ?
+      GST_AUDIO_FILTER (spectrum)->format.channels : 1;
+
+  GST_DEBUG_OBJECT (spectrum, "allocating data for %d channels", channels);
+
+  spectrum->channel_data = g_new (GstSpectrumChannel, channels);
+  for (i = 0; i < channels; i++) {
+    cd = &spectrum->channel_data[i];
+    cd->fft_ctx = gst_fft_f32_new (nfft, FALSE);
+    cd->input = g_new0 (gfloat, nfft);
+    cd->input_tmp = g_new0 (gfloat, nfft);
+    cd->freqdata = g_new0 (GstFFTF32Complex, bands);
+    cd->spect_magnitude = g_new0 (gfloat, bands);
+    cd->spect_phase = g_new0 (gfloat, bands);
+  }
+}
+
+static void
+gst_spectrum_free_channel_data (GstSpectrum * spectrum)
+{
+  gint i;
+  GstSpectrumChannel *cd;
+  guint channels = (spectrum->multi_channel) ?
+      GST_AUDIO_FILTER (spectrum)->format.channels : 1;
+
+  GST_DEBUG_OBJECT (spectrum, "freeing data for %d channels", channels);
+
+  if (spectrum->channel_data) {
+    for (i = 0; i < channels; i++) {
+      cd = &spectrum->channel_data[i];
+      if (cd->fft_ctx)
+        gst_fft_f32_free (cd->fft_ctx);
+      g_free (cd->input);
+      g_free (cd->input_tmp);
+      g_free (cd->freqdata);
+      g_free (cd->spect_magnitude);
+      g_free (cd->spect_phase);
+    }
+    g_free (spectrum->channel_data);
+    spectrum->channel_data = NULL;
+  }
+}
+
+static void
 gst_spectrum_flush (GstSpectrum * spectrum)
 {
   spectrum->num_frames = 0;
@@ -286,21 +336,7 @@ gst_spectrum_reset_state (GstSpectrum * spectrum)
 {
   GST_DEBUG_OBJECT (spectrum, "resetting state");
 
-  if (spectrum->fft_ctx)
-    gst_fft_f32_free (spectrum->fft_ctx);
-  g_free (spectrum->input);
-  g_free (spectrum->input_tmp);
-  g_free (spectrum->freqdata);
-  g_free (spectrum->spect_magnitude);
-  g_free (spectrum->spect_phase);
-
-  spectrum->fft_ctx = NULL;
-  spectrum->input = NULL;
-  spectrum->input_tmp = NULL;
-  spectrum->freqdata = NULL;
-  spectrum->spect_magnitude = NULL;
-  spectrum->spect_phase = NULL;
-
+  gst_spectrum_free_channel_data (spectrum);
   gst_spectrum_flush (spectrum);
 }
 
@@ -418,8 +454,30 @@ gst_spectrum_setup (GstAudioFilter * base, GstRingBufferSpec * format)
   GstSpectrum *spectrum = GST_SPECTRUM (base);
 
   gst_spectrum_reset_state (spectrum);
-
   return TRUE;
+}
+
+static void
+gst_spectrum_message_add_data (GstSpectrum * spectrum, GstStructure * s,
+    const gchar * name, gfloat * data, guint num_values)
+{
+  GValue v = { 0, };
+  GValue *l;
+  guint i;
+
+  /* FIXME 0.11: this should be an array, not a list */
+  g_value_init (&v, GST_TYPE_LIST);
+  /* will copy-by-value */
+  gst_structure_set_value (s, name, &v);
+  g_value_unset (&v);
+
+  g_value_init (&v, G_TYPE_FLOAT);
+  l = (GValue *) gst_structure_get_value (s, name);
+  for (i = 0; i < num_values; i++) {
+    g_value_set_float (&v, data[i]);
+    gst_value_list_append_value (l, &v);        /* copies by value */
+  }
+  g_value_unset (&v);
 }
 
 static GstMessage *
@@ -427,16 +485,11 @@ gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime timestamp,
     GstClockTime duration)
 {
   GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (spectrum);
+  GstSpectrumChannel *cd;
   GstStructure *s;
-  GValue v = { 0, };
-  GValue *l;
-  guint i;
-  gfloat *spect_magnitude = spectrum->spect_magnitude;
-  gfloat *spect_phase = spectrum->spect_phase;
   GstClockTime endtime, running_time, stream_time;
 
-  GST_DEBUG_OBJECT (spectrum, "preparing message, spect = %p, bands =%d ",
-      spect_magnitude, spectrum->bands);
+  GST_DEBUG_OBJECT (spectrum, "preparing message, bands =%d ", spectrum->bands);
 
   running_time = gst_segment_to_running_time (&trans->segment, GST_FORMAT_TIME,
       timestamp);
@@ -452,39 +505,90 @@ gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime timestamp,
       "running-time", G_TYPE_UINT64, running_time,
       "duration", G_TYPE_UINT64, duration, NULL);
 
-  if (spectrum->message_magnitude) {
-    /* FIXME 0.11: this should be an array, not a list */
-    g_value_init (&v, GST_TYPE_LIST);
-    /* will copy-by-value */
-    gst_structure_set_value (s, "magnitude", &v);
-    g_value_unset (&v);
+  cd = &spectrum->channel_data[0];
 
-    g_value_init (&v, G_TYPE_FLOAT);
-    l = (GValue *) gst_structure_get_value (s, "magnitude");
-    for (i = 0; i < spectrum->bands; i++) {
-      g_value_set_float (&v, spect_magnitude[i]);
-      gst_value_list_append_value (l, &v);      /* copies by value */
+  if (spectrum->message_magnitude) {
+    gst_spectrum_message_add_data (spectrum, s, "magnitude",
+        cd->spect_magnitude, spectrum->bands);
+  }
+  if (spectrum->message_phase) {
+    gst_spectrum_message_add_data (spectrum, s, "phase",
+        cd->spect_phase, spectrum->bands);
+  }
+  return gst_message_new_element (GST_OBJECT (spectrum), s);
+}
+
+static void
+gst_spectrum_run_fft (GstSpectrum * spectrum, GstSpectrumChannel * cd,
+    guint input_pos)
+{
+  guint i;
+  guint bands = spectrum->bands;
+  guint nfft = 2 * bands - 2;
+  gint threshold = spectrum->threshold;
+  gfloat *input = cd->input;
+  gfloat *input_tmp = cd->input_tmp;
+  gfloat *spect_magnitude = cd->spect_magnitude;
+  gfloat *spect_phase = cd->spect_phase;
+  GstFFTF32Complex *freqdata = cd->freqdata;
+  GstFFTF32 *fft_ctx = cd->fft_ctx;
+
+  for (i = 0; i < nfft; i++)
+    input_tmp[i] = input[(input_pos + i) % nfft];
+
+  gst_fft_f32_window (fft_ctx, input_tmp, GST_FFT_WINDOW_HAMMING);
+
+  gst_fft_f32_fft (fft_ctx, input_tmp, freqdata);
+
+  if (spectrum->message_magnitude) {
+    gdouble val;
+    /* Calculate magnitude in db */
+    for (i = 0; i < bands; i++) {
+      val = freqdata[i].r * freqdata[i].r;
+      val += freqdata[i].i * freqdata[i].i;
+      val /= nfft * nfft;
+      val = 10.0 * log10 (val);
+      if (val < threshold)
+        val = threshold;
+      spect_magnitude[i] += val;
     }
-    g_value_unset (&v);
   }
 
   if (spectrum->message_phase) {
-    /* FIXME 0.11: this should be an array, not a list */
-    g_value_init (&v, GST_TYPE_LIST);
-    /* will copy-by-value */
-    gst_structure_set_value (s, "phase", &v);
-    g_value_unset (&v);
-
-    g_value_init (&v, G_TYPE_FLOAT);
-    l = (GValue *) gst_structure_get_value (s, "phase");
-    for (i = 0; i < spectrum->bands; i++) {
-      g_value_set_float (&v, spect_phase[i]);
-      gst_value_list_append_value (l, &v);      /* copies by value */
-    }
-    g_value_unset (&v);
+    /* Calculate phase */
+    for (i = 0; i < bands; i++)
+      spect_phase[i] += atan2 (freqdata[i].i, freqdata[i].r);
   }
+}
 
-  return gst_message_new_element (GST_OBJECT (spectrum), s);
+static void
+gst_spectrum_prepare_message_data (GstSpectrum * spectrum,
+    GstSpectrumChannel * cd)
+{
+  guint i;
+  guint bands = spectrum->bands;
+  guint num_fft = spectrum->num_fft;
+  gfloat *spect_magnitude = cd->spect_magnitude;
+  gfloat *spect_phase = cd->spect_phase;
+
+  /* Calculate average */
+  for (i = 0; i < bands; i++) {
+    spect_magnitude[i] /= num_fft;
+    spect_phase[i] /= num_fft;
+  }
+}
+
+static void
+gst_spectrum_reset_message_data (GstSpectrum * spectrum,
+    GstSpectrumChannel * cd)
+{
+  guint bands = spectrum->bands;
+  gfloat *spect_magnitude = cd->spect_magnitude;
+  gfloat *spect_phase = cd->spect_phase;
+
+  /* reset spectrum accumulators */
+  memset (spect_magnitude, 0, bands * sizeof (gfloat));
+  memset (spect_phase, 0, bands * sizeof (gfloat));
 }
 
 static GstFlowReturn
@@ -500,17 +604,12 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   gboolean fp = (GST_AUDIO_FILTER (spectrum)->format.type == GST_BUFTYPE_FLOAT);
   guint bands = spectrum->bands;
   guint nfft = 2 * bands - 2;
-  gint threshold = spectrum->threshold;
   guint input_pos;
   gfloat *input;
-  gfloat *input_tmp;
-  GstFFTF32Complex *freqdata;
-  gfloat *spect_magnitude;
-  gfloat *spect_phase;
-  GstFFTF32 *fft_ctx;
   const guint8 *data = GST_BUFFER_DATA (buffer);
   guint size = GST_BUFFER_SIZE (buffer);
   gboolean have_full_interval;
+  GstSpectrumChannel *cd;
 
   GST_LOG_OBJECT (spectrum, "input size: %d bytes", GST_BUFFER_SIZE (buffer));
 
@@ -522,15 +621,10 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   /* If we don't have a FFT context yet (or it was reset due to parameter
    * changes) get one and allocate memory for everything
    */
-  if (spectrum->fft_ctx == NULL) {
+  if (spectrum->channel_data == NULL) {
     GST_DEBUG_OBJECT (spectrum, "allocating for bands %u", bands);
 
-    spectrum->fft_ctx = gst_fft_f32_new (nfft, FALSE);
-    spectrum->input = g_new0 (gfloat, nfft);
-    spectrum->input_tmp = g_new0 (gfloat, nfft);
-    spectrum->freqdata = g_new0 (GstFFTF32Complex, bands);
-    spectrum->spect_magnitude = g_new0 (gfloat, bands);
-    spectrum->spect_phase = g_new0 (gfloat, bands);
+    gst_spectrum_alloc_channel_data (spectrum);
 
     spectrum->frames_per_interval =
         gst_util_uint64_scale (spectrum->interval, rate, GST_SECOND);
@@ -546,17 +640,12 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   if (spectrum->num_frames == 0)
     spectrum->message_ts = GST_BUFFER_TIMESTAMP (buffer);
 
-  input = spectrum->input;
-  input_tmp = spectrum->input_tmp;
-  freqdata = spectrum->freqdata;
-  spect_magnitude = spectrum->spect_magnitude;
-  spect_phase = spectrum->spect_phase;
-  fft_ctx = spectrum->fft_ctx;
-
   input_pos = spectrum->input_pos;
 
-  while (size >= width * channels) {
+  cd = &spectrum->channel_data[0];
+  input = cd->input;
 
+  while (size >= width * channels) {
     /* Move the current frame into our ringbuffer and
      * take the average of all channels
      */
@@ -608,40 +697,13 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
             && spectrum->num_frames - 1 == spectrum->frames_per_interval)
         );
 
-    /* If we have enough frames for an FFT or we
-     * have all frames required for the interval run
-     * an FFT. In the last case we probably take the
+    /* If we have enough frames for an FFT or we have all frames required for
+     * the interval run an FFT. In the last case we probably take the
      * FFT of frames that we already handled.
      */
     if ((spectrum->num_frames % nfft == 0) || have_full_interval) {
-
-      for (i = 0; i < nfft; i++)
-        input_tmp[i] = input[(input_pos + i) % nfft];
-
-      gst_fft_f32_window (fft_ctx, input_tmp, GST_FFT_WINDOW_HAMMING);
-
-      gst_fft_f32_fft (fft_ctx, input_tmp, freqdata);
+      gst_spectrum_run_fft (spectrum, cd, input_pos);
       spectrum->num_fft++;
-
-      if (spectrum->message_magnitude) {
-        gdouble val;
-        /* Calculate magnitude in db */
-        for (i = 0; i < bands; i++) {
-          val = freqdata[i].r * freqdata[i].r;
-          val += freqdata[i].i * freqdata[i].i;
-          val /= nfft * nfft;
-          val = 10.0 * log10 (val);
-          if (val < threshold)
-            val = threshold;
-          spect_magnitude[i] += val;
-        }
-      }
-
-      if (spectrum->message_phase) {
-        /* Calculate phase */
-        for (i = 0; i < bands; i++)
-          spect_phase[i] += atan2 (freqdata[i].i, freqdata[i].r);
-      }
     }
 
     /* Do we have the FFTs for one interval? */
@@ -660,11 +722,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       if (spectrum->post_messages) {
         GstMessage *m;
 
-        /* Calculate average */
-        for (i = 0; i < bands; i++) {
-          spect_magnitude[i] /= spectrum->num_fft;
-          spect_phase[i] /= spectrum->num_fft;
-        }
+        gst_spectrum_prepare_message_data (spectrum, cd);
 
         m = gst_spectrum_message_new (spectrum, spectrum->message_ts,
             spectrum->interval);
@@ -676,9 +734,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
         spectrum->message_ts +=
             gst_util_uint64_scale (spectrum->num_frames, GST_SECOND, rate);
 
-      /* reset spectrum accumulators */
-      memset (spect_magnitude, 0, bands * sizeof (gfloat));
-      memset (spect_phase, 0, bands * sizeof (gfloat));
+      gst_spectrum_reset_message_data (spectrum, cd);
       spectrum->num_frames = 0;
       spectrum->num_fft = 0;
     }
