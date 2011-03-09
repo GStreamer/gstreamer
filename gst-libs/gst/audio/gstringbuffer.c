@@ -436,6 +436,16 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
     spec->width = 16;
     spec->depth = 16;
     spec->channels = 2;
+  } else if (!strncmp (mimetype, "audio/x-dts", 11)) {
+    /* extract the needed information from the cap */
+    if (!(gst_structure_get_int (structure, "rate", &spec->rate)))
+      goto parse_error;
+
+    spec->type = GST_BUFTYPE_DTS;
+    spec->format = GST_DTS;
+    spec->width = 16;
+    spec->depth = 16;
+    spec->channels = 2;
   } else {
     goto parse_error;
   }
