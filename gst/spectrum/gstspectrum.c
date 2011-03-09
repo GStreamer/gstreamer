@@ -415,9 +415,9 @@ gst_spectrum_stop (GstBaseTransform * trans)
 static gboolean
 gst_spectrum_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
-  GstSpectrum *filter = GST_SPECTRUM (base);
+  GstSpectrum *spectrum = GST_SPECTRUM (base);
 
-  gst_spectrum_reset_state (filter);
+  gst_spectrum_reset_state (spectrum);
 
   return TRUE;
 }
