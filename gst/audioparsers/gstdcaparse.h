@@ -55,6 +55,7 @@ struct _GstDcaParse {
   gint         channels;
   gint         depth;
   gint         endianness;
+  gint         block_size;
 
   guint32      last_sync;
 };

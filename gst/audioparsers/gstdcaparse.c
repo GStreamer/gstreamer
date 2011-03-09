@@ -120,6 +120,7 @@ gst_dca_parse_reset (GstDcaParse * dcaparse)
   dcaparse->rate = -1;
   dcaparse->depth = -1;
   dcaparse->endianness = -1;
+  dcaparse->block_size = -1;
   dcaparse->last_sync = 0;
 }
 
@@ -161,7 +162,8 @@ static gboolean
 gst_dca_parse_parse_header (GstDcaParse * dcaparse,
     const GstByteReader * reader, guint * frame_size,
     guint * sample_rate, guint * channels, guint * depth,
-    gint * endianness, guint * samples)
+    gint * endianness, guint * num_blocks, guint * samples_per_block,
+    gboolean * terminator)
 {
   static const int sample_rates[16] = { 0, 8000, 16000, 32000, 0, 0, 11025,
     22050, 44100, 0, 0, 12000, 24000, 48000, 96000, 192000
@@ -172,7 +174,7 @@ gst_dca_parse_parse_header (GstDcaParse * dcaparse,
   GstByteReader r = *reader;
   guint16 hdr[8];
   guint32 marker;
-  guint num_blocks, samples_per_block, chans, lfe, i;
+  guint chans, lfe, i;
 
   if (gst_byte_reader_get_remaining (&r) < (4 + sizeof (hdr)))
     return FALSE;
@@ -214,18 +216,19 @@ gst_dca_parse_parse_header (GstDcaParse * dcaparse,
   GST_LOG_OBJECT (dcaparse, "frame header: %04x%04x%04x%04x",
       hdr[2], hdr[3], hdr[4], hdr[5]);
 
-  samples_per_block = ((hdr[2] >> 10) & 0x1f) + 1;
-  num_blocks = ((hdr[2] >> 2) & 0x7F) + 1;
+  *terminator = (hdr[2] & 0x80) ? FALSE : TRUE;
+  *samples_per_block = ((hdr[2] >> 10) & 0x1f) + 1;
+  *num_blocks = ((hdr[2] >> 2) & 0x7F) + 1;
   *frame_size = (((hdr[2] & 0x03) << 12) | (hdr[3] >> 4)) + 1;
   chans = ((hdr[3] & 0x0F) << 2) | (hdr[4] >> 14);
   *sample_rate = sample_rates[(hdr[4] >> 10) & 0x0F];
   lfe = (hdr[5] >> 9) & 0x03;
 
   GST_TRACE_OBJECT (dcaparse, "frame size %u, num_blocks %u, rate %u, "
-      "samples per block %u", *frame_size, num_blocks, *sample_rate,
-      samples_per_block);
+      "samples per block %u", *frame_size, *num_blocks, *sample_rate,
+      *samples_per_block);
 
-  if (num_blocks < 6 || *frame_size < 96 || *sample_rate == 0)
+  if (*num_blocks < 6 || *frame_size < 96 || *sample_rate == 0)
     return FALSE;
 
   if (marker == 0x1FFFE800 || marker == 0xFF1F00E8)
@@ -242,10 +245,10 @@ gst_dca_parse_parse_header (GstDcaParse * dcaparse,
     *endianness = (marker == 0xFE7F0180 || marker == 0xFF1F00E8) ?
         G_LITTLE_ENDIAN : G_BIG_ENDIAN;
 
-  *samples = num_blocks * samples_per_block;
+  GST_TRACE_OBJECT (dcaparse, "frame size %u, channels %u, rate %u, "
+      "num_blocks %u, samples_per_block %u", *frame_size, *channels,
+      *sample_rate, *num_blocks, *samples_per_block);
 
-  GST_TRACE_OBJECT (dcaparse, "frame size %u, channels %u, rate %u, samples %u",
-      *frame_size, *channels, *sample_rate, *samples);
   return TRUE;
 }
 
@@ -310,8 +313,9 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
   GstByteReader r = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   gboolean parser_draining;
   gboolean parser_in_sync;
+  gboolean terminator;
   guint32 sync = 0;
-  guint size, rate, chans, samples;
+  guint size, rate, chans, num_blocks, samples_per_block;
   gint off = -1;
 
   if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < 16))
@@ -345,7 +349,7 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
 
   /* make sure the values in the frame header look sane */
   if (!gst_dca_parse_parse_header (dcaparse, &r, &size, &rate, &chans, NULL,
-          NULL, &samples)) {
+          NULL, &num_blocks, &samples_per_block, &terminator)) {
     *skipsize = 4;
     return FALSE;
   }
@@ -363,14 +367,15 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
     /* check for second frame to be sure */
     GST_DEBUG_OBJECT (dcaparse, "resyncing; checking next frame syncword");
     if (GST_BUFFER_SIZE (buf) >= (size + 16)) {
-      guint s2, r2, c2, n2;
+      guint s2, r2, c2, n2, s3;
+      gboolean t;
 
       GST_MEMDUMP ("buf", GST_BUFFER_DATA (buf), size + 16);
       gst_byte_reader_init_from_buffer (&r, buf);
       gst_byte_reader_skip_unchecked (&r, size);
 
       if (!gst_dca_parse_parse_header (dcaparse, &r, &s2, &r2, &c2, NULL, NULL,
-              &n2)) {
+              &n2, &s3, &t)) {
         GST_DEBUG_OBJECT (dcaparse, "didn't find second syncword");
         *skipsize = 4;
         return FALSE;
@@ -397,21 +402,26 @@ gst_dca_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstDcaParse *dcaparse = GST_DCA_PARSE (parse);
   GstBuffer *buf = frame->buffer;
   GstByteReader r = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
-  guint size, rate, chans, depth, samples;
+  guint size, rate, chans, depth, block_size, num_blocks, samples_per_block;
   gint endianness;
+  gboolean terminator;
 
   if (!gst_dca_parse_parse_header (dcaparse, &r, &size, &rate, &chans, &depth,
-          &endianness, &samples))
+          &endianness, &num_blocks, &samples_per_block, &terminator))
     goto broken_header;
 
+  block_size = num_blocks * samples_per_block;
+
   if (G_UNLIKELY (dcaparse->rate != rate || dcaparse->channels != chans
-          || dcaparse->depth != depth || dcaparse->endianness != endianness)) {
+          || dcaparse->depth != depth || dcaparse->endianness != endianness
+          || (!terminator && dcaparse->block_size != block_size))) {
     GstCaps *caps;
 
     caps = gst_caps_new_simple ("audio/x-dts",
         "framed", G_TYPE_BOOLEAN, TRUE,
         "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, chans,
-        "endianness", G_TYPE_INT, endianness, "depth", G_TYPE_INT, depth, NULL);
+        "endianness", G_TYPE_INT, endianness, "depth", G_TYPE_INT, depth,
+        "block-size", G_TYPE_INT, block_size, NULL);
     gst_buffer_set_caps (buf, caps);
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
@@ -420,8 +430,9 @@ gst_dca_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     dcaparse->channels = chans;
     dcaparse->depth = depth;
     dcaparse->endianness = endianness;
+    dcaparse->block_size = block_size;
 
-    gst_base_parse_set_frame_props (parse, rate, samples, 0, 0);
+    gst_base_parse_set_frame_props (parse, rate, block_size, 0, 0);
   }
 
   return GST_FLOW_OK;
