@@ -305,19 +305,19 @@ gst_base_audio_encoder_class_init (GstBaseAudioEncoderClass * klass)
 
   /* properties */
   g_object_class_install_property (gobject_class, PROP_PERFECT_TS,
-      g_param_spec_boolean ("perfect-ts", "perfect-ts",
+      g_param_spec_boolean ("perfect-ts", "Perfect Timestamps",
           "Favour perfect timestamps over tracking upstream timestamps",
           DEFAULT_PERFECT_TS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_GRANULE,
-      g_param_spec_boolean ("granule", "granule",
+      g_param_spec_boolean ("granule", "Granule Marking",
           "Apply granule semantics to buffer metadata (implies perfect-ts)",
           DEFAULT_GRANULE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HARD_RESYNC,
-      g_param_spec_boolean ("hard-resync", "hard-resync",
+      g_param_spec_boolean ("hard-resync", "Hard Resync",
           "Perform clipping and sample flushing upon discontinuity",
           DEFAULT_HARD_RESYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TOLERANCE,
-      g_param_spec_int64 ("tolerance", "tolerance",
+      g_param_spec_int64 ("tolerance", "Tolerance",
           "Consider discontinuity if timestamp jitter/imperfection exceeds tolerance",
           0, G_MAXINT64, DEFAULT_TOLERANCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
