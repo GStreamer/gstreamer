@@ -59,6 +59,7 @@ struct _GstSpectrum
   guint64 frames_per_interval;  /* how many frames per interval */
   guint bands;                  /* number of spectrum bands */
   gint threshold;               /* energy level treshold */
+  gboolean multi_channel;       /* send separate channel results */
 
   guint64 num_frames;           /* frame count (1 sample per channel)
                                  * since last emit */
