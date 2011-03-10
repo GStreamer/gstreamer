@@ -95,7 +95,7 @@
  * ]|
  * </refsect2>
  *
- * Last reviewed on 2009-01-14 (0.10.12)
+ * Last reviewed on 2011-03-10 (0.10.29)
  */
 
 #ifdef HAVE_CONFIG_H
