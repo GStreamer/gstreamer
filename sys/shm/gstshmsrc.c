@@ -71,6 +71,8 @@ static GstFlowReturn gst_shm_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 static gboolean gst_shm_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_shm_src_unlock_stop (GstBaseSrc * bsrc);
+static GstStateChangeReturn gst_shm_src_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_shm_pipe_inc (GstShmPipe * pipe);
 static void gst_shm_pipe_dec (GstShmPipe * pipe);
@@ -97,16 +99,20 @@ static void
 gst_shm_src_class_init (GstShmSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpush_src_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpush_src_class = (GstPushSrcClass *) klass;
 
   gobject_class->set_property = gst_shm_src_set_property;
   gobject_class->get_property = gst_shm_src_get_property;
   gobject_class->finalize = gst_shm_src_finalize;
+
+  gstelement_class->change_state = gst_shm_src_change_state;
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_shm_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_shm_src_stop);
@@ -197,28 +203,27 @@ gst_shm_src_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_shm_src_start (GstBaseSrc * bsrc)
+gst_shm_src_start_reading (GstShmSrc * self)
 {
-  GstShmSrc *self = GST_SHM_SRC (bsrc);
   GstShmPipe *gstpipe = g_slice_new0 (GstShmPipe);
 
   gstpipe->use_count = 1;
   gstpipe->src = gst_object_ref (self);
 
   if (!self->socket_path) {
-    GST_ELEMENT_ERROR (bsrc, RESOURCE, NOT_FOUND,
+    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
         ("No path specified for socket."), (NULL));
     return FALSE;
   }
 
-  GST_DEBUG ("Opening socket %s", self->socket_path);
+  GST_DEBUG_OBJECT (self, "Opening socket %s", self->socket_path);
 
   GST_OBJECT_LOCK (self);
   gstpipe->pipe = sp_client_open (self->socket_path);
   GST_OBJECT_UNLOCK (self);
 
   if (!gstpipe->pipe) {
-    GST_ELEMENT_ERROR (bsrc, RESOURCE, OPEN_READ_WRITE,
+    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
         ("Could not open socket %s: %d %s", self->socket_path, errno,
             strerror (errno)), (NULL));
     gst_shm_pipe_dec (gstpipe);
@@ -237,11 +242,9 @@ gst_shm_src_start (GstBaseSrc * bsrc)
   return TRUE;
 }
 
-static gboolean
-gst_shm_src_stop (GstBaseSrc * bsrc)
+static void
+gst_shm_src_stop_reading (GstShmSrc * self)
 {
-  GstShmSrc *self = GST_SHM_SRC (bsrc);
-
   GST_DEBUG_OBJECT (self, "Stopping %p", self);
 
   if (self->pipe) {
@@ -253,6 +256,22 @@ gst_shm_src_stop (GstBaseSrc * bsrc)
   gst_poll_fd_init (&self->pollfd);
 
   gst_poll_set_flushing (self->poll, TRUE);
+}
+
+static gboolean
+gst_shm_src_start (GstBaseSrc * bsrc)
+{
+  if (gst_base_src_is_live (bsrc))
+    return TRUE;
+  else
+    return gst_shm_src_start_reading (GST_SHM_SRC (bsrc));
+}
+
+static gboolean
+gst_shm_src_stop (GstBaseSrc * bsrc)
+{
+  if (!gst_base_src_is_live (bsrc))
+    gst_shm_src_stop_reading (GST_SHM_SRC (bsrc));
 
   return TRUE;
 }
@@ -337,6 +356,36 @@ gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GST_BUFFER_FREE_FUNC (*outbuf) = free_buffer;
 
   return GST_FLOW_OK;
+}
+
+static GstStateChangeReturn
+gst_shm_src_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstShmSrc *self = GST_SHM_SRC (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      if (gst_base_src_is_live (GST_BASE_SRC (element)))
+        if (!gst_shm_src_start_reading (self))
+          return GST_STATE_CHANGE_FAILURE;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      if (gst_base_src_is_live (GST_BASE_SRC (element)))
+        gst_shm_src_stop_reading (self);
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean
