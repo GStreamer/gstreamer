@@ -389,13 +389,8 @@ gst_base_audio_encoder_reset (GstBaseAudioEncoder * enc, gboolean full)
     enc->priv->active = FALSE;
     enc->priv->samples_in = 0;
     enc->priv->bytes_out = 0;
-    memset (enc->ctx, 0, sizeof (enc->ctx));
-    enc->ctx->state.bpf = 0;
-    enc->ctx->state.rate = 0;
-    enc->ctx->min_latency = 0;
-    enc->ctx->max_latency = 0;
     g_free (enc->ctx->state.channel_pos);
-    enc->ctx->state.channel_pos = NULL;
+    memset (enc->ctx, 0, sizeof (enc->ctx));
   }
 
   gst_segment_init (&enc->segment, GST_FORMAT_TIME);
