@@ -922,11 +922,11 @@ gst_wrapper_camera_bin_src_start_capture (GstBaseCameraSrc * camerasrc)
   } else if (src->mode == MODE_VIDEO) {
     GstCaps *caps = NULL;
 
-    g_mutex_unlock (camerasrc->capturing_mutex);
-    gst_wrapper_camera_bin_reset_video_src_caps (src, NULL);
-    g_mutex_lock (camerasrc->capturing_mutex);
-
     if (src->video_renegotiate) {
+      g_mutex_unlock (camerasrc->capturing_mutex);
+      gst_wrapper_camera_bin_reset_video_src_caps (src, NULL);
+      g_mutex_lock (camerasrc->capturing_mutex);
+
       /* clean capsfilter caps so they don't interfere here */
       g_object_set (src->src_filter, "caps", NULL, NULL);
       if (src->src_zoom_filter)
