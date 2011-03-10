@@ -72,6 +72,7 @@ struct _GstSpectrum
 
   /* <private> */
   GstSpectrumChannel *channel_data;
+  guint num_channels;
 
   guint input_pos;
   guint64 error_per_interval;

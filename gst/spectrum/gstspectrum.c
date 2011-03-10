@@ -297,13 +297,17 @@ gst_spectrum_alloc_channel_data (GstSpectrum * spectrum)
   GstSpectrumChannel *cd;
   guint bands = spectrum->bands;
   guint nfft = 2 * bands - 2;
-  guint channels = (spectrum->multi_channel) ?
+
+  g_assert (spectrum->channel_data == NULL);
+
+  spectrum->num_channels = (spectrum->multi_channel) ?
       GST_AUDIO_FILTER (spectrum)->format.channels : 1;
 
-  GST_DEBUG_OBJECT (spectrum, "allocating data for %d channels", channels);
+  GST_DEBUG_OBJECT (spectrum, "allocating data for %d channels",
+      spectrum->num_channels);
 
-  spectrum->channel_data = g_new (GstSpectrumChannel, channels);
-  for (i = 0; i < channels; i++) {
+  spectrum->channel_data = g_new (GstSpectrumChannel, spectrum->num_channels);
+  for (i = 0; i < spectrum->num_channels; i++) {
     cd = &spectrum->channel_data[i];
     cd->fft_ctx = gst_fft_f32_new (nfft, FALSE);
     cd->input = g_new0 (gfloat, nfft);
@@ -317,15 +321,14 @@ gst_spectrum_alloc_channel_data (GstSpectrum * spectrum)
 static void
 gst_spectrum_free_channel_data (GstSpectrum * spectrum)
 {
-  gint i;
-  GstSpectrumChannel *cd;
-  guint channels = (spectrum->multi_channel) ?
-      GST_AUDIO_FILTER (spectrum)->format.channels : 1;
-
-  GST_DEBUG_OBJECT (spectrum, "freeing data for %d channels", channels);
-
   if (spectrum->channel_data) {
-    for (i = 0; i < channels; i++) {
+    gint i;
+    GstSpectrumChannel *cd;
+
+    GST_DEBUG_OBJECT (spectrum, "freeing data for %d channels",
+        spectrum->num_channels);
+
+    for (i = 0; i < spectrum->num_channels; i++) {
       cd = &spectrum->channel_data[i];
       if (cd->fft_ctx)
         gst_fft_f32_free (cd->fft_ctx);
