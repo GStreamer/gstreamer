@@ -889,13 +889,17 @@ gst_spectrum_prepare_message_data (GstSpectrum * spectrum,
   guint i;
   guint bands = spectrum->bands;
   guint num_fft = spectrum->num_fft;
-  gfloat *spect_magnitude = cd->spect_magnitude;
-  gfloat *spect_phase = cd->spect_phase;
 
   /* Calculate average */
-  for (i = 0; i < bands; i++) {
-    spect_magnitude[i] /= num_fft;
-    spect_phase[i] /= num_fft;
+  if (spectrum->message_magnitude) {
+    gfloat *spect_magnitude = cd->spect_magnitude;
+    for (i = 0; i < bands; i++)
+      spect_magnitude[i] /= num_fft;
+  }
+  if (spectrum->message_phase) {
+    gfloat *spect_phase = cd->spect_phase;
+    for (i = 0; i < bands; i++)
+      spect_phase[i] /= num_fft;
   }
 }
 
