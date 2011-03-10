@@ -2028,6 +2028,8 @@ gst_qt_mux_get_asc_buffer_ts (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     pad->buf_entries[pad->buf_head++] = NULL;
     pad->buf_head %= wrap;
     buf = gst_buffer_make_metadata_writable (buf);
+    /* track original ts (= pts ?) for later */
+    GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_TIMESTAMP (buf);
     GST_BUFFER_TIMESTAMP (buf) = ts;
     GST_DEBUG_OBJECT (qtmux, "next buffer uses reordered ts %" GST_TIME_FORMAT,
         GST_TIME_ARGS (ts));
@@ -2105,7 +2107,7 @@ again:
    * - collect some buffers and re-order timestamp,
    *   then process the oldest buffer with smallest timestamps.
    *   This should typically compensate for some codec's handywork with ts.
-   * ... but in case this makes ts end up where not expected:
+   * ... but in case this makes ts end up where not expected, in DTS_METHOD_ASC:
    * - keep each ts with its buffer and still keep a list of most recent X ts,
    *   use the (ascending) minimum of those as DTS (and the difference as ts delta),
    *   and use this DTS as a basis to obtain a (positive) CTS offset.
@@ -2273,7 +2275,9 @@ again:
   if ((pad->have_dts || qtmux->guess_pts) && pad->is_out_of_order) {
     guint64 pts;
 
-    pts = gst_util_uint64_scale_round (GST_BUFFER_TIMESTAMP (last_buf),
+    pts = qtmux->dts_method == DTS_METHOD_REORDER ?
+        GST_BUFFER_OFFSET_END (last_buf) : GST_BUFFER_TIMESTAMP (last_buf);
+    pts = gst_util_uint64_scale_round (pts,
         atom_trak_get_timescale (pad->trak), GST_SECOND);
     pts_offset = (gint64) (pts - last_dts);
     do_pts = TRUE;
