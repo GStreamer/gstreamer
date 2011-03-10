@@ -64,6 +64,7 @@ static void gst_shm_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_shm_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_shm_src_finalize (GObject * object);
 static gboolean gst_shm_src_start (GstBaseSrc * bsrc);
 static gboolean gst_shm_src_stop (GstBaseSrc * bsrc);
 static GstFlowReturn gst_shm_src_create (GstPushSrc * psrc,
@@ -105,6 +106,7 @@ gst_shm_src_class_init (GstShmSrcClass * klass)
 
   gobject_class->set_property = gst_shm_src_set_property;
   gobject_class->get_property = gst_shm_src_get_property;
+  gobject_class->finalize = gst_shm_src_finalize;
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_shm_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_shm_src_stop);
@@ -130,6 +132,18 @@ gst_shm_src_class_init (GstShmSrcClass * klass)
 static void
 gst_shm_src_init (GstShmSrc * self, GstShmSrcClass * g_class)
 {
+  self->poll = gst_poll_new (TRUE);
+  gst_poll_fd_init (&self->pollfd);
+}
+
+static void
+gst_shm_src_finalize (GObject * object)
+{
+  GstShmSrc *self = GST_SHM_SRC (object);
+
+  gst_poll_free (self->poll);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 
@@ -213,7 +227,8 @@ gst_shm_src_start (GstBaseSrc * bsrc)
 
   self->pipe = gstpipe;
 
-  self->poll = gst_poll_new (TRUE);
+  gst_poll_set_flushing (self->poll, FALSE);
+
   gst_poll_fd_init (&self->pollfd);
   self->pollfd.fd = sp_get_fd (self->pipe->pipe);
   gst_poll_add_fd (self->poll, &self->pollfd);
@@ -234,8 +249,10 @@ gst_shm_src_stop (GstBaseSrc * bsrc)
     self->pipe = NULL;
   }
 
-  gst_poll_free (self->poll);
-  self->poll = NULL;
+  gst_poll_remove_fd (self->poll, &self->pollfd);
+  gst_poll_fd_init (&self->pollfd);
+
+  gst_poll_set_flushing (self->poll, TRUE);
 
   return TRUE;
 }
@@ -328,9 +345,7 @@ gst_shm_src_unlock (GstBaseSrc * bsrc)
   GstShmSrc *self = GST_SHM_SRC (bsrc);
 
   self->unlocked = TRUE;
-
-  if (self->poll)
-    gst_poll_set_flushing (self->poll, TRUE);
+  gst_poll_set_flushing (self->poll, TRUE);
 
   return TRUE;
 }
@@ -341,9 +356,7 @@ gst_shm_src_unlock_stop (GstBaseSrc * bsrc)
   GstShmSrc *self = GST_SHM_SRC (bsrc);
 
   self->unlocked = FALSE;
-
-  if (self->poll)
-    gst_poll_set_flushing (self->poll, FALSE);
+  gst_poll_set_flushing (self->poll, FALSE);
 
   return TRUE;
 }
