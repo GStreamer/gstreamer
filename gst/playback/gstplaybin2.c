@@ -3058,6 +3058,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   const gchar *klass;
   GstPlaySinkType type;
   GstElement **sinkp;
+  GstPad *sinkpad;
 
   playbin = group->playbin;
 
@@ -3128,6 +3129,20 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
         GST_ELEMENT_NAME (element));
     gst_object_unref (element);
     return GST_AUTOPLUG_SELECT_SKIP;
+  }
+
+  if ((sinkpad = gst_element_get_static_pad (element, "sink"))) {
+    /* Got the sink pad, now let's see if the element actually does accept the
+     * caps that we have */
+    if (!gst_pad_accept_caps (sinkpad, caps)) {
+      GST_DEBUG_OBJECT (playbin, "%s doesn't accept our caps",
+          GST_ELEMENT_NAME (element));
+      gst_object_unref (sinkpad);
+      gst_element_set_state (element, GST_STATE_NULL);
+      gst_object_unref (element);
+      return GST_AUTOPLUG_SELECT_SKIP;
+    }
+    gst_object_unref (sinkpad);
   }
 
   /* remember the sink in the group now, the element is floating, we take
