@@ -1034,8 +1034,14 @@ gboolean                gst_element_seek_simple         (GstElement   *element,
                                                          gint64        seek_pos);
 
 /* util elementfactory functions */
-gboolean		gst_element_factory_can_src_caps(GstElementFactory *factory, const GstCaps *caps);
-gboolean		gst_element_factory_can_sink_caps(GstElementFactory *factory, const GstCaps *caps);
+#ifndef GST_DISABLE_DEPRECATED
+gboolean		gst_element_factory_can_src_caps    (GstElementFactory *factory, const GstCaps *caps);
+gboolean		gst_element_factory_can_sink_caps   (GstElementFactory *factory, const GstCaps *caps);
+#endif /* GST_DISABLE_DEPRECATED */
+gboolean gst_element_factory_can_sink_all_caps (GstElementFactory *factory, const GstCaps *caps);
+gboolean gst_element_factory_can_src_all_caps  (GstElementFactory *factory, const GstCaps *caps);
+gboolean gst_element_factory_can_sink_any_caps (GstElementFactory *factory, const GstCaps *caps);
+gboolean gst_element_factory_can_src_any_caps  (GstElementFactory *factory, const GstCaps *caps);
 
 /* util query functions */
 gboolean                gst_element_query_position      (GstElement *element, GstFormat *format,
