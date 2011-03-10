@@ -1321,7 +1321,6 @@ gst_element_factory_can_accept_any_caps_in_direction (GstElementFactory *
   return FALSE;
 }
 
-#ifndef GST_DISABLE_DEPRECATED
 /**
  * gst_element_factory_can_src_caps:
  * @factory: factory to query
@@ -1333,6 +1332,11 @@ gst_element_factory_can_accept_any_caps_in_direction (GstElementFactory *
  *
  * Deprecated: use gst_element_factory_can_src_all_caps() instead.
  */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean gst_element_factory_can_src_caps (GstElementFactory * factory,
+    const GstCaps * caps);
+#endif
 gboolean
 gst_element_factory_can_src_caps (GstElementFactory * factory,
     const GstCaps * caps)
@@ -1340,6 +1344,7 @@ gst_element_factory_can_src_caps (GstElementFactory * factory,
   return gst_element_factory_can_accept_all_caps_in_direction (factory, caps,
       GST_PAD_SRC);
 }
+#endif /* GST_REMOVE_DEPRECATED */
 
 /**
  * gst_element_factory_can_sink_caps:
@@ -1352,6 +1357,11 @@ gst_element_factory_can_src_caps (GstElementFactory * factory,
  *
  * Deprecated: use gst_element_factory_can_sink_all_caps() instead.
  */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean gst_element_factory_can_sink_caps (GstElementFactory * factory,
+    const GstCaps * caps);
+#endif
 gboolean
 gst_element_factory_can_sink_caps (GstElementFactory * factory,
     const GstCaps * caps)
@@ -1359,7 +1369,7 @@ gst_element_factory_can_sink_caps (GstElementFactory * factory,
   return gst_element_factory_can_accept_all_caps_in_direction (factory, caps,
       GST_PAD_SINK);
 }
-#endif /* GST_DISABLE_DEPRECATED */
+#endif /* GST_REMOVE_DEPRECATED */
 
 /**
  * gst_element_factory_can_sink_all_caps:
