@@ -949,11 +949,19 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
     gst_spectrum_alloc_channel_data (spectrum);
 
+    /* number of sample frames we process before posting a message
+     * interval is in ns */
     spectrum->frames_per_interval =
         gst_util_uint64_scale (spectrum->interval, rate, GST_SECOND);
+    /* rounding error in ns, aggregated it in accumulated_error */
     spectrum->error_per_interval = (spectrum->interval * rate) % GST_SECOND;
     if (spectrum->frames_per_interval == 0)
       spectrum->frames_per_interval = 1;
+
+    GST_INFO_OBJECT (spectrum, "interval %" GST_TIME_FORMAT ", fpi %"
+        G_GUINT64_FORMAT ", error %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (spectrum->interval), spectrum->frames_per_interval,
+        GST_TIME_ARGS (spectrum->error_per_interval));
 
     spectrum->input_pos = 0;
 
@@ -995,9 +1003,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
       /* Do we have the FFTs for one interval? */
       if (have_full_interval) {
-
-        GST_INFO ("nfft: %u num_frames: %" G_GUINT64_FORMAT " fpi: %"
-            G_GUINT64_FORMAT " error: %" GST_TIME_FORMAT, nfft,
+        GST_DEBUG_OBJECT (spectrum, "nfft: %u frames: %" G_GUINT64_FORMAT
+            " fpi: %" G_GUINT64_FORMAT " error: %" GST_TIME_FORMAT, nfft,
             spectrum->num_frames, spectrum->frames_per_interval,
             GST_TIME_ARGS (spectrum->accumulated_error));
 
@@ -1062,8 +1069,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       /* Do we have the FFTs for one interval? */
       if (have_full_interval) {
 
-        GST_INFO ("nfft: %u num_frames: %" G_GUINT64_FORMAT " fpi: %"
-            G_GUINT64_FORMAT " error: %" GST_TIME_FORMAT, nfft,
+        GST_DEBUG_OBJECT (spectrum, "nfft: %u frames: %" G_GUINT64_FORMAT
+            " fpi: %" G_GUINT64_FORMAT " error: %" GST_TIME_FORMAT, nfft,
             spectrum->num_frames, spectrum->frames_per_interval,
             GST_TIME_ARGS (spectrum->accumulated_error));
 
