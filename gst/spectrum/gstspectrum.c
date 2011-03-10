@@ -986,10 +986,9 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           );
 
       /* If we have enough frames for an FFT or we have all frames required for
-       * the interval run an FFT. In the last case we probably take the
-       * FFT of frames that we already handled.
-       */
-      if ((spectrum->num_frames % nfft == 0) || have_full_interval) {
+       * the interval and we haven't run a FFT, then run an FFT */
+      if ((spectrum->num_frames % nfft == 0) ||
+          (have_full_interval && !spectrum->num_fft)) {
         gst_spectrum_run_fft (spectrum, cd, input_pos);
         spectrum->num_fft++;
       }
@@ -1050,10 +1049,9 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           );
 
       /* If we have enough frames for an FFT or we have all frames required for
-       * the interval run an FFT. In the last case we probably take the
-       * FFT of frames that we already handled.
-       */
-      if ((spectrum->num_frames % nfft == 0) || have_full_interval) {
+       * the interval and we haven't run a FFT, then run an FFT */
+      if ((spectrum->num_frames % nfft == 0) ||
+          (have_full_interval && !spectrum->num_fft)) {
         for (c = 0; c < channels; c++) {
           cd = &spectrum->channel_data[c];
           gst_spectrum_run_fft (spectrum, cd, input_pos);
