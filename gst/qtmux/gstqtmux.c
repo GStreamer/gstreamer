@@ -2272,7 +2272,7 @@ again:
    *   buffer timestamps in case of multiple segment, non-perfect streams
    *  (and just perhaps maybe with some luck segment_to_running_time
    *   or segment_to_media_time might get near to it) */
-  if ((pad->have_dts || qtmux->guess_pts) && pad->is_out_of_order) {
+  if ((pad->have_dts || qtmux->guess_pts)) {
     guint64 pts;
 
     pts = qtmux->dts_method == DTS_METHOD_REORDER ?
