@@ -1443,17 +1443,6 @@ AG_GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
   AC_SUBST(SWFDEC_LIBS)
 ])
 
-dnl *** theora ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_THEORADEC, true)
-AG_GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
-  PKG_CHECK_MODULES(THEORADEC, theoradec, HAVE_THEORADEC="yes", [
-    HAVE_THEORADEC="no"
-    AC_MSG_RESULT(no)
-  ])
-  AC_SUBST(THEORADEC_LIBS)
-  AC_SUBST(THEORADEC_CFLAGS)
-])
-
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
 AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
@@ -1898,7 +1887,6 @@ ext/gsettings/Makefile
 ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
 ext/spc/Makefile
 ext/swfdec/Makefile
-ext/theora/Makefile
 ext/timidity/Makefile
 ext/vp8/Makefile
 ext/xvid/Makefile

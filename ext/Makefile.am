@@ -324,18 +324,6 @@ else
 SWFDEC_DIR=
 endif
 
-if USE_THEORADEC
-#THEORA_DIR = theora
-else
-THEORA_DIR =
-endif
-
-# if USE_TARKIN
-# TARKIN_DIR=tarkin
-# else
-TARKIN_DIR=
-# endif
-
 if USE_VP8
 VP8_DIR=vp8
 else
@@ -480,7 +468,6 @@ DIST_SUBDIRS = \
 	spc \
 	gme \
 	swfdec \
-	theora \
 	timidity \
 	vp8 \
 	xvid \
