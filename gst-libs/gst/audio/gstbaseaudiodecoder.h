@@ -1,6 +1,9 @@
 /* GStreamer
  * Copyright (C) 2009 Igalia S.L.
  * Author: Iago Toral Quiroga <itoral@igalia.com>
+ * Copyright (C) 2011 Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>.
+ * Copyright (C) 2011 Nokia Corporation. All rights reserved.
+ *   Contact: Stefan Kost <stefan.kost@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,6 +30,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/audio/gstbaseaudioutils.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
@@ -73,59 +77,46 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_AUDIO_DECODER_SINK_PAD(obj)        (((GstBaseAudioDecoder *) (obj))->sinkpad)
 
-/**
- * GST_BASE_AUDIO_DECODER_INPUT_ADAPTER:
- * @obj: base audio codec instance
- *
- * Gives the pointer to the input #GstAdapter object of the element.
- */
-#define GST_BASE_AUDIO_DECODER_INPUT_ADAPTER(obj)   (((GstBaseAudioDecoder *) (obj))->input_adapter)
-
-/**
- * GST_BASE_AUDIO_DECODER_OUTPUT_ADAPTER:
- * @obj: base audio codec instance
- *
- * Gives the pointer to the output #GstAdapter object of the element.
- */
-#define GST_BASE_AUDIO_DECODER_OUTPUT_ADAPTER(obj)   (((GstBaseAudioDecoder *) (obj))->output_adapter)
-
 typedef struct _GstBaseAudioDecoder GstBaseAudioDecoder;
 typedef struct _GstBaseAudioDecoderClass GstBaseAudioDecoderClass;
-typedef struct _GstAudioState GstAudioState;
 
-struct _GstAudioState
-{
-  gint channels;
-  gint rate;
-  gint bytes_per_sample;
-  gint sample_depth;
-  gint frame_size;
-  GstSegment segment;
+typedef struct _GstBaseAudioDecoderPrivate GstBaseAudioDecoderPrivate;
+typedef struct _GstBaseAudioDecoderContext GstBaseAudioDecoderContext;
+
+/**
+ * GstBaseAudioDecoderContext:
+ * @state: a #GstAudioState describing input audio format
+ * @eos: no (immediate) subsequent data in stream
+ * @sync: stream parsing in sync
+ * @delay: number of frames pending decoding (typically at least 1 for current)
+ * @do_plc: whether subclass is prepared to handle (packet) loss concealment
+ * @min_latency: min latency of element
+ * @max_latency: max latency of element
+ * @lookahead: decoder lookahead (in units of input rate samples)
+ *
+ * Transparent #GstBaseAudioEncoderContext data structure.
+ */
+struct _GstBaseAudioDecoderContext {
+  /* input */
+  /* (output) audio format */
+  GstAudioState state;
+
+  /* parsing state */
+  gboolean eos;
+  gboolean sync;
+
+  /* misc */
+  gint delay;
+
+  /* output */
+  gboolean do_plc;
+  /* MT-protected (with LOCK) */
+  GstClockTime min_latency;
+  GstClockTime max_latency;
 };
 
 /**
  * GstBaseAudioDecoder:
- * @element: the parent element.
- * @caps_set: whether caps have been set on the codec's source pad.
- * @sinkpad: the sink pad.
- * @srcpad: the source pad.
- * @input_adapter: the input adapter that will be filled with the input buffers.
- * @output_adapter: the output adapter. Subclasses will read from the input
- *    adapter, process the data and fill the output adapter with the result.
- * @input_buffer_size: The minimum amount of data that should be present on the
- *    input adapter for the codec to process it.
- * @output_buffer_size: The minimum amount of data that should be present on the
- *    output adapter for the codec to push buffers out.
- * @bytes_in: total bytes that have been received.
- * @bytes_out: total bytes that have been pushed out.
- * @discont: whether the next buffer to push represents a discontinuity in the
- *     stream.
- * @state: Audio stream information. See #GstAudioState for details.
- * @codec_data: The codec data.
- * @started: Whether the codec has been started and is ready to process data
- *     or not.
- * @first_ts: timestamp of the first buffer in the input adapter.
- * @last_ts: timestamp of the last buffer in the input adapter.
  *
  * The opaque #GstBaseAudioDecoder data structure.
  */
@@ -133,86 +124,97 @@ struct _GstBaseAudioDecoder
 {
   GstElement element;
 
-  /*< private >*/
-  gboolean caps_set;
-
   /*< protected >*/
-  GstPad *sinkpad;
-  GstPad *srcpad;
-  GstAdapter *input_adapter;
-  GstAdapter *output_adapter;
-  guint input_buffer_size;
-  guint output_buffer_size;
-  guint64 bytes_in;
-  guint64 bytes_out;
-  gboolean discont;
-  GstAudioState state;
-  GstBuffer *codec_data;
-  gboolean started;
+  /* source and sink pads */
+  GstPad         *sinkpad;
+  GstPad         *srcpad;
 
-  guint64 first_ts;
-  guint64 last_ts;
+  /* MT-protected (with STREAM_LOCK) */
+  GstSegment      segment;
+  GstBaseAudioDecoderContext *ctx;
+
+  /* properties */
+  GstClockTime    latency;
+  GstClockTime    tolerance;
+  gboolean        plc;
+
+  /*< private >*/
+  GstBaseAudioDecoderPrivate *priv;
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
  * GstBaseAudioDecoderClass:
- * @parent_class: Element parent class
- * @start: Start processing. Ideal for opening resources in the subclass
- * @stop: Stop processing. Subclasses should use this to close resources.
- * @reset: Resets the codec. Called on discontinuities, etc.
- * @event: Override this to handle events arriving on the sink pad.
- * @handle_discont: Override to be notified on discontinuities.
- * @flush_input: Subclasses may implement this to flush the input adapter,
- *    processing any data present in it and filling the output adapter with the
- *    result. This could be necessary if it is possible for the codec to
- *    receive an end-of-stream event before all the data in the input
- *    adapter has been processed.
- * @flush_output: Subclasses may implement this to flush the output adapter,
- *    pushing buffers out through the codec's source pad when the end-of-stream
- *    event is received and there is data waiting to be processed in the
- *    adapters.
- * @process_data: Subclasses must implement this. They should read from the
- *    input adapter, encode/decode the data present in it and fill the 
- *    output adapter with the result.
- * @push_data: Normally, #GstBaseAudioDecoder will handle pushing buffers out.
- *     However, it is possible for developers to take control of when and how
- *     buffers are pushed out by overriding this method. If subclasses provide
- *     an implementation, #GstBaseAudioDecoder will not push any buffers,
- *     instead, whenever there is data on the output adapter, it will call this
- *     method on the subclass, which would be the sole responsible for 
- *     pushing the buffers out when appropriate.
- * @negotiate_src_caps: Subclasses can implement this method to provide
- * appropriate caps to be set on the codec's source pad. If they don't
- * provide this, they will be responsible for calling 
- * gst_base_audio_decoder_set_src_caps when appropriate.
+ * @start:          Optional.
+ *                  Called when the element starts processing.
+ *                  Allows opening external resources.
+ * @stop:           Optional.
+ *                  Called when the element stops processing.
+ *                  Allows closing external resources.
+ * @set_format:     Notifies subclass of incoming data format (caps).
+ * @parse:          Optional.
+ *                  Allows chopping incoming data into manageable units (frames)
+ *                  for subsequent decoding.  This division is at subclass
+ *                  discretion and may or may not correspond to 1 (or more)
+ *                  frames as defined by audio format.
+ * @handle_frame:   Provides input data (or NULL to clear any remaining data)
+ *                  to subclass.  Input data ref management is performed by
+ *                  base class, subclass should not care or intervene.
+ * @flush:          Optional.
+ *                  Instructs subclass to clear any codec caches and discard
+ *                  any pending samples and not yet returned encoded data.
+ *                  @hard indicates whether a FLUSH is being processed,
+ *                  or otherwise a DISCONT (or conceptually similar).
+ * @event:          Optional.
+ *                  Event handler on the sink pad. This function should return
+ *                  TRUE if the event was handled and should be discarded
+ *                  (i.e. not unref'ed).
+ * @pre_push:       Optional.
+ *                  Called just prior to pushing (encoded data) buffer downstream.
+ *                  Subclass has full discretionary access to buffer,
+ *                  and a not OK flow return will abort downstream pushing.
+ *
+ * Subclasses can override any of the available virtual methods or not, as
+ * needed. At minimum @handle_frame (and likely @set_format) needs to be
+ * overridden.
  */
 struct _GstBaseAudioDecoderClass
 {
   GstElementClass parent_class;
 
-  gboolean (*start) (GstBaseAudioDecoder *codec);
-  gboolean (*stop) (GstBaseAudioDecoder *codec);
-  gboolean (*reset) (GstBaseAudioDecoder *codec);
+  /*< public >*/
+  /* virtual methods for subclasses */
 
-  GstFlowReturn (*event) (GstBaseAudioDecoder *codec, GstEvent *event);
-  void (*handle_discont) (GstBaseAudioDecoder *codec, GstBuffer *buffer);
-  gboolean (*flush_input) (GstBaseAudioDecoder *codec);
-  gboolean (*flush_output) (GstBaseAudioDecoder *codec);
-  GstFlowReturn (*process_data) (GstBaseAudioDecoder *codec);
-  GstFlowReturn (*push_data) (GstBaseAudioDecoder *codec);
-  GstCaps * (*negotiate_src_caps) (GstBaseAudioDecoder *codec,
-      GstCaps *sink_caps);
+  gboolean      (*start)              (GstBaseAudioDecoder *dec);
+
+  gboolean      (*stop)               (GstBaseAudioDecoder *dec);
+
+  gboolean      (*set_format)         (GstBaseAudioDecoder *dec,
+                                       GstCaps *caps);
+
+  GstFlowReturn (*parse)              (GstBaseAudioDecoder *dec,
+                                       GstAdapter *adapter,
+                                       gint *offset, gint *length);
+
+  GstFlowReturn (*handle_frame)       (GstBaseAudioDecoder *dec,
+                                       GstBuffer *buffer);
+
+  void          (*flush)              (GstBaseAudioDecoder *dec, gboolean hard);
+
+  GstFlowReturn (*pre_push)           (GstBaseAudioDecoder *dec,
+                                       GstBuffer **buffer);
+
+  gboolean      (*event)              (GstBaseAudioDecoder *dec,
+                                       GstEvent *event);
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
+GstFlowReturn     gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec,
+                                                       GstBuffer * buf, gint frames);
+
 GType gst_base_audio_decoder_get_type (void);
-gboolean gst_base_audio_decoder_reset (GstBaseAudioDecoder *codec);
-gboolean gst_base_audio_decoder_stop (GstBaseAudioDecoder *codec);
-gboolean gst_base_audio_decoder_start (GstBaseAudioDecoder *codec);
-gboolean gst_base_audio_decoder_flush (GstBaseAudioDecoder *codec);
-gboolean gst_base_audio_decoder_set_src_caps (GstBaseAudioDecoder *codec,
-    GstCaps *caps);
-GstFlowReturn gst_base_audio_decoder_push_buffer (GstBaseAudioDecoder *codec,
-    GstBuffer *buffer);
 
 G_END_DECLS
 
