@@ -208,9 +208,6 @@ struct _GstBaseAudioEncoderPrivate
   /* subclass currently being forcibly drained */
   gboolean force;
 
-  /* MT safe latency; taken from ctx */
-  GstClockTime min_latency;
-  GstClockTime max_latency;
   /* output bps estimatation */
   /* global in samples seen */
   guint64 samples_in;
@@ -971,23 +968,25 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     enc->ctx->lookahead = 0;
 
     /* element might report latency */
+    GST_OBJECT_LOCK (enc);
     old_min_latency = ctx->min_latency;
     old_max_latency = ctx->max_latency;
+    GST_OBJECT_UNLOCK (enc);
 
     if (klass->set_format)
       res = klass->set_format (enc, state);
 
     /* notify if new latency */
+    GST_OBJECT_LOCK (enc);
     if ((ctx->min_latency > 0 && ctx->min_latency != old_min_latency) ||
         (ctx->max_latency > 0 && ctx->max_latency != old_max_latency)) {
+      GST_OBJECT_UNLOCK (enc);
       /* post latency message on the bus */
       gst_element_post_message (GST_ELEMENT (enc),
           gst_message_new_latency (GST_OBJECT (enc)));
       GST_OBJECT_LOCK (enc);
-      enc->priv->min_latency = ctx->min_latency;
-      enc->priv->max_latency = ctx->max_latency;
-      GST_OBJECT_UNLOCK (enc);
     }
+    GST_OBJECT_UNLOCK (enc);
   } else {
     GST_DEBUG_OBJECT (enc, "new audio format identical to configured format");
   }
@@ -1460,9 +1459,9 @@ gst_base_audio_encoder_src_query (GstPad * pad, GstQuery * query)
         GST_OBJECT_LOCK (enc);
         /* add our latency */
         if (min_latency != -1)
-          min_latency += enc->priv->min_latency;
+          min_latency += enc->ctx->min_latency;
         if (max_latency != -1)
-          max_latency += enc->priv->max_latency;
+          max_latency += enc->ctx->max_latency;
         GST_OBJECT_UNLOCK (enc);
 
         gst_query_set_latency (query, live, min_latency, max_latency);

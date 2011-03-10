@@ -117,7 +117,8 @@ typedef struct _GstAudioState {
  *   or will be handed all available if 0.
  * @frame_max: max number of frames of size @frame_bytes accepted at once
  *  (assumed minimally 1)
- * @latency: latency of element; should only be changed during configure
+ * @min_latency: min latency of element
+ * @max_latency: max latency of element
  * @lookahead: encoder lookahead (in units of input rate samples)
  *
  * Transparent #GstBaseAudioEncoderContext data structure.
@@ -129,9 +130,10 @@ struct _GstBaseAudioEncoderContext {
   /* output */
   gint  frame_samples;
   gint  frame_max;
+  gint  lookahead;
+  /* MT-protected (with LOCK) */
   GstClockTime min_latency;
   GstClockTime max_latency;
-  gint  lookahead;
 };
 
 /**
