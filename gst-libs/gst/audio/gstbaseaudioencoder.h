@@ -188,6 +188,8 @@ struct _GstBaseAudioEncoder {
  *                  (i.e. not unref'ed).
  * @pre_push:       Optional.
  *                  Called just prior to pushing (encoded data) buffer downstream.
+ *                  Subclass has full discretionary access to buffer,
+ *                  and a not OK flow return will abort downstream pushing.
  * @getcaps:        Optional.
  *                  Allows for a custom sink getcaps implementation (e.g.
  *                  for multichannel input specification).  If not implemented,
@@ -216,7 +218,7 @@ struct _GstBaseAudioEncoderClass {
   void          (*flush)              (GstBaseAudioEncoder *enc);
 
   GstFlowReturn (*pre_push)           (GstBaseAudioEncoder *enc,
-                                       GstBuffer *buffer);
+                                       GstBuffer **buffer);
 
   gboolean      (*event)              (GstBaseAudioEncoder *enc,
                                        GstEvent *event);

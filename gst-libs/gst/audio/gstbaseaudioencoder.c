@@ -196,10 +196,6 @@ struct _GstBaseAudioEncoderPrivate
   GstAdapter *adapter;
   /* offset in adapter up to which already supplied to encoder */
   gint offset;
-  /* collected encoded data */
-  GstAdapter *adapter_out;
-  /* (estimated) samples (w.r.t. input rate) represented in adapter_out */
-  gint samples_out;
   /* mark outgoing discont */
   gboolean discont;
   /* to guess duration of drained data */
@@ -375,7 +371,6 @@ gst_base_audio_encoder_init (GstBaseAudioEncoder * enc,
   GST_DEBUG_OBJECT (enc, "src created");
 
   enc->priv->adapter = gst_adapter_new ();
-  enc->priv->adapter_out = gst_adapter_new ();
   enc->ctx = &enc->priv->ctx;
 
   /* property default */
@@ -409,14 +404,12 @@ gst_base_audio_encoder_reset (GstBaseAudioEncoder * enc, gboolean full)
   gst_segment_init (&enc->segment, GST_FORMAT_TIME);
 
   gst_adapter_clear (enc->priv->adapter);
-  gst_adapter_clear (enc->priv->adapter_out);
   enc->priv->got_data = FALSE;
   enc->priv->drained = TRUE;
   enc->priv->offset = 0;
   enc->priv->base_ts = GST_CLOCK_TIME_NONE;
   enc->priv->base_gp = -1;
   enc->priv->samples = 0;
-  enc->priv->samples_out = 0;
   enc->priv->discont = FALSE;
 
   GST_OBJECT_UNLOCK (enc);
@@ -428,7 +421,6 @@ gst_base_audio_encoder_finalize (GObject * object)
   GstBaseAudioEncoder *enc = GST_BASE_AUDIO_ENCODER (object);
 
   g_object_unref (enc->priv->adapter);
-  g_object_unref (enc->priv->adapter_out);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -464,7 +456,6 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
   GstBaseAudioEncoderPrivate *priv;
   GstBaseAudioEncoderContext *ctx;
   GstFlowReturn ret = GST_FLOW_OK;
-  gint av;
 
   klass = GST_BASE_AUDIO_ENCODER_GET_CLASS (enc);
   priv = enc->priv;
@@ -487,8 +478,8 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
     samples = (enc->priv->offset / ctx->state.bpf);
 
   if (G_LIKELY (samples)) {
-    /* track upstream ts at output collection start if so configured */
-    if (!enc->perfect_ts && !priv->samples_out) {
+    /* track upstream ts if so configured */
+    if (!enc->perfect_ts) {
       guint64 ts, distance;
 
       ts = gst_adapter_prev_timestamp (priv->adapter, &distance);
@@ -544,21 +535,12 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
       if (G_UNLIKELY (gst_adapter_available (priv->adapter) == 0))
         gst_adapter_clear (priv->adapter);
     }
-    if (G_LIKELY (buf)) {
-      priv->samples_out += samples;
-      samples = 0;
-    }
-    /* otherwise retain count of to-be-discarded samples */
+    /* sample count advanced below after buffer handling */
   }
 
   /* collect output */
-  if (G_LIKELY (buf))
-    gst_adapter_push (enc->priv->adapter_out, buf);
-
-  av = gst_adapter_available (priv->adapter_out);
-  if (av) {
-    GST_LOG_OBJECT (enc, "collecting all %d bytes for output", av);
-    buf = gst_adapter_take_buffer (priv->adapter_out, av);
+  if (G_LIKELY (buf)) {
+    GST_LOG_OBJECT (enc, "taking %d bytes for output", GST_BUFFER_SIZE (buf));
     buf = gst_buffer_make_metadata_writable (buf);
 
     /* decorate */
@@ -570,10 +552,9 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
       GST_BUFFER_TIMESTAMP (buf) = priv->base_ts +
           gst_util_uint64_scale (priv->samples - ctx->lookahead, GST_SECOND,
           ctx->state.rate);
-      GST_DEBUG_OBJECT (enc, "out samples %d", (gint) priv->samples_out);
-      if (G_LIKELY (priv->samples_out > 0)) {
-        priv->samples += priv->samples_out;
-        priv->samples_out = 0;
+      GST_DEBUG_OBJECT (enc, "out samples %d", samples);
+      if (G_LIKELY (samples > 0)) {
+        priv->samples += samples;
         GST_BUFFER_DURATION (buf) = priv->base_ts +
             gst_util_uint64_scale (priv->samples - ctx->lookahead, GST_SECOND,
             ctx->state.rate) - GST_BUFFER_TIMESTAMP (buf);
@@ -599,29 +580,39 @@ gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc, GstBuffer * buf,
       }
     }
 
+    priv->bytes_out += GST_BUFFER_SIZE (buf);
+
     if (G_UNLIKELY (priv->discont)) {
       GST_LOG_OBJECT (enc, "marking discont");
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       priv->discont = FALSE;
     }
-    // TODO return value ?
-    if (klass->pre_push)
-      klass->pre_push (enc, buf);
+
+    if (klass->pre_push) {
+      /* last chance for subclass to do some dirty stuff */
+      ret = klass->pre_push (enc, &buf);
+      if (ret != GST_FLOW_OK || !buf) {
+        GST_DEBUG_OBJECT (enc, "subclass returned %s, buf %p",
+            gst_flow_get_name (ret), buf);
+        if (buf)
+          gst_buffer_unref (buf);
+        goto exit;
+      }
+    }
 
     GST_LOG_OBJECT (enc, "pushing buffer of size %d with ts %" GST_TIME_FORMAT
         ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
-    priv->bytes_out += GST_BUFFER_SIZE (buf);
-
     ret = gst_pad_push (enc->srcpad, buf);
     GST_LOG_OBJECT (enc, "buffer pushed: %s", gst_flow_get_name (ret));
+  } else {
+    /* merely advance samples, most work for that already done above */
+    priv->samples += samples;
   }
 
-  /* account for discarded */
-  priv->samples += samples;
-
+exit:
   return ret;
 
   /* ERRORS */
@@ -656,10 +647,6 @@ gst_base_audio_encoder_push_buffers (GstBaseAudioEncoder * enc, gboolean force)
 
   priv = enc->priv;
   ctx = enc->ctx;
-
-  /* ensure clear start */
-  gst_adapter_clear (priv->adapter_out);
-  priv->samples_out = 0;
 
   while (ret == GST_FLOW_OK) {
 
@@ -722,9 +709,6 @@ gst_base_audio_encoder_push_buffers (GstBaseAudioEncoder * enc, gboolean force)
       break;
     }
   }
-
-  if (gst_adapter_available (priv->adapter_out))
-    gst_base_audio_encoder_finish_frame (enc, NULL, 0);
 
   return ret;
 }
