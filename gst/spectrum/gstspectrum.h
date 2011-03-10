@@ -37,6 +37,10 @@ typedef struct _GstSpectrum GstSpectrum;
 typedef struct _GstSpectrumClass GstSpectrumClass;
 typedef struct _GstSpectrumChannel GstSpectrumChannel;
 
+typedef gfloat (*GstSpectrumInputDataMixed)(const guint8 * data, guint channels,
+    gfloat max_value);
+typedef gfloat (*GstSpectrumInputData)(const guint8 * data, gfloat max_value);
+
 struct _GstSpectrumChannel
 {
   gfloat *input;
@@ -72,6 +76,9 @@ struct _GstSpectrum
   guint input_pos;
   guint64 error_per_interval;
   guint64 accumulated_error;
+
+  GstSpectrumInputDataMixed input_data_mixed;
+  GstSpectrumInputData input_data;
 };
 
 struct _GstSpectrumClass

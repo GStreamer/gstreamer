@@ -479,10 +479,245 @@ gst_spectrum_stop (GstBaseTransform * trans)
   return TRUE;
 }
 
+/* mixing data readers */
+
+static gfloat
+input_data_mixed_float (const guint8 * data, guint channels, gfloat max_value)
+{
+  guint i;
+  gfloat v = 0.0;
+  gfloat *in = (gfloat *) data;
+
+  for (i = 0; i < channels; i++)
+    v += in[i];
+
+  return v / channels;
+}
+
+static gfloat
+input_data_mixed_double (const guint8 * data, guint channels, gfloat max_value)
+{
+  guint i;
+  gfloat v = 0.0;
+  gdouble *in = (gdouble *) data;
+
+  for (i = 0; i < channels; i++)
+    v += in[i];
+
+  return v / channels;
+}
+
+static gfloat
+input_data_mixed_int32 (const guint8 * data, guint channels, gfloat max_value)
+{
+  guint i;
+  gfloat v = 0.0;
+  gint32 *in = (gint32 *) data;
+
+  for (i = 0; i < channels; i++)
+    v += in[i] * 2 + 1;
+
+  return v / channels;
+}
+
+static gfloat
+input_data_mixed_int32_max (const guint8 * data, guint channels,
+    gfloat max_value)
+{
+  guint i;
+  gfloat v = 0.0;
+  gint32 *in = (gint32 *) data;
+
+  for (i = 0; i < channels; i++)
+    v += in[i] / max_value;
+
+  return v / channels;
+}
+
+static gfloat
+input_data_mixed_int24 (const guint8 * data, guint channels, gfloat max_value)
+{
+  guint i;
+  gfloat v = 0.0;
+
+  for (i = 0; i < channels; i++) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    gint32 value = GST_READ_UINT24_BE (data);
+#else
+    gint32 value = GST_READ_UINT24_LE (data);
+#endif
+    if (value & 0x00800000)
+      value |= 0xff000000;
+    v += value * 2 + 1;
+  }
+
+  return v / channels;
+}
+
+static gfloat
+input_data_mixed_int24_max (const guint8 * data, guint channels,
+    gfloat max_value)
+{
+  guint i;
+  gfloat v = 0.0;
+
+  for (i = 0; i < channels; i++) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    gint32 value = GST_READ_UINT24_BE (data);
+#else
+    gint32 value = GST_READ_UINT24_LE (data);
+#endif
+    if (value & 0x00800000)
+      value |= 0xff000000;
+    v += value / max_value;
+  }
+
+  return v / channels;
+}
+
+static gfloat
+input_data_mixed_int16 (const guint8 * data, guint channels, gfloat max_value)
+{
+  guint i;
+  gfloat v = 0.0;
+  gint16 *in = (gint16 *) data;
+
+  for (i = 0; i < channels; i++)
+    v += in[i] * 2 + 1;
+
+  return v / channels;
+}
+
+static gfloat
+input_data_mixed_int16_max (const guint8 * data, guint channels,
+    gfloat max_value)
+{
+  guint i;
+  gfloat v = 0.0;
+  gint16 *in = (gint16 *) data;
+
+  for (i = 0; i < channels; i++)
+    v += in[i] / max_value;
+
+  return v / channels;
+}
+
+/* non mixing data readers */
+
+static gfloat
+input_data_float (const guint8 * data, gfloat max_value)
+{
+  return ((gfloat *) data)[0];
+}
+
+static gfloat
+input_data_double (const guint8 * data, gfloat max_value)
+{
+  return (gfloat) ((gdouble *) data)[0];
+}
+
+static gfloat
+input_data_int32 (const guint8 * data, gfloat max_value)
+{
+  return ((gint32 *) data)[0] * 2 + 1;
+}
+
+static gfloat
+input_data_int32_max (const guint8 * data, gfloat max_value)
+{
+  return ((gint32 *) data)[0] / max_value;
+}
+
+static gfloat
+input_data_int24 (const guint8 * data, gfloat max_value)
+{
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+  gint32 in = GST_READ_UINT24_BE (data);
+#else
+  gint32 in = GST_READ_UINT24_LE (data);
+#endif
+  if (in & 0x00800000)
+    in |= 0xff000000;
+  return in * 2 + 1;
+}
+
+static gfloat
+input_data_int24_max (const guint8 * data, gfloat max_value)
+{
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+  gint32 in = GST_READ_UINT24_BE (data);
+#else
+  gint32 in = GST_READ_UINT24_LE (data);
+#endif
+  if (in & 0x00800000)
+    in |= 0xff000000;
+  return in / max_value;
+}
+
+static gfloat
+input_data_int16 (const guint8 * data, gfloat max_value)
+{
+  return ((gint16 *) data)[0] * 2 + 1;
+}
+
+static gfloat
+input_data_int16_max (const guint8 * data, gfloat max_value)
+{
+  return ((gint16 *) data)[0] / max_value;
+}
+
 static gboolean
 gst_spectrum_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
   GstSpectrum *spectrum = GST_SPECTRUM (base);
+  guint width = format->width / 8;
+  gboolean is_float = (format->type == GST_BUFTYPE_FLOAT);
+  /* max_value will be 0 when depth is 1,
+   * interpret -1 and 0 as -1 and +1 if that's the case. */
+  gfloat max_value = (1UL << (format->depth - 1)) - 1;
+
+  spectrum->input_data_mixed = NULL;
+  spectrum->input_data = NULL;
+
+  if (is_float) {
+    if (width == 4) {
+      spectrum->input_data_mixed = input_data_mixed_float;
+      spectrum->input_data = input_data_float;
+    } else if (width == 8) {
+      spectrum->input_data_mixed = input_data_mixed_double;
+      spectrum->input_data = input_data_double;
+    } else {
+      g_assert_not_reached ();
+    }
+  } else {
+    if (width == 4) {
+      if (max_value) {
+        spectrum->input_data_mixed = input_data_mixed_int32_max;
+        spectrum->input_data = input_data_int32_max;
+      } else {
+        spectrum->input_data_mixed = input_data_mixed_int32;
+        spectrum->input_data = input_data_int32;
+      }
+    } else if (width == 3) {
+      if (max_value) {
+        spectrum->input_data_mixed = input_data_mixed_int24_max;
+        spectrum->input_data = input_data_int24_max;
+      } else {
+        spectrum->input_data_mixed = input_data_mixed_int24;
+        spectrum->input_data = input_data_int24;
+      }
+    } else if (width == 2) {
+      if (max_value) {
+        spectrum->input_data_mixed = input_data_mixed_int16_max;
+        spectrum->input_data = input_data_int16_max;
+      } else {
+        spectrum->input_data_mixed = input_data_mixed_int16;
+        spectrum->input_data = input_data_int16;
+      }
+    } else {
+      g_assert_not_reached ();
+    }
+  }
 
   gst_spectrum_reset_state (spectrum);
   return TRUE;
@@ -601,94 +836,6 @@ gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime timestamp,
   return gst_message_new_element (GST_OBJECT (spectrum), s);
 }
 
-/* FIXME: have dedicated read function pointers for each format */
-static gfloat
-gst_spectrum_input_data_mixed (const guint8 * data, gfloat is_float,
-    guint width, guint channels, gfloat max_value)
-{
-  guint i;
-  gfloat v = 0.0;
-
-  if (is_float) {
-    if (width == 4) {
-      gfloat *in = (gfloat *) data;
-      for (i = 0; i < channels; i++)
-        v += in[i];
-    } else if (width == 8) {
-      gdouble *in = (gdouble *) data;
-      for (i = 0; i < channels; i++)
-        v += in[i];
-    } else {
-      g_assert_not_reached ();
-    }
-  } else {
-    if (width == 4) {
-      gint32 *in = (gint32 *) data;
-      /* max_value will be 0 when depth is 1,
-       * interpret -1 and 0 as -1 and +1 if that's the case. */
-      for (i = 0; i < channels; i++)
-        v += max_value ? in[i] / max_value : in[i] * 2 + 1;
-    } else if (width == 3) {
-      for (i = 0; i < channels; i++) {
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-        gint32 value = GST_READ_UINT24_BE (data);
-#else
-        gint32 value = GST_READ_UINT24_LE (data);
-#endif
-        if (value & 0x00800000)
-          value |= 0xff000000;
-        v += max_value ? value / max_value : value * 2 + 1;
-      }
-    } else if (width == 2) {
-      gint16 *in = (gint16 *) data;
-      for (i = 0; i < channels; i++)
-        v += max_value ? in[i] / max_value : in[i] * 2 + 1;
-    } else {
-      g_assert_not_reached ();
-    }
-  }
-  return v / channels;
-}
-
-static gfloat
-gst_spectrum_input_data (const guint8 * data, gfloat is_float, guint width,
-    gfloat max_value)
-{
-  gfloat v = 0.0;
-
-  if (is_float) {
-    if (width == 4) {
-      v = ((gfloat *) data)[0];
-    } else if (width == 8) {
-      v = ((gdouble *) data)[0];
-    } else {
-      g_assert_not_reached ();
-    }
-  } else {
-    if (width == 4) {
-      gint32 *in = (gint32 *) data;
-      /* max_value will be 0 when depth is 1,
-       * interpret -1 and 0 as -1 and +1 if that's the case. */
-      v = max_value ? in[0] / max_value : in[0] * 2 + 1;
-    } else if (width == 3) {
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-      gint32 in = GST_READ_UINT24_BE (data);
-#else
-      gint32 in = GST_READ_UINT24_LE (data);
-#endif
-      if (in & 0x00800000)
-        in |= 0xff000000;
-      v = max_value ? in / max_value : in * 2 + 1;
-    } else if (width == 2) {
-      gint16 *in = (gint16 *) data;
-      v = max_value ? in[0] / max_value : in[0] * 2 + 1;
-    } else {
-      g_assert_not_reached ();
-    }
-  }
-  return v;
-}
-
 static void
 gst_spectrum_run_fft (GstSpectrum * spectrum, GstSpectrumChannel * cd,
     guint input_pos)
@@ -770,7 +917,6 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   guint rate = format->rate;
   guint channels = format->channels;
   guint width = format->width / 8;
-  gboolean is_float = (format->type == GST_BUFTYPE_FLOAT);
   gfloat max_value = (1UL << (format->depth - 1)) - 1;
   guint bands = spectrum->bands;
   guint nfft = 2 * bands - 2;
@@ -818,8 +964,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
     while (size >= width * channels) {
       /* Move the mixdown of current frame into our ringbuffer */
-      input[input_pos] = gst_spectrum_input_data_mixed (data, is_float, width,
-          channels, max_value);
+      input[input_pos] = spectrum->input_data_mixed (data, channels, max_value);
 
       data += width * channels;
       size -= width * channels;
@@ -883,8 +1028,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
         cd = &spectrum->channel_data[c];
         input = cd->input;
         /* Move the current frames into our ringbuffers */
-        input[input_pos] = gst_spectrum_input_data (data, is_float, width,
-            max_value);
+        input[input_pos] = spectrum->input_data (data, max_value);
         data += width;
       }
       size -= width * channels;
