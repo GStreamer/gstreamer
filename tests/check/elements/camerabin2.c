@@ -943,7 +943,7 @@ GST_START_TEST (test_video_capture_with_tags)
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < 3; i++) {
     check_file_validity (VIDEO_FILENAME, i, taglists[i], 0, 0, NO_AUDIO);
     gst_tag_list_free (taglists[i]);
   }
