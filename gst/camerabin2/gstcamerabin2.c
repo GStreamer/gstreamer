@@ -682,9 +682,13 @@ static void
 encodebin_element_added (GstElement * encodebin, GstElement * new_element,
     GstCameraBin * camera)
 {
-  if (g_str_has_prefix (gst_element_get_name (new_element), "audiorate") ||
-      g_str_has_prefix (gst_element_get_name (new_element), "videorate")) {
-    g_object_set (new_element, "skip-to-first", TRUE, NULL);
+  GstElementFactory *factory = gst_element_get_factory (new_element);
+
+  if (factory != NULL) {
+    if (strcmp (GST_PLUGIN_FEATURE_NAME (factory), "audiorate") == 0 ||
+        strcmp (GST_PLUGIN_FEATURE_NAME (factory), "videorate") == 0) {
+      g_object_set (new_element, "skip-to-first", TRUE, NULL);
+    }
   }
 }
 
