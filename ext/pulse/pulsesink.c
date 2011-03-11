@@ -442,6 +442,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   GstPulseRingBuffer *pbuf;
   GstPulseContext *pctx;
   pa_mainloop_api *api;
+  gboolean need_unlock_shared;
 
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (buf));
   pbuf = GST_PULSERING_BUFFER_CAST (buf);
@@ -458,6 +459,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   pa_threaded_mainloop_lock (mainloop);
 
   g_mutex_lock (pa_shared_resource_mutex);
+  need_unlock_shared = TRUE;
 
   pctx = g_hash_table_lookup (gst_pulse_shared_contexts, pbuf->context_name);
   if (pctx == NULL) {
@@ -481,7 +483,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
         gst_pulsering_context_subscribe_cb, pctx);
 #endif
 
-    /* try to connect to the server and wait for completioni, we don't want to
+    /* try to connect to the server and wait for completion, we don't want to
      * autospawn a deamon */
     GST_LOG_OBJECT (psink, "connect to server %s",
         GST_STR_NULL (psink->server));
@@ -496,6 +498,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   }
 
   g_mutex_unlock (pa_shared_resource_mutex);
+  need_unlock_shared = FALSE;
 
   /* context created or shared okay */
   pbuf->context = pa_context_ref (pctx->context);
@@ -527,7 +530,8 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   /* ERRORS */
 unlock_and_fail:
   {
-    g_mutex_unlock (pa_shared_resource_mutex);
+    if (need_unlock_shared)
+      g_mutex_unlock (pa_shared_resource_mutex);
     gst_pulsering_destroy_context (pbuf);
     pa_threaded_mainloop_unlock (mainloop);
     return FALSE;
