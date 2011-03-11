@@ -527,6 +527,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   /* ERRORS */
 unlock_and_fail:
   {
+    g_mutex_unlock (pa_shared_resource_mutex);
     gst_pulsering_destroy_context (pbuf);
     pa_threaded_mainloop_unlock (mainloop);
     return FALSE;
