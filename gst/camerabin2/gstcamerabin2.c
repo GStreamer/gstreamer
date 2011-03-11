@@ -308,6 +308,8 @@ gst_camera_bin_dispose (GObject * object)
     gst_object_unref (camerabin->audio_queue);
   if (camerabin->audio_convert)
     gst_object_unref (camerabin->audio_convert);
+  if (camerabin->audio_volume)
+    gst_object_unref (camerabin->audio_volume);
 
   if (camerabin->viewfinderbin)
     gst_object_unref (camerabin->viewfinderbin);
@@ -1033,7 +1035,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (GST_STATE (camera->videosink) >= GST_STATE_PAUSED)
         gst_element_set_state (camera->videosink, GST_STATE_READY);
-      if (camera->audio_src)
+      if (camera->audio_src && GST_STATE (camera->audio_src) >= GST_STATE_READY)
         gst_element_set_state (camera->audio_src, GST_STATE_READY);
 
       gst_tag_setter_reset_tags (GST_TAG_SETTER (camera));

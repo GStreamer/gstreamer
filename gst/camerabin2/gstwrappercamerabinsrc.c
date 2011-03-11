@@ -58,6 +58,7 @@ gst_wrapper_camera_bin_src_dispose (GObject * object)
     gst_object_unref (self->app_vid_src);
     self->app_vid_src = NULL;
   }
+  gst_caps_replace (&self->image_capture_caps, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
