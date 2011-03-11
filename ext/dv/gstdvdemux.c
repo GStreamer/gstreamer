@@ -915,7 +915,7 @@ gst_dvdemux_handle_push_seek (GstDVDemux * dvdemux, GstPad * pad,
 
   /* First try if upstream can handle time based seeks */
   if (format == GST_FORMAT_TIME)
-    res = gst_pad_push_event (dvdemux->sinkpad, event);
+    res = gst_pad_push_event (dvdemux->sinkpad, gst_event_ref (event));
 
   if (!res) {
     /* we convert the start/stop on the srcpad to the byte format
@@ -1153,8 +1153,10 @@ gst_dvdemux_send_event (GstElement * element, GstEvent * event)
       } else {
         GST_OBJECT_UNLOCK (dvdemux);
 
-        if (dvdemux->seek_handler)
+        if (dvdemux->seek_handler) {
           res = dvdemux->seek_handler (dvdemux, dvdemux->videosrcpad, event);
+          gst_event_unref (event);
+        }
       }
       break;
     }
