@@ -38,7 +38,7 @@
  * ]| Play a 440Hz sine wave.
  * |[
  * gst-launch -v audiotestsrc ! pulsesink stream-properties="props,media.title=test"
- * ]] Play a sine wave and set a stream property. The property can be checked
+ * ]| Play a sine wave and set a stream property. The property can be checked
  * with "pactl list".
  * </refsect2>
  */
