@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 #include <gst/tag/tag.h>
 #include <mad.h>
-#include <id3tag.h>
 
 G_BEGIN_DECLS
 

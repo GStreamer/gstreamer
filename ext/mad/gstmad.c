@@ -40,6 +40,10 @@
 #include "gstmad.h"
 #include <gst/audio/audio.h>
 
+#ifdef HAVE_ID3TAG
+#include <id3tag.h>
+#endif
+
 enum
 {
   ARG_0,
@@ -103,7 +107,9 @@ static GstStateChangeReturn gst_mad_change_state (GstElement * element,
 static void gst_mad_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mad_get_index (GstElement * element);
 
+#ifdef HAVE_ID3TAG
 static GstTagList *gst_mad_id3_to_tag_list (const struct id3_tag *tag);
+#endif
 
 GST_BOILERPLATE (GstMad, gst_mad, GstElement, GST_TYPE_ELEMENT);
 
@@ -1514,50 +1520,54 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           goto end;
         } else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
           /* lost sync, force a resync */
-          signed long tagsize;
-
           GST_INFO ("recoverable lost sync error");
 
-          tagsize = id3_tag_query (mad->stream.this_frame,
-              mad->stream.bufend - mad->stream.this_frame);
+#ifdef HAVE_ID3TAG
+          {
+            signed long tagsize;
 
-          if (tagsize > mad->tempsize) {
-            GST_INFO ("mad: got partial id3 tag in buffer, skipping");
-          } else if (tagsize > 0) {
-            struct id3_tag *tag;
-            id3_byte_t const *data;
+            tagsize = id3_tag_query (mad->stream.this_frame,
+                mad->stream.bufend - mad->stream.this_frame);
 
-            GST_INFO ("mad: got ID3 tag size %ld", tagsize);
+            if (tagsize > mad->tempsize) {
+              GST_INFO ("mad: got partial id3 tag in buffer, skipping");
+            } else if (tagsize > 0) {
+              struct id3_tag *tag;
+              id3_byte_t const *data;
 
-            data = mad->stream.this_frame;
+              GST_INFO ("mad: got ID3 tag size %ld", tagsize);
 
-            /* mad has moved the pointer to the next frame over the start of the
-             * id3 tags, so we need to flush one byte less than the tagsize */
-            mad_stream_skip (&mad->stream, tagsize - 1);
+              data = mad->stream.this_frame;
 
-            tag = id3_tag_parse (data, tagsize);
-            if (tag) {
-              GstTagList *list;
+              /* mad has moved the pointer to the next frame over the start of the
+               * id3 tags, so we need to flush one byte less than the tagsize */
+              mad_stream_skip (&mad->stream, tagsize - 1);
 
-              list = gst_mad_id3_to_tag_list (tag);
-              id3_tag_delete (tag);
-              GST_DEBUG ("found tag");
-              gst_element_post_message (GST_ELEMENT (mad),
-                  gst_message_new_tag (GST_OBJECT (mad),
-                      gst_tag_list_copy (list)));
-              if (mad->tags) {
-                gst_tag_list_insert (mad->tags, list, GST_TAG_MERGE_PREPEND);
-              } else {
-                mad->tags = gst_tag_list_copy (list);
+              tag = id3_tag_parse (data, tagsize);
+              if (tag) {
+                GstTagList *list;
+
+                list = gst_mad_id3_to_tag_list (tag);
+                id3_tag_delete (tag);
+                GST_DEBUG ("found tag");
+                gst_element_post_message (GST_ELEMENT (mad),
+                    gst_message_new_tag (GST_OBJECT (mad),
+                        gst_tag_list_copy (list)));
+                if (mad->tags) {
+                  gst_tag_list_insert (mad->tags, list, GST_TAG_MERGE_PREPEND);
+                } else {
+                  mad->tags = gst_tag_list_copy (list);
+                }
+                if (mad->need_newsegment)
+                  mad->pending_events =
+                      g_list_append (mad->pending_events,
+                      gst_event_new_tag (list));
+                else
+                  gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
               }
-              if (mad->need_newsegment)
-                mad->pending_events =
-                    g_list_append (mad->pending_events,
-                    gst_event_new_tag (list));
-              else
-                gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
             }
           }
+#endif /* HAVE_ID3TAG */
         }
 
         mad_frame_mute (&mad->frame);
@@ -1902,6 +1912,7 @@ gst_mad_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+#ifdef HAVE_ID3TAG
 /* id3 tag helper (FIXME: why does mad parse id3 tags at all? It shouldn't) */
 static GstTagList *
 gst_mad_id3_to_tag_list (const struct id3_tag *tag)
@@ -2075,6 +2086,7 @@ gst_mad_id3_to_tag_list (const struct id3_tag *tag)
 
   return tag_list;
 }
+#endif /* HAVE_ID3TAG */
 
 /* plugin initialisation */
 
