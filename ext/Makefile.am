@@ -336,12 +336,6 @@ else
 GSETTINGS_DIR=
 endif
 
-# if USE_XINE
-# XINE_DIR=xine
-# else
-XINE_DIR=
-# endif
-
 if USE_XVID
 XVID_DIR=xvid
 else
@@ -415,11 +409,8 @@ SUBDIRS=\
 	$(GME_DIR) \
 	$(SPC_DIR) \
 	$(SWFDEC_DIR) \
-	$(TARKIN_DIR) \
-	$(THEORA_DIR) \
 	$(TIMIDITY_DIR) \
 	$(VP8_DIR) \
-	$(XINE_DIR) \
 	$(XVID_DIR) \
 	$(ZBAR_DIR) \
 	$(RTMP_DIR)

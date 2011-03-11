@@ -1508,19 +1508,6 @@ gst_textwrite_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-theoradecexp</FILE>
-<TITLE>theoradecexp</TITLE>
-GstTheoraExpDec
-<SUBSECTION Standard>
-GstTheoraExpDecClass
-GST_THEORA_DEC_EXP
-GST_THEORA_DEC_EXP_CLASS
-GST_IS_THEORA_DEC_EXP
-GST_IS_THEORA_DEC_EXP_CLASS
-GST_TYPE_THEORA_DEC_EXP
-</SECTION>
-
-<SECTION>
 <FILE>element-timidity</FILE>
 <TITLE>timidity</TITLE>
 GstTimidity

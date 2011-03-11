@@ -82,7 +82,9 @@ CRUFT_DIRS = \
 	$(top_srcdir)/ext/alsaspdif \
 	$(top_srcdir)/ext/ivorbis \
 	$(top_srcdir)/ext/jack \
-	$(top_srcdir)/ext/metadata 
+	$(top_srcdir)/ext/metadata \
+	$(top_srcdir)/ext/tarkin \
+	$(top_srcdir)/ext/theora
 
 include $(top_srcdir)/common/cruft.mak
 
