@@ -821,7 +821,6 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
   GstFlowReturn ret;
   gfloat current_ts;
   gint64 m2ts_pcr, pcr_bytes, chunk_bytes;
-  gint8 *temp_ptr;
   gint64 ts_rate;
 
   if (mux->m2ts_mode == TRUE) {
@@ -877,7 +876,6 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
           m2ts_pcr = (((gint64) (STANDARD_TIME_CLOCK * current_ts / 300) &
                   TWO_POW_33_MINUS1) * 300) + ((gint64) (STANDARD_TIME_CLOCK *
                   current_ts) % 300);
-          temp_ptr = (gint8 *) & m2ts_pcr;
 
           out_buf = gst_adapter_take_buffer (mux->adapter, M2TS_PACKET_LENGTH);
           if (G_UNLIKELY (!out_buf))
