@@ -782,6 +782,24 @@ gst_camera_bin_video_profile_has_audio (GstCameraBin * camera)
   return FALSE;
 }
 
+static GstPadLinkReturn
+gst_camera_bin_link_encodebin (GstCameraBin * camera, GstElement * element,
+    gint padtype)
+{
+  GstPadLinkReturn ret;
+  GstPad *srcpad;
+  GstPad *sinkpad = NULL;
+
+  srcpad = gst_element_get_static_pad (element, "src");
+  sinkpad = encodebin_find_pad (camera->encodebin, padtype);
+
+  ret = gst_pad_link (srcpad, sinkpad);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+
+  return ret;
+}
+
 /**
  * gst_camera_bin_create_elements:
  * @param camera: the #GstCameraBin
@@ -800,6 +818,7 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   gboolean new_src = FALSE;
   gboolean new_audio_src = FALSE;
   gboolean has_audio;
+  gboolean profile_switched = FALSE;
 
   if (!camera->elements_created) {
 
@@ -843,8 +862,8 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
       gst_caps_unref (caps);
 
       camera->video_profile = (GstEncodingProfile *) prof;
+      camera->profile_switch = TRUE;
     }
-    g_object_set (camera->encodebin, "profile", camera->video_profile, NULL);
 
     camera->videobin_queue =
         gst_element_factory_make ("queue", "videobin-queue");
@@ -868,17 +887,6 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     gst_element_link_many (camera->videobin_queue, camera->videobin_capsfilter,
         NULL);
     gst_element_link (camera->encodebin, camera->videosink);
-    {
-      GstPad *srcpad;
-      GstPad *sinkpad = NULL;
-
-      srcpad = gst_element_get_static_pad (camera->videobin_capsfilter, "src");
-      sinkpad = encodebin_find_pad (camera->encodebin, VIDEO_PAD);
-
-      gst_pad_link (srcpad, sinkpad);
-      gst_object_unref (sinkpad);
-      gst_object_unref (srcpad);
-    }
 
     gst_element_link_many (camera->imagebin_queue, camera->imagebin_capsfilter,
         camera->imagebin, NULL);
@@ -897,6 +905,15 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
 
     g_object_set (camera->videosink, "location", camera->video_location, NULL);
     g_object_set (camera->imagebin, "location", camera->image_location, NULL);
+  }
+  if (camera->profile_switch) {
+    g_object_set (camera->encodebin, "profile", camera->video_profile, NULL);
+    gst_camera_bin_link_encodebin (camera, camera->videobin_capsfilter,
+        VIDEO_PAD);
+    camera->profile_switch = FALSE;
+
+    /* used to trigger relinking further down */
+    profile_switched = TRUE;
   }
 
   /* check if we need to replace the camera src */
@@ -996,17 +1013,10 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     gst_element_link_many (camera->audio_src, camera->audio_queue,
         camera->audio_volume,
         camera->audio_capsfilter, camera->audio_convert, NULL);
-    {
-      GstPad *srcpad;
-      GstPad *sinkpad = NULL;
+  }
 
-      srcpad = gst_element_get_static_pad (camera->audio_convert, "src");
-      sinkpad = encodebin_find_pad (camera->encodebin, AUDIO_PAD);
-
-      gst_pad_link (srcpad, sinkpad);
-      gst_object_unref (srcpad);
-      gst_object_unref (sinkpad);
-    }
+  if ((profile_switched && has_audio) || new_audio_src) {
+    gst_camera_bin_link_encodebin (camera, camera->audio_convert, AUDIO_PAD);
   }
 
   camera->elements_created = TRUE;
@@ -1227,8 +1237,11 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
         g_object_set (camera->src, "preview-caps", camera->preview_caps, NULL);
       break;
     case PROP_VIDEO_ENCODING_PROFILE:
+      if (camera->video_profile)
+        gst_encoding_profile_unref (camera->video_profile);
       camera->video_profile =
           (GstEncodingProfile *) gst_value_dup_mini_object (value);
+      camera->profile_switch = TRUE;
       break;
     case PROP_IMAGE_FILTER:
       if (camera->user_image_filter)

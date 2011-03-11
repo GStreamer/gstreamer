@@ -73,6 +73,8 @@ struct _GstCameraBin
   /* Index of the auto incrementing file index for video recordings */
   gint video_index;
 
+  gboolean profile_switch;
+
   /* properties */
   gint mode;
   gchar *video_location;
