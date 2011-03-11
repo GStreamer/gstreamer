@@ -766,6 +766,12 @@ AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
   PKG_CHECK_MODULES(JACK, jack >= 0.99.10, HAVE_JACK="yes", HAVE_JACK="no")
   AC_SUBST(JACK_CFLAGS)
   AC_SUBST(JACK_LIBS)
+
+  AG_GST_PKG_CHECK_MODULES(JACK_0_120_2, jack >= 0.120.2)
+  if test x$HAVE_JACK_0_120_2 = xyes; then
+    AC_DEFINE(HAVE_JACK_0_120_2, 1, [defined if jack >= 0.120.2 is available])
+  fi
+
 ])
 
 dnl *** jpeg ***
