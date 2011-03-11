@@ -1161,6 +1161,7 @@ gst_dvdemux_send_event (GstElement * element, GstEvent * event)
       break;
     }
     default:
+      res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
       break;
   }
 
