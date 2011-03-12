@@ -849,6 +849,7 @@ static gboolean
 gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
 {
   GList *list;
+  GstStructure *s;
 
   if (is_fast)
     list = g_list_next (demux->client->main->lists);
@@ -865,6 +866,12 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
   gst_hls_demux_update_playlist (demux, TRUE);
   GST_INFO_OBJECT (demux, "Client is %s, switching to bitrate %d",
       is_fast ? "fast" : "slow", demux->client->current->bandwidth);
+
+  s = gst_structure_new ("playlist",
+      "uri", G_TYPE_STRING, demux->client->current->uri,
+      "bitrate", G_TYPE_INT, demux->client->current->bandwidth, NULL);
+  gst_element_post_message (GST_ELEMENT_CAST (demux),
+      gst_message_new_element (GST_OBJECT_CAST (demux), s));
 
   return TRUE;
 }
