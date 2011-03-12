@@ -471,3 +471,30 @@ gst_m3u8_client_get_duration (GstM3U8Client * client)
   g_list_foreach (client->current->files, (GFunc) _sum_duration, &duration);
   return duration;
 }
+
+const gchar *
+gst_m3u8_client_get_uri (GstM3U8Client * client)
+{
+  g_return_val_if_fail (client != NULL, NULL);
+
+  return client->main->uri;
+}
+
+gboolean
+gst_m3u8_client_has_variant_playlist (GstM3U8Client * client)
+{
+  g_return_val_if_fail (client != NULL, FALSE);
+
+  return client->main->lists != NULL;
+}
+
+gboolean
+gst_m3u8_client_is_live (GstM3U8Client * client)
+{
+  g_return_val_if_fail (client != NULL, FALSE);
+
+  if (!client->current || client->current->endlist)
+    return FALSE;
+
+  return TRUE;
+}
