@@ -4,6 +4,7 @@ libgstbase_@GST_MAJORMINOR@_la_DEPENDENCIES = \
 	$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
 libgstbase_@GST_MAJORMINOR@_la_SOURCES = \
 	gstadapter.c		\
+	gstbaseparse.c		\
 	gstbasesink.c		\
 	gstbasesrc.c		\
 	gstbasetransform.c	\
@@ -24,6 +25,7 @@ libgstbase_@GST_MAJORMINOR@includedir =		\
 
 libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
 	gstadapter.h		\
+	gstbaseparse.h		\
 	gstbasesink.h		\
 	gstbasesrc.h		\
 	gstbasetransform.h	\
