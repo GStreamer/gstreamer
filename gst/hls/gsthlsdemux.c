@@ -379,6 +379,14 @@ gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_URI:
+      if (hlsdemux->client) {
+        /* FIXME: Do we answer with the variant playlist, with the current
+         * playlist or the the uri of the least downlowaded fragment? */
+        gst_query_set_uri (query, hlsdemux->client->current->uri);
+        ret = TRUE;
+      }
+      break;
     default:
       /* Don't fordward queries upstream because of the special nature of this
        * "demuxer", which relies on the upstream element only to be feed with the
