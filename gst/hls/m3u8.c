@@ -450,3 +450,24 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
 
   return file->uri;
 }
+
+static void
+_sum_duration (GstM3U8MediaFile * self, GstClockTime * duration)
+{
+  *duration += self->duration;
+}
+
+GstClockTime
+gst_m3u8_client_get_duration (GstM3U8Client * client)
+{
+  GstClockTime duration = 0;
+
+  g_return_val_if_fail (client != NULL, GST_CLOCK_TIME_NONE);
+
+  /* We can only get the duration for on-demand streams */
+  if (!client->current->endlist)
+    return GST_CLOCK_TIME_NONE;
+
+  g_list_foreach (client->current->files, (GFunc) _sum_duration, &duration);
+  return duration;
+}

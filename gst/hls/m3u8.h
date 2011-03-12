@@ -77,6 +77,7 @@ gboolean gst_m3u8_client_update (GstM3U8Client * client, gchar * data);
 void gst_m3u8_client_set_current (GstM3U8Client * client, GstM3U8 * m3u8);
 const gchar *gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     gboolean * discontinuity);
+GstClockTime gst_m3u8_client_get_duration (GstM3U8Client * client);
 #define gst_m3u8_client_get_uri(Client) ((Client)->main->uri)
 #define gst_m3u8_client_has_variant_playlist(Client) ((Client)->main->lists)
 #define gst_m3u8_client_is_live(Client) (!(Client)->main->lists && !(Client)->current->endlist)
