@@ -44,7 +44,7 @@ endif
 endif
 
 if HAVE_CXX
-CXX_CHECKS = gst/gstcpp
+CXX_CHECKS = gst/gstcpp libs/gstlibscpp
 else
 CXX_CHECKS =
 endif
@@ -165,6 +165,8 @@ LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS)
 
 gst_gstcpp_SOURCES = gst/gstcpp.cc
+
+libs_gstlibscpp_SOURCES = libs/gstlibscpp.cc
 
 gst_gstutils_LDADD = $(LDADD) $(GSL_LIBS) $(GMP_LIBS)
 
