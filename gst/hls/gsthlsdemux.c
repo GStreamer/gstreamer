@@ -92,6 +92,7 @@ static GstBusSyncReply gst_hls_demux_fetcher_bus_handler (GstBus * bus,
     GstMessage * message, gpointer data);
 static GstFlowReturn gst_hls_demux_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_hls_demux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_hls_demux_src_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn gst_hls_demux_fetcher_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_hls_demux_fetcher_sink_event (GstPad * pad, GstEvent * event);
 static void gst_hls_demux_loop (GstHLSDemux * demux);
@@ -203,6 +204,9 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
 
   /* demux pad */
   demux->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
+  gst_pad_set_query_function (demux->srcpad,
+      GST_DEBUG_FUNCPTR (gst_hls_demux_src_query));
+  gst_pad_set_element_private (demux->srcpad, demux);
   gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad);
 
   /* fetcher pad */
@@ -351,6 +355,38 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
   }
 
   return gst_pad_event_default (pad, event);
+}
+
+static gboolean
+gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
+{
+  GstHLSDemux *hlsdemux;
+  gboolean ret = FALSE;
+
+  if (query == NULL)
+    return FALSE;
+
+  hlsdemux = GST_HLS_DEMUX (gst_pad_get_element_private (pad));
+
+  switch (query->type) {
+    case GST_QUERY_DURATION:{
+      GstClockTime duration;
+
+      duration = gst_m3u8_client_get_duration (hlsdemux->client);
+      if (duration) {
+        gst_query_set_duration (query, GST_FORMAT_TIME, duration);
+        ret = TRUE;
+      }
+      break;
+    }
+    default:
+      /* Don't fordward queries upstream because of the special nature of this
+       * "demuxer", which relies on the upstream element only to be feed with the
+       * first playlist */
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean
