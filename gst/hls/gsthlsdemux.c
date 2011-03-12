@@ -848,15 +848,18 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean retry)
 static gboolean
 gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
 {
-  if (is_fast) {
-    if (!demux->client->main->lists->next)
-      return TRUE;
-    demux->client->main->lists = g_list_next (demux->client->main->lists);
-  } else {
-    if (!demux->client->main->lists->prev)
-      return TRUE;
-    demux->client->main->lists = g_list_previous (demux->client->main->lists);
-  }
+  GList *list;
+
+  if (is_fast)
+    list = g_list_next (demux->client->main->lists);
+  else
+    list = g_list_previous (demux->client->main->lists);
+
+  /* Don't do anything else if the playlist is the same */
+  if (!list || list->data == demux->client->current)
+    return TRUE;
+
+  demux->client->main->lists = list;
 
   gst_m3u8_client_set_current (demux->client, demux->client->main->lists->data);
   gst_hls_demux_update_playlist (demux, TRUE);
