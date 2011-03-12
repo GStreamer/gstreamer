@@ -99,6 +99,12 @@ else
 check_orc =
 endif
 
+if HAVE_CXX
+cxx_checks = libs/gstlibscpp
+else
+cxx_checks =
+endif
+
 check_PROGRAMS = \
 	$(check_alsa) \
 	$(check_gnomevfs) \
@@ -144,6 +150,7 @@ check_PROGRAMS = \
 	libs/rtsp \
 	libs/tag \
 	libs/video \
+	$(cxx_checks) \
 	$(check_orc) \
 	pipelines/simple-launch-lines \
 	pipelines/streamheader \
@@ -170,7 +177,12 @@ noinst_HEADERS = \
 #	libs/struct_sparc.h \
 #	libs/struct_x86_64.h
 
-AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS) \
+AM_CFLAGS = -I$(top_srcdir)/gst-libs -I$(top_builddir)/gst-libs \
+	$(GST_CFLAGS) $(GST_CHECK_CFLAGS) \
+	-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
+	-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
+AM_CXXFLAGS = -I$(top_srcdir)/gst-libs -I$(top_builddir)/gst-libs \
+	$(GST_CXXFLAGS) $(GST_CHECK_CFLAGS) \
 	-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
 	-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(GST_LIBS) $(GST_CHECK_LIBS)
@@ -294,6 +306,8 @@ libs_profile_CFLAGS = \
 	$(AM_CFLAGS)
 libs_profile_LDADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la $(LDADD)
+
+libs_gstlibscpp_SOURCES = libs/gstlibscpp.cc
 
 elements_appsink_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \

@@ -2,6 +2,7 @@
 audio
 cddabasesrc
 fft
+gstlibscpp
 mixer
 navigation
 netbuffer
