@@ -27,26 +27,26 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASE_PARSE		   (gst_base_parse_get_type())
-#define GST_BASE_PARSE(obj)		   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_PARSE,GstBaseParse))
+#define GST_TYPE_BASE_PARSE            (gst_base_parse_get_type())
+#define GST_BASE_PARSE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_PARSE,GstBaseParse))
 #define GST_BASE_PARSE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_PARSE,GstBaseParseClass))
 #define GST_BASE_PARSE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_BASE_PARSE,GstBaseParseClass))
-#define GST_IS_BASE_PARSE(obj)	   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_PARSE))
+#define GST_IS_BASE_PARSE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_PARSE))
 #define GST_IS_BASE_PARSE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_PARSE))
-#define GST_BASE_PARSE_CAST(obj)	((GstBaseParse *)(obj))
+#define GST_BASE_PARSE_CAST(obj)       ((GstBaseParse *)(obj))
 
 /**
  * GST_BASE_PARSE_SINK_NAME:
  *
  * the name of the templates for the sink pad
  */
-#define GST_BASE_PARSE_SINK_NAME	"sink"
+#define GST_BASE_PARSE_SINK_NAME    "sink"
 /**
  * GST_BASE_PARSE_SRC_NAME:
  *
  * the name of the templates for the source pad
  */
-#define GST_BASE_PARSE_SRC_NAME	        "src"
+#define GST_BASE_PARSE_SRC_NAME     "src"
 
 /**
  * GST_BASE_PARSE_SRC_PAD:
@@ -56,7 +56,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.x
  */
-#define GST_BASE_PARSE_SRC_PAD(obj)	(GST_BASE_PARSE_CAST (obj)->srcpad)
+#define GST_BASE_PARSE_SRC_PAD(obj)    (GST_BASE_PARSE_CAST (obj)->srcpad)
 
 /**
  * GST_BASE_PARSE_SINK_PAD:
@@ -66,7 +66,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.x
  */
-#define GST_BASE_PARSE_SINK_PAD(obj)	(GST_BASE_PARSE_CAST (obj)->sinkpad)
+#define GST_BASE_PARSE_SINK_PAD(obj)    (GST_BASE_PARSE_CAST (obj)->sinkpad)
 
 /**
  * GST_BASE_PARSE_SEGMENT:
@@ -138,9 +138,9 @@ typedef enum {
  * Since: 0.10.x
  */
 typedef struct {
-  GstBuffer       *buffer;
-  guint           flags;
-  gint            overhead;
+  GstBuffer * buffer;
+  guint       flags;
+  gint        overhead;
 } GstBaseParseFrame;
 
 /**
@@ -275,69 +275,81 @@ struct _GstBaseParseClass {
   /*< public >*/
   /* virtual methods for subclasses */
 
-  gboolean      (*start)              (GstBaseParse *parse);
+  gboolean      (*start)              (GstBaseParse * parse);
 
-  gboolean      (*stop)               (GstBaseParse *parse);
+  gboolean      (*stop)               (GstBaseParse * parse);
 
-  gboolean      (*set_sink_caps)      (GstBaseParse *parse,
-                                       GstCaps *caps);
+  gboolean      (*set_sink_caps)      (GstBaseParse * parse,
+                                       GstCaps      * caps);
 
-  gboolean      (*check_valid_frame)  (GstBaseParse *parse,
-                                       GstBaseParseFrame *frame,
-                                       guint *framesize,
-                                       gint *skipsize);
+  gboolean      (*check_valid_frame)  (GstBaseParse      * parse,
+                                       GstBaseParseFrame * frame,
+                                       guint             * framesize,
+                                       gint              * skipsize);
 
-  GstFlowReturn (*parse_frame)        (GstBaseParse *parse,
-                                       GstBaseParseFrame *frame);
+  GstFlowReturn (*parse_frame)        (GstBaseParse      * parse,
+                                       GstBaseParseFrame * frame);
 
-  GstFlowReturn (*pre_push_frame)     (GstBaseParse *parse,
-                                       GstBaseParseFrame *frame);
+  GstFlowReturn (*pre_push_frame)     (GstBaseParse      * parse,
+                                       GstBaseParseFrame * frame);
 
   gboolean      (*convert)            (GstBaseParse * parse,
-                                       GstFormat src_format,
-                                       gint64 src_value,
-                                       GstFormat dest_format,
-                                       gint64 * dest_value);
+                                       GstFormat      src_format,
+                                       gint64         src_value,
+                                       GstFormat      dest_format,
+                                       gint64       * dest_value);
 
-  gboolean      (*event)              (GstBaseParse *parse,
-                                       GstEvent *event);
+  gboolean      (*event)              (GstBaseParse * parse,
+                                       GstEvent     * event);
 
-  gboolean      (*src_event)          (GstBaseParse *parse,
-                                       GstEvent *event);
+  gboolean      (*src_event)          (GstBaseParse * parse,
+                                       GstEvent     * event);
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
-GType           gst_base_parse_get_type         (void);
+GType           gst_base_parse_get_type (void);
 
-void            gst_base_parse_frame_init (GstBaseParse * parse,
-                                           GstBaseParseFrame * frame);
-GstFlowReturn   gst_base_parse_push_frame (GstBaseParse *parse,
-                                           GstBaseParseFrame *frame);
+void            gst_base_parse_frame_init      (GstBaseParse      * parse,
+                                                GstBaseParseFrame * frame);
 
-void            gst_base_parse_set_duration (GstBaseParse *parse,
-                                             GstFormat fmt, gint64 duration,
-                                              gint interval);
-void            gst_base_parse_set_seek (GstBaseParse * parse,
-                                         GstBaseParseSeekable seek,
-                                         guint bitrate);
-void            gst_base_parse_set_min_frame_size (GstBaseParse *parse,
-                                                   guint min_size);
-void            gst_base_parse_set_format (GstBaseParse * parse,
-                                           GstBaseParseFormat flag,
-                                           gboolean on);
+GstFlowReturn   gst_base_parse_push_frame      (GstBaseParse      * parse,
+                                                GstBaseParseFrame * frame);
+
+void            gst_base_parse_set_duration    (GstBaseParse      * parse,
+                                                GstFormat           fmt,
+                                                gint64              duration,
+                                                gint                interval);
+
+void            gst_base_parse_set_seek        (GstBaseParse       * parse,
+                                                GstBaseParseSeekable seek,
+                                                guint                bitrate);
+
+void            gst_base_parse_set_min_frame_size (GstBaseParse    * parse,
+                                                   guint             min_size);
+
+void            gst_base_parse_set_format      (GstBaseParse       * parse,
+                                                GstBaseParseFormat   flag,
+                                                gboolean             on);
+
 void            gst_base_parse_set_frame_props (GstBaseParse * parse,
-                                                guint fps_num, guint fps_den,
-                                                guint lead_in, guint lead_out);
+                                                guint          fps_num,
+                                                guint          fps_den,
+                                                guint          lead_in,
+                                                guint          lead_out);
 
 gboolean        gst_base_parse_convert_default (GstBaseParse * parse,
-                                                GstFormat src_format, gint64 src_value,
-                                                GstFormat dest_format, gint64 * dest_value);
+                                                GstFormat      src_format,
+                                                gint64         src_value,
+                                                GstFormat      dest_format,
+                                                gint64       * dest_value);
 
 gboolean        gst_base_parse_add_index_entry (GstBaseParse * parse,
-                                                guint64 offset, GstClockTime ts,
-                                                gboolean key, gboolean force);
+                                                guint64        offset,
+                                                GstClockTime   ts,
+                                                gboolean       key,
+                                                gboolean       force);
 
 G_END_DECLS
 
