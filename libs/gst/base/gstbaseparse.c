@@ -313,9 +313,9 @@ static void gst_base_parse_init (GstBaseParse * parse,
 GType
 gst_base_parse_get_type (void)
 {
-  static GType base_parse_type = 0;
+  static volatile gsize base_parse_type = 0;
 
-  if (!base_parse_type) {
+  if (g_once_init_enter (&base_parse_type)) {
     static const GTypeInfo base_parse_info = {
       sizeof (GstBaseParseClass),
       (GBaseInitFunc) NULL,
@@ -327,11 +327,13 @@ gst_base_parse_get_type (void)
       0,
       (GInstanceInitFunc) gst_base_parse_init,
     };
+    GType _type;
 
-    base_parse_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstBaseParseBad", &base_parse_info, G_TYPE_FLAG_ABSTRACT);
+    _type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstBaseParse", &base_parse_info, G_TYPE_FLAG_ABSTRACT);
+    g_once_init_leave (&base_parse_type, _type);
   }
-  return base_parse_type;
+  return (GType) base_parse_type;
 }
 
 static void gst_base_parse_finalize (GObject * object);
