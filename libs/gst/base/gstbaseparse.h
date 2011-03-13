@@ -23,7 +23,6 @@
 #define __GST_BASE_PARSE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -190,7 +189,6 @@ typedef struct _GstBaseParsePrivate GstBaseParsePrivate;
  */
 struct _GstBaseParse {
   GstElement     element;
-  GstAdapter    *adapter;
 
   /*< protected >*/
   /* source and sink pads */

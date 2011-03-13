@@ -195,6 +195,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <gst/base/gstadapter.h>
+
 #include "gstbaseparse.h"
 
 #define MIN_FRAMES_TO_POST_BITRATE 10
@@ -217,6 +219,8 @@ static GstFormat fmtlist[] = {
 struct _GstBaseParsePrivate
 {
   GstActivateMode pad_mode;
+
+  GstAdapter *adapter;
 
   gint64 duration;
   GstFormat duration_fmt;
@@ -414,7 +418,7 @@ gst_base_parse_finalize (GObject * object)
   GstBaseParse *parse = GST_BASE_PARSE (object);
   GstEvent **p_ev;
 
-  g_object_unref (parse->adapter);
+  g_object_unref (parse->priv->adapter);
 
   if (parse->priv->pending_segment) {
     p_ev = &parse->priv->pending_segment;
@@ -515,7 +519,7 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
   GST_DEBUG_OBJECT (parse, "src created");
 
-  parse->adapter = gst_adapter_new ();
+  parse->priv->adapter = gst_adapter_new ();
 
   parse->priv->pad_mode = GST_ACTIVATE_NONE;
 
@@ -914,7 +918,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
         gst_base_parse_drain (parse);
       else
         gst_base_parse_process_fragment (parse, FALSE);
-      gst_adapter_clear (parse->adapter);
+      gst_adapter_clear (parse->priv->adapter);
       parse->priv->offset = offset;
       parse->priv->sync_offset = offset;
       parse->priv->next_ts = next_ts;
@@ -936,7 +940,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       break;
 
     case GST_EVENT_FLUSH_STOP:
-      gst_adapter_clear (parse->adapter);
+      gst_adapter_clear (parse->priv->adapter);
       gst_base_parse_clear_queues (parse);
       parse->priv->flushing = FALSE;
       parse->priv->discont = TRUE;
@@ -1821,7 +1825,7 @@ gst_base_parse_drain (GstBaseParse * parse)
   parse->priv->drain = TRUE;
 
   for (;;) {
-    avail = gst_adapter_available (parse->adapter);
+    avail = gst_adapter_available (parse->priv->adapter);
     if (!avail)
       break;
 
@@ -1830,9 +1834,9 @@ gst_base_parse_drain (GstBaseParse * parse)
     }
 
     /* nothing changed, maybe due to truncated frame; break infinite loop */
-    if (avail == gst_adapter_available (parse->adapter)) {
+    if (avail == gst_adapter_available (parse->priv->adapter)) {
       GST_DEBUG_OBJECT (parse, "no change during draining; flushing");
-      gst_adapter_clear (parse->adapter);
+      gst_adapter_clear (parse->priv->adapter);
     }
   }
 
@@ -1909,7 +1913,7 @@ gst_base_parse_process_fragment (GstBaseParse * parse, gboolean push_only)
     buf = GST_BUFFER_CAST (parse->priv->buffers_pending->data);
     GST_LOG_OBJECT (parse, "adding pending buffer (size %d)",
         GST_BUFFER_SIZE (buf));
-    gst_adapter_push (parse->adapter, buf);
+    gst_adapter_push (parse->priv->adapter, buf);
     parse->priv->buffers_pending =
         g_slist_delete_link (parse->priv->buffers_pending,
         parse->priv->buffers_pending);
@@ -1992,10 +1996,10 @@ push:
     ret = gst_base_parse_send_buffers (parse);
 
   /* any trailing unused no longer usable (ideally none) */
-  if (G_UNLIKELY (gst_adapter_available (parse->adapter))) {
+  if (G_UNLIKELY (gst_adapter_available (parse->priv->adapter))) {
     GST_DEBUG_OBJECT (parse, "discarding %d trailing bytes",
-        gst_adapter_available (parse->adapter));
-    gst_adapter_clear (parse->adapter);
+        gst_adapter_available (parse->priv->adapter));
+    gst_adapter_clear (parse->priv->adapter);
   }
 
   return ret;
@@ -2057,10 +2061,10 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
         GST_DEBUG_OBJECT (parse, "buffer starts new reverse playback fragment");
         ret = gst_base_parse_process_fragment (parse, FALSE);
       }
-      gst_adapter_push (parse->adapter, buffer);
+      gst_adapter_push (parse->priv->adapter, buffer);
       return ret;
     }
-    gst_adapter_push (parse->adapter, buffer);
+    gst_adapter_push (parse->priv->adapter, buffer);
   }
 
   /* Parse and push as many frames as possible */
@@ -2074,7 +2078,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     /* Synchronization loop */
     for (;;) {
       min_size = MAX (parse->priv->min_frame_size, fsize);
-      av = gst_adapter_available (parse->adapter);
+      av = gst_adapter_available (parse->priv->adapter);
 
       /* loop safety check */
       if (G_UNLIKELY (old_min_size >= min_size))
@@ -2099,7 +2103,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       }
 
       /* always pass all available data */
-      data = gst_adapter_peek (parse->adapter, av);
+      data = gst_adapter_peek (parse->priv->adapter, av);
       GST_BUFFER_DATA (tmpbuf) = (guint8 *) data;
       GST_BUFFER_SIZE (tmpbuf) = min_size;
       GST_BUFFER_OFFSET (tmpbuf) = parse->priv->offset;
@@ -2115,10 +2119,10 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       res = bclass->check_valid_frame (parse, frame, &fsize, &skip);
       gst_buffer_replace (&frame->buffer, NULL);
       if (res) {
-        if (gst_adapter_available (parse->adapter) < fsize) {
+        if (gst_adapter_available (parse->priv->adapter) < fsize) {
           GST_DEBUG_OBJECT (parse,
               "found valid frame but not enough data available (only %d bytes)",
-              gst_adapter_available (parse->adapter));
+              gst_adapter_available (parse->priv->adapter));
           gst_buffer_unref (tmpbuf);
           goto done;
         }
@@ -2135,15 +2139,15 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
           /* reverse playback, and no frames found yet, so we are skipping
            * the leading part of a fragment, which may form the tail of
            * fragment coming later, hopefully subclass skips efficiently ... */
-          timestamp = gst_adapter_prev_timestamp (parse->adapter, NULL);
-          outbuf = gst_adapter_take_buffer (parse->adapter, skip);
+          timestamp = gst_adapter_prev_timestamp (parse->priv->adapter, NULL);
+          outbuf = gst_adapter_take_buffer (parse->priv->adapter, skip);
           outbuf = gst_buffer_make_metadata_writable (outbuf);
           GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
           parse->priv->buffers_pending =
               g_slist_prepend (parse->priv->buffers_pending, outbuf);
           outbuf = NULL;
         } else {
-          gst_adapter_flush (parse->adapter, skip);
+          gst_adapter_flush (parse->priv->adapter, skip);
         }
         parse->priv->offset += skip;
         if (!parse->priv->discont)
@@ -2165,7 +2169,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     if (skip > 0) {
       /* Subclass found the sync, but still wants to skip some data */
       GST_LOG_OBJECT (parse, "skipping %d bytes", skip);
-      gst_adapter_flush (parse->adapter, skip);
+      gst_adapter_flush (parse->priv->adapter, skip);
       parse->priv->offset += skip;
     }
 
@@ -2181,14 +2185,14 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
     /* move along with upstream timestamp (if any),
      * but interpolate in between */
-    timestamp = gst_adapter_prev_timestamp (parse->adapter, NULL);
+    timestamp = gst_adapter_prev_timestamp (parse->priv->adapter, NULL);
     if (GST_CLOCK_TIME_IS_VALID (timestamp) &&
         (parse->priv->prev_ts != timestamp)) {
       parse->priv->prev_ts = parse->priv->next_ts = timestamp;
     }
 
     /* FIXME: Would it be more efficient to make a subbuffer instead? */
-    outbuf = gst_adapter_take_buffer (parse->adapter, fsize);
+    outbuf = gst_adapter_take_buffer (parse->priv->adapter, fsize);
     outbuf = gst_buffer_make_metadata_writable (outbuf);
 
     /* Subclass may want to know the data offset */
@@ -2345,7 +2349,7 @@ gst_base_parse_handle_previous_fragment (GstBaseParse * parse)
   /* offset will increase again as fragment is processed/parsed */
   parse->priv->last_offset = offset;
 
-  gst_adapter_push (parse->adapter, buffer);
+  gst_adapter_push (parse->priv->adapter, buffer);
   ret = gst_base_parse_process_fragment (parse, FALSE);
   if (ret != GST_FLOW_OK)
     goto exit;
