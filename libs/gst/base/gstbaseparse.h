@@ -36,19 +36,6 @@ G_BEGIN_DECLS
 #define GST_BASE_PARSE_CAST(obj)       ((GstBaseParse *)(obj))
 
 /**
- * GST_BASE_PARSE_SINK_NAME:
- *
- * the name of the templates for the sink pad
- */
-#define GST_BASE_PARSE_SINK_NAME    "sink"
-/**
- * GST_BASE_PARSE_SRC_NAME:
- *
- * the name of the templates for the source pad
- */
-#define GST_BASE_PARSE_SRC_NAME     "src"
-
-/**
  * GST_BASE_PARSE_SRC_PAD:
  * @obj: base parse instance
  *
