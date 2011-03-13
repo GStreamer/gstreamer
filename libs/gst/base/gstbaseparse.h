@@ -56,16 +56,6 @@ G_BEGIN_DECLS
 #define GST_BASE_PARSE_SINK_PAD(obj)    (GST_BASE_PARSE_CAST (obj)->sinkpad)
 
 /**
- * GST_BASE_PARSE_SEGMENT:
- * @obj: base parse instance
- *
- * Gives the segment of the element.
- *
- * Since: 0.10.x
- */
-#define GST_BASE_PARSE_SEGMENT(obj)     (GST_BASE_PARSE_CAST (obj)->segment)
-
-/**
  * GST_BASE_PARSE_FLOW_DROPPED:
  *
  * A #GstFlowReturn that can be returned from parse_frame to
@@ -209,12 +199,6 @@ struct _GstBaseParse {
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment      segment;
-
-  /* Newsegment event to be sent after SEEK */
-  GstEvent       *pending_segment;
-
-  /* Segment event that closes the running segment prior to SEEK */
-  GstEvent       *close_segment;
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE];
