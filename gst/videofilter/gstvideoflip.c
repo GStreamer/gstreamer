@@ -611,16 +611,22 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, guint8 * dest,
           /* u/v must be calculated using the offset of the even column */
           gint even_y = (y & ~1);
 
-          u = (s[(sh - 1 - x) * src_stride + even_y * bpp + u_offset] +
-              s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + u_offset]) / 2;
-          v = (s[(sh - 1 - x) * src_stride + even_y * bpp + v_offset] +
-              s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + v_offset]) / 2;
+          u = s[(sh - 1 - x) * src_stride + even_y * bpp + u_offset];
+          if (x + 1 < dw)
+            u = (s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + u_offset]
+                + u) >> 1;
+          v = s[(sh - 1 - x) * src_stride + even_y * bpp + v_offset];
+          if (x + 1 < dw)
+            v = (s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + v_offset]
+                + v) >> 1;
+
           d[y * dest_stride + x * bpp + u_offset] = u;
           d[y * dest_stride + x * bpp + v_offset] = v;
           d[y * dest_stride + x * bpp + y_offset] =
               s[(sh - 1 - x) * src_stride + y * bpp + y_offset];
-          d[y * dest_stride + (x + 1) * bpp + y_offset] =
-              s[(sh - 1 - (x + 1)) * src_stride + y * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(sh - 1 - (x + 1)) * src_stride + y * bpp + y_offset];
         }
       }
       break;
@@ -632,17 +638,20 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, guint8 * dest,
           /* u/v must be calculated using the offset of the even column */
           gint even_y = ((sw - 1 - y) & ~1);
 
-          u = (s[x * src_stride + even_y * bpp + u_offset] +
-              s[(x + 1) * src_stride + even_y * bpp + u_offset]) / 2;
-          v = (s[x * src_stride + even_y * bpp + v_offset] +
-              s[(x + 1) * src_stride + even_y * bpp + v_offset]) / 2;
+          u = s[x * src_stride + even_y * bpp + u_offset];
+          if (x + 1 < dw)
+            u = (s[(x + 1) * src_stride + even_y * bpp + u_offset] + u) >> 1;
+          v = s[x * src_stride + even_y * bpp + v_offset];
+          if (x + 1 < dw)
+            v = (s[(x + 1) * src_stride + even_y * bpp + v_offset] + v) >> 1;
 
           d[y * dest_stride + x * bpp + u_offset] = u;
           d[y * dest_stride + x * bpp + v_offset] = v;
           d[y * dest_stride + x * bpp + y_offset] =
               s[x * src_stride + (sw - 1 - y) * bpp + y_offset];
-          d[y * dest_stride + (x + 1) * bpp + y_offset] =
-              s[(x + 1) * src_stride + (sw - 1 - y) * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(x + 1) * src_stride + (sw - 1 - y) * bpp + y_offset];
         }
       }
       break;
@@ -663,9 +672,10 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, guint8 * dest,
           d[y * dest_stride + x * bpp + v_offset] = v;
           d[y * dest_stride + x * bpp + y_offset] =
               s[(sh - 1 - y) * src_stride + (sw - 1 - x) * bpp + y_offset];
-          d[y * dest_stride + (x + 1) * bpp + y_offset] =
-              s[(sh - 1 - y) * src_stride + (sw - 1 - (x + 1)) * bpp +
-              y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(sh - 1 - y) * src_stride + (sw - 1 - (x + 1)) * bpp +
+                y_offset];
         }
       }
       break;
@@ -686,8 +696,9 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, guint8 * dest,
           d[y * dest_stride + x * bpp + v_offset] = v;
           d[y * dest_stride + x * bpp + y_offset] =
               s[y * src_stride + (sw - 1 - x) * bpp + y_offset];
-          d[y * dest_stride + (x + 1) * bpp + y_offset] =
-              s[y * src_stride + (sw - 1 - (x + 1)) * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[y * src_stride + (sw - 1 - (x + 1)) * bpp + y_offset];
         }
       }
       break;
@@ -708,8 +719,9 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, guint8 * dest,
           d[y * dest_stride + x * bpp + v_offset] = v;
           d[y * dest_stride + x * bpp + y_offset] =
               s[(sh - 1 - y) * src_stride + x * bpp + y_offset];
-          d[y * dest_stride + (x + 1) * bpp + y_offset] =
-              s[(sh - 1 - y) * src_stride + (x + 1) * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(sh - 1 - y) * src_stride + (x + 1) * bpp + y_offset];
         }
       }
       break;
@@ -721,17 +733,20 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, guint8 * dest,
           /* u/v must be calculated using the offset of the even column */
           gint even_y = (y & ~1);
 
-          u = (s[x * src_stride + even_y * bpp + u_offset] +
-              s[(x + 1) * src_stride + even_y * bpp + u_offset]) / 2;
-          v = (s[x * src_stride + even_y * bpp + v_offset] +
-              s[(x + 1) * src_stride + even_y * bpp + v_offset]) / 2;
+          u = s[x * src_stride + even_y * bpp + u_offset];
+          if (x + 1 < dw)
+            u = (s[(x + 1) * src_stride + even_y * bpp + u_offset] + u) >> 1;
+          v = s[x * src_stride + even_y * bpp + v_offset];
+          if (x + 1 < dw)
+            v = (s[(x + 1) * src_stride + even_y * bpp + v_offset] + v) >> 1;
 
           d[y * dest_stride + x * bpp + u_offset] = u;
           d[y * dest_stride + x * bpp + v_offset] = v;
           d[y * dest_stride + x * bpp + y_offset] =
               s[x * src_stride + y * bpp + y_offset];
-          d[y * dest_stride + (x + 1) * bpp + y_offset] =
-              s[(x + 1) * src_stride + y * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(x + 1) * src_stride + y * bpp + y_offset];
         }
       }
       break;
@@ -743,18 +758,23 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, guint8 * dest,
           /* u/v must be calculated using the offset of the even column */
           gint even_y = ((sw - 1 - y) & ~1);
 
-          u = (s[(sh - 1 - x) * src_stride + even_y * bpp + u_offset] +
-              s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + u_offset]) / 2;
-          v = (s[(sh - 1 - x) * src_stride + even_y * bpp + v_offset] +
-              s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + v_offset]) / 2;
+          u = s[(sh - 1 - x) * src_stride + even_y * bpp + u_offset];
+          if (x + 1 < dw)
+            u = (s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + u_offset]
+                + u) >> 1;
+          v = s[(sh - 1 - x) * src_stride + even_y * bpp + v_offset];
+          if (x + 1 < dw)
+            v = (s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + v_offset]
+                + v) >> 1;
 
           d[y * dest_stride + x * bpp + u_offset] = u;
           d[y * dest_stride + x * bpp + v_offset] = v;
           d[y * dest_stride + x * bpp + y_offset] =
               s[(sh - 1 - x) * src_stride + (sw - 1 - y) * bpp + y_offset];
-          d[y * dest_stride + (x + 1) * bpp + y_offset] =
-              s[(sh - 1 - (x + 1)) * src_stride + (sw - 1 - y) * bpp +
-              y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(sh - 1 - (x + 1)) * src_stride + (sw - 1 - y) * bpp +
+                y_offset];
         }
       }
       break;
