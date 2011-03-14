@@ -57,8 +57,12 @@ GST_DEBUG_CATEGORY_STATIC (dca_parse_debug);
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-dts, framed = (boolean) true, "
-        " channels = (int) [ 1, 8 ], rate = (int) [ 8000, 192000 ]"));
+    GST_STATIC_CAPS ("audio/x-dts,"
+        " framed = (boolean) true,"
+        " channels = (int) [ 1, 8 ],"
+        " rate = (int) [ 8000, 192000 ],"
+        " depth = (int) { 14, 16 },"
+        " endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }"));
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -114,6 +118,8 @@ gst_dca_parse_reset (GstDcaParse * dcaparse)
 {
   dcaparse->channels = -1;
   dcaparse->rate = -1;
+  dcaparse->depth = -1;
+  dcaparse->endianness = -1;
   dcaparse->last_sync = 0;
 }
 
@@ -154,7 +160,8 @@ gst_dca_parse_stop (GstBaseParse * parse)
 static gboolean
 gst_dca_parse_parse_header (GstDcaParse * dcaparse,
     const GstByteReader * reader, guint * frame_size,
-    guint * sample_rate, guint * channels, guint * samples)
+    guint * sample_rate, guint * channels, guint * depth,
+    gint * endianness, guint * samples)
 {
   static const int sample_rates[16] = { 0, 8000, 16000, 32000, 0, 0, 11025,
     22050, 44100, 0, 0, 12000, 24000, 48000, 96000, 192000
@@ -228,6 +235,12 @@ gst_dca_parse_parse_header (GstDcaParse * dcaparse,
     *channels = channels_table[chans] + ((lfe) ? 1 : 0);
   else
     *channels = 0;
+
+  if (depth)
+    *depth = (marker == 0x1FFFE800 || marker == 0xFF1F00E8) ? 14 : 16;
+  if (endianness)
+    *endianness = (marker == 0xFE7F0180 || marker == 0xFF1F00E8) ?
+        G_LITTLE_ENDIAN : G_BIG_ENDIAN;
 
   *samples = num_blocks * samples_per_block;
 
@@ -331,8 +344,8 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
   }
 
   /* make sure the values in the frame header look sane */
-  if (!gst_dca_parse_parse_header (dcaparse, &r, &size, &rate, &chans,
-          &samples)) {
+  if (!gst_dca_parse_parse_header (dcaparse, &r, &size, &rate, &chans, NULL,
+          NULL, &samples)) {
     *skipsize = 4;
     return FALSE;
   }
@@ -356,7 +369,8 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
       gst_byte_reader_init_from_buffer (&r, buf);
       gst_byte_reader_skip_unchecked (&r, size);
 
-      if (!gst_dca_parse_parse_header (dcaparse, &r, &s2, &r2, &c2, &n2)) {
+      if (!gst_dca_parse_parse_header (dcaparse, &r, &s2, &r2, &c2, NULL, NULL,
+              &n2)) {
         GST_DEBUG_OBJECT (dcaparse, "didn't find second syncword");
         *skipsize = 4;
         return FALSE;
@@ -383,24 +397,29 @@ gst_dca_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstDcaParse *dcaparse = GST_DCA_PARSE (parse);
   GstBuffer *buf = frame->buffer;
   GstByteReader r = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
-  guint size, rate, chans, samples;
+  guint size, rate, chans, depth, samples;
+  gint endianness;
 
-  if (!gst_dca_parse_parse_header (dcaparse, &r, &size, &rate, &chans,
-          &samples))
+  if (!gst_dca_parse_parse_header (dcaparse, &r, &size, &rate, &chans, &depth,
+          &endianness, &samples))
     goto broken_header;
 
-  if (G_UNLIKELY (dcaparse->rate != rate || dcaparse->channels != chans)) {
+  if (G_UNLIKELY (dcaparse->rate != rate || dcaparse->channels != chans
+          || dcaparse->depth != depth || dcaparse->endianness != endianness)) {
     GstCaps *caps;
 
     caps = gst_caps_new_simple ("audio/x-dts",
         "framed", G_TYPE_BOOLEAN, TRUE,
-        "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, chans, NULL);
+        "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, chans,
+        "endianness", G_TYPE_INT, endianness, "depth", G_TYPE_INT, depth, NULL);
     gst_buffer_set_caps (buf, caps);
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
 
     dcaparse->rate = rate;
     dcaparse->channels = chans;
+    dcaparse->depth = depth;
+    dcaparse->endianness = endianness;
 
     gst_base_parse_set_frame_props (parse, rate, samples, 0, 0);
   }
