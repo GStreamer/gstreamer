@@ -437,6 +437,7 @@ gst_base_camera_src_change_state (GstElement * element,
       /* recreate the preview pipeline */
       if (self->preview_pipeline && self->preview_filter_changed) {
         gst_camerabin_destroy_preview_pipeline (self->preview_pipeline);
+        self->preview_pipeline = NULL;
       }
 
       if (self->preview_pipeline == NULL)
