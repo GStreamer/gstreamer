@@ -704,11 +704,15 @@ encodebin_element_added (GstElement * encodebin, GstElement * new_element,
 #define VIDEO_PAD 1
 #define AUDIO_PAD 2
 static GstPad *
-encodebin_find_pad (GstElement * encodebin, gint pad_type)
+encodebin_find_pad (GstCameraBin * camera, gint pad_type)
 {
   GstPad *pad = NULL;
   GstIterator *iter;
   gboolean done;
+  GstElement *encodebin = camera->encodebin;
+
+  GST_DEBUG_OBJECT (camera, "Looking at encodebin pads, searching for %s pad",
+      VIDEO_PAD ? "video" : "audio");
 
   iter = gst_element_iterate_sink_pads (encodebin);
   done = FALSE;
@@ -717,11 +721,13 @@ encodebin_find_pad (GstElement * encodebin, gint pad_type)
       case GST_ITERATOR_OK:
         if (pad_type == VIDEO_PAD) {
           if (strstr (GST_PAD_NAME (pad), "video") != NULL) {
+            GST_DEBUG_OBJECT (camera, "Found video pad %s", GST_PAD_NAME (pad));
             done = TRUE;
             break;
           }
         } else if (pad_type == AUDIO_PAD) {
           if (strstr (GST_PAD_NAME (pad), "audio") != NULL) {
+            GST_DEBUG_OBJECT (camera, "Found audio pad %s", GST_PAD_NAME (pad));
             done = TRUE;
             break;
           }
@@ -749,11 +755,14 @@ encodebin_find_pad (GstElement * encodebin, gint pad_type)
     GstElementClass *klass;
     GstPadTemplate *tmpl;
 
+    GST_DEBUG_OBJECT (camera, "No pads found, trying to request one");
+
     klass = GST_ELEMENT_GET_CLASS (encodebin);
     tmpl = gst_element_class_get_pad_template (klass, pad_type == VIDEO_PAD ?
         "video_%d" : "audio_%d");
 
     pad = gst_element_request_pad (encodebin, tmpl, NULL, NULL);
+    GST_DEBUG_OBJECT (camera, "Got pad: %s", pad ? GST_PAD_NAME (pad) : "null");
     gst_object_unref (tmpl);
   }
 
@@ -791,7 +800,10 @@ gst_camera_bin_link_encodebin (GstCameraBin * camera, GstElement * element,
   GstPad *sinkpad = NULL;
 
   srcpad = gst_element_get_static_pad (element, "src");
-  sinkpad = encodebin_find_pad (camera->encodebin, padtype);
+  sinkpad = encodebin_find_pad (camera, padtype);
+
+  g_assert (srcpad != NULL);
+  g_assert (sinkpad != NULL);
 
   ret = gst_pad_link (srcpad, sinkpad);
   gst_object_unref (sinkpad);
@@ -910,6 +922,7 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     g_object_set (camera->imagebin, "location", camera->image_location, NULL);
   }
   if (camera->profile_switch) {
+    GST_DEBUG_OBJECT (camera, "Switching encodebin's profile");
     g_object_set (camera->encodebin, "profile", camera->video_profile, NULL);
     gst_camera_bin_link_encodebin (camera, camera->videobin_capsfilter,
         VIDEO_PAD);
