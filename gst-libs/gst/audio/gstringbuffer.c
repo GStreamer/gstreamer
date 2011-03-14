@@ -446,6 +446,19 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
     spec->width = 16;
     spec->depth = 16;
     spec->channels = 2;
+  } else if (!strncmp (mimetype, "audio/mpeg", 10) &&
+      gst_structure_get_int (structure, "mpegaudioversion", &i) &&
+      (i == 1 || i == 2)) {
+    /* Now we know this is MPEG-1 or MPEG-2 (non AAC) */
+    /* extract the needed information from the cap */
+    if (!(gst_structure_get_int (structure, "rate", &spec->rate)))
+      goto parse_error;
+
+    spec->type = GST_BUFTYPE_MPEG;
+    spec->format = GST_MPEG;
+    spec->width = 16;
+    spec->depth = 16;
+    spec->channels = 2;
   } else {
     goto parse_error;
   }
