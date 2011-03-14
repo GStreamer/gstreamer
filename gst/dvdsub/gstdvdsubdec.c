@@ -317,16 +317,10 @@ gst_dvd_sub_dec_parse_subpic (GstDvdSubDec * dec)
       case SPU_SET_SIZE:       /* image coordinates */
         PARSE_BYTES_NEEDED (7);
 
-        dec->left =
-            CLAMP ((((guint) buf[1]) << 4) | (buf[2] >> 4), 0,
-            (dec->in_width - 1));
-        dec->top =
-            CLAMP ((((guint) buf[4]) << 4) | (buf[5] >> 4), 0,
-            (dec->in_height - 1));
-        dec->right =
-            CLAMP ((((buf[2] & 0x0f) << 8) | buf[3]), 0, (dec->in_width - 1));
-        dec->bottom =
-            CLAMP ((((buf[5] & 0x0f) << 8) | buf[6]), 0, (dec->in_height - 1));
+        dec->top = ((buf[4] & 0x3f) << 4) | ((buf[5] & 0xe0) >> 4);
+        dec->left = ((buf[1] & 0x3f) << 4) | ((buf[2] & 0xf0) >> 4);
+        dec->right = ((buf[2] & 0x03) << 8) | buf[3];
+        dec->bottom = ((buf[5] & 0x03) << 8) | buf[6];
 
         GST_DEBUG_OBJECT (dec, "SPU SET_SIZE left %d, top %d, right %d, "
             "bottom %d", dec->left, dec->top, dec->right, dec->bottom);
@@ -593,6 +587,50 @@ gst_dvd_sub_dec_merge_title (GstDvdSubDec * dec, GstBuffer * buf)
   state.next = 0;
   state.offset[0] = dec->offset[0];
   state.offset[1] = dec->offset[1];
+
+  /* center the image when display rectangle exceeds the video width */
+  if (dec->in_width <= dec->right) {
+    gint left, disp_width;
+
+    disp_width = dec->right - dec->left + 1;
+    left = (dec->in_width - disp_width) / 2;
+    dec->left = left;
+    dec->right = left + disp_width - 1;
+
+    /* if it clips to the right, shift it left, but only till zero */
+    if (dec->right >= dec->in_width) {
+      gint shift = dec->right - dec->in_width - 1;
+      if (shift > dec->left)
+        shift = dec->left;
+      dec->left -= shift;
+      dec->right -= shift;
+    }
+
+    GST_DEBUG_OBJECT (dec, "clipping width to %d,%d",
+        dec->left, dec->in_width - 1);
+  }
+
+  /* for the height, bring it up till it fits as well as it can. We
+   * assume the picture is in the lower part. We should better check where it
+   * is and do something more clever. */
+  if (dec->in_height <= dec->bottom) {
+
+    /* shift it up, but only till zero */
+    gint shift = dec->bottom - dec->in_height - 1;
+    if (shift > dec->top)
+      shift = dec->top;
+    dec->top -= shift;
+    dec->bottom -= shift;
+
+    /* start on even line */
+    if (dec->top & 1) {
+      dec->top--;
+      dec->bottom--;
+    }
+
+    GST_DEBUG_OBJECT (dec, "clipping height to %d,%d",
+        dec->top, dec->in_height - 1);
+  }
 
   if (dec->current_button) {
     hl_top = dec->hl_top;
