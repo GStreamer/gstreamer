@@ -678,7 +678,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * If this function returns NULL, @pad will be exposed as a final caps.
    *
    * If this function returns an empty array, the pad will be considered as
-   * having an unhandled type media type. 
+   * having an unhandled type media type.
    *
    * <note>
    *   Only the signal handler that is connected first will ever by invoked.

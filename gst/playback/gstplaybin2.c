@@ -2426,7 +2426,7 @@ notify_tags_cb (GObject * object, GParamSpec * pspec, gpointer user_data)
 }
 
 /* this function is called when a new pad is added to decodebin. We check the
- * type of the pad and add it to the selector element of the group. 
+ * type of the pad and add it to the selector element of the group.
  */
 static void
 pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
@@ -3431,7 +3431,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
 }
 
 /* setup the next group to play, this assumes the next_group is valid and
- * configured. It swaps out the current_group and activates the valid 
+ * configured. It swaps out the current_group and activates the valid
  * next_group. */
 static gboolean
 setup_next_source (GstPlayBin * playbin, GstState target)
