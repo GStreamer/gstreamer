@@ -375,6 +375,8 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_text_overlay_change_state);
 
+  klass->pango_lock = g_mutex_new ();
+
   klass->get_text = gst_text_overlay_get_text;
   fontmap = pango_cairo_font_map_get_default ();
   klass->pango_context =
@@ -1235,6 +1237,8 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   double scalef = 1.0;
   double a, r, g, b;
 
+  g_mutex_lock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
+
   if (overlay->auto_adjust_size) {
     /* 640 pixel is default */
     scalef = (double) (overlay->width) / DEFAULT_SCALE_BASIS;
@@ -1297,6 +1301,8 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   } else {
     cairo_matrix_init_scale (&cairo_matrix, scalef, scalef);
   }
+
+  g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 
   /* reallocate surface */
   overlay->text_image = g_realloc (overlay->text_image, 4 * width * height);

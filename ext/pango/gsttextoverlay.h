@@ -155,6 +155,7 @@ struct _GstTextOverlayClass {
     GstElementClass parent_class;
 
     PangoContext *pango_context;
+    GMutex       *pango_lock;
 
     gchar *     (*get_text) (GstTextOverlay *overlay, GstBuffer *video_frame);
 };
