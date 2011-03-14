@@ -22,6 +22,11 @@
 #ifndef __GST_BASE_AUDIO_ENCODER_H__
 #define __GST_BASE_AUDIO_ENCODER_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "GstBaseAudioEncoder is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/audio/multichannel.h>
