@@ -835,6 +835,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
             GST_DEBUG_OBJECT (ogg_mux,
                 "got header buffer in control state, ignoring");
             /* just ignore */
+            pad->map.n_header_packets_seen++;
             gst_buffer_unref (buf);
             buf = NULL;
           } else {
