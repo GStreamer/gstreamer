@@ -2696,10 +2696,12 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
   if (G_UNLIKELY (!group->multiqueue))
     goto missing_multiqueue;
 
-  g_object_set (mq, "use-buffering", dbin->use_buffering, NULL);
+  /* default is for use-buffering is FALSE */
   if (dbin->use_buffering) {
-    g_object_set (mq, "low-percent", dbin->low_percent, NULL);
-    g_object_set (mq, "high-percent", dbin->high_percent, NULL);
+    g_object_set (mq,
+        "use-buffering", TRUE,
+        "low-percent", dbin->low_percent,
+        "high-percent", dbin->high_percent, NULL);
   }
 
   /* configure queue sizes for preroll */
