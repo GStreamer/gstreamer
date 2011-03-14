@@ -140,7 +140,7 @@ static gboolean new_packet_cb (guint8 * data, guint len, void *user_data,
     gint64 new_pcr);
 static void release_buffer_cb (guint8 * data, void *user_data);
 
-static gboolean mpegtsdemux_prepare_srcpad (MpegTsMux * mux);
+static void mpegtsdemux_prepare_srcpad (MpegTsMux * mux);
 static GstFlowReturn mpegtsmux_collected (GstCollectPads * pads,
     MpegTsMux * mux);
 static GstPad *mpegtsmux_request_new_pad (GstElement * element,
@@ -656,22 +656,17 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
 
   GST_DEBUG_OBJECT (mux, "Pads collected");
 
-  if (mux->first) {
+  if (G_UNLIKELY (mux->first)) {
     ret = mpegtsmux_create_streams (mux);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       return ret;
 
-    best = mpegtsmux_choose_best_stream (mux);
-
-    if (!mpegtsdemux_prepare_srcpad (mux)) {
-      GST_DEBUG_OBJECT (mux, "Failed to send new segment");
-      goto new_seg_fail;
-    }
+    mpegtsdemux_prepare_srcpad (mux);
 
     mux->first = FALSE;
-  } else {
-    best = mpegtsmux_choose_best_stream (mux);
   }
+
+  best = mpegtsmux_choose_best_stream (mux);
 
   if (best != NULL) {
     TsMuxProgram *prog = best->prog;
@@ -732,8 +727,6 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
   }
 
   return ret;
-new_seg_fail:
-  return GST_FLOW_ERROR;
 write_fail:
   /* FIXME: Failed writing data for some reason. Should set appropriate error */
   return mux->last_flow_ret;
@@ -981,7 +974,7 @@ mpegtsdemux_set_header_on_caps (MpegTsMux * mux)
   gst_caps_unref (caps);
 }
 
-static gboolean
+static void
 mpegtsdemux_prepare_srcpad (MpegTsMux * mux)
 {
   GstEvent *new_seg =
@@ -992,17 +985,12 @@ mpegtsdemux_prepare_srcpad (MpegTsMux * mux)
       (mux->m2ts_mode ? M2TS_PACKET_LENGTH : NORMAL_TS_PACKET_LENGTH),
       NULL);
 
-//      gst_static_pad_template_get_caps (&mpegtsmux_src_factory);
-
   /* Set caps on src pad from our template and push new segment */
   gst_pad_set_caps (mux->srcpad, caps);
 
   if (!gst_pad_push_event (mux->srcpad, new_seg)) {
-    GST_WARNING_OBJECT (mux, "New segment event was not handled");
-    return FALSE;
+    GST_WARNING_OBJECT (mux, "New segment event was not handled downstream");
   }
-
-  return TRUE;
 }
 
 static GstStateChangeReturn
