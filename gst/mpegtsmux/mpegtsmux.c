@@ -946,10 +946,10 @@ mpegtsdemux_set_header_on_caps (MpegTsMux * mux)
   GstStructure *structure;
   GValue array = { 0 };
   GValue value = { 0 };
-  GstCaps *caps = GST_PAD_CAPS (mux->srcpad);
+  GstCaps *caps;
   GList *sh;
 
-  caps = gst_caps_make_writable (caps);
+  caps = gst_caps_copy (GST_PAD_CAPS (mux->srcpad));
   structure = gst_caps_get_structure (caps, 0);
 
   g_value_init (&array, GST_TYPE_ARRAY);
@@ -987,6 +987,7 @@ mpegtsdemux_prepare_srcpad (MpegTsMux * mux)
 
   /* Set caps on src pad from our template and push new segment */
   gst_pad_set_caps (mux->srcpad, caps);
+  gst_caps_unref (caps);
 
   if (!gst_pad_push_event (mux->srcpad, new_seg)) {
     GST_WARNING_OBJECT (mux, "New segment event was not handled downstream");
