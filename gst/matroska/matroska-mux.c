@@ -644,22 +644,23 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       gst_tag_setter_merge_tags (GST_TAG_SETTER (mux), list,
           gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
 
-      /* handled this, don't want collectpads to forward it downstream */
-      ret = FALSE;
       gst_event_unref (event);
+      /* handled this, don't want collectpads to forward it downstream */
+      event = NULL;
       break;
     }
     case GST_EVENT_NEWSEGMENT:
       /* We don't support NEWSEGMENT events */
       ret = FALSE;
       gst_event_unref (event);
+      event = NULL;
       break;
     default:
       break;
   }
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
-  if (ret)
+  if (event)
     ret = mux->collect_event (pad, event);
 
   gst_object_unref (mux);
