@@ -416,7 +416,7 @@ static void
 task_monitor_alsa (gpointer data)
 {
   struct pollfd *pfds;
-  unsigned int nfds, rnfds;
+  int nfds, rnfds;
   unsigned short revents;
   GstAlsaMixer *mixer = (GstAlsaMixer *) data;
   gint ret;
@@ -733,7 +733,7 @@ gst_alsa_mixer_set_mute (GstAlsaMixer * mixer, GstMixerTrack * track,
 
   gst_alsa_mixer_track_update (alsa_track);
 
-  if (!!(mute) == !!(track->flags & GST_MIXER_TRACK_MUTE)) {
+  if (! !(mute) == ! !(track->flags & GST_MIXER_TRACK_MUTE)) {
     g_static_rec_mutex_unlock (mixer->rec_mutex);
     return;
   }
@@ -785,7 +785,7 @@ gst_alsa_mixer_set_record (GstAlsaMixer * mixer,
 
   gst_alsa_mixer_track_update (alsa_track);
 
-  if (!!(record) == !!(track->flags & GST_MIXER_TRACK_RECORD)) {
+  if (! !(record) == ! !(track->flags & GST_MIXER_TRACK_RECORD)) {
     g_static_rec_mutex_unlock (mixer->rec_mutex);
     return;
   }
@@ -917,8 +917,8 @@ gst_alsa_mixer_update_track (GstAlsaMixer * mixer,
     return;
   }
 
-  old_mute = !!(GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_MUTE));
-  old_record = !!(GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD));
+  old_mute = ! !(GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_MUTE));
+  old_record = ! !(GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD));
   old_volumes = g_new (gint, track->num_channels);
   n_channels = track->num_channels;
   memcpy (old_volumes, alsa_track->volumes,
@@ -927,13 +927,13 @@ gst_alsa_mixer_update_track (GstAlsaMixer * mixer,
   gst_alsa_mixer_track_update (alsa_track);
 
   if (old_record !=
-      !!(GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD))) {
+      ! !(GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD))) {
     gst_mixer_record_toggled (mixer->interface, track,
-        !!GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD));
+        ! !GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD));
   }
-  if (old_mute != !!(GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_MUTE))) {
+  if (old_mute != ! !(GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_MUTE))) {
     gst_mixer_mute_toggled (mixer->interface, track,
-        !!GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_MUTE));
+        ! !GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_MUTE));
   }
 
   n_channels = MIN (n_channels, track->num_channels);
