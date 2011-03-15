@@ -734,13 +734,20 @@ gst_send_subtitle_frame (GstDvdSubDec * dec, GstClockTime end_ts)
 
     dec->out_buffer = out_buf;
     dec->buf_dirty = FALSE;
+  } else {
+    goto out;
   }
 
   out_buf = gst_buffer_create_sub (dec->out_buffer, 0,
       GST_BUFFER_SIZE (dec->out_buffer));
 
   GST_BUFFER_TIMESTAMP (out_buf) = dec->next_ts;
-  GST_BUFFER_DURATION (out_buf) = GST_CLOCK_DIFF (dec->next_ts, end_ts);
+  if (GST_CLOCK_TIME_IS_VALID (dec->next_event_ts)) {
+    GST_BUFFER_DURATION (out_buf) = GST_CLOCK_DIFF (dec->next_ts,
+        dec->next_event_ts);
+  } else {
+    GST_BUFFER_DURATION (out_buf) = GST_CLOCK_TIME_NONE;
+  }
 
   GST_DEBUG_OBJECT (dec, "Sending subtitle buffer with ts %"
       GST_TIME_FORMAT ", dur %" G_GINT64_FORMAT,
