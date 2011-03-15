@@ -126,6 +126,9 @@ typedef struct _GstMatroskaMux {
                  cluster_pos,
 		 prev_cluster_size;
 
+  /* GstForceKeyUnit event */
+  GstEvent       *force_key_unit_event;
+
 } GstMatroskaMux;
 
 typedef struct _GstMatroskaMuxClass {
