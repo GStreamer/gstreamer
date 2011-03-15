@@ -135,17 +135,19 @@ dnl *** checks for programs ***
 dnl find a compiler
 AC_PROG_CC
 AC_PROG_CC_STDC
-AC_PROG_CXX
-
-dnl determine if c++ is available on this system
-AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
-
-dnl determine c++ preprocessor
-dnl FIXME: do we need this ?
-AC_PROG_CXXCPP
 
 dnl check if the compiler supports '-c' and '-o' options
 AM_PROG_CC_C_O
+
+dnl determine if c++ is available on this system
+AC_PROG_CXX
+dnl CXX may be set to some default even if no c++ compiler is available
+dnl (thanks autotools!), so just try to compile some c++ code to make sure
+AC_LANG_PUSH([C++])
+AC_TRY_COMPILE([ class Foo { int bar; };], , working_cxx=yes, working_cxx=no)
+AC_LANG_POP([C++])
+AC_MSG_NOTICE([working c++ compiler found: $working_cxx])
+AM_CONDITIONAL(HAVE_CXX, test "x$working_cxx" = "xyes")
 
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")

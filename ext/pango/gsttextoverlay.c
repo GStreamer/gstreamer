@@ -32,7 +32,7 @@
  * the text set via the "text" property will be rendered. If the text sink
  * pad is linked, text will be rendered as it is received on that pad,
  * honouring and matching the buffer timestamps of both input streams.
- * 
+ *
  * The text can contain newline characters and text wrapping is enabled by
  * default.
  *
@@ -41,7 +41,7 @@
  * |[
  * gst-launch -v videotestsrc ! textoverlay text="Room A" valign=top halign=left ! xvimagesink
  * ]| Here is a simple pipeline that displays a static text in the top left
- * corner of the video picture 
+ * corner of the video picture
  * |[
  * gst-launch -v filesrc location=subtitles.srt ! subparse ! txt.   videotestsrc ! timeoverlay ! textoverlay name=txt shaded-background=yes ! xvimagesink
  * ]| Here is another pipeline that displays subtitles from an .srt subtitle
@@ -54,12 +54,12 @@
  * 1
  * 00:00:03,000 --> 00:00:05,000
  * Hello? (3-5s)
- *  
+ *
  * 2
  * 00:00:08,000 --> 00:00:13,000
  * Yes, this is a subtitle. Don&apos;t
  * you like it? (8-13s)
- *  
+ *
  * 3
  * 00:00:18,826 --> 00:01:02,886
  * Uh? What are you talking about?
@@ -374,6 +374,8 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_text_overlay_change_state);
+
+  klass->pango_lock = g_mutex_new ();
 
   klass->get_text = gst_text_overlay_get_text;
   fontmap = pango_cairo_font_map_get_default ();
@@ -1235,6 +1237,8 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   double scalef = 1.0;
   double a, r, g, b;
 
+  g_mutex_lock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
+
   if (overlay->auto_adjust_size) {
     /* 640 pixel is default */
     scalef = (double) (overlay->width) / DEFAULT_SCALE_BASIS;
@@ -1250,8 +1254,8 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
 
   if (width + overlay->deltax >
       (overlay->use_vertical_render ? overlay->height : overlay->width)) {
-    /* 
-     * subtitle image width is larger then overlay width 
+    /*
+     * subtitle image width is larger then overlay width
      * so rearrange overlay wrap mode.
      */
     gst_text_overlay_update_wrap_mode (overlay);
@@ -1297,6 +1301,8 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   } else {
     cairo_matrix_init_scale (&cairo_matrix, scalef, scalef);
   }
+
+  g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 
   /* reallocate surface */
   overlay->text_image = g_realloc (overlay->text_image, 4 * width * height);

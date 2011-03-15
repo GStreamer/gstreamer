@@ -1698,9 +1698,9 @@ gst_encode_bin_set_profile (GstEncodeBin * ebin, GstEncodingProfile * profile)
   }
 
   /* If we're not active, we can deactivate the previous profile */
-  if (ebin->profile)
-    gst_encoding_profile_unref (ebin->profile);
-  ebin->profile = NULL;
+  if (ebin->profile) {
+    gst_encode_bin_tear_down_profile (ebin);
+  }
 
   return gst_encode_bin_setup_profile (ebin, profile);
 }

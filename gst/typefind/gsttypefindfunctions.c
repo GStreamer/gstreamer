@@ -1333,7 +1333,7 @@ static GstStaticCaps dts_caps = GST_STATIC_CAPS ("audio/x-dts");
 
 static gboolean
 dts_parse_frame_header (DataScanCtx * c, guint * frame_size,
-    guint * sample_rate, guint * channels)
+    guint * sample_rate, guint * channels, guint * depth, guint * endianness)
 {
   static const int sample_rates[16] = { 0, 8000, 16000, 32000, 0, 0, 11025,
     22050, 44100, 0, 0, 12000, 24000, 48000, 96000, 192000
@@ -1349,11 +1349,13 @@ dts_parse_frame_header (DataScanCtx * c, guint * frame_size,
 
   /* raw big endian or 14-bit big endian */
   if (marker == 0x7FFE8001 || marker == 0x1FFFE800) {
+    *endianness = G_BIG_ENDIAN;
     for (i = 0; i < G_N_ELEMENTS (hdr); ++i)
       hdr[i] = GST_READ_UINT16_BE (c->data + (i * sizeof (guint16)));
   } else
     /* raw little endian or 14-bit little endian */
   if (marker == 0xFE7F0180 || marker == 0xFF1F00E8) {
+    *endianness = G_LITTLE_ENDIAN;
     for (i = 0; i < G_N_ELEMENTS (hdr); ++i)
       hdr[i] = GST_READ_UINT16_LE (c->data + (i * sizeof (guint16)));
   } else {
@@ -1376,6 +1378,9 @@ dts_parse_frame_header (DataScanCtx * c, guint * frame_size,
     hdr[5] = (hdr[5] << 12) | ((hdr[6] >> 2) & 0x0FFF);
     hdr[6] = (hdr[6] << 14) | ((hdr[7] >> 0) & 0x3FFF);
     g_assert (hdr[0] == 0x7FFE && hdr[1] == 0x8001);
+    *depth = 14;
+  } else {
+    *depth = 16;
   }
 
   GST_LOG ("frame header: %04x%04x%04x%04x", hdr[2], hdr[3], hdr[4], hdr[5]);
@@ -1409,12 +1414,13 @@ dts_type_find (GstTypeFind * tf, gpointer unused)
    * a lower probability if not found right at the start. Check that the
    * frame is followed by a second frame at the expected offset. */
   while (c.offset <= DTS_MAX_FRAMESIZE) {
-    guint frame_size = 0, rate = 0, chans = 0;
+    guint frame_size = 0, rate = 0, chans = 0, depth = 0, endianness = 0;
 
     if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, DTS_MIN_FRAMESIZE)))
       return;
 
-    if (G_UNLIKELY (dts_parse_frame_header (&c, &frame_size, &rate, &chans))) {
+    if (G_UNLIKELY (dts_parse_frame_header (&c, &frame_size, &rate, &chans,
+                &depth, &endianness))) {
       GstTypeFindProbability prob;
       DataScanCtx next_c;
 
@@ -1433,10 +1439,13 @@ dts_type_find (GstTypeFind * tf, gpointer unused)
       if (chans > 0) {
         gst_type_find_suggest_simple (tf, prob, "audio/x-dts",
             "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, chans,
+            "depth", G_TYPE_INT, depth, "endianness", G_TYPE_INT, endianness,
             "framed", G_TYPE_BOOLEAN, FALSE, NULL);
       } else {
         gst_type_find_suggest_simple (tf, prob, "audio/x-dts",
-            "rate", G_TYPE_INT, rate, "framed", G_TYPE_BOOLEAN, FALSE, NULL);
+            "rate", G_TYPE_INT, rate, "depth", G_TYPE_INT, depth,
+            "endianness", G_TYPE_INT, endianness,
+            "framed", G_TYPE_BOOLEAN, FALSE, NULL);
       }
 
       return;

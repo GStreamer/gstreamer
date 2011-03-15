@@ -810,6 +810,66 @@ GST_START_TEST (test_encodebin_impossible_element_combination)
 
 GST_END_TEST;
 
+static void
+_test_encodebin_reuse (GstEncodingProfile * prof1, GstEncodingProfile * prof2)
+{
+  GstElement *ebin;
+
+  ebin = gst_element_factory_make ("encodebin", NULL);
+
+  /* Set a profile on encodebin... */
+  if (prof1)
+    g_object_set (ebin, "profile", prof1, NULL);
+
+  /* Make sure we can go to PAUSED */
+  fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_SUCCESS);
+
+  /* Set back to NULL */
+  fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  if (prof2)
+    g_object_set (ebin, "profile", prof2, NULL);
+
+  /* Make sure we can go to PLAYING */
+  fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_SUCCESS);
+
+  /* Set back to NULL */
+  fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (ebin);
+}
+
+GST_START_TEST (test_encodebin_reuse)
+{
+  GstEncodingProfile *prof1;
+  GstEncodingProfile *prof2;
+  GstEncodingProfile *prof3;
+  GstCaps *caps;
+
+  caps = gst_caps_new_simple ("application/ogg", NULL);
+  prof1 = (GstEncodingProfile *) gst_encoding_container_profile_new ((gchar *)
+      "myprofile", NULL, caps, NULL);
+  gst_caps_unref (caps);
+
+  prof2 = create_ogg_theora_vorbis_profile (1, 1);
+  prof3 = create_vorbis_only_profile ();
+
+  _test_encodebin_reuse (prof1, NULL);
+  _test_encodebin_reuse (prof1, prof1);
+
+  _test_encodebin_reuse (prof1, prof2);
+
+  _test_encodebin_reuse (prof2, prof3);
+
+  gst_encoding_profile_unref (prof1);
+};
+
+GST_END_TEST;
+
 
 static Suite *
 encodebin_suite (void)
@@ -831,6 +891,7 @@ encodebin_suite (void)
   tcase_add_test (tc_chain, test_encodebin_render_audio_video_static);
   tcase_add_test (tc_chain, test_encodebin_render_audio_video_dynamic);
   tcase_add_test (tc_chain, test_encodebin_impossible_element_combination);
+  tcase_add_test (tc_chain, test_encodebin_reuse);
 
   return s;
 }
