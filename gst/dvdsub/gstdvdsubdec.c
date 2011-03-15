@@ -164,7 +164,6 @@ gst_dvd_sub_dec_init (GstDvdSubDec * dec, GstDvdSubDecClass * klass)
   dec->next_ts = 0;
   dec->next_event_ts = GST_CLOCK_TIME_NONE;
 
-  dec->out_buffer = NULL;
   dec->buf_dirty = TRUE;
   dec->use_ARGB = FALSE;
 }
@@ -689,57 +688,48 @@ gst_send_subtitle_frame (GstDvdSubDec * dec, GstClockTime end_ts)
   g_assert (dec->next_ts <= end_ts);
 
   /* Check if we need to redraw the output buffer */
-  if (dec->buf_dirty) {
-    if (dec->out_buffer) {
-      gst_buffer_unref (dec->out_buffer);
-      dec->out_buffer = NULL;
-    }
-
-    flow = gst_pad_alloc_buffer_and_set_caps (dec->srcpad, 0,
-        4 * dec->in_width * dec->in_height, GST_PAD_CAPS (dec->srcpad),
-        &out_buf);
-
-    if (flow != GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (dec, "alloc buffer failed: flow = %s",
-          gst_flow_get_name (flow));
-      goto out;
-    }
-
-    /* Clear the buffer */
-    /* FIXME - move this into the buffer rendering code */
-    for (y = 0; y < dec->in_height; y++) {
-      guchar *line = GST_BUFFER_DATA (out_buf) + 4 * dec->in_width * y;
-
-      for (x = 0; x < dec->in_width; x++) {
-        line[0] = 0;            /* A */
-        if (!dec->use_ARGB) {
-          line[1] = 16;         /* Y */
-          line[2] = 128;        /* U */
-          line[3] = 128;        /* V */
-        } else {
-          line[1] = 0;          /* R */
-          line[2] = 0;          /* G */
-          line[3] = 0;          /* B */
-        }
-
-        line += 4;
-      }
-    }
-
-    /* FIXME: do we really want to honour the forced_display flag
-     * for subtitles streans? */
-    if (dec->visible || dec->forced_display) {
-      gst_dvd_sub_dec_merge_title (dec, out_buf);
-    }
-
-    dec->out_buffer = out_buf;
-    dec->buf_dirty = FALSE;
-  } else {
+  if (!dec->buf_dirty) {
+    flow = GST_FLOW_OK;
     goto out;
   }
 
-  out_buf = gst_buffer_create_sub (dec->out_buffer, 0,
-      GST_BUFFER_SIZE (dec->out_buffer));
+  flow = gst_pad_alloc_buffer_and_set_caps (dec->srcpad, 0,
+      4 * dec->in_width * dec->in_height, GST_PAD_CAPS (dec->srcpad), &out_buf);
+
+  if (flow != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (dec, "alloc buffer failed: flow = %s",
+        gst_flow_get_name (flow));
+    goto out;
+  }
+
+  /* Clear the buffer */
+  /* FIXME - move this into the buffer rendering code */
+  for (y = 0; y < dec->in_height; y++) {
+    guchar *line = GST_BUFFER_DATA (out_buf) + 4 * dec->in_width * y;
+
+    for (x = 0; x < dec->in_width; x++) {
+      line[0] = 0;              /* A */
+      if (!dec->use_ARGB) {
+        line[1] = 16;           /* Y */
+        line[2] = 128;          /* U */
+        line[3] = 128;          /* V */
+      } else {
+        line[1] = 0;            /* R */
+        line[2] = 0;            /* G */
+        line[3] = 0;            /* B */
+      }
+
+      line += 4;
+    }
+  }
+
+  /* FIXME: do we really want to honour the forced_display flag
+   * for subtitles streans? */
+  if (dec->visible || dec->forced_display) {
+    gst_dvd_sub_dec_merge_title (dec, out_buf);
+  }
+
+  dec->buf_dirty = FALSE;
 
   GST_BUFFER_TIMESTAMP (out_buf) = dec->next_ts;
   if (GST_CLOCK_TIME_IS_VALID (dec->next_event_ts)) {
@@ -759,7 +749,6 @@ gst_send_subtitle_frame (GstDvdSubDec * dec, GstClockTime end_ts)
   flow = gst_pad_push (dec->srcpad, out_buf);
 
 out:
-
   dec->next_ts = end_ts;
   return flow;
 }

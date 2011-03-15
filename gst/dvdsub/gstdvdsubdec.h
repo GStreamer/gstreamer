@@ -89,7 +89,6 @@ struct _GstDvdSubDec
 
   GstClockTime next_event_ts;
 
-  GstBuffer *out_buffer;
   gboolean buf_dirty;
 };
 
