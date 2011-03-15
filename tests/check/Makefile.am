@@ -129,6 +129,7 @@ check_PROGRAMS = \
 	elements/multifdsink \
 	elements/playbin \
 	elements/playbin2 \
+	elements/playbin2-compressed \
 	$(check_subparse) \
 	elements/videorate \
 	elements/videoscale \
@@ -375,6 +376,9 @@ elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_playbin2_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_playbin2_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
+elements_playbin2_compressed_LDADD = $(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la $(GST_BASE_LIBS) $(LDADD)
+elements_playbin2_compressed_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_decodebin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
