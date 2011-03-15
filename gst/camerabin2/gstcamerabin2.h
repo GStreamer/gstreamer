@@ -45,6 +45,7 @@ struct _GstCameraBin
   GstElement *encodebin;
   gulong encodebin_signal_id;
   GstElement *videosink;
+  gulong videosink_probe;
   GstElement *videobin_queue;
   GstElement *videobin_capsfilter;
 
@@ -69,6 +70,8 @@ struct _GstCameraBin
   GstElement *audio_volume;
   GstElement *audio_capsfilter;
   GstElement *audio_convert;
+
+  gint processing_counter; /* atomic int */
 
   /* Index of the auto incrementing file index for video recordings */
   gint video_index;

@@ -57,6 +57,28 @@
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
 #include "gstcamerabin2.h"
 
+#define GST_CAMERA_BIN_PROCESSING_INC(c)                                \
+{                                                                       \
+  gint bef = g_atomic_int_exchange_and_add (&c->processing_counter, 1); \
+  if (bef == 0)                                                         \
+    g_object_notify (G_OBJECT (c), "idle");                             \
+  GST_DEBUG_OBJECT ((c), "Processing counter incremented to: %d",       \
+      bef + 1);                                                         \
+}
+
+#define GST_CAMERA_BIN_PROCESSING_DEC(c)                                \
+{                                                                       \
+  if (g_atomic_int_dec_and_test (&c->processing_counter))               \
+    g_object_notify (G_OBJECT (c), "idle");                             \
+  GST_DEBUG_OBJECT ((c), "Processing counter decremented");             \
+}
+
+#define GST_CAMERA_BIN_RESET_PROCESSING_COUNTER(c)                      \
+{                                                                       \
+  g_atomic_int_set (&c->processing_counter, 0);                         \
+  GST_DEBUG_OBJECT ((c), "Processing counter reset");                   \
+}
+
 GST_DEBUG_CATEGORY_STATIC (gst_camera_bin_debug);
 #define GST_CAT_DEFAULT gst_camera_bin_debug
 
@@ -88,7 +110,8 @@ enum
   PROP_AUDIO_CAPTURE_CAPS,
   PROP_ZOOM,
   PROP_IMAGE_CAPTURE_ENCODER,
-  PROP_IMAGE_CAPTURE_MUXER
+  PROP_IMAGE_CAPTURE_MUXER,
+  PROP_IDLE
 };
 
 enum
@@ -106,6 +129,7 @@ static guint camerabin_signals[LAST_SIGNAL];
 #define DEFAULT_IMG_LOCATION "img_%d"
 #define DEFAULT_POST_PREVIEWS TRUE
 #define DEFAULT_MUTE_AUDIO FALSE
+#define DEFAULT_IDLE TRUE
 
 #define DEFAULT_AUDIO_SRC "autoaudiosrc"
 
@@ -184,6 +208,7 @@ gst_camera_bin_start_capture (GstCameraBin * camerabin)
   const GstTagList *taglist;
 
   GST_DEBUG_OBJECT (camerabin, "Received start-capture");
+  GST_CAMERA_BIN_PROCESSING_INC (camerabin);
 
   taglist = gst_tag_setter_get_tag_list (GST_TAG_SETTER (camerabin));
   if (taglist) {
@@ -323,6 +348,12 @@ gst_camera_bin_dispose (GObject * object)
   if (camerabin->encodebin_signal_id)
     g_signal_handler_disconnect (camerabin->encodebin,
         camerabin->encodebin_signal_id);
+
+  if (camerabin->videosink_probe) {
+    GstPad *pad = gst_element_get_static_pad (camerabin->videosink, "sink");
+    gst_pad_remove_data_probe (pad, camerabin->videosink_probe);
+    gst_object_unref (pad);
+  }
 
   if (camerabin->videosink)
     gst_object_unref (camerabin->videosink);
@@ -564,6 +595,11 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           "The image encoder element to be used on image captures.",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_IDLE,
+      g_param_spec_boolean ("idle", "Idle",
+          "If camerabin2 is idle (not doing captures).", DEFAULT_IDLE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   /* TODO review before going stable
    * We have viewfinder-supported-caps that returns the caps that the
    * camerasrc can produce on its viewfinder pad, this could easily be
@@ -661,6 +697,7 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
     const gchar *filename;
 
     if (gst_structure_has_name (structure, "GstMultiFileSink")) {
+      GST_CAMERA_BIN_PROCESSING_DEC (GST_CAMERA_BIN_CAST (bin));
       filename = gst_structure_get_string (structure, "filename");
       if (filename) {
         gst_image_capture_bin_post_image_done (GST_CAMERA_BIN_CAST (bin),
@@ -838,6 +875,17 @@ gst_camera_bin_link_encodebin (GstCameraBin * camera, GstElement * element,
   return ret;
 }
 
+static gboolean
+videosink_event_probe (GstPad * pad, GstEvent * evt, gpointer data)
+{
+  GstCameraBin *camera = data;
+
+  if (GST_EVENT_TYPE (evt) == GST_EVENT_EOS) {
+    GST_CAMERA_BIN_PROCESSING_DEC (camera);
+  }
+  return TRUE;
+}
+
 /**
  * gst_camera_bin_create_elements:
  * @param camera: the #GstCameraBin
@@ -869,6 +917,15 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     camera->videosink =
         gst_element_factory_make ("filesink", "videobin-filesink");
     g_object_set (camera->videosink, "async", FALSE, NULL);
+    {
+      GstPad *pad;
+      pad = gst_element_get_static_pad (camera->videosink, "sink");
+
+      camera->videosink_probe = gst_pad_add_event_probe (pad,
+          (GCallback) videosink_event_probe, camera);
+
+      gst_object_unref (pad);
+    }
 
     /* audio elements */
     camera->audio_queue = gst_element_factory_make ("queue", "audio-queue");
@@ -1078,6 +1135,9 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_CAMERA_BIN_RESET_PROCESSING_COUNTER (camera);
+      break;
     default:
       break;
   }
@@ -1092,6 +1152,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
         gst_element_set_state (camera->audio_src, GST_STATE_READY);
 
       gst_tag_setter_reset_tags (GST_TAG_SETTER (camera));
+      GST_CAMERA_BIN_RESET_PROCESSING_COUNTER (camera);
 
       /* explicitly set to READY as they might be outside of the bin */
       gst_element_set_state (camera->audio_queue, GST_STATE_READY);
@@ -1495,6 +1556,10 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       g_value_take_object (value, mux);
       break;
     }
+    case PROP_IDLE:
+      g_value_set_boolean (value,
+          g_atomic_int_get (&camera->processing_counter) == 0);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
