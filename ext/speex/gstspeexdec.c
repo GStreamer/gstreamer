@@ -665,7 +665,8 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
     fpp = dec->header->frames_per_packet;
     bits = &dec->bits;
 
-    GST_DEBUG_OBJECT (dec, "received buffer of size %u, fpp %d", size, fpp);
+    GST_DEBUG_OBJECT (dec, "received buffer of size %u, fpp %d, %d bits", size,
+        fpp, speex_bits_remaining (bits));
   } else {
     /* concealment data, pass NULL as the bits parameters */
     GST_DEBUG_OBJECT (dec, "creating concealment data");
@@ -680,7 +681,8 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
     gint16 *out_data;
     gint ret;
 
-    GST_LOG_OBJECT (dec, "decoding frame %d/%d", i, fpp);
+    GST_LOG_OBJECT (dec, "decoding frame %d/%d, %d bits remaining", i, fpp,
+        bits ? speex_bits_remaining (bits) : -1);
 
     res = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
         GST_BUFFER_OFFSET_NONE, dec->frame_size * dec->header->nb_channels * 2,
@@ -696,7 +698,12 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
     ret = speex_decode_int (dec->state, bits, out_data);
     if (ret == -1) {
       /* uh? end of stream */
-      GST_WARNING_OBJECT (dec, "Unexpected end of stream found");
+      if (fpp == 0 && speex_bits_remaining (bits) < 8) {
+        /* if we did not know how many frames to expect, then we get this
+           at the end if there are leftover bits to pad to the next byte */
+      } else {
+        GST_WARNING_OBJECT (dec, "Unexpected end of stream found");
+      }
       gst_buffer_unref (outbuf);
       outbuf = NULL;
       break;
