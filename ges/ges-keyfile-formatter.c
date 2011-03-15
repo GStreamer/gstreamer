@@ -193,6 +193,7 @@ create_track (GKeyFile * kf, gchar * group, GESTimeline * timeline)
   GESTrack *track;
   GstCaps *caps;
   gchar *caps_field, *type_field;
+  gboolean res;
   GValue v = { 0 };
 
   if (!(caps_field = g_key_file_get_string (kf, group, "caps", NULL)))
@@ -205,10 +206,10 @@ create_track (GKeyFile * kf, gchar * group, GESTimeline * timeline)
     return FALSE;
 
   g_value_init (&v, GES_TYPE_TRACK_TYPE);
-  gst_value_deserialize (&v, type_field);
+  res = gst_value_deserialize (&v, type_field);
   g_free (type_field);
 
-  if (!caps)
+  if (!caps || !res)
     return FALSE;
 
   track = ges_track_new (g_value_get_flags (&v), caps);
