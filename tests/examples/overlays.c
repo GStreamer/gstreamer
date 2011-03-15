@@ -32,8 +32,6 @@ GESTimelineObject *make_source (char *path, guint64 start, guint64 duration,
 GESTimelineObject *make_overlay (char *text, guint64 start, guint64 duration,
     gint priority);
 
-gboolean print_transition_data (GESTimelineObject * tr);
-
 GESTimelinePipeline *make_timeline (char *path, float duration, char *text);
 
 GESTimelineObject *
@@ -67,38 +65,6 @@ make_overlay (char *text, guint64 start, guint64 duration, gint priority)
       "priority", (guint32) priority, "in-point", (guint64) 0, NULL);
 
   return ret;
-}
-
-gboolean
-print_transition_data (GESTimelineObject * tr)
-{
-  GESTrackObject *trackobj;
-  GstElement *gnlobj;
-  guint64 start, duration;
-  gint priority;
-  char *name;
-  GList *trackobjects, *tmp;
-
-  if (!tr)
-    return FALSE;
-
-  trackobjects = ges_timeline_object_get_track_objects (tr);
-  trackobj = GES_TRACK_OBJECT (trackobjects->data);
-  gnlobj = ges_track_object_get_gnlobject (trackobj);
-
-  g_object_get (gnlobj, "start", &start, "duration", &duration,
-      "priority", &priority, "name", &name, NULL);
-  g_print ("gnlobject for %s: %f %f %d\n", name,
-      ((gfloat) start) / GST_SECOND,
-      ((gfloat) duration) / GST_SECOND, priority);
-
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
-  }
-
-  g_list_free (trackobjects);
-
-  return FALSE;
 }
 
 GESTimelinePipeline *
