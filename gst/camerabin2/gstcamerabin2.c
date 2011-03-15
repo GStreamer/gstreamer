@@ -86,7 +86,9 @@ enum
   PROP_MUTE_AUDIO,
   PROP_AUDIO_CAPTURE_SUPPORTED_CAPS,
   PROP_AUDIO_CAPTURE_CAPS,
-  PROP_ZOOM
+  PROP_ZOOM,
+  PROP_IMAGE_CAPTURE_ENCODER,
+  PROP_IMAGE_CAPTURE_MUXER
 };
 
 enum
@@ -539,6 +541,29 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           "Digital zoom factor (e.g. 1.5 means 1.5x)", MIN_ZOOM, MAX_ZOOM,
           DEFAULT_ZOOM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* TODO
+   * Review before stable
+   * - We use a profile for video recording properties and here we have
+   *   elements for image capture. This is slightly inconsistent.
+   * - One problem with using encodebin for images here is how jifmux
+   *   autoplugging works. We need to give it a higher rank and fix its
+   *   caps (it has image/jpeg on sink and src pads). Preliminary tests
+   *   show that jifmux is picked if image/jpeg is the caps of a container
+   *   profile. So this could work.
+   * - There seems to be a problem with encodebin for images currently as
+   *   it autoplugs a videorate that ony starts outputing buffers after
+   *   getting the 2nd buffer.
+   */
+  g_object_class_install_property (object_class, PROP_IMAGE_CAPTURE_ENCODER,
+      g_param_spec_object ("image-capture-encoder", "Image capture encoder",
+          "The image encoder element to be used on image captures.",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_IMAGE_CAPTURE_MUXER,
+      g_param_spec_object ("image-capture-muxer", "Image capture encoder",
+          "The image encoder element to be used on image captures.",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /* TODO review before going stable
    * We have viewfinder-supported-caps that returns the caps that the
    * camerasrc can produce on its viewfinder pad, this could easily be
@@ -587,6 +612,7 @@ gst_camera_bin_init (GstCameraBin * camera)
   camera->video_location = g_strdup (DEFAULT_VID_LOCATION);
   camera->image_location = g_strdup (DEFAULT_IMG_LOCATION);
   camera->viewfinderbin = gst_element_factory_make ("viewfinderbin", "vf-bin");
+  camera->imagebin = gst_element_factory_make ("imagecapturebin", "imagebin");
   camera->zoom = DEFAULT_ZOOM;
 
   /* capsfilters are created here as we proxy their caps properties and
@@ -833,6 +859,8 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   gboolean profile_switched = FALSE;
 
   if (!camera->elements_created) {
+    /* TODO check that elements created in _init were really created */
+    /* TODO add proper missing plugin error handling */
 
     camera->encodebin = gst_element_factory_make ("encodebin", NULL);
     camera->encodebin_signal_id = g_signal_connect (camera->encodebin,
@@ -840,7 +868,6 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
 
     camera->videosink =
         gst_element_factory_make ("filesink", "videobin-filesink");
-    camera->imagebin = gst_element_factory_make ("imagecapturebin", "imagebin");
     g_object_set (camera->videosink, "async", FALSE, NULL);
 
     /* audio elements */
@@ -1297,6 +1324,14 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       if (camera->src)
         g_object_set (camera->src, "zoom", camera->zoom, NULL);
       break;
+    case PROP_IMAGE_CAPTURE_ENCODER:
+      g_object_set (camera->imagebin, "image-encoder",
+          g_value_get_object (value), NULL);
+      break;
+    case PROP_IMAGE_CAPTURE_MUXER:
+      g_object_set (camera->imagebin, "image-muxer",
+          g_value_get_object (value), NULL);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1446,6 +1481,20 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
     case PROP_ZOOM:
       g_value_set_float (value, camera->zoom);
       break;
+    case PROP_IMAGE_CAPTURE_ENCODER:{
+      GstElement *enc;
+
+      g_object_get (camera->imagebin, "image-encoder", &enc, NULL);
+      g_value_take_object (value, enc);
+      break;
+    }
+    case PROP_IMAGE_CAPTURE_MUXER:{
+      GstElement *mux;
+
+      g_object_get (camera->imagebin, "image-muxer", &mux, NULL);
+      g_value_take_object (value, mux);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
