@@ -1031,6 +1031,55 @@ GST_START_TEST (test_supported_caps)
 GST_END_TEST;
 
 
+GST_START_TEST (test_idle_property)
+{
+  gboolean idle;
+  if (!camera)
+    return;
+
+  /* Set video recording mode */
+  g_object_set (camera, "mode", 2,
+      "location", make_test_file_name (VIDEO_FILENAME, -1), NULL);
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
+
+  GST_INFO ("starting capture");
+  fail_unless (camera != NULL);
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (idle);
+  g_signal_emit_by_name (camera, "start-capture", NULL);
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (!idle);
+
+  /* emit a second start-capture that should be ignored */
+  g_signal_emit_by_name (camera, "start-capture", NULL);
+
+  /* Record for one seconds  */
+  g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
+      main_loop);
+  g_main_loop_run (main_loop);
+
+  g_signal_emit_by_name (camera, "stop-capture", NULL);
+
+  check_preview_image ();
+
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (idle);
+
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  check_file_validity (VIDEO_FILENAME, 0, NULL, 0, 0, WITH_AUDIO);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_image_custom_filter)
 {
   GstElement *vf_filter;
@@ -1296,6 +1345,8 @@ camerabin_suite (void)
     tcase_add_test (tc_basic, test_image_capture_with_tags);
 
     tcase_add_test (tc_basic, test_video_capture_with_tags);
+
+    tcase_add_test (tc_basic, test_idle_property);
 
     tcase_add_test (tc_basic, test_image_custom_filter);
     tcase_add_test (tc_basic, test_video_custom_filter);
