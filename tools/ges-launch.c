@@ -95,7 +95,8 @@ check_time (char *time)
 
   if (!compiled) {
     compiled = TRUE;
-    regcomp (&re, "^[0-9]+(.[0-9]+)?$", REG_EXTENDED | REG_NOSUB);
+    if (regcomp (&re, "^[0-9]+(.[0-9]+)?$", REG_EXTENDED | REG_NOSUB))
+      return FALSE;
   }
 
   if (!regexec (&re, time, (size_t) 0, NULL, 0))
