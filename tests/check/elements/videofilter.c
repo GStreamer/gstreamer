@@ -36,6 +36,9 @@ GstPad *mysrcpad, *mysinkpad;
 #define VIDEO_CAPS_TEMPLATE_STRING \
   GST_VIDEO_CAPS_YUV ("I420") ";" \
   GST_VIDEO_CAPS_YUV ("AYUV") ";" \
+  GST_VIDEO_CAPS_YUV ("YUY2") ";" \
+  GST_VIDEO_CAPS_YUV ("UYVY") ";" \
+  GST_VIDEO_CAPS_YUV ("YVYU") ";" \
   GST_VIDEO_CAPS_xRGB
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -129,7 +132,14 @@ check_filter_caps (const gchar * name, GstCaps * caps, gint size,
 static void
 check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
 {
-  gint i, n;
+  static const struct
+  {
+    const int width, height;
+  } resolutions[] = { {
+  384, 288}, {
+  385, 289}, {
+  385, 385}};
+  gint i, n, r;
   GstVideoFormat format;
   gint size;
   GstCaps *templ = gst_caps_from_string (VIDEO_CAPS_TEMPLATE_STRING);
@@ -142,27 +152,23 @@ check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
     GstCaps *caps = gst_caps_new_empty ();
 
     gst_caps_append_structure (caps, gst_structure_copy (s));
-    gst_caps_set_simple (caps, "width", G_TYPE_INT, 384, "height", G_TYPE_INT,
-        288, "framerate", GST_TYPE_FRACTION, 25, 1, NULL);
 
-    GST_DEBUG ("Testing with caps: %" GST_PTR_FORMAT, caps);
-    gst_video_format_parse_caps (caps, &format, NULL, NULL);
-    size = gst_video_format_get_size (format, 384, 288);
-    va_start (varargs, prop);
-    check_filter_caps (name, caps, size, num_buffers, prop, varargs);
-    va_end (varargs);
+    /* try various resolutions */
+    for (r = 0; r < G_N_ELEMENTS (resolutions); ++r) {
+      caps = gst_caps_make_writable (caps);
+      gst_caps_set_simple (caps, "width", G_TYPE_INT, resolutions[r].width,
+          "height", G_TYPE_INT, resolutions[r].height,
+          "framerate", GST_TYPE_FRACTION, 25, 1, NULL);
 
-    /* and again with 'odd' width/height */
-    caps = gst_caps_make_writable (caps);
-    gst_caps_set_simple (caps, "width", G_TYPE_INT, 385, "height", G_TYPE_INT,
-        289, "framerate", GST_TYPE_FRACTION, 25, 1, NULL);
+      GST_DEBUG ("Testing with caps: %" GST_PTR_FORMAT, caps);
+      gst_video_format_parse_caps (caps, &format, NULL, NULL);
+      size = gst_video_format_get_size (format, resolutions[r].width,
+          resolutions[r].height);
 
-    GST_DEBUG ("Testing with caps: %" GST_PTR_FORMAT, caps);
-    gst_video_format_parse_caps (caps, &format, NULL, NULL);
-    size = gst_video_format_get_size (format, 385, 289);
-    va_start (varargs, prop);
-    check_filter_caps (name, caps, size, num_buffers, prop, varargs);
-    va_end (varargs);
+      va_start (varargs, prop);
+      check_filter_caps (name, caps, size, num_buffers, prop, varargs);
+      va_end (varargs);
+    }
 
     gst_caps_unref (caps);
   }
