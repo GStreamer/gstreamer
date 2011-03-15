@@ -28,8 +28,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/gstbaseaudioutils.h>
 
 G_BEGIN_DECLS
 
@@ -90,30 +89,6 @@ typedef struct _GstBaseAudioEncoderClass GstBaseAudioEncoderClass;
 
 typedef struct _GstBaseAudioEncoderPrivate GstBaseAudioEncoderPrivate;
 typedef struct _GstBaseAudioEncoderContext GstBaseAudioEncoderContext;
-
-/**
- * GstAudioState:
- * @xint: whether sample data is int or float
- * @rate: rate of sample data
- * @channels: number of channels in sample data
- * @width: width (in bits) of sample data
- * @depth: used bits in sample data (if integer)
- * @sign: rate of sample data (if integer)
- * @endian: endianness of sample data
- * @bpf: bytes per audio frame
- */
-typedef struct _GstAudioState {
-  gboolean is_int;
-  gint  rate;
-  gint  channels;
-  gint  width;
-  gint  depth;
-  gboolean sign;
-  gint  endian;
-  GstAudioChannelPosition *channel_pos;
-
-  gint  bpf;
-} GstAudioState;
 
 /**
  * GstBaseAudioEncoderContext:
@@ -243,9 +218,6 @@ GstFlowReturn   gst_base_audio_encoder_finish_frame (GstBaseAudioEncoder * enc,
 
 GstCaps *       gst_base_audio_encoder_proxy_getcaps (GstBaseAudioEncoder * enc,
                                                       GstCaps * caps);
-
-GstCaps *       gst_base_audio_encoder_add_streamheader (GstCaps * caps,
-                                                         GstBuffer * buf, ...);
 
 G_END_DECLS
 

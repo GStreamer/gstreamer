@@ -150,12 +150,13 @@
 #  include "config.h"
 #endif
 
+#include "gstbaseaudioencoder.h"
+#include <gst/base/gstadapter.h>
+#include <gst/audio/audio.h>
+
 #include <stdlib.h>
 #include <string.h>
 
-#include "gstbaseaudioencoder.h"
-
-#include <gst/audio/audio.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_audio_encoder_debug);
 #define GST_CAT_DEFAULT gst_base_audio_encoder_debug
@@ -318,7 +319,7 @@ gst_base_audio_encoder_class_init (GstBaseAudioEncoderClass * klass)
           DEFAULT_HARD_RESYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TOLERANCE,
       g_param_spec_int64 ("tolerance", "Tolerance",
-          "Consider discontinuity if timestamp jitter/imperfection exceeds tolerance",
+          "Consider discontinuity if timestamp jitter/imperfection exceeds tolerance (ns)",
           0, G_MAXINT64, DEFAULT_TOLERANCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
@@ -887,13 +888,6 @@ wrong_buffer:
   }
 }
 
-#define CHECK_VALUE(res, var, val) \
-  if (!res) \
-    goto refuse_caps; \
-  if (var != val) \
-    changed = TRUE; \
-  var = val;
-
 static gboolean
 gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -902,9 +896,6 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseAudioEncoderContext *ctx;
   GstAudioState *state;
   gboolean res = TRUE, changed = FALSE;
-  GstStructure *s;
-  gboolean vb;
-  gint vi;
 
   enc = GST_BASE_AUDIO_ENCODER (GST_PAD_PARENT (pad));
   klass = GST_BASE_AUDIO_ENCODER_GET_CLASS (enc);
@@ -920,35 +911,8 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_caps_is_fixed (caps))
     goto refuse_caps;
 
-  s = gst_caps_get_structure (caps, 0);
-  /* parse caps here to save subclass the trouble */
-  if (gst_structure_has_name (s, "audio/x-raw-int"))
-    state->is_int = TRUE;
-  else if (gst_structure_has_name (s, "audio/x-raw-float"))
-    state->is_int = FALSE;
-  else
+  if (!gst_base_audio_parse_caps (caps, state, &changed))
     goto refuse_caps;
-
-  res = gst_structure_get_int (s, "rate", &vi);
-  CHECK_VALUE (res, state->rate, vi);
-  res &= gst_structure_get_int (s, "channels", &vi);
-  CHECK_VALUE (res, state->channels, vi);
-  res &= gst_structure_get_int (s, "width", &vi);
-  CHECK_VALUE (res, state->width, vi);
-  res &= (!state->is_int || gst_structure_get_int (s, "depth", &vi));
-  CHECK_VALUE (res, state->depth, vi);
-  res &= gst_structure_get_int (s, "endianness", &vi);
-  CHECK_VALUE (res, state->endian, vi);
-  res &= (!state->is_int || gst_structure_get_boolean (s, "signed", &vb));
-  CHECK_VALUE (res, state->sign, vb);
-
-  state->bpf = (state->width / 8) * state->channels;
-  GST_LOG_OBJECT (enc, "bpf: %d", state->bpf);
-  if (!state->bpf)
-    goto refuse_caps;
-
-  g_free (state->channel_pos);
-  state->channel_pos = gst_audio_get_channel_positions (s);
 
   if (changed) {
     GstClockTime old_min_latency;
@@ -1186,82 +1150,12 @@ gst_base_audio_encoder_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_base_audio_encoder_convert_sink (GstPad * pad, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
-{
-  GstBaseAudioEncoder *enc;
-  gboolean res = FALSE;
-  guint scale = 1;
-  gint bytes_per_sample, rate, byterate;
-
-  enc = GST_BASE_AUDIO_ENCODER (gst_pad_get_parent (pad));
-
-  bytes_per_sample = enc->ctx->state.bpf;
-  rate = enc->ctx->state.rate;
-  byterate = bytes_per_sample * rate;
-
-  if (G_UNLIKELY (bytes_per_sample == 0 || rate == 0)) {
-    GST_DEBUG_OBJECT (enc, "not enough metadata yet to convert");
-    goto exit;
-  }
-
-  switch (src_format) {
-    case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_value = src_value / bytes_per_sample;
-          res = TRUE;
-          break;
-        case GST_FORMAT_TIME:
-          *dest_value =
-              gst_util_uint64_scale_int (src_value, GST_SECOND, byterate);
-          res = TRUE;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_DEFAULT:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = src_value * bytes_per_sample;
-          res = TRUE;
-          break;
-        case GST_FORMAT_TIME:
-          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND, rate);
-          res = TRUE;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          scale = bytes_per_sample;
-          /* fallthrough */
-        case GST_FORMAT_DEFAULT:
-          *dest_value = gst_util_uint64_scale_int (src_value,
-              scale * rate, GST_SECOND);
-          res = TRUE;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    default:
-      res = FALSE;
-  }
-
-exit:
-  gst_object_unref (enc);
-  return res;
-}
-
-static gboolean
 gst_base_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
+  GstBaseAudioEncoder *enc;
+
+  enc = GST_BASE_AUDIO_ENCODER (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_FORMATS:
@@ -1277,9 +1171,8 @@ gst_base_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res =
-              gst_base_audio_encoder_convert_sink (pad, src_fmt, src_val,
-                  &dest_fmt, &dest_val)))
+      if (!(res = gst_base_audio_raw_audio_convert (&enc->ctx->state,
+                  src_fmt, src_val, &dest_fmt, &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
@@ -1290,53 +1183,6 @@ gst_base_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
   }
 
 error:
-  return res;
-}
-
-static gboolean
-gst_base_audio_encoder_convert_src (GstPad * pad, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
-{
-  GstBaseAudioEncoder *enc;
-  gboolean res = FALSE;
-  gint64 avg;
-
-  enc = GST_BASE_AUDIO_ENCODER (gst_pad_get_parent (pad));
-
-  if (enc->priv->samples_in == 0 ||
-      enc->priv->bytes_out == 0 || enc->ctx->state.rate == 0) {
-    GST_DEBUG_OBJECT (enc, "not enough metadata yet to convert");
-    goto exit;
-  }
-
-  avg = (enc->priv->bytes_out * enc->ctx->state.rate) / (enc->priv->samples_in);
-
-  switch (src_format) {
-    case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND, avg);
-          res = TRUE;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = gst_util_uint64_scale_int (src_value, avg, GST_SECOND);
-          res = TRUE;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    default:
-      res = FALSE;
-  }
-
-exit:
   gst_object_unref (enc);
   return res;
 }
@@ -1377,7 +1223,7 @@ gst_base_audio_encoder_src_query (GstPad * pad, GstQuery * query)
       GstFormat fmt, req_fmt;
       gint64 pos, val;
 
-      if ((res = gst_pad_peer_query (pad, query))) {
+      if ((res = gst_pad_peer_query (enc->sinkpad, query))) {
         GST_LOG_OBJECT (enc, "returning peer response");
         break;
       }
@@ -1402,7 +1248,7 @@ gst_base_audio_encoder_src_query (GstPad * pad, GstQuery * query)
       GstFormat fmt, req_fmt;
       gint64 dur, val;
 
-      if ((res = gst_pad_peer_query (pad, query))) {
+      if ((res = gst_pad_peer_query (enc->sinkpad, query))) {
         GST_LOG_OBJECT (enc, "returning peer response");
         break;
       }
@@ -1434,7 +1280,8 @@ gst_base_audio_encoder_src_query (GstPad * pad, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res = gst_base_audio_encoder_convert_src (pad, src_fmt, src_val,
+      if (!(res = gst_base_audio_encoded_audio_convert (&enc->ctx->state,
+                  enc->priv->bytes_out, enc->priv->samples_in, src_fmt, src_val,
                   &dest_fmt, &dest_val)))
         break;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -1442,7 +1289,7 @@ gst_base_audio_encoder_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_LATENCY:
     {
-      if ((res = gst_pad_peer_query (pad, query))) {
+      if ((res = gst_pad_peer_query (enc->sinkpad, query))) {
         gboolean live;
         GstClockTime min_latency, max_latency;
 
@@ -1461,6 +1308,7 @@ gst_base_audio_encoder_src_query (GstPad * pad, GstQuery * query)
 
         gst_query_set_latency (query, live, min_latency, max_latency);
       }
+      break;
     }
     default:
       res = gst_pad_query_default (pad, query);
@@ -1576,55 +1424,4 @@ gst_base_audio_encoder_sink_activate_push (GstPad * pad, gboolean active)
 
   gst_object_unref (enc);
   return result;
-}
-
-/**
- * gst_base_audio_encoder_add_streamheader:
- * @caps: a #GstCaps
- * @buf: header buffers
- *
- * Adds given buffers to an array of buffers set as streamheader field
- * on the given @caps.  List of buffer arguments must be NULL-terminated.
- *
- * Returns: input caps with a streamheader field added, or NULL if some error
- */
-GstCaps *
-gst_base_audio_encoder_add_streamheader (GstCaps * caps, GstBuffer * buf, ...)
-{
-  GstStructure *structure = NULL;
-  va_list va;
-  GValue array = { 0 };
-  GValue value = { 0 };
-
-  g_return_val_if_fail (caps != NULL, NULL);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
-
-  caps = gst_caps_make_writable (caps);
-  structure = gst_caps_get_structure (caps, 0);
-
-  g_value_init (&array, GST_TYPE_ARRAY);
-
-  va_start (va, buf);
-  /* put buffers in a fixed list */
-  while (buf) {
-    g_assert (gst_buffer_is_metadata_writable (buf));
-
-    /* mark buffer */
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
-
-    g_value_init (&value, GST_TYPE_BUFFER);
-    buf = gst_buffer_copy (buf);
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
-    gst_value_set_buffer (&value, buf);
-    gst_buffer_unref (buf);
-    gst_value_array_append_value (&array, &value);
-    g_value_unset (&value);
-
-    buf = va_arg (va, GstBuffer *);
-  }
-
-  gst_structure_set_value (structure, "streamheader", &array);
-  g_value_unset (&array);
-
-  return caps;
 }
