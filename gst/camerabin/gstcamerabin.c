@@ -3320,6 +3320,8 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->pad_view_vid = NULL;
 
   camera->video_preview_buffer = NULL;
+  camera->preview_caps = NULL;
+  camera->video_preview_caps = NULL;
 
   /* image capture bin */
   camera->imgbin = g_object_new (GST_TYPE_CAMERABIN_IMAGE, NULL);

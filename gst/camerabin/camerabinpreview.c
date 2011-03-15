@@ -206,6 +206,7 @@ gst_camerabin_preview_convert (GstCameraBinPreviewPipelineData * data,
   GstFlowReturn fret;
 
   g_return_val_if_fail (GST_BUFFER_CAPS (buf) != NULL, NULL);
+  g_return_val_if_fail (data != NULL, NULL);
 
   if (data->pipeline == NULL) {
     GST_WARNING ("pipeline is NULL");
