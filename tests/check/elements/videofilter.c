@@ -146,9 +146,20 @@ check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
         288, "framerate", GST_TYPE_FRACTION, 25, 1, NULL);
 
     GST_DEBUG ("Testing with caps: %" GST_PTR_FORMAT, caps);
-
     gst_video_format_parse_caps (caps, &format, NULL, NULL);
     size = gst_video_format_get_size (format, 384, 288);
+    va_start (varargs, prop);
+    check_filter_caps (name, caps, size, num_buffers, prop, varargs);
+    va_end (varargs);
+
+    /* and again with 'odd' width/height */
+    caps = gst_caps_make_writable (caps);
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, 385, "height", G_TYPE_INT,
+        289, "framerate", GST_TYPE_FRACTION, 25, 1, NULL);
+
+    GST_DEBUG ("Testing with caps: %" GST_PTR_FORMAT, caps);
+    gst_video_format_parse_caps (caps, &format, NULL, NULL);
+    size = gst_video_format_get_size (format, 385, 289);
     va_start (varargs, prop);
     check_filter_caps (name, caps, size, num_buffers, prop, varargs);
     va_end (varargs);
@@ -189,36 +200,14 @@ GST_END_TEST;
 
 
 static Suite *
-videobalance_suite (void)
+videofilter_suite (void)
 {
-  Suite *s = suite_create ("videobalance");
+  Suite *s = suite_create ("videofilter");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_videobalance);
-
-  return s;
-}
-
-static Suite *
-videoflip_suite (void)
-{
-  Suite *s = suite_create ("videoflip");
-  TCase *tc_chain = tcase_create ("general");
-
-  suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_videoflip);
-
-  return s;
-}
-
-static Suite *
-gamma_suite (void)
-{
-  Suite *s = suite_create ("gamma");
-  TCase *tc_chain = tcase_create ("general");
-
-  suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_gamma);
 
   return s;
@@ -229,11 +218,8 @@ main (int argc, char **argv)
 {
   int nf;
 
-  Suite *s = videobalance_suite ();
+  Suite *s = videofilter_suite ();
   SRunner *sr = srunner_create (s);
-
-  srunner_add_suite (sr, videoflip_suite ());
-  srunner_add_suite (sr, gamma_suite ());
 
   gst_check_init (&argc, &argv);
 
