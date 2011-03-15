@@ -524,6 +524,7 @@ filter_buffer_count (GstPad * pad, GstMiniObject * obj, gpointer data)
 
 GST_START_TEST (test_single_image_capture)
 {
+  gboolean idle;
   if (!camera)
     return;
 
@@ -540,6 +541,8 @@ GST_START_TEST (test_single_image_capture)
   }
   GST_INFO ("starting capture");
   fail_unless (camera != NULL);
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (idle);
   g_signal_emit_by_name (camera, "start-capture", NULL);
 
   g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
@@ -548,6 +551,8 @@ GST_START_TEST (test_single_image_capture)
   /* check that we got a preview image */
   check_preview_image ();
 
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (idle);
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
   check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0, NO_AUDIO);
 }
@@ -557,6 +562,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_multiple_image_captures)
 {
+  gboolean idle;
   gint i;
   gint widths[] = { 800, 640, 1280 };
   gint heights[] = { 600, 480, 1024 };
@@ -576,6 +582,8 @@ GST_START_TEST (test_multiple_image_captures)
     camera = NULL;
   }
   fail_unless (camera != NULL);
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (idle);
   GST_INFO ("starting capture");
 
   for (i = 0; i < 3; i++) {
@@ -596,6 +604,8 @@ GST_START_TEST (test_multiple_image_captures)
   }
 
   g_usleep (G_USEC_PER_SEC * 3);
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (idle);
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
   for (i = 0; i < 3; i++) {
     check_file_validity (IMAGE_FILENAME, i, NULL, widths[i], heights[i],
@@ -607,6 +617,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_single_video_recording)
 {
+  gboolean idle;
   if (!camera)
     return;
 
@@ -624,7 +635,12 @@ GST_START_TEST (test_single_video_recording)
 
   GST_INFO ("starting capture");
   fail_unless (camera != NULL);
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (idle);
   g_signal_emit_by_name (camera, "start-capture", NULL);
+
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (!idle);
 
   /* Record for one seconds  */
   g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
@@ -635,6 +651,10 @@ GST_START_TEST (test_single_video_recording)
 
   check_preview_image ();
 
+  g_usleep (G_USEC_PER_SEC * 3);
+
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (idle);
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
   check_file_validity (VIDEO_FILENAME, 0, NULL, 0, 0, WITH_AUDIO);
@@ -644,6 +664,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_multiple_video_recordings)
 {
+  gboolean idle;
   gint i;
   gint widths[] = { 800, 640, 1280 };
   gint heights[] = { 600, 480, 1024 };
@@ -665,6 +686,8 @@ GST_START_TEST (test_multiple_video_recordings)
 
   GST_INFO ("starting capture");
   fail_unless (camera != NULL);
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (idle);
   for (i = 0; i < 3; i++) {
     GstCaps *caps;
 
@@ -678,6 +701,10 @@ GST_START_TEST (test_multiple_video_recordings)
     gst_caps_unref (caps);
 
     g_signal_emit_by_name (camera, "start-capture", NULL);
+
+    g_object_get (camera, "idle", &idle, NULL);
+    fail_unless (!idle);
+
     g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
         main_loop);
     g_main_loop_run (main_loop);
@@ -685,8 +712,10 @@ GST_START_TEST (test_multiple_video_recordings)
 
     check_preview_image ();
 
-    g_timeout_add_seconds (1, (GSourceFunc) g_main_loop_quit, main_loop);
+    g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
     g_main_loop_run (main_loop);
+    g_object_get (camera, "idle", &idle, NULL);
+    fail_unless (idle);
   }
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
@@ -700,6 +729,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_image_video_cycle)
 {
+  gboolean idle;
   gint i;
 
   if (!camera)
@@ -723,6 +753,9 @@ GST_START_TEST (test_image_video_cycle)
 
   GST_INFO ("starting capture");
   for (i = 0; i < 2; i++) {
+    g_object_get (camera, "idle", &idle, NULL);
+    fail_unless (idle);
+
     /* take a picture */
     g_object_set (camera, "mode", 1, NULL);
     g_signal_emit_by_name (camera, "start-capture", NULL);
