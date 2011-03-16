@@ -150,6 +150,7 @@
 #include "gstbaseaudiodecoder.h"
 #include <gst/audio/audio.h>
 #include <gst/base/gstadapter.h>
+#include <gst/pbutils/descriptions.h>
 
 #include <string.h>
 
@@ -212,6 +213,8 @@ struct _GstBaseAudioDecoderPrivate
   guint64 samples_out;
   /* bytes flushed during parsing */
   guint sync_flush;
+  /* codec id tag */
+  GstTagList *taglist;
 
   /* whether circumstances allow output aggregation */
   gint agg;
@@ -386,6 +389,11 @@ gst_base_audio_decoder_reset (GstBaseAudioDecoder * dec, gboolean full)
     g_free (dec->ctx->state.channel_pos);
     memset (dec->ctx, 0, sizeof (dec->ctx));
 
+    if (dec->priv->taglist) {
+      gst_tag_list_free (dec->priv->taglist);
+      dec->priv->taglist = NULL;
+    }
+
     gst_segment_init (&dec->segment, GST_FORMAT_TIME);
   }
 
@@ -475,6 +483,14 @@ gst_base_audio_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   klass = GST_BASE_AUDIO_DECODER_GET_CLASS (dec);
 
   GST_DEBUG_OBJECT (dec, "caps: %" GST_PTR_FORMAT, caps);
+
+  /* NOTE pbutils only needed here */
+  /* TODO maybe (only) upstream demuxer/parser etc should handle this ? */
+  if (dec->priv->taglist)
+    gst_tag_list_free (dec->priv->taglist);
+  dec->priv->taglist = gst_tag_list_new ();
+  gst_pb_utils_add_codec_description_to_tag_list (dec->priv->taglist,
+      GST_TAG_AUDIO_CODEC, caps);
 
   if (klass->set_format)
     res = klass->set_format (dec, caps);
@@ -741,6 +757,18 @@ gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec, GstBuffer * buf,
   }
 
   if (G_LIKELY (buf)) {
+
+    /* delayed one-shot stuff until confirmed data */
+    if (priv->taglist) {
+      GST_DEBUG_OBJECT (dec, "codec tag %" GST_PTR_FORMAT, priv->taglist);
+      if (gst_tag_list_is_empty (priv->taglist)) {
+        gst_tag_list_free (priv->taglist);
+      } else {
+        gst_element_found_tags (GST_ELEMENT (dec), priv->taglist);
+      }
+      priv->taglist = NULL;
+    }
+
     buf = gst_buffer_make_metadata_writable (buf);
     if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (priv->base_ts))) {
       GST_BUFFER_TIMESTAMP (buf) =
