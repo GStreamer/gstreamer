@@ -2689,8 +2689,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
         entry->pos + demux->ebml_segment_start);
   }
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     GST_DEBUG_OBJECT (demux, "Starting flush");
@@ -3639,6 +3639,7 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
   tag_conv[] = {
     {
     GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
+    GST_MATROSKA_TAG_ID_ARTIST, GST_TAG_ARTIST}, {
     GST_MATROSKA_TAG_ID_AUTHOR, GST_TAG_ARTIST}, {
     GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
     GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
