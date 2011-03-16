@@ -83,7 +83,9 @@ enum
   ARG_FPS_UPDATE_INTERVAL,
   ARG_MAX_FPS,
   ARG_MIN_FPS,
-  ARG_SIGNAL_FPS_MEASUREMENTS
+  ARG_SIGNAL_FPS_MEASUREMENTS,
+  ARG_FRAMES_DROPPED,
+  ARG_FRAMES_RENDERED
       /* FILL ME */
 };
 
@@ -149,6 +151,17 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
           "Minimum fps rate measured. Reset when going from NULL to READY."
           "-1 means no measurement has yet been done", -1, G_MAXDOUBLE, -1,
           G_PARAM_STATIC_STRINGS | G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_klass, ARG_FRAMES_DROPPED,
+      g_param_spec_uint ("frames-dropped", "dropped frames",
+          "Number of frames dropped by the sink", 0, G_MAXUINT, 0,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_klass, ARG_FRAMES_RENDERED,
+      g_param_spec_uint ("frames-rendered", "rendered frames",
+          "Number of frames rendered", 0, G_MAXUINT, 0,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READABLE));
+
 
   g_object_class_install_property (gobject_klass, ARG_SIGNAL_FPS_MEASUREMENTS,
       g_param_spec_boolean ("signal-fps-measurements",
@@ -219,9 +232,9 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
 
       gst_event_parse_qos (ev, NULL, &diff, &ts);
       if (diff <= 0.0) {
-        self->frames_rendered++;
+        g_atomic_int_inc (&self->frames_rendered);
       } else {
-        self->frames_dropped++;
+        g_atomic_int_inc (&self->frames_dropped);
       }
 
       ts = gst_util_get_timestamp ();
@@ -334,8 +347,8 @@ display_current_fps (gpointer data)
   gdouble time_diff, time_elapsed;
   GstClockTime current_ts = gst_util_get_timestamp ();
 
-  frames_rendered = self->frames_rendered;
-  frames_dropped = self->frames_dropped;
+  frames_rendered = g_atomic_int_get (&self->frames_rendered);
+  frames_dropped = g_atomic_int_get (&self->frames_dropped);
 
   if ((frames_rendered + frames_dropped) == 0) {
     /* in case timer fired and we didn't yet get any QOS events */
@@ -404,8 +417,8 @@ fps_display_sink_start (GstFPSDisplaySink * self)
   GstPad *target_pad = NULL;
 
   /* Init counters */
-  self->frames_rendered = G_GUINT64_CONSTANT (0);
-  self->frames_dropped = G_GUINT64_CONSTANT (0);
+  self->frames_rendered = 0;
+  self->frames_dropped = 0;
   self->last_frames_rendered = G_GUINT64_CONSTANT (0);
   self->last_frames_dropped = G_GUINT64_CONSTANT (0);
   self->max_fps = -1;
@@ -553,6 +566,12 @@ fps_display_sink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_MIN_FPS:
       g_value_set_double (value, self->min_fps);
+      break;
+    case ARG_FRAMES_DROPPED:
+      g_value_set_uint (value, g_atomic_int_get (&self->frames_dropped));
+      break;
+    case ARG_FRAMES_RENDERED:
+      g_value_set_uint (value, g_atomic_int_get (&self->frames_rendered));
       break;
     case ARG_SIGNAL_FPS_MEASUREMENTS:
       g_value_set_boolean (value, self->signal_measurements);
