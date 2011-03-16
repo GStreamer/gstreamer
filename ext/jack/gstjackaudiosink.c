@@ -609,7 +609,7 @@ gst_jack_ring_buffer_delay (GstRingBuffer * buf)
     if (range.max > res)
       res = range.max;
 #else
-    latency = jack_port_get_total_latency (client, src->ports[i]);
+    latency = jack_port_get_total_latency (client, sink->ports[i]);
     if (latency > res)
       res = latency;
 #endif
