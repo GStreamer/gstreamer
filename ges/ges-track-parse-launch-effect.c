@@ -136,18 +136,37 @@ static GstElement *
 ges_track_parse_launch_effect_create_element (GESTrackObject * object)
 {
   GstElement *effect;
+  gchar *bin_desc;
 
   GError *error = NULL;
   GESTrackParseLaunchEffect *self = GES_TRACK_PARSE_LAUNCH_EFFECT (object);
+  GESTrack *track = ges_track_object_get_track (object);
 
-  effect =
-      gst_parse_bin_from_description (self->priv->bin_description, TRUE,
-      &error);
+  if (!track) {
+    GST_WARNING
+        ("The object %p should be in a Track for the element to be created");
+    return NULL;
+  }
+
+  if (track->type == GES_TRACK_TYPE_VIDEO) {
+    bin_desc = g_strconcat ("ffmpegcolorspace !",
+        self->priv->bin_description, " ! ffmpegcolorspace", NULL);
+  } else if (track->type == GES_TRACK_TYPE_AUDIO) {
+    bin_desc = g_strconcat ("audioconvert ! audioresample !", self->priv->bin_description, NULL);
+  } else {
+    GST_DEBUG ("We don not suppoort this track type here");
+    return NULL;
+  }
+
+  effect = gst_parse_bin_from_description (bin_desc, TRUE, &error);
+
+  g_free (bin_desc);
 
   if (error != NULL) {
-		g_error_free (error);
+    GST_DEBUG ("%s accured while creating the GstElement", error->message);
+    g_error_free (error);
     return NULL;
-	}
+  }
 
   GST_DEBUG ("Created %p", effect);
 
