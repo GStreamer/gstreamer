@@ -34,6 +34,13 @@
  * </refsect2>
  */
 
+/* FIXME: we should make the base class (GstBaseParse) aware of the
+ * XING seek table somehow, so it can use it properly for things like
+ * accurate seeks. Currently it can only do a lookup via the convert function,
+ * but then doesn't know what the result represents exactly. One could either
+ * add a vfunc for index lookup, or just make mpegaudioparse populate the
+ * base class's index via the API provided.
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
