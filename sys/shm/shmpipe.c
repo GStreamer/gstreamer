@@ -119,6 +119,7 @@ struct _ShmPipe
 {
   int main_socket;
   char *socket_path;
+  int use_count;
 
   ShmArea *shm_area;
 
@@ -196,6 +197,7 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
   memset (self, 0, sizeof (ShmPipe));
 
   self->main_socket = socket (PF_UNIX, SOCK_STREAM, 0);
+  self->use_count = 1;
 
   if (self->main_socket < 0)
     RETURN_ERROR ("Could not create socket (%d): %s\n", errno,
@@ -372,6 +374,26 @@ sp_shm_area_dec (ShmPipe * self, ShmArea * area)
   }
 }
 
+static void
+sp_inc (ShmPipe * self)
+{
+  self->use_count++;
+}
+
+static void
+sp_dec (ShmPipe * self)
+{
+  self->use_count--;
+
+  if (self->use_count > 0)
+    return;
+
+  while (self->shm_area)
+    sp_shm_area_dec (self, self->shm_area);
+
+  spalloc_free (ShmPipe, self);
+}
+
 void
 sp_close (ShmPipe * self)
 {
@@ -386,10 +408,7 @@ sp_close (ShmPipe * self)
   while (self->clients)
     sp_writer_close_client (self, self->clients);
 
-  while (self->shm_area)
-    sp_shm_area_dec (self, self->shm_area);
-
-  spalloc_free (ShmPipe, self);
+  sp_dec (self);
 }
 
 int
@@ -481,6 +500,7 @@ sp_writer_alloc_block (ShmPipe * self, size_t size)
   block->pipe = self;
   block->area = self->shm_area;
   block->ablock = ablock;
+  sp_inc (self);
   return block;
 }
 
@@ -491,11 +511,18 @@ sp_writer_block_get_buf (ShmBlock * block)
       shm_alloc_space_alloc_block_get_offset (block->ablock);
 }
 
+ShmPipe *
+sp_writer_block_get_pipe (ShmBlock * block)
+{
+  return block->pipe;
+}
+
 void
 sp_writer_free_block (ShmBlock * block)
 {
   shm_alloc_space_block_dec (block->ablock);
   sp_shm_area_dec (block->pipe, block->area);
+  sp_dec (block->pipe);
   spalloc_free (ShmBlock, block);
 }
 
@@ -709,6 +736,8 @@ sp_client_open (const char *path)
   memset (self, 0, sizeof (ShmPipe));
 
   self->main_socket = socket (PF_UNIX, SOCK_STREAM, 0);
+  self->use_count = 1;
+
   if (self->main_socket < 0)
     goto error;
 
