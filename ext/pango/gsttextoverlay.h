@@ -27,7 +27,9 @@ typedef struct _GstTextOverlayClass GstTextOverlayClass;
  * GstTextOverlayVAlign:
  * @GST_TEXT_OVERLAY_VALIGN_BASELINE: draw text on the baseline
  * @GST_TEXT_OVERLAY_VALIGN_BOTTOM: draw text on the bottom
- * @GST_TEXT_OVERLAY_VALIGN_TOP: draw test on top
+ * @GST_TEXT_OVERLAY_VALIGN_TOP: draw text on top
+ * @GST_TEXT_OVERLAY_VALIGN_POS: draw text according to the #GstTextOverlay:ypos property
+ * @GST_TEXT_OVERLAY_VALIGN_CENTER: draw text vertically centered
  *
  * Vertical alignment of the text.
  */
@@ -44,14 +46,16 @@ typedef enum {
  * @GST_TEXT_OVERLAY_HALIGN_LEFT: align text left
  * @GST_TEXT_OVERLAY_HALIGN_CENTER: align text center
  * @GST_TEXT_OVERLAY_HALIGN_RIGHT: align text right
+ * @GST_TEXT_OVERLAY_HALIGN_POS: position text according to the #GstTextOverlay:xpos property
  *
  * Horizontal alignment of the text.
  */
+/* FIXME 0.11: remove GST_TEXT_OVERLAY_HALIGN_UNUSED */
 typedef enum {
     GST_TEXT_OVERLAY_HALIGN_LEFT,
     GST_TEXT_OVERLAY_HALIGN_CENTER,
     GST_TEXT_OVERLAY_HALIGN_RIGHT,
-    GST_TEXT_OVERLAY_HALIGN_TOP,
+    GST_TEXT_OVERLAY_HALIGN_UNUSED,
     GST_TEXT_OVERLAY_HALIGN_POS
 } GstTextOverlayHAlign;
 
