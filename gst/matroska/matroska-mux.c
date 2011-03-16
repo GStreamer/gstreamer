@@ -2177,7 +2177,7 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
   tag_conv[] = {
     {
     GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
-    GST_MATROSKA_TAG_ID_AUTHOR, GST_TAG_ARTIST}, {
+    GST_MATROSKA_TAG_ID_ARTIST, GST_TAG_ARTIST}, {
     GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
     GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
     GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {
