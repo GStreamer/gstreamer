@@ -298,6 +298,7 @@ gst_shm_sink_start (GstBaseSink * bsink)
     return FALSE;
   }
 
+  sp_set_data (self->pipe, self);
   g_free (self->socket_path);
   self->socket_path = g_strdup (sp_writer_get_path (self->pipe));
 
@@ -411,8 +412,17 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 static void
 gst_shm_sink_free_buffer (gpointer data)
 {
+  ShmPipe *pipe;
   ShmBlock *block = data;
+  GstShmSink *self;
+
+  pipe = sp_writer_block_get_pipe (block);
+  self = sp_get_data (pipe);
+
+  GST_OBJECT_LOCK (self);
   sp_writer_free_block (block);
+  GST_OBJECT_UNLOCK (self);
+  g_object_unref (self);
 }
 
 static GstFlowReturn
@@ -426,8 +436,10 @@ gst_shm_sink_buffer_alloc (GstBaseSink * sink, guint64 offset, guint size,
 
   GST_OBJECT_LOCK (self);
   block = sp_writer_alloc_block (self->pipe, size);
-  if (block)
+  if (block) {
     buf = sp_writer_block_get_buf (block);
+    g_object_ref (self);
+  }
   GST_OBJECT_UNLOCK (self);
 
   if (block) {
