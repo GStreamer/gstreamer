@@ -120,6 +120,7 @@ struct _ShmPipe
   int main_socket;
   char *socket_path;
   int use_count;
+  void *data;
 
   ShmArea *shm_area;
 
@@ -372,6 +373,18 @@ sp_shm_area_dec (ShmPipe * self, ShmArea * area)
 
     sp_close_shm (area);
   }
+}
+
+void *
+sp_get_data (ShmPipe * self)
+{
+  return self->data;
+}
+
+void
+sp_set_data (ShmPipe * self, void *data)
+{
+  self->data = data;
 }
 
 static void
