@@ -911,6 +911,13 @@ gst_base_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_caps_is_fixed (caps))
     goto refuse_caps;
 
+  /* adjust ts tracking to new sample rate */
+  if (GST_CLOCK_TIME_IS_VALID (enc->priv->base_ts) && state->rate) {
+    enc->priv->base_ts +=
+        GST_FRAMES_TO_CLOCK_TIME (enc->priv->samples, state->rate);
+    enc->priv->samples = 0;
+  }
+
   if (!gst_base_audio_parse_caps (caps, state, &changed))
     goto refuse_caps;
 
@@ -1072,17 +1079,13 @@ gst_base_audio_encoder_sink_eventfunc (GstBaseAudioEncoder * enc,
       if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (enc, "received TIME NEW_SEGMENT %" GST_TIME_FORMAT
             " -- %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT
-            ", accum %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (enc->segment.start),
-            GST_TIME_ARGS (enc->segment.stop),
-            GST_TIME_ARGS (enc->segment.time),
-            GST_TIME_ARGS (enc->segment.accum));
+            ", rate %g, applied_rate %g",
+            GST_TIME_ARGS (start), GST_TIME_ARGS (stop), GST_TIME_ARGS (time),
+            rate, arate);
       } else {
         GST_DEBUG_OBJECT (enc, "received NEW_SEGMENT %" G_GINT64_FORMAT
             " -- %" G_GINT64_FORMAT ", time %" G_GINT64_FORMAT
-            ", accum %" G_GINT64_FORMAT,
-            enc->segment.start, enc->segment.stop,
-            enc->segment.time, enc->segment.accum);
+            ", rate %g, applied_rate %g", start, stop, time, rate, arate);
         GST_DEBUG_OBJECT (enc, "unsupported format; ignoring");
         break;
       }
@@ -1102,7 +1105,7 @@ gst_base_audio_encoder_sink_eventfunc (GstBaseAudioEncoder * enc,
 
     case GST_EVENT_FLUSH_STOP:
       /* discard any pending stuff */
-      // TODO route through drain ?
+      /* TODO route through drain ?? */
       if (!enc->priv->drained && klass->flush)
         klass->flush (enc);
       /* and get (re)set for the sequel */
