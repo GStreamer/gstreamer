@@ -3045,6 +3045,33 @@ done:
   return ret;
 }
 
+static gboolean
+sink_accepts_caps (GstElement * sink, GstCaps * caps)
+{
+  GstPad *sinkpad;
+
+  /* ... activate it ... We do this before adding it to the bin so that we
+   * don't accidentally make it post error messages that will stop
+   * everything. */
+  if (GST_STATE (sink) < GST_STATE_READY &&
+      gst_element_set_state (sink,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE) {
+    return FALSE;
+  }
+
+  if ((sinkpad = gst_element_get_static_pad (sink, "sink"))) {
+    /* Got the sink pad, now let's see if the element actually does accept the
+     * caps that we have */
+    if (!gst_pad_accept_caps (sinkpad, caps)) {
+      gst_object_unref (sinkpad);
+      return FALSE;
+    }
+    gst_object_unref (sinkpad);
+  }
+
+  return TRUE;
+}
+
 /* We are asked to select an element. See if the next element to check
  * is a sink. If this is the case, we see if the sink works by setting it to
  * READY. If the sink works, we return SELECT_EXPOSE to make decodebin
@@ -3058,7 +3085,6 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   const gchar *klass;
   GstPlaySinkType type;
   GstElement **sinkp;
-  GstPad *sinkpad;
 
   playbin = group->playbin;
 
@@ -3105,62 +3131,50 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   /* now see if we already have a sink element */
   GST_SOURCE_GROUP_LOCK (group);
   if (*sinkp) {
-    GST_DEBUG_OBJECT (playbin, "we already have a pending sink, expose pad");
-    /* for now, just assume that we can link the pad to this same sink. FIXME,
-     * check that we can link this new pad to this sink as well. */
-    GST_SOURCE_GROUP_UNLOCK (group);
-    return GST_AUTOPLUG_SELECT_EXPOSE;
+    GstElement *sink = gst_object_ref (*sinkp);
+
+    if (sink_accepts_caps (sink, caps)) {
+      GST_DEBUG_OBJECT (playbin,
+          "Existing sink '%s' accepts caps: %" GST_PTR_FORMAT,
+          GST_ELEMENT_NAME (sink), caps);
+      gst_object_unref (sink);
+      GST_SOURCE_GROUP_UNLOCK (group);
+      return GST_AUTOPLUG_SELECT_EXPOSE;
+    } else {
+      GST_DEBUG_OBJECT (playbin,
+          "Existing sink '%s' does not accept caps: %" GST_PTR_FORMAT,
+          GST_ELEMENT_NAME (sink), caps);
+      gst_object_unref (sink);
+      GST_SOURCE_GROUP_UNLOCK (group);
+      return GST_AUTOPLUG_SELECT_SKIP;
+    }
   }
   GST_DEBUG_OBJECT (playbin, "we have no pending sink, try to create one");
-  GST_SOURCE_GROUP_UNLOCK (group);
 
   if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
     GST_WARNING_OBJECT (playbin, "Could not create an element from %s",
         gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
+    GST_SOURCE_GROUP_UNLOCK (group);
     return GST_AUTOPLUG_SELECT_SKIP;
   }
 
-  /* ... activate it ... We do this before adding it to the bin so that we
-   * don't accidentally make it post error messages that will stop
-   * everything. */
-  if ((gst_element_set_state (element,
-              GST_STATE_READY)) == GST_STATE_CHANGE_FAILURE) {
-    GST_WARNING_OBJECT (playbin, "Couldn't set %s to READY",
-        GST_ELEMENT_NAME (element));
+  /* Check if the selected sink actually supports the
+   * caps and can be set to READY*/
+  if (!sink_accepts_caps (element, caps)) {
+    gst_element_set_state (element, GST_STATE_NULL);
     gst_object_unref (element);
+    GST_SOURCE_GROUP_UNLOCK (group);
     return GST_AUTOPLUG_SELECT_SKIP;
-  }
-
-  if ((sinkpad = gst_element_get_static_pad (element, "sink"))) {
-    /* Got the sink pad, now let's see if the element actually does accept the
-     * caps that we have */
-    if (!gst_pad_accept_caps (sinkpad, caps)) {
-      GST_DEBUG_OBJECT (playbin, "%s doesn't accept our caps",
-          GST_ELEMENT_NAME (element));
-      gst_object_unref (sinkpad);
-      gst_element_set_state (element, GST_STATE_NULL);
-      gst_object_unref (element);
-      return GST_AUTOPLUG_SELECT_SKIP;
-    }
-    gst_object_unref (sinkpad);
   }
 
   /* remember the sink in the group now, the element is floating, we take
-   * ownership now */
-  GST_SOURCE_GROUP_LOCK (group);
-  if (*sinkp == NULL) {
-    /* store the sink in the group, we will configure it later when we
-     * reconfigure the sink */
-    GST_DEBUG_OBJECT (playbin, "remember sink");
-    gst_object_ref_sink (element);
-    *sinkp = element;
-  } else {
-    /* some other thread configured a sink while we were testing the sink, set
-     * the sink back to NULL and assume we can use the other sink */
-    GST_DEBUG_OBJECT (playbin, "another sink was found, expose pad");
-    gst_element_set_state (element, GST_STATE_NULL);
-    gst_object_unref (element);
-  }
+   * ownership now 
+   *
+   * store the sink in the group, we will configure it later when we
+   * reconfigure the sink */
+  GST_DEBUG_OBJECT (playbin, "remember sink");
+  gst_object_ref_sink (element);
+  *sinkp = element;
   GST_SOURCE_GROUP_UNLOCK (group);
 
   /* tell decodebin to expose the pad because we are going to use this
