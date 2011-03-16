@@ -2169,7 +2169,7 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
     gpointer data)
 {
   /* TODO: more sensible tag mappings */
-  struct
+  static const struct
   {
     const gchar *matroska_tagname;
     const gchar *gstreamer_tagname;

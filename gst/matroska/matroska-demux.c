@@ -3631,7 +3631,7 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
     GstEbmlRead * ebml, GstTagList ** p_taglist)
 {
   /* FIXME: check if there are more useful mappings */
-  struct
+  static const struct
   {
     const gchar *matroska_tagname;
     const gchar *gstreamer_tagname;
