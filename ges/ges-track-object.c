@@ -513,9 +513,7 @@ gst_element_prop_changed_cb (GstElement * element, GParamSpec * arg
 static void
 connect_signal (gpointer key, gpointer value, gpointer user_data)
 {
-  gchar **name = g_strsplit ((char *) key, "-", 2);
-  gchar *signame = g_strconcat ("notify::", (gchar *) name[1], NULL);
-  g_strfreev (name);
+  gchar *signame = g_strconcat ("notify::", G_PARAM_SPEC (key)->name, NULL);
 
   g_signal_connect (G_OBJECT (value),
       signame, G_CALLBACK (gst_element_prop_changed_cb),
