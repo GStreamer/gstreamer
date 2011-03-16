@@ -137,6 +137,7 @@ struct _GstSelectorPad
   GstPad parent;
 
   gboolean active;              /* when buffer have passed the pad */
+  gboolean pushed;              /* when buffer was pushed downstream since activation */
   gboolean eos;                 /* when EOS has been received */
   gboolean discont;             /* after switching we create a discont */
   gboolean always_ok;
@@ -329,6 +330,7 @@ gst_selector_pad_reset (GstSelectorPad * pad)
 {
   GST_OBJECT_LOCK (pad);
   pad->active = FALSE;
+  pad->pushed = FALSE;
   pad->eos = FALSE;
   pad->segment_pending = FALSE;
   pad->discont = FALSE;
@@ -542,7 +544,7 @@ not_active:
     /* unselected pad, perform fallback alloc or return unlinked when
      * asked */
     GST_OBJECT_LOCK (selpad);
-    if (selpad->always_ok) {
+    if (selpad->always_ok || !GST_SELECTOR_PAD_CAST (active_sinkpad)->pushed) {
       GST_DEBUG_OBJECT (pad, "Not selected, performing fallback allocation");
       *buf = NULL;
       result = GST_FLOW_OK;
@@ -675,6 +677,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   }
 
   res = gst_pad_push (sel->srcpad, buf);
+  selpad->pushed = TRUE;
 
 done:
   gst_object_unref (sel);
@@ -691,7 +694,7 @@ ignore:
 
     /* figure out what to return upstream */
     GST_OBJECT_LOCK (selpad);
-    if (selpad->always_ok)
+    if (selpad->always_ok || !GST_SELECTOR_PAD_CAST (active_sinkpad)->pushed)
       res = GST_FLOW_OK;
     else
       res = GST_FLOW_NOT_LINKED;
@@ -1032,6 +1035,8 @@ gst_input_selector_set_active_pad (GstInputSelector * self,
     gst_segment_set_stop (&self->segment, stop_time);
     self->pending_close = TRUE;
   }
+  if (old)
+    old->pushed = FALSE;
 
   if (new && new->active && start_time >= 0) {
     GST_DEBUG_OBJECT (self, "setting start_time to %" GST_TIME_FORMAT,
@@ -1040,6 +1045,8 @@ gst_input_selector_set_active_pad (GstInputSelector * self,
     gst_segment_set_start (&new->segment, start_time);
     new->segment_pending = TRUE;
   }
+  if (new)
+    new->pushed = FALSE;
 
   active_pad_p = &self->active_sinkpad;
   gst_object_replace ((GstObject **) active_pad_p, GST_OBJECT_CAST (pad));
