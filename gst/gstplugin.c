@@ -1538,7 +1538,7 @@ gst_plugin_ext_dep_scan_dir_and_match_names (GstPlugin * plugin,
   GDir *dir;
   guint hash = 0;
 
-  recurse_dirs = !!(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
+  recurse_dirs = ! !(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
 
   dir = g_dir_open (path, 0, &err);
   if (dir == NULL) {
@@ -1600,8 +1600,8 @@ gst_plugin_ext_dep_scan_path_with_filenames (GstPlugin * plugin,
   if (filenames == NULL || *filenames == NULL)
     filenames = empty_filenames;
 
-  recurse_into_dirs = !!(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
-  partial_names = !!(flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX);
+  recurse_into_dirs = ! !(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
+  partial_names = ! !(flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX);
 
   /* if we can construct the exact paths to check with the data we have, just
    * stat them one by one; this is more efficient than opening the directory
