@@ -142,7 +142,6 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
     GST_ERROR_OBJECT (self, "Can't create playsink instance !");
   if (G_UNLIKELY (self->priv->encodebin == NULL))
     GST_ERROR_OBJECT (self, "Can't create encodebin instance !");
-  return;
 
   /* HACK : Intercept events going through playsink */
   playsinkclass = GST_ELEMENT_GET_CLASS (self->priv->playsink);
