@@ -2967,6 +2967,12 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   if (sinkpad) {
     GstCaps *sinkcaps;
 
+    /* Ignore errors here, if a custom sink fails to go
+     * to READY things are wrong and will error out later
+     */
+    if (GST_STATE (sink) < GST_STATE_READY)
+      gst_element_set_state (sink, GST_STATE_READY);
+
     sinkcaps = gst_pad_get_caps_reffed (sinkpad);
     if (!gst_caps_is_any (sinkcaps))
       ret = !gst_pad_accept_caps (sinkpad, caps);
@@ -2993,6 +2999,12 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     if (sinkpad) {
       GstCaps *sinkcaps;
 
+      /* Ignore errors here, if a custom sink fails to go
+       * to READY things are wrong and will error out later
+       */
+      if (GST_STATE (sink) < GST_STATE_READY)
+        gst_element_set_state (sink, GST_STATE_READY);
+
       sinkcaps = gst_pad_get_caps_reffed (sinkpad);
       if (!gst_caps_is_any (sinkcaps))
         ret = !gst_pad_accept_caps (sinkpad, caps);
@@ -3007,6 +3019,12 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     sinkpad = gst_element_get_static_pad (sink, "sink");
     if (sinkpad) {
       GstCaps *sinkcaps;
+
+      /* Ignore errors here, if a custom sink fails to go
+       * to READY things are wrong and will error out later
+       */
+      if (GST_STATE (sink) < GST_STATE_READY)
+        gst_element_set_state (sink, GST_STATE_READY);
 
       sinkcaps = gst_pad_get_caps_reffed (sinkpad);
       if (!gst_caps_is_any (sinkcaps))
