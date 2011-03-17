@@ -496,11 +496,13 @@ EXPORTS
 	gst_int_range_get_type
 	gst_is_initialized
 	gst_is_tag_list
+	gst_iterator_copy
 	gst_iterator_filter
 	gst_iterator_find_custom
 	gst_iterator_fold
 	gst_iterator_foreach
 	gst_iterator_free
+	gst_iterator_get_type
 	gst_iterator_item_get_type
 	gst_iterator_new
 	gst_iterator_new_list
@@ -609,6 +611,7 @@ EXPORTS
 	gst_meta_get_info
 	gst_meta_register
 	gst_meta_timing_get_info
+	gst_meta_transform_type_get_type
 	gst_mini_object_copy
 	gst_mini_object_flags_get_type
 	gst_mini_object_init

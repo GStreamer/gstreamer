@@ -1189,13 +1189,13 @@ GstIterator
 GstIteratorItem
 GstIteratorResult
 
-GstIteratorDisposeFunction
+GstIteratorCopyFunction
 GstIteratorNextFunction
 GstIteratorItemFunction
 GstIteratorResyncFunction
 GstIteratorFreeFunction
+GstIteratorForeachFunction
 GstIteratorFoldFunction
-GstCopyFunction
 
 GST_ITERATOR
 GST_ITERATOR_LOCK
@@ -1206,9 +1206,11 @@ gst_iterator_new
 gst_iterator_new_list
 gst_iterator_new_single
 
+gst_iterator_copy
+gst_iterator_free
+
 gst_iterator_next
 gst_iterator_resync
-gst_iterator_free
 gst_iterator_push
 gst_iterator_filter
 gst_iterator_fold
@@ -1219,6 +1221,7 @@ gst_iterator_find_custom
 GST_TYPE_ITERATOR_ITEM
 GST_TYPE_ITERATOR_RESULT
 <SUBSECTION Private>
+gst_iterator_get_type
 gst_iterator_item_get_type
 gst_iterator_result_get_type
 </SECTION>
