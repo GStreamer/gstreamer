@@ -62,17 +62,21 @@ typedef struct App
 
   /* widgets */
   GtkWidget *main_window;
+  GtkWidget *add_effect_dlg;
   GtkWidget *properties;
   GtkWidget *filesource_properties;
   GtkWidget *text_properties;
   GtkWidget *generic_duration;
   GtkWidget *background_properties;
+  GtkWidget *audio_effect_entry;
+  GtkWidget *video_effect_entry;
 
   GtkHScale *duration;
   GtkHScale *in_point;
   GtkHScale *volume;
 
   GtkAction *add_file;
+  GtkAction *add_effect;
   GtkAction *add_test;
   GtkAction *add_title;
   GtkAction *add_transition;
@@ -113,6 +117,7 @@ void play_activate_cb (GtkAction * item, App * app);
 void stop_activate_cb (GtkAction * item, App * app);
 void move_up_activate_cb (GtkAction * item, App * app);
 void move_down_activate_cb (GtkAction * item, App * app);
+void add_effect_activate_cb (GtkAction * item, App * app);
 void add_file_activate_cb (GtkAction * item, App * app);
 void add_text_activate_cb (GtkAction * item, App * app);
 void add_test_activate_cb (GtkAction * item, App * app);
@@ -124,6 +129,10 @@ void halign_changed_cb (GtkComboBox * widget, App * app);
 void valign_changed_cb (GtkComboBox * widget, App * app);
 void background_type_changed_cb (GtkComboBox * widget, App * app);
 void frequency_value_changed_cb (GtkSpinButton * widget, App * app);
+void on_apply_effect_cb (GtkButton * button, App * app);
+void on_cancel_add_effect_cb (GtkButton * button, App * app);
+gboolean add_effect_dlg_delete_event_cb (GtkWidget * widget, GdkEvent * event,
+    gpointer * app);
 
 gboolean
 duration_scale_change_value_cb (GtkRange * range,
@@ -142,6 +151,25 @@ volume_change_value_cb (GtkRange * range,
 /**
  * Update properties of UI elements that depend on more than one thing.
  */
+
+static void
+update_effect_sensitivity (App * app)
+{
+  GList *i;
+  gboolean ok = TRUE;
+
+  /* effects will work for multiple FileSource */
+  for (i = app->selected_objects; i; i = i->next) {
+    if (!GES_IS_TIMELINE_FILE_SOURCE (i->data)) {
+      ok = FALSE;
+      break;
+    }
+  }
+
+  gtk_action_set_sensitive (app->add_effect,
+      ok && (app->n_selected > 0) && (app->state != GST_STATE_PLAYING)
+      && (app->state != GST_STATE_PAUSED));
+}
 
 static void
 update_delete_sensitivity (App * app)
@@ -802,6 +830,9 @@ create_ui (App * app)
   GET_WIDGET (app->filesource_properties, "filesource_properties", GTK_WIDGET);
   GET_WIDGET (app->text_properties, "text_properties", GTK_WIDGET);
   GET_WIDGET (app->main_window, "window", GTK_WIDGET);
+  GET_WIDGET (app->add_effect_dlg, "add_effect_dlg", GTK_WIDGET);
+  GET_WIDGET (app->audio_effect_entry, "entry1", GTK_WIDGET);
+  GET_WIDGET (app->video_effect_entry, "entry2", GTK_WIDGET);
   GET_WIDGET (app->duration, "duration_scale", GTK_HSCALE);
   GET_WIDGET (app->in_point, "in_point_scale", GTK_HSCALE);
   GET_WIDGET (app->halign, "halign", GTK_COMBO_BOX);
@@ -810,6 +841,7 @@ create_ui (App * app)
   GET_WIDGET (duration_col, "duration_column", GTK_TREE_VIEW_COLUMN);
   GET_WIDGET (duration_renderer, "duration_renderer", GTK_CELL_RENDERER);
   GET_WIDGET (app->add_file, "add_file", GTK_ACTION);
+  GET_WIDGET (app->add_effect, "add_effect", GTK_ACTION);
   GET_WIDGET (app->add_title, "add_text", GTK_ACTION);
   GET_WIDGET (app->add_test, "add_test", GTK_ACTION);
   GET_WIDGET (app->add_transition, "add_transition", GTK_ACTION);
@@ -1024,6 +1056,65 @@ app_move_selected_up (App * app)
   for (tmp = objects; tmp; tmp = tmp->next) {
     g_object_unref (tmp->data);
   }
+}
+
+static void
+app_add_effect_on_selected_clips (App * app, const gchar * bin_desc,
+    GESTrackType type)
+{
+  GList *objects, *tmp;
+  GESTrackObject *effect = NULL;
+
+  /* No crash if the video is playing */
+  gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PAUSED);
+  objects = ges_timeline_layer_get_objects (app->layer);
+
+  for (tmp = objects; tmp; tmp = tmp->next) {
+    effect = GES_TRACK_OBJECT (ges_track_parse_launch_effect_new (bin_desc));
+    ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT (tmp->data),
+        effect);
+
+    if (type == GES_TRACK_TYPE_VIDEO)
+      ges_track_add_object (app->video_track, effect);
+    else if (type == GES_TRACK_TYPE_AUDIO)
+      ges_track_add_object (app->audio_track, effect);
+
+    g_object_unref (tmp->data);
+  }
+}
+
+gboolean
+add_effect_dlg_delete_event_cb (GtkWidget * widget, GdkEvent * event,
+    gpointer * app)
+{
+  gtk_widget_hide_all (((App *) app)->add_effect_dlg);
+  return TRUE;
+}
+
+void
+on_cancel_add_effect_cb (GtkButton * button, App * app)
+{
+  gtk_widget_hide_all (app->add_effect_dlg);
+}
+
+void
+on_apply_effect_cb (GtkButton * button, App * app)
+{
+  const gchar *effect;
+
+  effect = gtk_entry_get_text (GTK_ENTRY (app->video_effect_entry));
+  if (g_strcmp0 (effect, ""))
+    app_add_effect_on_selected_clips (app, effect, GES_TRACK_TYPE_VIDEO);
+
+  gtk_entry_set_text (GTK_ENTRY (app->video_effect_entry), "");
+
+  effect = gtk_entry_get_text (GTK_ENTRY (app->audio_effect_entry));
+  if (g_strcmp0 (effect, ""))
+    app_add_effect_on_selected_clips (app, effect, GES_TRACK_TYPE_AUDIO);
+
+  gtk_entry_set_text (GTK_ENTRY (app->audio_effect_entry), "");
+
+  gtk_widget_hide_all (app->add_effect_dlg);
 }
 
 static void
@@ -1344,6 +1435,12 @@ delete_activate_cb (GtkAction * item, App * app)
 }
 
 void
+add_effect_activate_cb (GtkAction * item, App * app)
+{
+  gtk_widget_show_all (app->add_effect_dlg);
+}
+
+void
 add_file_activate_cb (GtkAction * item, App * app)
 {
   GtkFileChooserDialog *dlg;
@@ -1437,6 +1534,7 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
   app_update_selection (app);
 
   update_delete_sensitivity (app);
+  update_effect_sensitivity (app);
   update_add_transition_sensitivity (app);
   update_move_up_down_sensitivity (app);
 

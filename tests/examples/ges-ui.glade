@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
@@ -229,6 +229,13 @@
                         <property name="use_stock">True</property>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkMenuItem" id="add_effect_item">
+                        <property name="visible">True</property>
+                        <property name="related_action">add_effect</property>
+                        <property name="use_action_appearance">True</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -363,6 +370,19 @@
                 <property name="related_action">add_transition</property>
                 <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">toolbutton5</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="add_button1">
+                <property name="visible">True</property>
+                <property name="related_action">add_effect</property>
+                <property name="use_action_appearance">True</property>
+                <property name="label" translatable="yes">File</property>
                 <property name="use_underline">True</property>
               </object>
               <packing>
@@ -528,7 +548,7 @@
                           <object class="GtkEntry" id="seconds">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">●</property>
+                            <property name="invisible_char">&#x25CF;</property>
                           </object>
                           <packing>
                             <property name="position">1</property>
@@ -700,7 +720,7 @@
                               <object class="GtkSpinButton" id="frequency">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="invisible_char">●</property>
+                                <property name="invisible_char">&#x25CF;</property>
                                 <property name="adjustment">adjustment2</property>
                                 <signal name="value_changed" handler="frequency_value_changed_cb"/>
                               </object>
@@ -772,7 +792,7 @@
                               <object class="GtkEntry" id="text">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="invisible_char">●</property>
+                                <property name="invisible_char">&#x25CF;</property>
                               </object>
                               <packing>
                                 <property name="position">1</property>
@@ -869,18 +889,142 @@
     </child>
   </object>
   <object class="GtkTreeSelection" id="selection"/>
+  <object class="GtkDialog" id="add_effect_dlg">
+    <property name="border_width">5</property>
+    <property name="title" translatable="yes">Add effects</property>
+    <property name="window_position">center-always</property>
+    <property name="type_hint">dialog</property>
+    <signal name="delete_event" handler="add_effect_dlg_delete_event_cb"/>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox1">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+          <object class="GtkVBox" id="vbox3">
+            <property name="visible">True</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkHBox" id="hbox6">
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkLabel" id="label9">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Audio effects bin description</property>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="entry1">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">&#x25CF;</property>
+                    <signal name="activate" handler="on_apply_effect_cb"/>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkHBox" id="hbox7">
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkLabel" id="label10">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Video effects bin desciption:</property>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="entry2">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">&#x25CF;</property>
+                    <signal name="activate" handler="on_apply_effect_cb"/>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
+            <property name="visible">True</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="button2">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+                <signal name="clicked" handler="on_cancel_add_effect_cb"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button1">
+                <property name="label">gtk-apply</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+                <signal name="clicked" handler="on_apply_effect_cb"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">button2</action-widget>
+      <action-widget response="0">button1</action-widget>
+    </action-widgets>
+  </object>
   <object class="GtkSizeGroup" id="LabelSizeGroup">
     <widgets>
-      <widget name="label6"/>
-      <widget name="label5"/>
       <widget name="label4"/>
-      <widget name="label3"/>
+      <widget name="label_inpoint"/>
+      <widget name="label_duration"/>
+      <widget name="label_duration"/>
+      <widget name="label_inpoint"/>
       <widget name="label2"/>
-      <widget name="label_inpoint"/>
-      <widget name="label_duration"/>
-      <widget name="label_duration"/>
-      <widget name="label_inpoint"/>
+      <widget name="label3"/>
       <widget name="label4"/>
+      <widget name="label5"/>
+      <widget name="label6"/>
     </widgets>
   </object>
   <object class="GtkAction" id="delete">
@@ -974,5 +1118,12 @@
     <property name="always_show_image">True</property>
     <property name="active">True</property>
     <signal name="activate" handler="video_track_activate_cb"/>
+  </object>
+  <object class="GtkAction" id="add_effect">
+    <property name="label">Add effect...</property>
+    <property name="short_label">Effect</property>
+    <property name="icon_name">face-smile</property>
+    <property name="always_show_image">True</property>
+    <signal name="activate" handler="add_effect_activate_cb"/>
   </object>
 </interface>
