@@ -192,7 +192,7 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
 {
   ShmPipe *self = spalloc_new (ShmPipe);
   int flags;
-  struct sockaddr_un sun;
+  struct sockaddr_un sock_un;
   int i = 0;
 
   memset (self, 0, sizeof (ShmPipe));
@@ -211,10 +211,10 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
   if (fcntl (self->main_socket, F_SETFL, flags | O_NONBLOCK | FD_CLOEXEC) < 0)
     RETURN_ERROR ("fcntl(F_SETFL) failed (%d): %s\n", errno, strerror (errno));
 
-  sun.sun_family = AF_UNIX;
-  strncpy (sun.sun_path, path, sizeof (sun.sun_path) - 1);
+  sock_un.sun_family = AF_UNIX;
+  strncpy (sock_un.sun_path, path, sizeof (sock_un.sun_path) - 1);
 
-  while (bind (self->main_socket, (struct sockaddr *) &sun,
+  while (bind (self->main_socket, (struct sockaddr *) &sock_un,
           sizeof (struct sockaddr_un)) < 0) {
     if (errno != EADDRINUSE)
       RETURN_ERROR ("bind() failed (%d): %s\n", errno, strerror (errno));
@@ -222,11 +222,11 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
     if (i > 256)
       RETURN_ERROR ("Could not find a free socket name for %s", path);
 
-    snprintf (sun.sun_path, sizeof (sun.sun_path), "%s.%d", path, i);
+    snprintf (sock_un.sun_path, sizeof (sock_un.sun_path), "%s.%d", path, i);
     i++;
   }
 
-  self->socket_path = strdup (sun.sun_path);
+  self->socket_path = strdup (sock_un.sun_path);
 
   if (listen (self->main_socket, LISTEN_BACKLOG) < 0)
     RETURN_ERROR ("listen() failed (%d): %s\n", errno, strerror (errno));
@@ -744,7 +744,7 @@ ShmPipe *
 sp_client_open (const char *path)
 {
   ShmPipe *self = spalloc_new (ShmPipe);
-  struct sockaddr_un sun;
+  struct sockaddr_un sock_un;
 
   memset (self, 0, sizeof (ShmPipe));
 
@@ -754,10 +754,10 @@ sp_client_open (const char *path)
   if (self->main_socket < 0)
     goto error;
 
-  sun.sun_family = AF_UNIX;
-  strncpy (sun.sun_path, path, sizeof (sun.sun_path) - 1);
+  sock_un.sun_family = AF_UNIX;
+  strncpy (sock_un.sun_path, path, sizeof (sock_un.sun_path) - 1);
 
-  if (connect (self->main_socket, (struct sockaddr *) &sun,
+  if (connect (self->main_socket, (struct sockaddr *) &sock_un,
           sizeof (struct sockaddr_un)) < 0)
     goto error;
 
