@@ -560,12 +560,14 @@ done:
   /* ERRORS */
 not_active:
   {
+    gboolean active_pad_pushed = GST_SELECTOR_PAD_CAST (active_sinkpad)->pushed;
+
     GST_INPUT_SELECTOR_UNLOCK (sel);
 
     /* unselected pad, perform fallback alloc or return unlinked when
      * asked */
     GST_OBJECT_LOCK (selpad);
-    if (selpad->always_ok || !GST_SELECTOR_PAD_CAST (active_sinkpad)->pushed) {
+    if (selpad->always_ok || !active_pad_pushed) {
       GST_DEBUG_OBJECT (pad, "Not selected, performing fallback allocation");
       *buf = NULL;
       result = GST_FLOW_OK;
@@ -707,6 +709,8 @@ done:
   /* dropped buffers */
 ignore:
   {
+    gboolean active_pad_pushed = GST_SELECTOR_PAD_CAST (active_sinkpad)->pushed;
+
     GST_DEBUG_OBJECT (pad, "Pad not active, discard buffer %p", buf);
     /* when we drop a buffer, we're creating a discont on this pad */
     selpad->discont = TRUE;
@@ -715,7 +719,7 @@ ignore:
 
     /* figure out what to return upstream */
     GST_OBJECT_LOCK (selpad);
-    if (selpad->always_ok || !GST_SELECTOR_PAD_CAST (active_sinkpad)->pushed)
+    if (selpad->always_ok || !active_pad_pushed)
       res = GST_FLOW_OK;
     else
       res = GST_FLOW_NOT_LINKED;
