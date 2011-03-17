@@ -303,8 +303,7 @@ gst_query_type_iterate_definitions (void)
   g_static_mutex_lock (&mutex);
   /* FIXME: register a boxed type for GstQueryTypeDefinition */
   result = gst_iterator_new_list (G_TYPE_POINTER,
-      g_static_mutex_get_mutex (&mutex), &_n_values, &_gst_queries,
-      NULL, NULL, NULL);
+      g_static_mutex_get_mutex (&mutex), &_n_values, &_gst_queries, NULL, NULL);
   g_static_mutex_unlock (&mutex);
 
   return result;

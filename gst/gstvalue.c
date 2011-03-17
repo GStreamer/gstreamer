@@ -2416,9 +2416,12 @@ gst_value_serialize_enum (const GValue * value)
 }
 
 static gint
-gst_value_deserialize_enum_iter_cmp (const GstFormatDefinition * format_def,
+gst_value_deserialize_enum_iter_cmp (const GValue * format_def_value,
     const gchar * s)
 {
+  const GstFormatDefinition *format_def =
+      g_value_get_pointer (format_def_value);
+
   if (g_ascii_strcasecmp (s, format_def->nick) == 0)
     return 0;
 
@@ -2446,16 +2449,21 @@ gst_value_deserialize_enum (GValue * dest, const gchar * s)
 
   /* might be one of the custom formats registered later */
   if (G_UNLIKELY (en == NULL && G_VALUE_TYPE (dest) == GST_TYPE_FORMAT)) {
+    GValue res = { 0, };
     const GstFormatDefinition *format_def;
     GstIterator *iter;
+    gboolean found;
 
     iter = gst_format_iterate_definitions ();
 
-    format_def = gst_iterator_find_custom (iter,
-        (GCompareFunc) gst_value_deserialize_enum_iter_cmp, (gpointer) s);
+    found = gst_iterator_find_custom (iter,
+        (GCompareFunc) gst_value_deserialize_enum_iter_cmp, &res, (gpointer) s);
 
+    g_return_val_if_fail (found, FALSE);
+    format_def = g_value_get_pointer (&res);
     g_return_val_if_fail (format_def != NULL, FALSE);
     g_value_set_enum (dest, (gint) format_def->value);
+    g_value_unset (&res);
     gst_iterator_free (iter);
     return TRUE;
   }

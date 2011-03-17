@@ -131,9 +131,12 @@ gst_proxy_pad_do_iterate_internal_links (GstPad * pad)
   GstPad *internal = GST_PROXY_PAD_INTERNAL (pad);
 
   if (internal) {
-    res =
-        gst_iterator_new_single (GST_TYPE_PAD, internal,
-        (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
+    GValue v = { 0, };
+
+    g_value_init (&v, GST_TYPE_PAD);
+    g_value_set_object (&v, internal);
+    res = gst_iterator_new_single (GST_TYPE_PAD, &v);
+    g_value_unset (&v);
   }
 
   return res;
@@ -720,9 +723,12 @@ gst_ghost_pad_do_iterate_internal_links (GstPad * pad)
   GstPad *internal = GST_PROXY_PAD_INTERNAL (GST_GHOST_PAD_CAST (pad));
 
   if (internal) {
-    res =
-        gst_iterator_new_single (GST_TYPE_PAD, internal,
-        (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
+    GValue v = { 0, };
+
+    g_value_init (&v, GST_TYPE_PAD);
+    g_value_set_object (&v, internal);
+    res = gst_iterator_new_single (GST_TYPE_PAD, &v);
+    g_value_unset (&v);
   }
 
   return res;

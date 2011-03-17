@@ -2862,13 +2862,6 @@ no_peer:
   }
 }
 
-static GstIteratorItem
-iterate_pad (GstIterator * it, GstPad * pad)
-{
-  gst_object_ref (pad);
-  return GST_ITERATOR_ITEM_PASS;
-}
-
 /**
  * gst_pad_iterate_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
@@ -2893,7 +2886,6 @@ gst_pad_iterate_internal_links_default (GstPad * pad)
   guint32 *cookie;
   GMutex *lock;
   gpointer owner;
-  GstIteratorDisposeFunction dispose;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
@@ -2917,13 +2909,11 @@ gst_pad_iterate_internal_links_default (GstPad * pad)
 
     cookie = &parent->pads_cookie;
     owner = parent;
-    dispose = (GstIteratorDisposeFunction) gst_object_unref;
     lock = GST_OBJECT_GET_LOCK (parent);
   }
 
   res = gst_iterator_new_list (GST_TYPE_PAD,
-      lock, cookie, padlist, owner, (GstIteratorItemFunction) iterate_pad,
-      dispose);
+      lock, cookie, padlist, (GObject *) owner, NULL);
 
   return res;
 
@@ -2973,7 +2963,7 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
   gboolean result = FALSE;
   GstIterator *iter;
   gboolean done = FALSE;
-  gpointer item;
+  GValue item = { 0, };
   GstPad *eventpad;
   GList *pushed_pads = NULL;
 
@@ -2988,11 +2978,11 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
   while (!done) {
     switch (gst_iterator_next (iter, &item)) {
       case GST_ITERATOR_OK:
-        eventpad = GST_PAD_CAST (item);
+        eventpad = g_value_get_object (&item);
 
         /* if already pushed,  skip */
         if (g_list_find (pushed_pads, eventpad)) {
-          gst_object_unref (item);
+          g_value_reset (&item);
           break;
         }
 
@@ -3017,7 +3007,7 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
 
         pushed_pads = g_list_prepend (pushed_pads, eventpad);
 
-        gst_object_unref (item);
+        g_value_reset (&item);
         break;
       case GST_ITERATOR_RESYNC:
         /* We don't reset the result here because we don't push the event
@@ -3034,6 +3024,7 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (iter);
 
 no_iter:
@@ -3110,7 +3101,7 @@ gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
   gboolean res = FALSE;
   GstIterator *iter = NULL;
   gboolean done = FALSE;
-  gpointer item;
+  GValue item = { 0, };
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (dispatch != NULL, FALSE);
@@ -3124,7 +3115,7 @@ gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
     switch (gst_iterator_next (iter, &item)) {
       case GST_ITERATOR_OK:
       {
-        GstPad *int_pad = GST_PAD_CAST (item);
+        GstPad *int_pad = g_value_get_object (&item);
         GstPad *int_peer = gst_pad_get_peer (int_pad);
 
         if (int_peer) {
@@ -3135,8 +3126,8 @@ gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
         } else {
           GST_DEBUG_OBJECT (int_pad, "no peer");
         }
+        g_value_reset (&item);
       }
-        gst_object_unref (item);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
@@ -3150,6 +3141,7 @@ gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (iter);
 
   GST_DEBUG_OBJECT (pad, "done, result %d", res);

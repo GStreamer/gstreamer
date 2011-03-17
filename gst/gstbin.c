@@ -640,6 +640,7 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
   gboolean done;
   GstIterator *it;
   GstIndex *old;
+  GValue data = { 0, };
 
   bin = GST_BIN_CAST (element);
 
@@ -660,18 +661,16 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
   /* set the index on all elements in the bin */
   done = FALSE;
   while (!done) {
-    gpointer data;
-
     switch (gst_iterator_next (it, &data)) {
       case GST_ITERATOR_OK:
       {
-        GstElement *child = GST_ELEMENT_CAST (data);
+        GstElement *child = g_value_get_object (&data);
 
         GST_DEBUG_OBJECT (bin, "setting index on '%s'",
             GST_ELEMENT_NAME (child));
         gst_element_set_index (child, index);
 
-        gst_object_unref (child);
+        g_value_reset (&data);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -685,6 +684,7 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
         break;
     }
   }
+  g_value_unset (&data);
   gst_iterator_free (it);
   return;
 
@@ -707,6 +707,7 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
   gboolean done;
   GstIterator *it;
   gboolean res = TRUE;
+  GValue data = { 0, };
 
   bin = GST_BIN_CAST (element);
 
@@ -714,16 +715,14 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
 
   done = FALSE;
   while (!done) {
-    gpointer data;
-
     switch (gst_iterator_next (it, &data)) {
       case GST_ITERATOR_OK:
       {
-        GstElement *child = GST_ELEMENT_CAST (data);
+        GstElement *child = g_value_get_object (&data);
 
         res &= gst_element_set_clock (child, clock);
 
-        gst_object_unref (child);
+        g_value_reset (&data);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -738,6 +737,7 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
         break;
     }
   }
+  g_value_unset (&data);
   gst_iterator_free (it);
 
   return res;
@@ -759,7 +759,8 @@ gst_bin_provide_clock_func (GstElement * element)
   GstElement *provider = NULL;
   GstBin *bin;
   GstIterator *it;
-  gpointer val;
+  gboolean done;
+  GValue val = { 0, };
   GstClock **provided_clock_p;
   GstElement **clock_provider_p;
 
@@ -772,24 +773,52 @@ gst_bin_provide_clock_func (GstElement * element)
   GST_DEBUG_OBJECT (bin, "finding new clock");
 
   it = gst_bin_sort_iterator_new (bin);
+  GST_OBJECT_UNLOCK (bin);
 
-  while (it->next (it, &val) == GST_ITERATOR_OK) {
-    GstElement *child = GST_ELEMENT_CAST (val);
-    GstClock *clock;
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (it, &val)) {
+      case GST_ITERATOR_OK:
+      {
+        GstElement *child = g_value_get_object (&val);
+        GstClock *clock;
 
-    clock = gst_element_provide_clock (child);
-    if (clock) {
-      GST_DEBUG_OBJECT (bin, "found candidate clock %p by element %s",
-          clock, GST_ELEMENT_NAME (child));
-      if (result) {
-        gst_object_unref (result);
-        gst_object_unref (provider);
+        clock = gst_element_provide_clock (child);
+        if (clock) {
+          GST_DEBUG_OBJECT (bin, "found candidate clock %p by element %s",
+              clock, GST_ELEMENT_NAME (child));
+          if (result) {
+            gst_object_unref (result);
+            gst_object_unref (provider);
+          }
+          result = clock;
+          provider = gst_object_ref (child);
+        }
+
+        g_value_reset (&val);
+        break;
       }
-      result = clock;
-      provider = child;
-    } else {
-      gst_object_unref (child);
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        break;
+      default:
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
     }
+  }
+  g_value_unset (&val);
+  gst_iterator_free (it);
+
+  GST_OBJECT_LOCK (bin);
+  if (!bin->clock_dirty) {
+    if (provider)
+      gst_object_unref (provider);
+    if (result)
+      gst_object_unref (result);
+    result = NULL;
+
+    goto not_dirty;
   }
 
   provided_clock_p = &bin->provided_clock;
@@ -804,8 +833,6 @@ gst_bin_provide_clock_func (GstElement * element)
   if (provider)
     gst_object_unref (provider);
   GST_OBJECT_UNLOCK (bin);
-
-  gst_iterator_free (it);
 
   return result;
 
@@ -981,9 +1008,12 @@ is_eos (GstBin * bin, guint32 * seqnum)
 }
 
 static void
-unlink_pads (GstPad * pad)
+unlink_pads (const GValue * item, gpointer user_data)
 {
+  GstPad *pad;
   GstPad *peer;
+
+  pad = g_value_get_object (item);
 
   if ((peer = gst_pad_get_peer (pad))) {
     if (gst_pad_get_direction (pad) == GST_PAD_SRC)
@@ -992,7 +1022,6 @@ unlink_pads (GstPad * pad)
       gst_pad_unlink (peer, pad);
     gst_object_unref (peer);
   }
-  gst_object_unref (pad);
 }
 
 /* vmethod that adds an element to a bin
@@ -1114,7 +1143,7 @@ no_state_recalc:
 
   /* unlink all linked pads */
   it = gst_element_iterate_pads (element);
-  gst_iterator_foreach (it, (GFunc) unlink_pads, element);
+  gst_iterator_foreach (it, (GstIteratorForeachFunction) unlink_pads, NULL);
   gst_iterator_free (it);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "added element \"%s\"",
@@ -1240,7 +1269,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 
   /* unlink all linked pads */
   it = gst_element_iterate_pads (element);
-  gst_iterator_foreach (it, (GFunc) unlink_pads, element);
+  gst_iterator_foreach (it, (GstIteratorForeachFunction) unlink_pads, NULL);
   gst_iterator_free (it);
 
   GST_OBJECT_LOCK (bin);
@@ -1505,13 +1534,6 @@ no_function:
   }
 }
 
-static GstIteratorItem
-iterate_child (GstIterator * it, GstElement * child)
-{
-  gst_object_ref (child);
-  return GST_ITERATOR_ITEM_PASS;
-}
-
 /**
  * gst_bin_iterate_elements:
  * @bin: a #GstBin
@@ -1533,26 +1555,19 @@ gst_bin_iterate_elements (GstBin * bin)
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
   GST_OBJECT_LOCK (bin);
-  /* add ref because the iterator refs the bin. When the iterator
-   * is freed it will unref the bin again using the provided dispose
-   * function. */
-  gst_object_ref (bin);
   result = gst_iterator_new_list (GST_TYPE_ELEMENT,
       GST_OBJECT_GET_LOCK (bin),
-      &bin->children_cookie,
-      &bin->children,
-      bin,
-      (GstIteratorItemFunction) iterate_child,
-      (GstIteratorDisposeFunction) gst_object_unref);
+      &bin->children_cookie, &bin->children, (GObject *) bin, NULL);
   GST_OBJECT_UNLOCK (bin);
 
   return result;
 }
 
 static GstIteratorItem
-iterate_child_recurse (GstIterator * it, GstElement * child)
+iterate_child_recurse (GstIterator * it, const GValue * item)
 {
-  gst_object_ref (child);
+  GstElement *child = g_value_get_object (item);
+
   if (GST_IS_BIN (child)) {
     GstIterator *other = gst_bin_iterate_recurse (GST_BIN_CAST (child));
 
@@ -1583,17 +1598,11 @@ gst_bin_iterate_recurse (GstBin * bin)
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
   GST_OBJECT_LOCK (bin);
-  /* add ref because the iterator refs the bin. When the iterator
-   * is freed it will unref the bin again using the provided dispose
-   * function. */
-  gst_object_ref (bin);
   result = gst_iterator_new_list (GST_TYPE_ELEMENT,
       GST_OBJECT_GET_LOCK (bin),
       &bin->children_cookie,
       &bin->children,
-      bin,
-      (GstIteratorItemFunction) iterate_child_recurse,
-      (GstIteratorDisposeFunction) gst_object_unref);
+      (GObject *) bin, (GstIteratorItemFunction) iterate_child_recurse);
   GST_OBJECT_UNLOCK (bin);
 
   return result;
@@ -1619,17 +1628,12 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
 }
 
 static gint
-sink_iterator_filter (GstElement * child, GstBin * bin)
+sink_iterator_filter (const GValue * vchild, GValue * vbin)
 {
-  if (bin_element_is_sink (child, bin) == 0) {
-    /* returns 0 because this is a GCompareFunc */
-    return 0;
-  } else {
-    /* child carries a ref from gst_bin_iterate_elements -- drop if not passing
-       through */
-    gst_object_unref (child);
-    return 1;
-  }
+  GstBin *bin = g_value_get_object (vbin);
+  GstElement *child = g_value_get_object (vchild);
+
+  return (bin_element_is_sink (child, bin));
 }
 
 /**
@@ -1651,12 +1655,18 @@ gst_bin_iterate_sinks (GstBin * bin)
 {
   GstIterator *children;
   GstIterator *result;
+  GValue vbin = { 0, };
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
+  g_value_init (&vbin, GST_TYPE_BIN);
+  g_value_set_object (&vbin, bin);
+
   children = gst_bin_iterate_elements (bin);
   result = gst_iterator_filter (children,
-      (GCompareFunc) sink_iterator_filter, bin);
+      (GCompareFunc) sink_iterator_filter, &vbin);
+
+  g_value_unset (&vbin);
 
   return result;
 }
@@ -1681,17 +1691,12 @@ bin_element_is_src (GstElement * child, GstBin * bin)
 }
 
 static gint
-src_iterator_filter (GstElement * child, GstBin * bin)
+src_iterator_filter (const GValue * vchild, GValue * vbin)
 {
-  if (bin_element_is_src (child, bin) == 0) {
-    /* returns 0 because this is a GCompareFunc */
-    return 0;
-  } else {
-    /* child carries a ref from gst_bin_iterate_elements -- drop if not passing
-       through */
-    gst_object_unref (child);
-    return 1;
-  }
+  GstBin *bin = g_value_get_object (vbin);
+  GstElement *child = g_value_get_object (vchild);
+
+  return (bin_element_is_src (child, bin));
 }
 
 /**
@@ -1713,12 +1718,18 @@ gst_bin_iterate_sources (GstBin * bin)
 {
   GstIterator *children;
   GstIterator *result;
+  GValue vbin = { 0, };
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
+  g_value_init (&vbin, GST_TYPE_BIN);
+  g_value_set_object (&vbin, bin);
+
   children = gst_bin_iterate_elements (bin);
   result = gst_iterator_filter (children,
-      (GCompareFunc) src_iterator_filter, bin);
+      (GCompareFunc) src_iterator_filter, &vbin);
+
+  g_value_unset (&vbin);
 
   return result;
 }
@@ -1764,6 +1775,26 @@ typedef struct _GstBinSortIterator
   GHashTable *hash;             /* hashtable with element dependencies */
   gboolean dirty;               /* we detected structure change */
 } GstBinSortIterator;
+
+static void
+gst_bin_sort_iterator_copy (const GstBinSortIterator * it,
+    GstBinSortIterator * copy)
+{
+  GHashTableIter iter;
+  gpointer key, value;
+
+  copy->queue = g_queue_copy (it->queue);
+  g_queue_foreach (copy->queue, (GFunc) gst_object_ref, NULL);
+
+  copy->bin = gst_object_ref (it->bin);
+  if (it->best)
+    copy->best = gst_object_ref (it->best);
+
+  copy->hash = g_hash_table_new (NULL, NULL);
+  g_hash_table_iter_init (&iter, it->hash);
+  while (g_hash_table_iter_next (&iter, &key, &value))
+    g_hash_table_insert (copy->hash, key, value);
+}
 
 /* we add and subtract 1 to make sure we don't confuse NULL and 0 */
 #define HASH_SET_DEGREE(bit, elem, deg) \
@@ -1944,13 +1975,13 @@ find_element (GstElement * element, GstBinSortIterator * bit)
 /* get next element in iterator. the returned element has the
  * refcount increased */
 static GstIteratorResult
-gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
+gst_bin_sort_iterator_next (GstBinSortIterator * bit, GValue * result)
 {
+  GstElement *best;
   GstBin *bin = bit->bin;
 
   /* empty queue, we have to find a next best element */
   if (g_queue_is_empty (bit->queue)) {
-    GstElement *best;
 
     bit->best = NULL;
     bit->best_deg = G_MAXINT;
@@ -1967,9 +1998,8 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
       /* best unhandled element, schedule as next element */
       GST_DEBUG_OBJECT (bin, "queue empty, next best: %s",
           GST_ELEMENT_NAME (best));
-      gst_object_ref (best);
       HASH_SET_DEGREE (bit, best, -1);
-      *result = best;
+      g_value_set_object (result, best);
     } else {
       GST_DEBUG_OBJECT (bin, "queue empty, elements exhausted");
       /* no more unhandled elements, we are done */
@@ -1977,12 +2007,14 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
     }
   } else {
     /* everything added to the queue got reffed */
-    *result = g_queue_pop_head (bit->queue);
+    best = g_queue_pop_head (bit->queue);
+    g_value_set_object (result, best);
+    gst_object_unref (best);
   }
 
-  GST_DEBUG_OBJECT (bin, "queue head gives %s", GST_ELEMENT_NAME (*result));
+  GST_DEBUG_OBJECT (bin, "queue head gives %s", GST_ELEMENT_NAME (best));
   /* update degrees of linked elements */
-  update_degree (GST_ELEMENT_CAST (*result), bit);
+  update_degree (best, bit);
 
   return GST_ITERATOR_OK;
 }
@@ -2031,6 +2063,7 @@ gst_bin_sort_iterator_new (GstBin * bin)
       GST_TYPE_ELEMENT,
       GST_OBJECT_GET_LOCK (bin),
       &bin->priv->structure_cookie,
+      (GstIteratorCopyFunction) gst_bin_sort_iterator_copy,
       (GstIteratorNextFunction) gst_bin_sort_iterator_next,
       (GstIteratorItemFunction) NULL,
       (GstIteratorResyncFunction) gst_bin_sort_iterator_resync,
@@ -2197,8 +2230,9 @@ unneeded:
 /* gst_iterator_fold functions for pads_activate
  * Stop the iterator if activating one pad failed. */
 static gboolean
-activate_pads (GstPad * pad, GValue * ret, gboolean * active)
+activate_pads (const GValue * vpad, GValue * ret, gboolean * active)
 {
+  GstPad *pad = g_value_get_object (vpad);
   gboolean cont = TRUE;
 
   if (!(cont = gst_pad_set_active (pad, *active)))
@@ -2207,7 +2241,6 @@ activate_pads (GstPad * pad, GValue * ret, gboolean * active)
     gst_pad_set_caps (pad, NULL);
 
   /* unref the object that was reffed for us by _fold */
-  gst_object_unref (pad);
   return cont;
 }
 
@@ -2367,6 +2400,7 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
   GstClockTime base_time, start_time;
   GstIterator *it;
   gboolean done;
+  GValue data = { 0, };
 
   /* we don't need to take the STATE_LOCK, it is already taken */
   current = (GstState) GST_STATE_TRANSITION_CURRENT (transition);
@@ -2445,14 +2479,12 @@ restart:
 
   done = FALSE;
   while (!done) {
-    gpointer data;
-
     switch (gst_iterator_next (it, &data)) {
       case GST_ITERATOR_OK:
       {
         GstElement *child;
 
-        child = GST_ELEMENT_CAST (data);
+        child = g_value_get_object (&data);
 
         /* set state and base_time now */
         ret = gst_bin_element_set_state (bin, child, base_time, start_time,
@@ -2488,7 +2520,6 @@ restart:
             parent = gst_object_get_parent (GST_OBJECT_CAST (child));
             if (parent == GST_OBJECT_CAST (element)) {
               /* element is still in bin, really error now */
-              gst_object_unref (child);
               gst_object_unref (parent);
               goto done;
             }
@@ -2514,7 +2545,7 @@ restart:
             g_assert_not_reached ();
             break;
         }
-        gst_object_unref (child);
+        g_value_reset (&data);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -2545,6 +2576,7 @@ restart:
   }
 
 done:
+  g_value_unset (&data);
   gst_iterator_free (it);
 
   GST_OBJECT_LOCK (bin);
@@ -2620,6 +2652,7 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
   GstIterator *iter;
   gboolean res = TRUE;
   gboolean done = FALSE;
+  GValue data = { 0, };
 
   if (GST_EVENT_IS_DOWNSTREAM (event)) {
     iter = gst_bin_iterate_sources (bin);
@@ -2632,17 +2665,14 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
   }
 
   while (!done) {
-    gpointer data;
-
     switch (gst_iterator_next (iter, &data)) {
       case GST_ITERATOR_OK:
       {
-        GstElement *child;
+        GstElement *child = g_value_get_object (&data);;
 
         gst_event_ref (event);
-        child = GST_ELEMENT_CAST (data);
         res &= gst_element_send_event (child, event);
-        gst_object_unref (child);
+        g_value_reset (&data);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -2657,6 +2687,7 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
         break;
     }
   }
+  g_value_unset (&data);
   gst_iterator_free (iter);
   gst_event_unref (event);
 
@@ -3403,8 +3434,10 @@ bin_query_min_max_init (GstBin * bin, QueryFold * fold)
 }
 
 static gboolean
-bin_query_duration_fold (GstElement * item, GValue * ret, QueryFold * fold)
+bin_query_duration_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
 {
+  GstElement *item = g_value_get_object (vitem);
+
   if (gst_element_query (item, fold->query)) {
     gint64 duration;
 
@@ -3418,7 +3451,6 @@ bin_query_duration_fold (GstElement * item, GValue * ret, QueryFold * fold)
       fold->max = duration;
   }
 
-  gst_object_unref (item);
   return TRUE;
 }
 
@@ -3441,8 +3473,10 @@ bin_query_duration_done (GstBin * bin, QueryFold * fold)
 }
 
 static gboolean
-bin_query_position_fold (GstElement * item, GValue * ret, QueryFold * fold)
+bin_query_position_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
 {
+  GstElement *item = g_value_get_object (vitem);
+
   if (gst_element_query (item, fold->query)) {
     gint64 position;
 
@@ -3456,7 +3490,6 @@ bin_query_position_fold (GstElement * item, GValue * ret, QueryFold * fold)
       fold->max = position;
   }
 
-  gst_object_unref (item);
   return TRUE;
 }
 
@@ -3473,8 +3506,10 @@ bin_query_position_done (GstBin * bin, QueryFold * fold)
 }
 
 static gboolean
-bin_query_latency_fold (GstElement * item, GValue * ret, QueryFold * fold)
+bin_query_latency_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
 {
+  GstElement *item = g_value_get_object (vitem);
+
   if (gst_element_query (item, fold->query)) {
     GstClockTime min, max;
     gboolean live;
@@ -3502,7 +3537,6 @@ bin_query_latency_fold (GstElement * item, GValue * ret, QueryFold * fold)
     GST_DEBUG_OBJECT (item, "failed query");
   }
 
-  gst_object_unref (item);
   return TRUE;
 }
 
@@ -3520,16 +3554,15 @@ bin_query_latency_done (GstBin * bin, QueryFold * fold)
 
 /* generic fold, return first valid result */
 static gboolean
-bin_query_generic_fold (GstElement * item, GValue * ret, QueryFold * fold)
+bin_query_generic_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
 {
+  GstElement *item = g_value_get_object (vitem);
   gboolean res;
 
   if ((res = gst_element_query (item, fold->query))) {
     g_value_set_boolean (ret, TRUE);
     GST_DEBUG_OBJECT (item, "answered query %p", fold->query);
   }
-
-  gst_object_unref (item);
 
   /* and stop as soon as we have a valid result */
   return !res;
@@ -3652,17 +3685,15 @@ exit:
 }
 
 static gint
-compare_name (GstElement * element, const gchar * name)
+compare_name (const GValue * velement, const gchar * name)
 {
   gint eq;
+  GstElement *element = g_value_get_object (velement);
 
   GST_OBJECT_LOCK (element);
   eq = strcmp (GST_ELEMENT_NAME (element), name);
   GST_OBJECT_UNLOCK (element);
 
-  if (eq != 0) {
-    gst_object_unref (element);
-  }
   return eq;
 }
 
@@ -3684,7 +3715,9 @@ GstElement *
 gst_bin_get_by_name (GstBin * bin, const gchar * name)
 {
   GstIterator *children;
-  gpointer result;
+  GValue result = { 0, };
+  GstElement *element;
+  gboolean found;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
@@ -3692,11 +3725,18 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
       GST_ELEMENT_NAME (bin), name);
 
   children = gst_bin_iterate_recurse (bin);
-  result = gst_iterator_find_custom (children,
-      (GCompareFunc) compare_name, (gpointer) name);
+  found = gst_iterator_find_custom (children,
+      (GCompareFunc) compare_name, &result, (gpointer) name);
   gst_iterator_free (children);
 
-  return GST_ELEMENT_CAST (result);
+  if (found) {
+    element = g_value_dup_object (&result);
+    g_value_unset (&result);
+  } else {
+    element = NULL;
+  }
+
+  return element;
 }
 
 /**
@@ -3740,17 +3780,15 @@ gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
 }
 
 static gint
-compare_interface (GstElement * element, gpointer interface)
+compare_interface (const GValue * velement, GValue * interface)
 {
-  GType interface_type = (GType) interface;
+  GstElement *element = g_value_get_object (velement);
+  GType interface_type = (GType) g_value_get_pointer (interface);
   gint ret;
 
   if (G_TYPE_CHECK_INSTANCE_TYPE (element, interface_type)) {
     ret = 0;
   } else {
-    /* we did not find the element, need to release the ref
-     * added by the iterator */
-    gst_object_unref (element);
     ret = 1;
   }
   return ret;
@@ -3775,17 +3813,31 @@ GstElement *
 gst_bin_get_by_interface (GstBin * bin, GType iface)
 {
   GstIterator *children;
-  gpointer result;
+  GValue result = { 0, };
+  GstElement *element;
+  gboolean found;
+  GValue viface = { 0, };
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
   g_return_val_if_fail (G_TYPE_IS_INTERFACE (iface), NULL);
 
+  g_value_init (&viface, G_TYPE_POINTER);
+  g_value_set_pointer (&viface, (gpointer) iface);
+
   children = gst_bin_iterate_recurse (bin);
-  result = gst_iterator_find_custom (children, (GCompareFunc) compare_interface,
-      (gpointer) iface);
+  found = gst_iterator_find_custom (children, (GCompareFunc) compare_interface,
+      &result, &viface);
   gst_iterator_free (children);
 
-  return GST_ELEMENT_CAST (result);
+  if (found) {
+    element = g_value_dup_object (&result);
+    g_value_unset (&result);
+  } else {
+    element = NULL;
+  }
+  g_value_unset (&viface);
+
+  return element;
 }
 
 /**
@@ -3811,13 +3863,19 @@ gst_bin_iterate_all_by_interface (GstBin * bin, GType iface)
 {
   GstIterator *children;
   GstIterator *result;
+  GValue viface = { 0, };
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
   g_return_val_if_fail (G_TYPE_IS_INTERFACE (iface), NULL);
 
+  g_value_init (&viface, G_TYPE_POINTER);
+  g_value_set_pointer (&viface, (gpointer) iface);
+
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_filter (children, (GCompareFunc) compare_interface,
-      (gpointer) iface);
+      &viface);
+
+  g_value_unset (&viface);
 
   return result;
 }

@@ -257,8 +257,7 @@ gst_format_iterate_definitions (void)
   g_static_mutex_lock (&mutex);
   /* FIXME: register a boxed type for GstFormatDefinition */
   result = gst_iterator_new_list (G_TYPE_POINTER,
-      g_static_mutex_get_mutex (&mutex), &_n_values, &_gst_formats,
-      NULL, NULL, NULL);
+      g_static_mutex_get_mutex (&mutex), &_n_values, &_gst_formats, NULL, NULL);
   g_static_mutex_unlock (&mutex);
 
   return result;

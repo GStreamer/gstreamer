@@ -1088,6 +1088,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   GstCaps *templcaps;
   GstPad *foundpad = NULL;
   gboolean done;
+  GValue padptr = { 0, };
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
@@ -1110,8 +1111,6 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   }
 
   while (!done) {
-    gpointer padptr;
-
     switch (gst_iterator_next (pads, &padptr)) {
       case GST_ITERATOR_OK:
       {
@@ -1120,7 +1119,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
         GstPad *srcpad;
         GstPad *sinkpad;
 
-        current = GST_PAD (padptr);
+        current = g_value_get_object (&padptr);
 
         GST_CAT_LOG (GST_CAT_ELEMENT_PADS, "examining pad %s:%s",
             GST_DEBUG_PAD_NAME (current));
@@ -1158,6 +1157,9 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
                 GST_DEBUG_PAD_NAME (current));
             gst_iterator_free (pads);
 
+            current = gst_object_ref (current);
+            g_value_unset (&padptr);
+
             return current;
           } else {
             GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "incompatible pads");
@@ -1168,7 +1170,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
         }
         GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "unreffing pads");
 
-        gst_object_unref (current);
+        g_value_reset (&padptr);
         if (peer)
           gst_object_unref (peer);
         break;
@@ -1184,6 +1186,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
         break;
     }
   }
+  g_value_unset (&padptr);
   gst_iterator_free (pads);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
@@ -2172,6 +2175,7 @@ gst_element_unlink (GstElement * src, GstElement * dest)
 {
   GstIterator *pads;
   gboolean done = FALSE;
+  GValue data = { 0, };
 
   g_return_if_fail (GST_IS_ELEMENT (src));
   g_return_if_fail (GST_IS_ELEMENT (dest));
@@ -2181,12 +2185,10 @@ gst_element_unlink (GstElement * src, GstElement * dest)
 
   pads = gst_element_iterate_pads (src);
   while (!done) {
-    gpointer data;
-
     switch (gst_iterator_next (pads, &data)) {
       case GST_ITERATOR_OK:
       {
-        GstPad *pad = GST_PAD_CAST (data);
+        GstPad *pad = g_value_get_object (&data);
 
         if (GST_PAD_IS_SRC (pad)) {
           GstPad *peerpad = gst_pad_get_peer (pad);
@@ -2206,7 +2208,7 @@ gst_element_unlink (GstElement * src, GstElement * dest)
             gst_object_unref (peerpad);
           }
         }
-        gst_object_unref (pad);
+        g_value_reset (&data);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -2220,6 +2222,7 @@ gst_element_unlink (GstElement * src, GstElement * dest)
         break;
     }
   }
+  g_value_unset (&data);
   gst_iterator_free (pads);
 }
 
@@ -2734,8 +2737,9 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
 
 
 static gboolean
-getcaps_fold_func (GstPad * pad, GValue * ret, GstPad * orig)
+getcaps_fold_func (const GValue * vpad, GValue * ret, GstPad * orig)
 {
+  GstPad *pad = g_value_get_object (vpad);
   gboolean empty = FALSE;
   GstCaps *peercaps, *existing;
 
@@ -2750,7 +2754,6 @@ getcaps_fold_func (GstPad * pad, GValue * ret, GstPad * orig)
     gst_caps_unref (existing);
     gst_caps_unref (peercaps);
   }
-  gst_object_unref (pad);
   return !empty;
 }
 
@@ -2866,15 +2869,15 @@ typedef struct
 } SetCapsFoldData;
 
 static gboolean
-setcaps_fold_func (GstPad * pad, GValue * ret, SetCapsFoldData * data)
+setcaps_fold_func (const GValue * vpad, GValue * ret, SetCapsFoldData * data)
 {
   gboolean success = TRUE;
+  GstPad *pad = g_value_get_object (vpad);
 
   if (pad != data->orig) {
     success = gst_pad_set_caps (pad, data->caps);
     g_value_set_boolean (ret, success);
   }
-  gst_object_unref (pad);
 
   return success;
 }
@@ -3473,11 +3476,11 @@ gst_element_found_tags_for_pad (GstElement * element,
 }
 
 static void
-push_and_ref (GstPad * pad, GstEvent * event)
+push_and_ref (const GValue * vpad, GstEvent * event)
 {
+  GstPad *pad = g_value_get_object (vpad);
+
   gst_pad_push_event (pad, gst_event_ref (event));
-  /* iterator refs pad, we unref when we are done with it */
-  gst_object_unref (pad);
 }
 
 /**
@@ -3502,7 +3505,7 @@ gst_element_found_tags (GstElement * element, GstTagList * list)
 
   iter = gst_element_iterate_src_pads (element);
   event = gst_event_new_tag (gst_tag_list_copy (list));
-  gst_iterator_foreach (iter, (GFunc) push_and_ref, event);
+  gst_iterator_foreach (iter, (GstIteratorForeachFunction) push_and_ref, event);
   gst_iterator_free (iter);
   gst_event_unref (event);
 
@@ -3516,6 +3519,7 @@ element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
   GstIterator *iter;
   GstPad *unlinked_pad = NULL;
   gboolean done;
+  GValue data = { 0, };
 
   switch (direction) {
     case GST_PAD_SRC:
@@ -3530,26 +3534,25 @@ element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
 
   done = FALSE;
   while (!done) {
-    gpointer pad;
-
-    switch (gst_iterator_next (iter, &pad)) {
+    switch (gst_iterator_next (iter, &data)) {
       case GST_ITERATOR_OK:{
         GstPad *peer;
+        GstPad *pad = g_value_get_object (&data);
 
         GST_CAT_LOG (GST_CAT_ELEMENT_PADS, "examining pad %s:%s",
             GST_DEBUG_PAD_NAME (pad));
 
-        peer = gst_pad_get_peer (GST_PAD (pad));
+        peer = gst_pad_get_peer (pad);
         if (peer == NULL) {
-          unlinked_pad = pad;
+          unlinked_pad = gst_object_ref (pad);
           done = TRUE;
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
               "found existing unlinked pad %s:%s",
               GST_DEBUG_PAD_NAME (unlinked_pad));
         } else {
-          gst_object_unref (pad);
           gst_object_unref (peer);
         }
+        g_value_reset (&data);
         break;
       }
       case GST_ITERATOR_DONE:
@@ -3563,7 +3566,7 @@ element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
         break;
     }
   }
-
+  g_value_unset (&data);
   gst_iterator_free (iter);
 
   return unlinked_pad;
@@ -3590,6 +3593,7 @@ gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
   GstIterator *iter;
   gboolean done;
   GstPad *pad = NULL;
+  GValue data = { 0, };
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
   g_return_val_if_fail (direction != GST_PAD_UNKNOWN, NULL);
@@ -3597,15 +3601,16 @@ gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
   done = FALSE;
   iter = gst_bin_iterate_recurse (bin);
   while (!done) {
-    gpointer element;
+    switch (gst_iterator_next (iter, &data)) {
+      case GST_ITERATOR_OK:{
+        GstElement *element = g_value_get_object (&data);
 
-    switch (gst_iterator_next (iter, &element)) {
-      case GST_ITERATOR_OK:
-        pad = element_find_unlinked_pad (GST_ELEMENT (element), direction);
-        gst_object_unref (element);
+        pad = element_find_unlinked_pad (element, direction);
         if (pad != NULL)
           done = TRUE;
+        g_value_reset (&data);
         break;
+      }
       case GST_ITERATOR_DONE:
         done = TRUE;
         break;
@@ -3617,7 +3622,7 @@ gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
         break;
     }
   }
-
+  g_value_unset (&data);
   gst_iterator_free (iter);
 
   return pad;

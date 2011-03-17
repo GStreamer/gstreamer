@@ -1194,27 +1194,15 @@ gst_element_get_pad (GstElement * element, const gchar * name)
 }
 #endif /* GST_REMOVE_DEPRECATED */
 
-static GstIteratorItem
-iterate_pad (GstIterator * it, GstPad * pad)
-{
-  gst_object_ref (pad);
-  return GST_ITERATOR_ITEM_PASS;
-}
-
 static GstIterator *
 gst_element_iterate_pad_list (GstElement * element, GList ** padlist)
 {
   GstIterator *result;
 
   GST_OBJECT_LOCK (element);
-  gst_object_ref (element);
   result = gst_iterator_new_list (GST_TYPE_PAD,
       GST_OBJECT_GET_LOCK (element),
-      &element->pads_cookie,
-      padlist,
-      element,
-      (GstIteratorItemFunction) iterate_pad,
-      (GstIteratorDisposeFunction) gst_object_unref);
+      &element->pads_cookie, padlist, (GObject *) element, NULL);
   GST_OBJECT_UNLOCK (element);
 
   return result;
@@ -2718,24 +2706,26 @@ invalid_return:
 /* gst_iterator_fold functions for pads_activate
  * Stop the iterator if activating one pad failed. */
 static gboolean
-activate_pads (GstPad * pad, GValue * ret, gboolean * active)
+activate_pads (const GValue * vpad, GValue * ret, gboolean * active)
 {
+  GstPad *pad = g_value_get_object (vpad);
   gboolean cont = TRUE;
 
   if (!(cont = gst_pad_set_active (pad, *active)))
     g_value_set_boolean (ret, FALSE);
 
   /* unref the object that was reffed for us by _fold */
-  gst_object_unref (pad);
   return cont;
 }
 
 /* set the caps on the pad to NULL */
 static gboolean
-clear_caps (GstPad * pad, GValue * ret, gboolean * active)
+clear_caps (const GValue * vpad, GValue * ret, gboolean * active)
 {
+  GstPad *pad = g_value_get_object (vpad);
+
   gst_pad_set_caps (pad, NULL);
-  gst_object_unref (pad);
+
   return TRUE;
 }
 
