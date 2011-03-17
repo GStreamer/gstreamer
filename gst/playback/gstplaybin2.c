@@ -2972,7 +2972,15 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     ret = !gst_caps_can_intersect (caps, subcaps);
     gst_caps_unref (subcaps);
   }
+  /* If autoplugging can stop don't do additional checks */
   if (!ret)
+    goto done;
+
+  /* If this is from the subtitle uridecodebin we don't need to
+   * check the audio and video sink */
+  if (group->suburidecodebin
+      && gst_object_has_ancestor (GST_OBJECT_CAST (element),
+          GST_OBJECT_CAST (group->suburidecodebin)))
     goto done;
 
   if ((sink = group->playbin->audio_sink)) {
