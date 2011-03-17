@@ -139,6 +139,7 @@ struct _GstSelectorPad
   gboolean active;              /* when buffer have passed the pad */
   gboolean pushed;              /* when buffer was pushed downstream since activation */
   gboolean eos;                 /* when EOS has been received */
+  gboolean eos_sent;            /* when EOS was sent downstream */
   gboolean discont;             /* after switching we create a discont */
   gboolean always_ok;
   GstSegment segment;           /* the current segment on the pad */
@@ -332,6 +333,7 @@ gst_selector_pad_reset (GstSelectorPad * pad)
   pad->active = FALSE;
   pad->pushed = FALSE;
   pad->eos = FALSE;
+  pad->eos_sent = FALSE;
   pad->segment_pending = FALSE;
   pad->discont = FALSE;
   gst_segment_init (&pad->segment, GST_FORMAT_UNDEFINED);
@@ -450,6 +452,25 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_EOS:
       selpad->eos = TRUE;
+
+      if (forward) {
+        selpad->eos_sent = TRUE;
+      } else {
+        GstSelectorPad *tmp;
+
+        /* If the active sinkpad is in EOS state but EOS
+         * was not sent downstream this means that the pad
+         * got EOS before it was set as active pad and that
+         * the previously active pad got EOS after it was
+         * active
+         */
+        GST_INPUT_SELECTOR_LOCK (sel);
+        active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+        tmp = GST_SELECTOR_PAD (active_sinkpad);
+        forward = (tmp->eos && !tmp->eos_sent);
+        tmp->eos_sent = TRUE;
+        GST_INPUT_SELECTOR_UNLOCK (sel);
+      }
       GST_DEBUG_OBJECT (pad, "received EOS");
       break;
     default:
