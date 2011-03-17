@@ -142,7 +142,7 @@ struct _GstBufferList
 {
   GstMiniObject mini_object;
 
-  GList *buffers;
+  GQueue *buffers;
 };
 
 /**
@@ -173,23 +173,26 @@ static GstBufferList *
 _gst_buffer_list_copy (GstBufferList * list)
 {
   GstBufferList *list_copy;
+  GQueue *buffers_copy;
   GList *tmp;
 
   g_return_val_if_fail (list != NULL, NULL);
 
-  list_copy = gst_buffer_list_new ();
-
   /* shallow copy of list and pointers */
-  list_copy->buffers = g_list_copy (list->buffers);
+  buffers_copy = g_queue_copy (list->buffers);
 
   /* ref all buffers in the list */
-  tmp = list_copy->buffers;
+  tmp = list->buffers->head;
   while (tmp) {
     if (tmp->data != GROUP_START && tmp->data != STOLEN) {
       tmp->data = gst_buffer_ref (GST_BUFFER_CAST (tmp->data));
     }
     tmp = g_list_next (tmp);
   }
+
+  list_copy = gst_buffer_list_new ();
+  g_queue_free (list_copy->buffers);
+  list_copy->buffers = buffers_copy;
 
   return list_copy;
 }
@@ -203,14 +206,14 @@ _gst_buffer_list_free (GstBufferList * list)
 
   GST_LOG ("free %p", list);
 
-  tmp = list->buffers;
+  tmp = list->buffers->head;
   while (tmp) {
     if (tmp->data != GROUP_START && tmp->data != STOLEN) {
       gst_buffer_unref (GST_BUFFER_CAST (tmp->data));
     }
     tmp = tmp->next;
   }
-  g_list_free (list->buffers);
+  g_queue_free (list->buffers);
 
   g_slice_free1 (GST_MINI_OBJECT_SIZE (list), list);
 }
@@ -223,6 +226,10 @@ gst_buffer_list_init (GstBufferList * list, gsize size)
 
   list->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_list_copy;
   list->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_list_free;
+
+  list->buffers = g_queue_new ();
+
+  GST_LOG ("init %p", list);
 }
 
 /**
@@ -270,7 +277,7 @@ gst_buffer_list_n_groups (GstBufferList * list)
 
   g_return_val_if_fail (list != NULL, 0);
 
-  tmp = list->buffers;
+  tmp = list->buffers->head;
   n = 0;
   while (tmp) {
     if (tmp->data == GROUP_START) {
@@ -307,7 +314,7 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
   g_return_if_fail (list != NULL);
   g_return_if_fail (func != NULL);
 
-  next = list->buffers;
+  next = list->buffers->head;
   group = idx = 0;
   while (next) {
     GstBuffer *buffer;
@@ -333,7 +340,7 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
       /* the function changed the buffer */
       if (buffer == NULL) {
         /* we were asked to remove the item */
-        list->buffers = g_list_delete_link (list->buffers, tmp);
+        g_queue_delete_link (list->buffers, tmp);
         idx--;
       } else {
         /* change the buffer */
@@ -378,7 +385,7 @@ gst_buffer_list_get (GstBufferList * list, guint group, guint idx)
 
   g_return_val_if_fail (list != NULL, NULL);
 
-  tmp = list->buffers;
+  tmp = list->buffers->head;
   cgroup = 0;
   while (tmp) {
     if (tmp->data == GROUP_START) {
@@ -430,7 +437,7 @@ gst_buffer_list_iterate (GstBufferList * list)
 
   it = g_slice_new (GstBufferListIterator);
   it->list = list;
-  it->next = list->buffers;
+  it->next = list->buffers->head;
   it->last_returned = NULL;
 
   return it;
@@ -509,11 +516,14 @@ gst_buffer_list_iterator_add (GstBufferListIterator * it, GstBuffer * buffer)
   g_return_if_fail (buffer != NULL);
 
   /* adding before the first group start is not allowed */
-  g_return_if_fail (it->next != it->list->buffers);
+  g_return_if_fail (it->next != it->list->buffers->head);
 
-  /* cheap insert into the GList */
-  it->list->buffers = g_list_insert_before (it->list->buffers, it->next,
-      buffer);
+  /* cheap insert into the GQueue */
+  if (it->next != NULL) {
+    g_queue_insert_before (it->list->buffers, it->next, buffer);
+  } else {
+    g_queue_push_tail (it->list->buffers, buffer);
+  }
 }
 
 /**
@@ -535,31 +545,33 @@ void
 gst_buffer_list_iterator_add_list (GstBufferListIterator * it, GList * list)
 {
   GList *last;
+  guint len;
 
   g_return_if_fail (it != NULL);
-  g_return_if_fail (it->next != it->list->buffers);
+  g_return_if_fail (it->next != it->list->buffers->head);
 
   if (list == NULL)
     return;
 
-  if (it->next) {
-    last = list;
-    while (last->next)
-      last = last->next;
+  last = list;
+  len = 1;
+  while (last->next) {
+    last = last->next;
+    len++;
+  }
 
+  if (it->next) {
     last->next = it->next;
     list->prev = it->next->prev;
     it->next->prev = last;
     if (list->prev)
       list->prev->next = list;
   } else {
-    last = it->list->buffers;
-    while (last->next)
-      last = last->next;
-
-    last->next = list;
-    list->prev = last;
+    it->list->buffers->tail->next = list;
+    list->prev = it->list->buffers->tail;
+    it->list->buffers->tail = last;
   }
+  it->list->buffers->length += len;
 }
 
 /**
@@ -584,9 +596,12 @@ gst_buffer_list_iterator_add_group (GstBufferListIterator * it)
     it->next = g_list_next (it->next);
   }
 
-  /* cheap insert of a group start into the GList */
-  it->list->buffers = g_list_insert_before (it->list->buffers, it->next,
-      GROUP_START);
+  /* cheap insert of a group start into the GQueue */
+  if (it->next != NULL) {
+    g_queue_insert_before (it->list->buffers, it->next, GROUP_START);
+  } else {
+    g_queue_push_tail (it->list->buffers, GROUP_START);
+  }
 }
 
 /**
@@ -691,7 +706,7 @@ gst_buffer_list_iterator_remove (GstBufferListIterator * it)
   if (it->last_returned->data != STOLEN) {
     gst_buffer_unref (it->last_returned->data);
   }
-  it->list->buffers = g_list_delete_link (it->list->buffers, it->last_returned);
+  g_queue_delete_link (it->list->buffers, it->last_returned);
   it->last_returned = NULL;
 }
 

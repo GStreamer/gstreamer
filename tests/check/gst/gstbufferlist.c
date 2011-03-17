@@ -783,7 +783,14 @@ GST_START_TEST (test_list)
   gst_buffer_list_iterator_add_group (it);
   gst_buffer_list_iterator_add_list (it, l);
 
-  for (i = 0; i < 10; i++) {
+  /* add a buffer */
+  gst_buffer_list_iterator_add (it, buffer_from_string ("10"));
+
+  /* add another list */
+  l = g_list_append (NULL, buffer_from_string ("11"));
+  gst_buffer_list_iterator_add_list (it, l);
+
+  for (i = 0; i < 12; i++) {
     GstBuffer *buf;
     gchar name[10];
 

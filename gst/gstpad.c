@@ -991,6 +991,11 @@ gst_pad_is_active (GstPad * pad)
  * You can pass NULL as the callback to make this call block. Be careful with
  * this blocking call as it might not return for reasons stated above.
  *
+ * <note>
+ *  Pad block handlers are only called for source pads in push mode
+ *  and sink pads in pull mode.
+ * </note>
+ *
  * Returns: TRUE if the pad could be blocked. This function can fail if the
  * wrong parameters were passed or the pad was already in the requested state.
  *
@@ -1085,6 +1090,11 @@ had_right_state:
  * take an indeterminate amount of time.
  * You can pass NULL as the callback to make this call block. Be careful with
  * this blocking call as it might not return for reasons stated above.
+ * 
+ * <note>
+ *  Pad block handlers are only called for source pads in push mode
+ *  and sink pads in pull mode.
+ * </note>
  *
  * Returns: TRUE if the pad could be blocked. This function can fail if the
  * wrong parameters were passed or the pad was already in the requested state.
@@ -1107,6 +1117,11 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
  * Blocks or unblocks the dataflow on a pad. This function is
  * a shortcut for gst_pad_set_blocked_async() with a NULL
  * callback.
+ *
+ * <note>
+ *  Pad blocks are only possible for source pads in push mode
+ *  and sink pads in pull mode.
+ * </note>
  *
  * Returns: TRUE if the pad could be blocked. This function can fail if the
  * wrong parameters were passed or the pad was already in the requested state.

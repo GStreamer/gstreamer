@@ -124,11 +124,12 @@ static GstIterator *
 gst_proxy_pad_do_iterate_internal_links (GstPad * pad)
 {
   GstIterator *res = NULL;
-  GstPad *target = gst_proxy_pad_get_target (pad);
+  GstPad *internal = GST_PROXY_PAD_INTERNAL (pad);
 
-  if (target) {
-    res = gst_pad_iterate_internal_links (target);
-    gst_object_unref (target);
+  if (internal) {
+    res =
+        gst_iterator_new_single (GST_TYPE_PAD, internal,
+        (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
   }
 
   return res;
