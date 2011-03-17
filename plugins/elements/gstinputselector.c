@@ -329,14 +329,17 @@ gst_selector_pad_iterate_linked_pads (GstPad * pad)
   GstInputSelector *sel;
   GstPad *otherpad;
   GstIterator *it;
+  GValue val = { 0, };
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
   if (G_UNLIKELY (sel == NULL))
     return NULL;
 
   otherpad = gst_input_selector_get_linked_pad (sel, pad, TRUE);
-  it = gst_iterator_new_single (GST_TYPE_PAD, otherpad,
-      (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
+  g_value_init (&val, GST_TYPE_PAD);
+  g_value_set_object (&val, otherpad);
+  it = gst_iterator_new_single (GST_TYPE_PAD, &val);
+  g_value_unset (&val);
 
   if (otherpad)
     gst_object_unref (otherpad);

@@ -550,6 +550,7 @@ gst_multi_queue_iterate_internal_links (GstPad * pad)
   GstPad *opad;
   GstSingleQueue *squeue;
   GstMultiQueue *mq = GST_MULTI_QUEUE (gst_pad_get_parent (pad));
+  GValue val = { 0, };
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
   squeue = gst_pad_get_element_private (pad);
@@ -563,8 +564,10 @@ gst_multi_queue_iterate_internal_links (GstPad * pad)
   else
     goto out;
 
-  it = gst_iterator_new_single (GST_TYPE_PAD, opad,
-      (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
+  g_value_init (&val, GST_TYPE_PAD);
+  g_value_set_object (&val, opad);
+  it = gst_iterator_new_single (GST_TYPE_PAD, &val);
+  g_value_unset (&val);
 
   gst_object_unref (opad);
 

@@ -357,6 +357,7 @@ gst_funnel_src_event (GstPad * pad, GstEvent * event)
   GstPad *sinkpad;
   gboolean result = FALSE;
   gboolean done = FALSE;
+  GValue value = { 0, };
 
   funnel = gst_pad_get_parent_element (pad);
   if (G_UNLIKELY (funnel == NULL)) {
@@ -367,11 +368,12 @@ gst_funnel_src_event (GstPad * pad, GstEvent * event)
   iter = gst_element_iterate_sink_pads (funnel);
 
   while (!done) {
-    switch (gst_iterator_next (iter, (gpointer) & sinkpad)) {
+    switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
+        sinkpad = g_value_get_object (&value);
         gst_event_ref (event);
         result |= gst_pad_push_event (sinkpad, event);
-        gst_object_unref (sinkpad);
+        g_value_reset (&value);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
@@ -384,6 +386,7 @@ gst_funnel_src_event (GstPad * pad, GstEvent * event)
         break;
     }
   }
+  g_value_unset (&value);
   gst_iterator_free (iter);
   gst_object_unref (funnel);
   gst_event_unref (event);
@@ -392,15 +395,14 @@ gst_funnel_src_event (GstPad * pad, GstEvent * event)
 }
 
 static void
-reset_pad (gpointer data, gpointer user_data)
+reset_pad (const GValue * data, gpointer user_data)
 {
-  GstPad *pad = data;
+  GstPad *pad = g_value_get_object (data);
   GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
 
   GST_OBJECT_LOCK (pad);
   gst_funnel_pad_reset (fpad);
   GST_OBJECT_UNLOCK (pad);
-  gst_object_unref (pad);
 }
 
 static GstStateChangeReturn

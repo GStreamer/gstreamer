@@ -472,6 +472,7 @@ gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   GstTee *tee;
   gboolean res, done;
   GstIterator *it;
+  GValue item = { 0, };
 
   tee = GST_TEE_CAST (GST_PAD_PARENT (pad));
 
@@ -480,12 +481,10 @@ gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   res = TRUE;
   done = FALSE;
   while (!done && res) {
-    gpointer item;
-
     switch (gst_iterator_next (it, &item)) {
       case GST_ITERATOR_OK:
-        res &= gst_pad_peer_accept_caps (GST_PAD_CAST (item), caps);
-        gst_object_unref (item);
+        res &= gst_pad_peer_accept_caps (g_value_get_object (&item), caps);
+        g_value_reset (&item);
         break;
       case GST_ITERATOR_RESYNC:
         res = TRUE;
@@ -500,6 +499,7 @@ gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (it);
 
   return res;
@@ -864,11 +864,12 @@ cannot_pull_multiple_srcs:
 }
 
 static void
-gst_tee_push_eos (GstPad * pad, GstTee * tee)
+gst_tee_push_eos (const GValue * vpad, GstTee * tee)
 {
+  GstPad *pad = g_value_get_object (vpad);
+
   if (pad != tee->pull_pad)
     gst_pad_push_event (pad, gst_event_new_eos ());
-  gst_object_unref (pad);
 }
 
 static void
@@ -877,7 +878,8 @@ gst_tee_pull_eos (GstTee * tee)
   GstIterator *iter;
 
   iter = gst_element_iterate_src_pads (GST_ELEMENT (tee));
-  gst_iterator_foreach (iter, (GFunc) gst_tee_push_eos, tee);
+  gst_iterator_foreach (iter, (GstIteratorForeachFunction) gst_tee_push_eos,
+      tee);
   gst_iterator_free (iter);
 }
 
