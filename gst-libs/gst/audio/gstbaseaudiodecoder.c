@@ -119,9 +119,11 @@
  * output buffer aggregation which may help to redue large(r) numbers of
  * small(er) buffers being pushed and processed downstream.
  *
- * On the other hand, it should be noted that baseclass does not handle seeking,
- * nor are subclasses expected to do so, as this should rather be left to
- * upstream demuxer, parser or alike.
+ * On the other hand, it should be noted that baseclass only provides limited
+ * seeking support (upon explicit subclass request), as full-fledged support
+ * should rather be left to upstream demuxer, parser or alike.  This simple
+ * approach caters for seeking and duration reporting using estimated input
+ * bitrates.
  *
  * Things that subclass need to take care of:
  * <itemizedlist>
@@ -1209,9 +1211,24 @@ gst_base_audio_decoder_chain (GstPad * pad, GstBuffer * buffer)
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    gint64 samples, ts;
+
+    /* track present position */
+    ts = dec->priv->base_ts;
+    samples = dec->priv->samples;
+
     GST_DEBUG_OBJECT (dec, "handling discont");
     gst_base_audio_decoder_flush (dec, FALSE);
     dec->priv->discont = TRUE;
+
+    /* buffer may claim DISCONT loudly, if it can't tell us where we are now,
+     * we'll stick to where we were ...
+     * Particularly useful/needed for upstream BYTE based */
+    if (dec->segment.rate > 0.0 && !GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+      GST_DEBUG_OBJECT (dec, "... but restoring previous ts tracking");
+      dec->priv->base_ts = ts;
+      dec->priv->samples = samples;
+    }
   }
 
   if (dec->segment.rate > 0.0)
@@ -1220,6 +1237,15 @@ gst_base_audio_decoder_chain (GstPad * pad, GstBuffer * buffer)
     ret = gst_base_audio_decoder_chain_reverse (dec, buffer);
 
   return ret;
+}
+
+/* perform upstream byte <-> time conversion (duration, seeking)
+ * if subclass allows and if enough data for moderately decent conversion */
+static inline gboolean
+gst_base_audio_decoder_do_byte (GstBaseAudioDecoder * dec)
+{
+  return dec->ctx->do_byte_time && dec->ctx->state.bpf &&
+      dec->ctx->state.rate <= dec->priv->samples_out;
 }
 
 static gboolean
@@ -1242,19 +1268,37 @@ gst_base_audio_decoder_sink_eventfunc (GstBaseAudioDecoder * dec,
       if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (dec, "received TIME NEW_SEGMENT %" GST_TIME_FORMAT
             " -- %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT
-            ", accum %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (dec->segment.start),
-            GST_TIME_ARGS (dec->segment.stop),
-            GST_TIME_ARGS (dec->segment.time),
-            GST_TIME_ARGS (dec->segment.accum));
+            ", rate %g, applied_rate %g",
+            GST_TIME_ARGS (start), GST_TIME_ARGS (stop), GST_TIME_ARGS (time),
+            rate, arate);
       } else {
+        GstFormat dformat = GST_FORMAT_TIME;
+
         GST_DEBUG_OBJECT (dec, "received NEW_SEGMENT %" G_GINT64_FORMAT
             " -- %" G_GINT64_FORMAT ", time %" G_GINT64_FORMAT
-            ", accum %" G_GINT64_FORMAT,
-            dec->segment.start, dec->segment.stop,
-            dec->segment.time, dec->segment.accum);
-        GST_DEBUG_OBJECT (dec, "unsupported format; ignoring");
-        break;
+            ", rate %g, applied_rate %g", start, stop, time, rate, arate);
+        /* handle newsegment resulting from legacy simple seeking */
+        /* note that we need to convert this whether or not enough data
+         * to handle initial newsegment */
+        if (dec->ctx->do_byte_time &&
+            gst_pad_query_convert (dec->sinkpad, GST_FORMAT_BYTES, start,
+                &dformat, &start)) {
+          /* best attempt convert */
+          /* as these are only estimates, stop is kept open-ended to avoid
+           * premature cutting */
+          GST_DEBUG_OBJECT (dec, "converted to TIME start %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (start));
+          format = GST_FORMAT_TIME;
+          time = start;
+          stop = GST_CLOCK_TIME_NONE;
+          /* replace event */
+          gst_event_unref (event);
+          event = gst_event_new_new_segment_full (update, rate, arate,
+              GST_FORMAT_TIME, start, stop, time);
+        } else {
+          GST_DEBUG_OBJECT (dec, "unsupported format; ignoring");
+          break;
+        }
       }
 
       /* finish current segment */
@@ -1281,11 +1325,21 @@ gst_base_audio_decoder_sink_eventfunc (GstBaseAudioDecoder * dec,
       } else {
         /* prepare for next one */
         gst_base_audio_decoder_flush (dec, FALSE);
+        /* and that's where we time from,
+         * in case upstream does not come up with anything better
+         * (e.g. upstream BYTE) */
+        if (format != GST_FORMAT_TIME) {
+          dec->priv->base_ts = start;
+          dec->priv->samples = 0;
+        }
       }
 
       /* and follow along with segment */
       gst_segment_set_newsegment_full (&dec->segment, update, rate, arate,
           format, start, stop, time);
+
+      gst_pad_push_event (dec->srcpad, event);
+      handled = TRUE;
       break;
     }
 
@@ -1338,6 +1392,62 @@ gst_base_audio_decoder_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
+gst_base_audio_decoder_do_seek (GstBaseAudioDecoder * dec, GstEvent * event)
+{
+  GstSeekFlags flags;
+  GstSeekType start_type, end_type;
+  GstFormat format;
+  gdouble rate;
+  gint64 start, start_time, end_time;
+  GstSegment seek_segment;
+
+  gst_event_parse_seek (event, &rate, &format, &flags, &start_type,
+      &start_time, &end_type, &end_time);
+
+  /* we'll handle plain open-ended flushing seeks with the simple approach */
+  if (rate != 1.0) {
+    GST_DEBUG_OBJECT (dec, "unsupported seek: rate");
+    return FALSE;
+  }
+
+  if (start_type != GST_SEEK_TYPE_SET) {
+    GST_DEBUG_OBJECT (dec, "unsupported seek: start time");
+    return FALSE;
+  }
+
+  if (end_type != GST_SEEK_TYPE_NONE ||
+      (end_type == GST_SEEK_TYPE_SET && end_time != GST_CLOCK_TIME_NONE)) {
+    GST_DEBUG_OBJECT (dec, "unsupported seek: end time");
+    return FALSE;
+  }
+
+  if (!(flags & GST_SEEK_FLAG_FLUSH)) {
+    GST_DEBUG_OBJECT (dec, "unsupported seek: not flushing");
+    return FALSE;
+  }
+
+  memcpy (&seek_segment, &dec->segment, sizeof (seek_segment));
+  gst_segment_set_seek (&seek_segment, rate, format, flags, start_type,
+      start_time, end_type, end_time, NULL);
+  start_time = seek_segment.last_stop;
+
+  format = GST_FORMAT_BYTES;
+  if (!gst_pad_query_convert (dec->sinkpad, GST_FORMAT_TIME, start_time,
+          &format, &start)) {
+    GST_DEBUG_OBJECT (dec, "conversion failed");
+    return FALSE;
+  }
+
+  event = gst_event_new_seek (1.0, GST_FORMAT_BYTES, flags,
+      GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_NONE, -1);
+
+  GST_DEBUG_OBJECT (dec, "seeking to %" GST_TIME_FORMAT " at byte offset %"
+      G_GINT64_FORMAT, GST_TIME_ARGS (start_time), start);
+
+  return gst_pad_push_event (dec->sinkpad, event);
+}
+
+static gboolean
 gst_base_audio_decoder_src_event (GstPad * pad, GstEvent * event)
 {
   GstBaseAudioDecoder *dec;
@@ -1366,12 +1476,17 @@ gst_base_audio_decoder_src_event (GstPad * pad, GstEvent * event)
       seqnum = gst_event_get_seqnum (event);
 
       /* upstream gets a chance first */
-      res = gst_pad_push_event (dec->sinkpad, event);
-
-      /* if upstream fails for a non-time seek, maybe we can help */
-      if (G_LIKELY (format == GST_FORMAT_TIME || res))
+      if ((res = gst_pad_push_event (dec->sinkpad, event)))
         break;
 
+      /* if upstream fails for a time seek, maybe we can help if allowed */
+      if (format == GST_FORMAT_TIME) {
+        if (gst_base_audio_decoder_do_byte (dec))
+          res = gst_base_audio_decoder_do_seek (dec, event);
+        break;
+      }
+
+      /* ... though a non-time seek can be aided as well */
       /* First bring the requested format to time */
       tformat = GST_FORMAT_TIME;
       if (!(res = gst_pad_query_convert (pad, format, cur, &tformat, &tcur)))
@@ -1473,6 +1588,32 @@ gst_base_audio_decoder_src_query (GstPad * pad, GstQuery * query)
   GST_LOG_OBJECT (dec, "handling query: %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+
+      /* upstream in any case */
+      if ((res = gst_pad_query_default (pad, query)))
+        break;
+
+      gst_query_parse_duration (query, &format, NULL);
+      /* try answering TIME by converting from BYTE if subclass allows  */
+      if (format == GST_FORMAT_TIME && gst_base_audio_decoder_do_byte (dec)) {
+        gint64 value;
+
+        format = GST_FORMAT_BYTES;
+        if (gst_pad_query_peer_duration (dec->sinkpad, &format, &value)) {
+          GST_LOG_OBJECT (dec, "upstream size %" G_GINT64_FORMAT, value);
+          format = GST_FORMAT_TIME;
+          if (gst_pad_query_convert (dec->sinkpad, GST_FORMAT_BYTES, value,
+                  &format, &value)) {
+            gst_query_set_duration (query, GST_FORMAT_TIME, value);
+            res = TRUE;
+          }
+        }
+      }
+      break;
+    }
     case GST_QUERY_POSITION:
     {
       GstFormat format;

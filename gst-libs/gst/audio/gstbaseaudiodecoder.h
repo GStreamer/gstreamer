@@ -110,6 +110,7 @@ struct _GstBaseAudioDecoderContext {
 
   /* output */
   gboolean do_plc;
+  gboolean do_byte_time;
   /* MT-protected (with LOCK) */
   GstClockTime min_latency;
   GstClockTime max_latency;
