@@ -337,7 +337,9 @@ GST_START_TEST (test_internal_links)
   GstPad *sinkpad, *srcpad1, *srcpad2;
   GstIterator *it;
   GstIteratorResult res;
-  gpointer val1, val2;
+  GValue val1 = { 0, }
+  , val2 = {
+  0,};
 
   tee = gst_check_setup_element ("tee");
 
@@ -347,10 +349,9 @@ GST_START_TEST (test_internal_links)
   fail_unless (it != NULL);
 
   /* iterator should not return anything */
-  val1 = NULL;
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_DONE);
-  fail_unless (val1 == NULL);
+  fail_unless (g_value_get_object (&val1) == NULL);
 
   srcpad1 = gst_element_get_request_pad (tee, "src%d");
   fail_unless (srcpad1 != NULL);
@@ -358,20 +359,19 @@ GST_START_TEST (test_internal_links)
   /* iterator should resync */
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_RESYNC);
-  fail_unless (val1 == NULL);
+  fail_unless (g_value_get_object (&val1) == NULL);
   gst_iterator_resync (it);
 
   /* we should get something now */
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_OK);
-  fail_unless (GST_PAD_CAST (val1) == srcpad1);
+  fail_unless (GST_PAD_CAST (g_value_get_object (&val1)) == srcpad1);
 
-  gst_object_unref (val1);
+  g_value_reset (&val1);
 
-  val1 = NULL;
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_DONE);
-  fail_unless (val1 == NULL);
+  fail_unless (g_value_get_object (&val1) == NULL);
 
   srcpad2 = gst_element_get_request_pad (tee, "src%d");
   fail_unless (srcpad2 != NULL);
@@ -379,28 +379,27 @@ GST_START_TEST (test_internal_links)
   /* iterator should resync */
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_RESYNC);
-  fail_unless (val1 == NULL);
+  fail_unless (g_value_get_object (&val1) == NULL);
   gst_iterator_resync (it);
 
   /* we should get one of the 2 pads now */
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_OK);
-  fail_unless (GST_PAD_CAST (val1) == srcpad1
-      || GST_PAD_CAST (val1) == srcpad2);
+  fail_unless (GST_PAD_CAST (g_value_get_object (&val1)) == srcpad1
+      || GST_PAD_CAST (g_value_get_object (&val1)) == srcpad2);
 
   /* and the other */
   res = gst_iterator_next (it, &val2);
   fail_unless (res == GST_ITERATOR_OK);
-  fail_unless (GST_PAD_CAST (val2) == srcpad1
-      || GST_PAD_CAST (val2) == srcpad2);
-  fail_unless (val1 != val2);
-  gst_object_unref (val1);
-  gst_object_unref (val2);
+  fail_unless (GST_PAD_CAST (g_value_get_object (&val2)) == srcpad1
+      || GST_PAD_CAST (g_value_get_object (&val2)) == srcpad2);
+  fail_unless (g_value_get_object (&val1) != g_value_get_object (&val2));
+  g_value_reset (&val1);
+  g_value_reset (&val2);
 
-  val1 = NULL;
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_DONE);
-  fail_unless (val1 == NULL);
+  fail_unless (g_value_get_object (&val1) == NULL);
 
   gst_iterator_free (it);
 
@@ -410,8 +409,8 @@ GST_START_TEST (test_internal_links)
 
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_OK);
-  fail_unless (GST_PAD_CAST (val1) == sinkpad);
-  gst_object_unref (val1);
+  fail_unless (GST_PAD_CAST (g_value_get_object (&val1)) == sinkpad);
+  g_value_reset (&val1);
 
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_DONE);
@@ -422,12 +421,14 @@ GST_START_TEST (test_internal_links)
 
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_OK);
-  fail_unless (GST_PAD_CAST (val1) == sinkpad);
-  gst_object_unref (val1);
+  fail_unless (GST_PAD_CAST (g_value_get_object (&val1)) == sinkpad);
+  g_value_reset (&val1);
 
   res = gst_iterator_next (it, &val1);
   fail_unless (res == GST_ITERATOR_DONE);
 
+  g_value_unset (&val1);
+  g_value_unset (&val2);
   gst_iterator_free (it);
   gst_object_unref (srcpad1);
   gst_object_unref (srcpad2);

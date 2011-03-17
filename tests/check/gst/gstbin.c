@@ -61,7 +61,7 @@ GST_START_TEST (test_interface)
   GstBin *bin, *bin2;
   GstElement *filesrc;
   GstIterator *it;
-  gpointer item;
+  GValue item = { 0, };
 
   bin = GST_BIN (gst_bin_new (NULL));
   fail_unless (bin != NULL, "Could not create bin");
@@ -77,8 +77,8 @@ GST_START_TEST (test_interface)
   it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   fail_unless (it != NULL);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
-  fail_unless (item == (gpointer) filesrc);
-  gst_object_unref (GST_OBJECT (item));
+  fail_unless (g_value_get_object (&item) == (gpointer) filesrc);
+  g_value_reset (&item);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
   gst_iterator_free (it);
 
@@ -89,8 +89,8 @@ GST_START_TEST (test_interface)
   it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   fail_unless (it != NULL);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
-  fail_unless (item == (gpointer) filesrc);
-  gst_object_unref (GST_OBJECT (item));
+  fail_unless (g_value_get_object (&item) == (gpointer) filesrc);
+  g_value_reset (&item);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
   gst_iterator_free (it);
 
@@ -103,8 +103,8 @@ GST_START_TEST (test_interface)
       GST_ELEMENT (bin2), gst_element_factory_make ("identity", NULL), NULL);
   it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
-  fail_unless (item == (gpointer) filesrc);
-  gst_object_unref (GST_OBJECT (item));
+  fail_unless (g_value_get_object (&item) == (gpointer) filesrc);
+  g_value_reset (&item);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
   gst_iterator_free (it);
 
@@ -112,12 +112,13 @@ GST_START_TEST (test_interface)
   gst_bin_add (bin2, gst_element_factory_make ("filesrc", NULL));
   it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
-  gst_object_unref (GST_OBJECT (item));
+  g_value_reset (&item);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
-  gst_object_unref (GST_OBJECT (item));
+  g_value_reset (&item);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
-  gst_object_unref (GST_OBJECT (item));
+  g_value_reset (&item);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
+  g_value_unset (&item);
   gst_iterator_free (it);
 
   gst_object_unref (bin);
@@ -887,7 +888,7 @@ GST_START_TEST (test_iterate_sorted)
 {
   GstElement *src, *tee, *identity, *sink1, *sink2, *pipeline, *bin;
   GstIterator *it;
-  gpointer elem;
+  GValue elem = { 0, };
 
   pipeline = gst_pipeline_new (NULL);
   fail_unless (pipeline != NULL, "Could not create pipeline");
@@ -922,19 +923,21 @@ GST_START_TEST (test_iterate_sorted)
 
   it = gst_bin_iterate_sorted (GST_BIN (pipeline));
   fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
-  fail_unless (elem == sink2);
-  gst_object_unref (elem);
+  fail_unless (g_value_get_object (&elem) == (gpointer) sink2);
+  g_value_reset (&elem);
 
   fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
-  fail_unless (elem == identity);
-  gst_object_unref (elem);
+  fail_unless (g_value_get_object (&elem) == (gpointer) identity);
+  g_value_reset (&elem);
 
   fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
-  fail_unless (elem == bin);
-  gst_object_unref (elem);
+  fail_unless (g_value_get_object (&elem) == (gpointer) bin);
+  g_value_reset (&elem);
 
+  g_value_unset (&elem);
   gst_iterator_free (it);
 
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
   gst_object_unref (pipeline);
 }
 
