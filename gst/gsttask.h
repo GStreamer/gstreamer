@@ -99,7 +99,7 @@ typedef enum {
  *
  * Send a broadcast signal to all waiting task conds
  */
-#define GST_TASK_BROADCAST(task)        g_cond_breadcast(GST_TASK_GET_COND (task))
+#define GST_TASK_BROADCAST(task)        g_cond_broadcast(GST_TASK_GET_COND (task))
 
 /**
  * GST_TASK_GET_LOCK:
