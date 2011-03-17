@@ -1322,56 +1322,6 @@ gst_element_factory_can_accept_any_caps_in_direction (GstElementFactory *
 }
 
 /**
- * gst_element_factory_can_src_caps:
- * @factory: factory to query
- * @caps: the caps to check
- *
- * Checks if the factory can source the given capability.
- *
- * Returns: %TRUE if it can src the capabilities
- *
- * Deprecated: use gst_element_factory_can_src_all_caps() instead.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-gboolean gst_element_factory_can_src_caps (GstElementFactory * factory,
-    const GstCaps * caps);
-#endif
-gboolean
-gst_element_factory_can_src_caps (GstElementFactory * factory,
-    const GstCaps * caps)
-{
-  return gst_element_factory_can_accept_all_caps_in_direction (factory, caps,
-      GST_PAD_SRC);
-}
-#endif /* GST_REMOVE_DEPRECATED */
-
-/**
- * gst_element_factory_can_sink_caps:
- * @factory: factory to query
- * @caps: the caps to check
- *
- * Checks if the factory can sink the given capability.
- *
- * Returns: %TRUE if it can sink the capabilities
- *
- * Deprecated: use gst_element_factory_can_sink_all_caps() instead.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-gboolean gst_element_factory_can_sink_caps (GstElementFactory * factory,
-    const GstCaps * caps);
-#endif
-gboolean
-gst_element_factory_can_sink_caps (GstElementFactory * factory,
-    const GstCaps * caps)
-{
-  return gst_element_factory_can_accept_all_caps_in_direction (factory, caps,
-      GST_PAD_SINK);
-}
-#endif /* GST_REMOVE_DEPRECATED */
-
-/**
  * gst_element_factory_can_sink_all_caps:
  * @factory: factory to query
  * @caps: the caps to check
