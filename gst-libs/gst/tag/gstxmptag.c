@@ -93,22 +93,21 @@ typedef void (*XmpDeserializationFunc) (XmpTag * xmptag, GstTagList * taglist,
 struct _XmpSerializationData
 {
   GString *data;
-  GList *schemas;
+  const gchar **schemas;
 };
 
 static gboolean
 xmp_serialization_data_use_schema (XmpSerializationData * serdata,
     const gchar * schemaname)
 {
-  GList *iter;
+  gint i = 0;
   if (serdata->schemas == NULL)
     return TRUE;
 
-  for (iter = serdata->schemas; iter; iter = g_list_next (iter)) {
-    const gchar *name = (const gchar *) iter->data;
-
-    if (strcmp (name, schemaname) == 0)
+  while (serdata->schemas[i] != NULL) {
+    if (strcmp (serdata->schemas[i], schemaname) == 0)
       return TRUE;
+    i++;
   }
   return FALSE;
 }
@@ -1574,7 +1573,7 @@ write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
  * gst_tag_list_to_xmp_buffer_full:
  * @list: tags
  * @read_only: does the container forbid inplace editing
- * @schemas: list of schemas to be used on serialization
+ * @schemas: %NULL terminated array of schemas to be used on serialization
  *
  * Formats a taglist as a xmp packet using only the selected
  * schemas. An empty list (%NULL) means that all schemas should
@@ -1586,7 +1585,7 @@ write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
  */
 GstBuffer *
 gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
-    GList * schemas)
+    const gchar ** schemas)
 {
   GstBuffer *buffer = NULL;
   XmpSerializationData serialization_data;

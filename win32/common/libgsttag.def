@@ -31,4 +31,11 @@ EXPORTS
 	gst_tag_to_vorbis_comments
 	gst_tag_to_vorbis_tag
 	gst_tag_xmp_list_schemas
+	gst_tag_xmp_writer_add_all_schemas
+	gst_tag_xmp_writer_add_schema
+	gst_tag_xmp_writer_get_type
+	gst_tag_xmp_writer_has_schema
+	gst_tag_xmp_writer_remove_all_schemas
+	gst_tag_xmp_writer_remove_schema
+	gst_tag_xmp_writer_tag_list_to_xmp_buffer
 	gst_vorbis_tag_add
