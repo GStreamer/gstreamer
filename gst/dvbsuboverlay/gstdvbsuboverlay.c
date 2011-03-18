@@ -444,13 +444,13 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
   const guint8 *src;
   guint8 *dst_y, *dst_y2, *dst_u, *dst_v;
   gint x, y;
-  gint w2, h2;
+  gint w2;
   gint width = overlay->width;
   gint height = overlay->height;
   gint src_stride;
-  gint y_offset, y_height, y_width, y_stride;
-  gint u_offset, u_height, u_width, u_stride;
-  gint v_offset, v_height, v_width, v_stride;
+  gint y_offset, y_stride;
+  gint u_offset, u_stride;
+  gint v_offset, v_stride;
   gint scale = 0;
   gint scale_x = 0, scale_y = 0;        /* 16.16 fixed point */
 
@@ -463,20 +463,6 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
   v_offset =
       gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2, width,
       height);
-
-  y_height =
-      gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 0, height);
-  u_height =
-      gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 1, height);
-  v_height =
-      gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 2, height);
-
-  y_width =
-      gst_video_format_get_component_width (GST_VIDEO_FORMAT_I420, 0, width);
-  u_width =
-      gst_video_format_get_component_width (GST_VIDEO_FORMAT_I420, 1, width);
-  v_width =
-      gst_video_format_get_component_width (GST_VIDEO_FORMAT_I420, 2, width);
 
   y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
   u_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
@@ -528,7 +514,6 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
     ystep = (sub_region->h << 16) / dh;
 
     w2 = (dw + 1) / 2;
-    h2 = (dh + 1) / 2;
 
     src_stride = sub_region->pict.rowstride;
 
