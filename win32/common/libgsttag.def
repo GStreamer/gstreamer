@@ -24,9 +24,11 @@ EXPORTS
 	gst_tag_list_to_exif_buffer_with_tiff_header
 	gst_tag_list_to_vorbiscomment_buffer
 	gst_tag_list_to_xmp_buffer
+	gst_tag_list_to_xmp_buffer_full
 	gst_tag_parse_extended_comment
 	gst_tag_register_musicbrainz_tags
 	gst_tag_to_id3_tag
 	gst_tag_to_vorbis_comments
 	gst_tag_to_vorbis_tag
+	gst_tag_xmp_list_schemas
 	gst_vorbis_tag_add
