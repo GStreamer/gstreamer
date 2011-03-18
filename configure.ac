@@ -967,6 +967,14 @@ AG_GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
 ])
 AC_SUBST(LIBMMS_LIBS)
 
+dnl *** linsys ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LINSYS, true)
+AG_GST_CHECK_FEATURE(LINSYS, [Linear Systems SDI plugin], linsys, [
+  if test "x$host" = "xlinux" ; then
+    HAVE_LINSYS="yes"
+  fi
+])
+
 dnl *** modplug ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MODPLUG, true)
 AG_GST_CHECK_FEATURE(MODPLUG, modplug, modplug, [
@@ -1797,6 +1805,7 @@ sys/dshowsrcwrapper/Makefile
 sys/dshowvideosink/Makefile
 sys/dvb/Makefile
 sys/fbdev/Makefile
+sys/linsys/Makefile
 sys/osxvideo/Makefile
 sys/qtwrapper/Makefile
 sys/shm/Makefile
