@@ -1782,7 +1782,7 @@ gst_rtp_buffer_add_extension_twobytes_header (GstBuffer * buffer,
     gst_rtp_buffer_set_extension_data (buffer, (0x100 << 4) | (appbits & 0x0F),
         wordlen);
   } else {
-    wordlen = (size + 1) / 4 + (((size + 1) % 4) ? 1 : 0);
+    wordlen = (size + 2) / 4 + (((size + 2) % 4) ? 1 : 0);
 
     gst_rtp_buffer_set_extension_data (buffer, (0x100 << 4) | (appbits & 0x0F),
         wordlen);
