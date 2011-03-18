@@ -52,6 +52,12 @@ else
 check_jifmux =
 endif
 
+if USE_COG
+check_logoinsert = elements/logoinsert
+else
+check_logoinsert =
+endif
+
 if USE_MPEG2ENC
 check_mpeg2enc = elements/mpeg2enc
 else
@@ -160,6 +166,7 @@ check_PROGRAMS = \
 	elements/legacyresample \
         $(check_jifmux) \
 	elements/jpegparse \
+	$(check_logoinsert) \
 	elements/qtmux \
 	elements/mxfdemux \
 	elements/mxfmux \

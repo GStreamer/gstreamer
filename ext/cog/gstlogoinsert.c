@@ -79,14 +79,15 @@ enum
 
 GType gst_logoinsert_get_type (void);
 
-static void gst_logoinsert_base_init (gpointer g_class);
-static void gst_logoinsert_class_init (gpointer g_class, gpointer class_data);
-static void gst_logoinsert_init (GTypeInstance * instance, gpointer g_class);
+GST_DEBUG_CATEGORY_STATIC (gst_logoinsert_debug_category);
+#define GST_CAT_DEFAULT gst_logoinsert_debug_category
 
 static void gst_logoinsert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_logoinsert_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_logoinsert_dispose (GObject * object);
+static void gst_logoinsert_finalize (GObject * object);
 
 static void
 gst_logoinsert_set_location (GstLogoinsert * li, const char *location);
@@ -114,30 +115,14 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
 
-GType
-gst_logoinsert_get_type (void)
-{
-  static GType compress_type = 0;
+/* class initialization */
 
-  if (!compress_type) {
-    static const GTypeInfo compress_info = {
-      sizeof (GstLogoinsertClass),
-      gst_logoinsert_base_init,
-      NULL,
-      gst_logoinsert_class_init,
-      NULL,
-      NULL,
-      sizeof (GstLogoinsert),
-      0,
-      gst_logoinsert_init,
-    };
+#define DEBUG_INIT(bla) \
+  GST_DEBUG_CATEGORY_INIT (gst_logoinsert_debug_category, "logoinsert", 0, \
+      "debug category for logoinsert element");
 
-    compress_type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-        "GstLogoinsert", &compress_info, 0);
-  }
-  return compress_type;
-}
-
+GST_BOILERPLATE_FULL (GstLogoinsert, gst_logoinsert, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
 static void
 gst_logoinsert_base_init (gpointer g_class)
@@ -156,18 +141,18 @@ gst_logoinsert_base_init (gpointer g_class)
 }
 
 static void
-gst_logoinsert_class_init (gpointer g_class, gpointer class_data)
+gst_logoinsert_class_init (GstLogoinsertClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *base_transform_class;
-  GstLogoinsertClass *filter_class;
 
-  gobject_class = G_OBJECT_CLASS (g_class);
-  base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
-  filter_class = GST_LOGOINSERT_CLASS (g_class);
+  gobject_class = G_OBJECT_CLASS (klass);
+  base_transform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_logoinsert_set_property;
   gobject_class->get_property = gst_logoinsert_get_property;
+  gobject_class->dispose = gst_logoinsert_dispose;
+  gobject_class->finalize = gst_logoinsert_finalize;
 
   g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "location",
@@ -183,7 +168,8 @@ gst_logoinsert_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_logoinsert_init (GTypeInstance * instance, gpointer g_class)
+gst_logoinsert_init (GstLogoinsert * logoinsert,
+    GstLogoinsertClass * logoinsert_class)
 {
 
   GST_DEBUG ("gst_logoinsert_init");
@@ -234,6 +220,47 @@ gst_logoinsert_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+void
+gst_logoinsert_dispose (GObject * object)
+{
+  GstLogoinsert *logoinsert;
+
+  g_return_if_fail (GST_IS_LOGOINSERT (object));
+  logoinsert = GST_LOGOINSERT (object);
+
+  /* clean up as possible.  may be called multiple times */
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+void
+gst_logoinsert_finalize (GObject * object)
+{
+  GstLogoinsert *logoinsert;
+
+  g_return_if_fail (GST_IS_LOGOINSERT (object));
+  logoinsert = GST_LOGOINSERT (object);
+
+  g_free (logoinsert->location);
+  if (logoinsert->buffer) {
+    gst_buffer_unref (logoinsert->buffer);
+  }
+  if (logoinsert->overlay_frame) {
+    cog_frame_unref (logoinsert->overlay_frame);
+    logoinsert->overlay_frame = NULL;
+  }
+  if (logoinsert->alpha_frame) {
+    cog_frame_unref (logoinsert->alpha_frame);
+    logoinsert->alpha_frame = NULL;
+  }
+  if (logoinsert->argb_frame) {
+    cog_frame_unref (logoinsert->argb_frame);
+    logoinsert->argb_frame = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static gboolean
 gst_logoinsert_set_caps (GstBaseTransform * base_transform,
     GstCaps * incaps, GstCaps * outcaps)
@@ -257,10 +284,11 @@ gst_logoinsert_transform_ip (GstBaseTransform * base_transform, GstBuffer * buf)
   g_return_val_if_fail (GST_IS_LOGOINSERT (base_transform), GST_FLOW_ERROR);
   li = GST_LOGOINSERT (base_transform);
 
-  frame = gst_cog_buffer_wrap (buf, li->format, li->width, li->height);
-
   if (li->argb_frame == NULL)
     return GST_FLOW_OK;
+
+  frame = gst_cog_buffer_wrap (gst_buffer_ref (buf),
+      li->format, li->width, li->height);
 
   if (li->overlay_frame == NULL) {
     CogFrame *f;
@@ -308,6 +336,7 @@ gst_logoinsert_transform_ip (GstBaseTransform * base_transform, GstBuffer * buf)
     }
   }
 
+  cog_frame_unref (frame);
 
   return GST_FLOW_OK;
 }
@@ -427,6 +456,7 @@ cog_frame_new_from_png (void *data, int size)
 
   frame_data = g_malloc (width * height * 4);
   frame = cog_frame_new_from_data_ARGB (frame_data, width, height);
+  frame->regions[0] = frame_data;
 
   rowbytes = png_get_rowbytes (png_ptr, info_ptr);
   rows = (png_bytep *) g_malloc (sizeof (png_bytep) * height);
