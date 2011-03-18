@@ -23,10 +23,13 @@
 #ifndef __GST_MEMORY_H__
 #define __GST_MEMORY_H__
 
+#include <gst/gst.h>
+
 G_BEGIN_DECLS
 
 typedef struct _GstMemory GstMemory;
 typedef struct _GstMemoryInfo GstMemoryInfo;
+typedef struct _GstMemoryImpl GstMemoryImpl;
 
 /**
  * GstMemory:
@@ -36,10 +39,15 @@ typedef struct _GstMemoryInfo GstMemoryInfo;
  * as the first member of their structure.
  */
 struct _GstMemory {
-  const GstMemoryInfo *info;
+  const GstMemoryImpl *impl;
 
   gint refcount;
 };
+
+typedef enum {
+  GST_MAP_READ,
+  GST_MAP_WRITE,
+} GstMapFlags;
 
 /**
  * GST_MEMORY_TRACE_NAME:
@@ -51,10 +59,11 @@ struct _GstMemory {
 typedef gsize (*GstMemoryGetSizesFunction)  (GstMemory *mem, gsize *maxsize);
 
 typedef void  (*GstMemorySetSizeFunction)   (GstMemory *mem, gsize size);
-typedef gpointer (*GstMemoryMapFunction)    (GstMemory *mem, gsize offset, gsize *size,
+typedef gpointer (*GstMemoryMapFunction)    (GstMemory *mem, gsize *size, gsize *maxsize,
                                              GstMapFlags flags);
 typedef gboolean (*GstMemoryUnmapFunction)  (GstMemory *mem, gpointer data, gsize size);
 
+typedef void        (*GstMemoryFreeFunction)  (GstMemory *mem);
 typedef GstMemory * (*GstMemoryCopyFunction)  (GstMemory *mem);
 
 /**
@@ -66,13 +75,11 @@ typedef GstMemory * (*GstMemoryCopyFunction)  (GstMemory *mem);
  * structure.
  */
 struct _GstMemoryInfo {
-  GQuark                    impl;
-  gsize                     size;
-
   GstMemoryGetSizesFunction get_sizes;
   GstMemorySetSizeFunction  set_size;
   GstMemoryMapFunction      map;
   GstMemoryUnmapFunction    unmap;
+  GstMemoryFreeFunction     free;
   GstMemoryCopyFunction     copy;
 };
 
@@ -96,12 +103,9 @@ GstMemory * gst_memory_new_wrapped (gpointer data, GFreeFunc free_func,
 GstMemory * gst_memory_new_alloc   (gsize maxsize, gsize align);
 
 
+const GstMemoryImpl *  gst_memory_register    (const gchar *impl, const GstMemoryInfo *info);
+
 #if 0
-const GstMemoryInfo *  gst_memory_register    (const gchar *impl, gsize size,
-                                               GstMemoryGetSizesFunction get_sizes,
-                                               GstMemorySetSizeFunction  set_size,
-                                               GstMemoryMapFunction      map,
-                                               GstMemoryUnmapFunction    unmap);
 const GstMemoryInfo *  gst_memory_get_info    (const gchar * impl);
 #endif
 

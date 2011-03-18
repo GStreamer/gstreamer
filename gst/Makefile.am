@@ -73,6 +73,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstatomicqueue.c	\
 	gstmessage.c		\
 	gstmeta.c		\
+	gstmemory.c		\
 	gstminiobject.c		\
 	gstpad.c		\
 	gstpadtemplate.c	\
@@ -168,6 +169,7 @@ gst_headers =			\
 	gstmacros.h		\
 	gstmessage.h		\
 	gstmeta.h		\
+	gstmemory.h		\
 	gstminiobject.h		\
 	gstpad.h		\
 	gstpadtemplate.h	\
