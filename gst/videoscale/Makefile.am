@@ -8,7 +8,8 @@ libgstvideoscale_la_SOURCES = \
 	vs_image.c \
 	vs_scanline.c \
 	vs_4tap.c \
-	vs_fill_borders.c
+	vs_fill_borders.c \
+	vs_lanczos.c
 
 nodist_libgstvideoscale_la_SOURCES = $(ORC_NODIST_SOURCES)
 

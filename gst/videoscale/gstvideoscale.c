@@ -89,13 +89,22 @@ GST_DEBUG_CATEGORY (video_scale_debug);
 
 #define DEFAULT_PROP_METHOD       GST_VIDEO_SCALE_BILINEAR
 #define DEFAULT_PROP_ADD_BORDERS  FALSE
+#define DEFAULT_PROP_SHARPNESS    1.0
+#define DEFAULT_PROP_SHARPEN      0.0
+#define DEFAULT_PROP_DITHER       FALSE
+#define DEFAULT_PROP_SUBMETHOD    1
+#define DEFAULT_PROP_ENVELOPE     2.0
 
 enum
 {
   PROP_0,
   PROP_METHOD,
-  PROP_ADD_BORDERS
-      /* FILL ME */
+  PROP_ADD_BORDERS,
+  PROP_SHARPNESS,
+  PROP_SHARPEN,
+  PROP_DITHER,
+  PROP_SUBMETHOD,
+  PROP_ENVELOPE
 };
 
 #undef GST_VIDEO_SIZE_RANGE
@@ -144,6 +153,7 @@ gst_video_scale_method_get_type (void)
     {GST_VIDEO_SCALE_NEAREST, "Nearest Neighbour", "nearest-neighbour"},
     {GST_VIDEO_SCALE_BILINEAR, "Bilinear", "bilinear"},
     {GST_VIDEO_SCALE_4TAP, "4-tap", "4-tap"},
+    {GST_VIDEO_SCALE_LANCZOS, "Lanczos", "lanczos"},
     {0, NULL, NULL},
   };
 
@@ -251,6 +261,36 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
           DEFAULT_PROP_ADD_BORDERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_SHARPNESS,
+      g_param_spec_double ("sharpness", "Sharpness",
+          "Sharpness of filter", 0.0, 2.0, DEFAULT_PROP_SHARPNESS,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SHARPEN,
+      g_param_spec_double ("sharpen", "Sharpen",
+          "Sharpening", 0.0, 1.0, DEFAULT_PROP_SHARPEN,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DITHER,
+      g_param_spec_boolean ("dither", "Dither",
+          "Add dither (only used for Lanczos method)",
+          DEFAULT_PROP_DITHER,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+#if 0
+  /* I am hiding submethod for now, since it's poorly named, poorly
+   * documented, and will probably just get people into trouble. */
+  g_object_class_install_property (gobject_class, PROP_SUBMETHOD,
+      g_param_spec_int ("submethod", "submethod",
+          "submethod", 0, 3, DEFAULT_PROP_SUBMETHOD,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
+
+  g_object_class_install_property (gobject_class, PROP_ENVELOPE,
+      g_param_spec_double ("envelope", "Envelope",
+          "Size of filter envelope", 0.0, 5.0, DEFAULT_PROP_ENVELOPE,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_scale_transform_caps);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_scale_set_caps);
@@ -267,6 +307,11 @@ gst_video_scale_init (GstVideoScale * videoscale, GstVideoScaleClass * klass)
   videoscale->tmp_buf = NULL;
   videoscale->method = DEFAULT_PROP_METHOD;
   videoscale->add_borders = DEFAULT_PROP_ADD_BORDERS;
+  videoscale->submethod = DEFAULT_PROP_SUBMETHOD;
+  videoscale->sharpness = DEFAULT_PROP_SHARPNESS;
+  videoscale->sharpen = DEFAULT_PROP_SHARPEN;
+  videoscale->dither = DEFAULT_PROP_DITHER;
+  videoscale->envelope = DEFAULT_PROP_ENVELOPE;
 }
 
 static void
@@ -296,6 +341,31 @@ gst_video_scale_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (vscale);
       gst_base_transform_reconfigure (GST_BASE_TRANSFORM_CAST (vscale));
       break;
+    case PROP_SHARPNESS:
+      GST_OBJECT_LOCK (vscale);
+      vscale->sharpness = g_value_get_double (value);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
+    case PROP_SHARPEN:
+      GST_OBJECT_LOCK (vscale);
+      vscale->sharpen = g_value_get_double (value);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
+    case PROP_DITHER:
+      GST_OBJECT_LOCK (vscale);
+      vscale->dither = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
+    case PROP_SUBMETHOD:
+      GST_OBJECT_LOCK (vscale);
+      vscale->submethod = g_value_get_int (value);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
+    case PROP_ENVELOPE:
+      GST_OBJECT_LOCK (vscale);
+      vscale->envelope = g_value_get_double (value);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -317,6 +387,31 @@ gst_video_scale_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_ADD_BORDERS:
       GST_OBJECT_LOCK (vscale);
       g_value_set_boolean (value, vscale->add_borders);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
+    case PROP_SHARPNESS:
+      GST_OBJECT_LOCK (vscale);
+      g_value_set_double (value, vscale->sharpness);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
+    case PROP_SHARPEN:
+      GST_OBJECT_LOCK (vscale);
+      g_value_set_double (value, vscale->sharpen);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
+    case PROP_DITHER:
+      GST_OBJECT_LOCK (vscale);
+      g_value_set_boolean (value, vscale->dither);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
+    case PROP_SUBMETHOD:
+      GST_OBJECT_LOCK (vscale);
+      g_value_set_int (value, vscale->submethod);
+      GST_OBJECT_UNLOCK (vscale);
+      break;
+    case PROP_ENVELOPE:
+      GST_OBJECT_LOCK (vscale);
+      g_value_set_double (value, vscale->envelope);
       GST_OBJECT_UNLOCK (vscale);
       break;
     default:
@@ -1078,6 +1173,11 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
         case GST_VIDEO_SCALE_4TAP:
           vs_image_scale_4tap_RGBA (&dest, &src, videoscale->tmp_buf);
           break;
+        case GST_VIDEO_SCALE_LANCZOS:
+          vs_image_scale_lanczos_AYUV (&dest, &src, videoscale->tmp_buf,
+              videoscale->sharpness, videoscale->dither, videoscale->submethod,
+              videoscale->envelope, videoscale->sharpen);
+          break;
         default:
           goto unknown_mode;
       }
@@ -1216,6 +1316,17 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           vs_image_scale_4tap_Y (&dest, &src, videoscale->tmp_buf);
           vs_image_scale_4tap_Y (&dest_u, &src_u, videoscale->tmp_buf);
           vs_image_scale_4tap_Y (&dest_v, &src_v, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_LANCZOS:
+          vs_image_scale_lanczos_Y (&dest, &src, videoscale->tmp_buf,
+              videoscale->sharpness, videoscale->dither, videoscale->submethod,
+              videoscale->envelope, videoscale->sharpen);
+          vs_image_scale_lanczos_Y (&dest_u, &src_u, videoscale->tmp_buf,
+              videoscale->sharpness, videoscale->dither, videoscale->submethod,
+              videoscale->envelope, videoscale->sharpen);
+          vs_image_scale_lanczos_Y (&dest_v, &src_v, videoscale->tmp_buf,
+              videoscale->sharpness, videoscale->dither, videoscale->submethod,
+              videoscale->envelope, videoscale->sharpen);
           break;
         default:
           goto unknown_mode;
