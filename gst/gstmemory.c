@@ -38,6 +38,7 @@ typedef struct
 
   guint8 *data;
   GFreeFunc free_func;
+  gpointer free_data;
   gsize maxsize;
   gsize offset;
   gsize size;
@@ -54,16 +55,6 @@ _default_get_sizes (GstMemory * mem, gsize * maxsize)
     *maxsize = def->maxsize;
 
   return def->size;
-}
-
-static void
-_default_set_size (GstMemory * mem, gsize size)
-{
-  GstMemoryDefault *def = (GstMemoryDefault *) mem;
-
-  g_return_if_fail (def->size + def->offset > def->maxsize);
-
-  def->size = size;
 }
 
 static gpointer
@@ -95,7 +86,7 @@ _default_free (GstMemory * mem)
   GstMemoryDefault *def = (GstMemoryDefault *) mem;
 
   if (def->free_func)
-    def->free_func (def->data);
+    def->free_func (def->free_data);
 }
 
 static GstMemory *
@@ -107,6 +98,7 @@ _default_copy (GstMemory * mem)
   copy = g_slice_new (GstMemoryDefault);
   copy->mem.impl = _default_memory_impl;
   copy->data = g_memdup (def->data, def->maxsize);
+  copy->free_data = copy->data;
   copy->free_func = g_free;
   copy->maxsize = def->maxsize;
   copy->offset = def->offset;
@@ -115,17 +107,126 @@ _default_copy (GstMemory * mem)
   return (GstMemory *) copy;
 }
 
+static void
+_default_copy_into (GstMemory * mem, gsize offset, gpointer dest, gsize size)
+{
+  GstMemoryDefault *def = (GstMemoryDefault *) mem;
+
+  g_return_if_fail (size + def->offset + offset > def->maxsize);
+
+  memcpy (dest, def->data + def->offset + offset, size);
+}
+
+static void
+_default_trim (GstMemory * mem, gsize offset, gsize size)
+{
+  GstMemoryDefault *def = (GstMemoryDefault *) mem;
+
+  g_return_if_fail (size + def->offset + offset > def->maxsize);
+
+  def->offset += offset;
+  def->size = size;
+}
+
+static GstMemory *
+_default_sub (GstMemory * mem, gsize offset, gsize size)
+{
+  GstMemoryDefault *def = (GstMemoryDefault *) mem;
+  GstMemoryDefault *sub;
+
+  sub = g_slice_new (GstMemoryDefault);
+  sub->mem.impl = _default_memory_impl;
+  sub->data = def->data;
+  sub->free_data = gst_memory_ref (mem);
+  sub->free_func = (GFreeFunc) gst_memory_unref;
+  sub->maxsize = def->maxsize;
+  sub->offset = def->offset + offset;
+  sub->size = size;
+
+  return (GstMemory *) sub;
+}
+
+static void
+_fallback_copy_into (GstMemory * mem, gsize offset, gpointer dest, gsize size)
+{
+  guint8 *data;
+  gsize msize;
+
+  data = gst_memory_map (mem, &msize, NULL, GST_MAP_READ);
+  memcpy (dest, data + offset, size);
+  gst_memory_unmap (mem, data, msize);
+}
+
+static GstMemory *
+_fallback_copy (GstMemory * mem)
+{
+  GstMemory *copy;
+  gpointer data, cdata;
+  gsize size;
+
+  data = gst_memory_map (mem, &size, NULL, GST_MAP_READ);
+  cdata = g_memdup (data, size);
+  gst_memory_unmap (mem, data, size);
+
+  copy = gst_memory_new_wrapped (cdata, g_free, size, 0, size);
+
+  return copy;
+}
+
+static GstMemory *
+_fallback_sub (GstMemory * mem, gsize offset, gsize size)
+{
+  GstMemoryDefault *def = (GstMemoryDefault *) mem;
+  GstMemoryDefault *sub;
+
+  sub = g_slice_new (GstMemoryDefault);
+  sub->mem.impl = _default_memory_impl;
+  sub->data = def->data;
+  sub->free_data = sub->data;
+  sub->free_func = NULL;
+  sub->maxsize = def->maxsize;
+  sub->offset = def->offset + offset;
+  sub->size = size;
+
+  return (GstMemory *) sub;
+}
+
+static gboolean
+_fallback_is_span (GstMemory * mem1, GstMemory * mem2)
+{
+  return FALSE;
+}
+
+static GstMemory *
+_fallback_span (GstMemory * mem1, gsize offset, GstMemory * mem2, gsize size)
+{
+  return FALSE;
+}
+
 const GstMemoryImpl *
 gst_memory_register (const gchar * name, const GstMemoryInfo * info)
 {
   GstMemoryImpl *impl;
 
+#define INSTALL_FALLBACK(_t) \
+  if (impl->info._t == NULL) impl->info._t = _fallback_ ##_t;
+
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (info->get_sizes != NULL, NULL);
+  g_return_val_if_fail (info->trim != NULL, NULL);
+  g_return_val_if_fail (info->map != NULL, NULL);
+  g_return_val_if_fail (info->unmap != NULL, NULL);
+  g_return_val_if_fail (info->free != NULL, NULL);
 
   impl = g_slice_new (GstMemoryImpl);
   impl->name = g_quark_from_string (name);
   impl->info = *info;
+  INSTALL_FALLBACK (copy);
+  INSTALL_FALLBACK (copy_into);
+  INSTALL_FALLBACK (sub);
+  INSTALL_FALLBACK (is_span);
+  INSTALL_FALLBACK (span);
 
   GST_DEBUG ("register \"%s\" of size %" G_GSIZE_FORMAT, name);
 
@@ -134,6 +235,7 @@ gst_memory_register (const gchar * name, const GstMemoryInfo * info)
   g_hash_table_insert (memoryimpl, (gpointer) name, (gpointer) impl);
   g_static_rw_lock_writer_unlock (&lock);
 #endif
+#undef INSTALL_FALLBACK
 
   return impl;
 }
@@ -143,11 +245,13 @@ _gst_memory_init (void)
 {
   static const GstMemoryInfo info = {
     _default_get_sizes,
-    _default_set_size,
+    _default_trim,
     _default_map,
     _default_unmap,
     _default_free,
-    _default_copy
+    _default_copy,
+    _default_copy_into,
+    _default_sub
   };
   _default_memory_impl = gst_memory_register ("GstMemoryDefault", &info);
 }
@@ -179,14 +283,6 @@ gst_memory_get_sizes (GstMemory * mem, gsize * maxsize)
   return mem->impl->info.get_sizes (mem, maxsize);
 }
 
-void
-gst_memory_set_size (GstMemory * mem, gsize size)
-{
-  g_return_if_fail (mem != NULL);
-
-  mem->impl->info.set_size (mem, size);
-}
-
 gpointer
 gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
     GstMapFlags flags)
@@ -212,6 +308,31 @@ gst_memory_copy (GstMemory * mem)
   return mem->impl->info.copy (mem);
 }
 
+void
+gst_memory_copy_into (GstMemory * mem, gsize offset, gpointer dest, gsize size)
+{
+  g_return_if_fail (mem != NULL);
+  g_return_if_fail (dest != NULL);
+
+  return mem->impl->info.copy_into (mem, offset, dest, size);
+}
+
+void
+gst_memory_trim (GstMemory * mem, gsize offset, gsize size)
+{
+  g_return_if_fail (mem != NULL);
+
+  mem->impl->info.trim (mem, offset, size);
+}
+
+GstMemory *
+gst_memory_sub (GstMemory * mem, gsize offset, gsize size)
+{
+  g_return_val_if_fail (mem != NULL, NULL);
+
+  return mem->impl->info.sub (mem, offset, size);
+}
+
 GstMemory *
 gst_memory_new_wrapped (gpointer data, GFreeFunc free_func,
     gsize maxsize, gsize offset, gsize size)
@@ -221,6 +342,7 @@ gst_memory_new_wrapped (gpointer data, GFreeFunc free_func,
   mem = g_slice_new (GstMemoryDefault);
   mem->mem.impl = _default_memory_impl;
   mem->data = data;
+  mem->free_data = data;
   mem->free_func = free_func;
   mem->maxsize = maxsize;
   mem->offset = offset;

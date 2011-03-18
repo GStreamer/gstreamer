@@ -58,13 +58,19 @@ typedef enum {
 
 typedef gsize (*GstMemoryGetSizesFunction)  (GstMemory *mem, gsize *maxsize);
 
-typedef void  (*GstMemorySetSizeFunction)   (GstMemory *mem, gsize size);
 typedef gpointer (*GstMemoryMapFunction)    (GstMemory *mem, gsize *size, gsize *maxsize,
                                              GstMapFlags flags);
 typedef gboolean (*GstMemoryUnmapFunction)  (GstMemory *mem, gpointer data, gsize size);
 
-typedef void        (*GstMemoryFreeFunction)  (GstMemory *mem);
-typedef GstMemory * (*GstMemoryCopyFunction)  (GstMemory *mem);
+typedef void        (*GstMemoryFreeFunction)      (GstMemory *mem);
+typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem);
+typedef void        (*GstMemoryCopyIntoFunction)  (GstMemory *mem, gsize offset,
+                                                   gpointer dest, gsize size);
+typedef void        (*GstMemoryTrimFunction)  (GstMemory *mem, gsize offset, gsize size);
+typedef GstMemory * (*GstMemorySubFunction)   (GstMemory *mem, gsize offset, gsize size);
+typedef gboolean    (*GstMemoryIsSpanFunction) (GstMemory *mem1, GstMemory *mem2);
+typedef GstMemory * (*GstMemorySpanFunction)  (GstMemory *mem1, gsize offset,
+                                               GstMemory *mem2, gsize size);
 
 /**
  * GstMemoryInfo:
@@ -76,11 +82,16 @@ typedef GstMemory * (*GstMemoryCopyFunction)  (GstMemory *mem);
  */
 struct _GstMemoryInfo {
   GstMemoryGetSizesFunction get_sizes;
-  GstMemorySetSizeFunction  set_size;
+  GstMemoryTrimFunction     trim;
   GstMemoryMapFunction      map;
   GstMemoryUnmapFunction    unmap;
   GstMemoryFreeFunction     free;
+
   GstMemoryCopyFunction     copy;
+  GstMemoryCopyIntoFunction copy_into;
+  GstMemorySubFunction      sub;
+  GstMemoryIsSpanFunction   is_span;
+  GstMemorySpanFunction     span;
 };
 
 void _gst_memory_init (void);
@@ -89,13 +100,20 @@ GstMemory * gst_memory_ref        (GstMemory *mem);
 void        gst_memory_unref      (GstMemory *mem);
 
 gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *maxsize);
-void        gst_memory_set_size   (GstMemory *mem, gsize size);
+void        gst_memory_trim       (GstMemory *mem, gsize offset, gsize size);
 
 gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,
                                    GstMapFlags flags);
 gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gsize size);
 
 GstMemory * gst_memory_copy       (GstMemory *mem);
+void        gst_memory_copy_into  (GstMemory *mem, gsize offset, gpointer dest,
+                                   gsize size);
+GstMemory * gst_memory_sub        (GstMemory *mem, gsize offset, gsize size);
+
+gboolean    gst_memory_is_span    (GstMemory *mem1, GstMemory *mem2);
+GstMemory * gst_memory_span       (GstMemory *mem1, gsize offset,
+                                   GstMemory *mem2, gsize size);
 
 
 GstMemory * gst_memory_new_wrapped (gpointer data, GFreeFunc free_func,
