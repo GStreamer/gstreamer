@@ -336,6 +336,17 @@ gst_wrapper_camera_bin_src_caps_cb (GObject * gobject, GParamSpec * pspec,
   gst_caps_unref (caps);
 };
 
+static void
+gst_wrapper_camera_bin_src_max_zoom_cb (GObject * self, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstBaseCameraSrc *bcamsrc = (GstBaseCameraSrc *) user_data;
+
+  g_object_get (self, "max-zoom", &bcamsrc->max_zoom, NULL);
+  g_object_notify (G_OBJECT (bcamsrc), "max-zoom");
+}
+
+
 /**
  * gst_wrapper_camera_bin_src_construct_pipeline:
  * @bcamsrc: camerasrc object
@@ -378,6 +389,13 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     }
     /* we lost the reference */
     self->app_vid_src = NULL;
+
+    /* we listen for changes to max-zoom in the video src so that
+     * we can proxy them to the basecamerasrc property */
+    if (g_object_class_find_property (G_OBJECT_GET_CLASS (bcamsrc), "max-zoom")) {
+      g_signal_connect (G_OBJECT (self->src_vid_src), "notify::max-zoom",
+          (GCallback) gst_wrapper_camera_bin_src_max_zoom_cb, bcamsrc);
+    }
 
     /* add a buffer probe to the src elemento to drop EOS from READY->NULL */
     {

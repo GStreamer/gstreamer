@@ -61,6 +61,7 @@ enum
   PROP_0,
   PROP_MODE,
   PROP_ZOOM,
+  PROP_MAX_ZOOM,
   PROP_READY_FOR_CAPTURE,
   PROP_POST_PREVIEW,
   PROP_PREVIEW_CAPS,
@@ -338,6 +339,12 @@ gst_base_camera_src_set_property (GObject * object,
       break;
     case PROP_ZOOM:{
       self->zoom = g_value_get_float (value);
+      /* limit to max-zoom */
+      if (self->zoom > self->max_zoom) {
+        GST_DEBUG_OBJECT (self, "Clipping zoom %f to max-zoom %f", self->zoom,
+            self->max_zoom);
+        self->zoom = self->max_zoom;
+      }
       /* does not set it if in NULL, the src is not created yet */
       if (GST_STATE (self) != GST_STATE_NULL)
         gst_base_camera_src_setup_zoom (self);
@@ -384,6 +391,9 @@ gst_base_camera_src_get_property (GObject * object,
       break;
     case PROP_ZOOM:
       g_value_set_float (value, self->zoom);
+      break;
+    case PROP_MAX_ZOOM:
+      g_value_set_float (value, self->max_zoom);
       break;
     case PROP_POST_PREVIEW:
       g_value_set_boolean (value, self->post_preview);
@@ -530,8 +540,14 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ZOOM,
       g_param_spec_float ("zoom", "Zoom",
-          "Digital zoom factor (e.g. 1.5 means 1.5x)", MIN_ZOOM, MAX_ZOOM,
+          "Digital zoom factor (e.g. 1.5 means 1.5x)", MIN_ZOOM, G_MAXFLOAT,
           DEFAULT_ZOOM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_ZOOM,
+      g_param_spec_float ("max-zoom", "Maximum zoom level (note: may change "
+          "depending on resolution/implementation)",
+          "Digital zoom factor (e.g. 1.5 means 1.5x)", MIN_ZOOM, G_MAXFLOAT,
+          MAX_ZOOM, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBaseCameraSrc:post-previews:
@@ -603,6 +619,7 @@ gst_base_camera_src_init (GstBaseCameraSrc * self,
   self->width = DEFAULT_WIDTH;
   self->height = DEFAULT_HEIGHT;
   self->zoom = DEFAULT_ZOOM;
+  self->max_zoom = MAX_ZOOM;
   self->mode = MODE_IMAGE;
 
   self->capturing = FALSE;

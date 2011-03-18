@@ -78,8 +78,8 @@ struct _GstBaseCameraSrc
   gint width;
   gint height;
 
-  /* The digital zoom (from 100% to 1000%) */
   gfloat zoom;
+  gfloat max_zoom;
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };

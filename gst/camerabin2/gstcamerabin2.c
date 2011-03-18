@@ -109,6 +109,7 @@ enum
   PROP_AUDIO_CAPTURE_SUPPORTED_CAPS,
   PROP_AUDIO_CAPTURE_CAPS,
   PROP_ZOOM,
+  PROP_MAX_ZOOM,
   PROP_IMAGE_CAPTURE_ENCODER,
   PROP_IMAGE_CAPTURE_MUXER,
   PROP_IDLE
@@ -571,6 +572,12 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           "Digital zoom factor (e.g. 1.5 means 1.5x)", MIN_ZOOM, MAX_ZOOM,
           DEFAULT_ZOOM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_MAX_ZOOM,
+      g_param_spec_float ("max-zoom", "Maximum zoom level (note: may change "
+          "depending on resolution/implementation)",
+          "Digital zoom factor (e.g. 1.5 means 1.5x)", MIN_ZOOM, G_MAXFLOAT,
+          MAX_ZOOM, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   /* TODO
    * Review before stable
    * - We use a profile for video recording properties and here we have
@@ -649,6 +656,7 @@ gst_camera_bin_init (GstCameraBin * camera)
   camera->viewfinderbin = gst_element_factory_make ("viewfinderbin", "vf-bin");
   camera->imagebin = gst_element_factory_make ("imagecapturebin", "imagebin");
   camera->zoom = DEFAULT_ZOOM;
+  camera->max_zoom = MAX_ZOOM;
 
   /* capsfilters are created here as we proxy their caps properties and
    * this way we avoid having to store the caps while on NULL state to 
@@ -901,6 +909,17 @@ videosink_event_probe (GstPad * pad, GstEvent * evt, gpointer data)
   return TRUE;
 }
 
+static void
+gst_camera_bin_src_notify_max_zoom_cb (GObject * self, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstCameraBin *camera = (GstCameraBin *) user_data;
+
+  g_object_get (self, "max-zoom", &camera->max_zoom, NULL);
+  GST_DEBUG_OBJECT (camera, "Max zoom updated to %f", camera->max_zoom);
+  g_object_notify (G_OBJECT (camera), "max-zoom");
+}
+
 /**
  * gst_camera_bin_create_elements:
  * @param camera: the #GstCameraBin
@@ -1066,6 +1085,8 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
           camera->preview_filter, NULL);
     }
     g_object_set (camera->src, "zoom", camera->zoom, NULL);
+    g_signal_connect (G_OBJECT (camera->src), "notify::max-zoom",
+        (GCallback) gst_camera_bin_src_notify_max_zoom_cb, camera);
   }
   if (new_src) {
     gst_bin_add (GST_BIN_CAST (camera), gst_object_ref (camera->src));
@@ -1397,6 +1418,12 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ZOOM:
       camera->zoom = g_value_get_float (value);
+      /* limit to max-zoom */
+      if (camera->zoom > camera->max_zoom) {
+        GST_DEBUG_OBJECT (camera, "Clipping zoom %f to max-zoom %f",
+            camera->zoom, camera->max_zoom);
+        camera->zoom = camera->max_zoom;
+      }
       if (camera->src)
         g_object_set (camera->src, "zoom", camera->zoom, NULL);
       break;
@@ -1556,6 +1583,9 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
     }
     case PROP_ZOOM:
       g_value_set_float (value, camera->zoom);
+      break;
+    case PROP_MAX_ZOOM:
+      g_value_set_float (value, camera->max_zoom);
       break;
     case PROP_IMAGE_CAPTURE_ENCODER:{
       GstElement *enc;

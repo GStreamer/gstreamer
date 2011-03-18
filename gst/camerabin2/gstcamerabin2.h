@@ -87,6 +87,7 @@ struct _GstCameraBin
   GstElement *preview_filter;
   GstEncodingProfile *video_profile;
   gfloat zoom;
+  gfloat max_zoom;
 
   gboolean elements_created;
 };
