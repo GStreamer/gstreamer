@@ -5,6 +5,7 @@
  * Copyright (C) 2007 Wim Taymans <wim.taymans@gmail.com>
  * Copyright (C) 2007 Andy Wingo <wingo@pobox.com>
  * Copyright (C) 2008 Nokia Corporation. (contact <stefan.kost@nokia.com>)
+ * Copyright (C) 2011 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -149,6 +150,7 @@ struct _GstSelectorPad
   gboolean eos;                 /* when EOS has been received */
   gboolean eos_sent;            /* when EOS was sent downstream */
   gboolean discont;             /* after switching we create a discont */
+  gboolean flushing;            /* set after flush-start and before flush-stop */
   gboolean always_ok;
   GstSegment segment;           /* the current segment on the pad */
   GstTagList *tags;             /* last tags received on the pad */
@@ -344,6 +346,7 @@ gst_selector_pad_reset (GstSelectorPad * pad)
   pad->eos_sent = FALSE;
   pad->segment_pending = FALSE;
   pad->discont = FALSE;
+  pad->flushing = FALSE;
   gst_segment_init (&pad->segment, GST_FORMAT_UNDEFINED);
   GST_OBJECT_UNLOCK (pad);
 }
@@ -397,7 +400,11 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      /* FIXME, flush out the waiter */
+      /* Unblock the pad if it's waiting */
+      GST_INPUT_SELECTOR_LOCK (sel);
+      selpad->flushing = TRUE;
+      GST_INPUT_SELECTOR_BROADCAST (sel);
+      GST_INPUT_SELECTOR_UNLOCK (sel);
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_INPUT_SELECTOR_LOCK (sel);
@@ -592,9 +599,9 @@ not_active:
 /* must be called with the SELECTOR_LOCK, will block while the pad is blocked 
  * or return TRUE when flushing */
 static gboolean
-gst_input_selector_wait (GstInputSelector * self, GstPad * pad)
+gst_input_selector_wait (GstInputSelector * self, GstSelectorPad * pad)
 {
-  while (self->blocked && !self->flushing) {
+  while (self->blocked && !self->flushing && !pad->flushing) {
     /* we can be unlocked here when we are shutting down (flushing) or when we
      * get unblocked */
     GST_INPUT_SELECTOR_WAIT (self);
@@ -621,7 +628,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
 
   GST_INPUT_SELECTOR_LOCK (sel);
   /* wait or check for flushing */
-  if (gst_input_selector_wait (sel, pad))
+  if (gst_input_selector_wait (sel, selpad))
     goto flushing;
 
   GST_LOG_OBJECT (pad, "getting active pad");
