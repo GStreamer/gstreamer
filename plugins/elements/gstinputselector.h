@@ -56,6 +56,7 @@ struct _GstInputSelector {
   GstPad *active_sinkpad;
   guint n_pads;
   guint padcount;
+  gboolean sync_streams;
 
   GstSegment segment;      /* the output segment */
   gboolean pending_close;  /* if we should push a close first */
