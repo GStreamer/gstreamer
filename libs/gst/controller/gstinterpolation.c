@@ -573,7 +573,7 @@ _interpolate_cubic_update_cache_##vtype (GstInterpolationControlSource *self) \
   \
   GSequenceIter *iter; \
   GstControlPoint *cp; \
-  GstClockTime x_prev, x, x_next; \
+  GstClockTime x, x_next; \
   g##vtype y_prev, y, y_next; \
   \
   /* Fill linear system of equations */ \
@@ -592,7 +592,6 @@ _interpolate_cubic_update_cache_##vtype (GstInterpolationControlSource *self) \
   \
   for (i = 1; i < n-1; i++) { \
     /* Shuffle x and y values */ \
-    x_prev = x; \
     y_prev = y; \
     x = x_next; \
     y = y_next; \
