@@ -1304,17 +1304,24 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
 {
-  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
+  GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
   GstPad *peer;
   gboolean res;
 
-  if (!(peer = gst_pad_get_peer (queue->sinkpad)))
+  if (G_UNLIKELY (queue == NULL))
     return FALSE;
+
+  if (!(peer = gst_pad_get_peer (queue->sinkpad))) {
+    gst_object_unref (queue);
+    return FALSE;
+  }
 
   res = gst_pad_query (peer, query);
   gst_object_unref (peer);
-  if (!res)
+  if (!res) {
+    gst_object_unref (queue);
     return FALSE;
+  }
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -1370,6 +1377,7 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
+  gst_object_unref (queue);
   return TRUE;
 }
 
