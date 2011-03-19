@@ -31,9 +31,16 @@ typedef struct _GstMemory GstMemory;
 typedef struct _GstMemoryInfo GstMemoryInfo;
 typedef struct _GstMemoryImpl GstMemoryImpl;
 
+typedef enum {
+  GST_MEMORY_FLAG_READONLY = (1 << 0),
+  GST_MEMORY_FLAG_MUTABLE  = (1 << 1),
+} GstMemoryFlags;
+
 /**
  * GstMemory:
- * @info: pointer to the #GstMemoryInfo
+ * @impl: pointer to the #GstMemoryImpl
+ * @refcount: refcount
+ * @paret: parent memory block
  *
  * Base structure for memory implementations. Custom memory will put this structure
  * as the first member of their structure.
@@ -41,7 +48,9 @@ typedef struct _GstMemoryImpl GstMemoryImpl;
 struct _GstMemory {
   const GstMemoryImpl *impl;
 
-  gint refcount;
+  GstMemoryFlags  flags;
+  gint            refcount;
+  GstMemory      *parent;
 };
 
 typedef enum {
@@ -64,7 +73,7 @@ typedef gboolean (*GstMemoryUnmapFunction)  (GstMemory *mem, gpointer data, gsiz
 
 typedef void        (*GstMemoryFreeFunction)      (GstMemory *mem);
 typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem);
-typedef void        (*GstMemoryCopyIntoFunction)  (GstMemory *mem, gsize offset,
+typedef void        (*GstMemoryExtractFunction)   (GstMemory *mem, gsize offset,
                                                    gpointer dest, gsize size);
 typedef void        (*GstMemoryTrimFunction)  (GstMemory *mem, gsize offset, gsize size);
 typedef GstMemory * (*GstMemorySubFunction)   (GstMemory *mem, gsize offset, gsize size);
@@ -74,11 +83,9 @@ typedef GstMemory * (*GstMemorySpanFunction)  (GstMemory *mem1, gsize offset,
 
 /**
  * GstMemoryInfo:
- * @impl: tag indentifying the implementor of the api
- * @size: size of the memory structure
+ * @get_sizes:
  *
- * The #GstMemoryInfo provides information about a specific metadata
- * structure.
+ * The #GstMemoryInfo is used to register new memory implementations.
  */
 struct _GstMemoryInfo {
   GstMemoryGetSizesFunction get_sizes;
@@ -88,7 +95,7 @@ struct _GstMemoryInfo {
   GstMemoryFreeFunction     free;
 
   GstMemoryCopyFunction     copy;
-  GstMemoryCopyIntoFunction copy_into;
+  GstMemoryExtractFunction  extract;
   GstMemorySubFunction      sub;
   GstMemoryIsSpanFunction   is_span;
   GstMemorySpanFunction     span;
@@ -107,7 +114,7 @@ gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,
 gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gsize size);
 
 GstMemory * gst_memory_copy       (GstMemory *mem);
-void        gst_memory_copy_into  (GstMemory *mem, gsize offset, gpointer dest,
+void        gst_memory_extract    (GstMemory *mem, gsize offset, gpointer dest,
                                    gsize size);
 GstMemory * gst_memory_sub        (GstMemory *mem, gsize offset, gsize size);
 
