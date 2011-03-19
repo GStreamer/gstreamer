@@ -93,6 +93,7 @@ typedef enum {
  * @GST_EVENT_SINK_MESSAGE: An event that sinks turn into a message. Used to
  *                          send messages that should be emitted in sync with
  *                          rendering.
+ *                          Since: 0.10.26
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements should adjust their processing
  *                 rate.
