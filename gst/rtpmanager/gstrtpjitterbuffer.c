@@ -2084,6 +2084,8 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
   gboolean res = FALSE;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (jitterbuffer == NULL))
+    return FALSE;
   priv = jitterbuffer->priv;
 
   switch (GST_QUERY_TYPE (query)) {
