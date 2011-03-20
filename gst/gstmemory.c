@@ -51,8 +51,9 @@ _default_mem_init (GstMemoryDefault * mem, GstMemory * parent,
     gsize slice_size, gpointer data, GFreeFunc free_func,
     gsize maxsize, gsize offset, gsize size)
 {
-  mem->mem.refcount = 1;
   mem->mem.impl = data ? _default_mem_impl : _default_sub_impl;
+  mem->mem.flags = 0;
+  mem->mem.refcount = 1;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
   mem->slice_size = slice_size;
   mem->data = data;
@@ -67,10 +68,38 @@ _default_mem_new (GstMemory * parent, gpointer data,
     GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
 {
   GstMemoryDefault *mem;
+  gsize slice_size;
 
-  mem = g_slice_new (GstMemoryDefault);
-  _default_mem_init (mem, parent, sizeof (GstMemoryDefault),
+  slice_size = sizeof (GstMemoryDefault);
+
+  mem = g_slice_alloc (slice_size);
+  _default_mem_init (mem, parent, slice_size,
       data, free_func, maxsize, offset, size);
+
+  return mem;
+}
+
+static GstMemoryDefault *
+_default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
+{
+  GstMemoryDefault *mem;
+  gsize aoffset, slice_size;
+  guint8 *data;
+
+  /* alloc header and data in one block */
+  slice_size = sizeof (GstMemoryDefault) + maxsize + align;
+
+  mem = g_slice_alloc (slice_size);
+  if (mem == NULL)
+    return NULL;
+
+  data = (guint8 *) mem + sizeof (GstMemoryDefault);
+
+  if ((aoffset = ((guintptr) data & align)))
+    aoffset = align - aoffset;
+
+  _default_mem_init (mem, NULL, slice_size, data, NULL, maxsize + align,
+      aoffset + offset, size);
 
   return mem;
 }
@@ -158,11 +187,9 @@ static GstMemoryDefault *
 _default_mem_copy (GstMemoryDefault * mem)
 {
   GstMemoryDefault *copy;
-  gpointer data;
 
-  data = g_memdup (mem->data, mem->maxsize);
-  copy = _default_mem_new (NULL, data, g_free, mem->maxsize,
-      mem->offset, mem->size);
+  copy = _default_mem_new_block (mem->maxsize, 0, mem->offset, mem->size);
+  memcpy (copy->data + copy->offset, mem->data, mem->maxsize);
 
   return copy;
 }
@@ -222,16 +249,13 @@ _default_mem_span (GstMemoryDefault * mem1, gsize offset,
     span =
         _default_mem_sub (parent, mem1->offset - parent->offset + offset, size);
   } else {
-    guint8 *data;
     gsize len1;
 
-    data = g_malloc (size);
     len1 = mem1->size - offset;
 
-    memcpy (data, mem1->data + mem1->offset + offset, len1);
-    memcpy (data + len1, mem2->data + mem2->offset, size - len1);
-
-    span = _default_mem_new (NULL, data, g_free, size, 0, size);
+    span = _default_mem_new_block (size, 0, 0, size);
+    memcpy (span->data, mem1->data + mem1->offset + offset, len1);
+    memcpy (span->data + len1, mem2->data + mem2->offset, size - len1);
   }
   return span;
 }
@@ -251,14 +275,13 @@ static GstMemory *
 _fallback_copy (GstMemory * mem)
 {
   GstMemoryDefault *copy;
-  gpointer data, cdata;
+  gpointer data;
   gsize size;
 
   data = gst_memory_map (mem, &size, NULL, GST_MAP_READ);
-  cdata = g_memdup (data, size);
+  copy = _default_mem_new_block (size, 0, 0, size);
+  memcpy (copy->data, data, size);
   gst_memory_unmap (mem, data, size);
-
-  copy = _default_mem_new (NULL, cdata, g_free, size, 0, size);
 
   return (GstMemory *) copy;
 }
@@ -287,21 +310,19 @@ static GstMemory *
 _fallback_span (GstMemory * mem1, gsize offset, GstMemory * mem2, gsize size)
 {
   GstMemoryDefault *span;
-  guint8 *data, *dest;
+  guint8 *data;
   gsize ssize, len1;
 
-  dest = g_malloc (size);
+  span = _default_mem_new_block (size, 0, 0, size);
 
   data = gst_memory_map (mem1, &ssize, NULL, GST_MAP_READ);
   len1 = ssize - offset;
-  memcpy (dest, data + offset, len1);
+  memcpy (span->data, data + offset, len1);
   gst_memory_unmap (mem1, data, size);
 
   data = gst_memory_map (mem2, &ssize, NULL, GST_MAP_READ);
-  memcpy (dest + len1, data, ssize - len1);
+  memcpy (span->data + len1, data, ssize - len1);
   gst_memory_unmap (mem2, data, size);
-
-  span = _default_mem_new (NULL, dest, g_free, size, 0, size);
 
   return (GstMemory *) span;
 }
@@ -485,23 +506,20 @@ GstMemory *
 gst_memory_new_alloc (gsize maxsize, gsize align)
 {
   GstMemoryDefault *mem;
-  guint8 *data;
-  gsize offset, size;
 
-  /* alloc header and data in one block */
-  size = sizeof (GstMemoryDefault) + maxsize + align;
+  mem = _default_mem_new_block (maxsize, align, 0, 0);
 
-  mem = g_slice_alloc (size);
-  if (mem == NULL)
-    return NULL;
+  return (GstMemory *) mem;
+}
 
-  data = (guint8 *) mem + sizeof (GstMemoryDefault);
+GstMemory *
+gst_memory_new_copy (gsize maxsize, gsize align, gpointer data,
+    gsize offset, gsize size)
+{
+  GstMemoryDefault *mem;
 
-  if ((offset = ((guintptr) data & align)))
-    offset = align - offset;
-
-  _default_mem_init (mem, NULL, size, data, NULL, maxsize + align, offset,
-      maxsize);
+  mem = _default_mem_new_block (maxsize, align, offset, size);
+  memcpy (mem->data, data, maxsize);
 
   return (GstMemory *) mem;
 }

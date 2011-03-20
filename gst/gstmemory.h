@@ -126,6 +126,8 @@ GstMemory * gst_memory_span       (GstMemory *mem1, gsize offset,
 GstMemory * gst_memory_new_wrapped (gpointer data, GFreeFunc free_func,
                                     gsize maxsize, gsize offset, gsize size);
 GstMemory * gst_memory_new_alloc   (gsize maxsize, gsize align);
+GstMemory * gst_memory_new_copy    (gsize maxsize, gsize align, gpointer data,
+                                    gsize offset, gsize size);
 
 
 const GstMemoryImpl *  gst_memory_register    (const gchar *impl, const GstMemoryInfo *info);
