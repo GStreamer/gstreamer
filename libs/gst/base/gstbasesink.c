@@ -4088,7 +4088,7 @@ gst_base_sink_loop (GstPad * pad)
   if (G_UNLIKELY (buf == NULL))
     goto no_buffer;
 
-  offset += GST_BUFFER_SIZE (buf);
+  offset += gst_buffer_get_size (buf);
 
   gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_BYTES, offset);
 

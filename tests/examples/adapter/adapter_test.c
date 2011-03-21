@@ -28,6 +28,7 @@ static struct TestParams param_sets[] = {
  * in 1000 byte blocks */
   {25600000, 1000, 200}
 };
+
 static const gint n_tests = sizeof (param_sets) / sizeof (struct TestParams);
 
 static gint ticks_per_sec;
@@ -45,7 +46,10 @@ run_test_take (struct TestParams *params)
 
   for (i = 0; i < ntimes; i++) {
     buf = gst_buffer_new_and_alloc (params->write_size);
-    memset (GST_BUFFER_DATA (buf), 0, params->write_size);
+
+    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    memset (data, 0, params->write_size);
+    gst_buffer_unmap (buf, data, params->write_size);
 
     gst_adapter_push (adapter, buf);
   }
@@ -70,10 +74,14 @@ run_test_take_buffer (struct TestParams *params)
   GstBuffer *buf;
   int i;
   gint ntimes = params->tot_size / params->write_size;
+  guint8 *data;
 
   for (i = 0; i < ntimes; i++) {
     buf = gst_buffer_new_and_alloc (params->write_size);
-    memset (GST_BUFFER_DATA (buf), 0, params->write_size);
+
+    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    memset (data, 0, params->write_size);
+    gst_buffer_unmap (buf, data, params->write_size);
 
     gst_adapter_push (adapter, buf);
   }

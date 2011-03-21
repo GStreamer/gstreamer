@@ -231,8 +231,8 @@ static GstFlowReturn
 gst_fd_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstFdSink *fdsink;
-  guint8 *data;
-  guint size;
+  guint8 *data, *ptr;
+  gsize size, left;
   gint written;
 
 #ifndef HAVE_WIN32
@@ -243,8 +243,10 @@ gst_fd_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   g_return_val_if_fail (fdsink->fd >= 0, GST_FLOW_ERROR);
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
+  ptr = data;
+  left = size;
 
 again:
 #ifndef HAVE_WIN32
@@ -265,7 +267,7 @@ again:
   GST_DEBUG_OBJECT (fdsink, "writing %d bytes to file descriptor %d", size,
       fdsink->fd);
 
-  written = write (fdsink->fd, data, size);
+  written = write (fdsink->fd, ptr, left);
 
   /* check for errors */
   if (G_UNLIKELY (written < 0)) {
@@ -278,16 +280,19 @@ again:
   }
 
   /* all is fine when we get here */
-  size -= written;
-  data += written;
+  left -= written;
+  ptr += written;
   fdsink->bytes_written += written;
   fdsink->current_pos += written;
 
-  GST_DEBUG_OBJECT (fdsink, "wrote %d bytes, %d left", written, size);
+  GST_DEBUG_OBJECT (fdsink, "wrote %d bytes, %" G_GSIZE_FORMAT " left", written,
+      left);
 
   /* short write, select and try to write the remainder */
-  if (G_UNLIKELY (size > 0))
+  if (G_UNLIKELY (left > 0))
     goto again;
+
+  gst_buffer_unmap (buffer, data, size);
 
   return GST_FLOW_OK;
 
@@ -297,11 +302,13 @@ select_error:
     GST_ELEMENT_ERROR (fdsink, RESOURCE, READ, (NULL),
         ("select on file descriptor: %s.", g_strerror (errno)));
     GST_DEBUG_OBJECT (fdsink, "Error during select");
+    gst_buffer_unmap (buffer, data, size);
     return GST_FLOW_ERROR;
   }
 stopped:
   {
     GST_DEBUG_OBJECT (fdsink, "Select stopped");
+    gst_buffer_unmap (buffer, data, size);
     return GST_FLOW_WRONG_STATE;
   }
 #endif
@@ -318,6 +325,7 @@ write_error:
                 fdsink->fd, g_strerror (errno)));
       }
     }
+    gst_buffer_unmap (buffer, data, size);
     return GST_FLOW_ERROR;
   }
 }

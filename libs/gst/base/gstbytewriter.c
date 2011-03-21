@@ -116,33 +116,6 @@ gst_byte_writer_new_with_data (guint8 * data, guint size, gboolean initialized)
 }
 
 /**
- * gst_byte_writer_new_with_buffer:
- * @buffer: Buffer used for writing
- * @initialized: If %TRUE the complete data can be read from the beginning
- *
- * Creates a new #GstByteWriter instance with the given
- * buffer. If @initialized is %TRUE it is possible to
- * read the complete buffer from the #GstByteWriter from the beginning.
- *
- * <note>@buffer must be writable</note>
- *
- * Free-function: gst_byte_writer_free
- *
- * Returns: (transfer full): a new #GstByteWriter instance
- *
- * Since: 0.10.26
- */
-GstByteWriter *
-gst_byte_writer_new_with_buffer (GstBuffer * buffer, gboolean initialized)
-{
-  g_return_val_if_fail (GST_IS_BUFFER (buffer)
-      && gst_buffer_is_writable (buffer), NULL);
-
-  return gst_byte_writer_new_with_data (GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer), initialized);
-}
-
-/**
  * gst_byte_writer_init:
  * @writer: #GstByteWriter instance
  *
@@ -214,30 +187,6 @@ gst_byte_writer_init_with_data (GstByteWriter * writer, guint8 * data,
 }
 
 /**
- * gst_byte_writer_init_with_buffer:
- * @writer: #GstByteWriter instance
- * @buffer: (transfer none): Buffer used for writing
- * @initialized: If %TRUE the complete data can be read from the beginning
- *
- * Initializes @writer with the given
- * buffer. If @initialized is %TRUE it is possible to
- * read the complete buffer from the #GstByteWriter from the beginning.
- *
- * <note>@buffer must be writable</note>
- *
- * Since: 0.10.26
- */
-void
-gst_byte_writer_init_with_buffer (GstByteWriter * writer, GstBuffer * buffer,
-    gboolean initialized)
-{
-  g_return_if_fail (GST_IS_BUFFER (buffer) && gst_buffer_is_writable (buffer));
-
-  gst_byte_writer_init_with_data (writer, GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer), initialized);
-}
-
-/**
  * gst_byte_writer_reset:
  * @writer: #GstByteWriter instance
  *
@@ -301,13 +250,17 @@ GstBuffer *
 gst_byte_writer_reset_and_get_buffer (GstByteWriter * writer)
 {
   GstBuffer *buffer;
+  gpointer data;
+  gsize size;
 
   g_return_val_if_fail (writer != NULL, NULL);
 
+  size = writer->parent.size;
+  data = gst_byte_writer_reset_and_get_data (writer);
+
   buffer = gst_buffer_new ();
-  GST_BUFFER_SIZE (buffer) = writer->parent.size;
-  GST_BUFFER_MALLOCDATA (buffer) = gst_byte_writer_reset_and_get_data (writer);
-  GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
+  gst_buffer_take_memory (buffer, gst_memory_new_wrapped (data, g_free, size, 0,
+          size));
 
   return buffer;
 }

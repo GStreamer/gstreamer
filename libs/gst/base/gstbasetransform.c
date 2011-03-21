@@ -271,7 +271,7 @@ struct _GstBaseTransformPrivate
 
   /* upstream caps and size suggestions */
   GstCaps *sink_suggest;
-  guint size_suggest;
+  gsize size_suggest;
   gboolean suggest_pending;
 
   gboolean reconfigure;
@@ -329,7 +329,7 @@ static gboolean gst_base_transform_sink_activate_push (GstPad * pad,
 static gboolean gst_base_transform_activate (GstBaseTransform * trans,
     gboolean active);
 static gboolean gst_base_transform_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 
 static gboolean gst_base_transform_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_transform_src_eventfunc (GstBaseTransform * trans,
@@ -566,9 +566,9 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
 static gboolean
 gst_base_transform_transform_size (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps,
-    guint size, GstCaps * othercaps, guint * othersize)
+    gsize size, GstCaps * othercaps, gsize * othersize)
 {
-  guint inunitsize, outunitsize, units;
+  gsize inunitsize, outunitsize, units;
   GstBaseTransformClass *klass;
   gboolean ret;
 
@@ -628,8 +628,8 @@ no_multiple:
   {
     GST_DEBUG_OBJECT (trans, "Size %u is not a multiple of unit size %u", size,
         inunitsize);
-    g_warning ("%s: size %u is not a multiple of unit size %u",
-        GST_ELEMENT_NAME (trans), size, inunitsize);
+    g_warning ("%s: size %" G_GSIZE_FORMAT " is not a multiple of unit size %"
+        G_GSIZE_FORMAT, GST_ELEMENT_NAME (trans), size, inunitsize);
     return FALSE;
   }
 no_out_size:
@@ -1272,7 +1272,7 @@ gst_base_transform_query_type (GstPad * pad)
 }
 
 static void
-compute_upstream_suggestion (GstBaseTransform * trans, guint expsize,
+compute_upstream_suggestion (GstBaseTransform * trans, gsize expsize,
     GstCaps * caps)
 {
   GstCaps *othercaps;
@@ -1290,7 +1290,7 @@ compute_upstream_suggestion (GstBaseTransform * trans, guint expsize,
      * because it should have checked if we could handle these caps. We can
      * simply ignore these caps and produce a buffer with our original caps. */
   } else {
-    guint size_suggest;
+    gsize size_suggest;
 
     GST_DEBUG_OBJECT (trans, "getting size of suggestion");
 
@@ -1331,7 +1331,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   GstBaseTransformClass *bclass;
   GstBaseTransformPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint outsize, newsize, expsize;
+  gsize insize, outsize, newsize, expsize;
   gboolean discard, setcaps, copymeta;
   GstCaps *incaps, *oldcaps, *newcaps, *outcaps;
 
@@ -1341,13 +1341,15 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
   *out_buf = NULL;
 
+  insize = gst_buffer_get_size (in_buf);
+
   /* figure out how to allocate a buffer based on the current configuration */
   if (trans->passthrough) {
     GST_DEBUG_OBJECT (trans, "doing passthrough alloc");
     /* passthrough, we don't really need to call pad alloc but we still need to
      * in order to get upstream negotiation. The output size is the same as the
      * input size. */
-    outsize = GST_BUFFER_SIZE (in_buf);
+    outsize = insize;
     /* we always alloc and discard here */
     discard = TRUE;
   } else {
@@ -1357,7 +1359,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     if (want_in_place) {
       GST_DEBUG_OBJECT (trans, "doing inplace alloc");
       /* we alloc a buffer of the same size as the input */
-      outsize = GST_BUFFER_SIZE (in_buf);
+      outsize = insize;
       /* only discard it when the input was not writable, otherwise, we reuse
        * the input buffer. */
       discard = gst_buffer_is_writable (in_buf);
@@ -1367,8 +1369,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       /* copy transform, figure out the output size */
       if (!gst_base_transform_transform_size (trans,
               GST_PAD_SINK, GST_PAD_CAPS (trans->sinkpad),
-              GST_BUFFER_SIZE (in_buf), GST_PAD_CAPS (trans->srcpad),
-              &outsize)) {
+              insize, GST_PAD_CAPS (trans->srcpad), &outsize)) {
         goto unknown_size;
       }
       /* never discard this buffer, we need it for storing the output */
@@ -1427,7 +1428,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
   /* check if we got different caps on this new output buffer */
   newcaps = GST_BUFFER_CAPS (*out_buf);
-  newsize = GST_BUFFER_SIZE (*out_buf);
+  newsize = gst_buffer_get_size (*out_buf);
 
   if (newcaps && !gst_caps_is_equal (newcaps, oldcaps)) {
     GstCaps *othercaps;
@@ -1446,7 +1447,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       GST_DEBUG_OBJECT (trans, "cannot perform transform on current buffer");
 
       gst_base_transform_transform_size (trans,
-          GST_PAD_SINK, incaps, GST_BUFFER_SIZE (in_buf), newcaps, &expsize);
+          GST_PAD_SINK, incaps, insize, newcaps, &expsize);
 
       compute_upstream_suggestion (trans, expsize, newcaps);
 
@@ -1471,7 +1472,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
      * expected size here, we will check the size if we are going to use the
      * buffer later on. */
     gst_base_transform_transform_size (trans,
-        GST_PAD_SINK, incaps, GST_BUFFER_SIZE (in_buf), newcaps, &expsize);
+        GST_PAD_SINK, incaps, insize, newcaps, &expsize);
 
     if (can_convert) {
       GST_DEBUG_OBJECT (trans, "reconfigure transform for current buffer");
@@ -1537,8 +1538,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
           outsize);
       /* no valid buffer yet, make one, metadata is writable */
       *out_buf = gst_buffer_new_and_alloc (outsize);
-      gst_buffer_copy_metadata (*out_buf, in_buf,
-          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
+      gst_buffer_copy_into (*out_buf, in_buf,
+          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
     } else {
       GST_DEBUG_OBJECT (trans, "reuse input buffer");
       *out_buf = in_buf;
@@ -1598,7 +1599,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     if (!gst_buffer_is_metadata_writable (*out_buf)) {
       GST_DEBUG_OBJECT (trans, "buffer metadata %p not writable", *out_buf);
       if (in_buf == *out_buf)
-        *out_buf = gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
+        *out_buf = gst_buffer_create_sub (in_buf, 0, insize);
       else
         *out_buf = gst_buffer_make_metadata_writable (*out_buf);
     }
@@ -1606,8 +1607,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     if (setcaps)
       gst_buffer_set_caps (*out_buf, outcaps);
     if (copymeta)
-      gst_buffer_copy_metadata (*out_buf, in_buf,
-          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
+      gst_buffer_copy_into (*out_buf, in_buf,
+          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
     /* clear the GAP flag when the subclass does not understand it */
     if (!trans->priv->gap_aware)
       GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
@@ -1654,7 +1655,7 @@ failed_configure:
  */
 static gboolean
 gst_base_transform_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   gboolean res = FALSE;
   GstBaseTransformClass *bclass;
@@ -1711,7 +1712,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn res;
   gboolean proxy, suggest, same_caps;
   GstCaps *sink_suggest = NULL;
-  guint size_suggest;
+  gsize size_suggest;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -2139,6 +2140,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   GstClockTime running_time;
   GstClockTime timestamp;
   GstCaps *incaps;
+  gsize insize;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
@@ -2158,13 +2160,16 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     }
   }
 
+  insize = gst_buffer_get_size (inbuf);
+
   if (GST_BUFFER_OFFSET_IS_VALID (inbuf))
-    GST_DEBUG_OBJECT (trans, "handling buffer %p of size %d and offset %"
-        G_GUINT64_FORMAT, inbuf, GST_BUFFER_SIZE (inbuf),
-        GST_BUFFER_OFFSET (inbuf));
+    GST_DEBUG_OBJECT (trans,
+        "handling buffer %p of size %" G_GSIZE_FORMAT " and offset %"
+        G_GUINT64_FORMAT, inbuf, insize, GST_BUFFER_OFFSET (inbuf));
   else
-    GST_DEBUG_OBJECT (trans, "handling buffer %p of size %d and offset NONE",
-        inbuf, GST_BUFFER_SIZE (inbuf));
+    GST_DEBUG_OBJECT (trans,
+        "handling buffer %p of size %" G_GSIZE_FORMAT " and offset NONE", inbuf,
+        insize);
 
   /* Don't allow buffer handling before negotiation, except in passthrough mode
    * or if the class doesn't implement a set_caps function (in which case it doesn't
@@ -2266,16 +2271,20 @@ no_qos:
 
       if (inbuf != *outbuf) {
         guint8 *indata, *outdata;
+        gsize insize, outsize;
 
         /* Different buffer. The data can still be the same when we are dealing
          * with subbuffers of the same buffer. Note that because of the FIXME in
          * prepare_output_buffer() we have decreased the refcounts of inbuf and
          * outbuf to keep them writable */
-        indata = GST_BUFFER_DATA (inbuf);
-        outdata = GST_BUFFER_DATA (*outbuf);
+        indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
+        outdata = gst_buffer_map (*outbuf, &outsize, NULL, GST_MAP_WRITE);
 
         if (indata != outdata)
-          memcpy (outdata, indata, GST_BUFFER_SIZE (inbuf));
+          memcpy (outdata, indata, insize);
+
+        gst_buffer_unmap (inbuf, indata, insize);
+        gst_buffer_unmap (*outbuf, outdata, outsize);
       }
       ret = bclass->transform_ip (trans, *outbuf);
     } else {
@@ -2828,7 +2837,7 @@ gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
  */
 void
 gst_base_transform_suggest (GstBaseTransform * trans, GstCaps * caps,
-    guint size)
+    gsize size)
 {
   g_return_if_fail (GST_IS_BASE_TRANSFORM (trans));
 

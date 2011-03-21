@@ -861,7 +861,7 @@ gst_collect_pads_available (GstCollectPads * pads)
     }
 
     /* this is the size left of the buffer */
-    size = GST_BUFFER_SIZE (buffer) - pdata->pos;
+    size = gst_buffer_get_size (buffer) - pdata->pos;
     GST_DEBUG ("pad %s:%s has %d bytes left",
         GST_DEBUG_PAD_NAME (pdata->pad), size);
 
@@ -879,48 +879,6 @@ not_filled:
   {
     return 0;
   }
-}
-
-/**
- * gst_collect_pads_read:
- * @pads: the collectspads to query
- * @data: the data to use
- * @bytes: (out) (transfer none) (array length=size): a pointer to a byte array
- * @size: the number of bytes to read
- *
- * Get a pointer in @bytes where @size bytes can be read from the
- * given pad @data.
- *
- * This function should be called with @pads LOCK held, such as
- * in the callback.
- *
- * Returns: The number of bytes available for consumption in the
- * memory pointed to by @bytes. This can be less than @size and
- * is 0 if the pad is end-of-stream.
- *
- * MT safe.
- */
-guint
-gst_collect_pads_read (GstCollectPads * pads, GstCollectData * data,
-    guint8 ** bytes, guint size)
-{
-  guint readsize;
-  GstBuffer *buffer;
-
-  g_return_val_if_fail (pads != NULL, 0);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), 0);
-  g_return_val_if_fail (data != NULL, 0);
-  g_return_val_if_fail (bytes != NULL, 0);
-
-  /* no buffer, must be EOS */
-  if ((buffer = data->buffer) == NULL)
-    return 0;
-
-  readsize = MIN (size, GST_BUFFER_SIZE (buffer) - data->pos);
-
-  *bytes = GST_BUFFER_DATA (buffer) + data->pos;
-
-  return readsize;
 }
 
 /**
@@ -958,7 +916,7 @@ gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
   if ((buffer = data->buffer) == NULL)
     return NULL;
 
-  bufsize = GST_BUFFER_SIZE (buffer);
+  bufsize = gst_buffer_get_size (buffer);
 
   readsize = MIN (size, bufsize - data->pos);
 
@@ -996,7 +954,7 @@ gst_collect_pads_take_buffer (GstCollectPads * pads, GstCollectData * data,
   GstBuffer *buffer = gst_collect_pads_read_buffer (pads, data, size);
 
   if (buffer) {
-    gst_collect_pads_flush (pads, data, GST_BUFFER_SIZE (buffer));
+    gst_collect_pads_flush (pads, data, gst_buffer_get_size (buffer));
   }
   return buffer;
 }
@@ -1023,6 +981,7 @@ gst_collect_pads_flush (GstCollectPads * pads, GstCollectData * data,
 {
   guint flushsize;
   GstBuffer *buffer;
+  gsize bsize;
 
   g_return_val_if_fail (pads != NULL, 0);
   g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), 0);
@@ -1032,14 +991,16 @@ gst_collect_pads_flush (GstCollectPads * pads, GstCollectData * data,
   if ((buffer = data->buffer) == NULL)
     return 0;
 
+  bsize = gst_buffer_get_size (buffer);
+
   /* this is what we can flush at max */
-  flushsize = MIN (size, GST_BUFFER_SIZE (buffer) - data->pos);
+  flushsize = MIN (size, bsize - data->pos);
 
   data->pos += size;
 
   GST_LOG_OBJECT (pads, "Flushing %d bytes, requested %u", flushsize, size);
 
-  if (data->pos >= GST_BUFFER_SIZE (buffer))
+  if (data->pos >= bsize)
     /* _clear will also reset data->pos to 0 */
     gst_collect_pads_clear (pads, data);
 

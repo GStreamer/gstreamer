@@ -801,6 +801,8 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
 {
   int ret;
   GstBuffer *buf;
+  guint8 *data;
+  gsize size;
 
   if (G_UNLIKELY (src->read_position != offset)) {
     off_t res;
@@ -813,16 +815,16 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
   }
 
   buf = gst_buffer_try_new_and_alloc (length);
-  if (G_UNLIKELY (buf == NULL && length > 0)) {
-    GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", length);
-    return GST_FLOW_ERROR;
-  }
+  if (G_UNLIKELY (buf == NULL && length > 0))
+    goto alloc_failed;
 
   /* No need to read anything if length is 0 */
   if (length > 0) {
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
+
     GST_LOG_OBJECT (src, "Reading %d bytes at offset 0x%" G_GINT64_MODIFIER "x",
         length, offset);
-    ret = read (src->fd, GST_BUFFER_DATA (buf), length);
+    ret = read (src->fd, data, length);
     if (G_UNLIKELY (ret < 0))
       goto could_not_read;
 
@@ -835,7 +837,9 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
       goto eos;
 
     length = ret;
-    GST_BUFFER_SIZE (buf) = length;
+
+    gst_buffer_unmap (buf, data, length);
+
     GST_BUFFER_OFFSET (buf) = offset;
     GST_BUFFER_OFFSET_END (buf) = offset + length;
 
@@ -852,9 +856,15 @@ seek_failed:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     return GST_FLOW_ERROR;
   }
+alloc_failed:
+  {
+    GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", length);
+    return GST_FLOW_ERROR;
+  }
 could_not_read:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+    gst_buffer_unmap (buf, data, 0);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
@@ -862,12 +872,14 @@ unexpected_eos:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("unexpected end of file."));
+    gst_buffer_unmap (buf, data, 0);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 eos:
   {
     GST_DEBUG ("non-regular file hits EOS");
+    gst_buffer_unmap (buf, data, 0);
     gst_buffer_unref (buf);
     return GST_FLOW_UNEXPECTED;
   }

@@ -47,11 +47,9 @@ typedef struct {
 } GstBitReader;
 
 GstBitReader * gst_bit_reader_new (const guint8 *data, guint size);
-GstBitReader * gst_bit_reader_new_from_buffer (const GstBuffer *buffer);
 void gst_bit_reader_free (GstBitReader *reader);
 
 void gst_bit_reader_init (GstBitReader *reader, const guint8 *data, guint size);
-void gst_bit_reader_init_from_buffer (GstBitReader *reader, const GstBuffer *buffer);
 
 gboolean gst_bit_reader_set_pos (GstBitReader *reader, guint pos);
 
@@ -86,19 +84,6 @@ gboolean gst_bit_reader_peek_bits_uint64 (const GstBitReader *reader, guint64 *v
  * Since: 0.10.22
  */
 #define GST_BIT_READER_INIT(data, size) {data, size, 0, 0}
-
-/**
- * GST_BIT_READER_INIT_FROM_BUFFER:
- * @buffer: Buffer from which the #GstBitReader should read
- *
- * A #GstBitReader must be initialized with this macro, before it can be
- * used. This macro can used be to initialize a variable, but it cannot
- * be assigned to a variable. In that case you have to use
- * gst_bit_reader_init().
- *
- * Since: 0.10.22
- */
-#define GST_BIT_READER_INIT_FROM_BUFFER(buffer) {GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 0, 0}
 
 /* Unchecked variants */
 

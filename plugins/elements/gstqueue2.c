@@ -1167,7 +1167,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
   /* allocate the output buffer of the requested size */
   buf = gst_buffer_new_and_alloc (length);
-  data = GST_BUFFER_DATA (buf);
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
 
   GST_DEBUG_OBJECT (queue, "Reading %u bytes from %" G_GUINT64_FORMAT, length,
       offset);
@@ -1279,7 +1279,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
     GST_DEBUG_OBJECT (queue, "%u bytes left to read", remaining);
   }
 
-  GST_BUFFER_SIZE (buf) = length;
+  gst_buffer_unmap (buf, data, length);
+
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + length;
 
@@ -1296,6 +1297,7 @@ out_flushing:
 read_error:
   {
     GST_DEBUG_OBJECT (queue, "we have a read error");
+    gst_buffer_unmap (buf, data, 0);
     gst_buffer_unref (buf);
     return read_return;
   }
@@ -1521,8 +1523,9 @@ out_flushing:
 static gboolean
 gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
 {
-  guint8 *data, *ring_buffer;
+  guint8 *odata, *data, *ring_buffer;
   guint size, rb_size;
+  gsize osize;
   guint64 writing_pos, new_writing_pos;
   GstQueue2Range *range, *prev, *next;
 
@@ -1533,8 +1536,10 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
   ring_buffer = queue->ring_buffer;
   rb_size = queue->ring_buffer_max_size;
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  odata = gst_buffer_map (buffer, &osize, NULL, GST_MAP_READ);
+
+  size = osize;
+  data = odata;
 
   GST_DEBUG_OBJECT (queue, "Writing %u bytes to %" G_GUINT64_FORMAT, size,
       GST_BUFFER_OFFSET (buffer));
@@ -1756,7 +1761,9 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
         queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
 
     GST_QUEUE2_SIGNAL_ADD (queue);
-  };
+  }
+
+  gst_buffer_unmap (buffer, odata, osize);
 
   return TRUE;
 
@@ -1764,12 +1771,14 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
 out_flushing:
   {
     GST_DEBUG_OBJECT (queue, "we are flushing");
+    gst_buffer_unmap (buffer, odata, osize);
     /* FIXME - GST_FLOW_UNEXPECTED ? */
     return FALSE;
   }
 seek_failed:
   {
     GST_ELEMENT_ERROR (queue, RESOURCE, SEEK, (NULL), GST_ERROR_SYSTEM);
+    gst_buffer_unmap (buffer, odata, osize);
     return FALSE;
   }
 handle_error:
@@ -1785,6 +1794,7 @@ handle_error:
             ("%s", g_strerror (errno)));
       }
     }
+    gst_buffer_unmap (buffer, odata, osize);
     return FALSE;
   }
 }
@@ -1798,7 +1808,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item, gboolean isbuffer)
     guint size;
 
     buffer = GST_BUFFER_CAST (item);
-    size = GST_BUFFER_SIZE (buffer);
+    size = gst_buffer_get_size (buffer);
 
     /* add buffer to the statistics */
     if (QUEUE_IS_USING_QUEUE (queue)) {
@@ -1905,7 +1915,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
     guint size;
 
     buffer = GST_BUFFER_CAST (item);
-    size = GST_BUFFER_SIZE (buffer);
+    size = gst_buffer_get_size (buffer);
     *is_buffer = TRUE;
 
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
@@ -2136,7 +2146,7 @@ gst_queue2_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_CAT_LOG_OBJECT (queue_dataflow, queue,
       "received buffer %p of size %d, time %" GST_TIME_FORMAT ", duration %"
-      GST_TIME_FORMAT, buffer, GST_BUFFER_SIZE (buffer),
+      GST_TIME_FORMAT, buffer, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 

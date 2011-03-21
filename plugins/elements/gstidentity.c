@@ -560,7 +560,7 @@ print_pretty_time (gchar * ts_str, gsize ts_str_len, GstClockTime ts)
 
 static void
 gst_identity_update_last_message_for_buffer (GstIdentity * identity,
-    const gchar * action, GstBuffer * buf)
+    const gchar * action, GstBuffer * buf, gsize size)
 {
   gchar ts_str[64], dur_str[64];
 
@@ -568,14 +568,13 @@ gst_identity_update_last_message_for_buffer (GstIdentity * identity,
 
   g_free (identity->last_message);
   identity->last_message = g_strdup_printf ("%s   ******* (%s:%s)i "
-      "(%u bytes, timestamp: %s, duration: %s, offset: %" G_GINT64_FORMAT ", "
-      "offset_end: % " G_GINT64_FORMAT ", flags: %d) %p", action,
-      GST_DEBUG_PAD_NAME (GST_BASE_TRANSFORM_CAST (identity)->sinkpad),
-      GST_BUFFER_SIZE (buf),
-      print_pretty_time (ts_str, sizeof (ts_str), GST_BUFFER_TIMESTAMP (buf)),
-      print_pretty_time (dur_str, sizeof (dur_str), GST_BUFFER_DURATION (buf)),
-      GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
-      GST_BUFFER_FLAGS (buf), buf);
+      "(%" G_GSIZE_FORMAT " bytes, timestamp: %s, duration: %s, offset: %"
+      G_GINT64_FORMAT ", " "offset_end: % " G_GINT64_FORMAT ", flags: %d) %p",
+      action, GST_DEBUG_PAD_NAME (GST_BASE_TRANSFORM_CAST (identity)->sinkpad),
+      size, print_pretty_time (ts_str, sizeof (ts_str),
+          GST_BUFFER_TIMESTAMP (buf)), print_pretty_time (dur_str,
+          sizeof (dur_str), GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
+      GST_BUFFER_OFFSET_END (buf), GST_BUFFER_FLAGS (buf), buf);
 
   GST_OBJECT_UNLOCK (identity);
 
@@ -588,6 +587,10 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstIdentity *identity = GST_IDENTITY (trans);
   GstClockTime runtimestamp = G_GINT64_CONSTANT (0);
+  guint8 *data;
+  gsize size;
+
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
   if (identity->check_perfect)
     gst_identity_check_perfect (identity, buf);
@@ -604,29 +607,21 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   if (identity->error_after >= 0) {
     identity->error_after--;
-    if (identity->error_after == 0) {
-      GST_ELEMENT_ERROR (identity, CORE, FAILED,
-          (_("Failed after iterations as requested.")), (NULL));
-      return GST_FLOW_ERROR;
-    }
+    if (identity->error_after == 0)
+      goto error_after;
   }
 
   if (identity->drop_probability > 0.0) {
-    if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability) {
-      if (!identity->silent) {
-        gst_identity_update_last_message_for_buffer (identity, "dropping", buf);
-      }
-      /* return DROPPED to basetransform. */
-      return GST_BASE_TRANSFORM_FLOW_DROPPED;
-    }
+    if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability)
+      goto dropped;
   }
 
   if (identity->dump) {
-    gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    gst_util_dump_mem (data, size);
   }
 
   if (!identity->silent) {
-    gst_identity_update_last_message_for_buffer (identity, "chain", buf);
+    gst_identity_update_last_message_for_buffer (identity, "chain", buf, size);
   }
 
   if (identity->datarate > 0) {
@@ -634,8 +629,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         GST_SECOND, identity->datarate);
 
     GST_BUFFER_TIMESTAMP (buf) = time;
-    GST_BUFFER_DURATION (buf) =
-        GST_BUFFER_SIZE (buf) * GST_SECOND / identity->datarate;
+    GST_BUFFER_DURATION (buf) = size * GST_SECOND / identity->datarate;
   }
 
   if (identity->signal_handoffs)
@@ -673,7 +667,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GST_OBJECT_UNLOCK (identity);
   }
 
-  identity->offset += GST_BUFFER_SIZE (buf);
+  identity->offset += size;
 
   if (identity->sleep_time && ret == GST_FLOW_OK)
     g_usleep (identity->sleep_time);
@@ -685,7 +679,28 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GST_BUFFER_OFFSET_END (buf) = GST_CLOCK_TIME_NONE;
   }
 
+  gst_buffer_unmap (buf, data, size);
+
   return ret;
+
+  /* ERRORS */
+error_after:
+  {
+    GST_ELEMENT_ERROR (identity, CORE, FAILED,
+        (_("Failed after iterations as requested.")), (NULL));
+    gst_buffer_unmap (buf, data, size);
+    return GST_FLOW_ERROR;
+  }
+dropped:
+  {
+    if (!identity->silent) {
+      gst_identity_update_last_message_for_buffer (identity, "dropping", buf,
+          size);
+    }
+    gst_buffer_unmap (buf, data, size);
+    /* return DROPPED to basetransform. */
+    return GST_BASE_TRANSFORM_FLOW_DROPPED;
+  }
 }
 
 static void

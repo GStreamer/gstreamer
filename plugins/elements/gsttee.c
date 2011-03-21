@@ -641,9 +641,9 @@ gst_tee_do_message (GstTee * tee, GstPad * pad, gpointer data, gboolean is_list)
         GST_DEBUG_PAD_NAME (pad), data);
   } else {
     tee->last_message =
-        g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
-        G_GUINT64_FORMAT ") %p", GST_DEBUG_PAD_NAME (pad),
-        GST_BUFFER_SIZE (data), GST_BUFFER_TIMESTAMP (data), data);
+        g_strdup_printf ("chain        ******* (%s:%s)t (%" G_GSIZE_FORMAT
+        " bytes, %" G_GUINT64_FORMAT ") %p", GST_DEBUG_PAD_NAME (pad),
+        gst_buffer_get_size (data), GST_BUFFER_TIMESTAMP (data), data);
   }
   GST_OBJECT_UNLOCK (tee);
 

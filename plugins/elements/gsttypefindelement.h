@@ -25,10 +25,9 @@
 
 #include <gst/gstinfo.h>
 #include <gst/gstelement.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
-
-
 
 #define GST_TYPE_TYPE_FIND_ELEMENT		(gst_type_find_element_get_type ())
 #define GST_TYPE_FIND_ELEMENT(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TYPE_FIND_ELEMENT, GstTypeFindElement))
@@ -56,7 +55,7 @@ struct _GstTypeFindElement {
   GstCaps *		caps;
 
   guint			mode;
-  GstBuffer *		store;
+  GstAdapter *		adapter;
 
   GList *               cached_events;
   GstCaps *             force_caps;

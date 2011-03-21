@@ -67,33 +67,11 @@ gst_byte_reader_new (const guint8 * data, guint size)
 }
 
 /**
- * gst_byte_reader_new_from_buffer:
- * @buffer: (transfer none): Buffer from which the #GstByteReader should read
- *
- * Create a new #GstByteReader instance, which will read from the
- * #GstBuffer @buffer.
- *
- * Free-function: gst_byte_reader_free
- *
- * Returns: (transfer full): a new #GstByteReader instance
- *
- * Since: 0.10.22
- */
-GstByteReader *
-gst_byte_reader_new_from_buffer (const GstBuffer * buffer)
-{
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-
-  return gst_byte_reader_new (GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
-}
-
-/**
  * gst_byte_reader_free:
  * @reader: (in) (transfer full): a #GstByteReader instance
  *
  * Frees a #GstByteReader instance, which was previously allocated by
- * gst_byte_reader_new() or gst_byte_reader_new_from_buffer().
+ * gst_byte_reader_new().
  * 
  * Since: 0.10.22
  */
@@ -125,26 +103,6 @@ gst_byte_reader_init (GstByteReader * reader, const guint8 * data, guint size)
   reader->data = data;
   reader->size = size;
   reader->byte = 0;
-}
-
-/**
- * gst_byte_reader_init_from_buffer:
- * @reader: a #GstByteReader instance
- * @buffer: (transfer none): Buffer from which the #GstByteReader should read
- *
- * Initializes a #GstByteReader instance to read from @buffer. This function
- * can be called on already initialized instances.
- * 
- * Since: 0.10.22
- */
-void
-gst_byte_reader_init_from_buffer (GstByteReader * reader,
-    const GstBuffer * buffer)
-{
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-
-  gst_byte_reader_init (reader, GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
 }
 
 /**

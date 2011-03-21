@@ -72,18 +72,18 @@ typedef enum {
  */
 struct _GstTypeFind {
   /* private to the caller of the typefind function */
-  guint8 *  (* peek)       (gpointer         data,
-                            gint64           offset,
-                            guint            size);
+  const guint8 *  (* peek)       (gpointer         data,
+                                  gint64           offset,
+                                  guint            size);
 
-  void      (* suggest)    (gpointer         data,
-                            guint            probability,
-                            const GstCaps *  caps);
+  void            (* suggest)    (gpointer         data,
+                                  guint            probability,
+                                  const GstCaps *  caps);
 
-  gpointer     data;
+  gpointer         data;
 
   /* optional */
-  guint64   (* get_length) (gpointer data);
+  guint64         (* get_length) (gpointer data);
 
   /* <private> */
   gpointer _gst_reserved[GST_PADDING];
@@ -92,18 +92,18 @@ struct _GstTypeFind {
 GType     gst_type_find_get_type   (void);
 
 /* typefind function interface */
-guint8 *  gst_type_find_peek       (GstTypeFind   * find,
-                                    gint64          offset,
-                                    guint           size);
+const guint8 *  gst_type_find_peek       (GstTypeFind   * find,
+                                          gint64          offset,
+                                          guint           size);
 
-void      gst_type_find_suggest    (GstTypeFind   * find,
-                                    guint           probability,
-                                    const GstCaps * caps);
+void            gst_type_find_suggest    (GstTypeFind   * find,
+                                          guint           probability,
+                                          const GstCaps * caps);
 
-void      gst_type_find_suggest_simple (GstTypeFind * find,
-                                        guint         probability,
-                                        const char  * media_type,
-                                        const char  * fieldname, ...);
+void            gst_type_find_suggest_simple (GstTypeFind * find,
+                                              guint         probability,
+                                              const char  * media_type,
+                                              const char  * fieldname, ...);
 
 guint64   gst_type_find_get_length (GstTypeFind   * find);
 

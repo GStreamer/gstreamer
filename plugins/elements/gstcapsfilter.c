@@ -341,7 +341,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
         gst_buffer_ref (input);
       } else {
         GST_DEBUG_OBJECT (trans, "Creating sub-buffer and setting caps");
-        *buf = gst_buffer_create_sub (input, 0, GST_BUFFER_SIZE (input));
+        *buf = gst_buffer_create_sub (input, 0, gst_buffer_get_size (input));
         gst_buffer_set_caps (*buf, caps);
       }
     } else {
@@ -373,7 +373,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
         *buf = input;
       } else {
         GST_DEBUG_OBJECT (trans, "Creating sub-buffer and setting caps");
-        *buf = gst_buffer_create_sub (input, 0, GST_BUFFER_SIZE (input));
+        *buf = gst_buffer_create_sub (input, 0, gst_buffer_get_size (input));
       }
       GST_BUFFER_CAPS (*buf) = out_caps;
 

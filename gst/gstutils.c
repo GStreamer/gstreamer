@@ -2678,9 +2678,13 @@ GstBuffer *
 gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
 {
   GstBuffer *result;
+  gsize size1, size2;
+
+  size1 = gst_buffer_get_size (buf1);
+  size2 = gst_buffer_get_size (buf2);
 
   /* we're just a specific case of the more general gst_buffer_span() */
-  result = gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
+  result = gst_buffer_span (buf1, 0, buf2, size1 + size2);
 
   return result;
 }
@@ -2708,8 +2712,12 @@ GstBuffer *
 gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
 {
   GstBuffer *result;
+  gsize size1, size2;
 
-  result = gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
+  size1 = gst_buffer_get_size (buf1);
+  size2 = gst_buffer_get_size (buf2);
+
+  result = gst_buffer_span (buf1, 0, buf2, size1 + size2);
   gst_buffer_unref (buf1);
   gst_buffer_unref (buf2);
 

@@ -30,6 +30,10 @@ G_BEGIN_DECLS
 
 GstCaps * gst_type_find_helper (GstPad *src, guint64 size);
 
+GstCaps * gst_type_find_helper_for_data   (GstObject              *obj,
+                                           const guint8           *data,
+                                           gsize                   size,
+                                           GstTypeFindProbability *prob);
 GstCaps * gst_type_find_helper_for_buffer (GstObject              *obj,
                                            GstBuffer              *buf,
                                            GstTypeFindProbability *prob);

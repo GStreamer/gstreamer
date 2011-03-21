@@ -1720,20 +1720,33 @@ gst_value_deserialize_structure (GValue * dest, const gchar * s)
 static gint
 gst_value_compare_buffer (const GValue * value1, const GValue * value2)
 {
-  GstBuffer *buf1 = GST_BUFFER_CAST (g_value_get_boxed (value1));
-  GstBuffer *buf2 = GST_BUFFER_CAST (g_value_get_boxed (value2));
+  GstBuffer *buf1 = gst_value_get_buffer (value1);
+  GstBuffer *buf2 = gst_value_get_buffer (value2);
+  gsize size1, size2;
+  gpointer data1, data2;
+  gint result = GST_VALUE_UNORDERED;
 
-  if (GST_BUFFER_SIZE (buf1) != GST_BUFFER_SIZE (buf2))
+  size1 = gst_buffer_get_size (buf1);
+  size2 = gst_buffer_get_size (buf2);
+
+  if (size1 != size2)
     return GST_VALUE_UNORDERED;
-  if (GST_BUFFER_SIZE (buf1) == 0)
-    return GST_VALUE_EQUAL;
-  g_assert (GST_BUFFER_DATA (buf1));
-  g_assert (GST_BUFFER_DATA (buf2));
-  if (memcmp (GST_BUFFER_DATA (buf1), GST_BUFFER_DATA (buf2),
-          GST_BUFFER_SIZE (buf1)) == 0)
+
+  if (size1 == 0)
     return GST_VALUE_EQUAL;
 
-  return GST_VALUE_UNORDERED;
+  data1 = gst_buffer_map (buf1, &size1, NULL, GST_MAP_READ);
+  data2 = gst_buffer_map (buf2, &size2, NULL, GST_MAP_READ);
+  g_assert (data1);
+  g_assert (data2);
+
+  if (memcmp (data1, data2, size1) == 0)
+    result = GST_VALUE_EQUAL;
+
+  gst_buffer_unmap (buf2, data2, size2);
+  gst_buffer_unmap (buf1, data1, size1);
+
+  return result;
 }
 
 static gchar *
@@ -1741,7 +1754,7 @@ gst_value_serialize_buffer (const GValue * value)
 {
   guint8 *data;
   gint i;
-  gint size;
+  gsize size;
   gchar *string;
   GstBuffer *buffer;
 
@@ -1749,14 +1762,15 @@ gst_value_serialize_buffer (const GValue * value)
   if (buffer == NULL)
     return NULL;
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
   string = g_malloc (size * 2 + 1);
   for (i = 0; i < size; i++) {
     sprintf (string + i * 2, "%02x", data[i]);
   }
   string[size * 2] = 0;
+
+  gst_buffer_unmap (buffer, data, size);
 
   return string;
 }
@@ -1769,13 +1783,15 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
   gchar ts[3];
   guint8 *data;
   gint i;
+  gsize size;
 
   len = strlen (s);
   if (len & 1)
     goto wrong_length;
 
   buffer = gst_buffer_new_and_alloc (len / 2);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
+
   for (i = 0; i < len / 2; i++) {
     if (!isxdigit ((int) s[i * 2]) || !isxdigit ((int) s[i * 2 + 1]))
       goto wrong_char;
@@ -1786,6 +1802,7 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
 
     data[i] = (guint8) strtoul (ts, NULL, 16);
   }
+  gst_buffer_unmap (buffer, data, size);
 
   gst_value_take_buffer (dest, buffer);
 
@@ -1799,6 +1816,7 @@ wrong_length:
 wrong_char:
   {
     gst_buffer_unref (buffer);
+    gst_buffer_unmap (buffer, data, size);
     return FALSE;
   }
 }

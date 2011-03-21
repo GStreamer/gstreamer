@@ -521,11 +521,12 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     }
 
     sink->last_message =
-        g_strdup_printf ("chain   ******* < (%5d bytes, timestamp: %s"
-        ", duration: %s, offset: %" G_GINT64_FORMAT ", offset_end: %"
-        G_GINT64_FORMAT ", flags: %d %s) %p", GST_BUFFER_SIZE (buf), ts_str,
-        dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
-        GST_MINI_OBJECT_CAST (buf)->flags, flag_str, buf);
+        g_strdup_printf ("chain   ******* < (%5" G_GSIZE_FORMAT
+        " bytes, timestamp: %s" ", duration: %s, offset: %" G_GINT64_FORMAT
+        ", offset_end: %" G_GINT64_FORMAT ", flags: %d %s) %p",
+        gst_buffer_get_size (buf), ts_str, dur_str, GST_BUFFER_OFFSET (buf),
+        GST_BUFFER_OFFSET_END (buf), GST_MINI_OBJECT_CAST (buf)->flags,
+        flag_str, buf);
     GST_OBJECT_UNLOCK (sink);
 
     gst_fake_sink_notify_last_message (sink);
@@ -535,7 +536,12 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
         bsink->sinkpad);
 
   if (sink->dump) {
-    gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    guint8 *data;
+    gsize size;
+
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_util_dump_mem (data, size);
+    gst_buffer_unmap (buf, data, size);
   }
   if (sink->num_buffers_left == 0)
     goto eos;

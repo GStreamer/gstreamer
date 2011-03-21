@@ -51,12 +51,10 @@ typedef struct {
 GstByteWriter * gst_byte_writer_new (void);
 GstByteWriter * gst_byte_writer_new_with_size (guint size, gboolean fixed);
 GstByteWriter * gst_byte_writer_new_with_data (guint8 *data, guint size, gboolean initialized);
-GstByteWriter * gst_byte_writer_new_with_buffer (GstBuffer *buffer, gboolean initialized);
 
 void gst_byte_writer_init (GstByteWriter *writer);
 void gst_byte_writer_init_with_size (GstByteWriter *writer, guint size, gboolean fixed);
 void gst_byte_writer_init_with_data (GstByteWriter *writer, guint8 *data, guint size, gboolean initialized);
-void gst_byte_writer_init_with_buffer (GstByteWriter *writer, GstBuffer *buffer, gboolean initialized);
 
 void gst_byte_writer_free (GstByteWriter *writer);
 guint8 * gst_byte_writer_free_and_get_data (GstByteWriter *writer);

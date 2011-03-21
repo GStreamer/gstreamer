@@ -127,7 +127,7 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
  * Returns: (transfer none) (array length=size): the requested data, or NULL
  *     if that data is not available.
  */
-guint8 *
+const guint8 *
 gst_type_find_peek (GstTypeFind * find, gint64 offset, guint size)
 {
   g_return_val_if_fail (find->peek != NULL, NULL);

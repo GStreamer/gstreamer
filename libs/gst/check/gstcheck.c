@@ -471,22 +471,31 @@ gst_check_element_push_buffer_list (const gchar * element_name,
   while (buffers != NULL) {
     GstBuffer *new = GST_BUFFER (buffers->data);
     GstBuffer *orig = GST_BUFFER (buffer_out->data);
+    gsize newsize, origsize;
+    guint8 *newdata, *origdata;
+
+    newdata = gst_buffer_map (new, &newsize, NULL, GST_MAP_READ);
+    origdata = gst_buffer_map (orig, &origsize, NULL, GST_MAP_READ);
 
     GST_LOG ("orig buffer: size %u, caps %" GST_PTR_FORMAT,
-        GST_BUFFER_SIZE (orig), GST_BUFFER_CAPS (orig));
+        origsize, GST_BUFFER_CAPS (orig));
     GST_LOG ("new  buffer: size %u, caps %" GST_PTR_FORMAT,
-        GST_BUFFER_SIZE (new), GST_BUFFER_CAPS (new));
-    GST_MEMDUMP ("orig buffer", GST_BUFFER_DATA (orig), GST_BUFFER_SIZE (orig));
-    GST_MEMDUMP ("new  buffer", GST_BUFFER_DATA (new), GST_BUFFER_SIZE (new));
+        newsize, GST_BUFFER_CAPS (new));
+    GST_MEMDUMP ("orig buffer", origdata, origsize);
+    GST_MEMDUMP ("new  buffer", newdata, newsize);
 
     /* remove the buffers */
     buffers = g_list_remove (buffers, new);
     buffer_out = g_list_remove (buffer_out, orig);
-    fail_unless (GST_BUFFER_SIZE (orig) == GST_BUFFER_SIZE (new),
-        "size of the buffers are not the same");
-    fail_unless (memcmp (GST_BUFFER_DATA (orig), GST_BUFFER_DATA (new),
-            GST_BUFFER_SIZE (new)) == 0, "data is not the same");
+
+    fail_unless (origsize == newsize, "size of the buffers are not the same");
+    fail_unless (memcmp (origdata, newdata, newsize) == 0,
+        "data is not the same");
     gst_check_caps_equal (GST_BUFFER_CAPS (orig), GST_BUFFER_CAPS (new));
+
+    gst_buffer_unmap (orig, origdata, origsize);
+    gst_buffer_unmap (new, newdata, newsize);
+
     gst_buffer_unref (new);
     gst_buffer_unref (orig);
   }

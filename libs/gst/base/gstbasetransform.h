@@ -119,9 +119,9 @@ struct _GstBaseTransform {
   gboolean	 always_in_place;
 
   GstCaps	*cache_caps1;
-  guint		 cache_caps1_size;
+  gsize		 cache_caps1_size;
   GstCaps	*cache_caps2;
-  guint		 cache_caps2_size;
+  gsize		 cache_caps2_size;
   gboolean	 have_same_caps;
 
   gboolean	 delay_configure;
@@ -218,11 +218,11 @@ struct _GstBaseTransformClass {
 
   gboolean      (*transform_size) (GstBaseTransform *trans,
                                    GstPadDirection direction,
-                                   GstCaps *caps, guint size,
-                                   GstCaps *othercaps, guint *othersize);
+                                   GstCaps *caps, gsize size,
+                                   GstCaps *othercaps, gsize *othersize);
 
   gboolean      (*get_unit_size)  (GstBaseTransform *trans, GstCaps *caps,
-                                   guint *size);
+                                   gsize *size);
 
   gboolean      (*start)        (GstBaseTransform *trans);
   gboolean      (*stop)         (GstBaseTransform *trans);
@@ -266,7 +266,7 @@ void            gst_base_transform_set_gap_aware    (GstBaseTransform *trans,
                                                      gboolean gap_aware);
 
 void		gst_base_transform_suggest          (GstBaseTransform *trans,
-	                                             GstCaps *caps, guint size);
+	                                             GstCaps *caps, gsize size);
 void		gst_base_transform_reconfigure      (GstBaseTransform *trans);
 G_END_DECLS
 

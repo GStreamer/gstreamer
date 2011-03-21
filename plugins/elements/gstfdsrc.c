@@ -406,6 +406,8 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   gssize readbytes;
   guint blocksize;
   GstClockTime timeout;
+  guint8 *data;
+  gsize maxsize;
 
 #ifndef HAVE_WIN32
   gboolean try_again;
@@ -454,24 +456,25 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   /* create the buffer */
   buf = gst_buffer_try_new_and_alloc (blocksize);
-  if (G_UNLIKELY (buf == NULL)) {
-    GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", blocksize);
-    return GST_FLOW_ERROR;
-  }
+  if (G_UNLIKELY (buf == NULL))
+    goto alloc_failed;
+
+  data = gst_buffer_map (buf, NULL, &maxsize, GST_MAP_WRITE);
 
   do {
-    readbytes = read (src->fd, GST_BUFFER_DATA (buf), blocksize);
+    readbytes = read (src->fd, data, blocksize);
     GST_LOG_OBJECT (src, "read %" G_GSSIZE_FORMAT, readbytes);
   } while (readbytes == -1 && errno == EINTR);  /* retry if interrupted */
 
   if (readbytes < 0)
     goto read_error;
 
+  gst_buffer_unmap (buf, data, readbytes);
+
   if (readbytes == 0)
     goto eos;
 
   GST_BUFFER_OFFSET (buf) = src->curoffset;
-  GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   src->curoffset += readbytes;
 
@@ -497,6 +500,11 @@ stopped:
     return GST_FLOW_WRONG_STATE;
   }
 #endif
+alloc_failed:
+  {
+    GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", blocksize);
+    return GST_FLOW_ERROR;
+  }
 eos:
   {
     GST_DEBUG_OBJECT (psrc, "Read 0 bytes. EOS.");
@@ -508,6 +516,7 @@ read_error:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("read on file descriptor: %s.", g_strerror (errno)));
     GST_DEBUG_OBJECT (psrc, "Error reading from fd");
+    gst_buffer_unmap (buf, data, 0);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }

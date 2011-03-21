@@ -313,9 +313,10 @@ _gst_buffer_free (GstBuffer * buffer)
     /* call free_func if any */
     if (info->free_func)
       info->free_func (meta, buffer);
-    /* and free the slice */
+
     next = walk->next;
-    g_slice_free (GstMetaItem, walk);
+    /* and free the slice */
+    g_slice_free1 (ITEM_SIZE (info), walk);
   }
 
   /* free our data, unrefs the memory too */
@@ -523,6 +524,36 @@ gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
     result = FALSE;
   }
   return result;
+}
+
+void
+gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
+{
+  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  gsize i, len;
+  guint8 *ptr = dest;
+
+  len = arr->len;
+
+  for (i = 0; i < len && size > 0; i++) {
+    guint8 *data;
+    gsize ssize, tocopy;
+    GstMemory *mem;
+
+    mem = g_ptr_array_index (arr, i);
+
+    data = gst_memory_map (mem, &ssize, NULL, GST_MAP_READ);
+    tocopy = MIN (ssize, size);
+    if (tocopy > offset) {
+      memcpy (ptr, data + offset, tocopy - offset);
+      size -= tocopy;
+      ptr += tocopy;
+      offset = 0;
+    } else {
+      offset -= tocopy;
+    }
+    gst_memory_unmap (mem, data, ssize);
+  }
 }
 
 /**

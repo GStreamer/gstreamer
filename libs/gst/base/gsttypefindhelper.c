@@ -70,14 +70,14 @@ typedef struct
  * Returns: address of the data or %NULL if buffer does not cover the
  * requested range.
  */
-static guint8 *
+static const guint8 *
 helper_find_peek (gpointer data, gint64 offset, guint size)
 {
   GstTypeFindHelper *helper;
   GstBuffer *buffer;
   GstFlowReturn ret;
   GSList *insert_pos = NULL;
-  guint buf_size;
+  gsize buf_size;
   guint64 buf_offset;
   GstCaps *caps;
 
@@ -103,14 +103,19 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     for (walk = helper->buffers; walk; walk = walk->next) {
       GstBuffer *buf = GST_BUFFER_CAST (walk->data);
       guint64 buf_offset = GST_BUFFER_OFFSET (buf);
-      guint buf_size = GST_BUFFER_SIZE (buf);
+      guint buf_size = gst_buffer_get_size (buf);
 
       /* buffers are kept sorted by end offset (highest first) in the list, so
        * at this point we save the current position and stop searching if 
        * we're after the searched end offset */
       if (buf_offset <= offset) {
         if ((offset + size) < (buf_offset + buf_size)) {
-          return GST_BUFFER_DATA (buf) + (offset - buf_offset);
+          guint8 *data;
+
+          /* FIXME, unmap after usage */
+          data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
+
+          return data + (offset - buf_offset);
         }
       } else if (offset + size >= buf_offset + buf_size) {
         insert_pos = walk;
@@ -147,7 +152,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   /* getrange might silently return shortened buffers at the end of a file,
    * we must, however, always return either the full requested data or NULL */
   buf_offset = GST_BUFFER_OFFSET (buffer);
-  buf_size = GST_BUFFER_SIZE (buffer);
+  buf_size = gst_buffer_get_size (buffer);
 
   if ((buf_offset != -1 && buf_offset != offset) || buf_size < size) {
     GST_DEBUG ("droping short buffer: %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
@@ -164,10 +169,12 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     /* if insert_pos is not set, our offset is bigger than the largest offset
      * we have so far; since we keep the list sorted with highest offsets
      * first, we need to prepend the buffer to the list */
-    helper->last_offset = GST_BUFFER_OFFSET (buffer) + GST_BUFFER_SIZE (buffer);
+    helper->last_offset = GST_BUFFER_OFFSET (buffer) + buf_size;
     helper->buffers = g_slist_prepend (helper->buffers, buffer);
   }
-  return GST_BUFFER_DATA (buffer);
+
+  /* FIXME, unmap */
+  return gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
 
 error:
   {
@@ -406,8 +413,8 @@ gst_type_find_helper (GstPad * src, guint64 size)
 
 typedef struct
 {
-  guint8 *data;                 /* buffer data */
-  guint size;
+  const guint8 *data;           /* buffer data */
+  gsize size;
   guint best_probability;
   GstCaps *caps;
   GstTypeFindFactory *factory;  /* for logging */
@@ -425,7 +432,7 @@ typedef struct
  * Returns: address inside the buffer or %NULL if buffer does not cover the
  * requested range.
  */
-static guint8 *
+static const guint8 *
 buf_helper_find_peek (gpointer data, gint64 off, guint size)
 {
   GstTypeFindBufHelper *helper;
@@ -477,14 +484,15 @@ buf_helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
 }
 
 /**
- * gst_type_find_helper_for_buffer:
+ * gst_type_find_helper_for_data:
  * @obj: object doing the typefinding, or NULL (used for logging)
- * @buf: (in) (transfer none): a #GstBuffer with data to typefind
+ * @data: (in) (transfer none): a pointer with data to typefind
+ * @size: (in) (transfer none): the size of @data
  * @prob: (out) (allow-none): location to store the probability of the found
  *     caps, or #NULL
  *
- * Tries to find what type of data is contained in the given #GstBuffer, the
- * assumption being that the buffer represents the beginning of the stream or
+ * Tries to find what type of data is contained in the given @data, the
+ * assumption being that the data represents the beginning of the stream or
  * file.
  *
  * All available typefinders will be called on the data in order of rank. If
@@ -492,7 +500,7 @@ buf_helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
  * typefinding is stopped immediately and the found caps will be returned
  * right away. Otherwise, all available typefind functions will the tried,
  * and the caps with the highest probability will be returned, or #NULL if
- * the content of the buffer could not be identified.
+ * the content of @data could not be identified.
  *
  * Free-function: gst_caps_unref
  *
@@ -501,7 +509,7 @@ buf_helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
  *     with gst_caps_unref().
  */
 GstCaps *
-gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
+gst_type_find_helper_for_data (GstObject * obj, const guint8 * data, gsize size,
     GstTypeFindProbability * prob)
 {
   GstTypeFindBufHelper helper;
@@ -509,13 +517,10 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
   GList *l, *type_list;
   GstCaps *result = NULL;
 
-  g_return_val_if_fail (buf != NULL, NULL);
-  g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
-  g_return_val_if_fail (GST_BUFFER_OFFSET (buf) == 0 ||
-      GST_BUFFER_OFFSET (buf) == GST_BUFFER_OFFSET_NONE, NULL);
+  g_return_val_if_fail (data != NULL, NULL);
 
-  helper.data = GST_BUFFER_DATA (buf);
-  helper.size = GST_BUFFER_SIZE (buf);
+  helper.data = data;
+  helper.size = size;
   helper.best_probability = 0;
   helper.caps = NULL;
   helper.obj = obj;
@@ -546,6 +551,50 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
 
   GST_LOG_OBJECT (obj, "Returning %" GST_PTR_FORMAT " (probability = %u)",
       result, (guint) helper.best_probability);
+
+  return result;
+}
+
+/**
+ * gst_type_find_helper_for_buffer:
+ * @obj: object doing the typefinding, or NULL (used for logging)
+ * @buf: (in) (transfer none): a #GstBuffer with data to typefind
+ * @prob: (out) (allow-none): location to store the probability of the found
+ *     caps, or #NULL
+ *
+ * Tries to find what type of data is contained in the given #GstBuffer, the
+ * assumption being that the buffer represents the beginning of the stream or
+ * file.
+ *
+ * All available typefinders will be called on the data in order of rank. If
+ * a typefinding function returns a probability of #GST_TYPE_FIND_MAXIMUM,
+ * typefinding is stopped immediately and the found caps will be returned
+ * right away. Otherwise, all available typefind functions will the tried,
+ * and the caps with the highest probability will be returned, or #NULL if
+ * the content of the buffer could not be identified.
+ *
+ * Free-function: gst_caps_unref
+ *
+ * Returns: (transfer full): the #GstCaps corresponding to the data, or #NULL
+ *     if no type could be found. The caller should free the caps returned
+ *     with gst_caps_unref().
+ */
+GstCaps *
+gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
+    GstTypeFindProbability * prob)
+{
+  GstCaps *result;
+  guint8 *data;
+  gsize size;
+
+  g_return_val_if_fail (buf != NULL, NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
+  g_return_val_if_fail (GST_BUFFER_OFFSET (buf) == 0 ||
+      GST_BUFFER_OFFSET (buf) == GST_BUFFER_OFFSET_NONE, NULL);
+
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  result = gst_type_find_helper_for_data (obj, data, size, prob);
+  gst_buffer_unmap (buf, data, size);
 
   return result;
 }

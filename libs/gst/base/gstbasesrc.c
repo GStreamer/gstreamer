@@ -2435,7 +2435,7 @@ gst_base_src_loop (GstPad * pad)
   switch (src->segment.format) {
     case GST_FORMAT_BYTES:
     {
-      guint bufsize = GST_BUFFER_SIZE (buf);
+      guint bufsize = gst_buffer_get_size (buf);
 
       /* we subtracted above for negative rates */
       if (src->segment.rate >= 0.0)

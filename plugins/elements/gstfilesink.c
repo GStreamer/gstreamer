@@ -640,13 +640,12 @@ static GstFlowReturn
 gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstFileSink *filesink;
-  guint size;
+  gsize size;
   guint8 *data;
 
   filesink = GST_FILE_SINK (sink);
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
   GST_DEBUG_OBJECT (filesink, "writing %u bytes at %" G_GUINT64_FORMAT,
       size, filesink->current_pos);
@@ -657,6 +656,7 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
     filesink->current_pos += size;
   }
+  gst_buffer_unmap (buffer, data, size);
 
   return GST_FLOW_OK;
 
@@ -673,6 +673,7 @@ handle_error:
             ("%s", g_strerror (errno)));
       }
     }
+    gst_buffer_unmap (buffer, data, size);
     return GST_FLOW_ERROR;
   }
 }

@@ -465,10 +465,7 @@ gst_fake_src_alloc_parent (GstFakeSrc * src)
 {
   GstBuffer *buf;
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = g_malloc (src->parentsize);
-  GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
-  GST_BUFFER_SIZE (buf) = src->parentsize;
+  buf = gst_buffer_new_and_alloc (src->parentsize);
 
   src->parent = buf;
   src->parentoffset = 0;
@@ -629,21 +626,21 @@ gst_fake_src_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_fake_src_prepare_buffer (GstFakeSrc * src, GstBuffer * buf)
+gst_fake_src_prepare_buffer (GstFakeSrc * src, guint8 * data, gsize size)
 {
-  if (GST_BUFFER_SIZE (buf) == 0)
+  if (size == 0)
     return;
 
   switch (src->filltype) {
     case FAKE_SRC_FILLTYPE_ZERO:
-      memset (GST_BUFFER_DATA (buf), 0, GST_BUFFER_SIZE (buf));
+      memset (data, 0, size);
       break;
     case FAKE_SRC_FILLTYPE_RANDOM:
     {
       gint i;
-      guint8 *ptr = GST_BUFFER_DATA (buf);
+      guint8 *ptr = data;
 
-      for (i = GST_BUFFER_SIZE (buf); i; i--) {
+      for (i = size; i; i--) {
         *ptr++ = g_random_int_range (0, 256);
       }
       break;
@@ -653,9 +650,9 @@ gst_fake_src_prepare_buffer (GstFakeSrc * src, GstBuffer * buf)
     case FAKE_SRC_FILLTYPE_PATTERN_CONT:
     {
       gint i;
-      guint8 *ptr = GST_BUFFER_DATA (buf);
+      guint8 *ptr = data;
 
-      for (i = GST_BUFFER_SIZE (buf); i; i--) {
+      for (i = size; i; i--) {
         *ptr++ = src->pattern_byte++;
       }
       break;
@@ -670,29 +667,32 @@ static GstBuffer *
 gst_fake_src_alloc_buffer (GstFakeSrc * src, guint size)
 {
   GstBuffer *buf;
+  gpointer data;
+  gboolean do_prepare = FALSE;
 
   buf = gst_buffer_new ();
-  GST_BUFFER_SIZE (buf) = size;
 
   if (size != 0) {
     switch (src->filltype) {
       case FAKE_SRC_FILLTYPE_NOTHING:
-        GST_BUFFER_DATA (buf) = g_malloc (size);
-        GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
+        data = g_malloc (size);
         break;
       case FAKE_SRC_FILLTYPE_ZERO:
-        GST_BUFFER_DATA (buf) = g_malloc0 (size);
-        GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
+        data = g_malloc0 (size);
         break;
       case FAKE_SRC_FILLTYPE_RANDOM:
       case FAKE_SRC_FILLTYPE_PATTERN:
       case FAKE_SRC_FILLTYPE_PATTERN_CONT:
       default:
-        GST_BUFFER_DATA (buf) = g_malloc (size);
-        GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
-        gst_fake_src_prepare_buffer (src, buf);
+        data = g_malloc (size);
+        do_prepare = TRUE;
         break;
     }
+    if (do_prepare)
+      gst_fake_src_prepare_buffer (src, data, size);
+
+    gst_buffer_take_memory (buf, gst_memory_new_wrapped (data, g_free, size, 0,
+            size));
   }
 
   return buf;
@@ -720,11 +720,14 @@ gst_fake_src_get_size (GstFakeSrc * src)
 }
 
 static GstBuffer *
-gst_fake_src_create_buffer (GstFakeSrc * src)
+gst_fake_src_create_buffer (GstFakeSrc * src, gsize * bufsize)
 {
   GstBuffer *buf;
-  guint size = gst_fake_src_get_size (src);
+  gsize size = gst_fake_src_get_size (src);
   gboolean dump = src->dump;
+  guint8 *data;
+
+  *bufsize = size;
 
   switch (src->data) {
     case FAKE_SRC_DATA_ALLOCATE:
@@ -737,7 +740,7 @@ gst_fake_src_create_buffer (GstFakeSrc * src)
         g_assert (src->parent);
       }
       /* see if it's large enough */
-      if ((GST_BUFFER_SIZE (src->parent) - src->parentoffset) >= size) {
+      if ((src->parentsize - src->parentoffset) >= size) {
         buf = gst_buffer_create_sub (src->parent, src->parentoffset, size);
         src->parentoffset += size;
       } else {
@@ -745,9 +748,11 @@ gst_fake_src_create_buffer (GstFakeSrc * src)
         gst_buffer_unref (src->parent);
         src->parent = NULL;
         /* try again (this will allocate a new parent) */
-        return gst_fake_src_create_buffer (src);
+        return gst_fake_src_create_buffer (src, bufsize);
       }
-      gst_fake_src_prepare_buffer (src, buf);
+      data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
+      gst_fake_src_prepare_buffer (src, data, size);
+      gst_buffer_unmap (buf, data, size);
       break;
     default:
       g_warning ("fakesrc: dunno how to allocate buffers !");
@@ -755,7 +760,9 @@ gst_fake_src_create_buffer (GstFakeSrc * src)
       break;
   }
   if (dump) {
-    gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_util_dump_mem (data, size);
+    gst_buffer_unmap (buf, data, size);
   }
 
   return buf;
@@ -795,17 +802,17 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   GstFakeSrc *src;
   GstBuffer *buf;
   GstClockTime time;
+  gsize size;
 
   src = GST_FAKE_SRC (basesrc);
 
-  buf = gst_fake_src_create_buffer (src);
+  buf = gst_fake_src_create_buffer (src, &size);
   GST_BUFFER_OFFSET (buf) = src->buffer_count++;
 
   if (src->datarate > 0) {
     time = (src->bytes_sent * GST_SECOND) / src->datarate;
 
-    GST_BUFFER_DURATION (buf) =
-        GST_BUFFER_SIZE (buf) * GST_SECOND / src->datarate;
+    GST_BUFFER_DURATION (buf) = size * GST_SECOND / src->datarate;
   } else if (gst_base_src_is_live (basesrc)) {
     GstClock *clock;
 
@@ -848,7 +855,7 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
     src->last_message =
         g_strdup_printf ("get      ******* > (%5d bytes, timestamp: %s"
         ", duration: %s, offset: %" G_GINT64_FORMAT ", offset_end: %"
-        G_GINT64_FORMAT ", flags: %d) %p", GST_BUFFER_SIZE (buf), ts_str,
+        G_GINT64_FORMAT ", flags: %d) %p", (gint) size, ts_str,
         dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
         GST_MINI_OBJECT_CAST (buf)->flags, buf);
     GST_OBJECT_UNLOCK (src);
@@ -867,7 +874,7 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
     GST_LOG_OBJECT (src, "post handoff emit");
   }
 
-  src->bytes_sent += GST_BUFFER_SIZE (buf);
+  src->bytes_sent += size;
 
   *ret = buf;
   return GST_FLOW_OK;

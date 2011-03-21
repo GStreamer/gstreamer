@@ -687,7 +687,7 @@ gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
 
   /* add buffer to the statistics */
   queue->cur_level.buffers++;
-  queue->cur_level.bytes += GST_BUFFER_SIZE (buffer);
+  queue->cur_level.bytes += gst_buffer_get_size (buffer);
   apply_buffer (queue, buffer, &queue->sink_segment, TRUE, TRUE);
 
   g_queue_push_tail (queue->queue, item);
@@ -745,7 +745,7 @@ gst_queue_locked_dequeue (GstQueue * queue, gboolean * is_buffer)
         "retrieved buffer %p from queue", buffer);
 
     queue->cur_level.buffers--;
-    queue->cur_level.bytes -= GST_BUFFER_SIZE (buffer);
+    queue->cur_level.bytes -= gst_buffer_get_size (buffer);
     apply_buffer (queue, buffer, &queue->src_segment, TRUE, FALSE);
 
     /* if the queue is empty now, update the other side */
@@ -952,7 +952,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_CAT_LOG_OBJECT (queue_dataflow, queue,
       "received buffer %p of size %d, time %" GST_TIME_FORMAT ", duration %"
-      GST_TIME_FORMAT, buffer, GST_BUFFER_SIZE (buffer),
+      GST_TIME_FORMAT, buffer, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
 
   /* We make space available if we're "full" according to whatever

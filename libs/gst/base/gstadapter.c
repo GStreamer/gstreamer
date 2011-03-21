@@ -116,6 +116,8 @@
 /* default size for the assembled data buffer */
 #define DEFAULT_SIZE 4096
 
+static void gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush);
+
 GST_DEBUG_CATEGORY_STATIC (gst_adapter_debug);
 #define GST_CAT_DEFAULT gst_adapter_debug
 
@@ -127,8 +129,11 @@ struct _GstAdapterPrivate
   GstClockTime timestamp;
   guint64 distance;
 
-  guint scan_offset;
+  gsize scan_offset;
   GSList *scan_entry;
+
+  gpointer cdata;
+  gsize csize;
 };
 
 #define _do_init(thing) \
@@ -239,12 +244,12 @@ update_timestamp (GstAdapter * adapter, GstBuffer * buf)
 
 /* copy data into @dest, skipping @skip bytes from the head buffers */
 static void
-copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
-    guint size)
+copy_into_unchecked (GstAdapter * adapter, guint8 * dest, gsize skip,
+    gsize size)
 {
   GSList *g;
   GstBuffer *buf;
-  guint bsize, csize;
+  gsize bsize, csize;
 
   /* first step, do skipping */
   /* we might well be copying where we were scanning */
@@ -255,16 +260,16 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
     g = adapter->buflist;
   }
   buf = g->data;
-  bsize = GST_BUFFER_SIZE (buf);
+  bsize = gst_buffer_get_size (buf);
   while (G_UNLIKELY (skip >= bsize)) {
     skip -= bsize;
     g = g_slist_next (g);
     buf = g->data;
-    bsize = GST_BUFFER_SIZE (buf);
+    bsize = gst_buffer_get_size (buf);
   }
   /* copy partial buffer */
   csize = MIN (bsize - skip, size);
-  memcpy (dest, GST_BUFFER_DATA (buf) + skip, csize);
+  gst_buffer_extract (buf, skip, dest, csize);
   size -= csize;
   dest += csize;
 
@@ -272,10 +277,10 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
   while (size > 0) {
     g = g_slist_next (g);
     buf = g->data;
-    bsize = GST_BUFFER_SIZE (buf);
+    bsize = gst_buffer_get_size (buf);
     if (G_LIKELY (bsize > 0)) {
       csize = MIN (bsize, size);
-      memcpy (dest, GST_BUFFER_DATA (buf), csize);
+      gst_buffer_extract (buf, 0, dest, csize);
       size -= csize;
       dest += csize;
     }
@@ -293,12 +298,12 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
 void
 gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
 {
-  guint size;
+  gsize size;
 
   g_return_if_fail (GST_IS_ADAPTER (adapter));
   g_return_if_fail (GST_IS_BUFFER (buf));
 
-  size = GST_BUFFER_SIZE (buf);
+  size = gst_buffer_get_size (buf);
   adapter->size += size;
 
   /* Note: merging buffers at this point is premature. */
@@ -322,11 +327,12 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
  * Returns TRUE if it managed to merge anything.
  */
 static gboolean
-gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
+gst_adapter_try_to_merge_up (GstAdapter * adapter, gsize size)
 {
   GstBuffer *cur, *head;
   GSList *g;
   gboolean ret = FALSE;
+  gsize hsize;
 
   g = adapter->buflist;
   if (g == NULL)
@@ -338,8 +344,9 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
   /* How large do we want our head buffer? The requested size, plus whatever's
    * been skipped already */
   size += adapter->skip;
+  hsize = gst_buffer_get_size (head);
 
-  while (g != NULL && GST_BUFFER_SIZE (head) < size) {
+  while (g != NULL && hsize < size) {
     cur = g->data;
     if (!gst_buffer_is_span_fast (head, cur))
       return ret;
@@ -347,9 +354,10 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
     /* Merge the head buffer and the next in line */
     GST_LOG_OBJECT (adapter,
         "Merging buffers of size %u & %u in search of target %u",
-        GST_BUFFER_SIZE (head), GST_BUFFER_SIZE (cur), size);
+        hsize, gst_buffer_get_size (cur), size);
 
     head = gst_buffer_join (head, cur);
+    hsize = gst_buffer_get_size (head);
     ret = TRUE;
 
     /* Delete the front list item, and store our new buffer in the 2nd list
@@ -390,11 +398,11 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
  *     @size bytes of data, or NULL
  */
 const guint8 *
-gst_adapter_peek (GstAdapter * adapter, guint size)
+gst_adapter_map (GstAdapter * adapter, gsize size)
 {
   GstBuffer *cur;
-  guint skip;
-  guint toreuse, tocopy;
+  gsize skip, csize;
+  gsize toreuse, tocopy;
   guint8 *data;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
@@ -410,20 +418,20 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
   if (adapter->assembled_len >= size)
     return adapter->assembled_data;
 
-  /* our head buffer has enough data left, return it */
-  cur = adapter->buflist->data;
-  skip = adapter->skip;
-  if (GST_BUFFER_SIZE (cur) >= size + skip)
-    return GST_BUFFER_DATA (cur) + skip;
-
-  /* We may be able to efficiently merge buffers in our pool to
-   * gather a big enough chunk to return it from the head buffer directly */
-  if (gst_adapter_try_to_merge_up (adapter, size)) {
-    /* Merged something! Check if there's enough avail now */
+  do {
     cur = adapter->buflist->data;
-    if (GST_BUFFER_SIZE (cur) >= size + skip)
-      return GST_BUFFER_DATA (cur) + skip;
-  }
+    skip = adapter->skip;
+
+    csize = gst_buffer_get_size (cur);
+    if (csize >= size + skip) {
+      data = gst_buffer_map (cur, &csize, NULL, GST_META_MAP_READ);
+      adapter->priv->cdata = data;
+      adapter->priv->csize = csize;
+      return data + skip;
+    }
+    /* We may be able to efficiently merge buffers in our pool to
+     * gather a big enough chunk to return it from the head buffer directly */
+  } while (gst_adapter_try_to_merge_up (adapter, size));
 
   /* see how much data we can reuse from the assembled memory and how much
    * we need to copy */
@@ -458,6 +466,29 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
 }
 
 /**
+ * gst_adapter_unmap:
+ * @adapter: a #GstAdapter
+ * @flush: the amount of bytes to flush
+ *
+ * Releases the memory obtained with the last gst_adapter_map() and flushes
+ * @size bytes from the adapter.
+ */
+void
+gst_adapter_unmap (GstAdapter * adapter, gsize flush)
+{
+  g_return_if_fail (GST_IS_ADAPTER (adapter));
+
+  if (adapter->priv->cdata) {
+    GstBuffer *cur = adapter->buflist->data;
+    gst_buffer_unmap (cur, adapter->priv->cdata, adapter->priv->csize);
+    adapter->priv->cdata = NULL;
+  }
+
+  if (flush)
+    gst_adapter_flush_unchecked (adapter, flush);
+}
+
+/**
  * gst_adapter_copy:
  * @adapter: a #GstAdapter
  * @dest: (out caller-allocates) (array length=size): the memory to copy into
@@ -474,7 +505,7 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
  * Since: 0.10.12
  */
 void
-gst_adapter_copy (GstAdapter * adapter, guint8 * dest, guint offset, guint size)
+gst_adapter_copy (GstAdapter * adapter, guint8 * dest, gsize offset, gsize size)
 {
   g_return_if_fail (GST_IS_ADAPTER (adapter));
   g_return_if_fail (size > 0);
@@ -494,10 +525,10 @@ gst_adapter_copy (GstAdapter * adapter, guint8 * dest, guint offset, guint size)
  * See also: gst_adapter_peek().
  */
 static void
-gst_adapter_flush_unchecked (GstAdapter * adapter, guint flush)
+gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
 {
   GstBuffer *cur;
-  guint size;
+  gsize size;
   GstAdapterPrivate *priv;
   GSList *g;
 
@@ -516,7 +547,7 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, guint flush)
 
   g = adapter->buflist;
   cur = g->data;
-  size = GST_BUFFER_SIZE (cur);
+  size = gst_buffer_get_size (cur);
   while (flush >= size) {
     /* can skip whole buffer */
     GST_LOG_OBJECT (adapter, "flushing out head buffer");
@@ -534,7 +565,7 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, guint flush)
     /* there is a new head buffer, update the timestamp */
     cur = g->data;
     update_timestamp (adapter, cur);
-    size = GST_BUFFER_SIZE (cur);
+    size = gst_buffer_get_size (cur);
   }
   adapter->buflist = g;
   /* account for the remaining bytes */
@@ -546,7 +577,7 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, guint flush)
 }
 
 void
-gst_adapter_flush (GstAdapter * adapter, guint flush)
+gst_adapter_flush (GstAdapter * adapter, gsize flush)
 {
   g_return_if_fail (GST_IS_ADAPTER (adapter));
   g_return_if_fail (flush <= adapter->size);
@@ -560,10 +591,10 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
 
 /* internal function, nbytes should be flushed after calling this function */
 static guint8 *
-gst_adapter_take_internal (GstAdapter * adapter, guint nbytes)
+gst_adapter_take_internal (GstAdapter * adapter, gsize nbytes)
 {
   guint8 *data;
-  guint toreuse, tocopy;
+  gsize toreuse, tocopy;
 
   /* see how much data we can reuse from the assembled memory and how much
    * we need to copy */
@@ -615,7 +646,7 @@ gst_adapter_take_internal (GstAdapter * adapter, guint nbytes)
  *     #NULL if @nbytes bytes are not available
  */
 guint8 *
-gst_adapter_take (GstAdapter * adapter, guint nbytes)
+gst_adapter_take (GstAdapter * adapter, gsize nbytes)
 {
   guint8 *data;
 
@@ -656,11 +687,11 @@ gst_adapter_take (GstAdapter * adapter, guint nbytes)
  * Since: 0.10.6
  */
 GstBuffer *
-gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
+gst_adapter_take_buffer (GstAdapter * adapter, gsize nbytes)
 {
   GstBuffer *buffer;
   GstBuffer *cur;
-  guint hsize, skip;
+  gsize hsize, skip;
   guint8 *data;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
@@ -676,7 +707,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
 
   cur = adapter->buflist->data;
   skip = adapter->skip;
-  hsize = GST_BUFFER_SIZE (cur);
+  hsize = gst_buffer_get_size (cur);
 
   /* our head buffer has enough data left, return it */
   if (skip == 0 && hsize == nbytes) {
@@ -694,7 +725,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
   if (gst_adapter_try_to_merge_up (adapter, nbytes)) {
     /* Merged something, let's try again for sub-buffering */
     cur = adapter->buflist->data;
-    if (GST_BUFFER_SIZE (cur) >= nbytes + skip) {
+    if (gst_buffer_get_size (cur) >= nbytes + skip) {
       GST_LOG_OBJECT (adapter, "providing buffer of %d bytes via sub-buffer",
           nbytes);
       buffer = gst_buffer_create_sub (cur, skip, nbytes);
@@ -705,9 +736,8 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
   data = gst_adapter_take_internal (adapter, nbytes);
 
   buffer = gst_buffer_new ();
-  GST_BUFFER_SIZE (buffer) = nbytes;
-  GST_BUFFER_DATA (buffer) = data;
-  GST_BUFFER_MALLOCDATA (buffer) = data;
+  gst_buffer_take_memory (buffer, gst_memory_new_wrapped (data, g_free, nbytes,
+          0, nbytes));
 
 done:
   gst_adapter_flush_unchecked (adapter, nbytes);
@@ -735,11 +765,11 @@ done:
  * Since: 0.10.31
  */
 GList *
-gst_adapter_take_list (GstAdapter * adapter, guint nbytes)
+gst_adapter_take_list (GstAdapter * adapter, gsize nbytes)
 {
   GList *result = NULL, *tail = NULL;
   GstBuffer *cur;
-  guint hsize, skip;
+  gsize hsize, skip;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (nbytes <= adapter->size, NULL);
@@ -749,7 +779,7 @@ gst_adapter_take_list (GstAdapter * adapter, guint nbytes)
   while (nbytes > 0) {
     cur = adapter->buflist->data;
     skip = adapter->skip;
-    hsize = MIN (nbytes, GST_BUFFER_SIZE (cur) - skip);
+    hsize = MIN (nbytes, gst_buffer_get_size (cur) - skip);
 
     cur = gst_adapter_take_buffer (adapter, hsize);
 
@@ -774,7 +804,7 @@ gst_adapter_take_list (GstAdapter * adapter, guint nbytes)
  *
  * Returns: number of bytes available in @adapter
  */
-guint
+gsize
 gst_adapter_available (GstAdapter * adapter)
 {
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), 0);
@@ -793,11 +823,11 @@ gst_adapter_available (GstAdapter * adapter)
  * Returns: number of bytes that are available in @adapter without expensive
  * operations
  */
-guint
+gsize
 gst_adapter_available_fast (GstAdapter * adapter)
 {
   GstBuffer *cur;
-  guint size;
+  gsize size;
   GSList *g;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), 0);
@@ -814,7 +844,7 @@ gst_adapter_available_fast (GstAdapter * adapter)
   g = adapter->buflist;
   while (TRUE) {
     cur = g->data;
-    size = GST_BUFFER_SIZE (cur);
+    size = gst_buffer_get_size (cur);
     if (size != 0)
       break;
     g = g_slist_next (g);
@@ -878,14 +908,14 @@ gst_adapter_prev_timestamp (GstAdapter * adapter, guint64 * distance)
  *
  * Since: 0.10.30
  */
-guint
+gsize
 gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
-    guint32 pattern, guint offset, guint size, guint32 * value)
+    guint32 pattern, gsize offset, gsize size, guint32 * value)
 {
   GSList *g;
-  guint skip, bsize, i;
+  gsize skip, bsize, osize, i;
   guint32 state;
-  guint8 *bdata;
+  guint8 *bdata, *odata;
   GstBuffer *buf;
 
   g_return_val_if_fail (size > 0, -1);
@@ -909,18 +939,20 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
     adapter->priv->scan_entry = NULL;
   }
   buf = g->data;
-  bsize = GST_BUFFER_SIZE (buf);
+  bsize = gst_buffer_get_size (buf);
   while (G_UNLIKELY (skip >= bsize)) {
     skip -= bsize;
     g = g_slist_next (g);
     adapter->priv->scan_offset += bsize;
     adapter->priv->scan_entry = g;
     buf = g->data;
-    bsize = GST_BUFFER_SIZE (buf);
+    bsize = gst_buffer_get_size (buf);
   }
   /* get the data now */
-  bsize -= skip;
-  bdata = GST_BUFFER_DATA (buf) + skip;
+  odata = gst_buffer_map (buf, &osize, NULL, GST_MAP_READ);
+
+  bdata = odata + skip;
+  bsize = osize - skip;
   skip = 0;
 
   /* set the state to something that does not match */
@@ -937,6 +969,7 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
         if (G_LIKELY (skip + i >= 3)) {
           if (G_LIKELY (value))
             *value = state;
+          gst_buffer_unmap (buf, odata, osize);
           return offset + skip + i - 3;
         }
       }
@@ -948,12 +981,17 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
     /* nothing found yet, go to next buffer */
     skip += bsize;
     g = g_slist_next (g);
-    adapter->priv->scan_offset += GST_BUFFER_SIZE (buf);
+    adapter->priv->scan_offset += osize;
     adapter->priv->scan_entry = g;
+    gst_buffer_unmap (buf, odata, osize);
     buf = g->data;
-    bsize = GST_BUFFER_SIZE (buf);
-    bdata = GST_BUFFER_DATA (buf);
+
+    odata = gst_buffer_map (buf, &osize, NULL, GST_MAP_READ);
+    bsize = osize;
+    bdata = odata;
   } while (TRUE);
+
+  gst_buffer_unmap (buf, odata, osize);
 
   /* nothing found */
   return -1;
@@ -1005,9 +1043,9 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
  *
  * Since: 0.10.24
  */
-guint
+gsize
 gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
-    guint32 pattern, guint offset, guint size)
+    guint32 pattern, gsize offset, gsize size)
 {
   return gst_adapter_masked_scan_uint32_peek (adapter, mask, pattern, offset,
       size, NULL);
