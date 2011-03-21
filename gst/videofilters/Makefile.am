@@ -4,6 +4,8 @@ plugin_LTLIBRARIES = libgstvideofiltersbad.la
 #include $(top_srcdir)/common/orc.mak
 
 libgstvideofiltersbad_la_SOURCES = \
+	gstvideofilter2.c \
+	gstvideofilter2.h \
 	gstzebrastripe.c \
 	gstvideofiltersbad.c
 #nodist_libgstvideofiltersbad_la_SOURCES = $(ORC_NODIST_SOURCES)
