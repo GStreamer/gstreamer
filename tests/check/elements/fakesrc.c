@@ -117,7 +117,7 @@ GST_START_TEST (test_sizetype_empty)
   while (l) {
     GstBuffer *buf = l->data;
 
-    fail_unless (GST_BUFFER_SIZE (buf) == 0);
+    fail_unless (gst_buffer_get_size (buf) == 0);
     l = l->next;
   }
   gst_check_drop_buffers ();
@@ -155,7 +155,7 @@ GST_START_TEST (test_sizetype_fixed)
   while (l) {
     GstBuffer *buf = l->data;
 
-    fail_unless (GST_BUFFER_SIZE (buf) == 8192);
+    fail_unless (gst_buffer_get_size (buf) == 8192);
     l = l->next;
   }
   gst_check_drop_buffers ();
@@ -194,8 +194,8 @@ GST_START_TEST (test_sizetype_random)
   while (l) {
     GstBuffer *buf = l->data;
 
-    fail_if (GST_BUFFER_SIZE (buf) > 8192);
-    fail_if (GST_BUFFER_SIZE (buf) < 4096);
+    fail_if (gst_buffer_get_size (buf) > 8192);
+    fail_if (gst_buffer_get_size (buf) < 4096);
     l = l->next;
   }
   gst_check_drop_buffers ();

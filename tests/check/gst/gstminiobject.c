@@ -32,7 +32,7 @@ GST_START_TEST (test_copy)
   copy = GST_BUFFER (gst_mini_object_copy (GST_MINI_OBJECT_CAST (buffer)));
 
   fail_if (copy == NULL, "Copy of buffer returned NULL");
-  fail_unless (GST_BUFFER_SIZE (copy) == 4,
+  fail_unless (gst_buffer_get_size (copy) == 4,
       "Copy of buffer has different size");
 }
 

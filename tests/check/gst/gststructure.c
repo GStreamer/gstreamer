@@ -509,11 +509,15 @@ GST_START_TEST (test_vararg_getters)
   gint64 i64;
   gchar *c;
   gint i, num, denom;
+  guint8 *data;
 
   buf = gst_buffer_new_and_alloc (3);
-  GST_BUFFER_DATA (buf)[0] = 0xf0;
-  GST_BUFFER_DATA (buf)[1] = 0x66;
-  GST_BUFFER_DATA (buf)[2] = 0x0d;
+
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  data[0] = 0xf0;
+  data[1] = 0x66;
+  data[2] = 0x0d;
+  gst_buffer_unmap (buf, data, 3);
 
   caps = gst_caps_new_simple ("video/x-foo", NULL);
 

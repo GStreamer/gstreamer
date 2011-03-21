@@ -93,7 +93,7 @@ test_transform_func (GstBuffer * transbuf, GstMetaTest * meta,
     size = subdata->size;
   } else {
     offset = 0;
-    size = GST_BUFFER_SIZE (buffer);
+    size = gst_buffer_get_size (buffer);
   }
 
   GST_DEBUG ("trans called from buffer %p to %p, meta %p, %u-%u", buffer,
@@ -104,7 +104,7 @@ test_transform_func (GstBuffer * transbuf, GstMetaTest * meta,
     /* same offset, copy timestamps */
     test->pts = meta->pts;
     test->dts = meta->dts;
-    if (size == GST_BUFFER_SIZE (buffer)) {
+    if (size == gst_buffer_get_size (buffer)) {
       /* same size, copy duration */
       test->duration = meta->duration;
     } else {
@@ -138,9 +138,13 @@ GST_START_TEST (test_meta_test)
 {
   GstBuffer *buffer, *copy, *subbuf;
   GstMetaTest *meta;
+  gpointer data;
 
   buffer = gst_buffer_new_and_alloc (4);
-  memset (GST_BUFFER_DATA (buffer), 0, 4);
+
+  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
+  memset (data, 0, 4);
+  gst_buffer_unmap (buffer, data, 4);
 
   /* add some metadata */
   meta = GST_META_TEST_ADD (buffer);

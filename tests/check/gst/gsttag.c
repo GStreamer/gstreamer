@@ -373,8 +373,8 @@ GST_START_TEST (test_buffer_tags)
   fail_if (!gst_tag_list_get_buffer_index (tags, GST_TAG_IMAGE, 0, &buf1));
   fail_if (!gst_tag_list_get_buffer_index (tags, GST_TAG_PREVIEW_IMAGE, 0,
           &buf2));
-  fail_unless_equals_int (GST_BUFFER_SIZE (buf1), 222);
-  fail_unless_equals_int (GST_BUFFER_SIZE (buf2), 100);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), 222);
+  fail_unless_equals_int (gst_buffer_get_size (buf2), 100);
 
   gst_buffer_unref (buf1);
   gst_buffer_unref (buf2);

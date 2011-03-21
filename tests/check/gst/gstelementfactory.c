@@ -53,10 +53,9 @@ setup_factory (void)
   gst_plugin_feature_set_name (feature, "test");
 
   factory = GST_ELEMENT_FACTORY_CAST (feature);
-  factory->details.longname = g_strdup ("test");
-  factory->details.klass = g_strdup ("test");
-  factory->details.description = g_strdup ("test");
-  factory->details.author = g_strdup ("test");
+#if 0
+  gst_element_class_set_metadata (factory, "test", "test", "test", "test");
+#endif
 
   setup_pad_template (factory, &sink_template);
   setup_pad_template (factory, &src_template);

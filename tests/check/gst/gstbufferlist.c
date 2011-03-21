@@ -47,17 +47,34 @@ cleanup (void)
 static GstBuffer *
 buffer_from_string (const gchar * str)
 {
-  guint size;
+  gsize size;
   GstBuffer *buf;
+  gpointer data;
 
   size = strlen (str);
   buf = gst_buffer_new_and_alloc (size);
   gst_buffer_set_caps (buf, caps);
   GST_BUFFER_TIMESTAMP (buf) = TIMESTAMP;
-  memcpy (GST_BUFFER_DATA (buf), str, size);
-  GST_BUFFER_SIZE (buf) = size;
+
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  memcpy (data, str, size);
+  gst_buffer_unmap (buf, data, size);
 
   return buf;
+}
+
+static void
+check_buffer (GstBuffer * buf, gsize size, const gchar * data)
+{
+  gchar *bdata;
+  gsize bsize, csize, msize;
+
+  bdata = gst_buffer_map (buf, &bsize, &msize, GST_META_MAP_READ);
+  csize = size ? size : bsize;
+  GST_DEBUG ("%lu %lu %lu", bsize, csize, msize);
+  fail_unless (bsize == csize);
+  fail_unless (memcmp (bdata, data, csize) == 0);
+  gst_buffer_unmap (buf, bdata, bsize);
 }
 
 GST_START_TEST (test_add_and_iterate)
@@ -546,9 +563,7 @@ GST_START_TEST (test_merge)
   gst_buffer_unref (buf);
   fail_unless (GST_BUFFER_CAPS (merged_buf) == caps);
   fail_unless (GST_BUFFER_TIMESTAMP (merged_buf) == TIMESTAMP);
-  fail_unless (GST_BUFFER_SIZE (merged_buf) == 3);
-  fail_unless (memcmp (GST_BUFFER_DATA (merged_buf), "One",
-          GST_BUFFER_SIZE (merged_buf)) == 0);
+  check_buffer (merged_buf, 3, "One");
   gst_buffer_unref (merged_buf);
 
   /* add another buffer to the same group */
@@ -559,17 +574,13 @@ GST_START_TEST (test_merge)
   ASSERT_BUFFER_REFCOUNT (merged_buf, "merged_buf", 1);
   fail_unless (GST_BUFFER_CAPS (merged_buf) == caps);
   fail_unless (GST_BUFFER_TIMESTAMP (merged_buf) == TIMESTAMP);
-  fail_unless (GST_BUFFER_SIZE (merged_buf) == 8);
-  fail_unless (memcmp (GST_BUFFER_DATA (merged_buf), "OneGroup",
-          GST_BUFFER_SIZE (merged_buf)) == 0);
+  check_buffer (merged_buf, 8, "OneGroup");
 
   /* merging the same group again should return a new buffer with merged data */
   buf = gst_buffer_list_iterator_merge_group (merge_it);
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
   fail_unless (buf != merged_buf);
-  fail_unless (GST_BUFFER_SIZE (buf) == 8);
-  fail_unless (memcmp (GST_BUFFER_DATA (buf), "OneGroup",
-          GST_BUFFER_SIZE (buf)) == 0);
+  check_buffer (buf, 8, "OneGroup");
   gst_buffer_unref (buf);
   gst_buffer_unref (merged_buf);
 
@@ -583,9 +594,7 @@ GST_START_TEST (test_merge)
   ASSERT_BUFFER_REFCOUNT (merged_buf, "merged_buf", 1);
   fail_unless (GST_BUFFER_CAPS (merged_buf) == caps);
   fail_unless (GST_BUFFER_TIMESTAMP (merged_buf) == TIMESTAMP);
-  fail_unless (GST_BUFFER_SIZE (merged_buf) == 8);
-  fail_unless (memcmp (GST_BUFFER_DATA (merged_buf), "OneGroup",
-          GST_BUFFER_SIZE (merged_buf)) == 0);
+  check_buffer (merged_buf, 8, "OneGroup");
   gst_buffer_unref (merged_buf);
 
   /* merge the second group */
@@ -594,9 +603,7 @@ GST_START_TEST (test_merge)
   ASSERT_BUFFER_REFCOUNT (merged_buf, "merged_buf", 1);
   fail_unless (GST_BUFFER_CAPS (merged_buf) == caps);
   fail_unless (GST_BUFFER_TIMESTAMP (merged_buf) == TIMESTAMP);
-  fail_unless (GST_BUFFER_SIZE (merged_buf) == 12);
-  fail_unless (memcmp (GST_BUFFER_DATA (merged_buf), "AnotherGroup",
-          GST_BUFFER_SIZE (merged_buf)) == 0);
+  check_buffer (merged_buf, 12, "AnotherGroup");
   gst_buffer_unref (merged_buf);
 
   gst_buffer_list_iterator_free (merge_it);
@@ -609,8 +616,7 @@ GST_START_TEST (test_merge)
   buf = gst_buffer_list_iterator_steal (it);
   gst_buffer_list_iterator_free (it);
   fail_unless (buf != NULL);
-  fail_unless (memcmp (GST_BUFFER_DATA (buf), "Group",
-          GST_BUFFER_SIZE (buf)) == 0);
+  check_buffer (buf, 0, "Group");
   gst_buffer_unref (buf);
   merge_it = gst_buffer_list_iterate (list);
   fail_unless (gst_buffer_list_iterator_next_group (merge_it));
@@ -618,9 +624,7 @@ GST_START_TEST (test_merge)
   ASSERT_BUFFER_REFCOUNT (merged_buf, "merged_buf", 1);
   fail_unless (GST_BUFFER_CAPS (merged_buf) == caps);
   fail_unless (GST_BUFFER_TIMESTAMP (merged_buf) == TIMESTAMP);
-  fail_unless (GST_BUFFER_SIZE (merged_buf) == 3);
-  fail_unless (memcmp (GST_BUFFER_DATA (merged_buf), "One",
-          GST_BUFFER_SIZE (merged_buf)) == 0);
+  check_buffer (merged_buf, 3, "One");
   gst_buffer_unref (merged_buf);
 
   /* steal the first buffer too and merge the first group again */
@@ -629,8 +633,7 @@ GST_START_TEST (test_merge)
   fail_unless (gst_buffer_list_iterator_next (it) != NULL);
   buf = gst_buffer_list_iterator_steal (it);
   fail_unless (buf != NULL);
-  fail_unless (memcmp (GST_BUFFER_DATA (buf), "One",
-          GST_BUFFER_SIZE (buf)) == 0);
+  check_buffer (buf, 3, "One");
   gst_buffer_unref (buf);
   gst_buffer_list_iterator_free (it);
   fail_unless (gst_buffer_list_iterator_merge_group (merge_it) == NULL);
@@ -796,8 +799,7 @@ GST_START_TEST (test_list)
 
     buf = gst_buffer_list_get (list, 0, i);
     g_snprintf (name, 10, "%d", i);
-    fail_unless (memcmp (name, (gchar *) GST_BUFFER_DATA (buf),
-            GST_BUFFER_SIZE (buf)) == 0);
+    check_buffer (buf, 0, name);
   }
   gst_buffer_list_iterator_free (it);
 }

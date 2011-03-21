@@ -139,10 +139,15 @@ GST_START_TEST (test_serialize_buffer)
   gchar *serialized;
   static const char *buf_data = "1234567890abcdef";
   gint len;
+  gpointer data;
 
   len = strlen (buf_data);
   buf = gst_buffer_new_and_alloc (len);
-  memcpy (GST_BUFFER_DATA (buf), buf_data, len);
+
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  memcpy (data, buf_data, len);
+  gst_buffer_unmap (buf, data, len);
+
   ASSERT_MINI_OBJECT_REFCOUNT (buf, "buffer", 1);
 
   /* and assign buffer to mini object */

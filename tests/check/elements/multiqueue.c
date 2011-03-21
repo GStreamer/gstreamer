@@ -267,6 +267,8 @@ mq_dummypad_chain (GstPad * sinkpad, GstBuffer * buf)
 {
   guint32 cur_id;
   struct PadData *pad_data;
+  guint8 *data;
+  gsize size;
 
   pad_data = gst_pad_get_element_private (sinkpad);
 
@@ -274,9 +276,11 @@ mq_dummypad_chain (GstPad * sinkpad, GstBuffer * buf)
   fail_if (pad_data == NULL);
   /* Read an ID from the first 4 bytes of the buffer data and check it's
    * what we expect */
-  fail_unless (GST_BUFFER_SIZE (buf) >= 4);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  fail_unless (size >= 4);
   g_static_mutex_unlock (&_check_lock);
-  cur_id = GST_READ_UINT32_BE (GST_BUFFER_DATA (buf));
+  cur_id = GST_READ_UINT32_BE (data);
+  gst_buffer_unmap (buf, data, size);
 
   g_mutex_lock (pad_data->mutex);
 
@@ -429,6 +433,7 @@ run_output_order_test (gint n_linked)
     guint8 cur_pad;
     GstBuffer *buf;
     GstFlowReturn ret;
+    gpointer data;
 
     cur_pad = pad_pattern[i % n];
 
@@ -436,7 +441,10 @@ run_output_order_test (gint n_linked)
     g_static_mutex_lock (&_check_lock);
     fail_if (buf == NULL);
     g_static_mutex_unlock (&_check_lock);
-    GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), i + 1);
+
+    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    GST_WRITE_UINT32_BE (data, i + 1);
+    gst_buffer_unmap (buf, data, 4);
     GST_BUFFER_TIMESTAMP (buf) = (i + 1) * GST_SECOND;
 
     ret = gst_pad_push (inputpads[cur_pad], buf);
@@ -582,6 +590,7 @@ GST_START_TEST (test_sparse_stream)
     GstBuffer *buf;
     GstFlowReturn ret;
     GstClockTime ts;
+    gpointer data;
 
     ts = gst_util_uint64_scale_int (GST_SECOND, i, 10);
 
@@ -589,7 +598,11 @@ GST_START_TEST (test_sparse_stream)
     g_static_mutex_lock (&_check_lock);
     fail_if (buf == NULL);
     g_static_mutex_unlock (&_check_lock);
-    GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), i + 1);
+
+    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    GST_WRITE_UINT32_BE (data, i + 1);
+    gst_buffer_unmap (buf, data, 4);
+
     GST_BUFFER_TIMESTAMP (buf) = gst_util_uint64_scale_int (GST_SECOND, i, 10);
 
     /* If i == 0, also push the buffer to the 2nd pad */

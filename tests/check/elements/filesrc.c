@@ -171,6 +171,8 @@ GST_START_TEST (test_pull)
   GstPad *pad;
   GstFlowReturn ret;
   GstBuffer *buffer1, *buffer2;
+  guint8 *data1, *data2;
+  gsize size1, size2;
 
   src = setup_filesrc ();
 
@@ -208,16 +210,18 @@ GST_START_TEST (test_pull)
   ret = gst_pad_get_range (pad, 0, 100, &buffer1);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer1 != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer1) == 100);
+  fail_unless (gst_buffer_get_size (buffer1) == 100);
 
   ret = gst_pad_get_range (pad, 0, 50, &buffer2);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer2 != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer2) == 50);
+  fail_unless (gst_buffer_get_size (buffer2) == 50);
 
   /* this should be the same */
-  fail_unless (memcmp (GST_BUFFER_DATA (buffer1), GST_BUFFER_DATA (buffer2),
-          50) == 0);
+  data1 = gst_buffer_map (buffer1, &size1, NULL, GST_MAP_READ);
+  data2 = gst_buffer_map (buffer2, &size2, NULL, GST_MAP_READ);
+  fail_unless (memcmp (data1, data2, 50) == 0);
+  gst_buffer_unmap (buffer2, data2, size2);
 
   gst_buffer_unref (buffer2);
 
@@ -225,12 +229,14 @@ GST_START_TEST (test_pull)
   ret = gst_pad_get_range (pad, 50, 50, &buffer2);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer2 != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer2) == 50);
+  fail_unless (gst_buffer_get_size (buffer2) == 50);
 
   /* compare with previously read data */
-  fail_unless (memcmp (GST_BUFFER_DATA (buffer1) + 50,
-          GST_BUFFER_DATA (buffer2), 50) == 0);
+  data2 = gst_buffer_map (buffer2, &size2, NULL, GST_MAP_READ);
+  fail_unless (memcmp (data1, data2, 50) == 0);
+  gst_buffer_unmap (buffer2, data2, size2);
 
+  gst_buffer_unmap (buffer1, data1, size1);
   gst_buffer_unref (buffer1);
   gst_buffer_unref (buffer2);
 
@@ -238,28 +244,28 @@ GST_START_TEST (test_pull)
   ret = gst_pad_get_range (pad, stop - 10, 10, &buffer1);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer1 != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer1) == 10);
+  fail_unless (gst_buffer_get_size (buffer1) == 10);
   gst_buffer_unref (buffer1);
 
   /* read 20 bytes at end-10 should give exactly 10 bytes */
   ret = gst_pad_get_range (pad, stop - 10, 20, &buffer1);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer1 != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer1) == 10);
+  fail_unless (gst_buffer_get_size (buffer1) == 10);
   gst_buffer_unref (buffer1);
 
   /* read 0 bytes at end-1 should return 0 bytes */
   ret = gst_pad_get_range (pad, stop - 1, 0, &buffer1);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer1 != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer1) == 0);
+  fail_unless (gst_buffer_get_size (buffer1) == 0);
   gst_buffer_unref (buffer1);
 
   /* read 10 bytes at end-1 should return 1 byte */
   ret = gst_pad_get_range (pad, stop - 1, 10, &buffer1);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer1 != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer1) == 1);
+  fail_unless (gst_buffer_get_size (buffer1) == 1);
   gst_buffer_unref (buffer1);
 
   /* read 0 bytes at end should EOS */

@@ -54,8 +54,9 @@ GST_START_TEST (test_buffer_range)
 
   buf = gst_buffer_new ();
   fail_unless (buf != NULL);
-  GST_BUFFER_DATA (buf) = (guint8 *) vorbisid;
-  GST_BUFFER_SIZE (buf) = 30;
+
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped ((gpointer) vorbisid, NULL, 30, 0, 30));
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
 
   caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);
@@ -90,7 +91,7 @@ GST_CHECK_MAIN (gst_typefindhelper);
 static void
 foobar_typefind (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data;
+  const guint8 *data;
 
   data = gst_type_find_peek (tf, 0, 10);
   fail_unless (data != NULL);
