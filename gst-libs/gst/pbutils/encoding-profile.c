@@ -68,12 +68,12 @@
  *  gst_caps_unref (caps);
  *
  *  caps = gst_caps_from_string("video/x-theora");
- *  sprof = gst_encoding_container_profile_add_profile(
+ *  gst_encoding_container_profile_add_profile(prof,
  *       (GstEncodingProfile*) gst_encoding_video_profile_new(caps, NULL, NULL, 0));
  *  gst_caps_unref (caps);
  *
  *  caps = gst_caps_from_string("audio/x-vorbis");
- *  sprof = gst_encoding_container_profile_add_profile(
+ *  gst_encoding_container_profile_add_profile(prof,
  *       (GstEncodingProfile*) gst_encoding_audio_profile_new(caps, NULL, NULL, 0));
  *  gst_caps_unref (caps);
  *
