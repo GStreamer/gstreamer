@@ -241,7 +241,7 @@ meta_timing_transform (GstBuffer * transbuf, GstMetaTiming * meta,
     size = subdata->size;
   } else {
     offset = 0;
-    size = GST_BUFFER_SIZE (buffer);
+    size = gst_buffer_get_size (buffer);
   }
 
   GST_DEBUG ("trans called from buffer %p to %p, meta %p, %u-%u", buffer,
@@ -252,7 +252,7 @@ meta_timing_transform (GstBuffer * transbuf, GstMetaTiming * meta,
     /* same offset, copy timestamps */
     timing->pts = meta->pts;
     timing->dts = meta->dts;
-    if (size == GST_BUFFER_SIZE (buffer)) {
+    if (size == gst_buffer_get_size (buffer)) {
       /* same size, copy duration */
       timing->duration = meta->duration;
     } else {

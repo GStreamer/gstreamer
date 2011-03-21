@@ -154,16 +154,6 @@ static size_t _gst_buffer_data_alignment = BUFFER_ALIGNMENT;
 #else
 #error "No buffer alignment configured"
 #endif
-
-static inline gboolean
-aligned_malloc (gpointer * memptr, guint size)
-{
-  gint res;
-
-  res = posix_memalign (memptr, _gst_buffer_data_alignment, size);
-  return (res == 0);
-}
-
 #endif /* HAVE_POSIX_MEMALIGN */
 
 void
@@ -179,58 +169,21 @@ _gst_buffer_initialize (void)
   }
 }
 
-void
-gst_buffer_copy_memory (GstBuffer * dest, GstBuffer * src,
-    gsize offset, gsize size, gboolean merge)
-{
-  GPtrArray *sarr = (GPtrArray *) src->memory;
-  GPtrArray *darr = (GPtrArray *) dest->memory;
-  guint i, len;
-
-  len = sarr->len;
-
-  for (i = 0; i < len; i++) {
-    GstMemory *mem = g_ptr_array_index (sarr, i);
-    g_ptr_array_add (darr, gst_memory_copy (mem));
-  }
-}
-
-void
-gst_buffer_share_memory (GstBuffer * dest, GstBuffer * src)
-{
-  GPtrArray *sarr = (GPtrArray *) src->memory;
-  GPtrArray *darr = (GPtrArray *) dest->memory;
-  guint i, len;
-
-  len = sarr->len;
-
-  for (i = 0; i < len; i++) {
-    GstMemory *mem = g_ptr_array_index (sarr, i);
-    g_ptr_array_add (darr, gst_memory_ref (mem));
-  }
-}
-
-
 /**
- * gst_buffer_copy_metadata:
+ * gst_buffer_copy_into:
  * @dest: a destination #GstBuffer
  * @src: a source #GstBuffer
  * @flags: flags indicating what metadata fields should be copied.
+ * @offset: offset to copy from
+ * @trim: bytes to trim from end
  *
- * Copies the metadata from @src into @dest. The data, size and mallocdata
- * fields are not copied.
+ * Copies the information from @src into @dest.
  *
- * @flags indicate which fields will be copied. Use #GST_BUFFER_COPY_ALL to copy
- * all the metadata fields.
- *
- * This function is typically called from a custom buffer copy function after
- * creating @dest and setting the data, size, mallocdata.
- *
- * Since: 0.10.13
+ * @flags indicate which fields will be copied.
  */
 void
-gst_buffer_copy_metadata (GstBuffer * dest, GstBuffer * src,
-    GstBufferCopyFlags flags)
+gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
+    GstBufferCopyFlags flags, gsize offset, gsize trim)
 {
   GstMetaItem *walk;
 
@@ -260,14 +213,43 @@ gst_buffer_copy_metadata (GstBuffer * dest, GstBuffer * src,
   }
 
   if (flags & GST_BUFFER_COPY_TIMESTAMPS) {
-    GST_BUFFER_TIMESTAMP (dest) = GST_BUFFER_TIMESTAMP (src);
-    GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
-    GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
-    GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
+    if (offset == 0) {
+      GST_BUFFER_TIMESTAMP (dest) = GST_BUFFER_TIMESTAMP (src);
+      GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
+      if (trim == 0) {
+        GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
+        GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
+      }
+    } else {
+      GST_BUFFER_TIMESTAMP (dest) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_DURATION (dest) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_NONE;
+    }
   }
 
   if (flags & GST_BUFFER_COPY_CAPS) {
     gst_caps_replace (&GST_BUFFER_CAPS (dest), GST_BUFFER_CAPS (src));
+  }
+
+  if (flags & GST_BUFFER_COPY_MEMORY) {
+    GPtrArray *sarr = (GPtrArray *) src->memory;
+    GPtrArray *darr = (GPtrArray *) dest->memory;
+    guint i, len;
+
+    len = sarr->len;
+
+    if (flags & GST_BUFFER_COPY_MEMORY_SHARE) {
+      for (i = 0; i < len; i++) {
+        GstMemory *mem = g_ptr_array_index (sarr, i);
+        g_ptr_array_add (darr, gst_memory_ref (mem));
+      }
+    } else {
+      for (i = 0; i < len; i++) {
+        GstMemory *mem = g_ptr_array_index (sarr, i);
+        g_ptr_array_add (darr, gst_memory_copy (mem));
+      }
+    }
   }
 
   for (walk = src->priv; walk; walk = walk->next) {
@@ -291,8 +273,7 @@ _gst_buffer_copy (GstBuffer * buffer)
   copy = gst_buffer_new ();
 
   /* we simply copy everything from our parent */
-  gst_buffer_copy_memory (copy, buffer, 0, 0, FALSE);
-  gst_buffer_copy_metadata (copy, buffer, GST_BUFFER_COPY_ALL);
+  gst_buffer_copy_into (copy, buffer, GST_BUFFER_COPY_ALL, 0, 0);
 
   return copy;
 }
@@ -337,7 +318,7 @@ _gst_buffer_free (GstBuffer * buffer)
     g_slice_free (GstMetaItem, walk);
   }
 
-  /* free our data */
+  /* free our data, unrefs the memory too */
   g_ptr_array_free (buffer->memory, TRUE);
 
   g_slice_free1 (GST_MINI_OBJECT_SIZE (buffer), buffer);
@@ -445,6 +426,8 @@ gst_buffer_try_new_and_alloc (guint size)
     GST_CAT_WARNING (GST_CAT_BUFFER, "failed to allocate %d bytes", size);
     return NULL;
   }
+
+  newbuf = gst_buffer_new ();
   gst_buffer_take_memory (newbuf, mem);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
@@ -488,7 +471,7 @@ gst_buffer_remove_memory (GstBuffer * buffer, guint idx)
 }
 
 gsize
-gst_buffer_get_memory_size (GstBuffer * buffer)
+gst_buffer_get_size (GstBuffer * buffer)
 {
   GPtrArray *arr = (GPtrArray *) buffer->memory;
   guint i, size, len;
@@ -507,13 +490,39 @@ gpointer
 gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
     GstMapFlags flags)
 {
-  return NULL;
+  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  guint len;
+  gpointer data;
+
+  len = arr->len;
+
+  if (G_LIKELY (len == 1)) {
+    GstMemory *mem = g_ptr_array_index (arr, 0);
+
+    data = gst_memory_map (mem, size, maxsize, flags);
+  } else {
+    data = NULL;
+  }
+  return data;
 }
 
 gboolean
 gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
 {
-  return FALSE;
+  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  gboolean result;
+  guint len;
+
+  len = arr->len;
+
+  if (G_LIKELY (len == 1)) {
+    GstMemory *mem = g_ptr_array_index (arr, 0);
+
+    result = gst_memory_unmap (mem, data, size);
+  } else {
+    result = FALSE;
+  }
+  return result;
 }
 
 /**
@@ -614,14 +623,11 @@ gst_buffer_make_metadata_writable (GstBuffer * buf)
     ret = gst_buffer_new ();
 
     /* we simply copy everything from our parent */
-    gst_buffer_share_memory (ret, buf);
-    gst_buffer_copy_metadata (ret, buf, GST_BUFFER_COPY_ALL);
+    gst_buffer_copy_into (ret, buf, GST_BUFFER_SHARE_ALL, 0, 0);
     gst_buffer_unref (buf);
   }
   return ret;
 }
-
-#define GST_IS_SUBBUFFER(obj)   (GST_BUFFER_CAST(obj)->parent != NULL)
 
 /**
  * gst_buffer_create_sub:
@@ -645,88 +651,25 @@ gst_buffer_make_metadata_writable (GstBuffer * buf)
  *     invalid.
  */
 GstBuffer *
-gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
+gst_buffer_create_sub (GstBuffer * buffer, gsize offset, gsize size)
 {
   GstBuffer *subbuffer;
-  GstBuffer *parent;
-  gboolean complete;
-  GstMetaItem *walk;
+  gsize bufsize;
 
   g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (buffer->mini_object.refcount > 0, NULL);
-  g_return_val_if_fail (buffer->size >= offset + size, NULL);
 
-  /* find real parent */
-  if (GST_IS_SUBBUFFER (buffer)) {
-    parent = buffer->parent;
-  } else {
-    parent = buffer;
-  }
-  gst_buffer_ref (parent);
+  bufsize = gst_buffer_get_size (buffer);
+  g_return_val_if_fail (bufsize >= offset + size, NULL);
 
   /* create the new buffer */
   subbuffer = gst_buffer_new ();
-  subbuffer->parent = parent;
-  GST_BUFFER_FLAG_SET (subbuffer, GST_BUFFER_FLAG_READONLY);
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p (parent %p)", subbuffer,
-      parent);
+  GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p of %p", subbuffer, buffer);
 
-  /* set the right values in the child */
-  GST_BUFFER_DATA (subbuffer) = buffer->data + offset;
-  GST_BUFFER_SIZE (subbuffer) = size;
+  gst_buffer_copy_into (subbuffer, buffer, GST_BUFFER_SHARE_ALL, offset,
+      bufsize - (size + offset));
 
-  if ((offset == 0) && (size == GST_BUFFER_SIZE (buffer))) {
-    /* copy all the flags except IN_CAPS */
-    GST_BUFFER_FLAG_SET (subbuffer, GST_BUFFER_FLAGS (buffer));
-    GST_BUFFER_FLAG_UNSET (subbuffer, GST_BUFFER_FLAG_IN_CAPS);
-  } else {
-    /* copy only PREROLL & GAP flags */
-    GST_BUFFER_FLAG_SET (subbuffer, (GST_BUFFER_FLAGS (buffer) &
-            (GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_GAP)));
-  }
-
-  /* we can copy the timestamp and offset if the new buffer starts at
-   * offset 0 */
-  if (offset == 0) {
-    GST_BUFFER_TIMESTAMP (subbuffer) = GST_BUFFER_TIMESTAMP (buffer);
-    GST_BUFFER_OFFSET (subbuffer) = GST_BUFFER_OFFSET (buffer);
-    complete = (buffer->size == size);
-  } else {
-    GST_BUFFER_TIMESTAMP (subbuffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_OFFSET (subbuffer) = GST_BUFFER_OFFSET_NONE;
-    complete = FALSE;
-  }
-
-  if (complete) {
-    GstCaps *caps;
-
-    /* if we copied the complete buffer we can copy the duration,
-     * offset_end and caps as well */
-    GST_BUFFER_DURATION (subbuffer) = GST_BUFFER_DURATION (buffer);
-    GST_BUFFER_OFFSET_END (subbuffer) = GST_BUFFER_OFFSET_END (buffer);
-    if ((caps = GST_BUFFER_CAPS (buffer)))
-      gst_caps_ref (caps);
-    GST_BUFFER_CAPS (subbuffer) = caps;
-  } else {
-    GST_BUFFER_DURATION (subbuffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_OFFSET_END (subbuffer) = GST_BUFFER_OFFSET_NONE;
-    GST_BUFFER_CAPS (subbuffer) = NULL;
-  }
-  /* call subbuffer functions for metadata */
-  for (walk = buffer->priv; walk; walk = walk->next) {
-    GstMeta *meta = &walk->meta;
-    const GstMetaInfo *info = meta->info;
-    GstMetaTransformSubbuffer subdata;
-
-    subdata.data.type = GST_META_TRANSFORM_TRIM;
-    subdata.offset = offset;
-    subdata.size = size;
-
-    if (info->transform_func)
-      info->transform_func (subbuffer, meta, buffer,
-          (GstMetaTransformData *) & subdata);
-  }
   return subbuffer;
 }
 
@@ -736,7 +679,7 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
  * @buf2: the second #GstBuffer.
  *
  * Determines whether a gst_buffer_span() can be done without copying
- * the contents, that is, whether the data areas are contiguous sub-buffers of 
+ * the contents, that is, whether the data areas are contiguous sub-buffers of
  * the same buffer.
  *
  * MT safe.
@@ -746,14 +689,17 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
 gboolean
 gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
 {
+  GPtrArray *arr1, *arr2;
+
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, FALSE);
   g_return_val_if_fail (buf1->mini_object.refcount > 0, FALSE);
   g_return_val_if_fail (buf2->mini_object.refcount > 0, FALSE);
 
-  /* it's only fast if we have subbuffers of the same parent */
-  return (GST_IS_SUBBUFFER (buf1) &&
-      GST_IS_SUBBUFFER (buf2) && (buf1->parent == buf2->parent)
-      && ((buf1->data + buf1->size) == buf2->data));
+  arr1 = (GPtrArray *) buf1->memory;
+  arr2 = (GPtrArray *) buf2->memory;
+
+  return gst_memory_is_span ((GstMemory **) arr1->pdata, arr1->len,
+      (GstMemory **) arr2->pdata, arr2->len, NULL, NULL);
 }
 
 /**
@@ -780,36 +726,27 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
  *     buffers, or NULL if the arguments are invalid.
  */
 GstBuffer *
-gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
-    guint32 len)
+gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize len)
 {
   GstBuffer *newbuf;
+  GPtrArray *arr1, *arr2;
+  GstMemory *mem;
 
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, NULL);
   g_return_val_if_fail (buf1->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (buf2->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (len > 0, NULL);
-  g_return_val_if_fail (len <= buf1->size + buf2->size - offset, NULL);
 
-  /* if the two buffers have the same parent and are adjacent */
-  if (gst_buffer_is_span_fast (buf1, buf2)) {
-    GstBuffer *parent = buf1->parent;
+  newbuf = gst_buffer_new ();
 
-    /* we simply create a subbuffer of the common parent */
-    newbuf = gst_buffer_create_sub (parent,
-        buf1->data - parent->data + offset, len);
-  } else {
-    GST_CAT_DEBUG (GST_CAT_BUFFER,
-        "slow path taken while spanning buffers %p and %p", buf1, buf2);
-    /* otherwise we simply have to brute-force copy the buffers */
-    newbuf = gst_buffer_new_and_alloc (len);
+  arr1 = (GPtrArray *) buf1->memory;
+  arr2 = (GPtrArray *) buf2->memory;
 
-    /* copy the first buffer's data across */
-    memcpy (newbuf->data, buf1->data + offset, buf1->size - offset);
-    /* copy the second buffer's data across */
-    memcpy (newbuf->data + (buf1->size - offset), buf2->data,
-        len - (buf1->size - offset));
-  }
+  mem = gst_memory_span ((GstMemory **) arr1->pdata, arr1->len, offset,
+      (GstMemory **) arr2->pdata, arr2->len, len);
+  gst_buffer_take_memory (newbuf, mem);
+
+#if 0
   /* if the offset is 0, the new buffer has the same timestamp as buf1 */
   if (offset == 0) {
     GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET (buf1);
@@ -831,6 +768,7 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
       }
     }
   }
+#endif
 
   return newbuf;
 }

@@ -302,7 +302,7 @@ void        gst_buffer_take_memory       (GstBuffer *buffer, GstMemory *mem);
 GstMemory * gst_buffer_peek_memory       (GstBuffer *buffer, guint idx);
 void        gst_buffer_remove_memory     (GstBuffer *buffer, guint idx);
 
-gsize       gst_buffer_get_memory_size   (GstBuffer *buffer);
+gsize       gst_buffer_get_size          (GstBuffer *buffer);
 
 /* getting memory */
 gpointer    gst_buffer_map               (GstBuffer *buffer, gsize *size, gsize *maxsize,
@@ -406,27 +406,32 @@ gst_buffer_copy (const GstBuffer * buf)
  * Since: 0.10.13
  */
 typedef enum {
-  GST_BUFFER_COPY_FLAGS      = (1 << 0),
-  GST_BUFFER_COPY_TIMESTAMPS = (1 << 1),
-  GST_BUFFER_COPY_CAPS       = (1 << 2)
+  GST_BUFFER_COPY_FLAGS          = (1 << 0),
+  GST_BUFFER_COPY_TIMESTAMPS     = (1 << 1),
+  GST_BUFFER_COPY_CAPS           = (1 << 2),
+  GST_BUFFER_COPY_MEMORY         = (1 << 3),
+  GST_BUFFER_COPY_MEMORY_MERGE   = (1 << 4),
+  GST_BUFFER_COPY_MEMORY_SHARE   = (1 << 5),
 } GstBufferCopyFlags;
+
+#define GST_BUFFER_COPY_METADATA       (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS)
 
 /**
  * GST_BUFFER_COPY_ALL:
  *
  * Combination of all possible fields that can be copied with
- * gst_buffer_copy_metadata().
+ * gst_buffer_copy_into().
  *
  * Since: 0.10.13
  */
-#define GST_BUFFER_COPY_ALL (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS)
+#define GST_BUFFER_COPY_ALL  (GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_MEMORY)
+
+#define GST_BUFFER_SHARE_ALL (GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_MEMORY | GST_BUFFER_COPY_MEMORY_SHARE)
 
 /* copies memory or metadata into newly allocated buffer */
-void            gst_buffer_copy_memory          (GstBuffer *dest, GstBuffer *src,
-                                                 gsize offset, gsize size, gboolean merge);
-void            gst_buffer_share_memory         (GstBuffer *dest, GstBuffer *src);
-void            gst_buffer_copy_metadata        (GstBuffer *dest, GstBuffer *src,
-                                                 GstBufferCopyFlags flags);
+void            gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src,
+                                                 GstBufferCopyFlags flags,
+                                                 gsize offset, gsize trim);
 
 /**
  * gst_buffer_is_writable:
@@ -481,11 +486,11 @@ GstCaps*        gst_buffer_get_caps             (GstBuffer *buffer);
 void            gst_buffer_set_caps             (GstBuffer *buffer, GstCaps *caps);
 
 /* creating a subbuffer */
-GstBuffer*      gst_buffer_create_sub           (GstBuffer *parent, guint offset, guint size);
+GstBuffer*      gst_buffer_create_sub           (GstBuffer *parent, gsize offset, gsize size);
 
 /* span, two buffers, intelligently */
 gboolean        gst_buffer_is_span_fast         (GstBuffer *buf1, GstBuffer *buf2);
-GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
+GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, gsize offset, GstBuffer *buf2, gsize len);
 
 /* metadata */
 #include <gst/gstmeta.h>

@@ -2960,7 +2960,8 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
   }
 
   /* sanity check (only if caps are the same) */
-  if (G_LIKELY (newcaps == caps) && G_UNLIKELY (GST_BUFFER_SIZE (*buf) < size))
+  if (G_LIKELY (newcaps == caps)
+      && G_UNLIKELY (gst_buffer_get_size (*buf) < size))
     goto wrong_size_fallback;
 
   return ret;
@@ -2997,7 +2998,7 @@ wrong_size_fallback:
   {
     GST_CAT_ERROR_OBJECT (GST_CAT_PADS, pad, "buffer returned by alloc "
         "function is too small (%u < %d), doing fallback buffer alloc",
-        GST_BUFFER_SIZE (*buf), size);
+        gst_buffer_get_size (*buf), size);
 
     gst_buffer_unref (*buf);
 
