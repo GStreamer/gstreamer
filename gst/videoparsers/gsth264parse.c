@@ -688,7 +688,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse)
   }
 
   if (caps) {
-    gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING,
+    gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE,
+        "stream-format", G_TYPE_STRING,
         gst_h264_parse_get_string (h264parse, TRUE, h264parse->format),
         "alignment", G_TYPE_STRING,
         gst_h264_parse_get_string (h264parse, FALSE, h264parse->align), NULL);
