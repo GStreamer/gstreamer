@@ -256,6 +256,8 @@ static void gst_multi_queue_get_property (GObject * object,
 static GstPad *gst_multi_queue_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * name);
 static void gst_multi_queue_release_pad (GstElement * element, GstPad * pad);
+static GstStateChangeReturn gst_multi_queue_change_state (GstElement *
+    element, GstStateChange transition);
 
 static void gst_multi_queue_loop (GstPad * pad);
 
@@ -400,6 +402,8 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
       GST_DEBUG_FUNCPTR (gst_multi_queue_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_multi_queue_release_pad);
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_multi_queue_change_state);
 }
 
 static void
@@ -648,6 +652,56 @@ gst_multi_queue_release_pad (GstElement * element, GstPad * pad)
   gst_element_remove_pad (element, sq->srcpad);
   gst_element_remove_pad (element, sq->sinkpad);
   gst_single_queue_free (sq);
+}
+
+static GstStateChangeReturn
+gst_multi_queue_change_state (GstElement * element, GstStateChange transition)
+{
+  GstMultiQueue *mqueue = GST_MULTI_QUEUE (element);
+  GstSingleQueue *sq = NULL;
+  GstStateChangeReturn result;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:{
+      GList *tmp;
+
+      /* Set all pads to non-flushing */
+      GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
+      for (tmp = mqueue->queues; tmp; tmp = g_list_next (tmp)) {
+        sq = (GstSingleQueue *) tmp->data;
+        sq->flushing = FALSE;
+      }
+      GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
+      break;
+    }
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      GList *tmp;
+
+      /* Un-wait all waiting pads */
+      GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
+      for (tmp = mqueue->queues; tmp; tmp = g_list_next (tmp)) {
+        sq = (GstSingleQueue *) tmp->data;
+        sq->flushing = TRUE;
+        g_cond_signal (sq->turn);
+      }
+      GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
+      break;
+    }
+    default:
+      break;
+  }
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  return result;
+
+
+
 }
 
 static gboolean
