@@ -2085,6 +2085,9 @@ gst_base_transform_src_event (GstPad * pad, GstEvent * event)
   gboolean ret = TRUE;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (trans == NULL))
+    return FALSE;
+
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->src_event)
