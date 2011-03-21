@@ -205,7 +205,6 @@ _xmp_tag_get_mapping (const gchar * gst_tag)
 
     ret = (GPtrArray *) gst_xmp_schema_lookup (schema, GUINT_TO_POINTER (key));
   }
-
   return ret;
 }
 
@@ -822,6 +821,7 @@ _init_xmp_tag_map ()
   _gst_xmp_add_schema ("xmp", schema);
 
   /* tiff */
+  schema = gst_xmp_schema_new ();
   _gst_xmp_schema_add_simple_mapping (schema,
       GST_TAG_DEVICE_MANUFACTURER, "tiff:Make", GST_XMP_TAG_TYPE_SIMPLE, NULL,
       NULL);
