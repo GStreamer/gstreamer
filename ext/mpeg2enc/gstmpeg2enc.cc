@@ -717,7 +717,7 @@ plugin_init (GstPlugin * plugin)
   mjpeg_default_handler_verbosity (0);
 
   return gst_element_register (plugin, "mpeg2enc",
-      GST_RANK_SECONDARY, GST_TYPE_MPEG2ENC);
+      GST_RANK_MARGINAL, GST_TYPE_MPEG2ENC);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
