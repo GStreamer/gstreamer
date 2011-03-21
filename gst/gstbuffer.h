@@ -27,6 +27,7 @@
 #include <gst/gstminiobject.h>
 #include <gst/gstclock.h>
 #include <gst/gstcaps.h>
+#include <gst/gstmemory.h>
 
 G_BEGIN_DECLS
 
@@ -265,9 +266,6 @@ struct _GstBuffer {
   GstMiniObject          mini_object;
 
   /*< public >*/ /* with COW */
-  /* pointer to data and its size */
-  guint8                *data;
-  guint                  size;
 
   /* timestamp */
   GstClockTime           timestamp;
@@ -280,11 +278,15 @@ struct _GstBuffer {
   guint64                offset;
   guint64                offset_end;
 
-  guint8                *malloc_data;
+  /* pointer to data and its size, backwards compatibility */
+  guint8                *bw_data;
+  guint                  bw_size;
+  guint8                *bw_malloc_data;
+  GFreeFunc              bw_free_func;
 
-  /* ABI Added */
-  GFreeFunc              free_func;
-  GstBuffer             *parent;
+  /* pointer to memory blocks */
+  gpointer               memory;
+
   GstBufferPool         *pool;
   gpointer               priv;
 };
@@ -293,6 +295,19 @@ struct _GstBuffer {
 GstBuffer * gst_buffer_new               (void);
 GstBuffer * gst_buffer_new_and_alloc     (guint size);
 GstBuffer * gst_buffer_try_new_and_alloc (guint size);
+
+/* memory blocks */
+guint       gst_buffer_n_memory          (GstBuffer *buffer);
+void        gst_buffer_take_memory       (GstBuffer *buffer, GstMemory *mem);
+GstMemory * gst_buffer_peek_memory       (GstBuffer *buffer, guint idx);
+void        gst_buffer_remove_memory     (GstBuffer *buffer, guint idx);
+
+gsize       gst_buffer_get_memory_size   (GstBuffer *buffer);
+
+/* getting memory */
+gpointer    gst_buffer_map               (GstBuffer *buffer, gsize *size, gsize *maxsize,
+                                          GstMapFlags flags);
+gboolean    gst_buffer_unmap             (GstBuffer *buffer, gpointer data, gsize size);
 
 /**
  * gst_buffer_set_data:
@@ -406,8 +421,11 @@ typedef enum {
  */
 #define GST_BUFFER_COPY_ALL (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS)
 
-/* copies metadata into newly allocated buffer */
-void            gst_buffer_copy_metadata        (GstBuffer *dest, const GstBuffer *src,
+/* copies memory or metadata into newly allocated buffer */
+void            gst_buffer_copy_memory          (GstBuffer *dest, GstBuffer *src,
+                                                 gsize offset, gsize size, gboolean merge);
+void            gst_buffer_share_memory         (GstBuffer *dest, GstBuffer *src);
+void            gst_buffer_copy_metadata        (GstBuffer *dest, GstBuffer *src,
                                                  GstBufferCopyFlags flags);
 
 /**

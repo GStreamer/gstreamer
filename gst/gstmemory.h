@@ -23,7 +23,9 @@
 #ifndef __GST_MEMORY_H__
 #define __GST_MEMORY_H__
 
-#include <gst/gst.h>
+#include <gst/gstconfig.h>
+
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 

@@ -179,6 +179,38 @@ _gst_buffer_initialize (void)
   }
 }
 
+void
+gst_buffer_copy_memory (GstBuffer * dest, GstBuffer * src,
+    gsize offset, gsize size, gboolean merge)
+{
+  GPtrArray *sarr = (GPtrArray *) src->memory;
+  GPtrArray *darr = (GPtrArray *) dest->memory;
+  guint i, len;
+
+  len = sarr->len;
+
+  for (i = 0; i < len; i++) {
+    GstMemory *mem = g_ptr_array_index (sarr, i);
+    g_ptr_array_add (darr, gst_memory_copy (mem));
+  }
+}
+
+void
+gst_buffer_share_memory (GstBuffer * dest, GstBuffer * src)
+{
+  GPtrArray *sarr = (GPtrArray *) src->memory;
+  GPtrArray *darr = (GPtrArray *) dest->memory;
+  guint i, len;
+
+  len = sarr->len;
+
+  for (i = 0; i < len; i++) {
+    GstMemory *mem = g_ptr_array_index (sarr, i);
+    g_ptr_array_add (darr, gst_memory_ref (mem));
+  }
+}
+
+
 /**
  * gst_buffer_copy_metadata:
  * @dest: a destination #GstBuffer
@@ -197,7 +229,7 @@ _gst_buffer_initialize (void)
  * Since: 0.10.13
  */
 void
-gst_buffer_copy_metadata (GstBuffer * dest, const GstBuffer * src,
+gst_buffer_copy_metadata (GstBuffer * dest, GstBuffer * src,
     GstBufferCopyFlags flags)
 {
   GstMetaItem *walk;
@@ -259,30 +291,7 @@ _gst_buffer_copy (GstBuffer * buffer)
   copy = gst_buffer_new ();
 
   /* we simply copy everything from our parent */
-#ifdef HAVE_POSIX_MEMALIGN
-  {
-    gpointer memptr = NULL;
-
-    if (G_LIKELY (buffer->size)) {
-      if (G_UNLIKELY (!aligned_malloc (&memptr, buffer->size))) {
-        /* terminate on error like g_memdup() would */
-        g_error ("%s: failed to allocate %u bytes", G_STRLOC, buffer->size);
-      } else {
-        memcpy (memptr, buffer->data, buffer->size);
-      }
-    }
-    copy->data = (guint8 *) memptr;
-    GST_BUFFER_FREE_FUNC (copy) = free;
-  }
-#else
-  copy->data = g_memdup (buffer->data, buffer->size);
-#endif
-
-  /* make sure it gets freed (even if the parent is subclassed, we return a
-     normal buffer) */
-  copy->malloc_data = copy->data;
-  copy->size = buffer->size;
-
+  gst_buffer_copy_memory (copy, buffer, 0, 0, FALSE);
   gst_buffer_copy_metadata (copy, buffer, GST_BUFFER_COPY_ALL);
 
   return copy;
@@ -313,14 +322,7 @@ _gst_buffer_free (GstBuffer * buffer)
 
   GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
 
-  /* free our data */
-  if (G_LIKELY (buffer->malloc_data))
-    buffer->free_func (buffer->malloc_data);
-
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
-
-  if (buffer->parent)
-    gst_buffer_unref (buffer->parent);
 
   /* free metadata */
   for (walk = buffer->priv; walk; walk = next) {
@@ -334,6 +336,9 @@ _gst_buffer_free (GstBuffer * buffer)
     next = walk->next;
     g_slice_free (GstMetaItem, walk);
   }
+
+  /* free our data */
+  g_ptr_array_free (buffer->memory, TRUE);
 
   g_slice_free1 (GST_MINI_OBJECT_SIZE (buffer), buffer);
 }
@@ -352,7 +357,10 @@ gst_buffer_init (GstBuffer * buffer, gsize size)
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_FREE_FUNC (buffer) = g_free;
+
+  /* FIXME, do more efficient with array in the buffer memory itself */
+  buffer->memory =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) gst_memory_unref);
 }
 
 /**
@@ -401,24 +409,8 @@ gst_buffer_new_and_alloc (guint size)
 
   newbuf = gst_buffer_new ();
 
-#ifdef HAVE_POSIX_MEMALIGN
-  {
-    gpointer memptr = NULL;
-
-    if (G_LIKELY (size)) {
-      if (G_UNLIKELY (!aligned_malloc (&memptr, size))) {
-        /* terminate on error like g_memdup() would */
-        g_error ("%s: failed to allocate %u bytes", G_STRLOC, size);
-      }
-    }
-    newbuf->malloc_data = (guint8 *) memptr;
-    GST_BUFFER_FREE_FUNC (newbuf) = free;
-  }
-#else
-  newbuf->malloc_data = g_malloc (size);
-#endif
-  GST_BUFFER_DATA (newbuf) = newbuf->malloc_data;
-  GST_BUFFER_SIZE (newbuf) = size;
+  gst_buffer_take_memory (newbuf, gst_memory_new_alloc (size,
+          _gst_buffer_data_alignment));
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
 
@@ -446,40 +438,82 @@ GstBuffer *
 gst_buffer_try_new_and_alloc (guint size)
 {
   GstBuffer *newbuf;
-  guint8 *malloc_data;
-#ifdef HAVE_POSIX_MEMALIGN
-  gpointer memptr = NULL;
+  GstMemory *mem;
 
-  if (G_LIKELY (size)) {
-    if (G_UNLIKELY (!aligned_malloc (&memptr, size))) {
-      GST_CAT_WARNING (GST_CAT_BUFFER, "failed to allocate %d bytes", size);
-      return NULL;
-    }
-  }
-  malloc_data = (guint8 *) memptr;
-#else
-  malloc_data = g_try_malloc (size);
-
-  if (G_UNLIKELY (malloc_data == NULL && size != 0)) {
+  mem = gst_memory_new_alloc (size, _gst_buffer_data_alignment);
+  if (G_UNLIKELY (mem == NULL)) {
     GST_CAT_WARNING (GST_CAT_BUFFER, "failed to allocate %d bytes", size);
     return NULL;
   }
-#endif
-
-  /* FIXME: there's no g_type_try_create_instance() in GObject yet, so this
-   * will still abort if a new GstBuffer structure can't be allocated */
-  newbuf = gst_buffer_new ();
-
-  GST_BUFFER_MALLOCDATA (newbuf) = malloc_data;
-  GST_BUFFER_DATA (newbuf) = malloc_data;
-  GST_BUFFER_SIZE (newbuf) = size;
-#ifdef HAVE_POSIX_MEMALIGN
-  GST_BUFFER_FREE_FUNC (newbuf) = free;
-#endif
+  gst_buffer_take_memory (newbuf, mem);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
 
   return newbuf;
+}
+
+guint
+gst_buffer_n_memory (GstBuffer * buffer)
+{
+  GPtrArray *arr = (GPtrArray *) buffer->memory;
+
+  return arr->len;
+}
+
+void
+gst_buffer_take_memory (GstBuffer * buffer, GstMemory * mem)
+{
+  GPtrArray *arr = (GPtrArray *) buffer->memory;
+
+  g_ptr_array_add (arr, mem);
+}
+
+GstMemory *
+gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
+{
+  GstMemory *mem;
+  GPtrArray *arr = (GPtrArray *) buffer->memory;
+
+  mem = g_ptr_array_index (arr, idx);
+
+  return mem;
+}
+
+void
+gst_buffer_remove_memory (GstBuffer * buffer, guint idx)
+{
+  GPtrArray *arr = (GPtrArray *) buffer->memory;
+
+  g_ptr_array_remove_index (arr, idx);
+}
+
+gsize
+gst_buffer_get_memory_size (GstBuffer * buffer)
+{
+  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  guint i, size, len;
+
+  len = arr->len;
+
+  size = 0;
+  for (i = 0; i < len; i++) {
+    size += gst_memory_get_sizes (g_ptr_array_index (arr, i), NULL);
+  }
+  return size;
+}
+
+/* getting memory */
+gpointer
+gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
+    GstMapFlags flags)
+{
+  return NULL;
+}
+
+gboolean
+gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
+{
+  return FALSE;
 }
 
 /**
@@ -576,11 +610,14 @@ gst_buffer_make_metadata_writable (GstBuffer * buf)
   if (gst_buffer_is_metadata_writable (buf)) {
     ret = buf;
   } else {
-    ret = gst_buffer_create_sub (buf, 0, GST_BUFFER_SIZE (buf));
+    /* create a fresh new buffer */
+    ret = gst_buffer_new ();
 
+    /* we simply copy everything from our parent */
+    gst_buffer_share_memory (ret, buf);
+    gst_buffer_copy_metadata (ret, buf, GST_BUFFER_COPY_ALL);
     gst_buffer_unref (buf);
   }
-
   return ret;
 }
 
