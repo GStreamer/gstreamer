@@ -83,6 +83,44 @@ typedef struct _GstBaseAudioDecoderClass GstBaseAudioDecoderClass;
 typedef struct _GstBaseAudioDecoderPrivate GstBaseAudioDecoderPrivate;
 typedef struct _GstBaseAudioDecoderContext GstBaseAudioDecoderContext;
 
+/* do not use this one, use macro below */
+GstFlowReturn _gst_base_audio_decoder_error (GstBaseAudioDecoder *dec, gint weight,
+                                            GQuark domain, gint code,
+                                            gchar *txt, gchar *debug,
+                                            const gchar *file, const gchar *function,
+                                            gint line);
+
+/**
+ * GST_BASE_AUDIO_DECODER_ERROR:
+ * @el:     the base audio decoder element that generates the error
+ * @weight: element defined weight of the error, added to error count
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #gstreamer-GstGError)
+ * @code:   error code defined for that domain (see #gstreamer-GstGError)
+ * @text:   the message to display (format string and args enclosed in
+ *          parentheses)
+ * @debug:  debugging information for the message (format string and args
+ *          enclosed in parentheses)
+ * @ret:    variable to receive return value
+ *
+ * Utility function that audio decoder elements can use in case they encountered
+ * a data processing error that may be fatal for the current "data unit" but
+ * need not prevent subsequent decoding.  Such errors are counted and if there
+ * are too many, as configured in the context's max_errors, the pipeline will
+ * post an error message and the application will be requested to stop further
+ * media processing.  Otherwise, it is considered a "glitch" and only a warning
+ * is logged. In either case, @ret is set to the proper value to
+ * return to upstream/caller (indicating either GST_FLOW_ERROR or GST_FLOW_OK).
+ */
+#define GST_BASE_AUDIO_DECODER_ERROR(el, w, domain, code, text, debug, ret) \
+G_STMT_START {                                                              \
+  gchar *__txt = _gst_element_error_printf text;                            \
+  gchar *__dbg = _gst_element_error_printf debug;                           \
+  GstBaseAudioDecoder *dec = GST_BASE_AUDIO_DECODER (el);                   \
+  ret = _gst_base_audio_decoder_error (dec, w, GST_ ## domain ## _ERROR,    \
+      GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,            \
+      GST_FUNCTION, __LINE__);                                              \
+} G_STMT_END
+
 /**
  * GstBaseAudioDecoderContext:
  * @state: a #GstAudioState describing input audio format
@@ -111,6 +149,7 @@ struct _GstBaseAudioDecoderContext {
   /* output */
   gboolean do_plc;
   gboolean do_byte_time;
+  gint max_errors;
   /* MT-protected (with LOCK) */
   GstClockTime min_latency;
   GstClockTime max_latency;

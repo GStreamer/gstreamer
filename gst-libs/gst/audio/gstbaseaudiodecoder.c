@@ -215,6 +215,8 @@ struct _GstBaseAudioDecoderPrivate
   guint64 samples_out;
   /* bytes flushed during parsing */
   guint sync_flush;
+  /* error count */
+  gint error_count;
   /* codec id tag */
   GstTagList *taglist;
 
@@ -386,6 +388,7 @@ gst_base_audio_decoder_reset (GstBaseAudioDecoder * dec, gboolean full)
     dec->priv->bytes_in = 0;
     dec->priv->samples_out = 0;
     dec->priv->agg = -1;
+    dec->priv->error_count = 0;
     gst_base_audio_decoder_clear_queues (dec);
 
     g_free (dec->ctx->state.channel_pos);
@@ -786,6 +789,10 @@ gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec, GstBuffer * buf,
     }
     priv->samples += samples;
     priv->samples_out += samples;
+
+    /* we got data, so note things are looking up */
+    if (G_UNLIKELY (dec->priv->error_count))
+      dec->priv->error_count--;
   }
 
   return gst_base_audio_decoder_output (dec, buf);
@@ -985,6 +992,7 @@ gst_base_audio_decoder_flush (GstBaseAudioDecoder * dec, gboolean hard)
     ret = gst_base_audio_decoder_drain (dec);
   } else {
     gst_segment_init (&dec->segment, GST_FORMAT_TIME);
+    dec->priv->error_count = 0;
   }
   /* only bother subclass with flushing if known it is already alive
    * and kicking out stuff */
@@ -1842,5 +1850,25 @@ stop_failed:
   {
     GST_ELEMENT_ERROR (codec, LIBRARY, INIT, (NULL), ("Failed to stop codec"));
     return GST_STATE_CHANGE_FAILURE;
+  }
+}
+
+GstFlowReturn
+_gst_base_audio_decoder_error (GstBaseAudioDecoder * dec, gint weight,
+    GQuark domain, gint code, gchar * txt, gchar * dbg, const gchar * file,
+    const gchar * function, gint line)
+{
+  if (txt)
+    GST_WARNING_OBJECT (dec, "error: %s", txt);
+  if (dbg)
+    GST_WARNING_OBJECT (dec, "error: %s", dbg);
+  dec->priv->error_count += weight;
+  dec->priv->discont = TRUE;
+  if (dec->ctx->max_errors < dec->priv->error_count) {
+    gst_element_message_full (GST_ELEMENT (dec), GST_MESSAGE_ERROR,
+        domain, code, txt, dbg, file, function, line);
+    return GST_FLOW_ERROR;
+  } else {
+    return GST_FLOW_OK;
   }
 }
