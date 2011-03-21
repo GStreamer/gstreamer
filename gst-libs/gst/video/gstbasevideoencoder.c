@@ -384,22 +384,6 @@ error:
   return res;
 }
 
-static gboolean
-gst_pad_is_negotiated (GstPad * pad)
-{
-  GstCaps *caps;
-
-  g_return_val_if_fail (pad != NULL, FALSE);
-
-  caps = gst_pad_get_negotiated_caps (pad);
-  if (caps) {
-    gst_caps_unref (caps);
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
 static GstFlowReturn
 gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -412,7 +396,7 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
 
   g_return_val_if_fail (klass->handle_frame != NULL, GST_FLOW_ERROR);
 
-  if (!gst_pad_is_negotiated (pad)) {
+  if (!GST_PAD_CAPS (pad)) {
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
