@@ -117,6 +117,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
+#include <gst/tag/xmpwriter.h>
 
 #include <sys/types.h>
 #ifdef G_OS_WIN32
@@ -1015,6 +1016,7 @@ static void
 gst_qt_mux_add_xmp_tags (GstQTMux * qtmux, const GstTagList * list)
 {
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
+  GstBuffer *xmp = NULL;
 
   /* adobe specs only have 'quicktime' and 'mp4',
    * but I guess we can extrapolate to gpp.
@@ -1026,14 +1028,24 @@ gst_qt_mux_add_xmp_tags (GstQTMux * qtmux, const GstTagList * list)
   GST_DEBUG_OBJECT (qtmux, "Adding xmp tags");
 
   if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT) {
-    atom_moov_add_xmp_tags (qtmux->moov, list);
+    xmp = gst_tag_xmp_writer_tag_list_to_xmp_buffer (GST_TAG_XMP_WRITER (qtmux),
+        list, TRUE);
+    if (xmp)
+      atom_moov_add_xmp_tags (qtmux->moov, xmp);
   } else {
+    AtomInfo *ainfo;
     /* for isom/mp4, it is a top level uuid atom */
-    AtomInfo *ainfo = build_uuid_xmp_atom (list);
-    if (ainfo) {
-      qtmux->extra_atoms = g_slist_prepend (qtmux->extra_atoms, ainfo);
+    xmp = gst_tag_xmp_writer_tag_list_to_xmp_buffer (GST_TAG_XMP_WRITER (qtmux),
+        list, TRUE);
+    if (xmp) {
+      ainfo = build_uuid_xmp_atom (xmp);
+      if (ainfo) {
+        qtmux->extra_atoms = g_slist_prepend (qtmux->extra_atoms, ainfo);
+      }
     }
   }
+  if (xmp)
+    gst_buffer_unref (xmp);
 }
 
 static void
@@ -3426,6 +3438,9 @@ gst_qt_mux_register (GstPlugin * plugin)
   static const GInterfaceInfo tag_setter_info = {
     NULL, NULL, NULL
   };
+  static const GInterfaceInfo tag_xmp_writer_info = {
+    NULL, NULL, NULL
+  };
   GType type;
   GstQTMuxFormat format;
   GstQTMuxClassParams *params;
@@ -3455,6 +3470,8 @@ gst_qt_mux_register (GstPlugin * plugin)
         0);
     g_type_set_qdata (type, GST_QT_MUX_PARAMS_QDATA, (gpointer) params);
     g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
+    g_type_add_interface_static (type, GST_TYPE_TAG_XMP_WRITER,
+        &tag_xmp_writer_info);
 
     if (!gst_element_register (plugin, prop->name, GST_RANK_PRIMARY, type))
       return FALSE;

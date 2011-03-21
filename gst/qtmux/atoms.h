@@ -928,7 +928,7 @@ AtomInfo *   build_gama_atom             (gdouble gamma);
 AtomInfo *   build_SMI_atom              (const GstBuffer *seqh);
 AtomInfo *   build_ima_adpcm_extension   (gint channels, gint rate,
                                           gint blocksize);
-AtomInfo *   build_uuid_xmp_atom         (const GstTagList * taglist);
+AtomInfo *   build_uuid_xmp_atom         (GstBuffer * xmp);
 
 
 /*
@@ -948,7 +948,7 @@ void atom_moov_add_3gp_str_int_tag   (AtomMOOV * moov, guint32 fourcc, const gch
 void atom_moov_add_3gp_tag           (AtomMOOV * moov, guint32 fourcc, guint8 * data,
                                       guint size);
 
-void atom_moov_add_xmp_tags          (AtomMOOV * moov, const GstTagList * tags);
+void atom_moov_add_xmp_tags          (AtomMOOV * moov, GstBuffer * xmp);
 
 #define GST_QT_MUX_DEFAULT_TAG_LANGUAGE   "eng"
 guint16  language_code               (const char * lang);
