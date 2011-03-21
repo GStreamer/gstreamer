@@ -2,6 +2,7 @@
  * Copyright (C) 2006 Edward Hervey <edward@fluendo.com>
  * Copyright (C) 2007 Jan Schmidt <jan@fluendo.com>
  * Copyright (C) 2007 Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2011 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * gstmultiqueue.c:
  *
@@ -421,7 +422,6 @@ gst_multi_queue_init (GstMultiQueue * mqueue, GstMultiQueueClass * klass)
 
   mqueue->counter = 1;
   mqueue->highid = -1;
-  mqueue->nextnotlinked = -1;
 
   mqueue->qlock = g_mutex_new ();
 }
