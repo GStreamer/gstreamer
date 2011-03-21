@@ -160,15 +160,6 @@ struct _GstBaseVideoCodecClass
 {
   GstElementClass element_class;
 
-  gboolean (*start) (GstBaseVideoCodec *codec);
-  gboolean (*stop) (GstBaseVideoCodec *codec);
-  gboolean (*reset) (GstBaseVideoCodec *codec);
-  GstFlowReturn (*parse_data) (GstBaseVideoCodec *codec, gboolean at_eos);
-  int (*scan_for_sync) (GstAdapter *adapter, gboolean at_eos,
-      int offset, int n);
-  GstFlowReturn (*shape_output) (GstBaseVideoCodec *codec, GstVideoFrame *frame);
-  GstCaps *(*get_caps) (GstBaseVideoCodec *codec);
-
   /* FIXME before moving to base */
   void *padding[GST_PADDING_LARGE];
 };
