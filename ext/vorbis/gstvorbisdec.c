@@ -294,6 +294,8 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
   gboolean res = FALSE;
 
   dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (dec == NULL))
+    return FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -408,6 +410,8 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
   GstVorbisDec *dec;
 
   dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (dec == NULL))
+    return FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
