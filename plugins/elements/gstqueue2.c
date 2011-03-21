@@ -2364,7 +2364,9 @@ static gboolean
 gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstQueue2 *queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
+  GstQueue2 *queue = GST_QUEUE2 (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (queue == NULL))
+    return FALSE;
 
 #ifndef GST_DISABLE_GST_DEBUG
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%s)",
@@ -2415,6 +2417,7 @@ gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  gst_object_unref (queue);
   return res;
 }
 
