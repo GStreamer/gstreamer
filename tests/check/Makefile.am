@@ -150,6 +150,7 @@ check_PROGRAMS = \
 	libs/rtsp \
 	libs/tag \
 	libs/video \
+	libs/xmpwriter \
 	$(cxx_checks) \
 	$(check_orc) \
 	pipelines/simple-launch-lines \
@@ -306,6 +307,17 @@ libs_profile_CFLAGS = \
 	$(AM_CFLAGS)
 libs_profile_LDADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la $(LDADD)
+
+libs_xmpwriter_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+        $(GST_BASE_CFLAGS) \
+        $(AM_CFLAGS)
+
+libs_xmpwriter_LDADD = \
+	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
+        $(GST_BASE_LIBS) \
+        $(LDADD)
+
 
 libs_gstlibscpp_SOURCES = libs/gstlibscpp.cc
 
