@@ -1229,7 +1229,7 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
     goto was_eos;
 
   /* Get a unique incrementing id */
-  curid = mq->counter++;
+  curid = g_atomic_int_exchange_and_add ((gint *) & mq->counter, 1);
 
   GST_LOG_OBJECT (mq, "SingleQueue %d : about to enqueue buffer %p with id %d",
       sq->id, buffer, curid);
@@ -1334,9 +1334,8 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
   if (sq->is_eos)
     goto was_eos;
 
-  /* Get an unique incrementing id. protected with the STREAM_LOCK, unserialized
-   * events already got pushed and don't end up in the queue. */
-  curid = mq->counter++;
+  /* Get an unique incrementing id. */
+  curid = g_atomic_int_exchange_and_add ((gint *) & mq->counter, 1);
 
   item = gst_multi_queue_event_item_new ((GstMiniObject *) event, curid);
 

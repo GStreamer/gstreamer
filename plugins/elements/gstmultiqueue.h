@@ -63,7 +63,7 @@ struct _GstMultiQueue {
   gboolean buffering;
   gint percent;
 
-  guint32  counter;	/* incoming object counter, protected with STREAM_LOCK */
+  guint32  counter;	/* incoming object counter, use atomic accesses */
   guint32  highid;	/* contains highest id of last outputted object */
 
   GMutex * qlock;	/* Global queue lock (vs object lock or individual */
