@@ -697,6 +697,8 @@ mpegts_base_apply_pmt (MpegTSBase * base,
 
   if (G_UNLIKELY (base->first_pat_offset == -1)) {
     GST_WARNING ("Got pmt without pat first. Returning");
+    /* remove the stream since we won't get another PMT otherwise */
+    mpegts_packetizer_remove_stream (base->packetizer, pmt_pid);
     return;
   }
 
