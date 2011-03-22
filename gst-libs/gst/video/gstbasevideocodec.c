@@ -77,7 +77,7 @@ gst_base_video_codec_init (GstBaseVideoCodec * base_video_codec,
 {
   GstPadTemplate *pad_template;
 
-  GST_DEBUG ("gst_base_video_codec_init");
+  GST_DEBUG_OBJECT (base_video_codec, "gst_base_video_codec_init");
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "sink");
@@ -104,7 +104,7 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 {
   GList *g;
 
-  GST_DEBUG ("reset");
+  GST_DEBUG_OBJECT (base_video_codec, "reset");
 
   for (g = base_video_codec->frames; g; g = g_list_next (g)) {
     gst_base_video_codec_free_frame ((GstVideoFrame *) g->data);
