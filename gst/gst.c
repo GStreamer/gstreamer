@@ -665,6 +665,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
 
   _priv_gst_quarks_initialize ();
+  _gst_memory_init ();
   _gst_format_initialize ();
   _gst_query_initialize ();
   _gst_caps_initialize ();

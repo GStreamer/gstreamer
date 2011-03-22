@@ -87,9 +87,11 @@ GST_START_TEST (test_subbuffer)
   /* check sizes, buffer starts out empty */
   data = gst_buffer_map (buffer, &size, &maxsize, GST_MAP_WRITE);
   fail_unless (size == 0, "buffer has wrong size");
-  fail_unless (maxsize == 4, "buffer has wrong size");
+  fail_unless (maxsize >= 4, "buffer has wrong size");
   memset (data, 0, 4);
+  gst_buffer_unmap (buffer, data, 4);
 
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   /* set some metadata */
   GST_BUFFER_TIMESTAMP (buffer) = 1;
   GST_BUFFER_DURATION (buffer) = 2;

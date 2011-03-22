@@ -184,12 +184,12 @@ _default_mem_free (GstMemoryDefault * mem)
 }
 
 static GstMemoryDefault *
-_default_mem_copy (GstMemoryDefault * mem)
+_default_mem_copy (GstMemoryDefault * mem, gsize offset, gsize size)
 {
   GstMemoryDefault *copy;
 
-  copy = _default_mem_new_block (mem->maxsize, 0, mem->offset, mem->size);
-  memcpy (copy->data + copy->offset, mem->data, mem->maxsize);
+  copy = _default_mem_new_block (mem->maxsize, 0, mem->offset + offset, size);
+  memcpy (copy->data, mem->data, mem->maxsize);
 
   return copy;
 }
@@ -242,16 +242,16 @@ _fallback_extract (GstMemory * mem, gsize offset, gpointer dest, gsize size)
 }
 
 static GstMemory *
-_fallback_copy (GstMemory * mem)
+_fallback_copy (GstMemory * mem, gsize offset, gsize size)
 {
   GstMemoryDefault *copy;
-  gpointer data;
-  gsize size;
+  guint8 *data;
+  gsize msize;
 
-  data = gst_memory_map (mem, &size, NULL, GST_MAP_READ);
+  data = gst_memory_map (mem, &msize, NULL, GST_MAP_READ);
   copy = _default_mem_new_block (size, 0, 0, size);
-  memcpy (copy->data, data, size);
-  gst_memory_unmap (mem, data, size);
+  memcpy (copy->data, data + offset, size);
+  gst_memory_unmap (mem, data, msize);
 
   return (GstMemory *) copy;
 }
@@ -356,6 +356,7 @@ void
 gst_memory_unref (GstMemory * mem)
 {
   g_return_if_fail (mem != NULL);
+  g_return_if_fail (mem->impl != NULL);
 
   if (g_atomic_int_dec_and_test (&mem->refcount))
     mem->impl->info.free (mem);
@@ -387,11 +388,11 @@ gst_memory_unmap (GstMemory * mem, gpointer data, gsize size)
 }
 
 GstMemory *
-gst_memory_copy (GstMemory * mem)
+gst_memory_copy (GstMemory * mem, gsize offset, gsize size)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 
-  return mem->impl->info.copy (mem);
+  return mem->impl->info.copy (mem, offset, size);
 }
 
 void

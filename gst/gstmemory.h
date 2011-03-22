@@ -74,7 +74,7 @@ typedef gpointer (*GstMemoryMapFunction)    (GstMemory *mem, gsize *size, gsize 
 typedef gboolean (*GstMemoryUnmapFunction)  (GstMemory *mem, gpointer data, gsize size);
 
 typedef void        (*GstMemoryFreeFunction)      (GstMemory *mem);
-typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem);
+typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem, gsize offset, gsize size);
 typedef void        (*GstMemoryExtractFunction)   (GstMemory *mem, gsize offset,
                                                    gpointer dest, gsize size);
 typedef void        (*GstMemoryTrimFunction)  (GstMemory *mem, gsize offset, gsize size);
@@ -103,33 +103,37 @@ struct _GstMemoryInfo {
 
 void _gst_memory_init (void);
 
-GstMemory * gst_memory_ref        (GstMemory *mem);
-void        gst_memory_unref      (GstMemory *mem);
-
-gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *maxsize);
-void        gst_memory_trim       (GstMemory *mem, gsize offset, gsize size);
-
-gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,
-                                   GstMapFlags flags);
-gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gsize size);
-
-GstMemory * gst_memory_copy       (GstMemory *mem);
-void        gst_memory_extract    (GstMemory *mem, gsize offset, gpointer dest,
-                                   gsize size);
-GstMemory * gst_memory_sub        (GstMemory *mem, gsize offset, gsize size);
-
-gboolean    gst_memory_is_span    (GstMemory **mem1, gsize len1,
-                                   GstMemory **mem2, gsize len2,
-                                   GstMemory **parent, gsize *offset);
-GstMemory * gst_memory_span       (GstMemory **mem1, gsize len1, gsize offset,
-                                   GstMemory **mem2, gsize len2, gsize size);
-
-
+/* allocating memory blocks */
 GstMemory * gst_memory_new_wrapped (gpointer data, GFreeFunc free_func,
                                     gsize maxsize, gsize offset, gsize size);
 GstMemory * gst_memory_new_alloc   (gsize maxsize, gsize align);
 GstMemory * gst_memory_new_copy    (gsize maxsize, gsize align, gpointer data,
                                     gsize offset, gsize size);
+
+/* refcounting */
+GstMemory * gst_memory_ref        (GstMemory *mem);
+void        gst_memory_unref      (GstMemory *mem);
+
+/* getting/setting memory properties */
+gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *maxsize);
+void        gst_memory_trim       (GstMemory *mem, gsize offset, gsize size);
+
+/* retriveing data */
+gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,
+                                   GstMapFlags flags);
+gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gsize size);
+void        gst_memory_extract    (GstMemory *mem, gsize offset, gpointer dest,
+                                   gsize size);
+/* copy and subregions */
+GstMemory * gst_memory_copy       (GstMemory *mem, gsize offset, gsize size);
+GstMemory * gst_memory_sub        (GstMemory *mem, gsize offset, gsize size);
+
+/* memory arrays */
+gboolean    gst_memory_is_span    (GstMemory **mem1, gsize len1,
+                                   GstMemory **mem2, gsize len2,
+                                   GstMemory **parent, gsize *offset);
+GstMemory * gst_memory_span       (GstMemory **mem1, gsize len1, gsize offset,
+                                   GstMemory **mem2, gsize len2, gsize size);
 
 
 const GstMemoryImpl *  gst_memory_register    (const gchar *impl, const GstMemoryInfo *info);

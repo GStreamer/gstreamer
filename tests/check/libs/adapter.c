@@ -43,7 +43,8 @@ GST_START_TEST (test_peek1)
 
   /* push single buffer in adapter */
   buffer = gst_buffer_new_and_alloc (512);
-  bufdata = GST_BUFFER_DATA (buffer);
+
+  bufdata = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
 
   fail_if (buffer == NULL);
   gst_adapter_push (adapter, buffer);
@@ -56,22 +57,25 @@ GST_START_TEST (test_peek1)
   fail_if (avail != 512);
 
   /* should g_critical with NULL as result */
-  ASSERT_CRITICAL (data1 = gst_adapter_peek (adapter, 0));
+  ASSERT_CRITICAL (data1 = gst_adapter_map (adapter, 0));
   fail_if (data1 != NULL);
 
   /* should return NULL as result */
-  data1 = gst_adapter_peek (adapter, 513);
+  data1 = gst_adapter_map (adapter, 513);
   fail_if (data1 != NULL);
 
   /* this should work */
-  data1 = gst_adapter_peek (adapter, 512);
+  data1 = gst_adapter_map (adapter, 512);
   fail_if (data1 == NULL);
   /* it should point to the buffer data as well */
   fail_if (data1 != bufdata);
-  data2 = gst_adapter_peek (adapter, 512);
+  gst_adapter_unmap (adapter, 0);
+
+  data2 = gst_adapter_map (adapter, 512);
   fail_if (data2 == NULL);
   /* second peek should return the same pointer */
   fail_if (data2 != data1);
+  gst_adapter_unmap (adapter, 0);
 
   /* this should fail since we don't have that many bytes */
   ASSERT_CRITICAL (gst_adapter_flush (adapter, 513));
@@ -86,15 +90,16 @@ GST_START_TEST (test_peek1)
   fail_if (avail != 502);
 
   /* should return NULL as result */
-  data2 = gst_adapter_peek (adapter, 503);
+  data2 = gst_adapter_map (adapter, 503);
   fail_if (data2 != NULL);
 
   /* should work fine */
-  data2 = gst_adapter_peek (adapter, 502);
+  data2 = gst_adapter_map (adapter, 502);
   fail_if (data2 == NULL);
   /* peek should return the same old pointer + 10 */
   fail_if (data2 != data1 + 10);
   fail_if (data2 != bufdata + 10);
+  gst_adapter_unmap (adapter, 0);
 
   /* flush some more */
   gst_adapter_flush (adapter, 500);
@@ -105,10 +110,11 @@ GST_START_TEST (test_peek1)
   avail = gst_adapter_available_fast (adapter);
   fail_if (avail != 2);
 
-  data2 = gst_adapter_peek (adapter, 2);
+  data2 = gst_adapter_map (adapter, 2);
   fail_if (data2 == NULL);
   fail_if (data2 != data1 + 510);
   fail_if (data2 != bufdata + 510);
+  gst_adapter_unmap (adapter, 0);
 
   /* flush some more */
   gst_adapter_flush (adapter, 2);
@@ -118,6 +124,8 @@ GST_START_TEST (test_peek1)
   fail_if (avail != 0);
   avail = gst_adapter_available_fast (adapter);
   fail_if (avail != 0);
+
+  gst_buffer_unmap (buffer, (gpointer) bufdata, 0);
 
   /* silly clear just for fun */
   gst_adapter_clear (adapter);
@@ -153,16 +161,16 @@ GST_START_TEST (test_take1)
   GstBuffer *buffer, *buffer2;
   guint avail;
   guint8 *data, *data2;
+  gsize size, size2;
 
   adapter = gst_adapter_new ();
   fail_unless (adapter != NULL);
 
   buffer = gst_buffer_new_and_alloc (100);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_DATA (buffer) != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 100);
-
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  fail_unless (data != NULL);
+  fail_unless (size == 100);
 
   /* push in the adapter */
   gst_adapter_push (adapter, buffer);
@@ -173,9 +181,10 @@ GST_START_TEST (test_take1)
   /* take out buffer */
   buffer2 = gst_adapter_take_buffer (adapter, 100);
   fail_unless (buffer2 != NULL);
-  fail_unless (GST_BUFFER_DATA (buffer2) != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer2) == 100);
-  data2 = GST_BUFFER_DATA (buffer2);
+
+  data2 = gst_buffer_map (buffer2, &size2, NULL, GST_MAP_READ);
+  fail_unless (data2 != NULL);
+  fail_unless (size2 == 100);
 
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 0);
@@ -183,6 +192,9 @@ GST_START_TEST (test_take1)
   /* the buffer should be the same */
   fail_unless (buffer == buffer2);
   fail_unless (data == data2);
+
+  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer2, data2, size2);
 
   gst_buffer_unref (buffer2);
 
@@ -209,16 +221,16 @@ GST_START_TEST (test_take3)
   GstBuffer *buffer, *buffer2;
   guint avail;
   guint8 *data, *data2;
+  gsize size, size2;
 
   adapter = gst_adapter_new ();
   fail_unless (adapter != NULL);
 
   buffer = gst_buffer_new_and_alloc (100);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_DATA (buffer) != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 100);
-
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  fail_unless (data != NULL);
+  fail_unless (size == 100);
 
   /* set up and push subbuffers */
   buffer2 = gst_buffer_create_sub (buffer, 0, 25);
@@ -238,9 +250,9 @@ GST_START_TEST (test_take3)
   /* take out buffer */
   buffer2 = gst_adapter_take_buffer (adapter, 100);
   fail_unless (buffer2 != NULL);
-  fail_unless (GST_BUFFER_DATA (buffer2) != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer2) == 100);
-  data2 = GST_BUFFER_DATA (buffer2);
+  data2 = gst_buffer_map (buffer2, &size2, NULL, GST_MAP_READ);
+  fail_unless (data2 != NULL);
+  fail_unless (size2 == 100);
 
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 0);
@@ -248,6 +260,8 @@ GST_START_TEST (test_take3)
   /* the data should be the same */
   fail_unless (data == data2);
 
+  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer2, data2, size2);
   gst_buffer_unref (buffer2);
 
   g_object_unref (adapter);
@@ -265,16 +279,20 @@ create_and_fill_adapter (void)
   fail_unless (adapter != NULL);
 
   for (i = 0; i < 10000; i += 4) {
-    GstBuffer *buf = gst_buffer_new_and_alloc (sizeof (guint32) * 4);
+    GstBuffer *buf;
     guint8 *data;
 
+    buf = gst_buffer_new_and_alloc (sizeof (guint32) * 4);
     fail_unless (buf != NULL);
-    data = GST_BUFFER_DATA (buf);
+
+    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
 
     for (j = 0; j < 4; j++) {
       GST_WRITE_UINT32_LE (data, i + j);
       data += sizeof (guint32);
     }
+    gst_buffer_unmap (buf, data, sizeof (guint32) * 4);
+
     gst_adapter_push (adapter, buf);
   }
 
@@ -314,8 +332,13 @@ GST_START_TEST (test_take_buf_order)
   adapter = create_and_fill_adapter ();
   while (gst_adapter_available (adapter) >= sizeof (guint32)) {
     GstBuffer *buf = gst_adapter_take_buffer (adapter, sizeof (guint32));
+    gpointer data;
+    gsize size;
 
-    fail_unless (GST_READ_UINT32_LE (GST_BUFFER_DATA (buf)) == i);
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    fail_unless (GST_READ_UINT32_LE (data) == i);
+    gst_buffer_unmap (buf, data, size);
+
     i++;
 
     gst_buffer_unref (buf);
@@ -509,7 +532,7 @@ GST_START_TEST (test_timestamp)
   /* remove first buffer, timestamp of empty buffer is visible */
   buffer = gst_adapter_take_buffer (adapter, 99);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 99);
+  fail_unless (gst_buffer_get_size (buffer) == 99);
   gst_buffer_unref (buffer);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 100);
@@ -518,8 +541,10 @@ GST_START_TEST (test_timestamp)
   fail_unless (dist == 0);
 
   /* remove empty buffer, timestamp still visible */
-  cdata = gst_adapter_peek (adapter, 50);
+  cdata = gst_adapter_map (adapter, 50);
   fail_unless (cdata != NULL);
+  gst_adapter_unmap (adapter, 0);
+
   data = gst_adapter_take (adapter, 50);
   fail_unless (data != NULL);
   g_free (data);
@@ -546,10 +571,12 @@ GST_START_TEST (test_scan)
   fail_unless (adapter != NULL);
 
   buffer = gst_buffer_new_and_alloc (100);
-  data = GST_BUFFER_DATA (buffer);
+
+  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
   /* fill with pattern */
   for (i = 0; i < 100; i++)
     data[i] = i;
+  gst_buffer_unmap (buffer, data, 100);
 
   gst_adapter_push (adapter, buffer);
 
@@ -608,10 +635,12 @@ GST_START_TEST (test_scan)
 
   /* add another buffer */
   buffer = gst_buffer_new_and_alloc (100);
-  data = GST_BUFFER_DATA (buffer);
+
+  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
   /* fill with pattern */
   for (i = 0; i < 100; i++)
     data[i] = i + 100;
+  gst_buffer_unmap (buffer, data, 100);
 
   gst_adapter_push (adapter, buffer);
 
@@ -739,23 +768,26 @@ GST_START_TEST (test_take_list)
   while (gst_adapter_available (adapter) >= sizeof (guint32)) {
     GList *list, *walk;
     GstBuffer *buf;
-    guint size;
-    guint8 *data;
+    gsize size, left;
+    guint8 *data, *ptr;
 
     list = gst_adapter_take_list (adapter, sizeof (guint32) * 5);
     fail_unless (list != NULL);
 
     for (walk = list; walk; walk = g_list_next (walk)) {
       buf = walk->data;
-      data = GST_BUFFER_DATA (buf);
-      size = GST_BUFFER_SIZE (buf);
 
-      while (size > 0) {
-        fail_unless (GST_READ_UINT32_LE (data) == i);
+      ptr = data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+
+      left = size;
+      while (left > 0) {
+        fail_unless (GST_READ_UINT32_LE (ptr) == i);
         i++;
-        data += sizeof (guint32);
-        size -= sizeof (guint32);
+        ptr += sizeof (guint32);
+        left -= sizeof (guint32);
       }
+      gst_buffer_unmap (buf, data, size);
+
       gst_buffer_unref (buf);
     }
     g_list_free (list);

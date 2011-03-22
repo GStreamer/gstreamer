@@ -414,7 +414,6 @@ typedef enum {
   GST_BUFFER_COPY_CAPS           = (1 << 2),
   GST_BUFFER_COPY_MEMORY         = (1 << 3),
   GST_BUFFER_COPY_MEMORY_MERGE   = (1 << 4),
-  GST_BUFFER_COPY_MEMORY_SHARE   = (1 << 5),
 } GstBufferCopyFlags;
 
 #define GST_BUFFER_COPY_METADATA       (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS)
@@ -428,8 +427,6 @@ typedef enum {
  * Since: 0.10.13
  */
 #define GST_BUFFER_COPY_ALL  (GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_MEMORY)
-
-#define GST_BUFFER_SHARE_ALL (GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_MEMORY | GST_BUFFER_COPY_MEMORY_SHARE)
 
 /* copies memory or metadata into newly allocated buffer */
 void            gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src,

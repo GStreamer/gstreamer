@@ -69,8 +69,8 @@ static gboolean (*klass_set_caps) (GstBaseTransform * trans, GstCaps * incaps,
 static GstCaps *(*klass_transform_caps) (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps) = NULL;
 static gboolean (*klass_transform_size) (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
-    guint * othersize) = NULL;
+    GstPadDirection direction, GstCaps * caps, gsize size, GstCaps * othercaps,
+    gsize * othersize) = NULL;
 static gboolean klass_passthrough_on_same_caps = FALSE;
 
 static GstStaticPadTemplate *sink_template = &gst_test_trans_sink_template;

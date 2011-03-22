@@ -239,16 +239,23 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
     len = sarr->len;
 
-    if (flags & GST_BUFFER_COPY_MEMORY_SHARE) {
-      for (i = 0; i < len; i++) {
-        GstMemory *mem = g_ptr_array_index (sarr, i);
-        g_ptr_array_add (darr, gst_memory_ref (mem));
-      }
-    } else {
-      for (i = 0; i < len; i++) {
-        GstMemory *mem = g_ptr_array_index (sarr, i);
-        g_ptr_array_add (darr, gst_memory_copy (mem));
-      }
+    for (i = 0; i < len; i++) {
+      GstMemory *mem, *dmem;
+      gsize size;
+
+      mem = g_ptr_array_index (sarr, i);
+      if (i + 1 == len) {
+        /* last chunk */
+        size = gst_memory_get_sizes (mem, NULL);
+        dmem = gst_memory_sub (mem, offset, size - offset - trim);
+      } else if (offset) {
+        size = gst_memory_get_sizes (mem, NULL);
+        dmem = gst_memory_sub (mem, offset, size - offset);
+        offset = 0;
+      } else
+        dmem = gst_memory_ref (mem);
+
+      g_ptr_array_add (darr, dmem);
     }
   }
 
@@ -654,7 +661,7 @@ gst_buffer_make_metadata_writable (GstBuffer * buf)
     ret = gst_buffer_new ();
 
     /* we simply copy everything from our parent */
-    gst_buffer_copy_into (ret, buf, GST_BUFFER_SHARE_ALL, 0, 0);
+    gst_buffer_copy_into (ret, buf, GST_BUFFER_COPY_ALL, 0, 0);
     gst_buffer_unref (buf);
   }
   return ret;
@@ -698,7 +705,7 @@ gst_buffer_create_sub (GstBuffer * buffer, gsize offset, gsize size)
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p of %p", subbuffer, buffer);
 
-  gst_buffer_copy_into (subbuffer, buffer, GST_BUFFER_SHARE_ALL, offset,
+  gst_buffer_copy_into (subbuffer, buffer, GST_BUFFER_COPY_ALL, offset,
       bufsize - (size + offset));
 
   return subbuffer;

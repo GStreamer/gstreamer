@@ -85,7 +85,7 @@ GST_START_TEST (basetransform_chain_pt1)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   /* caps should not have been set */
   fail_unless (GST_BUFFER_CAPS (buffer) == NULL);
 
@@ -104,7 +104,7 @@ GST_START_TEST (basetransform_chain_pt1)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 10);
+  fail_unless (gst_buffer_get_size (buffer) == 10);
   /* caps should not have been set */
   fail_unless (GST_BUFFER_CAPS (buffer) == NULL);
 
@@ -194,7 +194,7 @@ GST_START_TEST (basetransform_chain_pt2)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
 
   gst_buffer_unref (buffer);
@@ -230,7 +230,7 @@ GST_START_TEST (basetransform_chain_pt2)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 10);
+  fail_unless (gst_buffer_get_size (buffer) == 10);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
 
   gst_buffer_unref (buffer);
@@ -312,7 +312,7 @@ GST_START_TEST (basetransform_chain_ip1)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   gst_buffer_unref (buffer);
 
   GST_DEBUG_OBJECT (trans, "buffer without caps extra ref, size 20");
@@ -337,7 +337,7 @@ GST_START_TEST (basetransform_chain_ip1)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
 
   /* output buffer has refcount 1 */
   fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 1);
@@ -400,7 +400,7 @@ GST_START_TEST (basetransform_chain_ip2)
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, NULL, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_pt1_called == TRUE);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   fail_unless (GST_BUFFER_CAPS (buffer) == NULL);
   gst_buffer_unref (buffer);
 
@@ -413,7 +413,7 @@ GST_START_TEST (basetransform_chain_ip2)
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, caps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_pt1_called == TRUE);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   fail_unless (GST_BUFFER_CAPS (buffer) == caps);
   gst_buffer_unref (buffer);
 
@@ -453,7 +453,7 @@ GST_START_TEST (basetransform_chain_ip2)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
   gst_buffer_unref (buffer);
 
@@ -488,7 +488,7 @@ GST_START_TEST (basetransform_chain_ip2)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
 
   /* output buffer has refcount 1 */
@@ -570,7 +570,7 @@ transform_caps_ct1 (GstBaseTransform * trans, GstPadDirection dir,
 
 static gboolean
 transform_size_ct1 (GstBaseTransform * trans, GstPadDirection direction,
-    GstCaps * caps, guint size, GstCaps * othercaps, guint * othersize)
+    GstCaps * caps, gsize size, GstCaps * othercaps, gsize * othersize)
 {
   if (direction == GST_PAD_SINK) {
     *othersize = size * 2;
@@ -695,7 +695,7 @@ GST_START_TEST (basetransform_chain_ct1)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 40);
+  fail_unless (gst_buffer_get_size (buffer) == 40);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), outcaps));
   gst_buffer_unref (buffer);
 
@@ -721,7 +721,7 @@ GST_START_TEST (basetransform_chain_ct1)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 40);
+  fail_unless (gst_buffer_get_size (buffer) == 40);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), outcaps));
 
   /* output buffer has refcount 1 */
@@ -738,7 +738,7 @@ GST_START_TEST (basetransform_chain_ct1)
    * currently still calls the pad alloc for no reason and then throws away the
    * buffer. */
   fail_unless (buffer_alloc_ct1_called == FALSE);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 10);
+  fail_unless (gst_buffer_get_size (buffer) == 10);
   gst_buffer_unref (buffer);
 
   /* with caps buffer */
@@ -827,7 +827,7 @@ transform_caps_ct2 (GstBaseTransform * trans, GstPadDirection dir,
 
 static gboolean
 transform_size_ct2 (GstBaseTransform * trans, GstPadDirection direction,
-    GstCaps * caps, guint size, GstCaps * othercaps, guint * othersize)
+    GstCaps * caps, gsize size, GstCaps * othercaps, gsize * othersize)
 {
   if (gst_caps_is_equal (caps, othercaps)) {
     *othersize = size;
@@ -983,7 +983,7 @@ GST_START_TEST (basetransform_chain_ct2)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
   gst_buffer_unref (buffer);
 
@@ -1009,7 +1009,7 @@ GST_START_TEST (basetransform_chain_ct2)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
 
   /* output buffer has refcount 1 */
@@ -1024,7 +1024,7 @@ GST_START_TEST (basetransform_chain_ct2)
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, incaps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_ct2_called == TRUE);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 10);
+  fail_unless (gst_buffer_get_size (buffer) == 10);
   gst_buffer_unref (buffer);
 
   /* with caps buffer */
@@ -1140,7 +1140,7 @@ GST_START_TEST (basetransform_chain_ct3)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
   gst_buffer_unref (buffer);
 
@@ -1164,7 +1164,7 @@ GST_START_TEST (basetransform_chain_ct3)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
 
   /* output buffer has refcount 1 */
@@ -1179,7 +1179,7 @@ GST_START_TEST (basetransform_chain_ct3)
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, incaps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_ct2_called == TRUE);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 10);
+  fail_unless (gst_buffer_get_size (buffer) == 10);
   gst_buffer_unref (buffer);
 
   /* with caps buffer */
@@ -1226,7 +1226,7 @@ GST_START_TEST (basetransform_chain_ct3)
   GST_DEBUG_OBJECT (trans, "received caps %" GST_PTR_FORMAT,
       GST_BUFFER_CAPS (buffer));
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), outcaps));
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
 
   /* output buffer has refcount 1 */
   fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 1);
@@ -1244,7 +1244,7 @@ GST_START_TEST (basetransform_chain_ct3)
   fail_unless (buffer_alloc_ct2_called == TRUE);
   /* FIXME a buffer alloc should never set caps */
   fail_unless (set_caps_ct2_called == FALSE);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 10);
+  fail_unless (gst_buffer_get_size (buffer) == 10);
   /* FIXME, ideally we want to reuse these caps */
   fail_unless (GST_BUFFER_CAPS (buffer) == incaps);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
@@ -1267,7 +1267,7 @@ GST_START_TEST (basetransform_chain_ct3)
 
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
-  fail_unless (GST_BUFFER_SIZE (buffer) == 20);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), outcaps));
 
   /* output buffer has refcount 1 */
