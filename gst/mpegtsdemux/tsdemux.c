@@ -190,12 +190,12 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * stream,
     MpegTSBaseProgram * program);
 static void
 gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * stream);
-static GstFlowReturn gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event);
-static GstFlowReturn
-find_pcr_packet (MpegTSBase * base, guint64 offset, gint64 length,
-    TSPcrOffset * pcroffset);
-static GstFlowReturn
-find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset);
+static GstFlowReturn gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event,
+    guint16 pid);
+static GstFlowReturn find_pcr_packet (MpegTSBase * base, guint64 offset,
+    gint64 length, TSPcrOffset * pcroffset);
+static GstFlowReturn find_timestamps (MpegTSBase * base, guint64 initoff,
+    guint64 * offset);
 static void gst_ts_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_ts_demux_get_property (GObject * object, guint prop_id,
@@ -430,6 +430,164 @@ calculate_gsttime (TSPcrOffset * start, guint64 pcr)
   return time;
 }
 
+static GstFlowReturn
+gst_ts_demux_parse_pes_header_pts (GstTSDemux * demux,
+    MpegTSPacketizerPacket * packet, guint64 * time)
+{
+  GstFlowReturn res = GST_FLOW_ERROR;
+  guint8 *data;
+  guint32 length;
+  guint32 psc_stid;
+  guint8 stid;
+  guint16 pesplength;
+  guint8 PES_header_data_length = 0;
+
+  data = packet->payload;
+  length = packet->data_end - data;
+
+  GST_MEMDUMP ("Header buffer", data, MIN (length, 32));
+
+  /* packet_start_code_prefix           24
+   * stream_id                          8*/
+  psc_stid = GST_READ_UINT32_BE (data);
+  data += 4;
+  length -= 4;
+  if (G_UNLIKELY ((psc_stid & 0xffffff00) != 0x00000100)) {
+    GST_DEBUG ("WRONG PACKET START CODE! pid: 0x%x", packet->pid);
+    goto discont;
+  }
+  stid = psc_stid & 0x000000ff;
+  GST_LOG ("stream_id:0x%02x", stid);
+
+  /* PES_packet_length                  16 */
+  /* FIXME : store the expected pes length somewhere ? */
+  pesplength = GST_READ_UINT16_BE (data);
+  data += 2;
+  length -= 2;
+  GST_LOG ("PES_packet_length:%d", pesplength);
+
+  /* FIXME : Only parse header on streams which require it (see table 2-21) */
+  if (stid != 0xbf) {
+    guint64 pts;
+    guint8 p1, p2;
+    p1 = *data++;
+    p2 = *data++;
+    PES_header_data_length = *data++ + 3;
+    length -= 3;
+
+    GST_LOG ("0x%02x 0x%02x 0x%02x", p1, p2, PES_header_data_length);
+    GST_LOG ("PES header data length:%d", PES_header_data_length);
+
+    /* '10'                             2
+     * PES_scrambling_control           2
+     * PES_priority                     1
+     * data_alignment_indicator         1
+     * copyright                        1
+     * original_or_copy                 1 */
+    if (G_UNLIKELY ((p1 & 0xc0) != 0x80)) {
+      GST_WARNING ("p1 >> 6 != 0x2");
+      goto discont;
+    }
+
+    /* PTS_DTS_flags                    2
+     * ESCR_flag                        1
+     * ES_rate_flag                     1
+     * DSM_trick_mode_flag              1
+     * additional_copy_info_flag        1
+     * PES_CRC_flag                     1
+     * PES_extension_flag               1*/
+
+    /* PES_header_data_length           8 */
+    if (G_UNLIKELY (length < PES_header_data_length)) {
+      GST_WARNING ("length < PES_header_data_length");
+      goto discont;
+    }
+
+    /*  PTS                             32 */
+    if ((p2 & 0x80)) {          /* PTS */
+      READ_TS (data, pts, discont);
+      length -= 4;
+      *time = pts;
+      res = GST_FLOW_OK;
+    }
+  }
+discont:
+  return res;
+}
+
+
+/* performs a accurate seek to the last packet with pts < seektime */
+static GstFlowReturn
+gst_ts_demux_perform_accurate_seek (MpegTSBase * base, GstClockTime seektime,
+    TSPcrOffset * pcroffset, gint64 length, gint16 pid)
+{
+  GstTSDemux *demux = (GstTSDemux *) base;
+  GstFlowReturn res = GST_FLOW_ERROR;
+  gboolean done = FALSE;
+  GstBuffer *buf;
+  MpegTSPacketizerPacket packet;
+  MpegTSPacketizerPacketReturn pret;
+  gint64 offset = pcroffset->offset;
+  gint64 scan_offset = MIN (length, 50 * MPEGTS_MAX_PACKETSIZE);
+
+
+  GST_DEBUG ("accurate seek for %" GST_TIME_FORMAT " from offset: %"
+      G_GINT64_FORMAT " in %" G_GINT64_FORMAT " bytes for PID: %d",
+      GST_TIME_ARGS (seektime), pcroffset->offset, length, pid);
+
+  mpegts_packetizer_flush (base->packetizer);
+
+  while (!done && scan_offset <= length) {
+    res =
+        gst_pad_pull_range (base->sinkpad, offset + scan_offset,
+        50 * MPEGTS_MAX_PACKETSIZE, &buf);
+    if (res != GST_FLOW_OK)
+      goto beach;
+    mpegts_packetizer_push (base->packetizer, buf);
+
+    while ((!done)
+        && ((pret =
+                mpegts_packetizer_next_packet (base->packetizer,
+                    &packet)) != PACKET_NEED_MORE)) {
+      if (G_UNLIKELY (pret == PACKET_BAD))
+        /* bad header, skip the packet */
+        goto next;
+
+      if (packet.payload_unit_start_indicator)
+        GST_DEBUG ("found packet for PID: %d with pcr: %" GST_TIME_FORMAT
+            " at offset: %" G_GINT64_FORMAT, packet.pid,
+            GST_TIME_ARGS (packet.pcr), packet.offset);
+
+      if (packet.payload != NULL && packet.payload_unit_start_indicator
+          && packet.pid == pid) {
+        guint64 pts = 0;
+
+        res = gst_ts_demux_parse_pes_header_pts (demux, &packet, &pts);
+        if (res == GST_FLOW_OK) {
+          GstClockTime time = calculate_gsttime (pcroffset, pts * 300);
+
+          GST_DEBUG ("packet has PTS: %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (time));
+
+          if (time <= seektime) {
+            pcroffset->gsttime = time;
+            pcroffset->pcr = packet.pcr;
+            pcroffset->offset = packet.offset;
+          } else
+            done = TRUE;
+        } else
+          goto next;
+      }
+    next:
+      mpegts_packetizer_clear_packet (base->packetizer, &packet);
+    }
+    scan_offset += 50 * MPEGTS_MAX_PACKETSIZE;
+  }
+
+beach:
+  mpegts_packetizer_flush (base->packetizer);
+  return res;
+}
 
 static gint
 TSPcrOffset_find (gconstpointer a, gconstpointer b, gpointer user_data)
@@ -449,17 +607,19 @@ TSPcrOffset_find (gconstpointer a, gconstpointer b, gpointer user_data)
 }
 
 static GstFlowReturn
-gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment)
+gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
   GstFlowReturn res = GST_FLOW_ERROR;
-  int loop_cnt = 0;
+  int max_loop_cnt, loop_cnt = 0;
   double bias = 1.0;
   gint64 desired_offset;
   gint64 seekpos = 0;
   gint64 time_diff;
   GstClockTime seektime;
   TSPcrOffset seekpcroffset, pcr_start, pcr_stop, *tmp;
+
+  max_loop_cnt = (segment->flags & GST_SEEK_FLAG_ACCURATE) ? 25 : 10;
 
   desired_offset = segment->last_stop;
 
@@ -516,7 +676,8 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment)
       GST_TIME_ARGS (demux->cur_pcr.gsttime), demux->cur_pcr.offset, time_diff);
 
   /* seek loop */
-  while (loop_cnt++ < 10 && (time_diff < 0 || time_diff > 333 * GST_MSECOND)) {
+  while (loop_cnt++ < max_loop_cnt && (time_diff < 0
+          || time_diff > 333 * GST_MSECOND)) {
     gint64 duration = pcr_stop.gsttime - pcr_start.gsttime;
     gint64 size = pcr_stop.offset - pcr_start.offset;
 
@@ -580,6 +741,28 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment)
 
   GST_DEBUG ("seeking finished after %d loops", loop_cnt);
 
+  if (segment->flags & GST_SEEK_FLAG_ACCURATE) {
+    MpegTSBaseProgram *program = demux->program;
+
+    if (program->streams[pid]) {
+      switch (program->streams[pid]->stream_type) {
+        case ST_VIDEO_MPEG1:
+        case ST_VIDEO_MPEG2:
+        case ST_VIDEO_MPEG4:
+        case ST_VIDEO_H264:
+        case ST_VIDEO_DIRAC:
+          GST_WARNING ("no payload parser for stream 0x%04x type: 0x%02x", pid,
+              program->streams[pid]->stream_type);
+          break;
+      }
+    } else
+      GST_WARNING ("no stream info for PID: 0x%04x", pid);
+    seekpcroffset.pcr = pcr_start.pcr;
+    seekpcroffset.offset = pcr_start.offset;
+    res =
+        gst_ts_demux_perform_accurate_seek (base, seektime, &seekpcroffset,
+        pcr_stop.offset - pcr_start.offset, pid);
+  }
 
   segment->last_stop = seekpcroffset.gsttime;
   segment->time = seekpcroffset.gsttime;
@@ -600,7 +783,7 @@ done:
 
 
 static GstFlowReturn
-gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
+gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event, guint16 pid)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
   GstFlowReturn res = GST_FLOW_ERROR;
@@ -655,7 +838,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
       GST_TIME_ARGS (seeksegment.last_stop),
       GST_TIME_ARGS (seeksegment.duration));
 
-  res = gst_ts_demux_perform_seek (base, &seeksegment);
+  res = gst_ts_demux_perform_seek (base, &seeksegment, pid);
   if (G_UNLIKELY (res != GST_FLOW_OK)) {
     GST_WARNING ("seeking failed %s", gst_flow_get_name (res));
     goto done;

@@ -142,7 +142,7 @@ struct _MpegTSBaseClass {
  GstFlowReturn (*find_timestamps) (MpegTSBase * base, guint64 initoff, guint64 *offset);
 
   /* seek is called to wait for seeking */
-  GstFlowReturn (*seek) (MpegTSBase * base, GstEvent * event);
+  GstFlowReturn (*seek) (MpegTSBase * base, GstEvent * event, guint16 pid);
 
   /* signals */
   void (*pat_info) (GstStructure *pat);

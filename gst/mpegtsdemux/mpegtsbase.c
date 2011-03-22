@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <glib.h>
+
 #include <gst/gst-i18n-plugin.h>
 #include "mpegtsbase.h"
 #include "gstmpegdesc.h"
@@ -1221,6 +1223,8 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
   gint64 start, stop;
+  gchar *pad_name;
+  guint16 pid = 0;
 
   gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
@@ -1231,6 +1235,17 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   GST_DEBUG ("seek event, rate: %f start: %" GST_TIME_FORMAT
       " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop));
+
+  /* extract the pid from the pad name */
+  pad_name = gst_pad_get_name (pad);
+  if (pad_name) {
+    gchar *pidstr = g_strrstr (pad_name, "_");
+    if (pidstr) {
+      pidstr++;
+      pid = g_ascii_strtoull (pidstr, NULL, 16);
+    }
+    g_free (pad_name);
+  }
 
   flush = flags & GST_SEEK_FLAG_FLUSH;
 
@@ -1267,7 +1282,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   if (format == GST_FORMAT_TIME) {
     /* If the subclass can seek, do that */
     if (klass->seek) {
-      ret = klass->seek (base, event);
+      ret = klass->seek (base, event, pid);
       if (G_UNLIKELY (ret != GST_FLOW_OK)) {
         GST_WARNING ("seeking failed %s", gst_flow_get_name (ret));
         goto done;
