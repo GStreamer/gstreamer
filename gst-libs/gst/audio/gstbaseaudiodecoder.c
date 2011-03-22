@@ -732,6 +732,9 @@ gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec, GstBuffer * buf,
     GST_DEBUG_OBJECT (dec, "base_ts now %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
   }
 
+  if (G_UNLIKELY (!buf))
+    goto exit;
+
   /* slightly convoluted approach caters for perfect ts if subclass desires */
   if (GST_CLOCK_TIME_IS_VALID (ts)) {
     if (dec->tolerance > 0) {
@@ -744,7 +747,7 @@ gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec, GstBuffer * buf,
           " samples past base_ts %" GST_TIME_FORMAT
           ", expected ts %" GST_TIME_FORMAT, samples,
           GST_TIME_ARGS (priv->base_ts), GST_TIME_ARGS (next_ts));
-      diff = GST_CLOCK_DIFF (next_ts, GST_BUFFER_TIMESTAMP (buf));
+      diff = GST_CLOCK_DIFF (next_ts, ts);
       GST_LOG_OBJECT (dec, "ts diff %d ms", (gint) (diff / GST_MSECOND));
       /* if within tolerance,
        * discard buffer ts and carry on producing perfect stream,
@@ -761,40 +764,38 @@ gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec, GstBuffer * buf,
     }
   }
 
-  if (G_LIKELY (buf)) {
-
-    /* delayed one-shot stuff until confirmed data */
-    if (priv->taglist) {
-      GST_DEBUG_OBJECT (dec, "codec tag %" GST_PTR_FORMAT, priv->taglist);
-      if (gst_tag_list_is_empty (priv->taglist)) {
-        gst_tag_list_free (priv->taglist);
-      } else {
-        gst_element_found_tags (GST_ELEMENT (dec), priv->taglist);
-      }
-      priv->taglist = NULL;
-    }
-
-    buf = gst_buffer_make_metadata_writable (buf);
-    if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (priv->base_ts))) {
-      GST_BUFFER_TIMESTAMP (buf) =
-          priv->base_ts +
-          GST_FRAMES_TO_CLOCK_TIME (priv->samples, ctx->state.rate);
-      GST_BUFFER_DURATION (buf) = priv->base_ts +
-          GST_FRAMES_TO_CLOCK_TIME (priv->samples + samples, ctx->state.rate) -
-          GST_BUFFER_TIMESTAMP (buf);
+  /* delayed one-shot stuff until confirmed data */
+  if (priv->taglist) {
+    GST_DEBUG_OBJECT (dec, "codec tag %" GST_PTR_FORMAT, priv->taglist);
+    if (gst_tag_list_is_empty (priv->taglist)) {
+      gst_tag_list_free (priv->taglist);
     } else {
-      GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
-      GST_BUFFER_DURATION (buf) =
-          GST_FRAMES_TO_CLOCK_TIME (samples, ctx->state.rate);
+      gst_element_found_tags (GST_ELEMENT (dec), priv->taglist);
     }
-    priv->samples += samples;
-    priv->samples_out += samples;
-
-    /* we got data, so note things are looking up */
-    if (G_UNLIKELY (dec->priv->error_count))
-      dec->priv->error_count--;
+    priv->taglist = NULL;
   }
 
+  buf = gst_buffer_make_metadata_writable (buf);
+  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (priv->base_ts))) {
+    GST_BUFFER_TIMESTAMP (buf) =
+        priv->base_ts +
+        GST_FRAMES_TO_CLOCK_TIME (priv->samples, ctx->state.rate);
+    GST_BUFFER_DURATION (buf) = priv->base_ts +
+        GST_FRAMES_TO_CLOCK_TIME (priv->samples + samples, ctx->state.rate) -
+        GST_BUFFER_TIMESTAMP (buf);
+  } else {
+    GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (buf) =
+        GST_FRAMES_TO_CLOCK_TIME (samples, ctx->state.rate);
+  }
+  priv->samples += samples;
+  priv->samples_out += samples;
+
+  /* we got data, so note things are looking up */
+  if (G_UNLIKELY (dec->priv->error_count))
+    dec->priv->error_count--;
+
+exit:
   return gst_base_audio_decoder_output (dec, buf);
 
   /* ERRORS */
