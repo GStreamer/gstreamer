@@ -2428,6 +2428,19 @@ gst_qt_mux_collected (GstCollectPads * pads, gpointer user_data)
     time = GST_BUFFER_TIMESTAMP (buf);
     gst_buffer_unref (buf);
 
+    /* invalid should pass */
+    if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
+      time =
+          gst_segment_to_running_time (&data->segment, GST_FORMAT_TIME, time);
+      if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
+        GST_DEBUG_OBJECT (qtmux, "clipping buffer on pad %s outside segment",
+            GST_PAD_NAME (data->pad));
+        buf = gst_collect_pads_pop (pads, data);
+        gst_buffer_unref (buf);
+        return GST_FLOW_OK;
+      }
+    }
+
     if (best_pad == NULL || !GST_CLOCK_TIME_IS_VALID (time) ||
         (GST_CLOCK_TIME_IS_VALID (best_time) && time < best_time)) {
       best_pad = pad;
@@ -2439,6 +2452,8 @@ gst_qt_mux_collected (GstCollectPads * pads, gpointer user_data)
     GST_LOG_OBJECT (qtmux, "selected pad %s with time %" GST_TIME_FORMAT,
         GST_PAD_NAME (best_pad->collect.pad), GST_TIME_ARGS (best_time));
     buf = gst_collect_pads_pop (pads, &best_pad->collect);
+    buf = gst_buffer_make_metadata_writable (buf);
+    GST_BUFFER_TIMESTAMP (buf) = best_time;
     ret = gst_qt_mux_add_buffer (qtmux, best_pad, buf);
   } else {
     ret = gst_qt_mux_stop_file (qtmux);
