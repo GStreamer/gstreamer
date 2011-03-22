@@ -731,7 +731,6 @@ AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
            [The GIO library directory.])
   ], [
     HAVE_GIO="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(GIO_CFLAGS)
   AC_SUBST(GIO_LIBS)
