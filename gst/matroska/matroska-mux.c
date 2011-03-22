@@ -2409,8 +2409,29 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux, gboolean * popped)
       collect_pad->buffer = gst_collect_pads_pop (mux->collect,
           (GstCollectData *) collect_pad);
 
-      if (collect_pad->buffer != NULL)
+      if (collect_pad->buffer != NULL) {
+        GstClockTime time;
+
         *popped = TRUE;
+        /* convert to running time */
+        time = GST_BUFFER_TIMESTAMP (collect_pad->buffer);
+        /* invalid should pass */
+        if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
+          time = gst_segment_to_running_time (&collect_pad->collect.segment,
+              GST_FORMAT_TIME, time);
+          if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
+            GST_DEBUG_OBJECT (mux, "clipping buffer on pad %s outside segment",
+                GST_PAD_NAME (collect_pad->collect.pad));
+            gst_buffer_unref (collect_pad->buffer);
+            collect_pad->buffer = NULL;
+            return NULL;
+          } else {
+            collect_pad->buffer =
+                gst_buffer_make_metadata_writable (collect_pad->buffer);
+            GST_BUFFER_TIMESTAMP (collect_pad->buffer) = time;
+          }
+        }
+      }
     }
 
     /* if we have a buffer check if it is better then the current best one */
@@ -2772,7 +2793,7 @@ gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
   GstEbmlWrite *ebml = mux->ebml_write;
   GstMatroskaPad *best;
   gboolean popped;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (mux, "Collected pads");
 
@@ -2796,6 +2817,9 @@ gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
 
     /* if there is no best pad, we have reached EOS */
     if (best == NULL) {
+      /* buffer popped, but none returned means it was clipped */
+      if (popped)
+        break;
       GST_DEBUG_OBJECT (mux, "No best pad finishing...");
       if (!mux->streamable) {
         gst_matroska_mux_finish (mux);
