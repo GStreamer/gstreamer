@@ -343,11 +343,16 @@ gst_base_camera_src_set_property (GObject * object,
     case PROP_POST_PREVIEW:
       self->post_preview = g_value_get_boolean (value);
       break;
-    case PROP_PREVIEW_CAPS:
-      gst_caps_replace (&self->preview_caps,
-          (GstCaps *) gst_value_get_caps (value));
-      gst_base_camera_src_setup_preview (self,
-          (GstCaps *) gst_value_get_caps (value));
+    case PROP_PREVIEW_CAPS:{
+      GstCaps *new_caps = NULL;
+      new_caps = (GstCaps *) gst_value_get_caps (value);
+      if (!gst_caps_is_equal (self->preview_caps, new_caps)) {
+        gst_caps_replace (&self->preview_caps, new_caps);
+        gst_base_camera_src_setup_preview (self, new_caps);
+      } else {
+        GST_DEBUG_OBJECT (self, "New preview caps equal current preview caps");
+      }
+    }
       break;
     case PROP_PREVIEW_FILTER:
       if (self->preview_filter)
