@@ -357,7 +357,6 @@ dnl check for pygobject
 PKG_CHECK_MODULES(PYGOBJECT, pygobject-2.0 >= $PYGOBJECT_REQ,
   [
     HAVE_PYGOBJECT="yes"
-    AC_MSG_RESULT([yes])
   ], HAVE_PYGOBJECT="no")
 
 if test "x$HAVE_PYGOBJECT" = "xno"; then
@@ -373,7 +372,6 @@ dnl FIXME: check for a pygobject with a correct pyg_param_gvalue_from_pyobject
 PKG_CHECK_MODULES(PYGOBJECT_2_12, pygobject-2.0 >= 2.11.1,
   [
     HAVE_PYGOBJECT_2_12="yes"
-    AC_MSG_RESULT([yes])
     AC_DEFINE_UNQUOTED(HAVE_PYGOBJECT_2_12, 1,
       [Defined if we have a 2.12 series pygobject])
   ], HAVE_PYGOBJECT_2_12="no")
@@ -382,7 +380,6 @@ dnl FIXME: check for a pygobject which exports pyg_option_group_new
 PKG_CHECK_MODULES(PYGOBJECT_2_16, pygobject-2.0 >= 2.15.0,
   [
     HAVE_PYGOBJECT_2_16="yes"
-    AC_MSG_RESULT([yes])
     AC_DEFINE_UNQUOTED(HAVE_PYGOBJECT_2_16, 1,
       [Defined if we have a 2.16 series pygobject])
   ], HAVE_PYGOBJECT_2_16="no")
