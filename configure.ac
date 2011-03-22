@@ -558,7 +558,6 @@ AG_GST_CHECK_FEATURE(ASSRENDER, [ASS/SSA renderer], assrender, [
   PKG_CHECK_MODULES(ASSRENDER, libass >= 0.9.4, [
     HAVE_ASSRENDER="yes" ], [
     HAVE_ASSRENDER="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 AC_SUBST(ASSRENDER_CFLAGS)
@@ -604,7 +603,6 @@ AG_GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
 #AG_GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
 #  PKG_CHECK_MODULES(CAIRO, cairo >= 1.0 glitz-glx, HAVE_CAIRO=yes, [
 #    HAVE_CAIRO=no
-#    AC_MSG_RESULT(no)
 #  ])
 #  AC_SUBST(CAIRO_CFLAGS)
 #  AC_SUBST(CAIRO_LIBS)
@@ -657,7 +655,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_COG, true)
 AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
   PKG_CHECK_MODULES(COG, libpng >= 1.2, HAVE_COG="yes", [
     HAVE_COG="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(COG_CFLAGS)
   AC_SUBST(COG_LIBS)
@@ -674,7 +671,6 @@ AG_GST_CHECK_FEATURE(CURL, [Curl plugin], curl, [
     AC_MSG_RESULT($HAVE_CURL)
   ], [
     HAVE_CURL="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(CURL_CFLAGS)
   AC_SUBST(CURL_LIBS)
@@ -688,7 +684,6 @@ AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
 		HAVE_DC1394="yes"
 	else
 		HAVE_DC1394="no"
-		AC_MSG_RESULT(no)
 	fi
    ], [
         HAVE_DC1394="no"
@@ -704,7 +699,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
 AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
   PKG_CHECK_MODULES(DIRECTFB, directfb >= 0.9.24, HAVE_DIRECTFB="yes", [
     HAVE_DIRECTFB="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 
@@ -713,7 +707,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_DIRAC, true)
 AG_GST_CHECK_FEATURE(DIRAC, [dirac], dirac, [
   PKG_CHECK_MODULES(DIRAC, dirac >= 0.10, HAVE_DIRAC="yes", [
     HAVE_DIRAC="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 
@@ -751,10 +744,8 @@ AG_GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
 return 0;
     ], [
       HAVE_DIVX=yes
-      AC_MSG_RESULT(yes)
     ], [
       HAVE_DIVX=no
-      AC_MSG_RESULT(no)
       AC_MSG_WARN([Wrong version of divx4linux installed])
     ])
   fi
@@ -775,10 +766,8 @@ return 0;
 return 0;
     ], [
       HAVE_DIVX=yes
-      AC_MSG_RESULT(yes)
     ], [
       HAVE_DIVX=no
-      AC_MSG_RESULT(no)
       AC_MSG_WARN([Wrong version of divx4linux installed])
     ])
   fi
@@ -808,7 +797,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_RESINDVD, true)
 AG_GST_CHECK_FEATURE(RESINDVD, [resindvd plugin], resindvd, [
   PKG_CHECK_MODULES(DVDNAV, dvdnav >= 4.1.2 dvdread >= 4.1.2, HAVE_RESINDVD="yes", [
     HAVE_RESINDVD="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 
@@ -817,7 +805,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_EXIF, true)
 AG_GST_CHECK_FEATURE(EXIF, [exif], exif, [
   PKG_CHECK_MODULES(EXIF, libexif >= 0.6.16, HAVE_EXIF="yes", [
     HAVE_EXIF="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 
@@ -860,7 +847,6 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
         #endif
     ], [
       HAVE_FAAD="yes"
-      AC_MSG_RESULT(yes)
 
       AC_MSG_CHECKING([Checking FAAD2 version in $faad_hdr])
       for minor in 10 9 8 7 6 5 0; do
@@ -881,7 +867,6 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
       fi
     ], [
       HAVE_FAAD="no"
-      AC_MSG_RESULT(no)
     ])
   fi
   AS_SCRUB_INCLUDE(FAAD_CFLAGS)
@@ -933,7 +918,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_KATE, true)
 AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
   PKG_CHECK_MODULES(KATE, kate >= 0.1.7, HAVE_KATE="yes", [
     HAVE_KATE="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(KATE_CFLAGS)
   AC_SUBST(KATE_LIBS)
@@ -944,7 +928,6 @@ AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
     ],
     [
       HAVE_TIGER="no"
-      AC_MSG_RESULT(no)
     ]
   )
   AM_CONDITIONAL(USE_TIGER, test "x$HAVE_TIGER" = "xyes")
@@ -979,7 +962,6 @@ AG_GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
   dnl check with pkg-config first
   PKG_CHECK_MODULES(LIBMMS, libmms >= 0.4, HAVE_LIBMMS="yes", [
     HAVE_LIBMMS="no"
-    AC_MSG_RESULT(no)
   ])
 ])
 AC_SUBST(LIBMMS_LIBS)
@@ -1205,7 +1187,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_MYTHTV, true)
 AG_GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
   PKG_CHECK_MODULES(GMYTH, gmyth >= 0.4 gmyth <= 0.7.99, HAVE_MYTHTV="yes", [
     HAVE_MYTHTV="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(GMYTH_CFLAGS)
   AC_SUBST(GMYTH_LIBS)
@@ -1232,7 +1213,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
 AG_GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
   PKG_CHECK_MODULES(NEON, neon >= 0.27.0  neon <= 0.29.99, HAVE_NEON="yes", [
     HAVE_NEON="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(NEON_CFLAGS)
   AC_SUBST(NEON_LIBS)
@@ -1243,7 +1223,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_OFA, true)
 AG_GST_CHECK_FEATURE(OFA, [ofa plugins], ofa, [
   PKG_CHECK_MODULES(OFA, libofa >= 0.9.3, HAVE_OFA="yes", [
     HAVE_OFA="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(OFA_CFLAGS)
   AC_SUBST(OFA_LIBS)
@@ -1278,7 +1257,6 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
     fi
   ], [
     HAVE_OPENCV="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(OPENCV_CFLAGS)
   AC_SUBST(OPENCV_LIBS)
@@ -1289,7 +1267,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_RSVG, true)
 AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
   PKG_CHECK_MODULES(RSVG, librsvg-2.0 >= 2.14 cairo, HAVE_RSVG="yes", [
     HAVE_RSVG="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(RSVG_CFLAGS)
   AC_SUBST(RSVG_LIBS)
@@ -1319,7 +1296,6 @@ AG_GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
 	fi
   ], [
     HAVE_TIMIDITY="no"
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(TIMIDITY_CFLAGS)
   AC_SUBST(TIMIDITY_LIBS)
@@ -1438,7 +1414,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
 AG_GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
   PKG_CHECK_MODULES(SWFDEC, swfdec-0.3 >= 0.3.6, HAVE_SWFDEC=yes, [
     HAVE_SWFDEC=no
-    AC_MSG_RESULT(no)
   ])
   AC_SUBST(SWFDEC_CFLAGS)
   AC_SUBST(SWFDEC_LIBS)
