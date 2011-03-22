@@ -160,6 +160,8 @@ gst_h264_parse_finalize (GObject * object)
   GstH264Parse *h264parse = GST_H264_PARSE (object);
 
   g_object_unref (h264parse->frame_out);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
