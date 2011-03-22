@@ -365,7 +365,6 @@ AG_GST_CHECK_FEATURE(TWOLAME, [twolame], twolame, [
   PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.10, [
       HAVE_TWOLAME="yes"], [
       HAVE_TWOLAME="no"
-      AC_MSG_RESULT(no)
   ])
   AC_SUBST(TWOLAME_CFLAGS)
   AC_SUBST(TWOLAME_LIBS)
