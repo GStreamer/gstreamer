@@ -1916,6 +1916,11 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
   guint flags;
 
   data = gst_collect_pads_pop (avimux->collect, avipad->collect);
+  /* arrange downstream running time */
+  data = gst_buffer_make_metadata_writable (data);
+  GST_BUFFER_TIMESTAMP (data) =
+      gst_segment_to_running_time (&avipad->collect->segment,
+      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (data));
 
   /* Prepend a special buffer to the first one for some formats */
   if (avipad->is_video) {
@@ -2041,6 +2046,19 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
       continue;
     time = GST_BUFFER_TIMESTAMP (buffer);
     gst_buffer_unref (buffer);
+
+    /* invalid should pass */
+    if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
+      time = gst_segment_to_running_time (&avipad->collect->segment,
+          GST_FORMAT_TIME, time);
+      if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
+        GST_DEBUG_OBJECT (avimux, "clipping buffer on pad %s outside segment",
+            GST_PAD_NAME (avipad->collect->pad));
+        buffer = gst_collect_pads_pop (avimux->collect, avipad->collect);
+        gst_buffer_unref (buffer);
+        return GST_FLOW_OK;
+      }
+    }
 
     delay = avipad->is_video ? GST_SECOND / 2 : 0;
 
