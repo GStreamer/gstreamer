@@ -715,6 +715,34 @@ gst_base_audio_encoder_drain (GstBaseAudioEncoder * enc)
     return gst_base_audio_encoder_push_buffers (enc, TRUE);
 }
 
+static void
+gst_base_audio_encoder_set_base_gp (GstBaseAudioEncoder * enc)
+{
+  GstClockTime ts;
+
+  if (!enc->granule)
+    return;
+
+  /* use running time for granule */
+  /* incoming data is clipped, so a valid input should yield a valid output */
+  ts = gst_segment_to_running_time (&enc->segment, GST_FORMAT_TIME,
+      enc->priv->base_ts);
+  if (GST_CLOCK_TIME_IS_VALID (ts)) {
+    enc->priv->base_gp =
+        GST_CLOCK_TIME_TO_FRAMES (enc->priv->base_ts, enc->ctx->state.rate);
+    GST_DEBUG_OBJECT (enc, "new base gp %" G_GINT64_FORMAT,
+        GST_TIME_ARGS (enc->priv->base_gp));
+  } else {
+    /* should reasonably have a valid base,
+     * otherwise start at 0 if we did not already start there earlier */
+    if (enc->priv->base_gp < 0) {
+      enc->priv->base_gp = 0;
+      GST_DEBUG_OBJECT (enc, "new base gp %" G_GINT64_FORMAT,
+          GST_TIME_ARGS (enc->priv->base_gp));
+    }
+  }
+}
+
 static GstFlowReturn
 gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -790,12 +818,7 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
     priv->base_ts = GST_BUFFER_TIMESTAMP (buffer);
     GST_DEBUG_OBJECT (enc, "new base ts %" GST_TIME_FORMAT,
         GST_TIME_ARGS (priv->base_ts));
-    if (enc->granule) {
-      priv->base_gp =
-          GST_CLOCK_TIME_TO_FRAMES (priv->base_ts, enc->ctx->state.rate);
-      GST_DEBUG_OBJECT (enc, "new base gp %" G_GINT64_FORMAT,
-          GST_TIME_ARGS (priv->base_gp));
-    }
+    gst_base_audio_encoder_set_base_gp (enc);
   }
 
   /* check for continuity;
@@ -854,9 +877,7 @@ gst_base_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
     }
     /* now re-sync ts */
     priv->base_ts += diff;
-    if (priv->base_gp >= 0)
-      priv->base_gp =
-          GST_CLOCK_TIME_TO_FRAMES (priv->base_ts, enc->ctx->state.rate);
+    gst_base_audio_encoder_set_base_gp (enc);
     priv->discont |= discont;
   }
 
