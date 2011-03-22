@@ -1199,6 +1199,12 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad)
       gst_collect_pads_pop (mux->collect, (GstCollectData *) cpad);
   GstFlowReturn ret;
 
+  /* arrange downstream running time */
+  buffer = gst_buffer_make_metadata_writable (buffer);
+  GST_BUFFER_TIMESTAMP (buffer) =
+      gst_segment_to_running_time (&cpad->collect.segment,
+      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer));
+
   if (!mux->streamable)
     gst_flv_mux_update_index (mux, buffer, cpad);
 
@@ -1437,6 +1443,15 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
       break;
     }
 
+    time = gst_segment_to_running_time (&cpad->collect.segment,
+        GST_FORMAT_TIME, time);
+    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
+      GST_DEBUG_OBJECT (mux, "clipping buffer on pad %s outside segment",
+          GST_PAD_NAME (cpad->collect.pad));
+      buffer = gst_collect_pads_pop (pads, (GstCollectData *) cpad);
+      gst_buffer_unref (buffer);
+      return GST_FLOW_OK;
+    }
 
     if (best == NULL || (GST_CLOCK_TIME_IS_VALID (best_time)
             && time < best_time)) {
