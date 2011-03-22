@@ -50,6 +50,8 @@ typedef struct _GstMultiQueueClass GstMultiQueueClass;
 struct _GstMultiQueue {
   GstElement element;
 
+  gboolean sync_by_running_time;
+
   /* number of queues */
   guint	nbqueues;
 
@@ -65,6 +67,7 @@ struct _GstMultiQueue {
 
   guint32  counter;	/* incoming object counter, use atomic accesses */
   guint32  highid;	/* contains highest id of last outputted object */
+  GstClockTime high_time; /* highest start running time */
 
   GMutex * qlock;	/* Global queue lock (vs object lock or individual */
 			/* queues lock). Protects nbqueues, queues, global */
