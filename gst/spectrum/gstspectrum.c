@@ -974,12 +974,14 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   input_pos = spectrum->input_pos;
 
   if (!spectrum->multi_channel) {
+    GstSpectrumInputDataMixed input_data_mixed = spectrum->input_data_mixed;
+
     cd = &spectrum->channel_data[0];
     input = cd->input;
 
     while (size >= width * channels) {
       /* Move the mixdown of current frame into our ringbuffer */
-      input[input_pos] = spectrum->input_data_mixed (data, channels, max_value);
+      input[input_pos] = input_data_mixed (data, channels, max_value);
 
       data += width * channels;
       size -= width * channels;
@@ -1035,13 +1037,14 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     }
   } else {
     guint c;
+    GstSpectrumInputData input_data = spectrum->input_data;
 
     while (size >= width * channels) {
       for (c = 0; c < channels; c++) {
         cd = &spectrum->channel_data[c];
         input = cd->input;
         /* Move the current frames into our ringbuffers */
-        input[input_pos] = spectrum->input_data (data, max_value);
+        input[input_pos] = input_data (data, max_value);
         data += width;
       }
       size -= width * channels;
