@@ -953,6 +953,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
      * interval is in ns */
     spectrum->frames_per_interval =
         gst_util_uint64_scale (spectrum->interval, rate, GST_SECOND);
+    spectrum->frames_todo = spectrum->frames_per_interval;
     /* rounding error in ns, aggregated it in accumulated_error */
     spectrum->error_per_interval = (spectrum->interval * rate) % GST_SECOND;
     if (spectrum->frames_per_interval == 0)
@@ -988,12 +989,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       input_pos = (input_pos + 1) % nfft;
       spectrum->num_frames++;
 
-      have_full_interval = (
-          (spectrum->accumulated_error < GST_SECOND
-              && spectrum->num_frames == spectrum->frames_per_interval) ||
-          (spectrum->accumulated_error >= GST_SECOND
-              && spectrum->num_frames - 1 == spectrum->frames_per_interval)
-          );
+      have_full_interval = (spectrum->num_frames == spectrum->frames_todo);
 
       /* If we have enough frames for an FFT or we have all frames required for
        * the interval and we haven't run a FFT, then run an FFT */
@@ -1014,6 +1010,10 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           spectrum->accumulated_error -= GST_SECOND;
         else
           spectrum->accumulated_error += spectrum->error_per_interval;
+
+        spectrum->frames_todo = spectrum->frames_per_interval;
+        if (spectrum->accumulated_error >= spectrum->frame_time)
+          spectrum->frames_todo++;
 
         if (spectrum->post_messages) {
           GstMessage *m;
@@ -1051,12 +1051,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       input_pos = (input_pos + 1) % nfft;
       spectrum->num_frames++;
 
-      have_full_interval = (
-          (spectrum->accumulated_error < GST_SECOND
-              && spectrum->num_frames == spectrum->frames_per_interval) ||
-          (spectrum->accumulated_error >= GST_SECOND
-              && spectrum->num_frames - 1 == spectrum->frames_per_interval)
-          );
+      have_full_interval = (spectrum->num_frames == spectrum->frames_todo);
 
       /* If we have enough frames for an FFT or we have all frames required for
        * the interval and we haven't run a FFT, then run an FFT */
@@ -1081,6 +1076,10 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           spectrum->accumulated_error -= GST_SECOND;
         else
           spectrum->accumulated_error += spectrum->error_per_interval;
+
+        spectrum->frames_todo = spectrum->frames_per_interval;
+        if (spectrum->accumulated_error >= spectrum->frame_time)
+          spectrum->frames_todo++;
 
         if (spectrum->post_messages) {
           GstMessage *m;

@@ -61,6 +61,7 @@ struct _GstSpectrum
   gboolean message_phase;
   guint64 interval;             /* how many nanoseconds between emits */
   guint64 frames_per_interval;  /* how many frames per interval */
+  guint64 frames_todo;
   guint bands;                  /* number of spectrum bands */
   gint threshold;               /* energy level treshold */
   gboolean multi_channel;       /* send separate channel results */
