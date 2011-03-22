@@ -1075,7 +1075,7 @@ gst_multi_queue_loop (GstPad * pad)
   GstMultiQueueItem *item;
   GstDataQueueItem *sitem;
   GstMultiQueue *mq;
-  GstMiniObject *object;
+  GstMiniObject *object = NULL;
   guint32 newid;
   GstFlowReturn result;
 
@@ -1170,6 +1170,7 @@ gst_multi_queue_loop (GstPad * pad)
   /* Try to push out the new object */
   result = gst_single_queue_push_one (mq, sq, object);
   sq->srcresult = result;
+  object = NULL;
 
   if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED
       && result != GST_FLOW_UNEXPECTED)
@@ -1183,6 +1184,9 @@ gst_multi_queue_loop (GstPad * pad)
 
 out_flushing:
   {
+    if (object)
+      gst_mini_object_unref (object);
+
     /* Need to make sure wake up any sleeping pads when we exit */
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
     compute_high_id (mq);
