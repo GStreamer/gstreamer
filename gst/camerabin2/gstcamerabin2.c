@@ -258,7 +258,6 @@ gst_camera_bin_stop_capture (GstCameraBin * camerabin)
 
   if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
     gst_element_send_event (camerabin->audio_src, gst_event_new_eos ());
-    gst_element_set_state (camerabin->audio_src, GST_STATE_NULL);
   }
 }
 
