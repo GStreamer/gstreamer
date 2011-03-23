@@ -68,6 +68,9 @@ struct _GstSpeexDec {
   guint64               packetno;
 
   GstSegment            segment;    /* STREAM LOCK */
+
+  GstBuffer             *streamheader;
+  GstBuffer             *vorbiscomment;
 };
 
 struct _GstSpeexDecClass {
