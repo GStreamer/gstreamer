@@ -73,6 +73,15 @@ gst_base_video_encoder_class_init (GstBaseVideoEncoderClass * klass)
 }
 
 static void
+gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
+{
+  if (base_video_encoder->force_keyunit_event) {
+    gst_event_unref (base_video_encoder->force_keyunit_event);
+    base_video_encoder->force_keyunit_event = NULL;
+  }
+}
+
+static void
 gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
     GstBaseVideoEncoderClass * klass)
 {
@@ -235,6 +244,9 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
       if (gst_structure_has_name (s, "GstForceKeyUnit")) {
         GST_OBJECT_LOCK (base_video_encoder);
         base_video_encoder->force_keyframe = TRUE;
+        if (base_video_encoder->force_keyunit_event)
+          gst_event_unref (base_video_encoder->force_keyunit_event);
+        base_video_encoder->force_keyunit_event = gst_event_copy (event);
         GST_OBJECT_UNLOCK (base_video_encoder);
         gst_event_unref (event);
         ret = GST_FLOW_OK;
@@ -433,6 +445,8 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   frame->presentation_frame_number =
       base_video_encoder->presentation_frame_number;
   base_video_encoder->presentation_frame_number++;
+  frame->force_keyframe = base_video_encoder->force_keyframe;
+  base_video_encoder->force_keyframe = FALSE;
 
   GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
       g_list_append (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
@@ -460,6 +474,9 @@ gst_base_video_encoder_change_state (GstElement * element,
   base_video_encoder_class = GST_BASE_VIDEO_ENCODER_GET_CLASS (element);
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_base_video_encoder_reset (base_video_encoder);
+      break;
     default:
       break;
   }
@@ -468,6 +485,7 @@ gst_base_video_encoder_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_base_video_encoder_reset (base_video_encoder);
       if (base_video_encoder_class->stop) {
         base_video_encoder_class->stop (base_video_encoder);
       }
@@ -540,7 +558,7 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   if (frame->force_keyframe) {
     GstClockTime stream_time;
     GstClockTime running_time;
-    GstStructure *s;
+    GstEvent *ev;
 
     running_time =
         gst_segment_to_running_time (&GST_BASE_VIDEO_CODEC
@@ -551,15 +569,24 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
         (base_video_encoder)->segment, GST_FORMAT_TIME,
         frame->presentation_timestamp);
 
-    /* FIXME this should send the event that we got on the sink pad
-       instead of creating a new one */
-    s = gst_structure_new ("GstForceKeyUnit",
+    /* re-use upstream event if any so it also conveys any additional
+     * info upstream arranged in there */
+    GST_OBJECT_LOCK (base_video_encoder);
+    if (base_video_encoder->force_keyunit_event) {
+      ev = base_video_encoder->force_keyunit_event;
+      base_video_encoder->force_keyunit_event = NULL;
+    } else {
+      ev = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_new ("GstForceKeyUnit", NULL));
+    }
+    GST_OBJECT_UNLOCK (base_video_encoder);
+
+    gst_structure_set (ev->structure,
         "timestamp", G_TYPE_UINT64, frame->presentation_timestamp,
         "stream-time", G_TYPE_UINT64, stream_time,
         "running-time", G_TYPE_UINT64, running_time, NULL);
 
-    gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
-        gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s));
+    gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), ev);
   }
 
   if (base_video_encoder_class->shape_output) {

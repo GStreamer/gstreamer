@@ -75,6 +75,8 @@ struct _GstBaseVideoEncoder
   gint64 max_latency;
 
   gboolean force_keyframe;
+  GstEvent *force_keyunit_event;
+
   union {
     void *padding;
     gboolean at_eos;
