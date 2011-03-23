@@ -105,15 +105,11 @@ struct _GstBaseVideoEncoderClass
 
 GType gst_base_video_encoder_get_type (void);
 
-int gst_base_video_encoder_get_width (GstBaseVideoEncoder *coder);
-int gst_base_video_encoder_get_height (GstBaseVideoEncoder *coder);
 const GstVideoState *gst_base_video_encoder_get_state (GstBaseVideoEncoder *coder);
 
 GstVideoFrame *gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *coder);
 GstFlowReturn gst_base_video_encoder_finish_frame (GstBaseVideoEncoder *base_video_encoder,
     GstVideoFrame *frame);
-GstFlowReturn gst_base_video_encoder_end_of_stream (GstBaseVideoEncoder *base_video_encoder,
-    GstBuffer *buffer);
 
 void gst_base_video_encoder_set_latency (GstBaseVideoEncoder *base_video_encoder,
     GstClockTime min_latency, GstClockTime max_latency);

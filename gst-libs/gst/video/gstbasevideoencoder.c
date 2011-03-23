@@ -604,35 +604,10 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   return ret;
 }
 
-int
-gst_base_video_encoder_get_height (GstBaseVideoEncoder * base_video_encoder)
-{
-  return GST_BASE_VIDEO_CODEC (base_video_encoder)->state.height;
-}
-
-int
-gst_base_video_encoder_get_width (GstBaseVideoEncoder * base_video_encoder)
-{
-  return GST_BASE_VIDEO_CODEC (base_video_encoder)->state.width;
-}
-
 const GstVideoState *
 gst_base_video_encoder_get_state (GstBaseVideoEncoder * base_video_encoder)
 {
   return &GST_BASE_VIDEO_CODEC (base_video_encoder)->state;
-}
-
-GstFlowReturn
-gst_base_video_encoder_end_of_stream (GstBaseVideoEncoder * base_video_encoder,
-    GstBuffer * buffer)
-{
-
-  if (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames) {
-    GST_WARNING_OBJECT (base_video_encoder, "EOS with frames left over");
-  }
-
-  return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
-      buffer);
 }
 
 void
