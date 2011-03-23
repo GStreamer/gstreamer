@@ -540,22 +540,21 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
       g_list_remove (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
 
   if (!base_video_encoder->set_output_caps) {
+    GstCaps *caps;
+
     if (base_video_encoder_class->get_caps) {
-      GST_BASE_VIDEO_CODEC (base_video_encoder)->caps =
-          base_video_encoder_class->get_caps (base_video_encoder);
+      caps = base_video_encoder_class->get_caps (base_video_encoder);
     } else {
-      GST_BASE_VIDEO_CODEC (base_video_encoder)->caps =
-          gst_caps_new_simple ("video/unknown", NULL);
+      caps = gst_caps_new_simple ("video/unknown", NULL);
     }
-    GST_DEBUG_OBJECT (base_video_encoder, "src caps %" GST_PTR_FORMAT,
-        GST_BASE_VIDEO_CODEC (base_video_encoder)->caps);
-    gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
-        GST_BASE_VIDEO_CODEC (base_video_encoder)->caps);
+    GST_DEBUG_OBJECT (base_video_encoder, "src caps %" GST_PTR_FORMAT, caps);
+    gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), caps);
+    gst_caps_unref (caps);
     base_video_encoder->set_output_caps = TRUE;
   }
 
   gst_buffer_set_caps (GST_BUFFER (frame->src_buffer),
-      GST_BASE_VIDEO_CODEC (base_video_encoder)->caps);
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
 
   if (frame->force_keyframe) {
     GstClockTime stream_time;

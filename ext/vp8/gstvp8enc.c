@@ -936,7 +936,8 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
         gst_util_uint64_scale (frame->presentation_frame_number + 1,
         GST_SECOND * state->fps_d, state->fps_n);
 
-    gst_buffer_set_caps (buf, GST_BASE_VIDEO_CODEC (base_video_encoder)->caps);
+    gst_buffer_set_caps (buf,
+        GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
     ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 
     if (ret != GST_FLOW_OK) {

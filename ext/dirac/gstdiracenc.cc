@@ -1266,7 +1266,8 @@ gst_dirac_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
     GST_BUFFER_OFFSET_END (buf) = dirac_enc->last_granulepos;
   }
 
-  gst_buffer_set_caps (buf, GST_BASE_VIDEO_CODEC(base_video_encoder)->caps);
+  gst_buffer_set_caps (buf,
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
 
   return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 }
@@ -1297,7 +1298,8 @@ gst_dirac_enc_shape_output_quicktime (GstBaseVideoEncoder * base_video_encoder,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
-  gst_buffer_set_caps (buf, GST_BASE_VIDEO_CODEC(base_video_encoder)->caps);
+  gst_buffer_set_caps (buf,
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
 
   return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 }
@@ -1333,7 +1335,8 @@ gst_dirac_enc_shape_output_mp4 (GstBaseVideoEncoder * base_video_encoder,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
-  gst_buffer_set_caps (buf, GST_BASE_VIDEO_CODEC(base_video_encoder)->caps);
+  gst_buffer_set_caps (buf,
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
 
   return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 }

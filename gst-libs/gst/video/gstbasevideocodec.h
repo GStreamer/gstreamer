@@ -147,8 +147,6 @@ struct _GstBaseVideoCodec
   GstVideoState state;
   GstSegment segment;
 
-  GstCaps *caps;
-
   gdouble proportion;
   GstClockTime earliest_time;
 
