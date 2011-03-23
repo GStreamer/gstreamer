@@ -153,9 +153,9 @@ static gboolean gst_vp8_enc_handle_frame (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstFlowReturn gst_vp8_enc_shape_output (GstBaseVideoEncoder * encoder,
     GstVideoFrame * frame);
+static gboolean gst_vp8_enc_sink_event (GstBaseVideoEncoder *
+    base_video_encoder, GstEvent * event);
 static GstCaps *gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder);
-
-static gboolean gst_vp8_enc_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStaticPadTemplate gst_vp8_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -225,6 +225,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   base_video_encoder_class->set_format = gst_vp8_enc_set_format;
   base_video_encoder_class->finish = gst_vp8_enc_finish;
   base_video_encoder_class->shape_output = gst_vp8_enc_shape_output;
+  base_video_encoder_class->event = gst_vp8_enc_sink_event;
   base_video_encoder_class->get_caps = gst_vp8_enc_get_caps;
 
   g_object_class_install_property (gobject_class, PROP_BITRATE,
@@ -312,12 +313,6 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   gst_vp8_enc->multipass_mode = DEFAULT_MULTIPASS_MODE;
   gst_vp8_enc->multipass_cache_file = DEFAULT_MULTIPASS_CACHE_FILE;
   gst_vp8_enc->auto_alt_ref_frames = DEFAULT_AUTO_ALT_REF_FRAMES;
-
-  /* FIXME: Add sink/src event vmethods */
-  gst_vp8_enc->base_sink_event_func =
-      GST_PAD_EVENTFUNC (GST_BASE_VIDEO_CODEC_SINK_PAD (gst_vp8_enc));
-  gst_pad_set_event_function (GST_BASE_VIDEO_CODEC_SINK_PAD (gst_vp8_enc),
-      gst_vp8_enc_sink_event);
 }
 
 static void
@@ -985,10 +980,9 @@ done:
 }
 
 static gboolean
-gst_vp8_enc_sink_event (GstPad * pad, GstEvent * event)
+gst_vp8_enc_sink_event (GstBaseVideoEncoder * benc, GstEvent * event)
 {
-  GstVP8Enc *enc = GST_VP8_ENC (gst_pad_get_parent (pad));
-  gboolean ret;
+  GstVP8Enc *enc = GST_VP8_ENC (benc);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
     GstTagList *list;
@@ -999,10 +993,8 @@ gst_vp8_enc_sink_event (GstPad * pad, GstEvent * event)
     gst_tag_setter_merge_tags (setter, list, mode);
   }
 
-  ret = enc->base_sink_event_func (pad, event);
-  gst_object_unref (enc);
-
-  return ret;
+  /* just peeked, baseclass handles the rest */
+  return FALSE;
 }
 
 #endif /* HAVE_VP8_ENCODER */

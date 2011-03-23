@@ -78,9 +78,6 @@ struct _GstVP8Enc
 
   int n_frames;
   int keyframe_distance;
-
-  /* FIXME: Get a event vfunc in BaseVideoEncoder */
-  GstPadEventFunction base_sink_event_func;
 };
 
 struct _GstVP8EncClass
