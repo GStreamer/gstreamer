@@ -53,6 +53,11 @@
 /* maximal PCR time */
 #define PCR_MAX_VALUE (((((guint64)1)<<33) * 300) + 298)
 
+/* seek to SEEK_TIMESTAMP_OFFSET before the desired offset and search then
+ * either accurately or for the next timestamp
+ */
+#define SEEK_TIMESTAMP_OFFSET (1000 * GST_MSECOND)
+
 GST_DEBUG_CATEGORY_STATIC (ts_demux_debug);
 #define GST_CAT_DEFAULT ts_demux_debug
 
@@ -652,8 +657,6 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
   GstTSDemux *demux = (GstTSDemux *) base;
   GstFlowReturn res = GST_FLOW_ERROR;
   int max_loop_cnt, loop_cnt = 0;
-  double bias = 1.0;
-  gint64 desired_offset;
   gint64 seekpos = 0;
   gint64 time_diff;
   GstClockTime seektime;
@@ -661,9 +664,9 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
 
   max_loop_cnt = (segment->flags & GST_SEEK_FLAG_ACCURATE) ? 25 : 10;
 
-  desired_offset = segment->last_stop;
-
-  seektime = desired_offset + demux->first_pcr.gsttime;
+  seektime =
+      MAX (0,
+      segment->last_stop - SEEK_TIMESTAMP_OFFSET) + demux->first_pcr.gsttime;
   seekpcroffset.gsttime = seektime;
 
   GST_DEBUG ("seeking to %" GST_TIME_FORMAT, GST_TIME_ARGS (seektime));
@@ -716,26 +719,28 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
       GST_TIME_ARGS (demux->cur_pcr.gsttime), demux->cur_pcr.offset, time_diff);
 
   /* seek loop */
-  while (loop_cnt++ < max_loop_cnt && (time_diff < 0
-          || time_diff > 333 * GST_MSECOND)) {
+  while (loop_cnt++ < max_loop_cnt && (time_diff > SEEK_TIMESTAMP_OFFSET >> 1)
+      && (pcr_stop.gsttime - pcr_start.gsttime > SEEK_TIMESTAMP_OFFSET)) {
     gint64 duration = pcr_stop.gsttime - pcr_start.gsttime;
     gint64 size = pcr_stop.offset - pcr_start.offset;
 
-    seekpos =
-        pcr_start.offset + size * bias * ((double) (seektime -
-            pcr_start.gsttime) / duration);
+    if (loop_cnt & 1)
+      seekpos = pcr_start.offset + (size >> 1);
+    else
+      seekpos =
+          pcr_start.offset + size * ((double) (seektime -
+              pcr_start.gsttime) / duration);
 
     /* look a litle bit behind */
     seekpos =
         MAX (pcr_start.offset + 188, seekpos - 55 * MPEGTS_MAX_PACKETSIZE);
 
     GST_DEBUG ("looking for time: %" GST_TIME_FORMAT " .. %" GST_TIME_FORMAT
-        " .. %" GST_TIME_FORMAT "   bias = %g",
+        " .. %" GST_TIME_FORMAT,
         GST_TIME_ARGS (pcr_start.gsttime),
-        GST_TIME_ARGS (seektime), GST_TIME_ARGS (pcr_stop.gsttime), bias);
+        GST_TIME_ARGS (seektime), GST_TIME_ARGS (pcr_stop.gsttime));
     GST_DEBUG ("looking in bytes: %" G_GINT64_FORMAT " .. %" G_GINT64_FORMAT
-        " .. %" G_GINT64_FORMAT, pcr_start.offset, seekpos, pcr_stop.offset,
-        bias);
+        " .. %" G_GINT64_FORMAT, pcr_start.offset, seekpos, pcr_stop.offset);
 
     res =
         find_pcr_packet (&demux->parent, seekpos, 4000 * MPEGTS_MAX_PACKETSIZE,
@@ -755,10 +760,6 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
 
     seekpcroffset.gsttime = calculate_gsttime (&pcr_start, seekpcroffset.pcr);
 
-    bias =
-        1.0 + MAX (-.3, MIN (.3,
-            ((double) seektime - seekpcroffset.gsttime) / duration));
-
     /* validate */
     if (G_UNLIKELY ((seekpcroffset.gsttime < pcr_start.gsttime) ||
             (seekpcroffset.gsttime > pcr_stop.gsttime))) {
@@ -774,12 +775,15 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
       pcr_start = seekpcroffset;
     }
     time_diff = seektime - pcr_start.gsttime;
-    GST_DEBUG ("looking: %" GST_TIME_FORMAT " found: %" GST_TIME_FORMAT
+    GST_DEBUG ("seeking: %" GST_TIME_FORMAT " found: %" GST_TIME_FORMAT
         " diff = %" G_GINT64_FORMAT, GST_TIME_ARGS (seektime),
         GST_TIME_ARGS (seekpcroffset.gsttime), time_diff);
   }
 
   GST_DEBUG ("seeking finished after %d loops", loop_cnt);
+
+  /* use correct seek position for the auxiliary search */
+  seektime += SEEK_TIMESTAMP_OFFSET;
 
   if (segment->flags & GST_SEEK_FLAG_ACCURATE
       || segment->flags & GST_SEEK_FLAG_KEY_UNIT) {
@@ -810,17 +814,23 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
         pcr_stop.offset - pcr_start.offset, pid, segment->flags, keyframe_seek);
   }
 
-  segment->last_stop = seekpcroffset.gsttime;
-  segment->time = seekpcroffset.gsttime;
+
+  /* update seektime to the actual timestamp of the found keyframe */
+  if (segment->flags & GST_SEEK_FLAG_KEY_UNIT)
+    seektime = seekpcroffset.gsttime;
+
+  seektime -= demux->first_pcr.gsttime;
+
+  segment->last_stop = seektime;
+  segment->time = seektime;
 
   /* we stop at the end */
   if (segment->stop == -1)
-    segment->stop = segment->duration;
+    segment->stop = demux->first_pcr.gsttime + segment->duration;
 
   demux->need_newsegment = TRUE;
   demux->parent.seek_offset = seekpcroffset.offset;
-  GST_DEBUG ("seeked to postion:%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (seekpcroffset.gsttime));
+  GST_DEBUG ("seeked to postion:%" GST_TIME_FORMAT, GST_TIME_ARGS (seektime));
   res = GST_FLOW_OK;
 
 done:
@@ -2223,15 +2233,25 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
           }
         }
 
-        GST_DEBUG ("segment: tinypts: %" GST_TIME_FORMAT " stop: %"
+        GST_DEBUG ("old segment: tinypts: %" GST_TIME_FORMAT " stop: %"
             GST_TIME_FORMAT " time: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (tinypts),
             GST_TIME_ARGS (demux->first_pcr.gsttime + demux->duration),
             GST_TIME_ARGS (tinypts - demux->first_pcr.gsttime));
+/*         newsegmentevent = */
+/*             gst_event_new_new_segment (0, 1.0, GST_FORMAT_TIME, tinypts, */
+/*             demux->first_pcr.gsttime + demux->duration, */
+/*             tinypts - demux->first_pcr.gsttime); */
+        GST_DEBUG ("new segment:   start: %" GST_TIME_FORMAT " stop: %"
+            GST_TIME_FORMAT " time: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (demux->first_pcr.gsttime + demux->segment.start),
+            GST_TIME_ARGS (demux->first_pcr.gsttime + demux->segment.duration),
+            GST_TIME_ARGS (demux->segment.time));
         newsegmentevent =
-            gst_event_new_new_segment (0, 1.0, GST_FORMAT_TIME, tinypts,
-            demux->first_pcr.gsttime + demux->duration,
-            tinypts - demux->first_pcr.gsttime);
+            gst_event_new_new_segment (0, 1.0, GST_FORMAT_TIME,
+            demux->first_pcr.gsttime + demux->segment.start,
+            demux->first_pcr.gsttime + demux->segment.duration,
+            demux->segment.time);
 
         push_event ((MpegTSBase *) demux, newsegmentevent);
 
