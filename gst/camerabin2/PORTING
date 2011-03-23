@@ -12,6 +12,8 @@ capture.
 * Capture signals
 The signals were renamed from capture-start/stop to start/stop-capture as
 this is the usual naming on actions.
+Additionally, stop-capture is now async, the user should check 'idle' property
+to be sure that it can shut camerabin2.
 
 * image-done
 In camerabin, image-done is a signal, in camerabin2, it is a bus message
@@ -20,3 +22,4 @@ In camerabin, image-done is a signal, in camerabin2, it is a bus message
 In camerabin, video/audio encoder/muxer are selected by passing GstElements to
 camerabin properties. In camerabin2, a GstEncodingProfile is passed as a 
 property and encodebin manages to instantiate the elements for the format.
+
