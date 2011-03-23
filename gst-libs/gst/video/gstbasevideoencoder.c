@@ -176,18 +176,14 @@ gst_base_video_encoder_finalize (GObject * object)
 }
 
 static gboolean
-gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
+gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
+    GstEvent * event)
 {
-  GstBaseVideoEncoder *base_video_encoder;
   GstBaseVideoEncoderClass *base_video_encoder_class;
   gboolean ret = FALSE;
 
-  base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
   base_video_encoder_class =
       GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
-
-  GST_LOG_OBJECT (base_video_encoder, "handling event: %" GST_PTR_FORMAT,
-      event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -196,12 +192,8 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
       if (base_video_encoder_class->finish) {
         base_video_encoder_class->finish (base_video_encoder);
       }
-
-      ret =
-          gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
-          event);
-    }
       break;
+    }
     case GST_EVENT_NEWSEGMENT:
     {
       gboolean update;
@@ -221,20 +213,18 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
           GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
           GST_TIME_ARGS (position));
 
-      if (format != GST_FORMAT_TIME)
-        goto newseg_wrong_format;
+      if (format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (base_video_encoder, "received non TIME newsegment");
+        break;
+      }
 
       base_video_encoder->a.at_eos = FALSE;
 
       gst_segment_set_newsegment_full (&GST_BASE_VIDEO_CODEC
           (base_video_encoder)->segment, update, rate, applied_rate, format,
           start, stop, position);
-
-      ret =
-          gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
-          event);
-    }
       break;
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
       const GstStructure *s;
@@ -249,32 +239,44 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
         base_video_encoder->force_keyunit_event = gst_event_copy (event);
         GST_OBJECT_UNLOCK (base_video_encoder);
         gst_event_unref (event);
-        ret = GST_FLOW_OK;
-      } else {
-        ret =
-            gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD
-            (base_video_encoder), event);
+        ret = TRUE;
       }
       break;
     }
     default:
-      /* FIXME this changes the order of events */
-      ret =
-          gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
-          event);
       break;
   }
 
-done:
-  gst_object_unref (base_video_encoder);
   return ret;
+}
 
-newseg_wrong_format:
-  {
-    GST_DEBUG_OBJECT (base_video_encoder, "received non TIME newsegment");
-    gst_event_unref (event);
-    goto done;
-  }
+static gboolean
+gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstBaseVideoEncoder *enc;
+  GstBaseVideoEncoderClass *klass;
+  gboolean handled = FALSE;
+  gboolean ret = TRUE;
+
+  enc = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
+  klass = GST_BASE_VIDEO_ENCODER_GET_CLASS (enc);
+
+  GST_DEBUG_OBJECT (enc, "received event %d, %s", GST_EVENT_TYPE (event),
+      GST_EVENT_TYPE_NAME (event));
+
+  if (klass->event)
+    handled = klass->event (enc, event);
+
+  if (!handled)
+    handled = gst_base_video_encoder_sink_eventfunc (enc, event);
+
+  if (!handled)
+    ret = gst_pad_event_default (pad, event);
+
+  GST_DEBUG_OBJECT (enc, "event handled");
+
+  gst_object_unref (enc);
+  return ret;
 }
 
 static gboolean

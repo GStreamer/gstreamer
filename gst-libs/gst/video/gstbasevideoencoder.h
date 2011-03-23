@@ -96,6 +96,7 @@ struct _GstBaseVideoEncoderClass
   gboolean (*finish) (GstBaseVideoEncoder *coder);
   gboolean (*handle_frame) (GstBaseVideoEncoder *coder, GstVideoFrame *frame);
   GstFlowReturn (*shape_output) (GstBaseVideoEncoder *coder, GstVideoFrame *frame);
+  gboolean (*event) (GstBaseVideoEncoder *coder, GstEvent *event);
   GstCaps *(*get_caps) (GstBaseVideoEncoder *coder);
 
   /* FIXME before moving to base */
