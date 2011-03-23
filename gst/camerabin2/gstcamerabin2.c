@@ -724,6 +724,15 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         GST_CAMERA_BIN_PROCESSING_DEC (GST_CAMERA_BIN_CAST (bin));
       }
     }
+      break;
+    case GST_MESSAGE_EOS:{
+      GstElement *src = GST_ELEMENT (GST_MESSAGE_SRC (message));
+      if (src == GST_CAMERA_BIN_CAST (bin)->videosink) {
+        GST_DEBUG_OBJECT (bin, "EOS from video branch");
+        GST_CAMERA_BIN_PROCESSING_DEC (GST_CAMERA_BIN_CAST (bin));
+      }
+    }
+      break;
     default:
       break;
   }
@@ -898,17 +907,6 @@ gst_camera_bin_link_encodebin (GstCameraBin * camera, GstElement * element,
   return ret;
 }
 
-static gboolean
-videosink_event_probe (GstPad * pad, GstEvent * evt, gpointer data)
-{
-  GstCameraBin *camera = data;
-
-  if (GST_EVENT_TYPE (evt) == GST_EVENT_EOS) {
-    GST_CAMERA_BIN_PROCESSING_DEC (camera);
-  }
-  return TRUE;
-}
-
 static void
 gst_camera_bin_src_notify_max_zoom_cb (GObject * self, GParamSpec * pspec,
     gpointer user_data)
@@ -951,15 +949,6 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     camera->videosink =
         gst_element_factory_make ("filesink", "videobin-filesink");
     g_object_set (camera->videosink, "async", FALSE, NULL);
-    {
-      GstPad *pad;
-      pad = gst_element_get_static_pad (camera->videosink, "sink");
-
-      camera->videosink_probe = gst_pad_add_event_probe (pad,
-          (GCallback) videosink_event_probe, camera);
-
-      gst_object_unref (pad);
-    }
 
     /* audio elements */
     camera->audio_queue = gst_element_factory_make ("queue", "audio-queue");
