@@ -80,6 +80,7 @@ gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
   base_video_encoder->force_keyframe = FALSE;
 
   base_video_encoder->set_output_caps = FALSE;
+  base_video_encoder->drained = TRUE;
   base_video_encoder->min_latency = 0;
   base_video_encoder->max_latency = 0;
 
@@ -119,6 +120,43 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
 
   /* encoder is expected to do so */
   base_video_encoder->sink_clipping = TRUE;
+}
+
+static gboolean
+gst_base_video_encoder_drain (GstBaseVideoEncoder * enc)
+{
+  GstBaseVideoCodec *codec;
+  GstBaseVideoEncoderClass *enc_class;
+  gboolean ret = TRUE;
+
+  codec = GST_BASE_VIDEO_CODEC (enc);
+  enc_class = GST_BASE_VIDEO_ENCODER_GET_CLASS (enc);
+
+  GST_DEBUG_OBJECT (enc, "draining");
+
+  if (enc->drained) {
+    GST_DEBUG_OBJECT (enc, "already drained");
+    return TRUE;
+  }
+
+  if (enc_class->finish) {
+    GST_DEBUG_OBJECT (enc, "requesting subclass to finish");
+    ret = enc_class->finish (enc);
+  }
+  /* everything should be away now */
+  if (codec->frames) {
+    /* not fatal/impossible though if subclass/codec eats stuff */
+    GST_WARNING_OBJECT (enc, "still %d frames left after draining",
+        g_list_length (codec->frames));
+#if 0
+    /* FIXME should do this, but subclass may come up with it later on ?
+     * and would then need refcounting or so on frames */
+    g_list_foreach (codec->frames,
+        (GFunc) gst_base_video_codec_free_frame, NULL);
+#endif
+  }
+
+  return ret;
 }
 
 static gboolean
@@ -197,9 +235,7 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
     case GST_EVENT_EOS:
     {
       base_video_encoder->a.at_eos = TRUE;
-      if (base_video_encoder_class->finish) {
-        base_video_encoder_class->finish (base_video_encoder);
-      }
+      gst_base_video_encoder_drain (base_video_encoder);
       break;
     }
     case GST_EVENT_NEWSEGMENT:

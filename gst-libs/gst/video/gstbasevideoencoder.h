@@ -74,6 +74,7 @@ struct _GstBaseVideoEncoder
   /*< private >*/
   /* FIXME move to real private part ? */
   gboolean set_output_caps;
+  gboolean drained;
 
   gint64 min_latency;
   gint64 max_latency;
