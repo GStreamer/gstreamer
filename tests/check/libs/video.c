@@ -521,11 +521,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_template_caps)
 {
-/*
-  GstCaps *caps =
-      gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGB);
+  GstCaps *caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGB);
   gst_caps_unref (caps);
-*/
 }
 
 GST_END_TEST;
