@@ -1730,7 +1730,8 @@ gst_video_format_get_component_offset (GstVideoFormat format,
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
   g_return_val_if_fail (component >= 0 && component <= 3, 0);
-  g_return_val_if_fail (width > 0 && height > 0, 0);
+  g_return_val_if_fail ((!gst_video_format_is_yuv (format)) || (width > 0
+          && height > 0), 0);
 
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
