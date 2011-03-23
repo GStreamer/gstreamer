@@ -26,10 +26,16 @@
  * #GstCameraBinVideo.
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <string.h>
 
 #include <glib.h>
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
+#include <gst/gst-i18n-plugin.h>
+
 #include "camerabingeneral.h"
 
 /**
@@ -155,8 +161,9 @@ gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name,
 
   new_elem = gst_element_factory_make (elem_name, instance_name);
   if (!new_elem) {
-    GST_ELEMENT_ERROR (bin, CORE, MISSING_PLUGIN, (NULL),
-        ("could not create \"%s\" element.", elem_name));
+    GST_ELEMENT_ERROR (bin, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            elem_name), (NULL));
   } else if (!gst_camerabin_add_element (bin, new_elem)) {
     new_elem = NULL;
   }
