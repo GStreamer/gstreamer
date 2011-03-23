@@ -86,7 +86,7 @@ GST_START_TEST (test_subbuffer)
 
   /* check sizes, buffer starts out empty */
   data = gst_buffer_map (buffer, &size, &maxsize, GST_MAP_WRITE);
-  fail_unless (size == 0, "buffer has wrong size");
+  fail_unless (size == 4, "buffer has wrong size");
   fail_unless (maxsize >= 4, "buffer has wrong size");
   memset (data, 0, 4);
   gst_buffer_unmap (buffer, data, 4);
@@ -105,7 +105,6 @@ GST_START_TEST (test_subbuffer)
   fail_unless (ssize == 2, "subbuffer has wrong size");
   fail_unless (memcmp (data + 1, sdata, 2) == 0,
       "subbuffer contains the wrong data");
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 2);
   ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
   fail_unless (GST_BUFFER_TIMESTAMP (sub) == -1,
       "subbuffer has wrong timestamp");
@@ -123,7 +122,6 @@ GST_START_TEST (test_subbuffer)
   fail_unless (ssize == 0, "subbuffer has wrong size");
   fail_unless (memcmp (data + 1, sdata, 0) == 0,
       "subbuffer contains the wrong data");
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 2);
   ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
   gst_buffer_unmap (sub, sdata, ssize);
   gst_buffer_unref (sub);
@@ -293,10 +291,9 @@ create_read_only_buffer (void)
 
   /* assign some read-only data to the new buffer */
   gst_buffer_take_memory (buf,
-      gst_memory_new_wrapped ((gpointer) ro_memory, NULL,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          (gpointer) ro_memory, NULL,
           sizeof (ro_memory), 0, sizeof (ro_memory)));
-
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
 
   return buf;
 }
@@ -309,11 +306,7 @@ GST_START_TEST (test_make_writable)
 
   /* create read-only buffer and make it writable */
   buf = create_read_only_buffer ();
-  fail_unless (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY),
-      "read-only buffer should have read-only flag set");
-  buf = gst_buffer_make_writable (buf);
-  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY),
-      "writable buffer must not have read-only flag set");
+
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
   data[4] = 'a';
   gst_buffer_unmap (buf, data, size);
@@ -321,8 +314,6 @@ GST_START_TEST (test_make_writable)
 
   /* alloc'ed buffer with refcount 1 should be writable */
   buf = gst_buffer_new_and_alloc (32);
-  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY),
-      "_new_and_alloc'ed buffer must not have read-only flag set");
   buf2 = gst_buffer_make_writable (buf);
   fail_unless (buf == buf2,
       "_make_writable() should have returned same buffer");
@@ -330,8 +321,6 @@ GST_START_TEST (test_make_writable)
 
   /* alloc'ed buffer with refcount >1 should be copied */
   buf = gst_buffer_new_and_alloc (32);
-  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY),
-      "_new_and_alloc'ed buffer must not have read-only flag set");
   gst_buffer_ref (buf);
   buf2 = gst_buffer_make_writable (buf);
   fail_unless (buf != buf2, "_make_writable() should have returned a copy!");
@@ -349,18 +338,11 @@ GST_START_TEST (test_subbuffer_make_writable)
 
   /* create sub-buffer of read-only buffer and make it writable */
   buf = create_read_only_buffer ();
-  fail_unless (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY),
-      "read-only buffer should have read-only flag set");
 
   sub_buf = gst_buffer_create_sub (buf, 0, 8);
-  fail_unless (GST_BUFFER_FLAG_IS_SET (sub_buf, GST_BUFFER_FLAG_READONLY),
-      "sub-buffer of read-only buffer should have read-only flag set");
-
-  sub_buf = gst_buffer_make_writable (sub_buf);
-  fail_unless (!GST_BUFFER_FLAG_IS_SET (sub_buf, GST_BUFFER_FLAG_READONLY),
-      "writable buffer must not have read-only flag set");
 
   data = gst_buffer_map (sub_buf, &size, NULL, GST_MAP_WRITE);
+  fail_if (data == NULL);
   data[4] = 'a';
   gst_buffer_unmap (sub_buf, data, size);
   gst_buffer_unref (sub_buf);
@@ -378,23 +360,18 @@ GST_START_TEST (test_metadata_writable)
   GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
   /* Buffer with refcount 1 should have writable metadata */
-  fail_unless (gst_buffer_is_metadata_writable (buffer) == TRUE);
+  fail_unless (gst_buffer_is_writable (buffer) == TRUE);
 
   /* Check that a buffer with refcount 2 does not have writable metadata */
   gst_buffer_ref (buffer);
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 2);
-  fail_unless (gst_buffer_is_metadata_writable (buffer) == FALSE);
+  fail_unless (gst_buffer_is_writable (buffer) == FALSE);
 
   /* Check that make_metadata_writable produces a new sub-buffer with 
    * writable metadata. */
-  sub1 = gst_buffer_make_metadata_writable (buffer);
+  sub1 = gst_buffer_make_writable (buffer);
   fail_if (sub1 == buffer);
-  fail_unless (gst_buffer_is_metadata_writable (sub1) == TRUE);
-
-  /* Check that the original metadata is still not writable 
-   * (subbuffer should be holding a reference, and so should we) */
-  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 2);
-  fail_unless (gst_buffer_is_metadata_writable (buffer) == FALSE);
+  fail_unless (gst_buffer_is_writable (sub1) == TRUE);
 
   /* Check that make_metadata_writable() maintains the buffer flags */
   fail_unless (GST_BUFFER_FLAG_IS_SET (sub1, GST_BUFFER_FLAG_DISCONT));
@@ -410,7 +387,7 @@ GST_START_TEST (test_metadata_writable)
   /* Drop the subbuffer and check that the metadata is now writable again */
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
   gst_buffer_unref (sub1);
-  fail_unless (gst_buffer_is_metadata_writable (buffer) == TRUE);
+  fail_unless (gst_buffer_is_writable (buffer) == TRUE);
 
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
   gst_buffer_unref (buffer);
@@ -430,11 +407,13 @@ GST_START_TEST (test_copy)
   copy = gst_buffer_copy (buffer);
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
   ASSERT_BUFFER_REFCOUNT (copy, "copy", 1);
-  /* data must be copied and thus point to different memory */
+  /* buffers are copied and must point to different memory */
+  fail_if (buffer == copy);
+
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   sdata = gst_buffer_map (copy, &ssize, NULL, GST_MAP_READ);
 
-  fail_if (data == sdata);
+  /* NOTE that data is refcounted */
   fail_unless (size == ssize);
 
   gst_buffer_unmap (copy, sdata, ssize);
@@ -447,7 +426,6 @@ GST_START_TEST (test_copy)
   buffer = gst_buffer_new_and_alloc (0);
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   fail_unless (data == NULL);
-  fail_unless (size == 0);
   gst_buffer_unmap (buffer, data, size);
 
   /* copying a 0-sized buffer should not crash and also set
@@ -455,7 +433,6 @@ GST_START_TEST (test_copy)
   copy = gst_buffer_copy (buffer);
   data = gst_buffer_map (copy, &size, NULL, GST_MAP_READ);
   fail_unless (data == NULL);
-  fail_unless (size == 0);
   gst_buffer_unmap (copy, data, size);
 
   gst_buffer_unref (copy);
@@ -476,7 +453,6 @@ GST_START_TEST (test_try_new_and_alloc)
   fail_unless (GST_IS_BUFFER (buf));
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   fail_unless (data == NULL);
-  fail_unless (size == 0);
   gst_buffer_unmap (buf, data, size);
   gst_buffer_unref (buf);
 

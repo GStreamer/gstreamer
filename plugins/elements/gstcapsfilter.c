@@ -334,7 +334,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
     if (GST_BUFFER_CAPS (input) != caps) {
       /* caps are different, make a metadata writable output buffer to set
        * caps */
-      if (gst_buffer_is_metadata_writable (input)) {
+      if (gst_buffer_is_writable (input)) {
         /* input is writable, just set caps and use this as the output */
         *buf = input;
         gst_buffer_set_caps (*buf, caps);
@@ -368,7 +368,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
     if (gst_caps_is_fixed (out_caps) && !gst_caps_is_empty (out_caps)) {
       GST_DEBUG_OBJECT (trans, "Have fixed output caps %"
           GST_PTR_FORMAT " to apply to buffer with no caps", out_caps);
-      if (gst_buffer_is_metadata_writable (input)) {
+      if (gst_buffer_is_writable (input)) {
         gst_buffer_ref (input);
         *buf = input;
       } else {

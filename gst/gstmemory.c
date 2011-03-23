@@ -47,12 +47,12 @@ static const GstMemoryImpl *_default_mem_impl;
 static const GstMemoryImpl *_default_sub_impl;
 
 static void
-_default_mem_init (GstMemoryDefault * mem, GstMemory * parent,
-    gsize slice_size, gpointer data, GFreeFunc free_func,
-    gsize maxsize, gsize offset, gsize size)
+_default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
+    GstMemory * parent, gsize slice_size, gpointer data,
+    GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
 {
   mem->mem.impl = data ? _default_mem_impl : _default_sub_impl;
-  mem->mem.flags = 0;
+  mem->mem.flags = flags;
   mem->mem.refcount = 1;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
   mem->slice_size = slice_size;
@@ -64,7 +64,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemory * parent,
 }
 
 static GstMemoryDefault *
-_default_mem_new (GstMemory * parent, gpointer data,
+_default_mem_new (GstMemoryFlags flags, GstMemory * parent, gpointer data,
     GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
 {
   GstMemoryDefault *mem;
@@ -73,7 +73,7 @@ _default_mem_new (GstMemory * parent, gpointer data,
   slice_size = sizeof (GstMemoryDefault);
 
   mem = g_slice_alloc (slice_size);
-  _default_mem_init (mem, parent, slice_size,
+  _default_mem_init (mem, flags, parent, slice_size,
       data, free_func, maxsize, offset, size);
 
   return mem;
@@ -98,7 +98,7 @@ _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
   if ((aoffset = ((guintptr) data & align)))
     aoffset = align - aoffset;
 
-  _default_mem_init (mem, NULL, slice_size, data, NULL, maxsize + align,
+  _default_mem_init (mem, 0, NULL, slice_size, data, NULL, maxsize + align,
       aoffset + offset, size);
 
   return mem;
@@ -213,7 +213,7 @@ _default_mem_sub (GstMemoryDefault * mem, gsize offset, gsize size)
   if ((parent = mem->mem.parent) == NULL)
     parent = (GstMemory *) mem;
 
-  sub = _default_mem_new (parent, mem->data, NULL, mem->maxsize,
+  sub = _default_mem_new (parent->flags, parent, mem->data, NULL, mem->maxsize,
       mem->offset + offset, size);
 
   return sub;
@@ -265,7 +265,7 @@ _fallback_sub (GstMemory * mem, gsize offset, gsize size)
   /* find the real parent */
   parent = mem->parent ? mem->parent : mem;
 
-  sub = _default_mem_new (parent, NULL, NULL, size, offset, size);
+  sub = _default_mem_new (0, parent, NULL, NULL, size, offset, size);
 
   return (GstMemory *) sub;
 }
@@ -458,7 +458,11 @@ gst_memory_is_span (GstMemory ** mem1, gsize len1, GstMemory ** mem2,
           return FALSE;
 
         if (!have_offset) {
-          *offset = offs;
+          if (offset)
+            *offset = offs;
+          if (parent)
+            *parent = m1->parent;
+
           have_offset = TRUE;
         }
       }
@@ -517,12 +521,12 @@ gst_memory_span (GstMemory ** mem1, gsize len1, gsize offset, GstMemory ** mem2,
 }
 
 GstMemory *
-gst_memory_new_wrapped (gpointer data, GFreeFunc free_func,
-    gsize maxsize, gsize offset, gsize size)
+gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
+    GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
 {
   GstMemoryDefault *mem;
 
-  mem = _default_mem_new (NULL, data, free_func, maxsize, offset, size);
+  mem = _default_mem_new (flags, NULL, data, free_func, maxsize, offset, size);
 
   return (GstMemory *) mem;
 }
@@ -532,7 +536,7 @@ gst_memory_new_alloc (gsize maxsize, gsize align)
 {
   GstMemoryDefault *mem;
 
-  mem = _default_mem_new_block (maxsize, align, 0, 0);
+  mem = _default_mem_new_block (maxsize, align, 0, maxsize);
 
   return (GstMemory *) mem;
 }

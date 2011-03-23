@@ -659,7 +659,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
     gst_pad_push_event (sel->srcpad, start_event);
 
   if (selpad->discont) {
-    buf = gst_buffer_make_metadata_writable (buf);
+    buf = gst_buffer_make_writable (buf);
 
     GST_DEBUG_OBJECT (pad, "Marking discont buffer %p", buf);
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);

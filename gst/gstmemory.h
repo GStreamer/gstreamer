@@ -34,9 +34,13 @@ typedef struct _GstMemoryInfo GstMemoryInfo;
 typedef struct _GstMemoryImpl GstMemoryImpl;
 
 typedef enum {
-  GST_MEMORY_FLAG_READONLY = (1 << 0),
-  GST_MEMORY_FLAG_MUTABLE  = (1 << 1),
+  GST_MEMORY_FLAG_READONLY = (1 << 0)
 } GstMemoryFlags;
+
+
+#define GST_MEMORY_IS_WRITABLE(mem) (((mem)->refcount == 1) && \
+    (((mem)->parent == NULL) || ((mem)->parent->refcount == 1)) && \
+    (((mem)->flags & GST_MEMORY_FLAG_READONLY) == 0))
 
 /**
  * GstMemory:
@@ -104,7 +108,7 @@ struct _GstMemoryInfo {
 void _gst_memory_init (void);
 
 /* allocating memory blocks */
-GstMemory * gst_memory_new_wrapped (gpointer data, GFreeFunc free_func,
+GstMemory * gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data, GFreeFunc free_func,
                                     gsize maxsize, gsize offset, gsize size);
 GstMemory * gst_memory_new_alloc   (gsize maxsize, gsize align);
 GstMemory * gst_memory_new_copy    (gsize maxsize, gsize align, gpointer data,

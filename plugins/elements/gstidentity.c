@@ -394,13 +394,13 @@ gst_identity_prepare_output_buffer (GstBaseTransform * trans,
 
   /* only bother if we may have to alter metadata */
   if (identity->datarate > 0 || identity->single_segment) {
-    if (gst_buffer_is_metadata_writable (in_buf))
+    if (gst_buffer_is_writable (in_buf))
       *out_buf = gst_buffer_ref (in_buf);
     else {
       /* make even less writable */
       gst_buffer_ref (in_buf);
       /* extra ref is dropped going through the official process */
-      *out_buf = gst_buffer_make_metadata_writable (in_buf);
+      *out_buf = gst_buffer_make_writable (in_buf);
     }
   } else
     *out_buf = gst_buffer_ref (in_buf);

@@ -56,8 +56,8 @@ GST_START_TEST (test_buffer_range)
   fail_unless (buf != NULL);
 
   gst_buffer_take_memory (buf,
-      gst_memory_new_wrapped ((gpointer) vorbisid, NULL, 30, 0, 30));
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          (gpointer) vorbisid, NULL, 30, 0, 30));
 
   caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);
   fail_unless (caps != NULL);

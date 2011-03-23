@@ -1008,7 +1008,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   if (queue->tail_needs_discont) {
-    GstBuffer *subbuffer = gst_buffer_make_metadata_writable (buffer);
+    GstBuffer *subbuffer = gst_buffer_make_writable (buffer);
 
     if (subbuffer) {
       buffer = subbuffer;
@@ -1109,7 +1109,7 @@ next:
     buffer = GST_BUFFER_CAST (data);
 
     if (queue->head_needs_discont) {
-      GstBuffer *subbuffer = gst_buffer_make_metadata_writable (buffer);
+      GstBuffer *subbuffer = gst_buffer_make_writable (buffer);
 
       if (subbuffer) {
         buffer = subbuffer;

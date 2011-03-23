@@ -202,7 +202,6 @@ typedef struct _GstBufferPool GstBufferPool;
 
 /**
  * GstBufferFlag:
- * @GST_BUFFER_FLAG_READONLY: the buffer is read-only. This means the data of
  * the buffer should not be modified. The metadata might still be modified.
  * @GST_BUFFER_FLAG_PREROLL: the buffer is part of a preroll and should not be
  * displayed.
@@ -223,7 +222,6 @@ typedef struct _GstBufferPool GstBufferPool;
  * A set of buffer flags used to describe properties of a #GstBuffer.
  */
 typedef enum {
-  GST_BUFFER_FLAG_READONLY   = GST_MINI_OBJECT_FLAG_READONLY,
   GST_BUFFER_FLAG_PREROLL    = (GST_MINI_OBJECT_FLAG_LAST << 0),
   GST_BUFFER_FLAG_DISCONT    = (GST_MINI_OBJECT_FLAG_LAST << 1),
   GST_BUFFER_FLAG_IN_CAPS    = (GST_MINI_OBJECT_FLAG_LAST << 2),
@@ -455,11 +453,6 @@ void            gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src
  *     same as @buf
  */
 #define         gst_buffer_make_writable(buf)   GST_BUFFER_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (buf)))
-
-/* Ensure that the metadata of the buffer is writable, even if the buffer data
- * isn't */
-gboolean        gst_buffer_is_metadata_writable (GstBuffer *buf);
-GstBuffer*      gst_buffer_make_metadata_writable (GstBuffer *buf);
 
 /**
  * gst_buffer_replace:

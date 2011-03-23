@@ -2153,13 +2153,13 @@ again:
   /* no timestamp set and we are at offset 0, we can timestamp with 0 */
   if (offset == 0 && src->segment.time == 0
       && GST_BUFFER_TIMESTAMP (*buf) == -1) {
-    *buf = gst_buffer_make_metadata_writable (*buf);
+    *buf = gst_buffer_make_writable (*buf);
     GST_BUFFER_TIMESTAMP (*buf) = 0;
   }
 
   /* set pad caps on the buffer if the buffer had no caps */
   if (GST_BUFFER_CAPS (*buf) == NULL) {
-    *buf = gst_buffer_make_metadata_writable (*buf);
+    *buf = gst_buffer_make_writable (*buf);
     gst_buffer_set_caps (*buf, GST_PAD_CAPS (src->srcpad));
   }
 
@@ -2499,7 +2499,7 @@ gst_base_src_loop (GstPad * pad)
   }
 
   if (G_UNLIKELY (src->priv->discont)) {
-    buf = gst_buffer_make_metadata_writable (buf);
+    buf = gst_buffer_make_writable (buf);
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     src->priv->discont = FALSE;
   }

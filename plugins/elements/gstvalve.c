@@ -182,7 +182,7 @@ gst_valve_chain (GstPad * pad, GstBuffer * buffer)
     valve->discont = TRUE;
   } else {
     if (valve->discont) {
-      buffer = gst_buffer_make_metadata_writable (buffer);
+      buffer = gst_buffer_make_writable (buffer);
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
       valve->discont = FALSE;
     }

@@ -49,13 +49,6 @@ GST_START_TEST (test_is_writable)
   fail_unless (gst_mini_object_is_writable (mobj),
       "A buffer with one ref should be writable");
 
-  GST_MINI_OBJECT_FLAG_SET (mobj, GST_MINI_OBJECT_FLAG_READONLY);
-  fail_if (gst_mini_object_is_writable (mobj),
-      "A buffer with READONLY set should not be writable");
-  GST_MINI_OBJECT_FLAG_UNSET (mobj, GST_MINI_OBJECT_FLAG_READONLY);
-  fail_unless (gst_mini_object_is_writable (mobj),
-      "A buffer with one ref and READONLY not set should be writable");
-
   fail_if (gst_mini_object_ref (mobj) == NULL, "Could not ref the mobj");
 
   fail_if (gst_mini_object_is_writable (mobj),

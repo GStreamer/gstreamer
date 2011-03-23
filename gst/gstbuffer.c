@@ -196,7 +196,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
 #if GST_VERSION_NANO == 1
   /* we enable this extra debugging in git versions only for now */
-  g_warn_if_fail (gst_buffer_is_metadata_writable (dest));
+  g_warn_if_fail (gst_buffer_is_writable (dest));
 #endif
 
   GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p", src, dest);
@@ -398,8 +398,10 @@ gst_buffer_new_and_alloc (guint size)
 
   newbuf = gst_buffer_new ();
 
-  gst_buffer_take_memory (newbuf, gst_memory_new_alloc (size,
-          _gst_buffer_data_alignment));
+  if (size > 0) {
+    gst_buffer_take_memory (newbuf, gst_memory_new_alloc (size,
+            _gst_buffer_data_alignment));
+  }
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
 
@@ -429,24 +431,39 @@ gst_buffer_try_new_and_alloc (guint size)
   GstBuffer *newbuf;
   GstMemory *mem;
 
-  mem = gst_memory_new_alloc (size, _gst_buffer_data_alignment);
-  if (G_UNLIKELY (mem == NULL)) {
-    GST_CAT_WARNING (GST_CAT_BUFFER, "failed to allocate %d bytes", size);
-    return NULL;
+  if (size > 0) {
+    mem = gst_memory_new_alloc (size, _gst_buffer_data_alignment);
+    if (G_UNLIKELY (mem == NULL))
+      goto no_memory;
+  } else {
+    mem = NULL;
   }
 
   newbuf = gst_buffer_new ();
-  gst_buffer_take_memory (newbuf, mem);
+
+  if (mem != NULL)
+    gst_buffer_take_memory (newbuf, mem);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
 
   return newbuf;
+
+  /* ERRORS */
+no_memory:
+  {
+    GST_CAT_WARNING (GST_CAT_BUFFER, "failed to allocate %d bytes", size);
+    return NULL;
+  }
 }
 
 guint
 gst_buffer_n_memory (GstBuffer * buffer)
 {
-  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  GPtrArray *arr;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+
+  arr = (GPtrArray *) buffer->memory;
 
   return arr->len;
 }
@@ -454,8 +471,13 @@ gst_buffer_n_memory (GstBuffer * buffer)
 void
 gst_buffer_take_memory (GstBuffer * buffer, GstMemory * mem)
 {
-  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  GPtrArray *arr;
 
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_if_fail (gst_buffer_is_writable (buffer));
+  g_return_if_fail (mem != NULL);
+
+  arr = (GPtrArray *) buffer->memory;
   g_ptr_array_add (arr, mem);
 }
 
@@ -463,7 +485,11 @@ GstMemory *
 gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
 {
   GstMemory *mem;
-  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  GPtrArray *arr;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  arr = (GPtrArray *) buffer->memory;
+  g_return_val_if_fail (idx < arr->len, NULL);
 
   mem = g_ptr_array_index (arr, idx);
 
@@ -473,7 +499,12 @@ gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
 void
 gst_buffer_remove_memory (GstBuffer * buffer, guint idx)
 {
-  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  GPtrArray *arr;
+
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_if_fail (gst_buffer_is_writable (buffer));
+  arr = (GPtrArray *) buffer->memory;
+  g_return_if_fail (idx < arr->len);
 
   g_ptr_array_remove_index (arr, idx);
 }
@@ -483,6 +514,8 @@ gst_buffer_get_size (GstBuffer * buffer)
 {
   GPtrArray *arr = (GPtrArray *) buffer->memory;
   guint i, size, len;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
 
   len = arr->len;
 
@@ -498,29 +531,53 @@ gpointer
 gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
     GstMapFlags flags)
 {
-  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  GPtrArray *arr;
   guint len;
   gpointer data;
 
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+
+  arr = (GPtrArray *) buffer->memory;
   len = arr->len;
+
+  if (G_UNLIKELY ((flags & GST_MAP_WRITE) && !gst_buffer_is_writable (buffer)))
+    goto not_writable;
 
   if (G_LIKELY (len == 1)) {
     GstMemory *mem = g_ptr_array_index (arr, 0);
+
+    if (flags & GST_MAP_WRITE) {
+      if (G_UNLIKELY (!GST_MEMORY_IS_WRITABLE (mem))) {
+        /* try to get a writable copy */
+        g_return_val_if_fail (GST_MEMORY_IS_WRITABLE (mem), NULL);
+        return NULL;
+      }
+    }
 
     data = gst_memory_map (mem, size, maxsize, flags);
   } else {
     data = NULL;
   }
   return data;
+
+  /* ERROR */
+not_writable:
+  {
+    g_return_val_if_fail (gst_buffer_is_writable (buffer), NULL);
+    return NULL;
+  }
 }
 
 gboolean
 gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
 {
-  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  GPtrArray *arr;
   gboolean result;
   guint len;
 
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+
+  arr = (GPtrArray *) buffer->memory;
   len = arr->len;
 
   if (G_LIKELY (len == 1)) {
@@ -611,60 +668,11 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
 
 #if GST_VERSION_NANO == 1
   /* we enable this extra debugging in git versions only for now */
-  g_warn_if_fail (gst_buffer_is_metadata_writable (buffer));
+  g_warn_if_fail (gst_buffer_is_writable (buffer));
   /* FIXME: would be nice to also check if caps are fixed here, but expensive */
 #endif
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), caps);
-}
-
-/**
- * gst_buffer_is_metadata_writable:
- * @buf: a #GstBuffer
- *
- * Similar to gst_buffer_is_writable, but this only ensures that the
- * refcount of the buffer is 1, indicating that the caller is the sole
- * owner and can change the buffer metadata, such as caps and timestamps.
- *
- * Returns: TRUE if the metadata is writable.
- */
-gboolean
-gst_buffer_is_metadata_writable (GstBuffer * buf)
-{
-  return (GST_MINI_OBJECT_REFCOUNT_VALUE (GST_MINI_OBJECT_CAST (buf)) == 1);
-}
-
-/**
- * gst_buffer_make_metadata_writable:
- * @buf: (transfer full): a #GstBuffer
- *
- * Similar to gst_buffer_make_writable, but does not ensure that the buffer
- * data array is writable. Instead, this just ensures that the returned buffer
- * is solely owned by the caller, by creating a subbuffer of the original
- * buffer if necessary.
- * 
- * After calling this function, @buf should not be referenced anymore. The
- * result of this function has guaranteed writable metadata.
- *
- * Returns: (transfer full): a new #GstBuffer with writable metadata, which
- *     may or may not be the same as @buf.
- */
-GstBuffer *
-gst_buffer_make_metadata_writable (GstBuffer * buf)
-{
-  GstBuffer *ret;
-
-  if (gst_buffer_is_metadata_writable (buf)) {
-    ret = buf;
-  } else {
-    /* create a fresh new buffer */
-    ret = gst_buffer_new ();
-
-    /* we simply copy everything from our parent */
-    gst_buffer_copy_into (ret, buf, GST_BUFFER_COPY_ALL, 0, 0);
-    gst_buffer_unref (buf);
-  }
-  return ret;
 }
 
 /**

@@ -736,8 +736,8 @@ gst_adapter_take_buffer (GstAdapter * adapter, gsize nbytes)
   data = gst_adapter_take_internal (adapter, nbytes);
 
   buffer = gst_buffer_new ();
-  gst_buffer_take_memory (buffer, gst_memory_new_wrapped (data, g_free, nbytes,
-          0, nbytes));
+  gst_buffer_take_memory (buffer,
+      gst_memory_new_wrapped (0, data, g_free, nbytes, 0, nbytes));
 
 done:
   gst_adapter_flush_unchecked (adapter, nbytes);

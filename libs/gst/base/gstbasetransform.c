@@ -1459,7 +1459,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       if (othercaps && !gst_caps_is_empty (othercaps)) {
         GST_DEBUG_OBJECT (trans, "we found target caps %" GST_PTR_FORMAT,
             othercaps);
-        *out_buf = gst_buffer_make_metadata_writable (*out_buf);
+        *out_buf = gst_buffer_make_writable (*out_buf);
         gst_buffer_set_caps (*out_buf, othercaps);
         gst_caps_unref (othercaps);
         newcaps = GST_BUFFER_CAPS (*out_buf);
@@ -1487,7 +1487,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
             GST_DEBUG_PAD_NAME (trans->srcpad));
         bclass->fixate_caps (trans, GST_PAD_SINK, incaps, newcaps);
 
-        *out_buf = gst_buffer_make_metadata_writable (*out_buf);
+        *out_buf = gst_buffer_make_writable (*out_buf);
         gst_buffer_set_caps (*out_buf, newcaps);
         gst_caps_unref (newcaps);
         newcaps = GST_BUFFER_CAPS (*out_buf);
@@ -1596,12 +1596,12 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
   if (setcaps || copymeta) {
     GST_DEBUG_OBJECT (trans, "setcaps %d, copymeta %d", setcaps, copymeta);
-    if (!gst_buffer_is_metadata_writable (*out_buf)) {
+    if (!gst_buffer_is_writable (*out_buf)) {
       GST_DEBUG_OBJECT (trans, "buffer metadata %p not writable", *out_buf);
       if (in_buf == *out_buf)
         *out_buf = gst_buffer_create_sub (in_buf, 0, insize);
       else
-        *out_buf = gst_buffer_make_metadata_writable (*out_buf);
+        *out_buf = gst_buffer_make_writable (*out_buf);
     }
     /* when we get here, the metadata should be writable */
     if (setcaps)
@@ -2436,7 +2436,7 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
       /* apply DISCONT flag if the buffer is not yet marked as such */
       if (trans->priv->discont) {
         if (!GST_BUFFER_IS_DISCONT (outbuf)) {
-          outbuf = gst_buffer_make_metadata_writable (outbuf);
+          outbuf = gst_buffer_make_writable (outbuf);
           GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
         }
         trans->priv->discont = FALSE;
