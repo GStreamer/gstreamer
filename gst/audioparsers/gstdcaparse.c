@@ -121,6 +121,7 @@ gst_dca_parse_reset (GstDcaParse * dcaparse)
   dcaparse->depth = -1;
   dcaparse->endianness = -1;
   dcaparse->block_size = -1;
+  dcaparse->frame_size = -1;
   dcaparse->last_sync = 0;
 }
 
@@ -414,14 +415,16 @@ gst_dca_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   if (G_UNLIKELY (dcaparse->rate != rate || dcaparse->channels != chans
           || dcaparse->depth != depth || dcaparse->endianness != endianness
-          || (!terminator && dcaparse->block_size != block_size))) {
+          || (!terminator && dcaparse->block_size != block_size)
+          || (size != dcaparse->frame_size))) {
     GstCaps *caps;
 
     caps = gst_caps_new_simple ("audio/x-dts",
         "framed", G_TYPE_BOOLEAN, TRUE,
         "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, chans,
         "endianness", G_TYPE_INT, endianness, "depth", G_TYPE_INT, depth,
-        "block-size", G_TYPE_INT, block_size, NULL);
+        "block-size", G_TYPE_INT, block_size, "frame-size", G_TYPE_INT, size,
+        NULL);
     gst_buffer_set_caps (buf, caps);
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
@@ -431,6 +434,7 @@ gst_dca_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     dcaparse->depth = depth;
     dcaparse->endianness = endianness;
     dcaparse->block_size = block_size;
+    dcaparse->frame_size = size;
 
     gst_base_parse_set_frame_props (parse, rate, block_size, 0, 0);
   }
