@@ -1059,6 +1059,8 @@ GST_START_TEST (test_idle_property)
 
   /* emit a second start-capture that should be ignored */
   g_signal_emit_by_name (camera, "start-capture", NULL);
+  g_object_get (camera, "idle", &idle, NULL);
+  fail_unless (!idle);
 
   /* Record for one seconds  */
   g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
@@ -1069,6 +1071,7 @@ GST_START_TEST (test_idle_property)
 
   check_preview_image ();
 
+  g_usleep (3 * G_USEC_PER_SEC);
   g_object_get (camera, "idle", &idle, NULL);
   fail_unless (idle);
 

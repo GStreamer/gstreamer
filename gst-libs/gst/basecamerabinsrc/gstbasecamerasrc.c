@@ -252,6 +252,9 @@ gst_base_camera_src_start_capture (GstBaseCameraSrc * src)
   if (src->capturing) {
     GST_WARNING_OBJECT (src, "Capturing already ongoing");
     g_mutex_unlock (src->capturing_mutex);
+
+    /* post a warning to notify camerabin2 that the capture failed */
+    GST_ELEMENT_WARNING (src, RESOURCE, BUSY, (NULL), (NULL));
     return;
   }
 

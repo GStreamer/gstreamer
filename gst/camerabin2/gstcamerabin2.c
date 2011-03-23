@@ -691,20 +691,36 @@ gst_image_capture_bin_post_image_done (GstCameraBin * camera,
 static void
 gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
 {
-  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) {
-    const GstStructure *structure = gst_message_get_structure (message);
-    const gchar *filename;
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ELEMENT:{
+      const GstStructure *structure = gst_message_get_structure (message);
+      const gchar *filename;
 
-    if (gst_structure_has_name (structure, "GstMultiFileSink")) {
-      GST_CAMERA_BIN_PROCESSING_DEC (GST_CAMERA_BIN_CAST (bin));
-      filename = gst_structure_get_string (structure, "filename");
-      if (filename) {
-        gst_image_capture_bin_post_image_done (GST_CAMERA_BIN_CAST (bin),
-            filename);
+      if (gst_structure_has_name (structure, "GstMultiFileSink")) {
+        GST_CAMERA_BIN_PROCESSING_DEC (GST_CAMERA_BIN_CAST (bin));
+        filename = gst_structure_get_string (structure, "filename");
+        if (filename) {
+          gst_image_capture_bin_post_image_done (GST_CAMERA_BIN_CAST (bin),
+              filename);
+        }
       }
     }
+      break;
+    case GST_MESSAGE_WARNING:{
+      GError *err = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_warning (message, &err, &debug);
+      if (err->domain == GST_RESOURCE_ERROR) {
+        /* some capturing failed */
+        GST_CAMERA_BIN_PROCESSING_DEC (GST_CAMERA_BIN_CAST (bin));
+      }
+    }
+    default:
+      break;
   }
-  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+  if (message)
+    GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
 /*
