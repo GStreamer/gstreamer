@@ -135,6 +135,7 @@ static gint zoom = 100;
 static gint capture_time = 10;
 static gint capture_count = 0;
 static gint capture_total = 1;
+static gulong stop_capture_cb_id = 0;
 
 /* photography interface command line options */
 #define EV_COMPENSATION_NONE -G_MAXFLOAT
@@ -569,15 +570,30 @@ error:
   return FALSE;
 }
 
+static void
+stop_capture_cb (GObject * self, GParamSpec * pspec, gpointer user_data)
+{
+  gboolean idle = FALSE;
+
+  g_object_get (camerabin, "idle", &idle, NULL);
+
+  if (idle) {
+    if (capture_count < capture_total) {
+      g_idle_add ((GSourceFunc) run_pipeline, NULL);
+    } else {
+      g_main_loop_quit (loop);
+    }
+  }
+
+  g_signal_handler_disconnect (camerabin, stop_capture_cb_id);
+}
+
 static gboolean
 stop_capture (gpointer user_data)
 {
+  stop_capture_cb_id = g_signal_connect (camerabin, "notify::idle",
+      (GCallback) stop_capture_cb, camerabin);
   g_signal_emit_by_name (camerabin, "stop-capture", 0);
-  if (capture_count < capture_total) {
-    g_idle_add ((GSourceFunc) run_pipeline, NULL);
-  } else {
-    g_main_loop_quit (loop);
-  }
   return FALSE;
 }
 
