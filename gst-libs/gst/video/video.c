@@ -1926,9 +1926,9 @@ gst_video_format_get_component_offset (GstVideoFormat format,
       if (component == 0)
         return 0;
       if (component == 1)
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+        return GST_ROUND_UP_4 (width) * height;
       if (component == 2) {
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) +
+        return GST_ROUND_UP_4 (width) * height +
             GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
             (GST_ROUND_UP_4 (height) / 4);
       }
