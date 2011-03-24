@@ -1690,7 +1690,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
   gst_bin_add (bin, chain->sink);
 
   /* we have to add a queue when we need to decouple for the video sink in
-   * visualisations */
+   * visualisations and for streamsynchronizer */
   GST_DEBUG_OBJECT (playsink, "adding audio queue");
   chain->queue = gst_element_factory_make ("queue", "aqueue");
   if (chain->queue == NULL) {
