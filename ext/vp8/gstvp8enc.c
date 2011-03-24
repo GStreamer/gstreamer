@@ -805,7 +805,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   hook->image = image;
   frame->coder_hook = hook;
 
-  if (encoder->force_keyframe) {
+  if (frame->force_keyframe) {
     flags |= VPX_EFLAG_FORCE_KF;
   }
 
