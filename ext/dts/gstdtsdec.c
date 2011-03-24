@@ -535,8 +535,13 @@ gst_dtsdec_update_streaminfo (GstDtsDec * dts)
   taglist = gst_tag_list_new ();
 
   gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
-      GST_TAG_AUDIO_CODEC, "DTS DCA",
-      GST_TAG_BITRATE, (guint) dts->bit_rate, NULL);
+      GST_TAG_AUDIO_CODEC, "DTS DCA", NULL);
+
+  if (dts->bit_rate > 3) {
+    /* 1 => open bitrate, 2 => variable bitrate, 3 => lossless */
+    gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_BITRATE,
+        (guint) dts->bit_rate, NULL);
+  }
 
   gst_element_found_tags_for_pad (GST_ELEMENT (dts), dts->srcpad, taglist);
 }
