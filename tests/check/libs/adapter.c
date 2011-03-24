@@ -280,16 +280,16 @@ create_and_fill_adapter (void)
 
   for (i = 0; i < 10000; i += 4) {
     GstBuffer *buf;
-    guint8 *data;
+    guint8 *data, *ptr;
 
     buf = gst_buffer_new_and_alloc (sizeof (guint32) * 4);
     fail_unless (buf != NULL);
 
-    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    ptr = data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
 
     for (j = 0; j < 4; j++) {
-      GST_WRITE_UINT32_LE (data, i + j);
-      data += sizeof (guint32);
+      GST_WRITE_UINT32_LE (ptr, i + j);
+      ptr += sizeof (guint32);
     }
     gst_buffer_unmap (buf, data, sizeof (guint32) * 4);
 

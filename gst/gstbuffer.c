@@ -416,14 +416,12 @@ gst_buffer_new_and_alloc (guint size)
  * the requested amount of memory can't be allocated, NULL will be returned.
  * The buffer memory is not cleared.
  *
- * Note that when @size == 0, the buffer data pointer will be NULL.
+ * Note that when @size == 0, the buffer will not have memory associated with it.
  *
  * MT safe.
  *
  * Returns: (transfer full): a new #GstBuffer, or NULL if the memory couldn't
  *     be allocated.
- *
- * Since: 0.10.13
  */
 GstBuffer *
 gst_buffer_try_new_and_alloc (guint size)
@@ -456,6 +454,14 @@ no_memory:
   }
 }
 
+/**
+ * gst_buffer_n_memory:
+ * @buffer: a #GstBuffer.
+ *
+ * Get the amount of memory blocks that this buffer has.
+ *
+ * Returns: (transfer full): the amount of memory block in this buffer.
+ */
 guint
 gst_buffer_n_memory (GstBuffer * buffer)
 {
@@ -468,6 +474,14 @@ gst_buffer_n_memory (GstBuffer * buffer)
   return arr->len;
 }
 
+/**
+ * gst_buffer_take_memory:
+ * @buffer: a #GstBuffer.
+ * @mem: a #GstMemory.
+ *
+ * Add the memory block @mem to @buffer. This function takes ownership of @mem
+ * and thus doesn't increase its refcount.
+ */
 void
 gst_buffer_take_memory (GstBuffer * buffer, GstMemory * mem)
 {
@@ -481,6 +495,17 @@ gst_buffer_take_memory (GstBuffer * buffer, GstMemory * mem)
   g_ptr_array_add (arr, mem);
 }
 
+/**
+ * gst_buffer_peek_memory:
+ * @buffer: a #GstBuffer.
+ * @idx: an index
+ *
+ * Get the memory block in @buffer at @idx. This function does not return a
+ * refcount to the memory block. The memory block stays valid for as long as the
+ * caller has a valid reference to @buffer.
+ *
+ * Returns: a #GstMemory at @idx.
+ */
 GstMemory *
 gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
 {
@@ -496,6 +521,13 @@ gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
   return mem;
 }
 
+/**
+ * gst_buffer_remove_memory:
+ * @buffer: a #GstBuffer.
+ * @idx: an index
+ *
+ * Remove the memory block in @buffer at @idx.
+ */
 void
 gst_buffer_remove_memory (GstBuffer * buffer, guint idx)
 {
@@ -509,6 +541,14 @@ gst_buffer_remove_memory (GstBuffer * buffer, guint idx)
   g_ptr_array_remove_index (arr, idx);
 }
 
+/**
+ * gst_buffer_get_size:
+ * @buffer: a #GstBuffer.
+ *
+ * Get the total size of all memory blocks in @buffer.
+ *
+ * Returns: the total size of the memory in @buffer.
+ */
 gsize
 gst_buffer_get_size (GstBuffer * buffer)
 {
@@ -526,7 +566,30 @@ gst_buffer_get_size (GstBuffer * buffer)
   return size;
 }
 
-/* getting memory */
+/**
+ * gst_buffer_map:
+ * @buffer: a #GstBuffer.
+ * @size: a location for the size
+ * @maxsize: a location for the max size
+ * @flags: flags for the mapping
+ *
+ * This function return a pointer to the memory in @buffer. @flags describe the
+ * desired access of the memory. When @flags is #GST_MAP_WRITE, @buffer should
+ * be writable (as returned from gst_buffer_is_writable()).
+ *
+ * @size and @maxsize will contain the current valid number of bytes in the
+ * returned memory area and the total maximum mount of bytes available in the
+ * returned memory area respectively.
+ *
+ * When @buffer is writable but the memory isn't, a writable copy will
+ * automatically be created and returned. The readonly copy of the buffer memory
+ * will then also be replaced with this writable copy.
+ *
+ * When the buffer contains multiple memory blocks, the returned pointer will be
+ * a concatenation of the memory blocks.
+ *
+ * Returns: a pointer to the memory for the buffer.
+ */
 gpointer
 gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
     GstMapFlags flags)
@@ -544,13 +607,19 @@ gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
     goto not_writable;
 
   if (G_LIKELY (len == 1)) {
-    GstMemory *mem = g_ptr_array_index (arr, 0);
+    GstMemory *mem;
+
+    mem = g_ptr_array_index (arr, 0);
 
     if (flags & GST_MAP_WRITE) {
       if (G_UNLIKELY (!GST_MEMORY_IS_WRITABLE (mem))) {
-        /* try to get a writable copy */
-        g_return_val_if_fail (GST_MEMORY_IS_WRITABLE (mem), NULL);
-        return NULL;
+        GstMemory *copy;
+
+        /* replace with a writable copy */
+        copy = gst_memory_copy (mem, 0, gst_memory_get_sizes (mem, NULL));
+        g_ptr_array_index (arr, 0) = copy;
+        gst_memory_unref (mem);
+        mem = copy;
       }
     }
 
@@ -568,6 +637,17 @@ not_writable:
   }
 }
 
+/**
+ * gst_buffer_unmap:
+ * @buffer: a #GstBuffer.
+ * @data: the previously mapped data
+ * @size: the size of @data
+ *
+ * Release the memory previously mapped with gst_buffer_map().
+ *
+ * Returns: #TRUE on success. #FALSE can be returned when the new size is larger
+ * than the maxsize of the memory.
+ */
 gboolean
 gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
 {
@@ -590,6 +670,15 @@ gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
   return result;
 }
 
+/**
+ * gst_buffer_extract:
+ * @buffer: a #GstBuffer.
+ * @offset: the offset to extract
+ * @dest: the destination address
+ * @size: the size to extract
+ *
+ * Copy @size bytes starting from @offset in @buffer to @dest.
+ */
 void
 gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
 {

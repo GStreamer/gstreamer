@@ -276,6 +276,43 @@ _fallback_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
   return FALSE;
 }
 
+void
+_gst_memory_init (void)
+{
+  static const GstMemoryInfo _mem_info = {
+    (GstMemoryGetSizesFunction) _default_mem_get_sizes,
+    (GstMemoryTrimFunction) _default_mem_trim,
+    (GstMemoryMapFunction) _default_mem_map,
+    (GstMemoryUnmapFunction) _default_mem_unmap,
+    (GstMemoryFreeFunction) _default_mem_free,
+    (GstMemoryCopyFunction) _default_mem_copy,
+    (GstMemoryExtractFunction) _default_mem_extract,
+    (GstMemorySubFunction) _default_mem_sub,
+    (GstMemoryIsSpanFunction) _default_mem_is_span
+  };
+  static const GstMemoryInfo _sub_info = {
+    (GstMemoryGetSizesFunction) _default_mem_get_sizes,
+    (GstMemoryTrimFunction) _default_mem_trim,
+    (GstMemoryMapFunction) _default_sub_map,
+    (GstMemoryUnmapFunction) _default_sub_unmap,
+    (GstMemoryFreeFunction) _default_mem_free,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+  };
+
+  _default_mem_impl = gst_memory_register ("GstMemoryDefault", &_mem_info);
+  _default_sub_impl = gst_memory_register ("GstMemorySubbuffer", &_sub_info);
+}
+
+/**
+ * gst_memory_register:
+ * @name:
+ * @info:
+ *
+ * Returns:
+ */
 const GstMemoryImpl *
 gst_memory_register (const gchar * name, const GstMemoryInfo * info)
 {
@@ -312,36 +349,45 @@ gst_memory_register (const gchar * name, const GstMemoryInfo * info)
   return impl;
 }
 
-void
-_gst_memory_init (void)
+GstMemory *
+gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
+    GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
 {
-  static const GstMemoryInfo _mem_info = {
-    (GstMemoryGetSizesFunction) _default_mem_get_sizes,
-    (GstMemoryTrimFunction) _default_mem_trim,
-    (GstMemoryMapFunction) _default_mem_map,
-    (GstMemoryUnmapFunction) _default_mem_unmap,
-    (GstMemoryFreeFunction) _default_mem_free,
-    (GstMemoryCopyFunction) _default_mem_copy,
-    (GstMemoryExtractFunction) _default_mem_extract,
-    (GstMemorySubFunction) _default_mem_sub,
-    (GstMemoryIsSpanFunction) _default_mem_is_span
-  };
-  static const GstMemoryInfo _sub_info = {
-    (GstMemoryGetSizesFunction) _default_mem_get_sizes,
-    (GstMemoryTrimFunction) _default_mem_trim,
-    (GstMemoryMapFunction) _default_sub_map,
-    (GstMemoryUnmapFunction) _default_sub_unmap,
-    (GstMemoryFreeFunction) _default_mem_free,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-  };
+  GstMemoryDefault *mem;
 
-  _default_mem_impl = gst_memory_register ("GstMemoryDefault", &_mem_info);
-  _default_sub_impl = gst_memory_register ("GstMemorySubbuffer", &_sub_info);
+  mem = _default_mem_new (flags, NULL, data, free_func, maxsize, offset, size);
+
+  return (GstMemory *) mem;
 }
 
+GstMemory *
+gst_memory_new_alloc (gsize maxsize, gsize align)
+{
+  GstMemoryDefault *mem;
+
+  mem = _default_mem_new_block (maxsize, align, 0, maxsize);
+
+  return (GstMemory *) mem;
+}
+
+GstMemory *
+gst_memory_new_copy (gsize maxsize, gsize align, gpointer data,
+    gsize offset, gsize size)
+{
+  GstMemoryDefault *mem;
+
+  mem = _default_mem_new_block (maxsize, align, offset, size);
+  memcpy (mem->data, data, maxsize);
+
+  return (GstMemory *) mem;
+}
+
+/**
+ * gst_memory_ref:
+ * @mem: a #GstMemory
+ *
+ * Returns: @mem with increased refcount
+ */
 GstMemory *
 gst_memory_ref (GstMemory * mem)
 {
@@ -352,6 +398,10 @@ gst_memory_ref (GstMemory * mem)
   return mem;
 }
 
+/**
+ * gst_memory_unref:
+ * @mem: a #GstMemory
+ */
 void
 gst_memory_unref (GstMemory * mem)
 {
@@ -362,6 +412,13 @@ gst_memory_unref (GstMemory * mem)
     mem->impl->info.free (mem);
 }
 
+/**
+ * gst_memory_get_sizes:
+ * @mem: a #GstMemory
+ * @maxsize: pointer to maxsize
+ *
+ * Returns: the current size of @mem
+ */
 gsize
 gst_memory_get_sizes (GstMemory * mem, gsize * maxsize)
 {
@@ -518,37 +575,4 @@ gst_memory_span (GstMemory ** mem1, gsize len1, gsize offset, GstMemory ** mem2,
     span = (GstMemory *) tspan;
   }
   return span;
-}
-
-GstMemory *
-gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
-    GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
-{
-  GstMemoryDefault *mem;
-
-  mem = _default_mem_new (flags, NULL, data, free_func, maxsize, offset, size);
-
-  return (GstMemory *) mem;
-}
-
-GstMemory *
-gst_memory_new_alloc (gsize maxsize, gsize align)
-{
-  GstMemoryDefault *mem;
-
-  mem = _default_mem_new_block (maxsize, align, 0, maxsize);
-
-  return (GstMemory *) mem;
-}
-
-GstMemory *
-gst_memory_new_copy (gsize maxsize, gsize align, gpointer data,
-    gsize offset, gsize size)
-{
-  GstMemoryDefault *mem;
-
-  mem = _default_mem_new_block (maxsize, align, offset, size);
-  memcpy (mem->data, data, maxsize);
-
-  return (GstMemory *) mem;
 }
