@@ -1456,10 +1456,13 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
         /* not really an ES, so use section filter not pes filter */
         /* initialise section filter */
         GstCaps *caps;
+        gchar name[13];
+
+        g_snprintf (name, sizeof (name), "private_%04x", entry.PID);
         gst_section_filter_init (&ES_stream->section_filter);
         ES_stream->PID_type = PID_TYPE_PRIVATE_SECTION;
         ES_stream->pad = gst_pad_new_from_static_template (&private_template,
-            g_strdup_printf ("private_%04x", entry.PID));
+            name);
         gst_pad_set_active (ES_stream->pad, TRUE);
         caps = gst_caps_new_simple ("application/x-mpegts-private-section",
             NULL);
