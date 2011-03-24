@@ -424,6 +424,7 @@ buffer_compare (GstBuffer * buf, const gchar * str, gsize size)
 
   data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
   res = memcmp (data, str, size) == 0;
+  GST_DEBUG ("%s <-> %s: %d", (gchar *) data, str, res);
   gst_buffer_unmap (buf, data, size);
 
   return res;
@@ -476,12 +477,12 @@ GST_START_TEST (test_push_buffer_list_compat)
   fail_unless_equals_int (g_list_length (buffers), 2);
   buffer = GST_BUFFER (buffers->data);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
-  fail_unless (buffer_compare (buffer, "ListGroup", 9) == 0);
+  fail_unless (buffer_compare (buffer, "ListGroup", 9));
   gst_buffer_unref (buffer);
   buffers = g_list_delete_link (buffers, buffers);
   buffer = GST_BUFFER (buffers->data);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
-  fail_unless (buffer_compare (buffer, "AnotherListGroup", 16) == 0);
+  fail_unless (buffer_compare (buffer, "AnotherListGroup", 16));
   gst_buffer_unref (buffer);
   buffers = g_list_delete_link (buffers, buffers);
   fail_unless (buffers == NULL);

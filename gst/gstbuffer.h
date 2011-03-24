@@ -429,7 +429,7 @@ typedef enum {
 /* copies memory or metadata into newly allocated buffer */
 void            gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src,
                                                  GstBufferCopyFlags flags,
-                                                 gsize offset, gsize trim);
+                                                 gsize offset, gsize size);
 
 /**
  * gst_buffer_is_writable:

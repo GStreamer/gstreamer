@@ -64,51 +64,8 @@ typedef gboolean (*GstMetaInitFunction) (GstMeta *meta, gpointer params, GstBuff
  */
 typedef void (*GstMetaFreeFunction)     (GstMeta *meta, GstBuffer *buffer);
 
-/**
- * GstMetaTransformType:
- * @GST_META_TRANSFORM_NONE: invalid transform type
- * @GST_META_TRANSFORM_COPY: copy transform
- * @GST_META_TRANSFORM_MAKE_WRITABLE: make writable type
- * @GST_META_TRANSFORM_TRIM: trim buffer
- * @GST_META_TRANSFORM_CUSTOM: start of custom transform types
- *
- * Different default transform types.
- */
-typedef enum {
-  GST_META_TRANSFORM_NONE = 0,
-  GST_META_TRANSFORM_COPY,
-  GST_META_TRANSFORM_MAKE_WRITABLE,
-  GST_META_TRANSFORM_TRIM,
-
-  GST_META_TRANSFORM_CUSTOM = 256 
-} GstMetaTransformType;
-
-/**
- * GstMetaTransformData:
- * @type: a #GstMetaTransformType
- *
- * Common structure that should be put as the first field in the type specific
- * structure for the #GstMetaTransformFunction. It contains the type of the
- * transform that should be performed.
- */
-typedef struct {
-  GstMetaTransformType type;
-} GstMetaTransformData;
-
-/**
- * GstMetaTransformSubbuffer:
- * @data: parent #GstMetaTransformData
- * @offset: the offset of the subbuffer
- * @size: the new size of the subbuffer
- *
- * The subbuffer specific extra info.
- */
-typedef struct {
-  GstMetaTransformData data;
-  gsize offset;
-  gsize size;
-} GstMetaTransformSubbuffer;
-
+typedef void (*GstMetaCopyFunction)     (GstBuffer *dest, GstMeta *meta,
+                                         GstBuffer *buffer, gsize offset, gsize size);
 /**
  * GstMetaTransformFunction:
  * @transbuf: a #GstBuffer
@@ -122,12 +79,9 @@ typedef struct {
  *
  * Implementations should check the type of the transform @data and parse
  * additional type specific field that should be used to perform the transform.
- *
- * If @data is NULL, the metadata should be shallow copied. This is done when
- * gst_buffer_make_metadata_writable() is called.
  */
 typedef void (*GstMetaTransformFunction) (GstBuffer *transbuf, GstMeta *meta,
-                                          GstBuffer *buffer, GstMetaTransformData *data);
+                                          GstBuffer *buffer, gpointer data);
 
 /**
  * GstMetaSerializeFunction:
@@ -149,6 +103,7 @@ typedef gboolean (*GstMetaDeserializeFunction) (GstMeta *meta,
  * @size: size of the metadata
  * @init_func: function for initializing the metadata
  * @free_func: function for freeing the metadata
+ * @copy_func: function for copying the metadata
  * @transform_func: function for transforming the metadata
  * @serialize_func: function for serializing
  * @deserialize_func: function for deserializing
@@ -163,6 +118,7 @@ struct _GstMetaInfo {
 
   GstMetaInitFunction        init_func;
   GstMetaFreeFunction        free_func;
+  GstMetaCopyFunction        copy_func;
   GstMetaTransformFunction   transform_func;
   GstMetaSerializeFunction   serialize_func;
   GstMetaDeserializeFunction deserialize_func;
@@ -174,6 +130,7 @@ const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *im
                                                gsize size,
                                                GstMetaInitFunction        init_func,
                                                GstMetaFreeFunction        free_func,
+                                               GstMetaCopyFunction        copy_func,
                                                GstMetaTransformFunction   transform_func,
                                                GstMetaSerializeFunction   serialize_func,
                                                GstMetaDeserializeFunction deserialize_func);

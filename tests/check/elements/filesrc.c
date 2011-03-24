@@ -233,7 +233,7 @@ GST_START_TEST (test_pull)
 
   /* compare with previously read data */
   data2 = gst_buffer_map (buffer2, &size2, NULL, GST_MAP_READ);
-  fail_unless (memcmp (data1, data2, 50) == 0);
+  fail_unless (memcmp (data1 + 50, data2, 50) == 0);
   gst_buffer_unmap (buffer2, data2, size2);
 
   gst_buffer_unmap (buffer1, data1, size1);

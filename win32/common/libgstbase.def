@@ -5,15 +5,16 @@ EXPORTS
 	gst_adapter_copy
 	gst_adapter_flush
 	gst_adapter_get_type
+	gst_adapter_map
 	gst_adapter_masked_scan_uint32
 	gst_adapter_masked_scan_uint32_peek
 	gst_adapter_new
-	gst_adapter_peek
 	gst_adapter_prev_timestamp
 	gst_adapter_push
 	gst_adapter_take
 	gst_adapter_take_buffer
 	gst_adapter_take_list
+	gst_adapter_unmap
 	gst_base_sink_do_preroll
 	gst_base_sink_get_blocksize
 	gst_base_sink_get_last_buffer
@@ -71,9 +72,7 @@ EXPORTS
 	gst_bit_reader_get_remaining
 	gst_bit_reader_get_size
 	gst_bit_reader_init
-	gst_bit_reader_init_from_buffer
 	gst_bit_reader_new
-	gst_bit_reader_new_from_buffer
 	gst_bit_reader_peek_bits_uint16
 	gst_bit_reader_peek_bits_uint32
 	gst_bit_reader_peek_bits_uint64
@@ -114,10 +113,8 @@ EXPORTS
 	gst_byte_reader_get_uint64_le
 	gst_byte_reader_get_uint8
 	gst_byte_reader_init
-	gst_byte_reader_init_from_buffer
 	gst_byte_reader_masked_scan_uint32
 	gst_byte_reader_new
-	gst_byte_reader_new_from_buffer
 	gst_byte_reader_peek_data
 	gst_byte_reader_peek_float32_be
 	gst_byte_reader_peek_float32_le
@@ -154,11 +151,9 @@ EXPORTS
 	gst_byte_writer_free_and_get_data
 	gst_byte_writer_get_remaining
 	gst_byte_writer_init
-	gst_byte_writer_init_with_buffer
 	gst_byte_writer_init_with_data
 	gst_byte_writer_init_with_size
 	gst_byte_writer_new
-	gst_byte_writer_new_with_buffer
 	gst_byte_writer_new_with_data
 	gst_byte_writer_new_with_size
 	gst_byte_writer_put_data
@@ -201,7 +196,6 @@ EXPORTS
 	gst_collect_pads_new
 	gst_collect_pads_peek
 	gst_collect_pads_pop
-	gst_collect_pads_read
 	gst_collect_pads_read_buffer
 	gst_collect_pads_remove_pad
 	gst_collect_pads_set_clip_function
@@ -225,6 +219,7 @@ EXPORTS
 	gst_push_src_get_type
 	gst_type_find_helper
 	gst_type_find_helper_for_buffer
+	gst_type_find_helper_for_data
 	gst_type_find_helper_for_extension
 	gst_type_find_helper_get_range
 	gst_type_find_helper_get_range_ext

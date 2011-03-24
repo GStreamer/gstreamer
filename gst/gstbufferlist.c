@@ -836,9 +836,9 @@ GstBuffer *
 gst_buffer_list_iterator_merge_group (const GstBufferListIterator * it)
 {
   GList *tmp;
-  gsize size, bsize;
+  gsize size;
   GstBuffer *buf;
-  guint8 *dest, *ptr, *bdata;
+  guint8 *dest, *ptr;
 
   g_return_val_if_fail (it != NULL, NULL);
 
@@ -861,19 +861,18 @@ gst_buffer_list_iterator_merge_group (const GstBufferListIterator * it)
 
   /* copy metadata from the next buffer after the implicit cursor */
   gst_buffer_copy_into (buf, GST_BUFFER_CAST (it->next->data),
-      GST_BUFFER_COPY_METADATA, 0, 0);
+      GST_BUFFER_COPY_METADATA, 0, -1);
 
   /* copy data of all buffers before the next group start into the new buffer */
   dest = ptr = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   tmp = it->next;
   do {
     if (tmp->data != STOLEN) {
+      GstBuffer *tbuf = GST_BUFFER_CAST (tmp->data);
+      gsize bsize;
 
-      bdata =
-          gst_buffer_map (GST_BUFFER_CAST (tmp->data), &bsize, NULL,
-          GST_MAP_READ);
-      memcpy (ptr, bdata, bsize);
-      gst_buffer_unmap (GST_BUFFER_CAST (tmp->data), bdata, bsize);
+      bsize = gst_buffer_get_size (tbuf);
+      gst_buffer_extract (tbuf, 0, ptr, bsize);
       ptr += bsize;
     }
     tmp = g_list_next (tmp);

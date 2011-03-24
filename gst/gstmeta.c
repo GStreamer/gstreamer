@@ -54,6 +54,7 @@ _gst_meta_init (void)
 const GstMetaInfo *
 gst_meta_register (const gchar * api, const gchar * impl, gsize size,
     GstMetaInitFunction init_func, GstMetaFreeFunction free_func,
+    GstMetaCopyFunction copy_func,
     GstMetaTransformFunction transform_func,
     GstMetaSerializeFunction serialize_func,
     GstMetaDeserializeFunction deserialize_func)
@@ -70,6 +71,7 @@ gst_meta_register (const gchar * api, const gchar * impl, gsize size,
   info->size = size;
   info->init_func = init_func;
   info->free_func = free_func;
+  info->copy_func = copy_func;
   info->transform_func = transform_func;
   info->serialize_func = serialize_func;
   info->deserialize_func = deserialize_func;
@@ -109,26 +111,15 @@ gst_meta_get_info (const gchar * impl)
 
 /* Timing metadata */
 static void
-meta_timing_transform (GstBuffer * transbuf, GstMetaTiming * meta,
-    GstBuffer * buffer, GstMetaTransformData * data)
+meta_timing_copy (GstBuffer * copybuf, GstMetaTiming * meta,
+    GstBuffer * buffer, gsize offset, gsize size)
 {
   GstMetaTiming *timing;
-  guint offset;
-  guint size;
-
-  if (data->type == GST_META_TRANSFORM_TRIM) {
-    GstMetaTransformSubbuffer *subdata = (GstMetaTransformSubbuffer *) data;
-    offset = subdata->offset;
-    size = subdata->size;
-  } else {
-    offset = 0;
-    size = gst_buffer_get_size (buffer);
-  }
 
   GST_DEBUG ("trans called from buffer %p to %p, meta %p, %u-%u", buffer,
-      transbuf, meta, offset, size);
+      copybuf, meta, offset, size);
 
-  timing = gst_buffer_add_meta_timing (transbuf);
+  timing = gst_buffer_add_meta_timing (copybuf);
   if (offset == 0) {
     /* same offset, copy timestamps */
     timing->pts = meta->pts;
@@ -158,7 +149,8 @@ gst_meta_timing_get_info (void)
         sizeof (GstMetaTiming),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
-        (GstMetaTransformFunction) meta_timing_transform,
+        (GstMetaCopyFunction) meta_timing_copy,
+        (GstMetaTransformFunction) NULL,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
   }
   return meta_info;

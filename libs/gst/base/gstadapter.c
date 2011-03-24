@@ -269,6 +269,7 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, gsize skip,
   }
   /* copy partial buffer */
   csize = MIN (bsize - skip, size);
+  GST_DEBUG ("%u %u %u", bsize, skip, csize);
   gst_buffer_extract (buf, skip, dest, csize);
   size -= csize;
   dest += csize;
@@ -623,7 +624,6 @@ gst_adapter_take_internal (GstAdapter * adapter, gsize nbytes)
   }
   if (tocopy) {
     /* copy the remaining data */
-    GST_LOG_OBJECT (adapter, "copying %u bytes", tocopy);
     copy_into_unchecked (adapter, toreuse + data, toreuse + adapter->skip,
         tocopy);
   }

@@ -90,14 +90,14 @@ EXPORTS
 	gst_bin_remove
 	gst_bin_remove_many
 	gst_buffer_add_meta
-	gst_buffer_add_meta_memory
 	gst_buffer_copy_flags_get_type
-	gst_buffer_copy_metadata
+	gst_buffer_copy_into
 	gst_buffer_create_sub
+	gst_buffer_extract
 	gst_buffer_flag_get_type
 	gst_buffer_get_caps
 	gst_buffer_get_meta
-	gst_buffer_is_metadata_writable
+	gst_buffer_get_size
 	gst_buffer_is_span_fast
 	gst_buffer_iterate_meta
 	gst_buffer_join
@@ -119,10 +119,12 @@ EXPORTS
 	gst_buffer_list_iterator_take
 	gst_buffer_list_n_groups
 	gst_buffer_list_new
-	gst_buffer_make_metadata_writable
+	gst_buffer_map
 	gst_buffer_merge
+	gst_buffer_n_memory
 	gst_buffer_new
 	gst_buffer_new_and_alloc
+	gst_buffer_peek_memory
 	gst_buffer_pool_acquire_buffer
 	gst_buffer_pool_config_get
 	gst_buffer_pool_config_set
@@ -133,10 +135,13 @@ EXPORTS
 	gst_buffer_pool_release_buffer
 	gst_buffer_pool_set_active
 	gst_buffer_pool_set_config
+	gst_buffer_remove_memory
 	gst_buffer_remove_meta
 	gst_buffer_set_caps
 	gst_buffer_span
+	gst_buffer_take_memory
 	gst_buffer_try_new_and_alloc
+	gst_buffer_unmap
 	gst_buffering_mode_get_type
 	gst_bus_add_signal_watch
 	gst_bus_add_signal_watch_full
@@ -504,6 +509,7 @@ EXPORTS
 	gst_iterator_resync
 	gst_library_error_get_type
 	gst_library_error_quark
+	gst_map_flags_get_type
 	gst_marshal_BOOLEAN__BOXED
 	gst_marshal_BOOLEAN__POINTER
 	gst_marshal_BOOLEAN__VOID
@@ -521,6 +527,22 @@ EXPORTS
 	gst_marshal_VOID__OBJECT_STRING
 	gst_marshal_VOID__POINTER_OBJECT
 	gst_marshal_VOID__UINT_BOXED
+	gst_memory_copy
+	gst_memory_extract
+	gst_memory_flags_get_type
+	gst_memory_get_sizes
+	gst_memory_is_span
+	gst_memory_map
+	gst_memory_new_alloc
+	gst_memory_new_copy
+	gst_memory_new_wrapped
+	gst_memory_ref
+	gst_memory_register
+	gst_memory_span
+	gst_memory_sub
+	gst_memory_trim
+	gst_memory_unmap
+	gst_memory_unref
 	gst_message_get_seqnum
 	gst_message_get_stream_status_object
 	gst_message_get_structure
@@ -586,8 +608,6 @@ EXPORTS
 	gst_message_type_get_type
 	gst_message_type_to_quark
 	gst_meta_get_info
-	gst_meta_map_flags_get_type
-	gst_meta_memory_get_info
 	gst_meta_register
 	gst_meta_timing_get_info
 	gst_mini_object_copy

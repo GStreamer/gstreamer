@@ -175,7 +175,7 @@ _gst_buffer_initialize (void)
  * @src: a source #GstBuffer
  * @flags: flags indicating what metadata fields should be copied.
  * @offset: offset to copy from
- * @trim: bytes to trim from end
+ * @size: total size to copy
  *
  * Copies the information from @src into @dest.
  *
@@ -183,9 +183,10 @@ _gst_buffer_initialize (void)
  */
 void
 gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
-    GstBufferCopyFlags flags, gsize offset, gsize trim)
+    GstBufferCopyFlags flags, gsize offset, gsize size)
 {
   GstMetaItem *walk;
+  gsize bufsize;
 
   g_return_if_fail (dest != NULL);
   g_return_if_fail (src != NULL);
@@ -193,6 +194,11 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   /* nothing to copy if the buffers are the same */
   if (G_UNLIKELY (dest == src))
     return;
+
+  bufsize = gst_buffer_get_size (src);
+  if (size == -1)
+    size = bufsize - offset;
+  g_return_if_fail (bufsize >= offset + size);
 
 #if GST_VERSION_NANO == 1
   /* we enable this extra debugging in git versions only for now */
@@ -216,7 +222,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     if (offset == 0) {
       GST_BUFFER_TIMESTAMP (dest) = GST_BUFFER_TIMESTAMP (src);
       GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
-      if (trim == 0) {
+      if (size == gst_buffer_get_size (src)) {
         GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
         GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
       }
@@ -241,31 +247,36 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
     for (i = 0; i < len; i++) {
       GstMemory *mem, *dmem;
-      gsize size;
+      gsize msize;
 
       mem = g_ptr_array_index (sarr, i);
+      msize = gst_memory_get_sizes (mem, NULL);
+
       if (i + 1 == len) {
         /* last chunk */
-        size = gst_memory_get_sizes (mem, NULL);
-        dmem = gst_memory_sub (mem, offset, size - offset - trim);
+        dmem = gst_memory_sub (mem, offset, size);
       } else if (offset) {
-        size = gst_memory_get_sizes (mem, NULL);
-        dmem = gst_memory_sub (mem, offset, size - offset);
-        offset = 0;
+        if (msize > offset) {
+          dmem = gst_memory_sub (mem, offset, msize - offset);
+          offset = 0;
+        } else {
+          offset -= msize;
+          dmem = NULL;
+        }
       } else
         dmem = gst_memory_ref (mem);
 
-      g_ptr_array_add (darr, dmem);
+      if (dmem)
+        g_ptr_array_add (darr, dmem);
     }
   }
 
   for (walk = src->priv; walk; walk = walk->next) {
     GstMeta *meta = &walk->meta;
     const GstMetaInfo *info = meta->info;
-    GstMetaTransformData data = { GST_META_TRANSFORM_COPY };
 
-    if (info->transform_func)
-      info->transform_func (dest, meta, (GstBuffer *) src, &data);
+    if (info->copy_func)
+      info->copy_func (dest, meta, (GstBuffer *) src, offset, size);
   }
 }
 
@@ -280,7 +291,7 @@ _gst_buffer_copy (GstBuffer * buffer)
   copy = gst_buffer_new ();
 
   /* we simply copy everything from our parent */
-  gst_buffer_copy_into (copy, buffer, GST_BUFFER_COPY_ALL, 0, 0);
+  gst_buffer_copy_into (copy, buffer, GST_BUFFER_COPY_ALL, 0, -1);
 
   return copy;
 }
@@ -696,14 +707,16 @@ gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
     mem = g_ptr_array_index (arr, i);
 
     data = gst_memory_map (mem, &ssize, NULL, GST_MAP_READ);
-    tocopy = MIN (ssize, size);
-    if (tocopy > offset) {
-      memcpy (ptr, data + offset, tocopy - offset);
+    if (ssize > offset) {
+      /* we have enough */
+      tocopy = MIN (ssize - offset, size);
+      memcpy (ptr, data + offset, tocopy);
       size -= tocopy;
       ptr += tocopy;
       offset = 0;
     } else {
-      offset -= tocopy;
+      /* offset past buffer, skip */
+      offset -= ssize;
     }
     gst_memory_unmap (mem, data, ssize);
   }
@@ -802,8 +815,7 @@ gst_buffer_create_sub (GstBuffer * buffer, gsize offset, gsize size)
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p of %p", subbuffer, buffer);
 
-  gst_buffer_copy_into (subbuffer, buffer, GST_BUFFER_COPY_ALL, offset,
-      bufsize - (size + offset));
+  gst_buffer_copy_into (subbuffer, buffer, GST_BUFFER_COPY_ALL, offset, size);
 
   return subbuffer;
 }

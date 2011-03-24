@@ -80,26 +80,15 @@ test_free_func (GstMetaTest * meta, GstBuffer * buffer)
 }
 
 static void
-test_transform_func (GstBuffer * transbuf, GstMetaTest * meta,
-    GstBuffer * buffer, GstMetaTransformData * data)
+test_copy_func (GstBuffer * copybuf, GstMetaTest * meta,
+    GstBuffer * buffer, gsize offset, gsize size)
 {
   GstMetaTest *test;
-  guint offset;
-  guint size;
 
-  if (data->type == GST_META_TRANSFORM_TRIM) {
-    GstMetaTransformSubbuffer *subdata = (GstMetaTransformSubbuffer *) data;
-    offset = subdata->offset;
-    size = subdata->size;
-  } else {
-    offset = 0;
-    size = gst_buffer_get_size (buffer);
-  }
+  GST_DEBUG ("copy called from buffer %p to %p, meta %p, %u-%u", buffer,
+      copybuf, meta, offset, size);
 
-  GST_DEBUG ("trans called from buffer %p to %p, meta %p, %u-%u", buffer,
-      transbuf, meta, offset, size);
-
-  test = GST_META_TEST_ADD (transbuf);
+  test = GST_META_TEST_ADD (copybuf);
   if (offset == 0) {
     /* same offset, copy timestamps */
     test->pts = meta->pts;
@@ -129,7 +118,8 @@ gst_meta_test_get_info (void)
         sizeof (GstMetaTest),
         (GstMetaInitFunction) test_init_func,
         (GstMetaFreeFunction) test_free_func,
-        (GstMetaTransformFunction) test_transform_func, NULL, NULL);
+        (GstMetaCopyFunction) test_copy_func,
+        (GstMetaTransformFunction) NULL, NULL, NULL);
   }
   return meta_test_info;
 }

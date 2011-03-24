@@ -125,8 +125,6 @@ GST_START_TEST (test_peek1)
   avail = gst_adapter_available_fast (adapter);
   fail_if (avail != 0);
 
-  gst_buffer_unmap (buffer, (gpointer) bufdata, 0);
-
   /* silly clear just for fun */
   gst_adapter_clear (adapter);
 
@@ -260,8 +258,6 @@ GST_START_TEST (test_take3)
   /* the data should be the same */
   fail_unless (data == data2);
 
-  gst_buffer_unmap (buffer, data, size);
-  gst_buffer_unmap (buffer2, data2, size2);
   gst_buffer_unref (buffer2);
 
   g_object_unref (adapter);
@@ -309,8 +305,10 @@ GST_START_TEST (test_take_order)
   adapter = create_and_fill_adapter ();
   while (gst_adapter_available (adapter) >= sizeof (guint32)) {
     guint8 *data = gst_adapter_take (adapter, sizeof (guint32));
+    guint32 val = GST_READ_UINT32_LE (data);
 
-    fail_unless (GST_READ_UINT32_LE (data) == i);
+    GST_DEBUG ("val %8u", val);
+    fail_unless (val == i);
     i++;
     g_free (data);
   }
