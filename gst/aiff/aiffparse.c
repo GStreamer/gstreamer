@@ -655,19 +655,37 @@ gst_aiff_parse_parse_comm (GstAiffParse * aiff, GstBuffer * buf)
   aiff->width = GST_ROUND_UP_8 (aiff->depth);
   aiff->rate = (int) gst_aiff_parse_read_IEEE80 (data + 8);
 
+  aiff->floating_point = FALSE;
+
   if (aiff->is_aifc) {
+    guint32 fourcc = GST_READ_UINT32_LE (data + 18);
+
     /* We only support the 'trivial' uncompressed AIFC, but it can be
      * either big or little endian */
-    if (GST_READ_UINT32_LE (data + 18) == GST_MAKE_FOURCC ('N', 'O', 'N', 'E'))
-      aiff->endianness = G_BIG_ENDIAN;
-    else if (GST_READ_UINT32_LE (data + 18) ==
-        GST_MAKE_FOURCC ('s', 'o', 'w', 't'))
-      aiff->endianness = G_LITTLE_ENDIAN;
-    else {
-      GST_WARNING_OBJECT (aiff, "Unsupported compression in AIFC "
-          "file: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (GST_READ_UINT32_LE (data + 18)));
-      return FALSE;
+    switch (fourcc) {
+      case GST_MAKE_FOURCC ('N', 'O', 'N', 'E'):
+        aiff->endianness = G_BIG_ENDIAN;
+        break;
+      case GST_MAKE_FOURCC ('s', 'o', 'w', 't'):
+        aiff->endianness = G_LITTLE_ENDIAN;
+        break;
+      case GST_MAKE_FOURCC ('F', 'L', '3', '2'):
+      case GST_MAKE_FOURCC ('f', 'l', '3', '2'):
+        aiff->floating_point = TRUE;
+        aiff->width = aiff->depth = 32;
+        aiff->endianness = G_BIG_ENDIAN;
+        break;
+      case GST_MAKE_FOURCC ('f', 'l', '6', '4'):
+        aiff->floating_point = TRUE;
+        aiff->width = aiff->depth = 64;
+        aiff->endianness = G_BIG_ENDIAN;
+        break;
+      default:
+        GST_WARNING_OBJECT (aiff, "Unsupported compression in AIFC "
+            "file: %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (GST_READ_UINT32_LE (data + 18)));
+        return FALSE;
+
     }
   } else
     aiff->endianness = G_BIG_ENDIAN;
@@ -719,12 +737,20 @@ gst_aiff_parse_create_caps (GstAiffParse * aiff)
 {
   GstCaps *caps;
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "width", G_TYPE_INT, aiff->width,
-      "depth", G_TYPE_INT, aiff->depth,
-      "channels", G_TYPE_INT, aiff->channels,
-      "endianness", G_TYPE_INT, aiff->endianness,
-      "rate", G_TYPE_INT, aiff->rate, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+  if (aiff->floating_point) {
+    caps = gst_caps_new_simple ("audio/x-raw-float",
+        "width", G_TYPE_INT, aiff->width,
+        "channels", G_TYPE_INT, aiff->channels,
+        "endianness", G_TYPE_INT, aiff->endianness,
+        "rate", G_TYPE_INT, aiff->rate, NULL);
+  } else {
+    caps = gst_caps_new_simple ("audio/x-raw-int",
+        "width", G_TYPE_INT, aiff->width,
+        "depth", G_TYPE_INT, aiff->depth,
+        "channels", G_TYPE_INT, aiff->channels,
+        "endianness", G_TYPE_INT, aiff->endianness,
+        "rate", G_TYPE_INT, aiff->rate, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+  }
 
   GST_DEBUG_OBJECT (aiff, "Created caps: %" GST_PTR_FORMAT, caps);
   return caps;
