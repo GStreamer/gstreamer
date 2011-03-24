@@ -149,7 +149,7 @@ static gboolean gst_vp8_enc_stop (GstBaseVideoEncoder * encoder);
 static gboolean gst_vp8_enc_set_format (GstBaseVideoEncoder *
     base_video_encoder, GstVideoState * state);
 static gboolean gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder);
-static gboolean gst_vp8_enc_handle_frame (GstBaseVideoEncoder *
+static GstFlowReturn gst_vp8_enc_handle_frame (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstFlowReturn gst_vp8_enc_shape_output (GstBaseVideoEncoder * encoder,
     GstVideoFrame * frame);
@@ -672,7 +672,7 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
   return caps;
 }
 
-static void
+static GstFlowReturn
 gst_vp8_enc_process (GstVP8Enc * encoder)
 {
   vpx_codec_iter_t iter = NULL;
@@ -680,6 +680,7 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
   GstBaseVideoEncoder *base_video_encoder;
   GstVP8EncCoderHook *hook;
   GstVideoFrame *frame;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   base_video_encoder = GST_BASE_VIDEO_ENCODER (encoder);
 
@@ -732,11 +733,13 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
       hook->invisible = g_list_append (hook->invisible, buffer);
     } else {
       frame->src_buffer = buffer;
-      gst_base_video_encoder_finish_frame (base_video_encoder, frame);
+      ret = gst_base_video_encoder_finish_frame (base_video_encoder, frame);
     }
 
     pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   }
+
+  return ret;
 }
 
 static gboolean
@@ -803,7 +806,7 @@ static const int speed_table[] = {
   VPX_DL_REALTIME,
 };
 
-static gboolean
+static GstFlowReturn
 gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
 {
@@ -845,9 +848,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     return FALSE;
   }
 
-  gst_vp8_enc_process (encoder);
-
-  return TRUE;
+  return gst_vp8_enc_process (encoder);
 }
 
 static guint64
