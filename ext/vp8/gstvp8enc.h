@@ -75,6 +75,8 @@ struct _GstVP8Enc
   /* state */
   gboolean inited;
 
+  vpx_image_t image;
+
   int n_frames;
   int keyframe_distance;
 };
