@@ -227,7 +227,7 @@ struct _GstBaseParsePrivate
   gint64 estimated_duration;
 
   guint min_frame_size;
-  guint format;
+  GstBaseParseFormatFlags format_flags;
   guint fps_num, fps_den;
   gint update_interval;
   guint bitrate;
@@ -309,9 +309,9 @@ typedef struct _GstBaseParseSeek
 } GstBaseParseSeek;
 
 #define GST_BASE_PARSE_PASSTHROUGH(parse)  \
-    (parse->priv->format & GST_BASE_PARSE_FORMAT_PASSTHROUGH)
+    (parse->priv->format_flags & GST_BASE_PARSE_FORMAT_FLAG_PASSTHROUGH)
 #define GST_BASE_PARSE_HAS_TIME(parse)  \
-    (parse->priv->format & GST_BASE_PARSE_FORMAT_HAS_TIME)
+    (parse->priv->format_flags & GST_BASE_PARSE_FORMAT_FLAG_HAS_TIME)
 
 
 static GstElementClass *parent_class = NULL;
@@ -596,7 +596,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->first_frame_offset = -1;
   parse->priv->estimated_duration = -1;
   parse->priv->next_ts = 0;
-  parse->priv->format = 0;
+  parse->priv->format_flags = 0;
   parse->priv->post_min_bitrate = TRUE;
   parse->priv->post_avg_bitrate = TRUE;
   parse->priv->post_max_bitrate = TRUE;
@@ -2817,24 +2817,21 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
 }
 
 /**
- * gst_base_parse_set_format:
- * @parse: the #GstBaseParseFormat to set or unset
- * @flags: format flag to enable or disable
- * @on: whether or not to enable
+ * gst_base_parse_set_format_flags:
+ * @parse: #GstBaseParse
+ * @flags: the #GstBaseParseFormatFlags to set
  *
- * Set flags describing characteristics of parsed format.
+ * Set flags describing characteristics of parsed format. This overrides
+ * any previous flags set (ie. it's not a bitwise OR operation).
  */
 void
-gst_base_parse_set_format (GstBaseParse * parse, GstBaseParseFormat flag,
-    gboolean on)
+gst_base_parse_set_format_flags (GstBaseParse * parse,
+    GstBaseParseFormatFlags flags)
 {
   g_return_if_fail (parse != NULL);
 
-  GST_LOG_OBJECT (parse, "set flag %d to %d", flag, on);
-  if (on)
-    parse->priv->format |= flag;
-  else
-    parse->priv->format &= ~flag;
+  GST_LOG_OBJECT (parse, "setting flags 0x%02x", flags);
+  parse->priv->format_flags = flags;
 }
 
 /**

@@ -140,26 +140,26 @@ typedef struct {
 #define GST_BASE_PARSE_FRAME_DRAIN(frame)    (!!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_DRAIN))
 
 /**
- * GstBaseParseFormat:
- * @GST_BASE_PARSE_FORMAT_NONE: default setting
- * @GST_BASE_PARSE_FORMAT_PASSTHROUGH: nature of format or configuration
+ * GstBaseParseFormatFlags:
+ * @GST_BASE_PARSE_FORMAT_FLAG_NONE: default setting
+ * @GST_BASE_PARSE_FORMAT_FLAG_PASSTHROUGH: nature of format or configuration
  *   does not allow (much) parsing, so parser should operate in passthrough mode
  *   (which only applies operating in pull mode).  That is, incoming buffers
  *   are pushed through unmodified, i.e. no @check_valid_frame or @parse_frame
- *   callbacks will be invoked.  On the other hand, @pre_push_buffer is still invoked,
- *   where subclass can perform as much or as little is appropriate for
+ *   callbacks will be invoked.  On the other hand, @pre_push_buffer is still
+ *   invoked, where subclass can perform as much or as little is appropriate for
  *   "passthrough" semantics.
- * @GST_BASE_PARSE_FORMAT_HAS_TIME: frames carry timing info which subclass
+ * @GST_BASE_PARSE_FORMAT_FLAG_HAS_TIME: frames carry timing info which subclass
  *   can (generally) parse and provide.  In particular, intrinsic time
- *   (rather than estimated) can be obtained following seek.
+ *   (rather than estimated) can be obtained following a seek.
  *
  * Since: 0.10.x
  */
-typedef enum _GstBaseParseFormat {
-  GST_BASE_PARSE_FORMAT_NONE               = 0,
-  GST_BASE_PARSE_FORMAT_PASSTHROUGH        = (1 << 0),
-  GST_BASE_PARSE_FORMAT_HAS_TIME           = (1 << 1),
-} GstBaseParseFormat;
+typedef enum {
+  GST_BASE_PARSE_FORMAT_FLAG_NONE               = 0,
+  GST_BASE_PARSE_FORMAT_FLAG_PASSTHROUGH        = (1 << 0),
+  GST_BASE_PARSE_FORMAT_FLAG_HAS_TIME           = (1 << 1),
+} GstBaseParseFormatFlags;
 
 /**
  * GstBaseParseSeekable:
@@ -298,9 +298,8 @@ void            gst_base_parse_set_seek        (GstBaseParse       * parse,
 void            gst_base_parse_set_min_frame_size (GstBaseParse    * parse,
                                                    guint             min_size);
 
-void            gst_base_parse_set_format      (GstBaseParse       * parse,
-                                                GstBaseParseFormat   flag,
-                                                gboolean             on);
+void            gst_base_parse_set_format_flags (GstBaseParse           * parse,
+                                                 GstBaseParseFormatFlags  flag);
 
 void            gst_base_parse_set_frame_props (GstBaseParse * parse,
                                                 guint          fps_num,
