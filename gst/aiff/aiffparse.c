@@ -204,25 +204,6 @@ gst_aiff_parse_init (GstAiffParse * aiffparse, GstAiffParseClass * g_class)
   gst_element_add_pad (GST_ELEMENT_CAST (aiffparse), aiffparse->srcpad);
 }
 
-/* Compute (value * nom) % denom, avoiding overflow.  This can be used
- * to perform ceiling or rounding division together with
- * gst_util_uint64_scale[_int]. */
-#define uint64_scale_modulo(val, nom, denom) \
-  ((val % denom) * (nom % denom) % denom)
-
-/* Like gst_util_uint64_scale, but performs ceiling division. */
-static guint64
-uint64_ceiling_scale (guint64 val, guint64 num, guint64 denom)
-{
-  guint64 result = gst_util_uint64_scale_int (val, num, denom);
-
-  if (uint64_scale_modulo (val, num, denom) == 0)
-    return result;
-  else
-    return result + 1;
-}
-
-
 static gboolean
 gst_aiff_parse_parse_file_header (GstAiffParse * aiff, GstBuffer * buf)
 {
@@ -387,8 +368,8 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
      * bytes. */
     if (aiff->bps > 0)
       aiff->offset =
-          uint64_ceiling_scale (seeksegment.last_stop, (guint64) aiff->bps,
-          GST_SECOND);
+          gst_util_uint64_scale_ceil (seeksegment.last_stop,
+          (guint64) aiff->bps, GST_SECOND);
     else
       aiff->offset = seeksegment.last_stop;
     GST_LOG_OBJECT (aiff, "offset=%" G_GUINT64_FORMAT, aiff->offset);
@@ -404,7 +385,7 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
   if (stop_type != GST_SEEK_TYPE_NONE) {
     if (aiff->bps > 0)
       aiff->end_offset =
-          uint64_ceiling_scale (stop, (guint64) aiff->bps, GST_SECOND);
+          gst_util_uint64_scale_ceil (stop, (guint64) aiff->bps, GST_SECOND);
     else
       aiff->end_offset = stop;
     GST_LOG_OBJECT (aiff, "end_offset=%" G_GUINT64_FORMAT, aiff->end_offset);
@@ -594,7 +575,8 @@ gst_aiff_parse_calculate_duration (GstAiffParse * aiff)
 
   if (aiff->datasize > 0 && aiff->bps > 0) {
     aiff->duration =
-        uint64_ceiling_scale (aiff->datasize, GST_SECOND, (guint64) aiff->bps);
+        gst_util_uint64_scale_ceil (aiff->datasize, GST_SECOND,
+        (guint64) aiff->bps);
     GST_INFO_OBJECT (aiff, "Got duration %" GST_TIME_FORMAT,
         GST_TIME_ARGS (aiff->duration));
     return TRUE;
@@ -1123,9 +1105,10 @@ iterate_adapter:
 
   if (aiff->bps > 0) {
     /* and timestamps if we have a bitrate, be careful for overflows */
-    timestamp = uint64_ceiling_scale (pos, GST_SECOND, (guint64) aiff->bps);
+    timestamp =
+        gst_util_uint64_scale_ceil (pos, GST_SECOND, (guint64) aiff->bps);
     next_timestamp =
-        uint64_ceiling_scale (nextpos, GST_SECOND, (guint64) aiff->bps);
+        gst_util_uint64_scale_ceil (nextpos, GST_SECOND, (guint64) aiff->bps);
     duration = next_timestamp - timestamp;
 
     /* update current running segment position */
@@ -1345,7 +1328,7 @@ gst_aiff_parse_pad_convert (GstPad * pad,
           break;
         case GST_FORMAT_TIME:
           if (aiffparse->bps > 0) {
-            *dest_value = uint64_ceiling_scale (src_value, GST_SECOND,
+            *dest_value = gst_util_uint64_scale_ceil (src_value, GST_SECOND,
                 (guint64) aiffparse->bps);
             break;
           }
