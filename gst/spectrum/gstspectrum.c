@@ -1012,7 +1012,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           spectrum->accumulated_error += spectrum->error_per_interval;
 
         spectrum->frames_todo = spectrum->frames_per_interval;
-        if (spectrum->accumulated_error >= spectrum->frame_time)
+        if (spectrum->accumulated_error >= GST_SECOND)
           spectrum->frames_todo++;
 
         if (spectrum->post_messages) {
@@ -1078,7 +1078,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           spectrum->accumulated_error += spectrum->error_per_interval;
 
         spectrum->frames_todo = spectrum->frames_per_interval;
-        if (spectrum->accumulated_error >= spectrum->frame_time)
+        if (spectrum->accumulated_error >= GST_SECOND)
           spectrum->frames_todo++;
 
         if (spectrum->post_messages) {
