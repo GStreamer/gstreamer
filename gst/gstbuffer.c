@@ -871,6 +871,8 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize len)
   g_return_val_if_fail (buf1->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (buf2->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (len > 0, NULL);
+  g_return_val_if_fail (len <= gst_buffer_get_size (buf1) +
+      gst_buffer_get_size (buf2) - offset, NULL);
 
   newbuf = gst_buffer_new ();
 

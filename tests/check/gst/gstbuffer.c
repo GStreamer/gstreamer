@@ -212,7 +212,7 @@ GST_START_TEST (test_span)
   sub2 = gst_buffer_create_sub (buffer, 2, 2);
   fail_if (sub2 == NULL, "create_sub of buffer returned NULL");
 
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 3);
+  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
 
@@ -220,7 +220,7 @@ GST_START_TEST (test_span)
   span = gst_buffer_span (sub1, 0, sub2, 4);
   data = gst_buffer_map (span, &size, NULL, GST_MAP_READ);
   fail_unless (size == 4, "spanned buffer is wrong size");
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 4);
+  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
   ASSERT_BUFFER_REFCOUNT (span, "span", 1);
@@ -228,13 +228,13 @@ GST_START_TEST (test_span)
       "spanned buffer contains the wrong data");
   gst_buffer_unmap (span, data, size);
   gst_buffer_unref (span);
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 3);
+  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
 
   /* span from non-contiguous buffers will create new buffers */
   span = gst_buffer_span (sub2, 0, sub1, 4);
   data = gst_buffer_map (span, &size, NULL, GST_MAP_READ);
   fail_unless (size == 4, "spanned buffer is wrong size");
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 3);
+  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
   ASSERT_BUFFER_REFCOUNT (span, "span", 1);
@@ -242,13 +242,13 @@ GST_START_TEST (test_span)
       "spanned buffer contains the wrong data");
   gst_buffer_unmap (span, data, size);
   gst_buffer_unref (span);
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 3);
+  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
 
   /* span with different sizes */
   span = gst_buffer_span (sub1, 1, sub2, 3);
   data = gst_buffer_map (span, &size, NULL, GST_MAP_READ);
   fail_unless (size == 3, "spanned buffer is wrong size");
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 4);
+  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
   ASSERT_BUFFER_REFCOUNT (span, "span", 1);
@@ -256,12 +256,12 @@ GST_START_TEST (test_span)
       "spanned buffer contains the wrong data");
   gst_buffer_unmap (span, data, size);
   gst_buffer_unref (span);
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 3);
+  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
 
   span = gst_buffer_span (sub2, 0, sub1, 3);
   data = gst_buffer_map (span, &size, NULL, GST_MAP_READ);
   fail_unless (size == 3, "spanned buffer is wrong size");
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 3);
+  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
   ASSERT_BUFFER_REFCOUNT (span, "span", 1);
@@ -269,7 +269,7 @@ GST_START_TEST (test_span)
       "spanned buffer contains the wrong data");
   gst_buffer_unmap (span, data, size);
   gst_buffer_unref (span);
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 3);
+  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
 
   /* clean up */
   gst_buffer_unref (sub1);
