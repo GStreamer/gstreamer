@@ -73,7 +73,6 @@ struct _GstVP8Enc
   gboolean auto_alt_ref_frames;
 
   /* state */
-  gboolean force_keyframe;
   gboolean inited;
 
   int n_frames;
