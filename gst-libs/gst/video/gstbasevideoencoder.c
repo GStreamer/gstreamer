@@ -116,6 +116,9 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_src_event));
 
   base_video_encoder->a.at_eos = FALSE;
+
+  /* encoder is expected to do so */
+  base_video_encoder->sink_clipping = TRUE;
 }
 
 static gboolean
