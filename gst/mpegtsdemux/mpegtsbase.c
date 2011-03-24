@@ -307,11 +307,13 @@ mpegts_get_descriptor_from_stream (MpegTSBaseStream * stream, guint8 tag)
   if (descriptors) {
     for (i = 0; i < descriptors->n_values; i++) {
       GValue *value = g_value_array_get_nth (descriptors, i);
-      guint8 *desc = g_value_dup_boxed (value);
-      if (DESC_TAG (desc) == tag) {
-        retval = desc;
+      GString *desc = g_value_dup_boxed (value);
+      if (DESC_TAG (desc->str) == tag) {
+        retval = (guint8 *) desc->str;
+        g_string_free (desc, FALSE);
         break;
-      }
+      } else
+        g_string_free (desc, FALSE);
     }
     g_value_array_free (descriptors);
   }
