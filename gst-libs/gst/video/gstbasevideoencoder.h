@@ -63,18 +63,21 @@ struct _GstBaseVideoEncoder
 {
   GstBaseVideoCodec base_video_codec;
 
-  /*< private >*/
+  /*< protected >*/
   gboolean sink_clipping;
 
   guint64 presentation_frame_number;
   int distance_from_sync;
 
+  gboolean force_keyframe;
+
+  /*< private >*/
+  /* FIXME move to real private part ? */
   gboolean set_output_caps;
 
   gint64 min_latency;
   gint64 max_latency;
 
-  gboolean force_keyframe;
   GstEvent *force_keyunit_event;
 
   union {
