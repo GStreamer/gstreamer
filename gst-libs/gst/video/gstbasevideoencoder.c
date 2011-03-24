@@ -167,42 +167,86 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   GstVideoState *state;
   gboolean ret;
+  gboolean changed = FALSE, u, v;
+  GstVideoFormat fmt;
+  gint w, h, num, den;
 
   base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
   base_video_encoder_class =
       GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
+
+  /* subclass should do something here ... */
+  g_return_val_if_fail (base_video_encoder_class->set_format != NULL, FALSE);
 
   GST_DEBUG_OBJECT (base_video_encoder, "setcaps %" GST_PTR_FORMAT, caps);
 
   state = &GST_BASE_VIDEO_CODEC (base_video_encoder)->state;
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_video_format_parse_caps (caps, &state->format,
-      &state->width, &state->height);
+  ret = gst_video_format_parse_caps (caps, &fmt, &w, &h);
+  if (!ret)
+    goto exit;
 
-  state->fps_n = 0;
-  state->fps_d = 1;
-  gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d);
-  if (state->fps_d == 0) {
-    state->fps_n = 0;
-    state->fps_d = 1;
+  if (fmt != state->format || w != state->width || h != state->height) {
+    changed = TRUE;
+    state->format = fmt;
+    state->width = w;
+    state->height = h;
   }
 
-  state->par_n = 1;
-  state->par_d = 1;
-  gst_video_parse_caps_pixel_aspect_ratio (caps, &state->par_n, &state->par_d);
+  num = 0;
+  den = 1;
+  gst_video_parse_caps_framerate (caps, &num, &den);
+  if (den == 0) {
+    num = 0;
+    den = 1;
+  }
+  if (num != state->fps_n || den != state->fps_d) {
+    changed = TRUE;
+    state->fps_n = num;
+    state->fps_d = den;
+  }
 
-  state->have_interlaced = gst_structure_get_boolean (structure,
-      "interlaced", &state->interlaced);
+  num = 0;
+  den = 1;
+  gst_video_parse_caps_pixel_aspect_ratio (caps, &num, &den);
+  if (den == 0) {
+    num = 0;
+    den = 1;
+  }
+  if (num != state->par_n || den != state->par_d) {
+    changed = TRUE;
+    state->par_n = num;
+    state->par_d = den;
+  }
+
+  u = gst_structure_get_boolean (structure, "interlaced", &v);
+  if (u != state->have_interlaced || v != state->interlaced) {
+    changed = TRUE;
+    state->have_interlaced = u;
+    state->interlaced = v;
+  }
 
   state->clean_width = state->width;
   state->clean_height = state->height;
   state->clean_offset_left = 0;
   state->clean_offset_top = 0;
 
-  ret = base_video_encoder_class->set_format (base_video_encoder,
-      &GST_BASE_VIDEO_CODEC (base_video_encoder)->state);
+  if (changed) {
+    /* arrange draining pending frames */
+    gst_base_video_encoder_drain (base_video_encoder);
 
+    /* and subclass should be ready to configure format at any time around */
+    if (base_video_encoder_class->set_format)
+      ret = base_video_encoder_class->set_format (base_video_encoder, state);
+  } else {
+    /* no need to stir things up */
+    GST_DEBUG_OBJECT (base_video_encoder,
+        "new video format identical to configured format");
+    ret = TRUE;
+  }
+
+exit:
   g_object_unref (base_video_encoder);
 
   if (!ret) {
@@ -496,6 +540,9 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
 
   GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
       g_list_append (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
+
+  /* new data, more finish needed */
+  base_video_encoder->drained = FALSE;
 
   GST_LOG_OBJECT (base_video_encoder, "passing frame pfn %d to subclass",
       frame->presentation_frame_number);
