@@ -698,7 +698,9 @@ AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
 dnl *** decklink  ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DECKLINK, true)
 AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
-   HAVE_DECKLINK=yes
+   if test "x$host" = "xlinux" ; then
+     HAVE_DECKLINK=yes
+   fi
    DECKLINK_CXXFLAGS=
    DECKLINK_LIBS=
    AC_SUBST(DECKLINK_CXXFLAGS)

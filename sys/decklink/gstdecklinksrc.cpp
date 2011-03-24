@@ -1077,7 +1077,7 @@ gst_decklink_src_task (void *priv)
 
   if (decklinksrc->audio_caps == NULL) {
     decklinksrc->audio_caps = gst_caps_new_simple ("audio/x-raw-int",
-        "endianness", G_TYPE_INT, LITTLE_ENDIAN,
+        "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
         "signed", G_TYPE_BOOLEAN, TRUE,
         "depth", G_TYPE_INT, 16,
         "width", G_TYPE_INT, 16,
