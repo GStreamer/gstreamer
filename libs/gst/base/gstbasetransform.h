@@ -143,6 +143,7 @@ struct _GstBaseTransform {
 
 /**
  * GstBaseTransformClass:
+ * @parent_class:   Element parent class
  * @transform_caps: Optional.  Given the pad in this direction and the given
  *                  caps, what caps are allowed on the other pad in this
  *                  element ?
@@ -170,7 +171,7 @@ struct _GstBaseTransform {
  *                  Transform the incoming buffer in-place.
  * @event:          Optional.
  *                  Event handler on the sink pad. This function should return
- *                  TRUE if the base class should forward the event. 
+ *                  TRUE if the base class should forward the event.
  * @src_event:      Optional.
  *                  Event handler on the source pad.
  * @passthrough_on_same_caps: If set to TRUE, passthrough mode will be
