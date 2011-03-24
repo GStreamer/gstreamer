@@ -477,6 +477,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   GstVP8Enc *encoder;
   vpx_codec_enc_cfg_t cfg;
   vpx_codec_err_t status;
+  vpx_image_t *image;
+  guint8 *data = NULL;
 
   encoder = GST_VP8_ENC (base_video_encoder);
   GST_DEBUG_OBJECT (base_video_encoder, "set_format");
@@ -566,6 +568,32 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
       gst_util_uint64_scale (encoder->max_latency,
           state->fps_d * GST_SECOND, state->fps_n));
   encoder->inited = TRUE;
+
+  /* prepare cached image buffer setup */
+  image = &encoder->image;
+  memset (image, 0, sizeof (image));
+
+  image->fmt = VPX_IMG_FMT_I420;
+  image->bps = 12;
+  image->x_chroma_shift = image->y_chroma_shift = 1;
+  image->w = image->d_w = state->width;
+  image->h = image->d_h = state->height;
+
+  image->stride[VPX_PLANE_Y] =
+      gst_video_format_get_row_stride (state->format, 0, state->width);
+  image->stride[VPX_PLANE_U] =
+      gst_video_format_get_row_stride (state->format, 1, state->width);
+  image->stride[VPX_PLANE_V] =
+      gst_video_format_get_row_stride (state->format, 2, state->width);
+  image->planes[VPX_PLANE_Y] =
+      data + gst_video_format_get_component_offset (state->format, 0,
+      state->width, state->height);
+  image->planes[VPX_PLANE_U] =
+      data + gst_video_format_get_component_offset (state->format, 1,
+      state->width, state->height);
+  image->planes[VPX_PLANE_V] =
+      data + gst_video_format_get_component_offset (state->format, 2,
+      state->width, state->height);
 
   return TRUE;
 }
@@ -753,32 +781,18 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 static vpx_image_t *
 gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstBuffer * buffer)
 {
-  vpx_image_t *image = g_slice_new0 (vpx_image_t);
+  vpx_image_t *image = g_slice_new (vpx_image_t);
   guint8 *data = GST_BUFFER_DATA (buffer);
-  GstVideoState *state = &GST_BASE_VIDEO_CODEC (enc)->state;
+  const GstVideoState *state;
 
-  image->fmt = VPX_IMG_FMT_I420;
-  image->bps = 12;
-  image->x_chroma_shift = image->y_chroma_shift = 1;
+  state = gst_base_video_encoder_get_state (GST_BASE_VIDEO_ENCODER (enc));
+
+  memcpy (image, &enc->image, sizeof (*image));
+
   image->img_data = data;
-  image->w = image->d_w = state->width;
-  image->h = image->d_h = state->height;
-
-  image->stride[VPX_PLANE_Y] =
-      gst_video_format_get_row_stride (state->format, 0, state->width);
-  image->stride[VPX_PLANE_U] =
-      gst_video_format_get_row_stride (state->format, 1, state->width);
-  image->stride[VPX_PLANE_V] =
-      gst_video_format_get_row_stride (state->format, 2, state->width);
-  image->planes[VPX_PLANE_Y] =
-      data + gst_video_format_get_component_offset (state->format, 0,
-      state->width, state->height);
-  image->planes[VPX_PLANE_U] =
-      data + gst_video_format_get_component_offset (state->format, 1,
-      state->width, state->height);
-  image->planes[VPX_PLANE_V] =
-      data + gst_video_format_get_component_offset (state->format, 2,
-      state->width, state->height);
+  image->planes[VPX_PLANE_Y] += (data - (guint8 *) NULL);
+  image->planes[VPX_PLANE_U] += (data - (guint8 *) NULL);
+  image->planes[VPX_PLANE_V] += (data - (guint8 *) NULL);
 
   return image;
 }
