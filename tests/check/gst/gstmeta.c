@@ -194,75 +194,6 @@ GST_START_TEST (test_meta_test)
 
 GST_END_TEST;
 
-GST_START_TEST (test_meta_memory)
-{
-  GstBuffer *buffer, *copy;
-  GstMetaMemory *meta;
-  guint8 *data;
-  gsize size;
-  guint i;
-
-  buffer = gst_buffer_new ();
-
-  /* add some memory metadata */
-  meta = gst_buffer_add_meta_memory (buffer, g_malloc (4), g_free, 4, 0);
-  fail_if (meta == NULL);
-  fail_if (meta->mmap_func == NULL);
-  fail_if (meta->munmap_func == NULL);
-
-  /* prepare for writing */
-  data = gst_meta_memory_map (meta, 0, &size, GST_META_MAP_WRITE);
-  fail_if (data == NULL);
-  fail_if (size != 4);
-  for (i = 0; i < 4; i++)
-    data[i] = i;
-  gst_meta_memory_unmap (meta, data, size);
-
-  /* reading */
-  meta = gst_buffer_get_meta_memory (buffer);
-  fail_if (meta == NULL);
-
-  data = gst_meta_memory_map (meta, 0, &size, GST_META_MAP_READ);
-  fail_if (data == NULL);
-  fail_if (size != 4);
-  for (i = 0; i < 4; i++)
-    fail_if (data[i] != i);
-  gst_meta_memory_unmap (meta, data, size);
-
-  /* copy of the buffer */
-  copy = gst_buffer_copy (buffer);
-  /* get metadata of the buffer */
-  meta = gst_buffer_get_meta_memory (copy);
-  fail_if (meta == NULL);
-  data = gst_meta_memory_map (meta, 0, &size, GST_META_MAP_READ);
-  fail_if (data == NULL);
-  fail_if (size != 4);
-  for (i = 0; i < 4; i++)
-    fail_if (data[i] != i);
-  gst_meta_memory_unmap (meta, data, size);
-  gst_buffer_unref (copy);
-
-#if 0
-  /* FIXME, does not work yet */
-  /* make a subbuffer */
-  subbuf = gst_buffer_create_sub (buffer, 1, 3);
-  meta = gst_buffer_get_meta_memory (subbuf);
-  fail_if (meta == NULL);
-  data = gst_meta_memory_map (meta, 0, &size, GST_META_MAP_READ);
-  fail_if (data == NULL);
-  fail_if (size != 3);
-  for (i = 0; i < 3; i++)
-    fail_if (data[i] != i + 1);
-  gst_meta_memory_unmap (meta, data, size);
-  gst_buffer_unref (subbuf);
-#endif
-
-  /* clean up */
-  gst_buffer_unref (buffer);
-}
-
-GST_END_TEST;
-
 static Suite *
 gst_buffermeta_suite (void)
 {
@@ -271,7 +202,6 @@ gst_buffermeta_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_meta_test);
-  tcase_add_test (tc_chain, test_meta_memory);
 
   return s;
 }

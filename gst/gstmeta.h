@@ -181,34 +181,6 @@ const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
 
 /* default metadata */
 
-/* memory metadata */
-typedef struct _GstMetaMemory GstMetaMemory;
-
-const GstMetaInfo *gst_meta_memory_get_info(void);
-#define GST_META_MEMORY_INFO (gst_meta_memory_get_info())
-
-typedef enum {
-  GST_META_MAP_NONE  = 0,
-  GST_META_MAP_READ  = (1 << 0),
-  GST_META_MAP_WRITE = (1 << 1)
-} GstMetaMapFlags;
-
-struct _GstMetaMemory
-{
-  GstMeta      meta;
-
-  gpointer   (*mmap_func)      (GstMetaMemory *meta, gsize offset, gsize *size,
-                                GstMetaMapFlags flags);
-  gboolean   (*munmap_func)    (GstMetaMemory *meta, gpointer data, gsize size);
-};
-
-#define gst_meta_memory_map(m,o,s,f)   ((m)->mmap_func(m, o, s, f))
-#define gst_meta_memory_unmap(m,d,s)   ((m)->munmap_func(m, d, s))
-
-#define gst_buffer_get_meta_memory(b)  ((GstMetaMemory*)gst_buffer_get_meta((b),GST_META_MEMORY_INFO))
-GstMetaMemory * gst_buffer_add_meta_memory (GstBuffer *buffer, gpointer data,
-                                            GFreeFunc free_func,
-                                            gsize size, gsize offset);
 /* timing metadata */
 typedef struct _GstMetaTiming GstMetaTiming;
 

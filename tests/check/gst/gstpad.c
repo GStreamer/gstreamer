@@ -422,7 +422,7 @@ buffer_compare (GstBuffer * buf, const gchar * str, gsize size)
   gboolean res;
   gpointer data;
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_META_MAP_READ);
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
   res = memcmp (data, str, size) == 0;
   gst_buffer_unmap (buf, data, size);
 

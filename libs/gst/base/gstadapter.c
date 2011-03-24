@@ -424,7 +424,7 @@ gst_adapter_map (GstAdapter * adapter, gsize size)
 
     csize = gst_buffer_get_size (cur);
     if (csize >= size + skip) {
-      data = gst_buffer_map (cur, &csize, NULL, GST_META_MAP_READ);
+      data = gst_buffer_map (cur, &csize, NULL, GST_MAP_READ);
       adapter->priv->cdata = data;
       adapter->priv->csize = csize;
       return data + skip;

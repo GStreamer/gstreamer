@@ -69,7 +69,7 @@ check_buffer (GstBuffer * buf, gsize size, const gchar * data)
   gchar *bdata;
   gsize bsize, csize, msize;
 
-  bdata = gst_buffer_map (buf, &bsize, &msize, GST_META_MAP_READ);
+  bdata = gst_buffer_map (buf, &bsize, &msize, GST_MAP_READ);
   csize = size ? size : bsize;
   GST_DEBUG ("%lu %lu %lu", bsize, csize, msize);
   fail_unless (bsize == csize);
