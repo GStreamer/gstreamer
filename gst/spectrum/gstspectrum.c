@@ -1006,14 +1006,12 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
             spectrum->num_frames, spectrum->frames_per_interval,
             GST_TIME_ARGS (spectrum->accumulated_error));
 
-        if (spectrum->accumulated_error >= GST_SECOND)
-          spectrum->accumulated_error -= GST_SECOND;
-        else
-          spectrum->accumulated_error += spectrum->error_per_interval;
-
         spectrum->frames_todo = spectrum->frames_per_interval;
-        if (spectrum->accumulated_error >= GST_SECOND)
+        if (spectrum->accumulated_error >= GST_SECOND) {
+          spectrum->accumulated_error -= GST_SECOND;
           spectrum->frames_todo++;
+        }
+        spectrum->accumulated_error += spectrum->error_per_interval;
 
         if (spectrum->post_messages) {
           GstMessage *m;
@@ -1072,14 +1070,12 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
             spectrum->num_frames, spectrum->frames_per_interval,
             GST_TIME_ARGS (spectrum->accumulated_error));
 
-        if (spectrum->accumulated_error >= GST_SECOND)
-          spectrum->accumulated_error -= GST_SECOND;
-        else
-          spectrum->accumulated_error += spectrum->error_per_interval;
-
         spectrum->frames_todo = spectrum->frames_per_interval;
-        if (spectrum->accumulated_error >= GST_SECOND)
+        if (spectrum->accumulated_error >= GST_SECOND) {
+          spectrum->accumulated_error -= GST_SECOND;
           spectrum->frames_todo++;
+        }
+        spectrum->accumulated_error += spectrum->error_per_interval;
 
         if (spectrum->post_messages) {
           GstMessage *m;
