@@ -338,6 +338,8 @@ gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
       gst_schro_wrap_schro_buffer (schro_encoder_encode_sequence_header
       (schro_enc->encoder));
 
+  schro_enc->granule_offset = ~0;
+
   return TRUE;
 }
 
@@ -413,10 +415,6 @@ gst_schro_enc_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_schro_enc_start (GstBaseVideoEncoder * base_video_encoder)
 {
-  GstSchroEnc *schro_enc = GST_SCHRO_ENC (base_video_encoder);
-
-  schro_enc->granule_offset = ~0;
-
   return TRUE;
 }
 

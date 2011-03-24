@@ -421,6 +421,10 @@ gst_dirac_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   dirac_enc->enc_ctx.decode_flag = 0;
   dirac_enc->enc_ctx.instr_flag = 0;
 
+  dirac_enc->granule_offset = ~0;
+
+  dirac_enc->encoder = dirac_encoder_init (&dirac_enc->enc_ctx, FALSE);
+
   return TRUE;
 }
 
@@ -821,12 +825,6 @@ error:
 static gboolean
 gst_dirac_enc_start (GstBaseVideoEncoder * base_video_encoder)
 {
-  GstDiracEnc *dirac_enc = GST_DIRAC_ENC (base_video_encoder);
-
-  dirac_enc->granule_offset = ~0;
-
-  dirac_enc->encoder = dirac_encoder_init (&dirac_enc->enc_ctx, FALSE);
-
   return TRUE;
 }
 

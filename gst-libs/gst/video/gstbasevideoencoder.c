@@ -164,9 +164,6 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   ret = base_video_encoder_class->set_format (base_video_encoder,
       &GST_BASE_VIDEO_CODEC (base_video_encoder)->state);
-  if (ret) {
-    ret = base_video_encoder_class->start (base_video_encoder);
-  }
 
   g_object_unref (base_video_encoder);
 
@@ -489,6 +486,10 @@ gst_base_video_encoder_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_base_video_encoder_reset (base_video_encoder);
+      gst_base_video_encoder_reset (base_video_encoder);
+      if (base_video_encoder_class->start) {
+        base_video_encoder_class->start (base_video_encoder);
+      }
       break;
     default:
       break;
