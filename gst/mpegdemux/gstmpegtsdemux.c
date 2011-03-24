@@ -365,16 +365,9 @@ gst_mpegts_demux_reset (GstMpegTSDemux * demux)
       if (stream->PAT.entries)
         g_array_free (stream->PAT.entries, TRUE);
 
-      switch (stream->PID_type) {
-        case PID_TYPE_ELEMENTARY:
-          gst_pes_filter_uninit (&stream->filter);
-          break;
-        case PID_TYPE_PROGRAM_ASSOCIATION:
-        case PID_TYPE_CONDITIONAL_ACCESS:
-        case PID_TYPE_PROGRAM_MAP:
-          gst_section_filter_uninit (&stream->section_filter);
-          break;
-      }
+      gst_pes_filter_uninit (&stream->filter);
+      gst_section_filter_uninit (&stream->section_filter);
+
       if (stream->pes_buffer) {
         gst_buffer_unref (stream->pes_buffer);
         stream->pes_buffer = NULL;
