@@ -106,10 +106,6 @@ int gst_base_video_encoder_get_width (GstBaseVideoEncoder *coder);
 int gst_base_video_encoder_get_height (GstBaseVideoEncoder *coder);
 const GstVideoState *gst_base_video_encoder_get_state (GstBaseVideoEncoder *coder);
 
-guint64 gst_base_video_encoder_get_timestamp_offset (GstBaseVideoEncoder *coder);
-
-GstVideoFrame *gst_base_video_encoder_get_frame (GstBaseVideoEncoder *coder,
-    int frame_number);
 GstVideoFrame *gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *coder);
 GstFlowReturn gst_base_video_encoder_finish_frame (GstBaseVideoEncoder *base_video_encoder,
     GstVideoFrame *frame);
