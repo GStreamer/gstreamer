@@ -166,7 +166,11 @@ gst_h264_params_store_nal (GstH264Params * params, GstBuffer ** store, gint id,
   gst_nal_bs_get_data (bs, &data, &size);
   buf = gst_buffer_new_and_alloc (size);
   memcpy (GST_BUFFER_DATA (buf), data, size);
-  gst_buffer_replace (store + id, buf);
+
+  if (store[id])
+    gst_buffer_unref (store[id]);
+
+  store[id] = buf;
 }
 
 static GstH264ParamsSPS *
