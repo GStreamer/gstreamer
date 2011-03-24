@@ -149,6 +149,7 @@ GST_INPUT_SELECTOR_WAIT
 <FILE>element-queue</FILE>
 <TITLE>queue</TITLE>
 GstQueue
+GstQueueLeaky
 <SUBSECTION Standard>
 GstQueueClass
 GST_QUEUE
