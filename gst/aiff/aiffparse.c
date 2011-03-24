@@ -842,8 +842,8 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
         } else {
           gst_buffer_unref (ssndbuf);
         }
-        /* 8 byte chunk header, 16 byte SSND header */
-        aiff->offset += 24;
+        /* 8 byte chunk header, 8 byte SSND header */
+        aiff->offset += 16;
 
         datasize = size - 16;
 
