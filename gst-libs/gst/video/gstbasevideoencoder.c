@@ -75,6 +75,14 @@ gst_base_video_encoder_class_init (GstBaseVideoEncoderClass * klass)
 static void
 gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
 {
+  base_video_encoder->presentation_frame_number = 0;
+  base_video_encoder->distance_from_sync = 0;
+  base_video_encoder->force_keyframe = FALSE;
+
+  base_video_encoder->set_output_caps = FALSE;
+  base_video_encoder->min_latency = 0;
+  base_video_encoder->max_latency = 0;
+
   if (base_video_encoder->force_keyunit_event) {
     gst_event_unref (base_video_encoder->force_keyunit_event);
     base_video_encoder->force_keyunit_event = NULL;
