@@ -474,7 +474,98 @@ static gboolean
 gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GstVideoState * state)
 {
+  GstVP8Enc *encoder;
+  vpx_codec_enc_cfg_t cfg;
+  vpx_codec_err_t status;
+
+  encoder = GST_VP8_ENC (base_video_encoder);
   GST_DEBUG_OBJECT (base_video_encoder, "set_format");
+
+  if (encoder->inited) {
+    GST_DEBUG_OBJECT (base_video_encoder, "refusing renegotiation");
+    return FALSE;
+  }
+
+  status = vpx_codec_enc_config_default (&vpx_codec_vp8_cx_algo, &cfg, 0);
+  if (status != VPX_CODEC_OK) {
+    GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
+        ("Failed to get default encoder configuration"), ("%s",
+            gst_vpx_error_name (status)));
+    return FALSE;
+  }
+
+  cfg.g_w = state->width;
+  cfg.g_h = state->height;
+  cfg.g_timebase.num = state->fps_d;
+  cfg.g_timebase.den = state->fps_n;
+
+  cfg.g_error_resilient = encoder->error_resilient;
+  cfg.g_lag_in_frames = encoder->max_latency;
+  cfg.g_threads = encoder->threads;
+  cfg.rc_end_usage = encoder->mode;
+  if (encoder->bitrate) {
+    cfg.rc_target_bitrate = encoder->bitrate / 1000;
+  } else {
+    cfg.rc_min_quantizer = 63 - encoder->quality * 5.0;
+    cfg.rc_max_quantizer = 63 - encoder->quality * 5.0;
+    cfg.rc_target_bitrate = encoder->bitrate;
+  }
+
+  cfg.kf_mode = VPX_KF_AUTO;
+  cfg.kf_min_dist = 0;
+  cfg.kf_max_dist = encoder->max_keyframe_distance;
+
+  cfg.g_pass = encoder->multipass_mode;
+  if (encoder->multipass_mode == VPX_RC_FIRST_PASS) {
+    encoder->first_pass_cache_content = g_byte_array_sized_new (4096);
+  } else if (encoder->multipass_mode == VPX_RC_LAST_PASS) {
+    GError *err = NULL;
+
+    if (!encoder->multipass_cache_file) {
+      GST_ELEMENT_ERROR (encoder, RESOURCE, OPEN_READ,
+          ("No multipass cache file provided"), (NULL));
+      return FALSE;
+    }
+
+    if (!g_file_get_contents (encoder->multipass_cache_file,
+            (gchar **) & encoder->last_pass_cache_content.buf,
+            &encoder->last_pass_cache_content.sz, &err)) {
+      GST_ELEMENT_ERROR (encoder, RESOURCE, OPEN_READ,
+          ("Failed to read multipass cache file provided"), ("%s",
+              err->message));
+      g_error_free (err);
+      return FALSE;
+    }
+    cfg.rc_twopass_stats_in = encoder->last_pass_cache_content;
+  }
+
+  status = vpx_codec_enc_init (&encoder->encoder, &vpx_codec_vp8_cx_algo,
+      &cfg, 0);
+  if (status != VPX_CODEC_OK) {
+    GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
+        ("Failed to initialize encoder"), ("%s", gst_vpx_error_name (status)));
+    return FALSE;
+  }
+
+  status = vpx_codec_control (&encoder->encoder, VP8E_SET_CPUUSED, 0);
+  if (status != VPX_CODEC_OK) {
+    GST_WARNING_OBJECT (encoder, "Failed to set VP8E_SET_CPUUSED to 0: %s",
+        gst_vpx_error_name (status));
+  }
+
+  status =
+      vpx_codec_control (&encoder->encoder, VP8E_SET_ENABLEAUTOALTREF,
+      (encoder->auto_alt_ref_frames ? 1 : 0));
+  if (status != VPX_CODEC_OK) {
+    GST_WARNING_OBJECT (encoder,
+        "Failed to set VP8E_ENABLEAUTOALTREF to %d: %s",
+        (encoder->auto_alt_ref_frames ? 1 : 0), gst_vpx_error_name (status));
+  }
+
+  gst_base_video_encoder_set_latency (base_video_encoder, 0,
+      gst_util_uint64_scale (encoder->max_latency,
+          state->fps_d * GST_SECOND, state->fps_n));
+  encoder->inited = TRUE;
 
   return TRUE;
 }
@@ -711,93 +802,6 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 
   GST_DEBUG_OBJECT (base_video_encoder, "size %d %d", state->width,
       state->height);
-
-  if (!encoder->inited) {
-    vpx_codec_enc_cfg_t cfg;
-
-    status = vpx_codec_enc_config_default (&vpx_codec_vp8_cx_algo, &cfg, 0);
-    if (status != VPX_CODEC_OK) {
-      GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
-          ("Failed to get default encoder configuration"), ("%s",
-              gst_vpx_error_name (status)));
-      return FALSE;
-    }
-
-    cfg.g_w = state->width;
-    cfg.g_h = state->height;
-    cfg.g_timebase.num = state->fps_d;
-    cfg.g_timebase.den = state->fps_n;
-
-    cfg.g_error_resilient = encoder->error_resilient;
-    cfg.g_lag_in_frames = encoder->max_latency;
-    cfg.g_threads = encoder->threads;
-    cfg.rc_end_usage = encoder->mode;
-    if (encoder->bitrate) {
-      cfg.rc_target_bitrate = encoder->bitrate / 1000;
-    } else {
-      cfg.rc_min_quantizer = 63 - encoder->quality * 5.0;
-      cfg.rc_max_quantizer = 63 - encoder->quality * 5.0;
-      cfg.rc_target_bitrate = encoder->bitrate;
-    }
-
-    cfg.kf_mode = VPX_KF_AUTO;
-    cfg.kf_min_dist = 0;
-    cfg.kf_max_dist = encoder->max_keyframe_distance;
-
-    cfg.g_pass = encoder->multipass_mode;
-    if (encoder->multipass_mode == VPX_RC_FIRST_PASS) {
-      encoder->first_pass_cache_content = g_byte_array_sized_new (4096);
-    } else if (encoder->multipass_mode == VPX_RC_LAST_PASS) {
-      GError *err = NULL;
-
-
-      if (!encoder->multipass_cache_file) {
-        GST_ELEMENT_ERROR (encoder, RESOURCE, OPEN_READ,
-            ("No multipass cache file provided"), (NULL));
-        return GST_FLOW_ERROR;
-      }
-
-      if (!g_file_get_contents (encoder->multipass_cache_file,
-              (gchar **) & encoder->last_pass_cache_content.buf,
-              &encoder->last_pass_cache_content.sz, &err)) {
-        GST_ELEMENT_ERROR (encoder, RESOURCE, OPEN_READ,
-            ("Failed to read multipass cache file provided"), ("%s",
-                err->message));
-        g_error_free (err);
-        return GST_FLOW_ERROR;
-      }
-      cfg.rc_twopass_stats_in = encoder->last_pass_cache_content;
-    }
-
-    status = vpx_codec_enc_init (&encoder->encoder, &vpx_codec_vp8_cx_algo,
-        &cfg, 0);
-    if (status != VPX_CODEC_OK) {
-      GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
-          ("Failed to initialize encoder"), ("%s",
-              gst_vpx_error_name (status)));
-      return GST_FLOW_ERROR;
-    }
-
-    status = vpx_codec_control (&encoder->encoder, VP8E_SET_CPUUSED, 0);
-    if (status != VPX_CODEC_OK) {
-      GST_WARNING_OBJECT (encoder, "Failed to set VP8E_SET_CPUUSED to 0: %s",
-          gst_vpx_error_name (status));
-    }
-
-    status =
-        vpx_codec_control (&encoder->encoder, VP8E_SET_ENABLEAUTOALTREF,
-        (encoder->auto_alt_ref_frames ? 1 : 0));
-    if (status != VPX_CODEC_OK) {
-      GST_WARNING_OBJECT (encoder,
-          "Failed to set VP8E_ENABLEAUTOALTREF to %d: %s",
-          (encoder->auto_alt_ref_frames ? 1 : 0), gst_vpx_error_name (status));
-    }
-
-    gst_base_video_encoder_set_latency (base_video_encoder, 0,
-        gst_util_uint64_scale (encoder->max_latency,
-            state->fps_d * GST_SECOND, state->fps_n));
-    encoder->inited = TRUE;
-  }
 
   image = gst_vp8_enc_buffer_to_image (encoder, frame->sink_buffer);
 
