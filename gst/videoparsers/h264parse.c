@@ -1040,7 +1040,7 @@ gst_h264_params_free (GstH264Params * params)
   for (i = 0; i < MAX_SPS_COUNT; i++)
     gst_buffer_replace (&params->sps_nals[i], NULL);
   for (i = 0; i < MAX_PPS_COUNT; i++)
-    gst_buffer_replace (&params->sps_nals[i], NULL);
+    gst_buffer_replace (&params->pps_nals[i], NULL);
 
   g_free (params);
 }
