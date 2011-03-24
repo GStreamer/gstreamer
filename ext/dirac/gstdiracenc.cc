@@ -150,7 +150,7 @@ static gboolean gst_dirac_enc_set_format (GstBaseVideoEncoder *
 static gboolean gst_dirac_enc_start (GstBaseVideoEncoder * base_video_encoder);
 static gboolean gst_dirac_enc_stop (GstBaseVideoEncoder * base_video_encoder);
 static gboolean gst_dirac_enc_finish (GstBaseVideoEncoder * base_video_encoder);
-static gboolean gst_dirac_enc_handle_frame (GstBaseVideoEncoder *
+static GstFlowReturn gst_dirac_enc_handle_frame (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstFlowReturn gst_dirac_enc_shape_output (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
@@ -855,12 +855,12 @@ gst_dirac_enc_finish (GstBaseVideoEncoder * base_video_encoder)
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
 {
   GstDiracEnc *dirac_enc = GST_DIRAC_ENC (base_video_encoder);
-  gboolean ret;
+  GstFlowReturn ret;
   int r;
   const GstVideoState *state;
   uint8_t *data;
@@ -963,7 +963,7 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   }
   if (r != (int) GST_BUFFER_SIZE (frame->sink_buffer)) {
     GST_ERROR ("failed to push picture");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   GST_DEBUG ("handle frame");
@@ -976,7 +976,7 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 
   ret = gst_dirac_enc_process (dirac_enc, FALSE);
 
-  return (ret == GST_FLOW_OK);
+  return ret;
 }
 
 #if 0

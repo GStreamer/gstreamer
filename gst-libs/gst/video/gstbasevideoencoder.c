@@ -492,6 +492,7 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   GstBaseVideoEncoder *base_video_encoder;
   GstBaseVideoEncoderClass *klass;
   GstVideoFrame *frame;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
   klass = GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
@@ -547,12 +548,12 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (base_video_encoder, "passing frame pfn %d to subclass",
       frame->presentation_frame_number);
 
-  klass->handle_frame (base_video_encoder, frame);
+  ret = klass->handle_frame (base_video_encoder, frame);
 
 done:
   g_object_unref (base_video_encoder);
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static GstStateChangeReturn
