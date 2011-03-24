@@ -140,6 +140,9 @@ gst_celt_dec_reset (GstCeltDec * dec)
 
   gst_buffer_replace (&dec->streamheader, NULL);
   gst_buffer_replace (&dec->vorbiscomment, NULL);
+  g_list_foreach (dec->extra_headers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->extra_headers);
+  dec->extra_headers = NULL;
 
   memset (&dec->header, 0, sizeof (dec->header));
 }
@@ -205,6 +208,22 @@ celt_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
       if (res != GST_FLOW_OK)
         goto done;
       gst_buffer_replace (&dec->vorbiscomment, buf);
+    }
+
+    g_list_foreach (dec->extra_headers, (GFunc) gst_mini_object_unref, NULL);
+    g_list_free (dec->extra_headers);
+    dec->extra_headers = NULL;
+
+    if (gst_value_array_get_size (streamheader) > 2) {
+      gint i, n;
+
+      n = gst_value_array_get_size (streamheader);
+      for (i = 2; i < n; i++) {
+        header = gst_value_array_get_value (streamheader, i);
+        buf = gst_value_get_buffer (header);
+        dec->extra_headers =
+            g_list_prepend (dec->extra_headers, gst_buffer_ref (buf));
+      }
     }
   }
 
