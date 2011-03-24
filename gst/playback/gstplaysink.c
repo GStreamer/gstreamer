@@ -1645,7 +1645,7 @@ notify_mute_cb (GObject * object, GParamSpec * pspec, GstPlaySink * playsink)
  *  +-------------------------------------------------------------+
  */
 static GstPlayAudioChain *
-gen_audio_chain (GstPlaySink * playsink, gboolean raw)
+gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 {
   GstPlayAudioChain *chain;
   GstBin *bin;
@@ -1691,19 +1691,24 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
 
   /* we have to add a queue when we need to decouple for the video sink in
    * visualisations */
-  GST_DEBUG_OBJECT (playsink, "adding audio queue");
-  chain->queue = gst_element_factory_make ("queue", "aqueue");
-  if (chain->queue == NULL) {
-    post_missing_element_message (playsink, "queue");
-    GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
-        (_("Missing element '%s' - check your GStreamer installation."),
-            "queue"), ("audio playback and visualizations might not work"));
+  if (queue) {
+    GST_DEBUG_OBJECT (playsink, "adding audio queue");
+    chain->queue = gst_element_factory_make ("queue", "aqueue");
+    if (chain->queue == NULL) {
+      post_missing_element_message (playsink, "queue");
+      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+          (_("Missing element '%s' - check your GStreamer installation."),
+              "queue"), ("audio playback and visualizations might not work"));
+      head = chain->sink;
+      prev = NULL;
+    } else {
+      g_object_set (chain->queue, "silent", TRUE, NULL);
+      gst_bin_add (bin, chain->queue);
+      prev = head = chain->queue;
+    }
+  } else {
     head = chain->sink;
     prev = NULL;
-  } else {
-    g_object_set (chain->queue, "silent", TRUE, NULL);
-    gst_bin_add (bin, chain->queue);
-    prev = head = chain->queue;
   }
 
   /* find ts-offset element */
@@ -2393,7 +2398,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
     if (!playsink->audiochain) {
       GST_DEBUG_OBJECT (playsink, "creating new audio chain");
-      playsink->audiochain = gen_audio_chain (playsink, raw);
+      playsink->audiochain = gen_audio_chain (playsink, raw, need_vis);
     }
 
     if (!playsink->audio_sinkpad_stream_synchronizer) {
