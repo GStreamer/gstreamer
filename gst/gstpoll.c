@@ -1375,8 +1375,13 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
           t = 0;
         }
 
-        wait_ret = WSAWaitForMultipleEvents (set->active_events->len,
-            (HANDLE *) set->active_events->data, FALSE, t, FALSE);
+        if (set->active_events->len != 0) {
+          wait_ret = WSAWaitForMultipleEvents (set->active_events->len,
+              (HANDLE *) set->active_events->data, FALSE, t, FALSE);
+        } else {
+          wait_ret = WSA_WAIT_FAILED;
+          WSASetLastError (WSA_INVALID_PARAMETER);
+        }
 
         if (ignore_count == 0 && wait_ret == WSA_WAIT_TIMEOUT) {
           res = 0;
