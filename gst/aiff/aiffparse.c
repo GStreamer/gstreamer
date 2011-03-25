@@ -90,10 +90,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS ";"
+        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
     );
 
 GST_BOILERPLATE (GstAiffParse, gst_aiff_parse, GstElement, GST_TYPE_ELEMENT);
