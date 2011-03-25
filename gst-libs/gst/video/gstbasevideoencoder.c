@@ -1,5 +1,8 @@
 /* GStreamer
  * Copyright (C) 2008 David Schleef <ds@schleef.org>
+ * Copyright (C) 2011 Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>.
+ * Copyright (C) 2011 Nokia Corporation. All rights reserved.
+ *   Contact: Stefan Kost <stefan.kost@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -15,6 +18,87 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+
+/**
+ * SECTION:gstbasevideoencoder
+ * @short_description: Base class for video encoders
+ * @see_also: #GstBaseTransform
+ *
+ * This base class is for video encoders turning raw video into
+ * encoded video data.
+ *
+ * GstBaseVideoEncoder and subclass should cooperate as follows.
+ * <orderedlist>
+ * <listitem>
+ *   <itemizedlist><title>Configuration</title>
+ *   <listitem><para>
+ *     Initially, GstBaseVideoEncoder calls @start when the encoder element
+ *     is activated, which allows subclass to perform any global setup.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     GstBaseVideoEncoder calls @set_format to inform subclass of the format
+ *     of input video data that it is about to receive.  Subclass should
+ *     setup for encoding and configure base class as appropriate
+ *     (e.g. latency). While unlikely, it might be called more than once,
+ *     if changing input parameters require reconfiguration.  Baseclass
+ *     will ensure that processing of current configuration is finished.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     GstBaseVideoEncoder calls @stop at end of all processing.
+ *   </para></listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * <listitem>
+ *   <itemizedlist>
+ *   <title>Data processing</title>
+ *     <listitem><para>
+ *       Base class collects input data and metadata into a frame and hands
+ *       this to subclass' @handle_frame.
+ *     </para></listitem>
+ *     <listitem><para>
+ *       If codec processing results in encoded data, subclass should call
+ *       @gst_base_video_encoder_finish_frame to have encoded data pushed
+ *       downstream.
+ *     </para></listitem>
+ *     <listitem><para>
+ *       If implemented, baseclass calls subclass @shape_output which then sends
+ *       data downstream in desired form.  Otherwise, it is sent as-is.
+ *     </para></listitem>
+ *     <listitem><para>
+ *       GstBaseVideoEncoderClass will handle both srcpad and sinkpad events.
+ *       Sink events will be passed to subclass if @event callback has been
+ *       provided.
+ *     </para></listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * <listitem>
+ *   <itemizedlist><title>Shutdown phase</title>
+ *   <listitem><para>
+ *     GstBaseVideoEncoder class calls @stop to inform the subclass that data
+ *     parsing will be stopped.
+ *   </para></listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * </orderedlist>
+ *
+ * Subclass is responsible for providing pad template caps for
+ * source and sink pads. The pads need to be named "sink" and "src". It should
+ * also be able to provide fixed src pad caps in @getcaps by the time it calls
+ * @gst_base_video_encoder_finish_frame.
+ *
+ * Things that subclass need to take care of:
+ * <itemizedlist>
+ *   <listitem><para>Provide pad templates</para></listitem>
+ *   <listitem><para>
+ *      Provide source pad caps in @get_caps.
+ *   </para></listitem>
+ *   <listitem><para>
+ *      Accept data in @handle_frame and provide encoded results to
+ *      @gst_base_video_encoder_finish_frame.
+ *   </para></listitem>
+ * </itemizedlist>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -595,12 +679,26 @@ gst_base_video_encoder_change_state (GstElement * element,
   return ret;
 }
 
+/**
+ * gst_base_video_encoder_finish_frame:
+ * @base_video_encoder: a #GstBaseVideoEncoder
+ * @frame: an encoded #GstVideoFrame 
+ *
+ * @frame must have a valid encoded data buffer, whose metadata fields
+ * are then appropriately set according to frame data.
+ * It is subsequently pushed downstream or provided to @shape_output.
+ * In any case, the frame is considered finished and released.
+ *
+ * Returns: a #GstFlowReturn resulting from sending data downstream
+ */
 GstFlowReturn
 gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
 {
   GstFlowReturn ret;
   GstBaseVideoEncoderClass *base_video_encoder_class;
+
+  g_return_val_if_fail (frame->src_buffer != NULL, GST_FLOW_ERROR);
 
   base_video_encoder_class =
       GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
@@ -635,6 +733,10 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
       g_list_remove (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
 
+  /* FIXME get rid of this ?
+   * seems a roundabout way that adds little benefit to simply get
+   * and subsequently set.  subclass is adult enough to set_caps itself ...
+   * so simply check/ensure/assert that src pad caps are set by now */
   if (!base_video_encoder->set_output_caps) {
     GstCaps *caps;
 
@@ -699,12 +801,26 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   return ret;
 }
 
+/**
+ * gst_base_video_encoder_get_state:
+ * @base_video_encoder: a #GstBaseVideoEncoder
+ *
+ * Returns: #GstVideoState describing format of video data.
+ */
 const GstVideoState *
 gst_base_video_encoder_get_state (GstBaseVideoEncoder * base_video_encoder)
 {
   return &GST_BASE_VIDEO_CODEC (base_video_encoder)->state;
 }
 
+/**
+ * gst_base_video_encoder_set_latency:
+ * @base_video_encoder: a #GstBaseVideoEncoder
+ * @min_latency: minimum latency
+ * @max_latency: maximum latency
+ *
+ * Informs baseclass of encoding latency.
+ */
 void
 gst_base_video_encoder_set_latency (GstBaseVideoEncoder * base_video_encoder,
     GstClockTime min_latency, GstClockTime max_latency)
@@ -721,6 +837,14 @@ gst_base_video_encoder_set_latency (GstBaseVideoEncoder * base_video_encoder,
       gst_message_new_latency (GST_OBJECT_CAST (base_video_encoder)));
 }
 
+/**
+ * gst_base_video_encoder_set_latency_fields:
+ * @base_video_encoder: a #GstBaseVideoEncoder
+ * @fields: latency in fields
+ *
+ * Informs baseclass of encoding latency in terms of fields (both min
+ * and max latency).
+ */
 void
 gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *
     base_video_encoder, int n_fields)
@@ -735,6 +859,12 @@ gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *
 
 }
 
+/**
+ * gst_base_video_encoder_get_oldest_frame:
+ * @base_video_encoder: a #GstBaseVideoEncoder
+ *
+ * Returns: oldest unfinished pending #GstVideoFrame
+ */
 GstVideoFrame *
 gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *
     base_video_encoder)
@@ -747,3 +877,6 @@ gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *
     return NULL;
   return (GstVideoFrame *) (g->data);
 }
+
+/* FIXME there could probably be more of these;
+ * get by presentation_number, by presentation_time ? */
