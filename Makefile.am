@@ -23,6 +23,8 @@ DISTCLEANFILES = _stdint.h gst-rtsp.spec
 include $(top_srcdir)/common/release.mak
 include $(top_srcdir)/common/po.mak
 
+include $(top_srcdir)/common/coverage/lcov.mak
+
 check-valgrind:
 	cd tests/check && make check-valgrind
 
