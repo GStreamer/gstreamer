@@ -31,6 +31,8 @@
 
 #include "gstplaysink.h"
 #include "gststreamsynchronizer.h"
+#include "gstplaysinkvideoconvert.h"
+#include "gstplaysinkaudioconvert.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_sink_debug);
 #define GST_CAT_DEFAULT gst_play_sink_debug
@@ -59,7 +61,6 @@ typedef struct
   GstPad *sinkpad;
   GstElement *queue;
   GstElement *conv;
-  GstElement *resample;
   GstElement *volume;           /* element with the volume property */
   gboolean sink_volume;         /* if the volume was provided by the sink */
   GstElement *mute;             /* element with the mute property */
@@ -81,7 +82,6 @@ typedef struct
   GstPad *sinkpad;
   GstElement *queue;
   GstElement *conv;
-  GstElement *scale;
   GstElement *sink;
   gboolean async;
   GstElement *ts_offset;
@@ -1278,46 +1278,19 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     head = prev = chain->queue;
   }
 
-  if (raw && !(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)) {
-    GST_DEBUG_OBJECT (playsink, "creating ffmpegcolorspace");
-    chain->conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
-    if (chain->conv == NULL) {
-      post_missing_element_message (playsink, "ffmpegcolorspace");
-      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
-          (_("Missing element '%s' - check your GStreamer installation."),
-              "ffmpegcolorspace"), ("video rendering might fail"));
+  if (!(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)) {
+    GST_DEBUG_OBJECT (playsink, "creating videoconverter");
+    chain->conv =
+        g_object_new (GST_TYPE_PLAY_SINK_VIDEO_CONVERT, "name", "vconv", NULL);
+    gst_bin_add (bin, chain->conv);
+    if (prev) {
+      if (!gst_element_link_pads_full (prev, "src", chain->conv, "sink",
+              GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
+        goto link_failed;
     } else {
-      gst_bin_add (bin, chain->conv);
-      if (prev) {
-        if (!gst_element_link_pads_full (prev, "src", chain->conv, "sink",
-                GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
-          goto link_failed;
-      } else {
-        head = chain->conv;
-      }
-      prev = chain->conv;
+      head = chain->conv;
     }
-
-    GST_DEBUG_OBJECT (playsink, "creating videoscale");
-    chain->scale = gst_element_factory_make ("videoscale", "vscale");
-    if (chain->scale == NULL) {
-      post_missing_element_message (playsink, "videoscale");
-      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
-          (_("Missing element '%s' - check your GStreamer installation."),
-              "videoscale"), ("possibly a liboil version mismatch?"));
-    } else {
-      /* Add black borders if necessary to keep the DAR */
-      g_object_set (chain->scale, "add-borders", TRUE, NULL);
-      gst_bin_add (bin, chain->scale);
-      if (prev) {
-        if (!gst_element_link_pads_full (prev, "src", chain->scale, "sink",
-                GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
-          goto link_failed;
-      } else {
-        head = chain->scale;
-      }
-      prev = chain->scale;
-    }
+    prev = chain->conv;
   }
 
   if (prev) {
@@ -1388,8 +1361,7 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
 
   chain = playsink->videochain;
 
-  if (chain->chain.raw != raw)
-    return FALSE;
+  chain->chain.raw = raw;
 
   /* if the chain was active we don't do anything */
   if (GST_PLAY_CHAIN (chain)->activated == TRUE)
@@ -1768,54 +1740,32 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
     chain->sink_volume = FALSE;
   }
 
-  if (raw && !(playsink->flags & GST_PLAY_FLAG_NATIVE_AUDIO)) {
+  if (!(playsink->flags & GST_PLAY_FLAG_NATIVE_AUDIO) || (!have_volume
+          && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME)) {
     GST_DEBUG_OBJECT (playsink, "creating audioconvert");
-    chain->conv = gst_element_factory_make ("audioconvert", "aconv");
-    if (chain->conv == NULL) {
-      post_missing_element_message (playsink, "audioconvert");
-      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
-          (_("Missing element '%s' - check your GStreamer installation."),
-              "audioconvert"), ("possibly a liboil version mismatch?"));
+    chain->conv =
+        g_object_new (GST_TYPE_PLAY_SINK_AUDIO_CONVERT, "name", "aconv", NULL);
+    gst_bin_add (bin, chain->conv);
+    if (prev) {
+      if (!gst_element_link_pads_full (prev, "src", chain->conv, "sink",
+              GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
+        goto link_failed;
     } else {
-      gst_bin_add (bin, chain->conv);
-      if (prev) {
-        if (!gst_element_link_pads_full (prev, "src", chain->conv, "sink",
-                GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
-          goto link_failed;
-      } else {
-        head = chain->conv;
-      }
-      prev = chain->conv;
+      head = chain->conv;
     }
+    prev = chain->conv;
 
-    GST_DEBUG_OBJECT (playsink, "creating audioresample");
-    chain->resample = gst_element_factory_make ("audioresample", "aresample");
-    if (chain->resample == NULL) {
-      post_missing_element_message (playsink, "audioresample");
-      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
-          (_("Missing element '%s' - check your GStreamer installation."),
-              "audioresample"), ("possibly a liboil version mismatch?"));
-    } else {
-      gst_bin_add (bin, chain->resample);
-      if (prev) {
-        if (!gst_element_link_pads_full (prev, "src", chain->resample, "sink",
-                GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
-          goto link_failed;
-      } else {
-        head = chain->resample;
-      }
-      prev = chain->resample;
-    }
+    GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv)->use_converters =
+        !(playsink->flags & GST_PLAY_FLAG_NATIVE_AUDIO);
+    GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv)->use_volume = (!have_volume
+        && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME);
 
     if (!have_volume && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME) {
-      GST_DEBUG_OBJECT (playsink, "creating volume");
-      chain->volume = gst_element_factory_make ("volume", "volume");
-      if (chain->volume == NULL) {
-        post_missing_element_message (playsink, "volume");
-        GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
-            (_("Missing element '%s' - check your GStreamer installation."),
-                "volume"), ("possibly a liboil version mismatch?"));
-      } else {
+      GstPlaySinkAudioConvert *conv =
+          GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
+
+      if (conv->volume) {
+        chain->volume = conv->volume;
         have_volume = TRUE;
 
         g_signal_connect (chain->volume, "notify::volume",
@@ -1830,16 +1780,6 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
         g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume,
             NULL);
         g_object_set (G_OBJECT (chain->mute), "mute", playsink->mute, NULL);
-        gst_bin_add (bin, chain->volume);
-
-        if (prev) {
-          if (!gst_element_link_pads_full (prev, "src", chain->volume, "sink",
-                  GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
-            goto link_failed;
-        } else {
-          head = chain->volume;
-        }
-        prev = chain->volume;
       }
     }
   }
@@ -1921,8 +1861,7 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
 
   chain = playsink->audiochain;
 
-  if (chain->chain.raw != raw)
-    return FALSE;
+  chain->chain.raw = raw;
 
   /* if the chain was active we don't do anything */
   if (GST_PLAY_CHAIN (chain)->activated == TRUE)
@@ -1967,29 +1906,35 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
       g_signal_connect (chain->mute, "notify::mute",
           G_CALLBACK (notify_mute_cb), playsink);
     }
+
+    GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv)->use_volume = FALSE;
   } else {
+    GstPlaySinkAudioConvert *conv =
+        GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
+
     /* no volume, we need to add a volume element when we can */
+    conv->use_volume = TRUE;
     GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
-    if (!raw) {
-      GST_LOG_OBJECT (playsink, "non-raw format, can't do soft volume control");
 
-      disconnect_chain (chain, playsink);
-      chain->volume = NULL;
-      chain->mute = NULL;
-    } else {
-      /* both last and current chain are raw audio, there should be a volume
-       * element already, unless the sink changed from one with a volume
-       * property to one that hasn't got a volume property, in which case we
-       * re-generate the chain */
-      if (chain->volume == NULL) {
-        GST_DEBUG_OBJECT (playsink, "no existing volume element to re-use");
-        /* undo background state change done earlier */
-        gst_element_set_state (chain->sink, GST_STATE_NULL);
-        return FALSE;
-      }
+    /* Disconnect signals */
+    disconnect_chain (chain, playsink);
 
-      GST_DEBUG_OBJECT (playsink, "reusing existing volume element");
+    if (conv->volume) {
+      chain->volume = conv->volume;
+      chain->mute = chain->volume;
+
+      g_signal_connect (chain->volume, "notify::volume",
+          G_CALLBACK (notify_volume_cb), playsink);
+
+      g_signal_connect (chain->mute, "notify::mute",
+          G_CALLBACK (notify_mute_cb), playsink);
+
+      /* configure with the latest volume and mute */
+      g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
+      g_object_set (G_OBJECT (chain->mute), "mute", playsink->mute, NULL);
     }
+
+    GST_DEBUG_OBJECT (playsink, "reusing existing volume element");
   }
   return TRUE;
 }
