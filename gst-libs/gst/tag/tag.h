@@ -445,7 +445,8 @@ GList *                 gst_tag_to_vorbis_comments              (const GstTagLis
                                                                  const gchar *          tag);
 
 /* functions to convert GstBuffers with vorbiscomment contents to GstTagLists and back */
-GstTagList *            gst_tag_list_from_vorbiscomment_buffer  (const GstBuffer *      buffer,
+GstTagList *            gst_tag_list_from_vorbiscomment         (const guint8 *         data,
+                                                                 gsize                  size,
                                                                  const guint8 *         id_data,
                                                                  const guint            id_data_length,
                                                                  gchar **               vendor_string);
@@ -471,7 +472,7 @@ gboolean                gst_tag_list_add_id3_image (GstTagList   * tag_list,
                                                     guint          id3_picture_type);
 
 /* functions to  convert GstBuffers with xmp packets contents to GstTagLists and back */
-GstTagList *            gst_tag_list_from_xmp_buffer  (const GstBuffer *  buffer);
+GstTagList *            gst_tag_list_from_xmp_buffer  (GstBuffer *  buffer);
 GstBuffer *             gst_tag_list_to_xmp_buffer    (const GstTagList * list,
                                                        gboolean           read_only);
 
@@ -482,12 +483,12 @@ GstBuffer *             gst_tag_list_to_exif_buffer (const GstTagList * taglist,
 
 GstBuffer *             gst_tag_list_to_exif_buffer_with_tiff_header (const GstTagList * taglist);
 
-GstTagList *            gst_tag_list_from_exif_buffer (const GstBuffer * buffer,
+GstTagList *            gst_tag_list_from_exif_buffer (GstBuffer * buffer,
                                                        gint byte_order,
                                                        guint32 base_offset);
 
 GstTagList *            gst_tag_list_from_exif_buffer_with_tiff_header (
-                                                      const GstBuffer * buffer);
+                                                      GstBuffer * buffer);
 
 /* other tag-related functions */
 

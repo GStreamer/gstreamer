@@ -1132,11 +1132,11 @@ read_one_tag (GstTagList * list, const gchar * tag, XmpTag * xmptag,
  * Since: 0.10.29
  */
 GstTagList *
-gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
+gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
 {
   GstTagList *list = NULL;
-  const gchar *xps, *xp1, *xp2, *xpe, *ns, *ne;
-  guint len, max_ft_len;
+  gchar *xps, *xp1, *xp2, *xpe, *ns, *ne;
+  gsize len, max_ft_len;
   gboolean in_tag;
   gchar *part, *pp;
   guint i;
@@ -1157,10 +1157,10 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
   xmp_tags_initialize ();
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  g_return_val_if_fail (GST_BUFFER_SIZE (buffer) > 0, NULL);
 
-  xps = (const gchar *) GST_BUFFER_DATA (buffer);
-  len = GST_BUFFER_SIZE (buffer);
+  xps = gst_buffer_map (buffer, &len, NULL, GST_MAP_READ);
+  g_return_val_if_fail (len > 0, NULL);
+
   xpe = &xps[len + 1];
 
   /* check header and footer */
@@ -1365,6 +1365,8 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
   }
   g_free (part);
 
+  gst_buffer_unmap (buffer, xps, len);
+
   return list;
 
   /* Errors */
@@ -1530,53 +1532,57 @@ GstBuffer *
 gst_tag_list_to_xmp_buffer (const GstTagList * list, gboolean read_only)
 {
   GstBuffer *buffer = NULL;
-  GString *data = g_string_sized_new (4096);
+  GString *str = g_string_sized_new (4096);
   guint i;
+  gsize size;
+  gpointer data;
 
   xmp_tags_initialize ();
 
   g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
 
   /* xmp header */
-  g_string_append (data,
+  g_string_append (str,
       "<?xpacket begin=\"\xEF\xBB\xBF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n");
-  g_string_append (data,
+  g_string_append (str,
       "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"GStreamer\">\n");
-  g_string_append (data,
+  g_string_append (str,
       "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
   i = 0;
   while (ns_match[i].ns_prefix) {
-    g_string_append_printf (data, " xmlns:%s=\"%s\"", ns_match[i].ns_prefix,
+    g_string_append_printf (str, " xmlns:%s=\"%s\"", ns_match[i].ns_prefix,
         ns_match[i].ns_uri);
     i++;
   }
-  g_string_append (data, ">\n");
-  g_string_append (data, "<rdf:Description rdf:about=\"\">\n");
+  g_string_append (str, ">\n");
+  g_string_append (str, "<rdf:Description rdf:about=\"\">\n");
 
   /* iterate the taglist */
-  gst_tag_list_foreach (list, write_one_tag, data);
+  gst_tag_list_foreach (list, write_one_tag, str);
 
   /* xmp footer */
-  g_string_append (data, "</rdf:Description>\n");
-  g_string_append (data, "</rdf:RDF>\n");
-  g_string_append (data, "</x:xmpmeta>\n");
+  g_string_append (str, "</rdf:Description>\n");
+  g_string_append (str, "</rdf:RDF>\n");
+  g_string_append (str, "</x:xmpmeta>\n");
 
   if (!read_only) {
     /* the xmp spec recommand to add 2-4KB padding for in-place editable xmp */
     guint i;
 
     for (i = 0; i < 32; i++) {
-      g_string_append (data, "                " "                "
+      g_string_append (str, "                " "                "
           "                " "                " "\n");
     }
   }
-  g_string_append_printf (data, "<?xpacket end=\"%c\"?>\n",
+  g_string_append_printf (str, "<?xpacket end=\"%c\"?>\n",
       (read_only ? 'r' : 'w'));
 
+  size = str->len + 1;
+  data = g_string_free (str, FALSE);
+
   buffer = gst_buffer_new ();
-  GST_BUFFER_SIZE (buffer) = data->len + 1;
-  GST_BUFFER_DATA (buffer) = (guint8 *) g_string_free (data, FALSE);
-  GST_BUFFER_MALLOCDATA (buffer) = GST_BUFFER_DATA (buffer);
+  gst_buffer_take_memory (buffer,
+      gst_memory_new_wrapped (0, data, g_free, size, 0, size));
 
   return buffer;
 }

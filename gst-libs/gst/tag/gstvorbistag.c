@@ -365,7 +365,8 @@ convert_failed:
 
 /**
  * gst_tag_list_from_vorbiscomment_buffer:
- * @buffer: buffer to convert
+ * @data: data to convert
+ * @size: size of @data
  * @id_data: identification data at start of stream
  * @id_data_length: length of identification data
  * @vendor_string: pointer to a string that should take the vendor string
@@ -378,7 +379,7 @@ convert_failed:
  *          given vorbiscomment buffer or NULL on error.
  */
 GstTagList *
-gst_tag_list_from_vorbiscomment_buffer (const GstBuffer * buffer,
+gst_tag_list_from_vorbiscomment (const guint8 * data, gsize size,
     const guint8 * id_data, const guint id_data_length, gchar ** vendor_string)
 {
 #define ADVANCE(x) G_STMT_START{                                                \
@@ -394,15 +395,12 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer * buffer,
   gchar *cur, *value;
   guint cur_size;
   guint iterations;
-  guint8 *data;
-  guint size, value_len;
+  guint value_len;
   GstTagList *list;
 
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (id_data != NULL || id_data_length == 0, NULL);
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
   list = gst_tag_list_new ();
 
   if (size < 11 || size <= id_data_length + 4)
@@ -471,6 +469,8 @@ gst_tag_to_coverart (const GValue * image_value)
   GstStructure *mime_struct;
   GstBuffer *buffer;
   GList *l = NULL;
+  guint8 *data;
+  gsize size;
 
   g_return_val_if_fail (image_value != NULL, NULL);
 
@@ -479,12 +479,14 @@ gst_tag_to_coverart (const GValue * image_value)
   mime_struct = gst_caps_get_structure (buffer->caps, 0);
   mime_type = gst_structure_get_name (mime_struct);
 
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   if (strcmp (mime_type, "text/uri-list") == 0) {
     /* URI reference */
-    coverart_data = g_strndup ((gchar *) buffer->data, buffer->size);
+    coverart_data = g_strndup ((gchar *) data, size);
   } else {
-    coverart_data = g_base64_encode (buffer->data, buffer->size);
+    coverart_data = g_base64_encode (data, size);
   }
+  gst_buffer_unmap (buffer, data, size);
 
   data_result = g_strdup_printf ("COVERART=%s", coverart_data);
   mime_result = g_strdup_printf ("COVERARTMIME=%s", mime_type);
@@ -647,7 +649,7 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
     const gchar * vendor_string)
 {
   GstBuffer *buffer;
-  guint8 *data;
+  guint8 *data, *odata;
   guint i;
   GList *l;
   MyForEach my_data = { 0, 0, NULL };
@@ -663,8 +665,9 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
   required_size = id_data_length + 4 + vendor_len + 4 + 1;
   gst_tag_list_foreach ((GstTagList *) list, write_one_tag, &my_data);
   required_size += 4 * my_data.count + my_data.data_count;
+
   buffer = gst_buffer_new_and_alloc (required_size);
-  data = GST_BUFFER_DATA (buffer);
+  odata = data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
   if (id_data_length > 0) {
     memcpy (data, id_data, id_data_length);
     data += id_data_length;
@@ -692,6 +695,7 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
   g_list_foreach (my_data.entries, (GFunc) g_free, NULL);
   g_list_free (my_data.entries);
   *data = 1;
+  gst_buffer_unmap (buffer, odata, required_size);
 
   return buffer;
 }

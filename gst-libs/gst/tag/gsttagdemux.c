@@ -102,6 +102,7 @@ struct _GstTagDemuxPrivate
 
   GstTagDemuxState state;
   GstBuffer *collect;
+  gsize collect_size;
   GstCaps *src_caps;
 
   GstTagList *event_tags;
@@ -254,6 +255,7 @@ gst_tag_demux_reset (GstTagDemux * tagdemux)
   tagdemux->priv->send_tag_event = FALSE;
 
   gst_buffer_replace (buffer_p, NULL);
+  tagdemux->priv->collect_size = 0;
   gst_caps_replace (caps_p, NULL);
 
   gst_tag_demux_remove_srcpad (tagdemux);
@@ -388,18 +390,23 @@ gst_tag_demux_remove_srcpad (GstTagDemux * demux)
  * also return TRUE and set *buf_ref to NULL if the buffer was before
  * the start of the data */
 static gboolean
-gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref)
+gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref,
+    gsize * buf_size)
 {
   GstBuffer *buf = *buf_ref;
 
   guint trim_start = 0;
-  guint out_size = GST_BUFFER_SIZE (buf);
-  guint64 out_offset = GST_BUFFER_OFFSET (buf);
+  guint out_size, bsize;
+  guint64 out_offset, boffset;
   gboolean need_sub = FALSE;
+
+  bsize = out_size = gst_buffer_get_size (buf);
+  boffset = out_offset = GST_BUFFER_OFFSET (buf);
 
   /* Adjust offset and length */
   if (!GST_BUFFER_OFFSET_IS_VALID (buf)) {
     /* Can't change anything without an offset */
+    *buf_size = bsize;
     return TRUE;
   }
 
@@ -439,21 +446,22 @@ gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref)
   }
 
   if (need_sub == TRUE) {
-    if (out_size != GST_BUFFER_SIZE (buf) || !gst_buffer_is_writable (buf)) {
+    if (out_size != bsize || !gst_buffer_is_writable (buf)) {
       GstBuffer *sub;
 
       GST_DEBUG_OBJECT (tagdemux, "Sub-buffering to trim size %d offset %"
           G_GINT64_FORMAT " to %d offset %" G_GINT64_FORMAT,
-          GST_BUFFER_SIZE (buf), GST_BUFFER_OFFSET (buf), out_size, out_offset);
+          bsize, boffset, out_size, out_offset);
 
       sub = gst_buffer_create_sub (buf, trim_start, out_size);
       g_return_val_if_fail (sub != NULL, FALSE);
       gst_buffer_unref (buf);
       *buf_ref = buf = sub;
+      *buf_size = out_size;
     } else {
       GST_DEBUG_OBJECT (tagdemux, "Adjusting buffer from size %d offset %"
           G_GINT64_FORMAT " to %d offset %" G_GINT64_FORMAT,
-          GST_BUFFER_SIZE (buf), GST_BUFFER_OFFSET (buf), out_size, out_offset);
+          bsize, boffset, out_size, out_offset);
     }
 
     GST_BUFFER_OFFSET (buf) = out_offset;
@@ -485,7 +493,7 @@ gst_tag_demux_chain_parse_tag (GstTagDemux * demux, GstBuffer * collect)
   guint tagsize = 0;
   guint available;
 
-  g_assert (gst_buffer_is_metadata_writable (collect));
+  g_assert (gst_buffer_is_writable (collect));
 
   klass = GST_TAG_DEMUX_CLASS (G_OBJECT_GET_CLASS (demux));
 
@@ -501,7 +509,7 @@ gst_tag_demux_chain_parse_tag (GstTagDemux * demux, GstBuffer * collect)
   g_assert (klass->identify_tag != NULL);
   g_assert (klass->parse_tag != NULL);
 
-  available = GST_BUFFER_SIZE (collect);
+  available = gst_buffer_get_size (collect);
 
   if (available < klass->min_start_size) {
     GST_DEBUG_OBJECT (demux, "Only %u bytes available, but %u needed "
@@ -535,13 +543,13 @@ gst_tag_demux_chain_parse_tag (GstTagDemux * demux, GstBuffer * collect)
       return;                   /* wait for more data */
     }
 
-    saved_size = GST_BUFFER_SIZE (collect);
-    GST_BUFFER_SIZE (collect) = tagsize;
+    saved_size = gst_buffer_get_size (collect);
+    gst_buffer_set_size (collect, tagsize);
     newsize = tagsize;
 
     parse_ret = klass->parse_tag (demux, collect, TRUE, &newsize, &tags);
 
-    GST_BUFFER_SIZE (collect) = saved_size;
+    gst_buffer_set_size (collect, saved_size);
 
     switch (parse_ret) {
       case GST_TAG_DEMUX_RESULT_OK:
@@ -572,14 +580,17 @@ static GstFlowReturn
 gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstTagDemux *demux;
+  gsize size;
 
   demux = GST_TAG_DEMUX (GST_PAD_PARENT (pad));
+
+  size = gst_buffer_get_size (buf);
 
   /* Update our segment last_stop info */
   if (demux->priv->segment.format == GST_FORMAT_BYTES) {
     if (GST_BUFFER_OFFSET_IS_VALID (buf))
       demux->priv->segment.last_stop = GST_BUFFER_OFFSET (buf);
-    demux->priv->segment.last_stop += GST_BUFFER_SIZE (buf);
+    demux->priv->segment.last_stop += size;
   } else if (demux->priv->segment.format == GST_FORMAT_TIME) {
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buf))
       demux->priv->segment.last_stop = GST_BUFFER_TIMESTAMP (buf);
@@ -592,12 +603,12 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
   } else {
     demux->priv->collect = gst_buffer_join (demux->priv->collect, buf);
   }
+  demux->priv->collect_size += size;
   buf = NULL;
 
   switch (demux->priv->state) {
     case GST_TAG_DEMUX_READ_START_TAG:
-      demux->priv->collect =
-          gst_buffer_make_metadata_writable (demux->priv->collect);
+      demux->priv->collect = gst_buffer_make_writable (demux->priv->collect);
       gst_tag_demux_chain_parse_tag (demux, demux->priv->collect);
       if (demux->priv->state != GST_TAG_DEMUX_TYPEFINDING)
         break;
@@ -605,19 +616,20 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
     case GST_TAG_DEMUX_TYPEFINDING:{
       GstTypeFindProbability probability = 0;
       GstBuffer *typefind_buf = NULL;
+      gsize typefind_size;
       GstCaps *caps;
 
-      if (GST_BUFFER_SIZE (demux->priv->collect) <
+      if (demux->priv->collect_size <
           TYPE_FIND_MIN_SIZE + demux->priv->strip_start)
         break;                  /* Go get more data first */
 
       GST_DEBUG_OBJECT (demux, "Typefinding with size %d",
-          GST_BUFFER_SIZE (demux->priv->collect));
+          demux->priv->collect_size);
 
       /* Trim the buffer and adjust offset for typefinding */
       typefind_buf = demux->priv->collect;
       gst_buffer_ref (typefind_buf);
-      if (!gst_tag_demux_trim_buffer (demux, &typefind_buf))
+      if (!gst_tag_demux_trim_buffer (demux, &typefind_buf, &typefind_size))
         return GST_FLOW_UNEXPECTED;
 
       if (typefind_buf == NULL)
@@ -627,7 +639,7 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
           typefind_buf, &probability);
 
       if (caps == NULL) {
-        if (GST_BUFFER_SIZE (typefind_buf) < TYPE_FIND_MAX_SIZE) {
+        if (typefind_size < TYPE_FIND_MAX_SIZE) {
           /* Just break for more data */
           gst_buffer_unref (typefind_buf);
           return GST_FLOW_OK;
@@ -639,6 +651,7 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
         gst_buffer_unref (typefind_buf);
         gst_buffer_unref (demux->priv->collect);
         demux->priv->collect = NULL;
+        demux->priv->collect_size = 0;
         return GST_FLOW_ERROR;
       }
       gst_buffer_unref (typefind_buf);
@@ -660,12 +673,14 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
     }
     case GST_TAG_DEMUX_STREAMING:{
       GstBuffer *outbuf = NULL;
+      gsize outbuf_size;
 
       /* Trim the buffer and adjust offset */
       if (demux->priv->collect) {
         outbuf = demux->priv->collect;
         demux->priv->collect = NULL;
-        if (!gst_tag_demux_trim_buffer (demux, &outbuf))
+        demux->priv->collect_size = 0;
+        if (!gst_tag_demux_trim_buffer (demux, &outbuf, &outbuf_size))
           return GST_FLOW_UNEXPECTED;
       }
       if (outbuf) {
@@ -693,7 +708,7 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
         }
 
         /* Ensure the caps are set correctly */
-        outbuf = gst_buffer_make_metadata_writable (outbuf);
+        outbuf = gst_buffer_make_writable (outbuf);
         gst_buffer_set_caps (outbuf, GST_PAD_CAPS (demux->priv->srcpad));
 
         GST_LOG_OBJECT (demux, "Pushing buffer %p", outbuf);
@@ -885,6 +900,7 @@ gst_tag_demux_pull_end_tag (GstTagDemux * demux, GstTagList ** tags)
   gboolean res = FALSE;
   guint64 offset;
   guint tagsize;
+  gsize bsize;
 
   klass = GST_TAG_DEMUX_CLASS (G_OBJECT_GET_CLASS (demux));
 
@@ -913,9 +929,11 @@ gst_tag_demux_pull_end_tag (GstTagDemux * demux, GstTagList ** tags)
     goto done;
   }
 
-  if (GST_BUFFER_SIZE (buffer) < klass->min_end_size) {
+  bsize = gst_buffer_get_size (buffer);
+
+  if (bsize < klass->min_end_size) {
     GST_DEBUG_OBJECT (demux, "Only managed to read %u bytes from file "
-        "(required: %u bytes)", GST_BUFFER_SIZE (buffer), klass->min_end_size);
+        "(required: %u bytes)", bsize, klass->min_end_size);
     goto done;
   }
 
@@ -937,7 +955,7 @@ gst_tag_demux_pull_end_tag (GstTagDemux * demux, GstTagList ** tags)
     g_assert (tagsize >= klass->min_end_size);
 
     /* Get buffer that's exactly the requested size */
-    if (GST_BUFFER_SIZE (buffer) != tagsize) {
+    if (bsize != tagsize) {
       gst_buffer_unref (buffer);
       buffer = NULL;
 
@@ -953,22 +971,24 @@ gst_tag_demux_pull_end_tag (GstTagDemux * demux, GstTagList ** tags)
         goto done;
       }
 
-      if (GST_BUFFER_SIZE (buffer) < tagsize) {
+      bsize = gst_buffer_get_size (buffer);
+
+      if (bsize < tagsize) {
         GST_DEBUG_OBJECT (demux, "Only managed to read %u bytes from file",
-            GST_BUFFER_SIZE (buffer));
+            bsize);
         goto done;
       }
     }
 
     GST_BUFFER_OFFSET (buffer) = offset;
 
-    saved_size = GST_BUFFER_SIZE (buffer);
-    GST_BUFFER_SIZE (buffer) = tagsize;
+    saved_size = bsize;
+    gst_buffer_set_size (buffer, tagsize);
     newsize = tagsize;
 
     parse_ret = klass->parse_tag (demux, buffer, FALSE, &newsize, &new_tags);
 
-    GST_BUFFER_SIZE (buffer) = saved_size;
+    gst_buffer_set_size (buffer, saved_size);
 
     switch (parse_ret) {
       case GST_TAG_DEMUX_RESULT_OK:
@@ -1015,6 +1035,7 @@ gst_tag_demux_pull_start_tag (GstTagDemux * demux, GstTagList ** tags)
   gboolean have_tag;
   gboolean res = FALSE;
   guint req, tagsize;
+  gsize bsize;
 
   klass = GST_TAG_DEMUX_CLASS (G_OBJECT_GET_CLASS (demux));
 
@@ -1037,9 +1058,11 @@ gst_tag_demux_pull_start_tag (GstTagDemux * demux, GstTagList ** tags)
     goto done;
   }
 
-  if (GST_BUFFER_SIZE (buffer) < klass->min_start_size) {
+  bsize = gst_buffer_get_size (buffer);
+
+  if (bsize < klass->min_start_size) {
     GST_DEBUG_OBJECT (demux, "Only managed to read %u bytes from file - "
-        "no tag in this file", GST_BUFFER_SIZE (buffer));
+        "no tag in this file", bsize);
     goto done;
   }
 
@@ -1061,7 +1084,7 @@ gst_tag_demux_pull_start_tag (GstTagDemux * demux, GstTagList ** tags)
     /* Now pull the entire tag */
     g_assert (tagsize >= klass->min_start_size);
 
-    if (GST_BUFFER_SIZE (buffer) < tagsize) {
+    if (bsize < tagsize) {
       gst_buffer_unref (buffer);
       buffer = NULL;
 
@@ -1072,21 +1095,23 @@ gst_tag_demux_pull_start_tag (GstTagDemux * demux, GstTagList ** tags)
         goto done;
       }
 
-      if (GST_BUFFER_SIZE (buffer) < tagsize) {
+      bsize = gst_buffer_get_size (buffer);
+
+      if (bsize < tagsize) {
         GST_DEBUG_OBJECT (demux, "Only managed to read %u bytes from file",
-            GST_BUFFER_SIZE (buffer));
+            bsize);
         GST_ELEMENT_ERROR (demux, STREAM, DECODE,
             (_("Failed to read tag: not enough data")), (NULL));
         goto done;
       }
     }
 
-    saved_size = GST_BUFFER_SIZE (buffer);
-    GST_BUFFER_SIZE (buffer) = tagsize;
+    saved_size = bsize;
+    gst_buffer_set_size (buffer, tagsize);
     newsize = tagsize;
     parse_ret = klass->parse_tag (demux, buffer, TRUE, &newsize, &new_tags);
 
-    GST_BUFFER_SIZE (buffer) = saved_size;
+    gst_buffer_set_size (buffer, saved_size);
 
     switch (parse_ret) {
       case GST_TAG_DEMUX_RESULT_OK:
@@ -1272,6 +1297,7 @@ gst_tag_demux_read_range (GstTagDemux * demux,
   GstFlowReturn ret;
   guint64 in_offset;
   guint in_length;
+  gsize size;
 
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
@@ -1294,7 +1320,7 @@ gst_tag_demux_read_range (GstTagDemux * demux,
   ret = gst_pad_pull_range (demux->priv->sinkpad, in_offset, in_length, buffer);
 
   if (ret == GST_FLOW_OK && *buffer) {
-    if (!gst_tag_demux_trim_buffer (demux, buffer))
+    if (!gst_tag_demux_trim_buffer (demux, buffer, &size))
       goto read_beyond_end;
 
     /* this should only happen in streaming mode */

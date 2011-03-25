@@ -553,10 +553,9 @@ gst_tag_image_data_to_image_buffer (const guint8 * image_data,
     guint image_data_len, GstTagImageType image_type)
 {
   const gchar *name;
-
   GstBuffer *image;
-
   GstCaps *caps;
+  guint8 *data;
 
   g_return_val_if_fail (image_data != NULL, NULL);
   g_return_val_if_fail (image_data_len > 0, NULL);
@@ -565,14 +564,14 @@ gst_tag_image_data_to_image_buffer (const guint8 * image_data,
   GST_DEBUG ("image data len: %u bytes", image_data_len);
 
   /* allocate space for a NUL terminator for an uri too */
-  image = gst_buffer_try_new_and_alloc (image_data_len + 1);
-  if (image == NULL) {
-    GST_WARNING ("failed to allocate buffer of %d for image", image_data_len);
-    return NULL;
-  }
+  image = gst_buffer_new_and_alloc (image_data_len + 1);
+  if (image == NULL)
+    goto alloc_failed;
 
-  memcpy (GST_BUFFER_DATA (image), image_data, image_data_len);
-  GST_BUFFER_DATA (image)[image_data_len] = '\0';
+  data = gst_buffer_map (image, NULL, NULL, GST_MAP_WRITE);
+  memcpy (data, image_data, image_data_len);
+  data[image_data_len] = '\0';
+  gst_buffer_unmap (image, data, image_data_len + 1);
 
   /* Find GStreamer media type, can't trust declared type */
   caps = gst_type_find_helper_for_buffer (NULL, image, NULL);
@@ -596,7 +595,7 @@ gst_tag_image_data_to_image_buffer (const guint8 * image_data,
    * to keep the original size of the image
    */
   if (!g_str_equal (name, "text/uri-list"))
-    GST_BUFFER_SIZE (image) = image_data_len;
+    gst_buffer_set_size (image, image_data_len);
 
   if (image_type != GST_TAG_IMAGE_TYPE_NONE) {
     GST_LOG ("Setting image type: %d", image_type);
@@ -623,4 +622,11 @@ error:
       gst_caps_unref (caps);
     return NULL;
   }
+alloc_failed:
+  {
+    GST_WARNING ("failed to allocate buffer of %d for image", image_data_len);
+    gst_buffer_unref (image);
+    return NULL;
+  }
+
 }
