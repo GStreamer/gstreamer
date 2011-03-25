@@ -128,8 +128,21 @@ static gboolean gst_base_video_encoder_src_query (GstPad * pad,
     GstQuery * query);
 
 
-GST_BOILERPLATE (GstBaseVideoEncoder, gst_base_video_encoder, GstBaseVideoCodec,
-    GST_TYPE_BASE_VIDEO_CODEC);
+static void
+_do_init (GType object_type)
+{
+  const GInterfaceInfo preset_interface_info = {
+    NULL,                       /* interface_init */
+    NULL,                       /* interface_finalize */
+    NULL                        /* interface_data */
+  };
+
+  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
+      &preset_interface_info);
+}
+
+GST_BOILERPLATE_FULL (GstBaseVideoEncoder, gst_base_video_encoder,
+    GstBaseVideoCodec, GST_TYPE_BASE_VIDEO_CODEC, _do_init);
 
 static void
 gst_base_video_encoder_base_init (gpointer g_class)
