@@ -41,5 +41,5 @@ libgstcairo_la_LIBADD = \
 libgstcairo_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcairo_la_LIBTOOLFLAGS = --tag=disable-static
 
-EXTRA_DIST = cairo-marshal.list
+EXTRA_DIST = gstcairo-marshal.list
 
