@@ -13,6 +13,7 @@ libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				gstv4l2object.c \
 				gstv4l2bufferpool.c \
 				gstv4l2src.c \
+				gstv4l2radio.c \
 				gstv4l2tuner.c \
 				gstv4l2vidorient.c \
 				v4l2_calls.c \
@@ -51,6 +52,7 @@ noinst_HEADERS = \
 	gstv4l2object.h \
 	gstv4l2sink.h \
 	gstv4l2src.h \
+	gstv4l2radio.h \
 	gstv4l2tuner.h \
 	gstv4l2vidorient.h \
 	gstv4l2xoverlay.h \
