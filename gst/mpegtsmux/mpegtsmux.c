@@ -192,8 +192,8 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_M2TS_MODE,
       g_param_spec_boolean ("m2ts-mode", "M2TS(192 bytes) Mode",
-          "Defines what packet size to use, normal TS format ie .ts(188 bytes) "
-          "or Blue-Ray disc ie .m2ts(192 bytes).", FALSE,
+          "Set to TRUE to output Blu-Ray disc format with 192 byte packets. "
+          "FALSE for standard TS format with 188 byte packets.", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PAT_INTERVAL,
@@ -810,140 +810,193 @@ mpegtsmux_release_pad (GstElement * element, GstPad * pad)
   gst_element_remove_pad (element, pad);
 }
 
+static void
+new_packet_common_init (MpegTsMux * mux, GstBuffer * buf, guint8 * data,
+    guint len)
+{
+  /* Packets should be at least 188 bytes, but check anyway */
+  g_return_if_fail (len >= 2);
+
+  if (!mux->streamheader_sent) {
+    guint pid = ((data[1] & 0x1f) << 8) | data[2];
+    /* if it's a PAT or a PMT */
+    if (pid == 0x00 || (pid >= TSMUX_START_PMT_PID && pid < TSMUX_START_ES_PID)) {
+      mux->streamheader =
+          g_list_append (mux->streamheader, gst_buffer_copy (buf));
+    } else if (mux->streamheader) {
+      mpegtsdemux_set_header_on_caps (mux);
+      mux->streamheader_sent = TRUE;
+    }
+  }
+
+  /* Set the caps on the buffer only after possibly setting the stream headers
+   * into the pad caps above */
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
+
+  if (mux->is_delta) {
+    GST_LOG_OBJECT (mux, "marking as delta unit");
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  } else {
+    GST_DEBUG_OBJECT (mux, "marking as non-delta unit");
+    mux->is_delta = TRUE;
+  }
+}
+
+static gboolean
+new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
+{
+  GstBuffer *buf, *out_buf;
+  GstFlowReturn ret;
+  guint64 chunk_bytes;
+
+  GST_LOG_OBJECT (mux, "Have buffer with new_pcr=%" G_GINT64_FORMAT " size %d",
+      new_pcr, len);
+
+  buf = gst_buffer_new_and_alloc (M2TS_PACKET_LENGTH);
+  if (G_UNLIKELY (buf == NULL)) {
+    GST_ELEMENT_ERROR (mux, STREAM, MUX,
+        ("Failed allocating output buffer"), (NULL));
+    mux->last_flow_ret = GST_FLOW_ERROR;
+    return FALSE;
+  }
+
+  new_packet_common_init (mux, buf, data, len);
+
+  /* copies the TS data of 188 bytes to the m2ts buffer at an offset
+     of 4 bytes to leave space for writing the timestamp later */
+  memcpy (GST_BUFFER_DATA (buf) + 4, data, len);
+
+  if (new_pcr < 0) {
+    /* If theres no pcr in current ts packet then just add the packet
+       to the adapter for later output when we see a PCR */
+    GST_LOG_OBJECT (mux, "Accumulating non-PCR packet");
+    gst_adapter_push (mux->adapter, buf);
+    return TRUE;
+  }
+
+  chunk_bytes = gst_adapter_available (mux->adapter);
+
+  /* We have a new PCR, output anything in the adapter */
+  if (mux->first_pcr) {
+    /* We can't generate sensible timestamps for anything that might
+     * be in the adapter preceding the first PCR and will hit a divide
+     * by zero, so empty the adapter. This is probably a null op. */
+    gst_adapter_clear (mux->adapter);
+    /* Warn if we threw anything away */
+    if (chunk_bytes) {
+      GST_ELEMENT_WARNING (mux, STREAM, MUX,
+          ("Discarding %d bytes from stream preceding first PCR",
+              chunk_bytes / M2TS_PACKET_LENGTH * NORMAL_TS_PACKET_LENGTH),
+          (NULL));
+      chunk_bytes = 0;
+    }
+    mux->first_pcr = FALSE;
+  }
+
+  if (chunk_bytes) {
+    /* Start the PCR offset counting at 192 bytes: At the end of the packet
+     * that had the last PCR */
+    guint64 pcr_bytes = M2TS_PACKET_LENGTH, ts_rate;
+
+    /* Include the pending packet size to get the ts_rate right */
+    chunk_bytes += M2TS_PACKET_LENGTH;
+
+    /* calculate rate based on latest and previous pcr values */
+    ts_rate = gst_util_uint64_scale (chunk_bytes, CLOCK_FREQ_SCR,
+        (new_pcr - mux->previous_pcr));
+    GST_LOG_OBJECT (mux, "Processing pending packets with ts_rate %"
+        G_GUINT64_FORMAT, ts_rate);
+
+    while (1) {
+      guint64 cur_pcr;
+
+      /* Loop, pulling packets of the adapter, updating their 4 byte
+       * timestamp header and pushing */
+
+      /* The header is the bottom 30 bits of the PCR, apparently not
+       * encoded into base + ext as in the packets themselves, so
+       * we can just interpolate, mask and insert */
+      cur_pcr = (mux->previous_pcr +
+          gst_util_uint64_scale (pcr_bytes, CLOCK_FREQ_SCR, ts_rate));
+
+      out_buf = gst_adapter_take_buffer (mux->adapter, M2TS_PACKET_LENGTH);
+      if (G_UNLIKELY (!out_buf))
+        break;
+      gst_buffer_set_caps (out_buf, GST_PAD_CAPS (mux->srcpad));
+      GST_BUFFER_TIMESTAMP (out_buf) = MPEG_SYS_TIME_TO_GSTTIME (cur_pcr);
+
+      /* Write the 4 byte timestamp value, bottom 30 bits only = PCR */
+      GST_WRITE_UINT32_BE (GST_BUFFER_DATA (out_buf), cur_pcr & 0x3FFFFFFF);
+
+      GST_LOG_OBJECT (mux, "Outputting a packet of length %d PCR %"
+          G_GUINT64_FORMAT, M2TS_PACKET_LENGTH, cur_pcr);
+      ret = gst_pad_push (mux->srcpad, out_buf);
+      if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+        mux->last_flow_ret = ret;
+        return FALSE;
+      }
+      pcr_bytes += M2TS_PACKET_LENGTH;
+    }
+  }
+
+  /* Finally, output the passed in packet */
+  /* Only write the bottom 30 bits of the PCR */
+  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), new_pcr & 0x3FFFFFFF);
+  GST_BUFFER_TIMESTAMP (buf) = MPEG_SYS_TIME_TO_GSTTIME (new_pcr);
+
+  GST_LOG_OBJECT (mux, "Outputting a packet of length %d PCR %"
+      G_GUINT64_FORMAT, M2TS_PACKET_LENGTH, new_pcr);
+  ret = gst_pad_push (mux->srcpad, buf);
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    mux->last_flow_ret = ret;
+    return FALSE;
+  }
+
+  mux->previous_pcr = new_pcr;
+
+  return TRUE;
+}
+
+static gboolean
+new_packet_normal_ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
+{
+  GstBuffer *buf;
+  GstFlowReturn ret;
+
+  /* Output a normal TS packet */
+  GST_LOG_OBJECT (mux, "Outputting a packet of length %d", len);
+  buf = gst_buffer_new_and_alloc (len);
+  if (G_UNLIKELY (buf == NULL)) {
+    mux->last_flow_ret = GST_FLOW_ERROR;
+    return FALSE;
+  }
+
+  new_packet_common_init (mux, buf, data, len);
+
+  memcpy (GST_BUFFER_DATA (buf), data, len);
+  GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;
+
+  ret = gst_pad_push (mux->srcpad, buf);
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    mux->last_flow_ret = ret;
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static gboolean
 new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
 {
   /* Called when the TsMux has prepared a packet for output. Return FALSE
    * on error */
   MpegTsMux *mux = (MpegTsMux *) user_data;
-  GstBuffer *buf, *out_buf;
-  GstFlowReturn ret;
-  gfloat current_ts;
-  gint64 m2ts_pcr, pcr_bytes, chunk_bytes;
-  gint64 ts_rate;
 
   if (mux->m2ts_mode == TRUE) {
-    /* Enters when the m2ts-mode is set true */
-    buf = gst_buffer_new_and_alloc (M2TS_PACKET_LENGTH);
-    if (mux->is_delta) {
-      GST_LOG_OBJECT (mux, "marking as delta unit");
-      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-    } else {
-      GST_DEBUG_OBJECT (mux, "marking as non-delta unit");
-      mux->is_delta = TRUE;
-    }
-    if (G_UNLIKELY (buf == NULL)) {
-      mux->last_flow_ret = GST_FLOW_ERROR;
-      return FALSE;
-    }
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
-
-    /* copies the ts data of 188 bytes to the m2ts buffer at an offset 
-       of 4 bytes of timestamp  */
-    memcpy (GST_BUFFER_DATA (buf) + 4, data, len);
-
-    if (new_pcr >= 0) {
-      /*when there is a pcr value in ts data */
-      pcr_bytes = 0;
-      if (mux->first_pcr) {
-        /*Incase of first pcr */
-        /*writing the 4  byte timestamp value */
-        GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), new_pcr);
-
-        GST_LOG_OBJECT (mux, "Outputting a packet of length %d",
-            M2TS_PACKET_LENGTH);
-        ret = gst_pad_push (mux->srcpad, buf);
-        if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-          mux->last_flow_ret = ret;
-          return FALSE;
-        }
-        mux->first_pcr = FALSE;
-        mux->previous_pcr = new_pcr;
-        pcr_bytes = M2TS_PACKET_LENGTH;
-      }
-      chunk_bytes = gst_adapter_available (mux->adapter);
-
-      if (G_UNLIKELY (chunk_bytes)) {
-        /* calculate rate based on latest and previous pcr values */
-        ts_rate = ((chunk_bytes * STANDARD_TIME_CLOCK) / (new_pcr -
-                mux->previous_pcr));
-        while (1) {
-          /*loop till all the accumulated ts packets are transformed to 
-             m2ts packets and pushed */
-          current_ts = ((gfloat) mux->previous_pcr / STANDARD_TIME_CLOCK) +
-              ((gfloat) pcr_bytes / ts_rate);
-          m2ts_pcr = (((gint64) (STANDARD_TIME_CLOCK * current_ts / 300) &
-                  TWO_POW_33_MINUS1) * 300) + ((gint64) (STANDARD_TIME_CLOCK *
-                  current_ts) % 300);
-
-          out_buf = gst_adapter_take_buffer (mux->adapter, M2TS_PACKET_LENGTH);
-          if (G_UNLIKELY (!out_buf))
-            break;
-          gst_buffer_set_caps (out_buf, GST_PAD_CAPS (mux->srcpad));
-
-          /*writing the 4  byte timestamp value */
-          GST_WRITE_UINT32_BE (GST_BUFFER_DATA (out_buf), m2ts_pcr);
-
-          GST_LOG_OBJECT (mux, "Outputting a packet of length %d",
-              M2TS_PACKET_LENGTH);
-          ret = gst_pad_push (mux->srcpad, out_buf);
-          if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-            mux->last_flow_ret = ret;
-            return FALSE;
-          }
-          pcr_bytes += M2TS_PACKET_LENGTH;
-        }
-        mux->previous_pcr = m2ts_pcr;
-      }
-    } else {
-      /* If theres no pcr in current ts packet then push the packet 
-         to an adapter, which is used to create m2ts packets */
-      gst_adapter_push (mux->adapter, buf);
-    }
-  } else {
-    /* In case of Normal TS packets */
-    GST_LOG_OBJECT (mux, "Outputting a packet of length %d", len);
-    buf = gst_buffer_new_and_alloc (len);
-    if (G_UNLIKELY (buf == NULL)) {
-      mux->last_flow_ret = GST_FLOW_ERROR;
-      return FALSE;
-    }
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
-
-    memcpy (GST_BUFFER_DATA (buf), data, len);
-    GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;
-
-    if (!mux->streamheader_sent) {
-      guint pid = ((data[1] & 0x1f) << 8) | data[2];
-      /* if it's a PAT or a PMT */
-      if (pid == 0x00 ||
-          (pid >= TSMUX_START_PMT_PID && pid < TSMUX_START_ES_PID)) {
-        mux->streamheader =
-            g_list_append (mux->streamheader, gst_buffer_copy (buf));
-      } else if (mux->streamheader) {
-        mpegtsdemux_set_header_on_caps (mux);
-        mux->streamheader_sent = TRUE;
-        /* don't unset the streamheaders by pushing old caps */
-        gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
-      }
-    }
-
-    if (mux->is_delta) {
-      GST_LOG_OBJECT (mux, "marking as delta unit");
-      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-    } else {
-      GST_DEBUG_OBJECT (mux, "marking as non-delta unit");
-      mux->is_delta = TRUE;
-    }
-
-    ret = gst_pad_push (mux->srcpad, buf);
-    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-      mux->last_flow_ret = ret;
-      return FALSE;
-    }
+    return new_packet_m2ts (mux, data, len, new_pcr);
   }
 
-  return TRUE;
+  return new_packet_normal_ts (mux, data, len, new_pcr);
 }
 
 static void
