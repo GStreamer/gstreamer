@@ -574,6 +574,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               GstOggStream *stream = (GstOggStream *) l->data;
               int j;
 
+              /* FIXME: list iteration */
               for (j = 1; j < g_list_length (stream->headers); j++) {
                 gst_ogg_parse_append_header (&array,
                     GST_BUFFER (g_list_nth_data (stream->headers, j)));
@@ -603,6 +604,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               GstOggStream *stream = (GstOggStream *) l->data;
               GstBuffer *buf = GST_BUFFER (stream->headers->data);
 
+              buf = gst_buffer_make_metadata_writable (buf);
               gst_buffer_set_caps (buf, caps);
 
               result = gst_pad_push (ogg->srcpad, buf);
@@ -613,9 +615,12 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               GstOggStream *stream = (GstOggStream *) l->data;
               int j;
 
+              /* FIXME: list iteration */
               for (j = 1; j < g_list_length (stream->headers); j++) {
                 GstBuffer *buf =
                     GST_BUFFER (g_list_nth_data (stream->headers, j));
+
+                buf = gst_buffer_make_metadata_writable (buf);
                 gst_buffer_set_caps (buf, caps);
 
                 result = gst_pad_push (ogg->srcpad, buf);
@@ -646,7 +651,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               for (k = stream->unknown_pages; k != NULL; k = k->next) {
                 GstBuffer *buf;
 
-                buf = GST_BUFFER (k->data);
+                buf = gst_buffer_make_metadata_writable (GST_BUFFER (k->data));
                 gst_buffer_set_caps (buf, caps);
                 result = gst_pad_push (ogg->srcpad, buf);
                 if (result != GST_FLOW_OK)
@@ -666,10 +671,12 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             if (stream->stored_buffers) {
               int j;
 
+              /* FIXME: list iteration */
               for (j = 0; j < g_list_length (stream->stored_buffers); j++) {
                 GstBuffer *buf =
                     GST_BUFFER (g_list_nth_data (stream->stored_buffers, j));
 
+                buf = gst_buffer_make_metadata_writable (buf);
                 gst_buffer_set_caps (buf, ogg->caps);
                 GST_BUFFER_TIMESTAMP (buf) = buffertimestamp;
                 if (!keyframe) {
@@ -686,6 +693,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               stream->stored_buffers = NULL;
             }
 
+            pagebuffer = gst_buffer_make_metadata_writable (pagebuffer);
             gst_buffer_set_caps (pagebuffer, ogg->caps);
             if (!keyframe) {
               GST_BUFFER_FLAG_SET (pagebuffer, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -693,7 +701,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               keyframe = FALSE;
             }
 
-            result = gst_pad_push (ogg->srcpad, GST_BUFFER (pagebuffer));
+            result = gst_pad_push (ogg->srcpad, pagebuffer);
             if (result != GST_FLOW_OK)
               return result;
           }
