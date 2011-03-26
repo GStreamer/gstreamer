@@ -4,6 +4,8 @@
  *           Kapil Agrawal <kapil@fluendo.com>
  *           Julien Moutte <julien@fluendo.com>
  *
+ * Copyright (C) 2011 Jan Schmidt <thaytan@noraisin.net>
+ *
  * This library is licensed under 4 different licenses and you
  * can choose to use it under the terms of any one of them. The
  * four licenses are the MPL 1.1, the LGPL, the GPL and the MIT
@@ -675,8 +677,9 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
     gboolean delta = TRUE;
 
     if (prog == NULL) {
-      GST_ELEMENT_ERROR (mux, STREAM, MUX, ("Stream is not associated with "
-              "any program"), (NULL));
+      GST_ELEMENT_ERROR (mux, STREAM, MUX,
+          ("Stream on pad %" GST_PTR_FORMAT
+              " is not associated with any program", best), (NULL));
       return GST_FLOW_ERROR;
     }
 
@@ -713,7 +716,11 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
     mux->is_delta = delta;
     while (tsmux_stream_bytes_in_buffer (best->stream) > 0) {
       if (!tsmux_write_stream_packet (mux->tsmux, best->stream)) {
+        /* Failed writing data for some reason. Set appropriate error */
         GST_DEBUG_OBJECT (mux, "Failed to write data packet");
+        GST_ELEMENT_ERROR (mux, STREAM, MUX,
+            ("Failed writing output data to stream %04x", best->stream->id),
+            (NULL));
         goto write_fail;
       }
     }
@@ -728,7 +735,6 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
 
   return ret;
 write_fail:
-  /* FIXME: Failed writing data for some reason. Should set appropriate error */
   return mux->last_flow_ret;
 }
 
@@ -889,12 +895,13 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
         }
         mux->previous_pcr = m2ts_pcr;
       }
-    } else
+    } else {
       /* If theres no pcr in current ts packet then push the packet 
          to an adapter, which is used to create m2ts packets */
       gst_adapter_push (mux->adapter, buf);
+    }
   } else {
-    /* In case of Normal Ts packets */
+    /* In case of Normal TS packets */
     GST_LOG_OBJECT (mux, "Outputting a packet of length %d", len);
     buf = gst_buffer_new_and_alloc (len);
     if (G_UNLIKELY (buf == NULL)) {
