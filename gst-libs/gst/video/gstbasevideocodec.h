@@ -149,6 +149,7 @@ struct _GstBaseVideoCodec
 
   gdouble proportion;
   GstClockTime earliest_time;
+  gboolean discont;
 
   /* FIXME before moving to base */
   void *padding[GST_PADDING_LARGE];

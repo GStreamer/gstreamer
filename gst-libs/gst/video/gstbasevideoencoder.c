@@ -624,6 +624,11 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
+    GST_LOG_OBJECT (base_video_encoder, "marked discont");
+    GST_BASE_VIDEO_CODEC (base_video_encoder)->discont = TRUE;
+  }
+
   frame =
       gst_base_video_codec_new_frame (GST_BASE_VIDEO_CODEC
       (base_video_encoder));
@@ -742,6 +747,12 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   GST_BUFFER_TIMESTAMP (frame->src_buffer) = frame->presentation_timestamp;
   GST_BUFFER_DURATION (frame->src_buffer) = frame->presentation_duration;
   GST_BUFFER_OFFSET (frame->src_buffer) = frame->decode_timestamp;
+
+  if (G_UNLIKELY (GST_BASE_VIDEO_CODEC (base_video_encoder)->discont)) {
+    GST_LOG_OBJECT (base_video_encoder, "marking discont");
+    GST_BUFFER_FLAG_SET (frame->src_buffer, GST_BUFFER_FLAG_DISCONT);
+    GST_BASE_VIDEO_CODEC (base_video_encoder)->discont = FALSE;
+  }
 
   GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
       g_list_remove (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
