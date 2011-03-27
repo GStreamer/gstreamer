@@ -290,7 +290,7 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   VdpPictureInfoMPEG1Or2 *info;
   GstVdpMpegFrame *mpeg_frame;
 
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   VdpBitstreamBuffer vbit[1];
   GstVdpVideoBuffer *outbuf;
 
@@ -356,7 +356,7 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 
   if (info->picture_coding_type != B_FRAME) {
     if (info->backward_reference != VDP_INVALID_HANDLE) {
-      gst_base_video_decoder_finish_frame (base_video_decoder,
+      ret = gst_base_video_decoder_finish_frame (base_video_decoder,
           mpeg_dec->b_frame);
     }
 
@@ -369,6 +369,11 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
     mpeg_dec->f_frame = mpeg_dec->b_frame;
 
     info->backward_reference = VDP_INVALID_HANDLE;
+  }
+
+  if (ret != GST_FLOW_OK) {
+    gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+    return ret;
   }
 
   /* decode */

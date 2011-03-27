@@ -169,7 +169,7 @@ gst_base_video_decoder_have_frame (GstBaseVideoDecoder *base_video_decoder,
 GstVideoState gst_base_video_decoder_get_state (GstBaseVideoDecoder *base_video_decoder);
 void gst_base_video_decoder_set_state (GstBaseVideoDecoder *base_video_decoder,
     GstVideoState state);
-void gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder);
+gboolean gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder);
 
 void gst_base_video_decoder_lost_sync (GstBaseVideoDecoder *base_video_decoder);
 

@@ -499,20 +499,20 @@ gst_base_video_decoder_sink_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
-void
+gboolean
 gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
 {
   GstCaps *caps;
   GstVideoState *state = &base_video_decoder->state;
 
   if (base_video_decoder->have_src_caps)
-    return;
+    return TRUE;
 
   caps = gst_pad_get_allowed_caps (base_video_decoder->srcpad);
   if (!caps)
-    goto null_caps;
+    goto null_allowed_caps;
   if (gst_caps_is_empty (caps))
-    goto empty_caps;
+    goto empty_allowed_caps;
 
   gst_caps_set_simple (caps,
       "width", G_TYPE_INT, state->width,
@@ -526,25 +526,26 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
 
 
   gst_pad_fixate_caps (base_video_decoder->srcpad, caps);
-
-
   GST_DEBUG ("setting caps %" GST_PTR_FORMAT, caps);
 
-  gst_pad_set_caps (GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder), caps);
+  base_video_decoder->have_src_caps =
+      gst_pad_set_caps (GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder),
+      caps);
+  gst_caps_unref (caps);
 
-  base_video_decoder->have_src_caps = TRUE;
+  return base_video_decoder->have_src_caps;
+
+null_allowed_caps:
+  GST_ERROR_OBJECT (base_video_decoder,
+      "Got null from gst_pad_get_allowed_caps");
+  return FALSE;
+
+empty_allowed_caps:
+  GST_ERROR_OBJECT (base_video_decoder,
+      "Got EMPTY caps from gst_pad_get_allowed_caps");
 
   gst_caps_unref (caps);
-  return;
-
-null_caps:
-  GST_WARNING ("Got null caps from get_allowed_caps");
-  return;
-
-empty_caps:
-  GST_WARNING ("Got empty caps from get_allowed_caps");
-  gst_caps_unref (caps);
-  return;
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -870,6 +871,10 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   base_video_decoder_class =
       GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
+
+  if (!gst_base_video_decoder_set_src_caps (base_video_decoder))
+    return GST_FLOW_NOT_NEGOTIATED;
+
   gst_base_video_decoder_calculate_timestamps (base_video_decoder, frame,
       &presentation_timestamp, &presentation_duration);
 
@@ -912,8 +917,6 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
 
   GST_DEBUG ("pushing frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (presentation_timestamp));
-
-  gst_base_video_decoder_set_src_caps (base_video_decoder);
 
   if (base_video_decoder->sink_clipping) {
     gint64 start = GST_BUFFER_TIMESTAMP (src_buffer);
@@ -1050,7 +1053,6 @@ gst_base_video_decoder_set_state (GstBaseVideoDecoder * base_video_decoder,
   base_video_decoder->state = state;
 
   base_video_decoder->have_src_caps = FALSE;
-  gst_base_video_decoder_set_src_caps (base_video_decoder);
 }
 
 void

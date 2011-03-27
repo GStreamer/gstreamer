@@ -244,7 +244,7 @@ gst_vdp_mpeg4_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   if (vop.coding_type != B_VOP) {
     if (mpeg4_dec->b_frame) {
 
-      gst_base_video_decoder_finish_frame (base_video_decoder,
+      ret = gst_base_video_decoder_finish_frame (base_video_decoder,
           GST_VIDEO_FRAME_CAST (mpeg4_dec->b_frame));
 
       if (mpeg4_dec->f_frame)
