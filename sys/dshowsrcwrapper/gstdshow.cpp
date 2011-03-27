@@ -123,13 +123,10 @@ gst_dshow_new_pin_mediatype_from_streamcaps (IPin * pin, gint id, IAMStreamConfi
 void
 gst_dshow_free_pins_mediatypes (GList * pins_mediatypes)
 {
-  guint i = 0;
-  for (; i < g_list_length (pins_mediatypes); i++) {
-    GList *mylist = g_list_nth (pins_mediatypes, i);
-    if (mylist && mylist->data)
-      gst_dshow_free_pin_mediatype ((GstCapturePinMediaType *) mylist->data);
+  while (pins_mediatypes != NULL) {
+    gst_dshow_free_pin_mediatype (pins_mediatypes->data);
+    pins_mediatypes = g_list_remove_link (pins_mediatypes, pins_mediatypes);
   }
-  g_list_free (pins_mediatypes);
 }
 
 gboolean
