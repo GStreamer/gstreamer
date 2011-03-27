@@ -768,9 +768,9 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
   GstBaseVideoDecoderClass *klass;
   GstFlowReturn ret;
 
-  GST_DEBUG ("chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT,
+  GST_DEBUG ("chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT " size %d",
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_SIZE (buf));
 
 #if 0
   /* requiring the pad to be negotiated makes it impossible to use
@@ -790,8 +790,8 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
     GstEvent *event;
     GstFlowReturn ret;
 
-    GST_WARNING
-        ("Received buffer without a new-segment. Assuming timestamps start from 0.");
+    GST_WARNING_OBJECT (base_video_decoder,
+        "Received buffer without a new-segment. Assuming timestamps start from 0.");
 
     gst_segment_set_newsegment_full (&GST_BASE_VIDEO_CODEC
         (base_video_decoder)->segment, FALSE, 1.0, 1.0, GST_FORMAT_TIME, 0,
@@ -805,8 +805,11 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
         gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
         event);
     if (!ret) {
+#if 0
+      /* Other base classes tend to ignore the return value */
       GST_ERROR ("new segment event ret=%d", ret);
       return GST_FLOW_ERROR;
+#endif
     }
   }
 
@@ -1046,7 +1049,10 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   }
   base_video_decoder->last_timestamp = frame->presentation_timestamp;
 
-  GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  src_buffer = gst_buffer_make_metadata_writable (frame->src_buffer);
+  frame->src_buffer = NULL;
+
+  GST_BUFFER_FLAG_UNSET (src_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   if (state->interlaced) {
     int tff = state->top_field_first;
 
@@ -1054,27 +1060,27 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
       tff ^= 1;
     }
     if (tff) {
-      GST_BUFFER_FLAG_SET (frame->src_buffer, GST_VIDEO_BUFFER_TFF);
+      GST_BUFFER_FLAG_SET (src_buffer, GST_VIDEO_BUFFER_TFF);
     } else {
-      GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_VIDEO_BUFFER_TFF);
+      GST_BUFFER_FLAG_UNSET (src_buffer, GST_VIDEO_BUFFER_TFF);
     }
-    GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_VIDEO_BUFFER_RFF);
-    GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_VIDEO_BUFFER_ONEFIELD);
+    GST_BUFFER_FLAG_UNSET (src_buffer, GST_VIDEO_BUFFER_RFF);
+    GST_BUFFER_FLAG_UNSET (src_buffer, GST_VIDEO_BUFFER_ONEFIELD);
     if (frame->n_fields == 3) {
-      GST_BUFFER_FLAG_SET (frame->src_buffer, GST_VIDEO_BUFFER_RFF);
+      GST_BUFFER_FLAG_SET (src_buffer, GST_VIDEO_BUFFER_RFF);
     } else if (frame->n_fields == 1) {
-      GST_BUFFER_FLAG_SET (frame->src_buffer, GST_VIDEO_BUFFER_ONEFIELD);
+      GST_BUFFER_FLAG_SET (src_buffer, GST_VIDEO_BUFFER_ONEFIELD);
     }
   }
   if (base_video_decoder->discont) {
-    GST_BUFFER_FLAG_SET (frame->src_buffer, GST_BUFFER_FLAG_DISCONT);
+    GST_BUFFER_FLAG_SET (src_buffer, GST_BUFFER_FLAG_DISCONT);
     base_video_decoder->discont = FALSE;
   }
 
-  GST_BUFFER_TIMESTAMP (frame->src_buffer) = frame->presentation_timestamp;
-  GST_BUFFER_DURATION (frame->src_buffer) = frame->presentation_duration;
-  GST_BUFFER_OFFSET (frame->src_buffer) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_OFFSET_END (frame->src_buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_TIMESTAMP (src_buffer) = frame->presentation_timestamp;
+  GST_BUFFER_DURATION (src_buffer) = frame->presentation_duration;
+  GST_BUFFER_OFFSET (src_buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (src_buffer) = GST_BUFFER_OFFSET_NONE;
 
   GST_DEBUG ("pushing frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->presentation_timestamp));
@@ -1083,9 +1089,8 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
       g_list_remove (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames, frame);
 
   gst_base_video_decoder_set_src_caps (base_video_decoder);
-
-  src_buffer = frame->src_buffer;
-  frame->src_buffer = NULL;
+  gst_buffer_set_caps (src_buffer,
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)));
 
   gst_base_video_decoder_free_frame (frame);
 
