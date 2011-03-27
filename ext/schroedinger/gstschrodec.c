@@ -571,28 +571,18 @@ gst_schro_dec_process (GstSchroDec * schro_dec, gboolean eos)
         GstBuffer *outbuf;
         GstVideoState *state;
         SchroFrame *schro_frame;
-        GstFlowReturn flow_ret;
-        int size;
 
         GST_DEBUG ("need frame");
 
         state =
             gst_base_video_decoder_get_state (GST_BASE_VIDEO_DECODER
             (schro_dec));
-        size =
-            gst_video_format_get_size (state->format, state->width,
+        outbuf =
+            gst_base_video_decoder_alloc_src_buffer (GST_BASE_VIDEO_DECODER
+            (schro_dec));
+        schro_frame =
+            gst_schro_buffer_wrap (outbuf, state->format, state->width,
             state->height);
-        flow_ret =
-            gst_pad_alloc_buffer_and_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
-            (schro_dec), GST_BUFFER_OFFSET_NONE, size,
-            GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (schro_dec)), &outbuf);
-        if (flow_ret != GST_FLOW_OK) {
-          go = FALSE;
-          ret = flow_ret;
-          break;
-        }
-        schro_frame = gst_schro_buffer_wrap (outbuf,
-            state->format, state->width, state->height);
         schro_decoder_add_output_picture (schro_dec->decoder, schro_frame);
         break;
       }
@@ -642,6 +632,8 @@ gst_schro_dec_process (GstSchroDec * schro_dec, gboolean eos)
         GST_DEBUG ("codec error");
         ret = GST_FLOW_ERROR;
         break;
+      default:
+        break;
     }
   }
   return ret;
@@ -658,8 +650,6 @@ gst_schro_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   schro_dec = GST_SCHRO_DEC (base_video_decoder);
 
   GST_DEBUG ("handle frame");
-
-  gst_base_video_decoder_set_src_caps (base_video_decoder);
 
   input_buffer = gst_schro_wrap_gst_buffer (frame->sink_buffer);
   frame->sink_buffer = NULL;
@@ -679,8 +669,6 @@ gst_schro_dec_finish (GstBaseVideoDecoder * base_video_decoder)
   schro_dec = GST_SCHRO_DEC (base_video_decoder);
 
   GST_DEBUG ("finish");
-
-  gst_base_video_decoder_set_src_caps (base_video_decoder);
 
   schro_decoder_autoparse_push_end_of_sequence (schro_dec->decoder);
 

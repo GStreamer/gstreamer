@@ -168,6 +168,8 @@ void gst_base_video_decoder_set_sync_point (GstBaseVideoDecoder *base_video_deco
 
 void gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder *base_video_decoder);
 
+GstBuffer * gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
+    base_video_decoder);
 GstFlowReturn gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *base_video_decoder,
     GstVideoFrame *frame);
 

@@ -1468,6 +1468,32 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   gst_caps_unref (caps);
 }
 
+GstBuffer *
+gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
+    base_video_decoder)
+{
+  GstBuffer *buffer;
+  GstFlowReturn flow_ret;
+  int num_bytes;
+  GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
+
+  num_bytes = gst_video_format_get_size (state->format, state->width,
+      state->height);
+  flow_ret =
+      gst_pad_alloc_buffer_and_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
+      (base_video_decoder), GST_BUFFER_OFFSET_NONE, num_bytes,
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)),
+      &buffer);
+
+  if (flow_ret != GST_FLOW_OK) {
+    buffer = gst_buffer_new_and_alloc (num_bytes);
+    gst_buffer_set_caps (buffer,
+        GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)));
+  }
+
+  return buffer;
+}
+
 GstFlowReturn
 gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *
     base_video_decoder, GstVideoFrame * frame)
