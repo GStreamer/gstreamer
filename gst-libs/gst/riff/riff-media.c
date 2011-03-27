@@ -908,18 +908,19 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   if (palette) {
     GstBuffer *copy;
     guint num_colors;
+    gsize size;
 
     if (strf != NULL)
       num_colors = strf->num_colors;
     else
       num_colors = 256;
 
-    if (GST_BUFFER_SIZE (palette) >= (num_colors * 4)) {
+    size = gst_buffer_get_size (palette);
+
+    if (size >= (num_colors * 4)) {
       /* palette is always at least 256*4 bytes */
-      copy =
-          gst_buffer_new_and_alloc (MAX (GST_BUFFER_SIZE (palette), 256 * 4));
-      memcpy (GST_BUFFER_DATA (copy), GST_BUFFER_DATA (palette),
-          GST_BUFFER_SIZE (palette));
+      copy = gst_buffer_new_and_alloc (MAX (size, 256 * 4));
+      gst_buffer_copy_into (copy, palette, GST_BUFFER_COPY_MEMORY, 0, size);
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
       {
@@ -1466,25 +1467,28 @@ gst_riff_create_audio_caps (guint16 codec_id,
       guint16 valid_bits_per_sample;
       guint32 channel_mask;
       guint32 subformat_guid[4];
-      const guint8 *data;
+      guint8 *data;
+      gsize size;
 
       channels_max = 8;
 
       /* should be at least 22 bytes */
-      if (strf_data == NULL || GST_BUFFER_SIZE (strf_data) < 22) {
+      size = gst_buffer_get_size (strf_data);
+
+      if (strf_data == NULL || size < 22) {
         GST_WARNING ("WAVE_FORMAT_EXTENSIBLE data size is %d (expected: 22)",
-            (strf_data) ? GST_BUFFER_SIZE (strf_data) : -1);
+            (strf_data) ? size : -1);
         return NULL;
       }
 
-      data = GST_BUFFER_DATA (strf_data);
-
+      data = gst_buffer_map (strf_data, &size, NULL, GST_MAP_READ);
       valid_bits_per_sample = GST_READ_UINT16_LE (data);
       channel_mask = GST_READ_UINT32_LE (data + 2);
       subformat_guid[0] = GST_READ_UINT32_LE (data + 6);
       subformat_guid[1] = GST_READ_UINT32_LE (data + 10);
       subformat_guid[2] = GST_READ_UINT32_LE (data + 14);
       subformat_guid[3] = GST_READ_UINT32_LE (data + 18);
+      gst_buffer_unmap (strf_data, data, size);
 
       GST_DEBUG ("valid bps    = %u", valid_bits_per_sample);
       GST_DEBUG ("channel mask = 0x%08x", channel_mask);

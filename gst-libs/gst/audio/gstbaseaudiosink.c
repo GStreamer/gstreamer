@@ -1327,8 +1327,9 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstBaseAudioSink *sink;
   GstRingBuffer *ringbuf;
   gint64 diff, align, ctime, cstop;
+  gsize offset;
   guint8 *data;
-  guint size;
+  gsize size;
   guint samples, written;
   gint bps;
   gint accum;
@@ -1367,7 +1368,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   bps = ringbuf->spec.bytes_per_sample;
 
-  size = GST_BUFFER_SIZE (buf);
+  size = gst_buffer_get_size (buf);
   if (G_UNLIKELY (size % bps) != 0)
     goto wrong_size;
 
@@ -1382,7 +1383,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_TIME_FORMAT ", samples %u", GST_TIME_ARGS (time), in_offset,
       GST_TIME_ARGS (bsink->segment.start), samples);
 
-  data = GST_BUFFER_DATA (buf);
+  offset = 0;
 
   /* if not valid timestamp or we can't clip or sync, try to play
    * sample ASAP */
@@ -1391,7 +1392,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     render_stop = render_start + samples;
     GST_DEBUG_OBJECT (sink,
         "Buffer of size %u has no time. Using render_start=%" G_GUINT64_FORMAT,
-        GST_BUFFER_SIZE (buf), render_start);
+        size, render_start);
     /* we don't have a start so we don't know stop either */
     stop = -1;
     goto no_sync;
@@ -1445,7 +1446,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     GST_DEBUG_OBJECT (sink, "clipping start to %" GST_TIME_FORMAT " %"
         G_GUINT64_FORMAT " samples", GST_TIME_ARGS (ctime), diff);
     samples -= diff;
-    data += diff * bps;
+    offset += diff * bps;
     time = ctime;
   }
   diff = stop - cstop;
@@ -1625,10 +1626,11 @@ no_sync:
   /* we need to accumulate over different runs for when we get interrupted */
   accum = 0;
   align_next = TRUE;
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   do {
     written =
-        gst_ring_buffer_commit_full (ringbuf, &sample_offset, data, samples,
-        out_samples, &accum);
+        gst_ring_buffer_commit_full (ringbuf, &sample_offset, data + offset,
+        samples, out_samples, &accum);
 
     GST_DEBUG_OBJECT (sink, "wrote %u of %u", written, samples);
     /* if we wrote all, we're done */
@@ -1652,8 +1654,9 @@ no_sync:
       break;
 
     samples -= written;
-    data += written * bps;
+    offset += written * bps;
   } while (TRUE);
+  gst_buffer_unmap (buf, data, size);
 
   if (align_next)
     sink->next_sample = sample_offset;
@@ -1698,6 +1701,7 @@ stopping:
   {
     GST_DEBUG_OBJECT (sink, "preroll got interrupted: %d (%s)", ret,
         gst_flow_get_name (ret));
+    gst_buffer_unmap (buf, data, size);
     return ret;
   }
 sync_latency_failed:
@@ -1741,6 +1745,7 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
   GstBaseAudioSink *sink;
   GstBuffer *buf;
   GstFlowReturn ret;
+  gsize size;
 
   basesink = GST_BASE_SINK (user_data);
   sink = GST_BASE_AUDIO_SINK (user_data);
@@ -1771,16 +1776,17 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
   if (ret != GST_FLOW_OK)
     goto preroll_error;
 
-  if (len != GST_BUFFER_SIZE (buf)) {
+  size = gst_buffer_get_size (buf);
+
+  if (len != size) {
     GST_INFO_OBJECT (basesink,
-        "got different size than requested from sink pad: %u != %u", len,
-        GST_BUFFER_SIZE (buf));
-    len = MIN (GST_BUFFER_SIZE (buf), len);
+        "got different size than requested from sink pad: %u != %u", len, size);
+    len = MIN (size, len);
   }
 
   basesink->segment.last_stop += len;
 
-  memcpy (data, GST_BUFFER_DATA (buf), len);
+  gst_buffer_extract (buf, 0, data, len);
   GST_BASE_SINK_PREROLL_UNLOCK (basesink);
 
   GST_PAD_STREAM_UNLOCK (basesink->sinkpad);

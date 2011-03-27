@@ -376,8 +376,8 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   if (!result)
     goto could_not_open;
 
-  buf->data = gst_buffer_new_and_alloc (spec->segtotal * spec->segsize);
-  memset (GST_BUFFER_DATA (buf->data), 0, GST_BUFFER_SIZE (buf->data));
+  buf->size = spec->segtotal * spec->segsize;
+  buf->memory = g_malloc0 (buf->size);
 
   abuf = GST_AUDIORING_BUFFER (buf);
   abuf->running = TRUE;
@@ -418,8 +418,8 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
   GST_OBJECT_LOCK (buf);
 
   /* free the buffer */
-  gst_buffer_unref (buf->data);
-  buf->data = NULL;
+  g_free (buf->memory);
+  buf->memory = NULL;
 
   if (csrc->unprepare)
     result = csrc->unprepare (src);

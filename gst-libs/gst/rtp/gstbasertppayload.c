@@ -727,10 +727,15 @@ find_timestamp (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
 static GstBufferListItem
 set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
 {
-  gst_rtp_buffer_set_ssrc (*buffer, data->ssrc);
-  gst_rtp_buffer_set_payload_type (*buffer, data->pt);
-  gst_rtp_buffer_set_seq (*buffer, data->seqnum);
-  gst_rtp_buffer_set_timestamp (*buffer, data->rtptime);
+  GstRTPBuffer rtp;
+
+  gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp);
+  gst_rtp_buffer_set_ssrc (&rtp, data->ssrc);
+  gst_rtp_buffer_set_payload_type (&rtp, data->pt);
+  gst_rtp_buffer_set_seq (&rtp, data->seqnum);
+  gst_rtp_buffer_set_timestamp (&rtp, data->rtptime);
+  gst_rtp_buffer_unmap (&rtp);
+
   gst_buffer_set_caps (*buffer, data->caps);
   /* increment the seqnum for each buffer */
   data->seqnum++;
@@ -821,7 +826,7 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
   GST_LOG_OBJECT (payload,
       "Preparing to push packet with size %d, seq=%d, rtptime=%u, timestamp %"
       GST_TIME_FORMAT, (is_list) ? -1 :
-      GST_BUFFER_SIZE (GST_BUFFER (obj)), payload->seqnum, data.rtptime,
+      gst_buffer_get_size (GST_BUFFER (obj)), payload->seqnum, data.rtptime,
       GST_TIME_ARGS (data.timestamp));
 
   if (g_atomic_int_compare_and_exchange (&payload->

@@ -292,7 +292,7 @@ gst_video_convert_frame (GstBuffer * buf, const GstCaps * to_caps,
 
   /* feed buffer in appsrc */
   GST_DEBUG ("feeding buffer %p, size %u, caps %" GST_PTR_FORMAT,
-      buf, GST_BUFFER_SIZE (buf), from_caps);
+      buf, gst_buffer_get_size (buf), from_caps);
   g_signal_emit_by_name (src, "push-buffer", buf, &ret);
 
   /* now see what happens. We either got an error somewhere or the pipeline

@@ -70,10 +70,8 @@ gst_rtcp_buffer_new_take_data (gpointer data, guint len)
   g_return_val_if_fail (len > 0, NULL);
 
   result = gst_buffer_new ();
-
-  GST_BUFFER_MALLOCDATA (result) = data;
-  GST_BUFFER_DATA (result) = data;
-  GST_BUFFER_SIZE (result) = len;
+  gst_buffer_take_memory (result,
+      gst_memory_new_wrapped (0, data, g_free, len, 0, len));
 
   return result;
 }
@@ -205,15 +203,17 @@ wrong_padding:
 gboolean
 gst_rtcp_buffer_validate (GstBuffer * buffer)
 {
+  gboolean res;
   guint8 *data;
-  guint len;
+  gsize len;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
 
-  data = GST_BUFFER_DATA (buffer);
-  len = GST_BUFFER_SIZE (buffer);
+  data = gst_buffer_map (buffer, &len, NULL, GST_MAP_READ);
+  res = gst_rtcp_buffer_validate_data (data, len);
+  gst_buffer_unmap (buffer, data, len);
 
-  return gst_rtcp_buffer_validate_data (data, len);
+  return res;
 }
 
 /**
@@ -233,36 +233,66 @@ gst_rtcp_buffer_new (guint mtu)
   g_return_val_if_fail (mtu > 0, NULL);
 
   result = gst_buffer_new ();
-  GST_BUFFER_MALLOCDATA (result) = g_malloc0 (mtu);
-  GST_BUFFER_DATA (result) = GST_BUFFER_MALLOCDATA (result);
-  GST_BUFFER_SIZE (result) = mtu;
+  gst_buffer_take_memory (result,
+      gst_memory_new_wrapped (0, g_malloc0 (mtu), g_free, mtu, 0, mtu));
 
   return result;
 }
 
 /**
- * gst_rtcp_buffer_end:
+ * gst_rtcp_buffer_map:
+ * @buffer: a buffer with an RTCP packet
+ * @flags: flags for the mapping
+ * @rtcp: resulting #GstRTCPBuffer
+ *
+ * Open @buffer for reading or writing, depending on @flags. The resulting RTCP
+ * buffer state is stored in @rtcp.
+ */
+gboolean
+gst_rtcp_buffer_map (GstBuffer * buffer, GstMapFlags flags,
+    GstRTCPBuffer * rtcp)
+{
+  g_return_val_if_fail (rtcp != NULL, FALSE);
+  g_return_val_if_fail (rtcp->buffer == NULL, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+
+  rtcp->buffer = buffer;
+  rtcp->flags = flags;
+  rtcp->data = gst_buffer_map (buffer, &rtcp->size, &rtcp->maxsize, flags);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_buffer_unmap:
  * @buffer: a buffer with an RTCP packet
  *
- * Finish @buffer after being constructured. This function is usually called
- * after gst_rtcp_buffer_new() and after adding the RTCP items to the new buffer. 
+ * Finish @rtcp after being constructured. This function is usually called
+ * after gst_rtcp_buffer_map() and after adding the RTCP items to the new buffer.
  *
  * The function adjusts the size of @buffer with the total length of all the
  * added packets.
  */
-void
-gst_rtcp_buffer_end (GstBuffer * buffer)
+gboolean
+gst_rtcp_buffer_unmap (GstRTCPBuffer * rtcp)
 {
+  gboolean res;
   GstRTCPPacket packet;
 
-  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_val_if_fail (rtcp != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (rtcp->buffer), FALSE);
 
   /* move to the first free space */
-  if (gst_rtcp_buffer_get_first_packet (buffer, &packet))
+  if (gst_rtcp_buffer_get_first_packet (rtcp, &packet))
     while (gst_rtcp_packet_move_to_next (&packet));
 
   /* shrink size */
-  GST_BUFFER_SIZE (buffer) = packet.offset;
+  gst_buffer_set_size (rtcp->buffer, packet.offset);
+
+  res = gst_buffer_unmap (rtcp->buffer, rtcp->data, rtcp->size);
+  rtcp->buffer = NULL;
+
+  return res;
 }
 
 /**
@@ -274,15 +304,16 @@ gst_rtcp_buffer_end (GstBuffer * buffer)
  * Returns: the number of RTCP packets in @buffer.
  */
 guint
-gst_rtcp_buffer_get_packet_count (GstBuffer * buffer)
+gst_rtcp_buffer_get_packet_count (GstRTCPBuffer * rtcp)
 {
   GstRTCPPacket packet;
   guint count;
 
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+  g_return_val_if_fail (rtcp != NULL, 0);
+  g_return_val_if_fail (GST_IS_BUFFER (rtcp->buffer), 0);
 
   count = 0;
-  if (gst_rtcp_buffer_get_first_packet (buffer, &packet)) {
+  if (gst_rtcp_buffer_get_first_packet (rtcp, &packet)) {
     do {
       count++;
     } while (gst_rtcp_packet_move_to_next (&packet));
@@ -307,10 +338,9 @@ read_packet_header (GstRTCPPacket * packet)
   guint offset;
 
   g_return_val_if_fail (packet != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
-  data = GST_BUFFER_DATA (packet->buffer);
-  size = GST_BUFFER_SIZE (packet->buffer);
+  data = packet->rtcp->data;
+  size = packet->rtcp->size;
 
   offset = packet->offset;
 
@@ -345,13 +375,14 @@ read_packet_header (GstRTCPPacket * packet)
  * Returns: TRUE if the packet existed in @buffer.
  */
 gboolean
-gst_rtcp_buffer_get_first_packet (GstBuffer * buffer, GstRTCPPacket * packet)
+gst_rtcp_buffer_get_first_packet (GstRTCPBuffer * rtcp, GstRTCPPacket * packet)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (rtcp != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (rtcp->buffer), FALSE);
   g_return_val_if_fail (packet != NULL, FALSE);
 
   /* init to 0 */
-  packet->buffer = buffer;
+  packet->rtcp = rtcp;
   packet->offset = 0;
   packet->type = GST_RTCP_TYPE_INVALID;
 
@@ -376,7 +407,6 @@ gst_rtcp_packet_move_to_next (GstRTCPPacket * packet)
 {
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type != GST_RTCP_TYPE_INVALID, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   /* if we have a padding or invalid packet, it must be the last, 
    * return FALSE */
@@ -413,22 +443,23 @@ end:
  * if the max mtu is exceeded for the buffer.
  */
 gboolean
-gst_rtcp_buffer_add_packet (GstBuffer * buffer, GstRTCPType type,
+gst_rtcp_buffer_add_packet (GstRTCPBuffer * rtcp, GstRTCPType type,
     GstRTCPPacket * packet)
 {
   guint len, size;
   guint8 *data;
   gboolean result;
 
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (rtcp != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (rtcp->buffer), FALSE);
   g_return_val_if_fail (type != GST_RTCP_TYPE_INVALID, FALSE);
   g_return_val_if_fail (packet != NULL, FALSE);
 
   /* find free space */
-  if (gst_rtcp_buffer_get_first_packet (buffer, packet))
+  if (gst_rtcp_buffer_get_first_packet (rtcp, packet))
     while (gst_rtcp_packet_move_to_next (packet));
 
-  size = GST_BUFFER_SIZE (buffer);
+  size = rtcp->size;
 
   /* packet->offset is now pointing to the next free offset in the buffer to
    * start a compount packet. Next we figure out if we have enough free space in
@@ -461,7 +492,7 @@ gst_rtcp_buffer_add_packet (GstBuffer * buffer, GstRTCPType type,
   if (packet->offset + len >= size)
     goto no_space;
 
-  data = GST_BUFFER_DATA (buffer) + packet->offset;
+  data = rtcp->data + packet->offset;
 
   data[0] = (GST_RTCP_VERSION << 6);
   data[1] = type;
@@ -510,9 +541,8 @@ gst_rtcp_packet_remove (GstRTCPPacket * packet)
   offset = packet->offset + (packet->length << 2) + 4;
 
   /* Overwrite this packet with the rest of the data */
-  memmove (GST_BUFFER_DATA (packet->buffer) + packet->offset,
-      GST_BUFFER_DATA (packet->buffer) + offset,
-      GST_BUFFER_SIZE (packet->buffer) - offset);
+  memmove (packet->rtcp->data + packet->offset,
+      packet->rtcp->data + offset, packet->rtcp->size - offset);
 
   /* try to read next header */
   ret = read_packet_header (packet);
@@ -612,9 +642,8 @@ gst_rtcp_packet_sr_get_sender_info (GstRTCPPacket * packet, guint32 * ssrc,
 
   g_return_if_fail (packet != NULL);
   g_return_if_fail (packet->type == GST_RTCP_TYPE_SR);
-  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   /* skip header */
   data += packet->offset + 4;
@@ -653,9 +682,8 @@ gst_rtcp_packet_sr_set_sender_info (GstRTCPPacket * packet, guint32 ssrc,
 
   g_return_if_fail (packet != NULL);
   g_return_if_fail (packet->type == GST_RTCP_TYPE_SR);
-  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   /* skip header */
   data += packet->offset + 4;
@@ -686,9 +714,8 @@ gst_rtcp_packet_rr_get_ssrc (GstRTCPPacket * packet)
 
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RR, 0);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   /* skip header */
   data += packet->offset + 4;
@@ -711,9 +738,8 @@ gst_rtcp_packet_rr_set_ssrc (GstRTCPPacket * packet, guint32 ssrc)
 
   g_return_if_fail (packet != NULL);
   g_return_if_fail (packet->type == GST_RTCP_TYPE_RR);
-  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   /* skip header */
   data += packet->offset + 4;
@@ -734,7 +760,6 @@ gst_rtcp_packet_get_rb_count (GstRTCPPacket * packet)
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RR ||
       packet->type == GST_RTCP_TYPE_SR, 0);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
 
   return packet->count;
 }
@@ -765,9 +790,8 @@ gst_rtcp_packet_get_rb (GstRTCPPacket * packet, guint nth, guint32 * ssrc,
   g_return_if_fail (packet != NULL);
   g_return_if_fail (packet->type == GST_RTCP_TYPE_RR ||
       packet->type == GST_RTCP_TYPE_SR);
-  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   /* skip header */
   data += packet->offset + 4;
@@ -835,13 +859,12 @@ gst_rtcp_packet_add_rb (GstRTCPPacket * packet, guint32 ssrc,
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RR ||
       packet->type == GST_RTCP_TYPE_SR, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   if (packet->count >= GST_RTCP_MAX_RB_COUNT)
     goto no_space;
 
-  data = GST_BUFFER_DATA (packet->buffer);
-  size = GST_BUFFER_SIZE (packet->buffer);
+  data = packet->rtcp->data;
+  size = packet->rtcp->size;
 
   /* skip header */
   offset = packet->offset + 4;
@@ -911,7 +934,6 @@ gst_rtcp_packet_set_rb (GstRTCPPacket * packet, guint nth, guint32 ssrc,
   g_return_if_fail (packet != NULL);
   g_return_if_fail (packet->type == GST_RTCP_TYPE_RR ||
       packet->type == GST_RTCP_TYPE_SR);
-  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
 
   g_warning ("not implemented");
 }
@@ -930,7 +952,6 @@ gst_rtcp_packet_sdes_get_item_count (GstRTCPPacket * packet)
 {
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, 0);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
 
   return packet->count;
 }
@@ -948,7 +969,6 @@ gst_rtcp_packet_sdes_first_item (GstRTCPPacket * packet)
 {
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   packet->item_offset = 4;
   packet->item_count = 0;
@@ -977,14 +997,13 @@ gst_rtcp_packet_sdes_next_item (GstRTCPPacket * packet)
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   /* if we are at the last item, we are done */
   if (packet->item_count == packet->count)
     return FALSE;
 
   /* move to SDES */
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
   data += packet->offset;
   /* move to item */
   offset = packet->item_offset;
@@ -1028,10 +1047,9 @@ gst_rtcp_packet_sdes_get_ssrc (GstRTCPPacket * packet)
 
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, 0);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
 
   /* move to SDES */
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
   data += packet->offset;
   /* move to item */
   data += packet->item_offset;
@@ -1057,10 +1075,9 @@ gst_rtcp_packet_sdes_first_entry (GstRTCPPacket * packet)
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   /* move to SDES */
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
   data += packet->offset;
   /* move to item */
   offset = packet->item_offset;
@@ -1096,10 +1113,9 @@ gst_rtcp_packet_sdes_next_entry (GstRTCPPacket * packet)
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   /* move to SDES */
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
   data += packet->offset;
   /* move to item */
   offset = packet->item_offset;
@@ -1150,10 +1166,9 @@ gst_rtcp_packet_sdes_get_entry (GstRTCPPacket * packet,
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   /* move to SDES */
-  bdata = GST_BUFFER_DATA (packet->buffer);
+  bdata = packet->rtcp->data;
   bdata += packet->offset;
   /* move to item */
   offset = packet->item_offset;
@@ -1194,7 +1209,6 @@ gst_rtcp_packet_sdes_copy_entry (GstRTCPPacket * packet,
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   if (!gst_rtcp_packet_sdes_get_entry (packet, type, &tlen, &tdata))
     return FALSE;
@@ -1225,7 +1239,6 @@ gst_rtcp_packet_sdes_add_item (GstRTCPPacket * packet, guint32 ssrc)
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   /* increment item count when possible */
   if (packet->count >= GST_RTCP_MAX_SDES_ITEM_COUNT)
@@ -1238,8 +1251,8 @@ gst_rtcp_packet_sdes_add_item (GstRTCPPacket * packet, guint32 ssrc)
   gst_rtcp_packet_sdes_next_item (packet);
 
   /* move to SDES */
-  data = GST_BUFFER_DATA (packet->buffer);
-  size = GST_BUFFER_SIZE (packet->buffer);
+  data = packet->rtcp->data;
+  size = packet->rtcp->size;
   data += packet->offset;
   /* move to current item */
   offset = packet->item_offset;
@@ -1295,11 +1308,10 @@ gst_rtcp_packet_sdes_add_entry (GstRTCPPacket * packet, GstRTCPSDESType type,
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   /* move to SDES */
-  bdata = GST_BUFFER_DATA (packet->buffer);
-  size = GST_BUFFER_SIZE (packet->buffer);
+  bdata = packet->rtcp->data;
+  size = packet->rtcp->size;
   bdata += packet->offset;
   /* move to item */
   offset = packet->item_offset;
@@ -1371,7 +1383,6 @@ gst_rtcp_packet_bye_get_nth_ssrc (GstRTCPPacket * packet, guint nth)
 
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, 0);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
 
   /* get amount of sources and check that we don't read too much */
   sc = packet->count;
@@ -1389,10 +1400,10 @@ gst_rtcp_packet_bye_get_nth_ssrc (GstRTCPPacket * packet, guint nth)
   offset += packet->offset;
 
   /* check if the packet is valid */
-  if (offset + 4 > GST_BUFFER_SIZE (packet->buffer))
+  if (offset + 4 > packet->rtcp->size)
     return 0;
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
   data += offset;
 
   ssrc = GST_READ_UINT32_BE (data);
@@ -1419,13 +1430,12 @@ gst_rtcp_packet_bye_add_ssrc (GstRTCPPacket * packet, guint32 ssrc)
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   if (packet->count >= GST_RTCP_MAX_BYE_SSRC_COUNT)
     goto no_space;
 
-  data = GST_BUFFER_DATA (packet->buffer);
-  size = GST_BUFFER_SIZE (packet->buffer);
+  data = packet->rtcp->data;
+  size = packet->rtcp->size;
 
   /* skip header */
   offset = packet->offset + 4;
@@ -1477,7 +1487,6 @@ gst_rtcp_packet_bye_add_ssrcs (GstRTCPPacket * packet, guint32 * ssrc,
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   res = TRUE;
   for (i = 0; i < len && res; i++) {
@@ -1504,7 +1513,7 @@ get_reason_offset (GstRTCPPacket * packet)
   offset += packet->offset;
 
   /* check if the packet is valid */
-  if (offset + 1 > GST_BUFFER_SIZE (packet->buffer))
+  if (offset + 1 > packet->rtcp->size)
     return 0;
 
   return offset;
@@ -1527,13 +1536,12 @@ gst_rtcp_packet_bye_get_reason_len (GstRTCPPacket * packet)
 
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, 0);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
 
   roffset = get_reason_offset (packet);
   if (roffset == 0)
     return 0;
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   return data[roffset];
 }
@@ -1556,13 +1564,12 @@ gst_rtcp_packet_bye_get_reason (GstRTCPPacket * packet)
 
   g_return_val_if_fail (packet != NULL, NULL);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, NULL);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), NULL);
 
   roffset = get_reason_offset (packet);
   if (roffset == 0)
     return NULL;
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   /* get length of reason string */
   len = data[roffset];
@@ -1573,7 +1580,7 @@ gst_rtcp_packet_bye_get_reason (GstRTCPPacket * packet)
   roffset += 1;
 
   /* check if enough data to copy */
-  if (roffset + len > GST_BUFFER_SIZE (packet->buffer))
+  if (roffset + len > packet->rtcp->size)
     return NULL;
 
   return g_strndup ((gconstpointer) (data + roffset), len);
@@ -1597,7 +1604,6 @@ gst_rtcp_packet_bye_set_reason (GstRTCPPacket * packet, const gchar * reason)
 
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
   if (reason == NULL)
     return TRUE;
@@ -1613,8 +1619,8 @@ gst_rtcp_packet_bye_set_reason (GstRTCPPacket * packet, const gchar * reason)
   if (roffset == 0)
     goto no_space;
 
-  data = GST_BUFFER_DATA (packet->buffer);
-  size = GST_BUFFER_SIZE (packet->buffer);
+  data = packet->rtcp->data;
+  size = packet->rtcp->size;
 
   /* we have 1 byte length and we need to pad to 4 bytes */
   padded = ((len + 1) + 3) & ~3;
@@ -1660,9 +1666,8 @@ gst_rtcp_packet_fb_get_sender_ssrc (GstRTCPPacket * packet)
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail ((packet->type == GST_RTCP_TYPE_RTPFB ||
           packet->type == GST_RTCP_TYPE_PSFB), 0);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   /* skip header */
   data += packet->offset + 4;
@@ -1688,9 +1693,8 @@ gst_rtcp_packet_fb_set_sender_ssrc (GstRTCPPacket * packet, guint32 ssrc)
   g_return_if_fail (packet != NULL);
   g_return_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
       packet->type == GST_RTCP_TYPE_PSFB);
-  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   /* skip header */
   data += packet->offset + 4;
@@ -1716,9 +1720,8 @@ gst_rtcp_packet_fb_get_media_ssrc (GstRTCPPacket * packet)
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail ((packet->type == GST_RTCP_TYPE_RTPFB ||
           packet->type == GST_RTCP_TYPE_PSFB), 0);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   /* skip header and sender ssrc */
   data += packet->offset + 8;
@@ -1744,9 +1747,8 @@ gst_rtcp_packet_fb_set_media_ssrc (GstRTCPPacket * packet, guint32 ssrc)
   g_return_if_fail (packet != NULL);
   g_return_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
       packet->type == GST_RTCP_TYPE_PSFB);
-  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   /* skip header and sender ssrc */
   data += packet->offset + 8;
@@ -1790,9 +1792,8 @@ gst_rtcp_packet_fb_set_type (GstRTCPPacket * packet, GstRTCPFBType type)
   g_return_if_fail (packet != NULL);
   g_return_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
       packet->type == GST_RTCP_TYPE_PSFB);
-  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
 
-  data = GST_BUFFER_DATA (packet->buffer);
+  data = packet->rtcp->data;
 
   data[packet->offset] = (data[packet->offset] & 0xe0) | type;
   packet->count = type;
@@ -1963,9 +1964,8 @@ gst_rtcp_packet_fb_get_fci_length (GstRTCPPacket * packet)
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
       packet->type == GST_RTCP_TYPE_PSFB, 0);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
 
-  data = GST_BUFFER_DATA (packet->buffer) + packet->offset + 2;
+  data = packet->rtcp->data + packet->offset + 2;
 
   return GST_READ_UINT16_BE (data) - 2;
 }
@@ -1990,12 +1990,11 @@ gst_rtcp_packet_fb_set_fci_length (GstRTCPPacket * packet, guint16 wordlen)
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
       packet->type == GST_RTCP_TYPE_PSFB, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
-  if (GST_BUFFER_SIZE (packet->buffer) < packet->offset + ((wordlen + 3) * 4))
+  if (packet->rtcp->size < packet->offset + ((wordlen + 3) * 4))
     return FALSE;
 
-  data = GST_BUFFER_DATA (packet->buffer) + packet->offset + 2;
+  data = packet->rtcp->data + packet->offset + 2;
   wordlen += 2;
   GST_WRITE_UINT16_BE (data, wordlen);
 
@@ -2020,9 +2019,8 @@ gst_rtcp_packet_fb_get_fci (GstRTCPPacket * packet)
   g_return_val_if_fail (packet != NULL, NULL);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
       packet->type == GST_RTCP_TYPE_PSFB, NULL);
-  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), NULL);
 
-  data = GST_BUFFER_DATA (packet->buffer) + packet->offset;
+  data = packet->rtcp->data + packet->offset;
 
   if (GST_READ_UINT16_BE (data + 2) <= 2)
     return NULL;

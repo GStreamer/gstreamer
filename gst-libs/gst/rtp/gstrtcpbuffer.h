@@ -156,7 +156,18 @@ typedef enum
  */
 #define GST_RTCP_VALID_VALUE ((GST_RTCP_VERSION << 14) | GST_RTCP_TYPE_SR)
 
+typedef struct _GstRTCPBuffer GstRTCPBuffer;
 typedef struct _GstRTCPPacket GstRTCPPacket;
+
+struct _GstRTCPBuffer
+{
+  GstBuffer   *buffer;
+
+  GstMapFlags  flags;
+  guint8      *data;
+  gsize        size;
+  gsize        maxsize;
+};
 
 /**
  * GstRTCPPacket:
@@ -168,8 +179,8 @@ typedef struct _GstRTCPPacket GstRTCPPacket;
  */
 struct _GstRTCPPacket
 { 
-  GstBuffer   *buffer;
-  guint        offset;
+  GstRTCPBuffer *rtcp;
+  guint         offset;
   
   /*< private >*/
   gboolean     padding;      /* padding field of current packet */
@@ -190,14 +201,16 @@ gboolean        gst_rtcp_buffer_validate_data     (guint8 *data, guint len);
 gboolean        gst_rtcp_buffer_validate          (GstBuffer *buffer);
 
 GstBuffer*      gst_rtcp_buffer_new               (guint mtu);
-void            gst_rtcp_buffer_end               (GstBuffer *buffer);
+
+gboolean        gst_rtcp_buffer_map               (GstBuffer *buffer, GstMapFlags flags, GstRTCPBuffer *rtcp);
+gboolean        gst_rtcp_buffer_unmap             (GstRTCPBuffer *rtcp);
 
 /* adding/retrieving packets */
-guint           gst_rtcp_buffer_get_packet_count  (GstBuffer *buffer);
-gboolean        gst_rtcp_buffer_get_first_packet  (GstBuffer *buffer, GstRTCPPacket *packet);
+guint           gst_rtcp_buffer_get_packet_count  (GstRTCPBuffer *rtcp);
+gboolean        gst_rtcp_buffer_get_first_packet  (GstRTCPBuffer *rtcp, GstRTCPPacket *packet);
 gboolean        gst_rtcp_packet_move_to_next      (GstRTCPPacket *packet);
 
-gboolean        gst_rtcp_buffer_add_packet        (GstBuffer *buffer, GstRTCPType type,
+gboolean        gst_rtcp_buffer_add_packet        (GstRTCPBuffer *rtcp, GstRTCPType type,
 		                                   GstRTCPPacket *packet);
 gboolean        gst_rtcp_packet_remove            (GstRTCPPacket *packet);
 

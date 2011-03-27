@@ -58,7 +58,7 @@ static GstStateChangeReturn gst_audio_filter_change_state (GstElement * element,
 static gboolean gst_audio_filter_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
 static gboolean gst_audio_filter_get_unit_size (GstBaseTransform * btrans,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 
 #define do_init G_STMT_START { \
     GST_DEBUG_CATEGORY_INIT (audiofilter_dbg, "audiofilter", 0, "audiofilter"); \
@@ -154,7 +154,7 @@ gst_audio_filter_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
 static gboolean
 gst_audio_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   GstStructure *structure;
   gboolean ret = TRUE;

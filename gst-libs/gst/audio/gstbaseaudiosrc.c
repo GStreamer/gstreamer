@@ -749,7 +749,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
 {
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
   GstBuffer *buf;
-  guchar *data;
+  guchar *data, *ptr;
   guint samples, total_samples;
   guint64 sample;
   gint bps;
@@ -794,10 +794,9 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
 
   /* FIXME, using a bufferpool would be nice here */
   buf = gst_buffer_new_and_alloc (length);
-  data = GST_BUFFER_DATA (buf);
-
+  data = ptr = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   do {
-    read = gst_ring_buffer_read (ringbuffer, sample, data, samples);
+    read = gst_ring_buffer_read (ringbuffer, sample, ptr, samples);
     GST_DEBUG_OBJECT (src, "read %u of %u", read, samples);
     /* if we read all, we're done */
     if (read == samples)
@@ -813,8 +812,9 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     /* read next samples */
     sample += read;
     samples -= read;
-    data += read * bps;
+    ptr += read * bps;
   } while (TRUE);
+  gst_buffer_unmap (buf, data, length);
 
   /* mark discontinuity if needed */
   if (G_UNLIKELY (sample != src->next_sample) && src->next_sample != -1) {

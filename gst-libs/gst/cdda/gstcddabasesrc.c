@@ -1647,7 +1647,7 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 
   /* fallback duration: 4 bytes per sample, 44100 samples per second */
   if (duration == GST_CLOCK_TIME_NONE) {
-    duration = gst_util_uint64_scale_int (GST_BUFFER_SIZE (buf) >> 2,
+    duration = gst_util_uint64_scale_int (gst_buffer_get_size (buf) >> 2,
         GST_SECOND, 44100);
   }
 

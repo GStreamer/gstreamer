@@ -75,7 +75,7 @@ gst_video_filter_get_type (void)
 
 static gboolean
 gst_video_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   GstVideoFormat fmt;
   gint width, height;

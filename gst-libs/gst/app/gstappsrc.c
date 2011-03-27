@@ -988,7 +988,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
       guint buf_size;
 
       *buf = g_queue_pop_head (priv->queue);
-      buf_size = GST_BUFFER_SIZE (*buf);
+      buf_size = gst_buffer_get_size (*buf);
 
       GST_DEBUG_OBJECT (appsrc, "we have buffer %p of size %u", *buf, buf_size);
 
@@ -998,7 +998,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
       if (priv->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS)
         priv->offset += buf_size;
       if (caps) {
-        *buf = gst_buffer_make_metadata_writable (*buf);
+        *buf = gst_buffer_make_writable (*buf);
         gst_buffer_set_caps (*buf, caps);
       }
 
@@ -1492,7 +1492,7 @@ gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
   if (!steal_ref)
     gst_buffer_ref (buffer);
   g_queue_push_tail (priv->queue, buffer);
-  priv->queued_bytes += GST_BUFFER_SIZE (buffer);
+  priv->queued_bytes += gst_buffer_get_size (buffer);
   g_cond_broadcast (priv->cond);
   g_mutex_unlock (priv->mutex);
 

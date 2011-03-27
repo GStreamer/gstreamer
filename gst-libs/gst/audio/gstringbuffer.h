@@ -257,7 +257,8 @@ struct _GstRingBuffer {
   GCond                 *cond;
   gboolean               open;
   gboolean               acquired;
-  GstBuffer             *data;
+  guint8                *memory;
+  gsize                  size;
   GstRingBufferSpec      spec;
   GstRingBufferSegState *segstate;
   gint                   samples_per_seg;

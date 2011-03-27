@@ -1601,10 +1601,10 @@ default_commit (GstRingBuffer * buf, guint64 * sample,
   gint inr, outr;
   gboolean reverse;
 
-  g_return_val_if_fail (buf->data != NULL, -1);
+  g_return_val_if_fail (buf->memory != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
-  dest = GST_BUFFER_DATA (buf->data);
+  dest = buf->memory;
   segsize = buf->spec.segsize;
   segtotal = buf->spec.segtotal;
   bps = buf->spec.bytes_per_sample;
@@ -1830,10 +1830,10 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
   guint to_read;
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), -1);
-  g_return_val_if_fail (buf->data != NULL, -1);
+  g_return_val_if_fail (buf->memory != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
-  dest = GST_BUFFER_DATA (buf->data);
+  dest = buf->memory;
   segsize = buf->spec.segsize;
   segtotal = buf->spec.segtotal;
   bps = buf->spec.bytes_per_sample;
@@ -1940,12 +1940,12 @@ gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
       return FALSE;
   }
 
-  g_return_val_if_fail (buf->data != NULL, FALSE);
+  g_return_val_if_fail (buf->memory != NULL, FALSE);
   g_return_val_if_fail (segment != NULL, FALSE);
   g_return_val_if_fail (readptr != NULL, FALSE);
   g_return_val_if_fail (len != NULL, FALSE);
 
-  data = GST_BUFFER_DATA (buf->data);
+  data = buf->memory;
 
   /* get the position of the pointer */
   segdone = g_atomic_int_get (&buf->segdone);
@@ -2012,7 +2012,7 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
   g_return_if_fail (GST_IS_RING_BUFFER (buf));
 
   /* no data means it's already cleared */
-  if (G_UNLIKELY (buf->data == NULL))
+  if (G_UNLIKELY (buf->memory == NULL))
     return;
 
   /* no empty_seg means it's not opened */
@@ -2021,7 +2021,7 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
 
   segment %= buf->spec.segtotal;
 
-  data = GST_BUFFER_DATA (buf->data);
+  data = buf->memory;
   data += segment * buf->spec.segsize;
 
   GST_LOG ("clear segment %d @%p", segment, data);

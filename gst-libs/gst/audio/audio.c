@@ -93,7 +93,7 @@ gst_audio_frame_length (GstPad * pad, GstBuffer * buf)
   /* FIXME: this function assumes the buffer size to be a whole multiple
    *        of the frame byte size
    */
-  return GST_BUFFER_SIZE (buf) / frame_byte_size;
+  return gst_buffer_get_size (buf) / frame_byte_size;
 }
 
 /**
@@ -129,7 +129,7 @@ gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
     length = GST_CLOCK_TIME_NONE;
   } else {
     structure = gst_caps_get_structure (caps, 0);
-    bytes = GST_BUFFER_SIZE (buf);
+    bytes = gst_buffer_get_size (buf);
     gst_structure_get_int (structure, "width", &width);
     gst_structure_get_int (structure, "channels", &channels);
     gst_structure_get_int (structure, "rate", &rate);
@@ -155,7 +155,7 @@ gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
 gboolean
 gst_audio_is_buffer_framed (GstPad * pad, GstBuffer * buf)
 {
-  if (GST_BUFFER_SIZE (buf) % gst_audio_frame_byte_size (pad) == 0)
+  if (gst_buffer_get_size (buf) % gst_audio_frame_byte_size (pad) == 0)
     return TRUE;
   else
     return FALSE;
@@ -295,9 +295,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
   GstBuffer *ret;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE, duration = GST_CLOCK_TIME_NONE;
   guint64 offset = GST_BUFFER_OFFSET_NONE, offset_end = GST_BUFFER_OFFSET_NONE;
-  guint8 *data;
-  guint size;
-
+  gsize trim, size;
   gboolean change_duration = TRUE, change_offset = TRUE, change_offset_end =
       TRUE;
 
@@ -313,8 +311,8 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
    * Calculate the missing values for the calculations,
    * they won't be changed later though. */
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  trim = 0;
+  size = gst_buffer_get_size (buffer);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
@@ -359,7 +357,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
         diff = gst_util_uint64_scale (diff, rate, GST_SECOND);
         if (change_offset)
           offset += diff;
-        data += diff * frame_size;
+        trim += diff * frame_size;
         size -= diff * frame_size;
       }
 
@@ -398,7 +396,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
         if (change_duration)
           duration -= gst_util_uint64_scale (diff, GST_SECOND, rate);
 
-        data += diff * frame_size;
+        trim += diff * frame_size;
         size -= diff * frame_size;
       }
 
@@ -417,12 +415,11 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
     }
   }
 
-  /* Get a metadata writable buffer and apply all changes */
-  ret = gst_buffer_make_metadata_writable (buffer);
+  /* Get a writable buffer and apply all changes */
+  ret = gst_buffer_create_sub (buffer, offset, size);
+  gst_buffer_unref (buffer);
 
   GST_BUFFER_TIMESTAMP (ret) = timestamp;
-  GST_BUFFER_SIZE (ret) = size;
-  GST_BUFFER_DATA (ret) = data;
 
   if (change_duration)
     GST_BUFFER_DURATION (ret) = duration;

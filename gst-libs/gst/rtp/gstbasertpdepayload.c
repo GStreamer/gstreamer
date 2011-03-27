@@ -273,6 +273,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   guint32 rtptime;
   gboolean reset_seq, discont;
   gint gap;
+  GstRTPBuffer rtp;
 
   filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
   priv = filter->priv;
@@ -297,8 +298,11 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   priv->timestamp = timestamp;
   priv->duration = GST_BUFFER_DURATION (in);
 
-  seqnum = gst_rtp_buffer_get_seq (in);
-  rtptime = gst_rtp_buffer_get_timestamp (in);
+  gst_rtp_buffer_map (in, GST_MAP_READ, &rtp);
+  seqnum = gst_rtp_buffer_get_seq (&rtp);
+  rtptime = gst_rtp_buffer_get_timestamp (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
+
   reset_seq = TRUE;
   discont = FALSE;
 
@@ -342,7 +346,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
     /* we detected a seqnum discont but the buffer was not flagged with a discont,
      * set the discont flag so that the subclass can throw away old data. */
     priv->discont = TRUE;
-    in = gst_buffer_make_metadata_writable (in);
+    in = gst_buffer_make_writable (in);
     GST_BUFFER_FLAG_SET (in, GST_BUFFER_FLAG_DISCONT);
   }
 
@@ -527,7 +531,7 @@ set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
 {
   GstBaseRTPDepayload *depayload = data->depayload;
 
-  *buffer = gst_buffer_make_metadata_writable (*buffer);
+  *buffer = gst_buffer_make_writable (*buffer);
   gst_buffer_set_caps (*buffer, data->caps);
 
   /* set the timestamp if we must and can */
