@@ -302,18 +302,20 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
     ogg_packet packet;
     GstBuffer *buf;
     int ret;
+    gsize size;
 
     buf = parse->streamheader[i];
     if (buf == NULL)
       continue;
 
-    packet.packet = GST_BUFFER_DATA (buf);
-    packet.bytes = GST_BUFFER_SIZE (buf);
+    packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    packet.bytes = size;
     packet.granulepos = GST_BUFFER_OFFSET_END (buf);
     packet.packetno = i + 1;
     packet.e_o_s = 0;
     packet.b_o_s = (i == 0);
     ret = th_decode_headerin (&parse->info, &parse->comment, &setup, &packet);
+    gst_buffer_unmap (buf, packet.packet, size);
     if (ret < 0) {
       GST_WARNING_OBJECT (parse, "Failed to decode Theora header %d: %d\n",
           i + 1, ret);
@@ -435,11 +437,16 @@ parse_granulepos (GstTheoraParse * parse, gint64 granulepos,
 static gboolean
 is_keyframe (GstBuffer * buf)
 {
-  if (!GST_BUFFER_DATA (buf))
+  gsize size;
+  guint8 data[1];
+
+  size = gst_buffer_get_size (buf);
+  if (size == 0)
     return FALSE;
-  if (!GST_BUFFER_SIZE (buf))
-    return FALSE;
-  return ((GST_BUFFER_DATA (buf)[0] & 0x40) == 0);
+
+  gst_buffer_extract (buf, 0, data, 1);
+
+  return ((data[0] & 0x40) == 0);
 }
 
 static void
@@ -644,18 +651,20 @@ theora_parse_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn ret;
   GstTheoraParse *parse;
-  guint8 *data;
-  guint size;
+  guint8 *data, header;
+  gsize size;
   gboolean have_header;
 
   parse = GST_THEORA_PARSE (gst_pad_get_parent (pad));
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
-
   have_header = FALSE;
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  header = data[0];
+  gst_buffer_unmap (buffer, data, size);
+
   if (size >= 1) {
-    if (data[0] & 0x80)
+    if (header & 0x80)
       have_header = TRUE;
   }
 
@@ -663,8 +672,8 @@ theora_parse_chain (GstPad * pad, GstBuffer * buffer)
     if (parse->send_streamheader) {
       /* we need to collect the headers still */
       /* so put it on the streamheader list and return */
-      if (data[0] >= 0x80 && data[0] <= 0x82)
-        parse->streamheader[data[0] - 0x80] = buffer;
+      if (header >= 0x80 && header <= 0x82)
+        parse->streamheader[header - 0x80] = buffer;
     }
     ret = GST_FLOW_OK;
   } else {
