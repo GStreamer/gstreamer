@@ -44,14 +44,14 @@
  */
 
 /**
- * SECTION:element-textwrite
+ * SECTION:element-opencvtextoverlay
  *
- * FIXME:Describe textwrite here.
+ * opencvtextoverlay renders the text on top of the video frames
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m fakesrc ! textwrite ! fakesink silent=TRUE
+ * gst-launch-0.10 videotestsrc ! ffmpegcolorspace ! opencvtextoverlay text="Opencv Text Overlay " ! ffmpegcolorspace ! xvimagesink
  * ]|
  * </refsect2>
  */
@@ -63,10 +63,11 @@
 #include <gst/gst.h>
 
 #include "gstopencvutils.h"
-#include "gsttextwrite.h"
+#include "gsttextoverlay.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_textwrite_debug);
-#define GST_CAT_DEFAULT gst_textwrite_debug
+GST_DEBUG_CATEGORY_STATIC (gst_opencv_text_overlay_debug);
+#define GST_CAT_DEFAULT gst_opencv_opencv_text_overlay_debug
+
 #define DEFAULT_PROP_TEXT 	""
 #define DEFAULT_PROP_WIDTH 	1
 #define DEFAULT_PROP_HEIGHT 	1
@@ -114,23 +115,25 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
-GST_BOILERPLATE (Gsttextwrite, gst_textwrite, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstOpencvTextOverlay, gst_opencv_text_overlay, GstElement,
+    GST_TYPE_ELEMENT);
 
-static void gst_textwrite_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_textwrite_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
+static void gst_opencv_text_overlay_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_opencv_text_overlay_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_textwrite_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_textwrite_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_opencv_text_overlay_set_caps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_opencv_text_overlay_chain (GstPad * pad,
+    GstBuffer * buf);
 
 
 
 /* Clean up */
 static void
-gst_textwrite_finalize (GObject * obj)
+gst_opencv_text_overlay_finalize (GObject * obj)
 {
-  Gsttextwrite *filter = GST_textwrite (obj);
+  GstOpencvTextOverlay *filter = GST_OPENCV_TEXT_OVERLAY (obj);
 
   if (filter->cvImage) {
     cvReleaseImage (&filter->cvImage);
@@ -144,14 +147,14 @@ gst_textwrite_finalize (GObject * obj)
 /* GObject vmethod implementations */
 
 static void
-gst_textwrite_base_init (gpointer gclass)
+gst_opencv_text_overlay_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_set_details_simple (element_class,
-      "textwrite",
+      "opencvtextoverlay",
       "Filter/Effect/Video",
-      "Performs text writing to the video", "sreerenj<bsreerenj@gmail.com>");
+      "Write text on the top of video", "sreerenj<bsreerenj@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -159,19 +162,20 @@ gst_textwrite_base_init (gpointer gclass)
       gst_static_pad_template_get (&sink_factory));
 }
 
-/* initialize the textwrite's class */
+/* initialize the opencvtextoverlay's class */
 static void
-gst_textwrite_class_init (GsttextwriteClass * klass)
+gst_opencv_text_overlay_class_init (GstOpencvTextOverlayClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_textwrite_finalize);
+  gobject_class->finalize =
+      GST_DEBUG_FUNCPTR (gst_opencv_text_overlay_finalize);
 
-  gobject_class->set_property = gst_textwrite_set_property;
-  gobject_class->get_property = gst_textwrite_get_property;
+  gobject_class->set_property = gst_opencv_text_overlay_set_property;
+  gobject_class->get_property = gst_opencv_text_overlay_get_property;
 
 
   g_object_class_install_property (gobject_class, PROP_TEXT,
@@ -209,8 +213,6 @@ gst_textwrite_class_init (GsttextwriteClass * klass)
           "Sets the color -B", 0, 255,
           DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-
-
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_double ("height", "Height",
           "Sets the height of fonts", 1.0, 5.0,
@@ -229,15 +231,16 @@ gst_textwrite_class_init (GsttextwriteClass * klass)
  * initialize instance structure
  */
 static void
-gst_textwrite_init (Gsttextwrite * filter, GsttextwriteClass * gclass)
+gst_opencv_text_overlay_init (GstOpencvTextOverlay * filter,
+    GstOpencvTextOverlayClass * gclass)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_textwrite_set_caps));
+      GST_DEBUG_FUNCPTR (gst_opencv_text_overlay_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_textwrite_chain));
+      GST_DEBUG_FUNCPTR (gst_opencv_text_overlay_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
@@ -258,10 +261,10 @@ gst_textwrite_init (Gsttextwrite * filter, GsttextwriteClass * gclass)
 }
 
 static void
-gst_textwrite_set_property (GObject * object, guint prop_id,
+gst_opencv_text_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gsttextwrite *filter = GST_textwrite (object);
+  GstOpencvTextOverlay *filter = GST_OPENCV_TEXT_OVERLAY (object);
 
   switch (prop_id) {
     case PROP_TEXT:
@@ -301,10 +304,10 @@ gst_textwrite_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_textwrite_get_property (GObject * object, guint prop_id,
+gst_opencv_text_overlay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gsttextwrite *filter = GST_textwrite (object);
+  GstOpencvTextOverlay *filter = GST_OPENCV_TEXT_OVERLAY (object);
 
   switch (prop_id) {
     case PROP_TEXT:
@@ -344,15 +347,15 @@ gst_textwrite_get_property (GObject * object, guint prop_id,
 
 /* this function handles the link with other elements */
 static gboolean
-gst_textwrite_set_caps (GstPad * pad, GstCaps * caps)
+gst_opencv_text_overlay_set_caps (GstPad * pad, GstCaps * caps)
 {
-  Gsttextwrite *filter;
+  GstOpencvTextOverlay *filter;
   GstPad *otherpad;
 
   gint width, height;
   GstStructure *structure;
 
-  filter = GST_textwrite (gst_pad_get_parent (pad));
+  filter = GST_OPENCV_TEXT_OVERLAY (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &width);
@@ -371,11 +374,11 @@ gst_textwrite_set_caps (GstPad * pad, GstCaps * caps)
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_textwrite_chain (GstPad * pad, GstBuffer * buf)
+gst_opencv_text_overlay_chain (GstPad * pad, GstBuffer * buf)
 {
-  Gsttextwrite *filter;
+  GstOpencvTextOverlay *filter;
 
-  filter = GST_textwrite (GST_OBJECT_PARENT (pad));
+  filter = GST_OPENCV_TEXT_OVERLAY (GST_OBJECT_PARENT (pad));
 
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
 
@@ -396,15 +399,15 @@ gst_textwrite_chain (GstPad * pad, GstBuffer * buf)
  * register the element factories and other features
  */
 gboolean
-gst_textwrite_plugin_init (GstPlugin * plugin)
+gst_opencv_text_overlay_plugin_init (GstPlugin * plugin)
 {
   /* debug category for fltering log messages
    *
-   * exchange the string 'Template textwrite' with your description
+   * exchange the string 'Template opencvtextoverlay' with your description
    */
-  GST_DEBUG_CATEGORY_INIT (gst_textwrite_debug, "textwrite",
-      0, "Template textwrite");
+  GST_DEBUG_CATEGORY_INIT (gst_opencv_text_overlay_debug, "opencvtextoverlay",
+      0, "Template opencvtextoverlay");
 
-  return gst_element_register (plugin, "textwrite", GST_RANK_NONE,
-      GST_TYPE_textwrite);
+  return gst_element_register (plugin, "opencvtextoverlay", GST_RANK_NONE,
+      GST_TYPE_OPENCV_TEXT_OVERLAY);
 }

@@ -1143,6 +1143,20 @@ GST_TYPE_NUV_DEMUX
 gst_nuv_demux_get_type
 </SECTION>
 
+<FILE>element-opencvtextoverlay</FILE>
+<TITLE>opencvtextoverlay</TITLE>
+GstOpencvTextOverlay
+<SUBSECTION Standard>
+GstOpencvTextOverlayClass
+GST_OPENCV_TEXT_OVERLAY
+GST_OPENCV_TEXT_OVERLAY_CLASS
+GST_TYPE_OPENCV_TEXT_OVERLAY
+GST_IS_OPENCV_TEXT_OVERLAY
+GST_IS_OPENCV_TEXT_OVERLAY_CLASS
+gst_opencv_text_overlay_get_type
+gst_opencv_text_overlay_plugin_init
+</SECTION>
+
 <SECTION>
 <FILE>element-pcapparse</FILE>
 <TITLE>pcapparse</TITLE>
@@ -1491,20 +1505,6 @@ GST_IS_TEMPLATEMATCH
 GST_IS_TEMPLATEMATCH_CLASS
 gst_templatematch_get_type
 gst_templatematch_plugin_init
-</SECTION>
-
-<FILE>element-textwrite</FILE>
-<TITLE>textwrite</TITLE>
-Gsttextwrite
-<SUBSECTION Standard>
-GsttextwriteClass
-GST_textwrite
-GST_textwrite_CLASS
-GST_TYPE_textwrite
-GST_IS_textwrite
-GST_IS_textwrite_CLASS
-gst_textwrite_get_type
-gst_textwrite_plugin_init
 </SECTION>
 
 <SECTION>

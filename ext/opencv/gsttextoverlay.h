@@ -2,7 +2,7 @@
  * GStreamer
  * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2010 root <<user@hostname.org>>m
+ * Copyright (C) 2010 Sreerenj Balachandran <bsreerenj@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -43,37 +43,37 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_textwrite_H__
-#define __GST_textwrite_H__
+#ifndef __GST_OPENCV_TEXT_OVERLAY_H__
+#define __GST_OPENCV_TEXT_OVERLAY_H__
 
 #include <gst/gst.h>
 #include <cv.h>
 #include <cvaux.h>
 #include <highgui.h>
+
 G_BEGIN_DECLS
 
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_textwrite \
-  (gst_textwrite_get_type())
-#define GST_textwrite(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_textwrite,Gsttextwrite))
-#define GST_textwrite_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_textwrite,GsttextwriteClass))
-#define GST_IS_textwrite(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_textwrite))
-#define GST_IS_textwrite_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_textwrite))
+#define GST_TYPE_OPENCV_TEXT_OVERLAY \
+  (gst_opencv_text_overlay_get_type())
+#define GST_OPENCV_TEXT_OVERLAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OPENCV_TEXT_OVERLAY,GstOpencvTextOverlay))
+#define GST_OPECV_TEXT_OVERLAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OPECV_TEXT_OVERLAY,GstOpencvTextOverlayClass))
+#define GST_IS_OPENCV_TEXT_OVERLAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OPENCV_TEXT_OVERLAY))
+#define GST_IS_OPENCV_TEXT_OVERLAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPENCV_TEXT_OVERLAY))
 
-typedef struct _Gsttextwrite      Gsttextwrite;
-typedef struct _GsttextwriteClass GsttextwriteClass;
+typedef struct _GstOpencvTextOverlay  GstOpencvTextOverlay;
+typedef struct _GstOpencvTextOverlayClass GstOpencvTextOverlayClass;
 
-struct _Gsttextwrite
+struct _GstOpencvTextOverlay
 {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
 
- 
   IplImage *cvImage;
   CvMemStorage *cvStorage;
   CvFont font;  
@@ -88,14 +88,14 @@ struct _Gsttextwrite
 
 };
 
-struct _GsttextwriteClass 
+struct _GstOpencvTextOverlayClass 
 {
   GstElementClass parent_class;
 };
 
-GType gst_textwrite_get_type (void);
-gboolean gst_textwrite_plugin_init (GstPlugin * plugin);
+GType gst_opencv_text_overlay_get_type (void);
+gboolean gst_opencv_text_overlay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_textwrite_H__ */
+#endif /* __GST_OPENCV_TEXT_OVERLAY_H__ */

@@ -124,7 +124,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/opencv/gstfacedetect.h \
 	$(top_srcdir)/ext/opencv/gstpyramidsegment.h \
 	$(top_srcdir)/ext/opencv/gsttemplatematch.h \
-	$(top_srcdir)/ext/opencv/gsttextwrite.h \
+	$(top_srcdir)/ext/opencv/gsttextoverlay.h \
 	$(top_srcdir)/ext/rsvg/gstrsvgdec.h \
 	$(top_srcdir)/ext/rsvg/gstrsvgoverlay.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
