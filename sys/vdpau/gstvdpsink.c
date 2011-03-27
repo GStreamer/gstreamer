@@ -158,19 +158,53 @@ gst_vdp_sink_window_set_title (VdpSink * vdp_sink,
   }
 }
 
+static void
+gst_vdp_sink_window_setup_vdpau (VdpSink * vdp_sink, GstVdpWindow * window)
+{
+  GstVdpDevice *device = vdp_sink->device;
+  VdpStatus status;
+  VdpColor color = { 0, };
+
+  status = device->vdp_presentation_queue_target_create_x11 (device->device,
+      window->win, &window->target);
+  if (status != VDP_STATUS_OK) {
+    GST_ELEMENT_ERROR (vdp_sink, RESOURCE, READ,
+        ("Could not create presentation target"),
+        ("Error returned from vdpau was: %s",
+            device->vdp_get_error_string (status)));
+  }
+
+  status =
+      device->vdp_presentation_queue_create (device->device, window->target,
+      &window->queue);
+  if (status != VDP_STATUS_OK) {
+    GST_ELEMENT_ERROR (vdp_sink, RESOURCE, READ,
+        ("Could not create presentation queue"),
+        ("Error returned from vdpau was: %s",
+            device->vdp_get_error_string (status)));
+  }
+
+  status =
+      device->vdp_presentation_queue_set_background_color (window->queue,
+      &color);
+  if (status != VDP_STATUS_OK) {
+    GST_ELEMENT_ERROR (vdp_sink, RESOURCE, READ,
+        ("Could not set background color"),
+        ("Error returned from vdpau was: %s",
+            device->vdp_get_error_string (status)));
+  }
+}
+
 /* This function handles a GstVdpWindow creation */
 static GstVdpWindow *
 gst_vdp_sink_window_new (VdpSink * vdp_sink, gint width, gint height)
 {
-  GstVdpWindow *window = NULL;
   GstVdpDevice *device = vdp_sink->device;
+  GstVdpWindow *window = NULL;
 
   Window root;
   gint screen_num;
   gulong black;
-
-  VdpStatus status;
-  VdpColor color = { 0, };
 
   g_return_val_if_fail (GST_IS_VDP_SINK (vdp_sink), NULL);
 
@@ -218,35 +252,7 @@ gst_vdp_sink_window_new (VdpSink * vdp_sink, gint width, gint height)
   g_mutex_unlock (vdp_sink->x_lock);
 
   gst_vdp_sink_window_decorate (vdp_sink, window);
-
-  status = device->vdp_presentation_queue_target_create_x11 (device->device,
-      window->win, &window->target);
-  if (status != VDP_STATUS_OK) {
-    GST_ELEMENT_ERROR (vdp_sink, RESOURCE, READ,
-        ("Could not create presentation target"),
-        ("Error returned from vdpau was: %s",
-            device->vdp_get_error_string (status)));
-  }
-
-  status =
-      device->vdp_presentation_queue_create (device->device, window->target,
-      &window->queue);
-  if (status != VDP_STATUS_OK) {
-    GST_ELEMENT_ERROR (vdp_sink, RESOURCE, READ,
-        ("Could not create presentation queue"),
-        ("Error returned from vdpau was: %s",
-            device->vdp_get_error_string (status)));
-  }
-
-  status =
-      device->vdp_presentation_queue_set_background_color (window->queue,
-      &color);
-  if (status != VDP_STATUS_OK) {
-    GST_ELEMENT_ERROR (vdp_sink, RESOURCE, READ,
-        ("Could not set background color"),
-        ("Error returned from vdpau was: %s",
-            device->vdp_get_error_string (status)));
-  }
+  gst_vdp_sink_window_setup_vdpau (vdp_sink, window);
 
   gst_x_overlay_got_window_handle (GST_X_OVERLAY (vdp_sink),
       (guintptr) window->win);
@@ -1161,8 +1167,9 @@ gst_vdp_sink_set_window_handle (GstXOverlay * overlay, guintptr window_handle)
           StructureNotifyMask | PointerMotionMask | KeyPressMask |
           KeyReleaseMask);
     }
-
     g_mutex_unlock (vdp_sink->x_lock);
+
+    gst_vdp_sink_window_setup_vdpau (vdp_sink, window);
   }
 
   if (window)
