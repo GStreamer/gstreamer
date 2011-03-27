@@ -332,9 +332,9 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
 
     GST_BUFFER_OFFSET (buf) = offset;
     GST_BUFFER_OFFSET_END (buf) = offset + size;
-    GST_BUFFER_SIZE (buf) = size;
   } else {
     guint cachesize = MAX (4096, size);
+    guint8 *bdata;
     gssize read, res;
     gboolean success, eos;
     GError *err = NULL;
@@ -371,13 +371,14 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
      * supports reads up to 64k. So we loop here until we get at
      * at least the requested amount of bytes or a read returns
      * nothing. */
+    bdata = gst_buffer_map (src->cache, NULL, NULL, GST_MAP_WRITE);
     read = 0;
     while (size - read > 0 && (res =
             g_input_stream_read (G_INPUT_STREAM (src->stream),
-                GST_BUFFER_DATA (src->cache) + read, cachesize - read,
-                src->cancel, &err)) > 0) {
+                bdata + read, cachesize - read, src->cancel, &err)) > 0) {
       read += res;
     }
+    gst_buffer_unmap (src->cache, bdata, read);
 
     success = (read >= 0);
     eos = (cachesize > 0 && read == 0);
@@ -390,7 +391,6 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
 
     if (success && !eos) {
       src->position += read;
-      GST_BUFFER_SIZE (src->cache) = read;
 
       GST_BUFFER_OFFSET (src->cache) = offset;
       GST_BUFFER_OFFSET_END (src->cache) = offset + read;
@@ -404,7 +404,6 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
 
       GST_BUFFER_OFFSET (buf) = offset;
       GST_BUFFER_OFFSET_END (buf) = offset + MIN (size, read);
-      GST_BUFFER_SIZE (buf) = MIN (size, read);
     } else {
       GST_DEBUG_OBJECT (src, "Read not successful");
       gst_buffer_unref (src->cache);

@@ -642,7 +642,8 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (visual,
       "Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
-      GST_BUFFER_SIZE (buffer) / visual->bps, GST_BUFFER_TIMESTAMP (buffer));
+      gst_buffer_get_size (buffer) / visual->bps,
+      GST_BUFFER_TIMESTAMP (buffer));
 
   gst_adapter_push (visual->adapter, buffer);
 
@@ -828,8 +829,8 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       visual->actor =
-          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
-          plugname);
+          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->
+          info->plugname);
       visual->video = visual_video_new ();
       visual->audio = visual_audio_new ();
       /* can't have a play without actors */

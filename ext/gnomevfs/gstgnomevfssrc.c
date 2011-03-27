@@ -601,8 +601,8 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   GnomeVFSResult res;
   GstBuffer *buf;
   GnomeVFSFileSize readbytes;
-  guint8 *data;
-  guint todo;
+  guint8 *data, *ptr;
+  gsize todo;
   GstGnomeVFSSrc *src;
 
   src = GST_GNOME_VFS_SRC (basesrc);
@@ -630,12 +630,13 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
     return GST_FLOW_ERROR;
   }
 
-  data = GST_BUFFER_DATA (buf);
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
 
+  ptr = data;
   todo = size;
   while (todo > 0) {
     /* this can return less that we ask for */
-    res = gnome_vfs_read (src->handle, data, todo, &readbytes);
+    res = gnome_vfs_read (src->handle, ptr, todo, &readbytes);
 
     if (G_UNLIKELY (res == GNOME_VFS_ERROR_EOF || (res == GNOME_VFS_OK
                 && readbytes == 0)))
@@ -645,13 +646,15 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
       goto read_failed;
 
     if (readbytes < todo) {
-      data = &data[readbytes];
+      ptr += readbytes;
       todo -= readbytes;
     } else {
       todo = 0;
     }
     GST_LOG ("  got size %" G_GUINT64_FORMAT, readbytes);
   }
+  gst_buffer_unmap (buf, data, size);
+
   GST_BUFFER_OFFSET (buf) = src->curoffset;
   src->curoffset += size;
 
@@ -676,6 +679,7 @@ cannot_seek:
   }
 read_failed:
   {
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Failed to read data: %s", gnome_vfs_result_to_string (res)));
@@ -683,6 +687,7 @@ read_failed:
   }
 eos:
   {
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     GST_DEBUG_OBJECT (src, "Reading data gave EOS");
     return GST_FLOW_UNEXPECTED;

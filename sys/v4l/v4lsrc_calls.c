@@ -657,6 +657,7 @@ gst_meta_v4lsrc_get_info (void)
         sizeof (GstMetaV4lSrc),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) meta_v4lsrc_free,
+        (GstMetaCopyFunction) NULL,
         (GstMetaTransformFunction) NULL,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
   }
@@ -686,9 +687,11 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
   meta->num = num;
   meta->v4lsrc = gst_object_ref (v4lsrc);
 
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
-  GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
-  GST_BUFFER_SIZE (buf) = v4lsrc->buffer_size;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          gst_v4lsrc_get_buffer (v4lsrc, num), NULL, v4lsrc->buffer_size,
+          0, v4lsrc->buffer_size));
+
   GST_BUFFER_OFFSET (buf) = v4lsrc->offset++;
   GST_BUFFER_OFFSET_END (buf) = v4lsrc->offset;
 

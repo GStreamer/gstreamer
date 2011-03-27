@@ -400,7 +400,7 @@ gst_cd_paranoia_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
     goto read_failed;
 
   buf = gst_buffer_new_and_alloc (CD_FRAMESIZE_RAW);
-  memcpy (GST_BUFFER_DATA (buf), cdda_buf, CD_FRAMESIZE_RAW);
+  gst_buffer_fill (buf, 0, cdda_buf, CD_FRAMESIZE_RAW);
 
   /* cdda base class will take care of timestamping etc. */
   ++src->next_sector;

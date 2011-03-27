@@ -523,6 +523,8 @@ gst_gnome_vfs_sink_render (GstBaseSink * basesink, GstBuffer * buf)
   GstGnomeVFSSink *sink;
   GnomeVFSResult result;
   GstFlowReturn ret;
+  guint8 *data;
+  gsize size;
 
   sink = GST_GNOME_VFS_SINK (basesink);
 
@@ -531,22 +533,22 @@ gst_gnome_vfs_sink_render (GstBaseSink * basesink, GstBuffer * buf)
     sink->current_pos = cur_pos;
   }
 
-  result = gnome_vfs_write (sink->handle, GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf), &written);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  result = gnome_vfs_write (sink->handle, data, size, &written);
+  gst_buffer_unmap (buf, data, size);
 
   switch (result) {
     case GNOME_VFS_OK:{
       GST_DEBUG_OBJECT (sink, "wrote %" G_GINT64_FORMAT " bytes at %"
           G_GINT64_FORMAT, (gint64) written, (gint64) cur_pos);
 
-      if (written < GST_BUFFER_SIZE (buf)) {
+      if (written < size) {
         /* FIXME: what to do here? (tpm) */
-        g_warning ("%s: %d bytes should be written, only %"
-            G_GUINT64_FORMAT " bytes written", G_STRLOC,
-            GST_BUFFER_SIZE (buf), written);
+        g_warning ("%s: %" G_GSIZE_FORMAT " bytes should be written, only %"
+            G_GUINT64_FORMAT " bytes written", G_STRLOC, size, written);
       }
 
-      sink->current_pos += GST_BUFFER_SIZE (buf);
+      sink->current_pos += size;
       ret = GST_FLOW_OK;
       break;
     }
@@ -554,7 +556,7 @@ gst_gnome_vfs_sink_render (GstBaseSink * basesink, GstBuffer * buf)
       /* TODO: emit signal/send msg on out-of-diskspace and
        * handle this gracefully (see open bug) (tpm) */
       GST_ELEMENT_ERROR (sink, RESOURCE, NO_SPACE_LEFT, (NULL),
-          ("bufsize=%u, written=%u", GST_BUFFER_SIZE (buf), (guint) written));
+          ("bufsize=%u, written=%u", size, (guint) written));
       ret = GST_FLOW_ERROR;
       break;
     }
@@ -565,7 +567,7 @@ gst_gnome_vfs_sink_render (GstBaseSink * basesink, GstBuffer * buf)
       GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
           (_("Error while writing to file \"%s\"."), filename),
           ("%s, bufsize=%u, written=%u", gnome_vfs_result_to_string (result),
-              GST_BUFFER_SIZE (buf), (guint) written));
+              size, (guint) written));
 
       g_free (filename);
       ret = GST_FLOW_ERROR;

@@ -208,6 +208,7 @@ gst_meta_xvimage_get_info (void)
         sizeof (GstMetaXvImage),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
+        (GstMetaCopyFunction) NULL,
         (GstMetaTransformFunction) NULL,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
   }
@@ -401,7 +402,7 @@ static GstBuffer *
 gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
 {
   GstBuffer *buffer = NULL;
-  GstMetaXvImage *data = NULL;
+  GstMetaXvImage *meta = NULL;
   GstStructure *structure = NULL;
   gboolean succeeded = FALSE;
   int (*handler) (Display *, XErrorEvent *);
@@ -416,31 +417,31 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
   GST_MINI_OBJECT_CAST (buffer)->dispose =
       (GstMiniObjectDisposeFunction) gst_xvimage_buffer_dispose;
 
-  data = GST_META_XVIMAGE_ADD (buffer);
+  meta = GST_META_XVIMAGE_ADD (buffer);
 #ifdef HAVE_XSHM
-  data->SHMInfo.shmaddr = ((void *) -1);
-  data->SHMInfo.shmid = -1;
+  meta->SHMInfo.shmaddr = ((void *) -1);
+  meta->SHMInfo.shmid = -1;
 #endif
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (structure, "width", &data->width) ||
-      !gst_structure_get_int (structure, "height", &data->height)) {
+  if (!gst_structure_get_int (structure, "width", &meta->width) ||
+      !gst_structure_get_int (structure, "height", &meta->height)) {
     GST_WARNING ("failed getting geometry from caps %" GST_PTR_FORMAT, caps);
   }
 
-  GST_LOG_OBJECT (xvimagesink, "creating %dx%d", data->width, data->height);
+  GST_LOG_OBJECT (xvimagesink, "creating %dx%d", meta->width, meta->height);
 
-  data->im_format = gst_xvimagesink_get_format_from_caps (xvimagesink, caps);
-  if (data->im_format == -1) {
+  meta->im_format = gst_xvimagesink_get_format_from_caps (xvimagesink, caps);
+  if (meta->im_format == -1) {
     GST_WARNING_OBJECT (xvimagesink, "failed to get format from caps %"
         GST_PTR_FORMAT, caps);
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
-            data->width, data->height), ("Invalid input caps"));
+            meta->width, meta->height), ("Invalid input caps"));
     goto beach_unlocked;
   }
-  data->xvimagesink = gst_object_ref (xvimagesink);
+  meta->xvimagesink = gst_object_ref (xvimagesink);
 
   g_mutex_lock (xvimagesink->x_lock);
 
@@ -452,10 +453,10 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
   if (xvimagesink->xcontext->use_xshm) {
     int expected_size;
 
-    data->xvimage = XvShmCreateImage (xvimagesink->xcontext->disp,
+    meta->xvimage = XvShmCreateImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
-        data->im_format, NULL, data->width, data->height, &data->SHMInfo);
-    if (!data->xvimage || error_caught) {
+        meta->im_format, NULL, meta->width, meta->height, &meta->SHMInfo);
+    if (!meta->xvimage || error_caught) {
       g_mutex_unlock (xvimagesink->x_lock);
       /* Reset error handler */
       error_caught = FALSE;
@@ -463,20 +464,20 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
       /* Push an error */
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
-              data->width, data->height),
+              meta->width, meta->height),
           ("could not XvShmCreateImage a %dx%d image",
-              data->width, data->height));
+              meta->width, meta->height));
       goto beach_unlocked;
     }
 
     /* we have to use the returned data_size for our shm size */
-    data->size = data->xvimage->data_size;
+    meta->size = meta->xvimage->data_size;
     GST_LOG_OBJECT (xvimagesink, "XShm image size is %" G_GSIZE_FORMAT,
-        data->size);
+        meta->size);
 
     /* calculate the expected size.  This is only for sanity checking the
      * number we get from X. */
-    switch (data->im_format) {
+    switch (meta->im_format) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
       {
@@ -485,17 +486,17 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
         guint plane;
 
         offsets[0] = 0;
-        pitches[0] = GST_ROUND_UP_4 (data->width);
-        offsets[1] = offsets[0] + pitches[0] * GST_ROUND_UP_2 (data->height);
-        pitches[1] = GST_ROUND_UP_8 (data->width) / 2;
+        pitches[0] = GST_ROUND_UP_4 (meta->width);
+        offsets[1] = offsets[0] + pitches[0] * GST_ROUND_UP_2 (meta->height);
+        pitches[1] = GST_ROUND_UP_8 (meta->width) / 2;
         offsets[2] =
-            offsets[1] + pitches[1] * GST_ROUND_UP_2 (data->height) / 2;
+            offsets[1] + pitches[1] * GST_ROUND_UP_2 (meta->height) / 2;
         pitches[2] = GST_ROUND_UP_8 (pitches[0]) / 2;
 
         expected_size =
-            offsets[2] + pitches[2] * GST_ROUND_UP_2 (data->height) / 2;
+            offsets[2] + pitches[2] * GST_ROUND_UP_2 (meta->height) / 2;
 
-        for (plane = 0; plane < data->xvimage->num_planes; plane++) {
+        for (plane = 0; plane < meta->xvimage->num_planes; plane++) {
           GST_DEBUG_OBJECT (xvimagesink,
               "Plane %u has a expected pitch of %d bytes, " "offset of %d",
               plane, pitches[plane], offsets[plane]);
@@ -504,63 +505,63 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
       }
       case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
       case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
-        expected_size = data->height * GST_ROUND_UP_4 (data->width * 2);
+        expected_size = meta->height * GST_ROUND_UP_4 (meta->width * 2);
         break;
       default:
         expected_size = 0;
         break;
     }
-    if (expected_size != 0 && data->size != expected_size) {
+    if (expected_size != 0 && meta->size != expected_size) {
       GST_WARNING_OBJECT (xvimagesink,
           "unexpected XShm image size (got %" G_GSIZE_FORMAT ", expected %d)",
-          data->size, expected_size);
+          meta->size, expected_size);
     }
 
     /* Be verbose about our XvImage stride */
     {
       guint plane;
 
-      for (plane = 0; plane < data->xvimage->num_planes; plane++) {
+      for (plane = 0; plane < meta->xvimage->num_planes; plane++) {
         GST_DEBUG_OBJECT (xvimagesink, "Plane %u has a pitch of %d bytes, "
-            "offset of %d", plane, data->xvimage->pitches[plane],
-            data->xvimage->offsets[plane]);
+            "offset of %d", plane, meta->xvimage->pitches[plane],
+            meta->xvimage->offsets[plane]);
       }
     }
 
-    data->SHMInfo.shmid = shmget (IPC_PRIVATE, data->size, IPC_CREAT | 0777);
-    if (data->SHMInfo.shmid == -1) {
+    meta->SHMInfo.shmid = shmget (IPC_PRIVATE, meta->size, IPC_CREAT | 0777);
+    if (meta->SHMInfo.shmid == -1) {
       g_mutex_unlock (xvimagesink->x_lock);
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
-              data->width, data->height),
+              meta->width, meta->height),
           ("could not get shared memory of %" G_GSIZE_FORMAT " bytes",
-              data->size));
+              meta->size));
       goto beach_unlocked;
     }
 
-    data->SHMInfo.shmaddr = shmat (data->SHMInfo.shmid, NULL, 0);
-    if (data->SHMInfo.shmaddr == ((void *) -1)) {
+    meta->SHMInfo.shmaddr = shmat (meta->SHMInfo.shmid, NULL, 0);
+    if (meta->SHMInfo.shmaddr == ((void *) -1)) {
       g_mutex_unlock (xvimagesink->x_lock);
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
-              data->width, data->height),
+              meta->width, meta->height),
           ("Failed to shmat: %s", g_strerror (errno)));
       /* Clean up the shared memory segment */
-      shmctl (data->SHMInfo.shmid, IPC_RMID, NULL);
+      shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
       goto beach_unlocked;
     }
 
-    data->xvimage->data = data->SHMInfo.shmaddr;
-    data->SHMInfo.readOnly = FALSE;
+    meta->xvimage->data = meta->SHMInfo.shmaddr;
+    meta->SHMInfo.readOnly = FALSE;
 
-    if (XShmAttach (xvimagesink->xcontext->disp, &data->SHMInfo) == 0) {
+    if (XShmAttach (xvimagesink->xcontext->disp, &meta->SHMInfo) == 0) {
       /* Clean up the shared memory segment */
-      shmctl (data->SHMInfo.shmid, IPC_RMID, NULL);
+      shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
 
       g_mutex_unlock (xvimagesink->x_lock);
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
-              data->width, data->height), ("Failed to XShmAttach"));
+              meta->width, meta->height), ("Failed to XShmAttach"));
       goto beach_unlocked;
     }
 
@@ -569,17 +570,17 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     /* Delete the shared memory segment as soon as we everyone is attached.
      * This way, it will be deleted as soon as we detach later, and not
      * leaked if we crash. */
-    shmctl (data->SHMInfo.shmid, IPC_RMID, NULL);
+    shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
 
     GST_DEBUG_OBJECT (xvimagesink, "XServer ShmAttached to 0x%x, id 0x%lx",
-        data->SHMInfo.shmid, data->SHMInfo.shmseg);
+        meta->SHMInfo.shmid, meta->SHMInfo.shmseg);
   } else
 #endif /* HAVE_XSHM */
   {
-    data->xvimage = XvCreateImage (xvimagesink->xcontext->disp,
+    meta->xvimage = XvCreateImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
-        data->im_format, NULL, data->width, data->height);
-    if (!data->xvimage || error_caught) {
+        meta->im_format, NULL, meta->width, meta->height);
+    if (!meta->xvimage || error_caught) {
       g_mutex_unlock (xvimagesink->x_lock);
       /* Reset error handler */
       error_caught = FALSE;
@@ -587,14 +588,14 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
       /* Push an error */
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create outputimage buffer of %dx%d pixels",
-              data->width, data->height),
-          ("could not XvCreateImage a %dx%d image", data->width, data->height));
+              meta->width, meta->height),
+          ("could not XvCreateImage a %dx%d image", meta->width, meta->height));
       goto beach_unlocked;
     }
 
     /* we have to use the returned data_size for our image size */
-    data->size = data->xvimage->data_size;
-    data->xvimage->data = g_malloc (data->size);
+    meta->size = meta->xvimage->data_size;
+    meta->xvimage->data = g_malloc (meta->size);
 
     XSync (xvimagesink->xcontext->disp, FALSE);
   }
@@ -605,8 +606,9 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
 
   succeeded = TRUE;
 
-  GST_BUFFER_DATA (buffer) = (guchar *) data->xvimage->data;
-  GST_BUFFER_SIZE (buffer) = data->size;
+  gst_buffer_take_memory (buffer,
+      gst_memory_new_wrapped (0, meta->xvimage->data, NULL,
+          meta->size, 0, meta->size));
 
   g_mutex_unlock (xvimagesink->x_lock);
 
@@ -2345,6 +2347,9 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     if (!gst_xvimagesink_xvimage_put (xvimagesink, buf))
       goto no_window;
   } else {
+    guint8 *data;
+    gsize size;
+
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, xvimagesink,
         "slow copy into bufferpool buffer %p", buf);
     /* Else we have to copy the data into our private image, */
@@ -2359,23 +2364,14 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
         /* The create method should have posted an informative error */
         goto no_image;
 
-      if (GST_BUFFER_SIZE (xvimagesink->xvimage) < GST_BUFFER_SIZE (buf)) {
-        meta = GST_META_XVIMAGE_GET (xvimagesink->xvimage);
-
-        GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
-            ("Failed to create output image buffer of %dx%d pixels",
-                meta->width, meta->height),
-            ("XServer allocated buffer size did not match input buffer"));
-
-        gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
-        xvimagesink->xvimage = NULL;
-        goto no_image;
-      }
+      if (gst_buffer_get_size (xvimagesink->xvimage) <
+          gst_buffer_get_size (buf))
+        goto wrong_size;
     }
 
-    memcpy (GST_BUFFER_DATA (xvimagesink->xvimage),
-        GST_BUFFER_DATA (buf),
-        MIN (GST_BUFFER_SIZE (buf), GST_BUFFER_SIZE (xvimagesink->xvimage)));
+    data = gst_buffer_map (xvimagesink->xvimage, &size, NULL, GST_MAP_WRITE);
+    gst_buffer_extract (buf, 0, data, size);
+    gst_buffer_unmap (xvimagesink->xvimage, data, size);
 
     if (!gst_xvimagesink_xvimage_put (xvimagesink, xvimagesink->xvimage))
       goto no_window;
@@ -2395,6 +2391,19 @@ no_window:
     /* No Window available to put our image into */
     GST_WARNING_OBJECT (xvimagesink, "could not output image - no window");
     return GST_FLOW_ERROR;
+  }
+wrong_size:
+  {
+    meta = GST_META_XVIMAGE_GET (xvimagesink->xvimage);
+
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
+        ("Failed to create output image buffer of %dx%d pixels",
+            meta->width, meta->height),
+        ("XServer allocated buffer size did not match input buffer"));
+
+    gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
+    xvimagesink->xvimage = NULL;
+    goto no_image;
   }
 }
 

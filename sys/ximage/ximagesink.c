@@ -1219,6 +1219,8 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     res = GST_FLOW_OK;
   } else {
     GstBuffer *temp;
+    guint8 *data;
+    gsize size;
 
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
@@ -1233,11 +1235,12 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     if (res != GST_FLOW_OK)
       goto no_buffer;
 
-    if (GST_BUFFER_SIZE (temp) < GST_BUFFER_SIZE (buf))
+    if (gst_buffer_get_size (temp) < gst_buffer_get_size (buf))
       goto wrong_size;
 
-    memcpy (GST_BUFFER_DATA (temp), GST_BUFFER_DATA (buf),
-        MIN (GST_BUFFER_SIZE (temp), GST_BUFFER_SIZE (buf)));
+    data = gst_buffer_map (temp, &size, NULL, GST_MAP_WRITE);
+    gst_buffer_extract (buf, 0, data, size);
+    gst_buffer_unmap (temp, data, size);
 
     buf = temp;
   }

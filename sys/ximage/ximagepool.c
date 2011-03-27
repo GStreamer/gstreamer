@@ -43,6 +43,7 @@ gst_meta_ximage_get_info (void)
         sizeof (GstMetaXImage),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_meta_ximage_free,
+        (GstMetaCopyFunction) NULL,
         (GstMetaTransformFunction) NULL,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
   }
@@ -173,8 +174,9 @@ gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
   error_caught = FALSE;
   XSetErrorHandler (handler);
 
-  GST_BUFFER_DATA (buffer) = (guchar *) meta->ximage->data;
-  GST_BUFFER_SIZE (buffer) = meta->size;
+  gst_buffer_take_memory (buffer,
+      gst_memory_new_wrapped (0, meta->ximage->data, NULL,
+          meta->size, 0, meta->size));
 
   g_mutex_unlock (ximagesink->x_lock);
 
