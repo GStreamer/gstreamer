@@ -168,12 +168,13 @@ static void *
 gst_dccp_server_delete_dead_clients (void *arg)
 {
   GstDCCPServerSink *sink = (GstDCCPServerSink *) arg;
-  int i;
   GList *tmp = NULL;
+  GList *l;
 
   pthread_mutex_lock (&lock);
-  for (i = 0; i < g_list_length (sink->clients); i++) {
-    Client *client = (Client *) g_list_nth_data (sink->clients, i);
+  for (l = sink->clients; l != NULL; l = l->next) {
+    Client *client = (Client *) l->data;
+
     if (client->flow_status == GST_FLOW_OK) {
       tmp = g_list_append (tmp, client);
     } else {
@@ -272,20 +273,26 @@ gst_dccp_server_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstDCCPServerSink *sink = GST_DCCP_SERVER_SINK (bsink);
 
   pthread_t thread_id;
-  int i;
+  GList *l;
 
   pthread_mutex_lock (&lock);
 
-  for (i = 0; i < g_list_length (sink->clients); i++) {
-    Client *client = (Client *) g_list_nth_data (sink->clients, i);
+  for (l = sink->clients; l != NULL; l = l->next) {
+    Client *client = (Client *) l->data;
+
     client->buf = buf;
     client->server = sink;
 
+    /* FIXME: are we really creating a new thread here for every single buffer
+     * and every single client? */
     if (client->flow_status == GST_FLOW_OK) {
       pthread_create (&thread_id, NULL, gst_dccp_server_send_buffer,
           (void *) client);
       pthread_detach (thread_id);
     } else {
+      /* FIXME: what's the point of doing this in a separate thread if it
+       * keeps he global lock anyway while going through all the clients and
+       * waiting for close() to finish? */
       pthread_create (&thread_id, NULL, gst_dccp_server_delete_dead_clients,
           (void *) sink);
       pthread_detach (thread_id);
@@ -300,7 +307,8 @@ static gboolean
 gst_dccp_server_sink_stop (GstBaseSink * bsink)
 {
   GstDCCPServerSink *sink;
-  int i;
+  GList *l;
+
   sink = GST_DCCP_SERVER_SINK (bsink);
 
   if (sink->wait_connections == TRUE) {
@@ -310,8 +318,9 @@ gst_dccp_server_sink_stop (GstBaseSink * bsink)
   gst_dccp_socket_close (GST_ELEMENT (sink), &(sink->sock_fd));
 
   pthread_mutex_lock (&lock);
-  for (i = 0; i < g_list_length (sink->clients); i++) {
-    Client *client = (Client *) g_list_nth_data (sink->clients, i);
+  for (l = sink->clients; l != NULL; l = l->next) {
+    Client *client = (Client *) l->data;
+
     if (client->socket != DCCP_DEFAULT_CLIENT_SOCK_FD && sink->closed == TRUE) {
       gst_dccp_socket_close (GST_ELEMENT (sink), &(client->socket));
     }
