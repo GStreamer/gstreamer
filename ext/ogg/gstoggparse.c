@@ -286,15 +286,14 @@ gst_ogg_parse_dispose (GObject * object)
 static GstFlowReturn
 gst_ogg_parse_submit_buffer (GstOggParse * ogg, GstBuffer * buffer)
 {
-  guint size;
+  gsize size;
   guint8 *data;
   gchar *oggbuffer;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-  GST_DEBUG_OBJECT (ogg, "submitting %u bytes", size);
+  GST_DEBUG_OBJECT (ogg, "submitting %" G_GSIZE_FORMAT " bytes", size);
   if (G_UNLIKELY (size == 0))
     goto done;
 
@@ -314,6 +313,7 @@ gst_ogg_parse_submit_buffer (GstOggParse * ogg, GstBuffer * buffer)
   }
 
 done:
+  gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
 
   return ret;
@@ -368,8 +368,8 @@ gst_ogg_parse_buffer_from_page (ogg_page * page,
   int size = page->header_len + page->body_len;
   GstBuffer *buf = gst_buffer_new_and_alloc (size);
 
-  memcpy (GST_BUFFER_DATA (buf), page->header, page->header_len);
-  memcpy (GST_BUFFER_DATA (buf) + page->header_len, page->body, page->body_len);
+  gst_buffer_fill (buf, 0, page->header, page->header_len);
+  gst_buffer_fill (buf, page->header_len, page->body, page->body_len);
 
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_OFFSET (buf) = offset;
@@ -394,8 +394,9 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   ogg = GST_OGG_PARSE (GST_OBJECT_PARENT (pad));
 
-  GST_LOG_OBJECT (ogg, "Chain function received buffer of size %d",
-      GST_BUFFER_SIZE (buffer));
+  GST_LOG_OBJECT (ogg,
+      "Chain function received buffer of size %" G_GSIZE_FORMAT,
+      gst_buffer_get_size (buffer));
 
   gst_ogg_parse_submit_buffer (ogg, buffer);
 

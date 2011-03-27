@@ -303,19 +303,14 @@ static gboolean
 tag_list_from_vorbiscomment_packet (ogg_packet * packet,
     const guint8 * id_data, const guint id_data_length, GstTagList ** tags)
 {
-  GstBuffer *buf = NULL;
   gchar *encoder = NULL;
   GstTagList *list;
   gboolean ret = TRUE;
 
   g_return_val_if_fail (tags != NULL, FALSE);
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
-  GST_BUFFER_SIZE (buf) = packet->bytes;
-
-  list = gst_tag_list_from_vorbiscomment_buffer (buf, id_data, id_data_length,
-      &encoder);
+  list = gst_tag_list_from_vorbiscomment (packet->packet, packet->bytes,
+      id_data, id_data_length, &encoder);
 
   if (!list) {
     GST_WARNING ("failed to decode vorbis comments");
@@ -334,8 +329,6 @@ exit:
   if (*tags)
     gst_tag_list_free (*tags);
   *tags = list;
-
-  gst_buffer_unref (buf);
 
   return ret;
 }

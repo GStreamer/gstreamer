@@ -1754,11 +1754,15 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
   gint width, height;
   GstTextOverlayVAlign valign;
   GstTextOverlayHAlign halign;
+  guint8 *data;
+  gsize size;
 
   width = overlay->image_width;
   height = overlay->image_height;
 
   video_frame = gst_buffer_make_writable (video_frame);
+
+  data = gst_buffer_map (video_frame, &size, NULL, GST_MAP_WRITE);
 
   if (overlay->use_vertical_render)
     halign = GST_TEXT_OVERLAY_HALIGN_RIGHT;
@@ -1820,24 +1824,24 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_NV12:
       case GST_VIDEO_FORMAT_NV21:
-        gst_text_overlay_shade_planar_Y (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+        gst_text_overlay_shade_planar_Y (overlay, data,
+            xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
       case GST_VIDEO_FORMAT_AYUV:
       case GST_VIDEO_FORMAT_UYVY:
-        gst_text_overlay_shade_packed_Y (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+        gst_text_overlay_shade_packed_Y (overlay, data,
+            xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
       case GST_VIDEO_FORMAT_xRGB:
-        gst_text_overlay_shade_xRGB (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+        gst_text_overlay_shade_xRGB (overlay, data,
+            xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
       case GST_VIDEO_FORMAT_BGRx:
-        gst_text_overlay_shade_BGRx (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+        gst_text_overlay_shade_BGRx (overlay, data,
+            xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
       default:
@@ -1851,34 +1855,30 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
   if (overlay->text_image) {
     switch (overlay->format) {
       case GST_VIDEO_FORMAT_I420:
-        gst_text_overlay_blit_I420 (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_I420 (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_NV12:
       case GST_VIDEO_FORMAT_NV21:
-        gst_text_overlay_blit_NV12_NV21 (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_NV12_NV21 (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_UYVY:
-        gst_text_overlay_blit_UYVY (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_UYVY (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_AYUV:
-        gst_text_overlay_blit_AYUV (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_AYUV (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_BGRx:
-        gst_text_overlay_blit_BGRx (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_BGRx (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_xRGB:
-        gst_text_overlay_blit_xRGB (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_xRGB (overlay, data, xpos, ypos);
         break;
       default:
         g_assert_not_reached ();
     }
   }
+  gst_buffer_unmap (video_frame, data, size);
+
   return gst_pad_push (overlay->srcpad, video_frame);
 }
 
@@ -2237,7 +2237,7 @@ gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
   /* if the buffer is only partially in the segment, fix up stamps */
   if (clip_start != start || (stop != -1 && clip_stop != stop)) {
     GST_DEBUG_OBJECT (overlay, "clipping buffer timestamp/duration to segment");
-    buffer = gst_buffer_make_metadata_writable (buffer);
+    buffer = gst_buffer_make_writable (buffer);
     GST_BUFFER_TIMESTAMP (buffer) = clip_start;
     if (stop != -1)
       GST_BUFFER_DURATION (buffer) = clip_stop - clip_start;
@@ -2365,11 +2365,13 @@ wait_for_text_buf:
         /* Push the video frame */
         ret = gst_pad_push (overlay->srcpad, buffer);
       } else {
-        gchar *in_text;
-        gsize in_size;
+        gchar *in_text, *otext;
+        gsize in_size, osize;
 
-        in_text = (gchar *) GST_BUFFER_DATA (overlay->text_buffer);
-        in_size = GST_BUFFER_SIZE (overlay->text_buffer);
+        otext =
+            gst_buffer_map (overlay->text_buffer, &osize, NULL, GST_MAP_READ);
+        in_text = otext;
+        in_size = osize;
 
         /* g_markup_escape_text() absolutely requires valid UTF8 input, it
          * might crash otherwise. We don't fall back on GST_SUBTITLE_ENCODING
@@ -2403,8 +2405,9 @@ wait_for_text_buf:
           GST_DEBUG_OBJECT (overlay, "No text to render (empty buffer)");
           gst_text_overlay_render_text (overlay, " ", 1);
         }
+        gst_buffer_unmap (overlay->text_buffer, otext, osize);
 
-        if (in_text != (gchar *) GST_BUFFER_DATA (overlay->text_buffer))
+        if (in_text != otext)
           g_free (in_text);
 
         GST_OBJECT_UNLOCK (overlay);

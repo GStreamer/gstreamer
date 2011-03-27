@@ -725,32 +725,27 @@ gst_ogm_parse_comment_packet (GstOgmParse * ogm, GstBuffer * buf)
 static void
 gst_ogm_text_parse_strip_trailing_zeroes (GstOgmParse * ogm, GstBuffer * buf)
 {
-  const guint8 *data;
-  guint size;
+  guint8 *data;
+  gsize size;
 
-  g_assert (gst_buffer_is_metadata_writable (buf));
+  g_assert (gst_buffer_is_writable (buf));
 
   /* zeroes are not valid UTF-8 characters, so strip them from output */
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
   while (size > 0 && data[size - 1] == '\0') {
     --size;
   }
-
-  GST_BUFFER_SIZE (buf) = size;
+  gst_buffer_unmap (buf, data, size);
 }
 
 static GstFlowReturn
-gst_ogm_parse_data_packet (GstOgmParse * ogm, GstBuffer * buf)
+gst_ogm_parse_data_packet (GstOgmParse * ogm, GstBuffer * buf,
+    const guint8 * data, gsize size)
 {
   GstFlowReturn ret;
-  const guint8 *data;
   GstBuffer *sbuf;
   gboolean keyframe;
-  guint size, len, n, xsize = 0;
-
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  guint len, n, xsize = 0;
 
   if ((data[0] & 0x01) != 0)
     goto invalid_startcode;
@@ -857,9 +852,10 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstOgmParse *ogm = GST_OGM_PARSE (GST_PAD_PARENT (pad));
-  guint8 *data = GST_BUFFER_DATA (buf);
-  guint size = GST_BUFFER_SIZE (buf);
+  guint8 *data;
+  gsize size;
 
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   if (size < 1)
     goto buffer_too_small;
 
@@ -875,11 +871,12 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buf)
       break;
     }
     default:{
-      ret = gst_ogm_parse_data_packet (ogm, buf);
+      ret = gst_ogm_parse_data_packet (ogm, buf, data, size);
       break;
     }
   }
 
+  gst_buffer_unmap (buf, data, size);
   gst_buffer_unref (buf);
 
   if (ret != GST_FLOW_OK) {
@@ -892,6 +889,7 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buf)
 buffer_too_small:
   {
     GST_ELEMENT_ERROR (ogm, STREAM, DECODE, (NULL), ("buffer too small"));
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }

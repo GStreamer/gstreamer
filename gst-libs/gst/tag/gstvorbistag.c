@@ -364,7 +364,7 @@ convert_failed:
 }
 
 /**
- * gst_tag_list_from_vorbiscomment_buffer:
+ * gst_tag_list_from_vorbiscomment:
  * @data: data to convert
  * @size: size of @data
  * @id_data: identification data at start of stream
@@ -451,6 +451,37 @@ error:
   gst_tag_list_free (list);
   return NULL;
 #undef ADVANCE
+}
+
+/**
+ * gst_tag_list_from_vorbiscomment_buffer:
+ * @buffer: buffer to convert
+ * @id_data: identification data at start of stream
+ * @id_data_length: length of identification data
+ * @vendor_string: pointer to a string that should take the vendor string
+ *                 of this vorbis comment or NULL if you don't need it.
+ *
+ * Creates a new tag list that contains the information parsed out of a
+ * vorbiscomment packet.
+ *
+ * Returns: A new #GstTagList with all tags that could be extracted from the
+ *          given vorbiscomment buffer or NULL on error.
+ */
+GstTagList *
+gst_tag_list_from_vorbiscomment_buffer (GstBuffer * buffer,
+    const guint8 * id_data, const guint id_data_length, gchar ** vendor_string)
+{
+  GstTagList *res;
+  guint8 *data;
+  gsize size;
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  res =
+      gst_tag_list_from_vorbiscomment (data, size, id_data, id_data_length,
+      vendor_string);
+  gst_buffer_unmap (buffer, data, size);
+
+  return res;
 }
 
 typedef struct

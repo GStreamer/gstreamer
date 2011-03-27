@@ -450,6 +450,10 @@ GstTagList *            gst_tag_list_from_vorbiscomment         (const guint8 * 
                                                                  const guint8 *         id_data,
                                                                  const guint            id_data_length,
                                                                  gchar **               vendor_string);
+GstTagList *            gst_tag_list_from_vorbiscomment_buffer  (GstBuffer *            buffer,
+                                                                 const guint8 *         id_data,
+                                                                 const guint            id_data_length,
+                                                                 gchar **               vendor_string);
 GstBuffer *             gst_tag_list_to_vorbiscomment_buffer    (const GstTagList *     list,
                                                                  const guint8 *         id_data,
                                                                  const guint            id_data_length,

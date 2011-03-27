@@ -466,12 +466,14 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   GstFlowReturn ret;
   GstBuffer *outbuf;
   GstCaps *caps = NULL;
-  guint8 *data = GST_BUFFER_DATA (inbuf);
-  guint size = GST_BUFFER_SIZE (inbuf);
+  guint8 *data;
+  gsize size;
   gint n;
   gint xpos, ypos;
 
   render = GST_TEXT_RENDER (gst_pad_get_parent (pad));
+
+  data = gst_buffer_map (inbuf, &size, NULL, GST_MAP_READ);
 
   /* somehow pango barfs over "\0" buffers... */
   while (size > 0 &&
@@ -484,6 +486,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   GST_DEBUG ("rendering '%*s'", size, data);
   pango_layout_set_markup (render->layout, (gchar *) data, size);
   gst_text_render_render_pangocairo (render);
+  gst_buffer_unmap (inbuf, data, size);
 
   gst_text_render_check_argb (render);
 
@@ -512,8 +515,8 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   if (ret != GST_FLOW_OK)
     goto done;
 
-  gst_buffer_copy_metadata (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
-  data = GST_BUFFER_DATA (outbuf);
+  gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
 
   if (render->use_ARGB) {
     memset (data, 0, render->width * render->height * 4);
@@ -562,6 +565,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
           render->width * 4);
     }
   }
+  gst_buffer_unmap (outbuf, data, size);
 
   ret = gst_pad_push (render->srcpad, outbuf);
 

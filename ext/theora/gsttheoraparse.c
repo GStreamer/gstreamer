@@ -267,7 +267,7 @@ theora_parse_set_header_on_caps (GstTheoraParse * parse, GstCaps * caps)
     if (bufs[i] == NULL)
       continue;
 
-    bufs[i] = gst_buffer_make_metadata_writable (bufs[i]);
+    bufs[i] = gst_buffer_make_writable (bufs[i]);
     GST_BUFFER_FLAG_SET (bufs[i], GST_BUFFER_FLAG_IN_CAPS);
 
     g_value_init (&value, GST_TYPE_BUFFER);
@@ -367,7 +367,7 @@ theora_parse_push_headers (GstTheoraParse * parse)
     GstBuffer *buf;
 
     if ((buf = parse->streamheader[i])) {
-      buf = gst_buffer_make_metadata_writable (buf);
+      buf = gst_buffer_make_writable (buf);
       gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
       gst_pad_push (parse->srcpad, buf);
       parse->streamheader[i] = NULL;
@@ -624,7 +624,7 @@ theora_parse_queue_buffer (GstTheoraParse * parse, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
-  buf = gst_buffer_make_metadata_writable (buf);
+  buf = gst_buffer_make_writable (buf);
 
   g_queue_push_tail (parse->buffer_queue, buf);
 

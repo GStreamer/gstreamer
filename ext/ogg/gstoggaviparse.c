@@ -196,8 +196,8 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   const GValue *codec_data;
   GstBuffer *buffer;
-  guint8 *data;
-  guint size;
+  guint8 *data, *ptr;
+  gsize size, left;
   guint32 sizes[3];
   GstCaps *outcaps;
   gint i, offs;
@@ -221,31 +221,33 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
   /* first 22 bytes are bits_per_sample, channel_mask, GUID
    * Then we get 3 LE guint32 with the 3 header sizes
    * then we get the bytes of the 3 headers. */
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-  GST_LOG_OBJECT (ogg, "configuring codec_data of size %u", size);
+  ptr = data;
+  left = size;
+
+  GST_LOG_OBJECT (ogg, "configuring codec_data of size %u", left);
 
   /* skip headers */
-  data += 22;
-  size -= 22;
+  ptr += 22;
+  left -= 22;
 
   /* we need at least 12 bytes for the packet sizes of the 3 headers */
-  if (size < 12)
+  if (left < 12)
     goto buffer_too_small;
 
   /* read sizes of the 3 headers */
-  sizes[0] = GST_READ_UINT32_LE (data);
-  sizes[1] = GST_READ_UINT32_LE (data + 4);
-  sizes[2] = GST_READ_UINT32_LE (data + 8);
+  sizes[0] = GST_READ_UINT32_LE (ptr);
+  sizes[1] = GST_READ_UINT32_LE (ptr + 4);
+  sizes[2] = GST_READ_UINT32_LE (ptr + 8);
 
   GST_DEBUG_OBJECT (ogg, "header sizes: %u %u %u", sizes[0], sizes[1],
       sizes[2]);
 
-  size -= 12;
+  left -= 12;
 
   /* and we need at least enough data for all the headers */
-  if (size < sizes[0] + sizes[1] + sizes[2])
+  if (left < sizes[0] + sizes[1] + sizes[2])
     goto buffer_too_small;
 
   /* set caps */
@@ -264,6 +266,7 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
 
     offs += sizes[i];
   }
+  gst_buffer_unmap (buffer, data, size);
   gst_caps_unref (outcaps);
 
   return TRUE;
@@ -282,6 +285,7 @@ wrong_format:
 buffer_too_small:
   {
     GST_DEBUG_OBJECT (ogg, "codec_data is too small");
+    gst_buffer_unmap (buffer, data, size);
     return FALSE;
   }
 }
@@ -319,7 +323,7 @@ gst_ogg_avi_parse_push_packet (GstOggAviParse * ogg, ogg_packet * packet)
 
   /* allocate space for header and body */
   buffer = gst_buffer_new_and_alloc (packet->bytes);
-  memcpy (GST_BUFFER_DATA (buffer), packet->packet, packet->bytes);
+  gst_buffer_fill (buffer, 0, packet->packet, packet->bytes);
 
   GST_LOG_OBJECT (ogg, "created buffer %p from page", buffer);
 
@@ -340,15 +344,13 @@ gst_ogg_avi_parse_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn result = GST_FLOW_OK;
   GstOggAviParse *ogg;
-  guint8 *data;
   guint size;
   gchar *oggbuf;
   gint ret = -1;
 
   ogg = GST_OGG_AVI_PARSE (GST_OBJECT_PARENT (pad));
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  size = gst_buffer_get_size (buffer);
 
   GST_LOG_OBJECT (ogg, "Chain function received buffer of size %d", size);
 
@@ -359,7 +361,7 @@ gst_ogg_avi_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   /* write data to sync layer */
   oggbuf = ogg_sync_buffer (&ogg->sync, size);
-  memcpy (oggbuf, data, size);
+  gst_buffer_extract (buffer, 0, oggbuf, size);
   ogg_sync_wrote (&ogg->sync, size);
   gst_buffer_unref (buffer);
 

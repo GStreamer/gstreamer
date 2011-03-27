@@ -651,6 +651,8 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     gboolean need_skip;
     const guint16 *data;
     guint64 dist, timestamp;
+    guint8 *outdata;
+    gsize outsize;
 
     GST_DEBUG_OBJECT (visual, "processing buffer");
 
@@ -697,7 +699,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
     /* Read VISUAL_SAMPLES samples per channel */
     data =
-        (const guint16 *) gst_adapter_peek (visual->adapter,
+        (const guint16 *) gst_adapter_map (visual->adapter,
         VISUAL_SAMPLES * visual->bps);
 
 #if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
@@ -783,14 +785,19 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     if (outbuf == NULL) {
       ret = get_buffer (visual, &outbuf);
       if (ret != GST_FLOW_OK) {
+        gst_adapter_unmap (visual->adapter, 0);
         goto beach;
       }
     }
-    visual_video_set_buffer (visual->video, GST_BUFFER_DATA (outbuf));
+    outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+    visual_video_set_buffer (visual->video, outdata);
     visual_audio_analyze (visual->audio);
     visual_actor_run (visual->actor, visual->audio);
     visual_video_set_buffer (visual->video, NULL);
+    gst_buffer_unmap (outbuf, outdata, outsize);
     GST_DEBUG_OBJECT (visual, "rendered one frame");
+
+    gst_adapter_unmap (visual->adapter, 0);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     GST_BUFFER_DURATION (outbuf) = visual->duration;

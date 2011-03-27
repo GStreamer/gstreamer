@@ -748,7 +748,7 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
     goto done;
   }
 
-  memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
+  gst_buffer_fill (buf, 0, packet->packet, packet->bytes);
   gst_buffer_set_caps (buf, GST_PAD_CAPS (enc->srcpad));
   /* see ext/ogg/README; OFFSET_END takes "our" granulepos, OFFSET its
    * time representation */
@@ -786,7 +786,7 @@ theora_push_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
 {
   GstFlowReturn ret;
 
-  enc->bytes_out += GST_BUFFER_SIZE (buffer);
+  enc->bytes_out += gst_buffer_get_size (buffer);
 
   ret = gst_pad_push (enc->srcpad, buffer);
 
@@ -1049,17 +1049,21 @@ theora_enc_read_multipass_cache (GstTheoraEnc * enc)
 
   while (!done) {
     if (gst_adapter_available (enc->multipass_cache_adapter) == 0) {
+      guint8 *data;
+      gsize size;
+
       cache_buf = gst_buffer_new_and_alloc (512);
+
+      data = gst_buffer_map (cache_buf, &size, NULL, GST_MAP_READ);
       stat = g_io_channel_read_chars (enc->multipass_cache_fd,
-          (gchar *) GST_BUFFER_DATA (cache_buf), GST_BUFFER_SIZE (cache_buf),
-          &bytes_read, NULL);
+          (gchar *) data, size, &bytes_read, NULL);
 
       if (bytes_read <= 0) {
+        gst_buffer_unmap (cache_buf, data, 0);
         gst_buffer_unref (cache_buf);
         break;
       } else {
-        GST_BUFFER_SIZE (cache_buf) = bytes_read;
-
+        gst_buffer_unmap (cache_buf, data, bytes_read);
         gst_adapter_push (enc->multipass_cache_adapter, cache_buf);
       }
     }
@@ -1069,11 +1073,13 @@ theora_enc_read_multipass_cache (GstTheoraEnc * enc)
     bytes_read =
         MIN (gst_adapter_available (enc->multipass_cache_adapter), 512);
 
-    cache_data = gst_adapter_peek (enc->multipass_cache_adapter, bytes_read);
+    cache_data = gst_adapter_map (enc->multipass_cache_adapter, bytes_read);
 
     bytes_consumed =
         th_encode_ctl (enc->encoder, TH_ENCCTL_2PASS_IN, (guint8 *) cache_data,
         bytes_read);
+    gst_adapter_unmap (enc->multipass_cache_adapter, 0);
+
     done = bytes_consumed <= 0;
     if (bytes_consumed > 0)
       gst_adapter_flush (enc->multipass_cache_adapter, bytes_consumed);
@@ -1258,8 +1264,11 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   {
     th_ycbcr_buffer ycbcr;
     gint res;
+    guint8 *data;
+    gsize size;
 
-    theora_enc_init_buffer (ycbcr, &enc->info, GST_BUFFER_DATA (buffer));
+    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+    theora_enc_init_buffer (ycbcr, &enc->info, data);
 
     if (theora_enc_is_discontinuous (enc, running_time, duration)) {
       theora_enc_reset (enc);
@@ -1274,6 +1283,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     if (enc->multipass_cache_fd
         && enc->multipass_mode == MULTIPASS_MODE_SECOND_PASS) {
       if (!theora_enc_read_multipass_cache (enc)) {
+        gst_buffer_unmap (buffer, data, size);
         ret = GST_FLOW_ERROR;
         goto multipass_read_failed;
       }
@@ -1286,6 +1296,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     if (enc->multipass_cache_fd
         && enc->multipass_mode == MULTIPASS_MODE_FIRST_PASS) {
       if (!theora_enc_write_multipass_cache (enc)) {
+        gst_buffer_unmap (buffer, data, size);
         ret = GST_FLOW_ERROR;
         goto multipass_write_failed;
       }
@@ -1302,9 +1313,12 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
           next_time - enc->next_ts);
 
       enc->next_ts = next_time;
-      if (ret != GST_FLOW_OK)
+      if (ret != GST_FLOW_OK) {
+        gst_buffer_unmap (buffer, data, size);
         goto data_push;
+      }
     }
+    gst_buffer_unmap (buffer, data, size);
     gst_buffer_unref (buffer);
   }
 

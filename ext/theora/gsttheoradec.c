@@ -716,28 +716,30 @@ theora_dec_setcaps (GstPad * pad, GstCaps * caps)
   if ((codec_data = gst_structure_get_value (s, "codec_data"))) {
     if (G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
       GstBuffer *buffer;
-      guint8 *data;
-      guint size;
+      guint8 *data, *ptr;
+      gsize size, left;
       guint offset;
 
       buffer = gst_value_get_buffer (codec_data);
 
       offset = 0;
-      size = GST_BUFFER_SIZE (buffer);
-      data = GST_BUFFER_DATA (buffer);
+      data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-      while (size > 2) {
+      ptr = data;
+      left = size;
+
+      while (left > 2) {
         guint psize;
         GstBuffer *buf;
 
-        psize = (data[0] << 8) | data[1];
+        psize = (ptr[0] << 8) | ptr[1];
         /* skip header */
-        data += 2;
-        size -= 2;
+        ptr += 2;
+        left -= 2;
         offset += 2;
 
         /* make sure we don't read too much */
-        psize = MIN (psize, size);
+        psize = MIN (psize, left);
 
         buf = gst_buffer_create_sub (buffer, offset, psize);
 
@@ -749,10 +751,11 @@ theora_dec_setcaps (GstPad * pad, GstCaps * caps)
         theora_dec_chain (pad, buf);
 
         /* skip the data */
-        size -= psize;
-        data += psize;
+        left -= psize;
+        ptr += psize;
         offset += psize;
       }
+      gst_buffer_unmap (buffer, data, size);
     }
   }
 
@@ -765,20 +768,13 @@ static GstFlowReturn
 theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 {
   gchar *encoder = NULL;
-  GstBuffer *buf;
   GstTagList *list;
 
   GST_DEBUG_OBJECT (dec, "parsing comment packet");
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_SIZE (buf) = packet->bytes;
-  GST_BUFFER_DATA (buf) = packet->packet;
-
   list =
-      gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\201theora", 7,
-      &encoder);
-
-  gst_buffer_unref (buf);
+      gst_tag_list_from_vorbiscomment (packet->packet, packet->bytes,
+      (guint8 *) "\201theora", 7, &encoder);
 
   if (!list) {
     GST_ERROR_OBJECT (dec, "couldn't decode comments");
@@ -1056,6 +1052,8 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   int i, plane;
   GstVideoFormat format;
   guint8 *dest, *src;
+  gsize size;
+  guint8 *data;
 
   switch (dec->info.pixel_fmt) {
     case TH_PF_444:
@@ -1081,13 +1079,14 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
     return result;
   }
 
+  data = gst_buffer_map (*out, &size, NULL, GST_MAP_WRITE);
+
   for (plane = 0; plane < 3; plane++) {
     width = gst_video_format_get_component_width (format, plane, dec->width);
     height = gst_video_format_get_component_height (format, plane, dec->height);
     stride = gst_video_format_get_row_stride (format, plane, dec->width);
 
-    dest =
-        GST_BUFFER_DATA (*out) + gst_video_format_get_component_offset (format,
+    dest = data + gst_video_format_get_component_offset (format,
         plane, dec->width, dec->height);
     src = buf[plane].data;
     src += ((height == dec->height) ? dec->offset_y : dec->offset_y / 2)
@@ -1101,6 +1100,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
       src += buf[plane].stride;
     }
   }
+  gst_buffer_unmap (*out, data, size);
 
   return GST_FLOW_OK;
 }
@@ -1268,10 +1268,11 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
   GstClockTime timestamp, duration;
+  gsize size;
 
   /* make ogg_packet out of the buffer */
-  packet.packet = GST_BUFFER_DATA (buf);
-  packet.bytes = GST_BUFFER_SIZE (buf);
+  packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  packet.bytes = size;
   packet.granulepos = -1;
   packet.packetno = 0;          /* we don't really care */
   packet.b_o_s = dec->have_header ? 0 : 1;
@@ -1299,8 +1300,9 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
   } else {
     result = theora_handle_data_packet (dec, &packet, timestamp, duration);
   }
-
 done:
+  gst_buffer_unmap (buf, packet.packet, size);
+
   return result;
 }
 
@@ -1430,7 +1432,7 @@ theora_dec_chain_reverse (GstTheoraDec * dec, gboolean discont, GstBuffer * buf)
     GST_DEBUG_OBJECT (dec, "received discont,gathering buffers");
     while (dec->gather) {
       GstBuffer *gbuf;
-      guint8 *data;
+      guint8 data[1];
 
       gbuf = GST_BUFFER_CAST (dec->gather->data);
       /* remove from the gather list */
@@ -1439,7 +1441,7 @@ theora_dec_chain_reverse (GstTheoraDec * dec, gboolean discont, GstBuffer * buf)
       dec->decode = g_list_prepend (dec->decode, gbuf);
 
       /* if we copied a keyframe, flush and decode the decode queue */
-      data = GST_BUFFER_DATA (gbuf);
+      gst_buffer_extract (gbuf, 0, data, 1);
       if ((data[0] & 0x40) == 0) {
         GST_DEBUG_OBJECT (dec, "copied keyframe");
         res = theora_dec_flush_decode (dec);
@@ -1449,7 +1451,7 @@ theora_dec_chain_reverse (GstTheoraDec * dec, gboolean discont, GstBuffer * buf)
 
   /* add buffer to gather queue */
   GST_DEBUG_OBJECT (dec, "gathering buffer %p, size %u", buf,
-      GST_BUFFER_SIZE (buf));
+      gst_buffer_get_size (buf));
   dec->gather = g_list_prepend (dec->gather, buf);
 
   return res;

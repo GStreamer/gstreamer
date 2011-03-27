@@ -581,7 +581,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   /* copy packet in buffer */
-  memcpy (buf->data, packet->packet + offset, packet->bytes - offset - trim);
+  gst_buffer_fill (buf, 0, packet->packet + offset,
+      packet->bytes - offset - trim);
 
   GST_BUFFER_TIMESTAMP (buf) = out_timestamp;
   GST_BUFFER_DURATION (buf) = out_duration;
@@ -1400,15 +1401,14 @@ gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
 {
-  gint size;
+  gsize size;
   guint8 *data;
   gchar *oggbuffer;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-  GST_DEBUG_OBJECT (ogg, "submitting %u bytes", size);
+  GST_DEBUG_OBJECT (ogg, "submitting %" G_GSIZE_FORMAT " bytes", size);
   if (G_UNLIKELY (size == 0))
     goto done;
 
@@ -1421,6 +1421,7 @@ gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
     goto write_failed;
 
 done:
+  gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
 
   return ret;
@@ -1479,7 +1480,7 @@ gst_ogg_demux_get_data (GstOggDemux * ogg, gint64 end_offset)
   if (ret != GST_FLOW_OK)
     goto error;
 
-  ogg->read_offset += GST_BUFFER_SIZE (buffer);
+  ogg->read_offset += gst_buffer_get_size (buffer);
 
   ret = gst_ogg_demux_submit_buffer (ogg, buffer);
 
@@ -1725,7 +1726,7 @@ gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg, GstCaps * caps,
     ogg_packet *op = headers->data;
     g_assert (op);
     buffer = gst_buffer_new_and_alloc (op->bytes);
-    memcpy (GST_BUFFER_DATA (buffer), op->packet, op->bytes);
+    gst_buffer_fill (buffer, 0, op->packet, op->bytes);
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
     g_value_init (&value, GST_TYPE_BUFFER);
     gst_value_take_buffer (&value, buffer);
@@ -3272,7 +3273,7 @@ gst_ogg_demux_loop_forward (GstOggDemux * ogg)
     goto done;
   }
 
-  ogg->offset += GST_BUFFER_SIZE (buffer);
+  ogg->offset += gst_buffer_get_size (buffer);
 
   if (G_UNLIKELY (ogg->newsegment)) {
     gst_ogg_demux_send_event (ogg, ogg->newsegment);
