@@ -847,7 +847,7 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
 {
   GstBuffer *buf, *out_buf;
   GstFlowReturn ret;
-  guint64 chunk_bytes;
+  int chunk_bytes;
 
   GST_LOG_OBJECT (mux, "Have buffer with new_pcr=%" G_GINT64_FORMAT " size %d",
       new_pcr, len);
