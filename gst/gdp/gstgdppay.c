@@ -77,9 +77,7 @@ GST_BOILERPLATE_FULL (GstGDPPay, gst_gdp_pay, GstElement,
 static void gst_gdp_pay_reset (GstGDPPay * this);
 
 static GstFlowReturn gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer);
-
 static gboolean gst_gdp_pay_src_event (GstPad * pad, GstEvent * event);
-
 static gboolean gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_gdp_pay_change_state (GstElement *
@@ -112,7 +110,6 @@ static void
 gst_gdp_pay_class_init (GstGDPPayClass * klass)
 {
   GObjectClass *gobject_class;
-
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -216,7 +213,7 @@ static void
 gst_gdp_stamp_buffer (GstGDPPay * this, GstBuffer * buffer)
 {
   GST_BUFFER_OFFSET (buffer) = this->offset;
-  GST_BUFFER_OFFSET_END (buffer) = this->offset + GST_BUFFER_SIZE (buffer);
+  GST_BUFFER_OFFSET_END (buffer) = this->offset + gst_buffer_get_size (buffer);
   this->offset = GST_BUFFER_OFFSET_END (buffer);
 }
 
@@ -224,12 +221,9 @@ static GstBuffer *
 gst_gdp_buffer_from_caps (GstGDPPay * this, GstCaps * caps)
 {
   GstBuffer *headerbuf;
-
   GstBuffer *payloadbuf;
-
   guint8 *header, *payload;
-
-  guint len;
+  guint len, plen;
 
   if (!this->packetizer->packet_from_caps (caps, this->header_flag, &len,
           &header, &payload))
@@ -237,13 +231,13 @@ gst_gdp_buffer_from_caps (GstGDPPay * this, GstCaps * caps)
 
   GST_LOG_OBJECT (this, "creating GDP header and payload buffer from caps");
   headerbuf = gst_buffer_new ();
-  gst_buffer_set_data (headerbuf, header, len);
-  GST_BUFFER_MALLOCDATA (headerbuf) = header;
+  gst_buffer_take_memory (headerbuf,
+      gst_memory_new_wrapped (0, header, g_free, len, 0, len));
 
   payloadbuf = gst_buffer_new ();
-  gst_buffer_set_data (payloadbuf, payload,
-      gst_dp_header_payload_length (header));
-  GST_BUFFER_MALLOCDATA (payloadbuf) = payload;
+  plen = gst_dp_header_payload_length (header);
+  gst_buffer_take_memory (payloadbuf,
+      gst_memory_new_wrapped (0, payload, g_free, plen, 0, plen));
 
   return gst_buffer_join (headerbuf, payloadbuf);
 
@@ -259,9 +253,7 @@ static GstBuffer *
 gst_gdp_pay_buffer_from_buffer (GstGDPPay * this, GstBuffer * buffer)
 {
   GstBuffer *headerbuf;
-
   guint8 *header;
-
   guint len;
 
   if (!this->packetizer->header_from_buffer (buffer, this->header_flag, &len,
@@ -270,8 +262,8 @@ gst_gdp_pay_buffer_from_buffer (GstGDPPay * this, GstBuffer * buffer)
 
   GST_LOG_OBJECT (this, "creating GDP header and payload buffer from buffer");
   headerbuf = gst_buffer_new ();
-  gst_buffer_set_data (headerbuf, header, len);
-  GST_BUFFER_MALLOCDATA (headerbuf) = header;
+  gst_buffer_take_memory (headerbuf,
+      gst_memory_new_wrapped (0, header, g_free, len, 0, len));
 
   /* we do not want to lose the ref on the incoming buffer */
   gst_buffer_ref (buffer);
@@ -290,13 +282,9 @@ static GstBuffer *
 gst_gdp_buffer_from_event (GstGDPPay * this, GstEvent * event)
 {
   GstBuffer *headerbuf;
-
   GstBuffer *payloadbuf;
-
   guint8 *header, *payload;
-
-  guint len;
-
+  guint len, plen;
   gboolean ret;
 
   ret =
@@ -307,13 +295,13 @@ gst_gdp_buffer_from_event (GstGDPPay * this, GstEvent * event)
 
   GST_LOG_OBJECT (this, "creating GDP header and payload buffer from event");
   headerbuf = gst_buffer_new ();
-  gst_buffer_set_data (headerbuf, header, len);
-  GST_BUFFER_MALLOCDATA (headerbuf) = header;
+  gst_buffer_take_memory (headerbuf,
+      gst_memory_new_wrapped (0, header, g_free, len, 0, len));
 
   payloadbuf = gst_buffer_new ();
-  gst_buffer_set_data (payloadbuf, payload,
-      gst_dp_header_payload_length (header));
-  GST_BUFFER_MALLOCDATA (payloadbuf) = payload;
+  plen = gst_dp_header_payload_length (header);
+  gst_buffer_take_memory (payloadbuf,
+      gst_memory_new_wrapped (0, payload, g_free, plen, 0, plen));
 
   return gst_buffer_join (headerbuf, payloadbuf);
 
@@ -333,14 +321,10 @@ static GstFlowReturn
 gst_gdp_pay_reset_streamheader (GstGDPPay * this)
 {
   GstCaps *caps;
-
   /* We use copies of these to avoid circular refcounts */
   GstBuffer *new_segment_buf, *caps_buf, *tag_buf;
-
   GstStructure *structure;
-
   GstFlowReturn r = GST_FLOW_OK;
-
   gboolean version_one_zero = TRUE;
 
   GValue array = { 0 };
@@ -474,10 +458,9 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
 
   GST_DEBUG_OBJECT (this, "Setting caps on src pad %" GST_PTR_FORMAT, caps);
   gst_pad_set_caps (this->srcpad, caps);
-  this->caps_buf = gst_buffer_make_metadata_writable (this->caps_buf);
+  this->caps_buf = gst_buffer_make_writable (this->caps_buf);
   gst_buffer_set_caps (this->caps_buf, caps);
-  this->new_segment_buf =
-      gst_buffer_make_metadata_writable (this->new_segment_buf);
+  this->new_segment_buf = gst_buffer_make_writable (this->new_segment_buf);
   gst_buffer_set_caps (this->new_segment_buf, caps);
 
   /* if these are our first ever buffers, send out new_segment first */
@@ -579,11 +562,8 @@ static GstFlowReturn
 gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstGDPPay *this;
-
   GstCaps *caps;
-
   GstBuffer *outbuffer;
-
   GstFlowReturn ret;
 
   this = GST_GDP_PAY (gst_pad_get_parent (pad));
@@ -698,11 +678,8 @@ static gboolean
 gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event)
 {
   GstBuffer *outbuffer;
-
   GstGDPPay *this = GST_GDP_PAY (gst_pad_get_parent (pad));
-
   GstFlowReturn flowret;
-
   gboolean ret = TRUE;
 
   GST_DEBUG_OBJECT (this, "received event %p of type %s (%d)",
@@ -784,7 +761,6 @@ static gboolean
 gst_gdp_pay_src_event (GstPad * pad, GstEvent * event)
 {
   GstGDPPay *this;
-
   gboolean res = TRUE;
 
   this = GST_GDP_PAY (gst_pad_get_parent (pad));
@@ -865,7 +841,6 @@ static GstStateChangeReturn
 gst_gdp_pay_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-
   GstGDPPay *this = GST_GDP_PAY (element);
 
   switch (transition) {
