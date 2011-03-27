@@ -874,7 +874,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstVolume *self = GST_VOLUME (base);
   guint8 *data;
-  guint size;
+  gsize size;
   GstControlSource *mute_csource, *volume_csource;
 
   if (G_UNLIKELY (!self->negotiated))
@@ -885,8 +885,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
       GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
-  data = GST_BUFFER_DATA (outbuf);
-  size = GST_BUFFER_SIZE (outbuf);
+  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
 
   mute_csource = gst_object_get_control_source (G_OBJECT (self), "mute");
   volume_csource = gst_object_get_control_source (G_OBJECT (self), "volume");
@@ -954,6 +953,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   } else if (self->current_volume != 1.0) {
     self->process (self, data, size);
   }
+  gst_buffer_unmap (outbuf, data, size);
 
   return GST_FLOW_OK;
 
@@ -973,6 +973,7 @@ controller_failure:
 
     GST_ELEMENT_ERROR (self, CORE, FAILED,
         ("Failed to get values from controller"), (NULL));
+    gst_buffer_unmap (outbuf, data, size);
     return GST_FLOW_ERROR;
   }
 }

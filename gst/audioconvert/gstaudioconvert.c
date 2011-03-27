@@ -76,7 +76,7 @@ static void gst_audio_convert_dispose (GObject * obj);
 
 /* gstreamer functions */
 static gboolean gst_audio_convert_get_unit_size (GstBaseTransform * base,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 static GstCaps *gst_audio_convert_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
 static void gst_audio_convert_fixate_caps (GstBaseTransform * base,
@@ -361,7 +361,7 @@ not_allowed:
 /* BaseTransform vmethods */
 static gboolean
 gst_audio_convert_get_unit_size (GstBaseTransform * base, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   AudioConvertFmt fmt = { 0 };
 
@@ -1069,7 +1069,9 @@ static GstFlowReturn
 gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
+  GstFlowReturn ret;
   GstAudioConvert *this = GST_AUDIO_CONVERT (base);
+  gsize srcsize, dstsize;
   gint insize, outsize;
   gint samples;
   gpointer src, dst;
@@ -1079,7 +1081,7 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
       GST_BUFFER_CAPS (outbuf));
 
   /* get amount of samples to convert. */
-  samples = GST_BUFFER_SIZE (inbuf) / this->ctx.in.unit_size;
+  samples = gst_buffer_get_size (inbuf) / this->ctx.in.unit_size;
 
   /* get in/output sizes, to see if the buffers we got are of correct
    * sizes */
@@ -1089,15 +1091,15 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   if (insize == 0 || outsize == 0)
     return GST_FLOW_OK;
 
-  /* check in and outsize */
-  if (GST_BUFFER_SIZE (inbuf) < insize)
-    goto wrong_size;
-  if (GST_BUFFER_SIZE (outbuf) < outsize)
-    goto wrong_size;
-
   /* get src and dst data */
-  src = GST_BUFFER_DATA (inbuf);
-  dst = GST_BUFFER_DATA (outbuf);
+  src = gst_buffer_map (inbuf, &srcsize, NULL, GST_MAP_READ);
+  dst = gst_buffer_map (outbuf, &dstsize, NULL, GST_MAP_WRITE);
+
+  /* check in and outsize */
+  if (srcsize < insize)
+    goto wrong_size;
+  if (dstsize < outsize)
+    goto wrong_size;
 
   /* and convert the samples */
   if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
@@ -1108,10 +1110,13 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
     /* Create silence buffer */
     gst_audio_convert_create_silence_buffer (this, dst, outsize);
   }
+  ret = GST_FLOW_OK;
 
-  GST_BUFFER_SIZE (outbuf) = outsize;
+done:
+  gst_buffer_unmap (outbuf, dst, outsize);
+  gst_buffer_unmap (inbuf, src, srcsize);
 
-  return GST_FLOW_OK;
+  return ret;
 
   /* ERRORS */
 error:
@@ -1125,15 +1130,16 @@ wrong_size:
     GST_ELEMENT_ERROR (this, STREAM, FORMAT,
         (NULL),
         ("input/output buffers are of wrong size in: %d < %d or out: %d < %d",
-            GST_BUFFER_SIZE (inbuf), insize, GST_BUFFER_SIZE (outbuf),
-            outsize));
-    return GST_FLOW_ERROR;
+            srcsize, insize, dstsize, outsize));
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 convert_error:
   {
     GST_ELEMENT_ERROR (this, STREAM, FORMAT,
         (NULL), ("error while converting"));
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 }
 

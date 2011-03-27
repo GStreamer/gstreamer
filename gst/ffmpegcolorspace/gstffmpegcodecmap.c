@@ -43,7 +43,6 @@ gst_ff_vid_caps_new (AVCodecContext * context,
 /*
  * Read a palette from a caps.
  */
-
      static void
          gst_ffmpeg_get_palette (const GstCaps * caps, AVCodecContext * context)
 {
@@ -52,15 +51,15 @@ gst_ff_vid_caps_new (AVCodecContext * context,
 
   /* do we have a palette? */
   if ((palette_v = gst_structure_get_value (str, "palette_data")) && context) {
-    const GstBuffer *palette;
+    GstBuffer *palette;
 
     palette = gst_value_get_buffer (palette_v);
-    if (palette && GST_BUFFER_SIZE (palette) >= 256 * 4) {
+    if (palette && gst_buffer_get_size (palette) >= 256 * 4) {
       if (context->palctrl)
         av_free (context->palctrl);
       context->palctrl = av_malloc (sizeof (AVPaletteControl));
       context->palctrl->palette_changed = 1;
-      memcpy (context->palctrl->palette, GST_BUFFER_DATA (palette),
+      gst_buffer_extract (palette, 0, context->palctrl->palette,
           AVPALETTE_SIZE);
     }
   }
@@ -71,9 +70,13 @@ gst_ffmpeg_set_palette (GstCaps * caps, AVCodecContext * context)
 {
   if (context->palctrl) {
     GstBuffer *palette = gst_buffer_new_and_alloc (256 * 4);
+    guint8 *data;
+    gsize size;
 
-    memcpy (GST_BUFFER_DATA (palette), context->palctrl->palette,
-        AVPALETTE_SIZE);
+    data = gst_buffer_map (palette, &size, NULL, GST_MAP_WRITE);
+    memcpy (data, context->palctrl->palette, AVPALETTE_SIZE);
+    gst_buffer_unmap (palette, data, size);
+
     gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, palette, NULL);
     gst_buffer_unref (palette);
   }

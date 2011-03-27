@@ -285,17 +285,23 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
           goto wrong_type;
         }
 
-        if (this->payload_length
-            && (!gst_dp_validate_payload (GST_DP_HEADER_LENGTH, this->header,
-                    gst_adapter_peek (this->adapter, this->payload_length)))) {
-          goto payload_validate_error;
+        if (this->payload_length) {
+          const guint8 *data;
+          gboolean res;
+
+          data = gst_adapter_map (this->adapter, this->payload_length);
+          res = gst_dp_validate_payload (GST_DP_HEADER_LENGTH, this->header,
+              data);
+          gst_adapter_unmap (this->adapter, 0);
+
+          if (!res)
+            goto payload_validate_error;
         }
 
         break;
       }
       case GST_GDP_DEPAY_STATE_BUFFER:
       {
-
         /* if we receive a buffer without caps first, we error out */
         if (!this->caps)
           goto no_caps;
@@ -309,9 +315,11 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         if (this->payload_length > 0) {
           guint8 *payload;
 
-          payload = gst_adapter_take (this->adapter, this->payload_length);
-          memcpy (GST_BUFFER_DATA (buf), payload, this->payload_length);
-          g_free (payload);
+          payload = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+          gst_adapter_copy (this->adapter, payload, 0, this->payload_length);
+          gst_buffer_unmap (buf, payload, this->payload_length);
+
+          gst_adapter_flush (this->adapter, this->payload_length);
         }
 
         /* set caps and push */
@@ -319,12 +327,12 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         GST_LOG_OBJECT (this, "deserialized buffer %p, pushing, timestamp %"
             GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
             ", offset %" G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT
-            ", size %d, flags 0x%x",
+            ", size %" G_GSIZE_FORMAT ", flags 0x%x",
             buf,
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
             GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
             GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
-            GST_BUFFER_SIZE (buf), GST_BUFFER_FLAGS (buf));
+            gst_buffer_get_size (buf), GST_BUFFER_FLAGS (buf));
         ret = gst_pad_push (this->srcpad, buf);
         if (ret != GST_FLOW_OK)
           goto push_error;

@@ -199,7 +199,7 @@ gst_tcp_client_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
         "Returning buffer from _get of size %d, ts %"
         GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT
         ", offset %" G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
-        GST_BUFFER_SIZE (*outbuf),
+        gst_buffer_get_size (*outbuf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (*outbuf)),
         GST_BUFFER_OFFSET (*outbuf), GST_BUFFER_OFFSET_END (*outbuf));

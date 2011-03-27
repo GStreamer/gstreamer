@@ -463,8 +463,7 @@ gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate)
     goto eos_before_buffers;
 
   /* make sure we can write to the metadata */
-  outbuf = gst_buffer_make_metadata_writable
-      (gst_buffer_ref (videorate->prevbuf));
+  outbuf = gst_buffer_make_writable (gst_buffer_ref (videorate->prevbuf));
 
   GST_BUFFER_OFFSET (outbuf) = videorate->out;
   GST_BUFFER_OFFSET_END (outbuf) = videorate->out + 1;

@@ -592,7 +592,7 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
   GST_LOG_OBJECT (pad, "Handling buffer %p: size=%u, timestamp=%"
       GST_TIME_FORMAT " duration=%" GST_TIME_FORMAT
       " offset=%" G_GUINT64_FORMAT " offset_end=%" G_GUINT64_FORMAT,
-      buffer, GST_BUFFER_SIZE (buffer),
+      buffer, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
       GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET_END (buffer));
@@ -607,7 +607,7 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
 
   stream->seen_data = TRUE;
   if (stream && stream->drop_discont) {
-    buffer = gst_buffer_make_metadata_writable (buffer);
+    buffer = gst_buffer_make_writable (buffer);
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
     stream->drop_discont = FALSE;
   }

@@ -1102,16 +1102,16 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
        * are the only one referencing this buffer. If this is the last (and
        * only) GAP buffer, it will automatically copy the GAP flag. */
       outbuf = gst_buffer_make_writable (inbuf);
-      outdata = GST_BUFFER_DATA (outbuf);
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (adder->srcpad));
+
+      outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
     } else {
       if (!is_gap) {
         /* we had a previous output buffer, mix this non-GAP buffer */
         guint8 *indata;
-        guint insize;
+        gsize insize;
 
-        indata = GST_BUFFER_DATA (inbuf);
-        insize = GST_BUFFER_SIZE (inbuf);
+        indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
 
         /* all buffers should have outsize, there are no short buffers because we
          * asked for the max size above */
@@ -1123,6 +1123,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
         /* further buffers, need to add them */
         adder->func ((gpointer) outdata, (gpointer) indata,
             insize / adder->sample_size);
+        gst_buffer_unmap (inbuf, indata, insize);
       } else {
         /* skip gap buffer */
         GST_LOG_OBJECT (adder, "channel %p: skipping GAP buffer", collect_data);
@@ -1130,6 +1131,8 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       gst_buffer_unref (inbuf);
     }
   }
+  if (outbuf)
+    gst_buffer_unmap (outbuf, outdata, outsize);
 
   if (outbuf == NULL) {
     /* no output buffer, reuse one of the GAP buffers then if we have one */

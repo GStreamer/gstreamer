@@ -87,7 +87,7 @@ GType gst_ffmpegcsp_get_type (void);
 static gboolean gst_ffmpegcsp_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
 static gboolean gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 static GstFlowReturn gst_ffmpegcsp_transform (GstBaseTransform * btrans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 
@@ -396,7 +396,7 @@ gst_ffmpegcsp_init (GstFFMpegCsp * space, GstFFMpegCspClass * klass)
 
 static gboolean
 gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   GstStructure *structure = NULL;
   AVCodecContext *ctx = NULL;
@@ -448,6 +448,8 @@ gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
 {
   GstFFMpegCsp *space;
   gint result;
+  guint8 *indata, *outdata;
+  gsize insize, outsize;
 
   space = GST_FFMPEGCSP (btrans);
 
@@ -458,8 +460,9 @@ gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
     goto unknown_format;
 
   /* fill from with source data */
+  indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
   gst_ffmpegcsp_avpicture_fill (&space->from_frame,
-      GST_BUFFER_DATA (inbuf), space->from_pixfmt, space->width, space->height,
+      indata, space->from_pixfmt, space->width, space->height,
       space->interlaced);
 
   /* fill optional palette */
@@ -467,13 +470,17 @@ gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
     space->from_frame.data[1] = (uint8_t *) space->palette->palette;
 
   /* fill target frame */
+  outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
   gst_ffmpegcsp_avpicture_fill (&space->to_frame,
-      GST_BUFFER_DATA (outbuf), space->to_pixfmt, space->width, space->height,
+      outdata, space->to_pixfmt, space->width, space->height,
       space->interlaced);
 
   /* and convert */
   result = img_convert (&space->to_frame, space->to_pixfmt,
       &space->from_frame, space->from_pixfmt, space->width, space->height);
+  gst_buffer_unmap (outbuf, outdata, outsize);
+  gst_buffer_unmap (inbuf, indata, insize);
+
   if (result == -1)
     goto not_supported;
 

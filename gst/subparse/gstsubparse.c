@@ -1418,6 +1418,8 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
   gboolean discont;
   gsize consumed;
   gchar *input = NULL;
+  const guint8 *data;
+  gsize avail;
 
   discont = GST_BUFFER_IS_DISCONT (buf);
 
@@ -1442,19 +1444,20 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
      * subtitles which are discontinuous by nature. */
   }
 
-  self->offset = GST_BUFFER_OFFSET (buf) + GST_BUFFER_SIZE (buf);
+  self->offset = GST_BUFFER_OFFSET (buf) + gst_buffer_get_size (buf);
   self->next_offset = self->offset;
 
   gst_adapter_push (self->adapter, buf);
 
-  input =
-      convert_encoding (self, (const gchar *) gst_adapter_peek (self->adapter,
-          gst_adapter_available (self->adapter)),
-      (gsize) gst_adapter_available (self->adapter), &consumed);
+  avail = gst_adapter_available (self->adapter);
+  data = gst_adapter_map (self->adapter, avail),
+      input = convert_encoding (self, (const gchar *) data, avail, &consumed);
 
   if (input && consumed > 0) {
     self->textbuf = g_string_append (self->textbuf, input);
-    gst_adapter_flush (self->adapter, consumed);
+    gst_adapter_unmap (self->adapter, consumed);
+  } else {
+    gst_adapter_unmap (self->adapter, 0);
   }
 
   g_free (input);
@@ -1465,12 +1468,13 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps = NULL;
-  gchar *line, *subtitle;
+  gchar *line, *subtitle, *data;
+  gsize size;
 
   if (self->first_buffer) {
-    self->detected_encoding =
-        detect_encoding ((gchar *) GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    self->detected_encoding = detect_encoding (data, size);
+    gst_buffer_unmap (buf, data, size);
     self->first_buffer = FALSE;
     self->state.fps_n = self->fps_n;
     self->state.fps_d = self->fps_d;
@@ -1520,8 +1524,9 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
 
       if (ret == GST_FLOW_OK) {
         /* copy terminating NUL character as well */
-        memcpy (GST_BUFFER_DATA (buf), subtitle, subtitle_len + 1);
-        GST_BUFFER_SIZE (buf) = subtitle_len;
+        gst_buffer_fill (buf, 0, subtitle, subtitle_len + 1);
+        gst_buffer_set_size (buf, subtitle_len);
+
         GST_BUFFER_TIMESTAMP (buf) = self->state.start_time;
         GST_BUFFER_DURATION (buf) = self->state.duration;
 
@@ -1602,13 +1607,13 @@ gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
           self->parser_type == GST_SUB_PARSE_FORMAT_TMPLAYER ||
           self->parser_type == GST_SUB_PARSE_FORMAT_MPL2 ||
           self->parser_type == GST_SUB_PARSE_FORMAT_QTTEXT) {
+        gchar term_chars[] = { '\n', '\n', '\0' };
         GstBuffer *buf = gst_buffer_new_and_alloc (2 + 1);
 
         GST_DEBUG ("EOS. Pushing remaining text (if any)");
-        GST_BUFFER_DATA (buf)[0] = '\n';
-        GST_BUFFER_DATA (buf)[1] = '\n';
-        GST_BUFFER_DATA (buf)[2] = '\0';        /* play it safe */
-        GST_BUFFER_SIZE (buf) = 2;
+        gst_buffer_fill (buf, 0, term_chars, 3);
+        gst_buffer_set_size (buf, 2);
+
         GST_BUFFER_OFFSET (buf) = self->offset;
         gst_sub_parse_chain (pad, buf);
       }

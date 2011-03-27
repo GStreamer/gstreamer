@@ -589,7 +589,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     in_time = audiorate->next_ts;
   }
 
-  in_size = GST_BUFFER_SIZE (buf);
+  in_size = gst_buffer_get_size (buf);
   in_samples = in_size / audiorate->bytes_per_sample;
 
   /* calculate the buffer offset */
@@ -633,13 +633,17 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
     while (fillsamples > 0) {
       guint64 cursamples = MIN (fillsamples, audiorate->rate);
+      guint8 *data;
 
       fillsamples -= cursamples;
       fillsize = cursamples * audiorate->bytes_per_sample;
 
       fill = gst_buffer_new_and_alloc (fillsize);
+
+      data = gst_buffer_map (fill, NULL, NULL, GST_MAP_WRITE);
       /* FIXME, 0 might not be the silence byte for the negotiated format. */
-      memset (GST_BUFFER_DATA (fill), 0, fillsize);
+      memset (data, 0, fillsize);
+      gst_buffer_unmap (fill, data, fillsize);
 
       GST_DEBUG_OBJECT (audiorate, "inserting %" G_GUINT64_FORMAT " samples",
           cursamples);
@@ -722,7 +726,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   }
 
 send:
-  if (GST_BUFFER_SIZE (buf) == 0)
+  if (gst_buffer_get_size (buf) == 0)
     goto beach;
 
   /* Now calculate parameters for whichever buffer (either the original
@@ -738,14 +742,14 @@ send:
   if (audiorate->discont) {
     /* we need to output a discont buffer, do so now */
     GST_DEBUG_OBJECT (audiorate, "marking DISCONT on output buffer");
-    buf = gst_buffer_make_metadata_writable (buf);
+    buf = gst_buffer_make_writable (buf);
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     audiorate->discont = FALSE;
   } else if (GST_BUFFER_IS_DISCONT (buf)) {
     /* else we make everything continuous so we can safely remove the DISCONT
      * flag from the buffer if there was one */
     GST_DEBUG_OBJECT (audiorate, "removing DISCONT from buffer");
-    buf = gst_buffer_make_metadata_writable (buf);
+    buf = gst_buffer_make_writable (buf);
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 

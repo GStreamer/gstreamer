@@ -196,19 +196,21 @@ gst_tcp_client_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   size_t wrote = 0;
   GstTCPClientSink *sink;
-  gint size;
+  guint8 *data;
+  gsize size;
 
   sink = GST_TCP_CLIENT_SINK (bsink);
 
   g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_TCP_CLIENT_SINK_OPEN),
       GST_FLOW_WRONG_STATE);
 
-  size = GST_BUFFER_SIZE (buf);
-
-  GST_LOG_OBJECT (sink, "writing %d bytes for buffer data", size);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  GST_LOG_OBJECT (sink, "writing %" G_GSIZE_FORMAT " bytes for buffer data",
+      size);
 
   /* write buffer data */
-  wrote = gst_tcp_socket_write (sink->sock_fd.fd, GST_BUFFER_DATA (buf), size);
+  wrote = gst_tcp_socket_write (sink->sock_fd.fd, data, size);
+  gst_buffer_unmap (buf, data, size);
 
   if (wrote < size)
     goto write_error;
@@ -222,8 +224,8 @@ write_error:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
         (_("Error while sending data to \"%s:%d\"."), sink->host, sink->port),
-        ("Only %" G_GSIZE_FORMAT " of %u bytes written: %s",
-            wrote, GST_BUFFER_SIZE (buf), g_strerror (errno)));
+        ("Only %" G_GSIZE_FORMAT " of %" G_GSIZE_FORMAT " bytes written: %s",
+            wrote, size, g_strerror (errno)));
     return GST_FLOW_ERROR;
   }
 }

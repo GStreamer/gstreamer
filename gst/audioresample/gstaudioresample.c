@@ -127,14 +127,14 @@ static void gst_audio_resample_get_property (GObject * object,
 
 /* vmethods */
 static gboolean gst_audio_resample_get_unit_size (GstBaseTransform * base,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 static GstCaps *gst_audio_resample_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
 static void gst_audio_resample_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_audio_resample_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * incaps, guint insize,
-    GstCaps * outcaps, guint * outsize);
+    GstPadDirection direction, GstCaps * incaps, gsize insize,
+    GstCaps * outcaps, gsize * outsize);
 static gboolean gst_audio_resample_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_audio_resample_transform (GstBaseTransform * base,
@@ -282,7 +282,7 @@ gst_audio_resample_stop (GstBaseTransform * base)
 
 static gboolean
 gst_audio_resample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   gint width, channels;
   GstStructure *structure;
@@ -530,8 +530,8 @@ _gcd (gint a, gint b)
 
 static gboolean
 gst_audio_resample_transform_size (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
-    guint * othersize)
+    GstPadDirection direction, GstCaps * caps, gsize size, GstCaps * othercaps,
+    gsize * othersize)
 {
   gboolean ret = TRUE;
   guint32 ratio_den, ratio_num;
@@ -824,6 +824,7 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
   guint out_len, out_processed;
   gint err;
   guint num, den;
+  guint8 *data;
 
   g_assert (resample->state != NULL);
 
@@ -851,6 +852,8 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
     return;
   }
 
+  data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+
   if (resample->funcs->width != resample->width) {
     /* need to convert data format;  allocate workspace */
     if (!gst_audio_resample_workspace_realloc (&resample->tmp_out,
@@ -866,16 +869,19 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
 
     /* convert output format */
     gst_audio_resample_convert_buffer (resample, resample->tmp_out,
-        GST_BUFFER_DATA (outbuf), out_processed, TRUE);
+        data, out_processed, TRUE);
   } else {
     /* don't need to convert data format;  process */
     err = resample->funcs->process (resample->state, NULL, &in_processed,
-        GST_BUFFER_DATA (outbuf), &out_processed);
+        data, &out_processed);
   }
 
   /* If we wrote more than allocated something is really wrong now
    * and we should better abort immediately */
   g_assert (out_len >= out_processed);
+
+  outsize = out_processed * resample->channels * (resample->width / 8);
+  gst_buffer_unmap (outbuf, data, outsize);
 
   if (G_UNLIKELY (err != RESAMPLER_ERR_SUCCESS)) {
     GST_WARNING_OBJECT (resample, "Failed to process drain: %s",
@@ -914,13 +920,10 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
     return;
   }
 
-  GST_BUFFER_SIZE (outbuf) =
-      out_processed * resample->channels * (resample->width / 8);
-
   GST_LOG_OBJECT (resample,
       "Pushing drain buffer of %u bytes with timestamp %" GST_TIME_FORMAT
       " duration %" GST_TIME_FORMAT " offset %" G_GUINT64_FORMAT " offset_end %"
-      G_GUINT64_FORMAT, GST_BUFFER_SIZE (outbuf),
+      G_GUINT64_FORMAT, outsize,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf),
       GST_BUFFER_OFFSET_END (outbuf));
@@ -1025,12 +1028,17 @@ static GstFlowReturn
 gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
+  gsize in_size, out_size;
+  guint8 *in_data, *out_data;
   guint32 in_len, in_processed;
   guint32 out_len, out_processed;
   guint filt_len = resample->funcs->get_filt_len (resample->state);
 
-  in_len = GST_BUFFER_SIZE (inbuf) / resample->channels;
-  out_len = GST_BUFFER_SIZE (outbuf) / resample->channels;
+  in_data = gst_buffer_map (inbuf, &in_size, NULL, GST_MAP_READ);
+  out_data = gst_buffer_map (outbuf, &out_size, NULL, GST_MAP_WRITE);
+
+  in_len = in_size / resample->channels;
+  out_len = out_size / resample->channels;
 
   in_len /= (resample->width / 8);
   out_len /= (resample->width / 8);
@@ -1062,7 +1070,7 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
       else
         out_processed = 0;
 
-      memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
+      memset (out_data, 0, out_size);
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
       resample->num_gap_samples += in_len;
       in_processed = in_len;
@@ -1095,11 +1103,13 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
               &resample->tmp_out_size, out_len * resample->channels *
               (resample->funcs->width / 8))) {
         GST_ERROR_OBJECT (resample, "failed to allocate workspace");
+        gst_buffer_unmap (inbuf, in_data, in_size);
+        gst_buffer_unmap (outbuf, out_data, out_size);
         return GST_FLOW_ERROR;
       }
 
       /* convert input */
-      gst_audio_resample_convert_buffer (resample, GST_BUFFER_DATA (inbuf),
+      gst_audio_resample_convert_buffer (resample, in_data,
           resample->tmp_in, in_len, FALSE);
 
       /* process */
@@ -1108,17 +1118,18 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
 
       /* convert output */
       gst_audio_resample_convert_buffer (resample, resample->tmp_out,
-          GST_BUFFER_DATA (outbuf), out_processed, TRUE);
+          out_data, out_processed, TRUE);
     } else {
       /* no format conversion required;  process */
       err = resample->funcs->process (resample->state,
-          GST_BUFFER_DATA (inbuf), &in_processed,
-          GST_BUFFER_DATA (outbuf), &out_processed);
+          in_data, &in_processed, out_data, &out_processed);
     }
 
     if (G_UNLIKELY (err != RESAMPLER_ERR_SUCCESS)) {
       GST_ERROR_OBJECT (resample, "Failed to convert data: %s",
           resample->funcs->strerror (err));
+      gst_buffer_unmap (inbuf, in_data, in_size);
+      gst_buffer_unmap (outbuf, out_data, out_size);
       return GST_FLOW_ERROR;
     }
   }
@@ -1156,14 +1167,15 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
   resample->samples_out += out_processed;
   resample->samples_in += in_len;
 
-  GST_BUFFER_SIZE (outbuf) =
-      out_processed * resample->channels * (resample->width / 8);
+  out_size = out_processed * resample->channels * (resample->width / 8);
+  gst_buffer_unmap (inbuf, in_data, in_size);
+  gst_buffer_unmap (outbuf, out_data, out_size);
 
   GST_LOG_OBJECT (resample,
       "Converted to buffer of %" G_GUINT32_FORMAT
       " samples (%u bytes) with timestamp %" GST_TIME_FORMAT ", duration %"
       GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT ", offset_end %"
-      G_GUINT64_FORMAT, out_processed, GST_BUFFER_SIZE (outbuf),
+      G_GUINT64_FORMAT, out_processed, out_size,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
       GST_BUFFER_OFFSET (outbuf), GST_BUFFER_OFFSET_END (outbuf));
@@ -1180,7 +1192,6 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
-  gulong size;
   GstFlowReturn ret;
 
   if (resample->state == NULL) {
@@ -1194,12 +1205,10 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
         gst_audio_resample_get_funcs (resample->width, resample->fp);
   }
 
-  size = GST_BUFFER_SIZE (inbuf);
-
   GST_LOG_OBJECT (resample, "transforming buffer of %ld bytes, ts %"
       GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ", offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
-      size, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
+      gst_buffer_get_size (inbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
       GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf));
 

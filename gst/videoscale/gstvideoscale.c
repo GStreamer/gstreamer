@@ -201,7 +201,7 @@ static GstCaps *gst_video_scale_transform_caps (GstBaseTransform * trans,
 static gboolean gst_video_scale_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
 static gboolean gst_video_scale_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 static GstFlowReturn gst_video_scale_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
 static void gst_video_scale_fixate_caps (GstBaseTransform * base,
@@ -443,7 +443,7 @@ done:
 
 static gboolean
 gst_video_scale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   GstVideoFormat format;
   gint width, height;
@@ -1016,18 +1016,22 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   gint method;
   const guint8 *black = _get_black_for_format (videoscale->format);
   gboolean add_borders;
+  guint8 *in_data, *out_data;
+  gsize in_size, out_size;
 
   GST_OBJECT_LOCK (videoscale);
   method = videoscale->method;
   add_borders = videoscale->add_borders;
   GST_OBJECT_UNLOCK (videoscale);
 
+  in_data = gst_buffer_map (in, &in_size, NULL, GST_MAP_READ);
+  out_data = gst_buffer_map (out, &out_size, NULL, GST_MAP_WRITE);
+
   gst_video_scale_setup_vs_image (&src, videoscale->format, 0,
-      videoscale->from_width, videoscale->from_height, 0, 0,
-      GST_BUFFER_DATA (in));
+      videoscale->from_width, videoscale->from_height, 0, 0, in_data);
   gst_video_scale_setup_vs_image (&dest, videoscale->format, 0,
       videoscale->to_width, videoscale->to_height, videoscale->borders_w,
-      videoscale->borders_h, GST_BUFFER_DATA (out));
+      videoscale->borders_h, out_data);
 
   if (videoscale->format == GST_VIDEO_FORMAT_I420
       || videoscale->format == GST_VIDEO_FORMAT_YV12
@@ -1035,17 +1039,15 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
       || videoscale->format == GST_VIDEO_FORMAT_Y42B
       || videoscale->format == GST_VIDEO_FORMAT_Y41B) {
     gst_video_scale_setup_vs_image (&src_u, videoscale->format, 1,
-        videoscale->from_width, videoscale->from_height, 0, 0,
-        GST_BUFFER_DATA (in));
+        videoscale->from_width, videoscale->from_height, 0, 0, in_data);
     gst_video_scale_setup_vs_image (&src_v, videoscale->format, 2,
-        videoscale->from_width, videoscale->from_height, 0, 0,
-        GST_BUFFER_DATA (in));
+        videoscale->from_width, videoscale->from_height, 0, 0, in_data);
     gst_video_scale_setup_vs_image (&dest_u, videoscale->format, 1,
         videoscale->to_width, videoscale->to_height, videoscale->borders_w,
-        videoscale->borders_h, GST_BUFFER_DATA (out));
+        videoscale->borders_h, out_data);
     gst_video_scale_setup_vs_image (&dest_v, videoscale->format, 2,
         videoscale->to_width, videoscale->to_height, videoscale->borders_w,
-        videoscale->borders_h, GST_BUFFER_DATA (out));
+        videoscale->borders_h, out_data);
   }
 
   switch (videoscale->format) {
@@ -1252,7 +1254,11 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   }
 
   GST_LOG_OBJECT (videoscale, "pushing buffer of %d bytes",
-      GST_BUFFER_SIZE (out));
+      gst_buffer_get_size (out));
+
+done:
+  gst_buffer_unmap (in, in_data, in_size);
+  gst_buffer_unmap (out, out_data, out_size);
 
   return ret;
 
@@ -1262,13 +1268,15 @@ unsupported:
     GST_ELEMENT_ERROR (videoscale, STREAM, NOT_IMPLEMENTED, (NULL),
         ("Unsupported format %d for scaling method %d",
             videoscale->format, method));
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 unknown_mode:
   {
     GST_ELEMENT_ERROR (videoscale, STREAM, NOT_IMPLEMENTED, (NULL),
         ("Unknown scaling method %d", videoscale->method));
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 }
 

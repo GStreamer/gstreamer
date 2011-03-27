@@ -1391,7 +1391,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
         buffer = g_value_peek_pointer (bufval);
         GST_DEBUG_OBJECT (sink,
             "[fd %5d] queueing streamheader buffer of length %d",
-            client->fd.fd, GST_BUFFER_SIZE (buffer));
+            client->fd.fd, gst_buffer_get_size (buffer));
         gst_buffer_ref (buffer);
 
         client->sending = g_slist_append (client->sending, buffer);
@@ -1403,7 +1403,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
   caps = NULL;
 
   GST_LOG_OBJECT (sink, "[fd %5d] queueing buffer of length %d",
-      client->fd.fd, GST_BUFFER_SIZE (buffer));
+      client->fd.fd, gst_buffer_get_size (buffer));
 
   gst_buffer_ref (buffer);
   client->sending = g_slist_append (client->sending, buffer);
@@ -1490,7 +1490,7 @@ get_buffers_max (GstMultiFdSink * sink, gint64 max)
 
       for (i = 0; i < len; i++) {
         buf = g_array_index (sink->bufqueue, GstBuffer *, i);
-        acc += GST_BUFFER_SIZE (buf);
+        acc += gst_buffer_get_size (buf);
 
         if (acc > max)
           return i + 1;
@@ -1573,7 +1573,7 @@ find_limits (GstMultiFdSink * sink,
     }
     buf = g_array_index (sink->bufqueue, GstBuffer *, i);
 
-    bytes += GST_BUFFER_SIZE (buf);
+    bytes += gst_buffer_get_size (buf);
 
     /* take timestamp and save for the base first timestamp */
     if ((time = GST_BUFFER_TIMESTAMP (buf)) != -1) {
@@ -1980,10 +1980,14 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
     if (client->sending) {
       ssize_t wrote;
       GstBuffer *head;
+      guint8 *data;
+      gsize size;
 
       /* pick first buffer from list */
       head = GST_BUFFER (client->sending->data);
-      maxsize = GST_BUFFER_SIZE (head) - client->bufoffset;
+
+      data = gst_buffer_map (head, &size, NULL, GST_MAP_READ);
+      maxsize = size - client->bufoffset;
 
       /* try to write the complete buffer */
 #ifdef MSG_NOSIGNAL
@@ -1992,12 +1996,11 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
 #define FLAGS 0
 #endif
       if (client->is_socket) {
-        wrote =
-            send (fd, GST_BUFFER_DATA (head) + client->bufoffset, maxsize,
-            FLAGS);
+        wrote = send (fd, data + client->bufoffset, maxsize, FLAGS);
       } else {
-        wrote = write (fd, GST_BUFFER_DATA (head) + client->bufoffset, maxsize);
+        wrote = write (fd, data + client->bufoffset, maxsize);
       }
+      gst_buffer_unmap (head, data, size);
 
       if (wrote < 0) {
         /* hmm error.. */
@@ -2499,14 +2502,14 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   /* stamp the buffer with previous caps if no caps set */
   if (!bufcaps) {
-    if (!gst_buffer_is_metadata_writable (buf)) {
+    if (!gst_buffer_is_writable (buf)) {
       /* metadata is not writable, copy will be made and original buffer
        * will be unreffed so we need to ref so that we don't lose the
        * buffer in the render method. */
       gst_buffer_ref (buf);
       /* the new buffer is ours only, we keep it out of the scope of this
        * function */
-      buf = gst_buffer_make_metadata_writable (buf);
+      buf = gst_buffer_make_writable (buf);
     } else {
       /* else the metadata is writable, we ref because we keep the buffer
        * out of the scope of this method */
@@ -2554,13 +2557,13 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (in_caps) {
     GST_DEBUG_OBJECT (sink,
         "appending IN_CAPS buffer with length %d to streamheader",
-        GST_BUFFER_SIZE (buf));
+        gst_buffer_get_size (buf));
     sink->streamheader = g_slist_append (sink->streamheader, buf);
   } else {
     /* queue the buffer, this is a regular data buffer. */
     gst_multi_fd_sink_queue_buffer (sink, buf);
 
-    sink->bytes_to_serve += GST_BUFFER_SIZE (buf);
+    sink->bytes_to_serve += gst_buffer_get_size (buf);
   }
   return GST_FLOW_OK;
 

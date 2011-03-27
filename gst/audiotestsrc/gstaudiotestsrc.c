@@ -1034,6 +1034,7 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   gint64 next_sample, next_byte;
   gint bytes, samples;
   GstElementClass *eclass;
+  guint8 *data;
 
   src = GST_AUDIO_TEST_SRC (basesrc);
 
@@ -1130,7 +1131,9 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
       src->generate_samples_per_buffer,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
-  src->process (src, GST_BUFFER_DATA (buf));
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  src->process (src, data);
+  gst_buffer_unmap (buf, data, bytes);
 
   if (G_UNLIKELY ((src->wave == GST_AUDIO_TEST_SRC_WAVE_SILENCE)
           || (src->volume == 0.0))) {

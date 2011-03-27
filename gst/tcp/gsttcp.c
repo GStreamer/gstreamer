@@ -228,6 +228,7 @@ gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdset,
   int ret;
   ssize_t bytes_read;
   int readsize;
+  guint8 *data;
 
   *buf = NULL;
 
@@ -251,7 +252,9 @@ gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdset,
 
   *buf = gst_buffer_new_and_alloc (readsize);
 
-  bytes_read = read (socket, GST_BUFFER_DATA (*buf), readsize);
+  data = gst_buffer_map (*buf, NULL, NULL, GST_MAP_WRITE);
+  bytes_read = read (socket, data, readsize);
+  gst_buffer_unmap (*buf, data, bytes_read);
 
   if (bytes_read < 0)
     goto read_error;
@@ -260,7 +263,7 @@ gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdset,
     /* but mom, you promised to give me readsize bytes! */
     goto short_read;
 
-  GST_LOG_OBJECT (this, "returning buffer of size %d", GST_BUFFER_SIZE (*buf));
+  GST_LOG_OBJECT (this, "returning buffer of size %d", bytes_read);
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -317,6 +320,8 @@ gst_tcp_gdp_read_buffer (GstElement * this, int socket, GstPoll * fdset,
 {
   GstFlowReturn ret;
   guint8 *header = NULL;
+  guint8 *data;
+  gsize size;
 
   GST_LOG_OBJECT (this, "Reading %d bytes for buffer packet header",
       GST_DP_HEADER_LENGTH);
@@ -341,8 +346,9 @@ gst_tcp_gdp_read_buffer (GstElement * this, int socket, GstPoll * fdset,
 
   g_free (header);
 
-  ret = gst_tcp_socket_read (this, socket, GST_BUFFER_DATA (*buf),
-      GST_BUFFER_SIZE (*buf), fdset);
+  data = gst_buffer_map (*buf, &size, NULL, GST_MAP_WRITE);
+  ret = gst_tcp_socket_read (this, socket, data, size, fdset);
+  gst_buffer_unmap (*buf, data, size);
 
   if (ret != GST_FLOW_OK)
     goto data_read_error;

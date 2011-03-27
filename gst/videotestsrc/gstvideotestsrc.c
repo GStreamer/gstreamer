@@ -828,10 +828,11 @@ static GstFlowReturn
 gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 {
   GstVideoTestSrc *src;
-  gulong newsize, size;
+  gsize newsize, size;
   GstBuffer *outbuf = NULL;
   GstFlowReturn res;
   GstClockTime next_time;
+  guint8 *data;
 
   src = GST_VIDEO_TEST_SRC (psrc);
 
@@ -860,7 +861,7 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 
     /* the buffer could have renegotiated, we need to discard any buffers of the
      * wrong size. */
-    size = GST_BUFFER_SIZE (outbuf);
+    size = gst_buffer_get_size (outbuf);
     newsize = gst_video_test_src_get_size (src, src->width, src->height);
 
     if (size != newsize) {
@@ -874,13 +875,14 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
   }
 
-  memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
+  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
+  memset (data, 0, size);
   src->tmpline_u8 = g_malloc (src->width + 8);
   src->tmpline = g_malloc ((src->width + 8) * 4);
   src->tmpline2 = g_malloc ((src->width + 8) * 4);
 
-  src->make_image (src, (void *) GST_BUFFER_DATA (outbuf),
-      src->width, src->height);
+  src->make_image (src, (void *) data, src->width, src->height);
+  gst_buffer_unmap (outbuf, data, size);
 
   g_free (src->tmpline);
   g_free (src->tmpline2);
