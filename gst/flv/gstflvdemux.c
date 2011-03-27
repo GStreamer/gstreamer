@@ -103,6 +103,10 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
       "adding key=%d association %" GST_TIME_FORMAT "-> %" G_GUINT64_FORMAT,
       keyframe, GST_TIME_ARGS (ts), pos);
 
+  /* if upstream is not seekable there is no point in building an index */
+  if (!demux->upstream_seekable)
+    return;
+
   /* entry may already have been added before, avoid adding indefinitely */
   entry = gst_index_get_assoc_entry (demux->index, demux->index_id,
       GST_INDEX_LOOKUP_EXACT, GST_ASSOCIATION_FLAG_NONE, GST_FORMAT_BYTES, pos);
@@ -184,6 +188,41 @@ gst_flv_demux_query_types (GstPad * pad)
   };
 
   return query_types;
+}
+
+static void
+gst_flv_demux_check_seekability (GstFlvDemux * demux)
+{
+  GstQuery *query;
+  gint64 start = -1, stop = -1;
+
+  demux->upstream_seekable = FALSE;
+
+  query = gst_query_new_seeking (GST_FORMAT_BYTES);
+  if (!gst_pad_peer_query (demux->sinkpad, query)) {
+    GST_DEBUG_OBJECT (demux, "seeking query failed");
+    return;
+  }
+
+  gst_query_parse_seeking (query, NULL, &demux->upstream_seekable,
+      &start, &stop);
+
+  /* try harder to query upstream size if we didn't get it the first time */
+  if (demux->upstream_seekable && stop == -1) {
+    GstFormat fmt = GST_FORMAT_BYTES;
+
+    GST_DEBUG_OBJECT (demux, "doing duration query to fix up unset stop");
+    gst_pad_query_peer_duration (demux->sinkpad, &fmt, &stop);
+  }
+
+  /* if upstream doesn't know the size, it's likely that it's not seekable in
+   * practice even if it technically may be seekable */
+  if (demux->upstream_seekable && (start != 0 || stop <= start)) {
+    GST_DEBUG_OBJECT (demux, "seekable but unknown start/stop -> disable");
+    demux->upstream_seekable = FALSE;
+  }
+
+  GST_DEBUG_OBJECT (demux, "upstream seekable: %d", demux->upstream_seekable);
 }
 
 static void
@@ -1491,6 +1530,9 @@ gst_flv_demux_parse_header (GstFlvDemux * demux, GstBuffer * buffer)
     }
   }
 
+  /* do a one-time seekability check */
+  gst_flv_demux_check_seekability (demux);
+
   /* We don't care about the rest */
   demux->need_header = FALSE;
 
@@ -1544,6 +1586,7 @@ gst_flv_demux_cleanup (GstFlvDemux * demux)
   demux->got_par = FALSE;
 
   demux->indexed = FALSE;
+  demux->upstream_seekable = FALSE;
   demux->file_size = 0;
 
   demux->index_max_pos = 0;
