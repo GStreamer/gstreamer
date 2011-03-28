@@ -1737,7 +1737,7 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
       break;
     }
     default:
-      result = TRUE;
+      result = FALSE;
       break;
   }
   return result;
@@ -2614,7 +2614,8 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   if (peercaps) {
     /* get intersection */
-    caps = gst_caps_intersect_full (peercaps, thiscaps, GST_CAPS_INTERSECT_FIRST);
+    caps =
+        gst_caps_intersect_full (peercaps, thiscaps, GST_CAPS_INTERSECT_FIRST);
     GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, caps);
     gst_caps_unref (peercaps);
   } else {

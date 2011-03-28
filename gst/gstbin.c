@@ -2376,11 +2376,8 @@ gst_bin_do_latency_func (GstBin * bin)
           GST_TIME_ARGS (min_latency));
     } else {
       GST_WARNING_OBJECT (element,
-          "failed to configure latency of %" GST_TIME_FORMAT,
+          "did not really configure latency of %" GST_TIME_FORMAT,
           GST_TIME_ARGS (min_latency));
-      GST_ELEMENT_WARNING (element, CORE, CLOCK, (NULL),
-          ("Failed to configure latency of %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (min_latency)));
     }
   } else {
     /* this is not a real problem, we just don't configure any latency. */
