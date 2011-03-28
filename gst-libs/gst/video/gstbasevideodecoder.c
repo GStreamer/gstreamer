@@ -177,6 +177,8 @@ gst_base_video_decoder_finalize (GObject * object)
 
   base_video_decoder = GST_BASE_VIDEO_DECODER (object);
 
+  GST_DEBUG_OBJECT (object, "finalize");
+
   gst_base_video_decoder_reset (base_video_decoder);
 
   if (base_video_decoder->input_adapter) {
@@ -187,8 +189,6 @@ gst_base_video_decoder_finalize (GObject * object)
     g_object_unref (base_video_decoder->output_adapter);
     base_video_decoder->output_adapter = NULL;
   }
-
-  GST_DEBUG_OBJECT (object, "finalize");
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -399,6 +399,10 @@ gst_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
   gboolean res = FALSE;
 
   base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (base_video_decoder,
+      "received event %d, %s", GST_EVENT_TYPE (event),
+      GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -623,9 +627,8 @@ gst_base_video_decoder_sink_query (GstPad * pad, GstQuery * query)
 
   base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
 
-  GST_DEBUG_OBJECT (base_video_decoder, "sink query fps=%d/%d",
-      GST_BASE_VIDEO_CODEC (base_video_decoder)->state.fps_n,
-      GST_BASE_VIDEO_CODEC (base_video_decoder)->state.fps_d);
+  GST_LOG_OBJECT (base_video_decoder, "handling query: %" GST_PTR_FORMAT,
+      query);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONVERT:
@@ -671,7 +674,7 @@ gst_base_video_decoder_add_timestamp (GstBaseVideoDecoder * base_video_decoder,
 
   ts = g_malloc (sizeof (Timestamp));
 
-  GST_DEBUG_OBJECT (base_video_decoder,
+  GST_LOG_OBJECT (base_video_decoder,
       "adding timestamp %" GST_TIME_FORMAT " %" GST_TIME_FORMAT,
       GST_TIME_ARGS (base_video_decoder->input_offset),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
@@ -710,7 +713,7 @@ gst_base_video_decoder_get_timestamp_at_offset (GstBaseVideoDecoder *
     }
   }
 
-  GST_DEBUG_OBJECT (base_video_decoder,
+  GST_LOG_OBJECT (base_video_decoder,
       "got timestamp %" GST_TIME_FORMAT " %" GST_TIME_FORMAT,
       GST_TIME_ARGS (offset), GST_TIME_ARGS (*timestamp));
 }
@@ -773,7 +776,7 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
   base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
   klass = GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
-  GST_DEBUG_OBJECT (base_video_decoder,
+  GST_LOG_OBJECT (base_video_decoder,
       "chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT " size %d",
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_SIZE (buf));
@@ -781,8 +784,6 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
   /* NOTE:
    * requiring the pad to be negotiated makes it impossible to use
    * oggdemux or filesrc ! decoder */
-
-  GST_DEBUG_OBJECT (base_video_decoder, "chain");
 
   if (!base_video_decoder->have_segment) {
     GstEvent *event;
@@ -985,13 +986,13 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   GstBuffer *src_buffer;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  GST_DEBUG_OBJECT (base_video_decoder, "finish frame");
-  GST_DEBUG_OBJECT (base_video_decoder, "n %d in %d out %d",
+  GST_LOG_OBJECT (base_video_decoder, "finish frame");
+  GST_LOG_OBJECT (base_video_decoder, "n %d in %d out %d",
       g_list_length (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames),
       gst_adapter_available (base_video_decoder->input_adapter),
       gst_adapter_available (base_video_decoder->output_adapter));
 
-  GST_DEBUG_OBJECT (base_video_decoder,
+  GST_LOG_OBJECT (base_video_decoder,
       "finish frame sync=%d pts=%" GST_TIME_FORMAT, frame->is_sync_point,
       GST_TIME_ARGS (frame->presentation_timestamp));
 
@@ -1103,12 +1104,14 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     GST_BASE_VIDEO_CODEC (base_video_decoder)->time = GST_CLOCK_TIME_NONE;
   }
 
-  GST_DEBUG_OBJECT (base_video_decoder, "pushing frame %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (frame->presentation_timestamp));
-
   gst_base_video_decoder_set_src_caps (base_video_decoder);
   gst_buffer_set_caps (src_buffer,
       GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)));
+
+  GST_LOG_OBJECT (base_video_decoder, "pushing frame ts %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (src_buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (src_buffer)));
 
   if (base_video_decoder->sink_clipping) {
     gint64 start = GST_BUFFER_TIMESTAMP (src_buffer);
@@ -1119,7 +1122,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     if (gst_segment_clip (segment, GST_FORMAT_TIME, start, stop, &start, &stop)) {
       GST_BUFFER_TIMESTAMP (src_buffer) = start;
       GST_BUFFER_DURATION (src_buffer) = stop - start;
-      GST_DEBUG_OBJECT (base_video_decoder,
+      GST_LOG_OBJECT (base_video_decoder,
           "accepting buffer inside segment: %" GST_TIME_FORMAT
           " %" GST_TIME_FORMAT
           " seg %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT
@@ -1130,7 +1133,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
           GST_TIME_ARGS (segment->start),
           GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time));
     } else {
-      GST_DEBUG_OBJECT (base_video_decoder,
+      GST_LOG_OBJECT (base_video_decoder,
           "dropping buffer outside segment: %" GST_TIME_FORMAT
           " %" GST_TIME_FORMAT
           " seg %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT
@@ -1162,7 +1165,7 @@ gst_base_video_decoder_add_to_frame (GstBaseVideoDecoder * base_video_decoder,
 {
   GstBuffer *buf;
 
-  GST_DEBUG_OBJECT (base_video_decoder, "add to frame");
+  GST_LOG_OBJECT (base_video_decoder, "add %d bytes to frame", n_bytes);
 
   if (n_bytes == 0)
     return;
@@ -1241,7 +1244,7 @@ gst_base_video_decoder_have_frame (GstBaseVideoDecoder * base_video_decoder)
   GstClockTime timestamp;
   GstClockTime duration;
 
-  GST_DEBUG_OBJECT (base_video_decoder, "have_frame");
+  GST_LOG_OBJECT (base_video_decoder, "have_frame");
 
   n_available = gst_adapter_available (base_video_decoder->output_adapter);
   if (n_available) {
@@ -1258,6 +1261,10 @@ gst_base_video_decoder_have_frame (GstBaseVideoDecoder * base_video_decoder)
 
   GST_BUFFER_TIMESTAMP (buffer) = timestamp;
   GST_BUFFER_DURATION (buffer) = duration;
+
+  GST_LOG_OBJECT (base_video_decoder, "collected frame size %d, "
+      "ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT,
+      n_available, GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
 
   return gst_base_video_decoder_have_frame_2 (base_video_decoder);
 }
@@ -1278,11 +1285,11 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
   frame->presentation_timestamp = GST_BUFFER_TIMESTAMP (frame->sink_buffer);
   frame->presentation_duration = GST_BUFFER_DURATION (frame->sink_buffer);
 
-  GST_DEBUG_OBJECT (base_video_decoder, "pts %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (base_video_decoder, "pts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->presentation_timestamp));
-  GST_DEBUG_OBJECT (base_video_decoder, "dts %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (base_video_decoder, "dts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->decode_timestamp));
-  GST_DEBUG_OBJECT (base_video_decoder, "dist %d", frame->distance_from_sync);
+  GST_LOG_OBJECT (base_video_decoder, "dist %d", frame->distance_from_sync);
 
   GST_BASE_VIDEO_CODEC (base_video_decoder)->frames =
       g_list_append (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames, frame);
@@ -1295,7 +1302,8 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
   /* do something with frame */
   ret = base_video_decoder_class->handle_frame (base_video_decoder, frame);
   if (ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (base_video_decoder, "flow error!");
+    GST_DEBUG_OBJECT (base_video_decoder, "flow error %s",
+        gst_flow_get_name (ret));
   }
 
   /* create new frame */
@@ -1309,7 +1317,6 @@ GstVideoState *
 gst_base_video_decoder_get_state (GstBaseVideoDecoder * base_video_decoder)
 {
   return &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
-
 }
 
 void
@@ -1318,7 +1325,6 @@ gst_base_video_decoder_set_state (GstBaseVideoDecoder * base_video_decoder,
 {
   memcpy (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state,
       state, sizeof (*state));
-
 }
 
 void
@@ -1449,7 +1455,8 @@ gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *
       &frame->src_buffer);
 
   if (flow_ret != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (base_video_decoder, "failed to get buffer");
+    GST_WARNING_OBJECT (base_video_decoder, "failed to get buffer %s",
+        gst_flow_get_name (flow_ret));
   }
 
   return flow_ret;
@@ -1468,6 +1475,10 @@ gst_base_video_decoder_get_max_decode_time (GstBaseVideoDecoder *
   else
     deadline = G_MAXINT64;
 
+  GST_LOG_OBJECT (base_video_decoder, "earliest %" GST_TIME_FORMAT
+      ", frame deadline %" GST_TIME_FORMAT ", deadline %" GST_TIME_FORMAT,
+      earliest_time, frame->deadline, deadline);
+
   return deadline;
 }
 
@@ -1476,6 +1487,8 @@ gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *
     base_video_decoder_class, guint32 mask, guint32 pattern)
 {
   g_return_if_fail (((~mask) & pattern) == 0);
+
+  GST_DEBUG ("capture mask %08x, pattern %08x", mask, pattern);
 
   base_video_decoder_class->capture_mask = mask;
   base_video_decoder_class->capture_pattern = pattern;
