@@ -142,11 +142,6 @@ GType gst_base_video_decoder_get_type (void);
 void gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *klass,
     guint32 mask, guint32 pattern);
 
-int gst_base_video_decoder_get_width (GstBaseVideoDecoder *coder);
-int gst_base_video_decoder_get_height (GstBaseVideoDecoder *coder);
-
-guint64 gst_base_video_decoder_get_timestamp_offset (GstBaseVideoDecoder *coder);
-
 GstVideoFrame *gst_base_video_decoder_get_frame (GstBaseVideoDecoder *coder,
     int frame_number);
 GstVideoFrame *gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *coder);
@@ -156,8 +151,6 @@ GstFlowReturn gst_base_video_decoder_finish_frame (GstBaseVideoDecoder *base_vid
     GstVideoFrame *frame);
 GstFlowReturn gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrame * frame);
-GstFlowReturn gst_base_video_decoder_end_of_stream (GstBaseVideoDecoder *base_video_decoder,
-    GstBuffer *buffer);
 GstFlowReturn
 gst_base_video_decoder_have_frame (GstBaseVideoDecoder *base_video_decoder);
 GstVideoState * gst_base_video_decoder_get_state (GstBaseVideoDecoder *base_video_decoder);

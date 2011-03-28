@@ -1123,35 +1123,6 @@ gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
   return GST_FLOW_OK;
 }
 
-int
-gst_base_video_decoder_get_height (GstBaseVideoDecoder * base_video_decoder)
-{
-  GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
-
-  return state->height;
-}
-
-int
-gst_base_video_decoder_get_width (GstBaseVideoDecoder * base_video_decoder)
-{
-  GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
-
-  return state->width;
-}
-
-GstFlowReturn
-gst_base_video_decoder_end_of_stream (GstBaseVideoDecoder * base_video_decoder,
-    GstBuffer * buffer)
-{
-
-  if (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames) {
-    GST_DEBUG_OBJECT (base_video_decoder, "EOS with frames left over");
-  }
-
-  return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
-      buffer);
-}
-
 void
 gst_base_video_decoder_add_to_frame (GstBaseVideoDecoder * base_video_decoder,
     int n_bytes)
