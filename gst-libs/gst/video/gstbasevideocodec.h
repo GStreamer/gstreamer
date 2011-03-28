@@ -100,9 +100,6 @@ struct _GstVideoState
 
   int bytes_per_picture;
 
-  //GstSegment segment;
-
-  int picture_number;
   GstBuffer *codec_data;
 
 };
