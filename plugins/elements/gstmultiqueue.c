@@ -173,7 +173,7 @@ struct _GstMultiQueueItem
   guint32 posid;
 };
 
-static GstSingleQueue *gst_single_queue_new (GstMultiQueue * mqueue);
+static GstSingleQueue *gst_single_queue_new (GstMultiQueue * mqueue, gchar * name);
 static void gst_single_queue_free (GstSingleQueue * squeue);
 
 static void wake_up_next_non_linked (GstMultiQueue * mq);
@@ -595,7 +595,7 @@ gst_multi_queue_request_new_pad (GstElement * element, GstPadTemplate * temp,
   GST_LOG_OBJECT (element, "name : %s", GST_STR_NULL (name));
 
   /* Create a new single queue, add the sink and source pad and return the sink pad */
-  squeue = gst_single_queue_new (mqueue);
+  squeue = gst_single_queue_new (mqueue, g_strdup(name));
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
   mqueue->queues = g_list_append (mqueue->queues, squeue);
@@ -1706,7 +1706,7 @@ gst_single_queue_free (GstSingleQueue * sq)
 }
 
 static GstSingleQueue *
-gst_single_queue_new (GstMultiQueue * mqueue)
+gst_single_queue_new (GstMultiQueue * mqueue, gchar * name)
 {
   GstSingleQueue *sq;
   gchar *tmp;
@@ -1750,9 +1750,10 @@ gst_single_queue_new (GstMultiQueue * mqueue)
   sq->sink_tainted = TRUE;
   sq->src_tainted = TRUE;
 
-  tmp = g_strdup_printf ("sink%d", sq->id);
-  sq->sinkpad = gst_pad_new_from_static_template (&sinktemplate, tmp);
-  g_free (tmp);
+  if (!name)
+    name = g_strdup_printf ("sink%d", sq->id);
+
+  sq->sinkpad = gst_pad_new_from_static_template (&sinktemplate, name);
 
   gst_pad_set_chain_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_chain));
@@ -1769,9 +1770,10 @@ gst_single_queue_new (GstMultiQueue * mqueue)
   gst_pad_set_iterate_internal_links_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_iterate_internal_links));
 
-  tmp = g_strdup_printf ("src%d", sq->id);
+  tmp = g_strdup_printf ("src%s", name+4);
   sq->srcpad = gst_pad_new_from_static_template (&srctemplate, tmp);
   g_free (tmp);
+  g_free (name);
 
   gst_pad_set_activatepush_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_activate_push));
