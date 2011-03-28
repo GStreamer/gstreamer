@@ -107,7 +107,7 @@ gst_encoding_target_finalize (GObject * object)
   if (target->description)
     g_free (target->description);
 
-  g_list_foreach (target->profiles, (GFunc) gst_mini_object_unref, NULL);
+  g_list_foreach (target->profiles, (GFunc) g_object_unref, NULL);
   g_list_free (target->profiles);
 }
 

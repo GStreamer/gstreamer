@@ -435,7 +435,7 @@ gst_encoding_container_profile_finalize (GObject * object)
 {
   GstEncodingContainerProfile *prof = (GstEncodingContainerProfile *) object;
 
-  g_list_foreach (prof->encodingprofiles, (GFunc) gst_mini_object_unref, NULL);
+  g_list_foreach (prof->encodingprofiles, (GFunc) g_object_unref, NULL);
   g_list_free (prof->encodingprofiles);
 
   G_OBJECT_CLASS (gst_encoding_container_profile_parent_class)->finalize
