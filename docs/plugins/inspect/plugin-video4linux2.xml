@@ -24,5 +24,12 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>v4l2radio</name>
+      <longname>Radio (video4linux2) Tuner</longname>
+      <class>Tuner</class>
+      <description>Controls a Video4Linux2 radio device</description>
+      <author>Alexey Chernov &lt;4ernov@gmail.com&gt;</author>
+    </element>
   </elements>
 </plugin>

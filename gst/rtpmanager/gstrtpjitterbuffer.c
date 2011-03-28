@@ -2129,6 +2129,35 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_POSITION:
+    {
+      GstClockTime start, last_out;
+      GstFormat fmt;
+
+      gst_query_parse_position (query, &fmt, NULL);
+      if (fmt != GST_FORMAT_TIME) {
+        res = gst_pad_query_default (pad, query);
+        break;
+      }
+
+      JBUF_LOCK (priv);
+      start = priv->npt_start;
+      last_out = priv->last_out_time;
+      JBUF_UNLOCK (priv);
+
+      GST_DEBUG_OBJECT (jitterbuffer, "npt start %" GST_TIME_FORMAT
+          ", last out %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
+          GST_TIME_ARGS (last_out));
+
+      if (GST_CLOCK_TIME_IS_VALID (start) && GST_CLOCK_TIME_IS_VALID (last_out)) {
+        /* bring 0-based outgoing time to stream time */
+        gst_query_set_position (query, GST_FORMAT_TIME, start + last_out);
+        res = TRUE;
+      } else {
+        res = gst_pad_query_default (pad, query);
+      }
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, query);
       break;

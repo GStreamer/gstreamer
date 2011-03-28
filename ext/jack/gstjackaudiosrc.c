@@ -603,16 +603,27 @@ static guint
 gst_jack_ring_buffer_delay (GstRingBuffer * buf)
 {
   GstJackAudioSrc *src;
-  guint i, res = 0, latency;
+  guint i, res = 0;
+#ifdef HAVE_JACK_0_120_2
+  jack_latency_range_t range;
+#else
+  guint latency;
+#endif
   jack_client_t *client;
 
   src = GST_JACK_AUDIO_SRC (GST_OBJECT_PARENT (buf));
   client = gst_jack_audio_client_get_client (src->client);
 
   for (i = 0; i < src->port_count; i++) {
+#ifdef HAVE_JACK_0_120_2
+    jack_port_get_latency_range (src->ports[i], JackCaptureLatency, &range);
+    if (range.max > res)
+      res = range.max;
+#else
     latency = jack_port_get_total_latency (client, src->ports[i]);
     if (latency > res)
       res = latency;
+#endif
   }
 
   GST_DEBUG_OBJECT (src, "delay %u", res);

@@ -766,6 +766,13 @@ AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
   PKG_CHECK_MODULES(JACK, jack >= 0.99.10, HAVE_JACK="yes", HAVE_JACK="no")
   AC_SUBST(JACK_CFLAGS)
   AC_SUBST(JACK_LIBS)
+
+  dnl upcomming jack2 (1.9.7 will have the new api as well
+  AG_GST_PKG_CHECK_MODULES(JACK_0_120_2, jack >= 0.120.2 jack < 1.0)
+  if test x$HAVE_JACK_0_120_2 = xyes; then
+    AC_DEFINE(HAVE_JACK_0_120_2, 1, [defined if jack >= 0.120.2 is available])
+  fi
+
 ])
 
 dnl *** jpeg ***
@@ -921,7 +928,6 @@ AG_GST_CHECK_FEATURE(SOUP, [soup http client plugin (2.4)], souphttpsrc, [
   ],[
     PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.26, HAVE_SOUP="yes", [
       HAVE_SOUP="no"
-      AC_MSG_RESULT(no)
     ])
   ])
   AC_SUBST(SOUP_CFLAGS)
@@ -998,7 +1004,6 @@ AG_GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
       AC_DEFINE(WAVPACK_OLD_API, 1, [old wavpack API])
     ],[
       HAVE_WAVPACK=no
-      AC_MSG_RESULT(no)
     ])
   ])
   AC_SUBST(WAVPACK_CFLAGS)

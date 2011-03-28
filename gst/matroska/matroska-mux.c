@@ -644,22 +644,23 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       gst_tag_setter_merge_tags (GST_TAG_SETTER (mux), list,
           gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
 
-      /* handled this, don't want collectpads to forward it downstream */
-      ret = FALSE;
       gst_event_unref (event);
+      /* handled this, don't want collectpads to forward it downstream */
+      event = NULL;
       break;
     }
     case GST_EVENT_NEWSEGMENT:
       /* We don't support NEWSEGMENT events */
       ret = FALSE;
       gst_event_unref (event);
+      event = NULL;
       break;
     default:
       break;
   }
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
-  if (ret)
+  if (event)
     ret = mux->collect_event (pad, event);
 
   gst_object_unref (mux);
@@ -2168,7 +2169,7 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
     gpointer data)
 {
   /* TODO: more sensible tag mappings */
-  struct
+  static const struct
   {
     const gchar *matroska_tagname;
     const gchar *gstreamer_tagname;
@@ -2176,7 +2177,7 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
   tag_conv[] = {
     {
     GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
-    GST_MATROSKA_TAG_ID_AUTHOR, GST_TAG_ARTIST}, {
+    GST_MATROSKA_TAG_ID_ARTIST, GST_TAG_ARTIST}, {
     GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
     GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
     GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {
@@ -2408,8 +2409,29 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux, gboolean * popped)
       collect_pad->buffer = gst_collect_pads_pop (mux->collect,
           (GstCollectData *) collect_pad);
 
-      if (collect_pad->buffer != NULL)
+      if (collect_pad->buffer != NULL) {
+        GstClockTime time;
+
         *popped = TRUE;
+        /* convert to running time */
+        time = GST_BUFFER_TIMESTAMP (collect_pad->buffer);
+        /* invalid should pass */
+        if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
+          time = gst_segment_to_running_time (&collect_pad->collect.segment,
+              GST_FORMAT_TIME, time);
+          if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
+            GST_DEBUG_OBJECT (mux, "clipping buffer on pad %s outside segment",
+                GST_PAD_NAME (collect_pad->collect.pad));
+            gst_buffer_unref (collect_pad->buffer);
+            collect_pad->buffer = NULL;
+            return NULL;
+          } else {
+            collect_pad->buffer =
+                gst_buffer_make_metadata_writable (collect_pad->buffer);
+            GST_BUFFER_TIMESTAMP (collect_pad->buffer) = time;
+          }
+        }
+      }
     }
 
     /* if we have a buffer check if it is better then the current best one */
@@ -2771,7 +2793,7 @@ gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
   GstEbmlWrite *ebml = mux->ebml_write;
   GstMatroskaPad *best;
   gboolean popped;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (mux, "Collected pads");
 
@@ -2795,6 +2817,9 @@ gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
 
     /* if there is no best pad, we have reached EOS */
     if (best == NULL) {
+      /* buffer popped, but none returned means it was clipped */
+      if (popped)
+        break;
       GST_DEBUG_OBJECT (mux, "No best pad finishing...");
       if (!mux->streamable) {
         gst_matroska_mux_finish (mux);

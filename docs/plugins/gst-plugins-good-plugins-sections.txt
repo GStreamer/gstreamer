@@ -2049,6 +2049,20 @@ gst_v4l2sink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-v4l2radio</FILE>
+<TITLE>v4l2radio</TITLE>
+GstV4l2Radio
+<SUBSECTION Standard>
+GstV4l2RadioClass
+GST_V4L2RADIO
+GST_IS_V4L2RADIO
+GST_TYPE_V4L2RADIO
+GST_V4L2RADIO_CLASS
+GST_IS_V4L2RADIO_CLASS
+gst_v4l2radio_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-waveformsink</FILE>
 <TITLE>waveformsink</TITLE>
 GstWaveFormSink

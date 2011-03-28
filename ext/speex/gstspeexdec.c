@@ -86,6 +86,7 @@ static GstStateChangeReturn speex_dec_change_state (GstElement * element,
 static gboolean speex_dec_src_event (GstPad * pad, GstEvent * event);
 static gboolean speex_dec_src_query (GstPad * pad, GstQuery * query);
 static gboolean speex_dec_sink_query (GstPad * pad, GstQuery * query);
+static gboolean speex_dec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static const GstQueryType *speex_get_src_query_types (GstPad * pad);
 static const GstQueryType *speex_get_sink_query_types (GstPad * pad);
 static gboolean speex_dec_convert (GstPad * pad,
@@ -99,6 +100,11 @@ static void gst_speex_dec_set_property (GObject * object, guint prop_id,
 
 static GstFlowReturn speex_dec_chain_parse_data (GstSpeexDec * dec,
     GstBuffer * buf, GstClockTime timestamp, GstClockTime duration);
+
+static GstFlowReturn speex_dec_chain_parse_header (GstSpeexDec * dec,
+    GstBuffer * buf);
+static GstFlowReturn speex_dec_chain_parse_comments (GstSpeexDec * dec,
+    GstBuffer * buf);
 
 static void
 gst_speex_dec_base_init (gpointer g_class)
@@ -148,6 +154,9 @@ gst_speex_dec_reset (GstSpeexDec * dec)
   dec->header = NULL;
   speex_bits_destroy (&dec->bits);
 
+  gst_buffer_replace (&dec->streamheader, NULL);
+  gst_buffer_replace (&dec->vorbiscomment, NULL);
+
   if (dec->stereo) {
     speex_stereo_state_destroy (dec->stereo);
     dec->stereo = NULL;
@@ -172,6 +181,8 @@ gst_speex_dec_init (GstSpeexDec * dec, GstSpeexDecClass * g_class)
       GST_DEBUG_FUNCPTR (speex_get_sink_query_types));
   gst_pad_set_query_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (speex_dec_sink_query));
+  gst_pad_set_setcaps_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (speex_dec_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad =
@@ -188,6 +199,46 @@ gst_speex_dec_init (GstSpeexDec * dec, GstSpeexDecClass * g_class)
   dec->enh = DEFAULT_ENH;
 
   gst_speex_dec_reset (dec);
+}
+
+static gboolean
+speex_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstSpeexDec *dec = GST_SPEEX_DEC (gst_pad_get_parent (pad));
+  gboolean ret = TRUE;
+  GstStructure *s;
+  const GValue *streamheader;
+
+  s = gst_caps_get_structure (caps, 0);
+  if ((streamheader = gst_structure_get_value (s, "streamheader")) &&
+      G_VALUE_HOLDS (streamheader, GST_TYPE_ARRAY) &&
+      gst_value_array_get_size (streamheader) >= 2) {
+    const GValue *header, *vorbiscomment;
+    GstBuffer *buf;
+    GstFlowReturn res = GST_FLOW_OK;
+
+    header = gst_value_array_get_value (streamheader, 0);
+    if (header && G_VALUE_HOLDS (header, GST_TYPE_BUFFER)) {
+      buf = gst_value_get_buffer (header);
+      res = speex_dec_chain_parse_header (dec, buf);
+      if (res != GST_FLOW_OK)
+        goto done;
+      gst_buffer_replace (&dec->streamheader, buf);
+    }
+
+    vorbiscomment = gst_value_array_get_value (streamheader, 1);
+    if (vorbiscomment && G_VALUE_HOLDS (vorbiscomment, GST_TYPE_BUFFER)) {
+      buf = gst_value_get_buffer (vorbiscomment);
+      res = speex_dec_chain_parse_comments (dec, buf);
+      if (res != GST_FLOW_OK)
+        goto done;
+      gst_buffer_replace (&dec->vorbiscomment, buf);
+    }
+  }
+
+done:
+  gst_object_unref (dec);
+  return ret;
 }
 
 static gboolean
@@ -662,10 +713,11 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
     /* send data to the bitstream */
     speex_bits_read_from (&dec->bits, (char *) data, size);
 
-    fpp = 0;
+    fpp = dec->header->frames_per_packet;
     bits = &dec->bits;
 
-    GST_DEBUG_OBJECT (dec, "received buffer of size %u, fpp %d", size, fpp);
+    GST_DEBUG_OBJECT (dec, "received buffer of size %u, fpp %d, %d bits", size,
+        fpp, speex_bits_remaining (bits));
   } else {
     /* concealment data, pass NULL as the bits parameters */
     GST_DEBUG_OBJECT (dec, "creating concealment data");
@@ -675,13 +727,13 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
 
 
   /* now decode each frame, catering for unknown number of them (e.g. rtp) */
-  for (i = 0; (!fpp || i < fpp) && (!bits || speex_bits_remaining (bits) > 0);
-      i++) {
+  for (i = 0; i < fpp; i++) {
     GstBuffer *outbuf;
     gint16 *out_data;
     gint ret;
 
-    GST_LOG_OBJECT (dec, "decoding frame %d/%d", i, fpp);
+    GST_LOG_OBJECT (dec, "decoding frame %d/%d, %d bits remaining", i, fpp,
+        bits ? speex_bits_remaining (bits) : -1);
 
     res = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
         GST_BUFFER_OFFSET_NONE, dec->frame_size * dec->header->nb_channels * 2,
@@ -697,7 +749,12 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
     ret = speex_decode_int (dec->state, bits, out_data);
     if (ret == -1) {
       /* uh? end of stream */
-      GST_WARNING_OBJECT (dec, "Unexpected end of stream found");
+      if (fpp == 0 && speex_bits_remaining (bits) < 8) {
+        /* if we did not know how many frames to expect, then we get this
+           at the end if there are leftover bits to pad to the next byte */
+      } else {
+        GST_WARNING_OBJECT (dec, "Unexpected end of stream found");
+      }
       gst_buffer_unref (outbuf);
       outbuf = NULL;
       break;
@@ -754,19 +811,37 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
 
   dec = GST_SPEEX_DEC (gst_pad_get_parent (pad));
 
-  switch (dec->packetno) {
-    case 0:
-      res = speex_dec_chain_parse_header (dec, buf);
-      break;
-    case 1:
-      res = speex_dec_chain_parse_comments (dec, buf);
-      break;
-    default:
-    {
+  /* If we have the streamheader and vorbiscomment from the caps already
+   * ignore them here */
+  if (dec->streamheader && dec->vorbiscomment) {
+    if (GST_BUFFER_SIZE (dec->streamheader) == GST_BUFFER_SIZE (buf)
+        && memcmp (GST_BUFFER_DATA (dec->streamheader), GST_BUFFER_DATA (buf),
+            GST_BUFFER_SIZE (buf)) == 0) {
+      res = GST_FLOW_OK;
+    } else if (GST_BUFFER_SIZE (dec->vorbiscomment) == GST_BUFFER_SIZE (buf)
+        && memcmp (GST_BUFFER_DATA (dec->vorbiscomment), GST_BUFFER_DATA (buf),
+            GST_BUFFER_SIZE (buf)) == 0) {
+      res = GST_FLOW_OK;
+    } else {
       res =
           speex_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
           GST_BUFFER_DURATION (buf));
-      break;
+    }
+  } else {
+    /* Otherwise fall back to packet counting and assume that the
+     * first two packets are the headers. */
+    switch (dec->packetno) {
+      case 0:
+        res = speex_dec_chain_parse_header (dec, buf);
+        break;
+      case 1:
+        res = speex_dec_chain_parse_comments (dec, buf);
+        break;
+      default:
+        res =
+            speex_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
+            GST_BUFFER_DURATION (buf));
+        break;
     }
   }
 

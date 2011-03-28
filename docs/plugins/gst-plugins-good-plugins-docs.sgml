@@ -154,6 +154,7 @@
     <xi:include href="xml/element-udpsink.xml" />
     <xi:include href="xml/element-v4l2src.xml" />
     <xi:include href="xml/element-v4l2sink.xml" />
+    <xi:include href="xml/element-v4l2radio.xml" />
     <xi:include href="xml/element-vertigotv.xml" />
     <xi:include href="xml/element-videobalance.xml" />
     <xi:include href="xml/element-videobox.xml" />

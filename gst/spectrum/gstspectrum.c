@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- *               <2006> Stefan Kost <ensonic@users.sf.net>
+ *               <2006,2011> Stefan Kost <ensonic@users.sf.net>
  *               <2007-2009> Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
@@ -71,7 +71,7 @@
  *   <classname>&quot;magnitude&quot;</classname>:
  *   the level for each frequency band in dB. All values below the value of the
  *   #GstSpectrum:threshold property will be set to the threshold. Only present
- *   if the message-magnitude property is true.
+ *   if the #GstSpectrum:message-magnitude property is %TRUE.
  *   </para>
  * </listitem>
  * <listitem>
@@ -79,10 +79,14 @@
  *   #GstValueList of #gfloat
  *   <classname>&quot;phase&quot;</classname>:
  *   The phase for each frequency band. The value is between -pi and pi. Only
- *   present if the message-phase property is true.
+ *   present if the #GstSpectrum:message-phase property is %TRUE.
  *   </para>
  * </listitem>
  * </itemizedlist>
+ *
+ * If #GstSpectrum:multi-channel property is set to true. magnitude and phase
+ * fields will be each a nested #GstValueArray. The first dimension are the
+ * channels and the second dimension are the values.
  *
  * <refsect2>
  * <title>Example application</title>
@@ -91,7 +95,7 @@
  * ]|
  * </refsect2>
  *
- * Last reviewed on 2009-01-14 (0.10.12)
+ * Last reviewed on 2011-03-10 (0.10.29)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -143,6 +147,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_spectrum_debug);
 #define DEFAULT_INTERVAL		(GST_SECOND / 10)
 #define DEFAULT_BANDS			128
 #define DEFAULT_THRESHOLD		-60
+#define DEFAULT_MULTI_CHANNEL		FALSE
 
 enum
 {
@@ -153,7 +158,8 @@ enum
   PROP_MESSAGE_PHASE,
   PROP_INTERVAL,
   PROP_BANDS,
-  PROP_THRESHOLD
+  PROP_THRESHOLD,
+  PROP_MULTI_CHANNEL
 };
 
 GST_BOILERPLATE (GstSpectrum, gst_spectrum, GstAudioFilter,
@@ -257,6 +263,18 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
           G_MININT, 0, DEFAULT_THRESHOLD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstSpectrum:multi-channel
+   *
+   * Send separate results for each channel
+   *
+   * Since: 0.10.29
+   */
+  g_object_class_install_property (gobject_class, PROP_MULTI_CHANNEL,
+      g_param_spec_boolean ("multi-channel", "Multichannel results",
+          "Send separate results for each channel",
+          DEFAULT_MULTI_CHANNEL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_CATEGORY_INIT (gst_spectrum_debug, "spectrum", 0,
       "audio spectrum analyser element");
 }
@@ -273,6 +291,59 @@ gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
 }
 
 static void
+gst_spectrum_alloc_channel_data (GstSpectrum * spectrum)
+{
+  gint i;
+  GstSpectrumChannel *cd;
+  guint bands = spectrum->bands;
+  guint nfft = 2 * bands - 2;
+
+  g_assert (spectrum->channel_data == NULL);
+
+  spectrum->num_channels = (spectrum->multi_channel) ?
+      GST_AUDIO_FILTER (spectrum)->format.channels : 1;
+
+  GST_DEBUG_OBJECT (spectrum, "allocating data for %d channels",
+      spectrum->num_channels);
+
+  spectrum->channel_data = g_new (GstSpectrumChannel, spectrum->num_channels);
+  for (i = 0; i < spectrum->num_channels; i++) {
+    cd = &spectrum->channel_data[i];
+    cd->fft_ctx = gst_fft_f32_new (nfft, FALSE);
+    cd->input = g_new0 (gfloat, nfft);
+    cd->input_tmp = g_new0 (gfloat, nfft);
+    cd->freqdata = g_new0 (GstFFTF32Complex, bands);
+    cd->spect_magnitude = g_new0 (gfloat, bands);
+    cd->spect_phase = g_new0 (gfloat, bands);
+  }
+}
+
+static void
+gst_spectrum_free_channel_data (GstSpectrum * spectrum)
+{
+  if (spectrum->channel_data) {
+    gint i;
+    GstSpectrumChannel *cd;
+
+    GST_DEBUG_OBJECT (spectrum, "freeing data for %d channels",
+        spectrum->num_channels);
+
+    for (i = 0; i < spectrum->num_channels; i++) {
+      cd = &spectrum->channel_data[i];
+      if (cd->fft_ctx)
+        gst_fft_f32_free (cd->fft_ctx);
+      g_free (cd->input);
+      g_free (cd->input_tmp);
+      g_free (cd->freqdata);
+      g_free (cd->spect_magnitude);
+      g_free (cd->spect_phase);
+    }
+    g_free (spectrum->channel_data);
+    spectrum->channel_data = NULL;
+  }
+}
+
+static void
 gst_spectrum_flush (GstSpectrum * spectrum)
 {
   spectrum->num_frames = 0;
@@ -286,21 +357,7 @@ gst_spectrum_reset_state (GstSpectrum * spectrum)
 {
   GST_DEBUG_OBJECT (spectrum, "resetting state");
 
-  if (spectrum->fft_ctx)
-    gst_fft_f32_free (spectrum->fft_ctx);
-  g_free (spectrum->input);
-  g_free (spectrum->input_tmp);
-  g_free (spectrum->freqdata);
-  g_free (spectrum->spect_magnitude);
-  g_free (spectrum->spect_phase);
-
-  spectrum->fft_ctx = NULL;
-  spectrum->input = NULL;
-  spectrum->input_tmp = NULL;
-  spectrum->freqdata = NULL;
-  spectrum->spect_magnitude = NULL;
-  spectrum->spect_phase = NULL;
-
+  gst_spectrum_free_channel_data (spectrum);
   gst_spectrum_flush (spectrum);
 }
 
@@ -335,7 +392,7 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
       guint64 interval = g_value_get_uint64 (value);
       if (filter->interval != interval) {
         GST_BASE_TRANSFORM_LOCK (filter);
-        filter->interval = g_value_get_uint64 (value);
+        filter->interval = interval;
         gst_spectrum_reset_state (filter);
         GST_BASE_TRANSFORM_UNLOCK (filter);
       }
@@ -353,6 +410,16 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
       break;
     case PROP_THRESHOLD:
       filter->threshold = g_value_get_int (value);
+      break;
+    case PROP_MULTI_CHANNEL:{
+      gboolean multi_channel = g_value_get_boolean (value);
+      if (filter->multi_channel != multi_channel) {
+        GST_BASE_TRANSFORM_LOCK (filter);
+        filter->multi_channel = multi_channel;
+        gst_spectrum_reset_state (filter);
+        GST_BASE_TRANSFORM_UNLOCK (filter);
+      }
+    }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -386,6 +453,9 @@ gst_spectrum_get_property (GObject * object, guint prop_id,
     case PROP_THRESHOLD:
       g_value_set_int (value, filter->threshold);
       break;
+    case PROP_MULTI_CHANNEL:
+      g_value_set_boolean (value, filter->multi_channel);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -412,14 +482,375 @@ gst_spectrum_stop (GstBaseTransform * trans)
   return TRUE;
 }
 
+/* mixing data readers */
+
+static void
+input_data_mixed_float (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint i, j, ip = 0;
+  gfloat v;
+  gfloat *in = (gfloat *) _in;
+
+  for (j = 0; j < len; j++) {
+    v = in[ip++];
+    for (i = 1; i < channels; i++)
+      v += in[ip++];
+    out[op] = v / channels;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_mixed_double (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint i, j, ip = 0;
+  gfloat v;
+  gdouble *in = (gdouble *) _in;
+
+  for (j = 0; j < len; j++) {
+    v = in[ip++];
+    for (i = 1; i < channels; i++)
+      v += in[ip++];
+    out[op] = v / channels;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_mixed_int32 (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint i, j, ip = 0;
+  gint32 *in = (gint32 *) _in;
+  gfloat v;
+
+  for (j = 0; j < len; j++) {
+    v = in[ip++] * 2 + 1;
+    for (i = 1; i < channels; i++)
+      v += in[ip++] * 2 + 1;
+    out[op] = v / channels;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_mixed_int32_max (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint i, j, ip = 0;
+  gint32 *in = (gint32 *) _in;
+  gfloat v;
+
+  for (j = 0; j < len; j++) {
+    v = in[ip++] / max_value;
+    for (i = 1; i < channels; i++)
+      v += in[ip++] / max_value;
+    out[op] = v / channels;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_mixed_int24 (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint i, j;
+  gfloat v = 0.0;
+
+  for (j = 0; j < len; j++) {
+    for (i = 0; i < channels; i++) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+      gint32 value = GST_READ_UINT24_BE (_in);
+#else
+      gint32 value = GST_READ_UINT24_LE (_in);
+#endif
+      if (value & 0x00800000)
+        value |= 0xff000000;
+      v += value * 2 + 1;
+      _in += 3;
+    }
+    out[op] = v / channels;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_mixed_int24_max (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint i, j;
+  gfloat v = 0.0;
+
+  for (j = 0; j < len; j++) {
+    for (i = 0; i < channels; i++) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+      gint32 value = GST_READ_UINT24_BE (_in);
+#else
+      gint32 value = GST_READ_UINT24_LE (_in);
+#endif
+      if (value & 0x00800000)
+        value |= 0xff000000;
+      v += value / max_value;
+      _in += 3;
+    }
+    out[op] = v / channels;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_mixed_int16 (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint i, j, ip = 0;
+  gint16 *in = (gint16 *) _in;
+  gfloat v;
+
+  for (j = 0; j < len; j++) {
+    v = in[ip++] * 2 + 1;
+    for (i = 1; i < channels; i++)
+      v += in[ip++] * 2 + 1;
+    out[op] = v / channels;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_mixed_int16_max (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint i, j, ip = 0;
+  gint16 *in = (gint16 *) _in;
+  gfloat v;
+
+  for (j = 0; j < len; j++) {
+    v = in[ip++] / max_value;
+    for (i = 1; i < channels; i++)
+      v += in[ip++] / max_value;
+    out[op] = v / channels;
+    op = (op + 1) % nfft;
+  }
+}
+
+/* non mixing data readers */
+
+static void
+input_data_float (const guint8 * _in, gfloat * out, guint len, guint channels,
+    gfloat max_value, guint op, guint nfft)
+{
+  guint j, ip;
+  gfloat *in = (gfloat *) _in;
+
+  for (j = 0, ip = 0; j < len; j++, ip += channels) {
+    out[op] = in[ip];
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_double (const guint8 * _in, gfloat * out, guint len, guint channels,
+    gfloat max_value, guint op, guint nfft)
+{
+  guint j, ip;
+  gdouble *in = (gdouble *) _in;
+
+  for (j = 0, ip = 0; j < len; j++, ip += channels) {
+    out[op] = in[ip];
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_int32 (const guint8 * _in, gfloat * out, guint len, guint channels,
+    gfloat max_value, guint op, guint nfft)
+{
+  guint j, ip;
+  gint32 *in = (gint32 *) _in;
+
+  for (j = 0, ip = 0; j < len; j++, ip += channels) {
+    out[op] = in[ip] * 2 + 1;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_int32_max (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint j, ip;
+  gint32 *in = (gint32 *) _in;
+
+  for (j = 0, ip = 0; j < len; j++, ip += channels) {
+    out[op] = in[ip] / max_value;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_int24 (const guint8 * _in, gfloat * out, guint len, guint channels,
+    gfloat max_value, guint op, guint nfft)
+{
+  guint j;
+
+  for (j = 0; j < len; j++) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    gint32 v = GST_READ_UINT24_BE (_in);
+#else
+    gint32 v = GST_READ_UINT24_LE (_in);
+#endif
+    if (v & 0x00800000)
+      v |= 0xff000000;
+    _in += 3 * channels;
+    out[op] = v * 2 + 1;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_int24_max (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint j;
+
+  for (j = 0; j < len; j++) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    gint32 v = GST_READ_UINT24_BE (_in);
+#else
+    gint32 v = GST_READ_UINT24_LE (_in);
+#endif
+    if (v & 0x00800000)
+      v |= 0xff000000;
+    _in += 3 * channels;
+    out[op] = v / max_value;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_int16 (const guint8 * _in, gfloat * out, guint len, guint channels,
+    gfloat max_value, guint op, guint nfft)
+{
+  guint j, ip;
+  gint16 *in = (gint16 *) _in;
+
+  for (j = 0, ip = 0; j < len; j++, ip += channels) {
+    out[op] = in[ip] * 2 + 1;
+    op = (op + 1) % nfft;
+  }
+}
+
+static void
+input_data_int16_max (const guint8 * _in, gfloat * out, guint len,
+    guint channels, gfloat max_value, guint op, guint nfft)
+{
+  guint j, ip;
+  gint16 *in = (gint16 *) _in;
+
+  for (j = 0, ip = 0; j < len; j++, ip += channels) {
+    out[op] = in[ip] / max_value;
+    op = (op + 1) % nfft;
+  }
+}
+
 static gboolean
 gst_spectrum_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
-  GstSpectrum *filter = GST_SPECTRUM (base);
+  GstSpectrum *spectrum = GST_SPECTRUM (base);
+  guint width = format->width / 8;
+  gboolean is_float = (format->type == GST_BUFTYPE_FLOAT);
+  /* max_value will be 0 when depth is 1,
+   * interpret -1 and 0 as -1 and +1 if that's the case. */
+  guint max_value = (1UL << (format->depth - 1)) - 1;
+  gboolean multi_channel = spectrum->multi_channel;
+  GstSpectrumInputData input_data = NULL;
 
-  gst_spectrum_reset_state (filter);
+  if (is_float) {
+    if (width == 4) {
+      input_data = multi_channel ? input_data_float : input_data_mixed_float;
+    } else if (width == 8) {
+      input_data = multi_channel ? input_data_double : input_data_mixed_double;
+    } else {
+      g_assert_not_reached ();
+    }
+  } else {
+    if (width == 4) {
+      if (max_value) {
+        input_data =
+            multi_channel ? input_data_int32_max : input_data_mixed_int32_max;
+      } else {
+        input_data = multi_channel ? input_data_int32 : input_data_mixed_int32;
+      }
+    } else if (width == 3) {
+      if (max_value) {
+        input_data =
+            multi_channel ? input_data_int24_max : input_data_mixed_int24_max;
+      } else {
+        input_data = multi_channel ? input_data_int24 : input_data_mixed_int24;
+      }
+    } else if (width == 2) {
+      if (max_value) {
+        input_data =
+            multi_channel ? input_data_int16_max : input_data_mixed_int16_max;
+      } else {
+        input_data = multi_channel ? input_data_int16 : input_data_mixed_int16;
+      }
+    } else {
+      g_assert_not_reached ();
+    }
+  }
 
+  spectrum->input_data = input_data;
+  gst_spectrum_reset_state (spectrum);
   return TRUE;
+}
+
+static GValue *
+gst_spectrum_message_add_container (GstStructure * s, GType type,
+    const gchar * name)
+{
+  GValue v = { 0, };
+
+  g_value_init (&v, type);
+  /* will copy-by-value */
+  gst_structure_set_value (s, name, &v);
+  g_value_unset (&v);
+  return (GValue *) gst_structure_get_value (s, name);
+}
+
+static void
+gst_spectrum_message_add_list (GValue * cv, gfloat * data, guint num_values)
+{
+  GValue v = { 0, };
+  guint i;
+
+  g_value_init (&v, G_TYPE_FLOAT);
+  for (i = 0; i < num_values; i++) {
+    g_value_set_float (&v, data[i]);
+    gst_value_list_append_value (cv, &v);       /* copies by value */
+  }
+  g_value_unset (&v);
+}
+
+static void
+gst_spectrum_message_add_array (GValue * cv, gfloat * data, guint num_values)
+{
+  GValue v = { 0, };
+  GValue a = { 0, };
+  guint i;
+
+  g_value_init (&a, GST_TYPE_ARRAY);
+
+  g_value_init (&v, G_TYPE_FLOAT);
+  for (i = 0; i < num_values; i++) {
+    g_value_set_float (&v, data[i]);
+    gst_value_array_append_value (&a, &v);      /* copies by value */
+  }
+  g_value_unset (&v);
+
+  gst_value_array_append_value (cv, &a);        /* copies by value */
+  g_value_unset (&a);
 }
 
 static GstMessage *
@@ -427,16 +858,12 @@ gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime timestamp,
     GstClockTime duration)
 {
   GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (spectrum);
+  GstSpectrumChannel *cd;
   GstStructure *s;
-  GValue v = { 0, };
-  GValue *l;
-  guint i;
-  gfloat *spect_magnitude = spectrum->spect_magnitude;
-  gfloat *spect_phase = spectrum->spect_phase;
+  GValue *mcv = NULL, *pcv = NULL;
   GstClockTime endtime, running_time, stream_time;
 
-  GST_DEBUG_OBJECT (spectrum, "preparing message, spect = %p, bands =%d ",
-      spect_magnitude, spectrum->bands);
+  GST_DEBUG_OBJECT (spectrum, "preparing message, bands =%d ", spectrum->bands);
 
   running_time = gst_segment_to_running_time (&trans->segment, GST_FORMAT_TIME,
       timestamp);
@@ -452,65 +879,145 @@ gst_spectrum_message_new (GstSpectrum * spectrum, GstClockTime timestamp,
       "running-time", G_TYPE_UINT64, running_time,
       "duration", G_TYPE_UINT64, duration, NULL);
 
-  if (spectrum->message_magnitude) {
-    /* FIXME 0.11: this should be an array, not a list */
-    g_value_init (&v, GST_TYPE_LIST);
-    /* will copy-by-value */
-    gst_structure_set_value (s, "magnitude", &v);
-    g_value_unset (&v);
+  if (!spectrum->multi_channel) {
+    cd = &spectrum->channel_data[0];
 
-    g_value_init (&v, G_TYPE_FLOAT);
-    l = (GValue *) gst_structure_get_value (s, "magnitude");
-    for (i = 0; i < spectrum->bands; i++) {
-      g_value_set_float (&v, spect_magnitude[i]);
-      gst_value_list_append_value (l, &v);      /* copies by value */
+    if (spectrum->message_magnitude) {
+      /* FIXME 0.11: this should be an array, not a list */
+      mcv = gst_spectrum_message_add_container (s, GST_TYPE_LIST, "magnitude");
+      gst_spectrum_message_add_list (mcv, cd->spect_magnitude, spectrum->bands);
     }
-    g_value_unset (&v);
+    if (spectrum->message_phase) {
+      /* FIXME 0.11: this should be an array, not a list */
+      pcv = gst_spectrum_message_add_container (s, GST_TYPE_LIST, "phase");
+      gst_spectrum_message_add_list (pcv, cd->spect_phase, spectrum->bands);
+    }
+  } else {
+    guint c;
+    guint channels = GST_AUDIO_FILTER (spectrum)->format.channels;
+
+    if (spectrum->message_magnitude) {
+      mcv = gst_spectrum_message_add_container (s, GST_TYPE_ARRAY, "magnitude");
+    }
+    if (spectrum->message_phase) {
+      pcv = gst_spectrum_message_add_container (s, GST_TYPE_ARRAY, "phase");
+    }
+
+    for (c = 0; c < channels; c++) {
+      cd = &spectrum->channel_data[c];
+
+      if (spectrum->message_magnitude) {
+        gst_spectrum_message_add_array (mcv, cd->spect_magnitude,
+            spectrum->bands);
+      }
+      if (spectrum->message_phase) {
+        gst_spectrum_message_add_array (pcv, cd->spect_magnitude,
+            spectrum->bands);
+      }
+    }
+  }
+  return gst_message_new_element (GST_OBJECT (spectrum), s);
+}
+
+static void
+gst_spectrum_run_fft (GstSpectrum * spectrum, GstSpectrumChannel * cd,
+    guint input_pos)
+{
+  guint i;
+  guint bands = spectrum->bands;
+  guint nfft = 2 * bands - 2;
+  gint threshold = spectrum->threshold;
+  gfloat *input = cd->input;
+  gfloat *input_tmp = cd->input_tmp;
+  gfloat *spect_magnitude = cd->spect_magnitude;
+  gfloat *spect_phase = cd->spect_phase;
+  GstFFTF32Complex *freqdata = cd->freqdata;
+  GstFFTF32 *fft_ctx = cd->fft_ctx;
+
+  for (i = 0; i < nfft; i++)
+    input_tmp[i] = input[(input_pos + i) % nfft];
+
+  gst_fft_f32_window (fft_ctx, input_tmp, GST_FFT_WINDOW_HAMMING);
+
+  gst_fft_f32_fft (fft_ctx, input_tmp, freqdata);
+
+  if (spectrum->message_magnitude) {
+    gdouble val;
+    /* Calculate magnitude in db */
+    for (i = 0; i < bands; i++) {
+      val = freqdata[i].r * freqdata[i].r;
+      val += freqdata[i].i * freqdata[i].i;
+      val /= nfft * nfft;
+      val = 10.0 * log10 (val);
+      if (val < threshold)
+        val = threshold;
+      spect_magnitude[i] += val;
+    }
   }
 
   if (spectrum->message_phase) {
-    /* FIXME 0.11: this should be an array, not a list */
-    g_value_init (&v, GST_TYPE_LIST);
-    /* will copy-by-value */
-    gst_structure_set_value (s, "phase", &v);
-    g_value_unset (&v);
-
-    g_value_init (&v, G_TYPE_FLOAT);
-    l = (GValue *) gst_structure_get_value (s, "phase");
-    for (i = 0; i < spectrum->bands; i++) {
-      g_value_set_float (&v, spect_phase[i]);
-      gst_value_list_append_value (l, &v);      /* copies by value */
-    }
-    g_value_unset (&v);
+    /* Calculate phase */
+    for (i = 0; i < bands; i++)
+      spect_phase[i] += atan2 (freqdata[i].i, freqdata[i].r);
   }
+}
 
-  return gst_message_new_element (GST_OBJECT (spectrum), s);
+static void
+gst_spectrum_prepare_message_data (GstSpectrum * spectrum,
+    GstSpectrumChannel * cd)
+{
+  guint i;
+  guint bands = spectrum->bands;
+  guint num_fft = spectrum->num_fft;
+
+  /* Calculate average */
+  if (spectrum->message_magnitude) {
+    gfloat *spect_magnitude = cd->spect_magnitude;
+    for (i = 0; i < bands; i++)
+      spect_magnitude[i] /= num_fft;
+  }
+  if (spectrum->message_phase) {
+    gfloat *spect_phase = cd->spect_phase;
+    for (i = 0; i < bands; i++)
+      spect_phase[i] /= num_fft;
+  }
+}
+
+static void
+gst_spectrum_reset_message_data (GstSpectrum * spectrum,
+    GstSpectrumChannel * cd)
+{
+  guint bands = spectrum->bands;
+  gfloat *spect_magnitude = cd->spect_magnitude;
+  gfloat *spect_phase = cd->spect_phase;
+
+  /* reset spectrum accumulators */
+  memset (spect_magnitude, 0, bands * sizeof (gfloat));
+  memset (spect_phase, 0, bands * sizeof (gfloat));
 }
 
 static GstFlowReturn
 gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 {
   GstSpectrum *spectrum = GST_SPECTRUM (trans);
-  guint i;
-  guint rate = GST_AUDIO_FILTER (spectrum)->format.rate;
-  guint channels = GST_AUDIO_FILTER (spectrum)->format.channels;
-  gfloat max_value =
-      (1UL << (GST_AUDIO_FILTER (spectrum)->format.depth - 1)) - 1;
-  guint width = GST_AUDIO_FILTER (spectrum)->format.width / 8;
-  gboolean fp = (GST_AUDIO_FILTER (spectrum)->format.type == GST_BUFTYPE_FLOAT);
+  GstRingBufferSpec *format = &GST_AUDIO_FILTER (spectrum)->format;
+  guint rate = format->rate;
+  guint channels = format->channels;
+  guint output_channels = spectrum->multi_channel ? channels : 1;
+  guint c;
+  guint width = format->width / 8;
+  gfloat max_value = (1UL << (format->depth - 1)) - 1;
   guint bands = spectrum->bands;
   guint nfft = 2 * bands - 2;
-  gint threshold = spectrum->threshold;
   guint input_pos;
   gfloat *input;
-  gfloat *input_tmp;
-  GstFFTF32Complex *freqdata;
-  gfloat *spect_magnitude;
-  gfloat *spect_phase;
-  GstFFTF32 *fft_ctx;
   const guint8 *data = GST_BUFFER_DATA (buffer);
   guint size = GST_BUFFER_SIZE (buffer);
+  guint frame_size = width * channels;
+  guint fft_todo, msg_todo, block_size;
   gboolean have_full_interval;
+  GstSpectrumChannel *cd;
+  GstSpectrumInputData input_data;
 
   GST_LOG_OBJECT (spectrum, "input size: %d bytes", GST_BUFFER_SIZE (buffer));
 
@@ -522,21 +1029,26 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   /* If we don't have a FFT context yet (or it was reset due to parameter
    * changes) get one and allocate memory for everything
    */
-  if (spectrum->fft_ctx == NULL) {
+  if (spectrum->channel_data == NULL) {
     GST_DEBUG_OBJECT (spectrum, "allocating for bands %u", bands);
 
-    spectrum->fft_ctx = gst_fft_f32_new (nfft, FALSE);
-    spectrum->input = g_new0 (gfloat, nfft);
-    spectrum->input_tmp = g_new0 (gfloat, nfft);
-    spectrum->freqdata = g_new0 (GstFFTF32Complex, bands);
-    spectrum->spect_magnitude = g_new0 (gfloat, bands);
-    spectrum->spect_phase = g_new0 (gfloat, bands);
+    gst_spectrum_alloc_channel_data (spectrum);
 
+    /* number of sample frames we process before posting a message
+     * interval is in ns */
     spectrum->frames_per_interval =
         gst_util_uint64_scale (spectrum->interval, rate, GST_SECOND);
+    spectrum->frames_todo = spectrum->frames_per_interval;
+    /* rounding error for frames_per_interval in ns,
+     * aggregated it in accumulated_error */
     spectrum->error_per_interval = (spectrum->interval * rate) % GST_SECOND;
     if (spectrum->frames_per_interval == 0)
       spectrum->frames_per_interval = 1;
+
+    GST_INFO_OBJECT (spectrum, "interval %" GST_TIME_FORMAT ", fpi %"
+        G_GUINT64_FORMAT ", error %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (spectrum->interval), spectrum->frames_per_interval,
+        GST_TIME_ARGS (spectrum->error_per_interval));
 
     spectrum->input_pos = 0;
 
@@ -546,124 +1058,70 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   if (spectrum->num_frames == 0)
     spectrum->message_ts = GST_BUFFER_TIMESTAMP (buffer);
 
-  input = spectrum->input;
-  input_tmp = spectrum->input_tmp;
-  freqdata = spectrum->freqdata;
-  spect_magnitude = spectrum->spect_magnitude;
-  spect_phase = spectrum->spect_phase;
-  fft_ctx = spectrum->fft_ctx;
-
   input_pos = spectrum->input_pos;
+  input_data = spectrum->input_data;
 
-  while (size >= width * channels) {
+  while (size >= frame_size) {
+    /* run input_data for a chunk of data */
+    fft_todo = nfft - (spectrum->num_frames % nfft);
+    msg_todo = spectrum->frames_todo - spectrum->num_frames;
+    GST_LOG_OBJECT (spectrum,
+        "message frames todo: %u, fft frames todo: %u, input frames %u",
+        msg_todo, fft_todo, (size / frame_size));
+    block_size = msg_todo;
+    if (block_size > (size / frame_size))
+      block_size = (size / frame_size);
+    if (block_size > fft_todo)
+      block_size = fft_todo;
 
-    /* Move the current frame into our ringbuffer and
-     * take the average of all channels
-     */
-    input[input_pos] = 0.0;
-    if (fp && width == 4) {
-      gfloat *in = (gfloat *) data;
-      for (i = 0; i < channels; i++)
-        input[input_pos] += in[i];
-    } else if (fp && width == 8) {
-      gdouble *in = (gdouble *) data;
-      for (i = 0; i < channels; i++)
-        input[input_pos] += in[i];
-    } else if (!fp && width == 4) {
-      gint32 *in = (gint32 *) data;
-      for (i = 0; i < channels; i++)
-        /* max_value will be 0 when depth is 1, interpret -1 and 0
-         * as -1 and +1 if that's the case.
-         */
-        input[input_pos] += max_value ? in[i] / max_value : in[i] * 2 + 1;
-    } else if (!fp && width == 3) {
-      for (i = 0; i < channels; i++) {
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-        gint32 value = GST_READ_UINT24_BE (data);
-#else
-        gint32 value = GST_READ_UINT24_LE (data);
-#endif
-        if (value & 0x00800000)
-          value |= 0xff000000;
-        input[input_pos] += max_value ? value / max_value : value * 2 + 1;
-      }
-    } else if (!fp && width == 2) {
-      gint16 *in = (gint16 *) data;
-      for (i = 0; i < channels; i++)
-        input[input_pos] += max_value ? in[i] / max_value : in[i] * 2 + 1;
-    } else {
-      g_assert_not_reached ();
+    for (c = 0; c < output_channels; c++) {
+      cd = &spectrum->channel_data[c];
+      input = cd->input;
+      /* Move the current frames into our ringbuffers */
+      input_data (data + c * width, input, block_size, channels, max_value,
+          input_pos, nfft);
     }
-    input[input_pos] /= channels;
+    data += block_size * frame_size;
+    size -= block_size * frame_size;
+    input_pos = (input_pos + block_size) % nfft;
+    spectrum->num_frames += block_size;
 
-    data += width * channels;
-    size -= width * channels;
-    input_pos = (input_pos + 1) % nfft;
-    spectrum->num_frames++;
+    have_full_interval = (spectrum->num_frames == spectrum->frames_todo);
 
-    have_full_interval = (
-        (spectrum->accumulated_error < GST_SECOND
-            && spectrum->num_frames == spectrum->frames_per_interval) ||
-        (spectrum->accumulated_error >= GST_SECOND
-            && spectrum->num_frames - 1 == spectrum->frames_per_interval)
-        );
+    GST_LOG_OBJECT (spectrum, "size: %u, do-fft = %d, do-message = %d", size,
+        (spectrum->num_frames % nfft == 0), have_full_interval);
 
-    /* If we have enough frames for an FFT or we
-     * have all frames required for the interval run
-     * an FFT. In the last case we probably take the
-     * FFT of frames that we already handled.
-     */
-    if ((spectrum->num_frames % nfft == 0) || have_full_interval) {
-
-      for (i = 0; i < nfft; i++)
-        input_tmp[i] = input[(input_pos + i) % nfft];
-
-      gst_fft_f32_window (fft_ctx, input_tmp, GST_FFT_WINDOW_HAMMING);
-
-      gst_fft_f32_fft (fft_ctx, input_tmp, freqdata);
+    /* If we have enough frames for an FFT or we have all frames required for
+     * the interval and we haven't run a FFT, then run an FFT */
+    if ((spectrum->num_frames % nfft == 0) ||
+        (have_full_interval && !spectrum->num_fft)) {
+      for (c = 0; c < output_channels; c++) {
+        cd = &spectrum->channel_data[c];
+        gst_spectrum_run_fft (spectrum, cd, input_pos);
+      }
       spectrum->num_fft++;
-
-      if (spectrum->message_magnitude) {
-        gdouble val;
-        /* Calculate magnitude in db */
-        for (i = 0; i < bands; i++) {
-          val = freqdata[i].r * freqdata[i].r;
-          val += freqdata[i].i * freqdata[i].i;
-          val /= nfft * nfft;
-          val = 10.0 * log10 (val);
-          if (val < threshold)
-            val = threshold;
-          spect_magnitude[i] += val;
-        }
-      }
-
-      if (spectrum->message_phase) {
-        /* Calculate phase */
-        for (i = 0; i < bands; i++)
-          spect_phase[i] += atan2 (freqdata[i].i, freqdata[i].r);
-      }
     }
 
     /* Do we have the FFTs for one interval? */
     if (have_full_interval) {
-
-      GST_INFO ("nfft: %u num_frames: %" G_GUINT64_FORMAT " fpi: %"
-          G_GUINT64_FORMAT " error: %" GST_TIME_FORMAT, nfft,
+      GST_DEBUG_OBJECT (spectrum, "nfft: %u frames: %" G_GUINT64_FORMAT
+          " fpi: %" G_GUINT64_FORMAT " error: %" GST_TIME_FORMAT, nfft,
           spectrum->num_frames, spectrum->frames_per_interval,
           GST_TIME_ARGS (spectrum->accumulated_error));
 
-      if (spectrum->accumulated_error >= GST_SECOND)
+      spectrum->frames_todo = spectrum->frames_per_interval;
+      if (spectrum->accumulated_error >= GST_SECOND) {
         spectrum->accumulated_error -= GST_SECOND;
-      else
-        spectrum->accumulated_error += spectrum->error_per_interval;
+        spectrum->frames_todo++;
+      }
+      spectrum->accumulated_error += spectrum->error_per_interval;
 
       if (spectrum->post_messages) {
         GstMessage *m;
 
-        /* Calculate average */
-        for (i = 0; i < bands; i++) {
-          spect_magnitude[i] /= spectrum->num_fft;
-          spect_phase[i] /= spectrum->num_fft;
+        for (c = 0; c < output_channels; c++) {
+          cd = &spectrum->channel_data[c];
+          gst_spectrum_prepare_message_data (spectrum, cd);
         }
 
         m = gst_spectrum_message_new (spectrum, spectrum->message_ts,
@@ -676,9 +1134,10 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
         spectrum->message_ts +=
             gst_util_uint64_scale (spectrum->num_frames, GST_SECOND, rate);
 
-      /* reset spectrum accumulators */
-      memset (spect_magnitude, 0, bands * sizeof (gfloat));
-      memset (spect_phase, 0, bands * sizeof (gfloat));
+      for (c = 0; c < channels; c++) {
+        cd = &spectrum->channel_data[c];
+        gst_spectrum_reset_message_data (spectrum, cd);
+      }
       spectrum->num_frames = 0;
       spectrum->num_fft = 0;
     }

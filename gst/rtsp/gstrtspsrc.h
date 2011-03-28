@@ -233,7 +233,9 @@ struct _GstRTSPSrc {
 
   /* supported methods */
   gint               methods;
+
   gboolean           seekable;
+  GstClockTime       last_pos;
 
   /* session management */
   GstElement      *manager;

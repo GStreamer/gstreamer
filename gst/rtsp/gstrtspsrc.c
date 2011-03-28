@@ -1712,6 +1712,33 @@ gst_rtspsrc_connection_receive (GstRTSPSrc * src, GstRTSPConnection * conn,
   return ret;
 }
 
+static void
+gst_rtspsrc_get_position (GstRTSPSrc * src)
+{
+  GstQuery *query;
+  GList *walk;
+
+  query = gst_query_new_position (GST_FORMAT_TIME);
+  /*  should be known somewhere down the stream (e.g. jitterbuffer) */
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+    GstFormat fmt;
+    gint64 pos;
+
+    if (stream->srcpad) {
+      if (gst_pad_query (stream->srcpad, query)) {
+        gst_query_parse_position (query, &fmt, &pos);
+        GST_DEBUG_OBJECT (src, "retaining position %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (pos));
+        src->last_pos = pos;
+        return;
+      }
+    }
+  }
+
+  src->last_pos = 0;
+}
+
 static gboolean
 gst_rtspsrc_do_seek (GstRTSPSrc * src, GstSegment * segment)
 {
@@ -1804,8 +1831,11 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   playing = (src->state == GST_RTSP_STATE_PLAYING);
 
   /* if we were playing, pause first */
-  if (playing)
+  if (playing) {
+    /* obtain current position in case seek fails */
+    gst_rtspsrc_get_position (src);
     gst_rtspsrc_pause (src, FALSE);
+  }
 
   gst_rtspsrc_do_seek (src, &seeksegment);
 
@@ -5879,7 +5909,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
       /* NOTE the above also disables npt based eos detection */
       /* and below forces position to 0,
        * which is visible feedback we lost the plot */
-      segment->start = segment->last_stop = 0;
+      segment->start = segment->last_stop = src->last_pos;
     }
 
     gst_rtsp_message_unset (&request);

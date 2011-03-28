@@ -13,8 +13,9 @@ TESTS_ENVIRONMENT = \
 	GST_PLUGIN_LOADING_WHITELIST="gstreamer@$(GST_PLUGINS_DIR):gst-plugins-base@$(GSTPB_PLUGINS_DIR):gst-plugins-good@$(top_builddir)"	\
 	GST_STATE_IGNORE_ELEMENTS="aasink autoaudiosrc autoaudiosink autovideosrc autovideosink \
 		cacasink cairotextoverlay gconfaudiosrc gconfvideosrc gconfaudiosink gconfvideosink \
-		halaudiosrc halaudiosink v4l2src osssrc osssink pulsesink pulsesrc pulsemixer \
-		osxaudiosink osxaudiosrc osxvideosrc osxvideosink"
+		halaudiosrc halaudiosink jackaudiosrc jackaudiosink \
+		osssrc osssink osxaudiosink osxaudiosrc osxvideosrc osxvideosink \
+		pulsesink pulsesrc pulsemixer v4l2src"
 
 # fake device drivers: we could run hardware element tests against dummy drivers
 # v4l2: vivo (part of normal kernel)
@@ -39,7 +40,7 @@ check_annodex = \
 	elements/cmmldec \
 	elements/cmmlenc
 else
-check_annodex = 
+check_annodex =
 endif
 
 if USE_FLAC
@@ -51,7 +52,7 @@ endif
 if USE_GDK_PIXBUF
 check_gdkpixbuf = elements/gdkpixbufsink
 else
-check_gdkpixbuf = 
+check_gdkpixbuf =
 endif
 
 if USE_JPEG
@@ -69,7 +70,7 @@ endif
 if USE_SUNAUDIO
 check_sunaudio = elements/sunaudio
 else
-check_sunaudio = 
+check_sunaudio =
 endif
 
 if USE_TAGLIB

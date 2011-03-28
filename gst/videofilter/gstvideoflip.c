@@ -2,6 +2,7 @@
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
  * Copyright (C) <2010> Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) <2011> Youness Alaoui <youness.alaoui@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -75,7 +76,10 @@ static GstStaticPadTemplate gst_video_flip_src_template =
         GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("IYUV")
+        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("IYUV") ";"
+        GST_VIDEO_CAPS_YUV ("YUY2") ";" GST_VIDEO_CAPS_YUV ("UYVY") ";"
+        GST_VIDEO_CAPS_YUV ("YVYU")
+
     )
     );
 
@@ -91,7 +95,9 @@ static GstStaticPadTemplate gst_video_flip_sink_template =
         GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("IYUV")
+        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("IYUV") ";"
+        GST_VIDEO_CAPS_YUV ("YUY2") ";" GST_VIDEO_CAPS_YUV ("UYVY") ";"
+        GST_VIDEO_CAPS_YUV ("YVYU")
     )
     );
 
@@ -563,6 +569,225 @@ gst_video_flip_packed_simple (GstVideoFlip * videoflip, guint8 * dest,
   }
 }
 
+
+static void
+gst_video_flip_y422 (GstVideoFlip * videoflip, guint8 * dest,
+    const guint8 * src)
+{
+  gint x, y;
+  guint8 const *s = src;
+  guint8 *d = dest;
+  GstVideoFormat format = videoflip->format;
+  gint sw = videoflip->from_width;
+  gint sh = videoflip->from_height;
+  gint dw = videoflip->to_width;
+  gint dh = videoflip->to_height;
+  gint src_stride, dest_stride;
+  gint bpp;
+  gint y_offset;
+  gint u_offset;
+  gint v_offset;
+  gint y_stride;
+  gint u_stride;
+  gint v_stride;
+
+  src_stride = gst_video_format_get_row_stride (format, 0, sw);
+  dest_stride = gst_video_format_get_row_stride (format, 0, dw);
+
+  y_offset = gst_video_format_get_component_offset (format, 0, sw, sh);
+  u_offset = gst_video_format_get_component_offset (format, 1, sw, sh);
+  v_offset = gst_video_format_get_component_offset (format, 2, sw, sh);
+  y_stride = gst_video_format_get_pixel_stride (format, 0);
+  u_stride = gst_video_format_get_pixel_stride (format, 1);
+  v_stride = gst_video_format_get_pixel_stride (format, 2);
+  bpp = y_stride;
+
+  switch (videoflip->method) {
+    case GST_VIDEO_FLIP_METHOD_90R:
+      for (y = 0; y < dh; y++) {
+        for (x = 0; x < dw; x += 2) {
+          guint8 u;
+          guint8 v;
+          /* u/v must be calculated using the offset of the even column */
+          gint even_y = (y & ~1);
+
+          u = s[(sh - 1 - x) * src_stride + even_y * bpp + u_offset];
+          if (x + 1 < dw)
+            u = (s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + u_offset]
+                + u) >> 1;
+          v = s[(sh - 1 - x) * src_stride + even_y * bpp + v_offset];
+          if (x + 1 < dw)
+            v = (s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + v_offset]
+                + v) >> 1;
+
+          d[y * dest_stride + x * bpp + u_offset] = u;
+          d[y * dest_stride + x * bpp + v_offset] = v;
+          d[y * dest_stride + x * bpp + y_offset] =
+              s[(sh - 1 - x) * src_stride + y * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(sh - 1 - (x + 1)) * src_stride + y * bpp + y_offset];
+        }
+      }
+      break;
+    case GST_VIDEO_FLIP_METHOD_90L:
+      for (y = 0; y < dh; y++) {
+        for (x = 0; x < dw; x += 2) {
+          guint8 u;
+          guint8 v;
+          /* u/v must be calculated using the offset of the even column */
+          gint even_y = ((sw - 1 - y) & ~1);
+
+          u = s[x * src_stride + even_y * bpp + u_offset];
+          if (x + 1 < dw)
+            u = (s[(x + 1) * src_stride + even_y * bpp + u_offset] + u) >> 1;
+          v = s[x * src_stride + even_y * bpp + v_offset];
+          if (x + 1 < dw)
+            v = (s[(x + 1) * src_stride + even_y * bpp + v_offset] + v) >> 1;
+
+          d[y * dest_stride + x * bpp + u_offset] = u;
+          d[y * dest_stride + x * bpp + v_offset] = v;
+          d[y * dest_stride + x * bpp + y_offset] =
+              s[x * src_stride + (sw - 1 - y) * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(x + 1) * src_stride + (sw - 1 - y) * bpp + y_offset];
+        }
+      }
+      break;
+    case GST_VIDEO_FLIP_METHOD_180:
+      for (y = 0; y < dh; y++) {
+        for (x = 0; x < dw; x += 2) {
+          guint8 u;
+          guint8 v;
+          /* u/v must be calculated using the offset of the even column */
+          gint even_x = ((sw - 1 - x) & ~1);
+
+          u = (s[(sh - 1 - y) * src_stride + even_x * bpp + u_offset] +
+              s[(sh - 1 - y) * src_stride + even_x * bpp + u_offset]) / 2;
+          v = (s[(sh - 1 - y) * src_stride + even_x * bpp + v_offset] +
+              s[(sh - 1 - y) * src_stride + even_x * bpp + v_offset]) / 2;
+
+          d[y * dest_stride + x * bpp + u_offset] = u;
+          d[y * dest_stride + x * bpp + v_offset] = v;
+          d[y * dest_stride + x * bpp + y_offset] =
+              s[(sh - 1 - y) * src_stride + (sw - 1 - x) * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(sh - 1 - y) * src_stride + (sw - 1 - (x + 1)) * bpp +
+                y_offset];
+        }
+      }
+      break;
+    case GST_VIDEO_FLIP_METHOD_HORIZ:
+      for (y = 0; y < dh; y++) {
+        for (x = 0; x < dw; x += 2) {
+          guint8 u;
+          guint8 v;
+          /* u/v must be calculated using the offset of the even column */
+          gint even_x = ((sw - 1 - x) & ~1);
+
+          u = (s[y * src_stride + even_x * bpp + u_offset] +
+              s[y * src_stride + even_x * bpp + u_offset]) / 2;
+          v = (s[y * src_stride + even_x * bpp + v_offset] +
+              s[y * src_stride + even_x * bpp + v_offset]) / 2;
+
+          d[y * dest_stride + x * bpp + u_offset] = u;
+          d[y * dest_stride + x * bpp + v_offset] = v;
+          d[y * dest_stride + x * bpp + y_offset] =
+              s[y * src_stride + (sw - 1 - x) * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[y * src_stride + (sw - 1 - (x + 1)) * bpp + y_offset];
+        }
+      }
+      break;
+    case GST_VIDEO_FLIP_METHOD_VERT:
+      for (y = 0; y < dh; y++) {
+        for (x = 0; x < dw; x += 2) {
+          guint8 u;
+          guint8 v;
+          /* u/v must be calculated using the offset of the even column */
+          gint even_x = (x & ~1);
+
+          u = (s[(sh - 1 - y) * src_stride + even_x * bpp + u_offset] +
+              s[(sh - 1 - y) * src_stride + even_x * bpp + u_offset]) / 2;
+          v = (s[(sh - 1 - y) * src_stride + even_x * bpp + v_offset] +
+              s[(sh - 1 - y) * src_stride + even_x * bpp + v_offset]) / 2;
+
+          d[y * dest_stride + x * bpp + u_offset] = u;
+          d[y * dest_stride + x * bpp + v_offset] = v;
+          d[y * dest_stride + x * bpp + y_offset] =
+              s[(sh - 1 - y) * src_stride + x * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(sh - 1 - y) * src_stride + (x + 1) * bpp + y_offset];
+        }
+      }
+      break;
+    case GST_VIDEO_FLIP_METHOD_TRANS:
+      for (y = 0; y < dh; y++) {
+        for (x = 0; x < dw; x += 2) {
+          guint8 u;
+          guint8 v;
+          /* u/v must be calculated using the offset of the even column */
+          gint even_y = (y & ~1);
+
+          u = s[x * src_stride + even_y * bpp + u_offset];
+          if (x + 1 < dw)
+            u = (s[(x + 1) * src_stride + even_y * bpp + u_offset] + u) >> 1;
+          v = s[x * src_stride + even_y * bpp + v_offset];
+          if (x + 1 < dw)
+            v = (s[(x + 1) * src_stride + even_y * bpp + v_offset] + v) >> 1;
+
+          d[y * dest_stride + x * bpp + u_offset] = u;
+          d[y * dest_stride + x * bpp + v_offset] = v;
+          d[y * dest_stride + x * bpp + y_offset] =
+              s[x * src_stride + y * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(x + 1) * src_stride + y * bpp + y_offset];
+        }
+      }
+      break;
+    case GST_VIDEO_FLIP_METHOD_OTHER:
+      for (y = 0; y < dh; y++) {
+        for (x = 0; x < dw; x += 2) {
+          guint8 u;
+          guint8 v;
+          /* u/v must be calculated using the offset of the even column */
+          gint even_y = ((sw - 1 - y) & ~1);
+
+          u = s[(sh - 1 - x) * src_stride + even_y * bpp + u_offset];
+          if (x + 1 < dw)
+            u = (s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + u_offset]
+                + u) >> 1;
+          v = s[(sh - 1 - x) * src_stride + even_y * bpp + v_offset];
+          if (x + 1 < dw)
+            v = (s[(sh - 1 - (x + 1)) * src_stride + even_y * bpp + v_offset]
+                + v) >> 1;
+
+          d[y * dest_stride + x * bpp + u_offset] = u;
+          d[y * dest_stride + x * bpp + v_offset] = v;
+          d[y * dest_stride + x * bpp + y_offset] =
+              s[(sh - 1 - x) * src_stride + (sw - 1 - y) * bpp + y_offset];
+          if (x + 1 < dw)
+            d[y * dest_stride + (x + 1) * bpp + y_offset] =
+                s[(sh - 1 - (x + 1)) * src_stride + (sw - 1 - y) * bpp +
+                y_offset];
+        }
+      }
+      break;
+    case GST_VIDEO_FLIP_METHOD_IDENTITY:
+      g_assert_not_reached ();
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+
+
 static gboolean
 gst_video_flip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
@@ -623,6 +848,11 @@ gst_video_flip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
       vf->process = gst_video_flip_planar_yuv;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_YVYU:
+      vf->process = gst_video_flip_y422;
       break;
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_ARGB:
