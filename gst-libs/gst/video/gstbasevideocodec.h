@@ -148,6 +148,9 @@ struct _GstBaseVideoCodec
   GstClockTime earliest_time;
   gboolean discont;
 
+  gint64 bytes;
+  gint64 time;
+
   /* FIXME before moving to base */
   void *padding[GST_PADDING_LARGE];
 };
@@ -169,9 +172,9 @@ void gst_base_video_codec_free_frame (GstVideoFrame *frame);
 gboolean gst_base_video_rawvideo_convert (GstVideoState *state,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 *dest_value);
-gboolean gst_base_video_encoded_video_convert (GstVideoState *state,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 *dest_value);
+gboolean gst_base_video_encoded_video_convert (GstVideoState * state,
+    gint64 bytes, gint64 time, GstFormat src_format,
+    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
 GstClockTime gst_video_state_get_timestamp (const GstVideoState *state,
     GstSegment *segment, int frame_number);

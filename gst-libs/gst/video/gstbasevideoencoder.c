@@ -324,6 +324,8 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     state->interlaced = v;
   }
 
+  state->bytes_per_picture =
+      gst_video_format_get_size (state->format, state->width, state->height);
   state->clean_width = state->width;
   state->clean_height = state->height;
   state->clean_offset_left = 0;
@@ -534,13 +536,13 @@ gst_base_video_encoder_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONVERT:
     {
+      GstBaseVideoCodec *codec = GST_BASE_VIDEO_CODEC (enc);
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      res =
-          gst_base_video_encoded_video_convert (&GST_BASE_VIDEO_CODEC
-          (enc)->state, src_fmt, src_val, &dest_fmt, &dest_val);
+      res = gst_base_video_encoded_video_convert (&codec->state,
+          codec->bytes, codec->time, src_fmt, src_val, &dest_fmt, &dest_val);
       if (!res)
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -747,6 +749,17 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   GST_BUFFER_TIMESTAMP (frame->src_buffer) = frame->presentation_timestamp;
   GST_BUFFER_DURATION (frame->src_buffer) = frame->presentation_duration;
   GST_BUFFER_OFFSET (frame->src_buffer) = frame->decode_timestamp;
+
+  /* update rate estimate */
+  GST_BASE_VIDEO_CODEC (base_video_encoder)->bytes +=
+      GST_BUFFER_SIZE (frame->src_buffer);
+  if (GST_CLOCK_TIME_IS_VALID (frame->presentation_duration)) {
+    GST_BASE_VIDEO_CODEC (base_video_encoder)->time +=
+        frame->presentation_duration;
+  } else {
+    /* better none than nothing valid */
+    GST_BASE_VIDEO_CODEC (base_video_encoder)->time = GST_CLOCK_TIME_NONE;
+  }
 
   if (G_UNLIKELY (GST_BASE_VIDEO_CODEC (base_video_encoder)->discont)) {
     GST_LOG_OBJECT (base_video_encoder, "marking discont");
