@@ -861,8 +861,6 @@ GST_START_TEST (test_xmp_parsing)
     g_free (text);
     i++;
   }
-
-  gst_buffer_unref (buf);
 }
 
 GST_END_TEST;
