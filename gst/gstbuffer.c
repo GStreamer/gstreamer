@@ -205,7 +205,9 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   g_warn_if_fail (gst_buffer_is_writable (dest));
 #endif
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p", src, dest);
+  GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p, offset %" G_GSIZE_FORMAT
+      "-%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT, src, dest, offset, size,
+      bufsize);
 
   if (flags & GST_BUFFER_COPY_FLAGS) {
     guint mask;
@@ -222,7 +224,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     if (offset == 0) {
       GST_BUFFER_TIMESTAMP (dest) = GST_BUFFER_TIMESTAMP (src);
       GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
-      if (size == gst_buffer_get_size (src)) {
+      if (size == bufsize) {
         GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
         GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
       }
@@ -594,6 +596,9 @@ gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
   gsize bsize;
   GstMemory *mem;
 
+  GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSIZE_FORMAT "-%" G_GSIZE_FORMAT,
+      buffer, offset, size);
+
   g_return_if_fail (gst_buffer_is_writable (buffer));
 
   arr = (GPtrArray *) buffer->memory;
@@ -926,7 +931,8 @@ gst_buffer_create_sub (GstBuffer * buffer, gsize offset, gsize size)
   /* create the new buffer */
   subbuffer = gst_buffer_new ();
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p of %p", subbuffer, buffer);
+  GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p of %p %" G_GSIZE_FORMAT
+      "-%" G_GSIZE_FORMAT, subbuffer, buffer, offset, size);
 
   gst_buffer_copy_into (subbuffer, buffer, GST_BUFFER_COPY_ALL, offset, size);
 

@@ -1539,7 +1539,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       /* no valid buffer yet, make one, metadata is writable */
       *out_buf = gst_buffer_new_and_alloc (outsize);
       gst_buffer_copy_into (*out_buf, in_buf,
-          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
+          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
     } else {
       GST_DEBUG_OBJECT (trans, "reuse input buffer");
       *out_buf = in_buf;
@@ -1608,7 +1608,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       gst_buffer_set_caps (*out_buf, outcaps);
     if (copymeta)
       gst_buffer_copy_into (*out_buf, in_buf,
-          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
+          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
     /* clear the GAP flag when the subclass does not understand it */
     if (!trans->priv->gap_aware)
       GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);

@@ -116,7 +116,7 @@ _default_mem_get_sizes (GstMemoryDefault * mem, gsize * maxsize)
 static void
 _default_mem_trim (GstMemoryDefault * mem, gsize offset, gsize size)
 {
-  g_return_if_fail (size + mem->offset + offset > mem->maxsize);
+  g_return_if_fail (size + mem->offset + offset <= mem->maxsize);
 
   mem->offset += offset;
   mem->size = size;
@@ -198,7 +198,7 @@ static void
 _default_mem_extract (GstMemoryDefault * mem, gsize offset, gpointer dest,
     gsize size)
 {
-  g_return_if_fail (size + mem->offset + offset > mem->maxsize);
+  g_return_if_fail (size + mem->offset + offset <= mem->maxsize);
 
   memcpy (dest, mem->data + mem->offset + offset, size);
 }
