@@ -1008,6 +1008,10 @@ gst_vorbis_enc_buffer_check_discontinuous (GstVorbisEnc * vorbisenc,
 {
   gboolean ret = FALSE;
 
+  GST_DEBUG_OBJECT (vorbisenc, "exp %" GST_TIME_FORMAT " time %" GST_TIME_FORMAT
+      "dur %" GST_TIME_FORMAT, GST_TIME_ARGS (vorbisenc->expected_ts),
+      GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
+
   if (timestamp != GST_CLOCK_TIME_NONE &&
       vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
       timestamp + duration != vorbisenc->expected_ts) {
@@ -1063,8 +1067,9 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
       gst_segment_to_running_time (&vorbisenc->segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (buffer));
   timestamp = running_time + vorbisenc->initial_ts;
-  GST_DEBUG_OBJECT (vorbisenc, "Initial ts is %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (vorbisenc->initial_ts));
+  GST_DEBUG_OBJECT (vorbisenc, "Initial ts is %" GST_TIME_FORMAT
+      " timestamp %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (vorbisenc->initial_ts), GST_TIME_ARGS (timestamp));
   if (!vorbisenc->header_sent) {
     /* Vorbis streams begin with three headers; the initial header (with
        most of the codec setup parameters) which is mandated by the Ogg

@@ -264,7 +264,12 @@ GST_END_TEST;
 static gboolean
 drop_second_data_buffer (GstPad * droppad, GstBuffer * buffer, gpointer unused)
 {
-  return !(GST_BUFFER_OFFSET (buffer) == 1024);
+  gboolean res;
+
+  res = !(GST_BUFFER_OFFSET (buffer) == 1024);
+  GST_DEBUG ("dropping %d", res);
+
+  return res;
 }
 
 GST_START_TEST (test_discontinuity)

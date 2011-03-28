@@ -1,6 +1,4 @@
 EXPORTS
-	gst_app_buffer_get_type
-	gst_app_buffer_new
 	gst_app_sink_get_caps
 	gst_app_sink_get_drop
 	gst_app_sink_get_emit_signals
