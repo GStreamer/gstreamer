@@ -901,6 +901,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
 {
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
   GstBuffer *src_buffer;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (base_video_decoder, "finish frame");
   GST_DEBUG_OBJECT (base_video_decoder, "n %d in %d out %d",
@@ -969,6 +970,13 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   }
   base_video_decoder->last_timestamp = frame->presentation_timestamp;
 
+  /* no buffer data means this frame is skipped/dropped */
+  if (!frame->src_buffer) {
+    GST_DEBUG_OBJECT (base_video_decoder, "skipping frame %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (frame->presentation_timestamp));
+    goto done;
+  }
+
   src_buffer = gst_buffer_make_metadata_writable (frame->src_buffer);
   frame->src_buffer = NULL;
 
@@ -1005,14 +1013,9 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   GST_DEBUG_OBJECT (base_video_decoder, "pushing frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->presentation_timestamp));
 
-  GST_BASE_VIDEO_CODEC (base_video_decoder)->frames =
-      g_list_remove (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames, frame);
-
   gst_base_video_decoder_set_src_caps (base_video_decoder);
   gst_buffer_set_caps (src_buffer,
       GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)));
-
-  gst_base_video_decoder_free_frame (frame);
 
   if (base_video_decoder->sink_clipping) {
     gint64 start = GST_BUFFER_TIMESTAMP (src_buffer);
@@ -1049,78 +1052,15 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     }
   }
 
-  return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
+  ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
       src_buffer);
-}
 
-GstFlowReturn
-gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
-    GstVideoFrame * frame)
-{
-  GST_DEBUG_OBJECT (base_video_decoder, "finish frame");
-
-  GST_DEBUG_OBJECT (base_video_decoder,
-      "finish frame sync=%d pts=%" GST_TIME_FORMAT, frame->is_sync_point,
-      GST_TIME_ARGS (frame->presentation_timestamp));
-
-  if (GST_CLOCK_TIME_IS_VALID (frame->presentation_timestamp)) {
-    if (frame->presentation_timestamp != base_video_decoder->timestamp_offset) {
-      GST_DEBUG_OBJECT (base_video_decoder,
-          "sync timestamp %" GST_TIME_FORMAT " diff %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (frame->presentation_timestamp),
-          GST_TIME_ARGS (frame->presentation_timestamp -
-              GST_BASE_VIDEO_CODEC (base_video_decoder)->segment.start));
-      base_video_decoder->timestamp_offset = frame->presentation_timestamp;
-      base_video_decoder->field_index = 0;
-    } else {
-      /* This case is for one initial timestamp and no others, e.g.,
-       * filesrc ! decoder ! xvimagesink */
-      GST_WARNING_OBJECT (base_video_decoder,
-          "sync timestamp didn't change, ignoring");
-      frame->presentation_timestamp = GST_CLOCK_TIME_NONE;
-    }
-  } else {
-    if (frame->is_sync_point) {
-      GST_WARNING_OBJECT (base_video_decoder,
-          "sync point doesn't have timestamp");
-      if (GST_CLOCK_TIME_IS_VALID (base_video_decoder->timestamp_offset)) {
-        GST_WARNING_OBJECT (base_video_decoder,
-            "No base timestamp.  Assuming frames start at segment start");
-        base_video_decoder->timestamp_offset =
-            GST_BASE_VIDEO_CODEC (base_video_decoder)->segment.start;
-        base_video_decoder->field_index = 0;
-      }
-    }
-  }
-  frame->field_index = base_video_decoder->field_index;
-  base_video_decoder->field_index += frame->n_fields;
-
-  if (frame->presentation_timestamp == GST_CLOCK_TIME_NONE) {
-    frame->presentation_timestamp =
-        gst_base_video_decoder_get_field_timestamp (base_video_decoder,
-        frame->field_index);
-    frame->presentation_duration = GST_CLOCK_TIME_NONE;
-    frame->decode_timestamp =
-        gst_base_video_decoder_get_timestamp (base_video_decoder,
-        frame->decode_frame_number);
-  }
-  if (frame->presentation_duration == GST_CLOCK_TIME_NONE) {
-    frame->presentation_duration =
-        gst_base_video_decoder_get_field_duration (base_video_decoder,
-        frame->n_fields);
-  }
-
-  base_video_decoder->last_timestamp = frame->presentation_timestamp;
-
-  GST_DEBUG_OBJECT (base_video_decoder, "skipping frame %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (frame->presentation_timestamp));
-
+done:
   GST_BASE_VIDEO_CODEC (base_video_decoder)->frames =
       g_list_remove (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames, frame);
-
   gst_base_video_decoder_free_frame (frame);
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 void

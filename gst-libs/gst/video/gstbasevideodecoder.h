@@ -149,8 +149,6 @@ void gst_base_video_decoder_add_to_frame (GstBaseVideoDecoder *base_video_decode
     int n_bytes);
 GstFlowReturn gst_base_video_decoder_finish_frame (GstBaseVideoDecoder *base_video_decoder,
     GstVideoFrame *frame);
-GstFlowReturn gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
-    GstVideoFrame * frame);
 GstFlowReturn
 gst_base_video_decoder_have_frame (GstBaseVideoDecoder *base_video_decoder);
 GstVideoState * gst_base_video_decoder_get_state (GstBaseVideoDecoder *base_video_decoder);

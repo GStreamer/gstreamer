@@ -381,7 +381,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
     if (status != VPX_CODEC_OK || !stream_info.is_kf) {
       GST_WARNING_OBJECT (decoder, "No keyframe, skipping");
-      gst_base_video_decoder_skip_frame (decoder, frame);
+      gst_base_video_decoder_finish_frame (decoder, frame);
       return GST_FLOW_OK;
     }
 
@@ -469,7 +469,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     if (deadline < 0) {
       GST_LOG_OBJECT (dec, "Skipping late frame (%f s past deadline)",
           (double) -deadline / GST_SECOND);
-      gst_base_video_decoder_skip_frame (decoder, frame);
+      gst_base_video_decoder_finish_frame (decoder, frame);
     } else {
       ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
 
@@ -477,7 +477,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
         gst_vp8_dec_image_to_buffer (dec, img, frame->src_buffer);
         gst_base_video_decoder_finish_frame (decoder, frame);
       } else {
-        gst_base_video_decoder_skip_frame (decoder, frame);
+        gst_base_video_decoder_finish_frame (decoder, frame);
       }
     }
 
@@ -489,7 +489,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     }
   } else {
     /* Invisible frame */
-    gst_base_video_decoder_skip_frame (decoder, frame);
+    gst_base_video_decoder_finish_frame (decoder, frame);
   }
 
   return ret;
