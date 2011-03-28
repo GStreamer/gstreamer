@@ -1409,6 +1409,7 @@ gst_base_audio_decoder_do_seek (GstBaseAudioDecoder * dec, GstEvent * event)
   gdouble rate;
   gint64 start, start_time, end_time;
   GstSegment seek_segment;
+  guint32 seqnum;
 
   gst_event_parse_seek (event, &rate, &format, &flags, &start_type,
       &start_time, &end_type, &end_time);
@@ -1447,8 +1448,10 @@ gst_base_audio_decoder_do_seek (GstBaseAudioDecoder * dec, GstEvent * event)
     return FALSE;
   }
 
+  seqnum = gst_event_get_seqnum (event);
   event = gst_event_new_seek (1.0, GST_FORMAT_BYTES, flags,
       GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_NONE, -1);
+  gst_event_set_seqnum (event, seqnum);
 
   GST_DEBUG_OBJECT (dec, "seeking to %" GST_TIME_FORMAT " at byte offset %"
       G_GINT64_FORMAT, GST_TIME_ARGS (start_time), start);
