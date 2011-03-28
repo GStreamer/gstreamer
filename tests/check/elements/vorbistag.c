@@ -168,8 +168,7 @@ compare_buffer (GstBuffer * buf, const guint8 * data, gsize size)
 
   bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
   fail_unless_equals_int (bsize, size);
-  fail_unless_equals_int (memcmp (bdata,
-          title_comment_header, sizeof (title_comment_header)), 0);
+  fail_unless_equals_int (memcmp (bdata, data, size), 0);
   gst_buffer_unmap (buf, bdata, bsize);
 }
 

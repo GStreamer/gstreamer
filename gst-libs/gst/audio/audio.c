@@ -416,7 +416,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
   }
 
   /* Get a writable buffer and apply all changes */
-  ret = gst_buffer_create_sub (buffer, offset, size);
+  ret = gst_buffer_create_sub (buffer, trim, size);
   gst_buffer_unref (buffer);
 
   GST_BUFFER_TIMESTAMP (ret) = timestamp;

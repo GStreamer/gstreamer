@@ -383,8 +383,8 @@ GST_START_TEST (test_video_passthrough)
   /* pushing gives away one of the two references we have ... */
   fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_OK);
 
-  /* should be the parent for a new subbuffer for the stamp fix-up */
-  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 2);
+  /* should be a new buffer for the stamp fix-up */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_unless (GST_BUFFER_CAST (buffers->data) != inbuffer);
   fail_unless (GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (buffers->data)) ==

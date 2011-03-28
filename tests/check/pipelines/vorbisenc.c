@@ -356,11 +356,11 @@ GST_START_TEST (test_discontinuity)
      * samples (because of the overlap/add), so it won't increment the 
      * granulepos, which should be 2048 after the discontinuity.
      */
+    fail_unless (GST_BUFFER_IS_DISCONT (buffer),
+        "expected discontinuous buffer");
     fail_unless (GST_BUFFER_OFFSET_END (buffer) == 2048,
         "expected granulepos after gap: %" G_GUINT64_FORMAT,
         GST_BUFFER_OFFSET_END (buffer));
-    fail_unless (GST_BUFFER_IS_DISCONT (buffer),
-        "expected discontinuous buffer");
     gst_buffer_unref (buffer);
   }
 

@@ -42,14 +42,22 @@ static const gchar dummytext[] =
     "over a Lazy Frog Quick Brown Fox Jumps over a Lazy Frog Quick Brown Fox ";
 
 static void
-src_handoff_cb (GstElement * src, GstBuffer * buf, GstPad * pad, gpointer data)
+src_need_data_cb (GstElement * src, guint size, gpointer data)
 {
+  GstBuffer *buf;
+  GstFlowReturn ret;
+
+  buf = gst_buffer_new ();
   gst_buffer_take_memory (buf,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) dummytext, NULL, sizeof (dummytext), 0,
           sizeof (dummytext)));
 
   GST_BUFFER_OFFSET (buf) = 0;
+
+  g_signal_emit_by_name (src, "push-buffer", buf, &ret);
+
+  fail_unless (ret == GST_FLOW_OK);
 }
 
 static void
@@ -70,13 +78,12 @@ GST_START_TEST (test_text_plain_streams)
   pipe = gst_pipeline_new (NULL);
   fail_unless (pipe != NULL, "failed to create pipeline");
 
-  src = gst_element_factory_make ("fakesrc", "src");
-  fail_unless (src != NULL, "Failed to create fakesrc element");
+  src = gst_element_factory_make ("appsrc", "src");
+  fail_unless (src != NULL, "Failed to create appsrc element");
 
-  g_object_set (src, "signal-handoffs", TRUE, NULL);
+  g_object_set (src, "emit-signals", TRUE, NULL);
   g_object_set (src, "num-buffers", 1, NULL);
-  g_object_set (src, "can-activate-pull", FALSE, NULL);
-  g_signal_connect (src, "handoff", G_CALLBACK (src_handoff_cb), NULL);
+  g_signal_connect (src, "need-data", G_CALLBACK (src_need_data_cb), NULL);
 
   decodebin = gst_element_factory_make ("decodebin", "decodebin");
   fail_unless (decodebin != NULL, "Failed to create decodebin element");
