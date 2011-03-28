@@ -44,10 +44,12 @@ static const gchar dummytext[] =
 static void
 src_handoff_cb (GstElement * src, GstBuffer * buf, GstPad * pad, gpointer data)
 {
-  GST_BUFFER_DATA (buf) = (guint8 *) dummytext;
-  GST_BUFFER_SIZE (buf) = sizeof (dummytext);
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          (gpointer) dummytext, NULL, sizeof (dummytext), 0,
+          sizeof (dummytext)));
+
   GST_BUFFER_OFFSET (buf) = 0;
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
 }
 
 static void

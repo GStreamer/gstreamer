@@ -57,8 +57,9 @@ main (int argc, char *argv[])
     void *data;
 
     buf = gst_buffer_new_and_alloc (100);
-    data = GST_BUFFER_DATA (buf);
+    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
     memset (data, i, 100);
+    gst_buffer_unmap (buf, data, 100);
 
     printf ("%d: pushing buffer for pointer %p, %p\n", i, data, buf);
     gst_app_src_push_buffer (GST_APP_SRC (app->src), buf);

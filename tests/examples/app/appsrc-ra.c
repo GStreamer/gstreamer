@@ -83,8 +83,10 @@ feed_data (GstElement * appsrc, guint size, App * app)
   if (app->offset + size > app->length)
     size = app->length - app->offset;
 
-  GST_BUFFER_DATA (buffer) = app->data + app->offset;
-  GST_BUFFER_SIZE (buffer) = size;
+  gst_buffer_take_memory (buffer,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          app->data, NULL, app->length, app->offset, size));
+
   /* we need to set an offset for random access */
   GST_BUFFER_OFFSET (buffer) = app->offset;
   GST_BUFFER_OFFSET_END (buffer) = app->offset + size;

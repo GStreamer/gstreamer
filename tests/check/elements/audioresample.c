@@ -175,9 +175,8 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   guint64 offset = 0;
-
   int i, j;
-  gint16 *p;
+  gint16 *p, *data;
 
   audioresample = setup_audioresample (2, inrate, outrate, 16, FALSE);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
@@ -198,7 +197,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
 
     gst_buffer_set_caps (inbuffer, caps);
 
-    p = (gint16 *) GST_BUFFER_DATA (inbuffer);
+    p = data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
 
     /* create a 16 bit signed ramp */
     for (i = 0; i < samples; ++i) {
@@ -207,6 +206,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
       *p = -32767 + i * (65535 / samples);
       ++p;
     }
+    gst_buffer_unmap (inbuffer, data, samples * 4);
 
     /* pushing gives away my reference ... */
     fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -261,7 +261,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
   GstClockTime ints;
 
   int i, j;
-  gint16 *p;
+  gint16 *p, *data;
 
   GST_DEBUG ("inrate:%d outrate:%d samples:%d numbuffers:%d",
       inrate, outrate, samples, numbuffers);
@@ -286,8 +286,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
 
     gst_buffer_set_caps (inbuffer, caps);
 
-    p = (gint16 *) GST_BUFFER_DATA (inbuffer);
-
+    p = data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
     /* create a 16 bit signed ramp */
     for (i = 0; i < samples; ++i) {
       *p = -32767 + i * (65535 / samples);
@@ -295,6 +294,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
       *p = -32767 + i * (65535 / samples);
       ++p;
     }
+    gst_buffer_unmap (inbuffer, data, samples * 4);
 
     GST_DEBUG ("Sending Buffer time:%" G_GUINT64_FORMAT " duration:%"
         G_GINT64_FORMAT " discont:%d offset:%" G_GUINT64_FORMAT " offset_end:%"
@@ -351,6 +351,7 @@ GST_START_TEST (test_reuse)
   GstEvent *newseg;
   GstBuffer *inbuffer;
   GstCaps *caps;
+  guint8 *data;
 
   audioresample = setup_audioresample (1, 9343, 48000, 16, FALSE);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
@@ -364,7 +365,9 @@ GST_START_TEST (test_reuse)
   fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
 
   inbuffer = gst_buffer_new_and_alloc (9343 * 4);
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  memset (data, 0, 9343 * 4);
+  gst_buffer_unmap (inbuffer, data, 9343 * 4);
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_OFFSET (inbuffer) = 0;
@@ -388,7 +391,9 @@ GST_START_TEST (test_reuse)
   fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
 
   inbuffer = gst_buffer_new_and_alloc (9343 * 4);
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  memset (data, 0, 9343 * 4);
+  gst_buffer_unmap (inbuffer, data, 9343 * 4);
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_OFFSET (inbuffer) = 0;
@@ -500,6 +505,7 @@ live_switch_push (int rate, GstCaps * caps)
   GstBuffer *inbuffer;
   GstCaps *desired;
   GList *l;
+  guint8 *data;
 
   desired = gst_caps_copy (caps);
   gst_caps_set_simple (desired, "rate", G_TYPE_INT, rate, NULL);
@@ -516,7 +522,10 @@ live_switch_push (int rate, GstCaps * caps)
       desired, GST_BUFFER_CAPS (inbuffer));
   fail_unless (gst_caps_is_equal (desired, GST_BUFFER_CAPS (inbuffer)));
 
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  memset (data, 0, rate * 4);
+  gst_buffer_unmap (inbuffer, data, rate * 4);
+
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_OFFSET (inbuffer) = 0;
@@ -769,7 +778,7 @@ fakesink_handoff_cb (GstElement * object, GstBuffer * buffer, GstPad * pad,
 
   ctx->out_buffer_count++;
   if (ctx->latency == GST_CLOCK_TIME_NONE) {
-    ctx->latency = 1000 - GST_BUFFER_SIZE (buffer) / 8;
+    ctx->latency = 1000 - gst_buffer_get_size (buffer) / 8;
   }
 
   /* Check if we have a perfectly timestampped stream */
@@ -781,10 +790,10 @@ fakesink_handoff_cb (GstElement * object, GstBuffer * buffer, GstPad * pad,
 
   /* Check if we have a perfectly offsetted stream */
   fail_unless (GST_BUFFER_OFFSET_END (buffer) ==
-      GST_BUFFER_OFFSET (buffer) + GST_BUFFER_SIZE (buffer) / 8,
+      GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer) / 8,
       "expected offset end %" G_GUINT64_FORMAT " got offset end %"
       G_GUINT64_FORMAT,
-      GST_BUFFER_OFFSET (buffer) + GST_BUFFER_SIZE (buffer) / 8,
+      GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer) / 8,
       GST_BUFFER_OFFSET_END (buffer));
   if (ctx->next_out_off != GST_BUFFER_OFFSET_NONE) {
     fail_unless (GST_BUFFER_OFFSET (buffer) == ctx->next_out_off,

@@ -142,6 +142,26 @@ cleanup_videorate (GstElement * videorate)
   gst_check_teardown_element (videorate);
 }
 
+static void
+buffer_memset (GstBuffer * buffer, gint val, gsize size)
+{
+  guint8 *data;
+
+  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
+  memset (data, val, size);
+  gst_buffer_unmap (buffer, data, size);
+}
+
+static guint8
+buffer_get_byte (GstBuffer * buffer, gint offset)
+{
+  guint8 res;
+
+  gst_buffer_extract (buffer, offset, &res, 1);
+
+  return res;
+}
+
 GST_START_TEST (test_one)
 {
   GstElement *videorate;
@@ -154,7 +174,7 @@ GST_START_TEST (test_one)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (4);
-  memset (GST_BUFFER_DATA (inbuffer), 0, 4);
+  buffer_memset (inbuffer, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (inbuffer, caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
@@ -196,7 +216,7 @@ GST_START_TEST (test_more)
      streams */
   GST_BUFFER_OFFSET (first) = g_rand_int (rand);
   GST_BUFFER_OFFSET_END (first) = g_rand_int (rand);
-  memset (GST_BUFFER_DATA (first), 1, 4);
+  buffer_memset (first, 1, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (first, caps);
   gst_caps_unref (caps);
@@ -215,7 +235,7 @@ GST_START_TEST (test_more)
   GST_BUFFER_TIMESTAMP (second) = GST_SECOND * 3 / 50;
   GST_BUFFER_OFFSET (first) = g_rand_int (rand);
   GST_BUFFER_OFFSET_END (first) = g_rand_int (rand);
-  memset (GST_BUFFER_DATA (second), 2, 4);
+  buffer_memset (second, 2, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (second, caps);
   gst_caps_unref (caps);
@@ -240,7 +260,7 @@ GST_START_TEST (test_more)
   GST_BUFFER_TIMESTAMP (third) = GST_SECOND * 12 / 50;
   GST_BUFFER_OFFSET (first) = g_rand_int (rand);
   GST_BUFFER_OFFSET_END (first) = g_rand_int (rand);
-  memset (GST_BUFFER_DATA (third), 3, 4);
+  buffer_memset (third, 3, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (third, caps);
   gst_caps_unref (caps);
@@ -258,27 +278,27 @@ GST_START_TEST (test_more)
   /* check timestamp and source correctness */
   l = buffers;
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data), 0);
-  fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 1);
+  fail_unless_equals_int (buffer_get_byte (l->data, 0), 1);
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), 0);
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), 1);
 
   l = g_list_next (l);
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data), GST_SECOND / 25);
-  fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 2);
+  fail_unless_equals_int (buffer_get_byte (l->data, 0), 2);
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), 1);
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), 2);
 
   l = g_list_next (l);
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data),
       GST_SECOND * 2 / 25);
-  fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 2);
+  fail_unless_equals_int (buffer_get_byte (l->data, 0), 2);
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), 2);
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), 3);
 
   l = g_list_next (l);
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data),
       GST_SECOND * 3 / 25);
-  fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 2);
+  fail_unless_equals_int (buffer_get_byte (l->data, 0), 2);
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), 3);
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), 4);
 
@@ -320,7 +340,7 @@ GST_START_TEST (test_wrong_order_from_zero)
   /* first buffer */
   first = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (first) = GST_SECOND;
-  memset (GST_BUFFER_DATA (first), 0, 4);
+  buffer_memset (first, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (first, caps);
   gst_caps_unref (caps);
@@ -338,7 +358,7 @@ GST_START_TEST (test_wrong_order_from_zero)
   /* second buffer */
   second = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (second) = 0;
-  memset (GST_BUFFER_DATA (second), 0, 4);
+  buffer_memset (second, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (second, caps);
   gst_caps_unref (caps);
@@ -358,7 +378,7 @@ GST_START_TEST (test_wrong_order_from_zero)
   /* third buffer */
   third = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (third) = 2 * GST_SECOND;
-  memset (GST_BUFFER_DATA (third), 0, 4);
+  buffer_memset (third, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (third, caps);
   gst_caps_unref (caps);
@@ -409,7 +429,7 @@ GST_START_TEST (test_wrong_order)
   /* first buffer */
   first = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (first) = 0;
-  memset (GST_BUFFER_DATA (first), 0, 4);
+  buffer_memset (first, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (first, caps);
   gst_caps_unref (caps);
@@ -427,7 +447,7 @@ GST_START_TEST (test_wrong_order)
   /* second buffer */
   second = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (second) = GST_SECOND;
-  memset (GST_BUFFER_DATA (second), 0, 4);
+  buffer_memset (second, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (second, caps);
   gst_caps_unref (caps);
@@ -446,7 +466,7 @@ GST_START_TEST (test_wrong_order)
   /* third buffer */
   third = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (third) = 2 * GST_SECOND;
-  memset (GST_BUFFER_DATA (third), 0, 4);
+  buffer_memset (third, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (third, caps);
   gst_caps_unref (caps);
@@ -468,7 +488,7 @@ GST_START_TEST (test_wrong_order)
   /* fourth buffer */
   fourth = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (fourth) = 0;
-  memset (GST_BUFFER_DATA (fourth), 0, 4);
+  buffer_memset (fourth, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (fourth, caps);
   gst_caps_unref (caps);
@@ -516,7 +536,7 @@ GST_START_TEST (test_no_framerate)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (4);
-  memset (GST_BUFFER_DATA (inbuffer), 0, 4);
+  buffer_memset (inbuffer, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_NO_FRAMERATE_STRING);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
@@ -564,7 +584,7 @@ GST_START_TEST (test_changing_size)
   fail_unless (gst_pad_push_event (mysrcpad, newsegment) == TRUE);
 
   first = gst_buffer_new_and_alloc (4);
-  memset (GST_BUFFER_DATA (first), 0, 4);
+  buffer_memset (first, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   GST_BUFFER_TIMESTAMP (first) = 0;
   gst_buffer_set_caps (first, caps);
@@ -575,7 +595,7 @@ GST_START_TEST (test_changing_size)
   /* second buffer */
   second = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (second) = GST_SECOND / 25;
-  memset (GST_BUFFER_DATA (second), 0, 4);
+  buffer_memset (second, 0, 4);
   gst_buffer_set_caps (second, caps);
 
   fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
@@ -588,7 +608,7 @@ GST_START_TEST (test_changing_size)
   /* third buffer with new size */
   third = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (third) = 2 * GST_SECOND / 25;
-  memset (GST_BUFFER_DATA (third), 0, 4);
+  buffer_memset (third, 0, 4);
   caps_newsize = gst_caps_from_string (VIDEO_CAPS_NEWSIZE_STRING);
   gst_buffer_set_caps (third, caps_newsize);
 
@@ -603,7 +623,7 @@ GST_START_TEST (test_changing_size)
   /* fourth buffer with original size */
   fourth = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (fourth) = 3 * GST_SECOND / 25;
-  memset (GST_BUFFER_DATA (fourth), 0, 4);
+  buffer_memset (fourth, 0, 4);
   gst_buffer_set_caps (fourth, caps);
 
   fail_unless (gst_pad_push (mysrcpad, fourth) == GST_FLOW_OK);
@@ -612,7 +632,7 @@ GST_START_TEST (test_changing_size)
   /* fifth buffer with original size */
   fifth = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (fifth) = 4 * GST_SECOND / 25;
-  memset (GST_BUFFER_DATA (fifth), 0, 4);
+  buffer_memset (fifth, 0, 4);
   gst_buffer_set_caps (fifth, caps);
 
   fail_unless (gst_pad_push (mysrcpad, fifth) == GST_FLOW_OK);
@@ -643,7 +663,7 @@ GST_START_TEST (test_non_ok_flow)
       "could not set to playing");
 
   buf = gst_buffer_new_and_alloc (4);
-  memset (GST_BUFFER_DATA (buf), 0, 4);
+  buffer_memset (buf, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
@@ -666,7 +686,7 @@ GST_START_TEST (test_non_ok_flow)
   gst_pad_set_active (mysinkpad, FALSE);
 
   /* push buffer on deactivated pad */
-  fail_unless (gst_buffer_is_metadata_writable (buf));
+  fail_unless (gst_buffer_is_writable (buf));
   GST_BUFFER_TIMESTAMP (buf) = ts;
 
   /* pushing gives away our reference */

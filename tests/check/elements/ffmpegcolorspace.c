@@ -313,6 +313,8 @@ GST_START_TEST (test_rgb_to_rgb)
       GstStateChangeReturn state_ret;
       RGBFormat *from = &conv->from_fmt;
       RGBFormat *to = &conv->to_fmt;
+      guint8 *data;
+      gsize size;
 
       /* trick compiler into thinking from is used, might throw warning
        * otherwise if the debugging system is disabled */
@@ -393,10 +395,12 @@ GST_START_TEST (test_rgb_to_rgb)
       }
 
       /* now check the top-left pixel */
-      check_rgb_buf (GST_BUFFER_DATA (buf), to->red_mask,
+      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+      check_rgb_buf (data, to->red_mask,
           to->green_mask, to->blue_mask, to->alpha_mask,
           test_patterns[p].r_expected, test_patterns[p].g_expected,
           test_patterns[p].b_expected, to->endianness, to->bpp, to->depth);
+      gst_buffer_unmap (buf, data, size);
 
       gst_buffer_unref (buf);
       buf = NULL;

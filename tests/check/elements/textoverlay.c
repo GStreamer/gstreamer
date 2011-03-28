@@ -164,6 +164,8 @@ buffer_is_all_black (GstBuffer * buf)
 {
   GstStructure *s;
   gint x, y, w, h;
+  guint8 *data;
+  gsize size;
 
   fail_unless (buf != NULL);
   fail_unless (GST_BUFFER_CAPS (buf) != NULL);
@@ -172,16 +174,18 @@ buffer_is_all_black (GstBuffer * buf)
   fail_unless (gst_structure_get_int (s, "width", &w));
   fail_unless (gst_structure_get_int (s, "height", &h));
 
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   for (y = 0; y < h; ++y) {
-    guint8 *data = GST_BUFFER_DATA (buf) + (y * GST_ROUND_UP_4 (w));
+    guint8 *ptr = data + (y * GST_ROUND_UP_4 (w));
 
     for (x = 0; x < w; ++x) {
-      if (data[x] != 0x00) {
+      if (ptr[x] != 0x00) {
         GST_LOG ("non-black pixel at (x,y) %d,%d", x, y);
         return FALSE;
       }
     }
   }
+  gst_buffer_unmap (buf, data, size);
 
   return TRUE;
 }
@@ -193,6 +197,7 @@ create_black_buffer (const gchar * caps_string)
   GstBuffer *buffer;
   GstCaps *caps;
   gint w, h, size;
+  guint8 *data;
 
   fail_unless (caps_string != NULL);
 
@@ -207,9 +212,12 @@ create_black_buffer (const gchar * caps_string)
   GST_LOG ("creating buffer (%dx%d)", w, h);
   size = I420_SIZE (w, h);
   buffer = gst_buffer_new_and_alloc (size);
+
+  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
   /* we're only checking the Y plane later, so just zero it all out,
    * even if it's not the blackest black there is */
-  memset (GST_BUFFER_DATA (buffer), 0, size);
+  memset (data, 0, size);
+  gst_buffer_unmap (buffer, data, size);
 
   gst_buffer_set_caps (buffer, caps);
   gst_caps_unref (caps);
@@ -232,7 +240,7 @@ create_text_buffer (const gchar * txt, GstClockTime ts, GstClockTime duration)
   txt_len = strlen (txt);
 
   buffer = gst_buffer_new_and_alloc (txt_len);
-  memcpy (GST_BUFFER_DATA (buffer), txt, txt_len);
+  gst_buffer_fill (buffer, 0, txt, txt_len);
 
   GST_BUFFER_TIMESTAMP (buffer) = ts;
   GST_BUFFER_DURATION (buffer) = duration;
@@ -525,7 +533,7 @@ GST_START_TEST (test_video_waits_for_text)
   fail_unless (buffer_is_all_black (GST_BUFFER_CAST (buffers->data)));
 
   /* now, another video buffer */
-  inbuffer = gst_buffer_make_metadata_writable (inbuffer);
+  inbuffer = gst_buffer_make_writable (inbuffer);
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND / 2;
 
@@ -545,7 +553,7 @@ GST_START_TEST (test_video_waits_for_text)
       FALSE);
 
   /* a third video buffer */
-  inbuffer = gst_buffer_make_metadata_writable (inbuffer);
+  inbuffer = gst_buffer_make_writable (inbuffer);
   GST_BUFFER_TIMESTAMP (inbuffer) = 30 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND / 2;
 
@@ -573,7 +581,7 @@ GST_START_TEST (test_video_waits_for_text)
               next->data)));
 
   /* a fourth video buffer */
-  inbuffer = gst_buffer_make_metadata_writable (inbuffer);
+  inbuffer = gst_buffer_make_writable (inbuffer);
   GST_BUFFER_TIMESTAMP (inbuffer) = 35 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
 

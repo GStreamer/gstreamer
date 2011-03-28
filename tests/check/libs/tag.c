@@ -407,6 +407,8 @@ GST_START_TEST (test_vorbis_tags)
   /* now, while we still have a taglist, test _to_vorbiscomment_buffer() */
   {
     GstBuffer *buf1, *buf2;
+    guint8 *data1, *data2;
+    gsize size1, size2;
 
     ASSERT_CRITICAL (gst_tag_list_to_vorbiscomment_buffer (NULL,
             (const guint8 *) "x", 1, "x"));
@@ -418,8 +420,13 @@ GST_START_TEST (test_vorbis_tags)
         (const guint8 *) "foo", 3, NULL);
     fail_unless (buf2 != NULL);
 
-    fail_unless (memcmp (GST_BUFFER_DATA (buf1), GST_BUFFER_DATA (buf2) + 3,
-            GST_BUFFER_SIZE (buf1)) == 0);
+    data1 = gst_buffer_map (buf1, &size1, NULL, GST_MAP_READ);
+    data2 = gst_buffer_map (buf2, &size2, NULL, GST_MAP_READ);
+
+    fail_unless (memcmp (data1, data2 + 3, size1) == 0);
+
+    gst_buffer_unmap (buf2, data2, size2);
+    gst_buffer_unmap (buf1, data1, size1);
 
     gst_buffer_unref (buf1);
     gst_buffer_unref (buf2);
@@ -437,8 +444,10 @@ GST_START_TEST (test_vorbis_tags)
     gchar *vendor = NULL;
 
     buf = gst_buffer_new ();
-    GST_BUFFER_DATA (buf) = (guint8 *) speex_comments_buf1;
-    GST_BUFFER_SIZE (buf) = sizeof (speex_comments_buf1);
+    gst_buffer_take_memory (buf,
+        gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+            (gpointer) speex_comments_buf1, NULL,
+            sizeof (speex_comments_buf1), 0, sizeof (speex_comments_buf1)));
 
     /* make sure it doesn't memcmp over the end of the buffer */
     fail_unless (gst_tag_list_from_vorbiscomment_buffer (buf,
@@ -480,8 +489,10 @@ GST_START_TEST (test_vorbis_tags)
     gchar *vendor = NULL;
 
     buf = gst_buffer_new ();
-    GST_BUFFER_DATA (buf) = (guint8 *) vorbis_comments_buf;
-    GST_BUFFER_SIZE (buf) = sizeof (vorbis_comments_buf);
+    gst_buffer_take_memory (buf,
+        gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+            (gpointer) vorbis_comments_buf, NULL,
+            sizeof (vorbis_comments_buf), 0, sizeof (vorbis_comments_buf)));
 
     /* make sure it doesn't memcmp over the end of the buffer */
     fail_unless (gst_tag_list_from_vorbiscomment_buffer (buf,
@@ -755,7 +766,7 @@ GST_START_TEST (test_xmp_formatting)
   GstTagList *list;
   GstBuffer *buf;
   const gchar *text;
-  guint len;
+  gsize len;
 
   /* test data */
   list = gst_tag_list_new_full (GST_TAG_TITLE, "test title",
@@ -765,8 +776,7 @@ GST_START_TEST (test_xmp_formatting)
   buf = gst_tag_list_to_xmp_buffer (list, FALSE);
   fail_unless (buf != NULL);
 
-  text = (const gchar *) GST_BUFFER_DATA (buf);
-  len = GST_BUFFER_SIZE (buf);
+  text = gst_buffer_map (buf, &len, NULL, GST_MAP_READ);
 
   /* check the content */
   fail_unless (g_strrstr_len (text, len, "<?xpacket begin") == text);
@@ -775,6 +785,7 @@ GST_START_TEST (test_xmp_formatting)
   fail_unless (g_strrstr_len (text, len, ">keyword1<") != NULL);
   fail_unless (g_strrstr_len (text, len, ">keyword2<") != NULL);
   fail_unless (g_strrstr_len (text, len, "<?xpacket end") != NULL);
+  gst_buffer_unmap (buf, (gpointer) text, len);
 
   gst_buffer_unref (buf);
   gst_tag_list_free (list);
@@ -814,16 +825,18 @@ GST_START_TEST (test_xmp_parsing)
   };
 
   /* test data */
-  buf = gst_buffer_new ();
-
   i = 0;
   while (test_data[i].xmp_data) {
+    gsize len;
+
     GST_DEBUG ("trying test-data %u", i);
 
     text = g_strconcat (xmp_header, test_data[i].xmp_data, xmp_footer, NULL);
-    GST_BUFFER_DATA (buf) = (guint8 *) text;
-    GST_BUFFER_SIZE (buf) = strlen (text) + 1;
 
+    buf = gst_buffer_new ();
+    len = strlen (text) + 1;
+    gst_buffer_take_memory (buf,
+        gst_memory_new_wrapped (0, text, NULL, len, 0, len));
 
     list = gst_tag_list_from_xmp_buffer (buf);
     if (test_data[i].result_size >= 0) {
@@ -844,6 +857,7 @@ GST_START_TEST (test_xmp_parsing)
     if (list)
       gst_tag_list_free (list);
 
+    gst_buffer_unref (buf);
     g_free (text);
     i++;
   }
@@ -1251,6 +1265,7 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   GstBuffer *buf = NULL;
   gint i;
   GstTagList *taglist;
+  guint8 *data;
 
   gst_tag_register_musicbrainz_tags ();
 
@@ -1545,8 +1560,10 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
 
   g_value_init (&value, GST_TYPE_BUFFER);
   buf = gst_buffer_new_and_alloc (1024);
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i++)
-    GST_BUFFER_DATA (buf)[i] = i % 255;
+    data[i] = i % 255;
+  gst_buffer_unmap (buf, data, 1024);
   gst_value_set_buffer (&value, buf);
   gst_buffer_unref (buf);
   do_simple_exif_tag_serialization_deserialization (GST_TAG_APPLICATION_DATA,

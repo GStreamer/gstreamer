@@ -62,8 +62,11 @@ GST_START_TEST (test_quicktime_mpeg4video)
   GstCaps *caps = NULL;
 
   buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = (guint8 *) qt_redirect_396042;
-  GST_BUFFER_SIZE (buf) = sizeof (qt_redirect_396042);
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          (gpointer) qt_redirect_396042, NULL,
+          sizeof (qt_redirect_396042), 0, sizeof (qt_redirect_396042)));
+
   GST_BUFFER_OFFSET (buf) = 0;
 
   caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
@@ -89,8 +92,11 @@ GST_START_TEST (test_broken_flac_in_ogg)
   GstCaps *caps = NULL;
 
   buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = (guint8 *) flac_id_packet;
-  GST_BUFFER_SIZE (buf) = sizeof (flac_id_packet);
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          (gpointer) flac_id_packet, NULL,
+          sizeof (flac_id_packet), 0, sizeof (flac_id_packet)));
+
   GST_BUFFER_OFFSET (buf) = 0;
 
   caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
@@ -123,8 +129,10 @@ typefind_test_file (const gchar * filename)
   }
 
   buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = (guint8 *) data;
-  GST_BUFFER_SIZE (buf) = data_len;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          (gpointer) data, NULL, data_len, 0, data_len));
+
   GST_BUFFER_OFFSET (buf) = 0;
 
   caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);
@@ -222,11 +230,14 @@ GST_START_TEST (test_ac3)
   GstBuffer *buf;
   GstCaps *caps = NULL;
   guint bsid;
+  guint8 *data;
 
   for (bsid = 0; bsid < 32; bsid++) {
     buf = gst_buffer_new_and_alloc ((256 + 640) * 2);
-    make_ac3_packet (GST_BUFFER_DATA (buf), 256 * 2, bsid);
-    make_ac3_packet (GST_BUFFER_DATA (buf) + 256 * 2, 640 * 2, bsid);
+    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    make_ac3_packet (data, 256 * 2, bsid);
+    make_ac3_packet (data + 256 * 2, 640 * 2, bsid);
+    gst_buffer_unmap (buf, data, (256 + 640) * 2);
 
     caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
     if (bsid <= 8) {
@@ -281,11 +292,14 @@ GST_START_TEST (test_eac3)
   GstBuffer *buf;
   GstCaps *caps = NULL;
   guint bsid;
+  guint8 *data;
 
   for (bsid = 0; bsid <= 32; bsid++) {
     buf = gst_buffer_new_and_alloc (558 + 384);
-    make_eac3_packet (GST_BUFFER_DATA (buf), 558, bsid);
-    make_eac3_packet (GST_BUFFER_DATA (buf) + 558, 384, bsid);
+    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    make_eac3_packet (data, 558, bsid);
+    make_eac3_packet (data + 558, 384, bsid);
+    gst_buffer_unmap (buf, data, 558 + 384);
 
     caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
     if (bsid > 10 && bsid <= 16) {
@@ -335,8 +349,10 @@ GST_START_TEST (test_random_data)
     data[i] = g_random_int () & 0xff;
 
   buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = (guint8 *) data;
-  GST_BUFFER_SIZE (buf) = TEST_RANDOM_DATA_SIZE;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          data, NULL, TEST_RANDOM_DATA_SIZE, 0, TEST_RANDOM_DATA_SIZE));
+
   GST_BUFFER_OFFSET (buf) = 0;
 
   caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);

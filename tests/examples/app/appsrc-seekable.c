@@ -89,8 +89,9 @@ feed_data (GstElement * appsrc, guint size, App * app)
   if (app->offset + len > app->length)
     len = app->length - app->offset;
 
-  GST_BUFFER_DATA (buffer) = app->data + app->offset;
-  GST_BUFFER_SIZE (buffer) = len;
+  gst_buffer_take_memory (buffer,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          app->data, NULL, app->length, app->offset, len));
 
   GST_DEBUG ("feed buffer %p, offset %" G_GUINT64_FORMAT "-%u", buffer,
       app->offset, len);

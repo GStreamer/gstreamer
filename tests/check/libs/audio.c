@@ -127,18 +127,16 @@ GST_END_TEST;
 GST_START_TEST (test_buffer_clipping_time)
 {
   GstSegment s;
-
   GstBuffer *buf;
-
   GstBuffer *ret;
-
-  guint8 *data;
+  guint8 *data, *sdata;
+  gsize ssize;
 
   /* Clip start and end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 4 * GST_SECOND,
@@ -156,16 +154,18 @@ GST_START_TEST (test_buffer_clipping_time)
   fail_unless (GST_BUFFER_DURATION (ret) == 4 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 800);
-  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
-  fail_unless (GST_BUFFER_SIZE (ret) == 400);
+  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
+  fail_unless (sdata == data + 200);
+  fail_unless (ssize == 400);
+  gst_buffer_unmap (ret, sdata, ssize);
 
   gst_buffer_unref (ret);
 
   /* Clip only start */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 4 * GST_SECOND,
@@ -183,16 +183,18 @@ GST_START_TEST (test_buffer_clipping_time)
   fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 1200);
-  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
-  fail_unless (GST_BUFFER_SIZE (ret) == 800);
+  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
+  fail_unless (sdata == data + 200);
+  fail_unless (ssize == 800);
+  gst_buffer_unmap (ret, sdata, ssize);
 
   gst_buffer_unref (ret);
 
   /* Clip only stop */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 2 * GST_SECOND,
@@ -210,16 +212,18 @@ GST_START_TEST (test_buffer_clipping_time)
   fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 200);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 1000);
-  fail_unless (GST_BUFFER_DATA (ret) == data);
-  fail_unless (GST_BUFFER_SIZE (ret) == 800);
+  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
+  fail_unless (sdata == data);
+  fail_unless (ssize == 800);
+  gst_buffer_unmap (ret, sdata, ssize);
 
   gst_buffer_unref (ret);
 
   /* Buffer outside segment */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 12 * GST_SECOND,
@@ -236,8 +240,8 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Clip start and end but don't touch duration and offset_end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 4 * GST_SECOND,
@@ -255,8 +259,10 @@ GST_START_TEST (test_buffer_clipping_time)
   fail_unless (GST_BUFFER_DURATION (ret) == GST_CLOCK_TIME_NONE);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == GST_BUFFER_OFFSET_NONE);
-  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
-  fail_unless (GST_BUFFER_SIZE (ret) == 400);
+  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
+  fail_unless (sdata == data + 200);
+  fail_unless (ssize == 400);
+  gst_buffer_unmap (ret, sdata, ssize);
 
   gst_buffer_unref (ret);
 
@@ -266,8 +272,8 @@ GST_START_TEST (test_buffer_clipping_time)
    */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND,
@@ -289,8 +295,8 @@ GST_START_TEST (test_buffer_clipping_time)
    */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_PERCENT);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_PERCENT, 0, 10, 0);
@@ -311,18 +317,16 @@ GST_END_TEST;
 GST_START_TEST (test_buffer_clipping_samples)
 {
   GstSegment s;
-
   GstBuffer *buf;
-
   GstBuffer *ret;
-
-  guint8 *data;
+  guint8 *data, *sdata;
+  gsize ssize;
 
   /* Clip start and end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 400,
@@ -340,16 +344,18 @@ GST_START_TEST (test_buffer_clipping_samples)
   fail_unless (GST_BUFFER_DURATION (ret) == 4 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 800);
-  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
-  fail_unless (GST_BUFFER_SIZE (ret) == 400);
+  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
+  fail_unless (sdata == data + 200);
+  fail_unless (ssize == 400);
+  gst_buffer_unmap (ret, sdata, ssize);
 
   gst_buffer_unref (ret);
 
   /* Clip only start */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 400,
@@ -367,16 +373,18 @@ GST_START_TEST (test_buffer_clipping_samples)
   fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 1200);
-  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
-  fail_unless (GST_BUFFER_SIZE (ret) == 800);
+  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
+  fail_unless (sdata == data + 200);
+  fail_unless (ssize == 800);
+  gst_buffer_unmap (ret, sdata, ssize);
 
   gst_buffer_unref (ret);
 
   /* Clip only stop */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 200,
@@ -394,16 +402,18 @@ GST_START_TEST (test_buffer_clipping_samples)
   fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 200);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 1000);
-  fail_unless (GST_BUFFER_DATA (ret) == data);
-  fail_unless (GST_BUFFER_SIZE (ret) == 800);
+  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
+  fail_unless (sdata == data);
+  fail_unless (ssize == 800);
+  gst_buffer_unmap (ret, sdata, ssize);
 
   gst_buffer_unref (ret);
 
   /* Buffer outside segment */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 1200,
@@ -420,8 +430,8 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Clip start and end but don't touch duration and offset_end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 400,
@@ -439,8 +449,10 @@ GST_START_TEST (test_buffer_clipping_samples)
   fail_unless (GST_BUFFER_DURATION (ret) == GST_CLOCK_TIME_NONE);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == GST_BUFFER_OFFSET_NONE);
-  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
-  fail_unless (GST_BUFFER_SIZE (ret) == 400);
+  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
+  fail_unless (sdata == data + 200);
+  fail_unless (ssize == 400);
+  gst_buffer_unmap (ret, sdata, ssize);
 
   gst_buffer_unref (ret);
 
@@ -450,8 +462,8 @@ GST_START_TEST (test_buffer_clipping_samples)
    */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  GST_BUFFER_SIZE (buf) = 1000;
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, 1000, 0, 1000));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
   gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 0, 10, 0);

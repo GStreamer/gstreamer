@@ -29,7 +29,7 @@
 
 GST_START_TEST (test_netbuffer_copy)
 {
-  GstNetBuffer *netbuf, *copy;
+  GstBuffer *netbuf, *copy;
   guint8 ipv6_addr[16] = { 0xff, 0x11, 0xee, 0x22, 0xdd, 0x33, 0xcc,
     0x44, 0xbb, 0x55, 0xaa, 0x66, 0x00, 0x77, 0x99, 0x88
   };
@@ -38,44 +38,88 @@ GST_START_TEST (test_netbuffer_copy)
   guint16 ipv6_port = 3490;
   guint16 ipv4_port = 5678;
   guint16 port;
+  GstMetaNetAddress *meta, *cmeta;
+  gsize len;
+  guint8 *data1, *data2;
+  gsize size1, size2;
 
-  netbuf = gst_netbuffer_new ();
+  netbuf = gst_buffer_new ();
   fail_unless (netbuf != NULL, "failed to create net buffer");
+  meta = gst_buffer_add_meta_net_address (netbuf);
 
-  gst_netaddress_set_ip4_address (&netbuf->from, ipv4_addr, ipv4_port);
-  gst_netaddress_set_ip6_address (&netbuf->to, ipv6_addr, ipv6_port);
+  gst_netaddress_set_ip4_address (&meta->naddr, ipv4_addr, ipv4_port);
 
-  GST_BUFFER_DATA (netbuf) = (guint8 *) DATA_STRING;
-  GST_BUFFER_SIZE (netbuf) = strlen (DATA_STRING);
+  len = strlen (DATA_STRING);
+  gst_buffer_take_memory (netbuf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          (gpointer) DATA_STRING, NULL, len, 0, len));
+
   GST_BUFFER_FLAG_SET (netbuf, GST_BUFFER_FLAG_DISCONT);
-  GST_BUFFER_FLAG_SET (netbuf, GST_BUFFER_FLAG_READONLY);
 
-  copy = (GstNetBuffer *) gst_buffer_copy (GST_BUFFER_CAST (netbuf));
+  copy = gst_buffer_copy (netbuf);
   fail_unless (copy != NULL, "failed to copy net buffer");
-  fail_unless (GST_IS_NETBUFFER (copy), "copied buffer is not a GstNetBuffer!");
+
+  cmeta = gst_buffer_get_meta_net_address (copy);
+  fail_unless (cmeta != NULL, "copied buffer is not a GstNetBuffer!");
 
   fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT_VALUE (copy), 1);
 
-  fail_unless_equals_int (GST_BUFFER_SIZE (copy), GST_BUFFER_SIZE (netbuf));
-  fail_unless (memcmp (GST_BUFFER_DATA (copy), GST_BUFFER_DATA (netbuf),
-          GST_BUFFER_SIZE (copy)) == 0);
+  data1 = gst_buffer_map (netbuf, &size1, NULL, GST_MAP_READ);
+  data2 = gst_buffer_map (copy, &size2, NULL, GST_MAP_READ);
+  fail_unless_equals_int (size1, size2);
+  fail_unless (memcmp (data1, data2, size1) == 0);
+  gst_buffer_unmap (copy, data2, size2);
+  gst_buffer_unmap (netbuf, data1, size1);
 
-  fail_if (GST_BUFFER_FLAG_IS_SET (copy, GST_BUFFER_FLAG_READONLY));
   fail_unless (GST_BUFFER_FLAG_IS_SET (copy, GST_BUFFER_FLAG_DISCONT));
 
-  fail_unless (gst_netaddress_get_ip4_address (&copy->from, &ipv4_copy, &port));
+  fail_unless (gst_netaddress_get_ip4_address (&cmeta->naddr, &ipv4_copy,
+          &port));
   fail_unless (ipv4_copy == ipv4_addr,
       "Copied buffer has wrong IPV4 from address");
   fail_unless (port == ipv4_port, "Copied buffer has wrong IPV4 from port");
+  gst_buffer_unref (netbuf);
+  gst_buffer_unref (copy);
 
-  fail_unless (gst_netaddress_get_ip6_address (&copy->to, ipv6_copy, &port));
+  netbuf = gst_buffer_new ();
+  fail_unless (netbuf != NULL, "failed to create net buffer");
+  meta = gst_buffer_add_meta_net_address (netbuf);
+
+  gst_netaddress_set_ip6_address (&meta->naddr, ipv6_addr, ipv6_port);
+
+  len = strlen (DATA_STRING);
+  gst_buffer_take_memory (netbuf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          (gpointer) DATA_STRING, NULL, len, 0, len));
+
+  GST_BUFFER_FLAG_SET (netbuf, GST_BUFFER_FLAG_DISCONT);
+
+  copy = gst_buffer_copy (netbuf);
+  fail_unless (copy != NULL, "failed to copy net buffer");
+
+  cmeta = gst_buffer_get_meta_net_address (copy);
+  fail_unless (cmeta != NULL, "copied buffer is not a GstNetBuffer!");
+
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT_VALUE (copy), 1);
+
+  data1 = gst_buffer_map (netbuf, &size1, NULL, GST_MAP_READ);
+  data2 = gst_buffer_map (copy, &size2, NULL, GST_MAP_READ);
+  fail_unless_equals_int (size1, size2);
+  fail_unless (memcmp (data1, data2, size1) == 0);
+  gst_buffer_unmap (copy, data2, size2);
+  gst_buffer_unmap (netbuf, data1, size1);
+
+  fail_unless (GST_BUFFER_FLAG_IS_SET (copy, GST_BUFFER_FLAG_DISCONT));
+
+  fail_unless (gst_netaddress_get_ip6_address (&cmeta->naddr, ipv6_copy,
+          &port));
   fail_unless (memcmp (ipv6_copy, ipv6_addr, 16) == 0,
       "Copied buffer has wrong IPv6 destination address");
   fail_unless (port == ipv6_port,
       "Copied buffer has wrong IPv6 destination port");
+  gst_buffer_unref (netbuf);
+  gst_buffer_unref (copy);
 
-  gst_buffer_unref (GST_BUFFER_CAST (netbuf));
-  gst_buffer_unref (GST_BUFFER_CAST (copy));
 }
 
 GST_END_TEST;

@@ -449,7 +449,7 @@ verify_convert (const gchar * which, void *in, int inlength,
 
   GST_DEBUG ("Creating buffer of %d bytes", inlength);
   inbuffer = gst_buffer_new_and_alloc (inlength);
-  memcpy (GST_BUFFER_DATA (inbuffer), in, inlength);
+  gst_buffer_fill (inbuffer, 0, in, inlength);
   gst_buffer_set_caps (inbuffer, incaps);
   ASSERT_CAPS_REFCOUNT (incaps, "incaps", 2);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -467,8 +467,10 @@ verify_convert (const gchar * which, void *in, int inlength,
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), outlength);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), outlength);
 
+  gst_check_buffer_data (outbuffer, out, outlength);
+#if 0
   if (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) != 0) {
     g_print ("\nInput data:\n");
     gst_util_dump_mem (in, inlength);
@@ -479,6 +481,7 @@ verify_convert (const gchar * which, void *in, int inlength,
   }
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) == 0,
       "failed converting %s", which);
+#endif
 
   /* make sure that the channel positions are not lost */
   {

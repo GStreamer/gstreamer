@@ -198,6 +198,8 @@ GST_END_TEST;
 static GstBufferList *mylist;
 static GstCaps *mycaps;
 
+static gint values[] = { 1, 2, 4 };
+
 static GstBufferList *
 create_buffer_list (void)
 {
@@ -216,19 +218,19 @@ create_buffer_list (void)
   gst_buffer_list_iterator_add_group (it);
 
   buffer = gst_buffer_new_and_alloc (sizeof (gint));
-  *(gint *) GST_BUFFER_DATA (buffer) = 1;
+  gst_buffer_fill (buffer, 0, &values[0], sizeof (gint));
   gst_buffer_set_caps (buffer, mycaps);
   gst_buffer_list_iterator_add (it, buffer);
 
   gst_buffer_list_iterator_add_group (it);
 
   buffer = gst_buffer_new_and_alloc (sizeof (gint));
-  *(gint *) GST_BUFFER_DATA (buffer) = 2;
+  gst_buffer_fill (buffer, 0, &values[1], sizeof (gint));
   gst_buffer_set_caps (buffer, mycaps);
   gst_buffer_list_iterator_add (it, buffer);
 
   buffer = gst_buffer_new_and_alloc (sizeof (gint));
-  *(gint *) GST_BUFFER_DATA (buffer) = 4;
+  gst_buffer_fill (buffer, 0, &values[2], sizeof (gint));
   gst_buffer_set_caps (buffer, mycaps);
   gst_buffer_list_iterator_add (it, buffer);
 
@@ -254,7 +256,7 @@ check_buffer_list (GstBufferList * list)
   fail_unless (gst_buffer_list_iterator_n_buffers (it) == 1);
   buf = gst_buffer_list_iterator_next (it);
   fail_if (buf == NULL);
-  fail_unless (*(gint *) GST_BUFFER_DATA (buf) == 1);
+  gst_check_buffer_data (buf, &values[0], sizeof (gint));
   caps = gst_buffer_get_caps (buf);
   fail_unless (caps == mycaps);
   fail_unless (gst_caps_is_equal (caps, mycaps));
@@ -264,14 +266,14 @@ check_buffer_list (GstBufferList * list)
   fail_unless (gst_buffer_list_iterator_n_buffers (it) == 2);
   buf = gst_buffer_list_iterator_next (it);
   fail_if (buf == NULL);
-  fail_unless (*(gint *) GST_BUFFER_DATA (buf) == 2);
+  gst_check_buffer_data (buf, &values[1], sizeof (gint));
   caps = gst_buffer_get_caps (buf);
   fail_unless (caps == mycaps);
   gst_caps_unref (caps);
 
   buf = gst_buffer_list_iterator_next (it);
   fail_if (buf == NULL);
-  fail_unless (*(gint *) GST_BUFFER_DATA (buf) == 4);
+  gst_check_buffer_data (buf, &values[2], sizeof (gint));
   caps = gst_buffer_get_caps (buf);
   fail_unless (caps == mycaps);
   gst_caps_unref (caps);
@@ -329,13 +331,12 @@ callback_function_buffer (GstAppSink * appsink, gpointer p_counter)
   /* buffer list has 3 buffers in two groups */
   switch (*p_int_counter) {
     case 0:
-      fail_unless_equals_int (GST_BUFFER_SIZE (buf), sizeof (gint));
-      fail_unless_equals_int ((((gint *) GST_BUFFER_DATA (buf))[0]), 1);
+      fail_unless_equals_int (gst_buffer_get_size (buf), sizeof (gint));
+      gst_check_buffer_data (buf, &values[0], sizeof (gint));
       break;
     case 1:
-      fail_unless_equals_int (GST_BUFFER_SIZE (buf), 2 * sizeof (gint));
-      fail_unless_equals_int ((((gint *) GST_BUFFER_DATA (buf))[0]), 2);
-      fail_unless_equals_int ((((gint *) GST_BUFFER_DATA (buf))[1]), 4);
+      fail_unless_equals_int (gst_buffer_get_size (buf), 2 * sizeof (gint));
+      gst_check_buffer_data (buf, &values[1], 2 * sizeof (gint));
       break;
     default:
       g_warn_if_reached ();

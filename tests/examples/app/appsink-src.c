@@ -22,7 +22,6 @@ static void
 on_new_buffer_from_source (GstElement * elt, ProgramData * data)
 {
   guint size;
-  gpointer raw_buffer;
   GstBuffer *app_buffer, *buffer;
   GstElement *source;
 
@@ -31,11 +30,11 @@ on_new_buffer_from_source (GstElement * elt, ProgramData * data)
 
   /* turn it into an app buffer, it's not really needed, we could simply push
    * the retrieved buffer from appsink into appsrc just fine.  */
-  size = GST_BUFFER_SIZE (buffer);
+  size = gst_buffer_get_size (buffer);
   g_print ("Pushing a buffer of size %d\n", size);
   app_buffer = gst_buffer_new_and_alloc (size);
-  raw_buffer = GST_BUFFER_DATA (app_buffer);
-  memcpy (raw_buffer, GST_BUFFER_DATA (buffer), size);
+
+  gst_buffer_copy_into (app_buffer, buffer, GST_BUFFER_COPY_MEMORY, 0, size);
 
   /* newer basesrc will set caps for use automatically but it does not really
    * hurt to set it on the buffer again */

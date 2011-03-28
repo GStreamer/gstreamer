@@ -322,6 +322,8 @@ GST_START_TEST (test_rgb_formats)
         /* caps are supported, let's run some tests then ... */
         for (p = 0; p < G_N_ELEMENTS (test_patterns); ++p) {
           GstStateChangeReturn state_ret;
+          guint8 *data;
+          gsize size;
 
           g_object_set (src, "pattern", test_patterns[p].pattern_enum, NULL);
 
@@ -375,11 +377,13 @@ GST_START_TEST (test_rgb_formats)
 
 
           /* now check the first pixel */
-          check_rgb_buf (GST_BUFFER_DATA (buf), rgb_formats[i].red_mask,
+          data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+          check_rgb_buf (data, rgb_formats[i].red_mask,
               rgb_formats[i].green_mask, rgb_formats[i].blue_mask,
               rgb_formats[i].alpha_mask, test_patterns[p].r_expected,
               test_patterns[p].g_expected, test_patterns[p].b_expected,
               endianness, rgb_formats[i].bpp, rgb_formats[i].depth);
+          gst_buffer_unmap (buf, data, size);
 
           gst_buffer_unref (buf);
           buf = NULL;

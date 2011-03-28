@@ -87,9 +87,12 @@ cleanup_gnomevfssink (GstElement * gnomevfssink)
     G_STMT_START {                                                        \
       GstBuffer *buf = gst_buffer_new_and_alloc(num_bytes);               \
       GRand *rand = g_rand_new_with_seed (num_bytes);                     \
-      guint i;                                                            \
+      gsize i;                                                            \
+      guint8 *data;                                                       \
+      data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);             \
       for (i = 0; i < num_bytes; ++i)                                     \
-        GST_BUFFER_DATA(buf)[i] = (g_rand_int (rand) >> 24) & 0xff;       \
+        data[i] = (g_rand_int (rand) >> 24) & 0xff;                       \
+      gst_buffer_unmap (buf, data, num_bytes);                            \
       fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK); \
       g_rand_free (rand);                                                 \
     } G_STMT_END

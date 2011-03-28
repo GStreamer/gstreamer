@@ -142,7 +142,7 @@ GST_START_TEST (test_audio)
   buffers = g_list_remove (buffers, outbuffer);
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 2);
   length = GST_DP_HEADER_LENGTH + (strlen (caps_string) + 1);
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
 
   /* the third buffer is the GDP buffer for our pushed buffer */
@@ -150,7 +150,7 @@ GST_START_TEST (test_audio)
   buffers = g_list_remove (buffers, outbuffer);
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   length = GST_DP_HEADER_LENGTH + 4;
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
 
   /* second buffer */
@@ -170,7 +170,7 @@ GST_START_TEST (test_audio)
 
   /* the third output buffer is data */
   length = GST_DP_HEADER_LENGTH + 4;
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
 
   /* a third buffer without caps set explicitly; should work */
@@ -189,7 +189,7 @@ GST_START_TEST (test_audio)
 
   /* the fourth output buffer is data */
   length = GST_DP_HEADER_LENGTH + 4;
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
 
 
@@ -263,7 +263,7 @@ GST_START_TEST (test_streamheader)
 
   GST_DEBUG ("first buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
-  memcpy (GST_BUFFER_DATA (inbuffer), "head", 4);
+  gst_buffer_fill (inbuffer, 0, "head", 4);
   caps = gst_caps_from_string ("application/x-gst-test-streamheader");
   structure = gst_caps_get_structure (caps, 0);
   GST_BUFFER_FLAG_SET (inbuffer, GST_BUFFER_FLAG_IN_CAPS);
@@ -316,7 +316,7 @@ GST_START_TEST (test_streamheader)
   buffers = g_list_remove (buffers, outbuffer);
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 2);
   length = GST_DP_HEADER_LENGTH + (strlen (caps_string) + 1);
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
 
   /* the third buffer is the GDP buffer for our pushed buffer */
@@ -324,7 +324,7 @@ GST_START_TEST (test_streamheader)
   buffers = g_list_remove (buffers, outbuffer);
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   length = GST_DP_HEADER_LENGTH + 4;
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
 
   /* second buffer */
@@ -344,7 +344,7 @@ GST_START_TEST (test_streamheader)
 
   /* the third output buffer is data */
   length = GST_DP_HEADER_LENGTH + 4;
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
 
   /* a third buffer without caps set explicitly; should work */
@@ -363,7 +363,7 @@ GST_START_TEST (test_streamheader)
 
   /* the fourth output buffer is data */
   length = GST_DP_HEADER_LENGTH + 4;
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
 
 
@@ -464,6 +464,8 @@ GST_START_TEST (test_crc)
   GstEvent *event;
   gchar *caps_string;
   gint length;
+  guint8 *data;
+  gsize size;
   guint16 crc_calculated, crc_read;
 
   gdppay = setup_gdppay ();
@@ -503,16 +505,18 @@ GST_START_TEST (test_crc)
 
   /* verify the header checksum */
   /* CRC's start at 58 in the header */
-  crc_calculated = gst_dp_crc (GST_BUFFER_DATA (outbuffer), 58);
-  crc_read = GST_READ_UINT16_BE (GST_BUFFER_DATA (outbuffer) + 58);
+  data = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READWRITE);
+  crc_calculated = gst_dp_crc (data, 58);
+  crc_read = GST_READ_UINT16_BE (data + 58);
   fail_unless_equals_int (crc_calculated, crc_read);
 
   /* change a byte in the header and verify that the checksum now fails */
-  GST_BUFFER_DATA (outbuffer)[0] = 0xff;
-  crc_calculated = gst_dp_crc (GST_BUFFER_DATA (outbuffer), 58);
+  data[0] = 0xff;
+  crc_calculated = gst_dp_crc (data, 58);
   fail_if (crc_calculated == crc_read,
       "Introducing a byte error in the header should make the checksum fail");
 
+  gst_buffer_unmap (outbuffer, data, size);
   gst_buffer_unref (outbuffer);
 
   /* second buffer is the serialized caps;
@@ -521,7 +525,7 @@ GST_START_TEST (test_crc)
   buffers = g_list_remove (buffers, outbuffer);
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 2);
   length = GST_DP_HEADER_LENGTH + (strlen (caps_string) + 1);
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
 
   /* the third buffer is the GDP buffer for our pushed buffer */
@@ -529,7 +533,7 @@ GST_START_TEST (test_crc)
   buffers = g_list_remove (buffers, outbuffer);
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   length = GST_DP_HEADER_LENGTH + 4;
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), length);
   gst_buffer_unref (outbuffer);
 
   fail_unless (gst_element_set_state (gdppay,

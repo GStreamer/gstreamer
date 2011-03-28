@@ -147,7 +147,7 @@ GST_START_TEST (test_identification_header)
   bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (30);
-  memcpy (GST_BUFFER_DATA (inbuffer), identification_header, 30);
+  gst_buffer_fill (inbuffer, 0, identification_header, 30);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -161,7 +161,7 @@ GST_START_TEST (test_identification_header)
   fail_if ((message = gst_bus_pop (bus)) != NULL);
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (comment_header));
-  memcpy (GST_BUFFER_DATA (inbuffer), comment_header, sizeof (comment_header));
+  gst_buffer_fill (inbuffer, 0, comment_header, sizeof (comment_header));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -214,7 +214,7 @@ _create_codebook_header_buffer (void)
   vorbis_analysis_headerout (&vd, &vc, &header, &header_comm, &header_code);
 
   buffer = gst_buffer_new_and_alloc (header_code.bytes);
-  memcpy (GST_BUFFER_DATA (buffer), header_code.packet, header_code.bytes);
+  gst_buffer_fill (buffer, 0, header_code.packet, header_code.bytes);
 
   return buffer;
 }
@@ -236,7 +236,7 @@ _create_audio_buffer (void)
   vorbis_bitrate_addblock (&vb);
   vorbis_bitrate_flushpacket (&vd, &packet);
   buffer = gst_buffer_new_and_alloc (packet.bytes);
-  memcpy (GST_BUFFER_DATA (buffer), packet.packet, packet.bytes);
+  gst_buffer_fill (buffer, 0, packet.packet, packet.bytes);
 
   vorbis_comment_clear (&vc);
   vorbis_block_clear (&vb);
@@ -260,7 +260,7 @@ GST_START_TEST (test_empty_vorbis_packet)
   bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (30);
-  memcpy (GST_BUFFER_DATA (inbuffer), identification_header, 30);
+  gst_buffer_fill (inbuffer, 0, identification_header, 30);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -275,7 +275,7 @@ GST_START_TEST (test_empty_vorbis_packet)
   fail_if ((message = gst_bus_pop (bus)) != NULL);
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (comment_header));
-  memcpy (GST_BUFFER_DATA (inbuffer), comment_header, sizeof (comment_header));
+  gst_buffer_fill (inbuffer, 0, comment_header, sizeof (comment_header));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 

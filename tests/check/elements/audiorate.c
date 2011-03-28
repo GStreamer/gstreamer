@@ -277,11 +277,12 @@ do_perfect_stream_test (guint rate, guint width, gdouble drop_probability,
     }
 
     /* check buffer size for sanity */
-    fail_unless_equals_int (GST_BUFFER_SIZE (buf) % (width / 8), 0);
+    fail_unless_equals_int (gst_buffer_get_size (buf) % (width / 8), 0);
 
     /* check there is actually as much data as there should be */
     num_samples = GST_BUFFER_OFFSET_END (buf) - GST_BUFFER_OFFSET (buf);
-    fail_unless_equals_int (GST_BUFFER_SIZE (buf), num_samples * (width / 8));
+    fail_unless_equals_int (gst_buffer_get_size (buf),
+        num_samples * (width / 8));
 
     next_time = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
     next_offset = GST_BUFFER_OFFSET_END (buf);

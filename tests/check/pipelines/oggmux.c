@@ -162,16 +162,14 @@ eos_buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
 {
   gint ret;
   gint size;
-  guint8 *data;
   gchar *oggbuffer;
   ChainState *state = NULL;
   gboolean has_video = FALSE;
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  size = gst_buffer_get_size (buffer);
 
   oggbuffer = ogg_sync_buffer (&oggsync, size);
-  memcpy (oggbuffer, data, size);
+  gst_buffer_extract (buffer, 0, oggbuffer, size);
   ogg_sync_wrote (&oggsync, size);
 
   do {

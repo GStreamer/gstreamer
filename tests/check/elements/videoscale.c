@@ -240,9 +240,15 @@ GST_START_TEST (test_passthrough)
           l1 = l1->next, l2 = l2->next) {
         GstBuffer *a = l1->data;
         GstBuffer *b = l2->data;
+        gsize sa, sb;
+        guint8 *pa, *pb;
 
-        fail_unless_equals_int (GST_BUFFER_SIZE (a), GST_BUFFER_SIZE (b));
-        fail_unless (GST_BUFFER_DATA (a) == GST_BUFFER_DATA (b));
+        pa = gst_buffer_map (a, &sa, NULL, GST_MAP_READ);
+        pb = gst_buffer_map (b, &sb, NULL, GST_MAP_READ);
+        fail_unless_equals_int (sa, sb);
+        fail_unless (pa == pb);
+        gst_buffer_unmap (b, pb, sb);
+        gst_buffer_unmap (a, pa, sa);
 
         gst_buffer_unref (a);
         gst_buffer_unref (b);

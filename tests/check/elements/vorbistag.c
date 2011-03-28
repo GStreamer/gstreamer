@@ -160,6 +160,19 @@ stop_pipeline (GstElement * element)
   pending_buffers = NULL;
 }
 
+static void
+compare_buffer (GstBuffer * buf, const guint8 * data, gsize size)
+{
+  guint8 *bdata;
+  gsize bsize;
+
+  bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+  fail_unless_equals_int (bsize, size);
+  fail_unless_equals_int (memcmp (bdata,
+          title_comment_header, sizeof (title_comment_header)), 0);
+  gst_buffer_unmap (buf, bdata, bsize);
+}
+
 static vorbis_comment vc;
 static vorbis_dsp_state vd;
 static vorbis_info vi;
@@ -182,7 +195,7 @@ _create_codebook_header_buffer (void)
   vorbis_analysis_headerout (&vd, &vc, &header, &header_comm, &header_code);
 
   buffer = gst_buffer_new_and_alloc (header_code.bytes);
-  memcpy (GST_BUFFER_DATA (buffer), header_code.packet, header_code.bytes);
+  gst_buffer_fill (buffer, 0, header_code.packet, header_code.bytes);
 
   return buffer;
 }
@@ -201,7 +214,7 @@ _create_audio_buffer (void)
   vorbis_bitrate_addblock (&vb);
   vorbis_bitrate_flushpacket (&vd, &packet);
   buffer = gst_buffer_new_and_alloc (packet.bytes);
-  memcpy (GST_BUFFER_DATA (buffer), packet.packet, packet.bytes);
+  gst_buffer_fill (buffer, 0, packet.packet, packet.bytes);
 
   vorbis_comment_clear (&vc);
   vorbis_block_clear (&vb);
@@ -232,13 +245,13 @@ GST_START_TEST (test_empty_tags_set)
 
   /* send identification header */
   inbuffer = gst_buffer_new_and_alloc (sizeof (identification_header));
-  memcpy (GST_BUFFER_DATA (inbuffer), identification_header,
+  gst_buffer_fill (inbuffer, 0, identification_header,
       sizeof (identification_header));
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
 
   /* send empty comment buffer */
   inbuffer = gst_buffer_new_and_alloc (sizeof (empty_comment_header));
-  memcpy (GST_BUFFER_DATA (inbuffer), empty_comment_header,
+  gst_buffer_fill (inbuffer, 0, empty_comment_header,
       sizeof (empty_comment_header));
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
 
@@ -251,18 +264,14 @@ GST_START_TEST (test_empty_tags_set)
 
   /* check identification header is unchanged */
   outbuffer = get_buffer ();
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer),
+  compare_buffer (outbuffer, identification_header,
       sizeof (identification_header));
-  fail_unless_equals_int (memcmp (GST_BUFFER_DATA (outbuffer),
-          identification_header, sizeof (identification_header)), 0);
   gst_buffer_unref (outbuffer);
 
   /* check comment header is correct */
   outbuffer = get_buffer ();
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer),
+  compare_buffer (outbuffer, title_comment_header,
       sizeof (title_comment_header));
-  fail_unless_equals_int (memcmp (GST_BUFFER_DATA (outbuffer),
-          title_comment_header, sizeof (title_comment_header)), 0);
   gst_buffer_unref (outbuffer);
 
   stop_pipeline (vorbistag);
@@ -291,13 +300,13 @@ GST_START_TEST (test_filled_tags_unset)
 
   /* send identification header */
   inbuffer = gst_buffer_new_and_alloc (sizeof (identification_header));
-  memcpy (GST_BUFFER_DATA (inbuffer), identification_header,
+  gst_buffer_fill (inbuffer, 0, identification_header,
       sizeof (identification_header));
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
 
   /* send empty comment buffer */
   inbuffer = gst_buffer_new_and_alloc (sizeof (title_comment_header));
-  memcpy (GST_BUFFER_DATA (inbuffer), title_comment_header,
+  gst_buffer_fill (inbuffer, 0, title_comment_header,
       sizeof (title_comment_header));
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
 
@@ -310,18 +319,14 @@ GST_START_TEST (test_filled_tags_unset)
 
   /* check identification header is unchanged */
   outbuffer = get_buffer ();
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer),
+  compare_buffer (outbuffer, identification_header,
       sizeof (identification_header));
-  fail_unless_equals_int (memcmp (GST_BUFFER_DATA (outbuffer),
-          identification_header, sizeof (identification_header)), 0);
   gst_buffer_unref (outbuffer);
 
   /* check comment header is correct */
   outbuffer = get_buffer ();
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer),
+  compare_buffer (outbuffer, empty_comment_header,
       sizeof (empty_comment_header));
-  fail_unless_equals_int (memcmp (GST_BUFFER_DATA (outbuffer),
-          empty_comment_header, sizeof (empty_comment_header)), 0);
   gst_buffer_unref (outbuffer);
 
   stop_pipeline (vorbistag);
@@ -351,13 +356,13 @@ GST_START_TEST (test_filled_tags_change)
 
   /* send identification header */
   inbuffer = gst_buffer_new_and_alloc (sizeof (identification_header));
-  memcpy (GST_BUFFER_DATA (inbuffer), identification_header,
+  gst_buffer_fill (inbuffer, 0, identification_header,
       sizeof (identification_header));
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
 
   /* send empty comment buffer */
   inbuffer = gst_buffer_new_and_alloc (sizeof (artist_comment_header));
-  memcpy (GST_BUFFER_DATA (inbuffer), artist_comment_header,
+  gst_buffer_fill (inbuffer, 0, artist_comment_header,
       sizeof (artist_comment_header));
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
 
@@ -370,18 +375,14 @@ GST_START_TEST (test_filled_tags_change)
 
   /* check identification header is unchanged */
   outbuffer = get_buffer ();
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer),
+  compare_buffer (outbuffer, identification_header,
       sizeof (identification_header));
-  fail_unless_equals_int (memcmp (GST_BUFFER_DATA (outbuffer),
-          identification_header, sizeof (identification_header)), 0);
   gst_buffer_unref (outbuffer);
 
   /* check comment header is correct */
   outbuffer = get_buffer ();
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer),
+  compare_buffer (outbuffer, title_comment_header,
       sizeof (title_comment_header));
-  fail_unless_equals_int (memcmp (GST_BUFFER_DATA (outbuffer),
-          title_comment_header, sizeof (title_comment_header)), 0);
   gst_buffer_unref (outbuffer);
 
   stop_pipeline (vorbistag);

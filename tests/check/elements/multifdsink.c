@@ -121,7 +121,7 @@ GST_START_TEST (test_add_client)
   buffer = gst_buffer_new_and_alloc (4);
   gst_buffer_set_caps (buffer, caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
-  memcpy (GST_BUFFER_DATA (buffer), "dead", 4);
+  gst_buffer_fill (buffer, 0, "dead", 4);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
   GST_DEBUG ("reading");
@@ -176,10 +176,10 @@ gst_multifdsink_create_streamheader (const gchar * data1,
    * buffers */
   *hbuf1 = gst_buffer_new_and_alloc (size1);
   GST_BUFFER_FLAG_SET (*hbuf1, GST_BUFFER_FLAG_IN_CAPS);
-  memcpy (GST_BUFFER_DATA (*hbuf1), data1, size1);
+  gst_buffer_fill (*hbuf1, 0, data1, size1);
   *hbuf2 = gst_buffer_new_and_alloc (size2);
   GST_BUFFER_FLAG_SET (*hbuf2, GST_BUFFER_FLAG_IN_CAPS);
-  memcpy (GST_BUFFER_DATA (*hbuf2), data2, size2);
+  gst_buffer_fill (*hbuf2, 0, data2, size2);
 
   g_value_init (&array, GST_TYPE_ARRAY);
 
@@ -265,7 +265,7 @@ GST_START_TEST (test_streamheader)
   /* push a non-IN_CAPS buffer, this should trigger the client receiving the
    * first three buffers */
   buf = gst_buffer_new_and_alloc (4);
-  memcpy (GST_BUFFER_DATA (buf), "f00d", 4);
+  gst_buffer_fill (buf, 0, "f00d", 4);
   gst_pad_push (mysrcpad, buf);
 
   fail_unless_read ("first client", pfd1[0], 4, "babe");
@@ -281,7 +281,7 @@ GST_START_TEST (test_streamheader)
   /* now push another buffer, which will trigger streamheader for second
    * client */
   buf = gst_buffer_new_and_alloc (4);
-  memcpy (GST_BUFFER_DATA (buf), "deaf", 4);
+  gst_buffer_fill (buf, 0, "deaf", 4);
   gst_pad_push (mysrcpad, buf);
 
   fail_unless_read ("first client", pfd1[0], 4, "deaf");
@@ -360,7 +360,7 @@ GST_START_TEST (test_change_streamheader)
 
   /* now push a buffer and read */
   buf = gst_buffer_new_and_alloc (4);
-  memcpy (GST_BUFFER_DATA (buf), "f00d", 4);
+  gst_buffer_fill (buf, 0, "f00d", 4);
   gst_pad_push (mysrcpad, buf);
 
   fail_unless_read ("change: first client", pfd1[0], 5, "first");
@@ -400,7 +400,7 @@ GST_START_TEST (test_change_streamheader)
   /* now push another buffer, which will trigger streamheader for second
    * client, but should also send new streamheaders to first client */
   buf = gst_buffer_new_and_alloc (8);
-  memcpy (GST_BUFFER_DATA (buf), "deadbabe", 8);
+  gst_buffer_fill (buf, 0, "deadbabe", 8);
   gst_pad_push (mysrcpad, buf);
 
   fail_unless_read ("first client", pfd1[0], 6, "second");
@@ -469,8 +469,9 @@ GST_START_TEST (test_burst_client_bytes)
     gst_buffer_set_caps (buffer, caps);
 
     /* copy some id */
-    data = (gchar *) GST_BUFFER_DATA (buffer);
+    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
     g_snprintf (data, 16, "deadbee%08x", i);
+    gst_buffer_unmap (buffer, data, 16);
 
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   }
@@ -494,8 +495,9 @@ GST_START_TEST (test_burst_client_bytes)
     gst_buffer_set_caps (buffer, caps);
 
     /* copy some id */
-    data = (gchar *) GST_BUFFER_DATA (buffer);
+    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
     g_snprintf (data, 16, "deadbee%08x", i);
+    gst_buffer_unmap (buffer, data, 16);
 
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   }
@@ -586,8 +588,9 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
     /* copy some id */
-    data = (gchar *) GST_BUFFER_DATA (buffer);
+    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
     g_snprintf (data, 16, "deadbee%08x", i);
+    gst_buffer_unmap (buffer, data, 16);
 
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   }
@@ -612,8 +615,9 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
     /* copy some id */
-    data = (gchar *) GST_BUFFER_DATA (buffer);
+    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
     g_snprintf (data, 16, "deadbee%08x", i);
+    gst_buffer_unmap (buffer, data, 16);
 
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   }
@@ -701,8 +705,9 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
     /* copy some id */
-    data = (gchar *) GST_BUFFER_DATA (buffer);
+    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
     g_snprintf (data, 16, "deadbee%08x", i);
+    gst_buffer_unmap (buffer, data, 16);
 
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   }
@@ -727,8 +732,9 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
     /* copy some id */
-    data = (gchar *) GST_BUFFER_DATA (buffer);
+    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
     g_snprintf (data, 16, "deadbee%08x", i);
+    gst_buffer_unmap (buffer, data, 16);
 
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   }
@@ -813,8 +819,9 @@ GST_START_TEST (test_client_next_keyframe)
     gst_buffer_set_caps (buffer, caps);
 
     /* copy some id */
-    data = (gchar *) GST_BUFFER_DATA (buffer);
+    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
     g_snprintf (data, 16, "deadbee%08x", i);
+    gst_buffer_unmap (buffer, data, 16);
     if (i > 0)
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 

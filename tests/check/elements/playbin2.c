@@ -588,10 +588,11 @@ gst_red_video_src_create (GstPushSrc * src, GstBuffer ** p_buf)
 
   size = w * h * 3 / 2;
   buf = gst_buffer_new_and_alloc (size);
-  data = GST_BUFFER_DATA (buf);
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   memset (data, 76, w * h);
   memset (data + (w * h), 85, (w * h) / 4);
   memset (data + (w * h) + ((w * h) / 4), 255, (w * h) / 4);
+  gst_buffer_unmap (buf, data, size);
 
   caps = gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
       GST_MAKE_FOURCC ('I', '4', '2', '0'), "width", G_TYPE_INT, w, "height",
@@ -694,9 +695,12 @@ gst_codec_src_create (GstPushSrc * src, GstBuffer ** p_buf)
 {
   GstBuffer *buf;
   GstCaps *caps;
+  guint8 *data;
 
   buf = gst_buffer_new_and_alloc (20);
-  memset (GST_BUFFER_DATA (buf), 0, GST_BUFFER_SIZE (buf));
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  memset (data, 0, 20);
+  gst_buffer_unmap (buf, data, 20);
 
   caps = gst_caps_new_simple ("application/x-codec", NULL);
   gst_buffer_set_caps (buf, caps);

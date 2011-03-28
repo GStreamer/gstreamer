@@ -396,7 +396,7 @@ GST_START_TEST (test_loading_profile)
   GstEncodingProfile *profile;
   GstCaps *tmpcaps;
   GValue strvalue = { 0, };
-  GValue miniobjectvalue = { 0, };
+  GValue objectvalue = { 0, };
 
   /* Test loading using short method and all arguments */
   target = gst_encoding_target_load ("myponytarget", "herding", NULL);
@@ -442,13 +442,13 @@ GST_START_TEST (test_loading_profile)
 
   /* For my next trick, I will need the assistance of a GValue */
   g_value_init (&strvalue, G_TYPE_STRING);
-  g_value_init (&miniobjectvalue, GST_TYPE_ENCODING_PROFILE);
+  g_value_init (&objectvalue, GST_TYPE_ENCODING_PROFILE);
   g_value_set_static_string (&strvalue, "myponytarget/pony");
-  fail_unless (g_value_transform (&strvalue, &miniobjectvalue));
-  profile = (GstEncodingProfile *) gst_value_dup_mini_object (&miniobjectvalue);
+  fail_unless (g_value_transform (&strvalue, &objectvalue));
+  profile = (GstEncodingProfile *) g_value_dup_object (&objectvalue);
   fail_if (profile == NULL);
   g_value_unset (&strvalue);
-  g_value_unset (&miniobjectvalue);
+  g_value_unset (&objectvalue);
   tmpcaps = gst_caps_from_string ("animal/x-pony");
   CHECK_PROFILE (profile, "pony", "I don't want a description !", tmpcaps, NULL,
       0, 0);

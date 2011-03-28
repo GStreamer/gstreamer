@@ -43,11 +43,14 @@ static GstBuffer *
 buffer_from_static_string (const gchar * s)
 {
   GstBuffer *buf;
+  gsize len;
+
+  len = strlen (s);
 
   buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = (guint8 *) s;
-  GST_BUFFER_SIZE (buf) = strlen (s);
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          (gpointer) s, NULL, len, 0, len));
 
   return buf;
 }
@@ -209,7 +212,7 @@ test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
     const GstStructure *buffer_caps_struct;
     GstBuffer *buf;
     gchar *out;
-    guint out_size;
+    gsize out_size;
 
     buf = g_list_nth_data (buffers, n - start_idx);
     fail_unless (buf != NULL);
@@ -218,8 +221,8 @@ test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
     fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (buf), input[n].from_ts);
     fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf),
         input[n].to_ts - input[n].from_ts);
-    out = (gchar *) GST_BUFFER_DATA (buf);
-    out_size = GST_BUFFER_SIZE (buf);
+
+    out = gst_buffer_map (buf, &out_size, NULL, GST_MAP_READ);
     /* shouldn't have trailing newline characters */
     fail_if (out_size > 0 && out[out_size - 1] == '\n');
     /* shouldn't include NUL-terminator in data size */
@@ -228,6 +231,7 @@ test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
     fail_unless_equals_int (out[out_size], '\0');
     /* make sure out string matches expected string */
     fail_unless_equals_string (out, input[n].out);
+    gst_buffer_unmap (buf, out, out_size);
     /* check caps */
     fail_unless (GST_BUFFER_CAPS (buf) != NULL);
     buffer_caps_struct = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
@@ -288,7 +292,7 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
     const GstStructure *buffer_caps_struct;
     GstBuffer *buf;
     gchar *out;
-    guint out_size;
+    gsize out_size;
 
     buf = g_list_nth_data (buffers, n);
     fail_unless (buf != NULL);
@@ -305,8 +309,7 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
           input[n].to_ts - input[n].from_ts);
     }
 
-    out = (gchar *) GST_BUFFER_DATA (buf);
-    out_size = GST_BUFFER_SIZE (buf);
+    out = gst_buffer_map (buf, &out_size, NULL, GST_MAP_READ);
     /* shouldn't have trailing newline characters */
     fail_if (out_size > 0 && out[out_size - 1] == '\n');
     /* shouldn't include NUL-terminator in data size */
@@ -315,6 +318,7 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
     fail_unless_equals_int (out[out_size], '\0');
     /* make sure out string matches expected string */
     fail_unless_equals_string (out, input[n].out);
+    gst_buffer_unmap (buf, out, out_size);
     /* check caps */
     fail_unless (GST_BUFFER_CAPS (buf) != NULL);
     buffer_caps_struct = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);

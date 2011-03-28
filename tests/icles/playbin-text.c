@@ -94,7 +94,7 @@ have_subtitle (GstElement * appsink, App * app)
 
   if (buffer) {
     guint8 *data;
-    guint size;
+    gsize size;
     GstFormat format;
     gint64 position;
     GstClock *clock;
@@ -114,10 +114,9 @@ have_subtitle (GstElement * appsink, App * app)
         ", running_time %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
         GST_TIME_ARGS (running_time));
 
-    data = GST_BUFFER_DATA (buffer);
-    size = GST_BUFFER_SIZE (buffer);
-
+    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
     gst_util_dump_mem (data, size);
+    gst_buffer_unmap (buffer, data, size);
   }
 }
 
