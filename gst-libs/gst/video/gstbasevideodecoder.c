@@ -406,18 +406,18 @@ gst_base_video_decoder_src_convert (GstPad * pad,
     GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
-  GstBaseVideoDecoder *enc;
+  GstBaseVideoDecoder *dec;
 
   if (src_format == *dest_format) {
     *dest_value = src_value;
     return TRUE;
   }
 
-  enc = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  dec = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
 
   /* FIXME: check if we are in a encoding state */
 
-  GST_DEBUG_OBJECT (enc, "src convert");
+  GST_DEBUG_OBJECT (dec, "src convert");
   switch (src_format) {
 #if 0
     case GST_FORMAT_DEFAULT:
@@ -449,7 +449,7 @@ gst_base_video_decoder_src_convert (GstPad * pad,
       break;
   }
 
-  gst_object_unref (enc);
+  gst_object_unref (dec);
 
   return res;
 }
@@ -470,10 +470,10 @@ gst_base_video_decoder_get_query_types (GstPad * pad)
 static gboolean
 gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
 {
-  GstBaseVideoDecoder *enc;
+  GstBaseVideoDecoder *dec;
   gboolean res = TRUE;
 
-  enc = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  dec = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
 
   switch GST_QUERY_TYPE
     (query) {
@@ -483,15 +483,15 @@ gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
       gint64 time;
 
       gst_query_parse_position (query, &format, NULL);
-      GST_DEBUG_OBJECT (enc, "query in format %d", format);
+      GST_DEBUG_OBJECT (dec, "query in format %d", format);
 
       if (format != GST_FORMAT_TIME) {
         goto error;
       }
 
-      time = enc->last_timestamp;
+      time = dec->last_timestamp;
       time =
-          gst_segment_to_stream_time (&GST_BASE_VIDEO_CODEC (enc)->segment,
+          gst_segment_to_stream_time (&GST_BASE_VIDEO_CODEC (dec)->segment,
           GST_FORMAT_TIME, time);
 
       gst_query_set_position (query, format, time);
@@ -502,7 +502,7 @@ gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
-      res = gst_pad_peer_query (enc->base_video_codec.sinkpad, query);
+      res = gst_pad_peer_query (dec->base_video_codec.sinkpad, query);
       break;
     }
     case GST_QUERY_CONVERT:
@@ -510,7 +510,7 @@ gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      GST_DEBUG_OBJECT (enc, "convert query");
+      GST_DEBUG_OBJECT (dec, "convert query");
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       res =
@@ -524,12 +524,12 @@ gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
     default:
       res = gst_pad_query_default (pad, query);
     }
-  gst_object_unref (enc);
+  gst_object_unref (dec);
   return res;
 
 error:
-  GST_ERROR_OBJECT (enc, "query failed");
-  gst_object_unref (enc);
+  GST_ERROR_OBJECT (dec, "query failed");
+  gst_object_unref (dec);
   return res;
 }
 
