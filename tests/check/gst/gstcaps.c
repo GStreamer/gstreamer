@@ -728,6 +728,90 @@ GST_START_TEST (test_intersect2)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_intersect_zigzag)
+{
+  GstCaps *caps1, *caps2, *icaps, *result;
+
+  /* tests if caps order is maintained */
+  caps1 = gst_caps_from_string ("format/A; format/B; format/C; format/D");
+  caps2 = gst_caps_from_string ("format/D; format/A; format/B; format/C");
+
+  icaps = gst_caps_intersect_full (caps1, caps2, GST_CAPS_INTERSECT_ZIG_ZAG);
+  result = gst_caps_from_string ("format/B; format/A; format/D; format/C");
+  GST_LOG ("intersected caps: %" GST_PTR_FORMAT, icaps);
+  fail_if (gst_caps_is_empty (icaps));
+  fail_unless (gst_caps_is_equal (icaps, result));
+  gst_caps_unref (icaps);
+  gst_caps_unref (result);
+
+  icaps = gst_caps_intersect_full (caps2, caps1, GST_CAPS_INTERSECT_FIRST);
+  result = gst_caps_from_string ("format/A; format/B; format/D; format/C");
+  GST_LOG ("intersected caps: %" GST_PTR_FORMAT, icaps);
+  fail_if (gst_caps_is_empty (icaps));
+  fail_unless (gst_caps_is_equal (icaps, result));
+  gst_caps_unref (icaps);
+  gst_caps_unref (result);
+
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_intersect_first)
+{
+  GstCaps *caps1, *caps2, *icaps, *result;
+
+  /* tests if caps order is maintained */
+  caps1 = gst_caps_from_string ("format/A; format/B; format/C; format/D");
+  caps2 = gst_caps_from_string ("format/C; format/D; format/A");
+  icaps = gst_caps_intersect_full (caps1, caps2, GST_CAPS_INTERSECT_FIRST);
+  result = gst_caps_from_string ("format/A; format/C; format/D");
+  GST_LOG ("intersected caps: %" GST_PTR_FORMAT, icaps);
+  fail_if (gst_caps_is_empty (icaps));
+  fail_unless (gst_caps_is_equal (icaps, result));
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+  gst_caps_unref (icaps);
+  gst_caps_unref (result);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_intersect_first2)
+{
+  GstCaps *caps1, *caps2, *icaps, *result;
+
+  /* tests if caps order is maintained */
+  caps1 = gst_caps_from_string ("format/A; format/B; format/C; format/D");
+  caps2 = gst_caps_from_string ("format/D; format/A; format/B; format/C");
+
+  icaps = gst_caps_intersect_full (caps1, caps2, GST_CAPS_INTERSECT_FIRST);
+  result = gst_caps_from_string ("format/A; format/B; format/C; format/D");
+  GST_LOG ("intersected caps: %" GST_PTR_FORMAT, icaps);
+  fail_if (gst_caps_is_empty (icaps));
+  fail_unless (gst_caps_is_equal (icaps, result));
+  gst_caps_unref (icaps);
+  gst_caps_unref (result);
+
+  icaps = gst_caps_intersect_full (caps2, caps1, GST_CAPS_INTERSECT_FIRST);
+  result = gst_caps_from_string ("format/D; format/A; format/B; format/C");
+  GST_LOG ("intersected caps: %" GST_PTR_FORMAT, icaps);
+  fail_if (gst_caps_is_empty (icaps));
+  fail_unless (gst_caps_is_equal (icaps, result));
+  gst_caps_unref (icaps);
+  gst_caps_unref (result);
+
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+}
+
+GST_END_TEST;
+
+
 static gboolean
 _caps_is_fixed_foreach (GQuark field_id, const GValue * value, gpointer unused)
 {
@@ -834,6 +918,9 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_merge_subset);
   tcase_add_test (tc_chain, test_intersect);
   tcase_add_test (tc_chain, test_intersect2);
+  tcase_add_test (tc_chain, test_intersect_zigzag);
+  tcase_add_test (tc_chain, test_intersect_first);
+  tcase_add_test (tc_chain, test_intersect_first2);
   tcase_add_test (tc_chain, test_normalize);
   tcase_add_test (tc_chain, test_broken);
 

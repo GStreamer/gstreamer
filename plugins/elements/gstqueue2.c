@@ -369,7 +369,7 @@ gst_queue2_class_init (GstQueue2Class * klass)
       g_param_spec_uint64 ("ring-buffer-max-size",
           "Max. ring buffer size (bytes)",
           "Max. amount of data in the ring buffer (bytes, 0 = disabled",
-          0, G_MAXUINT, DEFAULT_RING_BUFFER_MAX_SIZE,
+          0, G_MAXUINT64, DEFAULT_RING_BUFFER_MAX_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* set several parent class virtual functions */
@@ -766,7 +766,7 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
-  /* if no timestamp is set, assume it's continuous with the previous 
+  /* if no timestamp is set, assume it's continuous with the previous
    * time */
   if (timestamp == GST_CLOCK_TIME_NONE)
     timestamp = segment->last_stop;

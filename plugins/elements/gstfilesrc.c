@@ -764,11 +764,11 @@ gst_file_src_create_mmap (GstFileSrc * src, guint64 offset, guint length,
 
   /* if we need to touch the buffer (to bring it into memory), do so */
   if (src->touch) {
-    volatile guchar *p = GST_BUFFER_DATA (buf), c;
+    volatile guchar *p = GST_BUFFER_DATA (buf);
 
     /* read first byte of each page */
     for (i = 0; i < GST_BUFFER_SIZE (buf); i += src->pagesize)
-      c = p[i];
+      (void) p[i];
   }
 
   /* we're done, return the buffer */

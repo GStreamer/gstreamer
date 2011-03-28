@@ -179,6 +179,8 @@ EXPORTS
 	gst_caps_get_size
 	gst_caps_get_structure
 	gst_caps_intersect
+	gst_caps_intersect_full
+	gst_caps_intersect_mode_get_type
 	gst_caps_is_always_compatible
 	gst_caps_is_any
 	gst_caps_is_empty

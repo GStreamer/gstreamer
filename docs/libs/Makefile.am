@@ -54,7 +54,8 @@ SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
 MKDB_OPTIONS=--sgml-mode --output-format=xml
 
 # Extra options to supply to gtkdoc-fixref.
-FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \
+FIXXREF_OPTIONS=--extra-dir=$(top_builddir)/docs/gst/html \
+	--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \
 	--extra-dir=$(datadir)/gtk-doc/html
 
 # Used for dependencies.

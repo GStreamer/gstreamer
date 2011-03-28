@@ -459,7 +459,7 @@ G_STMT_START {                                                          \
  *
  * Utility function that elements can use in case they want to inform
  * the application of something noteworthy that is not an error.
- * The pipeline will post a warning message and the
+ * The pipeline will post a info message and the
  * application will be informed.
  *
  * Since: 0.10.12

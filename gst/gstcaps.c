@@ -1301,18 +1301,8 @@ gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
   return FALSE;
 }
 
-/**
- * gst_caps_intersect:
- * @caps1: a #GstCaps to intersect
- * @caps2: a #GstCaps to intersect
- *
- * Creates a new #GstCaps that contains all the formats that are common
- * to both @caps1 and @caps2.
- *
- * Returns: the new #GstCaps
- */
-GstCaps *
-gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
+static GstCaps *
+gst_caps_intersect_zig_zag (const GstCaps * caps1, const GstCaps * caps2)
 {
   guint64 i;                    /* index can be up to 2 * G_MAX_UINT */
   guint j, k, len1, len2;
@@ -1321,9 +1311,6 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
   GstStructure *struct2;
   GstCaps *dest;
   GstStructure *istruct;
-
-  g_return_val_if_fail (GST_IS_CAPS (caps1), NULL);
-  g_return_val_if_fail (GST_IS_CAPS (caps2), NULL);
 
   /* caps are exactly the same pointers, just copy one caps */
   if (G_UNLIKELY (caps1 == caps2))
@@ -1384,6 +1371,109 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
   }
   return dest;
 }
+
+/**
+ * gst_caps_intersect_first:
+ * @caps1: a #GstCaps to intersect
+ * @caps2: a #GstCaps to intersect
+ *
+ * Creates a new #GstCaps that contains all the formats that are common
+ * to both @caps1 and @caps2.
+ *
+ * Unlike @gst_caps_intersect, the returned caps will be ordered in a similar
+ * fashion as @caps1.
+ *
+ * Returns: the new #GstCaps
+ */
+static GstCaps *
+gst_caps_intersect_first (const GstCaps * caps1, const GstCaps * caps2)
+{
+  guint64 i;                    /* index can be up to 2 * G_MAX_UINT */
+  guint j, len1, len2;
+
+  GstStructure *struct1;
+  GstStructure *struct2;
+  GstCaps *dest;
+  GstStructure *istruct;
+
+  /* caps are exactly the same pointers, just copy one caps */
+  if (G_UNLIKELY (caps1 == caps2))
+    return gst_caps_copy (caps1);
+
+  /* empty caps on either side, return empty */
+  if (G_UNLIKELY (CAPS_IS_EMPTY (caps1) || CAPS_IS_EMPTY (caps2)))
+    return gst_caps_new_empty ();
+
+  /* one of the caps is any, just copy the other caps */
+  if (G_UNLIKELY (CAPS_IS_ANY (caps1)))
+    return gst_caps_copy (caps2);
+  if (G_UNLIKELY (CAPS_IS_ANY (caps2)))
+    return gst_caps_copy (caps1);
+
+  dest = gst_caps_new_empty ();
+
+  len1 = caps1->structs->len;
+  len2 = caps2->structs->len;
+  for (i = 0; i < len1; i++) {
+    struct1 = gst_caps_get_structure_unchecked (caps1, i);
+    for (j = 0; j < len2; j++) {
+      struct2 = gst_caps_get_structure_unchecked (caps2, j);
+      istruct = gst_caps_structure_intersect (struct1, struct2);
+      if (istruct)
+        gst_caps_append_structure (dest, istruct);
+    }
+  }
+
+  return dest;
+}
+
+/**
+ * gst_caps_intersect_full:
+ * @caps1: a #GstCaps to intersect
+ * @caps2: a #GstCaps to intersect
+ * @mode: The intersection algorithm/mode to use
+ *
+ * Creates a new #GstCaps that contains all the formats that are common
+ * to both @caps1 and @caps2, the order is defined by the #GstCapsIntersectMode
+ * used.
+ *
+ * Returns: the new #GstCaps
+ * Since: 0.10.33
+ */
+GstCaps *
+gst_caps_intersect_full (const GstCaps * caps1, const GstCaps * caps2,
+    GstCapsIntersectMode mode)
+{
+  g_return_val_if_fail (GST_IS_CAPS (caps1), NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps2), NULL);
+
+  switch (mode) {
+    case GST_CAPS_INTERSECT_FIRST:
+      return gst_caps_intersect_first (caps1, caps2);
+    default:
+      g_warning ("Unknown caps intersect mode: %d", mode);
+      /* fallthrough */
+    case GST_CAPS_INTERSECT_ZIG_ZAG:
+      return gst_caps_intersect_zig_zag (caps1, caps2);
+  }
+}
+
+/**
+ * gst_caps_intersect:
+ * @caps1: a #GstCaps to intersect
+ * @caps2: a #GstCaps to intersect
+ *
+ * Creates a new #GstCaps that contains all the formats that are common
+ * to both @caps1 and @caps2. Defaults to %GST_CAPS_INTERSECT_ZIG_ZAG mode.
+ *
+ * Returns: the new #GstCaps
+ */
+GstCaps *
+gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
+{
+  return gst_caps_intersect_full (caps1, caps2, GST_CAPS_INTERSECT_ZIG_ZAG);
+}
+
 
 /* subtract operation */
 

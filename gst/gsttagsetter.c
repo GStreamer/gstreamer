@@ -77,9 +77,6 @@
 #include <gobject/gvaluecollector.h>
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_tag_interface_debug);
-#define GST_CAT_DEFAULT tag_tag_interface_debug
-
 static GQuark gst_tag_key;
 
 typedef struct
@@ -107,9 +104,6 @@ gst_tag_setter_get_type (void)
       0,
       NULL
     };
-
-    GST_DEBUG_CATEGORY_INIT (gst_tag_interface_debug, "GstTagInterface", 0,
-        "interfaces for tagging");
 
     _type = g_type_register_static (G_TYPE_INTERFACE, "GstTagSetter",
         &tag_setter_info, 0);

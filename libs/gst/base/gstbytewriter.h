@@ -181,7 +181,7 @@ _gst_byte_writer_next_pow2 (guint n)
 static inline gboolean
 _gst_byte_writer_ensure_free_space_inline (GstByteWriter * writer, guint size)
 {
-  guint8 *data;
+  gpointer data;
 
   if (G_LIKELY (size <= writer->alloc_size - writer->parent.byte))
     return TRUE;
@@ -195,7 +195,7 @@ _gst_byte_writer_ensure_free_space_inline (GstByteWriter * writer, guint size)
   if (G_UNLIKELY (data == NULL))
     return FALSE;
 
-  writer->parent.data = data;
+  writer->parent.data = (guint8 *) data;
 
   return TRUE;
 }

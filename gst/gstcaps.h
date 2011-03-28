@@ -47,6 +47,37 @@ typedef enum {
 } GstCapsFlags;
 
 /**
+ * GstCapsIntersectMode:
+ * @GST_CAPS_INTERSECT_ZIG_ZAG  : Zig-zags over both caps.
+ * @GST_CAPS_INTERSECT_FIRST    : Keeps the first caps order.
+ *
+ * Modes of caps intersection
+ * 
+ * #GST_CAPS_INTERSECT_ZIG_ZAG tries to preserve overall order of both caps
+ * by iterating on the caps' structures as the following matrix shows:
+ *          caps1
+ *       +-------------
+ *       | 1  2  4  7
+ * caps2 | 3  5  8 10
+ *       | 6  9 11 12
+ *
+ * Used when there is no explicit precedence of one caps over the other. e.g.
+ * tee's sink pad getcaps function, it will probe its src pad peers' for their
+ * caps and intersect them with this mode.
+ *
+ * #GST_CAPS_INTERSECT_FIRST is useful when an element wants to preserve
+ * another element's caps priority order when intersecting with its own caps.
+ * Example: If caps1 is [A, B, C] and caps2 is [E, B, D, A], the result
+ * would be [A, B], maintaining the first caps priority on the intersection.
+ *
+ * Since: 0.10.33
+ */
+typedef enum {
+  GST_CAPS_INTERSECT_ZIG_ZAG            =  0,
+  GST_CAPS_INTERSECT_FIRST              =  1
+} GstCapsIntersectMode;
+
+/**
  * GST_CAPS_ANY:
  *
  * Means that the element/pad can output 'anything'. Useful for elements
@@ -316,6 +347,9 @@ gboolean          gst_caps_can_intersect           (const GstCaps * caps1,
 /* operations */
 GstCaps *         gst_caps_intersect               (const GstCaps *caps1,
 						    const GstCaps *caps2);
+GstCaps *         gst_caps_intersect_full          (const GstCaps *caps1,
+						    const GstCaps *caps2,
+                                                    GstCapsIntersectMode mode);
 GstCaps *         gst_caps_subtract		   (const GstCaps *minuend,
 						    const GstCaps *subtrahend);
 GstCaps *         gst_caps_union                   (const GstCaps *caps1,

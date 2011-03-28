@@ -2331,7 +2331,7 @@ gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
   /* ERRORS */
 preroll_failed:
   {
-    GST_DEBUG_OBJECT (sink, "preroll failed %d", ret);
+    GST_DEBUG_OBJECT (sink, "preroll failed: %s", gst_flow_get_name (ret));
     return ret;
   }
 }

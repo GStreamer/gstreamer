@@ -200,7 +200,6 @@ release_wakeup (GstPoll * set)
 static inline gint
 release_all_wakeup (GstPoll * set)
 {
-  gboolean result;
   gint old;
 
   while (TRUE) {
@@ -211,7 +210,7 @@ release_all_wakeup (GstPoll * set)
     /* try to remove all pending control messages */
     if (g_atomic_int_compare_and_exchange (&set->control_pending, old, 0)) {
       /* we managed to remove all messages, read the control socket */
-      result = RELEASE_EVENT (set);
+      (void) RELEASE_EVENT (set);
       break;
     }
   }

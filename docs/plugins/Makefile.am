@@ -52,7 +52,9 @@ SCAN_OPTIONS=
 MKDB_OPTIONS=--sgml-mode
 
 # Extra options to supply to gtkdoc-fixref.
-FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \
+FIXXREF_OPTIONS=--extra-dir=$(top_builddir)/docs/gst/html \
+	--extra-dir=$(top_builddir)/docs/libs/html \
+	--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \
 	--extra-dir=$(datadir)/gtk-doc/html
 
 # Used for dependencies.

@@ -8,6 +8,7 @@ bytewriter
 gdp
 collectpads
 controller
+gstlibscpp
 gstnetclientclock
 gstnettimeprovider
 libsabi

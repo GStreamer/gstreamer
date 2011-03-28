@@ -63,14 +63,12 @@ struct _GstMultiQueue {
   gboolean buffering;
   gint percent;
 
-  guint32  counter;	/* incoming object counter, protected with STREAM_LOCK */
+  guint32  counter;	/* incoming object counter, use atomic accesses */
   guint32  highid;	/* contains highest id of last outputted object */
 
   GMutex * qlock;	/* Global queue lock (vs object lock or individual */
 			/* queues lock). Protects nbqueues, queues, global */
 			/* GstMultiQueueSize, counter and highid */
-
-  gint nextnotlinked;	/* ID of the next queue not linked (-1 : none) */
 
   gint numwaiting;	/* number of not-linked pads waiting */
 };
