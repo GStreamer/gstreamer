@@ -223,14 +223,17 @@ test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
         input[n].to_ts - input[n].from_ts);
 
     out = gst_buffer_map (buf, &out_size, NULL, GST_MAP_READ);
-    /* shouldn't have trailing newline characters */
-    fail_if (out_size > 0 && out[out_size - 1] == '\n');
-    /* shouldn't include NUL-terminator in data size */
-    fail_if (out_size > 0 && out[out_size - 1] == '\0');
-    /* but should still have a  NUL-terminator behind the declared data */
-    fail_unless_equals_int (out[out_size], '\0');
-    /* make sure out string matches expected string */
-    fail_unless_equals_string (out, input[n].out);
+    /* can be NULL */
+    if (out != NULL) {
+      /* shouldn't have trailing newline characters */
+      fail_if (out_size > 0 && out[out_size - 1] == '\n');
+      /* shouldn't include NUL-terminator in data size */
+      fail_if (out_size > 0 && out[out_size - 1] == '\0');
+      /* but should still have a  NUL-terminator behind the declared data */
+      fail_unless_equals_int (out[out_size], '\0');
+      /* make sure out string matches expected string */
+      fail_unless_equals_string (out, input[n].out);
+    }
     gst_buffer_unmap (buf, out, out_size);
     /* check caps */
     fail_unless (GST_BUFFER_CAPS (buf) != NULL);
@@ -310,14 +313,17 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
     }
 
     out = gst_buffer_map (buf, &out_size, NULL, GST_MAP_READ);
-    /* shouldn't have trailing newline characters */
-    fail_if (out_size > 0 && out[out_size - 1] == '\n');
-    /* shouldn't include NUL-terminator in data size */
-    fail_if (out_size > 0 && out[out_size - 1] == '\0');
-    /* but should still have a  NUL-terminator behind the declared data */
-    fail_unless_equals_int (out[out_size], '\0');
-    /* make sure out string matches expected string */
-    fail_unless_equals_string (out, input[n].out);
+    /* can be NULL */
+    if (out != NULL) {
+      /* shouldn't have trailing newline characters */
+      fail_if (out_size > 0 && out[out_size - 1] == '\n');
+      /* shouldn't include NUL-terminator in data size */
+      fail_if (out_size > 0 && out[out_size - 1] == '\0');
+      /* but should still have a  NUL-terminator behind the declared data */
+      fail_unless_equals_int (out[out_size], '\0');
+      /* make sure out string matches expected string */
+      fail_unless_equals_string (out, input[n].out);
+    }
     gst_buffer_unmap (buf, out, out_size);
     /* check caps */
     fail_unless (GST_BUFFER_CAPS (buf) != NULL);
