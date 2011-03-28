@@ -112,6 +112,8 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
   g_list_free (base_video_codec->frames);
   base_video_codec->frames = NULL;
 
+  base_video_codec->bytes = 0;
+  base_video_codec->time = 0;
 }
 
 static void

@@ -78,6 +78,7 @@ struct _GstBaseVideoDecoder
   gboolean started;
 
   gboolean sink_clipping;
+  gboolean do_byte_time;
 
   guint64 presentation_frame_number;
 

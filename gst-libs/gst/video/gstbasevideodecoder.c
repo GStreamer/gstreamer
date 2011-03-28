@@ -204,6 +204,10 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
   base_video_decoder_class =
       GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
+  GST_DEBUG_OBJECT (base_video_decoder,
+      "received event %d, %s", GST_EVENT_TYPE (event),
+      GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
@@ -228,19 +232,52 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
     {
       gboolean update;
-      double rate;
-      double applied_rate;
+      double rate, arate;
       GstFormat format;
       gint64 start;
       gint64 stop;
-      gint64 position;
+      gint64 pos;
       GstSegment *segment = &GST_BASE_VIDEO_CODEC (base_video_decoder)->segment;
 
       gst_event_parse_new_segment_full (event, &update, &rate,
-          &applied_rate, &format, &start, &stop, &position);
+          &arate, &format, &start, &stop, &pos);
 
-      if (format != GST_FORMAT_TIME)
-        goto newseg_wrong_format;
+      if (format == GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (base_video_decoder,
+            "received TIME NEW_SEGMENT %" GST_TIME_FORMAT
+            " -- %" GST_TIME_FORMAT ", pos %" GST_TIME_FORMAT
+            ", rate %g, applied_rate %g",
+            GST_TIME_ARGS (start), GST_TIME_ARGS (stop), GST_TIME_ARGS (pos),
+            rate, arate);
+      } else {
+        GstFormat dformat = GST_FORMAT_TIME;
+
+        GST_DEBUG_OBJECT (base_video_decoder,
+            "received NEW_SEGMENT %" G_GINT64_FORMAT
+            " -- %" G_GINT64_FORMAT ", time %" G_GINT64_FORMAT
+            ", rate %g, applied_rate %g", start, stop, pos, rate, arate);
+        /* handle newsegment as a result from our legacy simple seeking */
+        /* note that initial 0 should convert to 0 in any case */
+        if (base_video_decoder->do_byte_time &&
+            gst_pad_query_convert (GST_BASE_VIDEO_CODEC_SINK_PAD
+                (base_video_decoder), GST_FORMAT_BYTES, start, &dformat,
+                &start)) {
+          /* best attempt convert */
+          /* as these are only estimates, stop is kept open-ended to avoid
+           * premature cutting */
+          GST_DEBUG_OBJECT (base_video_decoder,
+              "converted to TIME start %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (start));
+          pos = start;
+          stop = GST_CLOCK_TIME_NONE;
+          /* replace event */
+          gst_event_unref (event);
+          event = gst_event_new_new_segment_full (update, rate, arate,
+              GST_FORMAT_TIME, start, stop, pos);
+        } else {
+          goto newseg_wrong_format;
+        }
+      }
 
       if (!update) {
         gst_base_video_decoder_reset (base_video_decoder);
@@ -249,23 +286,13 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
       base_video_decoder->timestamp_offset = start;
 
       gst_segment_set_newsegment_full (segment,
-          update, rate, applied_rate, format, start, stop, position);
-      base_video_decoder->have_segment = TRUE;
-
-      GST_DEBUG_OBJECT (base_video_decoder,
-          "new segment: format %d rate %g start %" GST_TIME_FORMAT
-          " stop %" GST_TIME_FORMAT
-          " position %" GST_TIME_FORMAT
-          " update %d",
-          format, rate,
-          GST_TIME_ARGS (segment->start),
-          GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time), update);
+          update, rate, arate, format, start, stop, pos);
 
       ret =
           gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
           event);
-    }
       break;
+    }
     case GST_EVENT_FLUSH_STOP:{
       GST_OBJECT_LOCK (base_video_decoder);
       GST_BASE_VIDEO_CODEC (base_video_decoder)->earliest_time =
@@ -295,6 +322,76 @@ newseg_wrong_format:
   }
 }
 
+/* perform upstream byte <-> time conversion (duration, seeking)
+ * if subclass allows and if enough data for moderately decent conversion */
+static inline gboolean
+gst_base_video_decoder_do_byte (GstBaseVideoDecoder * dec)
+{
+  GstBaseVideoCodec *codec = GST_BASE_VIDEO_CODEC (dec);
+
+  return dec->do_byte_time && (codec->bytes > 0) && (codec->time > GST_SECOND);
+}
+
+static gboolean
+gst_base_video_decoder_do_seek (GstBaseVideoDecoder * dec, GstEvent * event)
+{
+  GstBaseVideoCodec *codec = GST_BASE_VIDEO_CODEC (dec);
+  GstSeekFlags flags;
+  GstSeekType start_type, end_type;
+  GstFormat format;
+  gdouble rate;
+  gint64 start, start_time, end_time;
+  GstSegment seek_segment;
+  guint32 seqnum;
+
+  gst_event_parse_seek (event, &rate, &format, &flags, &start_type,
+      &start_time, &end_type, &end_time);
+
+  /* we'll handle plain open-ended flushing seeks with the simple approach */
+  if (rate != 1.0) {
+    GST_DEBUG_OBJECT (dec, "unsupported seek: rate");
+    return FALSE;
+  }
+
+  if (start_type != GST_SEEK_TYPE_SET) {
+    GST_DEBUG_OBJECT (dec, "unsupported seek: start time");
+    return FALSE;
+  }
+
+  if (end_type != GST_SEEK_TYPE_NONE ||
+      (end_type == GST_SEEK_TYPE_SET && end_time != GST_CLOCK_TIME_NONE)) {
+    GST_DEBUG_OBJECT (dec, "unsupported seek: end time");
+    return FALSE;
+  }
+
+  if (!(flags & GST_SEEK_FLAG_FLUSH)) {
+    GST_DEBUG_OBJECT (dec, "unsupported seek: not flushing");
+    return FALSE;
+  }
+
+  memcpy (&seek_segment, &codec->segment, sizeof (seek_segment));
+  gst_segment_set_seek (&seek_segment, rate, format, flags, start_type,
+      start_time, end_type, end_time, NULL);
+  start_time = seek_segment.last_stop;
+
+  format = GST_FORMAT_BYTES;
+  if (!gst_pad_query_convert (codec->sinkpad, GST_FORMAT_TIME, start_time,
+          &format, &start)) {
+    GST_DEBUG_OBJECT (dec, "conversion failed");
+    return FALSE;
+  }
+
+  seqnum = gst_event_get_seqnum (event);
+  event = gst_event_new_seek (1.0, GST_FORMAT_BYTES, flags,
+      GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_NONE, -1);
+  gst_event_set_seqnum (event, seqnum);
+
+  GST_DEBUG_OBJECT (dec, "seeking to %" GST_TIME_FORMAT " at byte offset %"
+      G_GINT64_FORMAT, GST_TIME_ARGS (start_time), start);
+
+  return gst_pad_push_event (codec->sinkpad, event);
+}
+
 static gboolean
 gst_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
 {
@@ -308,35 +405,45 @@ gst_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
     {
       GstFormat format, tformat;
       gdouble rate;
-      GstEvent *real_seek;
       GstSeekFlags flags;
       GstSeekType cur_type, stop_type;
       gint64 cur, stop;
-      gint64 tcur = -1, tstop = -1;
+      gint64 tcur, tstop;
+      guint32 seqnum;
 
-      GST_DEBUG_OBJECT (base_video_decoder, "seek event");
+      gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
+          &stop_type, &stop);
+      seqnum = gst_event_get_seqnum (event);
 
-      gst_event_parse_seek (event, &rate, &format, &flags, &cur_type,
-          &cur, &stop_type, &stop);
-      gst_event_unref (event);
+      /* upstream gets a chance first */
+      if ((res =
+              gst_pad_push_event (GST_BASE_VIDEO_CODEC_SINK_PAD
+                  (base_video_decoder), event)))
+        break;
 
+      /* if upstream fails for a time seek, maybe we can help if allowed */
+      if (format == GST_FORMAT_TIME) {
+        if (gst_base_video_decoder_do_byte (base_video_decoder))
+          res = gst_base_video_decoder_do_seek (base_video_decoder, event);
+        break;
+      }
+
+      /* ... though a non-time seek can be aided as well */
+      /* First bring the requested format to time */
       tformat = GST_FORMAT_TIME;
-      res = gst_pad_query_convert (GST_BASE_VIDEO_CODEC_SINK_PAD
-          (base_video_decoder), format, cur, &tformat, &tcur);
-      if (!res)
+      if (!(res = gst_pad_query_convert (pad, format, cur, &tformat, &tcur)))
         goto convert_error;
-      res = gst_pad_query_convert (GST_BASE_VIDEO_CODEC_SINK_PAD
-          (base_video_decoder), format, stop, &tformat, &tstop);
-      if (!res)
+      if (!(res = gst_pad_query_convert (pad, format, stop, &tformat, &tstop)))
         goto convert_error;
 
-      real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
+      /* then seek with time on the peer */
+      event = gst_event_new_seek (rate, GST_FORMAT_TIME,
           flags, cur_type, tcur, stop_type, tstop);
+      gst_event_set_seqnum (event, seqnum);
 
       res =
           gst_pad_push_event (GST_BASE_VIDEO_CODEC_SINK_PAD
-          (base_video_decoder), real_seek);
-
+          (base_video_decoder), event);
       break;
     }
     case GST_EVENT_QOS:
@@ -416,34 +523,69 @@ gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
 
   dec = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
 
-  switch GST_QUERY_TYPE
-    (query) {
+  GST_LOG_OBJECT (dec, "handling query: %" GST_PTR_FORMAT, query);
+
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
       GstFormat format;
-      gint64 time;
+      gint64 time, value;
 
-      gst_query_parse_position (query, &format, NULL);
-      GST_DEBUG_OBJECT (dec, "query in format %d", format);
-
-      if (format != GST_FORMAT_TIME) {
-        goto error;
+      /* upstream gets a chance first */
+      if ((res =
+              gst_pad_peer_query (GST_BASE_VIDEO_CODEC_SINK_PAD (dec),
+                  query))) {
+        GST_LOG_OBJECT (dec, "returning peer response");
+        break;
       }
 
+      /* we start from the last seen time */
       time = dec->last_timestamp;
-      time =
-          gst_segment_to_stream_time (&GST_BASE_VIDEO_CODEC (dec)->segment,
+      /* correct for the segment values */
+      time = gst_segment_to_stream_time (&GST_BASE_VIDEO_CODEC (dec)->segment,
           GST_FORMAT_TIME, time);
 
-      gst_query_set_position (query, format, time);
+      GST_LOG_OBJECT (dec,
+          "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
 
-      res = TRUE;
+      /* and convert to the final format */
+      gst_query_parse_position (query, &format, NULL);
+      if (!(res = gst_pad_query_convert (pad, GST_FORMAT_TIME, time,
+                  &format, &value)))
+        break;
 
+      gst_query_set_position (query, format, value);
+
+      GST_LOG_OBJECT (dec,
+          "query %p: we return %" G_GINT64_FORMAT " (format %u)", query, value,
+          format);
       break;
     }
     case GST_QUERY_DURATION:
     {
-      res = gst_pad_peer_query (dec->base_video_codec.sinkpad, query);
+      GstFormat format;
+
+      /* upstream in any case */
+      if ((res = gst_pad_query_default (pad, query)))
+        break;
+
+      gst_query_parse_duration (query, &format, NULL);
+      /* try answering TIME by converting from BYTE if subclass allows  */
+      if (format == GST_FORMAT_TIME && gst_base_video_decoder_do_byte (dec)) {
+        gint64 value;
+
+        format = GST_FORMAT_BYTES;
+        if (gst_pad_query_peer_duration (GST_BASE_VIDEO_CODEC_SINK_PAD (dec),
+                &format, &value)) {
+          GST_LOG_OBJECT (dec, "upstream size %" G_GINT64_FORMAT, value);
+          format = GST_FORMAT_TIME;
+          if (gst_pad_query_convert (GST_BASE_VIDEO_CODEC_SINK_PAD (dec),
+                  GST_FORMAT_BYTES, value, &format, &value)) {
+            gst_query_set_duration (query, GST_FORMAT_TIME, value);
+            res = TRUE;
+          }
+        }
+      }
       break;
     }
     case GST_QUERY_CONVERT:
@@ -463,7 +605,7 @@ gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
     }
     default:
       res = gst_pad_query_default (pad, query);
-    }
+  }
   gst_object_unref (dec);
   return res;
 
