@@ -739,7 +739,10 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   GST_DEBUG_OBJECT (sink, "release old ringbuffer");
 
-  /* get current time, updates the last_time */
+  /* get current time, updates the last_time. When the subclass has a clock that
+   * restarts from 0 when a new format is negotiated, it will call
+   * gst_audio_clock_reset() which will use this last_time to create an offset
+   * so that time from the clock keeps on increasing monotonically. */
   now = gst_clock_get_time (sink->provided_clock);
 
   GST_DEBUG_OBJECT (sink, "time was %" GST_TIME_FORMAT, GST_TIME_ARGS (now));
