@@ -491,6 +491,43 @@ GST_START_TEST (test_video_formats)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_formats_rgb)
+{
+  gint width, height, framerate_n, framerate_d, par_n, par_d;
+  GstCaps *caps =
+      gst_video_format_new_caps (GST_VIDEO_FORMAT_RGB, 800, 600, 0, 1, 1, 1);
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  fail_unless (gst_structure_get_int (structure, "width", &width));
+  fail_unless (gst_structure_get_int (structure, "height", &height));
+  fail_unless (gst_structure_get_fraction (structure, "framerate", &framerate_n,
+          &framerate_d));
+  fail_unless (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
+          &par_n, &par_d));
+
+  fail_unless (width == 800);
+  fail_unless (height == 600);
+  fail_unless (framerate_n == 0);
+  fail_unless (framerate_d == 1);
+  fail_unless (par_n == 1);
+  fail_unless (par_d == 1);
+
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_template_caps)
+{
+  GstCaps *caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGB);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_dar_calc)
 {
   guint display_ratio_n, display_ratio_d;
@@ -738,6 +775,8 @@ video_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_video_formats);
+  tcase_add_test (tc_chain, test_video_formats_rgb);
+  tcase_add_test (tc_chain, test_video_template_caps);
   tcase_add_test (tc_chain, test_dar_calc);
   tcase_add_test (tc_chain, test_parse_caps_rgb);
   tcase_add_test (tc_chain, test_events);

@@ -1215,6 +1215,8 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
         chain->sink = try_element (playsink, elem, TRUE);
       }
     }
+    if (chain->sink)
+      playsink->video_sink = gst_object_ref (chain->sink);
   }
   if (chain->sink == NULL)
     goto no_sinks;
@@ -1360,6 +1362,8 @@ link_failed:
         (NULL), ("Failed to configure the video sink."));
     /* checking sink made it READY */
     gst_element_set_state (chain->sink, GST_STATE_NULL);
+    /* Remove chain from the bin to allow reuse later */
+    gst_bin_remove (bin, chain->sink);
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
@@ -1486,6 +1490,9 @@ gen_text_chain (GstPlaySink * playsink)
                 gst_play_sink_find_property_sinks (playsink, chain->sink,
                     "sync", G_TYPE_BOOLEAN)))
           g_object_set (elem, "sync", TRUE, NULL);
+
+        if (!textsinkpad)
+          gst_bin_remove (bin, chain->sink);
       } else {
         GST_WARNING_OBJECT (playsink,
             "can't find async property in custom text sink");
@@ -1671,6 +1678,8 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
         chain->sink = try_element (playsink, elem, TRUE);
       }
     }
+    if (chain->sink)
+      playsink->audio_sink = gst_object_ref (chain->sink);
   }
   if (chain->sink == NULL)
     goto no_sinks;
@@ -1681,7 +1690,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
   gst_bin_add (bin, chain->sink);
 
   /* we have to add a queue when we need to decouple for the video sink in
-   * visualisations */
+   * visualisations and for streamsynchronizer */
   GST_DEBUG_OBJECT (playsink, "adding audio queue");
   chain->queue = gst_element_factory_make ("queue", "aqueue");
   if (chain->queue == NULL) {
@@ -1885,6 +1894,8 @@ link_failed:
         (NULL), ("Failed to configure the audio sink."));
     /* checking sink made it READY */
     gst_element_set_state (chain->sink, GST_STATE_NULL);
+    /* Remove chain from the bin to allow reuse later */
+    gst_bin_remove (bin, chain->sink);
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
@@ -2211,6 +2222,13 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         }
 
         add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
+
+        /* Remove the sink from the bin to keep its state
+         * and unparent it to allow reuse */
+        if (playsink->videochain->sink)
+          gst_bin_remove (GST_BIN_CAST (playsink->videochain->chain.bin),
+              playsink->videochain->sink);
+
         activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
         free_chain ((GstPlayChain *) playsink->videochain);
         playsink->videochain = NULL;
@@ -2355,6 +2373,13 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         }
 
         add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
+
+        /* Remove the sink from the bin to keep its state
+         * and unparent it to allow reuse */
+        if (playsink->audiochain->sink)
+          gst_bin_remove (GST_BIN_CAST (playsink->audiochain->chain.bin),
+              playsink->audiochain->sink);
+
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
@@ -3275,6 +3300,27 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
        * so they may be re-used faster next time/url around.
        * when really going to NULL, clean up everything completely. */
       if (transition == GST_STATE_CHANGE_READY_TO_NULL) {
+
+        /* Unparent the sinks to allow reuse */
+        if (playsink->videochain && playsink->videochain->sink)
+          gst_bin_remove (GST_BIN_CAST (playsink->videochain->chain.bin),
+              playsink->videochain->sink);
+        if (playsink->audiochain && playsink->audiochain->sink)
+          gst_bin_remove (GST_BIN_CAST (playsink->audiochain->chain.bin),
+              playsink->audiochain->sink);
+        if (playsink->textchain && playsink->textchain->sink)
+          gst_bin_remove (GST_BIN_CAST (playsink->textchain->chain.bin),
+              playsink->textchain->sink);
+
+        if (playsink->audio_sink != NULL)
+          gst_element_set_state (playsink->audio_sink, GST_STATE_NULL);
+        if (playsink->video_sink != NULL)
+          gst_element_set_state (playsink->video_sink, GST_STATE_NULL);
+        if (playsink->visualisation != NULL)
+          gst_element_set_state (playsink->visualisation, GST_STATE_NULL);
+        if (playsink->text_sink != NULL)
+          gst_element_set_state (playsink->text_sink, GST_STATE_NULL);
+
         free_chain ((GstPlayChain *) playsink->videodeinterlacechain);
         playsink->videodeinterlacechain = NULL;
         free_chain ((GstPlayChain *) playsink->videochain);

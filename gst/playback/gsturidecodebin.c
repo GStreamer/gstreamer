@@ -1539,6 +1539,11 @@ make_decoder (GstURIDecodeBin * decoder)
 
     if (!decodebin)
       goto no_decodebin;
+
+    /* sanity check */
+    if (decodebin->numsinkpads == 0)
+      goto no_typefind;
+
     /* connect signals to proxy */
     g_signal_connect (decodebin, "unknown-type",
         G_CALLBACK (proxy_unknown_type_signal), decoder);
@@ -1609,6 +1614,15 @@ make_decoder (GstURIDecodeBin * decoder)
 no_decodebin:
   {
     post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "decodebin2");
+    GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
+        ("No decodebin2 element, check your installation"));
+    return NULL;
+  }
+no_typefind:
+  {
+    gst_object_unref (decodebin);
+    GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
+        ("No typefind element, decodebin2 is unusable, check your installation"));
     return NULL;
   }
 }
@@ -1762,6 +1776,8 @@ setup_streaming (GstURIDecodeBin * decoder)
 no_typefind:
   {
     post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "typefind");
+    GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN, (NULL),
+        ("No typefind element, check your installation"));
     return FALSE;
   }
 could_not_link:

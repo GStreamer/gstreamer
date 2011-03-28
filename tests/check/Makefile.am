@@ -290,8 +290,8 @@ libs_tag_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 libs_tag_LDADD = \
-	$(GST_BASE_LIBS) \
-	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la $(LDADD)
+	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) $(LDADD)
 
 libs_pbutils_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \

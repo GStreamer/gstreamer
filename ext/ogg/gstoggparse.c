@@ -573,11 +573,11 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
 
             for (l = ogg->oggstreams; l != NULL; l = l->next) {
               GstOggStream *stream = (GstOggStream *) l->data;
-              int j;
+              GList *j;
 
-              for (j = 1; j < g_list_length (stream->headers); j++) {
-                gst_ogg_parse_append_header (&array,
-                    GST_BUFFER (g_list_nth_data (stream->headers, j)));
+              /* already appended the first header, now do headers 2-N */
+              for (j = stream->headers->next; j != NULL; j = j->next) {
+                gst_ogg_parse_append_header (&array, GST_BUFFER (j->data));
                 count++;
               }
             }
@@ -604,6 +604,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               GstOggStream *stream = (GstOggStream *) l->data;
               GstBuffer *buf = GST_BUFFER (stream->headers->data);
 
+              buf = gst_buffer_make_metadata_writable (buf);
               gst_buffer_set_caps (buf, caps);
 
               result = gst_pad_push (ogg->srcpad, buf);
@@ -612,11 +613,13 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             }
             for (l = ogg->oggstreams; l != NULL; l = l->next) {
               GstOggStream *stream = (GstOggStream *) l->data;
-              int j;
+              GList *j;
 
-              for (j = 1; j < g_list_length (stream->headers); j++) {
-                GstBuffer *buf =
-                    GST_BUFFER (g_list_nth_data (stream->headers, j));
+              /* pushed the first one for each stream already, now do 2-N */
+              for (j = stream->headers->next; j != NULL; j = j->next) {
+                GstBuffer *buf = GST_BUFFER (j->data);
+
+                buf = gst_buffer_make_metadata_writable (buf);
                 gst_buffer_set_caps (buf, caps);
 
                 result = gst_pad_push (ogg->srcpad, buf);
@@ -647,7 +650,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               for (k = stream->unknown_pages; k != NULL; k = k->next) {
                 GstBuffer *buf;
 
-                buf = GST_BUFFER (k->data);
+                buf = gst_buffer_make_metadata_writable (GST_BUFFER (k->data));
                 gst_buffer_set_caps (buf, caps);
                 result = gst_pad_push (ogg->srcpad, buf);
                 if (result != GST_FLOW_OK)
@@ -664,29 +667,28 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             stream->stored_buffers = g_list_append (stream->stored_buffers,
                 pagebuffer);
           } else {
-            if (stream->stored_buffers) {
-              int j;
+            while (stream->stored_buffers) {
+              GstBuffer *buf = stream->stored_buffers->data;
 
-              for (j = 0; j < g_list_length (stream->stored_buffers); j++) {
-                GstBuffer *buf =
-                    GST_BUFFER (g_list_nth_data (stream->stored_buffers, j));
-
-                gst_buffer_set_caps (buf, ogg->caps);
-                GST_BUFFER_TIMESTAMP (buf) = buffertimestamp;
-                if (!keyframe) {
-                  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-                } else {
-                  keyframe = FALSE;
-                }
-
-                result = gst_pad_push (ogg->srcpad, buf);
-                if (result != GST_FLOW_OK)
-                  return result;
+              buf = gst_buffer_make_metadata_writable (buf);
+              gst_buffer_set_caps (buf, ogg->caps);
+              GST_BUFFER_TIMESTAMP (buf) = buffertimestamp;
+              if (!keyframe) {
+                GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+              } else {
+                keyframe = FALSE;
               }
-              g_list_free (stream->stored_buffers);
-              stream->stored_buffers = NULL;
+
+              result = gst_pad_push (ogg->srcpad, buf);
+              if (result != GST_FLOW_OK)
+                return result;
+
+              stream->stored_buffers =
+                  g_list_delete_link (stream->stored_buffers,
+                  stream->stored_buffers);
             }
 
+            pagebuffer = gst_buffer_make_metadata_writable (pagebuffer);
             gst_buffer_set_caps (pagebuffer, ogg->caps);
             if (!keyframe) {
               GST_BUFFER_FLAG_SET (pagebuffer, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -694,7 +696,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               keyframe = FALSE;
             }
 
-            result = gst_pad_push (ogg->srcpad, GST_BUFFER (pagebuffer));
+            result = gst_pad_push (ogg->srcpad, pagebuffer);
             if (result != GST_FLOW_OK)
               return result;
           }

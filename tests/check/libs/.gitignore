@@ -3,6 +3,7 @@ audio
 cddabasesrc
 fft
 gstlibscpp
+libsabi
 mixer
 navigation
 netbuffer

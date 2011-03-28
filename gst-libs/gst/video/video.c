@@ -544,36 +544,14 @@ gst_video_format_new_caps_interlaced (GstVideoFormat format,
   return res;
 }
 
-/**
- * gst_video_format_new_caps:
- * @format: the #GstVideoFormat describing the raw video format
- * @width: width of video
- * @height: height of video
- * @framerate_n: numerator of frame rate
- * @framerate_d: denominator of frame rate
- * @par_n: numerator of pixel aspect ratio
- * @par_d: denominator of pixel aspect ratio
- *
- * Creates a new #GstCaps object based on the parameters provided.
- *
- * Since: 0.10.16
- *
- * Returns: a new #GstCaps object, or NULL if there was an error
- */
-GstCaps *
-gst_video_format_new_caps (GstVideoFormat format, int width,
-    int height, int framerate_n, int framerate_d, int par_n, int par_d)
+static GstCaps *
+gst_video_format_new_caps_raw (GstVideoFormat format)
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
-  g_return_val_if_fail (width > 0 && height > 0, NULL);
 
   if (gst_video_format_is_yuv (format)) {
     return gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, gst_video_format_to_fourcc (format),
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+        "format", GST_TYPE_FOURCC, gst_video_format_to_fourcc (format), NULL);
   }
   if (gst_video_format_is_rgb (format)) {
     GstCaps *caps;
@@ -651,14 +629,11 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
         mask = 0xff0000;
       }
       red_mask =
-          mask >> (8 * gst_video_format_get_component_offset (format, 0,
-              width, height));
+          mask >> (8 * gst_video_format_get_component_offset (format, 0, 0, 0));
       green_mask =
-          mask >> (8 * gst_video_format_get_component_offset (format, 1,
-              width, height));
+          mask >> (8 * gst_video_format_get_component_offset (format, 1, 0, 0));
       blue_mask =
-          mask >> (8 * gst_video_format_get_component_offset (format, 2,
-              width, height));
+          mask >> (8 * gst_video_format_get_component_offset (format, 2, 0, 0));
     } else if (bpp == 16) {
       switch (format) {
         case GST_VIDEO_FORMAT_RGB16:
@@ -690,12 +665,7 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
     }
 
     caps = gst_caps_new_simple ("video/x-raw-rgb",
-        "bpp", G_TYPE_INT, bpp,
-        "depth", G_TYPE_INT, depth,
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+        "bpp", G_TYPE_INT, bpp, "depth", G_TYPE_INT, depth, NULL);
 
     if (bpp != 8) {
       gst_caps_set_simple (caps,
@@ -707,8 +677,7 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
 
     if (have_alpha) {
       alpha_mask =
-          mask >> (8 * gst_video_format_get_component_offset (format, 3,
-              width, height));
+          mask >> (8 * gst_video_format_get_component_offset (format, 3, 0, 0));
       gst_caps_set_simple (caps, "alpha_mask", G_TYPE_INT, alpha_mask, NULL);
     }
     return caps;
@@ -740,21 +709,12 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
 
     if (bpp > 8) {
       caps = gst_caps_new_simple ("video/x-raw-gray",
-          "bpp", G_TYPE_INT, bpp,
-          "depth", G_TYPE_INT, depth,
-          "width", G_TYPE_INT, width,
-          "height", G_TYPE_INT, height,
-          "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
-          "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+          "bpp", G_TYPE_INT, bpp, "depth", G_TYPE_INT, depth, NULL);
     } else {
       caps = gst_caps_new_simple ("video/x-raw-gray",
           "bpp", G_TYPE_INT, bpp,
           "depth", G_TYPE_INT, depth,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-          "width", G_TYPE_INT, width,
-          "height", G_TYPE_INT, height,
-          "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
-          "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
     }
 
     return caps;
@@ -762,6 +722,96 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
 
   return NULL;
 }
+
+/**
+ * gst_video_format_new_template_caps:
+ * @format: the #GstVideoFormat describing the raw video format
+ *
+ * Creates a new #GstCaps object based on the parameters provided.
+ * Size, frame rate, and pixel aspect ratio are set to the full
+ * range.
+ *
+ * Since: 0.10.33
+ *
+ * Returns: a new #GstCaps object, or NULL if there was an error
+ */
+GstCaps *
+gst_video_format_new_template_caps (GstVideoFormat format)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
+
+  caps = gst_video_format_new_caps_raw (format);
+  if (caps) {
+    GValue value = { 0 };
+    GValue v = { 0 };
+
+    structure = gst_caps_get_structure (caps, 0);
+
+    gst_structure_set (structure,
+        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+    g_value_init (&value, GST_TYPE_LIST);
+    g_value_init (&v, G_TYPE_BOOLEAN);
+    g_value_set_boolean (&v, TRUE);
+    gst_value_list_append_value (&value, &v);
+    g_value_set_boolean (&v, FALSE);
+    gst_value_list_append_value (&value, &v);
+
+    gst_structure_set_value (structure, "interlaced", &value);
+
+    g_value_reset (&value);
+    g_value_reset (&v);
+  }
+
+  return caps;
+}
+
+/**
+ * gst_video_format_new_caps:
+ * @format: the #GstVideoFormat describing the raw video format
+ * @width: width of video
+ * @height: height of video
+ * @framerate_n: numerator of frame rate
+ * @framerate_d: denominator of frame rate
+ * @par_n: numerator of pixel aspect ratio
+ * @par_d: denominator of pixel aspect ratio
+ *
+ * Creates a new #GstCaps object based on the parameters provided.
+ *
+ * Since: 0.10.16
+ *
+ * Returns: a new #GstCaps object, or NULL if there was an error
+ */
+GstCaps *
+gst_video_format_new_caps (GstVideoFormat format, int width,
+    int height, int framerate_n, int framerate_d, int par_n, int par_d)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
+  g_return_val_if_fail (width > 0 && height > 0, NULL);
+
+  caps = gst_video_format_new_caps_raw (format);
+  if (caps) {
+    structure = gst_caps_get_structure (caps, 0);
+
+    gst_structure_set (structure,
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+  }
+
+  return caps;
+}
+
 
 /**
  * gst_video_format_from_fourcc:
@@ -1680,7 +1730,8 @@ gst_video_format_get_component_offset (GstVideoFormat format,
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
   g_return_val_if_fail (component >= 0 && component <= 3, 0);
-  g_return_val_if_fail (width > 0 && height > 0, 0);
+  g_return_val_if_fail ((!gst_video_format_is_yuv (format)) || (width > 0
+          && height > 0), 0);
 
   switch (format) {
     case GST_VIDEO_FORMAT_I420:

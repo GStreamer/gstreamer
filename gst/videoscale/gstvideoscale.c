@@ -501,8 +501,8 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
           NULL);
     }
     if (!from_par) {
-      g_value_init (&fpar, GST_TYPE_FRACTION_RANGE);
-      gst_value_set_fraction_range_full (&fpar, 1, G_MAXINT, G_MAXINT, 1);
+      g_value_init (&fpar, GST_TYPE_FRACTION);
+      gst_value_set_fraction (&fpar, 1, 1);
       from_par = &fpar;
     }
   }

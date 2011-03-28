@@ -461,7 +461,8 @@ GstCaps * gst_video_format_new_caps (GstVideoFormat format,
     int par_n, int par_d);
 GstCaps * gst_video_format_new_caps_interlaced (GstVideoFormat format,
     int width, int height, int framerate_n, int framerate_d,
-						int par_n, int par_d, gboolean interlaced);
+    int par_n, int par_d, gboolean interlaced);
+GstCaps * gst_video_format_new_template_caps (GstVideoFormat format);
 GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc);
 guint32 gst_video_format_to_fourcc (GstVideoFormat format);
 gboolean gst_video_format_is_rgb (GstVideoFormat format);

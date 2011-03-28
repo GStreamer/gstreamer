@@ -21,6 +21,7 @@ EXPORTS
 	gst_video_format_is_yuv
 	gst_video_format_new_caps
 	gst_video_format_new_caps_interlaced
+	gst_video_format_new_template_caps
 	gst_video_format_parse_caps
 	gst_video_format_parse_caps_interlaced
 	gst_video_format_to_fourcc
