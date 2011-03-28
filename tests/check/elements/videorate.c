@@ -250,7 +250,7 @@ GST_START_TEST (test_more)
   /* ... and the first one is pushed out, with timestamp 0 */
   fail_unless_equals_int (g_list_length (buffers), 1);
   assert_videorate_stats (videorate, "second buffer", 2, 1, 0, 0);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 2);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
 
   outbuffer = buffers->data;
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer), 0);
@@ -304,7 +304,7 @@ GST_START_TEST (test_more)
 
   fail_unless_equals_int (g_list_length (buffers), 4);
   /* one held by us, three held by each output frame taken from the second */
-  ASSERT_BUFFER_REFCOUNT (second, "second", 4);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
 
   /* now send EOS */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
@@ -393,7 +393,7 @@ GST_START_TEST (test_wrong_order_from_zero)
   /* and now the first one should be pushed once and dupped 24 + 13 times, to
    * reach the half point between 1 s (first) and 2 s (third) */
   fail_unless_equals_int (g_list_length (buffers), 38);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 39);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   ASSERT_BUFFER_REFCOUNT (third, "third", 2);
   assert_videorate_stats (videorate, "third", 3, 38, 1, 37);
@@ -461,7 +461,7 @@ GST_START_TEST (test_wrong_order)
   /* and it created 13 output buffers as copies of the first frame */
   fail_unless_equals_int (g_list_length (buffers), 13);
   assert_videorate_stats (videorate, "second", 2, 13, 0, 12);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 14);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
 
   /* third buffer */
   third = gst_buffer_new_and_alloc (4);
@@ -480,8 +480,8 @@ GST_START_TEST (test_wrong_order)
 
   /* submitting a frame with 2 seconds triggers output of 25 more frames */
   fail_unless_equals_int (g_list_length (buffers), 38);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 14);
-  ASSERT_BUFFER_REFCOUNT (second, "second", 26);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   /* three frames submitted; two of them output as is, and 36 duplicated */
   assert_videorate_stats (videorate, "third", 3, 38, 0, 36);
 
@@ -501,8 +501,8 @@ GST_START_TEST (test_wrong_order)
   ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
 
   fail_unless_equals_int (g_list_length (buffers), 38);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 14);
-  ASSERT_BUFFER_REFCOUNT (second, "second", 26);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   assert_videorate_stats (videorate, "fourth", 4, 38, 1, 36);
 
   /* verify last buffer */
