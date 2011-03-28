@@ -1272,8 +1272,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
     gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop ());
   }
 
-  if (flags & (GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_SEGMENT |
-          GST_SEEK_FLAG_SKIP)) {
+  if (flags & (GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_SKIP)) {
     GST_WARNING ("seek flags 0x%x are not supported", (int) flags);
     goto done;
   }

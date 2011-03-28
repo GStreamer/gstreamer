@@ -37,6 +37,7 @@
 #include "gstmpegdesc.h"
 #include "gstmpegdefs.h"
 #include "mpegtspacketizer.h"
+#include "payload_parsers.h"
 
 /* latency in mseconds */
 #define TS_LATENCY 700
@@ -515,25 +516,34 @@ discont:
   return res;
 }
 
-
-/* performs a accurate seek to the last packet with pts < seektime */
+/* performs a accurate/key_unit seek */
 static GstFlowReturn
-gst_ts_demux_perform_accurate_seek (MpegTSBase * base, GstClockTime seektime,
-    TSPcrOffset * pcroffset, gint64 length, gint16 pid)
+gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
+    TSPcrOffset * pcroffset, gint64 length, gint16 pid, GstSeekFlags flags,
+    payload_parse_keyframe auxiliary_seek_fn)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
   GstFlowReturn res = GST_FLOW_ERROR;
   gboolean done = FALSE;
+  gboolean found_keyframe = FALSE, found_accurate = FALSE;
   GstBuffer *buf;
   MpegTSPacketizerPacket packet;
   MpegTSPacketizerPacketReturn pret;
   gint64 offset = pcroffset->offset;
   gint64 scan_offset = MIN (length, 50 * MPEGTS_MAX_PACKETSIZE);
+  guint32 state = 0xffffffff;
+  TSPcrOffset key_pos = { 0 };
 
+  GST_DEBUG ("auxiliary seek for %" GST_TIME_FORMAT " from offset: %"
+      G_GINT64_FORMAT " in %" G_GINT64_FORMAT " bytes for PID: %d "
+      "%s %s", GST_TIME_ARGS (seektime), pcroffset->offset, length, pid,
+      (flags & GST_SEEK_FLAG_ACCURATE) ? "accurate" : "",
+      (flags & GST_SEEK_FLAG_KEY_UNIT) ? "key_unit" : "");
 
-  GST_DEBUG ("accurate seek for %" GST_TIME_FORMAT " from offset: %"
-      G_GINT64_FORMAT " in %" G_GINT64_FORMAT " bytes for PID: %d",
-      GST_TIME_ARGS (seektime), pcroffset->offset, length, pid);
+  if ((flags & GST_SEEK_FLAG_KEY_UNIT) && !auxiliary_seek_fn) {
+    GST_ERROR ("key_unit seek for unkown video codec");
+    goto beach;
+  }
 
   mpegts_packetizer_flush (base->packetizer);
 
@@ -558,31 +568,61 @@ gst_ts_demux_perform_accurate_seek (MpegTSBase * base, GstClockTime seektime,
             " at offset: %" G_GINT64_FORMAT, packet.pid,
             GST_TIME_ARGS (packet.pcr), packet.offset);
 
-      if (packet.payload != NULL && packet.payload_unit_start_indicator
-          && packet.pid == pid) {
-        guint64 pts = 0;
+      if (packet.payload != NULL && packet.pid == pid) {
 
-        res = gst_ts_demux_parse_pes_header_pts (demux, &packet, &pts);
-        if (res == GST_FLOW_OK) {
-          GstClockTime time = calculate_gsttime (pcroffset, pts * 300);
+        if (packet.payload_unit_start_indicator) {
+          guint64 pts = 0;
+          res = gst_ts_demux_parse_pes_header_pts (demux, &packet, &pts);
+          if (res == GST_FLOW_OK) {
+            GstClockTime time = calculate_gsttime (pcroffset, pts * 300);
 
-          GST_DEBUG ("packet has PTS: %" GST_TIME_FORMAT,
+            GST_DEBUG ("packet has PTS: %" GST_TIME_FORMAT,
               GST_TIME_ARGS (time));
 
-          if (time <= seektime) {
-            pcroffset->gsttime = time;
-            pcroffset->pcr = packet.pcr;
-            pcroffset->offset = packet.offset;
+            if (time <= seektime) {
+              pcroffset->gsttime = time;
+              pcroffset->pcr = packet.pcr;
+              pcroffset->offset = packet.offset;
+            } else
+              found_accurate = TRUE;
           } else
-            done = TRUE;
-        } else
-          goto next;
+            goto next;
+          /* reset state for new packet */
+          state = 0xffffffff;
+        }
+
+        if (flags & GST_SEEK_FLAG_KEY_UNIT) {
+          gboolean is_keyframe = auxiliary_seek_fn (&state, &packet);
+          if (is_keyframe) {
+            found_keyframe = TRUE;
+            key_pos = *pcroffset;
+            GST_DEBUG ("found keyframe: time: %" GST_TIME_FORMAT " pcr: %"
+                GST_TIME_FORMAT " offset %" G_GINT64_FORMAT,
+                GST_TIME_ARGS (pcroffset->gsttime),
+                GST_TIME_ARGS (pcroffset->pcr), pcroffset->offset);
+          }
+        }
+      }
+      switch (flags & (GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_KEY_UNIT)) {
+        case GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_KEY_UNIT:
+          done = found_accurate && found_keyframe;
+          *pcroffset = key_pos;
+          break;
+        case GST_SEEK_FLAG_ACCURATE:
+          done = found_accurate;
+          break;
+        case GST_SEEK_FLAG_KEY_UNIT:
+          done = found_keyframe;
+          break;
       }
     next:
       mpegts_packetizer_clear_packet (base->packetizer, &packet);
     }
     scan_offset += 50 * MPEGTS_MAX_PACKETSIZE;
   }
+
+  if (done)
+    res = GST_FLOW_OK;
 
 beach:
   mpegts_packetizer_flush (base->packetizer);
@@ -741,13 +781,17 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
 
   GST_DEBUG ("seeking finished after %d loops", loop_cnt);
 
-  if (segment->flags & GST_SEEK_FLAG_ACCURATE) {
+  if (segment->flags & GST_SEEK_FLAG_ACCURATE
+      || segment->flags & GST_SEEK_FLAG_KEY_UNIT) {
+    payload_parse_keyframe keyframe_seek = NULL;
     MpegTSBaseProgram *program = demux->program;
 
     if (program->streams[pid]) {
       switch (program->streams[pid]->stream_type) {
         case ST_VIDEO_MPEG1:
         case ST_VIDEO_MPEG2:
+          keyframe_seek = gst_tsdemux_has_mpeg2_keyframe;
+          break;
         case ST_VIDEO_MPEG4:
         case ST_VIDEO_H264:
         case ST_VIDEO_DIRAC:
@@ -760,8 +804,8 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
     seekpcroffset.pcr = pcr_start.pcr;
     seekpcroffset.offset = pcr_start.offset;
     res =
-        gst_ts_demux_perform_accurate_seek (base, seektime, &seekpcroffset,
-        pcr_stop.offset - pcr_start.offset, pid);
+        gst_ts_demux_perform_auxiliary_seek (base, seektime, &seekpcroffset,
+        pcr_stop.offset - pcr_start.offset, pid, segment->flags, keyframe_seek);
   }
 
   segment->last_stop = seekpcroffset.gsttime;
@@ -810,8 +854,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event, guint16 pid)
   accurate = flags & GST_SEEK_FLAG_ACCURATE;
   flush = flags & GST_SEEK_FLAG_FLUSH;
 
-  if (flags & (GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_SEGMENT |
-          GST_SEEK_FLAG_SKIP)) {
+  if (flags & (GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_SKIP)) {
     GST_WARNING ("seek flags 0x%x are not supported", (int) flags);
     goto done;
   }

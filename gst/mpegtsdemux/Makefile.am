@@ -6,6 +6,7 @@ libgstmpegtsdemux_la_SOURCES = \
 	mpegtsbase.c	\
 	mpegtspacketizer.c \
 	mpegtsparse.c \
+	payload_parsers.c \
 	tsdemux.c
 
 libgstmpegtsdemux_la_CFLAGS = \
@@ -23,6 +24,7 @@ noinst_HEADERS = \
 	mpegtsbase.h	\
 	mpegtspacketizer.h \
 	mpegtsparse.h \
+	payload_parsers.h \
 	tsdemux.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
