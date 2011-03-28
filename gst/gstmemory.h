@@ -60,9 +60,11 @@ struct _GstMemory {
 };
 
 typedef enum {
-  GST_MAP_READ,
-  GST_MAP_WRITE,
+  GST_MAP_READ =  (1 << 0),
+  GST_MAP_WRITE = (1 << 1),
 } GstMapFlags;
+
+#define GST_MAP_READWRITE      (GST_MAP_READ | GST_MAP_WRITE)
 
 /**
  * GST_MEMORY_TRACE_NAME:

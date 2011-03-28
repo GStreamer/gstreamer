@@ -578,6 +578,20 @@ gst_buffer_get_size (GstBuffer * buffer)
 }
 
 /**
+ * gst_buffer_set_size:
+ * @buffer: a #GstBuffer.
+ * @size: the new size
+ *
+ * Set the total size of the buffer
+ */
+void
+gst_buffer_set_size (GstBuffer * buffer, gsize size)
+{
+  /* FIXME */
+  g_warning ("gst_buffer_set_size not imlpemented");
+}
+
+/**
  * gst_buffer_map:
  * @buffer: a #GstBuffer.
  * @size: a location for the size
@@ -679,6 +693,47 @@ gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
     result = FALSE;
   }
   return result;
+}
+
+/**
+ * gst_buffer_fill:
+ * @buffer: a #GstBuffer.
+ * @offset: the offset to fill
+ * @src: the source address
+ * @size: the size to fill
+ *
+ * Copy @size bytes fro @src to @buffer at @offset.
+ */
+void
+gst_buffer_fill (GstBuffer * buffer, gsize offset, gpointer src, gsize size)
+{
+  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  gsize i, len;
+  guint8 *ptr = src;
+
+  len = arr->len;
+
+  for (i = 0; i < len && size > 0; i++) {
+    guint8 *data;
+    gsize ssize, tocopy;
+    GstMemory *mem;
+
+    mem = g_ptr_array_index (arr, i);
+
+    data = gst_memory_map (mem, &ssize, NULL, GST_MAP_WRITE);
+    if (ssize > offset) {
+      /* we have enough */
+      tocopy = MIN (ssize - offset, size);
+      memcpy (data + offset, ptr, tocopy);
+      size -= tocopy;
+      ptr += tocopy;
+      offset = 0;
+    } else {
+      /* offset past buffer, skip */
+      offset -= ssize;
+    }
+    gst_memory_unmap (mem, data, ssize);
+  }
 }
 
 /**

@@ -300,10 +300,14 @@ void        gst_buffer_take_memory       (GstBuffer *buffer, GstMemory *mem);
 GstMemory * gst_buffer_peek_memory       (GstBuffer *buffer, guint idx);
 void        gst_buffer_remove_memory     (GstBuffer *buffer, guint idx);
 
+void        gst_buffer_fill              (GstBuffer *buffer, gsize offset,
+                                          gpointer src, gsize size);
 void        gst_buffer_extract           (GstBuffer *buffer, gsize offset,
                                           gpointer dest, gsize size);
 
 gsize       gst_buffer_get_size          (GstBuffer *buffer);
+void        gst_buffer_set_size          (GstBuffer *buffer, gsize size);
+void        gst_buffer_trim              (GstBuffer *buffer, gsize offset, gsize size);
 
 /* getting memory */
 gpointer    gst_buffer_map               (GstBuffer *buffer, gsize *size, gsize *maxsize,
