@@ -111,9 +111,17 @@ gst_vorbis_tag_parse_packet (GstVorbisParse * parse, GstBuffer * buffer)
   GstVorbisTag *tagger;
   gchar *encoder = NULL;
   GstBuffer *new_buf;
+  guint8 *data;
+  gsize size;
+  gboolean do_parse = FALSE;
 
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   /* just pass everything except the comments packet */
-  if (GST_BUFFER_SIZE (buffer) >= 1 && GST_BUFFER_DATA (buffer)[0] != 0x03) {
+  if (size >= 1 && data[0] != 0x03)
+    do_parse = TRUE;
+  gst_buffer_unmap (buffer, data, size);
+
+  if (do_parse) {
     return GST_VORBIS_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);
   }
 
@@ -132,7 +140,7 @@ gst_vorbis_tag_parse_packet (GstVorbisParse * parse, GstBuffer * buffer)
   new_buf =
       gst_tag_list_to_vorbiscomment_buffer (new_tags, (guint8 *) "\003vorbis",
       7, encoder);
-  gst_buffer_copy_metadata (new_buf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
+  gst_buffer_copy_into (new_buf, buffer, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
   gst_tag_list_free (new_tags);
   g_free (encoder);

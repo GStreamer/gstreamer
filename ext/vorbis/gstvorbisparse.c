@@ -191,6 +191,7 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   GstCaps *caps;
   GstBuffer *outbuf, *outbuf1, *outbuf2, *outbuf3;
   ogg_packet packet;
+  gsize size;
 
   /* get the headers into the caps, passing them to vorbis as we go */
   caps = gst_caps_make_writable (gst_pad_get_caps (parse->srcpad));
@@ -200,47 +201,50 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   gst_caps_unref (caps);
 
   outbuf = GST_BUFFER_CAST (parse->streamheader->data);
-  packet.packet = GST_BUFFER_DATA (outbuf);
-  packet.bytes = GST_BUFFER_SIZE (outbuf);
+  packet.packet = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READ);
+  packet.bytes = size;
   packet.granulepos = GST_BUFFER_OFFSET_END (outbuf);
   packet.packetno = 1;
   packet.e_o_s = 0;
   packet.b_o_s = 1;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
+  gst_buffer_unmap (outbuf, packet.packet, size);
   parse->sample_rate = parse->vi.rate;
   outbuf1 = outbuf;
 
   outbuf = GST_BUFFER_CAST (parse->streamheader->next->data);
-  packet.packet = GST_BUFFER_DATA (outbuf);
-  packet.bytes = GST_BUFFER_SIZE (outbuf);
+  packet.packet = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READ);
+  packet.bytes = size;
   packet.granulepos = GST_BUFFER_OFFSET_END (outbuf);
   packet.packetno = 2;
   packet.e_o_s = 0;
   packet.b_o_s = 0;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
+  gst_buffer_unmap (outbuf, packet.packet, size);
   outbuf2 = outbuf;
 
   outbuf = GST_BUFFER_CAST (parse->streamheader->next->next->data);
-  packet.packet = GST_BUFFER_DATA (outbuf);
-  packet.bytes = GST_BUFFER_SIZE (outbuf);
+  packet.packet = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READ);
+  packet.bytes = size;
   packet.granulepos = GST_BUFFER_OFFSET_END (outbuf);
   packet.packetno = 3;
   packet.e_o_s = 0;
   packet.b_o_s = 0;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
+  gst_buffer_unmap (outbuf, packet.packet, size);
   outbuf3 = outbuf;
 
   /* first process queued events */
   vorbis_parse_drain_event_queue (parse);
 
   /* push out buffers, ignoring return value... */
-  outbuf1 = gst_buffer_make_metadata_writable (outbuf1);
+  outbuf1 = gst_buffer_make_writable (outbuf1);
   gst_buffer_set_caps (outbuf1, GST_PAD_CAPS (parse->srcpad));
   gst_pad_push (parse->srcpad, outbuf1);
-  outbuf2 = gst_buffer_make_metadata_writable (outbuf2);
+  outbuf2 = gst_buffer_make_writable (outbuf2);
   gst_buffer_set_caps (outbuf2, GST_PAD_CAPS (parse->srcpad));
   gst_pad_push (parse->srcpad, outbuf2);
-  outbuf3 = gst_buffer_make_metadata_writable (outbuf3);
+  outbuf3 = gst_buffer_make_writable (outbuf3);
   gst_buffer_set_caps (outbuf3, GST_PAD_CAPS (parse->srcpad));
   gst_pad_push (parse->srcpad, outbuf3);
 
@@ -358,16 +362,18 @@ vorbis_parse_queue_buffer (GstVorbisParse * parse, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   long blocksize;
   ogg_packet packet;
+  gsize size;
 
-  buf = gst_buffer_make_metadata_writable (buf);
+  buf = gst_buffer_make_writable (buf);
 
-  packet.packet = GST_BUFFER_DATA (buf);
-  packet.bytes = GST_BUFFER_SIZE (buf);
+  packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  packet.bytes = size;
   packet.granulepos = GST_BUFFER_OFFSET_END (buf);
   packet.packetno = parse->packetno + parse->buffer_queue->length;
   packet.e_o_s = 0;
 
   blocksize = vorbis_packet_blocksize (&parse->vi, &packet);
+  gst_buffer_unmap (buf, packet.packet, size);
 
   /* temporarily store the sample count in OFFSET -- we overwrite this later */
 
@@ -391,19 +397,18 @@ vorbis_parse_parse_packet (GstVorbisParse * parse, GstBuffer * buf)
 {
   GstFlowReturn ret;
   guint8 *data;
-  guint size;
+  gsize size;
   gboolean have_header;
-
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
 
   parse->packetno++;
 
   have_header = FALSE;
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   if (size >= 1) {
     if (data[0] >= 0x01 && data[0] <= 0x05)
       have_header = TRUE;
   }
+  gst_buffer_unmap (buf, data, size);
 
   if (have_header) {
     if (!parse->streamheader_sent) {

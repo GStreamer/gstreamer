@@ -629,16 +629,16 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
   guint bitrate = 0;
   gchar *encoder = NULL;
   GstTagList *list, *old_list;
-  GstBuffer *buf;
+  guint8 *data;
+  gsize size;
 
   GST_DEBUG_OBJECT (vd, "parsing comment packet");
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = gst_ogg_packet_data (packet);
-  GST_BUFFER_SIZE (buf) = gst_ogg_packet_size (packet);
+  data = gst_ogg_packet_data (packet);
+  size = gst_ogg_packet_size (packet);
 
   list =
-      gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,
+      gst_tag_list_from_vorbiscomment (data, size, (guint8 *) "\003vorbis", 7,
       &encoder);
 
   old_list = vd->taglist;
@@ -647,7 +647,6 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
   if (old_list)
     gst_tag_list_free (old_list);
   gst_tag_list_free (list);
-  gst_buffer_unref (buf);
 
   if (!vd->taglist) {
     GST_ERROR_OBJECT (vd, "couldn't decode comments");
@@ -859,7 +858,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
   guint sample_count;
   GstBuffer *out = NULL;
   GstFlowReturn result;
-  gint size;
+  guint8 *data;
+  gsize size;
 
   if (G_UNLIKELY (!vd->initialized))
     goto not_initialized;
@@ -899,11 +899,12 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
     goto wrong_samples;
 
   /* copy samples in buffer */
-  vd->copy_samples ((vorbis_sample_t *) GST_BUFFER_DATA (out), pcm,
+  data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
+  vd->copy_samples ((vorbis_sample_t *) data, pcm,
       sample_count, vd->vi.channels, vd->width);
 
   GST_LOG_OBJECT (vd, "setting output size to %d", size);
-  GST_BUFFER_SIZE (out) = size;
+  gst_buffer_unmap (out, data, size);
 
   /* this should not overflow */
   if (duration == -1)
@@ -961,7 +962,7 @@ vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer)
   GstFlowReturn result = GST_FLOW_OK;
 
   /* make ogg_packet out of the buffer */
-  gst_ogg_packet_wrapper_from_buffer (&packet_wrapper, buffer);
+  gst_ogg_packet_wrapper_map (&packet_wrapper, buffer);
   packet = gst_ogg_packet_from_wrapper (&packet_wrapper);
   /* set some more stuff */
   packet->granulepos = -1;
@@ -997,6 +998,8 @@ vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer)
   }
 
 done:
+  gst_ogg_packet_wrapper_unmap (&packet_wrapper, buffer);
+
   return result;
 
 empty_buffer:
@@ -1153,7 +1156,7 @@ vorbis_dec_chain_reverse (GstVorbisDec * vd, gboolean discont, GstBuffer * buf)
   if (G_LIKELY (buf)) {
     GST_DEBUG_OBJECT (vd,
         "gathering buffer %p of size %u, time %" GST_TIME_FORMAT
-        ", dur %" GST_TIME_FORMAT, buf, GST_BUFFER_SIZE (buf),
+        ", dur %" GST_TIME_FORMAT, buf, gst_buffer_get_size (buf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 

@@ -826,7 +826,7 @@ gst_vorbis_enc_buffer_from_packet (GstVorbisEnc * vorbisenc,
   GstBuffer *outbuf;
 
   outbuf = gst_buffer_new_and_alloc (packet->bytes);
-  memcpy (GST_BUFFER_DATA (outbuf), packet->packet, packet->bytes);
+  gst_buffer_fill (outbuf, 0, packet->packet, packet->bytes);
   /* see ext/ogg/README; OFFSET_END takes "our" granulepos, OFFSET its
    * time representation */
   GST_BUFFER_OFFSET_END (outbuf) = packet->granulepos +
@@ -851,7 +851,7 @@ gst_vorbis_enc_buffer_from_packet (GstVorbisEnc * vorbisenc,
   gst_buffer_set_caps (outbuf, vorbisenc->srccaps);
 
   GST_LOG_OBJECT (vorbisenc, "encoded buffer of %d bytes",
-      GST_BUFFER_SIZE (outbuf));
+      gst_buffer_get_size (outbuf));
   return outbuf;
 }
 
@@ -864,7 +864,7 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
   GstBuffer *outbuf;
 
   outbuf = gst_buffer_new_and_alloc (packet->bytes);
-  memcpy (GST_BUFFER_DATA (outbuf), packet->packet, packet->bytes);
+  gst_buffer_fill (outbuf, 0, packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (outbuf) = vorbisenc->bytes_out;
   GST_BUFFER_OFFSET_END (outbuf) = 0;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
@@ -873,7 +873,7 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
   gst_buffer_set_caps (outbuf, vorbisenc->srccaps);
 
   GST_DEBUG ("created header packet buffer, %d bytes",
-      GST_BUFFER_SIZE (outbuf));
+      gst_buffer_get_size (outbuf));
   return outbuf;
 }
 
@@ -881,7 +881,7 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
 static GstFlowReturn
 gst_vorbis_enc_push_buffer (GstVorbisEnc * vorbisenc, GstBuffer * buffer)
 {
-  vorbisenc->bytes_out += GST_BUFFER_SIZE (buffer);
+  vorbisenc->bytes_out += gst_buffer_get_size (buffer);
 
   GST_DEBUG_OBJECT (vorbisenc,
       "Pushing buffer with GP %" G_GINT64_FORMAT ", ts %" GST_TIME_FORMAT,
@@ -1038,7 +1038,7 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstVorbisEnc *vorbisenc;
   GstFlowReturn ret = GST_FLOW_OK;
-  gfloat *data;
+  gfloat *data, *ptr;
   gulong size;
   gulong i, j;
   float **vorbis_buffer;
@@ -1046,6 +1046,7 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
   gboolean first = FALSE;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE;
   GstClockTime running_time = GST_CLOCK_TIME_NONE;
+  gsize bsize;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
@@ -1137,22 +1138,24 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
       timestamp < vorbisenc->expected_ts) {
     guint64 diff = vorbisenc->expected_ts - timestamp;
     guint64 diff_bytes;
+    gsize size;
 
     GST_WARNING_OBJECT (vorbisenc, "Buffer is older than previous "
         "timestamp + duration (%" GST_TIME_FORMAT "< %" GST_TIME_FORMAT
         "), cannot handle. Clipping buffer.",
         GST_TIME_ARGS (timestamp), GST_TIME_ARGS (vorbisenc->expected_ts));
 
+    size = gst_buffer_get_size (buffer);
+
     diff_bytes =
         GST_CLOCK_TIME_TO_FRAMES (diff,
         vorbisenc->frequency) * vorbisenc->channels * sizeof (gfloat);
-    if (diff_bytes >= GST_BUFFER_SIZE (buffer)) {
+    if (diff_bytes >= size) {
       gst_buffer_unref (buffer);
       return GST_FLOW_OK;
     }
-    buffer = gst_buffer_make_metadata_writable (buffer);
-    GST_BUFFER_DATA (buffer) += diff_bytes;
-    GST_BUFFER_SIZE (buffer) -= diff_bytes;
+    buffer = gst_buffer_make_writable (buffer);
+    gst_buffer_trim (buffer, diff_bytes, size - diff_bytes);
 
     GST_BUFFER_TIMESTAMP (buffer) += diff;
     if (GST_BUFFER_DURATION_IS_VALID (buffer))
@@ -1187,14 +1190,17 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   /* Sending zero samples to libvorbis marks EOS, so we mustn't do that */
-  if (GST_BUFFER_SIZE (buffer) == 0) {
+  data = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_WRITE);
+  if (bsize == 0) {
+    gst_buffer_unmap (buffer, data, bsize);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 
   /* data to encode */
-  data = (gfloat *) GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer) / (vorbisenc->channels * sizeof (float));
+  size = bsize / (vorbisenc->channels * sizeof (float));
+
+  ptr = data;
 
   /* expose the buffer to submit data */
   vorbis_buffer = vorbis_analysis_buffer (&vorbisenc->vd, size);
@@ -1202,12 +1208,13 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
   /* deinterleave samples, write the buffer data */
   for (i = 0; i < size; i++) {
     for (j = 0; j < vorbisenc->channels; j++) {
-      vorbis_buffer[j][i] = *data++;
+      vorbis_buffer[j][i] = *ptr++;
     }
   }
 
   /* tell the library how much we actually submitted */
   vorbis_analysis_wrote (&vorbisenc->vd, size);
+  gst_buffer_unmap (buffer, data, bsize);
 
   GST_LOG_OBJECT (vorbisenc, "wrote %lu samples to vorbis", size);
 

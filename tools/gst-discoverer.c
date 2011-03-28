@@ -249,7 +249,9 @@ print_tag_each (GQuark field_id, const GValue * value, gpointer user_data)
     ser = g_value_dup_string (value);
   else if (GST_VALUE_HOLDS_BUFFER (value)) {
     GstBuffer *buf = gst_value_get_buffer (value);
-    ser = g_strdup_printf ("<GstBuffer [%d bytes]>", GST_BUFFER_SIZE (buf));
+    ser =
+        g_strdup_printf ("<GstBuffer [%" G_GSIZE_FORMAT " bytes]>",
+        gst_buffer_get_size (buf));
   } else
     ser = gst_value_serialize (value);
 
