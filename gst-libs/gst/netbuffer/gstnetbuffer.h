@@ -99,7 +99,7 @@ const GstMetaInfo *gst_meta_net_address_get_info (void);
 #define gst_buffer_get_meta_net_address(b) \
   ((GstMetaNetAddress*)gst_buffer_get_meta((b),GST_META_NET_ADDRESS_INFO))
 #define gst_buffer_add_meta_net_address(b) \
-  ((GstMetaNetAddress*)gst_buffer_add_meta((b),GST_META_TIMING_INFO,NULL))
+  ((GstMetaNetAddress*)gst_buffer_add_meta((b),GST_META_NET_ADDRESS_INFO,NULL))
 
 /* address operations */
 void            gst_netaddress_set_ip4_address   (GstNetAddress *naddr, guint32 address, guint16 port);
