@@ -505,6 +505,7 @@ GST_START_TEST (test_crc)
 
   /* verify the header checksum */
   /* CRC's start at 58 in the header */
+  outbuffer = gst_buffer_make_writable (outbuffer);
   data = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READWRITE);
   crc_calculated = gst_dp_crc (data, 58);
   crc_read = GST_READ_UINT16_BE (data + 58);
