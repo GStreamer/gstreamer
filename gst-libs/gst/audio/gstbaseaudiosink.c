@@ -836,6 +836,10 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
   if (!sink->ringbuffer->spec.rate)
     return TRUE;
 
+  /* if PLAYING is interrupted,
+   * arrange to have clock running when going to PLAYING again */
+  g_atomic_int_set (&sink->abidata.ABI.eos_rendering, 1);
+
   /* need to start playback before we can drain, but only when
    * we have successfully negotiated a format and thus acquired the
    * ringbuffer. */
@@ -853,6 +857,7 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
 
     GST_DEBUG_OBJECT (sink, "drained audio");
   }
+  g_atomic_int_set (&sink->abidata.ABI.eos_rendering, 0);
   return TRUE;
 }
 
@@ -1906,7 +1911,8 @@ gst_base_audio_sink_change_state (GstElement * element,
       GST_OBJECT_UNLOCK (sink);
 
       gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
-      if (GST_BASE_SINK_CAST (sink)->pad_mode == GST_ACTIVATE_PULL || eos) {
+      if (GST_BASE_SINK_CAST (sink)->pad_mode == GST_ACTIVATE_PULL ||
+          g_atomic_int_get (&sink->abidata.ABI.eos_rendering) || eos) {
         /* we always start the ringbuffer in pull mode immediatly */
         /* sync rendering on eos needs running clock,
          * and others need running clock when finished rendering eos */

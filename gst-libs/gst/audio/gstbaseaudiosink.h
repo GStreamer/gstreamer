@@ -127,7 +127,14 @@ struct _GstBaseAudioSink {
   /*< private >*/
   GstBaseAudioSinkPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING - 1];
+  union {
+    struct {
+      /*< protected >*/
+      /* with g_atomic_; currently rendering eos */
+      gboolean   eos_rendering;
+    } ABI;
+    gpointer _gst_reserved[GST_PADDING - 1];
+  } abidata;
 };
 
 /**
