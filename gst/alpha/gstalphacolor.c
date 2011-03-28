@@ -638,12 +638,8 @@ static GstFlowReturn
 gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
 {
   GstAlphaColor *alpha = GST_ALPHA_COLOR (btrans);
-
-  if (G_UNLIKELY (GST_BUFFER_SIZE (inbuf) != 4 * alpha->width * alpha->height)) {
-    GST_ERROR_OBJECT (alpha, "Invalid buffer size (was %u, expected %u)",
-        GST_BUFFER_SIZE (inbuf), alpha->width * alpha->height);
-    return GST_FLOW_ERROR;
-  }
+  guint8 *data;
+  gsize size;
 
   if (gst_base_transform_is_passthrough (btrans))
     return GST_FLOW_OK;
@@ -653,9 +649,19 @@ gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
+  data = gst_buffer_map (inbuf, &size, NULL, GST_MAP_READWRITE);
+
+  if (G_UNLIKELY (size != 4 * alpha->width * alpha->height)) {
+    GST_ERROR_OBJECT (alpha, "Invalid buffer size (was %u, expected %u)",
+        size, alpha->width * alpha->height);
+    gst_buffer_unmap (inbuf, data, size);
+    return GST_FLOW_ERROR;
+  }
+
   /* Transform in place */
-  alpha->process (GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf),
-      alpha->matrix);
+  alpha->process (data, size, alpha->matrix);
+
+  gst_buffer_unmap (inbuf, data, size);
 
   return GST_FLOW_OK;
 }

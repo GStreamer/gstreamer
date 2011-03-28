@@ -191,7 +191,7 @@ gst_video_flip_transform_caps (GstBaseTransform * trans,
 
 static gboolean
 gst_video_flip_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   GstVideoFormat format;
   gint width, height;
@@ -903,13 +903,14 @@ gst_video_flip_transform (GstBaseTransform * trans, GstBuffer * in,
 {
   GstVideoFlip *videoflip = GST_VIDEO_FLIP (trans);
   guint8 *dest;
-  const guint8 *src;
+  guint8 *src;
+  gsize srcsize, destsize;
 
   if (G_UNLIKELY (videoflip->process == NULL))
     goto not_negotiated;
 
-  src = GST_BUFFER_DATA (in);
-  dest = GST_BUFFER_DATA (out);
+  src = gst_buffer_map (in, &srcsize, NULL, GST_MAP_READ);
+  dest = gst_buffer_map (out, &destsize, NULL, GST_MAP_WRITE);
 
   GST_LOG_OBJECT (videoflip, "videoflip: flipping %dx%d to %dx%d (%s)",
       videoflip->from_width, videoflip->from_height, videoflip->to_width,
@@ -918,6 +919,9 @@ gst_video_flip_transform (GstBaseTransform * trans, GstBuffer * in,
   GST_OBJECT_LOCK (videoflip);
   videoflip->process (videoflip, dest, src);
   GST_OBJECT_UNLOCK (videoflip);
+
+  gst_buffer_unmap (in, src, srcsize);
+  gst_buffer_unmap (out, dest, destsize);
 
   return GST_FLOW_OK;
 

@@ -333,16 +333,24 @@ static gboolean
 gst_ape_demux_identify_tag (GstTagDemux * demux, GstBuffer * buffer,
     gboolean start_tag, guint * tag_size)
 {
-  if (memcmp (GST_BUFFER_DATA (buffer), "APETAGEX", 8) != 0) {
+  guint8 *data;
+  gsize size;
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
+  if (memcmp (data, "APETAGEX", 8) != 0) {
     GST_DEBUG_OBJECT (demux, "No APETAGEX marker at %s - not an APE file",
         (start_tag) ? "start" : "end");
+    gst_buffer_unmap (buffer, data, size);
     return FALSE;
   }
 
-  *tag_size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buffer) + 12);
+  *tag_size = GST_READ_UINT32_LE (data + 12);
 
   /* size is without header, so add 32 to account for that */
   *tag_size += 32;
+
+  gst_buffer_unmap (buffer, data, size);
 
   return TRUE;
 }

@@ -174,7 +174,7 @@ static GstStaticCaps gst_alpha_alpha_caps =
 
 static gboolean gst_alpha_start (GstBaseTransform * trans);
 static gboolean gst_alpha_get_unit_size (GstBaseTransform * btrans,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 static GstCaps *gst_alpha_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps);
 static gboolean gst_alpha_set_caps (GstBaseTransform * btrans,
@@ -458,7 +458,7 @@ gst_alpha_get_property (GObject * object, guint prop_id, GValue * value,
 
 static gboolean
 gst_alpha_get_unit_size (GstBaseTransform * btrans,
-    GstCaps * caps, guint * size)
+    GstCaps * caps, gsize * size)
 {
   GstVideoFormat format;
   gint width, height;
@@ -2597,6 +2597,8 @@ gst_alpha_transform (GstBaseTransform * btrans, GstBuffer * in, GstBuffer * out)
 {
   GstAlpha *alpha = GST_ALPHA (btrans);
   gint width, height;
+  guint8 *indata, *outdata;
+  gsize insize, outsize;
 
   GST_ALPHA_LOCK (alpha);
 
@@ -2609,8 +2611,13 @@ gst_alpha_transform (GstBaseTransform * btrans, GstBuffer * in, GstBuffer * out)
   width = alpha->width;
   height = alpha->height;
 
-  alpha->process (GST_BUFFER_DATA (in),
-      GST_BUFFER_DATA (out), width, height, alpha);
+  indata = gst_buffer_map (in, &insize, NULL, GST_MAP_READ);
+  outdata = gst_buffer_map (out, &outsize, NULL, GST_MAP_WRITE);
+
+  alpha->process (indata, outdata, width, height, alpha);
+
+  gst_buffer_unmap (out, outdata, outsize);
+  gst_buffer_unmap (in, indata, insize);
 
   GST_ALPHA_UNLOCK (alpha);
 

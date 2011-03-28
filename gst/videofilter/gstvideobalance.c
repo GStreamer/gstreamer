@@ -488,7 +488,7 @@ gst_video_balance_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstVideoBalance *videobalance = GST_VIDEO_BALANCE (base);
   guint8 *data;
-  guint size;
+  gsize size;
 
   if (!videobalance->process)
     goto not_negotiated;
@@ -497,8 +497,7 @@ gst_video_balance_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   if (base->passthrough)
     goto done;
 
-  data = GST_BUFFER_DATA (outbuf);
-  size = GST_BUFFER_SIZE (outbuf);
+  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
 
   if (size != videobalance->size)
     goto wrong_size;
@@ -506,6 +505,8 @@ gst_video_balance_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GST_OBJECT_LOCK (videobalance);
   videobalance->process (videobalance, data);
   GST_OBJECT_UNLOCK (videobalance);
+
+  gst_buffer_unmap (outbuf, data, size);
 
 done:
   return GST_FLOW_OK;
@@ -516,6 +517,7 @@ wrong_size:
     GST_ELEMENT_ERROR (videobalance, STREAM, FORMAT,
         (NULL), ("Invalid buffer size %d, expected %d", size,
             videobalance->size));
+    gst_buffer_unmap (outbuf, data, size);
     return GST_FLOW_ERROR;
   }
 not_negotiated:

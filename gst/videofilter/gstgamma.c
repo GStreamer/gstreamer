@@ -434,7 +434,7 @@ gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstGamma *gamma = GST_GAMMA (base);
   guint8 *data;
-  guint size;
+  gsize size;
 
   if (!gamma->process)
     goto not_negotiated;
@@ -442,8 +442,7 @@ gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   if (base->passthrough)
     goto done;
 
-  data = GST_BUFFER_DATA (outbuf);
-  size = GST_BUFFER_SIZE (outbuf);
+  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
 
   if (size != gamma->size)
     goto wrong_size;
@@ -451,6 +450,8 @@ gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GST_OBJECT_LOCK (gamma);
   gamma->process (gamma, data);
   GST_OBJECT_UNLOCK (gamma);
+
+  gst_buffer_unmap (outbuf, data, size);
 
 done:
   return GST_FLOW_OK;
@@ -460,6 +461,7 @@ wrong_size:
   {
     GST_ELEMENT_ERROR (gamma, STREAM, FORMAT,
         (NULL), ("Invalid buffer size %d, expected %d", size, gamma->size));
+    gst_buffer_unmap (outbuf, data, size);
     return GST_FLOW_ERROR;
   }
 not_negotiated:
