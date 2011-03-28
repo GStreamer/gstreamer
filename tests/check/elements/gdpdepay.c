@@ -94,14 +94,15 @@ cleanup_gdpdepay (GstElement * gdpdepay)
 }
 
 static void
-gdpdepay_push_per_byte (const gchar * reason, guint8 * bytes, guint length)
+gdpdepay_push_per_byte (const gchar * reason, const guint8 * bytes,
+    guint length)
 {
   int i;
   GstBuffer *inbuffer;
 
   for (i = 0; i < length; ++i) {
     inbuffer = gst_buffer_new_and_alloc (1);
-    GST_BUFFER_DATA (inbuffer)[0] = bytes[i];
+    gst_buffer_fill (inbuffer, 0, &bytes[i], 1);
     fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK,
         "%s: failed pushing byte buffer", reason);
   }
@@ -148,13 +149,13 @@ GST_START_TEST (test_audio_per_byte)
   g_free (payload);
 
   buffer = gst_buffer_new_and_alloc (4);
-  memcpy (GST_BUFFER_DATA (buffer), "f00d", 4);
+  gst_buffer_fill (buffer, 0, "f00d", 4);
   GST_BUFFER_TIMESTAMP (buffer) = GST_SECOND;
   GST_BUFFER_DURATION (buffer) = GST_SECOND / 10;
   fail_unless (pk->header_from_buffer (buffer, 0, &len, &header));
   gdpdepay_push_per_byte ("buffer header", header, len);
   fail_unless_equals_int (g_list_length (buffers), 0);
-  gdpdepay_push_per_byte ("buffer payload", GST_BUFFER_DATA (buffer),
+  gdpdepay_push_per_byte ("buffer payload", (const guint8 *) "f00d",
       gst_dp_header_payload_length (header));
   g_free (header);
   gst_buffer_unref (buffer);
@@ -214,21 +215,20 @@ GST_START_TEST (test_audio_in_one_buffer)
           &caps_payload));
 
   buffer = gst_buffer_new_and_alloc (4);
-  memcpy (GST_BUFFER_DATA (buffer), "f00d", 4);
+  gst_buffer_fill (buffer, 0, "f00d", 4);
   fail_unless (pk->header_from_buffer (buffer, 0, &header_len, &buf_header));
 
   payload_len = gst_dp_header_payload_length (caps_header);
 
   inbuffer = gst_buffer_new_and_alloc (2 * GST_DP_HEADER_LENGTH +
-      payload_len + GST_BUFFER_SIZE (buffer));
-  memcpy (GST_BUFFER_DATA (inbuffer), caps_header, GST_DP_HEADER_LENGTH);
+      payload_len + gst_buffer_get_size (buffer));
+  gst_buffer_fill (inbuffer, 0, caps_header, GST_DP_HEADER_LENGTH);
   i = GST_DP_HEADER_LENGTH;
-  memcpy (GST_BUFFER_DATA (inbuffer) + i, caps_payload, payload_len);
+  gst_buffer_fill (inbuffer, i, caps_payload, payload_len);
   i += payload_len;
-  memcpy (GST_BUFFER_DATA (inbuffer) + i, buf_header, GST_DP_HEADER_LENGTH);
+  gst_buffer_fill (inbuffer, i, buf_header, GST_DP_HEADER_LENGTH);
   i += GST_DP_HEADER_LENGTH;
-  memcpy (GST_BUFFER_DATA (inbuffer) + i, GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
+  gst_buffer_fill (inbuffer, i, "f00d", 4);
 
   gst_caps_unref (caps);
   gst_buffer_unref (buffer);
@@ -287,7 +287,8 @@ GST_START_TEST (test_streamheader)
   GstPad *srcpad;
   GstElement *gdpdepay;
   GstBuffer *buffer, *inbuffer, *outbuffer, *shbuffer;
-  guint8 *caps_header, *caps_payload, *buf_header;
+  guint8 *caps_header, *caps_payload, *buf_header, *data;
+  gsize size;
   guint header_len, payload_len;
   guint i;
   GstStructure *structure;
@@ -315,7 +316,7 @@ GST_START_TEST (test_streamheader)
   caps = gst_caps_from_string ("application/x-gst-test-streamheader");
   structure = gst_caps_get_structure (caps, 0);
   buffer = gst_buffer_new_and_alloc (4);
-  memcpy (GST_BUFFER_DATA (buffer), "f00d", 4);
+  gst_buffer_fill (buffer, 0, "f00d", 4);
   GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
   g_value_init (&array, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
@@ -338,16 +339,17 @@ GST_START_TEST (test_streamheader)
 
   payload_len = gst_dp_header_payload_length (caps_header);
 
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   inbuffer = gst_buffer_new_and_alloc (2 * GST_DP_HEADER_LENGTH +
-      payload_len + GST_BUFFER_SIZE (buffer));
-  memcpy (GST_BUFFER_DATA (inbuffer), caps_header, GST_DP_HEADER_LENGTH);
+      payload_len + size);
+  gst_buffer_fill (inbuffer, 0, caps_header, GST_DP_HEADER_LENGTH);
   i = GST_DP_HEADER_LENGTH;
-  memcpy (GST_BUFFER_DATA (inbuffer) + i, caps_payload, payload_len);
+  gst_buffer_fill (inbuffer, i, caps_payload, payload_len);
   i += payload_len;
-  memcpy (GST_BUFFER_DATA (inbuffer) + i, buf_header, GST_DP_HEADER_LENGTH);
+  gst_buffer_fill (inbuffer, i, buf_header, GST_DP_HEADER_LENGTH);
   i += GST_DP_HEADER_LENGTH;
-  memcpy (GST_BUFFER_DATA (inbuffer) + i, GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
+  gst_buffer_fill (inbuffer, i, data, size);
+  gst_buffer_unmap (buffer, data, size);
 
   gst_caps_unref (caps);
   gst_buffer_unref (buffer);
