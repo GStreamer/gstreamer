@@ -623,7 +623,7 @@ GST_START_TEST (test_pb_utils_installer_details)
   /* uri source */
   detail1 = gst_missing_uri_source_installer_detail_new ("http");
   fail_unless (detail1 != NULL);
-  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.10|"));
+  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.11|"));
   fail_unless (g_str_has_suffix (detail1, "|urisource-http"));
   msg = gst_missing_uri_source_message_new (el, "http");
   fail_unless (msg != NULL);
@@ -637,7 +637,7 @@ GST_START_TEST (test_pb_utils_installer_details)
   /* uri sink */
   detail1 = gst_missing_uri_sink_installer_detail_new ("http");
   fail_unless (detail1 != NULL);
-  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.10|"));
+  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.11|"));
   fail_unless (g_str_has_suffix (detail1, "|urisink-http"));
   msg = gst_missing_uri_sink_message_new (el, "http");
   fail_unless (msg != NULL);
@@ -651,7 +651,7 @@ GST_START_TEST (test_pb_utils_installer_details)
   /* element */
   detail1 = gst_missing_element_installer_detail_new ("deinterlace");
   fail_unless (detail1 != NULL);
-  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.10|"));
+  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.11|"));
   fail_unless (g_str_has_suffix (detail1, "|element-deinterlace"));
   msg = gst_missing_element_message_new (el, "deinterlace");
   fail_unless (msg != NULL);
@@ -667,7 +667,7 @@ GST_START_TEST (test_pb_utils_installer_details)
       2, "channels", G_TYPE_INT, 6, NULL);
   detail1 = gst_missing_decoder_installer_detail_new (caps);
   fail_unless (detail1 != NULL);
-  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.10|"));
+  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.11|"));
   fail_unless (g_str_has_suffix (detail1,
           "|decoder-audio/x-spiffy, spiffyversion=(int)2"));
   msg = gst_missing_decoder_message_new (el, caps);
@@ -684,7 +684,7 @@ GST_START_TEST (test_pb_utils_installer_details)
   caps = gst_caps_new_simple ("audio/x-spiffy", "spiffyversion", G_TYPE_INT,
       2, "channels", G_TYPE_INT, 6, NULL);
   detail1 = gst_missing_encoder_installer_detail_new (caps);
-  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.10|"));
+  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.11|"));
   fail_unless (g_str_has_suffix (detail1,
           "|encoder-audio/x-spiffy, spiffyversion=(int)2"));
   fail_unless (detail1 != NULL);
