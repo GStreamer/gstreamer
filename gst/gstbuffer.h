@@ -301,7 +301,7 @@ GstMemory * gst_buffer_peek_memory       (GstBuffer *buffer, guint idx);
 void        gst_buffer_remove_memory     (GstBuffer *buffer, guint idx);
 
 void        gst_buffer_fill              (GstBuffer *buffer, gsize offset,
-                                          gpointer src, gsize size);
+                                          gconstpointer src, gsize size);
 void        gst_buffer_extract           (GstBuffer *buffer, gsize offset,
                                           gpointer dest, gsize size);
 

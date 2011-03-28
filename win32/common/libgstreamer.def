@@ -94,6 +94,7 @@ EXPORTS
 	gst_buffer_copy_into
 	gst_buffer_create_sub
 	gst_buffer_extract
+	gst_buffer_fill
 	gst_buffer_flag_get_type
 	gst_buffer_get_caps
 	gst_buffer_get_meta
@@ -138,6 +139,7 @@ EXPORTS
 	gst_buffer_remove_memory
 	gst_buffer_remove_meta
 	gst_buffer_set_caps
+	gst_buffer_set_size
 	gst_buffer_span
 	gst_buffer_take_memory
 	gst_buffer_try_new_and_alloc

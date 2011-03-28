@@ -705,11 +705,12 @@ gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
  * Copy @size bytes fro @src to @buffer at @offset.
  */
 void
-gst_buffer_fill (GstBuffer * buffer, gsize offset, gpointer src, gsize size)
+gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
+    gsize size)
 {
   GPtrArray *arr = (GPtrArray *) buffer->memory;
   gsize i, len;
-  guint8 *ptr = src;
+  const guint8 *ptr = src;
 
   len = arr->len;
 

@@ -67,6 +67,7 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_buffer_straw_stop_pipeline \
 	gst_check_abi_list \
 	gst_check_caps_equal \
+	gst_check_buffer_data \
 	gst_check_chain_func \
 	gst_check_drop_buffers \
 	gst_check_element_push_buffer \

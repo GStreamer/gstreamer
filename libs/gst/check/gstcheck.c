@@ -366,6 +366,26 @@ gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2)
   g_free (name2);
 }
 
+
+/**
+ * gst_check_buffer_data:
+ * @buffer: buffer to compare
+ * @data: data to compare to
+ * @size: size of data to compare
+ *
+ * Compare the buffer contents with @data and @size.
+ */
+void
+gst_check_buffer_data (GstBuffer * buffer, gconstpointer data, gsize size)
+{
+  guint8 *bdata;
+  gsize bsize;
+
+  bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
+  fail_unless (memcmp (bdata, data, size) == 0, "buffer contents not equal");
+  gst_buffer_unmap (buffer, bdata, bsize);
+}
+
 /**
  * gst_check_element_push_buffer_list:
  * @element_name: name of the element that needs to be created
