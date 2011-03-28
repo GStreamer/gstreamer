@@ -122,6 +122,11 @@ static int n_in_caps = 0;
 static gboolean
 buffer_probe_cb (GstPad * pad, GstBuffer * buffer)
 {
+  guint8 *data;
+  gsize size;
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
     GstCaps *caps;
     GstStructure *s;
@@ -143,22 +148,27 @@ buffer_probe_cb (GstPad * pad, GstBuffer * buffer)
 
     for (i = 0; i < 3; ++i) {
       GValue *val;
+      guint8 *data2;
+      gsize size2;
 
       val = &g_array_index (buffers, GValue, i);
       buf = g_value_peek_pointer (val);
       fail_unless (GST_IS_BUFFER (buf));
-      if (GST_BUFFER_SIZE (buf) == GST_BUFFER_SIZE (buffer)) {
-        if (memcmp (GST_BUFFER_DATA (buf), GST_BUFFER_DATA (buffer),
-                GST_BUFFER_SIZE (buffer)) == 0) {
+
+      data2 = gst_buffer_map (buf, &size2, NULL, GST_MAP_READ);
+      if (size2 == size) {
+        if (memcmp (data2, data, size) == 0) {
           found = TRUE;
         }
       }
+      gst_buffer_unmap (buf, data2, size2);
     }
     fail_unless (found, "Did not find incoming IN_CAPS buffer %p on caps",
         buffer);
 
     gst_caps_unref (caps);
   }
+  gst_buffer_unmap (buffer, data, size);
 
   return TRUE;
 }
