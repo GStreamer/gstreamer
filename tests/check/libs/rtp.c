@@ -35,7 +35,7 @@ GST_START_TEST (test_rtp_buffer)
   GstBuffer *buf;
   guint8 *data;
   gsize size;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL, };
 
   /* check GstRTPHeader structure alignment and packing */
   buf = gst_rtp_buffer_new_allocate (16, 4, 0);
@@ -225,7 +225,7 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   gpointer pointer;
   guint8 appbits;
   gsize bsize;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL, };
 
   /* check GstRTPHeader structure alignment and packing */
   buf = gst_rtp_buffer_new_allocate (4, 0, 0);
@@ -676,7 +676,7 @@ GST_START_TEST (test_rtcp_buffer)
   GstRTCPPacket packet;
   guint8 *data;
   gsize size;
-  GstRTCPBuffer rtcp;
+  GstRTCPBuffer rtcp = { NULL, };
 
   buf = gst_rtcp_buffer_new (1400);
   fail_unless (buf != NULL);

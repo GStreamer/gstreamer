@@ -50,13 +50,9 @@ struct _GstRTPBuffer
 {
   GstBuffer   *buffer;
   GstMapFlags  flags;
+  guint8      *data;
   gsize        size;
   gsize        maxsize;
-
-  guint8      *data;
-  gsize        data_size;
-  guint8      *payload;
-  gsize        payload_size;
 };
 
 /* creating buffers */

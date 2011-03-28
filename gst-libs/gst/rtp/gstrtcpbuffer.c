@@ -287,9 +287,7 @@ gst_rtcp_buffer_unmap (GstRTCPBuffer * rtcp)
     while (gst_rtcp_packet_move_to_next (&packet));
 
   /* shrink size */
-  gst_buffer_set_size (rtcp->buffer, packet.offset);
-
-  res = gst_buffer_unmap (rtcp->buffer, rtcp->data, rtcp->size);
+  res = gst_buffer_unmap (rtcp->buffer, rtcp->data, packet.offset);
   rtcp->buffer = NULL;
 
   return res;

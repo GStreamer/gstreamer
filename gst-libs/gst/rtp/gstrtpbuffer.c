@@ -427,20 +427,21 @@ gboolean
 gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
 {
   guint8 *data;
-  gsize size;
+  gsize size, maxsize;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (rtp != NULL, FALSE);
   g_return_val_if_fail (rtp->buffer == NULL, FALSE);
 
-  data = gst_buffer_map (buffer, &size, NULL, flags);
+  data = gst_buffer_map (buffer, &size, &maxsize, flags);
   if (data == NULL)
     return FALSE;
 
   rtp->buffer = buffer;
   rtp->flags = flags;
   rtp->data = data;
-  rtp->data_size = size;
+  rtp->size = size;
+  rtp->maxsize = maxsize;
 
   return TRUE;
 }
@@ -451,7 +452,7 @@ gst_rtp_buffer_unmap (GstRTPBuffer * rtp)
   g_return_val_if_fail (rtp != NULL, FALSE);
   g_return_val_if_fail (rtp->buffer != NULL, FALSE);
 
-  gst_buffer_unmap (rtp->buffer, rtp->data, rtp->data_size);
+  gst_buffer_unmap (rtp->buffer, rtp->data, rtp->size);
 
   rtp->buffer = NULL;
 
