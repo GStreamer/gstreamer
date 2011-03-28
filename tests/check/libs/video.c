@@ -606,14 +606,16 @@ GST_START_TEST (test_convert_frame)
   guint8 *data;
 
   from_buffer = gst_buffer_new_and_alloc (640 * 480 * 4);
-  data = GST_BUFFER_DATA (from_buffer);
 
+  data = gst_buffer_map (from_buffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 640 * 480; i++) {
     data[4 * i + 0] = 0;        /* x */
     data[4 * i + 1] = 255;      /* R */
     data[4 * i + 2] = 0;        /* G */
     data[4 * i + 3] = 0;        /* B */
   }
+  gst_buffer_unmap (from_buffer, data, 640 * 480 * 4);
+
   from_caps = gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB,
       640, 480, 25, 1, 1, 1);
   gst_buffer_set_caps (from_buffer, from_caps);
@@ -675,14 +677,16 @@ GST_START_TEST (test_convert_frame_async)
   ConvertFrameContext cf_data = { NULL, NULL, NULL };
 
   from_buffer = gst_buffer_new_and_alloc (640 * 480 * 4);
-  data = GST_BUFFER_DATA (from_buffer);
 
+  data = gst_buffer_map (from_buffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 640 * 480; i++) {
     data[4 * i + 0] = 0;        /* x */
     data[4 * i + 1] = 255;      /* R */
     data[4 * i + 2] = 0;        /* G */
     data[4 * i + 3] = 0;        /* B */
   }
+  gst_buffer_unmap (from_buffer, data, 640 * 480 * 4);
+
   from_caps = gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB,
       640, 480, 25, 1, 1, 1);
   gst_buffer_set_caps (from_buffer, from_caps);

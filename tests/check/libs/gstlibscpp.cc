@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 
-#include <gst/app/gstappbuffer.h>
 #include <gst/app/gstapp-marshal.h>
 #include <gst/app/gstappsink.h>
 #include <gst/app/gstappsrc.h>
