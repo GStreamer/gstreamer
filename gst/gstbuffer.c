@@ -578,6 +578,62 @@ gst_buffer_get_size (GstBuffer * buffer)
 }
 
 /**
+ * gst_buffer_trim:
+ * @buffer: a #GstBuffer.
+ * @offset: the new offset
+ * @size: the new size
+ *
+ * Set the total size of the buffer
+ */
+void
+gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
+{
+  GPtrArray *arr;
+  guint len;
+  guint si, di;
+  gsize bsize;
+  GstMemory *mem;
+
+  g_return_if_fail (gst_buffer_is_writable (buffer));
+
+  arr = (GPtrArray *) buffer->memory;
+  len = arr->len;
+  si = di = 0;
+
+  /* copy and trim */
+  while (size > 0) {
+    mem = g_ptr_array_index (arr, si);
+    bsize = gst_memory_get_sizes (mem, NULL);
+
+    if (bsize <= offset) {
+      /* remove buffer */
+      gst_memory_unref (mem);
+      offset -= bsize;
+    } else {
+      gsize tocopy;
+
+      tocopy = MIN (bsize - offset, size);
+      if (tocopy < bsize) {
+        /* we need to clip something */
+        if (GST_MEMORY_IS_WRITABLE (mem)) {
+          gst_memory_trim (mem, offset, tocopy);
+        } else {
+          GstMemory *tmp;
+          tmp = gst_memory_sub (mem, offset, tocopy);
+          gst_memory_unref (mem);
+          mem = tmp;
+        }
+      }
+      g_ptr_array_index (arr, di) = mem;
+      size -= tocopy;
+      di++;
+    }
+    si++;
+  }
+  g_ptr_array_set_size (arr, di);
+}
+
+/**
  * gst_buffer_set_size:
  * @buffer: a #GstBuffer.
  * @size: the new size
@@ -587,8 +643,7 @@ gst_buffer_get_size (GstBuffer * buffer)
 void
 gst_buffer_set_size (GstBuffer * buffer, gsize size)
 {
-  /* FIXME */
-  g_warning ("gst_buffer_set_size not imlpemented");
+  gst_buffer_trim (buffer, 0, size);
 }
 
 /**
@@ -651,6 +706,8 @@ gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
     data = gst_memory_map (mem, size, maxsize, flags);
   } else {
     data = NULL;
+    if (size)
+      *size = 0;
   }
   return data;
 
