@@ -110,6 +110,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <stdio.h>
 #include "gstmultiqueue.h"
 
 /**
@@ -173,7 +174,7 @@ struct _GstMultiQueueItem
   guint32 posid;
 };
 
-static GstSingleQueue *gst_single_queue_new (GstMultiQueue * mqueue, gchar * name);
+static GstSingleQueue *gst_single_queue_new (GstMultiQueue * mqueue, guint id);
 static void gst_single_queue_free (GstSingleQueue * squeue);
 
 static void wake_up_next_non_linked (GstMultiQueue * mq);
@@ -591,11 +592,31 @@ gst_multi_queue_request_new_pad (GstElement * element, GstPadTemplate * temp,
 {
   GstMultiQueue *mqueue = GST_MULTI_QUEUE (element);
   GstSingleQueue *squeue;
+  GList *tmp = NULL;
+  gint temp_id = 0, id = -1;
 
-  GST_LOG_OBJECT (element, "name : %s", GST_STR_NULL (name));
+  if (name)
+    sscanf (name + 4, "%d", &temp_id);
+
+  GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
+  while (id == -1) {
+    for (tmp = mqueue->queues; tmp; tmp = g_list_next (tmp)) {
+      squeue = (GstSingleQueue *) tmp->data;
+      if (squeue->id == temp_id) {
+        temp_id++;
+        break;
+      }
+    }
+    if (tmp == NULL)
+      id = temp_id;
+  }
+  mqueue->nbqueues++;
+  GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
+
+  GST_LOG_OBJECT (element, "name : %s (id %d)", GST_STR_NULL (name), id);
 
   /* Create a new single queue, add the sink and source pad and return the sink pad */
-  squeue = gst_single_queue_new (mqueue, g_strdup(name));
+  squeue = gst_single_queue_new (mqueue, id);
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
   mqueue->queues = g_list_append (mqueue->queues, squeue);
@@ -1706,15 +1727,15 @@ gst_single_queue_free (GstSingleQueue * sq)
 }
 
 static GstSingleQueue *
-gst_single_queue_new (GstMultiQueue * mqueue, gchar * name)
+gst_single_queue_new (GstMultiQueue * mqueue, guint id)
 {
   GstSingleQueue *sq;
-  gchar *tmp;
+  gchar *name;
 
   sq = g_new0 (GstSingleQueue, 1);
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
-  sq->id = mqueue->nbqueues++;
+  sq->id = id;
 
   /* copy over max_size and extra_size so we don't need to take the lock
    * any longer when checking if the queue is full. */
@@ -1750,8 +1771,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, gchar * name)
   sq->sink_tainted = TRUE;
   sq->src_tainted = TRUE;
 
-  if (!name)
-    name = g_strdup_printf ("sink%d", sq->id);
+  name = g_strdup_printf ("sink%d", sq->id);
 
   sq->sinkpad = gst_pad_new_from_static_template (&sinktemplate, name);
 
@@ -1770,9 +1790,8 @@ gst_single_queue_new (GstMultiQueue * mqueue, gchar * name)
   gst_pad_set_iterate_internal_links_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_iterate_internal_links));
 
-  tmp = g_strdup_printf ("src%s", name+4);
-  sq->srcpad = gst_pad_new_from_static_template (&srctemplate, tmp);
-  g_free (tmp);
+  name = g_strdup_printf ("src%d", sq->id);
+  sq->srcpad = gst_pad_new_from_static_template (&srctemplate, name);
   g_free (name);
 
   gst_pad_set_activatepush_function (sq->srcpad,
