@@ -532,6 +532,11 @@ gst_hls_demux_loop (GstHLSDemux * demux)
     GST_TASK_WAIT (demux->task);
   }
 
+  /* Check again if it's the end of the playlist in case we we reached */
+  if (demux->end_of_playlist) {
+    goto end_of_playlist;
+  }
+
   buf = g_queue_pop_head (demux->queue);
   ret = gst_pad_push (demux->srcpad, buf);
   if (ret != GST_FLOW_OK)
