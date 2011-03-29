@@ -345,6 +345,7 @@ gst_funnel_sink_event (GstPad * pad, GstEvent * event)
     {
       GST_OBJECT_LOCK (funnel);
       gst_segment_init (&fpad->segment, GST_FORMAT_UNDEFINED);
+      funnel->has_segment = FALSE;
       GST_OBJECT_UNLOCK (funnel);
     }
       break;
