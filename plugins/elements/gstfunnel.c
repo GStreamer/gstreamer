@@ -109,17 +109,17 @@ GST_BOILERPLATE_FULL (GstFunnel, gst_funnel, GstElement, GST_TYPE_ELEMENT,
 
 static GstStateChangeReturn gst_funnel_change_state (GstElement * element,
     GstStateChange transition);
-
 static GstPad *gst_funnel_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_funnel_release_pad (GstElement * element, GstPad * pad);
 
-static GstFlowReturn gst_funnel_buffer_alloc (GstPad * pad, guint64 offset,
+static GstFlowReturn gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_funnel_sink_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
-static GstFlowReturn gst_funnel_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_funnel_event (GstPad * pad, GstEvent * event);
+static gboolean gst_funnel_sink_event (GstPad * pad, GstEvent * event);
+static GstCaps *gst_funnel_sink_getcaps (GstPad * pad);
+
 static gboolean gst_funnel_src_event (GstPad * pad, GstEvent * event);
-static GstCaps *gst_funnel_getcaps (GstPad * pad);
 
 static void
 gst_funnel_base_init (gpointer g_class)
@@ -135,7 +135,6 @@ gst_funnel_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&funnel_src_template));
 }
-
 
 static void
 gst_funnel_dispose (GObject * object)
@@ -180,7 +179,7 @@ gst_funnel_init (GstFunnel * funnel, GstFunnelClass * g_class)
 }
 
 static GstFlowReturn
-gst_funnel_buffer_alloc (GstPad * pad, guint64 offset, guint size,
+gst_funnel_sink_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent_element (pad));
@@ -192,7 +191,6 @@ gst_funnel_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
   return ret;
 }
-
 
 static GstPad *
 gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
@@ -206,12 +204,14 @@ gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
           "name", name, "direction", templ->direction, "template", templ,
           NULL));
 
-  gst_pad_set_chain_function (sinkpad, GST_DEBUG_FUNCPTR (gst_funnel_chain));
-  gst_pad_set_event_function (sinkpad, GST_DEBUG_FUNCPTR (gst_funnel_event));
+  gst_pad_set_chain_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_funnel_sink_chain));
+  gst_pad_set_event_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_funnel_sink_event));
   gst_pad_set_getcaps_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_funnel_getcaps));
+      GST_DEBUG_FUNCPTR (gst_funnel_sink_getcaps));
   gst_pad_set_bufferalloc_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_funnel_buffer_alloc));
+      GST_DEBUG_FUNCPTR (gst_funnel_sink_buffer_alloc));
 
   gst_pad_set_active (sinkpad, TRUE);
 
@@ -233,7 +233,7 @@ gst_funnel_release_pad (GstElement * element, GstPad * pad)
 }
 
 static GstCaps *
-gst_funnel_getcaps (GstPad * pad)
+gst_funnel_sink_getcaps (GstPad * pad)
 {
   GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
   GstCaps *caps;
@@ -248,7 +248,7 @@ gst_funnel_getcaps (GstPad * pad)
 }
 
 static GstFlowReturn
-gst_funnel_chain (GstPad * pad, GstBuffer * buffer)
+gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn res;
   GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
@@ -290,7 +290,6 @@ gst_funnel_chain (GstPad * pad, GstBuffer * buffer)
       GST_WARNING_OBJECT (funnel, "Could not push out newsegment event");
   }
 
-
   GST_OBJECT_LOCK (pad);
   padcaps = GST_PAD_CAPS (funnel->srcpad);
   GST_OBJECT_UNLOCK (pad);
@@ -313,7 +312,7 @@ out:
 }
 
 static gboolean
-gst_funnel_event (GstPad * pad, GstEvent * event)
+gst_funnel_sink_event (GstPad * pad, GstEvent * event)
 {
   GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
   GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
@@ -332,7 +331,6 @@ gst_funnel_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_new_segment_full (event, &update, &rate, &arate,
           &format, &start, &stop, &time);
-
 
       GST_OBJECT_LOCK (funnel);
       gst_segment_set_newsegment_full (&fpad->segment, update, rate, arate,
@@ -353,7 +351,6 @@ gst_funnel_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
-
 
   if (forward)
     res = gst_pad_push_event (funnel->srcpad, event);
