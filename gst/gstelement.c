@@ -1047,7 +1047,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
           break;
         }
         /* Because of sanity checks in gst_pad_template_new(), we know that %s
-           and %d, occurring at the end of the name_template, are the only
+           and %d and %u, occurring at the end of the name_template, are the only
            possibilities. */
         else if ((str = strchr (templ->name_template, '%'))
             && strncmp (templ->name_template, name,
@@ -1061,6 +1061,16 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
             tmp = strtol (data, &endptr, 10);
             if (tmp != G_MINLONG && tmp != G_MAXLONG && endptr &&
                 *endptr == '\0') {
+              templ_found = TRUE;
+              req_name = name;
+              break;
+            }
+          } else if (*(str + 1) == 'u') {
+            guint tmp;
+
+            /* it's an int */
+            tmp = strtoul (data, &endptr, 10);
+            if (tmp != G_MAXULONG && endptr && *endptr == '\0') {
               templ_found = TRUE;
               req_name = name;
               break;
@@ -1333,8 +1343,7 @@ gst_element_class_set_icon_name (GstElementClass * klass, const gchar * name)
  */
 #ifndef GST_REMOVE_DEPRECATED
 #ifdef GST_DISABLE_DEPRECATED
-void
-gst_element_class_set_details (GstElementClass * klass,
+void gst_element_class_set_details (GstElementClass * klass,
     const GstElementDetails * details);
 #endif
 void
@@ -1418,8 +1427,8 @@ gst_element_class_get_pad_template_list (GstElementClass * element_class)
  *     if none was found. No unreferencing is necessary.
  */
 GstPadTemplate *
-gst_element_class_get_pad_template (GstElementClass * element_class,
-    const gchar * name)
+gst_element_class_get_pad_template (GstElementClass *
+    element_class, const gchar * name)
 {
   GList *padlist;
 
@@ -1441,8 +1450,8 @@ gst_element_class_get_pad_template (GstElementClass * element_class,
 }
 
 static GstPadTemplate *
-gst_element_class_get_request_pad_template (GstElementClass * element_class,
-    const gchar * name)
+gst_element_class_get_request_pad_template (GstElementClass *
+    element_class, const gchar * name)
 {
   GstPadTemplate *tmpl;
 
@@ -1457,8 +1466,8 @@ gst_element_class_get_request_pad_template (GstElementClass * element_class,
  * The pad is random in a sense that it is the first pad that is (optionaly) linked.
  */
 static GstPad *
-gst_element_get_random_pad (GstElement * element, gboolean need_linked,
-    GstPadDirection dir)
+gst_element_get_random_pad (GstElement * element,
+    gboolean need_linked, GstPadDirection dir)
 {
   GstPad *result = NULL;
   GList *pads;
@@ -1969,7 +1978,8 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
 
 was_ok:
   {
-    GST_CAT_DEBUG (GST_CAT_STATES, "elements %s was already in locked state %d",
+    GST_CAT_DEBUG (GST_CAT_STATES,
+        "elements %s was already in locked state %d",
         GST_ELEMENT_NAME (element), old);
     GST_OBJECT_UNLOCK (element);
 
