@@ -992,6 +992,7 @@ gst_base_audio_decoder_flush (GstBaseAudioDecoder * dec, gboolean hard)
   if (!hard) {
     ret = gst_base_audio_decoder_drain (dec);
   } else {
+    gst_base_audio_decoder_clear_queues (dec);
     gst_segment_init (&dec->segment, GST_FORMAT_TIME);
     dec->priv->error_count = 0;
   }
@@ -1357,7 +1358,7 @@ gst_base_audio_decoder_sink_eventfunc (GstBaseAudioDecoder * dec,
 
     case GST_EVENT_FLUSH_STOP:
       /* prepare for fresh start */
-      gst_base_audio_decoder_flush (dec, FALSE);
+      gst_base_audio_decoder_flush (dec, TRUE);
       break;
 
     case GST_EVENT_EOS:
