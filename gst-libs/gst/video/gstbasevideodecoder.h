@@ -56,9 +56,10 @@ G_BEGIN_DECLS
 #define GST_BASE_VIDEO_DECODER_SRC_NAME     "src"
 
 /**
- *  * GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA:
- *   *
- *    */
+ * GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA:
+ *
+ * Returned while parsing to indicate more data is needed.
+ **/
 #define GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
 
@@ -69,39 +70,54 @@ struct _GstBaseVideoDecoder
 {
   GstBaseVideoCodec base_video_codec;
 
+  /*< protected >*/
+  gboolean          sink_clipping;
+  gboolean          do_byte_time;
+  gboolean          packetized;
+
+  /* parse tracking */
+  /* input data */
+  GstAdapter       *input_adapter;
+  /* assembles current frame */
+  GstAdapter       *output_adapter;
+
   /*< private >*/
-  GstAdapter *input_adapter;
-  GstAdapter *output_adapter;
+  /* FIXME move to real private part ?
+   * (and introduce a context ?) */
+  /* ... being tracked here;
+   * only available during parsing */
+  /* FIXME remove and add parameter to method */
+  GstVideoFrame    *current_frame;
+  /* relative offset of input data */
+  guint64           input_offset;
+  /* relative offset of frame */
+  guint64           frame_offset;
+  /* tracking ts and offsets */
+  GList            *timestamps;
+  /* whether parsing is in sync */
+  gboolean          have_sync;
 
-  gboolean have_sync;
-  gboolean discont;
+  /* maybe sort-of protected ? */
 
-  gboolean sink_clipping;
-  gboolean do_byte_time;
+  /* need mark discont */
+  gboolean          discont;
+  /* src caps set */
+  gboolean          have_src_caps;
 
-  gboolean have_src_caps;
+  /* combine to yield (presentation) ts */
+  GstClockTime      timestamp_offset;
+  int               field_index;
 
-  GstVideoFrame *current_frame;
+  /* last outgoing ts */
+  GstClockTime      last_timestamp;
 
-  int distance_from_sync;
-  int reorder_depth;
-
-  GstClockTime timestamp_offset;
-
-  guint64 input_offset;
-  guint64 frame_offset;
-  GstClockTime last_timestamp;
-
-  guint64 base_picture_number;
-
-  int field_index;
-
-  gboolean packetized;
-
-  GList *timestamps;
+  /* no comment ... */
+  guint64           base_picture_number;
+  int               reorder_depth;
+  int               distance_from_sync;
 
   /* FIXME before moving to base */
-  void *padding[GST_PADDING_LARGE];
+  void             *padding[GST_PADDING_LARGE];
 };
 
 struct _GstBaseVideoDecoderClass
