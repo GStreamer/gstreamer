@@ -212,6 +212,17 @@ gst_codec_sink_base_init (gpointer klass)
 {
 }
 
+static gboolean
+gst_codec_sink_start (GstBaseSink * bsink)
+{
+  GstCodecSink *sink = (GstCodecSink *) bsink;
+
+  sink->n_raw = 0;
+  sink->n_compressed = 0;
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_codec_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
@@ -230,6 +241,7 @@ gst_codec_sink_class_init (GstCodecSinkClass * klass)
 {
   GstBaseSinkClass *basesink_class = (GstBaseSinkClass *) klass;
 
+  basesink_class->start = gst_codec_sink_start;
   basesink_class->render = gst_codec_sink_render;
 }
 
