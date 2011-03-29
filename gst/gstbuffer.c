@@ -131,6 +131,9 @@
 
 GType _gst_buffer_type = 0;
 
+static GstMemory *_gst_buffer_arr_span (GstMemory ** mem[], gsize len[],
+    guint n, gsize offset, gsize size);
+
 typedef struct _GstMetaItem GstMetaItem;
 
 struct _GstMetaItem
@@ -157,12 +160,38 @@ typedef struct
   GstMetaItem *item;
 } GstBufferImpl;
 
+static void
+_span_memory (GstBuffer * buffer, gsize offset, gsize size)
+{
+  GstMemory *span, **mem[1];
+  gsize len[1], i;
+
+  /* not enough room, span buffers */
+  mem[0] = GST_BUFFER_MEM_ARRAY (buffer);
+  len[0] = GST_BUFFER_MEM_LEN (buffer);
+  span = _gst_buffer_arr_span (mem, len, 1, offset, size);
+
+  /* unref old buffers */
+  for (i = 0; i < len[0]; i++)
+    gst_memory_unref (mem[0][i]);
+
+  /* replace with single spanned buffer */
+  GST_BUFFER_MEM_PTR (buffer, 0) = span;
+  GST_BUFFER_MEM_LEN (buffer) = 1;
+}
+
 static inline void
 _memory_add (GstBuffer * buffer, GstMemory * mem)
 {
   guint len = GST_BUFFER_MEM_LEN (buffer);
-  /* FIXME, span buffers when we run out of places */
-  g_return_if_fail (len < GST_BUFFER_MEM_MAX);
+
+  if (G_UNLIKELY (len >= GST_BUFFER_MEM_MAX)) {
+    gsize size = gst_buffer_get_size (buffer);
+    /* to many buffer, span them */
+    _span_memory (buffer, 0, size);
+    /* we now have 1 single spanned buffer */
+    len = 1;
+  }
   GST_BUFFER_MEM_PTR (buffer, len) = mem;
   GST_BUFFER_MEM_LEN (buffer) = len + 1;
 }
@@ -223,12 +252,13 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   if (G_UNLIKELY (dest == src))
     return;
 
+  g_return_if_fail (gst_buffer_is_writable (dest));
+
   bufsize = gst_buffer_get_size (src);
+  g_return_if_fail (bufsize >= offset);
   if (size == -1)
     size = bufsize - offset;
-
   g_return_if_fail (bufsize >= offset + size);
-  g_return_if_fail (gst_buffer_is_writable (dest));
 
   GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p, offset %" G_GSIZE_FORMAT
       "-%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT, src, dest, offset, size,
@@ -646,13 +676,19 @@ gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
 {
   guint len;
   guint si, di;
-  gsize bsize;
+  gsize bsize, bufsize;
   GstMemory *mem;
 
   GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSIZE_FORMAT "-%" G_GSIZE_FORMAT,
       buffer, offset, size);
 
   g_return_if_fail (gst_buffer_is_writable (buffer));
+
+  bufsize = gst_buffer_get_size (buffer);
+  g_return_if_fail (bufsize >= offset);
+  if (size == -1)
+    size = bufsize - offset;
+  g_return_if_fail (bufsize >= offset + size);
 
   len = GST_BUFFER_MEM_LEN (buffer);
 
@@ -963,8 +999,10 @@ gst_buffer_create_sub (GstBuffer * buffer, gsize offset, gsize size)
 
   g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (buffer->mini_object.refcount > 0, NULL);
-
   bufsize = gst_buffer_get_size (buffer);
+  g_return_val_if_fail (bufsize >= offset, NULL);
+  if (size == -1)
+    size = bufsize - offset;
   g_return_val_if_fail (bufsize >= offset + size, NULL);
 
   /* create the new buffer */
@@ -976,6 +1014,92 @@ gst_buffer_create_sub (GstBuffer * buffer, gsize offset, gsize size)
   gst_buffer_copy_into (subbuffer, buffer, GST_BUFFER_COPY_ALL, offset, size);
 
   return subbuffer;
+}
+
+static gboolean
+_gst_buffer_arr_is_span_fast (GstMemory ** mem[], gsize len[], guint n,
+    gsize * offset, GstMemory ** parent)
+{
+  GstMemory *mcur, *mprv;
+  gboolean have_offset = FALSE;
+  guint count, i;
+
+  mcur = mprv = NULL;
+  for (count = 0; count < n; count++) {
+    gsize offs, clen;
+    GstMemory **cmem;
+
+    cmem = mem[count];
+    clen = len[count];
+
+    for (i = 0; i < clen; i++) {
+      if (mcur)
+        mprv = mcur;
+      mcur = cmem[i];
+
+      if (mprv && mcur) {
+        /* check is memory is contiguous */
+        if (!gst_memory_is_span (mprv, mcur, &offs))
+          return FALSE;
+
+        if (!have_offset) {
+          if (offset)
+            *offset = offs;
+          if (parent)
+            *parent = mprv->parent;
+
+          have_offset = TRUE;
+        }
+      }
+    }
+  }
+  return have_offset;
+}
+
+static GstMemory *
+_gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
+    gsize size)
+{
+  GstMemory *span, *parent;
+  gsize poffset;
+
+  if (_gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
+    span = gst_memory_sub (parent, offset + poffset, size);
+  } else {
+    gsize count, left;
+    guint8 *dest, *ptr;
+
+    span = gst_memory_new_alloc (size, 0);
+    dest = gst_memory_map (span, NULL, NULL, GST_MAP_WRITE);
+
+    ptr = dest;
+    left = size;
+
+    for (count = 0; count < n; count++) {
+      gsize i, tocopy, clen, ssize;
+      guint8 *src;
+      GstMemory **cmem;
+
+      cmem = mem[count];
+      clen = len[count];
+
+      for (i = 0; i < clen && left > 0; i++) {
+        src = gst_memory_map (cmem[i], &ssize, NULL, GST_MAP_READ);
+        tocopy = MIN (ssize, left);
+        if (tocopy > offset) {
+          memcpy (ptr, src + offset, tocopy - offset);
+          left -= tocopy;
+          ptr += tocopy;
+          offset = 0;
+        } else {
+          offset -= tocopy;
+        }
+        gst_memory_unmap (cmem[i], src, ssize);
+      }
+    }
+    gst_memory_unmap (span, dest, size);
+  }
+  return span;
 }
 
 /**
@@ -994,20 +1118,20 @@ gst_buffer_create_sub (GstBuffer * buffer, gsize offset, gsize size)
 gboolean
 gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
 {
-  GstMemory **arr1, **arr2;
-  gsize len1, len2;
+  GstMemory **mem[2];
+  gsize len[2];
 
   g_return_val_if_fail (GST_IS_BUFFER (buf1), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buf2), FALSE);
   g_return_val_if_fail (buf1->mini_object.refcount > 0, FALSE);
   g_return_val_if_fail (buf2->mini_object.refcount > 0, FALSE);
 
-  arr1 = GST_BUFFER_MEM_ARRAY (buf1);
-  len1 = GST_BUFFER_MEM_LEN (buf1);
-  arr2 = GST_BUFFER_MEM_ARRAY (buf2);
-  len2 = GST_BUFFER_MEM_LEN (buf2);
+  mem[0] = GST_BUFFER_MEM_ARRAY (buf1);
+  len[0] = GST_BUFFER_MEM_LEN (buf1);
+  mem[1] = GST_BUFFER_MEM_ARRAY (buf2);
+  len[1] = GST_BUFFER_MEM_LEN (buf2);
 
-  return gst_memory_is_span (arr1, len1, arr2, len2, NULL, NULL);
+  return _gst_buffer_arr_is_span_fast (mem, len, 2, NULL, NULL);
 }
 
 /**
@@ -1016,7 +1140,7 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
  * @offset: the offset in the first buffer from where the new
  * buffer should start.
  * @buf2: the second source #GstBuffer to merge.
- * @len: the total length of the new buffer.
+ * @size: the total size of the new buffer.
  *
  * Creates a new buffer that consists of part of buf1 and buf2.
  * Logically, buf1 and buf2 are concatenated into a single larger
@@ -1034,30 +1158,34 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
  *     buffers, or NULL if the arguments are invalid.
  */
 GstBuffer *
-gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize len)
+gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize size)
 {
   GstBuffer *newbuf;
-  GstMemory **arr1, **arr2;
-  gsize len1, len2;
-  GstMemory *mem;
+  GstMemory *span;
+  GstMemory **mem[2];
+  gsize len[2], len1, len2;
 
   g_return_val_if_fail (GST_IS_BUFFER (buf1), NULL);
   g_return_val_if_fail (GST_IS_BUFFER (buf2), NULL);
   g_return_val_if_fail (buf1->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (buf2->mini_object.refcount > 0, NULL);
-  g_return_val_if_fail (len > 0, NULL);
-  g_return_val_if_fail (len <= gst_buffer_get_size (buf1) +
-      gst_buffer_get_size (buf2) - offset, NULL);
+  len1 = gst_buffer_get_size (buf1);
+  len2 = gst_buffer_get_size (buf2);
+  g_return_val_if_fail (len1 + len2 > offset, NULL);
+  if (size == -1)
+    size = len1 + len2 - offset;
+  else
+    g_return_val_if_fail (size <= len1 + len2 - offset, NULL);
+
+  mem[0] = GST_BUFFER_MEM_ARRAY (buf1);
+  len[0] = GST_BUFFER_MEM_LEN (buf1);
+  mem[1] = GST_BUFFER_MEM_ARRAY (buf2);
+  len[1] = GST_BUFFER_MEM_LEN (buf2);
+
+  span = _gst_buffer_arr_span (mem, len, 2, offset, size);
 
   newbuf = gst_buffer_new ();
-
-  arr1 = GST_BUFFER_MEM_ARRAY (buf1);
-  len1 = GST_BUFFER_MEM_LEN (buf1);
-  arr2 = GST_BUFFER_MEM_ARRAY (buf2);
-  len2 = GST_BUFFER_MEM_LEN (buf2);
-
-  mem = gst_memory_span (arr1, len1, offset, arr2, len2, len);
-  _memory_add (newbuf, mem);
+  _memory_add (newbuf, span);
 
 #if 0
   /* if the offset is 0, the new buffer has the same timestamp as buf1 */

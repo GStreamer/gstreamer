@@ -135,9 +135,7 @@ GstMemory * gst_memory_copy       (GstMemory *mem, gsize offset, gsize size);
 GstMemory * gst_memory_sub        (GstMemory *mem, gsize offset, gsize size);
 
 /* memory arrays */
-gboolean    gst_memory_is_span    (GstMemory **mem1, gsize len1,
-                                   GstMemory **mem2, gsize len2,
-                                   GstMemory **parent, gsize *offset);
+gboolean    gst_memory_is_span    (GstMemory *mem1, GstMemory *mem2, gsize *offset);
 GstMemory * gst_memory_span       (GstMemory **mem1, gsize len1, gsize offset,
                                    GstMemory **mem2, gsize len2, gsize size);
 

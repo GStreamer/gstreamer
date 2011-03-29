@@ -213,6 +213,9 @@ _default_mem_sub (GstMemoryDefault * mem, gsize offset, gsize size)
   if ((parent = mem->mem.parent) == NULL)
     parent = (GstMemory *) mem;
 
+  if (size == -1)
+    size = mem->size - offset;
+
   sub = _default_mem_new (parent->flags, parent, mem->data, NULL, mem->maxsize,
       mem->offset + offset, size);
 
@@ -478,101 +481,22 @@ gst_memory_sub (GstMemory * mem, gsize offset, gsize size)
 }
 
 gboolean
-gst_memory_is_span (GstMemory ** mem1, gsize len1, GstMemory ** mem2,
-    gsize len2, GstMemory ** parent, gsize * offset)
+gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
 {
-  GstMemory *m1, *m2, **arr;
-  gsize len, i;
-  guint count;
-  gboolean have_offset = FALSE;
-
   g_return_val_if_fail (mem1 != NULL, FALSE);
   g_return_val_if_fail (mem2 != NULL, FALSE);
 
-  arr = mem1;
-  len = len1;
-  m1 = m2 = NULL;
+  /* need to have the same implementation */
+  if (mem1->impl != mem2->impl)
+    return FALSE;
 
-  for (count = 0; count < 2; count++) {
-    gsize offs;
+  /* need to have the same parent */
+  if (mem1->parent == NULL || mem1->parent != mem2->parent)
+    return FALSE;
 
-    for (i = 0; i < len; i++) {
-      if (m2)
-        m1 = m2;
-      m2 = arr[i];
-
-      if (m1 && m2) {
-        /* need to have the same implementation */
-        if (m1->impl != m2->impl)
-          return FALSE;
-
-        /* need to have the same parent */
-        if (m1->parent == NULL || m1->parent != m2->parent)
-          return FALSE;
-
-        /* and memory is contiguous */
-        if (!m1->impl->info.is_span (m1, m2, &offs))
-          return FALSE;
-
-        if (!have_offset) {
-          if (offset)
-            *offset = offs;
-          if (parent)
-            *parent = m1->parent;
-
-          have_offset = TRUE;
-        }
-      }
-    }
-    arr = mem2;
-    len = len2;
-  }
-  if (!have_offset)
+  /* and memory is contiguous */
+  if (!mem1->impl->info.is_span (mem1, mem2, offset))
     return FALSE;
 
   return TRUE;
-}
-
-GstMemory *
-gst_memory_span (GstMemory ** mem1, gsize len1, gsize offset, GstMemory ** mem2,
-    gsize len2, gsize size)
-{
-  GstMemory *span, **mem, *parent;
-  guint8 *data, *dest;
-  gsize count, ssize, tocopy, len, poffset, i;
-
-  g_return_val_if_fail (mem1 != NULL, NULL);
-  g_return_val_if_fail (mem2 != NULL, NULL);
-
-  if (gst_memory_is_span (mem1, len1, mem2, len2, &parent, &poffset)) {
-    span = gst_memory_sub (parent, offset + poffset, size);
-  } else {
-    GstMemoryDefault *tspan;
-
-    tspan = _default_mem_new_block (size, 0, 0, size);
-    dest = tspan->data;
-
-    mem = mem1;
-    len = len1;
-
-    for (count = 0; count < 2; count++) {
-      for (i = 0; i < len && size > 0; i++) {
-        data = gst_memory_map (mem[i], &ssize, NULL, GST_MAP_READ);
-        tocopy = MIN (ssize, size);
-        if (tocopy > offset) {
-          memcpy (dest, data + offset, tocopy - offset);
-          size -= tocopy;
-          dest += tocopy;
-          offset = 0;
-        } else {
-          offset -= tocopy;
-        }
-        gst_memory_unmap (mem[i], data, ssize);
-      }
-      mem = mem2;
-      len = len2;
-    }
-    span = (GstMemory *) tspan;
-  }
-  return span;
 }

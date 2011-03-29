@@ -541,7 +541,6 @@ EXPORTS
 	gst_memory_new_wrapped
 	gst_memory_ref
 	gst_memory_register
-	gst_memory_span
 	gst_memory_sub
 	gst_memory_trim
 	gst_memory_unmap
