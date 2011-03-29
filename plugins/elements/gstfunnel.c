@@ -38,6 +38,54 @@
 GST_DEBUG_CATEGORY_STATIC (gst_funnel_debug);
 #define GST_CAT_DEFAULT gst_funnel_debug
 
+GType gst_funnel_pad_get_type (void);
+#define GST_TYPE_FUNNEL_PAD \
+  (gst_funnel_pad_get_type())
+#define GST_FUNNEL_PAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_FUNNEL_PAD, GstFunnelPad))
+#define GST_FUNNEL_PAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_FUNNEL_PAD, GstFunnelPadClass))
+#define GST_IS_FUNNEL_PAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_FUNNEL_PAD))
+#define GST_IS_FUNNEL_PAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FUNNEL_PAD))
+#define GST_FUNNEL_PAD_CAST(obj) \
+  ((GstFunnelPad *)(obj))
+
+typedef struct _GstFunnelPad GstFunnelPad;
+typedef struct _GstFunnelPadClass GstFunnelPadClass;
+
+struct _GstFunnelPad
+{
+  GstPad parent;
+
+  GstSegment segment;
+};
+
+struct _GstFunnelPadClass
+{
+  GstPadClass parent;
+};
+
+G_DEFINE_TYPE (GstFunnelPad, gst_funnel_pad, GST_TYPE_PAD);
+
+static void
+gst_funnel_pad_class_init (GstFunnelPadClass * klass)
+{
+}
+
+static void
+gst_funnel_pad_reset (GstFunnelPad * pad)
+{
+  gst_segment_init (&pad->segment, GST_FORMAT_UNDEFINED);
+}
+
+static void
+gst_funnel_pad_init (GstFunnelPad * pad)
+{
+  gst_funnel_pad_reset (pad);
+}
+
 static GstStaticPadTemplate funnel_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_PAD_SINK,
@@ -72,12 +120,6 @@ static GstFlowReturn gst_funnel_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_funnel_event (GstPad * pad, GstEvent * event);
 static gboolean gst_funnel_src_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_funnel_getcaps (GstPad * pad);
-
-
-typedef struct
-{
-  GstSegment segment;
-} GstFunnelPadPrivate;
 
 static void
 gst_funnel_base_init (gpointer g_class)
@@ -157,11 +199,12 @@ gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name)
 {
   GstPad *sinkpad;
-  GstFunnelPadPrivate *priv = g_slice_alloc0 (sizeof (GstFunnelPadPrivate));
 
   GST_DEBUG_OBJECT (element, "requesting pad");
 
-  sinkpad = gst_pad_new_from_template (templ, name);
+  sinkpad = GST_PAD_CAST (g_object_new (GST_TYPE_FUNNEL_PAD,
+          "name", name, "direction", templ->direction, "template", templ,
+          NULL));
 
   gst_pad_set_chain_function (sinkpad, GST_DEBUG_FUNCPTR (gst_funnel_chain));
   gst_pad_set_event_function (sinkpad, GST_DEBUG_FUNCPTR (gst_funnel_event));
@@ -169,9 +212,6 @@ gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_FUNCPTR (gst_funnel_getcaps));
   gst_pad_set_bufferalloc_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_funnel_buffer_alloc));
-
-  gst_segment_init (&priv->segment, GST_FORMAT_UNDEFINED);
-  gst_pad_set_element_private (sinkpad, priv);
 
   gst_pad_set_active (sinkpad, TRUE);
 
@@ -184,14 +224,10 @@ static void
 gst_funnel_release_pad (GstElement * element, GstPad * pad)
 {
   GstFunnel *funnel = GST_FUNNEL (element);
-  GstFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
 
   GST_DEBUG_OBJECT (funnel, "releasing pad");
 
   gst_pad_set_active (pad, FALSE);
-
-  if (priv)
-    g_slice_free1 (sizeof (GstFunnelPadPrivate), priv);
 
   gst_element_remove_pad (GST_ELEMENT_CAST (funnel), pad);
 }
@@ -216,7 +252,7 @@ gst_funnel_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn res;
   GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
-  GstFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
+  GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
   GstEvent *event = NULL;
   GstClockTime newts;
   GstCaps *padcaps;
@@ -224,19 +260,19 @@ gst_funnel_chain (GstPad * pad, GstBuffer * buffer)
   GST_DEBUG_OBJECT (funnel, "received buffer %p", buffer);
 
   GST_OBJECT_LOCK (funnel);
-  if (priv->segment.format == GST_FORMAT_UNDEFINED) {
+  if (fpad->segment.format == GST_FORMAT_UNDEFINED) {
     GST_WARNING_OBJECT (funnel, "Got buffer without segment,"
         " setting segment [0,inf[");
-    gst_segment_set_newsegment_full (&priv->segment, FALSE, 1.0, 1.0,
+    gst_segment_set_newsegment_full (&fpad->segment, FALSE, 1.0, 1.0,
         GST_FORMAT_TIME, 0, -1, 0);
   }
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)))
-    gst_segment_set_last_stop (&priv->segment, priv->segment.format,
+    gst_segment_set_last_stop (&fpad->segment, fpad->segment.format,
         GST_BUFFER_TIMESTAMP (buffer));
 
-  newts = gst_segment_to_running_time (&priv->segment,
-      priv->segment.format, GST_BUFFER_TIMESTAMP (buffer));
+  newts = gst_segment_to_running_time (&fpad->segment,
+      fpad->segment.format, GST_BUFFER_TIMESTAMP (buffer));
   if (newts != GST_BUFFER_TIMESTAMP (buffer)) {
     buffer = gst_buffer_make_metadata_writable (buffer);
     GST_BUFFER_TIMESTAMP (buffer) = newts;
@@ -280,7 +316,7 @@ static gboolean
 gst_funnel_event (GstPad * pad, GstEvent * event)
 {
   GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
-  GstFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
+  GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
   gboolean forward = TRUE;
   gboolean res = TRUE;
 
@@ -299,7 +335,7 @@ gst_funnel_event (GstPad * pad, GstEvent * event)
 
 
       GST_OBJECT_LOCK (funnel);
-      gst_segment_set_newsegment_full (&priv->segment, update, rate, arate,
+      gst_segment_set_newsegment_full (&fpad->segment, update, rate, arate,
           format, start, stop, time);
       GST_OBJECT_UNLOCK (funnel);
 
@@ -310,7 +346,7 @@ gst_funnel_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
     {
       GST_OBJECT_LOCK (funnel);
-      gst_segment_init (&priv->segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (&fpad->segment, GST_FORMAT_UNDEFINED);
       GST_OBJECT_UNLOCK (funnel);
     }
       break;
@@ -370,10 +406,10 @@ static void
 reset_pad (gpointer data, gpointer user_data)
 {
   GstPad *pad = data;
-  GstFunnelPadPrivate *priv = gst_pad_get_element_private (pad);
+  GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
 
   GST_OBJECT_LOCK (pad);
-  gst_segment_init (&priv->segment, GST_FORMAT_UNDEFINED);
+  gst_funnel_pad_reset (fpad);
   GST_OBJECT_UNLOCK (pad);
   gst_object_unref (pad);
 }
