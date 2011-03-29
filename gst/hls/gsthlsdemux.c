@@ -327,6 +327,7 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
         gst_hls_demux_set_location (demux, uri);
         g_free (uri);
       }
+      gst_query_unref (query);
 
       playlist = g_strndup ((gchar *) GST_BUFFER_DATA (demux->playlist),
           GST_BUFFER_SIZE (demux->playlist));
