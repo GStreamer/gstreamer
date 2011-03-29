@@ -504,7 +504,8 @@ GST_START_TEST (test_encodebin_render_audio_only_static)
   fail_unless (gst_element_link_many (audiotestsrc, ebin, fakesink, NULL));
 
   /* Requesting a new pad should fail */
-  fail_if (gst_element_get_request_pad (ebin, "audio_0") != NULL);
+  ASSERT_CRITICAL (gst_element_get_request_pad (ebin, "audio_0"));
+
   sinkcaps = gst_caps_new_simple ("audio/x-raw-int", NULL);
   g_signal_emit_by_name (ebin, "request-pad", sinkcaps, &sinkpad);
   gst_caps_unref (sinkcaps);
