@@ -833,6 +833,8 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
         frame->src_buffer);
   }
 
+  /* handed out */
+  frame->src_buffer = NULL;
   gst_base_video_codec_free_frame (frame);
 
   return ret;
