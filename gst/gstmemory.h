@@ -81,8 +81,6 @@ typedef gboolean (*GstMemoryUnmapFunction)  (GstMemory *mem, gpointer data, gsiz
 
 typedef void        (*GstMemoryFreeFunction)      (GstMemory *mem);
 typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem, gsize offset, gsize size);
-typedef void        (*GstMemoryExtractFunction)   (GstMemory *mem, gsize offset,
-                                                   gpointer dest, gsize size);
 typedef void        (*GstMemoryTrimFunction)  (GstMemory *mem, gsize offset, gsize size);
 typedef GstMemory * (*GstMemorySubFunction)   (GstMemory *mem, gsize offset, gsize size);
 typedef gboolean    (*GstMemoryIsSpanFunction) (GstMemory *mem1, GstMemory *mem2,
@@ -102,7 +100,6 @@ struct _GstMemoryInfo {
   GstMemoryFreeFunction     free;
 
   GstMemoryCopyFunction     copy;
-  GstMemoryExtractFunction  extract;
   GstMemorySubFunction      sub;
   GstMemoryIsSpanFunction   is_span;
 };
@@ -128,13 +125,12 @@ void        gst_memory_trim       (GstMemory *mem, gsize offset, gsize size);
 gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,
                                    GstMapFlags flags);
 gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gsize size);
-void        gst_memory_extract    (GstMemory *mem, gsize offset, gpointer dest,
-                                   gsize size);
+
 /* copy and subregions */
 GstMemory * gst_memory_copy       (GstMemory *mem, gsize offset, gsize size);
 GstMemory * gst_memory_sub        (GstMemory *mem, gsize offset, gsize size);
 
-/* memory arrays */
+/* span memory */
 gboolean    gst_memory_is_span    (GstMemory *mem1, GstMemory *mem2, gsize *offset);
 GstMemory * gst_memory_span       (GstMemory **mem1, gsize len1, gsize offset,
                                    GstMemory **mem2, gsize len2, gsize size);

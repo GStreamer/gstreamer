@@ -132,7 +132,7 @@
 GType _gst_buffer_type = 0;
 
 static GstMemory *_gst_buffer_arr_span (GstMemory ** mem[], gsize len[],
-    guint n, gsize offset, gsize size);
+    guint n, gsize offset, gsize size, gboolean writable);
 
 typedef struct _GstMetaItem GstMetaItem;
 
@@ -160,26 +160,36 @@ typedef struct
   GstMetaItem *item;
 } GstBufferImpl;
 
-static void
-_span_memory (GstBuffer * buffer, gsize offset, gsize size)
+static GstMemory *
+_span_memory (GstBuffer * buffer, gsize offset, gsize size, gboolean writable)
 {
   GstMemory *span, **mem[1];
-  gsize len[1], i;
+  gsize len[1];
 
   /* not enough room, span buffers */
   mem[0] = GST_BUFFER_MEM_ARRAY (buffer);
   len[0] = GST_BUFFER_MEM_LEN (buffer);
-  if (len[0] == 1)
-    return;
 
-  span = _gst_buffer_arr_span (mem, len, 1, offset, size);
+  if (size == -1)
+    size = gst_buffer_get_size (buffer);
+
+  span = _gst_buffer_arr_span (mem, len, 1, offset, size, writable);
+
+  return span;
+}
+
+static void
+_replace_memory (GstBuffer * buffer, GstMemory * mem)
+{
+  gsize len, i;
 
   /* unref old buffers */
-  for (i = 0; i < len[0]; i++)
-    gst_memory_unref (mem[0][i]);
+  len = GST_BUFFER_MEM_LEN (buffer);
+  for (i = 0; i < len; i++)
+    gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
 
   /* replace with single spanned buffer */
-  GST_BUFFER_MEM_PTR (buffer, 0) = span;
+  GST_BUFFER_MEM_PTR (buffer, 0) = mem;
   GST_BUFFER_MEM_LEN (buffer) = 1;
 }
 
@@ -189,12 +199,12 @@ _memory_add (GstBuffer * buffer, GstMemory * mem)
   guint len = GST_BUFFER_MEM_LEN (buffer);
 
   if (G_UNLIKELY (len >= GST_BUFFER_MEM_MAX)) {
-    gsize size = gst_buffer_get_size (buffer);
     /* to many buffer, span them */
-    _span_memory (buffer, 0, size);
+    _replace_memory (buffer, _span_memory (buffer, 0, -1, FALSE));
     /* we now have 1 single spanned buffer */
     len = 1;
   }
+  /* and append the new buffer */
   GST_BUFFER_MEM_PTR (buffer, len) = mem;
   GST_BUFFER_MEM_LEN (buffer) = len + 1;
 }
@@ -328,7 +338,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       }
     }
     if (flags & GST_BUFFER_COPY_MERGE) {
-      _span_memory (dest, 0, size);
+      _replace_memory (dest, _span_memory (dest, 0, size, FALSE));
     }
   }
 
@@ -598,16 +608,30 @@ gst_buffer_take_memory (GstBuffer * buffer, GstMemory * mem)
  * Returns: a #GstMemory at @idx.
  */
 GstMemory *
-gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
+gst_buffer_peek_memory (GstBuffer * buffer, guint idx, GstMapFlags flags)
 {
   GstMemory *mem;
+  gboolean write;
+
+  write = (flags & GST_MAP_WRITE) != 0;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
   g_return_val_if_fail (idx < GST_BUFFER_MEM_LEN (buffer), NULL);
 
+  /* check if we can write when asked for write access */
+  if (G_UNLIKELY (write && !gst_buffer_is_writable (buffer)))
+    goto not_writable;
+
   mem = GST_BUFFER_MEM_PTR (buffer, idx);
 
   return mem;
+
+  /* ERRORS */
+not_writable:
+  {
+    g_return_val_if_fail (gst_buffer_is_writable (buffer), NULL);
+    return NULL;
+  }
 }
 
 /**
@@ -759,38 +783,66 @@ gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
 {
   guint len;
   gpointer data;
+  GstMemory *mem;
+  gboolean write, writable;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
 
-  len = GST_BUFFER_MEM_LEN (buffer);
+  write = (flags & GST_MAP_WRITE) != 0;
+  writable = gst_buffer_is_writable (buffer);
 
-  if (G_UNLIKELY ((flags & GST_MAP_WRITE) && !gst_buffer_is_writable (buffer)))
+  /* check if we can write when asked for write access */
+  if (G_UNLIKELY (write && !writable))
     goto not_writable;
 
-  if (G_LIKELY (len == 1)) {
-    GstMemory *mem;
+  len = GST_BUFFER_MEM_LEN (buffer);
 
-    mem = GST_BUFFER_MEM_PTR (buffer, 0);
-
-    if (flags & GST_MAP_WRITE) {
-      if (G_UNLIKELY (!GST_MEMORY_IS_WRITABLE (mem))) {
-        GstMemory *copy;
-
-        /* replace with a writable copy */
-        copy = gst_memory_copy (mem, 0, gst_memory_get_sizes (mem, NULL));
-        GST_BUFFER_MEM_PTR (buffer, 0) = copy;
-        gst_memory_unref (mem);
-        mem = copy;
-      }
-    }
-
-    data = gst_memory_map (mem, size, maxsize, flags);
-  } else {
-    /* FIXME, implement me */
-    data = NULL;
+  if (G_UNLIKELY (len == 0)) {
+    /* no memory, return immediately */
     if (size)
       *size = 0;
+    if (maxsize)
+      *maxsize = 0;
+    return NULL;
   }
+
+  if (G_LIKELY (len == 1)) {
+    /* we can take the first one */
+    mem = GST_BUFFER_MEM_PTR (buffer, 0);
+  } else {
+    /* we need to span memory */
+    if (writable) {
+      /* if we can write, we can change the memory with the spanned
+       * memory */
+      mem = _span_memory (buffer, 0, -1, write);
+      _replace_memory (buffer, mem);
+    } else {
+      gsize bsize;
+
+      /* extract all data in new memory, FIXME slow!! */
+      bsize = gst_buffer_get_size (buffer);
+
+      data = g_malloc (bsize);
+      gst_buffer_extract (buffer, 0, data, bsize);
+      if (size)
+        *size = bsize;
+      if (maxsize)
+        *maxsize = bsize;
+      return data;
+    }
+  }
+
+  if (G_UNLIKELY (write && !GST_MEMORY_IS_WRITABLE (mem))) {
+    GstMemory *copy;
+    /* replace with a writable copy */
+    copy = gst_memory_copy (mem, 0, -1);
+    GST_BUFFER_MEM_PTR (buffer, 0) = copy;
+    gst_memory_unref (mem);
+    mem = copy;
+  }
+
+  data = gst_memory_map (mem, size, maxsize, flags);
+
   return data;
 
   /* ERROR */
@@ -827,8 +879,11 @@ gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
 
     result = gst_memory_unmap (mem, data, size);
   } else {
-    /* FIXME, implement me */
-    result = FALSE;
+    /* this must have been from read-only access. After _map, the buffer either
+     * only contains 1 memory block or it allocated memory to join memory
+     * blocks. It's not allowed to add buffers between _map and _unmap. */
+    g_free (data);
+    result = TRUE;
   }
   return result;
 }
@@ -1064,12 +1119,13 @@ _gst_buffer_arr_is_span_fast (GstMemory ** mem[], gsize len[], guint n,
 
 static GstMemory *
 _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
-    gsize size)
+    gsize size, gboolean writable)
 {
   GstMemory *span, *parent;
   gsize poffset;
 
-  if (_gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
+  if (!writable
+      && _gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
     span = gst_memory_sub (parent, offset + poffset, size);
   } else {
     gsize count, left;
@@ -1188,7 +1244,7 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize size)
   mem[1] = GST_BUFFER_MEM_ARRAY (buf2);
   len[1] = GST_BUFFER_MEM_LEN (buf2);
 
-  span = _gst_buffer_arr_span (mem, len, 2, offset, size);
+  span = _gst_buffer_arr_span (mem, len, 2, offset, size, FALSE);
 
   newbuf = gst_buffer_new ();
   _memory_add (newbuf, span);

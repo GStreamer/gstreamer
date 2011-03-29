@@ -531,7 +531,6 @@ EXPORTS
 	gst_marshal_VOID__POINTER_OBJECT
 	gst_marshal_VOID__UINT_BOXED
 	gst_memory_copy
-	gst_memory_extract
 	gst_memory_flags_get_type
 	gst_memory_get_sizes
 	gst_memory_is_span

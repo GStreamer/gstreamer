@@ -188,19 +188,12 @@ _default_mem_copy (GstMemoryDefault * mem, gsize offset, gsize size)
 {
   GstMemoryDefault *copy;
 
+  if (size == -1)
+    size = mem->size > offset ? mem->size - offset : 0;
   copy = _default_mem_new_block (mem->maxsize, 0, mem->offset + offset, size);
   memcpy (copy->data, mem->data, mem->maxsize);
 
   return copy;
-}
-
-static void
-_default_mem_extract (GstMemoryDefault * mem, gsize offset, gpointer dest,
-    gsize size)
-{
-  g_return_if_fail (size + mem->offset + offset <= mem->maxsize);
-
-  memcpy (dest, mem->data + mem->offset + offset, size);
 }
 
 static GstMemoryDefault *
@@ -233,17 +226,6 @@ _default_mem_is_span (GstMemoryDefault * mem1, GstMemoryDefault * mem2,
   return mem1->data + mem1->offset + mem1->size == mem2->data + mem2->offset;
 }
 
-static void
-_fallback_extract (GstMemory * mem, gsize offset, gpointer dest, gsize size)
-{
-  guint8 *data;
-  gsize msize;
-
-  data = gst_memory_map (mem, &msize, NULL, GST_MAP_READ);
-  memcpy (dest, data + offset, size);
-  gst_memory_unmap (mem, data, msize);
-}
-
 static GstMemory *
 _fallback_copy (GstMemory * mem, gsize offset, gsize size)
 {
@@ -252,6 +234,8 @@ _fallback_copy (GstMemory * mem, gsize offset, gsize size)
   gsize msize;
 
   data = gst_memory_map (mem, &msize, NULL, GST_MAP_READ);
+  if (size == -1)
+    size = msize > offset ? msize - offset : 0;
   copy = _default_mem_new_block (size, 0, 0, size);
   memcpy (copy->data, data + offset, size);
   gst_memory_unmap (mem, data, msize);
@@ -289,7 +273,6 @@ _gst_memory_init (void)
     (GstMemoryUnmapFunction) _default_mem_unmap,
     (GstMemoryFreeFunction) _default_mem_free,
     (GstMemoryCopyFunction) _default_mem_copy,
-    (GstMemoryExtractFunction) _default_mem_extract,
     (GstMemorySubFunction) _default_mem_sub,
     (GstMemoryIsSpanFunction) _default_mem_is_span
   };
@@ -299,7 +282,6 @@ _gst_memory_init (void)
     (GstMemoryMapFunction) _default_sub_map,
     (GstMemoryUnmapFunction) _default_sub_unmap,
     (GstMemoryFreeFunction) _default_mem_free,
-    NULL,
     NULL,
     NULL,
     NULL
@@ -336,7 +318,6 @@ gst_memory_register (const gchar * name, const GstMemoryInfo * info)
   impl->name = g_quark_from_string (name);
   impl->info = *info;
   INSTALL_FALLBACK (copy);
-  INSTALL_FALLBACK (extract);
   INSTALL_FALLBACK (sub);
   INSTALL_FALLBACK (is_span);
 
@@ -453,15 +434,6 @@ gst_memory_copy (GstMemory * mem, gsize offset, gsize size)
   g_return_val_if_fail (mem != NULL, NULL);
 
   return mem->impl->info.copy (mem, offset, size);
-}
-
-void
-gst_memory_extract (GstMemory * mem, gsize offset, gpointer dest, gsize size)
-{
-  g_return_if_fail (mem != NULL);
-  g_return_if_fail (dest != NULL);
-
-  return mem->impl->info.extract (mem, offset, dest, size);
 }
 
 void

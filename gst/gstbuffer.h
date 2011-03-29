@@ -284,7 +284,7 @@ GstBuffer * gst_buffer_new_and_alloc       (guint size);
 /* memory blocks */
 guint       gst_buffer_n_memory            (GstBuffer *buffer);
 void        gst_buffer_take_memory         (GstBuffer *buffer, GstMemory *mem);
-GstMemory * gst_buffer_peek_memory         (GstBuffer *buffer, guint idx);
+GstMemory * gst_buffer_peek_memory         (GstBuffer *buffer, guint idx, GstMapFlags flags);
 void        gst_buffer_remove_memory_range (GstBuffer *buffer, guint idx, guint length);
 
 /**
