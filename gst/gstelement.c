@@ -988,7 +988,7 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
     GstPad *pad;
 
     /* Is this the template name? */
-    if (strstr (name, "%")) {
+    if (strstr (name, "%") || !strchr (templ->name_template, '%')) {
       g_return_val_if_fail (strcmp (name, templ->name_template) == 0, NULL);
     } else {
       const gchar *str, *data;
