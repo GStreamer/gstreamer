@@ -357,7 +357,7 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
         return ret;
     }
 
-    src->cache = gst_buffer_try_new_and_alloc (cachesize);
+    src->cache = gst_buffer_new_and_alloc (cachesize);
     if (G_UNLIKELY (src->cache == NULL)) {
       GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", cachesize);
       return GST_FLOW_ERROR;
