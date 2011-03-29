@@ -75,7 +75,6 @@ struct _GstBaseVideoDecoder
 
   gboolean have_sync;
   gboolean discont;
-  gboolean started;
 
   gboolean sink_clipping;
   gboolean do_byte_time;
@@ -117,9 +116,7 @@ struct _GstBaseVideoDecoderClass
 {
   GstBaseVideoCodecClass base_video_codec_class;
 
-  gboolean (*set_format) (GstBaseVideoDecoder *coder, GstVideoFormat,
-      int width, int height, int fps_n, int fps_d,
-      int par_n, int par_d);
+  gboolean (*set_format) (GstBaseVideoDecoder *coder, GstVideoState * state);
   gboolean (*start) (GstBaseVideoDecoder *coder);
   gboolean (*stop) (GstBaseVideoDecoder *coder);
   gboolean (*reset) (GstBaseVideoDecoder *coder);

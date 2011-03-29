@@ -161,8 +161,9 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     state->codec_data = gst_value_get_buffer (codec_data);
   }
 
-  if (base_video_decoder_class->start) {
-    ret = base_video_decoder_class->start (base_video_decoder);
+  if (base_video_decoder_class->set_format) {
+    ret = base_video_decoder_class->set_format (base_video_decoder,
+        &GST_BASE_VIDEO_CODEC (base_video_decoder)->state);
   }
 
   g_object_unref (base_video_decoder);
@@ -728,8 +729,6 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder)
 
   GST_DEBUG_OBJECT (base_video_decoder, "reset");
 
-  base_video_decoder->started = FALSE;
-
   base_video_decoder->discont = TRUE;
   base_video_decoder->have_sync = FALSE;
 
@@ -816,11 +815,6 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (base_video_decoder, "received DISCONT buffer");
     gst_base_video_decoder_reset (base_video_decoder);
-  }
-
-  if (!base_video_decoder->started) {
-    klass->start (base_video_decoder);
-    base_video_decoder->started = TRUE;
   }
 
   if (base_video_decoder->current_frame == NULL) {
@@ -917,6 +911,10 @@ gst_base_video_decoder_change_state (GstElement * element,
   base_video_decoder_class = GST_BASE_VIDEO_DECODER_GET_CLASS (element);
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (base_video_decoder_class->start) {
+        base_video_decoder_class->start (base_video_decoder);
+      }
     default:
       break;
   }

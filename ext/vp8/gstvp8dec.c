@@ -98,6 +98,8 @@ static void gst_vp8_dec_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_vp8_dec_start (GstBaseVideoDecoder * decoder);
 static gboolean gst_vp8_dec_stop (GstBaseVideoDecoder * decoder);
+static gboolean gst_vp8_dec_set_format (GstBaseVideoDecoder * decoder,
+    GstVideoState * state);
 static gboolean gst_vp8_dec_reset (GstBaseVideoDecoder * decoder);
 static GstFlowReturn gst_vp8_dec_parse_data (GstBaseVideoDecoder * decoder,
     gboolean at_eos);
@@ -175,6 +177,7 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
   base_video_decoder_class->start = gst_vp8_dec_start;
   base_video_decoder_class->stop = gst_vp8_dec_stop;
   base_video_decoder_class->reset = gst_vp8_dec_reset;
+  base_video_decoder_class->set_format = gst_vp8_dec_set_format;
   base_video_decoder_class->parse_data = gst_vp8_dec_parse_data;
   base_video_decoder_class->handle_frame = gst_vp8_dec_handle_frame;
 
@@ -271,6 +274,17 @@ gst_vp8_dec_stop (GstBaseVideoDecoder * base_video_decoder)
   if (gst_vp8_dec->decoder_inited)
     vpx_codec_destroy (&gst_vp8_dec->decoder);
   gst_vp8_dec->decoder_inited = FALSE;
+  return TRUE;
+}
+
+static gboolean
+gst_vp8_dec_set_format (GstBaseVideoDecoder * decoder, GstVideoState * state)
+{
+  GstVP8Dec *gst_vp8_dec = GST_VP8_DEC (decoder);
+
+  GST_DEBUG_OBJECT (gst_vp8_dec, "set_format");
+  gst_vp8_dec->decoder_inited = FALSE;
+
   return TRUE;
 }
 
