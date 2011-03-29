@@ -304,9 +304,11 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         const GstStructure *structure = gst_message_get_structure (message);
 
         if (gst_structure_has_name (structure, "image-done")) {
+#ifndef GST_DISABLE_GST_DEBUG
           const gchar *fname = gst_structure_get_string (structure, "filename");
 
           GST_DEBUG ("image done: %s", fname);
+#endif
           if (capture_count < capture_total) {
             g_idle_add ((GSourceFunc) run_pipeline, NULL);
           } else {
