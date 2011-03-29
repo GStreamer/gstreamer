@@ -265,13 +265,12 @@ struct _GstBuffer {
 
   /*< public >*/ /* with COW */
   GstBufferPool         *pool;
+  /* the media type of this buffer */
+  GstCaps               *caps;
 
   /* timestamp */
   GstClockTime           timestamp;
   GstClockTime           duration;
-
-  /* the media type of this buffer */
-  GstCaps               *caps;
 
   /* media specific offset */
   guint64                offset;

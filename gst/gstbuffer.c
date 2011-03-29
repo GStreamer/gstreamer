@@ -138,20 +138,36 @@ struct _GstMetaItem
   GstMetaItem *next;
   GstMeta meta;
 };
+#define ITEM_SIZE(info) ((info)->size + sizeof (GstMetaItem))
 
-#define GST_BUFFER_MEMORY(b)  (((GstBufferImpl *)(b))->memory)
-#define GST_BUFFER_META(b)    (((GstBufferImpl *)(b))->item)
+#define GST_BUFFER_MEM_MAX         16
+
+#define GST_BUFFER_MEM_LEN(b)      (((GstBufferImpl *)(b))->len)
+#define GST_BUFFER_MEM_ARRAY(b)    (((GstBufferImpl *)(b))->mem)
+#define GST_BUFFER_MEM_PTR(b,i)    (((GstBufferImpl *)(b))->mem[i])
+#define GST_BUFFER_META(b)         (((GstBufferImpl *)(b))->item)
 
 typedef struct
 {
   GstBuffer buffer;
 
-  GPtrArray *memory;
+  guint len;
+  GstMemory *mem[GST_BUFFER_MEM_MAX];
+
   GstMetaItem *item;
 } GstBufferImpl;
 
-#define ITEM_SIZE(info) ((info)->size + sizeof (GstMetaItem))
+static inline void
+_memory_add (GstBuffer * buffer, GstMemory * mem)
+{
+  guint len = GST_BUFFER_MEM_LEN (buffer);
+  /* FIXME, span buffers when we run out of places */
+  g_return_if_fail (len < GST_BUFFER_MEM_MAX);
+  GST_BUFFER_MEM_PTR (buffer, len) = mem;
+  GST_BUFFER_MEM_LEN (buffer) = len + 1;
+}
 
+#if 1
 /* buffer alignment in bytes
  * an alignment of 8 would be the same as malloc() guarantees
  */
@@ -166,6 +182,7 @@ static size_t _gst_buffer_data_alignment = BUFFER_ALIGNMENT;
 #error "No buffer alignment configured"
 #endif
 #endif /* HAVE_POSIX_MEMALIGN */
+#endif
 
 void
 _gst_buffer_initialize (void)
@@ -249,17 +266,15 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   }
 
   if (flags & GST_BUFFER_COPY_MEMORY) {
-    GPtrArray *sarr = GST_BUFFER_MEMORY (src);
-    GPtrArray *darr = GST_BUFFER_MEMORY (dest);
     GstMemory *mem;
     gsize left, len, i, bsize;
 
-    len = sarr->len;
+    len = GST_BUFFER_MEM_LEN (src);
     left = size;
 
     /* copy and subbuffer */
     for (i = 0; i < len && left > 0; i++) {
-      mem = g_ptr_array_index (sarr, i);
+      mem = GST_BUFFER_MEM_PTR (src, i);
       bsize = gst_memory_get_sizes (mem, NULL);
 
       if (bsize <= offset) {
@@ -275,7 +290,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         } else {
           mem = gst_memory_ref (mem);
         }
-        g_ptr_array_add (darr, mem);
+        _memory_add (dest, mem);
         left -= tocopy;
       }
     }
@@ -326,6 +341,8 @@ static void
 _gst_buffer_free (GstBuffer * buffer)
 {
   GstMetaItem *walk, *next;
+  guint i, len;
+  gsize msize;
 
   g_return_if_fail (buffer != NULL);
 
@@ -347,10 +364,17 @@ _gst_buffer_free (GstBuffer * buffer)
     g_slice_free1 (ITEM_SIZE (info), walk);
   }
 
-  /* free our data, unrefs the memory too */
-  g_ptr_array_free (GST_BUFFER_MEMORY (buffer), TRUE);
+  /* get the size, when unreffing the memory, we could also unref the buffer
+   * itself */
+  msize = GST_MINI_OBJECT_SIZE (buffer);
 
-  g_slice_free1 (GST_MINI_OBJECT_SIZE (buffer), buffer);
+  /* free our memory */
+  len = GST_BUFFER_MEM_LEN (buffer);
+  for (i = 0; i < len; i++)
+    gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
+
+  if (msize)
+    g_slice_free1 (msize, buffer);
 }
 
 static void
@@ -365,14 +389,15 @@ gst_buffer_init (GstBufferImpl * buffer, gsize size)
   buffer->buffer.mini_object.free =
       (GstMiniObjectFreeFunction) _gst_buffer_free;
 
+  GST_BUFFER (buffer)->pool = NULL;
+  GST_BUFFER_CAPS (buffer) = NULL;
   GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
 
-  /* FIXME, do more efficient with array in the buffer memory itself */
-  GST_BUFFER_MEMORY (buffer) =
-      g_ptr_array_new_with_free_func ((GDestroyNotify) gst_memory_unref);
+  GST_BUFFER_MEM_LEN (buffer) = 0;
+  GST_BUFFER_META (buffer) = NULL;
 }
 
 /**
@@ -389,7 +414,7 @@ gst_buffer_new (void)
 {
   GstBufferImpl *newbuf;
 
-  newbuf = g_slice_new0 (GstBufferImpl);
+  newbuf = g_slice_new (GstBufferImpl);
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p", newbuf);
 
   gst_buffer_init (newbuf, sizeof (GstBufferImpl));
@@ -417,7 +442,12 @@ gst_buffer_new_and_alloc (guint size)
 {
   GstBuffer *newbuf;
   GstMemory *mem;
+#if 0
+  guint8 *data;
+  gsize asize;
+#endif
 
+#if 1
   if (size > 0) {
     mem = gst_memory_new_alloc (size, _gst_buffer_data_alignment);
     if (G_UNLIKELY (mem == NULL))
@@ -429,9 +459,52 @@ gst_buffer_new_and_alloc (guint size)
   newbuf = gst_buffer_new ();
 
   if (mem != NULL)
-    gst_buffer_take_memory (newbuf, mem);
+    _memory_add (newbuf, mem);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
+
+  return newbuf;
+#endif
+
+#if 0
+  asize = sizeof (GstBufferImpl) + size;
+  data = g_slice_alloc (asize);
+  if (G_UNLIKELY (data == NULL))
+    goto no_memory;
+
+  newbuf = GST_BUFFER_CAST (data);
+
+  gst_buffer_init ((GstBufferImpl *) data, asize);
+  if (size > 0) {
+    mem = gst_memory_new_wrapped (0, data + sizeof (GstBufferImpl), NULL,
+        size, 0, size);
+    _memory_add (newbuf, mem);
+  }
+
+  return newbuf;
+#endif
+
+#if 0
+  /* allocate memory and buffer */
+  asize = sizeof (GstBufferImpl) + size;
+  mem = gst_memory_new_alloc (asize, 0);
+  if (G_UNLIKELY (mem == NULL))
+    goto no_memory;
+
+  /* map the data part and init the buffer in it, set the buffer size to 0 so
+   * that a finalize won't free the buffer */
+  data = gst_memory_map (mem, &asize, NULL, GST_MAP_WRITE);
+  gst_buffer_init ((GstBufferImpl *) data, 0);
+  gst_memory_unmap (mem, data, asize);
+
+  /* strip off the buffer */
+  gst_memory_trim (mem, sizeof (GstBufferImpl), size);
+
+  newbuf = GST_BUFFER_CAST (data);
+
+  if (size > 0)
+    _memory_add (newbuf, mem);
+#endif
 
   return newbuf;
 
@@ -456,7 +529,7 @@ gst_buffer_n_memory (GstBuffer * buffer)
 {
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
 
-  return GST_BUFFER_MEMORY (buffer)->len;
+  return GST_BUFFER_MEM_LEN (buffer);
 }
 
 /**
@@ -474,7 +547,7 @@ gst_buffer_take_memory (GstBuffer * buffer, GstMemory * mem)
   g_return_if_fail (gst_buffer_is_writable (buffer));
   g_return_if_fail (mem != NULL);
 
-  g_ptr_array_add (GST_BUFFER_MEMORY (buffer), mem);
+  _memory_add (buffer, mem);
 }
 
 /**
@@ -492,13 +565,11 @@ GstMemory *
 gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
 {
   GstMemory *mem;
-  GPtrArray *arr;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  arr = GST_BUFFER_MEMORY (buffer);
-  g_return_val_if_fail (idx < arr->len, NULL);
+  g_return_val_if_fail (idx < GST_BUFFER_MEM_LEN (buffer), NULL);
 
-  mem = g_ptr_array_index (arr, idx);
+  mem = GST_BUFFER_MEM_PTR (buffer, idx);
 
   return mem;
 }
@@ -516,16 +587,26 @@ gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
 void
 gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, guint length)
 {
-  GPtrArray *arr;
+  guint len, i, end;
 
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
-  arr = GST_BUFFER_MEMORY (buffer);
+
+  len = GST_BUFFER_MEM_LEN (buffer);
   if (length == -1) {
-    g_return_if_fail (idx < arr->len);
-    length = arr->len - idx;
+    g_return_if_fail (idx < len);
+    length = len - idx;
   }
-  g_ptr_array_remove_range (arr, idx, length);
+
+  end = idx + length;
+  for (i = idx; i < end; i++)
+    gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
+
+  if (end != len) {
+    g_memmove (&GST_BUFFER_MEM_PTR (buffer, idx),
+        &GST_BUFFER_MEM_PTR (buffer, end), (len - end) * sizeof (gpointer));
+  }
+  GST_BUFFER_MEM_LEN (buffer) = len - length;
 }
 
 /**
@@ -539,17 +620,15 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, guint length)
 gsize
 gst_buffer_get_size (GstBuffer * buffer)
 {
-  GPtrArray *arr;
   guint i, size, len;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
 
-  arr = GST_BUFFER_MEMORY (buffer);
-  len = arr->len;
+  len = GST_BUFFER_MEM_LEN (buffer);
 
   size = 0;
   for (i = 0; i < len; i++) {
-    size += gst_memory_get_sizes (g_ptr_array_index (arr, i), NULL);
+    size += gst_memory_get_sizes (GST_BUFFER_MEM_PTR (buffer, i), NULL);
   }
   return size;
 }
@@ -565,7 +644,6 @@ gst_buffer_get_size (GstBuffer * buffer)
 void
 gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
 {
-  GPtrArray *arr;
   guint len;
   guint si, di;
   gsize bsize;
@@ -576,12 +654,11 @@ gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
 
   g_return_if_fail (gst_buffer_is_writable (buffer));
 
-  arr = GST_BUFFER_MEMORY (buffer);
-  len = arr->len;
+  len = GST_BUFFER_MEM_LEN (buffer);
 
   /* copy and trim */
   for (di = si = 0; si < len && size > 0; si++) {
-    mem = g_ptr_array_index (arr, si);
+    mem = GST_BUFFER_MEM_PTR (buffer, si);
     bsize = gst_memory_get_sizes (mem, NULL);
 
     if (bsize <= offset) {
@@ -603,11 +680,11 @@ gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
           mem = tmp;
         }
       }
-      g_ptr_array_index (arr, di++) = mem;
+      GST_BUFFER_MEM_PTR (buffer, di++) = mem;
       size -= tocopy;
     }
   }
-  g_ptr_array_set_size (arr, di);
+  GST_BUFFER_MEM_LEN (buffer) = di;
 }
 
 /**
@@ -638,14 +715,12 @@ gpointer
 gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
     GstMapFlags flags)
 {
-  GPtrArray *arr;
   guint len;
   gpointer data;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
 
-  arr = GST_BUFFER_MEMORY (buffer);
-  len = arr->len;
+  len = GST_BUFFER_MEM_LEN (buffer);
 
   if (G_UNLIKELY ((flags & GST_MAP_WRITE) && !gst_buffer_is_writable (buffer)))
     goto not_writable;
@@ -653,7 +728,7 @@ gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
   if (G_LIKELY (len == 1)) {
     GstMemory *mem;
 
-    mem = g_ptr_array_index (arr, 0);
+    mem = GST_BUFFER_MEM_PTR (buffer, 0);
 
     if (flags & GST_MAP_WRITE) {
       if (G_UNLIKELY (!GST_MEMORY_IS_WRITABLE (mem))) {
@@ -661,7 +736,7 @@ gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
 
         /* replace with a writable copy */
         copy = gst_memory_copy (mem, 0, gst_memory_get_sizes (mem, NULL));
-        g_ptr_array_index (arr, 0) = copy;
+        GST_BUFFER_MEM_PTR (buffer, 0) = copy;
         gst_memory_unref (mem);
         mem = copy;
       }
@@ -698,17 +773,15 @@ not_writable:
 gboolean
 gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
 {
-  GPtrArray *arr;
   gboolean result;
   guint len;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
 
-  arr = GST_BUFFER_MEMORY (buffer);
-  len = arr->len;
+  len = GST_BUFFER_MEM_LEN (buffer);
 
   if (G_LIKELY (len == 1)) {
-    GstMemory *mem = g_ptr_array_index (arr, 0);
+    GstMemory *mem = GST_BUFFER_MEM_PTR (buffer, 0);
 
     result = gst_memory_unmap (mem, data, size);
   } else {
@@ -731,7 +804,6 @@ void
 gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
     gsize size)
 {
-  GPtrArray *arr;
   gsize i, len;
   const guint8 *ptr = src;
 
@@ -739,15 +811,14 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
   g_return_if_fail (gst_buffer_is_writable (buffer));
   g_return_if_fail (src != NULL);
 
-  arr = GST_BUFFER_MEMORY (buffer);
-  len = arr->len;
+  len = GST_BUFFER_MEM_LEN (buffer);
 
   for (i = 0; i < len && size > 0; i++) {
     guint8 *data;
     gsize ssize, tocopy;
     GstMemory *mem;
 
-    mem = g_ptr_array_index (arr, i);
+    mem = GST_BUFFER_MEM_PTR (buffer, i);
 
     data = gst_memory_map (mem, &ssize, NULL, GST_MAP_WRITE);
     if (ssize > offset) {
@@ -777,22 +848,20 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
 void
 gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
 {
-  GPtrArray *arr;
   gsize i, len;
   guint8 *ptr = dest;
 
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (dest != NULL);
 
-  arr = GST_BUFFER_MEMORY (buffer);
-  len = arr->len;
+  len = GST_BUFFER_MEM_LEN (buffer);
 
   for (i = 0; i < len && size > 0; i++) {
     guint8 *data;
     gsize ssize, tocopy;
     GstMemory *mem;
 
-    mem = g_ptr_array_index (arr, i);
+    mem = GST_BUFFER_MEM_PTR (buffer, i);
 
     data = gst_memory_map (mem, &ssize, NULL, GST_MAP_READ);
     if (ssize > offset) {
@@ -925,18 +994,20 @@ gst_buffer_create_sub (GstBuffer * buffer, gsize offset, gsize size)
 gboolean
 gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
 {
-  GPtrArray *arr1, *arr2;
+  GstMemory **arr1, **arr2;
+  gsize len1, len2;
 
   g_return_val_if_fail (GST_IS_BUFFER (buf1), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buf2), FALSE);
   g_return_val_if_fail (buf1->mini_object.refcount > 0, FALSE);
   g_return_val_if_fail (buf2->mini_object.refcount > 0, FALSE);
 
-  arr1 = GST_BUFFER_MEMORY (buf1);
-  arr2 = GST_BUFFER_MEMORY (buf2);
+  arr1 = GST_BUFFER_MEM_ARRAY (buf1);
+  len1 = GST_BUFFER_MEM_LEN (buf1);
+  arr2 = GST_BUFFER_MEM_ARRAY (buf2);
+  len2 = GST_BUFFER_MEM_LEN (buf2);
 
-  return gst_memory_is_span ((GstMemory **) arr1->pdata, arr1->len,
-      (GstMemory **) arr2->pdata, arr2->len, NULL, NULL);
+  return gst_memory_is_span (arr1, len1, arr2, len2, NULL, NULL);
 }
 
 /**
@@ -966,7 +1037,8 @@ GstBuffer *
 gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize len)
 {
   GstBuffer *newbuf;
-  GPtrArray *arr1, *arr2;
+  GstMemory **arr1, **arr2;
+  gsize len1, len2;
   GstMemory *mem;
 
   g_return_val_if_fail (GST_IS_BUFFER (buf1), NULL);
@@ -979,12 +1051,13 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize len)
 
   newbuf = gst_buffer_new ();
 
-  arr1 = GST_BUFFER_MEMORY (buf1);
-  arr2 = GST_BUFFER_MEMORY (buf2);
+  arr1 = GST_BUFFER_MEM_ARRAY (buf1);
+  len1 = GST_BUFFER_MEM_LEN (buf1);
+  arr2 = GST_BUFFER_MEM_ARRAY (buf2);
+  len2 = GST_BUFFER_MEM_LEN (buf2);
 
-  mem = gst_memory_span ((GstMemory **) arr1->pdata, arr1->len, offset,
-      (GstMemory **) arr2->pdata, arr2->len, len);
-  gst_buffer_take_memory (newbuf, mem);
+  mem = gst_memory_span (arr1, len1, offset, arr2, len2, len);
+  _memory_add (newbuf, mem);
 
 #if 0
   /* if the offset is 0, the new buffer has the same timestamp as buf1 */
