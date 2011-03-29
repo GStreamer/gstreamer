@@ -37,12 +37,6 @@ GST_START_TEST (test_cleanup_send)
     fail_unless (rtp_sink != NULL);
     ASSERT_OBJECT_REFCOUNT (rtp_sink, "rtp_sink", 2);
 
-    /* request again */
-    rtp_sink = gst_element_get_request_pad (rtpbin, "send_rtp_sink_0");
-    fail_unless (rtp_sink != NULL);
-    ASSERT_OBJECT_REFCOUNT (rtp_sink, "rtp_sink", 3);
-    gst_object_unref (rtp_sink);
-
     /* this static pad should be created automatically now */
     rtp_src = gst_element_get_static_pad (rtpbin, "send_rtp_src_0");
     fail_unless (rtp_src != NULL);
@@ -57,12 +51,6 @@ GST_START_TEST (test_cleanup_send)
     rtcp_src = gst_element_get_request_pad (rtpbin, "send_rtcp_src_0");
     fail_unless (rtcp_src != NULL);
     ASSERT_OBJECT_REFCOUNT (rtcp_src, "rtcp_src", 2);
-
-    /* second time */
-    rtcp_src = gst_element_get_request_pad (rtpbin, "send_rtcp_src_0");
-    fail_unless (rtcp_src != NULL);
-    ASSERT_OBJECT_REFCOUNT (rtcp_src, "rtcp_src", 3);
-    gst_object_unref (rtcp_src);
 
     gst_element_release_request_pad (rtpbin, rtp_sink);
     /* we should only have our refs to the pads now */
