@@ -982,6 +982,51 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
+#ifndef G_DISABLE_CHECKS
+  /* Some sanity checking here */
+  if (name) {
+    GstPad *pad;
+
+    /* Is this the template name? */
+    if (strstr (name, "%")) {
+      g_return_val_if_fail (strcmp (name, templ->name_template) == 0, NULL);
+    } else {
+      const gchar *str, *data;
+      gchar *endptr;
+
+      /* Otherwise check if it's a valid name for the name template */
+      str = strchr (templ->name_template, '%');
+      g_return_val_if_fail (str != NULL, NULL);
+      g_return_val_if_fail (strncmp (templ->name_template, name,
+              str - templ->name_template) == 0, NULL);
+      g_return_val_if_fail (strlen (name) > str - templ->name_template, NULL);
+
+      data = name + (str - templ->name_template);
+
+      /* Can either be %s or %d or %u, do sanity checking for %d */
+      if (*(str + 1) == 'd') {
+        gint tmp;
+
+        /* it's an int */
+        tmp = strtol (data, &endptr, 10);
+        g_return_val_if_fail (tmp != G_MINLONG && tmp != G_MAXLONG
+            && *endptr == '\0', NULL);
+      } else if (*(str + 1) == 'u') {
+        guint tmp;
+
+        /* it's an int */
+        tmp = strtoul (data, &endptr, 10);
+        g_return_val_if_fail (tmp != G_MAXULONG && *endptr == '\0', NULL);
+      }
+    }
+
+    pad = gst_element_get_static_pad (element, name);
+    if (pad)
+      gst_object_unref (pad);
+    g_return_val_if_fail (pad == NULL, NULL);
+  }
+#endif
+
   if (oclass->request_new_pad_full)
     newpad = (oclass->request_new_pad_full) (element, templ, name, caps);
   else if (oclass->request_new_pad)
