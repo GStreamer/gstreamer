@@ -420,6 +420,27 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
     if (idx != pa_stream_get_index (pbuf->stream))
       continue;
 
+#ifdef HAVE_PULSE_1_0
+    if (psink->device && pa_format_info_is_pcm (pbuf->format) &&
+        !g_str_equal (psink->device,
+            pa_stream_get_device_name (pbuf->stream))) {
+      /* Underlying sink changed. And this is not a passthrough stream. Let's
+       * see if someone upstream wants to try to renegotiate. */
+      GstEvent *renego;
+
+      g_free (psink->device);
+      psink->device = g_strdup (pa_stream_get_device_name (pbuf->stream));
+
+      GST_INFO_OBJECT (psink, "emitting sink-changed");
+
+      renego = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+          gst_structure_new ("pulse-sink-changed", NULL));
+
+      if (!gst_pad_push_event (GST_BASE_SINK (psink)->sinkpad, renego))
+        GST_DEBUG_OBJECT (psink, "Emitted sink-changed - nobody was listening");
+    }
+#endif
+
     /* Actually this event is also triggered when other properties of
      * the stream change that are unrelated to the volume. However it is
      * probably cheaper to signal the change here and check for the
@@ -1719,12 +1740,6 @@ static GstStateChangeReturn gst_pulsesink_change_state (GstElement * element,
 
 static void gst_pulsesink_init_interfaces (GType type);
 
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-# define ENDIANNESS   "LITTLE_ENDIAN, BIG_ENDIAN"
-#else
-# define ENDIANNESS   "BIG_ENDIAN, LITTLE_ENDIAN"
-#endif
-
 GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSink, gst_pulsesink);
 
 #define _do_init(type) \
@@ -1784,57 +1799,7 @@ gst_pulsesink_base_init (gpointer g_class)
   static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("audio/x-raw-int, "
-          "endianness = (int) { " ENDIANNESS " }, "
-          "signed = (boolean) TRUE, "
-          "width = (int) 16, "
-          "depth = (int) 16, "
-          "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 32 ];"
-          "audio/x-raw-float, "
-          "endianness = (int) { " ENDIANNESS " }, "
-          "width = (int) 32, "
-          "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 32 ];"
-          "audio/x-raw-int, "
-          "endianness = (int) { " ENDIANNESS " }, "
-          "signed = (boolean) TRUE, "
-          "width = (int) 32, "
-          "depth = (int) 32, "
-          "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 32 ];"
-          "audio/x-raw-int, "
-          "endianness = (int) { " ENDIANNESS " }, "
-          "signed = (boolean) TRUE, "
-          "width = (int) 24, "
-          "depth = (int) 24, "
-          "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 32 ];"
-          "audio/x-raw-int, "
-          "endianness = (int) { " ENDIANNESS " }, "
-          "signed = (boolean) TRUE, "
-          "width = (int) 32, "
-          "depth = (int) 24, "
-          "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 32 ];"
-          "audio/x-raw-int, "
-          "signed = (boolean) FALSE, "
-          "width = (int) 8, "
-          "depth = (int) 8, "
-          "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 32 ];"
-          "audio/x-alaw, "
-          "rate = (int) [ 1, MAX], "
-          "channels = (int) [ 1, 32 ];"
-          "audio/x-mulaw, "
-          "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 32 ];"
-#ifdef HAVE_PULSE_1_0
-          "audio/x-ac3, framed = (boolean) true;"
-          "audio/x-eac3, framed = (boolean) true; "
-          "audio/x-dts, framed = (boolean) true, "
-          "  block_size = (int) { 512, 1024, 2048 }; "
-          "audio/mpeg, mpegversion = (int)1, "
-          "  mpegaudioversion = (int) [ 1, 2 ], parsed = (boolean) true; "
-#endif
-      ));
+      GST_STATIC_CAPS (PULSE_SINK_TEMPLATE_CAPS));
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -2075,6 +2040,8 @@ done:
 }
 
 #ifdef HAVE_PULSE_1_0
+/* NOTE: If you're making changes here, see if pulseaudiosink acceptcaps also
+ * needs to be changed accordingly. */
 static gboolean
 gst_pulsesink_pad_acceptcaps (GstPad * pad, GstCaps * caps)
 {

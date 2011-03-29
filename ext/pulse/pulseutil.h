@@ -22,6 +22,10 @@
 #ifndef __GST_PULSEUTIL_H__
 #define __GST_PULSEUTIL_H__
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/gst.h>
 #include <pulse/pulseaudio.h>
 #include <gst/audio/gstaudiosink.h>

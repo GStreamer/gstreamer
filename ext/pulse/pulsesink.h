@@ -24,6 +24,10 @@
 #ifndef __GST_PULSESINK_H__
 #define __GST_PULSESINK_H__
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/gst.h>
 #include <gst/audio/gstaudiosink.h>
 
@@ -87,6 +91,91 @@ struct _GstPulseSinkClass
 };
 
 GType gst_pulsesink_get_type (void);
+
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+# define ENDIANNESS   "LITTLE_ENDIAN, BIG_ENDIAN"
+#else
+# define ENDIANNESS   "BIG_ENDIAN, LITTLE_ENDIAN"
+#endif
+
+#define _PULSE_SINK_CAPS_COMMON \
+    "audio/x-raw-int, " \
+      "endianness = (int) { " ENDIANNESS " }, " \
+      "signed = (boolean) TRUE, " \
+      "width = (int) 16, " \
+      "depth = (int) 16, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, 32 ];" \
+    "audio/x-raw-float, " \
+      "endianness = (int) { " ENDIANNESS " }, " \
+      "width = (int) 32, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, 32 ];" \
+    "audio/x-raw-int, " \
+      "endianness = (int) { " ENDIANNESS " }, " \
+      "signed = (boolean) TRUE, " \
+      "width = (int) 32, " \
+      "depth = (int) 32, " \
+      "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 32 ];" \
+    "audio/x-raw-int, " \
+      "signed = (boolean) FALSE, " \
+      "width = (int) 8, " \
+      "depth = (int) 8, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, 32 ];" \
+    "audio/x-alaw, " \
+      "rate = (int) [ 1, MAX], " \
+      "channels = (int) [ 1, 32 ];" \
+    "audio/x-mulaw, " \
+      "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 32 ];" \
+    "audio/x-raw-int, " \
+      "endianness = (int) { " ENDIANNESS " }, " \
+      "signed = (boolean) TRUE, " \
+      "width = (int) 24, " \
+      "depth = (int) 24, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, 32 ];" \
+    "audio/x-raw-int, " \
+      "endianness = (int) { " ENDIANNESS " }, " \
+      "signed = (boolean) TRUE, " \
+      "width = (int) 32, " \
+      "depth = (int) 24, " \
+      "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 32 ];"
+
+#ifdef HAVE_PULSE_1_0
+#define _PULSE_SINK_CAPS_1_0 \
+    "audio/x-ac3, framed = (boolean) true;" \
+    "audio/x-eac3, framed = (boolean) true; " \
+    "audio/x-dts, framed = (boolean) true, " \
+      "block-size = (int) { 512, 1024, 2048 }; " \
+    "audio/mpeg, mpegversion = (int) 1, " \
+      "mpegaudioversion = (int) [ 1, 2 ], parsed = (boolean) true;"
+#else
+#define _PULSE_SINK_CAPS_1_0 ""
+#endif
+
+#define PULSE_SINK_TEMPLATE_CAPS \
+  _PULSE_SINK_CAPS_COMMON \
+  _PULSE_SINK_CAPS_1_0
+
+#ifdef HAVE_PULSE_1_0
+
+#define GST_TYPE_PULSE_AUDIO_SINK \
+  (gst_pulse_audio_sink_get_type())
+#define GST_PULSE_AUDIO_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PULSE_AUDIO_SINK,GstPulseAudioSink))
+#define GST_PULSE_AUDIO_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PULSE_AUDIO_SINK,GstPulseAudioSinkClass))
+#define GST_IS_PULSE_AUDIO_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PULSE_AUDIO_SINK))
+#define GST_IS_PULSE_AUDIO_SINK_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PULSE_AUDIO_SINK))
+#define GST_PULSE_AUDIO_SINK_CAST(obj) \
+  ((GstPulseAudioSink *)(obj))
+
+GType gst_pulse_audio_sink_get_type (void);
+
+#endif /* HAVE_PULSE_1_0 */
 
 G_END_DECLS
 
