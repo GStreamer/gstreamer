@@ -169,6 +169,9 @@ _span_memory (GstBuffer * buffer, gsize offset, gsize size)
   /* not enough room, span buffers */
   mem[0] = GST_BUFFER_MEM_ARRAY (buffer);
   len[0] = GST_BUFFER_MEM_LEN (buffer);
+  if (len[0] == 1)
+    return;
+
   span = _gst_buffer_arr_span (mem, len, 1, offset, size);
 
   /* unref old buffers */
@@ -323,6 +326,9 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         _memory_add (dest, mem);
         left -= tocopy;
       }
+    }
+    if (flags & GST_BUFFER_COPY_MERGE) {
+      _span_memory (dest, 0, size);
     }
   }
 
