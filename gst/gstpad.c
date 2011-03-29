@@ -2892,7 +2892,7 @@ fallback:
     /* fallback case, allocate a buffer of our own, add pad caps. */
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "fallback buffer alloc");
 
-    if ((*buf = gst_buffer_try_new_and_alloc (size))) {
+    if ((*buf = gst_buffer_new_and_alloc (size))) {
       GST_BUFFER_OFFSET (*buf) = offset;
       gst_buffer_set_caps (*buf, caps);
       return GST_FLOW_OK;
@@ -3002,7 +3002,7 @@ wrong_size_fallback:
 
     gst_buffer_unref (*buf);
 
-    if ((*buf = gst_buffer_try_new_and_alloc (size))) {
+    if ((*buf = gst_buffer_new_and_alloc (size))) {
       GST_BUFFER_OFFSET (*buf) = offset;
       gst_buffer_set_caps (*buf, caps);
       return GST_FLOW_OK;

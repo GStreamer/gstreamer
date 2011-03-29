@@ -198,12 +198,9 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   bufsize = gst_buffer_get_size (src);
   if (size == -1)
     size = bufsize - offset;
-  g_return_if_fail (bufsize >= offset + size);
 
-#if GST_VERSION_NANO == 1
-  /* we enable this extra debugging in git versions only for now */
-  g_warn_if_fail (gst_buffer_is_writable (dest));
-#endif
+  g_return_if_fail (bufsize >= offset + size);
+  g_return_if_fail (gst_buffer_is_writable (dest));
 
   GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p, offset %" G_GSIZE_FORMAT
       "-%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT, src, dest, offset, size,
@@ -243,33 +240,33 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   if (flags & GST_BUFFER_COPY_MEMORY) {
     GPtrArray *sarr = (GPtrArray *) src->memory;
     GPtrArray *darr = (GPtrArray *) dest->memory;
-    guint i, len;
+    GstMemory *mem;
+    gsize left, len, i, bsize;
 
     len = sarr->len;
+    left = size;
 
-    for (i = 0; i < len; i++) {
-      GstMemory *mem, *dmem;
-      gsize msize;
-
+    /* copy and subbuffer */
+    for (i = 0; i < len && left > 0; i++) {
       mem = g_ptr_array_index (sarr, i);
-      msize = gst_memory_get_sizes (mem, NULL);
+      bsize = gst_memory_get_sizes (mem, NULL);
 
-      if (i + 1 == len) {
-        /* last chunk */
-        dmem = gst_memory_sub (mem, offset, size);
-      } else if (offset) {
-        if (msize > offset) {
-          dmem = gst_memory_sub (mem, offset, msize - offset);
-          offset = 0;
+      if (bsize <= offset) {
+        /* don't copy buffer */
+        offset -= bsize;
+      } else {
+        gsize tocopy;
+
+        tocopy = MIN (bsize - offset, left);
+        if (tocopy < bsize) {
+          /* we need to clip something */
+          mem = gst_memory_sub (mem, offset, tocopy);
         } else {
-          offset -= msize;
-          dmem = NULL;
+          mem = gst_memory_ref (mem);
         }
-      } else
-        dmem = gst_memory_ref (mem);
-
-      if (dmem)
-        g_ptr_array_add (darr, dmem);
+        g_ptr_array_add (darr, mem);
+        left -= tocopy;
+      }
     }
   }
 
@@ -391,43 +388,9 @@ gst_buffer_new (void)
  * gst_buffer_new_and_alloc:
  * @size: the size in bytes of the new buffer's data.
  *
- * Creates a newly allocated buffer with data of the given size.
- * The buffer memory is not cleared. If the requested amount of
- * memory can't be allocated, the program will abort. Use
- * gst_buffer_try_new_and_alloc() if you want to handle this case
- * gracefully or have gotten the size to allocate from an untrusted
- * source such as a media stream.
- *
- * Note that when @size == 0, the buffer data pointer will be NULL.
- *
- * MT safe.
- *
- * Returns: (transfer full): the new #GstBuffer.
- */
-GstBuffer *
-gst_buffer_new_and_alloc (guint size)
-{
-  GstBuffer *newbuf;
-
-  newbuf = gst_buffer_new ();
-
-  if (size > 0) {
-    gst_buffer_take_memory (newbuf, gst_memory_new_alloc (size,
-            _gst_buffer_data_alignment));
-  }
-
-  GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
-
-  return newbuf;
-}
-
-/**
- * gst_buffer_try_new_and_alloc:
- * @size: the size in bytes of the new buffer's data.
- *
  * Tries to create a newly allocated buffer with data of the given size. If
  * the requested amount of memory can't be allocated, NULL will be returned.
- * The buffer memory is not cleared.
+ * The allocated buffer memory is not cleared.
  *
  * Note that when @size == 0, the buffer will not have memory associated with it.
  *
@@ -437,7 +400,7 @@ gst_buffer_new_and_alloc (guint size)
  *     be allocated.
  */
 GstBuffer *
-gst_buffer_try_new_and_alloc (guint size)
+gst_buffer_new_and_alloc (guint size)
 {
   GstBuffer *newbuf;
   GstMemory *mem;
@@ -535,23 +498,28 @@ gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
 }
 
 /**
- * gst_buffer_remove_memory:
+ * gst_buffer_remove_memory_range:
  * @buffer: a #GstBuffer.
  * @idx: an index
+ * @length: a length
  *
- * Remove the memory block in @buffer at @idx.
+ * Remove @len memory blocks in @buffer starting from @idx.
+ *
+ * @length can be -1, in which case all memory starting from @idx is removed.
  */
 void
-gst_buffer_remove_memory (GstBuffer * buffer, guint idx)
+gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, guint length)
 {
   GPtrArray *arr;
 
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
   arr = (GPtrArray *) buffer->memory;
-  g_return_if_fail (idx < arr->len);
-
-  g_ptr_array_remove_index (arr, idx);
+  if (length == -1) {
+    g_return_if_fail (idx < arr->len);
+    length = arr->len - idx;
+  }
+  g_ptr_array_remove_range (arr, idx, length);
 }
 
 /**
@@ -603,10 +571,9 @@ gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
 
   arr = (GPtrArray *) buffer->memory;
   len = arr->len;
-  si = di = 0;
 
   /* copy and trim */
-  while (size > 0) {
+  for (di = si = 0; si < len && size > 0; si++) {
     mem = g_ptr_array_index (arr, si);
     bsize = gst_memory_get_sizes (mem, NULL);
 
@@ -629,26 +596,11 @@ gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
           mem = tmp;
         }
       }
-      g_ptr_array_index (arr, di) = mem;
+      g_ptr_array_index (arr, di++) = mem;
       size -= tocopy;
-      di++;
     }
-    si++;
   }
   g_ptr_array_set_size (arr, di);
-}
-
-/**
- * gst_buffer_set_size:
- * @buffer: a #GstBuffer.
- * @size: the new size
- *
- * Set the total size of the buffer
- */
-void
-gst_buffer_set_size (GstBuffer * buffer, gsize size)
-{
-  gst_buffer_trim (buffer, 0, size);
 }
 
 /**
@@ -710,6 +662,7 @@ gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
 
     data = gst_memory_map (mem, size, maxsize, flags);
   } else {
+    /* FIXME, implement me */
     data = NULL;
     if (size)
       *size = 0;
@@ -752,6 +705,7 @@ gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
 
     result = gst_memory_unmap (mem, data, size);
   } else {
+    /* FIXME, implement me */
     result = FALSE;
   }
   return result;

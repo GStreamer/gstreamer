@@ -814,7 +814,7 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
     src->read_position = offset;
   }
 
-  buf = gst_buffer_try_new_and_alloc (length);
+  buf = gst_buffer_new_and_alloc (length);
   if (G_UNLIKELY (buf == NULL && length > 0))
     goto alloc_failed;
 

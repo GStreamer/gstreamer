@@ -276,12 +276,6 @@ struct _GstBuffer {
   guint64                offset;
   guint64                offset_end;
 
-  /* pointer to data and its size, backwards compatibility */
-  guint8                *bw_data;
-  guint                  bw_size;
-  guint8                *bw_malloc_data;
-  GFreeFunc              bw_free_func;
-
   /* pointer to memory blocks */
   gpointer               memory;
 
@@ -290,48 +284,46 @@ struct _GstBuffer {
 };
 
 /* allocation */
-GstBuffer * gst_buffer_new               (void);
-GstBuffer * gst_buffer_new_and_alloc     (guint size);
-GstBuffer * gst_buffer_try_new_and_alloc (guint size);
+GstBuffer * gst_buffer_new                 (void);
+GstBuffer * gst_buffer_new_and_alloc       (guint size);
 
 /* memory blocks */
-guint       gst_buffer_n_memory          (GstBuffer *buffer);
-void        gst_buffer_take_memory       (GstBuffer *buffer, GstMemory *mem);
-GstMemory * gst_buffer_peek_memory       (GstBuffer *buffer, guint idx);
-void        gst_buffer_remove_memory     (GstBuffer *buffer, guint idx);
-
-void        gst_buffer_fill              (GstBuffer *buffer, gsize offset,
-                                          gconstpointer src, gsize size);
-void        gst_buffer_extract           (GstBuffer *buffer, gsize offset,
-                                          gpointer dest, gsize size);
-
-gsize       gst_buffer_get_size          (GstBuffer *buffer);
-void        gst_buffer_set_size          (GstBuffer *buffer, gsize size);
-void        gst_buffer_trim              (GstBuffer *buffer, gsize offset, gsize size);
-
-/* getting memory */
-gpointer    gst_buffer_map               (GstBuffer *buffer, gsize *size, gsize *maxsize,
-                                          GstMapFlags flags);
-gboolean    gst_buffer_unmap             (GstBuffer *buffer, gpointer data, gsize size);
+guint       gst_buffer_n_memory            (GstBuffer *buffer);
+void        gst_buffer_take_memory         (GstBuffer *buffer, GstMemory *mem);
+GstMemory * gst_buffer_peek_memory         (GstBuffer *buffer, guint idx);
+void        gst_buffer_remove_memory_range (GstBuffer *buffer, guint idx, guint length);
 
 /**
- * gst_buffer_set_data:
- * @buf: a #GstBuffer
- * @data: The data (a #guint8 *) to set on the buffer.
- * @size: The size (in bytes, as a #guint) of the data being set.
+ * gst_buffer_remove_memory:
+ * @b: a #GstBuffer.
+ * @i: an index
  *
- * A convenience function to set the data and size on a buffer.
- * This will replace any existing data pointer set on this buffer, but will
- * not change GST_BUFFER_MALLOCDATA(), if any. Callers should ensure that
- * GST_BUFFER_MALLOCDATA() is non-NULL, or should free that and set it to NULL.
- *
- * No checks are done on the data or size arguments passed.
+ * Remove the memory block in @b at @i.
  */
-#define         gst_buffer_set_data(buf, data, size)    \
-G_STMT_START {                                          \
-  GST_BUFFER_DATA (buf) = data;                         \
-  GST_BUFFER_SIZE (buf) = size;                         \
-} G_STMT_END
+#define     gst_buffer_remove_memory(b,i)  gst_buffer_remove_memory_range ((b), (i), 1)
+
+void        gst_buffer_fill                (GstBuffer *buffer, gsize offset,
+                                            gconstpointer src, gsize size);
+void        gst_buffer_extract             (GstBuffer *buffer, gsize offset,
+                                            gpointer dest, gsize size);
+
+gsize       gst_buffer_get_size            (GstBuffer *buffer);
+void        gst_buffer_trim                (GstBuffer *buffer, gsize offset, gsize size);
+
+/**
+ * gst_buffer_remove_memory:
+ * @b: a #GstBuffer.
+ * @s: a new size
+ *
+ * Set the size of @b to @s. This will remove or trim the memory blocks
+ * in the buffer.
+ */
+#define     gst_buffer_set_size(b,s)       gst_buffer_trim ((b), 0, (s))
+
+/* getting memory */
+gpointer    gst_buffer_map                 (GstBuffer *buffer, gsize *size, gsize *maxsize,
+                                            GstMapFlags flags);
+gboolean    gst_buffer_unmap               (GstBuffer *buffer, gpointer data, gsize size);
 
 /* refcounting */
 /**
@@ -404,20 +396,28 @@ gst_buffer_copy (const GstBuffer * buf)
  * @GST_BUFFER_COPY_TIMESTAMPS: flag indicating that buffer timestamp, duration,
  * offset and offset_end should be copied
  * @GST_BUFFER_COPY_CAPS: flag indicating that buffer caps should be copied
+ * @GST_BUFFER_COPY_MEMORY: flag indicating that buffer memory should be copied
+ * and appended to already existing memory
+ * @GST_BUFFER_COPY_MERGE: flag indicating that buffer memory should be
+ * merged
  *
- * A set of flags that can be provided to the gst_buffer_copy_metadata()
- * function to specify which metadata fields should be copied.
- *
- * Since: 0.10.13
+ * A set of flags that can be provided to the gst_buffer_copy_into()
+ * function to specify which items should be copied.
  */
 typedef enum {
   GST_BUFFER_COPY_FLAGS          = (1 << 0),
   GST_BUFFER_COPY_TIMESTAMPS     = (1 << 1),
   GST_BUFFER_COPY_CAPS           = (1 << 2),
   GST_BUFFER_COPY_MEMORY         = (1 << 3),
-  GST_BUFFER_COPY_MEMORY_MERGE   = (1 << 4),
+  GST_BUFFER_COPY_MERGE          = (1 << 4)
 } GstBufferCopyFlags;
 
+/**
+ * GST_BUFFER_COPY_METADATA:
+ *
+ * Combination of all possible metadata fields that can be copied with
+ * gst_buffer_copy_into().
+ */
 #define GST_BUFFER_COPY_METADATA       (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS)
 
 /**
@@ -425,8 +425,6 @@ typedef enum {
  *
  * Combination of all possible fields that can be copied with
  * gst_buffer_copy_into().
- *
- * Since: 0.10.13
  */
 #define GST_BUFFER_COPY_ALL  (GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_MEMORY)
 

@@ -136,14 +136,12 @@ EXPORTS
 	gst_buffer_pool_release_buffer
 	gst_buffer_pool_set_active
 	gst_buffer_pool_set_config
-	gst_buffer_remove_memory
+	gst_buffer_remove_memory_range
 	gst_buffer_remove_meta
 	gst_buffer_set_caps
-	gst_buffer_set_size
 	gst_buffer_span
 	gst_buffer_take_memory
 	gst_buffer_trim
-	gst_buffer_try_new_and_alloc
 	gst_buffer_unmap
 	gst_buffering_mode_get_type
 	gst_bus_add_signal_watch

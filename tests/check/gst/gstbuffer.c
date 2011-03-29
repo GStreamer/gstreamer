@@ -448,7 +448,7 @@ GST_START_TEST (test_try_new_and_alloc)
   guint8 *data;
 
   /* special case: alloc of 0 bytes results in new buffer with NULL data */
-  buf = gst_buffer_try_new_and_alloc (0);
+  buf = gst_buffer_new_and_alloc (0);
   fail_unless (buf != NULL);
   fail_unless (GST_IS_BUFFER (buf));
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
@@ -457,7 +457,7 @@ GST_START_TEST (test_try_new_and_alloc)
   gst_buffer_unref (buf);
 
   /* normal alloc should still work */
-  buf = gst_buffer_try_new_and_alloc (640 * 480 * 4);
+  buf = gst_buffer_new_and_alloc (640 * 480 * 4);
   fail_unless (buf != NULL);
   fail_unless (GST_IS_BUFFER (buf));
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
@@ -477,7 +477,7 @@ GST_START_TEST (test_try_new_and_alloc)
   /* now this better fail (don't run in valgrind, it will abort
    * or warn when passing silly arguments to malloc) */
   if (!RUNNING_ON_VALGRIND) {
-    buf = gst_buffer_try_new_and_alloc ((guint) - 1);
+    buf = gst_buffer_new_and_alloc ((guint) - 1);
     fail_unless (buf == NULL);
   }
 #endif
