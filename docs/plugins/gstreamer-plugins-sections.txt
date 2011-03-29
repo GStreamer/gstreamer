@@ -96,6 +96,21 @@ gst_file_sink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-funnel</FILE>
+<TITLE>funnel</TITLE>
+GstFunnel
+<SUBSECTION Standard>
+GstFunnelClass
+GST_FUNNEL
+GST_IS_FUNNEL
+GST_TYPE_FUNNEL
+GST_FUNNEL_CLASS
+GST_IS_FUNNEL_CLASS
+<SUBSECTION Private>
+gst_funnel_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-capsfilter</FILE>
 <TITLE>capsfilter</TITLE>
 GstCapsFilter

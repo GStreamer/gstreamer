@@ -1,43 +1,44 @@
 GObject
   GstObject
-    GstBus
-    GstClock
+    GstPad
+    GstPadTemplate
+    GstPluginFeature
+      GstElementFactory
+      GstTypeFindFactory
+      GstIndexFactory
     GstElement
+      GstBin
+        GstPipeline
+      GstBaseTransform
+        GstCapsFilter
+        GstIdentity
+      GstBaseSrc
+        GstFakeSrc
+        GstPushSrc
+          GstFdSrc
+        GstFileSrc
       GstBaseSink
         GstFakeSink
         GstFdSink
         GstFileSink
-      GstBaseSrc
-        GstFakeSrc
-        GstFileSrc
-        GstPushSrc
-          GstFdSrc
-      GstBaseTransform
-        GstCapsFilter
-        GstIdentity
-      GstBin
-        GstPipeline
+      GstFunnel
       GstInputSelector
-      GstMultiQueue
       GstOutputSelector
       GstQueue
       GstQueue2
       GstTee
       GstTypeFindElement
+      GstMultiQueue
       GstValve
-    GstIndex
-      GstFileIndex
-      GstMemIndex
-    GstPad
-    GstPadTemplate
-    GstPlugin
-    GstPluginFeature
-      GstElementFactory
-      GstIndexFactory
-      GstTypeFindFactory
-    GstRegistry
+    GstBus
     GstTask
     GstTaskPool
+    GstClock
+    GstPlugin
+    GstRegistry
+    GstIndex
+      GstMemIndex
+      GstFileIndex
   GstSignalObject
 GInterface
   GTypePlugin

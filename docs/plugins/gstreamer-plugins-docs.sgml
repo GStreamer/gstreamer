@@ -24,6 +24,7 @@
     <xi:include href="xml/element-fdsrc.xml" />
     <xi:include href="xml/element-filesrc.xml" />
     <xi:include href="xml/element-filesink.xml" />
+    <xi:include href="xml/element-funnel.xml" />
     <xi:include href="xml/element-identity.xml" />
     <xi:include href="xml/element-input-selector.xml" />
     <xi:include href="xml/element-multiqueue.xml" />

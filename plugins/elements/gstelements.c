@@ -34,6 +34,7 @@
 #include "gstfdsink.h"
 #include "gstfilesink.h"
 #include "gstfilesrc.h"
+#include "gstfunnel.h"
 #include "gstidentity.h"
 #include "gstinputselector.h"
 #include "gstoutputselector.h"
@@ -61,6 +62,7 @@ static struct _elements_entry _elements[] = {
   {"fdsink", GST_RANK_NONE, gst_fd_sink_get_type},
 #endif
   {"filesrc", GST_RANK_PRIMARY, gst_file_src_get_type},
+  {"funnel", GST_RANK_NONE, gst_funnel_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
   {"input-selector", GST_RANK_NONE, gst_input_selector_get_type},
   {"output-selector", GST_RANK_NONE, gst_output_selector_get_type},

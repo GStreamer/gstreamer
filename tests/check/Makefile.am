@@ -77,6 +77,7 @@ REGISTRY_CHECKS =				\
 	elements/fdsrc			  	\
 	elements/filesink			\
 	elements/filesrc			\
+	elements/funnel				\
 	elements/identity			\
 	elements/multiqueue			\
 	elements/selector			\

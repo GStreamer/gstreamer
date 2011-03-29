@@ -11,6 +11,7 @@ libgstcoreelements_la_SOURCES =	\
 	gstfdsink.c		\
 	gstfilesink.c		\
 	gstfilesrc.c		\
+	gstfunnel.c		\
 	gstidentity.c		\
 	gstinputselector.c	\
 	gstoutputselector.c	\
@@ -36,6 +37,7 @@ noinst_HEADERS =		\
 	gstfdsink.h		\
 	gstfilesink.h		\
 	gstfilesrc.h		\
+	gstfunnel.h		\
 	gstidentity.h		\
 	gstinputselector.h	\
 	gstoutputselector.h	\

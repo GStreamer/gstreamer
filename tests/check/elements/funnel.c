@@ -1,4 +1,4 @@
-/* Farsight 2 unit tests for the fsfunnel
+/* GStreamer unit tests for the funnel
  *
  * Copyright (C) 2008 Collabora, Nokia
  * @author: Olivier Crete <olivier.crete@collabora.co.uk>
@@ -39,7 +39,7 @@ setup_test_objects (struct TestData *td, GstPadChainFunction chain_func,
 {
   td->mycaps = gst_caps_new_simple ("test/test", NULL);
 
-  td->funnel = gst_element_factory_make ("fsfunnel", NULL);
+  td->funnel = gst_element_factory_make ("funnel", NULL);
 
   td->funnelsrc = gst_element_get_static_pad (td->funnel, "src");
   fail_unless (td->funnelsrc != NULL);
