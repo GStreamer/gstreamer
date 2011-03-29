@@ -300,7 +300,7 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
           GST_CLOCK_TIME_NONE;
       GST_BASE_VIDEO_CODEC (base_video_decoder)->proportion = 0.5;
       gst_segment_init (&GST_BASE_VIDEO_CODEC (base_video_decoder)->segment,
-          GST_FORMAT_TIME);
+          GST_FORMAT_UNDEFINED);
       GST_OBJECT_UNLOCK (base_video_decoder);
     }
     default:
@@ -734,7 +734,6 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder)
 
   base_video_decoder->timestamp_offset = GST_CLOCK_TIME_NONE;
   GST_BASE_VIDEO_CODEC (base_video_decoder)->system_frame_number = 0;
-  base_video_decoder->presentation_frame_number = 0;
   base_video_decoder->base_picture_number = 0;
   base_video_decoder->last_timestamp = GST_CLOCK_TIME_NONE;
 
@@ -784,7 +783,8 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
    * requiring the pad to be negotiated makes it impossible to use
    * oggdemux or filesrc ! decoder */
 
-  if (!base_video_decoder->have_segment) {
+  if (GST_BASE_VIDEO_CODEC (base_video_decoder)->segment.format ==
+      GST_FORMAT_UNDEFINED) {
     GstEvent *event;
     GstFlowReturn ret;
 
@@ -795,7 +795,6 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
     gst_segment_set_newsegment_full (&GST_BASE_VIDEO_CODEC
         (base_video_decoder)->segment, FALSE, 1.0, 1.0, GST_FORMAT_TIME, 0,
         GST_CLOCK_TIME_NONE, 0);
-    base_video_decoder->have_segment = TRUE;
 
     event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0,
         GST_CLOCK_TIME_NONE, 0);
@@ -826,15 +825,6 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
     gst_base_video_decoder_add_timestamp (base_video_decoder, buf);
   }
   base_video_decoder->input_offset += GST_BUFFER_SIZE (buf);
-
-#if 0
-  if (base_video_decoder->timestamp_offset == GST_CLOCK_TIME_NONE &&
-      GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
-    GST_DEBUG ("got new offset %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
-    base_video_decoder->timestamp_offset = GST_BUFFER_TIMESTAMP (buf);
-  }
-#endif
 
   if (base_video_decoder->packetized) {
     base_video_decoder->current_frame->sink_buffer = buf;
@@ -927,7 +917,7 @@ gst_base_video_decoder_change_state (GstElement * element,
         base_video_decoder_class->stop (base_video_decoder);
       }
       gst_segment_init (&GST_BASE_VIDEO_CODEC (base_video_decoder)->segment,
-          GST_FORMAT_TIME);
+          GST_FORMAT_UNDEFINED);
       g_list_foreach (base_video_decoder->timestamps, (GFunc) g_free, NULL);
       g_list_free (base_video_decoder->timestamps);
       base_video_decoder->timestamps = NULL;

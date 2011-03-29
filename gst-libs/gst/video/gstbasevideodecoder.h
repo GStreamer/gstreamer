@@ -79,8 +79,6 @@ struct _GstBaseVideoDecoder
   gboolean sink_clipping;
   gboolean do_byte_time;
 
-  guint64 presentation_frame_number;
-
   gboolean have_src_caps;
 
   GstVideoFrame *current_frame;
@@ -88,11 +86,7 @@ struct _GstBaseVideoDecoder
   int distance_from_sync;
   int reorder_depth;
 
-  GstClockTime buffer_timestamp;
-
   GstClockTime timestamp_offset;
-
-  //GstBuffer *codec_data;
 
   guint64 input_offset;
   guint64 frame_offset;
@@ -102,11 +96,9 @@ struct _GstBaseVideoDecoder
 
   int field_index;
 
-  gboolean is_delta_unit;
   gboolean packetized;
 
   GList *timestamps;
-  gboolean have_segment;
 
   /* FIXME before moving to base */
   void *padding[GST_PADDING_LARGE];
