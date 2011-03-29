@@ -139,6 +139,17 @@ struct _GstMetaItem
   GstMeta meta;
 };
 
+#define GST_BUFFER_MEMORY(b)  (((GstBufferImpl *)(b))->memory)
+#define GST_BUFFER_META(b)    (((GstBufferImpl *)(b))->item)
+
+typedef struct
+{
+  GstBuffer buffer;
+
+  GPtrArray *memory;
+  GstMetaItem *item;
+} GstBufferImpl;
+
 #define ITEM_SIZE(info) ((info)->size + sizeof (GstMetaItem))
 
 /* buffer alignment in bytes
@@ -238,8 +249,8 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   }
 
   if (flags & GST_BUFFER_COPY_MEMORY) {
-    GPtrArray *sarr = (GPtrArray *) src->memory;
-    GPtrArray *darr = (GPtrArray *) dest->memory;
+    GPtrArray *sarr = GST_BUFFER_MEMORY (src);
+    GPtrArray *darr = GST_BUFFER_MEMORY (dest);
     GstMemory *mem;
     gsize left, len, i, bsize;
 
@@ -270,12 +281,12 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     }
   }
 
-  for (walk = src->priv; walk; walk = walk->next) {
+  for (walk = GST_BUFFER_META (src); walk; walk = walk->next) {
     GstMeta *meta = &walk->meta;
     const GstMetaInfo *info = meta->info;
 
     if (info->copy_func)
-      info->copy_func (dest, meta, (GstBuffer *) src, offset, size);
+      info->copy_func (dest, meta, src, offset, size);
   }
 }
 
@@ -323,7 +334,7 @@ _gst_buffer_free (GstBuffer * buffer)
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
 
   /* free metadata */
-  for (walk = buffer->priv; walk; walk = next) {
+  for (walk = GST_BUFFER_META (buffer); walk; walk = next) {
     GstMeta *meta = &walk->meta;
     const GstMetaInfo *info = meta->info;
 
@@ -337,20 +348,22 @@ _gst_buffer_free (GstBuffer * buffer)
   }
 
   /* free our data, unrefs the memory too */
-  g_ptr_array_free (buffer->memory, TRUE);
+  g_ptr_array_free (GST_BUFFER_MEMORY (buffer), TRUE);
 
   g_slice_free1 (GST_MINI_OBJECT_SIZE (buffer), buffer);
 }
 
 static void
-gst_buffer_init (GstBuffer * buffer, gsize size)
+gst_buffer_init (GstBufferImpl * buffer, gsize size)
 {
   gst_mini_object_init (GST_MINI_OBJECT_CAST (buffer), _gst_buffer_type, size);
 
-  buffer->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_copy;
-  buffer->mini_object.dispose =
+  buffer->buffer.mini_object.copy =
+      (GstMiniObjectCopyFunction) _gst_buffer_copy;
+  buffer->buffer.mini_object.dispose =
       (GstMiniObjectDisposeFunction) _gst_buffer_dispose;
-  buffer->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_free;
+  buffer->buffer.mini_object.free =
+      (GstMiniObjectFreeFunction) _gst_buffer_free;
 
   GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
@@ -358,7 +371,7 @@ gst_buffer_init (GstBuffer * buffer, gsize size)
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
 
   /* FIXME, do more efficient with array in the buffer memory itself */
-  buffer->memory =
+  GST_BUFFER_MEMORY (buffer) =
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_memory_unref);
 }
 
@@ -374,14 +387,14 @@ gst_buffer_init (GstBuffer * buffer, gsize size)
 GstBuffer *
 gst_buffer_new (void)
 {
-  GstBuffer *newbuf;
+  GstBufferImpl *newbuf;
 
-  newbuf = g_slice_new0 (GstBuffer);
+  newbuf = g_slice_new0 (GstBufferImpl);
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p", newbuf);
 
-  gst_buffer_init (newbuf, sizeof (GstBuffer));
+  gst_buffer_init (newbuf, sizeof (GstBufferImpl));
 
-  return newbuf;
+  return GST_BUFFER_CAST (newbuf);
 }
 
 /**
@@ -441,13 +454,9 @@ no_memory:
 guint
 gst_buffer_n_memory (GstBuffer * buffer)
 {
-  GPtrArray *arr;
-
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
 
-  arr = (GPtrArray *) buffer->memory;
-
-  return arr->len;
+  return GST_BUFFER_MEMORY (buffer)->len;
 }
 
 /**
@@ -461,14 +470,11 @@ gst_buffer_n_memory (GstBuffer * buffer)
 void
 gst_buffer_take_memory (GstBuffer * buffer, GstMemory * mem)
 {
-  GPtrArray *arr;
-
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
   g_return_if_fail (mem != NULL);
 
-  arr = (GPtrArray *) buffer->memory;
-  g_ptr_array_add (arr, mem);
+  g_ptr_array_add (GST_BUFFER_MEMORY (buffer), mem);
 }
 
 /**
@@ -489,7 +495,7 @@ gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
   GPtrArray *arr;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  arr = (GPtrArray *) buffer->memory;
+  arr = GST_BUFFER_MEMORY (buffer);
   g_return_val_if_fail (idx < arr->len, NULL);
 
   mem = g_ptr_array_index (arr, idx);
@@ -514,7 +520,7 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, guint length)
 
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
-  arr = (GPtrArray *) buffer->memory;
+  arr = GST_BUFFER_MEMORY (buffer);
   if (length == -1) {
     g_return_if_fail (idx < arr->len);
     length = arr->len - idx;
@@ -533,11 +539,12 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, guint length)
 gsize
 gst_buffer_get_size (GstBuffer * buffer)
 {
-  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  GPtrArray *arr;
   guint i, size, len;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
 
+  arr = GST_BUFFER_MEMORY (buffer);
   len = arr->len;
 
   size = 0;
@@ -569,7 +576,7 @@ gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
 
   g_return_if_fail (gst_buffer_is_writable (buffer));
 
-  arr = (GPtrArray *) buffer->memory;
+  arr = GST_BUFFER_MEMORY (buffer);
   len = arr->len;
 
   /* copy and trim */
@@ -637,7 +644,7 @@ gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
 
-  arr = (GPtrArray *) buffer->memory;
+  arr = GST_BUFFER_MEMORY (buffer);
   len = arr->len;
 
   if (G_UNLIKELY ((flags & GST_MAP_WRITE) && !gst_buffer_is_writable (buffer)))
@@ -697,7 +704,7 @@ gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
 
-  arr = (GPtrArray *) buffer->memory;
+  arr = GST_BUFFER_MEMORY (buffer);
   len = arr->len;
 
   if (G_LIKELY (len == 1)) {
@@ -724,10 +731,15 @@ void
 gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
     gsize size)
 {
-  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  GPtrArray *arr;
   gsize i, len;
   const guint8 *ptr = src;
 
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_if_fail (gst_buffer_is_writable (buffer));
+  g_return_if_fail (src != NULL);
+
+  arr = GST_BUFFER_MEMORY (buffer);
   len = arr->len;
 
   for (i = 0; i < len && size > 0; i++) {
@@ -765,10 +777,14 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
 void
 gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
 {
-  GPtrArray *arr = (GPtrArray *) buffer->memory;
+  GPtrArray *arr;
   gsize i, len;
   guint8 *ptr = dest;
 
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_if_fail (dest != NULL);
+
+  arr = GST_BUFFER_MEMORY (buffer);
   len = arr->len;
 
   for (i = 0; i < len && size > 0; i++) {
@@ -911,12 +927,13 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
 {
   GPtrArray *arr1, *arr2;
 
-  g_return_val_if_fail (buf1 != NULL && buf2 != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (buf1), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (buf2), FALSE);
   g_return_val_if_fail (buf1->mini_object.refcount > 0, FALSE);
   g_return_val_if_fail (buf2->mini_object.refcount > 0, FALSE);
 
-  arr1 = (GPtrArray *) buf1->memory;
-  arr2 = (GPtrArray *) buf2->memory;
+  arr1 = GST_BUFFER_MEMORY (buf1);
+  arr2 = GST_BUFFER_MEMORY (buf2);
 
   return gst_memory_is_span ((GstMemory **) arr1->pdata, arr1->len,
       (GstMemory **) arr2->pdata, arr2->len, NULL, NULL);
@@ -952,7 +969,8 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize len)
   GPtrArray *arr1, *arr2;
   GstMemory *mem;
 
-  g_return_val_if_fail (buf1 != NULL && buf2 != NULL, NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buf1), NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buf2), NULL);
   g_return_val_if_fail (buf1->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (buf2->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (len > 0, NULL);
@@ -961,8 +979,8 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize len)
 
   newbuf = gst_buffer_new ();
 
-  arr1 = (GPtrArray *) buf1->memory;
-  arr2 = (GPtrArray *) buf2->memory;
+  arr1 = GST_BUFFER_MEMORY (buf1);
+  arr2 = GST_BUFFER_MEMORY (buf2);
 
   mem = gst_memory_span ((GstMemory **) arr1->pdata, arr1->len, offset,
       (GstMemory **) arr2->pdata, arr2->len, len);
@@ -1017,7 +1035,7 @@ gst_buffer_get_meta (GstBuffer * buffer, const GstMetaInfo * info)
   g_return_val_if_fail (info != NULL, NULL);
 
   /* find GstMeta of the requested API */
-  for (item = buffer->priv; item; item = item->next) {
+  for (item = GST_BUFFER_META (buffer); item; item = item->next) {
     GstMeta *meta = &item->meta;
     if (meta->info->api == info->api) {
       result = meta;
@@ -1063,8 +1081,8 @@ gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
       goto init_failed;
 
   /* and add to the list of metadata */
-  item->next = buffer->priv;
-  buffer->priv = item;
+  item->next = GST_BUFFER_META (buffer);
+  GST_BUFFER_META (buffer) = item;
 
   return result;
 
@@ -1094,15 +1112,15 @@ gst_buffer_remove_meta (GstBuffer * buffer, GstMeta * meta)
   g_return_val_if_fail (meta != NULL, FALSE);
 
   /* find the metadata and delete */
-  prev = buffer->priv;
+  prev = GST_BUFFER_META (buffer);
   for (walk = prev; walk; walk = walk->next) {
     GstMeta *m = &walk->meta;
     if (m == meta) {
       const GstMetaInfo *info = meta->info;
 
       /* remove from list */
-      if (buffer->priv == walk)
-        buffer->priv = walk->next;
+      if (GST_BUFFER_META (buffer) == walk)
+        GST_BUFFER_META (buffer) = walk->next;
       else
         prev->next = walk->next;
       /* call free_func if any */
@@ -1141,7 +1159,7 @@ gst_buffer_iterate_meta (GstBuffer * buffer, gpointer * state)
   meta = (GstMetaItem **) state;
   if (*meta == NULL)
     /* state NULL, move to first item */
-    *meta = buffer->priv;
+    *meta = GST_BUFFER_META (buffer);
   else
     /* state !NULL, move to next item in list */
     *meta = (*meta)->next;

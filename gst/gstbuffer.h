@@ -264,6 +264,7 @@ struct _GstBuffer {
   GstMiniObject          mini_object;
 
   /*< public >*/ /* with COW */
+  GstBufferPool         *pool;
 
   /* timestamp */
   GstClockTime           timestamp;
@@ -275,12 +276,6 @@ struct _GstBuffer {
   /* media specific offset */
   guint64                offset;
   guint64                offset_end;
-
-  /* pointer to memory blocks */
-  gpointer               memory;
-
-  GstBufferPool         *pool;
-  gpointer               priv;
 };
 
 /* allocation */
