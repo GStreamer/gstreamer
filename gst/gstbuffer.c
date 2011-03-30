@@ -1352,9 +1352,9 @@ init_failed:
 /**
  * gst_buffer_remove_meta:
  * @buffer: a #GstBuffer
- * @info: a #GstMetaInfo
+ * @meta: a #GstMeta
  *
- * Remove the metadata for @info on @buffer.
+ * Remove the metadata for @meta on @buffer.
  *
  * Returns: %TRUE if the metadata existed and was removed, %FALSE if no such
  * metadata was on @buffer.

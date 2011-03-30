@@ -88,11 +88,12 @@ gst_meta_register (const gchar * api, const gchar * impl, gsize size,
 
 /**
  * gst_meta_get_info:
- * @name: the name
+ * @impl: the name
  *
- * Lookup a previously registered meta info structure by its @implementor name.
+ * Lookup a previously registered meta info structure by its implementor name
+ * @impl.
  *
- * Returns: a #GstMetaInfo with @name or #NULL when no such metainfo
+ * Returns: a #GstMetaInfo with @impl or #NULL when no such metainfo
  * exists.
  */
 const GstMetaInfo *

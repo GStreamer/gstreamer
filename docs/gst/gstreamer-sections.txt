@@ -164,13 +164,10 @@ GST_BUFFER_FLAG_IS_SET
 GST_BUFFER_FLAG_SET
 GST_BUFFER_FLAG_UNSET
 
-GST_BUFFER_DATA
-GST_BUFFER_MALLOCDATA
-GST_BUFFER_FREE_FUNC
-GST_BUFFER_SIZE
+GST_BUFFER_CAPS
+
 GST_BUFFER_TIMESTAMP
 GST_BUFFER_DURATION
-GST_BUFFER_CAPS
 GST_BUFFER_OFFSET
 GST_BUFFER_OFFSET_END
 GST_BUFFER_OFFSET_NONE
@@ -183,50 +180,56 @@ GST_BUFFER_TRACE_NAME
 
 gst_buffer_new
 gst_buffer_new_and_alloc
-gst_buffer_try_new_and_alloc
 
 gst_buffer_ref
 gst_buffer_unref
 
-gst_buffer_set_data
-gst_buffer_copy
+gst_buffer_get_size
+gst_buffer_resize
+gst_buffer_set_size
 
+gst_buffer_n_memory
+gst_buffer_take_memory
+gst_buffer_peek_memory
+gst_buffer_remove_memory
+gst_buffer_remove_memory_range
+
+gst_buffer_map
+gst_buffer_unmap
+
+gst_buffer_extract
+gst_buffer_fill
+
+GST_BUFFER_COPY_METADATA
 GST_BUFFER_COPY_ALL
-gst_buffer_copy_metadata
+gst_buffer_copy
+gst_buffer_copy_into
+gst_buffer_copy_region
+
 gst_buffer_is_writable
 gst_buffer_make_writable
-gst_buffer_is_metadata_writable
-gst_buffer_make_metadata_writable
 gst_buffer_replace
 
 gst_buffer_get_caps
 gst_buffer_set_caps
 
-gst_buffer_create_sub
 gst_buffer_is_span_fast
 gst_buffer_span
 
-gst_buffer_join
-gst_buffer_merge
-
-gst_buffer_get_meta_by_api
 gst_buffer_get_meta
+gst_buffer_add_meta
 gst_buffer_remove_meta
 gst_buffer_iterate_meta
 
 <SUBSECTION Standard>
 GstBufferClass
 GST_BUFFER
-GST_BUFFER_CLASS
-GST_BUFFER_GET_CLASS
 GST_IS_BUFFER
-GST_IS_BUFFER_CLASS
 GST_TYPE_BUFFER
 GST_TYPE_BUFFER_FLAG
 GST_TYPE_BUFFER_COPY_FLAGS
 GST_BUFFER_CAST
 <SUBSECTION Private>
-gst_buffer_get_type
 gst_buffer_flag_get_type
 gst_buffer_copy_flags_get_type
 </SECTION>
@@ -276,6 +279,7 @@ GST_BUFFER_POOL
 GST_IS_BUFFER_POOL
 GST_TYPE_BUFFER_POOL
 gst_buffer_pool_get_type
+gst_buffer_pool_flags_get_type
 GST_IS_BUFFER_POOL_CLASS
 GST_BUFFER_POOL_GET_CLASS
 </SECTION>
@@ -1269,6 +1273,8 @@ gst_memory_register
 gst_memory_get_info
 <SUBSECTION Standard>
 GST_MEMORY_TRACE_NAME
+gst_map_flags_get_type
+gst_memory_flags_get_type
 </SECTION>
 
 <SECTION>
@@ -1390,51 +1396,39 @@ GST_MESSAGE_WAIT
 GstMiniObject
 GstMiniObjectFlags
 GstMiniObjectCopyFunction
-GstMiniObjectFinalizeFunction
+GstMiniObjectDisposeFunction
+GstMiniObjectFreeFunction
 
+GST_MINI_OBJECT_TYPE
 GST_MINI_OBJECT_FLAGS
 GST_MINI_OBJECT_FLAG_IS_SET
 GST_MINI_OBJECT_FLAG_SET
 GST_MINI_OBJECT_FLAG_UNSET
 GST_MINI_OBJECT_REFCOUNT
 GST_MINI_OBJECT_REFCOUNT_VALUE
+GST_MINI_OBJECT_SIZE
 
-gst_mini_object_new
+gst_mini_object_register
+gst_mini_object_init
+
 gst_mini_object_copy
 gst_mini_object_is_writable
 gst_mini_object_make_writable
 
 gst_mini_object_ref
 gst_mini_object_unref
+
 gst_mini_object_replace
 
-GstParamSpecMiniObject
-gst_param_spec_mini_object
-
-gst_value_set_mini_object
-gst_value_take_mini_object
-gst_value_get_mini_object
-gst_value_dup_mini_object
-
 <SUBSECTION Standard>
-GstMiniObjectClass
 GST_MINI_OBJECT
-GST_IS_MINI_OBJECT
-GST_MINI_OBJECT_CLASS
-GST_IS_MINI_OBJECT_CLASS
-GST_MINI_OBJECT_GET_CLASS
-GST_TYPE_MINI_OBJECT
+GST_IS_MINI_OBJECT_TYPE
 GST_TYPE_MINI_OBJECT_FLAGS
 GST_MINI_OBJECT_CAST
 GST_MINI_OBJECT_CONST_CAST
 
-GST_IS_PARAM_SPEC_MINI_OBJECT
-GST_PARAM_SPEC_MINI_OBJECT
-GST_TYPE_PARAM_MINI_OBJECT
 <SUBSECTION Private>
-gst_mini_object_get_type
 gst_mini_object_flags_get_type
-gst_param_spec_mini_object_get_type
 </SECTION>
 
 
