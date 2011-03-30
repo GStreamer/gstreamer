@@ -1,5 +1,8 @@
 /* GStreamer
  * Copyright (C) 2008 David Schleef <ds@schleef.org>
+ * Copyright (C) 2011 Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>.
+ * Copyright (C) 2011 Nokia Corporation. All rights reserved.
+ *   Contact: Stefan Kost <stefan.kost@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -15,6 +18,101 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+
+/**
+ * SECTION:gstbasevideodecoder
+ * @short_description: Base class for video decoders
+ * @see_also: #GstBaseTransform
+ *
+ * This base class is for video decoders turning encoded data into raw video
+ * frames.
+ *
+ * GstBaseVideoDecoder and subclass should cooperate as follows.
+ * <orderedlist>
+ * <listitem>
+ *   <itemizedlist><title>Configuration</title>
+ *   <listitem><para>
+ *     Initially, GstBaseVideoDecoder calls @start when the decoder element
+ *     is activated, which allows subclass to perform any global setup.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     GstBaseVideoDecoder calls @set_format to inform subclass of caps
+ *     describing input video data that it is about to receive, including
+ *     possibly configuration data.
+ *     While unlikely, it might be called more than once, if changing input
+ *     parameters require reconfiguration.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     GstBaseVideoDecoder calls @stop at end of all processing.
+ *   </para></listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * <listitem>
+ *   <itemizedlist>
+ *   <title>Data processing</title>
+ *     <listitem><para>
+ *       Base class gathers input data, and optionally allows subclass
+ *       to parse this into subsequently manageable chunks, typically
+ *       corresponding to and referred to as 'frames'.
+ *     </para></listitem>
+ *     <listitem><para>
+ *       Input frame is provided to subclass' @handle_frame.
+ *     </para></listitem>
+ *     <listitem><para>
+ *       If codec processing results in decoded data, subclass should call
+ *       @gst_base_video_decoder_finish_frame to have decoded data pushed
+ *       downstream.
+ *     </para></listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * <listitem>
+ *   <itemizedlist><title>Shutdown phase</title>
+ *   <listitem><para>
+ *     GstBaseVideoDecoder class calls @stop to inform the subclass that data
+ *     parsing will be stopped.
+ *   </para></listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * </orderedlist>
+ *
+ * Subclass is responsible for providing pad template caps for
+ * source and sink pads. The pads need to be named "sink" and "src". It also
+ * needs to set the fixed caps on srcpad, when the format is ensured.  This
+ * is typically when base class calls subclass' @set_format function, though
+ * it might be delayed until calling @gst_base_video_decoder_finish_frame.
+ *
+ * Subclass is also responsible for providing (presentation) timestamps
+ * (likely based on corresponding input ones).  If that is not applicable
+ * or possible, baseclass provides limited framerate based interpolation.
+ *
+ * Similarly, the baseclass provides some limited (legacy) seeking support
+ * (upon explicit subclass request), as full-fledged support
+ * should rather be left to upstream demuxer, parser or alike.  This simple
+ * approach caters for seeking and duration reporting using estimated input
+ * bitrates.
+ *
+ * Things that subclass need to take care of:
+ * <itemizedlist>
+ *   <listitem><para>Provide pad templates</para></listitem>
+ *   <listitem><para>
+ *      Set source pad caps when appropriate
+ *   </para></listitem>
+ *   <listitem><para>
+ *      Configure some baseclass behaviour parameters.
+ *   </para></listitem>
+ *   <listitem><para>
+ *      Optionally parse input data, if it is not considered packetized.
+ *      Parse sync is obtained either by providing baseclass with a
+ *      mask and pattern or a custom @scan_for_sync.  When sync is established,
+ *      @parse_data should invoke @gst_base_video_decoder_add_to_frame and
+ *      @gst_base_video_decoder_have_frame as appropriate.
+ *   </para></listitem>
+ *   <listitem><para>
+ *      Accept data in @handle_frame and provide decoded results to
+ *      @gst_base_video_decoder_finish_frame.
+ *   </para></listitem>
+ * </itemizedlist>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1006,6 +1104,18 @@ gst_base_video_decoder_new_frame (GstBaseVideoDecoder * base_video_decoder)
   return frame;
 }
 
+/**
+ * gst_base_video_decoder_finish_frame:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ * @frame: a decoded #GstVideoFrame
+ *
+ * @frame should have a valid decoded data buffer, whose metadata fields
+ * are then appropriately set according to frame data and pushed downstream.
+ * If no output data is provided, @frame is considered skipped.
+ * In any case, the frame is considered finished and released.
+ *
+ * Returns: a #GstFlowReturn resulting from sending data downstream
+ */
 GstFlowReturn
 gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrame * frame)
@@ -1187,6 +1297,13 @@ done:
   return ret;
 }
 
+/**
+ * gst_base_video_decoder_finish_frame:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ * @n_bytes: an encoded #GstVideoFrame
+ *
+ * Removes next @n_bytes of input data and adds it to currently parsed frame.
+ */
 void
 gst_base_video_decoder_add_to_frame (GstBaseVideoDecoder * base_video_decoder,
     int n_bytes)
@@ -1263,7 +1380,15 @@ gst_base_video_decoder_get_field_duration (GstBaseVideoDecoder *
       state->fps_n * 2);
 }
 
-
+/**
+ * gst_base_video_decoder_have_frame:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ *
+ * Gathers all data collected for currently parsed frame, gathers corresponding
+ * metadata and passes it along for further processing, i.e. @handle_frame.
+ *
+ * Returns: a #GstFlowReturn
+ */
 GstFlowReturn
 gst_base_video_decoder_have_frame (GstBaseVideoDecoder * base_video_decoder)
 {
@@ -1341,20 +1466,24 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
   return ret;
 }
 
+/**
+ * gst_base_video_decoder_get_state:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ *
+ * Returns: #GstVideoState describing format of video data.
+ */
 GstVideoState *
 gst_base_video_decoder_get_state (GstBaseVideoDecoder * base_video_decoder)
 {
   return &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
 }
 
-void
-gst_base_video_decoder_set_state (GstBaseVideoDecoder * base_video_decoder,
-    GstVideoState * state)
-{
-  memcpy (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state,
-      state, sizeof (*state));
-}
-
+/**
+ * gst_base_video_decoder_lost_sync:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ *
+ * Advances out-of-sync input data by 1 byte and marks it accordingly.
+ */
 void
 gst_base_video_decoder_lost_sync (GstBaseVideoDecoder * base_video_decoder)
 {
@@ -1369,6 +1498,13 @@ gst_base_video_decoder_lost_sync (GstBaseVideoDecoder * base_video_decoder)
   base_video_decoder->have_sync = FALSE;
 }
 
+/* FIXME not quite exciting; get rid of this ? */
+/**
+ * gst_base_video_decoder_set_sync_point:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ *
+ * Marks current frame as a sync point, i.e. keyframe.
+ */
 void
 gst_base_video_decoder_set_sync_point (GstBaseVideoDecoder * base_video_decoder)
 {
@@ -1378,6 +1514,12 @@ gst_base_video_decoder_set_sync_point (GstBaseVideoDecoder * base_video_decoder)
   base_video_decoder->distance_from_sync = 0;
 }
 
+/**
+ * gst_base_video_decoder_get_oldest_frame:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ *
+ * Returns: oldest pending unfinished #GstVideoFrame.
+ */
 GstVideoFrame *
 gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *
     base_video_decoder)
@@ -1391,6 +1533,13 @@ gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *
   return (GstVideoFrame *) (g->data);
 }
 
+/**
+ * gst_base_video_decoder_get_frame:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ * @frame_number: system_frame_number of a frame
+ *
+ * Returns: pending unfinished #GstVideoFrame identified by @frame_number.
+ */
 GstVideoFrame *
 gst_base_video_decoder_get_frame (GstBaseVideoDecoder * base_video_decoder,
     int frame_number)
@@ -1409,6 +1558,13 @@ gst_base_video_decoder_get_frame (GstBaseVideoDecoder * base_video_decoder,
   return NULL;
 }
 
+/**
+ * gst_base_video_decoder_set_src_caps:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ *
+ * Sets src pad caps according to currently configured #GstVideoState.
+ *
+ */
 void
 gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
 {
@@ -1434,6 +1590,16 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   gst_caps_unref (caps);
 }
 
+/**
+ * gst_base_video_decoder_alloc_src_buffer:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ *
+ * Helper function that uses gst_pad_alloc_buffer_and_set_caps
+ * to allocate a buffer to hold a video frame for @base_video_decoder's
+ * current #GstVideoState.
+ *
+ * Returns: allocated buffer
+ */
 GstBuffer *
 gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
     base_video_decoder)
@@ -1464,6 +1630,17 @@ gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
   return buffer;
 }
 
+/**
+ * gst_base_video_decoder_alloc_src_frame:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ * @frame: a #GstVideoFrame
+ *
+ * Helper function that uses gst_pad_alloc_buffer_and_set_caps
+ * to allocate a buffer to hold a video frame for @base_video_decoder's
+ * current #GstVideoState.
+ *
+ * Returns: result from pad alloc call
+ */
 GstFlowReturn
 gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *
     base_video_decoder, GstVideoFrame * frame)
@@ -1490,6 +1667,18 @@ gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *
   return flow_ret;
 }
 
+/**
+ * gst_base_video_decoder_get_max_decode_time:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ * @frame: a #GstVideoFrame
+ *
+ * Determines maximum possible decoding time for @frame that will
+ * allow it to decode and arrive in time (as determined by QoS messages).
+ * In particular, a negative result means decoding in time is no longer possible
+ * and should therefore occur as soon/skippy as possible.
+ *
+ * Returns: max decoding time.
+ */
 GstClockTimeDiff
 gst_base_video_decoder_get_max_decode_time (GstBaseVideoDecoder *
     base_video_decoder, GstVideoFrame * frame)
@@ -1511,6 +1700,14 @@ gst_base_video_decoder_get_max_decode_time (GstBaseVideoDecoder *
   return deadline;
 }
 
+/**
+ * gst_base_video_decoder_get_oldest_frame:
+ * @base_video_decoder_class: a #GstBaseVideoDecoderClass
+ *
+ * Sets the mask and pattern that will be scanned for to obtain parse sync.
+ * Note that a non-zero @mask implies that @scan_for_sync will be ignored.
+ *
+ */
 void
 gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *
     base_video_decoder_class, guint32 mask, guint32 pattern)

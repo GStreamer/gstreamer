@@ -1,5 +1,8 @@
 /* GStreamer
  * Copyright (C) 2008 David Schleef <ds@schleef.org>
+ * Copyright (C) 2011 Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>.
+ * Copyright (C) 2011 Nokia Corporation. All rights reserved.
+ *   Contact: Stefan Kost <stefan.kost@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -66,6 +69,11 @@ G_BEGIN_DECLS
 typedef struct _GstBaseVideoDecoder GstBaseVideoDecoder;
 typedef struct _GstBaseVideoDecoderClass GstBaseVideoDecoderClass;
 
+/**
+ * GstBaseVideoDecoder:
+ *
+ * The opaque #GstBaseVideoDecoder data structure.
+ */
 struct _GstBaseVideoDecoder
 {
   GstBaseVideoCodec base_video_codec;
@@ -120,58 +128,89 @@ struct _GstBaseVideoDecoder
   void             *padding[GST_PADDING_LARGE];
 };
 
+/**
+ * GstBaseAudioDecoderClass:
+ * @start:          Optional.
+ *                  Called when the element starts processing.
+ *                  Allows opening external resources.
+ * @stop:           Optional.
+ *                  Called when the element stops processing.
+ *                  Allows closing external resources.
+ * @set_format:     Notifies subclass of incoming data format (caps).
+ * @scan_for_sync:  Optional.
+ *                  Allows subclass to obtain sync for subsequent parsing
+ *                  by custom means (above an beyond scanning for specific
+ *                  marker and mask).
+ * @parse_data:     Required for non-packetized input.
+ *                  Allows chopping incoming data into manageable units (frames)
+ *                  for subsequent decoding.
+ * @reset:          Optional.
+ *                  Allows subclass (codec) to perform post-seek semantics reset.
+ * @handle_frame:   Provides input data frame to subclass.
+ * @finish:         Optional.
+ *                  Called to request subclass to dispatch any pending remaining
+ *                  data (e.g. at EOS).
+ *
+ * Subclasses can override any of the available virtual methods or not, as
+ * needed. At minimum @handle_frame needs to be overridden, and @set_format
+ * and likely as well.  If non-packetized input is supported or expected,
+ * @parse needs to be overridden as well.
+ */
 struct _GstBaseVideoDecoderClass
 {
   GstBaseVideoCodecClass base_video_codec_class;
 
-  gboolean (*set_format) (GstBaseVideoDecoder *coder, GstVideoState * state);
-  gboolean (*start) (GstBaseVideoDecoder *coder);
-  gboolean (*stop) (GstBaseVideoDecoder *coder);
-  gboolean (*reset) (GstBaseVideoDecoder *coder);
-  int (*scan_for_sync) (GstBaseVideoDecoder *decoder, gboolean at_eos,
-      int offset, int n);
-  GstFlowReturn (*parse_data) (GstBaseVideoDecoder *decoder, gboolean at_eos);
-  GstFlowReturn (*finish) (GstBaseVideoDecoder *coder);
-  GstFlowReturn (*handle_frame) (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
-  GstFlowReturn (*shape_output) (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
-  GstCaps *(*get_caps) (GstBaseVideoDecoder *coder);
+  gboolean      (*start)          (GstBaseVideoDecoder *coder);
 
-  guint32 capture_mask;
-  guint32 capture_pattern;
+  gboolean      (*stop)           (GstBaseVideoDecoder *coder);
+
+  int           (*scan_for_sync)  (GstBaseVideoDecoder *decoder, gboolean at_eos,
+                                   int offset, int n);
+
+  GstFlowReturn (*parse_data)     (GstBaseVideoDecoder *decoder, gboolean at_eos);
+
+  gboolean      (*set_format)     (GstBaseVideoDecoder *coder, GstVideoState * state);
+
+  gboolean      (*reset)          (GstBaseVideoDecoder *coder);
+
+  GstFlowReturn (*finish)         (GstBaseVideoDecoder *coder);
+
+  GstFlowReturn (*handle_frame)   (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
+
+
+  /*< private >*/
+  guint32       capture_mask;
+  guint32       capture_pattern;
 
   /* FIXME before moving to base */
-  void *padding[GST_PADDING_LARGE];
+  void         *padding[GST_PADDING_LARGE];
 };
 
-GType gst_base_video_decoder_get_type (void);
+void             gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *klass,
+                                    guint32 mask, guint32 pattern);
 
-void gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *klass,
-    guint32 mask, guint32 pattern);
+GstVideoFrame   *gst_base_video_decoder_get_frame (GstBaseVideoDecoder *coder,
+                                    int frame_number);
+GstVideoFrame   *gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *coder);
 
-GstVideoFrame *gst_base_video_decoder_get_frame (GstBaseVideoDecoder *coder,
-    int frame_number);
-GstVideoFrame *gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *coder);
-void gst_base_video_decoder_add_to_frame (GstBaseVideoDecoder *base_video_decoder,
-    int n_bytes);
-GstFlowReturn gst_base_video_decoder_finish_frame (GstBaseVideoDecoder *base_video_decoder,
-    GstVideoFrame *frame);
-GstFlowReturn
-gst_base_video_decoder_have_frame (GstBaseVideoDecoder *base_video_decoder);
-GstVideoState * gst_base_video_decoder_get_state (GstBaseVideoDecoder *base_video_decoder);
-void gst_base_video_decoder_set_state (GstBaseVideoDecoder *base_video_decoder,
-    GstVideoState *state);
-void gst_base_video_decoder_lost_sync (GstBaseVideoDecoder *base_video_decoder);
-void gst_base_video_decoder_set_sync_point (GstBaseVideoDecoder *base_video_decoder);
+void             gst_base_video_decoder_add_to_frame (GstBaseVideoDecoder *base_video_decoder,
+                                    int n_bytes);
+void             gst_base_video_decoder_lost_sync (GstBaseVideoDecoder *base_video_decoder);
+GstFlowReturn    gst_base_video_decoder_have_frame (GstBaseVideoDecoder *base_video_decoder);
 
-void gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder *base_video_decoder);
-
-GstBuffer * gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
-    base_video_decoder);
-GstFlowReturn gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *base_video_decoder,
-    GstVideoFrame *frame);
-
+void             gst_base_video_decoder_set_sync_point (GstBaseVideoDecoder *base_video_decoder);
+void             gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder *base_video_decoder);
+GstBuffer       *gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder * base_video_decoder);
+GstFlowReturn    gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *base_video_decoder,
+                                    GstVideoFrame *frame);
+GstVideoState   *gst_base_video_decoder_get_state (GstBaseVideoDecoder *base_video_decoder);
 GstClockTimeDiff gst_base_video_decoder_get_max_decode_time (
-    GstBaseVideoDecoder *base_video_decoder, GstVideoFrame *frame);
+                                    GstBaseVideoDecoder *base_video_decoder,
+                                    GstVideoFrame *frame);
+GstFlowReturn    gst_base_video_decoder_finish_frame (GstBaseVideoDecoder *base_video_decoder,
+                                    GstVideoFrame *frame);
+
+GType            gst_base_video_decoder_get_type (void);
 
 G_END_DECLS
 
