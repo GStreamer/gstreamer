@@ -1245,7 +1245,6 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     GST_BASE_VIDEO_CODEC (base_video_decoder)->time = GST_CLOCK_TIME_NONE;
   }
 
-  gst_base_video_decoder_set_src_caps (base_video_decoder);
   gst_buffer_set_caps (src_buffer,
       GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)));
 
@@ -1583,9 +1582,6 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   g_return_val_if_fail (state->width != 0, FALSE);
   g_return_val_if_fail (state->height != 0, FALSE);
 
-  if (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)) != NULL)
-    return;
-
   /* sanitize */
   if (state->fps_d == 0) {
     state->fps_n = 0;
@@ -1599,9 +1595,6 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   caps = gst_video_format_new_caps (state->format,
       state->width, state->height,
       state->fps_n, state->fps_d, state->par_n, state->par_d);
-  /* arrange for derived info */
-  state->bytes_per_picture =
-      gst_video_format_get_size (state->format, state->width, state->height);
   gst_caps_set_simple (caps, "interlaced",
       G_TYPE_BOOLEAN, state->interlaced, NULL);
 
@@ -1610,8 +1603,11 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   ret =
       gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
       caps);
-
   gst_caps_unref (caps);
+
+  /* arrange for derived info */
+  state->bytes_per_picture =
+      gst_video_format_get_size (state->format, state->width, state->height);
 
   return ret;
 }
@@ -1634,8 +1630,6 @@ gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
   GstFlowReturn flow_ret;
   int num_bytes;
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
-
-  gst_base_video_decoder_set_src_caps (base_video_decoder);
 
   num_bytes = gst_video_format_get_size (state->format, state->width,
       state->height);
@@ -1663,7 +1657,8 @@ gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
  *
  * Helper function that uses gst_pad_alloc_buffer_and_set_caps
  * to allocate a buffer to hold a video frame for @base_video_decoder's
- * current #GstVideoState.
+ * current #GstVideoState.  Subclass should already have configured video state
+ * and set src pad caps.
  *
  * Returns: result from pad alloc call
  */
@@ -1672,13 +1667,14 @@ gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *
     base_video_decoder, GstVideoFrame * frame)
 {
   GstFlowReturn flow_ret;
-  int num_bytes;
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
+  int num_bytes = state->bytes_per_picture;
 
-  gst_base_video_decoder_set_src_caps (base_video_decoder);
+  g_return_val_if_fail (state->bytes_per_picture != 0, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD
+          (base_video_decoder)) != NULL, GST_FLOW_ERROR);
 
-  num_bytes = gst_video_format_get_size (state->format, state->width,
-      state->height);
+  GST_LOG_OBJECT (base_video_decoder, "alloc buffer size %d", num_bytes);
   flow_ret =
       gst_pad_alloc_buffer_and_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
       (base_video_decoder), GST_BUFFER_OFFSET_NONE, num_bytes,

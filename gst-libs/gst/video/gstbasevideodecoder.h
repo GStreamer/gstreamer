@@ -109,8 +109,6 @@ struct _GstBaseVideoDecoder
 
   /* need mark discont */
   gboolean          discont;
-  /* src caps set */
-  gboolean          have_src_caps;
 
   /* combine to yield (presentation) ts */
   GstClockTime      timestamp_offset;

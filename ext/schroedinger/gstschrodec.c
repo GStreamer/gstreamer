@@ -382,9 +382,7 @@ parse_sequence_header (GstSchroDec * schro_dec, guint8 * data, int size)
     state->par_d = video_format.aspect_ratio_denominator;
     GST_DEBUG ("Pixel aspect ratio is %d/%d", state->par_n, state->par_d);
 
-    /* FIXME state points to what is actually in the decoder */
-    //gst_base_video_decoder_set_state (GST_BASE_VIDEO_DECODER (schro_dec),
-    //    state);
+    gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER (schro_dec));
   } else {
     GST_WARNING ("Failed to get frame rate from sequence header");
   }
