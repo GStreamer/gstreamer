@@ -266,11 +266,12 @@ uri_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
-/*** plaulist/m3u8 ***/
+/*** playlist/m3u8 ***/
 
 static GstStaticCaps m3u8_caps = GST_STATIC_CAPS ("playlist/m3u8");
 #define M3U8_CAPS (gst_static_caps_get(&m3u8_caps))
 
+/* See http://tools.ietf.org/html/draft-pantos-http-live-streaming-05 */
 static void
 m3u8_type_find (GstTypeFind * tf, gpointer unused)
 {
