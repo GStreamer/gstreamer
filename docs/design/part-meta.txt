@@ -9,7 +9,6 @@ negotiated in the bufferpools.
 
 Some examples of metadata:
 
- - pointers to buffer memory regions
  - timestamp, duration
  - offset, offset_end
  - interlacing information
@@ -34,20 +33,6 @@ Requirements
 
 Use cases
 ---------
-
- * DSP vs CPU caches
-
- Both DSP and CPU can have separate MMUs and memory caches. When we exchange buffers
- between two subsystems we need to flush caches so that one CPU can see the
- modifications done by the other CPU. These caches must only be flushed when one
- CPU performed a write and the other CPU needs to do a read.
-
- In order to implement this we need to be able to mark our read and write
- operations on the buffer data.
-
- It might also be possible that buffers are not mapped into the address space of
- the process normally and that an explicit mmap operation is needed to setup
- the mapping tables for the physical memory.
 
  * Video planes
 
@@ -76,7 +61,7 @@ GstMeta
 A GstMeta is a structure as follows:
 
   struct _GstMeta {
-    GstMetaInfo *info;    /* tag and info for the meta item */
+    const GstMetaInfo *info;    /* tag and info for the meta item */
   };
 
 The purpose of the this structure is to serve as a common header for all metadata
@@ -92,43 +77,42 @@ will have this structure as the first field. For example:
     GstClockTime   clock_rate;  /* clock rate for the above values */
   };
 
-Or another example for the buffer memory region that consists of some methods
-only.
+Or another example for the video memory regions that consists of both fields and
+methods.
 
-  struct _GstMetaMemory {
-    GstMeta            meta;
-   
-    GstMetaMemoryMap       mmap_func;
-    GstMetaMemoryUnmap     munmap_func;
-  };
 
-  typedef enum {
-    GST_BUFFER_MAP_NONE,
-    GST_BUFFER_MAP_READ,
-    GST_BUFFER_MAP_WRITE,
-  } GstBufferMapFlags
+ #define GST_VIDEO_MAX_PLANES 4
 
-  gpointer gst_meta_memory_map   (GstMetaMemory *, guint offset, guint *size, GstBufferMapFlags);
-  gboolean gst_meta_memory_unmap (GstMetaMemory *, gpointer data,  guint size);
+ struct GstMetaVideoPlane {
+   gsize           offset;   /* offset in the buffer memory region of the
+                              * first pixel. */
+   gint            stride;   /* stride of the image lines. Can be negative when
+                              * the image is upside-down */
+ };
 
+ struct GstMetaVideo {
+   GstMeta       meta
+
+   GstMetaVideoFlags flags
+
+   guint               n_planes;
+   GstVideoPlane       plane[GST_VIDEO_MAX_PLANES];
+
+   gpointer (*map)     (GstMetaVideo *meta, guint plane, gint *stride,
+                        GstMapflags flags);
+   gboolean (*unmap)   (GstMetaVideo *meta, guint plane, gpointer data);
+ };
+
+ gpointer gst_meta_video_map   (GstMetaVideo *meta, guint plane, gint *stride,
+                                GstMapflags flags);
+ gboolean gst_meta_video_unmap (GstMetaVideo *meta, guint plane, gpointer data);
 
 GstMeta derived structures define the API of the metadata. The API can consist of
 fields and/or methods. It is possible to have different implementations for the
 same GstMeta structure.
 
 The implementation of the GstMeta api would typically add more fields to the
-public structure that allow it to implement the API. For example:
-
-  struct _GstMetaMemoryImpl {
-    GstMetaMemory      memory;
-   
-    gpointer          *data;
-    guint              size;
-    gpointer          *data_orig;
-    GFreeFunc          data_free;
-    gpointer           data_user;
-  };
-
+public structure that allow it to implement the API.
 
 GstMetaInfo will point to more information about the metadata and looks like this:
 
@@ -139,6 +123,7 @@ GstMetaInfo will point to more information about the metadata and looks like thi
 
     GstMetaInitFunction        init_func;
     GstMetaFreeFunction        free_func;
+    GstMetaCopyFunction        copy_func;
     GstMetaTransformFunction   transform_func;
     GstMetaSerializeFunction   serialize_func
     GstMetaDeserializeFunction deserialize_func
@@ -156,8 +141,7 @@ function will setup the methods in the metadata structure.
 Along with the metadata description we will have functions to initialize/free (and/or refcount)
 a specific GstMeta instance. We also have the possibility to add a custom
 transform function that can be used to modify the metadata when a transformation
-happens. Transformations can be copy, make-writable and subbuffer operations but
-can be expanded later.
+happens.
 
 We also add serialize and deserialize function for the metadata in case we need special
 logic for reading and writing the metadata. This is needed for GDP payloading of the
@@ -194,16 +178,18 @@ GstMetaTiming         |  |                                     | |
                       +- |     clock_rate                      | |
                          + . . . . . . . . . . . . . . . . . . + |
                          |     next                           <--+
-GstMetaMemory      +- +- |     info                           ------> GstMetaInfo
+GstMetaVideo       +- +- |     info                           ------> GstMetaInfo
                    |  |  |                                     | |
-                   |  |  |     mmap                            | |
-                   |  |  |     munmap                          | |
+                   |  |  |     flags                           | |
+                   |  |  |     n_planes                        | |
+                   |  |  |     planes[]                        | |
+                   |  |  |     map                             | |
+                   |  |  |     unmap                           | |
                    +- |  |                                     | |
-                      |  |     data                            | |
-GstMetaMemoryImpl     |  |     size                            | |
-                      |  |     mallocdata                      | |
-                      |  |     data_free                       | |
-                      +- |     data_user                       | |
+                      |  |     private fields                  | |
+GstMetaVideoImpl      |  |     ...                             | |
+                      |  |     ...                             | |
+                      +- |                                     | |
                          + . . . . . . . . . . . . . . . . . . + .
                          .                                       .
 
@@ -350,43 +336,13 @@ so on).
 Subbuffers
 ~~~~~~~~~~
 
-Subbuffers are implemented with a generic transform. Parameters to the transform
+Subbuffers are implemented with a generic copy. Parameters to the copy
 are the offset and size. This allows each metadata structure to implement the
 actions needed to update the metadata of the subbuffer. 
 
-Since the subbuffer transform expects an offset and size, it might not make sense
-to make subbuffers from arbitrary buffers. Video metadata that has data in muliple
-planes, for example, might need to copy the planes to its 'natural' contiguous
-representation for the subbuffer or might simply ignore the subbuffer transform.
-
-
-Other use cases
-~~~~~~~~~~~~~~~
-
-Making the GstMetaMemory (for making the buffer point to the associated
-memory region) as metadata on a GstBuffer, as opposed to making it an integral
-part of GstBuffer, allows for some more interesting ways to transfer data.
-
-We could for example make a new GstMetaIOVec metadata structure like this:
-
-  struct _GstMetaIOVec {
-    GstMeta  meta;
-   
-    /* pointer to data and its size */
-    GFreeFunc       data_free;
-    gpointer        data_user;
-    guint           len;
-    struct iovec   *iov;
-  };
-
-This would allow us to transfer data in a scatter/gather array. Since the fields
-in the buffer metadata are now explicit, elements that don't support this kind
-of metadata can gracefully degrade.
-
-Another use case for not having the Memory metadata in the buffers would be for
-_pad_alloc() and get_range(). We can pass a GstBuffer with the requested
-metadata fields to those functions and have the _get_range() or pad_alloc()
-implementations add (or use, in the case of a file reader) the memory metadata. 
+It might not make sense for some metadata to work with subbuffers. For example
+when  we take a subbuffer of a buffer with a video frame, the GstMetaVideo
+simply becomes invalid and is removed from the new subbuffer.
 
 
 Relationship with GstCaps
@@ -434,32 +390,3 @@ Some structures that we need to be able to add to buffers.
 
 Some of these overlap, we need to find a minimal set of metadata structures that
 allows us to define all use cases.
-
-
-
-Video Buffers
--------------
-
- #define GST_VIDEO_MAX_PLANES 4
-
- struct GstVideoPlane {
-   guint8             *data;
-   guint               size;
-   guint               stride;
-
-   guint8             *data_orig;
-   guint               size_orig;
-   GFreeFunc           data_free;
-   gpointer            data_user;
- };
-
- struct GstBufferVideoMeta {
-   GstMeta       meta
-
-   GstBufferVideoFlags flags
-
-   guint               n_planes;
-   GstVideoPlane       plane[GST_VIDEO_MAX_PLANES];
- };
-
-

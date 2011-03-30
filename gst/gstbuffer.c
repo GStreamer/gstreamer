@@ -154,9 +154,12 @@ typedef struct
 {
   GstBuffer buffer;
 
+  /* the memory blocks */
   guint len;
   GstMemory *mem[GST_BUFFER_MEM_MAX];
 
+  /* FIXME, make metadata allocation more efficient by using part of the
+   * GstBufferImpl */
   GstMetaItem *item;
 } GstBufferImpl;
 
