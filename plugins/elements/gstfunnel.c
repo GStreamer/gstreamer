@@ -282,7 +282,7 @@ gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
   newts = gst_segment_to_running_time (&fpad->segment,
       fpad->segment.format, GST_BUFFER_TIMESTAMP (buffer));
   if (newts != GST_BUFFER_TIMESTAMP (buffer)) {
-    buffer = gst_buffer_make_metadata_writable (buffer);
+    buffer = gst_buffer_make_writable (buffer);
     GST_BUFFER_TIMESTAMP (buffer) = newts;
   }
 
