@@ -269,44 +269,34 @@ uri_type_find (GstTypeFind * tf, gpointer unused)
 /*** plaulist/m3u8 ***/
 
 static GstStaticCaps m3u8_caps = GST_STATIC_CAPS ("playlist/m3u8");
-
 #define M3U8_CAPS (gst_static_caps_get(&m3u8_caps))
-#define M3U8_BUFFER_SIZE 24
-#define M3U8_INC_BUFFER {                                               \
-  pos++;                                                                \
-  if (pos == M3U8_BUFFER_SIZE) {                                        \
-    pos = 0;                                                            \
-    offset += M3U8_BUFFER_SIZE;                                         \
-    data = gst_type_find_peek (tf, offset, M3U8_BUFFER_SIZE);           \
-    if (data == NULL) return;                                           \
-  } else {                                                              \
-    data++;                                                             \
-  }                                                                     \
-}
 
 static void
 m3u8_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint pos = 0;
-  guint offset = 0;
-  guint8 *data = gst_type_find_peek (tf, 0, 7);
+  DataScanCtx c = { 0, NULL, 0 };
 
-  if (memcmp (data, "#EXTM3U", 7))
+  if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 7)))
     return;
-  M3U8_INC_BUFFER;
 
-  while (data) {
+  if (memcmp (c.data, "#EXTM3U", 7))
+    return;
+
+  data_scan_ctx_advance (tf, &c, 7);
+
+  /* Check only the first 256 bytes */
+  while (c.offset < 256) {
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 21)))
+      return;
+
     /* Search for # comment lines */
-    while (*data != '#') {
-      M3U8_INC_BUFFER;
-    }
-
-    if (memcmp (data, "#EXT-X-TARGETDURATION", 21) == 0 ||
-        memcmp (data, "#EXT-X-STREAM-INF", 17) == 0) {
+    if (c.data[0] == '#' && (memcmp (c.data, "#EXT-X-TARGETDURATION", 21) == 0
+            || memcmp (c.data, "#EXT-X-STREAM-INF", 17) == 0)) {
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, M3U8_CAPS);
       return;
     }
-    M3U8_INC_BUFFER;
+
+    data_scan_ctx_advance (tf, &c, 1);
   }
 }
 
