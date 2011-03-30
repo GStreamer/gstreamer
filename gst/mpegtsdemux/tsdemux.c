@@ -792,8 +792,10 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
         case ST_VIDEO_MPEG2:
           keyframe_seek = gst_tsdemux_has_mpeg2_keyframe;
           break;
-        case ST_VIDEO_MPEG4:
         case ST_VIDEO_H264:
+          keyframe_seek = gst_tsdemux_has_h264_keyframe;
+          break;
+        case ST_VIDEO_MPEG4:
         case ST_VIDEO_DIRAC:
           GST_WARNING ("no payload parser for stream 0x%04x type: 0x%02x", pid,
               program->streams[pid]->stream_type);
