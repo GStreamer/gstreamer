@@ -741,7 +741,9 @@ gst_fake_src_create_buffer (GstFakeSrc * src, gsize * bufsize)
       }
       /* see if it's large enough */
       if ((src->parentsize - src->parentoffset) >= size) {
-        buf = gst_buffer_create_sub (src->parent, src->parentoffset, size);
+        buf =
+            gst_buffer_copy_region (src->parent, GST_BUFFER_COPY_ALL,
+            src->parentoffset, size);
         src->parentoffset += size;
       } else {
         /* the parent is useless now */

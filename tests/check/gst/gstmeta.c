@@ -157,7 +157,7 @@ GST_START_TEST (test_meta_test)
   gst_buffer_unref (copy);
 
   /* make subbuffer */
-  subbuf = gst_buffer_create_sub (buffer, 0, 1);
+  subbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, 1);
   /* get metadata of the buffer */
   meta = GST_META_TEST_GET (subbuf);
   fail_if (meta == NULL);
@@ -168,7 +168,7 @@ GST_START_TEST (test_meta_test)
   gst_buffer_unref (subbuf);
 
   /* make another subbuffer */
-  subbuf = gst_buffer_create_sub (buffer, 1, 3);
+  subbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 1, 3);
   /* get metadata of the buffer */
   meta = GST_META_TEST_GET (subbuf);
   fail_if (meta == NULL);

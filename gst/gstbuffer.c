@@ -26,10 +26,10 @@
  * @see_also: #GstPad, #GstMiniObject
  *
  * Buffers are the basic unit of data transfer in GStreamer.  The #GstBuffer
- * type provides all the state necessary to define a region of memory as part
- * of a stream.  Sub-buffers are also supported, allowing a smaller region of a
- * buffer to become its own buffer, with mechanisms in place to ensure that
- * neither memory space goes away prematurely.
+ * type provides all the state necessary to define the regions of memory as
+ * part of a stream. Region copies are also supported, allowing a smaller
+ * region of a buffer to become its own buffer, with mechanisms in place to
+ * ensure that neither memory space goes away prematurely.
  *
  * Buffers are usually created with gst_buffer_new(). After a buffer has been
  * created one will typically allocate memory for it and set the size of the
@@ -85,33 +85,29 @@
  * next element.
  *
  * To efficiently create a smaller buffer out of an existing one, you can
- * use gst_buffer_create_sub().
+ * use gst_buffer_copy_region().
  *
- * If a plug-in wants to modify the buffer data in-place, it should first obtain
- * a buffer that is safe to modify by using gst_buffer_make_writable().  This
- * function is optimized so that a copy will only be made when it is necessary.
- *
- * A plugin that only wishes to modify the metadata of a buffer, such as the
- * offset, timestamp or caps, should use gst_buffer_make_metadata_writable(),
- * which will create a subbuffer of the original buffer to ensure the caller
- * has sole ownership, and not copy the buffer data.
+ * If a plug-in wants to modify the buffer data or metadata in-place, it should
+ * first obtain a buffer that is safe to modify by using
+ * gst_buffer_make_writable().  This function is optimized so that a copy will
+ * only be made when it is necessary.
  *
  * Several flags of the buffer can be set and unset with the
  * GST_BUFFER_FLAG_SET() and GST_BUFFER_FLAG_UNSET() macros. Use
  * GST_BUFFER_FLAG_IS_SET() to test if a certain #GstBufferFlag is set.
  *
  * Buffers can be efficiently merged into a larger buffer with
- * gst_buffer_merge() and gst_buffer_span() if the gst_buffer_is_span_fast()
+ * gst_buffer_span(), which avoids memory copies when the gst_buffer_is_span_fast()
  * function returns TRUE.
  *
  * An element should either unref the buffer or push it out on a src pad
  * using gst_pad_push() (see #GstPad).
  *
  * Buffers are usually freed by unreffing them with gst_buffer_unref(). When
- * the refcount drops to 0, any data pointed to by GST_BUFFER_MALLOCDATA() will
- * also be freed.
+ * the refcount drops to 0, any data pointed to by the buffer is unreffed as
+ * well.
  *
- * Last reviewed on August 11th, 2006 (0.10.10)
+ * Last reviewed on March 30, 2011 (0.11.0)
  */
 #include "gst_private.h"
 
@@ -318,7 +314,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     len = GST_BUFFER_MEM_LEN (src);
     left = size;
 
-    /* copy and subbuffer */
+    /* copy and make regions of the memory */
     for (i = 0; i < len && left > 0; i++) {
       mem = GST_BUFFER_MEM_PTR (src, i);
       bsize = gst_memory_get_sizes (mem, NULL);
@@ -332,7 +328,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         tocopy = MIN (bsize - offset, left);
         if (tocopy < bsize) {
           /* we need to clip something */
-          mem = gst_memory_sub (mem, offset, tocopy);
+          mem = gst_memory_share (mem, offset, tocopy);
         } else {
           mem = gst_memory_ref (mem);
         }
@@ -547,7 +543,7 @@ gst_buffer_new_and_alloc (guint size)
   gst_memory_unmap (mem, data, asize);
 
   /* strip off the buffer */
-  gst_memory_trim (mem, sizeof (GstBufferImpl), size);
+  gst_memory_resize (mem, sizeof (GstBufferImpl), size);
 
   newbuf = GST_BUFFER_CAST (data);
 
@@ -697,7 +693,7 @@ gst_buffer_get_size (GstBuffer * buffer)
 }
 
 /**
- * gst_buffer_trim:
+ * gst_buffer_resize:
  * @buffer: a #GstBuffer.
  * @offset: the new offset
  * @size: the new size
@@ -705,7 +701,7 @@ gst_buffer_get_size (GstBuffer * buffer)
  * Set the total size of the buffer
  */
 void
-gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
+gst_buffer_resize (GstBuffer * buffer, gsize offset, gsize size)
 {
   guint len;
   guint si, di;
@@ -741,10 +737,10 @@ gst_buffer_trim (GstBuffer * buffer, gsize offset, gsize size)
       if (tocopy < bsize) {
         /* we need to clip something */
         if (GST_MEMORY_IS_WRITABLE (mem)) {
-          gst_memory_trim (mem, offset, tocopy);
+          gst_memory_resize (mem, offset, tocopy);
         } else {
           GstMemory *tmp;
-          tmp = gst_memory_sub (mem, offset, tocopy);
+          tmp = gst_memory_share (mem, offset, tocopy);
           gst_memory_unref (mem);
           mem = tmp;
         }
@@ -1035,7 +1031,7 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
 }
 
 /**
- * gst_buffer_create_sub:
+ * gst_buffer_copy_region:
  * @parent: a #GstBuffer.
  * @offset: the offset into parent #GstBuffer at which the new sub-buffer 
  *          begins.
@@ -1056,28 +1052,22 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
  *     invalid.
  */
 GstBuffer *
-gst_buffer_create_sub (GstBuffer * buffer, gsize offset, gsize size)
+gst_buffer_copy_region (GstBuffer * buffer, GstBufferCopyFlags flags,
+    gsize offset, gsize size)
 {
-  GstBuffer *subbuffer;
-  gsize bufsize;
+  GstBuffer *copy;
 
   g_return_val_if_fail (buffer != NULL, NULL);
-  g_return_val_if_fail (buffer->mini_object.refcount > 0, NULL);
-  bufsize = gst_buffer_get_size (buffer);
-  g_return_val_if_fail (bufsize >= offset, NULL);
-  if (size == -1)
-    size = bufsize - offset;
-  g_return_val_if_fail (bufsize >= offset + size, NULL);
 
   /* create the new buffer */
-  subbuffer = gst_buffer_new ();
+  copy = gst_buffer_new ();
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p of %p %" G_GSIZE_FORMAT
-      "-%" G_GSIZE_FORMAT, subbuffer, buffer, offset, size);
+  GST_CAT_LOG (GST_CAT_BUFFER, "new region copy %p of %p %" G_GSIZE_FORMAT
+      "-%" G_GSIZE_FORMAT, copy, buffer, offset, size);
 
-  gst_buffer_copy_into (subbuffer, buffer, GST_BUFFER_COPY_ALL, offset, size);
+  gst_buffer_copy_into (copy, buffer, flags, offset, size);
 
-  return subbuffer;
+  return copy;
 }
 
 static gboolean
@@ -1129,7 +1119,7 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
 
   if (!writable
       && _gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
-    span = gst_memory_sub (parent, offset + poffset, size);
+    span = gst_memory_share (parent, offset + poffset, size);
   } else {
     gsize count, left;
     guint8 *dest, *ptr;

@@ -47,6 +47,8 @@ G_BEGIN_DECLS
 #define gst_pad_get_caps_reffed(p)             gst_pad_get_caps(p)
 #define gst_pad_peer_get_caps_reffed(p)        gst_pad_peer_get_caps(p)
 
+//#define gst_buffer_create_sub(b,o,s)           gst_buffer_copy_region(b,GST_BUFFER_COPY_ALL,o,s)
+
 #ifndef GST_DISABLE_DEPRECATED
 
 #endif /* not GST_DISABLE_DEPRECATED */

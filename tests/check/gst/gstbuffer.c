@@ -98,8 +98,8 @@ GST_START_TEST (test_subbuffer)
   GST_BUFFER_OFFSET (buffer) = 3;
   GST_BUFFER_OFFSET_END (buffer) = 4;
 
-  sub = gst_buffer_create_sub (buffer, 1, 2);
-  fail_if (sub == NULL, "create_sub of buffer returned NULL");
+  sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 1, 2);
+  fail_if (sub == NULL, "copy region of buffer returned NULL");
 
   sdata = gst_buffer_map (sub, &ssize, NULL, GST_MAP_READ);
   fail_unless (ssize == 2, "subbuffer has wrong size");
@@ -116,8 +116,8 @@ GST_START_TEST (test_subbuffer)
   gst_buffer_unref (sub);
 
   /* create a subbuffer of size 0 */
-  sub = gst_buffer_create_sub (buffer, 1, 0);
-  fail_if (sub == NULL, "create_sub of buffer returned NULL");
+  sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 1, 0);
+  fail_if (sub == NULL, "copy_region of buffer returned NULL");
   sdata = gst_buffer_map (sub, &ssize, NULL, GST_MAP_READ);
   fail_unless (ssize == 0, "subbuffer has wrong size");
   fail_unless (memcmp (data + 1, sdata, 0) == 0,
@@ -128,8 +128,8 @@ GST_START_TEST (test_subbuffer)
 
   /* test if metadata is coppied, not a complete buffer copy so only the
    * timestamp and offset fields are copied. */
-  sub = gst_buffer_create_sub (buffer, 0, 1);
-  fail_if (sub == NULL, "create_sub of buffer returned NULL");
+  sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, 1);
+  fail_if (sub == NULL, "copy_region of buffer returned NULL");
   fail_unless (gst_buffer_get_size (sub) == 1, "subbuffer has wrong size");
   fail_unless (GST_BUFFER_TIMESTAMP (sub) == 1,
       "subbuffer has wrong timestamp");
@@ -141,8 +141,8 @@ GST_START_TEST (test_subbuffer)
 
   /* test if metadata is coppied, a complete buffer is copied so all the timing
    * fields should be copied. */
-  sub = gst_buffer_create_sub (buffer, 0, 4);
-  fail_if (sub == NULL, "create_sub of buffer returned NULL");
+  sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, 4);
+  fail_if (sub == NULL, "copy_region of buffer returned NULL");
   fail_unless (gst_buffer_get_size (sub) == 4, "subbuffer has wrong size");
   fail_unless (GST_BUFFER_TIMESTAMP (sub) == 1,
       "subbuffer has wrong timestamp");
@@ -166,11 +166,11 @@ GST_START_TEST (test_is_span_fast)
 
   buffer = gst_buffer_new_and_alloc (4);
 
-  sub1 = gst_buffer_create_sub (buffer, 0, 2);
-  fail_if (sub1 == NULL, "create_sub of buffer returned NULL");
+  sub1 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, 2);
+  fail_if (sub1 == NULL, "copy_region of buffer returned NULL");
 
-  sub2 = gst_buffer_create_sub (buffer, 2, 2);
-  fail_if (sub2 == NULL, "create_sub of buffer returned NULL");
+  sub2 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 2, 2);
+  fail_if (sub2 == NULL, "copy_region of buffer returned NULL");
 
   fail_if (gst_buffer_is_span_fast (buffer, sub2) == TRUE,
       "a parent buffer can't be span_fasted");
@@ -206,11 +206,11 @@ GST_START_TEST (test_span)
   ASSERT_CRITICAL (gst_buffer_span (NULL, 1, buffer, 2));
   ASSERT_CRITICAL (gst_buffer_span (buffer, 0, buffer, 10));
 
-  sub1 = gst_buffer_create_sub (buffer, 0, 2);
-  fail_if (sub1 == NULL, "create_sub of buffer returned NULL");
+  sub1 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, 2);
+  fail_if (sub1 == NULL, "copy_region of buffer returned NULL");
 
-  sub2 = gst_buffer_create_sub (buffer, 2, 2);
-  fail_if (sub2 == NULL, "create_sub of buffer returned NULL");
+  sub2 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 2, 2);
+  fail_if (sub2 == NULL, "copy_region of buffer returned NULL");
 
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
@@ -339,7 +339,7 @@ GST_START_TEST (test_subbuffer_make_writable)
   /* create sub-buffer of read-only buffer and make it writable */
   buf = create_read_only_buffer ();
 
-  sub_buf = gst_buffer_create_sub (buf, 0, 8);
+  sub_buf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, 0, 8);
 
   data = gst_buffer_map (sub_buf, &size, NULL, GST_MAP_WRITE);
   fail_if (data == NULL);

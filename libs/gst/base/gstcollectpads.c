@@ -923,7 +923,8 @@ gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
   if (data->pos == 0 && readsize == bufsize)
     return gst_buffer_ref (buffer);
   else
-    return gst_buffer_create_sub (buffer, data->pos, readsize);
+    return gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, data->pos,
+        readsize);
 }
 
 /**

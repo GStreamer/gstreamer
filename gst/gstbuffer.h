@@ -237,13 +237,12 @@ typedef enum {
 /**
  * GstBuffer:
  * @mini_object: the parent structure
- * @data: pointer to the buffer data
- * @size: size of buffer data
+ * @pool: pointer to the pool owner of the buffer
+ * @caps: the #GstCaps describing the data format in this buffer
  * @timestamp: timestamp of the buffer, can be #GST_CLOCK_TIME_NONE when the
  *     timestamp is not known or relevant.
  * @duration: duration in time of the buffer data, can be #GST_CLOCK_TIME_NONE
  *     when the duration is not known or relevant.
- * @caps: the #GstCaps describing the data format in this buffer
  * @offset: a media specific offset for the buffer data.
  *     For video frames, this is the frame number of this buffer.
  *     For audio samples, this is the offset of the first sample in this buffer.
@@ -251,11 +250,6 @@ typedef enum {
  *       byte in this buffer.
  * @offset_end: the last offset contained in this buffer. It has the same
  *     format as @offset.
- * @malloc_data: a pointer to the allocated memory associated with this buffer.
- *     When the buffer is freed, this data will freed with @free_func.
- * @free_func: a custom function that will be called with @malloc_data, defaults
- *     to g_free(). Since 0.10.22.
- * @parent: the parent buffer if this is a subbuffer. Since 0.10.26.
  *
  * The structure of a #GstBuffer. Use the associated macros to access the public
  * variables.
@@ -302,7 +296,7 @@ void        gst_buffer_extract             (GstBuffer *buffer, gsize offset,
                                             gpointer dest, gsize size);
 
 gsize       gst_buffer_get_size            (GstBuffer *buffer);
-void        gst_buffer_trim                (GstBuffer *buffer, gsize offset, gsize size);
+void        gst_buffer_resize              (GstBuffer *buffer, gsize offset, gsize size);
 
 /**
  * gst_buffer_remove_memory:
@@ -312,7 +306,7 @@ void        gst_buffer_trim                (GstBuffer *buffer, gsize offset, gsi
  * Set the size of @b to @s. This will remove or trim the memory blocks
  * in the buffer.
  */
-#define     gst_buffer_set_size(b,s)       gst_buffer_trim ((b), 0, (s))
+#define     gst_buffer_set_size(b,s)       gst_buffer_resize ((b), 0, (s))
 
 /* getting memory */
 gpointer    gst_buffer_map                 (GstBuffer *buffer, gsize *size, gsize *maxsize,
@@ -386,6 +380,7 @@ gst_buffer_copy (const GstBuffer * buf)
 
 /**
  * GstBufferCopyFlags:
+ * @GST_BUFFER_COPY_NONE: copy nothing
  * @GST_BUFFER_COPY_FLAGS: flag indicating that buffer flags should be copied
  * @GST_BUFFER_COPY_TIMESTAMPS: flag indicating that buffer timestamp, duration,
  * offset and offset_end should be copied
@@ -399,6 +394,7 @@ gst_buffer_copy (const GstBuffer * buf)
  * function to specify which items should be copied.
  */
 typedef enum {
+  GST_BUFFER_COPY_NONE           = 0,
   GST_BUFFER_COPY_FLAGS          = (1 << 0),
   GST_BUFFER_COPY_TIMESTAMPS     = (1 << 1),
   GST_BUFFER_COPY_CAPS           = (1 << 2),
@@ -474,8 +470,9 @@ G_STMT_START {                                                                \
 GstCaps*        gst_buffer_get_caps             (GstBuffer *buffer);
 void            gst_buffer_set_caps             (GstBuffer *buffer, GstCaps *caps);
 
-/* creating a subbuffer */
-GstBuffer*      gst_buffer_create_sub           (GstBuffer *parent, gsize offset, gsize size);
+/* creating a region */
+GstBuffer*      gst_buffer_copy_region          (GstBuffer *parent, GstBufferCopyFlags flags,
+                                                 gsize offset, gsize size);
 
 /* span, two buffers, intelligently */
 gboolean        gst_buffer_is_span_fast         (GstBuffer *buf1, GstBuffer *buf2);

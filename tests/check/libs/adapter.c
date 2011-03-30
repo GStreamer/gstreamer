@@ -231,13 +231,13 @@ GST_START_TEST (test_take3)
   fail_unless (size == 100);
 
   /* set up and push subbuffers */
-  buffer2 = gst_buffer_create_sub (buffer, 0, 25);
+  buffer2 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, 25);
   gst_adapter_push (adapter, buffer2);
-  buffer2 = gst_buffer_create_sub (buffer, 25, 25);
+  buffer2 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 25, 25);
   gst_adapter_push (adapter, buffer2);
-  buffer2 = gst_buffer_create_sub (buffer, 50, 25);
+  buffer2 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 50, 25);
   gst_adapter_push (adapter, buffer2);
-  buffer2 = gst_buffer_create_sub (buffer, 75, 25);
+  buffer2 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 75, 25);
   gst_adapter_push (adapter, buffer2);
 
   gst_buffer_unref (buffer);

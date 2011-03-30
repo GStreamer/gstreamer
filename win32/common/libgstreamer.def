@@ -92,7 +92,7 @@ EXPORTS
 	gst_buffer_add_meta
 	gst_buffer_copy_flags_get_type
 	gst_buffer_copy_into
-	gst_buffer_create_sub
+	gst_buffer_copy_region
 	gst_buffer_extract
 	gst_buffer_fill
 	gst_buffer_flag_get_type
@@ -138,10 +138,10 @@ EXPORTS
 	gst_buffer_pool_set_config
 	gst_buffer_remove_memory_range
 	gst_buffer_remove_meta
+	gst_buffer_resize
 	gst_buffer_set_caps
 	gst_buffer_span
 	gst_buffer_take_memory
-	gst_buffer_trim
 	gst_buffer_unmap
 	gst_buffering_mode_get_type
 	gst_bus_add_signal_watch
@@ -540,8 +540,8 @@ EXPORTS
 	gst_memory_new_wrapped
 	gst_memory_ref
 	gst_memory_register
-	gst_memory_sub
-	gst_memory_trim
+	gst_memory_resize
+	gst_memory_share
 	gst_memory_unmap
 	gst_memory_unref
 	gst_message_get_seqnum

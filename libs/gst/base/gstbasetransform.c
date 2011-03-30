@@ -1598,9 +1598,9 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   if (setcaps || copymeta) {
     GST_DEBUG_OBJECT (trans, "setcaps %d, copymeta %d", setcaps, copymeta);
     if (!gst_buffer_is_writable (*out_buf)) {
-      GST_DEBUG_OBJECT (trans, "buffer metadata %p not writable", *out_buf);
+      GST_DEBUG_OBJECT (trans, "buffer %p not writable", *out_buf);
       if (in_buf == *out_buf)
-        *out_buf = gst_buffer_create_sub (in_buf, 0, insize);
+        *out_buf = gst_buffer_copy (in_buf);
       else
         *out_buf = gst_buffer_make_writable (*out_buf);
     }

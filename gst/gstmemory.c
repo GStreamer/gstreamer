@@ -44,14 +44,14 @@ typedef struct
 } GstMemoryDefault;
 
 static const GstMemoryImpl *_default_mem_impl;
-static const GstMemoryImpl *_default_sub_impl;
+static const GstMemoryImpl *_default_share_impl;
 
 static void
 _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
     GstMemory * parent, gsize slice_size, gpointer data,
     GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
 {
-  mem->mem.impl = data ? _default_mem_impl : _default_sub_impl;
+  mem->mem.impl = data ? _default_mem_impl : _default_share_impl;
   mem->mem.flags = flags;
   mem->mem.refcount = 1;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
@@ -114,7 +114,7 @@ _default_mem_get_sizes (GstMemoryDefault * mem, gsize * maxsize)
 }
 
 static void
-_default_mem_trim (GstMemoryDefault * mem, gsize offset, gsize size)
+_default_mem_resize (GstMemoryDefault * mem, gsize offset, gsize size)
 {
   g_return_if_fail (size + mem->offset + offset <= mem->maxsize);
 
@@ -135,7 +135,7 @@ _default_mem_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
 }
 
 static gpointer
-_default_sub_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
+_default_share_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
     GstMapFlags flags)
 {
   guint8 *data;
@@ -158,7 +158,7 @@ _default_mem_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
 }
 
 static gboolean
-_default_sub_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
+_default_share_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
 {
   gboolean res;
   guint8 *ptr = data;
@@ -197,7 +197,7 @@ _default_mem_copy (GstMemoryDefault * mem, gsize offset, gsize size)
 }
 
 static GstMemoryDefault *
-_default_mem_sub (GstMemoryDefault * mem, gsize offset, gsize size)
+_default_mem_share (GstMemoryDefault * mem, gsize offset, gsize size)
 {
   GstMemoryDefault *sub;
   GstMemory *parent;
@@ -244,7 +244,7 @@ _fallback_copy (GstMemory * mem, gsize offset, gsize size)
 }
 
 static GstMemory *
-_fallback_sub (GstMemory * mem, gsize offset, gsize size)
+_fallback_share (GstMemory * mem, gsize offset, gsize size)
 {
   GstMemoryDefault *sub;
   GstMemory *parent;
@@ -268,19 +268,19 @@ _gst_memory_init (void)
 {
   static const GstMemoryInfo _mem_info = {
     (GstMemoryGetSizesFunction) _default_mem_get_sizes,
-    (GstMemoryTrimFunction) _default_mem_trim,
+    (GstMemoryResizeFunction) _default_mem_resize,
     (GstMemoryMapFunction) _default_mem_map,
     (GstMemoryUnmapFunction) _default_mem_unmap,
     (GstMemoryFreeFunction) _default_mem_free,
     (GstMemoryCopyFunction) _default_mem_copy,
-    (GstMemorySubFunction) _default_mem_sub,
+    (GstMemoryShareFunction) _default_mem_share,
     (GstMemoryIsSpanFunction) _default_mem_is_span
   };
-  static const GstMemoryInfo _sub_info = {
+  static const GstMemoryInfo _share_info = {
     (GstMemoryGetSizesFunction) _default_mem_get_sizes,
-    (GstMemoryTrimFunction) _default_mem_trim,
-    (GstMemoryMapFunction) _default_sub_map,
-    (GstMemoryUnmapFunction) _default_sub_unmap,
+    (GstMemoryResizeFunction) _default_mem_resize,
+    (GstMemoryMapFunction) _default_share_map,
+    (GstMemoryUnmapFunction) _default_share_unmap,
     (GstMemoryFreeFunction) _default_mem_free,
     NULL,
     NULL,
@@ -288,7 +288,8 @@ _gst_memory_init (void)
   };
 
   _default_mem_impl = gst_memory_register ("GstMemoryDefault", &_mem_info);
-  _default_sub_impl = gst_memory_register ("GstMemorySubbuffer", &_sub_info);
+  _default_share_impl =
+      gst_memory_register ("GstMemorySharebuffer", &_share_info);
 }
 
 /**
@@ -309,7 +310,7 @@ gst_memory_register (const gchar * name, const GstMemoryInfo * info)
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->get_sizes != NULL, NULL);
-  g_return_val_if_fail (info->trim != NULL, NULL);
+  g_return_val_if_fail (info->resize != NULL, NULL);
   g_return_val_if_fail (info->map != NULL, NULL);
   g_return_val_if_fail (info->unmap != NULL, NULL);
   g_return_val_if_fail (info->free != NULL, NULL);
@@ -318,7 +319,7 @@ gst_memory_register (const gchar * name, const GstMemoryInfo * info)
   impl->name = g_quark_from_string (name);
   impl->info = *info;
   INSTALL_FALLBACK (copy);
-  INSTALL_FALLBACK (sub);
+  INSTALL_FALLBACK (share);
   INSTALL_FALLBACK (is_span);
 
   GST_DEBUG ("register \"%s\" of size %" G_GSIZE_FORMAT, name);
@@ -437,19 +438,19 @@ gst_memory_copy (GstMemory * mem, gsize offset, gsize size)
 }
 
 void
-gst_memory_trim (GstMemory * mem, gsize offset, gsize size)
+gst_memory_resize (GstMemory * mem, gsize offset, gsize size)
 {
   g_return_if_fail (mem != NULL);
 
-  mem->impl->info.trim (mem, offset, size);
+  mem->impl->info.resize (mem, offset, size);
 }
 
 GstMemory *
-gst_memory_sub (GstMemory * mem, gsize offset, gsize size)
+gst_memory_share (GstMemory * mem, gsize offset, gsize size)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 
-  return mem->impl->info.sub (mem, offset, size);
+  return mem->impl->info.share (mem, offset, size);
 }
 
 gboolean

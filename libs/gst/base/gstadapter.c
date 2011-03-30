@@ -716,9 +716,9 @@ gst_adapter_take_buffer (GstAdapter * adapter, gsize nbytes)
     buffer = gst_buffer_ref (cur);
     goto done;
   } else if (hsize >= nbytes + skip) {
-    GST_LOG_OBJECT (adapter, "providing buffer of %d bytes via sub-buffer",
+    GST_LOG_OBJECT (adapter, "providing buffer of %d bytes via region copy",
         nbytes);
-    buffer = gst_buffer_create_sub (cur, skip, nbytes);
+    buffer = gst_buffer_copy_region (cur, GST_BUFFER_COPY_ALL, skip, nbytes);
     goto done;
   }
 
@@ -728,7 +728,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, gsize nbytes)
     if (gst_buffer_get_size (cur) >= nbytes + skip) {
       GST_LOG_OBJECT (adapter, "providing buffer of %d bytes via sub-buffer",
           nbytes);
-      buffer = gst_buffer_create_sub (cur, skip, nbytes);
+      buffer = gst_buffer_copy_region (cur, GST_BUFFER_COPY_ALL, skip, nbytes);
       goto done;
     }
   }

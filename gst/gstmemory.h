@@ -46,7 +46,7 @@ typedef enum {
  * GstMemory:
  * @impl: pointer to the #GstMemoryImpl
  * @refcount: refcount
- * @paret: parent memory block
+ * @parent: parent memory block
  *
  * Base structure for memory implementations. Custom memory will put this structure
  * as the first member of their structure.
@@ -73,18 +73,17 @@ typedef enum {
  */
 #define GST_MEMORY_TRACE_NAME           "GstMemory"
 
-typedef gsize (*GstMemoryGetSizesFunction)  (GstMemory *mem, gsize *maxsize);
+typedef gsize       (*GstMemoryGetSizesFunction)  (GstMemory *mem, gsize *maxsize);
+typedef void        (*GstMemoryResizeFunction)    (GstMemory *mem, gsize offset, gsize size);
 
-typedef gpointer (*GstMemoryMapFunction)    (GstMemory *mem, gsize *size, gsize *maxsize,
-                                             GstMapFlags flags);
-typedef gboolean (*GstMemoryUnmapFunction)  (GstMemory *mem, gpointer data, gsize size);
-
+typedef gpointer    (*GstMemoryMapFunction)       (GstMemory *mem, gsize *size, gsize *maxsize,
+                                                   GstMapFlags flags);
+typedef gboolean    (*GstMemoryUnmapFunction)     (GstMemory *mem, gpointer data, gsize size);
 typedef void        (*GstMemoryFreeFunction)      (GstMemory *mem);
+
 typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem, gsize offset, gsize size);
-typedef void        (*GstMemoryTrimFunction)  (GstMemory *mem, gsize offset, gsize size);
-typedef GstMemory * (*GstMemorySubFunction)   (GstMemory *mem, gsize offset, gsize size);
-typedef gboolean    (*GstMemoryIsSpanFunction) (GstMemory *mem1, GstMemory *mem2,
-                                                gsize *offset);
+typedef GstMemory * (*GstMemoryShareFunction)     (GstMemory *mem, gsize offset, gsize size);
+typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *mem2, gsize *offset);
 
 /**
  * GstMemoryInfo:
@@ -94,13 +93,13 @@ typedef gboolean    (*GstMemoryIsSpanFunction) (GstMemory *mem1, GstMemory *mem2
  */
 struct _GstMemoryInfo {
   GstMemoryGetSizesFunction get_sizes;
-  GstMemoryTrimFunction     trim;
+  GstMemoryResizeFunction   resize;
   GstMemoryMapFunction      map;
   GstMemoryUnmapFunction    unmap;
   GstMemoryFreeFunction     free;
 
   GstMemoryCopyFunction     copy;
-  GstMemorySubFunction      sub;
+  GstMemoryShareFunction    share;
   GstMemoryIsSpanFunction   is_span;
 };
 
@@ -119,7 +118,7 @@ void        gst_memory_unref      (GstMemory *mem);
 
 /* getting/setting memory properties */
 gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *maxsize);
-void        gst_memory_trim       (GstMemory *mem, gsize offset, gsize size);
+void        gst_memory_resize     (GstMemory *mem, gsize offset, gsize size);
 
 /* retriveing data */
 gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,
@@ -128,10 +127,11 @@ gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gsize size);
 
 /* copy and subregions */
 GstMemory * gst_memory_copy       (GstMemory *mem, gsize offset, gsize size);
-GstMemory * gst_memory_sub        (GstMemory *mem, gsize offset, gsize size);
+GstMemory * gst_memory_share      (GstMemory *mem, gsize offset, gsize size);
 
 /* span memory */
 gboolean    gst_memory_is_span    (GstMemory *mem1, GstMemory *mem2, gsize *offset);
+
 GstMemory * gst_memory_span       (GstMemory **mem1, gsize len1, gsize offset,
                                    GstMemory **mem2, gsize len2, gsize size);
 
