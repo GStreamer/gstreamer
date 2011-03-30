@@ -536,7 +536,6 @@ EXPORTS
 	gst_memory_is_span
 	gst_memory_map
 	gst_memory_new_alloc
-	gst_memory_new_copy
 	gst_memory_new_wrapped
 	gst_memory_ref
 	gst_memory_register

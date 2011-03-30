@@ -79,6 +79,7 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gstindex.xml" />
     <xi:include href="xml/gstindexfactory.xml" />
     <xi:include href="xml/gstiterator.xml" />
+    <xi:include href="xml/gstmemory.xml" />
     <xi:include href="xml/gstmessage.xml" />
     <xi:include href="xml/gstmeta.xml" />
     <xi:include href="xml/gstminiobject.xml" />

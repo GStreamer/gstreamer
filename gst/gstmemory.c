@@ -19,11 +19,42 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstmemory
+ * @short_description: refcounted wrapper for memory blocks
+ * @see_also: #GstBuffer
+ *
+ * GstMemory is a lightweight refcounted object that wraps a region of memory.
+ * They are typically used to manage the data of a #GstBuffer.
+ *
+ * New memory can be created with gst_memory_new_wrapped() that wraps the memory
+ * allocated elsewhere and gst_memory_new_alloc() that creates a new GstMemory
+ * and the memory inside it.
+ *
+ * Refcounting of the memory block is performed with gst_memory_ref() and
+ * gst_memory_unref().
+ *
+ * The size of the memory can be retrieved and changed with
+ * gst_memory_get_sizes() and gst_memory_resize() respectively.
+ *
+ * Getting access to the data of the memory is performed with gst_memory_map().
+ * After the memory access is completed, gst_memory_unmap() should be called.
+ *
+ * Memory can be copied with gst_memory_copy(), which will returnn a writable
+ * copy. gst_memory_share() will create a new memory block that shares the
+ * memory with an existing memory block at a custom offset and with a custom
+ * size.
+ *
+ * Memory can be efficiently merged when gst_memory_is_span() returns TRUE and
+ * with the function gst_memory_span().
+ *
+ * Last reviewed on 2011-03-30 (0.11.0)
+ */
+
 #include "config.h"
-
 #include "gst_private.h"
-
 #include "gstmemory.h"
+
 
 struct _GstMemoryImpl
 {
@@ -32,6 +63,7 @@ struct _GstMemoryImpl
   GstMemoryInfo info;
 };
 
+/* default memory implementation */
 typedef struct
 {
   GstMemory mem;
@@ -46,6 +78,7 @@ typedef struct
 static const GstMemoryImpl *_default_mem_impl;
 static const GstMemoryImpl *_default_share_impl;
 
+/* initialize the fields */
 static void
 _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
     GstMemory * parent, gsize slice_size, gpointer data,
@@ -63,6 +96,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->size = size;
 }
 
+/* create a new memory block that manages the given memory */
 static GstMemoryDefault *
 _default_mem_new (GstMemoryFlags flags, GstMemory * parent, gpointer data,
     GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
@@ -79,6 +113,7 @@ _default_mem_new (GstMemoryFlags flags, GstMemory * parent, gpointer data,
   return mem;
 }
 
+/* allocate the memory and structure in one block */
 static GstMemoryDefault *
 _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
 {
@@ -153,7 +188,8 @@ _default_share_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
 static gboolean
 _default_mem_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
 {
-  mem->size = size;
+  if (size != -1)
+    mem->size = size;
   return TRUE;
 }
 
@@ -163,7 +199,10 @@ _default_share_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
   gboolean res;
   guint8 *ptr = data;
 
-  mem->size = size;
+  if (size != -1)
+    mem->size = size;
+  else
+    size = mem->size - mem->offset;
 
   res =
       gst_memory_unmap (mem->mem.parent, ptr - mem->offset, size + mem->offset);
@@ -190,6 +229,7 @@ _default_mem_copy (GstMemoryDefault * mem, gsize offset, gsize size)
 
   if (size == -1)
     size = mem->size > offset ? mem->size - offset : 0;
+
   copy = _default_mem_new_block (mem->maxsize, 0, mem->offset + offset, size);
   memcpy (copy->data, mem->data, mem->maxsize);
 
@@ -294,10 +334,13 @@ _gst_memory_init (void)
 
 /**
  * gst_memory_register:
- * @name:
- * @info:
+ * @name: the name of the implementation
+ * @info: #GstMemoryInfo
  *
- * Returns:
+ * Registers the memory implementation with @name and implementation functions
+ * @info.
+ *
+ * Returns: a new #GstMemoryImpl.
  */
 const GstMemoryImpl *
 gst_memory_register (const gchar * name, const GstMemoryInfo * info)
@@ -334,17 +377,43 @@ gst_memory_register (const gchar * name, const GstMemoryInfo * info)
   return impl;
 }
 
+/**
+ * gst_memory_new_wrapped:
+ * @flags: #GstMemoryFlags
+ * @data: data to wrap
+ * @free_func: function to free @data
+ * @maxsize: allocated size of @data
+ * @offset: offset in @data
+ * @size: size of valid data
+ *
+ * Allocate a new memory block that wraps the given @data.
+ *
+ * Returns: a new #GstMemory.
+ */
 GstMemory *
 gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
     GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
 {
   GstMemoryDefault *mem;
 
+  g_return_val_if_fail (data != NULL, NULL);
+  g_return_val_if_fail (offset + size <= maxsize, NULL);
+
   mem = _default_mem_new (flags, NULL, data, free_func, maxsize, offset, size);
 
   return (GstMemory *) mem;
 }
 
+/**
+ * gst_memory_new_alloc:
+ * @maxsize: allocated size of @data
+ * @align: alignment for the data
+ *
+ * Allocate a new memory block with memory that is at least @maxsize big and las
+ * the given alignment.
+ *
+ * Returns: a new #GstMemory.
+ */
 GstMemory *
 gst_memory_new_alloc (gsize maxsize, gsize align)
 {
@@ -355,21 +424,11 @@ gst_memory_new_alloc (gsize maxsize, gsize align)
   return (GstMemory *) mem;
 }
 
-GstMemory *
-gst_memory_new_copy (gsize maxsize, gsize align, gpointer data,
-    gsize offset, gsize size)
-{
-  GstMemoryDefault *mem;
-
-  mem = _default_mem_new_block (maxsize, align, offset, size);
-  memcpy (mem->data, data, maxsize);
-
-  return (GstMemory *) mem;
-}
-
 /**
  * gst_memory_ref:
  * @mem: a #GstMemory
+ *
+ * Increases the refcount of @mem.
  *
  * Returns: @mem with increased refcount
  */
@@ -386,6 +445,9 @@ gst_memory_ref (GstMemory * mem)
 /**
  * gst_memory_unref:
  * @mem: a #GstMemory
+ *
+ * Decreases the refcount of @mem. When the refcount reaches 0, the free
+ * function of @mem will be called.
  */
 void
 gst_memory_unref (GstMemory * mem)
@@ -402,7 +464,9 @@ gst_memory_unref (GstMemory * mem)
  * @mem: a #GstMemory
  * @maxsize: pointer to maxsize
  *
- * Returns: the current size of @mem
+ * Get the current @size and @maxsize of @mem.
+ *
+ * Returns: the current sizes of @mem
  */
 gsize
 gst_memory_get_sizes (GstMemory * mem, gsize * maxsize)
@@ -412,15 +476,61 @@ gst_memory_get_sizes (GstMemory * mem, gsize * maxsize)
   return mem->impl->info.get_sizes (mem, maxsize);
 }
 
+/**
+ * gst_memory_resize:
+ * @mem: a #GstMemory
+ * @offset: a new offset
+ * @size: a new size
+ *
+ * Resize the memory region. @mem should be writable and offset + size should be
+ * less than the maxsize of @mem.
+ */
+void
+gst_memory_resize (GstMemory * mem, gsize offset, gsize size)
+{
+  g_return_if_fail (mem != NULL);
+  g_return_if_fail (GST_MEMORY_IS_WRITABLE (mem));
+
+  mem->impl->info.resize (mem, offset, size);
+}
+
+/**
+ * gst_memory_map:
+ * @mem: a #GstMemory
+ * @size: pointer for size
+ * @maxsize: pointer for maxsize
+ * @flags: mapping flags
+ *
+ * Get a pointer to the memory of @mem that can be accessed according to @flags.
+ *
+ * @size and @maxsize will contain the size of the memory and the maximum
+ * allocated memory of @mem respectively. They can be set to NULL.
+ *
+ * Returns: a pointer to the memory of @mem.
+ */
 gpointer
 gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
     GstMapFlags flags)
 {
   g_return_val_if_fail (mem != NULL, NULL);
+  g_return_val_if_fail (!(flags & GST_MAP_WRITE) ||
+      GST_MEMORY_IS_WRITABLE (mem), NULL);
 
   return mem->impl->info.map (mem, size, maxsize, flags);
 }
 
+/**
+ * gst_memory_unmap:
+ * @mem: a #GstMemory
+ * @data: data to unmap
+ * @size: new size of @mem
+ *
+ * Release the memory pointer obtained with gst_memory_map() and set the size of
+ * the memory to @size. @size can be set to -1 when the size should not be
+ * updated.
+ *
+ * Returns: TRUE when the memory was release successfully.
+ */
 gboolean
 gst_memory_unmap (GstMemory * mem, gpointer data, gsize size)
 {
@@ -429,6 +539,18 @@ gst_memory_unmap (GstMemory * mem, gpointer data, gsize size)
   return mem->impl->info.unmap (mem, data, size);
 }
 
+/**
+ * gst_memory_copy:
+ * @mem: a #GstMemory
+ * @offset: an offset to copy
+ * @size: size to copy
+ *
+ * Return a copy of @size bytes from @mem starting from @offset. This copy is
+ * guaranteed to be writable. @size can be set to -1 to return a copy all bytes
+ * from @offset.
+ *
+ * Returns: a new #GstMemory.
+ */
 GstMemory *
 gst_memory_copy (GstMemory * mem, gsize offset, gsize size)
 {
@@ -437,14 +559,19 @@ gst_memory_copy (GstMemory * mem, gsize offset, gsize size)
   return mem->impl->info.copy (mem, offset, size);
 }
 
-void
-gst_memory_resize (GstMemory * mem, gsize offset, gsize size)
-{
-  g_return_if_fail (mem != NULL);
-
-  mem->impl->info.resize (mem, offset, size);
-}
-
+/**
+ * gst_memory_share:
+ * @mem: a #GstMemory
+ * @offset: an offset to share
+ * @size: size to share
+ *
+ * Return a shared copy of @size bytes from @mem starting from @offset. No memory
+ * copy is performed and the memory region is simply shared. The result is
+ * guaranteed to be not-writable. @size can be set to -1 to return a share all bytes
+ * from @offset.
+ *
+ * Returns: a new #GstMemory.
+ */
 GstMemory *
 gst_memory_share (GstMemory * mem, gsize offset, gsize size)
 {
@@ -453,6 +580,21 @@ gst_memory_share (GstMemory * mem, gsize offset, gsize size)
   return mem->impl->info.share (mem, offset, size);
 }
 
+/**
+ * gst_memory_is_span:
+ * @mem1: a #GstMemory
+ * @mem2: a #GstMemory
+ * @offset: a pointer to a result offset
+ *
+ * Check if @mem1 and mem2 share the memory with a common parent memory object
+ * and that the memory is contiguous.
+ *
+ * If this is the case, the memory of @mem1 and @mem2 can be merged
+ * efficiently by performing gst_memory_share() on the parent object from
+ * the returned @offset.
+ *
+ * Returns: %TRUE if the memory is contiguous and of a common parent.
+ */
 gboolean
 gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
 {
