@@ -266,6 +266,41 @@ uri_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** application/x-hls ***/
+
+static GstStaticCaps hls_caps = GST_STATIC_CAPS ("application/x-hls");
+#define HLS_CAPS (gst_static_caps_get(&hls_caps))
+
+/* See http://tools.ietf.org/html/draft-pantos-http-live-streaming-05 */
+static void
+hls_type_find (GstTypeFind * tf, gpointer unused)
+{
+  DataScanCtx c = { 0, NULL, 0 };
+
+  if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 7)))
+    return;
+
+  if (memcmp (c.data, "#EXTM3U", 7))
+    return;
+
+  data_scan_ctx_advance (tf, &c, 7);
+
+  /* Check only the first 256 bytes */
+  while (c.offset < 256) {
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 21)))
+      return;
+
+    /* Search for # comment lines */
+    if (c.data[0] == '#' && (memcmp (c.data, "#EXT-X-TARGETDURATION", 21) == 0
+            || memcmp (c.data, "#EXT-X-STREAM-INF", 17) == 0)) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, HLS_CAPS);
+      return;
+    }
+
+    data_scan_ctx_advance (tf, &c, 1);
+  }
+}
+
 
 /*** application/xml **********************************************************/
 
@@ -4161,6 +4196,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *shn_exts[] = { "shn", NULL };
   static const gchar *ape_exts[] = { "ape", NULL };
   static const gchar *uri_exts[] = { "ram", NULL };
+  static const gchar *hls_exts[] = { "m3u8", NULL };
   static const gchar *sdp_exts[] = { "sdp", NULL };
   static const gchar *smil_exts[] = { "smil", NULL };
   static const gchar *html_exts[] = { "htm", "html", NULL };
@@ -4324,6 +4360,8 @@ plugin_init (GstPlugin * plugin)
       utf8_exts, UTF8_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "text/uri-list", GST_RANK_MARGINAL, uri_type_find,
       uri_exts, URI_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-hls", GST_RANK_MARGINAL,
+      hls_type_find, hls_exts, HLS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/sdp", GST_RANK_SECONDARY,
       sdp_type_find, sdp_exts, SDP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/smil", GST_RANK_SECONDARY,

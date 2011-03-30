@@ -35,6 +35,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include "tag.h"
 #include <gst/gsttagsetter.h>
 #include "gsttageditingprivate.h"
 #include <stdio.h>
@@ -43,6 +44,32 @@
 #include <time.h>
 #include <ctype.h>
 
+static const gchar *schema_list[] = {
+  "dc",
+  "xap",
+  "tiff",
+  "exif",
+  "photoshop",
+  "Iptc4xmpCore",
+  NULL
+};
+
+/**
+ * gst_tag_xmp_list_schemas:
+ *
+ * Gets the list of supported schemas in the xmp lib
+ *
+ * Returns: a %NULL terminated array of strings with the schema names
+ *
+ * Since: 0.10.33
+ */
+const gchar **
+gst_tag_xmp_list_schemas (void)
+{
+  return schema_list;
+}
+
+typedef struct _XmpSerializationData XmpSerializationData;
 typedef struct _XmpTag XmpTag;
 
 /*
@@ -62,6 +89,28 @@ typedef gchar *(*XmpSerializationFunc) (const GValue * value);
 typedef void (*XmpDeserializationFunc) (XmpTag * xmptag, GstTagList * taglist,
     const gchar * gst_tag, const gchar * xmp_tag_value,
     const gchar * str, GSList ** pending_tags);
+
+struct _XmpSerializationData
+{
+  GString *data;
+  const gchar **schemas;
+};
+
+static gboolean
+xmp_serialization_data_use_schema (XmpSerializationData * serdata,
+    const gchar * schemaname)
+{
+  gint i = 0;
+  if (serdata->schemas == NULL)
+    return TRUE;
+
+  while (serdata->schemas[i] != NULL) {
+    if (strcmp (serdata->schemas[i], schemaname) == 0)
+      return TRUE;
+    i++;
+  }
+  return FALSE;
+}
 
 
 #define GST_XMP_TAG_TYPE_SIMPLE 0
@@ -192,18 +241,22 @@ _gst_xmp_schema_add_simple_mapping (GstXmpSchema * schema,
  * have our lists modified during usage
  */
 static GPtrArray *
-_xmp_tag_get_mapping (const gchar * gst_tag)
+_xmp_tag_get_mapping (const gchar * gst_tag, XmpSerializationData * serdata)
 {
   GPtrArray *ret = NULL;
   GHashTableIter iter;
   GQuark key = g_quark_from_string (gst_tag);
   gpointer iterkey, value;
+  const gchar *schemaname;
 
   g_hash_table_iter_init (&iter, __xmp_schemas);
   while (!ret && g_hash_table_iter_next (&iter, &iterkey, &value)) {
     GstXmpSchema *schema = (GstXmpSchema *) value;
 
-    ret = (GPtrArray *) gst_xmp_schema_lookup (schema, GUINT_TO_POINTER (key));
+    schemaname = g_quark_to_string (GPOINTER_TO_UINT (iterkey));
+    if (xmp_serialization_data_use_schema (serdata, schemaname))
+      ret =
+          (GPtrArray *) gst_xmp_schema_lookup (schema, GUINT_TO_POINTER (key));
   }
   return ret;
 }
@@ -818,7 +871,7 @@ _init_xmp_tag_map ()
   schema = gst_xmp_schema_new ();
   _gst_xmp_schema_add_simple_mapping (schema, GST_TAG_USER_RATING,
       "xmp:Rating", GST_XMP_TAG_TYPE_SIMPLE, NULL, deserialize_xmp_rating);
-  _gst_xmp_add_schema ("xmp", schema);
+  _gst_xmp_add_schema ("xap", schema);
 
   /* tiff */
   schema = gst_xmp_schema_new ();
@@ -1455,12 +1508,13 @@ static void
 write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 {
   guint i = 0, ct = gst_tag_list_get_tag_size (list, tag), tag_index;
-  GString *data = user_data;
+  XmpSerializationData *serialization_data = user_data;
+  GString *data = serialization_data->data;
   GPtrArray *xmp_tag_array = NULL;
   char *s;
 
   /* map gst-tag to xmp tag */
-  xmp_tag_array = _xmp_tag_get_mapping (tag);
+  xmp_tag_array = _xmp_tag_get_mapping (tag, serialization_data);
 
   if (!xmp_tag_array) {
     GST_WARNING ("no mapping for %s to xmp", tag);
@@ -1518,24 +1572,33 @@ write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 }
 
 /**
- * gst_tag_list_to_xmp_buffer:
+ * gst_tag_list_to_xmp_buffer_full:
  * @list: tags
  * @read_only: does the container forbid inplace editing
+ * @schemas: %NULL terminated array of schemas to be used on serialization
  *
- * Formats a taglist as a xmp packet.
+ * Formats a taglist as a xmp packet using only the selected
+ * schemas. An empty list (%NULL) means that all schemas should
+ * be used
  *
  * Returns: new buffer or %NULL, unref the buffer when done
  *
- * Since: 0.10.29
+ * Since: 0.10.33
  */
 GstBuffer *
-gst_tag_list_to_xmp_buffer (const GstTagList * list, gboolean read_only)
+gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
+    const gchar ** schemas)
 {
   GstBuffer *buffer = NULL;
-  GString *str = g_string_sized_new (4096);
+  XmpSerializationData serialization_data;
+  GString *data;
   guint i;
   gsize size;
   gpointer data;
+
+  serialization_data.data = g_string_sized_new (4096);
+  serialization_data.schemas = schemas;
+  data = serialization_data.data;
 
   xmp_tags_initialize ();
 
@@ -1550,15 +1613,17 @@ gst_tag_list_to_xmp_buffer (const GstTagList * list, gboolean read_only)
       "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
   i = 0;
   while (ns_match[i].ns_prefix) {
-    g_string_append_printf (str, " xmlns:%s=\"%s\"", ns_match[i].ns_prefix,
-        ns_match[i].ns_uri);
+    if (xmp_serialization_data_use_schema (&serialization_data,
+            ns_match[i].ns_prefix))
+      g_string_append_printf (data, " xmlns:%s=\"%s\"",
+          ns_match[i].ns_prefix, ns_match[i].ns_uri);
     i++;
   }
   g_string_append (str, ">\n");
   g_string_append (str, "<rdf:Description rdf:about=\"\">\n");
 
   /* iterate the taglist */
-  gst_tag_list_foreach (list, write_one_tag, str);
+  gst_tag_list_foreach (list, write_one_tag, &serialization_data);
 
   /* xmp footer */
   g_string_append (str, "</rdf:Description>\n");
@@ -1585,6 +1650,23 @@ gst_tag_list_to_xmp_buffer (const GstTagList * list, gboolean read_only)
       gst_memory_new_wrapped (0, data, g_free, size, 0, size));
 
   return buffer;
+}
+
+/**
+ * gst_tag_list_to_xmp_buffer:
+ * @list: tags
+ * @read_only: does the container forbid inplace editing
+ *
+ * Formats a taglist as a xmp packet.
+ *
+ * Returns: new buffer or %NULL, unref the buffer when done
+ *
+ * Since: 0.10.29
+ */
+GstBuffer *
+gst_tag_list_to_xmp_buffer (const GstTagList * list, gboolean read_only)
+{
+  return gst_tag_list_to_xmp_buffer_full (list, read_only, NULL);
 }
 
 #undef gst_xmp_schema_lookup

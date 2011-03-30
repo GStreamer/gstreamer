@@ -479,6 +479,9 @@ gboolean                gst_tag_list_add_id3_image (GstTagList   * tag_list,
 GstTagList *            gst_tag_list_from_xmp_buffer  (GstBuffer *  buffer);
 GstBuffer *             gst_tag_list_to_xmp_buffer    (const GstTagList * list,
                                                        gboolean           read_only);
+GstBuffer *		gst_tag_list_to_xmp_buffer_full (const GstTagList * list,
+							gboolean read_only, const gchar ** schemas);
+const gchar**		gst_tag_xmp_list_schemas      (void);
 
 /* functions related to exif */
 GstBuffer *             gst_tag_list_to_exif_buffer (const GstTagList * taglist,
