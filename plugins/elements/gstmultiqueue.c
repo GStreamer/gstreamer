@@ -174,7 +174,7 @@ struct _GstMultiQueueItem
   guint32 posid;
 };
 
-static GstSingleQueue *gst_single_queue_new (GstMultiQueue * mqueue, guint id);
+static GstSingleQueue *gst_single_queue_new (GstMultiQueue * mqueue, gint id);
 static void gst_single_queue_free (GstSingleQueue * squeue);
 
 static void wake_up_next_non_linked (GstMultiQueue * mq);
@@ -592,41 +592,20 @@ gst_multi_queue_request_new_pad (GstElement * element, GstPadTemplate * temp,
 {
   GstMultiQueue *mqueue = GST_MULTI_QUEUE (element);
   GstSingleQueue *squeue;
-  GList *tmp = NULL;
-  gint temp_id = 0, id = -1;
+  gint temp_id = -1;
 
-  if (name)
+  if (name) {
     sscanf (name + 4, "%d", &temp_id);
-
-  GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
-  while (id == -1) {
-    for (tmp = mqueue->queues; tmp; tmp = g_list_next (tmp)) {
-      squeue = (GstSingleQueue *) tmp->data;
-      if (squeue->id == temp_id) {
-        temp_id++;
-        break;
-      }
-    }
-    if (tmp == NULL)
-      id = temp_id;
+    GST_LOG_OBJECT (element, "name : %s (id %d)", GST_STR_NULL (name), temp_id);
   }
-  mqueue->nbqueues++;
-  GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
-
-  GST_LOG_OBJECT (element, "name : %s (id %d)", GST_STR_NULL (name), id);
 
   /* Create a new single queue, add the sink and source pad and return the sink pad */
-  squeue = gst_single_queue_new (mqueue, id);
-
-  GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
-  mqueue->queues = g_list_append (mqueue->queues, squeue);
-  mqueue->queues_cookie++;
-  GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
+  squeue = gst_single_queue_new (mqueue, temp_id);
 
   GST_DEBUG_OBJECT (mqueue, "Returning pad %s:%s",
       GST_DEBUG_PAD_NAME (squeue->sinkpad));
 
-  return squeue->sinkpad;
+  return squeue ? squeue->sinkpad : NULL;
 }
 
 static void
@@ -1727,15 +1706,37 @@ gst_single_queue_free (GstSingleQueue * sq)
 }
 
 static GstSingleQueue *
-gst_single_queue_new (GstMultiQueue * mqueue, guint id)
+gst_single_queue_new (GstMultiQueue * mqueue, gint id)
 {
   GstSingleQueue *sq;
   gchar *name;
-
-  sq = g_new0 (GstSingleQueue, 1);
+  GList *tmp;
+  gint temp_id = (id == -1) ? 0 : id;
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
-  sq->id = id;
+
+  /* Find an unused queue ID, if possible the passed one */
+  for (tmp = mqueue->queues; tmp; tmp = g_list_next (tmp)) {
+    GstSingleQueue *sq2 = (GstSingleQueue *) tmp->data;
+    /* This works because the IDs are sorted in ascending order */
+    if (sq2->id == temp_id) {
+      /* If this ID was requested by the caller return NULL,
+       * otherwise just get us the next one */
+      if (id == -1)
+        temp_id = sq2->id + 1;
+      else
+        return NULL;
+    } else if (sq2->id > temp_id) {
+      break;
+    }
+  }
+
+  sq = g_new0 (GstSingleQueue, 1);
+  mqueue->nbqueues++;
+  sq->id = temp_id;
+
+  mqueue->queues = g_list_insert_before (mqueue->queues, tmp, sq);
+  mqueue->queues_cookie++;
 
   /* copy over max_size and extra_size so we don't need to take the lock
    * any longer when checking if the queue is full. */

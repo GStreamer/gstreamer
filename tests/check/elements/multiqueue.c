@@ -243,6 +243,50 @@ mq_sinkpad_to_srcpad (GstElement * mq, GstPad * sink)
   return srcpad;
 }
 
+GST_START_TEST (test_request_pads_named)
+{
+  GstElement *mq;
+  GstPad *sink1, *sink2, *sink3, *sink4;
+
+  mq = gst_element_factory_make ("multiqueue", NULL);
+
+  sink1 = gst_element_get_request_pad (mq, "sink1");
+  fail_unless (sink1 != NULL);
+  fail_unless (GST_IS_PAD (sink1));
+  fail_unless (GST_PAD_IS_SINK (sink1));
+  fail_unless_equals_string (GST_PAD_NAME (sink1), "sink1");
+  GST_LOG ("Got pad %s:%s", GST_DEBUG_PAD_NAME (sink1));
+
+  sink3 = gst_element_get_request_pad (mq, "sink3");
+  fail_unless (sink3 != NULL);
+  fail_unless (GST_IS_PAD (sink3));
+  fail_unless (GST_PAD_IS_SINK (sink3));
+  fail_unless_equals_string (GST_PAD_NAME (sink3), "sink3");
+  GST_LOG ("Got pad %s:%s", GST_DEBUG_PAD_NAME (sink3));
+
+  sink2 = gst_element_get_request_pad (mq, "sink2");
+  fail_unless (sink2 != NULL);
+  fail_unless (GST_IS_PAD (sink2));
+  fail_unless (GST_PAD_IS_SINK (sink2));
+  fail_unless_equals_string (GST_PAD_NAME (sink2), "sink2");
+  GST_LOG ("Got pad %s:%s", GST_DEBUG_PAD_NAME (sink2));
+
+  /* This gets us the first unused id, sink0 */
+  sink4 = gst_element_get_request_pad (mq, "sink%d");
+  fail_unless (sink4 != NULL);
+  fail_unless (GST_IS_PAD (sink4));
+  fail_unless (GST_PAD_IS_SINK (sink4));
+  fail_unless_equals_string (GST_PAD_NAME (sink4), "sink0");
+  GST_LOG ("Got pad %s:%s", GST_DEBUG_PAD_NAME (sink4));
+
+  GST_LOG ("Cleaning up");
+  gst_object_unref (sink1);
+  gst_object_unref (sink2);
+  gst_object_unref (mq);
+}
+
+GST_END_TEST;
+
 static GstCaps *
 mq_dummypad_getcaps (GstPad * sinkpad)
 {
@@ -652,6 +696,7 @@ multiqueue_suite (void)
   tcase_add_test (tc_chain, test_simple_shutdown_while_running);
 
   tcase_add_test (tc_chain, test_request_pads);
+  tcase_add_test (tc_chain, test_request_pads_named);
 
   tcase_add_test (tc_chain, test_output_order);
 
