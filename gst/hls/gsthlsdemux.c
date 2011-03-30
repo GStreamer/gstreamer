@@ -174,10 +174,8 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_hls_demux_set_property;
   gobject_class->get_property = gst_hls_demux_get_property;
@@ -186,16 +184,19 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_FRAGMENTS_CACHE,
       g_param_spec_uint ("fragments-cache", "Fragments cache",
           "Number of fragments needed to be cached to start playing",
-          2, G_MAXUINT, DEFAULT_FRAGMENTS_CACHE, G_PARAM_READWRITE));
+          2, G_MAXUINT, DEFAULT_FRAGMENTS_CACHE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BITRATE_SWITCH_TOLERANCE,
       g_param_spec_float ("bitrate-switch-tolerance",
           "Bitrate switch tolerance",
           "Tolerance with respect of the fragment duration to switch to "
           "a different bitrate if the client is too slow/fast.",
-          0, 1, DEFAULT_BITRATE_SWITCH_TOLERANCE, G_PARAM_READWRITE));
+          0, 1, DEFAULT_BITRATE_SWITCH_TOLERANCE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstelement_class->change_state = gst_hls_demux_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
 }
 
 static void
