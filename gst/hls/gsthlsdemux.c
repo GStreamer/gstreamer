@@ -22,12 +22,12 @@
 /**
  * SECTION:element-hlsdemux
  *
- * HTTP Live Streaming source element.
+ * HTTP Live Streaming demuxer element.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch hlsdemux location=http://devimages.apple.com/iphone/samples/bipbop/gear1/prog_index.m3u8 ! decodebin2 ! xvimagesink
+ * gst-launch souphttp location=http://devimages.apple.com/iphone/samples/bipbop/gear1/prog_index.m3u8  ! mpegtsdemux ! decodebin2 ! xvimagesink
  * ]|
  * </refsect2>
  *
@@ -93,24 +93,31 @@ static GstBusSyncReply gst_hls_demux_fetcher_bus_handler (GstBus * bus,
 static GstFlowReturn gst_hls_demux_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_hls_demux_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_hls_demux_src_query (GstPad * pad, GstQuery * query);
-static GstFlowReturn gst_hls_demux_fetcher_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_hls_demux_fetcher_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_hls_demux_fetcher_chain (GstPad * pad,
+    GstBuffer * buf);
+static gboolean gst_hls_demux_fetcher_sink_event (GstPad * pad,
+    GstEvent * event);
 static void gst_hls_demux_loop (GstHLSDemux * demux);
 static void gst_hls_demux_stop (GstHLSDemux * demux);
-static void gst_hls_demux_stop_fetcher (GstHLSDemux * demux, gboolean cancelled);
+static void gst_hls_demux_stop_fetcher (GstHLSDemux * demux,
+    gboolean cancelled);
 static gboolean gst_hls_demux_start_update (GstHLSDemux * demux);
 static gboolean gst_hls_demux_cache_fragments (GstHLSDemux * demux);
 static gboolean gst_hls_demux_schedule (GstHLSDemux * demux);
 static gboolean gst_hls_demux_switch_playlist (GstHLSDemux * demux);
-static gboolean gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry);
-static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean retry);
+static gboolean gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
+    gboolean retry);
+static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux,
+    gboolean retry);
 static void gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose);
-static gboolean gst_hls_demux_set_location (GstHLSDemux * demux, const gchar * uri);
+static gboolean gst_hls_demux_set_location (GstHLSDemux * demux,
+    const gchar * uri);
 
 static void
 _do_init (GType type)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_hls_demux_debug, "hlsdemux", 0, "hlsdemux element");
+  GST_DEBUG_CATEGORY_INIT (gst_hls_demux_debug, "hlsdemux", 0,
+      "hlsdemux element");
 }
 
 GST_BOILERPLATE_FULL (GstHLSDemux, gst_hls_demux, GstElement,
@@ -128,9 +135,9 @@ gst_hls_demux_base_init (gpointer g_class)
       gst_static_pad_template_get (&sinktemplate));
 
   gst_element_class_set_details_simple (element_class,
-      "HLS Source",
+      "HLS Demuxer",
       "Demuxer/URIList",
-      "HTTP Live Streaming source",
+      "HTTP Live Streaming demuxer",
       "Marc-Andre Lureau <marcandre.lureau@gmail.com>\n"
       "Andoni Morales Alastruey <ylatuya@gmail.com>");
 }
@@ -210,7 +217,8 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
   gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad);
 
   /* fetcher pad */
-  demux->fetcherpad = gst_pad_new_from_static_template (&fetchertemplate, "sink");
+  demux->fetcherpad =
+      gst_pad_new_from_static_template (&fetchertemplate, "sink");
   gst_pad_set_chain_function (demux->fetcherpad,
       GST_DEBUG_FUNCPTR (gst_hls_demux_fetcher_chain));
   gst_pad_set_event_function (demux->fetcherpad,
@@ -223,8 +231,8 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
   demux->bitrate_switch_tol = DEFAULT_BITRATE_SWITCH_TOLERANCE;
 
   demux->fetcher_bus = gst_bus_new ();
-  gst_bus_set_sync_handler (demux->fetcher_bus, gst_hls_demux_fetcher_bus_handler,
-      demux);
+  gst_bus_set_sync_handler (demux->fetcher_bus,
+      gst_hls_demux_fetcher_bus_handler, demux);
   demux->thread_cond = g_cond_new ();
   demux->thread_lock = g_mutex_new ();
   demux->fetcher_cond = g_cond_new ();
@@ -236,8 +244,8 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
 }
 
 static void
-gst_hls_demux_set_property (GObject * object, guint prop_id, const GValue * value,
-    GParamSpec * pspec)
+gst_hls_demux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX (object);
 
@@ -318,7 +326,8 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
         break;
       }
 
-      GST_DEBUG_OBJECT (demux, "Got EOS on the sink pad: main playlist fetched");
+      GST_DEBUG_OBJECT (demux,
+          "Got EOS on the sink pad: main playlist fetched");
 
       query = gst_query_new_uri ();
       ret = gst_pad_peer_query (demux->sinkpad, query);
@@ -839,7 +848,8 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean retry)
 {
   gchar *playlist;
 
-  GST_INFO_OBJECT (demux, "Updating the playlist %s", demux->client->current->uri);
+  GST_INFO_OBJECT (demux, "Updating the playlist %s",
+      demux->client->current->uri);
   if (!gst_hls_demux_fetch_location (demux, demux->client->current->uri))
     return FALSE;
 
@@ -949,7 +959,8 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
   const gchar *next_fragment_uri;
   gboolean discont;
 
-  next_fragment_uri = gst_m3u8_client_get_next_fragment (demux->client, &discont);
+  next_fragment_uri =
+      gst_m3u8_client_get_next_fragment (demux->client, &discont);
 
   if (!next_fragment_uri) {
     GST_INFO_OBJECT (demux, "This playlist doesn't contain more fragments");
