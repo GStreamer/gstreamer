@@ -1593,8 +1593,8 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
   XmpSerializationData serialization_data;
   GString *data;
   guint i;
-  gsize size;
-  gpointer data;
+  gsize bsize;
+  gpointer bdata;
 
   serialization_data.data = g_string_sized_new (4096);
   serialization_data.schemas = schemas;
@@ -1605,11 +1605,11 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
   g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
 
   /* xmp header */
-  g_string_append (str,
+  g_string_append (data,
       "<?xpacket begin=\"\xEF\xBB\xBF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n");
-  g_string_append (str,
+  g_string_append (data,
       "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"GStreamer\">\n");
-  g_string_append (str,
+  g_string_append (data,
       "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
   i = 0;
   while (ns_match[i].ns_prefix) {
@@ -1619,35 +1619,35 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
           ns_match[i].ns_prefix, ns_match[i].ns_uri);
     i++;
   }
-  g_string_append (str, ">\n");
-  g_string_append (str, "<rdf:Description rdf:about=\"\">\n");
+  g_string_append (data, ">\n");
+  g_string_append (data, "<rdf:Description rdf:about=\"\">\n");
 
   /* iterate the taglist */
   gst_tag_list_foreach (list, write_one_tag, &serialization_data);
 
   /* xmp footer */
-  g_string_append (str, "</rdf:Description>\n");
-  g_string_append (str, "</rdf:RDF>\n");
-  g_string_append (str, "</x:xmpmeta>\n");
+  g_string_append (data, "</rdf:Description>\n");
+  g_string_append (data, "</rdf:RDF>\n");
+  g_string_append (data, "</x:xmpmeta>\n");
 
   if (!read_only) {
     /* the xmp spec recommand to add 2-4KB padding for in-place editable xmp */
     guint i;
 
     for (i = 0; i < 32; i++) {
-      g_string_append (str, "                " "                "
+      g_string_append (data, "                " "                "
           "                " "                " "\n");
     }
   }
-  g_string_append_printf (str, "<?xpacket end=\"%c\"?>\n",
+  g_string_append_printf (data, "<?xpacket end=\"%c\"?>\n",
       (read_only ? 'r' : 'w'));
 
-  size = str->len + 1;
-  data = g_string_free (str, FALSE);
+  bsize = data->len + 1;
+  bdata = g_string_free (data, FALSE);
 
   buffer = gst_buffer_new ();
   gst_buffer_take_memory (buffer,
-      gst_memory_new_wrapped (0, data, g_free, size, 0, size));
+      gst_memory_new_wrapped (0, bdata, g_free, bsize, 0, bsize));
 
   return buffer;
 }
