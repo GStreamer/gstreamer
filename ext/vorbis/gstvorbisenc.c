@@ -1160,7 +1160,7 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
       return GST_FLOW_OK;
     }
     buffer = gst_buffer_make_writable (buffer);
-    gst_buffer_trim (buffer, diff_bytes, size - diff_bytes);
+    gst_buffer_resize (buffer, diff_bytes, size - diff_bytes);
 
     GST_BUFFER_TIMESTAMP (buffer) += diff;
     if (GST_BUFFER_DURATION_IS_VALID (buffer))

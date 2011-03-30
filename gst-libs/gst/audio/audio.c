@@ -418,7 +418,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
 
   /* Get a writable buffer and apply all changes */
   GST_DEBUG ("trim %" G_GSIZE_FORMAT " size %" G_GSIZE_FORMAT, trim, size);
-  ret = gst_buffer_create_sub (buffer, trim, size);
+  ret = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, trim, size);
   gst_buffer_unref (buffer);
 
   GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));

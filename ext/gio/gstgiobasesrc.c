@@ -327,7 +327,7 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
     GST_DEBUG_OBJECT (src, "Creating subbuffer from cached buffer: offset %"
         G_GUINT64_FORMAT " length %u", offset, size);
 
-    buf = gst_buffer_create_sub (src->cache,
+    buf = gst_buffer_copy_region (src->cache, GST_BUFFER_COPY_ALL,
         offset - GST_BUFFER_OFFSET (src->cache), size);
 
     GST_BUFFER_OFFSET (buf) = offset;
@@ -400,7 +400,9 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
           "cached buffer: offset %" G_GUINT64_FORMAT " length %u", offset,
           size);
 
-      buf = gst_buffer_create_sub (src->cache, 0, MIN (size, read));
+      buf =
+          gst_buffer_copy_region (src->cache, GST_BUFFER_COPY_ALL, 0, MIN (size,
+              read));
 
       GST_BUFFER_OFFSET (buf) = offset;
       GST_BUFFER_OFFSET_END (buf) = offset + MIN (size, read);

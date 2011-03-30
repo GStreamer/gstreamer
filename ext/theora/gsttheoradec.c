@@ -741,7 +741,8 @@ theora_dec_setcaps (GstPad * pad, GstCaps * caps)
         /* make sure we don't read too much */
         psize = MIN (psize, left);
 
-        buf = gst_buffer_create_sub (buffer, offset, psize);
+        buf =
+            gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset, psize);
 
         /* first buffer is a discont buffer */
         if (offset == 2)

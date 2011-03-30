@@ -172,7 +172,8 @@ gst_riff_parse_chunk (GstElement * element, GstBuffer * buf,
   }
 
   if (size)
-    *chunk_data = gst_buffer_create_sub (buf, offset + 8, size);
+    *chunk_data =
+        gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset + 8, size);
   else
     *chunk_data = NULL;
 
@@ -411,8 +412,9 @@ gst_riff_parse_strf_vids (GstElement * element,
     strf->size = size;
   }
   if (sizeof (gst_riff_strf_vids) < size) {
-    *data = gst_buffer_create_sub (buf, sizeof (gst_riff_strf_vids),
-        size - sizeof (gst_riff_strf_vids));
+    *data =
+        gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL,
+        sizeof (gst_riff_strf_vids), size - sizeof (gst_riff_strf_vids));
   }
   gst_buffer_unref (buf);
 
@@ -507,7 +509,8 @@ gst_riff_parse_strf_auds (GstElement * element,
       len = bsize - 2 - sizeof (gst_riff_strf_auds);
     }
     if (len)
-      *data = gst_buffer_create_sub (buf, sizeof (gst_riff_strf_auds) + 2, len);
+      *data = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL,
+          sizeof (gst_riff_strf_auds) + 2, len);
   }
 
   /* debug */

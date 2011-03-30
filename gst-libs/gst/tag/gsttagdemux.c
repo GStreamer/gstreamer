@@ -453,7 +453,9 @@ gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref,
           G_GINT64_FORMAT " to %d offset %" G_GINT64_FORMAT,
           bsize, boffset, out_size, out_offset);
 
-      sub = gst_buffer_create_sub (buf, trim_start, out_size);
+      sub =
+          gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, trim_start,
+          out_size);
       g_return_val_if_fail (sub != NULL, FALSE);
       gst_buffer_unref (buf);
       *buf_ref = buf = sub;

@@ -955,7 +955,8 @@ gst_rtp_buffer_get_payload_subbuffer (GstRTPBuffer * rtp, guint offset,
   if (len != -1 && len < plen)
     plen = len;
 
-  return gst_buffer_create_sub (rtp->buffer, poffset, plen);
+  return gst_buffer_copy_region (rtp->buffer, GST_BUFFER_COPY_ALL, poffset,
+      plen);
 
   /* ERRORS */
 wrong_offset:

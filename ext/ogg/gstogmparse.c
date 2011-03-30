@@ -764,7 +764,9 @@ gst_ogm_parse_data_packet (GstOgmParse * ogm, GstBuffer * buf,
   GST_LOG_OBJECT (ogm, "[0x%02x] samples: %d, hdrbytes: %d, datasize: %d",
       data[0], xsize, len, size - len - 1);
 
-  sbuf = gst_buffer_create_sub (buf, len + 1, size - len - 1);
+  sbuf =
+      gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, len + 1,
+      size - len - 1);
 
   if (GST_BUFFER_OFFSET_END_IS_VALID (buf))
     ogm->next_granulepos = GST_BUFFER_OFFSET_END (buf);

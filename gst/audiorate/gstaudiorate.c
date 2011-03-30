@@ -709,7 +709,9 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       truncsize = truncsamples * audiorate->bytes_per_sample;
       leftsize = in_size - truncsize;
 
-      trunc = gst_buffer_create_sub (buf, truncsize, leftsize);
+      trunc =
+          gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, truncsize,
+          leftsize);
 
       gst_buffer_unref (buf);
       buf = trunc;
