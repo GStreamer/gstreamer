@@ -399,11 +399,11 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
       return GST_FLOW_OK;
     }
 
-    /* should set size here */
     state->width = stream_info.w;
     state->height = stream_info.h;
     state->format = GST_VIDEO_FORMAT_I420;
     gst_vp8_dec_send_tags (dec);
+    gst_base_video_decoder_set_src_caps (decoder);
 
     caps = vpx_codec_get_caps (&vpx_codec_vp8_dx_algo);
 
@@ -444,21 +444,6 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
   if (!GST_BUFFER_FLAG_IS_SET (frame->sink_buffer, GST_BUFFER_FLAG_DELTA_UNIT))
     gst_base_video_decoder_set_sync_point (decoder);
-
-#if 0
-  if (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder)) == NULL) {
-    GstCaps *caps;
-
-    caps = gst_video_format_new_caps (decoder->state.format,
-        decoder->state.width, decoder->state.height,
-        decoder->state.fps_n, decoder->state.fps_d,
-        decoder->state.par_n, decoder->state.par_d);
-
-    GST_DEBUG ("setting caps %" GST_PTR_FORMAT, caps);
-
-    gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder), caps);
-  }
-#endif
 
   deadline = gst_base_video_decoder_get_max_decode_time (decoder, frame);
   if (deadline < 0) {
