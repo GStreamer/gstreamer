@@ -859,7 +859,7 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder,
         GST_FORMAT_UNDEFINED);
   }
 
-  base_video_decoder->discont = TRUE;
+  GST_BASE_VIDEO_CODEC (base_video_decoder)->discont = TRUE;
   base_video_decoder->have_sync = FALSE;
 
   base_video_decoder->timestamp_offset = GST_CLOCK_TIME_NONE;
@@ -1224,9 +1224,9 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
       GST_BUFFER_FLAG_SET (src_buffer, GST_VIDEO_BUFFER_ONEFIELD);
     }
   }
-  if (base_video_decoder->discont) {
+  if (GST_BASE_VIDEO_CODEC (base_video_decoder)->discont) {
     GST_BUFFER_FLAG_SET (src_buffer, GST_BUFFER_FLAG_DISCONT);
-    base_video_decoder->discont = FALSE;
+    GST_BASE_VIDEO_CODEC (base_video_decoder)->discont = FALSE;
   }
 
   GST_BUFFER_TIMESTAMP (src_buffer) = frame->presentation_timestamp;

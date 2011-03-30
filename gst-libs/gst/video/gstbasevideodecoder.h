@@ -107,9 +107,6 @@ struct _GstBaseVideoDecoder
 
   /* maybe sort-of protected ? */
 
-  /* need mark discont */
-  gboolean          discont;
-
   /* combine to yield (presentation) ts */
   GstClockTime      timestamp_offset;
   int               field_index;
