@@ -45,15 +45,15 @@ GstVideo-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstvideo-@GST_MAJORMI
 		$(gir_cincludes) \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
-		--library=libgstvideo-0.10.la \
-		--include=Gst-0.10 \
-		--include=GstBase-0.10 \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_MAJORMINOR@` \
+		--library=libgstvideo-@GST_MAJORMINOR@.la \
+		--include=Gst-@GST_MAJORMINOR@ \
+		--include=GstBase-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-0.10 \
-		--pkg gstreamer-base-0.10 \
-		--pkg-export gstreamer-video-0.10 \
+		--pkg gstreamer-@GST_MAJORMINOR@ \
+		--pkg gstreamer-base-@GST_MAJORMINOR@ \
+		--pkg-export gstreamer-video-@GST_MAJORMINOR@ \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
@@ -72,8 +72,8 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
 		--includedir=$(builddir) \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_MAJORMINOR@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)

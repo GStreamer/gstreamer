@@ -35,18 +35,18 @@ GstRiff-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstriff-@GST_MAJORMINO
 		--add-include-path=$(builddir)/../tag \
 		--add-include-path=$(builddir)/../audio \
 		--add-include-path=$(builddir)/../interfaces \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
-		--library=libgstriff-0.10.la \
-		--include=GstAudio-0.10 \
-		--include=GstTag-0.10 \
-		--include=Gst-0.10 \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_MAJORMINOR@` \
+		--library=libgstriff-@GST_MAJORMINOR@.la \
+		--include=GstAudio-@GST_MAJORMINOR@ \
+		--include=GstTag-@GST_MAJORMINOR@ \
+		--include=Gst-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-0.10 \
-		--pkg gstreamer-tag-0.10 \
-		--pkg gstreamer-audio-0.10 \
-		--pkg gstreamer-interfaces-0.10 \
-		--pkg-export gstreamer-riff-0.10 \
+		--pkg gstreamer-@GST_MAJORMINOR@ \
+		--pkg gstreamer-tag-@GST_MAJORMINOR@ \
+		--pkg gstreamer-audio-@GST_MAJORMINOR@ \
+		--pkg gstreamer-interfaces-@GST_MAJORMINOR@ \
+		--pkg-export gstreamer-riff-@GST_MAJORMINOR@ \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
@@ -68,8 +68,8 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=$(builddir)/../tag \
 		--includedir=$(builddir)/../audio \
 		--includedir=$(builddir)/../interfaces \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_MAJORMINOR@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)

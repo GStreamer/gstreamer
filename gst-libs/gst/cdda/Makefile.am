@@ -29,17 +29,17 @@ GstCdda-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcdda-@GST_MAJORMINO
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
 		--add-include-path=$(builddir)/../tag \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
-		--library=libgstcdda-0.10.la \
-		--include=Gst-0.10 \
-		--include=GstBase-0.10 \
-		--include=GstTag-0.10 \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_MAJORMINOR@` \
+		--library=libgstcdda-@GST_MAJORMINOR@.la \
+		--include=Gst-@GST_MAJORMINOR@ \
+		--include=GstBase-@GST_MAJORMINOR@ \
+		--include=GstTag-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-0.10 \
-		--pkg gstreamer-base-0.10 \
-		--pkg gstreamer-tag-0.10 \
-		--pkg-export gstreamer-cdda-0.10 \
+		--pkg gstreamer-@GST_MAJORMINOR@ \
+		--pkg gstreamer-base-@GST_MAJORMINOR@ \
+		--pkg gstreamer-tag-@GST_MAJORMINOR@ \
+		--pkg-export gstreamer-cdda-@GST_MAJORMINOR@ \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
@@ -59,8 +59,8 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=$(srcdir) \
 		--includedir=$(builddir) \
 		--includedir=$(builddir)/../tag \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_MAJORMINOR@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
