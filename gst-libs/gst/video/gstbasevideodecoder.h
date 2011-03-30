@@ -199,7 +199,7 @@ void             gst_base_video_decoder_lost_sync (GstBaseVideoDecoder *base_vid
 GstFlowReturn    gst_base_video_decoder_have_frame (GstBaseVideoDecoder *base_video_decoder);
 
 void             gst_base_video_decoder_set_sync_point (GstBaseVideoDecoder *base_video_decoder);
-void             gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder *base_video_decoder);
+gboolean         gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder *base_video_decoder);
 GstBuffer       *gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder * base_video_decoder);
 GstFlowReturn    gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *base_video_decoder,
                                     GstVideoFrame *frame);

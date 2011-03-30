@@ -899,6 +899,9 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
   base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
   klass = GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
+  g_return_val_if_fail (base_video_decoder->packetized || klass->parse_data,
+      GST_FLOW_ERROR);
+
   GST_LOG_OBJECT (base_video_decoder,
       "chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT " size %d",
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
@@ -1432,6 +1435,9 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
   base_video_decoder_class =
       GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
+  g_return_val_if_fail (base_video_decoder_class->handle_frame != NULL,
+      GST_FLOW_ERROR);
+
   frame->distance_from_sync = base_video_decoder->distance_from_sync;
   base_video_decoder->distance_from_sync++;
 
@@ -1565,14 +1571,30 @@ gst_base_video_decoder_get_frame (GstBaseVideoDecoder * base_video_decoder,
  * Sets src pad caps according to currently configured #GstVideoState.
  *
  */
-void
+gboolean
 gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
 {
   GstCaps *caps;
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
+  gboolean ret;
+
+  /* minimum sense */
+  g_return_val_if_fail (state->format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (state->width != 0, FALSE);
+  g_return_val_if_fail (state->height != 0, FALSE);
 
   if (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)) != NULL)
     return;
+
+  /* sanitize */
+  if (state->fps_d == 0) {
+    state->fps_n = 0;
+    state->fps_d = 1;
+  }
+  if (state->par_d == 0) {
+    state->par_n = 0;
+    state->par_d = 1;
+  }
 
   caps = gst_video_format_new_caps (state->format,
       state->width, state->height,
@@ -1585,9 +1607,13 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
 
   GST_DEBUG_OBJECT (base_video_decoder, "setting caps %" GST_PTR_FORMAT, caps);
 
-  gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder), caps);
+  ret =
+      gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
+      caps);
 
   gst_caps_unref (caps);
+
+  return ret;
 }
 
 /**
