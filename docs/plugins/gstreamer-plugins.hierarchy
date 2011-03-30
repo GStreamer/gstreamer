@@ -22,6 +22,7 @@ GObject
           GstFakeSink
           GstFdSink
           GstFileSink
+        GstFunnel
         GstInputSelector
         GstOutputSelector
         GstQueue

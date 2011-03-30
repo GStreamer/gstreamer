@@ -121,6 +121,27 @@
       </pads>
     </element>
     <element>
+      <name>funnel</name>
+      <longname>Farsight Funnel pipe fitting</longname>
+      <class>Generic</class>
+      <description>N-to-1 pipe fitting</description>
+      <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>identity</name>
       <longname>Identity</longname>
       <class>Generic</class>
