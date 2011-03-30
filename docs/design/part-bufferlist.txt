@@ -87,7 +87,7 @@ The metadata of the bufferlist is always the metadata of the first buffer of the
 first group in the bufferlist. This means that:
 
   - Before pushing the list to a pad, negotiation happens with (only) the caps of
-    the first buffer in the list. Caps of other buffers is ignore.
+    the first buffer in the list. Caps of other buffers is ignored.
 
   - synchronisation happens on the timestamp of the first buffer in the list.
 
