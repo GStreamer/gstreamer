@@ -266,14 +266,14 @@ uri_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
-/*** playlist/m3u8 ***/
+/*** application/x-hls ***/
 
-static GstStaticCaps m3u8_caps = GST_STATIC_CAPS ("playlist/m3u8");
-#define M3U8_CAPS (gst_static_caps_get(&m3u8_caps))
+static GstStaticCaps hls_caps = GST_STATIC_CAPS ("application/x-hls");
+#define HLS_CAPS (gst_static_caps_get(&hls_caps))
 
 /* See http://tools.ietf.org/html/draft-pantos-http-live-streaming-05 */
 static void
-m3u8_type_find (GstTypeFind * tf, gpointer unused)
+hls_type_find (GstTypeFind * tf, gpointer unused)
 {
   DataScanCtx c = { 0, NULL, 0 };
 
@@ -293,7 +293,7 @@ m3u8_type_find (GstTypeFind * tf, gpointer unused)
     /* Search for # comment lines */
     if (c.data[0] == '#' && (memcmp (c.data, "#EXT-X-TARGETDURATION", 21) == 0
             || memcmp (c.data, "#EXT-X-STREAM-INF", 17) == 0)) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, M3U8_CAPS);
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, HLS_CAPS);
       return;
     }
 
@@ -4197,7 +4197,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *shn_exts[] = { "shn", NULL };
   static const gchar *ape_exts[] = { "ape", NULL };
   static const gchar *uri_exts[] = { "ram", NULL };
-  static const gchar *m3u8_exts[] = { "m3u8", NULL };
+  static const gchar *hls_exts[] = { "m3u8", NULL };
   static const gchar *sdp_exts[] = { "sdp", NULL };
   static const gchar *smil_exts[] = { "smil", NULL };
   static const gchar *html_exts[] = { "htm", "html", NULL };
@@ -4361,8 +4361,8 @@ plugin_init (GstPlugin * plugin)
       utf8_exts, UTF8_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "text/uri-list", GST_RANK_MARGINAL, uri_type_find,
       uri_exts, URI_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "playlist/m3u8", GST_RANK_MARGINAL,
-      m3u8_type_find, m3u8_exts, M3U8_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-hls", GST_RANK_MARGINAL,
+      hls_type_find, hls_exts, HLS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/sdp", GST_RANK_SECONDARY,
       sdp_type_find, sdp_exts, SDP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/smil", GST_RANK_SECONDARY,
