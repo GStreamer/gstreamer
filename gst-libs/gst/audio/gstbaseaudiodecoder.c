@@ -34,20 +34,20 @@
  * <listitem>
  *   <itemizedlist><title>Configuration</title>
  *   <listitem><para>
- *     Initially, GstBaseAudioEncoder calls @start when the decoder element
+ *     Initially, GstBaseAudioDecoder calls @start when the decoder element
  *     is activated, which allows subclass to perform any global setup.
  *     Base class context parameters can already be set according to subclass
  *     capabilities (or possibly upon receive more information in subsequent
  *     @set_format).
  *   </para></listitem>
  *   <listitem><para>
- *     GstBaseAudioEncoder calls @set_format to inform subclass of the format
+ *     GstBaseAudioDecoder calls @set_format to inform subclass of the format
  *     of input audio data that it is about to receive.
  *     While unlikely, it might be called more than once, if changing input
  *     parameters require reconfiguration.
  *   </para></listitem>
  *   <listitem><para>
- *     GstBaseAudioEncoder calls @stop at end of all processing.
+ *     GstBaseAudioDecoder calls @stop at end of all processing.
  *   </para></listitem>
  *   </itemizedlist>
  * </listitem>
@@ -82,7 +82,7 @@
  *       setting src pad caps.
  *     </para></listitem>
  *     <listitem><para>
- *       During the parsing process GstBaseAudioEncoderClass will handle both
+ *       During the parsing process GstBaseAudioDecoderClass will handle both
  *       srcpad and sinkpad events. Sink events will be passed to subclass
  *       if @event callback has been provided.
  *     </para></listitem>
@@ -91,7 +91,7 @@
  * <listitem>
  *   <itemizedlist><title>Shutdown phase</title>
  *   <listitem><para>
- *     GstBaseAudioEncoder class calls @stop to inform the subclass that data
+ *     GstBaseAudioDecoder class calls @stop to inform the subclass that data
  *     parsing will be stopped.
  *   </para></listitem>
  *   </itemizedlist>
