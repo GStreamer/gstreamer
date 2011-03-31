@@ -520,17 +520,17 @@ gst_base_rtp_audio_payload_push_buffer (GstBaseRTPAudioPayload *
 
   if (priv->buffer_list) {
     GstBufferList *list;
-    GstBufferListIterator *it;
+    guint i, len;
 
     list = gst_buffer_list_new ();
-    it = gst_buffer_list_iterate (list);
+    len = gst_buffer_list_len (list);
 
-    /* add both buffers to the buffer list */
-    gst_buffer_list_iterator_add_group (it);
-    gst_buffer_list_iterator_add (it, outbuf);
-    gst_buffer_list_iterator_add (it, buffer);
-
-    gst_buffer_list_iterator_free (it);
+    for (i = 0; i < len; i++) {
+      /* FIXME */
+      g_warning ("bufferlist not implemented");
+      gst_buffer_list_add (list, outbuf);
+      gst_buffer_list_add (list, buffer);
+    }
 
     GST_DEBUG_OBJECT (baseaudiopayload, "Pushing list %p", list);
     ret = gst_basertppayload_push_list (basepayload, list);

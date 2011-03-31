@@ -710,8 +710,8 @@ typedef struct
   guint32 rtptime;
 } HeaderData;
 
-static GstBufferListItem
-find_timestamp (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
+static gboolean
+find_timestamp (GstBuffer ** buffer, guint idx, HeaderData * data)
 {
   data->timestamp = GST_BUFFER_TIMESTAMP (*buffer);
   data->offset = GST_BUFFER_OFFSET (*buffer);
@@ -719,12 +719,12 @@ find_timestamp (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
   /* stop when we find a timestamp. We take whatever offset is associated with
    * the timestamp (if any) to do perfect timestamps when we need to. */
   if (data->timestamp != -1)
-    return GST_BUFFER_LIST_END;
+    return FALSE;
   else
-    return GST_BUFFER_LIST_CONTINUE;
+    return TRUE;
 }
 
-static GstBufferListItem
+static gboolean
 set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
 {
   GstRTPBuffer rtp;
@@ -740,7 +740,7 @@ set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
   /* increment the seqnum for each buffer */
   data->seqnum++;
 
-  return GST_BUFFER_LIST_SKIP_GROUP;
+  return TRUE;
 }
 
 /* Updates the SSRC, payload type, seqnum and timestamp of the RTP buffer

@@ -203,7 +203,7 @@ static gint values[] = { 1, 2, 4 };
 static GstBufferList *
 create_buffer_list (void)
 {
-  GstBufferListIterator *it;
+  guint len;
   GstBuffer *buffer;
 
   mylist = gst_buffer_list_new ();
@@ -212,29 +212,23 @@ create_buffer_list (void)
   mycaps = gst_caps_from_string ("application/x-gst-check");
   fail_if (mycaps == NULL);
 
-  it = gst_buffer_list_iterate (mylist);
-  fail_if (it == NULL);
-
-  gst_buffer_list_iterator_add_group (it);
+  len = gst_buffer_list_len (mylist);
+  fail_if (len != 0);
 
   buffer = gst_buffer_new_and_alloc (sizeof (gint));
   gst_buffer_fill (buffer, 0, &values[0], sizeof (gint));
   gst_buffer_set_caps (buffer, mycaps);
-  gst_buffer_list_iterator_add (it, buffer);
-
-  gst_buffer_list_iterator_add_group (it);
+  gst_buffer_list_add (mylist, buffer);
 
   buffer = gst_buffer_new_and_alloc (sizeof (gint));
   gst_buffer_fill (buffer, 0, &values[1], sizeof (gint));
   gst_buffer_set_caps (buffer, mycaps);
-  gst_buffer_list_iterator_add (it, buffer);
+  gst_buffer_list_add (mylist, buffer);
 
   buffer = gst_buffer_new_and_alloc (sizeof (gint));
   gst_buffer_fill (buffer, 0, &values[2], sizeof (gint));
   gst_buffer_set_caps (buffer, mycaps);
-  gst_buffer_list_iterator_add (it, buffer);
-
-  gst_buffer_list_iterator_free (it);
+  gst_buffer_list_add (mylist, buffer);
 
   return mylist;
 }
@@ -242,19 +236,16 @@ create_buffer_list (void)
 static void
 check_buffer_list (GstBufferList * list)
 {
-  GstBufferListIterator *it;
+  guint len;
   GstBuffer *buf;
   GstCaps *caps;
 
   fail_unless (list == mylist);
-  fail_unless (gst_buffer_list_n_groups (list) == 2);
+  fail_unless (gst_buffer_list_len (list) == 3);
 
-  it = gst_buffer_list_iterate (list);
-  fail_if (it == NULL);
+  len = gst_buffer_list_len (list);
 
-  fail_unless (gst_buffer_list_iterator_next_group (it));
-  fail_unless (gst_buffer_list_iterator_n_buffers (it) == 1);
-  buf = gst_buffer_list_iterator_next (it);
+  buf = gst_buffer_list_get (list, 0);
   fail_if (buf == NULL);
   gst_check_buffer_data (buf, &values[0], sizeof (gint));
   caps = gst_buffer_get_caps (buf);
@@ -262,23 +253,19 @@ check_buffer_list (GstBufferList * list)
   fail_unless (gst_caps_is_equal (caps, mycaps));
   gst_caps_unref (caps);
 
-  fail_unless (gst_buffer_list_iterator_next_group (it));
-  fail_unless (gst_buffer_list_iterator_n_buffers (it) == 2);
-  buf = gst_buffer_list_iterator_next (it);
+  buf = gst_buffer_list_get (list, 1);
   fail_if (buf == NULL);
   gst_check_buffer_data (buf, &values[1], sizeof (gint));
   caps = gst_buffer_get_caps (buf);
   fail_unless (caps == mycaps);
   gst_caps_unref (caps);
 
-  buf = gst_buffer_list_iterator_next (it);
+  buf = gst_buffer_list_get (list, 2);
   fail_if (buf == NULL);
   gst_check_buffer_data (buf, &values[2], sizeof (gint));
   caps = gst_buffer_get_caps (buf);
   fail_unless (caps == mycaps);
   gst_caps_unref (caps);
-
-  gst_buffer_list_iterator_free (it);
 }
 
 static GstFlowReturn
@@ -335,8 +322,12 @@ callback_function_buffer (GstAppSink * appsink, gpointer p_counter)
       gst_check_buffer_data (buf, &values[0], sizeof (gint));
       break;
     case 1:
-      fail_unless_equals_int (gst_buffer_get_size (buf), 2 * sizeof (gint));
-      gst_check_buffer_data (buf, &values[1], 2 * sizeof (gint));
+      fail_unless_equals_int (gst_buffer_get_size (buf), sizeof (gint));
+      gst_check_buffer_data (buf, &values[1], sizeof (gint));
+      break;
+    case 2:
+      fail_unless_equals_int (gst_buffer_get_size (buf), sizeof (gint));
+      gst_check_buffer_data (buf, &values[2], sizeof (gint));
       break;
     default:
       g_warn_if_reached ();
@@ -368,7 +359,7 @@ GST_START_TEST (test_buffer_list_fallback)
   list = create_buffer_list ();
   fail_unless (gst_pad_push_list (mysrcpad, list) == GST_FLOW_OK);
 
-  fail_unless_equals_int (counter, 2);
+  fail_unless_equals_int (counter, 3);
 
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_appsink (sink);
@@ -395,7 +386,7 @@ GST_START_TEST (test_buffer_list_fallback_signal)
   list = create_buffer_list ();
   fail_unless (gst_pad_push_list (mysrcpad, list) == GST_FLOW_OK);
 
-  fail_unless_equals_int (counter, 2);
+  fail_unless_equals_int (counter, 3);
 
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_appsink (sink);

@@ -833,10 +833,10 @@ gst_app_sink_render (GstBaseSink * psink, GstBuffer * buffer)
 static GstFlowReturn
 gst_app_sink_render_list (GstBaseSink * sink, GstBufferList * list)
 {
-  GstBufferListIterator *it;
   GstFlowReturn flow;
   GstAppSink *appsink;
-  GstBuffer *group;
+  GstBuffer *buffer;
+  guint i, len;
 
   appsink = GST_APP_SINK_CAST (sink);
 
@@ -847,28 +847,15 @@ gst_app_sink_render_list (GstBaseSink * sink, GstBufferList * list)
    * then and push them one-by-one */
   GST_INFO_OBJECT (sink, "chaining each group in list as a merged buffer");
 
-  it = gst_buffer_list_iterate (list);
+  len = gst_buffer_list_len (list);
 
-  if (gst_buffer_list_iterator_next_group (it)) {
-    do {
-      group = gst_buffer_list_iterator_merge_group (it);
-      if (group == NULL) {
-        group = gst_buffer_new ();
-        GST_DEBUG_OBJECT (sink, "chaining empty group");
-      } else {
-        GST_DEBUG_OBJECT (sink, "chaining group");
-      }
-      flow = gst_app_sink_render (sink, group);
-      gst_buffer_unref (group);
-    } while (flow == GST_FLOW_OK && gst_buffer_list_iterator_next_group (it));
-  } else {
-    GST_DEBUG_OBJECT (sink, "chaining empty group");
-    group = gst_buffer_new ();
-    flow = gst_app_sink_render (sink, group);
-    gst_buffer_unref (group);
+  flow = GST_FLOW_OK;
+  for (i = 0; i < len; i++) {
+    buffer = gst_buffer_list_get (list, i);
+    flow = gst_app_sink_render (sink, buffer);
+    if (flow != GST_FLOW_OK)
+      break;
   }
-
-  gst_buffer_list_iterator_free (it);
 
   return flow;
 }

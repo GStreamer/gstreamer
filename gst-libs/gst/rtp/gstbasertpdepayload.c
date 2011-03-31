@@ -526,8 +526,8 @@ typedef struct
   gboolean rtptime;
 } HeaderData;
 
-static GstBufferListItem
-set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
+static gboolean
+set_headers (GstBuffer ** buffer, guint idx, HeaderData * data)
 {
   GstBaseRTPDepayload *depayload = data->depayload;
 
@@ -544,7 +544,7 @@ set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
     depayload->priv->discont = FALSE;
   }
 
-  return GST_BUFFER_LIST_SKIP_GROUP;
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -567,7 +567,7 @@ gst_base_rtp_depayload_prepare_push (GstBaseRTPDepayload * filter,
     gst_buffer_list_foreach (*blist, (GstBufferListFunc) set_headers, &data);
   } else {
     GstBuffer **buf = obj;
-    set_headers (buf, 0, 0, &data);
+    set_headers (buf, 0, &data);
   }
 
   /* if this is the first buffer send a NEWSEGMENT */

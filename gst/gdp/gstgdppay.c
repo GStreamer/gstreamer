@@ -300,8 +300,10 @@ gst_gdp_buffer_from_event (GstGDPPay * this, GstEvent * event)
 
   payloadbuf = gst_buffer_new ();
   plen = gst_dp_header_payload_length (header);
-  gst_buffer_take_memory (payloadbuf,
-      gst_memory_new_wrapped (0, payload, g_free, plen, 0, plen));
+  if (plen && payload != NULL) {
+    gst_buffer_take_memory (payloadbuf,
+        gst_memory_new_wrapped (0, payload, g_free, plen, 0, plen));
+  }
 
   return gst_buffer_join (headerbuf, payloadbuf);
 
