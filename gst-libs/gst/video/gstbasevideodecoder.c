@@ -92,6 +92,14 @@
  * approach caters for seeking and duration reporting using estimated input
  * bitrates.
  *
+ * Baseclass provides some support for reverse playback, in particular
+ * in case incoming data is not packetized or upstream does not provide
+ * fragments on keyframe boundaries.  However, subclass should then be prepared
+ * for the parsing and frame processing stage to occur separately (rather
+ * than otherwise the latter immediately following the former),
+ * and should ensure the parsing stage properly marks keyframes or rely on
+ * upstream to do so properly for incoming data.
+ *
  * Things that subclass need to take care of:
  * <itemizedlist>
  *   <listitem><para>Provide pad templates</para></listitem>
@@ -162,6 +170,8 @@ static GstVideoFrame *gst_base_video_decoder_new_frame (GstBaseVideoDecoder *
     base_video_decoder);
 static void gst_base_video_decoder_free_frame (GstVideoFrame * frame);
 
+static void gst_base_video_decoder_clear_queues (GstBaseVideoDecoder * dec);
+
 GST_BOILERPLATE (GstBaseVideoDecoder, gst_base_video_decoder,
     GstBaseVideoCodec, GST_TYPE_BASE_VIDEO_CODEC);
 
@@ -215,9 +225,6 @@ gst_base_video_decoder_init (GstBaseVideoDecoder * base_video_decoder,
   base_video_decoder->output_adapter = gst_adapter_new ();
 
   gst_base_video_decoder_reset (base_video_decoder, TRUE);
-
-  base_video_decoder->current_frame =
-      gst_base_video_decoder_new_frame (base_video_decoder);
 
   base_video_decoder->sink_clipping = TRUE;
 }
@@ -310,6 +317,7 @@ gst_base_video_decoder_flush (GstBaseVideoDecoder * dec, gboolean hard)
   } else {
     gst_segment_init (&GST_BASE_VIDEO_CODEC (dec)->segment,
         GST_FORMAT_UNDEFINED);
+    gst_base_video_decoder_clear_queues (dec);
   }
   /* and get (re)set for the sequel */
   gst_base_video_decoder_reset (dec, FALSE);
@@ -844,6 +852,27 @@ gst_base_video_decoder_get_timestamp_at_offset (GstBaseVideoDecoder *
 }
 
 static void
+gst_base_video_decoder_clear_queues (GstBaseVideoDecoder * dec)
+{
+  g_list_foreach (dec->queued, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->queued);
+  dec->queued = NULL;
+  g_list_foreach (dec->gather, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->gather);
+  dec->gather = NULL;
+  g_list_foreach (dec->decode, (GFunc) gst_base_video_decoder_free_frame, NULL);
+  g_list_free (dec->decode);
+  dec->decode = NULL;
+  g_list_foreach (dec->parse, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->parse);
+  dec->decode = NULL;
+  g_list_foreach (dec->parse_gather, (GFunc) gst_base_video_decoder_free_frame,
+      NULL);
+  g_list_free (dec->parse_gather);
+  dec->decode = NULL;
+}
+
+static void
 gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder,
     gboolean full)
 {
@@ -857,6 +886,7 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder,
   if (full) {
     gst_segment_init (&GST_BASE_VIDEO_CODEC (base_video_decoder)->segment,
         GST_FORMAT_UNDEFINED);
+    gst_base_video_decoder_clear_queues (base_video_decoder);
   }
 
   GST_BASE_VIDEO_CODEC (base_video_decoder)->discont = TRUE;
@@ -890,17 +920,251 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder,
 }
 
 static GstFlowReturn
-gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
+gst_base_video_decoder_chain_forward (GstBaseVideoDecoder * base_video_decoder,
+    GstBuffer * buf)
 {
-  GstBaseVideoDecoder *base_video_decoder;
   GstBaseVideoDecoderClass *klass;
   GstFlowReturn ret;
 
-  base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
   klass = GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   g_return_val_if_fail (base_video_decoder->packetized || klass->parse_data,
       GST_FLOW_ERROR);
+
+  if (base_video_decoder->current_frame == NULL) {
+    base_video_decoder->current_frame =
+        gst_base_video_decoder_new_frame (base_video_decoder);
+  }
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    gst_base_video_decoder_add_timestamp (base_video_decoder, buf);
+  }
+  base_video_decoder->input_offset += GST_BUFFER_SIZE (buf);
+
+  if (base_video_decoder->packetized) {
+    base_video_decoder->current_frame->sink_buffer = buf;
+
+    if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT))
+      base_video_decoder->current_frame->is_sync_point = TRUE;
+
+    ret = gst_base_video_decoder_have_frame_2 (base_video_decoder);
+  } else {
+
+    gst_adapter_push (base_video_decoder->input_adapter, buf);
+
+    if (!base_video_decoder->have_sync) {
+      int n, m;
+
+      GST_DEBUG_OBJECT (base_video_decoder, "no sync, scanning");
+
+      n = gst_adapter_available (base_video_decoder->input_adapter);
+      if (klass->capture_mask != 0) {
+        m = gst_adapter_masked_scan_uint32 (base_video_decoder->input_adapter,
+            klass->capture_mask, klass->capture_pattern, 0, n - 3);
+      } else if (klass->scan_for_sync) {
+        m = klass->scan_for_sync (base_video_decoder, FALSE, 0, n);
+      } else {
+        m = 0;
+      }
+      if (m == -1) {
+        GST_ERROR_OBJECT (base_video_decoder, "scan returned no sync");
+        gst_adapter_flush (base_video_decoder->input_adapter, n - 3);
+
+        return GST_FLOW_OK;
+      } else {
+        if (m > 0) {
+          if (m >= n) {
+            GST_ERROR_OBJECT (base_video_decoder,
+                "subclass scanned past end %d >= %d", m, n);
+          }
+
+          gst_adapter_flush (base_video_decoder->input_adapter, m);
+
+          if (m < n) {
+            GST_DEBUG_OBJECT (base_video_decoder,
+                "found possible sync after %d bytes (of %d)", m, n);
+
+            /* this is only "maybe" sync */
+            base_video_decoder->have_sync = TRUE;
+          }
+        }
+
+      }
+    }
+
+    do {
+      ret = klass->parse_data (base_video_decoder, FALSE);
+    } while (ret == GST_FLOW_OK);
+
+    if (ret == GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA) {
+      return GST_FLOW_OK;
+    }
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_base_video_decoder_flush_decode (GstBaseVideoDecoder * dec)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+  GList *walk;
+
+  walk = dec->decode;
+
+  GST_DEBUG_OBJECT (dec, "flushing buffers to decode");
+
+  /* clear buffer and decoder state */
+  gst_base_video_decoder_flush (dec, FALSE);
+
+  /* signal have_frame it should not capture frames */
+  dec->process = TRUE;
+
+  while (walk) {
+    GList *next;
+    GstVideoFrame *frame = (GstVideoFrame *) (walk->data);
+    GstBuffer *buf = frame->sink_buffer;
+
+    GST_DEBUG_OBJECT (dec, "decoding frame %p, ts %" GST_TIME_FORMAT,
+        buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+    next = g_list_next (walk);
+    if (dec->current_frame)
+      gst_base_video_decoder_free_frame (dec->current_frame);
+    dec->current_frame = frame;
+    /* decode buffer, resulting data prepended to queue */
+    res = gst_base_video_decoder_have_frame_2 (dec);
+
+    walk = next;
+  }
+
+  dec->process = FALSE;
+
+  return res;
+}
+
+static GstFlowReturn
+gst_base_video_decoder_flush_parse (GstBaseVideoDecoder * dec)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+  GList *walk;
+
+  walk = dec->parse;
+
+  GST_DEBUG_OBJECT (dec, "flushing buffers to parsing");
+
+  /* clear buffer and decoder state */
+  gst_base_video_decoder_flush (dec, FALSE);
+
+  while (walk) {
+    GList *next;
+    GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+
+    GST_DEBUG_OBJECT (dec, "parsing buffer %p, ts %" GST_TIME_FORMAT,
+        buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+    next = g_list_next (walk);
+    /* parse buffer, resulting frames prepended to parse_gather queue */
+    gst_buffer_ref (buf);
+    res = gst_base_video_decoder_chain_forward (dec, buf);
+
+    /* if we generated output, we can discard the buffer, else we
+     * keep it in the queue */
+    if (dec->parse_gather) {
+      GST_DEBUG_OBJECT (dec, "parsed buffer to %p", dec->parse_gather->data);
+      dec->parse = g_list_delete_link (dec->parse, walk);
+      gst_buffer_unref (buf);
+    } else {
+      GST_DEBUG_OBJECT (dec, "buffer did not decode, keeping");
+    }
+    walk = next;
+  }
+
+  /* now we can process frames */
+  GST_DEBUG_OBJECT (dec, "checking frames");
+  while (dec->parse_gather) {
+    GstVideoFrame *frame;
+
+    frame = (GstVideoFrame *) (dec->parse_gather->data);
+    /* remove from the gather list */
+    dec->parse_gather =
+        g_list_delete_link (dec->parse_gather, dec->parse_gather);
+    /* copy to decode queue */
+    dec->decode = g_list_prepend (dec->decode, frame);
+
+    /* if we copied a keyframe, flush and decode the decode queue */
+    if (frame->is_sync_point) {
+      GST_DEBUG_OBJECT (dec, "copied keyframe");
+      res = gst_base_video_decoder_flush_decode (dec);
+    }
+  }
+
+  /* now send queued data downstream */
+  while (dec->queued) {
+    GstBuffer *buf = GST_BUFFER_CAST (dec->queued->data);
+
+    if (G_LIKELY (res == GST_FLOW_OK)) {
+      GST_DEBUG_OBJECT (dec, "pushing buffer %p of size %u, "
+          "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
+          GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+      /* should be already, but let's be sure */
+      buf = gst_buffer_make_metadata_writable (buf);
+      /* avoid stray DISCONT from forward processing,
+       * which have no meaning in reverse pushing */
+      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
+      res = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (dec), buf);
+    } else {
+      gst_buffer_unref (buf);
+    }
+
+    dec->queued = g_list_delete_link (dec->queued, dec->queued);
+  }
+
+  return res;
+}
+
+static GstFlowReturn
+gst_base_video_decoder_chain_reverse (GstBaseVideoDecoder * dec,
+    GstBuffer * buf)
+{
+  GstFlowReturn result = GST_FLOW_OK;
+
+  /* if we have a discont, move buffers to the decode list */
+  if (!buf || GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+    GST_DEBUG_OBJECT (dec, "received discont");
+    while (dec->gather) {
+      GstBuffer *gbuf;
+
+      gbuf = GST_BUFFER_CAST (dec->gather->data);
+      /* remove from the gather list */
+      dec->gather = g_list_delete_link (dec->gather, dec->gather);
+      /* copy to parse queue */
+      dec->parse = g_list_prepend (dec->parse, gbuf);
+    }
+    /* parse and decode stuff in the parse queue */
+    gst_base_video_decoder_flush_parse (dec);
+  }
+
+  if (G_LIKELY (buf)) {
+    GST_DEBUG_OBJECT (dec, "gathering buffer %p of size %u, "
+        "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
+        GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+    /* add buffer to gather queue */
+    dec->gather = g_list_prepend (dec->gather, buf);
+  }
+
+  return result;
+}
+
+static GstFlowReturn
+gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstBaseVideoDecoder *base_video_decoder;
+
+  base_video_decoder = GST_BASE_VIDEO_DECODER (GST_PAD_PARENT (pad));
 
   GST_LOG_OBJECT (base_video_decoder,
       "chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT " size %d",
@@ -931,11 +1195,8 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
         gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
         event);
     if (!ret) {
-#if 0
-      /* Other base classes tend to ignore the return value */
       GST_ERROR_OBJECT (base_video_decoder, "new segment event ret=%d", ret);
       return GST_FLOW_ERROR;
-#endif
     }
   }
 
@@ -961,77 +1222,10 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
-  if (base_video_decoder->current_frame == NULL) {
-    base_video_decoder->current_frame =
-        gst_base_video_decoder_new_frame (base_video_decoder);
-  }
-
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    gst_base_video_decoder_add_timestamp (base_video_decoder, buf);
-  }
-  base_video_decoder->input_offset += GST_BUFFER_SIZE (buf);
-
-  if (base_video_decoder->packetized) {
-    base_video_decoder->current_frame->sink_buffer = buf;
-
-    ret = gst_base_video_decoder_have_frame_2 (base_video_decoder);
-  } else {
-
-    gst_adapter_push (base_video_decoder->input_adapter, buf);
-
-    if (!base_video_decoder->have_sync) {
-      int n, m;
-
-      GST_DEBUG_OBJECT (base_video_decoder, "no sync, scanning");
-
-      n = gst_adapter_available (base_video_decoder->input_adapter);
-      if (klass->capture_mask != 0) {
-        m = gst_adapter_masked_scan_uint32 (base_video_decoder->input_adapter,
-            klass->capture_mask, klass->capture_pattern, 0, n - 3);
-      } else if (klass->scan_for_sync) {
-        m = klass->scan_for_sync (base_video_decoder, FALSE, 0, n);
-      } else {
-        m = 0;
-      }
-      if (m == -1) {
-        GST_ERROR_OBJECT (base_video_decoder, "scan returned no sync");
-        gst_adapter_flush (base_video_decoder->input_adapter, n - 3);
-
-        gst_object_unref (base_video_decoder);
-        return GST_FLOW_OK;
-      } else {
-        if (m > 0) {
-          if (m >= n) {
-            GST_ERROR_OBJECT (base_video_decoder,
-                "subclass scanned past end %d >= %d", m, n);
-          }
-
-          gst_adapter_flush (base_video_decoder->input_adapter, m);
-
-          if (m < n) {
-            GST_DEBUG_OBJECT (base_video_decoder,
-                "found possible sync after %d bytes (of %d)", m, n);
-
-            /* this is only "maybe" sync */
-            base_video_decoder->have_sync = TRUE;
-          }
-        }
-
-      }
-    }
-
-    do {
-      ret = klass->parse_data (base_video_decoder, FALSE);
-    } while (ret == GST_FLOW_OK);
-
-    if (ret == GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA) {
-      gst_object_unref (base_video_decoder);
-      return GST_FLOW_OK;
-    }
-  }
-
-  gst_object_unref (base_video_decoder);
-  return ret;
+  if (GST_BASE_VIDEO_CODEC (base_video_decoder)->segment.rate > 0.0)
+    return gst_base_video_decoder_chain_forward (base_video_decoder, buf);
+  else
+    return gst_base_video_decoder_chain_reverse (base_video_decoder, buf);
 }
 
 static GstStateChangeReturn
@@ -1288,8 +1482,14 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     }
   }
 
-  ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
-      src_buffer);
+  if (GST_BASE_VIDEO_CODEC (base_video_decoder)->segment.rate < 0.0) {
+    GST_LOG_OBJECT (base_video_decoder, "queued buffer");
+    base_video_decoder->queued =
+        g_list_prepend (base_video_decoder->queued, src_buffer);
+  } else {
+    ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
+        src_buffer);
+  }
 
 done:
   GST_BASE_VIDEO_CODEC (base_video_decoder)->frames =
@@ -1437,6 +1637,14 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
   g_return_val_if_fail (base_video_decoder_class->handle_frame != NULL,
       GST_FLOW_ERROR);
 
+  /* capture frames and queue for later processing */
+  if (GST_BASE_VIDEO_CODEC (base_video_decoder)->segment.rate < 0.0 &&
+      !base_video_decoder->process) {
+    base_video_decoder->parse_gather =
+        g_list_prepend (base_video_decoder->parse_gather, frame);
+    goto exit;
+  }
+
   frame->distance_from_sync = base_video_decoder->distance_from_sync;
   base_video_decoder->distance_from_sync++;
 
@@ -1464,6 +1672,7 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
         gst_flow_get_name (ret));
   }
 
+exit:
   /* create new frame */
   base_video_decoder->current_frame =
       gst_base_video_decoder_new_frame (base_video_decoder);

@@ -114,6 +114,19 @@ struct _GstBaseVideoDecoder
   /* last outgoing ts */
   GstClockTime      last_timestamp;
 
+  /* reverse playback */
+  /* collect input */
+  GList            *gather;
+  /* to-be-parsed */
+  GList            *parse;
+  /* collected parsed frames */
+  GList            *parse_gather;
+  /* frames to be handled == decoded */
+  GList            *decode;
+  /* collected output */
+  GList            *queued;
+  gboolean          process;
+
   /* no comment ... */
   guint64           base_picture_number;
   int               reorder_depth;
