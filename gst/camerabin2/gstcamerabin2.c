@@ -291,17 +291,17 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
 
       /* a video recording is about to start, we reset the videobin to clear eos/flushing state
        * also need to clean the queue ! capsfilter before it */
-      gst_element_set_state (camera->encodebin, GST_STATE_NULL);
       gst_element_set_state (camera->videosink, GST_STATE_NULL);
-      gst_element_set_state (camera->videobin_queue, GST_STATE_NULL);
+      gst_element_set_state (camera->encodebin, GST_STATE_NULL);
       gst_element_set_state (camera->videobin_capsfilter, GST_STATE_NULL);
+      gst_element_set_state (camera->videobin_queue, GST_STATE_NULL);
       location =
           g_strdup_printf (camera->video_location, camera->video_index++);
       GST_DEBUG_OBJECT (camera, "Switching videobin location to %s", location);
       g_object_set (camera->videosink, "location", location, NULL);
       g_free (location);
-      gst_element_set_state (camera->encodebin, GST_STATE_PLAYING);
       gst_element_set_state (camera->videosink, GST_STATE_PLAYING);
+      gst_element_set_state (camera->encodebin, GST_STATE_PLAYING);
       gst_element_set_state (camera->videobin_capsfilter, GST_STATE_PLAYING);
       gst_element_set_state (camera->videobin_queue, GST_STATE_PLAYING);
     }
@@ -1163,6 +1163,13 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_CAMERA_BIN_RESET_PROCESSING_COUNTER (camera);
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (GST_STATE (camera->videosink) >= GST_STATE_PAUSED)
+        gst_element_set_state (camera->videosink, GST_STATE_READY);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_element_set_state (camera->videosink, GST_STATE_NULL);
+      break;
     default:
       break;
   }
@@ -1171,8 +1178,6 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 
   switch (trans) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (GST_STATE (camera->videosink) >= GST_STATE_PAUSED)
-        gst_element_set_state (camera->videosink, GST_STATE_READY);
       if (camera->audio_src && GST_STATE (camera->audio_src) >= GST_STATE_READY)
         gst_element_set_state (camera->audio_src, GST_STATE_READY);
 
@@ -1186,7 +1191,6 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       gst_element_set_state (camera->audio_convert, GST_STATE_READY);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_element_set_state (camera->videosink, GST_STATE_NULL);
       if (camera->audio_src)
         gst_element_set_state (camera->audio_src, GST_STATE_NULL);
 
