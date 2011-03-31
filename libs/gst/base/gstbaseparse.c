@@ -532,10 +532,12 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
 /**
  * gst_base_parse_frame_init:
  * @parse: #GstBaseParse.
- * @fmt: #GstBaseParseFrame.
+ * @frame: #GstBaseParseFrame.
  *
  * Sets a #GstBaseParseFrame to initial state.  Currently this means
  * all fields are zero-ed.
+ *
+ * Since: 0.10.33
  */
 void
 gst_base_parse_frame_init (GstBaseParse * parse, GstBaseParseFrame * frame)
@@ -640,8 +642,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   GST_OBJECT_UNLOCK (parse);
 }
 
-/**
- * gst_base_parse_check_frame:
+/* gst_base_parse_check_frame:
  * @parse: #GstBaseParse.
  * @buffer: GstBuffer.
  * @framesize: This will be set to tell the found frame size in bytes.
@@ -662,8 +663,7 @@ gst_base_parse_check_frame (GstBaseParse * parse,
 }
 
 
-/**
- * gst_base_parse_parse_frame:
+/* gst_base_parse_parse_frame:
  * @parse: #GstBaseParse.
  * @buffer: #GstBuffer.
  *
@@ -685,8 +685,7 @@ gst_base_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   return GST_FLOW_OK;
 }
 
-/**
- * gst_base_parse_convert:
+/* gst_base_parse_convert:
  * @parse: #GstBaseParse.
  * @src_format: #GstFormat describing the source format.
  * @src_value: Source value to be converted.
@@ -740,8 +739,7 @@ gst_base_parse_convert (GstBaseParse * parse,
   return ret;
 }
 
-/**
- * gst_base_parse_sink_event:
+/* gst_base_parse_sink_event:
  * @pad: #GstPad that received the event.
  * @event: #GstEvent to be handled.
  *
@@ -800,8 +798,7 @@ gst_base_parse_sink_event (GstPad * pad, GstEvent * event)
 }
 
 
-/**
- * gst_base_parse_sink_eventfunc:
+/* gst_base_parse_sink_eventfunc:
  * @parse: #GstBaseParse.
  * @event: #GstEvent to be handled.
  *
@@ -973,8 +970,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 }
 
 
-/**
- * gst_base_parse_src_event:
+/* gst_base_parse_src_event:
  * @pad: #GstPad that received the event.
  * @event: #GstEvent that was received.
  *
@@ -1014,8 +1010,7 @@ gst_base_parse_is_seekable (GstBaseParse * parse)
   return (parse->priv->format_flags & GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE);
 }
 
-/**
- * gst_base_parse_src_eventfunc:
+/* gst_base_parse_src_eventfunc:
  * @parse: #GstBaseParse.
  * @event: #GstEvent that was received.
  *
@@ -1054,6 +1049,8 @@ gst_base_parse_src_eventfunc (GstBaseParse * parse, GstEvent * event)
  * Default implementation of "convert" vmethod in #GstBaseParse class.
  *
  * Returns: TRUE if conversion was successful.
+ *
+ * Since: 0.10.33
  */
 gboolean
 gst_base_parse_convert_default (GstBaseParse * parse,
@@ -1123,11 +1120,6 @@ gst_base_parse_convert_default (GstBaseParse * parse,
   return ret;
 }
 
-/**
- * gst_base_parse_update_duration:
- * @parse: #GstBaseParse.
- *
- */
 static void
 gst_base_parse_update_duration (GstBaseParse * aacparse)
 {
@@ -1183,8 +1175,7 @@ gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
   gst_element_found_tags_for_pad (GST_ELEMENT (parse), parse->srcpad, taglist);
 }
 
-/**
- * gst_base_parse_update_bitrates:
+/* gst_base_parse_update_bitrates:
  * @parse: #GstBaseParse.
  * @buffer: Current frame as a #GstBuffer
  *
@@ -1295,6 +1286,8 @@ exit:
  * to the new entry, etc.
  *
  * Returns: #gboolean indicating whether entry was added
+ *
+ * Since: 0.10.33
  */
 gboolean
 gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
@@ -1460,8 +1453,7 @@ gst_base_parse_check_media (GstBaseParse * parse)
   GST_DEBUG_OBJECT (parse, "media is video == %d", parse->priv->is_video);
 }
 
-/**
- * gst_base_parse_handle_and_push_buffer:
+/* gst_base_parse_handle_and_push_buffer:
  * @parse: #GstBaseParse.
  * @klass: #GstBaseParseClass.
  * @buffer: #GstBuffer.
@@ -1585,6 +1577,8 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
  * This must be called with sinkpad STREAM_LOCK held.
  *
  * Returns: #GstFlowReturn
+ *
+ * Since: 0.10.33
  */
 GstFlowReturn
 gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
@@ -1815,9 +1809,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 }
 
 
-/**
- * gst_base_parse_drain:
- * @parse: #GstBaseParse.
+/* gst_base_parse_drain:
  *
  * Drains the adapter until it is empty. It decreases the min_frame_size to
  * match the current adapter size and calls chain method until the adapter
@@ -1850,9 +1842,7 @@ gst_base_parse_drain (GstBaseParse * parse)
   parse->priv->drain = FALSE;
 }
 
-/**
- * gst_base_parse_process_fragment:
- * @parse: #GstBaseParse.
+/* gst_base_parse_send_buffers
  *
  * Sends buffers collected in send_buffers downstream, and ensures that list
  * is empty at the end (errors or not).
@@ -1894,9 +1884,7 @@ gst_base_parse_send_buffers (GstBaseParse * parse)
   return ret;
 }
 
-/**
- * gst_base_parse_process_fragment:
- * @parse: #GstBaseParse.
+/* gst_base_parse_process_fragment:
  *
  * Processes a reverse playback (forward) fragment:
  * - append head of last fragment that was skipped to current fragment data
@@ -2026,14 +2014,6 @@ gst_base_parse_check_sync (GstBaseParse * parse)
   return GST_FLOW_OK;
 }
 
-
-/**
- * gst_base_parse_chain:
- * @pad: #GstPad.
- * @buffer: #GstBuffer.
- *
- * Returns: #GstFlowReturn.
- */
 static GstFlowReturn
 gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -2486,12 +2466,7 @@ invalid_min:
   }
 }
 
-/**
- * gst_base_parse_loop:
- * @pad: GstPad
- *
- * Loop that is used in pull mode to retrieve data from upstream.
- */
+/* Loop that is used in pull mode to retrieve data from upstream */
 static void
 gst_base_parse_loop (GstPad * pad)
 {
@@ -2599,13 +2574,6 @@ pause:
   }
 }
 
-
-/**
- * gst_base_parse_sink_activate:
- * @sinkpad: #GstPad to be activated.
- *
- * Returns: TRUE if activation succeeded.
- */
 static gboolean
 gst_base_parse_sink_activate (GstPad * sinkpad)
 {
@@ -2629,14 +2597,6 @@ gst_base_parse_sink_activate (GstPad * sinkpad)
   return result;
 }
 
-
-/**
- * gst_base_parse_activate:
- * @parse: #GstBaseParse.
- * @active: TRUE if element will be activated, FALSE if deactivated.
- *
- * Returns: TRUE if the operation succeeded.
- */
 static gboolean
 gst_base_parse_activate (GstBaseParse * parse, gboolean active)
 {
@@ -2665,14 +2625,6 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
   return result;
 }
 
-
-/**
- * gst_base_parse_sink_activate_push:
- * @pad: #GstPad to be (de)activated.
- * @active: TRUE when activating, FALSE when deactivating.
- *
- * Returns: TRUE if (de)activation succeeded.
- */
 static gboolean
 gst_base_parse_sink_activate_push (GstPad * pad, gboolean active)
 {
@@ -2694,14 +2646,6 @@ gst_base_parse_sink_activate_push (GstPad * pad, gboolean active)
   return result;
 }
 
-
-/**
- * gst_base_parse_sink_activate_pull:
- * @sinkpad: #GstPad to be (de)activated.
- * @active: TRUE when activating, FALSE when deactivating.
- *
- * Returns: TRUE if (de)activation succeeded.
- */
 static gboolean
 gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
 {
@@ -2742,12 +2686,16 @@ gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
  * @parse: #GstBaseParse.
  * @fmt: #GstFormat.
  * @duration: duration value.
+ * @interval: how often to update the duration estimate based on bitrate, or 0.
  *
  * Sets the duration of the currently playing media. Subclass can use this
  * when it is able to determine duration and/or notices a change in the media
  * duration.  Alternatively, if @interval is non-zero (default), then stream
  * duration is determined based on estimated bitrate, and updated every @interval
- * frames. */
+ * frames.
+ *
+ * Since: 0.10.33
+ */
 void
 gst_base_parse_set_duration (GstBaseParse * parse,
     GstFormat fmt, gint64 duration, gint interval)
@@ -2785,7 +2733,7 @@ exit:
 /**
  * gst_base_parse_set_average_bitrate:
  * @parse: #GstBaseParse.
- * @abitrate: average bitrate in bits/second
+ * @bitrate: average bitrate in bits/second
  *
  * Optionally sets the average bitrate detected in media (if non-zero),
  * e.g. based on metadata, as it will be posted to the application.
@@ -2794,6 +2742,8 @@ exit:
  * is used to estimate the total duration of the stream and to estimate
  * a seek position, if there's no index and #GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE
  * is set.
+ *
+ * Since: 0.10.33
  */
 void
 gst_base_parse_set_average_bitrate (GstBaseParse * parse, guint bitrate)
@@ -2810,6 +2760,8 @@ gst_base_parse_set_average_bitrate (GstBaseParse * parse, guint bitrate)
  *
  * Subclass can use this function to tell the base class that it needs to
  * give at least #min_size buffers.
+ *
+ * Since: 0.10.33
  */
 void
 gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
@@ -2827,6 +2779,8 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
  *
  * Set flags describing characteristics of parsed format. This overrides
  * any previous flags set (ie. it's not a bitwise OR operation).
+ *
+ * Since: 0.10.33
  */
 void
 gst_base_parse_set_format_flags (GstBaseParse * parse,
@@ -2851,6 +2805,8 @@ gst_base_parse_set_format_flags (GstBaseParse * parse,
  * location, a corresponding decoder might need an initial @lead_in and a
  * following @lead_out number of frames to ensure the desired segment is
  * entirely filled upon decoding.
+ *
+ * Since: 0.10.33
  */
 void
 gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
@@ -2919,12 +2875,6 @@ gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
   return res;
 }
 
-/**
- * gst_base_parse_get_querytypes:
- * @pad: GstPad
- *
- * Returns: A table of #GstQueryType items describing supported query types.
- */
 static const GstQueryType *
 gst_base_parse_get_querytypes (GstPad * pad)
 {
@@ -2940,14 +2890,6 @@ gst_base_parse_get_querytypes (GstPad * pad)
   return list;
 }
 
-
-/**
- * gst_base_parse_query:
- * @pad: #GstPad.
- * @query: #GstQuery.
- *
- * Returns: TRUE on success.
- */
 static gboolean
 gst_base_parse_query (GstPad * pad, GstQuery * query)
 {
@@ -3320,14 +3262,7 @@ exit:
   return bytes;
 }
 
-
-/**
- * gst_base_parse_handle_seek:
- * @parse: #GstBaseParse.
- * @event: #GstEvent.
- *
- * Returns: TRUE if seek succeeded.
- */
+/* returns TRUE if seek succeeded */
 static gboolean
 gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
 {
@@ -3598,12 +3533,7 @@ convert_failed:
   }
 }
 
-/**
- * gst_base_parse_handle_tag:
- * @parse: #GstBaseParse.
- * @event: #GstEvent.
- *
- * Checks if bitrates are available from upstream tags so that we don't
+/* Checks if bitrates are available from upstream tags so that we don't
  * override them later
  */
 static void
@@ -3628,13 +3558,6 @@ gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event)
   }
 }
 
-/**
- * gst_base_parse_sink_setcaps:
- * @pad: #GstPad.
- * @caps: #GstCaps.
- *
- * Returns: TRUE if caps were accepted.
- */
 static gboolean
 gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
 {

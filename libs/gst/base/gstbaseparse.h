@@ -40,7 +40,7 @@ G_BEGIN_DECLS
  *
  * Gives the pointer to the source #GstPad object of the element.
  *
- * Since: 0.10.x
+ * Since: 0.10.33
  */
 #define GST_BASE_PARSE_SRC_PAD(obj)    (GST_BASE_PARSE_CAST (obj)->srcpad)
 
@@ -50,7 +50,7 @@ G_BEGIN_DECLS
  *
  * Gives the pointer to the sink #GstPad object of the element.
  *
- * Since: 0.10.x
+ * Since: 0.10.33
  */
 #define GST_BASE_PARSE_SINK_PAD(obj)    (GST_BASE_PARSE_CAST (obj)->sinkpad)
 
@@ -61,7 +61,7 @@ G_BEGIN_DECLS
  * indicate that no output buffer was generated, or from pre_push_buffer to
  * to forego pushing buffer.
  *
- * Since: 0.10.x
+ * Since: 0.10.33
  */
 #define GST_BASE_PARSE_FLOW_DROPPED     GST_FLOW_CUSTOM_SUCCESS
 
@@ -81,7 +81,7 @@ G_BEGIN_DECLS
  *
  * Flags to be used in a #GstBaseParseFrame.
  *
- * Since: 0.10.x
+ * Since: 0.10.33
  */
 typedef enum {
   GST_BASE_PARSE_FRAME_FLAG_NONE         = 0,
@@ -111,7 +111,7 @@ typedef enum {
  * only to some a particular one.  These parameters are effectively zeroed at start
  * of each frame's processing, i.e. parsing virtual method invocation sequence.
  *
- * Since: 0.10.x
+ * Since: 0.10.33
  */
 typedef struct {
   GstBuffer * buffer;
@@ -125,7 +125,7 @@ typedef struct {
  *
  * Obtains current sync status indicated in frame.
  *
- * Since: 0.10.x
+ * Since: 0.10.33
  */
 #define GST_BASE_PARSE_FRAME_SYNC(frame)     (!!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_SYNC))
 
@@ -135,7 +135,7 @@ typedef struct {
  *
  * Obtains current drain status indicated in frame.
  *
- * Since: 0.10.x
+ * Since: 0.10.33
  */
 #define GST_BASE_PARSE_FRAME_DRAIN(frame)    (!!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_DRAIN))
 
@@ -156,7 +156,7 @@ typedef struct {
  *   set by default, and determines whether seeking based on bitrate averages
  *   is possible for a format/stream.
  *
- * Since: 0.10.x
+ * Since: 0.10.33
  */
 typedef enum {
   GST_BASE_PARSE_FORMAT_FLAG_NONE               = 0,
@@ -193,6 +193,7 @@ struct _GstBaseParse {
 
 /**
  * GstBaseParseClass:
+ * @parent_class: the parent class
  * @start:          Optional.
  *                  Called when the element starts processing.
  *                  Allows opening external resources.
@@ -214,7 +215,6 @@ struct _GstBaseParse {
  * @src_event:      Optional.
  *                  Event handler on the source pad. Should return TRUE
  *                  if the event was handled and can be dropped.
- *
  * @pre_push_frame: Optional.
  *                   Called just prior to pushing a frame (after any pending
  *                   events have been sent) to give subclass a chance to perform
@@ -286,7 +286,7 @@ void            gst_base_parse_set_min_frame_size (GstBaseParse    * parse,
                                                    guint             min_size);
 
 void            gst_base_parse_set_format_flags (GstBaseParse           * parse,
-                                                 GstBaseParseFormatFlags  flag);
+                                                 GstBaseParseFormatFlags  flags);
 
 void            gst_base_parse_set_frame_props (GstBaseParse * parse,
                                                 guint          fps_num,
