@@ -56,7 +56,8 @@ struct GstShmClient
 
 #define DEFAULT_SIZE ( 256 * 1024 )
 #define DEFAULT_WAIT_FOR_CONNECTION (TRUE)
-#define DEFAULT_PERMS (S_IRWXU | S_IRWXG)
+/* Default is user read/write, group read */
+#define DEFAULT_PERMS ( S_IRUSR | S_IWUSR | S_IRGRP )
 
 
 GST_DEBUG_CATEGORY_STATIC (shmsink_debug);
