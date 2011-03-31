@@ -1,47 +1,40 @@
-static GstCheckABIStruct list[] = {
-  {"GstAdapter", sizeof (GstAdapter), 88}
-  ,
-  {"GstAdapterClass", sizeof (GstAdapterClass), 168}
-  ,
-  {"GstBaseSink", sizeof (GstBaseSink), 600}
-  ,
-  {"GstBaseSinkClass", sizeof (GstBaseSinkClass), 728}
-  ,
-  {"GstBaseSrc", sizeof (GstBaseSrc), 600}
-  ,
-  {"GstBaseSrcClass", sizeof (GstBaseSrcClass), 744}
-  ,
-  {"GstBaseTransform", sizeof (GstBaseTransform), 576}
-  ,
-  {"GstBaseTransformClass", sizeof (GstBaseTransformClass), 744}
-  ,
-  {"GstCollectData", sizeof (GstCollectData), 168}
-  ,
-  {"GstCollectPads", sizeof (GstCollectPads), 168}
-  ,
-  {"GstCollectPadsClass", sizeof (GstCollectPadsClass), 272}
-  ,
-  {"GstPushSrc", sizeof (GstPushSrc), 632}
-  ,
-  {"GstPushSrcClass", sizeof (GstPushSrcClass), 784}
-  ,
-  {"GstTimedValue", sizeof (GstTimedValue), 32}
-  ,
-  {"GstValueArray", sizeof (GstValueArray), 32}
-  ,
-  {"GstController", sizeof (GstController), 80}
-  ,
-  {"GstControllerClass", sizeof (GstControllerClass), 168}
-  ,
-  {"GstNetClientClock", sizeof (GstNetClientClock), 368}
-  ,
-  {"GstNetClientClockClass", sizeof (GstNetClientClockClass), 384}
-  ,
-  {"GstNetTimePacket", sizeof (GstNetTimePacket), 16}
-  ,
-  {"GstNetTimeProvider", sizeof (GstNetTimeProvider), 152}
-  ,
-  {"GstNetTimeProviderClass", sizeof (GstNetTimeProviderClass), 240}
-  ,
+
+GstCheckABIStruct list[] = {
+  {"GstAdapterClass", sizeof (GstAdapterClass), 168},
+  {"GstAdapter", sizeof (GstAdapter), 88},
+  {"GstBaseSinkClass", sizeof (GstBaseSinkClass), 728},
+  {"GstBaseSink", sizeof (GstBaseSink), 600},
+  {"GstBaseSrcClass", sizeof (GstBaseSrcClass), 744},
+  {"GstBaseSrc", sizeof (GstBaseSrc), 600},
+  {"GstBaseTransformClass", sizeof (GstBaseTransformClass), 744},
+  {"GstBaseTransform", sizeof (GstBaseTransform), 576},
+  {"GstBitReader", sizeof (GstBitReader), 24},
+  {"GstByteReader", sizeof (GstByteReader), 16},
+  {"GstByteWriter", sizeof (GstByteWriter), 32},
+  {"GstCollectData", sizeof (GstCollectData), 168},
+  {"GstCollectPadsClass", sizeof (GstCollectPadsClass), 272},
+  {"GstCollectPads", sizeof (GstCollectPads), 168},
+  {"GstControllerClass", sizeof (GstControllerClass), 168},
+  {"GstController", sizeof (GstController), 80},
+  {"GstControlSourceClass", sizeof (GstControlSourceClass), 176},
+  {"GstControlSource", sizeof (GstControlSource), 80},
+  {"GstDataQueueClass", sizeof (GstDataQueueClass), 184},
+  {"GstDataQueueItem", sizeof (GstDataQueueItem), 40},
+  {"GstDataQueue", sizeof (GstDataQueue), 128},
+  {"GstDataQueueSize", sizeof (GstDataQueueSize), 16},
+  {"GstDPPacketizer", sizeof (GstDPPacketizer), 64},
+  {"GstInterpolationControlSourceClass", sizeof (GstInterpolationControlSourceClass), 208},
+  {"GstInterpolationControlSource", sizeof (GstInterpolationControlSource), 128},
+  {"GstLFOControlSourceClass", sizeof (GstLFOControlSourceClass), 208},
+  {"GstLFOControlSource", sizeof (GstLFOControlSource), 128},
+  {"GstNetClientClockClass", sizeof (GstNetClientClockClass), 384},
+  {"GstNetClientClock", sizeof (GstNetClientClock), 368},
+  {"GstNetTimePacket", sizeof (GstNetTimePacket), 16},
+  {"GstNetTimeProviderClass", sizeof (GstNetTimeProviderClass), 240},
+  {"GstNetTimeProvider", sizeof (GstNetTimeProvider), 152},
+  {"GstPushSrcClass", sizeof (GstPushSrcClass), 784},
+  {"GstPushSrc", sizeof (GstPushSrc), 632},
+  {"GstTimedValue", sizeof (GstTimedValue), 32},
+  {"GstValueArray", sizeof (GstValueArray), 32},
   {NULL, 0, 0}
 };
