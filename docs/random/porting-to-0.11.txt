@@ -4,6 +4,9 @@ The 0.11 porting guide
 * All deprecated methods were removed. Recompile against 0.10 with
   DISABLE_DEPRECATED and fix issues before attempting to port to 0.11.
 
+* various methods take a gsize instead of a guint when talking about memory
+  sizes.
+
 * multifdsink, tcpclientsink, tcpclientsrc, tcpserversrc the protocol property
   is removed, use gdppay and gdpdepay.
 
@@ -76,10 +79,48 @@ The 0.11 porting guide
     gst_value_take_get_object() -> g_value_get_boxed()
     gst_value_take_dup_object() -> g_value_dup_boxed()
 
+    The GST_MINI_OBJECT_READONLY flag was removed as it used to mark the
+    memory in buffers as READONLY. Marking memory READONLY can now be done
+    with the GstMemory API. Writability of miniobjects is now only done by using
+    the refcount.
+
 * GstBuffer
     A GstBuffer is now a simple boxed type this means that subclassing is not
-    possible anymore. To add more data to the buffer, you have to use the
-    metadata feature of buffers.
+    possible anymore. 
+
+    To add data to the buffer you would now use gst_buffer_take_memory() with
+    a GstMemory object containing the data. Multiple memory blocks can added to
+    a GstBuffer that can then be retrieved with gst_buffer_peek_memory().
+
+    GST_BUFFER_DATA(), GST_BUFFER_MALLOCDATA(), GST_BUFFER_FREE_FUNC() and
+    GST_BUFFER_SIZE() are gone, along with the fields in GstBuffer. Use the
+    memory API to get access to the buffer data. GST_BUFFER_SIZE() can be
+    replaced with gst_buffer_get_size() but if also access to the data is
+    required, gst_buffer_map() can return both the size and data in one go.
+
+    The most common way to access all the data in a buffer is by using
+    gst_buffer_map() and gst_buffer_unmap(). These calls require you to specify
+    the access mode required to the data and will automatically merge and return
+    a writable copy of the data.
+
+    The buffer must be writable (gst_buffer_is_writable()) in order to modify
+    the fields, metadata or buffer memory. gst_buffer_make_writable() will not
+    automatically make a writable copy of the memory but will instead increase
+    the refcount of the memory. The _map() and _peek_memory() methods will
+    automatically create writable copies when needed.
+    
+    gst_buffer_make_metadata_writable() is gone, you can replace this safely
+    with gst_buffer_make_writable().
+
+    gst_buffer_create_sub() is gone and can be safely replaced with
+    gst_buffer_copy_region(). 
+
+    Changing the size of the buffer data can be done with gst_buffer_resize(),
+    which will also update the metadata fields correctly. gst_buffer_set_size()
+    is #defined to a special case of gst_buffer_resize() with a 0 offset.
+
+    gst_buffer_try_new_and_alloc() is replaced with gst_buffer_new_and_alloc(),
+    which now returns NULL when memory allocation fails.
 
 * GstEvent
 * GstQuery
@@ -94,4 +135,26 @@ The 0.11 porting guide
 * GstCaps
     Is now a boxed type derived from GstMiniObject. 
 
+* GstTypeFind
+    gst_type_find_peek() returns a const guin8 * now.
 
+* GstAdapter
+    gst_adapter_peek() is removed, use gst_adapter_map() and gst_adapter_unmap()
+    to get access to raw data from the adapter.
+
+    Arguments renamed from guint to gsize.
+
+* GstBitReader, GstByteReader, GstByteWriter
+    gst_*_reader_new_from_buffer(), gst_*_reader_init_from_buffer() removed, get
+    access to the buffer data with _map() and then use the _new() functions.
+
+    gst_byte_reader_new_from_buffer() and gst_byte_reader_init_from_buffer()
+    removed, get access to the buffer data and then use the _new() functions.
+
+* GstCollectPads
+    gst_collect_pads_read() removed, use _read_buffer() or _take_buffer() and
+    then use the memory API to get to the memory.
+
+
+ 
+  
