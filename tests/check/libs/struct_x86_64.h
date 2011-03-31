@@ -1,7 +1,5 @@
 
 GstCheckABIStruct list[] = {
-  {"GstAppBufferClass", sizeof (GstAppBufferClass), 32},
-  {"GstAppBuffer", sizeof (GstAppBuffer), 136},
   {"GstAppSinkCallbacks", sizeof (GstAppSinkCallbacks), 56},
   {"GstAppSinkClass", sizeof (GstAppSinkClass), 800},
   {"GstAppSink", sizeof (GstAppSink), 640},
@@ -49,8 +47,6 @@ GstCheckABIStruct list[] = {
   {"GstMixerTrack", sizeof (GstMixerTrack), 48},
   {"GstNavigationInterface", sizeof (GstNavigationInterface), 56},
   {"GstNetAddress", sizeof (GstNetAddress), 56},
-  {"GstNetBufferClass", sizeof (GstNetBufferClass), 64},
-  {"GstNetBuffer", sizeof (GstNetBuffer), 264},
   {"GstPropertyProbeInterface", sizeof (GstPropertyProbeInterface), 88},
   {"gst_riff_acid", sizeof (gst_riff_acid), 24},
   {"gst_riff_dmlh", sizeof (gst_riff_dmlh), 4},

@@ -98,6 +98,10 @@
 #endif
 #endif
 
+/* disabled for 0.11 */
+#undef HAVE_ABI_SIZES
+#define HAVE_ABI_SIZES FALSE
+
 GST_START_TEST (test_ABI)
 {
   gst_check_abi_list (list, HAVE_ABI_SIZES);

@@ -143,11 +143,22 @@ tag_list_equals (GstTagList * taglist, GstTagList * taglist2)
 static gboolean
 gst_buffer_equals (GstBuffer * buf_a, GstBuffer * buf_b)
 {
-  if (GST_BUFFER_SIZE (buf_a) != GST_BUFFER_SIZE (buf_b))
-    return FALSE;
+  gboolean res;
+  gpointer data1, data2;
+  gsize size1, size2;
 
-  return memcmp (GST_BUFFER_DATA (buf_a), GST_BUFFER_DATA (buf_b),
-      GST_BUFFER_SIZE (buf_a)) == 0;
+  data1 = gst_buffer_map (buf_a, &size1, NULL, GST_MAP_READ);
+  data2 = gst_buffer_map (buf_b, &size2, NULL, GST_MAP_READ);
+
+  if (size1 == size2) {
+    res = memcmp (data1, data2, size1) == 0;
+  } else {
+    res = FALSE;
+  }
+  gst_buffer_unmap (buf_a, data1, size1);
+  gst_buffer_unmap (buf_b, data2, size2);
+
+  return res;
 }
 
 static GstTagList *
