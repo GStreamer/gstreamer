@@ -104,22 +104,11 @@ EXPORTS
 	gst_buffer_join
 	gst_buffer_list_foreach
 	gst_buffer_list_get
-	gst_buffer_list_item_get_type
-	gst_buffer_list_iterate
-	gst_buffer_list_iterator_add
-	gst_buffer_list_iterator_add_group
-	gst_buffer_list_iterator_add_list
-	gst_buffer_list_iterator_do
-	gst_buffer_list_iterator_free
-	gst_buffer_list_iterator_merge_group
-	gst_buffer_list_iterator_n_buffers
-	gst_buffer_list_iterator_next
-	gst_buffer_list_iterator_next_group
-	gst_buffer_list_iterator_remove
-	gst_buffer_list_iterator_steal
-	gst_buffer_list_iterator_take
-	gst_buffer_list_n_groups
+	gst_buffer_list_insert
+	gst_buffer_list_len
 	gst_buffer_list_new
+	gst_buffer_list_remove
+	gst_buffer_list_sized_new
 	gst_buffer_map
 	gst_buffer_merge
 	gst_buffer_n_memory

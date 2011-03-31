@@ -3685,7 +3685,7 @@ gst_pad_data_get_caps (gboolean is_buffer, void *data)
   } else {
     GstBuffer *buf;
 
-    if ((buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (data), 0, 0)))
+    if ((buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (data), 0)))
       caps = GST_BUFFER_CAPS (buf);
     else
       caps = NULL;
@@ -3786,33 +3786,24 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
 chain_groups:
   {
     GstBufferList *list;
-    GstBufferListIterator *it;
-    GstBuffer *group;
+    guint i, len;
+    GstBuffer *buffer;
 
     GST_PAD_STREAM_UNLOCK (pad);
 
     GST_INFO_OBJECT (pad, "chaining each group in list as a merged buffer");
 
     list = GST_BUFFER_LIST_CAST (data);
-    it = gst_buffer_list_iterate (list);
+    len = gst_buffer_list_len (list);
 
-    if (gst_buffer_list_iterator_next_group (it)) {
-      do {
-        group = gst_buffer_list_iterator_merge_group (it);
-        if (group == NULL) {
-          group = gst_buffer_new ();
-          GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining empty group");
-        } else {
-          GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining group");
-        }
-        ret = gst_pad_chain_data_unchecked (pad, TRUE, group, NULL);
-      } while (ret == GST_FLOW_OK && gst_buffer_list_iterator_next_group (it));
-    } else {
-      GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining empty group");
-      ret = gst_pad_chain_data_unchecked (pad, TRUE, gst_buffer_new (), NULL);
+    for (i = 0; i < len; i++) {
+      buffer = gst_buffer_list_get (list, i);
+      ret =
+          gst_pad_chain_data_unchecked (pad, TRUE, gst_buffer_ref (buffer),
+          NULL);
+      if (ret != GST_FLOW_OK)
+        break;
     }
-
-    gst_buffer_list_iterator_free (it);
     gst_buffer_list_unref (list);
 
     return ret;
@@ -3998,31 +3989,20 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
 push_groups:
   {
     GstBufferList *list;
-    GstBufferListIterator *it;
-    GstBuffer *group;
+    guint i, len;
+    GstBuffer *buffer;
 
     GST_INFO_OBJECT (pad, "pushing each group in list as a merged buffer");
 
     list = GST_BUFFER_LIST_CAST (data);
-    it = gst_buffer_list_iterate (list);
+    len = gst_buffer_list_len (list);
 
-    if (gst_buffer_list_iterator_next_group (it)) {
-      do {
-        group = gst_buffer_list_iterator_merge_group (it);
-        if (group == NULL) {
-          group = gst_buffer_new ();
-          GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "pushing empty group");
-        } else {
-          GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "pushing group");
-        }
-        ret = gst_pad_push_data (pad, TRUE, group, NULL);
-      } while (ret == GST_FLOW_OK && gst_buffer_list_iterator_next_group (it));
-    } else {
-      GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "pushing empty group");
-      ret = gst_pad_push_data (pad, TRUE, gst_buffer_new (), NULL);
+    for (i = 0; i < len; i++) {
+      buffer = gst_buffer_list_get (list, i);
+      ret = gst_pad_push_data (pad, TRUE, gst_buffer_ref (buffer), NULL);
+      if (ret != GST_FLOW_OK)
+        break;
     }
-
-    gst_buffer_list_iterator_free (it);
     gst_buffer_list_unref (list);
 
     return ret;
@@ -4294,7 +4274,7 @@ gst_pad_push_list (GstPad * pad, GstBufferList * list)
     goto slow_path;
 
   /* check caps */
-  if ((buf = gst_buffer_list_get (list, 0, 0)))
+  if ((buf = gst_buffer_list_get (list, 0)))
     caps = GST_BUFFER_CAPS (buf);
   else
     caps = NULL;

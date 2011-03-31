@@ -2940,7 +2940,7 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
      * If buffer list, use the first group buffer within the list
      * for syncing
      */
-    sync_obj = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0, 0);
+    sync_obj = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
     g_assert (NULL != sync_obj);
   } else {
     sync_obj = obj;
@@ -3161,7 +3161,7 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, guint8 obj_type,
     GstClockTime timestamp;
 
     if (OBJ_IS_BUFFERLIST (obj_type)) {
-      buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0, 0);
+      buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
       g_assert (NULL != buf);
     } else {
       buf = GST_BUFFER_CAST (obj);
@@ -3589,7 +3589,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     goto was_eos;
 
   if (OBJ_IS_BUFFERLIST (obj_type)) {
-    time_buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0, 0);
+    time_buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
     g_assert (NULL != time_buf);
   } else {
     time_buf = GST_BUFFER_CAST (obj);
@@ -3727,32 +3727,21 @@ gst_base_sink_chain_list (GstPad * pad, GstBufferList * list)
   if (G_LIKELY (bclass->render_list)) {
     result = gst_base_sink_chain_main (basesink, pad, _PR_IS_BUFFERLIST, list);
   } else {
-    GstBufferListIterator *it;
-    GstBuffer *group;
+    guint i, len;
+    GstBuffer *buffer;
 
     GST_INFO_OBJECT (pad, "chaining each group in list as a merged buffer");
 
-    it = gst_buffer_list_iterate (list);
+    len = gst_buffer_list_len (list);
 
-    if (gst_buffer_list_iterator_next_group (it)) {
-      do {
-        group = gst_buffer_list_iterator_merge_group (it);
-        if (group == NULL) {
-          group = gst_buffer_new ();
-          GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining empty group");
-        } else {
-          GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining group");
-        }
-        result = gst_base_sink_chain_main (basesink, pad, _PR_IS_BUFFER, group);
-      } while (result == GST_FLOW_OK
-          && gst_buffer_list_iterator_next_group (it));
-    } else {
-      GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining empty group");
-      result =
-          gst_base_sink_chain_main (basesink, pad, _PR_IS_BUFFER,
-          gst_buffer_new ());
+    result = GST_FLOW_OK;
+    for (i = 0; i < len; i++) {
+      buffer = gst_buffer_list_get (list, 0);
+      result = gst_base_sink_chain_main (basesink, pad, _PR_IS_BUFFER,
+          gst_buffer_ref (buffer));
+      if (result != GST_FLOW_OK)
+        break;
     }
-    gst_buffer_list_iterator_free (it);
     gst_buffer_list_unref (list);
   }
   return result;

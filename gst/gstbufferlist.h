@@ -35,79 +35,29 @@ extern GType _gst_buffer_list_type;
 #define GST_BUFFER_LIST(obj)      (GST_BUFFER_LIST_CAST(obj))
 
 typedef struct _GstBufferList GstBufferList;
-typedef struct _GstBufferListIterator GstBufferListIterator;
-
-/**
- * GstBufferListDoFunction:
- * @buffer: (transfer full): the #GstBuffer
- * @user_data: user data
- *
- * A function for accessing the last buffer returned by
- * gst_buffer_list_iterator_next(). The function can leave @buffer in the list,
- * replace @buffer in the list or remove @buffer from the list, depending on
- * the return value. If the function returns NULL, @buffer will be removed from
- * the list, otherwise @buffer will be replaced with the returned buffer.
- *
- * The last buffer returned by gst_buffer_list_iterator_next() will be replaced
- * with the buffer returned from the function. The function takes ownership of
- * @buffer and if a different value than @buffer is returned, @buffer must be
- * unreffed. If NULL is returned, the buffer will be removed from the list. The
- * list must be writable.
- *
- * Returns: (transfer full): the buffer to replace @buffer in the list, or NULL
- *     to remove @buffer from the list
- *
- * Since: 0.10.24
- */
-typedef GstBuffer* (*GstBufferListDoFunction) (GstBuffer * buffer, gpointer user_data);
-
-/**
- * GstBufferListItem:
- * @GST_BUFFER_LIST_CONTINUE:   Retrieve next buffer
- * @GST_BUFFER_LIST_SKIP_GROUP: Skip to next group
- * @GST_BUFFER_LIST_END:        End iteration
- *
- * The result of the #GstBufferListFunc.
- *
- * Since: 0.10.24
- */
-typedef enum {
-  GST_BUFFER_LIST_CONTINUE,
-  GST_BUFFER_LIST_SKIP_GROUP,
-  GST_BUFFER_LIST_END
-} GstBufferListItem;
 
 /**
  * GstBufferListFunc:
  * @buffer: pointer the buffer
- * @group: the group index of @buffer
- * @idx: the index in @group of @buffer
+ * @idx: the index of @buffer
  * @user_data: user data passed to gst_buffer_list_foreach()
  *
  * A function that will be called from gst_buffer_list_foreach(). The @buffer
- * field will point to a the reference of the buffer at @idx in @group.
+ * field will point to a the reference of the buffer at @idx.
  *
- * When this function returns #GST_BUFFER_LIST_CONTINUE, the next buffer will be
- * returned. When #GST_BUFFER_LIST_SKIP_GROUP is returned, all remaining buffers
- * in the current group will be skipped and the first buffer of the next group
- * is returned (if any). When GST_BUFFER_LIST_END is returned,
- * gst_buffer_list_foreach() will return.
+ * When this function returns %TRUE, the next buffer will be
+ * returned. When %FALSE is returned, gst_buffer_list_foreach() will return.
  *
  * When @buffer is set to NULL, the item will be removed from the bufferlist.
  * When @buffer has been made writable, the new buffer reference can be assigned
  * to @buffer. This function is responsible for unreffing the old buffer when
  * removing or modifying.
  *
- * Returns: a #GstBufferListItem
- *
- * Since: 0.10.24
+ * Returns: %FALSE when gst_buffer_list_foreach() should stop
  */
-typedef GstBufferListItem (*GstBufferListFunc)   (GstBuffer **buffer, guint group, guint idx,
-                                                  gpointer user_data);
+typedef gboolean   (*GstBufferListFunc)   (GstBuffer **buffer, guint idx,
+                                           gpointer user_data);
 
-
-/* allocation */
-GstBufferList *gst_buffer_list_new (void);
 
 /* refcounting */
 /**
@@ -203,33 +153,21 @@ gst_buffer_list_copy (const GstBufferList * list)
  */
 #define gst_buffer_list_make_writable(list) GST_BUFFER_LIST_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (list)))
 
-guint                    gst_buffer_list_n_groups              (GstBufferList *list);
+/* allocation */
+GstBufferList *          gst_buffer_list_new                   (void);
+GstBufferList *          gst_buffer_list_sized_new             (guint size);
+
+guint                    gst_buffer_list_len                   (GstBufferList *list);
+
+GstBuffer *              gst_buffer_list_get                   (GstBufferList *list, guint idx);
+void                     gst_buffer_list_insert                (GstBufferList *list, guint idx, GstBuffer *buffer);
+void                     gst_buffer_list_remove                (GstBufferList *list, guint idx, guint length);
 
 void                     gst_buffer_list_foreach               (GstBufferList *list,
                                                                 GstBufferListFunc func,
 								gpointer user_data);
-GstBuffer *              gst_buffer_list_get                   (GstBufferList *list, guint group, guint idx);
 
-/* iterator */
-GstBufferListIterator *  gst_buffer_list_iterate               (GstBufferList *list);
-void                     gst_buffer_list_iterator_free         (GstBufferListIterator *it);
-
-guint                    gst_buffer_list_iterator_n_buffers    (const GstBufferListIterator *it);
-GstBuffer *              gst_buffer_list_iterator_next         (GstBufferListIterator *it);
-gboolean                 gst_buffer_list_iterator_next_group   (GstBufferListIterator *it);
-
-void                     gst_buffer_list_iterator_add          (GstBufferListIterator *it, GstBuffer *buffer);
-void                     gst_buffer_list_iterator_add_list     (GstBufferListIterator *it, GList *list);
-void                     gst_buffer_list_iterator_add_group    (GstBufferListIterator *it);
-void                     gst_buffer_list_iterator_remove       (GstBufferListIterator *it);
-GstBuffer *              gst_buffer_list_iterator_steal        (GstBufferListIterator *it);
-void                     gst_buffer_list_iterator_take         (GstBufferListIterator *it, GstBuffer *buffer);
-
-GstBuffer *              gst_buffer_list_iterator_do           (GstBufferListIterator *it, GstBufferListDoFunction do_func,
-                                                                gpointer user_data);
-
-/* conversion */
-GstBuffer *              gst_buffer_list_iterator_merge_group  (const GstBufferListIterator *it);
+#define gst_buffer_list_add(l,b) gst_buffer_list_insert((l),-1,(b));
 
 G_END_DECLS
 

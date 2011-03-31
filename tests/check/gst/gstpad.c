@@ -436,8 +436,8 @@ GST_START_TEST (test_push_buffer_list_compat)
   GstPadLinkReturn plr;
   GstCaps *caps;
   GstBufferList *list;
-  GstBufferListIterator *it;
   GstBuffer *buffer;
+  guint len;
 
   /* setup */
   sink = gst_pad_new ("sink", GST_PAD_SINK);
@@ -464,15 +464,11 @@ GST_START_TEST (test_push_buffer_list_compat)
 
   /* test */
   /* adding to a buffer list will drop the ref to the buffer */
-  it = gst_buffer_list_iterate (list);
-  gst_buffer_list_iterator_add_group (it);
-  gst_buffer_list_iterator_add (it, buffer_from_string ("List"));
-  gst_buffer_list_iterator_add (it, buffer_from_string ("Group"));
-  gst_buffer_list_iterator_add_group (it);
-  gst_buffer_list_iterator_add (it, buffer_from_string ("Another"));
-  gst_buffer_list_iterator_add (it, buffer_from_string ("List"));
-  gst_buffer_list_iterator_add (it, buffer_from_string ("Group"));
-  gst_buffer_list_iterator_free (it);
+  len = gst_buffer_list_len (list);
+
+  gst_buffer_list_add (list, buffer_from_string ("ListGroup"));
+  gst_buffer_list_add (list, buffer_from_string ("AnotherListGroup"));
+
   fail_unless (gst_pad_push_list (src, list) == GST_FLOW_OK);
   fail_unless_equals_int (g_list_length (buffers), 2);
   buffer = GST_BUFFER (buffers->data);
