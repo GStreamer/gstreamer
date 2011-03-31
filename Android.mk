@@ -63,6 +63,7 @@ GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 	gst/audiorate/Android.mk					\
 	gst/volume/Android.mk					\
 	tools/Android.mk					\
+	ext/vorbis/Android.mk				\
 	ext/ogg/Android.mk
 
 GST_PLUGINS_BASE_BUILT_SOURCES := $(patsubst %, $(abspath $(GST_PLUGINS_BASE_TOP))/%, $(GST_PLUGINS_BASE_BUILT_SOURCES))
@@ -79,8 +80,10 @@ gst-plugins-base-configure:
 	CPPFLAGS="$(CONFIGURE_CPPFLAGS)" \
 	PKG_CONFIG_LIBDIR="$(CONFIGURE_PKG_CONFIG_LIBDIR)" \
 	PKG_CONFIG_TOP_BUILD_DIR=/ \
+	IVORBIS_CFLAGS="-I$(TOP)/external/tremolo -DTREMOR" \
+	IVORBIS_LIBS="-lvorbisidec" \
 	$(abspath $(GST_PLUGINS_BASE_TOP))/$(CONFIGURE) --host=arm-linux-androideabi \
-	--prefix=/system --disable-orc --disable-gio \
+	--prefix=/system --disable-orc --disable-gio --enable-ivorbis \
 	--disable-valgrind --disable-gtk-doc && \
 	for file in $(GST_PLUGINS_BASE_BUILT_SOURCES); do \
 		rm -f $$file && \
@@ -118,4 +121,5 @@ CONFIGURE_TARGETS += gst-plugins-base-configure
 -include $(GST_PLUGINS_BASE_TOP)/gst/audiorate/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst/volume/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/ext/ogg/Android.mk
+-include $(GST_PLUGINS_BASE_TOP)/ext/vorbis/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/tools/Android.mk

@@ -166,7 +166,10 @@ vorbis_dec_finalize (GObject * object)
    */
   GstVorbisDec *vd = GST_VORBIS_DEC (object);
 
+#ifndef USE_TREMOLO
   vorbis_block_clear (&vd->vb);
+#endif
+
   vorbis_dsp_clear (&vd->vd);
   vorbis_comment_clear (&vd->vc);
   vorbis_info_clear (&vd->vi);
@@ -712,11 +715,16 @@ vorbis_handle_type_packet (GstVorbisDec * vd)
 
   g_assert (vd->initialized == FALSE);
 
+#ifdef USE_TREMOLO
+  if (G_UNLIKELY ((res = vorbis_dsp_init (&vd->vd, &vd->vi))))
+    goto synthesis_init_error;
+#else
   if (G_UNLIKELY ((res = vorbis_synthesis_init (&vd->vd, &vd->vi))))
     goto synthesis_init_error;
 
   if (G_UNLIKELY ((res = vorbis_block_init (&vd->vd, &vd->vb))))
     goto block_init_error;
+#endif
 
   vd->initialized = TRUE;
 
@@ -760,7 +768,11 @@ vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
   /* Packetno = 0 if the first byte is exactly 0x01 */
   packet->b_o_s = ((gst_ogg_packet_data (packet))[0] == 0x1) ? 1 : 0;
 
+#ifdef USE_TREMOLO
+  if ((ret = vorbis_dsp_headerin (&vd->vi, &vd->vc, packet)))
+#else
   if ((ret = vorbis_synthesis_headerin (&vd->vi, &vd->vc, packet)))
+#endif
     goto header_read_error;
 
   switch ((gst_ogg_packet_data (packet))[0]) {
@@ -861,7 +873,11 @@ static GstFlowReturn
 vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
     GstClockTime timestamp, GstClockTime duration)
 {
+#ifdef USE_TREMOLO
+  vorbis_sample_t *pcm;
+#else
   vorbis_sample_t **pcm;
+#endif
   guint sample_count;
   GstBuffer *out = NULL;
   GstFlowReturn result;
@@ -876,17 +892,27 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
    * packet to decode the current one so we must be carefull not to
    * throw away too much. For now we decode everything and clip right
    * before pushing data. */
+
+#ifdef USE_TREMOLO
+  if (G_UNLIKELY (vorbis_dsp_synthesis (&vd->vd, packet, 1)))
+    goto could_not_read;
+#else
   if (G_UNLIKELY (vorbis_synthesis (&vd->vb, packet)))
     goto could_not_read;
 
   if (G_UNLIKELY (vorbis_synthesis_blockin (&vd->vd, &vd->vb) < 0))
     goto not_accepted;
+#endif
 
   /* assume all goes well here */
   result = GST_FLOW_OK;
 
   /* count samples ready for reading */
+#ifdef USE_TREMOLO
+  if ((sample_count = vorbis_dsp_pcmout (&vd->vd, NULL, 0)) == 0)
+#else
   if ((sample_count = vorbis_synthesis_pcmout (&vd->vd, NULL)) == 0)
+#endif
     goto done;
 
   size = sample_count * vd->vi.channels * vd->width;
@@ -901,12 +927,19 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
     goto done;
 
   /* get samples ready for reading now, should be sample_count */
+#ifdef USE_TREMOLO
+  pcm = GST_BUFFER_DATA (out);
+  if (G_UNLIKELY ((vorbis_dsp_pcmout (&vd->vd, pcm, sample_count)) != sample_count))
+#else
   if (G_UNLIKELY ((vorbis_synthesis_pcmout (&vd->vd, &pcm)) != sample_count))
+#endif
     goto wrong_samples;
 
+#ifndef USE_TREMOLO
   /* copy samples in buffer */
   vd->copy_samples ((vorbis_sample_t *) GST_BUFFER_DATA (out), pcm,
       sample_count, vd->vi.channels, vd->width);
+#endif
 
   GST_LOG_OBJECT (vd, "setting output size to %d", size);
   GST_BUFFER_SIZE (out) = size;
@@ -927,7 +960,12 @@ done:
     /* no output, still keep track of timestamps */
     vorbis_do_timestamps (vd, NULL, FALSE, timestamp, duration);
   }
+
+#ifdef USE_TREMOLO
+  vorbis_dsp_read (&vd->vd, sample_count);
+#else
   vorbis_synthesis_read (&vd->vd, sample_count);
+#endif
 
   return result;
 
@@ -1243,7 +1281,11 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (vd, "PAUSED -> READY, clearing vorbis structures");
       vd->initialized = FALSE;
+
+#ifndef USE_TREMOLO
       vorbis_block_clear (&vd->vb);
+#endif
+
       vorbis_dsp_clear (&vd->vd);
       vorbis_comment_clear (&vd->vc);
       vorbis_info_clear (&vd->vi);

@@ -715,6 +715,10 @@ AG_GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
       HAVE_IVORBIS=no)
     AC_SUBST(IVORBIS_LIBS)
     AC_SUBST(IVORBIS_CFLAGS)
+  else
+    AC_CHECK_LIB(vorbisidec, vorbis_dsp_pcmout,
+      AC_DEFINE([USE_TREMOLO],1, "Define if building for android"),
+      USE_TREMOLO=no)
   fi
 ])
 

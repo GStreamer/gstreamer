@@ -22,6 +22,9 @@
 #ifndef __GST_VORBIS_DEC_H__
 #define __GST_VORBIS_DEC_H__
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
 #include <gst/gst.h>
 #include "gstvorbisdeclib.h"
@@ -56,7 +59,10 @@ struct _GstVorbisDec {
   vorbis_dsp_state  vd;
   vorbis_info       vi;
   vorbis_comment    vc;
+
+#ifndef USE_TREMOLO
   vorbis_block      vb;
+#endif
 
   gboolean          initialized;
   guint             width;
