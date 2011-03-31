@@ -545,11 +545,6 @@ gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
       (flags & GST_SEEK_FLAG_ACCURATE) ? "accurate" : "",
       (flags & GST_SEEK_FLAG_KEY_UNIT) ? "key_unit" : "");
 
-  if ((flags & GST_SEEK_FLAG_KEY_UNIT) && !auxiliary_seek_fn) {
-    GST_ERROR ("key_unit seek for unkown video codec");
-    goto beach;
-  }
-
   mpegts_packetizer_flush (base->packetizer);
 
   while (!done && scan_offset <= length) {
@@ -577,8 +572,9 @@ gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
 
         if (packet.payload_unit_start_indicator) {
           guint64 pts = 0;
-          res = gst_ts_demux_parse_pes_header_pts (demux, &packet, &pts);
-          if (res == GST_FLOW_OK) {
+          GstFlowReturn ok =
+              gst_ts_demux_parse_pes_header_pts (demux, &packet, &pts);
+          if (ok == GST_FLOW_OK) {
             GstClockTime time = calculate_gsttime (pcroffset, pts * 300);
 
             GST_DEBUG ("packet has PTS: %" GST_TIME_FORMAT,
@@ -596,7 +592,7 @@ gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
           state = 0xffffffff;
         }
 
-        if (flags & GST_SEEK_FLAG_KEY_UNIT) {
+        if (auxiliary_seek_fn) {
           gboolean is_keyframe = auxiliary_seek_fn (&state, &packet);
           if (is_keyframe) {
             found_keyframe = TRUE;
@@ -606,30 +602,30 @@ gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
                 GST_TIME_ARGS (pcroffset->gsttime),
                 GST_TIME_ARGS (pcroffset->pcr), pcroffset->offset);
           }
+        } else {
+          /* if we don't have a payload parsing function
+           * every frame is a keyframe */
+          found_keyframe = TRUE;
         }
       }
-      switch (flags & (GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_KEY_UNIT)) {
-        case GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_KEY_UNIT:
-          done = found_accurate && found_keyframe;
-          *pcroffset = key_pos;
-          break;
-        case GST_SEEK_FLAG_ACCURATE:
-          done = found_accurate;
-          break;
-        case GST_SEEK_FLAG_KEY_UNIT:
-          done = found_keyframe;
-          break;
-      }
+      if (flags & GST_SEEK_FLAG_ACCURATE)
+        done = found_accurate && found_keyframe;
+      else
+        done = found_keyframe;
+      if (done)
+        *pcroffset = key_pos;
     next:
       mpegts_packetizer_clear_packet (base->packetizer, &packet);
     }
     scan_offset += 50 * MPEGTS_MAX_PACKETSIZE;
   }
 
+beach:
   if (done)
     res = GST_FLOW_OK;
+  else if (GST_FLOW_OK == res)
+    res = GST_FLOW_CUSTOM_ERROR_1;
 
-beach:
   mpegts_packetizer_flush (base->packetizer);
   return res;
 }
@@ -785,10 +781,10 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
   /* use correct seek position for the auxiliary search */
   seektime += SEEK_TIMESTAMP_OFFSET;
 
-  if (segment->flags & GST_SEEK_FLAG_ACCURATE
-      || segment->flags & GST_SEEK_FLAG_KEY_UNIT) {
+  {
     payload_parse_keyframe keyframe_seek = NULL;
     MpegTSBaseProgram *program = demux->program;
+    guint64 avg_bitrate, length;
 
     if (program->streams[pid]) {
       switch (program->streams[pid]->stream_type) {
@@ -807,11 +803,29 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
       }
     } else
       GST_WARNING ("no stream info for PID: 0x%04x", pid);
-    seekpcroffset.pcr = pcr_start.pcr;
-    seekpcroffset.offset = pcr_start.offset;
+
+    avg_bitrate =
+        (pcr_stop.offset -
+        pcr_start.offset) * 1000 * GST_MSECOND / (pcr_stop.gsttime -
+        pcr_start.gsttime);
+
+    seekpcroffset = pcr_start;
+    /* search in 2500ms for a keyframe */
+    length =
+        MIN (demux->last_pcr.offset - pcr_start.offset,
+        (avg_bitrate * 25) / 10);
     res =
         gst_ts_demux_perform_auxiliary_seek (base, seektime, &seekpcroffset,
-        pcr_stop.offset - pcr_start.offset, pid, segment->flags, keyframe_seek);
+        length, pid, segment->flags, keyframe_seek);
+
+    if (res == GST_FLOW_CUSTOM_ERROR_1) {
+      GST_ERROR ("no keyframe found in %" G_GUINT64_FORMAT
+          " bytes starting from %" G_GUINT64_FORMAT, length,
+          seekpcroffset.offset);
+      res = GST_FLOW_ERROR;
+    }
+    if (res != GST_FLOW_OK)
+      goto done;
   }
 
 
