@@ -141,7 +141,7 @@ typedef struct {
 
 /**
  * GstBaseParseFormatFlags:
- * @GST_BASE_PARSE_FORMAT_FLAG_NONE: default setting
+ * @GST_BASE_PARSE_FORMAT_FLAG_NONE: no flags active
  * @GST_BASE_PARSE_FORMAT_FLAG_PASSTHROUGH: nature of format or configuration
  *   does not allow (much) parsing, so parser should operate in passthrough mode
  *   (which only applies operating in pull mode).  That is, incoming buffers
@@ -152,6 +152,9 @@ typedef struct {
  * @GST_BASE_PARSE_FORMAT_FLAG_HAS_TIME: frames carry timing info which subclass
  *   can (generally) parse and provide.  In particular, intrinsic time
  *   (rather than estimated) can be obtained following a seek.
+ * @GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE: frame starts can be identified. This
+ *   set by default, and determines whether seeking based on bitrate averages
+ *   is possible for a format/stream.
  *
  * Since: 0.10.x
  */
@@ -159,23 +162,8 @@ typedef enum {
   GST_BASE_PARSE_FORMAT_FLAG_NONE               = 0,
   GST_BASE_PARSE_FORMAT_FLAG_PASSTHROUGH        = (1 << 0),
   GST_BASE_PARSE_FORMAT_FLAG_HAS_TIME           = (1 << 1),
+  GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE           = (1 << 2)
 } GstBaseParseFormatFlags;
-
-/**
- * GstBaseParseSeekable:
- * @GST_BASE_PARSE_SEEK_NONE: No seeking possible.
- * @GST_BASE_PARSE_SEEK_DEFAULT: Default seeking possible using estimated bitrate.
- * @GST_BASE_PARSE_SEEK_TABLE: Additional metadata provides more accurate seeking.
- *
- * Indicates what level (of quality) of seeking is possible.
- *
- * Since: 0.10.x
- */
-typedef enum _GstBaseParseSeekable {
-  GST_BASE_PARSE_SEEK_NONE,
-  GST_BASE_PARSE_SEEK_DEFAULT,
-  GST_BASE_PARSE_SEEK_TABLE
-} GstBaseParseSeekable;
 
 typedef struct _GstBaseParse GstBaseParse;
 typedef struct _GstBaseParseClass GstBaseParseClass;
@@ -291,9 +279,8 @@ void            gst_base_parse_set_duration    (GstBaseParse      * parse,
                                                 gint64              duration,
                                                 gint                interval);
 
-void            gst_base_parse_set_seek        (GstBaseParse       * parse,
-                                                GstBaseParseSeekable seek,
-                                                guint                bitrate);
+void            gst_base_parse_set_average_bitrate (GstBaseParse   * parse,
+                                                    guint            bitrate);
 
 void            gst_base_parse_set_min_frame_size (GstBaseParse    * parse,
                                                    guint             min_size);

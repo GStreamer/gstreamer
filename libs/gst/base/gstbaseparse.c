@@ -233,7 +233,6 @@ struct _GstBaseParsePrivate
   guint bitrate;
   guint lead_in, lead_out;
   GstClockTime lead_in_ts, lead_out_ts;
-  GstBaseParseSeekable seekable;
 
   gboolean discont;
   gboolean flushing;
@@ -396,6 +395,8 @@ static GstFlowReturn gst_base_parse_locate_time (GstBaseParse * parse,
 
 static GstFlowReturn gst_base_parse_process_fragment (GstBaseParse * parse,
     gboolean push_only);
+
+static gboolean gst_base_parse_is_seekable (GstBaseParse * parse);
 
 static void
 gst_base_parse_clear_queues (GstBaseParse * parse)
@@ -587,7 +588,6 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
   parse->priv->lead_in = parse->priv->lead_out = 0;
   parse->priv->lead_in_ts = parse->priv->lead_out_ts = 0;
-  parse->priv->seekable = GST_BASE_PARSE_SEEK_DEFAULT;
   parse->priv->bitrate = 0;
   parse->priv->framecount = 0;
   parse->priv->bytecount = 0;
@@ -596,7 +596,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->first_frame_offset = -1;
   parse->priv->estimated_duration = -1;
   parse->priv->next_ts = 0;
-  parse->priv->format_flags = 0;
+  parse->priv->format_flags = GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE;
   parse->priv->post_min_bitrate = TRUE;
   parse->priv->post_avg_bitrate = TRUE;
   parse->priv->post_max_bitrate = TRUE;
@@ -1006,6 +1006,13 @@ gst_base_parse_src_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_base_parse_is_seekable (GstBaseParse * parse)
+{
+  /* FIXME: could do more here, e.g. check index or just send data from 0
+   * in pull mode and let decoder/sink clip */
+  return (parse->priv->format_flags & GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE);
+}
 
 /**
  * gst_base_parse_src_eventfunc:
@@ -1024,7 +1031,7 @@ gst_base_parse_src_eventfunc (GstBaseParse * parse, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      if (parse->priv->seekable > GST_BASE_PARSE_SEEK_NONE) {
+      if (gst_base_parse_is_seekable (parse)) {
         handled = gst_base_parse_handle_seek (parse, event);
       }
       break;
@@ -2776,27 +2783,24 @@ exit:
 }
 
 /**
- * gst_base_parse_set_seek:
+ * gst_base_parse_set_average_bitrate:
  * @parse: #GstBaseParse.
- * @seek: #GstBaseParseSeekable.
- * @abitrate: average bitrate.
+ * @abitrate: average bitrate in bits/second
  *
- * Sets whether and how the media is seekable (in time).
- * Also optionally provides average bitrate detected in media (if non-zero),
+ * Optionally sets the average bitrate detected in media (if non-zero),
  * e.g. based on metadata, as it will be posted to the application.
  *
- * By default, announced average bitrate is estimated, and seekability is assumed
- * possible based on estimated bitrate.
+ * By default, announced average bitrate is estimated. The average bitrate
+ * is used to estimate the total duration of the stream and to estimate
+ * a seek position, if there's no index and #GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE
+ * is set.
  */
 void
-gst_base_parse_set_seek (GstBaseParse * parse,
-    GstBaseParseSeekable seek, guint bitrate)
+gst_base_parse_set_average_bitrate (GstBaseParse * parse, guint bitrate)
 {
-  parse->priv->seekable = seek;
   parse->priv->bitrate = bitrate;
-  GST_DEBUG_OBJECT (parse, "seek %d, bitrate %d", seek, bitrate);
+  GST_DEBUG_OBJECT (parse, "bitrate %u", bitrate);
 }
-
 
 /**
  * gst_base_parse_set_min_frame_size:
@@ -3019,8 +3023,7 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       res = gst_pad_query_default (pad, query);
 
       /* we may be able to help if in TIME */
-      if (fmt == GST_FORMAT_TIME &&
-          parse->priv->seekable > GST_BASE_PARSE_SEEK_NONE) {
+      if (fmt == GST_FORMAT_TIME && gst_base_parse_is_seekable (parse)) {
         gst_query_parse_seeking (query, &fmt, &seekable, NULL, NULL);
         /* already OK if upstream takes care */
         GST_LOG_OBJECT (parse, "upstream handled %d, seekable %d",
