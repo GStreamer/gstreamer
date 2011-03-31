@@ -1081,6 +1081,13 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
 
   GST_DEBUG_OBJECT (psink, "starting");
   pbuf->paused = FALSE;
+
+  /* EOS needs running clock */
+  if (GST_BASE_SINK_CAST (psink)->eos ||
+      g_atomic_int_get (&GST_BASE_AUDIO_SINK (psink)->abidata.
+          ABI.eos_rendering))
+    gst_pulsering_set_corked (pbuf, FALSE, FALSE);
+
   pa_threaded_mainloop_unlock (mainloop);
 
   return TRUE;
