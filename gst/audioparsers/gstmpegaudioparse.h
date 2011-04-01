@@ -88,6 +88,10 @@ struct _GstMpegAudioParse {
   guint        vbri_seek_points;
   guint32     *vbri_seek_table;
   gboolean     vbri_valid;
+
+  /* LAME info */
+  guint32      encoder_delay;
+  guint32      encoder_padding;
 };
 
 /**
