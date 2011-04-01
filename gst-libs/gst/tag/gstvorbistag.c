@@ -37,6 +37,7 @@
 #include "config.h"
 #endif
 #include <gst/gsttagsetter.h>
+#include <gst/base/gstbytereader.h>
 #include "gsttageditingprivate.h"
 #include <stdlib.h>
 #include <string.h>
@@ -355,6 +356,65 @@ convert_failed:
   }
 }
 
+/* Standardized way of adding pictures to vorbiscomments:
+ * http://wiki.xiph.org/VorbisComment#METADATA_BLOCK_PICTURE
+ */
+static void
+gst_vorbis_tag_add_metadata_block_picture (GstTagList * tags,
+    gchar * value, gint value_len)
+{
+  GstByteReader reader;
+  guint32 img_len = 0, img_type = 0;
+  guint32 img_mimetype_len = 0, img_description_len = 0;
+  gsize decoded_len;
+  const guint8 *data;
+
+  /* img_data_base64 points to a temporary copy of the base64 encoded data, so
+   * it's safe to do inpace decoding here
+   */
+  g_base64_decode_inplace (value, &decoded_len);
+  if (decoded_len == 0)
+    goto decode_failed;
+
+  gst_byte_reader_init (&reader, (guint8 *) value, decoded_len);
+
+  if (!gst_byte_reader_get_uint32_be (&reader, &img_type))
+    goto error;
+
+  if (!gst_byte_reader_get_uint32_be (&reader, &img_mimetype_len))
+    goto error;
+  if (!gst_byte_reader_skip (&reader, img_mimetype_len))
+    goto error;
+
+  if (!gst_byte_reader_get_uint32_be (&reader, &img_description_len))
+    goto error;
+  if (!gst_byte_reader_skip (&reader, img_description_len))
+    goto error;
+
+  /* Skip width, height, color depth and number of colors for
+   * indexed formats */
+  if (!gst_byte_reader_skip (&reader, 4 * 4))
+    goto error;
+
+  if (!gst_byte_reader_get_uint32_be (&reader, &img_len))
+    goto error;
+
+  if (!gst_byte_reader_get_data (&reader, img_len, &data))
+    goto error;
+
+  gst_tag_list_add_id3_image (tags, data, img_len, img_type);
+
+  return;
+
+error:
+  GST_WARNING
+      ("Couldn't extract image or image type from METADATA_BLOCK_PICTURE tag");
+  return;
+decode_failed:
+  GST_WARNING ("Failed to decode Base64 data from METADATA_BLOCK_PICTURE tag");
+  return;
+}
+
 /**
  * gst_tag_list_from_vorbiscomment_buffer:
  * @buffer: buffer to convert
@@ -433,6 +493,8 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer * buffer,
       continue;
     } else if (g_ascii_strcasecmp (cur, "COVERART") == 0) {
       gst_vorbis_tag_add_coverart (list, value, value_len);
+    } else if (g_ascii_strcasecmp (cur, "METADATA_BLOCK_PICTURE") == 0) {
+      gst_vorbis_tag_add_metadata_block_picture (list, value, value_len);
     } else {
       gst_vorbis_tag_add (list, cur, value);
     }
