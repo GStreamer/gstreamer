@@ -25,6 +25,7 @@
 #define __GST_HLS_DEMUX_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 #include "m3u8.h"
 
 G_BEGIN_DECLS
@@ -84,7 +85,7 @@ struct _GstHLSDemux
   gboolean fetcher_error;
   gboolean stopping_fetcher;
   gboolean cancelled;
-  GstBuffer *downloaded_uri;
+  GstAdapter *download;
 
 };
 

@@ -165,6 +165,8 @@ gst_hls_demux_dispose (GObject * obj)
 
   gst_hls_demux_reset (demux, TRUE);
 
+  gst_object_unref (demux->download);
+
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
@@ -231,6 +233,7 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
   demux->fragments_cache = DEFAULT_FRAGMENTS_CACHE;
   demux->bitrate_switch_tol = DEFAULT_BITRATE_SWITCH_TOLERANCE;
 
+  demux->download = gst_adapter_new ();
   demux->fetcher_bus = gst_bus_new ();
   gst_bus_set_sync_handler (demux->fetcher_bus,
       gst_hls_demux_fetcher_bus_handler, demux);
@@ -449,7 +452,7 @@ gst_hls_demux_fetcher_chain (GstPad * pad, GstBuffer * buf)
   GstHLSDemux *demux = GST_HLS_DEMUX (gst_pad_get_element_private (pad));
 
   /* The source element can be an http source element. In case we get a 404,
-   * the html response will be sent downstream and demux->downloaded_uri
+   * the html response will be sent downstream and the adapter
    * will not be null, which might make us think that the request proceed
    * successfully. But it will also post an error message in the bus that
    * is handled synchronously and that will set demux->fetcher_error to TRUE,
@@ -460,10 +463,7 @@ gst_hls_demux_fetcher_chain (GstPad * pad, GstBuffer * buf)
 
   GST_LOG_OBJECT (demux, "The uri fetcher received a new buffer of size %u",
       GST_BUFFER_SIZE (buf));
-  if (demux->downloaded_uri == NULL)
-    demux->downloaded_uri = buf;
-  else
-    demux->downloaded_uri = gst_buffer_join (demux->downloaded_uri, buf);
+  gst_adapter_push (demux->download, buf);
 
 done:
   {
@@ -498,9 +498,8 @@ gst_hls_demux_stop_fetcher (GstHLSDemux * demux, gboolean cancelled)
   demux->fetcher = NULL;
 
   /* if we stopped it to cancell a download, free the cached buffer */
-  if (cancelled && demux->downloaded_uri != NULL) {
-    gst_buffer_unref (demux->downloaded_uri);
-    demux->downloaded_uri = NULL;
+  if (cancelled && !gst_adapter_available (demux->download)) {
+    gst_adapter_clear (demux->download);
     /* signal the fetcher thread that the download has finished/cancelled */
     g_cond_signal (demux->fetcher_cond);
   }
@@ -639,10 +638,7 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
     demux->playlist = NULL;
   }
 
-  if (demux->downloaded_uri) {
-    gst_buffer_unref (demux->downloaded_uri);
-    demux->downloaded_uri = NULL;
-  }
+  gst_adapter_clear (demux->download);
 
   if (demux->client)
     gst_m3u8_client_free (demux->client);
@@ -814,7 +810,7 @@ gst_hls_demux_fetch_location (GstHLSDemux * demux, const gchar * uri)
 
   gst_hls_demux_stop_fetcher (demux, FALSE);
 
-  if (demux->downloaded_uri != NULL) {
+  if (gst_adapter_available (demux->download)) {
     GST_INFO_OBJECT (demux, "URI fetched successfully");
     bret = TRUE;
   }
@@ -848,17 +844,18 @@ static gboolean
 gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean retry)
 {
   gchar *playlist;
+  guint avail;
 
   GST_INFO_OBJECT (demux, "Updating the playlist %s",
       demux->client->current->uri);
   if (!gst_hls_demux_fetch_location (demux, demux->client->current->uri))
     return FALSE;
 
-  playlist = g_strndup ((gchar *) GST_BUFFER_DATA (demux->downloaded_uri),
-      GST_BUFFER_SIZE (demux->downloaded_uri));
+  avail = gst_adapter_available (demux->download);
+  playlist =
+      g_strndup ((gchar *) gst_adapter_peek (demux->download, avail), avail);
   gst_m3u8_client_update (demux->client, playlist);
-  gst_buffer_unref (demux->downloaded_uri);
-  demux->downloaded_uri = NULL;
+  gst_adapter_clear (demux->download);
   return TRUE;
 }
 
@@ -957,6 +954,7 @@ static gboolean
 gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
 {
   GstBuffer *buf;
+  guint avail;
   const gchar *next_fragment_uri;
   gboolean discont;
 
@@ -975,7 +973,8 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
   if (!gst_hls_demux_fetch_location (demux, next_fragment_uri))
     return FALSE;
 
-  buf = demux->downloaded_uri;
+  avail = gst_adapter_available (demux->download);
+  buf = gst_adapter_take_buffer (demux->download, avail);
 
   if (G_UNLIKELY (demux->input_caps == NULL)) {
     demux->input_caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);
@@ -993,6 +992,6 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
 
   g_queue_push_tail (demux->queue, buf);
   GST_TASK_SIGNAL (demux->task);
-  demux->downloaded_uri = NULL;
+  gst_adapter_clear (demux->download);
   return TRUE;
 }
