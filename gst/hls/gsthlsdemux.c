@@ -112,6 +112,7 @@ static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux,
 static void gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose);
 static gboolean gst_hls_demux_set_location (GstHLSDemux * demux,
     const gchar * uri);
+static gchar *gst_hls_src_buf_to_utf8_playlist (gchar * string, guint size);
 
 static void
 _do_init (GType type)
@@ -342,10 +343,12 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
       }
       gst_query_unref (query);
 
-      playlist = g_strndup ((gchar *) GST_BUFFER_DATA (demux->playlist),
-          GST_BUFFER_SIZE (demux->playlist));
+      playlist = gst_hls_src_buf_to_utf8_playlist ((gchar *)
+          GST_BUFFER_DATA (demux->playlist), GST_BUFFER_SIZE (demux->playlist));
       gst_buffer_unref (demux->playlist);
-      if (!gst_m3u8_client_update (demux->client, playlist)) {
+      if (playlist == NULL) {
+        GST_WARNING_OBJECT (demux, "Error validating first playlist.");
+      } else if (!gst_m3u8_client_update (demux->client, playlist)) {
         /* In most cases, this will happen if we set a wrong url in the
          * source element and we have received the 404 HTML response instead of
          * the playlist */
@@ -840,9 +843,24 @@ quit:
   }
 }
 
+static gchar *
+gst_hls_src_buf_to_utf8_playlist (gchar * data, guint size)
+{
+  gchar *playlist;
+
+  if (!g_utf8_validate (data, size, NULL))
+    return NULL;
+
+  /* alloc size + 1 to end with a null character */
+  playlist = g_malloc0 (size + 1);
+  memcpy (playlist, data, size + 1);
+  return playlist;
+}
+
 static gboolean
 gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean retry)
 {
+  const guint8 *data;
   gchar *playlist;
   guint avail;
 
@@ -852,10 +870,14 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean retry)
     return FALSE;
 
   avail = gst_adapter_available (demux->download);
-  playlist =
-      g_strndup ((gchar *) gst_adapter_peek (demux->download, avail), avail);
-  gst_m3u8_client_update (demux->client, playlist);
+  data = gst_adapter_peek (demux->download, avail);
+  playlist = gst_hls_src_buf_to_utf8_playlist ((gchar *) data, avail);
   gst_adapter_clear (demux->download);
+  if (playlist == NULL) {
+    GST_WARNING_OBJECT (demux, "Couldn't not validate playlist encoding");
+    return FALSE;
+  }
+  gst_m3u8_client_update (demux->client, playlist);
   return TRUE;
 }
 
