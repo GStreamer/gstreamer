@@ -1005,14 +1005,14 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
 
       /* Can either be %s or %d or %u, do sanity checking for %d */
       if (*(str + 1) == 'd') {
-        gint tmp;
+        glong tmp;
 
         /* it's an int */
         tmp = strtol (data, &endptr, 10);
         g_return_val_if_fail (tmp != G_MINLONG && tmp != G_MAXLONG
             && *endptr == '\0', NULL);
       } else if (*(str + 1) == 'u') {
-        guint tmp;
+        gulong tmp;
 
         /* it's an int */
         tmp = strtoul (data, &endptr, 10);
@@ -1100,7 +1100,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
             && strlen (name) > str - templ->name_template) {
           data = name + (str - templ->name_template);
           if (*(str + 1) == 'd') {
-            gint tmp;
+            glong tmp;
 
             /* it's an int */
             tmp = strtol (data, &endptr, 10);
@@ -1111,7 +1111,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
               break;
             }
           } else if (*(str + 1) == 'u') {
-            guint tmp;
+            gulong tmp;
 
             /* it's an int */
             tmp = strtoul (data, &endptr, 10);
