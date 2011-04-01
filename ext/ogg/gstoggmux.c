@@ -351,6 +351,10 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
 
       break;
     }
+    case GST_EVENT_FLUSH_STOP:{
+      gst_segment_init (ogg_pad->segment, GST_FORMAT_UNDEFINED);
+      break;
+    }
     default:
       ret = TRUE;
       break;
@@ -1744,6 +1748,8 @@ gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
       gst_buffer_unref (oggpad->next_buffer);
       oggpad->next_buffer = NULL;
     }
+
+    gst_segment_init (oggpad->segment, GST_FORMAT_UNDEFINED);
   }
 }
 
