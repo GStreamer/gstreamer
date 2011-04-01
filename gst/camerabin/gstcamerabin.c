@@ -3834,6 +3834,12 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
          now that actual sink has been created. */
       camerabin_setup_view_elements (camera);
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* all processing should stop and those elements could have their state
+       * locked, so set them explicitly here */
+      gst_element_set_state (camera->imgbin, GST_STATE_READY);
+      gst_element_set_state (camera->vidbin, GST_STATE_READY);
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_element_set_locked_state (camera->imgbin, FALSE);
       gst_element_set_locked_state (camera->vidbin, FALSE);
