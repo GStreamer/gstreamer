@@ -205,6 +205,12 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
   g_free (self->last_data);
   self->last_data = data;
 
+  if (self->files) {
+    g_list_foreach (self->files, (GFunc) gst_m3u8_media_file_free, NULL);
+    g_list_free (self->files);
+    self->files = NULL;
+  }
+
   list = NULL;
   duration = -1;
   title = NULL;
