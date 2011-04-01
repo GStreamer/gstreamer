@@ -122,6 +122,18 @@ The 0.11 porting guide
     gst_buffer_try_new_and_alloc() is replaced with gst_buffer_new_and_alloc(),
     which now returns NULL when memory allocation fails.
 
+* GstBufferList
+    The GstBufferList object is much simplified because most of the
+    functionality in the groups is now part of the GstMemory in buffers.
+    
+    The object is reduced to encapsulating an array of buffers that you can send
+    with the regular gst_pad_push_list. The iterator is not needed anymore
+    because you can simply use gst_buffer_list_len() and gst_buffer_list_get()
+    to iterate the array.
+
+    For dealing with the groups, it's now needed to add the memory blocks to
+    GstBuffer and use the normal buffer API to get and merge the groups.
+
 * GstEvent
 * GstQuery
     Boxed types derived from GstMiniObject.
