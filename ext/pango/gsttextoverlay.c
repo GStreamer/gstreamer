@@ -192,7 +192,9 @@ static GstStaticPadTemplate src_template_factory =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_xRGB ";"
+        GST_VIDEO_CAPS_xBGR ";"
         GST_VIDEO_CAPS_RGBA ";"
         GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ARGB ";"
@@ -205,7 +207,9 @@ static GstStaticPadTemplate video_sink_template_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_xRGB ";"
+        GST_VIDEO_CAPS_xBGR ";"
         GST_VIDEO_CAPS_RGBA ";"
         GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ARGB ";"
@@ -1453,6 +1457,8 @@ gst_text_overlay_shade_packed_Y (GstTextOverlay * overlay, guchar * dest,
 }
 
 #define gst_text_overlay_shade_BGRx gst_text_overlay_shade_xRGB
+#define gst_text_overlay_shade_RGBx gst_text_overlay_shade_xRGB
+#define gst_text_overlay_shade_xBGR gst_text_overlay_shade_xRGB
 static inline void
 gst_text_overlay_shade_xRGB (GstTextOverlay * overlay, guchar * dest,
     gint x0, gint x1, gint y0, gint y1)
@@ -1759,6 +1765,8 @@ gst_text_overlay_blit_##name (GstTextOverlay * overlay, \
 }
 xRGB_BLIT_FUNCTION (xRGB, 1, 2, 3);
 xRGB_BLIT_FUNCTION (BGRx, 2, 1, 0);
+xRGB_BLIT_FUNCTION (xBGR, 3, 2, 1);
+xRGB_BLIT_FUNCTION (RGBx, 0, 1, 2);
 
 #define ARGB_BLIT_FUNCTION(name, A, R, G, B)	\
 static inline void \
@@ -1931,8 +1939,18 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
             GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
+      case GST_VIDEO_FORMAT_xBGR:
+        gst_text_overlay_shade_xBGR (overlay,
+            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+            ypos, ypos + overlay->image_height);
+        break;
       case GST_VIDEO_FORMAT_BGRx:
         gst_text_overlay_shade_BGRx (overlay,
+            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+            ypos, ypos + overlay->image_height);
+        break;
+      case GST_VIDEO_FORMAT_RGBx:
+        gst_text_overlay_shade_RGBx (overlay,
             GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
@@ -1989,6 +2007,14 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
         break;
       case GST_VIDEO_FORMAT_xRGB:
         gst_text_overlay_blit_xRGB (overlay,
+            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        break;
+      case GST_VIDEO_FORMAT_RGBx:
+        gst_text_overlay_blit_RGBx (overlay,
+            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        break;
+      case GST_VIDEO_FORMAT_xBGR:
+        gst_text_overlay_blit_xBGR (overlay,
             GST_BUFFER_DATA (video_frame), xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_ARGB:
