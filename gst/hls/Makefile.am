@@ -1,4 +1,3 @@
-plugindir = $(GST_PLUGINS_DIR)
 
 plugin_LTLIBRARIES = libgstfragmented.la
 
