@@ -247,9 +247,6 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
 
-  if (state->codec_data) {
-    gst_buffer_unref (state->codec_data);
-  }
   memset (state, 0, sizeof (GstVideoState));
 
   structure = gst_caps_get_structure (caps, 0);
