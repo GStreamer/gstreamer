@@ -1021,9 +1021,13 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
     }
 
     pad = gst_element_get_static_pad (element, name);
-    if (pad)
+    if (pad) {
       gst_object_unref (pad);
-    g_return_val_if_fail (pad == NULL, NULL);
+      /* FIXME 0.11: Change this to g_return_val_if_fail() */
+      g_critical ("Element %s already has a pad named %s, the behaviour of "
+          " gst_element_get_request_pad() for existing pads is undefined!",
+          GST_ELEMENT_NAME (element), name);
+    }
   }
 #endif
 
