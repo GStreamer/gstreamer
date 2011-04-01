@@ -65,9 +65,48 @@ G_BEGIN_DECLS
  **/
 #define GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
-
 typedef struct _GstBaseVideoDecoder GstBaseVideoDecoder;
 typedef struct _GstBaseVideoDecoderClass GstBaseVideoDecoderClass;
+
+
+/* do not use this one, use macro below */
+GstFlowReturn _gst_base_video_decoder_error (GstBaseVideoDecoder *dec, gint weight,
+                                             GQuark domain, gint code,
+                                             gchar *txt, gchar *debug,
+                                             const gchar *file, const gchar *function,
+                                             gint line);
+
+/**
+ * GST_BASE_VIDEO_DECODER_ERROR:
+ * @el:     the base video decoder element that generates the error
+ * @weight: element defined weight of the error, added to error count
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #gstreamer-GstGError)
+ * @code:   error code defined for that domain (see #gstreamer-GstGError)
+ * @text:   the message to display (format string and args enclosed in
+ *          parentheses)
+ * @debug:  debugging information for the message (format string and args
+ *          enclosed in parentheses)
+ * @ret:    variable to receive return value
+ *
+ * Utility function that audio decoder elements can use in case they encountered
+ * a data processing error that may be fatal for the current "data unit" but
+ * need not prevent subsequent decoding.  Such errors are counted and if there
+ * are too many, as configured in the context's max_errors, the pipeline will
+ * post an error message and the application will be requested to stop further
+ * media processing.  Otherwise, it is considered a "glitch" and only a warning
+ * is logged. In either case, @ret is set to the proper value to
+ * return to upstream/caller (indicating either GST_FLOW_ERROR or GST_FLOW_OK).
+ */
+#define GST_BASE_AUDIO_DECODER_ERROR(el, w, domain, code, text, debug, ret) \
+G_STMT_START {                                                              \
+  gchar *__txt = _gst_element_error_printf text;                            \
+  gchar *__dbg = _gst_element_error_printf debug;                           \
+  GstBaseVideoDecoder *dec = GST_BASE_VIDEO_DECODER (el);                   \
+  ret = _gst_base_video_decoder_error (dec, w, GST_ ## domain ## _ERROR,    \
+      GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,            \
+      GST_FUNCTION, __LINE__);                                              \
+} G_STMT_END
+
 
 /**
  * GstBaseVideoDecoder:
@@ -82,6 +121,7 @@ struct _GstBaseVideoDecoder
   gboolean          sink_clipping;
   gboolean          do_byte_time;
   gboolean          packetized;
+  gint              max_errors;
 
   /* parse tracking */
   /* input data */
@@ -113,6 +153,7 @@ struct _GstBaseVideoDecoder
 
   /* last outgoing ts */
   GstClockTime      last_timestamp;
+  gint              error_count;
 
   /* reverse playback */
   /* collect input */

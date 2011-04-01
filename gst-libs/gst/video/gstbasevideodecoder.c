@@ -318,6 +318,7 @@ gst_base_video_decoder_flush (GstBaseVideoDecoder * dec, gboolean hard)
     gst_segment_init (&GST_BASE_VIDEO_CODEC (dec)->segment,
         GST_FORMAT_UNDEFINED);
     gst_base_video_decoder_clear_queues (dec);
+    dec->error_count = 0;
   }
   /* and get (re)set for the sequel */
   gst_base_video_decoder_reset (dec, FALSE);
@@ -887,6 +888,7 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder,
     gst_segment_init (&GST_BASE_VIDEO_CODEC (base_video_decoder)->segment,
         GST_FORMAT_UNDEFINED);
     gst_base_video_decoder_clear_queues (base_video_decoder);
+    base_video_decoder->error_count = 0;
   }
 
   GST_BASE_VIDEO_CODEC (base_video_decoder)->discont = TRUE;
@@ -1482,6 +1484,10 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     }
   }
 
+  /* we got data, so note things are looking up again */
+  if (G_UNLIKELY (base_video_decoder->error_count))
+    base_video_decoder->error_count--;
+
   if (GST_BASE_VIDEO_CODEC (base_video_decoder)->segment.rate < 0.0) {
     GST_LOG_OBJECT (base_video_decoder, "queued buffer");
     base_video_decoder->queued =
@@ -1949,4 +1955,24 @@ gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *
 
   base_video_decoder_class->capture_mask = mask;
   base_video_decoder_class->capture_pattern = pattern;
+}
+
+GstFlowReturn
+_gst_base_video_decoder_error (GstBaseVideoDecoder * dec, gint weight,
+    GQuark domain, gint code, gchar * txt, gchar * dbg, const gchar * file,
+    const gchar * function, gint line)
+{
+  if (txt)
+    GST_WARNING_OBJECT (dec, "error: %s", txt);
+  if (dbg)
+    GST_WARNING_OBJECT (dec, "error: %s", dbg);
+  dec->error_count += weight;
+  GST_BASE_VIDEO_CODEC (dec)->discont = TRUE;
+  if (dec->max_errors < dec->error_count) {
+    gst_element_message_full (GST_ELEMENT (dec), GST_MESSAGE_ERROR,
+        domain, code, txt, dbg, file, function, line);
+    return GST_FLOW_ERROR;
+  } else {
+    return GST_FLOW_OK;
+  }
 }
