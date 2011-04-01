@@ -214,6 +214,9 @@ gst_mpeg_audio_parse_reset (GstMpegAudioParse * mp3parse)
   mp3parse->vbri_seek_points = 0;
   g_free (mp3parse->vbri_seek_table);
   mp3parse->vbri_seek_table = NULL;
+
+  mp3parse->encoder_delay = 0;
+  mp3parse->encoder_padding = 0;
 }
 
 static void
@@ -558,6 +561,7 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   const guint32 xing_id = 0x58696e67;   /* 'Xing' in hex */
   const guint32 info_id = 0x496e666f;   /* 'Info' in hex - found in LAME CBR files */
   const guint32 vbri_id = 0x56425249;   /* 'VBRI' in hex */
+  const guint32 lame_id = 0x4c414d45;   /* 'LAME' in hex */
   gint offset;
   guint64 avail;
   gint64 upstream_total_bytes = 0;
@@ -725,6 +729,7 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
 
     if (xing_flags & XING_VBR_SCALE_FLAG) {
       mp3parse->xing_vbr_scale = GST_READ_UINT32_BE (data);
+      data += 4;
     } else
       mp3parse->xing_vbr_scale = 0;
 
@@ -740,6 +745,33 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
           "invalidating Xing header duration and size");
       mp3parse->xing_flags &= ~XING_BYTES_FLAG;
       mp3parse->xing_flags &= ~XING_FRAMES_FLAG;
+    }
+
+    /* Optional LAME tag? */
+    if (avail - bytes_needed >= 36 && GST_READ_UINT32_BE (data) == lame_id) {
+      gchar lame_version[10] = { 0, };
+      guint tag_rev;
+      guint32 encoder_delay, encoder_padding;
+
+      memcpy (lame_version, data, 9);
+      data += 9;
+      tag_rev = data[0] >> 4;
+      GST_DEBUG_OBJECT (mp3parse, "Found LAME tag revision %d created by '%s'",
+          tag_rev, lame_version);
+
+      /* Skip all the information we're not interested in */
+      data += 12;
+      /* Encoder delay and end padding */
+      encoder_delay = GST_READ_UINT24_BE (data);
+      encoder_delay >>= 12;
+      encoder_padding = GST_READ_UINT24_BE (data);
+      encoder_padding &= 0x000fff;
+
+      mp3parse->encoder_delay = encoder_delay;
+      mp3parse->encoder_padding = encoder_padding;
+
+      GST_DEBUG_OBJECT (mp3parse, "Encoder delay %u, encoder padding %u",
+          encoder_delay, encoder_padding);
     }
   } else if (read_id == vbri_id) {
     gint64 total_bytes, total_frames;
