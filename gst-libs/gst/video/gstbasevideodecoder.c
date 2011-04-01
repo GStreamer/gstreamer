@@ -252,8 +252,18 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   gst_video_format_parse_caps (caps, NULL, &state->width, &state->height);
-  gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d);
-  gst_video_parse_caps_pixel_aspect_ratio (caps, &state->par_n, &state->par_d);
+  /* this one fails if no framerate in caps */
+  if (!gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d)) {
+    state->fps_n = 0;
+    state->fps_d = 1;
+  }
+  /* but the p-a-r sets 1/1 instead, which is not quite informative ... */
+  if (!gst_structure_has_field (structure, "pixel-aspect-ratio") ||
+      !gst_video_parse_caps_pixel_aspect_ratio (caps,
+          &state->par_n, &state->par_d)) {
+    state->par_n = 0;
+    state->par_d = 1;
+  }
 
   state->have_interlaced =
       gst_video_format_parse_caps_interlaced (caps, &state->interlaced);
