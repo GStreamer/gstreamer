@@ -313,28 +313,20 @@ gst_vorbis_tag_add_coverart (GstTagList * tags, gchar * img_data_base64,
 {
   GstBuffer *img;
   gsize img_len;
-  guchar *out;
-  guint save = 0;
-  gint state = 0;
 
   if (base64_len < 2)
     goto not_enough_data;
 
   /* img_data_base64 points to a temporary copy of the base64 encoded data, so
    * it's safe to do inpace decoding here
-   * TODO: glib 2.20 and later provides g_base64_decode_inplace, so change this
-   * to use glib's API instead once it's in wider use:
-   *  http://bugzilla.gnome.org/show_bug.cgi?id=564728
-   *  http://svn.gnome.org/viewvc/glib?view=revision&revision=7807 */
-  out = (guchar *) img_data_base64;
-  img_len = g_base64_decode_step (img_data_base64, base64_len,
-      out, &state, &save);
-
+   */
+  g_base64_decode_inplace (img_data_base64, &img_len);
   if (img_len == 0)
     goto decode_failed;
 
-  img = gst_tag_image_data_to_image_buffer (out, img_len,
-      GST_TAG_IMAGE_TYPE_NONE);
+  img =
+      gst_tag_image_data_to_image_buffer ((const guint8 *) img_data_base64,
+      img_len, GST_TAG_IMAGE_TYPE_NONE);
 
   if (img == NULL)
     goto convert_failed;
