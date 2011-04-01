@@ -174,12 +174,15 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
           0, 16, DEFAULT_NOISE_LEVEL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  base_video_decoder_class->start = gst_vp8_dec_start;
-  base_video_decoder_class->stop = gst_vp8_dec_stop;
-  base_video_decoder_class->reset = gst_vp8_dec_reset;
-  base_video_decoder_class->set_format = gst_vp8_dec_set_format;
-  base_video_decoder_class->parse_data = gst_vp8_dec_parse_data;
-  base_video_decoder_class->handle_frame = gst_vp8_dec_handle_frame;
+  base_video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_vp8_dec_start);
+  base_video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vp8_dec_stop);
+  base_video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_vp8_dec_reset);
+  base_video_decoder_class->set_format =
+      GST_DEBUG_FUNCPTR (gst_vp8_dec_set_format);
+  base_video_decoder_class->parse_data =
+      GST_DEBUG_FUNCPTR (gst_vp8_dec_parse_data);
+  base_video_decoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_vp8_dec_handle_frame);
 
   GST_DEBUG_CATEGORY_INIT (gst_vp8dec_debug, "vp8dec", 0, "VP8 Decoder");
 }
