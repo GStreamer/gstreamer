@@ -6,8 +6,6 @@ glib_gen_basename = gstencode
 built_sources = gstencode-marshal.c
 built_headers = gstencode-marshal.h
 
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
-
 plugin_LTLIBRARIES = libgstencodebin.la
 
 libgstencodebin_la_SOURCES = 	\
