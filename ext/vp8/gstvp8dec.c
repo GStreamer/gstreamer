@@ -474,7 +474,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
       if (ret == GST_FLOW_OK) {
         gst_vp8_dec_image_to_buffer (dec, img, frame->src_buffer);
-        gst_base_video_decoder_finish_frame (decoder, frame);
+        ret = gst_base_video_decoder_finish_frame (decoder, frame);
       } else {
         gst_base_video_decoder_finish_frame (decoder, frame);
       }
