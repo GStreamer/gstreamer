@@ -1197,7 +1197,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       if (hwalk == NULL) {
         GST_LOG_OBJECT (mux,
             "flushing page as packet %" G_GUINT64_FORMAT " is first or "
-            "last packet", packet.packetno);
+            "last packet", (guint64) packet.packetno);
         while (ogg_stream_flush (&pad->map.stream, &page)) {
           GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
 
