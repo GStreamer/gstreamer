@@ -64,7 +64,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogg_mux_debug);
 
 #define GST_BUFFER_RUNNING_TIME(buf, oggpad) \
     (GST_BUFFER_DURATION_IS_VALID (buf) \
-    ? gst_segment_to_running_time ((oggpad)->segment, GST_FORMAT_TIME, \
+    ? gst_segment_to_running_time (&(oggpad)->segment, GST_FORMAT_TIME, \
     GST_BUFFER_TIMESTAMP (buf)) : 0)
 
 #define GST_GP_FORMAT "[gp %8" G_GINT64_FORMAT "]"
@@ -297,11 +297,6 @@ gst_ogg_mux_ogg_pad_destroy_notify (GstCollectData * data)
     g_queue_free (oggpad->pagebuffers);
     oggpad->pagebuffers = NULL;
   }
-
-  if (oggpad->segment) {
-    gst_segment_free (oggpad->segment);
-    oggpad->segment = NULL;
-  }
 }
 
 static GstPadLinkReturn
@@ -336,8 +331,6 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 start, stop, position;
 
-      g_return_val_if_fail (ogg_pad->segment != NULL, FALSE);
-
       gst_event_parse_new_segment_full (event, &update, &rate,
           &applied_rate, &format, &start, &stop, &position);
 
@@ -346,13 +339,13 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
         gst_event_unref (event);
         return FALSE;
       }
-      gst_segment_set_newsegment_full (ogg_pad->segment, update, rate,
+      gst_segment_set_newsegment_full (&ogg_pad->segment, update, rate,
           applied_rate, format, start, stop, position);
 
       break;
     }
     case GST_EVENT_FLUSH_STOP:{
-      gst_segment_init (ogg_pad->segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (&ogg_pad->segment, GST_FORMAT_TIME);
       break;
     }
     default:
@@ -458,9 +451,8 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       oggpad->pagebuffers = g_queue_new ();
       oggpad->map.headers = NULL;
       oggpad->map.queued = NULL;
-      oggpad->segment = gst_segment_new ();
-      gst_segment_set_newsegment (oggpad->segment, FALSE, 1, GST_FORMAT_TIME,
-          0, -1, 0);
+
+      gst_segment_init (&oggpad->segment, GST_FORMAT_TIME);
 
       oggpad->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
       gst_pad_set_event_function (newpad,
@@ -763,9 +755,9 @@ gst_ogg_mux_compare_pads (GstOggMux * ogg_mux, GstOggPadData * first,
   if (secondtime == GST_CLOCK_TIME_NONE)
     return 1;
 
-  firsttime = gst_segment_to_running_time (first->segment, GST_FORMAT_TIME,
+  firsttime = gst_segment_to_running_time (&first->segment, GST_FORMAT_TIME,
       firsttime);
-  secondtime = gst_segment_to_running_time (second->segment, GST_FORMAT_TIME,
+  secondtime = gst_segment_to_running_time (&second->segment, GST_FORMAT_TIME,
       secondtime);
 
   /* first buffer has higher timestamp, second one should go first */
@@ -1714,9 +1706,8 @@ gst_ogg_mux_init_collectpads (GstCollectPads * collect)
     oggpad->prev_delta = FALSE;
     oggpad->data_pushed = FALSE;
     oggpad->pagebuffers = g_queue_new ();
-    oggpad->segment = gst_segment_new ();
-    gst_segment_set_newsegment (oggpad->segment, FALSE, 1, GST_FORMAT_TIME,
-        0, -1, 0);
+
+    gst_segment_init (&oggpad->segment, GST_FORMAT_TIME);
 
     walk = g_slist_next (walk);
   }
@@ -1749,7 +1740,7 @@ gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
       oggpad->next_buffer = NULL;
     }
 
-    gst_segment_init (oggpad->segment, GST_FORMAT_UNDEFINED);
+    gst_segment_init (&oggpad->segment, GST_FORMAT_TIME);
   }
 }
 
