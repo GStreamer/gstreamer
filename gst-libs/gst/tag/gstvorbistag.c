@@ -38,6 +38,7 @@
 #endif
 #include <gst/gsttagsetter.h>
 #include <gst/base/gstbytereader.h>
+#include <gst/base/gstbytewriter.h>
 #include "gsttageditingprivate.h"
 #include <stdlib.h>
 #include <string.h>
@@ -518,34 +519,74 @@ typedef struct
 MyForEach;
 
 static GList *
-gst_tag_to_coverart (const GValue * image_value)
+gst_tag_to_metadata_block_picture (const gchar * tag,
+    const GValue * image_value)
 {
-  gchar *coverart_data, *data_result, *mime_result;
+  gchar *comment_data, *data_result;
   const gchar *mime_type;
+  guint mime_type_len;
   GstStructure *mime_struct;
   GstBuffer *buffer;
   GList *l = NULL;
+  GstByteWriter writer;
+  GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
+  gint width = 0, height = 0;
+  guint8 *metadata_block;
+  guint metadata_block_len;
 
   g_return_val_if_fail (image_value != NULL, NULL);
 
   buffer = gst_value_get_buffer (image_value);
   g_return_val_if_fail (gst_caps_is_fixed (buffer->caps), NULL);
   mime_struct = gst_caps_get_structure (buffer->caps, 0);
-  mime_type = gst_structure_get_name (mime_struct);
 
-  if (strcmp (mime_type, "text/uri-list") == 0) {
-    /* URI reference */
-    coverart_data = g_strndup ((gchar *) buffer->data, buffer->size);
+  mime_type = gst_structure_get_name (mime_struct);
+  if (strcmp (mime_type, "text/uri-list") == 0)
+    mime_type = "-->";
+  mime_type_len = strlen (mime_type);
+
+  gst_structure_get (mime_struct, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
+      &image_type, "width", G_TYPE_INT, &width, "height", G_TYPE_INT, &height,
+      NULL);
+
+  metadata_block_len = 32 + mime_type_len + GST_BUFFER_SIZE (buffer);
+  gst_byte_writer_init_with_size (&writer, metadata_block_len, TRUE);
+
+  if (image_type == GST_TAG_IMAGE_TYPE_NONE
+      && strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0) {
+    gst_byte_writer_put_uint32_be_unchecked (&writer, 0x01);
   } else {
-    coverart_data = g_base64_encode (buffer->data, buffer->size);
+    /* Convert to ID3v2 APIC image type */
+    if (image_type == GST_TAG_IMAGE_TYPE_NONE)
+      image_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
+    else
+      image_type = image_type + 2;
+    gst_byte_writer_put_uint32_be_unchecked (&writer, image_type);
   }
 
-  data_result = g_strdup_printf ("COVERART=%s", coverart_data);
-  mime_result = g_strdup_printf ("COVERARTMIME=%s", mime_type);
-  g_free (coverart_data);
+  gst_byte_writer_put_uint32_be_unchecked (&writer, mime_type_len);
+  gst_byte_writer_put_data_unchecked (&writer, (guint8 *) mime_type,
+      mime_type_len);
+  /* description length */
+  gst_byte_writer_put_uint32_be_unchecked (&writer, 0);
+  gst_byte_writer_put_uint32_be_unchecked (&writer, width);
+  gst_byte_writer_put_uint32_be_unchecked (&writer, height);
+  /* color depth */
+  gst_byte_writer_put_uint32_be_unchecked (&writer, 0);
+  /* for indexed formats the number of colors */
+  gst_byte_writer_put_uint32_be_unchecked (&writer, 0);
+  gst_byte_writer_put_uint32_be_unchecked (&writer, GST_BUFFER_SIZE (buffer));
+  gst_byte_writer_put_data_unchecked (&writer, GST_BUFFER_DATA (buffer),
+      GST_BUFFER_SIZE (buffer));
+  g_assert (gst_byte_writer_get_pos (&writer) == metadata_block_len);
+
+  metadata_block = gst_byte_writer_reset_and_get_data (&writer);
+  comment_data = g_base64_encode (metadata_block, metadata_block_len);
+  g_free (metadata_block);
+  data_result = g_strdup_printf ("METADATA_BLOCK_PICTURE=%s", comment_data);
+  g_free (comment_data);
 
   l = g_list_append (l, data_result);
-  l = g_list_append (l, mime_result);
 
   return l;
 }
@@ -580,7 +621,8 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
   if ((strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0 &&
           gst_tag_list_get_tag_size (list, GST_TAG_IMAGE) == 0) ||
       strcmp (tag, GST_TAG_IMAGE) == 0) {
-    return gst_tag_to_coverart (gst_tag_list_get_value_index (list, tag, 0));
+    return gst_tag_to_metadata_block_picture (tag,
+        gst_tag_list_get_value_index (list, tag, 0));
   }
 
   if (strcmp (tag, GST_TAG_EXTENDED_COMMENT) != 0) {
