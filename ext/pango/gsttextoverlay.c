@@ -145,8 +145,9 @@ GST_DEBUG_CATEGORY (pango_debug);
 
 #define OVER(ret, alphaA, Ca, alphaB, Cb, alphaNew)	\
 { \
-    ret = (Ca * alphaA + Cb * alphaB * (255 - alphaA) / 255) / alphaNew; \
-    ret = CLAMP (ret, 0, 255); \
+    gint _tmp; \
+    _tmp = (Ca * alphaA + Cb * alphaB * (255 - alphaA) / 255) / alphaNew; \
+    ret = CLAMP (_tmp, 0, 255); \
 }
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
