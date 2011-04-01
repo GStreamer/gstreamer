@@ -1005,18 +1005,18 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
 
       /* Can either be %s or %d or %u, do sanity checking for %d */
       if (*(str + 1) == 'd') {
-        glong tmp;
+        gint64 tmp;
 
         /* it's an int */
-        tmp = strtol (data, &endptr, 10);
-        g_return_val_if_fail (tmp != G_MINLONG && tmp != G_MAXLONG
+        tmp = g_ascii_strtoll (data, &endptr, 10);
+        g_return_val_if_fail (tmp >= G_MININT && tmp <= G_MAXINT
             && *endptr == '\0', NULL);
       } else if (*(str + 1) == 'u') {
-        gulong tmp;
+        guint64 tmp;
 
         /* it's an int */
-        tmp = strtoul (data, &endptr, 10);
-        g_return_val_if_fail (tmp != G_MAXULONG && *endptr == '\0', NULL);
+        tmp = g_ascii_strtoull (data, &endptr, 10);
+        g_return_val_if_fail (tmp <= G_MAXUINT && *endptr == '\0', NULL);
       }
     }
 
