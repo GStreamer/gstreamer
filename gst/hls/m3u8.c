@@ -112,7 +112,7 @@ int_from_string (gchar * ptr, gchar ** endptr, gint * val)
   *val = strtol (ptr, &end, 10);
   if ((errno == ERANGE && (*val == LONG_MAX || *val == LONG_MIN))
       || (errno != 0 && *val == 0)) {
-    GST_WARNING (g_strerror (errno));
+    GST_WARNING ("%s", g_strerror (errno));
     return FALSE;
   }
 
