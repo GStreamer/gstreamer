@@ -271,7 +271,7 @@ gst_segment_clip_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
   otherpad = (pad == self->srcpad) ? self->sinkpad : self->srcpad;
-  ret = gst_pad_push_event (otherpad, event);
+  ret = gst_pad_push_event (otherpad, gst_event_ref (event));
 
   if (ret) {
     switch (GST_EVENT_TYPE (event)) {
@@ -299,6 +299,8 @@ gst_segment_clip_event (GstPad * pad, GstEvent * event)
         break;
     }
   }
+
+  gst_event_unref (event);
 
   gst_object_unref (self);
   return ret;
