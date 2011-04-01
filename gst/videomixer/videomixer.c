@@ -89,6 +89,12 @@
 #include "videomixer.h"
 #include "videomixer2.h"
 
+#ifdef DISABLE_ORC
+#define orc_memset memset
+#else
+#include <orc/orcfunctions.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_videomixer_debug);
 #define GST_CAT_DEFAULT gst_videomixer_debug
 
@@ -1610,7 +1616,7 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
           mix->out_height, 240, 128, 128);
       break;
     case VIDEO_MIXER_BACKGROUND_TRANSPARENT:
-      memset (GST_BUFFER_DATA (outbuf), 0,
+      orc_memset (GST_BUFFER_DATA (outbuf), 0,
           gst_video_format_get_row_stride (mix->fmt, 0,
               mix->out_width) * mix->out_height);
       break;
