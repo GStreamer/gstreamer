@@ -126,6 +126,9 @@ typedef struct {
   GstBuffer * buffer;
   guint       flags;
   gint        overhead;
+  /*< private >*/
+  gint        _gst_reserved_i[2];
+  gpointer    _gst_reserved_p[2];
 } GstBaseParseFrame;
 
 /**
