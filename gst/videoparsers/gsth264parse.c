@@ -25,6 +25,7 @@
 
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbytewriter.h>
+#include <gst/base/gstadapter.h>
 #include "gsth264parse.h"
 
 #include <string.h>
@@ -495,7 +496,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
     sc_pos = 0;
   }
 
-  drain = GST_BASE_PARSE_FRAME_DRAIN (frame);
+  drain = GST_BASE_PARSE_DRAINING (parse);
   while (TRUE) {
     gint prev_sc_pos;
 
@@ -684,7 +685,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse)
           GST_TYPE_FRACTION, sps->fps_num, sps->fps_den, NULL);
       h264parse->fps_num = sps->fps_num;
       h264parse->fps_den = sps->fps_den;
-      gst_base_parse_set_frame_props (GST_BASE_PARSE (h264parse),
+      gst_base_parse_set_frame_rate (GST_BASE_PARSE (h264parse),
           h264parse->fps_num, h264parse->fps_den, 0, 0);
     }
   }
@@ -978,6 +979,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
         /* arrange to insert codec-data in-stream if needed */
         h264parse->push_codec = h264parse->packetized;
       }
+      gst_base_parse_set_passthrough (parse, FALSE);
     } else {
       GST_DEBUG_OBJECT (h264parse, "passing on packetized AVC");
       /* no choice to negotiate */
@@ -986,8 +988,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       /* fallback codec-data */
       h264parse->codec_data = gst_buffer_ref (buffer);
       /* pass through unharmed, though _chain will parse a bit */
-      gst_base_parse_set_format (parse,
-          GST_BASE_PARSE_FORMAT_PASSTHROUGH, TRUE);
+      gst_base_parse_set_passthrough (parse, TRUE);
       /* we did parse codec-data and might supplement src caps */
       gst_h264_parse_update_src_caps (h264parse);
     }

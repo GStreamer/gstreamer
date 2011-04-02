@@ -5,9 +5,8 @@ libgstvideoparsersbad_la_SOURCES = plugin.c \
 	gsth264parse.c h264parse.c \
 	gstdiracparse.c dirac_parse.c
 libgstvideoparsersbad_la_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstvideoparsersbad_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/baseparse/libgstbaseparse-$(GST_MAJORMINOR).la \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstvideoparsersbad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideoparsersbad_la_LIBTOOLFLAGS = --tag=disable-static

@@ -36,7 +36,6 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbytereader.h>
-#include <gst/baseparse/gstbaseparse.h>
 #include "gstdiracparse.h"
 
 /* prototypes */
@@ -239,8 +238,8 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
   GstDiracParse *diracparse = GST_DIRAC_PARSE (parse);
   int off;
   guint32 next_header;
-  gboolean sync;
-  gboolean drain;
+  gboolean lost_sync;
+  gboolean draining;
 
   if (G_UNLIKELY (GST_BUFFER_SIZE (frame->buffer) < 13))
     return FALSE;
@@ -269,10 +268,10 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
 
   GST_LOG ("framesize %d", *framesize);
 
-  sync = GST_BASE_PARSE_FRAME_SYNC (frame);
-  drain = GST_BASE_PARSE_FRAME_DRAIN (frame);
+  lost_sync = GST_BASE_PARSE_LOST_SYNC (frame);
+  draining = GST_BASE_PARSE_DRAINING (frame);
 
-  if (!sync && !drain) {
+  if (lost_sync && !draining) {
     guint32 next_sync_word = 0;
 
     next_header = GST_READ_UINT32_BE (GST_BUFFER_DATA (frame->buffer) + 5);

@@ -273,7 +273,7 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse,
   next_psc_pos = find_psc (buffer, next_psc_pos);
 
   if (next_psc_pos == -1) {
-    if (GST_BASE_PARSE_FRAME_DRAIN (frame))
+    if (GST_BASE_PARSE_DRAINING (parse))
       /* FLUSH/EOS, it's okay if we can't find the next frame */
       next_psc_pos = GST_BUFFER_SIZE (buffer);
     else
@@ -290,11 +290,11 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse,
     res = gst_h263_parse_get_params (&params, buffer, FALSE, &h263parse->state);
     if (res != GST_FLOW_OK || h263parse->state != GOT_HEADER) {
       GST_WARNING ("Couldn't parse header - setting passthrough mode");
-      gst_base_parse_set_format (parse,
-          GST_BASE_PARSE_FORMAT_PASSTHROUGH, TRUE);
+      gst_base_parse_set_passthrough (parse, TRUE);
     } else {
       /* Set srcpad caps since we now have sufficient information to do so */
       gst_h263_parse_set_src_caps (h263parse, &params);
+      gst_base_parse_set_passthrough (parse, FALSE);
     }
   }
 
@@ -337,7 +337,7 @@ gst_h263_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
      * parse the header, which should not be possible. Either way, go into
      * passthrough mode and let downstream handle it if it can. */
     GST_WARNING ("Couldn't parse header - setting passthrough mode");
-    gst_base_parse_set_format (parse, GST_BASE_PARSE_FORMAT_PASSTHROUGH, TRUE);
+    gst_base_parse_set_passthrough (parse, TRUE);
     goto out;
   }
 
