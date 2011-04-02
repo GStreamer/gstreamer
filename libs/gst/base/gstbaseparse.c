@@ -264,7 +264,7 @@ struct _GstBaseParsePrivate
   GList *pending_events;
 
   /* frames/buffers that are queued and ready to go on OK */
-  GList *queued_frames;
+  GQueue queued_frames;
 
   GstBuffer *cache;
 
@@ -401,8 +401,6 @@ static GstFlowReturn gst_base_parse_process_fragment (GstBaseParse * parse,
 
 static gboolean gst_base_parse_is_seekable (GstBaseParse * parse);
 
-static void gst_base_parse_push_pending_frame (GstBaseParseFrame * frame,
-    GstBaseParse * parse);
 static void gst_base_parse_frame_free (GstBaseParseFrame * frame);
 static GstBaseParseFrame *gst_base_parse_frame_copy_and_clear (GstBaseParseFrame
     * frame);
@@ -449,10 +447,9 @@ gst_base_parse_finalize (GObject * object)
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
 
-  g_list_foreach (parse->priv->queued_frames,
+  g_queue_foreach (&parse->priv->queued_frames,
       (GFunc) gst_base_parse_frame_free, NULL);
-  g_list_free (parse->priv->queued_frames);
-  parse->priv->queued_frames = NULL;
+  g_queue_clear (&parse->priv->queued_frames);
 
   if (parse->priv->index) {
     gst_object_unref (parse->priv->index);
@@ -533,6 +530,8 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   gst_pad_use_fixed_caps (parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
   GST_DEBUG_OBJECT (parse, "src created");
+
+  g_queue_init (&parse->priv->queued_frames);
 
   parse->priv->adapter = gst_adapter_new ();
 
@@ -671,7 +670,6 @@ gst_base_parse_reset (GstBaseParse * parse)
   g_slist_foreach (parse->priv->pending_seeks, (GFunc) g_free, NULL);
   g_slist_free (parse->priv->pending_seeks);
   parse->priv->pending_seeks = NULL;
-
   GST_OBJECT_UNLOCK (parse);
 }
 
@@ -1593,7 +1591,7 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
     gst_base_parse_frame_clear (parse, frame);
     return GST_FLOW_OK;
   } else if (ret == GST_BASE_PARSE_FLOW_QUEUED) {
-    parse->priv->queued_frames = g_list_append (parse->priv->queued_frames,
+    g_queue_push_tail (&parse->priv->queued_frames,
         gst_base_parse_frame_copy_and_clear (frame));
     return GST_FLOW_OK;
   } else if (ret != GST_FLOW_OK) {
@@ -1601,24 +1599,20 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
   }
 
   /* All OK, push queued frames if there are any */
-  if (G_UNLIKELY (parse->priv->queued_frames != NULL)) {
-    g_list_foreach (parse->priv->queued_frames,
-        (GFunc) gst_base_parse_push_pending_frame, parse);
-    g_list_free (parse->priv->queued_frames);
-    parse->priv->queued_frames = NULL;
+  if (G_UNLIKELY (!g_queue_is_empty (&parse->priv->queued_frames))) {
+    GstBaseParseFrame *queued_frame;
+
+    while ((queued_frame = g_queue_pop_head (&parse->priv->queued_frames))) {
+      queued_frame->buffer =
+          gst_buffer_make_metadata_writable (queued_frame->buffer);
+      gst_buffer_set_caps (queued_frame->buffer,
+          GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (parse)));
+      gst_base_parse_push_frame (parse, queued_frame);
+      gst_base_parse_frame_free (queued_frame);
+    }
   }
 
   return gst_base_parse_push_frame (parse, frame);
-}
-
-static void
-gst_base_parse_push_pending_frame (GstBaseParseFrame * frame,
-    GstBaseParse * parse)
-{
-  gst_buffer_set_caps (frame->buffer,
-      GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (parse)));
-  gst_base_parse_push_frame (parse, frame);
-  gst_base_parse_frame_free (frame);
 }
 
 /**
