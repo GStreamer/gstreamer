@@ -263,6 +263,9 @@ struct _GstBaseParsePrivate
 
   GList *pending_events;
 
+  /* frames/buffers that are queued and ready to go on OK */
+  GList *queued_frames;
+
   GstBuffer *cache;
 
   /* index entry storage, either ours or provided */
@@ -398,6 +401,12 @@ static GstFlowReturn gst_base_parse_process_fragment (GstBaseParse * parse,
 
 static gboolean gst_base_parse_is_seekable (GstBaseParse * parse);
 
+static void gst_base_parse_push_pending_frame (GstBaseParseFrame * frame,
+    GstBaseParse * parse);
+static void gst_base_parse_frame_free (GstBaseParseFrame * frame);
+static GstBaseParseFrame *gst_base_parse_frame_copy_and_clear (GstBaseParseFrame
+    * frame);
+
 static void
 gst_base_parse_clear_queues (GstBaseParse * parse)
 {
@@ -439,6 +448,11 @@ gst_base_parse_finalize (GObject * object)
       NULL);
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
+
+  g_list_foreach (parse->priv->queued_frames,
+      (GFunc) gst_base_parse_frame_free, NULL);
+  g_list_free (parse->priv->queued_frames);
+  parse->priv->queued_frames = NULL;
 
   if (parse->priv->index) {
     gst_object_unref (parse->priv->index);
@@ -554,6 +568,25 @@ gst_base_parse_frame_clear (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_buffer_unref (frame->buffer);
     frame->buffer = NULL;
   }
+}
+
+/* free frame allocated with copy_and_clear (and not on the stack) */
+static void
+gst_base_parse_frame_free (GstBaseParseFrame * frame)
+{
+  gst_base_parse_frame_clear (NULL, frame);
+  g_slice_free (GstBaseParseFrame, frame);
+}
+
+/* copy frame (taking ownership of contents of passed frame) */
+static GstBaseParseFrame *
+gst_base_parse_frame_copy_and_clear (GstBaseParseFrame * frame)
+{
+  GstBaseParseFrame *copy;
+
+  copy = g_slice_dup (GstBaseParseFrame, frame);
+  memset (frame, 0, sizeof (GstBaseParseFrame));
+  return copy;
 }
 
 static inline void
@@ -1559,11 +1592,33 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
   if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
     gst_base_parse_frame_clear (parse, frame);
     return GST_FLOW_OK;
+  } else if (ret == GST_BASE_PARSE_FLOW_QUEUED) {
+    parse->priv->queued_frames = g_list_append (parse->priv->queued_frames,
+        gst_base_parse_frame_copy_and_clear (frame));
+    return GST_FLOW_OK;
   } else if (ret != GST_FLOW_OK) {
     return ret;
   }
 
+  /* All OK, push queued frames if there are any */
+  if (G_UNLIKELY (parse->priv->queued_frames != NULL)) {
+    g_list_foreach (parse->priv->queued_frames,
+        (GFunc) gst_base_parse_push_pending_frame, parse);
+    g_list_free (parse->priv->queued_frames);
+    parse->priv->queued_frames = NULL;
+  }
+
   return gst_base_parse_push_frame (parse, frame);
+}
+
+static void
+gst_base_parse_push_pending_frame (GstBaseParseFrame * frame,
+    GstBaseParse * parse)
+{
+  gst_buffer_set_caps (frame->buffer,
+      GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (parse)));
+  gst_base_parse_push_frame (parse, frame);
+  gst_base_parse_frame_free (frame);
 }
 
 /**

@@ -66,6 +66,15 @@ G_BEGIN_DECLS
 #define GST_BASE_PARSE_FLOW_DROPPED     GST_FLOW_CUSTOM_SUCCESS
 
 /**
+ * GST_BASE_PARSE_FLOW_QUEUED:
+ * A #GstFlowReturn that can be returned from parse frame to indicate that
+ * the buffer will be queued to be pushed when the next OK
+ *
+ * Since: 0.10.33
+ */
+#define GST_BASE_PARSE_FLOW_QUEUED      GST_FLOW_CUSTOM_SUCCESS_1
+
+/**
  * GstBaseParseFrameFlags:
  * @GST_BASE_PARSE_FRAME_FLAG_NONE: no flag
  * @GST_BASE_PARSE_FRAME_FLAG_SYNC: indicates if parsing is 'in sync'
