@@ -216,7 +216,7 @@ type_as_function ## _implements_interface_init (GstImplementsInterfaceClass *kla
 }                                                                       \
                                                                         \
 static void                                                             \
-type_as_function ## _init_interfaces (GType type)                       \
+type_as_function ## _init_interfaces (GType type_var)                   \
 {                                                                       \
   static const GInterfaceInfo implements_iface_info = {                 \
     (GInterfaceInitFunc) type_as_function ## _implements_interface_init,\
@@ -229,9 +229,9 @@ type_as_function ## _init_interfaces (GType type)                       \
     NULL,                                                               \
   };                                                                    \
                                                                         \
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,     \
+  g_type_add_interface_static (type_var, GST_TYPE_IMPLEMENTS_INTERFACE, \
       &implements_iface_info);                                          \
-  g_type_add_interface_static (type, interface_type_as_macro,		\
+  g_type_add_interface_static (type_var, interface_type_as_macro,	\
       &iface_info);							\
 }                                                                       \
                                                                         \
