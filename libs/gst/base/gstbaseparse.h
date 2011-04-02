@@ -153,7 +153,7 @@ typedef struct {
  * @GST_BASE_PARSE_FORMAT_FLAG_NONE: no flags active
  * @GST_BASE_PARSE_FORMAT_FLAG_PASSTHROUGH: nature of format or configuration
  *   does not allow (much) parsing, so parser should operate in passthrough mode
- *   (which only applies operating in pull mode).  That is, incoming buffers
+ *   (which only applies operating in push mode).  That is, incoming buffers
  *   are pushed through unmodified, i.e. no @check_valid_frame or @parse_frame
  *   callbacks will be invoked.  On the other hand, @pre_push_buffer is still
  *   invoked, where subclass can perform as much or as little is appropriate for
