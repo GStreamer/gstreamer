@@ -1553,7 +1553,7 @@ gst_base_video_decoder_get_timestamp (GstBaseVideoDecoder * base_video_decoder,
 {
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
 
-  if (state->fps_d == 0) {
+  if (state->fps_d == 0 || state->fps_n == 0) {
     return -1;
   }
   if (picture_number < base_video_decoder->base_picture_number) {
@@ -1574,7 +1574,7 @@ gst_base_video_decoder_get_field_timestamp (GstBaseVideoDecoder *
 {
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
 
-  if (state->fps_d == 0) {
+  if (state->fps_d == 0 || state->fps_n == 0) {
     return GST_CLOCK_TIME_NONE;
   }
   if (field_offset < 0) {
@@ -1592,7 +1592,7 @@ gst_base_video_decoder_get_field_duration (GstBaseVideoDecoder *
 {
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
 
-  if (state->fps_d == 0) {
+  if (state->fps_d == 0 || state->fps_n == 0) {
     return GST_CLOCK_TIME_NONE;
   }
   if (n_fields < 0) {
