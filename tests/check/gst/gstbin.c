@@ -1070,6 +1070,69 @@ GST_START_TEST (test_state_failure_remove)
 
 GST_END_TEST;
 
+GST_START_TEST (test_many_bins)
+{
+  GstStateChangeReturn ret;
+  GstElement *src, *sink, *pipeline, *last_bin = NULL;
+  gint i;
+
+#define NUM_BINS 2000
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  src = gst_element_factory_make ("fakesrc", "fakesrc");
+  fail_unless (src != NULL, "Could not create fakesrc");
+  g_object_set (src, "num-buffers", 3, NULL);
+
+  sink = gst_element_factory_make ("fakesink", "fakesink");
+  fail_unless (sink != NULL, "Could not create fakesink");
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  for (i = 0; i < NUM_BINS; ++i) {
+    GstElement *bin, *identity;
+    GstPad *srcpad, *sinkpad;
+
+    bin = gst_bin_new (NULL);
+    fail_unless (bin != NULL, "Could not create bin %d", i);
+    identity = gst_element_factory_make ("identity", "identity");
+    fail_unless (identity != NULL, "Could not create identity %d", i);
+    gst_bin_add (GST_BIN (bin), identity);
+    sinkpad = gst_element_get_static_pad (identity, "sink");
+    srcpad = gst_element_get_static_pad (identity, "src");
+    gst_element_add_pad (bin, gst_ghost_pad_new ("sink", sinkpad));
+    gst_element_add_pad (bin, gst_ghost_pad_new ("src", srcpad));
+    gst_object_unref (sinkpad);
+    gst_object_unref (srcpad);
+
+    gst_bin_add (GST_BIN (pipeline), bin);
+
+    if (last_bin == NULL) {
+      fail_unless (gst_element_link (src, bin));
+    } else {
+      fail_unless (gst_element_link (last_bin, bin));
+    }
+
+    last_bin = bin;
+  }
+
+  fail_unless (gst_element_link (last_bin, sink));
+
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC, "did not get state change async");
+
+  ret = gst_element_get_state (pipeline, NULL, NULL, 5 * GST_SECOND);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS,
+      "did not get state change success");
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_bin_suite (void)
 {
@@ -1093,6 +1156,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_iterate_sorted);
   tcase_add_test (tc_chain, test_link_structure_change);
   tcase_add_test (tc_chain, test_state_failure_remove);
+  tcase_add_test (tc_chain, test_many_bins);
 
   return s;
 }
