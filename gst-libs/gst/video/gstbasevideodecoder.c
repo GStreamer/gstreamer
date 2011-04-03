@@ -194,7 +194,8 @@ gst_base_video_decoder_class_init (GstBaseVideoDecoderClass * klass)
 
   gobject_class->finalize = gst_base_video_decoder_finalize;
 
-  gstelement_class->change_state = gst_base_video_decoder_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_base_video_decoder_change_state);
 
   parent_class = g_type_class_peek_parent (klass);
 }
@@ -209,16 +210,23 @@ gst_base_video_decoder_init (GstBaseVideoDecoder * base_video_decoder,
 
   pad = GST_BASE_VIDEO_CODEC_SINK_PAD (base_video_decoder);
 
-  gst_pad_set_chain_function (pad, gst_base_video_decoder_chain);
-  gst_pad_set_event_function (pad, gst_base_video_decoder_sink_event);
-  gst_pad_set_setcaps_function (pad, gst_base_video_decoder_sink_setcaps);
-  gst_pad_set_query_function (pad, gst_base_video_decoder_sink_query);
+  gst_pad_set_chain_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_video_decoder_chain));
+  gst_pad_set_event_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_video_decoder_sink_event));
+  gst_pad_set_setcaps_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_video_decoder_sink_setcaps));
+  gst_pad_set_query_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_video_decoder_sink_query));
 
   pad = GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder);
 
-  gst_pad_set_event_function (pad, gst_base_video_decoder_src_event);
-  gst_pad_set_query_type_function (pad, gst_base_video_decoder_get_query_types);
-  gst_pad_set_query_function (pad, gst_base_video_decoder_src_query);
+  gst_pad_set_event_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_video_decoder_src_event));
+  gst_pad_set_query_type_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_video_decoder_get_query_types));
+  gst_pad_set_query_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_video_decoder_src_query));
   gst_pad_use_fixed_caps (pad);
 
   base_video_decoder->input_adapter = gst_adapter_new ();
