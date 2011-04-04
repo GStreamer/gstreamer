@@ -548,6 +548,10 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
         return FALSE;
       }
     }
+  } else if (drain && !sync && caps_change) {
+    /* avoid caps jitter that we can't be sure of */
+    *skipsize = off + 2;
+    return FALSE;
   }
 
   *framesize = bpf;
