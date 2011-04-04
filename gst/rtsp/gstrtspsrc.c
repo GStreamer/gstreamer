@@ -1680,8 +1680,13 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   if (base_time != -1)
     gst_element_set_base_time (GST_ELEMENT_CAST (src), base_time);
   /* to manage jitterbuffer buffer mode */
-  if (src->manager)
+  if (src->manager) {
     gst_element_set_base_time (GST_ELEMENT_CAST (src->manager), base_time);
+    /* and to have base_time trickle further down,
+     * e.g. to jitterbuffer for its timeout handling */
+    if (base_time != -1)
+      gst_element_set_state (GST_ELEMENT_CAST (src->manager), state);
+  }
 }
 
 static GstRTSPResult
