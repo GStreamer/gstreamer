@@ -210,8 +210,11 @@ release_all_wakeup (GstPoll * set)
     /* try to remove all pending control messages */
     if (g_atomic_int_compare_and_exchange (&set->control_pending, old, 0)) {
       /* we managed to remove all messages, read the control socket */
-      (void) RELEASE_EVENT (set);
-      break;
+      if (RELEASE_EVENT (set))
+        break;
+      else
+        /* retry again until we read it successfully */
+        g_atomic_int_exchange_and_add (&set->control_pending, 1);
     }
   }
   return old;
