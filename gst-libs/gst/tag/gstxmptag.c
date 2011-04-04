@@ -837,7 +837,7 @@ deserialize_tiff_orientation (XmpTag * xmptag, GstTagList * taglist,
  * http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/XMP.html
  */
 static gpointer
-_init_xmp_tag_map ()
+_init_xmp_tag_map (gpointer user_data)
 {
   GPtrArray *array;
   XmpTag *xmpinfo;
@@ -984,7 +984,7 @@ static void
 xmp_tags_initialize ()
 {
   static GOnce my_once = G_ONCE_INIT;
-  g_once (&my_once, _init_xmp_tag_map, NULL);
+  g_once (&my_once, (GThreadFunc)_init_xmp_tag_map, NULL);
 }
 
 typedef struct _GstXmpNamespaceMatch GstXmpNamespaceMatch;
