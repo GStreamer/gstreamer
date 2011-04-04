@@ -297,7 +297,6 @@ gst_tag_xmp_writer_tag_list_to_xmp_buffer (GstTagXmpWriter * config,
 {
   GstTagXmpWriterData *data;
   GstBuffer *buf = NULL;
-  const gchar **array;
   gint i = 0;
   GSList *iter;
 
@@ -307,12 +306,13 @@ gst_tag_xmp_writer_tag_list_to_xmp_buffer (GstTagXmpWriter * config,
 
   g_static_mutex_lock (&data->lock);
   if (data->schemas) {
-    array = g_new0 (const gchar *, g_slist_length (data->schemas) + 1);
+    gchar **array = g_new0 (gchar *, g_slist_length (data->schemas) + 1);
     if (array) {
       for (iter = data->schemas; iter; iter = g_slist_next (iter)) {
-        array[i++] = (const gchar *) iter->data;
+        array[i++] = (gchar *) iter->data;
       }
-      buf = gst_tag_list_to_xmp_buffer_full (taglist, read_only, array);
+      buf = gst_tag_list_to_xmp_buffer_full (taglist, read_only,
+          (const gchar **) array);
       g_free (array);
     }
   }
