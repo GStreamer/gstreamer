@@ -1945,8 +1945,8 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
             ypos, ypos + overlay->image_height);
         break;
       case GST_VIDEO_FORMAT_xBGR:
-        gst_text_overlay_shade_xBGR (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+        gst_text_overlay_shade_xBGR (overlay, data,
+            xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
       case GST_VIDEO_FORMAT_BGRx:
@@ -1955,28 +1955,28 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
             ypos, ypos + overlay->image_height);
         break;
       case GST_VIDEO_FORMAT_RGBx:
-        gst_text_overlay_shade_RGBx (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+        gst_text_overlay_shade_RGBx (overlay, data,
+            xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
       case GST_VIDEO_FORMAT_ARGB:
-        gst_text_overlay_shade_ARGB (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+        gst_text_overlay_shade_ARGB (overlay, data,
+            xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
       case GST_VIDEO_FORMAT_ABGR:
-        gst_text_overlay_shade_ABGR (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+        gst_text_overlay_shade_ABGR (overlay, data,
+            xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
       case GST_VIDEO_FORMAT_RGBA:
-        gst_text_overlay_shade_RGBA (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+        gst_text_overlay_shade_RGBA (overlay, data,
+            xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
       case GST_VIDEO_FORMAT_BGRA:
-        gst_text_overlay_shade_BGRA (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+        gst_text_overlay_shade_BGRA (overlay, data,
+            xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
       default:
@@ -2009,28 +2009,22 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
         gst_text_overlay_blit_xRGB (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_RGBx:
-        gst_text_overlay_blit_RGBx (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_RGBx (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_xBGR:
-        gst_text_overlay_blit_xBGR (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_xBGR (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_ARGB:
-        gst_text_overlay_blit_ARGB (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_ARGB (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_ABGR:
-        gst_text_overlay_blit_ABGR (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_ABGR (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_RGBA:
-        gst_text_overlay_blit_RGBA (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_RGBA (overlay, data, xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_BGRA:
-        gst_text_overlay_blit_BGRA (overlay,
-            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        gst_text_overlay_blit_BGRA (overlay, data, xpos, ypos);
         break;
       default:
         g_assert_not_reached ();

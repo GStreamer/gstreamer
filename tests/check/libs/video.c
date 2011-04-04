@@ -429,8 +429,6 @@ GST_START_TEST (test_video_formats)
         fail_unless_equals_int (off1, (unsigned long) paintinfo.up);
         fail_unless_equals_int (off2, (unsigned long) paintinfo.vp);
 
-      skip_check:
-
         /* should be 0 if there's no alpha component */
         off3 = gst_video_format_get_component_offset (fmt, 3, w, h);
         fail_unless_equals_int (off3, (unsigned long) paintinfo.ap);

@@ -580,7 +580,7 @@ gst_tag_to_metadata_block_picture (const gchar * tag,
       &image_type, "width", G_TYPE_INT, &width, "height", G_TYPE_INT, &height,
       NULL);
 
-  metadata_block_len = 32 + mime_type_len + GST_BUFFER_SIZE (buffer);
+  metadata_block_len = 32 + mime_type_len + gst_buffer_get_size (buffer);
   gst_byte_writer_init_with_size (&writer, metadata_block_len, TRUE);
 
   if (image_type == GST_TAG_IMAGE_TYPE_NONE
