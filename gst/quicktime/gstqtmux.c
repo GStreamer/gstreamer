@@ -2368,7 +2368,8 @@ bail:
 no_time:
   {
     GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
-        ("Received buffer without timestamp/duration."));
+        ("Received buffer without timestamp/duration. "
+            "Using e.g. dts-method=reorder might help."));
     goto bail;
   }
 no_order:
