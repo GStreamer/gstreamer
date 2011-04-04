@@ -807,7 +807,7 @@ encodebin_find_pad (GstCameraBin * camera, gint pad_type)
   GstElement *encodebin = camera->encodebin;
 
   GST_DEBUG_OBJECT (camera, "Looking at encodebin pads, searching for %s pad",
-      VIDEO_PAD ? "video" : "audio");
+      pad_type == VIDEO_PAD ? "video" : "audio");
 
   iter = gst_element_iterate_sink_pads (encodebin);
   done = FALSE;
