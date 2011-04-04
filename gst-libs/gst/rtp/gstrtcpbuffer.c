@@ -161,7 +161,7 @@ gst_rtcp_buffer_validate_data (guint8 * data, guint len)
       goto wrong_length;
 
     /* get padding */
-    pad_bytes = data[len - 1];
+    pad_bytes = data[data_len - 1];
     if (data_len != pad_bytes)
       goto wrong_padding;
   }

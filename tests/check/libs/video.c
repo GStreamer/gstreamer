@@ -424,14 +424,6 @@ GST_START_TEST (test_video_formats)
         off1 = gst_video_format_get_component_offset (fmt, 1, w, h);
         off2 = gst_video_format_get_component_offset (fmt, 2, w, h);
 
-        /* FIXME: for YUV9/YVU9 old videotestsrc code disagrees with new code
-         *  - figure out which is right */
-        if (fmt == GST_VIDEO_FORMAT_YUV9 || fmt == GST_VIDEO_FORMAT_YVU9) {
-          if (w == 1 && h == 1)
-            GST_ERROR ("FIXME: fix GST_VIDEO_FORMAT_YUV9/YVU9 size checks");
-          goto skip_check;
-        }
-
         fail_unless_equals_int (size, (unsigned long) paintinfo.endptr);
         fail_unless_equals_int (off0, (unsigned long) paintinfo.yp);
         fail_unless_equals_int (off1, (unsigned long) paintinfo.up);

@@ -6,8 +6,6 @@ glib_gen_basename = gstplay
 built_sources = gstplay-marshal.c
 built_headers = gstplay-marshal.h
 
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
-
 plugin_LTLIBRARIES = libgstplaybin.la libgstdecodebin.la libgstdecodebin2.la
 
 libgstplaybin_la_SOURCES = \

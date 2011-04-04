@@ -37,6 +37,8 @@
 #include "config.h"
 #endif
 #include <gst/gsttagsetter.h>
+#include <gst/base/gstbytereader.h>
+#include <gst/base/gstbytewriter.h>
 #include "gsttageditingprivate.h"
 #include <stdlib.h>
 #include <string.h>
@@ -313,28 +315,20 @@ gst_vorbis_tag_add_coverart (GstTagList * tags, gchar * img_data_base64,
 {
   GstBuffer *img;
   gsize img_len;
-  guchar *out;
-  guint save = 0;
-  gint state = 0;
 
   if (base64_len < 2)
     goto not_enough_data;
 
   /* img_data_base64 points to a temporary copy of the base64 encoded data, so
    * it's safe to do inpace decoding here
-   * TODO: glib 2.20 and later provides g_base64_decode_inplace, so change this
-   * to use glib's API instead once it's in wider use:
-   *  http://bugzilla.gnome.org/show_bug.cgi?id=564728
-   *  http://svn.gnome.org/viewvc/glib?view=revision&revision=7807 */
-  out = (guchar *) img_data_base64;
-  img_len = g_base64_decode_step (img_data_base64, base64_len,
-      out, &state, &save);
-
+   */
+  g_base64_decode_inplace (img_data_base64, &img_len);
   if (img_len == 0)
     goto decode_failed;
 
-  img = gst_tag_image_data_to_image_buffer (out, img_len,
-      GST_TAG_IMAGE_TYPE_NONE);
+  img =
+      gst_tag_image_data_to_image_buffer ((const guint8 *) img_data_base64,
+      img_len, GST_TAG_IMAGE_TYPE_NONE);
 
   if (img == NULL)
     goto convert_failed;
@@ -361,6 +355,65 @@ convert_failed:
     GST_WARNING ("Couldn't extract image or image type from COVERART tag");
     return;
   }
+}
+
+/* Standardized way of adding pictures to vorbiscomments:
+ * http://wiki.xiph.org/VorbisComment#METADATA_BLOCK_PICTURE
+ */
+static void
+gst_vorbis_tag_add_metadata_block_picture (GstTagList * tags,
+    gchar * value, gint value_len)
+{
+  GstByteReader reader;
+  guint32 img_len = 0, img_type = 0;
+  guint32 img_mimetype_len = 0, img_description_len = 0;
+  gsize decoded_len;
+  const guint8 *data;
+
+  /* img_data_base64 points to a temporary copy of the base64 encoded data, so
+   * it's safe to do inpace decoding here
+   */
+  g_base64_decode_inplace (value, &decoded_len);
+  if (decoded_len == 0)
+    goto decode_failed;
+
+  gst_byte_reader_init (&reader, (guint8 *) value, decoded_len);
+
+  if (!gst_byte_reader_get_uint32_be (&reader, &img_type))
+    goto error;
+
+  if (!gst_byte_reader_get_uint32_be (&reader, &img_mimetype_len))
+    goto error;
+  if (!gst_byte_reader_skip (&reader, img_mimetype_len))
+    goto error;
+
+  if (!gst_byte_reader_get_uint32_be (&reader, &img_description_len))
+    goto error;
+  if (!gst_byte_reader_skip (&reader, img_description_len))
+    goto error;
+
+  /* Skip width, height, color depth and number of colors for
+   * indexed formats */
+  if (!gst_byte_reader_skip (&reader, 4 * 4))
+    goto error;
+
+  if (!gst_byte_reader_get_uint32_be (&reader, &img_len))
+    goto error;
+
+  if (!gst_byte_reader_get_data (&reader, img_len, &data))
+    goto error;
+
+  gst_tag_list_add_id3_image (tags, data, img_len, img_type);
+
+  return;
+
+error:
+  GST_WARNING
+      ("Couldn't extract image or image type from METADATA_BLOCK_PICTURE tag");
+  return;
+decode_failed:
+  GST_WARNING ("Failed to decode Base64 data from METADATA_BLOCK_PICTURE tag");
+  return;
 }
 
 /**
@@ -439,6 +492,8 @@ gst_tag_list_from_vorbiscomment (const guint8 * data, gsize size,
       continue;
     } else if (g_ascii_strcasecmp (cur, "COVERART") == 0) {
       gst_vorbis_tag_add_coverart (list, value, value_len);
+    } else if (g_ascii_strcasecmp (cur, "METADATA_BLOCK_PICTURE") == 0) {
+      gst_vorbis_tag_add_metadata_block_picture (list, value, value_len);
     } else {
       gst_vorbis_tag_add (list, cur, value);
     }
@@ -493,38 +548,79 @@ typedef struct
 MyForEach;
 
 static GList *
-gst_tag_to_coverart (const GValue * image_value)
+gst_tag_to_metadata_block_picture (const gchar * tag,
+    const GValue * image_value)
 {
-  gchar *coverart_data, *data_result, *mime_result;
+  gchar *comment_data, *data_result;
   const gchar *mime_type;
+  guint mime_type_len;
   GstStructure *mime_struct;
   GstBuffer *buffer;
   GList *l = NULL;
   guint8 *data;
   gsize size;
+  GstByteWriter writer;
+  GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
+  gint width = 0, height = 0;
+  guint8 *metadata_block;
+  guint metadata_block_len;
 
   g_return_val_if_fail (image_value != NULL, NULL);
 
   buffer = gst_value_get_buffer (image_value);
   g_return_val_if_fail (gst_caps_is_fixed (buffer->caps), NULL);
   mime_struct = gst_caps_get_structure (buffer->caps, 0);
+
   mime_type = gst_structure_get_name (mime_struct);
+  if (strcmp (mime_type, "text/uri-list") == 0)
+    mime_type = "-->";
+  mime_type_len = strlen (mime_type);
+
+  gst_structure_get (mime_struct, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
+      &image_type, "width", G_TYPE_INT, &width, "height", G_TYPE_INT, &height,
+      NULL);
+
+  metadata_block_len = 32 + mime_type_len + GST_BUFFER_SIZE (buffer);
+  gst_byte_writer_init_with_size (&writer, metadata_block_len, TRUE);
+
+  if (image_type == GST_TAG_IMAGE_TYPE_NONE
+      && strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0) {
+    gst_byte_writer_put_uint32_be_unchecked (&writer, 0x01);
+  } else {
+    /* Convert to ID3v2 APIC image type */
+    if (image_type == GST_TAG_IMAGE_TYPE_NONE)
+      image_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
+    else
+      image_type = image_type + 2;
+    gst_byte_writer_put_uint32_be_unchecked (&writer, image_type);
+  }
+
+  gst_byte_writer_put_uint32_be_unchecked (&writer, mime_type_len);
+  gst_byte_writer_put_data_unchecked (&writer, (guint8 *) mime_type,
+      mime_type_len);
+  /* description length */
+  gst_byte_writer_put_uint32_be_unchecked (&writer, 0);
+  gst_byte_writer_put_uint32_be_unchecked (&writer, width);
+  gst_byte_writer_put_uint32_be_unchecked (&writer, height);
+  /* color depth */
+  gst_byte_writer_put_uint32_be_unchecked (&writer, 0);
+  /* for indexed formats the number of colors */
+  gst_byte_writer_put_uint32_be_unchecked (&writer, 0);
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  if (strcmp (mime_type, "text/uri-list") == 0) {
-    /* URI reference */
-    coverart_data = g_strndup ((gchar *) data, size);
-  } else {
-    coverart_data = g_base64_encode (data, size);
-  }
+  gst_byte_writer_put_uint32_be_unchecked (&writer, size);
+  gst_byte_writer_put_data_unchecked (&writer, data, size);
   gst_buffer_unmap (buffer, data, size);
 
-  data_result = g_strdup_printf ("COVERART=%s", coverart_data);
-  mime_result = g_strdup_printf ("COVERARTMIME=%s", mime_type);
-  g_free (coverart_data);
+  g_assert (gst_byte_writer_get_pos (&writer) == metadata_block_len);
+
+  metadata_block = gst_byte_writer_reset_and_get_data (&writer);
+  comment_data = g_base64_encode (metadata_block, metadata_block_len);
+  g_free (metadata_block);
+  data_result = g_strdup_printf ("METADATA_BLOCK_PICTURE=%s", comment_data);
+  g_free (comment_data);
 
   l = g_list_append (l, data_result);
-  l = g_list_append (l, mime_result);
 
   return l;
 }
@@ -559,7 +655,8 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
   if ((strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0 &&
           gst_tag_list_get_tag_size (list, GST_TAG_IMAGE) == 0) ||
       strcmp (tag, GST_TAG_IMAGE) == 0) {
-    return gst_tag_to_coverart (gst_tag_list_get_value_index (list, tag, 0));
+    return gst_tag_to_metadata_block_picture (tag,
+        gst_tag_list_get_value_index (list, tag, 0));
   }
 
   if (strcmp (tag, GST_TAG_EXTENDED_COMMENT) != 0) {
