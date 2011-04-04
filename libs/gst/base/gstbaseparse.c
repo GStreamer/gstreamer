@@ -593,17 +593,16 @@ gst_base_parse_frame_update (GstBaseParse * parse, GstBaseParseFrame * frame,
     GstBuffer * buf)
 {
   gst_buffer_replace (&frame->buffer, buf);
-  if (parse->priv->drain) {
-    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DRAIN;
-  } else {
-    frame->flags &= ~(GST_BASE_PARSE_FRAME_FLAG_DRAIN);
-  }
+
+  parse->flags = 0;
+
+  /* set flags one by one for clarity */
+  if (G_UNLIKELY (parse->priv->drain))
+    parse->flags |= GST_BASE_PARSE_FLAG_DRAINING;
+
   /* losing sync is pretty much a discont (and vice versa), no ? */
-  if (!parse->priv->discont) {
-    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_SYNC;
-  } else {
-    frame->flags &= ~(GST_BASE_PARSE_FRAME_FLAG_SYNC);
-  }
+  if (G_UNLIKELY (parse->priv->discont))
+    parse->flags |= GST_BASE_PARSE_FLAG_LOST_SYNC;
 }
 
 static void

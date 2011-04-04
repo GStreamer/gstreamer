@@ -74,12 +74,34 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_PARSE_FLOW_QUEUED      GST_FLOW_CUSTOM_SUCCESS_1
 
+/* not public API, use accessor macros below */
+#define GST_BASE_PARSE_FLAG_LOST_SYNC (1 << 0)
+#define GST_BASE_PARSE_FLAG_DRAINING  (1 << 1)
+
+/**
+ * GST_BASE_PARSE_LOST_SYNC:
+ * @parse: base parse instance
+ *
+ * Obtains current sync status.
+ *
+ * Since: 0.10.33
+ */
+#define GST_BASE_PARSE_LOST_SYNC(parse) (!!(GST_BASE_PARSE_CAST(parse)->flags & GST_BASE_PARSE_FLAG_LOST_SYNC))
+
+/**
+ * GST_BASE_PARSE_DRAINING:
+ * @parse: base parse instance
+ *
+ * Obtains current drain status (ie. whether EOS has been received and
+ * the parser is now processing the frames at the end of the stream)
+ *
+ * Since: 0.10.33
+ */
+#define GST_BASE_PARSE_DRAINING(parse)  (!!(GST_BASE_PARSE_CAST(parse)->flags & GST_BASE_PARSE_FLAG_DRAINING))
+
 /**
  * GstBaseParseFrameFlags:
  * @GST_BASE_PARSE_FRAME_FLAG_NONE: no flag
- * @GST_BASE_PARSE_FRAME_FLAG_SYNC: indicates if parsing is 'in sync'
- * @GST_BASE_PARSE_FRAME_FLAG_DRAIN: indicates if parser is 'draining'.
- *   That is, leftover data (e.g. in FLUSH or EOS situation) is being parsed.
  * @GST_BASE_PARSE_FRAME_FLAG_NO_FRAME: set to indicate this buffer should not be
  *   counted as frame, e.g. if this frame is dependent on a previous one.
  *   As it is not counted as a frame, bitrate increases but frame to time
@@ -94,10 +116,8 @@ G_BEGIN_DECLS
  */
 typedef enum {
   GST_BASE_PARSE_FRAME_FLAG_NONE         = 0,
-  GST_BASE_PARSE_FRAME_FLAG_SYNC         = (1 << 0),
-  GST_BASE_PARSE_FRAME_FLAG_DRAIN        = (1 << 1),
-  GST_BASE_PARSE_FRAME_FLAG_NO_FRAME     = (1 << 2),
-  GST_BASE_PARSE_FRAME_FLAG_CLIP         = (1 << 3)
+  GST_BASE_PARSE_FRAME_FLAG_NO_FRAME     = (1 << 0),
+  GST_BASE_PARSE_FRAME_FLAG_CLIP         = (1 << 1)
 } GstBaseParseFrameFlags;
 
 /**
@@ -130,26 +150,6 @@ typedef struct {
   gint        _gst_reserved_i[2];
   gpointer    _gst_reserved_p[2];
 } GstBaseParseFrame;
-
-/**
- * GST_BASE_PARSE_FRAME_SYNC:
- * @frame: base parse frame instance
- *
- * Obtains current sync status indicated in frame.
- *
- * Since: 0.10.33
- */
-#define GST_BASE_PARSE_FRAME_SYNC(frame)     (!!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_SYNC))
-
-/**
- * GST_BASE_PARSE_FRAME_DRAIN:
- * @frame: base parse frame instance
- *
- * Obtains current drain status indicated in frame.
- *
- * Since: 0.10.33
- */
-#define GST_BASE_PARSE_FRAME_DRAIN(frame)    (!!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_DRAIN))
 
 /**
  * GstBaseParseFormatFlags:
@@ -194,6 +194,8 @@ struct _GstBaseParse {
   /* source and sink pads */
   GstPad         *sinkpad;
   GstPad         *srcpad;
+
+  guint           flags;
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment      segment;
