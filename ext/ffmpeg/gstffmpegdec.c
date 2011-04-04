@@ -2240,7 +2240,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       ffmpegdec->discont = FALSE;
     }
     /* set caps */
-    outbuf = gst_buffer_make_metadata_writable (outbuf);
+    outbuf = gst_buffer_make_writable (outbuf);
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
 
     if (ffmpegdec->segment.rate > 0.0) {
@@ -2451,6 +2451,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   GstFFMpegDec *ffmpegdec;
   GstFFMpegDecClass *oclass;
   guint8 *data, *bdata, *pdata;
+  guint8 *odata;
+  gsize osize;
   gint size, bsize, len, have_data;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime in_timestamp;
@@ -2539,12 +2541,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   }
   ffmpegdec->last_frames = 0;
 
-  GST_LOG_OBJECT (ffmpegdec,
-      "Received new data of size %u, offset:%" G_GUINT64_FORMAT ", ts:%"
-      GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT ", info %d",
-      GST_BUFFER_SIZE (inbuf), GST_BUFFER_OFFSET (inbuf),
-      GST_TIME_ARGS (in_timestamp), GST_TIME_ARGS (in_duration), in_info->idx);
-
   /* workarounds, functions write to buffers:
    *  libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
    *  libavcodec/svq3.c:svq3_decode_slice_header too.
@@ -2554,8 +2550,16 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     inbuf = gst_buffer_make_writable (inbuf);
   }
 
-  bdata = GST_BUFFER_DATA (inbuf);
-  bsize = GST_BUFFER_SIZE (inbuf);
+  odata = gst_buffer_map (inbuf, &osize, NULL, GST_MAP_READ);
+
+  bdata = odata;
+  bsize = osize;
+
+  GST_LOG_OBJECT (ffmpegdec,
+      "Received new data of size %u, offset:%" G_GUINT64_FORMAT ", ts:%"
+      GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT ", info %d",
+      bsize, in_offset, GST_TIME_ARGS (in_timestamp),
+      GST_TIME_ARGS (in_duration), in_info->idx);
 
   do {
     /* parse, if at all possible */
@@ -2691,6 +2695,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
         bsize, bdata);
   } while (bsize > 0);
 
+  gst_buffer_unmap (inbuf, odata, osize);
+
   /* keep left-over */
   if (ffmpegdec->pctx && bsize > 0) {
     in_timestamp = GST_BUFFER_TIMESTAMP (inbuf);
@@ -2700,8 +2706,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
         "Keeping %d bytes of data with offset %" G_GINT64_FORMAT ", timestamp %"
         GST_TIME_FORMAT, bsize, in_offset, GST_TIME_ARGS (in_timestamp));
 
-    ffmpegdec->pcache = gst_buffer_create_sub (inbuf,
-        GST_BUFFER_SIZE (inbuf) - bsize, bsize);
+    ffmpegdec->pcache = gst_buffer_copy_region (inbuf, GST_BUFFER_COPY_ALL,
+        gst_buffer_get_size (inbuf) - bsize, bsize);
     /* we keep timestamp, even though all we really know is that the correct
      * timestamp is not below the one from inbuf */
     GST_BUFFER_TIMESTAMP (ffmpegdec->pcache) = in_timestamp;

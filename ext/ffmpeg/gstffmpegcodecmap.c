@@ -42,17 +42,17 @@ gst_ffmpeg_get_palette (const GstCaps * caps, AVCodecContext * context)
 {
   GstStructure *str = gst_caps_get_structure (caps, 0);
   const GValue *palette_v;
-  const GstBuffer *palette;
+  GstBuffer *palette;
 
   /* do we have a palette? */
   if ((palette_v = gst_structure_get_value (str, "palette_data")) && context) {
     palette = gst_value_get_buffer (palette_v);
-    if (GST_BUFFER_SIZE (palette) >= AVPALETTE_SIZE) {
+    if (gst_buffer_get_size (palette) >= AVPALETTE_SIZE) {
       if (context->palctrl)
         av_free (context->palctrl);
       context->palctrl = av_malloc (sizeof (AVPaletteControl));
       context->palctrl->palette_changed = 1;
-      memcpy (context->palctrl->palette, GST_BUFFER_DATA (palette),
+      gst_buffer_extract (palette, 0, context->palctrl->palette,
           AVPALETTE_SIZE);
     }
   }
@@ -64,8 +64,7 @@ gst_ffmpeg_set_palette (GstCaps * caps, AVCodecContext * context)
   if (context->palctrl) {
     GstBuffer *palette = gst_buffer_new_and_alloc (AVPALETTE_SIZE);
 
-    memcpy (GST_BUFFER_DATA (palette), context->palctrl->palette,
-        AVPALETTE_SIZE);
+    gst_buffer_fill (palette, 0, context->palctrl->palette, AVPALETTE_SIZE);
     gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, palette, NULL);
   }
 }
@@ -1623,8 +1622,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     if (context && context->extradata_size > 0) {
       GstBuffer *data = gst_buffer_new_and_alloc (context->extradata_size);
 
-      memcpy (GST_BUFFER_DATA (data), context->extradata,
-          context->extradata_size);
+      gst_buffer_fill (data, 0, context->extradata, context->extradata_size);
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, data, NULL);
       gst_buffer_unref (data);
     }
@@ -2278,7 +2276,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 {
   GstStructure *str;
   const GValue *value;
-  const GstBuffer *buf;
+  GstBuffer *buf;
 
   GST_LOG ("codec_id:%d, codec_type:%d, caps:%" GST_PTR_FORMAT " context:%p",
       codec_id, codec_type, caps, context);
@@ -2290,12 +2288,11 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
   /* extradata parsing (esds [mpeg4], wma/wmv, msmpeg4v1/2/3, etc.) */
   if ((value = gst_structure_get_value (str, "codec_data"))) {
-    guint size;
+    gsize size;
     guint8 *data;
 
     buf = gst_value_get_buffer (value);
-    size = GST_BUFFER_SIZE (buf);
-    data = GST_BUFFER_DATA (buf);
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
     /* free the old one if it is there */
     if (context->extradata)
@@ -2336,6 +2333,8 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     }
 
     GST_DEBUG ("have codec data of size %d", size);
+
+    gst_buffer_unmap (buf, data, size);
   } else if (context->extradata == NULL) {
     /* no extradata, alloc dummy with 0 sized, some codecs insist on reading
      * extradata anyway which makes then segfault. */

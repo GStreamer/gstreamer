@@ -435,9 +435,8 @@ new_aligned_buffer (gint size, GstCaps * caps)
   GstBuffer *buf;
 
   buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = av_malloc (size);
-  GST_BUFFER_SIZE (buf) = size;
-  GST_BUFFER_FREE_FUNC (buf) = av_free;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, av_malloc (size), av_free, size, 0, size));
   if (caps)
     gst_buffer_set_caps (buf, caps);
 

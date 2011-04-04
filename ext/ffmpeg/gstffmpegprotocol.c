@@ -111,8 +111,8 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
 
   switch (ret) {
     case GST_FLOW_OK:
-      total = (gint) GST_BUFFER_SIZE (inbuf);
-      memcpy (buf, GST_BUFFER_DATA (inbuf), total);
+      total = (gint) gst_buffer_get_size (inbuf);
+      gst_buffer_extract (inbuf, 0, buf, total);
       gst_buffer_unref (inbuf);
       break;
     case GST_FLOW_UNEXPECTED:
@@ -169,7 +169,7 @@ gst_ffmpegdata_write (URLContext * h, const unsigned char *buf, int size)
           info->offset, size, GST_PAD_CAPS (info->pad), &outbuf) != GST_FLOW_OK)
     return 0;
 
-  memcpy (GST_BUFFER_DATA (outbuf), buf, size);
+  gst_buffer_fill (outbuf, 0, buf, size);
 
   if (gst_pad_push (info->pad, outbuf) != GST_FLOW_OK)
     return 0;
@@ -333,7 +333,6 @@ static int
 gst_ffmpeg_pipe_read (URLContext * h, unsigned char *buf, int size)
 {
   GstFFMpegPipe *ffpipe;
-  const guint8 *data;
   guint available;
 
   ffpipe = (GstFFMpegPipe *) h->priv_data;
@@ -355,8 +354,7 @@ gst_ffmpeg_pipe_read (URLContext * h, unsigned char *buf, int size)
   size = MIN (available, size);
   if (size) {
     GST_LOG ("Getting %d bytes", size);
-    data = gst_adapter_peek (ffpipe->adapter, size);
-    memcpy (buf, data, size);
+    gst_adapter_copy (ffpipe->adapter, buf, 0, size);
     gst_adapter_flush (ffpipe->adapter, size);
     GST_LOG ("%d bytes left in adapter",
         gst_adapter_available (ffpipe->adapter));
