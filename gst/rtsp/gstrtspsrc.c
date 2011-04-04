@@ -1663,6 +1663,16 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   gst_rtspsrc_push_event (src, event, FALSE);
   gst_rtspsrc_loop_send_cmd (src, cmd, flush);
 
+  /* set up manager before data-flow resumes */
+  /* to manage jitterbuffer buffer mode */
+  if (src->manager) {
+    gst_element_set_base_time (GST_ELEMENT_CAST (src->manager), base_time);
+    /* and to have base_time trickle further down,
+     * e.g. to jitterbuffer for its timeout handling */
+    if (base_time != -1)
+      gst_element_set_state (GST_ELEMENT_CAST (src->manager), state);
+  }
+
   /* make running time start start at 0 again */
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
@@ -1679,14 +1689,6 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   /* for tcp interleaved case */
   if (base_time != -1)
     gst_element_set_base_time (GST_ELEMENT_CAST (src), base_time);
-  /* to manage jitterbuffer buffer mode */
-  if (src->manager) {
-    gst_element_set_base_time (GST_ELEMENT_CAST (src->manager), base_time);
-    /* and to have base_time trickle further down,
-     * e.g. to jitterbuffer for its timeout handling */
-    if (base_time != -1)
-      gst_element_set_state (GST_ELEMENT_CAST (src->manager), state);
-  }
 }
 
 static GstRTSPResult
