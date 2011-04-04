@@ -302,7 +302,11 @@ typedef enum {
  * When doing fast forward (rate > 1.0) or fast reverse (rate < -1.0) trickmode
  * playback, the @GST_SEEK_FLAG_SKIP flag can be used to instruct decoders
  * and demuxers to adjust the playback rate by skipping frames. This can improve
- * performance and decrease CPU usage because not all frames need to be decoded. 
+ * performance and decrease CPU usage because not all frames need to be decoded.
+ *
+ * Also see part-seeking.txt in the GStreamer design documentation for more
+ * details on the meaning of these flags and the behaviour expected of
+ * elements that handle them.
  */
 typedef enum {
   GST_SEEK_FLAG_NONE            = 0,

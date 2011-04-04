@@ -976,25 +976,29 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
 
       /* Can either be %s or %d or %u, do sanity checking for %d */
       if (*(str + 1) == 'd') {
-        gint tmp;
+        gint64 tmp;
 
         /* it's an int */
-        tmp = strtol (data, &endptr, 10);
-        g_return_val_if_fail (tmp != G_MINLONG && tmp != G_MAXLONG
+        tmp = g_ascii_strtoll (data, &endptr, 10);
+        g_return_val_if_fail (tmp >= G_MININT && tmp <= G_MAXINT
             && *endptr == '\0', NULL);
       } else if (*(str + 1) == 'u') {
-        guint tmp;
+        guint64 tmp;
 
         /* it's an int */
-        tmp = strtoul (data, &endptr, 10);
-        g_return_val_if_fail (tmp != G_MAXULONG && *endptr == '\0', NULL);
+        tmp = g_ascii_strtoull (data, &endptr, 10);
+        g_return_val_if_fail (tmp <= G_MAXUINT && *endptr == '\0', NULL);
       }
     }
 
     pad = gst_element_get_static_pad (element, name);
-    if (pad)
+    if (pad) {
       gst_object_unref (pad);
-    g_return_val_if_fail (pad == NULL, NULL);
+      /* FIXME 0.11: Change this to g_return_val_if_fail() */
+      g_critical ("Element %s already has a pad named %s, the behaviour of "
+          " gst_element_get_request_pad() for existing pads is undefined!",
+          GST_ELEMENT_NAME (element), name);
+    }
   }
 #endif
 
@@ -1071,7 +1075,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
             && strlen (name) > str - templ->name_template) {
           data = name + (str - templ->name_template);
           if (*(str + 1) == 'd') {
-            gint tmp;
+            glong tmp;
 
             /* it's an int */
             tmp = strtol (data, &endptr, 10);
@@ -1082,7 +1086,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
               break;
             }
           } else if (*(str + 1) == 'u') {
-            guint tmp;
+            gulong tmp;
 
             /* it's an int */
             tmp = strtoul (data, &endptr, 10);

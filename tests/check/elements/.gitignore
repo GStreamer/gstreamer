@@ -5,6 +5,7 @@ fakesink
 fdsrc
 filesink
 filesrc
+funnel
 identity
 multiqueue
 queue

@@ -210,8 +210,11 @@ release_all_wakeup (GstPoll * set)
     /* try to remove all pending control messages */
     if (g_atomic_int_compare_and_exchange (&set->control_pending, old, 0)) {
       /* we managed to remove all messages, read the control socket */
-      (void) RELEASE_EVENT (set);
-      break;
+      if (RELEASE_EVENT (set))
+        break;
+      else
+        /* retry again until we read it successfully */
+        g_atomic_int_exchange_and_add (&set->control_pending, 1);
     }
   }
   return old;
@@ -1375,8 +1378,13 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
           t = 0;
         }
 
-        wait_ret = WSAWaitForMultipleEvents (set->active_events->len,
-            (HANDLE *) set->active_events->data, FALSE, t, FALSE);
+        if (set->active_events->len != 0) {
+          wait_ret = WSAWaitForMultipleEvents (set->active_events->len,
+              (HANDLE *) set->active_events->data, FALSE, t, FALSE);
+        } else {
+          wait_ret = WSA_WAIT_FAILED;
+          WSASetLastError (WSA_INVALID_PARAMETER);
+        }
 
         if (ignore_count == 0 && wait_ret == WSA_WAIT_TIMEOUT) {
           res = 0;

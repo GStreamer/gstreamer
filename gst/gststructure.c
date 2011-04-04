@@ -782,6 +782,25 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
       g_value_unset (&field->value);
       return;
     }
+  } else if (G_UNLIKELY (GST_VALUE_HOLDS_DATE (&field->value))) {
+    const GDate *d;
+
+    d = gst_value_get_date (&field->value);
+    /* only check for NULL GDates in taglists, as they might make sense
+     * in other, generic structs */
+    if (G_UNLIKELY ((IS_TAGLIST (structure) && d == NULL))) {
+      GIT_G_WARNING ("Trying to set NULL GDate on field '%s' on taglist. "
+          "Please file a bug.", g_quark_to_string (field->name));
+      g_value_unset (&field->value);
+      return;
+    } else if (G_UNLIKELY (d != NULL && !g_date_valid (d))) {
+      g_warning
+          ("Trying to set invalid GDate on %s field '%s'. Please file a bug.",
+          IS_TAGLIST (structure) ? "taglist" : "structure",
+          g_quark_to_string (field->name));
+      g_value_unset (&field->value);
+      return;
+    }
   }
 
   for (i = 0; i < len; i++) {
