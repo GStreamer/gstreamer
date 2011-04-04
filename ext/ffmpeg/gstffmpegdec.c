@@ -2450,7 +2450,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 {
   GstFFMpegDec *ffmpegdec;
   GstFFMpegDecClass *oclass;
-  guint8 *data, *bdata, *pdata;
+  guint8 *data, *bdata;
   gint size, bsize, len, have_data;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime in_timestamp;
@@ -2557,7 +2557,23 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   bdata = GST_BUFFER_DATA (inbuf);
   bsize = GST_BUFFER_SIZE (inbuf);
 
+  if (ffmpegdec->do_padding) {
+    /* add padding */
+    if (ffmpegdec->padded_size < bsize + FF_INPUT_BUFFER_PADDING_SIZE) {
+      ffmpegdec->padded_size = bsize + FF_INPUT_BUFFER_PADDING_SIZE;
+      ffmpegdec->padded = g_realloc (ffmpegdec->padded, ffmpegdec->padded_size);
+      GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
+          ffmpegdec->padded_size);
+    }
+    memcpy (ffmpegdec->padded, bdata, bsize);
+    memset (ffmpegdec->padded + bsize, 0, FF_INPUT_BUFFER_PADDING_SIZE);
+
+    bdata = ffmpegdec->padded;
+  }
+
   do {
+    guint8 tmp_padding[FF_INPUT_BUFFER_PADDING_SIZE];
+
     /* parse, if at all possible */
     if (ffmpegdec->pctx) {
       gint res;
@@ -2616,26 +2632,18 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     }
 
     if (ffmpegdec->do_padding) {
-      /* add padding */
-      if (ffmpegdec->padded_size < size + FF_INPUT_BUFFER_PADDING_SIZE) {
-        ffmpegdec->padded_size = size + FF_INPUT_BUFFER_PADDING_SIZE;
-        ffmpegdec->padded =
-            g_realloc (ffmpegdec->padded, ffmpegdec->padded_size);
-        GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
-            ffmpegdec->padded_size);
-      }
-      memcpy (ffmpegdec->padded, data, size);
-      memset (ffmpegdec->padded + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
-
-      pdata = ffmpegdec->padded;
-    } else {
-      pdata = data;
+      /* add temporary padding */
+      memcpy (tmp_padding, data + size, FF_INPUT_BUFFER_PADDING_SIZE);
+      memset (data + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
     }
 
     /* decode a frame of audio/video now */
     len =
-        gst_ffmpegdec_frame (ffmpegdec, pdata, size, &have_data, dec_info,
-        &ret);
+        gst_ffmpegdec_frame (ffmpegdec, data, size, &have_data, dec_info, &ret);
+
+    if (ffmpegdec->do_padding) {
+      memcpy (data + size, tmp_padding, FF_INPUT_BUFFER_PADDING_SIZE);
+    }
 
     if (ret != GST_FLOW_OK) {
       GST_LOG_OBJECT (ffmpegdec, "breaking because of flow ret %s",
