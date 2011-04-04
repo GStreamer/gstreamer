@@ -1269,7 +1269,7 @@ no_info:
 static void
 gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
 {
-  guint8 *data;
+  const guint8 *data;
   AVInputFormat *in_plugin = (AVInputFormat *) priv;
   gint res = 0;
   guint64 length;
@@ -1296,7 +1296,7 @@ gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
     AVProbeData probe_data;
 
     probe_data.filename = "";
-    probe_data.buf = data;
+    probe_data.buf = (guint8 *) data;
     probe_data.buf_size = length;
 
     res = in_plugin->read_probe (&probe_data);
@@ -1416,6 +1416,8 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
     AVPicture src, dst;
     const gchar *plugin_name =
         ((GstFFMpegDemuxClass *) (G_OBJECT_GET_CLASS (demux)))->in_plugin->name;
+    guint8 *data;
+    gsize size;
 
     if (strcmp (plugin_name, "gif") == 0) {
       src.data[0] = pkt.data;
@@ -1429,14 +1431,16 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
           avstream->codec->height);
     }
 
-    gst_ffmpeg_avpicture_fill (&dst, GST_BUFFER_DATA (outbuf),
+    data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
+    gst_ffmpeg_avpicture_fill (&dst, data,
         avstream->codec->pix_fmt, avstream->codec->width,
         avstream->codec->height);
 
     av_picture_copy (&dst, &src, avstream->codec->pix_fmt,
         avstream->codec->width, avstream->codec->height);
+    gst_buffer_unmap (outbuf, data, size);
   } else {
-    memcpy (GST_BUFFER_DATA (outbuf), pkt.data, outsize);
+    gst_buffer_fill (outbuf, 0, pkt.data, outsize);
   }
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
@@ -1456,7 +1460,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
 
   GST_DEBUG_OBJECT (demux,
       "Sending out buffer time:%" GST_TIME_FORMAT " size:%d",
-      GST_TIME_ARGS (timestamp), GST_BUFFER_SIZE (outbuf));
+      GST_TIME_ARGS (timestamp), gst_buffer_get_size (outbuf));
 
   ret = stream->last_flow = gst_pad_push (srcpad, outbuf);
 
@@ -1668,7 +1672,7 @@ gst_ffmpegdemux_chain (GstPad * sinkpad, GstBuffer * buffer)
   if (G_UNLIKELY (ffpipe->srcresult != GST_FLOW_OK))
     goto ignore;
 
-  GST_DEBUG ("Giving a buffer of %d bytes", GST_BUFFER_SIZE (buffer));
+  GST_DEBUG ("Giving a buffer of %d bytes", gst_buffer_get_size (buffer));
   gst_adapter_push (ffpipe->adapter, buffer);
   buffer = NULL;
   while (gst_adapter_available (ffpipe->adapter) >= ffpipe->needed) {

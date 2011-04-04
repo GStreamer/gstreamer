@@ -89,10 +89,10 @@ static void gst_ffmpegaudioresample_finalize (GObject * object);
 static GstCaps *gst_ffmpegaudioresample_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps);
 static gboolean gst_ffmpegaudioresample_transform_size (GstBaseTransform *
-    trans, GstPadDirection direction, GstCaps * caps, guint size,
-    GstCaps * othercaps, guint * othersize);
+    trans, GstPadDirection direction, GstCaps * caps, gsize size,
+    GstCaps * othercaps, gsize * othersize);
 static gboolean gst_ffmpegaudioresample_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 static gboolean gst_ffmpegaudioresample_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_ffmpegaudioresample_transform (GstBaseTransform *
@@ -174,8 +174,8 @@ gst_ffmpegaudioresample_transform_caps (GstBaseTransform * trans,
 
 static gboolean
 gst_ffmpegaudioresample_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
-    guint * othersize)
+    GstPadDirection direction, GstCaps * caps, gsize size, GstCaps * othercaps,
+    gsize * othersize)
 {
   gint inrate, outrate;
   gint inchanns, outchanns;
@@ -207,7 +207,7 @@ gst_ffmpegaudioresample_transform_size (GstBaseTransform * trans,
 
 static gboolean
 gst_ffmpegaudioresample_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   gint channels;
   GstStructure *structure;
@@ -263,26 +263,34 @@ gst_ffmpegaudioresample_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   GstFFMpegAudioResample *resample = GST_FFMPEGAUDIORESAMPLE (trans);
   gint nbsamples;
   gint ret;
+  guint8 *indata, *outdata;
+  gsize insize, outsize;
 
-  gst_buffer_copy_metadata (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
-  nbsamples = GST_BUFFER_SIZE (inbuf) / (2 * resample->in_channels);
+  gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
+  indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
+  nbsamples = insize / (2 * resample->in_channels);
 
   GST_LOG_OBJECT (resample, "input buffer duration:%" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)));
 
+  outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
   GST_DEBUG_OBJECT (resample,
       "audio_resample(ctx, output:%p [size:%d], input:%p [size:%d], nbsamples:%d",
-      GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf),
-      GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf), nbsamples);
+      outdata, outsize, indata, insize, nbsamples);
 
-  ret = audio_resample (resample->res, (short *) GST_BUFFER_DATA (outbuf),
-      (short *) GST_BUFFER_DATA (inbuf), nbsamples);
+  ret =
+      audio_resample (resample->res, (short *) outdata, (short *) indata,
+      nbsamples);
 
   GST_DEBUG_OBJECT (resample, "audio_resample returned %d", ret);
 
   GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale (ret, GST_SECOND,
       resample->out_rate);
-  GST_BUFFER_SIZE (outbuf) = ret * 2 * resample->out_channels;
+
+  outsize = ret * 2 * resample->out_channels;
+  gst_buffer_unmap (outbuf, outdata, outsize);
+  gst_buffer_unmap (inbuf, indata, insize);
 
   GST_LOG_OBJECT (resample, "Output buffer duration:%" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));

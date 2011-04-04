@@ -572,14 +572,18 @@ gst_post_proc_transform_ip (GstBaseTransform * btrans, GstBuffer * in)
   gint stride[3];
   guint8 *outplane[3];
   guint8 *inplane[3];
+  guint8 *data;
+  gsize size;
 
   /* postprocess the buffer ! */
   postproc = (GstPostProc *) btrans;
 
+  data = gst_buffer_map (in, &size, NULL, GST_MAP_READWRITE);
+
   stride[0] = postproc->ystride;
   stride[1] = postproc->ustride;
   stride[2] = postproc->vstride;
-  outplane[0] = inplane[0] = GST_BUFFER_DATA (in);
+  outplane[0] = inplane[0] = data;
   outplane[1] = inplane[1] = outplane[0] + postproc->ysize;
   outplane[2] = inplane[2] = outplane[1] + postproc->usize;
 
@@ -589,6 +593,8 @@ gst_post_proc_transform_ip (GstBaseTransform * btrans, GstBuffer * in)
   pp_postprocess ((const guint8 **) inplane, stride, outplane, stride,
       postproc->width, postproc->height, (int8_t *) "", 0,
       postproc->mode, postproc->context, 0);
+
+  gst_buffer_unmap (in, data, size);
 
   return GST_FLOW_OK;
 }

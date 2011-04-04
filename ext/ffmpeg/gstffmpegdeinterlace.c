@@ -176,17 +176,23 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstBuffer * inbuf)
       gst_pad_alloc_buffer (deinterlace->srcpad, GST_BUFFER_OFFSET_NONE,
       deinterlace->to_size, GST_PAD_CAPS (deinterlace->srcpad), &outbuf);
   if (result == GST_FLOW_OK) {
-    gst_ffmpeg_avpicture_fill (&deinterlace->from_frame,
-        GST_BUFFER_DATA (inbuf), deinterlace->pixfmt, deinterlace->width,
-        deinterlace->height);
+    guint8 *from_data, *to_data;
+    gsize from_size, to_size;
 
-    gst_ffmpeg_avpicture_fill (&deinterlace->to_frame, GST_BUFFER_DATA (outbuf),
+    from_data = gst_buffer_map (inbuf, &from_size, NULL, GST_MAP_READ);
+    gst_ffmpeg_avpicture_fill (&deinterlace->from_frame, from_data,
+        deinterlace->pixfmt, deinterlace->width, deinterlace->height);
+
+    to_data = gst_buffer_map (outbuf, &to_size, NULL, GST_MAP_WRITE);
+    gst_ffmpeg_avpicture_fill (&deinterlace->to_frame, to_data,
         deinterlace->pixfmt, deinterlace->width, deinterlace->height);
 
     avpicture_deinterlace (&deinterlace->to_frame, &deinterlace->from_frame,
         deinterlace->pixfmt, deinterlace->width, deinterlace->height);
+    gst_buffer_unmap (outbuf, to_data, to_size);
+    gst_buffer_unmap (inbuf, from_data, from_size);
 
-    gst_buffer_copy_metadata (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
+    gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
     result = gst_pad_push (deinterlace->srcpad, outbuf);
   }

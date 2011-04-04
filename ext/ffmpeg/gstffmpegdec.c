@@ -921,15 +921,6 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
         GST_PAD_CAPS (ffmpegdec->srcpad), outbuf);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto alloc_failed;
-
-    /* If buffer isn't 128-bit aligned, create a memaligned one ourselves */
-    if (((uintptr_t) GST_BUFFER_DATA (*outbuf)) % 16) {
-      GST_DEBUG_OBJECT (ffmpegdec,
-          "Downstream can't allocate aligned buffers.");
-      ffmpegdec->can_allocate_aligned = FALSE;
-      gst_buffer_unref (*outbuf);
-      *outbuf = new_aligned_buffer (fsize, GST_PAD_CAPS (ffmpegdec->srcpad));
-    }
   } else {
     GST_LOG_OBJECT (ffmpegdec,
         "not calling pad_alloc, we have a pallete or downstream can't give 16 byte aligned buffers.");
@@ -1003,6 +994,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
     {
       GstFlowReturn ret;
       gint clip_width, clip_height;
+      guint8 *data;
 
       /* take final clipped output size */
       if ((clip_width = ffmpegdec->format.video.clip_width) == -1)
@@ -1032,9 +1024,21 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
         return avcodec_default_get_buffer (context, picture);
       }
 
+      /* FIXME, unmap me later */
+      data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+      if (((uintptr_t) data) % 16) {
+        /* If buffer isn't 128-bit aligned, create a memaligned one ourselves */
+        gst_buffer_unmap (buf, data, 0);
+        gst_buffer_unref (buf);
+        GST_DEBUG_OBJECT (ffmpegdec,
+            "Downstream can't allocate aligned buffers.");
+        ffmpegdec->can_allocate_aligned = FALSE;
+        return avcodec_default_get_buffer (context, picture);
+      }
+
       /* copy the right pointers and strides in the picture object */
       gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
-          GST_BUFFER_DATA (buf), context->pix_fmt, width, height);
+          data, context->pix_fmt, width, height);
       break;
     }
     case CODEC_TYPE_AUDIO:
@@ -1092,6 +1096,7 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
 #else
   gst_buffer_unref (buf);
 #endif
+  /* FIXME, unmap buffer data */
 
   /* zero out the reference in ffmpeg */
   for (i = 0; i < 4; i++) {
@@ -1543,6 +1548,8 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
   } else {
     AVPicture pic, *outpic;
     gint width, height;
+    guint8 *data;
+    gsize size;
 
     GST_LOG_OBJECT (ffmpegdec, "get output buffer");
 
@@ -1567,7 +1574,9 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
 
     /* original ffmpeg code does not handle odd sizes correctly.
      * This patched up version does */
-    gst_ffmpeg_avpicture_fill (&pic, GST_BUFFER_DATA (*outbuf),
+    data = gst_buffer_map (*outbuf, &size, NULL, GST_MAP_WRITE);
+
+    gst_ffmpeg_avpicture_fill (&pic, data,
         ffmpegdec->context->pix_fmt, width, height);
 
     outpic = (AVPicture *) ffmpegdec->picture;
@@ -1579,6 +1588,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
         (guint) (outpic->data[2] - outpic->data[0]));
 
     av_picture_copy (&pic, outpic, ffmpegdec->context->pix_fmt, width, height);
+    gst_buffer_unmap (*outbuf, data, size);
   }
   ffmpegdec->picture->reordered_opaque = -1;
 
@@ -1928,8 +1938,11 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   /* palette is not part of raw video frame in gst and the size
    * of the outgoing buffer needs to be adjusted accordingly */
-  if (ffmpegdec->context->palctrl != NULL)
-    GST_BUFFER_SIZE (*outbuf) -= AVPALETTE_SIZE;
+  if (ffmpegdec->context->palctrl != NULL) {
+
+    gst_buffer_resize (*outbuf, 0,
+        gst_buffer_get_size (*outbuf) - AVPALETTE_SIZE);
+  }
 
   /* now see if we need to clip the buffer against the segment boundaries. */
   if (G_UNLIKELY (!clip_video_buffer (ffmpegdec, *outbuf, out_timestamp,
@@ -1979,11 +1992,15 @@ clip_audio_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
   GstClockTime stop;
   gint64 diff, ctime, cstop;
   gboolean res = TRUE;
+  gsize size, offset;
+
+  size = gst_buffer_get_size (buf);
+  offset = 0;
 
   GST_LOG_OBJECT (dec,
       "timestamp:%" GST_TIME_FORMAT ", duration:%" GST_TIME_FORMAT
-      ", size %u", GST_TIME_ARGS (in_ts), GST_TIME_ARGS (in_dur),
-      GST_BUFFER_SIZE (buf));
+      ", size %" G_GSIZE_FORMAT, GST_TIME_ARGS (in_ts), GST_TIME_ARGS (in_dur),
+      size);
 
   /* can't clip without TIME segment */
   if (G_UNLIKELY (dec->segment.format != GST_FORMAT_TIME))
@@ -2011,8 +2028,8 @@ clip_audio_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
     GST_DEBUG_OBJECT (dec, "clipping start to %" GST_TIME_FORMAT " %"
         G_GINT64_FORMAT " bytes", GST_TIME_ARGS (ctime), diff);
 
-    GST_BUFFER_SIZE (buf) -= diff;
-    GST_BUFFER_DATA (buf) += diff;
+    offset += diff;
+    size -= diff;
   }
   if (G_UNLIKELY ((diff = stop - cstop) > 0)) {
     /* bring clipped time to bytes */
@@ -2023,8 +2040,9 @@ clip_audio_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
     GST_DEBUG_OBJECT (dec, "clipping stop to %" GST_TIME_FORMAT " %"
         G_GINT64_FORMAT " bytes", GST_TIME_ARGS (cstop), diff);
 
-    GST_BUFFER_SIZE (buf) -= diff;
+    size -= diff;
   }
+  gst_buffer_resize (buf, offset, size);
   GST_BUFFER_TIMESTAMP (buf) = ctime;
   GST_BUFFER_DURATION (buf) = cstop - ctime;
 
@@ -2049,6 +2067,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
   gint have_data = AVCODEC_MAX_AUDIO_FRAME_SIZE;
   GstClockTime out_timestamp, out_duration;
   gint64 out_offset;
+  int16_t *odata;
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "size:%d, offset:%" G_GINT64_FORMAT ", ts:%" GST_TIME_FORMAT ", dur:%"
@@ -2060,12 +2079,16 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       new_aligned_buffer (AVCODEC_MAX_AUDIO_FRAME_SIZE,
       GST_PAD_CAPS (ffmpegdec->srcpad));
 
-  len = avcodec_decode_audio2 (ffmpegdec->context,
-      (int16_t *) GST_BUFFER_DATA (*outbuf), &have_data, data, size);
+  odata = gst_buffer_map (*outbuf, NULL, NULL, GST_MAP_WRITE);
+  len = avcodec_decode_audio2 (ffmpegdec->context, odata, &have_data,
+      data, size);
   GST_DEBUG_OBJECT (ffmpegdec,
       "Decode audio: len=%d, have_data=%d", len, have_data);
 
   if (len >= 0 && have_data > 0) {
+    /* Buffer size */
+    gst_buffer_unmap (*outbuf, odata, have_data);
+
     GST_DEBUG_OBJECT (ffmpegdec, "Creating output buffer");
     if (!gst_ffmpegdec_negotiate (ffmpegdec, FALSE)) {
       gst_buffer_unref (*outbuf);
@@ -2073,9 +2096,6 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       len = -1;
       goto beach;
     }
-
-    /* Buffer size */
-    GST_BUFFER_SIZE (*outbuf) = have_data;
 
     /*
      * Timestamps:
@@ -2123,6 +2143,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       goto clipped;
 
   } else {
+    gst_buffer_unmap (*outbuf, odata, 0);
     gst_buffer_unref (*outbuf);
     *outbuf = NULL;
   }

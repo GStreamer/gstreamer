@@ -176,7 +176,7 @@ static GstCaps *gst_ffmpegscale_transform_caps (GstBaseTransform * trans,
 static void gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_ffmpegscale_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 static gboolean gst_ffmpegscale_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_ffmpegscale_transform (GstBaseTransform * trans,
@@ -475,7 +475,7 @@ gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
 
 static gboolean
 gst_ffmpegscale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   gint width, height;
   GstVideoFormat format;
@@ -678,17 +678,25 @@ gst_ffmpegscale_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   guint8 *in_data[3] = { NULL, NULL, NULL };
   guint8 *out_data[3] = { NULL, NULL, NULL };
   gint i;
+  guint8 *indata, *outdata;
+  gsize insize, outsize;
+
+  indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
+  outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
 
   for (i = 0; i < 3; i++) {
     /* again; stay close to the ffmpeg offset way */
     if (!i || scale->in_offset[i])
-      in_data[i] = GST_BUFFER_DATA (inbuf) + scale->in_offset[i];
+      in_data[i] = indata + scale->in_offset[i];
     if (!i || scale->out_offset[i])
-      out_data[i] = GST_BUFFER_DATA (outbuf) + scale->out_offset[i];
+      out_data[i] = outdata + scale->out_offset[i];
   }
 
   sws_scale (scale->ctx, (const guint8 **) in_data, scale->in_stride, 0,
       scale->in_height, out_data, scale->out_stride);
+
+  gst_buffer_unmap (inbuf, indata, insize);
+  gst_buffer_unmap (outbuf, outdata, outsize);
 
   return GST_FLOW_OK;
 }
