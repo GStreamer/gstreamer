@@ -970,9 +970,10 @@ gst_avi_demux_peek_chunk_info (GstAviDemux * avi, guint32 * tag, guint32 * size)
   if (gst_adapter_available (avi->adapter) < 8)
     return FALSE;
 
-  data = gst_adapter_peek (avi->adapter, 8);
+  data = gst_adapter_map (avi->adapter, 8);
   *tag = GST_READ_UINT32_LE (data);
   *size = GST_READ_UINT32_LE (data + 4);
+  gst_adapter_unmap (avi->adapter, 0);
 
   return TRUE;
 }
@@ -1151,14 +1152,17 @@ gst_avi_demux_parse_avih (GstAviDemux * avi,
     GstBuffer * buf, gst_riff_avih ** _avih)
 {
   gst_riff_avih *avih;
+  gsize size;
 
   if (buf == NULL)
     goto no_buffer;
 
-  if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_avih))
+  size = gst_buffer_get_size (buf);
+  if (size < sizeof (gst_riff_avih))
     goto avih_too_small;
 
-  avih = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  avih = g_malloc (size);
+  gst_buffer_extract (buf, 0, avih, size);
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
   avih->us_frame = GUINT32_FROM_LE (avih->us_frame);
@@ -1218,7 +1222,7 @@ avih_too_small:
   {
     GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
         ("Too small avih (%d available, %d needed)",
-            GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_avih)));
+            size, (int) sizeof (gst_riff_avih)));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -1245,15 +1249,17 @@ gst_avi_demux_parse_superindex (GstAviDemux * avi,
   guint16 bpe = 16;
   guint32 num, i;
   guint64 *indexes;
-  guint size;
+  gsize size;
 
   *_indexes = NULL;
 
-  size = buf ? GST_BUFFER_SIZE (buf) : 0;
+  if (buf)
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  else
+    size = 0;
+
   if (size < 24)
     goto too_small;
-
-  data = GST_BUFFER_DATA (buf);
 
   /* check type of index. The opendml2 specs state that
    * there should be 4 dwords per array entry. Type can be
@@ -1285,6 +1291,7 @@ gst_avi_demux_parse_superindex (GstAviDemux * avi,
   indexes[i] = GST_BUFFER_OFFSET_NONE;
   *_indexes = indexes;
 
+  gst_buffer_unmap (buf, data, size);
   gst_buffer_unref (buf);
 
   return TRUE;
@@ -1294,16 +1301,18 @@ too_small:
   {
     GST_ERROR_OBJECT (avi,
         "Not enough data to parse superindex (%d available, 24 needed)", size);
-    if (buf)
+    if (buf) {
+      gst_buffer_unmap (buf, data, size);
       gst_buffer_unref (buf);
+    }
     return FALSE;
   }
 invalid_params:
   {
     GST_ERROR_OBJECT (avi, "invalid index parameters (num = %d, bpe = %d)",
         num, bpe);
-    if (buf)
-      gst_buffer_unref (buf);
+    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unref (buf);
     return FALSE;
   }
 }
@@ -1508,18 +1517,15 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi, GstAviStream * stream,
   guint16 bpe;
   guint32 num, i;
   guint64 baseoff;
-  guint size;
+  gsize size;
 
-  if (!buf)
+  if (buf == NULL)
     return TRUE;
 
-  size = GST_BUFFER_SIZE (buf);
-
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   /* check size */
   if (size < 24)
     goto too_small;
-
-  data = GST_BUFFER_DATA (buf);
 
   /* We don't support index-data yet */
   if (data[3] & 0x80)
@@ -1570,6 +1576,8 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi, GstAviStream * stream,
     if (G_UNLIKELY (!gst_avi_demux_add_index (avi, stream, num, &entry)))
       goto out_of_mem;
   }
+done:
+  gst_buffer_unmap (buf, data, size);
   gst_buffer_unref (buf);
 
   return TRUE;
@@ -1579,21 +1587,20 @@ too_small:
   {
     GST_ERROR_OBJECT (avi,
         "Not enough data to parse subindex (%d available, 24 needed)", size);
-    gst_buffer_unref (buf);
-    return TRUE;                /* continue */
+    goto done;                  /* continue */
   }
 not_implemented:
   {
     GST_ELEMENT_ERROR (avi, STREAM, NOT_IMPLEMENTED, (NULL),
         ("Subindex-is-data is not implemented"));
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     return FALSE;
   }
 empty_index:
   {
     GST_DEBUG_OBJECT (avi, "the index is empty");
-    gst_buffer_unref (buf);
-    return TRUE;
+    goto done;                  /* continue */
   }
 out_of_mem:
   {
@@ -1601,6 +1608,7 @@ out_of_mem:
         ("Cannot allocate memory for %u*%u=%u bytes",
             (guint) sizeof (GstAviIndexEntry), num,
             (guint) sizeof (GstAviIndexEntry) * num));
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -1754,14 +1762,18 @@ gst_avi_demux_riff_parse_vprp (GstElement * element,
 {
   gst_riff_vprp *vprp;
   gint k;
+  gsize size;
 
   g_return_val_if_fail (buf != NULL, FALSE);
   g_return_val_if_fail (_vprp != NULL, FALSE);
 
-  if (GST_BUFFER_SIZE (buf) < G_STRUCT_OFFSET (gst_riff_vprp, field_info))
+  size = gst_buffer_get_size (buf);
+
+  if (size < G_STRUCT_OFFSET (gst_riff_vprp, field_info))
     goto too_small;
 
-  vprp = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  vprp = g_malloc (size);
+  gst_buffer_extract (buf, 0, vprp, size);
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
   vprp->format_token = GUINT32_FROM_LE (vprp->format_token);
@@ -1777,8 +1789,7 @@ gst_avi_demux_riff_parse_vprp (GstElement * element,
 
   /* size checking */
   /* calculate fields based on size */
-  k = (GST_BUFFER_SIZE (buf) - G_STRUCT_OFFSET (gst_riff_vprp, field_info)) /
-      vprp->fields;
+  k = (size - G_STRUCT_OFFSET (gst_riff_vprp, field_info)) / vprp->fields;
   if (vprp->fields > k) {
     GST_WARNING_OBJECT (element,
         "vprp header indicated %d fields, only %d available", vprp->fields, k);
@@ -1850,8 +1861,7 @@ too_small:
   {
     GST_ERROR_OBJECT (element,
         "Too small vprp (%d available, at least %d needed)",
-        GST_BUFFER_SIZE (buf),
-        (int) G_STRUCT_OFFSET (gst_riff_vprp, field_info));
+        size, (int) G_STRUCT_OFFSET (gst_riff_vprp, field_info));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -1893,14 +1903,20 @@ gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
 static inline void
 gst_avi_demux_roundup_list (GstAviDemux * avi, GstBuffer ** buf)
 {
-  if (G_UNLIKELY (GST_BUFFER_SIZE (*buf) & 1)) {
-    GstBuffer *obuf;
+  gsize size;
 
-    GST_DEBUG_OBJECT (avi, "rounding up dubious list size %d",
-        GST_BUFFER_SIZE (*buf));
-    obuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + 1);
-    memcpy (GST_BUFFER_DATA (obuf), GST_BUFFER_DATA (*buf),
-        GST_BUFFER_SIZE (*buf));
+  size = gst_buffer_get_size (*buf);
+
+  if (G_UNLIKELY (size & 1)) {
+    GstBuffer *obuf;
+    guint8 *data;
+
+    GST_DEBUG_OBJECT (avi, "rounding up dubious list size %d", size);
+    obuf = gst_buffer_new_and_alloc (size + 1);
+
+    data = gst_buffer_map (obuf, NULL, NULL, GST_MAP_WRITE);
+    gst_buffer_extract (*buf, 0, data, size);
+    gst_buffer_unmap (obuf, data, size + 1);
     gst_buffer_replace (buf, obuf);
   }
 }
@@ -2125,9 +2141,12 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
       case GST_RIFF_TAG_strn:
         g_free (stream->name);
         if (sub != NULL) {
-          stream->name =
-              g_strndup ((gchar *) GST_BUFFER_DATA (sub),
-              (gsize) GST_BUFFER_SIZE (sub));
+          gchar *bdata;
+          gsize bsize;
+
+          bdata = gst_buffer_map (sub, &bsize, NULL, GST_MAP_READ);
+          stream->name = g_strndup (bdata, bsize);
+          gst_buffer_unmap (sub, bdata, bsize);
           gst_buffer_unref (sub);
           sub = NULL;
         } else {
@@ -2363,20 +2382,26 @@ gst_avi_demux_parse_odml (GstAviDemux * avi, GstBuffer * buf)
     switch (tag) {
       case GST_RIFF_TAG_dmlh:{
         gst_riff_dmlh dmlh, *_dmlh;
-        guint size;
+        gsize size;
+        guint8 *data;
 
         /* sub == NULL is possible and means an empty buffer */
-        size = sub ? GST_BUFFER_SIZE (sub) : 0;
+        if (sub == NULL)
+          goto next;
+
+        data = gst_buffer_map (sub, &size, NULL, GST_MAP_READ);
 
         /* check size */
         if (size < sizeof (gst_riff_dmlh)) {
           GST_ERROR_OBJECT (avi,
               "DMLH entry is too small (%d bytes, %d needed)",
               size, (int) sizeof (gst_riff_dmlh));
+          gst_buffer_unmap (sub, data, size);
           goto next;
         }
-        _dmlh = (gst_riff_dmlh *) GST_BUFFER_DATA (sub);
+        _dmlh = (gst_riff_dmlh *) data;
         dmlh.totalframes = GST_READ_UINT32_LE (&_dmlh->totalframes);
+        gst_buffer_unmap (sub, data, size);
 
         GST_INFO_OBJECT (avi, "dmlh tag found: totalframes: %u",
             dmlh.totalframes);
@@ -2555,7 +2580,7 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
 {
   guint64 pos_before;
   guint8 *data;
-  guint size;
+  gsize size;
   guint i, num, n;
   gst_riff_index_entry *index;
   GstClockTime stamp;
@@ -2566,8 +2591,7 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
   if (!buf)
     return FALSE;
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
   stamp = gst_util_get_timestamp ();
 
@@ -2630,6 +2654,7 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
 
     n++;
   }
+  gst_buffer_unmap (buf, data, size);
   gst_buffer_unref (buf);
 
   /* get stream stats now */
@@ -2645,6 +2670,7 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
 empty_list:
   {
     GST_DEBUG_OBJECT (avi, "empty index");
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -2654,6 +2680,7 @@ out_of_mem:
         ("Cannot allocate memory for %u*%u=%u bytes",
             (guint) sizeof (GstAviIndexEntry), num,
             (guint) sizeof (GstAviIndexEntry) * num));
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -2673,6 +2700,8 @@ gst_avi_demux_stream_index (GstAviDemux * avi)
   GstBuffer *buf;
   guint32 tag;
   guint32 size;
+  gsize bsize;
+  guint8 *bdata;
 
   GST_DEBUG ("demux stream index at offset %" G_GUINT64_FORMAT, offset);
 
@@ -2680,33 +2709,40 @@ gst_avi_demux_stream_index (GstAviDemux * avi)
   res = gst_pad_pull_range (avi->sinkpad, offset, 8, &buf);
   if (res != GST_FLOW_OK)
     goto pull_failed;
-  else if (GST_BUFFER_SIZE (buf) < 8)
+
+  bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+  if (bsize < 8)
     goto too_small;
 
   /* check tag first before blindy trying to read 'size' bytes */
-  tag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
-  size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
+  tag = GST_READ_UINT32_LE (bdata);
+  size = GST_READ_UINT32_LE (bdata + 4);
   if (tag == GST_RIFF_TAG_LIST) {
     /* this is the movi tag */
     GST_DEBUG_OBJECT (avi, "skip LIST chunk, size %" G_GUINT32_FORMAT,
         (8 + GST_ROUND_UP_2 (size)));
     offset += 8 + GST_ROUND_UP_2 (size);
+    gst_buffer_unmap (buf, bdata, bsize);
     gst_buffer_unref (buf);
+
     res = gst_pad_pull_range (avi->sinkpad, offset, 8, &buf);
     if (res != GST_FLOW_OK)
       goto pull_failed;
-    else if (GST_BUFFER_SIZE (buf) < 8)
+
+    bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+    if (bsize < 8)
       goto too_small;
-    tag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
-    size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
+
+    tag = GST_READ_UINT32_LE (bdata);
+    size = GST_READ_UINT32_LE (bdata + 4);
   }
+  gst_buffer_unmap (buf, bdata, bsize);
+  gst_buffer_unref (buf);
 
   if (tag != GST_RIFF_TAG_idx1)
     goto no_index;
   if (!size)
     goto zero_index;
-
-  gst_buffer_unref (buf);
 
   GST_DEBUG ("index found at offset %" G_GUINT64_FORMAT, offset);
 
@@ -2716,7 +2752,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi)
     return;
 
   GST_DEBUG ("will parse index chunk size %u for tag %"
-      GST_FOURCC_FORMAT, GST_BUFFER_SIZE (buf), GST_FOURCC_ARGS (tag));
+      GST_FOURCC_FORMAT, gst_buffer_get_size (buf), GST_FOURCC_ARGS (tag));
 
   gst_avi_demux_parse_index (avi, buf);
 
@@ -2745,6 +2781,7 @@ pull_failed:
 too_small:
   {
     GST_DEBUG_OBJECT (avi, "Buffer is too small");
+    gst_buffer_unmap (buf, bdata, bsize);
     gst_buffer_unref (buf);
     return;
   }
@@ -2753,13 +2790,11 @@ no_index:
     GST_WARNING_OBJECT (avi,
         "No index data (idx1) after movi chunk, but %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (tag));
-    gst_buffer_unref (buf);
     return;
   }
 zero_index:
   {
     GST_WARNING_OBJECT (avi, "Empty index data (idx1) after movi chunk");
-    gst_buffer_unref (buf);
     return;
   }
 }
@@ -2810,7 +2845,7 @@ gst_avi_demux_stream_index_push (GstAviDemux * avi)
   offset += 8 + GST_ROUND_UP_2 (size);
 
   GST_DEBUG ("will parse index chunk size %u for tag %"
-      GST_FOURCC_FORMAT, GST_BUFFER_SIZE (buf), GST_FOURCC_ARGS (tag));
+      GST_FOURCC_FORMAT, gst_buffer_get_size (buf), GST_FOURCC_ARGS (tag));
 
   avi->offset = avi->first_movi_offset;
   gst_avi_demux_parse_index (avi, buf);
@@ -2858,18 +2893,16 @@ gst_avi_demux_peek_tag (GstAviDemux * avi, guint64 offset, guint32 * tag,
 {
   GstFlowReturn res = GST_FLOW_OK;
   GstBuffer *buf = NULL;
-  guint bufsize;
+  gsize bufsize;
   guint8 *bufdata;
 
   res = gst_pad_pull_range (avi->sinkpad, offset, 8, &buf);
   if (res != GST_FLOW_OK)
     goto pull_failed;
 
-  bufsize = GST_BUFFER_SIZE (buf);
+  bufdata = gst_buffer_map (buf, &bufsize, NULL, GST_MAP_READ);
   if (bufsize != 8)
     goto wrong_size;
-
-  bufdata = GST_BUFFER_DATA (buf);
 
   *tag = GST_READ_UINT32_LE (bufdata);
   *size = GST_READ_UINT32_LE (bufdata + 4);
@@ -2879,6 +2912,7 @@ gst_avi_demux_peek_tag (GstAviDemux * avi, guint64 offset, guint32 * tag,
       *size, offset + 8, offset + 8 + (gint64) * size);
 
 done:
+  gst_buffer_unmap (buf, bufdata, bufsize);
   gst_buffer_unref (buf);
 
   return res;
@@ -3152,6 +3186,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
   gint64 stop;
   gint i;
   GstTagList *tags = NULL;
+  guint8 fourcc[4];
 
   GST_DEBUG ("Reading and parsing avi headers: %d", avi->header_state);
 
@@ -3167,7 +3202,9 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
         GST_DEBUG ("Reading %d bytes", size);
         buf = gst_adapter_take_buffer (avi->adapter, size);
 
-        if (GST_READ_UINT32_LE (GST_BUFFER_DATA (buf)) != GST_RIFF_LIST_hdrl)
+        gst_buffer_extract (buf, 0, fourcc, 4);
+
+        if (GST_READ_UINT32_LE (fourcc) != GST_RIFF_LIST_hdrl)
           goto header_no_hdrl;
 
         /* mind padding */
@@ -3200,10 +3237,12 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
 
           switch (tag) {
             case GST_RIFF_TAG_LIST:
-              if (GST_BUFFER_SIZE (sub) < 4)
+              if (gst_buffer_get_size (sub) < 4)
                 goto next;
 
-              switch (GST_READ_UINT32_LE (GST_BUFFER_DATA (sub))) {
+              gst_buffer_extract (sub, 0, fourcc, 4);
+
+              switch (GST_READ_UINT32_LE (fourcc)) {
                 case GST_RIFF_LIST_strl:
                   if (!(gst_avi_demux_parse_stream (avi, sub))) {
                     sub = NULL;
@@ -3220,14 +3259,13 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
                 default:
                   GST_WARNING_OBJECT (avi,
                       "Unknown list %" GST_FOURCC_FORMAT " in AVI header",
-                      GST_FOURCC_ARGS (GST_READ_UINT32_LE (GST_BUFFER_DATA
-                              (sub))));
+                      GST_FOURCC_ARGS (GST_READ_UINT32_LE (fourcc)));
                   /* fall-through */
                 case GST_RIFF_TAG_JUNQ:
                 case GST_RIFF_TAG_JUNK:
                   goto next;
+                  break;
               }
-              break;
             case GST_RIFF_IDIT:
               gst_avi_demux_parse_idit (avi, sub);
               goto next;
@@ -3270,10 +3308,11 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
         if (gst_adapter_available (avi->adapter) < 12)
           return GST_FLOW_OK;
 
-        data = gst_adapter_peek (avi->adapter, 12);
+        data = gst_adapter_map (avi->adapter, 12);
         tag = GST_READ_UINT32_LE (data);
         size = GST_READ_UINT32_LE (data + 4);
         ltag = GST_READ_UINT32_LE (data + 8);
+        gst_adapter_unmap (avi->adapter, 0);
 
         if (tag == GST_RIFF_TAG_LIST) {
           switch (ltag) {
@@ -3525,10 +3564,11 @@ gst_avi_demux_parse_idit_text (GstAviDemux * avi, gchar * data)
 static void
 gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
 {
-  gchar *data = (gchar *) GST_BUFFER_DATA (buf);
-  guint size = GST_BUFFER_SIZE (buf);
+  gchar *data, *ptr;
+  gsize size, left;
   gchar *safedata = NULL;
 
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   /*
    * According to:
    * http://www.eden-foundation.org/products/code/film_date_stamp/index.html
@@ -3542,24 +3582,27 @@ gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
    */
 
   /* skip eventual initial whitespace */
-  while (size > 0 && g_ascii_isspace (data[0])) {
-    data++;
-    size--;
+  ptr = data;
+  left = size;
+
+  while (left > 0 && g_ascii_isspace (ptr[0])) {
+    ptr++;
+    left--;
   }
 
-  if (size == 0) {
+  if (left == 0) {
     goto non_parsable;
   }
 
   /* make a safe copy to add a \0 to the end of the string */
-  safedata = g_strndup (data, size);
+  safedata = g_strndup (ptr, left);
 
   /* test if the first char is a alpha or a number */
-  if (g_ascii_isdigit (data[0])) {
+  if (g_ascii_isdigit (ptr[0])) {
     gst_avi_demux_parse_idit_nums_only (avi, safedata);
     g_free (safedata);
     return;
-  } else if (g_ascii_isalpha (data[0])) {
+  } else if (g_ascii_isalpha (ptr[0])) {
     gst_avi_demux_parse_idit_text (avi, safedata);
     g_free (safedata);
     return;
@@ -3569,6 +3612,7 @@ gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
 
 non_parsable:
   GST_WARNING_OBJECT (avi, "IDIT tag has no parsable info");
+  gst_buffer_unmap (buf, data, size);
 }
 
 /*
@@ -3585,6 +3629,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
   GstElement *element = GST_ELEMENT_CAST (avi);
   GstClockTime stamp;
   GstTagList *tags = NULL;
+  guint8 fourcc[4];
 
   stamp = gst_util_get_timestamp ();
 
@@ -3594,15 +3639,16 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
     goto pull_range_failed;
   else if (tag != GST_RIFF_TAG_LIST)
     goto no_list;
-  else if (GST_BUFFER_SIZE (buf) < 4)
+  else if (gst_buffer_get_size (buf) < 4)
     goto no_header;
 
   GST_DEBUG_OBJECT (avi, "parsing headers");
 
   /* Find the 'hdrl' LIST tag */
-  while (GST_READ_UINT32_LE (GST_BUFFER_DATA (buf)) != GST_RIFF_LIST_hdrl) {
+  gst_buffer_extract (buf, 0, fourcc, 4);
+  while (GST_READ_UINT32_LE (fourcc) != GST_RIFF_LIST_hdrl) {
     GST_LOG_OBJECT (avi, "buffer contains %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (GST_READ_UINT32_LE (GST_BUFFER_DATA (buf))));
+        GST_FOURCC_ARGS (GST_READ_UINT32_LE (fourcc)));
 
     /* Eat up */
     gst_buffer_unref (buf);
@@ -3613,8 +3659,9 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
       goto pull_range_failed;
     else if (tag != GST_RIFF_TAG_LIST)
       goto no_list;
-    else if (GST_BUFFER_SIZE (buf) < 4)
+    else if (gst_buffer_get_size (buf) < 4)
       goto no_header;
+    gst_buffer_extract (buf, 0, fourcc, 4);
   }
 
   GST_DEBUG_OBJECT (avi, "hdrl LIST tag found");
@@ -3633,23 +3680,21 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
 
   /* now, read the elements from the header until the end */
   while (gst_riff_parse_chunk (element, buf, &offset, &tag, &sub)) {
+    gsize size;
+    guint8 *data;
+
     /* sub can be NULL on empty tags */
     if (!sub)
       continue;
 
+    data = gst_buffer_map (sub, &size, NULL, GST_MAP_READ);
+
     switch (tag) {
       case GST_RIFF_TAG_LIST:
-      {
-        guint8 *data;
-        guint32 fourcc;
-
-        if (GST_BUFFER_SIZE (sub) < 4)
+        if (size < 4)
           goto next;
 
-        data = GST_BUFFER_DATA (sub);
-        fourcc = GST_READ_UINT32_LE (data);
-
-        switch (fourcc) {
+        switch (GST_READ_UINT32_LE (data)) {
           case GST_RIFF_LIST_strl:
             if (!(gst_avi_demux_parse_stream (avi, sub))) {
               GST_ELEMENT_WARNING (avi, STREAM, DEMUX, (NULL),
@@ -3663,8 +3708,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             sub = NULL;
             break;
           case GST_RIFF_LIST_INFO:
-            GST_BUFFER_DATA (sub) = data + 4;
-            GST_BUFFER_SIZE (sub) -= 4;
+            gst_buffer_resize (sub, 4, -1);
             gst_riff_parse_info (element, sub, &tags);
             if (tags) {
               if (avi->globaltags) {
@@ -3679,16 +3723,14 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
           default:
             GST_WARNING_OBJECT (avi,
                 "Unknown list %" GST_FOURCC_FORMAT " in AVI header",
-                GST_FOURCC_ARGS (fourcc));
-            GST_MEMDUMP_OBJECT (avi, "Unknown list", GST_BUFFER_DATA (sub),
-                GST_BUFFER_SIZE (sub));
+                GST_FOURCC_ARGS (GST_READ_UINT32_LE (data)));
+            GST_MEMDUMP_OBJECT (avi, "Unknown list", data, size);
             /* fall-through */
           case GST_RIFF_TAG_JUNQ:
           case GST_RIFF_TAG_JUNK:
             goto next;
         }
         break;
-      }
       case GST_RIFF_IDIT:
         gst_avi_demux_parse_idit (avi, sub);
         goto next;
@@ -3696,14 +3738,15 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
         GST_WARNING_OBJECT (avi,
             "Unknown tag %" GST_FOURCC_FORMAT " in AVI header at off %d",
             GST_FOURCC_ARGS (tag), offset);
-        GST_MEMDUMP_OBJECT (avi, "Unknown tag", GST_BUFFER_DATA (sub),
-            GST_BUFFER_SIZE (sub));
+        GST_MEMDUMP_OBJECT (avi, "Unknown tag", data, size);
         /* fall-through */
       case GST_RIFF_TAG_JUNQ:
       case GST_RIFF_TAG_JUNK:
       next:
-        if (sub)
+        if (sub) {
+          gst_buffer_unmap (sub, data, size);
           gst_buffer_unref (sub);
+        }
         sub = NULL;
         break;
     }
@@ -3726,6 +3769,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
   /* Now, find the data (i.e. skip all junk between header and data) */
   do {
     guint size;
+    gsize bsize;
     guint8 *data;
     guint32 tag, ltag;
 
@@ -3733,22 +3777,22 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
     if (res != GST_FLOW_OK) {
       GST_DEBUG_OBJECT (avi, "pull_range failure while looking for tags");
       goto pull_range_failed;
-    } else if (GST_BUFFER_SIZE (buf) < 12) {
+    } else if (gst_buffer_get_size (buf) < 12) {
       GST_DEBUG_OBJECT (avi, "got %d bytes which is less than 12 bytes",
-          GST_BUFFER_SIZE (buf));
+          gst_buffer_get_size (buf));
       gst_buffer_unref (buf);
       return GST_FLOW_ERROR;
     }
 
-    data = GST_BUFFER_DATA (buf);
-
+    data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
     tag = GST_READ_UINT32_LE (data);
     size = GST_READ_UINT32_LE (data + 4);
     ltag = GST_READ_UINT32_LE (data + 8);
 
     GST_DEBUG ("tag %" GST_FOURCC_FORMAT ", size %u",
         GST_FOURCC_ARGS (tag), size);
-    GST_MEMDUMP ("Tag content", data, GST_BUFFER_SIZE (buf));
+    GST_MEMDUMP ("Tag content", data, bsize);
+    gst_buffer_unmap (buf, data, bsize);
     gst_buffer_unref (buf);
 
     switch (tag) {
@@ -3766,7 +3810,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
               GST_DEBUG_OBJECT (avi, "couldn't read INFO chunk");
               goto pull_range_failed;
             }
-            GST_DEBUG ("got size %u", GST_BUFFER_SIZE (buf));
+            GST_DEBUG ("got size %u", gst_buffer_get_size (buf));
             if (size < 4) {
               GST_DEBUG ("skipping INFO LIST prefix");
               avi->offset += (4 - GST_ROUND_UP_2 (size));
@@ -3774,7 +3818,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
               continue;
             }
 
-            sub = gst_buffer_create_sub (buf, 4, GST_BUFFER_SIZE (buf) - 4);
+            sub = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, 4, -1);
             gst_riff_parse_info (element, sub, &tags);
             if (tags) {
               if (avi->globaltags) {
@@ -3814,7 +3858,9 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             GST_DEBUG_OBJECT (avi, "couldn't read INFO chunk");
             goto pull_range_failed;
           }
-          GST_MEMDUMP ("Junk", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+          data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+          GST_MEMDUMP ("Junk", data, bsize);
+          gst_buffer_unmap (buf, data, bsize);
           gst_buffer_unref (buf);
         }
         avi->offset += 8 + GST_ROUND_UP_2 (size);
@@ -4450,7 +4496,8 @@ gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
   GstStructure *s;
   gint y, w, h;
   gint bpp, stride;
-  guint8 *tmp = NULL;
+  guint8 *tmp = NULL, *data;
+  gsize size;
 
   if (stream->strh->type != GST_RIFF_FCC_vids)
     return buf;
@@ -4475,19 +4522,23 @@ gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
   stride = w * (bpp / 8);
 
   buf = gst_buffer_make_writable (buf);
-  if (GST_BUFFER_SIZE (buf) < (stride * h)) {
+
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
+  if (size < (stride * h)) {
     GST_WARNING ("Buffer is smaller than reported Width x Height x Depth");
+    gst_buffer_unmap (buf, data, size);
     return buf;
   }
 
   tmp = g_malloc (stride);
 
   for (y = 0; y < h / 2; y++) {
-    swap_line (GST_BUFFER_DATA (buf) + stride * y,
-        GST_BUFFER_DATA (buf) + stride * (h - 1 - y), tmp, stride);
+    swap_line (data + stride * y, data + stride * (h - 1 - y), tmp, stride);
   }
 
   g_free (tmp);
+
+  gst_buffer_unmap (buf, data, size);
 
   return buf;
 }
@@ -4742,7 +4793,7 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
       goto pull_failed;
 
     /* check for short buffers, this is EOS as well */
-    if (GST_BUFFER_SIZE (buf) < size)
+    if (gst_buffer_get_size (buf) < size)
       goto short_buffer;
 
     /* invert the picture if needed */
@@ -4776,7 +4827,7 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
     GST_DEBUG_OBJECT (avi, "Pushing buffer of size %u, ts %"
         GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", off %" G_GUINT64_FORMAT
         ", off_end %" G_GUINT64_FORMAT,
-        GST_BUFFER_SIZE (buf), GST_TIME_ARGS (timestamp),
+        gst_buffer_get_size (buf), GST_TIME_ARGS (timestamp),
         GST_TIME_ARGS (duration), out_offset, out_offset_end);
 
     ret = gst_pad_push (stream->pad, buf);
@@ -4831,7 +4882,7 @@ short_buffer:
   {
     GST_WARNING_OBJECT (avi, "Short read at offset %" G_GUINT64_FORMAT
         ", only got %d/%" G_GUINT64_FORMAT " bytes (truncated file?)", offset,
-        GST_BUFFER_SIZE (buf), size);
+        gst_buffer_get_size (buf), size);
     gst_buffer_unref (buf);
     ret = GST_FLOW_UNEXPECTED;
     goto beach;
@@ -4976,7 +5027,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         if (size) {
           buf = gst_adapter_take_buffer (avi->adapter, GST_ROUND_UP_2 (size));
           /* patch the size */
-          GST_BUFFER_SIZE (buf) = size;
+          gst_buffer_resize (buf, 0, size);
         } else {
           buf = NULL;
         }
@@ -5233,7 +5284,7 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
       avi->stream[i].discont = TRUE;
   }
 
-  GST_DEBUG ("Store %d bytes in adapter", GST_BUFFER_SIZE (buf));
+  GST_DEBUG ("Store %d bytes in adapter", gst_buffer_get_size (buf));
   gst_adapter_push (avi->adapter, buf);
 
   switch (avi->state) {
