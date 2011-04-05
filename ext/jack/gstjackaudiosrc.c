@@ -604,7 +604,7 @@ gst_jack_ring_buffer_delay (GstRingBuffer * buf)
 {
   GstJackAudioSrc *src;
   guint i, res = 0;
-#ifdef HAVE_JACK_0_120_2
+#ifdef HAVE_JACK_0_120_1
   jack_latency_range_t range;
 #else
   guint latency;
@@ -615,7 +615,7 @@ gst_jack_ring_buffer_delay (GstRingBuffer * buf)
   client = gst_jack_audio_client_get_client (src->client);
 
   for (i = 0; i < src->port_count; i++) {
-#ifdef HAVE_JACK_0_120_2
+#ifdef HAVE_JACK_0_120_1
     jack_port_get_latency_range (src->ports[i], JackCaptureLatency, &range);
     if (range.max > res)
       res = range.max;
