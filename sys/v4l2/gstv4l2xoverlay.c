@@ -45,7 +45,7 @@ struct _GstV4l2Xv
 {
   Display *dpy;
   gint port, idle_id, event_id;
-  GMutex *mutex;                       /* to serialize calls to X11 */
+  GMutex *mutex;                /* to serialize calls to X11 */
 };
 
 GST_DEBUG_CATEGORY_STATIC (v4l2xv_debug);
@@ -179,7 +179,7 @@ gst_v4l2_xoverlay_stop (GstV4l2Object * v4l2object)
 
 /* should be called with mutex held */
 static gboolean
-get_render_rect (GstV4l2Object * v4l2object, GstVideoRectangle *rect)
+get_render_rect (GstV4l2Object * v4l2object, GstVideoRectangle * rect)
 {
   GstV4l2Xv *v4l2xv = v4l2object->xv;
   if (v4l2xv && v4l2xv->dpy && v4l2object->xwindow_id) {
@@ -197,8 +197,8 @@ get_render_rect (GstV4l2Object * v4l2object, GstVideoRectangle *rect)
 }
 
 gboolean
-gst_v4l2_xoverlay_get_render_rect (GstV4l2Object *v4l2object,
-    GstVideoRectangle *rect)
+gst_v4l2_xoverlay_get_render_rect (GstV4l2Object * v4l2object,
+    GstVideoRectangle * rect)
 {
   GstV4l2Xv *v4l2xv = v4l2object->xv;
   gboolean ret = FALSE;
@@ -272,7 +272,7 @@ event_refresh (gpointer data)
        * interesting.
        */
       while (XCheckWindowEvent (v4l2xv->dpy, v4l2object->xwindow_id,
-          PointerMotionMask, &e)) {
+              PointerMotionMask, &e)) {
         switch (e.type) {
           case MotionNotify:
             pointer_x = e.xmotion.x;
@@ -307,18 +307,16 @@ event_refresh (gpointer data)
             GST_DEBUG_OBJECT (v4l2object->element,
                 "button %d pressed over window at %d,%d",
                 e.xbutton.button, e.xbutton.x, e.xbutton.y);
-            gst_navigation_send_mouse_event (
-                GST_NAVIGATION (v4l2object->element),
-                "mouse-button-press", e.xbutton.button,
+            gst_navigation_send_mouse_event (GST_NAVIGATION
+                (v4l2object->element), "mouse-button-press", e.xbutton.button,
                 e.xbutton.x, e.xbutton.y);
             break;
           case ButtonRelease:
             GST_DEBUG_OBJECT (v4l2object->element,
                 "button %d released over window at %d,%d",
                 e.xbutton.button, e.xbutton.x, e.xbutton.y);
-            gst_navigation_send_mouse_event (
-                GST_NAVIGATION (v4l2object->element),
-                "mouse-button-release", e.xbutton.button,
+            gst_navigation_send_mouse_event (GST_NAVIGATION
+                (v4l2object->element), "mouse-button-release", e.xbutton.button,
                 e.xbutton.x, e.xbutton.y);
             break;
           case KeyPress:
@@ -334,8 +332,7 @@ event_refresh (gpointer data)
             GST_DEBUG_OBJECT (v4l2object->element,
                 "key %d pressed over window at %d,%d (%s)",
                 e.xkey.keycode, e.xkey.x, e.xkey.y, key_str);
-            gst_navigation_send_key_event (
-                GST_NAVIGATION (v4l2object->element),
+            gst_navigation_send_key_event (GST_NAVIGATION (v4l2object->element),
                 e.type == KeyPress ? "key-press" : "key-release", key_str);
             break;
           default:
@@ -421,9 +418,11 @@ gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object, guintptr id)
 
 /**
  * gst_v4l2_xoverlay_prepare_xwindow_id:
- * @param v4l2object
- * @param required TRUE if display is required (ie. TRUE for v4l2sink, but
+ * @v4l2object: the v4l2object
+ * @required: %TRUE if display is required (ie. TRUE for v4l2sink, but
  *   FALSE for any other element with optional overlay capabilities)
+ *
+ * Helper function to create a windo if none is set from the application.
  */
 void
 gst_v4l2_xoverlay_prepare_xwindow_id (GstV4l2Object * v4l2object,
@@ -468,8 +467,7 @@ gst_v4l2_xoverlay_prepare_xwindow_id (GstV4l2Object * v4l2object,
     event_mask = ExposureMask | StructureNotifyMask;
     if (GST_IS_NAVIGATION (v4l2object->element)) {
       event_mask |= PointerMotionMask |
-          KeyPressMask | KeyReleaseMask |
-          ButtonPressMask | ButtonReleaseMask;
+          KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask;
     }
     XSelectInput (v4l2xv->dpy, win, event_mask);
     v4l2xv->event_id = g_timeout_add (45, event_refresh, v4l2object);

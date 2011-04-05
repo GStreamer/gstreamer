@@ -49,7 +49,6 @@ typedef GstFlowReturn (*GstV4l2SrcGetFunc)(GstV4l2Src * v4l2src, GstBuffer ** bu
 
 /**
  * GstV4l2Src:
- * @pushsrc: parent #GstPushSrc.
  *
  * Opaque object.
  */
@@ -83,7 +82,7 @@ struct _GstV4l2Src
 
   gint     fps_d, fps_n;       /* framerate if device is open */
   GstClockTime duration;       /* duration of one frame */
-  
+
   GstClockTime ctrl_time;
 
   GstV4l2SrcGetFunc get_frame;
@@ -92,7 +91,7 @@ struct _GstV4l2Src
 struct _GstV4l2SrcClass
 {
   GstPushSrcClass parent_class;
-  
+
   GList *v4l2_class_devices;
 };
 
