@@ -1026,6 +1026,8 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
    * configure the transport of the stream and is used to identity the stream in
    * the RTP-Info header field returned from PLAY. */
   control_url = gst_sdp_media_get_attribute_val (media, "control");
+  if (control_url == NULL)
+    control_url = gst_sdp_message_get_attribute_val_n (sdp, "control", 0);
 
   GST_DEBUG_OBJECT (src, "stream %d, (%p)", stream->id, stream);
   GST_DEBUG_OBJECT (src, " pt: %d", stream->pt);
@@ -1046,6 +1048,9 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
     else {
       const gchar *base;
       gboolean has_slash;
+
+      if (g_strcmp0 (control_url, "*") == 0)
+        control_url = "";
 
       if (src->control)
         base = src->control;
