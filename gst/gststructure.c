@@ -1710,6 +1710,8 @@ gst_structure_get_abbrs (gint * n_abbrs)
       ,
       {"structure", GST_TYPE_STRUCTURE}
       ,
+      {"date", GST_TYPE_DATE}
+      ,
       {"datetime", GST_TYPE_DATE_TIME}
     };
     _num = G_N_ELEMENTS (dyn_abbrs);
