@@ -96,13 +96,17 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
 {
   const gchar *input_enc = NULL;
   GstBuffer *ret = NULL;
-  gchar *data;
+  gchar *data, *bdata;
+  gsize bsize;
 
-  data = (gchar *) GST_BUFFER_DATA (buffer) + offset;
+  bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
+  data = bdata + offset;
 
   if (len >= (3 + 1) && IS_BOM_UTF8 (data) &&
       g_utf8_validate (data + 3, len - 3, NULL)) {
-    ret = gst_buffer_create_sub (buffer, offset + 3, len - 3);
+    ret =
+        gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset + 3,
+        len - 3);
   } else if (len >= 2 && IS_BOM_UTF16_BE (data)) {
     input_enc = "UTF-16BE";
     data += 2;
@@ -121,11 +125,12 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
     len -= 4;
   } else if (g_utf8_validate (data, len, NULL)) {
     /* not specified, check if it's UTF-8 */
-    ret = gst_buffer_create_sub (buffer, offset, len);
+    ret = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset, len);
   } else {
     /* we could fall back to gst_tag_freeform_to_utf8() here */
     GST_WARNING_OBJECT (sub, "unspecified encoding, and not UTF-8");
-    return NULL;
+    ret = NULL;
+    goto done;
   }
 
   g_return_val_if_fail (ret != NULL || input_enc != NULL, NULL);
@@ -133,6 +138,7 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
   if (input_enc) {
     GError *err = NULL;
     gchar *utf8;
+    gsize slen;
 
     GST_DEBUG_OBJECT (sub, "converting subtitles from %s to UTF-8", input_enc);
     utf8 = g_convert (data, len, "UTF-8", input_enc, NULL, NULL, &err);
@@ -140,17 +146,22 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
     if (err != NULL) {
       GST_WARNING_OBJECT (sub, "conversion to UTF-8 failed : %s", err->message);
       g_error_free (err);
-      return NULL;
+      ret = NULL;
+      goto done;
     }
 
     ret = gst_buffer_new ();
-    GST_BUFFER_DATA (ret) = (guint8 *) utf8;
-    GST_BUFFER_MALLOCDATA (ret) = (guint8 *) utf8;
-    GST_BUFFER_SIZE (ret) = strlen (utf8);
+    slen = strlen (utf8);
+    gst_buffer_take_memory (ret,
+        gst_memory_new_wrapped (0, utf8, g_free, slen, 0, slen));
+
     GST_BUFFER_OFFSET (ret) = 0;
   }
-
   GST_BUFFER_CAPS (ret) = gst_caps_new_simple ("application/x-subtitle", NULL);
+
+done:
+  gst_buffer_unmap (buffer, bdata, bsize);
+
   return ret;
 }
 
@@ -175,14 +186,13 @@ gst_avi_subtitle_title_tag (GstAviSubtitle * sub, gchar * title)
 static GstFlowReturn
 gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
 {
-  const guint8 *data;
+  guint8 *data;
   gchar *name_utf8;
   guint name_length;
   guint file_length;
-  guint size;
+  gsize size;
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
   /* check the magic word "GAB2\0", and the next word must be 2 */
   if (size < 12 || memcmp (data, "GAB2\0\2\0", 5 + 2) != 0)
@@ -222,18 +232,22 @@ gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
   if (sub->subfile == NULL)
     goto extract_failed;
 
+  gst_buffer_unmap (buf, data, size);
+
   return GST_FLOW_OK;
 
   /* ERRORS */
 wrong_magic_word:
   {
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL), ("Wrong magic word"));
+    gst_buffer_unmap (buf, data, size);
     return GST_FLOW_ERROR;
   }
 wrong_name_length:
   {
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
         ("name doesn't fit in buffer (%d < %d)", size, 17 + name_length));
+    gst_buffer_unmap (buf, data, size);
     return GST_FLOW_ERROR;
   }
 wrong_fixed_word_2:
@@ -241,6 +255,7 @@ wrong_fixed_word_2:
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
         ("wrong fixed word: expected %u, got %u", 4,
             GST_READ_UINT16_LE (data + 11 + name_length)));
+    gst_buffer_unmap (buf, data, size);
     return GST_FLOW_ERROR;
   }
 wrong_total_length:
@@ -248,12 +263,14 @@ wrong_total_length:
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
         ("buffer size is wrong: need %d bytes, have %d bytes",
             17 + name_length + file_length, size));
+    gst_buffer_unmap (buf, data, size);
     return GST_FLOW_ERROR;
   }
 extract_failed:
   {
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
         ("could not extract subtitles"));
+    gst_buffer_unmap (buf, data, size);
     return GST_FLOW_ERROR;
   }
 }
