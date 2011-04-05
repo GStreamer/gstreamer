@@ -106,7 +106,7 @@ gst_dshowvideosink_interface_init (GstImplementsInterfaceClass * klass)
 }
 
 static void
-gst_dshowvideosink_set_window_id (GstXOverlay * overlay, ULONG window_id)
+gst_dshowvideosink_set_window_handle (GstXOverlay * overlay, guintptr window_id)
 {
   GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (overlay);
   HWND previous_window = sink->window_id;
@@ -154,7 +154,7 @@ gst_dshowvideosink_expose (GstXOverlay * overlay)
 static void
 gst_dshowvideosink_xoverlay_interface_init (GstXOverlayClass * iface)
 {
-  iface->set_xwindow_id = gst_dshowvideosink_set_window_id;
+  iface->set_window_handle = gst_dshowvideosink_set_window_handle;
   iface->expose = gst_dshowvideosink_expose;
 }
 
@@ -713,7 +713,7 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
   sink->window_id = video_window;
 
   /* signal application we created a window */
-  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (sink),
+  gst_x_overlay_got_window_handle (GST_X_OVERLAY (sink),
       (gulong)video_window);
 
   /* Set the renderer's clipping window */
