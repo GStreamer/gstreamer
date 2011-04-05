@@ -516,6 +516,11 @@ pollthread_func (gpointer data)
       self->clients = g_list_prepend (self->clients, gclient);
       g_signal_emit (self, signals[SIGNAL_CLIENT_CONNECTED], 0,
           gclient->pollfd.fd);
+      /* we need to call gst_poll_wait before calling gst_poll_* status
+         functions on that new descriptor, so restart the loop, so _wait
+         will have been called on all elements of self->poll, whether
+         they have just been added or not. */
+      continue;
     }
 
   again:
