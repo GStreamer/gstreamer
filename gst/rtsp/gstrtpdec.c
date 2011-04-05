@@ -464,7 +464,7 @@ gst_rtp_dec_chain_rtp (GstPad * pad, GstBuffer * buffer)
   GstRTPDecSession *session;
   guint32 ssrc;
   guint8 pt;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL, };
 
   rtpdec = GST_RTP_DEC (GST_PAD_PARENT (pad));
 
