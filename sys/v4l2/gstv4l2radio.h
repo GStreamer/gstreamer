@@ -42,7 +42,6 @@ typedef struct _GstV4l2RadioClass GstV4l2RadioClass;
 
 /**
  * GstV4l2Radio:
- * @v4l2object: private #GstV4l2Object
  *
  * Opaque video4linux2 radio tuner element
  */

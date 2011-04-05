@@ -48,6 +48,8 @@ struct _GstFlacDec {
   gboolean                     framed;
   gboolean                     streaming;
 
+  gboolean       got_headers; /* if we've parsed the headers (unframed push mode only) */
+
   GstPad        *sinkpad;
   GstPad        *srcpad;
 

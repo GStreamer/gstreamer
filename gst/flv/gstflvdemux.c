@@ -70,7 +70,8 @@ static GstStaticPadTemplate video_src_template =
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("video/x-flash-video; "
         "video/x-flash-screen; "
-        "video/x-vp6-flash; " "video/x-vp6-alpha; " "video/x-h264;")
+        "video/x-vp6-flash; " "video/x-vp6-alpha; "
+        "video/x-h264, stream-format=avc;")
     );
 
 GST_DEBUG_CATEGORY_STATIC (flvdemux_debug);
@@ -1057,7 +1058,9 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
       caps = gst_caps_new_simple ("video/x-vp6-alpha", NULL);
       break;
     case 7:
-      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      caps =
+          gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
+          "avc", NULL);
       break;
     default:
       GST_WARNING_OBJECT (demux, "unsupported video codec tag %u", codec_tag);

@@ -473,6 +473,7 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
   const GstTagList *user_tags;
   GstTagList *copy;
   gint entries = 1;
+  gint n_images, n_preview_images;
 
   g_return_if_fail (flacenc != NULL);
   user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (flacenc));
@@ -481,33 +482,81 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
   }
   copy = gst_tag_list_merge (user_tags, flacenc->tags,
       gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (flacenc)));
-  flacenc->meta = g_new0 (FLAC__StreamMetadata *, 3);
+  n_images = gst_tag_list_get_tag_size (copy, GST_TAG_IMAGE);
+  n_preview_images = gst_tag_list_get_tag_size (copy, GST_TAG_PREVIEW_IMAGE);
+
+  flacenc->meta =
+      g_new0 (FLAC__StreamMetadata *, 3 + n_images + n_preview_images);
 
   flacenc->meta[0] =
       FLAC__metadata_object_new (FLAC__METADATA_TYPE_VORBIS_COMMENT);
   gst_tag_list_foreach (copy, add_one_tag, flacenc);
 
+  if (n_images + n_preview_images > 0) {
+    GstBuffer *buffer;
+    GstCaps *caps;
+    GstStructure *structure;
+    GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
+    gint i;
+
+    for (i = 0; i < n_images + n_preview_images; i++) {
+      if (i < n_images) {
+        if (!gst_tag_list_get_buffer_index (copy, GST_TAG_IMAGE, i, &buffer))
+          continue;
+      } else {
+        if (!gst_tag_list_get_buffer_index (copy, GST_TAG_PREVIEW_IMAGE,
+                i - n_images, &buffer))
+          continue;
+      }
+
+      flacenc->meta[entries] =
+          FLAC__metadata_object_new (FLAC__METADATA_TYPE_PICTURE);
+
+      caps = gst_buffer_get_caps (buffer);
+      structure = gst_caps_get_structure (caps, 0);
+
+      gst_structure_get (structure, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
+          &image_type, NULL);
+      /* Convert to ID3v2 APIC image type */
+      if (image_type == GST_TAG_IMAGE_TYPE_NONE)
+        image_type = (i < n_images) ? 0x00 : 0x01;
+      else
+        image_type = image_type + 2;
+
+      FLAC__metadata_object_picture_set_data (flacenc->meta[entries],
+          GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), TRUE);
+      /* FIXME: There's no way to set the picture type in libFLAC */
+      flacenc->meta[entries]->data.picture.type = image_type;
+      FLAC__metadata_object_picture_set_mime_type (flacenc->meta[entries],
+          (char *) gst_structure_get_name (structure), TRUE);
+
+      gst_caps_unref (caps);
+      gst_buffer_unref (buffer);
+      entries++;
+    }
+  }
+
   if (flacenc->seekpoints && total_samples != GST_CLOCK_TIME_NONE) {
     gboolean res;
     guint samples;
 
-    flacenc->meta[1] =
+    flacenc->meta[entries] =
         FLAC__metadata_object_new (FLAC__METADATA_TYPE_SEEKTABLE);
     if (flacenc->seekpoints > 0) {
       res =
           FLAC__metadata_object_seektable_template_append_spaced_points
-          (flacenc->meta[1], flacenc->seekpoints, total_samples);
+          (flacenc->meta[entries], flacenc->seekpoints, total_samples);
     } else {
       samples = -flacenc->seekpoints * flacenc->sample_rate;
       res =
           FLAC__metadata_object_seektable_template_append_spaced_points_by_samples
-          (flacenc->meta[1], samples, total_samples);
+          (flacenc->meta[entries], samples, total_samples);
     }
     if (!res) {
       GST_DEBUG_OBJECT (flacenc, "adding seekpoint template %d failed",
           flacenc->seekpoints);
       FLAC__metadata_object_delete (flacenc->meta[1]);
-      flacenc->meta[1] = NULL;
+      flacenc->meta[entries] = NULL;
     } else {
       entries++;
     }

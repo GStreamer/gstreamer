@@ -63,7 +63,8 @@ static GstStaticPadTemplate videosink_templ = GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-flash-video; "
         "video/x-flash-screen; "
-        "video/x-vp6-flash; " "video/x-vp6-alpha; " "video/x-h264;")
+        "video/x-vp6-flash; " "video/x-vp6-alpha; "
+        "video/x-h264, stream-format=avc;")
     );
 
 static GstStaticPadTemplate audiosink_templ = GST_STATIC_PAD_TEMPLATE ("audio",

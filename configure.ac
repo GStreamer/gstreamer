@@ -768,9 +768,9 @@ AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
   AC_SUBST(JACK_LIBS)
 
   dnl upcomming jack2 (1.9.7 will have the new api as well
-  AG_GST_PKG_CHECK_MODULES(JACK_0_120_2, jack >= 0.120.2 jack < 1.0)
-  if test x$HAVE_JACK_0_120_2 = xyes; then
-    AC_DEFINE(HAVE_JACK_0_120_2, 1, [defined if jack >= 0.120.2 is available])
+  AG_GST_PKG_CHECK_MODULES(JACK_0_120_1, jack >= 0.120.1 jack < 1.0)
+  if test x$HAVE_JACK_0_120_1 = xyes; then
+    AC_DEFINE(HAVE_JACK_0_120_1, 1, [defined if jack >= 0.120.1 is available])
   fi
 
 ])

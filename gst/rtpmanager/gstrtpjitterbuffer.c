@@ -881,8 +881,6 @@ static void
 gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
 {
   GstRtpJitterBufferPrivate *priv;
-  GstClock *clock;
-  GstClockTime ts;
 
   priv = jitterbuffer->priv;
 
@@ -904,18 +902,6 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf);
   rtp_jitter_buffer_reset_skew (priv->jbuf);
-  /* sync_time for scheduling timeouts needs proper element base_time
-   * However, following a seek new base_time only trickles down upon PLAYING
-   * upon which time quite some processing has already passed
-   * (which also needs correct base time) */
-  clock = gst_element_get_clock (GST_ELEMENT_CAST (jitterbuffer));
-  if (clock) {
-    ts = gst_clock_get_time (clock);
-    GST_DEBUG_OBJECT (jitterbuffer, "new base time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (ts));
-    gst_object_unref (clock);
-    gst_element_set_base_time (GST_ELEMENT_CAST (jitterbuffer), ts);
-  }
   JBUF_UNLOCK (priv);
 }
 

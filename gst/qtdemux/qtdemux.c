@@ -7557,6 +7557,10 @@ qtdemux_tag_add_year (GstQTDemux * qtdemux, const char *tag, const char *dummy,
     return;
 
   y = QT_UINT16 ((guint8 *) node->data + 12);
+  if (y == 0) {
+    GST_DEBUG_OBJECT (qtdemux, "year: %u is not a valid year", y);
+    return;
+  }
   GST_DEBUG_OBJECT (qtdemux, "year: %u", y);
 
   date = g_date_new_dmy (1, 1, y);
@@ -7580,6 +7584,12 @@ qtdemux_tag_add_classification (GstQTDemux * qtdemux, const char *tag,
 
   offset = 12;
   entity = (guint8 *) node->data + offset;
+  if (entity[0] == 0 || entity[1] == 0 || entity[2] == 0 || entity[3] == 0) {
+    GST_DEBUG_OBJECT (qtdemux,
+        "classification info: %c%c%c%c invalid classification entity",
+        entity[0], entity[1], entity[2], entity[3]);
+    return;
+  }
 
   offset += 4;
   table = QT_UINT16 ((guint8 *) node->data + offset);

@@ -1026,9 +1026,8 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
    * configure the transport of the stream and is used to identity the stream in
    * the RTP-Info header field returned from PLAY. */
   control_url = gst_sdp_media_get_attribute_val (media, "control");
-  if (control_url == NULL) {
+  if (control_url == NULL)
     control_url = gst_sdp_message_get_attribute_val_n (sdp, "control", 0);
-  }
 
   GST_DEBUG_OBJECT (src, "stream %d, (%p)", stream->id, stream);
   GST_DEBUG_OBJECT (src, " pt: %d", stream->pt);
@@ -1665,6 +1664,16 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   gst_rtspsrc_push_event (src, event, FALSE);
   gst_rtspsrc_loop_send_cmd (src, cmd, flush);
 
+  /* set up manager before data-flow resumes */
+  /* to manage jitterbuffer buffer mode */
+  if (src->manager) {
+    gst_element_set_base_time (GST_ELEMENT_CAST (src->manager), base_time);
+    /* and to have base_time trickle further down,
+     * e.g. to jitterbuffer for its timeout handling */
+    if (base_time != -1)
+      gst_element_set_state (GST_ELEMENT_CAST (src->manager), state);
+  }
+
   /* make running time start start at 0 again */
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
@@ -1681,9 +1690,6 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   /* for tcp interleaved case */
   if (base_time != -1)
     gst_element_set_base_time (GST_ELEMENT_CAST (src), base_time);
-  /* to manage jitterbuffer buffer mode */
-  if (src->manager)
-    gst_element_set_base_time (GST_ELEMENT_CAST (src->manager), base_time);
 }
 
 static GstRTSPResult

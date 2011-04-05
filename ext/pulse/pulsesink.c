@@ -783,12 +783,8 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   /* create a stream */
   GST_LOG_OBJECT (psink, "creating stream with name %s", name);
-  if (psink->proplist) {
-    if (!(pbuf->stream = pa_stream_new_with_proplist (pbuf->context,
-                name, &pbuf->sample_spec, &channel_map, psink->proplist)))
-      goto stream_failed;
-  } else if (!(pbuf->stream = pa_stream_new (pbuf->context,
-              name, &pbuf->sample_spec, &channel_map)))
+  if (!(pbuf->stream = pa_stream_new_with_proplist (pbuf->context, name,
+              &pbuf->sample_spec, &channel_map, psink->proplist)))
     goto stream_failed;
 
   /* install essential callbacks */
@@ -1081,6 +1077,13 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
 
   GST_DEBUG_OBJECT (psink, "starting");
   pbuf->paused = FALSE;
+
+  /* EOS needs running clock */
+  if (GST_BASE_SINK_CAST (psink)->eos ||
+      g_atomic_int_get (&GST_BASE_AUDIO_SINK (psink)->abidata.
+          ABI.eos_rendering))
+    gst_pulsering_set_corked (pbuf, FALSE, FALSE);
+
   pa_threaded_mainloop_unlock (mainloop);
 
   return TRUE;

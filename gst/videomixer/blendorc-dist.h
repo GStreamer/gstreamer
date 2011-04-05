@@ -35,6 +35,7 @@ typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
 #define ORC_UINT64_C(x) (x##Ui64)
+#define inline __inline
 #else
 #include <limits.h>
 typedef signed char orc_int8;
@@ -62,6 +63,8 @@ void orc_memcpy_u32 (guint32 * d1, const guint32 * s1, int n);
 void orc_blend_u8 (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int p1, int n, int m);
 void orc_blend_argb (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int p1, int n, int m);
 void orc_blend_bgra (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int p1, int n, int m);
+void orc_overlay_argb (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int p1, int n, int m);
+void orc_overlay_bgra (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int p1, int n, int m);
 
 #ifdef __cplusplus
 }

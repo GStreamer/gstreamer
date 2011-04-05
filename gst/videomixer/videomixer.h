@@ -45,6 +45,7 @@ typedef struct _GstVideoMixerClass GstVideoMixerClass;
  * @VIDEO_MIXER_BACKGROUND_CHECKER: checker pattern background
  * @VIDEO_MIXER_BACKGROUND_BLACK: solid color black background
  * @VIDEO_MIXER_BACKGROUND_WHITE: solid color white background
+ * @VIDEO_MIXER_BACKGROUND_TRANSPARENT: background is left transparent and layers are composited using "A OVER B" composition rules. This is only applicable to AYUV and ARGB (and variants) as it preserves the alpha channel and allows for further mixing.
  *
  * The different backgrounds videomixer can blend over.
  */
@@ -52,7 +53,8 @@ typedef enum
 {
   VIDEO_MIXER_BACKGROUND_CHECKER,
   VIDEO_MIXER_BACKGROUND_BLACK,
-  VIDEO_MIXER_BACKGROUND_WHITE
+  VIDEO_MIXER_BACKGROUND_WHITE,
+  VIDEO_MIXER_BACKGROUND_TRANSPARENT,
 }
 GstVideoMixerBackground;
 
@@ -112,7 +114,7 @@ struct _GstVideoMixer
   gdouble proportion;
   GstClockTime earliest_time;
 
-  BlendFunction blend;
+  BlendFunction blend, overlay;
   FillCheckerFunction fill_checker;
   FillColorFunction fill_color;
 

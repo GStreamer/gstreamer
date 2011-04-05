@@ -418,9 +418,11 @@ gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object, guintptr id)
 
 /**
  * gst_v4l2_xoverlay_prepare_xwindow_id:
- * @param v4l2object
- * @param required TRUE if display is required (ie. TRUE for v4l2sink, but
+ * @v4l2object: the v4l2object
+ * @required: %TRUE if display is required (ie. TRUE for v4l2sink, but
  *   FALSE for any other element with optional overlay capabilities)
+ *
+ * Helper function to create a windo if none is set from the application.
  */
 void
 gst_v4l2_xoverlay_prepare_xwindow_id (GstV4l2Object * v4l2object,

@@ -1304,6 +1304,53 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static gboolean
+gst_flac_dec_chain_parse_headers (GstFlacDec * dec)
+{
+  guint8 marker[4];
+  guint avail, off;
+
+  avail = gst_adapter_available (dec->adapter);
+  if (avail < 4)
+    return FALSE;
+
+  gst_adapter_copy (dec->adapter, marker, 0, 4);
+  if (strncmp ((const gchar *) marker, "fLaC", 4) != 0) {
+    GST_ERROR_OBJECT (dec, "Unexpected header, expected fLaC header");
+    return TRUE;                /* abort header parsing */
+  }
+
+  GST_DEBUG_OBJECT (dec, "fLaC header          : len           4 @ %7u", 0);
+
+  off = 4;
+  while (avail > (off + 1 + 3)) {
+    gboolean is_last;
+    guint8 mb_hdr[4];
+    guint len, block_type;
+
+    gst_adapter_copy (dec->adapter, mb_hdr, off, 4);
+
+    is_last = ((mb_hdr[0] & 0x80) == 0x80);
+    block_type = mb_hdr[0] & 0x7f;
+    len = GST_READ_UINT24_BE (mb_hdr + 1);
+    GST_DEBUG_OBJECT (dec, "Metadata block type %u: len %7u + 4 @ %7u%s",
+        block_type, len, off, (is_last) ? " (last)" : "");
+    off += 4 + len;
+
+    if (is_last)
+      break;
+
+    if (off >= avail) {
+      GST_LOG_OBJECT (dec, "Need more data: next offset %u > avail %u", off,
+          avail);
+      return FALSE;
+    }
+  }
+
+  /* want metadata blocks plus at least one frame */
+  return (off + FLAC__MAX_BLOCK_SIZE >= avail);
+}
+
 static GstFlowReturn
 gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -1368,6 +1415,15 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
   dec->last_flow = GST_FLOW_OK;
 
   if (!dec->framed) {
+    if (G_UNLIKELY (!dec->got_headers)) {
+      if (!gst_flac_dec_chain_parse_headers (dec)) {
+        GST_LOG_OBJECT (dec, "don't have metadata blocks yet, need more data");
+        goto out;
+      }
+      GST_INFO_OBJECT (dec, "have all metadata blocks now");
+      dec->got_headers = TRUE;
+    }
+
     /* wait until we have at least 64kB because libflac's StreamDecoder
      * interface is a bit dumb it seems (if we don't have as much data as
      * it wants it will call our read callback repeatedly and the only
@@ -1402,6 +1458,8 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
   } else {
     GST_DEBUG_OBJECT (dec, "don't have all headers yet");
   }
+
+out:
 
   return dec->last_flow;
 }
@@ -1992,6 +2050,7 @@ gst_flac_dec_sink_activate_push (GstPad * sinkpad, gboolean active)
   if (active) {
     gst_flac_dec_setup_decoder (dec);
     dec->streaming = TRUE;
+    dec->got_headers = FALSE;
   }
   return TRUE;
 }
