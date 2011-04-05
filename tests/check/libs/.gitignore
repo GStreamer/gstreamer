@@ -1,6 +1,7 @@
 .dirstamp
 audio
 cddabasesrc
+discoverer
 fft
 gstlibscpp
 libsabi

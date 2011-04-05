@@ -140,6 +140,7 @@ check_PROGRAMS = \
 	libs/libsabi \
 	libs/audio \
 	libs/cddabasesrc \
+	libs/discoverer \
 	libs/fft \
 	libs/mixer \
 	libs/navigation \
@@ -234,6 +235,14 @@ libs_cddabasesrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
+
+libs_discoverer_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS) \
+	-DGST_TEST_FILE="\"$(abs_top_srcdir)/tests/files/partialframe.mjpeg\""
+libs_discoverer_LDADD = \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) $(LDADD)
 
 libs_fft_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
