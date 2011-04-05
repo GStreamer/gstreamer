@@ -1026,6 +1026,9 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
    * configure the transport of the stream and is used to identity the stream in
    * the RTP-Info header field returned from PLAY. */
   control_url = gst_sdp_media_get_attribute_val (media, "control");
+  if (control_url == NULL) {
+    control_url = gst_sdp_message_get_attribute_val_n (sdp, "control", 0);
+  }
 
   GST_DEBUG_OBJECT (src, "stream %d, (%p)", stream->id, stream);
   GST_DEBUG_OBJECT (src, " pt: %d", stream->pt);
@@ -1046,6 +1049,9 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
     else {
       const gchar *base;
       gboolean has_slash;
+
+      if (g_strcmp0 (control_url, "*") == 0)
+        control_url = "";
 
       if (src->control)
         base = src->control;
@@ -2104,6 +2110,7 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn res = GST_FLOW_OK;
   guint8 *data;
   guint size;
+  gsize bsize;
   GstRTSPResult ret;
   GstRTSPMessage message = { 0 };
   GstRTSPConnection *conn;
@@ -2111,8 +2118,8 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
   stream = (GstRTSPStream *) gst_pad_get_element_private (pad);
   src = stream->parent;
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  data = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
+  size = bsize;
 
   gst_rtsp_message_init_data (&message, stream->channel[1]);
 
@@ -2133,6 +2140,7 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
   gst_rtsp_message_steal_body (&message, &data, &size);
   gst_rtsp_message_unset (&message);
 
+  gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
 
   return res;
@@ -3603,9 +3611,8 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   size -= 1;
 
   buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = data;
-  GST_BUFFER_MALLOCDATA (buf) = data;
-  GST_BUFFER_SIZE (buf) = size;
+  gst_buffer_take_memory (buf,
+      gst_memory_new_wrapped (0, data, g_free, size, 0, size));
 
   /* don't need message anymore */
   gst_rtsp_message_unset (&message);

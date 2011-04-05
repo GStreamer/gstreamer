@@ -209,7 +209,8 @@ static GstFlowReturn
 gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
   GstDynUDPSink *sink;
-  gint ret, size;
+  gint ret;
+  gsize size;
   guint8 *data;
   GstMetaNetAddress *meta;
   struct sockaddr_in theiraddr;
@@ -227,8 +228,7 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   sink = GST_DYNUDPSINK (bsink);
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
   GST_DEBUG ("about to send %d bytes", size);
 
@@ -246,6 +246,8 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   ret = sendto (sink->sock, data, size, 0,
 #endif
       (struct sockaddr *) &theiraddr, sizeof (theiraddr));
+
+  gst_buffer_unmap (buffer, data, size);
 
   if (ret < 0) {
     if (errno != EINTR && errno != EAGAIN) {

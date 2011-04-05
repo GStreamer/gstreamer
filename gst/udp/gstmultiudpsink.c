@@ -120,9 +120,11 @@ static void gst_multiudpsink_finalize (GObject * object);
 
 static GstFlowReturn gst_multiudpsink_render (GstBaseSink * sink,
     GstBuffer * buffer);
+#if 0
 #ifndef G_OS_WIN32              /* sendmsg() is not available on Windows */
 static GstFlowReturn gst_multiudpsink_render_list (GstBaseSink * bsink,
     GstBufferList * list);
+#endif
 #endif
 static GstStateChangeReturn gst_multiudpsink_change_state (GstElement *
     element, GstStateChange transition);
@@ -359,8 +361,10 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
   gstbasesink_class->render = gst_multiudpsink_render;
+#if 0
 #ifndef G_OS_WIN32
   gstbasesink_class->render_list = gst_multiudpsink_render_list;
+#endif
 #endif
   klass->add = gst_multiudpsink_add;
   klass->remove = gst_multiudpsink_remove;
@@ -488,15 +492,15 @@ static GstFlowReturn
 gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
   GstMultiUDPSink *sink;
-  gint ret, size, num = 0, no_clients = 0;
+  gint ret, num = 0, no_clients = 0;
+  gsize size;
   guint8 *data;
   GList *clients;
   gint len;
 
   sink = GST_MULTIUDPSINK (bsink);
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
   if (size > UDP_MAX_SIZE) {
     GST_WARNING ("Attempting to send a UDP packet larger than maximum "
@@ -554,12 +558,15 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   }
   g_mutex_unlock (sink->client_lock);
 
+  gst_buffer_unmap (buffer, data, size);
+
   GST_LOG_OBJECT (sink, "sent %d bytes to %d (of %d) clients", size, num,
       no_clients);
 
   return GST_FLOW_OK;
 }
 
+#if 0
 #ifndef G_OS_WIN32
 static GstFlowReturn
 gst_multiudpsink_render_list (GstBaseSink * bsink, GstBufferList * list)
@@ -569,7 +576,6 @@ gst_multiudpsink_render_list (GstBaseSink * bsink, GstBufferList * list)
   gint ret, size = 0, num = 0, no_clients = 0;
   struct iovec *iov;
   struct msghdr msg = { 0 };
-
   GstBufferListIterator *it;
   guint gsize;
   GstBuffer *buf;
@@ -658,6 +664,7 @@ invalid_list:
   gst_buffer_list_iterator_free (it);
   return GST_FLOW_ERROR;
 }
+#endif
 #endif
 
 static void

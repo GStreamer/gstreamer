@@ -421,6 +421,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   socklen_t slen;
   guint8 *pktdata;
   gint pktsize;
+  gsize offset;
 #ifdef G_OS_UNIX
   gint readsize;
 #elif defined G_OS_WIN32
@@ -499,6 +500,7 @@ no_select:
 
   pktdata = g_malloc (readsize);
   pktsize = readsize;
+  offset = 0;
 
   while (TRUE) {
     slen = sizeof (sa);
@@ -528,19 +530,18 @@ no_select:
       break;
   }
 
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_MALLOCDATA (outbuf) = pktdata;
-
   /* patch pktdata and len when stripping off the headers */
   if (G_UNLIKELY (udpsrc->skip_first_bytes != 0)) {
     if (G_UNLIKELY (readsize <= udpsrc->skip_first_bytes))
       goto skip_error;
 
-    pktdata += udpsrc->skip_first_bytes;
+    offset += udpsrc->skip_first_bytes;
     ret -= udpsrc->skip_first_bytes;
   }
-  GST_BUFFER_DATA (outbuf) = pktdata;
-  GST_BUFFER_SIZE (outbuf) = ret;
+
+  outbuf = gst_buffer_new ();
+  gst_buffer_take_memory (outbuf,
+      gst_memory_new_wrapped (0, pktdata, g_free, pktsize, offset, ret));
 
   /* use buffer metadata so receivers can also track the address */
   meta = gst_buffer_add_meta_net_address (outbuf);

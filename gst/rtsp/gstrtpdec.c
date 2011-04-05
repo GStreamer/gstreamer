@@ -464,6 +464,7 @@ gst_rtp_dec_chain_rtp (GstPad * pad, GstBuffer * buffer)
   GstRTPDecSession *session;
   guint32 ssrc;
   guint8 pt;
+  GstRTPBuffer rtp;
 
   rtpdec = GST_RTP_DEC (GST_PAD_PARENT (pad));
 
@@ -472,8 +473,11 @@ gst_rtp_dec_chain_rtp (GstPad * pad, GstBuffer * buffer)
   if (!gst_rtp_buffer_validate (buffer))
     goto bad_packet;
 
-  ssrc = gst_rtp_buffer_get_ssrc (buffer);
-  pt = gst_rtp_buffer_get_payload_type (buffer);
+
+  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+  ssrc = gst_rtp_buffer_get_ssrc (&rtp);
+  pt = gst_rtp_buffer_get_payload_type (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
 
   GST_DEBUG_OBJECT (rtpdec, "SSRC %08x, PT %d", ssrc, pt);
 
