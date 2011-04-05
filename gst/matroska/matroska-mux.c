@@ -197,7 +197,11 @@ static GstStaticPadTemplate audiosink_templ =
         "raversion = (int) { 1, 2, 8 }, " COMMON_AUDIO_CAPS "; "
         "audio/x-wma, " "wmaversion = (int) [ 1, 3 ], "
         "block_align = (int) [ 0, 65535 ], bitrate = (int) [ 0, 524288 ], "
-        COMMON_AUDIO_CAPS)
+        COMMON_AUDIO_CAPS ";"
+        "audio/x-alaw, "
+        "channels = (int) {1, 2}, " "rate = (int) [ 8000, 192000 ]; "
+        "audio/x-mulaw, "
+        "channels = (int) {1, 2}, " "rate = (int) [ 8000, 192000 ]")
     );
 
 static GstStaticPadTemplate subtitlesink_templ =
@@ -1632,41 +1636,61 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       context->codec_priv_size = priv_data_size;
     }
 
-  } else if (!strcmp (mimetype, "audio/x-wma")) {
+  } else if (!strcmp (mimetype, "audio/x-wma")
+      || !strcmp (mimetype, "audio/x-alaw")
+      || !strcmp (mimetype, "audio/x-mulaw")) {
     guint8 *codec_priv;
     guint codec_priv_size;
-    guint16 format;
+    guint16 format = 0;
     gint block_align;
     gint bitrate;
-    gint wmaversion;
-    gint depth;
 
-    if (!gst_structure_get_int (structure, "wmaversion", &wmaversion)
-        || !gst_structure_get_int (structure, "block_align", &block_align)
-        || !gst_structure_get_int (structure, "bitrate", &bitrate)
-        || samplerate == 0 || channels == 0) {
-      GST_WARNING_OBJECT (mux, "Missing wmaversion/block_align/bitrate/"
-          "channels/rate on WMA caps");
+    if (samplerate == 0 || channels == 0) {
+      GST_WARNING_OBJECT (mux, "Missing channels/samplerate on caps");
       goto refuse_caps;
     }
 
-    switch (wmaversion) {
-      case 1:
-        format = GST_RIFF_WAVE_FORMAT_WMAV1;
-        break;
-      case 2:
-        format = GST_RIFF_WAVE_FORMAT_WMAV2;
-        break;
-      case 3:
-        format = GST_RIFF_WAVE_FORMAT_WMAV3;
-        break;
-      default:
-        GST_WARNING_OBJECT (mux, "Unexpected WMA version: %d", wmaversion);
-        goto refuse_caps;
-    }
+    if (!strcmp (mimetype, "audio/x-wma")) {
+      gint wmaversion;
+      gint depth;
 
-    if (gst_structure_get_int (structure, "depth", &depth))
-      audiocontext->bitdepth = depth;
+      if (!gst_structure_get_int (structure, "wmaversion", &wmaversion)
+          || !gst_structure_get_int (structure, "block_align", &block_align)
+          || !gst_structure_get_int (structure, "bitrate", &bitrate)) {
+        GST_WARNING_OBJECT (mux, "Missing wmaversion/block_align/bitrate"
+            " on WMA caps");
+        goto refuse_caps;
+      }
+
+      switch (wmaversion) {
+        case 1:
+          format = GST_RIFF_WAVE_FORMAT_WMAV1;
+          break;
+        case 2:
+          format = GST_RIFF_WAVE_FORMAT_WMAV2;
+          break;
+        case 3:
+          format = GST_RIFF_WAVE_FORMAT_WMAV3;
+          break;
+        default:
+          GST_WARNING_OBJECT (mux, "Unexpected WMA version: %d", wmaversion);
+          goto refuse_caps;
+      }
+
+      if (gst_structure_get_int (structure, "depth", &depth))
+        audiocontext->bitdepth = depth;
+    } else if (!strcmp (mimetype, "audio/x-alaw")
+        || !strcmp (mimetype, "audio/x-mulaw")) {
+      audiocontext->bitdepth = 8;
+      if (!strcmp (mimetype, "audio/x-alaw"))
+        format = GST_RIFF_WAVE_FORMAT_ALAW;
+      else
+        format = GST_RIFF_WAVE_FORMAT_MULAW;
+
+      block_align = channels;
+      bitrate = block_align * samplerate;
+    }
+    g_assert (format != 0);
 
     codec_priv_size = WAVEFORMATEX_SIZE;
     if (buf)
