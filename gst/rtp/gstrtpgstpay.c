@@ -152,7 +152,7 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstBuffer *outbuf;
   GstFlowReturn ret;
   GstClockTime timestamp;
-  guint16 frag_offset;
+  guint32 frag_offset;
   guint flags;
 
   rtpgstpay = GST_RTP_GST_PAY (basepayload);
