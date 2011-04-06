@@ -1116,6 +1116,16 @@ GST_START_TEST (test_many_bins)
     }
 
     last_bin = bin;
+
+    /* insert some queues to limit the number of function calls in a row */
+    if ((i % 100) == 0) {
+      GstElement *q = gst_element_factory_make ("queue", NULL);
+
+      GST_LOG ("bin #%d, inserting queue", i);
+      gst_bin_add (GST_BIN (pipeline), q);
+      fail_unless (gst_element_link (last_bin, q));
+      last_bin = q;
+    }
   }
 
   fail_unless (gst_element_link (last_bin, sink));
