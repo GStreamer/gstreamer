@@ -1014,7 +1014,7 @@ gst_rtcp_packet_sdes_next_item (GstRTCPPacket * packet)
   while (offset < len) {
     if (data[offset] == 0) {
       /* end of list, round to next 32-bit word */
-      offset = (offset + 3) & ~3;
+      offset = (offset + 4) & ~3;
       break;
     }
     offset += data[offset + 1] + 2;

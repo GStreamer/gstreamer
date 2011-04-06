@@ -473,7 +473,7 @@ gst_audio_resample_parse_caps (GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
-  if (g_str_equal (gst_structure_get_name (structure), "audio/x-raw-float"))
+  if (gst_structure_has_name (structure, "audio/x-raw-float"))
     myfp = TRUE;
   else
     myfp = FALSE;

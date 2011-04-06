@@ -301,30 +301,25 @@ paint_setup_IMC4 (paintinfo * p, unsigned char *dest)
 static void
 paint_setup_YVU9 (paintinfo * p, unsigned char *dest)
 {
-  int h = GST_ROUND_UP_4 (p->height);
-
   p->yp = dest;
   p->ystride = GST_ROUND_UP_4 (p->width);
-  p->vp = p->yp + p->ystride * GST_ROUND_UP_4 (p->height);
+  p->vp = p->yp + p->ystride * p->height;
   p->vstride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->up = p->vp + p->vstride * GST_ROUND_UP_4 (h / 4);
+  p->up = p->vp + p->vstride * (GST_ROUND_UP_4 (p->height) / 4);
   p->ustride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->endptr = p->up + p->ustride * GST_ROUND_UP_4 (h / 4);
+  p->endptr = p->up + p->ustride * (GST_ROUND_UP_4 (p->height) / 4);
 }
 
 static void
 paint_setup_YUV9 (paintinfo * p, unsigned char *dest)
 {
-  /* untested */
-  int h = GST_ROUND_UP_4 (p->height);
-
   p->yp = dest;
   p->ystride = GST_ROUND_UP_4 (p->width);
-  p->up = p->yp + p->ystride * h;
+  p->up = p->yp + p->ystride * p->height;
   p->ustride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->vp = p->up + p->ustride * GST_ROUND_UP_4 (h / 4);
+  p->vp = p->up + p->ustride * (GST_ROUND_UP_4 (p->height) / 4);
   p->vstride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->endptr = p->vp + p->vstride * GST_ROUND_UP_4 (h / 4);
+  p->endptr = p->vp + p->vstride * (GST_ROUND_UP_4 (p->height) / 4);
 }
 
 #define gst_video_format_is_packed video_format_is_packed

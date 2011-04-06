@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <2005> Julien Moutte <julien@moutte.net>
- *               <2009>,<2010> Stefan Kost <stefan.kost@nokia.com> 
+ *               <2009>,<2010> Stefan Kost <stefan.kost@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -556,13 +556,6 @@ gst_xvimagesink_xwindow_clear (GstXvImageSink * xvimagesink,
 
   XvStopVideo (xvimagesink->xcontext->disp, xvimagesink->xcontext->xv_port_id,
       xwindow->win);
-
-  XSetForeground (xvimagesink->xcontext->disp, xwindow->gc,
-      xvimagesink->xcontext->black);
-
-  XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
-      xvimagesink->render_rect.x, xvimagesink->render_rect.y,
-      xvimagesink->render_rect.w, xvimagesink->render_rect.h);
 
   XSync (xvimagesink->xcontext->disp, FALSE);
 
@@ -1355,7 +1348,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   for (i = 0; i < (sizeof (channels) / sizeof (char *)); i++) {
     XvAttribute *matching_attr = NULL;
 
-    /* Retrieve the property atom if it exists. If it doesn't exist, 
+    /* Retrieve the property atom if it exists. If it doesn't exist,
      * the attribute itself must not either, so we can skip */
     prop_atom = XInternAtom (xcontext->disp, channels[i], True);
     if (prop_atom == None)
@@ -1641,7 +1634,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
         GST_VIDEO_SINK_HEIGHT (xvimagesink));
   }
 
-  /* After a resize, we want to redraw the borders in case the new frame size 
+  /* After a resize, we want to redraw the borders in case the new frame size
    * doesn't cover the same area */
   xvimagesink->redraw_border = TRUE;
 

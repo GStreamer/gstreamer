@@ -1937,12 +1937,12 @@ gst_video_format_get_component_offset (GstVideoFormat format,
       if (component == 0)
         return 0;
       if (component == 1) {
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) +
+        return GST_ROUND_UP_4 (width) * height +
             GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
             (GST_ROUND_UP_4 (height) / 4);
       }
       if (component == 2)
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+        return GST_ROUND_UP_4 (width) * height;
       return 0;
     case GST_VIDEO_FORMAT_IYU1:
       if (component == 0)
@@ -2054,7 +2054,7 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
       return size;
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
-      size = GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+      size = GST_ROUND_UP_4 (width) * height;
       size += GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4) *
           (GST_ROUND_UP_4 (height) / 4) * 2;
       return size;

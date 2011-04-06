@@ -1,6 +1,7 @@
 .dirstamp
 audio
 cddabasesrc
+discoverer
 fft
 gstlibscpp
 libsabi
@@ -14,4 +15,4 @@ rtsp
 tag
 utils
 video
-
+xmpwriter

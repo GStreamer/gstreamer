@@ -368,7 +368,7 @@ gst_vorbis_tag_add_metadata_block_picture (GstTagList * tags,
   guint32 img_len = 0, img_type = 0;
   guint32 img_mimetype_len = 0, img_description_len = 0;
   gsize decoded_len;
-  const guint8 *data;
+  const guint8 *data = NULL;
 
   /* img_data_base64 points to a temporary copy of the base64 encoded data, so
    * it's safe to do inpace decoding here

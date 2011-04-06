@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+#include <gst/math-compat.h>
 
 /* Some useful constants */
 #define TIFF_LITTLE_ENDIAN  0x4949
