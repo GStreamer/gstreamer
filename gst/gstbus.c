@@ -694,10 +694,8 @@ typedef struct
 static gboolean
 gst_bus_source_prepare (GSource * source, gint * timeout)
 {
-  GstBusSource *bsrc = (GstBusSource *) source;
   *timeout = -1;
-
-  return gst_bus_have_pending (bsrc->bus);
+  return FALSE;
 }
 
 static gboolean
@@ -705,8 +703,7 @@ gst_bus_source_check (GSource * source)
 {
   GstBusSource *bsrc = (GstBusSource *) source;
 
-  return gst_bus_have_pending (bsrc->bus) | (bsrc->bus->priv->
-      pollfd.revents & (G_IO_IN | G_IO_HUP | G_IO_ERR));
+  return bsrc->bus->priv->pollfd.revents & (G_IO_IN | G_IO_HUP | G_IO_ERR);
 }
 
 static gboolean
