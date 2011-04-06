@@ -1996,7 +1996,7 @@ GST_START_TEST (test_date)
   s = NULL;
 
   fail_unless (g_str_equal (str,
-          "media/x-type, SOME_DATE_TAG=(GstDate)2005-09-22;"));
+          "media/x-type, SOME_DATE_TAG=(date)2005-09-22;"));
 
   s = gst_structure_from_string (str, NULL);
   g_free (str);
@@ -2020,7 +2020,7 @@ GST_START_TEST (test_date)
   s = NULL;
 
   fail_unless (g_str_equal (str,
-          "media/x-type, SOME_DATE_TAG=(GstDate)2005-09-22;"));
+          "media/x-type, SOME_DATE_TAG=(date)2005-09-22;"));
   g_free (str);
   str = NULL;
 }
