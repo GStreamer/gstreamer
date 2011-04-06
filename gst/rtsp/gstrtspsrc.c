@@ -251,7 +251,8 @@ static GstRTSPResult gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment,
     gboolean async);
 static GstRTSPResult gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle,
     gboolean async);
-static GstRTSPResult gst_rtspsrc_close (GstRTSPSrc * src, gboolean async);
+static GstRTSPResult gst_rtspsrc_close (GstRTSPSrc * src, gboolean async,
+    gboolean only_close);
 
 static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
     const gchar * uri);
@@ -3927,7 +3928,7 @@ gst_rtspsrc_reconnect (GstRTSPSrc * src, gboolean async)
   src->cur_protocols = GST_RTSP_LOWER_TRANS_TCP;
 
   /* close and cleanup our state */
-  if ((res = gst_rtspsrc_close (src, async)) < 0)
+  if ((res = gst_rtspsrc_close (src, async, FALSE)) < 0)
     goto done;
 
   /* see if we have TCP left to try. Also don't try TCP when we were configured
@@ -5724,7 +5725,7 @@ open_failed:
 }
 
 static GstRTSPResult
-gst_rtspsrc_close (GstRTSPSrc * src, gboolean async)
+gst_rtspsrc_close (GstRTSPSrc * src, gboolean async, gboolean only_close)
 {
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
@@ -5738,6 +5739,9 @@ gst_rtspsrc_close (GstRTSPSrc * src, gboolean async)
     GST_DEBUG_OBJECT (src, "not ready, doing cleanup");
     goto close;
   }
+
+  if (only_close)
+    goto close;
 
   /* construct a control url */
   if (src->control)
@@ -6426,7 +6430,7 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
         running = TRUE;
       break;
     case CMD_CLOSE:
-      ret = gst_rtspsrc_close (src, TRUE);
+      ret = gst_rtspsrc_close (src, TRUE, FALSE);
       break;
     case CMD_LOOP:
       running = gst_rtspsrc_loop (src);
@@ -6509,6 +6513,9 @@ gst_rtspsrc_stop (GstRTSPSrc * src)
     GST_OBJECT_LOCK (src);
   }
   GST_OBJECT_UNLOCK (src);
+
+  /* ensure synchronously all is closed and clean */
+  gst_rtspsrc_close (src, FALSE, TRUE);
 
   return TRUE;
 }
