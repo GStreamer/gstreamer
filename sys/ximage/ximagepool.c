@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_debug_ximagepool);
 
 static void gst_meta_ximage_free (GstMetaXImage * meta, GstBuffer * buffer);
 
-/* ximage buffers */
+/* ximage metadata */
 const GstMetaInfo *
 gst_meta_ximage_get_info (void)
 {
@@ -51,7 +51,7 @@ gst_meta_ximage_get_info (void)
 }
 
 /* X11 stuff */
-static gboolean error_caught;
+static gboolean error_caught = FALSE;
 
 static int
 gst_ximagesink_handle_xerror (Display * display, XErrorEvent * xevent)
@@ -133,6 +133,9 @@ gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
      * This way, it will be deleted as soon as we detach later, and not
      * leaked if we crash. */
     shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
+
+    GST_DEBUG_OBJECT (ximagesink, "XServer ShmAttached to 0x%x, id 0x%lx",
+        meta->SHMInfo.shmid, meta->SHMInfo.shmseg);
   } else
 #endif /* HAVE_XSHM */
   {
@@ -225,7 +228,7 @@ shmat_failed:
   }
 xattach_failed:
   {
-    /* Clean up shm seg */
+    /* Clean up the shared memory segment */
     shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
     g_mutex_unlock (ximagesink->x_lock);
 
@@ -248,9 +251,11 @@ gst_meta_ximage_free (GstMetaXImage * meta, GstBuffer * buffer)
   /* Hold the object lock to ensure the XContext doesn't disappear */
   GST_OBJECT_LOCK (ximagesink);
   /* We might have some buffers destroyed after changing state to NULL */
-  if (!ximagesink->xcontext) {
+  if (ximagesink->xcontext == NULL) {
     GST_DEBUG_OBJECT (ximagesink, "Destroying XImage after XContext");
 #ifdef HAVE_XSHM
+    /* Need to free the shared memory segment even if the x context
+     * was already cleaned up */
     if (meta->SHMInfo.shmaddr != ((void *) -1)) {
       shmdt (meta->SHMInfo.shmaddr);
     }
@@ -263,14 +268,15 @@ gst_meta_ximage_free (GstMetaXImage * meta, GstBuffer * buffer)
 #ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm) {
     if (meta->SHMInfo.shmaddr != ((void *) -1)) {
+      GST_DEBUG_OBJECT (ximagesink, "XServer ShmDetaching from 0x%x id 0x%lx",
+          meta->SHMInfo.shmid, meta->SHMInfo.shmseg);
       XShmDetach (ximagesink->xcontext->disp, &meta->SHMInfo);
-      XSync (ximagesink->xcontext->disp, 0);
+      XSync (ximagesink->xcontext->disp, FALSE);
       shmdt (meta->SHMInfo.shmaddr);
       meta->SHMInfo.shmaddr = (void *) -1;
     }
     if (meta->ximage)
       XDestroyImage (meta->ximage);
-
   } else
 #endif /* HAVE_XSHM */
   {
@@ -302,7 +308,9 @@ gst_ximage_buffer_new (GstXImageSink * ximagesink, gint width, gint height)
   return buffer;
 }
 
-#ifdef HAVE_XSHM                /* Check that XShm calls actually work */
+#ifdef HAVE_XSHM
+/* This function checks that it is actually really possible to create an image
+   using XShm */
 gboolean
 gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
     GstXContext * xcontext)
@@ -351,7 +359,7 @@ gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
   SHMInfo.shmaddr = shmat (SHMInfo.shmid, NULL, 0);
   if (SHMInfo.shmaddr == ((void *) -1)) {
     GST_WARNING ("Failed to shmat: %s", g_strerror (errno));
-    /* Clean up shm seg */
+    /* Clean up the shared memory segment */
     shmctl (SHMInfo.shmid, IPC_RMID, NULL);
     goto beach;
   }
@@ -361,7 +369,7 @@ gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
 
   if (XShmAttach (xcontext->disp, &SHMInfo) == 0) {
     GST_WARNING ("Failed to XShmAttach");
-    /* Clean up shm seg */
+    /* Clean up the shared memory segment */
     shmctl (SHMInfo.shmid, IPC_RMID, NULL);
     goto beach;
   }
@@ -369,24 +377,33 @@ gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
   /* Sync to ensure we see any errors we caused */
   XSync (xcontext->disp, FALSE);
 
-  /* Delete the shared memory segment as soon as everyone is attached. 
+  /* Delete the shared memory segment as soon as everyone is attached.
    * This way, it will be deleted as soon as we detach later, and not
    * leaked if we crash. */
   shmctl (SHMInfo.shmid, IPC_RMID, NULL);
 
   if (!error_caught) {
+    GST_DEBUG ("XServer ShmAttached to 0x%x, id 0x%lx", SHMInfo.shmid,
+        SHMInfo.shmseg);
+
     did_attach = TRUE;
     /* store whether we succeeded in result */
     result = TRUE;
+  } else {
+    GST_WARNING ("MIT-SHM extension check failed at XShmAttach. "
+        "Not using shared memory.");
   }
 
 beach:
   /* Sync to ensure we swallow any errors we caused and reset error_caught */
   XSync (xcontext->disp, FALSE);
+
   error_caught = FALSE;
   XSetErrorHandler (handler);
 
   if (did_attach) {
+    GST_DEBUG ("XServer ShmDetaching from 0x%x id 0x%lx",
+        SHMInfo.shmid, SHMInfo.shmseg);
     XShmDetach (xcontext->disp, &SHMInfo);
     XSync (xcontext->disp, FALSE);
   }

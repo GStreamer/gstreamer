@@ -62,12 +62,13 @@ GstMetaXImage * gst_buffer_add_meta_ximage   (GstBuffer *buffer, GstXImageSink *
  * @height: the height in pixels of XImage @ximage
  * @size: the size in bytes of XImage @ximage
  *
- * Subclass of #GstBuffer containing additional information about an XImage.
+ * Subclass of #GstMeta containing additional information about an XImage.
  */
 struct _GstMetaXImage
 {
   GstMeta meta;
 
+  /* Reference to the ximagesink we belong to */
   GstXImageSink *sink;
 
   XImage *ximage;

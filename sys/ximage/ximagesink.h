@@ -129,7 +129,6 @@ struct _GstXWindow
   GC gc;
 };
 
-
 /**
  * GstXImageSink:
  * @display_name: the name of the Display we want to render to
