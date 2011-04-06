@@ -67,6 +67,7 @@ G_BEGIN_DECLS
 
 /**
  * GST_BASE_PARSE_FLOW_QUEUED:
+ *
  * A #GstFlowReturn that can be returned from parse frame to indicate that
  * the buffer will be queued to be pushed when the next OK
  *
@@ -150,32 +151,6 @@ typedef struct {
   gint        _gst_reserved_i[2];
   gpointer    _gst_reserved_p[2];
 } GstBaseParseFrame;
-
-/**
- * GstBaseParseFormatFlags:
- * @GST_BASE_PARSE_FORMAT_FLAG_NONE: no flags active
- * @GST_BASE_PARSE_FORMAT_FLAG_PASSTHROUGH: nature of format or configuration
- *   does not allow (much) parsing, so parser should operate in passthrough mode
- *   (which only applies operating in push mode).  That is, incoming buffers
- *   are pushed through unmodified, i.e. no @check_valid_frame or @parse_frame
- *   callbacks will be invoked.  On the other hand, @pre_push_buffer is still
- *   invoked, where subclass can perform as much or as little is appropriate for
- *   "passthrough" semantics.
- * @GST_BASE_PARSE_FORMAT_FLAG_HAS_TIME: frames carry timing info which subclass
- *   can (generally) parse and provide.  In particular, intrinsic time
- *   (rather than estimated) can be obtained following a seek.
- * @GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE: frame starts can be identified. This
- *   set by default, and determines whether seeking based on bitrate averages
- *   is possible for a format/stream.
- *
- * Since: 0.10.33
- */
-typedef enum {
-  GST_BASE_PARSE_FORMAT_FLAG_NONE               = 0,
-  GST_BASE_PARSE_FORMAT_FLAG_PASSTHROUGH        = (1 << 0),
-  GST_BASE_PARSE_FORMAT_FLAG_HAS_TIME           = (1 << 1),
-  GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE           = (1 << 2)
-} GstBaseParseFormatFlags;
 
 typedef struct _GstBaseParse GstBaseParse;
 typedef struct _GstBaseParseClass GstBaseParseClass;
@@ -299,8 +274,14 @@ void            gst_base_parse_set_average_bitrate (GstBaseParse   * parse,
 void            gst_base_parse_set_min_frame_size (GstBaseParse    * parse,
                                                    guint             min_size);
 
-void            gst_base_parse_set_format_flags (GstBaseParse           * parse,
-                                                 GstBaseParseFormatFlags  flags);
+void            gst_base_parse_set_has_timing_info (GstBaseParse   * parse,
+                                                    gboolean         has_timing);
+
+void            gst_base_parse_set_syncable    (GstBaseParse * parse,
+                                                gboolean       syncable);
+
+void            gst_base_parse_set_passthrough (GstBaseParse * parse,
+                                                gboolean       passthrough);
 
 void            gst_base_parse_set_frame_props (GstBaseParse * parse,
                                                 guint          fps_num,

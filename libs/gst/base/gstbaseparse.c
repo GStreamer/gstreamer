@@ -227,7 +227,9 @@ struct _GstBaseParsePrivate
   gint64 estimated_duration;
 
   guint min_frame_size;
-  GstBaseParseFormatFlags format_flags;
+  gboolean passthrough;
+  gboolean syncable;
+  gboolean has_timing_info;
   guint fps_num, fps_den;
   gint update_interval;
   guint bitrate;
@@ -309,12 +311,6 @@ typedef struct _GstBaseParseSeek
   gint64 offset;
   GstClockTime start_ts;
 } GstBaseParseSeek;
-
-#define GST_BASE_PARSE_PASSTHROUGH(parse)  \
-    (parse->priv->format_flags & GST_BASE_PARSE_FORMAT_FLAG_PASSTHROUGH)
-#define GST_BASE_PARSE_HAS_TIME(parse)  \
-    (parse->priv->format_flags & GST_BASE_PARSE_FORMAT_FLAG_HAS_TIME)
-
 
 static GstElementClass *parent_class = NULL;
 
@@ -629,7 +625,9 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->first_frame_offset = -1;
   parse->priv->estimated_duration = -1;
   parse->priv->next_ts = 0;
-  parse->priv->format_flags = GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE;
+  parse->priv->syncable = TRUE;
+  parse->priv->passthrough = FALSE;
+  parse->priv->has_timing_info = FALSE;
   parse->priv->post_min_bitrate = TRUE;
   parse->priv->post_avg_bitrate = TRUE;
   parse->priv->post_max_bitrate = TRUE;
@@ -1037,7 +1035,7 @@ gst_base_parse_is_seekable (GstBaseParse * parse)
 {
   /* FIXME: could do more here, e.g. check index or just send data from 0
    * in pull mode and let decoder/sink clip */
-  return (parse->priv->format_flags & GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE);
+  return parse->priv->syncable;
 }
 
 /* gst_base_parse_src_eventfunc:
@@ -1539,9 +1537,8 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
   /* check if subclass/format can provide ts.
    * If so, that allows and enables extra seek and duration determining options */
   if (G_UNLIKELY (parse->priv->first_frame_offset < 0 && ret == GST_FLOW_OK)) {
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
-        GST_BASE_PARSE_HAS_TIME (parse) &&
-        parse->priv->pad_mode == GST_ACTIVATE_PULL) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) && parse->priv->has_timing_info
+        && parse->priv->pad_mode == GST_ACTIVATE_PULL) {
       parse->priv->first_frame_offset = offset;
       parse->priv->first_frame_ts = GST_BUFFER_TIMESTAMP (buffer);
       GST_DEBUG_OBJECT (parse, "subclass provided ts %" GST_TIME_FORMAT
@@ -1673,7 +1670,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   g_return_val_if_fail (GST_PAD_CAPS (parse->srcpad), GST_FLOW_ERROR);
 
   /* segment adjustment magic; only if we are running the whole show */
-  if (!GST_BASE_PARSE_PASSTHROUGH (parse) && parse->segment.rate > 0.0 &&
+  if (!parse->priv->passthrough && parse->segment.rate > 0.0 &&
       (parse->priv->pad_mode == GST_ACTIVATE_PULL ||
           parse->priv->upstream_seekable)) {
     /* segment times are typically estimates,
@@ -1840,7 +1837,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         GST_BUFFER_SIZE (buffer), gst_flow_get_name (ret));
     /* if we are not sufficiently in control, let upstream decide on EOS */
     if (ret == GST_FLOW_UNEXPECTED &&
-        (GST_BASE_PARSE_PASSTHROUGH (parse) ||
+        (parse->priv->passthrough ||
             (parse->priv->pad_mode == GST_ACTIVATE_PUSH &&
                 !parse->priv->upstream_seekable)))
       ret = GST_FLOW_OK;
@@ -2085,7 +2082,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   if (G_LIKELY (buffer)) {
     GST_LOG_OBJECT (parse, "buffer size: %d, offset = %" G_GINT64_FORMAT,
         GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
-    if (G_UNLIKELY (GST_BASE_PARSE_PASSTHROUGH (parse))) {
+    if (G_UNLIKELY (parse->priv->passthrough)) {
       frame->buffer = gst_buffer_make_metadata_writable (buffer);
       return gst_base_parse_push_frame (parse, frame);
     }
@@ -2821,26 +2818,6 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
 }
 
 /**
- * gst_base_parse_set_format_flags:
- * @parse: #GstBaseParse
- * @flags: the #GstBaseParseFormatFlags to set
- *
- * Set flags describing characteristics of parsed format. This overrides
- * any previous flags set (ie. it's not a bitwise OR operation).
- *
- * Since: 0.10.33
- */
-void
-gst_base_parse_set_format_flags (GstBaseParse * parse,
-    GstBaseParseFormatFlags flags)
-{
-  g_return_if_fail (parse != NULL);
-
-  GST_LOG_OBJECT (parse, "setting flags 0x%02x", flags);
-  parse->priv->format_flags = flags;
-}
-
-/**
  * gst_base_parse_set_frame_props:
  * @parse: the #GstBaseParse to set
  * @fps_num: frames per second (numerator).
@@ -2893,6 +2870,64 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
       "lead out: %d frames = %" G_GUINT64_FORMAT " ms",
       lead_in, parse->priv->lead_in_ts / GST_MSECOND,
       lead_out, parse->priv->lead_out_ts / GST_MSECOND);
+}
+
+/**
+ * gst_base_parse_set_has_timing_info:
+ * @parse: a #GstBaseParse
+ * @has_timing: whether frames carry timing information
+ *
+ * Set if frames carry timing information which the subclass can (generally)
+ * parse and provide.  In particular, intrinsic (rather than estimated) time
+ * can be obtained following a seek.
+ *
+ * Since: 0.10.33
+ */
+void
+gst_base_parse_set_has_timing_info (GstBaseParse * parse, gboolean has_timing)
+{
+  parse->priv->has_timing_info = has_timing;
+  GST_INFO_OBJECT (parse, "has_timing: %s", (has_timing) ? "yes" : "no");
+}
+
+/**
+ * gst_base_parse_set_syncable:
+ * @parse: a #GstBaseParse
+ * @syncable: set if frame starts can be identified
+ *
+ * Set if frame starts can be identified. This is set by default and
+ * determines whether seeking based on bitrate averages
+ * is possible for a format/stream.
+ *
+ * Since: 0.10.33
+ */
+void
+gst_base_parse_set_syncable (GstBaseParse * parse, gboolean syncable)
+{
+  parse->priv->syncable = syncable;
+  GST_INFO_OBJECT (parse, "syncable: %s", (syncable) ? "yes" : "no");
+}
+
+/**
+ * gst_base_parse_set_passthrough:
+ * @parse: a #GstBaseParse
+ * @passthrough:
+ *
+ * Set if the nature of the format or configuration does not allow (much)
+ * parsing, and the parser should operate in passthrough mode (which only
+ * applies when operating in push mode). That is, incoming buffers are
+ * pushed through unmodified, i.e. no @check_valid_frame or @parse_frame
+ * callbacks will be invoked, but @pre_push_buffer will still be invoked,
+ * so subclass can perform as much or as little is appropriate for
+ * passthrough semantics in @pre_push_buffer.
+ *
+ * Since: 0.10.33
+ */
+void
+gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
+{
+  parse->priv->passthrough = passthrough;
+  GST_INFO_OBJECT (parse, "passthrough: %s", (passthrough) ? "yes" : "no");
 }
 
 static gboolean
