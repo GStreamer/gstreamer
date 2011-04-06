@@ -1099,6 +1099,7 @@ GST_START_TEST (test_many_bins)
     fail_unless (bin != NULL, "Could not create bin %d", i);
     identity = gst_element_factory_make ("identity", "identity");
     fail_unless (identity != NULL, "Could not create identity %d", i);
+    g_object_set (identity, "silent", TRUE, NULL);
     gst_bin_add (GST_BIN (bin), identity);
     sinkpad = gst_element_get_static_pad (identity, "sink");
     srcpad = gst_element_get_static_pad (identity, "src");
@@ -1110,10 +1111,15 @@ GST_START_TEST (test_many_bins)
     gst_bin_add (GST_BIN (pipeline), bin);
 
     if (last_bin == NULL) {
-      fail_unless (gst_element_link (src, bin));
+      srcpad = gst_element_get_static_pad (src, "src");
     } else {
-      fail_unless (gst_element_link (last_bin, bin));
+      srcpad = gst_element_get_static_pad (last_bin, "src");
     }
+    sinkpad = gst_element_get_static_pad (bin, "sink");
+    gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+    gst_object_unref (sinkpad);
+    gst_object_unref (srcpad);
+
 
     last_bin = bin;
 
