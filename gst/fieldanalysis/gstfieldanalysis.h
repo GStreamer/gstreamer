@@ -91,7 +91,7 @@ struct _FieldAnalysis
   FieldAnalysisConclusion conclusion;
   /* -1 - unknown; 0 - holding none; 1 - top field; 2 - bottom field; 3 - both */
   gint holding;
-  gboolean gap;
+  gboolean drop;
 };
 
 typedef enum
