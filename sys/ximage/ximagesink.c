@@ -1164,7 +1164,8 @@ gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
       GST_VIDEO_SINK_WIDTH (ximagesink) = 0;
       GST_VIDEO_SINK_HEIGHT (ximagesink) = 0;
       g_mutex_lock (ximagesink->flow_lock);
-      gst_buffer_pool_set_active (ximagesink->pool, FALSE);
+      if (ximagesink->pool)
+        gst_buffer_pool_set_active (ximagesink->pool, FALSE);
       g_mutex_unlock (ximagesink->flow_lock);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -1206,6 +1207,8 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   GstFlowReturn res;
   GstXImageSink *ximagesink;
   GstMetaXImage *meta;
+  GstBuffer *temp;
+  gboolean unref;
 
   ximagesink = GST_XIMAGESINK (vsink);
 
@@ -1216,8 +1219,8 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
        put the ximage which is in the PRIVATE pointer */
     GST_LOG_OBJECT (ximagesink, "buffer from our pool, writing directly");
     res = GST_FLOW_OK;
+    unref = FALSE;
   } else {
-    GstBuffer *temp;
     guint8 *data;
     gsize size;
 
@@ -1234,6 +1237,8 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     if (res != GST_FLOW_OK)
       goto no_buffer;
 
+    unref = TRUE;
+
     if (gst_buffer_get_size (temp) < gst_buffer_get_size (buf))
       goto wrong_size;
 
@@ -1246,6 +1251,10 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   if (!gst_ximagesink_ximage_put (ximagesink, buf))
     goto no_window;
+
+done:
+  if (unref)
+    gst_buffer_unref (buf);
 
   return res;
 
@@ -1267,14 +1276,18 @@ wrong_size:
   {
     GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer"),
-        ("XServer allocated buffer size did not match input buffer"));
-    return GST_FLOW_ERROR;
+        ("XServer allocated buffer size did not match input buffer %"
+            G_GSIZE_FORMAT " - %" G_GSIZE_FORMAT, gst_buffer_get_size (temp),
+            gst_buffer_get_size (buf)));
+    res = GST_FLOW_ERROR;
+    goto done;
   }
 no_window:
   {
     /* No Window available to put our image into */
     GST_WARNING_OBJECT (ximagesink, "could not output image - no window");
-    return GST_FLOW_ERROR;
+    res = GST_FLOW_ERROR;
+    goto done;
   }
 }
 

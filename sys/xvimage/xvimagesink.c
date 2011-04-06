@@ -1727,8 +1727,10 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       /* Initializing the XContext */
       if (xvimagesink->xcontext == NULL) {
         xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
-        if (xcontext == NULL)
-          return GST_STATE_CHANGE_FAILURE;
+        if (xcontext == NULL) {
+          ret = GST_STATE_CHANGE_FAILURE;
+          goto beach;
+        }
         GST_OBJECT_LOCK (xvimagesink);
         if (xcontext)
           xvimagesink->xcontext = xcontext;
@@ -1769,8 +1771,9 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       GST_VIDEO_SINK_WIDTH (xvimagesink) = 0;
       GST_VIDEO_SINK_HEIGHT (xvimagesink) = 0;
       g_mutex_lock (xvimagesink->flow_lock);
-      gst_buffer_pool_set_active (xvimagesink->pool, FALSE);
-      g_mutex_lock (xvimagesink->flow_lock);
+      if (xvimagesink->pool)
+        gst_buffer_pool_set_active (xvimagesink->pool, FALSE);
+      g_mutex_unlock (xvimagesink->flow_lock);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_xvimagesink_reset (xvimagesink);
@@ -1779,6 +1782,7 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
+beach:
   return ret;
 }
 
@@ -1810,6 +1814,8 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   GstFlowReturn res;
   GstXvImageSink *xvimagesink;
   GstMetaXvImage *meta;
+  GstBuffer *temp;
+  gboolean unref;
 
   xvimagesink = GST_XVIMAGESINK (vsink);
 
@@ -1820,13 +1826,11 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
        put the ximage which is in the PRIVATE pointer */
     GST_LOG_OBJECT (xvimagesink, "buffer from our pool, writing directly");
     res = GST_FLOW_OK;
+    unref = FALSE;
   } else {
-    GstBuffer *temp;
     guint8 *data;
     gsize size;
 
-    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, xvimagesink,
-        "slow copy into bufferpool buffer %p", buf);
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
     GST_LOG_OBJECT (xvimagesink, "buffer not from our pool, copying");
@@ -1840,6 +1844,11 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     if (res != GST_FLOW_OK)
       goto no_buffer;
 
+    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, xvimagesink,
+        "slow copy into bufferpool buffer %p", temp);
+
+    unref = TRUE;
+
     if (gst_buffer_get_size (temp) < gst_buffer_get_size (buf))
       goto wrong_size;
 
@@ -1852,6 +1861,10 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   if (!gst_xvimagesink_xvimage_put (xvimagesink, buf))
     goto no_window;
+
+done:
+  if (unref)
+    gst_buffer_unref (buf);
 
   return res;
 
@@ -1873,14 +1886,18 @@ wrong_size:
   {
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer"),
-        ("XServer allocated buffer size did not match input buffer"));
-    return GST_FLOW_ERROR;
+        ("XServer allocated buffer size did not match input buffer %"
+            G_GSIZE_FORMAT " - %" G_GSIZE_FORMAT, gst_buffer_get_size (temp),
+            gst_buffer_get_size (buf)));
+    res = GST_FLOW_ERROR;
+    goto done;
   }
 no_window:
   {
     /* No Window available to put our image into */
     GST_WARNING_OBJECT (xvimagesink, "could not output image - no window");
-    return GST_FLOW_ERROR;
+    res = GST_FLOW_ERROR;
+    goto done;
   }
 }
 
