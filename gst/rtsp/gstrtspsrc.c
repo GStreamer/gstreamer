@@ -1827,9 +1827,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
    * with the above flush/pause code */
   GST_RTSP_STREAM_LOCK (src);
 
-  /* stop flushing state */
-  gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, FALSE);
-
   GST_DEBUG_OBJECT (src, "stopped streaming");
 
   /* copy segment, we need this because we still need the old
@@ -1870,6 +1867,9 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     GST_DEBUG_OBJECT (src, "stopping flush");
     gst_rtspsrc_flush (src, FALSE);
   } else if (src->running) {
+    /* re-engage loop */
+    gst_rtspsrc_loop_send_cmd (src, CMD_LOOP, FALSE);
+
     /* we are running the current segment and doing a non-flushing seek,
      * close the segment first based on the previous last_stop. */
     GST_DEBUG_OBJECT (src, "closing running segment %" G_GINT64_FORMAT
