@@ -595,6 +595,24 @@ gst_buffer_take_memory (GstBuffer * buffer, GstMemory * mem)
   _memory_add (buffer, mem);
 }
 
+static GstMemory *
+_get_memory (GstBuffer * buffer, guint idx, gboolean write)
+{
+  GstMemory *mem;
+
+  mem = GST_BUFFER_MEM_PTR (buffer, idx);
+
+  if (G_UNLIKELY (write && !GST_MEMORY_IS_WRITABLE (mem))) {
+    GstMemory *copy;
+    /* replace with a writable copy */
+    copy = gst_memory_copy (mem, 0, -1);
+    GST_BUFFER_MEM_PTR (buffer, idx) = copy;
+    gst_memory_unref (mem);
+    mem = copy;
+  }
+  return mem;
+}
+
 /**
  * gst_buffer_peek_memory:
  * @buffer: a #GstBuffer.
@@ -621,7 +639,7 @@ gst_buffer_peek_memory (GstBuffer * buffer, guint idx, GstMapFlags flags)
   if (G_UNLIKELY (write && !gst_buffer_is_writable (buffer)))
     goto not_writable;
 
-  mem = GST_BUFFER_MEM_PTR (buffer, idx);
+  mem = _get_memory (buffer, idx, write);
 
   return mem;
 
@@ -914,7 +932,7 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
     gsize ssize, tocopy;
     GstMemory *mem;
 
-    mem = GST_BUFFER_MEM_PTR (buffer, i);
+    mem = _get_memory (buffer, i, TRUE);
 
     data = gst_memory_map (mem, &ssize, NULL, GST_MAP_WRITE);
     if (ssize > offset) {
