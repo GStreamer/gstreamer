@@ -287,12 +287,8 @@ static GstMemory *
 _fallback_share (GstMemory * mem, gsize offset, gsize size)
 {
   GstMemoryDefault *sub;
-  GstMemory *parent;
 
-  /* find the real parent */
-  parent = mem->parent ? mem->parent : mem;
-
-  sub = _default_mem_new (0, parent, NULL, NULL, size, offset, size);
+  sub = _default_mem_new (0, mem, NULL, NULL, size, offset, size);
 
   return (GstMemory *) sub;
 }
