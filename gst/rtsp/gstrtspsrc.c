@@ -6407,7 +6407,7 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
   gst_rtspsrc_connection_flush (src, FALSE);
 
   /* we allow these to be interrupted */
-  if (cmd == CMD_LOOP || cmd == CMD_CLOSE)
+  if (cmd == CMD_LOOP || cmd == CMD_CLOSE || cmd == CMD_PAUSE)
     src->waiting = TRUE;
   GST_OBJECT_UNLOCK (src);
 
