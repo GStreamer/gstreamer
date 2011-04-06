@@ -180,7 +180,6 @@ struct _GstRTSPSrc {
   /* UDP mode loop */
   gint             loop_cmd;
   gboolean         ignore_timeout;
-  gboolean         flushing;
   gboolean         waiting;
   gboolean         open_error;
 
