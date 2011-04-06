@@ -325,6 +325,8 @@ gst_meta_xvimage_free (GstMetaXvImage * meta, GstBuffer * buffer)
 
 beach:
   GST_OBJECT_UNLOCK (xvimagesink);
+
+  gst_object_unref (meta->sink);
 }
 
 GstBuffer *

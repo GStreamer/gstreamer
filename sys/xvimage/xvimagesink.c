@@ -314,8 +314,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
   if (xvimagesink->xcontext->use_xshm) {
     GST_LOG_OBJECT (xvimagesink,
         "XvShmPutImage with image %dx%d and window %dx%d, from xvimage %"
-        GST_PTR_FORMAT,
-        meta->width, meta->height,
+        GST_PTR_FORMAT, meta->width, meta->height,
         xvimagesink->render_rect.w, xvimagesink->render_rect.h, xvimage);
 
     XvShmPutImage (xvimagesink->xcontext->disp,
@@ -2331,6 +2330,7 @@ gst_xvimagesink_expose (GstXOverlay * overlay)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
 
+  GST_DEBUG ("doing expose");
   gst_xvimagesink_xwindow_update_geometry (xvimagesink);
   gst_xvimagesink_xvimage_put (xvimagesink, NULL);
 }

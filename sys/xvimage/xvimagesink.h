@@ -208,7 +208,6 @@ struct _GstXvImageSink
 
   GstXContext *xcontext;
   GstXWindow *xwindow;
-  GstBuffer *xvimage;
   GstBuffer *cur_image;
 
   GThread *event_thread;
