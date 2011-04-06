@@ -191,7 +191,9 @@ gst_bus_dispose (GObject * object)
     g_cond_free (bus->priv->queue_cond);
     bus->priv->queue_cond = NULL;
 
-    gst_poll_free (bus->priv->poll);
+    if (bus->priv->poll)
+      gst_poll_free (bus->priv->poll);
+    bus->priv->poll = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -273,7 +275,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       /* pass the message to the async queue, refcount passed in the queue */
       GST_DEBUG_OBJECT (bus, "[msg %p] pushing on async queue", message);
       gst_atomic_queue_push (bus->queue, message);
-      gst_poll_write_control (bus->priv->poll);
+      if (bus->priv->poll)
+        gst_poll_write_control (bus->priv->poll);
       GST_DEBUG_OBJECT (bus, "[msg %p] pushed on async queue", message);
 
       break;
@@ -295,7 +298,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_mutex_lock (lock);
 
       gst_atomic_queue_push (bus->queue, message);
-      gst_poll_write_control (bus->priv->poll);
+      if (bus->priv->poll)
+        gst_poll_write_control (bus->priv->poll);
 
       /* now block till the message is freed */
       g_cond_wait (cond, lock);
@@ -415,6 +419,7 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
   g_return_val_if_fail (types != 0, NULL);
+  g_return_val_if_fail (bus->priv->poll != NULL, NULL);
 
   g_mutex_lock (bus->queue_lock);
 
@@ -737,6 +742,7 @@ gst_bus_create_watch (GstBus * bus)
   GstBusSource *source;
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
+  g_return_val_if_fail (bus->priv->poll != NULL, NULL);
 
   source = (GstBusSource *) g_source_new (&gst_bus_source_funcs,
       sizeof (GstBusSource));
@@ -1250,4 +1256,15 @@ error:
     GST_OBJECT_UNLOCK (bus);
     return;
   }
+}
+
+/* Secret API used by GstBin to set the bus in child bus mode
+ * without sockets and everything. See bug #646624.
+ */
+void
+_priv_gst_bus_set_child_mode (GstBus * bus)
+{
+  if (bus->priv->poll)
+    gst_poll_free (bus->priv->poll);
+  bus->priv->poll = NULL;
 }

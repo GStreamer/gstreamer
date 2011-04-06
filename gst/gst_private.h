@@ -51,6 +51,9 @@ extern const char             g_log_domain_gstreamer[];
 /* for the pad cache */
 #include "gstpad.h"
 
+/* for GstBus */
+#include "gstbus.h"
+
 G_BEGIN_DECLS
 
 /* used by gstparse.c and grammar.y */
@@ -124,7 +127,6 @@ gboolean  priv_gst_structure_append_to_gstring (const GstStructure * structure,
 gboolean 		gst_registry_binary_read_cache 	(GstRegistry * registry, const char *location);
 gboolean 		gst_registry_binary_write_cache	(GstRegistry * registry, const char *location);
 
-
 /* used in gstvalue.c and gststructure.c */
 #define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
     ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
@@ -137,6 +139,11 @@ gint priv_gst_date_time_compare (gconstpointer dt1, gconstpointer dt2);
 /* Secret variable to initialise gst without registry cache */
 extern gboolean _gst_disable_registry_cache;
 #endif
+
+/* Secret API used by GstBin to set the bus in child bus mode
+ * without sockets and everything. See bug #646624.
+ */
+void _priv_gst_bus_set_child_mode (GstBus * bus);
 
 /* provide inline gst_g_value_get_foo_unchecked(), used in gststructure.c */
 #define DEFINE_INLINE_G_VALUE_GET_UNCHECKED(ret_type,name_type,v_field) \

@@ -518,6 +518,7 @@ gst_bin_init (GstBin * bin, GstBinClass * klass)
   GST_DEBUG_OBJECT (bin, "using bus %" GST_PTR_FORMAT " to listen to children",
       bus);
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bin_bus_handler, bin);
+  _priv_gst_bus_set_child_mode (bus);
 
   bin->priv = GST_BIN_GET_PRIVATE (bin);
   bin->priv->asynchandling = DEFAULT_ASYNC_HANDLING;
