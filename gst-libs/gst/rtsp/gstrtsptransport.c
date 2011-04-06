@@ -270,6 +270,20 @@ parse_mode (GstRTSPTransport * transport, const gchar * str)
 }
 
 static gboolean
+check_range (const gchar * str, gchar ** tmp, gint * range)
+{
+  glong range_val;
+
+  range_val = strtol (str, tmp, 10);
+  if (range_val >= G_MININT && range_val <= G_MAXINT) {
+    *range = range_val;
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+static gboolean
 parse_range (const gchar * str, GstRTSPRange * range)
 {
   gchar *minus;
@@ -286,16 +300,14 @@ parse_range (const gchar * str, GstRTSPRange * range)
     if (g_ascii_isspace (minus[1]) || minus[1] == '+' || minus[1] == '-')
       goto invalid_range;
 
-    range->min = strtol (str, &tmp, 10);
-    if (str == tmp || tmp != minus)
+    if (!check_range (str, &tmp, &range->min) || str == tmp || tmp != minus)
       goto invalid_range;
 
-    range->max = strtol (minus + 1, &tmp, 10);
-    if (*tmp && *tmp != ';')
+    if (!check_range (minus + 1, &tmp, &range->max) || (*tmp && *tmp != ';'))
       goto invalid_range;
   } else {
-    range->min = strtol (str, &tmp, 10);
-    if (str == tmp || (*tmp && *tmp != ';'))
+    if (!check_range (str, &tmp, &range->min) || str == tmp ||
+        (*tmp && *tmp != ';'))
       goto invalid_range;
 
     range->max = -1;
