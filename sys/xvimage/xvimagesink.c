@@ -1806,8 +1806,7 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   GstFlowReturn res;
   GstXvImageSink *xvimagesink;
   GstMetaXvImage *meta;
-  GstBuffer *temp;
-  gboolean unref;
+  GstBuffer *to_put;
 
   xvimagesink = GST_XVIMAGESINK (vsink);
 
@@ -1816,47 +1815,44 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   if (meta) {
     /* If this buffer has been allocated using our buffer management we simply
        put the ximage which is in the PRIVATE pointer */
-    GST_LOG_OBJECT (xvimagesink, "buffer from our pool, writing directly");
+    GST_LOG_OBJECT (xvimagesink, "buffer %p from our pool, writing directly",
+        buf);
     res = GST_FLOW_OK;
-    unref = FALSE;
+    to_put = buf;
   } else {
     guint8 *data;
     gsize size;
 
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
-    GST_LOG_OBJECT (xvimagesink, "buffer not from our pool, copying");
+    GST_LOG_OBJECT (xvimagesink, "buffer %p not from our pool, copying", buf);
 
     /* we should have a pool, configured in setcaps */
     if (xvimagesink->pool == NULL)
       goto no_pool;
 
     /* take a buffer form our pool */
-    res = gst_buffer_pool_acquire_buffer (xvimagesink->pool, &temp, NULL);
+    res = gst_buffer_pool_acquire_buffer (xvimagesink->pool, &to_put, NULL);
     if (res != GST_FLOW_OK)
       goto no_buffer;
 
-    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, xvimagesink,
-        "slow copy into bufferpool buffer %p", temp);
-
-    unref = TRUE;
-
-    if (gst_buffer_get_size (temp) < gst_buffer_get_size (buf))
+    if (gst_buffer_get_size (to_put) < gst_buffer_get_size (buf))
       goto wrong_size;
 
-    data = gst_buffer_map (temp, &size, NULL, GST_MAP_WRITE);
-    gst_buffer_extract (buf, 0, data, size);
-    gst_buffer_unmap (temp, data, size);
+    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, xvimagesink,
+        "slow copy into bufferpool buffer %p", to_put);
 
-    buf = temp;
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_buffer_fill (to_put, 0, data, size);
+    gst_buffer_unmap (buf, data, size);
   }
 
-  if (!gst_xvimagesink_xvimage_put (xvimagesink, buf))
+  if (!gst_xvimagesink_xvimage_put (xvimagesink, to_put))
     goto no_window;
 
 done:
-  if (unref)
-    gst_buffer_unref (buf);
+  if (to_put != buf)
+    gst_buffer_unref (to_put);
 
   return res;
 
@@ -1879,7 +1875,7 @@ wrong_size:
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer"),
         ("XServer allocated buffer size did not match input buffer %"
-            G_GSIZE_FORMAT " - %" G_GSIZE_FORMAT, gst_buffer_get_size (temp),
+            G_GSIZE_FORMAT " - %" G_GSIZE_FORMAT, gst_buffer_get_size (to_put),
             gst_buffer_get_size (buf)));
     res = GST_FLOW_ERROR;
     goto done;
@@ -2123,7 +2119,7 @@ reuse_last_caps:
   if (xvimage) {
     /* Make sure the buffer is cleared of any previously used flags */
     GST_MINI_OBJECT_CAST (xvimage)->flags = 0;
-    gst_buffer_set_caps (GST_BUFFER_CAST (xvimage), intersection);
+    gst_buffer_set_caps (xvimage, intersection);
   }
 
   *buf = xvimage;
