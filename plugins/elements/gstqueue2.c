@@ -1212,6 +1212,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
           } else {
             GST_DEBUG_OBJECT (queue,
                 "EOS hit and we don't have any requested data");
+            gst_buffer_unref (buf);
             return GST_FLOW_UNEXPECTED;
           }
         }
