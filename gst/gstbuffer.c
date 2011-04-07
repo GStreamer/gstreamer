@@ -309,26 +309,32 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
   if (flags & GST_BUFFER_COPY_MEMORY) {
     GstMemory *mem;
-    gsize left, len, i, bsize;
+    gsize skip, left, len, i, bsize;
 
     len = GST_BUFFER_MEM_LEN (src);
     left = size;
+    skip = offset;
 
     /* copy and make regions of the memory */
     for (i = 0; i < len && left > 0; i++) {
       mem = GST_BUFFER_MEM_PTR (src, i);
       bsize = gst_memory_get_sizes (mem, NULL);
 
-      if (bsize <= offset) {
+      if (bsize <= skip) {
         /* don't copy buffer */
-        offset -= bsize;
+        skip -= bsize;
       } else {
         gsize tocopy;
 
-        tocopy = MIN (bsize - offset, left);
-        if (tocopy < bsize) {
+        tocopy = MIN (bsize - skip, left);
+        if (mem->flags & GST_MEMORY_FLAG_NO_SHARE) {
+          /* no share, always copy then */
+          mem = gst_memory_copy (mem, skip, tocopy);
+          skip = 0;
+        } else if (tocopy < bsize) {
           /* we need to clip something */
-          mem = gst_memory_share (mem, offset, tocopy);
+          mem = gst_memory_share (mem, skip, tocopy);
+          skip = 0;
         } else {
           mem = gst_memory_ref (mem);
         }
@@ -604,6 +610,8 @@ _get_memory (GstBuffer * buffer, guint idx, gboolean write)
 
   if (G_UNLIKELY (write && !GST_MEMORY_IS_WRITABLE (mem))) {
     GstMemory *copy;
+    GST_CAT_LOG (GST_CAT_BUFFER,
+        "making writable copy of memory %p in buffer %p", mem, buffer);
     /* replace with a writable copy */
     copy = gst_memory_copy (mem, 0, -1);
     GST_BUFFER_MEM_PTR (buffer, idx) = copy;
@@ -758,10 +766,16 @@ gst_buffer_resize (GstBuffer * buffer, gsize offset, gsize size)
           gst_memory_resize (mem, offset, tocopy);
         } else {
           GstMemory *tmp;
-          tmp = gst_memory_share (mem, offset, tocopy);
+
+          if (mem->flags & GST_MEMORY_FLAG_NO_SHARE)
+            tmp = gst_memory_copy (mem, offset, tocopy);
+          else
+            tmp = gst_memory_share (mem, offset, tocopy);
+
           gst_memory_unref (mem);
           mem = tmp;
         }
+        offset = 0;
       }
       GST_BUFFER_MEM_PTR (buffer, di++) = mem;
       size -= tocopy;
@@ -1137,7 +1151,10 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
 
   if (!writable
       && _gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
-    span = gst_memory_share (parent, offset + poffset, size);
+    if (parent->flags & GST_MEMORY_FLAG_NO_SHARE)
+      span = gst_memory_copy (parent, offset + poffset, size);
+    else
+      span = gst_memory_share (parent, offset + poffset, size);
   } else {
     gsize count, left;
     guint8 *dest, *ptr;

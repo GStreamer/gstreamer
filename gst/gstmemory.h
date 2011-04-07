@@ -35,12 +35,18 @@ typedef struct _GstMemoryImpl GstMemoryImpl;
 
 /**
  * GstMemoryFlags:
- * @GST_MEMORY_FLAG_READONLY: memory is readonly
+ * @GST_MEMORY_FLAG_READONLY: memory is readonly. It is not allowed to map the
+ * memory with #GST_MAP_WRITE.
+ * @GST_MEMORY_FLAG_NO_SHARE: memory must not be shared. Copies will have to be
+ * made when this memory needs to be shared between buffers.
  *
  * Flags for wrapped memory.
  */
 typedef enum {
-  GST_MEMORY_FLAG_READONLY = (1 << 0)
+  GST_MEMORY_FLAG_READONLY = (1 << 0),
+  GST_MEMORY_FLAG_NO_SHARE = (1 << 1),
+
+  GST_MEMORY_FLAG_LAST = (1 << 24)
 } GstMemoryFlags;
 
 /**
