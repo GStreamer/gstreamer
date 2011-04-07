@@ -548,7 +548,7 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
         return FALSE;
       }
     }
-  } else if (draining && lost_sync && caps_change) {
+  } else if (draining && lost_sync && caps_change && mp3parse->rate > 0) {
     /* avoid caps jitter that we can't be sure of */
     *skipsize = off + 2;
     return FALSE;
