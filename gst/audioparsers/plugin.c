@@ -34,9 +34,9 @@ plugin_init (GstPlugin * plugin)
   gboolean ret;
 
   ret = gst_element_register (plugin, "aacparse",
-      GST_RANK_PRIMARY + 1, GST_TYPE_AACPARSE);
+      GST_RANK_PRIMARY + 1, GST_TYPE_AAC_PARSE);
   ret &= gst_element_register (plugin, "amrparse",
-      GST_RANK_PRIMARY + 1, GST_TYPE_AMRPARSE);
+      GST_RANK_PRIMARY + 1, GST_TYPE_AMR_PARSE);
   ret &= gst_element_register (plugin, "ac3parse",
       GST_RANK_PRIMARY + 1, GST_TYPE_AC3_PARSE);
   ret &= gst_element_register (plugin, "dcaparse",

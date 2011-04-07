@@ -20,24 +20,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AMRPARSE_H__
-#define __GST_AMRPARSE_H__
+#ifndef __GST_AMR_PARSE_H__
+#define __GST_AMR_PARSE_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbaseparse.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AMRPARSE \
-  (gst_amrparse_get_type())
-#define GST_AMRPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AMRPARSE, GstAmrParse))
-#define GST_AMRPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMRPARSE, GstAmrParseClass))
-#define GST_IS_AMRPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AMRPARSE))
-#define GST_IS_AMRPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AMRPARSE))
+#define GST_TYPE_AMR_PARSE \
+  (gst_amr_parse_get_type())
+#define GST_AMR_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AMR_PARSE, GstAmrParse))
+#define GST_AMR_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMR_PARSE, GstAmrParseClass))
+#define GST_IS_AMR_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AMR_PARSE))
+#define GST_IS_AMR_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AMR_PARSE))
 
 
 typedef struct _GstAmrParse GstAmrParse;
@@ -75,8 +75,8 @@ struct _GstAmrParseClass {
   GstBaseParseClass parent_class;
 };
 
-GType gst_amrparse_get_type (void);
+GType gst_amr_parse_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_AMRPARSE_H__ */
+#endif /* __GST_AMR_PARSE_H__ */

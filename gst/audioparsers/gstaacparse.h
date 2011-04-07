@@ -19,24 +19,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AACPARSE_H__
-#define __GST_AACPARSE_H__
+#ifndef __GST_AAC_PARSE_H__
+#define __GST_AAC_PARSE_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbaseparse.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AACPARSE \
-  (gst_aacparse_get_type())
-#define GST_AACPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AACPARSE, GstAacParse))
-#define GST_AACPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AACPARSE, GstAacParseClass))
-#define GST_IS_AACPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AACPARSE))
-#define GST_IS_AACPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AACPARSE))
+#define GST_TYPE_AAC_PARSE \
+  (gst_aac_parse_get_type())
+#define GST_AAC_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AAC_PARSE, GstAacParse))
+#define GST_AAC_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AAC_PARSE, GstAacParseClass))
+#define GST_IS_AAC_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AAC_PARSE))
+#define GST_IS_AAC_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AAC_PARSE))
 
 
 /**
@@ -102,8 +102,8 @@ struct _GstAacParseClass {
   GstBaseParseClass parent_class;
 };
 
-GType gst_aacparse_get_type (void);
+GType gst_aac_parse_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_AACPARSE_H__ */
+#endif /* __GST_AAC_PARSE_H__ */

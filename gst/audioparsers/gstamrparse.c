@@ -57,8 +57,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-amr-nb-sh; audio/x-amr-wb-sh"));
 
-GST_DEBUG_CATEGORY_STATIC (gst_amrparse_debug);
-#define GST_CAT_DEFAULT gst_amrparse_debug
+GST_DEBUG_CATEGORY_STATIC (amrparse_debug);
+#define GST_CAT_DEFAULT amrparse_debug
 
 static const gint block_size_nb[16] =
     { 12, 13, 15, 17, 19, 20, 26, 31, 5, 0, 0, 0, 0, 0, 0, 0 };
@@ -71,33 +71,33 @@ static const gint block_size_wb[16] =
 #define AMR_FRAME_DURATION (GST_SECOND/AMR_FRAMES_PER_SECOND)
 #define AMR_MIME_HEADER_SIZE 9
 
-gboolean gst_amrparse_start (GstBaseParse * parse);
-gboolean gst_amrparse_stop (GstBaseParse * parse);
+gboolean gst_amr_parse_start (GstBaseParse * parse);
+gboolean gst_amr_parse_stop (GstBaseParse * parse);
 
-static gboolean gst_amrparse_sink_setcaps (GstBaseParse * parse,
+static gboolean gst_amr_parse_sink_setcaps (GstBaseParse * parse,
     GstCaps * caps);
 
-gboolean gst_amrparse_check_valid_frame (GstBaseParse * parse,
+gboolean gst_amr_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
 
-GstFlowReturn gst_amrparse_parse_frame (GstBaseParse * parse,
+GstFlowReturn gst_amr_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
 #define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_amrparse_debug, "amrparse", 0, \
+    GST_DEBUG_CATEGORY_INIT (amrparse_debug, "amrparse", 0, \
                              "AMR-NB audio stream parser");
 
-GST_BOILERPLATE_FULL (GstAmrParse, gst_amrparse, GstBaseParse,
+GST_BOILERPLATE_FULL (GstAmrParse, gst_amr_parse, GstBaseParse,
     GST_TYPE_BASE_PARSE, _do_init);
 
 
 /**
- * gst_amrparse_base_init:
+ * gst_amr_parse_base_init:
  * @klass: #GstElementClass.
  *
  */
 static void
-gst_amrparse_base_init (gpointer klass)
+gst_amr_parse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -114,32 +114,32 @@ gst_amrparse_base_init (gpointer klass)
 
 
 /**
- * gst_amrparse_class_init:
+ * gst_amr_parse_class_init:
  * @klass: GstAmrParseClass.
  *
  */
 static void
-gst_amrparse_class_init (GstAmrParseClass * klass)
+gst_amr_parse_class_init (GstAmrParseClass * klass)
 {
   GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
 
-  parse_class->start = GST_DEBUG_FUNCPTR (gst_amrparse_start);
-  parse_class->stop = GST_DEBUG_FUNCPTR (gst_amrparse_stop);
-  parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_amrparse_sink_setcaps);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_amrparse_parse_frame);
+  parse_class->start = GST_DEBUG_FUNCPTR (gst_amr_parse_start);
+  parse_class->stop = GST_DEBUG_FUNCPTR (gst_amr_parse_stop);
+  parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_amr_parse_sink_setcaps);
+  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_amr_parse_parse_frame);
   parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_amrparse_check_valid_frame);
+      GST_DEBUG_FUNCPTR (gst_amr_parse_check_valid_frame);
 }
 
 
 /**
- * gst_amrparse_init:
+ * gst_amr_parse_init:
  * @amrparse: #GstAmrParse
  * @klass: #GstAmrParseClass.
  *
  */
 static void
-gst_amrparse_init (GstAmrParse * amrparse, GstAmrParseClass * klass)
+gst_amr_parse_init (GstAmrParse * amrparse, GstAmrParseClass * klass)
 {
   /* init rest */
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (amrparse), 62);
@@ -149,7 +149,7 @@ gst_amrparse_init (GstAmrParse * amrparse, GstAmrParseClass * klass)
 
 
 /**
- * gst_amrparse_set_src_caps:
+ * gst_amr_parse_set_src_caps:
  * @amrparse: #GstAmrParse.
  *
  * Set source pad caps according to current knowledge about the
@@ -158,7 +158,7 @@ gst_amrparse_init (GstAmrParse * amrparse, GstAmrParseClass * klass)
  * Returns: TRUE if caps were successfully set.
  */
 static gboolean
-gst_amrparse_set_src_caps (GstAmrParse * amrparse)
+gst_amr_parse_set_src_caps (GstAmrParse * amrparse)
 {
   GstCaps *src_caps = NULL;
   gboolean res = FALSE;
@@ -183,20 +183,20 @@ gst_amrparse_set_src_caps (GstAmrParse * amrparse)
 
 
 /**
- * gst_amrparse_sink_setcaps:
+ * gst_amr_parse_sink_setcaps:
  * @sinkpad: GstPad
  * @caps: GstCaps
  *
  * Returns: TRUE on success.
  */
 static gboolean
-gst_amrparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
+gst_amr_parse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
 {
   GstAmrParse *amrparse;
   GstStructure *structure;
   const gchar *name;
 
-  amrparse = GST_AMRPARSE (parse);
+  amrparse = GST_AMR_PARSE (parse);
   structure = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (structure);
 
@@ -215,12 +215,12 @@ gst_amrparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
 
   amrparse->need_header = FALSE;
   gst_base_parse_set_frame_props (GST_BASE_PARSE (amrparse), 50, 1, 2, 2);
-  gst_amrparse_set_src_caps (amrparse);
+  gst_amr_parse_set_src_caps (amrparse);
   return TRUE;
 }
 
 /**
- * gst_amrparse_parse_header:
+ * gst_amr_parse_parse_header:
  * @amrparse: #GstAmrParse
  * @data: Header data to be parsed.
  * @skipsize: Output argument where the frame size will be stored.
@@ -230,7 +230,7 @@ gst_amrparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
  * Returns: TRUE on success.
  */
 static gboolean
-gst_amrparse_parse_header (GstAmrParse * amrparse,
+gst_amr_parse_parse_header (GstAmrParse * amrparse,
     const guint8 * data, gint * skipsize)
 {
   GST_DEBUG_OBJECT (amrparse, "Parsing header data");
@@ -248,13 +248,13 @@ gst_amrparse_parse_header (GstAmrParse * amrparse,
   } else
     return FALSE;
 
-  gst_amrparse_set_src_caps (amrparse);
+  gst_amr_parse_set_src_caps (amrparse);
   return TRUE;
 }
 
 
 /**
- * gst_amrparse_check_valid_frame:
+ * gst_amr_parse_check_valid_frame:
  * @parse: #GstBaseParse.
  * @buffer: #GstBuffer.
  * @framesize: Output variable where the found frame size is put.
@@ -266,7 +266,7 @@ gst_amrparse_parse_header (GstAmrParse * amrparse,
  * Returns: TRUE if the given data contains valid frame.
  */
 gboolean
-gst_amrparse_check_valid_frame (GstBaseParse * parse,
+gst_amr_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
   GstBuffer *buffer;
@@ -274,7 +274,7 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
   gint fsize, mode, dsize;
   GstAmrParse *amrparse;
 
-  amrparse = GST_AMRPARSE (parse);
+  amrparse = GST_AMR_PARSE (parse);
   buffer = frame->buffer;
   data = GST_BUFFER_DATA (buffer);
   dsize = GST_BUFFER_SIZE (buffer);
@@ -283,7 +283,7 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
 
   if (amrparse->need_header) {
     if (dsize >= AMR_MIME_HEADER_SIZE &&
-        gst_amrparse_parse_header (amrparse, data, skipsize)) {
+        gst_amr_parse_parse_header (amrparse, data, skipsize)) {
       amrparse->need_header = FALSE;
       gst_base_parse_set_frame_props (GST_BASE_PARSE (amrparse), 50, 1, 2, 2);
     } else {
@@ -321,7 +321,7 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
 
 
 /**
- * gst_amrparse_parse_frame:
+ * gst_amr_parse_parse_frame:
  * @parse: #GstBaseParse.
  * @buffer: #GstBuffer.
  *
@@ -330,14 +330,14 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
  * Returns: #GstFlowReturn defining the parsing status.
  */
 GstFlowReturn
-gst_amrparse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+gst_amr_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   return GST_FLOW_OK;
 }
 
 
 /**
- * gst_amrparse_start:
+ * gst_amr_parse_start:
  * @parse: #GstBaseParse.
  *
  * Implementation of "start" vmethod in #GstBaseParse class.
@@ -345,11 +345,11 @@ gst_amrparse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
  * Returns: TRUE on success.
  */
 gboolean
-gst_amrparse_start (GstBaseParse * parse)
+gst_amr_parse_start (GstBaseParse * parse)
 {
   GstAmrParse *amrparse;
 
-  amrparse = GST_AMRPARSE (parse);
+  amrparse = GST_AMR_PARSE (parse);
   GST_DEBUG ("start");
   amrparse->need_header = TRUE;
   amrparse->header = 0;
@@ -358,7 +358,7 @@ gst_amrparse_start (GstBaseParse * parse)
 
 
 /**
- * gst_amrparse_stop:
+ * gst_amr_parse_stop:
  * @parse: #GstBaseParse.
  *
  * Implementation of "stop" vmethod in #GstBaseParse class.
@@ -366,11 +366,11 @@ gst_amrparse_start (GstBaseParse * parse)
  * Returns: TRUE on success.
  */
 gboolean
-gst_amrparse_stop (GstBaseParse * parse)
+gst_amr_parse_stop (GstBaseParse * parse)
 {
   GstAmrParse *amrparse;
 
-  amrparse = GST_AMRPARSE (parse);
+  amrparse = GST_AMR_PARSE (parse);
   GST_DEBUG ("stop");
   amrparse->need_header = TRUE;
   amrparse->header = 0;
