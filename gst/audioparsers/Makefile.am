@@ -6,10 +6,8 @@ libgstaudioparsersbad_la_SOURCES = \
 	plugin.c
 
 libgstaudioparsersbad_la_CFLAGS = \
-	-I$(top_srcdir)/gst-libs \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstaudioparsersbad_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/baseparse/libgstbaseparse-$(GST_MAJORMINOR).la \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) \
 	-lgstaudio-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) $(GST_LIBS)

@@ -21,7 +21,7 @@
 #define __GST_DCA_PARSE_H__
 
 #include <gst/gst.h>
-#include <gst/baseparse/gstbaseparse.h>
+#include <gst/base/gstbaseparse.h>
 
 G_BEGIN_DECLS
 

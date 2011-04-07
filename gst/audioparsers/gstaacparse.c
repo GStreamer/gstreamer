@@ -267,14 +267,15 @@ gst_aacparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
 
       /* arrange for metadata and get out of the way */
       gst_aacparse_set_src_caps (aacparse, caps);
-      gst_base_parse_set_format (parse,
-          GST_BASE_PARSE_FORMAT_PASSTHROUGH, TRUE);
+      gst_base_parse_set_passthrough (parse, TRUE);
     } else
       return FALSE;
 
     /* caps info overrides */
     gst_structure_get_int (structure, "rate", &aacparse->sample_rate);
     gst_structure_get_int (structure, "channels", &aacparse->channels);
+  } else {
+    gst_base_parse_set_passthrough (parse, FALSE);
   }
 
   return TRUE;
@@ -460,6 +461,8 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     GST_DEBUG ("ADTS: samplerate %d, channels %d, objtype %d, version %d",
         rate, channels, aacparse->object_type, aacparse->mpegversion);
 
+    gst_base_parse_set_syncable (GST_BASE_PARSE (aacparse), TRUE);
+
     return TRUE;
   } else if (need_data) {
     /* This tells the parent class not to skip any data */
@@ -478,10 +481,6 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
 
     aacparse->header_type = DSPAAC_HEADER_ADIF;
     aacparse->mpegversion = 4;
-
-    /* no way to seek this */
-    gst_base_parse_set_seek (GST_BASE_PARSE (aacparse),
-        GST_BASE_PARSE_SEEK_NONE, 0);
 
     /* Skip the "ADIF" bytes */
     adif = data + i + 4;
@@ -543,8 +542,11 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     /* arrange for metadata and get out of the way */
     gst_aacparse_set_src_caps (aacparse,
         GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (aacparse)));
-    gst_base_parse_set_format (GST_BASE_PARSE (aacparse),
-        GST_BASE_PARSE_FORMAT_PASSTHROUGH, TRUE);
+
+    /* not syncable, not easily seekable (unless we push data from start */
+    gst_base_parse_set_syncable (GST_BASE_PARSE_CAST (aacparse), FALSE);
+    gst_base_parse_set_passthrough (GST_BASE_PARSE_CAST (aacparse), TRUE);
+    gst_base_parse_set_average_bitrate (GST_BASE_PARSE_CAST (aacparse), 0);
 
     *framesize = avail;
     return TRUE;
@@ -574,14 +576,14 @@ gst_aacparse_check_valid_frame (GstBaseParse * parse,
   const guint8 *data;
   GstAacParse *aacparse;
   gboolean ret = FALSE;
-  gboolean sync;
+  gboolean lost_sync;
   GstBuffer *buffer;
 
   aacparse = GST_AACPARSE (parse);
   buffer = frame->buffer;
   data = GST_BUFFER_DATA (buffer);
 
-  sync = GST_BASE_PARSE_FRAME_SYNC (frame);
+  lost_sync = GST_BASE_PARSE_LOST_SYNC (parse);
 
   if (aacparse->header_type == DSPAAC_HEADER_ADIF ||
       aacparse->header_type == DSPAAC_HEADER_NONE) {
@@ -589,16 +591,16 @@ gst_aacparse_check_valid_frame (GstBaseParse * parse,
     *framesize = GST_BUFFER_SIZE (buffer);
     ret = TRUE;
 
-  } else if (aacparse->header_type == DSPAAC_HEADER_NOT_PARSED || sync == FALSE) {
+  } else if (aacparse->header_type == DSPAAC_HEADER_NOT_PARSED || lost_sync) {
 
     ret = gst_aacparse_detect_stream (aacparse, data, GST_BUFFER_SIZE (buffer),
-        GST_BASE_PARSE_FRAME_DRAIN (frame), framesize, skipsize);
+        GST_BASE_PARSE_DRAINING (parse), framesize, skipsize);
 
   } else if (aacparse->header_type == DSPAAC_HEADER_ADTS) {
     guint needed_data = 1024;
 
     ret = gst_aacparse_check_adts_frame (aacparse, data,
-        GST_BUFFER_SIZE (buffer), GST_BASE_PARSE_FRAME_DRAIN (frame),
+        GST_BUFFER_SIZE (buffer), GST_BASE_PARSE_DRAINING (parse),
         framesize, &needed_data);
 
     if (!ret) {

@@ -322,7 +322,7 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
   if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < 16))
     return FALSE;
 
-  parser_in_sync = GST_BASE_PARSE_FRAME_SYNC (frame);
+  parser_in_sync = !GST_BASE_PARSE_LOST_SYNC (parse);
 
   if (G_LIKELY (parser_in_sync && dcaparse->last_sync != 0)) {
     off = gst_byte_reader_masked_scan_uint32 (&r, 0xffffffff,
@@ -362,7 +362,7 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
 
   dcaparse->last_sync = sync;
 
-  parser_draining = GST_BASE_PARSE_FRAME_DRAIN (frame);
+  parser_draining = GST_BASE_PARSE_DRAINING (parse);
 
   if (!parser_in_sync && !parser_draining) {
     /* check for second frame to be sure */

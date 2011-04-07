@@ -326,9 +326,10 @@ gst_flac_parse_start (GstBaseParse * parse)
 
   /* "fLaC" marker */
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), 4);
+
   /* inform baseclass we can come up with ts, based on counters in packets */
-  gst_base_parse_set_format (GST_BASE_PARSE (flacparse),
-      GST_BASE_PARSE_FORMAT_HAS_TIME, TRUE);
+  gst_base_parse_set_has_timing_info (GST_BASE_PARSE_CAST (flacparse), TRUE);
+  gst_base_parse_set_syncable (GST_BASE_PARSE_CAST (flacparse), TRUE);
 
   return TRUE;
 }
@@ -622,7 +623,7 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
   }
 
   /* For the last frame output everything to the end */
-  if (G_UNLIKELY (GST_BASE_PARSE_FRAME_DRAIN (frame))) {
+  if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (flacparse))) {
     if (flacparse->check_frame_checksums) {
       guint16 actual_crc = gst_flac_calculate_crc16 (data, size - 2);
       guint16 expected_crc = GST_READ_UINT16_BE (data + size - 2);
@@ -697,7 +698,7 @@ gst_flac_parse_check_valid_frame (GstBaseParse * parse,
         return TRUE;
       } else {
         /* If we're at EOS and the frame was not valid, drop it! */
-        if (G_UNLIKELY (GST_BASE_PARSE_FRAME_DRAIN (frame))) {
+        if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (flacparse))) {
           GST_WARNING_OBJECT (flacparse, "EOS");
           return FALSE;
         }

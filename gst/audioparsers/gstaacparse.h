@@ -23,7 +23,7 @@
 #define __GST_AACPARSE_H__
 
 #include <gst/gst.h>
-#include <gst/baseparse/gstbaseparse.h>
+#include <gst/base/gstbaseparse.h>
 
 G_BEGIN_DECLS
 

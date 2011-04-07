@@ -308,7 +308,7 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
      *       perform this check)
      */
     if (fsize &&
-        (GST_BASE_PARSE_FRAME_SYNC (frame) || GST_BASE_PARSE_FRAME_DRAIN (frame)
+        (!GST_BASE_PARSE_LOST_SYNC (parse) || GST_BASE_PARSE_DRAINING (parse)
             || (dsize > fsize && (data[fsize] & 0x83) == 0))) {
       *framesize = fsize;
       return TRUE;

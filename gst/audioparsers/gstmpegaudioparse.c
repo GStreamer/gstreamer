@@ -489,7 +489,7 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
   GstBuffer *buf = frame->buffer;
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   gint off, bpf;
-  gboolean sync, drain, valid, caps_change;
+  gboolean lost_sync, draining, valid, caps_change;
   guint32 header;
   guint bitrate, layer, rate, channels, version, mode, crc;
 
@@ -532,11 +532,11 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
   else
     caps_change = FALSE;
 
-  sync = GST_BASE_PARSE_FRAME_SYNC (frame);
-  drain = GST_BASE_PARSE_FRAME_DRAIN (frame);
+  lost_sync = GST_BASE_PARSE_LOST_SYNC (parse);
+  draining = GST_BASE_PARSE_DRAINING (parse);
 
-  if (!drain && (!sync || caps_change)) {
-    if (!gst_mp3parse_validate_extended (mp3parse, buf, header, bpf, drain,
+  if (!draining && (lost_sync || caps_change)) {
+    if (!gst_mp3parse_validate_extended (mp3parse, buf, header, bpf, draining,
             &valid)) {
       /* not enough data */
       gst_base_parse_set_min_frame_size (parse, valid);
@@ -548,7 +548,7 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
         return FALSE;
       }
     }
-  } else if (drain && !sync && caps_change) {
+  } else if (draining && lost_sync && caps_change) {
     /* avoid caps jitter that we can't be sure of */
     *skipsize = off + 2;
     return FALSE;
@@ -572,7 +572,6 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   GstFormat fmt = GST_FORMAT_BYTES;
   guint32 read_id;
   const guint8 *data;
-  GstBaseParseSeekable seekable;
   guint bitrate;
 
   if (mp3parse->sent_codec_tag)
@@ -926,6 +925,8 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   }
 
   /* tell baseclass how nicely we can seek, and a bitrate if one found */
+  /* FIXME: fill index with seek table */
+#if 0
   seekable = GST_BASE_PARSE_SEEK_DEFAULT;
   if ((mp3parse->xing_flags & XING_TOC_FLAG) && mp3parse->xing_bytes &&
       mp3parse->xing_total_time)
@@ -934,6 +935,7 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   if (mp3parse->vbri_seek_table && mp3parse->vbri_bytes &&
       mp3parse->vbri_total_time)
     seekable = GST_BASE_PARSE_SEEK_TABLE;
+#endif
 
   if (mp3parse->xing_bitrate)
     bitrate = mp3parse->xing_bitrate;
@@ -942,7 +944,7 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   else
     bitrate = 0;
 
-  gst_base_parse_set_seek (GST_BASE_PARSE (mp3parse), seekable, bitrate);
+  gst_base_parse_set_average_bitrate (GST_BASE_PARSE (mp3parse), bitrate);
 }
 
 static GstFlowReturn

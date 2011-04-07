@@ -391,7 +391,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
   GstBuffer *buf = frame->buffer;
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   gint off;
-  gboolean sync, drain;
+  gboolean lost_sync, draining;
 
   if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < 6))
     return FALSE;
@@ -422,10 +422,10 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
 
   GST_LOG_OBJECT (parse, "got frame");
 
-  sync = GST_BASE_PARSE_FRAME_SYNC (frame);
-  drain = GST_BASE_PARSE_FRAME_DRAIN (frame);
+  lost_sync = GST_BASE_PARSE_LOST_SYNC (parse);
+  draining = GST_BASE_PARSE_DRAINING (parse);
 
-  if (!sync && !drain) {
+  if (lost_sync && !draining) {
     guint16 word = 0;
 
     GST_DEBUG_OBJECT (ac3parse, "resyncing; checking next frame syncword");
