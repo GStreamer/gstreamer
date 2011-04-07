@@ -183,7 +183,7 @@ gst_rtp_dv_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static gboolean
-gst_dv_pay_negotiate (GstRTPDVPay * rtpdvpay, guint8 * data, guint size)
+gst_dv_pay_negotiate (GstRTPDVPay * rtpdvpay, guint8 * data, gsize size)
 {
   const gchar *encode, *media;
   gboolean audio_bundled, res;
@@ -284,10 +284,11 @@ gst_rtp_dv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
   gint hdrlen;
-  guint size;
-  guint8 *data;
+  gsize size, osize;
+  guint8 *data, *odata;
   guint8 *dest;
   guint filled;
+  GstRTPBuffer rtp = { NULL, };
 
   rtpdvpay = GST_RTP_DV_PAY (basepayload);
 
@@ -300,8 +301,10 @@ gst_rtp_dv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   max_payload_size = ((GST_BASE_RTP_PAYLOAD_MTU (rtpdvpay) - hdrlen) / 80) * 80;
 
   /* The length of the buffer to transmit. */
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
+  odata = data;
+  osize = size;
 
   GST_DEBUG_OBJECT (rtpdvpay,
       "DV RTP payloader got buffer of %u bytes, splitting in %u byte "
@@ -324,7 +327,9 @@ gst_rtp_dv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     if (outbuf == NULL) {
       outbuf = gst_rtp_buffer_new_allocate (max_payload_size, 0, 0);
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
-      dest = gst_rtp_buffer_get_payload (outbuf);
+
+      gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+      dest = gst_rtp_buffer_get_payload (&rtp);
       filled = 0;
     }
 
@@ -348,13 +353,15 @@ gst_rtp_dv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         guint hlen;
 
         /* set marker */
-        gst_rtp_buffer_set_marker (outbuf, TRUE);
+        gst_rtp_buffer_set_marker (&rtp, TRUE);
 
         /* shrink buffer to last packet */
-        hlen = gst_rtp_buffer_get_header_len (outbuf);
-        gst_rtp_buffer_set_packet_len (outbuf, hlen + filled);
+        hlen = gst_rtp_buffer_get_header_len (&rtp);
+        gst_rtp_buffer_set_packet_len (&rtp, hlen + filled);
       }
+
       /* Push out the created piece, and check for errors. */
+      gst_rtp_buffer_unmap (&rtp);
       ret = gst_basertppayload_push (basepayload, outbuf);
       if (ret != GST_FLOW_OK)
         break;
@@ -362,6 +369,7 @@ gst_rtp_dv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       outbuf = NULL;
     }
   }
+  gst_buffer_unmap (buffer, odata, osize);
   gst_buffer_unref (buffer);
 
   return ret;

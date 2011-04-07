@@ -310,6 +310,7 @@ gst_rtp_celt_pay_flush_queued (GstRtpCELTPay * rtpceltpay)
   guint8 *payload, *spayload;
   guint payload_len;
   GstClockTime duration;
+  GstRTPBuffer rtp = { NULL, };
 
   payload_len = rtpceltpay->bytes + rtpceltpay->sbytes;
   duration = rtpceltpay->qduration;
@@ -322,8 +323,10 @@ gst_rtp_celt_pay_flush_queued (GstRtpCELTPay * rtpceltpay)
 
   GST_BUFFER_DURATION (outbuf) = duration;
 
+  gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+
   /* point to the payload for size headers and data */
-  spayload = gst_rtp_buffer_get_payload (outbuf);
+  spayload = gst_rtp_buffer_get_payload (&rtp);
   payload = spayload + rtpceltpay->sbytes;
 
   while ((buf = g_queue_pop_head (rtpceltpay->queue))) {
@@ -334,20 +337,21 @@ gst_rtp_celt_pay_flush_queued (GstRtpCELTPay * rtpceltpay)
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
     /* write the size to the header */
-    size = GST_BUFFER_SIZE (buf);
+    size = gst_buffer_get_size (buf);
     while (size > 0xff) {
       *spayload++ = 0xff;
       size -= 0xff;
     }
     *spayload++ = size;
 
-    size = GST_BUFFER_SIZE (buf);
     /* copy payload */
-    memcpy (payload, GST_BUFFER_DATA (buf), size);
+    size = gst_buffer_get_size (buf);
+    gst_buffer_extract (buf, 0, payload, size);
     payload += size;
 
     gst_buffer_unref (buf);
   }
+  gst_rtp_buffer_unmap (&rtp);
 
   /* we consumed it all */
   rtpceltpay->bytes = 0;
@@ -365,7 +369,7 @@ gst_rtp_celt_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 {
   GstFlowReturn ret;
   GstRtpCELTPay *rtpceltpay;
-  guint size, payload_len;
+  gsize size, payload_len;
   guint8 *data;
   GstClockTime duration, packet_dur;
   guint i, ssize, packet_len;
@@ -374,8 +378,7 @@ gst_rtp_celt_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   ret = GST_FLOW_OK;
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
   switch (rtpceltpay->packet) {
     case 0:
@@ -384,14 +387,15 @@ gst_rtp_celt_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       if (!gst_rtp_celt_pay_parse_ident (rtpceltpay, data, size))
         goto parse_error;
 
-      goto done;
+      goto cleanup;
     case 1:
       /* comment packet, we ignore it */
-      goto done;
+      goto cleanup;
     default:
       /* other packets go in the payload */
       break;
   }
+  gst_buffer_unmap (buffer, data, size);
 
   duration = GST_BUFFER_DURATION (buffer);
 
@@ -429,10 +433,16 @@ done:
   return ret;
 
   /* ERRORS */
+cleanup:
+  {
+    gst_buffer_unmap (buffer, data, size);
+    goto done;
+  }
 parse_error:
   {
     GST_ELEMENT_ERROR (rtpceltpay, STREAM, DECODE, (NULL),
         ("Error parsing first identification packet."));
+    gst_buffer_unmap (buffer, data, size);
     return GST_FLOW_ERROR;
   }
 }

@@ -247,6 +247,7 @@ gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay)
     guint8 *payload;
     guint payload_len;
     guint packet_len;
+    GstRTPBuffer rtp = { NULL, };
 
     /* this will be the total length of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (2 + avail, 0, 0);
@@ -294,8 +295,9 @@ gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay)
      *     3: other fragment
      * NF: amount of frames if FT = 0, else number of fragments.
      */
+    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
     GST_LOG_OBJECT (rtpac3pay, "FT %u, NF %u", FT, NF);
-    payload = gst_rtp_buffer_get_payload (outbuf);
+    payload = gst_rtp_buffer_get_payload (&rtp);
     payload[0] = (FT & 3);
     payload[1] = NF;
     payload_len -= 2;
@@ -305,7 +307,8 @@ gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay)
 
     avail -= payload_len;
     if (avail == 0)
-      gst_rtp_buffer_set_marker (outbuf, TRUE);
+      gst_rtp_buffer_set_marker (&rtp, TRUE);
+    gst_rtp_buffer_unmap (&rtp);
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpac3pay->first_ts;
     GST_BUFFER_DURATION (outbuf) = rtpac3pay->duration;
@@ -322,15 +325,14 @@ gst_rtp_ac3_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 {
   GstRtpAC3Pay *rtpac3pay;
   GstFlowReturn ret;
-  guint size, avail, left, NF;
+  gsize size, avail, left, NF;
   guint8 *data, *p;
   guint packet_len;
   GstClockTime duration, timestamp;
 
   rtpac3pay = GST_RTP_AC3_PAY (basepayload);
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   duration = GST_BUFFER_DURATION (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
@@ -374,6 +376,7 @@ gst_rtp_ac3_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     p += frame_size;
     left -= frame_size;
   }
+  gst_buffer_unmap (buffer, data, size);
   if (NF == 0)
     goto no_frames;
 

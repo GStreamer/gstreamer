@@ -165,47 +165,48 @@ gst_rtp_ac3_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpAC3Depay *rtpac3depay;
   GstBuffer *outbuf;
+  GstRTPBuffer rtp = { NULL, };
+  guint8 *payload;
+  guint16 FT, NF;
 
   rtpac3depay = GST_RTP_AC3_DEPAY (depayload);
 
-  {
-    guint8 *payload;
-    guint16 FT, NF;
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
-    if (gst_rtp_buffer_get_payload_len (buf) < 2)
-      goto empty_packet;
+  if (gst_rtp_buffer_get_payload_len (&rtp) < 2)
+    goto empty_packet;
 
-    payload = gst_rtp_buffer_get_payload (buf);
+  payload = gst_rtp_buffer_get_payload (&rtp);
 
-    /* strip off header
-     *
-     *  0                   1
-     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     * |    MBZ    | FT|       NF      |
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     */
-    FT = payload[0] & 0x3;
-    NF = payload[1];
+  /* strip off header
+   *
+   *  0                   1
+   *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |    MBZ    | FT|       NF      |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   */
+  FT = payload[0] & 0x3;
+  NF = payload[1];
 
-    GST_DEBUG_OBJECT (rtpac3depay, "FT: %d, NF: %d", FT, NF);
+  GST_DEBUG_OBJECT (rtpac3depay, "FT: %d, NF: %d", FT, NF);
 
-    /* We don't bother with fragmented packets yet */
-    outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 2, -1);
+  /* We don't bother with fragmented packets yet */
+  outbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, 2, -1);
 
-    GST_DEBUG_OBJECT (rtpac3depay, "pushing buffer of size %d",
-        GST_BUFFER_SIZE (outbuf));
+  gst_rtp_buffer_unmap (&rtp);
 
-    return outbuf;
-  }
+  GST_DEBUG_OBJECT (rtpac3depay, "pushing buffer of size %d",
+      gst_buffer_get_size (outbuf));
 
-  return NULL;
+  return outbuf;
 
   /* ERRORS */
 empty_packet:
   {
     GST_ELEMENT_WARNING (rtpac3depay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

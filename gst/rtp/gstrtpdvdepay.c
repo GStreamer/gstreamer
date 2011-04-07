@@ -172,6 +172,8 @@ gst_rtp_dv_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   gint clock_rate;
   gboolean systemstream, ret;
   const gchar *encode, *media;
+  guint8 *data;
+  gsize size;
 
   rtpdvdepay = GST_RTP_DV_DEPAY (depayload);
 
@@ -216,7 +218,9 @@ gst_rtp_dv_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   /* Initialize the new accumulator frame.
    * If the previous frame exists, copy that into the accumulator frame.
    * This way, missing packets in the stream won't show up badly. */
-  memset (GST_BUFFER_DATA (rtpdvdepay->acc), 0, rtpdvdepay->frame_size);
+  data = gst_buffer_map (rtpdvdepay->acc, &size, NULL, GST_MAP_WRITE);
+  memset (data, 0, rtpdvdepay->frame_size);
+  gst_buffer_unmap (rtpdvdepay->acc, data, size);
 
   srccaps = gst_caps_new_simple ("video/x-dv",
       "systemstream", G_TYPE_BOOLEAN, systemstream,
@@ -300,12 +304,15 @@ gst_rtp_dv_depay_process (GstBaseRTPDepayload * base, GstBuffer * in)
   guint payload_len, location;
   GstRTPDVDepay *dvdepay = GST_RTP_DV_DEPAY (base);
   gboolean marker;
+  GstRTPBuffer rtp = { NULL, };
 
-  marker = gst_rtp_buffer_get_marker (in);
+  gst_rtp_buffer_map (in, GST_MAP_READ, &rtp);
+
+  marker = gst_rtp_buffer_get_marker (&rtp);
 
   /* Check if the received packet contains (the start of) a new frame, we do
    * this by checking the RTP timestamp. */
-  rtp_ts = gst_rtp_buffer_get_timestamp (in);
+  rtp_ts = gst_rtp_buffer_get_timestamp (&rtp);
 
   /* we cannot copy the packet yet if the marker is set, we will do that below
    * after taking out the data */
@@ -319,8 +326,8 @@ gst_rtp_dv_depay_process (GstBaseRTPDepayload * base, GstBuffer * in)
   }
 
   /* Extract the payload */
-  payload_len = gst_rtp_buffer_get_payload_len (in);
-  payload = gst_rtp_buffer_get_payload (in);
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+  payload = gst_rtp_buffer_get_payload (&rtp);
 
   /* copy all DIF chunks in their place. */
   while (payload_len >= 80) {
@@ -343,11 +350,12 @@ gst_rtp_dv_depay_process (GstBaseRTPDepayload * base, GstBuffer * in)
 
     /* And copy it in, provided the location is sane. */
     if (offset >= 0 && offset <= dvdepay->frame_size - 80)
-      memcpy (GST_BUFFER_DATA (dvdepay->acc) + offset, payload, 80);
+      gst_buffer_fill (dvdepay->acc, offset, payload, 80);
 
     payload += 80;
     payload_len -= 80;
   }
+  gst_rtp_buffer_unmap (&rtp);
 
   if (marker) {
     GST_DEBUG_OBJECT (dvdepay, "marker bit complete frame %u", rtp_ts);

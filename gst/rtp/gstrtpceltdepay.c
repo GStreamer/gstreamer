@@ -122,7 +122,8 @@ gst_rtp_celt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstRtpCELTDepay *rtpceltdepay;
   gint clock_rate, nb_channels = 0, frame_size = 0;
   GstBuffer *buf;
-  guint8 *data;
+  guint8 *data, *ptr;
+  gsize size;
   const gchar *params;
   GstCaps *srccaps;
   gboolean res;
@@ -151,26 +152,27 @@ gst_rtp_celt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   /* construct minimal header and comment packet for the decoder */
   buf = gst_buffer_new_and_alloc (60);
-  data = GST_BUFFER_DATA (buf);
-  memcpy (data, "CELT    ", 8);
-  data += 8;
-  memcpy (data, "1.1.12", 7);
-  data += 20;
-  GST_WRITE_UINT32_LE (data, 0x80000006);       /* version */
-  data += 4;
-  GST_WRITE_UINT32_LE (data, 56);       /* header_size */
-  data += 4;
-  GST_WRITE_UINT32_LE (data, clock_rate);       /* rate */
-  data += 4;
-  GST_WRITE_UINT32_LE (data, nb_channels);      /* channels */
-  data += 4;
-  GST_WRITE_UINT32_LE (data, frame_size);       /* frame-size */
-  data += 4;
-  GST_WRITE_UINT32_LE (data, -1);       /* overlap */
-  data += 4;
-  GST_WRITE_UINT32_LE (data, -1);       /* bytes_per_packet */
-  data += 4;
-  GST_WRITE_UINT32_LE (data, 0);        /* extra headers */
+  ptr = data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
+  memcpy (ptr, "CELT    ", 8);
+  ptr += 8;
+  memcpy (ptr, "1.1.12", 7);
+  ptr += 20;
+  GST_WRITE_UINT32_LE (ptr, 0x80000006);        /* version */
+  ptr += 4;
+  GST_WRITE_UINT32_LE (ptr, 56);        /* header_size */
+  ptr += 4;
+  GST_WRITE_UINT32_LE (ptr, clock_rate);        /* rate */
+  ptr += 4;
+  GST_WRITE_UINT32_LE (ptr, nb_channels);       /* channels */
+  ptr += 4;
+  GST_WRITE_UINT32_LE (ptr, frame_size);        /* frame-size */
+  ptr += 4;
+  GST_WRITE_UINT32_LE (ptr, -1);        /* overlap */
+  ptr += 4;
+  GST_WRITE_UINT32_LE (ptr, -1);        /* bytes_per_packet */
+  ptr += 4;
+  GST_WRITE_UINT32_LE (ptr, 0); /* extra headers */
+  gst_buffer_unmap (buf, data, size);
 
   srccaps = gst_caps_new_simple ("audio/x-celt", NULL);
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
@@ -180,8 +182,7 @@ gst_rtp_celt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpceltdepay), buf);
 
   buf = gst_buffer_new_and_alloc (sizeof (gst_rtp_celt_comment));
-  memcpy (GST_BUFFER_DATA (buf), gst_rtp_celt_comment,
-      sizeof (gst_rtp_celt_comment));
+  gst_buffer_fill (buf, 0, gst_rtp_celt_comment, sizeof (gst_rtp_celt_comment));
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (depayload->srcpad));
   gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpceltdepay), buf);
@@ -207,6 +208,7 @@ gst_rtp_celt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstClockTime framesize_ns = 0, timestamp;
   guint n = 0;
   GstRtpCELTDepay *rtpceltdepay;
+  GstRTPBuffer rtp = { NULL, };
 
   rtpceltdepay = GST_RTP_CELT_DEPAY (depayload);
   clock_rate = depayload->clock_rate;
@@ -215,17 +217,19 @@ gst_rtp_celt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+
   GST_LOG_OBJECT (depayload, "got %d bytes, mark %d ts %u seqn %d",
-      GST_BUFFER_SIZE (buf),
-      gst_rtp_buffer_get_marker (buf),
-      gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
+      gst_buffer_get_size (buf),
+      gst_rtp_buffer_get_marker (&rtp),
+      gst_rtp_buffer_get_timestamp (&rtp), gst_rtp_buffer_get_seq (&rtp));
 
   GST_LOG_OBJECT (depayload, "got clock-rate=%d, frame_size=%d, "
       "_ns=%" GST_TIME_FORMAT ", timestamp=%" GST_TIME_FORMAT, clock_rate,
       frame_size, GST_TIME_ARGS (framesize_ns), GST_TIME_ARGS (timestamp));
 
-  payload = gst_rtp_buffer_get_payload (buf);
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
+  payload = gst_rtp_buffer_get_payload (&rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
 
   /* first count how many bytes are consumed by the size headers and make offset
    * point to the first data byte */
@@ -250,7 +254,7 @@ gst_rtp_celt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       total_size += size + 1;
     } while (s == 0xff);
 
-    outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, offset, size);
+    outbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, offset, size);
     offset += size;
 
     if (frame_size != -1 && clock_rate != -1) {
@@ -264,6 +268,8 @@ gst_rtp_celt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     gst_base_rtp_depayload_push (depayload, outbuf);
   }
+  gst_rtp_buffer_unmap (&rtp);
+
   return NULL;
 }
 

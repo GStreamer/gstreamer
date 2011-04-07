@@ -158,14 +158,18 @@ gst_rtp_bv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf;
   gboolean marker;
+  GstRTPBuffer rtp = { NULL, };
 
-  marker = gst_rtp_buffer_get_marker (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+
+  marker = gst_rtp_buffer_get_marker (&rtp);
 
   GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
-      GST_BUFFER_SIZE (buf), marker,
-      gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
+      gst_buffer_get_size (buf), marker,
+      gst_rtp_buffer_get_timestamp (&rtp), gst_rtp_buffer_get_seq (&rtp));
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
 
   if (marker) {
     /* mark start of talkspurt with DISCONT */
