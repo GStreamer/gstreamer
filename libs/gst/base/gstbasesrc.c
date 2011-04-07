@@ -238,9 +238,10 @@ struct _GstBaseSrcPrivate
   /* stream sequence number */
   guint32 seqnum;
 
-  /* pending tags to be pushed in the data stream */
-  GList *pending_tags;
-  volatile gint have_tags;
+  /* pending events (TAG, CUSTOM_BOTH, CUSTOM_DOWNSTREAM) to be
+   * pushed in the data stream */
+  GList *pending_events;
+  volatile gint have_events;
 
   /* QoS *//* with LOCK */
   gboolean qos_enabled;
@@ -438,7 +439,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_base_src_set_format (basesrc, GST_FORMAT_BYTES);
   basesrc->data.ABI.typefind = DEFAULT_TYPEFIND;
   basesrc->priv->do_timestamp = DEFAULT_DO_TIMESTAMP;
-  g_atomic_int_set (&basesrc->priv->have_tags, FALSE);
+  g_atomic_int_set (&basesrc->priv->have_events, FALSE);
 
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
   GST_OBJECT_FLAG_SET (basesrc, GST_ELEMENT_IS_SOURCE);
@@ -460,9 +461,10 @@ gst_base_src_finalize (GObject * object)
   event_p = &basesrc->data.ABI.pending_seek;
   gst_event_replace (event_p, NULL);
 
-  if (basesrc->priv->pending_tags) {
-    g_list_foreach (basesrc->priv->pending_tags, (GFunc) gst_event_unref, NULL);
-    g_list_free (basesrc->priv->pending_tags);
+  if (basesrc->priv->pending_events) {
+    g_list_foreach (basesrc->priv->pending_events, (GFunc) gst_event_unref,
+        NULL);
+    g_list_free (basesrc->priv->pending_events);
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -1586,10 +1588,13 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       /* sending random NEWSEGMENT downstream can break sync. */
       break;
     case GST_EVENT_TAG:
-      /* Insert tag in the dataflow */
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    case GST_EVENT_CUSTOM_BOTH:
+      /* Insert TAG, CUSTOM_DOWNSTREAM, CUSTOM_BOTH in the dataflow */
       GST_OBJECT_LOCK (src);
-      src->priv->pending_tags = g_list_append (src->priv->pending_tags, event);
-      g_atomic_int_set (&src->priv->have_tags, TRUE);
+      src->priv->pending_events =
+          g_list_append (src->priv->pending_events, event);
+      g_atomic_int_set (&src->priv->have_events, TRUE);
       GST_OBJECT_UNLOCK (src);
       event = NULL;
       result = TRUE;
@@ -1643,10 +1648,6 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       /* custom events */
     case GST_EVENT_CUSTOM_UPSTREAM:
       /* override send_event if you want this */
-      break;
-    case GST_EVENT_CUSTOM_DOWNSTREAM:
-    case GST_EVENT_CUSTOM_BOTH:
-      /* FIXME, insert event in the dataflow */
       break;
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
     case GST_EVENT_CUSTOM_BOTH_OOB:
@@ -2356,7 +2357,7 @@ gst_base_src_loop (GstPad * pad)
   gint64 position;
   gboolean eos;
   gulong blocksize;
-  GList *tags = NULL, *tmp;
+  GList *pending_events = NULL, *tmp;
 
   eos = FALSE;
 
@@ -2413,22 +2414,22 @@ gst_base_src_loop (GstPad * pad)
   }
   src->priv->newsegment_pending = FALSE;
 
-  if (g_atomic_int_get (&src->priv->have_tags)) {
+  if (g_atomic_int_get (&src->priv->have_events)) {
     GST_OBJECT_LOCK (src);
-    /* take the tags */
-    tags = src->priv->pending_tags;
-    src->priv->pending_tags = NULL;
-    g_atomic_int_set (&src->priv->have_tags, FALSE);
+    /* take the events */
+    pending_events = src->priv->pending_events;
+    src->priv->pending_events = NULL;
+    g_atomic_int_set (&src->priv->have_events, FALSE);
     GST_OBJECT_UNLOCK (src);
   }
 
   /* Push out pending tags if any */
-  if (G_UNLIKELY (tags != NULL)) {
-    for (tmp = tags; tmp; tmp = g_list_next (tmp)) {
+  if (G_UNLIKELY (pending_events != NULL)) {
+    for (tmp = pending_events; tmp; tmp = g_list_next (tmp)) {
       GstEvent *ev = (GstEvent *) tmp->data;
       gst_pad_push_event (pad, ev);
     }
-    g_list_free (tags);
+    g_list_free (pending_events);
   }
 
   /* figure out the new position */
