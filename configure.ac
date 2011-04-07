@@ -54,8 +54,8 @@ AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.32
-GSTPB_REQ=0.10.32
+GST_REQ=0.10.32.1
+GSTPB_REQ=0.10.32.1
 
 dnl *** autotools stuff ****
 
@@ -323,6 +323,7 @@ AG_GST_CHECK_PLUGIN(videofilter)
 AG_GST_CHECK_PLUGIN(alpha)
 AG_GST_CHECK_PLUGIN(apetag)
 AG_GST_CHECK_PLUGIN(audiofx)
+AG_GST_CHECK_PLUGIN(audioparsers)
 AG_GST_CHECK_PLUGIN(auparse)
 AG_GST_CHECK_PLUGIN(autodetect)
 AG_GST_CHECK_PLUGIN(avi)
@@ -1133,6 +1134,7 @@ gst/Makefile
 gst/alpha/Makefile
 gst/apetag/Makefile
 gst/audiofx/Makefile
+gst/audioparsers/Makefile
 gst/auparse/Makefile
 gst/autodetect/Makefile
 gst/avi/Makefile
