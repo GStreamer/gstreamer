@@ -32,7 +32,7 @@
           <name>video</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>video/x-flash-video; video/x-flash-screen; video/x-vp6-flash; video/x-vp6-alpha; video/x-h264</details>
+          <details>video/x-flash-video; video/x-flash-screen; video/x-vp6-flash; video/x-vp6-alpha; video/x-h264, stream-format=(string)avc</details>
         </caps>
       </pads>
     </element>
@@ -53,7 +53,7 @@
           <name>video</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-flash-video; video/x-flash-screen; video/x-vp6-flash; video/x-vp6-alpha; video/x-h264</details>
+          <details>video/x-flash-video; video/x-flash-screen; video/x-vp6-flash; video/x-vp6-alpha; video/x-h264, stream-format=(string)avc</details>
         </caps>
         <caps>
           <name>src</name>

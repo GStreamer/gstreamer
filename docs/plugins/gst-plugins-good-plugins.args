@@ -299,6 +299,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstSpectrum::multi-channel</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multichannel results</NICK>
+<BLURB>Send separate results for each channel.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstVideoflip::method</NAME>
 <TYPE>GstVideoflipMethod</TYPE>
 <RANGE></RANGE>
@@ -3510,7 +3520,7 @@
 
 <ARG>
 <NAME>GstSoupHTTPSrc::cookies</NAME>
-<TYPE>GStrv*</TYPE>
+<TYPE>GStrv</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Cookies</NICK>
@@ -21206,5 +21216,35 @@
 <NICK>Server</NICK>
 <BLURB>The Jack server to connect to (NULL = default).</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacParse::check-frame-checksums</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Check Frame Checksums</NICK>
+<BLURB>Check the overall checksums of every frame.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Radio::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Radio device location</NICK>
+<BLURB>Video4Linux2 radio device location.</BLURB>
+<DEFAULT>"/dev/radio0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Radio::frequency</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[87500000,108000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Station frequency</NICK>
+<BLURB>Station frequency in Hz.</BLURB>
+<DEFAULT>100000000</DEFAULT>
 </ARG>
 
