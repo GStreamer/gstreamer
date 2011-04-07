@@ -178,8 +178,8 @@ gst_buffer_add_meta_ximage (GstBuffer * buffer, GstXImageSink * ximagesink,
   XSetErrorHandler (handler);
 
   gst_buffer_take_memory (buffer,
-      gst_memory_new_wrapped (0, meta->ximage->data, NULL,
-          meta->size, 0, meta->size));
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->ximage->data,
+          NULL, meta->size, 0, meta->size));
 
   g_mutex_unlock (ximagesink->x_lock);
 

@@ -210,8 +210,8 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageSink * xvimagesink,
   XSetErrorHandler (handler);
 
   gst_buffer_take_memory (buffer,
-      gst_memory_new_wrapped (0, meta->xvimage->data, NULL,
-          meta->size, 0, meta->size));
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->xvimage->data,
+          NULL, meta->size, 0, meta->size));
 
   g_mutex_unlock (xvimagesink->x_lock);
 
