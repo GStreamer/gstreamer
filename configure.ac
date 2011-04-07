@@ -540,8 +540,15 @@ AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
 dnl check for shm_open (for shm plugin)
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHM, true)
 AG_GST_CHECK_FEATURE(SHM, [POSIX shared memory source and sink], shm, [
-  AC_CHECK_LIB(rt, shm_open,
-   AC_CHECK_DECL(MSG_NOSIGNAL, HAVE_SHM=yes, HAVE_SHM=no), HAVE_SHM=no)
+  if test "x$HAVE_SYS_SOCKET_H" = "xyes"; then
+    AC_CHECK_LIB([rt], [shm_open],
+       AC_CHECK_DECL([MSG_NOSIGNAL], HAVE_SHM=yes, HAVE_SHM=no, [
+#include <sys/socket.h>
+	 ]),
+	 HAVE_SHM=no)
+  else
+    HAVE_SHM=no
+  fi
 ])
 
 dnl check for Video CD
