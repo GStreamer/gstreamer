@@ -347,6 +347,11 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       && handler != gst_bus_sync_signal_handler)
     gst_bus_sync_signal_handler (bus, message, NULL);
 
+  /* If this is a bus without async message delivery
+   * always drop the message */
+  if (!bus->priv->poll)
+    reply = GST_BUS_DROP;
+
   /* now see what we should do with the message */
   switch (reply) {
     case GST_BUS_DROP:
@@ -357,8 +362,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       /* pass the message to the async queue, refcount passed in the queue */
       GST_DEBUG_OBJECT (bus, "[msg %p] pushing on async queue", message);
       gst_atomic_queue_push (bus->queue, message);
-      if (bus->priv->poll)
-        gst_poll_write_control (bus->priv->poll);
+      gst_poll_write_control (bus->priv->poll);
       GST_DEBUG_OBJECT (bus, "[msg %p] pushed on async queue", message);
 
       break;
@@ -380,8 +384,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_mutex_lock (lock);
 
       gst_atomic_queue_push (bus->queue, message);
-      if (bus->priv->poll)
-        gst_poll_write_control (bus->priv->poll);
+      gst_poll_write_control (bus->priv->poll);
 
       /* now block till the message is freed */
       g_cond_wait (cond, lock);
