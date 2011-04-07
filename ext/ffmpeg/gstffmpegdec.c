@@ -931,6 +931,10 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
     *outbuf = new_aligned_buffer (fsize, GST_PAD_CAPS (ffmpegdec->srcpad));
     ret = GST_FLOW_OK;
   }
+  /* set caps, we do this here because the buffer is still writable here and we
+   * are sure to be negotiated */
+  gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
+
   return ret;
 
   /* special cases */
@@ -995,6 +999,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
       GstFlowReturn ret;
       gint clip_width, clip_height;
       guint8 *data;
+      gsize size;
 
       /* take final clipped output size */
       if ((clip_width = ffmpegdec->format.video.clip_width) == -1)
@@ -1025,10 +1030,10 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
       }
 
       /* FIXME, unmap me later */
-      data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+      data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
       if (((uintptr_t) data) % 16) {
         /* If buffer isn't 128-bit aligned, create a memaligned one ourselves */
-        gst_buffer_unmap (buf, data, 0);
+        gst_buffer_unmap (buf, data, size);
         gst_buffer_unref (buf);
         GST_DEBUG_OBJECT (ffmpegdec,
             "Downstream can't allocate aligned buffers.");
@@ -2260,10 +2265,6 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
       ffmpegdec->discont = FALSE;
     }
-    /* set caps */
-    outbuf = gst_buffer_make_writable (outbuf);
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
-
     if (ffmpegdec->segment.rate > 0.0) {
       /* and off we go */
       *ret = gst_pad_push (ffmpegdec->srcpad, outbuf);
