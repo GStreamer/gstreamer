@@ -54,6 +54,7 @@
 #define DEFAULT_SIGNAL_FPS_MEASUREMENTS FALSE
 #define DEFAULT_FPS_UPDATE_INTERVAL_MS 500      /* 500 ms */
 #define DEFAULT_FONT "Sans 15"
+#define DEFAULT_VERBOSE FALSE
 
 /* generic templates */
 static GstStaticPadTemplate fps_display_sink_template =
@@ -85,7 +86,8 @@ enum
   ARG_MIN_FPS,
   ARG_SIGNAL_FPS_MEASUREMENTS,
   ARG_FRAMES_DROPPED,
-  ARG_FRAMES_RENDERED
+  ARG_FRAMES_RENDERED,
+  ARG_VERBOSE
       /* FILL ME */
 };
 
@@ -162,6 +164,10 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
           "Number of frames rendered", 0, G_MAXUINT, 0,
           G_PARAM_STATIC_STRINGS | G_PARAM_READABLE));
 
+  g_object_class_install_property (gobject_klass, ARG_VERBOSE,
+      g_param_spec_boolean ("verbose", "enable stdout output",
+          "If the element should display statistics on stdout", DEFAULT_VERBOSE,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_klass, ARG_SIGNAL_FPS_MEASUREMENTS,
       g_param_spec_boolean ("signal-fps-measurements",
@@ -332,6 +338,7 @@ fps_display_sink_init (GstFPSDisplaySink * self,
   self->video_sink = NULL;
   self->max_fps = -1;
   self->min_fps = -1;
+  self->verbose = DEFAULT_VERBOSE;
 
   self->ghost_pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (self), self->ghost_pad);
@@ -400,7 +407,9 @@ display_current_fps (gpointer data)
 
   if (self->use_text_overlay) {
     g_object_set (self->text_overlay, "text", fps_message, NULL);
-  } else {
+  }
+
+  if (self->verbose) {
     g_print ("%s\n", fps_message);
   }
 
@@ -536,6 +545,9 @@ fps_display_sink_set_property (GObject * object, guint prop_id,
     case ARG_SIGNAL_FPS_MEASUREMENTS:
       self->signal_measurements = g_value_get_boolean (value);
       break;
+    case ARG_VERBOSE:
+      self->verbose = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -575,6 +587,9 @@ fps_display_sink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_SIGNAL_FPS_MEASUREMENTS:
       g_value_set_boolean (value, self->signal_measurements);
+      break;
+    case ARG_VERBOSE:
+      g_value_set_boolean (value, self->verbose);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
