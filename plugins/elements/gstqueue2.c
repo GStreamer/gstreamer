@@ -2796,7 +2796,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = !!queue->ring_buffer;
+        result = ! !queue->ring_buffer;
       } else {
         result = TRUE;
       }
@@ -2891,6 +2891,7 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
           g_free (queue->ring_buffer);
           queue->ring_buffer = NULL;
         }
+        clean_ranges (queue);
       }
       if (queue->starting_segment != NULL) {
         gst_event_unref (queue->starting_segment);
