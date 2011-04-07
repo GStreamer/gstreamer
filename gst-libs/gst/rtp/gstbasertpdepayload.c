@@ -271,7 +271,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   GstClockTime timestamp;
   guint16 seqnum;
   guint32 rtptime;
-  gboolean reset_seq, discont;
+  gboolean discont;
   gint gap;
   GstRTPBuffer rtp;
 
@@ -303,7 +303,6 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
-  reset_seq = TRUE;
   discont = FALSE;
 
   GST_LOG_OBJECT (filter, "discont %d, seqnum %u, rtptime %u, timestamp %"
@@ -551,10 +550,7 @@ static GstFlowReturn
 gst_base_rtp_depayload_prepare_push (GstBaseRTPDepayload * filter,
     gboolean do_ts, guint32 rtptime, gboolean is_list, gpointer obj)
 {
-  GstBaseRTPDepayloadPrivate *priv;
   HeaderData data;
-
-  priv = filter->priv;
 
   data.depayload = filter;
   data.caps = GST_PAD_CAPS (filter->srcpad);

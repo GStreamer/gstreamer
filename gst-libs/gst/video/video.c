@@ -707,14 +707,14 @@ gst_video_format_new_caps_raw (GstVideoFormat format)
         break;
     }
 
-    if (bpp > 8) {
+    if (bpp <= 8) {
       caps = gst_caps_new_simple ("video/x-raw-gray",
           "bpp", G_TYPE_INT, bpp, "depth", G_TYPE_INT, depth, NULL);
     } else {
       caps = gst_caps_new_simple ("video/x-raw-gray",
           "bpp", G_TYPE_INT, bpp,
           "depth", G_TYPE_INT, depth,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
+          "endianness", G_TYPE_INT, endianness, NULL);
     }
 
     return caps;

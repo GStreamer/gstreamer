@@ -77,9 +77,20 @@ Telecine
 If the caps have interlaced=true and interlacing-method=telecine then the
 buffers are in some form of telecine state.
 
-The TFF, RFF and ONEFIELD flags have the same semantics as for the plain
-interlaced state, however, for the telecine state require one additional flag to
-be able to identify progressive buffers.
+The TFF and ONEFIELD flags have the same semantics as for the plain interlaced
+state.
+
+GST_VIDEO_BUFFER_RFF in the telecine state indicates that the buffer contains
+only repeated fields that are present in other buffers and are as such
+unneeded. For example, in a sequence of three telecined frames, we might have:
+
+AtAb AtBb BtBb
+
+In this situation, we only need the first and third buffers as the second
+buffer contains fields present in the first and third.
+
+The telecine state require one additional flag to be able to identify
+progressive buffers.
 
 GST_VIDEO_BUFFER_PROGRESSIVE means that the buffer containing two fields is a
 progressive frame. The implication is that if this flag is not set, the buffer
