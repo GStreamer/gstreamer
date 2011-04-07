@@ -940,6 +940,10 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
     *outbuf = new_aligned_buffer (fsize, GST_PAD_CAPS (ffmpegdec->srcpad));
     ret = GST_FLOW_OK;
   }
+  /* set caps, we do this here because the buffer is still writable here and we
+   * are sure to be negotiated */
+  gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
+
   return ret;
 
   /* special cases */
@@ -2239,9 +2243,6 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
       ffmpegdec->discont = FALSE;
     }
-    /* set caps */
-    outbuf = gst_buffer_make_metadata_writable (outbuf);
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
 
     if (ffmpegdec->segment.rate > 0.0) {
       /* and off we go */
