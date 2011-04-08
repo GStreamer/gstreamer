@@ -1149,12 +1149,12 @@ gst_base_parse_convert_default (GstBaseParse * parse,
 }
 
 static void
-gst_base_parse_update_duration (GstBaseParse * aacparse)
+gst_base_parse_update_duration (GstBaseParse * baseparse)
 {
   GstPad *peer;
   GstBaseParse *parse;
 
-  parse = GST_BASE_PARSE (aacparse);
+  parse = GST_BASE_PARSE (baseparse);
 
   peer = gst_pad_get_peer (parse->sinkpad);
   if (peer) {
