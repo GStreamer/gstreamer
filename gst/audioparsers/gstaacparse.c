@@ -456,8 +456,7 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
     gst_aac_parse_parse_adts_header (aacparse, data, &rate, &channels,
         &aacparse->object_type, &aacparse->mpegversion);
 
-    gst_base_parse_set_frame_props (GST_BASE_PARSE (aacparse),
-        rate, 1024, 2, 2);
+    gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse), rate, 1024, 2, 2);
 
     GST_DEBUG ("ADTS: samplerate %d, channels %d, objtype %d, version %d",
         rate, channels, aacparse->object_type, aacparse->mpegversion);
@@ -674,7 +673,7 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       ret = GST_FLOW_NOT_LINKED;
     }
 
-    gst_base_parse_set_frame_props (GST_BASE_PARSE (aacparse),
+    gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse),
         aacparse->sample_rate, 1024, 2, 2);
   }
 

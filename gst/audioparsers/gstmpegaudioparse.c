@@ -1001,7 +1001,7 @@ gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
      * Some mp3 streams have an offset in the timestamps, for which we have to
      * push the frame *after* the end position in order for the decoder to be
      * able to decode everything up until the segment.stop position. */
-    gst_base_parse_set_frame_props (parse, mp3parse->rate, mp3parse->spf,
+    gst_base_parse_set_frame_rate (parse, mp3parse->rate, mp3parse->spf,
         (version == 1) ? 10 : 30, 2);
   }
 

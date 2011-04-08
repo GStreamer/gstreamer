@@ -492,7 +492,7 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     ac3parse->channels = chans;
     ac3parse->eac = eac;
 
-    gst_base_parse_set_frame_props (parse, rate, 256 * blocks, 2, 2);
+    gst_base_parse_set_frame_rate (parse, rate, 256 * blocks, 2, 2);
   }
 
   return GST_FLOW_OK;

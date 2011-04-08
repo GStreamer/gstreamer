@@ -436,7 +436,7 @@ gst_dca_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     dcaparse->block_size = block_size;
     dcaparse->frame_size = size;
 
-    gst_base_parse_set_frame_props (parse, rate, block_size, 0, 0);
+    gst_base_parse_set_frame_rate (parse, rate, block_size, 0, 0);
   }
 
   return GST_FLOW_OK;
