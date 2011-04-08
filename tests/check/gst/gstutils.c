@@ -880,6 +880,9 @@ _gmp_test_scale (gsl_rng * rng)
       bygst = gst_util_uint64_scale (val, a, b);
       func = "gst_util_uint64_scale";
       break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
   fail_unless (bygst == bygmp,
       "error: %s(): %" G_GUINT64_FORMAT " * %" G_GUINT64_FORMAT " / %"
@@ -910,6 +913,9 @@ _gmp_test_scale_int (gsl_rng * rng)
     case ROUND_DOWN:
       bygst = gst_util_uint64_scale_int (val, a, b);
       func = "gst_util_uint64_scale_int";
+      break;
+    default:
+      g_assert_not_reached ();
       break;
   }
   fail_unless (bygst == bygmp,
