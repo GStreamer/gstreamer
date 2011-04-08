@@ -1759,8 +1759,11 @@ gst_base_src_event_handler (GstPad * pad, GstEvent * event)
   gboolean result = FALSE;
 
   src = GST_BASE_SRC (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (src == NULL))
+  if (G_UNLIKELY (src == NULL)) {
+    gst_event_unref (event);
     return FALSE;
+  }
+
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
   if (bclass->event) {
