@@ -105,7 +105,6 @@ static guint gst_bus_signals[LAST_SIGNAL] = { 0 };
 struct _GstBusPrivate
 {
   guint num_sync_message_emitters;
-  GCond *queue_cond;
   GSource *watch_id;
 
   gboolean enable_async;
@@ -244,8 +243,6 @@ gst_bus_init (GstBus * bus)
   bus->queue_lock = g_mutex_new ();
 
   bus->priv = G_TYPE_INSTANCE_GET_PRIVATE (bus, GST_TYPE_BUS, GstBusPrivate);
-  bus->priv->queue_cond = g_cond_new ();
-
   bus->priv->enable_async = DEFAULT_ENABLE_ASYNC;
 
   GST_DEBUG_OBJECT (bus, "created");
@@ -270,8 +267,6 @@ gst_bus_dispose (GObject * object)
     g_mutex_unlock (bus->queue_lock);
     g_mutex_free (bus->queue_lock);
     bus->queue_lock = NULL;
-    g_cond_free (bus->priv->queue_cond);
-    bus->priv->queue_cond = NULL;
 
     if (bus->priv->poll)
       gst_poll_free (bus->priv->poll);
