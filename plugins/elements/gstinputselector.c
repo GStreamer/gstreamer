@@ -1174,8 +1174,10 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
   GstPad *otherpad;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL))
+  if (G_UNLIKELY (sel == NULL)) {
+    gst_event_unref (event);
     return FALSE;
+  }
 
   otherpad = gst_input_selector_get_linked_pad (sel, pad, TRUE);
   if (otherpad) {
@@ -1283,7 +1285,7 @@ gst_input_selector_getcaps (GstPad * pad)
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
   if (G_UNLIKELY (sel == NULL))
-    return FALSE;
+    return gst_caps_new_any ();
 
   otherpad = gst_input_selector_get_linked_pad (sel, pad, FALSE);
 
