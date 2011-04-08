@@ -430,7 +430,9 @@ setup_pipeline_element (GstElement * element, const gchar * property_name,
   GstElement *elem = NULL;
 
   if (element_name) {
-    elem = gst_element_factory_make (element_name, NULL);
+    GError *error = NULL;
+
+    elem = gst_parse_launch (element_name, &error);
     if (elem) {
       if (g_object_class_find_property (G_OBJECT_GET_CLASS (elem), "device")) {
         g_object_set (elem, "device", "/dev/video1", NULL);
@@ -439,6 +441,10 @@ setup_pipeline_element (GstElement * element, const gchar * property_name,
     } else {
       GST_WARNING ("can't create element '%s' for property '%s'", element_name,
           property_name);
+      if (error) {
+        GST_ERROR ("%s", error->message);
+        g_error_free (error);
+      }
       res = FALSE;
     }
   } else {
