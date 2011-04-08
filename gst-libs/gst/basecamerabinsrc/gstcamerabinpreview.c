@@ -31,6 +31,9 @@
 #include "gstcamerabinpreview.h"
 #include "gstbasecamerasrc.h"
 
+static void _gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData *
+    preview, GstCaps * caps);
+
 static GstFlowReturn
 gst_camerabin_preview_pipeline_new_preroll (GstAppSink * appsink,
     gpointer user_data)
@@ -65,6 +68,14 @@ gst_camerabin_preview_pipeline_new_buffer (GstAppSink * appsink,
     GST_WARNING_OBJECT (data->element,
         "This element has no bus, therefore no message sent!");
   }
+
+  g_mutex_lock (data->processing_lock);
+
+  data->processing--;
+  if (data->processing == 0)
+    g_cond_signal (data->processing_cond);
+
+  g_mutex_unlock (data->processing_lock);
 
   return GST_FLOW_OK;
 }
@@ -132,6 +143,12 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
   data->element = element;
   data->filter = filter;
 
+  data->processing_lock = g_mutex_new ();
+  data->processing_cond = g_cond_new ();
+
+  data->pending_preview_caps = NULL;
+  data->processing = 0;
+
   return data;
 error:
   GST_WARNING ("Failed to create camerabin's preview pipeline");
@@ -163,6 +180,14 @@ void
 gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData *
     preview)
 {
+  if (preview->processing_lock) {
+    g_mutex_free (preview->processing_lock);
+    preview->processing_lock = NULL;
+  }
+  if (preview->processing_cond) {
+    g_cond_free (preview->processing_cond);
+    preview->processing_cond = NULL;
+  }
   if (preview->pipeline) {
     gst_element_set_state (preview->pipeline, GST_STATE_NULL);
     gst_object_unref (preview->pipeline);
@@ -188,22 +213,28 @@ gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview,
   g_return_val_if_fail (preview->pipeline != NULL, FALSE);
   g_return_val_if_fail (buffer, FALSE);
 
+  g_mutex_lock (preview->processing_lock);
+
+  if (preview->pending_preview_caps) {
+    if (preview->processing > 0) {
+      g_cond_wait (preview->processing_cond, preview->processing_lock);
+    }
+    _gst_camerabin_preview_set_caps (preview, preview->pending_preview_caps);
+    gst_caps_replace (&preview->pending_preview_caps, NULL);
+  }
+
+  preview->processing++;
+
   gst_app_src_push_buffer ((GstAppSrc *) preview->appsrc,
       gst_buffer_ref (buffer));
+
+  g_mutex_unlock (preview->processing_lock);
 
   return TRUE;
 }
 
-/**
- * gst_camerabin_preview_set_caps:
- * @preview: the #GstCameraBinPreviewPipelineData
- * @caps: the #GstCaps to be set
- *
- * The caps that preview buffers should have when posted
- * on the bus 
- */
-void
-gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview,
+static void
+_gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview,
     GstCaps * caps)
 {
   GstState state, pending;
@@ -217,10 +248,34 @@ gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview,
     state = GST_STATE_PLAYING;
     pending = GST_STATE_VOID_PENDING;
   }
-
   gst_element_set_state (preview->pipeline, GST_STATE_NULL);
   g_object_set (preview->capsfilter, "caps", caps, NULL);
   if (pending != GST_STATE_VOID_PENDING)
     state = pending;
   gst_element_set_state (preview->pipeline, state);
+}
+
+/**
+ * gst_camerabin_preview_set_caps:
+ * @preview: the #GstCameraBinPreviewPipelineData
+ * @caps: the #GstCaps to be set (a new ref will be taken)
+ *
+ * The caps that preview buffers should have when posted
+ * on the bus
+ */
+void
+gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview,
+    GstCaps * caps)
+{
+  g_return_if_fail (preview != NULL);
+
+  g_mutex_lock (preview->processing_lock);
+
+  if (preview->processing == 0) {
+    _gst_camerabin_preview_set_caps (preview, caps);
+  } else {
+    GST_DEBUG ("Preview pipeline busy, storing new caps as pending");
+    gst_caps_replace (&preview->pending_preview_caps, caps);
+  }
+  g_mutex_unlock (preview->processing_lock);
 }

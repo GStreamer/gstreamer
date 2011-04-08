@@ -39,6 +39,12 @@ typedef struct
   GstElement *appsink;
 
   GstElement *element;
+
+  GstCaps *pending_preview_caps;
+  guint processing;
+  GMutex *processing_lock;
+  GCond *processing_cond;
+
 } GstCameraBinPreviewPipelineData;
 
 GstCameraBinPreviewPipelineData *gst_camerabin_create_preview_pipeline (GstElement * element, GstElement * filter);
