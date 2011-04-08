@@ -1,32 +1,4 @@
 <SECTION>
-<FILE>element-aacparse</FILE>
-<TITLE>aacparse</TITLE>
-GstAacParse
-<SUBSECTION Standard>
-GstAacParseClass
-GST_AACPARSE
-GST_AACPARSE_CLASS
-GST_IS_AACPARSE
-GST_IS_AACPARSE_CLASS
-GST_TYPE_AACPARSE
-gst_aacparse_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-ac3parse</FILE>
-<TITLE>ac3parse</TITLE>
-GstAc3Parse
-<SUBSECTION Standard>
-GstAc3ParseClass
-GST_AC3_PARSE
-GST_AC3_PARSE_CLASS
-GST_IS_AC3_PARSE
-GST_IS_AC3_PARSE_CLASS
-GST_TYPE_AC3_PARSE
-gst_ac3_parse_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-aiffmux</FILE>
 <TITLE>aiffmux</TITLE>
 GstAiffMux
@@ -53,20 +25,6 @@ GST_TYPE_AIFF_PARSE
 GstAiffParseClass
 GstAiffParseState
 gst_aiff_parse_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-amrparse</FILE>
-<TITLE>amrparse</TITLE>
-GstAmrParse
-<SUBSECTION Standard>
-GstAmrParseClass
-GST_AMRPARSE
-GST_AMRPARSE_CLASS
-GST_IS_AMRPARSE
-GST_IS_AMRPARSE_CLASS
-GST_TYPE_AMRPARSE
-gst_amrparse_get_type
 </SECTION>
 
 <SECTION>
@@ -375,20 +333,6 @@ GST_IS_DC1394
 GST_IS_DC1394_CLASS
 GST_TYPE_DC1394
 gst_dc1394_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-dcaparse</FILE>
-<TITLE>dcaparse</TITLE>
-GstDCAParse
-<SUBSECTION Standard>
-GstDCAParseClass
-GST_DCA_PARSE
-GST_DCA_PARSE_CLASS
-GST_IS_DCA_PARSE
-GST_IS_DCA_PARSE_CLASS
-GST_TYPE_DCA_PARSE
-gst_dca_parse_get_type
 </SECTION>
 
 <SECTION>
@@ -752,20 +696,6 @@ gst_fisheye_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-flacparse</FILE>
-<TITLE>flacparse</TITLE>
-GstFlacParse
-<SUBSECTION Standard>
-GstFlacParseClass
-GST_FLAC_PARSE
-GST_FLAC_PARSE_CLASS
-GST_IS_FLAC_PARSE
-GST_IS_FLAC_PARSE_CLASS
-GST_TYPE_FLAC_PARSE
-gst_flac_parse_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-fpsdisplaysink</FILE>
 <TITLE>fpsdisplaysink</TITLE>
 GstFPSDisplaySink
@@ -1032,20 +962,6 @@ GST_IS_MODPLUG
 GST_IS_MODPLUG_CLASS
 GST_TYPE_MODPLUG
 gst_modplug_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-mpegaudioparse</FILE>
-<TITLE>mpegaudioparse</TITLE>
-GstMpegAudioParse
-<SUBSECTION Standard>
-GstMpegAudioParseClass
-GST_MPEG_AUDIO_PARSE
-GST_MPEG_AUDIO_PARSE_CLASS
-GST_IS_MPEG_AUDIO_PARSE
-GST_IS_MPEG_AUDIO_PARSE_CLASS
-GST_TYPE_MPEG_AUDIO_PARSE
-gst_mpeg_audio_parse_get_type
 </SECTION>
 
 <SECTION>

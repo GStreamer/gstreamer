@@ -154,15 +154,11 @@ check_PROGRAMS = \
 	$(check_ofa)        \
 	$(check_timidity)  \
 	$(check_kate)  \
-	elements/aacparse \
-	elements/ac3parse \
-	elements/amrparse \
 	elements/autoconvert \
 	elements/autovideoconvert \
 	elements/asfmux \
 	elements/camerabin \
 	elements/dataurisrc \
-	elements/flacparse \
 	elements/legacyresample \
         $(check_jifmux) \
 	elements/jpegparse \
@@ -171,7 +167,6 @@ check_PROGRAMS = \
 	elements/mxfdemux \
 	elements/mxfmux \
 	elements/id3mux \
-	elements/mpegaudioparse \
 	pipelines/mxf \
 	$(check_mimic) \
 	elements/rtpmux \
@@ -236,23 +231,6 @@ elements_rtpmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-0.10 $(GST_BASE_LIBS) 
 
 elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_assrender_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-0.10 -lgstapp-0.10 $(GST_BASE_LIBS) $(LDADD)
-
-# parser unit test convenience lib
-noinst_LTLIBRARIES = libparser.la
-libparser_la_SOURCES = elements/parser.c elements/parser.h
-libparser_la_CFLAGS = \
-	-I$(top_srcdir)/tests/check \
-	$(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS)
-
-elements_aacparse_LDADD = libparser.la $(LDADD)
-
-elements_ac3parse_LDADD = libparser.la $(LDADD)
-
-elements_amrparse_LDADD = libparser.la $(LDADD)
-
-elements_flacparse_LDADD = libparser.la $(LDADD)
-
-elements_mpegaudioparse_LDADD = libparser.la $(LDADD)
 
 EXTRA_DIST = gst-plugins-bad.supp
 

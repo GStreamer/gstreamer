@@ -1,7 +1,4 @@
 .dirstamp
-aacparse
-ac3parse
-amrparse
 asfmux
 assrender
 autoconvert
@@ -12,7 +9,6 @@ deinterleave
 dataurisrc
 faac
 faad
-flacparse
 gdpdepay
 gdppay
 id3mux
@@ -22,8 +18,8 @@ jifmux
 jpegparse
 kate
 legacyresample
+logoinsert
 mpeg2enc
-mpegaudioparse
 mplex
 mxfdemux
 mxfmux

@@ -17,11 +17,8 @@
 
   <chapter>
     <title>gst-plugins-bad Elements</title>
-    <xi:include href="xml/element-aacparse.xml" />
-    <xi:include href="xml/element-ac3parse.xml" />
     <xi:include href="xml/element-aiffparse.xml" />
     <xi:include href="xml/element-aiffmux.xml" />
-    <xi:include href="xml/element-amrparse.xml" />
     <xi:include href="xml/element-amrwbenc.xml" />
     <xi:include href="xml/element-assrender.xml" />
     <xi:include href="xml/element-autoconvert.xml" />
@@ -42,7 +39,6 @@
     <xi:include href="xml/element-cvsobel.xml" />
     <xi:include href="xml/element-dataurisrc.xml" />
     <!--xi:include href="xml/element-dc1394.xml" /-->
-    <xi:include href="xml/element-dcaparse.xml" />
     <xi:include href="xml/element-dccpclientsink.xml" />
     <xi:include href="xml/element-dccpclientsrc.xml" />
     <xi:include href="xml/element-dccpserversink.xml" />
@@ -65,7 +61,6 @@
     <xi:include href="xml/element-facedetect.xml" />
     <xi:include href="xml/element-festival.xml" />
     <xi:include href="xml/element-fisheye.xml" />
-    <xi:include href="xml/element-flacparse.xml" />
     <xi:include href="xml/element-fpsdisplaysink.xml" />
     <xi:include href="xml/element-freeze.xml" />
     <xi:include href="xml/element-gaussianblur.xml" />
@@ -84,7 +79,6 @@
     <xi:include href="xml/element-mimdec.xml" />
     <xi:include href="xml/element-mirror.xml" />
     <xi:include href="xml/element-modplug.xml" />
-    <xi:include href="xml/element-mpegaudioparse.xml" />
     <xi:include href="xml/element-mpeg2enc.xml" />
     <xi:include href="xml/element-mplex.xml" />
     <xi:include href="xml/element-mythtvsrc.xml" />
@@ -135,7 +129,6 @@
   <chapter>
     <title>gst-plugins-bad Plugins</title>
     <xi:include href="xml/plugin-aiff.xml" />
-    <xi:include href="xml/plugin-audioparsersbad.xml" />
     <xi:include href="xml/plugin-autoconvert.xml" />
     <xi:include href="xml/plugin-legacyresample.xml" />
     <xi:include href="xml/plugin-amrwbenc.xml" />

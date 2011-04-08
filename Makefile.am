@@ -49,6 +49,7 @@ CRUFT_FILES = \
 	$(top_builddir)/ext/jack/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/aacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/audioparsers/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/flacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/imagefreeze/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/selector/.libs/*.{so,dll,DLL,dylib} \
@@ -56,6 +57,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/valve/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/videoparsers/.libs/libgsth263parse* \
 	$(top_builddir)/sys/oss4/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/tests/check/elements/{aac,ac3,amr,flac,mpegaudio,dca}parse \
 	$(top_builddir)/tests/check/elements/autocolorspace \
 	$(top_builddir)/tests/check/elements/capssetter \
 	$(top_builddir)/tests/check/elements/imagefreeze \
