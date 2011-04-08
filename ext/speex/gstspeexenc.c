@@ -901,7 +901,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, gboolean flush)
 
   while (gst_adapter_available (enc->adapter) >= bytes) {
     gint16 *data;
-    gint outsize, written;
+    gint outsize, written, dtx_ret;
     GstBuffer *outbuf;
 
     data = (gint16 *) gst_adapter_take (enc->adapter, bytes);
@@ -913,7 +913,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, gboolean flush)
     if (enc->channels == 2) {
       speex_encode_stereo_int (data, frame_size, &enc->bits);
     }
-    speex_encode_int (enc->state, data, &enc->bits);
+    dtx_ret = speex_encode_int (enc->state, data, &enc->bits);
 
     g_free (data);
 
@@ -936,6 +936,9 @@ gst_speex_enc_encode (GstSpeexEnc * enc, gboolean flush)
         (gchar *) GST_BUFFER_DATA (outbuf), outsize);
     g_assert (written == outsize);
     speex_bits_reset (&enc->bits);
+
+    if (!dtx_ret)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
 
     GST_BUFFER_TIMESTAMP (outbuf) = enc->start_ts +
         gst_util_uint64_scale_int ((enc->frameno_out -
