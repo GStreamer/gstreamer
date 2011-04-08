@@ -235,7 +235,7 @@ gst_base_parse_set_min_frame_size
 gst_base_parse_set_passthrough
 gst_base_parse_set_syncable
 gst_base_parse_set_has_timing_info
-gst_base_parse_set_frame_props
+gst_base_parse_set_frame_rate
 gst_base_parse_convert_default
 gst_base_parse_add_index_entry
 

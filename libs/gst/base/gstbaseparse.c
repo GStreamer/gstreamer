@@ -165,7 +165,7 @@
  *   </para></listitem>
  *   <listitem><para>
  *      Configure various baseparse parameters using @gst_base_parse_set_seek and
- *      @gst_base_parse_set_frame_props.
+ *      @gst_base_parse_set_frame_rate.
  *   </para></listitem>
  *   <listitem><para>
  *      In particular, if subclass is unable to determine a duration, but
@@ -2818,7 +2818,7 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
 }
 
 /**
- * gst_base_parse_set_frame_props:
+ * gst_base_parse_set_frame_rate:
  * @parse: the #GstBaseParse to set
  * @fps_num: frames per second (numerator).
  * @fps_den: frames per second (denominator).
@@ -2834,7 +2834,7 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
  * Since: 0.10.33
  */
 void
-gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
+gst_base_parse_set_frame_rate (GstBaseParse * parse, guint fps_num,
     guint fps_den, guint lead_in, guint lead_out)
 {
   g_return_if_fail (parse != NULL);

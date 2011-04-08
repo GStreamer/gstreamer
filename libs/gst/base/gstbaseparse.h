@@ -283,7 +283,7 @@ void            gst_base_parse_set_syncable    (GstBaseParse * parse,
 void            gst_base_parse_set_passthrough (GstBaseParse * parse,
                                                 gboolean       passthrough);
 
-void            gst_base_parse_set_frame_props (GstBaseParse * parse,
+void            gst_base_parse_set_frame_rate  (GstBaseParse * parse,
                                                 guint          fps_num,
                                                 guint          fps_den,
                                                 guint          lead_in,
