@@ -420,8 +420,10 @@ gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event)
   gboolean res = FALSE;
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (demux == NULL))
+  if (G_UNLIKELY (demux == NULL)) {
+    gst_event_unref (event);
     return FALSE;
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:

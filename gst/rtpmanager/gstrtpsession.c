@@ -1325,8 +1325,10 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
   gboolean ret = FALSE;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (rtpsession == NULL))
+  if (G_UNLIKELY (rtpsession == NULL)) {
+    gst_event_unref (event);
     return FALSE;
+  }
 
   GST_DEBUG_OBJECT (rtpsession, "received event %s",
       GST_EVENT_TYPE_NAME (event));
@@ -1434,6 +1436,10 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstEvent * event)
   guint pt;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (rtpsession == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:
@@ -1647,8 +1653,10 @@ gst_rtp_session_event_send_rtcp_src (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (rtpsession, "received EVENT");
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (rtpsession == NULL))
+  if (G_UNLIKELY (rtpsession == NULL)) {
+    gst_event_unref (event);
     return FALSE;
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
