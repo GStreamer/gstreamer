@@ -90,7 +90,7 @@ gst_video_filter2_base_init (gpointer g_class)
   GstCaps *caps = NULL;
 
   caps = gst_caps_new_empty ();
-  for (i = GST_VIDEO_FORMAT_I420; i <= GST_VIDEO_FORMAT_AYUV; i++) {
+  for (i = GST_VIDEO_FORMAT_I420; i <= GST_VIDEO_FORMAT_I420; i++) {
     gst_caps_append (caps, gst_video_format_new_template_caps (i));
   }
 

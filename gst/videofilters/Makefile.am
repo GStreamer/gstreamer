@@ -7,6 +7,7 @@ libgstvideofiltersbad_la_SOURCES = \
 	gstvideofilter2.c \
 	gstvideofilter2.h \
 	gstzebrastripe.c \
+	gstscenechange.c \
 	gstvideofiltersbad.c
 #nodist_libgstvideofiltersbad_la_SOURCES = $(ORC_NODIST_SOURCES)
 libgstvideofiltersbad_la_CFLAGS = \
@@ -23,6 +24,7 @@ libgstvideofiltersbad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideofiltersbad_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
-	gstzebrastripe.h
+	gstzebrastripe.h \
+	gstscenechange.h
 
 
