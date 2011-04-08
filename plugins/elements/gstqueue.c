@@ -1285,9 +1285,11 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (queue == NULL))
-    return FALSE;
 
+  if (G_UNLIKELY (queue == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 #ifndef GST_DISABLE_GST_DEBUG
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%d)",
       event, GST_EVENT_TYPE (event));
