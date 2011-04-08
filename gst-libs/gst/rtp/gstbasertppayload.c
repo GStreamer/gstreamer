@@ -383,8 +383,10 @@ gst_basertppayload_event (GstPad * pad, GstEvent * event)
   gboolean res;
 
   basertppayload = GST_BASE_RTP_PAYLOAD (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (basertppayload == NULL))
+  if (G_UNLIKELY (basertppayload == NULL)) {
+    gst_event_unref (event);
     return FALSE;
+  }
   basertppayload_class = GST_BASE_RTP_PAYLOAD_GET_CLASS (basertppayload);
 
   if (basertppayload_class->handle_event) {
