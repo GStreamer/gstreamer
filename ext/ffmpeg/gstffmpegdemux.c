@@ -1978,8 +1978,10 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "yuv4mpegpipe") ||
         !strcmp (in_plugin->name, "mpc") || !strcmp (in_plugin->name, "gif"))
       rank = GST_RANK_MARGINAL;
-    else
-      rank = GST_RANK_NONE;
+    else {
+      GST_DEBUG ("ignoring %s", in_plugin->name);
+      goto next;
+    }
 
     p = name = g_strdup (in_plugin->name);
     while (*p) {
