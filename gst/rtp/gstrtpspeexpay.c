@@ -260,6 +260,11 @@ gst_rtp_speex_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       break;
   }
 
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_GAP)) {
+    ret = GST_FLOW_OK;
+    goto done;
+  }
+
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
