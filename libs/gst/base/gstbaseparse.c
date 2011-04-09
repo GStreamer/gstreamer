@@ -29,19 +29,18 @@
  *
  * It provides for:
  * <itemizedlist>
- *   <listitem><para>One sinkpad and one srcpad</para></listitem>
- *   <listitem><para>Handles state changes</para></listitem>
- *   <listitem><para>Does flushing</para></listitem>
- *   <listitem><para>Push mode</para></listitem>
- *   <listitem><para>Pull mode</para></listitem>
- *   <listitem><para>Handles events (NEWSEGMENT/EOS/FLUSH)</para></listitem>
- *   <listitem><para>Handles seeking in both modes</para></listitem>
+ *   <listitem><para>provides one sink pad and one source pad</para></listitem>
+ *   <listitem><para>handles state changes</para></listitem>
+ *   <listitem><para>can operate in pull mode or push mode</para></listitem>
+ *   <listitem><para>handles seeking in both modes</para></listitem>
+ *   <listitem><para>handles events (NEWSEGMENT/EOS/FLUSH)</para></listitem>
  *   <listitem><para>
- *        Handles POSITION/DURATION/SEEKING/FORMAT/CONVERT queries
+ *        handles queries (POSITION/DURATION/SEEKING/FORMAT/CONVERT)
  *   </para></listitem>
+ *   <listitem><para>handles flushing</para></listitem>
  * </itemizedlist>
  *
- * The purpose of this base class is to provide a basic functionality of
+ * The purpose of this base class is to provide the basic functionality of
  * a parser and share a lot of rather complex code.
  *
  * Description of the parsing mechanism:
@@ -57,9 +56,9 @@
  *     about to start now.
  *   </para></listitem>
  *   <listitem><para>
- *      At least in this point subclass needs to tell the GstBaseParse class
+ *      At least at this point subclass needs to tell the GstBaseParse class
  *      how big data chunks it wants to receive (min_frame_size). It can do
- *      this with @gst_base_parse_set_min_frame_size.
+ *      this with gst_base_parse_set_min_frame_size().
  *   </para></listitem>
  *   <listitem><para>
  *      GstBaseParse class sets up appropriate data passing mode (pull/push)
@@ -72,7 +71,7 @@
  *   <title>Parsing phase</title>
  *     <listitem><para>
  *       GstBaseParse gathers at least min_frame_size bytes of data either
- *       by pulling it from upstream or collecting buffers into internal
+ *       by pulling it from upstream or collecting buffers in an internal
  *       #GstAdapter.
  *     </para></listitem>
  *     <listitem><para>
@@ -95,19 +94,19 @@
  *       (although the latter can also be done by GstBaseParse if it is
  *       appropriately configured, see below).  Frame is provided with
  *       timestamp derived from upstream (as much as generally possible),
- *       duration obtained form configuration (see below), and offset
+ *       duration obtained from configuration (see below), and offset
  *       if meaningful (in pull mode).
  *     </para></listitem>
  *     <listitem><para>
- *       Finally the buffer can be pushed downstream and parsing loop starts
+ *       Finally the buffer can be pushed downstream and the parsing loop starts
  *       over again.  Just prior to actually pushing the buffer in question,
  *       it is passed to @pre_push_buffer which gives subclass yet one
  *       last chance to examine buffer metadata, or to send some custom (tag)
  *       events, or to perform custom (segment) filtering.
  *     </para></listitem>
  *     <listitem><para>
- *       During the parsing process GstBaseParseClass will handle both srcpad and
- *       sinkpad events. They will be passed to subclass if @event or
+ *       During the parsing process GstBaseParseClass will handle both srcpad
+ *       and sinkpad events. They will be passed to subclass if @event or
  *       @src_event callbacks have been provided.
  *     </para></listitem>
  *   </itemizedlist>
@@ -127,13 +126,13 @@
  * needs to set the fixed caps on srcpad, when the format is ensured (e.g.
  * when base class calls subclass' @set_sink_caps function).
  *
- * This base class uses GST_FORMAT_DEFAULT as a meaning of frames. So,
+ * This base class uses #GST_FORMAT_DEFAULT as a meaning of frames. So,
  * subclass conversion routine needs to know that conversion from
- * GST_FORMAT_TIME to GST_FORMAT_DEFAULT must return the
+ * #GST_FORMAT_TIME to #GST_FORMAT_DEFAULT must return the
  * frame number that can be found from the given byte position.
  *
- * GstBaseParse uses subclasses conversion methods also for seeking (or otherwise
- * uses its own default one, see also below).
+ * GstBaseParse uses subclasses conversion methods also for seeking (or
+ * otherwise uses its own default one, see also below).
  *
  * Subclass @start and @stop functions will be called to inform the beginning
  * and end of data processing.
@@ -146,7 +145,7 @@
  *   </para></listitem>
  *   <listitem><para>
  *      Inform base class how big data chunks should be retrieved. This is
- *      done with @gst_base_parse_set_min_frame_size function.
+ *      done with gst_base_parse_set_min_frame_size() function.
  *   </para></listitem>
  *   <listitem><para>
  *      Examine data chunks passed to subclass with @check_valid_frame
@@ -158,25 +157,26 @@
  *   </para></listitem>
  *   <listitem><para>Provide conversion functions</para></listitem>
  *   <listitem><para>
- *      Update the duration information with @gst_base_parse_set_duration
+ *      Update the duration information with gst_base_parse_set_duration()
  *   </para></listitem>
  *   <listitem><para>
- *      Optionally passthrough using @gst_base_parse_set_format
+ *      Optionally passthrough using gst_base_parse_set_passthrough()
  *   </para></listitem>
  *   <listitem><para>
- *      Configure various baseparse parameters using @gst_base_parse_set_seek and
- *      @gst_base_parse_set_frame_rate.
+ *      Configure various baseparse parameters using
+ *      gst_base_parse_set_average_bitrate(), gst_base_parse_set_syncable()
+ *      and gst_base_parse_set_frame_rate().
  *   </para></listitem>
  *   <listitem><para>
  *      In particular, if subclass is unable to determine a duration, but
  *      parsing (or specs) yields a frames per seconds rate, then this can be
  *      provided to GstBaseParse to enable it to cater for
- *      buffer time metadata (which will be taken from upstream as much as possible).
- *      Internally keeping track of frame durations and respective
- *      sizes that have been pushed provides GstBaseParse with an estimated bitrate.
- *      A default @convert (used if not overriden) will then use these
- *      rates to perform obvious conversions.  These rates are also used to update
- *      (estimated) duration at regular frame intervals.
+ *      buffer time metadata (which will be taken from upstream as much as
+ *      possible). Internally keeping track of frame durations and respective
+ *      sizes that have been pushed provides GstBaseParse with an estimated
+ *      bitrate. A default @convert (used if not overriden) will then use these
+ *      rates to perform obvious conversions.  These rates are also used to
+ *      update (estimated) duration at regular frame intervals.
  *   </para></listitem>
  * </itemizedlist>
  *
