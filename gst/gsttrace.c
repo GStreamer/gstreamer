@@ -55,6 +55,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <errno.h>
 
 #if defined (_MSC_VER) && _MSC_VER >= 1400
 # include <io.h>
@@ -168,14 +169,23 @@ gst_trace_destroy (GstTrace * trace)
 void
 gst_trace_flush (GstTrace * trace)
 {
+  int res, buf_len;
+
   if (!trace) {
     trace = _gst_trace_default;
     if (!trace)
       return;
   }
 
-  g_return_if_fail (write (trace->fd, trace->buf,
-          trace->bufoffset * sizeof (GstTraceEntry)) != -1);
+  buf_len = trace->bufoffset * sizeof (GstTraceEntry);
+  res = write (trace->fd, trace->buf, buf_len);
+  if (res < 0) {
+    g_warning ("Failed to write trace: %s", g_strerror (errno));
+    return;
+  } else if (res < buf_len) {
+    g_warning ("Failed to write trace: only wrote %d/%d bytes", res, buf_len);
+    return;
+  }
   trace->bufoffset = 0;
 }
 
@@ -206,7 +216,10 @@ gst_trace_text_flush (GstTrace * trace)
     g_snprintf (str, STRSIZE, "%20" G_GINT64_FORMAT " %10d %10d %s\n",
         trace->buf[i].timestamp,
         trace->buf[i].sequence, trace->buf[i].data, trace->buf[i].message);
-    g_return_if_fail (write (trace->fd, str, strlen (str)) != -1);
+    if (write (trace->fd, str, strlen (str)) < 0) {
+      g_warning ("Failed to write trace %d: %s", i, g_strerror (errno));
+      return;
+    }
   }
   trace->bufoffset = 0;
 #undef STRSIZE
