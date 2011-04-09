@@ -168,8 +168,7 @@ gst_vdp_h264_dec_calculate_poc (GstVdpH264Dec * h264_dec, GstH264Slice * slice)
 {
   GstH264Picture *pic;
   GstH264Sequence *seq;
-
-  guint poc;
+  guint poc = 0;
 
   pic = slice->picture;
   seq = pic->sequence;
