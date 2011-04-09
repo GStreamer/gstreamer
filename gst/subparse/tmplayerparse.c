@@ -84,7 +84,6 @@ tmplayer_parse_line (ParserState * state, const gchar * line, guint line_num)
 {
   GstClockTime ts = GST_CLOCK_TIME_NONE;
   const gchar *text_start = NULL;
-  gboolean multiline = FALSE;
   gchar *ret = NULL;
   gchar divc = '\0';
   guint h, m, s, l = 1;
@@ -94,7 +93,6 @@ tmplayer_parse_line (ParserState * state, const gchar * line, guint line_num)
     GST_LOG ("multiline format %u %u %u %u", h, m, s, l);
     ts = GST_SECOND * ((((h * 60) + m) * 60) + s);
     text_start = strchr (line, '=');
-    multiline = TRUE;
   } else if (sscanf (line, "%u:%02u:%02u%c", &h, &m, &s, &divc) == 4 &&
       (divc == '=' || divc == ':')) {
     GST_LOG ("single line format %u %u %u %u %c", h, m, s, l, divc);

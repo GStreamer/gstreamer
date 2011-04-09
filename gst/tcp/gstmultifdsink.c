@@ -821,7 +821,7 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   GstTCPClient *client;
   GList *clink;
   GTimeVal now;
-  gint flags, res;
+  gint flags;
   struct stat statbuf;
 
   GST_DEBUG_OBJECT (sink, "[fd %5d] adding client, sync_method %d, "
@@ -876,7 +876,7 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   sink->clients_cookie++;
 
   /* set the socket to non blocking */
-  res = fcntl (fd, F_SETFL, O_NONBLOCK);
+  fcntl (fd, F_SETFL, O_NONBLOCK);
   /* we always read from a client */
   gst_poll_add_fd (sink->fdset, &client->fd);
 
@@ -888,7 +888,7 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
     }
   }
   /* figure out the mode, can't use send() for non sockets */
-  res = fstat (fd, &statbuf);
+  fstat (fd, &statbuf);
   if (S_ISSOCK (statbuf.st_mode)) {
     client->is_socket = TRUE;
     setup_dscp_client (sink, client);
@@ -1865,7 +1865,6 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
     }
     case GST_SYNC_METHOD_BURST_KEYFRAME:
     {
-      gboolean ok;
       gint min_idx, max_idx;
       gint next_syncframe, prev_syncframe;
 
@@ -1877,7 +1876,7 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
        * NEXT_KEYFRAME.
        */
       /* gather burst limits */
-      ok = count_burst_unit (sink, &min_idx, client->burst_min_unit,
+      count_burst_unit (sink, &min_idx, client->burst_min_unit,
           client->burst_min_value, &max_idx, client->burst_max_unit,
           client->burst_max_value);
 
@@ -1914,7 +1913,6 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
     }
     case GST_SYNC_METHOD_BURST_WITH_KEYFRAME:
     {
-      gboolean ok;
       gint min_idx, max_idx;
       gint next_syncframe;
 
@@ -1925,7 +1923,7 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
        * amount of data up 'till min.
        */
       /* gather enough data to burst */
-      ok = count_burst_unit (sink, &min_idx, client->burst_min_unit,
+      count_burst_unit (sink, &min_idx, client->burst_min_unit,
           client->burst_min_value, &max_idx, client->burst_max_unit,
           client->burst_max_value);
 

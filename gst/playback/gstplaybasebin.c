@@ -425,7 +425,6 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
 {
   GstPlayBaseGroup *group;
   gboolean had_active_group;
-  gboolean res;
 
   GROUP_LOCK (play_base_bin);
   group = play_base_bin->building_group;
@@ -486,8 +485,7 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
 
     setup_substreams (play_base_bin);
     GST_DEBUG_OBJECT (play_base_bin, "Emitting signal");
-    res =
-        GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->setup_output_pads
+    GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->setup_output_pads
         (play_base_bin, group);
     GST_DEBUG_OBJECT (play_base_bin, "done");
 
@@ -1167,7 +1165,6 @@ probe_triggered (GstPad * pad, GstEvent * event, gpointer user_data)
   GstPlayBaseGroup *group;
   GstPlayBaseBin *play_base_bin;
   GstStreamInfo *info;
-  gboolean res;
   GstEventType type;
 
   type = GST_EVENT_TYPE (event);
@@ -1231,8 +1228,7 @@ probe_triggered (GstPad * pad, GstEvent * event, gpointer user_data)
       setup_substreams (play_base_bin);
       GST_DEBUG ("switching to next group %p - emitting signal", group);
       /* and signal the new group */
-      res =
-          GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->setup_output_pads
+      GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->setup_output_pads
           (play_base_bin, group);
 
       GROUP_UNLOCK (play_base_bin);
