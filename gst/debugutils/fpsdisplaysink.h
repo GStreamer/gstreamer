@@ -67,6 +67,7 @@ struct _GstFPSDisplaySink
   gdouble max_fps;
   gdouble min_fps;
   gboolean silent;
+  gchar *last_message;
 };
 
 struct _GstFPSDisplaySinkClass

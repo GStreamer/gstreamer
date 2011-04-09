@@ -55,6 +55,7 @@
 #define DEFAULT_FPS_UPDATE_INTERVAL_MS 500      /* 500 ms */
 #define DEFAULT_FONT "Sans 15"
 #define DEFAULT_SILENT FALSE
+#define DEFAULT_LAST_MESSAGE NULL
 
 /* generic templates */
 static GstStaticPadTemplate fps_display_sink_template =
@@ -87,7 +88,8 @@ enum
   PROP_SIGNAL_FPS_MEASUREMENTS,
   PROP_FRAMES_DROPPED,
   PROP_FRAMES_RENDERED,
-  PROP_SILENT
+  PROP_SILENT,
+  PROP_LAST_MESSAGE
       /* FILL ME */
 };
 
@@ -104,6 +106,8 @@ static void fps_display_sink_dispose (GObject * object);
 static gboolean display_current_fps (gpointer data);
 
 static guint fpsdisplaysink_signals[LAST_SIGNAL] = { 0 };
+
+static GParamSpec *pspec_last_message = NULL;
 
 static void
 fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
@@ -175,6 +179,12 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
           "If the fps-measurements signal should be emited.",
           DEFAULT_SIGNAL_FPS_MEASUREMENTS,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
+
+  pspec_last_message = g_param_spec_string ("last-message", "Last Message",
+      "The message describing current status", DEFAULT_LAST_MESSAGE,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_klass, PROP_LAST_MESSAGE,
+      pspec_last_message);
 
   /**
    * GstFPSDisplaySink::fps-measurements:
@@ -339,6 +349,7 @@ fps_display_sink_init (GstFPSDisplaySink * self,
   self->max_fps = -1;
   self->min_fps = -1;
   self->silent = DEFAULT_SILENT;
+  self->last_message = g_strdup (DEFAULT_LAST_MESSAGE);
 
   self->ghost_pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (self), self->ghost_pad);
@@ -395,13 +406,13 @@ display_current_fps (gpointer data)
    */
   if (dr == 0.0) {
     g_snprintf (fps_message, 255,
-        "rendered: %" G_GUINT64_FORMAT "\t dropped: %" G_GUINT64_FORMAT
-        "\t current: %.2f\t average: %.2f", frames_rendered, frames_dropped, rr,
+        "rendered: %" G_GUINT64_FORMAT ", dropped: %" G_GUINT64_FORMAT
+        ", current: %.2f, average: %.2f", frames_rendered, frames_dropped, rr,
         average_fps);
   } else {
     g_snprintf (fps_message, 255,
-        "rendered: %" G_GUINT64_FORMAT "\t dropped: %" G_GUINT64_FORMAT
-        "\t fps: %.2f\t drop rate: %.2f", frames_rendered, frames_dropped, rr,
+        "rendered: %" G_GUINT64_FORMAT ", dropped: %" G_GUINT64_FORMAT
+        ", fps: %.2f, drop rate: %.2f", frames_rendered, frames_dropped, rr,
         dr);
   }
 
@@ -410,7 +421,11 @@ display_current_fps (gpointer data)
   }
 
   if (!self->silent) {
-    g_print ("%s\n", fps_message);
+    GST_OBJECT_LOCK (self);
+    g_free (self->last_message);
+    self->last_message = g_strdup (fps_message);
+    GST_OBJECT_UNLOCK (self);
+    g_object_notify_by_pspec ((GObject *) self, pspec_last_message);
   }
 
   self->last_frames_rendered = frames_rendered;
@@ -479,10 +494,26 @@ fps_display_sink_stop (GstFPSDisplaySink * self)
     gst_bin_remove (GST_BIN (self), self->text_overlay);
     gst_object_unref (self->text_overlay);
     self->text_overlay = NULL;
-  } else {
-    /* print the max and minimum fps values */
-    g_print ("Max-fps: %0.2f\nMin-fps: %0.2f\n", self->max_fps, self->min_fps);
   }
+
+  if (!self->silent) {
+    gchar *str;
+
+    /* print the max and minimum fps values */
+    str =
+        g_strdup_printf ("Max-fps: %0.2f, Min-fps: %0.2f", self->max_fps,
+        self->min_fps);
+    GST_OBJECT_LOCK (self);
+    g_free (self->last_message);
+    self->last_message = str;
+    GST_OBJECT_UNLOCK (self);
+    g_object_notify_by_pspec ((GObject *) self, pspec_last_message);
+  }
+
+  GST_OBJECT_LOCK (self);
+  g_free (self->last_message);
+  self->last_message = NULL;
+  GST_OBJECT_UNLOCK (self);
 }
 
 static void
@@ -499,6 +530,11 @@ fps_display_sink_dispose (GObject * object)
     gst_object_unref (self->text_overlay);
     self->text_overlay = NULL;
   }
+
+  GST_OBJECT_LOCK (self);
+  g_free (self->last_message);
+  self->last_message = NULL;
+  GST_OBJECT_UNLOCK (self);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -590,6 +626,11 @@ fps_display_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SILENT:
       g_value_set_boolean (value, self->silent);
+      break;
+    case PROP_LAST_MESSAGE:
+      GST_OBJECT_LOCK (self);
+      g_value_set_string (value, self->last_message);
+      GST_OBJECT_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
