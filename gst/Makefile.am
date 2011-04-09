@@ -154,6 +154,7 @@ gst_headers =			\
 	gstdatetime.h		\
 	gstdebugutils.h		\
 	gstelement.h		\
+	gstelementmetadata.h	\
 	gstelementfactory.h	\
 	gsterror.h		\
 	gstevent.h		\
