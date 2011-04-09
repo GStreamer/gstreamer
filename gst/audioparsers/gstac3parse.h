@@ -42,6 +42,12 @@ G_BEGIN_DECLS
 typedef struct _GstAc3Parse GstAc3Parse;
 typedef struct _GstAc3ParseClass GstAc3ParseClass;
 
+enum {
+  GST_AC3_PARSE_ALIGN_NONE,
+  GST_AC3_PARSE_ALIGN_FRAME,
+  GST_AC3_PARSE_ALIGN_IEC61937,
+};
+
 /**
  * GstAc3Parse:
  *
@@ -55,6 +61,7 @@ struct _GstAc3Parse {
   gint         channels;
   gint         blocks;
   gboolean     eac;
+  gint         align;
 };
 
 /**
