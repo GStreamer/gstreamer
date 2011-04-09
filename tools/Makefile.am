@@ -20,6 +20,7 @@ templatefiles=\
 	element-templates/srcpad \
 	element-templates/srcpad-simple \
 	element-templates/tagdemux \
+	element-templates/videofilter2 \
 	element-templates/videosink
 
 EXTRA_DIST = \
