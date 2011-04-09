@@ -1,6 +1,5 @@
 
 EXTRA_DIST = \
-	draft-buffer2.txt \
 	draft-klass.txt \
 	draft-push-pull.txt \
 	draft-tagreading.txt \
