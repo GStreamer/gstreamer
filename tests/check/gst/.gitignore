@@ -19,6 +19,7 @@ gstiterator
 gstindex
 gstinterface
 gstmessage
+gstmeta
 gstminiobject
 gstobject
 gstpad
