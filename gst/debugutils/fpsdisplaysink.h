@@ -66,7 +66,7 @@ struct _GstFPSDisplaySink
   GstClockTime fps_update_interval;
   gdouble max_fps;
   gdouble min_fps;
-  gboolean verbose;
+  gboolean silent;
 };
 
 struct _GstFPSDisplaySinkClass
