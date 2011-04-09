@@ -1595,6 +1595,7 @@ gst_element_default_send_event (GstElement * element, GstEvent * event)
   } else {
     GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "can't send %s event on element %s",
         GST_EVENT_TYPE_NAME (event), GST_ELEMENT_NAME (element));
+    gst_event_unref (event);
   }
   return result;
 }
