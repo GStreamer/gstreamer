@@ -32,3 +32,17 @@ EXTRA_DIST = README gstudp-marshal.list
 
 CLEANFILES = $(BUILT_SOURCES)
 
+Android.mk: Makefile.am $(BUILT_SOURCES)
+	androgenizer \
+	-:PROJECT libgstudp -:SHARED libgstudp \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstudp_la_SOURCES) \
+	 	   $(nodist_libgstudp_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstudp_la_CFLAGS) \
+	 -:LDFLAGS $(libgstudp_la_LDFLAGS) \
+	           $(libgstudp_la_LIBADD) \
+	           -ldl \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+	> $@

@@ -21,3 +21,16 @@ preset_DATA = GstIirEqualizer3Bands.prs GstIirEqualizer10Bands.prs
 
 EXTRA_DIST = $(preset_DATA)
 
+Android.mk: Makefile.am $(BUILT_SOURCES)
+	androgenizer \
+	-:PROJECT libgstequalizer -:SHARED libgstequalizer \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstequalizer_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstequalizer_la_CFLAGS) \
+	 -:LDFLAGS $(libgstequalizer_la_LDFLAGS) \
+	           $(libgstequalizer_la_LIBADD) \
+	           -ldl \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+	> $@

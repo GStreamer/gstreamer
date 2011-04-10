@@ -51,3 +51,16 @@ noinst_HEADERS = audiopanorama.h \
 	audioecho.h \
 	math_compat.h
 
+Android.mk: Makefile.am $(BUILT_SOURCES)
+	androgenizer \
+	-:PROJECT libgstaudiofx -:SHARED libgstaudiofx \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstaudiofx_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstaudiofx_la_CFLAGS) \
+	 -:LDFLAGS $(libgstaudiofx_la_LDFLAGS) \
+	           $(libgstaudiofx_la_LIBADD) \
+	           -ldl \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+	> $@
