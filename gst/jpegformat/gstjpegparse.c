@@ -512,6 +512,31 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
 }
 
 static inline gboolean
+gst_jpeg_parse_remove_marker (GstJpegParse * parse,
+    GstByteReader * reader, guint8 marker, GstBuffer * buffer)
+{
+  guint16 size = 0;
+  guint pos = gst_byte_reader_get_pos (reader);
+  guint8 *data = GST_BUFFER_DATA (buffer);
+
+  if (!gst_byte_reader_peek_uint16_be (reader, &size))
+    return FALSE;
+  if (gst_byte_reader_get_remaining (reader) < size)
+    return FALSE;
+
+  GST_LOG_OBJECT (parse, "unhandled marker %x removing %u bytes", marker, size);
+
+  memmove (&data[pos], &data[pos + size],
+      GST_BUFFER_SIZE (buffer) - (pos + size));
+  GST_BUFFER_SIZE (buffer) -= size;
+
+  if (!gst_byte_reader_set_pos (reader, pos - size))
+    return FALSE;
+
+  return TRUE;
+}
+
+static inline gboolean
 gst_jpeg_parse_skip_marker (GstJpegParse * parse,
     GstByteReader * reader, guint8 marker)
 {
@@ -671,7 +696,6 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 {
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
   guint8 marker = 0;
-  guint16 size = 0;
   gboolean foundSOF = FALSE;
 
   if (!gst_byte_reader_peek_uint8 (&reader, &marker))
@@ -729,28 +753,8 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
       default:
         if (marker == JPG || (marker >= JPG0 && marker <= JPG13)) {
           /* we'd like to remove them from the buffer */
-#if 1
-          guint pos = gst_byte_reader_get_pos (&reader);
-          guint8 *data = GST_BUFFER_DATA (buffer);
-
-          if (!gst_byte_reader_peek_uint16_be (&reader, &size))
+          if (!gst_jpeg_parse_remove_marker (parse, &reader, marker, buffer))
             goto error;
-          if (gst_byte_reader_get_remaining (&reader) < size)
-            goto error;
-
-          GST_LOG_OBJECT (parse, "unhandled marker %x removing %u bytes",
-              marker, size);
-
-          memmove (&data[pos], &data[pos + size],
-              GST_BUFFER_SIZE (buffer) - (pos + size));
-          GST_BUFFER_SIZE (buffer) -= size;
-
-          if (!gst_byte_reader_set_pos (&reader, pos - size))
-            goto error;
-#else
-          if (!gst_jpeg_parse_skip_marker (parse, &reader, marker))
-            goto error;
-#endif
         } else if (marker >= APP0 && marker <= APP15) {
           if (!gst_jpeg_parse_skip_marker (parse, &reader, marker))
             goto error;
