@@ -485,12 +485,19 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
   GstBaseRTPDepayload *filter;
   GstBaseRTPDepayloadClass *bclass;
 
-  filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
+  filter = GST_BASE_RTP_DEPAYLOAD (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (filter == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
   if (bclass->handle_event)
     res = bclass->handle_event (filter, event);
+  else
+    gst_event_unref (event);
 
+  gst_object_unref (filter);
   return res;
 }
 

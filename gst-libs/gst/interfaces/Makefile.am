@@ -118,3 +118,19 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
+
+Android.mk: Makefile.am $(BUILT_SOURCES)
+	androgenizer -:PROJECT libgstinterfaces -:SHARED libgstinterfaces-@GST_MAJORMINOR@ \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES) \
+	           $(nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(libgstinterfaces_@GST_MAJORMINOR@_la_CFLAGS) \
+	 -:LDFLAGS $(libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS) \
+	           $(libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD) \
+	           -ldl \
+	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/interfaces \
+	 -:HEADERS $(libgstinterfacesinclude_HEADERS) \
+	           $(nodist_libgstinterfacesinclude_HEADERS) \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+	> $@

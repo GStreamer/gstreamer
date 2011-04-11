@@ -7,6 +7,7 @@ LOCAL_ARM_MODE := arm
 audioconvert_LOCAL_SRC_FILES:= \
 	gst/audioconvert/gstaudioconvert.c \
 	gst/audioconvert/audioconvert.c \
+	gst/audioconvert/gstaudioconvertorc-dist.c \
 	gst/audioconvert/gstchannelmix.c \
 	gst/audioconvert/gstaudioquantize.c \
 	gst/audioconvert/plugin.c 
@@ -25,23 +26,8 @@ LOCAL_SHARED_LIBRARIES := \
 
 LOCAL_MODULE:= libgstaudioconvert
 
-LOCAL_C_INCLUDES := \
-    $(LOCAL_PATH)/../gst/audioconvert   \
-    $(LOCAL_PATH)/..         	  		\
-    $(LOCAL_PATH)/../gst-libs      		\
-    $(LOCAL_PATH)      			 		\
-	$(LOCAL_PATH)/gst-libs/gst/audio    \
-    $(TARGET_OUT_HEADERS)/gstreamer-0.11 \
-	$(TARGET_OUT_HEADERS)/glib-2.0 		\
-    $(TARGET_OUT_HEADERS)/glib-2.0/glib \
-	external/libxml2/include
-
-ifeq ($(STECONF_ANDROID_VERSION),"FROYO")
-LOCAL_SHARED_LIBRARIES += libicuuc 
-LOCAL_C_INCLUDES += external/icu4c/common
-endif
-
-LOCAL_CFLAGS := -DHAVE_CONFIG_H -DGSTREAMER_BUILT_FOR_ANDROID	
+LOCAL_CFLAGS := -DHAVE_CONFIG_H -DGSTREAMER_BUILT_FOR_ANDROID \
+	$(GST_PLUGINS_BASE_CFLAGS)
 #
 # define LOCAL_PRELINK_MODULE to false to not use pre-link map
 #
@@ -49,5 +35,6 @@ LOCAL_PRELINK_MODULE := false
 
 #It's a gstreamer plugins, and it must be installed on ..../lib/gstreamer-0.11
 LOCAL_MODULE_PATH := $(TARGET_OUT)/lib/gstreamer-0.11
+LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_SHARED_LIBRARY)

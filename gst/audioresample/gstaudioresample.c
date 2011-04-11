@@ -1273,8 +1273,12 @@ static gboolean
 gst_audio_resample_query (GstPad * pad, GstQuery * query)
 {
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (gst_pad_get_parent (pad));
-  GstBaseTransform *trans = GST_BASE_TRANSFORM (resample);
+  GstBaseTransform *trans;
   gboolean res = TRUE;
+  if (G_UNLIKELY (resample == NULL))
+    return FALSE;
+
+  trans = GST_BASE_TRANSFORM (resample);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:

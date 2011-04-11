@@ -36,3 +36,14 @@ all: all-am chmod
 
 chmod: $(bin_SCRIPTS)
 	@chmod +x $^
+
+Android.mk: Makefile.am
+	androgenizer -:PROJECT gst-discoverer \
+	 -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:EXECUTABLE gst-discoverer -:TAGS eng debug \
+	 -:SOURCES $(gst_discoverer_@GST_MAJORMINOR@_SOURCES) \
+	 -:CFLAGS $(DEFS) $(AM_CFLAGS) \
+	 -:LDFLAGS -lgstpbutils-@GST_MAJORMINOR@ -lgstvideo-@GST_MAJORMINOR@ \
+	 	   $(GST_BASE_LIBS) $(GST_LIBS) \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+	> $@
