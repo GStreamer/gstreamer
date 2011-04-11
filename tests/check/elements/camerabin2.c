@@ -359,6 +359,8 @@ setup_wrappercamerabinsrc_videotestsrc (void)
   gst_bus_add_watch (bus, (GstBusFunc) capture_bus_cb, main_loop);
   gst_object_unref (bus);
 
+  tags_found = NULL;
+
   GST_INFO ("init finished");
 }
 

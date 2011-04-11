@@ -880,7 +880,6 @@ gst_jpeg_parse_push_buffer (GstJpegParse * parse, guint len)
     parse->priv->caps_framerate_numerator = parse->priv->framerate_numerator;
     parse->priv->caps_framerate_denominator =
         parse->priv->framerate_denominator;
-    parse->priv->tags = NULL;
   }
 
   GST_BUFFER_TIMESTAMP (outbuf) = parse->priv->next_ts;
@@ -1043,8 +1042,10 @@ gst_jpeg_parse_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_adapter_clear (parse->priv->adapter);
-      if (parse->priv->tags)
+      if (parse->priv->tags) {
         gst_tag_list_free (parse->priv->tags);
+        parse->priv->tags = NULL;
+      }
       break;
     default:
       break;
