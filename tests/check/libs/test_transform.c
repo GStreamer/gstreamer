@@ -95,10 +95,8 @@ gst_test_trans_base_init (gpointer g_class)
 static void
 gst_test_trans_class_init (GstTestTransClass * klass)
 {
-  GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
 
-  gobject_class = (GObjectClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
 
   trans_class->passthrough_on_same_caps = klass_passthrough_on_same_caps;
