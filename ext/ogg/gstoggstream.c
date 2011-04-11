@@ -27,6 +27,7 @@
 #include "vorbis_parse.h"
 
 #include <gst/riff/riff-media.h>
+#include <gst/pbutils/pbutils.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -499,6 +500,9 @@ extract_tags_theora (GstOggStream * pad, ogg_packet * packet)
     if (!pad->taglist)
       pad->taglist = gst_tag_list_new_empty ();
 
+    gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_VIDEO_CODEC, "Theora", NULL);
+
     if (pad->bitrate)
       gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_BITRATE, (guint) pad->bitrate, NULL);
@@ -732,6 +736,9 @@ extract_tags_vp8 (GstOggStream * pad, ogg_packet * packet)
   if (packet->bytes >= 7 && memcmp (packet->packet, "OVP80\2 ", 7) == 0) {
     tag_list_from_vorbiscomment_packet (packet,
         (const guint8 *) "OVP80\2 ", 7, &pad->taglist);
+
+    gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_VIDEO_CODEC, "VP8", NULL);
   }
 }
 
@@ -814,7 +821,8 @@ extract_tags_vorbis (GstOggStream * pad, ogg_packet * packet)
       pad->taglist = gst_tag_list_new_empty ();
 
     gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_ENCODER_VERSION, pad->version, NULL);
+        GST_TAG_ENCODER_VERSION, pad->version,
+        GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
 
     if (pad->bitrate_nominal > 0)
       gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
@@ -903,6 +911,16 @@ extract_tags_count (GstOggStream * pad, ogg_packet * packet)
 
     if (!pad->taglist)
       pad->taglist = gst_tag_list_new_empty ();
+
+    if (pad->is_video) {
+      gst_pb_utils_add_codec_description_to_tag_list (pad->taglist,
+          GST_TAG_VIDEO_CODEC, pad->caps);
+    } else if (!pad->is_sparse && !pad->is_ogm_text && !pad->is_ogm) {
+      gst_pb_utils_add_codec_description_to_tag_list (pad->taglist,
+          GST_TAG_AUDIO_CODEC, pad->caps);
+    } else {
+      GST_FIXME ("not adding codec tag, not sure about codec type");
+    }
 
     if (pad->bitrate)
       gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
@@ -1025,6 +1043,9 @@ extract_tags_flac (GstOggStream * pad, ogg_packet * packet)
   if (packet->bytes > 4 && ((packet->packet[0] & 0x7F) == 0x4)) {
     tag_list_from_vorbiscomment_packet (packet,
         packet->packet, 4, &pad->taglist);
+
+    gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_AUDIO_CODEC, "FLAC", NULL);
   }
 }
 
@@ -1846,6 +1867,11 @@ extract_tags_kate (GstOggStream * pad, ogg_packet * packet)
     case 0x81:
       tag_list_from_vorbiscomment_packet (packet,
           (const guint8 *) "\201kate\0\0\0\0", 9, &list);
+
+      if (list != NULL) {
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_SUBTITLE_CODEC, "Kate", NULL);
+      }
       break;
     default:
       break;
@@ -1981,6 +2007,9 @@ extract_tags_opus (GstOggStream * pad, ogg_packet * packet)
   if (packet->bytes >= 8 && memcmp (packet->packet, "OpusTags", 8) == 0) {
     tag_list_from_vorbiscomment_packet (packet,
         (const guint8 *) "OpusTags", 8, &pad->taglist);
+
+    gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_AUDIO_CODEC, "Opus", NULL);
   }
 }
 
