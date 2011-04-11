@@ -245,7 +245,7 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
     guint * frame_size, guint * rate, guint * chans, guint * blks, guint * sid)
 {
   GstBitReader bits = GST_BIT_READER_INIT_FROM_BUFFER (buf);
-  guint8 fscod, frmsizcod, bsid, bsmod, acmod, lfe_on;
+  guint8 fscod, frmsizcod, bsid, acmod, lfe_on;
 
   GST_LOG_OBJECT (ac3parse, "parsing ac3");
 
@@ -259,7 +259,7 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   }
 
   bsid = gst_bit_reader_get_bits_uint8_unchecked (&bits, 5);
-  bsmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
+  gst_bit_reader_skip_unchecked (&bits, 3);     /* bsmod */
   acmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
 
   /* spec not quite clear here: decoder should decode if less than 8,
