@@ -258,10 +258,11 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
   kernel = g_new (gdouble, len);
 
   for (i = 0; i < len; ++i) {
-    if (i == len / 2)
+    if (i % 2 == 1 && i == (len - 1) / 2)
       kernel[i] = w;
     else
-      kernel[i] = sin (w * (i - len / 2)) / (i - len / 2);
+      kernel[i] = sin (w * (i - (len - 1) / 2)) / (i - (len - 1) / 2);
+
     /* windowing */
     switch (self->window) {
       case WINDOW_HAMMING:
@@ -293,7 +294,13 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
   if (self->mode == MODE_HIGH_PASS) {
     for (i = 0; i < len; ++i)
       kernel[i] = -kernel[i];
-    kernel[len / 2] += 1.0;
+
+    if (len % 2 == 1)
+      kernel[(len - 1) / 2] += 1.0;
+    else {
+      kernel[len / 2 - 1] += 0.5;
+      kernel[len / 2] += 0.5;
+    }
   }
 
   gst_audio_fx_base_fir_filter_set_kernel (GST_AUDIO_FX_BASE_FIR_FILTER (self),
