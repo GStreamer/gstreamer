@@ -623,6 +623,7 @@ gst_jpeg_parse_app1 (GstJpegParse * parse, GstByteReader * reader)
     /* skip id + NUL + padding */
     if (!gst_byte_reader_skip (reader, 6))
       return FALSE;
+    size -= 6;
 
     /* handle exif metadata */
     if (!gst_byte_reader_get_data (reader, size, &data))
@@ -639,6 +640,7 @@ gst_jpeg_parse_app1 (GstJpegParse * parse, GstByteReader * reader)
     /* skip the id + NUL */
     if (!gst_byte_reader_skip (reader, 29))
       return FALSE;
+    size -= 29;
 
     /* handle xmp metadata */
     if (!gst_byte_reader_get_data (reader, size, &data))
