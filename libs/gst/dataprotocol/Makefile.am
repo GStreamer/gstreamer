@@ -19,6 +19,18 @@ CLEANFILES = *.gcno *.gcda *.gcov *.gcov.out
 
 gcov: $(libgstdataprotocol_@GST_MAJORMINOR@_la_SOURCES:=.gcov)
 
+Android.mk: Makefile.am
+	androgenizer -:PROJECT gstreamer -:SHARED libgstdataprotocol-@GST_MAJORMINOR@ -:TAGS eng debug \
+	 -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstdataprotocol_@GST_MAJORMINOR@_la_SOURCES) \
+	 -:CFLAGS $(libgstdataprotocol_@GST_MAJORMINOR@_la_CFLAGS) \
+	 -:LDFLAGS $(libgstdataprotocol_@GST_MAJORMINOR@_la_LDFLAGS) \
+	           $(libgstdataprotocol_@GST_MAJORMINOR@_la_LIBADD) \
+	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/dataprotocol \
+	 -:HEADERS $(libgstdataprotocol_@GST_MAJORMINOR@_include_HEADERS) \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+	> $@
+
 # Disabled until this is fixed:
 # http://bugzilla.gnome.org/show_bug.cgi?id=594202
 if FALSE

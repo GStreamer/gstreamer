@@ -89,6 +89,7 @@ REGISTRY_CHECKS =				\
 	elements/selector			\
 	elements/tee			  	\
 	elements/queue                          \
+	elements/queue2                         \
 	elements/valve                          \
 	libs/basesrc				\
 	libs/basesink				\

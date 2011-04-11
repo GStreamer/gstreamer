@@ -33,6 +33,7 @@
         by elements and utillity classes that are most useful for plugin developers.
       </para>
 
+      <xi:include href="xml/gstbaseparse.xml" />
       <xi:include href="xml/gstbasesrc.xml" />
       <xi:include href="xml/gstbasesink.xml" />
       <xi:include href="xml/gstbasetransform.xml" />

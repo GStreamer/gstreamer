@@ -89,6 +89,14 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_ENABLE_ASYNC (TRUE)
+
+enum
+{
+  PROP_0,
+  PROP_ENABLE_ASYNC
+};
+
 static void gst_bus_dispose (GObject * object);
 
 static GstObjectClass *parent_class = NULL;
@@ -97,14 +105,41 @@ static guint gst_bus_signals[LAST_SIGNAL] = { 0 };
 struct _GstBusPrivate
 {
   guint num_sync_message_emitters;
-  GCond *queue_cond;
   GSource *watch_id;
 
+  gboolean enable_async;
   GstPoll *poll;
   GPollFD pollfd;
 };
 
 G_DEFINE_TYPE (GstBus, gst_bus, GST_TYPE_OBJECT);
+
+static void
+gst_bus_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstBus *bus = GST_BUS_CAST (object);
+
+  switch (prop_id) {
+    case PROP_ENABLE_ASYNC:
+      bus->priv->enable_async = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_bus_constructed (GObject * object)
+{
+  GstBus *bus = GST_BUS_CAST (object);
+
+  if (bus->priv->enable_async) {
+    bus->priv->poll = gst_poll_new_timer ();
+    gst_poll_get_read_gpollfd (bus->priv->poll, &bus->priv->pollfd);
+  }
+}
 
 static void
 gst_bus_class_init (GstBusClass * klass)
@@ -114,6 +149,25 @@ gst_bus_class_init (GstBusClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_bus_dispose;
+  gobject_class->set_property = gst_bus_set_property;
+  gobject_class->constructed = gst_bus_constructed;
+
+  /* GstBus:enable-async:
+   *
+   * Enable async message delivery support for bus watches,
+   * gst_bus_pop() and similar API. Without this only the
+   * synchronous message handlers are called.
+   *
+   * This property is used to create the child element buses
+   * in #GstBin.
+   *
+   * Since: 0.10.33
+   */
+  g_object_class_install_property (gobject_class, PROP_ENABLE_ASYNC,
+      g_param_spec_boolean ("enable-async", "Enable Async",
+          "Enable async message delivery for bus watches and gst_bus_pop()",
+          DEFAULT_ENABLE_ASYNC,
+          G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBus::sync-message:
@@ -161,10 +215,7 @@ gst_bus_init (GstBus * bus)
   bus->queue_lock = g_mutex_new ();
 
   bus->priv = G_TYPE_INSTANCE_GET_PRIVATE (bus, GST_TYPE_BUS, GstBusPrivate);
-  bus->priv->queue_cond = g_cond_new ();
-
-  bus->priv->poll = gst_poll_new_timer ();
-  gst_poll_get_read_gpollfd (bus->priv->poll, &bus->priv->pollfd);
+  bus->priv->enable_async = DEFAULT_ENABLE_ASYNC;
 
   GST_DEBUG_OBJECT (bus, "created");
 }
@@ -188,8 +239,6 @@ gst_bus_dispose (GObject * object)
     g_mutex_unlock (bus->queue_lock);
     g_mutex_free (bus->queue_lock);
     bus->queue_lock = NULL;
-    g_cond_free (bus->priv->queue_cond);
-    bus->priv->queue_cond = NULL;
 
     if (bus->priv->poll)
       gst_poll_free (bus->priv->poll);
@@ -265,6 +314,11 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       && handler != gst_bus_sync_signal_handler)
     gst_bus_sync_signal_handler (bus, message, NULL);
 
+  /* If this is a bus without async message delivery
+   * always drop the message */
+  if (!bus->priv->poll)
+    reply = GST_BUS_DROP;
+
   /* now see what we should do with the message */
   switch (reply) {
     case GST_BUS_DROP:
@@ -275,8 +329,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       /* pass the message to the async queue, refcount passed in the queue */
       GST_DEBUG_OBJECT (bus, "[msg %p] pushing on async queue", message);
       gst_atomic_queue_push (bus->queue, message);
-      if (bus->priv->poll)
-        gst_poll_write_control (bus->priv->poll);
+      gst_poll_write_control (bus->priv->poll);
       GST_DEBUG_OBJECT (bus, "[msg %p] pushed on async queue", message);
 
       break;
@@ -298,8 +351,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_mutex_lock (lock);
 
       gst_atomic_queue_push (bus->queue, message);
-      if (bus->priv->poll)
-        gst_poll_write_control (bus->priv->poll);
+      gst_poll_write_control (bus->priv->poll);
 
       /* now block till the message is freed */
       g_cond_wait (cond, lock);
@@ -1256,15 +1308,4 @@ error:
     GST_OBJECT_UNLOCK (bus);
     return;
   }
-}
-
-/* Secret API used by GstBin to set the bus in child bus mode
- * without sockets and everything. See bug #646624.
- */
-void
-_priv_gst_bus_set_child_mode (GstBus * bus)
-{
-  if (bus->priv->poll)
-    gst_poll_free (bus->priv->poll);
-  bus->priv->poll = NULL;
 }

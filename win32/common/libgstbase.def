@@ -15,6 +15,18 @@ EXPORTS
 	gst_adapter_take_buffer
 	gst_adapter_take_list
 	gst_adapter_unmap
+	gst_base_parse_add_index_entry
+	gst_base_parse_convert_default
+	gst_base_parse_frame_init
+	gst_base_parse_get_type
+	gst_base_parse_push_frame
+	gst_base_parse_set_average_bitrate
+	gst_base_parse_set_duration
+	gst_base_parse_set_frame_rate
+	gst_base_parse_set_has_timing_info
+	gst_base_parse_set_min_frame_size
+	gst_base_parse_set_passthrough
+	gst_base_parse_set_syncable
 	gst_base_sink_do_preroll
 	gst_base_sink_get_blocksize
 	gst_base_sink_get_last_buffer

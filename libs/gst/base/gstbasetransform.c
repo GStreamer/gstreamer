@@ -2085,10 +2085,17 @@ gst_base_transform_src_event (GstPad * pad, GstEvent * event)
   gboolean ret = TRUE;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (trans == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
+
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->src_event)
     ret = bclass->src_event (trans, event);
+  else
+    gst_event_unref (event);
 
   gst_object_unref (trans);
 

@@ -213,6 +213,41 @@ gst_adapter_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstbaseparse</FILE>
+<TITLE>GstBaseParse</TITLE>
+<INCLUDE>gst/base/gstbaseparse.h</INCLUDE>
+GstBaseParse
+GstBaseParseClass
+
+gst_base_parse_set_duration
+gst_base_parse_set_average_bitrate
+gst_base_parse_set_min_frame_size
+gst_base_parse_set_passthrough
+gst_base_parse_set_syncable
+gst_base_parse_set_has_timing_info
+gst_base_parse_set_frame_rate
+gst_base_parse_convert_default
+gst_base_parse_add_index_entry
+
+GstBaseParseFrameFlags
+gst_base_parse_frame_init
+gst_base_parse_push_frame
+
+GST_BASE_PARSE_SRC_PAD
+<SUBSECTION Standard>
+GstBaseParsePrivate
+GST_BASE_PARSE
+GST_BASE_PARSE_CAST
+GST_IS_BASE_PARSE
+GST_TYPE_BASE_PARSE
+GST_BASE_PARSE_CLASS
+GST_IS_BASE_PARSE_CLASS
+GST_BASE_PARSE_GET_CLASS
+<SUBSECTION Private>
+gst_base_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstbasesrc</FILE>
 <TITLE>GstBaseSrc</TITLE>
 <INCLUDE>gst/base/gstbasesrc.h</INCLUDE>

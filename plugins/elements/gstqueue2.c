@@ -648,12 +648,16 @@ gst_queue2_getcaps (GstPad * pad)
   GstPad *otherpad;
   GstCaps *result;
 
-  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE2 (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (queue == NULL))
+    return gst_caps_new_any ();
 
   otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
   result = gst_pad_peer_get_caps (otherpad);
   if (result == NULL)
     result = gst_caps_new_any ();
+
+  gst_object_unref (queue);
 
   return result;
 }
@@ -1212,6 +1216,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
           } else {
             GST_DEBUG_OBJECT (queue,
                 "EOS hit and we don't have any requested data");
+            gst_buffer_unref (buf);
             return GST_FLOW_UNEXPECTED;
           }
         }
@@ -1292,6 +1297,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 out_flushing:
   {
     GST_DEBUG_OBJECT (queue, "we are flushing");
+    gst_buffer_unref (buf);
     return GST_FLOW_WRONG_STATE;
   }
 read_error:
@@ -2368,8 +2374,12 @@ static gboolean
 gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstQueue2 *queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
+  GstQueue2 *queue = GST_QUEUE2 (gst_pad_get_parent (pad));
 
+  if (G_UNLIKELY (queue == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 #ifndef GST_DISABLE_GST_DEBUG
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%s)",
       event, GST_EVENT_TYPE_NAME (event));
@@ -2419,6 +2429,7 @@ gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  gst_object_unref (queue);
   return res;
 }
 
@@ -2440,7 +2451,9 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
 {
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE2 (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (queue == NULL))
+    return FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -2611,12 +2624,14 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
+  gst_object_unref (queue);
   return TRUE;
 
   /* ERRORS */
 peer_failed:
   {
     GST_DEBUG_OBJECT (queue, "failed peer query");
+    gst_object_unref (queue);
     return FALSE;
   }
 }
@@ -2901,6 +2916,7 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
           g_free (queue->ring_buffer);
           queue->ring_buffer = NULL;
         }
+        clean_ranges (queue);
       }
       if (queue->starting_segment != NULL) {
         gst_event_unref (queue->starting_segment);

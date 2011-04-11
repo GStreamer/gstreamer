@@ -664,6 +664,8 @@ gst_iterator_find_custom (GstIterator * it, GCompareFunc func,
     res =
         gst_iterator_fold (it, (GstIteratorFoldFunction) find_custom_fold_func,
         &ret, &data);
+    if (res == GST_ITERATOR_RESYNC)
+      gst_iterator_resync (it);
   } while (res == GST_ITERATOR_RESYNC);
 
   /* no need to unset, it's just a pointer */

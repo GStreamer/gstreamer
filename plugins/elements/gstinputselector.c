@@ -122,8 +122,8 @@ static inline gboolean gst_input_selector_is_active_sinkpad (GstInputSelector *
     sel, GstPad * pad);
 static GstPad *gst_input_selector_activate_sinkpad (GstInputSelector * sel,
     GstPad * pad);
-static GstPad *gst_input_selector_get_linked_pad (GstPad * pad,
-    gboolean strict);
+static GstPad *gst_input_selector_get_linked_pad (GstInputSelector * sel,
+    GstPad * pad, gboolean strict);
 
 #define GST_TYPE_SELECTOR_PAD \
   (gst_selector_pad_get_type())
@@ -356,11 +356,15 @@ gst_selector_pad_reset (GstSelectorPad * pad)
 static GstIterator *
 gst_selector_pad_iterate_linked_pads (GstPad * pad)
 {
-  GstInputSelector *sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  GstInputSelector *sel;
   GstPad *otherpad;
   GstIterator *it;
 
-  otherpad = gst_input_selector_get_linked_pad (pad, TRUE);
+  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL))
+    return NULL;
+
+  otherpad = gst_input_selector_get_linked_pad (sel, pad, TRUE);
   it = gst_iterator_new_single (GST_TYPE_PAD, otherpad,
       (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
 
@@ -1145,12 +1149,10 @@ gst_input_selector_get_property (GObject * object, guint prop_id,
 }
 
 static GstPad *
-gst_input_selector_get_linked_pad (GstPad * pad, gboolean strict)
+gst_input_selector_get_linked_pad (GstInputSelector * sel, GstPad * pad,
+    gboolean strict)
 {
-  GstInputSelector *sel;
   GstPad *otherpad = NULL;
-
-  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
 
   GST_INPUT_SELECTOR_LOCK (sel);
   if (pad == sel->srcpad)
@@ -1161,25 +1163,31 @@ gst_input_selector_get_linked_pad (GstPad * pad, gboolean strict)
     gst_object_ref (otherpad);
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
-  gst_object_unref (sel);
-
   return otherpad;
 }
 
 static gboolean
 gst_input_selector_event (GstPad * pad, GstEvent * event)
 {
+  GstInputSelector *sel;
   gboolean res = FALSE;
   GstPad *otherpad;
 
-  otherpad = gst_input_selector_get_linked_pad (pad, TRUE);
+  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
+  otherpad = gst_input_selector_get_linked_pad (sel, pad, TRUE);
   if (otherpad) {
     res = gst_pad_push_event (otherpad, event);
 
     gst_object_unref (otherpad);
   } else
     gst_event_unref (event);
+
+  gst_object_unref (sel);
   return res;
 }
 
@@ -1193,8 +1201,10 @@ gst_input_selector_query (GstPad * pad, GstQuery * query)
   GstPad *otherpad;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL))
+    return FALSE;
 
-  otherpad = gst_input_selector_get_linked_pad (pad, TRUE);
+  otherpad = gst_input_selector_get_linked_pad (sel, pad, TRUE);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -1270,12 +1280,14 @@ static GstCaps *
 gst_input_selector_getcaps (GstPad * pad)
 {
   GstPad *otherpad;
-  GstObject *parent;
+  GstInputSelector *sel;
   GstCaps *caps;
 
-  parent = gst_object_get_parent (GST_OBJECT (pad));
+  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL))
+    return gst_caps_new_any ();
 
-  otherpad = gst_input_selector_get_linked_pad (pad, FALSE);
+  otherpad = gst_input_selector_get_linked_pad (sel, pad, FALSE);
 
   if (!otherpad) {
     GST_DEBUG_OBJECT (pad, "Pad not linked, returning ANY");
@@ -1290,7 +1302,7 @@ gst_input_selector_getcaps (GstPad * pad)
     gst_object_unref (otherpad);
   }
 
-  gst_object_unref (parent);
+  gst_object_unref (sel);
   return caps;
 }
 

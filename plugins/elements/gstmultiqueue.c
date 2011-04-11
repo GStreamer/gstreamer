@@ -1115,6 +1115,13 @@ gst_multi_queue_loop (GstPad * pad)
 
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
+    /* Check again if we're flushing after the lock is taken,
+     * the flush flag might have been changed in the meantime */
+    if (sq->flushing) {
+      GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+      goto out_flushing;
+    }
+
     /* Update the nextid so other threads know when to wake us up */
     sq->nextid = newid;
 

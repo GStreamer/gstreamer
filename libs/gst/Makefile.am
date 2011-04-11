@@ -28,3 +28,9 @@ SUBDIRS_ALWAYS = base controller dataprotocol
 
 SUBDIRS = $(SUBDIRS_ALWAYS) $(SUBDIRS_CHECK) $(SUBDIRS_NET) $(SUBDIRS_HELPERS)
 DIST_SUBDIRS = $(SUBDIRS_ALWAYS) check net helpers
+
+Android.mk: Makefile.am
+	echo $(PWD)
+	androgenizer -:PROJECT gstreamer \
+	 -:SUBDIR $(patsubst %, libs/gst/%, $(SUBDIRS)) \
+	> $@

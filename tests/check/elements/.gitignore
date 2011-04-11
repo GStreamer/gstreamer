@@ -9,6 +9,7 @@ funnel
 identity
 multiqueue
 queue
+queue2
 selector
 tee
 valve

@@ -51,9 +51,6 @@ extern const char             g_log_domain_gstreamer[];
 /* for the pad cache */
 #include "gstpad.h"
 
-/* for GstBus */
-#include "gstbus.h"
-
 G_BEGIN_DECLS
 
 /* used by gstparse.c and grammar.y */
@@ -139,11 +136,6 @@ gint priv_gst_date_time_compare (gconstpointer dt1, gconstpointer dt2);
 /* Secret variable to initialise gst without registry cache */
 extern gboolean _gst_disable_registry_cache;
 #endif
-
-/* Secret API used by GstBin to set the bus in child bus mode
- * without sockets and everything. See bug #646624.
- */
-void _priv_gst_bus_set_child_mode (GstBus * bus);
 
 /* provide inline gst_g_value_get_foo_unchecked(), used in gststructure.c */
 #define DEFINE_INLINE_G_VALUE_GET_UNCHECKED(ret_type,name_type,v_field) \

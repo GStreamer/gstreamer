@@ -991,7 +991,7 @@
 <ARG>
 <NAME>GstQueue2::ring-buffer-max-size</NAME>
 <TYPE>guint64</TYPE>
-<RANGE><= G_MAXUINT</RANGE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max. ring buffer size (bytes)</NICK>
 <BLURB>Max. amount of data in the ring buffer (bytes, 0 = disabled.</BLURB>
