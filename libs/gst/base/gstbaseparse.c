@@ -685,7 +685,7 @@ static gboolean
 gst_base_parse_check_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
-  *framesize = GST_BUFFER_SIZE (frame->buffer);
+  *framesize = gst_buffer_get_size (frame->buffer);
   *skipsize = 0;
   return TRUE;
 }
@@ -1228,7 +1228,7 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (overhead == -1)
     return;
 
-  data_len = GST_BUFFER_SIZE (buffer) - overhead;
+  data_len = gst_buffer_get_size (buffer) - overhead;
   parse->priv->data_bytecount += data_len;
 
   /* duration should be valid by now,
@@ -1521,7 +1521,7 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
       "parsing frame at offset %" G_GUINT64_FORMAT
       " (%#" G_GINT64_MODIFIER "x) of size %d",
       GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET (buffer),
-      GST_BUFFER_SIZE (buffer));
+      gst_buffer_get_size (buffer));
 
   /* use default handler to provide initial (upstream) metadata */
   gst_base_parse_parse_frame (parse, frame);
@@ -1599,8 +1599,7 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
     GstBaseParseFrame *queued_frame;
 
     while ((queued_frame = g_queue_pop_head (&parse->priv->queued_frames))) {
-      queued_frame->buffer =
-          gst_buffer_make_metadata_writable (queued_frame->buffer);
+      queued_frame->buffer = gst_buffer_make_writable (queued_frame->buffer);
       gst_buffer_set_caps (queued_frame->buffer,
           GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (parse)));
       gst_base_parse_push_frame (parse, queued_frame);
@@ -1633,6 +1632,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstClockTime last_stop = GST_CLOCK_TIME_NONE;
   GstBaseParseClass *klass = GST_BASE_PARSE_GET_CLASS (parse);
   GstBuffer *buffer;
+  gsize size;
 
   g_return_val_if_fail (frame != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (frame->buffer != NULL, GST_FLOW_ERROR);
@@ -1641,12 +1641,13 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   GST_LOG_OBJECT (parse,
       "processing buffer of size %d with ts %" GST_TIME_FORMAT
-      ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buffer),
+      ", duration %" GST_TIME_FORMAT, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
   /* update stats */
-  parse->priv->bytecount += GST_BUFFER_SIZE (buffer);
+  size = gst_buffer_get_size (buffer);
+  parse->priv->bytecount += size;
   if (G_LIKELY (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_NO_FRAME))) {
     parse->priv->framecount++;
     if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
@@ -1784,7 +1785,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
   /* decorate */
-  buffer = gst_buffer_make_metadata_writable (buffer);
+  buffer = gst_buffer_make_writable (buffer);
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
 
   parse->priv->seen_keyframe |= parse->priv->is_video &&
@@ -1815,26 +1816,25 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   }
 
   if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
-    GST_LOG_OBJECT (parse, "frame (%d bytes) dropped",
-        GST_BUFFER_SIZE (buffer));
+    GST_LOG_OBJECT (parse, "frame (%" G_GSIZE_FORMAT " bytes) dropped", size);
     gst_buffer_unref (buffer);
     ret = GST_FLOW_OK;
   } else if (ret == GST_FLOW_OK) {
     if (parse->segment.rate > 0.0) {
       ret = gst_pad_push (parse->srcpad, buffer);
-      GST_LOG_OBJECT (parse, "frame (%d bytes) pushed: %s",
-          GST_BUFFER_SIZE (buffer), gst_flow_get_name (ret));
+      GST_LOG_OBJECT (parse, "frame (%" G_GSIZE_FORMAT " bytes) pushed: %s",
+          size, gst_flow_get_name (ret));
     } else {
-      GST_LOG_OBJECT (parse, "frame (%d bytes) queued for now",
-          GST_BUFFER_SIZE (buffer));
+      GST_LOG_OBJECT (parse, "frame (%" G_GSIZE_FORMAT " bytes) queued for now",
+          size);
       parse->priv->buffers_queued =
           g_slist_prepend (parse->priv->buffers_queued, buffer);
       ret = GST_FLOW_OK;
     }
   } else {
     gst_buffer_unref (buffer);
-    GST_LOG_OBJECT (parse, "frame (%d bytes) not pushed: %s",
-        GST_BUFFER_SIZE (buffer), gst_flow_get_name (ret));
+    GST_LOG_OBJECT (parse, "frame (%" G_GSIZE_FORMAT " bytes) not pushed: %s",
+        size, gst_flow_get_name (ret));
     /* if we are not sufficiently in control, let upstream decide on EOS */
     if (ret == GST_FLOW_UNEXPECTED &&
         (parse->priv->passthrough ||
@@ -1952,7 +1952,7 @@ gst_base_parse_process_fragment (GstBaseParse * parse, gboolean push_only)
   while (parse->priv->buffers_pending) {
     buf = GST_BUFFER_CAST (parse->priv->buffers_pending->data);
     GST_LOG_OBJECT (parse, "adding pending buffer (size %d)",
-        GST_BUFFER_SIZE (buf));
+        gst_buffer_get_size (buf));
     gst_adapter_push (parse->priv->adapter, buf);
     parse->priv->buffers_pending =
         g_slist_delete_link (parse->priv->buffers_pending,
@@ -2081,9 +2081,9 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   if (G_LIKELY (buffer)) {
     GST_LOG_OBJECT (parse, "buffer size: %d, offset = %" G_GINT64_FORMAT,
-        GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
+        gst_buffer_get_size (buffer), GST_BUFFER_OFFSET (buffer));
     if (G_UNLIKELY (parse->priv->passthrough)) {
-      frame->buffer = gst_buffer_make_metadata_writable (buffer);
+      frame->buffer = gst_buffer_make_writable (buffer);
       return gst_base_parse_push_frame (parse, frame);
     }
     /* upstream feeding us in reverse playback;
@@ -2135,11 +2135,11 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       }
 
       /* always pass all available data */
-      data = gst_adapter_peek (parse->priv->adapter, av);
-      GST_BUFFER_DATA (tmpbuf) = (guint8 *) data;
-      GST_BUFFER_SIZE (tmpbuf) = min_size;
+      data = gst_adapter_map (parse->priv->adapter, av);
+      gst_buffer_take_memory (tmpbuf,
+          gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+              (gpointer) data, NULL, min_size, 0, min_size));
       GST_BUFFER_OFFSET (tmpbuf) = parse->priv->offset;
-      GST_BUFFER_FLAG_SET (tmpbuf, GST_MINI_OBJECT_FLAG_READONLY);
 
       if (parse->priv->discont) {
         GST_DEBUG_OBJECT (parse, "marking DISCONT");
@@ -2149,6 +2149,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       skip = -1;
       gst_base_parse_frame_update (parse, frame, tmpbuf);
       res = bclass->check_valid_frame (parse, frame, &fsize, &skip);
+      gst_adapter_unmap (parse->priv->adapter, 0);
       gst_buffer_replace (&frame->buffer, NULL);
       if (res) {
         if (gst_adapter_available (parse->priv->adapter) < fsize) {
@@ -2173,7 +2174,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
            * fragment coming later, hopefully subclass skips efficiently ... */
           timestamp = gst_adapter_prev_timestamp (parse->priv->adapter, NULL);
           outbuf = gst_adapter_take_buffer (parse->priv->adapter, skip);
-          outbuf = gst_buffer_make_metadata_writable (outbuf);
+          outbuf = gst_buffer_make_writable (outbuf);
           GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
           parse->priv->buffers_pending =
               g_slist_prepend (parse->priv->buffers_pending, outbuf);
@@ -2225,7 +2226,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
     /* FIXME: Would it be more efficient to make a subbuffer instead? */
     outbuf = gst_adapter_take_buffer (parse->priv->adapter, fsize);
-    outbuf = gst_buffer_make_metadata_writable (outbuf);
+    outbuf = gst_buffer_make_writable (outbuf);
 
     /* Subclass may want to know the data offset */
     GST_BUFFER_OFFSET (outbuf) = parse->priv->offset;
@@ -2271,11 +2272,11 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
    * We do it mainly to avoid pulling buffers of 1 byte all the time */
   if (parse->priv->cache) {
     gint64 cache_offset = GST_BUFFER_OFFSET (parse->priv->cache);
-    gint cache_size = GST_BUFFER_SIZE (parse->priv->cache);
+    gint cache_size = gst_buffer_get_size (parse->priv->cache);
 
     if (cache_offset <= parse->priv->offset &&
         (parse->priv->offset + size) <= (cache_offset + cache_size)) {
-      *buffer = gst_buffer_create_sub (parse->priv->cache,
+      *buffer = gst_buffer_copy_region (parse->priv->cache, GST_BUFFER_COPY_ALL,
           parse->priv->offset - cache_offset, size);
       GST_BUFFER_OFFSET (*buffer) = parse->priv->offset;
       return GST_FLOW_OK;
@@ -2294,8 +2295,10 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
     return ret;
   }
 
-  if (GST_BUFFER_SIZE (parse->priv->cache) >= size) {
-    *buffer = gst_buffer_create_sub (parse->priv->cache, 0, size);
+  if (gst_buffer_get_size (parse->priv->cache) >= size) {
+    *buffer =
+        gst_buffer_copy_region (parse->priv->cache, GST_BUFFER_COPY_ALL, 0,
+        size);
     GST_BUFFER_OFFSET (*buffer) = parse->priv->offset;
     return GST_FLOW_OK;
   }
@@ -2314,10 +2317,10 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
     return ret;
   }
 
-  if (GST_BUFFER_SIZE (parse->priv->cache) < size) {
+  if (gst_buffer_get_size (parse->priv->cache) < size) {
     GST_DEBUG_OBJECT (parse, "Returning short buffer at offset %"
         G_GUINT64_FORMAT ": wanted %u bytes, got %u bytes", parse->priv->offset,
-        size, GST_BUFFER_SIZE (parse->priv->cache));
+        size, gst_buffer_get_size (parse->priv->cache));
 
     *buffer = parse->priv->cache;
     parse->priv->cache = NULL;
@@ -2325,7 +2328,8 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
     return GST_FLOW_OK;
   }
 
-  *buffer = gst_buffer_create_sub (parse->priv->cache, 0, size);
+  *buffer =
+      gst_buffer_copy_region (parse->priv->cache, GST_BUFFER_COPY_ALL, 0, size);
   GST_BUFFER_OFFSET (*buffer) = parse->priv->offset;
 
   return GST_FLOW_OK;
@@ -2430,7 +2434,7 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
 
     /* if we got a short read, inform subclass we are draining leftover
      * and no more is to be expected */
-    if (GST_BUFFER_SIZE (buffer) < min_size)
+    if (gst_buffer_get_size (buffer) < min_size)
       parse->priv->drain = TRUE;
 
     skip = -1;
@@ -2451,7 +2455,7 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
         /* reverse playback, and no frames found yet, so we are skipping
          * the leading part of a fragment, which may form the tail of
          * fragment coming later, hopefully subclass skips efficiently ... */
-        outbuf = gst_buffer_create_sub (buffer, 0, skip);
+        outbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, skip);
         parse->priv->buffers_pending =
             g_slist_prepend (parse->priv->buffers_pending, outbuf);
         outbuf = NULL;
@@ -2478,8 +2482,8 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
   else if (skip < 0)
     skip = 0;
 
-  if (fsize + skip <= GST_BUFFER_SIZE (buffer)) {
-    outbuf = gst_buffer_create_sub (buffer, skip, fsize);
+  if (fsize + skip <= gst_buffer_get_size (buffer)) {
+    outbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, skip, fsize);
     GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + skip;
     GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
     gst_buffer_unref (buffer);
@@ -2488,7 +2492,7 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
     ret = gst_base_parse_pull_range (parse, fsize, &outbuf);
     if (ret != GST_FLOW_OK)
       goto done;
-    if (GST_BUFFER_SIZE (outbuf) < fsize) {
+    if (gst_buffer_get_size (outbuf) < fsize) {
       gst_buffer_unref (outbuf);
       ret = GST_FLOW_UNEXPECTED;
     }
@@ -3137,7 +3141,8 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
   GST_LOG_OBJECT (parse,
       "peek parsing frame at offset %" G_GUINT64_FORMAT
       " (%#" G_GINT64_MODIFIER "x) of size %d",
-      GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
+      GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf),
+      gst_buffer_get_size (buf));
 
   /* get offset first, subclass parsing might dump other stuff in there */
   *pos = GST_BUFFER_OFFSET (buf);
