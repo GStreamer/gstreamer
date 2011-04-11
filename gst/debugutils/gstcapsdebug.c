@@ -32,10 +32,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_caps_debug_debug);
 /* prototypes */
 
 
-static void gst_caps_debug_set_property (GObject * object,
-    guint property_id, const GValue * value, GParamSpec * pspec);
-static void gst_caps_debug_get_property (GObject * object,
-    guint property_id, GValue * value, GParamSpec * pspec);
 static void gst_caps_debug_dispose (GObject * object);
 static void gst_caps_debug_finalize (GObject * object);
 
@@ -48,11 +44,6 @@ static GstFlowReturn gst_caps_debug_bufferalloc (GstPad * pad,
 
 static GstStateChangeReturn
 gst_caps_debug_change_state (GstElement * element, GstStateChange transition);
-
-enum
-{
-  PROP_0
-};
 
 /* pad templates */
 
@@ -97,8 +88,6 @@ gst_caps_debug_class_init (GstCapsDebugClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gobject_class->set_property = gst_caps_debug_set_property;
-  gobject_class->get_property = gst_caps_debug_get_property;
   gobject_class->dispose = gst_caps_debug_dispose;
   gobject_class->finalize = gst_caps_debug_finalize;
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_caps_debug_change_state);
@@ -133,45 +122,8 @@ gst_caps_debug_init (GstCapsDebug * capsdebug,
 }
 
 void
-gst_caps_debug_set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstCapsDebug *capsdebug;
-
-  g_return_if_fail (GST_IS_CAPS_DEBUG (object));
-  capsdebug = GST_CAPS_DEBUG (object);
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_caps_debug_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstCapsDebug *capsdebug;
-
-  g_return_if_fail (GST_IS_CAPS_DEBUG (object));
-  capsdebug = GST_CAPS_DEBUG (object);
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
 gst_caps_debug_dispose (GObject * object)
 {
-  GstCapsDebug *capsdebug;
-
-  g_return_if_fail (GST_IS_CAPS_DEBUG (object));
-  capsdebug = GST_CAPS_DEBUG (object);
-
   /* clean up as possible.  may be called multiple times */
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -180,11 +132,6 @@ gst_caps_debug_dispose (GObject * object)
 void
 gst_caps_debug_finalize (GObject * object)
 {
-  GstCapsDebug *capsdebug;
-
-  g_return_if_fail (GST_IS_CAPS_DEBUG (object));
-  capsdebug = GST_CAPS_DEBUG (object);
-
   /* clean up object here */
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -199,7 +146,7 @@ gst_caps_debug_change_state (GstElement * element, GstStateChange transition)
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
 
 
