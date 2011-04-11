@@ -208,6 +208,13 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
 
   length = *packet->data++;
 
+  /* an adaptation field with length 0 is valid and
+   * can be used to insert a single stuffing byte */
+  if (!length) {
+    packet->afc_flags = 0;
+    return TRUE;
+  }
+
   if (packet->adaptation_field_control == 0x02) {
     /* no payload, adaptation field of 183 bytes */
     if (length != 183) {
