@@ -1895,8 +1895,7 @@ gst_camerabin_have_vid_buffer (GstPad * pad, GstBuffer * buffer,
   GST_LOG ("got video buffer %p with size %d",
       buffer, GST_BUFFER_SIZE (buffer));
 
-  if (camera->video_preview_caps &&
-      !camera->video_preview_buffer && !camera->stop_requested) {
+  if (!camera->video_preview_buffer && camera->video_preview_caps) {
     GST_DEBUG ("storing video preview %p", buffer);
     camera->video_preview_buffer = gst_buffer_copy (buffer);
   }
@@ -2075,6 +2074,10 @@ gst_camerabin_reset_to_view_finder (GstCameraBin * camera)
   camera->stop_requested = FALSE;
   camera->paused = FALSE;
   camera->eos_handled = FALSE;
+  if (camera->video_preview_buffer) {
+    gst_buffer_unref (camera->video_preview_buffer);
+    camera->video_preview_buffer = NULL;
+  }
 
   /* Enable view finder mode in v4l2camsrc */
   if (camera->src_vid_src &&
@@ -2097,15 +2100,17 @@ gst_camerabin_reset_to_view_finder (GstCameraBin * camera)
 static void
 gst_camerabin_do_stop (GstCameraBin * camera)
 {
+  gboolean video_preview_sent = FALSE;
   g_mutex_lock (camera->capture_mutex);
   if (camera->capturing) {
     GST_DEBUG_OBJECT (camera, "mark stop");
     camera->stop_requested = TRUE;
 
-    if (camera->video_preview_caps && camera->video_preview_buffer) {
+    /* Post preview image ASAP and don't wait that video recording
+       finishes as it may take time. */
+    if (camera->video_preview_buffer) {
       gst_camerabin_send_preview (camera, camera->video_preview_buffer);
-      gst_buffer_unref (camera->video_preview_buffer);
-      camera->video_preview_buffer = NULL;
+      video_preview_sent = TRUE;
     }
 
     /* Take special care when stopping paused video capture */
@@ -2121,6 +2126,15 @@ gst_camerabin_do_stop (GstCameraBin * camera)
     GST_DEBUG_OBJECT (camera, "waiting for capturing to finish");
     g_cond_wait (camera->cond, camera->capture_mutex);
     GST_DEBUG_OBJECT (camera, "capturing finished");
+
+    if (camera->video_preview_buffer) {
+      /* Double check that preview image has been sent. This is useful
+         in a corner case where capture-stop is issued immediately after
+         start before a single video buffer is actually recorded */
+      if (video_preview_sent == FALSE) {
+        gst_camerabin_send_preview (camera, camera->video_preview_buffer);
+      }
+    }
   }
   g_mutex_unlock (camera->capture_mutex);
 }
