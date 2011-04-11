@@ -340,6 +340,12 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
 
       GST_DEBUG_OBJECT (videorate, "intersect %" GST_PTR_FORMAT, caps);
 
+      /* could turn up empty, due to e.g. colorspace etc */
+      if (gst_caps_get_size (caps) == 0) {
+        gst_caps_unref (caps);
+        goto no_transform;
+      }
+
       /* take first possibility */
       gst_caps_truncate (caps);
       structure = gst_caps_get_structure (caps, 0);
