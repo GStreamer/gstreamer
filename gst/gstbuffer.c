@@ -198,7 +198,10 @@ _memory_add (GstBuffer * buffer, GstMemory * mem)
   guint len = GST_BUFFER_MEM_LEN (buffer);
 
   if (G_UNLIKELY (len >= GST_BUFFER_MEM_MAX)) {
-    /* to many buffer, span them */
+    /* too many buffer, span them. */
+    /* FIXME, there is room for improvement here: We could only try to merge
+     * 2 buffers to make some room. If we can't efficiently merge 2 buffers we
+     * could try to only merge the two smallest buffers to avoid memcpy, etc. */
     _replace_memory (buffer, _span_memory (buffer, 0, -1, FALSE));
     /* we now have 1 single spanned buffer */
     len = 1;
