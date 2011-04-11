@@ -550,14 +550,17 @@ gst_jpeg_parse_skip_marker (GstJpegParse * parse,
   if (marker >= APP0 && marker <= APP15) {
     const gchar *id_str = NULL;
 
-    if (!gst_byte_reader_peek_string_utf8 (reader, &id_str))
-      return FALSE;
-
-    GST_LOG_OBJECT (parse, "unhandled marker %x: '%s' skiping %u bytes",
-        marker, id_str ? id_str : "(NULL)", size);
+    if (gst_byte_reader_peek_string_utf8 (reader, &id_str)) {
+      GST_DEBUG_OBJECT (parse, "unhandled marker %x: '%s' skiping %u bytes",
+          marker, id_str ? id_str : "(NULL)", size);
+    } else {
+      GST_DEBUG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker,
+          size);
+    }
   }
 #else
-  GST_LOG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker, size);
+  GST_DEBUG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker,
+      size);
 #endif // GST_DISABLE_DEBUG
 
   if (!gst_byte_reader_skip (reader, size - 2))
@@ -596,6 +599,8 @@ extract_and_queue_tags (GstJpegParse * parse, guint size, guint8 * data,
     } else {
       parse->priv->tags = tags;
     }
+    GST_DEBUG_OBJECT (parse, "collected tags: %" GST_PTR_FORMAT,
+        parse->priv->tags);
   }
 }
 
@@ -685,6 +690,7 @@ gst_jpeg_parse_com (GstJpegParse * parse, GstByteReader * reader)
     GstTagList *taglist = get_tag_list (parse);
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_COMMENT, comment, NULL);
+    GST_DEBUG_OBJECT (parse, "collected tags: %" GST_PTR_FORMAT, taglist);
     g_free (comment);
   }
 
@@ -861,7 +867,8 @@ gst_jpeg_parse_push_buffer (GstJpegParse * parse, guint len)
     }
 
     if (parse->priv->tags) {
-      GST_DEBUG_OBJECT (parse, "Pushing tags");
+      GST_DEBUG_OBJECT (parse, "Pushing tags: %" GST_PTR_FORMAT,
+          parse->priv->tags);
       gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse),
           parse->priv->srcpad, parse->priv->tags);
       parse->priv->tags = NULL;
@@ -981,6 +988,7 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event)
         /* Hold on to the tags till the srcpad caps are definitely set */
         gst_tag_list_insert (get_tag_list (parse), taglist,
             GST_TAG_MERGE_REPLACE);
+        GST_DEBUG ("collected tags: %" GST_PTR_FORMAT, parse->priv->tags);
         gst_event_unref (event);
       }
       break;

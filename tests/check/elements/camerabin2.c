@@ -186,6 +186,8 @@ validate_taglist_foreach (const GstTagList * list, const gchar * tag,
   const GValue *val1 = gst_tag_list_get_value_index (list, tag, 0);
   const GValue *val2 = gst_tag_list_get_value_index (other, tag, 0);
 
+  GST_DEBUG ("checking tag '%s'", tag);
+
   fail_if (val1 == NULL);
   fail_if (val2 == NULL);
 
@@ -421,6 +423,7 @@ validity_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
       } else {
         tags_found = taglist;
       }
+      GST_DEBUG ("tags: %" GST_PTR_FORMAT, tags_found);
     }
       break;
     default:

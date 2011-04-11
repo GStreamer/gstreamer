@@ -387,8 +387,8 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
 
   /* update the APP markers
    * - put any JFIF APP0 first
-   * - the Exif APP1 next, 
-   * - the XMP APP1 next, 
+   * - the Exif APP1 next,
+   * - the XMP APP1 next,
    * - the PSIR APP13 next,
    * - followed by all other marker segments
    */
@@ -587,7 +587,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     memcpy (&data[29], xmp, size);
     m = gst_jif_mux_new_marker (APP1, size + 29, data, TRUE);
 
-    /* 
+    /*
      * Replace the old xmp marker and not add a new one.
      * There shouldn't be a xmp packet in the input, but it is better
      * to be safe than add another one and end up with 2 packets.
@@ -611,12 +611,13 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     modified = TRUE;
   }
 
-  /* add jpeg comment */
+  /* add jpeg comment from any of those */
   (void) (gst_tag_list_get_string (tags, GST_TAG_COMMENT, &str) ||
       gst_tag_list_get_string (tags, GST_TAG_DESCRIPTION, &str) ||
       gst_tag_list_get_string (tags, GST_TAG_TITLE, &str));
 
   if (str) {
+    GST_DEBUG_OBJECT (self, "set COM marker to '%s'", str);
     /* insert new marker into self->markers list */
     m = gst_jif_mux_new_marker (COM, strlen (str) + 1, (const guint8 *) str,
         TRUE);
