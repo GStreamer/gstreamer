@@ -1137,11 +1137,15 @@ GST_START_TEST (test_many_bins)
   fail_unless (gst_element_link (last_bin, sink));
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  fail_unless (ret == GST_STATE_CHANGE_ASYNC, "did not get state change async");
+  fail_unless_equals_int (ret, GST_STATE_CHANGE_ASYNC);
 
-  ret = gst_element_get_state (pipeline, NULL, NULL, 5 * GST_SECOND);
-  fail_unless (ret == GST_STATE_CHANGE_SUCCESS,
-      "did not get state change success");
+  for (i = 0; i < 15; ++i) {
+    GST_INFO ("waiting for preroll ...");
+    ret = gst_element_get_state (pipeline, NULL, NULL, GST_SECOND);
+    if (ret != GST_STATE_CHANGE_ASYNC)
+      break;
+  }
+  fail_unless_equals_int (ret, GST_STATE_CHANGE_SUCCESS);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
