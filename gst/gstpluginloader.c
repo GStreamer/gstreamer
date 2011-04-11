@@ -355,13 +355,21 @@ gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
 {
 #ifdef __APPLE__
 #if defined(__x86_64__)
-  char *argv[] = { "/usr/bin/arch", "-x86_64", location, (char *) "-l", NULL };
+  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-x86_64",
+    location, (char *) "-l", NULL
+  };
 #elif defined(__i386__)
-  char *argv[] = { "/usr/bin/arch", "-i386", location, (char *) "-l", NULL };
+  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-i386",
+    location, (char *) "-l", NULL
+  };
 #elif defined(__ppc__)
-  char *argv[] = { "/usr/bin/arch", "-ppc", location, (char *) "-l", NULL };
+  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-ppc",
+    location, (char *) "-l", NULL
+  };
 #elif defined(__ppc64__)
-  char *argv[] = { "/usr/bin/arch", "-ppc64", location, (char *) "-l", NULL };
+  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-ppc64",
+    location, (char *) "-l", NULL
+  };
 #endif
 #else /* ! __APPLE__ */
   char *argv[] = { location, (char *) "-l", NULL };
