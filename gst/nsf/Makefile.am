@@ -34,3 +34,17 @@ libgstnsf_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = gstnsf.h $(NOSEFART_INCLUDES)
 
 EXTRA_DIST =
+
+Android.mk: Makefile.am $(BUILT_SOURCES)
+	androgenizer \
+	-:PROJECT libgstnsf -:SHARED libgstnsf \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstnsf_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstnsf_la_CFLAGS) \
+	 -:LDFLAGS $(libgstnsf_la_LDFLAGS) \
+	           $(libgstnsf_la_LIBADD) \
+	           -ldl \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+	> $@

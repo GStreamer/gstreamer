@@ -45,3 +45,19 @@ noinst_HEADERS = gstcamerabin.h             \
 		 camerabingeneral.h         \
 		 camerabinpreview.h         \
 		 gstcamerabin-enum.h
+
+Android.mk: Makefile.am $(BUILT_SOURCES)
+	androgenizer \
+	-:PROJECT libgstcamerabin -:SHARED libgstcamerabin \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstcamerabin_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstcamerabin_la_CFLAGS) \
+	 -:LDFLAGS $(libgstcamerabin_la_LDFLAGS) \
+	           $(libgstcamerabin_la_LIBADD) \
+	           -ldl \
+	 -:LIBFILTER_STATIC gstphotography-@GST_MAJORMINOR@ \
+	          gstbasecamerabinsrc-@GST_MAJORMINOR@ \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+	> $@

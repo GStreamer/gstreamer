@@ -2,7 +2,7 @@
 #
 #  Copyright 2009 STN wireless
 #
-ifeq ($(USE_HARDWARE_MM),true)
+#ifeq ($(USE_HARDWARE_MM),true)
 
 LOCAL_PATH:= $(call my-dir)
 
@@ -17,34 +17,17 @@ gstaudioflinger_FILES := \
 	 audioflinger_wrapper.cpp \
 	 gstaudioflingersink.c \
 	 GstAndroid.cpp 
-	 
-gstaudioflinger_C_INCLUDES := \
-	$(LOCAL_PATH)/ 							\
-	$(LOCAL_PATH)/audioflingersink 			\
-    $(TARGET_OUT_HEADERS)/gstreamer-0.10    	\
-    $(TARGET_OUT_HEADERS)/gstreamer-0.10/gst/audio \
-	$(TARGET_OUT_HEADERS)/glib-2.0 			  	\
-    $(TARGET_OUT_HEADERS)/glib-2.0/glib       	\
-	external/gst/gstreamer/android 		  	\
-	external/libxml2/include      				\
-	external/icebird/gstreamer-icb-video \
-	external/icebird/include \
-	frameworks/base/libs/audioflinger \
-	frameworks/base/media/libmediaplayerservice \
-	frameworks/base/media/libmedia	\
-	frameworks/base/include/media
-
-ifeq ($(STECONF_ANDROID_VERSION),"FROYO")      
-gstaudioflinger_C_INCLUDES += external/icu4c/common
-endif
 
 LOCAL_SRC_FILES := $(gstaudioflinger_FILES)
-
-LOCAL_C_INCLUDES += $(gstaudioflinger_C_INCLUDES)
+LOCAL_C_INCLUDES = $(LOCAL_PATH) \
+	$(LOCAL_PATH)/include \
+	$(TOP)/frameworks/base
 
 LOCAL_CFLAGS += -DHAVE_CONFIG_H
 LOCAL_CFLAGS += -Wall -Wdeclaration-after-statement -g -O2
-LOCAL_CFLAGS += -DANDROID_USE_GSTREAMER
+LOCAL_CFLAGS += -DANDROID_USE_GSTREAMER \
+	$(shell $(PKG_CONFIG) gstreamer-plugins-bad-0.10 --cflags) \
+	$(shell $(PKG_CONFIG) gstreamer-audio-0.10 --cflags)
 
 ifeq ($(USE_AUDIO_PURE_CODEC),true)
 LOCAL_CFLAGS += -DAUDIO_PURE_CODEC
@@ -60,6 +43,8 @@ LOCAL_SHARED_LIBRARIES += \
 	libgobject-2.0        \
 	libgstvideo-0.10      \
 	libgstaudio-0.10
+
+LOCAL_LDFLAGS := -L$(SYSROOT)/usr/lib -llog
 
 LOCAL_SHARED_LIBRARIES += \
 	libutils \
@@ -77,13 +62,8 @@ LOCAL_MODULE_PATH := $(TARGET_OUT)/lib/gstreamer-0.10
 # define LOCAL_PRELINK_MODULE to false to not use pre-link map
 #
 LOCAL_PRELINK_MODULE := false 
-
-ifeq ($(STECONF_ANDROID_VERSION),"DONUT")	
-LOCAL_CFLAGS += -DSTECONF_ANDROID_VERSION_DONUT
-endif
-
+LOCAL_MODULE_TAGS := eng debug
 
 include $(BUILD_SHARED_LIBRARY)
 
-
-endif  # USE_HARDWARE_MM == true
+#endif  # USE_HARDWARE_MM == true

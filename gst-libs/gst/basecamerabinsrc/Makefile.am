@@ -26,3 +26,17 @@ libgstbasecamerabinsrc_@GST_MAJORMINOR@_la_LIBADD = \
 
 libgstbasecamerabinsrc_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
+Android.mk: Makefile.am
+	androgenizer -:PROJECT libgstbasecamerabinsrc -:STATIC libgstbasecamerabinsrc-@GST_MAJORMINOR@ \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstbasecamerabinsrc_@GST_MAJORMINOR@_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(libgstbasecamerabinsrc_@GST_MAJORMINOR@_la_CFLAGS) \
+	 -:LDFLAGS $(libgstbasecamerabinsrc_@GST_MAJORMINOR@_la_LDFLAGS) \
+	           $(libgstbasecamerabinsrc_@GST_MAJORMINOR@_la_LIBADD) \
+	           -ldl \
+	 -:LIBFILTER_STATIC gstphotography-@GST_MAJORMINOR@ \
+	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/basecamerabinsrc \
+	 -:HEADERS $(libgstbasecamerabinsrcinclude_HEADERS) \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+	> $@

@@ -43,3 +43,19 @@ BUILT_SOURCES = \
 CLEANFILES = $(BUILT_SOURCES)
 
 include $(top_srcdir)/common/gst-glib-gen.mak
+
+Android.mk:  $(BUILT_SOURCES) Makefile.am
+	androgenizer -:PROJECT libgstphotography -:STATIC libgstphotography-@GST_MAJORMINOR@ \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstphotography_@GST_MAJORMINOR@_la_SOURCES) \
+         $(built_sources) \
+	 -:CFLAGS $(DEFS) $(libgstphotography_@GST_MAJORMINOR@_la_CFLAGS) \
+	 -:LDFLAGS $(libgstphotography_@GST_MAJORMINOR@_la_LDFLAGS) \
+	           $(libgstphotography_@GST_MAJORMINOR@_la_LIBADD) \
+	           -ldl \
+	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/photography \
+	 -:HEADERS $(libgstphotographyinclude_HEADERS) \
+         $(built_headers) \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+	> $@
