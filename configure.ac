@@ -346,7 +346,7 @@ AG_GST_CHECK_PLUGIN(matroska)
 AG_GST_CHECK_PLUGIN(monoscope)
 AG_GST_CHECK_PLUGIN(multifile)
 AG_GST_CHECK_PLUGIN(multipart)
-AG_GST_CHECK_PLUGIN(qtdemux)
+AG_GST_CHECK_PLUGIN(quicktime)
 AG_GST_CHECK_PLUGIN(replaygain)
 AG_GST_CHECK_PLUGIN(rtp)
 AG_GST_CHECK_PLUGIN(rtpmanager)
@@ -1159,7 +1159,7 @@ gst/matroska/Makefile
 gst/monoscope/Makefile
 gst/multifile/Makefile
 gst/multipart/Makefile
-gst/qtdemux/Makefile
+gst/quicktime/Makefile
 gst/replaygain/Makefile
 gst/rtp/Makefile
 gst/rtpmanager/Makefile
