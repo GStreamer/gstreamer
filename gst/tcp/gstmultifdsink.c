@@ -876,7 +876,11 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   sink->clients_cookie++;
 
   /* set the socket to non blocking */
-  fcntl (fd, F_SETFL, O_NONBLOCK);
+  if (fcntl (fd, F_SETFL, O_NONBLOCK) < 0) {
+    GST_ERROR_OBJECT (sink, "failed to make socket %d non-blocking: %s", fd,
+        g_strerror (errno));
+  }
+
   /* we always read from a client */
   gst_poll_add_fd (sink->fdset, &client->fd);
 
@@ -888,8 +892,7 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
     }
   }
   /* figure out the mode, can't use send() for non sockets */
-  fstat (fd, &statbuf);
-  if (S_ISSOCK (statbuf.st_mode)) {
+  if (fstat (fd, &statbuf) == 0 && S_ISSOCK (statbuf.st_mode)) {
     client->is_socket = TRUE;
     setup_dscp_client (sink, client);
   }
