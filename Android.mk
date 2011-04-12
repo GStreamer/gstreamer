@@ -10,7 +10,6 @@ GST_PLUGINS_BAD_BUILT_SOURCES := \
 	gst-libs/gst/basecamerabinsrc/Android.mk \
 	gst-libs/gst/interfaces/Android.mk \
 	gst/h264parse/Android.mk \
-	gst/qtmux/Android.mk \
 	gst/videoparsers/Android.mk \
 	gst/audiobuffer/Android.mk \
 	gst/autoconvert/Android.mk \
@@ -102,7 +101,6 @@ CONFIGURE_TARGETS += gst-plugins-bad-configure
 -include $(GST_PLUGINS_BAD_TOP)/gst-libs/gst/basecamerabinsrc/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst-libs/gst/interfaces/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/h264parse/Android.mk
--include $(GST_PLUGINS_BAD_TOP)/gst/qtmux/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/audiobuffer/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/autoconvert/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/bayer/Android.mk

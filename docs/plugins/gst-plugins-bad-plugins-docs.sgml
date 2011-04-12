@@ -88,7 +88,6 @@
     <xi:include href="xml/element-pcapparse.xml" />
     <xi:include href="xml/element-pinch.xml" />
     <xi:include href="xml/element-pyramidsegment.xml" />
-    <xi:include href="xml/element-qtmux.xml" />
     <xi:include href="xml/element-rsvgdec.xml" />
     <xi:include href="xml/element-rsvgoverlay.xml" />
     <xi:include href="xml/element-rtpdtmfdepay.xml" />
@@ -188,7 +187,6 @@
     <xi:include href="xml/plugin-nuvdemux.xml" />
     <xi:include href="xml/plugin-opencv.xml" />
     <xi:include href="xml/plugin-pcapparse.xml" />
-    <xi:include href="xml/plugin-qtmux.xml" />
     <xi:include href="xml/plugin-rawparse.xml" />
     <xi:include href="xml/plugin-real.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />

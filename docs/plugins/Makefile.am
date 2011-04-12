@@ -182,7 +182,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/mxf/mxfmux.h \
 	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \
 	$(top_srcdir)/gst/pcapparse/gstpcapparse.h \
-	$(top_srcdir)/gst/qtmux/gstqtmux.h \
 	$(top_srcdir)/gst/rawparse/gstaudioparse.h \
 	$(top_srcdir)/gst/rawparse/gstvideoparse.h \
 	$(top_srcdir)/gst/rtpmux/gstrtpmux.h \

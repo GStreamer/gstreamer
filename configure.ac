@@ -341,7 +341,6 @@ AG_GST_CHECK_PLUGIN(nuvdemux)
 AG_GST_CHECK_PLUGIN(patchdetect)
 AG_GST_CHECK_PLUGIN(pcapparse)
 AG_GST_CHECK_PLUGIN(pnm)
-AG_GST_CHECK_PLUGIN(qtmux)
 AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(real)
 AG_GST_CHECK_PLUGIN(rtpmux)
@@ -1784,7 +1783,6 @@ gst/nuvdemux/Makefile
 gst/patchdetect/Makefile
 gst/pcapparse/Makefile
 gst/pnm/Makefile
-gst/qtmux/Makefile
 gst/rawparse/Makefile
 gst/real/Makefile
 gst/rtpmux/Makefile

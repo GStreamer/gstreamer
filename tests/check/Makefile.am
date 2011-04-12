@@ -163,7 +163,6 @@ check_PROGRAMS = \
         $(check_jifmux) \
 	elements/jpegparse \
 	$(check_logoinsert) \
-	elements/qtmux \
 	elements/mxfdemux \
 	elements/mxfmux \
 	elements/id3mux \
@@ -174,7 +173,6 @@ check_PROGRAMS = \
 	$(check_vp8) \
 	$(check_zbar) \
 	$(check_orc) \
-        pipelines/tagschecking \
 	$(EXPERIMENTAL_CHECKS)
 
 noinst_HEADERS = elements/mxfdemux.h

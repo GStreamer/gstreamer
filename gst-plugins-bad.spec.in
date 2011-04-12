@@ -106,7 +106,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstjp2k.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapexsink.so
-%{_libdir}/gstreamer-%{majorminor}/libgstqtmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstlegacyresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmxf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvmnc.so
@@ -124,7 +123,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstasfmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpnm.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideomeasure.so
-%{_libdir}/gstreamer-%{majorminor}/libgstaudioparsersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrsvg.so
 
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideocodec.h
