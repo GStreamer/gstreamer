@@ -111,7 +111,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #include <stdlib.h>
@@ -515,18 +515,12 @@ static void
 gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc * dtmfsrc)
 {
   GstClock *clock;
-  GstClockTime base_time;
-
-#ifdef MAEMO_BROKEN
-  base_time = 0;
-#else
-  base_time = gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
-#endif
 
   clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
   if (clock != NULL) {
     dtmfsrc->timestamp = gst_clock_get_time (clock)
-        + (MIN_INTER_DIGIT_INTERVAL * GST_MSECOND) - base_time;
+        + (MIN_INTER_DIGIT_INTERVAL * GST_MSECOND)
+        - gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
     dtmfsrc->start_timestamp = dtmfsrc->timestamp;
     gst_object_unref (clock);
   } else {
@@ -742,13 +736,8 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
   GST_DEBUG_OBJECT (dtmfsrc, "Processed events, now lets wait on the clock");
 
   clock = gst_element_get_clock (GST_ELEMENT (basesrc));
-
-#ifdef MAEMO_BROKEN
-  clockid = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp);
-#else
   clockid = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp +
       gst_element_get_base_time (GST_ELEMENT (dtmfsrc)));
-#endif
   gst_object_unref (clock);
 
   GST_OBJECT_LOCK (dtmfsrc);
