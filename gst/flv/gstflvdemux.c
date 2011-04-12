@@ -1089,26 +1089,14 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
   }
 
   if (G_LIKELY (demux->framerate)) {
-    GValue fps_double = { 0, };
-    GValue fps_fraction = { 0, };
-    gint num = 0;
-    gint den = 0;
+    gint num = 0, den = 0;
 
-    g_value_init (&fps_double, G_TYPE_DOUBLE);
-    g_value_init (&fps_fraction, GST_TYPE_FRACTION);
-    g_value_set_double (&fps_double, demux->framerate);
-    g_value_transform (&fps_double, &fps_fraction);
-    num = gst_value_get_fraction_numerator (&fps_fraction);
-    den = gst_value_get_fraction_denominator (&fps_fraction);
-
+    gst_util_double_to_fraction (demux->framerate, &num, &den);
     GST_DEBUG_OBJECT (demux->video_pad,
         "fps to be used on caps %f (as a fraction = %d/%d)", demux->framerate,
         num, den);
 
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, num, den, NULL);
-
-    g_value_unset (&fps_double);
-    g_value_unset (&fps_fraction);
   }
 
   if (demux->video_codec_data) {
