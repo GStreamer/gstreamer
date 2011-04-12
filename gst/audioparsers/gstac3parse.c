@@ -163,6 +163,8 @@ static gboolean gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * size, gint * skipsize);
 static GstFlowReturn gst_ac3_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
+static gboolean gst_ac3_parse_src_event (GstBaseParse * parse,
+    GstEvent * event);
 
 GST_BOILERPLATE (GstAc3Parse, gst_ac3_parse, GstBaseParse, GST_TYPE_BASE_PARSE);
 
@@ -197,6 +199,8 @@ gst_ac3_parse_class_init (GstAc3ParseClass * klass)
   parse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_ac3_parse_check_valid_frame);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_ac3_parse_parse_frame);
+
+  parse_class->src_event = GST_DEBUG_FUNCPTR (gst_ac3_parse_src_event);
 }
 
 static void
@@ -206,7 +210,7 @@ gst_ac3_parse_reset (GstAc3Parse * ac3parse)
   ac3parse->sample_rate = -1;
   ac3parse->blocks = -1;
   ac3parse->eac = FALSE;
-  ac3parse->align = GST_AC3_PARSE_ALIGN_NONE;
+  g_atomic_int_set (&ac3parse->align, GST_AC3_PARSE_ALIGN_NONE);
 }
 
 static void
@@ -265,11 +269,16 @@ gst_ac3_parse_set_alignment (GstAc3Parse * ac3parse, gboolean eac)
       continue;
 
     if ((str = gst_structure_get_string (st, "alignment"))) {
-      if (strcmp (str, "iec61937") == 0) {
-        ac3parse->align = GST_AC3_PARSE_ALIGN_IEC61937;
+      if (g_str_equal (str, "iec61937")) {
+        g_atomic_int_set (&ac3parse->align, GST_AC3_PARSE_ALIGN_IEC61937);
         GST_DEBUG_OBJECT (ac3parse, "picked iec61937 alignment");
-      } else
-        GST_INFO_OBJECT (ac3parse, "unknown alignment: %s", str);
+      } else if (g_str_equal (str, "frame") == 0) {
+        g_atomic_int_set (&ac3parse->align, GST_AC3_PARSE_ALIGN_FRAME);
+        GST_DEBUG_OBJECT (ac3parse, "picked frame alignment");
+      } else {
+        g_atomic_int_set (&ac3parse->align, GST_AC3_PARSE_ALIGN_FRAME);
+        GST_WARNING_OBJECT (ac3parse, "unknown alignment: %s", str);
+      }
       break;
     }
   }
@@ -280,7 +289,7 @@ gst_ac3_parse_set_alignment (GstAc3Parse * ac3parse, gboolean eac)
 done:
   /* default */
   if (ac3parse->align == GST_AC3_PARSE_ALIGN_NONE) {
-    ac3parse->align = GST_AC3_PARSE_ALIGN_FRAME;
+    g_atomic_int_set (&ac3parse->align, GST_AC3_PARSE_ALIGN_FRAME);
     GST_DEBUG_OBJECT (ac3parse, "picked syncframe alignment");
   }
 }
@@ -477,7 +486,8 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
 
   *framesize = frmsiz;
 
-  if (G_UNLIKELY (ac3parse->align == GST_AC3_PARSE_ALIGN_NONE))
+  if (G_UNLIKELY (g_atomic_int_get (&ac3parse->align) ==
+          GST_AC3_PARSE_ALIGN_NONE))
     gst_ac3_parse_set_alignment (ac3parse, eac);
 
   GST_LOG_OBJECT (parse, "got frame");
@@ -485,7 +495,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
   lost_sync = GST_BASE_PARSE_LOST_SYNC (parse);
   draining = GST_BASE_PARSE_DRAINING (parse);
 
-  if (ac3parse->align == GST_AC3_PARSE_ALIGN_IEC61937) {
+  if (g_atomic_int_get (&ac3parse->align) == GST_AC3_PARSE_ALIGN_IEC61937) {
     /* We need 6 audio blocks from each substream, so we keep going forwards
      * till we have it */
 
@@ -586,8 +596,8 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         "framed", G_TYPE_BOOLEAN, TRUE, "rate", G_TYPE_INT, rate,
         "channels", G_TYPE_INT, chans, NULL);
     gst_caps_set_simple (caps, "alignment", G_TYPE_STRING,
-        ac3parse->align == GST_AC3_PARSE_ALIGN_IEC61937 ? "iec61937" : "frame",
-        NULL);
+        g_atomic_int_get (&ac3parse->align) == GST_AC3_PARSE_ALIGN_IEC61937 ?
+        "iec61937" : "frame", NULL);
     gst_buffer_set_caps (buf, caps);
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
@@ -617,4 +627,34 @@ broken_header:
     GST_ELEMENT_ERROR (parse, STREAM, DECODE, (NULL), (NULL));
     return GST_FLOW_ERROR;
   }
+}
+
+static gboolean
+gst_ac3_parse_src_event (GstBaseParse * parse, GstEvent * event)
+{
+  GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
+
+  if (G_UNLIKELY (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_UPSTREAM) &&
+      gst_event_has_name (event, "ac3parse-set-alignment")) {
+    const GstStructure *st = gst_event_get_structure (event);
+    const gchar *align = gst_structure_get_string (st, "alignment");
+
+    if (g_str_equal (align, "iec61937")) {
+      GST_DEBUG_OBJECT (ac3parse, "Switching to iec61937 alignment");
+      g_atomic_int_set (&ac3parse->align, GST_AC3_PARSE_ALIGN_IEC61937);
+    } else if (g_str_equal (align, "frame")) {
+      GST_DEBUG_OBJECT (ac3parse, "Switching to frame alignment");
+      g_atomic_int_set (&ac3parse->align, GST_AC3_PARSE_ALIGN_FRAME);
+    } else {
+      g_atomic_int_set (&ac3parse->align, GST_AC3_PARSE_ALIGN_FRAME);
+      GST_WARNING_OBJECT (ac3parse, "Got unknown alignment request (%s) "
+          "reverting to frame alignment.",
+          gst_structure_get_string (st, "alignment"));
+    }
+
+    gst_event_unref (event);
+    return TRUE;
+  }
+
+  return GST_BASE_PARSE_CLASS (parent_class)->src_event (parse, event);
 }
