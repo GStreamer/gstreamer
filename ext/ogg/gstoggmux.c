@@ -318,10 +318,9 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
 {
   GstOggMux *ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
   GstOggPadData *ogg_pad = (GstOggPadData *) gst_pad_get_element_private (pad);
-  gboolean ret;
+  gboolean ret = FALSE;
 
-  GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
-      GST_DEBUG_PAD_NAME (pad));
+  GST_DEBUG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:{
@@ -337,8 +336,10 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
       /* We don't support non time NEWSEGMENT events */
       if (format != GST_FORMAT_TIME) {
         gst_event_unref (event);
-        return FALSE;
+        event = NULL;
+        break;
       }
+
       gst_segment_set_newsegment_full (&ogg_pad->segment, update, rate,
           applied_rate, format, start, stop, position);
 
@@ -349,12 +350,11 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      ret = TRUE;
       break;
   }
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
-  if (ret)
+  if (event != NULL)
     ret = ogg_pad->collect_event (pad, event);
 
   gst_object_unref (ogg_mux);
