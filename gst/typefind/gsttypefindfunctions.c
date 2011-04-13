@@ -1018,7 +1018,7 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
       while (found < GST_MP3_TYPEFIND_TRY_HEADERS) {
         guint32 head;
         guint length;
-        guint prev_layer = 0, prev_bitrate = 0;
+        guint prev_layer = 0;
         guint prev_channels = 0, prev_samplerate = 0;
         gboolean free = FALSE;
 
@@ -1065,7 +1065,6 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
            * be a freaking funky encoded mp3 though. We'll just not count
            * this header*/
           prev_layer = layer;
-          prev_bitrate = bitrate;
           prev_channels = channels;
           prev_samplerate = samplerate;
         } else {
