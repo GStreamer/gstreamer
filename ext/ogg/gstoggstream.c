@@ -501,22 +501,16 @@ setup_dirac_mapper (GstOggStream * pad, ogg_packet * packet)
 static gboolean
 is_keyframe_dirac (GstOggStream * pad, gint64 granulepos)
 {
-  gint64 pt;
   int dist_h;
   int dist_l;
   int dist;
-  int delay;
-  gint64 dt;
 
   if (granulepos == -1)
     return -1;
 
-  pt = ((granulepos >> 22) + (granulepos & OGG_DIRAC_GRANULE_LOW_MASK)) >> 9;
   dist_h = (granulepos >> 22) & 0xff;
   dist_l = granulepos & 0xff;
   dist = (dist_h << 8) | dist_l;
-  delay = (granulepos >> 9) & 0x1fff;
-  dt = pt - delay;
 
   return (dist == 0);
 }
@@ -525,16 +519,10 @@ static gint64
 granulepos_to_granule_dirac (GstOggStream * pad, gint64 gp)
 {
   gint64 pt;
-  int dist_h;
-  int dist_l;
-  int dist;
   int delay;
   gint64 dt;
 
   pt = ((gp >> 22) + (gp & OGG_DIRAC_GRANULE_LOW_MASK)) >> 9;
-  dist_h = (gp >> 22) & 0xff;
-  dist_l = gp & 0xff;
-  dist = (dist_h << 8) | dist_l;
   delay = (gp >> 9) & 0x1fff;
   dt = pt - delay;
 
