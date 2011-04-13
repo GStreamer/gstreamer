@@ -92,6 +92,7 @@ static GstBusSyncReply gst_hls_demux_fetcher_bus_handler (GstBus * bus,
     GstMessage * message, gpointer data);
 static GstFlowReturn gst_hls_demux_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_hls_demux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_hls_demux_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_hls_demux_src_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn gst_hls_demux_fetcher_chain (GstPad * pad,
     GstBuffer * buf);
@@ -215,6 +216,8 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
 
   /* demux pad */
   demux->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
+  gst_pad_set_event_function (demux->srcpad,
+      GST_DEBUG_FUNCPTR (gst_hls_demux_src_event));
   gst_pad_set_query_function (demux->srcpad,
       GST_DEBUG_FUNCPTR (gst_hls_demux_src_query));
   gst_pad_set_element_private (demux->srcpad, demux);
@@ -311,6 +314,21 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return ret;
+}
+
+static gboolean
+gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
+{
+  switch (event->type) {
+      /* FIXME: ignore seek event for the moment */
+    case GST_EVENT_SEEK:
+      gst_event_unref (event);
+      return FALSE;
+    default:
+      break;
+  }
+
+  return gst_pad_event_default (pad, event);
 }
 
 static gboolean
