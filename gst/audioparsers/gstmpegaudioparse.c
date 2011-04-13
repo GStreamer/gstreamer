@@ -566,11 +566,11 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   const guint32 info_id = 0x496e666f;   /* 'Info' in hex - found in LAME CBR files */
   const guint32 vbri_id = 0x56425249;   /* 'VBRI' in hex */
   const guint32 lame_id = 0x4c414d45;   /* 'LAME' in hex */
-  gint offset;
+  gint offset_xing, offset_vbri;
   guint64 avail;
   gint64 upstream_total_bytes = 0;
   GstFormat fmt = GST_FORMAT_BYTES;
-  guint32 read_id;
+  guint32 read_id_xing = 0, read_id_vbri = 0;
   const guint8 *data;
   guint bitrate;
 
@@ -580,26 +580,33 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   /* Check first frame for Xing info */
   if (mp3parse->version == 1) { /* MPEG-1 file */
     if (mp3parse->channels == 1)
-      offset = 0x11;
+      offset_xing = 0x11;
     else
-      offset = 0x20;
+      offset_xing = 0x20;
   } else {                      /* MPEG-2 header */
     if (mp3parse->channels == 1)
-      offset = 0x09;
+      offset_xing = 0x09;
     else
-      offset = 0x11;
+      offset_xing = 0x11;
   }
+
+  /* The VBRI tag is always at offset 0x20 */
+  offset_vbri = 0x20;
+
   /* Skip the 4 bytes of the MP3 header too */
-  offset += 4;
+  offset_xing += 4;
+  offset_vbri += 4;
 
   /* Check if we have enough data to read the Xing header */
   avail = GST_BUFFER_SIZE (buf);
   data = GST_BUFFER_DATA (buf);
-  if (avail < offset + 8)
-    return;
 
-  /* The header starts at the provided offset */
-  data += offset;
+  if (avail >= offset_xing + 4) {
+    read_id_xing = GST_READ_UINT32_BE (data + offset_xing);
+  }
+  if (avail >= offset_vbri + 4) {
+    read_id_vbri = GST_READ_UINT32_BE (data + offset_vbri);
+  }
 
   /* obtain real upstream total bytes */
   fmt = GST_FORMAT_BYTES;
@@ -607,17 +614,20 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
               (mp3parse)), &fmt, &upstream_total_bytes))
     upstream_total_bytes = 0;
 
-  read_id = GST_READ_UINT32_BE (data);
-  if (read_id == xing_id || read_id == info_id) {
+  if (read_id_xing == xing_id || read_id_xing == info_id) {
     guint32 xing_flags;
-    guint bytes_needed = offset + 8;
+    guint bytes_needed = offset_xing + 8;
     gint64 total_bytes;
     GstClockTime total_time;
 
     GST_DEBUG_OBJECT (mp3parse, "Found Xing header marker 0x%x", xing_id);
 
+    /* Move data after Xing header */
+    data += offset_xing + 4;
+
     /* Read 4 base bytes of flags, big-endian */
-    xing_flags = GST_READ_UINT32_BE (data + 4);
+    xing_flags = GST_READ_UINT32_BE (data);
+    data += 4;
     if (xing_flags & XING_FRAMES_FLAG)
       bytes_needed += 4;
     if (xing_flags & XING_BYTES_FLAG)
@@ -634,9 +644,6 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
 
     GST_DEBUG_OBJECT (mp3parse, "Reading Xing header");
     mp3parse->xing_flags = xing_flags;
-
-    data = GST_BUFFER_DATA (buf);
-    data += offset + 8;
 
     if (xing_flags & XING_FRAMES_FLAG) {
       mp3parse->xing_frames = GST_READ_UINT32_BE (data);
@@ -776,21 +783,25 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
       GST_DEBUG_OBJECT (mp3parse, "Encoder delay %u, encoder padding %u",
           encoder_delay, encoder_padding);
     }
-  } else if (read_id == vbri_id) {
+  }
+
+  if (read_id_vbri == vbri_id) {
     gint64 total_bytes, total_frames;
     GstClockTime total_time;
     guint16 nseek_points;
 
     GST_DEBUG_OBJECT (mp3parse, "Found VBRI header marker 0x%x", vbri_id);
-    if (avail < offset + 26) {
+
+    if (avail < offset_vbri + 26) {
       GST_DEBUG_OBJECT (mp3parse,
-          "Not enough data to read VBRI header (need %d)", offset + 26);
+          "Not enough data to read VBRI header (need %d)", offset_vbri + 26);
       return;
     }
 
     GST_DEBUG_OBJECT (mp3parse, "Reading VBRI header");
-    data = GST_BUFFER_DATA (buf);
-    data += offset + 4;
+
+    /* Move data after VBRI header */
+    data += offset_vbri + 4;
 
     if (GST_READ_UINT16_BE (data) != 0x0001) {
       GST_WARNING_OBJECT (mp3parse,
@@ -850,10 +861,10 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
         goto out_vbri;
       }
 
-      if (avail < offset + 26 + nseek_points * seek_bytes) {
+      if (avail < offset_vbri + 26 + nseek_points * seek_bytes) {
         GST_WARNING_OBJECT (mp3parse,
             "Not enough data to read VBRI seek table (need %d)",
-            offset + 26 + nseek_points * seek_bytes);
+            offset_vbri + 26 + nseek_points * seek_bytes);
         goto out_vbri;
       }
 
@@ -864,15 +875,15 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
         goto out_vbri;
       }
 
-      if (avail < offset + 26) {
+      if (avail < offset_vbri + 26) {
         GST_DEBUG_OBJECT (mp3parse,
             "Not enough data to read VBRI header (need %d)",
-            offset + 26 + nseek_points * seek_bytes);
+            offset_vbri + 26 + nseek_points * seek_bytes);
         return;
       }
 
       data = GST_BUFFER_DATA (buf);
-      data += offset + 26;
+      data += offset_vbri + 26;
 
       /* VBRI seek table: frame/seek_frames -> byte */
       mp3parse->vbri_seek_table = g_new (guint32, nseek_points);
