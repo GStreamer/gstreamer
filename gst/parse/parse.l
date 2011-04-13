@@ -35,7 +35,7 @@ PRINT (const char *format, ...)
 %}
 
 _operator [(){}.!,;=]
-_identifier [[:alpha:]][[:alnum:]\-_%:]*
+_identifier [[:alnum:]_][[:alnum:]\-_%:]*
 
 _char ("\\".)|([^[:space:]])
 _string {_char}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\'")*"'")
