@@ -295,9 +295,9 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
     for (i = 0; i < len; ++i)
       kernel[i] = -kernel[i];
 
-    if (len % 2 == 1)
+    if (len % 2 == 1) {
       kernel[(len - 1) / 2] += 1.0;
-    else {
+    } else {
       kernel[len / 2 - 1] += 0.5;
       kernel[len / 2] += 0.5;
     }
