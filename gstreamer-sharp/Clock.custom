@@ -21,15 +21,15 @@ private IntPtr EntriesChangedPtr {
   }
 }
 
-[DllImport ("libglib-2.0-0.dll") ]
-static extern void g_cond_wait (IntPtr cond, IntPtr mutex);
-[DllImport ("libglib-2.0-0.dll") ]
-static extern bool g_cond_timed_wait (IntPtr cond, IntPtr mutex, ref _TimeVal abs_time);
-[DllImport ("libglib-2.0-0.dll") ]
-static extern void g_cond_broadcast (IntPtr cond);
+[DllImport ("gstreamersharpglue-0.10.dll") ]
+static extern void gstsharp_g_cond_wait (IntPtr cond, IntPtr mutex);
+[DllImport ("gstreamersharpglue-0.10.dll") ]
+static extern bool gstsharp_g_cond_timed_wait (IntPtr cond, IntPtr mutex, ref _TimeVal abs_time);
+[DllImport ("gstreamersharpglue-0.10.dll") ]
+static extern void gstsharp_g_cond_broadcast (IntPtr cond);
 
 public void Wait () {
-  g_cond_wait (EntriesChangedPtr, LockPtr);
+  gstsharp_g_cond_wait (EntriesChangedPtr, LockPtr);
 }
 
 [StructLayout (LayoutKind.Sequential) ]
@@ -44,7 +44,7 @@ public bool Wait (uint mseconds) {
   long usec = 1000 * (mseconds - sec * 1000);
   tv.sec = (IntPtr) (sec);
   tv.usec = (IntPtr) (usec);
-  return g_cond_timed_wait (EntriesChangedPtr, LockPtr, ref tv);
+  return gstsharp_g_cond_timed_wait (EntriesChangedPtr, LockPtr, ref tv);
 }
 
 public bool Wait (TimeSpan timespan) {
@@ -53,11 +53,11 @@ public bool Wait (TimeSpan timespan) {
   long usec = 1000 * ( ( (long) timespan.TotalMilliseconds) - sec * 1000);
   tv.sec = (IntPtr) (sec);
   tv.usec = (IntPtr) (usec);
-  return g_cond_timed_wait (EntriesChangedPtr, LockPtr, ref tv);
+  return gstsharp_g_cond_timed_wait (EntriesChangedPtr, LockPtr, ref tv);
 }
 
 public void Broadcast () {
-  g_cond_broadcast (EntriesChangedPtr);
+  gstsharp_g_cond_broadcast (EntriesChangedPtr);
 }
 
 [DllImport ("gstreamersharpglue-0.10.dll") ]
@@ -73,23 +73,23 @@ private IntPtr SlaveLockPtr {
   }
 }
 
-[DllImport ("libglib-2.0-0.dll") ]
-static extern void g_mutex_lock (IntPtr mutex);
-[DllImport ("libglib-2.0-0.dll") ]
-static extern void g_mutex_unlock (IntPtr mutex);
-[DllImport ("libglib-2.0-0.dll") ]
-static extern bool g_mutex_trylock (IntPtr mutex);
+[DllImport ("gstreamersharpglue-0.10.dll") ]
+static extern void gstsharp_g_mutex_lock (IntPtr mutex);
+[DllImport ("gstreamersharpglue-0.10.dll") ]
+static extern void gstsharp_g_mutex_unlock (IntPtr mutex);
+[DllImport ("gstreamersharpglue-0.10.dll") ]
+static extern bool gstsharp_g_mutex_trylock (IntPtr mutex);
 
 public void SlaveLock () {
-  g_mutex_lock (SlaveLockPtr);
+  gstsharp_g_mutex_lock (SlaveLockPtr);
 }
 
 public void SlaveUnlock () {
-  g_mutex_unlock (SlaveLockPtr);
+  gstsharp_g_mutex_unlock (SlaveLockPtr);
 }
 
 public bool TrySlaveLock () {
-  return g_mutex_trylock (SlaveLockPtr);
+  return gstsharp_g_mutex_trylock (SlaveLockPtr);
 }
 
 [DllImport ("libgstreamer-0.10.dll") ]
