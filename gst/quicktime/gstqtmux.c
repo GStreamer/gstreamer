@@ -2973,6 +2973,28 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
             "output might not play in Apple QuickTime (try global-headers?)");
     }
   } else if (strcmp (mimetype, "video/x-h264") == 0) {
+    /* check if we accept these caps */
+    if (gst_structure_has_field (structure, "stream-format")) {
+      const gchar *format;
+      const gchar *alignment;
+
+      format = gst_structure_get_string (structure, "stream-format");
+      alignment = gst_structure_get_string (structure, "alignment");
+
+      if (strcmp (format, "avc") != 0 || alignment == NULL ||
+          strcmp (alignment, "au") != 0) {
+        GST_WARNING_OBJECT (qtmux, "Rejecting h264 caps, qtmux only accepts "
+            "avc format with AU aligned samples");
+        goto refuse_caps;
+      }
+    } else {
+      GST_WARNING_OBJECT (qtmux, "no stream-format field in h264 caps");
+    }
+
+    if (!codec_data) {
+      GST_WARNING_OBJECT (qtmux, "no codec_data in h264 caps");
+    }
+
     entry.fourcc = FOURCC_avc1;
     if (qtpad->avg_bitrate == 0) {
       gint avg_bitrate = 0;
@@ -2982,8 +3004,6 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
     ext_atom = build_btrt_extension (0, qtpad->avg_bitrate, qtpad->max_bitrate);
     if (ext_atom != NULL)
       ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
-    if (!codec_data)
-      GST_WARNING_OBJECT (qtmux, "no codec_data in h264 caps");
     ext_atom = build_codec_data_extension (FOURCC_avcC, codec_data);
     if (ext_atom != NULL)
       ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
