@@ -456,7 +456,8 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
   /* IMAGE and PREVIEW_IMAGE tags are already written
    * differently, no need to store them inside the
    * vorbiscomments too */
-  if (strcmp (tag, GST_TAG_IMAGE) == 0 || strcmp (tag, GST_TAG_PREVIEW_IMAGE))
+  if (strcmp (tag, GST_TAG_IMAGE) == 0
+      || strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0)
     return;
 
   comments = gst_tag_to_vorbis_comments (list, tag);
