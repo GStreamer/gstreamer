@@ -111,7 +111,6 @@ CONFIGURE_TARGETS += gst-plugins-bad-configure
 -include $(GST_PLUGINS_BAD_TOP)/gst/asfmux/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/videoparsers/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/ext/faad/Android.mk
--include $(GST_PLUGINS_BAD_TOP)/sys/audioflingersink/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/sdp/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/hls/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/jp2kdecimator/Android.mk
