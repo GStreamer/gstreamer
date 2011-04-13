@@ -272,10 +272,10 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
   w = 2 * G_PI * (self->lower_frequency / GST_AUDIO_FILTER (self)->format.rate);
   kernel_lp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
-    if (i % 2 == 1 && i == (len - 1) / 2)
+    if (i == (len - 1) / 2.0)
       kernel_lp[i] = w;
     else
-      kernel_lp[i] = sin (w * (i - (len - 1) / 2)) / (i - (len - 1) / 2);
+      kernel_lp[i] = sin (w * (i - (len - 1) / 2.0)) / (i - (len - 1) / 2.0);
 
     /* windowing */
     switch (self->window) {
@@ -309,10 +309,10 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
   w = 2 * G_PI * (self->upper_frequency / GST_AUDIO_FILTER (self)->format.rate);
   kernel_hp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
-    if (i % 2 == 1 && i == (len - 1) / 2)
+    if (i == (len - 1) / 2.0)
       kernel_hp[i] = w;
     else
-      kernel_hp[i] = sin (w * (i - (len - 1) / 2)) / (i - (len - 1) / 2);
+      kernel_hp[i] = sin (w * (i - (len - 1) / 2.0)) / (i - (len - 1) / 2.0);
 
     /* Windowing */
     switch (self->window) {

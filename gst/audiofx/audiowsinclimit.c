@@ -258,10 +258,10 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
   kernel = g_new (gdouble, len);
 
   for (i = 0; i < len; ++i) {
-    if (i % 2 == 1 && i == (len - 1) / 2)
+    if (i == (len - 1) / 2.0)
       kernel[i] = w;
     else
-      kernel[i] = sin (w * (i - (len - 1) / 2)) / (i - (len - 1) / 2);
+      kernel[i] = sin (w * (i - (len - 1) / 2)) / (i - (len - 1) / 2.0);
 
     /* windowing */
     switch (self->window) {
