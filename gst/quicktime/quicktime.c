@@ -26,6 +26,8 @@
 
 #include "qtdemux.h"
 #include "gstrtpxqtdepay.h"
+#include "gstqtmux.h"
+#include "gstqtmoovrecover.h"
 
 #include <gst/pbutils/pbutils.h>
 
@@ -55,6 +57,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "rtpxqtdepay",
           GST_RANK_MARGINAL, GST_TYPE_RTP_XQT_DEPAY))
+    return FALSE;
+
+  if (!gst_qt_mux_register (plugin))
+    return FALSE;
+  if (!gst_qt_moov_recover_register (plugin))
     return FALSE;
 
   return TRUE;

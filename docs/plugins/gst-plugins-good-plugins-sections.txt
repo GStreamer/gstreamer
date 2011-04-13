@@ -1688,6 +1688,20 @@ gst_qtdemux_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-qtmux</FILE>
+<TITLE>qtmux</TITLE>
+GstQTMux
+<SUBSECTION Standard>
+GstQTMuxClass
+GST_QT_MUX
+GST_QT_MUX_CLASS
+GST_IS_QT_MUX
+GST_IS_QT_MUX_CLASS
+GST_TYPE_QT_MUX
+gst_qt_mux_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rganalysis</FILE>
 <TITLE>rganalysis</TITLE>
 GstRgAnalysis

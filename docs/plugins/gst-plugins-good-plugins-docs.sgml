@@ -134,6 +134,7 @@
     <xi:include href="xml/element-pulsemixer.xml" />
     <xi:include href="xml/element-quarktv.xml" />
     <xi:include href="xml/element-qtdemux.xml" />
+    <xi:include href="xml/element-qtmux.xml" />
     <xi:include href="xml/element-radioactv.xml" />
     <xi:include href="xml/element-revtv.xml" />
     <xi:include href="xml/element-rganalysis.xml" />

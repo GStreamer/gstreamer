@@ -12,7 +12,9 @@ libgstqtdemux_la_LIBADD = \
     $(GST_BASE_LIBS) $(GST_LIBS) $(ZLIB_LIBS)
 libgstqtdemux_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS} 
 libgstqtdemux_la_SOURCES = quicktime.c gstrtpxqtdepay.c \
-	qtdemux.c qtdemux_types.c qtdemux_dump.c qtdemux_lang.c
+	qtdemux.c qtdemux_types.c qtdemux_dump.c qtdemux_lang.c \
+	gstqtmux.c gstqtmoovrecover.c atoms.c atomsrecovery.c descriptors.c \
+	properties.c gstqtmuxmap.c
 libgstqtdemux_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
@@ -23,7 +25,16 @@ noinst_HEADERS = \
 	qtdemux_fourcc.h \
 	qtdemux_lang.h   \
 	qtpalette.h      \
-	gstrtpxqtdepay.h
+	gstrtpxqtdepay.h \
+	gstqtmux.h       \
+	gstqtmoovrecover.h \
+	atoms.h          \
+	atomsrecovery.h  \
+	descriptors.h    \
+	properties.h     \
+	fourcc.h         \
+	ftypcc.h         \
+	gstqtmuxmap.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

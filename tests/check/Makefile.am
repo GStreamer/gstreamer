@@ -134,6 +134,7 @@ check_PROGRAMS = \
 	elements/matroskamux \
 	elements/mpegaudioparse \
 	elements/multifile \
+	elements/qtmux \
 	elements/rganalysis \
 	elements/rglimiter \
 	elements/rgvolume \
@@ -149,6 +150,7 @@ check_PROGRAMS = \
 	elements/y4menc \
 	pipelines/simple-launch-lines \
 	pipelines/effectv \
+	pipelines/tagschecking \
 	pipelines/wavenc \
 	$(check_flac) \
 	$(check_gdkpixbuf) \

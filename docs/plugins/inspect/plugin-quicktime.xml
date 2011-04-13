@@ -10,6 +10,114 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
+      <name>gppmux</name>
+      <longname>3GPP Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>Multiplex audio and video into a 3GPP file</description>
+      <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/AMR, rate=(int)8000, channels=(int)[ 1, 2 ]; audio/AMR-WB, rate=(int)16000, channels=(int)[ 1, 2 ]; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>video_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/quicktime, variant=(string)3gpp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ismlmux</name>
+      <longname>ISML Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>Multiplex audio and video into a ISML file</description>
+      <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>video_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/quicktime, variant=(string)iso</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>mj2mux</name>
+      <longname>MJ2 Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>Multiplex audio and video into a MJ2 file</description>
+      <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-raw-int, width=(int)8, depth=(int)8, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean){ true, false }; audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>video_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>image/x-j2c, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/x-jpc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mj2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>mp4mux</name>
+      <longname>MP4 Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>Multiplex audio and video into a MP4 file</description>
+      <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]; audio/x-alac, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>video_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-mp4-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/quicktime, variant=(string)iso</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>qtdemux</name>
       <longname>QuickTime demuxer</longname>
       <class>Codec/Demuxer</class>
@@ -39,6 +147,42 @@
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>qtmoovrecover</name>
+      <longname>QT Moov Recover</longname>
+      <class>Util</class>
+      <description>Recovers unfinished qtmux files</description>
+      <author>Thiago Santos &lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
+      <pads>
+      </pads>
+    </element>
+    <element>
+      <name>qtmux</name>
+      <longname>QuickTime Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>Multiplex audio and video into a QuickTime file</description>
+      <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-raw-int, width=(int)8, depth=(int)8, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean){ true, false }; audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/x-raw-int, width=(int)24, depth=(int)24, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/x-raw-int, width=(int)32, depth=(int)32, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]; audio/x-adpcm, layout=(string)dvi, block_align=(int)[ 64, 8096 ], channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/x-alaw, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/AMR, rate=(int)8000, channels=(int)[ 1, 2 ]; audio/AMR-WB, rate=(int)16000, channels=(int)[ 1, 2 ]; audio/x-alac, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>video_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-svq, svqversion=(int)3, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dv, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-vp8, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-qt-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/quicktime, variant=(string)apple</details>
         </caps>
       </pads>
     </element>
