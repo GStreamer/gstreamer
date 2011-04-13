@@ -39,6 +39,7 @@ level
 matroskamux
 mpegaudioparse
 multifile
+qtmux
 rganalysis
 rglimiter
 rgvolume
