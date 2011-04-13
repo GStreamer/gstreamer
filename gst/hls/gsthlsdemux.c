@@ -557,15 +557,14 @@ gst_hls_demux_loop (GstHLSDemux * demux)
   }
 
   if (g_queue_is_empty (demux->queue)) {
-    if (demux->end_of_playlist) {
+    if (demux->end_of_playlist)
       goto end_of_playlist;
-    }
-    GST_TASK_WAIT (demux->task);
-  }
 
-  /* Check again if it's the end of the playlist in case we we reached */
-  if (demux->end_of_playlist) {
-    goto end_of_playlist;
+    GST_TASK_WAIT (demux->task);
+    /* If the queue is still empty check again if it's the end of the
+     * playlist in case we reached it after beeing woken up */
+    if (g_queue_is_empty (demux->queue) && demux->end_of_playlist)
+      goto end_of_playlist;
   }
 
   buf = g_queue_pop_head (demux->queue);
