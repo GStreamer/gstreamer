@@ -79,6 +79,7 @@ static void gst_xvidenc_init (GstXvidEnc * xvidenc);
 static void gst_xvidenc_finalize (GObject * object);
 static GstFlowReturn gst_xvidenc_chain (GstPad * pad, GstBuffer * data);
 static gboolean gst_xvidenc_setcaps (GstPad * pad, GstCaps * vscapslist);
+static GstCaps *gst_xvidenc_getcaps (GstPad * pad);
 static void gst_xvidenc_flush_buffers (GstXvidEnc * xvidenc, gboolean send);
 static gboolean gst_xvidenc_handle_sink_event (GstPad * pad, GstEvent * event);
 
@@ -497,6 +498,8 @@ gst_xvidenc_init (GstXvidEnc * xvidenc)
       GST_DEBUG_FUNCPTR (gst_xvidenc_chain));
   gst_pad_set_setcaps_function (xvidenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_xvidenc_setcaps));
+  gst_pad_set_getcaps_function (xvidenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_xvidenc_getcaps));
   gst_pad_set_event_function (xvidenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_xvidenc_handle_sink_event));
 
@@ -792,6 +795,53 @@ gst_xvidenc_setcaps (GstPad * pad, GstCaps * vscaps)
 
   } else                        /* setup did not work out */
     return FALSE;
+}
+
+static GstCaps *
+gst_xvidenc_getcaps (GstPad * pad)
+{
+  GstXvidEnc *xvidenc;
+  GstPad *peer;
+  GstCaps *caps;
+
+  /* If we already have caps return them */
+  if (GST_PAD_CAPS (pad))
+    return GST_PAD_CAPS (pad);
+
+  xvidenc = GST_XVIDENC (gst_pad_get_parent (pad));
+  if (!xvidenc)
+    return gst_caps_new_empty ();
+
+  peer = gst_pad_get_peer (xvidenc->srcpad);
+  if (peer) {
+    const GstCaps *templcaps;
+    GstCaps *peercaps;
+    guint i, n;
+
+    peercaps = gst_pad_get_caps (peer);
+
+    /* Translate peercaps to YUV */
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+
+      gst_structure_set_name (s, "video/x-raw-yuv");
+      gst_structure_remove_field (s, "mpegversion");
+      gst_structure_remove_field (s, "systemstream");
+    }
+
+    templcaps = gst_pad_get_pad_template_caps (pad);
+
+    caps = gst_caps_intersect (peercaps, templcaps);
+    gst_caps_unref (peercaps);
+  } else {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+
+  gst_object_unref (xvidenc);
+
+  return caps;
 }
 
 /* encodes frame according to info in xframe;
