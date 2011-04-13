@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch souphttp location=http://devimages.apple.com/iphone/samples/bipbop/gear1/prog_index.m3u8  ! mpegtsdemux ! decodebin2 ! xvimagesink
+ * gst-launch souphttpsrc location=http://devimages.apple.com/iphone/samples/bipbop/gear4/prog_index.m3u8 ! hlsdemux ! decodebin2 ! ffmpegcolorspace ! videoscale ! autovideosink
  * ]|
  * </refsect2>
  *
