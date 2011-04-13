@@ -2112,6 +2112,10 @@ step_cb (GtkButton * button, gpointer data)
   event = gst_event_new_step (format, amount, rate, flush, FALSE);
 
   res = send_event (event);
+
+  if (!res) {
+    g_print ("Sending step event failed\n");
+  }
 }
 
 static void
@@ -2651,6 +2655,8 @@ read_joystick (GIOChannel * source, GIOCondition condition, gpointer user_data)
     g_print ("error reading joystick, read %u bytes of %u\n",
         (guint) bytes_read, (guint) sizeof (struct js_event));
     return TRUE;
+  } else if (result != G_IO_STATUS_NORMAL) {
+    g_print ("reading from joystick returned status %d", result);
   }
 
   switch (js->type & ~JS_EVENT_INIT) {

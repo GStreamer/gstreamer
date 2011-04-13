@@ -2102,6 +2102,10 @@ step_cb (GtkButton * button, gpointer data)
   event = gst_event_new_step (format, amount, rate, flush, FALSE);
 
   res = send_event (event);
+
+  if (!res) {
+    g_print ("Sending step event failed\n");
+  }
 }
 
 static void

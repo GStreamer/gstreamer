@@ -119,6 +119,7 @@ main (int argc, char *argv[])
 
   gtk_main ();
 
+  g_source_remove (watch_id);
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 
