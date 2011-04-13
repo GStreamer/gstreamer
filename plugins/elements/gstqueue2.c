@@ -699,7 +699,9 @@ update_time_level (GstQueue2 * queue)
   GST_DEBUG_OBJECT (queue, "sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT,
       GST_TIME_ARGS (queue->sinktime), GST_TIME_ARGS (queue->srctime));
 
-  if (queue->sinktime >= queue->srctime)
+  if (queue->sinktime != GST_CLOCK_TIME_NONE
+      && queue->srctime != GST_CLOCK_TIME_NONE
+      && queue->sinktime >= queue->srctime)
     queue->cur_level.time = queue->sinktime - queue->srctime;
   else
     queue->cur_level.time = 0;
