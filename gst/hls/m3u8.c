@@ -475,7 +475,7 @@ gst_m3u8_client_get_duration (GstM3U8Client * client)
     return GST_CLOCK_TIME_NONE;
 
   g_list_foreach (client->current->files, (GFunc) _sum_duration, &duration);
-  return duration;
+  return duration * GST_SECOND;
 }
 
 const gchar *
