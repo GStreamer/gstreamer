@@ -20,9 +20,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/pbutils/encoding-profile.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
@@ -385,6 +392,70 @@ GST_START_TEST (test_reuse)
 
 GST_END_TEST;
 
+static GstEncodingContainerProfile *
+create_qtmux_profile (const gchar * variant)
+{
+  GstEncodingContainerProfile *cprof;
+  GstCaps *caps;
+
+  if (variant == NULL) {
+    caps = gst_caps_new_simple ("video/quicktime", NULL);
+  } else {
+    caps = gst_caps_new_simple ("video/quicktime",
+        "variant", G_TYPE_STRING, variant, NULL);
+  }
+
+  cprof = gst_encoding_container_profile_new ("Name", "blah", caps, NULL);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 16,
+      "depth", G_TYPE_INT, 16, "endianness", G_TYPE_INT, 4321,
+      "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 44100,
+      "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+  gst_encoding_container_profile_add_profile (cprof,
+      GST_ENCODING_PROFILE (gst_encoding_audio_profile_new (caps, NULL, NULL,
+              1)));
+  gst_caps_unref (caps);
+
+  return cprof;
+}
+
+GST_START_TEST (test_encodebin)
+{
+  GstEncodingContainerProfile *cprof;
+  GstElement *enc;
+  GstPad *pad;
+
+  enc = gst_element_factory_make ("encodebin", NULL);
+  if (enc == NULL)
+    return;
+
+  /* Make sure encodebin finds a muxer for a profile with a variant field .. */
+  cprof = create_qtmux_profile ("apple");
+  g_object_set (enc, "profile", cprof, NULL);
+  gst_encoding_profile_unref (cprof);
+
+  /* should have created a pad after setting the profile */
+  pad = gst_element_get_static_pad (enc, "audio_0");
+  fail_unless (pad != NULL);
+  gst_object_unref (pad);
+  gst_object_unref (enc);
+
+  /* ... and for a profile without a variant field */
+  enc = gst_element_factory_make ("encodebin", NULL);
+  cprof = create_qtmux_profile (NULL);
+  g_object_set (enc, "profile", cprof, NULL);
+  gst_encoding_profile_unref (cprof);
+
+  /* should have created a pad after setting the profile */
+  pad = gst_element_get_static_pad (enc, "audio_0");
+  fail_unless (pad != NULL);
+  gst_object_unref (pad);
+  gst_object_unref (enc);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtmux_suite (void)
 {
@@ -398,25 +469,10 @@ qtmux_suite (void)
   tcase_add_test (tc_chain, test_audio_pad_frag);
   tcase_add_test (tc_chain, test_video_pad_frag_streamable);
   tcase_add_test (tc_chain, test_audio_pad_frag_streamable);
-
   tcase_add_test (tc_chain, test_reuse);
+  tcase_add_test (tc_chain, test_encodebin);
 
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = qtmux_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (qtmux)

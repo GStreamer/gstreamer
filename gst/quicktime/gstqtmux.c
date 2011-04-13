@@ -1591,6 +1591,9 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   GST_DEBUG_OBJECT (qtmux, "starting file");
 
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (qtmux->srcpad));
+  /* qtmux has structure with and without variant, remove all but the first */
+  while (gst_caps_get_size (caps) > 1)
+    gst_caps_remove_structure (caps, 1);
   gst_pad_set_caps (qtmux->srcpad, caps);
   gst_caps_unref (caps);
 

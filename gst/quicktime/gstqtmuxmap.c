@@ -149,7 +149,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "qtmux",
         "QuickTime",
         "GstQTMux",
-        GST_STATIC_CAPS ("video/quicktime, variant = (string) apple"),
+        GST_STATIC_CAPS ("video/quicktime, variant = (string) apple; "
+            "video/quicktime"),
         GST_STATIC_CAPS ("video/x-raw-rgb, "
             COMMON_VIDEO_CAPS "; "
             "video/x-raw-yuv, "
