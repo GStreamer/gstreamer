@@ -471,6 +471,7 @@ static gboolean gst_x264_enc_init_encoder (GstX264Enc * encoder);
 static void gst_x264_enc_close_encoder (GstX264Enc * encoder);
 
 static gboolean gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_x264_enc_sink_get_caps (GstPad * pad);
 static gboolean gst_x264_enc_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_x264_enc_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_x264_enc_chain (GstPad * pad, GstBuffer * buf);
@@ -854,6 +855,8 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (encoder->sinkpad,
       GST_DEBUG_FUNCPTR (gst_x264_enc_sink_set_caps));
+  gst_pad_set_getcaps_function (encoder->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_x264_enc_sink_get_caps));
   gst_pad_set_event_function (encoder->sinkpad,
       GST_DEBUG_FUNCPTR (gst_x264_enc_sink_event));
   gst_pad_set_chain_function (encoder->sinkpad,
@@ -1452,6 +1455,53 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   }
 
   return TRUE;
+}
+
+static GstCaps *
+gst_x264_enc_sink_get_caps (GstPad * pad)
+{
+  GstX264Enc *encoder;
+  GstPad *peer;
+  GstCaps *caps;
+
+  /* If we already have caps return them */
+  if (GST_PAD_CAPS (pad))
+    return GST_PAD_CAPS (pad);
+
+  encoder = GST_X264_ENC (gst_pad_get_parent (pad));
+  if (!encoder)
+    return gst_caps_new_empty ();
+
+  peer = gst_pad_get_peer (encoder->srcpad);
+  if (peer) {
+    const GstCaps *templcaps;
+    GstCaps *peercaps;
+    guint i, n;
+
+    peercaps = gst_pad_get_caps (peer);
+
+    /* Translate peercaps to YUV */
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+
+      gst_structure_set_name (s, "video/x-raw-yuv");
+      gst_structure_remove_field (s, "stream-format");
+      gst_structure_remove_field (s, "alignment");
+    }
+
+    templcaps = gst_pad_get_pad_template_caps (pad);
+
+    caps = gst_caps_intersect (peercaps, templcaps);
+    gst_caps_unref (peercaps);
+  } else {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+
+  gst_object_unref (encoder);
+
+  return caps;
 }
 
 static gboolean
