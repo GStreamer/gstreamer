@@ -2153,7 +2153,7 @@ static int glue (get_alpha_info_, RGB_NAME) (const AVPicture * src,
 {
   const unsigned char *p;
   int src_wrap, ret, x, y;
-  unsigned int r, g, b, a;
+  unsigned int G_GNUC_UNUSED r, G_GNUC_UNUSED g, G_GNUC_UNUSED b, a;
 
   p = src->data[0];
   src_wrap = src->linesize[0] - BPP * width;
