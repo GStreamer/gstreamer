@@ -272,11 +272,10 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
   w = 2 * G_PI * (self->lower_frequency / GST_AUDIO_FILTER (self)->format.rate);
   kernel_lp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
-    if (i == len / 2)
+    if (i % 2 == 1 && i == (len - 1) / 2)
       kernel_lp[i] = w;
     else
-      kernel_lp[i] = sin (w * (i - len / 2))
-          / (i - len / 2);
+      kernel_lp[i] = sin (w * (i - (len - 1) / 2)) / (i - (len - 1) / 2);
 
     /* windowing */
     switch (self->window) {
@@ -310,11 +309,11 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
   w = 2 * G_PI * (self->upper_frequency / GST_AUDIO_FILTER (self)->format.rate);
   kernel_hp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
-    if (i == len / 2)
+    if (i % 2 == 1 && i == (len - 1) / 2)
       kernel_hp[i] = w;
     else
-      kernel_hp[i] = sin (w * (i - len / 2))
-          / (i - len / 2);
+      kernel_hp[i] = sin (w * (i - (len - 1) / 2)) / (i - (len - 1) / 2);
+
     /* Windowing */
     switch (self->window) {
       case WINDOW_HAMMING:
@@ -346,7 +345,12 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
   /* do spectral inversion to go from lowpass to highpass */
   for (i = 0; i < len; ++i)
     kernel_hp[i] = -kernel_hp[i];
-  kernel_hp[len / 2] += 1;
+  if (len % 2 == 1) {
+    kernel_hp[(len - 1) / 2] += 1.0;
+  } else {
+    kernel_hp[len / 2 - 1] += 0.5;
+    kernel_hp[len / 2] += 0.5;
+  }
 
   /* combine the two kernels */
   kernel = g_new (gdouble, len);
