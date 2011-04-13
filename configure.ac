@@ -243,6 +243,12 @@ if test "x$HAVE_X11" = "xyes"; then
   AC_DEFINE(HAVE_X11, 1, [Define if you have X11 library])
 fi
 
+dnl exif (used on jifmux tests) ****
+PKG_CHECK_MODULES(EXIF, libexif >= 0.6.16, HAVE_EXIF="yes", HAVE_EXIF="no")
+AC_SUBST(EXIF_LIBS)
+AC_SUBST(EXIF_CFLAGS)
+AM_CONDITIONAL(USE_EXIF, test "x$HAVE_EXIF" = "xyes")
+
 dnl Orc
 ORC_CHECK([0.4.7])
 
@@ -817,14 +823,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_RESINDVD, true)
 AG_GST_CHECK_FEATURE(RESINDVD, [resindvd plugin], resindvd, [
   PKG_CHECK_MODULES(DVDNAV, dvdnav >= 4.1.2 dvdread >= 4.1.2, HAVE_RESINDVD="yes", [
     HAVE_RESINDVD="no"
-  ])
-])
-
-dnl **** exif (used on jifmux tests) ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_EXIF, true)
-AG_GST_CHECK_FEATURE(EXIF, [exif], exif, [
-  PKG_CHECK_MODULES(EXIF, libexif >= 0.6.16, HAVE_EXIF="yes", [
-    HAVE_EXIF="no"
   ])
 ])
 
