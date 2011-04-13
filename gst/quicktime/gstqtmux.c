@@ -198,13 +198,13 @@ enum
 
 #define DEFAULT_MOVIE_TIMESCALE         1000
 #define DEFAULT_TRAK_TIMESCALE          0
-#define DEFAULT_DO_CTTS                 FALSE
+#define DEFAULT_DO_CTTS                 TRUE
 #define DEFAULT_FAST_START              FALSE
 #define DEFAULT_FAST_START_TEMP_FILE    NULL
 #define DEFAULT_MOOV_RECOV_FILE         NULL
 #define DEFAULT_FRAGMENT_DURATION       0
 #define DEFAULT_STREAMABLE              FALSE
-#define DEFAULT_DTS_METHOD              DTS_METHOD_DD
+#define DEFAULT_DTS_METHOD              DTS_METHOD_REORDER
 
 
 static void gst_qt_mux_finalize (GObject * object);
@@ -306,8 +306,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
       g_param_spec_boolean ("presentation-time",
           "Include presentation-time info",
           "Calculate and include presentation/composition time "
-          "(in addition to decoding time) (use with caution)",
-          DEFAULT_DO_CTTS,
+          "(in addition to decoding time)", DEFAULT_DO_CTTS,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DTS_METHOD,
       g_param_spec_enum ("dts-method", "dts-method",
@@ -316,7 +315,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FAST_START,
       g_param_spec_boolean ("faststart", "Format file to faststart",
-          "If the file should be formated for faststart (headers first). ",
+          "If the file should be formatted for faststart (headers first)",
           DEFAULT_FAST_START, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FAST_START_TEMP_FILE,
       g_param_spec_string ("faststart-file", "File to use for storing buffers",
