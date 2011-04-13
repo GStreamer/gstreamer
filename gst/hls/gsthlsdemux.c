@@ -305,7 +305,7 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       demux->cancelled = TRUE;
-      gst_hls_demux_stop_fetcher (demux, TRUE);
+      g_cond_signal (demux->fetcher_cond);
       break;
     default:
       break;
