@@ -745,8 +745,6 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder)
     base_video_decoder->current_frame = NULL;
   }
 
-  base_video_decoder->have_src_caps = FALSE;
-
   GST_OBJECT_LOCK (base_video_decoder);
   GST_BASE_VIDEO_CODEC (base_video_decoder)->earliest_time =
       GST_CLOCK_TIME_NONE;
@@ -1442,7 +1440,7 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   GstCaps *caps;
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
 
-  if (base_video_decoder->have_src_caps)
+  if (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)) != NULL)
     return;
 
   caps = gst_video_format_new_caps (state->format,
@@ -1454,8 +1452,6 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   GST_DEBUG ("setting caps %" GST_PTR_FORMAT, caps);
 
   gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder), caps);
-
-  base_video_decoder->have_src_caps = TRUE;
 
   gst_caps_unref (caps);
 }
@@ -1469,8 +1465,12 @@ gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
   int num_bytes;
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
 
+  gst_base_video_decoder_set_src_caps (base_video_decoder);
+
   num_bytes = gst_video_format_get_size (state->format, state->width,
       state->height);
+  GST_DEBUG ("alloc src buffer caps=%" GST_PTR_FORMAT,
+      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)));
   flow_ret =
       gst_pad_alloc_buffer_and_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
       (base_video_decoder), GST_BUFFER_OFFSET_NONE, num_bytes,
