@@ -118,11 +118,11 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     gboolean key;
 
     gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
-    key = !!(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
+    key = ! !(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
     GST_LOG_OBJECT (demux, "position already mapped to time %" GST_TIME_FORMAT
         ", keyframe %d", GST_TIME_ARGS (time), key);
     /* there is not really a way to delete the existing one */
-    if (time != ts || key != !!keyframe)
+    if (time != ts || key != ! !keyframe)
       GST_DEBUG_OBJECT (demux, "metadata mismatch");
 #endif
     return;
@@ -202,11 +202,14 @@ gst_flv_demux_check_seekability (GstFlvDemux * demux)
   query = gst_query_new_seeking (GST_FORMAT_BYTES);
   if (!gst_pad_peer_query (demux->sinkpad, query)) {
     GST_DEBUG_OBJECT (demux, "seeking query failed");
+    gst_query_unref (query);
     return;
   }
 
   gst_query_parse_seeking (query, NULL, &demux->upstream_seekable,
       &start, &stop);
+
+  gst_query_unref (query);
 
   /* try harder to query upstream size if we didn't get it the first time */
   if (demux->upstream_seekable && stop == -1) {
@@ -2449,9 +2452,9 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used ! */
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
@@ -2615,9 +2618,9 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
     demux->seeking = seeking;
   GST_OBJECT_UNLOCK (demux);
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used */
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     /* Flush start up and downstream to make sure data flow and loops are
