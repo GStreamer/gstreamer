@@ -178,7 +178,7 @@ GST_END_TEST;
         "%f does not match expected %f", ___d, d);                         \
   }
 
-GST_START_TEST (test_muscibrainz_tag_registration)
+GST_START_TEST (test_musicbrainz_tag_registration)
 {
   GstTagList *list;
 
@@ -1622,7 +1622,7 @@ tag_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_muscibrainz_tag_registration);
+  tcase_add_test (tc_chain, test_musicbrainz_tag_registration);
   tcase_add_test (tc_chain, test_parse_extended_comment);
   tcase_add_test (tc_chain, test_vorbis_tags);
   tcase_add_test (tc_chain, test_id3_tags);
