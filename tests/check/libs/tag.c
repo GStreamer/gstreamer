@@ -945,6 +945,8 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
   GDate *date;
   GstDateTime *datetime;
 
+  gst_tag_register_musicbrainz_tags ();
+
   g_value_init (&value, G_TYPE_STRING);
   g_value_set_static_string (&value, "my string");
   do_simple_xmp_tag_serialization_deserialization (GST_TAG_ARTIST, &value);
@@ -1055,6 +1057,16 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
   g_value_set_double (&value, 359.99);
   do_simple_xmp_tag_serialization_deserialization
       (GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, &value);
+
+  g_value_set_double (&value, 0.0);
+  do_simple_xmp_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
+  g_value_set_double (&value, 1.0);
+  do_simple_xmp_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
+  g_value_set_double (&value, -2.5);
+  do_simple_xmp_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
   g_value_unset (&value);
 
   g_value_init (&value, GST_TYPE_DATE);
