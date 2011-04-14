@@ -81,7 +81,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #include <string.h>
@@ -90,23 +90,12 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtpdtmfdepay.h"
 
-#ifndef M_PI
-# define M_PI           3.14159265358979323846  /* pi */
-#endif
-
-
 #define DEFAULT_PACKET_INTERVAL  50     /* ms */
 #define MIN_PACKET_INTERVAL      10     /* ms */
 #define MAX_PACKET_INTERVAL      50     /* ms */
 #define SAMPLE_RATE              8000
 #define SAMPLE_SIZE              16
 #define CHANNELS                 1
-#define MIN_EVENT                0
-#define MAX_EVENT                16
-#define MIN_VOLUME               0
-#define MAX_VOLUME               36
-#define MIN_INTER_DIGIT_INTERVAL 100
-#define MIN_PULSE_DURATION       250
 #define MIN_DUTY_CYCLE           (MIN_INTER_DIGIT_INTERVAL + MIN_PULSE_DURATION)
 
 #define MIN_UNIT_TIME            0

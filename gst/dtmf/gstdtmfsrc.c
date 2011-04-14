@@ -122,10 +122,7 @@
 
 #include <glib.h>
 
-#ifndef M_PI
-#define M_PI           3.14159265358979323846   /* pi */
-#endif
-
+#include "gstdtmfcommon.h"
 
 #include "gstdtmfsrc.h"
 
@@ -136,12 +133,6 @@
 #define DEFAULT_SAMPLE_RATE      8000
 #define SAMPLE_SIZE              16
 #define CHANNELS                 1
-#define MIN_EVENT                0
-#define MAX_EVENT                16
-#define MIN_VOLUME               0
-#define MAX_VOLUME               36
-#define MIN_INTER_DIGIT_INTERVAL 100
-#define MIN_PULSE_DURATION       250
 #define MIN_DUTY_CYCLE           (MIN_INTER_DIGIT_INTERVAL + MIN_PULSE_DURATION)
 
 

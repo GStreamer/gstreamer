@@ -2,6 +2,20 @@
 #ifndef __GST_RTP_DTMF_COMMON_H__
 #define __GST_RTP_DTMF_COMMON_H__
 
+#define MIN_INTER_DIGIT_INTERVAL 100     /* ms */
+#define MIN_PULSE_DURATION       250     /* ms */
+
+#define MIN_VOLUME               0
+#define MAX_VOLUME               36
+
+#define MIN_EVENT                0
+#define MAX_EVENT                16
+#define MIN_EVENT_STRING         "0"
+#define MAX_EVENT_STRING         "16"
+
+#ifndef M_PI
+#define M_PI           3.14159265358979323846  /* pi */
+#endif
 
 typedef struct
 {

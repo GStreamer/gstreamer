@@ -11,7 +11,7 @@ noinst_HEADERS = gstdtmfsrc.h \
                  gstdtmfdetect.h \
                  gstrtpdtmfsrc.h \
                  gstrtpdtmfdepay.h \
-                 gstrtpdtmfcommon.h \
+                 gstdtmfcommon.h \
                  tone_detect.h
 
 libgstdtmf_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
