@@ -189,10 +189,8 @@ static void
 gst_siddec_class_init (GstSidDec * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   parent_class = GST_ELEMENT_CLASS (g_type_class_peek_parent (klass));
 

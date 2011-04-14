@@ -1667,7 +1667,6 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
 #endif
   int encoder_return;
   GstFlowReturn ret;
-  GstClockTime timestamp;
   GstClockTime duration;
   guint8 *data;
   GstEvent *forcekeyunit_event = NULL;
@@ -1723,7 +1722,6 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
 
   in_buf = g_queue_pop_head (encoder->delay);
   if (in_buf) {
-    timestamp = GST_BUFFER_TIMESTAMP (in_buf);
     duration = GST_BUFFER_DURATION (in_buf);
     gst_buffer_unref (in_buf);
   } else {
