@@ -1015,12 +1015,11 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
   GstBuffer *buf;
   guint avail;
   const gchar *next_fragment_uri;
+  GstClockTime duration;
   gboolean discont;
 
-  next_fragment_uri =
-      gst_m3u8_client_get_next_fragment (demux->client, &discont);
-
-  if (!next_fragment_uri) {
+  if (!gst_m3u8_client_get_next_fragment (demux->client, &discont,
+          &next_fragment_uri, &duration)) {
     GST_INFO_OBJECT (demux, "This playlist doesn't contain more fragments");
     demux->end_of_playlist = TRUE;
     GST_TASK_SIGNAL (demux->task);
@@ -1034,6 +1033,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean retry)
 
   avail = gst_adapter_available (demux->download);
   buf = gst_adapter_take_buffer (demux->download, avail);
+  GST_BUFFER_DURATION (buf) = duration;
 
   if (G_UNLIKELY (demux->input_caps == NULL)) {
     demux->input_caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);

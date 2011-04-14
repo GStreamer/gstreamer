@@ -432,29 +432,31 @@ _find_next (GstM3U8MediaFile * file, GstM3U8Client * client)
   return TRUE;
 }
 
-const gchar *
+gboolean
 gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
-    gboolean * discontinuity)
+    gboolean * discontinuity, const gchar ** uri, GstClockTime * duration)
 {
   GList *l;
   GstM3U8MediaFile *file;
 
-  g_return_val_if_fail (client != NULL, NULL);
-  g_return_val_if_fail (client->current != NULL, NULL);
-  g_return_val_if_fail (discontinuity != NULL, NULL);
+  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (client->current != NULL, FALSE);
+  g_return_val_if_fail (discontinuity != NULL, FALSE);
 
   GST_DEBUG ("Looking for fragment %d", client->sequence);
   l = g_list_find_custom (client->current->files, client,
       (GCompareFunc) _find_next);
   if (l == NULL)
-    return NULL;
+    return FALSE;
 
   file = GST_M3U8_MEDIA_FILE (l->data);
 
   *discontinuity = client->sequence != file->sequence;
   client->sequence = file->sequence + 1;
 
-  return file->uri;
+  *uri = file->uri;
+  *duration = file->duration * GST_SECOND;
+  return TRUE;
 }
 
 static void

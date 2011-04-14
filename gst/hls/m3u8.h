@@ -75,8 +75,8 @@ GstM3U8Client *gst_m3u8_client_new (const gchar * uri);
 void gst_m3u8_client_free (GstM3U8Client * client);
 gboolean gst_m3u8_client_update (GstM3U8Client * client, gchar * data);
 void gst_m3u8_client_set_current (GstM3U8Client * client, GstM3U8 * m3u8);
-const gchar *gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
-    gboolean * discontinuity);
+gboolean gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
+    gboolean * discontinuity, const gchar ** uri, GstClockTime * duration);
 GstClockTime gst_m3u8_client_get_duration (GstM3U8Client * client);
 const gchar *gst_m3u8_client_get_uri(GstM3U8Client * client);
 gboolean gst_m3u8_client_has_variant_playlist(GstM3U8Client * client);
