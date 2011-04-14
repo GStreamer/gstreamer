@@ -430,13 +430,6 @@ gst_csp_base_init (gpointer klass)
 void
 gst_csp_dispose (GObject * object)
 {
-  GstCsp *csp;
-
-  g_return_if_fail (GST_IS_CSP (object));
-  csp = GST_CSP (object);
-
-  /* clean up as possible.  may be called multiple times */
-
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
