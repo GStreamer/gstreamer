@@ -22,6 +22,11 @@
 #ifndef __CAMERABIN_PREVIEW_H_
 #define __CAMERABIN_PREVIEW_H_
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "camera bin preview is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <gst/gst.h>
 
 typedef struct
