@@ -282,6 +282,8 @@ GST_START_TEST (test_request_pads_named)
   GST_LOG ("Cleaning up");
   gst_object_unref (sink1);
   gst_object_unref (sink2);
+  gst_object_unref (sink3);
+  gst_object_unref (sink4);
   gst_object_unref (mq);
 }
 
