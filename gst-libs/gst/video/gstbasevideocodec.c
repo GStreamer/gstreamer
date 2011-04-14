@@ -130,11 +130,6 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 static void
 gst_base_video_codec_finalize (GObject * object)
 {
-  GstBaseVideoCodec *base_video_codec;
-
-  g_return_if_fail (GST_IS_BASE_VIDEO_CODEC (object));
-  base_video_codec = GST_BASE_VIDEO_CODEC (object);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 

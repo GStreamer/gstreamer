@@ -149,14 +149,7 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 static void
 gst_base_video_encoder_finalize (GObject * object)
 {
-  GstBaseVideoEncoder *base_video_encoder;
-  GstBaseVideoEncoderClass *base_video_encoder_class;
-
-  g_return_if_fail (GST_IS_BASE_VIDEO_ENCODER (object));
-  base_video_encoder = GST_BASE_VIDEO_ENCODER (object);
-  base_video_encoder_class = GST_BASE_VIDEO_ENCODER_GET_CLASS (object);
-
-  GST_DEBUG ("finalize");
+  GST_DEBUG_OBJECT (object, "finalize");
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -255,12 +248,9 @@ static gboolean
 gst_base_video_encoder_src_event (GstPad * pad, GstEvent * event)
 {
   GstBaseVideoEncoder *base_video_encoder;
-  GstBaseVideoEncoderClass *base_video_encoder_class;
   gboolean ret = FALSE;
 
   base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
-  base_video_encoder_class =
-      GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:

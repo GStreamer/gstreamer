@@ -178,11 +178,8 @@ static void
 gst_base_video_decoder_finalize (GObject * object)
 {
   GstBaseVideoDecoder *base_video_decoder;
-  GstBaseVideoDecoderClass *base_video_decoder_class;
 
-  g_return_if_fail (GST_IS_BASE_VIDEO_DECODER (object));
   base_video_decoder = GST_BASE_VIDEO_DECODER (object);
-  base_video_decoder_class = GST_BASE_VIDEO_DECODER_GET_CLASS (object);
 
   gst_base_video_decoder_reset (base_video_decoder);
 
@@ -980,7 +977,6 @@ GstFlowReturn
 gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrame * frame)
 {
-  GstBaseVideoDecoderClass *base_video_decoder_class;
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
   GstBuffer *src_buffer;
 
@@ -989,9 +985,6 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
       g_list_length (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames),
       gst_adapter_available (base_video_decoder->input_adapter),
       gst_adapter_available (base_video_decoder->output_adapter));
-
-  base_video_decoder_class =
-      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   GST_DEBUG ("finish frame sync=%d pts=%" GST_TIME_FORMAT, frame->is_sync_point,
       GST_TIME_ARGS (frame->presentation_timestamp));
@@ -1135,13 +1128,7 @@ GstFlowReturn
 gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrame * frame)
 {
-  GstBaseVideoDecoderClass *base_video_decoder_class;
-
   GST_DEBUG ("finish frame");
-
-  base_video_decoder_class =
-      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
-
   GST_DEBUG ("finish frame sync=%d pts=%" GST_TIME_FORMAT, frame->is_sync_point,
       GST_TIME_ARGS (frame->presentation_timestamp));
 
