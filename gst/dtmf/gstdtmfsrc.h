@@ -81,6 +81,8 @@ struct _GstDTMFSrc
   gboolean paused;
   GstClockID clockid;
 
+  GstClockTime last_stop;
+
   gint sample_rate;
 };
 
