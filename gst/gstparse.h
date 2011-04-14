@@ -75,6 +75,8 @@ typedef enum
   GST_PARSE_FLAG_FATAL_ERRORS = (1 << 0)
 } GstParseFlags;
 
+#define GST_TYPE_PARSE_CONTEXT (gst_parse_context_get_type())
+
 /**
  * GstParseContext:
  *
@@ -86,6 +88,7 @@ typedef struct _GstParseContext GstParseContext;
 
 /* create, process and free a parse context */
 
+GType             gst_parse_context_get_type (void);
 GstParseContext * gst_parse_context_new (void);
 
 gchar          ** gst_parse_context_get_missing_elements (GstParseContext * context);

@@ -44,6 +44,42 @@
 #include "parse/types.h"
 #endif
 
+static void
+_prepend_missing_element (gchar * element, GList ** list)
+{
+  *list = g_list_prepend (*list, g_strdup (element));
+}
+
+static GstParseContext *
+gst_parse_context_copy (const GstParseContext * context)
+{
+  GstParseContext *ret = NULL;
+#ifndef GST_DISABLE_PARSE
+
+  ret = gst_parse_context_new ();
+  if (context) {
+    g_list_foreach (context->missing_elements, (GFunc) _prepend_missing_element,
+        &ret->missing_elements);
+    ret->missing_elements = g_list_reverse (ret->missing_elements);
+  }
+#endif
+  return ret;
+}
+
+GType
+gst_parse_context_get_type (void)
+{
+  static GType type = 0;
+
+  if (G_UNLIKELY (type == 0)) {
+    type = g_boxed_type_register_static ("GstParseContext",
+        (GBoxedCopyFunc) gst_parse_context_copy,
+        (GBoxedFreeFunc) gst_parse_context_free);
+  }
+
+  return type;
+}
+
 /**
  * gst_parse_error_quark:
  *
