@@ -195,6 +195,12 @@ gst_camerabin_image_dispose (GstCameraBinImage * img)
     img->enc = NULL;
   }
 
+  if (img->csp) {
+    GST_LOG_OBJECT (img, "disposing %s with refcount %d",
+        GST_ELEMENT_NAME (img->enc), GST_OBJECT_REFCOUNT_VALUE (img->csp));
+    gst_object_unref (img->csp);
+    img->csp = NULL;
+  }
 
   /* Note: if imagebin was never set to READY state the
      ownership of elements created by application were never
