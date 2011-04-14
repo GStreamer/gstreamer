@@ -334,6 +334,7 @@ gst_rtp_dtmf_src_handle_dtmf_event (GstRTPDTMFSrc * dtmfsrc,
   gint event_type;
   gboolean start;
   gint method;
+  GstClockTime last_stop;
 
   if (!gst_structure_get_int (event_structure, "type", &event_type) ||
       !gst_structure_get_boolean (event_structure, "start", &start) ||
@@ -345,6 +346,13 @@ gst_rtp_dtmf_src_handle_dtmf_event (GstRTPDTMFSrc * dtmfsrc,
       goto failure;
     }
   }
+
+  GST_OBJECT_LOCK (dtmfsrc);
+  if (gst_structure_get_clock_time (event_structure, "last-stop", &last_stop))
+    dtmfsrc->last_stop = last_stop;
+  else
+    dtmfsrc->last_stop = GST_CLOCK_TIME_NONE;
+  GST_OBJECT_UNLOCK (dtmfsrc);
 
   if (start) {
     gint event_number;
@@ -491,17 +499,27 @@ gst_rtp_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc * dtmfsrc)
 {
-  GstClock *clock;
+  GstClockTime last_stop;
 
-  clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
-  if (clock == NULL)
-    return FALSE;
+  GST_OBJECT_LOCK (dtmfsrc);
+  last_stop = dtmfsrc->last_stop;
+  GST_OBJECT_UNLOCK (dtmfsrc);
 
-  dtmfsrc->timestamp = gst_clock_get_time (clock)
-      + (MIN_INTER_DIGIT_INTERVAL * GST_MSECOND)
-      - gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
-  dtmfsrc->start_timestamp = dtmfsrc->timestamp;
-  gst_object_unref (clock);
+  if (GST_CLOCK_TIME_IS_VALID (last_stop)) {
+    dtmfsrc->timestamp = last_stop;
+    dtmfsrc->start_timestamp = last_stop;
+  } else {
+    GstClock *clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
+
+    if (clock == NULL)
+      return FALSE;
+
+    dtmfsrc->timestamp = gst_clock_get_time (clock)
+        + (MIN_INTER_DIGIT_INTERVAL * GST_MSECOND)
+        - gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
+    dtmfsrc->start_timestamp = dtmfsrc->timestamp;
+    gst_object_unref (clock);
+  }
 
   dtmfsrc->rtp_timestamp = dtmfsrc->ts_base +
       gst_util_uint64_scale_int (gst_segment_to_running_time (&GST_BASE_SRC
