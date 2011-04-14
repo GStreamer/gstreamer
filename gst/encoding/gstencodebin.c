@@ -1559,6 +1559,7 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
   /* Capsfilter - outqueue */
   gst_element_set_state (sgroup->outfilter, GST_STATE_NULL);
   gst_element_unlink (sgroup->outfilter, sgroup->outqueue);
+  gst_element_set_state (sgroup->outqueue, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (ebin), sgroup->outqueue);
 
   /* streamcombiner - parser - capsfilter */
@@ -1566,6 +1567,7 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
     gst_element_set_state (sgroup->parser, GST_STATE_NULL);
     gst_element_unlink (sgroup->parser, sgroup->outfilter);
     gst_element_unlink (sgroup->combiner, sgroup->parser);
+    gst_bin_remove ((GstBin *) ebin, sgroup->parser);
   }
 
   /* Sink Ghostpad */
@@ -1606,6 +1608,8 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
       gst_iterator_resync (it);
     }
     gst_iterator_free (it);
+    gst_element_set_state (sgroup->combiner, GST_STATE_NULL);
+    gst_bin_remove ((GstBin *) ebin, sgroup->combiner);
   }
 
   if (sgroup->splitter) {
@@ -1616,14 +1620,22 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
       gst_iterator_resync (it);
     }
     gst_iterator_free (it);
+
+    gst_element_set_state (sgroup->splitter, GST_STATE_NULL);
+    gst_bin_remove ((GstBin *) ebin, sgroup->splitter);
   }
 
   if (sgroup->inqueue)
     gst_bin_remove ((GstBin *) ebin, sgroup->inqueue);
+
   if (sgroup->encoder)
     gst_bin_remove ((GstBin *) ebin, sgroup->encoder);
+
   if (sgroup->smartencoder)
     gst_bin_remove ((GstBin *) ebin, sgroup->smartencoder);
+
+  if (sgroup->outfilter)
+    gst_bin_remove ((GstBin *) ebin, sgroup->outfilter);
 
   g_slice_free (StreamGroup, sgroup);
 }
@@ -1653,6 +1665,7 @@ gst_encode_bin_tear_down_profile (GstEncodeBin * ebin)
 
   /* Remove muxer if present */
   if (ebin->muxer) {
+    gst_element_set_state (ebin->muxer, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (ebin), ebin->muxer);
     ebin->muxer = NULL;
   }
