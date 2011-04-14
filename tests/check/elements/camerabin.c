@@ -420,6 +420,7 @@ validate_taglist_foreach (const GstTagList * list, const gchar * tag,
 static void
 extract_jpeg_tags (const gchar * filename, gint num)
 {
+  guint source;
   GstBus *bus;
   GMainLoop *loop = g_main_loop_new (NULL, FALSE);
   const gchar *filepath = make_test_file_name (filename, num);
@@ -432,12 +433,14 @@ extract_jpeg_tags (const gchar * filename, gint num)
   g_free (pipeline_str);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
+  source = gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
+  g_main_loop_unref (loop);
+  g_source_remove (source);
   gst_object_unref (bus);
   gst_object_unref (pipeline);
 }
