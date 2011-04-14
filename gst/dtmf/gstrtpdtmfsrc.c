@@ -130,15 +130,6 @@
 #define DEFAULT_TIMESTAMP_OFFSET -1
 #define DEFAULT_SEQNUM_OFFSET    -1
 #define DEFAULT_CLOCK_RATE       8000
-#define MIN_EVENT                0
-#define MAX_EVENT                16
-#define MIN_EVENT_STRING         "0"
-#define MAX_EVENT_STRING         "16"
-#define MIN_VOLUME               0
-#define MAX_VOLUME               36
-
-#define MIN_INTER_DIGIT_INTERVAL 50     /* ms */
-#define MIN_PULSE_DURATION       70     /* ms */
 
 #define DEFAULT_PACKET_REDUNDANCY 1
 #define MIN_PACKET_REDUNDANCY 1

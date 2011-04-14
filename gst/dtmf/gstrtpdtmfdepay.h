@@ -27,7 +27,7 @@
 #include <gst/base/gstadapter.h>
 #include <gst/rtp/gstbasertpdepayload.h>
 
-#include "gstrtpdtmfcommon.h"
+#include "gstdtmfcommon.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_RTP_DTMF_DEPAY \

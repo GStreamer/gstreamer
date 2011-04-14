@@ -29,7 +29,7 @@
 #include <gst/base/gstbasesrc.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include "gstrtpdtmfcommon.h"
+#include "gstdtmfcommon.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_RTP_DTMF_SRC		(gst_rtp_dtmf_src_get_type())
