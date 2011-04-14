@@ -23,10 +23,7 @@ void
 gst_replace_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstReplace *replace;
-
-  g_return_if_fail (GST_IS_REPLACE (object));
-  replace = GST_REPLACE (object);
+  /* GstReplace *replace = GST_REPLACE (object); */
 
   switch (property_id) {
     default:
@@ -39,10 +36,7 @@ void
 gst_replace_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstReplace *replace;
-
-  g_return_if_fail (GST_IS_REPLACE (object));
-  replace = GST_REPLACE (object);
+  /* GstReplace *replace = GST_REPLACE (object); */
 
   switch (property_id) {
     default:
@@ -54,10 +48,7 @@ gst_replace_get_property (GObject * object, guint property_id,
 void
 gst_replace_dispose (GObject * object)
 {
-  GstReplace *replace;
-
-  g_return_if_fail (GST_IS_REPLACE (object));
-  replace = GST_REPLACE (object);
+  /* GstReplace *replace = GST_REPLACE (object); */
 
   /* clean up as possible.  may be called multiple times */
 
@@ -67,10 +58,7 @@ gst_replace_dispose (GObject * object)
 void
 gst_replace_finalize (GObject * object)
 {
-  GstReplace *replace;
-
-  g_return_if_fail (GST_IS_REPLACE (object));
-  replace = GST_REPLACE (object);
+  /* GstReplace *replace = GST_REPLACE (object); */
 
   /* clean up object here */
 
