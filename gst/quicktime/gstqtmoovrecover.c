@@ -351,9 +351,8 @@ gst_qt_moov_recover_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       qtmr->task = gst_task_create (gst_qt_moov_recover_run, qtmr);
-      qtmr->task_mutex = g_new (GStaticRecMutex, 1);
-      g_static_rec_mutex_init (qtmr->task_mutex);
-      gst_task_set_lock (qtmr->task, qtmr->task_mutex);
+      g_static_rec_mutex_init (&qtmr->task_mutex);
+      gst_task_set_lock (qtmr->task, &qtmr->task_mutex);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       gst_task_start (qtmr->task);
@@ -373,7 +372,7 @@ gst_qt_moov_recover_change_state (GstElement * element,
       g_assert (gst_task_get_state (qtmr->task) == GST_TASK_STOPPED);
       gst_object_unref (qtmr->task);
       qtmr->task = NULL;
-      g_static_rec_mutex_free (qtmr->task_mutex);
+      g_static_rec_mutex_free (&qtmr->task_mutex);
       break;
     default:
       break;
