@@ -139,6 +139,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstimagefreeze.so
 %{_libdir}/gstreamer-%{majorminor}/libgstshapewipe.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideofilter.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaudioparsers.so
 
 # sys plugins
 @USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
