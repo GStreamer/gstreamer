@@ -3642,6 +3642,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   GstPlayBin *playbin;
+  gboolean do_save = FALSE;
 
   playbin = GST_PLAY_BIN (element);
 
@@ -3660,6 +3661,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    async_down:
       /* FIXME unlock our waiting groups */
       GST_LOG_OBJECT (playbin, "setting shutdown flag");
       g_atomic_int_set (&playbin->shutdown, 1);
@@ -3673,6 +3675,13 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       GST_PLAY_BIN_DYN_UNLOCK (playbin);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      /* we go async to PAUSED, so if that fails, we never make it to PAUSED
+       * an no state change PAUSED to READY passes here,
+       * though it is a nice-to-have ... */
+      if (!g_atomic_int_get (&playbin->shutdown)) {
+        do_save = TRUE;
+        goto async_down;
+      }
       memset (&playbin->duration, 0, sizeof (playbin->duration));
 
       /* unlock so that all groups go to NULL */
@@ -3699,6 +3708,9 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
     {
       guint i;
 
+      /* also do missed state change down to READY */
+      if (do_save)
+        save_current_group (playbin);
       /* Deactive the groups, set the uridecodebins to NULL
        * and unref them.
        */
