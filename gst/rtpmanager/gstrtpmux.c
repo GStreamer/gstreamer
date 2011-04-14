@@ -107,6 +107,9 @@ static void gst_rtp_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_rtp_mux_dispose (GObject * object);
 
+static gboolean gst_rtp_mux_src_event_real (GstRTPMux *rtp_mux,
+    GstEvent * event);
+
 GST_BOILERPLATE (GstRTPMux, gst_rtp_mux, GstElement, GST_TYPE_ELEMENT);
 
 static void
@@ -136,6 +139,8 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
   gobject_class->get_property = gst_rtp_mux_get_property;
   gobject_class->set_property = gst_rtp_mux_set_property;
   gobject_class->dispose = gst_rtp_mux_dispose;
+
+  klass->src_event = gst_rtp_mux_src_event_real;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_TIMESTAMP_OFFSET, g_param_spec_int ("timestamp-offset",
@@ -183,16 +188,30 @@ restart:
 static gboolean
 gst_rtp_mux_src_event (GstPad * pad, GstEvent * event)
 {
-  GstElement *rtp_mux;
+  GstRTPMux *rtp_mux;
+  GstRTPMuxClass *klass;
+  gboolean ret = FALSE;
+
+  rtp_mux = (GstRTPMux *) gst_pad_get_parent_element (pad);
+  g_return_val_if_fail (rtp_mux != NULL, FALSE);
+  klass = GST_RTP_MUX_GET_CLASS (rtp_mux);
+
+  ret = klass->src_event (rtp_mux, event);
+
+  gst_object_unref (rtp_mux);
+
+  return ret;
+}
+
+static gboolean
+gst_rtp_mux_src_event_real (GstRTPMux *rtp_mux, GstEvent * event)
+{
   GstIterator *iter;
   GstPad *sinkpad;
   gboolean result = FALSE;
   gboolean done = FALSE;
 
-  rtp_mux = gst_pad_get_parent_element (pad);
-  g_return_val_if_fail (rtp_mux != NULL, FALSE);
-
-  iter = gst_element_iterate_sink_pads (rtp_mux);
+  iter = gst_element_iterate_sink_pads (GST_ELEMENT (rtp_mux));
 
   while (!done) {
     switch (gst_iterator_next (iter, (gpointer) & sinkpad)) {
@@ -213,7 +232,6 @@ gst_rtp_mux_src_event (GstPad * pad, GstEvent * event)
     }
   }
   gst_iterator_free (iter);
-  gst_object_unref (rtp_mux);
   gst_event_unref (event);
 
   return result;
@@ -236,6 +254,7 @@ gst_rtp_mux_init (GstRTPMux * object, GstRTPMuxClass * g_class)
   object->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
 
   object->segment_pending = TRUE;
+  object->last_stop = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -394,6 +413,20 @@ gst_rtp_mux_chain_list (GstPad * pad, GstBufferList * bufferlist)
       break;
 
     gst_buffer_list_iterator_take (it, rtpbuf);
+
+    do {
+      if (GST_BUFFER_DURATION_IS_VALID (rtpbuf) &&
+          GST_BUFFER_TIMESTAMP_IS_VALID (rtpbuf))
+        rtp_mux->last_stop = GST_BUFFER_TIMESTAMP (rtpbuf) +
+            GST_BUFFER_DURATION (rtpbuf);
+      else
+        rtp_mux->last_stop = GST_CLOCK_TIME_NONE;
+
+      gst_buffer_list_iterator_take (it, rtpbuf);
+
+    } while ((rtpbuf = gst_buffer_list_iterator_next (it)) != NULL);
+
+
   }
   gst_buffer_list_iterator_free (it);
 
@@ -456,15 +489,25 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 
   drop = !process_buffer_locked (rtp_mux, padpriv, buffer);
 
-  if (!drop && rtp_mux->segment_pending) {
-    /*
-     * We set the start at 0, because we re-timestamps to the running time
-     */
-    newseg_event = gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
-        GST_FORMAT_TIME, 0, -1, 0);
+  if (!drop) {
+    if (rtp_mux->segment_pending) {
+      /*
+       * We set the start at 0, because we re-timestamps to the running time
+       */
+      newseg_event = gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
+          GST_FORMAT_TIME, 0, -1, 0);
 
-    rtp_mux->segment_pending = FALSE;
+      rtp_mux->segment_pending = FALSE;
+    }
+
+    if (GST_BUFFER_DURATION_IS_VALID (buffer) &&
+        GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+      rtp_mux->last_stop = GST_BUFFER_TIMESTAMP (buffer) +
+          GST_BUFFER_DURATION (buffer);
+    else
+      rtp_mux->last_stop = GST_CLOCK_TIME_NONE;
   }
+
   GST_OBJECT_UNLOCK (rtp_mux);
 
   if (newseg_event)
@@ -709,6 +752,7 @@ gst_rtp_mux_sink_event (GstPad * pad, GstEvent * event)
       GstRTPMuxPadPrivate *padpriv;
 
       GST_OBJECT_LOCK (mux);
+      mux->last_stop = GST_CLOCK_TIME_NONE;
       mux->segment_pending = TRUE;
       padpriv = gst_pad_get_element_private (pad);
       if (padpriv)
@@ -800,6 +844,8 @@ gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
     rtp_mux->ts_base = g_random_int ();
   else
     rtp_mux->ts_base = rtp_mux->ts_offset;
+
+  rtp_mux->last_stop = GST_CLOCK_TIME_NONE;
 
   GST_DEBUG_OBJECT (rtp_mux, "set clock-base to %u", rtp_mux->ts_base);
 
