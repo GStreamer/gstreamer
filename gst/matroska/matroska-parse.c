@@ -228,8 +228,7 @@ gst_matroska_parse_init (GstMatroskaParse * parse,
   gst_pad_set_query_function (parse->srcpad,
       GST_DEBUG_FUNCPTR (gst_matroska_parse_handle_src_query));
   gst_pad_use_fixed_caps (parse->srcpad);
-  gst_pad_set_caps (parse->srcpad, gst_caps_new_simple ("video/x-matroska",
-          NULL));
+
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 
   /* initial stream no. */
