@@ -312,7 +312,6 @@ gst_rtp_asf_pay_handle_packet (GstRtpAsfPay * rtpasfpay, GstBuffer * buffer)
 static GstFlowReturn
 gst_rtp_asf_pay_parse_headers (GstRtpAsfPay * rtpasfpay)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
   gchar *maxps;
   g_return_val_if_fail (rtpasfpay->headers, GST_FLOW_ERROR);
 
@@ -346,9 +345,11 @@ gst_rtp_asf_pay_parse_headers (GstRtpAsfPay * rtpasfpay)
   return GST_FLOW_OK;
 
 error:
-  ret = GST_FLOW_ERROR;
-  GST_ERROR_OBJECT (rtpasfpay, "Error while parsing headers");
-  return GST_FLOW_ERROR;
+  {
+    GST_ELEMENT_ERROR (rtpasfpay, STREAM, DECODE, (NULL),
+        ("Error parsing headers"));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn

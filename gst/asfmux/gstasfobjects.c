@@ -520,6 +520,11 @@ gboolean
 gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
     gboolean trust_delta_flag, guint packet_size)
 {
+/* Might be useful in future:
+  guint8 rep_data_len_type;
+  guint8 mo_number_len_type;
+  guint8 mo_offset_type;
+*/
   GstByteReader *reader;
   gboolean ret = TRUE;
   guint8 first = 0;
@@ -528,9 +533,6 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
   guint8 packet_len_type;
   guint8 padding_len_type;
   guint8 seq_len_type;
-  guint8 rep_data_len_type;
-  guint8 mo_number_len_type;
-  guint8 mo_offset_type;
   gboolean mult_payloads;
   guint32 packet_len;
   guint32 padd_len;
@@ -587,9 +589,12 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
 
   if (!gst_byte_reader_get_uint8 (reader, &aux))
     goto error;
+
+/*
   rep_data_len_type = aux & 0x3;
   mo_offset_type = (aux >> 2) & 0x3;
   mo_number_len_type = (aux >> 4) & 0x3;
+*/
 
   /* gets the fields lengths */
   GST_LOG ("Getting packet and padding length");
