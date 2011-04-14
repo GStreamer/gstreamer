@@ -94,6 +94,8 @@ struct _GstRTPDTMFSrc
   guint16 packet_redundancy;
   guint32 clock_rate;
 
+  GstClockTime last_stop;
+
   gboolean dirty;
   guint16 redundancy_count;
 };
