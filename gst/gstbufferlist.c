@@ -425,6 +425,33 @@ gst_buffer_list_get (GstBufferList * list, guint group, guint idx)
   return NULL;
 }
 
+static GstBufferListIterator *
+gst_buffer_list_iterator_copy (const GstBufferListIterator * it)
+{
+  GstBufferListIterator *ret;
+
+  ret = g_slice_new (GstBufferListIterator);
+  ret->list = it->list;
+  ret->next = it->next;
+  ret->last_returned = it->last_returned;
+
+  return ret;
+}
+
+GType
+gst_buffer_list_iterator_get_type (void)
+{
+  static GType type = 0;
+
+  if (G_UNLIKELY (type == 0)) {
+    type = g_boxed_type_register_static ("GstBufferListIterator",
+        (GBoxedCopyFunc) gst_buffer_list_iterator_copy,
+        (GBoxedFreeFunc) gst_buffer_list_iterator_free);
+  }
+
+  return type;
+}
+
 /**
  * gst_buffer_list_iterate:
  * @list: a #GstBufferList

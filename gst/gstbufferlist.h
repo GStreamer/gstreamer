@@ -35,6 +35,8 @@ G_BEGIN_DECLS
 #define GST_BUFFER_LIST_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BUFFER_LIST, GstBufferListClass))
 #define GST_BUFFER_LIST_CAST(obj) ((GstBufferList *)obj)
 
+#define GST_TYPE_BUFFER_LIST_ITERATOR (gst_buffer_list_iterator_get_type ())
+
 typedef struct _GstBufferList GstBufferList;
 typedef struct _GstBufferListClass GstBufferListClass;
 typedef struct _GstBufferListIterator GstBufferListIterator;
@@ -215,6 +217,7 @@ void                     gst_buffer_list_foreach               (GstBufferList *l
 GstBuffer *              gst_buffer_list_get                   (GstBufferList *list, guint group, guint idx);
 
 /* iterator */
+GType                    gst_buffer_list_iterator_get_type     (void);
 GstBufferListIterator *  gst_buffer_list_iterate               (GstBufferList *list);
 void                     gst_buffer_list_iterator_free         (GstBufferListIterator *it);
 

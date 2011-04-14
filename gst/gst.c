@@ -756,6 +756,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   _gst_event_initialize ();
   _gst_buffer_initialize ();
   _gst_buffer_list_initialize ();
+  gst_buffer_list_iterator_get_type ();
   _gst_message_initialize ();
   _gst_tag_initialize ();
   gst_parse_context_get_type ();
