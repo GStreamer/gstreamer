@@ -203,6 +203,15 @@ G_BEGIN_DECLS
 #define GST_TAG_CAPTURING_EXPOSURE_MODE       "capturing-exposure-mode"
 
 /**
+ * GST_TAG_CAPTURING_EXPOSURE_COMPENSATION:
+ *
+ * Exposure compensation using when capturing an image in EV. (double)
+ *
+ * Since: 0.10.33
+ */
+#define GST_TAG_CAPTURING_EXPOSURE_COMPENSATION "capturing-exposure-compensation"
+
+/**
  * GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE:
  *
  * Scene mode used when capturing an image. (string)

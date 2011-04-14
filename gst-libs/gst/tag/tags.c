@@ -133,6 +133,10 @@ gst_tag_register_tags_internal (gpointer unused)
       G_TYPE_STRING, _("capturing exposure mode"),
       _("The exposure mode used when capturing an image"), NULL);
 
+  gst_tag_register (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("capturing exposure compensation"),
+      _("The exposure compensation used when capturing an image"), NULL);
+
   gst_tag_register (GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("capturing scene capture type"),
       _("The scene capture mode used when capturing an image"), NULL);
