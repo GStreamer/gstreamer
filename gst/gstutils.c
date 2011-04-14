@@ -1286,9 +1286,13 @@ gst_element_factory_can_accept_all_caps_in_direction (GstElementFactory *
     GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
 
     if (template->direction == direction) {
-      if (gst_caps_is_always_compatible (caps,
-              gst_static_caps_get (&template->static_caps)))
+      GstCaps *templcaps = gst_static_caps_get (&template->static_caps);
+
+      if (gst_caps_is_always_compatible (caps, templcaps)) {
+        gst_caps_unref (templcaps);
         return TRUE;
+      }
+      gst_caps_unref (templcaps);
     }
     templates = g_list_next (templates);
   }
@@ -1311,9 +1315,13 @@ gst_element_factory_can_accept_any_caps_in_direction (GstElementFactory *
     GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
 
     if (template->direction == direction) {
-      if (gst_caps_can_intersect (caps,
-              gst_static_caps_get (&template->static_caps)))
+      GstCaps *templcaps = gst_static_caps_get (&template->static_caps);
+
+      if (gst_caps_can_intersect (caps, templcaps)) {
+        gst_caps_unref (templcaps);
         return TRUE;
+      }
+      gst_caps_unref (templcaps);
     }
     templates = g_list_next (templates);
   }
