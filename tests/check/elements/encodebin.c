@@ -867,6 +867,8 @@ GST_START_TEST (test_encodebin_reuse)
   _test_encodebin_reuse (prof2, prof3);
 
   gst_encoding_profile_unref (prof1);
+  gst_encoding_profile_unref (prof2);
+  gst_encoding_profile_unref (prof3);
 };
 
 GST_END_TEST;
