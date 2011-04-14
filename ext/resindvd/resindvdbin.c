@@ -118,10 +118,8 @@ static void
 rsn_dvdbin_class_init (RsnDvdBinClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = rsn_dvdbin_finalize;
   gobject_class->set_property = rsn_dvdbin_set_property;

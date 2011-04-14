@@ -626,7 +626,7 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
   const char *type = gst_structure_get_string (structure, "event");
   gint i;
   gchar cur_stream_name[32];
-  GstFluPSStream *temp;
+  GstFluPSStream *temp G_GNUC_UNUSED;
 
   if (strcmp (type, "dvd-lang-codes") == 0) {
     GstEvent **p_ev;
@@ -639,7 +639,7 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
     GST_DEBUG_OBJECT (demux, "Handling language codes event");
 
     /* Create a video pad to ensure have it before emit no more pads */
-    temp = gst_flups_demux_get_stream (demux, 0xe0, ST_VIDEO_MPEG2);
+    (void) gst_flups_demux_get_stream (demux, 0xe0, ST_VIDEO_MPEG2);
 
     /* Read out the languages for audio streams and request each one that 
      * is present */
@@ -1066,7 +1066,7 @@ gst_flups_demux_handle_seek_pull (GstFluPSDemux * demux, GstEvent * event)
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gdouble rate;
-  gboolean update, flush, keyframe;
+  gboolean update, flush;
   GstSegment seeksegment;
   GstClockTime first_pts = MPEGTIME_TO_GSTTIME (demux->first_pts);
 
@@ -1084,7 +1084,7 @@ gst_flups_demux_handle_seek_pull (GstFluPSDemux * demux, GstEvent * event)
     goto no_scr_rate;
 
   flush = flags & GST_SEEK_FLAG_FLUSH;
-  keyframe = flags & GST_SEEK_FLAG_KEY_UNIT;
+  /* keyframe = flags & GST_SEEK_FLAG_KEY_UNIT; *//* FIXME */
 
   if (flush) {
     /* Flush start up and downstream to make sure data flow and loops are

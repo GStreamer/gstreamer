@@ -25,13 +25,6 @@
 #include <gst/base/gstbasesink.h>
 #include "gstchecksumsink.h"
 
-/* prototypes */
-
-
-static void gst_checksum_sink_set_property (GObject * object,
-    guint property_id, const GValue * value, GParamSpec * pspec);
-static void gst_checksum_sink_get_property (GObject * object,
-    guint property_id, GValue * value, GParamSpec * pspec);
 static void gst_checksum_sink_dispose (GObject * object);
 static void gst_checksum_sink_finalize (GObject * object);
 
@@ -39,14 +32,6 @@ static gboolean gst_checksum_sink_start (GstBaseSink * sink);
 static gboolean gst_checksum_sink_stop (GstBaseSink * sink);
 static GstFlowReturn
 gst_checksum_sink_render (GstBaseSink * sink, GstBuffer * buffer);
-
-enum
-{
-  PROP_0,
-  PROP_SYNC
-};
-
-/* pad templates */
 
 static GstStaticPadTemplate gst_checksum_sink_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -86,8 +71,6 @@ gst_checksum_sink_class_init (GstChecksumSinkClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS (klass);
 
-  gobject_class->set_property = gst_checksum_sink_set_property;
-  gobject_class->get_property = gst_checksum_sink_get_property;
   gobject_class->dispose = gst_checksum_sink_dispose;
   gobject_class->finalize = gst_checksum_sink_finalize;
   base_sink_class->start = GST_DEBUG_FUNCPTR (gst_checksum_sink_start);
@@ -100,80 +83,29 @@ gst_checksum_sink_init (GstChecksumSink * checksumsink,
     GstChecksumSinkClass * checksumsink_class)
 {
   gst_base_sink_set_sync (GST_BASE_SINK (checksumsink), FALSE);
-
-}
-
-void
-gst_checksum_sink_set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstChecksumSink *checksumsink;
-
-  g_return_if_fail (GST_IS_CHECKSUM_SINK (object));
-  checksumsink = GST_CHECKSUM_SINK (object);
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_checksum_sink_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstChecksumSink *checksumsink;
-
-  g_return_if_fail (GST_IS_CHECKSUM_SINK (object));
-  checksumsink = GST_CHECKSUM_SINK (object);
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
 }
 
 void
 gst_checksum_sink_dispose (GObject * object)
 {
-  GstChecksumSink *checksumsink;
-
-  g_return_if_fail (GST_IS_CHECKSUM_SINK (object));
-  checksumsink = GST_CHECKSUM_SINK (object);
-
-  /* clean up as possible.  may be called multiple times */
-
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 void
 gst_checksum_sink_finalize (GObject * object)
 {
-  GstChecksumSink *checksumsink;
-
-  g_return_if_fail (GST_IS_CHECKSUM_SINK (object));
-  checksumsink = GST_CHECKSUM_SINK (object);
-
-  /* clean up object here */
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
-
-
 
 static gboolean
 gst_checksum_sink_start (GstBaseSink * sink)
 {
-
   return TRUE;
 }
 
 static gboolean
 gst_checksum_sink_stop (GstBaseSink * sink)
 {
-
   return TRUE;
 }
 

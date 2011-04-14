@@ -1600,8 +1600,6 @@ gst_h264_parse_push_codec_buffer (GstH264Parse * h264parse, GstBuffer * nal,
 static GstFlowReturn
 gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
-
   /* We can send pending events if this is the first call, since we now have
    * caps for the srcpad */
   if (G_UNLIKELY (h264parse->pending_segment != NULL)) {
@@ -1630,7 +1628,7 @@ gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
       GST_BUFFER_DURATION (nals->data) = 0;
 
       gst_buffer_set_caps (nals->data, h264parse->src_caps);
-      ret = gst_pad_push (h264parse->srcpad, nals->data);
+      (void) gst_pad_push (h264parse->srcpad, nals->data);
       nals = g_slist_delete_link (nals, nals);
     }
     h264parse->codec_nals = NULL;
@@ -2445,7 +2443,7 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
 
   /* if we have a discont, move buffers to the decode list */
   if (G_UNLIKELY (discont)) {
-    guint start, stop, last;
+    guint start, last;
     guint32 code;
     GstBuffer *prev;
     GstClockTime timestamp;
@@ -2454,7 +2452,6 @@ gst_h264_parse_chain_reverse (GstH264Parse * h264parse, gboolean discont,
         "received discont, copy gathered buffers for decoding");
 
     /* init start code accumulator */
-    stop = -1;
     prev = h264parse->prev;
     h264parse->prev = NULL;
 

@@ -179,7 +179,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
 {
   gint val, duration;
   gchar *title, *end;
-  gboolean discontinuity;
+//  gboolean discontinuity;
   GstM3U8 *list;
 
   g_return_val_if_fail (self != NULL, FALSE);
@@ -309,7 +309,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       if (int_from_string (data + 22, &data, &val))
         self->mediasequence = val;
     } else if (g_str_has_prefix (data, "#EXT-X-DISCONTINUITY")) {
-      discontinuity = TRUE;
+      /* discontinuity = TRUE; */
     } else if (g_str_has_prefix (data, "#EXT-X-PROGRAM-DATE-TIME:")) {
       /* <YYYY-MM-DDThh:mm:ssZ> */
       GST_DEBUG ("FIXME parse date");

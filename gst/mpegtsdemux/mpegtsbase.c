@@ -1047,10 +1047,8 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
   MpegTSPacketizerPacketReturn pret;
   MpegTSPacketizer2 *packetizer;
   MpegTSPacketizerPacket packet;
-  MpegTSBaseClass *klass;
 
   base = GST_MPEGTS_BASE (gst_object_get_parent (GST_OBJECT (pad)));
-  klass = GST_MPEGTS_BASE_GET_CLASS (base);
   packetizer = base->packetizer;
 
   mpegts_packetizer_push (base->packetizer, buf);

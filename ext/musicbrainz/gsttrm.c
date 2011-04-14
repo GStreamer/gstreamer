@@ -171,7 +171,6 @@ gst_trm_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstTRM *trm;
   GstStructure *structure;
-  const gchar *mimetype;
   gint width;
 
   trm = GST_TRM (gst_pad_get_parent (pad));
@@ -180,7 +179,6 @@ gst_trm_setcaps (GstPad * pad, GstCaps * caps)
     return FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
-  mimetype = gst_structure_get_name (structure);
 
   if (!gst_structure_get_int (structure, "depth", &trm->depth) ||
       !gst_structure_get_int (structure, "width", &width) ||

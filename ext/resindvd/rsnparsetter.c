@@ -73,10 +73,8 @@ static void
 rsn_parsetter_class_init (RsnParSetterClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = rsn_parsetter_finalize;
 }

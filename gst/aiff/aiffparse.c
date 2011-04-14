@@ -840,7 +840,6 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
         break;
       }
       case GST_MAKE_FOURCC ('S', 'S', 'N', 'D'):{
-        GstFormat fmt;
         GstBuffer *ssndbuf = NULL;
         const guint8 *ssnddata = NULL;
         guint32 datasize;
@@ -876,7 +875,6 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
 
         aiff->datastart = aiff->offset + aiff->ssnd_offset;
         /* file might be truncated */
-        fmt = GST_FORMAT_BYTES;
         if (upstream_size) {
           size = MIN (datasize, (upstream_size - aiff->datastart));
         }
