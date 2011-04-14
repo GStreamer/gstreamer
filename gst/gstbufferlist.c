@@ -304,7 +304,7 @@ gst_buffer_list_n_groups (GstBufferList * list)
  * gst_buffer_list_foreach:
  * @list: a #GstBufferList
  * @func: (scope call): a #GstBufferListFunc to call
- * @user_data: user data passed to @func
+ * @user_data: (closure): user data passed to @func
  *
  * Call @func with @data for each buffer in @list.
  *
@@ -785,8 +785,8 @@ gst_buffer_list_iterator_steal (GstBufferListIterator * it)
 /**
  * gst_buffer_list_iterator_do:
  * @it: a #GstBufferListIterator
- * @do_func: the function to be called
- * @user_data: the gpointer to optional user data.
+ * @do_func: (scope call): the function to be called
+ * @user_data: (closure): the gpointer to optional user data.
  *
  * Calls the given function for the last buffer returned by
  * gst_buffer_list_iterator_next(). gst_buffer_list_iterator_next() must have

@@ -606,7 +606,7 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
 /**
  * gst_registry_plugin_filter:
  * @registry: registry to query
- * @filter: the filter to use
+ * @filter: (scope call): the filter to use
  * @first: only return first match
  * @user_data: (closure): user data passed to the filter function
  *
@@ -726,7 +726,7 @@ gst_registry_get_typefind_factory_list (GstRegistry * registry)
 /**
  * gst_registry_feature_filter:
  * @registry: registry to query
- * @filter: the filter to use
+ * @filter: (scope call): the filter to use
  * @first: only return first match
  * @user_data: (closure): user data passed to the filter function
  *

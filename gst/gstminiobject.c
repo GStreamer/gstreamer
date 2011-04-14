@@ -298,7 +298,7 @@ gst_mini_object_make_writable (GstMiniObject * mini_object)
  * of memcpy operations in a pipeline, especially if the miniobject
  * is a #GstBuffer.
  *
- * Returns: the mini-object.
+ * Returns: (transfer full): the mini-object.
  */
 GstMiniObject *
 gst_mini_object_ref (GstMiniObject * mini_object)
