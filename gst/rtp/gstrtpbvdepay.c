@@ -75,10 +75,8 @@ gst_rtp_bv_depay_base_init (gpointer klass)
 static void
 gst_rtp_bv_depay_class_init (GstRTPBVDepayClass * klass)
 {
-  GObjectClass *gobject_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gstbasertpdepayload_class->process = gst_rtp_bv_depay_process;

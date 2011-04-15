@@ -190,10 +190,6 @@ gst_rtp_g722_pay_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad)
 
   if (otherpadcaps) {
     if (!gst_caps_is_empty (otherpadcaps)) {
-      GstStructure *structure;
-
-      structure = gst_caps_get_structure (otherpadcaps, 0);
-
       gst_caps_set_simple (caps, "channels", G_TYPE_INT, 1, NULL);
       gst_caps_set_simple (caps, "rate", G_TYPE_INT, 16000, NULL);
     }

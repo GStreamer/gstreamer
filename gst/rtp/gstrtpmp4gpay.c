@@ -451,10 +451,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
   guint avail, total;
   GstBuffer *outbuf;
   GstFlowReturn ret;
-  gboolean fragmented;
   guint mtu;
-
-  fragmented = FALSE;
 
   /* the data available in the adapter is either smaller
    * than the MTU or bigger. In the case it is smaller, the complete
@@ -544,7 +541,6 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
     ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp4gpay), outbuf);
 
     avail -= payload_len;
-    fragmented = TRUE;
   }
 
   return ret;

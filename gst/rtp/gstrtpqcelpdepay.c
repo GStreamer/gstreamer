@@ -118,7 +118,7 @@ static void
 gst_rtp_qcelp_depay_init (GstRtpQCELPDepay * rtpqcelpdepay,
     GstRtpQCELPDepayClass * klass)
 {
-  GstBaseRTPDepayload *depayload;
+  GstBaseRTPDepayload G_GNUC_UNUSED *depayload;
 
   depayload = GST_BASE_RTP_DEPAYLOAD (rtpqcelpdepay);
 }
@@ -144,10 +144,7 @@ static gboolean
 gst_rtp_qcelp_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
-  GstRtpQCELPDepay *rtpqcelpdepay;
   gboolean res;
-
-  rtpqcelpdepay = GST_RTP_QCELP_DEPAY (depayload);
 
   srccaps = gst_caps_new_simple ("audio/qcelp",
       "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
@@ -263,7 +260,7 @@ gst_rtp_qcelp_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstClockTime timestamp;
   guint payload_len, offset, index;
   guint8 *payload;
-  guint RR, LLL, NNN;
+  guint LLL, NNN;
 
   depay = GST_RTP_QCELP_DEPAY (depayload);
 
@@ -281,7 +278,7 @@ gst_rtp_qcelp_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
    * |RR | LLL | NNN |
    * +-+-+-+-+-+-+-+-+
    */
-  RR = payload[0] >> 6;
+  /* RR = payload[0] >> 6; */
   LLL = (payload[0] & 0x38) >> 3;
   NNN = (payload[0] & 0x07);
 

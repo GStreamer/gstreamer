@@ -68,8 +68,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"X-GST\"")
     );
 
-static void gst_rtp_gst_pay_finalize (GObject * object);
-
 static gboolean gst_rtp_gst_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * payload,
@@ -96,13 +94,9 @@ GST_BOILERPLATE (GstRtpGSTPay, gst_rtp_gst_pay, GstBaseRTPPayload,
 static void
 gst_rtp_gst_pay_class_init (GstRtpGSTPayClass * klass)
 {
-  GObjectClass *gobject_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
-
-  gobject_class->finalize = gst_rtp_gst_pay_finalize;
 
   gstbasertppayload_class->set_caps = gst_rtp_gst_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_gst_pay_handle_buffer;
@@ -111,16 +105,6 @@ gst_rtp_gst_pay_class_init (GstRtpGSTPayClass * klass)
 static void
 gst_rtp_gst_pay_init (GstRtpGSTPay * rtpgstpay, GstRtpGSTPayClass * klass)
 {
-}
-
-static void
-gst_rtp_gst_pay_finalize (GObject * object)
-{
-  GstRtpGSTPay *rtpgstpay;
-
-  rtpgstpay = GST_RTP_GST_PAY (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

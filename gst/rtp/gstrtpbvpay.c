@@ -93,10 +93,8 @@ gst_rtp_bv_pay_class_init (GstRTPBVPayClass * klass)
 static void
 gst_rtp_bv_pay_init (GstRTPBVPay * rtpbvpay, GstRTPBVPayClass * klass)
 {
-  GstBaseRTPPayload *basertppayload;
   GstBaseRTPAudioPayload *basertpaudiopayload;
 
-  basertppayload = GST_BASE_RTP_PAYLOAD (rtpbvpay);
   basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (rtpbvpay);
 
   rtpbvpay->mode = -1;

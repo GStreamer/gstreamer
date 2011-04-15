@@ -1597,7 +1597,6 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
   GstRtpSessionPrivate *priv;
   GstClockTime current_time;
   guint64 ntpnstime;
-  GstFlowReturn ret;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
   priv = rtpsession->priv;
@@ -1607,12 +1606,11 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
   current_time = gst_clock_get_time (priv->sysclock);
   get_current_times (rtpsession, NULL, &ntpnstime);
 
-  ret =
-      rtp_session_process_rtcp (priv->session, buffer, current_time, ntpnstime);
+  rtp_session_process_rtcp (priv->session, buffer, current_time, ntpnstime);
 
   gst_object_unref (rtpsession);
 
-  return GST_FLOW_OK;
+  return GST_FLOW_OK;           /* always return OK */
 }
 
 static gboolean

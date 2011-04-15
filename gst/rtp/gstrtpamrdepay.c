@@ -290,7 +290,6 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
    * no robust sorting, no interleaving data is to be depayloaded */
   {
     guint8 *payload, *p, *dp;
-    guint8 CMR;
     gint i, num_packets, num_nonempty_packets;
     gint amr_len;
     gint ILL, ILP;
@@ -311,7 +310,7 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
      * | CMR   |R|R|R|R|
      * +-+-+-+-+-+-+-+-+
      */
-    CMR = (payload[0] & 0xf0) >> 4;
+    /* CMR = (payload[0] & 0xf0) >> 4; */
 
     /* strip CMR header now, pack FT and the data for the decoder */
     payload_len -= 1;
