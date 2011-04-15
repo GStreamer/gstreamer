@@ -1070,7 +1070,6 @@ gst_matroska_decode_content_encodings (GArray * encodings)
   for (i = 0; i < encodings->len; i++) {
     GstMatroskaTrackEncoding *enc =
         &g_array_index (encodings, GstMatroskaTrackEncoding, i);
-    GstMatroskaTrackEncoding *enc2;
     guint8 *data = NULL;
     guint size;
 
@@ -1084,8 +1083,6 @@ gst_matroska_decode_content_encodings (GArray * encodings)
 
     if (i + 1 >= encodings->len)
       return GST_FLOW_ERROR;
-
-    enc2 = &g_array_index (encodings, GstMatroskaTrackEncoding, i + 1);
 
     if (enc->comp_settings_length == 0)
       continue;
