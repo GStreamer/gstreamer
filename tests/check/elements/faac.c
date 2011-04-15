@@ -37,15 +37,27 @@ static GstPad *mysrcpad, *mysinkpad;
                            "signed = (boolean) true, " \
                            "endianness = (int) BYTE_ORDER "
 
-#define AAC_CAPS_STRING "audio/mpeg, " \
+#define AAC_RAW_CAPS_STRING "audio/mpeg, " \
                           "mpegversion = (int) 4, " \
                           "rate = (int) 48000, " \
-                          "channels = (int) 2 "
+                          "channels = (int) 2, " \
+													"stream-format = \"raw\""
 
-static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+#define AAC_ADTS_CAPS_STRING "audio/mpeg, " \
+                          "mpegversion = (int) 4, " \
+                          "rate = (int) 48000, " \
+                          "channels = (int) 2, " \
+													"stream-format = \"adts\""
+
+static GstStaticPadTemplate sinktemplate_adts = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (AAC_CAPS_STRING));
+    GST_STATIC_CAPS (AAC_ADTS_CAPS_STRING));
+
+static GstStaticPadTemplate sinktemplate_raw = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (AAC_RAW_CAPS_STRING));
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -61,9 +73,13 @@ setup_faac (gboolean adts)
   GST_DEBUG ("setup_faac");
   faac = gst_check_setup_element ("faac");
   g_object_set (faac, "profile", 2, NULL);
-  g_object_set (faac, "outputformat", adts ? 1 : 0, NULL);
   mysrcpad = gst_check_setup_src_pad (faac, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (faac, &sinktemplate, NULL);
+
+  if (adts)
+    mysinkpad = gst_check_setup_sink_pad (faac, &sinktemplate_adts, NULL);
+  else
+    mysinkpad = gst_check_setup_sink_pad (faac, &sinktemplate_raw, NULL);
+
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

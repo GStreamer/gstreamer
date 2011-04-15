@@ -24,11 +24,6 @@
  *
  * faac encodes raw audio to AAC (MPEG-4 part 3) streams.
  *
- * The #GstFaac:outputformat property determines whether or not the
- * AAC data needs additional framing provided by a container
- * (such as Matroska or Quicktime).
- * This is required for raw data, whereas ADTS formatted AAC already provides
- * framing and needs no container.
  *
  * The #GstFaac:profile property determines the AAC profile, where the default
  * LC (Low Complexity) profile is most widely used, supported and suitable for
@@ -94,7 +89,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 enum
 {
   ARG_0,
-  ARG_OUTPUTFORMAT,
   ARG_BITRATE,
   ARG_PROFILE,
   ARG_TNS,
@@ -229,26 +223,6 @@ gst_faac_shortctl_get_type (void)
   return gst_faac_shortctl_type;
 }
 
-#define GST_TYPE_FAAC_OUTPUTFORMAT (gst_faac_outputformat_get_type ())
-static GType
-gst_faac_outputformat_get_type (void)
-{
-  static GType gst_faac_outputformat_type = 0;
-
-  if (!gst_faac_outputformat_type) {
-    static GEnumValue gst_faac_outputformat[] = {
-      {0, "OUTPUTFORMAT_RAW", "Raw AAC"},
-      {1, "OUTPUTFORMAT_ADTS", "ADTS headers"},
-      {0, NULL, NULL},
-    };
-
-    gst_faac_outputformat_type = g_enum_register_static ("GstFaacOutputFormat",
-        gst_faac_outputformat);
-  }
-
-  return gst_faac_outputformat_type;
-}
-
 static void
 gst_faac_class_init (GstFaacClass * klass)
 {
@@ -280,11 +254,6 @@ gst_faac_class_init (GstFaacClass * klass)
       g_param_spec_enum ("shortctl", "Block type",
           "Block type encorcing",
           GST_TYPE_FAAC_SHORTCTL, FAAC_DEFAULT_SHORTCTL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_OUTPUTFORMAT,
-      g_param_spec_enum ("outputformat", "Output format",
-          "Format of output frames",
-          GST_TYPE_FAAC_OUTPUTFORMAT, FAAC_DEFAULT_OUTPUTFORMAT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* virtual functions */
@@ -428,6 +397,39 @@ gst_faac_sink_getcaps (GstPad * pad)
   return gst_caps_ref ((GstCaps *) sinkcaps);
 }
 
+/* check downstream caps to configure format */
+static void
+gst_faac_negotiate (GstFaac * faac)
+{
+  GstCaps *caps;
+
+  caps = gst_pad_get_allowed_caps (faac->srcpad);
+
+  GST_DEBUG_OBJECT (faac, "allowed caps: %" GST_PTR_FORMAT, caps);
+
+  if (caps && gst_caps_get_size (caps) > 0) {
+    GstStructure *s = gst_caps_get_structure (caps, 0);
+    const gchar *str = NULL;
+
+    if ((str = gst_structure_get_string (s, "stream-format"))) {
+      if (strcmp (str, "adts") == 0) {
+        GST_DEBUG_OBJECT (faac, "use ADTS format for output");
+        faac->outputformat = 1;
+      } else if (strcmp (str, "raw") == 0) {
+        GST_DEBUG_OBJECT (faac, "use RAW format for output");
+        faac->outputformat = 0;
+      } else {
+        GST_DEBUG_OBJECT (faac, "unknown stream-format: %s", str);
+        faac->outputformat = 0;
+      }
+    }
+  }
+
+  if (caps)
+    gst_caps_unref (caps);
+
+}
+
 static gboolean
 gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -493,6 +495,8 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   faac->samples = samples;
   faac->channels = channels;
   faac->samplerate = samplerate;
+
+  gst_faac_negotiate (faac);
 
   /* finish up */
   result = gst_faac_configure_source_pad (faac);
@@ -858,9 +862,6 @@ gst_faac_set_property (GObject * object,
     case ARG_SHORTCTL:
       faac->shortctl = g_value_get_enum (value);
       break;
-    case ARG_OUTPUTFORMAT:
-      faac->outputformat = g_value_get_enum (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -892,9 +893,6 @@ gst_faac_get_property (GObject * object,
       break;
     case ARG_SHORTCTL:
       g_value_set_enum (value, faac->shortctl);
-      break;
-    case ARG_OUTPUTFORMAT:
-      g_value_set_enum (value, faac->outputformat);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
