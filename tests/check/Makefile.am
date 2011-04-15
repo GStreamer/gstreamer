@@ -171,7 +171,9 @@ VALGRIND_TO_FIX = \
 noinst_PROGRAMS = $(check_libvisual)
 
 noinst_HEADERS = \
-	libs/struct_*.h
+	libs/struct_i386.h     \
+	libs/struct_i386_osx.h \
+	libs/struct_x86_64.h
 
 AM_CFLAGS = -I$(top_srcdir)/gst-libs -I$(top_builddir)/gst-libs \
 	$(GST_CFLAGS) $(GST_CHECK_CFLAGS) \
