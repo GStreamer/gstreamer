@@ -1734,11 +1734,6 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     GstCollectData *cdata = (GstCollectData *) walk->data;
     GstQTPad *qtpad = (GstQTPad *) cdata;
 
-    if (!qtpad->last_buf) {
-      GST_DEBUG_OBJECT (qtmux, "Pad %s has no buffers",
-          GST_PAD_NAME (qtpad->collect.pad));
-      continue;
-    }
     /* send last buffer */
     GST_DEBUG_OBJECT (qtmux, "Sending the last buffer for pad %s",
         GST_PAD_NAME (qtpad->collect.pad));
@@ -1747,6 +1742,13 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       GST_WARNING_OBJECT (qtmux, "Failed to send last buffer for %s, "
           "flow return: %s", GST_PAD_NAME (qtpad->collect.pad),
           gst_flow_get_name (ret));
+
+    if (!GST_CLOCK_TIME_IS_VALID (qtpad->first_ts)) {
+      GST_DEBUG_OBJECT (qtmux, "Pad %s has no buffers",
+          GST_PAD_NAME (qtpad->collect.pad));
+      continue;
+    }
+
     /* determine max stream duration */
     if (!GST_CLOCK_TIME_IS_VALID (first_ts) ||
         (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts) &&
@@ -2069,7 +2071,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   gint64 pts_offset = 0;
   gboolean sync = FALSE, do_pts = FALSE;
   gboolean drain = (buf == NULL);
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (!pad->fourcc)
     goto not_negotiated;
@@ -2080,15 +2082,15 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   }
 
 again:
+  last_buf = pad->last_buf;
   if (G_UNLIKELY (qtmux->dts_method == DTS_METHOD_REORDER)) {
     buf = gst_qt_mux_get_asc_buffer_ts (qtmux, pad, buf);
-    if (!buf) {
-      GST_DEBUG_OBJECT (qtmux, "no reordered buffer yet");
+    if (!buf && !last_buf) {
+      GST_DEBUG_OBJECT (qtmux, "no reordered buffer");
       return GST_FLOW_OK;
     }
   }
 
-  last_buf = pad->last_buf;
   if (last_buf == NULL) {
 #ifndef GST_DISABLE_GST_DEBUG
     if (buf == NULL) {
@@ -2102,7 +2104,7 @@ again:
     }
 #endif
     pad->last_buf = buf;
-    return GST_FLOW_OK;
+    goto exit;
   } else
     gst_buffer_ref (last_buf);
 
@@ -2352,6 +2354,7 @@ again:
     ret = gst_qt_mux_send_buffer (qtmux, last_buf, &qtmux->mdat_size, TRUE);
   }
 
+exit:
   if (G_UNLIKELY (drain && qtmux->dts_method == DTS_METHOD_REORDER &&
           ret == GST_FLOW_OK)) {
     buf = NULL;
