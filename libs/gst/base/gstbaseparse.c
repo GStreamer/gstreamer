@@ -1216,13 +1216,10 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
   /* Only update the tag on a 10 kbps delta */
   static const gint update_threshold = 10000;
 
-  GstBaseParseClass *klass;
   guint64 data_len, frame_dur;
   gint overhead, frame_bitrate, old_avg_bitrate;
   gboolean update_min = FALSE, update_avg = FALSE, update_max = FALSE;
   GstBuffer *buffer = frame->buffer;
-
-  klass = GST_BASE_PARSE_GET_CLASS (parse);
 
   overhead = frame->overhead;
   if (overhead == -1)
