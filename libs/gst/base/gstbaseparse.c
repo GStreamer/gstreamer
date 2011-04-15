@@ -538,6 +538,40 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   GST_DEBUG_OBJECT (parse, "init ok");
 }
 
+static GstBaseParseFrame *
+gst_base_parse_frame_copy (GstBaseParseFrame * frame)
+{
+  GstBaseParseFrame *copy;
+
+  copy = g_slice_dup (GstBaseParseFrame, frame);
+  copy->buffer = gst_buffer_ref (frame->buffer);
+  return copy;
+}
+
+static void
+gst_base_parse_frame_free (GstBaseParseFrame * frame)
+{
+  if (frame->buffer)
+    gst_buffer_unref (frame->buffer);
+  g_slice_free (GstBaseParseFrame, frame);
+}
+
+GType
+gst_base_parse_frame_get_type (void)
+{
+  static volatile gsize frame_type = 0;
+
+  if (g_once_init_enter (&frame_type)) {
+    GType _type;
+
+    _type = g_boxed_type_register_static ("GstBaseParseFrame",
+        (GBoxedCopyFunc) gst_base_parse_frame_copy,
+        (GBoxedFreeFunc) gst_base_parse_frame_free);
+    g_once_init_leave (&frame_type, _type);
+  }
+  return (GType) frame_type;
+}
+
 /**
  * gst_base_parse_frame_init:
  * @parse: #GstBaseParse.
@@ -563,14 +597,6 @@ gst_base_parse_frame_clear (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_buffer_unref (frame->buffer);
     frame->buffer = NULL;
   }
-}
-
-/* free frame allocated with copy_and_clear (and not on the stack) */
-static void
-gst_base_parse_frame_free (GstBaseParseFrame * frame)
-{
-  gst_base_parse_frame_clear (NULL, frame);
-  g_slice_free (GstBaseParseFrame, frame);
 }
 
 /* copy frame (taking ownership of contents of passed frame) */

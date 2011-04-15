@@ -257,6 +257,8 @@ struct _GstBaseParseClass {
 
 GType           gst_base_parse_get_type (void);
 
+GType           gst_base_parse_frame_get_type (void);
+
 void            gst_base_parse_frame_init      (GstBaseParse      * parse,
                                                 GstBaseParseFrame * frame);
 
