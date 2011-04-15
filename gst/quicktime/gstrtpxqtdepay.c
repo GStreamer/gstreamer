@@ -277,7 +277,6 @@ gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     gint payload_len;
     guint avail;
     guint8 *payload;
-    guint32 timestamp;
     guint8 ver, pck;
     gboolean s, q, l, d;
 
@@ -335,7 +334,9 @@ gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       gboolean k, f, a, z;
       guint pdlen, pdpadded;
       gint padding;
-      guint32 media_type, timescale;
+      /* media_type only used for printing */
+      guint32 G_GNUC_UNUSED media_type;
+      guint32 timescale;
 
       /*                      1                   2                   3
        *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -537,7 +538,6 @@ gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       payload_len -= padding;
     }
 
-    timestamp = gst_rtp_buffer_get_timestamp (buf);
     rtpxqtdepay->previous_id = rtpxqtdepay->current_id;
 
     switch (pck) {
@@ -550,7 +550,7 @@ gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       }
       case 2:
       {
-        guint slen, timestamp;
+        guint slen;
 
         /* multiple samples per packet. 
          *                      1                   2                   3
@@ -574,9 +574,10 @@ gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         while (payload_len > 8) {
           s = (payload[0] & 0x80) != 0; /* contains sync sample */
           slen = (payload[2] << 8) | payload[3];
-          timestamp =
-              (payload[4] << 24) | (payload[5] << 16) | (payload[6] << 8) |
-              payload[7];
+          /* timestamp =
+           *    (payload[4] << 24) | (payload[5] << 16) | (payload[6] << 8) |
+           *    payload[7];
+           */
 
           payload += 8;
           payload_len -= 8;

@@ -416,13 +416,12 @@ guint64
 desc_es_descriptor_copy_data (ESDescriptor * desc, guint8 ** buffer,
     guint64 * size, guint64 * offset)
 {
-  guint64 desc_size;
   guint64 original_offset = *offset;
 
   /* must call this twice to have size fields of all contained descriptors set
    * correctly, and to have the size of the size fields taken into account */
-  desc_size = desc_es_descriptor_get_size (desc);
-  desc_size = desc_es_descriptor_get_size (desc);
+  desc_es_descriptor_get_size (desc);
+  desc_es_descriptor_get_size (desc);
 
   if (!desc_base_descriptor_copy_data (&desc->base, buffer, size, offset)) {
     return 0;

@@ -4139,16 +4139,12 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         }
 
         if (demux->mdatbuffer && demux->n_streams) {
-          GstBuffer *buf;
-
           /* the mdat was before the header */
           GST_DEBUG_OBJECT (demux, "We have n_streams:%d and mdatbuffer:%p",
               demux->n_streams, demux->mdatbuffer);
           /* restore our adapter/offset view of things with upstream;
            * put preceding buffered data ahead of current moov data.
            * This should also handle evil mdat, moov, mdat cases and alike */
-          buf = gst_adapter_take_buffer (demux->adapter,
-              gst_adapter_available (demux->adapter));
           gst_adapter_clear (demux->adapter);
           demux->mdatbuffer = NULL;
           demux->offset = demux->mdatoffset;
@@ -6045,7 +6041,6 @@ end:
 static gchar *
 qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
 {
-  GNode *hndl;
   GNode *dinf;
   GstByteReader dref;
   gchar *uri = NULL;
@@ -6065,7 +6060,6 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
         gst_byte_reader_skip (&dref, 4) &&
         gst_byte_reader_get_uint32_be (&dref, &dref_num_entries)) {
       gint i;
-      hndl = NULL;
 
       /* search dref entries for hndl atom */
       for (i = 0; i < dref_num_entries; i++) {
