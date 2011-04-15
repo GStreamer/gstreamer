@@ -368,7 +368,7 @@ gst_queue2_class_init (GstQueue2Class * klass)
   g_object_class_install_property (gobject_class, PROP_RING_BUFFER_MAX_SIZE,
       g_param_spec_uint64 ("ring-buffer-max-size",
           "Max. ring buffer size (bytes)",
-          "Max. amount of data in the ring buffer (bytes, 0 = disabled",
+          "Max. amount of data in the ring buffer (bytes, 0 = disabled)",
           0, G_MAXUINT64, DEFAULT_RING_BUFFER_MAX_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
