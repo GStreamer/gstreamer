@@ -37,7 +37,6 @@ int
 main (int argc, char **argv)
 {
   GstElement *pipeline;
-  GstBus *bus;
 #ifndef G_DISABLE_ASSERT
   GstState state, pending;
 #endif
@@ -52,8 +51,6 @@ main (int argc, char **argv)
   }
 
   loop = g_main_loop_new (NULL, FALSE);
-
-  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 

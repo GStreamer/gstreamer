@@ -190,7 +190,6 @@ main (int argc, char **argv)
   GError *opt_err = NULL;
 
   GstElement *pipeline, *src, *filter1, *crop, *scale, *filter2, *csp, *sink;
-  GMainLoop *loop;
   GstCaps *filter_caps = NULL;
   GList *caps_list, *l;
 
@@ -208,8 +207,6 @@ main (int argc, char **argv)
   }
 
   GST_DEBUG_CATEGORY_INIT (videocrop_test_debug, "videocroptest", 0, "vctest");
-
-  loop = g_main_loop_new (NULL, FALSE);
 
   pipeline = gst_pipeline_new ("pipeline");
   src = gst_element_factory_make ("videotestsrc", "videotestsrc");

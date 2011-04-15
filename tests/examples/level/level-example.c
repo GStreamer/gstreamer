@@ -82,7 +82,7 @@ main (int argc, char *argv[])
   GstElement *pipeline;
   GstCaps *caps;
   GstBus *bus;
-  gint watch_id;
+  guint watch_id;
   GMainLoop *loop;
 
   gst_init (&argc, &argv);
@@ -120,5 +120,7 @@ main (int argc, char *argv[])
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
 
+  g_source_remove (watch_id);
+  g_main_loop_unref (loop);
   return 0;
 }
