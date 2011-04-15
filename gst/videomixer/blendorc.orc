@@ -132,7 +132,6 @@ x4 subw alpha_s_inv, alpha_s_inv, alpha_s
 loadl t, d
 convlw tw, t
 convwb tb, tw
-convubw tw, tb
 splatbl a, tb
 x4 convubw alpha_d, a
 x4 mullw alpha_d, alpha_d, alpha_s_inv
@@ -179,7 +178,7 @@ storel d, t
 # calc source alpha as alpha_s = alpha_s * alpha / 256
 loadl t, s
 shrul t2, t, 24
-convlw tw, t
+convlw tw, t2
 convwb tb, tw
 splatbl a, tb
 x4 convubw alpha_s, a
@@ -194,9 +193,8 @@ x4 convubw alpha_s_inv, a
 x4 subw alpha_s_inv, alpha_s_inv, alpha_s
 loadl t, d
 shrul t2, t, 24
-convlw tw, t
+convlw tw, t2
 convwb tb, tw
-convubw tw, tb
 splatbl a, tb
 x4 convubw alpha_d, a
 x4 mullw alpha_d, alpha_d, alpha_s_inv
