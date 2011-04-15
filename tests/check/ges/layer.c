@@ -20,6 +20,8 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
+#define LAYER_HEIGHT 10
+
 static gboolean
 my_fill_track_func (GESTimelineObject * object,
     GESTrackObject * trobject, GstElement * gnlobj, gpointer user_data)
@@ -116,14 +118,14 @@ GST_START_TEST (test_layer_properties)
   /* Change the priority of the layer */
   g_object_set (layer, "priority", 1, NULL);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 1);
-  assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 10);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 0);
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
       51, 10, TRUE);
 
   /* Change it to an insanely high value */
   g_object_set (layer, "priority", 1000000, NULL);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 1000000);
-  assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 10000000);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 0);
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
       51, 10000000, TRUE);
 
@@ -143,6 +145,120 @@ GST_START_TEST (test_layer_properties)
 
 GST_END_TEST;
 
+GST_START_TEST (test_layer_priorities)
+{
+  GESTrack *track;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer1, *layer2, *layer3;
+  GESTrackObject *tckobj1, *tckobj2, *tckobj3;
+  GESTimelineObject *object1, *object2, *object3;
+  GstElement *gnlobj1, *gnlobj2, *gnlobj3;
+  guint prio1, prio2, prio3;
+
+  ges_init ();
+
+  /* Timeline and 3 Layer */
+  timeline = ges_timeline_new ();
+  layer1 = (GESTimelineLayer *) ges_timeline_layer_new ();
+  layer2 = (GESTimelineLayer *) ges_timeline_layer_new ();
+  layer3 = (GESTimelineLayer *) ges_timeline_layer_new ();
+
+  ges_timeline_layer_set_priority (layer2, 1);
+  ges_timeline_layer_set_priority (layer3, 2);
+
+  fail_unless (ges_timeline_add_layer (timeline, layer1));
+  fail_unless (ges_timeline_add_layer (timeline, layer2));
+  fail_unless (ges_timeline_add_layer (timeline, layer3));
+  fail_unless_equals_int (ges_timeline_layer_get_priority (layer1), 0);
+  fail_unless_equals_int (ges_timeline_layer_get_priority (layer2), 1);
+  fail_unless_equals_int (ges_timeline_layer_get_priority (layer3), 2);
+
+  track = ges_track_video_raw_new ();
+  fail_unless (track != NULL);
+  fail_unless (ges_timeline_add_track (timeline, track));
+
+  object1 =
+      GES_TIMELINE_OBJECT (ges_custom_timeline_source_new (my_fill_track_func,
+          NULL));
+  object2 =
+      GES_TIMELINE_OBJECT (ges_custom_timeline_source_new (my_fill_track_func,
+          NULL));
+  object3 =
+      GES_TIMELINE_OBJECT (ges_custom_timeline_source_new (my_fill_track_func,
+          NULL));
+  fail_unless (object1 != NULL);
+  fail_unless (object2 != NULL);
+  fail_unless (object3 != NULL);
+
+  /* Set priorities on the objects */
+  g_object_set (object1, "priority", 0, NULL);
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object1), 0);
+  g_object_set (object2, "priority", 1, NULL);
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object2), 1);
+  g_object_set (object3, "priority", LAYER_HEIGHT + 1, NULL);
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object3), LAYER_HEIGHT + 1);
+
+  /* Add objects to the timeline */
+  fail_unless (ges_timeline_layer_add_object (layer1, object1));
+  tckobj1 = ges_timeline_object_find_track_object (object1, track, G_TYPE_NONE);
+  fail_unless (tckobj1 != NULL);
+
+  fail_unless (ges_timeline_layer_add_object (layer2, object2));
+  tckobj2 = ges_timeline_object_find_track_object (object2, track, G_TYPE_NONE);
+  fail_unless (tckobj2 != NULL);
+
+  fail_unless (ges_timeline_layer_add_object (layer3, object3));
+  tckobj3 = ges_timeline_object_find_track_object (object3, track, G_TYPE_NONE);
+  fail_unless (tckobj3 != NULL);
+
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object1), 0);
+  gnlobj1 = ges_track_object_get_gnlobject (tckobj1);
+  fail_unless (gnlobj1 != NULL);
+  g_object_get (gnlobj1, "priority", &prio1, NULL);
+  assert_equals_int (prio1, 0);
+
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object2), 1);
+  gnlobj2 = ges_track_object_get_gnlobject (tckobj2);
+  fail_unless (gnlobj2 != NULL);
+  g_object_get (gnlobj2, "priority", &prio2, NULL);
+  /* object2 is on the second layer and has a priority of 1 */
+  assert_equals_int (prio2, LAYER_HEIGHT + 1);
+
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object3), LAYER_HEIGHT - 1);
+  gnlobj3 = ges_track_object_get_gnlobject (tckobj3);
+  fail_unless (gnlobj3 != NULL);
+  /* object3 is on the third layer and has a priority of LAYER_HEIGHT + 1
+   * it priority must have the maximum priority of this layer*/
+  g_object_get (gnlobj3, "priority", &prio3, NULL);
+  assert_equals_int (prio3, LAYER_HEIGHT * 3 - 1);
+
+  /* Move layers around */
+  g_object_set (layer1, "priority", 2, NULL);
+  g_object_set (layer2, "priority", 0, NULL);
+  g_object_set (layer3, "priority", 1, NULL);
+
+  /* And check the new priorities */
+  assert_equals_int (ges_timeline_layer_get_priority (layer1), 2);
+  assert_equals_int (ges_timeline_layer_get_priority (layer2), 0);
+  assert_equals_int (ges_timeline_layer_get_priority (layer3), 1);
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object1), 0);
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object2), 1);
+  assert_equals_int (GES_TIMELINE_OBJECT_PRIORITY (object3), LAYER_HEIGHT - 1);
+  g_object_get (gnlobj1, "priority", &prio1, NULL);
+  g_object_get (gnlobj2, "priority", &prio2, NULL);
+  g_object_get (gnlobj3, "priority", &prio3, NULL);
+  assert_equals_int (prio1, 2 * LAYER_HEIGHT);
+  assert_equals_int (prio2, 1);
+  assert_equals_int (prio3, LAYER_HEIGHT * 2 - 1);
+
+  g_object_unref (tckobj1);
+  g_object_unref (tckobj2);
+  g_object_unref (tckobj3);
+  g_object_unref (timeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -152,6 +268,7 @@ ges_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_layer_properties);
+  tcase_add_test (tc_chain, test_layer_priorities);
 
   return s;
 }

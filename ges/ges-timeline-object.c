@@ -58,6 +58,9 @@ static void update_height (GESTimelineObject * object);
 
 static gint sort_track_effects (gpointer a, gpointer b,
     GESTimelineObject * object);
+static void
+get_layer_priorities (GESTimelineLayer * layer, guint32 * layer_min_gnl_prio,
+    guint32 * layer_max_gnl_prio);
 
 static gboolean
 ges_timeline_object_set_start_internal (GESTimelineObject * object,
@@ -417,6 +420,7 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
 {
   ObjectMapping *mapping;
   GList *tmp;
+  guint max_prio, min_prio;
   GESTimelineObjectPrivate *priv = object->priv;
   gboolean is_effect = GES_IS_TRACK_EFFECT (trobj);
   GESTimelineObjectClass *klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
@@ -500,8 +504,9 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
       g_signal_connect (G_OBJECT (trobj), "notify::priority",
       G_CALLBACK (track_object_priority_changed_cb), object);
 
-  ges_track_object_set_priority (trobj,
-      object->priority + mapping->priority_offset);
+  get_layer_priorities (priv->layer, &min_prio, &max_prio);
+  ges_track_object_set_priority (trobj, min_prio + object->priority
+      + mapping->priority_offset);
 
   GST_DEBUG ("Returning trobj:%p", trobj);
 
@@ -773,21 +778,39 @@ ges_timeline_object_set_priority_internal (GESTimelineObject * object,
   GESTrackObject *tr;
   ObjectMapping *map;
   GESTimelineObjectPrivate *priv = object->priv;
+  guint32 layer_min_gnl_prio, layer_max_gnl_prio;
 
   GST_DEBUG ("object:%p, priority:%" G_GUINT32_FORMAT, object, priority);
 
   priv->ignore_notifies = TRUE;
+
+  object->priv->ignore_notifies = TRUE;
+
+  get_layer_priorities (priv->layer, &layer_min_gnl_prio, &layer_max_gnl_prio);
 
   for (tmp = priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
     tr = (GESTrackObject *) tmp->data;
     map = find_object_mapping (object, tr);
 
     if (ges_track_object_is_locked (tr)) {
+      guint32 real_tck_prio;
+
       /* Move the child... */
-      ges_track_object_set_priority (tr, priority + map->priority_offset);
+      real_tck_prio = layer_min_gnl_prio + priority + map->priority_offset;
+
+      if (real_tck_prio > layer_max_gnl_prio) {
+        GST_WARNING ("%p priority of %i, is outside of the its containing "
+            "layer space. (%d/%d) setting it to the maximum it can be", object,
+            priority, layer_min_gnl_prio, layer_max_gnl_prio);
+
+        real_tck_prio = layer_max_gnl_prio;
+      }
+
+      ges_track_object_set_priority (tr, real_tck_prio);
+
     } else {
       /* ... or update the offset */
-      map->priority_offset = priority - tr->priority;
+      map->priority_offset = layer_min_gnl_prio + priority - tr->priority;
     }
   }
 
@@ -1123,6 +1146,8 @@ track_object_priority_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
 {
   ObjectMapping *map;
+  guint32 layer_min_gnl_prio, layer_max_gnl_prio;
+
   guint tck_priority = ges_track_object_get_priority (child);
 
   GST_DEBUG ("Priority changed");
@@ -1132,17 +1157,53 @@ track_object_priority_changed_cb (GESTrackObject * child,
 
   update_height (object);
   map = find_object_mapping (object, child);
+  get_layer_priorities (object->priv->layer, &layer_min_gnl_prio,
+      &layer_max_gnl_prio);
+
   if (G_UNLIKELY (map == NULL))
     /* something massively screwed up if we get this */
     return;
 
   if (!ges_track_object_is_locked (child)) {
+    if (tck_priority < layer_min_gnl_prio || tck_priority > layer_max_gnl_prio) {
+      GST_WARNING ("%p priority of %i, is outside of its containing "
+          "layer space. (%d/%d). This is a bug in the program.", object,
+          tck_priority, layer_min_gnl_prio, layer_max_gnl_prio);
+    }
+
     /* Update the internal priority_offset */
-    map->priority_offset = object->priority - tck_priority;
-  } else if (tck_priority < object->priority) {
+    map->priority_offset =
+        (layer_min_gnl_prio + object->priority) - tck_priority;
+
+  } else if (tck_priority < layer_min_gnl_prio + object->priority) {
     /* Or update the parent priority, the object priority is always the
      * highest priority (smaller number) */
+    if (tck_priority - layer_min_gnl_prio < 0 ||
+        layer_max_gnl_prio - tck_priority < 0) {
+
+      GST_WARNING ("%p priority of %i, is outside of its containing "
+          "layer space. (%d/%d). This is a bug in the program.", object,
+          tck_priority, layer_min_gnl_prio, layer_max_gnl_prio);
+      return;
+    }
+
     ges_timeline_object_set_priority (object,
-        tck_priority + map->priority_offset);
+        tck_priority - layer_min_gnl_prio);
+  }
+
+  GST_DEBUG ("object %p priority %d child %p priority %d", object,
+      object->priority, child, ges_track_object_get_priority (child));
+}
+
+static void
+get_layer_priorities (GESTimelineLayer * layer, guint32 * layer_min_gnl_prio,
+    guint32 * layer_max_gnl_prio)
+{
+  if (layer) {
+    *layer_min_gnl_prio = layer->min_gnl_priority;
+    *layer_max_gnl_prio = layer->max_gnl_priority;
+  } else {
+    *layer_min_gnl_prio = 0;
+    *layer_max_gnl_prio = G_MAXUINT32;
   }
 }

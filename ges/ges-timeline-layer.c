@@ -166,7 +166,6 @@ ges_timeline_layer_init (GESTimelineLayer * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TIMELINE_LAYER, GESTimelineLayerPrivate);
 
-  /* TODO : Keep those 3 values in sync */
   self->priv->priority = 0;
   self->min_gnl_priority = 0;
   self->max_gnl_priority = 9;
@@ -230,6 +229,7 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
 {
   GESTimelineLayer *tl_obj_layer;
+  guint32 maxprio, minprio, prio;
 
   GST_DEBUG ("layer:%p, object:%p", layer, object);
 
@@ -256,13 +256,19 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
       layer->min_gnl_priority, layer->max_gnl_priority);
 
   /* Set the priority. */
-  if (GES_TIMELINE_OBJECT_PRIORITY (object) > (layer->max_gnl_priority)) {
-    ges_timeline_object_set_priority (object, layer->max_gnl_priority);
+  maxprio = layer->max_gnl_priority;
+  minprio = layer->min_gnl_priority;
+  prio = GES_TIMELINE_OBJECT_PRIORITY (object);
+  if (minprio + prio > (maxprio)) {
+    GST_WARNING ("%p is out of the layer %p space, setting its priority to "
+        "setting its priority %d to the maximum priority of the layer %d",
+        object, layer, prio, maxprio - minprio);
+    ges_timeline_object_set_priority (object, LAYER_HEIGHT - 1);
   }
+  /* If the object has an acceptable priority, we just let it with its current
+   * priority */
 
-  else if (GES_TIMELINE_OBJECT_PRIORITY (object) < (layer->min_gnl_priority)) {
-    ges_timeline_object_set_priority (object, layer->min_gnl_priority);
-  }
+  ges_timeline_layer_resync_priorities (layer);
 
   /* emit 'object-added' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, object);
@@ -330,17 +336,15 @@ gboolean
 ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
 {
   GSList *tmp;
+  GESTimelineObject *obj;
 
   /* TODO : Inhibit composition updates while doing this.
    * Ideally we want to do it from an even higher level, but here will
    * do in the meantime. */
 
-  /* TODO : This is the dumb version where we put everything linearly,
-   * will need to be adjusted for more complex usages (like with
-   * transitions).  */
   for (tmp = layer->priv->objects_start; tmp; tmp = tmp->next) {
-    ges_timeline_object_set_priority ((GESTimelineObject *) tmp->data,
-        layer->min_gnl_priority);
+    obj = GES_TIMELINE_OBJECT (tmp->data);
+    ges_timeline_object_set_priority (obj, GES_TIMELINE_OBJECT_PRIORITY (obj));
   }
 
   return TRUE;
@@ -366,7 +370,6 @@ ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
     layer->min_gnl_priority = (priority * LAYER_HEIGHT);
     layer->max_gnl_priority = ((priority + 1) * LAYER_HEIGHT) - 1;
 
-    /* FIXME : Update controlled object's gnl priority accordingly */
     ges_timeline_layer_resync_priorities (layer);
   }
 }

@@ -181,8 +181,7 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object3", "start", "5000000000");
   KEY ("Object3", "in-point", "0");
   KEY ("Object3", "duration", "1000000000");
-  /* The second layer's minimum priority will be 10 */
-  KEY ("Object3", "priority", "10");
+  KEY ("Object3", "priority", "0");
   KEY ("Object3", "mute", "false");
   KEY ("Object3", "text", "\"the\\\\ quick\\\\ brown\\\\ fox\"");
   KEY ("Object3", "font-desc", "\"Serif\\\\ 36\"");
