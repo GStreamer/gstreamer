@@ -146,7 +146,8 @@ cleanup_qtmux (GstElement * qtmux, const gchar * sinkname)
 }
 
 static void
-check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
+check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
+    guint32 dts_method)
 {
   GstElement *qtmux;
   GstBuffer *inbuffer, *outbuffer;
@@ -158,6 +159,7 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
   guint8 data2[4] = "moov";
 
   qtmux = setup_qtmux (srctemplate, sinkname);
+  g_object_set (qtmux, "dts-method", dts_method, NULL);
   fail_unless (gst_element_set_state (qtmux,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -224,7 +226,7 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
 
 static void
 check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
-    const gchar * sinkname, gboolean streamable)
+    const gchar * sinkname, guint32 dts_method, gboolean streamable)
 {
   GstElement *qtmux;
   GstBuffer *inbuffer, *outbuffer;
@@ -238,6 +240,7 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
   guint8 data4[4] = "mfra";
 
   qtmux = setup_qtmux (srctemplate, sinkname);
+  g_object_set (qtmux, "dts-method", dts_method, NULL);
   g_object_set (qtmux, "fragment-duration", 2000, NULL);
   g_object_set (qtmux, "streamable", streamable, NULL);
   fail_unless (gst_element_set_state (qtmux,
@@ -315,52 +318,146 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
   cleanup_qtmux (qtmux, sinkname);
 }
 
+/* dts-method dd */
 
-GST_START_TEST (test_video_pad)
+GST_START_TEST (test_video_pad_dd)
 {
-  check_qtmux_pad (&srcvideotemplate, "video_%d");
+  check_qtmux_pad (&srcvideotemplate, "video_%d", 0);
 }
 
 GST_END_TEST;
 
-GST_START_TEST (test_audio_pad)
+GST_START_TEST (test_audio_pad_dd)
 {
-  check_qtmux_pad (&srcaudiotemplate, "audio_%d");
-}
-
-GST_END_TEST;
-
-
-GST_START_TEST (test_video_pad_frag)
-{
-  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_audio_pad_frag)
-{
-  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", FALSE);
+  check_qtmux_pad (&srcaudiotemplate, "audio_%d", 0);
 }
 
 GST_END_TEST;
 
 
-GST_START_TEST (test_video_pad_frag_streamable)
+GST_START_TEST (test_video_pad_frag_dd)
 {
-  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", TRUE);
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 0, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_audio_pad_frag_dd)
+{
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 0, FALSE);
 }
 
 GST_END_TEST;
 
 
-GST_START_TEST (test_audio_pad_frag_streamable)
+GST_START_TEST (test_video_pad_frag_dd_streamable)
 {
-  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", TRUE);
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 0, TRUE);
 }
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_audio_pad_frag_dd_streamable)
+{
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 0, TRUE);
+}
+
+GST_END_TEST;
+
+/* dts-method reorder */
+
+GST_START_TEST (test_video_pad_reorder)
+{
+  check_qtmux_pad (&srcvideotemplate, "video_%d", 1);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_audio_pad_reorder)
+{
+  check_qtmux_pad (&srcaudiotemplate, "audio_%d", 1);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_video_pad_frag_reorder)
+{
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 1, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_audio_pad_frag_reorder)
+{
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 1, FALSE);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_video_pad_frag_reorder_streamable)
+{
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 1, TRUE);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_audio_pad_frag_reorder_streamable)
+{
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 1, TRUE);
+}
+
+GST_END_TEST;
+
+/* dts-method asc */
+
+GST_START_TEST (test_video_pad_asc)
+{
+  check_qtmux_pad (&srcvideotemplate, "video_%d", 2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_audio_pad_asc)
+{
+  check_qtmux_pad (&srcaudiotemplate, "audio_%d", 2);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_video_pad_frag_asc)
+{
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 2, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_audio_pad_frag_asc)
+{
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 2, FALSE);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_video_pad_frag_asc_streamable)
+{
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 2, TRUE);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_audio_pad_frag_asc_streamable)
+{
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 2, TRUE);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_reuse)
 {
@@ -463,12 +560,27 @@ qtmux_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_video_pad);
-  tcase_add_test (tc_chain, test_audio_pad);
-  tcase_add_test (tc_chain, test_video_pad_frag);
-  tcase_add_test (tc_chain, test_audio_pad_frag);
-  tcase_add_test (tc_chain, test_video_pad_frag_streamable);
-  tcase_add_test (tc_chain, test_audio_pad_frag_streamable);
+  tcase_add_test (tc_chain, test_video_pad_dd);
+  tcase_add_test (tc_chain, test_audio_pad_dd);
+  tcase_add_test (tc_chain, test_video_pad_frag_dd);
+  tcase_add_test (tc_chain, test_audio_pad_frag_dd);
+  tcase_add_test (tc_chain, test_video_pad_frag_dd_streamable);
+  tcase_add_test (tc_chain, test_audio_pad_frag_dd_streamable);
+
+  tcase_add_test (tc_chain, test_video_pad_reorder);
+  tcase_add_test (tc_chain, test_audio_pad_reorder);
+  tcase_add_test (tc_chain, test_video_pad_frag_reorder);
+  tcase_add_test (tc_chain, test_audio_pad_frag_reorder);
+  tcase_add_test (tc_chain, test_video_pad_frag_reorder_streamable);
+  tcase_add_test (tc_chain, test_audio_pad_frag_reorder_streamable);
+
+  tcase_add_test (tc_chain, test_video_pad_asc);
+  tcase_add_test (tc_chain, test_audio_pad_asc);
+  tcase_add_test (tc_chain, test_video_pad_frag_asc);
+  tcase_add_test (tc_chain, test_audio_pad_frag_asc);
+  tcase_add_test (tc_chain, test_video_pad_frag_asc_streamable);
+  tcase_add_test (tc_chain, test_audio_pad_frag_asc_streamable);
+
   tcase_add_test (tc_chain, test_reuse);
   tcase_add_test (tc_chain, test_encodebin);
 
