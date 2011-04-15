@@ -824,7 +824,7 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
   gfloat position = self->mask_position; \
   gfloat low = position - (self->mask_border / 2.0f); \
   gfloat high = position + (self->mask_border / 2.0f); \
-  guint32 low_i, high_i, position_i, round_i; \
+  guint32 low_i, high_i, round_i; \
   gint width = self->width, height = self->height; \
   \
   if (low < 0.0f) { \
@@ -837,7 +837,6 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     high = 1.0f; \
   } \
   \
-  position_i = position * 65536; \
   low_i = low * 65536; \
   high_i = high * 65536; \
   round_i = (high_i - low_i) >> 1; \
