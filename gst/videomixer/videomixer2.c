@@ -361,13 +361,11 @@ static GstCaps *
 gst_videomixer2_pad_sink_getcaps (GstPad * pad)
 {
   GstVideoMixer2 *mix;
-  GstVideoMixer2Pad *mixpad;
   GstCaps *srccaps;
   GstStructure *s;
   gint i, n;
 
   mix = GST_VIDEO_MIXER2 (gst_pad_get_parent (pad));
-  mixpad = GST_VIDEO_MIXER2_PAD (pad);
 
   srccaps = gst_pad_get_fixed_caps_func (GST_PAD (mix->srcpad));
   srccaps = gst_caps_make_writable (srccaps);
@@ -1584,7 +1582,6 @@ gst_videomixer2_sink_prepare_buffer (GstCollectPads2 * pads,
   GstVideoMixer2Pad *pad = GST_VIDEO_MIXER2_PAD (data->pad);
   GstVideoMixer2Collect *mixcol = pad->mixcol;
   GstClockTime start_time, end_time;
-  gint64 last_stop;
 
   start_time = GST_BUFFER_TIMESTAMP (buf);
   if (start_time == -1) {
@@ -1615,10 +1612,6 @@ gst_videomixer2_sink_prepare_buffer (GstCollectPads2 * pads,
     start_time *= mix->segment.abs_rate;
     end_time *= mix->segment.abs_rate;
   }
-
-  last_stop = mix->segment.last_stop;
-  if (mix->segment.last_stop == -1)
-    last_stop = mix->segment.start;
 
   if (mixcol->buffer != NULL && end_time < mixcol->end_time) {
     return GST_COLLECT_PADS2_FLOW_DROP;
