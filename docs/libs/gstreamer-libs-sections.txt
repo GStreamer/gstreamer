@@ -240,7 +240,10 @@ gst_base_parse_convert_default
 gst_base_parse_add_index_entry
 
 GstBaseParseFrameFlags
+gst_base_parse_frame_new
 gst_base_parse_frame_init
+gst_base_parse_frame_free
+
 gst_base_parse_push_frame
 
 GST_BASE_PARSE_SRC_PAD
@@ -255,6 +258,7 @@ GST_IS_BASE_PARSE_CLASS
 GST_BASE_PARSE_GET_CLASS
 <SUBSECTION Private>
 gst_base_parse_get_type
+gst_base_parse_frame_get_type
 </SECTION>
 
 <SECTION>

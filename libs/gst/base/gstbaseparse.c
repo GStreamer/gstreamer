@@ -399,8 +399,6 @@ static GstFlowReturn gst_base_parse_process_fragment (GstBaseParse * parse,
 
 static gboolean gst_base_parse_is_seekable (GstBaseParse * parse);
 
-static void gst_base_parse_frame_free (GstBaseParseFrame * frame);
-
 static void
 gst_base_parse_clear_queues (GstBaseParse * parse)
 {
@@ -552,7 +550,7 @@ gst_base_parse_frame_copy (GstBaseParseFrame * frame)
   return copy;
 }
 
-static void
+void
 gst_base_parse_frame_free (GstBaseParseFrame * frame)
 {
   GST_TRACE ("freeing frame %p", frame);
