@@ -2140,12 +2140,14 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   const guint8 *data;
   guint old_min_size = 0, min_size, av;
   GstClockTime timestamp;
-  GstBaseParseFrame _frame = { 0, };
+  GstBaseParseFrame _frame;
   GstBaseParseFrame *frame;
 
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
   frame = &_frame;
+
+  gst_base_parse_frame_init (frame);
 
   if (G_LIKELY (buffer)) {
     GST_LOG_OBJECT (parse, "buffer size: %d, offset = %" G_GINT64_FORMAT,
