@@ -3673,7 +3673,8 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       GST_PLAY_BIN_DYN_LOCK (playbin);
       GST_LOG_OBJECT (playbin, "dynamic lock taken, we can continue shutdown");
       GST_PLAY_BIN_DYN_UNLOCK (playbin);
-      break;
+      if (!do_save)
+        break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* we go async to PAUSED, so if that fails, we never make it to PAUSED
        * an no state change PAUSED to READY passes here,
