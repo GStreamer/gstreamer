@@ -2443,7 +2443,7 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gdouble rate;
-  gboolean update, flush, keyframe, ret;
+  gboolean update, flush, ret;
   GstSegment seeksegment;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
@@ -2454,7 +2454,6 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
 
   flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used ! */
-  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
@@ -2603,7 +2602,7 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gdouble rate;
-  gboolean update, flush, keyframe, ret = FALSE;
+  gboolean update, flush, ret = FALSE;
   GstSegment seeksegment;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
@@ -2620,7 +2619,6 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
 
   flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used */
-  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     /* Flush start up and downstream to make sure data flow and loops are
