@@ -37,6 +37,10 @@
 #include <io.h>
 #endif
 
+#ifdef HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
+#endif
+
 #include <errno.h>
 
 #include <gst/gstconfig.h>
@@ -350,38 +354,74 @@ plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
   gst_registry_add_plugin (l->registry, plugin);
 }
 
+#ifdef __APPLE__
+#if defined(__x86_64__)
+#define USR_BIN_ARCH_SWITCH "-x86_64"
+#elif defined(__i386__)
+#define USR_BIN_ARCH_SWITCH "-i386"
+#elif defined(__ppc__)
+#define USR_BIN_ARCH_SWITCH "-ppc"
+#elif defined(__ppc64__)
+#define USR_BIN_ARCH_SWITCH "-ppc64"
+#endif
+#endif
+
+#define YES_MULTIARCH 1
+#define NO_MULTIARCH  2
+
+#if defined (__APPLE__) && defined (USR_BIN_ARCH_SWITCH)
+static gboolean
+gst_plugin_loader_use_usr_bin_arch (void)
+{
+  static volatile gsize multiarch = 0;
+
+  if (g_once_init_enter (&multiarch)) {
+    gsize res = NO_MULTIARCH;
+
+#ifdef HAVE_SYS_UTSNAME_H
+    {
+      struct utsname uname_data;
+
+      if (uname (&uname_data) == 0) {
+        /* Check for OS X >= 10.5 (darwin kernel 9.0) */
+        GST_LOG ("%s %s", uname_data.sysname, uname_data.release);
+        if (g_ascii_strcasecmp (uname_data.sysname, "Darwin") == 0 &&
+            g_strtod (uname_data.release, NULL) >= 9.0) {
+          res = YES_MULTIARCH;
+        }
+      }
+    }
+#endif
+
+    GST_INFO ("multiarch: %s", (res == YES_MULTIARCH) ? "yes" : "no");
+    g_once_init_leave (&multiarch, res);
+  }
+  return (multiarch == YES_MULTIARCH);
+}
+#endif /* __APPLE__ && USR_BIN_ARCH_SWITCH */
+
 static gboolean
 gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
 {
-#ifdef __APPLE__
-#if defined(__x86_64__)
-  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-x86_64",
-    location, (char *) "-l", NULL
-  };
-#elif defined(__i386__)
-  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-i386",
-    location, (char *) "-l", NULL
-  };
-#elif defined(__ppc__)
-  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-ppc",
-    location, (char *) "-l", NULL
-  };
-#elif defined(__ppc64__)
-  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-ppc64",
-    location, (char *) "-l", NULL
-  };
-#endif
-#else /* ! __APPLE__ */
-  char *argv[] = { location, (char *) "-l", NULL };
-#endif
+  char *argv[5] = { NULL, };
+  int c = 0;
 
-
-#ifdef __APPLE__
-  GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s with arch %s",
-      location, argv[1]);
-#else
-  GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s", location);
+#if defined (__APPLE__) && defined (USR_BIN_ARCH_SWITCH)
+  if (gst_plugin_loader_use_usr_bin_arch ()) {
+    argv[c++] = (char *) "/usr/bin/arch";
+    argv[c++] = (char *) USR_BIN_ARCH_SWITCH;
+  }
 #endif
+  argv[c++] = location;
+  argv[c++] = (char *) "-l";
+  argv[c++] = NULL;
+
+  if (c > 3) {
+    GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s with arch %s",
+        location, argv[1]);
+  } else {
+    GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s", location);
+  }
 
   if (!g_spawn_async_with_pipes (NULL, argv, NULL,
           G_SPAWN_DO_NOT_REAP_CHILD /* | G_SPAWN_STDERR_TO_DEV_NULL */ ,
