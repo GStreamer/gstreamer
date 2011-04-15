@@ -199,6 +199,8 @@
 
 #include "gstbaseparse.h"
 
+#define GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC  (1 << 0)
+
 #define MIN_FRAMES_TO_POST_BITRATE 10
 #define TARGET_DIFFERENCE          (20 * GST_SECOND)
 
@@ -398,8 +400,6 @@ static GstFlowReturn gst_base_parse_process_fragment (GstBaseParse * parse,
 static gboolean gst_base_parse_is_seekable (GstBaseParse * parse);
 
 static void gst_base_parse_frame_free (GstBaseParseFrame * frame);
-static GstBaseParseFrame *gst_base_parse_frame_copy_and_clear (GstBaseParseFrame
-    * frame);
 
 static void
 gst_base_parse_clear_queues (GstBaseParse * parse)
@@ -545,15 +545,21 @@ gst_base_parse_frame_copy (GstBaseParseFrame * frame)
 
   copy = g_slice_dup (GstBaseParseFrame, frame);
   copy->buffer = gst_buffer_ref (frame->buffer);
+  copy->_private_flags &= ~GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
+
   return copy;
 }
 
 static void
 gst_base_parse_frame_free (GstBaseParseFrame * frame)
 {
-  if (frame->buffer)
+  if (frame->buffer) {
     gst_buffer_unref (frame->buffer);
-  g_slice_free (GstBaseParseFrame, frame);
+    frame->buffer = NULL;
+  }
+
+  if (!(frame->_private_flags & GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC))
+    g_slice_free (GstBaseParseFrame, frame);
 }
 
 GType
@@ -578,36 +584,48 @@ gst_base_parse_frame_get_type (void)
  * @frame: #GstBaseParseFrame.
  *
  * Sets a #GstBaseParseFrame to initial state.  Currently this means
- * all fields are zero-ed.
+ * all public fields are zero-ed and a private flag is set to make
+ * sure gst_base_parse_frame_free() only frees the contents but not
+ * the actual frame. Use this function to initialise a #GstBaseParseFrame
+ * allocated on the stack.
  *
  * Since: 0.10.33
  */
 void
 gst_base_parse_frame_init (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
-  memset (frame, 0, sizeof (*frame));
-}
-
-/* clear == frame no longer to be used following this */
-static void
-gst_base_parse_frame_clear (GstBaseParse * parse, GstBaseParseFrame * frame)
-{
-  /* limited for now */
-  if (frame->buffer) {
-    gst_buffer_unref (frame->buffer);
-    frame->buffer = NULL;
-  }
-}
-
-/* copy frame (taking ownership of contents of passed frame) */
-static GstBaseParseFrame *
-gst_base_parse_frame_copy_and_clear (GstBaseParseFrame * frame)
-{
-  GstBaseParseFrame *copy;
-
-  copy = g_slice_dup (GstBaseParseFrame, frame);
   memset (frame, 0, sizeof (GstBaseParseFrame));
-  return copy;
+  frame->_private_flags = GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
+}
+
+/**
+ * gst_base_parse_frame_new:
+ * @buffer: (transfer none): a #GstBuffer
+ * @flags: the flags
+ * @overhead: number of bytes in this frame which should be counted as
+ *     metadata overhead, ie. not used to calculate the average bitrate.
+ *     Set to -1 to mark the entire frame as metadata. If in doubt, set to 0.
+ *
+ * Allocates a new #GstBaseParseFrame. This function is mainly for bindings,
+ * elements written in C should usually allocate the frame on the stack and
+ * then use gst_base_parse_frame_init() to initialise it.
+ *
+ * Returns: a newly-allocated #GstBaseParseFrame. Free with
+ *     gst_base_parse_frame_free() when no longer needed, unless you gave
+ *     away ownership to gst_base_parse_push_frame().
+ *
+ * Since: 0.10.33
+ */
+GstBaseParseFrame *
+gst_base_parse_frame_new (GstBuffer * buffer, GstBaseParseFrameFlags flags,
+    gint overhead)
+{
+  GstBaseParseFrame *frame;
+
+  frame = g_slice_new0 (GstBaseParseFrame);
+  frame->buffer = gst_buffer_ref (buffer);
+
+  return frame;
 }
 
 static inline void
@@ -1507,7 +1525,7 @@ gst_base_parse_check_media (GstBaseParse * parse)
 /* gst_base_parse_handle_and_push_buffer:
  * @parse: #GstBaseParse.
  * @klass: #GstBaseParseClass.
- * @buffer: #GstBuffer.
+ * @frame: (transfer full): a #GstBaseParseFrame
  *
  * Parses the frame from given buffer and pushes it forward. Also performs
  * timestamp handling and checks the segment limits.
@@ -1607,11 +1625,18 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
    * frames to decide on the format and queues them internally */
   /* convert internal flow to OK and mark discont for the next buffer. */
   if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
-    gst_base_parse_frame_clear (parse, frame);
+    gst_base_parse_frame_free (frame);
     return GST_FLOW_OK;
   } else if (ret == GST_BASE_PARSE_FLOW_QUEUED) {
-    g_queue_push_tail (&parse->priv->queued_frames,
-        gst_base_parse_frame_copy_and_clear (frame));
+    if (!(frame->_private_flags & GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC)) {
+      /* frame allocated on the heap, we can just take ownership */
+      g_queue_push_tail (&parse->priv->queued_frames, frame);
+    } else {
+      /* probably allocated on the stack, must make a proper copy */
+      g_queue_push_tail (&parse->priv->queued_frames,
+          gst_base_parse_frame_copy (frame));
+      gst_base_parse_frame_free (frame);
+    }
     return GST_FLOW_OK;
   } else if (ret != GST_FLOW_OK) {
     return ret;
@@ -1637,10 +1662,12 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
 /**
  * gst_base_parse_push_frame:
  * @parse: #GstBaseParse.
- * @frame: #GstBaseParseFrame.
+ * @frame: (transfer full): a #GstBaseParseFrame
  *
  * Pushes the frame downstream, sends any pending events and
- * does some timestamp and segment handling.
+ * does some timestamp and segment handling. Takes ownership
+ * of @frame and will clear it (if it was initialised with
+ * gst_base_parse_frame_init()) or free it.
  *
  * This must be called with sinkpad STREAM_LOCK held.
  *
@@ -1871,7 +1898,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       parse->segment.last_stop < last_stop)
     gst_segment_set_last_stop (&parse->segment, GST_FORMAT_TIME, last_stop);
 
-  gst_base_parse_frame_clear (parse, frame);
+  gst_base_parse_frame_free (frame);
 
   return ret;
 }
@@ -2541,7 +2568,7 @@ gst_base_parse_loop (GstPad * pad)
   GstBaseParse *parse;
   GstBaseParseClass *klass;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBaseParseFrame frame = { 0, };
+  GstBaseParseFrame frame;
 
   parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
   klass = GST_BASE_PARSE_GET_CLASS (parse);
@@ -2558,6 +2585,7 @@ gst_base_parse_loop (GstPad * pad)
     }
   }
 
+  gst_base_parse_frame_init (parse, &frame);
   ret = gst_base_parse_scan_frame (parse, klass, &frame, TRUE);
   if (ret != GST_FLOW_OK)
     goto done;
@@ -3131,7 +3159,7 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
   gboolean orig_drain, orig_discont;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buf = NULL;
-  GstBaseParseFrame frame = { 0, };
+  GstBaseParseFrame frame;
 
   g_return_val_if_fail (GST_FLOW_ERROR, pos != NULL);
   g_return_val_if_fail (GST_FLOW_ERROR, time != NULL);
@@ -3149,6 +3177,8 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
 
   GST_DEBUG_OBJECT (parse, "scanning for frame starting at %" G_GINT64_FORMAT
       " (%#" G_GINT64_MODIFIER "x)", *pos, *pos);
+
+  gst_base_parse_frame_init (parse, &frame);
 
   /* jump elsewhere and locate next frame */
   parse->priv->offset = *pos;
@@ -3170,7 +3200,8 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
   /* but it should provide proper time */
   *time = GST_BUFFER_TIMESTAMP (buf);
   *duration = GST_BUFFER_DURATION (buf);
-  gst_base_parse_frame_clear (parse, &frame);
+
+  gst_base_parse_frame_free (&frame);
 
   GST_LOG_OBJECT (parse,
       "frame with time %" GST_TIME_FORMAT " at offset %" G_GINT64_FORMAT,
