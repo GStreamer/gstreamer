@@ -62,7 +62,7 @@
 
 #define SEND_COMMAND(src, command)          \
 G_STMT_START {                              \
-  int _res; unsigned char c; c = command;   \
+  int G_GNUC_UNUSED _res; unsigned char c; c = command;   \
   _res = write (WRITE_SOCKET(src), &c, 1);  \
 } G_STMT_END
 

@@ -941,10 +941,8 @@ connect_failed:
 static gboolean
 gst_pulseringbuffer_release (GstRingBuffer * buf)
 {
-  GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
 
-  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (buf));
   pbuf = GST_PULSERING_BUFFER_CAST (buf);
 
   pa_threaded_mainloop_lock (mainloop);
@@ -957,12 +955,6 @@ gst_pulseringbuffer_release (GstRingBuffer * buf)
 static void
 gst_pulsering_success_cb (pa_stream * s, int success, void *userdata)
 {
-  GstPulseRingBuffer *pbuf;
-  GstPulseSink *psink;
-
-  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
-  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
-
   pa_threaded_mainloop_signal (mainloop, 0);
 }
 
