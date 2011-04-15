@@ -264,8 +264,7 @@ GstBaseParseFrame * gst_base_parse_frame_new  (GstBuffer              * buffer,
                                                GstBaseParseFrameFlags   flags,
                                                gint                     overhead);
 
-void            gst_base_parse_frame_init      (GstBaseParse      * parse,
-                                                GstBaseParseFrame * frame);
+void            gst_base_parse_frame_init      (GstBaseParseFrame * frame);
 
 GstFlowReturn   gst_base_parse_push_frame      (GstBaseParse      * parse,
                                                 GstBaseParseFrame * frame);

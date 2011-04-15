@@ -580,7 +580,6 @@ gst_base_parse_frame_get_type (void)
 
 /**
  * gst_base_parse_frame_init:
- * @parse: #GstBaseParse.
  * @frame: #GstBaseParseFrame.
  *
  * Sets a #GstBaseParseFrame to initial state.  Currently this means
@@ -592,7 +591,7 @@ gst_base_parse_frame_get_type (void)
  * Since: 0.10.33
  */
 void
-gst_base_parse_frame_init (GstBaseParse * parse, GstBaseParseFrame * frame)
+gst_base_parse_frame_init (GstBaseParseFrame * frame)
 {
   memset (frame, 0, sizeof (GstBaseParseFrame));
   frame->_private_flags = GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
@@ -2585,7 +2584,7 @@ gst_base_parse_loop (GstPad * pad)
     }
   }
 
-  gst_base_parse_frame_init (parse, &frame);
+  gst_base_parse_frame_init (&frame);
   ret = gst_base_parse_scan_frame (parse, klass, &frame, TRUE);
   if (ret != GST_FLOW_OK)
     goto done;
@@ -3178,7 +3177,7 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
   GST_DEBUG_OBJECT (parse, "scanning for frame starting at %" G_GINT64_FORMAT
       " (%#" G_GINT64_MODIFIER "x)", *pos, *pos);
 
-  gst_base_parse_frame_init (parse, &frame);
+  gst_base_parse_frame_init (&frame);
 
   /* jump elsewhere and locate next frame */
   parse->priv->offset = *pos;
