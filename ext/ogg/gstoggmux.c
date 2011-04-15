@@ -848,7 +848,18 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
           /* if we're not yet in data mode, ensure we're setup on the first packet */
           if (!pad->have_type) {
-            pad->have_type = gst_ogg_stream_setup_map (&pad->map, &packet);
+            /* Use headers in caps, if any; this will allow us to be resilient
+             * to starting streams on the fly, and some streams (like VP8
+             * at least) do not send headers packets, as other muxers don't
+             * expect/need them. */
+            pad->have_type =
+                gst_ogg_stream_setup_map_from_caps_headers (&pad->map,
+                GST_BUFFER_CAPS (buf));
+
+            if (!pad->have_type) {
+              /* fallback on the packet */
+              pad->have_type = gst_ogg_stream_setup_map (&pad->map, &packet);
+            }
             if (!pad->have_type) {
               GST_ERROR_OBJECT (pad, "mapper didn't recognise input stream "
                   "(pad caps: %" GST_PTR_FORMAT ")", GST_PAD_CAPS (pad));

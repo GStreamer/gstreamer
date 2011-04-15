@@ -106,6 +106,8 @@ struct _GstOggStream
 
 
 gboolean gst_ogg_stream_setup_map (GstOggStream * pad, ogg_packet *packet);
+gboolean gst_ogg_stream_setup_map_from_caps_headers (GstOggStream * pad,
+    const GstCaps * caps);
 GstClockTime gst_ogg_stream_get_end_time_for_granulepos (GstOggStream *pad,
     gint64 granulepos);
 GstClockTime gst_ogg_stream_get_start_time_for_granulepos (GstOggStream *pad,
