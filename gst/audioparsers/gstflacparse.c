@@ -1056,7 +1056,7 @@ push_headers:
         GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (flacparse))));
 
     /* init, set and give away frame */
-    gst_base_parse_frame_init (GST_BASE_PARSE (flacparse), &frame);
+    gst_base_parse_frame_init (&frame);
     frame.buffer = buf;
     frame.overhead = -1;
     ret = gst_base_parse_push_frame (GST_BASE_PARSE (flacparse), &frame);
