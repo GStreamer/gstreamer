@@ -84,7 +84,6 @@ gboolean
 gst_oss4_mixer_switch_get (GstOss4MixerSwitch * s, gboolean * disabled)
 {
   GstMixerTrack *track;
-  int flag;
   int enabled = -1;
 
   track = GST_MIXER_TRACK (s);
@@ -94,8 +93,6 @@ gst_oss4_mixer_switch_get (GstOss4MixerSwitch * s, gboolean * disabled)
     GST_WARNING_OBJECT (s, "could not get switch state");
     return FALSE;
   }
-
-  flag = (enabled == 0) ? GST_MIXER_TRACK_MUTE : 0;
 
   if (enabled) {
     track->flags &= ~GST_MIXER_TRACK_MUTE;

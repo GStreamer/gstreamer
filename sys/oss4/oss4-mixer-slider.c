@@ -219,7 +219,7 @@ gst_oss4_mixer_slider_set_mute (GstOss4MixerSlider * s, gboolean mute)
     }
     ret = gst_oss4_mixer_set_control_val (s->mixer, s->mc, volume);
   } else {
-    ret = gst_oss4_mixer_set_control_val (s->mixer, s->mc->mute, !!mute);
+    ret = gst_oss4_mixer_set_control_val (s->mixer, s->mc->mute, ! !mute);
   }
 
   if (mute) {
@@ -228,7 +228,7 @@ gst_oss4_mixer_slider_set_mute (GstOss4MixerSlider * s, gboolean mute)
     track->flags &= ~GST_MIXER_TRACK_MUTE;
   }
 
-  return FALSE;
+  return ret;
 }
 
 GstMixerTrack *
@@ -286,7 +286,7 @@ gst_oss4_mixer_slider_process_change_unlocked (GstMixerTrack * track)
 
   if (s->mc->mute != NULL && s->mc->mute->changed) {
     gst_mixer_mute_toggled (GST_MIXER (s->mixer), track,
-        !!s->mc->mute->last_val);
+        ! !s->mc->mute->last_val);
   } else {
     /* nothing to do here, since we don't/can't easily implement the record
      * flag */
