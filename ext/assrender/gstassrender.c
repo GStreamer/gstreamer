@@ -618,100 +618,129 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
         buffer->data + y_offset + ass_image->dst_y * y_stride +
         ass_image->dst_x;
     dst_u =
-        buffer->data + u_offset + ((ass_image->dst_y + 1) / 2) * u_stride +
-        (ass_image->dst_x + 1) / 2;
+        buffer->data + u_offset + (ass_image->dst_y / 2) * u_stride +
+        ass_image->dst_x / 2;
     dst_v =
-        buffer->data + v_offset + ((ass_image->dst_y + 1) / 2) * v_stride +
-        (ass_image->dst_x + 1) / 2;
+        buffer->data + v_offset + (ass_image->dst_y / 2) * v_stride +
+        ass_image->dst_x / 2;
 
-    for (y = 0; y < h - 1; y += 2) {
-      for (x = 0; x < w - 1; x += 2) {
-        k = src[0] * alpha / 255;
-        k2 = k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+    for (y = 0; y < h; y++) {
+      dst_y = buffer->data + y_offset + (ass_image->dst_y + y) * y_stride +
+          ass_image->dst_x;
+      for (x = 0; x < w; x++) {
+        k = src[y * ass_image->w + x] * alpha / 255;
+        dst_y[x] = (k * Y + (255 - k) * dst_y[x]) / 255;
+      }
+    }
 
-        k = src[1] * alpha / 255;
-        k2 += k;
-        dst_y[1] = (k * Y + (255 - k) * dst_y[1]) / 255;
-
-        src += src_stride;
-        dst_y += y_stride;
-
-        k = src[0] * alpha / 255;
-        k2 += k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
-
-        k = src[1] * alpha / 255;
-        k2 += k;
-        dst_y[1] = (k * Y + (255 - k) * dst_y[1]) / 255;
-
-        k2 /= 4;
+    y = 0;
+    if (ass_image->dst_y & 1) {
+      dst_u =
+          buffer->data + u_offset + (ass_image->dst_y / 2) * u_stride +
+          ass_image->dst_x / 2;
+      dst_v =
+          buffer->data + v_offset + (ass_image->dst_y / 2) * v_stride +
+          ass_image->dst_x / 2;
+      x = 0;
+      if (ass_image->dst_x & 1) {
+        k2 = src[y * ass_image->w + x] * alpha / 255;
+        k2 = (k2 + 2) >> 2;
+        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
+        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
+        x++;
+        dst_u++;
+        dst_v++;
+      }
+      for (; x < w - 1; x += 2) {
+        k2 = src[y * ass_image->w + x] * alpha / 255;
+        k2 += src[y * ass_image->w + x + 1] * alpha / 255;
+        k2 = (k2 + 2) >> 2;
         dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
         dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
         dst_u++;
         dst_v++;
-
-        src += -src_stride + 2;
-        dst_y += -y_stride + 2;
       }
-
       if (x < w) {
-        k = src[0] * alpha / 255;
-        k2 = k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+        k2 = src[y * ass_image->w + x] * alpha / 255;
+        k2 = (k2 + 2) >> 2;
+        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
+        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
+      }
+    }
 
-        src += src_stride;
-        dst_y += y_stride;
-
-        k = src[0] * alpha / 255;
-        k2 += k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
-
-        k2 /= 2;
+    for (; y < h - 1; y += 2) {
+      dst_u =
+          buffer->data + u_offset + ((ass_image->dst_y + y) / 2) * u_stride +
+          ass_image->dst_x / 2;
+      dst_v =
+          buffer->data + v_offset + ((ass_image->dst_y + y) / 2) * v_stride +
+          ass_image->dst_x / 2;
+      x = 0;
+      if (ass_image->dst_x & 1) {
+        k2 = src[y * ass_image->w + x] * alpha / 255;
+        k2 += src[(y + 1) * ass_image->w + x] * alpha / 255;
+        k2 = (k2 + 2) >> 2;
+        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
+        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
+        x++;
+        dst_u++;
+        dst_v++;
+      }
+      for (; x < w - 1; x += 2) {
+        k2 = src[y * ass_image->w + x] * alpha / 255;
+        k2 += src[y * ass_image->w + x + 1] * alpha / 255;
+        k2 += src[(y + 1) * ass_image->w + x] * alpha / 255;
+        k2 += src[(y + 1) * ass_image->w + x + 1] * alpha / 255;
+        k2 = (k2 + 2) >> 2;
         dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
         dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
         dst_u++;
         dst_v++;
-
-        src += -src_stride + 1;
-        dst_y += -y_stride + 1;
       }
-
-      src += src_stride + (src_stride - w);
-      dst_y += y_stride + (y_stride - w);
-      dst_u += u_stride - w2;
-      dst_v += v_stride - w2;
+      if (x < w) {
+        k2 = src[y * ass_image->w + x] * alpha / 255;
+        k2 += src[(y + 1) * ass_image->w + x] * alpha / 255;
+        k2 = (k2 + 2) >> 2;
+        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
+        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
+      }
     }
 
     if (y < h) {
-      for (x = 0; x < w - 1; x += 2) {
-        k = src[0] * alpha / 255;
-        k2 = k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
-
-        k = src[1] * alpha / 255;
-        k2 += k;
-        dst_y[1] = (k * Y + (255 - k) * dst_y[1]) / 255;
-
-        k2 /= 2;
+      dst_u =
+          buffer->data + u_offset + (ass_image->dst_y / 2) * u_stride +
+          ass_image->dst_x / 2;
+      dst_v =
+          buffer->data + v_offset + (ass_image->dst_y / 2) * v_stride +
+          ass_image->dst_x / 2;
+      x = 0;
+      if (ass_image->dst_x & 1) {
+        k2 = src[y * ass_image->w + x] * alpha / 255;
+        k2 = (k2 + 2) >> 2;
+        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
+        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
+        x++;
+        dst_u++;
+        dst_v++;
+      }
+      for (; x < w - 1; x += 2) {
+        k2 = src[y * ass_image->w + x] * alpha / 255;
+        k2 += src[y * ass_image->w + x + 1] * alpha / 255;
+        k2 = (k2 + 2) >> 2;
         dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
         dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
         dst_u++;
         dst_v++;
-
-        src += 2;
-        dst_y += 2;
       }
-
       if (x < w) {
-        k = src[0] * alpha / 255;
-        k2 = k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
-
+        k2 = src[y * ass_image->w + x] * alpha / 255;
+        k2 = (k2 + 2) >> 2;
         dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
         dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
       }
     }
+
+
 
   next:
     counter++;
