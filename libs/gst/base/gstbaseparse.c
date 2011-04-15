@@ -547,12 +547,16 @@ gst_base_parse_frame_copy (GstBaseParseFrame * frame)
   copy->buffer = gst_buffer_ref (frame->buffer);
   copy->_private_flags &= ~GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
 
+  GST_TRACE ("copied frame %p -> %p", frame, copy);
+
   return copy;
 }
 
 static void
 gst_base_parse_frame_free (GstBaseParseFrame * frame)
 {
+  GST_TRACE ("freeing frame %p", frame);
+
   if (frame->buffer) {
     gst_buffer_unref (frame->buffer);
     frame->buffer = NULL;
@@ -595,6 +599,7 @@ gst_base_parse_frame_init (GstBaseParseFrame * frame)
 {
   memset (frame, 0, sizeof (GstBaseParseFrame));
   frame->_private_flags = GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
+  GST_TRACE ("inited frame %p", frame);
 }
 
 /**
@@ -624,6 +629,7 @@ gst_base_parse_frame_new (GstBuffer * buffer, GstBaseParseFrameFlags flags,
   frame = g_slice_new0 (GstBaseParseFrame);
   frame->buffer = gst_buffer_ref (buffer);
 
+  GST_TRACE ("created frame %p", frame);
   return frame;
 }
 
@@ -1521,6 +1527,25 @@ gst_base_parse_check_media (GstBaseParse * parse)
   GST_DEBUG_OBJECT (parse, "media is video == %d", parse->priv->is_video);
 }
 
+/* takes ownership of frame */
+static void
+gst_base_parse_queue_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  if (!(frame->_private_flags & GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC)) {
+    /* frame allocated on the heap, we can just take ownership */
+    g_queue_push_tail (&parse->priv->queued_frames, frame);
+    GST_TRACE ("queued frame %p", frame);
+  } else {
+    GstBaseParseFrame *copy;
+
+    /* probably allocated on the stack, must make a proper copy */
+    copy = gst_base_parse_frame_copy (frame);
+    g_queue_push_tail (&parse->priv->queued_frames, copy);
+    GST_TRACE ("queued frame %p (copy of %p)", copy, frame);
+    gst_base_parse_frame_free (frame);
+  }
+}
+
 /* gst_base_parse_handle_and_push_buffer:
  * @parse: #GstBaseParse.
  * @klass: #GstBaseParseClass.
@@ -1627,15 +1652,7 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
     gst_base_parse_frame_free (frame);
     return GST_FLOW_OK;
   } else if (ret == GST_BASE_PARSE_FLOW_QUEUED) {
-    if (!(frame->_private_flags & GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC)) {
-      /* frame allocated on the heap, we can just take ownership */
-      g_queue_push_tail (&parse->priv->queued_frames, frame);
-    } else {
-      /* probably allocated on the stack, must make a proper copy */
-      g_queue_push_tail (&parse->priv->queued_frames,
-          gst_base_parse_frame_copy (frame));
-      gst_base_parse_frame_free (frame);
-    }
+    gst_base_parse_queue_frame (parse, frame);
     return GST_FLOW_OK;
   } else if (ret != GST_FLOW_OK) {
     return ret;
@@ -1685,6 +1702,8 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   g_return_val_if_fail (frame != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (frame->buffer != NULL, GST_FLOW_ERROR);
+
+  GST_TRACE_OBJECT (parse, "pushing frame %p", frame);
 
   buffer = frame->buffer;
 
