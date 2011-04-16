@@ -20,11 +20,11 @@
 
 /**
  * SECTION:element-clockoverlay
- * @see_also: #GstTextOverlay, #GstTimeOverlay
+ * @see_also: #GstBaseTextOverlay, #GstTimeOverlay
  *
  * This element overlays the current clock time on top of a video
  * stream. You can position the text and configure the font details
- * using the properties of the #GstTextOverlay class. By default, the
+ * using the properties of the #GstBaseTextOverlay class. By default, the
  * time is displayed in the top left corner of the picture, with some
  * padding to the left and to the top.
  *
@@ -60,8 +60,8 @@ enum
   PROP_LAST
 };
 
-GST_BOILERPLATE (GstClockOverlay, gst_clock_overlay, GstTextOverlay,
-    GST_TYPE_TEXT_OVERLAY);
+GST_BOILERPLATE (GstClockOverlay, gst_clock_overlay, GstBaseTextOverlay,
+    GST_TYPE_BASE_TEXT_OVERLAY);
 
 static void
 gst_clock_overlay_base_init (gpointer g_class)
@@ -114,7 +114,8 @@ gst_clock_overlay_render_time (GstClockOverlay * overlay)
 
 /* Called with lock held */
 static gchar *
-gst_clock_overlay_get_text (GstTextOverlay * overlay, GstBuffer * video_frame)
+gst_clock_overlay_get_text (GstBaseTextOverlay * overlay,
+    GstBuffer * video_frame)
 {
   gchar *time_str, *txt, *ret;
   GstClockOverlay *clock_overlay = GST_CLOCK_OVERLAY (overlay);
@@ -145,10 +146,10 @@ static void
 gst_clock_overlay_class_init (GstClockOverlayClass * klass)
 {
   GObjectClass *gobject_class;
-  GstTextOverlayClass *gsttextoverlay_class;
+  GstBaseTextOverlayClass *gsttextoverlay_class;
 
   gobject_class = (GObjectClass *) klass;
-  gsttextoverlay_class = (GstTextOverlayClass *) klass;
+  gsttextoverlay_class = (GstBaseTextOverlayClass *) klass;
 
   gobject_class->finalize = gst_clock_overlay_finalize;
   gobject_class->set_property = gst_clock_overlay_set_property;
@@ -180,12 +181,12 @@ static void
 gst_clock_overlay_init (GstClockOverlay * overlay, GstClockOverlayClass * klass)
 {
   PangoFontDescription *font_description;
-  GstTextOverlay *textoverlay;
+  GstBaseTextOverlay *textoverlay;
   PangoContext *context;
 
-  textoverlay = GST_TEXT_OVERLAY (overlay);
+  textoverlay = GST_BASE_TEXT_OVERLAY (overlay);
 
-  context = GST_TEXT_OVERLAY_CLASS (klass)->pango_context;
+  context = GST_BASE_TEXT_OVERLAY_CLASS (klass)->pango_context;
 
   pango_context_set_language (context, pango_language_from_string ("en_US"));
   pango_context_set_base_dir (context, PANGO_DIRECTION_LTR);
@@ -200,8 +201,8 @@ gst_clock_overlay_init (GstClockOverlay * overlay, GstClockOverlayClass * klass)
   pango_context_set_font_description (context, font_description);
   pango_font_description_free (font_description);
 
-  textoverlay->valign = GST_TEXT_OVERLAY_VALIGN_TOP;
-  textoverlay->halign = GST_TEXT_OVERLAY_HALIGN_LEFT;
+  textoverlay->valign = GST_BASE_TEXT_OVERLAY_VALIGN_TOP;
+  textoverlay->halign = GST_BASE_TEXT_OVERLAY_HALIGN_LEFT;
 
   overlay->format = g_strdup (DEFAULT_PROP_TIMEFORMAT);
 }

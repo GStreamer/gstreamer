@@ -1,12 +1,14 @@
 plugin_LTLIBRARIES = libgstpango.la
 
 noinst_HEADERS = \
+        gstbasetextoverlay.h \
 	gstclockoverlay.h \
 	gsttextoverlay.h \
 	gsttextrender.h \
 	gsttimeoverlay.h
 
 libgstpango_la_SOURCES = \
+	gstbasetextoverlay.c \
 	gstclockoverlay.c \
 	gsttextoverlay.c \
 	gsttextrender.c \

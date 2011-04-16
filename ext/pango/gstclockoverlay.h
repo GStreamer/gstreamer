@@ -22,7 +22,7 @@
 #ifndef __GST_CLOCK_OVERLAY_H__
 #define __GST_CLOCK_OVERLAY_H__
 
-#include "gsttextoverlay.h"
+#include "gstbasetextoverlay.h"
 
 G_BEGIN_DECLS
 
@@ -46,13 +46,13 @@ typedef struct _GstClockOverlayClass GstClockOverlayClass;
  * Opaque clockoverlay data structure.
  */
 struct _GstClockOverlay {
-  GstTextOverlay textoverlay;
+  GstBaseTextOverlay textoverlay;
   gchar         *format; /* as in strftime () */
   gchar         *text;
 };
 
 struct _GstClockOverlayClass {
-  GstTextOverlayClass parent_class;
+  GstBaseTextOverlayClass parent_class;
 };
 
 GType gst_clock_overlay_get_type (void);

@@ -1,171 +1,60 @@
+/* GStreamer
+ * Copyright (C) 2011 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+
 #ifndef __GST_TEXT_OVERLAY_H__
 #define __GST_TEXT_OVERLAY_H__
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/controller/gstcontroller.h>
-#include <pango/pangocairo.h>
+#include "gstbasetextoverlay.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_TEXT_OVERLAY            (gst_text_overlay_get_type())
-#define GST_TEXT_OVERLAY(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),\
-                                         GST_TYPE_TEXT_OVERLAY, GstTextOverlay))
-#define GST_TEXT_OVERLAY_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),\
-                                         GST_TYPE_TEXT_OVERLAY,GstTextOverlayClass))
-#define GST_TEXT_OVERLAY_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),\
-                                         GST_TYPE_TEXT_OVERLAY, GstTextOverlayClass))
-#define GST_IS_TEXT_OVERLAY(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),\
-                                         GST_TYPE_TEXT_OVERLAY))
-#define GST_IS_TEXT_OVERLAY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),\
-                                         GST_TYPE_TEXT_OVERLAY))
+#define GST_TYPE_TEXT_OVERLAY \
+  (gst_text_overlay_get_type())
+#define GST_TEXT_OVERLAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TEXT_OVERLAY,GstTextOverlay))
+#define GST_TEXT_OVERLAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TEXT_OVERLAY,GstTextOverlayClass))
+#define GST_IS_TEXT_OVERLAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TEXT_OVERLAY))
+#define GST_IS_TEXT_OVERLAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TEXT_OVERLAY))
 
-typedef struct _GstTextOverlay      GstTextOverlay;
+typedef struct _GstTextOverlay GstTextOverlay;
 typedef struct _GstTextOverlayClass GstTextOverlayClass;
-
-/**
- * GstTextOverlayVAlign:
- * @GST_TEXT_OVERLAY_VALIGN_BASELINE: draw text on the baseline
- * @GST_TEXT_OVERLAY_VALIGN_BOTTOM: draw text on the bottom
- * @GST_TEXT_OVERLAY_VALIGN_TOP: draw text on top
- * @GST_TEXT_OVERLAY_VALIGN_POS: draw text according to the #GstTextOverlay:ypos property
- * @GST_TEXT_OVERLAY_VALIGN_CENTER: draw text vertically centered
- *
- * Vertical alignment of the text.
- */
-typedef enum {
-    GST_TEXT_OVERLAY_VALIGN_BASELINE,
-    GST_TEXT_OVERLAY_VALIGN_BOTTOM,
-    GST_TEXT_OVERLAY_VALIGN_TOP,
-    GST_TEXT_OVERLAY_VALIGN_POS,
-    GST_TEXT_OVERLAY_VALIGN_CENTER
-} GstTextOverlayVAlign;
-
-/**
- * GstTextOverlayHAlign:
- * @GST_TEXT_OVERLAY_HALIGN_LEFT: align text left
- * @GST_TEXT_OVERLAY_HALIGN_CENTER: align text center
- * @GST_TEXT_OVERLAY_HALIGN_RIGHT: align text right
- * @GST_TEXT_OVERLAY_HALIGN_POS: position text according to the #GstTextOverlay:xpos property
- *
- * Horizontal alignment of the text.
- */
-/* FIXME 0.11: remove GST_TEXT_OVERLAY_HALIGN_UNUSED */
-typedef enum {
-    GST_TEXT_OVERLAY_HALIGN_LEFT,
-    GST_TEXT_OVERLAY_HALIGN_CENTER,
-    GST_TEXT_OVERLAY_HALIGN_RIGHT,
-    GST_TEXT_OVERLAY_HALIGN_UNUSED,
-    GST_TEXT_OVERLAY_HALIGN_POS
-} GstTextOverlayHAlign;
-
-/**
- * GstTextOverlayWrapMode:
- * @GST_TEXT_OVERLAY_WRAP_MODE_NONE: no wrapping
- * @GST_TEXT_OVERLAY_WRAP_MODE_WORD: do word wrapping
- * @GST_TEXT_OVERLAY_WRAP_MODE_CHAR: do char wrapping
- * @GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR: do word and char wrapping
- *
- * Whether to wrap the text and if so how.
- */
-typedef enum {
-    GST_TEXT_OVERLAY_WRAP_MODE_NONE = -1,
-    GST_TEXT_OVERLAY_WRAP_MODE_WORD = PANGO_WRAP_WORD,
-    GST_TEXT_OVERLAY_WRAP_MODE_CHAR = PANGO_WRAP_CHAR,
-    GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR = PANGO_WRAP_WORD_CHAR
-} GstTextOverlayWrapMode;
-
-/**
- * GstTextOverlayLineAlign:
- * @GST_TEXT_OVERLAY_LINE_ALIGN_LEFT: lines are left-aligned
- * @GST_TEXT_OVERLAY_LINE_ALIGN_CENTER: lines are center-aligned
- * @GST_TEXT_OVERLAY_LINE_ALIGN_RIGHT: lines are right-aligned
- *
- * Alignment of text lines relative to each other
- */
-typedef enum {
-    GST_TEXT_OVERLAY_LINE_ALIGN_LEFT = PANGO_ALIGN_LEFT,
-    GST_TEXT_OVERLAY_LINE_ALIGN_CENTER = PANGO_ALIGN_CENTER,
-    GST_TEXT_OVERLAY_LINE_ALIGN_RIGHT = PANGO_ALIGN_RIGHT
-} GstTextOverlayLineAlign;
 
 /**
  * GstTextOverlay:
  *
- * Opaque textoverlay object structure
+ * Opaque textoverlay data structure.
  */
 struct _GstTextOverlay {
-    GstElement               element;
-
-    GstPad                  *video_sinkpad;
-    GstPad                  *text_sinkpad;
-    GstPad                  *srcpad;
-
-    GstSegment               segment;
-    GstSegment               text_segment;
-    GstBuffer               *text_buffer;
-    gboolean                text_linked;
-    gboolean                video_flushing;
-    gboolean                video_eos;
-    gboolean                text_flushing;
-    gboolean                text_eos;
-
-    GCond                   *cond;  /* to signal removal of a queued text
-                                     * buffer, arrival of a text buffer,
-                                     * a text segment update, or a change
-                                     * in status (e.g. shutdown, flushing) */
-
-    gint                     width;
-    gint                     height;
-    gint                     fps_n;
-    gint                     fps_d;
-    GstVideoFormat           format;
-
-    GstTextOverlayVAlign     valign;
-    GstTextOverlayHAlign     halign;
-    GstTextOverlayWrapMode   wrap_mode;
-    GstTextOverlayLineAlign  line_align;
-
-    gint                     xpad;
-    gint                     ypad;
-    gint                     deltax;
-    gint                     deltay;
-    gdouble                  xpos;
-    gdouble                  ypos;
-    gchar                   *default_text;
-    gboolean                 want_shading;
-    gboolean                 silent;
-    gboolean                 wait_text;
-    guint                    color;
-
-    PangoLayout             *layout;
-    gdouble                  shadow_offset;
-    gdouble                  outline_offset;
-    guchar                  *text_image;
-    gint                     image_width;
-    gint                     image_height;
-    gint                     baseline_y;
-
-    gboolean                 auto_adjust_size;
-    gboolean                 need_render;
-
-    gint                     shading_value;  /* for timeoverlay subclass */
-
-    gboolean                 have_pango_markup;
-    gboolean                 use_vertical_render;
+  GstBaseTextOverlay parent;
 };
 
 struct _GstTextOverlayClass {
-    GstElementClass parent_class;
-
-    PangoContext *pango_context;
-    GMutex       *pango_lock;
-
-    gchar *     (*get_text) (GstTextOverlay *overlay, GstBuffer *video_frame);
+  GstBaseTextOverlayClass parent_class;
 };
 
-GType gst_text_overlay_get_type(void) G_GNUC_CONST;
+GType gst_text_overlay_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_TEXT_OVERLAY_H */
+#endif /* __GST_TEXT_OVERLAY_H__ */
+

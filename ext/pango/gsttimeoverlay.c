@@ -20,11 +20,11 @@
 
 /**
  * SECTION:element-timeoverlay
- * @see_also: #GstTextOverlay, #GstClockOverlay
+ * @see_also: #GstBaseTextOverlay, #GstClockOverlay
  *
  * This element overlays the buffer time stamps of a video stream on
  * top of itself. You can position the text and configure the font details
- * using the properties of the #GstTextOverlay class. By default, the
+ * using the properties of the #GstBaseTextOverlay class. By default, the
  * time stamp is displayed in the top left corner of the picture, with some
  * padding to the left and to the top.
  *
@@ -50,8 +50,8 @@
 
 #include <gsttimeoverlay.h>
 
-GST_BOILERPLATE (GstTimeOverlay, gst_time_overlay, GstTextOverlay,
-    GST_TYPE_TEXT_OVERLAY);
+GST_BOILERPLATE (GstTimeOverlay, gst_time_overlay, GstBaseTextOverlay,
+    GST_TYPE_BASE_TEXT_OVERLAY);
 
 static void
 gst_time_overlay_base_init (gpointer g_class)
@@ -82,7 +82,8 @@ gst_time_overlay_render_time (GstTimeOverlay * overlay, GstClockTime time)
 
 /* Called with lock held */
 static gchar *
-gst_time_overlay_get_text (GstTextOverlay * overlay, GstBuffer * video_frame)
+gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
+    GstBuffer * video_frame)
 {
   GstClockTime time = GST_BUFFER_TIMESTAMP (video_frame);
   gchar *time_str, *txt, *ret;
@@ -115,9 +116,9 @@ gst_time_overlay_get_text (GstTextOverlay * overlay, GstBuffer * video_frame)
 static void
 gst_time_overlay_class_init (GstTimeOverlayClass * klass)
 {
-  GstTextOverlayClass *gsttextoverlay_class;
+  GstBaseTextOverlayClass *gsttextoverlay_class;
 
-  gsttextoverlay_class = (GstTextOverlayClass *) klass;
+  gsttextoverlay_class = (GstBaseTextOverlayClass *) klass;
 
   gsttextoverlay_class->get_text = gst_time_overlay_get_text;
 }
@@ -126,12 +127,12 @@ static void
 gst_time_overlay_init (GstTimeOverlay * overlay, GstTimeOverlayClass * klass)
 {
   PangoFontDescription *font_description;
-  GstTextOverlay *textoverlay;
+  GstBaseTextOverlay *textoverlay;
   PangoContext *context;
 
-  textoverlay = GST_TEXT_OVERLAY (overlay);
+  textoverlay = GST_BASE_TEXT_OVERLAY (overlay);
 
-  context = GST_TEXT_OVERLAY_CLASS (klass)->pango_context;
+  context = GST_BASE_TEXT_OVERLAY_CLASS (klass)->pango_context;
 
   pango_context_set_language (context, pango_language_from_string ("en_US"));
   pango_context_set_base_dir (context, PANGO_DIRECTION_LTR);
@@ -146,6 +147,6 @@ gst_time_overlay_init (GstTimeOverlay * overlay, GstTimeOverlayClass * klass)
   pango_context_set_font_description (context, font_description);
   pango_font_description_free (font_description);
 
-  textoverlay->valign = GST_TEXT_OVERLAY_VALIGN_TOP;
-  textoverlay->halign = GST_TEXT_OVERLAY_HALIGN_LEFT;
+  textoverlay->valign = GST_BASE_TEXT_OVERLAY_VALIGN_TOP;
+  textoverlay->halign = GST_BASE_TEXT_OVERLAY_HALIGN_LEFT;
 }
