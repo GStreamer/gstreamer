@@ -4,9 +4,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#ifndef DISABLE_ORC
-#include <orc/orc.h>
-#endif
 #include <glib.h>
 
 #ifndef _ORC_INTEGER_TYPEDEFS_
@@ -32,6 +29,7 @@ typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
 #define ORC_UINT64_C(x) (x##Ui64)
+#define inline __inline
 #else
 #include <limits.h>
 typedef signed char orc_int8;
@@ -71,8 +69,20 @@ typedef union
   orc_int16 x4[4];
 } orc_union64;
 #endif
+#ifndef ORC_RESTRICT
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
+#endif
 
-void orc_splat_u32 (guint32 * d1, int p1, int n);
+#ifndef DISABLE_ORC
+#include <orc/orc.h>
+#endif
+void orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n);
 
 
 /* begin Orc C target preamble */
@@ -106,12 +116,14 @@ void orc_splat_u32 (guint32 * d1, int p1, int n);
 #define ORC_ISNAN(x) ((((x)&0x7f800000) == 0x7f800000) && (((x)&0x007fffff) != 0))
 #define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == 0) ? ORC_UINT64_C(0xfff0000000000000) : ORC_UINT64_C(0xffffffffffffffff)))
 #define ORC_ISNAN_DOUBLE(x) ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == ORC_UINT64_C(0x7ff0000000000000)) && (((x)&ORC_UINT64_C(0x000fffffffffffff)) != 0))
+#ifndef ORC_RESTRICT
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
 #define ORC_RESTRICT __restrict__
 #else
 #define ORC_RESTRICT
+#endif
 #endif
 /* end Orc C target preamble */
 
@@ -120,7 +132,7 @@ void orc_splat_u32 (guint32 * d1, int p1, int n);
 /* orc_splat_u32 */
 #ifdef DISABLE_ORC
 void
-orc_splat_u32 (guint32 * d1, int p1, int n)
+orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -166,7 +178,7 @@ _backup_orc_splat_u32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_splat_u32 (guint32 * d1, int p1, int n)
+orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -176,7 +188,6 @@ orc_splat_u32 (guint32 * d1, int p1, int n)
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
-      OrcCompileResult result;
 
       p = orc_program_new ();
       orc_program_set_name (p, "orc_splat_u32");
@@ -187,7 +198,7 @@ orc_splat_u32 (guint32 * d1, int p1, int n)
       orc_program_append_2 (p, "copyl", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
           ORC_VAR_D1);
 
-      result = orc_program_compile (p);
+      orc_program_compile (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();

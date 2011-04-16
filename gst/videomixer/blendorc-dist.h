@@ -58,13 +58,22 @@ typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
 typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;
 #endif
-void orc_splat_u32 (guint32 * d1, int p1, int n);
-void orc_memcpy_u32 (guint32 * d1, const guint32 * s1, int n);
-void orc_blend_u8 (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int p1, int n, int m);
-void orc_blend_argb (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int p1, int n, int m);
-void orc_blend_bgra (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int p1, int n, int m);
-void orc_overlay_argb (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int p1, int n, int m);
-void orc_overlay_bgra (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int p1, int n, int m);
+#ifndef ORC_RESTRICT
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
+#endif
+void orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n);
+void orc_memcpy_u32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n);
+void orc_blend_u8 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void orc_blend_argb (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void orc_blend_bgra (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void orc_overlay_argb (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
 
 #ifdef __cplusplus
 }
