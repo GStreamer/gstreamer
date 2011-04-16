@@ -113,7 +113,7 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
         "mpegversion = (int) { 1, 2, 4 }, "
         "systemstream = (boolean) false; "
         "video/x-dirac;"
-        "video/x-h264;"
+        "video/x-h264,stream-format=(string)byte-stream;"
         "audio/mpeg, "
         "mpegversion = (int) { 1, 2, 4 };"
         "audio/x-lpcm, "
