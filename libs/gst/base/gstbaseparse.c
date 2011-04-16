@@ -2854,8 +2854,8 @@ exit:
  *
  * By default, announced average bitrate is estimated. The average bitrate
  * is used to estimate the total duration of the stream and to estimate
- * a seek position, if there's no index and #GST_BASE_PARSE_FORMAT_FLAG_SYNCABLE
- * is set.
+ * a seek position, if there's no index and the format is syncable
+ * (see gst_base_parse_set_syncable()).
  *
  * Since: 0.10.33
  */
