@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-17 23:54+0000\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -405,6 +405,13 @@ msgstr "tekijänoikeus-uri"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI huomautukseen datan tekijänoikeuksista"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "koodain"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "yhteystiedot"
@@ -1046,6 +1053,9 @@ msgstr "VIRHE: ei voitu jäsentää komentoriviargumenttia %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VAROITUS: elementtiä nimeltä ”%s” ei löytynyt.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Saatiin viesti #%u elementiltä ”%s” (%s): "
@@ -1150,6 +1160,9 @@ msgstr "Tulosta varausjälki (jos valittu käännöksen yhteydessä)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Pakota virran-loppu lähteille ennen liukuhihan sammuttamista"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

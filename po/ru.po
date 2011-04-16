@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-29 14:08+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-10-25 14:54+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -405,6 +405,13 @@ msgstr "URI авторских прав"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI уведомления об авторских правах"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "кодировщик"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "контакт"
@@ -1050,6 +1057,9 @@ msgstr "ОШИБКА: ошибка обработки аргумента ком�
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: элемент с именем «%s» не найден.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Получено сообщение #%u от элемента «%s» (%s): "
@@ -1154,6 +1164,9 @@ msgstr "Вывести трассировку выделения памяти (�
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Выдать EOS в источники перед закрытием конвейера"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

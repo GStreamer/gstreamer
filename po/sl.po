@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-09-18 20:21+0100\n"
 "Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -398,6 +398,13 @@ msgstr "naslov uri avtorskih pravic"
 
 msgid "URI to the copyright notice of the data"
 msgstr "naslov URI do obvestila avtorstva podatkov"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "kodirnik"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "stik"
@@ -1043,6 +1050,9 @@ msgstr "Napaka: ni mogoče razčleniti argumenta %d ukazne vrstice: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "Opozorilo: predmeta z imenom '%s' ni mogoče najti.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Prejeto sporočilo #%u od predmeta \"%s\" (%s): "
@@ -1149,6 +1159,9 @@ msgstr ""
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Viru vsili EOS pred zaustavljanjem predvajanja vsebine cevovoda"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -412,6 +412,13 @@ msgstr "copyright"
 #, fuzzy
 msgid "URI to the copyright notice of the data"
 msgstr "copyright notice of the data"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "encoder"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "contact"
@@ -1055,6 +1062,9 @@ msgstr "ERROR: could not parse command line argument %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WARNING: element named '%s' not found.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr ""
@@ -1158,6 +1168,9 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Print alloc trace (if enabled at compile time)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
+msgid "Gather and print index statistics"
 msgstr ""
 
 #, c-format

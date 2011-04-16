@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2006-01-18 22:26+0200\n"
 "Last-Translator: Ales Nyakhaychyk <nab@mail.by>\n"
 "Language-Team: Belarusian <i18n@mova.org>\n"
@@ -391,6 +391,12 @@ msgid "copyright uri"
 msgstr ""
 
 msgid "URI to the copyright notice of the data"
+msgstr ""
+
+msgid "encoded by"
+msgstr ""
+
+msgid "name of the encoding person or organization"
 msgstr ""
 
 msgid "contact"
@@ -1008,6 +1014,9 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr ""
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr ""
@@ -1109,6 +1118,9 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
 
 msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
+msgid "Gather and print index statistics"
 msgstr ""
 
 #, c-format

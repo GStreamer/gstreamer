@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-17 23:54+0000\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-11-01 13:39+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -401,6 +401,13 @@ msgstr "védjegy uri"
 
 msgid "URI to the copyright notice of the data"
 msgstr "Az adatok védjegymegjegyzésének URI címe"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "kódoló"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "névjegy"
@@ -1038,6 +1045,9 @@ msgstr "HIBA: nem elemezhető a(z) %d. parancssori argumentum: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "FIGYELMEZTETÉS: a(z) „%s” nevű elem nem található.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "%u számú üzenet érkezett a következő elemtől: „%s” (%s)."
@@ -1142,6 +1152,9 @@ msgstr "Foglalási nyomkövetés kiírása (ha fordításkor engedélyezték)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "EOS kényszerítése a forrásokra az adatcsatorna leállítása előtt"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

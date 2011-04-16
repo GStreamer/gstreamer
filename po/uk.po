@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2007-09-07 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -401,6 +401,13 @@ msgstr "uri авторських прав"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI примітки про авторські права даних"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "кодер"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "контакти"
@@ -1051,6 +1058,9 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПОПЕРЕДЖЕННЯ: елемент з назвою \"%s\" не існує.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Отримано повідомлення від елементу \"%s\" (%s): "
@@ -1157,6 +1167,9 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Вивести трасу розподілу (якщо ввімкнено при компіляції)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
+msgid "Gather and print index statistics"
 msgstr ""
 
 #, c-format

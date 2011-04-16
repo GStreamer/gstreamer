@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -386,6 +386,13 @@ msgstr "版权 uri"
 
 msgid "URI to the copyright notice of the data"
 msgstr "数据的版权警告 URI"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "编码器"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "联系人"
@@ -1017,6 +1024,9 @@ msgstr "错误: 无法解析命令行参数 %d: %s。\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "警告: 组件名‘%s’未找到。\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "从组件\"%2$s\"(%3$s)中获取信息 #%1$u:"
@@ -1122,6 +1132,9 @@ msgstr "打印分配记录(如果在编译时开启的话)"
 #, fuzzy
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "关闭管道前强制对源发出 EOS 信号"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

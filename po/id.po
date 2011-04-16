@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-06-29 21:55+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -404,6 +404,13 @@ msgstr "uri hak cipta"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI ke keterangan hak cipta data"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "penyandi"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "kontak"
@@ -1045,6 +1052,9 @@ msgstr "GALAT: tak dapat menguraikan argumen baris perintah %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "GALAT: elemen yang dinamakan '%s' tak ditemukan.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Mendapat pesan #%u dari elemen \"%s\" (%s): "
@@ -1149,6 +1159,9 @@ msgstr "Cetak jejak alokasi (jika diaktifkan sewaktu kompilasi)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Paksa EOS pada sumber sebelum mematikan pemipaan"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

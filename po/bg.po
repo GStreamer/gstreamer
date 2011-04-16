@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-17 23:54+0000\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-11-04 14:22+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -405,6 +405,13 @@ msgstr "адрес за авторски права"
 
 msgid "URI to the copyright notice of the data"
 msgstr "адрес на означението на авторските права на данните"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "кодер"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "контакт"
@@ -1048,6 +1055,9 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: елементът на име „%s“ не е открит.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Получено е съобщение #%u от елемент „%s“ (%s): "
@@ -1155,6 +1165,9 @@ msgstr ""
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""
 "Принудително извеждане на EOS за източниците преди спирането на конвейера"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

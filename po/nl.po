@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-29 14:08+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-10-25 19:10+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -409,6 +409,13 @@ msgstr "auteursrecht-uri"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI naar de auteursrechtvermelding van de gegevens"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "encoder"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "contact"
@@ -1056,6 +1063,9 @@ msgstr "FOUT: kon argument %d op opdrachtregel niet verwerken: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Bericht #%u ontvangen uit element \"%s\" (%s): "
@@ -1160,6 +1170,9 @@ msgstr "Toewijzingsspoor weergeven (indien aangezet tijdens compileren)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Forceer een EOS op de bron bij het afsluiten van de pijplijn"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

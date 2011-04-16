@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -412,6 +412,13 @@ msgstr "copyrightaren URIa"
 
 msgid "URI to the copyright notice of the data"
 msgstr "datuen egile-eskubideei buruzko informazioa atzitzeko URIa"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "kodetzailea"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "kontaktua"
@@ -1054,6 +1061,9 @@ msgstr "ERROREA: ezin izan da komando-lerroko %d. argumentua analizatu: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "KONTUZ: ez da aurkitu '%s' izeneko elementua.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "\"%2$s\" (%3$s) elementuaren %1$u. mezua jaso da: "
@@ -1160,6 +1170,9 @@ msgstr "Inprimatu esleipenen segimendua (konpilatzean gaitu bada)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Derrigortu EOS iturburuetan kanalizazioa itzali aurretik"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
