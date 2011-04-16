@@ -148,8 +148,9 @@ typedef struct {
   guint       flags;
   gint        overhead;
   /*< private >*/
-  gint        _gst_reserved_i[2];
+  guint       _gst_reserved_i[2];
   gpointer    _gst_reserved_p[2];
+  guint       _private_flags;
 } GstBaseParseFrame;
 
 typedef struct _GstBaseParse GstBaseParse;
@@ -257,8 +258,15 @@ struct _GstBaseParseClass {
 
 GType           gst_base_parse_get_type (void);
 
-void            gst_base_parse_frame_init      (GstBaseParse      * parse,
-                                                GstBaseParseFrame * frame);
+GType           gst_base_parse_frame_get_type (void);
+
+GstBaseParseFrame * gst_base_parse_frame_new  (GstBuffer              * buffer,
+                                               GstBaseParseFrameFlags   flags,
+                                               gint                     overhead);
+
+void            gst_base_parse_frame_init      (GstBaseParseFrame * frame);
+
+void            gst_base_parse_frame_free      (GstBaseParseFrame * frame);
 
 GstFlowReturn   gst_base_parse_push_frame      (GstBaseParse      * parse,
                                                 GstBaseParseFrame * frame);

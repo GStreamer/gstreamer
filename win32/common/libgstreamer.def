@@ -733,6 +733,7 @@ EXPORTS
 	gst_parse_bin_from_description_full
 	gst_parse_context_free
 	gst_parse_context_get_missing_elements
+	gst_parse_context_get_type
 	gst_parse_context_new
 	gst_parse_error_get_type
 	gst_parse_error_quark
