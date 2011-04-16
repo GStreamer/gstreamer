@@ -272,7 +272,8 @@ gir_headers=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_MAJORMINOR@include_HEA
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_MAJORMINOR@_la_SOURCES))
 
 Gst-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_MAJORMINOR@.la
-	$(AM_V_GEN)$(INTROSPECTION_SCANNER) -v --namespace Gst \
+	$(AM_V_GEN)GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
+		$(INTROSPECTION_SCANNER) -v --namespace Gst \
 		--nsversion=@GST_MAJORMINOR@ \
 		-I$(top_srcdir) \
 		-I$(top_builddir) \
