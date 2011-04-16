@@ -3,7 +3,7 @@
   <description>Scale audio tempo in sync with playback rate</description>
   <filename>../../gst/scaletempo/.libs/libgstscaletempoplugin.so</filename>
   <basename>libgstscaletempoplugin.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.21.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>

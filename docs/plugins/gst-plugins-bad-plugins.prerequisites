@@ -3,6 +3,6 @@ GstImplementsInterface GstElement
 GstXOverlay GstImplementsInterface GstElement
 GstTagSetter GstElement
 GstColorBalance GstImplementsInterface GstElement
-GstMixer GstImplementsInterface GstElement
+GstTagXmpWriter GstElement
 MXFDescriptiveMetadataFrameworkInterface MXFDescriptiveMetadata
 GstPhotography GstImplementsInterface GstElement

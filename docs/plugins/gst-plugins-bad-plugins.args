@@ -650,7 +650,7 @@
 
 <ARG>
 <NAME>GstNeonhttpSrc::cookies</NAME>
-<TYPE>GStrv*</TYPE>
+<TYPE>GStrv</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Cookies</NICK>
@@ -22299,7 +22299,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>M2TS(192 bytes) Mode</NICK>
-<BLURB>Defines what packet size to use, normal TS format ie .ts(188 bytes) or Blue-Ray disc ie .m2ts(192 bytes).</BLURB>
+<BLURB>Set to TRUE to output Blu-Ray disc format with 192 byte packets. FALSE for standard TS format with 188 byte packets.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -23510,6 +23510,46 @@
 <FLAGS>rw</FLAGS>
 <NICK>Signal fps measurements</NICK>
 <BLURB>If the fps-measurements signal should be emited.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFPSDisplaySink::frames-dropped</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>dropped frames</NICK>
+<BLURB>Number of frames dropped by the sink.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFPSDisplaySink::frames-rendered</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>rendered frames</NICK>
+<BLURB>Number of frames rendered.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFPSDisplaySink::last-message</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Last Message</NICK>
+<BLURB>The message describing current status.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFPSDisplaySink::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable stdout output</NICK>
+<BLURB>Don't produce last_message events.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -26510,7 +26550,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>2.34813e-310</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26550,7 +26590,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>4.43069e-315</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26560,7 +26600,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.15117e-321</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26590,7 +26630,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>3.81574e-236</DEFAULT>
+<DEFAULT>1.01856e-311</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26600,7 +26640,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>2.58656e-231</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26610,7 +26650,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>-6.17189e+303</DEFAULT>
+<DEFAULT>1.37974e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26640,7 +26680,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>7.05334e-30</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26650,7 +26690,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>7.05334e-30</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26990,7 +27030,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>8.20251e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27000,7 +27040,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.3852e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27010,7 +27050,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>7.74861e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27180,7 +27220,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>8.20251e-304</DEFAULT>
+<DEFAULT>4.74303e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27190,7 +27230,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>-5.83035e+303</DEFAULT>
+<DEFAULT>1.37429e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27370,7 +27410,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>1.86264e-09</DEFAULT>
+<DEFAULT>2.2262e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -30901,6 +30941,16 @@
 <NICK>location</NICK>
 <BLURB>location of PNG file to overlay.</BLURB>
 <DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLogoinsert::data</NAME>
+<TYPE>GstBuffer*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>data</NICK>
+<BLURB>Buffer containing PNG file to overlay.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -45980,7 +46030,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Permissions on the shm area</NICK>
 <BLURB>Permissions to set on the shm area.</BLURB>
-<DEFAULT>504</DEFAULT>
+<DEFAULT>416</DEFAULT>
 </ARG>
 
 <ARG>
@@ -47321,5 +47371,545 @@
 <NICK>User name</NICK>
 <BLURB>User name to use for server authentication.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::block-height</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block height</NICK>
+<BLURB>Block height for windowed comb detection.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::block-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block threshold</NICK>
+<BLURB>Block threshold for windowed comb detection.</BLURB>
+<DEFAULT>80</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::block-width</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block width</NICK>
+<BLURB>Block width for windowed comb detection.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::comb-method</NAME>
+<TYPE>FieldAnalysisCombMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Comb-detection Method</NICK>
+<BLURB>Metric to be used for identifying comb artifacts if using windowed comb detection.</BLURB>
+<DEFAULT>5-tap [1,-3,4,-3,1] vertical filter result is larger than spatial threshold*6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::field-metric</NAME>
+<TYPE>GstFieldAnalysisFieldMetric</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Field Metric</NICK>
+<BLURB>Metric to be used for comparing same parity fields to decide if they are a repeated field for telecine.</BLURB>
+<DEFAULT>Sum of Squared Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::field-threshold</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Field Threshold</NICK>
+<BLURB>Threshold for field metric decisions.</BLURB>
+<DEFAULT>0.08</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::frame-metric</NAME>
+<TYPE>GstFieldAnalysisFrameMetric</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame Metric</NICK>
+<BLURB>Metric to be used for comparing opposite parity fields to decide if they are a progressive frame.</BLURB>
+<DEFAULT>5-tap [1,-3,4,-3,1] Vertical Filter</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::frame-threshold</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame Threshold</NICK>
+<BLURB>Threshold for frame metric decisions.</BLURB>
+<DEFAULT>0.002</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::ignored-lines</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 2</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignored lines</NICK>
+<BLURB>Ignore this many lines from the top and bottom for windowed comb detection.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::noise-floor</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Floor</NICK>
+<BLURB>Noise floor for appropriate metrics (per-pixel metric values with a score less than this will be ignored).</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFieldAnalysis::spatial-threshold</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial Combing Threshold</NICK>
+<BLURB>Threshold for combing metric decisions.</BLURB>
+<DEFAULT>9</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHLSDemux::bitrate-switch-tolerance</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate switch tolerance</NICK>
+<BLURB>Tolerance with respect of the fragment duration to switch to a different bitrate if the client is too slow/fast.</BLURB>
+<DEFAULT>0.4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHLSDemux::fragments-cache</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 2</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fragments cache</NICK>
+<BLURB>Number of fragments needed to be cached to start playing.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWrapperCameraBinSrc::video-src</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video source</NICK>
+<BLURB>The video source element to be used.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstViewfinderBin::video-sink</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video Sink</NICK>
+<BLURB>the video output element to use (NULL = default).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstImageCaptureBin::image-encoder</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image encoder</NICK>
+<BLURB>Image encoder GStreamer element (default is jpegenc).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstImageCaptureBin::image-muxer</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image muxer</NICK>
+<BLURB>Image muxer GStreamer element (default is jifmux).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstImageCaptureBin::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>Location to save the captured files. A %%d can be used as a placeholder for a capture count.</BLURB>
+<DEFAULT>"img_%d"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::audio-capture-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio capture caps</NICK>
+<BLURB>Format to capture audio for video recording represented as GstCaps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::audio-capture-supported-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Audio capture supported caps</NICK>
+<BLURB>Formats supported for capturing audio represented as GstCaps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::audio-src</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio source</NICK>
+<BLURB>The audio source element to be used on video recordings.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::camera-src</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Camera source</NICK>
+<BLURB>The camera source element to be used.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::idle</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Idle</NICK>
+<BLURB>If camerabin2 is idle (not doing captures).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::image-capture-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image capture caps</NICK>
+<BLURB>Caps for image capture.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::image-capture-encoder</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image capture encoder</NICK>
+<BLURB>The image encoder element to be used on image captures.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::image-capture-muxer</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image capture encoder</NICK>
+<BLURB>The image encoder element to be used on image captures.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::image-capture-supported-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Image capture supported caps</NICK>
+<BLURB>Formats supported for capturing images represented as GstCaps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::image-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image filter</NICK>
+<BLURB>The element that will process captured image frames. (Should be set on NULL state).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>Location to save the captured files. A %d might be used on thefilename as a placeholder for a numeric index of the capture.Default for images is img_%d and vid_%d for videos.</BLURB>
+<DEFAULT>"img_%d"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::max-zoom</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Maximum zoom level (note: may change depending on resolution/implementation)</NICK>
+<BLURB>Digital zoom factor (e.g. 1.5 means 1.5x).</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::mode</NAME>
+<TYPE>GstCameraBin2Mode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>The capture mode (still image capture or video recording).</BLURB>
+<DEFAULT>Still image capture (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::mute</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mute</NICK>
+<BLURB>If the audio recording should be muted. Note that this still saves audio data to the resulting file, but they are silent. Use a video-profile without audio to disable audio completely.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::post-previews</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post Previews</NICK>
+<BLURB>If capture preview images should be posted to the bus.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::preview-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Preview caps</NICK>
+<BLURB>The caps of the preview image to be posted.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::preview-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Preview filter</NICK>
+<BLURB>The element that will process preview buffers. (Should be set on NULL state).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::video-capture-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video capture caps</NICK>
+<BLURB>Caps for video capture.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::video-capture-supported-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Video capture supported caps</NICK>
+<BLURB>Formats supported for capturing videos represented as GstCaps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::video-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video filter</NICK>
+<BLURB>The element that will process captured video frames. (Should be set on NULL state).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::video-profile</NAME>
+<TYPE>GstEncodingProfile*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video Profile</NICK>
+<BLURB>The GstEncodingProfile to use for video recording. Audio is enabled when this profile supports audio.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::viewfinder-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Viewfinder caps</NICK>
+<BLURB>Restricts the caps that can be used on the viewfinder.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::viewfinder-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Viewfinder filter</NICK>
+<BLURB>The element that will process frames going to the viewfinder. (Should be set on NULL state).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::viewfinder-sink</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Viewfinder sink</NICK>
+<BLURB>The video sink of the viewfinder.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::viewfinder-supported-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Camera source Viewfinder pad supported caps</NICK>
+<BLURB>The caps that the camera source can produce on the viewfinder pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::zoom</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Zoom</NICK>
+<BLURB>Digital zoom factor (e.g. 1.5 means 1.5x).</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstZebraStripe::threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>Threshold above which the video is striped.</BLURB>
+<DEFAULT>90</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpencvTextOverlay::colorB</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>color -Blue</NICK>
+<BLURB>Sets the color -B.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpencvTextOverlay::colorG</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>color -Green</NICK>
+<BLURB>Sets the color -G.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpencvTextOverlay::colorR</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>color -Red </NICK>
+<BLURB>Sets the color -R.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpencvTextOverlay::height</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[1,5]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Height</NICK>
+<BLURB>Sets the height of fonts.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpencvTextOverlay::text</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>text</NICK>
+<BLURB>Text to be display.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpencvTextOverlay::thickness</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>font thickness</NICK>
+<BLURB>Sets the Thickness of Font.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpencvTextOverlay::width</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[1,5]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Sets the width of fonts.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpencvTextOverlay::xpos</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>horizontal position</NICK>
+<BLURB>Sets the Horizontal position.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpencvTextOverlay::ypos</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>vertical position</NICK>
+<BLURB>Sets the Vertical position.</BLURB>
+<DEFAULT>50</DEFAULT>
 </ARG>
 

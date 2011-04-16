@@ -515,3 +515,17 @@ GstShmSink *gstshmsink
 gint  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstCameraBin2::start-capture</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin2 *gstcamerabin2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin2::stop-capture</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin2 *gstcamerabin2
+</SIGNAL>
+

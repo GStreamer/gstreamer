@@ -3,30 +3,30 @@
   <description>videoparsers</description>
   <filename>../../gst/videoparsers/.libs/libgstvideoparsersbad.so</filename>
   <basename>libgstvideoparsersbad.so</basename>
-  <version>0.10.21.1</version>
+  <version>0.10.21.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>diracparse</name>
-      <longname>FIXME</longname>
-      <class>Generic</class>
-      <description>FIXME</description>
+      <longname>Dirac parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>Parses Dirac streams</description>
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/unknown</details>
+          <details>video/x-dirac, parsed=(boolean)false</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/unknown</details>
+          <details>video/x-dirac, parsed=(boolean)true</details>
         </caps>
       </pads>
     </element>
