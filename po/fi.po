@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-06 20:42+0000\n"
+"POT-Creation-Date: 2011-04-16 15:41+0100\n"
 "PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -330,6 +330,14 @@ msgid "capturing exposure mode"
 msgstr "kuvaamisen valotustapa"
 
 msgid "The exposure mode used when capturing an image"
+msgstr "Valotustapa kuvattaessa"
+
+#, fuzzy
+msgid "capturing exposure compensation"
+msgstr "kuvaamisen valotustapa"
+
+#, fuzzy
+msgid "The exposure compensation used when capturing an image"
 msgstr "Valotustapa kuvattaessa"
 
 msgid "capturing scene capture type"

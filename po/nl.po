@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"POT-Creation-Date: 2011-04-16 15:41+0100\n"
 "PO-Revision-Date: 2010-10-25 22:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -329,6 +329,14 @@ msgid "capturing exposure mode"
 msgstr "belichtingmodus bij het maken"
 
 msgid "The exposure mode used when capturing an image"
+msgstr "Gebruikte belichtingmodus bij het maken van een foto"
+
+#, fuzzy
+msgid "capturing exposure compensation"
+msgstr "belichtingmodus bij het maken"
+
+#, fuzzy
+msgid "The exposure compensation used when capturing an image"
 msgstr "Gebruikte belichtingmodus bij het maken van een foto"
 
 msgid "capturing scene capture type"

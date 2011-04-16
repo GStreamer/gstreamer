@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-18 00:35+0000\n"
+"POT-Creation-Date: 2011-04-16 15:41+0100\n"
 "PO-Revision-Date: 2010-11-16 16:38+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -322,6 +322,14 @@ msgid "capturing exposure mode"
 msgstr "pozlandırma kipini yakalıyor"
 
 msgid "The exposure mode used when capturing an image"
+msgstr "Bir resim çekerken kullanılan pozlandırma kipi"
+
+#, fuzzy
+msgid "capturing exposure compensation"
+msgstr "pozlandırma kipini yakalıyor"
+
+#, fuzzy
+msgid "The exposure compensation used when capturing an image"
 msgstr "Bir resim çekerken kullanılan pozlandırma kipi"
 
 msgid "capturing scene capture type"

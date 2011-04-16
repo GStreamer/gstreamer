@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-06 20:42+0000\n"
+"POT-Creation-Date: 2011-04-16 15:41+0100\n"
 "PO-Revision-Date: 2011-01-01 16:29+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -331,6 +331,14 @@ msgid "capturing exposure mode"
 msgstr "режим экспозиции при съёмке"
 
 msgid "The exposure mode used when capturing an image"
+msgstr "Режим экспозиции при съёмке изображения"
+
+#, fuzzy
+msgid "capturing exposure compensation"
+msgstr "режим экспозиции при съёмке"
+
+#, fuzzy
+msgid "The exposure compensation used when capturing an image"
 msgstr "Режим экспозиции при съёмке изображения"
 
 msgid "capturing scene capture type"
