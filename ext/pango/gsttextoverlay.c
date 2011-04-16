@@ -372,9 +372,16 @@ gst_text_overlay_base_init (gpointer g_class)
       "Adds text strings on top of a video buffer",
       "David Schleef <ds@schleef.org>, " "Zeeshan Ali <zeeshan.ali@nokia.com>");
 
+  /* Only lock for the subclasses here, the base class
+   * doesn't have this mutex yet and it's not necessary
+   * here */
+  if (klass->pango_lock)
+    g_mutex_lock (klass->pango_lock);
   fontmap = pango_cairo_font_map_get_default ();
   klass->pango_context =
       pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
+  if (klass->pango_lock)
+    g_mutex_unlock (klass->pango_lock);
 }
 
 static gchar *
@@ -627,6 +634,7 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
   overlay->line_align = DEFAULT_PROP_LINE_ALIGNMENT;
+  g_mutex_lock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
   overlay->layout =
       pango_layout_new (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_context);
   desc =
@@ -665,6 +673,7 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   overlay->text_linked = FALSE;
   overlay->cond = g_cond_new ();
   gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
+  g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 }
 
 static void
@@ -762,7 +771,9 @@ gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
 
   if (ret) {
     GST_OBJECT_LOCK (overlay);
+    g_mutex_lock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
     gst_text_overlay_update_wrap_mode (overlay);
+    g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
     GST_OBJECT_UNLOCK (overlay);
   }
 
@@ -841,7 +852,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       break;
     case PROP_WRAP_MODE:
       overlay->wrap_mode = g_value_get_enum (value);
+      g_mutex_lock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       gst_text_overlay_update_wrap_mode (overlay);
+      g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       break;
     case PROP_FONT_DESC:
     {
@@ -849,6 +862,7 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       const gchar *fontdesc_str;
 
       fontdesc_str = g_value_get_string (value);
+      g_mutex_lock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       desc = pango_font_description_from_string (fontdesc_str);
       if (desc) {
         GST_LOG_OBJECT (overlay, "font description set: %s", fontdesc_str);
@@ -859,6 +873,7 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
         GST_WARNING_OBJECT (overlay, "font description parse failed: %s",
             fontdesc_str);
       }
+      g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       break;
     }
     case PROP_COLOR:
@@ -869,8 +884,10 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       break;
     case PROP_LINE_ALIGNMENT:
       overlay->line_align = g_value_get_enum (value);
+      g_mutex_lock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       pango_layout_set_alignment (overlay->layout,
           (PangoAlignment) overlay->line_align);
+      g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       break;
     case PROP_WAIT_TEXT:
       overlay->wait_text = g_value_get_boolean (value);
@@ -881,7 +898,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       break;
     case PROP_VERTICAL_RENDER:
       overlay->use_vertical_render = g_value_get_boolean (value);
+      g_mutex_lock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       gst_text_overlay_update_render_mode (overlay);
+      g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       overlay->need_render = TRUE;
       break;
     default:
@@ -1323,8 +1342,6 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
     cairo_matrix_init_scale (&cairo_matrix, scalef, scalef);
   }
 
-  g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
-
   /* reallocate surface */
   overlay->text_image = g_realloc (overlay->text_image, 4 * width * height);
 
@@ -1387,6 +1404,8 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   overlay->image_width = width;
   overlay->image_height = height;
   overlay->baseline_y = ink_rect.y;
+
+  g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 }
 
 #define BOX_XPAD         6
