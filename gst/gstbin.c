@@ -281,7 +281,7 @@ static void gst_bin_child_proxy_init (gpointer g_iface, gpointer iface_data);
 
 static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 
-#define _do_init(type) \
+#define _do_init \
 { \
   const gchar *compat; \
   static const GInterfaceInfo iface_info = { \
@@ -289,7 +289,7 @@ static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
     NULL, \
     NULL}; \
   \
-  g_type_add_interface_static (type, GST_TYPE_CHILD_PROXY, &iface_info); \
+  g_type_add_interface_static (g_define_type_id, GST_TYPE_CHILD_PROXY, &iface_info); \
   \
   GST_DEBUG_CATEGORY_INIT (bin_debug, "bin", GST_DEBUG_BOLD, \
       "debugging info for the 'bin' container element"); \
@@ -304,19 +304,8 @@ static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
   } \
 }
 
-GST_BOILERPLATE_FULL (GstBin, gst_bin, GstElement, GST_TYPE_ELEMENT, _do_init);
-
-static void
-gst_bin_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_metadata (gstelement_class, "Generic bin",
-      "Generic/Bin",
-      "Simple container object",
-      "Erik Walthinsen <omega@cse.ogi.edu>,"
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_bin_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstBin, gst_bin, GST_TYPE_ELEMENT, _do_init);
 
 static GstObject *
 gst_bin_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
@@ -473,6 +462,12 @@ gst_bin_class_init (GstBinClass * klass)
 
   gobject_class->dispose = gst_bin_dispose;
 
+  gst_element_class_set_metadata (gstelement_class, "Generic bin",
+      "Generic/Bin",
+      "Simple container object",
+      "Erik Walthinsen <omega@cse.ogi.edu>,"
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_bin_change_state_func);
   gstelement_class->get_state = GST_DEBUG_FUNCPTR (gst_bin_get_state_func);
@@ -501,7 +496,7 @@ gst_bin_class_init (GstBinClass * klass)
 }
 
 static void
-gst_bin_init (GstBin * bin, GstBinClass * klass)
+gst_bin_init (GstBin * bin)
 {
   GstBus *bus;
 
@@ -1739,7 +1734,9 @@ gst_bin_get_state_func (GstElement * element, GstState * state,
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
 
-  ret = parent_class->get_state (element, state, pending, timeout);
+  ret =
+      GST_ELEMENT_CLASS (parent_class)->get_state (element, state, pending,
+      timeout);
 
   return ret;
 }
@@ -2533,7 +2530,7 @@ restart:
     }
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (G_UNLIKELY (ret == GST_STATE_CHANGE_FAILURE))
     goto done;
 

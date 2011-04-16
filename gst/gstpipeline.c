@@ -139,25 +139,14 @@ static void gst_pipeline_handle_message (GstBin * bin, GstMessage * message);
 
 /* static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 }; */
 
-#define _do_init(type) \
+#define _do_init \
 { \
   GST_DEBUG_CATEGORY_INIT (pipeline_debug, "pipeline", GST_DEBUG_BOLD, \
       "debugging info for the 'pipeline' container element"); \
 }
 
-GST_BOILERPLATE_FULL (GstPipeline, gst_pipeline, GstBin, GST_TYPE_BIN,
-    _do_init);
-
-static void
-gst_pipeline_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_metadata (gstelement_class, "Pipeline object",
-      "Generic/Bin",
-      "Complete pipeline object",
-      "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
-}
+#define gst_pipeline_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstPipeline, gst_pipeline, GST_TYPE_BIN, _do_init);
 
 static void
 gst_pipeline_class_init (GstPipelineClass * klass)
@@ -203,6 +192,11 @@ gst_pipeline_class_init (GstPipelineClass * klass)
 
   gobject_class->dispose = gst_pipeline_dispose;
 
+  gst_element_class_set_metadata (gstelement_class, "Pipeline object",
+      "Generic/Bin",
+      "Complete pipeline object",
+      "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pipeline_change_state);
   gstelement_class->provide_clock =
@@ -212,7 +206,7 @@ gst_pipeline_class_init (GstPipelineClass * klass)
 }
 
 static void
-gst_pipeline_init (GstPipeline * pipeline, GstPipelineClass * klass)
+gst_pipeline_init (GstPipeline * pipeline)
 {
   GstBus *bus;
 
