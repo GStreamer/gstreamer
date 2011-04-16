@@ -176,12 +176,8 @@ gst_jack_ring_buffer_get_type (void)
 static void
 gst_jack_ring_buffer_class_init (GstJackRingBufferClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
   GstRingBufferClass *gstringbuffer_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
   gstringbuffer_class = (GstRingBufferClass *) klass;
 
   ring_parent_class = g_type_class_peek_parent (klass);
@@ -599,37 +595,50 @@ gst_jack_ring_buffer_stop (GstRingBuffer * buf)
   return TRUE;
 }
 
+#if defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)
 static guint
 gst_jack_ring_buffer_delay (GstRingBuffer * buf)
 {
   GstJackAudioSrc *src;
   guint i, res = 0;
-#if defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)
   jack_latency_range_t range;
-#else
-  guint latency;
-#endif
-  jack_client_t *client;
 
   src = GST_JACK_AUDIO_SRC (GST_OBJECT_PARENT (buf));
-  client = gst_jack_audio_client_get_client (src->client);
 
   for (i = 0; i < src->port_count; i++) {
-#if defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)
     jack_port_get_latency_range (src->ports[i], JackCaptureLatency, &range);
     if (range.max > res)
       res = range.max;
-#else
-    latency = jack_port_get_total_latency (client, src->ports[i]);
-    if (latency > res)
-      res = latency;
-#endif
   }
 
   GST_DEBUG_OBJECT (src, "delay %u", res);
 
   return res;
 }
+#else /* !(defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)) */
+static guint
+gst_jack_ring_buffer_delay (GstRingBuffer * buf)
+{
+  GstJackAudioSrc *src;
+  guint i, res = 0;
+  guint latency;
+  jack_client_t *client;
+
+  src = GST_JACK_AUDIO_SRC (GST_OBJECT_PARENT (buf));
+
+  client = gst_jack_audio_client_get_client (src->client);
+
+  for (i = 0; i < src->port_count; i++) {
+    latency = jack_port_get_total_latency (client, src->ports[i]);
+    if (latency > res)
+      res = latency;
+  }
+
+  GST_DEBUG_OBJECT (src, "delay %u", res);
+
+  return res;
+}
+#endif
 
 /* Audiosrc signals and args */
 enum
@@ -700,12 +709,10 @@ static void
 gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstBaseAudioSrcClass *gstbaseaudiosrc_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;

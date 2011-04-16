@@ -155,12 +155,8 @@ gst_jack_ring_buffer_get_type (void)
 static void
 gst_jack_ring_buffer_class_init (GstJackRingBufferClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
   GstRingBufferClass *gstringbuffer_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
   gstringbuffer_class = (GstRingBufferClass *) klass;
 
   ring_parent_class = g_type_class_peek_parent (klass);
@@ -188,14 +184,12 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
 {
   GstJackAudioSink *sink;
   GstRingBuffer *buf;
-  GstJackRingBuffer *abuf;
   gint readseg, len;
   guint8 *readptr;
   gint i, j, flen, channels;
   sample_t **buffers, *data;
 
   buf = GST_RING_BUFFER_CAST (arg);
-  abuf = GST_JACK_RING_BUFFER_CAST (arg);
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
 
   channels = buf->spec.channels;
@@ -588,37 +582,49 @@ gst_jack_ring_buffer_stop (GstRingBuffer * buf)
   return TRUE;
 }
 
+#if defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)
 static guint
 gst_jack_ring_buffer_delay (GstRingBuffer * buf)
 {
   GstJackAudioSink *sink;
   guint i, res = 0;
-#if defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)
   jack_latency_range_t range;
-#else
-  guint latency;
-#endif
-  jack_client_t *client;
 
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
-  client = gst_jack_audio_client_get_client (sink->client);
 
   for (i = 0; i < sink->port_count; i++) {
-#if defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)
     jack_port_get_latency_range (sink->ports[i], JackPlaybackLatency, &range);
     if (range.max > res)
       res = range.max;
-#else
-    latency = jack_port_get_total_latency (client, sink->ports[i]);
-    if (latency > res)
-      res = latency;
-#endif
   }
 
   GST_LOG_OBJECT (sink, "delay %u", res);
 
   return res;
 }
+#else /* !(defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)) */
+static guint
+gst_jack_ring_buffer_delay (GstRingBuffer * buf)
+{
+  GstJackAudioSink *sink;
+  guint i, res = 0;
+  guint latency;
+  jack_client_t *client;
+
+  sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
+  client = gst_jack_audio_client_get_client (sink->client);
+
+  for (i = 0; i < sink->port_count; i++) {
+    latency = jack_port_get_total_latency (client, sink->ports[i]);
+    if (latency > res)
+      res = latency;
+  }
+
+  GST_LOG_OBJECT (sink, "delay %u", res);
+
+  return res;
+}
+#endif
 
 static GstStaticPadTemplate jackaudiosink_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -682,12 +688,10 @@ static void
 gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
   GstBaseAudioSinkClass *gstbaseaudiosink_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
 
