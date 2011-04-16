@@ -60,21 +60,30 @@ typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
 typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;
 #endif
-void orc_merge_linear_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2, int p1, int n);
-void orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1, const orc_uint16 * s2, int p1, int p2, int n);
-void orc_splat_u16 (orc_uint16 * d1, int p1, int n);
-void orc_splat_u32 (orc_uint32 * d1, int p1, int n);
-void orc_splat_u64 (orc_uint64 * d1, orc_int64 p1, int n);
-void orc_downsample_u8 (guint8 * d1, const guint8 * s1, int n);
-void orc_downsample_u16 (guint16 * d1, const guint16 * s1, int n);
-void gst_videoscale_orc_downsample_u32 (guint8 * d1, const guint8 * s1, int n);
-void gst_videoscale_orc_downsample_yuyv (guint8 * d1, const guint8 * s1, int n);
-void gst_videoscale_orc_resample_nearest_u8 (guint8 * d1, const guint8 * s1, int p1, int p2, int n);
-void gst_videoscale_orc_resample_bilinear_u8 (guint8 * d1, const guint8 * s1, int p1, int p2, int n);
-void gst_videoscale_orc_resample_nearest_u32 (guint8 * d1, const guint8 * s1, int p1, int p2, int n);
-void gst_videoscale_orc_resample_bilinear_u32 (guint8 * d1, const guint8 * s1, int p1, int p2, int n);
-void gst_videoscale_orc_resample_merge_bilinear_u32 (guint8 * d1, guint8 * d2, const guint8 * s1, const guint8 * s2, int p1, int p2, int p3, int n);
-void gst_videoscale_orc_merge_bicubic_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, const guint8 * s3, const guint8 * s4, int p1, int p2, int p3, int p4, int n);
+#ifndef ORC_RESTRICT
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
+#endif
+void orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1, const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2, int p1, int n);
+void orc_merge_linear_u16 (orc_uint16 * ORC_RESTRICT d1, const orc_uint16 * ORC_RESTRICT s1, const orc_uint16 * ORC_RESTRICT s2, int p1, int p2, int n);
+void orc_splat_u16 (orc_uint16 * ORC_RESTRICT d1, int p1, int n);
+void orc_splat_u32 (orc_uint32 * ORC_RESTRICT d1, int p1, int n);
+void orc_splat_u64 (orc_uint64 * ORC_RESTRICT d1, orc_int64 p1, int n);
+void orc_downsample_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void orc_downsample_u16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n);
+void gst_videoscale_orc_downsample_u32 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void gst_videoscale_orc_downsample_yuyv (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void gst_videoscale_orc_resample_nearest_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int p1, int p2, int n);
+void gst_videoscale_orc_resample_bilinear_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int p1, int p2, int n);
+void gst_videoscale_orc_resample_nearest_u32 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int p1, int p2, int n);
+void gst_videoscale_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int p1, int p2, int n);
+void gst_videoscale_orc_resample_merge_bilinear_u32 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1, int p2, int p3, int n);
+void gst_videoscale_orc_merge_bicubic_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int p1, int p2, int p3, int p4, int n);
 
 #ifdef __cplusplus
 }
