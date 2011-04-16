@@ -102,9 +102,12 @@ main (int argc, char *argv[])
 
   gst_bin_add_many (GST_BIN (pipeline), audiotestsrc, audioconvert, level,
       fakesink, NULL);
-  g_assert (gst_element_link (audiotestsrc, audioconvert));
-  g_assert (gst_element_link_filtered (audioconvert, level, caps));
-  g_assert (gst_element_link (level, fakesink));
+  if (!gst_element_link (audiotestsrc, audioconvert))
+    g_error ("Failed to link audiotestsrc and audioconvert");
+  if (!gst_element_link_filtered (audioconvert, level, caps))
+    g_error ("Failed to link audioconvert and level");
+  if (!gst_element_link (level, fakesink))
+    g_error ("Failed to link level and fakesink");
 
   /* make sure we'll get messages */
   g_object_set (G_OBJECT (level), "message", TRUE, NULL);
