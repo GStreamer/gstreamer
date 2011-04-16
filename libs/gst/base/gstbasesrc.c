@@ -251,7 +251,6 @@ struct _GstBaseSrcPrivate
 
 static GstElementClass *parent_class = NULL;
 
-static void gst_base_src_base_init (gpointer g_class);
 static void gst_base_src_class_init (GstBaseSrcClass * klass);
 static void gst_base_src_init (GstBaseSrc * src, gpointer g_class);
 static void gst_base_src_finalize (GObject * object);
@@ -266,7 +265,7 @@ gst_base_src_get_type (void)
     GType _type;
     static const GTypeInfo base_src_info = {
       sizeof (GstBaseSrcClass),
-      (GBaseInitFunc) gst_base_src_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_base_src_class_init,
       NULL,
@@ -325,12 +324,6 @@ static GstFlowReturn gst_base_src_get_range (GstBaseSrc * src, guint64 offset,
 static gboolean gst_base_src_seekable (GstBaseSrc * src);
 
 static void
-gst_base_src_base_init (gpointer g_class)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_base_src_debug, "basesrc", 0, "basesrc element");
-}
-
-static void
 gst_base_src_class_init (GstBaseSrcClass * klass)
 {
   GObjectClass *gobject_class;
@@ -338,6 +331,8 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_base_src_debug, "basesrc", 0, "basesrc element");
 
   g_type_class_add_private (klass, sizeof (GstBaseSrcPrivate));
 
