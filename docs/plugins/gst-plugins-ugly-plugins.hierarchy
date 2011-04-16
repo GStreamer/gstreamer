@@ -1,60 +1,61 @@
 GObject
   GstObject
-    GstBus
-    GstClock
+    GstPad
+    GstPadTemplate
+    GstPluginFeature
+      GstElementFactory
+      GstTypeFindFactory
+      GstIndexFactory
     GstElement
-      AC3IEC
-      GstA52Dec
-      GstASFDemux
-      GstAmrnbDec
-      GstAmrnbEnc
-      GstAmrwbDec
-      GstBaseRTPDepayload
-        GstRtpAsfDepay
-      GstBaseSrc
-        GstPushSrc
-          GstCddaBaseSrc
-            GstCdioCddaSrc
-          GstDvdReadSrc
-          GstPNMSrc
       GstBin
         GstPipeline
-      GstDvdLpcmDec
+      GstRMDemux
+      GstRealAudioDemux
+      GstRDTDepay
+      GstRDTManager
+      GstRTSPReal
+      GstBaseSrc
+        GstPushSrc
+          GstPNMSrc
+          GstDvdReadSrc
+          GstCddaBaseSrc
+            GstCdioCddaSrc
+      GstMad
+      GstX264Enc
+      GstTwoLame
+      GstSidDec
+      GstLameMP3Enc
+      GstLame
+      GstA52Dec
+      GstAmrwbDec
+      GstMpeg2dec
+      GstAmrnbDec
+      GstAmrnbEnc
+      GstSynaesthesia
       GstDvdSubDec
       GstDvdSubParse
-      GstLame
-      GstLameMP3Enc
+      AC3IEC
+      GstDvdLpcmDec
+      GstXingMux
       GstMPEGAudioParse
       GstMPEGParse
         GstMPEGDemux
           GstDVDDemux
-      GstMad
-      GstMpeg2dec
-      GstRDTDepay
-      GstRDTManager
-      GstRMDemux
-      GstRTSPReal
+      GstASFDemux
       GstRTSPWMS
-      GstRealAudioDemux
-      GstSidDec
-      GstTwoLame
-      GstX264Enc
-      GstXingMux
-    GstPad
-    GstPadTemplate
-    GstPlugin
-    GstPluginFeature
-      GstElementFactory
-      GstIndexFactory
-      GstTypeFindFactory
-    GstRegistry
+      GstBaseRTPDepayload
+        GstRtpAsfDepay
+    GstBus
     GstTask
     GstTaskPool
+    GstClock
+    GstPlugin
+    GstRegistry
   GstSignalObject
 GInterface
   GTypePlugin
   GstChildProxy
-  GstPreset
-  GstRTSPExtension
-  GstTagSetter
   GstURIHandler
+  GstRTSPExtension
+  GstPreset
+  GstTagSetter

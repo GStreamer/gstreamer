@@ -3,10 +3,10 @@
   <description>Encode MP3s with LAME</description>
   <filename>../../ext/lame/.libs/libgstlame.so</filename>
   <basename>libgstlame.so</basename>
-  <version>0.10.17.1</version>
+  <version>0.10.17.2</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins git</package>
+  <package>GStreamer Ugly Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

@@ -3,10 +3,10 @@
   <description>Convert raw AC3 into IEC958 (S/PDIF) frames</description>
   <filename>../../gst/iec958/.libs/libgstiec958.so</filename>
   <basename>libgstiec958.so</basename>
-  <version>0.10.17.1</version>
+  <version>0.10.17.2</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins git</package>
+  <package>GStreamer Ugly Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
