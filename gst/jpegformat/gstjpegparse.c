@@ -607,7 +607,7 @@ extract_and_queue_tags (GstJpegParse * parse, guint size, guint8 * data,
 static inline gboolean
 gst_jpeg_parse_app1 (GstJpegParse * parse, GstByteReader * reader)
 {
-  guint16 size;
+  guint16 size = 0;
   const gchar *id_str;
   const guint8 *data = NULL;
 
