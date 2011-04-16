@@ -78,13 +78,13 @@
  * </example>
  *
  * The following example shows you how to add the padtemplate to an
- * element class, this is usually done in the base_init of the class:
+ * element class, this is usually done in the class_init of the class:
  * <informalexample>
  *   <programlisting>
  *   static void
- *   my_element_base_init (gpointer g_class)
+ *   my_element_class_init (GstMyElementClass *klass)
  *   {
- *     GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+ *     GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
  *
  *     gst_element_class_add_pad_template (gstelement_class,
  *         gst_static_pad_template_get (&amp;my_template));

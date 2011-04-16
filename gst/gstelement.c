@@ -238,18 +238,29 @@ static void
 gst_element_base_class_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GList *node, *padtemplates;
 
-  /* FIXME 0.11: Instead of clearing the
-   * pad template list copy the list and increase the refcount of
-   * the pad templates by one.
-   *
-   * This will make it possible to add pad templates and set element
-   * details in the class_init functions and is the real GObject way
-   * of doing things.
-   * See http://bugzilla.gnome.org/show_bug.cgi?id=491501
+  /* Copy the element details here so elements can inherit the
+   * details from their base class and classes only need to set
+   * the details in class_init instead of base_init */
+  element_class->metadata =
+      element_class->metadata ? gst_structure_copy (element_class->metadata) :
+      gst_structure_empty_new ("metadata");
+
+  /* Copy the pad templates so elements inherit them
+   * from their base class but elements can add pad templates in class_init
+   * instead of base_init.
    */
-  element_class->metadata = gst_structure_empty_new ("metadata");
-  element_class->padtemplates = NULL;
+  /* FIXME: Do we consider GstPadTemplates as immutable? If so we can
+   * simply ref them instead of copying.
+   */
+  padtemplates = g_list_copy (element_class->padtemplates);
+  for (node = padtemplates; node != NULL; node = node->next) {
+    GstPadTemplate *tmpl = (GstPadTemplate *) node->data;
+    node->data = gst_pad_template_new (tmpl->name_template,
+        tmpl->direction, tmpl->presence, gst_caps_copy (tmpl->caps));
+  }
+  element_class->padtemplates = padtemplates;
 
   /* set the factory, see gst_element_register() */
   element_class->elementfactory =
@@ -1270,30 +1281,37 @@ gst_element_iterate_sink_pads (GstElement * element)
 /**
  * gst_element_class_add_pad_template:
  * @klass: the #GstElementClass to add the pad template to.
- * @templ: (transfer none): a #GstPadTemplate to add to the element class.
+ * @templ: (transfer full): a #GstPadTemplate to add to the element class.
  *
- * Adds a padtemplate to an element class. This is mainly used in the _base_init
- * functions of classes.
+ * Adds a padtemplate to an element class. This is mainly used in the _class_init
+ * functions of classes. If a pad template with the same name as an already
+ * existing one is added the old one is replaced by the new one.
+ *
  */
 void
 gst_element_class_add_pad_template (GstElementClass * klass,
     GstPadTemplate * templ)
 {
+  GList *template_list = klass->padtemplates;
+
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
   g_return_if_fail (GST_IS_PAD_TEMPLATE (templ));
 
-  /* FIXME 0.11: allow replacing the pad templates by
-   * calling this with the same name as an already existing pad
-   * template. For this we _must_ _not_ ref the added pad template
-   * a second time and _must_ document that this function takes
-   * ownership of the pad template. Otherwise we will leak pad templates
-   * or the caller unref's the pad template and it disappears */
-  /* avoid registering pad templates with the same name */
-  g_return_if_fail (gst_element_class_get_pad_template (klass,
-          templ->name_template) == NULL);
+  /* If we already have a pad template with the same name replace the
+   * old one. */
+  while (template_list) {
+    GstPadTemplate *padtempl = (GstPadTemplate *) template_list->data;
 
-  klass->padtemplates = g_list_append (klass->padtemplates,
-      gst_object_ref (templ));
+    /* Found pad with the same name, replace and return */
+    if (strcmp (templ->name_template, padtempl->name_template) == 0) {
+      gst_object_unref (padtempl);
+      template_list->data = templ;
+      return;
+    }
+    template_list = g_list_next (template_list);
+  }
+
+  klass->padtemplates = g_list_append (klass->padtemplates, templ);
   klass->numpadtemplates++;
 }
 
@@ -1330,7 +1348,7 @@ gst_element_class_add_metadata (GstElementClass * klass,
  * multiple author metadata. E.g: "Joe Bloggs &lt;joe.blogs at foo.com&gt;"
  *
  * Sets the detailed information for a #GstElementClass.
- * <note>This function is for use in _base_init functions only.</note>
+ * <note>This function is for use in _class_init functions only.</note>
  */
 void
 gst_element_class_set_metadata (GstElementClass * klass,

@@ -45,6 +45,11 @@ The 0.11 porting guide
 
     gstelementmetadata.h contains the keys for all standard metadata.
 
+    Element metadata and pad templates are inherited from parent classes and
+    should be added in class_init instead of base_init.
+
+    gst_element_class_add_pad_template() takes ownership of the template
+
 * GstPad:
     gst_pad_get_caps() does not return writable caps anymore and an explicit
     gst_caps_make_writable() needs to be performed. This was the functionality
