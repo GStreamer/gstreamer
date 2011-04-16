@@ -3,10 +3,10 @@
   <description>Quicktime support</description>
   <filename>../../gst/quicktime/.libs/libgstqtdemux.so</filename>
   <basename>libgstqtdemux.so</basename>
-  <version>0.10.28.1</version>
+  <version>0.10.28.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -26,7 +26,7 @@
           <name>video_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -53,7 +53,7 @@
           <name>video_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -107,7 +107,7 @@
           <name>video_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-mp4-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-mp4-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -176,13 +176,13 @@
           <name>video_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-svq, svqversion=(int)3, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dv, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-vp8, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-qt-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-svq, svqversion=(int)3, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dv, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-vp8, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-qt-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/quicktime, variant=(string)apple</details>
+          <details>video/quicktime, variant=(string)apple; video/quicktime</details>
         </caps>
       </pads>
     </element>

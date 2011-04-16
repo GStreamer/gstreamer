@@ -1,5 +1,6 @@
 GstBin GstChildProxy
 GstPipeline GstChildProxy
+GstQTMoovRecover GstChildProxy
 GstSwitchSink GstChildProxy
 GstGConfVideoSink GstChildProxy
 GstGConfAudioSink GstChildProxy
@@ -22,18 +23,21 @@ GstOss4Sink GstStreamVolume GstPropertyProbe
 GstV4l2Sink GstImplementsInterface GstXOverlay GstNavigation GstColorBalance GstVideoOrientation GstPropertyProbe
 GstShout2send GstTagSetter
 GstUDPSink GstURIHandler
-GstDV1394Src GstURIHandler GstPropertyProbe
-GstHDV1394Src GstURIHandler GstPropertyProbe
-GstSoupHTTPSrc GstURIHandler
 GstPulseSrc GstImplementsInterface GstMixer GstPropertyProbe
 GstOssSrc GstImplementsInterface GstMixer
 GstOss4Source GstImplementsInterface GstMixer GstPropertyProbe
 GstV4l2Src GstURIHandler GstImplementsInterface GstTuner GstColorBalance GstVideoOrientation GstPropertyProbe
+GstDV1394Src GstURIHandler GstPropertyProbe
+GstHDV1394Src GstURIHandler GstPropertyProbe
+GstSoupHTTPSrc GstURIHandler
 GstUDPSrc GstURIHandler
+GstPulseMixer GstImplementsInterface GstMixer GstPropertyProbe
+GstSpeexEnc GstTagSetter GstPreset
+GstV4l2Radio GstURIHandler GstImplementsInterface GstTuner GstPropertyProbe
+GstMatroskaMux GstTagSetter
+GstWebMMux GstTagSetter
+GstDeinterlace GstChildProxy
 GstWavpackEnc GstPreset
-GstTagLibMux GstTagSetter
-GstId3v2Mux GstTagSetter
-GstApev2Mux GstTagSetter
 GstFlacEnc GstTagSetter GstPreset
 GstFlacTag GstTagSetter
 GstVideoBalance GstImplementsInterface GstColorBalance
@@ -41,15 +45,14 @@ GstIirEqualizer GstChildProxy
 GstIirEqualizerNBands GstChildProxy
 GstIirEqualizer3Bands GstChildProxy GstPreset
 GstIirEqualizer10Bands GstChildProxy GstPreset
-GstPulseMixer GstImplementsInterface GstMixer GstPropertyProbe
-GstSpeexEnc GstTagSetter GstPreset
 GstOssMixerElement GstImplementsInterface GstMixer
-GstV4l2Radio GstURIHandler GstImplementsInterface GstTuner GstPropertyProbe
 GstOss4Mixer GstImplementsInterface GstMixer GstPropertyProbe
 GstAviMux GstTagSetter
-GstMatroskaMux GstTagSetter
-GstWebMMux GstTagSetter
-GstDeinterlace GstChildProxy
+GstQTMux GstTagSetter GstTagXmpWriter
+GstMP4Mux GstTagSetter GstTagXmpWriter
+GstISMLMux GstTagSetter GstTagXmpWriter
+GstGPPMux GstTagSetter GstTagXmpWriter
+GstMJ2Mux GstTagSetter GstTagXmpWriter
 GstFlvMux GstTagSetter
 GstVideoMixer GstChildProxy
 GstVideoMixer2 GstChildProxy

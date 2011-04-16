@@ -21248,3 +21248,493 @@
 <DEFAULT>100000000</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstQTMux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>reorder</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::faststart</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format file to faststart</NICK>
+<BLURB>If the file should be formatted for faststart (headers first).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::faststart-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to use for storing buffers</NICK>
+<BLURB>File that will be used temporarily to store data from the stream when creating a faststart file. If null a filepath will be created automatically.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::fragment-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Fragment duration</NICK>
+<BLURB>Fragment durations in ms (produce a fragmented file if > 0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::moov-recovery-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to store data for posterior moov atom recovery</NICK>
+<BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::movie-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Movie timescale</NICK>
+<BLURB>Timescale to use in the movie (units per second).</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::presentation-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Include presentation-time info</NICK>
+<BLURB>Calculate and include presentation/composition time (in addition to decoding time).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::trak-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Track timescale</NICK>
+<BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMoovRecover::broken-input</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Path to broken input file</NICK>
+<BLURB>Path to broken input file. (If qtmux was on faststart mode, this file is the faststart file).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMoovRecover::faststart-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>If the broken input is from faststart mode</NICK>
+<BLURB>If the broken input is from faststart mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMoovRecover::fixed-output</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Path to write the fixed file</NICK>
+<BLURB>Path to write the fixed file to (used as output).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMoovRecover::recovery-input</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Path to recovery file</NICK>
+<BLURB>Path to recovery file (used as input).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>reorder</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::faststart</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format file to faststart</NICK>
+<BLURB>If the file should be formatted for faststart (headers first).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::faststart-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to use for storing buffers</NICK>
+<BLURB>File that will be used temporarily to store data from the stream when creating a faststart file. If null a filepath will be created automatically.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::fragment-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Fragment duration</NICK>
+<BLURB>Fragment durations in ms (produce a fragmented file if > 0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::moov-recovery-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to store data for posterior moov atom recovery</NICK>
+<BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::movie-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Movie timescale</NICK>
+<BLURB>Timescale to use in the movie (units per second).</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::presentation-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Include presentation-time info</NICK>
+<BLURB>Calculate and include presentation/composition time (in addition to decoding time).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::trak-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Track timescale</NICK>
+<BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>reorder</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::faststart</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format file to faststart</NICK>
+<BLURB>If the file should be formatted for faststart (headers first).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::faststart-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to use for storing buffers</NICK>
+<BLURB>File that will be used temporarily to store data from the stream when creating a faststart file. If null a filepath will be created automatically.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::fragment-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Fragment duration</NICK>
+<BLURB>Fragment durations in ms (produce a fragmented file if > 0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::moov-recovery-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to store data for posterior moov atom recovery</NICK>
+<BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::movie-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Movie timescale</NICK>
+<BLURB>Timescale to use in the movie (units per second).</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::presentation-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Include presentation-time info</NICK>
+<BLURB>Calculate and include presentation/composition time (in addition to decoding time).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::trak-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Track timescale</NICK>
+<BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>reorder</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::faststart</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format file to faststart</NICK>
+<BLURB>If the file should be formatted for faststart (headers first).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::faststart-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to use for storing buffers</NICK>
+<BLURB>File that will be used temporarily to store data from the stream when creating a faststart file. If null a filepath will be created automatically.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::fragment-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Fragment duration</NICK>
+<BLURB>Fragment durations in ms (produce a fragmented file if > 0).</BLURB>
+<DEFAULT>2000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::moov-recovery-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to store data for posterior moov atom recovery</NICK>
+<BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::movie-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Movie timescale</NICK>
+<BLURB>Timescale to use in the movie (units per second).</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::presentation-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Include presentation-time info</NICK>
+<BLURB>Calculate and include presentation/composition time (in addition to decoding time).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::trak-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Track timescale</NICK>
+<BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::dts-method</NAME>
+<TYPE>GstQTMuxDtsMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dts-method</NICK>
+<BLURB>Method to determine DTS time.</BLURB>
+<DEFAULT>reorder</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::faststart</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format file to faststart</NICK>
+<BLURB>If the file should be formatted for faststart (headers first).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::faststart-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to use for storing buffers</NICK>
+<BLURB>File that will be used temporarily to store data from the stream when creating a faststart file. If null a filepath will be created automatically.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::fragment-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Fragment duration</NICK>
+<BLURB>Fragment durations in ms (produce a fragmented file if > 0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::moov-recovery-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to store data for posterior moov atom recovery</NICK>
+<BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::movie-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Movie timescale</NICK>
+<BLURB>Timescale to use in the movie (units per second).</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::presentation-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Include presentation-time info</NICK>
+<BLURB>Calculate and include presentation/composition time (in addition to decoding time).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::trak-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Track timescale</NICK>
+<BLURB>Timescale to use for the tracks (units per second, 0 is automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
