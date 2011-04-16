@@ -180,7 +180,7 @@ gst_buffer_list_len (GstBufferList * list)
  * gst_buffer_list_foreach:
  * @list: a #GstBufferList
  * @func: (scope call): a #GstBufferListFunc to call
- * @user_data: user data passed to @func
+ * @user_data: (closure): user data passed to @func
  *
  * Call @func with @data for each buffer in @list.
  *

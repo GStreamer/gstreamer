@@ -653,6 +653,8 @@ gst_base_sink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn result = GST_FLOW_OK;
 
   bsink = GST_BASE_SINK (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (bsink == NULL))
+    return GST_FLOW_WRONG_STATE;
   bclass = GST_BASE_SINK_GET_CLASS (bsink);
 
   if (bclass->buffer_alloc)
@@ -3402,6 +3404,10 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
   GstBaseSinkClass *bclass;
 
   basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (basesink == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 

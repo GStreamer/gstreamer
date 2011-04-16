@@ -136,7 +136,7 @@ gst_element_implements_interface (GstElement * element, GType iface_type)
  * cast a given object to an interface type, and check whether this
  * interface is supported for this specific instance.
  *
- * Returns: a gpointer to the interface type
+ * Returns: (transfer none): a gpointer to the interface type
  */
 
 gpointer

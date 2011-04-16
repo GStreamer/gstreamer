@@ -42,9 +42,9 @@
 /**
  * gst_filter_run:
  * @list: a linked list
- * @func: the function to execute for each item
+ * @func: (scope call): the function to execute for each item
  * @first: flag to stop execution after a successful item
- * @user_data: user data
+ * @user_data: (closure): user data
  *
  * Iterates over the elements in @list, calling @func with the
  * list item data for each item.  If @func returns TRUE, @data is

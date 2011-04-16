@@ -624,7 +624,6 @@ GST_START_TEST (test_deserialize_string)
   };
   guint i;
   GValue v = { 0, };
-  gboolean ret = TRUE;
 
   g_value_init (&v, G_TYPE_STRING);
   for (i = 0; i < G_N_ELEMENTS (tests); i++) {
@@ -635,7 +634,6 @@ GST_START_TEST (test_deserialize_string)
           "\nwanted: %s\ngot    : %s", tests[i].to, g_value_get_string (&v));
     } else {
       fail_if (tests[i].to != NULL, "failed, but wanted: %s", tests[i].to);
-      ret = FALSE;
     }
   }
   g_value_unset (&v);

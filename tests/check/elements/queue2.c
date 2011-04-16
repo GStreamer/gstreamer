@@ -59,7 +59,7 @@ setup_queue2 (GstElement * pipe, GstElement * input, GstElement * output)
 
 GST_START_TEST (test_simple_pipeline)
 {
-  GstElement *pipe, *queue2, *input, *output;
+  GstElement *pipe, *input, *output;
   GstMessage *msg;
 
   pipe = gst_pipeline_new ("pipeline");
@@ -71,7 +71,7 @@ GST_START_TEST (test_simple_pipeline)
   output = gst_element_factory_make ("fakesink", NULL);
   fail_unless (output != NULL, "failed to create 'fakesink' element");
 
-  queue2 = setup_queue2 (pipe, input, output);
+  setup_queue2 (pipe, input, output);
 
   gst_element_set_state (pipe, GST_STATE_PLAYING);
 

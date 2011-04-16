@@ -1286,9 +1286,13 @@ gst_element_factory_can_accept_all_caps_in_direction (GstElementFactory *
     GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
 
     if (template->direction == direction) {
-      if (gst_caps_is_always_compatible (caps,
-              gst_static_caps_get (&template->static_caps)))
+      GstCaps *templcaps = gst_static_caps_get (&template->static_caps);
+
+      if (gst_caps_is_always_compatible (caps, templcaps)) {
+        gst_caps_unref (templcaps);
         return TRUE;
+      }
+      gst_caps_unref (templcaps);
     }
     templates = g_list_next (templates);
   }
@@ -1311,9 +1315,13 @@ gst_element_factory_can_accept_any_caps_in_direction (GstElementFactory *
     GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
 
     if (template->direction == direction) {
-      if (gst_caps_can_intersect (caps,
-              gst_static_caps_get (&template->static_caps)))
+      GstCaps *templcaps = gst_static_caps_get (&template->static_caps);
+
+      if (gst_caps_can_intersect (caps, templcaps)) {
+        gst_caps_unref (templcaps);
         return TRUE;
+      }
+      gst_caps_unref (templcaps);
     }
     templates = g_list_next (templates);
   }
@@ -3821,7 +3829,7 @@ gst_util_get_timestamp (void)
  * @array: the sorted input array
  * @num_elements: number of elements in the array
  * @element_size: size of every element in bytes
- * @search_func: function to compare two elements, @search_data will always be passed as second argument
+ * @search_func: (scope call): function to compare two elements, @search_data will always be passed as second argument
  * @mode: search mode that should be used
  * @search_data: element that should be found
  * @user_data: (closure): data to pass to @search_func
@@ -3834,7 +3842,7 @@ gst_util_get_timestamp (void)
  *
  * The complexity of this search function is O(log (num_elements)).
  *
- * Returns: The address of the found element or %NULL if nothing was found
+ * Returns: (transfer none): The address of the found element or %NULL if nothing was found
  *
  * Since: 0.10.23
  */

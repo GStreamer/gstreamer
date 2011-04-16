@@ -93,7 +93,7 @@ setup_multiqueue (GstElement * pipe, GstElement * inputs[],
 
 GST_START_TEST (test_simple_pipeline)
 {
-  GstElement *pipe, *mq;
+  GstElement *pipe;
   GstElement *inputs[1];
   GstElement *outputs[1];
   GstMessage *msg;
@@ -107,7 +107,7 @@ GST_START_TEST (test_simple_pipeline)
   outputs[0] = gst_element_factory_make ("fakesink", NULL);
   fail_unless (outputs[0] != NULL, "failed to create 'fakesink' element");
 
-  mq = setup_multiqueue (pipe, inputs, outputs, 1);
+  setup_multiqueue (pipe, inputs, outputs, 1);
 
   gst_element_set_state (pipe, GST_STATE_PLAYING);
 
@@ -128,7 +128,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_simple_shutdown_while_running)
 {
-  GstElement *pipe, *mq;
+  GstElement *pipe;
   GstElement *inputs[1];
   GstElement *outputs[1];
   GstMessage *msg;
@@ -141,7 +141,7 @@ GST_START_TEST (test_simple_shutdown_while_running)
   outputs[0] = gst_element_factory_make ("fakesink", NULL);
   fail_unless (outputs[0] != NULL, "failed to create 'fakesink' element");
 
-  mq = setup_multiqueue (pipe, inputs, outputs, 1);
+  setup_multiqueue (pipe, inputs, outputs, 1);
 
   gst_element_set_state (pipe, GST_STATE_PAUSED);
 
@@ -282,6 +282,8 @@ GST_START_TEST (test_request_pads_named)
   GST_LOG ("Cleaning up");
   gst_object_unref (sink1);
   gst_object_unref (sink2);
+  gst_object_unref (sink3);
+  gst_object_unref (sink4);
   gst_object_unref (mq);
 }
 

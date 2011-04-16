@@ -471,8 +471,8 @@ filter_free (GstIteratorFilter * it)
 /**
  * gst_iterator_filter:
  * @it: The #GstIterator to filter
- * @func: the compare function to select elements
- * @user_data: user data passed to the compare function
+ * @func: (scope call): the compare function to select elements
+ * @user_data: (closure): user data passed to the compare function
  *
  * Create a new iterator from an existing iterator. The new iterator
  * will only return those elements that match the given compare function @func.
@@ -481,7 +481,7 @@ filter_free (GstIteratorFilter * it)
  *
  * When this iterator is freed, @it will also be freed.
  *
- * Returns: a new #GstIterator.
+ * Returns: (transfer full): a new #GstIterator.
  *
  * MT safe.
  */
@@ -510,9 +510,9 @@ gst_iterator_filter (GstIterator * it, GCompareFunc func, gpointer user_data)
 /**
  * gst_iterator_fold:
  * @it: The #GstIterator to fold over
- * @func: the fold function
+ * @func: (scope call): the fold function
  * @ret: the seed value passed to the fold function
- * @user_data: user data passed to the fold function
+ * @user_data: (closure): user data passed to the fold function
  *
  * Folds @func over the elements of @iter. That is to say, @func will be called
  * as @func (object, @ret, @user_data) for each object in @it. The normal use
@@ -578,8 +578,8 @@ foreach_fold_func (gpointer item, GValue * unused, ForeachFoldData * data)
 /**
  * gst_iterator_foreach:
  * @it: The #GstIterator to iterate
- * @func: the function to call for each element.
- * @user_data: user data passed to the function
+ * @func: (scope call): the function to call for each element.
+ * @user_data: (closure): user data passed to the function
  *
  * Iterate over all element of @it and call the given function @func for
  * each element.  As in gst_iterator_fold(), the refcount of a refcounted 
@@ -630,8 +630,8 @@ find_custom_fold_func (gpointer item, GValue * ret, FindCustomFoldData * data)
 /**
  * gst_iterator_find_custom:
  * @it: The #GstIterator to iterate
- * @func: the compare function to use
- * @user_data: user data passed to the compare function
+ * @func: (scope call): the compare function to use
+ * @user_data: (closure): user data passed to the compare function
  *
  * Find the first element in @it that matches the compare function @func.
  * @func should return 0 when the element is found.  As in gst_iterator_fold(),
@@ -643,7 +643,7 @@ find_custom_fold_func (gpointer item, GValue * ret, FindCustomFoldData * data)
  *
  * This function will return NULL if an error happened to the iterator.
  *
- * Returns: The element in the iterator that matches the compare
+ * Returns: (transfer full): The element in the iterator that matches the compare
  * function or NULL when no element matched.
  *
  * MT safe.

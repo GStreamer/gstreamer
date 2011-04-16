@@ -763,6 +763,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   _gst_value_initialize ();
   g_type_class_ref (gst_param_spec_fraction_get_type ());
   _gst_tag_initialize ();
+  gst_parse_context_get_type ();
 
   _gst_plugin_initialize ();
 

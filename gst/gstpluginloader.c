@@ -353,9 +353,36 @@ plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
 static gboolean
 gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
 {
+#ifdef __APPLE__
+#if defined(__x86_64__)
+  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-x86_64",
+    location, (char *) "-l", NULL
+  };
+#elif defined(__i386__)
+  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-i386",
+    location, (char *) "-l", NULL
+  };
+#elif defined(__ppc__)
+  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-ppc",
+    location, (char *) "-l", NULL
+  };
+#elif defined(__ppc64__)
+  char *argv[] = { (char *) "/usr/bin/arch", (char *) "-ppc64",
+    location, (char *) "-l", NULL
+  };
+#endif
+#else /* ! __APPLE__ */
   char *argv[] = { location, (char *) "-l", NULL };
+#endif
 
+
+#ifdef __APPLE__
+  GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s with arch %s",
+      location, argv[1]);
+#else
   GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s", location);
+#endif
+
   if (!g_spawn_async_with_pipes (NULL, argv, NULL,
           G_SPAWN_DO_NOT_REAP_CHILD /* | G_SPAWN_STDERR_TO_DEV_NULL */ ,
           NULL, NULL, &loader->child_pid, &loader->fd_w.fd, &loader->fd_r.fd,

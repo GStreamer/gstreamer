@@ -368,7 +368,7 @@ gst_queue2_class_init (GstQueue2Class * klass)
   g_object_class_install_property (gobject_class, PROP_RING_BUFFER_MAX_SIZE,
       g_param_spec_uint64 ("ring-buffer-max-size",
           "Max. ring buffer size (bytes)",
-          "Max. amount of data in the ring buffer (bytes, 0 = disabled",
+          "Max. amount of data in the ring buffer (bytes, 0 = disabled)",
           0, G_MAXUINT64, DEFAULT_RING_BUFFER_MAX_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -699,7 +699,9 @@ update_time_level (GstQueue2 * queue)
   GST_DEBUG_OBJECT (queue, "sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT,
       GST_TIME_ARGS (queue->sinktime), GST_TIME_ARGS (queue->srctime));
 
-  if (queue->sinktime >= queue->srctime)
+  if (queue->sinktime != GST_CLOCK_TIME_NONE
+      && queue->srctime != GST_CLOCK_TIME_NONE
+      && queue->sinktime >= queue->srctime)
     queue->cur_level.time = queue->sinktime - queue->srctime;
   else
     queue->cur_level.time = 0;
@@ -2821,7 +2823,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = !!queue->ring_buffer;
+        result = ! !queue->ring_buffer;
       } else {
         result = TRUE;
       }

@@ -1225,8 +1225,13 @@ static gboolean
 gst_base_transform_query (GstPad * pad, GstQuery * query)
 {
   gboolean ret = FALSE;
-  GstBaseTransform *trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-  GstPad *otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
+  GstBaseTransform *trans;
+  GstPad *otherpad;
+
+  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (trans == NULL))
+    return FALSE;
+  otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
@@ -1716,6 +1721,8 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   gsize size_suggest;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (trans == NULL))
+    return GST_FLOW_WRONG_STATE;
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   priv = trans->priv;
 
@@ -1997,6 +2004,10 @@ gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
   gboolean forward = TRUE;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (trans == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->event)

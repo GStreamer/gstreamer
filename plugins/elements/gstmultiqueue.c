@@ -1780,8 +1780,8 @@ gst_single_queue_new (GstMultiQueue * mqueue, gint id)
   sq->src_tainted = TRUE;
 
   name = g_strdup_printf ("sink%d", sq->id);
-
   sq->sinkpad = gst_pad_new_from_static_template (&sinktemplate, name);
+  g_free (name);
 
   gst_pad_set_chain_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_chain));

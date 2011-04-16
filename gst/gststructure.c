@@ -1074,7 +1074,7 @@ gst_structure_nth_field_name (const GstStructure * structure, guint index)
 /**
  * gst_structure_foreach:
  * @structure: a #GstStructure
- * @func: a function to call for each field
+ * @func: (scope call): a function to call for each field
  * @user_data: (closure): private data
  *
  * Calls the provided function once for each field in the #GstStructure. The
@@ -1110,7 +1110,7 @@ gst_structure_foreach (const GstStructure * structure,
 /**
  * gst_structure_map_in_place:
  * @structure: a #GstStructure
- * @func: a function to call for each field
+ * @func: (scope call): a function to call for each field
  * @user_data: (closure): private data
  *
  * Calls the provided function once for each field in the #GstStructure. In
