@@ -359,14 +359,14 @@ GST_START_TEST (test_encodebin_sink_pads_multiple_dynamic)
   fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_PAUSED),
       GST_STATE_CHANGE_SUCCESS);
 
+  /* Set back to NULL */
+  fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
   gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpadvorbis);
   gst_object_unref (sinkpadvorbis);
   gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpadtheora);
   gst_object_unref (sinkpadtheora);
-
-  /* Set back to NULL */
-  fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_NULL),
-      GST_STATE_CHANGE_SUCCESS);
 
   gst_object_unref (ebin);
 };
@@ -604,12 +604,12 @@ GST_START_TEST (test_encodebin_render_audio_dynamic)
     }
   }
 
-  gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpad);
-  gst_object_unref (sinkpad);
-
   /* Set back to NULL */
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
+
+  gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpad);
+  gst_object_unref (sinkpad);
 
   gst_object_unref (bus);
 
@@ -745,14 +745,14 @@ GST_START_TEST (test_encodebin_render_audio_video_dynamic)
     }
   }
 
+  /* Set back to NULL */
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
   gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpad1);
   gst_object_unref (sinkpad1);
   gst_element_release_request_pad (GST_ELEMENT (ebin), sinkpad2);
   gst_object_unref (sinkpad2);
-
-  /* Set back to NULL */
-  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
-      GST_STATE_CHANGE_SUCCESS);
 
   gst_object_unref (bus);
 
@@ -867,6 +867,8 @@ GST_START_TEST (test_encodebin_reuse)
   _test_encodebin_reuse (prof2, prof3);
 
   gst_encoding_profile_unref (prof1);
+  gst_encoding_profile_unref (prof2);
+  gst_encoding_profile_unref (prof3);
 };
 
 GST_END_TEST;

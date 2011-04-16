@@ -178,7 +178,7 @@ GST_END_TEST;
         "%f does not match expected %f", ___d, d);                         \
   }
 
-GST_START_TEST (test_muscibrainz_tag_registration)
+GST_START_TEST (test_musicbrainz_tag_registration)
 {
   GstTagList *list;
 
@@ -957,6 +957,8 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
   GDate *date;
   GstDateTime *datetime;
 
+  gst_tag_register_musicbrainz_tags ();
+
   g_value_init (&value, G_TYPE_STRING);
   g_value_set_static_string (&value, "my string");
   do_simple_xmp_tag_serialization_deserialization (GST_TAG_ARTIST, &value);
@@ -1067,6 +1069,16 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
   g_value_set_double (&value, 359.99);
   do_simple_xmp_tag_serialization_deserialization
       (GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, &value);
+
+  g_value_set_double (&value, 0.0);
+  do_simple_xmp_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
+  g_value_set_double (&value, 1.0);
+  do_simple_xmp_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
+  g_value_set_double (&value, -2.5);
+  do_simple_xmp_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
   g_value_unset (&value);
 
   g_value_init (&value, GST_TYPE_DATE);
@@ -1538,6 +1550,16 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_double (&value, 600.0);
   do_simple_exif_tag_serialization_deserialization
       (GST_TAG_IMAGE_VERTICAL_PPI, &value);
+
+  g_value_set_double (&value, 0.0);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
+  g_value_set_double (&value, 1.0);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
+  g_value_set_double (&value, -2.5);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
   g_value_unset (&value);
 
   g_value_init (&value, G_TYPE_INT);
@@ -1615,7 +1637,7 @@ tag_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_muscibrainz_tag_registration);
+  tcase_add_test (tc_chain, test_musicbrainz_tag_registration);
   tcase_add_test (tc_chain, test_parse_extended_comment);
   tcase_add_test (tc_chain, test_vorbis_tags);
   tcase_add_test (tc_chain, test_id3_tags);

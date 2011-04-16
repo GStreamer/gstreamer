@@ -318,10 +318,9 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
 {
   GstOggMux *ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
   GstOggPadData *ogg_pad = (GstOggPadData *) gst_pad_get_element_private (pad);
-  gboolean ret;
+  gboolean ret = FALSE;
 
-  GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
-      GST_DEBUG_PAD_NAME (pad));
+  GST_DEBUG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:{
@@ -337,8 +336,10 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
       /* We don't support non time NEWSEGMENT events */
       if (format != GST_FORMAT_TIME) {
         gst_event_unref (event);
-        return FALSE;
+        event = NULL;
+        break;
       }
+
       gst_segment_set_newsegment_full (&ogg_pad->segment, update, rate,
           applied_rate, format, start, stop, position);
 
@@ -349,12 +350,11 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      ret = TRUE;
       break;
   }
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
-  if (ret)
+  if (event != NULL)
     ret = ogg_pad->collect_event (pad, event);
 
   gst_object_unref (ogg_mux);
@@ -883,7 +883,6 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
         GST_DEBUG_OBJECT (data->pad, "EOS on pad");
         if (!pad->eos) {
           ogg_page page;
-          GstFlowReturn ret;
 
           /* it's no longer active */
           ogg_mux->active_pads--;
@@ -893,8 +892,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
           while (ogg_stream_flush (&pad->map.stream, &page)) {
             /* Place page into the per-pad queue */
-            ret = gst_ogg_mux_pad_queue_page (ogg_mux, pad, &page,
-                pad->first_delta);
+            gst_ogg_mux_pad_queue_page (ogg_mux, pad, &page, pad->first_delta);
             /* increment the page number counter */
             pad->pageno++;
             /* mark other pages as delta */

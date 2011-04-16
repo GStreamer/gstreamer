@@ -897,6 +897,9 @@ _init_xmp_tag_map (gpointer user_data)
   _gst_xmp_schema_add_simple_mapping (schema, GST_TAG_GEO_LOCATION_LONGITUDE,
       "exif:GPSLongitude", GST_XMP_TAG_TYPE_SIMPLE, serialize_exif_longitude,
       deserialize_exif_longitude);
+  _gst_xmp_schema_add_simple_mapping (schema,
+      GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, "exif:ExposureBiasValue",
+      GST_XMP_TAG_TYPE_SIMPLE, NULL, NULL);
 
   /* compound exif tags */
   array = g_ptr_array_sized_new (2);
@@ -1032,6 +1035,18 @@ read_one_tag (GstTagList * list, const gchar * tag, XmpTag * xmptag,
   switch (tag_type) {
     case G_TYPE_STRING:{
       gst_tag_list_add (list, merge_mode, tag, v, NULL);
+      break;
+    }
+    case G_TYPE_DOUBLE:{
+      gdouble value = 0;
+      gint frac_n, frac_d;
+
+      if (sscanf (v, "%d/%d", &frac_n, &frac_d) == 2) {
+        gst_util_fraction_to_double (frac_n, frac_d, &value);
+        gst_tag_list_add (list, merge_mode, tag, value, NULL);
+      } else {
+        GST_WARNING ("Failed to parse fraction: %s", v);
+      }
       break;
     }
     default:
@@ -1463,6 +1478,8 @@ gst_value_serialize_xmp (const GValue * value)
       return g_strdup_printf ("%d", g_value_get_int (value));
     case G_TYPE_UINT:
       return g_strdup_printf ("%u", g_value_get_uint (value));
+    case G_TYPE_DOUBLE:
+      return double_to_fraction_string (g_value_get_double (value));
     default:
       break;
   }

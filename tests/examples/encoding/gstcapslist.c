@@ -27,7 +27,7 @@ static gboolean
 remove_range_foreach (GQuark field_id, const GValue * value, GstStructure * st)
 {
   GType ftype = G_VALUE_TYPE (value);
-  const gchar *fname;
+  /* const gchar *fname; */
 
   if (ftype == GST_TYPE_INT_RANGE || ftype == GST_TYPE_DOUBLE_RANGE ||
       ftype == GST_TYPE_FRACTION_RANGE) {
@@ -35,8 +35,7 @@ remove_range_foreach (GQuark field_id, const GValue * value, GstStructure * st)
     return FALSE;
   }
 
-  fname = g_quark_to_string (field_id);
-
+  /* fname = g_quark_to_string (field_id); */
   /* if (strstr (fname, "framerate") || strstr (fname, "pixel-aspect-ratio") || */
   /*     strstr (fname, "rate")) { */
   /*   gst_structure_remove_field (st, g_quark_to_string (field_id)); */

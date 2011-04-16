@@ -3087,14 +3087,12 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
       pad = gst_ogg_demux_find_pad (ogg, serialno);
     } else {
       GstClockTime chain_time;
-      GstOggChain *current_chain;
       gint64 current_time;
 
       /* this can only happen in push mode */
       if (ogg->pullmode)
         goto unknown_chain;
 
-      current_chain = ogg->current_chain;
       current_time = ogg->segment.last_stop;
 
       /* time of new chain is current time */

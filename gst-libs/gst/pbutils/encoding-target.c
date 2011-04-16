@@ -449,21 +449,19 @@ serialize_encoding_profile (GKeyFile * out, GstEncodingProfile * prof)
   const GList *tmp;
   guint i;
   const gchar *profname, *profdesc, *profpreset, *proftype;
-  const GstCaps *profformat, *profrestriction;
+  const GstCaps *profformat;
 
   profname = gst_encoding_profile_get_name (prof);
   profdesc = gst_encoding_profile_get_description (prof);
   profformat = gst_encoding_profile_get_format (prof);
   profpreset = gst_encoding_profile_get_preset (prof);
   proftype = gst_encoding_profile_get_type_nick (prof);
-  profrestriction = gst_encoding_profile_get_restriction (prof);
 
   profgroupname = g_strdup_printf ("profile-%s", profname);
 
   g_key_file_set_string (out, profgroupname, "name", profname);
 
-  g_key_file_set_value (out, profgroupname, "type",
-      gst_encoding_profile_get_type_nick (prof));
+  g_key_file_set_value (out, profgroupname, "type", proftype);
 
   if (profdesc) {
     gchar *locale;
@@ -1002,7 +1000,6 @@ gst_encoding_target_save (GstEncodingTarget * target, GError ** error)
 {
   gchar *filename;
   gchar *lfilename;
-  gboolean res;
 
   g_return_val_if_fail (GST_IS_ENCODING_TARGET (target), FALSE);
   g_return_val_if_fail (target->category != NULL, FALSE);
@@ -1013,7 +1010,7 @@ gst_encoding_target_save (GstEncodingTarget * target, GError ** error)
       GST_ENCODING_TARGET_DIRECTORY, target->category, lfilename, NULL);
   g_free (lfilename);
 
-  res = gst_encoding_target_save_to_file (target, filename, error);
+  gst_encoding_target_save_to_file (target, filename, error);
   g_free (filename);
 
   return TRUE;

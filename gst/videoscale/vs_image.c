@@ -85,7 +85,6 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
   int y_increment;
   int x_increment;
   int y1;
-  int y2;
   int i;
   int j;
   int x;
@@ -106,7 +105,6 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
 #define LINE(x) ((tmpbuf) + (dest_size)*((x)&1))
 
   acc = 0;
-  y2 = -1;
   gst_videoscale_orc_resample_bilinear_u32 (LINE (0), src->pixels,
       0, x_increment, dest->width);
   y1 = 0;
@@ -574,7 +572,6 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
   int j;
   int x;
   int dest_size;
-  int xacc;
 
   if (dest->height == 1)
     y_increment = 0;
@@ -592,7 +589,6 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
   tmp2 = tmpbuf + dest_size;
 
   acc = 0;
-  xacc = 0;
   y2 = -1;
   gst_videoscale_orc_resample_bilinear_u8 (tmp1, src->pixels,
       0, x_increment, dest->width);
@@ -607,7 +603,6 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
       } else if (j == y2) {
         memcpy (dest->pixels + i * dest->stride, tmp2, dest_size);
       } else {
-        xacc = 0;
         gst_videoscale_orc_resample_bilinear_u8 (tmp1,
             src->pixels + j * src->stride, 0, x_increment, dest->width);
         y1 = j;
@@ -616,7 +611,6 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
     } else {
       if (j == y1) {
         if (j + 1 != y2) {
-          xacc = 0;
           gst_videoscale_orc_resample_bilinear_u8 (tmp2,
               src->pixels + (j + 1) * src->stride, 0, x_increment, dest->width);
           y2 = j + 1;
@@ -629,7 +623,6 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
         }
       } else if (j == y2) {
         if (j + 1 != y1) {
-          xacc = 0;
           gst_videoscale_orc_resample_bilinear_u8 (tmp1,
               src->pixels + (j + 1) * src->stride, 0, x_increment, dest->width);
           y1 = j + 1;
@@ -1098,7 +1091,6 @@ vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
   int y_increment;
   int x_increment;
   int y1;
-  int y2;
   int i;
   int j;
   int x;
@@ -1121,7 +1113,6 @@ vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
 #define LINE(x) ((guint16 *)((tmpbuf) + (dest_size)*((x)&1)))
 
   acc = 0;
-  y2 = -1;
   //gst_videoscale_orc_resample_bilinear_u64 (LINE (0), src->pixels,
   //    0, x_increment, dest->width);
   xacc = 0;
