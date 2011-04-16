@@ -352,6 +352,8 @@ static void
 gst_text_overlay_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstTextOverlayClass *klass = GST_TEXT_OVERLAY_CLASS (g_class);
+  PangoFontMap *fontmap;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template_factory));
@@ -369,6 +371,10 @@ gst_text_overlay_base_init (gpointer g_class)
       "Filter/Editor/Video",
       "Adds text strings on top of a video buffer",
       "David Schleef <ds@schleef.org>, " "Zeeshan Ali <zeeshan.ali@nokia.com>");
+
+  fontmap = pango_cairo_font_map_get_default ();
+  klass->pango_context =
+      pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
 }
 
 static gchar *
@@ -382,7 +388,6 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  PangoFontMap *fontmap;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -397,9 +402,6 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
   klass->pango_lock = g_mutex_new ();
 
   klass->get_text = gst_text_overlay_get_text;
-  fontmap = pango_cairo_font_map_get_default ();
-  klass->pango_context =
-      pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT,
       g_param_spec_string ("text", "text",
