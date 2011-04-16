@@ -45,6 +45,7 @@ gir_cincludes=--c-include="gst/net/gstnet.h"
 
 GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
+		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstNet \
 		--strip-prefix=Gst \
 		--nsversion=@GST_MAJORMINOR@ \
