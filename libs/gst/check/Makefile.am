@@ -132,6 +132,7 @@ GstCheck-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_MAJORMI
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
 		--pkg-export gstreamer-check-0.10 \
+		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
