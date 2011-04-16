@@ -14,8 +14,6 @@ GstVorbisTag GstTagSetter
 GstCddaBaseSrc GstURIHandler
 GstCdParanoiaSrc GstURIHandler
 GstAlsaSrc GstImplementsInterface GstMixer GstPropertyProbe
-GstV4lElement GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
-GstV4lSrc GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
 GstGioSrc GstURIHandler
 GstGnomeVFSSrc GstURIHandler
 GstAppSrc GstURIHandler

@@ -1271,10 +1271,10 @@
 <ARG>
 <NAME>GstTheoraEnc::speed-level</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,3]</RANGE>
-<FLAGS>rw</FLAGS>
+<RANGE>[0,2]</RANGE>
+<FLAGS>rwx</FLAGS>
 <NICK>Speed level</NICK>
-<BLURB>Controls the amount of motion vector searching done while encoding.  This property requires libtheora version >= 1.0.</BLURB>
+<BLURB>Controls the amount of analysis performed when encoding. Higher values trade compression quality for speed. This property requires libtheora version >= 1.0, and the maximum value may vary based on encoder version.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -1284,7 +1284,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>VP3 Compatible</NICK>
-<BLURB>Enable capping of bit reservoir overflows.  This property requires libtheora version >= 1.1.</BLURB>
+<BLURB>Enable capping of bit reservoir overflows.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -1294,7 +1294,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>VP3 Compatible</NICK>
-<BLURB>Enable capping of bit reservoir underflows.  This property requires libtheora version >= 1.1.</BLURB>
+<BLURB>Enable capping of bit reservoir underflows.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -1304,7 +1304,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>VP3 Compatible</NICK>
-<BLURB>Allow or disallow frame dropping.  This property requires libtheora version >= 1.1.</BLURB>
+<BLURB>Allow or disallow frame dropping.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -1314,7 +1314,7 @@
 <RANGE>[0,1000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate Control Buffer</NICK>
-<BLURB>Sets the size of the rate control buffer, in units of frames.  The default value of 0 instructs the encoder to automatically select an appropriate value.  This property requires libtheora version >= 1.1.</BLURB>
+<BLURB>Sets the size of the rate control buffer, in units of frames.  The default value of 0 instructs the encoder to automatically select an appropriate value.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1324,7 +1324,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>VP3 Compatible</NICK>
-<BLURB>Disables non-VP3 compatible features.  This property requires libtheora version >= 1.1.</BLURB>
+<BLURB>Disables non-VP3 compatible features.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -1736,6 +1736,16 @@
 <NICK>tolerance</NICK>
 <BLURB>Only act if timestamp jitter/imperfection exceeds indicated tolerance (ns).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioRate::skip-to-first</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip to first buffer</NICK>
+<BLURB>Don't produce buffers before the first one we receive.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3144,7 +3154,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Emit signals</NICK>
-<BLURB>Emit new-preroll and new-buffer signals.</BLURB>
+<BLURB>Emit new-preroll, new-buffer and new-buffer-list signals.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
