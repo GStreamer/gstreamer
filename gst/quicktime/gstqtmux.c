@@ -2991,10 +2991,12 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
       }
     } else {
       GST_WARNING_OBJECT (qtmux, "no stream-format field in h264 caps");
+      goto refuse_caps;
     }
 
     if (!codec_data) {
       GST_WARNING_OBJECT (qtmux, "no codec_data in h264 caps");
+      goto refuse_caps;
     }
 
     entry.fourcc = FOURCC_avc1;
