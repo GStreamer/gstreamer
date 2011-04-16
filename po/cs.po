@@ -1,15 +1,15 @@
 # Czech translation of gst-plugins-good.
-# Copyright (C) 2007, 2008, 2009, 2010 the author(s) of gst-plugins-good.
+# Copyright (C) 2007, 2008, 2009, 2010, 2011 the author(s) of gst-plugins-good.
 # Copyright (C) 2004 Miloslav Trmac <mitr@volny.cz>.
 # This file is put in the public domain.
 # Miloslav Trmac <mitr@volny.cz>, 2004.
-# Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010.
+# Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 01:15+0000\n"
-"PO-Revision-Date: 2010-10-31 10:21+0100\n"
+"POT-Creation-Date: 2011-04-16 16:25+0100\n"
+"PO-Revision-Date: 2011-01-12 23:07+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -74,7 +74,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Tento soubor je poškozen a nelze jej přehrát."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Atom - neplatná velikost."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Tento soubor není úplný a nelze jej přehrát."
@@ -632,16 +632,16 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Nezdařilo se nastavení vstupu \"%d\" na zařízení \"%s\"."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Nezdařilo se získání aktuálního vstupu na zařízení \"%s\". Možná se jedná o "
-"radiopřijímač."
+"Nezdařilo se získání aktuálního výstupu na zařízení \"%s\". Možná se jedná o "
+"radiopřijímač"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Nezdařilo se nastavení vstupu \"%d\" na zařízení \"%s\"."
+msgstr "Nezdařilo se nastavení výstupu %d na zařízení %s."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
