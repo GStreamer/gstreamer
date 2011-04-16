@@ -359,17 +359,19 @@ static GstTagDemuxResult
 gst_ape_demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
     gboolean start_tag, guint * tag_size, GstTagList ** tags)
 {
-  const guint8 *data;
-  const guint8 *footer;
+  guint8 *data_start, *data;
+  guint8 *footer;
   gboolean have_header;
   gboolean end_tag = !start_tag;
   GstCaps *sink_caps;
   guint version, footer_size;
+  gsize size;
 
-  GST_LOG_OBJECT (demux, "Parsing buffer of size %u", GST_BUFFER_SIZE (buffer));
+  data_start = data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-  data = GST_BUFFER_DATA (buffer);
-  footer = GST_BUFFER_DATA (buffer) + GST_BUFFER_SIZE (buffer) - 32;
+  GST_LOG_OBJECT (demux, "Parsing buffer of size %" G_GSIZE_FORMAT, size);
+
+  footer = data + size - 32;
 
   GST_LOG_OBJECT (demux, "Checking for footer at offset 0x%04x",
       (guint) (footer - data));
@@ -427,6 +429,8 @@ gst_ape_demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
   gst_pb_utils_add_codec_description_to_tag_list (*tags,
       GST_TAG_CONTAINER_FORMAT, sink_caps);
   gst_caps_unref (sink_caps);
+
+  gst_buffer_unmap (buffer, data_start, size);
 
   return GST_TAG_DEMUX_RESULT_OK;
 }
