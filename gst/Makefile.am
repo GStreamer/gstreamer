@@ -271,7 +271,8 @@ gir_headers=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_MAJORMINOR@include_HEA
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_MAJORMINOR@_la_SOURCES))
 
 Gst-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_MAJORMINOR@.la
-	$(AM_V_GEN)$(INTROSPECTION_SCANNER) -v --namespace Gst \
+	$(AM_V_GEN)GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
+		$(INTROSPECTION_SCANNER) -v --namespace Gst \
 		--nsversion=@GST_MAJORMINOR@ \
 		-I$(top_srcdir) \
 		-I$(top_builddir) \
@@ -286,7 +287,8 @@ Gst-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_MAJORMINOR@
 		--pkg gobject-2.0 \
 		--pkg gmodule-no-export-2.0 \
 		--pkg gthread-2.0 \
-		--pkg-export gstreamer-0.11 \
+		--pkg-export gstreamer-@GST_MAJORMINOR@ \
+		--add-init-section="gst_init(NULL, NULL);" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
