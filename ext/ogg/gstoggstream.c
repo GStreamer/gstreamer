@@ -2049,11 +2049,14 @@ gboolean
 gst_ogg_stream_setup_map_from_caps_headers (GstOggStream * pad,
     const GstCaps * caps)
 {
+  GstBuffer *buf;
   const GstStructure *structure;
-  const GstBuffer *buf;
   const GValue *streamheader;
   const GValue *first_element;
   ogg_packet packet;
+  guint8 *data;
+  gsize size;
+  gboolean ret;
 
   GST_INFO ("Checking streamheader on caps %" GST_PTR_FORMAT, caps);
 
@@ -2086,16 +2089,26 @@ gst_ogg_stream_setup_map_from_caps_headers (GstOggStream * pad,
   }
 
   buf = gst_value_get_buffer (first_element);
-  if (buf == NULL || GST_BUFFER_SIZE (buf) == 0) {
+  if (buf == NULL) {
+    GST_ERROR ("no first streamheader buffer");
+    return FALSE;
+  }
+
+  data = gst_buffer_map (buf, &size, 0, GST_MAP_READ);
+  if (data == NULL || size == 0) {
     GST_ERROR ("invalid first streamheader buffer");
     return FALSE;
   }
 
-  GST_MEMDUMP ("streamheader", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  GST_MEMDUMP ("streamheader", data, size);
 
-  packet.packet = GST_BUFFER_DATA (buf);
-  packet.bytes = GST_BUFFER_SIZE (buf);
+  packet.packet = data;
+  packet.bytes = size;
 
   GST_INFO ("Found headers on caps, using those to determine type");
-  return gst_ogg_stream_setup_map (pad, &packet);
+  ret = gst_ogg_stream_setup_map (pad, &packet);
+
+  gst_buffer_unmap (buf, data, size);
+
+  return ret;
 }
