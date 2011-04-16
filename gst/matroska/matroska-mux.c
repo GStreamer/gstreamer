@@ -494,7 +494,7 @@ gst_matroska_pad_reset (GstMatroskaPad * collect_pad, gboolean full)
         break;
       default:
         g_assert_not_reached ();
-        break;
+        return;
     }
 
     context->type = type;
