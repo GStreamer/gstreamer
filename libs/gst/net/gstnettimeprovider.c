@@ -105,10 +105,11 @@ static void gst_net_time_provider_set_property (GObject * object, guint prop_id,
 static void gst_net_time_provider_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-#define _do_init(type) \
+#define _do_init \
   GST_DEBUG_CATEGORY_INIT (ntp_debug, "nettime", 0, "Network time provider");
 
-GST_BOILERPLATE_FULL (GstNetTimeProvider, gst_net_time_provider, GstObject,
+#define gst_net_time_provider_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstNetTimeProvider, gst_net_time_provider,
     GST_TYPE_OBJECT, _do_init);
 
 #ifdef G_OS_WIN32
@@ -122,12 +123,6 @@ inet_aton (const char *c, struct in_addr *paddr)
   return 1;
 }
 #endif
-
-static void
-gst_net_time_provider_base_init (gpointer g_class)
-{
-  /* Do nothing here */
-}
 
 static void
 gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
@@ -163,8 +158,7 @@ gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
 }
 
 static void
-gst_net_time_provider_init (GstNetTimeProvider * self,
-    GstNetTimeProviderClass * g_class)
+gst_net_time_provider_init (GstNetTimeProvider * self)
 {
 #ifdef G_OS_WIN32
   WSADATA w;
