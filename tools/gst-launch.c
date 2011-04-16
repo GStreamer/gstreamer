@@ -360,7 +360,7 @@ print_index_stats (GPtrArray * index_stats)
   gint i;
 
   if (index_stats->len) {
-    g_print (_("Index statistics\n"));
+    g_print ("%s:\n", _("Index statistics"));
   }
 
   for (i = 0; i < index_stats->len; i++) {
