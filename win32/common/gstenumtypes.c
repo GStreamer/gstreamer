@@ -53,6 +53,7 @@ gst_buffer_flag_get_type (void)
   static const GFlagsValue values[] = {
     {C_FLAGS (GST_BUFFER_FLAG_READONLY), "GST_BUFFER_FLAG_READONLY",
         "readonly"},
+    {C_FLAGS (GST_BUFFER_FLAG_MEDIA4), "GST_BUFFER_FLAG_MEDIA4", "media4"},
     {C_FLAGS (GST_BUFFER_FLAG_PREROLL), "GST_BUFFER_FLAG_PREROLL", "preroll"},
     {C_FLAGS (GST_BUFFER_FLAG_DISCONT), "GST_BUFFER_FLAG_DISCONT", "discont"},
     {C_FLAGS (GST_BUFFER_FLAG_IN_CAPS), "GST_BUFFER_FLAG_IN_CAPS", "in-caps"},
@@ -165,6 +166,25 @@ gst_caps_flags_get_type (void)
 
   if (g_once_init_enter (&id)) {
     GType tmp = g_flags_register_static ("GstCapsFlags", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
+gst_caps_intersect_mode_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_CAPS_INTERSECT_ZIG_ZAG), "GST_CAPS_INTERSECT_ZIG_ZAG",
+        "zig-zag"},
+    {C_ENUM (GST_CAPS_INTERSECT_FIRST), "GST_CAPS_INTERSECT_FIRST", "first"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstCapsIntersectMode", values);
     g_once_init_leave (&id, tmp);
   }
 
@@ -605,6 +625,25 @@ gst_seek_flags_get_type (void)
   return (GType) id;
 }
 
+GType
+gst_qos_type_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_QOS_TYPE_OVERFLOW), "GST_QOS_TYPE_OVERFLOW", "overflow"},
+    {C_ENUM (GST_QOS_TYPE_UNDERFLOW), "GST_QOS_TYPE_UNDERFLOW", "underflow"},
+    {C_ENUM (GST_QOS_TYPE_THROTTLE), "GST_QOS_TYPE_THROTTLE", "throttle"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstQOSType", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 /* enumerations from "gstformat.h" */
 GType
 gst_format_get_type (void)
@@ -891,6 +930,7 @@ gst_message_type_get_type (void)
         "request-state"},
     {C_FLAGS (GST_MESSAGE_STEP_START), "GST_MESSAGE_STEP_START", "step-start"},
     {C_FLAGS (GST_MESSAGE_QOS), "GST_MESSAGE_QOS", "qos"},
+    {C_FLAGS (GST_MESSAGE_PROGRESS), "GST_MESSAGE_PROGRESS", "progress"},
     {C_FLAGS (GST_MESSAGE_ANY), "GST_MESSAGE_ANY", "any"},
     {0, NULL, NULL}
   };
@@ -953,6 +993,30 @@ gst_stream_status_type_get_type (void)
   return (GType) id;
 }
 
+GType
+gst_progress_type_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_PROGRESS_TYPE_START), "GST_PROGRESS_TYPE_START", "start"},
+    {C_ENUM (GST_PROGRESS_TYPE_CONTINUE), "GST_PROGRESS_TYPE_CONTINUE",
+        "continue"},
+    {C_ENUM (GST_PROGRESS_TYPE_COMPLETE), "GST_PROGRESS_TYPE_COMPLETE",
+        "complete"},
+    {C_ENUM (GST_PROGRESS_TYPE_CANCELED), "GST_PROGRESS_TYPE_CANCELED",
+        "canceled"},
+    {C_ENUM (GST_PROGRESS_TYPE_ERROR), "GST_PROGRESS_TYPE_ERROR", "error"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstProgressType", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 /* enumerations from "gstminiobject.h" */
 GType
 gst_mini_object_flags_get_type (void)
@@ -961,6 +1025,8 @@ gst_mini_object_flags_get_type (void)
   static const GFlagsValue values[] = {
     {C_FLAGS (GST_MINI_OBJECT_FLAG_READONLY), "GST_MINI_OBJECT_FLAG_READONLY",
         "readonly"},
+    {C_FLAGS (GST_MINI_OBJECT_FLAG_RESERVED1), "GST_MINI_OBJECT_FLAG_RESERVED1",
+        "reserved1"},
     {C_FLAGS (GST_MINI_OBJECT_FLAG_LAST), "GST_MINI_OBJECT_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };

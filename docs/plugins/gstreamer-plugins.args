@@ -994,7 +994,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max. ring buffer size (bytes)</NICK>
-<BLURB>Max. amount of data in the ring buffer (bytes, 0 = disabled.</BLURB>
+<BLURB>Max. amount of data in the ring buffer (bytes, 0 = disabled).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 

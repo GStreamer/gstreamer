@@ -3,10 +3,10 @@
   <description>standard GStreamer elements</description>
   <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
   <basename>libgstcoreelements.so</basename>
-  <version>0.10.32.1</version>
+  <version>0.10.32.2</version>
   <license>LGPL</license>
   <source>gstreamer</source>
-  <package>GStreamer git</package>
+  <package>GStreamer prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -122,7 +122,7 @@
     </element>
     <element>
       <name>funnel</name>
-      <longname>Farsight Funnel pipe fitting</longname>
+      <longname>Funnel pipe fitting</longname>
       <class>Generic</class>
       <description>N-to-1 pipe fitting</description>
       <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
