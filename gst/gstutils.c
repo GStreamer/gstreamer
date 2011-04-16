@@ -4063,7 +4063,7 @@ gst_util_greatest_common_divisor (gint a, gint b)
  * @src_d: Fraction denominator #gint
  * @dest: (out): pointer to a #gdouble for the result
  *
- * Transforms a #gdouble to a fraction and simplifies the result.
+ * Transforms a fraction to a #gdouble.
  *
  * Since: 0.10.26
  */
