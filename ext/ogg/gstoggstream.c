@@ -2044,3 +2044,58 @@ gst_ogg_stream_setup_map (GstOggStream * pad, ogg_packet * packet)
 
   return FALSE;
 }
+
+gboolean
+gst_ogg_stream_setup_map_from_caps_headers (GstOggStream * pad,
+    const GstCaps * caps)
+{
+  const GstStructure *structure;
+  const GstBuffer *buf;
+  const GValue *streamheader;
+  const GValue *first_element;
+  ogg_packet packet;
+
+  GST_INFO ("Checking streamheader on caps %" GST_PTR_FORMAT, caps);
+
+  if (caps == NULL)
+    return FALSE;
+
+  structure = gst_caps_get_structure (caps, 0);
+  streamheader = gst_structure_get_value (structure, "streamheader");
+
+  if (streamheader == NULL) {
+    GST_LOG ("no streamheader field in caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  if (!GST_VALUE_HOLDS_ARRAY (streamheader)) {
+    GST_ERROR ("streamheader field not an array, caps: %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  if (gst_value_array_get_size (streamheader) == 0) {
+    GST_ERROR ("empty streamheader field in caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  first_element = gst_value_array_get_value (streamheader, 0);
+
+  if (!GST_VALUE_HOLDS_BUFFER (first_element)) {
+    GST_ERROR ("first streamheader not a buffer, caps: %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  buf = gst_value_get_buffer (first_element);
+  if (buf == NULL || GST_BUFFER_SIZE (buf) == 0) {
+    GST_ERROR ("invalid first streamheader buffer");
+    return FALSE;
+  }
+
+  GST_MEMDUMP ("streamheader", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+
+  packet.packet = GST_BUFFER_DATA (buf);
+  packet.bytes = GST_BUFFER_SIZE (buf);
+
+  GST_INFO ("Found headers on caps, using those to determine type");
+  return gst_ogg_stream_setup_map (pad, &packet);
+}
