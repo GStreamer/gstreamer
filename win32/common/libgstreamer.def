@@ -108,6 +108,7 @@ EXPORTS
 	gst_buffer_list_iterator_add_list
 	gst_buffer_list_iterator_do
 	gst_buffer_list_iterator_free
+	gst_buffer_list_iterator_get_type
 	gst_buffer_list_iterator_merge_group
 	gst_buffer_list_iterator_n_buffers
 	gst_buffer_list_iterator_next
@@ -738,6 +739,7 @@ EXPORTS
 	gst_parse_bin_from_description_full
 	gst_parse_context_free
 	gst_parse_context_get_missing_elements
+	gst_parse_context_get_type
 	gst_parse_context_new
 	gst_parse_error_get_type
 	gst_parse_error_quark
