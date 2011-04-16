@@ -16,7 +16,10 @@ EXPORTS
 	gst_adapter_take_list
 	gst_base_parse_add_index_entry
 	gst_base_parse_convert_default
+	gst_base_parse_frame_free
+	gst_base_parse_frame_get_type
 	gst_base_parse_frame_init
+	gst_base_parse_frame_new
 	gst_base_parse_get_type
 	gst_base_parse_push_frame
 	gst_base_parse_set_average_bitrate
