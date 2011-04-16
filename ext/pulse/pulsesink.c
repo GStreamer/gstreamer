@@ -1072,8 +1072,8 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
 
   /* EOS needs running clock */
   if (GST_BASE_SINK_CAST (psink)->eos ||
-      g_atomic_int_get (&GST_BASE_AUDIO_SINK (psink)->abidata.
-          ABI.eos_rendering))
+      g_atomic_int_get (&GST_BASE_AUDIO_SINK (psink)->abidata.ABI.
+          eos_rendering))
     gst_pulsering_set_corked (pbuf, FALSE, FALSE);
 
   pa_threaded_mainloop_unlock (mainloop);
@@ -2722,7 +2722,6 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (element);
   GstStateChangeReturn ret;
-  guint res;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -2732,8 +2731,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
         if (!(mainloop = pa_threaded_mainloop_new ()))
           goto mainloop_failed;
         mainloop_ref_ct = 1;
-        res = pa_threaded_mainloop_start (mainloop);
-        g_assert (res == 0);
+        pa_threaded_mainloop_start (mainloop);
         g_mutex_unlock (pa_shared_resource_mutex);
       } else {
         GST_INFO_OBJECT (element, "reusing pa main loop thread");

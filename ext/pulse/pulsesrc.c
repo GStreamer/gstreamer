@@ -1112,7 +1112,7 @@ gst_pulsesrc_success_cb (pa_stream * s, int success, void *userdata)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
-  pulsesrc->operation_success = !!success;
+  pulsesrc->operation_success = ! !success;
   pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
 }
 
@@ -1250,15 +1250,13 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   GstPulseSrc *this = GST_PULSESRC_CAST (element);
-  int e;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       this->mainloop = pa_threaded_mainloop_new ();
       g_assert (this->mainloop);
 
-      e = pa_threaded_mainloop_start (this->mainloop);
-      g_assert (e == 0);
+      pa_threaded_mainloop_start (this->mainloop);
 
       if (!this->mixer)
         this->mixer =

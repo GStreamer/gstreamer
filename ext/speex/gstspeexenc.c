@@ -934,7 +934,12 @@ gst_speex_enc_encode (GstSpeexEnc * enc, gboolean flush)
 
     written = speex_bits_write (&enc->bits,
         (gchar *) GST_BUFFER_DATA (outbuf), outsize);
-    g_assert (written == outsize);
+
+    if (G_UNLIKELY (written != outsize)) {
+      GST_ERROR_OBJECT (enc, "short write: %d < %d bytes", written, outsize);
+      GST_BUFFER_SIZE (outbuf) = written;
+    }
+
     speex_bits_reset (&enc->bits);
 
     if (!dtx_ret)
