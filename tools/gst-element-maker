@@ -54,6 +54,7 @@ PREFIX=$(echo $prefix | sed -e 's/\(.*\)/\U\1/')
 NAME=$(echo $name | sed -e 's/\(.*\)/\U\1/')
 Prefix=$(echo $prefix | sed -e 's/_\(.\)/\U\1/g' -e 's/^\(.\)/\U\1/')
 Name=$(echo $name | sed -e 's/_\(.\)/\U\1/g' -e 's/^\(.\)/\U\1/')
+name=$(echo $name | sed -e 's/\(.*\)/\L\1/')
 
 GST_IS_REPLACE=${PREFIX}_IS_${NAME}
 GST_REPLACE=${PREFIX}_${NAME}
