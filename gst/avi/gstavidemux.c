@@ -2248,7 +2248,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
       break;
     }
     default:
-      g_assert_not_reached ();
+      g_return_val_if_reached (FALSE);
   }
 
   /* no caps means no stream */
