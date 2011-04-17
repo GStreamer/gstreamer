@@ -710,9 +710,14 @@ AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
 dnl *** decklink  ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DECKLINK, true)
 AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
-   if test "x$host" = "xlinux" ; then
-     HAVE_DECKLINK=yes
-   fi
+   case "$host" in
+     *-*linux*)
+       HAVE_DECKLINK=yes
+       ;;
+     *)
+       HAVE_DECKLINK=no
+       ;;
+   esac
    DECKLINK_CXXFLAGS=
    DECKLINK_LIBS=
    AC_SUBST(DECKLINK_CXXFLAGS)
@@ -986,9 +991,14 @@ AC_SUBST(LIBMMS_LIBS)
 dnl *** linsys ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LINSYS, true)
 AG_GST_CHECK_FEATURE(LINSYS, [Linear Systems SDI plugin], linsys, [
-  if test "x$host" = "xlinux" ; then
-    HAVE_LINSYS="yes"
-  fi
+  case "$host" in
+    *-*linux*)
+      HAVE_LINSYS=yes
+      ;;
+    *)
+      HAVE_LINSYS=no
+      ;;
+  esac
 ])
 
 dnl *** modplug ***
