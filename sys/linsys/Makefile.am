@@ -4,10 +4,17 @@ plugin_LTLIBRARIES = libgstlinsys.la
 
 libgstlinsys_la_SOURCES = \
 	gstlinsyssdisink.c \
-	gstlinsyssdisink.h \
 	gstlinsyssdisrc.c \
-	gstlinsyssdisrc.h \
 	gstlinsys.c
+
+noinst_HEADERS = \
+	gstlinsyssdisink.h \
+	gstlinsyssdisrc.h \
+	include/asi.h \
+	include/master.h \
+	include/sdi.h \
+	include/sdiaudio.h \
+	include/sdivideo.h
 
 libgstlinsys_la_CFLAGS = \
 	-I$(srcdir)/include \
