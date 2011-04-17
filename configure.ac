@@ -534,6 +534,22 @@ case "$host" in
     ;;
 esac
 
+dnl *** OS/X AVCVideoServices ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AVC, true)
+HAVE_AVC="no"
+AG_GST_CHECK_FEATURE(AVC, [AVC Video Services], avcsrc, [
+  AC_CHECK_TYPE([AVCDevice], HAVE_AVC="yes", HAVE_AVC="no",
+      [#include <AVCVideoServices/AVCVideoServices.h>])
+])
+dnl in case header AVCVideoServices/AVCVideoServices.h is found on other platforms
+case "$host" in
+  *-*darwin*)
+    ;;
+  *)
+    HAVE_AVC="no"
+    ;;
+esac
+
 dnl check for QuickTime
 translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
 AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
@@ -1836,6 +1852,7 @@ sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
 sys/acmmp3dec/Makefile
 sys/applemedia/Makefile
+sys/avc/Makefile
 sys/decklink/Makefile
 sys/directdraw/Makefile
 sys/directsound/Makefile
