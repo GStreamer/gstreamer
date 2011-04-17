@@ -15,11 +15,15 @@ libgstdecklink_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstdecklink_la_SOURCES = \
 	gstdecklinksrc.cpp \
-	gstdecklinksrc.h \
 	gstdecklinksink.cpp \
-	gstdecklinksink.h \
 	gstdecklink.cpp \
 	capture.cpp \
-	capture.h \
 	DeckLinkAPIDispatch.cpp
+
+noinst_HEADERS = \
+	gstdecklinksrc.h \
+	gstdecklinksink.h \
+	capture.h \
+	DeckLinkAPI.h \
+	LinuxCOM.h
 
