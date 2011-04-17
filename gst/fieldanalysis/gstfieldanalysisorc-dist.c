@@ -4,9 +4,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#ifndef DISABLE_ORC
-#include <orc/orc.h>
-#endif
 #include <glib.h>
 
 #ifndef _ORC_INTEGER_TYPEDEFS_
@@ -32,6 +29,7 @@ typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
 #define ORC_UINT64_C(x) (x##Ui64)
+#define inline __inline
 #else
 #include <limits.h>
 typedef signed char orc_int8;
@@ -71,17 +69,34 @@ typedef union
   orc_int16 x4[4];
 } orc_union64;
 #endif
+#ifndef ORC_RESTRICT
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
+#endif
 
-void orc_same_parity_sad_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, int p2, int n);
-void orc_same_parity_ssd_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, int p2, int n);
-void orc_same_parity_3_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4,
-    const orc_uint8 * s5, const orc_uint8 * s6, int p2, int n);
-void orc_opposite_parity_5_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4,
-    const orc_uint8 * s5, int p2, int n);
+#ifndef DISABLE_ORC
+#include <orc/orc.h>
+#endif
+void orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    int p2, int n);
+void orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    int p2, int n);
+void orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
+    const orc_uint8 * ORC_RESTRICT s5, const orc_uint8 * ORC_RESTRICT s6,
+    int p2, int n);
+void orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
+    const orc_uint8 * ORC_RESTRICT s5, int p2, int n);
 
 void gst_fieldanalysis_orc_init (void);
 
@@ -117,12 +132,14 @@ void gst_fieldanalysis_orc_init (void);
 #define ORC_ISNAN(x) ((((x)&0x7f800000) == 0x7f800000) && (((x)&0x007fffff) != 0))
 #define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == 0) ? ORC_UINT64_C(0xfff0000000000000) : ORC_UINT64_C(0xffffffffffffffff)))
 #define ORC_ISNAN_DOUBLE(x) ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == ORC_UINT64_C(0x7ff0000000000000)) && (((x)&ORC_UINT64_C(0x000fffffffffffff)) != 0))
+#ifndef ORC_RESTRICT
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
 #define ORC_RESTRICT __restrict__
 #else
 #define ORC_RESTRICT
+#endif
 #endif
 /* end Orc C target preamble */
 
@@ -131,8 +148,9 @@ void gst_fieldanalysis_orc_init (void);
 /* orc_same_parity_sad_planar_yuv */
 #ifdef DISABLE_ORC
 void
-orc_same_parity_sad_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, int p2, int n)
+orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    int p2, int n)
 {
   int i;
   const orc_int8 *ORC_RESTRICT ptr4;
@@ -183,7 +201,7 @@ orc_same_parity_sad_planar_yuv (guint32 * a1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_orc_same_parity_sad_planar_yuv (OrcExecutor * ex)
+_backup_orc_same_parity_sad_planar_yuv (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -235,8 +253,9 @@ _backup_orc_same_parity_sad_planar_yuv (OrcExecutor * ex)
 
 static OrcProgram *_orc_program_orc_same_parity_sad_planar_yuv;
 void
-orc_same_parity_sad_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, int p2, int n)
+orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_orc_same_parity_sad_planar_yuv;
@@ -259,8 +278,9 @@ orc_same_parity_sad_planar_yuv (guint32 * a1, const orc_uint8 * s1,
 /* orc_same_parity_ssd_planar_yuv */
 #ifdef DISABLE_ORC
 void
-orc_same_parity_ssd_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, int p2, int n)
+orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    int p2, int n)
 {
   int i;
   const orc_int8 *ORC_RESTRICT ptr4;
@@ -308,7 +328,7 @@ orc_same_parity_ssd_planar_yuv (guint32 * a1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_orc_same_parity_ssd_planar_yuv (OrcExecutor * ex)
+_backup_orc_same_parity_ssd_planar_yuv (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -357,8 +377,9 @@ _backup_orc_same_parity_ssd_planar_yuv (OrcExecutor * ex)
 
 static OrcProgram *_orc_program_orc_same_parity_ssd_planar_yuv;
 void
-orc_same_parity_ssd_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, int p2, int n)
+orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_orc_same_parity_ssd_planar_yuv;
@@ -381,9 +402,11 @@ orc_same_parity_ssd_planar_yuv (guint32 * a1, const orc_uint8 * s1,
 /* orc_same_parity_3_tap_planar_yuv */
 #ifdef DISABLE_ORC
 void
-orc_same_parity_3_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4,
-    const orc_uint8 * s5, const orc_uint8 * s6, int p2, int n)
+orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
+    const orc_uint8 * ORC_RESTRICT s5, const orc_uint8 * ORC_RESTRICT s6,
+    int p2, int n)
 {
   int i;
   const orc_int8 *ORC_RESTRICT ptr4;
@@ -484,7 +507,7 @@ orc_same_parity_3_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_orc_same_parity_3_tap_planar_yuv (OrcExecutor * ex)
+_backup_orc_same_parity_3_tap_planar_yuv (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -586,9 +609,11 @@ _backup_orc_same_parity_3_tap_planar_yuv (OrcExecutor * ex)
 
 static OrcProgram *_orc_program_orc_same_parity_3_tap_planar_yuv;
 void
-orc_same_parity_3_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4,
-    const orc_uint8 * s5, const orc_uint8 * s6, int p2, int n)
+orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
+    const orc_uint8 * ORC_RESTRICT s5, const orc_uint8 * ORC_RESTRICT s6,
+    int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_orc_same_parity_3_tap_planar_yuv;
@@ -615,9 +640,10 @@ orc_same_parity_3_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1,
 /* orc_opposite_parity_5_tap_planar_yuv */
 #ifdef DISABLE_ORC
 void
-orc_opposite_parity_5_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4,
-    const orc_uint8 * s5, int p2, int n)
+orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
+    const orc_uint8 * ORC_RESTRICT s5, int p2, int n)
 {
   int i;
   const orc_int8 *ORC_RESTRICT ptr4;
@@ -658,9 +684,9 @@ orc_opposite_parity_5_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1,
   ptr8 = (orc_int8 *) s5;
 
   /* 11: loadpw */
-  var44.i = 0x00000003;         /* 3 or 1.4822e-323f */
+  var44.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
   /* 13: loadpw */
-  var45.i = 0x00000003;         /* 3 or 1.4822e-323f */
+  var45.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
   /* 21: loadpl */
   var46.i = p2;
 
@@ -716,7 +742,7 @@ orc_opposite_parity_5_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_orc_opposite_parity_5_tap_planar_yuv (OrcExecutor * ex)
+_backup_orc_opposite_parity_5_tap_planar_yuv (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -758,9 +784,9 @@ _backup_orc_opposite_parity_5_tap_planar_yuv (OrcExecutor * ex)
   ptr8 = (orc_int8 *) ex->arrays[8];
 
   /* 11: loadpw */
-  var44.i = 0x00000003;         /* 3 or 1.4822e-323f */
+  var44.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
   /* 13: loadpw */
-  var45.i = 0x00000003;         /* 3 or 1.4822e-323f */
+  var45.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
   /* 21: loadpl */
   var46.i = ex->params[25];
 
@@ -816,9 +842,10 @@ _backup_orc_opposite_parity_5_tap_planar_yuv (OrcExecutor * ex)
 
 static OrcProgram *_orc_program_orc_opposite_parity_5_tap_planar_yuv;
 void
-orc_opposite_parity_5_tap_planar_yuv (guint32 * a1, const orc_uint8 * s1,
-    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4,
-    const orc_uint8 * s5, int p2, int n)
+orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
+    const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
+    const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
+    const orc_uint8 * ORC_RESTRICT s5, int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_orc_opposite_parity_5_tap_planar_yuv;
@@ -848,7 +875,6 @@ gst_fieldanalysis_orc_init (void)
   {
     /* orc_same_parity_sad_planar_yuv */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "orc_same_parity_sad_planar_yuv");
@@ -879,14 +905,13 @@ gst_fieldanalysis_orc_init (void)
     orc_program_append_2 (p, "accl", 0, ORC_VAR_A1, ORC_VAR_T3, ORC_VAR_D1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_orc_same_parity_sad_planar_yuv = p;
   }
   {
     /* orc_same_parity_ssd_planar_yuv */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "orc_same_parity_ssd_planar_yuv");
@@ -915,14 +940,13 @@ gst_fieldanalysis_orc_init (void)
     orc_program_append_2 (p, "accl", 0, ORC_VAR_A1, ORC_VAR_T3, ORC_VAR_D1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_orc_same_parity_ssd_planar_yuv = p;
   }
   {
     /* orc_same_parity_3_tap_planar_yuv */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "orc_same_parity_3_tap_planar_yuv");
@@ -983,14 +1007,13 @@ gst_fieldanalysis_orc_init (void)
     orc_program_append_2 (p, "accl", 0, ORC_VAR_A1, ORC_VAR_T7, ORC_VAR_D1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_orc_same_parity_3_tap_planar_yuv = p;
   }
   {
     /* orc_opposite_parity_5_tap_planar_yuv */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "orc_opposite_parity_5_tap_planar_yuv");
@@ -1048,7 +1071,7 @@ gst_fieldanalysis_orc_init (void)
     orc_program_append_2 (p, "accl", 0, ORC_VAR_A1, ORC_VAR_T6, ORC_VAR_D1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_orc_opposite_parity_5_tap_planar_yuv = p;
   }
