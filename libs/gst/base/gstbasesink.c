@@ -4313,10 +4313,8 @@ gst_base_sink_negotiate_pull (GstBaseSink * basesink)
   caps = gst_caps_make_writable (caps);
   /* get the first (prefered) format */
   gst_caps_truncate (caps);
-  /* try to fixate */
-  gst_pad_fixate_caps (GST_BASE_SINK_PAD (basesink), caps);
 
-  GST_DEBUG_OBJECT (basesink, "fixated to: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (basesink, "have caps: %" GST_PTR_FORMAT, caps);
 
   if (gst_caps_is_any (caps)) {
     GST_DEBUG_OBJECT (basesink, "caps were ANY after fixating, "
@@ -4324,15 +4322,21 @@ gst_base_sink_negotiate_pull (GstBaseSink * basesink)
     /* neither side has template caps in this case, so they are prepared for
        pull() without setcaps() */
     result = TRUE;
-  } else if (gst_caps_is_fixed (caps)) {
-    if (!gst_pad_set_caps (GST_BASE_SINK_PAD (basesink), caps))
-      goto could_not_set_caps;
+  } else {
+    /* try to fixate */
+    gst_pad_fixate_caps (GST_BASE_SINK_PAD (basesink), caps);
+    GST_DEBUG_OBJECT (basesink, "fixated to: %" GST_PTR_FORMAT, caps);
 
-    GST_OBJECT_LOCK (basesink);
-    gst_caps_replace (&basesink->priv->pull_caps, caps);
-    GST_OBJECT_UNLOCK (basesink);
+    if (gst_caps_is_fixed (caps)) {
+      if (!gst_pad_set_caps (GST_BASE_SINK_PAD (basesink), caps))
+        goto could_not_set_caps;
 
-    result = TRUE;
+      GST_OBJECT_LOCK (basesink);
+      gst_caps_replace (&basesink->priv->pull_caps, caps);
+      GST_OBJECT_UNLOCK (basesink);
+
+      result = TRUE;
+    }
   }
 
   gst_caps_unref (caps);

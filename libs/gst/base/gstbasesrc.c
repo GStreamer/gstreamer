@@ -2632,17 +2632,19 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
 
     /* now fixate */
     if (!gst_caps_is_empty (caps)) {
-      gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
-      GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
-
+      GST_DEBUG_OBJECT (basesrc, "have caps: %" GST_PTR_FORMAT, caps);
       if (gst_caps_is_any (caps)) {
         /* hmm, still anything, so element can do anything and
          * nego is not needed */
         result = TRUE;
-      } else if (gst_caps_is_fixed (caps)) {
-        /* yay, fixed caps, use those then, it's possible that the subclass does
-         * not accept this caps after all and we have to fail. */
-        result = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
+      } else {
+        gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
+        GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
+        if (gst_caps_is_fixed (caps)) {
+          /* yay, fixed caps, use those then, it's possible that the subclass does
+           * not accept this caps after all and we have to fail. */
+          result = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
+        }
       }
     }
     gst_caps_unref (caps);
