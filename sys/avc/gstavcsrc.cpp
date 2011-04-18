@@ -250,12 +250,6 @@ static gboolean
 gst_avc_src_start (GstBaseSrc * src)
 {
   GstAVCSrc *avcsrc = GST_AVC_SRC (src);
-#ifdef ENABLE
-  AVCDeviceController *pAVCDeviceController = nil;
-  AVCDevice *pAVCDevice;
-  AVCDeviceStream *pAVCDeviceStream;
-  int deviceIndex = 0;
-#endif
 
   GST_DEBUG_OBJECT (avcsrc, "start");
 
@@ -263,8 +257,9 @@ gst_avc_src_start (GstBaseSrc * src)
 
 #ifdef ENABLE
   // Create a AVCDeviceController
-  CreateAVCDeviceController (&pAVCDeviceController);
-  if (!pAVCDeviceController) {
+  if (!avcsrc->pAVCDeviceController)
+    CreateAVCDeviceController (&avcsrc->pAVCDeviceController);
+  if (!avcsrc->pAVCDeviceController) {
     // TODO: This should never happen (unless we've run out of memory), but we should handle it cleanly anyway
     GST_ERROR ("Failed to create AVC device controller.");
     return FALSE;
@@ -272,35 +267,35 @@ gst_avc_src_start (GstBaseSrc * src)
 
   GST_INFO ("Created AVC device controller.");
 
-  if (deviceIndex >= CFArrayGetCount (pAVCDeviceController->avcDeviceArray)) {
-    GST_ERROR ("Failed to find AVC device %d", deviceIndex);
+  if (avcsrc->deviceIndex >= CFArrayGetCount (avcsrc->pAVCDeviceController->avcDeviceArray)) {
+    GST_ERROR ("Failed to find AVC device %d", avcsrc->deviceIndex);
     return FALSE;
   }
 
-  pAVCDevice = (AVCDevice *)
-      CFArrayGetValueAtIndex (pAVCDeviceController->avcDeviceArray,
-      deviceIndex);
+  avcsrc->pAVCDevice = (AVCDevice *)
+      CFArrayGetValueAtIndex (avcsrc->pAVCDeviceController->avcDeviceArray,
+      avcsrc->deviceIndex);
 
-  if (!pAVCDevice) {
-    GST_ERROR ("Failed to find AVC device %d", deviceIndex);
+  if (!avcsrc->pAVCDevice) {
+    GST_ERROR ("Failed to find AVC device %d", avcsrc->deviceIndex);
     return FALSE;
   }
 
-  GST_INFO ("Found device with GUID 0x%016llX\n", pAVCDevice->guid);
+  GST_INFO ("Found device with GUID 0x%016llX\n", avcsrc->pAVCDevice->guid);
 
-  pAVCDevice->openDevice (nil, nil);
+  avcsrc->pAVCDevice->openDevice (nil, nil);
 
-  pAVCDeviceStream = pAVCDevice->CreateMPEGReceiverForDevicePlug (0, nil,       // We'll install the structured callback later (MyStructuredDataPushProc),
+  avcsrc->pAVCDeviceStream = avcsrc->pAVCDevice->CreateMPEGReceiverForDevicePlug (0, nil,       // We'll install the structured callback later (MyStructuredDataPushProc),
       nil,
       MPEGReceiverMessageReceivedProc,
       nil,
       nil, kNumCyclesInMPEGReceiverSegment, kNumSegmentsInMPEGReceiverProgram);
 
-  pAVCDeviceStream->pMPEGReceiver->registerStructuredDataPushCallback
+  avcsrc->pAVCDeviceStream->pMPEGReceiver->registerStructuredDataPushCallback
       (MyStructuredDataPushProc,
       kNumCyclesInMPEGReceiverSegment, (void *) avcsrc);
 
-  pAVCDevice->StartAVCDeviceStream (pAVCDeviceStream);
+  avcsrc->pAVCDevice->StartAVCDeviceStream (avcsrc->pAVCDeviceStream);
 #endif
 
   return TRUE;
@@ -314,7 +309,14 @@ gst_avc_src_stop (GstBaseSrc * src)
 
   GST_DEBUG_OBJECT (avcsrc, "stop");
 
-  /* FIXME do whatever is needed to stop capture */
+  // Stop the stream
+  avcsrc->pAVCDevice->StopAVCDeviceStream(avcsrc->pAVCDeviceStream);
+  // Destroy the stream
+  avcsrc->pAVCDevice->DestroyAVCDeviceStream(avcsrc->pAVCDeviceStream);
+  avcsrc->pAVCDeviceStream = nil;
+
+  // Forget about the device (don't destroy it; pAVCDeviceController manages it)
+  avcsrc->pAVCDevice = nil;
 
   while ((buffer = GST_BUFFER (gst_atomic_queue_pop (avcsrc->queue))) != NULL) {
     gst_buffer_unref (buffer);

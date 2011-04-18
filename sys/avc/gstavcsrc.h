@@ -21,6 +21,8 @@
 #define _GST_AVC_SRC_H_
 
 #include <gst/base/gstbasesrc.h>
+#include <AVCVideoServices/AVCVideoServices.h>
+using namespace AVS;
 
 G_BEGIN_DECLS
 
@@ -38,6 +40,11 @@ struct _GstAVCSrc
   GstBaseSrc base_avcsrc;
 
   GstPad *srcpad;
+
+  AVCDeviceController *pAVCDeviceController;
+  AVCDevice *pAVCDevice;
+  AVCDeviceStream *pAVCDeviceStream;
+  int deviceIndex;
 
   GstAtomicQueue *queue;
   GCond *cond;
