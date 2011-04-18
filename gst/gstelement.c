@@ -2716,18 +2716,18 @@ invalid_return:
 }
 
 /* gst_iterator_fold functions for pads_activate
- * Note how we don't stop the iterator when we fail an activation. This is
- * probably a FIXME since when one pad activation fails, we don't want to
- * continue our state change. */
+ * Stop the iterator if activating one pad failed. */
 static gboolean
 activate_pads (GstPad * pad, GValue * ret, gboolean * active)
 {
-  if (!gst_pad_set_active (pad, *active))
+  gboolean cont = TRUE;
+
+  if (!(cont = gst_pad_set_active (pad, *active)))
     g_value_set_boolean (ret, FALSE);
 
   /* unref the object that was reffed for us by _fold */
   gst_object_unref (pad);
-  return TRUE;
+  return cont;
 }
 
 /* set the caps on the pad to NULL */
@@ -2739,8 +2739,7 @@ clear_caps (GstPad * pad, GValue * ret, gboolean * active)
   return TRUE;
 }
 
-/* returns false on error or early cutout (will never happen because the fold
- * function always returns TRUE, see FIXME above) of the fold, true if all
+/* returns false on error or early cutout of the fold, true if all
  * pads in @iter were (de)activated successfully. */
 static gboolean
 iterator_activate_fold_with_resync (GstIterator * iter,
