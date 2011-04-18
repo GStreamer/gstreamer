@@ -131,8 +131,8 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpGSTPay *rtpgstpay;
-  guint8 *data;
-  guint size;
+  guint8 *data, *ptr;
+  gsize size, left;
   GstBuffer *outbuf;
   GstFlowReturn ret;
   GstClockTime timestamp;
@@ -141,8 +141,7 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   rtpgstpay = GST_RTP_GST_PAY (basepayload);
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   ret = GST_FLOW_OK;
@@ -168,15 +167,18 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
   frag_offset = 0;
+  ptr = data;
+  left = size;
 
-  while (size > 0) {
+  while (left > 0) {
     guint towrite;
     guint8 *payload;
     guint payload_len;
     guint packet_len;
+    GstRTPBuffer rtp = { NULL };
 
     /* this will be the total lenght of the packet */
-    packet_len = gst_rtp_buffer_calc_packet_len (8 + size, 0, 0);
+    packet_len = gst_rtp_buffer_calc_packet_len (8 + left, 0, 0);
 
     /* fill one MTU or all available bytes */
     towrite = MIN (packet_len, GST_BASE_RTP_PAYLOAD_MTU (rtpgstpay));
@@ -186,7 +188,9 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     /* create buffer to hold the payload */
     outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
-    payload = gst_rtp_buffer_get_payload (outbuf);
+
+    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+    payload = gst_rtp_buffer_get_payload (&rtp);
 
     payload[0] = flags;
     payload[1] = payload[2] = payload[3] = 0;
@@ -198,19 +202,22 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     payload += 8;
     payload_len -= 8;
 
-    memcpy (payload, data, payload_len);
+    memcpy (payload, ptr, payload_len);
 
-    data += payload_len;
-    size -= payload_len;
+    ptr += payload_len;
+    left -= payload_len;
     frag_offset += payload_len;
 
-    if (size == 0)
-      gst_rtp_buffer_set_marker (outbuf, TRUE);
+    if (left == 0)
+      gst_rtp_buffer_set_marker (&rtp, TRUE);
+
+    gst_rtp_buffer_unmap (&rtp);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
     ret = gst_basertppayload_push (basepayload, outbuf);
   }
+  gst_buffer_unmap (buffer, data, size);
 
   return ret;
 }

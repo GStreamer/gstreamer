@@ -184,10 +184,13 @@ gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   gint payload_len;
   guint8 *payload;
   guint CV;
+  GstRTPBuffer rtp = { NULL };
 
   rtpgstdepay = GST_RTP_GST_DEPAY (depayload);
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
 
   if (payload_len <= 8)
     goto empty_packet;
@@ -197,7 +200,7 @@ gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     gst_adapter_clear (rtpgstdepay->adapter);
   }
 
-  payload = gst_rtp_buffer_get_payload (buf);
+  payload = gst_rtp_buffer_get_payload (&rtp);
 
   /* strip off header
    *
@@ -214,10 +217,10 @@ gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
    */
 
   /* subbuffer skipping the 8 header bytes */
-  subbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 8, -1);
+  subbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, 8, -1);
   gst_adapter_push (rtpgstdepay->adapter, subbuf);
 
-  if (gst_rtp_buffer_get_marker (buf)) {
+  if (gst_rtp_buffer_get_marker (&rtp)) {
     guint avail;
     GstCaps *outcaps;
 
@@ -228,25 +231,30 @@ gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     CV = (payload[0] >> 4) & 0x7;
 
     if (payload[0] & 0x80) {
-      guint b, csize, size, offset;
+      guint b, csize, left, offset;
+      gsize size;
       guint8 *data;
       GstBuffer *subbuf;
 
       /* C bit, we have inline caps */
-      data = GST_BUFFER_DATA (outbuf);
-      size = GST_BUFFER_SIZE (outbuf);
+      data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READ);
 
       /* start reading the length, we need this to skip to the data later */
       csize = offset = 0;
+      left = size;
       do {
-        if (offset >= size)
+        if (offset >= left) {
+          gst_buffer_unmap (outbuf, data, size);
           goto too_small;
+        }
         b = data[offset++];
         csize = (csize << 7) | (b & 0x7f);
       } while (b & 0x80);
 
-      if (size < csize)
+      if (left < csize) {
+        gst_buffer_unmap (outbuf, data, size);
         goto too_small;
+      }
 
       /* parse and store in cache */
       outcaps = gst_caps_from_string ((gchar *) & data[offset]);
@@ -254,17 +262,19 @@ gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
       /* skip caps */
       offset += csize;
-      size -= csize;
+      left -= csize;
 
       GST_DEBUG_OBJECT (rtpgstdepay,
           "inline caps %u, length %u, %" GST_PTR_FORMAT, CV, csize, outcaps);
 
       /* create real data buffer when needed */
       if (size)
-        subbuf = gst_buffer_create_sub (outbuf, offset, size);
+        subbuf =
+            gst_buffer_copy_region (outbuf, GST_BUFFER_COPY_ALL, offset, left);
       else
         subbuf = NULL;
 
+      gst_buffer_unmap (outbuf, data, size);
       gst_buffer_unref (outbuf);
       outbuf = subbuf;
     }
@@ -302,6 +312,7 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpgstdepay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 too_small:
@@ -310,6 +321,7 @@ too_small:
         ("Buffer too small."), (NULL));
     if (outbuf)
       gst_buffer_unref (outbuf);
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 missing_caps:
@@ -318,6 +330,7 @@ missing_caps:
         ("Missing caps %u.", CV), (NULL));
     if (outbuf)
       gst_buffer_unref (outbuf);
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }
