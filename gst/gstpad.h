@@ -848,9 +848,9 @@ gpointer		gst_pad_get_element_private		(GstPad *pad);
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
 
 void			gst_pad_set_bufferalloc_function	(GstPad *pad, GstPadBufferAllocFunction bufalloc);
-GstFlowReturn		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, gint size,
+GstFlowReturn		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, guint size,
 								 GstCaps *caps, GstBuffer **buf);
-GstFlowReturn		gst_pad_alloc_buffer_and_set_caps	(GstPad *pad, guint64 offset, gint size,
+GstFlowReturn		gst_pad_alloc_buffer_and_set_caps	(GstPad *pad, guint64 offset, guint size,
 								 GstCaps *caps, GstBuffer **buf);
 
 /* data passing setup functions */

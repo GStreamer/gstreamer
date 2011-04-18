@@ -2823,7 +2823,7 @@ no_peer:
 
 /* calls the buffer_alloc function on the given pad */
 static GstFlowReturn
-gst_pad_buffer_alloc_unchecked (GstPad * pad, guint64 offset, gint size,
+gst_pad_buffer_alloc_unchecked (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   GstFlowReturn ret;
@@ -2838,11 +2838,11 @@ gst_pad_buffer_alloc_unchecked (GstPad * pad, guint64 offset, gint size,
 
   if (offset == GST_BUFFER_OFFSET_NONE) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
-        "calling bufferallocfunc &%s (@%p) for size %d offset NONE",
+        "calling bufferallocfunc &%s (@%p) for size %u offset NONE",
         GST_DEBUG_FUNCPTR_NAME (bufferallocfunc), bufferallocfunc, size);
   } else {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
-        "calling bufferallocfunc &%s (@%p) of for size %d offset %"
+        "calling bufferallocfunc &%s (@%p) of for size %u offset %"
         G_GUINT64_FORMAT, GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
         bufferallocfunc, size, offset);
   }
@@ -2896,15 +2896,14 @@ fallback:
       return GST_FLOW_OK;
     } else {
       GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
-          "out of memory allocating %d bytes", size);
+          "out of memory allocating %u bytes", size);
       return GST_FLOW_ERROR;
     }
   }
 }
 
-/* FIXME 0.11: size should be unsigned */
 static GstFlowReturn
-gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
+gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf, gboolean setcaps)
 {
   GstPad *peer;
@@ -2915,9 +2914,8 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (size >= 0, GST_FLOW_ERROR);
 
-  GST_DEBUG_OBJECT (pad, "offset %" G_GUINT64_FORMAT ", size %d, caps %"
+  GST_DEBUG_OBJECT (pad, "offset %" G_GUINT64_FORMAT ", size %u, caps %"
       GST_PTR_FORMAT, offset, size, caps);
 
   GST_OBJECT_LOCK (pad);
@@ -2995,7 +2993,7 @@ not_negotiated:
 wrong_size_fallback:
   {
     GST_CAT_ERROR_OBJECT (GST_CAT_PADS, pad, "buffer returned by alloc "
-        "function is too small (%u < %d), doing fallback buffer alloc",
+        "function is too small (%u < %u), doing fallback buffer alloc",
         gst_buffer_get_size (*buf), size);
 
     gst_buffer_unref (*buf);
@@ -3038,9 +3036,8 @@ wrong_size_fallback:
  * MT safe.
  */
 
-/* FIXME 0.11: size should be unsigned */
 GstFlowReturn
-gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
+gst_pad_alloc_buffer (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
     GstBuffer ** buf)
 {
   return gst_pad_alloc_buffer_full (pad, offset, size, caps, buf, FALSE);
@@ -3070,10 +3067,8 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
  *
  * MT safe.
  */
-
-/* FIXME 0.11: size should be unsigned */
 GstFlowReturn
-gst_pad_alloc_buffer_and_set_caps (GstPad * pad, guint64 offset, gint size,
+gst_pad_alloc_buffer_and_set_caps (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   return gst_pad_alloc_buffer_full (pad, offset, size, caps, buf, TRUE);
