@@ -87,6 +87,7 @@ test_mux_tags (const gchar * tag_str, const gchar * caps,
   GstElement *mux;
   GstTagSetter *setter;
   gchar *launch_str;
+  guint bus_watch = 0;
 
   GST_DEBUG ("testing xmp muxing on : %s", muxer);
 
@@ -104,7 +105,7 @@ test_mux_tags (const gchar * tag_str, const gchar * caps,
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   gst_element_set_state (pipeline, GST_STATE_READY);
@@ -124,6 +125,7 @@ test_mux_tags (const gchar * tag_str, const gchar * caps,
   g_main_loop_unref (loop);
   g_object_unref (mux);
   g_object_unref (pipeline);
+  g_source_remove (bus_watch);
 }
 
 /*
@@ -148,6 +150,7 @@ test_demux_tags (const gchar * tag_str, const gchar * demuxer,
   gint comparison;
   GstElement *demux;
   gchar *launch_str;
+  guint bus_watch = 0;
 
   GST_DEBUG ("testing tags : %s", tag_str);
 
@@ -170,7 +173,7 @@ test_demux_tags (const gchar * tag_str, const gchar * demuxer,
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   sent_tags = gst_structure_from_string (tag_str, NULL);
@@ -224,6 +227,7 @@ test_demux_tags (const gchar * tag_str, const gchar * demuxer,
   g_main_loop_unref (loop);
   g_object_unref (demux);
   g_object_unref (pipeline);
+  g_source_remove (bus_watch);
 }
 
 /*
