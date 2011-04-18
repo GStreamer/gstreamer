@@ -136,19 +136,13 @@ struct _GstAdapterPrivate
   gsize csize;
 };
 
-#define _do_init(thing) \
+#define _do_init \
   GST_DEBUG_CATEGORY_INIT (gst_adapter_debug, "adapter", 0, "object to splice and merge buffers to desired size")
-GST_BOILERPLATE_FULL (GstAdapter, gst_adapter, GObject, G_TYPE_OBJECT,
-    _do_init);
+#define gst_adapter_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAdapter, gst_adapter, G_TYPE_OBJECT, _do_init);
 
 static void gst_adapter_dispose (GObject * object);
 static void gst_adapter_finalize (GObject * object);
-
-static void
-gst_adapter_base_init (gpointer g_class)
-{
-  /* nop */
-}
 
 static void
 gst_adapter_class_init (GstAdapterClass * klass)
@@ -162,7 +156,7 @@ gst_adapter_class_init (GstAdapterClass * klass)
 }
 
 static void
-gst_adapter_init (GstAdapter * adapter, GstAdapterClass * g_class)
+gst_adapter_init (GstAdapter * adapter)
 {
   adapter->priv = GST_ADAPTER_GET_PRIVATE (adapter);
   adapter->assembled_data = g_malloc (DEFAULT_SIZE);

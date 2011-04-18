@@ -86,7 +86,8 @@ struct _GstCollectPadsPrivate
   gpointer clipfunc_user_data;
 };
 
-GST_BOILERPLATE (GstCollectPads, gst_collect_pads, GstObject, GST_TYPE_OBJECT);
+#define gst_collect_pads_parent_class parent_class
+G_DEFINE_TYPE (GstCollectPads, gst_collect_pads, GST_TYPE_OBJECT);
 
 static void gst_collect_pads_clear (GstCollectPads * pads,
     GstCollectData * data);
@@ -96,12 +97,6 @@ static void gst_collect_pads_finalize (GObject * object);
 static void ref_data (GstCollectData * data);
 static void unref_data (GstCollectData * data);
 static void gst_collect_pads_check_pads_unlocked (GstCollectPads * pads);
-
-static void
-gst_collect_pads_base_init (gpointer g_class)
-{
-  /* Do nothing here */
-}
 
 static void
 gst_collect_pads_class_init (GstCollectPadsClass * klass)
@@ -117,7 +112,7 @@ gst_collect_pads_class_init (GstCollectPadsClass * klass)
 }
 
 static void
-gst_collect_pads_init (GstCollectPads * pads, GstCollectPadsClass * g_class)
+gst_collect_pads_init (GstCollectPads * pads)
 {
   pads->abidata.ABI.priv = GST_COLLECT_PADS_GET_PRIVATE (pads);
 

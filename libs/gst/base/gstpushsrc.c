@@ -62,22 +62,16 @@
 GST_DEBUG_CATEGORY_STATIC (gst_push_src_debug);
 #define GST_CAT_DEFAULT gst_push_src_debug
 
-#define _do_init(type) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_push_src_debug, "pushsrc", 0, \
         "pushsrc element");
 
-GST_BOILERPLATE_FULL (GstPushSrc, gst_push_src, GstBaseSrc, GST_TYPE_BASE_SRC,
-    _do_init);
+#define gst_push_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstPushSrc, gst_push_src, GST_TYPE_BASE_SRC, _do_init);
 
 static gboolean gst_push_src_check_get_range (GstBaseSrc * src);
 static GstFlowReturn gst_push_src_create (GstBaseSrc * bsrc, guint64 offset,
     guint length, GstBuffer ** ret);
-
-static void
-gst_push_src_base_init (gpointer g_class)
-{
-  /* nop */
-}
 
 static void
 gst_push_src_class_init (GstPushSrcClass * klass)
@@ -90,7 +84,7 @@ gst_push_src_class_init (GstPushSrcClass * klass)
 }
 
 static void
-gst_push_src_init (GstPushSrc * pushsrc, GstPushSrcClass * klass)
+gst_push_src_init (GstPushSrc * pushsrc)
 {
   /* nop */
 }
