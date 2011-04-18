@@ -220,6 +220,8 @@ struct _GstBinPrivate
   GstIndex *index;
   /* forward messages from our children */
   gboolean message_forward;
+
+  gboolean posted_eos;
 };
 
 typedef struct
@@ -238,12 +240,15 @@ static void gst_bin_get_property (GObject * object, guint prop_id,
 
 static GstStateChangeReturn gst_bin_change_state_func (GstElement * element,
     GstStateChange transition);
+static void gst_bin_state_changed (GstElement * element, GstState oldstate,
+    GstState newstate, GstState pending);
 static GstStateChangeReturn gst_bin_get_state_func (GstElement * element,
     GstState * state, GstState * pending, GstClockTime timeout);
 static void bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
     gboolean flag_pending);
 static void bin_handle_async_start (GstBin * bin, gboolean new_base_time);
 static void bin_push_state_continue (BinContinueData * data);
+static void bin_do_eos (GstBin * bin);
 
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
@@ -502,6 +507,7 @@ gst_bin_class_init (GstBinClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_bin_change_state_func);
+  gstelement_class->state_changed = GST_DEBUG_FUNCPTR (gst_bin_state_changed);
   gstelement_class->get_state = GST_DEBUG_FUNCPTR (gst_bin_get_state_func);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_bin_get_index_func);
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_bin_set_index_func);
@@ -987,10 +993,10 @@ bin_remove_messages (GstBin * bin, GstObject * src, GstMessageType types)
  *
  * call with bin LOCK */
 static gboolean
-is_eos (GstBin * bin)
+is_eos (GstBin * bin, guint32 * seqnum)
 {
   gboolean result;
-  GList *walk;
+  GList *walk, *msgs;
 
   result = TRUE;
   for (walk = bin->children; walk; walk = g_list_next (walk)) {
@@ -999,8 +1005,10 @@ is_eos (GstBin * bin)
     element = GST_ELEMENT_CAST (walk->data);
     if (bin_element_is_sink (element, bin) == 0) {
       /* check if element posted EOS */
-      if (find_message (bin, GST_OBJECT_CAST (element), GST_MESSAGE_EOS)) {
+      if ((msgs =
+              find_message (bin, GST_OBJECT_CAST (element), GST_MESSAGE_EOS))) {
         GST_DEBUG ("sink '%s' posted EOS", GST_ELEMENT_NAME (element));
+        *seqnum = gst_message_get_seqnum (GST_MESSAGE_CAST (msgs->data));
       } else {
         GST_DEBUG ("sink '%s' did not post EOS yet",
             GST_ELEMENT_NAME (element));
@@ -2387,6 +2395,19 @@ gst_bin_do_latency_func (GstBin * bin)
   return res;
 }
 
+static void
+gst_bin_state_changed (GstElement * element, GstState oldstate,
+    GstState newstate, GstState pending)
+{
+  GstElementClass *pklass = (GstElementClass *) parent_class;
+
+  if (newstate == GST_STATE_PLAYING && pending == GST_STATE_VOID_PENDING)
+    bin_do_eos (GST_BIN_CAST (element));
+
+  if (pklass->state_changed)
+    pklass->state_changed (element, oldstate, newstate, pending);
+}
+
 static GstStateChangeReturn
 gst_bin_change_state_func (GstElement * element, GstStateChange transition)
 {
@@ -2427,6 +2448,7 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
       GST_OBJECT_LOCK (bin);
       GST_DEBUG_OBJECT (element, "clearing EOS elements");
       bin_remove_messages (bin, NULL, GST_MESSAGE_EOS);
+      bin->priv->posted_eos = FALSE;
       GST_OBJECT_UNLOCK (bin);
       if (current == GST_STATE_READY)
         if (!(gst_bin_src_pads_activate (bin, TRUE)))
@@ -2734,6 +2756,7 @@ gst_bin_continue_func (BinContinueData * data)
 
   GST_STATE_UNLOCK (bin);
   GST_DEBUG_OBJECT (bin, "state continue done");
+
   gst_object_unref (bin);
   g_slice_free (BinContinueData, data);
   return;
@@ -2998,6 +3021,33 @@ nothing_pending:
   }
 }
 
+static void
+bin_do_eos (GstBin * bin)
+{
+  guint32 seqnum = 0;
+  gboolean eos;
+
+  GST_OBJECT_LOCK (bin);
+  /* If all sinks are EOS, we're in PLAYING and no state change is pending
+   * we forward the EOS message to the parent bin or application
+   */
+  eos = GST_STATE (bin) == GST_STATE_PLAYING
+      && GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING
+      && is_eos (bin, &seqnum);
+  GST_OBJECT_UNLOCK (bin);
+
+  if (eos
+      && g_atomic_int_compare_and_exchange (&bin->priv->posted_eos, FALSE,
+          TRUE)) {
+    GstMessage *tmessage;
+    tmessage = gst_message_new_eos (GST_OBJECT_CAST (bin));
+    gst_message_set_seqnum (tmessage, seqnum);
+    GST_DEBUG_OBJECT (bin,
+        "all sinks posted EOS, posting seqnum #%" G_GUINT32_FORMAT, seqnum);
+    gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
+  }
+}
+
 /* must be called with the object lock. This function releases the lock to post
  * the message. */
 static void
@@ -3106,28 +3156,15 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
     }
     case GST_MESSAGE_EOS:
     {
-      gboolean eos;
 
       /* collect all eos messages from the children */
       GST_OBJECT_LOCK (bin);
       bin_do_message_forward (bin, message);
       /* ref message for future use  */
-      gst_message_ref (message);
       bin_replace_message (bin, message, GST_MESSAGE_EOS);
-      eos = is_eos (bin);
       GST_OBJECT_UNLOCK (bin);
 
-      /* if we are completely EOS, we forward an EOS message */
-      if (eos) {
-        seqnum = gst_message_get_seqnum (message);
-        tmessage = gst_message_new_eos (GST_OBJECT_CAST (bin));
-        gst_message_set_seqnum (tmessage, seqnum);
-
-        GST_DEBUG_OBJECT (bin,
-            "all sinks posted EOS, posting seqnum #%" G_GUINT32_FORMAT, seqnum);
-        gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
-      }
-      gst_message_unref (message);
+      bin_do_eos (bin);
       break;
     }
     case GST_MESSAGE_STATE_DIRTY:
