@@ -3570,8 +3570,9 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
         gst_object_unref (item);
         break;
       case GST_ITERATOR_RESYNC:
-        /* FIXME, if we want to reset the result value we need to remember which
-         * pads pushed with which result */
+        /* We don't reset the result here because we don't push the event
+         * again on pads that got the event already and because we need
+         * to consider the result of the previous pushes */
         gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_ERROR:
