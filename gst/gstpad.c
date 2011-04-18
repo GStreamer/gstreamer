@@ -2379,9 +2379,7 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (caps != NULL);
   g_return_if_fail (!gst_caps_is_empty (caps));
-  /* FIXME-0.11: do not allow fixating any-caps
-   * g_return_if_fail (!gst_caps_is_any (caps));
-   */
+  g_return_if_fail (!gst_caps_is_any (caps));
 
   if (gst_caps_is_fixed (caps) || gst_caps_is_any (caps))
     return;
