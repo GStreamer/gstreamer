@@ -46,7 +46,7 @@
 /**
  * SECTION:element-facedetect
  *
- * FIXME:Describe facedetect here.
+ * Performs face detection on videos and images.
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -96,8 +96,6 @@ enum
 
 /**
  * GstOpencvFaceDetectFlags:
- * @GST_CAMERABIN_FLAG_SOURCE_RESIZE: enable video crop and scale
- *   after capture
  *
  * Flags parameter to OpenCV's cvHaarDetectObjects function.
  */
@@ -205,7 +203,6 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_facedetect_finalize);
   gobject_class->set_property = gst_facedetect_set_property;
@@ -385,8 +382,8 @@ gst_facedetect_message_new (Gstfacedetect * filter, GstBuffer * buf)
 }
 
 
-/* chain function
- * this function does the actual processing
+/* 
+ * Performs the face detection
  */
 static GstFlowReturn
 gst_facedetect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
