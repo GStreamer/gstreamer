@@ -88,11 +88,11 @@ struct _GstNetClientClockPrivate
   GstPoll *fdset;
 };
 
-#define _do_init(type) \
+#define _do_init \
   GST_DEBUG_CATEGORY_INIT (ncc_debug, "netclock", 0, "Network client clock");
-
-GST_BOILERPLATE_FULL (GstNetClientClock, gst_net_client_clock,
-    GstSystemClock, GST_TYPE_SYSTEM_CLOCK, _do_init);
+#define gst_net_client_clock_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstNetClientClock, gst_net_client_clock,
+    GST_TYPE_SYSTEM_CLOCK, _do_init);
 
 static void gst_net_client_clock_finalize (GObject * object);
 static void gst_net_client_clock_set_property (GObject * object, guint prop_id,
@@ -116,12 +116,6 @@ inet_aton (const char *c, struct in_addr *paddr)
   return 1;
 }
 #endif
-
-static void
-gst_net_client_clock_base_init (gpointer g_class)
-{
-  /* nop */
-}
 
 static void
 gst_net_client_clock_class_init (GstNetClientClockClass * klass)
@@ -148,8 +142,7 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
 }
 
 static void
-gst_net_client_clock_init (GstNetClientClock * self,
-    GstNetClientClockClass * g_class)
+gst_net_client_clock_init (GstNetClientClock * self)
 {
   GstClock *clock = GST_CLOCK_CAST (self);
 
