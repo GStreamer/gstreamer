@@ -100,6 +100,9 @@ endif
 
 check_PROGRAMS = \
 	generic/states \
+	elements/aacparse \
+	elements/ac3parse \
+	elements/amrparse \
 	$(check_annodex) \
 	elements/alphacolor \
 	elements/aspectratiocrop \
@@ -120,6 +123,7 @@ check_PROGRAMS = \
 	elements/deinterlace \
 	elements/deinterleave \
 	elements/equalizer \
+	elements/flacparse \
 	elements/flvdemux \
 	elements/flvmux \
 	elements/icydemux \
@@ -128,7 +132,9 @@ check_PROGRAMS = \
 	elements/interleave \
 	elements/level \
 	elements/matroskamux \
+	elements/mpegaudioparse \
 	elements/multifile \
+	elements/qtmux \
 	elements/rganalysis \
 	elements/rglimiter \
 	elements/rgvolume \
@@ -144,6 +150,7 @@ check_PROGRAMS = \
 	elements/y4menc \
 	pipelines/simple-launch-lines \
 	pipelines/effectv \
+	pipelines/tagschecking \
 	pipelines/wavenc \
 	$(check_flac) \
 	$(check_gdkpixbuf) \
@@ -176,6 +183,23 @@ VALGRIND_TESTS_DISABLE = \
 	$(VALGRIND_TO_FIX)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-good.supp
+
+# parser unit test convenience lib
+noinst_LTLIBRARIES = libparser.la
+libparser_la_SOURCES = elements/parser.c elements/parser.h
+libparser_la_CFLAGS = \
+	-I$(top_srcdir)/tests/check \
+	$(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS)
+
+elements_aacparse_LDADD = libparser.la $(LDADD)
+
+elements_ac3parse_LDADD = libparser.la $(LDADD)
+
+elements_amrparse_LDADD = libparser.la $(LDADD)
+
+elements_flacparse_LDADD = libparser.la $(LDADD)
+
+elements_mpegaudioparse_LDADD = libparser.la $(LDADD)
 
 elements_aspectratiocrop_LDADD = $(LDADD)
 elements_aspectratiocrop_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
@@ -211,11 +235,15 @@ elements_level_LDADD = $(LDADD) $(LIBM)
 
 elements_matroskamux_LDADD = $(GST_BASE_LIBS) $(LDADD) $(LIBM)
 
+elements_qtmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+elements_qtmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-@GST_MAJORMINOR@ \
+             $(GST_BASE_LIBS) $(GST_LIBS) $(GST_CHECK_LIBS)
+
 elements_rtpbin_buffer_list_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 	$(WARNING_CFLAGS) $(ERROR_CFLAGS) $(GST_CHECK_CFLAGS) $(AM_CFLAGS)
 elements_rtpbin_buffer_list_LDADD = $(GST_PLUGINS_BASE_LIBS) \
              -lgstnetbuffer-@GST_MAJORMINOR@ -lgstrtp-@GST_MAJORMINOR@ \
-             $(GST_BASE_LIBS) $(GST_LIBS_LIBS) $(GST_CHECK_LIBS)
+             $(GST_BASE_LIBS) $(GST_LIBS) $(GST_CHECK_LIBS)
 elements_rtpbin_buffer_list_SOURCES = elements/rtpbin_buffer_list.c
 
 elements_souphttpsrc_CFLAGS = $(SOUP_CFLAGS) $(AM_CFLAGS)

@@ -608,7 +608,7 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
           &stop_type, &stop);
       gst_event_unref (event);
 
-      flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+      flush = !!(flags & GST_SEEK_FLAG_FLUSH);
 
       if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
         GST_ERROR_OBJECT (pad, "Seek in invalid format: %s",
@@ -744,7 +744,7 @@ gst_image_freeze_src_loop (GstPad * pad)
   GstImageFreeze *self = GST_IMAGE_FREEZE (GST_PAD_PARENT (pad));
   GstBuffer *buffer;
   guint64 offset;
-  GstClockTime timestamp, timestamp_end, duration;
+  GstClockTime timestamp, timestamp_end;
   gint64 cstart, cstop;
   gboolean in_seg, eos;
 
@@ -800,11 +800,9 @@ gst_image_freeze_src_loop (GstPad * pad)
     timestamp_end =
         gst_util_uint64_scale (offset + 1, self->fps_d * GST_SECOND,
         self->fps_n);
-    duration = timestamp_end - timestamp;
   } else {
     timestamp = self->segment.start;
     timestamp_end = GST_CLOCK_TIME_NONE;
-    duration = GST_CLOCK_TIME_NONE;
   }
 
   eos = (self->fps_n == 0 && offset > 0) ||

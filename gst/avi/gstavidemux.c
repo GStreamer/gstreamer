@@ -2267,7 +2267,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
       break;
     }
     default:
-      g_assert_not_reached ();
+      g_return_val_if_reached (FALSE);
   }
 
   /* no caps means no stream */
@@ -2578,7 +2578,6 @@ gst_avi_demux_stream_for_id (GstAviDemux * avi, guint32 id)
 static gboolean
 gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
 {
-  guint64 pos_before;
   guint8 *data;
   gsize size;
   guint i, num, n;
@@ -2603,7 +2602,6 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
   GST_INFO_OBJECT (avi, "Parsing index, nr_entries = %6d", num);
 
   index = (gst_riff_index_entry *) data;
-  pos_before = avi->offset;
 
   /* figure out if the index is 0 based or relative to the MOVI start */
   entry.offset = GST_READ_UINT32_LE (&index[0].offset);

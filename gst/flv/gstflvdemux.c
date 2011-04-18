@@ -202,11 +202,14 @@ gst_flv_demux_check_seekability (GstFlvDemux * demux)
   query = gst_query_new_seeking (GST_FORMAT_BYTES);
   if (!gst_pad_peer_query (demux->sinkpad, query)) {
     GST_DEBUG_OBJECT (demux, "seeking query failed");
+    gst_query_unref (query);
     return;
   }
 
   gst_query_parse_seeking (query, NULL, &demux->upstream_seekable,
       &start, &stop);
+
+  gst_query_unref (query);
 
   /* try harder to query upstream size if we didn't get it the first time */
   if (demux->upstream_seekable && stop == -1) {
@@ -321,6 +324,12 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
       } else if (!strcmp (tag_name, "AspectRatioY")) {
         demux->par_y = d;
         demux->got_par = TRUE;
+      } else if (!strcmp (tag_name, "width")) {
+        demux->w = d;
+      } else if (!strcmp (tag_name, "height")) {
+        demux->h = d;
+      } else if (!strcmp (tag_name, "framerate")) {
+        demux->framerate = d;
       } else {
         GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
       }
@@ -1074,6 +1083,25 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
   gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
       demux->par_x, demux->par_y, NULL);
 
+  if (G_LIKELY (demux->w)) {
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, demux->w, NULL);
+  }
+
+  if (G_LIKELY (demux->h)) {
+    gst_caps_set_simple (caps, "height", G_TYPE_INT, demux->h, NULL);
+  }
+
+  if (G_LIKELY (demux->framerate)) {
+    gint num = 0, den = 0;
+
+    gst_util_double_to_fraction (demux->framerate, &num, &den);
+    GST_DEBUG_OBJECT (demux->video_pad,
+        "fps to be used on caps %f (as a fraction = %d/%d)", demux->framerate,
+        num, den);
+
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, num, den, NULL);
+  }
+
   if (demux->video_codec_data) {
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER,
         demux->video_codec_data, NULL);
@@ -1602,6 +1630,7 @@ gst_flv_demux_cleanup (GstFlvDemux * demux)
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
   demux->w = demux->h = 0;
+  demux->framerate = 0.0;
   demux->par_x = demux->par_y = 1;
   demux->video_offset = 0;
   demux->audio_offset = 0;
@@ -2414,7 +2443,7 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gdouble rate;
-  gboolean update, flush, keyframe, ret;
+  gboolean update, flush, ret;
   GstSegment seeksegment;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
@@ -2425,7 +2454,6 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
 
   flush = !!(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used ! */
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
@@ -2574,7 +2602,7 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gdouble rate;
-  gboolean update, flush, keyframe, ret = FALSE;
+  gboolean update, flush, ret = FALSE;
   GstSegment seeksegment;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
@@ -2591,7 +2619,6 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
 
   flush = !!(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used */
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     /* Flush start up and downstream to make sure data flow and loops are

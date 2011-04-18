@@ -108,7 +108,7 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   guint32 *src, *dest;
   guint32 p, q;
   guint32 v0, v1, v2, v3;
-  gint height, width, map_height, map_width;
+  gint width, map_height, map_width;
   gint video_width_margin;
   guint32 *map;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -118,7 +118,6 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 
   GST_OBJECT_LOCK (filter);
   map = filter->map;
-  height = filter->height;
   width = filter->width;
   map_height = filter->map_height;
   map_width = filter->map_width;

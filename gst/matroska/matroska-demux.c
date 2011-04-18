@@ -1070,7 +1070,6 @@ gst_matroska_decode_content_encodings (GArray * encodings)
   for (i = 0; i < encodings->len; i++) {
     GstMatroskaTrackEncoding *enc =
         &g_array_index (encodings, GstMatroskaTrackEncoding, i);
-    GstMatroskaTrackEncoding *enc2;
     guint8 *data = NULL;
     guint size;
 
@@ -1084,8 +1083,6 @@ gst_matroska_decode_content_encodings (GArray * encodings)
 
     if (i + 1 >= encodings->len)
       return GST_FLOW_ERROR;
-
-    enc2 = &g_array_index (encodings, GstMatroskaTrackEncoding, i + 1);
 
     if (enc->comp_settings_length == 0)
       continue;
@@ -2689,8 +2686,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
         entry->pos + demux->ebml_segment_start);
   }
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     GST_DEBUG_OBJECT (demux, "Starting flush");
@@ -6317,6 +6314,31 @@ gst_matroska_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
   return TRUE;
 }
 
+static void
+gst_duration_to_fraction (guint64 duration, gint * dest_n, gint * dest_d)
+{
+  static const int common_den[] = { 1, 2, 3, 4, 1001 };
+  int n, d;
+  int i;
+  guint64 a;
+
+  for (i = 0; i < G_N_ELEMENTS (common_den); i++) {
+    d = common_den[i];
+    n = floor (0.5 + (d * 1e9) / duration);
+    a = gst_util_uint64_scale_int (1000000000, d, n);
+    if (duration >= a - 1 && duration <= a + 1) {
+      goto out;
+    }
+  }
+
+  gst_util_double_to_fraction (1e9 / duration, &n, &d);
+
+out:
+  /* set results */
+  *dest_n = n;
+  *dest_d = d;
+}
+
 static GstCaps *
 gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     videocontext, const gchar * codec_id, guint8 * data, guint size,
@@ -6503,6 +6525,10 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
 
       gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "avc",
           "alignment", G_TYPE_STRING, "au", NULL);
+    } else {
+      GST_WARNING ("No codec data found, assuming output is byte-stream");
+      gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "byte-stream",
+          NULL);
     }
     *codec_name = g_strdup ("H264");
   } else if ((!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO1)) ||
@@ -6608,21 +6634,15 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         g_value_unset (&fps_double);
         g_value_unset (&fps_fraction);
       } else if (context->default_duration > 0) {
-        GValue fps_double = { 0, };
-        GValue fps_fraction = { 0, };
+        int fps_n, fps_d;
 
-        g_value_init (&fps_double, G_TYPE_DOUBLE);
-        g_value_init (&fps_fraction, GST_TYPE_FRACTION);
-        g_value_set_double (&fps_double, (gdouble) GST_SECOND /
-            gst_guint64_to_gdouble (context->default_duration));
-        g_value_transform (&fps_double, &fps_fraction);
+        gst_duration_to_fraction (context->default_duration, &fps_n, &fps_d);
 
-        GST_DEBUG ("using default duration %" G_GUINT64_FORMAT,
-            context->default_duration);
+        GST_INFO ("using default duration %" G_GUINT64_FORMAT
+            " framerate %d/%d", context->default_duration, fps_n, fps_d);
 
-        gst_structure_set_value (structure, "framerate", &fps_fraction);
-        g_value_unset (&fps_double);
-        g_value_unset (&fps_fraction);
+        gst_structure_set (structure, "framerate", GST_TYPE_FRACTION,
+            fps_n, fps_d, NULL);
       } else {
         /* sort of a hack to get most codecs to support,
          * even if the default_duration is missing */

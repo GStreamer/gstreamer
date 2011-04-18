@@ -163,3 +163,17 @@ noinst_HEADERS =			\
 	 	 gstrtpvorbispay.h      \
 	 	 gstrtpvrawdepay.h      \
 	 	 gstrtpvrawpay.h
+
+Android.mk: Makefile.am $(BUILT_SOURCES)
+	androgenizer \
+	-:PROJECT libgstrtp -:SHARED libgstrtp \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstrtp_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstrtp_la_CFLAGS) \
+	 -:LDFLAGS $(libgstrtp_la_LDFLAGS) \
+	           $(libgstrtp_la_LIBADD) \
+	           -ldl \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+	> $@

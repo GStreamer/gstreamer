@@ -306,7 +306,7 @@ static void
 gst_y4m_encode_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstY4mEncode *filter;
+  GstY4mEncode G_GNUC_UNUSED *filter;
 
   g_return_if_fail (GST_IS_Y4M_ENCODE (object));
   filter = GST_Y4M_ENCODE (object);
@@ -321,7 +321,7 @@ static void
 gst_y4m_encode_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstY4mEncode *filter;
+  GstY4mEncode G_GNUC_UNUSED *filter;
 
   g_return_if_fail (GST_IS_Y4M_ENCODE (object));
   filter = GST_Y4M_ENCODE (object);

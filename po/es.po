@@ -1,14 +1,14 @@
-# translation of gst-plugins-good-0.10.25.3.po to Español
+# translation of gst-plugins-good-0.10.26.2.po to Español
 # spanish translation for gst-plugins-good
 # This file is put in the public domain.
-# Jorge González González <aloriel@gmail.com>, 2007, 2008, 2009, 2010.
+# Jorge González González <aloriel@gmail.com>, 2007, 2008, 2009, 2010, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 01:15+0000\n"
-"PO-Revision-Date: 2010-11-01 18:05+0100\n"
+"POT-Creation-Date: 2011-04-16 16:25+0100\n"
+"PO-Revision-Date: 2011-02-12 18:30+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "Language: es\n"
@@ -74,7 +74,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Este archivo está corrupto y no se puede reproducir."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "El tamaño atom no es válido."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Este archivo está incompleto y no se puede reproducir."
@@ -639,16 +639,16 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Falló al establecer la entrada %d en el dispositivo %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Falló al obtener la entrada actual en el dispositivo «%s». Quizá sea un "
+"Falló al obtener la salida actual en el dispositivo «%s». Quizá sea un "
 "dispositivo de radio."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Falló al establecer la entrada %d en el dispositivo %s."
+msgstr "Falló al establecer la salida %d en el dispositivo %s."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."

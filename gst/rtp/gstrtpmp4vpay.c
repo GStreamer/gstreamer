@@ -141,8 +141,6 @@ gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
 static void
 gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay, GstRtpMP4VPayClass * klass)
 {
-  GstPad *sinkpad;
-
   rtpmp4vpay->adapter = gst_adapter_new ();
   rtpmp4vpay->rate = 90000;
   rtpmp4vpay->profile = 1;
@@ -153,8 +151,6 @@ gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay, GstRtpMP4VPayClass * klass)
   rtpmp4vpay->last_config = -1;
 
   rtpmp4vpay->config = NULL;
-
-  sinkpad = GST_BASE_RTP_PAYLOAD_SINKPAD (rtpmp4vpay);
 }
 
 static void

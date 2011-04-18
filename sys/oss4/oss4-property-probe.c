@@ -283,7 +283,6 @@ gst_oss4_property_probe_get_values (GstPropertyProbe * probe,
     guint prop_id, const GParamSpec * pspec)
 {
   struct oss_sysinfo si = { {0,}, };
-  GstElementClass *klass;
   GValueArray *array = NULL;
   GstObject *obj;
   GList *devices, *l;
@@ -299,7 +298,6 @@ gst_oss4_property_probe_get_values (GstPropertyProbe * probe,
   GST_OBJECT_LOCK (obj);
 
   /* figure out whether the element is a source or sink */
-  klass = GST_ELEMENT_GET_CLASS (GST_ELEMENT (probe));
   if (GST_IS_OSS4_SINK (probe)) {
     GST_DEBUG_OBJECT (probe, "probing available output devices");
     cap_mask = PCM_CAP_OUTPUT;

@@ -228,8 +228,7 @@ gst_matroska_parse_init (GstMatroskaParse * parse,
   gst_pad_set_query_function (parse->srcpad,
       GST_DEBUG_FUNCPTR (gst_matroska_parse_handle_src_query));
   gst_pad_use_fixed_caps (parse->srcpad);
-  gst_pad_set_caps (parse->srcpad, gst_caps_new_simple ("video/x-matroska",
-          NULL));
+
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 
   /* initial stream no. */
@@ -961,7 +960,6 @@ gst_matroska_decode_content_encodings (GArray * encodings)
   for (i = 0; i < encodings->len; i++) {
     GstMatroskaTrackEncoding *enc =
         &g_array_index (encodings, GstMatroskaTrackEncoding, i);
-    GstMatroskaTrackEncoding *enc2;
     guint8 *data = NULL;
     guint size;
 
@@ -975,8 +973,6 @@ gst_matroska_decode_content_encodings (GArray * encodings)
 
     if (i + 1 >= encodings->len)
       return GST_FLOW_ERROR;
-
-    enc2 = &g_array_index (encodings, GstMatroskaTrackEncoding, i + 1);
 
     if (enc->comp_settings_length == 0)
       continue;
@@ -3463,9 +3459,6 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
   gint64 time = 0;
   gint flags = 0;
   gint64 referenceblock = 0;
-  gint64 offset;
-
-  offset = gst_ebml_read_get_offset (ebml);
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
     if (!is_simpleblock) {
@@ -4071,11 +4064,10 @@ gst_matroska_parse_parse_contents_seekentry (GstMatroskaParse * parse,
     case GST_MATROSKA_ID_ATTACHMENTS:
     case GST_MATROSKA_ID_CHAPTERS:
     {
-      guint64 before_pos, length;
+      guint64 length;
 
       /* remember */
       length = gst_matroska_parse_get_length (parse);
-      before_pos = parse->offset;
 
       if (length == (guint64) - 1) {
         GST_DEBUG_OBJECT (parse, "no upstream length, skipping SeakHead entry");

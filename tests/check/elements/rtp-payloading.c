@@ -291,13 +291,12 @@ rtp_pipeline_run (rtp_pipeline * p)
   for (i = 0; i < LOOP_COUNT; i++) {
     const char *frame_data_pointer = p->frame_data;
     int res;
-
     int frame_count = p->frame_count;
 
     /* Write in to the pipe. */
     while (frame_count > 0) {
       res = write (p->fd[1], frame_data_pointer, p->frame_data_size);
-
+      fail_unless_equals_int (res, p->frame_data_size);
       frame_data_pointer += p->frame_data_size;
       frame_count--;
     }

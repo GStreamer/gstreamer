@@ -28,7 +28,7 @@
 static gboolean
 gst_caps_is_interlaced (GstCaps * caps)
 {
-  GstStructure *structure;
+  GstStructure G_GNUC_UNUSED *structure;
   gboolean interlaced = FALSE;
 
   fail_unless (gst_caps_is_fixed (caps));

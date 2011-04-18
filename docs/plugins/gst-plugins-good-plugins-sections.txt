@@ -1,4 +1,18 @@
 <SECTION>
+<FILE>element-aacparse</FILE>
+<TITLE>aacparse</TITLE>
+GstAacParse
+<SUBSECTION Standard>
+GstAacParseClass
+GST_AAC_PARSE
+GST_AAC_PARSE_CLASS
+GST_IS_AAC_PARSE
+GST_IS_AAC_PARSE_CLASS
+GST_TYPE_AAC_PARSE
+gst_aac_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-aasink</FILE>
 <TITLE>aasink</TITLE>
 GstAASink
@@ -10,6 +24,20 @@ GST_TYPE_AASINK
 GST_AASINK_CLASS
 GST_IS_AASINK_CLASS
 gst_aasink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-ac3parse</FILE>
+<TITLE>ac3parse</TITLE>
+GstAc3Parse
+<SUBSECTION Standard>
+GstAc3ParseClass
+GST_AC3_PARSE
+GST_AC3_PARSE_CLASS
+GST_IS_AC3_PARSE
+GST_IS_AC3_PARSE_CLASS
+GST_TYPE_AC3_PARSE
+gst_ac3_parse_get_type
 </SECTION>
 
 <SECTION>
@@ -66,6 +94,20 @@ GST_TYPE_ALPHA_COLOR
 gst_alpha_color_get_type
 GST_ALPHA_COLOR_CLASS
 GST_IS_ALPHA_COLOR_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-amrparse</FILE>
+<TITLE>amrparse</TITLE>
+GstAmrParse
+<SUBSECTION Standard>
+GstAmrParseClass
+GST_AMR_PARSE
+GST_AMR_PARSE_CLASS
+GST_IS_AMR_PARSE
+GST_IS_AMR_PARSE_CLASS
+GST_TYPE_AMR_PARSE
+gst_amr_parse_get_type
 </SECTION>
 
 <SECTION>
@@ -538,6 +580,21 @@ gst_cutter_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-dcaparse</FILE>
+<TITLE>dcaparse</TITLE>
+GstDcaParse
+<SUBSECTION Standard>
+GstDcaParseClass
+GST_DCA_PARSE
+GST_DCA_PARSE_CLASS
+GST_IS_DCA_PARSE
+GST_IS_DCA_PARSE_CLASS
+GST_TYPE_DCA_PARSE
+gst_dca_parse_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>element-deinterlace</FILE>
 <TITLE>deinterlace</TITLE>
 GstDeinterlace
@@ -774,6 +831,20 @@ GST_FLAC_ENC_CLASS
 GST_IS_FLAC_ENC
 GST_IS_FLAC_ENC_CLASS
 gst_flac_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-flacparse</FILE>
+<TITLE>flacparse</TITLE>
+GstFlacParse
+<SUBSECTION Standard>
+GstFlacParseClass
+GST_FLAC_PARSE
+GST_FLAC_PARSE_CLASS
+GST_IS_FLAC_PARSE
+GST_IS_FLAC_PARSE_CLASS
+GST_TYPE_FLAC_PARSE
+gst_flac_parse_get_type
 </SECTION>
 
 <SECTION>
@@ -1244,6 +1315,20 @@ gst_monoscope_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-mpegaudioparse</FILE>
+<TITLE>mpegaudioparse</TITLE>
+GstMpegAudioParse
+<SUBSECTION Standard>
+GstMpegAudioParseClass
+GST_MPEG_AUDIO_PARSE
+GST_MPEG_AUDIO_PARSE_CLASS
+GST_IS_MPEG_AUDIO_PARSE
+GST_IS_MPEG_AUDIO_PARSE_CLASS
+GST_TYPE_MPEG_AUDIO_PARSE
+gst_mpeg_audio_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-mulawdec</FILE>
 <TITLE>mulawdec</TITLE>
 GstMuLawDec
@@ -1600,6 +1685,20 @@ GST_QTDEMUX_CLASS
 GST_QTDEMUX_MAX_STREAMS
 GST_TYPE_QTDEMUX
 gst_qtdemux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-qtmux</FILE>
+<TITLE>qtmux</TITLE>
+GstQTMux
+<SUBSECTION Standard>
+GstQTMuxClass
+GST_QT_MUX
+GST_QT_MUX_CLASS
+GST_IS_QT_MUX
+GST_IS_QT_MUX_CLASS
+GST_TYPE_QT_MUX
+gst_qt_mux_get_type
 </SECTION>
 
 <SECTION>

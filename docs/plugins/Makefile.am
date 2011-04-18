@@ -132,6 +132,12 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audiofx/audiowsincband.h \
 	$(top_srcdir)/gst/audiofx/audiowsinclimit.h \
 	$(top_srcdir)/gst/audiofx/audiofirfilter.h \
+	$(top_srcdir)/gst/audioparsers/gstaacparse.h \
+	$(top_srcdir)/gst/audioparsers/gstac3parse.h \
+	$(top_srcdir)/gst/audioparsers/gstamrparse.h \
+	$(top_srcdir)/gst/audioparsers/gstflacparse.h \
+	$(top_srcdir)/gst/audioparsers/gstdcaparse.h \
+	$(top_srcdir)/gst/audioparsers/gstmpegaudioparse.h \
 	$(top_srcdir)/gst/auparse/gstauparse.h \
 	$(top_srcdir)/gst/autodetect/gstautoaudiosink.h \
 	$(top_srcdir)/gst/autodetect/gstautoaudiosrc.h \
@@ -184,7 +190,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/multifile/gstmultifilesrc.h \
 	$(top_srcdir)/gst/multipart/multipartdemux.h \
 	$(top_srcdir)/gst/multipart/multipartmux.h \
-	$(top_srcdir)/gst/qtdemux/qtdemux.h \
+	$(top_srcdir)/gst/quicktime/qtdemux.h \
+	$(top_srcdir)/gst/quicktime/gstqtmux.h \
 	$(top_srcdir)/gst/replaygain/gstrganalysis.h \
 	$(top_srcdir)/gst/replaygain/gstrglimiter.h \
 	$(top_srcdir)/gst/replaygain/gstrgvolume.h \

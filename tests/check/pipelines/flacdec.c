@@ -110,7 +110,6 @@ GST_START_TEST (test_decode_seek_full)
   GstEvent *event;
   GstBuffer *buffer = NULL;
   guint16 first_sample = 0;
-  gboolean result;
   guint size = 0;
   gchar *path =
       g_build_filename (GST_TEST_FILES_PATH, "audiotestsrc.flac", NULL);
@@ -133,7 +132,7 @@ GST_START_TEST (test_decode_seek_full)
   /* do a seek that should give us the complete output */
   event = gst_event_new_seek (1.0, GST_FORMAT_DEFAULT, GST_SEEK_FLAG_FLUSH,
       GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, 20480);
-  result = gst_element_send_event (appsink, event);
+  fail_unless (gst_element_send_event (appsink, event));
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
@@ -169,7 +168,6 @@ GST_START_TEST (test_decode_seek_partial)
   GstElement *appsink;
   GstEvent *event;
   GstBuffer *buffer = NULL;
-  gboolean result;
   guint size = 0;
   guint16 first_sample = 0;
   gchar *path =
@@ -194,7 +192,7 @@ GST_START_TEST (test_decode_seek_partial)
   event = gst_event_new_seek (1.0, GST_FORMAT_DEFAULT, GST_SEEK_FLAG_FLUSH,
       GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, 1024);
   GST_DEBUG ("seeking");
-  result = gst_element_send_event (appsink, event);
+  fail_unless (gst_element_send_event (appsink, event));
   GST_DEBUG ("seeked");
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);

@@ -578,7 +578,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
 
   ret = gst_caps_new_empty ();
 
-  for (walk = v4l2src->v4l2object->formats; walk; walk = walk->next) {
+  for (walk = formats; walk; walk = walk->next) {
     struct v4l2_fmtdesc *format;
 
     GstStructure *template;

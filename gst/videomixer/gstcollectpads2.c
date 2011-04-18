@@ -1198,7 +1198,7 @@ gst_collect_pads2_set_waiting (GstCollectPads2 * pads, GstCollectData2 * data,
   /* Do something only on a change and if not locked */
   if (!GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_LOCKED) &&
       (GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_WAITING) !=
-          ! !waiting)) {
+          !!waiting)) {
     /* Set waiting state for this pad */
     if (waiting)
       GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_WAITING);
@@ -1759,7 +1759,6 @@ gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstCollectData2 *data;
   GstCollectPads2 *pads;
-  guint64 size;
   GstFlowReturn ret;
   GstBuffer **buffer_p;
   guint32 cookie;
@@ -1781,8 +1780,6 @@ gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer)
   prepare_buffer_func = pads->prepare_buffer_func;
   prepare_buffer_user_data = pads->prepare_buffer_user_data;
   GST_OBJECT_UNLOCK (pads);
-
-  size = GST_BUFFER_SIZE (buffer);
 
   GST_COLLECT_PADS2_STREAM_LOCK (pads);
   /* if not started, bail out */

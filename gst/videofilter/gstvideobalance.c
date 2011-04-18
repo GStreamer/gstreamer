@@ -233,8 +233,8 @@ gst_video_balance_planar_yuv (GstVideoBalance * videobalance, guint8 * data)
 
     yptr = ydata + y * ystride;
     for (x = 0; x < width; x++) {
-      *ydata = tabley[*ydata];
-      ydata++;
+      *yptr = tabley[*yptr];
+      yptr++;
     }
   }
 
@@ -294,8 +294,8 @@ gst_video_balance_packed_yuv (GstVideoBalance * videobalance, guint8 * data)
 
     yptr = ydata + y * ystride;
     for (x = 0; x < width; x++) {
-      *ydata = tabley[*ydata];
-      ydata += yoff;
+      *yptr = tabley[*yptr];
+      yptr += yoff;
     }
   }
 
@@ -670,7 +670,7 @@ gst_video_balance_colorbalance_set_value (GstColorBalance * balance,
 {
   GstVideoBalance *vb = GST_VIDEO_BALANCE (balance);
   gdouble new_val;
-  gboolean changed;
+  gboolean changed = FALSE;
 
   g_return_if_fail (vb != NULL);
   g_return_if_fail (GST_IS_VIDEO_BALANCE (vb));
@@ -697,12 +697,15 @@ gst_video_balance_colorbalance_set_value (GstColorBalance * balance,
     vb->contrast = new_val;
   }
 
-  gst_video_balance_update_properties (vb);
+  if (changed)
+    gst_video_balance_update_properties (vb);
   GST_OBJECT_UNLOCK (vb);
   GST_BASE_TRANSFORM_UNLOCK (vb);
 
-  gst_color_balance_value_changed (balance, channel,
-      gst_color_balance_get_value (balance, channel));
+  if (changed) {
+    gst_color_balance_value_changed (balance, channel,
+        gst_color_balance_get_value (balance, channel));
+  }
 }
 
 static gint

@@ -1,302 +1,317 @@
 GObject
-  GdkPixbuf
-  GstCmmlTagClip
-  GstCmmlTagHead
-  GstCmmlTagStream
-  GstColorBalanceChannel
   GstObject
-    GstBus
-    GstClock
-      GstSystemClock
-        GstAudioClock
+    GstPad
+      GstVideoMixer2Pad
+      GstVideoMixerPad
+      GstInterleavePad
+    GstPadTemplate
+    GstPluginFeature
+      GstElementFactory
+      GstTypeFindFactory
+      GstIndexFactory
     GstElement
-      GstALawDec
-      GstALawEnc
-      GstAsteriskh263
-      GstAuParse
-      GstAviDemux
-      GstAviMux
-      GstAviSubtitle
+      GstBin
+        GstPipeline
+          GstQTMoovRecover
+        GstSwitchSink
+          GstGConfVideoSink
+          GstGConfAudioSink
+        GstSwitchSrc
+          GstGConfVideoSrc
+          GstGConfAudioSrc
+        GstHalAudioSink
+        GstHalAudioSrc
+        GstRtpBin
+        GstAutoVideoSink
+        GstAutoVideoSrc
+        GstAutoAudioSink
+        GstAutoAudioSrc
+        GstPushFileSrc
+        GstRTSPSrc
+        GstRgVolume
+        GstAspectRatioCrop
+      GstBaseSink
+        GstBaseAudioSink
+          GstPulseSink
+          GstJackAudioSink
+          GstAudioSink
+            GstEsdSink
+            GstOssSink
+            GstOss4Sink
+        GstVideoSink
+          GstV4l2Sink
+          GstGdkPixbufSink
+        GstAASink
+        GstCACASink
+        GstShout2send
+        GstTest
+        GstMultiFileSink
+        GstMultiUDPSink
+          GstUDPSink
+        GstDynUDPSink
+      GstBaseSrc
+        GstPushSrc
+          GstBaseAudioSrc
+            GstAudioSrc
+              GstPulseSrc
+              GstOssSrc
+              GstOss4Source
+            GstJackAudioSrc
+          GstV4l2Src
+          GstDV1394Src
+          GstHDV1394Src
+          GstSoupHTTPSrc
+          GstXImageSrc
+          GstMultiFileSrc
+          GstUDPSrc
+      GstPulseMixer
+      GstSpeexEnc
+      GstSpeexDec
+      GstV4l2Radio
+      GstRTPDepay
       GstBaseRTPDepayload
-        GstRTPBVDepay
-        GstRTPDVDepay
-        GstRTPGSMDepay
-        GstRTPSirenDepay
-        GstRTPiLBCDepay
         GstRtpAC3Depay
-        GstRtpAMRDepay
+        GstRTPBVDepay
         GstRtpCELTDepay
+        GstRTPDVDepay
+        GstRtpGSTDepay
+        GstRTPiLBCDepay
         GstRtpG722Depay
         GstRtpG723Depay
         GstRtpG726Depay
         GstRtpG729Depay
-        GstRtpGSTDepay
-        GstRtpH263Depay
+        GstRTPGSMDepay
+        GstRtpAMRDepay
+        GstRtpPcmaDepay
+        GstRtpPcmuDepay
+        GstRtpMPADepay
+        GstRtpMPARobustDepay
+        GstRtpMPVDepay
         GstRtpH263PDepay
+        GstRtpH263Depay
         GstRtpH264Depay
         GstRtpJ2KDepay
         GstRtpJPEGDepay
         GstRtpL16Depay
         GstRtpMP1SDepay
         GstRtpMP2TDepay
+        GstRtpMP4VDepay
         GstRtpMP4ADepay
         GstRtpMP4GDepay
-        GstRtpMP4VDepay
-        GstRtpMPADepay
-        GstRtpMPARobustDepay
-        GstRtpMPVDepay
-        GstRtpPcmaDepay
-        GstRtpPcmuDepay
         GstRtpQCELPDepay
         GstRtpQDM2Depay
+        GstRTPSirenDepay
         GstRtpSPEEXDepay
         GstRtpSV3VDepay
         GstRtpTheoraDepay
-        GstRtpVRawDepay
         GstRtpVorbisDepay
+        GstRtpVRawDepay
         GstRtpXQTDepay
       GstBaseRTPPayload
+        GstRtpAC3Pay
         GstBaseRTPAudioPayload
           GstRTPBVPay
           GstRTPILBCPay
-          GstRTPSirenPay
           GstRtpG722Pay
           GstRtpG726Pay
-          GstRtpL16Pay
-          GstRtpPcmaPay
           GstRtpPcmuPay
+          GstRtpPcmaPay
+          GstRtpL16Pay
+          GstRTPSirenPay
+        GstRtpCELTPay
         GstRTPDVPay
+        GstRtpGSTPay
         GstRTPG723Pay
         GstRTPG729Pay
         GstRTPGSMPay
-        GstRTPMP2TPay
-        GstRTPMPVPay
-        GstRtpAC3Pay
         GstRtpAMRPay
-        GstRtpCELTPay
-        GstRtpGSTPay
+        GstRtpMPAPay
+        GstRTPMPVPay
         GstRtpH263PPay
         GstRtpH263Pay
         GstRtpH264Pay
         GstRtpJ2KPay
         GstRtpJPEGPay
+        GstRTPMP2TPay
+        GstRtpMP4VPay
         GstRtpMP4APay
         GstRtpMP4GPay
-        GstRtpMP4VPay
-        GstRtpMPAPay
         GstRtpSPEEXPay
         GstRtpTheoraPay
-        GstRtpVRawPay
         GstRtpVorbisPay
-      GstBaseSink
-        GstAASink
-        GstBaseAudioSink
-          GstAudioSink
-            GstEsdSink
-            GstOss4Sink
-            GstOssSink
-          GstJackAudioSink
-          GstPulseSink
-        GstCACASink
-        GstDynUDPSink
-        GstMultiFileSink
-        GstMultiUDPSink
-          GstUDPSink
-        GstShout2send
-        GstTest
-        GstVideoSink
-          GstGdkPixbufSink
-          GstV4l2Sink
-      GstBaseSrc
-        GstPushSrc
-          GstBaseAudioSrc
-            GstAudioSrc
-              GstOss4Source
-              GstOssSrc
-              GstPulseSrc
-            GstJackAudioSrc
-          GstDV1394Src
-          GstHDV1394Src
-          GstMultiFileSrc
-          GstSoupHTTPSrc
-          GstUDPSrc
-          GstV4l2Src
-          GstXImageSrc
-      GstBaseTransform
-        GstAudioFilter
-          GstAudioAmplify
-          GstAudioDynamic
-          GstAudioEcho
-          GstAudioFXBaseFIRFilter
-            GstAudioFIRFilter
-            GstAudioWSincBand
-            GstAudioWSincLimit
-          GstAudioFXBaseIIRFilter
-            GstAudioChebBand
-            GstAudioChebLimit
-            GstAudioIIRFilter
-          GstAudioInvert
-          GstAudioKaraoke
-          GstIirEqualizer
-            GstIirEqualizer10Bands
-            GstIirEqualizer3Bands
-            GstIirEqualizerNBands
-          GstSpectrum
-        GstAudioPanorama
-        GstBreakMyData
-        GstCairoTimeOverlay
-        GstCapsSetter
-        GstCpuReport
-        GstLevel
-        GstNavSeek
-        GstPixbufScale
-        GstProgressReport
-        GstRgAnalysis
-        GstRgLimiter
-        GstTagInject
-        GstVideoBox
-        GstVideoCrop
-        GstVideoFilter
-          GstAgingTV
-          GstAlpha
-          GstAlphaColor
-          GstCairoOverlay
-          GstDiceTV
-          GstEdgeTV
-          GstGamma
-          GstNavigationtest
-          GstOpTV
-          GstQuarkTV
-          GstRadioacTV
-          GstRevTV
-          GstRippleTV
-          GstSMPTEAlpha
-          GstShagadelicTV
-          GstStreakTV
-          GstVertigoTV
-          GstVideoBalance
-          GstVideoFlip
-          GstWarpTV
-      GstBin
-        GstAspectRatioCrop
-        GstAutoAudioSink
-        GstAutoAudioSrc
-        GstAutoVideoSink
-        GstAutoVideoSrc
-        GstHalAudioSink
-        GstHalAudioSrc
-        GstPipeline
-        GstPushFileSrc
-        GstRTSPSrc
-        GstRgVolume
-        GstRtpBin
-        GstSwitchSink
-          GstGConfAudioSink
-          GstGConfVideoSink
-        GstSwitchSrc
-          GstGConfAudioSrc
-          GstGConfVideoSrc
-      GstCairoRender
-      GstCairoTextOverlay
-      GstCapsDebug
-      GstCmmlDec
-      GstCmmlEnc
-      GstCutter
-      GstDVDec
-      GstDVDemux
-      GstDeinterlace
-      GstDeinterleave
-      GstEFence
-      GstFlacDec
-      GstFlacEnc
-      GstFlacTag
-      GstFlvDemux
-      GstFlvMux
-      GstFlxDec
-      GstGdkPixbuf
-      GstGoom
-      GstGoom2k1
-      GstICYDemux
-      GstImageFreeze
-      GstInterleave
-      GstJpegDec
-      GstJpegEnc
+        GstRtpVRawPay
+      GstAsteriskh263
       GstMatroskaDemux
+      GstMatroskaParse
       GstMatroskaMux
         GstWebMMux
-      GstMonoscope
-      GstMuLawDec
-      GstMuLawEnc
-      GstMultipartDemux
-      GstMultipartMux
-      GstOss4Mixer
-      GstOssMixerElement
+      GstDeinterlace
+      GstCmmlEnc
+      GstCmmlDec
+      GstWavpackParse
+      GstWavpackDec
+      GstWavpackEnc
+      GstDVDemux
+      GstDVDec
+      GstFlacEnc
+      GstFlacDec
+      GstFlacTag
+      GstCairoTextOverlay
+      GstBaseTransform
+        GstCairoTimeOverlay
+        GstVideoFilter
+          GstCairoOverlay
+          GstEdgeTV
+          GstAgingTV
+          GstDiceTV
+          GstWarpTV
+          GstShagadelicTV
+          GstVertigoTV
+          GstRevTV
+          GstQuarkTV
+          GstOpTV
+          GstRadioacTV
+          GstStreakTV
+          GstRippleTV
+          GstNavigationtest
+          GstGamma
+          GstVideoBalance
+          GstVideoFlip
+          GstSMPTEAlpha
+          GstAlpha
+          GstAlphaColor
+        GstPixbufScale
+        GstVideoBox
+        GstBreakMyData
+        GstCapsSetter
+        GstNavSeek
+        GstProgressReport
+        GstTagInject
+        GstCpuReport
+        GstLevel
+        GstAudioFilter
+          GstIirEqualizer
+            GstIirEqualizerNBands
+            GstIirEqualizer3Bands
+            GstIirEqualizer10Bands
+          GstSpectrum
+          GstAudioInvert
+          GstAudioKaraoke
+          GstAudioAmplify
+          GstAudioDynamic
+          GstAudioFXBaseIIRFilter
+            GstAudioChebLimit
+            GstAudioChebBand
+            GstAudioIIRFilter
+          GstAudioFXBaseFIRFilter
+            GstAudioWSincLimit
+            GstAudioWSincBand
+            GstAudioFIRFilter
+          GstAudioEcho
+        GstRgAnalysis
+        GstRgLimiter
+        GstVideoCrop
+        GstAudioPanorama
+      GstCairoRender
+      GstJpegEnc
+      GstJpegDec
+      GstSmokeEnc
+      GstSmokeDec
       GstPngDec
       GstPngEnc
-      GstPulseMixer
-      GstQTDemux
-      GstRTPDec
-      GstRTPDepay
-      GstRndBufferSize
+      GstGdkPixbuf
+      GstOssMixerElement
+      GstOss4Mixer
+      GstShapeWipe
+      GstAviDemux
+      GstAviMux
+      GstAviSubtitle
+      GstGoom
+      GstGoom2k1
+      GstWavEnc
       GstRtpJitterBuffer
       GstRtpPtDemux
       GstRtpSession
       GstRtpSsrcDemux
+      GstQTDemux
+      GstQTMux
+      GstMP4Mux
+      GstISMLMux
+      GstGPPMux
+      GstMJ2Mux
+      GstRndBufferSize
+      GstCapsDebug
+      GstEFence
+      GstCutter
+      GstRTPDec
       GstSMPTE
-      GstShapeWipe
-      GstSmokeDec
-      GstSmokeEnc
-      GstSpeexDec
-      GstSpeexEnc
+      GstAuParse
+      GstMultipartDemux
+      GstMultipartMux
+      GstALawEnc
+      GstALawDec
+      GstMuLawEnc
+      GstMuLawDec
       GstTagDemux
         GstApeDemux
         GstID3Demux
-      GstTagLibMux
-        GstApev2Mux
-        GstId3v2Mux
+      GstFlxDec
+      GstImageFreeze
+      GstBaseParse
+        GstAacParse
+        GstAmrParse
+        GstAc3Parse
+        GstDcaParse
+        GstFlacParse
+        GstMpegAudioParse
+      GstY4mEncode
+      GstInterleave
+      GstDeinterleave
+      GstWavParse
+      GstFlvDemux
+      GstFlvMux
+      GstMonoscope
+      GstICYDemux
       GstVideoMixer
       GstVideoMixer2
-      GstWavEnc
-      GstWavParse
-      GstWavpackDec
-      GstWavpackEnc
-      GstWavpackParse
-      GstY4mEncode
-    GstPad
-      GstInterleavePad
-      GstVideoMixer2Pad
-      GstVideoMixerPad
-    GstPadTemplate
-    GstPlugin
-    GstPluginFeature
-      GstElementFactory
-      GstIndexFactory
-      GstTypeFindFactory
-    GstRegistry
-    GstRingBuffer
-      GstAudioSinkRingBuffer
-      GstAudioSrcRingBuffer
-      GstJackAudioSinkRingBuffer
-      GstJackAudioSrcRingBuffer
+    GstBus
     GstTask
     GstTaskPool
+    GstClock
+      GstSystemClock
+        GstAudioClock
+    GstPlugin
+    GstRegistry
+    GstRingBuffer
+      GstAudioSrcRingBuffer
+      GstAudioSinkRingBuffer
+      GstJackAudioSrcRingBuffer
+      GstJackAudioSinkRingBuffer
   GstSignalObject
-  GstTunerChannel
-  GstTunerNorm
+  GstCmmlTagStream
+  GstCmmlTagHead
+  GstCmmlTagClip
+  GstColorBalanceChannel
   RTPSession
+  GstMixerTrack
+    GstMixerOptions
+  GdkPixbuf
+  GstTunerNorm
+  GstTunerChannel
 GInterface
-  GIcon
   GTypePlugin
   GstChildProxy
-  GstColorBalance
-  GstImplementsInterface
-  GstMixer
-  GstNavigation
-  GstPreset
-  GstPropertyProbe
-  GstStreamVolume
-  GstTagSetter
-  GstTuner
   GstURIHandler
+  GstStreamVolume
+  GstImplementsInterface
+  GstPropertyProbe
+  GstMixer
+  GstTagSetter
+  GstPreset
+  GstTuner
+  GstColorBalance
   GstVideoOrientation
   GstXOverlay
+  GstNavigation
+  GstTagXmpWriter
+  GIcon

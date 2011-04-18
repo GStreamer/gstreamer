@@ -384,6 +384,7 @@ gst_v4l2radio_init (GstV4l2Radio * filter, GstV4l2RadioClass * gclass)
       gst_v4l2radio_get_input, gst_v4l2radio_set_input, NULL);
 
   filter->v4l2object->frequency = DEFAULT_FREQUENCY;
+  g_free (filter->v4l2object->videodev);
   filter->v4l2object->videodev = g_strdup (DEFAULT_PROP_DEVICE);
 }
 
@@ -521,6 +522,7 @@ gst_v4l2radio_set_property (GObject * object, guint prop_id,
   gint frequency;
   switch (prop_id) {
     case ARG_DEVICE:
+      g_free (radio->v4l2object->videodev);
       radio->v4l2object->videodev =
           g_strdup ((gchar *) g_value_get_string (value));
       break;

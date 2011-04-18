@@ -18,12 +18,15 @@
 
   <chapter>
     <title>gst-plugins-good Elements</title>
+    <xi:include href="xml/element-aacparse.xml" />
     <xi:include href="xml/element-aasink.xml" />
+    <xi:include href="xml/element-ac3parse.xml" />
     <xi:include href="xml/element-agingtv.xml" />
     <xi:include href="xml/element-alpha.xml" />
     <xi:include href="xml/element-alphacolor.xml" />
     <xi:include href="xml/element-alawdec.xml" />
     <xi:include href="xml/element-alawenc.xml" />
+    <xi:include href="xml/element-amrparse.xml" />
     <xi:include href="xml/element-apedemux.xml" />
     <xi:include href="xml/element-apev2mux.xml" />
     <xi:include href="xml/element-aspectratiocrop.xml" />
@@ -56,6 +59,7 @@
     <xi:include href="xml/element-cmmldec.xml" />
     <xi:include href="xml/element-cmmlenc.xml" />
     <xi:include href="xml/element-cutter.xml" />
+    <xi:include href="xml/element-dcaparse.xml" />
     <xi:include href="xml/element-deinterlace.xml" />
     <xi:include href="xml/element-deinterleave.xml" />
     <xi:include href="xml/element-dicetv.xml" />
@@ -70,6 +74,7 @@
     <xi:include href="xml/element-esdsink.xml" />
     <xi:include href="xml/element-flacdec.xml" />
     <xi:include href="xml/element-flacenc.xml" />
+    <xi:include href="xml/element-flacparse.xml" />
     <xi:include href="xml/element-flactag.xml" />
     <xi:include href="xml/element-flvdemux.xml" />
     <xi:include href="xml/element-flvmux.xml" />
@@ -103,6 +108,7 @@
     <xi:include href="xml/element-matroskamux.xml" />
     <xi:include href="xml/element-matroskademux.xml" />
     <xi:include href="xml/element-monoscope.xml" />
+    <xi:include href="xml/element-mpegaudioparse.xml" />
     <xi:include href="xml/element-mulawdec.xml" />
     <xi:include href="xml/element-mulawenc.xml" />
     <xi:include href="xml/element-multifilesink.xml" />
@@ -128,6 +134,7 @@
     <xi:include href="xml/element-pulsemixer.xml" />
     <xi:include href="xml/element-quarktv.xml" />
     <xi:include href="xml/element-qtdemux.xml" />
+    <xi:include href="xml/element-qtmux.xml" />
     <xi:include href="xml/element-radioactv.xml" />
     <xi:include href="xml/element-revtv.xml" />
     <xi:include href="xml/element-rganalysis.xml" />

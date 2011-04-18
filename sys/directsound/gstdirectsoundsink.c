@@ -468,6 +468,7 @@ gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
     spec->segsize += spec->segsize % spec->bytes_per_sample;
     spec->segtotal = dsoundsink->buffer_size / spec->segsize;
   } else {
+#ifdef WAVE_FORMAT_DOLBY_AC3_SPDIF
     wfx.cbSize = 0;
     wfx.wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
     wfx.nChannels = 2;
@@ -478,6 +479,9 @@ gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
     spec->segsize = 6144;
     spec->segtotal = 10;
+#else
+    g_assert_not_reached ();
+#endif
   }
 
   // Make the final buffer size be an integer number of segments
@@ -738,6 +742,7 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
    * Check availability of digital output by trying to create an SPDIF buffer 
    */
 
+#ifdef WAVE_FORMAT_DOLBY_AC3_SPDIF
   /* fill the WAVEFORMATEX structure with some standard AC3 over SPDIF params */
   memset (&wfx, 0, sizeof (wfx));
   wfx.cbSize = 0;
@@ -772,6 +777,9 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
           DXGetErrorString9 (hRes));
     }
   }
+#else
+  caps = gst_caps_subtract (caps, gst_caps_new_simple ("audio/x-iec958", NULL));
+#endif
 
   return caps;
 }

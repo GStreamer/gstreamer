@@ -121,15 +121,11 @@ static void
 gst_oss4_source_class_init (GstOss4SourceClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
-  GstBaseAudioSrcClass *gstbaseaudiosrc_class;
   GstAudioSrcClass *gstaudiosrc_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
-  gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
   gobject_class->dispose = gst_oss4_source_dispose;
@@ -928,15 +924,11 @@ static void
 gst_oss4_source_mixer_set_mute (GstMixer * mixer, GstMixerTrack * track,
     gboolean mute)
 {
-  GstOss4Source *oss;
-
   g_return_if_fail (mixer != NULL);
   g_return_if_fail (track != NULL);
   g_return_if_fail (GST_IS_MIXER_TRACK (track));
   g_return_if_fail (GST_IS_OSS4_SOURCE (mixer));
   g_return_if_fail (GST_OSS4_SOURCE_IS_OPEN (mixer));
-
-  oss = GST_OSS4_SOURCE (mixer);
 
   /* FIXME: implement gst_oss4_source_mixer_set_mute() - what to do here? */
   /* oss4_mixer_set_mute (mixer->mixer, track, mute); */

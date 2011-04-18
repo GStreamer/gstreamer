@@ -74,24 +74,7 @@ extern void gst_rtp_bin_marshal_UINT64__BOOLEAN_UINT64 (GClosure     *closure,
                                                         gpointer      marshal_data);
 #define gst_rtp_bin_marshal_UINT64__BOOL_UINT64	gst_rtp_bin_marshal_UINT64__BOOLEAN_UINT64
 
-/* BOOL:POINTER,BOOL (gstrtpbin-marshal.list:10) */
-extern void gst_rtp_bin_marshal_BOOLEAN__POINTER_BOOLEAN (GClosure     *closure,
-                                                          GValue       *return_value,
-                                                          guint         n_param_values,
-                                                          const GValue *param_values,
-                                                          gpointer      invocation_hint,
-                                                          gpointer      marshal_data);
-#define gst_rtp_bin_marshal_BOOL__POINTER_BOOL	gst_rtp_bin_marshal_BOOLEAN__POINTER_BOOLEAN
-
-/* VOID:UINT,UINT,UINT,UINT,POINTER (gstrtpbin-marshal.list:11) */
-extern void gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_POINTER (GClosure     *closure,
-                                                                   GValue       *return_value,
-                                                                   guint         n_param_values,
-                                                                   const GValue *param_values,
-                                                                   gpointer      invocation_hint,
-                                                                   gpointer      marshal_data);
-
-/* VOID:UINT64 (gstrtpbin-marshal.list:12) */
+/* VOID:UINT64 (gstrtpbin-marshal.list:10) */
 extern void gst_rtp_bin_marshal_VOID__UINT64 (GClosure     *closure,
                                               GValue       *return_value,
                                               guint         n_param_values,

@@ -749,7 +749,7 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
       break;
     default:
       g_assert_not_reached ();
-      break;
+      return;
   }
 
   // copy first even line no matter what, and the first odd line if we're

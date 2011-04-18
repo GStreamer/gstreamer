@@ -15,3 +15,17 @@ noinst_HEADERS = gstrtspsrc.h     \
 		 gstrtsp.h        \
 		 gstrtpdec.h      \
 		 gstrtspext.h
+
+Android.mk: Makefile.am $(BUILT_SOURCES)
+	androgenizer \
+	-:PROJECT libgstrtsp -:SHARED libgstrtsp \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstrtsp_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstrtsp_la_CFLAGS) \
+	 -:LDFLAGS $(libgstrtsp_la_LDFLAGS) \
+	           $(libgstrtsp_la_LIBADD) \
+	           -ldl \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+	> $@

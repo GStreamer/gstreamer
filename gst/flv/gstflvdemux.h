@@ -109,6 +109,7 @@ struct _GstFlvDemux
   gboolean got_par;
   GstBuffer * video_codec_data;
   GstClockTime video_start;
+  gdouble framerate;
 
   gboolean random_access;
   gboolean need_header;

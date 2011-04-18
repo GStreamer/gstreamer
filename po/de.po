@@ -8,14 +8,14 @@
 # Pipeline = Weiterleitung
 # Stream = Strom
 # mixer  =
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2010.
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2010, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 01:15+0000\n"
-"PO-Revision-Date: 2010-10-25 00:33+0200\n"
+"POT-Creation-Date: 2011-04-16 16:25+0100\n"
+"PO-Revision-Date: 2011-01-21 22:36+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -83,7 +83,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Diese Datei ist beschädigt und kann nicht wiedergegeben werden."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Ungültige Atom-Größe."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Diese Datei ist unvollständig und kann nicht wiedergegeben werden."
@@ -640,23 +640,23 @@ msgstr ""
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Auslesen der aktuellen Eingabe auf dem Gerät »%s« schlug fehl. Vielleicht "
-"ist es ein Radiogerät."
+"ist es ein Funkgerät."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Festlegen der Eingabe »%d« des Geräts »%s« schlug fehl."
 
 # Sendegerät sicherlich nicht, eben eher ein Radio. Warum diese Fehlermeldung beie einem Radiogerät kommen könnte, weiß ich allerdings auch nicht.
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Auslesen der aktuellen Eingabe auf dem Gerät »%s« schlug fehl. Vielleicht "
-"ist es ein Radiogerät."
+"Auslesen der aktuellen Ausgabe des Geräts »%s« schlug fehl. Vielleicht ist "
+"es ein Funkgerät."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Festlegen der Eingabe »%d« des Geräts »%s« schlug fehl."
+msgstr "Festlegen der Ausgabe »%d« des Geräts »%s« schlug fehl."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."

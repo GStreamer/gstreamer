@@ -547,7 +547,7 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   GstJpegEnc *jpegenc;
   guchar *data;
   gulong size;
-  guint height, width;
+  guint height;
   guchar *base[3], *end[3];
   gint i, j, k;
 
@@ -572,7 +572,6 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   gst_buffer_copy_metadata (jpegenc->output_buffer, buf,
       GST_BUFFER_COPY_TIMESTAMPS);
 
-  width = jpegenc->width;
   height = jpegenc->height;
 
   for (i = 0; i < jpegenc->channels; i++) {

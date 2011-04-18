@@ -1,5 +1,8 @@
 .dirstamp
+aacparse
+ac3parse
 alphacolor
+amrparse
 apev2mux
 aspectratiocrop
 audioamplify
@@ -23,6 +26,7 @@ deinterlace
 deinterleave
 equalizer
 gdkpixbufsink
+flacparse
 flvdemux
 flvmux
 icydemux
@@ -33,7 +37,9 @@ interleave
 jpegenc
 level
 matroskamux
+mpegaudioparse
 multifile
+qtmux
 rganalysis
 rglimiter
 rgvolume

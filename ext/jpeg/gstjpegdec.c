@@ -1651,6 +1651,10 @@ gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event)
   gboolean res;
 
   dec = GST_JPEG_DEC (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (dec == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:{

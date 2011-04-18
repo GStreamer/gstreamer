@@ -658,7 +658,7 @@ gst_v4l2sink_get_caps (GstBaseSink * bsink)
 
   ret = gst_caps_new_empty ();
 
-  for (walk = v4l2sink->v4l2object->formats; walk; walk = walk->next) {
+  for (walk = formats; walk; walk = walk->next) {
     struct v4l2_fmtdesc *format;
 
     GstStructure *template;

@@ -941,10 +941,8 @@ connect_failed:
 static gboolean
 gst_pulseringbuffer_release (GstRingBuffer * buf)
 {
-  GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
 
-  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (buf));
   pbuf = GST_PULSERING_BUFFER_CAST (buf);
 
   pa_threaded_mainloop_lock (mainloop);
@@ -957,12 +955,6 @@ gst_pulseringbuffer_release (GstRingBuffer * buf)
 static void
 gst_pulsering_success_cb (pa_stream * s, int success, void *userdata)
 {
-  GstPulseRingBuffer *pbuf;
-  GstPulseSink *psink;
-
-  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
-  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
-
   pa_threaded_mainloop_signal (mainloop, 0);
 }
 
@@ -1080,8 +1072,8 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
 
   /* EOS needs running clock */
   if (GST_BASE_SINK_CAST (psink)->eos ||
-      g_atomic_int_get (&GST_BASE_AUDIO_SINK (psink)->abidata.
-          ABI.eos_rendering))
+      g_atomic_int_get (&GST_BASE_AUDIO_SINK (psink)->abidata.ABI.
+          eos_rendering))
     gst_pulsering_set_corked (pbuf, FALSE, FALSE);
 
   pa_threaded_mainloop_unlock (mainloop);
@@ -1351,11 +1343,11 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
     towrite = out_samples * bps;
 
-    /* Only ever write bufsize bytes at once. This will
-     * also limit the PA shm buffer to bufsize
+    /* Only ever write segsize bytes at once. This will
+     * also limit the PA shm buffer to segsize
      */
-    if (towrite > bufsize)
-      towrite = bufsize;
+    if (towrite > buf->spec.segsize)
+      towrite = buf->spec.segsize;
 
     if ((pbuf->m_writable < towrite) || (offset != pbuf->m_lastoffset)) {
       /* if no room left or discontinuity in offset,
@@ -1404,9 +1396,9 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       }
 
       /* make sure we only buffer up latency-time samples */
-      if (pbuf->m_writable > bufsize) {
+      if (pbuf->m_writable > buf->spec.segsize) {
         /* limit buffering to latency-time value */
-        pbuf->m_writable = bufsize;
+        pbuf->m_writable = buf->spec.segsize;
 
         GST_LOG_OBJECT (psink, "Limiting buffering to %" G_GSIZE_FORMAT,
             pbuf->m_writable);
@@ -1425,9 +1417,9 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
           pbuf->m_writable);
 
       /* Just to make sure that we didn't get more than requested */
-      if (pbuf->m_writable > bufsize) {
+      if (pbuf->m_writable > buf->spec.segsize) {
         /* limit buffering to latency-time value */
-        pbuf->m_writable = bufsize;
+        pbuf->m_writable = buf->spec.segsize;
       }
     }
 
@@ -2730,7 +2722,6 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (element);
   GstStateChangeReturn ret;
-  guint res;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -2740,8 +2731,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
         if (!(mainloop = pa_threaded_mainloop_new ()))
           goto mainloop_failed;
         mainloop_ref_ct = 1;
-        res = pa_threaded_mainloop_start (mainloop);
-        g_assert (res == 0);
+        pa_threaded_mainloop_start (mainloop);
         g_mutex_unlock (pa_shared_resource_mutex);
       } else {
         GST_INFO_OBJECT (element, "reusing pa main loop thread");

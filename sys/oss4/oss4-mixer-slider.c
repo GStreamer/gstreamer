@@ -228,7 +228,7 @@ gst_oss4_mixer_slider_set_mute (GstOss4MixerSlider * s, gboolean mute)
     track->flags &= ~GST_MIXER_TRACK_MUTE;
   }
 
-  return FALSE;
+  return ret;
 }
 
 GstMixerTrack *

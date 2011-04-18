@@ -131,6 +131,75 @@ accumulate_trues (GSignalInvocationHint * ihint, GValue * return_accu,
 }
 
 static void
+gst_rtp_bin_marshal_BOOLEAN__MINIOBJECT_BOOLEAN (GClosure * closure,
+    GValue * return_value G_GNUC_UNUSED, guint n_param_values,
+    const GValue * param_values, gpointer invocation_hint G_GNUC_UNUSED,
+    gpointer marshal_data)
+{
+  typedef gboolean (*GMarshalFunc_BOOLEAN__MINIOBJECT_BOOLEAN) (gpointer data1,
+      gpointer arg_1, gboolean arg_2, gpointer data2);
+  register GMarshalFunc_BOOLEAN__MINIOBJECT_BOOLEAN callback;
+  register GCClosure *cc = (GCClosure *) closure;
+  register gpointer data1, data2;
+  gboolean v_return;
+
+  g_return_if_fail (return_value != NULL);
+  g_return_if_fail (n_param_values == 3);
+
+  if (G_CCLOSURE_SWAP_DATA (closure)) {
+    data1 = closure->data;
+    data2 = g_value_peek_pointer (param_values + 0);
+  } else {
+    data1 = g_value_peek_pointer (param_values + 0);
+    data2 = closure->data;
+  }
+  callback =
+      (GMarshalFunc_BOOLEAN__MINIOBJECT_BOOLEAN) (marshal_data ? marshal_data :
+      cc->callback);
+
+  v_return = callback (data1,
+      gst_value_get_mini_object (param_values + 1),
+      g_value_get_boolean (param_values + 2), data2);
+
+  g_value_set_boolean (return_value, v_return);
+}
+
+static void
+gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_MINIOBJECT (GClosure * closure,
+    GValue * return_value G_GNUC_UNUSED, guint n_param_values,
+    const GValue * param_values, gpointer invocation_hint G_GNUC_UNUSED,
+    gpointer marshal_data)
+{
+  typedef void (*GMarshalFunc_VOID__UINT_UINT_UINT_UINT_MINIOBJECT) (gpointer
+      data1, guint arg_1, guint arg_2, guint arg_3, guint arg_4, gpointer arg_5,
+      gpointer data2);
+  register GMarshalFunc_VOID__UINT_UINT_UINT_UINT_MINIOBJECT callback;
+  register GCClosure *cc = (GCClosure *) closure;
+  register gpointer data1, data2;
+
+  g_return_if_fail (n_param_values == 6);
+
+  if (G_CCLOSURE_SWAP_DATA (closure)) {
+    data1 = closure->data;
+    data2 = g_value_peek_pointer (param_values + 0);
+  } else {
+    data1 = g_value_peek_pointer (param_values + 0);
+    data2 = closure->data;
+  }
+  callback =
+      (GMarshalFunc_VOID__UINT_UINT_UINT_UINT_MINIOBJECT) (marshal_data ?
+      marshal_data : cc->callback);
+
+  callback (data1,
+      g_value_get_uint (param_values + 1),
+      g_value_get_uint (param_values + 2),
+      g_value_get_uint (param_values + 3),
+      g_value_get_uint (param_values + 4),
+      gst_value_get_mini_object (param_values + 5), data2);
+}
+
+
+static void
 rtp_session_class_init (RTPSessionClass * klass)
 {
   GObjectClass *gobject_class;
@@ -278,8 +347,8 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SENDING_RTCP] =
       g_signal_new ("on-sending-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sending_rtcp),
-      accumulate_trues, NULL, gst_rtp_bin_marshal_BOOLEAN__POINTER_BOOLEAN,
-      G_TYPE_BOOLEAN, 2, G_TYPE_POINTER, G_TYPE_BOOLEAN);
+      accumulate_trues, NULL, gst_rtp_bin_marshal_BOOLEAN__MINIOBJECT_BOOLEAN,
+      G_TYPE_BOOLEAN, 2, GST_TYPE_BUFFER, G_TYPE_BOOLEAN);
 
   /**
    * RTPSession::on-feedback-rtcp:
@@ -298,9 +367,9 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP] =
       g_signal_new ("on-feedback-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_feedback_rtcp),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_POINTER,
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_MINIOBJECT,
       G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT,
-      G_TYPE_POINTER);
+      GST_TYPE_BUFFER);
 
   /**
    * RTPSession::send-rtcp:
@@ -1942,10 +2011,16 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
     validated = !RTP_SOURCE_IS_ACTIVE (source);
     source->validated = TRUE;
 
+    /* source became active */
+    if (validated) {
+      sess->stats.active_sources++;
+      GST_DEBUG ("source: %08x became active, %d active sources", ssrc,
+          sess->stats.active_sources);
+      on_ssrc_validated (sess, source);
+    }
+
     if (created)
       on_new_ssrc (sess, source);
-    if (validated)
-      on_ssrc_validated (sess, source);
     if (changed)
       on_ssrc_sdes (sess, source);
 
@@ -1978,6 +2053,9 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
 
     ssrc = gst_rtcp_packet_bye_get_nth_ssrc (packet, i);
     GST_DEBUG ("SSRC: %08x", ssrc);
+
+    if (ssrc == sess->source->ssrc)
+      return;
 
     /* find src and mark bye, no probation when dealing with RTCP */
     source = obtain_source (sess, ssrc, &created, arrival, FALSE);
@@ -2102,27 +2180,29 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
   GstRTCPFBType fbtype = gst_rtcp_packet_fb_get_type (packet);
   guint32 sender_ssrc = gst_rtcp_packet_fb_get_sender_ssrc (packet);
   guint32 media_ssrc = gst_rtcp_packet_fb_get_media_ssrc (packet);
-  guint length = 4 * (gst_rtcp_packet_get_length (packet) - 2);
+  guint8 *fci_data = gst_rtcp_packet_fb_get_fci (packet);
+  guint fci_length = 4 * gst_rtcp_packet_fb_get_fci_length (packet);
 
-  GST_DEBUG ("received feedback %d:%d from %08X about %08X"
-      " with FCI of length %d", type, fbtype, sender_ssrc, media_ssrc, length);
+  GST_DEBUG ("received feedback %d:%d from %08X about %08X with FCI of "
+      "length %d", type, fbtype, sender_ssrc, media_ssrc, fci_length);
 
   if (g_signal_has_handler_pending (sess,
           rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP], 0, TRUE)) {
-    GstBuffer *fci = NULL;
+    GstBuffer *fci_buffer = NULL;
 
-    if (length) {
-      fci = gst_buffer_create_sub (packet->buffer, packet->offset + 72, length);
-      GST_BUFFER_TIMESTAMP (fci) = arrival->running_time;
+    if (fci_length > 0) {
+      fci_buffer = gst_buffer_create_sub (packet->buffer,
+          fci_data - GST_BUFFER_DATA (packet->buffer), fci_length);
+      GST_BUFFER_TIMESTAMP (fci_buffer) = arrival->running_time;
     }
 
     RTP_SESSION_UNLOCK (sess);
     g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP], 0,
-        type, fbtype, sender_ssrc, media_ssrc, fci);
+        type, fbtype, sender_ssrc, media_ssrc, fci_buffer);
     RTP_SESSION_LOCK (sess);
 
-    if (fci)
-      gst_buffer_unref (fci);
+    if (fci_buffer)
+      gst_buffer_unref (fci_buffer);
   }
 
   if (sess->rtcp_feedback_retention_window) {

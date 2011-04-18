@@ -323,6 +323,7 @@ AG_GST_CHECK_PLUGIN(videofilter)
 AG_GST_CHECK_PLUGIN(alpha)
 AG_GST_CHECK_PLUGIN(apetag)
 AG_GST_CHECK_PLUGIN(audiofx)
+AG_GST_CHECK_PLUGIN(audioparsers)
 AG_GST_CHECK_PLUGIN(auparse)
 AG_GST_CHECK_PLUGIN(autodetect)
 AG_GST_CHECK_PLUGIN(avi)
@@ -345,7 +346,7 @@ AG_GST_CHECK_PLUGIN(matroska)
 AG_GST_CHECK_PLUGIN(monoscope)
 AG_GST_CHECK_PLUGIN(multifile)
 AG_GST_CHECK_PLUGIN(multipart)
-AG_GST_CHECK_PLUGIN(qtdemux)
+AG_GST_CHECK_PLUGIN(quicktime)
 AG_GST_CHECK_PLUGIN(replaygain)
 AG_GST_CHECK_PLUGIN(rtp)
 AG_GST_CHECK_PLUGIN(rtpmanager)
@@ -767,10 +768,13 @@ AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
   AC_SUBST(JACK_CFLAGS)
   AC_SUBST(JACK_LIBS)
 
-  dnl upcomming jack2 (1.9.7 will have the new api as well
   AG_GST_PKG_CHECK_MODULES(JACK_0_120_1, jack >= 0.120.1 jack < 1.0)
   if test x$HAVE_JACK_0_120_1 = xyes; then
     AC_DEFINE(HAVE_JACK_0_120_1, 1, [defined if jack >= 0.120.1 is available])
+  fi
+  AG_GST_PKG_CHECK_MODULES(JACK_1_9_7, jack >= 1.9.7)
+  if test x$HAVE_JACK_1_9_7 = xyes; then
+    AC_DEFINE(HAVE_JACK_1_9_7, 1, [defined if jack >= 1.9.7 is available])
   fi
 
 ])
@@ -1133,6 +1137,7 @@ gst/Makefile
 gst/alpha/Makefile
 gst/apetag/Makefile
 gst/audiofx/Makefile
+gst/audioparsers/Makefile
 gst/auparse/Makefile
 gst/autodetect/Makefile
 gst/avi/Makefile
@@ -1154,7 +1159,7 @@ gst/matroska/Makefile
 gst/monoscope/Makefile
 gst/multifile/Makefile
 gst/multipart/Makefile
-gst/qtdemux/Makefile
+gst/quicktime/Makefile
 gst/replaygain/Makefile
 gst/rtp/Makefile
 gst/rtpmanager/Makefile

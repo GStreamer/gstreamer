@@ -117,8 +117,6 @@ main (int argc, char *argv[])
   GstElement *rtpbin, *rtpsink, *rtcpsink, *rtcpsrc;
   GstElement *pipeline;
   GMainLoop *loop;
-  gboolean res;
-  GstPadLinkReturn lres;
   GstPad *srcpad, *sinkpad;
 
   /* always init first */
@@ -145,9 +143,11 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (pipeline), audiosrc, audioconv, audiores,
       audioenc, audiopay, NULL);
 
-  res = gst_element_link_many (audiosrc, audioconv, audiores, audioenc,
-      audiopay, NULL);
-  g_assert (res == TRUE);
+  if (!gst_element_link_many (audiosrc, audioconv, audiores, audioenc,
+          audiopay, NULL)) {
+    g_error ("Failed to link audiosrc, audioconv, audioresample, "
+        "audio encoder and audio payloader");
+  }
 
   /* the rtpbin element */
   rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
@@ -175,32 +175,32 @@ main (int argc, char *argv[])
   /* now link all to the rtpbin, start by getting an RTP sinkpad for session 0 */
   sinkpad = gst_element_get_request_pad (rtpbin, "send_rtp_sink_0");
   srcpad = gst_element_get_static_pad (audiopay, "src");
-  lres = gst_pad_link (srcpad, sinkpad);
-  g_assert (lres == GST_PAD_LINK_OK);
+  if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK)
+    g_error ("Failed to link audio payloader to rtpbin");
   gst_object_unref (srcpad);
 
   /* get the RTP srcpad that was created when we requested the sinkpad above and
    * link it to the rtpsink sinkpad*/
   srcpad = gst_element_get_static_pad (rtpbin, "send_rtp_src_0");
   sinkpad = gst_element_get_static_pad (rtpsink, "sink");
-  lres = gst_pad_link (srcpad, sinkpad);
-  g_assert (lres == GST_PAD_LINK_OK);
+  if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK)
+    g_error ("Failed to link rtpbin to rtpsink");
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
 
   /* get an RTCP srcpad for sending RTCP to the receiver */
   srcpad = gst_element_get_request_pad (rtpbin, "send_rtcp_src_0");
   sinkpad = gst_element_get_static_pad (rtcpsink, "sink");
-  lres = gst_pad_link (srcpad, sinkpad);
-  g_assert (lres == GST_PAD_LINK_OK);
+  if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK)
+    g_error ("Failed to link rtpbin to rtcpsink");
   gst_object_unref (sinkpad);
 
   /* we also want to receive RTCP, request an RTCP sinkpad for session 0 and
    * link it to the srcpad of the udpsrc for RTCP */
   srcpad = gst_element_get_static_pad (rtcpsrc, "src");
   sinkpad = gst_element_get_request_pad (rtpbin, "recv_rtcp_sink_0");
-  lres = gst_pad_link (srcpad, sinkpad);
-  g_assert (lres == GST_PAD_LINK_OK);
+  if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK)
+    g_error ("Failed to link rtcpsrc to rtpbin");
   gst_object_unref (srcpad);
 
   /* set the pipeline to playing */

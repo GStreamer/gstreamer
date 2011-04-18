@@ -9,7 +9,7 @@ ext/wavpack/gstwavpackparse.c
 gconf/gstreamer.schemas.in
 gst/avi/gstavidemux.c
 gst/avi/gstavimux.c
-gst/qtdemux/qtdemux.c
+gst/quicktime/qtdemux.c
 gst/rtsp/gstrtspsrc.c
 gst/wavparse/gstwavparse.c
 sys/oss/gstossmixer.c

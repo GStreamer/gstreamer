@@ -221,8 +221,8 @@ blend_##format_name (const guint8 * src, gint xpos, gint ypos, \
   gint xoffset = 0; \
   gint yoffset = 0; \
   gint src_comp_rowstride, dest_comp_rowstride; \
-  gint src_comp_height, dest_comp_height; \
-  gint src_comp_width, dest_comp_width; \
+  gint src_comp_height; \
+  gint src_comp_width; \
   gint comp_ypos, comp_xpos; \
   gint comp_yoffset, comp_xoffset; \
   \
@@ -262,9 +262,7 @@ blend_##format_name (const guint8 * src, gint xpos, gint ypos, \
   src_comp_rowstride = gst_video_format_get_row_stride (format_enum, 0, src_width); \
   dest_comp_rowstride = gst_video_format_get_row_stride (format_enum, 0, dest_width); \
   src_comp_height = gst_video_format_get_component_height (format_enum, 0, b_src_height); \
-  dest_comp_height = gst_video_format_get_component_height (format_enum, 0, dest_height); \
   src_comp_width = gst_video_format_get_component_width (format_enum, 0, b_src_width); \
-  dest_comp_width = gst_video_format_get_component_width (format_enum, 0, dest_width); \
   comp_xpos = (xpos == 0) ? 0 : gst_video_format_get_component_width (format_enum, 0, xpos); \
   comp_ypos = (ypos == 0) ? 0 : gst_video_format_get_component_height (format_enum, 0, ypos); \
   comp_xoffset = (xoffset == 0) ? 0 : gst_video_format_get_component_width (format_enum, 0, xoffset); \
@@ -280,9 +278,7 @@ blend_##format_name (const guint8 * src, gint xpos, gint ypos, \
   src_comp_rowstride = gst_video_format_get_row_stride (format_enum, 1, src_width); \
   dest_comp_rowstride = gst_video_format_get_row_stride (format_enum, 1, dest_width); \
   src_comp_height = gst_video_format_get_component_height (format_enum, 1, b_src_height); \
-  dest_comp_height = gst_video_format_get_component_height (format_enum, 1, dest_height); \
   src_comp_width = gst_video_format_get_component_width (format_enum, 1, b_src_width); \
-  dest_comp_width = gst_video_format_get_component_width (format_enum, 1, dest_width); \
   comp_xpos = (xpos == 0) ? 0 : gst_video_format_get_component_width (format_enum, 1, xpos); \
   comp_ypos = (ypos == 0) ? 0 : gst_video_format_get_component_height (format_enum, 1, ypos); \
   comp_xoffset = (xoffset == 0) ? 0 : gst_video_format_get_component_width (format_enum, 1, xoffset); \
@@ -298,9 +294,7 @@ blend_##format_name (const guint8 * src, gint xpos, gint ypos, \
   src_comp_rowstride = gst_video_format_get_row_stride (format_enum, 2, src_width); \
   dest_comp_rowstride = gst_video_format_get_row_stride (format_enum, 2, dest_width); \
   src_comp_height = gst_video_format_get_component_height (format_enum, 2, b_src_height); \
-  dest_comp_height = gst_video_format_get_component_height (format_enum, 2, dest_height); \
   src_comp_width = gst_video_format_get_component_width (format_enum, 2, b_src_width); \
-  dest_comp_width = gst_video_format_get_component_width (format_enum, 2, dest_width); \
   comp_xpos = (xpos == 0) ? 0 : gst_video_format_get_component_width (format_enum, 2, xpos); \
   comp_ypos = (ypos == 0) ? 0 : gst_video_format_get_component_height (format_enum, 2, ypos); \
   comp_xoffset = (xoffset == 0) ? 0 : gst_video_format_get_component_width (format_enum, 2, xoffset); \

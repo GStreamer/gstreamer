@@ -26,6 +26,8 @@
  * chapter 16
  * available at http://www.dspguide.com/
  *
+ * For the window functions see
+ * http://en.wikipedia.org/wiki/Window_function
  */
 
 /**
@@ -103,7 +105,10 @@ gst_audio_wsinclimit_mode_get_type (void)
 enum
 {
   WINDOW_HAMMING = 0,
-  WINDOW_BLACKMAN
+  WINDOW_BLACKMAN,
+  WINDOW_GAUSSIAN,
+  WINDOW_COSINE,
+  WINDOW_HANN
 };
 
 #define GST_TYPE_AUDIO_WSINC_LIMIT_WINDOW (gst_audio_wsinclimit_window_get_type ())
@@ -118,6 +123,12 @@ gst_audio_wsinclimit_window_get_type (void)
           "hamming"},
       {WINDOW_BLACKMAN, "Blackman window",
           "blackman"},
+      {WINDOW_GAUSSIAN, "Gaussian window",
+          "gaussian"},
+      {WINDOW_COSINE, "Cosine window",
+          "cosine"},
+      {WINDOW_HANN, "Hann window",
+          "hann"},
       {0, NULL, NULL}
     };
 
@@ -141,6 +152,9 @@ static void gst_audio_wsinclimit_finalize (GObject * object);
 
 static gboolean gst_audio_wsinclimit_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
+
+
+#define POW2(x)  (x)*(x)
 
 /* Element class */
 
@@ -244,16 +258,30 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
   kernel = g_new (gdouble, len);
 
   for (i = 0; i < len; ++i) {
-    if (i == len / 2)
+    if (i == (len - 1) / 2.0)
       kernel[i] = w;
     else
-      kernel[i] = sin (w * (i - len / 2)) / (i - len / 2);
+      kernel[i] = sin (w * (i - (len - 1) / 2)) / (i - (len - 1) / 2.0);
+
     /* windowing */
-    if (self->window == WINDOW_HAMMING)
-      kernel[i] *= (0.54 - 0.46 * cos (2 * G_PI * i / len));
-    else
-      kernel[i] *= (0.42 - 0.5 * cos (2 * G_PI * i / len) +
-          0.08 * cos (4 * G_PI * i / len));
+    switch (self->window) {
+      case WINDOW_HAMMING:
+        kernel[i] *= (0.54 - 0.46 * cos (2 * G_PI * i / (len - 1)));
+        break;
+      case WINDOW_BLACKMAN:
+        kernel[i] *= (0.42 - 0.5 * cos (2 * G_PI * i / (len - 1)) +
+            0.08 * cos (4 * G_PI * i / (len - 1)));
+        break;
+      case WINDOW_GAUSSIAN:
+        kernel[i] *= exp (-0.5 * POW2 (3.0 / len * (2 * i - (len - 1))));
+        break;
+      case WINDOW_COSINE:
+        kernel[i] *= cos (G_PI * i / (len - 1) - G_PI / 2);
+        break;
+      case WINDOW_HANN:
+        kernel[i] *= 0.5 * (1 - cos (2 * G_PI * i / (len - 1)));
+        break;
+    }
   }
 
   /* normalize for unity gain at DC */
@@ -266,7 +294,13 @@ gst_audio_wsinclimit_build_kernel (GstAudioWSincLimit * self)
   if (self->mode == MODE_HIGH_PASS) {
     for (i = 0; i < len; ++i)
       kernel[i] = -kernel[i];
-    kernel[len / 2] += 1.0;
+
+    if (len % 2 == 1) {
+      kernel[(len - 1) / 2] += 1.0;
+    } else {
+      kernel[len / 2 - 1] += 0.5;
+      kernel[len / 2] += 0.5;
+    }
   }
 
   gst_audio_fx_base_fir_filter_set_kernel (GST_AUDIO_FX_BASE_FIR_FILTER (self),

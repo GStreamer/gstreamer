@@ -26,6 +26,8 @@
  * chapter 16
  * available at http://www.dspguide.com/
  *
+ * For the window functions see
+ * http://en.wikipedia.org/wiki/Window_function
  */
 
 /**
@@ -104,7 +106,10 @@ gst_gst_audio_wsincband_mode_get_type (void)
 enum
 {
   WINDOW_HAMMING = 0,
-  WINDOW_BLACKMAN
+  WINDOW_BLACKMAN,
+  WINDOW_GAUSSIAN,
+  WINDOW_COSINE,
+  WINDOW_HANN
 };
 
 #define GST_TYPE_AUDIO_WSINC_BAND_WINDOW (gst_gst_audio_wsincband_window_get_type ())
@@ -119,6 +124,12 @@ gst_gst_audio_wsincband_window_get_type (void)
           "hamming"},
       {WINDOW_BLACKMAN, "Blackman window",
           "blackman"},
+      {WINDOW_GAUSSIAN, "Gaussian window",
+          "gaussian"},
+      {WINDOW_COSINE, "Cosine window",
+          "cosine"},
+      {WINDOW_HANN, "Hann window",
+          "hann"},
       {0, NULL, NULL}
     };
 
@@ -142,6 +153,9 @@ static void gst_audio_wsincband_finalize (GObject * object);
 
 static gboolean gst_audio_wsincband_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
+
+
+#define POW2(x)  (x)*(x)
 
 /* Element class */
 static void
@@ -258,18 +272,30 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
   w = 2 * G_PI * (self->lower_frequency / GST_AUDIO_FILTER (self)->format.rate);
   kernel_lp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
-    if (i == len / 2)
+    if (i == (len - 1) / 2.0)
       kernel_lp[i] = w;
     else
-      kernel_lp[i] = sin (w * (i - len / 2))
-          / (i - len / 2);
-    /* Windowing */
-    if (self->window == WINDOW_HAMMING)
-      kernel_lp[i] *= (0.54 - 0.46 * cos (2 * G_PI * i / len));
-    else
-      kernel_lp[i] *=
-          (0.42 - 0.5 * cos (2 * G_PI * i / len) +
-          0.08 * cos (4 * G_PI * i / len));
+      kernel_lp[i] = sin (w * (i - (len - 1) / 2.0)) / (i - (len - 1) / 2.0);
+
+    /* windowing */
+    switch (self->window) {
+      case WINDOW_HAMMING:
+        kernel_lp[i] *= (0.54 - 0.46 * cos (2 * G_PI * i / (len - 1)));
+        break;
+      case WINDOW_BLACKMAN:
+        kernel_lp[i] *= (0.42 - 0.5 * cos (2 * G_PI * i / (len - 1)) +
+            0.08 * cos (4 * G_PI * i / (len - 1)));
+        break;
+      case WINDOW_GAUSSIAN:
+        kernel_lp[i] *= exp (-0.5 * POW2 (3.0 / len * (2 * i - (len - 1))));
+        break;
+      case WINDOW_COSINE:
+        kernel_lp[i] *= cos (G_PI * i / (len - 1) - G_PI / 2);
+        break;
+      case WINDOW_HANN:
+        kernel_lp[i] *= 0.5 * (1 - cos (2 * G_PI * i / (len - 1)));
+        break;
+    }
   }
 
   /* normalize for unity gain at DC */
@@ -283,18 +309,30 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
   w = 2 * G_PI * (self->upper_frequency / GST_AUDIO_FILTER (self)->format.rate);
   kernel_hp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
-    if (i == len / 2)
+    if (i == (len - 1) / 2.0)
       kernel_hp[i] = w;
     else
-      kernel_hp[i] = sin (w * (i - len / 2))
-          / (i - len / 2);
+      kernel_hp[i] = sin (w * (i - (len - 1) / 2.0)) / (i - (len - 1) / 2.0);
+
     /* Windowing */
-    if (self->window == WINDOW_HAMMING)
-      kernel_hp[i] *= (0.54 - 0.46 * cos (2 * G_PI * i / len));
-    else
-      kernel_hp[i] *=
-          (0.42 - 0.5 * cos (2 * G_PI * i / len) +
-          0.08 * cos (4 * G_PI * i / len));
+    switch (self->window) {
+      case WINDOW_HAMMING:
+        kernel_hp[i] *= (0.54 - 0.46 * cos (2 * G_PI * i / (len - 1)));
+        break;
+      case WINDOW_BLACKMAN:
+        kernel_hp[i] *= (0.42 - 0.5 * cos (2 * G_PI * i / (len - 1)) +
+            0.08 * cos (4 * G_PI * i / (len - 1)));
+        break;
+      case WINDOW_GAUSSIAN:
+        kernel_hp[i] *= exp (-0.5 * POW2 (3.0 / len * (2 * i - (len - 1))));
+        break;
+      case WINDOW_COSINE:
+        kernel_hp[i] *= cos (G_PI * i / (len - 1) - G_PI / 2);
+        break;
+      case WINDOW_HANN:
+        kernel_hp[i] *= 0.5 * (1 - cos (2 * G_PI * i / (len - 1)));
+        break;
+    }
   }
 
   /* normalize for unity gain at DC */
@@ -307,7 +345,12 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
   /* do spectral inversion to go from lowpass to highpass */
   for (i = 0; i < len; ++i)
     kernel_hp[i] = -kernel_hp[i];
-  kernel_hp[len / 2] += 1;
+  if (len % 2 == 1) {
+    kernel_hp[(len - 1) / 2] += 1.0;
+  } else {
+    kernel_hp[len / 2 - 1] += 0.5;
+    kernel_hp[len / 2] += 0.5;
+  }
 
   /* combine the two kernels */
   kernel = g_new (gdouble, len);

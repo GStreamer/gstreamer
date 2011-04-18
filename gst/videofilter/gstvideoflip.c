@@ -588,8 +588,6 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, guint8 * dest,
   gint u_offset;
   gint v_offset;
   gint y_stride;
-  gint u_stride;
-  gint v_stride;
 
   src_stride = gst_video_format_get_row_stride (format, 0, sw);
   dest_stride = gst_video_format_get_row_stride (format, 0, dw);
@@ -598,8 +596,6 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, guint8 * dest,
   u_offset = gst_video_format_get_component_offset (format, 1, sw, sh);
   v_offset = gst_video_format_get_component_offset (format, 2, sw, sh);
   y_stride = gst_video_format_get_pixel_stride (format, 0);
-  u_stride = gst_video_format_get_pixel_stride (format, 1);
-  v_stride = gst_video_format_get_pixel_stride (format, 2);
   bpp = y_stride;
 
   switch (videoflip->method) {

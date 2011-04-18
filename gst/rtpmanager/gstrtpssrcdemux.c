@@ -383,8 +383,10 @@ gst_rtp_ssrc_demux_clear_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
 
   GST_PAD_LOCK (demux);
   dpad = find_demux_pad_for_ssrc (demux, ssrc);
-  if (dpad == NULL)
+  if (dpad == NULL) {
+    GST_PAD_UNLOCK (demux);
     goto unknown_pad;
+  }
 
   GST_DEBUG_OBJECT (demux, "clearing pad for SSRC %08x", ssrc);
 
@@ -408,7 +410,7 @@ gst_rtp_ssrc_demux_clear_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
   /* ERRORS */
 unknown_pad:
   {
-    g_warning ("unknown SSRC %08x", ssrc);
+    GST_WARNING_OBJECT (demux, "unknown SSRC %08x", ssrc);
     return;
   }
 }
@@ -420,6 +422,10 @@ gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event)
   gboolean res = FALSE;
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (demux == NULL)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
@@ -699,6 +705,8 @@ gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query)
   gboolean res = FALSE;
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (demux == NULL))
+    return FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:

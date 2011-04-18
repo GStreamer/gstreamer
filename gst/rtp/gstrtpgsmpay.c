@@ -143,9 +143,15 @@ gst_rtp_gsm_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* FIXME, only one GSM frame per RTP packet for now */
   payload_len = size;
 
+  /* FIXME, just error out for now */
+  if (payload_len > GST_BASE_RTP_PAYLOAD_MTU (rtpgsmpay)) {
+    GST_ELEMENT_ERROR (rtpgsmpay, STREAM, ENCODE, (NULL),
+        ("payload_len %u > mtu %u", payload_len,
+            GST_BASE_RTP_PAYLOAD_MTU (rtpgsmpay)));
+    return GST_FLOW_ERROR;
+  }
+
   outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
-  /* FIXME, assert for now */
-  g_assert (payload_len <= GST_BASE_RTP_PAYLOAD_MTU (rtpgsmpay));
 
   /* copy timestamp and duration */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;

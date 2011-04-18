@@ -43,13 +43,13 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Good Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Good Plug-ins prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-03-08T16:22Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-04-16T15:21Z"
 
 /* struct v4l2_buffer missing */
 #undef GST_V4L2_MISSING_BUFDECL
@@ -210,6 +210,12 @@
 
 /* Define to enable Jack (used by jack). */
 #undef HAVE_JACK
+
+/* defined if jack >= 0.120.1 is available */
+#undef HAVE_JACK_0_120_1
+
+/* defined if jack >= 1.9.7 is available */
+#undef HAVE_JACK_1_9_7
 
 /* Define to enable jpeg library (used by jpeg). */
 #undef HAVE_JPEG
@@ -390,7 +396,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.28.1"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.28.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -399,7 +405,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.28.1"
+#define PACKAGE_VERSION "0.10.28.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -430,7 +436,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.28.1"
+#define VERSION "0.10.28.2"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API

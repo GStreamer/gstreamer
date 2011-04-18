@@ -82,7 +82,7 @@ main (int argc, char *argv[])
   GstElement *pipeline;
   GstCaps *caps;
   GstBus *bus;
-  gint watch_id;
+  guint watch_id;
   GMainLoop *loop;
 
   gst_init (&argc, &argv);
@@ -102,9 +102,12 @@ main (int argc, char *argv[])
 
   gst_bin_add_many (GST_BIN (pipeline), audiotestsrc, audioconvert, level,
       fakesink, NULL);
-  g_assert (gst_element_link (audiotestsrc, audioconvert));
-  g_assert (gst_element_link_filtered (audioconvert, level, caps));
-  g_assert (gst_element_link (level, fakesink));
+  if (!gst_element_link (audiotestsrc, audioconvert))
+    g_error ("Failed to link audiotestsrc and audioconvert");
+  if (!gst_element_link_filtered (audioconvert, level, caps))
+    g_error ("Failed to link audioconvert and level");
+  if (!gst_element_link (level, fakesink))
+    g_error ("Failed to link level and fakesink");
 
   /* make sure we'll get messages */
   g_object_set (G_OBJECT (level), "message", TRUE, NULL);
@@ -120,5 +123,7 @@ main (int argc, char *argv[])
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
 
+  g_source_remove (watch_id);
+  g_main_loop_unref (loop);
   return 0;
 }
