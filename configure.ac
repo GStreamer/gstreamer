@@ -587,6 +587,12 @@ AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwbenc, [
                         AC_SUBST(AMRWB_LIBS))
 ])
 
+dnl *** aac-enc ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_VOAACENC, true)
+AG_GST_CHECK_FEATURE(VOAACENC, [vo-aacenc library], vo-aacenc, [
+  AG_GST_PKG_CHECK_MODULES(VOAACENC, vo-aacenc >= 0.1.0)
+])
+
 dnl *** apexsink ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_APEXSINK, true)
 AG_GST_CHECK_FEATURE(APEXSINK, [AirPort Express Wireless sink], apexsink, [
@@ -1622,6 +1628,7 @@ dnl but we still need to set the conditionals
 
 AM_CONDITIONAL(USE_ASSRENDER, false)
 AM_CONDITIONAL(USE_AMRWB, false)
+AM_CONDITIONAL(USE_VOAACENC, false)
 AM_CONDITIONAL(USE_APEXSINK, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CDAUDIO, false)
@@ -1863,6 +1870,7 @@ tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile
 tests/icles/Makefile
 ext/amrwbenc/Makefile
+ext/voaacenc/Makefile
 ext/assrender/Makefile
 ext/apexsink/Makefile
 ext/bz2/Makefile

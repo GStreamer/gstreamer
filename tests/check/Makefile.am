@@ -46,6 +46,12 @@ else
 check_faad =
 endif
 
+if USE_VOAACENC
+check_voaacenc = elements/voaacenc
+else
+check_voaacenc =
+endif
+
 if USE_EXIF
 check_jifmux = elements/jifmux
 else
@@ -149,6 +155,7 @@ check_PROGRAMS = \
 	$(check_assrender) \
 	$(check_faac)  \
 	$(check_faad)  \
+	$(check_voaacenc) \
 	$(check_mpeg2enc)  \
 	$(check_mplex)     \
 	$(check_ofa)        \
@@ -183,6 +190,10 @@ AM_CFLAGS = $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) \
 		-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
 		-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(GST_CHECK_LIBS)
+
+elements_voaacenc_LDADD = \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
+	-lgstaudio-@GST_MAJORMINOR@ 
 
 elements_camerabin_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \

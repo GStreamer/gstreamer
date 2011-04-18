@@ -118,6 +118,12 @@ else
  FAAD_DIR=
 endif
 
+if USE_VOAACENC
+ VOAACENC_DIR=voaacenc
+else
+ VOAACENC_DIR=
+endif
+
 if USE_FLITE
 FLITE_DIR=flite
 else
@@ -356,6 +362,7 @@ endif
 
 
 SUBDIRS=\
+	$(VOAACENC_DIR) \
 	$(ASSRENDER_DIR) \
 	$(AMRWB_DIR) \
 	$(APEXSINK_DIR) \
