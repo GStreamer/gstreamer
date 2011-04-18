@@ -57,8 +57,7 @@ struct _GstTestTransClass
 
 GType gst_test_trans_get_type (void);
 
-GST_BOILERPLATE (GstTestTrans, gst_test_trans, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+G_DEFINE_TYPE (GstTestTrans, gst_test_trans, GST_TYPE_BASE_TRANSFORM);
 
 static GstFlowReturn (*klass_transform) (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf) = NULL;
@@ -77,11 +76,13 @@ static GstStaticPadTemplate *sink_template = &gst_test_trans_sink_template;
 static GstStaticPadTemplate *src_template = &gst_test_trans_src_template;
 
 static void
-gst_test_trans_base_init (gpointer g_class)
+gst_test_trans_class_init (GstTestTransClass * klass)
 {
   GstElementClass *element_class;
+  GstBaseTransformClass *trans_class;
 
-  element_class = GST_ELEMENT_CLASS (g_class);
+  element_class = (GstElementClass *) klass;
+  trans_class = (GstBaseTransformClass *) klass;
 
   gst_element_class_set_details_simple (element_class, "TestTrans",
       "Filter/Test", "Test transform", "Wim Taymans <wim.taymans@gmail.com>");
@@ -90,14 +91,6 @@ gst_test_trans_base_init (gpointer g_class)
       gst_static_pad_template_get (sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (src_template));
-}
-
-static void
-gst_test_trans_class_init (GstTestTransClass * klass)
-{
-  GstBaseTransformClass *trans_class;
-
-  trans_class = (GstBaseTransformClass *) klass;
 
   trans_class->passthrough_on_same_caps = klass_passthrough_on_same_caps;
   trans_class->transform_ip = klass_transform_ip;
@@ -108,7 +101,7 @@ gst_test_trans_class_init (GstTestTransClass * klass)
 }
 
 static void
-gst_test_trans_init (GstTestTrans * this, GstTestTransClass * g_class)
+gst_test_trans_init (GstTestTrans * this)
 {
 }
 

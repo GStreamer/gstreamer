@@ -480,24 +480,12 @@ typedef struct _GstParseTestElementClass
 static GstStaticPadTemplate test_element_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
     GST_PAD_SOMETIMES, GST_STATIC_CAPS ("application/x-test-caps"));
-
-GST_BOILERPLATE (GstParseTestElement, gst_parse_test_element, GstBin,
-    GST_TYPE_BIN);
+#define gst_parse_test_element_parent_class parent_class
+G_DEFINE_TYPE (GstParseTestElement, gst_parse_test_element, GST_TYPE_BIN);
 
 static GstStateChangeReturn
 gst_parse_test_element_change_state (GstElement * element,
     GstStateChange transition);
-
-static void
-gst_parse_test_element_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Test element for parse launch tests", "Source",
-      "Test element for parse launch tests in core",
-      "GStreamer Devel <gstreamer-devel@lists.sf.net>");
-}
 
 static void
 gst_parse_test_element_class_init (GstParseTestElementClass * klass)
@@ -507,12 +495,16 @@ gst_parse_test_element_class_init (GstParseTestElementClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&test_element_pad_template));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Test element for parse launch tests", "Source",
+      "Test element for parse launch tests in core",
+      "GStreamer Devel <gstreamer-devel@lists.sf.net>");
+
   gstelement_class->change_state = gst_parse_test_element_change_state;
 }
 
 static void
-gst_parse_test_element_init (GstParseTestElement * src,
-    GstParseTestElementClass * klass)
+gst_parse_test_element_init (GstParseTestElement * src)
 {
   /* Create a fakesrc and add it to ourselves */
   src->fakesrc = gst_element_factory_make ("fakesrc", NULL);

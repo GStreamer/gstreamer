@@ -865,17 +865,7 @@ typedef GstPushSrc OOBSource;
 typedef GstPushSrcClass OOBSourceClass;
 
 GType oob_source_get_type (void);
-GST_BOILERPLATE (OOBSource, oob_source, GstPushSrc, GST_TYPE_PUSH_SRC);
-
-static void
-oob_source_base_init (gpointer g_class)
-{
-  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS_ANY);
-
-  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (g_class),
-      gst_static_pad_template_get (&sinktemplate));
-}
+G_DEFINE_TYPE (OOBSource, oob_source, GST_TYPE_PUSH_SRC);
 
 static GstFlowReturn
 oob_source_create (GstPushSrc * src, GstBuffer ** p_buf)
@@ -891,13 +881,19 @@ oob_source_create (GstPushSrc * src, GstBuffer ** p_buf)
 static void
 oob_source_class_init (OOBSourceClass * klass)
 {
+  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS_ANY);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstPushSrcClass *pushsrc_class = GST_PUSH_SRC_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sinktemplate));
 
   pushsrc_class->create = GST_DEBUG_FUNCPTR (oob_source_create);
 }
 
 static void
-oob_source_init (OOBSource * src, OOBSourceClass * g_class)
+oob_source_init (OOBSource * src)
 {
   /* nothing to do */
 }

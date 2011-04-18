@@ -33,7 +33,7 @@ typedef struct
 typedef GstElementClass GstDummyObjClass;
 
 GType gst_dummy_obj_get_type (void);
-GST_BOILERPLATE (GstDummyObj, gst_dummy_obj, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstDummyObj, gst_dummy_obj, GST_TYPE_ELEMENT);
 
 static void
 gst_dummy_obj_get_property (GObject * obj, guint prop_id, GValue * val,
@@ -41,11 +41,6 @@ gst_dummy_obj_get_property (GObject * obj, guint prop_id, GValue * val,
 static void
 gst_dummy_obj_set_property (GObject * obj, guint prop_id, const GValue * val,
     GParamSpec * pspec);
-
-static void
-gst_dummy_obj_base_init (gpointer g_class)
-{
-}
 
 static void
 gst_dummy_obj_class_init (GstDummyObjClass * klass)
@@ -71,7 +66,7 @@ gst_dummy_obj_class_init (GstDummyObjClass * klass)
 }
 
 static void
-gst_dummy_obj_init (GstDummyObj * obj, GstDummyObjClass * klass)
+gst_dummy_obj_init (GstDummyObj * obj)
 {
   /* nothing to do there */
 }

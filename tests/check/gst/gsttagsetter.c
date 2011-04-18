@@ -27,24 +27,9 @@
 typedef GstElement GstDummyEnc;
 typedef GstElementClass GstDummyEncClass;
 
-static void gst_dummy_enc_add_interfaces (GType enc_type);
-
 GType gst_dummy_enc_get_type (void);
-GST_BOILERPLATE_FULL (GstDummyEnc, gst_dummy_enc, GstElement,
-    GST_TYPE_ELEMENT, gst_dummy_enc_add_interfaces);
-
-static void
-gst_dummy_enc_add_interfaces (GType enc_type)
-{
-  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
-
-  g_type_add_interface_static (enc_type, GST_TYPE_TAG_SETTER, &tag_setter_info);
-}
-
-static void
-gst_dummy_enc_base_init (gpointer g_class)
-{
-}
+G_DEFINE_TYPE_WITH_CODE (GstDummyEnc, gst_dummy_enc,
+    GST_TYPE_ELEMENT, G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 
 static void
 gst_dummy_enc_class_init (GstDummyEncClass * klass)
@@ -52,7 +37,7 @@ gst_dummy_enc_class_init (GstDummyEncClass * klass)
 }
 
 static void
-gst_dummy_enc_init (GstDummyEnc * enc, GstDummyEncClass * klass)
+gst_dummy_enc_init (GstDummyEnc * enc)
 {
 }
 
