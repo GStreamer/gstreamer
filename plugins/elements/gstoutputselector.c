@@ -86,11 +86,11 @@ enum
 
 #define DEFAULT_PAD_NEGOTIATION_MODE GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL
 
-#define _do_init(bla) \
+#define _do_init \
 GST_DEBUG_CATEGORY_INIT (output_selector_debug, \
         "output-selector", 0, "Output stream selector");
-
-GST_BOILERPLATE_FULL (GstOutputSelector, gst_output_selector, GstElement,
+#define gst_output_selector_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstOutputSelector, gst_output_selector,
     GST_TYPE_ELEMENT, _do_init);
 
 static void gst_output_selector_dispose (GObject * object);
@@ -111,20 +111,6 @@ static gboolean gst_output_selector_handle_sink_event (GstPad * pad,
     GstEvent * event);
 static void gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector *
     sel, gint mode);
-
-static void
-gst_output_selector_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Output selector",
-      "Generic", "1-to-N output stream selector",
-      "Stefan Kost <stefan.kost@nokia.com>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_output_selector_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_output_selector_src_factory));
-}
 
 static void
 gst_output_selector_class_init (GstOutputSelectorClass * klass)
@@ -152,6 +138,14 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
           DEFAULT_PAD_NEGOTIATION_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "Output selector",
+      "Generic", "1-to-N output stream selector",
+      "Stefan Kost <stefan.kost@nokia.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_output_selector_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_output_selector_src_factory));
+
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_output_selector_request_new_pad);
   gstelement_class->release_pad =
@@ -161,8 +155,7 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
 }
 
 static void
-gst_output_selector_init (GstOutputSelector * sel,
-    GstOutputSelectorClass * g_class)
+gst_output_selector_init (GstOutputSelector * sel)
 {
   sel->sinkpad =
       gst_pad_new_from_static_template (&gst_output_selector_sink_factory,

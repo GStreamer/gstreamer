@@ -61,12 +61,12 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_capsfilter_debug);
 #define GST_CAT_DEFAULT gst_capsfilter_debug
 
-#define _do_init(bla) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_capsfilter_debug, "capsfilter", 0, \
     "capsfilter element");
-
-GST_BOILERPLATE_FULL (GstCapsFilter, gst_capsfilter, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, _do_init);
+#define gst_capsfilter_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstCapsFilter, gst_capsfilter, GST_TYPE_BASE_TRANSFORM,
+    _do_init);
 
 
 static void gst_capsfilter_set_property (GObject * object, guint prop_id,
@@ -85,25 +85,10 @@ static GstFlowReturn gst_capsfilter_prepare_buf (GstBaseTransform * trans,
     GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf);
 
 static void
-gst_capsfilter_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "CapsFilter",
-      "Generic",
-      "Pass data without modification, limiting formats",
-      "David Schleef <ds@schleef.org>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-}
-
-static void
 gst_capsfilter_class_init (GstCapsFilterClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseTransformClass *trans_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
@@ -118,6 +103,17 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
               "object."), GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gstelement_class = GST_ELEMENT_CLASS (klass);
+  gst_element_class_set_details_simple (gstelement_class,
+      "CapsFilter",
+      "Generic",
+      "Pass data without modification, limiting formats",
+      "David Schleef <ds@schleef.org>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
   trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_capsfilter_transform_caps);
@@ -128,7 +124,7 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
 }
 
 static void
-gst_capsfilter_init (GstCapsFilter * filter, GstCapsFilterClass * g_class)
+gst_capsfilter_init (GstCapsFilter * filter)
 {
   GstBaseTransform *trans = GST_BASE_TRANSFORM (filter);
   gst_base_transform_set_gap_aware (trans, TRUE);

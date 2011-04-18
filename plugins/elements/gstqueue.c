@@ -178,13 +178,12 @@ enum
   }                                                                     \
 } G_STMT_END
 
-#define _do_init(bla) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (queue_debug, "queue", 0, "queue element"); \
     GST_DEBUG_CATEGORY_INIT (queue_dataflow, "queue_dataflow", 0, \
         "dataflow inside the queue element");
-
-GST_BOILERPLATE_FULL (GstQueue, gst_queue, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
+#define gst_queue_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstQueue, gst_queue, GST_TYPE_ELEMENT, _do_init);
 
 static void gst_queue_finalize (GObject * object);
 
@@ -239,23 +238,10 @@ queue_leaky_get_type (void)
 static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
 
 static void
-gst_queue_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Queue",
-      "Generic", "Simple data queue", "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-}
-
-static void
 gst_queue_class_init (GstQueueClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->set_property = gst_queue_set_property;
   gobject_class->get_property = gst_queue_get_property;
@@ -374,6 +360,14 @@ gst_queue_class_init (GstQueueClass * klass)
 
   gobject_class->finalize = gst_queue_finalize;
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Queue",
+      "Generic", "Simple data queue", "Erik Walthinsen <omega@cse.ogi.edu>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_chain);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_sink_activate_push);
@@ -389,7 +383,7 @@ gst_queue_class_init (GstQueueClass * klass)
 }
 
 static void
-gst_queue_init (GstQueue * queue, GstQueueClass * g_class)
+gst_queue_init (GstQueue * queue)
 {
   queue->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
 

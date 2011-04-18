@@ -262,27 +262,13 @@ static GstStateChangeReturn gst_multi_queue_change_state (GstElement *
 
 static void gst_multi_queue_loop (GstPad * pad);
 
-#define _do_init(bla) \
+#define _do_init \
   GST_DEBUG_CATEGORY_INIT (multi_queue_debug, "multiqueue", 0, "multiqueue element");
-
-GST_BOILERPLATE_FULL (GstMultiQueue, gst_multi_queue, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
+#define gst_multi_queue_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstMultiQueue, gst_multi_queue, GST_TYPE_ELEMENT,
+    _do_init);
 
 static guint gst_multi_queue_signals[LAST_SIGNAL] = { 0 };
-
-static void
-gst_multi_queue_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "MultiQueue",
-      "Generic", "Multiple data queue", "Edward Hervey <edward@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-}
 
 static void
 gst_multi_queue_class_init (GstMultiQueueClass * klass)
@@ -399,6 +385,14 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
 
   gobject_class->finalize = gst_multi_queue_finalize;
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "MultiQueue",
+      "Generic", "Multiple data queue", "Edward Hervey <edward@fluendo.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_multi_queue_request_new_pad);
   gstelement_class->release_pad =
@@ -408,7 +402,7 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
 }
 
 static void
-gst_multi_queue_init (GstMultiQueue * mqueue, GstMultiQueueClass * klass)
+gst_multi_queue_init (GstMultiQueue * mqueue)
 {
   mqueue->nbqueues = 0;
   mqueue->queues = NULL;

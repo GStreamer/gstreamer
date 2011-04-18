@@ -78,33 +78,19 @@ static GstFlowReturn gst_valve_buffer_alloc (GstPad * pad, guint64 offset,
 static GstFlowReturn gst_valve_chain (GstPad * pad, GstBuffer * buffer);
 static GstCaps *gst_valve_getcaps (GstPad * pad);
 
-#define _do_init(bla) \
+#define _do_init \
   GST_DEBUG_CATEGORY_INIT (valve_debug, "valve", 0, "Valve");
-
-GST_BOILERPLATE_FULL (GstValve, gst_valve, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
-
-static void
-gst_valve_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
-
-  gst_element_class_set_details_simple (element_class, "Valve element",
-      "Filter", "Drops buffers and events or lets them through",
-      "Olivier Crete <olivier.crete@collabora.co.uk>");
-}
+#define gst_valve_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstValve, gst_valve, GST_TYPE_ELEMENT, _do_init);
 
 static void
 gst_valve_class_init (GstValveClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) (klass);
 
   gobject_class->set_property = gst_valve_set_property;
   gobject_class->get_property = gst_valve_get_property;
@@ -113,10 +99,19 @@ gst_valve_class_init (GstValveClass * klass)
       g_param_spec_boolean ("drop", "Drop buffers and events",
           "Whether to drop buffers and events or let them through",
           DEFAULT_DROP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_details_simple (gstelement_class, "Valve element",
+      "Filter", "Drops buffers and events or lets them through",
+      "Olivier Crete <olivier.crete@collabora.co.uk>");
 }
 
 static void
-gst_valve_init (GstValve * valve, GstValveClass * klass)
+gst_valve_init (GstValve * valve)
 {
   valve->drop = FALSE;
   valve->discont = FALSE;

@@ -106,14 +106,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static void
-_do_init (GType type)
-{
+#define _do_init \
   GST_DEBUG_CATEGORY_INIT (gst_funnel_debug, "funnel", 0, "funnel element");
-}
-
-GST_BOILERPLATE_FULL (GstFunnel, gst_funnel, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
+#define gst_funnel_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstFunnel, gst_funnel, GST_TYPE_ELEMENT, _do_init);
 
 static GstStateChangeReturn gst_funnel_change_state (GstElement * element,
     GstStateChange transition);
@@ -128,21 +124,6 @@ static gboolean gst_funnel_sink_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_funnel_sink_getcaps (GstPad * pad);
 
 static gboolean gst_funnel_src_event (GstPad * pad, GstEvent * event);
-
-static void
-gst_funnel_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Funnel pipe fitting", "Generic", "N-to-1 pipe fitting",
-      "Olivier Crete <olivier.crete@collabora.co.uk>");
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&funnel_sink_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&funnel_src_template));
-}
 
 static void
 gst_funnel_dispose (GObject * object)
@@ -170,6 +151,15 @@ gst_funnel_class_init (GstFunnelClass * klass)
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_funnel_dispose);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Funnel pipe fitting", "Generic", "N-to-1 pipe fitting",
+      "Olivier Crete <olivier.crete@collabora.co.uk>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&funnel_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&funnel_src_template));
+
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_funnel_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_funnel_release_pad);
@@ -177,7 +167,7 @@ gst_funnel_class_init (GstFunnelClass * klass)
 }
 
 static void
-gst_funnel_init (GstFunnel * funnel, GstFunnelClass * g_class)
+gst_funnel_init (GstFunnel * funnel)
 {
   funnel->srcpad = gst_pad_new_from_static_template (&funnel_src_template,
       "src");

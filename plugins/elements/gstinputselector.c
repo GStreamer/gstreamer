@@ -163,15 +163,12 @@ struct _GstSelectorPadClass
   GstPadClass parent;
 };
 
-static void gst_selector_pad_class_init (GstSelectorPadClass * klass);
-static void gst_selector_pad_init (GstSelectorPad * pad);
+GType gst_selector_pad_get_type (void);
 static void gst_selector_pad_finalize (GObject * object);
 static void gst_selector_pad_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_selector_pad_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-
-static GstPadClass *selector_pad_parent_class = NULL;
 
 static gint64 gst_selector_pad_get_running_time (GstSelectorPad * pad);
 static void gst_selector_pad_reset (GstSelectorPad * pad);
@@ -183,30 +180,7 @@ static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
 static GstFlowReturn gst_selector_pad_bufferalloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 
-static GType
-gst_selector_pad_get_type (void)
-{
-  static volatile gsize selector_pad_type = 0;
-  static const GTypeInfo selector_pad_info = {
-    sizeof (GstSelectorPadClass),
-    NULL,
-    NULL,
-    (GClassInitFunc) gst_selector_pad_class_init,
-    NULL,
-    NULL,
-    sizeof (GstSelectorPad),
-    0,
-    (GInstanceInitFunc) gst_selector_pad_init,
-  };
-
-  if (g_once_init_enter (&selector_pad_type)) {
-    GType tmp = g_type_register_static (GST_TYPE_PAD, "GstSelectorPad",
-        &selector_pad_info, 0);
-    g_once_init_leave (&selector_pad_type, tmp);
-  }
-
-  return (GType) selector_pad_type;
-}
+G_DEFINE_TYPE (GstSelectorPad, gst_selector_pad, GST_TYPE_PAD);
 
 static void
 gst_selector_pad_class_init (GstSelectorPadClass * klass)
@@ -214,8 +188,6 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  selector_pad_parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_selector_pad_finalize;
 
@@ -258,7 +230,7 @@ gst_selector_pad_finalize (GObject * object)
   if (pad->tags)
     gst_tag_list_free (pad->tags);
 
-  G_OBJECT_CLASS (selector_pad_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_selector_pad_parent_class)->finalize (object);
 }
 
 static void
@@ -855,28 +827,12 @@ gst_input_selector_marshal_VOID__OBJECT_INT64_INT64 (GClosure * closure,
       g_marshal_value_peek_int64 (param_values + 3), data2);
 }
 
-#define _do_init(bla) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (input_selector_debug, \
         "input-selector", 0, "An input stream selector element");
-
-GST_BOILERPLATE_FULL (GstInputSelector, gst_input_selector, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
-
-static void
-gst_input_selector_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Input selector",
-      "Generic", "N-to-1 input stream selector",
-      "Julien Moutte <julien@moutte.net>, "
-      "Jan Schmidt <thaytan@mad.scientist.com>, "
-      "Wim Taymans <wim.taymans@gmail.com>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_input_selector_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_input_selector_src_factory));
-}
+#define gst_input_selector_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstInputSelector, gst_input_selector, GST_TYPE_ELEMENT,
+    _do_init);
 
 static void
 gst_input_selector_class_init (GstInputSelectorClass * klass)
@@ -964,6 +920,16 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
       NULL, NULL, gst_input_selector_marshal_VOID__OBJECT_INT64_INT64,
       G_TYPE_NONE, 3, GST_TYPE_PAD, G_TYPE_INT64, G_TYPE_INT64);
 
+  gst_element_class_set_details_simple (gstelement_class, "Input selector",
+      "Generic", "N-to-1 input stream selector",
+      "Julien Moutte <julien@moutte.net>, "
+      "Jan Schmidt <thaytan@mad.scientist.com>, "
+      "Wim Taymans <wim.taymans@gmail.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_input_selector_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_input_selector_src_factory));
+
   gstelement_class->request_new_pad = gst_input_selector_request_new_pad;
   gstelement_class->release_pad = gst_input_selector_release_pad;
   gstelement_class->change_state = gst_input_selector_change_state;
@@ -974,8 +940,7 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
 }
 
 static void
-gst_input_selector_init (GstInputSelector * sel,
-    GstInputSelectorClass * g_class)
+gst_input_selector_init (GstInputSelector * sel)
 {
   sel->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_iterate_internal_links_function (sel->srcpad,

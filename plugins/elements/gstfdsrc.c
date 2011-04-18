@@ -113,23 +113,11 @@ enum
 
 static void gst_fd_src_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
-static void
-_do_init (GType fd_src_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_fd_src_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (fd_src_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
-
+#define _do_init \
+  G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_fd_src_uri_handler_init); \
   GST_DEBUG_CATEGORY_INIT (gst_fd_src_debug, "fdsrc", 0, "fdsrc element");
-}
-
-GST_BOILERPLATE_FULL (GstFdSrc, gst_fd_src, GstPushSrc, GST_TYPE_PUSH_SRC,
-    _do_init);
+#define gst_fd_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstFdSrc, gst_fd_src, GST_TYPE_PUSH_SRC, _do_init);
 
 static void gst_fd_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -149,26 +137,15 @@ static gboolean gst_fd_src_query (GstBaseSrc * src, GstQuery * query);
 static GstFlowReturn gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf);
 
 static void
-gst_fd_src_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Filedescriptor Source",
-      "Source/File",
-      "Read from a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-}
-
-static void
 gst_fd_src_class_init (GstFdSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpush_src_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   gstpush_src_class = GST_PUSH_SRC_CLASS (klass);
 
@@ -192,6 +169,13 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
           G_MAXUINT64, DEFAULT_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Filedescriptor Source",
+      "Source/File",
+      "Read from a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_fd_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_fd_src_stop);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_fd_src_unlock);
@@ -205,7 +189,7 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
 }
 
 static void
-gst_fd_src_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
+gst_fd_src_init (GstFdSrc * fdsrc)
 {
   fdsrc->new_fd = DEFAULT_FD;
   fdsrc->seekable_fd = FALSE;

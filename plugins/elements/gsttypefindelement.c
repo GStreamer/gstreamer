@@ -123,11 +123,11 @@ enum
 };
 
 
-#define _do_init(bla) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_type_find_element_debug, "typefind",           \
         GST_DEBUG_BG_YELLOW | GST_DEBUG_FG_GREEN, "type finding element");
-
-GST_BOILERPLATE_FULL (GstTypeFindElement, gst_type_find_element, GstElement,
+#define gst_type_find_element_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstTypeFindElement, gst_type_find_element,
     GST_TYPE_ELEMENT, _do_init);
 
 static void gst_type_find_element_dispose (GObject * object);
@@ -190,22 +190,6 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
 }
 
 static void
-gst_type_find_element_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "TypeFind",
-      "Generic",
-      "Finds the media type of a stream",
-      "Benjamin Otte <in7y118@public.uni-hamburg.de>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&type_find_element_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&type_find_element_sink_template));
-}
-
-static void
 gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (typefind_class);
@@ -251,13 +235,22 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
   typefind_class->have_type =
       GST_DEBUG_FUNCPTR (gst_type_find_element_have_type);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "TypeFind",
+      "Generic",
+      "Finds the media type of a stream",
+      "Benjamin Otte <in7y118@public.uni-hamburg.de>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&type_find_element_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&type_find_element_sink_template));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_type_find_element_change_state);
 }
 
 static void
-gst_type_find_element_init (GstTypeFindElement * typefind,
-    GstTypeFindElementClass * g_class)
+gst_type_find_element_init (GstTypeFindElement * typefind)
 {
   /* sinkpad */
   typefind->sink =

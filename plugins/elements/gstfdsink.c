@@ -94,23 +94,11 @@ enum
 static void gst_fd_sink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static void
-_do_init (GType gst_fd_sink_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_fd_sink_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (gst_fd_sink_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
-
+#define _do_init \
+  G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_fd_sink_uri_handler_init); \
   GST_DEBUG_CATEGORY_INIT (gst_fd_sink__debug, "fdsink", 0, "fdsink element");
-}
-
-GST_BOILERPLATE_FULL (GstFdSink, gst_fd_sink, GstBaseSink, GST_TYPE_BASE_SINK,
-    _do_init);
+#define gst_fd_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstFdSink, gst_fd_sink, GST_TYPE_BASE_SINK, _do_init);
 
 static void gst_fd_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -130,9 +118,19 @@ static gboolean gst_fd_sink_event (GstBaseSink * sink, GstEvent * event);
 static gboolean gst_fd_sink_do_seek (GstFdSink * fdsink, guint64 new_offset);
 
 static void
-gst_fd_sink_base_init (gpointer g_class)
+gst_fd_sink_class_init (GstFdSinkClass * klass)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+  GstBaseSinkClass *gstbasesink_class;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
+  gstbasesink_class = GST_BASE_SINK_CLASS (klass);
+
+  gobject_class->set_property = gst_fd_sink_set_property;
+  gobject_class->get_property = gst_fd_sink_get_property;
+  gobject_class->dispose = gst_fd_sink_dispose;
 
   gst_element_class_set_details_simple (gstelement_class,
       "Filedescriptor Sink",
@@ -140,20 +138,6 @@ gst_fd_sink_base_init (gpointer g_class)
       "Write data to a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-}
-
-static void
-gst_fd_sink_class_init (GstFdSinkClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstBaseSinkClass *gstbasesink_class;
-
-  gobject_class = G_OBJECT_CLASS (klass);
-  gstbasesink_class = GST_BASE_SINK_CLASS (klass);
-
-  gobject_class->set_property = gst_fd_sink_set_property;
-  gobject_class->get_property = gst_fd_sink_get_property;
-  gobject_class->dispose = gst_fd_sink_dispose;
 
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_fd_sink_render);
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_fd_sink_start);
@@ -168,7 +152,7 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
 }
 
 static void
-gst_fd_sink_init (GstFdSink * fdsink, GstFdSinkClass * klass)
+gst_fd_sink_init (GstFdSink * fdsink)
 {
   GstPad *pad;
 

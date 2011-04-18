@@ -111,11 +111,11 @@ gst_fake_sink_state_error_get_type (void)
   return fakesink_state_error_type;
 }
 
-#define _do_init(bla) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_fake_sink_debug, "fakesink", 0, "fakesink element");
-
-GST_BOILERPLATE_FULL (GstFakeSink, gst_fake_sink, GstBaseSink,
-    GST_TYPE_BASE_SINK, _do_init);
+#define gst_fake_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstFakeSink, gst_fake_sink, GST_TYPE_BASE_SINK,
+    _do_init);
 
 static void gst_fake_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -162,22 +162,6 @@ marshal_VOID__MINIOBJECT_OBJECT (GClosure * closure, GValue * return_value,
 
   callback (data1, g_value_get_boxed (param_values + 1),
       g_value_get_object (param_values + 2), data2);
-}
-
-static void
-gst_fake_sink_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Fake Sink",
-      "Sink",
-      "Black hole for data",
-      "Erik Walthinsen <omega@cse.ogi.edu>, "
-      "Wim Taymans <wim@fluendo.com>, "
-      "Mr. 'frag-me-more' Vanderwingo <wingo@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
 }
 
 static void
@@ -260,6 +244,16 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
       NULL, NULL, marshal_VOID__MINIOBJECT_OBJECT, G_TYPE_NONE, 2,
       GST_TYPE_BUFFER, GST_TYPE_PAD);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Fake Sink",
+      "Sink",
+      "Black hole for data",
+      "Erik Walthinsen <omega@cse.ogi.edu>, "
+      "Wim Taymans <wim@fluendo.com>, "
+      "Mr. 'frag-me-more' Vanderwingo <wingo@fluendo.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_fake_sink_change_state);
 
@@ -269,7 +263,7 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
 }
 
 static void
-gst_fake_sink_init (GstFakeSink * fakesink, GstFakeSinkClass * g_class)
+gst_fake_sink_init (GstFakeSink * fakesink)
 {
   fakesink->silent = DEFAULT_SILENT;
   fakesink->dump = DEFAULT_DUMP;

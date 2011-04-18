@@ -205,44 +205,21 @@ static gboolean gst_file_src_query (GstBaseSrc * src, GstQuery * query);
 static void gst_file_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static void
-_do_init (GType filesrc_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_file_src_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (filesrc_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
+#define _do_init \
+  G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_file_src_uri_handler_init); \
   GST_DEBUG_CATEGORY_INIT (gst_file_src_debug, "filesrc", 0, "filesrc element");
-}
-
-GST_BOILERPLATE_FULL (GstFileSrc, gst_file_src, GstBaseSrc, GST_TYPE_BASE_SRC,
-    _do_init);
-
-static void
-gst_file_src_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "File Source",
-      "Source/File",
-      "Read from arbitrary point in a file",
-      "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-}
+#define gst_file_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstFileSrc, gst_file_src, GST_TYPE_BASE_SRC, _do_init);
 
 static void
 gst_file_src_class_init (GstFileSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
 
   gobject_class->set_property = gst_file_src_set_property;
@@ -300,6 +277,14 @@ gst_file_src_class_init (GstFileSrcClass * klass)
 
   gobject_class->finalize = gst_file_src_finalize;
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "File Source",
+      "Source/File",
+      "Read from arbitrary point in a file",
+      "Erik Walthinsen <omega@cse.ogi.edu>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_file_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_file_src_stop);
   gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_file_src_is_seekable);
@@ -314,7 +299,7 @@ gst_file_src_class_init (GstFileSrcClass * klass)
 }
 
 static void
-gst_file_src_init (GstFileSrc * src, GstFileSrcClass * g_class)
+gst_file_src_init (GstFileSrc * src)
 {
 #ifdef HAVE_MMAP
   src->pagesize = getpagesize ();

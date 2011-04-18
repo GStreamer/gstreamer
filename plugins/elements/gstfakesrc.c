@@ -201,11 +201,10 @@ gst_fake_src_filltype_get_type (void)
   return fakesrc_filltype_type;
 }
 
-#define _do_init(bla) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_fake_src_debug, "fakesrc", 0, "fakesrc element");
-
-GST_BOILERPLATE_FULL (GstFakeSrc, gst_fake_src, GstBaseSrc, GST_TYPE_BASE_SRC,
-    _do_init);
+#define gst_fake_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstFakeSrc, gst_fake_src, GST_TYPE_BASE_SRC, _do_init);
 
 static void gst_fake_src_finalize (GObject * object);
 static void gst_fake_src_set_property (GObject * object, guint prop_id,
@@ -256,26 +255,14 @@ marshal_VOID__MINIOBJECT_OBJECT (GClosure * closure, GValue * return_value,
 }
 
 static void
-gst_fake_src_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Fake Source",
-      "Source",
-      "Push empty (no data) buffers around",
-      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-}
-
-static void
 gst_fake_src_class_init (GstFakeSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbase_src_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbase_src_class = GST_BASE_SRC_CLASS (klass);
 
   gobject_class->finalize = gst_fake_src_finalize;
@@ -379,6 +366,14 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
       marshal_VOID__MINIOBJECT_OBJECT, G_TYPE_NONE, 2, GST_TYPE_BUFFER,
       GST_TYPE_PAD);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Fake Source",
+      "Source",
+      "Push empty (no data) buffers around",
+      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+
   gstbase_src_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fake_src_is_seekable);
   gstbase_src_class->start = GST_DEBUG_FUNCPTR (gst_fake_src_start);
   gstbase_src_class->stop = GST_DEBUG_FUNCPTR (gst_fake_src_stop);
@@ -388,7 +383,7 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
 }
 
 static void
-gst_fake_src_init (GstFakeSrc * fakesrc, GstFakeSrcClass * g_class)
+gst_fake_src_init (GstFakeSrc * fakesrc)
 {
   fakesrc->output = FAKE_SRC_FIRST_LAST_LOOP;
   fakesrc->buffer_count = 0;

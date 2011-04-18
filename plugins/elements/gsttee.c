@@ -105,13 +105,14 @@ static GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_tee_debug, "tee", 0, "tee element");
-
-GST_BOILERPLATE_FULL (GstTee, gst_tee, GstElement, GST_TYPE_ELEMENT, _do_init);
-
 /* structure and quark to keep track of which pads have been pushed */
 static GQuark push_data;
+
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (gst_tee_debug, "tee", 0, "tee element"); \
+    push_data = g_quark_from_static_string ("tee-push-data");
+#define gst_tee_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstTee, gst_tee, GST_TYPE_ELEMENT, _do_init);
 
 static GParamSpec *pspec_last_message = NULL;
 static GParamSpec *pspec_alloc_pad = NULL;
@@ -144,25 +145,6 @@ static gboolean gst_tee_src_check_get_range (GstPad * pad);
 static gboolean gst_tee_src_activate_pull (GstPad * pad, gboolean active);
 static GstFlowReturn gst_tee_src_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buf);
-
-
-static void
-gst_tee_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Tee pipe fitting",
-      "Generic",
-      "1-to-N pipe fitting",
-      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&tee_src_template));
-
-  push_data = g_quark_from_static_string ("tee-push-data");
-}
 
 static void
 gst_tee_dispose (GObject * object)
@@ -242,13 +224,23 @@ gst_tee_class_init (GstTeeClass * klass)
   g_object_class_install_property (gobject_class, PROP_ALLOC_PAD,
       pspec_alloc_pad);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Tee pipe fitting",
+      "Generic",
+      "1-to-N pipe fitting",
+      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&tee_src_template));
+
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_tee_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_tee_release_pad);
 }
 
 static void
-gst_tee_init (GstTee * tee, GstTeeClass * g_class)
+gst_tee_init (GstTee * tee)
 {
   tee->dyn_lock = g_mutex_new ();
 

@@ -91,11 +91,11 @@ enum
 };
 
 
-#define _do_init(bla) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_identity_debug, "identity", 0, "identity element");
-
-GST_BOILERPLATE_FULL (GstIdentity, gst_identity, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, _do_init);
+#define gst_identity_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstIdentity, gst_identity, GST_TYPE_BASE_TRANSFORM,
+    _do_init);
 
 static void gst_identity_finalize (GObject * object);
 static void gst_identity_set_property (GObject * object, guint prop_id,
@@ -115,21 +115,6 @@ static gboolean gst_identity_stop (GstBaseTransform * trans);
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *pspec_last_message = NULL;
-
-static void
-gst_identity_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Identity",
-      "Generic",
-      "Pass data without modification", "Erik Walthinsen <omega@cse.ogi.edu>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-}
 
 static void
 gst_identity_finalize (GObject * object)
@@ -179,9 +164,11 @@ static void
 gst_identity_class_init (GstIdentityClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseTransformClass *gstbasetrans_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_identity_set_property;
@@ -271,6 +258,15 @@ gst_identity_class_init (GstIdentityClass * klass)
 
   gobject_class->finalize = gst_identity_finalize;
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Identity",
+      "Generic",
+      "Pass data without modification", "Erik Walthinsen <omega@cse.ogi.edu>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
   gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_identity_event);
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_identity_transform_ip);
@@ -281,7 +277,7 @@ gst_identity_class_init (GstIdentityClass * klass)
 }
 
 static void
-gst_identity_init (GstIdentity * identity, GstIdentityClass * g_class)
+gst_identity_init (GstIdentity * identity)
 {
   identity->sleep_time = DEFAULT_SLEEP_TIME;
   identity->error_after = DEFAULT_ERROR_AFTER;
@@ -375,7 +371,7 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
     identity->prev_offset = identity->prev_offset_end = GST_BUFFER_OFFSET_NONE;
   }
 
-  ret = parent_class->event (trans, event);
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->event (trans, event);
 
   if (identity->single_segment
       && (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT)) {

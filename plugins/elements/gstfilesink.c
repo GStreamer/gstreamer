@@ -173,42 +173,18 @@ static gboolean gst_file_sink_query (GstPad * pad, GstQuery * query);
 static void gst_file_sink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-
-static void
-_do_init (GType filesink_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_file_sink_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (filesink_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
-  GST_DEBUG_CATEGORY_INIT (gst_file_sink_debug, "filesink", 0,
-      "filesink element");
-}
-
-GST_BOILERPLATE_FULL (GstFileSink, gst_file_sink, GstBaseSink,
-    GST_TYPE_BASE_SINK, _do_init);
-
-static void
-gst_file_sink_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "File Sink",
-      "Sink/File", "Write stream to a file",
-      "Thomas Vander Stichele <thomas at apestaart dot org>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-}
+#define _do_init \
+  G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_file_sink_uri_handler_init); \
+  GST_DEBUG_CATEGORY_INIT (gst_file_sink_debug, "filesink", 0, "filesink element");
+#define gst_file_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstFileSink, gst_file_sink, GST_TYPE_BASE_SINK,
+    _do_init);
 
 static void
 gst_file_sink_class_init (GstFileSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
 
   gobject_class->dispose = gst_file_sink_dispose;
@@ -244,6 +220,13 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
           "Append to an already existing file", DEFAULT_APPEND,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "File Sink",
+      "Sink/File", "Write stream to a file",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_file_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_file_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_file_sink_render);
@@ -256,7 +239,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
 }
 
 static void
-gst_file_sink_init (GstFileSink * filesink, GstFileSinkClass * g_class)
+gst_file_sink_init (GstFileSink * filesink)
 {
   GstPad *pad;
 
