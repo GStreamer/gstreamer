@@ -69,6 +69,7 @@ make_n_channel_wav (const gint channels, const GValueArray * arr)
   GstBus *bus;
   GMainLoop *loop;
   guint i;
+  guint bus_watch = 0;
 
   audiotestsrc = g_new0 (GstElement *, channels);
 
@@ -104,7 +105,7 @@ make_n_channel_wav (const gint channels, const GValueArray * arr)
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -113,6 +114,9 @@ make_n_channel_wav (const gint channels, const GValueArray * arr)
 
   gst_object_unref (pipeline);
   g_free (audiotestsrc);
+
+  g_main_loop_unref (loop);
+  g_source_remove (bus_watch);
 }
 
 GST_START_TEST (test_encode_stereo)
