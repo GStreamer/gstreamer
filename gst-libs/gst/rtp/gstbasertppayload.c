@@ -121,7 +121,7 @@ gst_basertppayload_get_type (void)
 {
   static GType basertppayload_type = 0;
 
-  if (!basertppayload_type) {
+  if (g_once_init_enter ((gsize *) & basertppayload_type)) {
     static const GTypeInfo basertppayload_info = {
       sizeof (GstBaseRTPPayloadClass),
       (GBaseInitFunc) gst_basertppayload_base_init,
@@ -134,9 +134,9 @@ gst_basertppayload_get_type (void)
       (GInstanceInitFunc) gst_basertppayload_init,
     };
 
-    basertppayload_type =
+    g_once_init_leave ((gsize *) & basertppayload_type,
         g_type_register_static (GST_TYPE_ELEMENT, "GstBaseRTPPayload",
-        &basertppayload_info, G_TYPE_FLAG_ABSTRACT);
+            &basertppayload_info, G_TYPE_FLAG_ABSTRACT));
   }
   return basertppayload_type;
 }
