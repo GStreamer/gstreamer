@@ -1390,38 +1390,21 @@ gst_rtp_session_request_remote_key_unit (GstRtpSession * rtpsession,
   caps = gst_rtp_session_get_caps_for_pt (rtpsession, payload);
 
   if (caps) {
-    gboolean fir, pli;
     const GstStructure *s = gst_caps_get_structure (caps, 0);
+    gboolean pli;
 
-    if (!gst_structure_get_boolean (s, "rtcp-fb-nack-fir", &fir))
-      fir = FALSE;
-
-    if (!gst_structure_get_boolean (s, "rtcp-fb-nack-pli", &pli))
-      pli = FALSE;
+    pli = gst_structure_has_field (s, "rtcp-fb-nack-pli");
 
     gst_caps_unref (caps);
 
-    if (!pli && !fir)
-      goto out;
-
-    /* When we need all headers, use FIR if possible falling back to PLI if
-     * it's available */
-    if (all_headers) {
-      /* 500 ms acceptable delay for urgent request is a guesstimate, it could
-       * be made configurable if needed
-       */
-      /* If we don't have fir, fall back to pli */
-      rtp_session_request_key_unit (rtpsession->priv->session, ssrc, fir);
+    if (pli) {
+      rtp_session_request_key_unit (rtpsession->priv->session, ssrc);
       rtp_session_request_early_rtcp (rtpsession->priv->session,
-          gst_clock_get_time (rtpsession->priv->sysclock), 500 * GST_MSECOND);
-      requested = TRUE;
-    } else if (pli) {
-      rtp_session_request_key_unit (rtpsession->priv->session, ssrc, FALSE);
+          gst_clock_get_time (rtpsession->priv->sysclock), 200 * GST_MSECOND);
       requested = TRUE;
     }
   }
 
-out:
   return requested;
 }
 
