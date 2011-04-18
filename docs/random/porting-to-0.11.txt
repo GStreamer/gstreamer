@@ -50,6 +50,9 @@ The 0.11 porting guide
 
     gst_element_class_add_pad_template() takes ownership of the template
 
+    Elements that change the duration must post DURATION messages on the
+    bus when the duration changes in PAUSED or PLAYING.
+
 * GstPad:
     gst_pad_get_caps() does not return writable caps anymore and an explicit
     gst_caps_make_writable() needs to be performed. This was the functionality

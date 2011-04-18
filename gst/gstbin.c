@@ -170,11 +170,6 @@
 #include "gstutils.h"
 #include "gstchildproxy.h"
 
-/* enable for DURATION caching.
- * FIXME currently too many elements don't update
- * their duration when it changes so we return inaccurate values. */
-#undef DURATION_CACHING
-
 /* latency is by default enabled now.
  * live-preroll and no-live-preroll in the environment var GST_COMPAT
  * to enables or disable it respectively.
@@ -3412,13 +3407,11 @@ bin_query_duration_done (GstBin * bin, QueryFold * fold)
 
   GST_DEBUG_OBJECT (bin, "max duration %" G_GINT64_FORMAT, fold->max);
 
-#ifdef DURATION_CACHING
   /* and cache now */
   GST_OBJECT_LOCK (bin);
   bin->messages = g_list_prepend (bin->messages,
       gst_message_new_duration (GST_OBJECT_CAST (bin), format, fold->max));
   GST_OBJECT_UNLOCK (bin);
-#endif
 }
 
 static gboolean
@@ -3531,7 +3524,6 @@ gst_bin_query (GstElement * element, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
     {
-#ifdef DURATION_CACHING
       GList *cached;
       GstFormat qformat;
 
@@ -3562,7 +3554,6 @@ gst_bin_query (GstElement * element, GstQuery * query)
         }
       }
       GST_OBJECT_UNLOCK (bin);
-#endif
       /* no cached value found, iterate and collect durations */
       fold_func = (GstIteratorFoldFunction) bin_query_duration_fold;
       fold_init = bin_query_min_max_init;
@@ -3628,9 +3619,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
 done:
   gst_iterator_free (iter);
 
-#ifdef DURATION_CACHING
 exit:
-#endif
   GST_DEBUG_OBJECT (bin, "query %p result %d", query, res);
 
   return res;
