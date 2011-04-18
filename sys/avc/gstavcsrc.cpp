@@ -138,6 +138,7 @@ gst_avc_src_class_init (GstAVCSrcClass * klass)
 static void
 gst_avc_src_init (GstAVCSrc * avcsrc, GstAVCSrcClass * avcsrc_class)
 {
+  gst_base_src_set_live (GST_BASE_SRC (avcsrc), TRUE);
 
   avcsrc->srcpad = gst_pad_new_from_static_template (&gst_avc_src_src_template,
       "src");
