@@ -161,13 +161,9 @@ static GstStateChangeReturn gst_base_rtp_payload_audio_change_state (GstElement
 static gboolean gst_base_rtp_payload_audio_handle_event (GstPad * pad,
     GstEvent * event);
 
-GST_BOILERPLATE (GstBaseRTPAudioPayload, gst_base_rtp_audio_payload,
-    GstBaseRTPPayload, GST_TYPE_BASE_RTP_PAYLOAD);
-
-static void
-gst_base_rtp_audio_payload_base_init (gpointer klass)
-{
-}
+#define gst_base_rtp_audio_payload_parent_class parent_class
+G_DEFINE_TYPE (GstBaseRTPAudioPayload, gst_base_rtp_audio_payload,
+    GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
 gst_base_rtp_audio_payload_class_init (GstBaseRTPAudioPayloadClass * klass)
@@ -204,8 +200,7 @@ gst_base_rtp_audio_payload_class_init (GstBaseRTPAudioPayloadClass * klass)
 }
 
 static void
-gst_base_rtp_audio_payload_init (GstBaseRTPAudioPayload * payload,
-    GstBaseRTPAudioPayloadClass * klass)
+gst_base_rtp_audio_payload_init (GstBaseRTPAudioPayload * payload)
 {
   payload->priv = GST_BASE_RTP_AUDIO_PAYLOAD_GET_PRIVATE (payload);
 

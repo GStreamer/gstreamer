@@ -100,14 +100,37 @@ static gboolean gst_base_rtp_depayload_packet_lost (GstBaseRTPDepayload *
 static gboolean gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload *
     filter, GstEvent * event);
 
-GST_BOILERPLATE (GstBaseRTPDepayload, gst_base_rtp_depayload, GstElement,
-    GST_TYPE_ELEMENT);
+static GstElementClass *parent_class = NULL;
+static void gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass *
+    klass);
+static void gst_base_rtp_depayload_init (GstBaseRTPDepayload * basertppayload,
+    GstBaseRTPDepayloadClass * klass);
 
-static void
-gst_base_rtp_depayload_base_init (gpointer klass)
+GType
+gst_base_rtp_depayload_get_type (void)
 {
-  /*GstElementClass *element_class = GST_ELEMENT_CLASS (klass); */
+  static GType base_rtp_depayload_type = 0;
+
+  if (g_once_init_enter ((gsize *) & base_rtp_depayload_type)) {
+    static const GTypeInfo base_rtp_depayload_info = {
+      sizeof (GstBaseRTPDepayloadClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_base_rtp_depayload_class_init,
+      NULL,
+      NULL,
+      sizeof (GstBaseRTPDepayload),
+      0,
+      (GInstanceInitFunc) gst_base_rtp_depayload_init,
+    };
+
+    g_once_init_leave ((gsize *) & base_rtp_depayload_type,
+        g_type_register_static (GST_TYPE_ELEMENT, "GstBaseRTPDepayload",
+            &base_rtp_depayload_info, G_TYPE_FLAG_ABSTRACT));
+  }
+  return base_rtp_depayload_type;
 }
+
 
 static void
 gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
