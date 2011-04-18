@@ -1779,6 +1779,13 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   ximagesink = GST_XIMAGESINK (bsink);
 
+  if (G_UNLIKELY (!caps)) {
+    GST_WARNING_OBJECT (ximagesink, "have no caps, doing fallback allocation");
+    *buf = NULL;
+    ret = GST_FLOW_OK;
+    goto beach;
+  }
+
   /* This shouldn't really happen because state changes will fail
    * if the xcontext can't be allocated */
   if (!ximagesink->xcontext)
