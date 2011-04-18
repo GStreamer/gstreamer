@@ -182,6 +182,21 @@ gst_xmp_schema_new ()
  */
 static GHashTable *__xmp_schemas;
 
+static GstXmpSchema *
+_gst_xmp_get_schema (const gchar * name)
+{
+  GQuark key;
+  GstXmpSchema *schema;
+
+  key = g_quark_from_string (name);
+
+  schema = g_hash_table_lookup (__xmp_schemas, GUINT_TO_POINTER (key));
+  if (!schema) {
+    GST_WARNING ("Schema %s doesn't exist", name);
+  }
+  return schema;
+}
+
 static void
 _gst_xmp_add_schema (const gchar * name, GstXmpSchema * schema)
 {
@@ -240,6 +255,7 @@ _gst_xmp_schema_add_simple_mapping (GstXmpSchema * schema,
  * appended, and the API is not public, so we shouldn't
  * have our lists modified during usage
  */
+#if 0
 static GPtrArray *
 _xmp_tag_get_mapping (const gchar * gst_tag, XmpSerializationData * serdata)
 {
@@ -260,6 +276,7 @@ _xmp_tag_get_mapping (const gchar * gst_tag, XmpSerializationData * serdata)
   }
   return ret;
 }
+#endif
 
 /* finds the gst tag that maps to this xmp tag in this schema */
 static const gchar *
@@ -1520,21 +1537,13 @@ gst_value_serialize_xmp (const GValue * value)
 }
 
 static void
-write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
+write_one_tag (const GstTagList * list, const gchar * tag,
+    GPtrArray * xmp_tag_array, gpointer user_data)
 {
   guint i = 0, ct = gst_tag_list_get_tag_size (list, tag), tag_index;
   XmpSerializationData *serialization_data = user_data;
   GString *data = serialization_data->data;
-  GPtrArray *xmp_tag_array = NULL;
   char *s;
-
-  /* map gst-tag to xmp tag */
-  xmp_tag_array = _xmp_tag_get_mapping (tag, serialization_data);
-
-  if (!xmp_tag_array) {
-    GST_WARNING ("no mapping for %s to xmp", tag);
-    return;
-  }
 
   for (tag_index = 0; tag_index < xmp_tag_array->len; tag_index++) {
     XmpTag *xmp_tag;
@@ -1635,8 +1644,31 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
   g_string_append (data, ">\n");
   g_string_append (data, "<rdf:Description rdf:about=\"\">\n");
 
-  /* iterate the taglist */
-  gst_tag_list_foreach (list, write_one_tag, &serialization_data);
+  /* iterate the schemas */
+  if (schemas == NULL) {
+    /* use all schemas */
+    schemas = gst_tag_xmp_list_schemas ();
+  }
+  i = 0;
+  for (i = 0; schemas[i] != NULL; i++) {
+    GstXmpSchema *schema = _gst_xmp_get_schema (schemas[i]);
+    GHashTableIter iter;
+    gpointer key, value;
+
+    if (schema == NULL)
+      continue;
+
+    /* Iterate over the hashtable */
+    g_hash_table_iter_init (&iter, schema);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+      const gchar *tag = g_quark_to_string (GPOINTER_TO_UINT (key));
+
+      if (gst_tag_list_get_value_index (list, tag, 0) != NULL) {
+        write_one_tag (list, tag, value, (gpointer) & serialization_data);
+      }
+
+    }
+  }
 
   /* xmp footer */
   g_string_append (data, "</rdf:Description>\n");
