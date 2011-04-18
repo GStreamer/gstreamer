@@ -224,8 +224,8 @@ MyStructuredDataPushProc (UInt32 CycleDataCount,
   GstAVCSrc *avcsrc = GST_AVC_SRC (pRefCon);
 
   if (avcsrc) {
-    for (int cycle = 0; cycle < CycleDataCount; cycle++) {
-      for (int sourcePacket = 0; sourcePacket < pCycleData[cycle].tsPacketCount;
+    for (UInt32 cycle = 0; cycle < CycleDataCount; cycle++) {
+      for (UInt32 sourcePacket = 0; sourcePacket < pCycleData[cycle].tsPacketCount;
           sourcePacket++) {
         GstBuffer *buffer;
 
