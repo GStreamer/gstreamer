@@ -82,9 +82,15 @@ gst_ogg_packet_from_wrapper (ogg_packet_wrapper * packet)
 
 #else
 
-#include <tremor/ivorbiscodec.h>
+#ifdef USE_TREMOLO
+  #include <Tremolo/ivorbiscodec.h>
+  #include <Tremolo/codec_internal.h>
+  typedef ogg_int16_t                    vorbis_sample_t;
+#else
+  #include <tremor/ivorbiscodec.h>
+  typedef ogg_int32_t                    vorbis_sample_t;
+#endif
 
-typedef ogg_int32_t                    vorbis_sample_t;
 typedef struct _ogg_packet_wrapper     ogg_packet_wrapper;
 
 struct _ogg_packet_wrapper {

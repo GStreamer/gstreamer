@@ -4,9 +4,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#ifndef DISABLE_ORC
-#include <orc/orc.h>
-#endif
 #include <glib.h>
 
 #ifndef _ORC_INTEGER_TYPEDEFS_
@@ -32,6 +29,7 @@ typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
 #define ORC_UINT64_C(x) (x##Ui64)
+#define inline __inline
 #else
 #include <limits.h>
 typedef signed char orc_int8;
@@ -71,14 +69,31 @@ typedef union
   orc_int16 x4[4];
 } orc_union64;
 #endif
+#ifndef ORC_RESTRICT
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
+#endif
 
-void add_int32 (gint32 * d1, const gint32 * s1, int n);
-void add_int16 (gint16 * d1, const gint16 * s1, int n);
-void add_int8 (gint8 * d1, const gint8 * s1, int n);
-void add_uint32 (guint32 * d1, const guint32 * s1, int n);
-void add_uint16 (guint16 * d1, const guint16 * s1, int n);
-void add_uint8 (guint8 * d1, const guint8 * s1, int n);
-void add_float32 (float *d1, const float *s1, int n);
+#ifndef DISABLE_ORC
+#include <orc/orc.h>
+#endif
+void add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n);
+void add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1,
+    int n);
+void add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n);
+void add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
+    int n);
+void add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1,
+    int n);
+void add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1, int n);
 
 void gst_adder_orc_init (void);
 
@@ -114,12 +129,14 @@ void gst_adder_orc_init (void);
 #define ORC_ISNAN(x) ((((x)&0x7f800000) == 0x7f800000) && (((x)&0x007fffff) != 0))
 #define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == 0) ? ORC_UINT64_C(0xfff0000000000000) : ORC_UINT64_C(0xffffffffffffffff)))
 #define ORC_ISNAN_DOUBLE(x) ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == ORC_UINT64_C(0x7ff0000000000000)) && (((x)&ORC_UINT64_C(0x000fffffffffffff)) != 0))
+#ifndef ORC_RESTRICT
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
 #define ORC_RESTRICT __restrict__
 #else
 #define ORC_RESTRICT
+#endif
 #endif
 /* end Orc C target preamble */
 
@@ -128,7 +145,7 @@ void gst_adder_orc_init (void);
 /* add_int32 */
 #ifdef DISABLE_ORC
 void
-add_int32 (gint32 * d1, const gint32 * s1, int n)
+add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -185,7 +202,7 @@ _backup_add_int32 (OrcExecutor * ORC_RESTRICT ex)
 
 static OrcProgram *_orc_program_add_int32;
 void
-add_int32 (gint32 * d1, const gint32 * s1, int n)
+add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_add_int32;
@@ -206,7 +223,7 @@ add_int32 (gint32 * d1, const gint32 * s1, int n)
 /* add_int16 */
 #ifdef DISABLE_ORC
 void
-add_int16 (gint16 * d1, const gint16 * s1, int n)
+add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -263,7 +280,7 @@ _backup_add_int16 (OrcExecutor * ORC_RESTRICT ex)
 
 static OrcProgram *_orc_program_add_int16;
 void
-add_int16 (gint16 * d1, const gint16 * s1, int n)
+add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_add_int16;
@@ -284,7 +301,7 @@ add_int16 (gint16 * d1, const gint16 * s1, int n)
 /* add_int8 */
 #ifdef DISABLE_ORC
 void
-add_int8 (gint8 * d1, const gint8 * s1, int n)
+add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -341,7 +358,7 @@ _backup_add_int8 (OrcExecutor * ORC_RESTRICT ex)
 
 static OrcProgram *_orc_program_add_int8;
 void
-add_int8 (gint8 * d1, const gint8 * s1, int n)
+add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_add_int8;
@@ -362,7 +379,7 @@ add_int8 (gint8 * d1, const gint8 * s1, int n)
 /* add_uint32 */
 #ifdef DISABLE_ORC
 void
-add_uint32 (guint32 * d1, const guint32 * s1, int n)
+add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -423,7 +440,7 @@ _backup_add_uint32 (OrcExecutor * ORC_RESTRICT ex)
 
 static OrcProgram *_orc_program_add_uint32;
 void
-add_uint32 (guint32 * d1, const guint32 * s1, int n)
+add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_add_uint32;
@@ -444,7 +461,7 @@ add_uint32 (guint32 * d1, const guint32 * s1, int n)
 /* add_uint16 */
 #ifdef DISABLE_ORC
 void
-add_uint16 (guint16 * d1, const guint16 * s1, int n)
+add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -501,7 +518,7 @@ _backup_add_uint16 (OrcExecutor * ORC_RESTRICT ex)
 
 static OrcProgram *_orc_program_add_uint16;
 void
-add_uint16 (guint16 * d1, const guint16 * s1, int n)
+add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_add_uint16;
@@ -522,7 +539,7 @@ add_uint16 (guint16 * d1, const guint16 * s1, int n)
 /* add_uint8 */
 #ifdef DISABLE_ORC
 void
-add_uint8 (guint8 * d1, const guint8 * s1, int n)
+add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -579,7 +596,7 @@ _backup_add_uint8 (OrcExecutor * ORC_RESTRICT ex)
 
 static OrcProgram *_orc_program_add_uint8;
 void
-add_uint8 (guint8 * d1, const guint8 * s1, int n)
+add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_add_uint8;
@@ -600,7 +617,7 @@ add_uint8 (guint8 * d1, const guint8 * s1, int n)
 /* add_float32 */
 #ifdef DISABLE_ORC
 void
-add_float32 (float *d1, const float *s1, int n)
+add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -673,7 +690,7 @@ _backup_add_float32 (OrcExecutor * ORC_RESTRICT ex)
 
 static OrcProgram *_orc_program_add_float32;
 void
-add_float32 (float *d1, const float *s1, int n)
+add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_add_float32;
@@ -698,7 +715,6 @@ gst_adder_orc_init (void)
   {
     /* add_int32 */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "add_int32");
@@ -709,14 +725,13 @@ gst_adder_orc_init (void)
     orc_program_append_2 (p, "addssl", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_add_int32 = p;
   }
   {
     /* add_int16 */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "add_int16");
@@ -727,14 +742,13 @@ gst_adder_orc_init (void)
     orc_program_append_2 (p, "addssw", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_add_int16 = p;
   }
   {
     /* add_int8 */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "add_int8");
@@ -745,14 +759,13 @@ gst_adder_orc_init (void)
     orc_program_append_2 (p, "addssb", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_add_int8 = p;
   }
   {
     /* add_uint32 */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "add_uint32");
@@ -763,14 +776,13 @@ gst_adder_orc_init (void)
     orc_program_append_2 (p, "addusl", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_add_uint32 = p;
   }
   {
     /* add_uint16 */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "add_uint16");
@@ -781,14 +793,13 @@ gst_adder_orc_init (void)
     orc_program_append_2 (p, "addusw", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_add_uint16 = p;
   }
   {
     /* add_uint8 */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "add_uint8");
@@ -799,14 +810,13 @@ gst_adder_orc_init (void)
     orc_program_append_2 (p, "addusb", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_add_uint8 = p;
   }
   {
     /* add_float32 */
     OrcProgram *p;
-    OrcCompileResult result;
 
     p = orc_program_new ();
     orc_program_set_name (p, "add_float32");
@@ -817,7 +827,7 @@ gst_adder_orc_init (void)
     orc_program_append_2 (p, "addf", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
         ORC_VAR_D1);
 
-    result = orc_program_compile (p);
+    orc_program_compile (p);
 
     _orc_program_add_float32 = p;
   }

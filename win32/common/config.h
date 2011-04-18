@@ -75,13 +75,13 @@
 #define GST_MAJORMINOR "0.10"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-01-27T15:23Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-04-16T14:36Z"
 
 /* I know the API is subject to change. */
 #undef G_UDEV_API_IS_SUBJECT_TO_CHANGE
@@ -337,7 +337,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.32.1"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.32.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -346,7 +346,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.32.1"
+#define PACKAGE_VERSION "0.10.32.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -373,8 +373,11 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* "Define if building for android" */
+#undef USE_TREMOLO
+
 /* Version number of package */
-#define VERSION "0.10.32.1"
+#define VERSION "0.10.32.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

@@ -1,16 +1,16 @@
-# -*- mode:po; coding:utf-8; -*- Slovenian message catalogue for gst-plugins-base.
+# Slovenian translation for gst-plugins-base.
+# Copyright (C) 2005 - 2011 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Copyright (C) 2005 Free Software Foundation, Inc.
-#
 # Matej Urbančič <matej.urban@gmail.com>, 2010.
+# Klemen Košir <klemen.kosir@gmx.com>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-01 16:36+0000\n"
-"PO-Revision-Date: 2010-10-25 12:19+0100\n"
-"Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
+"POT-Creation-Date: 2011-04-16 15:41+0100\n"
+"PO-Revision-Date: 2011-03-12 19:59+0100\n"
+"Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
@@ -26,7 +26,7 @@ msgid "Master"
 msgstr "Glavni"
 
 msgid "Bass"
-msgstr "Basovski toni"
+msgstr "Bas"
 
 msgid "Treble"
 msgstr "Visoki toni"
@@ -56,97 +56,97 @@ msgid "Capture"
 msgstr "Zajemanje"
 
 msgid "Could not open device for playback in mono mode."
-msgstr "Ni mogoče odpreti naprave za predvajanje v mono načinu."
+msgstr "Naprave ni mogoče odpreti za predvajanje v mono načinu."
 
 msgid "Could not open device for playback in stereo mode."
-msgstr "Ni mogoče odpreti naprave za predvajanje v stereo načinu."
+msgstr "Naprave ni mogoče odpreti za predvajanje v stereo načinu."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Ni mogoče odpreti naprave za predvajanje v %d-kanalnem načinu."
+msgstr "Naprave ni mogoče odpreti za predvajanje v %d-kanalnem načinu."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Ni mogoče odpreti zvočne naprave za predvajanje. Napravo uporablja drug "
+"Zvočne naprave ni mogoče odpreti za predvajanje. Napravo uporablja drug "
 "program."
 
 msgid "Could not open audio device for playback."
-msgstr "Ni mogoče odpreti zvočne naprave za predvajanje."
+msgstr "Zvočne naprave ni mogoče odpreti za predvajanje."
 
 msgid "Could not open device for recording in mono mode."
-msgstr "Ni mogoče odpreti naprave za snemanje v mono načinu."
+msgstr "Naprave ni mogoče odpreti za snemanje v mono načinu."
 
 msgid "Could not open device for recording in stereo mode."
-msgstr "Ni mogoče odpreti naprave za snemanje v stereo načinu."
+msgstr "Naprave ni mogoče odpreti za snemanje v stereo načinu."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Ni mogoče odpreti naprave za snemanje v %d-kanalnem načinu."
+msgstr "Naprave ni mogoče odpreti za snemanje v %d-kanalnem načinu."
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
 msgstr ""
-"Ni mogoče odpreti zvočne naprave za snemanje. Napravo uporablja drug program."
+"Zvočne naprave ni mogoče odpreti za snemanje. Napravo uporablja drug program."
 
 msgid "Could not open audio device for recording."
-msgstr "Ni mogoče odpreti zvočne naprave za snemanje."
+msgstr "Zvočne naprave ni mogoče odpreti za snemanje."
 
 msgid "Could not open CD device for reading."
-msgstr "Ni mogoče odpreti CD naprave za branje."
+msgstr "Naprave CD ni mogoče odpreti za branje."
 
 msgid "Could not seek CD."
-msgstr "Ni mogoče iskati po vsebini CD nosilca."
+msgstr "Po CD-ju ni mogoče iskati."
 
 msgid "Could not read CD."
-msgstr "Ni mogoče prebrati CD nosilca."
+msgstr "CD-ja ni mogoče prebrati."
 
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Ni mogoče odpreti vfs datoteke \"%s\" za pisanje: %s."
+msgstr "VFS datoteke \"%s\" ni mogoče odpreti za pisanje: %s"
 
 msgid "No filename given"
-msgstr "Ni podanega imena datoteke."
+msgstr "Ni podanega imena datoteke"
 
 #, c-format
 msgid "Could not close vfs file \"%s\"."
-msgstr "Ni mogoče zapreti vfs datoteke \"%s\"."
+msgstr "VFS datoteke \"%s\" ni mogoče zapreti."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Napaka med pisanjem v  datoteko \"%s\"."
+msgstr "Napaka med pisanjem v datoteko \"%s\"."
 
 msgid "Internal data stream error."
 msgstr "Notranja napaka pretoka podatkov."
 
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
-msgstr "Za predvajanje tega pretoka je zahtevan vstavek %s, ki pa ni nameščen."
+msgstr "Za predvajanje tega pretoka je potreben vstavek %s, ki pa ni nameščen."
 
 msgid "This appears to be a text file"
-msgstr "Datoteka je videti kot besedilna datoteka."
+msgstr "Datoteka je videti kot besedilna datoteka"
 
 msgid "Could not determine type of stream"
-msgstr "Ni mogoče določiti vrste pretoka"
+msgstr "Vrste pretoka ni mogoče določiti."
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Neveljaven naslov URI \"%s\", zato bodo podnapisi onemogočeni."
+msgstr "Neveljaven URI podnapisov \"%s\", zato bodo onemogočeni."
 
 msgid "No URI specified to play from."
-msgstr "Ni določenega naslova URI za predvajanje."
+msgstr "Ni navedenega naslova URI za predvajanje."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "Neveljaven  naslov URI \"%s\"."
+msgstr "Neveljaven URI \"%s\"."
 
 msgid "RTSP streams cannot be played yet."
 msgstr "Pretokov RTSP še ni mogoče predvajati."
 
 msgid "Could not create \"decodebin\" element."
-msgstr "Ni mogoče ustvariti predmeta \"decodebin\""
+msgstr "Predmeta \"decodebin\" ni mogoče ustvariti."
 
 msgid "Source element is invalid."
 msgstr "Izvorni predmet je neveljaven."
@@ -155,43 +155,43 @@ msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
-"Zaznan je le pretok podnapisov. Morda je datoteka podnapisov ali katera "
-"druga besedilna datoteka naložena krajevno, ali pa večpredstavnostne "
+"Zaznan je bil le pretok podnapisov. Morda je bila naložena datoteka "
+"podnapisov ali katera druga vrsta besedilne datoteke, ali pa predstavnostne "
 "datoteke ni mogoče prepoznati."
 
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
-"Ni nameščenega ustreznega odkodirnika za to vrsto datoteke. Morda je treba "
+"Za to vrsto datotek ni nameščenega ustreznega odkodirnika. Morda je potrebno "
 "namestiti manjkajoče vstavke."
 
 msgid "This is not a media file"
-msgstr "Datoteka ni večpredstavnostna datoteka"
+msgstr "Datoteka ni predstavnostna datoteka"
 
 msgid "A subtitle stream was detected, but no video stream."
-msgstr "Zaznan je pretok podnapisov, ne pa tudi pretoka videa."
+msgstr "Zaznan je bil pretok podnapisov, ne pa tudi pretok videa."
 
 msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Manjkata predmeta autoaudiosink in xvimagesink."
+msgstr "Predmeta autovideosink in xvimagesink manjkata."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Manjka predmet '%s' - preverite namestitev paketa GStreamer"
+msgstr "Predmet '%s' manjka - preverite namestitev paketa GStreamer."
 
 msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Manjkata predmeta autoaudiosink in alsasink."
+msgstr "Predmeta autovideosink in alsasink manjkata."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Manjkata predmeta autovideosink in %s."
+msgstr "Predmeta autovideosink in %s manjkata."
 
 msgid "The autovideosink element is missing."
-msgstr "Manjka predmet autovideosink."
+msgstr "Predmet autovideosink manjka."
 
 #, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Nastavljen predmet videosink %s ne deluje."
+msgstr "Nastavljeni predmet videosink %s ne deluje."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -201,37 +201,35 @@ msgid "The autovideosink element is not working."
 msgstr "Predmet autovideosink ne deluje."
 
 msgid "Custom text sink element is not usable."
-msgstr "Prilagojen besedilni ponor ni uporaben."
+msgstr "Predmet ponora besedila po meri ni uporaben."
 
 msgid "No volume control found"
-msgstr "Ni mogoče najti nadzornika zvoka"
+msgstr "Nadzornika glasnosti ni mogoče najti"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Manjkata predmeta autoaudiosink in %s."
+msgstr "Predmeta autoaudiosink in %s manjkata."
 
 msgid "The autoaudiosink element is missing."
-msgstr "Manjka predmet autoaudiosink."
+msgstr "Predmet autoaudiosink manjka."
 
 #, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Nastavljen predmet audiosink %s ne deluje."
+msgstr "Nastavljeni predmet autosink %s ne deluje."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
 msgstr "Predmeta autovideosink in %s ne delujeta."
 
 msgid "The autoaudiosink element is not working."
-msgstr "Predmet autoaudiosink ne deluje."
+msgstr "Predmet autovideosink ne deluje."
 
 msgid "Can't play a text file without video or visualizations."
-msgstr ""
-"Ni mogoče predvajati besedilne datoteke brez videa ali druge vrste "
-"predočenja."
+msgstr "Besedilne datoteke ni mogoče predvajati brez videa ali predočenja."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Ni ustreznega odkodirnika za vrsto '%s'."
+msgstr "Za vrsto \"%s\" ni ustreznega odkodirnika."
 
 msgid "This stream type cannot be played yet."
 msgstr "Te vrste pretoka še ni mogoče predvajati."
@@ -246,170 +244,178 @@ msgstr "Napaka med pošiljanjem podatkov na \"%s:%d\"."
 
 #, c-format
 msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Napaka med pošiljanjem podatkov glave gdp na \"%s:%d\"."
+msgstr "Napaka med pošiljanjem podatkov glave GDP na \"%s:%d\"."
 
 #, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Napaka med pošiljanjem vsebine pretoka gdp na \"%s:%d\"."
+msgstr "Napaka med pošiljanjem podatkov vsebine GDP na \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
-msgstr "Povezava s strežnikom %s:%d je zavrnjena."
+msgstr "Povezava s %s:%d zavrnjena."
 
 msgid "Can't record audio fast enough"
 msgstr "Ni mogoče dovolj hitro snemati zvoka"
 
 msgid "Failed to read tag: not enough data"
-msgstr "Ni mogoče prebrati oznake: ni dovolj podatkov"
+msgstr "Oznake ni mogoče prebrati: ni dovolj podatkov"
 
 msgid "track ID"
 msgstr "ID sledi"
 
 msgid "MusicBrainz track ID"
-msgstr "MusicBrainz ID sledi"
+msgstr "ID sledi MusicBrainz"
 
 msgid "artist ID"
 msgstr "ID izvajalca"
 
 msgid "MusicBrainz artist ID"
-msgstr "MusicBrainz ID izvajalca"
+msgstr "ID izvajalca MusicBrainz"
 
 msgid "album ID"
 msgstr "ID albuma"
 
 msgid "MusicBrainz album ID"
-msgstr "MusicBrainz ID albuma"
+msgstr "ID albuma MusicBrainz"
 
 msgid "album artist ID"
 msgstr "ID izvajalca albuma"
 
 msgid "MusicBrainz album artist ID"
-msgstr "MusicBrainz ID izvajalca albuma"
+msgstr "ID izvajalca albuma MusicBrainz"
 
 msgid "track TRM ID"
 msgstr "TRM ID sledi"
 
 msgid "MusicBrainz TRM ID"
-msgstr "MusicBrainz TRM ID"
+msgstr "TRM ID MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr "zajemanje hitrosti zaklopke"
+msgstr "hitrost zaslonke"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Hitrost zaklopke uporabljena  med zajemanjem slike"
+msgstr "Hitrost zaslonke, uporabljene med zajemanjem slike (v sekundah)"
 
 msgid "capturing focal ratio"
-msgstr "zajemanje goriščnega razmerja"
+msgstr "goriščno razmerje med zajemanjem"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Goriščno razmerje (število f) uporabljeno  med zajemanjem slike"
+msgstr "Goriščno razmerje, uporabljeno med zajemanjem slike"
 
 msgid "capturing focal length"
-msgstr "zajemanje goriščne razdalje"
+msgstr "goriščna razdalja med zajemanjem"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Goriščna razdalja leč uporabljena  med zajemanjem slike"
+msgstr "Goriščna razdalja leč, uporabljena med zajemanjem slike"
 
 msgid "capturing digital zoom ratio"
-msgstr "zajemanje razmerja digitalnega približevanja"
+msgstr "razmerje digitalnega približevanja med zajemanjem"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr "Razmerje digitalnega približevanja uporabljeno  med zajemanjem slike"
+msgstr "Razmerje digitalnega približevanja, uporabljeno med zajemanjem slike"
 
 msgid "capturing iso speed"
-msgstr "zajemanje ISO ravni hitrosti"
+msgstr "hitrost ISO zajema"
 
 msgid "The ISO speed used when capturing an image"
-msgstr "ISO histrost uporabljena  med zajemanjem slike"
+msgstr "Hitrost ISO, uporabljena med zajemanjem slike"
 
 msgid "capturing exposure program"
-msgstr "zajemanje programa osvetljevanja"
+msgstr "program osvetlitve zajema"
 
 msgid "The exposure program used when capturing an image"
-msgstr "Program osvetlitve uporabljen  med zajemanjem slike"
+msgstr "Program osvetlitve, uporabljen med zajemanjem slike"
 
 msgid "capturing exposure mode"
-msgstr "zajemanje načina osvetljevanja"
+msgstr "način osvetlitve zajema"
 
 msgid "The exposure mode used when capturing an image"
-msgstr "Način osvetlitve uporabljen  med zajemanjem slike"
+msgstr "Program osvetlitve, uporabljen med zajemanjem slike"
+
+#, fuzzy
+msgid "capturing exposure compensation"
+msgstr "način osvetlitve zajema"
+
+#, fuzzy
+msgid "The exposure compensation used when capturing an image"
+msgstr "Program osvetlitve, uporabljen med zajemanjem slike"
 
 msgid "capturing scene capture type"
-msgstr "zajemanje vrste izbranega programa scene"
+msgstr "vrsta zajemanja scene med zajemanjem"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr "Program načina zajemanja scene uporabljenega med zajemanjem slike"
+msgstr "Način zajemanja scene, uporabljen med zajemanjem slike"
 
 msgid "capturing gain adjustment"
-msgstr "zajemanje prilagoditev ojačitve"
+msgstr "prilagoditev ojačitve med zajemanjem"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr "Skupna prilagoditev ojačitve slike."
+msgstr "Skupna prilagoditev ojačitve slike"
 
 msgid "capturing white balance"
-msgstr "zajemanje ravnotežja bele barve"
+msgstr "ravnotežje bele barve zajema"
 
 msgid "The white balance mode set when capturing an image"
-msgstr "Način ravnotežja beline določen med zajemanjem slike"
+msgstr "Način ravnotežja bele barve, uporabljen med zajemanjem slike"
 
 msgid "capturing contrast"
-msgstr "zajemanje kontrasta"
+msgstr "kontrast zajema"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Smer kontrasta uporabljena med zajemanjem slike"
+msgstr "Smer kontrasta, uporabljenega med zajemanjem slike"
 
 msgid "capturing saturation"
-msgstr "zajemanje nasičenosti"
+msgstr "nasičenost zajema"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr "Smer nasičenosti uporabljena med zajemanjem slike"
+msgstr "Smer nasičenosti, uporabljene med zajemanjem slike"
 
 msgid "capturing sharpness"
-msgstr "zajemanje ostrosti"
+msgstr "ostrina zajema"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "Smer ostrenja uporabljena med zajemanjem slike"
+msgstr "Smer ostrine, uporabljene med zajemanjem slike"
 
 msgid "capturing flash fired"
-msgstr "zajemanje podatkov sproženja bliskavice"
+msgstr "sproženje bliskavice med zajemanjem"
 
 msgid "If the flash fired while capturing an image"
-msgstr "Ali je bila bliskavica sprožena med zajemanjem slike"
+msgstr "Ali je med zajemanjem slike bliskavica sprožena"
 
 msgid "capturing flash mode"
-msgstr "zajemanje načina bliskavice"
+msgstr "način bliskavice med zajemanjem"
 
 msgid "The selected flash mode while capturing an image"
-msgstr "Izbran način bliskavice uporabljen med zajemanjem slike"
+msgstr "Izbrani način bliskavice, uporabljene med zajemanjem slike"
 
 msgid "capturing metering mode"
-msgstr "zajemanje načina umerjanja"
+msgstr "način umerjanja med zajemanjem"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
-"Način umerjanja uporabljen med določevanjem osvetljenosti zajemanja slike"
+"Način umerjanja, uporabljen med določevanjem osvetljenosti zajemanja slike"
 
 msgid "capturing source"
-msgstr "zajemanje izvora"
+msgstr "vir zajema"
 
 msgid "The source or type of device used for the capture"
-msgstr "Izvorna naprava ali pa vrsta napreve uporabljena  med zajemanjem slike"
+msgstr "Vir ali vrsta naprave, uporabljene za zajemanje"
 
 msgid "image horizontal ppi"
-msgstr "vodoravne točke slike (ppi)"
+msgstr "vodoravne slikovne točke slike (ppi)"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Gostota (slika/video) vodoravnih točk (v ppi)"
+msgstr "Gostota vodoravnih slikovnih točk (v ppi)"
 
 msgid "image vertical ppi"
-msgstr "navpične točke slike (ppi)"
+msgstr "navpične slikovne točke slike (ppi)"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Gostota (slika/video) navpičnih točk (v ppi)"
+msgstr "Gostota navpičnih slikovnih točk (v ppi)"
 
 msgid "This CD has no audio tracks"
-msgstr "Vstavljeni CD nosilec nima zvočnih sledi."
+msgstr "Ta CD nima zvočnih sledi"
 
 msgid "ID3 tag"
 msgstr "Oznaka ID3"
@@ -418,28 +424,28 @@ msgid "APE tag"
 msgstr "Oznaka APE"
 
 msgid "ICY internet radio"
-msgstr "Spletna radijska postaja ICY"
+msgstr "Internetni radio ICY"
 
 msgid "Apple Lossless Audio (ALAC)"
-msgstr "Apple kodek za kodiranje zvoka brez izgub (ALAC)"
+msgstr "Apple Lossless Audio (ALAC)"
 
 msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Prosti kodek za kodiranje zvoka brez izgub (FLAC)"
+msgstr "Free Lossless Audio Codec (FLAC)"
 
 msgid "Lossless True Audio (TTA)"
-msgstr "Kodek True Audio za kodiranje zvoka brez izgub (TTA)"
+msgstr "Lossless True Audio (TTA)"
 
 msgid "Windows Media Speech"
 msgstr "Govor Windows Media"
 
 msgid "CYUV Lossless"
-msgstr "Kodek za kodiranje brez izgub CYUV"
+msgstr "Brezizgubni CYUV"
 
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
 msgid "Lossless MSZH"
-msgstr "Kodek za kodiranje brez izgub (MSZH)"
+msgstr "Brezizgubni MSZH"
 
 msgid "Uncompressed Gray Image"
 msgstr "Nestisnjena sivinska slika"
@@ -448,13 +454,13 @@ msgid "Run-length encoding"
 msgstr "Kodiranje trajanja izvajanja"
 
 msgid "Sami subtitle format"
-msgstr "Zapis podnapisov Sami"
+msgstr "Oblika podnapisov Sami"
 
 msgid "TMPlayer subtitle format"
-msgstr "Zapis podnapisov TMPlayer"
+msgstr "Oblika podnapisov TMPlayer"
 
 msgid "Kate subtitle format"
-msgstr "Zapis podnapisov Kate"
+msgstr "Oblika podnapisov Kate"
 
 msgid "Uncompressed planar YUV 4:2:0"
 msgstr "Nestisnjen ploskovni YUV 4:2:0"
@@ -484,7 +490,7 @@ msgid "Uncompressed planar YUV 4:1:1"
 msgstr "Nestisnjen ploskovni YUV 4:1:1"
 
 msgid "Uncompressed black and white Y-plane"
-msgstr "Nestisnjen črno-bela slika Y-ravnine"
+msgstr "Nestisnjena črno-bela slika Y-ravnine"
 
 msgid "Uncompressed YUV"
 msgstr "Nestisnjen YUV"
@@ -506,73 +512,73 @@ msgstr "Surovi zvok PCM"
 
 #, c-format
 msgid "Raw %d-bit floating-point audio"
-msgstr "Surov %d-bitni zvok določen s števili plavajoče vejice"
+msgstr "Surovi %d-bitni zvok, določen s plavajočo vejico"
 
 msgid "Raw floating-point audio"
-msgstr "Surov zvok določen s števili plavajoče vejice"
+msgstr "Surovi zvok, določen s plavajočo vejico"
 
 msgid "Audio CD source"
-msgstr "Zvočni disk"
+msgstr "Vir zvočnega CD-ja"
 
 msgid "DVD source"
-msgstr "Vir DVD"
+msgstr "Vir DVD-ja"
 
 msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Vir protokola pretakanja Real Time (RTSP)"
+msgstr "Vir protokola Real Time Streaming Protocol (RTSP)"
 
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Vir protokola Microsoft Media Server (MMS)"
 
 #, c-format
 msgid "%s protocol source"
-msgstr "%s vir protokola"
+msgstr "Vir protokola %s"
 
 #, c-format
 msgid "%s video RTP depayloader"
-msgstr "%s RTP razlagalnik video vsebine"
+msgstr "Razlagalnik video vsebine %s RTP"
 
 #, c-format
 msgid "%s audio RTP depayloader"
-msgstr "%s RTP razlagalnik zvočne vsebine"
+msgstr "Razlagalnik zvočne vsebine %s RTP"
 
 #, c-format
 msgid "%s RTP depayloader"
-msgstr "%s RTP razlagalnik vsebine"
+msgstr "Razlagalnik vsebine %s RTP"
 
 #, c-format
 msgid "%s demuxer"
-msgstr "%s odvijalnik"
+msgstr "Odvijalnik %s"
 
 #, c-format
 msgid "%s decoder"
-msgstr "%s odkodirnik"
+msgstr "Odkodirnik %s"
 
 #, c-format
 msgid "%s video RTP payloader"
-msgstr "%s RTP nalagalnik video vsebine"
+msgstr "Nalagalnik video vsebine %s RTP"
 
 #, c-format
 msgid "%s audio RTP payloader"
-msgstr "%s RTP nalagalnik zvočne vsebine"
+msgstr "Nalagalnik zvočne vsebine %s RTP"
 
 #, c-format
 msgid "%s RTP payloader"
-msgstr "%s RTP nalagalnik vsebine"
+msgstr "Nalagalnik vsebine %s RTP"
 
 #, c-format
 msgid "%s muxer"
-msgstr "%s zvijalnik"
+msgstr "Zvijalnik %s"
 
 #, c-format
 msgid "%s encoder"
-msgstr "%s kodirnik"
+msgstr "Kodirnik %s"
 
 #, c-format
 msgid "GStreamer element %s"
-msgstr "Predmet GStreamer \"%s\""
+msgstr "Predmet GStreamer %s"
 
 msgid "Unknown source element"
-msgstr "Neznana vrsta vira"
+msgstr "Neznan predmet vira"
 
 msgid "Unknown sink element"
 msgstr "Neznan predmet ponora"
@@ -587,10 +593,10 @@ msgid "Unknown encoder element"
 msgstr "Neznan predmet kodirnika"
 
 msgid "Plugin or element of unknown type"
-msgstr "Vstavek oziroma predmet neznane vrste"
+msgstr "Vstavek ali predmet neznane vrste"
 
 msgid "No device specified."
-msgstr "Ni določene naprave."
+msgstr "Ni navedene naprave."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -602,7 +608,7 @@ msgstr "Naprava \"%s\" je že v uporabi."
 
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Ni mogoče odpreti naprave \"%s\" za branje in pisanje."
+msgstr "Naprave \"%s\" ni mogoče odpreti za branje in pisanje."
 
 #, fuzzy
 #~ msgid "No Temp directory specified."

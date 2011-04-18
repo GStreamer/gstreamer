@@ -1982,6 +1982,9 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 
+  if (G_UNLIKELY (!caps))
+    goto no_caps;
+
   if (G_LIKELY (xvimagesink->xcontext->last_caps &&
           gst_caps_is_equal (caps, xvimagesink->xcontext->last_caps))) {
     GST_LOG_OBJECT (xvimagesink,
@@ -2152,6 +2155,13 @@ invalid_caps:
     GST_WARNING_OBJECT (xvimagesink, "invalid caps for buffer allocation %"
         GST_PTR_FORMAT, intersection);
     ret = GST_FLOW_NOT_NEGOTIATED;
+    goto beach;
+  }
+no_caps:
+  {
+    GST_WARNING_OBJECT (xvimagesink, "have no caps, doing fallback allocation");
+    *buf = NULL;
+    ret = GST_FLOW_OK;
     goto beach;
   }
 }

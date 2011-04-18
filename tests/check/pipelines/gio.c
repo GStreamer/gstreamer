@@ -63,15 +63,14 @@ GST_START_TEST (test_memory_stream)
   GstElement *bin;
   GstElement *src, *sink;
   GstBus *bus;
-
   GMemoryInputStream *input;
   GMemoryOutputStream *output;
-
   guint8 *in_data;
   guint8 *out_data;
   gint i;
   GstFormat fmt = GST_FORMAT_BYTES;
   gint64 duration;
+  guint bus_watch = 0;
 
   got_eos = FALSE;
 
@@ -105,7 +104,7 @@ GST_START_TEST (test_memory_stream)
   fail_unless (gst_element_link_many (src, sink, NULL));
 
   bus = gst_element_get_bus (bin);
-  gst_bus_add_watch (bus, message_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, message_handler, loop);
   gst_object_unref (bus);
 
   gst_element_set_state (bin, GST_STATE_PAUSED);
@@ -147,6 +146,7 @@ GST_START_TEST (test_memory_stream)
   g_object_unref (output);
 
   g_main_loop_unref (loop);
+  g_source_remove (bus_watch);
 }
 
 GST_END_TEST;
