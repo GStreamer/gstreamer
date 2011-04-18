@@ -258,6 +258,7 @@ test_pipeline (const char *pipeline)
   GError *error = NULL;
   GMainLoop *loop;
   GstPadLinkReturn linkret;
+  guint bus_watch = 0;
 
   bin = gst_parse_launch (pipeline, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -280,7 +281,7 @@ test_pipeline (const char *pipeline)
   /* run until we receive EOS */
   loop = g_main_loop_new (NULL, FALSE);
   bus = gst_element_get_bus (bin);
-  gst_bus_add_watch (bus, (GstBusFunc) eos_watch, loop);
+  bus_watch = gst_bus_add_watch (bus, (GstBusFunc) eos_watch, loop);
   gst_object_unref (bus);
 
   start_pipeline (bin, pad);
@@ -305,6 +306,7 @@ test_pipeline (const char *pipeline)
 
   /* clean up */
   g_main_loop_unref (loop);
+  g_source_remove (bus_watch);
   gst_object_unref (pad);
   gst_object_unref (bin);
 }
