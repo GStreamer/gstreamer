@@ -538,8 +538,15 @@ dnl *** OS/X AVCVideoServices ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AVC, true)
 HAVE_AVC="no"
 AG_GST_CHECK_FEATURE(AVC, [AVC Video Services], avcsrc, [
-  AC_CHECK_TYPE([AVCDevice], HAVE_AVC="yes", HAVE_AVC="no",
-      [#include <AVCVideoServices/AVCVideoServices.h>])
+  AC_LANG_PUSH([C++])
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS -framework AVCVideoServices -framework CoreFoundation"
+  save_LIBS="$LIBS"
+  LIBS="$LIBS -framework AVCVideoServices -framework CoreFoundation"
+  AC_TRY_COMPILE([], [], [HAVE_AVC=yes], [HAVE_AVC=no])
+  LIBS=$save_LIBS
+  CPPFLAGS=$save_CPPFLAGS
+  AC_LANG_POP([C++])
 ])
 dnl in case header AVCVideoServices/AVCVideoServices.h is found on other platforms
 case "$host" in
