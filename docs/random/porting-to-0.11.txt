@@ -4,6 +4,8 @@ The 0.11 porting guide
 * All deprecated methods were removed. Recompile against 0.10 with
   DISABLE_DEPRECATED and fix issues before attempting to port to 0.11.
 
+* GST_BOILERPLATE is gone, use G_DEFINE_TYPE instead.
+
 * various methods take a gsize instead of a guint when talking about memory
   sizes.
 
