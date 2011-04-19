@@ -206,8 +206,8 @@ gst_avc_src_get_caps (GstBaseSrc * src)
   return gst_caps_from_string ("video/mpegts,systemstream=true,packetsize=188");
 }
 
-#define kNumCyclesInMPEGReceiverSegment 20
-#define kNumSegmentsInMPEGReceiverProgram 100
+#define kNumCyclesInMPEGReceiverSegment 200
+#define kNumSegmentsInMPEGReceiverProgram 10
 
 #ifdef ENABLE
 void
