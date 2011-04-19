@@ -77,8 +77,8 @@ enum
   PROP_STREAM
 };
 
-GST_BOILERPLATE (GstGioStreamSrc, gst_gio_stream_src, GstGioBaseSrc,
-    GST_TYPE_GIO_BASE_SRC);
+#define gst_gio_stream_src_parent_class parent_class
+G_DEFINE_TYPE (GstGioStreamSrc, gst_gio_stream_src, GST_TYPE_GIO_BASE_SRC);
 
 static void gst_gio_stream_src_finalize (GObject * object);
 static void gst_gio_stream_src_set_property (GObject * object, guint prop_id,
@@ -88,24 +88,14 @@ static void gst_gio_stream_src_get_property (GObject * object, guint prop_id,
 static GInputStream *gst_gio_stream_src_get_stream (GstGioBaseSrc * bsrc);
 
 static void
-gst_gio_stream_src_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  GST_DEBUG_CATEGORY_INIT (gst_gio_stream_src_debug, "gio_stream_src", 0,
-      "GIO source");
-
-  gst_element_class_set_details_simple (element_class, "GIO stream source",
-      "Source",
-      "Read from any GIO stream",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
 gst_gio_stream_src_class_init (GstGioStreamSrcClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstGioBaseSrcClass *gstgiobasesrc_class = (GstGioBaseSrcClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_gio_stream_src_debug, "gio_stream_src", 0,
+      "GIO source");
 
   gobject_class->finalize = gst_gio_stream_src_finalize;
   gobject_class->set_property = gst_gio_stream_src_set_property;
@@ -115,12 +105,17 @@ gst_gio_stream_src_class_init (GstGioStreamSrcClass * klass)
       g_param_spec_object ("stream", "Stream", "Stream to read from",
           G_TYPE_INPUT_STREAM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "GIO stream source",
+      "Source",
+      "Read from any GIO stream",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
   gstgiobasesrc_class->get_stream =
       GST_DEBUG_FUNCPTR (gst_gio_stream_src_get_stream);
 }
 
 static void
-gst_gio_stream_src_init (GstGioStreamSrc * src, GstGioStreamSrcClass * gclass)
+gst_gio_stream_src_init (GstGioStreamSrc * src)
 {
 }
 

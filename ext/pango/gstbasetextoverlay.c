@@ -309,6 +309,12 @@ gst_base_text_overlay_line_align_get_type (void)
 #define GST_BASE_TEXT_OVERLAY_SIGNAL(ov)   (g_cond_signal (GST_BASE_TEXT_OVERLAY_GET_COND (ov)))
 #define GST_BASE_TEXT_OVERLAY_BROADCAST(ov)(g_cond_broadcast (GST_BASE_TEXT_OVERLAY_GET_COND (ov)))
 
+static GstElementClass *parent_class = NULL;
+static void gst_base_text_overlay_base_init (gpointer g_class);
+static void gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass);
+static void gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
+    GstBaseTextOverlayClass * klass);
+
 static GstStateChangeReturn gst_base_text_overlay_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -348,8 +354,31 @@ static void
 gst_base_text_overlay_adjust_values_with_fontdesc (GstBaseTextOverlay * overlay,
     PangoFontDescription * desc);
 
-GST_BOILERPLATE (GstBaseTextOverlay, gst_base_text_overlay, GstElement,
-    GST_TYPE_ELEMENT);
+GType
+gst_base_text_overlay_get_type (void)
+{
+  static GType type = 0;
+
+  if (g_once_init_enter ((gsize *) & type)) {
+    static const GTypeInfo info = {
+      sizeof (GstBaseTextOverlayClass),
+      (GBaseInitFunc) gst_base_text_overlay_base_init,
+      NULL,
+      (GClassInitFunc) gst_base_text_overlay_class_init,
+      NULL,
+      NULL,
+      sizeof (GstBaseTextOverlay),
+      0,
+      (GInstanceInitFunc) gst_base_text_overlay_init,
+    };
+
+    g_once_init_leave ((gsize *) & type,
+        g_type_register_static (GST_TYPE_ELEMENT, "GstBaseTextOverlay", &info,
+            0));
+  }
+
+  return type;
+}
 
 static gchar *
 gst_base_text_overlay_get_text (GstBaseTextOverlay * overlay,
@@ -384,6 +413,8 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_base_text_overlay_finalize;
   gobject_class->set_property = gst_base_text_overlay_set_property;

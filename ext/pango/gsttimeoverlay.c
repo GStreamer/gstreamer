@@ -50,19 +50,8 @@
 
 #include <gsttimeoverlay.h>
 
-GST_BOILERPLATE (GstTimeOverlay, gst_time_overlay, GstBaseTextOverlay,
-    GST_TYPE_BASE_TEXT_OVERLAY);
-
-static void
-gst_time_overlay_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Time overlay",
-      "Filter/Editor/Video",
-      "Overlays buffer time stamps on a video stream",
-      "Tim-Philipp Müller <tim@centricular.net>");
-}
+#define gst_time_overlay_parent_class parent_class
+G_DEFINE_TYPE (GstTimeOverlay, gst_time_overlay, GST_TYPE_BASE_TEXT_OVERLAY);
 
 static gchar *
 gst_time_overlay_render_time (GstTimeOverlay * overlay, GstClockTime time)
@@ -116,11 +105,18 @@ gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
 static void
 gst_time_overlay_class_init (GstTimeOverlayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseTextOverlayClass *gsttextoverlay_class;
   PangoContext *context;
   PangoFontDescription *font_description;
 
   gsttextoverlay_class = (GstBaseTextOverlayClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+
+  gst_element_class_set_details_simple (gstelement_class, "Time overlay",
+      "Filter/Editor/Video",
+      "Overlays buffer time stamps on a video stream",
+      "Tim-Philipp Müller <tim@centricular.net>");
 
   gsttextoverlay_class->get_text = gst_time_overlay_get_text;
 
@@ -143,7 +139,7 @@ gst_time_overlay_class_init (GstTimeOverlayClass * klass)
 }
 
 static void
-gst_time_overlay_init (GstTimeOverlay * overlay, GstTimeOverlayClass * klass)
+gst_time_overlay_init (GstTimeOverlay * overlay)
 {
   GstBaseTextOverlay *textoverlay;
 

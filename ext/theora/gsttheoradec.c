@@ -81,7 +81,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-theora")
     );
 
-GST_BOILERPLATE (GstTheoraDec, gst_theora_dec, GstElement, GST_TYPE_ELEMENT);
+#define gst_theora_dec_parent_class parent_class
+G_DEFINE_TYPE (GstTheoraDec, gst_theora_dec, GST_TYPE_ELEMENT);
 
 static void theora_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -106,22 +107,6 @@ static const GstFormat *theora_get_formats (GstPad * pad);
 static const GstEventMask *theora_get_event_masks (GstPad * pad);
 #endif
 static const GstQueryType *theora_get_query_types (GstPad * pad);
-
-
-static void
-gst_theora_dec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_dec_sink_factory));
-  gst_element_class_set_details_simple (element_class,
-      "Theora video decoder", "Codec/Decoder/Video",
-      "decode raw theora streams to raw YUV video",
-      "Benjamin Otte <otte@gnome.org>, Wim Taymans <wim@fluendo.com>");
-}
 
 static gboolean
 gst_theora_dec_ctl_is_supported (int req)
@@ -188,13 +173,22 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   }
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&theora_dec_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&theora_dec_sink_factory));
+  gst_element_class_set_details_simple (gstelement_class,
+      "Theora video decoder", "Codec/Decoder/Video",
+      "decode raw theora streams to raw YUV video",
+      "Benjamin Otte <otte@gnome.org>, Wim Taymans <wim@fluendo.com>");
+
   gstelement_class->change_state = theora_dec_change_state;
 
   GST_DEBUG_CATEGORY_INIT (theoradec_debug, "theoradec", 0, "Theora decoder");
 }
 
 static void
-gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
+gst_theora_dec_init (GstTheoraDec * dec)
 {
   dec->sinkpad =
       gst_pad_new_from_static_template (&theora_dec_sink_factory, "sink");
@@ -1524,7 +1518,7 @@ theora_dec_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:

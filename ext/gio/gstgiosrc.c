@@ -83,8 +83,9 @@ enum
   PROP_FILE
 };
 
-GST_BOILERPLATE_FULL (GstGioSrc, gst_gio_src, GstGioBaseSrc,
-    GST_TYPE_GIO_BASE_SRC, gst_gio_uri_handler_do_init);
+#define gst_gio_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGioSrc, gst_gio_src,
+    GST_TYPE_GIO_BASE_SRC, gst_gio_uri_handler_do_init (g_define_type_id));
 
 static void gst_gio_src_finalize (GObject * object);
 
@@ -98,25 +99,14 @@ static GInputStream *gst_gio_src_get_stream (GstGioBaseSrc * bsrc);
 static gboolean gst_gio_src_check_get_range (GstBaseSrc * base_src);
 
 static void
-gst_gio_src_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  GST_DEBUG_CATEGORY_INIT (gst_gio_src_debug, "gio_src", 0, "GIO source");
-
-  gst_element_class_set_details_simple (element_class, "GIO source",
-      "Source/File",
-      "Read from any GIO-supported location",
-      "Ren\xc3\xa9 Stadler <mail@renestadler.de>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
 gst_gio_src_class_init (GstGioSrcClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
   GstGioBaseSrcClass *gstgiobasesrc_class = (GstGioBaseSrcClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_gio_src_debug, "gio_src", 0, "GIO source");
 
   gobject_class->finalize = gst_gio_src_finalize;
   gobject_class->set_property = gst_gio_src_set_property;
@@ -137,6 +127,12 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
       g_param_spec_object ("file", "File", "GFile to read from",
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "GIO source",
+      "Source/File",
+      "Read from any GIO-supported location",
+      "Ren\xc3\xa9 Stadler <mail@renestadler.de>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
   gstbasesrc_class->check_get_range =
       GST_DEBUG_FUNCPTR (gst_gio_src_check_get_range);
 
@@ -145,7 +141,7 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
 }
 
 static void
-gst_gio_src_init (GstGioSrc * src, GstGioSrcClass * gclass)
+gst_gio_src_init (GstGioSrc * src)
 {
 }
 

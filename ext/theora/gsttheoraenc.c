@@ -243,21 +243,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-theora")
     );
 
-static void
-_do_init (GType object_type)
-{
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface_init */
-    NULL,                       /* interface_finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-}
-
-GST_BOILERPLATE_FULL (GstTheoraEnc, gst_theora_enc, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
+#define gst_theora_enc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstTheoraEnc, gst_theora_enc,
+    GST_TYPE_ELEMENT, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
 
 static gboolean theora_enc_sink_event (GstPad * pad, GstEvent * event);
 static gboolean theora_enc_src_event (GstPad * pad, GstEvent * event);
@@ -274,21 +262,6 @@ static void theora_enc_finalize (GObject * object);
 
 static gboolean theora_enc_write_multipass_cache (GstTheoraEnc * enc,
     gboolean begin, gboolean eos);
-
-static void
-gst_theora_enc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_enc_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_enc_sink_factory));
-  gst_element_class_set_details_simple (element_class,
-      "Theora video encoder", "Codec/Encoder/Video",
-      "encode raw YUV video to a theora stream",
-      "Wim Taymans <wim@fluendo.com>");
-}
 
 static void
 gst_theora_enc_class_init (GstTheoraEncClass * klass)
@@ -414,11 +387,20 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           THEORA_DEF_MULTIPASS_MODE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&theora_enc_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&theora_enc_sink_factory));
+  gst_element_class_set_details_simple (gstelement_class,
+      "Theora video encoder", "Codec/Encoder/Video",
+      "encode raw YUV video to a theora stream",
+      "Wim Taymans <wim@fluendo.com>");
+
   gstelement_class->change_state = theora_enc_change_state;
 }
 
 static void
-gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
+gst_theora_enc_init (GstTheoraEnc * enc)
 {
   enc->sinkpad =
       gst_pad_new_from_static_template (&theora_enc_sink_factory, "sink");
@@ -1398,7 +1380,7 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:

@@ -72,8 +72,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-vorbis")
     );
 
-GST_BOILERPLATE (GstVorbisParse, gst_vorbis_parse, GstElement,
-    GST_TYPE_ELEMENT);
+#define gst_vorbis_parse_parent_class parent_class
+G_DEFINE_TYPE (GstVorbisParse, gst_vorbis_parse, GST_TYPE_ELEMENT);
 
 static GstFlowReturn vorbis_parse_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn vorbis_parse_change_state (GstElement * element,
@@ -87,32 +87,26 @@ static GstFlowReturn vorbis_parse_parse_packet (GstVorbisParse * parse,
     GstBuffer * buf);
 
 static void
-gst_vorbis_parse_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&vorbis_parse_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&vorbis_parse_sink_factory));
-  gst_element_class_set_details_simple (element_class,
-      "VorbisParse", "Codec/Parser/Audio",
-      "parse raw vorbis streams",
-      "Thomas Vander Stichele <thomas at apestaart dot org>");
-}
-
-static void
 gst_vorbis_parse_class_init (GstVorbisParseClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gstelement_class->change_state = vorbis_parse_change_state;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vorbis_parse_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vorbis_parse_sink_factory));
+  gst_element_class_set_details_simple (gstelement_class,
+      "VorbisParse", "Codec/Parser/Audio",
+      "parse raw vorbis streams",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
+
   klass->parse_packet = GST_DEBUG_FUNCPTR (vorbis_parse_parse_packet);
 }
 
 static void
-gst_vorbis_parse_init (GstVorbisParse * parse, GstVorbisParseClass * g_class)
+gst_vorbis_parse_init (GstVorbisParse * parse)
 {
   parse->sinkpad =
       gst_pad_new_from_static_template (&vorbis_parse_sink_factory, "sink");
@@ -655,7 +649,7 @@ vorbis_parse_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:

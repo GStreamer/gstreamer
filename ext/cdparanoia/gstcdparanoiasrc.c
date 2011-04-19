@@ -56,8 +56,8 @@ enum
 GST_DEBUG_CATEGORY_STATIC (gst_cd_paranoia_src_debug);
 #define GST_CAT_DEFAULT gst_cd_paranoia_src_debug
 
-GST_BOILERPLATE (GstCdParanoiaSrc, gst_cd_paranoia_src, GstCddaBaseSrc,
-    GST_TYPE_CDDA_BASE_SRC);
+#define gst_cd_paranoia_src_parent_class parent_class
+G_DEFINE_TYPE (GstCdParanoiaSrc, gst_cd_paranoia_src, GST_TYPE_CDDA_BASE_SRC);
 
 static void gst_cd_paranoia_src_finalize (GObject * obj);
 static void gst_cd_paranoia_src_get_property (GObject * object, guint prop_id,
@@ -103,18 +103,7 @@ gst_cd_paranoia_mode_get_type (void)
 }
 
 static void
-gst_cd_paranoia_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "CD Audio (cdda) Source, Paranoia IV", "Source/File",
-      "Read audio from CD in paranoid mode",
-      "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
-}
-
-static void
-gst_cd_paranoia_src_init (GstCdParanoiaSrc * src, GstCdParanoiaSrcClass * klass)
+gst_cd_paranoia_src_init (GstCdParanoiaSrc * src)
 {
   src->d = NULL;
   src->p = NULL;
@@ -131,11 +120,17 @@ static void
 gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
 {
   GstCddaBaseSrcClass *cddabasesrc_class = GST_CDDA_BASE_SRC_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->set_property = gst_cd_paranoia_src_set_property;
   gobject_class->get_property = gst_cd_paranoia_src_get_property;
   gobject_class->finalize = gst_cd_paranoia_src_finalize;
+
+  gst_element_class_set_details_simple (element_class,
+      "CD Audio (cdda) Source, Paranoia IV", "Source/File",
+      "Read audio from CD in paranoid mode",
+      "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
 
   cddabasesrc_class->open = gst_cd_paranoia_src_open;
   cddabasesrc_class->close = gst_cd_paranoia_src_close;

@@ -123,21 +123,9 @@ gst_gnome_vfs_sink_do_init (GType type)
       "Gnome VFS sink element");
 }
 
-GST_BOILERPLATE_FULL (GstGnomeVFSSink, gst_gnome_vfs_sink, GstBaseSink,
-    GST_TYPE_BASE_SINK, gst_gnome_vfs_sink_do_init);
-
-static void
-gst_gnome_vfs_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
-
-  gst_element_class_set_details_simple (element_class,
-      "GnomeVFS Sink", "Sink/File",
-      "Write a stream to a GnomeVFS URI", "Bastien Nocera <hadess@hadess.net>");
-}
+#define gst_gnome_vfs_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGnomeVFSSink, gst_gnome_vfs_sink,
+    GST_TYPE_BASE_SINK, gst_gnome_vfs_sink_do_init (g_define_type_id));
 
 static gboolean
 _gst_boolean_allow_overwrite_accumulator (GSignalInvocationHint * ihint,
@@ -157,9 +145,11 @@ static void
 gst_gnome_vfs_sink_class_init (GstGnomeVFSSinkClass * klass)
 {
   GstBaseSinkClass *basesink_class;
+  GstElementClass *gstelement_class;
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   basesink_class = (GstBaseSinkClass *) klass;
 
   gobject_class->set_property = gst_gnome_vfs_sink_set_property;
@@ -195,6 +185,13 @@ gst_gnome_vfs_sink_class_init (GstGnomeVFSSinkClass * klass)
       _gst_boolean_allow_overwrite_accumulator, NULL,
       gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, GST_TYPE_GNOME_VFS_URI);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "GnomeVFS Sink", "Sink/File",
+      "Write a stream to a GnomeVFS URI", "Bastien Nocera <hadess@hadess.net>");
+
   basesink_class->stop = GST_DEBUG_FUNCPTR (gst_gnome_vfs_sink_stop);
   basesink_class->start = GST_DEBUG_FUNCPTR (gst_gnome_vfs_sink_start);
   basesink_class->event = GST_DEBUG_FUNCPTR (gst_gnome_vfs_sink_handle_event);
@@ -221,7 +218,7 @@ gst_gnome_vfs_sink_finalize (GObject * obj)
 }
 
 static void
-gst_gnome_vfs_sink_init (GstGnomeVFSSink * sink, GstGnomeVFSSinkClass * klass)
+gst_gnome_vfs_sink_init (GstGnomeVFSSink * sink)
 {
   gst_pad_set_query_function (GST_BASE_SINK_PAD (sink),
       GST_DEBUG_FUNCPTR (gst_gnome_vfs_sink_query));

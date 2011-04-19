@@ -33,8 +33,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_BOILERPLATE (GstGioBaseSink, gst_gio_base_sink, GstBaseSink,
-    GST_TYPE_BASE_SINK);
+#define gst_gio_base_sink_parent_class parent_class
+G_DEFINE_TYPE (GstGioBaseSink, gst_gio_base_sink, GST_TYPE_BASE_SINK);
 
 static void gst_gio_base_sink_finalize (GObject * object);
 static gboolean gst_gio_base_sink_start (GstBaseSink * base_sink);
@@ -48,24 +48,19 @@ static GstFlowReturn gst_gio_base_sink_render (GstBaseSink * base_sink,
 static gboolean gst_gio_base_sink_query (GstPad * pad, GstQuery * query);
 
 static void
-gst_gio_base_sink_base_init (gpointer gclass)
+gst_gio_base_sink_class_init (GstGioBaseSinkClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstBaseSinkClass *gstbasesink_class = (GstBaseSinkClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (gst_gio_base_sink_debug, "gio_base_sink", 0,
       "GIO base sink");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-}
-
-static void
-gst_gio_base_sink_class_init (GstGioBaseSinkClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBaseSinkClass *gstbasesink_class = (GstBaseSinkClass *) klass;
-
   gobject_class->finalize = gst_gio_base_sink_finalize;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
 
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_gio_base_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_gio_base_sink_stop);
@@ -77,7 +72,7 @@ gst_gio_base_sink_class_init (GstGioBaseSinkClass * klass)
 }
 
 static void
-gst_gio_base_sink_init (GstGioBaseSink * sink, GstGioBaseSinkClass * gclass)
+gst_gio_base_sink_init (GstGioBaseSink * sink)
 {
   gst_pad_set_query_function (GST_BASE_SINK_PAD (sink),
       GST_DEBUG_FUNCPTR (gst_gio_base_sink_query));

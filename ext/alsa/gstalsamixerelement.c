@@ -36,9 +36,10 @@ enum
 };
 
 static void gst_alsa_mixer_element_init_interfaces (GType type);
-
-GST_BOILERPLATE_FULL (GstAlsaMixerElement, gst_alsa_mixer_element,
-    GstElement, GST_TYPE_ELEMENT, gst_alsa_mixer_element_init_interfaces);
+#define gst_alsa_mixer_element_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAlsaMixerElement, gst_alsa_mixer_element,
+    GST_TYPE_ELEMENT,
+    gst_alsa_mixer_element_init_interfaces (g_define_type_id));
 
 /* massive macro that takes care of all the GstMixer stuff */
 GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaMixerElement, gst_alsa_mixer_element);
@@ -91,15 +92,6 @@ gst_alsa_mixer_element_init_interfaces (GType type)
 }
 
 static void
-gst_alsa_mixer_element_base_init (gpointer klass)
-{
-  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (klass),
-      "Alsa mixer", "Generic/Audio",
-      "Control sound input and output levels with ALSA",
-      "Leif Johnson <leif@ambient.2y.net>");
-}
-
-static void
 gst_alsa_mixer_element_class_init (GstAlsaMixerElementClass * klass)
 {
   GstElementClass *element_class;
@@ -122,6 +114,11 @@ gst_alsa_mixer_element_class_init (GstAlsaMixerElementClass * klass)
           "Human-readable name of the sound device",
           DEFAULT_PROP_DEVICE_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (element_class,
+      "Alsa mixer", "Generic/Audio",
+      "Control sound input and output levels with ALSA",
+      "Leif Johnson <leif@ambient.2y.net>");
+
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_alsa_mixer_element_change_state);
 }
@@ -137,8 +134,7 @@ gst_alsa_mixer_element_finalize (GObject * obj)
 }
 
 static void
-gst_alsa_mixer_element_init (GstAlsaMixerElement * this,
-    GstAlsaMixerElementClass * klass)
+gst_alsa_mixer_element_init (GstAlsaMixerElement * this)
 {
   this->mixer = NULL;
   this->device = g_strdup (DEFAULT_PROP_DEVICE);

@@ -162,7 +162,8 @@ gst_text_render_line_align_get_type (void)
 static void gst_text_render_adjust_values_with_fontdesc (GstTextRender *
     render, PangoFontDescription * desc);
 
-GST_BOILERPLATE (GstTextRender, gst_text_render, GstElement, GST_TYPE_ELEMENT);
+#define gst_text_render_parent_class parent_class
+G_DEFINE_TYPE (GstTextRender, gst_text_render, GST_TYPE_ELEMENT);
 
 static void gst_text_render_finalize (GObject * object);
 static void gst_text_render_set_property (GObject * object,
@@ -171,35 +172,31 @@ static void gst_text_render_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static void
-gst_text_render_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template_factory));
-
-  gst_element_class_set_details_simple (element_class, "Text renderer",
-      "Filter/Editor/Video",
-      "Renders a text string to an image bitmap",
-      "David Schleef <ds@schleef.org>, "
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-}
-
-static void
 gst_text_render_class_init (GstTextRenderClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   PangoFontMap *fontmap;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_text_render_finalize;
   gobject_class->set_property = gst_text_render_set_property;
   gobject_class->get_property = gst_text_render_get_property;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "Text renderer",
+      "Filter/Editor/Video",
+      "Renders a text string to an image bitmap",
+      "David Schleef <ds@schleef.org>, "
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   fontmap = pango_cairo_font_map_get_default ();
   klass->pango_context =
@@ -591,7 +588,7 @@ gst_text_render_finalize (GObject * object)
 }
 
 static void
-gst_text_render_init (GstTextRender * render, GstTextRenderClass * klass)
+gst_text_render_init (GstTextRender * render)
 {
   GstPadTemplate *template;
 

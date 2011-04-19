@@ -63,41 +63,25 @@ GST_DEBUG_CATEGORY_EXTERN (vorbisparse_debug);
 static GstFlowReturn gst_vorbis_tag_parse_packet (GstVorbisParse * parse,
     GstBuffer * buffer);
 
-#define _do_init(type)                                                          \
-  G_STMT_START{                                                                 \
-    static const GInterfaceInfo tag_setter_info = {                             \
-      NULL,                                                                     \
-      NULL,                                                                     \
-      NULL                                                                      \
-    };                                                                          \
-    g_type_add_interface_static (type, GST_TYPE_TAG_SETTER,                     \
-                                 &tag_setter_info);                             \
-  }G_STMT_END
-
-GST_BOILERPLATE_FULL (GstVorbisTag, gst_vorbis_tag, GstVorbisParse,
-    GST_TYPE_VORBIS_PARSE, _do_init);
-
-
-static void
-gst_vorbis_tag_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "VorbisTag", "Formatter/Metadata",
-      "Retags vorbis streams", "James Livingston <doclivingston@gmail.com>");
-}
+#define gst_vorbis_tag_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVorbisTag, gst_vorbis_tag,
+    GST_TYPE_VORBIS_PARSE, G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 
 static void
 gst_vorbis_tag_class_init (GstVorbisTagClass * klass)
 {
   GstVorbisParseClass *vorbisparse_class = GST_VORBIS_PARSE_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_details_simple (element_class,
+      "VorbisTag", "Formatter/Metadata",
+      "Retags vorbis streams", "James Livingston <doclivingston@gmail.com>");
 
   vorbisparse_class->parse_packet = gst_vorbis_tag_parse_packet;
 }
 
 static void
-gst_vorbis_tag_init (GstVorbisTag * tagger, GstVorbisTagClass * g_class)
+gst_vorbis_tag_init (GstVorbisTag * tagger)
 {
   /* nothing to do */
 }

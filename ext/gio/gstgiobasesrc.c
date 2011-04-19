@@ -35,8 +35,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_BOILERPLATE (GstGioBaseSrc, gst_gio_base_src, GstBaseSrc,
-    GST_TYPE_BASE_SRC);
+#define gst_gio_base_src_parent_class parent_class
+G_DEFINE_TYPE (GstGioBaseSrc, gst_gio_base_src, GST_TYPE_BASE_SRC);
 
 static void gst_gio_base_src_finalize (GObject * object);
 
@@ -54,24 +54,19 @@ static gboolean gst_gio_base_src_query (GstBaseSrc * base_src,
     GstQuery * query);
 
 static void
-gst_gio_base_src_base_init (gpointer gclass)
+gst_gio_base_src_class_init (GstGioBaseSrcClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (gst_gio_base_src_debug, "gio_base_src", 0,
       "GIO base source");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-}
-
-static void
-gst_gio_base_src_class_init (GstGioBaseSrcClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
-
   gobject_class->finalize = gst_gio_base_src_finalize;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_gio_base_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_gio_base_src_stop);
@@ -88,7 +83,7 @@ gst_gio_base_src_class_init (GstGioBaseSrcClass * klass)
 }
 
 static void
-gst_gio_base_src_init (GstGioBaseSrc * src, GstGioBaseSrcClass * gclass)
+gst_gio_base_src_init (GstGioBaseSrc * src)
 {
   src->cancel = g_cancellable_new ();
 }

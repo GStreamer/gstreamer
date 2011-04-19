@@ -64,8 +64,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-vorbis")
     );
 
-GST_BOILERPLATE (GST_VORBIS_DEC_GLIB_TYPE_NAME, gst_vorbis_dec, GstElement,
-    GST_TYPE_ELEMENT);
+#define gst_vorbis_dec_parent_class parent_class
+G_DEFINE_TYPE (GST_VORBIS_DEC_GLIB_TYPE_NAME, gst_vorbis_dec, GST_TYPE_ELEMENT);
 
 static void vorbis_dec_finalize (GObject * object);
 static gboolean vorbis_dec_sink_event (GstPad * pad, GstEvent * event);
@@ -86,30 +86,23 @@ static gboolean vorbis_dec_convert (GstPad * pad,
 static gboolean vorbis_dec_sink_query (GstPad * pad, GstQuery * query);
 
 static void
-gst_vorbis_dec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstPadTemplate *src_template, *sink_template;
-
-  src_template = gst_static_pad_template_get (&vorbis_dec_src_factory);
-  gst_element_class_add_pad_template (element_class, src_template);
-
-  sink_template = gst_static_pad_template_get (&vorbis_dec_sink_factory);
-  gst_element_class_add_pad_template (element_class, sink_template);
-
-  gst_element_class_set_details_simple (element_class,
-      "Vorbis audio decoder", "Codec/Decoder/Audio",
-      GST_VORBIS_DEC_DESCRIPTION,
-      "Benjamin Otte <otte@gnome.org>, Chris Lord <chris@openedhand.com>");
-}
-
-static void
 gst_vorbis_dec_class_init (GstVorbisDecClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->finalize = vorbis_dec_finalize;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vorbis_dec_src_factory));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vorbis_dec_sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Vorbis audio decoder", "Codec/Decoder/Audio",
+      GST_VORBIS_DEC_DESCRIPTION,
+      "Benjamin Otte <otte@gnome.org>, Chris Lord <chris@openedhand.com>");
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (vorbis_dec_change_state);
 }
@@ -128,7 +121,7 @@ vorbis_get_query_types (GstPad * pad)
 }
 
 static void
-gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
+gst_vorbis_dec_init (GstVorbisDec * dec)
 {
   dec->sinkpad = gst_pad_new_from_static_template (&vorbis_dec_sink_factory,
       "sink");
@@ -1276,7 +1269,7 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  res = parent_class->change_state (element, transition);
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:

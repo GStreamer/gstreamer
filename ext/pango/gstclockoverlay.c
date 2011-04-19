@@ -60,20 +60,8 @@ enum
   PROP_LAST
 };
 
-GST_BOILERPLATE (GstClockOverlay, gst_clock_overlay, GstBaseTextOverlay,
-    GST_TYPE_BASE_TEXT_OVERLAY);
-
-static void
-gst_clock_overlay_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Clock overlay",
-      "Filter/Editor/Video",
-      "Overlays the current clock time on a video stream",
-      "Tim-Philipp Müller <tim@centricular.net>");
-}
-
+#define gst_clock_overlay_parent_class parent_class
+G_DEFINE_TYPE (GstClockOverlay, gst_clock_overlay, GST_TYPE_BASE_TEXT_OVERLAY);
 
 static void gst_clock_overlay_finalize (GObject * object);
 static void gst_clock_overlay_set_property (GObject * object, guint prop_id,
@@ -146,16 +134,23 @@ static void
 gst_clock_overlay_class_init (GstClockOverlayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseTextOverlayClass *gsttextoverlay_class;
   PangoContext *context;
   PangoFontDescription *font_description;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gsttextoverlay_class = (GstBaseTextOverlayClass *) klass;
 
   gobject_class->finalize = gst_clock_overlay_finalize;
   gobject_class->set_property = gst_clock_overlay_set_property;
   gobject_class->get_property = gst_clock_overlay_get_property;
+
+  gst_element_class_set_details_simple (gstelement_class, "Clock overlay",
+      "Filter/Editor/Video",
+      "Overlays the current clock time on a video stream",
+      "Tim-Philipp Müller <tim@centricular.net>");
 
   gsttextoverlay_class->get_text = gst_clock_overlay_get_text;
 
@@ -197,7 +192,7 @@ gst_clock_overlay_finalize (GObject * object)
 
 
 static void
-gst_clock_overlay_init (GstClockOverlay * overlay, GstClockOverlayClass * klass)
+gst_clock_overlay_init (GstClockOverlay * overlay)
 {
   GstBaseTextOverlay *textoverlay;
 

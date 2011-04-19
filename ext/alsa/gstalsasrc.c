@@ -65,9 +65,9 @@ enum
 };
 
 static void gst_alsasrc_init_interfaces (GType type);
-
-GST_BOILERPLATE_FULL (GstAlsaSrc, gst_alsasrc, GstAudioSrc,
-    GST_TYPE_AUDIO_SRC, gst_alsasrc_init_interfaces);
+#define gst_alsasrc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAlsaSrc, gst_alsasrc,
+    GST_TYPE_AUDIO_SRC, gst_alsasrc_init_interfaces (g_define_type_id));
 
 GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaSrc, gst_alsasrc_mixer);
 
@@ -183,32 +183,28 @@ gst_alsasrc_init_interfaces (GType type)
 }
 
 static void
-gst_alsasrc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Audio source (ALSA)", "Source/Audio",
-      "Read from a sound card via ALSA", "Wim Taymans <wim@fluendo.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&alsasrc_src_factory));
-}
-
-static void
 gst_alsasrc_class_init (GstAlsaSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstAudioSrcClass *gstaudiosrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
   gobject_class->finalize = gst_alsasrc_finalize;
   gobject_class->get_property = gst_alsasrc_get_property;
   gobject_class->set_property = gst_alsasrc_set_property;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Audio source (ALSA)", "Source/Audio",
+      "Read from a sound card via ALSA", "Wim Taymans <wim@fluendo.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&alsasrc_src_factory));
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasrc_getcaps);
 
@@ -287,7 +283,7 @@ gst_alsasrc_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_alsasrc_init (GstAlsaSrc * alsasrc, GstAlsaSrcClass * g_class)
+gst_alsasrc_init (GstAlsaSrc * alsasrc)
 {
   GST_DEBUG_OBJECT (alsasrc, "initializing");
 

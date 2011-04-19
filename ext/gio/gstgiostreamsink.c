@@ -83,8 +83,8 @@ enum
   PROP_STREAM
 };
 
-GST_BOILERPLATE (GstGioStreamSink, gst_gio_stream_sink, GstGioBaseSink,
-    GST_TYPE_GIO_BASE_SINK);
+#define gst_gio_stream_sink_parent_class parent_class
+G_DEFINE_TYPE (GstGioStreamSink, gst_gio_stream_sink, GST_TYPE_GIO_BASE_SINK);
 
 static void gst_gio_stream_sink_finalize (GObject * object);
 static void gst_gio_stream_sink_set_property (GObject * object, guint prop_id,
@@ -94,24 +94,14 @@ static void gst_gio_stream_sink_get_property (GObject * object, guint prop_id,
 static GOutputStream *gst_gio_stream_sink_get_stream (GstGioBaseSink * bsink);
 
 static void
-gst_gio_stream_sink_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  GST_DEBUG_CATEGORY_INIT (gst_gio_stream_sink_debug, "gio_stream_sink", 0,
-      "GIO stream sink");
-
-  gst_element_class_set_details_simple (element_class, "GIO stream sink",
-      "Sink",
-      "Write to any GIO stream",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
 gst_gio_stream_sink_class_init (GstGioStreamSinkClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstGioBaseSinkClass *ggbsink_class = (GstGioBaseSinkClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_gio_stream_sink_debug, "gio_stream_sink", 0,
+      "GIO stream sink");
 
   gobject_class->finalize = gst_gio_stream_sink_finalize;
   gobject_class->set_property = gst_gio_stream_sink_set_property;
@@ -121,13 +111,17 @@ gst_gio_stream_sink_class_init (GstGioStreamSinkClass * klass)
       g_param_spec_object ("stream", "Stream", "Stream to write to",
           G_TYPE_OUTPUT_STREAM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "GIO stream sink",
+      "Sink",
+      "Write to any GIO stream",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
   ggbsink_class->get_stream =
       GST_DEBUG_FUNCPTR (gst_gio_stream_sink_get_stream);
 }
 
 static void
-gst_gio_stream_sink_init (GstGioStreamSink * sink,
-    GstGioStreamSinkClass * gclass)
+gst_gio_stream_sink_init (GstGioStreamSink * sink)
 {
 }
 

@@ -132,8 +132,9 @@ static GstStateChangeReturn gst_vorbis_enc_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_vorbis_enc_add_interfaces (GType vorbisenc_type);
 
-GST_BOILERPLATE_FULL (GstVorbisEnc, gst_vorbis_enc, GstElement,
-    GST_TYPE_ELEMENT, gst_vorbis_enc_add_interfaces);
+#define gst_vorbis_enc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVorbisEnc, gst_vorbis_enc,
+    GST_TYPE_ELEMENT, gst_vorbis_enc_add_interfaces (g_define_type_id));
 
 static void
 gst_vorbis_enc_add_interfaces (GType vorbisenc_type)
@@ -144,24 +145,6 @@ gst_vorbis_enc_add_interfaces (GType vorbisenc_type)
   g_type_add_interface_static (vorbisenc_type, GST_TYPE_TAG_SETTER,
       &tag_setter_info);
   g_type_add_interface_static (vorbisenc_type, GST_TYPE_PRESET, &preset_info);
-}
-
-static void
-gst_vorbis_enc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstPadTemplate *src_template, *sink_template;
-
-
-  src_template = gst_static_pad_template_get (&vorbis_enc_src_factory);
-  gst_element_class_add_pad_template (element_class, src_template);
-
-  sink_template = gst_static_pad_template_get (&vorbis_enc_sink_factory);
-  gst_element_class_add_pad_template (element_class, sink_template);
-  gst_element_class_set_details_simple (element_class,
-      "Vorbis audio encoder", "Codec/Encoder/Audio",
-      "Encodes audio in Vorbis format",
-      "Monty <monty@xiph.org>, " "Wim Taymans <wim@fluendo.com>");
 }
 
 static void
@@ -207,6 +190,15 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
       g_param_spec_string ("last-message", "last-message",
           "The last status message", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vorbis_enc_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vorbis_enc_sink_factory));
+  gst_element_class_set_details_simple (gstelement_class,
+      "Vorbis audio encoder", "Codec/Encoder/Audio",
+      "Encodes audio in Vorbis format",
+      "Monty <monty@xiph.org>, " "Wim Taymans <wim@fluendo.com>");
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_vorbis_enc_change_state);
@@ -570,7 +562,7 @@ error:
 }
 
 static void
-gst_vorbis_enc_init (GstVorbisEnc * vorbisenc, GstVorbisEncClass * klass)
+gst_vorbis_enc_init (GstVorbisEnc * vorbisenc)
 {
   vorbisenc->sinkpad =
       gst_pad_new_from_static_template (&vorbis_enc_sink_factory, "sink");

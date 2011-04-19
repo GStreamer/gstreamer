@@ -69,9 +69,9 @@ enum
 };
 
 static void gst_alsasink_init_interfaces (GType type);
-
-GST_BOILERPLATE_FULL (GstAlsaSink, gst_alsasink, GstAudioSink,
-    GST_TYPE_AUDIO_SINK, gst_alsasink_init_interfaces);
+#define gst_alsasink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAlsaSink, gst_alsasink,
+    GST_TYPE_AUDIO_SINK, gst_alsasink_init_interfaces (g_define_type_id));
 
 static void gst_alsasink_finalise (GObject * object);
 static void gst_alsasink_set_property (GObject * object,
@@ -164,26 +164,15 @@ gst_alsasink_init_interfaces (GType type)
 }
 
 static void
-gst_alsasink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Audio sink (ALSA)", "Sink/Audio",
-      "Output to a sound card via ALSA", "Wim Taymans <wim@fluendo.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&alsasink_sink_factory));
-}
-
-static void
 gst_alsasink_class_init (GstAlsaSinkClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
   GstAudioSinkClass *gstaudiosink_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
@@ -192,6 +181,13 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
   gobject_class->finalize = gst_alsasink_finalise;
   gobject_class->get_property = gst_alsasink_get_property;
   gobject_class->set_property = gst_alsasink_set_property;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Audio sink (ALSA)", "Sink/Audio",
+      "Output to a sound card via ALSA", "Wim Taymans <wim@fluendo.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&alsasink_sink_factory));
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasink_getcaps);
 
@@ -271,7 +267,7 @@ gst_alsasink_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_alsasink_init (GstAlsaSink * alsasink, GstAlsaSinkClass * g_class)
+gst_alsasink_init (GstAlsaSink * alsasink)
 {
   GST_DEBUG_OBJECT (alsasink, "initializing alsasink");
 

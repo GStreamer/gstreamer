@@ -170,7 +170,8 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
   GST_LOG ("[%s] created new mixer track %p", name, track);
 
   /* This reflects the assumptions used for GstAlsaMixerTrack */
-  if (!(!!(flags & GST_MIXER_TRACK_OUTPUT) ^ !!(flags & GST_MIXER_TRACK_INPUT))) {
+  if (!(! !(flags & GST_MIXER_TRACK_OUTPUT) ^ ! !(flags &
+              GST_MIXER_TRACK_INPUT))) {
     GST_ERROR ("Mixer track must be either output or input!");
     g_return_val_if_reached (NULL);
   }
@@ -302,7 +303,7 @@ gst_alsa_mixer_track_update (GstAlsaMixerTrack * alsa_track)
     }
   }
 
-  if (!!(audible) != !(track->flags & GST_MIXER_TRACK_MUTE)) {
+  if (! !(audible) != !(track->flags & GST_MIXER_TRACK_MUTE)) {
     if (audible) {
       track->flags &= ~GST_MIXER_TRACK_MUTE;
 

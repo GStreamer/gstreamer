@@ -1264,29 +1264,24 @@ static gboolean gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event);
 
 static void gst_ogg_print (GstOggDemux * demux);
 
-GST_BOILERPLATE (GstOggDemux, gst_ogg_demux, GstElement, GST_TYPE_ELEMENT);
-
-static void
-gst_ogg_demux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Ogg demuxer", "Codec/Demuxer",
-      "demux ogg streams (info about ogg: http://xiph.org)",
-      "Wim Taymans <wim@fluendo.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ogg_demux_sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ogg_demux_src_template_factory));
-}
+#define gst_ogg_demux_parent_class parent_class
+G_DEFINE_TYPE (GstOggDemux, gst_ogg_demux, GST_TYPE_ELEMENT);
 
 static void
 gst_ogg_demux_class_init (GstOggDemuxClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Ogg demuxer", "Codec/Demuxer",
+      "demux ogg streams (info about ogg: http://xiph.org)",
+      "Wim Taymans <wim@fluendo.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&ogg_demux_sink_template_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&ogg_demux_src_template_factory));
 
   gstelement_class->change_state = gst_ogg_demux_change_state;
   gstelement_class->send_event = gst_ogg_demux_receive_event;
@@ -1295,7 +1290,7 @@ gst_ogg_demux_class_init (GstOggDemuxClass * klass)
 }
 
 static void
-gst_ogg_demux_init (GstOggDemux * ogg, GstOggDemuxClass * g_class)
+gst_ogg_demux_init (GstOggDemux * ogg)
 {
   /* create the sink pad */
   ogg->sinkpad =
@@ -3593,7 +3588,7 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  result = parent_class->change_state (element, transition);
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:

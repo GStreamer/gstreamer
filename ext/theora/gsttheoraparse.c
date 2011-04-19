@@ -85,8 +85,8 @@ enum
   PROP_SYNCHRONIZATION_POINTS
 };
 
-GST_BOILERPLATE (GstTheoraParse, gst_theora_parse, GstElement,
-    GST_TYPE_ELEMENT);
+#define gst_theora_parse_parent_class parent_class
+G_DEFINE_TYPE (GstTheoraParse, gst_theora_parse, GST_TYPE_ELEMENT);
 
 static void theora_parse_dispose (GObject * object);
 static void theora_parse_get_property (GObject * object, guint prop_id,
@@ -99,20 +99,6 @@ static GstStateChangeReturn theora_parse_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean theora_parse_sink_event (GstPad * pad, GstEvent * event);
 static gboolean theora_parse_src_query (GstPad * pad, GstQuery * query);
-
-static void
-gst_theora_parse_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_parse_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_parse_sink_factory));
-  gst_element_class_set_details_simple (element_class,
-      "Theora video parser", "Codec/Parser/Video",
-      "parse raw theora streams", "Andy Wingo <wingo@pobox.com>");
-}
 
 static void
 gst_theora_parse_class_init (GstTheoraParseClass * klass)
@@ -140,6 +126,15 @@ gst_theora_parse_class_init (GstTheoraParseClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&theora_parse_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&theora_parse_sink_factory));
+  gst_element_class_set_details_simple (gstelement_class,
+      "Theora video parser", "Codec/Parser/Video",
+      "parse raw theora streams", "Andy Wingo <wingo@pobox.com>");
+
   gstelement_class->change_state = theora_parse_change_state;
 
   GST_DEBUG_CATEGORY_INIT (theoraparse_debug, "theoraparse", 0,
@@ -147,7 +142,7 @@ gst_theora_parse_class_init (GstTheoraParseClass * klass)
 }
 
 static void
-gst_theora_parse_init (GstTheoraParse * parse, GstTheoraParseClass * g_class)
+gst_theora_parse_init (GstTheoraParse * parse)
 {
   parse->sinkpad =
       gst_pad_new_from_static_template (&theora_parse_sink_factory, "sink");
@@ -919,7 +914,7 @@ theora_parse_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:

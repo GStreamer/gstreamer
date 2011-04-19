@@ -92,8 +92,9 @@ enum
   PROP_FILE
 };
 
-GST_BOILERPLATE_FULL (GstGioSink, gst_gio_sink, GstGioBaseSink,
-    GST_TYPE_GIO_BASE_SINK, gst_gio_uri_handler_do_init);
+#define gst_gio_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGioSink, gst_gio_sink, GST_TYPE_GIO_BASE_SINK,
+    gst_gio_uri_handler_do_init (g_define_type_id));
 
 static void gst_gio_sink_finalize (GObject * object);
 static void gst_gio_sink_set_property (GObject * object, guint prop_id,
@@ -103,24 +104,13 @@ static void gst_gio_sink_get_property (GObject * object, guint prop_id,
 static GOutputStream *gst_gio_sink_get_stream (GstGioBaseSink * base_sink);
 
 static void
-gst_gio_sink_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  GST_DEBUG_CATEGORY_INIT (gst_gio_sink_debug, "gio_sink", 0, "GIO sink");
-
-  gst_element_class_set_details_simple (element_class, "GIO sink",
-      "Sink/File",
-      "Write to any GIO-supported location",
-      "Ren\xc3\xa9 Stadler <mail@renestadler.de>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
 gst_gio_sink_class_init (GstGioSinkClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstGioBaseSinkClass *gstgiobasesink_class = (GstGioBaseSinkClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_gio_sink_debug, "gio_sink", 0, "GIO sink");
 
   gobject_class->finalize = gst_gio_sink_finalize;
   gobject_class->set_property = gst_gio_sink_set_property;
@@ -141,13 +131,19 @@ gst_gio_sink_class_init (GstGioSinkClass * klass)
       g_param_spec_object ("file", "File", "GFile to write to",
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "GIO sink",
+      "Sink/File",
+      "Write to any GIO-supported location",
+      "Ren\xc3\xa9 Stadler <mail@renestadler.de>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
   gstgiobasesink_class->get_stream =
       GST_DEBUG_FUNCPTR (gst_gio_sink_get_stream);
   gstgiobasesink_class->close_on_stop = TRUE;
 }
 
 static void
-gst_gio_sink_init (GstGioSink * sink, GstGioSinkClass * gclass)
+gst_gio_sink_init (GstGioSink * sink)
 {
 }
 

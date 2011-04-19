@@ -116,9 +116,6 @@ enum
   ARG_IRADIO_TITLE
 };
 
-static void gst_gnome_vfs_src_base_init (gpointer g_class);
-static void gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass);
-static void gst_gnome_vfs_src_init (GstGnomeVFSSrc * gnomevfssrc);
 static void gst_gnome_vfs_src_finalize (GObject * object);
 static void gst_gnome_vfs_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -137,67 +134,24 @@ static GstFlowReturn gst_gnome_vfs_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint size, GstBuffer ** buffer);
 static gboolean gst_gnome_vfs_src_query (GstBaseSrc * src, GstQuery * query);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_gnome_vfs_src_get_type (void)
-{
-  static GType gnomevfssrc_type = 0;
-
-  if (!gnomevfssrc_type) {
-    static const GTypeInfo gnomevfssrc_info = {
-      sizeof (GstGnomeVFSSrcClass),
-      gst_gnome_vfs_src_base_init,
-      NULL,
-      (GClassInitFunc) gst_gnome_vfs_src_class_init,
-      NULL,
-      NULL,
-      sizeof (GstGnomeVFSSrc),
-      0,
-      (GInstanceInitFunc) gst_gnome_vfs_src_init,
-    };
-    static const GInterfaceInfo urihandler_info = {
-      gst_gnome_vfs_src_uri_handler_init,
-      NULL,
-      NULL
-    };
-
-    gnomevfssrc_type =
-        g_type_register_static (GST_TYPE_BASE_SRC,
-        "GstGnomeVFSSrc", &gnomevfssrc_info, 0);
-    g_type_add_interface_static (gnomevfssrc_type, GST_TYPE_URI_HANDLER,
-        &urihandler_info);
-  }
-  return gnomevfssrc_type;
-}
-
-static void
-gst_gnome_vfs_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_set_details_simple (element_class,
-      "GnomeVFS Source", "Source/File",
-      "Read from any GnomeVFS-supported file",
-      "Bastien Nocera <hadess@hadess.net>, "
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-  GST_DEBUG_CATEGORY_INIT (gnomevfssrc_debug, "gnomevfssrc", 0,
-      "Gnome-VFS Source");
-}
+#define gst_gnome_vfs_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGnomeVFSSrc, gst_gnome_vfs_src, GST_TYPE_BASE_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_gnome_vfs_src_uri_handler_init));
 
 static void
 gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
+  GST_DEBUG_CATEGORY_INIT (gnomevfssrc_debug, "gnomevfssrc", 0,
+      "Gnome-VFS Source");
 
   gobject_class->finalize = gst_gnome_vfs_src_finalize;
   gobject_class->set_property = gst_gnome_vfs_src_set_property;
@@ -238,6 +192,14 @@ gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
       g_param_spec_string ("iradio-title", "iradio-title",
           "Name of currently playing song", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_set_details_simple (gstelement_class,
+      "GnomeVFS Source", "Source/File",
+      "Read from any GnomeVFS-supported file",
+      "Bastien Nocera <hadess@hadess.net>, "
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_stop);

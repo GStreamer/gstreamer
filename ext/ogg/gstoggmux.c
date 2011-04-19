@@ -110,9 +110,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
         "subtitle/x-kate; application/x-kate")
     );
 
-static void gst_ogg_mux_base_init (gpointer g_class);
-static void gst_ogg_mux_class_init (GstOggMuxClass * klass);
-static void gst_ogg_mux_init (GstOggMux * ogg_mux);
 static void gst_ogg_mux_finalize (GObject * object);
 
 static GstFlowReturn
@@ -129,57 +126,10 @@ static void gst_ogg_mux_get_property (GObject * object,
 static GstStateChangeReturn gst_ogg_mux_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
-
 /*static guint gst_ogg_mux_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_ogg_mux_get_type (void)
-{
-  static GType ogg_mux_type = 0;
-
-  if (G_UNLIKELY (ogg_mux_type == 0)) {
-    static const GTypeInfo ogg_mux_info = {
-      sizeof (GstOggMuxClass),
-      gst_ogg_mux_base_init,
-      NULL,
-      (GClassInitFunc) gst_ogg_mux_class_init,
-      NULL,
-      NULL,
-      sizeof (GstOggMux),
-      0,
-      (GInstanceInitFunc) gst_ogg_mux_init,
-    };
-    static const GInterfaceInfo preset_info = {
-      NULL,
-      NULL,
-      NULL
-    };
-
-    ogg_mux_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstOggMux", &ogg_mux_info,
-        0);
-
-    g_type_add_interface_static (ogg_mux_type, GST_TYPE_PRESET, &preset_info);
-  }
-  return ogg_mux_type;
-}
-
-static void
-gst_ogg_mux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-
-  gst_element_class_set_details_simple (element_class,
-      "Ogg muxer", "Codec/Muxer",
-      "mux ogg streams (info about ogg: http://xiph.org)",
-      "Wim Taymans <wim@fluendo.com>");
-}
+#define gst_ogg_mux_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstOggMux, gst_ogg_mux, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
 
 static void
 gst_ogg_mux_class_init (GstOggMuxClass * klass)
@@ -190,11 +140,19 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->finalize = gst_ogg_mux_finalize;
   gobject_class->get_property = gst_ogg_mux_get_property;
   gobject_class->set_property = gst_ogg_mux_set_property;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Ogg muxer", "Codec/Muxer",
+      "mux ogg streams (info about ogg: http://xiph.org)",
+      "Wim Taymans <wim@fluendo.com>");
 
   gstelement_class->request_new_pad = gst_ogg_mux_request_new_pad;
   gstelement_class->release_pad = gst_ogg_mux_release_pad;
