@@ -4718,8 +4718,8 @@ slow_path:
   }
 invalid:
   {
-    pad_free_cache (cache);
     GST_PAD_STREAM_UNLOCK (peer);
+    pad_free_cache (cache);
     goto slow_path;
   }
 }
@@ -4830,8 +4830,8 @@ slow_path:
   }
 invalid:
   {
-    pad_free_cache (cache);
     GST_PAD_STREAM_UNLOCK (peer);
+    pad_free_cache (cache);
     goto slow_path;
   }
 }
