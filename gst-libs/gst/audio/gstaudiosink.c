@@ -574,19 +574,14 @@ enum
   ARG_0,
 };
 
-#define _do_init(bla) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_audio_sink_debug, "audiosink", 0, "audiosink element");
-
-GST_BOILERPLATE_FULL (GstAudioSink, gst_audio_sink, GstBaseAudioSink,
+#define gst_audio_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAudioSink, gst_audio_sink,
     GST_TYPE_BASE_AUDIO_SINK, _do_init);
 
 static GstRingBuffer *gst_audio_sink_create_ringbuffer (GstBaseAudioSink *
     sink);
-
-static void
-gst_audio_sink_base_init (gpointer g_class)
-{
-}
 
 static void
 gst_audio_sink_class_init (GstAudioSinkClass * klass)
@@ -602,7 +597,7 @@ gst_audio_sink_class_init (GstAudioSinkClass * klass)
 }
 
 static void
-gst_audio_sink_init (GstAudioSink * audiosink, GstAudioSinkClass * g_class)
+gst_audio_sink_init (GstAudioSink * audiosink)
 {
 }
 

@@ -119,8 +119,9 @@ _do_init (GType type)
 #endif /* ENABLE_NLS */
 }
 
-GST_BOILERPLATE_FULL (GstBaseAudioSrc, gst_base_audio_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, _do_init);
+#define gst_base_audio_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstBaseAudioSrc, gst_base_audio_src, GST_TYPE_PUSH_SRC,
+    _do_init (g_define_type_id));
 
 static void gst_base_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -147,11 +148,6 @@ static gboolean gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query);
 static void gst_base_audio_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 /* static guint gst_base_audio_src_signals[LAST_SIGNAL] = { 0 }; */
-
-static void
-gst_base_audio_src_base_init (gpointer g_class)
-{
-}
 
 static void
 gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
@@ -241,8 +237,7 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
 }
 
 static void
-gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
-    GstBaseAudioSrcClass * g_class)
+gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc)
 {
   baseaudiosrc->priv = GST_BASE_AUDIO_SRC_GET_PRIVATE (baseaudiosrc);
 

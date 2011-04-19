@@ -488,18 +488,13 @@ enum
   ARG_0,
 };
 
-#define _do_init(bla) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_audio_src_debug, "audiosrc", 0, "audiosrc element");
-
-GST_BOILERPLATE_FULL (GstAudioSrc, gst_audio_src, GstBaseAudioSrc,
+#define gst_audio_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAudioSrc, gst_audio_src,
     GST_TYPE_BASE_AUDIO_SRC, _do_init);
 
 static GstRingBuffer *gst_audio_src_create_ringbuffer (GstBaseAudioSrc * src);
-
-static void
-gst_audio_src_base_init (gpointer g_class)
-{
-}
 
 static void
 gst_audio_src_class_init (GstAudioSrcClass * klass)
@@ -515,7 +510,7 @@ gst_audio_src_class_init (GstAudioSrcClass * klass)
 }
 
 static void
-gst_audio_src_init (GstAudioSrc * audiosrc, GstAudioSrcClass * g_class)
+gst_audio_src_init (GstAudioSrc * audiosrc)
 {
 }
 

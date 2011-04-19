@@ -57,7 +57,6 @@ struct _GstBaseAudioSinkPrivate
 
   GstClockTime eos_time;
 
-  gboolean do_time_offset;
   /* number of microseconds we alow timestamps or clock slaving to drift
    * before resyncing */
   guint64 drift_tolerance;
@@ -119,10 +118,10 @@ gst_base_audio_sink_slave_method_get_type (void)
 }
 
 
-#define _do_init(bla) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_base_audio_sink_debug, "baseaudiosink", 0, "baseaudiosink element");
-
-GST_BOILERPLATE_FULL (GstBaseAudioSink, gst_base_audio_sink, GstBaseSink,
+#define gst_base_audio_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstBaseAudioSink, gst_base_audio_sink,
     GST_TYPE_BASE_SINK, _do_init);
 
 static void gst_base_audio_sink_dispose (GObject * object);
@@ -165,11 +164,6 @@ static gboolean gst_base_audio_sink_query_pad (GstPad * pad, GstQuery * query);
 
 
 /* static guint gst_base_audio_sink_signals[LAST_SIGNAL] = { 0 }; */
-
-static void
-gst_base_audio_sink_base_init (gpointer g_class)
-{
-}
 
 static void
 gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
@@ -257,10 +251,8 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
 }
 
 static void
-gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
-    GstBaseAudioSinkClass * g_class)
+gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink)
 {
-  GstPluginFeature *feature;
   GstBaseSink *basesink;
 
   baseaudiosink->priv = GST_BASE_AUDIO_SINK_GET_PRIVATE (baseaudiosink);
@@ -283,25 +275,6 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
   /* install some custom pad_query functions */
   gst_pad_set_query_function (GST_BASE_SINK_PAD (baseaudiosink),
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_query_pad));
-
-  baseaudiosink->priv->do_time_offset = TRUE;
-
-  /* check the factory, pulsesink < 0.10.17 does the timestamp offset itself so
-   * we should not do ourselves */
-  feature =
-      GST_PLUGIN_FEATURE_CAST (GST_ELEMENT_CLASS (g_class)->elementfactory);
-  GST_DEBUG ("created from factory %p", feature);
-
-  /* HACK for old pulsesink that did the time_offset themselves */
-  if (feature) {
-    if (strcmp (gst_plugin_feature_get_name (feature), "pulsesink") == 0) {
-      if (!gst_plugin_feature_check_version (feature, 0, 10, 17)) {
-        /* we're dealing with an old pulsesink, we need to disable time corection */
-        GST_DEBUG ("disable time offset");
-        baseaudiosink->priv->do_time_offset = FALSE;
-      }
-    }
-  }
 }
 
 static void
@@ -1585,20 +1558,18 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
 
   /* bring to position in the ringbuffer */
-  if (sink->priv->do_time_offset) {
-    time_offset =
-        GST_AUDIO_CLOCK_CAST (sink->provided_clock)->abidata.ABI.time_offset;
-    GST_DEBUG_OBJECT (sink,
-        "time offset %" GST_TIME_FORMAT, GST_TIME_ARGS (time_offset));
-    if (render_start > time_offset)
-      render_start -= time_offset;
-    else
-      render_start = 0;
-    if (render_stop > time_offset)
-      render_stop -= time_offset;
-    else
-      render_stop = 0;
-  }
+  time_offset =
+      GST_AUDIO_CLOCK_CAST (sink->provided_clock)->abidata.ABI.time_offset;
+  GST_DEBUG_OBJECT (sink,
+      "time offset %" GST_TIME_FORMAT, GST_TIME_ARGS (time_offset));
+  if (render_start > time_offset)
+    render_start -= time_offset;
+  else
+    render_start = 0;
+  if (render_stop > time_offset)
+    render_stop -= time_offset;
+  else
+    render_stop = 0;
 
   /* and bring the time to the rate corrected offset in the buffer */
   render_start = gst_util_uint64_scale_int (render_start,
