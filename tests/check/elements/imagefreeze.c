@@ -124,6 +124,7 @@ GST_START_TEST (test_imagefreeze_0_1)
   GstBus *bus;
   GMainLoop *loop;
   guint n_buffers = G_MAXUINT;
+  guint bus_watch = 0;
 
   caps1 =
       gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
@@ -139,7 +140,7 @@ GST_START_TEST (test_imagefreeze_0_1)
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   n_buffers = 0;
@@ -156,6 +157,7 @@ GST_START_TEST (test_imagefreeze_0_1)
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
+  g_source_remove (bus_watch);
 }
 
 GST_END_TEST;
@@ -185,6 +187,7 @@ GST_START_TEST (test_imagefreeze_25_1_0ms_400ms)
   GstBus *bus;
   GMainLoop *loop;
   guint n_buffers = G_MAXUINT;
+  guint bus_watch = 0;
 
   caps1 =
       gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
@@ -200,7 +203,7 @@ GST_START_TEST (test_imagefreeze_25_1_0ms_400ms)
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
@@ -225,6 +228,7 @@ GST_START_TEST (test_imagefreeze_25_1_0ms_400ms)
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
+  g_source_remove (bus_watch);
 }
 
 GST_END_TEST;
@@ -255,6 +259,7 @@ GST_START_TEST (test_imagefreeze_25_1_200ms_400ms)
   GstBus *bus;
   GMainLoop *loop;
   guint n_buffers = G_MAXUINT;
+  guint bus_watch = 0;
 
   caps1 =
       gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
@@ -270,7 +275,7 @@ GST_START_TEST (test_imagefreeze_25_1_200ms_400ms)
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
@@ -295,6 +300,7 @@ GST_START_TEST (test_imagefreeze_25_1_200ms_400ms)
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
+  g_source_remove (bus_watch);
 }
 
 GST_END_TEST;
@@ -325,6 +331,7 @@ GST_START_TEST (test_imagefreeze_25_1_400ms_0ms)
   GstBus *bus;
   GMainLoop *loop;
   guint n_buffers = G_MAXUINT;
+  guint bus_watch = 0;
 
   caps1 =
       gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
@@ -340,7 +347,7 @@ GST_START_TEST (test_imagefreeze_25_1_400ms_0ms)
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
@@ -365,6 +372,7 @@ GST_START_TEST (test_imagefreeze_25_1_400ms_0ms)
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
+  g_source_remove (bus_watch);
 }
 
 GST_END_TEST;
@@ -406,6 +414,7 @@ GST_START_TEST (test_imagefreeze_25_1_220ms_380ms)
   GstBus *bus;
   GMainLoop *loop;
   guint n_buffers = G_MAXUINT;
+  guint bus_watch = 0;
 
   caps1 =
       gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
@@ -421,7 +430,7 @@ GST_START_TEST (test_imagefreeze_25_1_220ms_380ms)
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
@@ -446,6 +455,7 @@ GST_START_TEST (test_imagefreeze_25_1_220ms_380ms)
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
+  g_source_remove (bus_watch);
 }
 
 GST_END_TEST;
@@ -491,6 +501,7 @@ GST_START_TEST (test_imagefreeze_bufferalloc)
   GstBus *bus;
   GMainLoop *loop;
   guint n_buffers = G_MAXUINT;
+  guint bus_watch = 0;
 
   caps1 =
       gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
@@ -514,7 +525,7 @@ GST_START_TEST (test_imagefreeze_bufferalloc)
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
@@ -542,6 +553,7 @@ GST_START_TEST (test_imagefreeze_bufferalloc)
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
+  g_source_remove (bus_watch);
 }
 
 GST_END_TEST;
@@ -555,6 +567,7 @@ GST_START_TEST (test_imagefreeze_eos)
   GMainLoop *loop;
   GstFormat fmt = GST_FORMAT_TIME;
   gint64 position;
+  guint bus_watch = 0;
 
   caps1 =
       gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
@@ -572,7 +585,7 @@ GST_START_TEST (test_imagefreeze_eos)
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
@@ -597,6 +610,7 @@ GST_START_TEST (test_imagefreeze_eos)
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
+  g_source_remove (bus_watch);
 }
 
 GST_END_TEST;

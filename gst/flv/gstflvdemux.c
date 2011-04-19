@@ -3101,12 +3101,16 @@ gst_flv_demux_set_index (GstElement * element, GstIndex * index)
     gst_object_unref (demux->index);
   if (index) {
     demux->index = gst_object_ref (index);
-    gst_index_get_writer_id (index, GST_OBJECT (element), &demux->index_id);
     demux->own_index = FALSE;
   } else
     demux->index = NULL;
 
   GST_OBJECT_UNLOCK (demux);
+  /* object lock might be taken again */
+  if (index)
+    gst_index_get_writer_id (index, GST_OBJECT (element), &demux->index_id);
+  GST_DEBUG_OBJECT (demux, "Set index %" GST_PTR_FORMAT, demux->index);
+
 }
 
 static GstIndex *

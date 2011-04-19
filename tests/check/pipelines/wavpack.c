@@ -95,6 +95,7 @@ GST_START_TEST (test_encode_decode)
   GstBus *bus;
   GMainLoop *loop;
   GstBuffer *in, *out;
+  guint bus_watch = 0;
 
   srcadapter = gst_adapter_new ();
   fail_unless (srcadapter != NULL);
@@ -148,7 +149,7 @@ GST_START_TEST (test_encode_decode)
 
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
   had_first_buffer = FALSE;
@@ -179,6 +180,7 @@ GST_START_TEST (test_encode_decode)
   g_main_loop_unref (loop);
   g_object_unref (srcadapter);
   g_object_unref (sinkadapter);
+  g_source_remove (bus_watch);
 }
 
 GST_END_TEST;
