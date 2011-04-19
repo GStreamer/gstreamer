@@ -898,6 +898,7 @@ reset_rate_timer (GstQueue2 * queue)
   queue->bytes_in = 0;
   queue->bytes_out = 0;
   queue->byte_in_rate = 0.0;
+  queue->byte_in_period = 0;
   queue->byte_out_rate = 0.0;
   queue->last_in_elapsed = 0.0;
   queue->last_out_elapsed = 0.0;
@@ -910,8 +911,11 @@ reset_rate_timer (GstQueue2 * queue)
 /* Tuning for rate estimation. We use a large window for the input rate because
  * it should be stable when connected to a network. The output rate is less
  * stable (the elements preroll, queues behind a demuxer fill, ...) and should
- * therefore adapt more quickly. */
-#define AVG_IN(avg,val)  ((avg) * 15.0 + (val)) / 16.0
+ * therefore adapt more quickly.
+ * However, initial input rate may be subject to a burst, and should therefore
+ * initially also adapt more quickly to changes, and only later on give higher
+ * weight to previous values. */
+#define AVG_IN(avg,val,w1,w2)  ((avg) * (w1) + (val) * (w2)) / ((w1) + (w2))
 #define AVG_OUT(avg,val) ((avg) * 3.0 + (val)) / 4.0
 
 static void
@@ -933,14 +937,20 @@ update_in_rates (GstQueue2 * queue)
     period = elapsed - queue->last_in_elapsed;
 
     GST_DEBUG_OBJECT (queue,
-        "rates: period %f, in %" G_GUINT64_FORMAT, period, queue->bytes_in);
+        "rates: period %f, in %" G_GUINT64_FORMAT ", global period %f",
+        period, queue->bytes_in, queue->byte_in_period);
 
     byte_in_rate = queue->bytes_in / period;
 
     if (queue->byte_in_rate == 0.0)
       queue->byte_in_rate = byte_in_rate;
     else
-      queue->byte_in_rate = AVG_IN (queue->byte_in_rate, byte_in_rate);
+      queue->byte_in_rate = AVG_IN (queue->byte_in_rate, byte_in_rate,
+          (double) queue->byte_in_period, period);
+
+    /* another data point, cap at 16 for long time running average */
+    if (queue->byte_in_period < 16 * RATE_INTERVAL)
+      queue->byte_in_period += period;
 
     /* reset the values to calculate rate over the next interval */
     queue->last_in_elapsed = elapsed;
