@@ -1441,7 +1441,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
   GST_BUFFER_DURATION (outbuf) = duration;
 
   /* mark keyframes */
-  if (!(pkt.flags & PKT_FLAG_KEY)) {
+  if (!(pkt.flags & AV_PKT_FLAG_KEY)) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 

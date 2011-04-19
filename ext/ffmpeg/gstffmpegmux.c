@@ -743,7 +743,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     pkt.flags = 0;
 
     if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT))
-      pkt.flags |= PKT_FLAG_KEY;
+      pkt.flags |= AV_PKT_FLAG_KEY;
 
     if (GST_BUFFER_DURATION_IS_VALID (buf))
       pkt.duration =
