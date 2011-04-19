@@ -208,7 +208,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_base_parse_debug);
 #define GST_CAT_DEFAULT gst_base_parse_debug
 
 /* Supported formats */
-static GstFormat fmtlist[] = {
+static const GstFormat fmtlist[] = {
   GST_FORMAT_DEFAULT,
   GST_FORMAT_BYTES,
   GST_FORMAT_TIME,
