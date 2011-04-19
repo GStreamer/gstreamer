@@ -80,29 +80,25 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
 
-GST_BOILERPLATE (GstFFMpegDeinterlace, gst_ffmpegdeinterlace, GstElement,
-    GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstFFMpegDeinterlace, gst_ffmpegdeinterlace, GST_TYPE_ELEMENT);
 
 static GstFlowReturn gst_ffmpegdeinterlace_chain (GstPad * pad,
     GstBuffer * inbuf);
 
+
 static void
-gst_ffmpegdeinterlace_base_init (gpointer g_class)
+gst_ffmpegdeinterlace_class_init (GstFFMpegDeinterlaceClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
+
   gst_element_class_set_details_simple (element_class,
       "FFMPEG Deinterlace element", "Filter/Effect/Video/Deinterlace",
       "Deinterlace video", "Luca Ognibene <luogni@tin.it>");
-}
-
-static void
-gst_ffmpegdeinterlace_class_init (GstFFMpegDeinterlaceClass * klass)
-{
 }
 
 static gboolean
@@ -147,8 +143,7 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_ffmpegdeinterlace_init (GstFFMpegDeinterlace * deinterlace,
-    GstFFMpegDeinterlaceClass * klass)
+gst_ffmpegdeinterlace_init (GstFFMpegDeinterlace * deinterlace)
 {
   deinterlace->sinkpad =
       gst_pad_new_from_static_template (&sink_factory, "sink");

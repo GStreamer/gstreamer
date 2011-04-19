@@ -161,8 +161,8 @@ enum
       /* FILL ME */
 };
 
-GST_BOILERPLATE (GstFFMpegScale, gst_ffmpegscale, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+#define gst_ffmpegscale_parent_class parent_class
+G_DEFINE_TYPE (GstFFMpegScale, gst_ffmpegscale, GST_TYPE_BASE_TRANSFORM);
 
 static void gst_ffmpegscale_finalize (GObject * object);
 static void gst_ffmpegscale_set_property (GObject * object, guint prop_id,
@@ -186,24 +186,10 @@ static gboolean gst_ffmpegscale_handle_src_event (GstPad * pad,
     GstEvent * event);
 
 static void
-gst_ffmpegscale_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details_simple (element_class, "FFMPEG Scale element",
-      "Filter/Converter/Video",
-      "Converts video from one resolution to another",
-      "Luca Ognibene <luogni@tin.it>, Mark Nauwelaerts <mnauw@users.sf.net>");
-}
-
-static void
 gst_ffmpegscale_class_init (GstFFMpegScaleClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->finalize = gst_ffmpegscale_finalize;
@@ -214,6 +200,16 @@ gst_ffmpegscale_class_init (GstFFMpegScaleClass * klass)
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_FFMPEGSCALE_METHOD, DEFAULT_PROP_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "FFMPEG Scale element", "Filter/Converter/Video",
+      "Converts video from one resolution to another",
+      "Luca Ognibene <luogni@tin.it>, Mark Nauwelaerts <mnauw@users.sf.net>");
 
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_ffmpegscale_stop);
   trans_class->transform_caps =
@@ -228,7 +224,7 @@ gst_ffmpegscale_class_init (GstFFMpegScaleClass * klass)
 }
 
 static void
-gst_ffmpegscale_init (GstFFMpegScale * scale, GstFFMpegScaleClass * klass)
+gst_ffmpegscale_init (GstFFMpegScale * scale)
 {
   GstBaseTransform *trans = GST_BASE_TRANSFORM (scale);
 
