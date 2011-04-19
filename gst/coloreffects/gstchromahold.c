@@ -91,7 +91,8 @@ static GstStaticPadTemplate gst_chroma_hold_sink_template =
 } G_STMT_END
 
 #define GST_CHROMA_HOLD_UNLOCK(self) G_STMT_START { \
-  GST_LOG_OBJECT (self, "Unlocking chromahold from thread %p", g_thread_self ()); \
+  GST_LOG_OBJECT (self, "Unlocking chromahold from thread %p", \
+      g_thread_self ()); \
   g_static_mutex_unlock (&self->lock); \
 } G_STMT_END
 
