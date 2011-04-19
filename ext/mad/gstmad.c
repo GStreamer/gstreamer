@@ -111,7 +111,8 @@ static GstIndex *gst_mad_get_index (GstElement * element);
 static GstTagList *gst_mad_id3_to_tag_list (const struct id3_tag *tag);
 #endif
 
-GST_BOILERPLATE (GstMad, gst_mad, GstElement, GST_TYPE_ELEMENT);
+#define gst_mad_parent_class parent_class
+G_DEFINE_TYPE (GstMad, gst_mad, GST_TYPE_ELEMENT);
 
 /*
 #define GST_TYPE_MAD_LAYER (gst_mad_layer_get_type())
@@ -175,20 +176,6 @@ gst_mad_emphasis_get_type (void)
 }
 
 static void
-gst_mad_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mad_sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mad_src_template_factory));
-  gst_element_class_set_details_simple (element_class, "mad mp3 decoder",
-      "Codec/Decoder/Audio",
-      "Uses mad code to decode mp3 streams", "Wim Taymans <wim@fluendo.com>");
-}
-
-static void
 gst_mad_class_init (GstMadClass * klass)
 {
   GObjectClass *gobject_class;
@@ -197,15 +184,9 @@ gst_mad_class_init (GstMadClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = gst_mad_set_property;
   gobject_class->get_property = gst_mad_get_property;
   gobject_class->dispose = gst_mad_dispose;
-
-  gstelement_class->change_state = gst_mad_change_state;
-  gstelement_class->set_index = gst_mad_set_index;
-  gstelement_class->get_index = gst_mad_get_index;
 
   /* init properties */
   /* currently, string representations are used, we might want to change that */
@@ -217,6 +198,19 @@ gst_mad_class_init (GstMadClass * klass)
   g_object_class_install_property (gobject_class, ARG_IGNORE_CRC,
       g_param_spec_boolean ("ignore-crc", "Ignore CRC", "Ignore CRC errors",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gstelement_class->change_state = gst_mad_change_state;
+  gstelement_class->set_index = gst_mad_set_index;
+  gstelement_class->get_index = gst_mad_get_index;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&mad_sink_template_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&mad_src_template_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "mad mp3 decoder",
+      "Codec/Decoder/Audio",
+      "Uses mad code to decode mp3 streams", "Wim Taymans <wim@fluendo.com>");
 
   /* register tags */
 #define GST_TAG_LAYER    "layer"
@@ -237,7 +231,7 @@ gst_mad_class_init (GstMadClass * klass)
 }
 
 static void
-gst_mad_init (GstMad * mad, GstMadClass * klass)
+gst_mad_init (GstMad * mad)
 {
   GstPadTemplate *template;
 
@@ -1327,7 +1321,7 @@ gst_mad_flush_decode (GstMad * mad)
 
     GST_DEBUG_OBJECT (mad, "pushing buffer %p of size %u, "
         "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
-        GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
     res = gst_pad_push (mad->srcpad, buf);
 
@@ -1361,7 +1355,7 @@ gst_mad_chain_reverse (GstMad * mad, GstBuffer * buf)
   if (G_LIKELY (buf)) {
     GST_DEBUG_OBJECT (mad, "gathering buffer %p of size %u, "
         "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
-        GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
     /* add buffer to gather queue */
@@ -1375,8 +1369,8 @@ static GstFlowReturn
 gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstMad *mad;
-  guint8 *data;
-  glong size, tempsize;
+  guint8 *data, *bdata;
+  gsize bsize, size, tempsize;
   gboolean new_pts = FALSE;
   gboolean discont;
   GstClockTime timestamp;
@@ -1425,8 +1419,10 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
   GST_DEBUG ("last_ts %" GST_TIME_FORMAT, GST_TIME_ARGS (mad->last_ts));
 
   /* handle data */
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
+
+  data = bdata;
+  size = bsize;
 
   tempsize = mad->tempsize;
 
@@ -1685,7 +1681,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
            to skip and send the remaining pcm samples */
 
         GstBuffer *outbuffer = NULL;
-        gint32 *outdata;
+        gpointer odata;
+        gsize osize;
         mad_fixed_t const *left_ch, *right_ch;
 
         if (mad->need_newsegment) {
@@ -1725,7 +1722,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           goto skip_frame;
         }
 
-        if (GST_BUFFER_SIZE (outbuffer) != nsamples * mad->channels * 4) {
+        if (gst_buffer_get_size (outbuffer) != nsamples * mad->channels * 4) {
           gst_buffer_unref (outbuffer);
 
           outbuffer = gst_buffer_new_and_alloc (nsamples * mad->channels * 4);
@@ -1736,8 +1733,6 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         left_ch = mad->synth.pcm.samples[0];
         right_ch = mad->synth.pcm.samples[1];
 
-        outdata = (gint32 *) GST_BUFFER_DATA (outbuffer);
-
         GST_DEBUG ("mad out timestamp %" GST_TIME_FORMAT " dur: %"
             GST_TIME_FORMAT, GST_TIME_ARGS (time_offset),
             GST_TIME_ARGS (time_duration));
@@ -1747,21 +1742,26 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         GST_BUFFER_OFFSET (outbuffer) = mad->total_samples;
         GST_BUFFER_OFFSET_END (outbuffer) = mad->total_samples + nsamples;
 
+        odata = gst_buffer_map (outbuffer, &osize, NULL, GST_MAP_WRITE);
+
         /* output sample(s) in 16-bit signed native-endian PCM */
         if (mad->channels == 1) {
           gint count = nsamples;
+          gint32 *ptr = odata;
 
           while (count--) {
-            *outdata++ = scale (*left_ch++) & 0xffffffff;
+            *ptr++ = scale (*left_ch++) & 0xffffffff;
           }
         } else {
           gint count = nsamples;
+          gint32 *ptr = odata;
 
           while (count--) {
-            *outdata++ = scale (*left_ch++) & 0xffffffff;
-            *outdata++ = scale (*right_ch++) & 0xffffffff;
+            *ptr++ = scale (*left_ch++) & 0xffffffff;
+            *ptr++ = scale (*right_ch++) & 0xffffffff;
           }
         }
+        gst_buffer_unmap (outbuffer, odata, osize);
 
         if ((outbuffer = gst_audio_buffer_clip (outbuffer, &mad->segment,
                     mad->rate, 4 * mad->channels))) {
@@ -1836,6 +1836,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
   result = GST_FLOW_OK;
 
 end:
+  gst_buffer_unmap (buffer, bdata, bsize);
   gst_buffer_unref (buffer);
 
   return result;
@@ -1887,7 +1888,7 @@ gst_mad_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
