@@ -124,7 +124,7 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
   ctx->width = deinterlace->width;
   ctx->height = deinterlace->height;
   ctx->pix_fmt = PIX_FMT_NB;
-  gst_ffmpeg_caps_with_codectype (CODEC_TYPE_VIDEO, caps, ctx);
+  gst_ffmpeg_caps_with_codectype (AVMEDIA_TYPE_VIDEO, caps, ctx);
   if (ctx->pix_fmt == PIX_FMT_NB) {
     av_free (ctx);
     return FALSE;

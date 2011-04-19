@@ -867,7 +867,7 @@ gst_ffmpegdemux_src_convert (GstPad * pad,
     return FALSE;
 
   avstream = stream->avstream;
-  if (avstream->codec->codec_type != CODEC_TYPE_VIDEO)
+  if (avstream->codec->codec_type != AVMEDIA_TYPE_VIDEO)
     return FALSE;
 
   switch (src_fmt) {
@@ -977,11 +977,11 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   stream->tags = NULL;
 
   switch (ctx->codec_type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
       templ = oclass->videosrctempl;
       num = demux->videopads++;
       break;
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
       templ = oclass->audiosrctempl;
       num = demux->audiopads++;
       break;
@@ -1041,7 +1041,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
     stream->tags = gst_tag_list_new ();
 
     gst_tag_list_add (stream->tags, GST_TAG_MERGE_REPLACE,
-        (ctx->codec_type == CODEC_TYPE_VIDEO) ?
+        (ctx->codec_type == AVMEDIA_TYPE_VIDEO) ?
         GST_TAG_VIDEO_CODEC : GST_TAG_AUDIO_CODEC, codec, NULL);
   }
 
@@ -1389,7 +1389,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
   /* prepare to push packet to peer */
   srcpad = stream->pad;
 
-  rawvideo = (avstream->codec->codec_type == CODEC_TYPE_VIDEO &&
+  rawvideo = (avstream->codec->codec_type == AVMEDIA_TYPE_VIDEO &&
       avstream->codec->codec_id == CODEC_ID_RAWVIDEO);
 
   if (rawvideo)

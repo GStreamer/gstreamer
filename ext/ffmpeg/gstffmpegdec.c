@@ -303,7 +303,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
   /* construct the element details struct */
   longname = g_strdup_printf ("FFmpeg %s decoder", in_plugin->long_name);
   classification = g_strdup_printf ("Codec/Decoder/%s",
-      (in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
+      (in_plugin->type == AVMEDIA_TYPE_VIDEO) ? "Video" : "Audio");
   description = g_strdup_printf ("FFmpeg %s decoder", in_plugin->name);
   gst_element_class_set_details_simple (element_class, longname, classification,
       description,
@@ -320,7 +320,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
     GST_DEBUG ("Couldn't get sink caps for decoder '%s'", in_plugin->name);
     sinkcaps = gst_caps_from_string ("unknown/unknown");
   }
-  if (in_plugin->type == CODEC_TYPE_VIDEO) {
+  if (in_plugin->type == AVMEDIA_TYPE_VIDEO) {
     srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
   } else {
     srccaps = gst_ffmpeg_codectype_to_audio_caps (NULL,
@@ -357,7 +357,7 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
   gobject_class->set_property = gst_ffmpegdec_set_property;
   gobject_class->get_property = gst_ffmpegdec_get_property;
 
-  if (klass->in_plugin->type == CODEC_TYPE_VIDEO) {
+  if (klass->in_plugin->type == AVMEDIA_TYPE_VIDEO) {
     g_object_class_install_property (gobject_class, PROP_SKIPFRAME,
         g_param_spec_enum ("skip-frame", "Skip frames",
             "Which types of frames to skip during decoding",
@@ -671,7 +671,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
   }
 
   switch (oclass->in_plugin->type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
       ffmpegdec->format.video.width = 0;
       ffmpegdec->format.video.height = 0;
       ffmpegdec->format.video.clip_width = -1;
@@ -679,7 +679,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
       ffmpegdec->format.video.pix_fmt = PIX_FMT_NB;
       ffmpegdec->format.video.interlaced = FALSE;
       break;
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
       ffmpegdec->format.audio.samplerate = 0;
       ffmpegdec->format.audio.channels = 0;
       ffmpegdec->format.audio.depth = 0;
@@ -1001,9 +1001,9 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   }
 
   switch (context->codec_type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
       /* some ffmpeg video plugins don't see the point in setting codec_type ... */
-    case CODEC_TYPE_UNKNOWN:
+    case AVMEDIA_TYPE_UNKNOWN:
     {
       GstFlowReturn ret;
       gint clip_width, clip_height;
@@ -1041,7 +1041,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
           GST_BUFFER_DATA (buf), context->pix_fmt, width, height);
       break;
     }
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
     default:
       GST_ERROR_OBJECT (ffmpegdec,
           "_get_buffer() should never get called for non-video buffers !");
@@ -1191,7 +1191,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   switch (oclass->in_plugin->type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
       if (!force && ffmpegdec->format.video.width == ffmpegdec->context->width
           && ffmpegdec->format.video.height == ffmpegdec->context->height
           && ffmpegdec->format.video.fps_n == ffmpegdec->format.video.old_fps_n
@@ -1221,7 +1221,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
       ffmpegdec->format.video.par_d =
           ffmpegdec->context->sample_aspect_ratio.den;
       break;
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
     {
       gint depth = av_smp_format_depth (ffmpegdec->context->sample_fmt);
       if (!force && ffmpegdec->format.audio.samplerate ==
@@ -1250,7 +1250,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
     goto no_caps;
 
   switch (oclass->in_plugin->type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
     {
       gint width, height;
       gboolean interlaced;
@@ -1280,7 +1280,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
           gst_caps_get_structure (caps, 0));
       break;
     }
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
     {
       break;
     }
@@ -2189,12 +2189,12 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   switch (oclass->in_plugin->type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
       len =
           gst_ffmpegdec_video_frame (ffmpegdec, data, size, dec_info, &outbuf,
           ret);
       break;
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
       len =
           gst_ffmpegdec_audio_frame (ffmpegdec, oclass->in_plugin, data, size,
           dec_info, &outbuf, ret);
@@ -2490,7 +2490,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   if (G_UNLIKELY (ffmpegdec->waiting_for_key)) {
     GST_DEBUG_OBJECT (ffmpegdec, "waiting for keyframe");
     if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DELTA_UNIT) &&
-        oclass->in_plugin->type != CODEC_TYPE_AUDIO)
+        oclass->in_plugin->type != AVMEDIA_TYPE_AUDIO)
       goto skip_keyframe;
 
     GST_DEBUG_OBJECT (ffmpegdec, "got keyframe");

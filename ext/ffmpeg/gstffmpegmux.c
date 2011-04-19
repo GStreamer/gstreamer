@@ -412,7 +412,7 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   gchar *padname;
   GstPad *pad;
   AVStream *st;
-  enum CodecType type;
+  enum AVMediaType type;
   gint bitrate = 0, framesize = 0;
 
   g_return_val_if_fail (templ != NULL, NULL);
@@ -422,12 +422,12 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   /* figure out a name that *we* like */
   if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
     padname = g_strdup_printf ("video_%d", ffmpegmux->videopads++);
-    type = CODEC_TYPE_VIDEO;
+    type = AVMEDIA_TYPE_VIDEO;
     bitrate = 64 * 1024;
     framesize = 1152;
   } else if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
     padname = g_strdup_printf ("audio_%d", ffmpegmux->audiopads++);
-    type = CODEC_TYPE_AUDIO;
+    type = AVMEDIA_TYPE_AUDIO;
     bitrate = 285 * 1024;
   } else {
     g_warning ("ffmux: unknown pad template!");
@@ -560,12 +560,12 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       if (st->codec->codec_id == CODEC_ID_NONE) {
         GST_ELEMENT_ERROR (ffmpegmux, CORE, NEGOTIATION, (NULL),
             ("no caps set on stream %d (%s)", collect_pad->padnum,
-                (st->codec->codec_type == CODEC_TYPE_VIDEO) ?
+                (st->codec->codec_type == AVMEDIA_TYPE_VIDEO) ?
                 "video" : "audio"));
         return GST_FLOW_ERROR;
       }
       /* set framerate for audio */
-      if (st->codec->codec_type == CODEC_TYPE_AUDIO) {
+      if (st->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
         switch (st->codec->codec_id) {
           case CODEC_ID_PCM_S16LE:
           case CODEC_ID_PCM_S16BE:
