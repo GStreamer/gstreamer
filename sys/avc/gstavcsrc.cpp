@@ -224,22 +224,30 @@ MyStructuredDataPushProc (UInt32 CycleDataCount,
   GstAVCSrc *avcsrc = GST_AVC_SRC (pRefCon);
 
   if (avcsrc) {
+    UInt32 numPackets = 0;
+    for (UInt32 cycle = 0; cycle < CycleDataCount; cycle++)
+      numPackets += pCycleData[cycle].tsPacketCount;
+    GstBuffer *buffer;
+
+    buffer = gst_buffer_new_and_alloc (numPackets*kMPEG2TSPacketSize);
+
+    guint8 *data = GST_BUFFER_DATA (buffer);
+
     for (UInt32 cycle = 0; cycle < CycleDataCount; cycle++) {
       GST_LOG("Received cycle %lu of %lu - %lu packets (fw time %lx)",
 	      cycle, CycleDataCount, pCycleData[cycle].tsPacketCount,
 	      pCycleData[cycle].fireWireTimeStamp);
       for (UInt32 sourcePacket = 0; sourcePacket < pCycleData[cycle].tsPacketCount;
           sourcePacket++) {
-        GstBuffer *buffer;
-
-        buffer = gst_buffer_new_and_alloc (kMPEG2TSPacketSize);
-        memcpy (GST_BUFFER_DATA (buffer),
+        memcpy (data,
             pCycleData[cycle].pBuf[sourcePacket], kMPEG2TSPacketSize);
+	data += kMPEG2TSPacketSize;
 
-        gst_atomic_queue_push (avcsrc->queue, buffer);
 	avcsrc->packets_enqueued++;
       }
     }
+
+    gst_atomic_queue_push (avcsrc->queue, buffer);
 
     g_mutex_lock (avcsrc->queue_lock);
     g_cond_signal (avcsrc->cond);
