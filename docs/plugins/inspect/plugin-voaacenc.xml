@@ -1,0 +1,34 @@
+<plugin>
+  <name>voaacenc</name>
+  <description>AAC audio encoder</description>
+  <filename>../../ext/voaacenc/.libs/libgstvoaacenc.so</filename>
+  <basename>libgstvoaacenc.so</basename>
+  <version>0.10.21.2</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>voaacenc</name>
+      <longname>AAC audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>AAC audio encoder</description>
+      <author>Kan Hu &lt;kan.hu@linaro.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean)true, endianness=(int)1234, rate=(int)[ 8000, 96000 ], channels=(int)[ 1, 6 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)4, rate=(int)[ 8000, 96000 ], channels=(int)[ 1, 6 ], stream-format=(string){ adts, raw }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
