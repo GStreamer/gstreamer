@@ -43,8 +43,8 @@ enum
   PROP_TIMESTAMP_OFFSET
 };
 
-
-GST_BOILERPLATE (GstV4lSrc, gst_v4lsrc, GstV4lElement, GST_TYPE_V4LELEMENT);
+#define gst_v4lsrc_parent_class parent_class
+G_DEFINE_TYPE (GstV4lSrc, gst_v4lsrc, GST_TYPE_V4LELEMENT);
 
 static GstStaticPadTemplate v4l_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -66,31 +66,20 @@ static void gst_v4lsrc_set_property (GObject * object,
 static void gst_v4lsrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-
-static void
-gst_v4lsrc_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Video (video4linux/raw) Source", "Source/Video",
-      "Reads raw frames from a video4linux device",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&v4l_src_template));
-}
-
 static void
 gst_v4lsrc_class_init (GstV4lSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstBaseSrcClass *basesrc_class;
   GstPushSrcClass *pushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
   basesrc_class = (GstBaseSrcClass *) klass;
   pushsrc_class = (GstPushSrcClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (v4lsrc_debug, "v4lsrc", 0, "V4L source element");
 
   gobject_class->set_property = gst_v4lsrc_set_property;
   gobject_class->get_property = gst_v4lsrc_get_property;
@@ -114,7 +103,13 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
           G_MININT64, G_MAXINT64, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  GST_DEBUG_CATEGORY_INIT (v4lsrc_debug, "v4lsrc", 0, "V4L source element");
+  gst_element_class_set_details_simple (element_class,
+      "Video (video4linux/raw) Source", "Source/Video",
+      "Reads raw frames from a video4linux device",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&v4l_src_template));
 
   basesrc_class->get_caps = gst_v4lsrc_get_caps;
   basesrc_class->set_caps = gst_v4lsrc_set_caps;
@@ -127,7 +122,7 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
 }
 
 static void
-gst_v4lsrc_init (GstV4lSrc * v4lsrc, GstV4lSrcClass * klass)
+gst_v4lsrc_init (GstV4lSrc * v4lsrc)
 {
   v4lsrc->buffer_size = 0;
 

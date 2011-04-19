@@ -57,8 +57,9 @@ GST_DEBUG_CATEGORY (v4lelement_debug);
 
 static void gst_v4lelement_init_interfaces (GType type);
 
-GST_BOILERPLATE_FULL (GstV4lElement, gst_v4lelement, GstPushSrc,
-    GST_TYPE_PUSH_SRC, gst_v4lelement_init_interfaces);
+#define gst_v4lelement_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstV4lElement, gst_v4lelement,
+    GST_TYPE_PUSH_SRC, gst_v4lelement_init_interfaces (g_define_type_id));
 
 static void gst_v4lelement_dispose (GObject * object);
 static void gst_v4lelement_set_property (GObject * object,
@@ -384,18 +385,6 @@ gst_v4lelement_init_interfaces (GType type)
       GST_TYPE_PROPERTY_PROBE, &v4l_propertyprobe_info);
 }
 
-
-static void
-gst_v4lelement_base_init (gpointer g_class)
-{
-  GstV4lElementClass *klass = GST_V4LELEMENT_CLASS (g_class);
-
-  klass->devices = NULL;
-
-  GST_DEBUG_CATEGORY_INIT (v4lelement_debug, "v4lelement", 0,
-      "V4L Base Class debug");
-}
-
 static void
 gst_v4lelement_class_init (GstV4lElementClass * klass)
 {
@@ -404,6 +393,9 @@ gst_v4lelement_class_init (GstV4lElementClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (v4lelement_debug, "v4lelement", 0,
+      "V4L Base Class debug");
 
   gobject_class->set_property = gst_v4lelement_set_property;
   gobject_class->get_property = gst_v4lelement_get_property;
@@ -421,12 +413,10 @@ gst_v4lelement_class_init (GstV4lElementClass * klass)
       g_param_spec_flags ("flags", "Flags", "Device type flags",
           GST_TYPE_V4L_DEVICE_FLAGS, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
 }
 
-
 static void
-gst_v4lelement_init (GstV4lElement * v4lelement, GstV4lElementClass * klass)
+gst_v4lelement_init (GstV4lElement * v4lelement)
 {
   /* some default values */
   v4lelement->video_fd = -1;
