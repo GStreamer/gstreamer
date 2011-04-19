@@ -1,5 +1,5 @@
 # we have to put in a little hack here for integration to work well
-# ffmpeg can't be in SUBDIRS, because then automake will try to descend in it
+# libav can't be in SUBDIRS, because then automake will try to descend in it
 # and find conditionals it doesn't know.
 
 # so,
@@ -9,24 +9,24 @@
 # this also satisfies make distcheck
 
 SUBDIRS = 
-DIST_SUBDIRS = ffmpeg
-TMP_DIST_DIR=ffmpeg-dist
-DIST_DIR=$(TMP_DIST_DIR)/.ffmpeg
+DIST_SUBDIRS = libav
+TMP_DIST_DIR=libav-dist
+DIST_DIR=$(TMP_DIST_DIR)/.libav
 EXTRA_DIST=Makefile.am
 MAINTAINERCLEANDIRS = $(DIST_SUBDIRS)
 
 all-local:
-	cd ffmpeg && $(MAKE)
+	cd libav && $(MAKE)
 
 clean-local:
-	cd ffmpeg && $(MAKE) clean
+	cd libav && $(MAKE) clean
 
 dist-clean:
-	cd ffmpeg && $(MAKE) distclean
+	cd libav && $(MAKE) distclean
 	rm -rf $(TMP_DIST_DIR)
 	rm -f Makefile
-	rm -f ffmpeg/.version
-	rm -f ffmpeg/.config
+	rm -f libav/.version
+	rm -f libav/.config
 
 distclean: dist-clean
 
@@ -36,22 +36,19 @@ maintainer-clean: distclean
 maintainerclean: maintainer-clean
 
 dist-local:
-	svn -r $(FFMPEG_REVISION) export $(FFMPEG_SVN) $(TMP_DIST_DIR)/ffmpeg/
-	@if [ "x$(FFMPEG_EXTERNALS_REVISION)" != x ]; then \
-		svn update -r $(FFMPEG_EXTERNALS_REVISION) $(TMP_DIST_DIR)/ffmpeg/libswscale; \
-	fi
-	touch $(TMP_DIST_DIR)/ffmpeg/config.mak
-	echo "Patching ffmpeg ./configure"
-	sed -e '/Unknown option/ {N;N;s/exit 1//; }' $(TMP_DIST_DIR)/ffmpeg/configure > $(TMP_DIST_DIR)/ffmpeg/configure.tmp
-	mv $(TMP_DIST_DIR)/ffmpeg/configure.tmp $(TMP_DIST_DIR)/ffmpeg/configure
-	chmod +x $(TMP_DIST_DIR)/ffmpeg/configure
+	GIT_DIR=libav/.git git checkout-index --prefix=$(TMP_DIST_DIR)/libav/ -a
+	touch $(TMP_DIST_DIR)/libav/config.mak
+	echo "Patching libav ./configure"
+	sed -e '/Unknown option/ {N;N;s/exit 1//; }' $(TMP_DIST_DIR)/libav/configure > $(TMP_DIST_DIR)/libav/configure.tmp
+	mv $(TMP_DIST_DIR)/libav/configure.tmp $(TMP_DIST_DIR)/libav/configure
+	chmod +x $(TMP_DIST_DIR)/libav/configure
 
 distdir: dist-local
-	cp -r $(TMP_DIST_DIR)/ffmpeg ${distdir}
+	cp -r $(TMP_DIST_DIR)/libav ${distdir}
 	cp -f $(top_srcdir)/gst-libs/ext/Makefile.am $(top_srcdir)/gst-libs/ext/Makefile.in ${distdir}
 	rm -rf $(TMP_DIST_DIR)
 
 dist: dist-local
-	cd $(TMP_DIST_DIR) && tar -czf ffmpeg.tar.gz ffmpeg
-	mv $(TMP_DIST_DIR)/ffmpeg.tar.gz ./
+	cd $(TMP_DIST_DIR) && tar -czf libav.tar.gz libav
+	mv $(TMP_DIST_DIR)/libav.tar.gz ./
 	rm -rf $(TMP_DIST_DIR)
