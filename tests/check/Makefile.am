@@ -99,6 +99,7 @@ endif
 
 
 check_PROGRAMS = \
+	generic/index \
 	generic/states \
 	elements/aacparse \
 	elements/ac3parse \
