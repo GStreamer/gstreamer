@@ -67,12 +67,11 @@ enum
   PROP_VERSION,
 };
 
-#define _do_init(x) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_gdp_pay_debug, "gdppay", 0, \
     "GDP payloader");
-
-GST_BOILERPLATE_FULL (GstGDPPay, gst_gdp_pay, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
+#define gst_gdp_pay_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGDPPay, gst_gdp_pay, GST_TYPE_ELEMENT, _do_init);
 
 static void gst_gdp_pay_reset (GstGDPPay * this);
 
@@ -89,22 +88,6 @@ static void gst_gdp_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void gst_gdp_pay_finalize (GObject * gobject);
-
-static void
-gst_gdp_pay_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "GDP Payloader", "GDP/Payloader",
-      "Payloads GStreamer Data Protocol buffers",
-      "Thomas Vander Stichele <thomas at apestaart dot org>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gdp_pay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gdp_pay_src_template));
-}
 
 static void
 gst_gdp_pay_class_init (GstGDPPayClass * klass)
@@ -133,11 +116,21 @@ gst_gdp_pay_class_init (GstGDPPayClass * klass)
           GST_TYPE_DP_VERSION, DEFAULT_VERSION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "GDP Payloader", "GDP/Payloader",
+      "Payloads GStreamer Data Protocol buffers",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gdp_pay_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gdp_pay_src_template));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_gdp_pay_change_state);
 }
 
 static void
-gst_gdp_pay_init (GstGDPPay * gdppay, GstGDPPayClass * g_class)
+gst_gdp_pay_init (GstGDPPay * gdppay)
 {
   gdppay->sinkpad =
       gst_pad_new_from_static_template (&gdp_pay_sink_template, "sink");

@@ -62,11 +62,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_gdp_depay_debug);
 #define GST_CAT_DEFAULT gst_gdp_depay_debug
 
-#define _do_init(x) \
+#define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_gdp_depay_debug, "gdpdepay", 0, \
     "GDP depayloader");
-
-GST_BOILERPLATE_FULL (GstGDPDepay, gst_gdp_depay, GstElement,
+#define gst_gdp_depay_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGDPDepay, gst_gdp_depay,
     GST_TYPE_ELEMENT, _do_init);
 
 static gboolean gst_gdp_depay_sink_event (GstPad * pad, GstEvent * event);
@@ -80,22 +80,6 @@ static GstStateChangeReturn gst_gdp_depay_change_state (GstElement *
 static void gst_gdp_depay_finalize (GObject * object);
 
 static void
-gst_gdp_depay_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "GDP Depayloader", "GDP/Depayloader",
-      "Depayloads GStreamer Data Protocol buffers",
-      "Thomas Vander Stichele <thomas at apestaart dot org>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gdp_depay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gdp_depay_src_template));
-}
-
-static void
 gst_gdp_depay_class_init (GstGDPDepayClass * klass)
 {
   GObjectClass *gobject_class;
@@ -104,13 +88,23 @@ gst_gdp_depay_class_init (GstGDPDepayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "GDP Depayloader", "GDP/Depayloader",
+      "Depayloads GStreamer Data Protocol buffers",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gdp_depay_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gdp_depay_src_template));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_gdp_depay_change_state);
   gobject_class->finalize = gst_gdp_depay_finalize;
 }
 
 static void
-gst_gdp_depay_init (GstGDPDepay * gdpdepay, GstGDPDepayClass * g_class)
+gst_gdp_depay_init (GstGDPDepay * gdpdepay)
 {
   gdpdepay->sinkpad =
       gst_pad_new_from_static_template (&gdp_depay_sink_template, "sink");
