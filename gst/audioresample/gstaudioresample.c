@@ -62,8 +62,7 @@ GST_DEBUG_CATEGORY (audio_resample_debug);
 enum
 {
   PROP_0,
-  PROP_QUALITY,
-  PROP_FILTER_LENGTH
+  PROP_QUALITY
 };
 
 #define SUPPORTED_CAPS \
@@ -164,21 +163,6 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
           SPEEX_RESAMPLER_QUALITY_MIN, SPEEX_RESAMPLER_QUALITY_MAX,
           SPEEX_RESAMPLER_QUALITY_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-
-  /* FIXME 0.11: Remove this property, it's just for compatibility
-   * with old audioresample
-   */
-  /**
-   * GstAudioResample:filter-length:
-   *
-   * Length of the resample filter
-   *
-   * Deprectated: Use #GstAudioResample:quality property instead
-   */
-  g_object_class_install_property (gobject_class, PROP_FILTER_LENGTH,
-      g_param_spec_int ("filter-length", "Filter length",
-          "Length of the resample filter", 0, G_MAXINT, 64,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_audio_resample_src_template));
@@ -1363,41 +1347,6 @@ gst_audio_resample_set_property (GObject * object, guint prop_id,
           resample->quality, resample->fp);
       GST_BASE_TRANSFORM_UNLOCK (resample);
       break;
-    case PROP_FILTER_LENGTH:{
-      gint filter_length = g_value_get_int (value);
-
-      GST_BASE_TRANSFORM_LOCK (resample);
-      if (filter_length <= 8)
-        resample->quality = 0;
-      else if (filter_length <= 16)
-        resample->quality = 1;
-      else if (filter_length <= 32)
-        resample->quality = 2;
-      else if (filter_length <= 48)
-        resample->quality = 3;
-      else if (filter_length <= 64)
-        resample->quality = 4;
-      else if (filter_length <= 80)
-        resample->quality = 5;
-      else if (filter_length <= 96)
-        resample->quality = 6;
-      else if (filter_length <= 128)
-        resample->quality = 7;
-      else if (filter_length <= 160)
-        resample->quality = 8;
-      else if (filter_length <= 192)
-        resample->quality = 9;
-      else
-        resample->quality = 10;
-
-      GST_DEBUG_OBJECT (resample, "new quality %d", resample->quality);
-
-      gst_audio_resample_update_state (resample, resample->width,
-          resample->channels, resample->inrate, resample->outrate,
-          resample->quality, resample->fp);
-      GST_BASE_TRANSFORM_UNLOCK (resample);
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1415,43 +1364,6 @@ gst_audio_resample_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_QUALITY:
       g_value_set_int (value, resample->quality);
-      break;
-    case PROP_FILTER_LENGTH:
-      switch (resample->quality) {
-        case 0:
-          g_value_set_int (value, 8);
-          break;
-        case 1:
-          g_value_set_int (value, 16);
-          break;
-        case 2:
-          g_value_set_int (value, 32);
-          break;
-        case 3:
-          g_value_set_int (value, 48);
-          break;
-        case 4:
-          g_value_set_int (value, 64);
-          break;
-        case 5:
-          g_value_set_int (value, 80);
-          break;
-        case 6:
-          g_value_set_int (value, 96);
-          break;
-        case 7:
-          g_value_set_int (value, 128);
-          break;
-        case 8:
-          g_value_set_int (value, 160);
-          break;
-        case 9:
-          g_value_set_int (value, 192);
-          break;
-        case 10:
-          g_value_set_int (value, 256);
-          break;
-      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
