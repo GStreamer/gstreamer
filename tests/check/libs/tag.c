@@ -913,12 +913,13 @@ tag_list_equals (GstTagList * taglist, GstTagList * taglist2)
 }
 
 static void
-do_xmp_tag_serialization_deserialization (GstTagList * taglist)
+do_xmp_tag_serialization_deserialization (GstTagList * taglist,
+    const gchar ** schemas)
 {
   GstTagList *taglist2;
   GstBuffer *buf;
 
-  buf = gst_tag_list_to_xmp_buffer (taglist, TRUE);
+  buf = gst_tag_list_to_xmp_buffer_full (taglist, TRUE, schemas);
   taglist2 = gst_tag_list_from_xmp_buffer (buf);
 
   tag_list_equals (taglist, taglist2);
@@ -935,7 +936,7 @@ do_simple_xmp_tag_serialization_deserialization (const gchar * gsttag,
 
   gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
 
-  do_xmp_tag_serialization_deserialization (taglist);
+  do_xmp_tag_serialization_deserialization (taglist, NULL);
   gst_tag_list_free (taglist);
 }
 
@@ -1122,13 +1123,19 @@ GST_END_TEST;
 
 GST_START_TEST (test_xmp_compound_tags)
 {
+  const gchar *schemas[] = { "Iptc4xmpExt", NULL };
   GstTagList *taglist = gst_tag_list_new ();
 
   gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_KEYWORDS, "k1",
       GST_TAG_KEYWORDS, "k2", GST_TAG_TITLE, "title", GST_TAG_KEYWORDS, "k3",
       NULL);
+  do_xmp_tag_serialization_deserialization (taglist, NULL);
+  gst_tag_list_free (taglist);
 
-  do_xmp_tag_serialization_deserialization (taglist);
+  taglist = gst_tag_list_new ();
+  gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_GEO_LOCATION_COUNTRY,
+      "Brazil", GST_TAG_GEO_LOCATION_CITY, "Campina Grande", NULL);
+  do_xmp_tag_serialization_deserialization (taglist, schemas);
   gst_tag_list_free (taglist);
 }
 
