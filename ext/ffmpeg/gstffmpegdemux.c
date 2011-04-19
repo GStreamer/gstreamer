@@ -150,22 +150,22 @@ gst_ffmpegdemux_averror (gint av_errno)
   const gchar *message = NULL;
 
   switch (av_errno) {
-    case AVERROR_UNKNOWN:
+    case AVERROR (EINVAL):
       message = "Unknown error";
       break;
-    case AVERROR_IO:
+    case AVERROR (EIO):
       message = "Input/output error";
       break;
-    case AVERROR_NUMEXPECTED:
+    case AVERROR (EDOM):
       message = "Number syntax expected in filename";
       break;
-    case AVERROR_NOMEM:
+    case AVERROR (ENOMEM):
       message = "Not enough memory";
       break;
-    case AVERROR_NOFMT:
+    case AVERROR (EILSEQ):
       message = "Unknown format";
       break;
-    case AVERROR_NOTSUPP:
+    case AVERROR (ENOSYS):
       message = "Operation not supported";
       break;
     default:
