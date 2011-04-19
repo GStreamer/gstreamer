@@ -185,20 +185,10 @@ static GstMiniObject *gst_app_sink_pull_object (GstAppSink * appsink);
 
 static guint gst_app_sink_signals[LAST_SIGNAL] = { 0 };
 
-static void
-_do_init (GType filesrc_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_app_sink_uri_handler_init,
-    NULL,
-    NULL
-  };
-  g_type_add_interface_static (filesrc_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
-}
-
-GST_BOILERPLATE_FULL (GstAppSink, gst_app_sink, GstBaseSink, GST_TYPE_BASE_SINK,
-    _do_init);
+#define gst_app_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAppSink, gst_app_sink, GST_TYPE_BASE_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_app_sink_uri_handler_init));
 
 /* Can't use glib-genmarshal for this, as it doesn't know how to handle
  * GstMiniObject-based types, which are a new fundamental type */
@@ -235,25 +225,13 @@ gst_app_marshal_BUFFER__VOID (GClosure * closure,
 }
 
 static void
-gst_app_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  GST_DEBUG_CATEGORY_INIT (app_sink_debug, "appsink", 0, "appsink element");
-
-  gst_element_class_set_details_simple (element_class, "AppSink",
-      "Generic/Sink", "Allow the application to get access to raw buffer",
-      "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_app_sink_template));
-}
-
-static void
 gst_app_sink_class_init (GstAppSinkClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) klass;
   GstBaseSinkClass *basesink_class = (GstBaseSinkClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (app_sink_debug, "appsink", 0, "appsink element");
 
   gobject_class->dispose = gst_app_sink_dispose;
   gobject_class->finalize = gst_app_sink_finalize;
@@ -441,6 +419,13 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
           pull_buffer_list), NULL, NULL, gst_app_marshal_BUFFER__VOID,
       GST_TYPE_BUFFER_LIST, 0, G_TYPE_NONE);
 
+  gst_element_class_set_details_simple (element_class, "AppSink",
+      "Generic/Sink", "Allow the application to get access to raw buffer",
+      "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_app_sink_template));
+
   basesink_class->unlock = gst_app_sink_unlock_start;
   basesink_class->unlock_stop = gst_app_sink_unlock_stop;
   basesink_class->start = gst_app_sink_start;
@@ -459,7 +444,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
 }
 
 static void
-gst_app_sink_init (GstAppSink * appsink, GstAppSinkClass * klass)
+gst_app_sink_init (GstAppSink * appsink)
 {
   GstAppSinkPrivate *priv;
 

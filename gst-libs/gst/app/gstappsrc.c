@@ -249,41 +249,18 @@ static GstFlowReturn gst_app_src_push_buffer_action (GstAppSrc * appsrc,
 
 static guint gst_app_src_signals[LAST_SIGNAL] = { 0 };
 
-static void
-_do_init (GType filesrc_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_app_src_uri_handler_init,
-    NULL,
-    NULL
-  };
-  g_type_add_interface_static (filesrc_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
-}
-
-GST_BOILERPLATE_FULL (GstAppSrc, gst_app_src, GstBaseSrc, GST_TYPE_BASE_SRC,
-    _do_init);
-
-static void
-gst_app_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  GST_DEBUG_CATEGORY_INIT (app_src_debug, "appsrc", 0, "appsrc element");
-
-  gst_element_class_set_details_simple (element_class, "AppSrc",
-      "Generic/Source", "Allow the application to feed buffers to a pipeline",
-      "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_app_src_template));
-}
+#define gst_app_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAppSrc, gst_app_src, GST_TYPE_BASE_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_app_src_uri_handler_init));
 
 static void
 gst_app_src_class_init (GstAppSrcClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) klass;
   GstBaseSrcClass *basesrc_class = (GstBaseSrcClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (app_src_debug, "appsrc", 0, "appsrc element");
 
   gobject_class->dispose = gst_app_src_dispose;
   gobject_class->finalize = gst_app_src_finalize;
@@ -498,6 +475,13 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           end_of_stream), NULL, NULL, __gst_app_marshal_ENUM__VOID,
       GST_TYPE_FLOW_RETURN, 0, G_TYPE_NONE);
 
+  gst_element_class_set_details_simple (element_class, "AppSrc",
+      "Generic/Source", "Allow the application to feed buffers to a pipeline",
+      "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_app_src_template));
+
   basesrc_class->create = gst_app_src_create;
   basesrc_class->start = gst_app_src_start;
   basesrc_class->stop = gst_app_src_stop;
@@ -517,7 +501,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
 }
 
 static void
-gst_app_src_init (GstAppSrc * appsrc, GstAppSrcClass * klass)
+gst_app_src_init (GstAppSrc * appsrc)
 {
   GstAppSrcPrivate *priv;
 
