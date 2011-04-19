@@ -114,6 +114,8 @@ enum
   ARG_TOC_BIAS
 };
 
+static void gst_cdda_base_src_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
 static void gst_cdda_base_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_cdda_base_src_set_property (GObject * object, guint prop_id,
@@ -125,7 +127,6 @@ static gboolean gst_cdda_base_src_handle_event (GstBaseSrc * basesrc,
     GstEvent * event);
 static gboolean gst_cdda_base_src_do_seek (GstBaseSrc * basesrc,
     GstSegment * segment);
-static void gst_cdda_base_src_setup_interfaces (GType type);
 static gboolean gst_cdda_base_src_start (GstBaseSrc * basesrc);
 static gboolean gst_cdda_base_src_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_cdda_base_src_create (GstPushSrc * pushsrc,
@@ -135,8 +136,10 @@ static void gst_cdda_base_src_update_duration (GstCddaBaseSrc * src);
 static void gst_cdda_base_src_set_index (GstElement * src, GstIndex * index);
 static GstIndex *gst_cdda_base_src_get_index (GstElement * src);
 
-GST_BOILERPLATE_FULL (GstCddaBaseSrc, gst_cdda_base_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, gst_cdda_base_src_setup_interfaces);
+#define gst_cdda_base_src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstCddaBaseSrc, gst_cdda_base_src, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_cdda_base_src_uri_handler_init));
 
 #define SRC_CAPS \
   "audio/x-raw-int, "               \
@@ -177,12 +180,20 @@ gst_cdda_base_src_mode_get_type (void)
 }
 
 static void
-gst_cdda_base_src_base_init (gpointer g_class)
+gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class;
+  GstPushSrcClass *pushsrc_class;
+  GstBaseSrcClass *basesrc_class;
+  GObjectClass *gobject_class;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_cdda_base_src_src_template));
+  gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
+  basesrc_class = (GstBaseSrcClass *) klass;
+  pushsrc_class = (GstPushSrcClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_cdda_base_src_debug, "cddabasesrc", 0,
+      "CDDA Base Source");
 
   /* our very own formats */
   track_format = gst_format_register ("track", "CD track");
@@ -195,23 +206,6 @@ gst_cdda_base_src_base_init (gpointer g_class)
   ///// FIXME: what type to use here? ///////
   gst_tag_register (GST_TAG_CDDA_TRACK_TAGS, GST_TAG_FLAG_META, GST_TYPE_TAG_LIST, "track-tags", "CDDA taglist for one track", gst_tag_merge_use_first);        ///////////// FIXME: right function??? ///////
 #endif
-
-  GST_DEBUG_CATEGORY_INIT (gst_cdda_base_src_debug, "cddabasesrc", 0,
-      "CDDA Base Source");
-}
-
-static void
-gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
-{
-  GstElementClass *element_class;
-  GstPushSrcClass *pushsrc_class;
-  GstBaseSrcClass *basesrc_class;
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  element_class = (GstElementClass *) klass;
-  basesrc_class = (GstBaseSrcClass *) klass;
-  pushsrc_class = (GstPushSrcClass *) klass;
 
   gobject_class->set_property = gst_cdda_base_src_set_property;
   gobject_class->get_property = gst_cdda_base_src_get_property;
@@ -247,6 +241,9 @@ gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_cdda_base_src_src_template));
+
   element_class->set_index = GST_DEBUG_FUNCPTR (gst_cdda_base_src_set_index);
   element_class->get_index = GST_DEBUG_FUNCPTR (gst_cdda_base_src_get_index);
 
@@ -262,7 +259,7 @@ gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
 }
 
 static void
-gst_cdda_base_src_init (GstCddaBaseSrc * src, GstCddaBaseSrcClass * klass)
+gst_cdda_base_src_init (GstCddaBaseSrc * src)
 {
   gst_pad_set_query_type_function (GST_BASE_SRC_PAD (src),
       GST_DEBUG_FUNCPTR (gst_cdda_base_src_get_query_types));
@@ -1033,18 +1030,6 @@ gst_cdda_base_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_uri = gst_cdda_base_src_uri_get_uri;
   iface->set_uri = gst_cdda_base_src_uri_set_uri;
   iface->get_protocols = gst_cdda_base_src_uri_get_protocols;
-}
-
-static void
-gst_cdda_base_src_setup_interfaces (GType type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_cdda_base_src_uri_handler_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
 }
 
 /**
