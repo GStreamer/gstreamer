@@ -44,6 +44,7 @@ check_x264enc=
 endif
 
 check_PROGRAMS = \
+	generic/index \
 	generic/states \
 	$(AMRNB) \
 	$(LAME) \
@@ -61,7 +62,9 @@ AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS) \
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 
 # valgrind testing
-VALGRIND_TESTS_DISABLE = elements/x264enc
+VALGRIND_TESTS_DISABLE = \
+	generic/index \
+	elements/x264enc
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-ugly.supp
 
