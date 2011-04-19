@@ -194,6 +194,35 @@ void
 gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
     gpointer user_data)
 {
+  guint i, len;
+
+  g_return_if_fail (GST_IS_BUFFER_LIST (list));
+  g_return_if_fail (func != NULL);
+
+  len = list->array->len;
+  for (i = 0; i < len;) {
+    GstBuffer *buf, *buf_ret;
+    gboolean ret;
+
+    buf = buf_ret = g_array_index (list->array, GstBuffer *, i);
+    ret = func (&buf_ret, i, user_data);
+
+    /* Check if the function changed the buffer */
+    if (buf != buf_ret) {
+      if (buf_ret == NULL) {
+        g_array_remove_index (list->array, i);
+      } else {
+        g_array_index (list->array, GstBuffer *, i) = buf_ret;
+      }
+    }
+
+    if (!ret)
+      break;
+
+    /* If the buffer was not removed by func go to the next buffer */
+    if (buf_ret != NULL)
+      i++;
+  }
 }
 
 /**
