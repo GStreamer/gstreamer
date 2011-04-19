@@ -724,7 +724,7 @@ gst_dvd_read_src_read (GstDvdReadSrc * src, gint angle, gint new_seek,
   GstSegment *seg;
   guint8 oneblock[DVD_VIDEO_LB_LEN];
   dsi_t dsi_pack;
-  guint next_vobu, next_ilvu_start, cur_output_size;
+  guint next_vobu, cur_output_size;
   gint len;
   gint retries;
   gint64 next_time;
@@ -811,7 +811,6 @@ nav_retry:
 
   /* determine where we go next. These values are the ones we
    * mostly care about */
-  next_ilvu_start = src->cur_pack + dsi_pack.sml_agli.data[angle].address;
   cur_output_size = dsi_pack.dsi_gi.vobu_ea + 1;
 
   /* If we're not at the end of this cell, we can determine the next

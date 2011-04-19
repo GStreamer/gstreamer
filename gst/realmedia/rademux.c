@@ -569,7 +569,7 @@ gst_real_audio_demux_handle_buffer (GstRealAudioDemux * demux, GstBuffer * buf)
       break;
     }
     default:
-      g_assert_not_reached ();
+      g_return_val_if_reached (GST_FLOW_ERROR);
   }
 
   return ret;
@@ -611,7 +611,7 @@ gst_real_audio_demux_loop (GstRealAudioDemux * demux)
       }
       break;
     default:
-      g_assert_not_reached ();
+      g_return_if_reached ();
   }
 
   /* now get the data */

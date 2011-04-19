@@ -636,8 +636,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   guint16 headerlen;
 
   guint16 packet_length;
-  gboolean STD_buffer_bound_scale;
-  guint16 STD_buffer_size_bound;
+  guint16 STD_buffer_size_bound G_GNUC_UNUSED;
   guint64 dts;
   gint64 pts = -1;
 
@@ -677,7 +676,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
       case 0x40:
         GST_DEBUG_OBJECT (mpeg_demux, "have STD");
 
-        STD_buffer_bound_scale = bits & 0x20;
+        /* STD_buffer_bound_scale = ((bits & 0x20) == 0x20); */
         STD_buffer_size_bound = ((guint16) (bits & 0x1F)) << 8;
         STD_buffer_size_bound |= *buf++;
 

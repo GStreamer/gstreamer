@@ -24,3 +24,16 @@ noinst_PROGRAMS = asmrules
 asmrules_CFLAGS = $(GST_CFLAGS) -DTEST
 asmrules_LDADD = $(GST_LIBS) $(LIBM)
 
+Android.mk: Makefile.am $(BUILT_SOURCES)
+	androgenizer \
+	-:PROJECT libgstrealmedia -:SHARED libgstrealmedia \
+	 -:TAGS eng debug \
+         -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
+	 -:SOURCES $(libgstrealmedia_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstrealmedia_la_CFLAGS) \
+	 -:LDFLAGS $(libgstrealmedia_la_LDFLAGS) \
+	           $(libgstrealmedia_la_LIBADD) \
+	           -ldl \
+	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+	> $@

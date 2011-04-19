@@ -31,7 +31,7 @@
  * of the encoding.  This will similarly be the case if this target bitrate
  * is to obtained in multiple (2 or 3) pass encoding.
  * Alternatively, one may choose to perform Constant Quantizer or Quality encoding,
- * in which case the #GstX264Enc:quantizer property controls much of the outcome.
+ * in which case the #GstX264Enc:quantizer property controls much of the outcome, in that case #GstX264Enc:bitrate is the maximum bitrate.
  *
  * The H264 profile that is eventually used depends on a few settings.
  * If #GstX264Enc:dct8x8 is enabled, then High profile is used.
@@ -232,7 +232,7 @@ gst_x264_enc_pass_get_type (void)
 
   static const GEnumValue pass_types[] = {
     {GST_X264_ENC_PASS_CBR, "Constant Bitrate Encoding", "cbr"},
-    {GST_X264_ENC_PASS_QUANT, "Constant Quantizer", "quant"},
+    {GST_X264_ENC_PASS_QUANT, "Constant Quantizer (debugging only)", "quant"},
     {GST_X264_ENC_PASS_QUAL, "Constant Quality", "qual"},
     {GST_X264_ENC_PASS_PASS1, "VBR Encoding - Pass 1", "pass1"},
     {GST_X264_ENC_PASS_PASS2, "VBR Encoding - Pass 2", "pass2"},
@@ -471,6 +471,7 @@ static gboolean gst_x264_enc_init_encoder (GstX264Enc * encoder);
 static void gst_x264_enc_close_encoder (GstX264Enc * encoder);
 
 static gboolean gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_x264_enc_sink_get_caps (GstPad * pad);
 static gboolean gst_x264_enc_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_x264_enc_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_x264_enc_chain (GstPad * pad, GstBuffer * buf);
@@ -574,12 +575,14 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in kbit/sec", 1,
           100 * 1024, ARG_BITRATE_DEFAULT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, ARG_VBV_BUF_CAPACITY,
       g_param_spec_uint ("vbv-buf-capacity", "VBV buffer capacity",
           "Size of the VBV buffer in milliseconds",
           0, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
 
 #ifdef X264_PRESETS
   g_object_class_install_property (gobject_class, ARG_SPEED_PRESET,
@@ -852,6 +855,8 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (encoder->sinkpad,
       GST_DEBUG_FUNCPTR (gst_x264_enc_sink_set_caps));
+  gst_pad_set_getcaps_function (encoder->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_x264_enc_sink_get_caps));
   gst_pad_set_event_function (encoder->sinkpad,
       GST_DEBUG_FUNCPTR (gst_x264_enc_sink_event));
   gst_pad_set_chain_function (encoder->sinkpad,
@@ -1131,6 +1136,10 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     case GST_X264_ENC_PASS_QUAL:
       encoder->x264param.rc.i_rc_method = X264_RC_CRF;
       encoder->x264param.rc.f_rf_constant = encoder->quantizer;
+      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_buffer_size
+          = encoder->x264param.rc.i_vbv_max_bitrate
+          * encoder->vbv_buf_capacity / 1000;
       break;
     case GST_X264_ENC_PASS_CBR:
     case GST_X264_ENC_PASS_PASS1:
@@ -1204,6 +1213,8 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
         x264_profile_names[encoder->profile - 1]);
   }
 #endif /* X264_PRESETS */
+
+  encoder->reconfig = FALSE;
 
   GST_OBJECT_UNLOCK (encoder);
 
@@ -1446,6 +1457,53 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   return TRUE;
 }
 
+static GstCaps *
+gst_x264_enc_sink_get_caps (GstPad * pad)
+{
+  GstX264Enc *encoder;
+  GstPad *peer;
+  GstCaps *caps;
+
+  /* If we already have caps return them */
+  if (GST_PAD_CAPS (pad))
+    return GST_PAD_CAPS (pad);
+
+  encoder = GST_X264_ENC (gst_pad_get_parent (pad));
+  if (!encoder)
+    return gst_caps_new_empty ();
+
+  peer = gst_pad_get_peer (encoder->srcpad);
+  if (peer) {
+    const GstCaps *templcaps;
+    GstCaps *peercaps;
+    guint i, n;
+
+    peercaps = gst_pad_get_caps (peer);
+
+    /* Translate peercaps to YUV */
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+
+      gst_structure_set_name (s, "video/x-raw-yuv");
+      gst_structure_remove_field (s, "stream-format");
+      gst_structure_remove_field (s, "alignment");
+    }
+
+    templcaps = gst_pad_get_pad_template_caps (pad);
+
+    caps = gst_caps_intersect (peercaps, templcaps);
+    gst_caps_unref (peercaps);
+  } else {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+
+  gst_object_unref (encoder);
+
+  return caps;
+}
+
 static gboolean
 gst_x264_enc_src_event (GstPad * pad, GstEvent * event)
 {
@@ -1609,13 +1667,20 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
 #endif
   int encoder_return;
   GstFlowReturn ret;
-  GstClockTime timestamp;
   GstClockTime duration;
   guint8 *data;
   GstEvent *forcekeyunit_event = NULL;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
+
+  GST_OBJECT_LOCK (encoder);
+  if (encoder->reconfig) {
+    encoder->reconfig = FALSE;
+    if (x264_encoder_reconfig (encoder->x264enc, &encoder->x264param) < 0)
+      GST_WARNING_OBJECT (encoder, "Could not reconfigure");
+  }
+  GST_OBJECT_UNLOCK (encoder);
 
   encoder_return = x264_encoder_encode (encoder->x264enc,
       &nal, i_nal, pic_in, &pic_out);
@@ -1657,7 +1722,6 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
 
   in_buf = g_queue_pop_head (encoder->delay);
   if (in_buf) {
-    timestamp = GST_BUFFER_TIMESTAMP (in_buf);
     duration = GST_BUFFER_DURATION (in_buf);
     gst_buffer_unref (in_buf);
   } else {
@@ -1755,6 +1819,35 @@ out:
   return ret;
 }
 
+
+
+static void
+gst_x264_enc_reconfig (GstX264Enc * encoder)
+{
+  switch (encoder->pass) {
+    case GST_X264_ENC_PASS_QUAL:
+      encoder->x264param.rc.f_rf_constant = encoder->quantizer;
+      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_buffer_size
+          = encoder->x264param.rc.i_vbv_max_bitrate
+          * encoder->vbv_buf_capacity / 1000;
+      break;
+    case GST_X264_ENC_PASS_CBR:
+    case GST_X264_ENC_PASS_PASS1:
+    case GST_X264_ENC_PASS_PASS2:
+    case GST_X264_ENC_PASS_PASS3:
+    default:
+      encoder->x264param.rc.i_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_buffer_size
+          = encoder->x264param.rc.i_vbv_max_bitrate
+          * encoder->vbv_buf_capacity / 1000;
+      break;
+  }
+
+  encoder->reconfig = TRUE;
+}
+
 static void
 gst_x264_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1769,8 +1862,10 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (encoder);
   /* state at least matters for sps, bytestream, pass,
    * and so by extension ... */
+
   state = GST_STATE (encoder);
-  if (state != GST_STATE_READY && state != GST_STATE_NULL)
+  if ((state != GST_STATE_READY && state != GST_STATE_NULL) &&
+      !(pspec->flags & GST_PARAM_MUTABLE_PLAYING))
     goto wrong_state;
 
   switch (prop_id) {
@@ -1779,12 +1874,15 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_QUANTIZER:
       encoder->quantizer = g_value_get_uint (value);
+      gst_x264_enc_reconfig (encoder);
       break;
     case ARG_BITRATE:
       encoder->bitrate = g_value_get_uint (value);
+      gst_x264_enc_reconfig (encoder);
       break;
     case ARG_VBV_BUF_CAPACITY:
       encoder->vbv_buf_capacity = g_value_get_uint (value);
+      gst_x264_enc_reconfig (encoder);
       break;
     case ARG_SPEED_PRESET:
       encoder->speed_preset = g_value_get_enum (value);
@@ -1967,7 +2065,7 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
   /* ERROR */
 wrong_state:
   {
-    GST_DEBUG_OBJECT (encoder, "setting property in wrong state");
+    GST_WARNING_OBJECT (encoder, "setting property in wrong state");
     GST_OBJECT_UNLOCK (encoder);
   }
 }

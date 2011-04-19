@@ -164,7 +164,6 @@ gst_dvd_sub_dec_init (GstDvdSubDec * dec, GstDvdSubDecClass * klass)
   dec->next_ts = 0;
   dec->next_event_ts = GST_CLOCK_TIME_NONE;
 
-  dec->out_buffer = NULL;
   dec->buf_dirty = TRUE;
   dec->use_ARGB = FALSE;
 }
@@ -317,16 +316,10 @@ gst_dvd_sub_dec_parse_subpic (GstDvdSubDec * dec)
       case SPU_SET_SIZE:       /* image coordinates */
         PARSE_BYTES_NEEDED (7);
 
-        dec->left =
-            CLAMP ((((guint) buf[1]) << 4) | (buf[2] >> 4), 0,
-            (dec->in_width - 1));
-        dec->top =
-            CLAMP ((((guint) buf[4]) << 4) | (buf[5] >> 4), 0,
-            (dec->in_height - 1));
-        dec->right =
-            CLAMP ((((buf[2] & 0x0f) << 8) | buf[3]), 0, (dec->in_width - 1));
-        dec->bottom =
-            CLAMP ((((buf[5] & 0x0f) << 8) | buf[6]), 0, (dec->in_height - 1));
+        dec->top = ((buf[4] & 0x3f) << 4) | ((buf[5] & 0xe0) >> 4);
+        dec->left = ((buf[1] & 0x3f) << 4) | ((buf[2] & 0xf0) >> 4);
+        dec->right = ((buf[2] & 0x03) << 8) | buf[3];
+        dec->bottom = ((buf[5] & 0x03) << 8) | buf[6];
 
         GST_DEBUG_OBJECT (dec, "SPU SET_SIZE left %d, top %d, right %d, "
             "bottom %d", dec->left, dec->top, dec->right, dec->bottom);
@@ -594,6 +587,50 @@ gst_dvd_sub_dec_merge_title (GstDvdSubDec * dec, GstBuffer * buf)
   state.offset[0] = dec->offset[0];
   state.offset[1] = dec->offset[1];
 
+  /* center the image when display rectangle exceeds the video width */
+  if (dec->in_width <= dec->right) {
+    gint left, disp_width;
+
+    disp_width = dec->right - dec->left + 1;
+    left = (dec->in_width - disp_width) / 2;
+    dec->left = left;
+    dec->right = left + disp_width - 1;
+
+    /* if it clips to the right, shift it left, but only till zero */
+    if (dec->right >= dec->in_width) {
+      gint shift = dec->right - dec->in_width - 1;
+      if (shift > dec->left)
+        shift = dec->left;
+      dec->left -= shift;
+      dec->right -= shift;
+    }
+
+    GST_DEBUG_OBJECT (dec, "clipping width to %d,%d",
+        dec->left, dec->in_width - 1);
+  }
+
+  /* for the height, bring it up till it fits as well as it can. We
+   * assume the picture is in the lower part. We should better check where it
+   * is and do something more clever. */
+  if (dec->in_height <= dec->bottom) {
+
+    /* shift it up, but only till zero */
+    gint shift = dec->bottom - dec->in_height - 1;
+    if (shift > dec->top)
+      shift = dec->top;
+    dec->top -= shift;
+    dec->bottom -= shift;
+
+    /* start on even line */
+    if (dec->top & 1) {
+      dec->top--;
+      dec->bottom--;
+    }
+
+    GST_DEBUG_OBJECT (dec, "clipping height to %d,%d",
+        dec->top, dec->in_height - 1);
+  }
+
   if (dec->current_button) {
     hl_top = dec->hl_top;
     hl_bottom = dec->hl_bottom;
@@ -651,58 +688,56 @@ gst_send_subtitle_frame (GstDvdSubDec * dec, GstClockTime end_ts)
   g_assert (dec->next_ts <= end_ts);
 
   /* Check if we need to redraw the output buffer */
-  if (dec->buf_dirty) {
-    if (dec->out_buffer) {
-      gst_buffer_unref (dec->out_buffer);
-      dec->out_buffer = NULL;
-    }
-
-    flow = gst_pad_alloc_buffer_and_set_caps (dec->srcpad, 0,
-        4 * dec->in_width * dec->in_height, GST_PAD_CAPS (dec->srcpad),
-        &out_buf);
-
-    if (flow != GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (dec, "alloc buffer failed: flow = %s",
-          gst_flow_get_name (flow));
-      goto out;
-    }
-
-    /* Clear the buffer */
-    /* FIXME - move this into the buffer rendering code */
-    for (y = 0; y < dec->in_height; y++) {
-      guchar *line = GST_BUFFER_DATA (out_buf) + 4 * dec->in_width * y;
-
-      for (x = 0; x < dec->in_width; x++) {
-        line[0] = 0;            /* A */
-        if (!dec->use_ARGB) {
-          line[1] = 16;         /* Y */
-          line[2] = 128;        /* U */
-          line[3] = 128;        /* V */
-        } else {
-          line[1] = 0;          /* R */
-          line[2] = 0;          /* G */
-          line[3] = 0;          /* B */
-        }
-
-        line += 4;
-      }
-    }
-
-    /* FIXME: do we really want to honour the forced_display flag
-     * for subtitles streans? */
-    if (dec->visible || dec->forced_display) {
-      gst_dvd_sub_dec_merge_title (dec, out_buf);
-    }
-
-    dec->out_buffer = out_buf;
-    dec->buf_dirty = FALSE;
+  if (!dec->buf_dirty) {
+    flow = GST_FLOW_OK;
+    goto out;
   }
 
-  out_buf = gst_buffer_create_sub (dec->out_buffer, 0,
-      GST_BUFFER_SIZE (dec->out_buffer));
+  flow = gst_pad_alloc_buffer_and_set_caps (dec->srcpad, 0,
+      4 * dec->in_width * dec->in_height, GST_PAD_CAPS (dec->srcpad), &out_buf);
+
+  if (flow != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (dec, "alloc buffer failed: flow = %s",
+        gst_flow_get_name (flow));
+    goto out;
+  }
+
+  /* Clear the buffer */
+  /* FIXME - move this into the buffer rendering code */
+  for (y = 0; y < dec->in_height; y++) {
+    guchar *line = GST_BUFFER_DATA (out_buf) + 4 * dec->in_width * y;
+
+    for (x = 0; x < dec->in_width; x++) {
+      line[0] = 0;              /* A */
+      if (!dec->use_ARGB) {
+        line[1] = 16;           /* Y */
+        line[2] = 128;          /* U */
+        line[3] = 128;          /* V */
+      } else {
+        line[1] = 0;            /* R */
+        line[2] = 0;            /* G */
+        line[3] = 0;            /* B */
+      }
+
+      line += 4;
+    }
+  }
+
+  /* FIXME: do we really want to honour the forced_display flag
+   * for subtitles streans? */
+  if (dec->visible || dec->forced_display) {
+    gst_dvd_sub_dec_merge_title (dec, out_buf);
+  }
+
+  dec->buf_dirty = FALSE;
 
   GST_BUFFER_TIMESTAMP (out_buf) = dec->next_ts;
-  GST_BUFFER_DURATION (out_buf) = GST_CLOCK_DIFF (dec->next_ts, end_ts);
+  if (GST_CLOCK_TIME_IS_VALID (dec->next_event_ts)) {
+    GST_BUFFER_DURATION (out_buf) = GST_CLOCK_DIFF (dec->next_ts,
+        dec->next_event_ts);
+  } else {
+    GST_BUFFER_DURATION (out_buf) = GST_CLOCK_TIME_NONE;
+  }
 
   GST_DEBUG_OBJECT (dec, "Sending subtitle buffer with ts %"
       GST_TIME_FORMAT ", dur %" G_GINT64_FORMAT,
@@ -714,7 +749,6 @@ gst_send_subtitle_frame (GstDvdSubDec * dec, GstClockTime end_ts)
   flow = gst_pad_push (dec->srcpad, out_buf);
 
 out:
-
   dec->next_ts = end_ts;
   return flow;
 }

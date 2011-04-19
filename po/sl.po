@@ -1,15 +1,16 @@
 # Slovenian translation for gst-plugins-ugly.
-# Copyright (C) 2009 THE PACKAGE'S COPYRIGHT HOLDER
+# Copyright (C) 2009 - 2011 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-ugly package.
 # Matej Urbančič <matej.urban@gmail.com>, 2009.
+# Klemen Košir <klemen.kosir@gmx.com>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.12.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
-"PO-Revision-Date: 2009-12-25 21:35+0100\n"
-"Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
+"POT-Creation-Date: 2011-04-16 20:57+0100\n"
+"PO-Revision-Date: 2011-03-08 21:31+0100\n"
+"Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
@@ -22,30 +23,30 @@ msgstr ""
 "X-Poedit-SourceCharset: utf-8\n"
 
 msgid "Could not read from CD."
-msgstr "Ni mogoče prebrati CD nosilca."
+msgstr "S CD-ja ni mogoče brati."
 
 msgid "Could not open CD device for reading."
-msgstr "Ni mogoče odpreti CD naprave za branje."
+msgstr "Naprave CD ni mogoče odpreti za branje."
 
 msgid "Disc is not an Audio CD."
 msgstr "Disk ni zvočni CD."
 
 msgid "Could not open DVD"
-msgstr "Ni mogoče odpreti DVD nosilca"
+msgstr "DVD-ja ni mogoče odpreti"
 
 #, c-format
 msgid "Could not open DVD title %d"
-msgstr "Ni mogoče odpreti DVD naslova %d"
+msgstr "DVD naslova %d ni mogoče odpreti."
 
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr "Napaka med odpiranjem poglavja %d DVD naslova %d"
+msgstr "Napaka med odpiranjem poglavja %d DVD naslova %d."
 
 #, c-format
 msgid ""
 "Could not open DVD title %d. Interactive titles are not supported by this "
 "element"
-msgstr "Ni mogoče odpreti DVD naslova %d. Interaktivni naslovni niso podprti."
+msgstr "DVD naslova %d ni mogoče odpreti. Interaktivni naslovi niso podprti."
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
@@ -54,23 +55,23 @@ msgstr ""
 
 #, fuzzy
 msgid "Could not read DVD."
-msgstr "Ni mogoče odpreti DVD nosilca"
+msgstr "DVD-ja ni mogoče odpreti"
 
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
-"Napaka med nastavljanjem LAME kodirnika. Preverite parametre kodirnika."
+"Napaka med nastavljanjem kodirnika LAME. Preverite parametre kodiranja."
 
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
-"Zahtevana bitna hitrost %d kbit/s za lastnost '%s' ni dovoljena. Bitna "
-"hitrost je spremenjena na %d kbit/s."
+"Zahtevana bitna hitrost %d kbit/s za lastnost \"%s\" ni dovoljena. Bitna "
+"hitrost je bila spremenjena na %d kbit/s."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
-"Napaka med nastavljanjem kodirnika TwoLAME. Preverite parametre kodirnika."
+"Napaka med nastavljanjem kodirnika TwoLAME. Preverite parametre kodiranja."
 
 msgid "This stream contains no data."
 msgstr "Pretok ne vsebuje podatkov."

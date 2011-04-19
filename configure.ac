@@ -326,20 +326,23 @@ AG_GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
     ])
   fi
 
+  dnl check with pkg-config first
+  AG_GST_PKG_CHECK_MODULES(MAD, mad >= 0.15)
+  MAD_LIBS="$MAD_LIBS $ID3TAG_LIBS"
+  if test "x$HAVE_MAD" = "xno"; then
+    dnl fall back to oldskool detection
+    AC_CHECK_HEADER(mad.h, [
+      AC_CHECK_LIB(mad, mad_decoder_finish,
+        HAVE_MAD="yes" MAD_LIBS="-lmad $ID3TAG_LIBS")
+    ])
+  fi
+
   if test "x$HAVE_ID3TAG" = "xyes"; then
-    dnl check with pkg-config first
-    AG_GST_PKG_CHECK_MODULES(MAD, mad >= 0.15)
-    MAD_LIBS="$MAD_LIBS $ID3TAG_LIBS"
-    if test "x$HAVE_MAD" = "xno"; then
-      dnl fall back to oldskool detection
-      AC_CHECK_HEADER(mad.h, [
-        AC_CHECK_LIB(mad, mad_decoder_finish,
-          HAVE_MAD="yes" MAD_LIBS="-lmad $ID3TAG_LIBS")
-      ])
-    fi
+    AC_DEFINE(HAVE_ID3TAG, 1, [defined if libid3tag is available])
   else
-    HAVE_MAD="no"
-    AC_MSG_WARN([libid3tag not available, cannot build MAD MP3 decoder plugin])
+    AC_MSG_WARN([libid3tag not available, MAD MP3 decoder will be built without
+                 ID3 tag reading support (which is not a problem, since ID3
+                 tags are usually handled by id3demux)])
   fi
 ])
 AC_SUBST(MAD_LIBS)
@@ -362,7 +365,6 @@ AG_GST_CHECK_FEATURE(TWOLAME, [twolame], twolame, [
   PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.10, [
       HAVE_TWOLAME="yes"], [
       HAVE_TWOLAME="no"
-      AC_MSG_RESULT(no)
   ])
   AC_SUBST(TWOLAME_CFLAGS)
   AC_SUBST(TWOLAME_LIBS)

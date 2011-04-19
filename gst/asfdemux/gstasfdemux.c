@@ -2264,13 +2264,13 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
   AsfCorrectionType correction_type;
   AsfStreamType stream_type;
   GstClockTime time_offset;
-  gboolean is_encrypted;
+  gboolean is_encrypted G_GNUC_UNUSED;
   guint16 stream_id;
   guint16 flags;
   ASFGuid guid;
   guint stream_specific_size;
-  guint type_specific_size;
-  guint unknown;
+  guint type_specific_size G_GNUC_UNUSED;
+  guint unknown G_GNUC_UNUSED;
 
   /* Get the rest of the header's header */
   if (size < (16 + 16 + 8 + 4 + 4 + 2 + 4))
@@ -2776,7 +2776,7 @@ gst_asf_demux_process_metadata (GstASFDemux * demux, guint8 * data,
 
   for (i = 0; i < blockcount; ++i) {
     GstStructure *s;
-    guint16 lang_idx, stream_num, name_len, data_type;
+    guint16 stream_num, name_len, data_type, lang_idx G_GNUC_UNUSED;
     guint32 data_len, ival;
     gchar *name_utf8;
 
@@ -2841,7 +2841,7 @@ gst_asf_demux_process_header (GstASFDemux * demux, guint8 * data, guint64 size)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 i, num_objects;
-  guint8 unknown;
+  guint8 unknown G_GNUC_UNUSED;
 
   /* Get the rest of the header's header */
   if (size < (4 + 1 + 1))
@@ -2876,9 +2876,11 @@ not_enough_data:
 static GstFlowReturn
 gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
 {
-  guint64 file_size, creation_time, packets_count;
-  guint64 play_time, send_time, preroll;
-  guint32 flags, min_pktsize, max_pktsize, min_bitrate;
+  guint64 creation_time G_GNUC_UNUSED;
+  guint64 file_size G_GNUC_UNUSED;
+  guint64 send_time G_GNUC_UNUSED;
+  guint64 packets_count, play_time, preroll;
+  guint32 flags, min_pktsize, max_pktsize, min_bitrate G_GNUC_UNUSED;
 
   if (size < (16 + 8 + 8 + 8 + 8 + 8 + 8 + 4 + 4 + 4 + 4))
     goto not_enough_data;
@@ -3184,7 +3186,7 @@ gst_asf_demux_process_simple_index (GstASFDemux * demux, guint8 * data,
     guint64 size)
 {
   GstClockTime interval;
-  guint32 x, count, i;
+  guint32 count, i;
 
   if (size < (16 + 8 + 4 + 4))
     goto not_enough_data;
@@ -3192,7 +3194,7 @@ gst_asf_demux_process_simple_index (GstASFDemux * demux, guint8 * data,
   /* skip file id */
   gst_asf_demux_skip_bytes (16, &data, &size);
   interval = gst_asf_demux_get_uint64 (&data, &size) * (GstClockTime) 100;
-  x = gst_asf_demux_get_uint32 (&data, &size);
+  gst_asf_demux_skip_bytes (4, &data, &size);
   count = gst_asf_demux_get_uint32 (&data, &size);
   if (count > 0) {
     demux->sidx_interval = interval;
@@ -3319,7 +3321,7 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
 
   /* read stream names */
   for (i = 0; i < stream_name_count; ++i) {
-    guint16 stream_lang_idx;
+    guint16 stream_lang_idx G_GNUC_UNUSED;
     gchar *stream_name = NULL;
 
     if (size < 2)
@@ -3594,15 +3596,10 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
   GST_INFO ("%s: size %" G_GUINT64_FORMAT, demux->objpath, obj.size);
 
   switch (obj.id) {
-    case ASF_OBJ_STREAM:{
-      AsfStream *stream;
-
-      stream =
-          gst_asf_demux_parse_stream_object (demux, *p_data, obj_data_size);
-
+    case ASF_OBJ_STREAM:
+      gst_asf_demux_parse_stream_object (demux, *p_data, obj_data_size);
       ret = GST_FLOW_OK;
       break;
-    }
     case ASF_OBJ_FILE:
       ret = gst_asf_demux_process_file (demux, *p_data, obj_data_size);
       break;

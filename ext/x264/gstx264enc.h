@@ -112,6 +112,9 @@ struct _GstX264Enc
 
   gint i_type;
   GstEvent *forcekeyunit_event;
+
+  /* configuration changed  while playing */
+  gboolean reconfig;
 };
 
 struct _GstX264EncClass
