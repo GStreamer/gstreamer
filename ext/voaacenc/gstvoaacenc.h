@@ -47,15 +47,15 @@ struct _GstVoAacEnc {
 
   /* pads */
   GstPad *sinkpad, *srcpad;
-	GstCaps *sinkcaps;
-  guint64 ts;
+  GstCaps *sinkcaps;
   gboolean discont;
 
   GstAdapter *adapter;
 
-
   /* desired bitrate */
   gint bitrate;
+
+  /* caps */
   gint channels;
   gint rate;
   gint output_format;

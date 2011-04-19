@@ -42,8 +42,6 @@
 #include "gstvoaacenc.h"
 
 #define VOAAC_ENC_DEFAULT_BITRATE (128000)
-#define VOAAC_ENC_DEFAULT_CHANNELS (2)
-#define VOAAC_ENC_DEFAULT_RATE (44100)
 #define VOAAC_ENC_DEFAULT_OUTPUTFORMAT (0)      /* RAW */
 #define VOAAC_ENC_MPEGVERSION (4)
 #define VOAAC_ENC_CODECDATA_LEN (2)
@@ -233,8 +231,6 @@ gst_voaacenc_init (GstVoAacEnc * voaacenc, GstVoAacEncClass * klass)
   voaacenc->adapter = gst_adapter_new ();
 
   voaacenc->bitrate = VOAAC_ENC_DEFAULT_BITRATE;
-  voaacenc->rate = VOAAC_ENC_DEFAULT_RATE;
-  voaacenc->channels = VOAAC_ENC_DEFAULT_CHANNELS;
   voaacenc->output_format = VOAAC_ENC_DEFAULT_OUTPUTFORMAT;
 
   /* init rest */
@@ -283,16 +279,14 @@ gst_voaacenc_negotiate (GstVoAacEnc * voaacenc)
         voaacenc->output_format = 0;
       } else {
         GST_DEBUG_OBJECT (voaacenc, "unknown stream-format: %s", str);
-        voaacenc->output_format = 0;
+        voaacenc->output_format = VOAAC_ENC_DEFAULT_OUTPUTFORMAT;
       }
     }
   }
 
   if (caps)
     gst_caps_unref (caps);
-
 }
-
 
 static GstCaps *
 gst_voaacenc_generate_sink_caps (void)
@@ -400,7 +394,6 @@ gst_voaacenc_chain (GstPad * pad, GstBuffer * buffer)
    * encoder flag to mask the discont. */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
     gst_adapter_clear (voaacenc->adapter);
-    voaacenc->ts = 0;
     voaacenc->discont = TRUE;
   }
 
@@ -461,8 +454,6 @@ gst_voaacenc_chain (GstPad * pad, GstBuffer * buffer)
         GST_FRAMES_TO_CLOCK_TIME (voaacenc->inbuf_size / voaacenc->channels /
         VOAAC_ENC_BITS_PER_SAMPLE, voaacenc->rate);
 
-    voaacenc->ts = GST_BUFFER_TIMESTAMP (out) + GST_BUFFER_DURATION (out);
-
     GST_LOG_OBJECT (voaacenc, "Pushing out buffer time: %" GST_TIME_FORMAT
         " duration: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out)),
@@ -504,7 +495,6 @@ gst_voaacenc_state_change (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       voaacenc->rate = 0;
       voaacenc->channels = 0;
-      voaacenc->ts = 0;
       voaacenc->discont = FALSE;
       gst_adapter_clear (voaacenc->adapter);
       break;
@@ -533,7 +523,6 @@ gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
   gint index;
 
   if ((index = voaacenc_get_rate_index (voaacenc->rate)) >= 0) {
-
     caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, VOAAC_ENC_MPEGVERSION,
         "channels", G_TYPE_INT, voaacenc->channels,
