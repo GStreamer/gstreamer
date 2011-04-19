@@ -155,6 +155,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvp8.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4mdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstzbar.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgsettingselements.so
+%{_libdir}/gstreamer-%{majorminor}/libgstlinsys.so
 %{_libdir}/libgstbasecamerabinsrc-0.10.so
 %{_libdir}/libgstbasecamerabinsrc-0.10.so.0
 %{_libdir}/libgstbasecamerabinsrc-0.10.so.0.0.0
