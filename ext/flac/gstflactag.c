@@ -96,34 +96,10 @@ static GstStateChangeReturn gst_flac_tag_change_state (GstElement * element,
 
 static gboolean gst_flac_tag_sink_setcaps (GstPad * pad, GstCaps * caps);
 
-static void
-gst_flac_tag_setup_interfaces (GType flac_tag_type)
-{
-  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
+#define gst_flac_tag_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstFlacTag, gst_flac_tag, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 
-  g_type_add_interface_static (flac_tag_type, GST_TYPE_TAG_SETTER,
-      &tag_setter_info);
-}
-
-GST_BOILERPLATE_FULL (GstFlacTag, gst_flac_tag, GstElement, GST_TYPE_ELEMENT,
-    gst_flac_tag_setup_interfaces);
-
-static void
-gst_flac_tag_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "FLAC tagger",
-      "Formatter/Metadata",
-      "Rewrite tags in a FLAC file", "Christophe Fergeau <teuf@gnome.org>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&flac_tag_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&flac_tag_src_template));
-
-  GST_DEBUG_CATEGORY_INIT (flactag_debug, "flactag", 0, "flac tag rewriter");
-}
 
 static void
 gst_flac_tag_class_init (GstFlacTagClass * klass)
@@ -131,13 +107,23 @@ gst_flac_tag_class_init (GstFlacTagClass * klass)
   GstElementClass *gstelement_class;
   GObjectClass *gobject_class;
 
+  GST_DEBUG_CATEGORY_INIT (flactag_debug, "flactag", 0, "flac tag rewriter");
+
   gstelement_class = (GstElementClass *) klass;
   gobject_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->dispose = gst_flac_tag_dispose;
   gstelement_class->change_state = gst_flac_tag_change_state;
+
+  gst_element_class_set_details_simple (gstelement_class, "FLAC tagger",
+      "Formatter/Metadata",
+      "Rewrite tags in a FLAC file", "Christophe Fergeau <teuf@gnome.org>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&flac_tag_sink_template));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&flac_tag_src_template));
 }
 
 static void
@@ -163,7 +149,7 @@ gst_flac_tag_dispose (GObject * object)
 
 
 static void
-gst_flac_tag_init (GstFlacTag * tag, GstFlacTagClass * klass)
+gst_flac_tag_init (GstFlacTag * tag)
 {
   /* create the sink and src pads */
   tag->sinkpad =
@@ -197,6 +183,8 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlacTag *tag;
   GstFlowReturn ret;
+  guint8 *data;
+  gsize size;
 
   ret = GST_FLOW_OK;
   tag = GST_FLAC_TAG (gst_pad_get_parent (pad));
@@ -212,7 +200,7 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
 
     id_buffer = gst_adapter_take_buffer (tag->adapter, FLAC_MAGIC_SIZE);
     GST_DEBUG_OBJECT (tag, "looking for " FLAC_MAGIC " identifier");
-    if (memcmp (GST_BUFFER_DATA (id_buffer), FLAC_MAGIC, FLAC_MAGIC_SIZE) == 0) {
+    if (gst_buffer_memcmp (id_buffer, 0, FLAC_MAGIC, FLAC_MAGIC_SIZE) == 0) {
 
       GST_DEBUG_OBJECT (tag, "pushing " FLAC_MAGIC " identifier buffer");
       gst_buffer_set_caps (id_buffer, GST_PAD_CAPS (tag->srcpad));
@@ -234,7 +222,6 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
    * of a metadata block
    */
   if (tag->state == GST_FLAC_TAG_STATE_METADATA_BLOCKS) {
-    guint size;
     guint type;
     gboolean is_last;
     const guint8 *block_header;
@@ -250,13 +237,14 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
     if (gst_adapter_available (tag->adapter) < 4)
       goto cleanup;
 
-    block_header = gst_adapter_peek (tag->adapter, 4);
+    block_header = gst_adapter_map (tag->adapter, 4);
 
     is_last = ((block_header[0] & 0x80) == 0x80);
     type = block_header[0] & 0x7F;
     size = (block_header[1] << 16)
         | (block_header[2] << 8)
         | block_header[3];
+    gst_adapter_unmap (tag->adapter, 0);
 
     /* The 4 bytes long header isn't included in the metadata size */
     tag->metadata_block_size = size + 4;
@@ -288,7 +276,9 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
     /* clear the is-last flag, as the last metadata block will
      * be the vorbis comment block which we will build ourselves.
      */
-    GST_BUFFER_DATA (metadata_buffer)[0] &= (~0x80);
+    data = gst_buffer_map (metadata_buffer, &size, NULL, GST_MAP_READWRITE);
+    data[0] &= (~0x80);
+    gst_buffer_unmap (metadata_buffer, data, size);
 
     if (tag->state == GST_FLAC_TAG_STATE_WRITING_METADATA_BLOCK) {
       GST_DEBUG_OBJECT (tag, "pushing metadata block buffer");
@@ -312,12 +302,14 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
      * block, and stop now if the user only wants to read tags
      */
     if (tag->vorbiscomment != NULL) {
+      guint8 id_data[4];
       /* We found some tags, try to parse them and notify the other elements
        * that we encountered some tags
        */
       GST_DEBUG_OBJECT (tag, "emitting vorbiscomment tags");
+      gst_buffer_extract (tag->vorbiscomment, 0, id_data, 4);
       tag->tags = gst_tag_list_from_vorbiscomment_buffer (tag->vorbiscomment,
-          GST_BUFFER_DATA (tag->vorbiscomment), 4, NULL);
+          id_data, 4, NULL);
       if (tag->tags != NULL) {
         gst_element_found_tags (GST_ELEMENT (tag),
             gst_tag_list_copy (tag->tags));
@@ -341,7 +333,6 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
    */
   if (tag->state == GST_FLAC_TAG_STATE_ADD_VORBIS_COMMENT) {
     GstBuffer *buffer;
-    gint size;
     const GstTagList *user_tags;
     GstTagList *merged_tags;
 
@@ -361,68 +352,54 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
        */
       GST_WARNING_OBJECT (tag, "No tags found");
       buffer = gst_buffer_new_and_alloc (12);
-      if (buffer == NULL) {
-        GST_ELEMENT_ERROR (tag, CORE, TOO_LAZY, (NULL),
-            ("Error creating 12-byte buffer for padding block"));
-        ret = GST_FLOW_ERROR;
-        goto cleanup;
-      }
-      memset (GST_BUFFER_DATA (buffer), 0, GST_BUFFER_SIZE (buffer));
-      GST_BUFFER_DATA (buffer)[0] = 0x81;       /* 0x80 = Last metadata block, 
-                                                 * 0x01 = padding block
-                                                 */
+      if (buffer == NULL)
+        goto no_buffer;
+
+      data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
+      memset (data, 0, size);
+      data[0] = 0x81;           /* 0x80 = Last metadata block, 
+                                 * 0x01 = padding block */
+      gst_buffer_unmap (buffer, data, size);
     } else {
       guchar header[4];
+      guint8 fbit[1];
 
       memset (header, 0, sizeof (header));
       header[0] = 0x84;         /* 0x80 = Last metadata block, 
-                                 * 0x04 = vorbiscomment block
-                                 */
+                                 * 0x04 = vorbiscomment block */
       buffer = gst_tag_list_to_vorbiscomment_buffer (merged_tags, header,
           sizeof (header), NULL);
       GST_DEBUG_OBJECT (tag, "Writing tags %" GST_PTR_FORMAT, merged_tags);
       gst_tag_list_free (merged_tags);
-      if (buffer == NULL) {
-        GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
-            ("Error converting tag list to vorbiscomment buffer"));
-        ret = GST_FLOW_ERROR;
-        goto cleanup;
-      }
-      size = GST_BUFFER_SIZE (buffer) - 4;
-      if ((size > 0xFFFFFF) || (size < 0)) {
-        /* FLAC vorbis comment blocks are limited to 2^24 bytes, 
-         * while the vorbis specs allow more than that. Shouldn't 
-         * be a real world problem though
-         */
-        GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
-            ("Vorbis comment of size %d too long", size));
-        ret = GST_FLOW_ERROR;
-        goto cleanup;
-      }
+      if (buffer == NULL)
+        goto no_comment;
 
+      size = gst_buffer_get_size (buffer);
+      if ((size < 4) || ((size - 4) > 0xFFFFFF))
+        goto comment_too_long;
+
+      fbit[0] = 1;
       /* Get rid of the framing bit at the end of the vorbiscomment buffer 
        * if it exists since libFLAC seems to lose sync because of this
        * bit in gstflacdec
        */
-      if (GST_BUFFER_DATA (buffer)[GST_BUFFER_SIZE (buffer) - 1] == 1) {
-        GstBuffer *sub;
-
-        sub = gst_buffer_create_sub (buffer, 0, GST_BUFFER_SIZE (buffer) - 1);
-        gst_buffer_unref (buffer);
-        buffer = sub;
+      if (gst_buffer_memcmp (buffer, size - 1, fbit, 1) == 0) {
+        buffer = gst_buffer_make_writable (buffer);
+        gst_buffer_resize (buffer, 0, size - 1);
       }
     }
 
     /* The 4 byte metadata block header isn't accounted for in the total
      * size of the metadata block
      */
-    size = GST_BUFFER_SIZE (buffer) - 4;
+    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
+    data[1] = (((size - 4) & 0xFF0000) >> 16);
+    data[2] = (((size - 4) & 0x00FF00) >> 8);
+    data[3] = ((size - 4) & 0x0000FF);
+    gst_buffer_unmap (buffer, data, size);
 
-    GST_BUFFER_DATA (buffer)[1] = ((size & 0xFF0000) >> 16);
-    GST_BUFFER_DATA (buffer)[2] = ((size & 0x00FF00) >> 8);
-    GST_BUFFER_DATA (buffer)[3] = (size & 0x0000FF);
-    GST_DEBUG_OBJECT (tag, "pushing %d byte vorbiscomment buffer",
-        GST_BUFFER_SIZE (buffer));
+    GST_DEBUG_OBJECT (tag, "pushing %d byte vorbiscomment buffer", size);
+
     gst_buffer_set_caps (buffer, GST_PAD_CAPS (tag->srcpad));
     ret = gst_pad_push (tag->srcpad, buffer);
     if (ret != GST_FLOW_OK) {
@@ -448,8 +425,34 @@ cleanup:
   gst_object_unref (tag);
 
   return ret;
-}
 
+  /* ERRORS */
+no_buffer:
+  {
+    GST_ELEMENT_ERROR (tag, CORE, TOO_LAZY, (NULL),
+        ("Error creating 12-byte buffer for padding block"));
+    ret = GST_FLOW_ERROR;
+    goto cleanup;
+  }
+no_comment:
+  {
+    GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
+        ("Error converting tag list to vorbiscomment buffer"));
+    ret = GST_FLOW_ERROR;
+    goto cleanup;
+  }
+comment_too_long:
+  {
+    /* FLAC vorbis comment blocks are limited to 2^24 bytes, 
+     * while the vorbis specs allow more than that. Shouldn't 
+     * be a real world problem though
+     */
+    GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
+        ("Vorbis comment of size %d too long", size));
+    ret = GST_FLOW_ERROR;
+    goto cleanup;
+  }
+}
 
 static GstStateChangeReturn
 gst_flac_tag_change_state (GstElement * element, GstStateChange transition)
@@ -486,5 +489,5 @@ gst_flac_tag_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return parent_class->change_state (element, transition);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }

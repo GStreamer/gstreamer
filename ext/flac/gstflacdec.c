@@ -147,7 +147,8 @@ static void gst_flac_dec_metadata_cb (const FLAC__StreamDecoder *
 static void gst_flac_dec_error_cb (const FLAC__StreamDecoder *
     decoder, FLAC__StreamDecoderErrorStatus status, void *client_data);
 
-GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT);
+#define gst_flac_dec_parent_class parent_class
+G_DEFINE_TYPE (GstFlacDec, gst_flac_dec, GST_TYPE_ELEMENT);
 
 /* FIXME 0.11: Use width=32 for all depths and let audioconvert
  * handle the conversions instead of doing it ourself.
@@ -174,22 +175,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static void
-gst_flac_dec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&flac_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&flac_dec_sink_factory));
-  gst_element_class_set_details_simple (element_class, "FLAC audio decoder",
-      "Codec/Decoder/Audio",
-      "Decodes FLAC lossless audio streams", "Wim Taymans <wim@fluendo.com>");
-
-  GST_DEBUG_CATEGORY_INIT (flacdec_debug, "flacdec", 0, "flac decoder");
-}
-
-static void
 gst_flac_dec_class_init (GstFlacDecClass * klass)
 {
   GstElementClass *gstelement_class;
@@ -198,14 +183,25 @@ gst_flac_dec_class_init (GstFlacDecClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gobject_class = (GObjectClass *) klass;
 
+  GST_DEBUG_CATEGORY_INIT (flacdec_debug, "flacdec", 0, "flac decoder");
+
   gobject_class->finalize = gst_flac_dec_finalize;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_flac_dec_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&flac_dec_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&flac_dec_sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "FLAC audio decoder",
+      "Codec/Decoder/Audio",
+      "Decodes FLAC lossless audio streams", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void
-gst_flac_dec_init (GstFlacDec * flacdec, GstFlacDecClass * klass)
+gst_flac_dec_init (GstFlacDec * flacdec)
 {
   flacdec->sinkpad =
       gst_pad_new_from_static_template (&flac_dec_sink_factory, "sink");
@@ -501,8 +497,8 @@ gst_flac_dec_scan_for_last_block (GstFlacDec * flacdec, gint64 * samples)
   while (offset >= MAX (SCANBLOCK_SIZE / 2, file_size / 2)) {
     GstFlowReturn flow;
     GstBuffer *buf = NULL;
-    guint8 *data;
-    guint size;
+    guint8 *data, *ptr;
+    gsize size, left;
 
     /* divide by 2 = not very sophisticated way to deal with overlapping */
     offset -= SCANBLOCK_SIZE / 2;
@@ -515,20 +511,24 @@ gst_flac_dec_scan_for_last_block (GstFlacDec * flacdec, gint64 * samples)
       return;
     }
 
-    size = GST_BUFFER_SIZE (buf);
-    data = GST_BUFFER_DATA (buf);
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
-    while (size > 16) {
-      if (gst_flac_dec_scan_got_frame (flacdec, data, size, samples)) {
+    ptr = data;
+    left = size;
+
+    while (left > 16) {
+      if (gst_flac_dec_scan_got_frame (flacdec, ptr, left, samples)) {
         GST_DEBUG_OBJECT (flacdec, "frame sync at offset %" G_GINT64_FORMAT,
-            offset + GST_BUFFER_SIZE (buf) - size);
+            offset + size - left);
+        gst_buffer_unmap (buf, data, size);
         gst_buffer_unref (buf);
         return;
       }
-      ++data;
-      --size;
+      ++ptr;
+      --left;
     }
 
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
   }
 }
@@ -777,10 +777,11 @@ gst_flac_dec_read_seekable (const FLAC__StreamDecoder * decoder,
       return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
   }
 
+  *bytes = gst_buffer_get_size (buf);
   GST_DEBUG_OBJECT (flacdec, "Read %d bytes at %" G_GUINT64_FORMAT,
-      GST_BUFFER_SIZE (buf), flacdec->offset);
-  memcpy (buffer, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-  *bytes = GST_BUFFER_SIZE (buf);
+      *bytes, flacdec->offset);
+
+  gst_buffer_extract (buf, 0, buffer, *bytes);
   gst_buffer_unref (buf);
   flacdec->offset += *bytes;
 
@@ -824,6 +825,8 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   guint samples = frame->header.blocksize;
   guint j, i;
   GstClockTime next;
+  gpointer data;
+  gsize size;
 
   GST_LOG_OBJECT (flacdec, "samples in frame header: %d", samples);
 
@@ -942,7 +945,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
      * downstream negotiation work on older basetransform */
     ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
         GST_BUFFER_OFFSET (flacdec->pending),
-        GST_BUFFER_SIZE (flacdec->pending),
+        gst_buffer_get_size (flacdec->pending),
         GST_BUFFER_CAPS (flacdec->pending), &outbuf);
     if (ret == GST_FLOW_OK) {
       gst_pad_push (flacdec->srcpad, flacdec->pending);
@@ -989,8 +992,9 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
 
   GST_BUFFER_DURATION (outbuf) = next - GST_BUFFER_TIMESTAMP (outbuf);
 
+  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
   if (width == 8) {
-    gint8 *outbuffer = (gint8 *) GST_BUFFER_DATA (outbuf);
+    gint8 *outbuffer = (gint8 *) data;
 
     for (i = 0; i < samples; i++) {
       for (j = 0; j < channels; j++) {
@@ -998,7 +1002,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
       }
     }
   } else if (width == 16) {
-    gint16 *outbuffer = (gint16 *) GST_BUFFER_DATA (outbuf);
+    gint16 *outbuffer = (gint16 *) data;
 
     for (i = 0; i < samples; i++) {
       for (j = 0; j < channels; j++) {
@@ -1006,7 +1010,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
       }
     }
   } else if (width == 32) {
-    gint32 *outbuffer = (gint32 *) GST_BUFFER_DATA (outbuf);
+    gint32 *outbuffer = (gint32 *) data;
 
     for (i = 0; i < samples; i++) {
       for (j = 0; j < channels; j++) {
@@ -1016,6 +1020,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   } else {
     g_assert_not_reached ();
   }
+  gst_buffer_unmap (outbuf, data, size);
 
   if (!flacdec->seeking) {
     GST_DEBUG_OBJECT (flacdec, "pushing %d samples at offset %" G_GINT64_FORMAT
@@ -1026,7 +1031,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
 
     if (flacdec->discont) {
       GST_DEBUG_OBJECT (flacdec, "marking discont");
-      outbuf = gst_buffer_make_metadata_writable (outbuf);
+      outbuf = gst_buffer_make_writable (outbuf);
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
       flacdec->discont = FALSE;
     }
@@ -1362,7 +1367,7 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
 
   GST_LOG_OBJECT (dec, "buffer with ts=%" GST_TIME_FORMAT ", end_offset=%"
       G_GINT64_FORMAT ", size=%u", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_BUFFER_OFFSET_END (buf), GST_BUFFER_SIZE (buf));
+      GST_BUFFER_OFFSET_END (buf), gst_buffer_get_size (buf));
 
   if (dec->init) {
     GST_DEBUG_OBJECT (dec, "initializing decoder");
@@ -1384,10 +1389,13 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
 
   if (dec->framed) {
     gint64 unused;
+    guint8 *data;
+    gsize size;
 
     /* check if this is a flac audio frame (rather than a header or junk) */
-    got_audio_frame = gst_flac_dec_scan_got_frame (dec, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf), &unused);
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    got_audio_frame = gst_flac_dec_scan_got_frame (dec, data, size, &unused);
+    gst_buffer_unmap (buf, data, size);
 
     /* oggdemux will set granulepos in OFFSET_END instead of timestamp */
     if (G_LIKELY (got_audio_frame)) {
