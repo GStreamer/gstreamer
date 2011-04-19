@@ -225,6 +225,9 @@ MyStructuredDataPushProc (UInt32 CycleDataCount,
 
   if (avcsrc) {
     for (UInt32 cycle = 0; cycle < CycleDataCount; cycle++) {
+      GST_LOG("Received cycle %lu of %lu - %lu packets (fw time %lx)",
+	      cycle, CycleDataCount, pCycleData[cycle].tsPacketCount,
+	      pCycleData[cycle].fireWireTimeStamp);
       for (UInt32 sourcePacket = 0; sourcePacket < pCycleData[cycle].tsPacketCount;
           sourcePacket++) {
         GstBuffer *buffer;
