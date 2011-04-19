@@ -1001,7 +1001,8 @@ gst_query_set_formats (GstQuery * query, gint n_formats, ...)
  * Since: 0.10.4
  */
 void
-gst_query_set_formatsv (GstQuery * query, gint n_formats, GstFormat * formats)
+gst_query_set_formatsv (GstQuery * query, gint n_formats,
+    const GstFormat * formats)
 {
   GValue list = { 0, };
   gint i;

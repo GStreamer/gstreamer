@@ -300,7 +300,7 @@ void            gst_query_parse_seeking         (GstQuery *query, GstFormat *for
 /* formats query */
 GstQuery*       gst_query_new_formats           (void);
 void            gst_query_set_formats           (GstQuery *query, gint n_formats, ...);
-void            gst_query_set_formatsv          (GstQuery *query, gint n_formats, GstFormat *formats);
+void            gst_query_set_formatsv          (GstQuery *query, gint n_formats, const GstFormat *formats);
 void            gst_query_parse_formats_length  (GstQuery *query, guint *n_formats);
 void            gst_query_parse_formats_nth     (GstQuery *query, guint nth, GstFormat *format);
 
