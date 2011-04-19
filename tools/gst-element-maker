@@ -2,7 +2,8 @@
 
 
 prefix=gst
-templatedir=element-templates
+basedir=`dirname $0`
+templatedir=$basedir/element-templates
 
 while [ "$1" ] ; do
   case $1 in
@@ -44,7 +45,7 @@ if [ "$name" = "" -o "$class" = "" ] ; then
   exit 1
 fi
 
-if [ ! -f "element-templates/$class" ] ; then
+if [ ! -f "$templatedir/$class" ] ; then
   echo "Template file for $class not found."
   exit 1
 fi
