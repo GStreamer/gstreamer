@@ -37,11 +37,8 @@
 #include "config.h"
 #endif
 
-//#define ENABLE
-#ifdef ENABLE
 #include <AVCVideoServices/AVCVideoServices.h>
 using namespace AVS;
-#endif
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesrc.h>
@@ -209,7 +206,6 @@ gst_avc_src_get_caps (GstBaseSrc * src)
 #define kNumCyclesInMPEGReceiverSegment 200
 #define kNumSegmentsInMPEGReceiverProgram 10
 
-#ifdef ENABLE
 void
 MPEGReceiverMessageReceivedProc (UInt32 msg, UInt32 param1, UInt32 param2,
     void *pRefCon)
@@ -256,7 +252,6 @@ MyStructuredDataPushProc (UInt32 CycleDataCount,
 
   return 0;
 }
-#endif
 
 static gboolean
 gst_avc_src_start (GstBaseSrc * src)
@@ -267,7 +262,6 @@ gst_avc_src_start (GstBaseSrc * src)
 
   avcsrc->unlock = FALSE;
 
-#ifdef ENABLE
   // Create a AVCDeviceController
   if (!avcsrc->pAVCDeviceController)
     CreateAVCDeviceController (&avcsrc->pAVCDeviceController);
@@ -308,7 +302,6 @@ gst_avc_src_start (GstBaseSrc * src)
       kNumCyclesInMPEGReceiverSegment, (void *) avcsrc);
 
   avcsrc->pAVCDevice->StartAVCDeviceStream (avcsrc->pAVCDeviceStream);
-#endif
 
   return TRUE;
 }
