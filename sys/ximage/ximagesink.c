@@ -154,7 +154,26 @@ enum
   PROP_WINDOW_HEIGHT
 };
 
-static GstVideoSinkClass *parent_class = NULL;
+/* ============================================================= */
+/*                                                               */
+/*                       Public Methods                          */
+/*                                                               */
+/* ============================================================= */
+
+/* =========================================== */
+/*                                             */
+/*          Object typing & Creation           */
+/*                                             */
+/* =========================================== */
+static void gst_ximagesink_interface_init (GstImplementsInterfaceClass * klass);
+static void gst_ximagesink_navigation_init (GstNavigationInterface * klass);
+static void gst_ximagesink_xoverlay_init (GstXOverlayClass * klass);
+#define gst_ximagesink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstXImageSink, gst_ximagesink, GST_TYPE_VIDEO_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
+        gst_ximagesink_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION, gst_ximagesink_navigation_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_X_OVERLAY, gst_ximagesink_xoverlay_init));
 
 /* ============================================================= */
 /*                                                               */
@@ -1910,19 +1929,6 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
 }
 
 static void
-gst_ximagesink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Video sink", "Sink/Video",
-      "A standard X based videosink", "Julien Moutte <julien@moutte.net>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_ximagesink_sink_template_factory));
-}
-
-static void
 gst_ximagesink_class_init (GstXImageSinkClass * klass)
 {
   GObjectClass *gobject_class;
@@ -1934,8 +1940,6 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
   videosink_class = (GstVideoSinkClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_ximagesink_finalize;
   gobject_class->set_property = gst_ximagesink_set_property;
@@ -1991,6 +1995,13 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
           "Height of the window", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Video sink", "Sink/Video",
+      "A standard X based videosink", "Julien Moutte <julien@moutte.net>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_ximagesink_sink_template_factory));
+
   gstelement_class->change_state = gst_ximagesink_change_state;
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_ximagesink_getcaps);
@@ -2001,60 +2012,4 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_ximagesink_event);
 
   videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_ximagesink_show_frame);
-}
-
-/* ============================================================= */
-/*                                                               */
-/*                       Public Methods                          */
-/*                                                               */
-/* ============================================================= */
-
-/* =========================================== */
-/*                                             */
-/*          Object typing & Creation           */
-/*                                             */
-/* =========================================== */
-
-GType
-gst_ximagesink_get_type (void)
-{
-  static GType ximagesink_type = 0;
-
-  if (!ximagesink_type) {
-    static const GTypeInfo ximagesink_info = {
-      sizeof (GstXImageSinkClass),
-      gst_ximagesink_base_init,
-      NULL,
-      (GClassInitFunc) gst_ximagesink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstXImageSink), 0, (GInstanceInitFunc) gst_ximagesink_init,
-    };
-    static const GInterfaceInfo iface_info = {
-      (GInterfaceInitFunc) gst_ximagesink_interface_init, NULL, NULL,
-    };
-    static const GInterfaceInfo navigation_info = {
-      (GInterfaceInitFunc) gst_ximagesink_navigation_init, NULL, NULL,
-    };
-    static const GInterfaceInfo overlay_info = {
-      (GInterfaceInitFunc) gst_ximagesink_xoverlay_init, NULL, NULL,
-    };
-
-    ximagesink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
-        "GstXImageSink", &ximagesink_info, 0);
-
-    g_type_add_interface_static (ximagesink_type, GST_TYPE_IMPLEMENTS_INTERFACE,
-        &iface_info);
-    g_type_add_interface_static (ximagesink_type, GST_TYPE_NAVIGATION,
-        &navigation_info);
-    g_type_add_interface_static (ximagesink_type, GST_TYPE_X_OVERLAY,
-        &overlay_info);
-
-    /* register type and create class in a more safe place instead of at
-     * runtime since the type registration and class creation is not
-     * threadsafe. */
-    g_type_class_ref (gst_ximage_buffer_pool_get_type ());
-  }
-
-  return ximagesink_type;
 }

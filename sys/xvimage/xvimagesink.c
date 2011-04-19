@@ -186,7 +186,37 @@ enum
   PROP_WINDOW_HEIGHT
 };
 
-static GstVideoSinkClass *parent_class = NULL;
+/* ============================================================= */
+/*                                                               */
+/*                       Public Methods                          */
+/*                                                               */
+/* ============================================================= */
+
+/* =========================================== */
+/*                                             */
+/*          Object typing & Creation           */
+/*                                             */
+/* =========================================== */
+static void gst_xvimagesink_interface_init (GstImplementsInterfaceClass *
+    klass);
+static void gst_xvimagesink_navigation_init (GstNavigationInterface * iface);
+static void gst_xvimagesink_xoverlay_init (GstXOverlayClass * iface);
+static void gst_xvimagesink_colorbalance_init (GstColorBalanceClass * iface);
+static void
+gst_xvimagesink_property_probe_interface_init (GstPropertyProbeInterface *
+    iface);
+#define gst_xvimagesink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstXvImageSink, gst_xvimagesink, GST_TYPE_VIDEO_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
+        gst_xvimagesink_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
+        gst_xvimagesink_navigation_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_X_OVERLAY, gst_xvimagesink_xoverlay_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_xvimagesink_colorbalance_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
+        gst_xvimagesink_property_probe_interface_init));
+
 
 /* ============================================================= */
 /*                                                               */
@@ -2948,19 +2978,6 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
 }
 
 static void
-gst_xvimagesink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Video sink", "Sink/Video",
-      "A Xv based videosink", "Julien Moutte <julien@moutte.net>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_xvimagesink_sink_template_factory));
-}
-
-static void
 gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
 {
   GObjectClass *gobject_class;
@@ -3107,6 +3124,13 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
 
   gobject_class->finalize = gst_xvimagesink_finalize;
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Video sink", "Sink/Video",
+      "A Xv based videosink", "Julien Moutte <julien@moutte.net>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_xvimagesink_sink_template_factory));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_xvimagesink_change_state);
 
@@ -3118,80 +3142,4 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_xvimagesink_event);
 
   videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_xvimagesink_show_frame);
-}
-
-/* ============================================================= */
-/*                                                               */
-/*                       Public Methods                          */
-/*                                                               */
-/* ============================================================= */
-
-/* =========================================== */
-/*                                             */
-/*          Object typing & Creation           */
-/*                                             */
-/* =========================================== */
-
-GType
-gst_xvimagesink_get_type (void)
-{
-  static GType xvimagesink_type = 0;
-
-  if (!xvimagesink_type) {
-    static const GTypeInfo xvimagesink_info = {
-      sizeof (GstXvImageSinkClass),
-      gst_xvimagesink_base_init,
-      NULL,
-      (GClassInitFunc) gst_xvimagesink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstXvImageSink),
-      0,
-      (GInstanceInitFunc) gst_xvimagesink_init,
-    };
-    static const GInterfaceInfo iface_info = {
-      (GInterfaceInitFunc) gst_xvimagesink_interface_init,
-      NULL,
-      NULL,
-    };
-    static const GInterfaceInfo navigation_info = {
-      (GInterfaceInitFunc) gst_xvimagesink_navigation_init,
-      NULL,
-      NULL,
-    };
-    static const GInterfaceInfo overlay_info = {
-      (GInterfaceInitFunc) gst_xvimagesink_xoverlay_init,
-      NULL,
-      NULL,
-    };
-    static const GInterfaceInfo colorbalance_info = {
-      (GInterfaceInitFunc) gst_xvimagesink_colorbalance_init,
-      NULL,
-      NULL,
-    };
-    static const GInterfaceInfo propertyprobe_info = {
-      (GInterfaceInitFunc) gst_xvimagesink_property_probe_interface_init,
-      NULL,
-      NULL,
-    };
-    xvimagesink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
-        "GstXvImageSink", &xvimagesink_info, 0);
-
-    g_type_add_interface_static (xvimagesink_type,
-        GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
-    g_type_add_interface_static (xvimagesink_type, GST_TYPE_NAVIGATION,
-        &navigation_info);
-    g_type_add_interface_static (xvimagesink_type, GST_TYPE_X_OVERLAY,
-        &overlay_info);
-    g_type_add_interface_static (xvimagesink_type, GST_TYPE_COLOR_BALANCE,
-        &colorbalance_info);
-    g_type_add_interface_static (xvimagesink_type, GST_TYPE_PROPERTY_PROBE,
-        &propertyprobe_info);
-    /* register type and create class in a more safe place instead of at
-     * runtime since the type registration and class creation is not
-     * threadsafe. */
-    g_type_class_ref (gst_xvimage_buffer_pool_get_type ());
-  }
-
-  return xvimagesink_type;
 }
