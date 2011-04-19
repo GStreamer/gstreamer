@@ -89,39 +89,88 @@ static GstCaps *gst_voaacenc_getcaps (GstPad * pad);
 static GstCaps *gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc);
 static gint voaacenc_get_rate_index (gint rate);
 
+static gpointer
+gst_voaacenc_generate_sink_caps (gpointer data)
+{
 #define VOAAC_ENC_MAX_CHANNELS 6
-
 /* describe the channels position */
-const GstAudioChannelPosition
-    gst_voaacenc_channel_position[][VOAAC_ENC_MAX_CHANNELS] = {
-  {                             /* 1 ch: Mono */
-      GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
-  {                             /* 2 ch: front left + front right (front stereo) */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
-  {                             /* 3 ch: front center + front stereo */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
-  {                             /* 4 ch: front center + front stereo + back center */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
-  {                             /* 5 ch: front center + front stereo + back stereo */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
-  {                             /* 6ch: front center + front stereo + back stereo + LFE */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-      GST_AUDIO_CHANNEL_POSITION_LFE}
-};
+  static const GstAudioChannelPosition
+      gst_voaacenc_channel_position[][VOAAC_ENC_MAX_CHANNELS] = {
+    {                           /* 1 ch: Mono */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+    {                           /* 2 ch: front left + front right (front stereo) */
+          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+    {                           /* 3 ch: front center + front stereo */
+          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+    {                           /* 4 ch: front center + front stereo + back center */
+          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+    {                           /* 5 ch: front center + front stereo + back stereo */
+          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+    {                           /* 6ch: front center + front stereo + back stereo + LFE */
+          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_LFE}
+  };
+  GstCaps *caps = gst_caps_new_empty ();
+  gint i, c;
+
+  for (i = 0; i < VOAAC_ENC_MAX_CHANNELS; i++) {
+    GValue chanpos = { 0 };
+    GValue pos = { 0 };
+    GstStructure *structure;
+
+    g_value_init (&chanpos, GST_TYPE_ARRAY);
+    g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
+
+    for (c = 0; c <= i; c++) {
+      g_value_set_enum (&pos, gst_voaacenc_channel_position[i][c]);
+      gst_value_array_append_value (&chanpos, &pos);
+    }
+
+    g_value_unset (&pos);
+
+    structure = gst_structure_new ("audio/x-raw-int",
+        "width", G_TYPE_INT, 16,
+        "depth", G_TYPE_INT, 16,
+        "signed", G_TYPE_BOOLEAN, TRUE,
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+        "rate", GST_TYPE_INT_RANGE, 8000, 96000, "channels", G_TYPE_INT, i + 1,
+        NULL);
+
+    gst_structure_set_value (structure, "channel-positions", &chanpos);
+    g_value_unset (&chanpos);
+
+    gst_caps_append_structure (caps, structure);
+  }
+
+  GST_DEBUG ("generated sink caps: %" GST_PTR_FORMAT, caps);
+  return caps;
+}
+
+static GstCaps *
+gst_voaacenc_get_sink_caps (void)
+{
+  static GOnce g_once = G_ONCE_INIT;
+  GstCaps *caps;
+
+  g_once (&g_once, gst_voaacenc_generate_sink_caps, NULL);
+  caps = g_once.retval;
+
+  return gst_caps_ref (caps);
+}
 
 static void
 _do_init (GType object_type)
@@ -235,7 +284,6 @@ gst_voaacenc_init (GstVoAacEnc * voaacenc, GstVoAacEncClass * klass)
 
   /* init rest */
   voaacenc->handle = NULL;
-  voaacenc->sinkcaps = NULL;
 }
 
 static void
@@ -244,11 +292,6 @@ gst_voaacenc_finalize (GObject * object)
   GstVoAacEnc *voaacenc;
 
   voaacenc = GST_VOAACENC (object);
-
-  if (voaacenc->sinkcaps) {
-    gst_caps_unref (voaacenc->sinkcaps);
-    voaacenc->sinkcaps = NULL;
-  }
 
   g_object_unref (G_OBJECT (voaacenc->adapter));
   voaacenc->adapter = NULL;
@@ -289,57 +332,9 @@ gst_voaacenc_negotiate (GstVoAacEnc * voaacenc)
 }
 
 static GstCaps *
-gst_voaacenc_generate_sink_caps (void)
-{
-  GstCaps *caps = gst_caps_new_empty ();
-  gint i, c;
-
-  for (i = 0; i < VOAAC_ENC_MAX_CHANNELS; i++) {
-    GValue chanpos = { 0 };
-    GValue pos = { 0 };
-    GstStructure *structure;
-
-    g_value_init (&chanpos, GST_TYPE_ARRAY);
-    g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
-
-    for (c = 0; c <= i; c++) {
-      g_value_set_enum (&pos, gst_voaacenc_channel_position[i][c]);
-      gst_value_array_append_value (&chanpos, &pos);
-    }
-
-    g_value_unset (&pos);
-
-    structure = gst_structure_new ("audio/x-raw-int",
-        "width", G_TYPE_INT, 16,
-        "depth", G_TYPE_INT, 16,
-        "signed", G_TYPE_BOOLEAN, TRUE,
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "rate", GST_TYPE_INT_RANGE, 8000, 96000, "channels", G_TYPE_INT, i + 1,
-        NULL);
-
-    gst_structure_set_value (structure, "channel-positions", &chanpos);
-    g_value_unset (&chanpos);
-
-    gst_caps_append_structure (caps, structure);
-  }
-
-  return caps;
-}
-
-
-static GstCaps *
 gst_voaacenc_getcaps (GstPad * pad)
 {
-  GstVoAacEnc *voaacenc = GST_VOAACENC (GST_PAD_PARENT (pad));
-
-  if (voaacenc->sinkcaps == NULL) {
-    voaacenc->sinkcaps = gst_voaacenc_generate_sink_caps ();
-  }
-
-  GST_DEBUG_OBJECT (voaacenc, "generated sink caps: %" GST_PTR_FORMAT,
-      voaacenc->sinkcaps);
-
-  return gst_caps_ref (voaacenc->sinkcaps);
+  return gst_voaacenc_get_sink_caps ();
 }
 
 
@@ -548,8 +543,6 @@ gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
 
   return caps;
 }
-
-
 
 static VO_U32
 voaacenc_core_mem_alloc (VO_S32 uID, VO_MEM_INFO * pMemInfo)

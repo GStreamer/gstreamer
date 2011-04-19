@@ -47,7 +47,6 @@ struct _GstVoAacEnc {
 
   /* pads */
   GstPad *sinkpad, *srcpad;
-  GstCaps *sinkcaps;
   gboolean discont;
 
   GstAdapter *adapter;
