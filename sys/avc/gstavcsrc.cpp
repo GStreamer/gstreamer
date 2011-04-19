@@ -237,6 +237,7 @@ MyStructuredDataPushProc (UInt32 CycleDataCount,
             pCycleData[cycle].pBuf[sourcePacket], kMPEG2TSPacketSize);
 
         gst_atomic_queue_push (avcsrc->queue, buffer);
+	avcsrc->packets_enqueued++;
       }
     }
 
@@ -321,6 +322,9 @@ gst_avc_src_stop (GstBaseSrc * src)
   // Forget about the device (don't destroy it; pAVCDeviceController manages it)
   avcsrc->pAVCDevice = nil;
 
+  GST_DEBUG("Packets enqueued = %llu", avcsrc->packets_enqueued);
+  GST_DEBUG("Packets dequeued = %llu", avcsrc->packets_dequeued);
+
   while ((buffer = GST_BUFFER (gst_atomic_queue_pop (avcsrc->queue))) != NULL) {
     gst_buffer_unref (buffer);
   }
@@ -358,7 +362,10 @@ gst_avc_src_event (GstBaseSrc * src, GstEvent * event)
 {
   GstAVCSrc *avcsrc = GST_AVC_SRC (src);
 
-  GST_DEBUG_OBJECT (avcsrc, "event");
+  GST_DEBUG_OBJECT (avcsrc, "event of type '%s'", GST_EVENT_TYPE_NAME(event));
+
+  GST_DEBUG("Packets enqueued = %llu, dequeued = %llu",
+	    avcsrc->packets_enqueued, avcsrc->packets_dequeued);
 
   return TRUE;
 }
@@ -389,6 +396,8 @@ gst_avc_src_create (GstBaseSrc * src, guint64 offset, guint size,
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (avcsrc->srcpad));
 
   *buf = buffer;
+
+  avcsrc->packets_dequeued++;
 
   return GST_FLOW_OK;
 }

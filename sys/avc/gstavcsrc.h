@@ -46,6 +46,9 @@ struct _GstAVCSrc
   AVCDeviceStream *pAVCDeviceStream;
   int deviceIndex;
 
+  guint64 packets_enqueued;
+  guint64 packets_dequeued;
+
   GstAtomicQueue *queue;
   GCond *cond;
   GMutex *queue_lock;
