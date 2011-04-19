@@ -72,9 +72,6 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-msvideo")
     );
 
-static void gst_avi_demux_base_init (GstAviDemuxClass * klass);
-static void gst_avi_demux_class_init (GstAviDemuxClass * klass);
-static void gst_avi_demux_init (GstAviDemux * avi);
 static void gst_avi_demux_finalize (GObject * object);
 
 static void gst_avi_demux_reset (GstAviDemux * avi);
@@ -118,42 +115,28 @@ static void gst_avi_demux_get_buffer_info (GstAviDemux * avi,
 
 static void gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf);
 
-static GstElementClass *parent_class = NULL;
-
 /* GObject methods */
 
-GType
-gst_avi_demux_get_type (void)
-{
-  static GType avi_demux_type = 0;
-
-  if (!avi_demux_type) {
-    static const GTypeInfo avi_demux_info = {
-      sizeof (GstAviDemuxClass),
-      (GBaseInitFunc) gst_avi_demux_base_init,
-      NULL,
-      (GClassInitFunc) gst_avi_demux_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAviDemux),
-      0,
-      (GInstanceInitFunc) gst_avi_demux_init,
-    };
-
-    avi_demux_type =
-        g_type_register_static (GST_TYPE_ELEMENT,
-        "GstAviDemux", &avi_demux_info, 0);
-  }
-
-  return avi_demux_type;
-}
+#define gst_avi_demux_parent_class parent_class
+G_DEFINE_TYPE (GstAviDemux, gst_avi_demux, GST_TYPE_ELEMENT);
 
 static void
-gst_avi_demux_base_init (GstAviDemuxClass * klass)
+gst_avi_demux_class_init (GstAviDemuxClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
   GstPadTemplate *videosrctempl, *audiosrctempl, *subsrctempl;
   GstCaps *audcaps, *vidcaps, *subcaps;
+
+  GST_DEBUG_CATEGORY_INIT (avidemux_debug, "avidemux",
+      0, "Demuxer for AVI streams");
+
+  gobject_class->finalize = gst_avi_demux_finalize;
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_avi_demux_change_state);
+  gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_avi_demux_set_index);
+  gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_avi_demux_get_index);
 
   audcaps = gst_riff_create_audio_template_caps ();
   gst_caps_append (audcaps, gst_caps_new_simple ("audio/x-avi-unknown", NULL));
@@ -169,36 +152,18 @@ gst_avi_demux_base_init (GstAviDemuxClass * klass)
   subcaps = gst_caps_new_simple ("application/x-subtitle-avi", NULL);
   subsrctempl = gst_pad_template_new ("subtitle_%02d",
       GST_PAD_SRC, GST_PAD_SOMETIMES, subcaps);
-  gst_element_class_add_pad_template (element_class, audiosrctempl);
-  gst_element_class_add_pad_template (element_class, videosrctempl);
-  gst_element_class_add_pad_template (element_class, subsrctempl);
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class, audiosrctempl);
+  gst_element_class_add_pad_template (gstelement_class, videosrctempl);
+  gst_element_class_add_pad_template (gstelement_class, subsrctempl);
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_templ));
-  gst_element_class_set_details_simple (element_class, "Avi demuxer",
+
+  gst_element_class_set_details_simple (gstelement_class, "Avi demuxer",
       "Codec/Demuxer",
       "Demultiplex an avi file into audio and video",
       "Erik Walthinsen <omega@cse.ogi.edu>, "
       "Wim Taymans <wim.taymans@chello.be>, "
       "Thijs Vermeir <thijsvermeir@gmail.com>");
-}
-
-static void
-gst_avi_demux_class_init (GstAviDemuxClass * klass)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  GST_DEBUG_CATEGORY_INIT (avidemux_debug, "avidemux",
-      0, "Demuxer for AVI streams");
-
-  parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->finalize = gst_avi_demux_finalize;
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_avi_demux_change_state);
-
-  gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_avi_demux_set_index);
-  gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_avi_demux_get_index);
 }
 
 static void

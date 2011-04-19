@@ -191,9 +191,6 @@ static GstStaticPadTemplate audio_sink_factory =
         "wmaversion = (int) [ 1, 2 ] ")
     );
 
-static void gst_avi_mux_base_init (gpointer g_class);
-static void gst_avi_mux_class_init (GstAviMuxClass * klass);
-static void gst_avi_mux_init (GstAviMux * avimux);
 static void gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free);
 
 static GstFlowReturn gst_avi_mux_collect_pads (GstCollectPads * pads,
@@ -209,58 +206,9 @@ static void gst_avi_mux_get_property (GObject * object,
 static GstStateChangeReturn gst_avi_mux_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_avi_mux_get_type (void)
-{
-  static GType avimux_type = 0;
-
-  if (!avimux_type) {
-    static const GTypeInfo avimux_info = {
-      sizeof (GstAviMuxClass),
-      gst_avi_mux_base_init,
-      NULL,
-      (GClassInitFunc) gst_avi_mux_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAviMux),
-      0,
-      (GInstanceInitFunc) gst_avi_mux_init,
-    };
-    static const GInterfaceInfo tag_setter_info = {
-      NULL,
-      NULL,
-      NULL
-    };
-
-    avimux_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstAviMux", &avimux_info, 0);
-    g_type_add_interface_static (avimux_type, GST_TYPE_TAG_SETTER,
-        &tag_setter_info);
-  }
-  return avimux_type;
-}
-
-static void
-gst_avi_mux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&audio_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_sink_factory));
-
-  gst_element_class_set_details_simple (element_class, "Avi muxer",
-      "Codec/Muxer",
-      "Muxes audio and video into an avi stream",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-  GST_DEBUG_CATEGORY_INIT (avimux_debug, "avimux", 0, "Muxer for AVI streams");
-}
+#define gst_avi_mux_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAviMux, gst_avi_mux, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 
 static void
 gst_avi_mux_finalize (GObject * object)
@@ -298,7 +246,7 @@ gst_avi_mux_class_init (GstAviMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
+  GST_DEBUG_CATEGORY_INIT (avimux_debug, "avimux", 0, "Muxer for AVI streams");
 
   gobject_class->get_property = gst_avi_mux_get_property;
   gobject_class->set_property = gst_avi_mux_set_property;
@@ -313,6 +261,18 @@ gst_avi_mux_class_init (GstAviMuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_avi_mux_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_avi_mux_release_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_avi_mux_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&audio_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&video_sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "Avi muxer",
+      "Codec/Muxer",
+      "Muxes audio and video into an avi stream",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 }
 
 /* reset pad to initial state

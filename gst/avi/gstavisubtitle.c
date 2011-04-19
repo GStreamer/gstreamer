@@ -81,8 +81,8 @@ static GstStateChangeReturn gst_avi_subtitle_change_state (GstElement * element,
 static gboolean gst_avi_subtitle_send_event (GstElement * element,
     GstEvent * event);
 
-GST_BOILERPLATE (GstAviSubtitle, gst_avi_subtitle, GstElement,
-    GST_TYPE_ELEMENT);
+#define gst_avi_subtitle_parent_class parent_class
+G_DEFINE_TYPE (GstAviSubtitle, gst_avi_subtitle, GST_TYPE_ELEMENT);
 
 #define IS_BOM_UTF8(data)     ((GST_READ_UINT32_BE(data) >> 8) == 0xEFBBBF)
 #define IS_BOM_UTF16_BE(data) (GST_READ_UINT16_BE(data) == 0xFEFF)
@@ -319,36 +319,30 @@ gst_avi_subtitle_send_event (GstElement * element, GstEvent * event)
 }
 
 static void
-gst_avi_subtitle_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  GST_DEBUG_CATEGORY_INIT (avisubtitle_debug, "avisubtitle", 0,
-      "parse avi subtitle stream");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "Avi subtitle parser", "Codec/Parser/Subtitle",
-      "Parse avi subtitle stream", "Thijs Vermeir <thijsvermeir@gmail.com>");
-}
-
-static void
 gst_avi_subtitle_class_init (GstAviSubtitleClass * klass)
 {
   GstElementClass *gstelement_class = (GstElementClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (avisubtitle_debug, "avisubtitle", 0,
+      "parse avi subtitle stream");
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_avi_subtitle_change_state);
   gstelement_class->send_event =
       GST_DEBUG_FUNCPTR (gst_avi_subtitle_send_event);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Avi subtitle parser", "Codec/Parser/Subtitle",
+      "Parse avi subtitle stream", "Thijs Vermeir <thijsvermeir@gmail.com>");
 }
 
 static void
-gst_avi_subtitle_init (GstAviSubtitle * self, GstAviSubtitleClass * klass)
+gst_avi_subtitle_init (GstAviSubtitle * self)
 {
   GstCaps *caps;
 
