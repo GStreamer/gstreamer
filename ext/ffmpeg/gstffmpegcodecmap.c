@@ -1216,7 +1216,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_SNOW:
     case CODEC_ID_VIXL:
     case CODEC_ID_QPEG:
-    case CODEC_ID_XVID:
     case CODEC_ID_PGMYUV:
     case CODEC_ID_FFVHUFF:
     case CODEC_ID_WNV1:
