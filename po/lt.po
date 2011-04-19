@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -401,6 +401,13 @@ msgstr "autoriaus teisių uri"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI, kur yra pranešimas apie duomenų autoriaus teises"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "enkoderis"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "kontaktai"
@@ -1049,6 +1056,9 @@ msgstr "KLAIDA: nepavyko apdoroti komandinės eilutės argumento %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ĮSPĖJIMAS: nerastas elementas „%s“.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Gautas pranešimas #%u iš elemento „%s“ (%s): "
@@ -1153,6 +1163,9 @@ msgstr "Išvesti alloc sekimą (jei įjungta kompiliavimo metu)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Priverstinai naudoti EOS šaltiniuose prie išjungiant konvejerį"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

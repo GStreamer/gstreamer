@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -409,6 +409,13 @@ msgstr "uri pentru drepturile de autor"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI către notița asupra drepturilor de autor pentru aceste date (URI)"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "codor"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "contact"
@@ -1071,6 +1078,9 @@ msgstr "EROARE: nu se poate analiza argumetul %d al liniei de comandă: %s\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVERTISMENT: elementul cu numele „%s” nu a fost găsit.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Primit mesajul #%u, de la elementul „%s” (%s):"
@@ -1176,6 +1186,9 @@ msgstr "Afișează căile de alocare (dacă s-a activat la momentul compilării)
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Forțează EOS pe surse înainte de a închide linia de asamblare"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

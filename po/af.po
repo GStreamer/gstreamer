@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -404,6 +404,13 @@ msgstr "kopiereg"
 #, fuzzy
 msgid "URI to the copyright notice of the data"
 msgstr "kopieregnota van die data"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "enkodeerder"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "kontak"
@@ -1048,6 +1055,9 @@ msgstr "FOUT: onverstaanbare bevellynparameter %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSKUWING: element genaamd '%s' nie gevind nie.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Boodskap vanaf element \"%s\" (%s):"
@@ -1154,6 +1164,9 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Druk \"alloc trace\" (indien aangeskakel tydens kompilering)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
+msgid "Gather and print index statistics"
 msgstr ""
 
 #, c-format

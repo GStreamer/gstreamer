@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-17 23:54+0000\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-11-08 16:13+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -419,6 +419,13 @@ msgstr "uri pre copyright"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI pre poznámku o autorských právach údajov"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "kodér"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "kontakt"
@@ -1061,6 +1068,9 @@ msgstr "CHYBA: nepodarilo sa analyzovať argument príkazového riadku %d: %s.\n
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VAROVANIE: prvok s názvom '%s' sa nenašiel.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Dostal som správu #%u od prvku \"%s\" (%s):"
@@ -1165,6 +1175,9 @@ msgstr "Vypisovať stopu alokácie (ak je to povolené pri kompilácii)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Vynútiť EOS na zdrojoch pred vypnutím rúry"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

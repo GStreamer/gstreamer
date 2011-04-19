@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-06 17:41+0000\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -412,6 +412,13 @@ msgstr "uri πνευματικών δικαιωμάτων"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI για το σημείωμα πνευματικών δικαιωμάτων των δεδομένων"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "κωδικοποιητής"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "επικοινωνία"
@@ -1063,6 +1070,9 @@ msgstr "ERROR: αδυναμία ανάλυσης ορίσματος γραμμή
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WARNING: το στοιχείο με το όνομα '%s' δεν βρέθηκε.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Ελήφθη το μήνυμα  #%u από το στοιχείο «%s» (%s): "
@@ -1169,6 +1179,9 @@ msgstr ""
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Εξαναγκασμός του EOS στις πηγές πριν το κλείσιμο της διασωλήνωσης"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

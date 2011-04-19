@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-17 23:54+0000\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-11-06 22:52+0100\n"
 "Last-Translator: Mogens Jaeger <mogensjaeger@gmail.com>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -406,6 +406,13 @@ msgstr "URI med ophavsret"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI til ophavsretsnotits for dataene"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "indkoder"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "kontakt"
@@ -1047,6 +1054,9 @@ msgstr "FEJL: kunne ikke tolke kommandolinieargumenetet %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ADVARSEL: elementet ved navn '%s' blev ikke fundet.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Modtog beskeden #%u fra elementet \"%s\" (%s): "
@@ -1152,6 +1162,9 @@ msgstr "Udskriv allokeringsspor (hvis tilladt på oversættelsestidspunktet)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Gennemtving medieslut på kilder før nedlukning af rørledning"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

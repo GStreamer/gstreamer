@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-29 14:08+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-10-25 10:03+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -531,6 +531,13 @@ msgstr "uri copyright"
 
 msgid "URI to the copyright notice of the data"
 msgstr "l'URI all'avviso sul copyright dei dati"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "encoder"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "contatto"
@@ -1214,6 +1221,9 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ATTENZIONE: elemento con nome «%s» non trovato.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Ottenuto messaggio #%u dall'elemento \"%s\" (%s): "
@@ -1328,6 +1338,9 @@ msgstr "Stampa traccia di alloc (se abilitato in compilazione)"
 # -e, --eos-on-shutdown
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Forza EOS sulle sorgenti prima di arrestare la pipeline"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

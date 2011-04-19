@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-10-03 19:09+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -400,6 +400,13 @@ msgstr "URI tác quyền"
 
 msgid "URI to the copyright notice of the data"
 msgstr "địa chỉ URI đến thông báo tác quyền của dữ liệu này"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "mã hóa"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "liên lạc"
@@ -1046,6 +1053,9 @@ msgstr "LỖI: không thể phân tách đối số dòng lệnh %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "CẢNH BÁO : không tìm thấy yếu tố tên « %s ».\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Nhận được thông điệp số %u từ phần tử « %s » (%s): "
@@ -1150,6 +1160,9 @@ msgstr "In ra vết cấp phát (nếu được bật khi biên dich)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Ép buộc kết thúc luồng trên các nguồn trước khi đóng đường ống"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

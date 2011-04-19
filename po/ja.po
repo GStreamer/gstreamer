@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2008-10-16 19:57+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -391,6 +391,13 @@ msgid "copyright uri"
 msgstr ""
 
 msgid "URI to the copyright notice of the data"
+msgstr ""
+
+#, fuzzy
+msgid "encoded by"
+msgstr "エンコーダー"
+
+msgid "name of the encoding person or organization"
 msgstr ""
 
 msgid "contact"
@@ -1020,6 +1027,9 @@ msgstr "エラー: コマンドライン引数 %d を解析できません: %s\n
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "警告: エレメント名 '%s' が見つかりません\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr ""
@@ -1128,6 +1138,9 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "alloc トレースを表示する (コンパイル時に有効にする必要があります)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
+msgid "Gather and print index statistics"
 msgstr ""
 
 #, c-format

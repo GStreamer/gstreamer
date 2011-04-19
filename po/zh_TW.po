@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -410,6 +410,13 @@ msgstr "授權"
 #, fuzzy
 msgid "URI to the copyright notice of the data"
 msgstr "一段有關媒體內容的簡短說明文字"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "編碼程序"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "連絡"
@@ -1038,6 +1045,9 @@ msgstr "錯誤：無法解析指令的第 %d 個參數：%s。\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr ""
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr ""
@@ -1140,6 +1150,9 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "印出 alloc 追蹤訊息 (如果編譯程式時有啟用這項功能)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
+msgid "Gather and print index statistics"
 msgstr ""
 
 #, c-format

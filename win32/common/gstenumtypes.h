@@ -35,6 +35,8 @@ GType gst_bus_sync_reply_get_type (void);
 /* enumerations from "gstcaps.h" */
 GType gst_caps_flags_get_type (void);
 #define GST_TYPE_CAPS_FLAGS (gst_caps_flags_get_type())
+GType gst_caps_intersect_mode_get_type (void);
+#define GST_TYPE_CAPS_INTERSECT_MODE (gst_caps_intersect_mode_get_type())
 
 /* enumerations from "gstclock.h" */
 GType gst_clock_return_get_type (void);
@@ -77,6 +79,8 @@ GType gst_seek_type_get_type (void);
 #define GST_TYPE_SEEK_TYPE (gst_seek_type_get_type())
 GType gst_seek_flags_get_type (void);
 #define GST_TYPE_SEEK_FLAGS (gst_seek_flags_get_type())
+GType gst_qos_type_get_type (void);
+#define GST_TYPE_QOS_TYPE (gst_qos_type_get_type())
 
 /* enumerations from "gstformat.h" */
 GType gst_format_get_type (void);
@@ -115,6 +119,8 @@ GType gst_structure_change_type_get_type (void);
 #define GST_TYPE_STRUCTURE_CHANGE_TYPE (gst_structure_change_type_get_type())
 GType gst_stream_status_type_get_type (void);
 #define GST_TYPE_STREAM_STATUS_TYPE (gst_stream_status_type_get_type())
+GType gst_progress_type_get_type (void);
+#define GST_TYPE_PROGRESS_TYPE (gst_progress_type_get_type())
 
 /* enumerations from "gstminiobject.h" */
 GType gst_mini_object_flags_get_type (void);

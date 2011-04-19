@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -418,6 +418,13 @@ msgstr "telif hakkı"
 #, fuzzy
 msgid "URI to the copyright notice of the data"
 msgstr "verinin telif hakkı notu"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "kodlayıcı"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "iletişim"
@@ -1061,6 +1068,9 @@ msgstr "HATA: komut satırı argümanı %d ayrıştırılamadı: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "UYARI: '%s' isimli öğe bulunamadı.\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr ""
@@ -1164,6 +1174,9 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "'alloc' takibini yazdır (derleme sırasında etkinleştirilmişse)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
+msgid "Gather and print index statistics"
 msgstr ""
 
 #, c-format

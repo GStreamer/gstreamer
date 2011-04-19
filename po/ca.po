@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-11-17 23:54+0000\n"
+"POT-Creation-Date: 2011-04-16 14:53+0100\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -407,6 +407,13 @@ msgstr "uri del copyright"
 
 msgid "URI to the copyright notice of the data"
 msgstr "URI a la nota del copyright de les dades"
+
+#, fuzzy
+msgid "encoded by"
+msgstr "codificador"
+
+msgid "name of the encoding person or organization"
+msgstr ""
 
 msgid "contact"
 msgstr "contacte"
@@ -1049,6 +1056,9 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVÍS: no s'ha trobat l'element anomenat «%s».\n"
 
+msgid "Index statistics"
+msgstr ""
+
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "S'ha rebut el missatge #%u de l'element «%s» (%s): "
@@ -1157,6 +1167,9 @@ msgstr "Imprimeix una traça d'alloc (si s'ha habilitat al compilar)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Força el final del flux abans de tancar el conducte"
+
+msgid "Gather and print index statistics"
+msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

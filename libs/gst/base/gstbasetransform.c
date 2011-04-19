@@ -1963,7 +1963,6 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     sink_suggest = NULL;
   }
 
-  gst_object_unref (trans);
   if (sink_suggest)
     gst_caps_unref (sink_suggest);
 
@@ -1974,6 +1973,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     trans->priv->force_alloc = FALSE;
   }
 
+  gst_object_unref (trans);
   return res;
 
   /* ERRORS */
