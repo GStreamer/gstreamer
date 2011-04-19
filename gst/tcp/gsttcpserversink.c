@@ -74,29 +74,18 @@ static void gst_tcp_server_sink_set_property (GObject * object, guint prop_id,
 static void gst_tcp_server_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-
-GST_BOILERPLATE (GstTCPServerSink, gst_tcp_server_sink, GstMultiFdSink,
-    GST_TYPE_MULTI_FD_SINK);
-
-
-static void
-gst_tcp_server_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "TCP server sink", "Sink/Network",
-      "Send data as a server over the network via TCP",
-      "Thomas Vander Stichele <thomas at apestaart dot org>");
-}
+#define gst_tcp_server_sink_parent_class parent_class
+G_DEFINE_TYPE (GstTCPServerSink, gst_tcp_server_sink, GST_TYPE_MULTI_FD_SINK);
 
 static void
 gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstMultiFdSinkClass *gstmultifdsink_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstmultifdsink_class = (GstMultiFdSinkClass *) klass;
 
   gobject_class->set_property = gst_tcp_server_sink_set_property;
@@ -111,6 +100,11 @@ gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "TCP server sink", "Sink/Network",
+      "Send data as a server over the network via TCP",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
+
   gstmultifdsink_class->init = gst_tcp_server_sink_init_send;
   gstmultifdsink_class->wait = gst_tcp_server_sink_handle_wait;
   gstmultifdsink_class->close = gst_tcp_server_sink_close;
@@ -120,8 +114,7 @@ gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
 }
 
 static void
-gst_tcp_server_sink_init (GstTCPServerSink * this,
-    GstTCPServerSinkClass * klass)
+gst_tcp_server_sink_init (GstTCPServerSink * this)
 {
   this->server_port = TCP_DEFAULT_PORT;
   /* should support as minimum 576 for IPV4 and 1500 for IPV6 */

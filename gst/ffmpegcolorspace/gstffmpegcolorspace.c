@@ -333,28 +333,8 @@ invalid_out_caps:
   }
 }
 
-GST_BOILERPLATE (GstFFMpegCsp, gst_ffmpegcsp, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
-
-static void
-gst_ffmpegcsp_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_ffmpegcsp_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_ffmpegcsp_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "FFMPEG Colorspace converter", "Filter/Converter/Video",
-      "Converts video from one colorspace to another",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-  _QRAWRGB = g_quark_from_string ("video/x-raw-rgb");
-  _QRAWYUV = g_quark_from_string ("video/x-raw-yuv");
-  _QALPHAMASK = g_quark_from_string ("alpha_mask");
-}
+#define gst_ffmpegcsp_parent_class parent_class
+G_DEFINE_TYPE (GstFFMpegCsp, gst_ffmpegcsp, GST_TYPE_VIDEO_FILTER);
 
 static void
 gst_ffmpegcsp_finalize (GObject * obj)
@@ -371,10 +351,25 @@ static void
 gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *gstbasetransform_class =
       (GstBaseTransformClass *) klass;
 
+  _QRAWRGB = g_quark_from_string ("video/x-raw-rgb");
+  _QRAWYUV = g_quark_from_string ("video/x-raw-yuv");
+  _QALPHAMASK = g_quark_from_string ("alpha_mask");
+
   gobject_class->finalize = gst_ffmpegcsp_finalize;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_ffmpegcsp_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_ffmpegcsp_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "FFMPEG Colorspace converter", "Filter/Converter/Video",
+      "Converts video from one colorspace to another",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   gstbasetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_ffmpegcsp_transform_caps);
@@ -388,7 +383,7 @@ gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
 }
 
 static void
-gst_ffmpegcsp_init (GstFFMpegCsp * space, GstFFMpegCspClass * klass)
+gst_ffmpegcsp_init (GstFFMpegCsp * space)
 {
   space->from_pixfmt = space->to_pixfmt = PIX_FMT_NB;
   space->palette = NULL;

@@ -142,32 +142,12 @@ enum
 static void gst_volume_interface_init (GstImplementsInterfaceClass * klass);
 static void gst_volume_mixer_init (GstMixerClass * iface);
 
-#define _init_interfaces(type)                                          \
-  {                                                                     \
-    static const GInterfaceInfo voliface_info = {                       \
-      (GInterfaceInitFunc) gst_volume_interface_init,                   \
-      NULL,                                                             \
-      NULL                                                              \
-    };                                                                  \
-    static const GInterfaceInfo volmixer_info = {                       \
-      (GInterfaceInitFunc) gst_volume_mixer_init,                       \
-      NULL,                                                             \
-      NULL                                                              \
-    };                                                                  \
-    static const GInterfaceInfo svol_info = {                           \
-      NULL,                                                             \
-      NULL,                                                             \
-      NULL                                                              \
-    };                                                                  \
-                                                                        \
-    g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,   \
-        &voliface_info);                                                \
-    g_type_add_interface_static (type, GST_TYPE_MIXER, &volmixer_info); \
-    g_type_add_interface_static (type, GST_TYPE_STREAM_VOLUME, &svol_info); \
-  }
-
-GST_BOILERPLATE_FULL (GstVolume, gst_volume, GstAudioFilter,
-    GST_TYPE_AUDIO_FILTER, _init_interfaces);
+#define gst_volume_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVolume, gst_volume,
+    GST_TYPE_AUDIO_FILTER, G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
+        gst_volume_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER, gst_volume_mixer_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
 
 static void volume_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -432,29 +412,16 @@ gst_volume_dispose (GObject * object)
 }
 
 static void
-gst_volume_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstAudioFilterClass *filter_class = GST_AUDIO_FILTER_CLASS (g_class);
-  GstCaps *caps;
-
-  gst_element_class_set_details_simple (element_class, "Volume",
-      "Filter/Effect/Audio",
-      "Set volume on audio/raw streams", "Andy Wingo <wingo@pobox.com>");
-
-  caps = gst_caps_from_string (ALLOWED_CAPS);
-  gst_audio_filter_class_add_pad_templates (filter_class, caps);
-  gst_caps_unref (caps);
-}
-
-static void
 gst_volume_class_init (GstVolumeClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstBaseTransformClass *trans_class;
   GstAudioFilterClass *filter_class;
+  GstCaps *caps;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
   filter_class = (GstAudioFilterClass *) (klass);
 
@@ -472,6 +439,14 @@ gst_volume_class_init (GstVolumeClass * klass)
           0.0, VOLUME_MAX_DOUBLE, DEFAULT_PROP_VOLUME,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (element_class, "Volume",
+      "Filter/Effect/Audio",
+      "Set volume on audio/raw streams", "Andy Wingo <wingo@pobox.com>");
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (filter_class, caps);
+  gst_caps_unref (caps);
+
   trans_class->before_transform = GST_DEBUG_FUNCPTR (volume_before_transform);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (volume_transform_ip);
   trans_class->stop = GST_DEBUG_FUNCPTR (volume_stop);
@@ -479,7 +454,7 @@ gst_volume_class_init (GstVolumeClass * klass)
 }
 
 static void
-gst_volume_init (GstVolume * self, GstVolumeClass * g_class)
+gst_volume_init (GstVolume * self)
 {
   GstMixerTrack *track = NULL;
 

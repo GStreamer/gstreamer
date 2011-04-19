@@ -108,9 +108,6 @@ static GstStaticPadTemplate gst_audio_rate_sink_template =
         GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
     );
 
-static void gst_audio_rate_base_init (gpointer g_class);
-static void gst_audio_rate_class_init (GstAudioRateClass * klass);
-static void gst_audio_rate_init (GstAudioRate * audiorate);
 static gboolean gst_audio_rate_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_audio_rate_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_audio_rate_chain (GstPad * pad, GstBuffer * buf);
@@ -123,61 +120,19 @@ static void gst_audio_rate_get_property (GObject * object,
 static GstStateChangeReturn gst_audio_rate_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
-
 /*static guint gst_audio_rate_signals[LAST_SIGNAL] = { 0 }; */
 
 static GParamSpec *pspec_drop = NULL;
 static GParamSpec *pspec_add = NULL;
 
-static GType
-gst_audio_rate_get_type (void)
-{
-  static GType audio_rate_type = 0;
-
-  if (!audio_rate_type) {
-    static const GTypeInfo audio_rate_info = {
-      sizeof (GstAudioRateClass),
-      gst_audio_rate_base_init,
-      NULL,
-      (GClassInitFunc) gst_audio_rate_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAudioRate),
-      0,
-      (GInstanceInitFunc) gst_audio_rate_init,
-    };
-
-    audio_rate_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstAudioRate", &audio_rate_info, 0);
-  }
-
-  return audio_rate_type;
-}
-
-static void
-gst_audio_rate_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Audio rate adjuster", "Filter/Effect/Audio",
-      "Drops/duplicates/adjusts timestamps on audio samples to make a perfect stream",
-      "Wim Taymans <wim@fluendo.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audio_rate_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audio_rate_src_template));
-}
+#define gst_audio_rate_parent_class parent_class
+G_DEFINE_TYPE (GstAudioRate, gst_audio_rate, GST_TYPE_ELEMENT);
 
 static void
 gst_audio_rate_class_init (GstAudioRateClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
 
   object_class->set_property = gst_audio_rate_set_property;
   object_class->get_property = gst_audio_rate_get_property;
@@ -224,6 +179,16 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
       g_param_spec_boolean ("skip-to-first", "Skip to first buffer",
           "Don't produce buffers before the first one we receive",
           DEFAULT_SKIP_TO_FIRST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "Audio rate adjuster", "Filter/Effect/Audio",
+      "Drops/duplicates/adjusts timestamps on audio samples to make a perfect stream",
+      "Wim Taymans <wim@fluendo.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_audio_rate_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_audio_rate_src_template));
 
   element_class->change_state = gst_audio_rate_change_state;
 }
@@ -860,10 +825,7 @@ gst_audio_rate_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if (parent_class->change_state)
-    return parent_class->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 static gboolean

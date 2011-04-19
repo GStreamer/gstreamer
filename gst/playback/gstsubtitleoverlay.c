@@ -79,8 +79,8 @@ enum
   PROP_SUBTITLE_ENCODING
 };
 
-GST_BOILERPLATE (GstSubtitleOverlay, gst_subtitle_overlay, GstBin,
-    GST_TYPE_BIN);
+#define gst_subtitle_overlay_parent_class parent_class
+G_DEFINE_TYPE (GstSubtitleOverlay, gst_subtitle_overlay, GST_TYPE_BIN);
 
 static void _pad_blocked_cb (GstPad * pad, gboolean blocked,
     gpointer user_data);
@@ -95,7 +95,7 @@ do_async_start (GstSubtitleOverlay * self)
         gst_message_new_async_start (GST_OBJECT_CAST (self), FALSE);
 
     GST_DEBUG_OBJECT (self, "Posting async-start");
-    parent_class->handle_message (GST_BIN_CAST (self), msg);
+    GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (self), msg);
     self->do_async = TRUE;
   }
 }
@@ -107,7 +107,7 @@ do_async_done (GstSubtitleOverlay * self)
     GstMessage *msg = gst_message_new_async_done (GST_OBJECT_CAST (self));
 
     GST_DEBUG_OBJECT (self, "Posting async-done");
-    parent_class->handle_message (GST_BIN_CAST (self), msg);
+    GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (self), msg);
     self->do_async = FALSE;
   }
 }
@@ -1513,25 +1513,6 @@ gst_subtitle_overlay_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_subtitle_overlay_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&video_sinktemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&subtitle_sinktemplate));
-
-  gst_element_class_set_details_simple (gstelement_class, "Subtitle Overlay",
-      "Video/Overlay/Subtitle",
-      "Overlays a video stream with subtitles",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
 gst_subtitle_overlay_class_init (GstSubtitleOverlayClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
@@ -1562,6 +1543,19 @@ gst_subtitle_overlay_class_init (GstSubtitleOverlayClass * klass)
           "be checked for an encoding to use. If that is not set either, "
           "ISO-8859-15 will be assumed.", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&srctemplate));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&video_sinktemplate));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&subtitle_sinktemplate));
+
+  gst_element_class_set_details_simple (element_class, "Subtitle Overlay",
+      "Video/Overlay/Subtitle",
+      "Overlays a video stream with subtitles",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_change_state);
@@ -2027,8 +2021,7 @@ out:
 }
 
 static void
-gst_subtitle_overlay_init (GstSubtitleOverlay * self,
-    GstSubtitleOverlayClass * klass)
+gst_subtitle_overlay_init (GstSubtitleOverlay * self)
 {
   GstPadTemplate *templ;
   GstIterator *it;

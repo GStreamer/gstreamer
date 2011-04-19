@@ -212,28 +212,14 @@ static void gst_video_scale_set_property (GObject * object, guint prop_id,
 static void gst_video_scale_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstVideoScale, gst_video_scale, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
-
-static void
-gst_video_scale_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Video scaler", "Filter/Converter/Video/Scaler",
-      "Resizes video", "Wim Taymans <wim.taymans@chello.be>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_video_scale_sink_template_factory ());
-  gst_element_class_add_pad_template (element_class,
-      gst_video_scale_src_template_factory ());
-}
+#define gst_video_scale_parent_class parent_class
+G_DEFINE_TYPE (GstVideoScale, gst_video_scale, GST_TYPE_VIDEO_FILTER);
 
 static void
 gst_video_scale_class_init (GstVideoScaleClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->finalize = (GObjectFinalizeFunc) gst_video_scale_finalize;
@@ -251,6 +237,15 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
           DEFAULT_PROP_ADD_BORDERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (element_class,
+      "Video scaler", "Filter/Converter/Video/Scaler",
+      "Resizes video", "Wim Taymans <wim.taymans@chello.be>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_video_scale_sink_template_factory ());
+  gst_element_class_add_pad_template (element_class,
+      gst_video_scale_src_template_factory ());
+
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_scale_transform_caps);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_scale_set_caps);
@@ -262,7 +257,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
 }
 
 static void
-gst_video_scale_init (GstVideoScale * videoscale, GstVideoScaleClass * klass)
+gst_video_scale_init (GstVideoScale * videoscale)
 {
   videoscale->tmp_buf = NULL;
   videoscale->method = DEFAULT_PROP_METHOD;

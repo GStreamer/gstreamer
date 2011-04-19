@@ -79,9 +79,6 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("text/plain; text/x-pango-markup")
     );
 
-static void gst_sub_parse_base_init (GstSubParseClass * klass);
-static void gst_sub_parse_class_init (GstSubParseClass * klass);
-static void gst_sub_parse_init (GstSubParse * subparse);
 
 static gboolean gst_sub_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_sub_parse_src_query (GstPad * pad, GstQuery * query);
@@ -92,48 +89,8 @@ static GstStateChangeReturn gst_sub_parse_change_state (GstElement * element,
 
 static GstFlowReturn gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_sub_parse_get_type (void)
-{
-  static GType sub_parse_type = 0;
-
-  if (!sub_parse_type) {
-    static const GTypeInfo sub_parse_info = {
-      sizeof (GstSubParseClass),
-      (GBaseInitFunc) gst_sub_parse_base_init,
-      NULL,
-      (GClassInitFunc) gst_sub_parse_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSubParse),
-      0,
-      (GInstanceInitFunc) gst_sub_parse_init,
-    };
-
-    sub_parse_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstSubParse", &sub_parse_info, 0);
-  }
-
-  return sub_parse_type;
-}
-
-static void
-gst_sub_parse_base_init (GstSubParseClass * klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class,
-      "Subtitle parser", "Codec/Parser/Subtitle",
-      "Parses subtitle (.sub) files into text streams",
-      "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>, "
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-}
+#define gst_sub_parse_parent_class parent_class
+G_DEFINE_TYPE (GstSubParse, gst_sub_parse, GST_TYPE_ELEMENT);
 
 static void
 gst_sub_parse_dispose (GObject * object)
@@ -184,11 +141,19 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   object_class->dispose = gst_sub_parse_dispose;
   object_class->set_property = gst_sub_parse_set_property;
   object_class->get_property = gst_sub_parse_get_property;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_templ));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_templ));
+  gst_element_class_set_details_simple (element_class,
+      "Subtitle parser", "Codec/Parser/Subtitle",
+      "Parses subtitle (.sub) files into text streams",
+      "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>, "
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   element_class->change_state = gst_sub_parse_change_state;
 
@@ -1698,7 +1663,7 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 

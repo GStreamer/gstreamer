@@ -44,7 +44,8 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("text/x-pango-markup")
     );
 
-GST_BOILERPLATE (GstSsaParse, gst_ssa_parse, GstElement, GST_TYPE_ELEMENT);
+#define gst_ssa_parse_parent_class parent_class
+G_DEFINE_TYPE (GstSsaParse, gst_ssa_parse, GST_TYPE_ELEMENT);
 
 static GstStateChangeReturn gst_ssa_parse_change_state (GstElement *
     element, GstStateChange transition);
@@ -52,24 +53,6 @@ static gboolean gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps);
 static gboolean gst_ssa_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_ssa_parse_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf);
-
-static void
-gst_ssa_parse_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class,
-      "SSA Subtitle Parser", "Codec/Parser/Subtitle",
-      "Parses SSA subtitle streams",
-      "Tim-Philipp Müller <tim centricular net>");
-
-  GST_DEBUG_CATEGORY_INIT (ssa_parse_debug, "ssaparse", 0,
-      "SSA subtitle parser");
-}
 
 static void
 gst_ssa_parse_dispose (GObject * object)
@@ -83,7 +66,7 @@ gst_ssa_parse_dispose (GObject * object)
 }
 
 static void
-gst_ssa_parse_init (GstSsaParse * parse, GstSsaParseClass * klass)
+gst_ssa_parse_init (GstSsaParse * parse)
 {
   parse->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
   gst_pad_set_setcaps_function (parse->sinkpad,
@@ -114,6 +97,18 @@ gst_ssa_parse_class_init (GstSsaParseClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   object_class->dispose = gst_ssa_parse_dispose;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_templ));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_templ));
+  gst_element_class_set_details_simple (element_class,
+      "SSA Subtitle Parser", "Codec/Parser/Subtitle",
+      "Parses SSA subtitle streams",
+      "Tim-Philipp Müller <tim centricular net>");
+
+  GST_DEBUG_CATEGORY_INIT (ssa_parse_debug, "ssaparse", 0,
+      "SSA subtitle parser");
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_ssa_parse_change_state);
 }
@@ -372,7 +367,7 @@ gst_ssa_parse_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 

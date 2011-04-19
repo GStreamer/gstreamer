@@ -54,8 +54,9 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%d",
 
 static const gboolean passthrough = TRUE;
 
-GST_BOILERPLATE (GstStreamSynchronizer, gst_stream_synchronizer,
-    GstElement, GST_TYPE_ELEMENT);
+#define gst_stream_synchronizer_parent_class parent_class
+G_DEFINE_TYPE (GstStreamSynchronizer, gst_stream_synchronizer,
+    GST_TYPE_ELEMENT);
 
 typedef struct
 {
@@ -943,27 +944,10 @@ gst_stream_synchronizer_finalize (GObject * object)
 
 /* GObject type initialization */
 static void
-gst_stream_synchronizer_init (GstStreamSynchronizer * self,
-    GstStreamSynchronizerClass * klass)
+gst_stream_synchronizer_init (GstStreamSynchronizer * self)
 {
   self->lock = g_mutex_new ();
   self->stream_finish_cond = g_cond_new ();
-}
-
-static void
-gst_stream_synchronizer_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Stream Synchronizer", "Generic",
-      "Synchronizes a group of streams to have equal durations and starting points",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
 static void
@@ -976,6 +960,16 @@ gst_stream_synchronizer_class_init (GstStreamSynchronizerClass * klass)
       "streamsynchronizer", 0, "Stream Synchronizer");
 
   gobject_class->finalize = gst_stream_synchronizer_finalize;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_details_simple (element_class,
+      "Stream Synchronizer", "Generic",
+      "Synchronizes a group of streams to have equal durations and starting points",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_change_state);

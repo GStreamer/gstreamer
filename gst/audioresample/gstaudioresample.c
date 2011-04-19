@@ -146,28 +146,14 @@ static gboolean gst_audio_resample_stop (GstBaseTransform * base);
 static gboolean gst_audio_resample_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_audio_resample_query_type (GstPad * pad);
 
-GST_BOILERPLATE (GstAudioResample, gst_audio_resample, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
-
-static void
-gst_audio_resample_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audio_resample_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audio_resample_sink_template));
-
-  gst_element_class_set_details_simple (gstelement_class, "Audio resampler",
-      "Filter/Converter/Audio", "Resamples audio",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
+#define gst_audio_resample_parent_class parent_class
+G_DEFINE_TYPE (GstAudioResample, gst_audio_resample, GST_TYPE_BASE_TRANSFORM);
 
 static void
 gst_audio_resample_class_init (GstAudioResampleClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   gobject_class->set_property = gst_audio_resample_set_property;
   gobject_class->get_property = gst_audio_resample_get_property;
@@ -194,6 +180,15 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
           "Length of the resample filter", 0, G_MAXINT, 64,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_audio_resample_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_audio_resample_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "Audio resampler",
+      "Filter/Converter/Audio", "Resamples audio",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
   GST_BASE_TRANSFORM_CLASS (klass)->start =
       GST_DEBUG_FUNCPTR (gst_audio_resample_start);
   GST_BASE_TRANSFORM_CLASS (klass)->stop =
@@ -217,8 +212,7 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
 }
 
 static void
-gst_audio_resample_init (GstAudioResample * resample,
-    GstAudioResampleClass * klass)
+gst_audio_resample_init (GstAudioResample * resample)
 {
   GstBaseTransform *trans = GST_BASE_TRANSFORM (resample);
 
@@ -984,7 +978,7 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       break;
   }
 
-  return parent_class->event (base, event);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->event (base, event);
 }
 
 static gboolean

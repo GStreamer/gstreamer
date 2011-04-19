@@ -186,7 +186,8 @@ enum
 static guint gst_uri_decode_bin_signals[LAST_SIGNAL] = { 0 };
 
 GType gst_uri_decode_bin_get_type (void);
-GST_BOILERPLATE (GstURIDecodeBin, gst_uri_decode_bin, GstBin, GST_TYPE_BIN);
+#define gst_uri_decode_bin_parent_class parent_class
+G_DEFINE_TYPE (GstURIDecodeBin, gst_uri_decode_bin, GST_TYPE_BIN);
 
 static void remove_decoders (GstURIDecodeBin * bin, gboolean force);
 static void gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
@@ -201,19 +202,6 @@ static gboolean gst_uri_decode_bin_query (GstElement * element,
     GstQuery * query);
 static GstStateChangeReturn gst_uri_decode_bin_change_state (GstElement *
     element, GstStateChange transition);
-
-static void
-gst_uri_decode_bin_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_set_details_simple (gstelement_class,
-      "URI Decoder", "Generic/Bin/Decoder",
-      "Autoplug and decode an URI to raw media",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
 
 static gboolean
 _gst_boolean_accumulator (GSignalInvocationHint * ihint,
@@ -637,6 +625,13 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_set_details_simple (gstelement_class,
+      "URI Decoder", "Generic/Bin/Decoder",
+      "Autoplug and decode an URI to raw media",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_query);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_change_state);
@@ -653,7 +648,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 }
 
 static void
-gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
+gst_uri_decode_bin_init (GstURIDecodeBin * dec)
 {
   /* first filter out the interesting element factories */
   dec->factories_lock = g_mutex_new ();
@@ -835,7 +830,7 @@ do_async_start (GstURIDecodeBin * dbin)
   dbin->async_pending = TRUE;
 
   message = gst_message_new_async_start (GST_OBJECT_CAST (dbin), FALSE);
-  parent_class->handle_message (GST_BIN_CAST (dbin), message);
+  GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (dbin), message);
 }
 
 static void
@@ -846,7 +841,7 @@ do_async_done (GstURIDecodeBin * dbin)
   if (dbin->async_pending) {
     GST_DEBUG_OBJECT (dbin, "posting ASYNC_DONE");
     message = gst_message_new_async_done (GST_OBJECT_CAST (dbin));
-    parent_class->handle_message (GST_BIN_CAST (dbin), message);
+    GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (dbin), message);
 
     dbin->async_pending = FALSE;
   }

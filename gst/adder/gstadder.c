@@ -116,7 +116,8 @@ GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_STATIC_CAPS (CAPS)
     );
 
-GST_BOILERPLATE (GstAdder, gst_adder, GstElement, GST_TYPE_ELEMENT);
+#define gst_adder_parent_class parent_class
+G_DEFINE_TYPE (GstAdder, gst_adder, GST_TYPE_ELEMENT);
 
 static void gst_adder_dispose (GObject * object);
 static void gst_adder_set_property (GObject * object, guint prop_id,
@@ -781,21 +782,6 @@ beach:
 }
 
 static void
-gst_adder_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_adder_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_adder_sink_template));
-  gst_element_class_set_details_simple (gstelement_class, "Adder",
-      "Generic/Audio",
-      "Add N audio channels together",
-      "Thomas Vander Stichele <thomas at apestaart dot org>");
-}
-
-static void
 gst_adder_class_init (GstAdderClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
@@ -817,6 +803,15 @@ gst_adder_class_init (GstAdderClass * klass)
           "object.", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_adder_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_adder_sink_template));
+  gst_element_class_set_details_simple (gstelement_class, "Adder",
+      "Generic/Audio",
+      "Add N audio channels together",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
+
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_adder_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_adder_release_pad);
@@ -824,7 +819,7 @@ gst_adder_class_init (GstAdderClass * klass)
 }
 
 static void
-gst_adder_init (GstAdder * adder, GstAdderClass * klass)
+gst_adder_init (GstAdder * adder)
 {
   GstPadTemplate *template;
 

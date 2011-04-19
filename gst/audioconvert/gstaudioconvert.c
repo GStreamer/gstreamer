@@ -108,11 +108,11 @@ enum
   ARG_NOISE_SHAPING,
 };
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (audio_convert_debug, "audioconvert", 0, "audio conversion element"); \
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
-
-GST_BOILERPLATE_FULL (GstAudioConvert, gst_audio_convert, GstBaseTransform,
+#define gst_audio_convert_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstAudioConvert, gst_audio_convert,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
 /*** GSTREAMER PROTOTYPES *****************************************************/
@@ -215,25 +215,11 @@ gst_audio_convert_ns_get_type (void)
 
 
 /*** TYPE FUNCTIONS ***********************************************************/
-
-static void
-gst_audio_convert_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audio_convert_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audio_convert_sink_template));
-  gst_element_class_set_details_simple (element_class,
-      "Audio converter", "Filter/Converter/Audio",
-      "Convert audio to different formats", "Benjamin Otte <otte@gnome.org>");
-}
-
 static void
 gst_audio_convert_class_init (GstAudioConvertClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *basetransform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->dispose = gst_audio_convert_dispose;
@@ -252,6 +238,14 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
           GST_TYPE_AUDIO_CONVERT_NOISE_SHAPING, NOISE_SHAPING_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_audio_convert_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_audio_convert_sink_template));
+  gst_element_class_set_details_simple (element_class,
+      "Audio converter", "Filter/Converter/Audio",
+      "Convert audio to different formats", "Benjamin Otte <otte@gnome.org>");
+
   basetransform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_convert_get_unit_size);
   basetransform_class->transform_caps =
@@ -269,7 +263,7 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
 }
 
 static void
-gst_audio_convert_init (GstAudioConvert * this, GstAudioConvertClass * g_class)
+gst_audio_convert_init (GstAudioConvert * this)
 {
   this->dither = DITHER_TPDF;
   this->ns = NOISE_SHAPING_NONE;

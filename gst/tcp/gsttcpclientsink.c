@@ -65,9 +65,6 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static void gst_tcp_client_sink_base_init (gpointer g_class);
-static void gst_tcp_client_sink_class_init (GstTCPClientSink * klass);
-static void gst_tcp_client_sink_init (GstTCPClientSink * tcpclientsink);
 static void gst_tcp_client_sink_finalize (GObject * gobject);
 
 static gboolean gst_tcp_client_sink_setcaps (GstBaseSink * bsink,
@@ -83,53 +80,13 @@ static void gst_tcp_client_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 
-static GstElementClass *parent_class = NULL;
-
 /*static guint gst_tcp_client_sink_signals[LAST_SIGNAL] = { 0 }; */
 
-GType
-gst_tcp_client_sink_get_type (void)
-{
-  static GType tcpclientsink_type = 0;
-
-
-  if (!tcpclientsink_type) {
-    static const GTypeInfo tcpclientsink_info = {
-      sizeof (GstTCPClientSinkClass),
-      gst_tcp_client_sink_base_init,
-      NULL,
-      (GClassInitFunc) gst_tcp_client_sink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstTCPClientSink),
-      0,
-      (GInstanceInitFunc) gst_tcp_client_sink_init,
-      NULL
-    };
-
-    tcpclientsink_type =
-        g_type_register_static (GST_TYPE_BASE_SINK, "GstTCPClientSink",
-        &tcpclientsink_info, 0);
-  }
-  return tcpclientsink_type;
-}
+#define gst_tcp_client_sink_parent_class parent_class
+G_DEFINE_TYPE (GstTCPClientSink, gst_tcp_client_sink, GST_TYPE_BASE_SINK);
 
 static void
-gst_tcp_client_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
-
-  gst_element_class_set_details_simple (element_class,
-      "TCP client sink", "Sink/Network",
-      "Send data as a client over the network via TCP",
-      "Thomas Vander Stichele <thomas at apestaart dot org>");
-}
-
-static void
-gst_tcp_client_sink_class_init (GstTCPClientSink * klass)
+gst_tcp_client_sink_class_init (GstTCPClientSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -152,6 +109,14 @@ gst_tcp_client_sink_class_init (GstTCPClientSink * klass)
       g_param_spec_int ("port", "Port", "The port to send the packets to",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "TCP client sink", "Sink/Network",
+      "Send data as a client over the network via TCP",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
 
   gstelement_class->change_state = gst_tcp_client_sink_change_state;
 

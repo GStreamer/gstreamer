@@ -82,9 +82,8 @@ enum
 };
 
 
-GST_BOILERPLATE (GstVideoTestSrc, gst_video_test_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC);
-
+#define gst_video_test_src_parent_class parent_class
+G_DEFINE_TYPE (GstVideoTestSrc, gst_video_test_src, GST_TYPE_PUSH_SRC);
 
 static void gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
     int pattern_type);
@@ -165,27 +164,15 @@ gst_video_test_src_color_spec_get_type (void)
 }
 
 static void
-gst_video_test_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Video test source", "Source/Video",
-      "Creates a test video stream", "David A. Schleef <ds@schleef.org>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_video_test_src_getcaps (NULL)));
-}
-
-static void
 gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
@@ -303,6 +290,14 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
           G_MININT32, G_MAXINT32, DEFAULT_HORIZONTAL_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Video test source", "Source/Video",
+      "Creates a test video stream", "David A. Schleef <ds@schleef.org>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          gst_video_test_src_getcaps (NULL)));
+
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
   gstbasesrc_class->is_seekable = gst_video_test_src_is_seekable;
@@ -315,7 +310,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
 }
 
 static void
-gst_video_test_src_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
+gst_video_test_src_init (GstVideoTestSrc * src)
 {
   GstPad *pad = GST_BASE_SRC_PAD (src);
 

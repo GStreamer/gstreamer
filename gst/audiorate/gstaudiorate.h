@@ -78,6 +78,8 @@ struct _GstAudioRateClass
   GstElementClass parent_class;
 };
 
+GType gst_audio_rate_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_RATE_H__ */

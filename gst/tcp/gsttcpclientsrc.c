@@ -65,9 +65,8 @@ enum
   PROP_PORT
 };
 
-
-GST_BOILERPLATE (GstTCPClientSrc, gst_tcp_client_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC);
+#define gst_tcp_client_src_parent_class parent_class
+G_DEFINE_TYPE (GstTCPClientSrc, gst_tcp_client_src, GST_TYPE_PUSH_SRC);
 
 
 static void gst_tcp_client_src_finalize (GObject * gobject);
@@ -86,29 +85,16 @@ static void gst_tcp_client_src_set_property (GObject * object, guint prop_id,
 static void gst_tcp_client_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-
-static void
-gst_tcp_client_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-
-  gst_element_class_set_details_simple (element_class,
-      "TCP client source", "Source/Network",
-      "Receive data as a client over the network via TCP",
-      "Thomas Vander Stichele <thomas at apestaart dot org>");
-}
-
 static void
 gst_tcp_client_src_class_init (GstTCPClientSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpush_src_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpush_src_class = (GstPushSrcClass *) klass;
 
@@ -125,6 +111,14 @@ gst_tcp_client_src_class_init (GstTCPClientSrcClass * klass)
           TCP_HIGHEST_PORT, TCP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "TCP client source", "Source/Network",
+      "Receive data as a client over the network via TCP",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
+
   gstbasesrc_class->get_caps = gst_tcp_client_src_getcaps;
   gstbasesrc_class->start = gst_tcp_client_src_start;
   gstbasesrc_class->stop = gst_tcp_client_src_stop;
@@ -138,7 +132,7 @@ gst_tcp_client_src_class_init (GstTCPClientSrcClass * klass)
 }
 
 static void
-gst_tcp_client_src_init (GstTCPClientSrc * this, GstTCPClientSrcClass * g_class)
+gst_tcp_client_src_init (GstTCPClientSrc * this)
 {
   this->port = TCP_DEFAULT_PORT;
   this->host = g_strdup (TCP_DEFAULT_HOST);

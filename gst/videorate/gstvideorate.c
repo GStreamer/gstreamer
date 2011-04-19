@@ -135,23 +135,8 @@ static GstStateChangeReturn gst_video_rate_change_state (GstElement * element,
 static GParamSpec *pspec_drop = NULL;
 static GParamSpec *pspec_duplicate = NULL;
 
-GST_BOILERPLATE (GstVideoRate, gst_video_rate, GstElement, GST_TYPE_ELEMENT);
-
-static void
-gst_video_rate_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Video rate adjuster", "Filter/Effect/Video",
-      "Drops/duplicates/adjusts timestamps on video frames to make a perfect stream",
-      "Wim Taymans <wim@fluendo.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_rate_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_rate_src_template));
-}
+#define gst_video_rate_parent_class parent_class
+G_DEFINE_TYPE (GstVideoRate, gst_video_rate, GST_TYPE_ELEMENT);
 
 static void
 gst_video_rate_class_init (GstVideoRateClass * klass)
@@ -198,6 +183,16 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
       g_param_spec_boolean ("skip-to-first", "Skip to first buffer",
           "Don't produce buffers before the first one we receive",
           DEFAULT_SKIP_TO_FIRST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "Video rate adjuster", "Filter/Effect/Video",
+      "Drops/duplicates/adjusts timestamps on video frames to make a perfect stream",
+      "Wim Taymans <wim@fluendo.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_video_rate_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_video_rate_src_template));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_video_rate_change_state);
 }
@@ -423,7 +418,7 @@ gst_video_rate_reset (GstVideoRate * videorate)
 }
 
 static void
-gst_video_rate_init (GstVideoRate * videorate, GstVideoRateClass * klass)
+gst_video_rate_init (GstVideoRate * videorate)
 {
   videorate->sinkpad =
       gst_pad_new_from_static_template (&gst_video_rate_sink_template, "sink");
@@ -993,7 +988,7 @@ gst_video_rate_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:

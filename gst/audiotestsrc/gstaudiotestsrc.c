@@ -109,9 +109,8 @@ static GstStaticPadTemplate gst_audio_test_src_src_template =
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 
-
-GST_BOILERPLATE (GstAudioTestSrc, gst_audio_test_src, GstBaseSrc,
-    GST_TYPE_BASE_SRC);
+#define gst_audio_test_src_parent_class parent_class
+G_DEFINE_TYPE (GstAudioTestSrc, gst_audio_test_src, GST_TYPE_BASE_SRC);
 
 #define GST_TYPE_AUDIO_TEST_SRC_WAVE (gst_audiostestsrc_wave_get_type())
 static GType
@@ -167,27 +166,15 @@ static gboolean gst_audio_test_src_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_audio_test_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
 
-
-static void
-gst_audio_test_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audio_test_src_src_template));
-  gst_element_class_set_details_simple (element_class,
-      "Audio test source", "Source/Audio",
-      "Creates audio test signals of given frequency and volume",
-      "Stefan Kost <ensonic@users.sf.net>");
-}
-
 static void
 gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
 
   gobject_class->set_property = gst_audio_test_src_set_property;
@@ -230,6 +217,13 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
           "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_audio_test_src_src_template));
+  gst_element_class_set_details_simple (gstelement_class,
+      "Audio test source", "Source/Audio",
+      "Creates audio test signals of given frequency and volume",
+      "Stefan Kost <ensonic@users.sf.net>");
+
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_test_src_setcaps);
   gstbasesrc_class->is_seekable =
       GST_DEBUG_FUNCPTR (gst_audio_test_src_is_seekable);
@@ -245,7 +239,7 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
 }
 
 static void
-gst_audio_test_src_init (GstAudioTestSrc * src, GstAudioTestSrcClass * g_class)
+gst_audio_test_src_init (GstAudioTestSrc * src)
 {
   GstPad *pad = GST_BASE_SRC_PAD (src);
 

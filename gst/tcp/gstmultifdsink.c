@@ -343,25 +343,10 @@ static void gst_multi_fd_sink_set_property (GObject * object, guint prop_id,
 static void gst_multi_fd_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstMultiFdSink, gst_multi_fd_sink, GstBaseSink,
-    GST_TYPE_BASE_SINK);
+#define gst_multi_fd_sink_parent_class parent_class
+G_DEFINE_TYPE (GstMultiFdSink, gst_multi_fd_sink, GST_TYPE_BASE_SINK);
 
 static guint gst_multi_fd_sink_signals[LAST_SIGNAL] = { 0 };
-
-static void
-gst_multi_fd_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
-
-  gst_element_class_set_details_simple (element_class,
-      "Multi filedescriptor sink", "Sink/Network",
-      "Send data to multiple filedescriptors",
-      "Thomas Vander Stichele <thomas at apestaart dot org>, "
-      "Wim Taymans <wim@fluendo.com>");
-}
 
 static void
 gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
@@ -663,6 +648,15 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
           client_fd_removed), NULL, NULL, gst_tcp_marshal_VOID__INT,
       G_TYPE_NONE, 1, G_TYPE_INT);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Multi filedescriptor sink", "Sink/Network",
+      "Send data to multiple filedescriptors",
+      "Thomas Vander Stichele <thomas at apestaart dot org>, "
+      "Wim Taymans <wim@fluendo.com>");
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_multi_fd_sink_change_state);
 
@@ -679,7 +673,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
 }
 
 static void
-gst_multi_fd_sink_init (GstMultiFdSink * this, GstMultiFdSinkClass * klass)
+gst_multi_fd_sink_init (GstMultiFdSink * this)
 {
   GST_OBJECT_FLAG_UNSET (this, GST_MULTI_FD_SINK_OPEN);
 
