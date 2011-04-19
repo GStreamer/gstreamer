@@ -18,8 +18,8 @@
  */
 
 /**
- * SECTION:element-amrwbenc
- * @see_also: #GstAmrwbDec, #GstAmrwbParse
+ * SECTION:element-voamrwbenc
+ * @see_also: #GstAmrWbDec, #GstAmrWbParse
  *
  * AMR wideband encoder based on the 
  * <ulink url="http://www.penguin.cz/~utx/amr">reference codec implementation</ulink>.
@@ -27,9 +27,9 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=abc.wav ! wavparse ! audioresample ! audioconvert ! amrwbenc ! filesink location=abc.amr
+ * gst-launch filesrc location=abc.wav ! wavparse ! audioresample ! audioconvert ! voamrwbenc ! filesink location=abc.amr
  * ]|
- * Please not that the above stream misses the header, that is needed to play
+ * Please note that the above stream misses the header, that is needed to play
  * the stream.
  * </refsect2>
  */
@@ -38,10 +38,8 @@
 #include "config.h"
 #endif
 
-#include "gstamrwbenc.h"
+#include "gstvoamrwbenc.h"
 
-/* these defines are not in all .h files */
-#ifndef MR660
 #define MR660  0
 #define MR885  1
 #define MR1265 2
@@ -52,13 +50,14 @@
 #define MR2305 6
 #define MR2385 7
 #define MRDTX  8
-#endif
+
+#define L_FRAME16k      320     /* Frame size at 16kHz  */
 
 static GType
-gst_amrwbenc_bandmode_get_type (void)
+gst_voamrwbenc_bandmode_get_type (void)
 {
-  static GType gst_amrwbenc_bandmode_type = 0;
-  static GEnumValue gst_amrwbenc_bandmode[] = {
+  static GType gst_voamrwbenc_bandmode_type = 0;
+  static GEnumValue gst_voamrwbenc_bandmode[] = {
     {MR660, "MR660", "MR660"},
     {MR885, "MR885", "MR885"},
     {MR1265, "MR1265", "MR1265"},
@@ -71,14 +70,15 @@ gst_amrwbenc_bandmode_get_type (void)
     {MRDTX, "MRDTX", "MRDTX"},
     {0, NULL, NULL},
   };
-  if (!gst_amrwbenc_bandmode_type) {
-    gst_amrwbenc_bandmode_type =
-        g_enum_register_static ("GstAmrWbEncBandMode", gst_amrwbenc_bandmode);
+  if (!gst_voamrwbenc_bandmode_type) {
+    gst_voamrwbenc_bandmode_type =
+        g_enum_register_static ("GstVoAmrWbEncBandMode",
+        gst_voamrwbenc_bandmode);
   }
-  return gst_amrwbenc_bandmode_type;
+  return gst_voamrwbenc_bandmode_type;
 }
 
-#define GST_AMRWBENC_BANDMODE_TYPE (gst_amrwbenc_bandmode_get_type())
+#define GST_VOAMRWBENC_BANDMODE_TYPE (gst_voamrwbenc_bandmode_get_type())
 
 #define BANDMODE_DEFAULT MR660
 
@@ -106,14 +106,14 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) 16000, " "channels = (int) 1")
     );
 
-GST_DEBUG_CATEGORY_STATIC (gst_amrwbenc_debug);
-#define GST_CAT_DEFAULT gst_amrwbenc_debug
+GST_DEBUG_CATEGORY_STATIC (gst_voamrwbenc_debug);
+#define GST_CAT_DEFAULT gst_voamrwbenc_debug
 
-static void gst_amrwbenc_finalize (GObject * object);
+static void gst_voamrwbenc_finalize (GObject * object);
 
-static GstFlowReturn gst_amrwbenc_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_amrwbenc_setcaps (GstPad * pad, GstCaps * caps);
-static GstStateChangeReturn gst_amrwbenc_state_change (GstElement * element,
+static GstFlowReturn gst_voamrwbenc_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_voamrwbenc_setcaps (GstPad * pad, GstCaps * caps);
+static GstStateChangeReturn gst_voamrwbenc_state_change (GstElement * element,
     GstStateChange transition);
 
 static void
@@ -128,21 +128,18 @@ _do_init (GType object_type)
   g_type_add_interface_static (object_type, GST_TYPE_PRESET,
       &preset_interface_info);
 
-  GST_DEBUG_CATEGORY_INIT (gst_amrwbenc_debug, "amrwbenc", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_voamrwbenc_debug, "amrwbenc", 0,
       "AMR-WB audio encoder");
 }
 
-#define GstAmrWbEnc GstAmrwbEnc
-#define GstAmrWbEncClass GstAmrwbEncClass
-
-GST_BOILERPLATE_FULL (GstAmrWbEnc, gst_amrwbenc, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
+GST_BOILERPLATE_FULL (GstVoAmrWbEnc, gst_voamrwbenc, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
 
 static void
-gst_amrwbenc_set_property (GObject * object, guint prop_id,
+gst_voamrwbenc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAmrwbEnc *self = GST_AMRWBENC (object);
+  GstVoAmrWbEnc *self = GST_VOAMRWBENC (object);
 
   switch (prop_id) {
     case PROP_BANDMODE:
@@ -157,10 +154,10 @@ gst_amrwbenc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_amrwbenc_get_property (GObject * object, guint prop_id,
+gst_voamrwbenc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAmrwbEnc *self = GST_AMRWBENC (object);
+  GstVoAmrWbEnc *self = GST_VOAMRWBENC (object);
 
   switch (prop_id) {
     case PROP_BANDMODE:
@@ -175,7 +172,7 @@ gst_amrwbenc_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_amrwbenc_base_init (gpointer klass)
+gst_voamrwbenc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -191,31 +188,31 @@ gst_amrwbenc_base_init (gpointer klass)
 }
 
 static void
-gst_amrwbenc_class_init (GstAmrwbEncClass * klass)
+gst_voamrwbenc_class_init (GstVoAmrWbEncClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  object_class->finalize = gst_amrwbenc_finalize;
-  object_class->set_property = gst_amrwbenc_set_property;
-  object_class->get_property = gst_amrwbenc_get_property;
+  object_class->finalize = gst_voamrwbenc_finalize;
+  object_class->set_property = gst_voamrwbenc_set_property;
+  object_class->get_property = gst_voamrwbenc_get_property;
 
   g_object_class_install_property (object_class, PROP_BANDMODE,
       g_param_spec_enum ("band-mode", "Band Mode",
-          "Encoding Band Mode (Kbps)", GST_AMRWBENC_BANDMODE_TYPE,
+          "Encoding Band Mode (Kbps)", GST_VOAMRWBENC_BANDMODE_TYPE,
           BANDMODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrwbenc_state_change);
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_voamrwbenc_state_change);
 }
 
 static void
-gst_amrwbenc_init (GstAmrwbEnc * amrwbenc, GstAmrwbEncClass * klass)
+gst_voamrwbenc_init (GstVoAmrWbEnc * amrwbenc, GstVoAmrWbEncClass * klass)
 {
   /* create the sink pad */
   amrwbenc->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_setcaps_function (amrwbenc->sinkpad, gst_amrwbenc_setcaps);
-  gst_pad_set_chain_function (amrwbenc->sinkpad, gst_amrwbenc_chain);
+  gst_pad_set_setcaps_function (amrwbenc->sinkpad, gst_voamrwbenc_setcaps);
+  gst_pad_set_chain_function (amrwbenc->sinkpad, gst_voamrwbenc_chain);
   gst_element_add_pad (GST_ELEMENT (amrwbenc), amrwbenc->sinkpad);
 
   /* create the src pad */
@@ -233,11 +230,11 @@ gst_amrwbenc_init (GstAmrwbEnc * amrwbenc, GstAmrwbEncClass * klass)
 }
 
 static void
-gst_amrwbenc_finalize (GObject * object)
+gst_voamrwbenc_finalize (GObject * object)
 {
-  GstAmrwbEnc *amrwbenc;
+  GstVoAmrWbEnc *amrwbenc;
 
-  amrwbenc = GST_AMRWBENC (object);
+  amrwbenc = GST_VOAMRWBENC (object);
 
   g_object_unref (G_OBJECT (amrwbenc->adapter));
   amrwbenc->adapter = NULL;
@@ -246,13 +243,13 @@ gst_amrwbenc_finalize (GObject * object)
 }
 
 static gboolean
-gst_amrwbenc_setcaps (GstPad * pad, GstCaps * caps)
+gst_voamrwbenc_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
-  GstAmrwbEnc *amrwbenc;
+  GstVoAmrWbEnc *amrwbenc;
   GstCaps *copy;
 
-  amrwbenc = GST_AMRWBENC (GST_PAD_PARENT (pad));
+  amrwbenc = GST_VOAMRWBENC (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -280,13 +277,13 @@ gst_amrwbenc_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_amrwbenc_chain (GstPad * pad, GstBuffer * buffer)
+gst_voamrwbenc_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstAmrwbEnc *amrwbenc;
+  GstVoAmrWbEnc *amrwbenc;
   GstFlowReturn ret = GST_FLOW_OK;
-  const int buffer_size = sizeof (Word16) * L_FRAME16k;
+  const int buffer_size = sizeof (short) * L_FRAME16k;
 
-  amrwbenc = GST_AMRWBENC (gst_pad_get_parent (pad));
+  amrwbenc = GST_VOAMRWBENC (gst_pad_get_parent (pad));
 
   g_return_val_if_fail (amrwbenc->handle, GST_FLOW_WRONG_STATE);
 
@@ -332,8 +329,8 @@ gst_amrwbenc_chain (GstPad * pad, GstBuffer * buffer)
 
     /* encode */
     outsize =
-        E_IF_encode (amrwbenc->handle, amrwbenc->bandmode, (Word16 *) data,
-        (UWord8 *) GST_BUFFER_DATA (out), 0);
+        E_IF_encode (amrwbenc->handle, amrwbenc->bandmode, (const short *) data,
+        (unsigned char *) GST_BUFFER_DATA (out), 0);
 
     gst_adapter_flush (amrwbenc->adapter, buffer_size);
     GST_BUFFER_SIZE (out) = outsize;
@@ -351,12 +348,12 @@ done:
 }
 
 static GstStateChangeReturn
-gst_amrwbenc_state_change (GstElement * element, GstStateChange transition)
+gst_voamrwbenc_state_change (GstElement * element, GstStateChange transition)
 {
-  GstAmrwbEnc *amrwbenc;
+  GstVoAmrWbEnc *amrwbenc;
   GstStateChangeReturn ret;
 
-  amrwbenc = GST_AMRWBENC (element);
+  amrwbenc = GST_VOAMRWBENC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:

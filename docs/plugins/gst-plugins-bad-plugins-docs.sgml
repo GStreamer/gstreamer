@@ -19,7 +19,6 @@
     <title>gst-plugins-bad Elements</title>
     <xi:include href="xml/element-aiffparse.xml" />
     <xi:include href="xml/element-aiffmux.xml" />
-    <xi:include href="xml/element-amrwbenc.xml" />
     <xi:include href="xml/element-assrender.xml" />
     <xi:include href="xml/element-autoconvert.xml" />
     <xi:include href="xml/element-bulge.xml" />
@@ -121,6 +120,7 @@
     <xi:include href="xml/element-waterripple.xml" />
     <xi:include href="xml/element-wildmidi.xml" />
     <xi:include href="xml/element-zbar.xml" />
+    <xi:include href="xml/element-voamrwbenc.xml" />
     <xi:include href="xml/element-vp8dec.xml" />
     <xi:include href="xml/element-vp8enc.xml" />
   </chapter>
@@ -130,7 +130,6 @@
     <xi:include href="xml/plugin-aiff.xml" />
     <xi:include href="xml/plugin-autoconvert.xml" />
     <xi:include href="xml/plugin-legacyresample.xml" />
-    <xi:include href="xml/plugin-amrwbenc.xml" />
     <xi:include href="xml/plugin-assrender.xml" />
     <xi:include href="xml/plugin-bayer.xml" />
     <xi:include href="xml/plugin-bz2.xml" />
@@ -210,6 +209,7 @@
     <xi:include href="xml/plugin-vmnc.xml" />
     <xi:include href="xml/plugin-wildmidi.xml" />
     <xi:include href="xml/plugin-xvid.xml" />
+    <xi:include href="xml/plugin-voamrwbenc.xml" />
     <xi:include href="xml/plugin-vp8.xml" />
     <xi:include href="xml/plugin-zbar.xml" />
   </chapter>

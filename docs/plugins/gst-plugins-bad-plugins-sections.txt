@@ -28,17 +28,17 @@ gst_aiff_parse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-amrwbenc</FILE>
-<TITLE>amrwbenc</TITLE>
-GstAmrwbEnc
+<FILE>element-voamrwbenc</FILE>
+<TITLE>voamrwbenc</TITLE>
+GstVoAmrwbEnc
 <SUBSECTION Standard>
-GstAmrwbEncClass
-GST_AMRWBENC
-GST_AMRWBENC_CLASS
-GST_IS_AMRWBENC
-GST_IS_AMRWBENC_CLASS
-GST_TYPE_AMRWBENC
-gst_amrwbenc_get_type
+GstVoAmrwbEncClass
+GST_VOAMRWBENC
+GST_VOAMRWBENC_CLASS
+GST_IS_VOAMRWBENC
+GST_IS_VOAMRWBENC_CLASS
+GST_TYPE_VOAMRWBENC
+gst_voamrwbenc_get_type
 </SECTION>
 
 <SECTION>

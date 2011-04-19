@@ -4,10 +4,10 @@ else
 ASSRENDER_DIR =
 endif
 
-if USE_AMRWB
-AMRWB_DIR = amrwbenc
+if USE_VOAMRWBENC
+VOAMRWBENC_DIR = voamrwbenc
 else
-AMRWB_DIR =
+VOAMRWBENC_DIR =
 endif
 
 if USE_APEXSINK
@@ -364,7 +364,7 @@ endif
 SUBDIRS=\
 	$(VOAACENC_DIR) \
 	$(ASSRENDER_DIR) \
-	$(AMRWB_DIR) \
+	$(VOAMRWBENC_DIR) \
 	$(APEXSINK_DIR) \
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
@@ -423,7 +423,6 @@ SUBDIRS=\
 	$(RTMP_DIR)
 
 DIST_SUBDIRS = \
-	amrwbenc \
 	assrender \
 	apexsink \
 	bz2 \
@@ -467,6 +466,8 @@ DIST_SUBDIRS = \
 	gme \
 	swfdec \
 	timidity \
+	voaacenc \
+	voamrwbenc \
 	vp8 \
 	xvid \
 	zbar \

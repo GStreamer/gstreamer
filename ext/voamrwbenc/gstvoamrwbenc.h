@@ -17,31 +17,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AMRWBENC_H__
-#define __GST_AMRWBENC_H__
+#ifndef __GST_VOAMRWBENC_H__
+#define __GST_VOAMRWBENC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include <amrwb/enc_if.h>
-#include <amrwb/typedef.h>
+#include <vo-amrwbenc/enc_if.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AMRWBENC			\
-  (gst_amrwbenc_get_type())
-#define GST_AMRWBENC(obj)						\
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AMRWBENC, GstAmrwbEnc))
-#define GST_AMRWBENC_CLASS(klass)					\
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMRWBENC, GstAmrwbEncClass))
-#define GST_IS_AMRWBENC(obj)					\
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AMRWBENC))
-#define GST_IS_AMRWBENC_CLASS(klass)			\
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AMRWBENC))
+#define GST_TYPE_VOAMRWBENC			\
+  (gst_voamrwbenc_get_type())
+#define GST_VOAMRWBENC(obj)						\
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VOAMRWBENC, GstVoAmrWbEnc))
+#define GST_VOAMRWBENC_CLASS(klass)					\
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VOAMRWBENC, GstVoAmrWbEncClass))
+#define GST_IS_VOAMRWBENC(obj)					\
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VOAMRWBENC))
+#define GST_IS_VOAMRWBENC_CLASS(klass)			\
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VOAMRWBENC))
 
-typedef struct _GstAmrwbEnc GstAmrwbEnc;
-typedef struct _GstAmrwbEncClass GstAmrwbEncClass;
+typedef struct _GstVoAmrWbEnc GstVoAmrWbEnc;
+typedef struct _GstVoAmrWbEncClass GstVoAmrWbEncClass;
 
-struct _GstAmrwbEnc {
+struct _GstVoAmrWbEnc {
   GstElement element;
 
   /* pads */
@@ -59,12 +58,12 @@ struct _GstAmrwbEnc {
   gint channels, rate;
 };
 
-struct _GstAmrwbEncClass {
+struct _GstVoAmrWbEncClass {
   GstElementClass parent_class;
 };
 
-GType gst_amrwbenc_get_type (void);
+GType gst_voamrwbenc_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_AMRWBENC_H__ */
+#endif /* __GST_VOAMRWBENC_H__ */

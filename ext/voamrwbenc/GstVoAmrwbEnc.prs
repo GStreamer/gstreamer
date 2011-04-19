@@ -1,6 +1,6 @@
 [_presets_]
 version=0.10
-element-name=GstAmrwbEnc
+element-name=GstVoAmrwbEnc
 
 [enhance-size]
 _meta/comment=Maximize compression, lowest bitrate

@@ -577,17 +577,13 @@ AG_GST_CHECK_FEATURE(ASSRENDER, [ASS/SSA renderer], assrender, [
 AC_SUBST(ASSRENDER_CFLAGS)
 AC_SUBST(ASSRENDER_LIBS)
 
-dnl *** amrwb ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
-AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwbenc, [
-  AG_GST_CHECK_LIBHEADER(AMRWB, amrwb,
-                        GP3E_IF_encode, ,
-                        amrwb/enc.h,
-                        AMRWB_LIBS="-lamrwb"
-                        AC_SUBST(AMRWB_LIBS))
+dnl *** vo-amrwbenc ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_VOAMRWBENC, true)
+AG_GST_CHECK_FEATURE(VOAMRWBENC, [vo-amrwbenc library], vo-amrwbenc, [
+  AG_GST_PKG_CHECK_MODULES(VOAMRWBENC, vo-amrwbenc >= 0.1.0)
 ])
 
-dnl *** aac-enc ***
+dnl *** vo-aacenc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VOAACENC, true)
 AG_GST_CHECK_FEATURE(VOAACENC, [vo-aacenc library], vo-aacenc, [
   AG_GST_PKG_CHECK_MODULES(VOAACENC, vo-aacenc >= 0.1.0)
@@ -1627,7 +1623,7 @@ dnl not building plugins with external dependencies,
 dnl but we still need to set the conditionals
 
 AM_CONDITIONAL(USE_ASSRENDER, false)
-AM_CONDITIONAL(USE_AMRWB, false)
+AM_CONDITIONAL(USE_VOAMRWBENC, false)
 AM_CONDITIONAL(USE_VOAACENC, false)
 AM_CONDITIONAL(USE_APEXSINK, false)
 AM_CONDITIONAL(USE_BZ2, false)
@@ -1869,7 +1865,7 @@ tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile
 tests/icles/Makefile
-ext/amrwbenc/Makefile
+ext/voamrwbenc/Makefile
 ext/voaacenc/Makefile
 ext/assrender/Makefile
 ext/apexsink/Makefile

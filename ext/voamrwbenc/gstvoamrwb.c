@@ -21,19 +21,19 @@
 #include "config.h"
 #endif
 
-#include "gstamrwbenc.h"
+#include "gstvoamrwbenc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "amrwbenc",
-      GST_RANK_SECONDARY, GST_TYPE_AMRWBENC);
+  return gst_element_register (plugin, "voamrwbenc",
+      GST_RANK_SECONDARY, GST_TYPE_VOAMRWBENC);
 }
 
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "amrwbenc",
+    "voamrwbenc",
     "Adaptive Multi-Rate Wide-Band Encoder",
     plugin_init, VERSION, GST_LICENSE_UNKNOWN, GST_PACKAGE_NAME,
     GST_PACKAGE_ORIGIN);

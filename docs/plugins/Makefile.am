@@ -91,7 +91,6 @@ EXAMPLE_CFILES = \
 
 EXTRA_HFILES = \
 	$(top_srcdir)/ext/assrender/gstassrender.h \
-	$(top_srcdir)/ext/amrwbenc/gstamrwbenc.h \
 	$(top_srcdir)/ext/celt/gstceltdec.h \
 	$(top_srcdir)/ext/celt/gstceltenc.h \
 	$(top_srcdir)/ext/curl/gstcurlsink.h \
@@ -131,6 +130,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/sdl/sdlvideosink.h \
 	$(top_srcdir)/ext/timidity/gsttimidity.h \
 	$(top_srcdir)/ext/timidity/gstwildmidi.h \
+	$(top_srcdir)/ext/voamrwbenc/gstvoamrwbenc.h \
 	$(top_srcdir)/ext/vp8/gstvp8enc.h \
 	$(top_srcdir)/ext/vp8/gstvp8dec.h \
 	$(top_srcdir)/ext/zbar/gstzbar.h \
