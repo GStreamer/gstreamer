@@ -294,6 +294,8 @@ void        gst_buffer_fill                (GstBuffer *buffer, gsize offset,
                                             gconstpointer src, gsize size);
 void        gst_buffer_extract             (GstBuffer *buffer, gsize offset,
                                             gpointer dest, gsize size);
+gint        gst_buffer_memcmp              (GstBuffer *buffer, gsize offset,
+                                            gconstpointer mem, gsize size);
 
 gsize       gst_buffer_get_size            (GstBuffer *buffer);
 void        gst_buffer_resize              (GstBuffer *buffer, gsize offset, gsize size);

@@ -1011,6 +1011,52 @@ gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
 }
 
 /**
+ * gst_buffer_memcmp:
+ * @buffer: a #GstBuffer.
+ * @offset: the offset in @buffer
+ * @mem: the memory to compare
+ * @size: the size to compare
+ *
+ * Compare @size bytes starting from @offset in @buffer with the memory in @mem.
+ */
+gint
+gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
+    gsize size)
+{
+  gsize i, len;
+  const guint8 *ptr = mem;
+  gint res = 0;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+  g_return_val_if_fail (mem != NULL, 0);
+
+  len = GST_BUFFER_MEM_LEN (buffer);
+
+  for (i = 0; i < len && size > 0 && res == 0; i++) {
+    guint8 *data;
+    gsize ssize, tocmp;
+    GstMemory *mem;
+
+    mem = GST_BUFFER_MEM_PTR (buffer, i);
+
+    data = gst_memory_map (mem, &ssize, NULL, GST_MAP_READ);
+    if (ssize > offset) {
+      /* we have enough */
+      tocmp = MIN (ssize - offset, size);
+      res = memcmp (ptr, data + offset, tocmp);
+      size -= tocmp;
+      ptr += tocmp;
+      offset = 0;
+    } else {
+      /* offset past buffer, skip */
+      offset -= ssize;
+    }
+    gst_memory_unmap (mem, data, ssize);
+  }
+  return res;
+}
+
+/**
  * gst_buffer_get_caps:
  * @buffer: a #GstBuffer.
  *
