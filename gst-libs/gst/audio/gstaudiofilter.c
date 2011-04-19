@@ -29,7 +29,7 @@
  * #GstAudioFilter will parse the input format for you (with error checking)
  * before calling your setup function. Also, elements deriving from
  * #GstAudioFilter may use gst_audio_filter_class_add_pad_templates() from
- * their base_init function to easily configure the set of caps/formats that
+ * their class_init function to easily configure the set of caps/formats that
  * the element is able to handle.
  *
  * Derived classes should override the #GstAudioFilterClass.setup() and
@@ -179,7 +179,7 @@ gst_audio_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
  * Convenience function to add pad templates to this element class, with
  * @allowed_caps as the caps that can be handled.
  *
- * This function is usually used from within a GObject base_init function.
+ * This function is usually used from within a GObject class_init function.
  *
  * Since: 0.10.12
  */
@@ -196,10 +196,8 @@ gst_audio_filter_class_add_pad_templates (GstAudioFilterClass * klass,
   pad_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
       gst_caps_copy (allowed_caps));
   gst_element_class_add_pad_template (element_class, pad_template);
-  gst_object_unref (pad_template);
 
   pad_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       gst_caps_copy (allowed_caps));
   gst_element_class_add_pad_template (element_class, pad_template);
-  gst_object_unref (pad_template);
 }
