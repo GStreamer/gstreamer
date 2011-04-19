@@ -78,9 +78,6 @@ G_STMT_START {                                                            \
   udpctx->sock = -1;                                                      \
 } G_STMT_END
 
-static void gst_dynudpsink_base_init (gpointer g_class);
-static void gst_dynudpsink_class_init (GstDynUDPSink * klass);
-static void gst_dynudpsink_init (GstDynUDPSink * udpsink);
 static void gst_dynudpsink_finalize (GObject * object);
 
 static GstFlowReturn gst_dynudpsink_render (GstBaseSink * sink,
@@ -94,52 +91,13 @@ static void gst_dynudpsink_set_property (GObject * object, guint prop_id,
 static void gst_dynudpsink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementClass *parent_class = NULL;
-
 static guint gst_dynudpsink_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_dynudpsink_get_type (void)
-{
-  static GType dynudpsink_type = 0;
-
-  if (!dynudpsink_type) {
-    static const GTypeInfo dynudpsink_info = {
-      sizeof (GstDynUDPSinkClass),
-      gst_dynudpsink_base_init,
-      NULL,
-      (GClassInitFunc) gst_dynudpsink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstDynUDPSink),
-      0,
-      (GInstanceInitFunc) gst_dynudpsink_init,
-      NULL
-    };
-
-    dynudpsink_type =
-        g_type_register_static (GST_TYPE_BASE_SINK, "GstDynUDPSink",
-        &dynudpsink_info, 0);
-  }
-  return dynudpsink_type;
-}
+#define gst_dynudpsink_parent_class parent_class
+G_DEFINE_TYPE (GstDynUDPSink, gst_dynudpsink, GST_TYPE_BASE_SINK);
 
 static void
-gst_dynudpsink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_details_simple (element_class, "UDP packet sender",
-      "Sink/Network",
-      "Send data over the network via UDP",
-      "Philippe Khalaf <burger@speedy.org>");
-}
-
-static void
-gst_dynudpsink_class_init (GstDynUDPSink * klass)
+gst_dynudpsink_class_init (GstDynUDPSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -172,6 +130,14 @@ gst_dynudpsink_class_init (GstDynUDPSink * klass)
           UDP_DEFAULT_CLOSEFD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_dynudpsink_change_state;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "UDP packet sender",
+      "Sink/Network",
+      "Send data over the network via UDP",
+      "Philippe Khalaf <burger@speedy.org>");
 
   gstbasesink_class->render = gst_dynudpsink_render;
 

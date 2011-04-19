@@ -196,48 +196,24 @@ static void gst_udpsrc_set_property (GObject * object, guint prop_id,
 static void gst_udpsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void
-_do_init (GType type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_udpsrc_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
-
-  GST_DEBUG_CATEGORY_INIT (udpsrc_debug, "udpsrc", 0, "UDP src");
-}
-
-GST_BOILERPLATE_FULL (GstUDPSrc, gst_udpsrc, GstPushSrc, GST_TYPE_PUSH_SRC,
-    _do_init);
-
-static void
-gst_udpsrc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class, "UDP packet receiver",
-      "Source/Network",
-      "Receive data over the network via UDP",
-      "Wim Taymans <wim@fluendo.com>, "
-      "Thijs Vermeir <thijs.vermeir@barco.com>");
-}
+#define gst_udpsrc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstUDPSrc, gst_udpsrc, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_udpsrc_uri_handler_init));
 
 static void
 gst_udpsrc_class_init (GstUDPSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (udpsrc_debug, "udpsrc", 0, "UDP src");
 
   gobject_class->set_property = gst_udpsrc_set_property;
   gobject_class->get_property = gst_udpsrc_get_property;
@@ -301,6 +277,15 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
       g_param_spec_boolean ("reuse", "Reuse", "Enable reuse of the port",
           UDP_DEFAULT_REUSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "UDP packet receiver",
+      "Source/Network",
+      "Receive data over the network via UDP",
+      "Wim Taymans <wim@fluendo.com>, "
+      "Thijs Vermeir <thijs.vermeir@barco.com>");
+
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
   gstbasesrc_class->unlock = gst_udpsrc_unlock;
@@ -311,7 +296,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
 }
 
 static void
-gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
+gst_udpsrc_init (GstUDPSrc * udpsrc)
 {
   WSA_STARTUP (udpsrc);
 

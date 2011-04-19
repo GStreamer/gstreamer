@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005,2006> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -193,29 +193,9 @@ free_session (GstRTPDecSession * session)
 
 static guint gst_rtp_dec_signals[LAST_SIGNAL] = { 0 };
 
-GST_BOILERPLATE (GstRTPDec, gst_rtp_dec, GstElement, GST_TYPE_ELEMENT);
+#define gst_rtp_dec_parent_class parent_class
+G_DEFINE_TYPE (GstRTPDec, gst_rtp_dec, GST_TYPE_ELEMENT);
 
-static void
-gst_rtp_dec_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  /* sink pads */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_dec_recv_rtp_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_dec_recv_rtcp_sink_template));
-  /* src pads */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_dec_recv_rtp_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_dec_rtcp_src_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP Decoder",
-      "Codec/Parser/Network",
-      "Accepts raw RTP and RTCP packets and sends them forward",
-      "Wim Taymans <wim@fluendo.com>");
-}
 
 /* BOXED:UINT,UINT */
 #define g_marshal_value_peek_uint(v)     g_value_get_uint (v)
@@ -296,6 +276,8 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
   klass = (GstRTPDecClass *) g_class;
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (rtpdec_debug, "rtpdec", 0, "RTP decoder");
 
   gobject_class->finalize = gst_rtp_dec_finalize;
   gobject_class->set_property = gst_rtp_dec_set_property;
@@ -413,11 +395,25 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
       GST_DEBUG_FUNCPTR (gst_rtp_dec_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_rtp_dec_release_pad);
 
-  GST_DEBUG_CATEGORY_INIT (rtpdec_debug, "rtpdec", 0, "RTP decoder");
+  /* sink pads */
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_dec_recv_rtp_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_dec_recv_rtcp_sink_template));
+  /* src pads */
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_dec_recv_rtp_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_dec_rtcp_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP Decoder",
+      "Codec/Parser/Network",
+      "Accepts raw RTP and RTCP packets and sends them forward",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void
-gst_rtp_dec_init (GstRTPDec * rtpdec, GstRTPDecClass * klass)
+gst_rtp_dec_init (GstRTPDec * rtpdec)
 {
   rtpdec->provided_clock = gst_system_clock_obtain ();
   rtpdec->latency = DEFAULT_LATENCY_MS;

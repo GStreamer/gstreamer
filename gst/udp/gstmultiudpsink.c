@@ -113,9 +113,6 @@ G_STMT_START {                                                            \
   udpctx->sock = DEFAULT_SOCK;                                            \
 } G_STMT_END
 
-static void gst_multiudpsink_base_init (gpointer g_class);
-static void gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass);
-static void gst_multiudpsink_init (GstMultiUDPSink * udpsink);
 static void gst_multiudpsink_finalize (GObject * object);
 
 static GstFlowReturn gst_multiudpsink_render (GstBaseSink * sink,
@@ -139,49 +136,10 @@ static void gst_multiudpsink_add_internal (GstMultiUDPSink * sink,
 static void gst_multiudpsink_clear_internal (GstMultiUDPSink * sink,
     gboolean lock);
 
-static GstElementClass *parent_class = NULL;
-
 static guint gst_multiudpsink_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_multiudpsink_get_type (void)
-{
-  static GType multiudpsink_type = 0;
-
-  if (!multiudpsink_type) {
-    static const GTypeInfo multiudpsink_info = {
-      sizeof (GstMultiUDPSinkClass),
-      gst_multiudpsink_base_init,
-      NULL,
-      (GClassInitFunc) gst_multiudpsink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMultiUDPSink),
-      0,
-      (GInstanceInitFunc) gst_multiudpsink_init,
-      NULL
-    };
-
-    multiudpsink_type =
-        g_type_register_static (GST_TYPE_BASE_SINK, "GstMultiUDPSink",
-        &multiudpsink_info, 0);
-  }
-  return multiudpsink_type;
-}
-
-static void
-gst_multiudpsink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_details_simple (element_class, "UDP packet sender",
-      "Sink/Network",
-      "Send data over the network via UDP",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_multiudpsink_parent_class parent_class
+G_DEFINE_TYPE (GstMultiUDPSink, gst_multiudpsink, GST_TYPE_BASE_SINK);
 
 static void
 gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
@@ -359,6 +317,14 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "UDP packet sender",
+      "Sink/Network",
+      "Send data over the network via UDP",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gstbasesink_class->render = gst_multiudpsink_render;
 #if 0

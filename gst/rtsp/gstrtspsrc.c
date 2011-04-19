@@ -267,39 +267,9 @@ static gboolean gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event,
 #define CMD_STOP	2
 
 /*static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 }; */
-
-static void
-_do_init (GType rtspsrc_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_rtspsrc_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  GST_DEBUG_CATEGORY_INIT (rtspsrc_debug, "rtspsrc", 0, "RTSP src");
-
-  g_type_add_interface_static (rtspsrc_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
-}
-
-GST_BOILERPLATE_FULL (GstRTSPSrc, gst_rtspsrc, GstBin, GST_TYPE_BIN, _do_init);
-
-static void
-gst_rtspsrc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtptemplate));
-
-  gst_element_class_set_details_simple (element_class, "RTSP packet receiver",
-      "Source/Network",
-      "Receive data over the network via RTSP (RFC 2326)",
-      "Wim Taymans <wim@fluendo.com>, "
-      "Thijs Vermeir <thijs.vermeir@barco.com>, "
-      "Lutz Mueller <lutz@topfrose.de>");
-}
+#define gst_rtspsrc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstRTSPSrc, gst_rtspsrc, GST_TYPE_BIN,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_rtspsrc_uri_handler_init));
 
 static void
 gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
@@ -311,6 +281,8 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbin_class = (GstBinClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (rtspsrc_debug, "rtspsrc", 0, "RTSP src");
 
   gobject_class->set_property = gst_rtspsrc_set_property;
   gobject_class->get_property = gst_rtspsrc_get_property;
@@ -459,6 +431,16 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&rtptemplate));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTSP packet receiver", "Source/Network",
+      "Receive data over the network via RTSP (RFC 2326)",
+      "Wim Taymans <wim@fluendo.com>, "
+      "Thijs Vermeir <thijs.vermeir@barco.com>, "
+      "Lutz Mueller <lutz@topfrose.de>");
+
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
 
   gst_rtsp_ext_list_init ();
@@ -466,7 +448,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 
 
 static void
-gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
+gst_rtspsrc_init (GstRTSPSrc * src)
 {
 #ifdef G_OS_WIN32
   WSADATA wsa_data;

@@ -62,9 +62,6 @@ enum
   /* FILL ME */
 };
 
-static void gst_udpsink_base_init (gpointer g_class);
-static void gst_udpsink_class_init (GstUDPSink * klass);
-static void gst_udpsink_init (GstUDPSink * udpsink);
 static void gst_udpsink_finalize (GstUDPSink * udpsink);
 
 static void gst_udpsink_uri_handler_init (gpointer g_iface,
@@ -75,63 +72,19 @@ static void gst_udpsink_set_property (GObject * object, guint prop_id,
 static void gst_udpsink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementClass *parent_class = NULL;
-
 /*static guint gst_udpsink_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_udpsink_get_type (void)
-{
-  static GType udpsink_type = 0;
-
-  if (!udpsink_type) {
-    static const GTypeInfo udpsink_info = {
-      sizeof (GstUDPSinkClass),
-      gst_udpsink_base_init,
-      NULL,
-      (GClassInitFunc) gst_udpsink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstUDPSink),
-      0,
-      (GInstanceInitFunc) gst_udpsink_init,
-      NULL
-    };
-    static const GInterfaceInfo urihandler_info = {
-      gst_udpsink_uri_handler_init,
-      NULL,
-      NULL
-    };
-
-    udpsink_type =
-        g_type_register_static (GST_TYPE_MULTIUDPSINK, "GstUDPSink",
-        &udpsink_info, 0);
-
-    g_type_add_interface_static (udpsink_type, GST_TYPE_URI_HANDLER,
-        &urihandler_info);
-
-  }
-  return udpsink_type;
-}
+#define gst_udpsink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstUDPSink, gst_udpsink, GST_TYPE_MULTIUDPSINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_udpsink_uri_handler_init));
 
 static void
-gst_udpsink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "UDP packet sender",
-      "Sink/Network",
-      "Send data over the network via UDP", "Wim Taymans <wim@fluendo.com>");
-}
-
-static void
-gst_udpsink_class_init (GstUDPSink * klass)
+gst_udpsink_class_init (GstUDPSinkClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
+  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->set_property = gst_udpsink_set_property;
   gobject_class->get_property = gst_udpsink_get_property;
@@ -146,8 +99,11 @@ gst_udpsink_class_init (GstUDPSink * klass)
       g_param_spec_int ("port", "port", "The port to send the packets to",
           0, 65535, UDP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-}
 
+  gst_element_class_set_details_simple (gstelement_class, "UDP packet sender",
+      "Sink/Network",
+      "Send data over the network via UDP", "Wim Taymans <wim@fluendo.com>");
+}
 
 static void
 gst_udpsink_init (GstUDPSink * udpsink)
