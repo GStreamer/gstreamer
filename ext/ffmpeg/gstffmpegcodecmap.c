@@ -203,6 +203,10 @@ gst_ff_vid_caps_new (AVCodecContext * context, enum CodecID codec_id,
     num = context->time_base.den / context->ticks_per_frame;
     denom = context->time_base.num;
 
+    if (!denom) {
+      GST_LOG ("invalid framerate: %d/0, -> %d/1", num, num);
+      denom = 1;
+    }
     if (gst_util_fraction_compare (num, denom, 1000, 1) > 0) {
       GST_LOG ("excessive framerate: %d/%d, -> 0/1", num, denom);
       num = 0;

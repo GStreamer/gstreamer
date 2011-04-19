@@ -313,15 +313,12 @@ static GstCaps *
 gst_ffmpegscale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstFFMpegScale *scale;
   GstCaps *ret;
   GstStructure *structure;
   const GValue *par;
 
   /* this function is always called with a simple caps */
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
-
-  scale = GST_FFMPEGSCALE (trans);
 
   structure = gst_caps_get_structure (caps, 0);
 
