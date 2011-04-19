@@ -51,6 +51,7 @@ static const gchar *schema_list[] = {
   "exif",
   "photoshop",
   "Iptc4xmpCore",
+  "Iptc4xmpExt",
   NULL
 };
 
@@ -1007,6 +1008,24 @@ _init_xmp_tag_map (gpointer user_data)
       GstXmpTagTypeSimple, NULL, NULL);
   _gst_xmp_add_schema ("Iptc4xmpCore", schema);
 
+  /* iptc4xmpext schema */
+  schema = gst_xmp_schema_new ();
+  xmpinfo = gst_xmp_tag_create (NULL, "Iptc4xmpExt:LocationShown",
+      GstXmpTagTypeStruct, NULL, NULL);
+  xmpinfo->children = g_slist_prepend (xmpinfo->children,
+      gst_xmp_tag_create (GST_TAG_GEO_LOCATION_SUBLOCATION,
+          "LocationDetails:Sublocation", GstXmpTagTypeSimple, NULL, NULL));
+  xmpinfo->children =
+      g_slist_prepend (xmpinfo->children,
+      gst_xmp_tag_create (GST_TAG_GEO_LOCATION_CITY,
+          "LocationDetails:City", GstXmpTagTypeSimple, NULL, NULL));
+  xmpinfo->children =
+      g_slist_prepend (xmpinfo->children,
+      gst_xmp_tag_create (GST_TAG_GEO_LOCATION_COUNTRY,
+          "LocationDetails:Country", GstXmpTagTypeSimple, NULL, NULL));
+  _gst_xmp_schema_add_mapping (schema, xmpinfo);
+  _gst_xmp_add_schema ("Iptc4xmpExt", schema);
+
   return NULL;
 }
 
@@ -1031,6 +1050,7 @@ static const GstXmpNamespaceMatch ns_match[] = {
   {"xap", "http://ns.adobe.com/xap/1.0/"},
   {"photoshop", "http://ns.adobe.com/photoshop/1.0/"},
   {"Iptc4xmpCore", "http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/"},
+  {"Iptc4xmpExt", "http://iptc.org/std/Iptc4xmpExt/2008-02-29/"},
   {NULL, NULL}
 };
 
@@ -1251,6 +1271,7 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
     {"xap", NULL},
     {"photoshop", NULL},
     {"Iptc4xmpCore", NULL},
+    {"Iptc4xmpExt", NULL},
     {NULL, NULL}
   };
 
