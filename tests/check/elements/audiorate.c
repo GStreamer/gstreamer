@@ -31,7 +31,7 @@ typedef GstElement TestInjector;
 typedef GstElementClass TestInjectorClass;
 
 GType test_injector_get_type (void);
-GST_BOILERPLATE (TestInjector, test_injector, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (TestInjector, test_injector, GST_TYPE_ELEMENT);
 
 #define INJECTOR_CAPS \
   "audio/x-raw-float, "                                  \
@@ -58,20 +58,14 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (INJECTOR_CAPS));
 
 static void
-test_injector_base_init (gpointer g_class)
+test_injector_class_init (TestInjectorClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-}
-
-static void
-test_injector_class_init (TestInjectorClass * klass)
-{
-  /* nothing to do here */
 }
 
 static GstFlowReturn
@@ -146,7 +140,7 @@ test_injector_chain (GstPad * pad, GstBuffer * buf)
 }
 
 static void
-test_injector_init (TestInjector * injector, TestInjectorClass * klass)
+test_injector_init (TestInjector * injector)
 {
   GstPad *pad;
 

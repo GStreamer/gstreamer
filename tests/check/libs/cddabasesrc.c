@@ -183,8 +183,7 @@ struct _GstCdFooSrcClass
 };
 
 GType gst_cd_foo_src_get_type (void);
-GST_BOILERPLATE (GstCdFooSrc, gst_cd_foo_src, GstCddaBaseSrc,
-    GST_TYPE_CDDA_BASE_SRC);
+G_DEFINE_TYPE (GstCdFooSrc, gst_cd_foo_src, GST_TYPE_CDDA_BASE_SRC);
 
 static GstBuffer *gst_cd_foo_src_read_sector (GstCddaBaseSrc * src,
     gint sector);
@@ -193,17 +192,7 @@ static gboolean gst_cd_foo_src_open (GstCddaBaseSrc * src,
 static void gst_cd_foo_src_close (GstCddaBaseSrc * src);
 
 static void
-gst_cd_foo_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "CD Audio (cdda) Source, FooBar", "Source/File",
-      "Read audio from CD", "Foo Bar <foo@bar.com>");
-}
-
-static void
-gst_cd_foo_src_init (GstCdFooSrc * src, GstCdFooSrcClass * klass)
+gst_cd_foo_src_init (GstCdFooSrc * src)
 {
   src->cur_disc = 0;
 }
@@ -212,6 +201,11 @@ static void
 gst_cd_foo_src_class_init (GstCdFooSrcClass * klass)
 {
   GstCddaBaseSrcClass *cddabasesrc_class = GST_CDDA_BASE_SRC_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_details_simple (element_class,
+      "CD Audio (cdda) Source, FooBar", "Source/File",
+      "Read audio from CD", "Foo Bar <foo@bar.com>");
 
   cddabasesrc_class->open = gst_cd_foo_src_open;
   cddabasesrc_class->close = gst_cd_foo_src_close;

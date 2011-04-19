@@ -559,23 +559,8 @@ gst_red_video_src_init_type (GType type)
 typedef GstPushSrc GstRedVideoSrc;
 typedef GstPushSrcClass GstRedVideoSrcClass;
 
-GST_BOILERPLATE_FULL (GstRedVideoSrc, gst_red_video_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, gst_red_video_src_init_type);
-
-static void
-gst_red_video_src_base_init (gpointer klass)
-{
-  static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC, GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("video/x-raw-yuv, format=(fourcc)I420")
-      );
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class,
-      "Red Video Src", "Source/Video", "yep", "me");
-}
+G_DEFINE_TYPE_WITH_CODE (GstRedVideoSrc, gst_red_video_src,
+    GST_TYPE_PUSH_SRC, gst_red_video_src_init_type (g_define_type_id));
 
 static GstFlowReturn
 gst_red_video_src_create (GstPushSrc * src, GstBuffer ** p_buf)
@@ -608,12 +593,22 @@ static void
 gst_red_video_src_class_init (GstRedVideoSrcClass * klass)
 {
   GstPushSrcClass *pushsrc_class = GST_PUSH_SRC_CLASS (klass);
+  static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS ("video/x-raw-yuv, format=(fourcc)I420")
+      );
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_templ));
+  gst_element_class_set_details_simple (element_class,
+      "Red Video Src", "Source/Video", "yep", "me");
 
   pushsrc_class->create = gst_red_video_src_create;
 }
 
 static void
-gst_red_video_src_init (GstRedVideoSrc * src, GstRedVideoSrcClass * klass)
+gst_red_video_src_init (GstRedVideoSrc * src)
 {
 }
 
@@ -672,23 +667,8 @@ gst_codec_src_init_type (GType type)
 typedef GstPushSrc GstCodecSrc;
 typedef GstPushSrcClass GstCodecSrcClass;
 
-GST_BOILERPLATE_FULL (GstCodecSrc, gst_codec_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, gst_codec_src_init_type);
-
-static void
-gst_codec_src_base_init (gpointer klass)
-{
-  static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC, GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("application/x-codec")
-      );
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class,
-      "Codec Src", "Source/Video", "yep", "me");
-}
+G_DEFINE_TYPE_WITH_CODE (GstCodecSrc, gst_codec_src,
+    GST_TYPE_PUSH_SRC, gst_codec_src_init_type (g_define_type_id));
 
 static GstFlowReturn
 gst_codec_src_create (GstPushSrc * src, GstBuffer ** p_buf)
@@ -714,12 +694,22 @@ static void
 gst_codec_src_class_init (GstCodecSrcClass * klass)
 {
   GstPushSrcClass *pushsrc_class = GST_PUSH_SRC_CLASS (klass);
+  static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS ("application/x-codec")
+      );
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_templ));
+  gst_element_class_set_details_simple (element_class,
+      "Codec Src", "Source/Video", "yep", "me");
 
   pushsrc_class->create = gst_codec_src_create;
 }
 
 static void
-gst_codec_src_init (GstCodecSrc * src, GstCodecSrcClass * klass)
+gst_codec_src_init (GstCodecSrc * src)
 {
 }
 

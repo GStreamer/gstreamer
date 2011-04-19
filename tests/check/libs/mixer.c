@@ -50,8 +50,8 @@ GType test_element_get_type (void);
 static void init_interface (GType type);
 static void gst_implements_interface_init (GstImplementsInterfaceClass * klass);
 
-GST_BOILERPLATE_FULL (TestElement, test_element, GstElement, GST_TYPE_ELEMENT,
-    init_interface);
+G_DEFINE_TYPE_WITH_CODE (TestElement, test_element, GST_TYPE_ELEMENT,
+    init_interface (g_define_type_id));
 
 static void
 test_element_mixer_interface_init (GstMixerClass * klass)
@@ -79,11 +79,6 @@ init_interface (GType type)
 }
 
 static void
-test_element_base_init (gpointer klass)
-{
-}
-
-static void
 test_element_class_init (TestElementClass * klass)
 {
 }
@@ -105,7 +100,7 @@ gst_implements_interface_init (GstImplementsInterfaceClass * klass)
 }
 
 static void
-test_element_init (TestElement * this, TestElementClass * klass)
+test_element_init (TestElement * this)
 {
 }
 

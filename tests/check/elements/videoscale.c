@@ -568,8 +568,8 @@ struct _GstTestReverseNegotiationSinkClass
 
 GType gst_test_reverse_negotiation_sink_get_type (void);
 
-GST_BOILERPLATE (GstTestReverseNegotiationSink,
-    gst_test_reverse_negotiation_sink, GstBaseSink, GST_TYPE_BASE_SINK);
+G_DEFINE_TYPE (GstTestReverseNegotiationSink,
+    gst_test_reverse_negotiation_sink, GST_TYPE_BASE_SINK);
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -640,19 +640,6 @@ gst_test_reverse_negotiation_sink_render (GstBaseSink * bsink,
 }
 
 static void
-gst_test_reverse_negotiation_sink_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Test Reverse Negotiation Sink",
-      "Sink",
-      "Some test sink", "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-}
-
-static void
 gst_test_reverse_negotiation_sink_class_init (GstTestReverseNegotiationSinkClass
     * klass)
 {
@@ -664,6 +651,13 @@ gst_test_reverse_negotiation_sink_class_init (GstTestReverseNegotiationSinkClass
   gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbase_sink_class = GST_BASE_SINK_CLASS (klass);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Test Reverse Negotiation Sink",
+      "Sink",
+      "Some test sink", "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
   gstbase_sink_class->buffer_alloc =
       GST_DEBUG_FUNCPTR (gst_test_reverse_negotiation_sink_buffer_alloc);
   gstbase_sink_class->render =
@@ -671,8 +665,7 @@ gst_test_reverse_negotiation_sink_class_init (GstTestReverseNegotiationSinkClass
 }
 
 static void
-gst_test_reverse_negotiation_sink_init (GstTestReverseNegotiationSink * sink,
-    GstTestReverseNegotiationSinkClass * g_class)
+gst_test_reverse_negotiation_sink_init (GstTestReverseNegotiationSink * sink)
 {
   sink->nbuffers = 0;
 }
