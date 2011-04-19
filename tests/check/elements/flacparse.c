@@ -242,6 +242,23 @@ GST_START_TEST (test_parse_flac_detect_stream)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_flac_set_index)
+{
+  GstElement *parse;
+  GstIndex *idx;
+
+  idx = gst_index_factory_make ("memindex");
+  if (idx == NULL)
+    return;
+  parse = gst_element_factory_make ("flacparse", NULL);
+  fail_unless (parse != NULL);
+  gst_object_ref_sink (idx);
+  gst_element_set_index (parse, GST_INDEX (idx));
+  gst_object_unref (idx);
+  gst_object_unref (parse);
+}
+
+GST_END_TEST;
 
 static Suite *
 flacparse_suite (void)
@@ -258,6 +275,7 @@ flacparse_suite (void)
 
   /* Other tests */
   tcase_add_test (tc_chain, test_parse_flac_detect_stream);
+  tcase_add_test (tc_chain, test_parse_flac_set_index);
 
   return s;
 }
