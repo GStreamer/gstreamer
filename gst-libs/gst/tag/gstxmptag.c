@@ -170,7 +170,6 @@ xmp_tag_get_type_name (XmpTag * xmptag)
 
 struct _PendingXmpTag
 {
-  const gchar *gst_tag;
   XmpTag *xmp_tag;
   gchar *str;
 };
@@ -1045,11 +1044,14 @@ struct _GstXmpNamespaceMap
 /* parsing */
 
 static void
-read_one_tag (GstTagList * list, const gchar * tag, XmpTag * xmptag,
+read_one_tag (GstTagList * list, XmpTag * xmptag,
     const gchar * v, GSList ** pending_tags)
 {
   GType tag_type;
   GstTagMergeMode merge_mode;
+  const gchar *tag = xmptag->gst_tag;
+
+  g_return_if_fail (tag != NULL);
 
   if (xmptag && xmptag->deserialize) {
     xmptag->deserialize (xmptag, list, tag, xmptag->tag_name, v, pending_tags);
@@ -1236,9 +1238,11 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
   gboolean in_tag;
   gchar *part, *pp;
   guint i;
-  const gchar *last_tag = NULL;
   XmpTag *last_xmp_tag = NULL;
   GSList *pending_tags = NULL;
+
+  /* Used for strucuture xmp tags */
+  XmpTag *context_tag = NULL;
 
   GstXmpNamespaceMap ns_map[] = {
     {"dc", NULL},
@@ -1254,6 +1258,8 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
   g_return_val_if_fail (GST_BUFFER_SIZE (buffer) > 0, NULL);
+
+  GST_LOG ("Starting xmp parsing");
 
   xps = (const gchar *) GST_BUFFER_DATA (buffer);
   len = GST_BUFFER_SIZE (buffer);
@@ -1354,19 +1360,41 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
                   }
                 }
               } else {
-                const gchar *gst_tag;
                 XmpTag *xmp_tag = NULL;
                 /* FIXME: eventualy rewrite ns
                  * find ':'
                  * check if ns before ':' is in ns_map and ns_map[i].gstreamer_ns!=NULL
                  * do 2 stage filter in tag_matches
                  */
-                gst_tag = _gst_xmp_tag_get_mapping_reverse (as, &xmp_tag);
-                if (gst_tag) {
+                if (context_tag) {
+                  GSList *iter;
+
+                  for (iter = context_tag->children; iter;
+                      iter = g_slist_next (iter)) {
+                    XmpTag *child = iter->data;
+
+                    GST_DEBUG ("Looking at child tag %s : %s", child->tag_name,
+                        as);
+                    if (strcmp (child->tag_name, as) == 0) {
+                      xmp_tag = child;
+                      break;
+                    }
+                  }
+
+                } else {
+                  GST_LOG ("Looking for tag: %s", as);
+                  _gst_xmp_tag_get_mapping_reverse (as, &xmp_tag);
+                }
+                if (xmp_tag) {
                   PendingXmpTag *ptag;
 
+                  GST_DEBUG ("Found xmp tag: %s -> %s", xmp_tag->tag_name,
+                      xmp_tag->gst_tag);
+
+                  /* we shouldn't find a xmp structure here */
+                  g_assert (xmp_tag->gst_tag != NULL);
+
                   ptag = g_slice_new (PendingXmpTag);
-                  ptag->gst_tag = gst_tag;
                   ptag->xmp_tag = xmp_tag;
                   ptag->str = g_strdup (v);
 
@@ -1393,15 +1421,42 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
 
           /* skip rdf tags for now */
           if (strncmp (part, "rdf:", 4)) {
-            const gchar *parttag;
+            /* if we're inside some struct, we look only on its children */
+            if (context_tag) {
+              GSList *iter;
 
-            parttag = _gst_xmp_tag_get_mapping_reverse (part, &last_xmp_tag);
-            if (parttag) {
-              last_tag = parttag;
+              /* check if this is the closing of the context */
+              if (part[0] == '/'
+                  && strcmp (part + 1, context_tag->tag_name) == 0) {
+                GST_DEBUG ("Closing context tag %s", part);
+                context_tag = NULL;
+              } else {
+
+                for (iter = context_tag->children; iter;
+                    iter = g_slist_next (iter)) {
+                  XmpTag *child = iter->data;
+
+                  GST_DEBUG ("Looking at child tag %s : %s", child->tag_name,
+                      part);
+                  if (strcmp (child->tag_name, part) == 0) {
+                    last_xmp_tag = child;
+                    break;
+                  }
+                }
+              }
+
+            } else {
+              GST_LOG ("Looking for tag: %s", part);
+              _gst_xmp_tag_get_mapping_reverse (part, &last_xmp_tag);
+              if (last_xmp_tag && last_xmp_tag->type == GstXmpTagTypeStruct) {
+                context_tag = last_xmp_tag;
+                last_xmp_tag = NULL;
+              }
             }
           }
         }
       }
+      GST_LOG ("Next cycle");
       /* next cycle */
       ne++;
       if (ne < xp2) {
@@ -1421,15 +1476,23 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
       if (ns[0] != '\n' && &ns[1] <= ne) {
         /* only log non-newline nodes, we still have to parse them */
         GST_INFO ("txt: %s", part);
-        if (last_tag) {
+        if (last_xmp_tag) {
           PendingXmpTag *ptag;
 
-          ptag = g_slice_new (PendingXmpTag);
-          ptag->gst_tag = last_tag;
-          ptag->xmp_tag = last_xmp_tag;
-          ptag->str = g_strdup (part);
+          GST_DEBUG ("Found tag %s -> %s", last_xmp_tag->tag_name,
+              last_xmp_tag->gst_tag);
 
-          pending_tags = g_slist_append (pending_tags, ptag);
+          if (last_xmp_tag->type == GstXmpTagTypeStruct) {
+            g_assert (context_tag == NULL);     /* we can't handle struct nesting currently */
+
+            context_tag = last_xmp_tag;
+          } else {
+            ptag = g_slice_new (PendingXmpTag);
+            ptag->xmp_tag = last_xmp_tag;
+            ptag->str = g_strdup (part);
+
+            pending_tags = g_slist_append (pending_tags, ptag);
+          }
         }
       }
       /* next cycle */
@@ -1444,7 +1507,7 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
 
     pending_tags = g_slist_delete_link (pending_tags, pending_tags);
 
-    read_one_tag (list, ptag->gst_tag, ptag->xmp_tag, ptag->str, &pending_tags);
+    read_one_tag (list, ptag->xmp_tag, ptag->str, &pending_tags);
 
     g_free (ptag->str);
     g_slice_free (PendingXmpTag, ptag);
