@@ -314,7 +314,8 @@ gst_voaacenc_generate_sink_caps (void)
         "depth", G_TYPE_INT, 16,
         "signed", G_TYPE_BOOLEAN, TRUE,
         "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "rate", GST_TYPE_INT_RANGE, 8000, 96000, "channels", G_TYPE_INT, i + 1);
+        "rate", GST_TYPE_INT_RANGE, 8000, 96000, "channels", G_TYPE_INT, i + 1,
+        NULL);
 
     gst_structure_set_value (structure, "channel-positions", &chanpos);
     g_value_unset (&chanpos);
