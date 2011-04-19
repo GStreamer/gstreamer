@@ -62,27 +62,13 @@ static void gst_auto_audio_src_set_property (GObject * object, guint prop_id,
 static void gst_auto_audio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstAutoAudioSrc, gst_auto_audio_src, GstBin, GST_TYPE_BIN);
+#define gst_auto_audio_src_parent_class parent_class
+G_DEFINE_TYPE (GstAutoAudioSrc, gst_auto_audio_src, GST_TYPE_BIN);
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
-
-static void
-gst_auto_audio_src_base_init (gpointer klass)
-{
-  GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (eklass,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (eklass, "Auto audio source",
-      "Source/Audio",
-      "Wrapper audio source for automatically detected audio source",
-      "Jan Schmidt <thaytan@noraisin.net>, "
-      "Stefan Kost <ensonic@users.sf.net>");
-}
 
 static void
 gst_auto_audio_src_class_init (GstAutoAudioSrcClass * klass)
@@ -114,6 +100,15 @@ gst_auto_audio_src_class_init (GstAutoAudioSrcClass * klass)
       g_param_spec_boxed ("filter-caps", "Filter caps",
           "Filter sink candidates using these caps.", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (eklass,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (eklass, "Auto audio source",
+      "Source/Audio",
+      "Wrapper audio source for automatically detected audio source",
+      "Jan Schmidt <thaytan@noraisin.net>, "
+      "Stefan Kost <ensonic@users.sf.net>");
 }
 
 static void
@@ -166,7 +161,7 @@ static GstStaticCaps raw_caps =
     GST_STATIC_CAPS ("audio/x-raw-int; audio/x-raw-float");
 
 static void
-gst_auto_audio_src_init (GstAutoAudioSrc * src, GstAutoAudioSrcClass * g_class)
+gst_auto_audio_src_init (GstAutoAudioSrc * src)
 {
   src->pad = gst_ghost_pad_new_no_target ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (src), src->pad);

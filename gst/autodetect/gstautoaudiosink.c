@@ -61,26 +61,13 @@ static void gst_auto_audio_sink_set_property (GObject * object, guint prop_id,
 static void gst_auto_audio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstAutoAudioSink, gst_auto_audio_sink, GstBin, GST_TYPE_BIN);
+#define gst_auto_audio_sink_parent_class parent_class
+G_DEFINE_TYPE (GstAutoAudioSink, gst_auto_audio_sink, GST_TYPE_BIN);
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
-
-static void
-gst_auto_audio_sink_base_init (gpointer klass)
-{
-  GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (eklass,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_details_simple (eklass, "Auto audio sink",
-      "Sink/Audio",
-      "Wrapper audio sink for automatically detected audio sink",
-      "Jan Schmidt <thaytan@noraisin.net>");
-}
 
 static void
 gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
@@ -112,6 +99,14 @@ gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
       g_param_spec_boxed ("filter-caps", "Filter caps",
           "Filter sink candidates using these caps.", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (eklass,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_details_simple (eklass, "Auto audio sink",
+      "Sink/Audio",
+      "Wrapper audio sink for automatically detected audio sink",
+      "Jan Schmidt <thaytan@noraisin.net>");
 }
 
 static void
@@ -163,8 +158,7 @@ static GstStaticCaps raw_caps =
     GST_STATIC_CAPS ("audio/x-raw-int; audio/x-raw-float");
 
 static void
-gst_auto_audio_sink_init (GstAutoAudioSink * sink,
-    GstAutoAudioSinkClass * g_class)
+gst_auto_audio_sink_init (GstAutoAudioSink * sink)
 {
   sink->pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (sink), sink->pad);

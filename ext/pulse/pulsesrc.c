@@ -95,18 +95,50 @@ static gboolean gst_pulsesrc_negotiate (GstBaseSrc * basesrc);
 static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
     element, GstStateChange transition);
 
-static void gst_pulsesrc_init_interfaces (GType type);
-
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
 # define ENDIANNESS   "LITTLE_ENDIAN, BIG_ENDIAN"
 #else
 # define ENDIANNESS   "BIG_ENDIAN, LITTLE_ENDIAN"
 #endif
 
+static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "endianness = (int) { " ENDIANNESS " }, "
+        "signed = (boolean) TRUE, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, 32 ];"
+        "audio/x-raw-float, "
+        "endianness = (int) { " ENDIANNESS " }, "
+        "width = (int) 32, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, 32 ];"
+        "audio/x-raw-int, "
+        "endianness = (int) { " ENDIANNESS " }, "
+        "signed = (boolean) TRUE, "
+        "width = (int) 32, "
+        "depth = (int) 32, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, 32 ];"
+        "audio/x-raw-int, "
+        "signed = (boolean) FALSE, "
+        "width = (int) 8, "
+        "depth = (int) 8, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, 32 ];"
+        "audio/x-alaw, "
+        "rate = (int) [ 1, MAX], "
+        "channels = (int) [ 1, 32 ];"
+        "audio/x-mulaw, "
+        "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 32 ]")
+    );
+
+
 GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseSrc, gst_pulsesrc);
 GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSrc, gst_pulsesrc);
-GST_BOILERPLATE_FULL (GstPulseSrc, gst_pulsesrc, GstAudioSrc,
-    GST_TYPE_AUDIO_SRC, gst_pulsesrc_init_interfaces);
 
 static gboolean
 gst_pulsesrc_interface_supported (GstImplementsInterface *
@@ -129,80 +161,13 @@ gst_pulsesrc_implements_interface_init (GstImplementsInterfaceClass * klass)
   klass->supported = gst_pulsesrc_interface_supported;
 }
 
-static void
-gst_pulsesrc_init_interfaces (GType type)
-{
-  static const GInterfaceInfo implements_iface_info = {
-    (GInterfaceInitFunc) gst_pulsesrc_implements_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo mixer_iface_info = {
-    (GInterfaceInitFunc) gst_pulsesrc_mixer_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo probe_iface_info = {
-    (GInterfaceInitFunc) gst_pulsesrc_property_probe_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
-      &implements_iface_info);
-  g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
-  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
-      &probe_iface_info);
-}
-
-static void
-gst_pulsesrc_base_init (gpointer g_class)
-{
-
-  static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("audio/x-raw-int, "
-          "endianness = (int) { " ENDIANNESS " }, "
-          "signed = (boolean) TRUE, "
-          "width = (int) 16, "
-          "depth = (int) 16, "
-          "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 32 ];"
-          "audio/x-raw-float, "
-          "endianness = (int) { " ENDIANNESS " }, "
-          "width = (int) 32, "
-          "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 32 ];"
-          "audio/x-raw-int, "
-          "endianness = (int) { " ENDIANNESS " }, "
-          "signed = (boolean) TRUE, "
-          "width = (int) 32, "
-          "depth = (int) 32, "
-          "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 32 ];"
-          "audio/x-raw-int, "
-          "signed = (boolean) FALSE, "
-          "width = (int) 8, "
-          "depth = (int) 8, "
-          "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 32 ];"
-          "audio/x-alaw, "
-          "rate = (int) [ 1, MAX], "
-          "channels = (int) [ 1, 32 ];"
-          "audio/x-mulaw, "
-          "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 32 ]")
-      );
-
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "PulseAudio Audio Source",
-      "Source/Audio",
-      "Captures audio from a PulseAudio server", "Lennart Poettering");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&pad_template));
-}
+#define gst_pulsesrc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstPulseSrc, gst_pulsesrc, GST_TYPE_AUDIO_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
+        gst_pulsesrc_implements_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER, gst_pulsesrc_mixer_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
+        gst_pulsesrc_property_probe_interface_init));
 
 static void
 gst_pulsesrc_class_init (GstPulseSrcClass * klass)
@@ -283,10 +248,17 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
       g_param_spec_boxed ("stream-properties", "stream properties",
           "list of pulseaudio stream properties",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "PulseAudio Audio Source",
+      "Source/Audio",
+      "Captures audio from a PulseAudio server", "Lennart Poettering");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&pad_template));
 }
 
 static void
-gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
+gst_pulsesrc_init (GstPulseSrc * pulsesrc)
 {
   pulsesrc->server = NULL;
   pulsesrc->device = NULL;

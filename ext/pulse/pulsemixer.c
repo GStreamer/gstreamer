@@ -64,12 +64,8 @@ static void gst_pulsemixer_finalize (GObject * object);
 static GstStateChangeReturn gst_pulsemixer_change_state (GstElement * element,
     GstStateChange transition);
 
-static void gst_pulsemixer_init_interfaces (GType type);
-
 GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseMixer, gst_pulsemixer);
 GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseMixer, gst_pulsemixer);
-GST_BOILERPLATE_FULL (GstPulseMixer, gst_pulsemixer, GstElement,
-    GST_TYPE_ELEMENT, gst_pulsemixer_init_interfaces);
 
 static gboolean
 gst_pulsemixer_interface_supported (GstImplementsInterface
@@ -92,41 +88,13 @@ gst_pulsemixer_implements_interface_init (GstImplementsInterfaceClass * klass)
   klass->supported = gst_pulsemixer_interface_supported;
 }
 
-static void
-gst_pulsemixer_init_interfaces (GType type)
-{
-  static const GInterfaceInfo implements_iface_info = {
-    (GInterfaceInitFunc) gst_pulsemixer_implements_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo mixer_iface_info = {
-    (GInterfaceInitFunc) gst_pulsemixer_mixer_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo probe_iface_info = {
-    (GInterfaceInitFunc) gst_pulsemixer_property_probe_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
-      &implements_iface_info);
-  g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
-  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
-      &probe_iface_info);
-}
-
-static void
-gst_pulsemixer_base_init (gpointer g_class)
-{
-  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (g_class),
-      "PulseAudio Mixer",
-      "Generic/Audio",
-      "Control sound input and output levels for PulseAudio",
-      "Lennart Poettering");
-}
+#define gst_pulsemixer_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstPulseMixer, gst_pulsemixer, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
+        gst_pulsemixer_implements_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER, gst_pulsemixer_mixer_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
+        gst_pulsemixer_property_probe_interface_init));
 
 static void
 gst_pulsemixer_class_init (GstPulseMixerClass * g_class)
@@ -158,10 +126,16 @@ gst_pulsemixer_class_init (GstPulseMixerClass * g_class)
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (g_class),
+      "PulseAudio Mixer",
+      "Generic/Audio",
+      "Control sound input and output levels for PulseAudio",
+      "Lennart Poettering");
 }
 
 static void
-gst_pulsemixer_init (GstPulseMixer * this, GstPulseMixerClass * g_class)
+gst_pulsemixer_init (GstPulseMixer * this)
 {
   this->mixer = NULL;
   this->server = NULL;

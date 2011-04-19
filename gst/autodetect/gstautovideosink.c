@@ -62,25 +62,13 @@ static void gst_auto_video_sink_set_property (GObject * object, guint prop_id,
 static void gst_auto_video_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstAutoVideoSink, gst_auto_video_sink, GstBin, GST_TYPE_BIN);
+#define gst_auto_video_sink_parent_class parent_class
+G_DEFINE_TYPE (GstAutoVideoSink, gst_auto_video_sink, GST_TYPE_BIN);
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
-
-static void
-gst_auto_video_sink_base_init (gpointer klass)
-{
-  GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (eklass,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details_simple (eklass, "Auto video sink",
-      "Sink/Video",
-      "Wrapper video sink for automatically detected video sink",
-      "Jan Schmidt <thaytan@noraisin.net>");
-}
 
 static void
 gst_auto_video_sink_class_init (GstAutoVideoSinkClass * klass)
@@ -109,6 +97,13 @@ gst_auto_video_sink_class_init (GstAutoVideoSinkClass * klass)
       g_param_spec_boxed ("filter-caps", "Filter caps",
           "Filter sink candidates using these caps.", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (eklass,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_set_details_simple (eklass, "Auto video sink",
+      "Sink/Video",
+      "Wrapper video sink for automatically detected video sink",
+      "Jan Schmidt <thaytan@noraisin.net>");
 }
 
 static void
@@ -162,8 +157,7 @@ static GstStaticCaps raw_caps =
     GST_STATIC_CAPS ("video/x-raw-yuv; video/x-raw-rgb");
 
 static void
-gst_auto_video_sink_init (GstAutoVideoSink * sink,
-    GstAutoVideoSinkClass * g_class)
+gst_auto_video_sink_init (GstAutoVideoSink * sink)
 {
   sink->pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
