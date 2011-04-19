@@ -2301,7 +2301,7 @@ static void
 gst_ffmpegdec_flush_pcache (GstFFMpegDec * ffmpegdec)
 {
   if (ffmpegdec->pctx) {
-    gint res, size, bsize;
+    gint size, bsize;
     guint8 *data;
     guint8 bdata[FF_INPUT_BUFFER_PADDING_SIZE];
 
@@ -2310,7 +2310,7 @@ gst_ffmpegdec_flush_pcache (GstFFMpegDec * ffmpegdec)
 
     /* parse some dummy data to work around some ffmpeg weirdness where it keeps
      * the previous pts around */
-    res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
+    av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
         &data, &size, bdata, bsize, -1, -1);
     ffmpegdec->pctx->pts = -1;
     ffmpegdec->pctx->dts = -1;
@@ -2326,11 +2326,9 @@ static gboolean
 gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
 {
   GstFFMpegDec *ffmpegdec;
-  GstFFMpegDecClass *oclass;
   gboolean ret = FALSE;
 
   ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
-  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   GST_DEBUG_OBJECT (ffmpegdec, "Handling %s event",
       GST_EVENT_TYPE_NAME (event));

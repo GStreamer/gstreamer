@@ -599,12 +599,11 @@ gst_post_proc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstPostProc *postproc = (GstPostProc *) object;
-  gint quality;
   gchar *args;
 
   switch (prop_id) {
     case PROP_QUALITY:
-      quality = g_value_get_uint (value);
+      postproc->quality = g_value_get_uint (value);
       break;
     case PROP_AUTOQ:
       postproc->autoq = g_value_get_boolean (value);

@@ -668,14 +668,12 @@ static gboolean
 gst_ffmpegdemux_src_event (GstPad * pad, GstEvent * event)
 {
   GstFFMpegDemux *demux;
-  AVStream *avstream;
   GstFFStream *stream;
   gboolean res = TRUE;
 
   if (!(stream = gst_pad_get_element_private (pad)))
     return FALSE;
 
-  avstream = stream->avstream;
   demux = (GstFFMpegDemux *) gst_pad_get_parent (pad);
 
   switch (GST_EVENT_TYPE (event)) {
