@@ -3,7 +3,7 @@ AC_PREREQ(2.60)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(GStreamer FFMpeg, 0.10.11.1,
+AC_INIT(GStreamer Libav, 0.10.11.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-ffmpeg)
 
@@ -209,7 +209,7 @@ dnl *** configure external libs ***
 HAVE_FFMPEG_UNINSTALLED=1
 
 AC_ARG_WITH(system-ffmpeg,
-            [AC_HELP_STRING([--with-system-ffmpeg], [use system FFmpeg libraries])])
+            [AC_HELP_STRING([--with-system-ffmpeg], [use system Libav libraries])])
 
 if test "x$with_system_ffmpeg" = "xyes"; then
   PKG_CHECK_MODULES(FFMPEG, libavformat libavcodec libavutil) 
@@ -219,34 +219,34 @@ if test "x$with_system_ffmpeg" = "xyes"; then
   CPPFLAGS="$CPPFLAGS $FFMPEG_CFLAGS"
   AC_CHECK_HEADERS([avi.h])
   CPPFLAGS="$saved_CPPFLAGS"
-  AC_DEFINE([FFMPEG_SOURCE], ["system install"], [Describes where the FFmpeg libraries come from.])
+  AC_DEFINE([FFMPEG_SOURCE], ["system install"], [Describes where the Libav libraries come from.])
   HAVE_FFMPEG_UNINSTALLED=0
   AC_MSG_NOTICE([Using system-installed FFMpeg code])
   AC_MSG_WARN([
   ======================================================================
    WARNING: you have chosen to build gst-ffmpeg against a random
-   external version of ffmpeg instead of building it against the tested
-   internal ffmpeg snapshot that is included with gst-ffmpeg.
+   external version of Libav instead of building it against the tested
+   internal Libav snapshot that is included with gst-ffmpeg.
    
    This is a very bad idea.  So bad in fact that words cannot express
    just how bad it is.  Suffice to say that it is BAD.
    
    The GStreamer developers cannot and will not support a gst-ffmpeg
    built this way.  Any bug reports that indicate there is an external
-   version of ffmpeg involved will be closed immediately without further
+   version of Libav involved will be closed immediately without further
    investigation.
    
-   The reason such a setup can't be supported is that the ffmpeg API
+   The reason such a setup can't be supported is that the Libav API
    and ABI is in constant flux, yet there aren't any official releases
-   of the ffmpeg library to develop against.  This makes it impossible
+   of the Libav library to develop against.  This makes it impossible
    to guarantee that gst-ffmpeg will work reliably, or even compile,
-   with a randomly picked version ffmpeg.  Even if gst-ffmpeg compiles
+   with a randomly picked version Libav.  Even if gst-ffmpeg compiles
    and superficially appears to work fine against your chosen external
-   ffmpeg version, that might just not be the case on other systems, or
+   Libav version, that might just not be the case on other systems, or
    even the same system at a later time, or when using decoders,
    encoders, demuxers or muxers that have not been tested.
    
-   Please do not create or distribute binary packages of gst-ffmpeg
+   Please do not create or distribute binary packages of gst-Libav
    that link against an external ffmpeg. Thank you!
   ======================================================================
   ])
@@ -255,50 +255,46 @@ if test "x$with_system_ffmpeg" = "xyes"; then
   sleep 15
 else
 
-  . "$srcdir/ffmpegrev"
-  
-  AC_MSG_NOTICE([Using ffmpeg revision $FFMPEG_REVISION])
+  AC_MSG_NOTICE([Using local Libav snapshot])
   
   dnl libgstffmpeg.la: include dirs
-  FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
-  		 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcore \
-  		 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
-                 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec \
-		 -I \$(top_srcdir)/gst-libs/ext/ffmpeg \
-		 -I \$(top_builddir)/gst-libs/ext/ffmpeg \
+  FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav/libavutil \
+  		 -I \$(top_srcdir)/gst-libs/ext/libav/libavformat \
+                 -I \$(top_srcdir)/gst-libs/ext/libav/libavcodec \
+		 -I \$(top_srcdir)/gst-libs/ext/libav \
+		 -I \$(top_builddir)/gst-libs/ext/libav \
                  -Wno-deprecated-declarations"
 
   dnl libgstffmpeg.la: libs to statically link to        
-  FFMPEG_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libavformat/libavformat.a \
-               \$(top_builddir)/gst-libs/ext/ffmpeg/libavcodec/libavcodec.a \
-               \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a \
-               \$(top_builddir)/gst-libs/ext/ffmpeg/libavcore/libavcore.a"
+  FFMPEG_LIBS="\$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
+               \$(top_builddir)/gst-libs/ext/libav/libavcodec/libavcodec.a \
+               \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
   dnl
-  POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libpostproc	\
-                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil 	\
-                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec 	\
-                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg 	\
-		   -I \$(top_builddir)/gst-libs/ext/ffmpeg \
+  POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav/libpostproc	\
+                   -I \$(top_srcdir)/gst-libs/ext/libav/libavutil 	\
+                   -I \$(top_srcdir)/gst-libs/ext/libav/libavcodec 	\
+                   -I \$(top_srcdir)/gst-libs/ext/libav 	\
+		   -I \$(top_builddir)/gst-libs/ext/libav \
                    -Wno-deprecated-declarations"
 
   dnl libgstpostproc.la: libs to statically link to
-  POSTPROC_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libpostproc/libpostproc.a \
-  		 \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a"
+  POSTPROC_LIBS="\$(top_builddir)/gst-libs/ext/libav/libpostproc/libpostproc.a \
+  		 \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
   				 
   dnl
-  SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libswscale	\
-                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil 	\
-                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg 	\
-		   -I \$(top_builddir)/gst-libs/ext/ffmpeg \
+  SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav/libswscale	\
+                  -I \$(top_srcdir)/gst-libs/ext/libav/libavutil 	\
+                  -I \$(top_srcdir)/gst-libs/ext/libav 	\
+		   -I \$(top_builddir)/gst-libs/ext/libav \
                   -Wno-deprecated-declarations"
 
   dnl libgstswscale.la: libs to statically link to
-  SWSCALE_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libswscale/libswscale.a \
-                \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a"
+  SWSCALE_LIBS="\$(top_builddir)/gst-libs/ext/libav/libswscale/libswscale.a \
+                \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
 
   FFMPEG_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
-  AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the FFmpeg libraries come from.])
+  AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the Libav libraries come from.])
 
   AC_ARG_WITH(ffmpeg-extra-configure, 
       AC_HELP_STRING([--with-ffmpeg-extra-configure="xxx"],
@@ -339,7 +335,7 @@ else
   esac
 
   dnl checks for extra enable/disable flags
-  FFMPEG_OPTS="(cd $srcdir/gst-libs/ext/ffmpeg && ./configure --help)"
+  FFMPEG_OPTS="(cd $srcdir/gst-libs/ext/libav && ./configure --help)"
   # Let's check if we can disable the building of the ffmpeg binary
   can_disable=`echo "$FFMPEG_OPTS" | grep 'disable-ffmpeg'`
   if test "$can_disable" != ""; then
@@ -361,24 +357,24 @@ else
   AC_SUBST(FFMPEG_REVISION)
   AC_SUBST(FFMPEG_EXTERNALS_REVISION)
   AC_CONFIG_COMMANDS([configure-embedded-ffmpeg],
-    [echo "Configuring included FFmpeg instance with args $embffmpeg_configure_args"
+    [echo "Configuring included Libav instance with args $embffmpeg_configure_args"
      origdir=`pwd`
      dnl Don't put path on the configure call when not needed, as FFmpeg's configure relies on it
      dnl to detect out-of-tree builds
      if test -z "$srcdir" -o "$srcdir" = .; then
        confcmd=./configure
      else
-       confcmd="$origdir"/"$ac_top_srcdir"/gst-libs/ext/ffmpeg/configure
+       confcmd="$origdir"/"$ac_top_srcdir"/gst-libs/ext/libav/configure
      fi
 
-     AS_MKDIR_P(["$ac_top_build_prefix"gst-libs/ext/ffmpeg])
-     cd "$ac_top_build_prefix"gst-libs/ext/ffmpeg &&
+     AS_MKDIR_P(["$ac_top_build_prefix"gst-libs/ext/libav])
+     cd "$ac_top_build_prefix"gst-libs/ext/libav &&
          $confcmd $embffmpeg_configure_args ||
-         AC_MSG_ERROR([Failed to configure embedded FFmpeg tree])
+         AC_MSG_ERROR([Failed to configure embedded Libav tree])
      cd "$origdir"
     ],
     [embffmpeg_configure_args="$embffmpeg_configure_args"])
-  AC_MSG_NOTICE([Using included FFMpeg code])
+  AC_MSG_NOTICE([Using included Libav code])
 fi
 
 AC_SUBST(FFMPEG_CFLAGS)
@@ -391,7 +387,7 @@ AC_SUBST(SWSCALE_LIBS)
 AC_SUBST(WIN32_LIBS)
  
 if test x$HAVE_FFMPEG_UNINSTALLED = x1; then
-  AC_DEFINE(HAVE_FFMPEG_UNINSTALLED, [], [Defined if building against uninstalled FFmpeg source])
+  AC_DEFINE(HAVE_FFMPEG_UNINSTALLED, [], [Defined if building against uninstalled Libav source])
 fi
 AM_CONDITIONAL(HAVE_FFMPEG_UNINSTALLED, test x$HAVE_FFMPEG_UNINSTALLED = x1)
 
