@@ -905,6 +905,7 @@ _init_xmp_tag_map (gpointer user_data)
   _gst_xmp_add_schema ("tiff", schema);
 
   /* exif schema */
+  schema = gst_xmp_schema_new ();
   _gst_xmp_schema_add_simple_mapping (schema, GST_TAG_DATE_TIME,
       "exif:DateTimeOriginal", GST_XMP_TAG_TYPE_SIMPLE, NULL, NULL);
   _gst_xmp_schema_add_simple_mapping (schema,
@@ -984,6 +985,7 @@ _init_xmp_tag_map (gpointer user_data)
   _gst_xmp_add_schema ("exif", schema);
 
   /* photoshop schema */
+  schema = gst_xmp_schema_new ();
   _gst_xmp_schema_add_simple_mapping (schema,
       GST_TAG_GEO_LOCATION_COUNTRY, "photoshop:Country",
       GST_XMP_TAG_TYPE_SIMPLE, NULL, NULL);
@@ -992,6 +994,7 @@ _init_xmp_tag_map (gpointer user_data)
   _gst_xmp_add_schema ("photoshop", schema);
 
   /* iptc4xmpcore schema */
+  schema = gst_xmp_schema_new ();
   _gst_xmp_schema_add_simple_mapping (schema,
       GST_TAG_GEO_LOCATION_SUBLOCATION, "Iptc4xmpCore:Location",
       GST_XMP_TAG_TYPE_SIMPLE, NULL, NULL);
