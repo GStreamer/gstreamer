@@ -151,8 +151,8 @@ plugin_init (GstPlugin * plugin)
 #endif
   gst_ffmpegaudioresample_register (plugin);
 
-  register_protocol (&gstreamer_protocol);
-  register_protocol (&gstpipe_protocol);
+  av_register_protocol2 (&gstreamer_protocol, sizeof (URLProtocol));
+  av_register_protocol2 (&gstpipe_protocol, sizeof (URLProtocol));
 
   /* Now we can return the pointer to the newly created Plugin object. */
   return TRUE;
