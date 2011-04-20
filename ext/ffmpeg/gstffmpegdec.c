@@ -115,7 +115,7 @@ struct _GstFFMpegDec
   gboolean extra_ref;           /* keep extra ref around in get/release */
 
   /* some properties */
-  gint hurry_up;
+  enum AVDiscard skip_frame;
   gint lowres;
   gboolean direct_rendering;
   gboolean do_padding;
@@ -423,7 +423,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->par = NULL;
   ffmpegdec->opened = FALSE;
   ffmpegdec->waiting_for_key = TRUE;
-  ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
+  ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
   ffmpegdec->do_padding = DEFAULT_DO_PADDING;
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
@@ -842,7 +842,7 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
 
   /* for slow cpus */
   ffmpegdec->context->lowres = ffmpegdec->lowres;
-  ffmpegdec->context->hurry_up = ffmpegdec->hurry_up;
+  ffmpegdec->context->skip_frame = ffmpegdec->skip_frame;
 
   /* ffmpeg can draw motion vectors on top of the image (not every decoder
    * supports it) */
@@ -1329,7 +1329,7 @@ caps_failed:
 
 /* perform qos calculations before decoding the next frame.
  *
- * Sets the hurry_up flag and if things are really bad, skips to the next
+ * Sets the skip_frame flag and if things are really bad, skips to the next
  * keyframe.
  * 
  * Returns TRUE if the frame should be decoded, FALSE if the frame can be dropped
@@ -1354,8 +1354,8 @@ gst_ffmpegdec_do_qos (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
 
   /* skip qos if we have no observation (yet) */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (earliest_time))) {
-    /* no hurry_up initialy */
-    ffmpegdec->context->hurry_up = 0;
+    /* no skip_frame initialy */
+    ffmpegdec->context->skip_frame = AVDISCARD_DEFAULT;
     goto no_qos;
   }
 
@@ -1393,8 +1393,8 @@ gst_ffmpegdec_do_qos (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
         /* we were waiting for a keyframe, that's ok */
         goto skipping;
       }
-      /* switch to hurry_up mode */
-      goto hurry_up;
+      /* switch to skip_frame mode */
+      goto skip_frame;
     }
   }
 
@@ -1407,8 +1407,8 @@ skipping:
   }
 normal_mode:
   {
-    if (ffmpegdec->context->hurry_up != 0) {
-      ffmpegdec->context->hurry_up = 0;
+    if (ffmpegdec->context->skip_frame != AVDISCARD_DEFAULT) {
+      ffmpegdec->context->skip_frame = AVDISCARD_DEFAULT;
       *mode_switch = TRUE;
       GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode %g < 0.4", proportion);
     }
@@ -1416,7 +1416,7 @@ normal_mode:
   }
 skip_to_keyframe:
   {
-    ffmpegdec->context->hurry_up = 1;
+    ffmpegdec->context->skip_frame = AVDISCARD_NONKEY;
     ffmpegdec->waiting_for_key = TRUE;
     *mode_switch = TRUE;
     GST_DEBUG_OBJECT (ffmpegdec,
@@ -1424,10 +1424,10 @@ skip_to_keyframe:
     /* we can skip the current frame */
     return FALSE;
   }
-hurry_up:
+skip_frame:
   {
-    if (ffmpegdec->context->hurry_up != 1) {
-      ffmpegdec->context->hurry_up = 1;
+    if (ffmpegdec->context->skip_frame != AVDISCARD_NONREF) {
+      ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
       *mode_switch = TRUE;
       GST_DEBUG_OBJECT (ffmpegdec,
           "QOS: hurry up, diff %" G_GINT64_FORMAT " >= 0", diff);
@@ -1651,7 +1651,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   gboolean iskeyframe;
   gboolean mode_switch;
   gboolean decode;
-  gint hurry_up = 0;
+  gint skip_frame = AVDISCARD_DEFAULT;
   GstClockTime out_timestamp, out_duration, out_pts;
   gint64 out_offset;
   const GstTSInfo *out_info;
@@ -1687,10 +1687,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   }
 
   if (!decode) {
-    /* no decoding needed, save previous hurry_up value and brutely skip
+    /* no decoding needed, save previous skip_frame value and brutely skip
      * decoding everything */
-    hurry_up = ffmpegdec->context->hurry_up;
-    ffmpegdec->context->hurry_up = 2;
+    skip_frame = ffmpegdec->context->skip_frame;
+    ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
   }
 
   /* save reference to the timing info */
@@ -1705,18 +1705,18 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   /* restore previous state */
   if (!decode)
-    ffmpegdec->context->hurry_up = hurry_up;
+    ffmpegdec->context->skip_frame = skip_frame;
 
   GST_DEBUG_OBJECT (ffmpegdec, "after decode: len %d, have_data %d",
       len, have_data);
 
-  /* when we are in hurry_up mode, don't complain when ffmpeg returned
+  /* when we are in skip_frame mode, don't complain when ffmpeg returned
    * no data because we told it to skip stuff. */
-  if (len < 0 && (mode_switch || ffmpegdec->context->hurry_up))
+  if (len < 0 && (mode_switch || ffmpegdec->context->skip_frame))
     len = 0;
 
   if (len > 0 && have_data <= 0 && (mode_switch
-          || ffmpegdec->context->hurry_up)) {
+          || ffmpegdec->context->skip_frame)) {
     /* we consumed some bytes but nothing decoded and we are skipping frames,
      * disable the interpollation of DTS timestamps */
     ffmpegdec->last_out = -1;
@@ -2775,7 +2775,7 @@ gst_ffmpegdec_set_property (GObject * object,
       ffmpegdec->lowres = ffmpegdec->context->lowres = g_value_get_enum (value);
       break;
     case PROP_SKIPFRAME:
-      ffmpegdec->hurry_up = ffmpegdec->context->hurry_up =
+      ffmpegdec->skip_frame = ffmpegdec->context->skip_frame =
           g_value_get_enum (value);
       break;
     case PROP_DIRECT_RENDERING:
@@ -2808,7 +2808,7 @@ gst_ffmpegdec_get_property (GObject * object,
       g_value_set_enum (value, ffmpegdec->context->lowres);
       break;
     case PROP_SKIPFRAME:
-      g_value_set_enum (value, ffmpegdec->context->hurry_up);
+      g_value_set_enum (value, ffmpegdec->context->skip_frame);
       break;
     case PROP_DIRECT_RENDERING:
       g_value_set_boolean (value, ffmpegdec->direct_rendering);
