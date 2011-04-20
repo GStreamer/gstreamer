@@ -458,7 +458,7 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment * segment)
 
   /* if we need to land on a keyframe, try to do so, we don't try to do a 
    * keyframe seek if we are not absolutely sure we have an index.*/
-  if (segment->flags & GST_SEEK_FLAG_KEY_UNIT && demux->context->index_built) {
+  if (segment->flags & GST_SEEK_FLAG_KEY_UNIT) {
     gint keyframeidx;
 
     GST_LOG_OBJECT (demux, "looking for keyframe in ffmpeg for time %"
