@@ -110,6 +110,7 @@ EXPORTS
 	gst_buffer_list_remove
 	gst_buffer_list_sized_new
 	gst_buffer_map
+	gst_buffer_memcmp
 	gst_buffer_merge
 	gst_buffer_n_memory
 	gst_buffer_new
