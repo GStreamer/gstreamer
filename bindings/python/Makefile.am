@@ -37,6 +37,7 @@ rtspserver.c: $(DEFS) $(OVERRIDES) arg-types.py
 	($(PYTHON) $(srcdir)/codegen/codegen.py \
 		--load-types $(srcdir)/arg-types.py \
 		--register $(srcdir)/rtspserver-types.defs \
+		--register $(PYGST_DEFSDIR)/gst-types.defs \
 		--override $(srcdir)/$*.override \
 		--extendpath $(top_builddir)/gst/ \
 		--extendpath $(srcdir)/ \

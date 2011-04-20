@@ -214,6 +214,42 @@
   )
 )
 
+(define-virtual get_element
+  (of-object "GstRTSPMediaFactory")
+  (parameters
+   '("const-GstRTSPUrl*" "url")
+  )
+  (return-type "GstElement*")
+)
+
+
+(define-virtual construct
+  (of-object "GstRTSPMediaFactory")
+  (parameters
+   '("const-GstRTSPUrl*" "url")
+  )
+  (return-type "GstRTSPMedia*")
+)
+
+
+(define-virtual configure
+  (of-object "GstRTSPMediaFactory")
+  (parameters
+   '("GstRTSPMedia*" "media")
+  )
+  (return-type "none")
+)
+
+
+(define-virtual create_pipeline
+  (of-object "GstRTSPMediaFactory")
+  (parameters
+   '("GstRTSPMedia*" "media")
+  )
+  (return-type "GstElement*")
+)
+
+
 ;; From gst/rtsp-server/rtsp-session-pool.h
 
 (define-function gst_rtsp_session_pool_new
