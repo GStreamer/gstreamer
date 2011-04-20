@@ -1065,6 +1065,10 @@ unknown_caps:
   }
 }
 
+#if 0
+    /* Re-enable once converted to new AVMetaData API
+     * See #566605
+     */
 static gchar *
 my_safe_copy (gchar * input)
 {
@@ -1135,6 +1139,7 @@ gst_ffmpegdemux_read_tags (GstFFMpegDemux * demux)
   }
   return tlist;
 }
+#endif
 
 static gboolean
 gst_ffmpegdemux_open (GstFFMpegDemux * demux)
@@ -1143,7 +1148,12 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
       (GstFFMpegDemuxClass *) G_OBJECT_GET_CLASS (demux);
   gchar *location;
   gint res, n_streams, i;
+#if 0
+  /* Re-enable once converted to new AVMetaData API
+   * See #566605
+   */
   GstTagList *tags;
+#endif
   GstEvent *event;
   GList *cached_events;
 
@@ -1224,12 +1234,17 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
     cached_events = g_list_delete_link (cached_events, cached_events);
   }
 
+#if 0
+  /* Re-enable once converted to new AVMetaData API
+   * See #566605
+   */
   /* grab the global tags */
   tags = gst_ffmpegdemux_read_tags (demux);
   if (tags) {
     GST_INFO_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, tags);
     gst_element_found_tags (GST_ELEMENT (demux), tags);
   }
+#endif
 
   /* now handle the stream tags */
   for (i = 0; i < n_streams; i++) {

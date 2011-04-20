@@ -543,7 +543,12 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
   GSList *collected;
   GstFFMpegMuxPad *best_pad;
   GstClockTime best_time;
+#if 0
+  /* Re-enable once converted to new AVMetaData API
+   * See #566605
+   */
   const GstTagList *tags;
+#endif
 
   /* open "file" (gstreamer protocol to next element) */
   if (!ffmpegmux->opened) {
@@ -594,6 +599,11 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       }
     }
 
+#if 0
+    /* Re-enable once converted to new AVMetaData API
+     * See #566605
+     */
+
     /* tags */
     tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (ffmpegmux));
     if (tags) {
@@ -629,6 +639,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
         ffmpegmux->context->track = i;
       }
     }
+#endif
 
     /* set the streamheader flag for gstffmpegprotocol if codec supports it */
     if (!strcmp (ffmpegmux->context->oformat->name, "flv")) {
