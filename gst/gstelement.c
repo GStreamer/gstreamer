@@ -2882,15 +2882,7 @@ gst_element_change_state_func (GstElement * element, GstStateChange transition)
          ready->paused but the element might not have made it to paused */
       if (!gst_element_pads_activate (element, FALSE)) {
         result = GST_STATE_CHANGE_FAILURE;
-      } else {
-        gst_element_set_base_time (element, 0);
       }
-
-      /* In null state release the reference to the clock */
-      GST_OBJECT_LOCK (element);
-      clock_p = &element->clock;
-      gst_object_replace ((GstObject **) clock_p, NULL);
-      GST_OBJECT_UNLOCK (element);
       break;
     default:
       /* this will catch real but unhandled state changes;
