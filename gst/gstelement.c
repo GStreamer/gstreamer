@@ -2848,7 +2848,6 @@ gst_element_change_state_func (GstElement * element, GstStateChange transition)
 {
   GstState state, next;
   GstStateChangeReturn result = GST_STATE_CHANGE_SUCCESS;
-  GstClock **clock_p;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
 
