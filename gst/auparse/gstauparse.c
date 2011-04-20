@@ -78,6 +78,9 @@ static gboolean gst_au_parse_add_srcpad (GstAuParse * auparse, GstCaps * caps);
 static gboolean gst_au_parse_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_au_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_au_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_au_parse_src_convert (GstAuParse * auparse,
+    GstFormat src_format, gint64 srcval, GstFormat dest_format,
+    gint64 * destval);
 
 GST_BOILERPLATE (GstAuParse, gst_au_parse, GstElement, GST_TYPE_ELEMENT);
 
@@ -251,7 +254,9 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   }
 
   auparse->offset = GST_READ_UINT32_BE (head + 4);
-  /* Do not trust size, could be set to -1 : unknown */
+  /* Do not trust size, could be set to -1 : unknown
+   * otherwise: filesize = size + auparse->offset
+   */
   size = GST_READ_UINT32_BE (head + 8);
   auparse->encoding = GST_READ_UINT32_BE (head + 12);
   auparse->samplerate = GST_READ_UINT32_BE (head + 16);
@@ -425,6 +430,9 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstAuParse *auparse;
   gint avail, sendnow = 0;
+  gint64 timestamp;
+  gint64 duration;
+  gint64 offset;
 
   auparse = GST_AU_PARSE (gst_pad_get_parent (pad));
 
@@ -446,7 +454,7 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
       goto out;
 
     gst_pad_push_event (auparse->srcpad,
-        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_DEFAULT,
+        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
             0, GST_CLOCK_TIME_NONE, 0));
   }
 
@@ -464,6 +472,7 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
   if (sendnow > 0) {
     GstBuffer *outbuf;
     const guint8 *data;
+    gint64 pos;
 
     ret = gst_pad_alloc_buffer_and_set_caps (auparse->srcpad,
         auparse->buffer_offset, sendnow, GST_PAD_CAPS (auparse->srcpad),
@@ -477,6 +486,22 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
     data = gst_adapter_peek (auparse->adapter, sendnow);
     memcpy (GST_BUFFER_DATA (outbuf), data, sendnow);
     gst_adapter_flush (auparse->adapter, sendnow);
+
+    pos = auparse->buffer_offset - auparse->offset;
+    pos = MAX (pos, 0);
+
+    if (auparse->sample_size > 0 && auparse->samplerate > 0) {
+      gst_au_parse_src_convert (auparse, GST_FORMAT_BYTES, pos,
+          GST_FORMAT_DEFAULT, &offset);
+      gst_au_parse_src_convert (auparse, GST_FORMAT_BYTES, pos,
+          GST_FORMAT_TIME, &timestamp);
+      gst_au_parse_src_convert (auparse, GST_FORMAT_BYTES,
+          sendnow, GST_FORMAT_TIME, &duration);
+
+      GST_BUFFER_OFFSET (outbuf) = offset;
+      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+      GST_BUFFER_DURATION (outbuf) = duration;
+    }
 
     auparse->buffer_offset += sendnow;
 
@@ -517,6 +542,9 @@ gst_au_parse_src_convert (GstAuParse * auparse, GstFormat src_format,
       /* fallthrough */
     case GST_FORMAT_DEFAULT:{
       switch (dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *destval = srcval;
+          break;
         case GST_FORMAT_BYTES:
           *destval = srcval * samplesize;
           break;
@@ -532,8 +560,8 @@ gst_au_parse_src_convert (GstAuParse * auparse, GstFormat src_format,
     case GST_FORMAT_TIME:{
       switch (dest_format) {
         case GST_FORMAT_BYTES:
-          *destval =
-              gst_util_uint64_scale_int (srcval, rate * samplesize, GST_SECOND);
+          *destval = samplesize *
+              gst_util_uint64_scale_int (srcval, rate, GST_SECOND);
           break;
         case GST_FORMAT_DEFAULT:
           *destval = gst_util_uint64_scale_int (srcval, rate, GST_SECOND);
@@ -581,8 +609,7 @@ gst_au_parse_src_query (GstPad * pad, GstQuery * query)
       len -= auparse->offset;
       GST_OBJECT_UNLOCK (auparse);
 
-      ret = gst_au_parse_src_convert (auparse, GST_FORMAT_BYTES, len,
-          format, &val);
+      ret = gst_au_parse_src_convert (auparse, bformat, len, format, &val);
 
       if (ret) {
         gst_query_set_duration (query, format, val);
@@ -611,6 +638,17 @@ gst_au_parse_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_SEEKING:{
+      GstFormat format;
+
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      /* FIXME: query duration in 'format'
+         gst_query_set_seeking (query, format, TRUE, 0, duration);
+       */
+      gst_query_set_seeking (query, format, TRUE, 0, GST_CLOCK_TIME_NONE);
+      ret = TRUE;
+      break;
+    }
     default:
       ret = gst_pad_query_default (pad, query);
       break;
@@ -628,6 +666,7 @@ gst_au_parse_handle_seek (GstAuParse * auparse, GstEvent * event)
   GstFormat format;
   gdouble rate;
   gint64 start, stop;
+  gboolean res;
 
   gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
@@ -637,19 +676,79 @@ gst_au_parse_handle_seek (GstAuParse * auparse, GstEvent * event)
     return FALSE;
   }
 
-  /* FIXME: implement seeking */
-  return FALSE;
+  res = gst_au_parse_src_convert (auparse, GST_FORMAT_TIME, start,
+      GST_FORMAT_BYTES, &start);
+
+  if (stop > 0) {
+    res = gst_au_parse_src_convert (auparse, GST_FORMAT_TIME, stop,
+        GST_FORMAT_BYTES, &stop);
+  }
+
+  GST_INFO_OBJECT (auparse,
+      "seeking: %" G_GINT64_FORMAT " ... %" G_GINT64_FORMAT, start, stop);
+
+  event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, start_type, start,
+      stop_type, stop);
+  res = gst_pad_push_event (auparse->sinkpad, event);
+  return res;
 }
 
 static gboolean
 gst_au_parse_sink_event (GstPad * pad, GstEvent * event)
 {
   GstAuParse *auparse;
-  gboolean ret;
+  gboolean ret = TRUE;
 
   auparse = GST_AU_PARSE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time, offset = 0;
+      gboolean update;
+      GstSegment segment;
+      GstEvent *new_event = NULL;
+
+      gst_segment_init (&segment, GST_FORMAT_UNDEFINED);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+      gst_segment_set_newsegment_full (&segment, update, rate, arate, format,
+          start, stop, time);
+
+      if (auparse->sample_size > 0) {
+        if (start > 0) {
+          offset = start;
+          start -= auparse->offset;
+          start = MAX (start, 0);
+        }
+        if (stop > 0) {
+          stop -= auparse->offset;
+          stop = MAX (stop, 0);
+        }
+        gst_au_parse_src_convert (auparse, GST_FORMAT_BYTES, start,
+            GST_FORMAT_TIME, &start);
+        gst_au_parse_src_convert (auparse, GST_FORMAT_BYTES, stop,
+            GST_FORMAT_TIME, &stop);
+      }
+
+      if (auparse->srcpad) {
+        GST_INFO_OBJECT (auparse,
+            "new segment: %" GST_TIME_FORMAT " ... %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+
+        new_event = gst_event_new_new_segment_full (update, rate, arate,
+            GST_FORMAT_TIME, start, stop, start);
+
+        ret = gst_pad_push_event (auparse->srcpad, new_event);
+      }
+
+      auparse->buffer_offset = offset;
+
+      gst_event_unref (event);
+      break;
+    }
     default:
       ret = gst_pad_event_default (pad, event);
       break;
