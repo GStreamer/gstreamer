@@ -213,6 +213,31 @@ class GstMiniObjectParam(Parameter):
 
 matcher.register_reverse('GstMiniObject*', GstMiniObjectParam)
 
+class GstRTSPUrlParam(Parameter):
+
+	def get_c_type(self):
+		c_type = self.props.get('c_type', None)
+        if c_type and c_type.startswith('const'):
+            return 'const GstRTSPUrl *'
+		return 'GstRTSPUrl *'
+
+	def convert_c2py(self):
+		self.wrapper.add_declaration("char *%s_str = NULL;" % self.name)
+		self.wrapper.add_declaration("PyObject *py_%s = NULL;" % self.name)
+		self.wrapper.write_code(code=("if (%(name)s) {\n"
+					      "    %(name)s_str = gst_rtsp_url_get_request_uri ((GstRTSPUrl*) %(name)s);\n"
+					      "    py_%(name)s = PyString_FromString (%(name)s_str);\n"
+                          "    g_free (%(name)s_str);\n"
+					      "} else {\n"
+					      "    Py_INCREF(Py_None);\n"
+					      "    py_%(name)s = Py_None;\n"
+					      "}" % {'name': self.name}),
+					cleanup=("Py_DECREF(py_%s);" % self.name))
+		self.wrapper.add_pyargv_item("py_%s" % self.name)
+
+matcher.register_reverse('const-GstRTSPUrl*', GstRTSPUrlParam)
+matcher.register_reverse('GstRTSPUrl*', GstRTSPUrlParam)
+
 class GstMiniObjectReturn(ReturnType):
 
 	def get_c_type(self):
