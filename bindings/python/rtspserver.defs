@@ -207,7 +207,7 @@
 
 (define-method collect_streams
   (of-object "GstRTSPMediaFactory")
-  (c-name "gst_rtsp_media_factory_construct")
+  (c-name "gst_rtsp_media_factory_collect_streams")
   (parameters
    '("const-GstRTSPUrl*" "url")
    '("GstRTSPMedia*" "media")
