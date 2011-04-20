@@ -69,17 +69,24 @@ static inline void
 gst_parse_unescape (gchar *str)
 {
   gchar *walk;
+  gboolean in_quotes;
 
   g_return_if_fail (str != NULL);
 
   walk = str;
+  in_quotes = FALSE;
 
   while (*walk) {
-    if (*walk == '\\') {
+    if (*walk == '\\' && !in_quotes) {
       walk++;
       /* make sure we don't read beyond the end of the string */
       if (*walk == '\0')
         break;
+    } else if (*walk == '"' && (!in_quotes || (in_quotes
+                && (*(walk - 1) != '\\')))) {
+      /* don't unescape inside quotes and don't switch
+       * state with escaped quoted inside quotes */
+      in_quotes = !in_quotes;
     }
     *str = *walk;
     str++;

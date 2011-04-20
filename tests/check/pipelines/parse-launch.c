@@ -145,6 +145,8 @@ GST_END_TEST;
 #define PIPELINE11 "fakesink silent=true name = sink identity silent=true name=id ( fakesrc num-buffers=\"4\" ! id. ) id. ! sink."
 #define PIPELINE12 "file:///tmp/test.file ! fakesink silent=true"
 #define PIPELINE13 "fakesrc ! file:///tmp/test.file"
+#define PIPELINE14 "capsfilter caps=application/x-rtp,sprop-parameter-sets=(string)\"x\\,x\""
+#define PIPELINE15 "capsfilter caps=application/x-rtp,sprop-parameter-sets=(string)\"x\\\"x\\,x\""
 
 GST_START_TEST (test_launch_lines2)
 {
@@ -284,6 +286,19 @@ GST_START_TEST (test_launch_lines2)
   /* Checks handling of a assignment followed by error inside a bin. 
    * This should warn, but ignore the error and carry on */
   cur = setup_pipeline ("( filesrc blocksize=4 location=/dev/null @ )");
+  gst_object_unref (cur);
+
+  /**
+   * Checks if characters inside quotes are not escaped.
+  */
+  cur = setup_pipeline (PIPELINE14);
+  gst_object_unref (cur);
+
+  /**
+   * Checks if escaped quotes inside quotes are not treated as end string quotes.
+   * This would make the rest of characters to be escaped incorrectly.
+   */
+  cur = setup_pipeline (PIPELINE15);
   gst_object_unref (cur);
 }
 
