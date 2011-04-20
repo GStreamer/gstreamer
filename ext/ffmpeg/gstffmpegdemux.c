@@ -42,6 +42,8 @@
 #include "gstffmpegutils.h"
 #include "gstffmpegpipe.h"
 
+#define MAX_STREAMS 20
+
 typedef struct _GstFFMpegDemux GstFFMpegDemux;
 typedef struct _GstFFStream GstFFStream;
 
