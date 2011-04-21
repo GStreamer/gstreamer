@@ -36,6 +36,10 @@ noinst_HEADERS = \
 	ftypcc.h         \
 	gstqtmuxmap.h
 
+EXTRA_DIST = \
+	gstqtmux-doc.c \
+	gstqtmux-doc.h
+
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
 	-:PROJECT libgstqtdemux -:SHARED libgstqtdemux \

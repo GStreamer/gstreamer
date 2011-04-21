@@ -42,21 +42,23 @@
 
 
 /**
- * SECTION:gstqtmoovrecover
+ * SECTION:element-qtmoovrecover
  * @short_description: Utility element for recovering unfinished quicktime files
  *
  * <refsect2>
  * <para>
- * This element recovers quicktime files created with qtmux using the moov recovery feature.
+ * This element recovers quicktime files created with qtmux using the moov
+ * recovery feature.
  * </para>
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
  * TODO
  * </programlisting>
+ * </para>
  * </refsect2>
  *
- * Last reviewed on 2010-02-01
+ * Documentation last reviewed on 2011-04-21
  */
 
 #ifdef HAVE_CONFIG_H
