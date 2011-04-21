@@ -62,6 +62,7 @@ typedef enum _GstQTMuxFormat
 typedef struct _GstQTMuxFormatProp
 {
   GstQTMuxFormat format;
+  GstRank rank;
   const gchar *name;
   const gchar *long_name;
   const gchar *type_name;

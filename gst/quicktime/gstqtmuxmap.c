@@ -147,6 +147,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
   /* original QuickTime format; see Apple site (e.g. qtff.pdf) */
   {
         GST_QT_MUX_FORMAT_QT,
+        GST_RANK_PRIMARY,
         "qtmux",
         "QuickTime",
         "GstQTMux",
@@ -180,6 +181,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
    * (supersedes original ISO 144996-1 mp41) */
   {
         GST_QT_MUX_FORMAT_MP4,
+        GST_RANK_PRIMARY,
         "mp4mux",
         "MP4",
         "GstMP4Mux",
@@ -193,6 +195,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
   /* TODO add WMV/WMA support */
   {
         GST_QT_MUX_FORMAT_ISML,
+        GST_RANK_PRIMARY,
         "ismlmux",
         "ISML",
         "GstISMLMux",
@@ -205,6 +208,21 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
    * (extended in 3GPP2 File Formats for Multimedia Services) */
   {
         GST_QT_MUX_FORMAT_3GP,
+        GST_RANK_PRIMARY,
+        "3gppmux",
+        "3GPP",
+        "Gst3GPPMux",
+        GST_STATIC_CAPS ("video/quicktime, variant = (string) 3gpp"),
+        GST_STATIC_CAPS (H263_CAPS "; " MPEG4V_CAPS "; " H264_CAPS),
+        GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS)
+      }
+  ,
+#ifndef GST_REMOVE_DEPRECATED
+  /* 3GPP Technical Specification 26.244 V7.3.0
+   * (extended in 3GPP2 File Formats for Multimedia Services) */
+  {
+        GST_QT_MUX_FORMAT_3GP,
+        GST_RANK_NONE,
         "gppmux",
         "3GPP",
         "GstGPPMux",
@@ -213,9 +231,11 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS)
       }
   ,
+#endif
   /* ISO 15444-3: Motion-JPEG-2000 (also ISO base media extension) */
   {
         GST_QT_MUX_FORMAT_MJ2,
+        GST_RANK_PRIMARY,
         "mj2mux",
         "MJ2",
         "GstMJ2Mux",
@@ -228,7 +248,6 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
   {
         GST_QT_MUX_FORMAT_NONE,
       }
-  ,
 };
 
 /* pretty static, but may turn out needed a few times */
