@@ -81,8 +81,8 @@ struct _GstPostProc
   gint ystride, ustride, vstride;
   gint ysize, usize, vsize;
 
-  pp_mode_t *mode;
-  pp_context_t *context;
+  pp_mode *mode;
+  pp_context *context;
 
   /* props of various filters */
   gboolean autoq;
