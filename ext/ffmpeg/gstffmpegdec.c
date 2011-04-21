@@ -2310,8 +2310,8 @@ gst_ffmpegdec_flush_pcache (GstFFMpegDec * ffmpegdec)
 
     /* parse some dummy data to work around some ffmpeg weirdness where it keeps
      * the previous pts around */
-    av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
-        &data, &size, bdata, bsize, -1, -1);
+    av_parser_parse2 (ffmpegdec->pctx, ffmpegdec->context,
+        &data, &size, bdata, bsize, -1, -1, -1);
     ffmpegdec->pctx->pts = -1;
     ffmpegdec->pctx->dts = -1;
   }
@@ -2578,14 +2578,14 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       gint res;
 
       GST_LOG_OBJECT (ffmpegdec,
-          "Calling av_parser_parse with offset %" G_GINT64_FORMAT ", ts:%"
+          "Calling av_parser_parse2 with offset %" G_GINT64_FORMAT ", ts:%"
           GST_TIME_FORMAT " size %d", in_offset, GST_TIME_ARGS (in_timestamp),
           bsize);
 
       /* feed the parser. We pass the timestamp info so that we can recover all
        * info again later */
-      res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
-          &data, &size, bdata, bsize, in_info->idx, in_info->idx);
+      res = av_parser_parse2 (ffmpegdec->pctx, ffmpegdec->context,
+          &data, &size, bdata, bsize, in_info->idx, in_info->idx, in_offset);
 
       GST_LOG_OBJECT (ffmpegdec,
           "parser returned res %d and size %d, id %" G_GINT64_FORMAT, res, size,
