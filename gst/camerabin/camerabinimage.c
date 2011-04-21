@@ -197,7 +197,7 @@ gst_camerabin_image_dispose (GstCameraBinImage * img)
 
   if (img->csp) {
     GST_LOG_OBJECT (img, "disposing %s with refcount %d",
-        GST_ELEMENT_NAME (img->enc), GST_OBJECT_REFCOUNT_VALUE (img->csp));
+        GST_ELEMENT_NAME (img->csp), GST_OBJECT_REFCOUNT_VALUE (img->csp));
     gst_object_unref (img->csp);
     img->csp = NULL;
   }
