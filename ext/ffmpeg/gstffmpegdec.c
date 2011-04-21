@@ -2133,6 +2133,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
     GST_BUFFER_TIMESTAMP (*outbuf) = out_timestamp;
     GST_BUFFER_DURATION (*outbuf) = out_duration;
     GST_BUFFER_OFFSET (*outbuf) = out_offset;
+    gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
 
     /* the next timestamp we'll use when interpolating */
     ffmpegdec->next_out = out_timestamp + out_duration;
