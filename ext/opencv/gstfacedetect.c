@@ -408,8 +408,11 @@ gst_facedetect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     faces =
         cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
         filter->cvStorage, filter->scale_factor, filter->min_neighbors,
-        filter->flags,
-        cvSize (filter->min_size_width, filter->min_size_height));
+        filter->flags, cvSize (filter->min_size_width, filter->min_size_height)
+#if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
+        , cvSize (filter->min_size_width + 2, filter->min_size_height + 2)
+#endif
+        );
 
     if (faces && faces->total > 0) {
       msg = gst_facedetect_message_new (filter, buf);

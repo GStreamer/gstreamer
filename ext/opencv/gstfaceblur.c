@@ -269,7 +269,11 @@ gst_faceblur_chain (GstPad * pad, GstBuffer * buf)
   if (filter->cvCascade) {
     faces =
         cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
-        filter->cvStorage, 1.1, 2, 0, cvSize (30, 30));
+        filter->cvStorage, 1.1, 2, 0, cvSize (30, 30)
+#if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
+        , cvSize (32, 32)
+#endif
+        );
 
     if (faces && faces->total > 0) {
       buf = gst_buffer_make_writable (buf);

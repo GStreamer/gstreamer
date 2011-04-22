@@ -47,9 +47,6 @@
 #define __GST_OPENCV_TEXT_OVERLAY_H__
 
 #include <gst/gst.h>
-#include <cv.h>
-#include <cvaux.h>
-#include <highgui.h>
 
 G_BEGIN_DECLS
 
