@@ -6,7 +6,7 @@ package=gst-ffmpeg
 srcfile=configure.ac
 
 # make sure we have common
-if test ! -f common/gst-autogen.sh; 
+if test ! -f common/gst-autogen.sh -o ! -f gst-libs/ext/libav/configure ; 
 then 
   echo "+ Setting up common submodule"
   git submodule init
