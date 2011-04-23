@@ -93,12 +93,12 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width * 4;
 
@@ -191,12 +191,12 @@ vs_image_scale_linear_RGB (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width * 3;
 
@@ -321,12 +321,12 @@ vs_image_scale_linear_YUYV (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = ROUND_UP_4 (dest->width * 2);
 
@@ -451,12 +451,12 @@ vs_image_scale_linear_UYVY (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = ROUND_UP_4 (dest->width * 2);
 
@@ -576,12 +576,12 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width;
 
@@ -707,12 +707,12 @@ vs_image_scale_linear_Y16 (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = 2 * dest->width;
 
@@ -837,12 +837,12 @@ vs_image_scale_linear_RGB565 (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width * 2;
 
@@ -967,12 +967,12 @@ vs_image_scale_linear_RGB555 (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width * 2;
 
@@ -1100,12 +1100,12 @@ vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width * 8;
 
