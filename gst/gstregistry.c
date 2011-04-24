@@ -1134,7 +1134,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
 
     if (file_status.st_mode & S_IFDIR) {
       if (G_UNLIKELY (is_blacklisted_hidden_directory (dirent))) {
-        GST_LOG_OBJECT (context->registry, "ignoring %s directory", dirent);
+        GST_TRACE_OBJECT (context->registry, "ignoring %s directory", dirent);
         g_free (filename);
         continue;
       }
@@ -1153,7 +1153,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
       continue;
     }
     if (!(file_status.st_mode & S_IFREG)) {
-      GST_LOG_OBJECT (context->registry, "%s is not a regular file, ignoring",
+      GST_TRACE_OBJECT (context->registry, "%s is not a regular file, ignoring",
           filename);
       g_free (filename);
       continue;
@@ -1163,7 +1163,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
         && !g_str_has_suffix (dirent, GST_EXTRA_MODULE_SUFFIX)
 #endif
         ) {
-      GST_LOG_OBJECT (context->registry,
+      GST_TRACE_OBJECT (context->registry,
           "extension is not recognized as module file, ignoring file %s",
           filename);
       g_free (filename);
