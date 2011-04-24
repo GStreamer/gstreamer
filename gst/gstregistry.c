@@ -468,12 +468,9 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
     GstPlugin * plugin)
 {
   GList *f;
-  const gchar *name;
 
   g_return_if_fail (GST_IS_REGISTRY (registry));
   g_return_if_fail (GST_IS_PLUGIN (plugin));
-
-  name = gst_plugin_get_name (plugin);
 
   /* Remove all features for this plugin */
   f = registry->features;
@@ -481,9 +478,10 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
     GList *next = g_list_next (f);
     GstPluginFeature *feature = f->data;
 
-    if (G_UNLIKELY (feature && !strcmp (feature->plugin_name, name))) {
-      GST_DEBUG_OBJECT (registry, "removing feature %p (%s) for plugin %s",
-          feature, gst_plugin_feature_get_name (feature), name);
+    if (G_UNLIKELY (feature && feature->plugin == plugin)) {
+      GST_DEBUG_OBJECT (registry, "removing feature %p (%s) for plugin %p (%s)",
+          feature, gst_plugin_feature_get_name (feature), plugin,
+          plugin->desc.name);
 
       registry->features = g_list_delete_link (registry->features, f);
       g_hash_table_remove (registry->feature_hash, feature->name);
