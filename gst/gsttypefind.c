@@ -99,8 +99,12 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   factory->user_data_notify = data_notify;
   if (plugin && plugin->desc.name) {
     GST_PLUGIN_FEATURE_CAST (factory)->plugin_name = plugin->desc.name; /* interned string */
+    GST_PLUGIN_FEATURE_CAST (factory)->plugin = plugin;
+    g_object_add_weak_pointer ((GObject *) plugin,
+        (gpointer *) & GST_PLUGIN_FEATURE_CAST (factory)->plugin);
   } else {
     GST_PLUGIN_FEATURE_CAST (factory)->plugin_name = "NULL";
+    GST_PLUGIN_FEATURE_CAST (factory)->plugin = NULL;
   }
   GST_PLUGIN_FEATURE_CAST (factory)->loaded = TRUE;
 

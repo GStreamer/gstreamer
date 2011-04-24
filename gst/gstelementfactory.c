@@ -307,8 +307,12 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
 
   if (plugin && plugin->desc.name) {
     GST_PLUGIN_FEATURE_CAST (factory)->plugin_name = plugin->desc.name;
+    GST_PLUGIN_FEATURE_CAST (factory)->plugin = plugin;
+    g_object_add_weak_pointer ((GObject *) plugin,
+        (gpointer *) & GST_PLUGIN_FEATURE_CAST (factory)->plugin);
   } else {
     GST_PLUGIN_FEATURE_CAST (factory)->plugin_name = "NULL";
+    GST_PLUGIN_FEATURE_CAST (factory)->plugin = NULL;
   }
   gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE_CAST (factory), rank);
   GST_PLUGIN_FEATURE_CAST (factory)->loaded = TRUE;

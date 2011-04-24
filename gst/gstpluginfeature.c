@@ -67,6 +67,11 @@ gst_plugin_feature_finalize (GObject * object)
       GST_PLUGIN_FEATURE_NAME (feature));
   g_free (feature->name);
 
+  if (feature->plugin != NULL) {
+    g_object_remove_weak_pointer ((GObject *) feature->plugin,
+        (gpointer *) & feature->plugin);
+  }
+
   G_OBJECT_CLASS (gst_plugin_feature_parent_class)->finalize (object);
 }
 
