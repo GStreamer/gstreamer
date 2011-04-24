@@ -104,7 +104,8 @@ struct _TSDemuxStream
     "video/mpeg, " \
       "mpegversion = (int) { 1, 2, 4 }, " \
       "systemstream = (boolean) FALSE; " \
-    "video/x-h264;" \
+    "video/x-h264,stream-format=(string)byte-stream," \
+      "alignment=(string)nal;" \
     "video/x-dirac;" \
     "video/x-wmv," \
       "wmvversion = (int) 3, " \
@@ -508,7 +509,9 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       if (program->program_number == 10510 && bstream->pid == 3401) {
         template = gst_static_pad_template_get (&video_template);
         name = g_strdup_printf ("video_%04x", bstream->pid);
-        caps = gst_caps_new_simple ("video/x-h264", NULL);
+        caps = gst_caps_new_simple ("video/x-h264",
+            "stream-format", G_TYPE_STRING, "byte-stream",
+            "alignment", G_TYPE_STRING, "nal", NULL);
       }
       break;
     case ST_HDV_AUX_V:
@@ -548,7 +551,9 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     case ST_VIDEO_H264:
       template = gst_static_pad_template_get (&video_template);
       name = g_strdup_printf ("video_%04x", bstream->pid);
-      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      caps = gst_caps_new_simple ("video/x-h264",
+          "stream-format", G_TYPE_STRING, "byte-stream",
+          "alignment", G_TYPE_STRING, "nal", NULL);
       break;
     case ST_VIDEO_DIRAC:
       desc =

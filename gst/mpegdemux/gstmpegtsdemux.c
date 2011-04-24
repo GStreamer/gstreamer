@@ -110,7 +110,8 @@ enum
     "video/mpeg, " \
       "mpegversion = (int) { 1, 2, 4 }, " \
       "systemstream = (boolean) FALSE; " \
-    "video/x-h264;" \
+    "video/x-h264,stream-format=(string)byte-stream," \
+      "alignment=(string)nal;" \
     "video/x-dirac;" \
     "video/x-wmv," \
       "wmvversion = (int) 3, " \
@@ -697,7 +698,9 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
     case ST_VIDEO_H264:
       template = klass->video_template;
       name = g_strdup_printf ("video_%04x", stream->PID);
-      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      caps = gst_caps_new_simple ("video/x-h264",
+          "stream-format", G_TYPE_STRING, "byte-stream",
+          "alignment", G_TYPE_STRING, "nal", NULL);
       break;
     case ST_VIDEO_DIRAC:
       if (gst_mpegts_is_dirac_stream (stream)) {
@@ -1044,8 +1047,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
        * to drop. */
       if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
           && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-          && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
-          discont_PCR) {
+          && demux->streams[demux->streams[stream->PMT_pid]->PMT.
+              PCR_PID]->discont_PCR) {
         GST_WARNING_OBJECT (demux, "middle of discont, dropping");
         goto bad_timestamp;
       }
@@ -1067,8 +1070,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
          */
         if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
             && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-            && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
-            last_PCR > 0) {
+            && demux->streams[demux->streams[stream->PMT_pid]->PMT.
+                PCR_PID]->last_PCR > 0) {
           GST_DEBUG_OBJECT (demux, "timestamps wrapped before noticed in PCR");
           time = MPEGTIME_TO_GSTTIME (pts) + stream->base_time +
               MPEGTIME_TO_GSTTIME ((guint64) (1) << 33);
