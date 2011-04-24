@@ -102,7 +102,7 @@ static GstStaticPadTemplate videosink_templ =
         "mpegversion = (int) { 1, 2, 4 }, "
         "systemstream = (boolean) false, "
         COMMON_VIDEO_CAPS "; "
-        "video/x-h264, "
+        "video/x-h264, stream-format=avc, alignment=au, "
         COMMON_VIDEO_CAPS "; "
         "video/x-divx, "
         COMMON_VIDEO_CAPS "; "

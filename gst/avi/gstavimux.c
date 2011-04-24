@@ -129,6 +129,8 @@ static GstStaticPadTemplate video_sink_factory =
         "height = (int) [ 16, 4096 ], "
         "framerate = (fraction) [ 0, MAX ]; "
         "video/x-h264, "
+        "stream-format = (string) byte-stream, "
+        "alignment = (string) au, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
         "framerate = (fraction) [ 0, MAX ]; "
