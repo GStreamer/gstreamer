@@ -1,8 +1,8 @@
 <plugin>
   <name>quicktime</name>
   <description>Quicktime support</description>
-  <filename>../../gst/quicktime/.libs/libgstqtdemux.so</filename>
-  <basename>libgstqtdemux.so</basename>
+  <filename>../../gst/quicktime/.libs/libgstquicktime.so</filename>
+  <basename>libgstquicktime.so</basename>
   <version>0.10.28.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
