@@ -461,10 +461,6 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   base_video_encoder_class =
       GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
 
-  frame->system_frame_number =
-      GST_BASE_VIDEO_CODEC (base_video_encoder)->system_frame_number;
-  GST_BASE_VIDEO_CODEC (base_video_encoder)->system_frame_number++;
-
   if (frame->is_sync_point) {
     base_video_encoder->distance_from_sync = 0;
     GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
