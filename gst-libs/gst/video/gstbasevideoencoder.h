@@ -75,9 +75,13 @@ struct _GstBaseVideoEncoder
   gint64 max_latency;
 
   gboolean force_keyframe;
+  union {
+    void *padding;
+    gboolean at_eos;
+  } a;
 
   /* FIXME before moving to base */
-  void *padding[GST_PADDING_LARGE];
+  void *padding[GST_PADDING_LARGE-1];
 };
 
 struct _GstBaseVideoEncoderClass

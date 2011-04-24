@@ -92,6 +92,8 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
   gst_pad_set_query_type_function (pad, gst_base_video_encoder_get_query_types);
   gst_pad_set_query_function (pad, gst_base_video_encoder_src_query);
   gst_pad_set_event_function (pad, gst_base_video_encoder_src_event);
+
+  base_video_encoder->a.at_eos = FALSE;
 }
 
 static gboolean
@@ -168,6 +170,7 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
+      base_video_encoder->a.at_eos = TRUE;
       if (base_video_encoder_class->finish) {
         base_video_encoder_class->finish (base_video_encoder);
       }
@@ -196,6 +199,7 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG ("new segment %" GST_TIME_FORMAT " %" GST_TIME_FORMAT,
           GST_TIME_ARGS (start), GST_TIME_ARGS (position));
 
+      base_video_encoder->a.at_eos = FALSE;
       gst_segment_set_newsegment_full (&GST_BASE_VIDEO_CODEC
           (base_video_encoder)->segment, update, rate, applied_rate, format,
           start, stop, position);
@@ -385,6 +389,10 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
 
   base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
   klass = GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
+
+  if (base_video_encoder->a.at_eos) {
+    return GST_FLOW_UNEXPECTED;
+  }
 
   if (base_video_encoder->sink_clipping) {
     gint64 start = GST_BUFFER_TIMESTAMP (buf);
