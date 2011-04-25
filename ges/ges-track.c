@@ -40,6 +40,7 @@ struct _GESTrackPrivate
   /*< private > */
   GESTimeline *timeline;
   GList *trackobjects;
+  guint64 duration;
 
   GstCaps *caps;
 
@@ -52,6 +53,7 @@ enum
   ARG_0,
   ARG_CAPS,
   ARG_TYPE,
+  ARG_DURATION,
   ARG_LAST
 };
 
@@ -60,6 +62,8 @@ static GParamSpec *properties[ARG_LAST];
 static void pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track);
 static void
 pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track);
+static void composition_duration_cb (GstElement * composition, GParamSpec * arg
+    G_GNUC_UNUSED, GESTrack * obj);
 
 static void
 ges_track_get_property (GObject * object, guint property_id,
@@ -73,6 +77,9 @@ ges_track_get_property (GObject * object, guint property_id,
       break;
     case ARG_TYPE:
       g_value_set_flags (value, track->type);
+      break;
+    case ARG_DURATION:
+      g_value_set_uint64 (value, track->priv->duration);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -155,6 +162,18 @@ ges_track_class_init (GESTrackClass * klass)
   g_object_class_install_property (object_class, ARG_CAPS,
       properties[ARG_CAPS]);
 
+  /**
+   * GESTrack:duration
+   *
+   * Current duration of the track
+   *
+   * Default value: O
+   */
+  properties[ARG_DURATION] = g_param_spec_uint64 ("duration", "Duration",
+      "The current duration of the track", 0, G_MAXUINT64, GST_SECOND,
+      G_PARAM_READABLE);
+  g_object_class_install_property (object_class, ARG_DURATION,
+      properties[ARG_DURATION]);
 
   /**
    * GESTrack:track-type
@@ -182,6 +201,8 @@ ges_track_init (GESTrack * self)
 
   self->priv->composition = gst_element_factory_make ("gnlcomposition", NULL);
 
+  g_signal_connect (G_OBJECT (self->priv->composition), "notify::duration",
+      G_CALLBACK (composition_duration_cb), self);
   g_signal_connect (self->priv->composition, "pad-added",
       (GCallback) pad_added_cb, self);
   g_signal_connect (self->priv->composition, "pad-removed",
@@ -427,6 +448,30 @@ pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track)
   }
 
   GST_DEBUG ("done");
+}
+
+static void
+composition_duration_cb (GstElement * composition,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrack * obj)
+{
+  guint64 duration;
+
+  g_object_get (composition, "duration", &duration, NULL);
+
+
+  if (obj->priv->duration != duration) {
+    GST_DEBUG ("composition duration : %" GST_TIME_FORMAT " current : %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (duration),
+        GST_TIME_ARGS (obj->priv->duration));
+
+    obj->priv->duration = duration;
+
+#if GLIB_CHECK_VERSION(2,26,0)
+    g_object_notify_by_pspec (G_OBJECT (obj), properties[ARG_DURATION]);
+#else
+    g_object_notify (G_OBJECT (obj), "duration");
+#endif
+  }
 }
 
 /**
