@@ -22,3 +22,7 @@ headers
 
 %%
 import gobject.GObject as PyGObject_Type
+import gobject.MainContext as PyGMainContext_Type
+import gobject.GObject as PyGInitiallyUnowned_Type
+import gst.Bin as PyGstBin_Type
+import gst.Pipeline as PyGstPipeline_Type
