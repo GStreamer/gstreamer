@@ -51,11 +51,13 @@ enum
 {
   ARG_0,
   ARG_CAPS,
-  ARG_TYPE
+  ARG_TYPE,
+  ARG_LAST
 };
 
-static void pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track);
+static GParamSpec *properties[ARG_LAST];
 
+static void pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track);
 static void
 pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track);
 
@@ -147,10 +149,12 @@ ges_track_class_init (GESTrackClass * klass)
    *
    * Default value: #GST_CAPS_ANY.
    */
+  properties[ARG_CAPS] = g_param_spec_boxed ("caps", "Caps",
+      "Caps used to filter/choose the output stream",
+      GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
   g_object_class_install_property (object_class, ARG_CAPS,
-      g_param_spec_boxed ("caps", "Caps",
-          "Caps used to filter/choose the output stream",
-          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+      properties[ARG_CAPS]);
+
 
   /**
    * GESTrack:track-type
@@ -162,11 +166,12 @@ ges_track_class_init (GESTrackClass * klass)
    * from the #GESTrack without having to actually check the #GESTrack's caps
    * property.
    */
+  properties[ARG_TYPE] = g_param_spec_flags ("track-type", "TrackType",
+      "Type of stream the track outputs",
+      GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_CUSTOM,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
   g_object_class_install_property (object_class, ARG_TYPE,
-      g_param_spec_flags ("track-type", "TrackType",
-          "Type of stream the track outputs",
-          GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_CUSTOM,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+      properties[ARG_TYPE]);
 }
 
 static void
