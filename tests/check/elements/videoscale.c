@@ -643,8 +643,10 @@ static void
 gst_test_reverse_negotiation_sink_class_init (GstTestReverseNegotiationSinkClass
     * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbase_sink_class;
 
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbase_sink_class = GST_BASE_SINK_CLASS (klass);
 
   gst_element_class_set_details_simple (gstelement_class,
