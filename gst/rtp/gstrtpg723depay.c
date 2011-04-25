@@ -78,42 +78,38 @@ static gboolean gst_rtp_g723_depay_setcaps (GstBaseRTPDepayload * depayload,
 static GstBuffer *gst_rtp_g723_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
-GST_BOILERPLATE (GstRtpG723Depay, gst_rtp_g723_depay, GstBaseRTPDepayload,
+#define gst_rtp_g723_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpG723Depay, gst_rtp_g723_depay,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
-
-static void
-gst_rtp_g723_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_g723_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_g723_depay_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP G.723 depayloader",
-      "Codec/Depayloader/Network/RTP",
-      "Extracts G.723 audio from RTP packets (RFC 3551)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-
-  GST_DEBUG_CATEGORY_INIT (rtpg723depay_debug, "rtpg723depay", 0,
-      "G.723 RTP Depayloader");
-}
 
 static void
 gst_rtp_g723_depay_class_init (GstRtpG723DepayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
+  GST_DEBUG_CATEGORY_INIT (rtpg723depay_debug, "rtpg723depay", 0,
+      "G.723 RTP Depayloader");
+
+  gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_g723_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_g723_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP G.723 depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts G.723 audio from RTP packets (RFC 3551)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gstbasertpdepayload_class->process = gst_rtp_g723_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_g723_depay_setcaps;
 }
 
 static void
-gst_rtp_g723_depay_init (GstRtpG723Depay * rtpg723depay,
-    GstRtpG723DepayClass * klass)
+gst_rtp_g723_depay_init (GstRtpG723Depay * rtpg723depay)
 {
   GstBaseRTPDepayload *depayload;
 
@@ -182,10 +178,13 @@ gst_rtp_g723_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstBuffer *outbuf = NULL;
   gint payload_len;
   gboolean marker;
+  GstRTPBuffer rtp = { NULL };
 
   rtpg723depay = GST_RTP_G723_DEPAY (depayload);
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
 
   /* At least 4 bytes */
   if (payload_len < 4)
@@ -193,8 +192,9 @@ gst_rtp_g723_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   GST_LOG_OBJECT (rtpg723depay, "payload len %d", payload_len);
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
-  marker = gst_rtp_buffer_get_marker (buf);
+  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
+  marker = gst_rtp_buffer_get_marker (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
 
   if (marker) {
     /* marker bit starts talkspurt */
@@ -202,7 +202,7 @@ gst_rtp_g723_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   GST_LOG_OBJECT (depayload, "pushing buffer of size %d",
-      GST_BUFFER_SIZE (outbuf));
+      gst_buffer_get_size (outbuf));
 
   return outbuf;
 
@@ -216,6 +216,7 @@ too_small:
 bad_packet:
   {
     /* no fatal error */
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

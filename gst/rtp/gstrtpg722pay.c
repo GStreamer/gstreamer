@@ -56,41 +56,38 @@ static gboolean gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload,
 static GstCaps *gst_rtp_g722_pay_getcaps (GstBaseRTPPayload * rtppayload,
     GstPad * pad);
 
-GST_BOILERPLATE (GstRtpG722Pay, gst_rtp_g722_pay, GstBaseRTPAudioPayload,
+#define gst_rtp_g722_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpG722Pay, gst_rtp_g722_pay,
     GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
-
-static void
-gst_rtp_g722_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_g722_pay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_g722_pay_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP audio payloader",
-      "Codec/Payloader/Network/RTP",
-      "Payload-encode Raw audio into RTP packets (RFC 3551)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
 
 static void
 gst_rtp_g722_pay_class_init (GstRtpG722PayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
-
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
-
-  gstbasertppayload_class->set_caps = gst_rtp_g722_pay_setcaps;
-  gstbasertppayload_class->get_caps = gst_rtp_g722_pay_getcaps;
 
   GST_DEBUG_CATEGORY_INIT (rtpg722pay_debug, "rtpg722pay", 0,
       "G722 RTP Payloader");
+
+  gstelement_class = (GstElementClass *) klass;
+  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_g722_pay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_g722_pay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP audio payloader",
+      "Codec/Payloader/Network/RTP",
+      "Payload-encode Raw audio into RTP packets (RFC 3551)",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
+  gstbasertppayload_class->set_caps = gst_rtp_g722_pay_setcaps;
+  gstbasertppayload_class->get_caps = gst_rtp_g722_pay_getcaps;
 }
 
 static void
-gst_rtp_g722_pay_init (GstRtpG722Pay * rtpg722pay, GstRtpG722PayClass * klass)
+gst_rtp_g722_pay_init (GstRtpG722Pay * rtpg722pay)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
 

@@ -62,7 +62,8 @@ static GstStaticPadTemplate gst_rtp_g722_depay_sink_template =
     )
     );
 
-GST_BOILERPLATE (GstRtpG722Depay, gst_rtp_g722_depay, GstBaseRTPDepayload,
+#define gst_rtp_g722_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpG722Depay, gst_rtp_g722_depay,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static gboolean gst_rtp_g722_depay_setcaps (GstBaseRTPDepayload * depayload,
@@ -71,40 +72,34 @@ static GstBuffer *gst_rtp_g722_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
 static void
-gst_rtp_g722_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_g722_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_g722_depay_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP audio depayloader",
-      "Codec/Depayloader/Network/RTP",
-      "Extracts G722 audio from RTP packets",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
-
-static void
 gst_rtp_g722_depay_class_init (GstRtpG722DepayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
-
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
-
-  gstbasertpdepayload_class->set_caps = gst_rtp_g722_depay_setcaps;
-  gstbasertpdepayload_class->process = gst_rtp_g722_depay_process;
 
   GST_DEBUG_CATEGORY_INIT (rtpg722depay_debug, "rtpg722depay", 0,
       "G722 RTP Depayloader");
+
+  gstelement_class = (GstElementClass *) klass;
+  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_g722_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_g722_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP audio depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts G722 audio from RTP packets",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
+  gstbasertpdepayload_class->set_caps = gst_rtp_g722_depay_setcaps;
+  gstbasertpdepayload_class->process = gst_rtp_g722_depay_process;
 }
 
 static void
-gst_rtp_g722_depay_init (GstRtpG722Depay * rtpg722depay,
-    GstRtpG722DepayClass * klass)
+gst_rtp_g722_depay_init (GstRtpG722Depay * rtpg722depay)
 {
-  /* needed because of GST_BOILERPLATE */
 }
 
 static gint
@@ -223,18 +218,22 @@ gst_rtp_g722_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstBuffer *outbuf;
   gint payload_len;
   gboolean marker;
+  GstRTPBuffer rtp = { NULL };
 
   rtpg722depay = GST_RTP_G722_DEPAY (depayload);
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
 
   if (payload_len <= 0)
     goto empty_packet;
 
   GST_DEBUG_OBJECT (rtpg722depay, "got payload of %d bytes", payload_len);
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
-  marker = gst_rtp_buffer_get_marker (buf);
+  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
+  marker = gst_rtp_buffer_get_marker (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
 
   if (marker) {
     /* mark talk spurt with DISCONT */
@@ -248,6 +247,7 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpg722depay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }

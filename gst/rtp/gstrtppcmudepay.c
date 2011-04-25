@@ -65,38 +65,35 @@ static GstBuffer *gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload,
 static gboolean gst_rtp_pcmu_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRtpPcmuDepay, gst_rtp_pcmu_depay, GstBaseRTPDepayload,
+#define gst_rtp_pcmu_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpPcmuDepay, gst_rtp_pcmu_depay,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
-
-static void
-gst_rtp_pcmu_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_pcmu_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_pcmu_depay_sink_template));
-  gst_element_class_set_details_simple (element_class, "RTP PCMU depayloader",
-      "Codec/Depayloader/Network/RTP",
-      "Extracts PCMU audio from RTP packets",
-      "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>");
-}
 
 static void
 gst_rtp_pcmu_depay_class_init (GstRtpPcmuDepayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
+  gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_pcmu_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_pcmu_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP PCMU depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts PCMU audio from RTP packets",
+      "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>");
 
   gstbasertpdepayload_class->process = gst_rtp_pcmu_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_pcmu_depay_setcaps;
 }
 
 static void
-gst_rtp_pcmu_depay_init (GstRtpPcmuDepay * rtppcmudepay,
-    GstRtpPcmuDepayClass * klass)
+gst_rtp_pcmu_depay_init (GstRtpPcmuDepay * rtppcmudepay)
 {
   GstBaseRTPDepayload *depayload;
 
@@ -133,15 +130,19 @@ gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstBuffer *outbuf = NULL;
   guint len;
   gboolean marker;
+  GstRTPBuffer rtp = { NULL };
 
-  marker = gst_rtp_buffer_get_marker (buf);
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+
+  marker = gst_rtp_buffer_get_marker (&rtp);
 
   GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
-      GST_BUFFER_SIZE (buf), marker,
-      gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
+      gst_buffer_get_size (buf), marker,
+      gst_rtp_buffer_get_timestamp (&rtp), gst_rtp_buffer_get_seq (&rtp));
 
-  len = gst_rtp_buffer_get_payload_len (buf);
-  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+  len = gst_rtp_buffer_get_payload_len (&rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
 
   GST_BUFFER_DURATION (outbuf) =
       gst_util_uint64_scale_int (len, GST_SECOND, depayload->clock_rate);

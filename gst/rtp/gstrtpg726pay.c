@@ -75,31 +75,19 @@ static gboolean gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload,
 static GstFlowReturn gst_rtp_g726_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
-GST_BOILERPLATE (GstRtpG726Pay, gst_rtp_g726_pay, GstBaseRTPAudioPayload,
+#define gst_rtp_g726_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpG726Pay, gst_rtp_g726_pay,
     GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
-
-static void
-gst_rtp_g726_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_g726_pay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_g726_pay_src_template));
-  gst_element_class_set_details_simple (element_class, "RTP G.726 payloader",
-      "Codec/Payloader/Network/RTP",
-      "Payload-encodes G.726 audio into a RTP packet",
-      "Axis Communications <dev-gstreamer@axis.com>");
-}
 
 static void
 gst_rtp_g726_pay_class_init (GstRtpG726PayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->set_property = gst_rtp_g726_pay_set_property;
@@ -110,6 +98,16 @@ gst_rtp_g726_pay_class_init (GstRtpG726PayClass * klass)
           "Force AAL2 encoding for compatibility with bad depayloaders",
           DEFAULT_FORCE_AAL2, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_g726_pay_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_g726_pay_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP G.726 payloader",
+      "Codec/Payloader/Network/RTP",
+      "Payload-encodes G.726 audio into a RTP packet",
+      "Axis Communications <dev-gstreamer@axis.com>");
+
   gstbasertppayload_class->set_caps = gst_rtp_g726_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_g726_pay_handle_buffer;
 
@@ -118,7 +116,7 @@ gst_rtp_g726_pay_class_init (GstRtpG726PayClass * klass)
 }
 
 static void
-gst_rtp_g726_pay_init (GstRtpG726Pay * rtpg726pay, GstRtpG726PayClass * klass)
+gst_rtp_g726_pay_init (GstRtpG726Pay * rtpg726pay)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
 
@@ -269,14 +267,13 @@ gst_rtp_g726_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
   if (!pay->aal2) {
     guint8 *data, tmp;
-    guint len;
+    gsize len;
 
     /* for non AAL2, we need to reshuffle the bytes, we can do this in-place
      * when the buffer is writable. */
     buffer = gst_buffer_make_writable (buffer);
 
-    data = GST_BUFFER_DATA (buffer);
-    len = GST_BUFFER_SIZE (buffer);
+    data = gst_buffer_map (buffer, &len, NULL, GST_MAP_READWRITE);
 
     GST_LOG_OBJECT (pay, "packing %u bytes of data", len);
 
@@ -366,6 +363,7 @@ gst_rtp_g726_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
         break;
       }
     }
+    gst_buffer_unmap (buffer, data, len);
   }
 
   res =

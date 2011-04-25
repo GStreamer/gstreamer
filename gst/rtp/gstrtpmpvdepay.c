@@ -53,8 +53,7 @@ static GstStaticPadTemplate gst_rtp_mpv_depay_sink_template =
         "clock-rate = (int) 90000")
     );
 
-GST_BOILERPLATE (GstRtpMPVDepay, gst_rtp_mpv_depay, GstBaseRTPDepayload,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRtpMPVDepay, gst_rtp_mpv_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static gboolean gst_rtp_mpv_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
@@ -62,27 +61,23 @@ static GstBuffer *gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
 static void
-gst_rtp_mpv_depay_base_init (gpointer klass)
+gst_rtp_mpv_depay_class_init (GstRtpMPVDepayClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *gstelement_class;
+  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
-  gst_element_class_add_pad_template (element_class,
+  gstelement_class = (GstElementClass *) klass;
+  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_mpv_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_mpv_depay_sink_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_details_simple (gstelement_class,
       "RTP MPEG video depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts MPEG video from RTP packets (RFC 2250)",
       "Wim Taymans <wim.taymans@gmail.com>");
-}
-
-static void
-gst_rtp_mpv_depay_class_init (GstRtpMPVDepayClass * klass)
-{
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
-
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gstbasertpdepayload_class->set_caps = gst_rtp_mpv_depay_setcaps;
   gstbasertpdepayload_class->process = gst_rtp_mpv_depay_process;
@@ -92,10 +87,8 @@ gst_rtp_mpv_depay_class_init (GstRtpMPVDepayClass * klass)
 }
 
 static void
-gst_rtp_mpv_depay_init (GstRtpMPVDepay * rtpmpvdepay,
-    GstRtpMPVDepayClass * klass)
+gst_rtp_mpv_depay_init (GstRtpMPVDepay * rtpmpvdepay)
 {
-  /* needed because of GST_BOILERPLATE */
 }
 
 static gboolean
@@ -126,16 +119,19 @@ gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMPVDepay *rtpmpvdepay;
   GstBuffer *outbuf;
+  GstRTPBuffer rtp = { NULL };
 
   rtpmpvdepay = GST_RTP_MPV_DEPAY (depayload);
+
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
   {
     gint payload_len, payload_header;
     guint8 *payload;
     guint8 T;
 
-    payload_len = gst_rtp_buffer_get_payload_len (buf);
-    payload = gst_rtp_buffer_get_payload (buf);
+    payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+    payload = gst_rtp_buffer_get_payload (&rtp);
     payload_header = 0;
 
     if (payload_len <= 4)
@@ -174,11 +170,11 @@ gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       payload += 4;
     }
 
-    outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, payload_header, -1);
+    outbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, payload_header, -1);
 
     GST_DEBUG_OBJECT (rtpmpvdepay,
         "gst_rtp_mpv_depay_chain: pushing buffer of size %d",
-        GST_BUFFER_SIZE (outbuf));
+        gst_buffer_get_size (outbuf));
 
     return outbuf;
   }
