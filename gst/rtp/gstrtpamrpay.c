@@ -93,35 +93,29 @@ static GstFlowReturn gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * pad,
 static GstStateChangeReturn
 gst_rtp_amr_pay_change_state (GstElement * element, GstStateChange transition);
 
-GST_BOILERPLATE (GstRtpAMRPay, gst_rtp_amr_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD);
-
-static void
-gst_rtp_amr_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_amr_pay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_amr_pay_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP AMR payloader",
-      "Codec/Payloader/Network/RTP",
-      "Payload-encode AMR or AMR-WB audio into RTP packets (RFC 3267)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_rtp_amr_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpAMRPay, gst_rtp_amr_pay, GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
 gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
 {
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
   GstElementClass *gstelement_class;
+  GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gstelement_class = (GstElementClass *) klass;
+  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+
   gstelement_class->change_state = gst_rtp_amr_pay_change_state;
 
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_amr_pay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_amr_pay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP AMR payloader",
+      "Codec/Payloader/Network/RTP",
+      "Payload-encode AMR or AMR-WB audio into RTP packets (RFC 3267)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gstbasertppayload_class->set_caps = gst_rtp_amr_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_amr_pay_handle_buffer;
@@ -131,9 +125,8 @@ gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
 }
 
 static void
-gst_rtp_amr_pay_init (GstRtpAMRPay * rtpamrpay, GstRtpAMRPayClass * klass)
+gst_rtp_amr_pay_init (GstRtpAMRPay * rtpamrpay)
 {
-  /* needed because of GST_BOILERPLATE */
 }
 
 static void
@@ -234,20 +227,22 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstRtpAMRPay *rtpamrpay;
   const gint *frame_size;
   GstFlowReturn ret;
-  guint size, payload_len;
+  guint payload_len;
+  gsize size;
   GstBuffer *outbuf;
-  guint8 *payload, *data, *payload_amr;
+  guint8 *payload, *data, *ptr, *payload_amr;
   GstClockTime timestamp, duration;
   guint packet_len, mtu;
   gint i, num_packets, num_nonempty_packets;
   gint amr_len;
   gboolean sid = FALSE;
+  GstRTPBuffer rtp = { NULL };
 
   rtpamrpay = GST_RTP_AMR_PAY (basepayload);
   mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpamrpay);
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
@@ -301,6 +296,8 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* now alloc output buffer */
   outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
 
+  gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+
   /* copy timestamp */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
@@ -313,7 +310,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   if (GST_BUFFER_IS_DISCONT (buffer)) {
     GST_DEBUG_OBJECT (basepayload, "discont, setting marker bit");
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-    gst_rtp_buffer_set_marker (outbuf, TRUE);
+    gst_rtp_buffer_set_marker (&rtp, TRUE);
     gst_rtp_amr_pay_recalc_rtp_time (rtpamrpay, timestamp);
   }
 
@@ -331,7 +328,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       (num_packets * 160) << (rtpamrpay->mode == GST_RTP_AMR_P_MODE_WB);
 
   /* get payload, this is now writable */
-  payload = gst_rtp_buffer_get_payload (outbuf);
+  payload = gst_rtp_buffer_get_payload (&rtp);
 
   /*   0 1 2 3 4 5 6 7
    *  +-+-+-+-+-+-+-+-+
@@ -346,6 +343,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* copy data in payload, first we copy all the FTs then all
    * the AMR data. The last FT has to have the F flag cleared. */
+  ptr = data;
   for (i = 1; i <= num_packets; i++) {
     guint8 FT;
     gint fr_size;
@@ -355,25 +353,28 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
      *  |F|  FT   |Q|P|P| more FT...
      *  +-+-+-+-+-+-+-+-+
      */
-    FT = (*data & 0x78) >> 3;
+    FT = (*ptr & 0x78) >> 3;
 
     fr_size = frame_size[FT];
 
     if (i == num_packets)
       /* last packet, clear F flag */
-      payload[i] = *data & 0x7f;
+      payload[i] = *ptr & 0x7f;
     else
       /* set F flag */
-      payload[i] = *data | 0x80;
+      payload[i] = *ptr | 0x80;
 
-    memcpy (payload_amr, &data[1], fr_size);
+    memcpy (payload_amr, &ptr[1], fr_size);
 
     /* all sizes are > 0 since we checked for that above */
-    data += fr_size + 1;
+    ptr += fr_size + 1;
     payload_amr += fr_size;
   }
 
+  gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
+
+  gst_rtp_buffer_unmap (&rtp);
 
   ret = gst_basertppayload_push (basepayload, outbuf);
 
@@ -384,6 +385,7 @@ wrong_size:
   {
     GST_ELEMENT_ERROR (basepayload, STREAM, FORMAT,
         (NULL), ("received AMR frame with size <= 0"));
+    gst_buffer_unmap (buffer, data, size);
     gst_buffer_unref (buffer);
 
     return GST_FLOW_ERROR;
@@ -392,6 +394,7 @@ incomplete_frame:
   {
     GST_ELEMENT_ERROR (basepayload, STREAM, FORMAT,
         (NULL), ("received incomplete AMR frames"));
+    gst_buffer_unmap (buffer, data, size);
     gst_buffer_unref (buffer);
 
     return GST_FLOW_ERROR;
@@ -400,6 +403,7 @@ too_big:
   {
     GST_ELEMENT_ERROR (basepayload, STREAM, FORMAT,
         (NULL), ("received too many AMR frames for MTU"));
+    gst_buffer_unmap (buffer, data, size);
     gst_buffer_unref (buffer);
 
     return GST_FLOW_ERROR;

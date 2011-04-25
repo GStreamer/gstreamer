@@ -61,7 +61,8 @@ static GstStaticPadTemplate gst_rtp_h263_depay_sink_template =
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263\"")
     );
 
-GST_BOILERPLATE (GstRtpH263Depay, gst_rtp_h263_depay, GstBaseRTPDepayload,
+#define gst_rtp_h263_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpH263Depay, gst_rtp_h263_depay,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void gst_rtp_h263_depay_finalize (GObject * object);
@@ -75,42 +76,36 @@ gboolean gst_rtp_h263_depay_setcaps (GstBaseRTPDepayload * filter,
     GstCaps * caps);
 
 static void
-gst_rtp_h263_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_h263_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_h263_depay_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "RTP H263 depayloader",
-      "Codec/Depayloader/Network/RTP",
-      "Extracts H263 video from RTP packets (RFC 2190)",
-      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
-      "Edward Hervey <bilboed@bilboed.com>");
-}
-
-static void
 gst_rtp_h263_depay_class_init (GstRtpH263DepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
+  GST_DEBUG_CATEGORY_INIT (rtph263depay_debug, "rtph263depay", 0,
+      "H263 Video RTP Depayloader");
+
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
-
-  gstbasertpdepayload_class->process = gst_rtp_h263_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_h263_depay_setcaps;
 
   gobject_class->finalize = gst_rtp_h263_depay_finalize;
 
   gstelement_class->change_state = gst_rtp_h263_depay_change_state;
 
-  GST_DEBUG_CATEGORY_INIT (rtph263depay_debug, "rtph263depay", 0,
-      "H263 Video RTP Depayloader");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_h263_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_h263_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP H263 depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts H263 video from RTP packets (RFC 2190)",
+      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
+      "Edward Hervey <bilboed@bilboed.com>");
+
+  gstbasertpdepayload_class->process = gst_rtp_h263_depay_process;
+  gstbasertpdepayload_class->set_caps = gst_rtp_h263_depay_setcaps;
 }
 
 static void
