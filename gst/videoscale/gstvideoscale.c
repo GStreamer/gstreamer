@@ -1019,6 +1019,14 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   add_borders = videoscale->add_borders;
   GST_OBJECT_UNLOCK (videoscale);
 
+  if (videoscale->from_width == 1) {
+    method = GST_VIDEO_SCALE_NEAREST;
+  }
+  if (method == GST_VIDEO_SCALE_4TAP &&
+      (videoscale->from_width < 4 || videoscale->from_height < 4)) {
+    method = GST_VIDEO_SCALE_BILINEAR;
+  }
+
   in_data = gst_buffer_map (in, &in_size, NULL, GST_MAP_READ);
   out_data = gst_buffer_map (out, &out_size, NULL, GST_MAP_WRITE);
 

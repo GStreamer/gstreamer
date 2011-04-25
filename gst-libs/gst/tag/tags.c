@@ -192,7 +192,11 @@ gst_tag_register_tags_internal (gpointer unused)
   return NULL;
 }
 
-/* FIXME 0.11: rename this to gst_tag_init() or gst_tag_register_tags() */
+/* FIXME 0.11: rename this to gst_tag_init() or gst_tag_register_tags() or
+ * even better: make tags auto-register themselves, either by defining them
+ * to a wrapper func that does the initing, or by adding tag factories so
+ * that the core can load+register tags automatically when needed. */
+
 /**
  * gst_tag_register_musicbrainz_tags
  *

@@ -522,7 +522,7 @@ GstBuffer             * gst_tag_image_data_to_image_buffer (const guint8   * ima
                                                             guint            image_data_len,
                                                             GstTagImageType  image_type);
 
-/* FIXME 0.11: replace with a more general gst_tag_library_init() */
+/* FIXME 0.11: get rid of this awkward register/init function, see tags.c */
 void                    gst_tag_register_musicbrainz_tags (void);
 
 

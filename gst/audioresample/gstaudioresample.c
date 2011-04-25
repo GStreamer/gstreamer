@@ -1379,7 +1379,7 @@ gst_audio_resample_get_property (GObject * object, guint prop_id,
 static gboolean
 _benchmark_int_float (SpeexResamplerState * st)
 {
-  gint16 in[BENCHMARK_SIZE] = { 0, }, out[BENCHMARK_SIZE / 2];
+  gint16 in[BENCHMARK_SIZE] = { 0, }, G_GNUC_UNUSED out[BENCHMARK_SIZE / 2];
   gfloat in_tmp[BENCHMARK_SIZE], out_tmp[BENCHMARK_SIZE / 2];
   gint i;
   guint32 inlen = BENCHMARK_SIZE, outlen = BENCHMARK_SIZE / 2;

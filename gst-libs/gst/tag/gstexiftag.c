@@ -456,6 +456,8 @@ static void
 gst_exif_reader_init (GstExifReader * reader, gint byte_order,
     GstBuffer * buf, guint32 base_offset)
 {
+  ensure_exif_tags ();
+
   reader->taglist = gst_tag_list_new ();
   reader->buffer = buf;
   reader->base_offset = base_offset;
@@ -524,6 +526,8 @@ gst_exif_reader_reset (GstExifReader * reader, gboolean return_taglist)
 static void
 gst_exif_writer_init (GstExifWriter * writer, gint byte_order)
 {
+  ensure_exif_tags ();
+
   gst_byte_writer_init (&writer->tagwriter);
   gst_byte_writer_init (&writer->datawriter);
 

@@ -93,12 +93,12 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width * 4;
 
@@ -121,15 +121,12 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
         y1++;
       }
       if (j >= y1) {
-        gst_videoscale_orc_resample_merge_bilinear_u32 (dest->pixels +
-            i * dest->stride, LINE (j + 1), LINE (j),
-            src->pixels + (j + 1) * src->stride, (x >> 8), 0, x_increment,
-            dest->width);
+        gst_videoscale_orc_resample_bilinear_u32 (LINE (j + 1),
+            src->pixels + (j + 1) * src->stride, 0, x_increment, dest->width);
         y1++;
-      } else {
-        orc_merge_linear_u8 (dest->pixels + i * dest->stride,
-            LINE (j), LINE (j + 1), (x >> 8), dest->width * 4);
       }
+      orc_merge_linear_u8 (dest->pixels + i * dest->stride,
+          LINE (j), LINE (j + 1), (x >> 8), dest->width * 4);
     }
 
     acc += y_increment;
@@ -191,12 +188,12 @@ vs_image_scale_linear_RGB (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width * 3;
 
@@ -321,12 +318,12 @@ vs_image_scale_linear_YUYV (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = ROUND_UP_4 (dest->width * 2);
 
@@ -451,12 +448,12 @@ vs_image_scale_linear_UYVY (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = ROUND_UP_4 (dest->width * 2);
 
@@ -576,12 +573,12 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width;
 
@@ -707,12 +704,12 @@ vs_image_scale_linear_Y16 (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = 2 * dest->width;
 
@@ -837,12 +834,12 @@ vs_image_scale_linear_RGB565 (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width * 2;
 
@@ -967,12 +964,12 @@ vs_image_scale_linear_RGB555 (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width * 2;
 
@@ -1100,12 +1097,12 @@ vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
   if (dest->height == 1)
     y_increment = 0;
   else
-    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1) - 1;
 
   if (dest->width == 1)
     x_increment = 0;
   else
-    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1) - 1;
 
   dest_size = dest->width * 8;
 
