@@ -468,12 +468,9 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
     GstPlugin * plugin)
 {
   GList *f;
-  const gchar *name;
 
   g_return_if_fail (GST_IS_REGISTRY (registry));
   g_return_if_fail (GST_IS_PLUGIN (plugin));
-
-  name = gst_plugin_get_name (plugin);
 
   /* Remove all features for this plugin */
   f = registry->features;
@@ -481,9 +478,10 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
     GList *next = g_list_next (f);
     GstPluginFeature *feature = f->data;
 
-    if (G_UNLIKELY (feature && !strcmp (feature->plugin_name, name))) {
-      GST_DEBUG_OBJECT (registry, "removing feature %p (%s) for plugin %s",
-          feature, gst_plugin_feature_get_name (feature), name);
+    if (G_UNLIKELY (feature && feature->plugin == plugin)) {
+      GST_DEBUG_OBJECT (registry, "removing feature %p (%s) for plugin %p (%s)",
+          feature, gst_plugin_feature_get_name (feature), plugin,
+          plugin->desc.name);
 
       registry->features = g_list_delete_link (registry->features, f);
       g_hash_table_remove (registry->feature_hash, feature->name);
@@ -1134,7 +1132,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
 
     if (file_status.st_mode & S_IFDIR) {
       if (G_UNLIKELY (is_blacklisted_hidden_directory (dirent))) {
-        GST_LOG_OBJECT (context->registry, "ignoring %s directory", dirent);
+        GST_TRACE_OBJECT (context->registry, "ignoring %s directory", dirent);
         g_free (filename);
         continue;
       }
@@ -1153,7 +1151,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
       continue;
     }
     if (!(file_status.st_mode & S_IFREG)) {
-      GST_LOG_OBJECT (context->registry, "%s is not a regular file, ignoring",
+      GST_TRACE_OBJECT (context->registry, "%s is not a regular file, ignoring",
           filename);
       g_free (filename);
       continue;
@@ -1163,7 +1161,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
         && !g_str_has_suffix (dirent, GST_EXTRA_MODULE_SUFFIX)
 #endif
         ) {
-      GST_LOG_OBJECT (context->registry,
+      GST_TRACE_OBJECT (context->registry,
           "extension is not recognized as module file, ignoring file %s",
           filename);
       g_free (filename);

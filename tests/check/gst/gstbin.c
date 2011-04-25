@@ -1006,10 +1006,12 @@ GST_START_TEST (test_link_structure_change)
   gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
 
   /* the state change will be done on src only if the pipeline correctly resyncs
-   * after that filesrc has been linked to identity */
+   * after that fakesrc has been linked to identity */
   gst_element_get_state (src, &state, NULL, 0);
   fail_unless_equals_int (state, GST_STATE_READY);
 
+  /* clean up */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (bus);
   gst_object_unref (pipeline);
 }

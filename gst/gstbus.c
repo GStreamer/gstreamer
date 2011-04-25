@@ -471,7 +471,7 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
   g_return_val_if_fail (types != 0, NULL);
-  g_return_val_if_fail (bus->priv->poll != NULL, NULL);
+  g_return_val_if_fail (timeout == 0 || bus->priv->poll != NULL, NULL);
 
   g_mutex_lock (bus->queue_lock);
 
@@ -482,7 +482,8 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
         gst_atomic_queue_length (bus->queue));
 
     while ((message = gst_atomic_queue_pop (bus->queue))) {
-      gst_poll_read_control (bus->priv->poll);
+      if (bus->priv->poll)
+        gst_poll_read_control (bus->priv->poll);
       GST_DEBUG_OBJECT (bus, "got message %p, %s, type mask is %u",
           message, GST_MESSAGE_TYPE_NAME (message), (guint) types);
       if ((GST_MESSAGE_TYPE (message) & types) != 0) {
@@ -516,6 +517,8 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
       }
     }
 
+    /* only here in timeout case */
+    g_assert (bus->priv->poll);
     g_mutex_unlock (bus->queue_lock);
     ret = gst_poll_wait (bus->priv->poll, timeout);
     g_mutex_lock (bus->queue_lock);

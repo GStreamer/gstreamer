@@ -1716,6 +1716,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstBaseTransformClass *klass;
   GstBaseTransformPrivate *priv;
   GstFlowReturn res;
+  gboolean alloced = FALSE;
   gboolean proxy, suggest, same_caps;
   GstCaps *sink_suggest = NULL;
   gsize size_suggest;
@@ -1921,6 +1922,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
     if (res != GST_FLOW_OK)
       goto alloc_failed;
+    alloced = TRUE;
 
     /* check if the caps changed */
     newcaps = GST_BUFFER_CAPS (*buf);
@@ -1966,7 +1968,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   if (sink_suggest)
     gst_caps_unref (sink_suggest);
 
-  if (res == GST_FLOW_OK) {
+  if (res == GST_FLOW_OK && alloced) {
     /* just alloc'ed a buffer, so we only want to do this again if we
      * received a buffer */
     GST_DEBUG_OBJECT (trans, "Cleaning force alloc");

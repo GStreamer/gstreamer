@@ -84,9 +84,10 @@ struct _GstPluginFeature {
   guint          rank;
 
   const gchar   *plugin_name;
+  GstPlugin     *plugin;      /* weak ref */
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstPluginFeatureClass {

@@ -528,6 +528,38 @@ GST_START_TEST (test_concurrent_create)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pipeline_in_pipeline)
+{
+  GstElement *pipeline, *bin, *fakesrc, *fakesink;
+  GstMessage *msg;
+
+  pipeline = gst_element_factory_make ("pipeline", "pipeline");
+  bin = gst_element_factory_make ("pipeline", "pipeline-as-bin");
+  fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
+
+  fail_unless (pipeline && bin && fakesrc && fakesink);
+
+  g_object_set (fakesrc, "num-buffers", 100, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), bin);
+  gst_bin_add_many (GST_BIN (bin), fakesrc, fakesink, NULL);
+  gst_element_link (fakesrc, fakesink);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline), -1,
+      GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_pipeline_suite (void)
 {
@@ -544,6 +576,7 @@ gst_pipeline_suite (void)
   tcase_add_test (tc_chain, test_bus);
   tcase_add_test (tc_chain, test_base_time);
   tcase_add_test (tc_chain, test_concurrent_create);
+  tcase_add_test (tc_chain, test_pipeline_in_pipeline);
 
   return s;
 }
