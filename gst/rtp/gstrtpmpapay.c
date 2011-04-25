@@ -63,23 +63,8 @@ static GstFlowReturn gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay);
 static GstFlowReturn gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * payload,
     GstBuffer * buffer);
 
-GST_BOILERPLATE (GstRtpMPAPay, gst_rtp_mpa_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD)
-
-     static void gst_rtp_mpa_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_mpa_pay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_mpa_pay_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP MPEG audio payloader", "Codec/Payloader/Network/RTP",
-      "Payload MPEG audio as RTP packets (RFC 2038)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_rtp_mpa_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpMPAPay, gst_rtp_mpa_pay, GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
 gst_rtp_mpa_pay_class_init (GstRtpMPAPayClass * klass)
@@ -87,6 +72,9 @@ gst_rtp_mpa_pay_class_init (GstRtpMPAPayClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
+
+  GST_DEBUG_CATEGORY_INIT (rtpmpapay_debug, "rtpmpapay", 0,
+      "MPEG Audio RTP Depayloader");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -96,16 +84,23 @@ gst_rtp_mpa_pay_class_init (GstRtpMPAPayClass * klass)
 
   gstelement_class->change_state = gst_rtp_mpa_pay_change_state;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_mpa_pay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_mpa_pay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP MPEG audio payloader", "Codec/Payloader/Network/RTP",
+      "Payload MPEG audio as RTP packets (RFC 2038)",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   gstbasertppayload_class->set_caps = gst_rtp_mpa_pay_setcaps;
   gstbasertppayload_class->handle_event = gst_rtp_mpa_pay_handle_event;
   gstbasertppayload_class->handle_buffer = gst_rtp_mpa_pay_handle_buffer;
-
-  GST_DEBUG_CATEGORY_INIT (rtpmpapay_debug, "rtpmpapay", 0,
-      "MPEG Audio RTP Depayloader");
 }
 
 static void
-gst_rtp_mpa_pay_init (GstRtpMPAPay * rtpmpapay, GstRtpMPAPayClass * klass)
+gst_rtp_mpa_pay_init (GstRtpMPAPay * rtpmpapay)
 {
   rtpmpapay->adapter = gst_adapter_new ();
 }

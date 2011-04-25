@@ -94,37 +94,24 @@ static void gst_dv_pay_set_property (GObject * object,
 static void gst_dv_pay_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstRTPDVPay, gst_rtp_dv_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD)
-
-     static void gst_rtp_dv_pay_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_dv_pay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_dv_pay_src_template));
-  gst_element_class_set_details_simple (element_class, "RTP DV Payloader",
-      "Codec/Payloader/Network/RTP",
-      "Payloads DV into RTP packets (RFC 3189)",
-      "Marcel Moreaux <marcelm@spacelabs.nl>, Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_rtp_dv_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRTPDVPay, gst_rtp_dv_pay, GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
 gst_rtp_dv_pay_class_init (GstRTPDVPayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
+  GST_DEBUG_CATEGORY_INIT (rtpdvpay_debug, "rtpdvpay", 0, "DV RTP Payloader");
+
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->set_property = gst_dv_pay_set_property;
   gobject_class->get_property = gst_dv_pay_get_property;
-
-  gstbasertppayload_class->set_caps = gst_rtp_dv_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_dv_pay_handle_buffer;
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
@@ -132,11 +119,22 @@ gst_rtp_dv_pay_class_init (GstRTPDVPayClass * klass)
           GST_TYPE_DV_PAY_MODE, DEFAULT_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  GST_DEBUG_CATEGORY_INIT (rtpdvpay_debug, "rtpdvpay", 0, "DV RTP Payloader");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_dv_pay_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_dv_pay_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP DV Payloader",
+      "Codec/Payloader/Network/RTP",
+      "Payloads DV into RTP packets (RFC 3189)",
+      "Marcel Moreaux <marcelm@spacelabs.nl>, Wim Taymans <wim.taymans@gmail.com>");
+
+  gstbasertppayload_class->set_caps = gst_rtp_dv_pay_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtp_dv_pay_handle_buffer;
 }
 
 static void
-gst_rtp_dv_pay_init (GstRTPDVPay * rtpdvpay, GstRTPDVPayClass * klass)
+gst_rtp_dv_pay_init (GstRTPDVPay * rtpdvpay)
 {
 }
 

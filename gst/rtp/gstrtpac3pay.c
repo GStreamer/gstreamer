@@ -60,23 +60,8 @@ static GstFlowReturn gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay);
 static GstFlowReturn gst_rtp_ac3_pay_handle_buffer (GstBaseRTPPayload * payload,
     GstBuffer * buffer);
 
-GST_BOILERPLATE (GstRtpAC3Pay, gst_rtp_ac3_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD)
-
-     static void gst_rtp_ac3_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_ac3_pay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_ac3_pay_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP AC3 audio payloader", "Codec/Payloader/Network/RTP",
-      "Payload AC3 audio as RTP packets (RFC 4184)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
+#define gst_rtp_ac3_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpAC3Pay, gst_rtp_ac3_pay, GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
 gst_rtp_ac3_pay_class_init (GstRtpAC3PayClass * klass)
@@ -84,6 +69,9 @@ gst_rtp_ac3_pay_class_init (GstRtpAC3PayClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
+
+  GST_DEBUG_CATEGORY_INIT (rtpac3pay_debug, "rtpac3pay", 0,
+      "AC3 Audio RTP Depayloader");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -93,16 +81,23 @@ gst_rtp_ac3_pay_class_init (GstRtpAC3PayClass * klass)
 
   gstelement_class->change_state = gst_rtp_ac3_pay_change_state;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_ac3_pay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_ac3_pay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP AC3 audio payloader", "Codec/Payloader/Network/RTP",
+      "Payload AC3 audio as RTP packets (RFC 4184)",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   gstbasertppayload_class->set_caps = gst_rtp_ac3_pay_setcaps;
   gstbasertppayload_class->handle_event = gst_rtp_ac3_pay_handle_event;
   gstbasertppayload_class->handle_buffer = gst_rtp_ac3_pay_handle_buffer;
-
-  GST_DEBUG_CATEGORY_INIT (rtpac3pay_debug, "rtpac3pay", 0,
-      "AC3 Audio RTP Depayloader");
 }
 
 static void
-gst_rtp_ac3_pay_init (GstRtpAC3Pay * rtpac3pay, GstRtpAC3PayClass * klass)
+gst_rtp_ac3_pay_init (GstRtpAC3Pay * rtpac3pay)
 {
   rtpac3pay->adapter = gst_adapter_new ();
 }

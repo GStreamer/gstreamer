@@ -62,26 +62,8 @@ static GstCaps *gst_rtp_celt_pay_getcaps (GstBaseRTPPayload * payload,
 static GstFlowReturn gst_rtp_celt_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
-GST_BOILERPLATE (GstRtpCELTPay, gst_rtp_celt_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD);
-
-static void
-gst_rtp_celt_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_celt_pay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_celt_pay_src_template));
-  gst_element_class_set_details_simple (element_class, "RTP CELT payloader",
-      "Codec/Payloader/Network/RTP",
-      "Payload-encodes CELT audio into a RTP packet",
-      "Wim Taymans <wim.taymans@gmail.com>");
-
-  GST_DEBUG_CATEGORY_INIT (rtpceltpay_debug, "rtpceltpay", 0,
-      "CELT RTP Payloader");
-}
+#define gst_rtp_celt_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpCELTPay, gst_rtp_celt_pay, GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
 gst_rtp_celt_pay_class_init (GstRtpCELTPayClass * klass)
@@ -89,6 +71,9 @@ gst_rtp_celt_pay_class_init (GstRtpCELTPayClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
+
+  GST_DEBUG_CATEGORY_INIT (rtpceltpay_debug, "rtpceltpay", 0,
+      "CELT RTP Payloader");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -98,13 +83,23 @@ gst_rtp_celt_pay_class_init (GstRtpCELTPayClass * klass)
 
   gstelement_class->change_state = gst_rtp_celt_pay_change_state;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_celt_pay_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_celt_pay_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP CELT payloader",
+      "Codec/Payloader/Network/RTP",
+      "Payload-encodes CELT audio into a RTP packet",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   gstbasertppayload_class->set_caps = gst_rtp_celt_pay_setcaps;
   gstbasertppayload_class->get_caps = gst_rtp_celt_pay_getcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_celt_pay_handle_buffer;
 }
 
 static void
-gst_rtp_celt_pay_init (GstRtpCELTPay * rtpceltpay, GstRtpCELTPayClass * klass)
+gst_rtp_celt_pay_init (GstRtpCELTPay * rtpceltpay)
 {
   rtpceltpay->queue = g_queue_new ();
 }

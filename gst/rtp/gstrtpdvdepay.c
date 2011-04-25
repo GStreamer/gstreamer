@@ -80,25 +80,10 @@ static GstBuffer *gst_rtp_dv_depay_process (GstBaseRTPDepayload * base,
 static gboolean gst_rtp_dv_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRTPDVDepay, gst_rtp_dv_depay, GstBaseRTPDepayload,
-    GST_TYPE_BASE_RTP_DEPAYLOAD)
+#define gst_rtp_dv_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRTPDVDepay, gst_rtp_dv_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
 
-     static void gst_rtp_dv_depay_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-
-  gst_element_class_set_details_simple (element_class, "RTP DV Depayloader",
-      "Codec/Depayloader/Network/RTP",
-      "Depayloads DV from RTP packets (RFC 3189)",
-      "Marcel Moreaux <marcelm@spacelabs.nl>, Wim Taymans <wim.taymans@gmail.com>");
-}
-
-/* initialize the plugin's class */
 static void
 gst_rtp_dv_depay_class_init (GstRTPDVDepayClass * klass)
 {
@@ -106,16 +91,26 @@ gst_rtp_dv_depay_class_init (GstRTPDVDepayClass * klass)
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class =
       (GstBaseRTPDepayloadClass *) klass;
 
+  GST_DEBUG_CATEGORY_INIT (rtpdvdepay_debug, "rtpdvdepay", 0,
+      "DV RTP Depayloader");
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_dv_depay_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP DV Depayloader",
+      "Codec/Depayloader/Network/RTP",
+      "Depayloads DV from RTP packets (RFC 3189)",
+      "Marcel Moreaux <marcelm@spacelabs.nl>, Wim Taymans <wim.taymans@gmail.com>");
 
   gstbasertpdepayload_class->process =
       GST_DEBUG_FUNCPTR (gst_rtp_dv_depay_process);
   gstbasertpdepayload_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_rtp_dv_depay_setcaps);
-
-  GST_DEBUG_CATEGORY_INIT (rtpdvdepay_debug, "rtpdvdepay", 0,
-      "DV RTP Depayloader");
 }
 
 /* initialize the new element
@@ -124,7 +119,7 @@ gst_rtp_dv_depay_class_init (GstRTPDVDepayClass * klass)
  * initialize structure
  */
 static void
-gst_rtp_dv_depay_init (GstRTPDVDepay * filter, GstRTPDVDepayClass * klass)
+gst_rtp_dv_depay_init (GstRTPDVDepay * filter)
 {
 }
 

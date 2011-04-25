@@ -54,37 +54,34 @@ static GstBuffer *gst_rtp_bv_depay_process (GstBaseRTPDepayload * depayload,
 static gboolean gst_rtp_bv_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRTPBVDepay, gst_rtp_bv_depay, GstBaseRTPDepayload,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
-
-static void
-gst_rtp_bv_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_bv_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_bv_depay_sink_template));
-  gst_element_class_set_details_simple (element_class,
-      "RTP BroadcomVoice depayloader", "Codec/Depayloader/Network/RTP",
-      "Extracts BroadcomVoice audio from RTP packets (RFC 4298)",
-      "Wim Taymans <wim.taymans@collabora.co.uk>");
-}
+#define gst_rtp_bv_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRTPBVDepay, gst_rtp_bv_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void
 gst_rtp_bv_depay_class_init (GstRTPBVDepayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
+  gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_bv_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_bv_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP BroadcomVoice depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts BroadcomVoice audio from RTP packets (RFC 4298)",
+      "Wim Taymans <wim.taymans@collabora.co.uk>");
 
   gstbasertpdepayload_class->process = gst_rtp_bv_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_bv_depay_setcaps;
 }
 
 static void
-gst_rtp_bv_depay_init (GstRTPBVDepay * rtpbvdepay, GstRTPBVDepayClass * klass)
+gst_rtp_bv_depay_init (GstRTPBVDepay * rtpbvdepay)
 {
   rtpbvdepay->mode = -1;
 }

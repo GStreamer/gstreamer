@@ -47,8 +47,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "encoding-name = (string) \"AC3\"")
     );
 
-GST_BOILERPLATE (GstRtpAC3Depay, gst_rtp_ac3_depay, GstBaseRTPDepayload,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRtpAC3Depay, gst_rtp_ac3_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static gboolean gst_rtp_ac3_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
@@ -56,27 +55,23 @@ static GstBuffer *gst_rtp_ac3_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
 static void
-gst_rtp_ac3_depay_base_init (gpointer klass)
+gst_rtp_ac3_depay_class_init (GstRtpAC3DepayClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *gstelement_class;
+  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
-  gst_element_class_add_pad_template (element_class,
+  gstelement_class = (GstElementClass *) klass;
+  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_ac3_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_ac3_depay_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "RTP AC3 depayloader",
+  gst_element_class_set_details_simple (gstelement_class, "RTP AC3 depayloader",
       "Codec/Depayloader/Network/RTP",
       "Extracts AC3 audio from RTP packets (RFC 4184)",
       "Wim Taymans <wim.taymans@gmail.com>");
-}
-
-static void
-gst_rtp_ac3_depay_class_init (GstRtpAC3DepayClass * klass)
-{
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
-
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gstbasertpdepayload_class->set_caps = gst_rtp_ac3_depay_setcaps;
   gstbasertpdepayload_class->process = gst_rtp_ac3_depay_process;
@@ -86,10 +81,9 @@ gst_rtp_ac3_depay_class_init (GstRtpAC3DepayClass * klass)
 }
 
 static void
-gst_rtp_ac3_depay_init (GstRtpAC3Depay * rtpac3depay,
-    GstRtpAC3DepayClass * klass)
+gst_rtp_ac3_depay_init (GstRtpAC3Depay * rtpac3depay)
 {
-  /* needed because of GST_BOILERPLATE */
+  /* needed because of G_DEFINE_TYPE */
 }
 
 static gboolean

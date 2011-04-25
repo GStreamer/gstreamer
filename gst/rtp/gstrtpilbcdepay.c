@@ -71,7 +71,8 @@ static GstBuffer *gst_rtp_ilbc_depay_process (GstBaseRTPDepayload * depayload,
 static gboolean gst_rtp_ilbc_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRTPiLBCDepay, gst_rtp_ilbc_depay, GstBaseRTPDepayload,
+#define gst_rtp_ilbc_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRTPiLBCDepay, gst_rtp_ilbc_depay,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 #define GST_TYPE_ILBC_MODE (gst_ilbc_mode_get_type())
@@ -92,27 +93,14 @@ gst_ilbc_mode_get_type (void)
 }
 
 static void
-gst_rtp_ilbc_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_ilbc_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_ilbc_depay_sink_template));
-  gst_element_class_set_details_simple (element_class, "RTP iLBC depayloader",
-      "Codec/Depayloader/Network/RTP",
-      "Extracts iLBC audio from RTP packets (RFC 3952)",
-      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>");
-}
-
-static void
 gst_rtp_ilbc_depay_class_init (GstRTPiLBCDepayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gobject_class->set_property = gst_ilbc_depay_set_property;
@@ -124,13 +112,22 @@ gst_rtp_ilbc_depay_class_init (GstRTPiLBCDepayClass * klass)
           GST_TYPE_ILBC_MODE, DEFAULT_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_ilbc_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_ilbc_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP iLBC depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts iLBC audio from RTP packets (RFC 3952)",
+      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>");
+
   gstbasertpdepayload_class->process = gst_rtp_ilbc_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_ilbc_depay_setcaps;
 }
 
 static void
-gst_rtp_ilbc_depay_init (GstRTPiLBCDepay * rtpilbcdepay,
-    GstRTPiLBCDepayClass * klass)
+gst_rtp_ilbc_depay_init (GstRTPiLBCDepay * rtpilbcdepay)
 {
   /* Set default mode */
   rtpilbcdepay->mode = DEFAULT_MODE;

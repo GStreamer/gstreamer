@@ -45,8 +45,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"X-GST\"")
     );
 
-GST_BOILERPLATE (GstRtpGSTDepay, gst_rtp_gst_depay, GstBaseRTPDepayload,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+#define gst_rtp_gst_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpGSTDepay, gst_rtp_gst_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void gst_rtp_gst_depay_finalize (GObject * object);
 
@@ -60,27 +60,14 @@ static GstBuffer *gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
 static void
-gst_rtp_gst_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_gst_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_gst_depay_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "GStreamer depayloader", "Codec/Depayloader/Network",
-      "Extracts GStreamer buffers from RTP packets",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
-
-static void
 gst_rtp_gst_depay_class_init (GstRtpGSTDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+
+  GST_DEBUG_CATEGORY_INIT (rtpgstdepay_debug, "rtpgstdepay", 0,
+      "Gstreamer RTP Depayloader");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -90,16 +77,22 @@ gst_rtp_gst_depay_class_init (GstRtpGSTDepayClass * klass)
 
   gstelement_class->change_state = gst_rtp_gst_depay_change_state;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_gst_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_gst_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "GStreamer depayloader", "Codec/Depayloader/Network",
+      "Extracts GStreamer buffers from RTP packets",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
   gstbasertpdepayload_class->set_caps = gst_rtp_gst_depay_setcaps;
   gstbasertpdepayload_class->process = gst_rtp_gst_depay_process;
-
-  GST_DEBUG_CATEGORY_INIT (rtpgstdepay_debug, "rtpgstdepay", 0,
-      "Gstreamer RTP Depayloader");
 }
 
 static void
-gst_rtp_gst_depay_init (GstRtpGSTDepay * rtpgstdepay,
-    GstRtpGSTDepayClass * klass)
+gst_rtp_gst_depay_init (GstRtpGSTDepay * rtpgstdepay)
 {
   rtpgstdepay->adapter = gst_adapter_new ();
 }

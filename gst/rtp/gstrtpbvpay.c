@@ -58,40 +58,37 @@ static GstCaps *gst_rtp_bv_pay_sink_getcaps (GstBaseRTPPayload * payload,
 static gboolean gst_rtp_bv_pay_sink_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRTPBVPay, gst_rtp_bv_pay, GstBaseRTPAudioPayload,
-    GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
-
-static void
-gst_rtp_bv_pay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_bv_pay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_bv_pay_src_template));
-  gst_element_class_set_details_simple (element_class, "RTP BV Payloader",
-      "Codec/Payloader/Network/RTP",
-      "Packetize BroadcomVoice audio streams into RTP packets (RFC 4298)",
-      "Wim Taymans <wim.taymans@collabora.co.uk>");
-}
+#define gst_rtp_bv_pay_parent_class parent_class
+G_DEFINE_TYPE (GstRTPBVPay, gst_rtp_bv_pay, GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
 
 static void
 gst_rtp_bv_pay_class_init (GstRTPBVPayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
-
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
-
-  gstbasertppayload_class->set_caps = gst_rtp_bv_pay_sink_setcaps;
-  gstbasertppayload_class->get_caps = gst_rtp_bv_pay_sink_getcaps;
 
   GST_DEBUG_CATEGORY_INIT (rtpbvpay_debug, "rtpbvpay", 0,
       "BroadcomVoice audio RTP payloader");
+
+  gstelement_class = (GstElementClass *) klass;
+  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_bv_pay_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_bv_pay_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "RTP BV Payloader",
+      "Codec/Payloader/Network/RTP",
+      "Packetize BroadcomVoice audio streams into RTP packets (RFC 4298)",
+      "Wim Taymans <wim.taymans@collabora.co.uk>");
+
+  gstbasertppayload_class->set_caps = gst_rtp_bv_pay_sink_setcaps;
+  gstbasertppayload_class->get_caps = gst_rtp_bv_pay_sink_getcaps;
 }
 
 static void
-gst_rtp_bv_pay_init (GstRTPBVPay * rtpbvpay, GstRTPBVPayClass * klass)
+gst_rtp_bv_pay_init (GstRTPBVPay * rtpbvpay)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
 

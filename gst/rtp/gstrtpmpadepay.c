@@ -50,8 +50,8 @@ static GstStaticPadTemplate gst_rtp_mpa_depay_sink_template =
         "clock-rate = (int) 90000")
     );
 
-GST_BOILERPLATE (GstRtpMPADepay, gst_rtp_mpa_depay, GstBaseRTPDepayload,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+#define gst_rtp_mpa_depay_parent_class parent_class
+G_DEFINE_TYPE (GstRtpMPADepay, gst_rtp_mpa_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static gboolean gst_rtp_mpa_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
@@ -59,38 +59,33 @@ static GstBuffer *gst_rtp_mpa_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
 static void
-gst_rtp_mpa_depay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_mpa_depay_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_mpa_depay_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP MPEG audio depayloader", "Codec/Depayloader/Network/RTP",
-      "Extracts MPEG audio from RTP packets (RFC 2038)",
-      "Wim Taymans <wim.taymans@gmail.com>");
-}
-
-static void
 gst_rtp_mpa_depay_class_init (GstRtpMPADepayClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
-
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
-
-  gstbasertpdepayload_class->set_caps = gst_rtp_mpa_depay_setcaps;
-  gstbasertpdepayload_class->process = gst_rtp_mpa_depay_process;
 
   GST_DEBUG_CATEGORY_INIT (rtpmpadepay_debug, "rtpmpadepay", 0,
       "MPEG Audio RTP Depayloader");
+
+  gstelement_class = (GstElementClass *) klass;
+  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_mpa_depay_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_mpa_depay_sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "RTP MPEG audio depayloader", "Codec/Depayloader/Network/RTP",
+      "Extracts MPEG audio from RTP packets (RFC 2038)",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
+  gstbasertpdepayload_class->set_caps = gst_rtp_mpa_depay_setcaps;
+  gstbasertpdepayload_class->process = gst_rtp_mpa_depay_process;
 }
 
 static void
-gst_rtp_mpa_depay_init (GstRtpMPADepay * rtpmpadepay,
-    GstRtpMPADepayClass * klass)
+gst_rtp_mpa_depay_init (GstRtpMPADepay * rtpmpadepay)
 {
   /* needed because of GST_BOILERPLATE */
 }
