@@ -121,28 +121,13 @@ static void gst_video_balance_set_property (GObject * object, guint prop_id,
 static void gst_video_balance_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void
-_do_init (GType video_balance_type)
-{
-  static const GInterfaceInfo iface_info = {
-    (GInterfaceInitFunc) gst_video_balance_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo colorbalance_info = {
-    (GInterfaceInitFunc) gst_video_balance_colorbalance_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (video_balance_type,
-      GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
-  g_type_add_interface_static (video_balance_type, GST_TYPE_COLOR_BALANCE,
-      &colorbalance_info);
-}
-
-GST_BOILERPLATE_FULL (GstVideoBalance, gst_video_balance, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER, _do_init);
+#define gst_video_balance_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVideoBalance, gst_video_balance,
+    GST_TYPE_VIDEO_FILTER,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
+        gst_video_balance_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_video_balance_colorbalance_init));
 
 /*
  * look-up tables (LUT).
@@ -526,22 +511,6 @@ not_negotiated:
 }
 
 static void
-gst_video_balance_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Video balance",
-      "Filter/Effect/Video",
-      "Adjusts brightness, contrast, hue, saturation on a video stream",
-      "David Schleef <ds@schleef.org>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_balance_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_balance_src_template));
-}
-
-static void
 gst_video_balance_finalize (GObject * object)
 {
   GList *channels = NULL;
@@ -568,6 +537,7 @@ static void
 gst_video_balance_class_init (GstVideoBalanceClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (videobalance_debug, "videobalance", 0,
@@ -593,6 +563,16 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
           DEFAULT_PROP_SATURATION,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "Video balance",
+      "Filter/Effect/Video",
+      "Adjusts brightness, contrast, hue, saturation on a video stream",
+      "David Schleef <ds@schleef.org>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_video_balance_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_video_balance_src_template));
+
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_balance_set_caps);
   trans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_video_balance_transform_ip);
@@ -601,8 +581,7 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
 }
 
 static void
-gst_video_balance_init (GstVideoBalance * videobalance,
-    GstVideoBalanceClass * klass)
+gst_video_balance_init (GstVideoBalance * videobalance)
 {
   const gchar *channels[4] = { "HUE", "SATURATION",
     "BRIGHTNESS", "CONTRAST"

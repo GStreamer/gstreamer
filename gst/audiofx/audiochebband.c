@@ -96,11 +96,9 @@ enum
   PROP_POLES
 };
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_cheb_band_debug, "audiochebband", 0, "audiochebband element");
-
-GST_BOILERPLATE_FULL (GstAudioChebBand, gst_audio_cheb_band,
-    GstAudioFXBaseIIRFilter, GST_TYPE_AUDIO_FX_BASE_IIR_FILTER, DEBUG_INIT);
+#define gst_audio_cheb_band_parent_class parent_class
+G_DEFINE_TYPE (GstAudioChebBand, gst_audio_cheb_band,
+    GST_TYPE_AUDIO_FX_BASE_IIR_FILTER);
 
 static void gst_audio_cheb_band_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -140,21 +138,14 @@ gst_audio_cheb_band_mode_get_type (void)
 /* GObject vmethod implementations */
 
 static void
-gst_audio_cheb_band_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "Band pass & band reject filter", "Filter/Effect/Audio",
-      "Chebyshev band pass and band reject filter",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
 gst_audio_cheb_band_class_init (GstAudioChebBandClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstAudioFilterClass *filter_class = (GstAudioFilterClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_audio_cheb_band_debug, "audiochebband", 0,
+      "audiochebband element");
 
   gobject_class->set_property = gst_audio_cheb_band_set_property;
   gobject_class->get_property = gst_audio_cheb_band_get_property;
@@ -193,12 +184,16 @@ gst_audio_cheb_band_class_init (GstAudioChebBandClass * klass)
           4, 32, 4,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Band pass & band reject filter", "Filter/Effect/Audio",
+      "Chebyshev band pass and band reject filter",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_cheb_band_setup);
 }
 
 static void
-gst_audio_cheb_band_init (GstAudioChebBand * filter,
-    GstAudioChebBandClass * klass)
+gst_audio_cheb_band_init (GstAudioChebBand * filter)
 {
   filter->lower_frequency = filter->upper_frequency = 0.0;
   filter->mode = MODE_BAND_PASS;

@@ -117,11 +117,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
     );
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_panorama_debug, "audiopanorama", 0, "audiopanorama element");
-
-GST_BOILERPLATE_FULL (GstAudioPanorama, gst_audio_panorama, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+G_DEFINE_TYPE (GstAudioPanorama, gst_audio_panorama, GST_TYPE_BASE_TRANSFORM);
 
 static void gst_audio_panorama_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -180,26 +176,17 @@ static GstAudioPanoramaProcessFunc panorama_process_functions[2][2][2] = {
 /* GObject vmethod implementations */
 
 static void
-gst_audio_panorama_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details_simple (element_class, "Stereo positioning",
-      "Filter/Effect/Audio",
-      "Positions audio streams in the stereo panorama",
-      "Stefan Kost <ensonic@users.sf.net>");
-}
-
-static void
 gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+
+  GST_DEBUG_CATEGORY_INIT (gst_audio_panorama_debug, "audiopanorama", 0,
+      "audiopanorama element");
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+
   gobject_class->set_property = gst_audio_panorama_set_property;
   gobject_class->get_property = gst_audio_panorama_get_property;
 
@@ -224,6 +211,16 @@ gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
           GST_TYPE_AUDIO_PANORAMA_METHOD, METHOD_PSYCHOACOUSTIC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "Stereo positioning",
+      "Filter/Effect/Audio",
+      "Positions audio streams in the stereo panorama",
+      "Stefan Kost <ensonic@users.sf.net>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_panorama_get_unit_size);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
@@ -235,8 +232,7 @@ gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
 }
 
 static void
-gst_audio_panorama_init (GstAudioPanorama * filter,
-    GstAudioPanoramaClass * klass)
+gst_audio_panorama_init (GstAudioPanorama * filter)
 {
 
   filter->panorama = 0;
@@ -655,8 +651,9 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstAudioPanorama *filter = GST_AUDIO_PANORAMA (base);
-  guint num_samples = GST_BUFFER_SIZE (outbuf) / (2 * filter->width);
   GstClockTime timestamp, stream_time;
+  guint8 *indata, *outdata;
+  gsize insize, outsize;
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   stream_time =
@@ -668,14 +665,20 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (filter), stream_time);
 
+  indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
+  outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP))) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
-    memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
-    return GST_FLOW_OK;
+    memset (outdata, 0, outsize);
+  } else {
+    guint num_samples = outsize / (2 * filter->width);
+
+    filter->process (filter, indata, outdata, num_samples);
   }
 
-  filter->process (filter, GST_BUFFER_DATA (inbuf),
-      GST_BUFFER_DATA (outbuf), num_samples);
+  gst_buffer_unmap (inbuf, indata, insize);
+  gst_buffer_unmap (outbuf, outdata, outsize);
 
   return GST_FLOW_OK;
 }

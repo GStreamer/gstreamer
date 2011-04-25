@@ -130,27 +130,13 @@ static void gst_gamma_before_transform (GstBaseTransform * transform,
 
 static void gst_gamma_calculate_tables (GstGamma * gamma);
 
-GST_BOILERPLATE (GstGamma, gst_gamma, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
-
-static void
-gst_gamma_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Video gamma correction",
-      "Filter/Effect/Video",
-      "Adjusts gamma on a video stream", "Arwed v. Merkatz <v.merkatz@gmx.net");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gamma_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gamma_src_template));
-}
+G_DEFINE_TYPE (GstGamma, gst_gamma, GST_TYPE_VIDEO_FILTER);
 
 static void
 gst_gamma_class_init (GstGammaClass * g_class)
 {
   GObjectClass *gobject_class = (GObjectClass *) g_class;
+  GstElementClass *gstelement_class = (GstElementClass *) g_class;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) g_class;
 
   GST_DEBUG_CATEGORY_INIT (gamma_debug, "gamma", 0, "gamma");
@@ -163,6 +149,15 @@ gst_gamma_class_init (GstGammaClass * g_class)
           0.01, 10, DEFAULT_PROP_GAMMA,
           GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Video gamma correction", "Filter/Effect/Video",
+      "Adjusts gamma on a video stream", "Arwed v. Merkatz <v.merkatz@gmx.net");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_gamma_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_gamma_src_template));
+
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_gamma_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_gamma_transform_ip);
   trans_class->before_transform =
@@ -170,7 +165,7 @@ gst_gamma_class_init (GstGammaClass * g_class)
 }
 
 static void
-gst_gamma_init (GstGamma * gamma, GstGammaClass * g_class)
+gst_gamma_init (GstGamma * gamma)
 {
   /* properties */
   gamma->gamma = DEFAULT_PROP_GAMMA;

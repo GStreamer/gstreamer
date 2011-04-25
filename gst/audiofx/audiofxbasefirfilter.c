@@ -49,10 +49,6 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
     " rate = (int) [ 1, MAX ], "                                      \
     " channels = (int) [ 1, MAX ]"
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_fx_base_fir_filter_debug, "audiofxbasefirfilter", 0, \
-      "FIR filter base class");
-
 /* Switch from time-domain to FFT convolution for kernels >= this */
 #define FFT_THRESHOLD 32
 
@@ -66,8 +62,9 @@ enum
 #define DEFAULT_LOW_LATENCY FALSE
 #define DEFAULT_DRAIN_ON_CHANGES TRUE
 
-GST_BOILERPLATE_FULL (GstAudioFXBaseFIRFilter, gst_audio_fx_base_fir_filter,
-    GstAudioFilter, GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
+#define gst_audio_fx_base_fir_filter_parent_class parent_class
+G_DEFINE_TYPE (GstAudioFXBaseFIRFilter, gst_audio_fx_base_fir_filter,
+    GST_TYPE_AUDIO_FILTER);
 
 static GstFlowReturn gst_audio_fx_base_fir_filter_transform (GstBaseTransform *
     base, GstBuffer * inbuf, GstBuffer * outbuf);
@@ -76,8 +73,8 @@ static gboolean gst_audio_fx_base_fir_filter_stop (GstBaseTransform * base);
 static gboolean gst_audio_fx_base_fir_filter_event (GstBaseTransform * base,
     GstEvent * event);
 static gboolean gst_audio_fx_base_fir_filter_transform_size (GstBaseTransform *
-    base, GstPadDirection direction, GstCaps * caps, guint size,
-    GstCaps * othercaps, guint * othersize);
+    base, GstPadDirection direction, GstCaps * caps, gsize size,
+    GstCaps * othercaps, gsize * othersize);
 static gboolean gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
 
@@ -541,22 +538,15 @@ gst_audio_fx_base_fir_filter_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_audio_fx_base_fir_filter_base_init (gpointer g_class)
-{
-  GstCaps *caps;
-
-  caps = gst_caps_from_string (ALLOWED_CAPS);
-  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
-      caps);
-  gst_caps_unref (caps);
-}
-
-static void
 gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
   GstAudioFilterClass *filter_class = (GstAudioFilterClass *) klass;
+  GstCaps *caps;
+
+  GST_DEBUG_CATEGORY_INIT (gst_audio_fx_base_fir_filter_debug,
+      "audiofxbasefirfilter", 0, "FIR filter base class");
 
   gobject_class->dispose = gst_audio_fx_base_fir_filter_dispose;
   gobject_class->set_property = gst_audio_fx_base_fir_filter_set_property;
@@ -593,6 +583,11 @@ gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
           DEFAULT_DRAIN_ON_CHANGES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),
+      caps);
+  gst_caps_unref (caps);
+
   trans_class->transform =
       GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_transform);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_start);
@@ -604,8 +599,7 @@ gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
 }
 
 static void
-gst_audio_fx_base_fir_filter_init (GstAudioFXBaseFIRFilter * self,
-    GstAudioFXBaseFIRFilterClass * g_class)
+gst_audio_fx_base_fir_filter_init (GstAudioFXBaseFIRFilter * self)
 {
   self->kernel = NULL;
   self->buffer = NULL;
@@ -634,7 +628,8 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
   gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels;
   gint width = GST_AUDIO_FILTER_CAST (self)->format.width / 8;
   gint outsize, outsamples;
-  guint8 *in, *out;
+  guint8 *in, *out, *data;
+  gsize size;
 
   if (channels == 0 || rate == 0 || self->nsamples_in == 0) {
     self->buffer_fill = 0;
@@ -684,15 +679,16 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
 
     /* Convolve the residue with zeros to get the actual remaining data */
     in = g_new0 (guint8, outsize);
-    self->nsamples_out +=
-        self->process (self, in, GST_BUFFER_DATA (outbuf), outsamples);
+    data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
+    self->nsamples_out += self->process (self, in, data, outsamples);
+    gst_buffer_unmap (outbuf, data, size);
+
     g_free (in);
   } else {
     guint gensamples = 0;
-    guint8 *data;
 
     outbuf = gst_buffer_new_and_alloc (outsize);
-    data = GST_BUFFER_DATA (outbuf);
+    data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
 
     while (gensamples < outsamples) {
       guint step_insamples = self->block_length - self->buffer_fill;
@@ -710,6 +706,8 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
       g_free (out);
     }
     self->nsamples_out += gensamples;
+
+    gst_buffer_unmap (outbuf, data, size);
   }
 
   /* Set timestamp, offset, etc from the values we
@@ -734,7 +732,8 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
   GST_DEBUG_OBJECT (self, "Pushing residue buffer of size %d with timestamp: %"
       GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
       G_GUINT64_FORMAT ", offset_end: %" G_GUINT64_FORMAT ", nsamples_out: %d",
-      GST_BUFFER_SIZE (outbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      gst_buffer_get_size (outbuf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf),
       GST_BUFFER_OFFSET_END (outbuf), outsamples);
 
@@ -778,8 +777,8 @@ gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
 
 static gboolean
 gst_audio_fx_base_fir_filter_transform_size (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
-    guint * othersize)
+    GstPadDirection direction, GstCaps * caps, gsize size, GstCaps * othercaps,
+    gsize * othersize)
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
   guint blocklen;
@@ -817,8 +816,10 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
   gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels;
   gint rate = GST_AUDIO_FILTER_CAST (self)->format.rate;
   gint width = GST_AUDIO_FILTER_CAST (self)->format.width / 8;
-  guint input_samples = (GST_BUFFER_SIZE (inbuf) / width) / channels;
-  guint output_samples = (GST_BUFFER_SIZE (outbuf) / width) / channels;
+  guint8 *indata, *outdata;
+  gsize insize, outsize;
+  guint input_samples;
+  guint output_samples;
   guint generated_samples;
   guint64 output_offset;
   gint64 diff = 0;
@@ -871,11 +872,18 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
     self->start_off = GST_BUFFER_OFFSET (inbuf);
   }
 
+  indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
+  outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+
+  input_samples = (insize / width) / channels;
+  output_samples = (outsize / width) / channels;
+
   self->nsamples_in += input_samples;
 
-  generated_samples =
-      self->process (self, GST_BUFFER_DATA (inbuf), GST_BUFFER_DATA (outbuf),
-      input_samples);
+  generated_samples = self->process (self, indata, outdata, input_samples);
+
+  gst_buffer_unmap (inbuf, indata, insize);
+  gst_buffer_unmap (outbuf, outdata, outsize);
 
   g_assert (generated_samples <= output_samples);
   self->nsamples_out += generated_samples;
@@ -891,9 +899,9 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
     gint64 tmp = diff;
     diff = generated_samples - diff;
     generated_samples = tmp;
-    GST_BUFFER_DATA (outbuf) += diff * width * channels;
   }
-  GST_BUFFER_SIZE (outbuf) = generated_samples * width * channels;
+  gst_buffer_resize (outbuf, diff * width * channels,
+      generated_samples * width * channels);
 
   output_offset = self->nsamples_out - self->latency - generated_samples;
   GST_BUFFER_TIMESTAMP (outbuf) =
@@ -913,7 +921,8 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
   GST_DEBUG_OBJECT (self, "Pushing buffer of size %d with timestamp: %"
       GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
       G_GUINT64_FORMAT ", offset_end: %" G_GUINT64_FORMAT ", nsamples_out: %d",
-      GST_BUFFER_SIZE (outbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      gst_buffer_get_size (outbuf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf),
       GST_BUFFER_OFFSET_END (outbuf), generated_samples);
 

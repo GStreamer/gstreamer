@@ -73,11 +73,8 @@ enum
     " rate=(int)[1,MAX],"                                             \
     " channels=(int)[1,MAX]"
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_echo_debug, "audioecho", 0, "audioecho element");
-
-GST_BOILERPLATE_FULL (GstAudioEcho, gst_audio_echo, GstAudioFilter,
-    GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
+#define gst_audio_echo_parent_class parent_class
+G_DEFINE_TYPE (GstAudioEcho, gst_audio_echo, GST_TYPE_AUDIO_FILTER);
 
 static void gst_audio_echo_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -99,28 +96,16 @@ static void gst_audio_echo_transform_double (GstAudioEcho * self,
 /* GObject vmethod implementations */
 
 static void
-gst_audio_echo_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstCaps *caps;
-
-  gst_element_class_set_details_simple (element_class, "Audio echo",
-      "Filter/Effect/Audio",
-      "Adds an echo or reverb effect to an audio stream",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  caps = gst_caps_from_string (ALLOWED_CAPS);
-  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),
-      caps);
-  gst_caps_unref (caps);
-}
-
-static void
 gst_audio_echo_class_init (GstAudioEchoClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *basetransform_class = (GstBaseTransformClass *) klass;
   GstAudioFilterClass *audioself_class = (GstAudioFilterClass *) klass;
+  GstCaps *caps;
+
+  GST_DEBUG_CATEGORY_INIT (gst_audio_echo_debug, "audioecho", 0,
+      "audioecho element");
 
   gobject_class->set_property = gst_audio_echo_set_property;
   gobject_class->get_property = gst_audio_echo_get_property;
@@ -151,6 +136,16 @@ gst_audio_echo_class_init (GstAudioEchoClass * klass)
           0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
           | GST_PARAM_CONTROLLABLE));
 
+  gst_element_class_set_details_simple (gstelement_class, "Audio echo",
+      "Filter/Effect/Audio",
+      "Adds an echo or reverb effect to an audio stream",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),
+      caps);
+  gst_caps_unref (caps);
+
   audioself_class->setup = GST_DEBUG_FUNCPTR (gst_audio_echo_setup);
   basetransform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_audio_echo_transform_ip);
@@ -158,7 +153,7 @@ gst_audio_echo_class_init (GstAudioEchoClass * klass)
 }
 
 static void
-gst_audio_echo_init (GstAudioEcho * self, GstAudioEchoClass * klass)
+gst_audio_echo_init (GstAudioEcho * self)
 {
   self->delay = 1;
   self->max_delay = 1;
@@ -359,6 +354,8 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   GstAudioEcho *self = GST_AUDIO_ECHO (base);
   guint num_samples;
   GstClockTime timestamp, stream_time;
+  guint8 *data;
+  gsize size;
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   stream_time =
@@ -369,9 +366,6 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (self), stream_time);
-
-  num_samples =
-      GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (self)->format.width / 8);
 
   if (self->buffer == NULL) {
     guint width, rate, channels;
@@ -395,7 +389,12 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
     }
   }
 
-  self->process (self, GST_BUFFER_DATA (buf), num_samples);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
+  num_samples = size / (GST_AUDIO_FILTER (self)->format.width / 8);
+
+  self->process (self, data, num_samples);
+
+  gst_buffer_unmap (buf, data, size);
 
   return GST_FLOW_OK;
 }

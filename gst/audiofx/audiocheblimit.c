@@ -91,12 +91,9 @@ enum
   PROP_POLES
 };
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_cheb_limit_debug, "audiocheblimit", 0, "audiocheblimit element");
-
-GST_BOILERPLATE_FULL (GstAudioChebLimit,
-    gst_audio_cheb_limit, GstAudioFXBaseIIRFilter,
-    GST_TYPE_AUDIO_FX_BASE_IIR_FILTER, DEBUG_INIT);
+#define gst_audio_cheb_limit_parent_class parent_class
+G_DEFINE_TYPE (GstAudioChebLimit,
+    gst_audio_cheb_limit, GST_TYPE_AUDIO_FX_BASE_IIR_FILTER);
 
 static void gst_audio_cheb_limit_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -136,22 +133,14 @@ gst_audio_cheb_limit_mode_get_type (void)
 /* GObject vmethod implementations */
 
 static void
-gst_audio_cheb_limit_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "Low pass & high pass filter",
-      "Filter/Effect/Audio",
-      "Chebyshev low pass and high pass filter",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
 gst_audio_cheb_limit_class_init (GstAudioChebLimitClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstAudioFilterClass *filter_class = (GstAudioFilterClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_audio_cheb_limit_debug, "audiocheblimit", 0,
+      "audiocheblimit element");
 
   gobject_class->set_property = gst_audio_cheb_limit_set_property;
   gobject_class->get_property = gst_audio_cheb_limit_get_property;
@@ -186,12 +175,17 @@ gst_audio_cheb_limit_class_init (GstAudioChebLimitClass * klass)
           2, 32, 4,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Low pass & high pass filter",
+      "Filter/Effect/Audio",
+      "Chebyshev low pass and high pass filter",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_cheb_limit_setup);
 }
 
 static void
-gst_audio_cheb_limit_init (GstAudioChebLimit * filter,
-    GstAudioChebLimitClass * klass)
+gst_audio_cheb_limit_init (GstAudioChebLimit * filter)
 {
   filter->cutoff = 0.0;
   filter->mode = MODE_LOW_PASS;

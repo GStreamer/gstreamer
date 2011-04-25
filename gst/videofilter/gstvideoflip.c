@@ -130,8 +130,8 @@ gst_video_flip_method_get_type (void)
   return video_flip_method_type;
 }
 
-GST_BOILERPLATE (GstVideoFlip, gst_video_flip, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
+#define gst_video_flip_parent_class parent_class
+G_DEFINE_TYPE (GstVideoFlip, gst_video_flip, GST_TYPE_VIDEO_FILTER);
 
 static GstCaps *
 gst_video_flip_transform_caps (GstBaseTransform * trans,
@@ -1047,24 +1047,10 @@ gst_video_flip_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_video_flip_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Video flipper",
-      "Filter/Effect/Video",
-      "Flips and rotates video", "David Schleef <ds@schleef.org>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_flip_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_flip_src_template));
-}
-
-static void
 gst_video_flip_class_init (GstVideoFlipClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (video_flip_debug, "videoflip", 0, "videoflip");
@@ -1077,6 +1063,15 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
           GST_TYPE_VIDEO_FLIP_METHOD, PROP_METHOD_DEFAULT,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "Video flipper",
+      "Filter/Effect/Video",
+      "Flips and rotates video", "David Schleef <ds@schleef.org>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_video_flip_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_video_flip_src_template));
+
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_flip_transform_caps);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_flip_set_caps);
@@ -1088,7 +1083,7 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
 }
 
 static void
-gst_video_flip_init (GstVideoFlip * videoflip, GstVideoFlipClass * klass)
+gst_video_flip_init (GstVideoFlip * videoflip)
 {
   videoflip->method = PROP_METHOD_DEFAULT;
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (videoflip), TRUE);

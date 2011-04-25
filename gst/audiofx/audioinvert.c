@@ -78,11 +78,7 @@ enum
     " rate=(int)[1,MAX],"                                             \
     " channels=(int)[1,MAX]"
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_invert_debug, "audioinvert", 0, "audioinvert element");
-
-GST_BOILERPLATE_FULL (GstAudioInvert, gst_audio_invert, GstAudioFilter,
-    GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
+G_DEFINE_TYPE (GstAudioInvert, gst_audio_invert, GST_TYPE_AUDIO_FILTER);
 
 static void gst_audio_invert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -102,28 +98,18 @@ static void gst_audio_invert_transform_float (GstAudioInvert * filter,
 /* GObject vmethod implementations */
 
 static void
-gst_audio_invert_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstCaps *caps;
-
-  gst_element_class_set_details_simple (element_class, "Audio inversion",
-      "Filter/Effect/Audio",
-      "Swaps upper and lower half of audio samples",
-      "Sebastian Dröge <slomo@circular-chaos.org>");
-
-  caps = gst_caps_from_string (ALLOWED_CAPS);
-  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),
-      caps);
-  gst_caps_unref (caps);
-}
-
-static void
 gst_audio_invert_class_init (GstAudioInvertClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+  GstCaps *caps;
+
+  GST_DEBUG_CATEGORY_INIT (gst_audio_invert_debug, "audioinvert", 0,
+      "audioinvert element");
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+
   gobject_class->set_property = gst_audio_invert_set_property;
   gobject_class->get_property = gst_audio_invert_get_property;
 
@@ -133,6 +119,16 @@ gst_audio_invert_class_init (GstAudioInvertClass * klass)
           0.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "Audio inversion",
+      "Filter/Effect/Audio",
+      "Swaps upper and lower half of audio samples",
+      "Sebastian Dröge <slomo@circular-chaos.org>");
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),
+      caps);
+  gst_caps_unref (caps);
+
   GST_AUDIO_FILTER_CLASS (klass)->setup =
       GST_DEBUG_FUNCPTR (gst_audio_invert_setup);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_ip =
@@ -140,7 +136,7 @@ gst_audio_invert_class_init (GstAudioInvertClass * klass)
 }
 
 static void
-gst_audio_invert_init (GstAudioInvert * filter, GstAudioInvertClass * klass)
+gst_audio_invert_init (GstAudioInvert * filter)
 {
   filter->degree = 0.0;
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
@@ -236,6 +232,8 @@ gst_audio_invert_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   GstAudioInvert *filter = GST_AUDIO_INVERT (base);
   guint num_samples;
   GstClockTime timestamp, stream_time;
+  guint8 *data;
+  gsize size;
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   stream_time =
@@ -247,14 +245,16 @@ gst_audio_invert_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (filter), stream_time);
 
-  num_samples =
-      GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
-
   if (gst_base_transform_is_passthrough (base) ||
       G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP)))
     return GST_FLOW_OK;
 
-  filter->process (filter, GST_BUFFER_DATA (buf), num_samples);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
+  num_samples = size / (GST_AUDIO_FILTER (filter)->format.width / 8);
+
+  filter->process (filter, data, num_samples);
+
+  gst_buffer_unmap (buf, data, size);
 
   return GST_FLOW_OK;
 }

@@ -62,8 +62,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         GST_VIDEO_CAPS_YUV ("AYUV"))
     );
 
-GST_BOILERPLATE (GstAlphaColor, gst_alpha_color, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
+G_DEFINE_TYPE (GstAlphaColor, gst_alpha_color, GST_TYPE_VIDEO_FILTER);
 
 static GstCaps *gst_alpha_color_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps);
@@ -73,26 +72,24 @@ static GstFlowReturn gst_alpha_color_transform_ip (GstBaseTransform * btrans,
     GstBuffer * inbuf);
 
 static void
-gst_alpha_color_base_init (gpointer g_class)
+gst_alpha_color_class_init (GstAlphaColorClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstBaseTransformClass *gstbasetransform_class =
+      (GstBaseTransformClass *) klass;
 
-  gst_element_class_set_details_simple (element_class, "Alpha color filter",
+  GST_DEBUG_CATEGORY_INIT (alpha_color_debug, "alphacolor", 0,
+      "ARGB<->AYUV colorspace conversion preserving the alpha channels");
+
+  gst_element_class_set_details_simple (gstelement_class, "Alpha color filter",
       "Filter/Converter/Video",
       "ARGB from/to AYUV colorspace conversion preserving the alpha channel",
       "Wim Taymans <wim@fluendo.com>");
 
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));
-}
-
-static void
-gst_alpha_color_class_init (GstAlphaColorClass * klass)
-{
-  GstBaseTransformClass *gstbasetransform_class =
-      (GstBaseTransformClass *) klass;
 
   gstbasetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_alpha_color_transform_caps);
@@ -101,12 +98,10 @@ gst_alpha_color_class_init (GstAlphaColorClass * klass)
   gstbasetransform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_alpha_color_transform_ip);
 
-  GST_DEBUG_CATEGORY_INIT (alpha_color_debug, "alphacolor", 0,
-      "ARGB<->AYUV colorspace conversion preserving the alpha channels");
 }
 
 static void
-gst_alpha_color_init (GstAlphaColor * alpha, GstAlphaColorClass * g_class)
+gst_alpha_color_init (GstAlphaColor * alpha)
 {
   GstBaseTransform *btrans = GST_BASE_TRANSFORM (alpha);
 

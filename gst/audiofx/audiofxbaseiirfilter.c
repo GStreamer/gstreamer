@@ -42,12 +42,9 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
     " rate = (int) [ 1, MAX ],"                                       \
     " channels = (int) [ 1, MAX ]"
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_fx_base_iir_filter_debug, "audiofxbaseiirfilter", 0, "Audio IIR Filter Base Class");
-
-GST_BOILERPLATE_FULL (GstAudioFXBaseIIRFilter,
-    gst_audio_fx_base_iir_filter, GstAudioFilter, GST_TYPE_AUDIO_FILTER,
-    DEBUG_INIT);
+#define gst_audio_fx_base_iir_filter_parent_class parent_class
+G_DEFINE_TYPE (GstAudioFXBaseIIRFilter,
+    gst_audio_fx_base_iir_filter, GST_TYPE_AUDIO_FILTER);
 
 static gboolean gst_audio_fx_base_iir_filter_setup (GstAudioFilter * filter,
     GstRingBufferSpec * format);
@@ -62,17 +59,6 @@ static void process_32 (GstAudioFXBaseIIRFilter * filter,
     gfloat * data, guint num_samples);
 
 /* GObject vmethod implementations */
-
-static void
-gst_audio_fx_base_iir_filter_base_init (gpointer klass)
-{
-  GstCaps *caps;
-
-  caps = gst_caps_from_string (ALLOWED_CAPS);
-  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),
-      caps);
-  gst_caps_unref (caps);
-}
 
 static void
 gst_audio_fx_base_iir_filter_dispose (GObject * object)
@@ -112,8 +98,17 @@ gst_audio_fx_base_iir_filter_class_init (GstAudioFXBaseIIRFilterClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
   GstAudioFilterClass *filter_class = (GstAudioFilterClass *) klass;
+  GstCaps *caps;
+
+  GST_DEBUG_CATEGORY_INIT (gst_audio_fx_base_iir_filter_debug,
+      "audiofxbaseiirfilter", 0, "Audio IIR Filter Base Class");
 
   gobject_class->dispose = gst_audio_fx_base_iir_filter_dispose;
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),
+      caps);
+  gst_caps_unref (caps);
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_fx_base_iir_filter_setup);
 
@@ -123,8 +118,7 @@ gst_audio_fx_base_iir_filter_class_init (GstAudioFXBaseIIRFilterClass * klass)
 }
 
 static void
-gst_audio_fx_base_iir_filter_init (GstAudioFXBaseIIRFilter * filter,
-    GstAudioFXBaseIIRFilterClass * klass)
+gst_audio_fx_base_iir_filter_init (GstAudioFXBaseIIRFilter * filter)
 {
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
 
@@ -357,6 +351,8 @@ gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
   GstAudioFXBaseIIRFilter *filter = GST_AUDIO_FX_BASE_IIR_FILTER (base);
   guint num_samples;
   GstClockTime timestamp, stream_time;
+  guint8 *data;
+  gsize size;
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   stream_time =
@@ -368,15 +364,17 @@ gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (filter), stream_time);
 
-  num_samples =
-      GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
-
   if (gst_base_transform_is_passthrough (base))
     return GST_FLOW_OK;
 
   g_return_val_if_fail (filter->a != NULL, GST_FLOW_ERROR);
 
-  filter->process (filter, GST_BUFFER_DATA (buf), num_samples);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
+  num_samples = size / (GST_AUDIO_FILTER (filter)->format.width / 8);
+
+  filter->process (filter, data, num_samples);
+
+  gst_buffer_unmap (buf, data, size);
 
   return GST_FLOW_OK;
 }

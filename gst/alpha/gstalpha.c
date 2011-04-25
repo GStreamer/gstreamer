@@ -193,7 +193,8 @@ static void gst_alpha_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_alpha_finalize (GObject * object);
 
-GST_BOILERPLATE (GstAlpha, gst_alpha, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
+#define gst_alpha_parent_class parent_class
+G_DEFINE_TYPE (GstAlpha, gst_alpha, GST_TYPE_VIDEO_FILTER);
 
 #define GST_TYPE_ALPHA_METHOD (gst_alpha_method_get_type())
 static GType
@@ -215,31 +216,14 @@ gst_alpha_method_get_type (void)
 }
 
 static void
-gst_alpha_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Alpha filter",
-      "Filter/Effect/Video",
-      "Adds an alpha channel to video - uniform or via chroma-keying",
-      "Wim Taymans <wim@fluendo.com>\n"
-      "Edward Hervey <edward.hervey@collabora.co.uk>\n"
-      "Jan Schmidt <thaytan@noraisin.net>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_alpha_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_alpha_src_template));
-
-  GST_DEBUG_CATEGORY_INIT (gst_alpha_debug, "alpha", 0,
-      "alpha - Element for adding alpha channel to streams");
-}
-
-static void
 gst_alpha_class_init (GstAlphaClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_alpha_debug, "alpha", 0,
+      "alpha - Element for adding alpha channel to streams");
 
   gobject_class->set_property = gst_alpha_set_property;
   gobject_class->get_property = gst_alpha_get_property;
@@ -290,6 +274,18 @@ gst_alpha_class_init (GstAlphaClass * klass)
           DEFAULT_PREFER_PASSTHROUGH,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "Alpha filter",
+      "Filter/Effect/Video",
+      "Adds an alpha channel to video - uniform or via chroma-keying",
+      "Wim Taymans <wim.taymans@gmail.com>\n"
+      "Edward Hervey <edward.hervey@collabora.co.uk>\n"
+      "Jan Schmidt <thaytan@noraisin.net>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_alpha_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_alpha_src_template));
+
   btrans_class->start = GST_DEBUG_FUNCPTR (gst_alpha_start);
   btrans_class->transform = GST_DEBUG_FUNCPTR (gst_alpha_transform);
   btrans_class->before_transform =
@@ -300,7 +296,7 @@ gst_alpha_class_init (GstAlphaClass * klass)
 }
 
 static void
-gst_alpha_init (GstAlpha * alpha, GstAlphaClass * klass)
+gst_alpha_init (GstAlpha * alpha)
 {
   alpha->alpha = DEFAULT_ALPHA;
   alpha->method = DEFAULT_METHOD;

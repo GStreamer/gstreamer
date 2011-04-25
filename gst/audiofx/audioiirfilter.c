@@ -71,12 +71,9 @@ enum
 
 static guint gst_audio_iir_filter_signals[LAST_SIGNAL] = { 0, };
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_iir_filter_debug, "audioiirfilter", 0, \
-      "Generic audio IIR filter plugin");
-
-GST_BOILERPLATE_FULL (GstAudioIIRFilter, gst_audio_iir_filter, GstAudioFilter,
-    GST_TYPE_AUDIO_FX_BASE_IIR_FILTER, DEBUG_INIT);
+#define gst_audio_iir_filter_parent_class parent_class
+G_DEFINE_TYPE (GstAudioIIRFilter, gst_audio_iir_filter,
+    GST_TYPE_AUDIO_FX_BASE_IIR_FILTER);
 
 static void gst_audio_iir_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -87,23 +84,15 @@ static void gst_audio_iir_filter_finalize (GObject * object);
 static gboolean gst_audio_iir_filter_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
 
-/* Element class */
-static void
-gst_audio_iir_filter_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Audio IIR filter", "Filter/Effect/Audio",
-      "Generic audio IIR filter with custom filter kernel",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
 static void
 gst_audio_iir_filter_class_init (GstAudioIIRFilterClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstAudioFilterClass *filter_class = (GstAudioFilterClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_audio_iir_filter_debug, "audioiirfilter", 0,
+      "Generic audio IIR filter plugin");
 
   gobject_class->set_property = gst_audio_iir_filter_set_property;
   gobject_class->get_property = gst_audio_iir_filter_get_property;
@@ -139,6 +128,11 @@ gst_audio_iir_filter_class_init (GstAudioIIRFilterClass * klass)
       g_signal_new ("rate-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstAudioIIRFilterClass, rate_changed),
       NULL, NULL, gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Audio IIR filter", "Filter/Effect/Audio",
+      "Generic audio IIR filter with custom filter kernel",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
 static void
@@ -184,8 +178,7 @@ gst_audio_iir_filter_update_coefficients (GstAudioIIRFilter * self,
 }
 
 static void
-gst_audio_iir_filter_init (GstAudioIIRFilter * self,
-    GstAudioIIRFilterClass * g_class)
+gst_audio_iir_filter_init (GstAudioIIRFilter * self)
 {
   GValue v = { 0, };
   GValueArray *a, *b;

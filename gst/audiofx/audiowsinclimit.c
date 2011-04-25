@@ -137,12 +137,9 @@ gst_audio_wsinclimit_window_get_type (void)
   return gtype;
 }
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_wsinclimit_debug, "audiowsinclimit", 0, \
-      "Low-pass and High-pass Windowed sinc filter plugin");
-
-GST_BOILERPLATE_FULL (GstAudioWSincLimit, gst_audio_wsinclimit, GstAudioFilter,
-    GST_TYPE_AUDIO_FX_BASE_FIR_FILTER, DEBUG_INIT);
+#define gst_audio_wsinclimit_parent_class parent_class
+G_DEFINE_TYPE (GstAudioWSincLimit, gst_audio_wsinclimit,
+    GST_TYPE_AUDIO_FX_BASE_FIR_FILTER);
 
 static void gst_audio_wsinclimit_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -156,27 +153,15 @@ static gboolean gst_audio_wsinclimit_setup (GstAudioFilter * base,
 
 #define POW2(x)  (x)*(x)
 
-/* Element class */
-
-static void
-gst_audio_wsinclimit_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Low pass & high pass filter", "Filter/Effect/Audio",
-      "Low pass and high pass windowed sinc filter",
-      "Thomas Vander Stichele <thomas at apestaart dot org>, "
-      "Steven W. Smith, "
-      "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
 static void
 gst_audio_wsinclimit_class_init (GstAudioWSincLimitClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstAudioFilterClass *filter_class = (GstAudioFilterClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_audio_wsinclimit_debug, "audiowsinclimit", 0,
+      "Low-pass and High-pass Windowed sinc filter plugin");
 
   gobject_class->set_property = gst_audio_wsinclimit_set_property;
   gobject_class->get_property = gst_audio_wsinclimit_get_property;
@@ -206,12 +191,19 @@ gst_audio_wsinclimit_class_init (GstAudioWSincLimitClass * klass)
           WINDOW_HAMMING,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Low pass & high pass filter", "Filter/Effect/Audio",
+      "Low pass and high pass windowed sinc filter",
+      "Thomas Vander Stichele <thomas at apestaart dot org>, "
+      "Steven W. Smith, "
+      "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_wsinclimit_setup);
 }
 
 static void
-gst_audio_wsinclimit_init (GstAudioWSincLimit * self,
-    GstAudioWSincLimitClass * g_class)
+gst_audio_wsinclimit_init (GstAudioWSincLimit * self)
 {
   self->mode = MODE_LOW_PASS;
   self->window = WINDOW_HAMMING;

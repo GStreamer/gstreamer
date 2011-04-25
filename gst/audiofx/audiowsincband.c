@@ -138,12 +138,9 @@ gst_gst_audio_wsincband_window_get_type (void)
   return gtype;
 }
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_gst_audio_wsincband_debug, "audiowsincband", 0, \
-      "Band-pass and Band-reject Windowed sinc filter plugin");
-
-GST_BOILERPLATE_FULL (GstAudioWSincBand, gst_audio_wsincband, GstAudioFilter,
-    GST_TYPE_AUDIO_FX_BASE_FIR_FILTER, DEBUG_INIT);
+#define gst_audio_wsincband_parent_class parent_class
+G_DEFINE_TYPE (GstAudioWSincBand, gst_audio_wsincband,
+    GST_TYPE_AUDIO_FX_BASE_FIR_FILTER);
 
 static void gst_audio_wsincband_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -157,26 +154,15 @@ static gboolean gst_audio_wsincband_setup (GstAudioFilter * base,
 
 #define POW2(x)  (x)*(x)
 
-/* Element class */
-static void
-gst_audio_wsincband_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Band pass & band reject filter", "Filter/Effect/Audio",
-      "Band pass and band reject windowed sinc filter",
-      "Thomas Vander Stichele <thomas at apestaart dot org>, "
-      "Steven W. Smith, "
-      "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
 static void
 gst_audio_wsincband_class_init (GstAudioWSincBandClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstAudioFilterClass *filter_class = (GstAudioFilterClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_gst_audio_wsincband_debug, "audiowsincband", 0,
+      "Band-pass and Band-reject Windowed sinc filter plugin");
 
   gobject_class->set_property = gst_audio_wsincband_set_property;
   gobject_class->get_property = gst_audio_wsincband_get_property;
@@ -210,12 +196,19 @@ gst_audio_wsincband_class_init (GstAudioWSincBandClass * klass)
           WINDOW_HAMMING,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Band pass & band reject filter", "Filter/Effect/Audio",
+      "Band pass and band reject windowed sinc filter",
+      "Thomas Vander Stichele <thomas at apestaart dot org>, "
+      "Steven W. Smith, "
+      "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_wsincband_setup);
 }
 
 static void
-gst_audio_wsincband_init (GstAudioWSincBand * self,
-    GstAudioWSincBandClass * g_class)
+gst_audio_wsincband_init (GstAudioWSincBand * self)
 {
   self->kernel_length = 101;
   self->lower_frequency = 0.0;

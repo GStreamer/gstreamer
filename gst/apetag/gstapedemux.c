@@ -72,31 +72,27 @@ static GstTagDemuxResult gst_ape_demux_parse_tag (GstTagDemux * demux,
     GstBuffer * buffer, gboolean start_tag, guint * tag_size,
     GstTagList ** tags);
 
-GST_BOILERPLATE (GstApeDemux, gst_ape_demux, GstTagDemux, GST_TYPE_TAG_DEMUX);
+G_DEFINE_TYPE (GstApeDemux, gst_ape_demux, GST_TYPE_TAG_DEMUX);
 
 static void
-gst_ape_demux_base_init (gpointer klass)
+gst_ape_demux_class_init (GstApeDemuxClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *element_class;
+  GstTagDemuxClass *tagdemux_class;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  GST_DEBUG_CATEGORY_INIT (apedemux_debug, "apedemux", 0,
+      "GStreamer APE tag demuxer");
+
+  tagdemux_class = GST_TAG_DEMUX_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_set_details_simple (element_class, "APE tag demuxer",
       "Codec/Demuxer/Metadata",
       "Read and output APE tags while demuxing the contents",
       "Tim-Philipp Müller <tim centricular net>");
 
-  GST_DEBUG_CATEGORY_INIT (apedemux_debug, "apedemux", 0,
-      "GStreamer APE tag demuxer");
-}
-
-static void
-gst_ape_demux_class_init (GstApeDemuxClass * klass)
-{
-  GstTagDemuxClass *tagdemux_class;
-
-  tagdemux_class = GST_TAG_DEMUX_CLASS (klass);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
 
   tagdemux_class->identify_tag = GST_DEBUG_FUNCPTR (gst_ape_demux_identify_tag);
   tagdemux_class->parse_tag = GST_DEBUG_FUNCPTR (gst_ape_demux_parse_tag);
@@ -110,7 +106,7 @@ gst_ape_demux_class_init (GstApeDemuxClass * klass)
 }
 
 static void
-gst_ape_demux_init (GstApeDemux * apedemux, GstApeDemuxClass * gclass)
+gst_ape_demux_init (GstApeDemux * apedemux)
 {
   /* nothing to do here */
 }
