@@ -3174,12 +3174,9 @@ dont_send:
 }
 
 void
-rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc, gboolean fir)
+rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc)
 {
   guint i;
-
-  if (fir)
-    return;
 
   for (i = 0; i < sess->rtcp_pli_requests->len; i++)
     if (ssrc == g_array_index (sess->rtcp_pli_requests, guint32, i))

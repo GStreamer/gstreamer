@@ -1,6 +1,8 @@
-/* Quicktime muxer plugin for GStreamer
- * Copyright (C) 2008 Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>
+/* Quicktime muxer documentation
+ * Copyright (C) 2008-2010 Thiago Santos <thiagoss@embedded.ufcg.edu.br>
  * Copyright (C) 2008 Mark Nauwelaerts <mnauw@users.sf.net>
+ * Copyright (C) 2010 Nokia Corporation. All rights reserved.
+ * Contact: Stefan Kost <stefan.kost@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -41,44 +43,10 @@
  * SOFTWARE.
  */
 
-#ifndef __GST_QT_MUX_MAP_H__
-#define __GST_QT_MUX_MAP_H__
+#error "This header is for gtk-doc only and not supposed to be included"
 
-#include "atoms.h"
+typedef struct _GstMP4Mux GstMP4Mux;
+typedef struct _Gst3GPPMux GstMP4Mux;
+typedef struct _GstISMLMux GstMP4Mux;
+typedef struct _GstMJ2Mux GstMJ2Mux;
 
-#include <glib.h>
-#include <gst/gst.h>
-
-typedef enum _GstQTMuxFormat
-{
-  GST_QT_MUX_FORMAT_NONE = 0,
-  GST_QT_MUX_FORMAT_QT,
-  GST_QT_MUX_FORMAT_MP4,
-  GST_QT_MUX_FORMAT_3GP,
-  GST_QT_MUX_FORMAT_MJ2,
-  GST_QT_MUX_FORMAT_ISML
-} GstQTMuxFormat;
-
-typedef struct _GstQTMuxFormatProp
-{
-  GstQTMuxFormat format;
-  GstRank rank;
-  const gchar *name;
-  const gchar *long_name;
-  const gchar *type_name;
-  GstStaticCaps src_caps;
-  GstStaticCaps video_sink_caps;
-  GstStaticCaps audio_sink_caps;
-} GstQTMuxFormatProp;
-
-extern GstQTMuxFormatProp gst_qt_mux_format_list[];
-
-void            gst_qt_mux_map_format_to_header      (GstQTMuxFormat format, GstBuffer ** _prefix,
-                                                      guint32 * _major, guint32 * verson,
-                                                      GList ** _compatible, AtomMOOV * moov,
-                                                      GstClockTime longest_chunk,
-                                                      gboolean faststart);
-
-AtomsTreeFlavor gst_qt_mux_map_format_to_flavor      (GstQTMuxFormat format);
-
-#endif /* __GST_QT_MUX_MAP_H__ */

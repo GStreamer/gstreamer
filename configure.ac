@@ -296,12 +296,22 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
 
 dnl define an ERROR_CFLAGS Makefile variable
 dnl -Wundef: too many broken headers
-dnl -Waggregate-return: causes problems with ObjC code like in osxvideosink
-AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
+if test "x$HAVE_OSX_VIDEO" != "xyes"; then
+  AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
         -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
-        -Wwrite-strings -Wold-style-definition
+        -Wwrite-strings -Wold-style-definition -Waggregate-return
         -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
         -Wnested-externs ])
+else
+  dnl work-around for us passing GST_CFLAGS to the ObjC-compiler, which
+  dnl doesn't understand all warning flags that the C compiler knows about
+  dnl (e.g. -Waddress) or causes problems with some flags (-Waggregate-return)
+  AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
+        -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
+        -Wwrite-strings -Wold-style-definition
+        -Winit-self -Wmissing-include-dirs -Wno-multichar
+        -Wnested-externs ])
+fi
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [

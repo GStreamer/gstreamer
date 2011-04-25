@@ -348,7 +348,6 @@ void            rtp_session_request_early_rtcp     (RTPSession * sess, GstClockT
 
 /* Notify session of a request for a new key unit */
 void            rtp_session_request_key_unit       (RTPSession * sess,
-                                                    guint32 ssrc,
-                                                    gboolean fir);
+                                                    guint32 ssrc);
 
 #endif /* __RTP_SESSION_H__ */

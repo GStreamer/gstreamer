@@ -1,4 +1,11 @@
 <SECTION>
+<FILE>element-3gppmux</FILE>
+<TITLE>3gppmux</TITLE>
+Gst3GPPMux
+<SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
 <FILE>element-aacparse</FILE>
 <TITLE>aacparse</TITLE>
 GstAacParse
@@ -1197,6 +1204,13 @@ gst_interleave_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-ismlmux</FILE>
+<TITLE>ismlmux</TITLE>
+GstISMLMux
+<SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
 <FILE>element-jackaudiosrc</FILE>
 <TITLE>jackaudiosrc</TITLE>
 GstJackAudioSrc
@@ -1301,6 +1315,13 @@ gst_matroska_demux_plugin_init
 </SECTION>
 
 <SECTION>
+<FILE>element-mj2mux</FILE>
+<TITLE>mj2mux</TITLE>
+GstMJ2Mux
+<SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
 <FILE>element-monoscope</FILE>
 <TITLE>monoscope</TITLE>
 GstMonoscope
@@ -1326,6 +1347,13 @@ GST_IS_MPEG_AUDIO_PARSE
 GST_IS_MPEG_AUDIO_PARSE_CLASS
 GST_TYPE_MPEG_AUDIO_PARSE
 gst_mpeg_audio_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-mp4mux</FILE>
+<TITLE>mp4mux</TITLE>
+GstMP4Mux
+<SUBSECTION Standard>
 </SECTION>
 
 <SECTION>
@@ -1685,6 +1713,16 @@ GST_QTDEMUX_CLASS
 GST_QTDEMUX_MAX_STREAMS
 GST_TYPE_QTDEMUX
 gst_qtdemux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-qtmoovrecover</FILE>
+<TITLE>qtmoovrecover</TITLE>
+GstQTMoovRecover
+GstQTMoovRecoverClass
+gst_qt_moov_recover_get_type
+gst_qt_moov_recover_register
+<SUBSECTION Standard>
 </SECTION>
 
 <SECTION>
