@@ -121,8 +121,8 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
         y1++;
       }
       if (j >= y1) {
-        gst_videoscale_orc_resample_bilinear_u32 (LINE (j),
-            src->pixels + j * src->stride, 0, x_increment, dest->width);
+        gst_videoscale_orc_resample_bilinear_u32 (LINE (j + 1),
+            src->pixels + (j + 1) * src->stride, 0, x_increment, dest->width);
         y1++;
       }
       orc_merge_linear_u8 (dest->pixels + i * dest->stride,
