@@ -81,8 +81,7 @@
 #define __TSMUX_COMMON_H__
 
 #include <glib.h>
-
-#undef TS_DEBUG_ON
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
@@ -169,11 +168,8 @@ tsmux_put_ts (guint8 **pos, guint8 id, gint64 ts)
   tsmux_put16 (pos, ((ts << 1) & 0xfffe) | 0x01);
 }
 
-#ifdef TS_DEBUG_ON
-#define TS_DEBUG(...) g_print(__VA_ARGS__); g_print ("\n")
-#else
-#define TS_DEBUG(...)
-#endif
+GST_DEBUG_CATEGORY_EXTERN (mpegtsmux_debug);
+#define TS_DEBUG GST_DEBUG
 
 G_END_DECLS
 
