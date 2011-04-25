@@ -1098,9 +1098,9 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
 #define FSEEK_FILE(file,offset)  (fseek (file, offset, SEEK_SET) != 0)
 #endif
 
-static gint64
+static GstFlowReturn
 gst_queue2_read_data_at_offset (GstQueue2 * queue, guint64 offset, guint length,
-    guint8 * dst)
+    guint8 * dst, gint64 * read_return)
 {
   guint8 *ring_buffer;
   size_t res;
@@ -1132,7 +1132,9 @@ gst_queue2_read_data_at_offset (GstQueue2 * queue, guint64 offset, guint length,
       goto eos;
   }
 
-  return res;
+  *read_return = res;
+
+  return GST_FLOW_OK;
 
 seek_failed:
   {
@@ -1159,9 +1161,9 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
   guint8 *data;
   guint64 file_offset;
   guint block_length, remaining, read_length;
-  gint64 read_return;
   guint64 rb_size;
   guint64 rpos;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   /* allocate the output buffer of the requested size */
   buf = gst_buffer_new_and_alloc (length);
@@ -1207,12 +1209,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
                 "EOS hit but read %" G_GUINT64_FORMAT " bytes that we have",
                 level);
             read_length = level;
-          } else {
-            GST_DEBUG_OBJECT (queue,
-                "EOS hit and we don't have any requested data");
-            gst_buffer_unref (buf);
-            return GST_FLOW_UNEXPECTED;
-          }
+          } else
+            goto hit_eos;
         }
       }
 
@@ -1256,10 +1254,12 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
     /* while we still have data to read, we loop */
     while (read_length > 0) {
-      read_return =
+      gint64 read_return;
+
+      ret =
           gst_queue2_read_data_at_offset (queue, file_offset, block_length,
-          data);
-      if (read_return < 0)
+          data, &read_return);
+      if (ret != GST_FLOW_OK)
         goto read_error;
 
       file_offset += read_return;
@@ -1285,9 +1285,15 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
   *buffer = buf;
 
-  return GST_FLOW_OK;
+  return ret;
 
   /* ERRORS */
+hit_eos:
+  {
+    GST_DEBUG_OBJECT (queue, "EOS hit and we don't have any requested data");
+    gst_buffer_unref (buf);
+    return GST_FLOW_UNEXPECTED;
+  }
 out_flushing:
   {
     GST_DEBUG_OBJECT (queue, "we are flushing");
@@ -1299,7 +1305,7 @@ read_error:
     GST_DEBUG_OBJECT (queue, "we have a read error");
     gst_buffer_unmap (buf, data, 0);
     gst_buffer_unref (buf);
-    return read_return;
+    return ret;
   }
 }
 
@@ -2815,7 +2821,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = ! !queue->ring_buffer;
+        result = !!queue->ring_buffer;
       } else {
         result = TRUE;
       }
