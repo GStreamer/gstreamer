@@ -3047,7 +3047,8 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* check for outdated collisions */
   GST_DEBUG ("Timing out collisions");
   rtp_source_timeout (sess->source, current_time,
-      data.interval * RTCP_INTERVAL_COLLISION_TIMEOUT,
+      /* "a relatively long time" -- RFC 3550 section 8.2 */
+      RTP_STATS_MIN_INTERVAL * GST_SECOND * 10,
       running_time - sess->rtcp_feedback_retention_window);
 
   if (sess->change_ssrc) {
