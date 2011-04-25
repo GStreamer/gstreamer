@@ -144,8 +144,8 @@ gst_format_register (const gchar * nick, const gchar * description)
   GstFormatDefinition *format;
   GstFormat query;
 
-  g_return_val_if_fail (nick != NULL, 0);
-  g_return_val_if_fail (description != NULL, 0);
+  g_return_val_if_fail (nick != NULL, GST_FORMAT_UNDEFINED);
+  g_return_val_if_fail (description != NULL, GST_FORMAT_UNDEFINED);
 
   query = gst_format_get_by_nick (nick);
   if (query != GST_FORMAT_UNDEFINED)
@@ -182,7 +182,7 @@ gst_format_get_by_nick (const gchar * nick)
 {
   GstFormatDefinition *format;
 
-  g_return_val_if_fail (nick != NULL, 0);
+  g_return_val_if_fail (nick != NULL, GST_FORMAT_UNDEFINED);
 
   g_static_mutex_lock (&mutex);
   format = g_hash_table_lookup (_nick_to_format, nick);

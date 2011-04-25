@@ -3649,7 +3649,7 @@ gst_parse_bin_from_description (const gchar * bin_description,
     gboolean ghost_unlinked_pads, GError ** err)
 {
   return gst_parse_bin_from_description_full (bin_description,
-      ghost_unlinked_pads, NULL, 0, err);
+      ghost_unlinked_pads, NULL, GST_PARSE_FLAG_NONE, err);
 }
 
 /**

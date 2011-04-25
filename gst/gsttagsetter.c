@@ -412,7 +412,7 @@ gst_tag_setter_get_tag_merge_mode (GstTagSetter * setter)
   GstTagMergeMode mode;
   GstTagData *data;
 
-  g_return_val_if_fail (GST_IS_TAG_SETTER (setter), FALSE);
+  g_return_val_if_fail (GST_IS_TAG_SETTER (setter), GST_TAG_MERGE_UNDEFINED);
 
   data = gst_tag_setter_get_data (setter);
 

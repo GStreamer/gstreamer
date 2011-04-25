@@ -189,8 +189,8 @@ gst_query_type_register (const gchar * nick, const gchar * description)
   GstQueryTypeDefinition *query;
   GstQueryType lookup;
 
-  g_return_val_if_fail (nick != NULL, 0);
-  g_return_val_if_fail (description != NULL, 0);
+  g_return_val_if_fail (nick != NULL, GST_QUERY_NONE);
+  g_return_val_if_fail (description != NULL, GST_QUERY_NONE);
 
   lookup = gst_query_type_get_by_nick (nick);
   if (lookup != GST_QUERY_NONE)
@@ -227,7 +227,7 @@ gst_query_type_get_by_nick (const gchar * nick)
 {
   GstQueryTypeDefinition *query;
 
-  g_return_val_if_fail (nick != NULL, 0);
+  g_return_val_if_fail (nick != NULL, GST_QUERY_NONE);
 
   g_static_mutex_lock (&mutex);
   query = g_hash_table_lookup (_nick_to_query, nick);

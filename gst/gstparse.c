@@ -223,7 +223,7 @@ _gst_parse_escape (const gchar * str)
 GstElement *
 gst_parse_launchv (const gchar ** argv, GError ** error)
 {
-  return gst_parse_launchv_full (argv, NULL, 0, error);
+  return gst_parse_launchv_full (argv, NULL, GST_PARSE_FLAG_NONE, error);
 }
 
 /**
@@ -299,7 +299,8 @@ gst_parse_launchv_full (const gchar ** argv, GstParseContext * context,
 GstElement *
 gst_parse_launch (const gchar * pipeline_description, GError ** error)
 {
-  return gst_parse_launch_full (pipeline_description, NULL, 0, error);
+  return gst_parse_launch_full (pipeline_description, NULL, GST_PARSE_FLAG_NONE,
+      error);
 }
 
 /**
