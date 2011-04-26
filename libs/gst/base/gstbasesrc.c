@@ -1739,7 +1739,7 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
     }
     case GST_EVENT_RENEGOTIATE:
     {
-      src->priv->renegotiate = TRUE;
+      g_atomic_int_set (&src->priv->renegotiate, TRUE);
       result = TRUE;
       break;
     }
@@ -2375,11 +2375,9 @@ gst_base_src_loop (GstPad * pad)
   src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
   /* check if we need to renegotiate */
-  if (src->priv->renegotiate) {
+  if (g_atomic_int_compare_and_exchange (&src->priv->renegotiate, TRUE, FALSE)) {
     if (!gst_base_src_negotiate (src))
       GST_DEBUG_OBJECT (src, "Failed to renegotiate");
-    else
-      src->priv->renegotiate = TRUE;
   }
 
   GST_LIVE_LOCK (src);
