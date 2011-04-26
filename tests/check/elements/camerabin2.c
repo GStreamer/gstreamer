@@ -192,7 +192,7 @@ validate_taglist_foreach (const GstTagList * list, const gchar * tag,
   fail_if (val1 == NULL);
   fail_if (val2 == NULL);
 
-  fail_unless (gst_value_can_intersect (val1, val2));
+  fail_unless (gst_value_compare (val1, val2) == GST_VALUE_EQUAL);
 }
 
 
