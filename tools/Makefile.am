@@ -3,7 +3,6 @@ templatefiles=\
 	element-templates/audiofilter \
 	element-templates/audiosink \
 	element-templates/audiosrc \
-	element-templates/base \
 	element-templates/baseaudiosink \
 	element-templates/baseaudiosrc \
 	element-templates/basertpdepayload \
@@ -15,13 +14,16 @@ templatefiles=\
 	element-templates/element \
 	element-templates/gobject \
 	element-templates/pushsrc \
-	element-templates/sinkpad \
-	element-templates/sinkpad-simple \
-	element-templates/srcpad \
-	element-templates/srcpad-simple \
 	element-templates/tagdemux \
 	element-templates/videofilter2 \
 	element-templates/videosink
+
+broken_templatefiles = \
+	element-templates/base \
+	element-templates/sinkpad \
+	element-templates/sinkpad-simple \
+	element-templates/srcpad \
+	element-templates/srcpad-simple
 
 EXTRA_DIST = \
 	gst-element-maker \
