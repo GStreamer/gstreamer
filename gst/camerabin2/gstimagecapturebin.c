@@ -327,6 +327,14 @@ gst_image_capture_bin_change_state (GstElement * element, GstStateChange trans)
       if (!gst_image_capture_bin_create_elements (imagebin)) {
         return GST_STATE_CHANGE_FAILURE;
       }
+
+      /* set our image muxer to MERGE_REPLACE mode if it is a tagsetter */
+      if (imagebin->muxer && gst_element_implements_interface (imagebin->muxer,
+              GST_TYPE_TAG_SETTER)) {
+        gst_tag_setter_set_tag_merge_mode (GST_TAG_SETTER (imagebin->muxer),
+            GST_TAG_MERGE_REPLACE);
+      }
+
       break;
     default:
       break;
