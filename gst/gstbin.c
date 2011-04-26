@@ -540,7 +540,7 @@ gst_bin_init (GstBin * bin, GstBinClass * klass)
   bin->clock_dirty = FALSE;
 
   /* Set up a bus for listening to child elements */
-  bus = g_object_new (GST_TYPE_BUS, "enable-async", FALSE, NULL);
+  bus = gst_bus_new ();
   bin->child_bus = bus;
   GST_DEBUG_OBJECT (bin, "using bus %" GST_PTR_FORMAT " to listen to children",
       bus);

@@ -123,6 +123,7 @@ gboolean  priv_gst_structure_append_to_gstring (const GstStructure * structure,
 gboolean 		gst_registry_binary_read_cache 	(GstRegistry * registry, const char *location);
 gboolean 		gst_registry_binary_write_cache	(GstRegistry * registry, const char *location);
 
+
 /* used in gstvalue.c and gststructure.c */
 #define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
     ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
