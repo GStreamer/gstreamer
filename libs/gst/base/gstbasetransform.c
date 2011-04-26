@@ -1846,6 +1846,7 @@ gst_base_transform_src_eventfunc (GstBaseTransform * trans, GstEvent * event)
     }
     case GST_EVENT_RENEGOTIATE:
       gst_pad_set_caps (GST_BASE_TRANSFORM_SINK_PAD (trans), NULL);
+      gst_base_transform_reconfigure (trans);
       break;
     default:
       break;
