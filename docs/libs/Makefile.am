@@ -8,7 +8,7 @@ DOC_MODULE=$(MODULE)
 
 # for upload-doc.mak
 DOC=$(MODULE)
-FORMATS=html ps pdf
+FORMATS=html
 html: html-build.stamp
 include $(top_srcdir)/common/upload-doc.mak
 

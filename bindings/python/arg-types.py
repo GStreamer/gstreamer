@@ -145,6 +145,54 @@ class GstIteratorArg(ArgType):
 		info.varlist.add('GstIterator', '*ret')
 		info.codeafter.append('    return pygst_iterator_new(ret);')
 
+class GstRTSPUrlArg(ArgType):
+	"""GstRTSPUrl node generator"""
+
+	before = ('    parse_result = gst_rtsp_url_parse (py_%(name)s, &%(name)s);\n'
+		  '    if (parse_result != GST_RTSP_OK) {\n'
+          '      PyErr_SetString(PyExc_TypeError, "invalid url");\n'
+		  '      return NULL;\n'
+          '    }')
+	beforenull = ('    if (py_%(name)s == NULL)\n'
+		      '        %(name)s = NULL;\n'
+		      '    else\n'
+		      '  ' + before)
+	after = ('    if (%(name)s)\n'
+		 '        gst_rtsp_url_free (%(name)s);\n')
+
+	def write_param(self, ptype, pname, pdflt, pnull, keeprefcount, info):
+		if ptype in ('const-GstRTSPUrl*', 'GstRTSPUrl*'):
+			self.write_normal_param(pname, pdflt, pnull, info)
+		else:
+			raise RuntimeError, "write_param not implemented for %s" % ptype
+
+	def write_normal_param(self, pname, pdflt, pnull, info):
+		info.varlist.add('GstRTSPResult', 'parse_result')
+		if pdflt:
+			assert pdflt == 'NULL'
+			info.varlist.add('const char', '*py_' + pname + ' = NULL')
+		else:
+			info.varlist.add('const char', '*py_' + pname)
+		info.varlist.add('GstRTSPUrl', '*'+pname)
+		info.add_parselist('s', ['&py_'+pname], [pname])
+		info.arglist.append(pname)
+		if pnull:
+			info.codebefore.append (self.beforenull % { 'name' : pname  })
+		else:
+			info.codebefore.append (self.before % { 'name' : pname })
+		info.codeafter.append (self.after % { 'name' : pname })
+
+	def write_return(self, ptype, ownsreturn, info):
+		if ptype == 'GstRTSPUrl*':
+			info.varlist.add('GstRTSPUrl', '*ret')
+			copyval = 'FALSE'
+		elif ptype == 'const-GstRTSPUrl*':
+			info.varlist.add('const GstRTSPUrl', '*ret')
+			copyval = 'TRUE'
+		else:
+			raise RuntimeError, "write_return not implemented for %s" % ptype
+		info.codeafter.append('    return pyg_boxed_new (GST_TYPE_RTSP_URL, ret, '+copyval+', TRUE);')
+
 class GstMiniObjectParam(Parameter):
 
 	def get_c_type(self):
@@ -164,6 +212,31 @@ class GstMiniObjectParam(Parameter):
 		self.wrapper.add_pyargv_item("py_%s" % self.name)
 
 matcher.register_reverse('GstMiniObject*', GstMiniObjectParam)
+
+class GstRTSPUrlParam(Parameter):
+
+	def get_c_type(self):
+		c_type = self.props.get('c_type', None)
+        if c_type and c_type.startswith('const'):
+            return 'const GstRTSPUrl *'
+		return 'GstRTSPUrl *'
+
+	def convert_c2py(self):
+		self.wrapper.add_declaration("char *%s_str = NULL;" % self.name)
+		self.wrapper.add_declaration("PyObject *py_%s = NULL;" % self.name)
+		self.wrapper.write_code(code=("if (%(name)s) {\n"
+					      "    %(name)s_str = gst_rtsp_url_get_request_uri ((GstRTSPUrl*) %(name)s);\n"
+					      "    py_%(name)s = PyString_FromString (%(name)s_str);\n"
+                          "    g_free (%(name)s_str);\n"
+					      "} else {\n"
+					      "    Py_INCREF(Py_None);\n"
+					      "    py_%(name)s = Py_None;\n"
+					      "}" % {'name': self.name}),
+					cleanup=("Py_DECREF(py_%s);" % self.name))
+		self.wrapper.add_pyargv_item("py_%s" % self.name)
+
+matcher.register_reverse('const-GstRTSPUrl*', GstRTSPUrlParam)
+matcher.register_reverse('GstRTSPUrl*', GstRTSPUrlParam)
 
 class GstMiniObjectReturn(ReturnType):
 
@@ -343,6 +416,8 @@ matcher.register('GstCaps', GstCapsArg()) #FIXME: does this work?
 matcher.register('GstCaps*', GstCapsArg()) #FIXME: does this work?
 matcher.register('const-GstCaps*', GstCapsArg())
 matcher.register('GstIterator*', GstIteratorArg())
+matcher.register('const-GstRTSPUrl*', GstRTSPUrlArg())
+matcher.register('GstRTSPUrl*', GstRTSPUrlArg())
 
 arg = PointerArg('gpointer', 'G_TYPE_POINTER')
 matcher.register('GstClockID', arg)

@@ -21,7 +21,7 @@
 
 G_DEFINE_TYPE (GstRTSPMediaMapping, gst_rtsp_media_mapping, G_TYPE_OBJECT);
 
-GST_DEBUG_CATEGORY_EXTERN (rtsp_media_debug);
+GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
 #define GST_CAT_DEFAULT rtsp_media_debug
 
 static void gst_rtsp_media_mapping_finalize (GObject * obj);
@@ -39,11 +39,16 @@ gst_rtsp_media_mapping_class_init (GstRTSPMediaMappingClass * klass)
   gobject_class->finalize = gst_rtsp_media_mapping_finalize;
 
   klass->find_media = find_media;
+
+  GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmediamapping", 0,
+      "GstRTSPMediaMapping");
 }
 
 static void
 gst_rtsp_media_mapping_init (GstRTSPMediaMapping * mapping)
 {
+  GST_DEBUG_OBJECT (mapping, "created");
+
   mapping->mappings = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, g_object_unref);
 }
@@ -52,6 +57,8 @@ static void
 gst_rtsp_media_mapping_finalize (GObject * obj)
 {
   GstRTSPMediaMapping *mapping = GST_RTSP_MEDIA_MAPPING (obj);
+
+  GST_DEBUG_OBJECT (mapping, "finalized");
 
   g_hash_table_unref (mapping->mappings);
 

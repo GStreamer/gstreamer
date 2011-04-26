@@ -19,20 +19,50 @@
 
 #include <gst/gst.h>
 
-#include <gst/rtsp/gstrtspurl.h>
-#include <gst/rtsp/gstrtspmessage.h>
+#include <gst/rtsp-server/rtsp-server.h>
 
-#ifndef __GST_RTSP_PARAMS_H__
-#define __GST_RTSP_PARAMS_H__
+static gboolean
+timeout (GMainLoop * loop, gboolean ignored)
+{
+  g_main_loop_quit (loop);
+  return FALSE;
+}
 
-#include "rtsp-client.h"
-#include "rtsp-session.h"
 
-G_BEGIN_DECLS
+int
+main (int argc, char *argv[])
+{
+  GMainLoop *loop;
+  GstRTSPServer *server;
+  guint id;
 
-GstRTSPResult    gst_rtsp_params_set      (GstRTSPClient * client, GstRTSPClientState * state);
-GstRTSPResult    gst_rtsp_params_get      (GstRTSPClient * client, GstRTSPClientState * state);
+  gst_init (&argc, &argv);
 
-G_END_DECLS
+  loop = g_main_loop_new (NULL, FALSE);
 
-#endif /* __GST_RTSP_PARAMS_H__ */
+  /* create a server instance */
+  server = gst_rtsp_server_new ();
+
+  /* attach the server to the default maincontext */
+  if ((id = gst_rtsp_server_attach (server, NULL)) == 0)
+    goto failed;
+
+  g_timeout_add_seconds (2, (GSourceFunc) timeout, loop);
+
+  /* start serving */
+  g_main_loop_run (loop);
+
+  /* cleanup */
+  g_source_remove (id);
+  g_object_unref (server);
+  g_main_loop_unref (loop);
+
+  return 0;
+
+  /* ERRORS */
+failed:
+  {
+    g_print ("failed to attach the server\n");
+    return -1;
+  }
+}

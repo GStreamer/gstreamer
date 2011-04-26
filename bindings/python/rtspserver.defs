@@ -1,9 +1,97 @@
 (include "rtspserver-types.defs")
 
+;; From gst/rtsp-server/rtsp-server.h
+
 (define-function rtsp_server_new
   (c-name "gst_rtsp_server_new")
   (is-constructor-of "GstRTSPServer")
   (return-type "GstRTSPServer*")
+)
+
+(define-method set_address
+  (of-object "GstRTSPServer")
+  (c-name "gst_rtsp_server_set_address")
+  (parameters
+    '("const-gchar*" "address")
+  )
+)
+
+(define-method get_address
+  (of-object "GstRTSPServer")
+  (c-name "gst_rtsp_server_get_address")
+  (return-type "const-gchar*")
+)
+
+(define-method set_service
+  (of-object "GstRTSPServer")
+  (c-name "gst_rtsp_server_set_service")
+  (parameters
+    '("const-gchar*" "service")
+  )
+)
+
+(define-method get_service
+  (of-object "GstRTSPServer")
+  (c-name "gst_rtsp_server_get_service")
+  (return-type "const-gchar*")
+)
+
+(define-method set_backlog
+  (of-object "GstRTSPServer")
+  (c-name "gst_rtsp_server_set_backlog")
+  (parameters
+    '("gint" "backlog")
+  )
+)
+
+(define-method get_backlog
+  (of-object "GstRTSPServer")
+  (c-name "gst_rtsp_server_get_backlog")
+  (return-type "gint")
+)
+
+(define-method set_session_pool
+  (of-object "GstRTSPServer")
+  (c-name "gst_rtsp_server_set_session_pool")
+  (parameters
+    '("GstRTSPSessionPool*" "pool")
+  )
+)
+
+(define-method get_session_pool
+  (of-object "GstRTSPServer")
+  (c-name "gst_rtsp_server_get_session_pool")
+  (return-type "GstRTSPSessionPool*")
+)
+
+(define-method set_media_mapping
+ (of-object "GstRTSPServer")
+ (c-name "gst_rtsp_server_set_media_mapping")
+  (parameters
+    '("GstRTSPMediaMapping*" "mapping")
+  )
+)
+
+(define-method get_media_mapping
+ (of-object "GstRTSPServer")
+ (c-name "gst_rtsp_server_get_media_mapping")
+ (return-type "GstRTSPMediaMapping*")
+)
+
+(define-function io_func
+ (c-name "gst_rtsp_server_io_func")
+ (return-type "gboolean")
+  (parameters
+    '("GIOChannel*" "channel")
+    '("GIOCondition" "condition")
+    '("GstRTSPServer*" "server")
+  )
+)
+
+(define-method get_io_channel
+ (of-object "GstRTSPServer")
+ (c-name "gst_rtsp_server_get_io_channel")
+ (return-type "GIOChannel*")
 )
 
 (define-method attach
@@ -12,5 +100,300 @@
   (return-type "guint")
   (parameters
     '("GMainContext*" "context")
+  )
+)
+
+(define-method create_watch
+  (of-object "GstRTSPServer")
+  (c-name "gst_rtsp_server_create_watch")
+  (return-type "GSource*")
+)
+
+;; From gst/rtsp-server/rtsp-media-mapping.h
+
+(define-function rtsp_media_mapping_new
+  (c-name "gst_rtsp_media_mapping_new")
+  (is-constructor-of "GstRTSPMediaMapping")
+  (return-type "GstRTSPMediaMapping*")
+)
+
+
+;; TODO define const-GstRTSPUrl* on arg-types.py
+(define-method find_factory
+  (of-object "GstRTSPMediaMapping")
+  (c-name "gst_rtsp_media_mapping_find_factory")
+  (return-type "GstRTSPMediaFactory*")
+  (parameters
+   '("const-GstRTSPUrl*" "url")
+  )
+)
+
+(define-method add_factory
+  (of-object "GstRTSPMediaMapping")
+  (c-name "gst_rtsp_media_mapping_add_factory")
+  (parameters
+   '("const-gchar*" "path")
+   '("GstRTSPMediaFactory*" "factory")
+  )
+)
+
+(define-method remove_factory
+  (of-object "GstRTSPMediaMapping")
+  (c-name "gst_rtsp_media_mapping_remove_factory")
+  (parameters
+   '("const-gchar*" "path")
+  )
+)
+
+;; From gst/rtsp-server/rtsp-media-factory.h
+
+(define-function rtsp_media_factory_new
+  (c-name "gst_rtsp_media_factory_new")
+  (is-constructor-of "GstRTSMediaFactory")
+  (return-type "GstRTSPMediaFactory*")
+)
+
+(define-method set_launch
+  (of-object "GstRTSPMediaFactory")
+  (c-name "gst_rtsp_media_factory_set_launch")
+  (parameters
+   '("gchar*" "launch")
+  )
+)
+
+(define-method get_launch
+  (of-object "GstRTSPMediaFactory")
+  (c-name "gst_rtsp_media_factory_get_launch")
+  (return-type "gchar*")
+)
+
+(define-method set_shared
+  (of-object "GstRTSPMediaFactory")
+  (c-name "gst_rtsp_media_factory_set_shared")
+  (parameters
+   '("gboolean" "shared")
+  )
+)
+
+(define-method is_shared
+  (of-object "GstRTSPMediaFactory")
+  (c-name "gst_rtsp_media_factory_is_shared")
+  (return-type "gboolean")
+)
+
+(define-method set_eos_shutdown
+  (of-object "GstRTSPMediaFactory")
+  (c-name "gst_rtsp_media_factory_set_eos_shutdown")
+  (parameters
+   '("gboolean" "eos_shutdown")
+  )
+)
+
+(define-method is_eos_shutdown
+  (of-object "GstRTSPMediaFactory")
+  (c-name "gst_rtsp_media_factory_is_eos_shutdown")
+  (return-type "gboolean")
+)
+
+;; TODO define const-GstRTSPUrl* on arg-types.py
+(define-method construct
+  (of-object "GstRTSPMediaFactory")
+  (c-name "gst_rtsp_media_factory_construct")
+  (return-type "GstRTSPMedia*")
+  (parameters
+   '("const-GstRTSPUrl*" "url")
+  )
+)
+
+(define-method collect_streams
+  (of-object "GstRTSPMediaFactory")
+  (c-name "gst_rtsp_media_factory_collect_streams")
+  (parameters
+   '("const-GstRTSPUrl*" "url")
+   '("GstRTSPMedia*" "media")
+  )
+)
+
+(define-virtual get_element
+  (of-object "GstRTSPMediaFactory")
+  (parameters
+   '("const-GstRTSPUrl*" "url")
+  )
+  (return-type "GstElement*")
+)
+
+
+(define-virtual construct
+  (of-object "GstRTSPMediaFactory")
+  (parameters
+   '("const-GstRTSPUrl*" "url")
+  )
+  (return-type "GstRTSPMedia*")
+)
+
+
+(define-virtual configure
+  (of-object "GstRTSPMediaFactory")
+  (parameters
+   '("GstRTSPMedia*" "media")
+  )
+  (return-type "none")
+)
+
+
+(define-virtual create_pipeline
+  (of-object "GstRTSPMediaFactory")
+  (parameters
+   '("GstRTSPMedia*" "media")
+  )
+  (return-type "GstElement*")
+)
+
+
+;; From gst/rtsp-server/rtsp-session-pool.h
+
+(define-function gst_rtsp_session_pool_new
+  (c-name "gst_rtsp_session_pool_new")
+  (is-constructor-of "GstRTSPSessionPool")
+  (return-type "GstRTSPSessionPool*")
+)
+
+(define-method set_max_sessions
+  (of-object "GstRTSPSessionPool")
+  (c-name "gst_rtsp_session_pool_set_max_sessions")
+  (return-type "none")
+  (parameters
+    '("guint" "max")
+  )
+)
+
+(define-method get_max_sessions
+  (of-object "GstRTSPSessionPool")
+  (c-name "gst_rtsp_session_pool_get_max_sessions")
+  (return-type "guint")
+)
+
+(define-method get_n_sessions
+  (of-object "GstRTSPSessionPool")
+  (c-name "gst_rtsp_session_pool_get_n_sessions")
+  (return-type "guint")
+)
+
+(define-method create
+  (of-object "GstRTSPSessionPool")
+  (c-name "gst_rtsp_session_pool_create")
+  (return-type "GstRTSPSession*")
+)
+
+(define-method find
+  (of-object "GstRTSPSessionPool")
+  (c-name "gst_rtsp_session_pool_find")
+  (return-type "GstRTSPSession*")
+  (parameters
+    '("const-gchar*" "sessionid")
+  )
+)
+
+(define-method remove
+  (of-object "GstRTSPSessionPool")
+  (c-name "gst_rtsp_session_pool_remove")
+  (return-type "gboolean")
+  (parameters
+    '("GstRTSPSession*" "sess")
+  )
+)
+
+(define-method filter
+  (of-object "GstRTSPSessionPool")
+  (c-name "gst_rtsp_session_pool_filter")
+  (return-type "GList*")
+  (parameters
+    '("GstRTSPSessionFilterFunc" "func")
+    '("gpointer" "user_data")
+  )
+)
+
+(define-method cleanup
+  (of-object "GstRTSPSessionPool")
+  (c-name "gst_rtsp_session_pool_cleanup")
+  (return-type "guint")
+)
+
+(define-method create_watch
+  (of-object "GstRTSPSessionPool")
+  (c-name "gst_rtsp_session_pool_create_watch")
+  (return-type "GSource*")
+)
+
+;; From gst/rtsp-server/rtsp-client.h
+
+(define-function gst_rtsp_client_new
+  (c-name "gst_rtsp_client_new")
+  (is-constructor-of "GstRTSPClient")
+  (return-type "GstRTSPClient*")
+)
+
+(define-method set_session_pool
+  (of-object "GstRTSPClient")
+  (c-name "gst_rtsp_client_set_session_pool")
+  (return-type "none")
+  (parameters
+    '("GstRTSPSessionPool*" "pool")
+  )
+)
+
+(define-method get_session_pool
+  (of-object "GstRTSPClient")
+  (c-name "gst_rtsp_client_get_session_pool")
+  (return-type "GstRTSPSessionPool*")
+)
+
+(define-method set_media_mapping
+  (of-object "GstRTSPClient")
+  (c-name "gst_rtsp_client_set_media_mapping")
+  (return-type "none")
+  (parameters
+    '("GstRTSPMediaMapping*" "mapping")
+  )
+)
+
+(define-method get_media_mapping
+  (of-object "GstRTSPClient")
+  (c-name "gst_rtsp_client_get_media_mapping")
+  (return-type "GstRTSPMediaMapping*")
+)
+
+(define-method accept
+  (of-object "GstRTSPClient")
+  (c-name "gst_rtsp_client_accept")
+  (return-type "gboolean")
+  (parameters
+    '("GIOChannel*" "channel")
+  )
+)
+
+;; From bindings/python/rtsp-params.h
+
+(define-function gst_rtsp_params_set
+  (c-name "gst_rtsp_params_set")
+  (return-type "GstRTSPResult")
+  (parameters
+    '("GstRTSPClient*" "client")
+    '("GstRTSPUrl*" "uri")
+    '("GstRTSPSession*" "session")
+    '("GstRTSPMessage*" "request")
+    '("GstRTSPMessage*" "response")
+  )
+)
+
+(define-function gst_rtsp_params_get
+  (c-name "gst_rtsp_params_get")
+  (return-type "GstRTSPResult")
+  (parameters
+    '("GstRTSPClient*" "client")
+    '("GstRTSPUrl*" "uri")
+    '("GstRTSPSession*" "session")
+    '("GstRTSPMessage*" "request")
+    '("GstRTSPMessage*" "response")
   )
 )

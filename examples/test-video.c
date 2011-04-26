@@ -21,7 +21,13 @@
 
 #include <gst/rtsp-server/rtsp-server.h>
 
+/* define this if you want the resource to only be available when using
+ * user/admin as the password */
+#undef WITH_AUTH
 
+/* this timeout is periodically run to clean up the expired sessions from the
+ * pool. This needs to be run explicitly currently but might be done
+ * automatically as part of the mainloop. */
 static gboolean
 timeout (GstRTSPServer * server, gboolean ignored)
 {
@@ -41,6 +47,10 @@ main (int argc, char *argv[])
   GstRTSPServer *server;
   GstRTSPMediaMapping *mapping;
   GstRTSPMediaFactory *factory;
+#ifdef WITH_AUTH
+  GstRTSPAuth *auth;
+  gchar *basic;
+#endif
 
   gst_init (&argc, &argv);
 
@@ -52,6 +62,17 @@ main (int argc, char *argv[])
   /* get the mapping for this server, every server has a default mapper object
    * that be used to map uri mount points to media factories */
   mapping = gst_rtsp_server_get_media_mapping (server);
+
+#ifdef WITH_AUTH
+  /* make a new authentication manager. it can be added to control access to all
+   * the factories on the server or on individual factories. */
+  auth = gst_rtsp_auth_new ();
+  basic = gst_rtsp_auth_make_basic ("user", "admin");
+  gst_rtsp_auth_set_basic (auth, basic);
+  g_free (basic);
+  /* configure in the server */
+  gst_rtsp_server_set_auth (server, auth);
+#endif
 
   /* make a media factory for a test stream. The default media factory can use
    * gst-launch syntax to create pipelines. 
@@ -74,9 +95,10 @@ main (int argc, char *argv[])
   if (gst_rtsp_server_attach (server, NULL) == 0)
     goto failed;
 
+  /* add a timeout for the session cleanup */
   g_timeout_add_seconds (2, (GSourceFunc) timeout, server);
 
-  /* start serving */
+  /* start serving, this never stops */
   g_main_loop_run (loop);
 
   return 0;

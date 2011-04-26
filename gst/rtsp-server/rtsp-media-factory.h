@@ -21,6 +21,7 @@
 #include <gst/rtsp/gstrtspurl.h>
 
 #include "rtsp-media.h"
+#include "rtsp-auth.h"
 
 #ifndef __GST_RTSP_MEDIA_FACTORY_H__
 #define __GST_RTSP_MEDIA_FACTORY_H__
@@ -62,6 +63,8 @@ struct _GstRTSPMediaFactory {
   gchar        *launch;
   gboolean      shared;
   gboolean      eos_shutdown;
+  GstRTSPAuth  *auth;
+  guint         buffer_size;
 
   GMutex       *medias_lock;
   GHashTable   *medias;
@@ -115,6 +118,13 @@ gboolean              gst_rtsp_media_factory_is_shared    (GstRTSPMediaFactory *
 void                  gst_rtsp_media_factory_set_eos_shutdown   (GstRTSPMediaFactory *factory,
                                                                  gboolean eos_shutdown);
 gboolean              gst_rtsp_media_factory_is_eos_shutdown    (GstRTSPMediaFactory *factory);
+
+void                  gst_rtsp_media_factory_set_auth     (GstRTSPMediaFactory *factory, GstRTSPAuth *auth);
+GstRTSPAuth *         gst_rtsp_media_factory_get_auth     (GstRTSPMediaFactory *factory);
+
+void                  gst_rtsp_media_factory_set_buffer_size    (GstRTSPMediaFactory * factory, guint size);
+guint                 gst_rtsp_media_factory_get_buffer_size    (GstRTSPMediaFactory * factory);
+
 
 /* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct    (GstRTSPMediaFactory *factory,

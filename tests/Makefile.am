@@ -1,4 +1,4 @@
-noinst_PROGRAMS = test-video test-ogg test-mp4 test-readme test-launch test-sdp test-uri test-auth
+noinst_PROGRAMS = test-cleanup
 
 INCLUDES = -I$(top_srcdir) -I$(srcdir)
 

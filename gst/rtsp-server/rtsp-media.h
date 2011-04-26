@@ -42,6 +42,7 @@ typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 typedef struct _GstRTSPMediaTrans GstRTSPMediaTrans;
 
 typedef gboolean (*GstRTSPSendFunc)      (GstBuffer *buffer, guint8 channel, gpointer user_data);
+typedef gboolean (*GstRTSPSendListFunc)  (GstBufferList *blist, guint8 channel, gpointer user_data);
 typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
 
 /**
@@ -49,6 +50,8 @@ typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
  * @idx: a stream index
  * @send_rtp: callback for sending RTP messages
  * @send_rtcp: callback for sending RTCP messages
+ * @send_rtp_list: callback for sending RTP messages
+ * @send_rtcp_list: callback for sending RTCP messages
  * @user_data: user data passed in the callbacks
  * @notify: free function for the user_data.
  * @keep_alive: keep alive callback
@@ -66,6 +69,8 @@ struct _GstRTSPMediaTrans {
 
   GstRTSPSendFunc      send_rtp;
   GstRTSPSendFunc      send_rtcp;
+  GstRTSPSendListFunc  send_rtp_list;
+  GstRTSPSendListFunc  send_rtcp_list;
   gpointer             user_data;
   GDestroyNotify       notify;
 
@@ -80,16 +85,17 @@ struct _GstRTSPMediaTrans {
   GObject             *rtpsource;
 };
 
+#include "rtsp-auth.h"
+
 /**
  * GstRTSPMediaStream:
  * @srcpad: the srcpad of the stream
  * @payloader: the payloader of the format
  * @prepared: if the stream is prepared for streaming
- * @server_port: the server udp ports
  * @recv_rtp_sink: sinkpad for RTP buffers
  * @recv_rtcp_sink: sinkpad for RTCP buffers
- * @recv_rtp_src: srcpad for RTP buffers
- * @recv_rtcp_src: srcpad for RTCP buffers
+ * @send_rtp_src: srcpad for RTP buffers
+ * @send_rtcp_src: srcpad for RTCP buffers
  * @udpsrc: the udp source elements for RTP/RTCP
  * @udpsink: the udp sink elements for RTP/RTCP
  * @appsrc: the app source elements for RTP/RTCP
@@ -136,11 +142,6 @@ struct _GstRTSPMediaStream {
 
   /* transports we stream to */
   GList        *transports;
-
-  /* to filter out duplicate destinations in case multiudpsink is too old to do
-   * this for us */
-  gboolean      filter_duplicates;
-  GList        *destinations;
 };
 
 /**
@@ -200,6 +201,8 @@ struct _GstRTSPMedia {
   gboolean           reused;
   gboolean           is_ipv6;
   gboolean           eos_shutdown;
+  guint              buffer_size;
+  GstRTSPAuth       *auth;
 
   GstElement        *element;
   GArray            *streams;
@@ -250,7 +253,10 @@ struct _GstRTSPMediaClass {
   gboolean     (*unprepare)       (GstRTSPMedia *media);
 
   /* signals */
+  gboolean     (*prepared)        (GstRTSPMedia *media);
   gboolean     (*unprepared)      (GstRTSPMedia *media);
+
+  gboolean     (*new_state)       (GstRTSPMedia *media, GstState state);
 };
 
 GType                 gst_rtsp_media_get_type         (void);
@@ -270,6 +276,12 @@ GstRTSPLowerTrans     gst_rtsp_media_get_protocols    (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_eos_shutdown (GstRTSPMedia *media, gboolean eos_shutdown);
 gboolean              gst_rtsp_media_is_eos_shutdown  (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_set_auth         (GstRTSPMedia *media, GstRTSPAuth *auth);
+GstRTSPAuth *         gst_rtsp_media_get_auth         (GstRTSPMedia *media);
+
+void                  gst_rtsp_media_set_buffer_size  (GstRTSPMedia *media, guint size);
+guint                 gst_rtsp_media_get_buffer_size  (GstRTSPMedia *media);
+
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);
 gboolean              gst_rtsp_media_is_prepared      (GstRTSPMedia *media);
@@ -280,6 +292,7 @@ guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);
 GstRTSPMediaStream *  gst_rtsp_media_get_stream       (GstRTSPMedia *media, guint idx);
 
 gboolean              gst_rtsp_media_seek             (GstRTSPMedia *media, GstRTSPTimeRange *range);
+gchar *               gst_rtsp_media_get_range_string (GstRTSPMedia *media, gboolean play);
 
 GstFlowReturn         gst_rtsp_media_stream_rtp       (GstRTSPMediaStream *stream, GstBuffer *buffer);
 GstFlowReturn         gst_rtsp_media_stream_rtcp      (GstRTSPMediaStream *stream, GstBuffer *buffer);

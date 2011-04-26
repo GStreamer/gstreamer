@@ -10,6 +10,7 @@
 *~
 .deps
 .libs
+ABOUT-NLS
 INSTALL
 Makefile
 Makefile.in
@@ -21,6 +22,7 @@ config.guess
 config.h
 config.h.in
 config.log
+config.rpath
 config.status
 config.sub
 configure
@@ -34,3 +36,5 @@ bindings/python/rtspserver.c
 tags
 gst-rtsp.spec
 stamp-h.in
+
+/m4/*m4

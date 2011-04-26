@@ -1,4 +1,5 @@
 public_headers = \
+		rtsp-auth.h \
 		rtsp-params.h \
 		rtsp-sdp.h \
 		rtsp-media.h \
@@ -11,6 +12,8 @@ public_headers = \
 		rtsp-server.h
 
 c_sources = \
+	rtsp-funnel.c \
+	rtsp-auth.c \
 	rtsp-params.c \
 	rtsp-sdp.c \
 	rtsp-media.c \
@@ -21,6 +24,8 @@ c_sources = \
 	rtsp-session-pool.c \
 	rtsp-client.c \
 	rtsp-server.c
+
+noinst_HEADERS = rtsp-funnel.h
 
 lib_LTLIBRARIES = \
 	libgstrtspserver-@GST_MAJORMINOR@.la
@@ -60,6 +65,8 @@ GstRtspServer-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@G
 		-DIN_GOBJECT_INTROSPECTION=1 \
 		--c-include='gst/gst.h' \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-rtsp-0.10` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-sdp-0.10` \
 		--library=libgstrtspserver-0.10.la \
 		--include=Gst-0.10 \
 		--include=GstRtsp-0.10 \
@@ -81,7 +88,14 @@ typelibsdir = $(libdir)/girepository-1.0/
 typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 %.typelib: %.gir $(INTROSPECTION_COMPILER)
-	$(AM_V_GEN)$(INTROSPECTION_COMPILER) --includedir=$(srcdir) --includedir=$(builddir) $(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
+	$(INTROSPECTION_COMPILER) \
+	--includedir=$(srcdir) \
+	--includedir=$(builddir) \
+	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
+	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-rtsp-0.10` \
+	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-sdp-0.10` \
+	$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif

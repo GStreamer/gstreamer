@@ -17,31 +17,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
+#ifndef __GST_RTSP_SERVER_H__
+#define __GST_RTSP_SERVER_H__
 
 #include <gst/gst.h>
+
+G_BEGIN_DECLS
+
+typedef struct _GstRTSPServer GstRTSPServer;
+typedef struct _GstRTSPServerClass GstRTSPServerClass;
 
 #include "rtsp-session-pool.h"
 #include "rtsp-media-mapping.h"
 #include "rtsp-media-factory-uri.h"
 #include "rtsp-client.h"
-
-#ifndef __GST_RTSP_SERVER_H__
-#define __GST_RTSP_SERVER_H__
-
-G_BEGIN_DECLS
+#include "rtsp-auth.h"
 
 #define GST_TYPE_RTSP_SERVER              (gst_rtsp_server_get_type ())
 #define GST_IS_RTSP_SERVER(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_SERVER))
@@ -52,43 +42,53 @@ G_BEGIN_DECLS
 #define GST_RTSP_SERVER_CAST(obj)         ((GstRTSPServer*)(obj))
 #define GST_RTSP_SERVER_CLASS_CAST(klass) ((GstRTSPServerClass*)(klass))
 
-typedef struct _GstRTSPServer GstRTSPServer;
-typedef struct _GstRTSPServerClass GstRTSPServerClass;
+#define GST_RTSP_SERVER_GET_LOCK(server)  (GST_RTSP_SERVER_CAST(server)->lock)
+#define GST_RTSP_SERVER_LOCK(server)      (g_mutex_lock(GST_RTSP_SERVER_GET_LOCK(server)))
+#define GST_RTSP_SERVER_UNLOCK(server)    (g_mutex_unlock(GST_RTSP_SERVER_GET_LOCK(server)))
 
+/**
+ * GstRTSPServer:
+ *
+ * This object listens on a port, creates and manages the clients connected to
+ * it.
+ */
 struct _GstRTSPServer {
-  GObject       parent;
+  GObject      parent;
+
+  GMutex      *lock;
 
   /* server information */
-  gchar *address;
-  gchar *service;
-  gint   backlog;
-
-  struct  sockaddr_in server_sin;
-
-  /* socket and channels */
-  GstPollFD    server_sock;
-  GIOChannel  *io_channel;
-  GSource     *io_watch;
+  gchar       *address;
+  gchar       *service;
+  gint         backlog;
 
   /* sessions on this server */
   GstRTSPSessionPool  *session_pool;
 
   /* media mapper for this server */
   GstRTSPMediaMapping *media_mapping;
+
+  /* authentication manager */
+  GstRTSPAuth *auth;
+
+  /* the clients that are connected */
+  GList   *clients;
 };
 
 /**
  * GstRTSPServerClass:
  *
- * @accept_client: Create, configure, accept and return a new GstRTSPClient 
- *   object that handles the new connection on @channel.
+ * @create_client: Create, configure a new GstRTSPClient
+ *          object that handles the new connection on @channel.
+ * @accept_client: accept a new GstRTSPClient
  *
  * The RTSP server class structure
  */
 struct _GstRTSPServerClass {
   GObjectClass  parent_class;
 
-  GstRTSPClient * (*accept_client) (GstRTSPServer *server, GIOChannel *channel);
+  GstRTSPClient * (*create_client) (GstRTSPServer *server);
+  gboolean        (*accept_client) (GstRTSPServer *server, GstRTSPClient *client, GIOChannel *channel);
 };
 
 GType                 gst_rtsp_server_get_type             (void);
@@ -109,6 +109,9 @@ GstRTSPSessionPool *  gst_rtsp_server_get_session_pool     (GstRTSPServer *serve
 
 void                  gst_rtsp_server_set_media_mapping    (GstRTSPServer *server, GstRTSPMediaMapping *mapping);
 GstRTSPMediaMapping * gst_rtsp_server_get_media_mapping    (GstRTSPServer *server);
+
+void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
+GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server);
 
 gboolean              gst_rtsp_server_io_func              (GIOChannel *channel, GIOCondition condition,
                                                             GstRTSPServer *server);

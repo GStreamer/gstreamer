@@ -9,15 +9,17 @@
   <bookinfo>
     <title>GStreamer RTSP Server Reference Manual</title>
     <releaseinfo>
-      for GStreamer RTSP Server &GST_MAJORMINOR;
+      for GStreamer RTSP Server &GST_VERSION;
     </releaseinfo>
   </bookinfo>
 
   <chapter>
     <xi:include href="xml/rtsp-client.xml"/>
     <xi:include href="xml/rtsp-media-factory.xml"/>
+    <xi:include href="xml/rtsp-media-factory-uri.xml"/>
     <xi:include href="xml/rtsp-media-mapping.xml"/>
     <xi:include href="xml/rtsp-media.xml"/>
+    <xi:include href="xml/rtsp-auth.xml"/>
     <xi:include href="xml/rtsp-params.xml"/>
     <xi:include href="xml/rtsp-sdp.xml"/>
     <xi:include href="xml/rtsp-server.xml"/>

@@ -22,6 +22,7 @@
 #define DEFAULT_LAUNCH         NULL
 #define DEFAULT_SHARED         FALSE
 #define DEFAULT_EOS_SHUTDOWN   FALSE
+#define DEFAULT_BUFFER_SIZE    0x80000
 
 enum
 {
@@ -29,10 +30,11 @@ enum
   PROP_LAUNCH,
   PROP_SHARED,
   PROP_EOS_SHUTDOWN,
+  PROP_BUFFER_SIZE,
   PROP_LAST
 };
 
-GST_DEBUG_CATEGORY (rtsp_media_debug);
+GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
 #define GST_CAT_DEFAULT rtsp_media_debug
 
 static void gst_rtsp_media_factory_get_property (GObject * object, guint propid,
@@ -96,13 +98,19 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           "Send EOS down the pipeline before shutting down",
           DEFAULT_EOS_SHUTDOWN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
+      g_param_spec_uint ("buffer-size", "Buffer Size",
+          "The kernel UDP buffer size to use", 0, G_MAXUINT,
+          DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   klass->gen_key = default_gen_key;
   klass->get_element = default_get_element;
   klass->construct = default_construct;
   klass->configure = default_configure;
   klass->create_pipeline = default_create_pipeline;
 
-  GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
+  GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmediafactory", 0,
+      "GstRTSPMediaFactory");
 }
 
 static void
@@ -111,6 +119,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   factory->launch = g_strdup (DEFAULT_LAUNCH);
   factory->shared = DEFAULT_SHARED;
   factory->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
+  factory->buffer_size = DEFAULT_BUFFER_SIZE;
 
   factory->lock = g_mutex_new ();
   factory->medias_lock = g_mutex_new ();
@@ -127,6 +136,8 @@ gst_rtsp_media_factory_finalize (GObject * obj)
   g_mutex_free (factory->medias_lock);
   g_free (factory->launch);
   g_mutex_free (factory->lock);
+  if (factory->auth)
+    g_object_unref (factory->auth);
 
   G_OBJECT_CLASS (gst_rtsp_media_factory_parent_class)->finalize (obj);
 }
@@ -147,6 +158,10 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
     case PROP_EOS_SHUTDOWN:
       g_value_set_boolean (value,
           gst_rtsp_media_factory_is_eos_shutdown (factory));
+      break;
+    case PROP_BUFFER_SIZE:
+      g_value_set_uint (value,
+          gst_rtsp_media_factory_get_buffer_size (factory));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -169,6 +184,10 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_EOS_SHUTDOWN:
       gst_rtsp_media_factory_set_eos_shutdown (factory,
           g_value_get_boolean (value));
+      break;
+    case PROP_BUFFER_SIZE:
+      gst_rtsp_media_factory_set_buffer_size (factory,
+          g_value_get_uint (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -322,6 +341,94 @@ gst_rtsp_media_factory_is_eos_shutdown (GstRTSPMediaFactory * factory)
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   result = factory->eos_shutdown;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_factory_set_buffer_size:
+ * @factory: a #GstRTSPMedia
+ * @size: the new value
+ *
+ * Set the kernel UDP buffer size.
+ */
+void
+gst_rtsp_media_factory_set_buffer_size (GstRTSPMediaFactory * factory,
+    guint size)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  factory->buffer_size = size;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_buffer_size:
+ * @factory: a #GstRTSPMedia
+ *
+ * Get the kernel UDP buffer size.
+ *
+ * Returns: the kernel UDP buffer size.
+ */
+guint
+gst_rtsp_media_factory_get_buffer_size (GstRTSPMediaFactory * factory)
+{
+  guint result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), 0);
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  result = factory->buffer_size;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_factory_set_auth:
+ * @factory: a #GstRTSPMediaFactory
+ * @auth: a #GstRTSPAuth
+ *
+ * configure @auth to be used as the authentication manager of @factory.
+ */
+void
+gst_rtsp_media_factory_set_auth (GstRTSPMediaFactory * factory,
+    GstRTSPAuth * auth)
+{
+  GstRTSPAuth *old;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  old = factory->auth;
+
+  if (old != auth) {
+    if (auth)
+      g_object_ref (auth);
+    factory->auth = auth;
+    if (old)
+      g_object_unref (old);
+  }
+}
+
+/**
+ * gst_rtsp_media_factory_get_auth:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get the #GstRTSPAuth used as the authentication manager of @factory.
+ *
+ * Returns: the #GstRTSPAuth of @factory. g_object_unref() after
+ * usage.
+ */
+GstRTSPAuth *
+gst_rtsp_media_factory_get_auth (GstRTSPMediaFactory * factory)
+{
+  GstRTSPAuth *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
+
+  if ((result = factory->auth))
+    g_object_ref (result);
 
   return result;
 }
@@ -608,13 +715,22 @@ static void
 default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
 {
   gboolean shared, eos_shutdown;
+  guint size;
+  GstRTSPAuth *auth;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   shared = factory->shared;
   eos_shutdown = factory->eos_shutdown;
+  size = factory->buffer_size;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_shared (media, shared);
   gst_rtsp_media_set_eos_shutdown (media, eos_shutdown);
+  gst_rtsp_media_set_buffer_size (media, size);
+
+  if ((auth = gst_rtsp_media_factory_get_auth (factory))) {
+    gst_rtsp_media_set_auth (media, auth);
+    g_object_unref (auth);
+  }
 }

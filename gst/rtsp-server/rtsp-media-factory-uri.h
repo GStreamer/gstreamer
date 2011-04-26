@@ -49,9 +49,13 @@ struct _GstRTSPMediaFactoryURI {
   GstRTSPMediaFactory   parent;
 
   gchar *uri;
+  gboolean use_gstpay;
+
   GstCaps *raw_vcaps;
   GstCaps *raw_acaps;
-  GList *factories;
+  GList *demuxers;
+  GList *payloaders;
+  GList *decoders;
 };
 
 /**

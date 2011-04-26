@@ -1,4 +1,5 @@
 #include <gst/gst.h>
+gst_rtsp_auth_get_type
 gst_rtsp_media_mapping_get_type
 gst_rtsp_media_factory_get_type
 gst_rtsp_media_get_type
