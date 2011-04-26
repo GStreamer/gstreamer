@@ -399,19 +399,22 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 {
   GstRTSPMessage message = { 0 };
   guint8 *data;
-  guint size;
+  guint usize;
+  gsize size;
 
   gst_rtsp_message_init_data (&message, channel);
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
-  gst_rtsp_message_take_body (&message, data, size);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  usize = size;
+  gst_rtsp_message_take_body (&message, data, usize);
 
   /* FIXME, client->watch could have been finalized here, we need to keep an
    * extra refcount to the watch.  */
   gst_rtsp_watch_send_message (client->watch, &message, NULL);
 
-  gst_rtsp_message_steal_body (&message, &data, &size);
+  gst_rtsp_message_steal_body (&message, &data, &usize);
+  gst_buffer_unmap (buffer, data, size);
+
   gst_rtsp_message_unset (&message);
 
   return TRUE;
@@ -421,18 +424,15 @@ static gboolean
 do_send_data_list (GstBufferList * blist, guint8 channel,
     GstRTSPClient * client)
 {
-  GstBufferListIterator *it;
+  guint len, i;
 
-  it = gst_buffer_list_iterate (blist);
-  while (gst_buffer_list_iterator_next_group (it)) {
-    GstBuffer *group = gst_buffer_list_iterator_merge_group (it);
+  len = gst_buffer_list_len (blist);
 
-    if (group == NULL)
-      continue;
+  for (i = 0; i < len; i++) {
+    GstBuffer *group = gst_buffer_list_get (blist, i);
 
     do_send_data (group, channel, client);
   }
-  gst_buffer_list_iterator_free (it);
 
   return TRUE;
 }
@@ -1428,9 +1428,8 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
   gst_rtsp_message_steal_body (message, &data, &size);
 
   buffer = gst_buffer_new ();
-  GST_BUFFER_DATA (buffer) = data;
-  GST_BUFFER_MALLOCDATA (buffer) = data;
-  GST_BUFFER_SIZE (buffer) = size;
+  gst_buffer_take_memory (buffer,
+      gst_memory_new_wrapped (0, data, g_free, size, 0, size));
 
   handled = FALSE;
   for (walk = client->streams; walk; walk = g_list_next (walk)) {

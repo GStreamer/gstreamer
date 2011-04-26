@@ -23,7 +23,6 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 
-#include "rtsp-funnel.h"
 #include "rtsp-media.h"
 
 #define DEFAULT_SHARED         FALSE
@@ -141,9 +140,6 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   klass->unprepare = default_unprepare;
 
   ssrc_stream_map_key = g_quark_from_static_string ("GstRTSPServer.stream");
-
-  gst_element_register (NULL, "rtspfunnel", GST_RANK_NONE, RTSP_TYPE_FUNNEL);
-
 }
 
 static void
@@ -1325,7 +1321,7 @@ setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
   gst_object_unref (teepad);
 
   /* make selector for the RTP receivers */
-  stream->selector[0] = gst_element_factory_make ("rtspfunnel", NULL);
+  stream->selector[0] = gst_element_factory_make ("funnel", NULL);
   gst_bin_add (GST_BIN_CAST (media->pipeline), stream->selector[0]);
 
   pad = gst_element_get_static_pad (stream->selector[0], "src");
@@ -1345,7 +1341,7 @@ setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
   gst_object_unref (selpad);
 
   /* make selector for the RTCP receivers */
-  stream->selector[1] = gst_element_factory_make ("rtspfunnel", NULL);
+  stream->selector[1] = gst_element_factory_make ("funnel", NULL);
   gst_bin_add (GST_BIN_CAST (media->pipeline), stream->selector[1]);
 
   pad = gst_element_get_static_pad (stream->selector[1], "src");
