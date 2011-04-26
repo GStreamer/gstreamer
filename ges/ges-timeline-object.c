@@ -190,6 +190,8 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   object_class->get_property = ges_timeline_object_get_property;
   object_class->set_property = ges_timeline_object_set_property;
   klass->create_track_objects = ges_timeline_object_create_track_objects_func;
+  klass->track_object_added = NULL;
+  klass->track_object_released = NULL;
 
   /**
    * GESTimelineObject:start
@@ -404,6 +406,7 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   GList *tmp;
   GESTimelineObjectPrivate *priv = object->priv;
   gboolean is_effect = GES_IS_TRACK_EFFECT (trobj);
+  GESTimelineObjectClass *klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
   GST_LOG ("Got a TrackObject : %p , setting the timeline object as its"
       "creator. Is a TrackEffect %i", trobj, is_effect);
@@ -462,6 +465,14 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   ges_track_object_set_duration (trobj, object->duration);
   ges_track_object_set_inpoint (trobj, object->inpoint);
 
+  if (klass->track_object_added) {
+    GST_DEBUG ("Calling track_object_added subclass method");
+    klass->track_object_added (object, trobj);
+  } else {
+    GST_DEBUG ("%s doesn't have any track_object_added vfunc implementation",
+        G_OBJECT_CLASS_NAME (klass));
+  }
+
   /* Listen to all property changes */
   mapping->start_notifyid =
       g_signal_connect (G_OBJECT (trobj), "notify::start",
@@ -499,6 +510,7 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
 {
   GList *tmp;
   ObjectMapping *mapping = NULL;
+  GESTimelineObjectClass *klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
   GST_DEBUG ("object:%p, trackobject:%p", object, trackobject);
 
@@ -506,9 +518,6 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
     GST_WARNING ("TrackObject isn't controlled by this object");
     return FALSE;
   }
-
-  /* FIXME : Do we need to tell the subclasses ?
-   * If so, add a new virtual-method */
 
   for (tmp = object->priv->mappings; tmp; tmp = tmp->next) {
     mapping = (ObjectMapping *) tmp->data;
@@ -541,6 +550,11 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
   ges_track_object_set_timeline_object (trackobject, NULL);
 
   GST_DEBUG ("Removing reference to track object %p", trackobject);
+
+  if (klass->track_object_released) {
+    GST_DEBUG ("Calling track_object_released subclass method");
+    klass->track_object_released (object, trackobject);
+  }
 
   g_object_unref (trackobject);
 
