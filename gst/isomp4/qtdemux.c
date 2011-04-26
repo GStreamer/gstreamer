@@ -7055,11 +7055,21 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     if (codec) {
+      GstStructure *s;
+      gint bitrate = 0;
+
       list = gst_tag_list_new ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_AUDIO_CODEC, codec, NULL);
       g_free (codec);
       codec = NULL;
+
+      /* some bitrate info may have ended up in caps */
+      s = gst_caps_get_structure (stream->caps, 0);
+      gst_structure_get_int (s, "bitrate", &bitrate);
+      if (bitrate > 0)
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
+            bitrate, NULL);
     }
 
     mp4a = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4a);
