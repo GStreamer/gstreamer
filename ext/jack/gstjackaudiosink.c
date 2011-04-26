@@ -437,8 +437,8 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       buffer_size, spec->segsize, spec->segtotal);
 
   /* allocate the ringbuffer memory now */
-  buf->data = gst_buffer_new_and_alloc (spec->segtotal * spec->segsize);
-  memset (GST_BUFFER_DATA (buf->data), 0, GST_BUFFER_SIZE (buf->data));
+  buf->size = spec->segtotal * spec->segsize;
+  buf->memory = g_malloc0 (buf->size);
 
   if ((res = gst_jack_audio_client_set_active (sink->client, TRUE)))
     goto could_not_activate;
@@ -540,8 +540,8 @@ gst_jack_ring_buffer_release (GstRingBuffer * buf)
   abuf->sample_rate = -1;
 
   /* free the buffer */
-  gst_buffer_unref (buf->data);
-  buf->data = NULL;
+  g_free (buf->memory);
+  buf->memory = NULL;
 
   return TRUE;
 }
@@ -655,11 +655,8 @@ enum
   PROP_LAST
 };
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_jack_audio_sink_debug, "jacksink", 0, "jacksink element");
-
-GST_BOILERPLATE_FULL (GstJackAudioSink, gst_jack_audio_sink, GstBaseAudioSink,
-    GST_TYPE_BASE_AUDIO_SINK, _do_init);
+#define gst_jack_audio_sink_parent_class parent_class
+G_DEFINE_TYPE (GstJackAudioSink, gst_jack_audio_sink, GST_TYPE_BASE_AUDIO_SINK);
 
 static void gst_jack_audio_sink_dispose (GObject * object);
 static void gst_jack_audio_sink_set_property (GObject * object, guint prop_id,
@@ -672,26 +669,18 @@ static GstRingBuffer *gst_jack_audio_sink_create_ringbuffer (GstBaseAudioSink *
     sink);
 
 static void
-gst_jack_audio_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Audio Sink (Jack)",
-      "Sink/Audio", "Output audio to a JACK server",
-      "Wim Taymans <wim.taymans@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&jackaudiosink_sink_factory));
-}
-
-static void
 gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
   GstBaseAudioSinkClass *gstbaseaudiosink_class;
 
+  GST_DEBUG_CATEGORY_INIT (gst_jack_audio_sink_debug, "jacksink", 0,
+      "jacksink element");
+
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
 
@@ -716,6 +705,13 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
           GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class, "Audio Sink (Jack)",
+      "Sink/Audio", "Output audio to a JACK server",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&jackaudiosink_sink_factory));
+
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_jack_audio_sink_getcaps);
 
   gstbaseaudiosink_class->create_ringbuffer =
@@ -729,8 +725,7 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
 }
 
 static void
-gst_jack_audio_sink_init (GstJackAudioSink * sink,
-    GstJackAudioSinkClass * g_class)
+gst_jack_audio_sink_init (GstJackAudioSink * sink)
 {
   sink->connect = DEFAULT_PROP_CONNECT;
   sink->server = g_strdup (DEFAULT_PROP_SERVER);
