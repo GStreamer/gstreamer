@@ -18,32 +18,39 @@ static gboolean gst_replace_handle_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_replace_get_caps (GstBaseRTPPayload * payload,
     GstPad * pad);
 % declare-class
-  GstBaseRTPPayload *base_rtppayload_class = GST_BASE_RTPPAYLOAD (klass);
+  GstBaseRTPPayloadClass *base_rtppayload_class = GST_BASE_RTP_PAYLOAD_CLASS (klass);
 % set-methods
-  base_rtppayload_class-> = GST_DEBUG_FUNCPTR (gst_replace_);
+  base_rtppayload_class->set_caps = GST_DEBUG_FUNCPTR (gst_replace_set_caps);
+  base_rtppayload_class->handle_buffer = GST_DEBUG_FUNCPTR (gst_replace_handle_buffer);
+  base_rtppayload_class->handle_event = GST_DEBUG_FUNCPTR (gst_replace_handle_event);
+  base_rtppayload_class->get_caps = GST_DEBUG_FUNCPTR (gst_replace_get_caps);
 % methods
 
 static gboolean
 gst_replace_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
 
+  return FALSE;
 }
 
 static GstFlowReturn
 gst_replace_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 {
 
+  return GST_FLOW_ERROR;
 }
 
 static gboolean
 gst_replace_handle_event (GstPad * pad, GstEvent * event)
 {
 
+  return FALSE;
 }
 
 static GstCaps *
 gst_replace_get_caps (GstBaseRTPPayload * payload, GstPad * pad)
 {
 
+  return NULL;
 }
 % end

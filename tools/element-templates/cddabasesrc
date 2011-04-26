@@ -16,9 +16,13 @@ static GstBuffer *gst_replace_read_sector (GstCddaBaseSrc * src, gint sector);
 static gchar *gst_replace_get_default_device (GstCddaBaseSrc * src);
 static gchar **gst_replace_probe_devices (GstCddaBaseSrc * src);
 % declare-class
-  GstcddaBaseSrc *cddabase_src_class = GST_CDDABASE_SRC (klass);
+  GstCddaBaseSrcClass *cddabase_src_class = GST_CDDA_BASE_SRC_CLASS (klass);
 % set-methods
-  cddabase_src_class-> = GST_DEBUG_FUNCPTR (gst_replace_);
+  cddabase_src_class->open = GST_DEBUG_FUNCPTR (gst_replace_open);
+  cddabase_src_class->close = GST_DEBUG_FUNCPTR (gst_replace_close);
+  cddabase_src_class->read_sector = GST_DEBUG_FUNCPTR (gst_replace_read_sector);
+  cddabase_src_class->get_default_device = GST_DEBUG_FUNCPTR (gst_replace_get_default_device);
+  cddabase_src_class->probe_devices = GST_DEBUG_FUNCPTR (gst_replace_probe_devices);
 % methods
 
 
@@ -26,6 +30,7 @@ static gboolean
 gst_replace_open (GstCddaBaseSrc * src, const gchar * device)
 {
 
+  return FALSE;
 }
 
 static void
@@ -38,17 +43,20 @@ static GstBuffer *
 gst_replace_read_sector (GstCddaBaseSrc * src, gint sector)
 {
 
+  return NULL;
 }
 
 static gchar *
 gst_replace_get_default_device (GstCddaBaseSrc * src)
 {
 
+  return NULL;
 }
 
 static gchar **
 gst_replace_probe_devices (GstCddaBaseSrc * src)
 {
 
+  return NULL;
 }
 % end
