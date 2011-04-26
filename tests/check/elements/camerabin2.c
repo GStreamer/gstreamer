@@ -120,14 +120,9 @@ gst_test_camera_src_base_init (gpointer g_class)
 static void
 gst_test_camera_src_class_init (GstTestCameraSrcClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseCameraSrcClass *gstbasecamera_class;
 
-  gobject_class = G_OBJECT_CLASS (klass);
-  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasecamera_class = GST_BASE_CAMERA_SRC_CLASS (klass);
-
   gstbasecamera_class->set_mode = gst_test_camera_src_set_mode;
 }
 
