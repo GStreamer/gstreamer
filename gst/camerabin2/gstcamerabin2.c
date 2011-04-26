@@ -211,6 +211,29 @@ gst_camera_bin_start_capture (GstCameraBin * camerabin)
   GST_DEBUG_OBJECT (camerabin, "Received start-capture");
   GST_CAMERA_BIN_PROCESSING_INC (camerabin);
 
+  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
+    gst_element_set_state (camerabin->audio_src, GST_STATE_READY);
+    /* need to reset eos status (pads could be flushing) */
+    gst_element_set_state (camerabin->audio_queue, GST_STATE_READY);
+    gst_element_set_state (camerabin->audio_convert, GST_STATE_READY);
+    gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
+    gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
+
+    gst_element_sync_state_with_parent (camerabin->audio_queue);
+    gst_element_sync_state_with_parent (camerabin->audio_convert);
+    gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
+    gst_element_sync_state_with_parent (camerabin->audio_volume);
+  }
+
+  g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
+  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src)
+    gst_element_set_state (camerabin->audio_src, GST_STATE_PLAYING);
+
+  /*
+   * We have to push tags after start capture because the video elements
+   * might be flushing from the previous capture and are reset only on the
+   * notify from ready for capture going to FALSE
+   */
   taglist = gst_tag_setter_get_tag_list (GST_TAG_SETTER (camerabin));
   if (taglist) {
     GstPad *active_pad;
@@ -231,23 +254,6 @@ gst_camera_bin_start_capture (GstCameraBin * camerabin)
     gst_object_unref (active_pad);
   }
 
-  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
-    gst_element_set_state (camerabin->audio_src, GST_STATE_READY);
-    /* need to reset eos status (pads could be flushing) */
-    gst_element_set_state (camerabin->audio_queue, GST_STATE_READY);
-    gst_element_set_state (camerabin->audio_convert, GST_STATE_READY);
-    gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
-    gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
-
-    gst_element_sync_state_with_parent (camerabin->audio_queue);
-    gst_element_sync_state_with_parent (camerabin->audio_convert);
-    gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
-    gst_element_sync_state_with_parent (camerabin->audio_volume);
-  }
-
-  g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
-  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src)
-    gst_element_set_state (camerabin->audio_src, GST_STATE_PLAYING);
 }
 
 static void
