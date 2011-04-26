@@ -17,7 +17,7 @@ templatefiles=\
 	element-templates/videofilter2 \
 	element-templates/videosink
 
-broken_templatefiles = \
+templatedeps = \
 	element-templates/base \
 	element-templates/gobject \
 	element-templates/sinkpad \
@@ -29,6 +29,7 @@ EXTRA_DIST = \
 	gst-element-maker \
 	gst-app-maker \
 	$(templatefiles) \
+	$(templatedeps) \
 	gst-element-maker-test.sh
 
 TESTS_ENVIRONMENT = \
