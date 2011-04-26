@@ -1,5 +1,8 @@
 /* vim: set filetype=c: */
-
+% ClassName
+GstObject
+% TYPE_CLASS_NAME
+GST_TYPE_OBJECT
 % includes
 % prototypes
 

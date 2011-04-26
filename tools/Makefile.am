@@ -12,7 +12,6 @@ templatefiles=\
 	element-templates/basetransform \
 	element-templates/cddabasesrc \
 	element-templates/element \
-	element-templates/gobject \
 	element-templates/pushsrc \
 	element-templates/tagdemux \
 	element-templates/videofilter2 \
@@ -20,6 +19,7 @@ templatefiles=\
 
 broken_templatefiles = \
 	element-templates/base \
+	element-templates/gobject \
 	element-templates/sinkpad \
 	element-templates/sinkpad-simple \
 	element-templates/srcpad \
