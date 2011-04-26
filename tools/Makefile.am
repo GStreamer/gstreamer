@@ -33,7 +33,8 @@ EXTRA_DIST = \
 
 TESTS_ENVIRONMENT = \
 	SRC_DIR=$(abs_srcdir) \
-	TEMPLATE_FILES="$(templatefiles)"
+	TEMPLATE_FILES="$(templatefiles)" \
+	CPPFLAGS="-I$(abs_srcdir)"
 
 TESTS = gst-element-maker-test.sh
 

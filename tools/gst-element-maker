@@ -379,7 +379,7 @@ gst-indent $gstreplace.c
 
 echo pkg is $pkg
 
-gcc -Wall -fPIC $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o $gstreplace.o $gstreplace.c
+gcc -Wall -fPIC $CPPFLAGS $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o $gstreplace.o $gstreplace.c
 if test $? -ne 0; then
     exit 1
 fi
