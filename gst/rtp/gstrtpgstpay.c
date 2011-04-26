@@ -211,6 +211,7 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     ret = gst_basertppayload_push (basepayload, outbuf);
   }
+  gst_buffer_unref (buffer);
 
   return ret;
 }
