@@ -26,5 +26,12 @@ templatefiles=\
 EXTRA_DIST = \
 	gst-element-maker \
 	gst-app-maker \
-	$(templatefiles)
+	$(templatefiles) \
+	gst-element-maker-test.sh
+
+TESTS_ENVIRONMENT = \
+	SRC_DIR=$(abs_srcdir) \
+	TEMPLATE_FILES="$(templatefiles)"
+
+TESTS = gst-element-maker-test.sh
 
