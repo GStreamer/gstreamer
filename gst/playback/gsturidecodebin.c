@@ -91,7 +91,6 @@ struct _GstURIDecodeBin
   guint have_type_id;           /* have-type signal id from typefind */
   GSList *decodebins;
   GSList *pending_decodebins;
-  GSList *srcpads;
   gint numpads;
 
   /* for dynamic sources */
@@ -1425,22 +1424,6 @@ remove_decoders (GstURIDecodeBin * bin, gboolean force)
 }
 
 static void
-remove_pads (GstURIDecodeBin * bin)
-{
-  GSList *walk;
-
-  for (walk = bin->srcpads; walk; walk = g_slist_next (walk)) {
-    GstPad *pad = GST_PAD_CAST (walk->data);
-
-    GST_DEBUG_OBJECT (bin, "removing old pad");
-    gst_pad_set_active (pad, FALSE);
-    gst_element_remove_pad (GST_ELEMENT_CAST (bin), pad);
-  }
-  g_slist_free (bin->srcpads);
-  bin->srcpads = NULL;
-}
-
-static void
 proxy_unknown_type_signal (GstElement * element, GstPad * pad, GstCaps * caps,
     GstURIDecodeBin * dec)
 {
@@ -2403,14 +2386,12 @@ gst_uri_decode_bin_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("paused to ready");
       remove_decoders (decoder, FALSE);
-      remove_pads (decoder);
       remove_source (decoder);
       do_async_done (decoder);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_DEBUG ("ready to null");
       remove_decoders (decoder, TRUE);
-      remove_pads (decoder);
       remove_source (decoder);
       break;
     default:
