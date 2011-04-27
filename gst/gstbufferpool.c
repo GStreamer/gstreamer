@@ -486,7 +486,8 @@ gst_buffer_pool_get_config (GstBufferPool * pool)
 
 /**
  * gst_buffer_pool_config_set:
- * @pool: a #GstBufferPool
+ * @config: a #GstBufferPool
+ * @caps: caps for the buffers
  * @size: the size of each buffer, not including pre and post fix
  * @min_buffers: the minimum amount of buffers to allocate.
  * @max_buffers: the maximum amount of buffers to allocate or 0 for unlimited.
@@ -515,7 +516,8 @@ gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
 
 /**
  * gst_buffer_pool_config_get:
- * @pool: a #GstBufferPool
+ * @config: a #GstBufferPool
+ * @caps: the caps of buffers
  * @size: the size of each buffer, not including pre and post fix
  * @min_buffers: the minimum amount of buffers to allocate.
  * @max_buffers: the maximum amount of buffers to allocate or 0 for unlimited.

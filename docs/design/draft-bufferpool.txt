@@ -111,7 +111,7 @@ negotiate a buffer pool with the downstream element. We propose a simple
 scheme where a sink can propose a bufferpool and some configuration and where
 the source can choose to use this allocator or use its own.
 
-The algorithm for doing this is rougly like this:
+The algorithm for doing this is roughly like this:
 
 
    /* srcpad knows media type and size of buffers and is ready to
