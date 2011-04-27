@@ -468,6 +468,7 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
   GstMessage *message;
   GTimeVal now, then;
   gboolean first_round = TRUE;
+  GstClockTime elapsed = 0;
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
   g_return_val_if_fail (types != 0, NULL);
@@ -505,22 +506,19 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
         g_get_current_time (&then);
         first_round = FALSE;
       } else {
-        GstClockTime elapsed;
-
         g_get_current_time (&now);
 
         elapsed = GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (then);
-        if (timeout > elapsed)
-          timeout -= elapsed;
-        else
-          timeout = 0;
+
+        if (elapsed > timeout)
+          break;
       }
     }
 
     /* only here in timeout case */
     g_assert (bus->priv->poll);
     g_mutex_unlock (bus->queue_lock);
-    ret = gst_poll_wait (bus->priv->poll, timeout);
+    ret = gst_poll_wait (bus->priv->poll, timeout - elapsed);
     g_mutex_lock (bus->queue_lock);
 
     if (ret == 0) {
