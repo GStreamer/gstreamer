@@ -29,3 +29,17 @@ import gobject.MainContext as PyGMainContext_Type
 import gobject.GObject as PyGInitiallyUnowned_Type
 import gst.Bin as PyGstBin_Type
 import gst.Pipeline as PyGstPipeline_Type
+
+%%
+override ges_track_get_timeline kwargs
+static PyObject *
+_wrap_ges_track_get_timeline(PyGObject *self)
+{
+    const GESTimeline *ret;
+
+    pyg_begin_allow_threads;
+    ret = ges_track_get_timeline(GES_TRACK(self->obj));
+    pyg_end_allow_threads;
+    /* pygobject_new handles NULL checking */
+    return pygobject_new((GObject *)ret);
+}
