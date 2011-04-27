@@ -1,15 +1,15 @@
 # Bulgarian translation of gst-plugins-bad.
-# Copyright (C) 2007, 2008, 2009, 2010 Free Software Fondation, Inc.
+# Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Fondation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010.
+# Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010, 2011.
 #
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 20:26+0000\n"
-"PO-Revision-Date: 2010-11-04 14:25+0200\n"
+"POT-Creation-Date: 2011-04-27 12:55+0100\n"
+"PO-Revision-Date: 2011-04-26 22:30+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "Language: \n"
@@ -32,10 +32,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"DVD-то не може да бъде прочетено. Причината може да е, че DVD-то е шифрирано "
+"и не е инсталирана библиотека за дешифриране."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Информацията за заглавните части на DVD-то не може да бъде прочетена."
+msgstr "DVD-то не може да бъде прочетено."
 
 msgid "No file name specified for writing."
 msgstr "Не е указано име на файл за запис."

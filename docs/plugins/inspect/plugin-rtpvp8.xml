@@ -3,7 +3,7 @@
   <description>rtpvp8</description>
   <filename>../../gst/rtpvp8/.libs/libgstrtpvp8.so</filename>
   <basename>libgstrtpvp8.so</basename>
-  <version>0.10.21.2</version>
+  <version>0.10.21.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>

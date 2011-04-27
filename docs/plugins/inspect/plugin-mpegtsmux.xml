@@ -3,7 +3,7 @@
   <description>MPEG-TS muxer</description>
   <filename>../../gst/mpegtsmux/.libs/libgstmpegtsmux.so</filename>
   <basename>libgstmpegtsmux.so</basename>
-  <version>0.10.21.2</version>
+  <version>0.10.21.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>
@@ -20,7 +20,7 @@
           <name>sink_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-dirac; video/x-h264; audio/mpeg, mpegversion=(int){ 1, 2, 4 }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-dts</details>
+          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-dirac; video/x-h264, stream-format=(string)byte-stream; audio/mpeg, mpegversion=(int){ 1, 2, 4 }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-dts</details>
         </caps>
         <caps>
           <name>src</name>

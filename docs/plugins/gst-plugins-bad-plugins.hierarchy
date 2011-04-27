@@ -31,6 +31,7 @@ GObject
         GstBaseCameraSrc
           GstWrapperCameraBinSrc
       GstWildmidi
+      GstMpeg2enc
       GstBaseSink
         GstVideoSink
           GstSDLVideoSink
@@ -42,6 +43,7 @@ GObject
             GstNasSink
         GstSFSink
         GstCurlSink
+        GstLinsysSdiSink
         GstShmSink
         GstFBDEVSink
         GstDCCPServerSink
@@ -58,6 +60,7 @@ GObject
         GstLogoinsert
         GstAudioFilter
           GstOFA
+          GstBPMDetect
           GstStereo
         GstVideoFilter
           GstOpencvVideoFilter
@@ -187,6 +190,7 @@ GObject
           frei0r-src-partik0l
           frei0r-src-plasma
         GstSFSrc
+        GstLinsysSdiSrc
         GstDTMFSrc
         GstRTPDTMFSrc
         GstDataURISrc
@@ -200,7 +204,9 @@ GObject
       GstTRM
       GstGSMEnc
       GstGSMDec
+      GstPitch
       GstFaac
+      GstMplex
       GstXvidEnc
       GstXvidDec
       GstBaseVideoCodec
@@ -221,6 +227,7 @@ GObject
       GstBz2dec
       GstFaad
       GstRsvgDec
+      GstModPlug
       GstSignalProcessor
         ladspa-karaoke
         ladspa-shaper
@@ -500,11 +507,11 @@ GInterface
   GTypePlugin
   GstChildProxy
   GstURIHandler
+  GstPreset
   GstImplementsInterface
   GstXOverlay
   GstNavigation
   GstTagSetter
-  GstPreset
   GstColorBalance
   GstTagXmpWriter
   MXFDescriptiveMetadataFrameworkInterface

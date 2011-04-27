@@ -7726,11 +7726,11 @@ cogorc_convert_YUY2_AYUV (orc_uint64 * ORC_RESTRICT d1, int d1_stride,
           ((orc_uint16) var39.i & 0x0000ffff) | ((orc_uint16) var39.i << 16);
       /* 5: mergewl */
       var38.x2[0] =
-          ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[0] << 16);
+          ((orc_uint16) var41.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
       var38.x2[1] =
-          ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[1] << 16);
+          ((orc_uint16) var41.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
       /* 6: storeq */
       ptr0[i] = var38;
     }
@@ -7782,11 +7782,11 @@ _backup_cogorc_convert_YUY2_AYUV (OrcExecutor * ORC_RESTRICT ex)
           ((orc_uint16) var39.i & 0x0000ffff) | ((orc_uint16) var39.i << 16);
       /* 5: mergewl */
       var38.x2[0] =
-          ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[0] << 16);
+          ((orc_uint16) var41.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
       var38.x2[1] =
-          ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[1] << 16);
+          ((orc_uint16) var41.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
       /* 6: storeq */
       ptr0[i] = var38;
     }
@@ -7892,11 +7892,11 @@ cogorc_convert_UYVY_AYUV (orc_uint64 * ORC_RESTRICT d1, int d1_stride,
           ((orc_uint16) var40.i & 0x0000ffff) | ((orc_uint16) var40.i << 16);
       /* 5: mergewl */
       var38.x2[0] =
-          ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[0] << 16);
+          ((orc_uint16) var41.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
       var38.x2[1] =
-          ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[1] << 16);
+          ((orc_uint16) var41.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
       /* 6: storeq */
       ptr0[i] = var38;
     }
@@ -7948,11 +7948,11 @@ _backup_cogorc_convert_UYVY_AYUV (OrcExecutor * ORC_RESTRICT ex)
           ((orc_uint16) var40.i & 0x0000ffff) | ((orc_uint16) var40.i << 16);
       /* 5: mergewl */
       var38.x2[0] =
-          ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[0] << 16);
+          ((orc_uint16) var41.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
       var38.x2[1] =
-          ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[1] << 16);
+          ((orc_uint16) var41.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
       /* 6: storeq */
       ptr0[i] = var38;
     }
@@ -10150,11 +10150,11 @@ cogorc_convert_Y42B_AYUV (orc_uint64 * ORC_RESTRICT d1, int d1_stride,
           ((orc_uint16) var41.i & 0x0000ffff) | ((orc_uint16) var41.i << 16);
       /* 7: mergewl */
       var40.x2[0] =
-          ((orc_uint16) var42.x2[0] & 0x0000ffff) | ((orc_uint16) var43.
-          x2[0] << 16);
+          ((orc_uint16) var42.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var43.x2[0] << 16);
       var40.x2[1] =
-          ((orc_uint16) var42.x2[1] & 0x0000ffff) | ((orc_uint16) var43.
-          x2[1] << 16);
+          ((orc_uint16) var42.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var43.x2[1] << 16);
       /* 8: storeq */
       ptr0[i] = var40;
     }
@@ -10212,11 +10212,11 @@ _backup_cogorc_convert_Y42B_AYUV (OrcExecutor * ORC_RESTRICT ex)
           ((orc_uint16) var41.i & 0x0000ffff) | ((orc_uint16) var41.i << 16);
       /* 7: mergewl */
       var40.x2[0] =
-          ((orc_uint16) var42.x2[0] & 0x0000ffff) | ((orc_uint16) var43.
-          x2[0] << 16);
+          ((orc_uint16) var42.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var43.x2[0] << 16);
       var40.x2[1] =
-          ((orc_uint16) var42.x2[1] & 0x0000ffff) | ((orc_uint16) var43.
-          x2[1] << 16);
+          ((orc_uint16) var42.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var43.x2[1] << 16);
       /* 8: storeq */
       ptr0[i] = var40;
     }

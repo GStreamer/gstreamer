@@ -3,7 +3,7 @@
   <description>JPEG2000 decimator</description>
   <filename>../../gst/jp2kdecimator/.libs/libgstjp2kdecimator.so</filename>
   <basename>libgstjp2kdecimator.so</basename>
-  <version>0.10.21.2</version>
+  <version>0.10.21.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>

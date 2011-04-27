@@ -18,6 +18,7 @@ GstViewfinderBin GstChildProxy
 GstImageCaptureBin GstChildProxy
 GstBaseCameraSrc GstChildProxy
 GstWrapperCameraBinSrc GstChildProxy
+GstMpeg2enc GstPreset
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 VdpSink GstImplementsInterface GstNavigation GstXOverlay

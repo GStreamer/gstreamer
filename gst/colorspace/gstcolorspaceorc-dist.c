@@ -6480,11 +6480,11 @@ cogorc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
           ((orc_uint16) var39.i & 0x0000ffff) | ((orc_uint16) var39.i << 16);
       /* 5: mergewl */
       var38.x2[0] =
-          ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[0] << 16);
+          ((orc_uint16) var41.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
       var38.x2[1] =
-          ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[1] << 16);
+          ((orc_uint16) var41.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
       /* 6: storeq */
       ptr0[i] = var38;
     }
@@ -6536,11 +6536,11 @@ _backup_cogorc_convert_YUY2_AYUV (OrcExecutor * ORC_RESTRICT ex)
           ((orc_uint16) var39.i & 0x0000ffff) | ((orc_uint16) var39.i << 16);
       /* 5: mergewl */
       var38.x2[0] =
-          ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[0] << 16);
+          ((orc_uint16) var41.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
       var38.x2[1] =
-          ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[1] << 16);
+          ((orc_uint16) var41.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
       /* 6: storeq */
       ptr0[i] = var38;
     }
@@ -6646,11 +6646,11 @@ cogorc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
           ((orc_uint16) var40.i & 0x0000ffff) | ((orc_uint16) var40.i << 16);
       /* 5: mergewl */
       var38.x2[0] =
-          ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[0] << 16);
+          ((orc_uint16) var41.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
       var38.x2[1] =
-          ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[1] << 16);
+          ((orc_uint16) var41.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
       /* 6: storeq */
       ptr0[i] = var38;
     }
@@ -6702,11 +6702,11 @@ _backup_cogorc_convert_UYVY_AYUV (OrcExecutor * ORC_RESTRICT ex)
           ((orc_uint16) var40.i & 0x0000ffff) | ((orc_uint16) var40.i << 16);
       /* 5: mergewl */
       var38.x2[0] =
-          ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[0] << 16);
+          ((orc_uint16) var41.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
       var38.x2[1] =
-          ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-          x2[1] << 16);
+          ((orc_uint16) var41.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
       /* 6: storeq */
       ptr0[i] = var38;
     }
@@ -8890,11 +8890,11 @@ cogorc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
           ((orc_uint16) var41.i & 0x0000ffff) | ((orc_uint16) var41.i << 16);
       /* 7: mergewl */
       var40.x2[0] =
-          ((orc_uint16) var42.x2[0] & 0x0000ffff) | ((orc_uint16) var43.
-          x2[0] << 16);
+          ((orc_uint16) var42.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var43.x2[0] << 16);
       var40.x2[1] =
-          ((orc_uint16) var42.x2[1] & 0x0000ffff) | ((orc_uint16) var43.
-          x2[1] << 16);
+          ((orc_uint16) var42.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var43.x2[1] << 16);
       /* 8: storeq */
       ptr0[i] = var40;
     }
@@ -8952,11 +8952,11 @@ _backup_cogorc_convert_Y42B_AYUV (OrcExecutor * ORC_RESTRICT ex)
           ((orc_uint16) var41.i & 0x0000ffff) | ((orc_uint16) var41.i << 16);
       /* 7: mergewl */
       var40.x2[0] =
-          ((orc_uint16) var42.x2[0] & 0x0000ffff) | ((orc_uint16) var43.
-          x2[0] << 16);
+          ((orc_uint16) var42.
+          x2[0] & 0x0000ffff) | ((orc_uint16) var43.x2[0] << 16);
       var40.x2[1] =
-          ((orc_uint16) var42.x2[1] & 0x0000ffff) | ((orc_uint16) var43.
-          x2[1] << 16);
+          ((orc_uint16) var42.
+          x2[1] & 0x0000ffff) | ((orc_uint16) var43.x2[1] << 16);
       /* 8: storeq */
       ptr0[i] = var40;
     }
@@ -12646,11 +12646,11 @@ cogorc_getline_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
         ((orc_uint8) var37.x2[1] & 0x00ff) | ((orc_uint8) var38.x2[1] << 8);
     /* 7: mergewl */
     var39.x2[0] =
-        ((orc_uint16) var44.x2[0] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[0] << 16);
+        ((orc_uint16) var44.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var43.x2[0] << 16);
     var39.x2[1] =
-        ((orc_uint16) var44.x2[1] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[1] << 16);
+        ((orc_uint16) var44.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var43.x2[1] << 16);
     /* 8: storeq */
     ptr0[i] = var39;
   }
@@ -12704,11 +12704,11 @@ _backup_cogorc_getline_YUV9 (OrcExecutor * ORC_RESTRICT ex)
         ((orc_uint8) var37.x2[1] & 0x00ff) | ((orc_uint8) var38.x2[1] << 8);
     /* 7: mergewl */
     var39.x2[0] =
-        ((orc_uint16) var44.x2[0] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[0] << 16);
+        ((orc_uint16) var44.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var43.x2[0] << 16);
     var39.x2[1] =
-        ((orc_uint16) var44.x2[1] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[1] << 16);
+        ((orc_uint16) var44.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var43.x2[1] << 16);
     /* 8: storeq */
     ptr0[i] = var39;
   }
@@ -12816,11 +12816,11 @@ cogorc_getline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
         ((orc_uint16) var39.i & 0x0000ffff) | ((orc_uint16) var39.i << 16);
     /* 5: mergewl */
     var38.x2[0] =
-        ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-        x2[0] << 16);
+        ((orc_uint16) var41.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
     var38.x2[1] =
-        ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-        x2[1] << 16);
+        ((orc_uint16) var41.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
     /* 6: storeq */
     ptr0[i] = var38;
   }
@@ -12868,11 +12868,11 @@ _backup_cogorc_getline_YUY2 (OrcExecutor * ORC_RESTRICT ex)
         ((orc_uint16) var39.i & 0x0000ffff) | ((orc_uint16) var39.i << 16);
     /* 5: mergewl */
     var38.x2[0] =
-        ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-        x2[0] << 16);
+        ((orc_uint16) var41.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
     var38.x2[1] =
-        ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-        x2[1] << 16);
+        ((orc_uint16) var41.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
     /* 6: storeq */
     ptr0[i] = var38;
   }
@@ -12971,11 +12971,11 @@ cogorc_getline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
         ((orc_uint16) var40.i & 0x0000ffff) | ((orc_uint16) var40.i << 16);
     /* 5: mergewl */
     var38.x2[0] =
-        ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-        x2[0] << 16);
+        ((orc_uint16) var41.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
     var38.x2[1] =
-        ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-        x2[1] << 16);
+        ((orc_uint16) var41.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
     /* 6: storeq */
     ptr0[i] = var38;
   }
@@ -13023,11 +13023,11 @@ _backup_cogorc_getline_UYVY (OrcExecutor * ORC_RESTRICT ex)
         ((orc_uint16) var40.i & 0x0000ffff) | ((orc_uint16) var40.i << 16);
     /* 5: mergewl */
     var38.x2[0] =
-        ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var42.
-        x2[0] << 16);
+        ((orc_uint16) var41.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var42.x2[0] << 16);
     var38.x2[1] =
-        ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var42.
-        x2[1] << 16);
+        ((orc_uint16) var41.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var42.x2[1] << 16);
     /* 6: storeq */
     ptr0[i] = var38;
   }
@@ -13129,11 +13129,11 @@ cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
         ((orc_uint16) var41.i & 0x0000ffff) | ((orc_uint16) var41.i << 16);
     /* 6: mergewl */
     var38.x2[0] =
-        ((orc_uint16) var42.x2[0] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[0] << 16);
+        ((orc_uint16) var42.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var43.x2[0] << 16);
     var38.x2[1] =
-        ((orc_uint16) var42.x2[1] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[1] << 16);
+        ((orc_uint16) var42.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var43.x2[1] << 16);
     /* 7: storeq */
     ptr0[i] = var38;
   }
@@ -13184,11 +13184,11 @@ _backup_cogorc_getline_YVYU (OrcExecutor * ORC_RESTRICT ex)
         ((orc_uint16) var41.i & 0x0000ffff) | ((orc_uint16) var41.i << 16);
     /* 6: mergewl */
     var38.x2[0] =
-        ((orc_uint16) var42.x2[0] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[0] << 16);
+        ((orc_uint16) var42.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var43.x2[0] << 16);
     var38.x2[1] =
-        ((orc_uint16) var42.x2[1] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[1] << 16);
+        ((orc_uint16) var42.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var43.x2[1] << 16);
     /* 7: storeq */
     ptr0[i] = var38;
   }
@@ -13295,11 +13295,11 @@ cogorc_getline_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
         ((orc_uint16) var41.i & 0x0000ffff) | ((orc_uint16) var41.i << 16);
     /* 7: mergewl */
     var40.x2[0] =
-        ((orc_uint16) var42.x2[0] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[0] << 16);
+        ((orc_uint16) var42.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var43.x2[0] << 16);
     var40.x2[1] =
-        ((orc_uint16) var42.x2[1] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[1] << 16);
+        ((orc_uint16) var42.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var43.x2[1] << 16);
     /* 8: storeq */
     ptr0[i] = var40;
   }
@@ -13353,11 +13353,11 @@ _backup_cogorc_getline_Y42B (OrcExecutor * ORC_RESTRICT ex)
         ((orc_uint16) var41.i & 0x0000ffff) | ((orc_uint16) var41.i << 16);
     /* 7: mergewl */
     var40.x2[0] =
-        ((orc_uint16) var42.x2[0] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[0] << 16);
+        ((orc_uint16) var42.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var43.x2[0] << 16);
     var40.x2[1] =
-        ((orc_uint16) var42.x2[1] & 0x0000ffff) | ((orc_uint16) var43.
-        x2[1] << 16);
+        ((orc_uint16) var42.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var43.x2[1] << 16);
     /* 8: storeq */
     ptr0[i] = var40;
   }
@@ -14247,11 +14247,11 @@ cogorc_getline_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
         ((orc_uint8) var36.x2[1] & 0x00ff) | ((orc_uint8) var37.x2[1] << 8);
     /* 6: mergewl */
     var38.x2[0] =
-        ((orc_uint16) var40.x2[0] & 0x0000ffff) | ((orc_uint16) var39.
-        x2[0] << 16);
+        ((orc_uint16) var40.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var39.x2[0] << 16);
     var38.x2[1] =
-        ((orc_uint16) var40.x2[1] & 0x0000ffff) | ((orc_uint16) var39.
-        x2[1] << 16);
+        ((orc_uint16) var40.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var39.x2[1] << 16);
     /* 7: storeq */
     ptr0[i] = var38;
   }
@@ -14300,11 +14300,11 @@ _backup_cogorc_getline_NV12 (OrcExecutor * ORC_RESTRICT ex)
         ((orc_uint8) var36.x2[1] & 0x00ff) | ((orc_uint8) var37.x2[1] << 8);
     /* 6: mergewl */
     var38.x2[0] =
-        ((orc_uint16) var40.x2[0] & 0x0000ffff) | ((orc_uint16) var39.
-        x2[0] << 16);
+        ((orc_uint16) var40.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var39.x2[0] << 16);
     var38.x2[1] =
-        ((orc_uint16) var40.x2[1] & 0x0000ffff) | ((orc_uint16) var39.
-        x2[1] << 16);
+        ((orc_uint16) var40.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var39.x2[1] << 16);
     /* 7: storeq */
     ptr0[i] = var38;
   }
@@ -14402,11 +14402,11 @@ cogorc_getline_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
         ((orc_uint8) var36.x2[1] & 0x00ff) | ((orc_uint8) var37.x2[1] << 8);
     /* 6: mergewl */
     var38.x2[0] =
-        ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var40.
-        x2[0] << 16);
+        ((orc_uint16) var41.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var40.x2[0] << 16);
     var38.x2[1] =
-        ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var40.
-        x2[1] << 16);
+        ((orc_uint16) var41.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var40.x2[1] << 16);
     /* 7: storeq */
     ptr0[i] = var38;
   }
@@ -14455,11 +14455,11 @@ _backup_cogorc_getline_NV21 (OrcExecutor * ORC_RESTRICT ex)
         ((orc_uint8) var36.x2[1] & 0x00ff) | ((orc_uint8) var37.x2[1] << 8);
     /* 6: mergewl */
     var38.x2[0] =
-        ((orc_uint16) var41.x2[0] & 0x0000ffff) | ((orc_uint16) var40.
-        x2[0] << 16);
+        ((orc_uint16) var41.
+        x2[0] & 0x0000ffff) | ((orc_uint16) var40.x2[0] << 16);
     var38.x2[1] =
-        ((orc_uint16) var41.x2[1] & 0x0000ffff) | ((orc_uint16) var40.
-        x2[1] << 16);
+        ((orc_uint16) var41.
+        x2[1] & 0x0000ffff) | ((orc_uint16) var40.x2[1] << 16);
     /* 7: storeq */
     ptr0[i] = var38;
   }

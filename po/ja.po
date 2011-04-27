@@ -1,13 +1,13 @@
 # Japanese traslation for gst-plugins-bad
 # This file is put in the public domain.
 #
-# Makoto Kato <makoto.kt@gmail.com>, 2009-2010.
+# Makoto Kato <makoto.kt@gmail.com>, 2009-2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 20:26+0000\n"
-"PO-Revision-Date: 2010-10-26 16:31+0900\n"
+"POT-Creation-Date: 2011-04-27 12:55+0100\n"
+"PO-Revision-Date: 2011-04-26 19:38+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "Language: ja\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Could not read title information for DVD."
-msgstr "DVD のタイトル情報を読み込むことができませんでした。"
+msgstr "DVDのタイトル情報を読み込むことができませんでした。"
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "DVD デバイス '%s' のオープンに失敗しました"
+msgstr "DVDデバイス '%s' のオープンに失敗しました。"
 
 msgid "Failed to set PGC based seeking."
 msgstr "PGCを利用したシークに失敗しました。"
@@ -31,27 +31,28 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"DVDを読み込むことができませんでした。DVDが暗号化されているかDVDを解読するライ"
+"ブラリがインストールされていないからかもしれません。"
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "DVD のタイトル情報を読み込むことができませんでした。"
+msgstr "DVDを読み込むことができませんでした。"
 
 msgid "No file name specified for writing."
-msgstr "書き込み用にファイル名が指定されていません"
+msgstr "書き込み用にファイル名が指定されていません。"
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "書き込み用にファイル \"%s\" を開くことができませんでした。"
 
 msgid "Internal data stream error."
-msgstr "内部データフローエラー"
+msgstr "内部データストリームエラー。"
 
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "ファイル \"%s\" へ書き込むことができませんでした。"
 
 msgid "Internal data flow error."
-msgstr "内部データフローエラー"
+msgstr "内部データフローエラー。"
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -59,7 +60,7 @@ msgstr "デバイス \"%s\" は存在しません。"
 
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "フロントデバイス \"%s\" を開くことができません。"
+msgstr "フロントエンドデバイス \"%s\" を開くことができません。"
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."

@@ -1,16 +1,16 @@
-# -*- mode:po; coding:utf-8; -*- Slovenian message catalogue for gst-plugins-bad.
+# Slovenian translation for gst-plugins-bad.
+# Copyright (C) 2005 - 2011 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Copyright (C) 2005 Free Software Foundation, Inc.
-#
 # Matej Urbančič <matej.urban@gmail.com>, 2010.
+# Klemen Košir <klemen.kosir@gmx.com>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2010-07-01 17:42+0100\n"
-"Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
+"POT-Creation-Date: 2011-04-27 12:55+0100\n"
+"PO-Revision-Date: 2011-04-26 15:21+0100\n"
+"Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
@@ -23,56 +23,57 @@ msgstr ""
 "X-Poedit-SourceCharset: utf-8\n"
 
 msgid "Could not read title information for DVD."
-msgstr "Ni mogoče prebrati podrobnosti naslova na nosilcu DVD."
+msgstr "Podatkov naslova DVD-ja ni mogoče prebrati."
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Napaka med odpiranjem DVD naprave '%s'."
+msgstr "Napaka med odpiranjem DVD naprave \"%s\"."
 
 msgid "Failed to set PGC based seeking."
-msgstr "Napaka med nastavljanjem PGC iskanja."
+msgstr "Napaka med nastavljanjem iskanja PGC."
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"DVD-ja ni mogoče prebrati. Verjetno je DVD šifriran, knjižnica za "
+"dešifriranje pa ni nameščena."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Ni mogoče prebrati podrobnosti naslova na nosilcu DVD."
+msgstr "DVD-ja ni mogoče prebrati."
 
 msgid "No file name specified for writing."
-msgstr "Ni določenega imena datoteke za zapisovanje."
+msgstr "Ni navedenega imena datoteke za pisanje."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Ni mogoče odpreti datoteke \"%s\" za pisanje."
+msgstr "Datoteke \"%s\" ni mogoče odpreti za pisanje."
 
 msgid "Internal data stream error."
 msgstr "Notranja napaka pretoka podatkov."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
-msgstr "Ni mogoče pisati v datoteko \"%s\"."
+msgstr "V datoteko \"%s\" ni mogoče pisati."
 
 msgid "Internal data flow error."
 msgstr "Notranja napaka pretočnosti podatkov."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Naprava \"%s\" ne obstaja"
+msgstr "Naprava \"%s\" ne obstaja."
 
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Ni mogoče odpreti čelne naprave \"%s\"."
+msgstr "Čelne naprave \"%s\" ni mogoče odpreti."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Ni mogoče pridobiti nastavitev čelne naprave \"%s\"."
+msgstr "Nastavitev čelne naprave \"%s\" ni mogoče pridobiti."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Ni mogoče odpreti datoteke \"%s\" za branje."
+msgstr "Datoteke \"%s\" ni mogoče odpreti za branje."
 
 #~ msgid "Volume"
 #~ msgstr "Glasnost"

@@ -3,7 +3,7 @@
   <description>XviD plugin library</description>
   <filename>../../ext/xvid/.libs/libgstxvid.so</filename>
   <basename>libgstxvid.so</basename>
-  <version>0.10.21.2</version>
+  <version>0.10.21.3</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>
