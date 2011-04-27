@@ -239,10 +239,8 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
 
-  gst_element_register (plugin, "replace", GST_RANK_NONE,
-      gst_replace_get_type ());
-
-  return TRUE;
+  return gst_element_register (plugin, "replace", GST_RANK_NONE,
+      GST_TYPE_REPLACE);
 }
 
 #ifndef VERSION
