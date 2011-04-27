@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2010.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
-"PO-Revision-Date: 2010-10-25 07:15+0200\n"
+"POT-Creation-Date: 2011-04-27 11:56+0100\n"
+"PO-Revision-Date: 2011-04-26 18:01+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -335,13 +335,11 @@ msgstr "tryb ekspozycji"
 msgid "The exposure mode used when capturing an image"
 msgstr "Tryb ekspozycji użyty przy robieniu zdjęcia"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "tryb ekspozycji"
+msgstr "kompensacja ekspozycji"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "Tryb ekspozycji użyty przy robieniu zdjęcia"
+msgstr "Kompensacja ekspozycji użyta przy robieniu zdjęcia"
 
 msgid "capturing scene capture type"
 msgstr "Tyb sceny zdjęcia"
