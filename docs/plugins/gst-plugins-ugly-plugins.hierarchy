@@ -9,17 +9,12 @@ GObject
     GstElement
       GstBin
         GstPipeline
-      GstRMDemux
-      GstRealAudioDemux
-      GstRDTDepay
-      GstRDTManager
-      GstRTSPReal
       GstBaseSrc
         GstPushSrc
-          GstPNMSrc
           GstDvdReadSrc
           GstCddaBaseSrc
             GstCdioCddaSrc
+          GstPNMSrc
       GstMad
       GstX264Enc
       GstTwoLame
@@ -41,6 +36,11 @@ GObject
       GstMPEGParse
         GstMPEGDemux
           GstDVDDemux
+      GstRMDemux
+      GstRealAudioDemux
+      GstRDTDepay
+      GstRDTManager
+      GstRTSPReal
       GstASFDemux
       GstRTSPWMS
       GstBaseRTPDepayload
@@ -56,6 +56,6 @@ GInterface
   GTypePlugin
   GstChildProxy
   GstURIHandler
-  GstRTSPExtension
   GstPreset
   GstTagSetter
+  GstRTSPExtension

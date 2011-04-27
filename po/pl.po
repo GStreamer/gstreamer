@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-ugly.
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2009.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
-"PO-Revision-Date: 2009-03-10 21:42+0100\n"
+"POT-Creation-Date: 2011-04-27 12:41+0100\n"
+"PO-Revision-Date: 2011-04-26 18:00+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -47,10 +47,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Nie udało się odczytać DVD. Powodem może być to, że płyta jest zaszyfrowana, "
+"a biblioteka odszyfrowująca nie została zainstalowana."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Nie udało się otworzyć DVD"
+msgstr "Nie udało się odczytać DVD."
 
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
@@ -75,15 +76,3 @@ msgstr "Ten strumień nie zawiera danych."
 
 msgid "Internal data stream error."
 msgstr "Błąd wewnętrzny strumienia danych."
-
-#~ msgid "Invalid title information on DVD."
-#~ msgstr "Błędna informacja tytułowa na DVD."
-
-#~ msgid "Could not read title information for DVD."
-#~ msgstr "Nie udało się odczytać informacji tytułowej dla DVD."
-
-#~ msgid "Failed to open DVD device '%s'."
-#~ msgstr "Nie udało się otworzyć urządzenia DVD '%s'."
-
-#~ msgid "Failed to set PGC based seeking."
-#~ msgstr "Nie udało się ustawić przemieszczania opartego na PGC."

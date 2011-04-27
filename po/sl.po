@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 20:57+0100\n"
-"PO-Revision-Date: 2011-03-08 21:31+0100\n"
+"POT-Creation-Date: 2011-04-27 12:41+0100\n"
+"PO-Revision-Date: 2011-04-26 15:35+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
@@ -52,10 +52,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"DVD-ja ni mogoče prebrati. Verjetno je DVD šifriran, knjižnica za "
+"dešifriranje pa ni nameščena."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "DVD-ja ni mogoče odpreti"
+msgstr "DVD-ja ni mogoče prebrati."
 
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""

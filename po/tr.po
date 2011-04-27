@@ -1,13 +1,13 @@
-# translation of gst-plugins-ugly-0.10.10.2.po to Turkish
+# translation of gst-plugins-ugly-0.10.17.2.po to Turkish
 # This file is put in the public domain.
 # Server Acim <sacim@kde.org.tr>, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly-0.10.10.2\n"
+"Project-Id-Version: gst-plugins-ugly-0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
-"PO-Revision-Date: 2009-03-10 22:42+0200\n"
-"Last-Translator: Server Acim <sacim@kde.org.tr>\n"
+"POT-Creation-Date: 2011-04-27 12:41+0100\n"
+"PO-Revision-Date: 2011-04-26 19:24+0200\n"
+"Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
@@ -47,10 +47,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"DVD okunamıyor. Bunun sebebi, DVD'nin şifrelenmiş olması veya DVD şifre "
+"çzöme kitaplığının kurulu olmaması olabilir."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "DVD açılamıyor"
+msgstr "DVD okunamıyor."
 
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""

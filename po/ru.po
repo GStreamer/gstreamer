@@ -6,10 +6,10 @@
 # Yuri Kozlov <yuray@komyakino.ru>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 14:34+0000\n"
-"PO-Revision-Date: 2011-01-01 14:29+0300\n"
+"POT-Creation-Date: 2011-04-27 12:41+0100\n"
+"PO-Revision-Date: 2011-04-26 20:28+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
@@ -52,10 +52,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Не удалось прочесть DVD. Это могло произойти из-за того, что DVD закодирован "
+"и не установлена библиотека декодирования DVD."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Не удалось открыть DVD"
+msgstr "Не удалось прочесть DVD."
 
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "Не удалось настроить кодировщик LAME. Проверьте параметры кодирования."
