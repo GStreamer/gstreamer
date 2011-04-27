@@ -32,10 +32,12 @@ EXTRA_DIST = \
 	$(templatedeps) \
 	gst-element-maker-test.sh
 
-TESTS_ENVIRONMENT = \
-	SRC_DIR=$(abs_srcdir) \
-	TEMPLATE_FILES="$(templatefiles)" \
-	CPPFLAGS="-I$(abs_srcdir)"
-
-TESTS = gst-element-maker-test.sh
+# Disabled since it doesn't work in an uninstalled setup:
+#
+#TESTS_ENVIRONMENT = \
+#	SRC_DIR=$(abs_srcdir) \
+#	TEMPLATE_FILES="$(templatefiles)" \
+#	CPPFLAGS="-I$(abs_srcdir)"
+#
+#TESTS = gst-element-maker-test.sh
 
