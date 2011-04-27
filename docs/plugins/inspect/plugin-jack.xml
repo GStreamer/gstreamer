@@ -3,7 +3,7 @@
   <description>JACK audio elements</description>
   <filename>../../ext/jack/.libs/libgstjack.so</filename>
   <basename>libgstjack.so</basename>
-  <version>0.10.28.2</version>
+  <version>0.10.28.3</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins prerelease</package>

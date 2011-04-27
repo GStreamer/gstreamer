@@ -1,20 +1,24 @@
 # Translation for gst-plugins-good messages to Russian
 # This file is put in the public domain.
+#
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-#
+# Yuri Kozlov <yuray@komyakino.ru>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 01:15+0000\n"
-"PO-Revision-Date: 2009-02-12 14:35+0200\n"
-"Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
+"POT-Creation-Date: 2011-04-27 12:13+0100\n"
+"PO-Revision-Date: 2011-04-26 21:13+0400\n"
+"Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.0\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 msgid "Could not establish connection to sound server"
 msgstr "Не удалось установить соединение с сервером звука"
@@ -25,7 +29,7 @@ msgstr "Ошибка при запросе возможностей сервер
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "«%s» исполняет «%s»"
 
 msgid "Internal data stream error."
 msgstr "Внутренняя ошибка потока данных."
@@ -36,30 +40,27 @@ msgstr "Не удалось декодировать JPEG-изображение
 msgid "Could not connect to server"
 msgstr "Не удалось соединиться с сервером"
 
-#, fuzzy
 msgid "Server does not support seeking."
-msgstr "Устройство «%s» не поддерживает захват видео"
+msgstr "Сервер не поддерживает поиск."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Не удалось соединиться с сервером"
+msgstr "Не удалось определить имя сервера."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Не удалось установить соединение с сервером звука"
+msgstr "Не удалось установить соединение с сервером."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Не удалось настроить защищённое соединение."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr ""
+msgstr "Произошла сетевая ошибка или сервер неожиданно закрыл соединение."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Сервер прислал некорректные данные."
 
 msgid "No URL set."
-msgstr ""
+msgstr "URL не задан."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
@@ -76,7 +77,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Файл повреждён и не может быть воспроизведён."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Неверный атомарный размер."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Файл не полон и не может быть воспроизведён."
@@ -93,12 +94,16 @@ msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
+"Ни один поток не поддерживается. Возможно требуется установка "
+"дополнительного модуля GStreamer RTSP для потоков Real media."
 
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
+"Ни один поток не поддерживается. Возможно требуется разрешить дополнительные "
+"протоколы передачи или же отсутствует правильный модуль GStreamer RTSP."
 
 msgid "Internal data flow error."
 msgstr "Внутренняя ошибка потока данных."
@@ -215,187 +220,173 @@ msgstr ""
 "Не удалось открыть аудио-устройство для обработки параметров микшера. Данная "
 "версия Open Sound System не поддерживается этим элементом."
 
-#, fuzzy
 msgid "Master"
-msgstr "Скорость"
+msgstr "Общий"
 
 msgid "Front"
-msgstr "Фронт"
+msgstr "Фронтальные"
 
 msgid "Rear"
-msgstr "Тыл"
+msgstr "Тыловые"
 
 msgid "Headphones"
 msgstr "Наушники"
 
-#, fuzzy
 msgid "Center"
-msgstr "Центр / Сабвуфер"
+msgstr "Центр"
 
 msgid "LFE"
-msgstr ""
+msgstr "Сабвуфер"
 
-#, fuzzy
 msgid "Surround"
 msgstr "Объёмный звук"
 
 msgid "Side"
 msgstr "Боковые"
 
-#, fuzzy
 msgid "Built-in Speaker"
 msgstr "Внутренний динамик"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "Выход AUX 1"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "Выход AUX 2"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "Выход AUX"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D глубина"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D центр"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "3D улучшение"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Наушники"
+msgstr "Телефон"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Линейный выход"
 
-#, fuzzy
 msgid "Line In"
 msgstr "Линейный вход"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Внутренний CD"
 
 msgid "Video In"
-msgstr ""
+msgstr "Видео вход"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "Вход AUX 1"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "Вход AUX 2"
 
 msgid "AUX In"
-msgstr ""
+msgstr "Вход AUX"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Уровень записи"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Выходной уровень"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Микрофон"
+msgstr "Микрофонный усилитель"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Петля"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Диагностика"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Усиление баса"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Порты воспроизведения"
 
 msgid "Input"
 msgstr "Вход"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Устройство записи"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Устройство вывода"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Озвучка клавиатуры"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Имитация стерео"
 
 msgid "Stereo"
 msgstr "Стерео"
 
-#, fuzzy
 msgid "Surround Sound"
 msgstr "Объёмный звук"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Микрофон"
+msgstr "Уровень микрофона"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Устройство динамика"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Микрофон"
+msgstr "Устройство микрофона"
 
 msgid "Jack"
-msgstr ""
+msgstr "Jack"
 
 msgid "Center / LFE"
 msgstr "Центр / Сабвуфер"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "Стерео"
+msgstr "Стерео микширование"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Моно микширование"
 
-#, fuzzy
 msgid "Input Mix"
-msgstr "Уровень входа"
+msgstr "Микширование входа"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "Вход SPDIF"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "Выход SPDIF"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Микрофон"
+msgstr "Микрофон 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Микрофон"
+msgstr "Микрофон 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Цифровой выход"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Цифровой вход"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Модем"
 
 msgid "Handset"
-msgstr ""
+msgstr "Гарнитура"
 
 msgid "Other"
-msgstr ""
+msgstr "Другой"
 
 msgid "None"
-msgstr ""
+msgstr "Ничего"
 
 msgid "On"
 msgstr "Вкл"
@@ -404,14 +395,14 @@ msgid "Off"
 msgstr "Выкл"
 
 msgid "Mute"
-msgstr ""
+msgstr "Заглушить"
 
 msgid "Fast"
 msgstr "Скорость"
 
 #. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
-msgstr ""
+msgstr "Очень низкое"
 
 #. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
@@ -426,129 +417,103 @@ msgid "High"
 msgstr "Высокое"
 
 #. TRANSLATORS: "Very High" is a quality setting here
-#, fuzzy
 msgid "Very High"
 msgstr "Очень высокое"
 
 #. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
-msgstr "Продукция"
+msgstr "Выдача"
 
-#, fuzzy
 msgid "Front Panel Microphone"
-msgstr "Фронтальный микрофон"
+msgstr "Микрофон на передней панели"
 
-#, fuzzy
 msgid "Front Panel Line In"
-msgstr "Фронтальный линейный вход"
+msgstr "Линейный вход на передней панели"
 
-#, fuzzy
 msgid "Front Panel Headphones"
-msgstr "Фронтальные наушники"
+msgstr "Наушники на передней панели"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "Фронтальный линейный вход"
+msgstr "Линейный выход на передней панели"
 
-#, fuzzy
 msgid "Green Connector"
 msgstr "Зелёный разъём"
 
-#, fuzzy
 msgid "Pink Connector"
 msgstr "Розовый разъём"
 
-#, fuzzy
 msgid "Blue Connector"
 msgstr "Синий разъём"
 
-#, fuzzy
 msgid "White Connector"
 msgstr "Белый разъём"
 
-#, fuzzy
 msgid "Black Connector"
 msgstr "Чёрный разъём"
 
-#, fuzzy
 msgid "Gray Connector"
 msgstr "Серый разъём"
 
-#, fuzzy
 msgid "Orange Connector"
 msgstr "Оранжевый разъём"
 
-#, fuzzy
 msgid "Red Connector"
 msgstr "Красный разъём"
 
-#, fuzzy
 msgid "Yellow Connector"
 msgstr "Жёлтый разъём"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
-msgstr "Фронтальный зелёный разъём"
+msgstr "Зелёный разъём на передней панели"
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
-msgstr "Фронтальный розовый разъём"
+msgstr "Розовый разъём на передней панели"
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
-msgstr "Фронтальный синий разъём"
+msgstr "Синий разъём на передней панели"
 
-#, fuzzy
 msgid "White Front Panel Connector"
-msgstr "Фронтальный белый разъём"
+msgstr "Белый разъём на передней панели"
 
-#, fuzzy
 msgid "Black Front Panel Connector"
-msgstr "Фронтальный чёрный разъём"
+msgstr "Чёрный разъём на передней панели"
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
-msgstr "Фронтальный серый разъём"
+msgstr "Серый разъём на передней панели"
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
-msgstr "Фронтальный оранжевый разъём"
+msgstr "Оранжевый разъём на передней панели"
 
-#, fuzzy
 msgid "Red Front Panel Connector"
-msgstr "Фронтальный красный разъём"
+msgstr "Красный разъём на передней панели"
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
-msgstr "Фронтальный жёлтый разъём"
+msgstr "Жёлтый разъём на передней панели"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Развёрнутый вывод"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Низведение"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
-msgstr "Виртуальный вход микшера"
+msgstr "Вход виртуального микшера"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
-msgstr "Виртуальный выход микшера"
+msgstr "Выход виртуального микшера"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "Виртуальный вход микшера"
+msgstr "Каналы виртуального микшера"
 
 #. TRANSLATORS: name + number of a volume mixer control
 #, c-format
 msgid "%s %d Function"
-msgstr ""
+msgstr "Функция %s %d"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "Функция %s"
 
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
@@ -570,10 +535,10 @@ msgid "Error recording from audio device."
 msgstr "Ошибка записи с аудио-устройства."
 
 msgid "Gain"
-msgstr "Усиление"
+msgstr "Уровень"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Наушник"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -627,9 +592,9 @@ msgstr "Не удалось открыть устройство «%s» для ч
 msgid "Device '%s' is not a capture device."
 msgstr "Устройство «%s» не является устройством захвата."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Устройство «%s» не является устройством захвата."
+msgstr "Устройство «%s» не является устройством вывода."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -664,18 +629,18 @@ msgstr ""
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Не удалось выбрать вход %d для устройства %s"
+msgstr "Не удалось выбрать вход %d для устройства %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Не удалось определить активный вход устройства «%s». Возможно, это радио-"
+"Не удалось определить активный выход устройства «%s». Возможно, это радио-"
 "устройство"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Не удалось выбрать вход %d для устройства %s"
+msgstr "Не удалось выбрать выход %d для устройства %s."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
@@ -713,56 +678,10 @@ msgstr ""
 msgid "Cannot operate without a clock"
 msgstr "Операция невозможна без часов"
 
-#~ msgid "Device '%s' cannot capture at %d/%d frames per second"
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
 #~ msgstr ""
-#~ "Устройство «%s» не может осуществить захват при %d/%d кадрах в секунду"
-
-#~ msgid "Could not set parameters on device '%s'"
-#~ msgstr "Не удалось установить параметры устройства «%s»"
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "Ошибка получения атрибутов управления устройства «%s»."
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Файл зашифрован и не может быть воспроизведён."
-
-#~ msgid "Disc is not an Audio CD."
-#~ msgstr "Диск не является аудио-CD."
-
-#~ msgid "Could not read from CD."
-#~ msgstr "Не удалось прочитать CD."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Ошибка при остановке потокового захвата с устройства «%s»."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Ошибка при запуске потокового захвата с устройства «%s»."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Не удалось получить необходимое количество буферов устройства «%s»"
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Не удалось получить буферы устройства «%s»"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Устройство «%s» не может осуществлять захват в указанном формате"
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Устройство «%s» не может осуществлять захват в разрешении %dx%d"
-
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "В пуле не найдено свободных буферов для индекса %d."
-
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "не хватает памяти для постановки в очередь буфера пользовательского "
-#~ "указателя (устройство %s)"
-
-#~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Ошибка при попытке получения кадров видео с устройства «%s». Не хватает "
-#~ "памяти."
+#~ "Не удалось создать список видео-форматов, с которыми может работать "
+#~ "устройство «%s»"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
@@ -773,7 +692,53 @@ msgstr "Операция невозможна без часов"
 #~ "были распределены, либо неверные значения длины или userptr (устройство "
 #~ "%s)"
 
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
 #~ msgstr ""
-#~ "Не удалось создать список видео-форматов, с которыми может работать "
-#~ "устройство «%s»"
+#~ "Ошибка при попытке получения кадров видео с устройства «%s». Не хватает "
+#~ "памяти."
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "не хватает памяти для постановки в очередь буфера пользовательского "
+#~ "указателя (устройство %s)"
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "В пуле не найдено свободных буферов для индекса %d."
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "Устройство «%s» не может осуществлять захват в разрешении %dx%d"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "Устройство «%s» не может осуществлять захват в указанном формате"
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Не удалось получить буферы устройства «%s»"
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "Не удалось получить необходимое количество буферов устройства «%s»"
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Ошибка при запуске потокового захвата с устройства «%s»."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Ошибка при остановке потокового захвата с устройства «%s»."
+
+#~ msgid "Could not read from CD."
+#~ msgstr "Не удалось прочитать CD."
+
+#~ msgid "Disc is not an Audio CD."
+#~ msgstr "Диск не является аудио-CD."
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Файл зашифрован и не может быть воспроизведён."
+
+#~ msgid "Failed getting controls attributes on device '%s.'"
+#~ msgstr "Ошибка получения атрибутов управления устройства «%s»."
+
+#~ msgid "Could not set parameters on device '%s'"
+#~ msgstr "Не удалось установить параметры устройства «%s»"
+
+#~ msgid "Device '%s' cannot capture at %d/%d frames per second"
+#~ msgstr ""
+#~ "Устройство «%s» не может осуществить захват при %d/%d кадрах в секунду"
