@@ -55,8 +55,10 @@
     --video-source                    Video source used in still capture and video recording
     --image-pp                        List of image post-processing elements separated with comma
     --viewfinder-sink                 Viewfinder sink (default = fakesink)
-    --image-width                     Width for image capture
-    --image-height                    Height for image capture
+    --image-width                     Width for capture (only used if the caps
+    arguments aren't set)
+    --image-height                    Height for capture (only used if the caps
+    arguments aren't set)
     --view-framerate-num              Framerate numerator for viewfinder
     --view-framerate-den              Framerate denominator for viewfinder
     --preview-caps                    Preview caps (e.g. video/x-raw-rgb,width=320,height=240)
@@ -67,6 +69,9 @@
     --encoding-target                 Video encoding target name
     --encoding-profile                Video encoding profile name
     --encoding-profile-filename       Video encoding profile filename
+    --image-capture-caps              Image capture caps (e.g. video/x-raw-rgb,width=640,height=480)
+    --viewfinder-caps                 Viewfinder caps (e.g. video/x-raw-rgb,width=640,height=480)
+    --video-capture-caps              Video capture caps (e.g. video/x-raw-rgb,width=640,height=480)
 
   */
 
@@ -125,6 +130,9 @@ static gboolean no_xwindow = FALSE;
 static gchar *gep_targetname = NULL;
 static gchar *gep_profilename = NULL;
 static gchar *gep_filename = NULL;
+static gchar *image_capture_caps_str = NULL;
+static gchar *viewfinder_caps_str = NULL;
+static gchar *video_capture_caps_str = NULL;
 
 
 #define MODE_VIDEO 2
@@ -457,6 +465,40 @@ setup_pipeline_element (GstElement * element, const gchar * property_name,
   return res;
 }
 
+static void
+set_camerabin2_caps_from_string (void)
+{
+  GstCaps *caps = NULL;
+  if (image_capture_caps_str != NULL) {
+    caps = gst_caps_from_string (image_capture_caps_str);
+    if (GST_CAPS_IS_SIMPLE (caps) && image_width > 0 && image_height > 0) {
+      gst_caps_set_simple (caps, "width", G_TYPE_INT, image_width, "height",
+          G_TYPE_INT, image_height, NULL);
+    }
+    GST_DEBUG ("setting image-capture-caps: %" GST_PTR_FORMAT, caps);
+    g_object_set (camerabin, "image-capture-caps", caps, NULL);
+    gst_caps_unref (caps);
+  }
+
+  if (viewfinder_caps_str != NULL) {
+    caps = gst_caps_from_string (viewfinder_caps_str);
+    if (GST_CAPS_IS_SIMPLE (caps) && view_framerate_num > 0
+        && view_framerate_den > 0) {
+      gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
+          view_framerate_num, view_framerate_den, NULL);
+    }
+    GST_DEBUG ("setting viewfinder-caps: %" GST_PTR_FORMAT, caps);
+    g_object_set (camerabin, "viewfinder-caps", caps, NULL);
+    gst_caps_unref (caps);
+  }
+
+  if (video_capture_caps_str != NULL) {
+    caps = gst_caps_from_string (video_capture_caps_str);
+    GST_DEBUG ("setting video-capture-caps: %" GST_PTR_FORMAT, caps);
+    g_object_set (camerabin, "video-capture-caps", caps, NULL);
+    gst_caps_unref (caps);
+  }
+}
 
 static gboolean
 setup_pipeline (void)
@@ -557,6 +599,8 @@ setup_pipeline (void)
       gst_caps_unref (caps);
     }
   }
+
+  set_camerabin2_caps_from_string ();
 
   if (GST_STATE_CHANGE_FAILURE ==
       gst_element_set_state (camerabin, GST_STATE_READY)) {
@@ -781,6 +825,15 @@ main (int argc, char *argv[])
         "Video encoding profile name", NULL},
     {"encoding-profile-filename", '\0', 0, G_OPTION_ARG_STRING, &gep_filename,
         "Video encoding profile filename", NULL},
+    {"image-capture-caps", '\0', G_OPTION_FLAG_OPTIONAL_ARG,
+          G_OPTION_ARG_STRING, &image_capture_caps_str,
+        "Image capture caps (e.g. video/x-raw-rgb,width=640,height=480)", NULL},
+    {"viewfinder-caps", '\0', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_STRING,
+          &viewfinder_caps_str,
+        "Viewfinder caps (e.g. video/x-raw-rgb,width=640,height=480)", NULL},
+    {"video-capture-caps", '\0', G_OPTION_FLAG_OPTIONAL_ARG,
+          G_OPTION_ARG_STRING, &video_capture_caps_str,
+        "Video capture caps (e.g. video/x-raw-rgb,width=640,height=480)", NULL},
     {NULL}
   };
 
