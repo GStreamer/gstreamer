@@ -50,7 +50,6 @@ struct _GstRtpAsfDepay
 
   GstAdapter *adapter;
   gboolean    discont;
-  gboolean    wait_start;
 };
 
 struct _GstRtpAsfDepayClass

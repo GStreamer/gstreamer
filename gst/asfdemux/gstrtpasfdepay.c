@@ -308,7 +308,6 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (GST_BUFFER_IS_DISCONT (buf)) {
     GST_LOG_OBJECT (depay, "got DISCONT");
     gst_adapter_clear (depay->adapter);
-    depay->wait_start = TRUE;
     depay->discont = TRUE;
   }
 
@@ -504,7 +503,6 @@ gst_rtp_asf_depay_change_state (GstElement * element, GstStateChange trans)
   switch (trans) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (depay->adapter);
-      depay->wait_start = TRUE;
       depay->discont = TRUE;
       break;
     default:
