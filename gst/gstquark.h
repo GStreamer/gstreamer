@@ -140,8 +140,9 @@ typedef enum _GstQuarkId
   GST_QUARK_PREFIX = 111,
   GST_QUARK_POSTFIX = 112,
   GST_QUARK_ALIGN = 113,
+  GST_QUARK_TIME = 114,
 
-  GST_QUARK_MAX = 114
+  GST_QUARK_MAX = 115
 } GstQuarkId;
 
 extern GQuark _priv_gst_quark_table[GST_QUARK_MAX];
