@@ -157,7 +157,17 @@ gst_rtp_asf_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if (ps_string == NULL || *ps_string == '\0')
     goto no_packetsize;
 
-  depay->packet_size = atoi (ps_string);
+  if (depay->packet_size) {
+    /* header sent again following seek;
+     * discard to avoid confusing upstream */
+    if (depay->packet_size == atoi (ps_string)) {
+      goto duplicate_header;
+    } else {
+      /* since we should fiddle with downstream state to handle this */
+      goto refuse_renegotiation;
+    }
+  } else
+    depay->packet_size = atoi (ps_string);
   if (depay->packet_size <= 16)
     goto invalid_packetsize;
 
@@ -201,6 +211,16 @@ invalid_headers:
   {
     GST_WARNING_OBJECT (depay, "headers don't look like valid ASF headers");
     g_free (headers);
+    return FALSE;
+  }
+duplicate_header:
+  {
+    GST_DEBUG_OBJECT (depayload, "discarding duplicate header");
+    return TRUE;
+  }
+refuse_renegotiation:
+  {
+    GST_WARNING_OBJECT (depayload, "cannot renegotiate to different header");
     return FALSE;
   }
 }
