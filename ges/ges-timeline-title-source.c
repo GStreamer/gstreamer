@@ -51,6 +51,7 @@ struct _GESTimelineTitleSourcePrivate
   gchar *font_desc;
   GESTextVAlign halign;
   GESTextHAlign valign;
+  GSList *track_titles;
 };
 
 enum
@@ -66,6 +67,13 @@ enum
 static GESTrackObject
     * ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
+
+static void
+ges_timeline_title_source_track_object_added (GESTimelineObject * obj,
+    GESTrackObject * tckobj);
+static void
+ges_timeline_title_source_track_object_released (GESTimelineObject * obj,
+    GESTrackObject * tckobj);
 
 static void
 ges_timeline_title_source_get_property (GObject * object, guint property_id,
@@ -200,6 +208,10 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
   timobj_class->create_track_object =
       ges_timeline_title_source_create_track_object;
   timobj_class->need_fill_track = FALSE;
+  timobj_class->track_object_added =
+      ges_timeline_title_source_track_object_added;
+  timobj_class->track_object_released =
+      ges_timeline_title_source_track_object_released;
 }
 
 static void
@@ -230,8 +242,7 @@ void
 ges_timeline_title_source_set_text (GESTimelineTitleSource * self,
     const gchar * text)
 {
-  GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GSList *tmp;
 
   GST_DEBUG ("self:%p, text:%s", self, text);
 
@@ -240,18 +251,10 @@ ges_timeline_title_source_set_text (GESTimelineTitleSource * self,
 
   self->priv->text = g_strdup (text);
 
-  /* FIXME : We need a much less crack way to find the trackobject to change */
-  trackobjects = ges_timeline_object_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
-
-    if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
-      ges_track_title_source_set_text (GES_TRACK_TITLE_SOURCE
-          (trackobject), self->priv->text);
-
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
+    ges_track_title_source_set_text (GES_TRACK_TITLE_SOURCE (tmp->data),
+        self->priv->text);
   }
-  g_list_free (trackobjects);
 }
 
 /**
@@ -266,8 +269,7 @@ void
 ges_timeline_title_source_set_font_desc (GESTimelineTitleSource * self,
     const gchar * font_desc)
 {
-  GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GSList *tmp;
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
 
@@ -276,18 +278,10 @@ ges_timeline_title_source_set_font_desc (GESTimelineTitleSource * self,
 
   self->priv->font_desc = g_strdup (font_desc);
 
-  /* FIXME : We need a much less crack way to find the trackobject to change */
-  trackobjects = ges_timeline_object_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
-
-    if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
-      ges_track_title_source_set_font_desc (GES_TRACK_TITLE_SOURCE
-          (trackobject), self->priv->font_desc);
-
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
+    ges_track_title_source_set_font_desc (GES_TRACK_TITLE_SOURCE (tmp->data),
+        self->priv->font_desc);
   }
-  g_list_free (trackobjects);
 }
 
 /**
@@ -302,25 +296,16 @@ void
 ges_timeline_title_source_set_halignment (GESTimelineTitleSource * self,
     GESTextHAlign halign)
 {
-  GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GSList *tmp;
 
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
   self->priv->halign = halign;
 
-  /* FIXME : We need a much less crack way to find the trackobject to change */
-  trackobjects = ges_timeline_object_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
-
-    if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
-      ges_track_title_source_set_halignment (GES_TRACK_TITLE_SOURCE
-          (trackobject), self->priv->halign);
-
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
+    ges_track_title_source_set_halignment (GES_TRACK_TITLE_SOURCE (tmp->data),
+        self->priv->halign);
   }
-  g_list_free (trackobjects);
 }
 
 /**
@@ -335,25 +320,16 @@ void
 ges_timeline_title_source_set_valignment (GESTimelineTitleSource * self,
     GESTextVAlign valign)
 {
-  GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GSList *tmp;
 
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
   self->priv->valign = valign;
 
-  /* FIXME : We need a much less crack way to find the trackobject to change */
-  trackobjects = ges_timeline_object_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
-
-    if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
-      ges_track_title_source_set_valignment (GES_TRACK_TITLE_SOURCE
-          (trackobject), self->priv->valign);
-
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
+    ges_track_title_source_set_valignment (GES_TRACK_TITLE_SOURCE (tmp->data),
+        self->priv->valign);
   }
-  g_list_free (trackobjects);
 }
 
 /**
@@ -463,6 +439,33 @@ gboolean
 ges_timeline_title_source_is_muted (GESTimelineTitleSource * self)
 {
   return self->priv->mute;
+}
+
+static void
+ges_timeline_title_source_track_object_released (GESTimelineObject * obj,
+    GESTrackObject * tckobj)
+{
+  GESTimelineTitleSourcePrivate *priv = GES_TIMELINE_TITLE_SOURCE (obj)->priv;
+
+  /* If this is called, we should be sure the tckobj exists */
+  if (GES_IS_TRACK_TITLE_SOURCE (tckobj)) {
+    GST_DEBUG ("GESTrackTitle %p released from %p", tckobj, obj);
+    priv->track_titles = g_slist_remove (priv->track_titles, tckobj);
+    g_object_unref (tckobj);
+  }
+}
+
+static void
+ges_timeline_title_source_track_object_added (GESTimelineObject * obj,
+    GESTrackObject * tckobj)
+{
+  GESTimelineTitleSourcePrivate *priv = GES_TIMELINE_TITLE_SOURCE (obj)->priv;
+
+  if (GES_IS_TRACK_TITLE_SOURCE (tckobj)) {
+    GST_DEBUG ("GESTrackTitle %p added to %p", tckobj, obj);
+    priv->track_titles =
+        g_slist_prepend (priv->track_titles, g_object_ref (tckobj));
+  }
 }
 
 static GESTrackObject *
