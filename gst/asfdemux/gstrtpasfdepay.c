@@ -427,50 +427,46 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       /* Fragmented packet handling */
       outbuf = NULL;
 
-      if (len_offs == 0 && (available = gst_adapter_available (depay->adapter))) {
-        /* Beginning of a new fragmented packet, Extract the previous buffer if any */
-        GST_DEBUG ("Extracting previous fragmented buffer from adapter");
-        sub = gst_adapter_take_buffer (depay->adapter, available);
-        if (available < depay->packet_size) {
-          /* Add padding if needed */
-          GST_DEBUG ("Padding outgoing buffer to packet_size (%d, was %d",
-              depay->packet_size, available);
-          outbuf = gst_buffer_new_and_alloc (depay->packet_size);
-          memcpy (GST_BUFFER_DATA (outbuf), GST_BUFFER_DATA (sub), available);
-          memset (GST_BUFFER_DATA (outbuf) + available, 0,
-              depay->packet_size - available);
-          gst_buffer_unref (sub);
-          gst_rtp_asf_depay_set_padding (depay, outbuf,
-              depay->packet_size - available);
-        } else
-          outbuf = sub;
-      }
-      GST_DEBUG ("storing fragmented buffer continuation and returning");
-      available = gst_adapter_available (depay->adapter);
-      GST_DEBUG ("Available bytes (%d), len_offs (%d)", available, len_offs);
-      if ((available = gst_adapter_available (depay->adapter))) {
-        if (available != len_offs) {
-          GST_WARNING ("Available bytes (%d) != len_offs (%d), trimming buffer",
-              available, len_offs);
-          sub = gst_adapter_take_buffer (depay->adapter, len_offs);
-          gst_adapter_clear (depay->adapter);
-          if (sub)
-            gst_adapter_push (depay->adapter, sub);
+      if (len_offs == (available = gst_adapter_available (depay->adapter))) {
+        /* fragment aligns with what we have, add it */
+        GST_LOG_OBJECT (depay, "collecting fragment");
+        sub = gst_rtp_buffer_get_payload_subbuffer (buf, offset, packet_len);
+        gst_adapter_push (depay->adapter, sub);
+        /* RTP marker bit M is set if this is last fragment */
+        if (gst_rtp_buffer_get_marker (buf)) {
+          GST_LOG_OBJECT (depay, "last fragment, assembling packet");
+          outbuf =
+              gst_adapter_take_buffer (depay->adapter, available + packet_len);
         }
+      } else {
+        if (available) {
+          GST_WARNING_OBJECT (depay, "Offset doesn't match previous data?!");
+          GST_DEBUG_OBJECT (depay, "clearing for re-sync");
+          gst_adapter_clear (depay->adapter);
+        } else
+          GST_DEBUG_OBJECT (depay, "waiting for start of packet");
       }
-      sub = gst_rtp_buffer_get_payload_subbuffer (buf, offset, packet_len);
-      gst_adapter_push (depay->adapter, sub);
-      /* If we haven't completed a full ASF packet, return */
-      if (!outbuf)
-        return NULL;
-    } else if (packet_len >= depay->packet_size) {
-      GST_LOG_OBJECT (depay, "creating subbuffer");
-      outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, offset, packet_len);
     } else {
-      GST_LOG_OBJECT (depay, "padding buffer");
-      /* we need to pad with zeroes to packet_size if it's smaller */
-      outbuf = gst_buffer_new_and_alloc (depay->packet_size);
-      memcpy (GST_BUFFER_DATA (outbuf), payload, packet_len);
+      GST_LOG_OBJECT (depay, "collecting packet");
+      outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, offset, packet_len);
+    }
+
+    /* If we haven't completed a full ASF packet, return */
+    if (!outbuf)
+      return NULL;
+
+    /* we need to pad with zeroes to packet_size if it's smaller */
+    g_assert (packet_len == GST_BUFFER_SIZE (outbuf));
+    packet_len = GST_BUFFER_SIZE (outbuf);
+    if (packet_len < depay->packet_size) {
+      GstBuffer *tmp;
+
+      GST_LOG_OBJECT (depay, "padding buffer size %d to packet size %d",
+          packet_len, depay->packet_size);
+      tmp = gst_buffer_new_and_alloc (depay->packet_size);
+      memcpy (GST_BUFFER_DATA (tmp), GST_BUFFER_DATA (outbuf), packet_len);
+      gst_buffer_unref (outbuf);
+      outbuf = tmp;
       memset (GST_BUFFER_DATA (outbuf) + packet_len, 0,
           depay->packet_size - packet_len);
       gst_rtp_asf_depay_set_padding (depay, outbuf,
