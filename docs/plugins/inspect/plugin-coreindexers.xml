@@ -3,7 +3,7 @@
   <description>GStreamer core indexers</description>
   <filename>../../plugins/indexers/.libs/libgstcoreindexers.so</filename>
   <basename>libgstcoreindexers.so</basename>
-  <version>0.10.32.2</version>
+  <version>0.10.32.3</version>
   <license>LGPL</license>
   <source>gstreamer</source>
   <package>GStreamer prerelease</package>

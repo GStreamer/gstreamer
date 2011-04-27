@@ -1,17 +1,17 @@
-# translation of gstreamer-0.10.30.3.po to Dutch
+# translation of gstreamer-0.10.32.2.po to Dutch
 # Dutch translation of gstreamer
 # Copyright (C) 2003-2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Taco Witte <tcwitte@cs.uu.nl>, 2006.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.30.3\n"
+"Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 14:53+0100\n"
-"PO-Revision-Date: 2010-10-25 19:10+0200\n"
+"POT-Creation-Date: 2011-04-27 11:27+0100\n"
+"PO-Revision-Date: 2011-04-26 23:10+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -410,12 +410,11 @@ msgstr "auteursrecht-uri"
 msgid "URI to the copyright notice of the data"
 msgstr "URI naar de auteursrechtvermelding van de gegevens"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "encoder"
+msgstr "gecodeerd door"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "naam van de coderende persoon of organisatie"
 
 msgid "contact"
 msgstr "contact"
@@ -1064,7 +1063,7 @@ msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Indexstatistieken"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1172,7 +1171,7 @@ msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Forceer een EOS op de bron bij het afsluiten van de pijplijn"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Verzamel en print indexstatistieken"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
