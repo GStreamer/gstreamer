@@ -46,7 +46,7 @@
  * means of doing so is to load every plugin and look at the resulting
  * information that is gathered in the default registry. Clearly, this is a time
  * consuming process, so we cache information in the registry file. The format
- * and location of the cache file is internal to gstreamer. 
+ * and location of the cache file is internal to gstreamer.
  *
  * On startup, plugins are searched for in the plugin search path. The following
  * locations are checked in this order:
@@ -280,7 +280,7 @@ gst_registry_finalize (GObject * object)
     if (feature) {
       GST_LOG_OBJECT (registry, "removing feature %p (%s)",
           feature, gst_plugin_feature_get_name (feature));
-      gst_object_unref (feature);
+      gst_object_unparent (GST_OBJECT_CAST (feature));
     }
     f = g_list_next (f);
   }
@@ -485,7 +485,7 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
 
       registry->features = g_list_delete_link (registry->features, f);
       g_hash_table_remove (registry->feature_hash, feature->name);
-      gst_object_unref (feature);
+      gst_object_unparent (GST_OBJECT_CAST (feature));
     }
     f = next;
   }
@@ -561,10 +561,10 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   if (G_UNLIKELY (existing_feature)) {
     /* We unref now. No need to remove the feature name from the hash table, it
      * got replaced by the new feature */
-    gst_object_unref (existing_feature);
+    gst_object_unparent (GST_OBJECT_CAST (existing_feature));
   }
 
-  gst_object_ref_sink (feature);
+  gst_object_set_parent (GST_OBJECT_CAST (feature), GST_OBJECT_CAST (registry));
 
   registry->priv->cookie++;
   GST_OBJECT_UNLOCK (registry);
@@ -598,7 +598,8 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
   g_hash_table_remove (registry->feature_hash, feature->name);
   registry->priv->cookie++;
   GST_OBJECT_UNLOCK (registry);
-  gst_object_unref (feature);
+
+  gst_object_unparent ((GstObject *) feature);
 }
 
 /**
