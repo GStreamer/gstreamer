@@ -36,6 +36,7 @@
 
 #include "gstviewfinderbin.h"
 #include "camerabingeneral.h"
+#include <gst/pbutils/pbutils.h>
 
 #include <gst/gst-i18n-plugin.h>
 
@@ -147,6 +148,7 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
   GstElement *csp = NULL;
   GstElement *videoscale = NULL;
   GstPad *pad = NULL;
+  const gchar *missing_element_name;
 
   GST_DEBUG_OBJECT (vfbin, "Creating internal elements");
 
@@ -155,14 +157,18 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
     csp =
         gst_camerabin_create_and_add_element (GST_BIN (vfbin),
         "ffmpegcolorspace", "vfbin-csp");
-    if (!csp)
-      goto error;
+    if (!csp) {
+      missing_element_name = "ffmpegcolorspace";
+      goto missing_element;
+    }
 
     videoscale =
         gst_camerabin_create_and_add_element (GST_BIN (vfbin), "videoscale",
         "vfbin-videoscale");
-    if (!videoscale)
-      goto error;
+    if (!videoscale) {
+      missing_element_name = "videoscale";
+      goto missing_element;
+    }
 
     /* add ghostpad */
     pad = gst_element_get_static_pad (csp, "sink");
@@ -190,10 +196,10 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
     else {
       vfbin->video_sink = gst_element_factory_make ("autovideosink",
           "vfbin-sink");
-      GST_ELEMENT_ERROR (vfbin, CORE, MISSING_PLUGIN,
-          (_("Missing element '%s' - check your GStreamer installation."),
-              "autovideosink"), (NULL));
-      goto error;
+      if (!vfbin->video_sink) {
+        missing_element_name = "autovideosink";
+        goto missing_element;
+      }
     }
 
     gst_bin_add (GST_BIN_CAST (vfbin), gst_object_ref (vfbin->video_sink));
@@ -212,6 +218,15 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
   }
 
   return TRUE;
+
+missing_element:
+  gst_element_post_message (GST_ELEMENT_CAST (vfbin),
+      gst_missing_element_message_new (GST_ELEMENT_CAST (vfbin),
+          missing_element_name));
+  GST_ELEMENT_ERROR (vfbin, CORE, MISSING_PLUGIN,
+      (_("Missing element '%s' - check your GStreamer installation."),
+          missing_element_name), (NULL));
+  goto error;
 
 error:
   GST_WARNING_OBJECT (vfbin, "Creating internal elements failed");

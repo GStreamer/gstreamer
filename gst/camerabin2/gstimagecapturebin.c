@@ -36,6 +36,8 @@
 
 #include "gstimagecapturebin.h"
 #include "camerabingeneral.h"
+#include <gst/pbutils/pbutils.h>
+#include <gst/gst-i18n-plugin.h>
 
 /* prototypes */
 
@@ -255,6 +257,7 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
 {
   GstElement *colorspace;
   GstPad *pad = NULL;
+  const gchar *missing_element_name;
 
   if (imagebin->elements_created)
     return TRUE;
@@ -263,8 +266,10 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
   colorspace =
       gst_camerabin_create_and_add_element (GST_BIN (imagebin),
       DEFAULT_COLORSPACE, "imagebin-colorspace");
-  if (!colorspace)
-    goto error;
+  if (!colorspace) {
+    missing_element_name = DEFAULT_COLORSPACE;
+    goto missing_element;
+  }
 
   if (imagebin->user_encoder) {
     imagebin->encoder = imagebin->user_encoder;
@@ -275,8 +280,10 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
     imagebin->encoder =
         gst_camerabin_create_and_add_element (GST_BIN (imagebin),
         DEFAULT_ENCODER, "imagebin-encoder");
-    if (!imagebin->encoder)
-      goto error;
+    if (!imagebin->encoder) {
+      missing_element_name = DEFAULT_ENCODER;
+      goto missing_element;
+    }
   }
 
   if (imagebin->user_muxer) {
@@ -288,15 +295,19 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
     imagebin->muxer =
         gst_camerabin_create_and_add_element (GST_BIN (imagebin),
         DEFAULT_MUXER, "imagebin-muxer");
-    if (!imagebin->muxer)
-      goto error;
+    if (!imagebin->muxer) {
+      missing_element_name = DEFAULT_MUXER;
+      goto missing_element;
+    }
   }
 
   imagebin->sink =
       gst_camerabin_create_and_add_element (GST_BIN (imagebin), DEFAULT_SINK,
       "imagebin-sink");
-  if (!imagebin->sink)
-    goto error;
+  if (!imagebin->sink) {
+    missing_element_name = DEFAULT_SINK;
+    goto missing_element;
+  }
 
   g_object_set (imagebin->sink, "location", imagebin->location, "async", FALSE,
       "post-messages", TRUE, NULL);
@@ -309,6 +320,15 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * imagebin)
 
   imagebin->elements_created = TRUE;
   return TRUE;
+
+missing_element:
+  gst_element_post_message (GST_ELEMENT_CAST (imagebin),
+      gst_missing_element_message_new (GST_ELEMENT_CAST (imagebin),
+          missing_element_name));
+  GST_ELEMENT_ERROR (imagebin, CORE, MISSING_PLUGIN,
+      (_("Missing element '%s' - check your GStreamer installation."),
+          missing_element_name), (NULL));
+  goto error;
 
 error:
   if (pad)

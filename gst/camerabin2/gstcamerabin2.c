@@ -56,6 +56,8 @@
 
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
 #include "gstcamerabin2.h"
+#include <gst/gst-i18n-plugin.h>
+#include <gst/pbutils/pbutils.h>
 
 #define GST_CAMERA_BIN_PROCESSING_INC(c)                                \
 {                                                                       \
@@ -949,12 +951,16 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   gboolean new_audio_src = FALSE;
   gboolean has_audio;
   gboolean profile_switched = FALSE;
+  const gchar *missing_element_name;
 
   if (!camera->elements_created) {
     /* TODO check that elements created in _init were really created */
-    /* TODO add proper missing plugin error handling */
 
     camera->encodebin = gst_element_factory_make ("encodebin", NULL);
+    if (!camera->encodebin) {
+      missing_element_name = "encodebin";
+      goto missing_element;
+    }
     camera->encodebin_signal_id = g_signal_connect (camera->encodebin,
         "element-added", (GCallback) encodebin_element_added, camera);
 
@@ -966,6 +972,14 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
     camera->audio_queue = gst_element_factory_make ("queue", "audio-queue");
     camera->audio_convert = gst_element_factory_make ("audioconvert",
         "audio-convert");
+    if (!camera->audio_convert) {
+      missing_element_name = "audioconvert";
+      goto missing_element;
+    }
+    if (!camera->audio_volume) {
+      missing_element_name = "volume";
+      goto missing_element;
+    }
 
     if (camera->video_profile == NULL) {
       GstEncodingContainerProfile *prof;
@@ -1163,6 +1177,15 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
 
   camera->elements_created = TRUE;
   return TRUE;
+
+missing_element:
+  gst_element_post_message (GST_ELEMENT_CAST (camera),
+      gst_missing_element_message_new (GST_ELEMENT_CAST (camera),
+          missing_element_name));
+  GST_ELEMENT_ERROR (camera, CORE, MISSING_PLUGIN,
+      (_("Missing element '%s' - check your GStreamer installation."),
+          missing_element_name), (NULL));
+  goto fail;
 
 fail:
   /* FIXME properly clean up */
