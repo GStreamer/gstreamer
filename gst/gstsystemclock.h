@@ -57,7 +57,6 @@ typedef enum {
 
 /**
  * GstSystemClock:
- * @clock: The parent clock
  *
  * The default implementation of a #GstClock that uses the system time.
  */

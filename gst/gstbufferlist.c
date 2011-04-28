@@ -132,7 +132,6 @@ static gconstpointer STOLEN = "";
 
 /**
  * GstBufferList:
- * @mini_object: the parent structure
  *
  * Opaque list of grouped buffers.
  *
