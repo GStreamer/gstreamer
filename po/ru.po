@@ -6,10 +6,10 @@
 # Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
-"PO-Revision-Date: 2011-01-01 16:29+0300\n"
+"POT-Creation-Date: 2011-04-27 11:56+0100\n"
+"PO-Revision-Date: 2011-04-26 20:30+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
@@ -333,13 +333,11 @@ msgstr "режим экспозиции при съёмке"
 msgid "The exposure mode used when capturing an image"
 msgstr "Режим экспозиции при съёмке изображения"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "режим экспозиции при съёмке"
+msgstr "компенсация экспозиции при съёмке"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "Режим экспозиции при съёмке изображения"
+msgstr "Компенсация экспозиции при съёмке изображения"
 
 msgid "capturing scene capture type"
 msgstr "тип сцены при съёмке"

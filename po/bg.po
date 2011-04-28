@@ -1,15 +1,15 @@
 # Bulgarian translation of gst-plugins-base.
-# Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+# Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Alexander Shopov <ash@kambanaria.org>, 2005, 2006, 2007, 2008, 2009, 2010.
+# Alexander Shopov <ash@kambanaria.org>, 2005, 2006, 2007, 2008, 2009, 2010, 2011.
 #
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
-"PO-Revision-Date: 2010-11-04 14:24+0200\n"
+"POT-Creation-Date: 2011-04-27 11:56+0100\n"
+"PO-Revision-Date: 2011-04-26 22:31+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "Language: bg\n"
@@ -260,7 +260,7 @@ msgid "Can't record audio fast enough"
 msgstr "Звукът не може да бъде записан достатъчно бързо"
 
 msgid "Failed to read tag: not enough data"
-msgstr "Неуспех при прочитаното на етикет: липсват достатъчно данни"
+msgstr "Неуспешно прочитано на етикет: липсват достатъчно данни"
 
 msgid "track ID"
 msgstr "идентификатор на песен"
@@ -334,13 +334,11 @@ msgstr "режим на експозиция"
 msgid "The exposure mode used when capturing an image"
 msgstr "Режим на експозиция при заснемане"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "режим на експозиция"
+msgstr "компенсация на експозицията"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "Режим на експозиция при заснемане"
+msgstr "Компенсацията на експозицията при заснемане"
 
 msgid "capturing scene capture type"
 msgstr "вид сцена"

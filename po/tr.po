@@ -1,12 +1,12 @@
-# translation of gst-plugins-base-0.10.30.3.po to Turkish
+# translation of gst-plugins-base-0.10.32.2.po to Turkish
 # This file is put in the public domain.
 # Server Acim <serveracim@gmail.com>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
-"PO-Revision-Date: 2010-11-16 16:38+0200\n"
+"POT-Creation-Date: 2011-04-27 11:56+0100\n"
+"PO-Revision-Date: 2011-04-26 19:22+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
@@ -324,11 +324,9 @@ msgstr "pozlandırma kipini yakalıyor"
 msgid "The exposure mode used when capturing an image"
 msgstr "Bir resim çekerken kullanılan pozlandırma kipi"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "pozlandırma kipini yakalıyor"
+msgstr "pozlandırma kipini yakalanıyor"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
 msgstr "Bir resim çekerken kullanılan pozlandırma kipi"
 
