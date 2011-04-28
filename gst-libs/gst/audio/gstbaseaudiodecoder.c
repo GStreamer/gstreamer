@@ -743,8 +743,7 @@ gst_base_audio_decoder_finish_frame (GstBaseAudioDecoder * dec, GstBuffer * buf,
       g_assert (GST_CLOCK_TIME_IS_VALID (priv->base_ts));
       next_ts = priv->base_ts +
           gst_util_uint64_scale (samples, GST_SECOND, ctx->state.rate);
-      GST_LOG_OBJECT (dec, "buffer is %" G_GUINT64_FORMAT
-          " samples past base_ts %" GST_TIME_FORMAT
+      GST_LOG_OBJECT (dec, "buffer is %d samples past base_ts %" GST_TIME_FORMAT
           ", expected ts %" GST_TIME_FORMAT, samples,
           GST_TIME_ARGS (priv->base_ts), GST_TIME_ARGS (next_ts));
       diff = GST_CLOCK_DIFF (next_ts, ts);
