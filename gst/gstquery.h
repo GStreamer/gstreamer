@@ -52,7 +52,7 @@ G_BEGIN_DECLS
  * @GST_QUERY_CUSTOM: a custom application or element defined query. Since
  * 0.10.22.
  * @GST_QUERY_URI: query the URI of the source or sink. Since 0.10.22.
- * @GST_QUERY_TRANSPORT: the buffer allocation properties
+ * @GST_QUERY_ALLOCATION: the buffer allocation properties
  *
  * Standard predefined Query types
  */
@@ -329,7 +329,7 @@ void            gst_query_parse_uri               (GstQuery *query, gchar **uri)
 void            gst_query_set_uri                 (GstQuery *query, const gchar *uri);
 
 /* allocation query */
-GstQuery *      gst_query_new_alloction           (GstCaps *caps, gboolean need_pool);
+GstQuery *      gst_query_new_allocation          (GstCaps *caps, gboolean need_pool);
 
 void            gst_query_set_allocation          (GstQuery *query, guint alignment, guint prefix,
                                                    guint size, GstBufferPool *pool);

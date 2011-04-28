@@ -833,7 +833,7 @@ EXPORTS
 	gst_query_get_n_buffering_ranges
 	gst_query_get_structure
 	gst_query_get_type
-	gst_query_new_alloction
+	gst_query_new_allocation
 	gst_query_new_application
 	gst_query_new_buffering
 	gst_query_new_convert

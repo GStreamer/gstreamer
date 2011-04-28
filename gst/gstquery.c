@@ -1067,7 +1067,7 @@ gst_query_parse_formats_nth (GstQuery * query, guint nth, GstFormat * format)
  * Constructs a new query object for querying the buffering status of
  * a stream.
  *
- * Free-function: gst_query_new
+ * Free-function: gst_query_unref
  *
  * Returns: (transfer full): a new #GstQuery
  *
@@ -1467,9 +1467,19 @@ gst_query_parse_uri (GstQuery * query, gchar ** uri)
             GST_QUARK (URI)));
 }
 
-
+/**
+ * gst_query_new_allocation
+ * @caps: the negotiated caps
+ * @need_pool: return a pool
+ *
+ * Constructs a new query object for querying the allocation properties.
+ *
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
+ */
 GstQuery *
-gst_query_new_alloction (GstCaps * caps, gboolean need_pool)
+gst_query_new_allocation (GstCaps * caps, gboolean need_pool)
 {
   GstQuery *query;
   GstStructure *structure;
@@ -1488,6 +1498,16 @@ gst_query_new_alloction (GstCaps * caps, gboolean need_pool)
   return query;
 }
 
+/**
+ * gst_query_set_allocation
+ * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
+ * @alignment: the alignment
+ * @prefix: the prefix
+ * @size: the size
+ * @pool: the #GstBufferPool
+ *
+ * Set the allocation properties in @query.
+ */
 void
 gst_query_set_allocation (GstQuery * query, guint alignment, guint prefix,
     guint size, GstBufferPool * pool)
@@ -1501,6 +1521,16 @@ gst_query_set_allocation (GstQuery * query, guint alignment, guint prefix,
       GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, pool, NULL);
 }
 
+/**
+ * gst_query_parse_allocation
+ * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
+ * @alignment: the alignment
+ * @prefix: the prefix
+ * @size: the size
+ * @pool: the #GstBufferPool
+ *
+ * Get the allocation properties in @query.
+ */
 void
 gst_query_parse_allocation (GstQuery * query, guint * alignment, guint * prefix,
     guint * size, GstBufferPool ** pool)
@@ -1514,6 +1544,13 @@ gst_query_parse_allocation (GstQuery * query, guint * alignment, guint * prefix,
       GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, pool, NULL);
 }
 
+/**
+ * gst_query_add_allocation_meta
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ * @api: the metadata API
+ *
+ * Add @api as aone of the supported metadata API to @query.
+ */
 void
 gst_query_add_allocation_meta (GstQuery * query, const gchar * api)
 {
@@ -1544,6 +1581,15 @@ gst_query_add_allocation_meta (GstQuery * query, const gchar * api)
   g_value_unset (&api_value);
 }
 
+/**
+ * gst_query_get_n_allocation_meta
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ *
+ * Retrieve the number of values currently stored in the
+ * meta API array of the query's structure.
+ *
+ * Returns: the metadata API array size as a #guint.
+ */
 guint
 gst_query_get_n_allocation_meta (GstQuery * query)
 {
@@ -1561,6 +1607,16 @@ gst_query_get_n_allocation_meta (GstQuery * query)
   return size;
 }
 
+/**
+ * gst_query_parse_allocation_meta
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ * @index: position in the metadata API array to read
+ *
+ * Parse an available query and get the metadata API
+ * at @index of the metadata API array.
+ *
+ * Returns: a #gchar of the metadata API at @index.
+ */
 const gchar *
 gst_query_parse_allocation_meta (GstQuery * query, guint index)
 {
