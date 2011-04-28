@@ -1477,7 +1477,8 @@ gst_base_video_decoder_get_max_decode_time (GstBaseVideoDecoder *
 
   GST_LOG_OBJECT (base_video_decoder, "earliest %" GST_TIME_FORMAT
       ", frame deadline %" GST_TIME_FORMAT ", deadline %" GST_TIME_FORMAT,
-      earliest_time, frame->deadline, deadline);
+      GST_TIME_ARGS (earliest_time), GST_TIME_ARGS (frame->deadline),
+      GST_TIME_ARGS (deadline));
 
   return deadline;
 }
