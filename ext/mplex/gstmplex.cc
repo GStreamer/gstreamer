@@ -129,7 +129,7 @@ gst_mplex_base_init (gpointer klass)
       "High-quality MPEG/DVD/SVCD/VCD video/audio multiplexer",
       "Andrew Stevens <andrew.stevens@nexgo.de>\n"
       "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
-      "Mark Nauwelaerts <mnauw@users.sourceforge.net");
+      "Mark Nauwelaerts <mnauw@users.sourceforge.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));

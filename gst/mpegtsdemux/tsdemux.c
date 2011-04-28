@@ -227,8 +227,8 @@ gst_ts_demux_base_init (gpointer klass)
       "MPEG transport stream demuxer",
       "Codec/Demuxer",
       "Demuxes MPEG2 transport streams",
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>;"
-      " Edward Hervey <edward.hervey@collabora.co.uk>");
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>\n"
+      "Edward Hervey <edward.hervey@collabora.co.uk>");
 }
 
 static void

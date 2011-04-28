@@ -146,7 +146,7 @@ gst_square_base_init (gpointer gclass)
       "square",
       "Transform/Effect/Video",
       "Distort center part of the image into a square",
-      "Filippo Argiolas <filippo.argiolas@gmail.com");
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }
 
 static gboolean

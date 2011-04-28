@@ -67,7 +67,7 @@ gst_fisheye_base_init (gpointer gclass)
       "fisheye",
       "Transform/Effect/Video",
       "Split the image into two halves and reflect one over each other",
-      "Filippo Argiolas <filippo.argiolas@gmail.com");
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }
 
 static gboolean

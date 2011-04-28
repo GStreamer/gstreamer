@@ -92,7 +92,7 @@ gst_shm_src_base_init (gpointer g_class)
       "Shared Memory Source",
       "Source",
       "Receive data from the sharem memory sink",
-      "Olivier Crete <olivier.crete@collabora.co.uk");
+      "Olivier Crete <olivier.crete@collabora.co.uk>");
 }
 
 static void
