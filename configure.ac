@@ -710,16 +710,23 @@ AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
 dnl *** decklink  ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DECKLINK, true)
 AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
+   HAVE_DECKLINK=no
    case "$host" in
      *-*linux*)
-       HAVE_DECKLINK=yes
+       if test "x$HAVE_PTHREAD_H" = "xyes"; then
+         AC_CHECK_LIB(dl, dlopen,
+           [
+            HAVE_DECKLINK=yes
+            DECKLINK_CXXFLAGS=
+            DECKLINK_LIBS="-lpthread -ldl"
+           ])
+       fi
        ;;
      *)
        HAVE_DECKLINK=no
        ;;
    esac
-   DECKLINK_CXXFLAGS=
-   DECKLINK_LIBS=
+
    AC_SUBST(DECKLINK_CXXFLAGS)
    AC_SUBST(DECKLINK_LIBS)
 ])
