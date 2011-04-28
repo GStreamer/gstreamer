@@ -31,6 +31,7 @@
 #include <gst/gstminiobject.h>
 #include <gst/gststructure.h>
 #include <gst/gstformat.h>
+#include <gst/gstpad.h>
 
 G_BEGIN_DECLS
 
@@ -51,6 +52,7 @@ G_BEGIN_DECLS
  * @GST_QUERY_CUSTOM: a custom application or element defined query. Since
  * 0.10.22.
  * @GST_QUERY_URI: query the URI of the source or sink. Since 0.10.22.
+ * @GST_QUERY_TRANSPORT: the buffer allocation properties
  *
  * Standard predefined Query types
  */
@@ -69,7 +71,8 @@ typedef enum {
   GST_QUERY_FORMATS,
   GST_QUERY_BUFFERING,
   GST_QUERY_CUSTOM,
-  GST_QUERY_URI
+  GST_QUERY_URI,
+  GST_QUERY_ALLOCATION
 } GstQueryType;
 
 /**
@@ -324,6 +327,19 @@ gboolean        gst_query_parse_nth_buffering_range (GstQuery *query,
 GstQuery *      gst_query_new_uri                 (void);
 void            gst_query_parse_uri               (GstQuery *query, gchar **uri);
 void            gst_query_set_uri                 (GstQuery *query, const gchar *uri);
+
+/* allocation query */
+GstQuery *      gst_query_new_alloction           (GstCaps *caps, gboolean need_pool);
+
+void            gst_query_set_allocation          (GstQuery *query, guint alignment, guint prefix,
+                                                   guint size, GstBufferPool *pool);
+void            gst_query_parse_allocation        (GstQuery *query, guint *alignment, guint *prefix,
+                                                   guint *size, GstBufferPool **pool);
+
+void            gst_query_add_allocation_meta     (GstQuery *query, const gchar *api);
+guint           gst_query_get_n_allocation_meta   (GstQuery *query);
+const gchar *   gst_query_parse_allocation_meta   (GstQuery *query, guint index);
+
 
 G_END_DECLS
 

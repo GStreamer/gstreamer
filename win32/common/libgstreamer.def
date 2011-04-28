@@ -827,10 +827,13 @@ EXPORTS
 	gst_progress_type_get_type
 	gst_proxy_pad_get_type
 	gst_qos_type_get_type
+	gst_query_add_allocation_meta
 	gst_query_add_buffering_range
+	gst_query_get_n_allocation_meta
 	gst_query_get_n_buffering_ranges
 	gst_query_get_structure
 	gst_query_get_type
+	gst_query_new_alloction
 	gst_query_new_application
 	gst_query_new_buffering
 	gst_query_new_convert
@@ -841,6 +844,8 @@ EXPORTS
 	gst_query_new_seeking
 	gst_query_new_segment
 	gst_query_new_uri
+	gst_query_parse_allocation
+	gst_query_parse_allocation_meta
 	gst_query_parse_buffering_percent
 	gst_query_parse_buffering_range
 	gst_query_parse_buffering_stats
@@ -854,6 +859,7 @@ EXPORTS
 	gst_query_parse_seeking
 	gst_query_parse_segment
 	gst_query_parse_uri
+	gst_query_set_allocation
 	gst_query_set_buffering_percent
 	gst_query_set_buffering_range
 	gst_query_set_buffering_stats

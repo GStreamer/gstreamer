@@ -68,6 +68,7 @@
 #include "gstenumtypes.h"
 #include "gstquark.h"
 #include "gsturi.h"
+#include "gstbufferpool.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_query_debug);
 #define GST_CAT_DEFAULT gst_query_debug
@@ -1464,4 +1465,120 @@ gst_query_parse_uri (GstQuery * query, gchar ** uri)
   if (uri)
     *uri = g_value_dup_string (gst_structure_id_get_value (query->structure,
             GST_QUARK (URI)));
+}
+
+
+GstQuery *
+gst_query_new_alloction (GstCaps * caps, gboolean need_pool)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_id_new (GST_QUARK (QUERY_ALLOCATION),
+      GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
+      GST_QUARK (NEED_POOL), G_TYPE_BOOLEAN, need_pool,
+      GST_QUARK (PREFIX), G_TYPE_UINT, 0,
+      GST_QUARK (ALIGN), G_TYPE_UINT, 1,
+      GST_QUARK (SIZE), G_TYPE_UINT, 0,
+      GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, NULL,
+      GST_QUARK (META), G_TYPE_VALUE_ARRAY, NULL, NULL);
+
+  query = gst_query_new (GST_QUERY_ALLOCATION, structure);
+
+  return query;
+}
+
+void
+gst_query_set_allocation (GstQuery * query, guint alignment, guint prefix,
+    guint size, GstBufferPool * pool)
+{
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+
+  gst_structure_id_set (query->structure,
+      GST_QUARK (ALIGN), G_TYPE_UINT, alignment,
+      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
+      GST_QUARK (SIZE), G_TYPE_UINT, size,
+      GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, pool, NULL);
+}
+
+void
+gst_query_parse_allocation (GstQuery * query, guint * alignment, guint * prefix,
+    guint * size, GstBufferPool ** pool)
+{
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+
+  gst_structure_id_get (query->structure,
+      GST_QUARK (ALIGN), G_TYPE_UINT, alignment,
+      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
+      GST_QUARK (SIZE), G_TYPE_UINT, size,
+      GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, pool, NULL);
+}
+
+void
+gst_query_add_allocation_meta (GstQuery * query, const gchar * api)
+{
+  GValueArray *array;
+  const GValue *value;
+  GValue api_value = { 0 };
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+
+  value = gst_structure_id_get_value (query->structure, GST_QUARK (META));
+  if (value) {
+    array = (GValueArray *) g_value_get_boxed (value);
+  } else {
+    GValue new_array_val = { 0, };
+
+    array = g_value_array_new (0);
+
+    g_value_init (&new_array_val, G_TYPE_VALUE_ARRAY);
+    g_value_take_boxed (&new_array_val, array);
+
+    gst_structure_id_take_value (query->structure, GST_QUARK (META),
+        &new_array_val);
+  }
+
+  g_value_init (&api_value, G_TYPE_STRING);
+  g_value_set_string (&api_value, api);
+  g_value_array_append (array, &api_value);
+  g_value_unset (&api_value);
+}
+
+guint
+gst_query_get_n_allocation_meta (GstQuery * query)
+{
+  GValueArray *array;
+  const GValue *value;
+  guint size = 0;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, 0);
+
+  value = gst_structure_id_get_value (query->structure, GST_QUARK (META));
+  if (value) {
+    array = (GValueArray *) g_value_get_boxed (value);
+    size = array->n_values;
+  }
+  return size;
+}
+
+const gchar *
+gst_query_parse_allocation_meta (GstQuery * query, guint index)
+{
+  const GValue *value;
+  const gchar *ret = NULL;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, NULL);
+
+  value = gst_structure_id_get_value (query->structure, GST_QUARK (META));
+  if (value) {
+    GValueArray *meta;
+    GValue *api_value;
+
+    meta = (GValueArray *) g_value_get_boxed (value);
+    api_value = g_value_array_get_nth (meta, index);
+
+    if (api_value)
+      ret = g_value_get_string (api_value);
+  }
+  return ret;
 }
