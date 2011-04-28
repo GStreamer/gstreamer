@@ -974,8 +974,27 @@ gst_ximagesink_getcaps (GstBaseSink * bsink)
 
   ximagesink = GST_XIMAGESINK (bsink);
 
-  if (ximagesink->xcontext)
-    return gst_caps_ref (ximagesink->xcontext->caps);
+  g_mutex_lock (ximagesink->x_lock);
+  if (ximagesink->xcontext) {
+    if (ximagesink->xwindow && ximagesink->xwindow->width) {
+      GstStructure *s0, *s1;
+
+      caps = gst_caps_copy (ximagesink->xcontext->caps);
+
+      s1 = gst_structure_copy (gst_caps_get_structure (caps, 0));
+      s0 = gst_caps_get_structure (caps, 0);
+      gst_structure_set (s0, "width", G_TYPE_INT, ximagesink->xwindow->width,
+          "height", G_TYPE_INT, ximagesink->xwindow->height, NULL);
+      gst_caps_append_structure (caps, s1);
+      g_mutex_unlock (ximagesink->x_lock);
+      return caps;
+    } else {
+      caps = gst_caps_ref (ximagesink->xcontext->caps);
+      g_mutex_unlock (ximagesink->x_lock);
+      return caps;
+    }
+  }
+  g_mutex_unlock (ximagesink->x_lock);
 
   /* get a template copy and add the pixel aspect ratio */
   caps =
