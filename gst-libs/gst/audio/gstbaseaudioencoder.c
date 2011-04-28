@@ -730,15 +730,14 @@ gst_base_audio_encoder_set_base_gp (GstBaseAudioEncoder * enc)
   if (GST_CLOCK_TIME_IS_VALID (ts)) {
     enc->priv->base_gp =
         GST_CLOCK_TIME_TO_FRAMES (enc->priv->base_ts, enc->ctx->state.rate);
-    GST_DEBUG_OBJECT (enc, "new base gp %" G_GINT64_FORMAT,
-        GST_TIME_ARGS (enc->priv->base_gp));
+    GST_DEBUG_OBJECT (enc, "new base gp %" G_GINT64_FORMAT, enc->priv->base_gp);
   } else {
     /* should reasonably have a valid base,
      * otherwise start at 0 if we did not already start there earlier */
     if (enc->priv->base_gp < 0) {
       enc->priv->base_gp = 0;
       GST_DEBUG_OBJECT (enc, "new base gp %" G_GINT64_FORMAT,
-          GST_TIME_ARGS (enc->priv->base_gp));
+          enc->priv->base_gp);
     }
   }
 }
