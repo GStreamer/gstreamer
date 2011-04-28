@@ -901,10 +901,16 @@ gst_camera_bin_link_encodebin (GstCameraBin * camera, GstElement * element,
   GstPad *sinkpad = NULL;
 
   srcpad = gst_element_get_static_pad (element, "src");
+  g_assert (srcpad != NULL);
+
   sinkpad = encodebin_find_pad (camera, padtype);
 
-  g_assert (srcpad != NULL);
-  g_assert (sinkpad != NULL);
+  /* there may be no available sink pad for encodebin in some situations:
+   * e.g. missing elements or incompatible padtype */
+  if (sinkpad == NULL) {
+    gst_object_unref (srcpad);
+    return GST_PAD_LINK_REFUSED;
+  }
 
   ret = gst_pad_link (srcpad, sinkpad);
   gst_object_unref (sinkpad);
@@ -1037,8 +1043,10 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   if (camera->profile_switch) {
     GST_DEBUG_OBJECT (camera, "Switching encodebin's profile");
     g_object_set (camera->encodebin, "profile", camera->video_profile, NULL);
-    gst_camera_bin_link_encodebin (camera, camera->videobin_capsfilter,
-        VIDEO_PAD);
+    if (GST_PAD_LINK_FAILED (gst_camera_bin_link_encodebin (camera,
+                camera->videobin_capsfilter, VIDEO_PAD))) {
+      goto fail;
+    }
     camera->profile_switch = FALSE;
 
     /* used to trigger relinking further down */
@@ -1147,11 +1155,18 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   }
 
   if ((profile_switched && has_audio) || new_audio_src) {
-    gst_camera_bin_link_encodebin (camera, camera->audio_convert, AUDIO_PAD);
+    if (GST_PAD_LINK_FAILED (gst_camera_bin_link_encodebin (camera,
+                camera->audio_convert, AUDIO_PAD))) {
+      goto fail;
+    }
   }
 
   camera->elements_created = TRUE;
   return TRUE;
+
+fail:
+  /* FIXME properly clean up */
+  return FALSE;
 }
 
 static GstStateChangeReturn
