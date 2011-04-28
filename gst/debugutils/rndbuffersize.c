@@ -113,7 +113,7 @@ gst_rnd_buffer_size_base_init (gpointer g_class)
 
   gst_element_class_set_details_simple (gstelement_class, "Random buffer size",
       "Testing", "pull random sized buffers",
-      "Stefan Kost <stefan.kost@nokia.com>)");
+      "Stefan Kost <stefan.kost@nokia.com>");
 }
 
 
