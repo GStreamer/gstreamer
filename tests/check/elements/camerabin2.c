@@ -1234,75 +1234,6 @@ GST_START_TEST (test_video_custom_filter)
 GST_END_TEST;
 
 
-GST_START_TEST (test_image_custom_encoder_muxer)
-{
-  GstElement *enc;
-  GstElement *mux;
-  GstElement *test;
-  GstPad *pad;
-  gint enc_probe_counter = 0;
-  gint mux_probe_counter = 0;
-
-  if (!camera)
-    return;
-
-  enc = gst_element_factory_make ("pngenc", "enc");
-  mux = gst_element_factory_make ("identity", "mux");
-
-  g_object_set (enc, "snapshot", FALSE, NULL);
-
-  pad = gst_element_get_static_pad (enc, "src");
-  gst_pad_add_buffer_probe (pad, (GCallback) filter_buffer_count,
-      &enc_probe_counter);
-  gst_object_unref (pad);
-
-  pad = gst_element_get_static_pad (mux, "src");
-  gst_pad_add_buffer_probe (pad, (GCallback) filter_buffer_count,
-      &mux_probe_counter);
-  gst_object_unref (pad);
-
-  /* set still image mode and filters */
-  g_object_set (camera, "mode", 1,
-      "location", make_test_file_name (IMAGE_FILENAME, -1),
-      "image-capture-encoder", enc, "image-capture-muxer", mux, NULL);
-
-  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
-      GST_STATE_CHANGE_FAILURE) {
-    GST_WARNING ("setting camerabin to PLAYING failed");
-    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
-    gst_object_unref (camera);
-    camera = NULL;
-  }
-  GST_INFO ("starting capture");
-  fail_unless (camera != NULL);
-
-  g_object_get (camera, "image-capture-encoder", &test, NULL);
-  fail_unless (test == enc);
-  g_object_get (camera, "image-capture-muxer", &test, NULL);
-  fail_unless (test == mux);
-
-  g_signal_emit_by_name (camera, "start-capture", NULL);
-
-  g_timeout_add_seconds (3, (GSourceFunc) g_main_loop_quit, main_loop);
-  g_main_loop_run (main_loop);
-
-  /* check that we got a preview image */
-  check_preview_image ();
-
-  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
-  check_file_validity (IMAGE_FILENAME, 0, NULL, 0, 0, NO_AUDIO);
-
-  fail_unless (enc_probe_counter == 1);
-  fail_unless (mux_probe_counter == 1);
-  gst_object_unref (enc);
-  gst_object_unref (mux);
-}
-
-GST_END_TEST;
-
-
-
-
 typedef struct _TestCaseDef
 {
   const gchar *name;
@@ -1362,11 +1293,6 @@ camerabin_suite (void)
 
     tcase_add_test (tc_basic, test_image_custom_filter);
     tcase_add_test (tc_basic, test_video_custom_filter);
-
-    if (pngenc_factory)
-      tcase_add_test (tc_basic, test_image_custom_encoder_muxer);
-    else
-      GST_WARNING ("Skipping custom encoder test because pngenc is missing");
   }
 
 end:
