@@ -120,6 +120,7 @@
 #include <gst/interfaces/propertyprobe.h>
 /* Helper functions */
 #include <gst/video/video.h>
+#include <gst/video/gstmetavideo.h>
 
 /* Object header */
 #include "xvimagesink.h"
@@ -1950,6 +1951,74 @@ gst_xvimagesink_event (GstBaseSink * sink, GstEvent * event)
     return TRUE;
 }
 
+static gboolean
+gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
+{
+  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (GST_PAD_PARENT (sinkpad));
+  gboolean res = TRUE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+    {
+      GstCaps *caps;
+      gboolean need_pool;
+      GstBufferPool *pool = NULL;
+      guint size;
+      GstVideoFormat format;
+      gint width, height;
+
+      gst_query_parse_allocation (query, &caps, &need_pool);
+
+      if (caps == NULL)
+        goto no_caps;
+
+      if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+        goto invalid_caps;
+
+      /* the normal size of a frame */
+      size = gst_video_format_get_size (format, width, height);
+
+      if (need_pool) {
+        GstStructure *config;
+
+        /* create a new pool for the new configuration */
+        pool = gst_xvimage_buffer_pool_new (xvimagesink);
+
+        config = gst_buffer_pool_get_config (pool);
+        gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 0, 16);
+        if (!gst_buffer_pool_set_config (pool, config))
+          goto config_failed;
+      }
+      gst_query_set_allocation_params (query, 0, 0, size, pool);
+
+      /* we also support various metadata */
+      gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "no caps specified");
+    return FALSE;
+  }
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "invalid caps specified");
+    return FALSE;
+  }
+config_failed:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "failed setting config");
+    return FALSE;
+  }
+}
+
 /* Buffer management */
 static GstCaps *
 gst_xvimage_sink_different_size_suggestion (GstXvImageSink * xvimagesink,
@@ -2940,6 +3009,10 @@ gst_xvimagesink_finalize (GObject * object)
 static void
 gst_xvimagesink_init (GstXvImageSink * xvimagesink)
 {
+  /* for the ALLOCATION query */
+  gst_pad_set_query_function (GST_BASE_SINK (xvimagesink)->sinkpad,
+      gst_xvimagesink_sink_query);
+
   xvimagesink->display_name = NULL;
   xvimagesink->adaptor_no = 0;
   xvimagesink->xcontext = NULL;
