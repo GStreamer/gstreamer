@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v v4l2src ! jpegddec ! ffmpegcolorspace ! xvimagesink
+ * gst-launch -v v4l2src ! jpegdec ! ffmpegcolorspace ! xvimagesink
  * ]| The above pipeline reads a motion JPEG stream from a v4l2 camera
  * and renders it to the screen.
  * </refsect2>

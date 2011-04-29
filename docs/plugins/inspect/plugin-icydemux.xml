@@ -3,7 +3,7 @@
   <description>Demux ICY tags from a stream</description>
   <filename>../../gst/icydemux/.libs/libgsticydemux.so</filename>
   <basename>libgsticydemux.so</basename>
-  <version>0.10.28.2</version>
+  <version>0.10.28.3</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins prerelease</package>

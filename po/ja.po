@@ -2,13 +2,13 @@
 # This file is put in the public domain.
 #
 # Takao Fujiwara <takao.fujiwara@sun.com>, 2006.
-# Makoto Kato <makoto.kt@gmail.com>, 2009.
+# Makoto Kato <makoto.kt@gmail.com>, 2009-2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 01:15+0000\n"
-"PO-Revision-Date: 2009-06-01 19:29+0900\n"
+"POT-Creation-Date: 2011-04-27 12:13+0100\n"
+"PO-Revision-Date: 2011-04-26 20:15+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "Language: ja\n"
@@ -38,30 +38,27 @@ msgstr "JPEG画像のデコードに失敗しました"
 msgid "Could not connect to server"
 msgstr "サーバーへ接続できません"
 
-#, fuzzy
 msgid "Server does not support seeking."
-msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
+msgstr "サーバーはシークをサポートしていません。"
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "サーバーへ接続できません"
+msgstr "サーバー名を解決できません。"
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "サウンドサーバーへの接続に失敗しました"
+msgstr "サーバーへの接続を確立できません。"
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "セキュア接続のセットアップに失敗しました。"
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr ""
+msgstr "ネットワークエラーが発生したか、サーバーが予期せず接続を閉じました。"
 
 msgid "Server sent bad data."
 msgstr ""
 
 msgid "No URL set."
-msgstr ""
+msgstr "URLが指定されていません。"
 
 # SUN REVIEWED
 msgid "No or invalid input audio, AVI stream will be corrupt."
@@ -77,7 +74,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "このファイルは壊れているため再生することができません"
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "不正なアトムサイズ"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "このファイルは正常ではないため、再生することができません"
@@ -108,7 +105,7 @@ msgstr ""
 "インをインストールする必要があるかもしれません。"
 
 msgid "Internal data flow error."
-msgstr "内部データフローエラー"
+msgstr "内部データフローエラー。"
 
 # SUN REVIEWED
 msgid "Volume"
@@ -238,16 +235,19 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "音声デバイスを録音用に開くことができません。"
 
+# SUN REVIEWED
 msgid "Could not open audio device for mixer control handling."
-msgstr "ミキサーがコントロールするオーディオデバイスを開くことができません。"
+msgstr "音声デバイスをミキサーコントロール用に開くことができません。"
 
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
+"ミキサーコントロール用にオーディオデバイスを開くことができませんでした。Open "
+"Sound Systemのこのバージョンではこの要素によってサポートされていません。"
 
 msgid "Master"
-msgstr ""
+msgstr "マスタ"
 
 msgid "Front"
 msgstr "フロント"
@@ -258,102 +258,95 @@ msgstr "リア"
 msgid "Headphones"
 msgstr "ヘッドフォン"
 
-#, fuzzy
 msgid "Center"
-msgstr "センター / LFE"
+msgstr "センター"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
-#, fuzzy
 msgid "Surround"
-msgstr "サラウンドサウンド"
+msgstr "サラウンド"
 
 msgid "Side"
 msgstr "サイド"
 
-# SUN REVIEWED
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "スピーカ"
+msgstr "ビルトインスピーカ"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1出力"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2出力"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX出力"
 
 msgid "3D Depth"
 msgstr ""
 
 msgid "3D Center"
-msgstr ""
+msgstr "3Dセンター"
 
 msgid "3D Enhance"
 msgstr ""
 
-#, fuzzy
 msgid "Telephone"
-msgstr "ヘッドフォン"
+msgstr "電話"
 
 msgid "Line Out"
-msgstr ""
+msgstr "ライン出力"
 
-#, fuzzy
 msgid "Line In"
 msgstr "ライン入力"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "内蔵CD"
 
 msgid "Video In"
-msgstr ""
+msgstr "ビデオ入力"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX 1入力"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX 2入力"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX入力"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "録音ゲイン"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "出力ゲイン"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "マイクロフォン"
+msgstr "マイクロフォンブースト"
 
 msgid "Loopback"
-msgstr ""
+msgstr "ループバック"
 
 msgid "Diagnostic"
 msgstr ""
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "低音ブースト"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "プレイバックポート"
 
 msgid "Input"
 msgstr "入力"
 
 msgid "Record Source"
-msgstr ""
+msgstr "録音ソース"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "モニターソース"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "キーボードビープ音"
 
 msgid "Simulate Stereo"
 msgstr ""
@@ -361,81 +354,74 @@ msgstr ""
 msgid "Stereo"
 msgstr "ステレオ"
 
-#, fuzzy
 msgid "Surround Sound"
 msgstr "サラウンドサウンド"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "マイクロフォン"
+msgstr "マイクロフォンゲイン"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "スピーカソース"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "マイクロフォン"
+msgstr "マイクロフォンソース"
 
 msgid "Jack"
-msgstr ""
+msgstr "ジャック"
 
 msgid "Center / LFE"
 msgstr "センター / LFE"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "ステレオ"
+msgstr "ステレオミックス"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "モノラルミックス"
 
-#, fuzzy
 msgid "Input Mix"
 msgstr "入力ミックス"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF入力"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF出力"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "マイクロフォン"
+msgstr "マイクロフォン1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "マイクロフォン"
+msgstr "マイクロフォン2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "デジタル出力"
 
 msgid "Digital In"
-msgstr ""
+msgstr "デジタル入力"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "モデム"
 
 msgid "Handset"
-msgstr ""
+msgstr "ヘッドセット"
 
 msgid "Other"
-msgstr ""
+msgstr "その他"
 
 msgid "None"
-msgstr ""
+msgstr "なし"
 
 msgid "On"
-msgstr "On"
+msgstr "オン"
 
 msgid "Off"
-msgstr "Off"
+msgstr "オフ"
 
 msgid "Mute"
-msgstr ""
+msgstr "ミュート"
 
 msgid "Fast"
 msgstr ""
@@ -446,130 +432,104 @@ msgstr ""
 
 #. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
-msgstr "低音"
+msgstr ""
 
 #. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
-msgstr "中音"
+msgstr ""
 
 #. TRANSLATORS: "High" is a quality setting here
 msgid "High"
-msgstr "高音"
+msgstr ""
 
 #. TRANSLATORS: "Very High" is a quality setting here
-#, fuzzy
 msgid "Very High"
-msgstr "高音"
+msgstr ""
 
 #. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
-msgstr "プロダクション"
+msgstr ""
 
-#, fuzzy
 msgid "Front Panel Microphone"
 msgstr "フロントパネルのマイクロフォン"
 
-#, fuzzy
 msgid "Front Panel Line In"
-msgstr "プロントパネルのライン入力"
+msgstr "フロントパネルのライン入力"
 
-#, fuzzy
 msgid "Front Panel Headphones"
 msgstr "フロントパネルのヘッドフォン"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "プロントパネルのライン入力"
+msgstr "フロントパネルのライン出力"
 
-#, fuzzy
 msgid "Green Connector"
 msgstr "緑色コネクタ"
 
-#, fuzzy
 msgid "Pink Connector"
 msgstr "ピンク色コネクタ"
 
-#, fuzzy
 msgid "Blue Connector"
 msgstr "青色コネクタ"
 
-#, fuzzy
 msgid "White Connector"
 msgstr "白色コネクタ"
 
-#, fuzzy
 msgid "Black Connector"
 msgstr "黒色コネクタ"
 
-#, fuzzy
 msgid "Gray Connector"
 msgstr "グレー色コネクタ"
 
-#, fuzzy
 msgid "Orange Connector"
 msgstr "オレンジ色コネクタ"
 
-#, fuzzy
 msgid "Red Connector"
 msgstr "赤色コネクタ"
 
-#, fuzzy
 msgid "Yellow Connector"
 msgstr "黄色コネクタ"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
-msgstr "緑色のフロントパネルのコネクタ"
+msgstr ""
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
-msgstr "ピンク色のフロントパネルコネクタ"
+msgstr ""
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
-msgstr "緑色のフロントパネルのコネクタ"
+msgstr ""
 
-#, fuzzy
 msgid "White Front Panel Connector"
-msgstr "ピンク色のフロントパネルコネクタ"
+msgstr ""
 
-#, fuzzy
 msgid "Black Front Panel Connector"
-msgstr "ピンク色のフロントパネルコネクタ"
+msgstr ""
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
-msgstr "緑色のフロントパネルのコネクタ"
+msgstr ""
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
-msgstr "緑色のフロントパネルのコネクタ"
+msgstr ""
 
-#, fuzzy
 msgid "Red Front Panel Connector"
-msgstr "緑色のフロントパネルのコネクタ"
+msgstr ""
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
-msgstr "緑色のフロントパネルのコネクタ"
+msgstr ""
 
 msgid "Spread Output"
 msgstr ""
 
 msgid "Downmix"
-msgstr ""
+msgstr "ダウンミックス"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
 msgstr "仮想ミキサー入力"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
 msgstr "仮想ミキサー出力"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "仮想ミキサー入力"
+msgstr "仮想ミキサーチャンネル"
 
 #. TRANSLATORS: name + number of a volume mixer control
 #, c-format
@@ -581,31 +541,33 @@ msgstr ""
 msgid "%s Function"
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"プレイバック用にオーディオデバイスを開くことができませんでした。この Open "
-"Sound System のバージョンはこのエレメントによってサポートされません。"
+"再生用にオーディオデバイスを開くことができませんでした。デバイスを開くための"
+"権限がありません。"
 
 msgid "Playback is not supported by this audio device."
-msgstr "プレイバックはこのオーディオデバイスによってサポートされません。"
+msgstr ""
 
 msgid "Audio playback error."
-msgstr "オーディオプレイバックエラー"
+msgstr ""
 
 msgid "Recording is not supported by this audio device."
-msgstr "録音はこのオーディオデバイスによってサポートされません。"
+msgstr "このオーディオデバイスによって録音はサポートされていません。"
 
+#, fuzzy
 msgid "Error recording from audio device."
-msgstr "オーディオデバイスからの録音時にエラーが発生しました。"
+msgstr "デバイス %2$s から　%1$d バイト読み込み時にエラーが発生しました。"
 
 # SUN REVIEWED
 msgid "Gain"
 msgstr "ゲイン"
 
 msgid "Headphone"
-msgstr ""
+msgstr "ヘッドフォン"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -660,9 +622,9 @@ msgstr "デバイス '%s' を読み取り用と書き込み用に開くことが
 msgid "Device '%s' is not a capture device."
 msgstr "デバイス '%s' はキャプチャデバイスではありません"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "デバイス '%s' はキャプチャデバイスではありません"
+msgstr "デバイス '%s' は出力デバイスではありません"
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

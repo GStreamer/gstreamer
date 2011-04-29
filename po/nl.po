@@ -1,14 +1,13 @@
-# translation of gst-plugins-good-0.10.25.3.nl.po to Dutch
+# translation of gst-plugins-good-0.10.28.2.nl.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2010.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 01:15+0000\n"
-"PO-Revision-Date: 2010-10-25 20:15+0200\n"
+"POT-Creation-Date: 2011-04-27 12:13+0100\n"
+"PO-Revision-Date: 2011-04-27 00:05+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -75,7 +74,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Dit bestand is beschadigd en kan niet afgespeeld worden."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Ongeldige \"atom\"-grootte."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Dit bestand is incompleet en kan niet afgespeeld worden."
@@ -630,16 +629,16 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Kan invoer %d op apparaat '%s' niet instellen."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Kan de huidige instellingen van apparaat '%s' niet verkrijgen. Het is "
-"mogelijk een radio"
+"Kan de huidige uitvoer niet op apparaat '%s' krijgen. Het is mogelijk een "
+"radio"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Kan invoer %d op apparaat '%s' niet instellen."
+msgstr "Kan uitvoer %d op apparaat %s niet instellen."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
