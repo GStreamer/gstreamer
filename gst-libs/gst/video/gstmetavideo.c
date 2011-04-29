@@ -26,7 +26,7 @@ gst_meta_video_get_info (void)
   static const GstMetaInfo *meta_video_info = NULL;
 
   if (meta_video_info == NULL) {
-    meta_video_info = gst_meta_register ("GstMetaVideo", "GstMetaVideo",
+    meta_video_info = gst_meta_register (GST_META_API_VIDEO, "GstMetaVideo",
         sizeof (GstMetaVideo),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,

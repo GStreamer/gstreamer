@@ -26,6 +26,7 @@
 
 G_BEGIN_DECLS
 
+#define GST_META_API_VIDEO   "GstMetaVideo"
 #define GST_META_INFO_VIDEO  (gst_meta_video_get_info())
 
 #define GST_VIDEO_MAX_PLANES 4
@@ -36,11 +37,23 @@ typedef struct _GstMetaVideoPlane GstMetaVideoPlane;
 /**
  * GstMetaVideoFlags:
  * @GST_META_VIDEO_FLAG_NONE: no flags
+ * @GST_META_VIDEO_FLAG_INTERLACED:
+ * @GST_META_VIDEO_FLAG_TTF:
+ * @GST_META_VIDEO_FLAG_RFF:
+ * @GST_META_VIDEO_FLAG_ONEFIELD:
+ * @GST_META_VIDEO_FLAG_TELECINE:
+ * @GST_META_VIDEO_FLAG_PROGRESSIVE:
  *
  * Extra video flags
  */
 typedef enum {
-  GST_META_VIDEO_FLAG_NONE = 0
+  GST_META_VIDEO_FLAG_NONE        = 0,
+  GST_META_VIDEO_FLAG_INTERLACED  = (1 << 0),
+  GST_META_VIDEO_FLAG_TTF         = (1 << 1),
+  GST_META_VIDEO_FLAG_RFF         = (1 << 2),
+  GST_META_VIDEO_FLAG_ONEFIELD    = (1 << 3),
+  GST_META_VIDEO_FLAG_TELECINE    = (1 << 4),
+  GST_META_VIDEO_FLAG_PROGRESSIVE = (1 << 5)
 } GstMetaVideoFlags;
 
 /**
