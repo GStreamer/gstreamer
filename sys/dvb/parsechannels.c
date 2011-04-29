@@ -156,8 +156,8 @@ set_properties_for_channel (GObject * dvbbasebin, const gchar * channel_name)
     guint major, minor, micro, nano;
 
     gst_version (&major, &minor, &micro, &nano);
-    filename = g_strdup_printf ("%s/.gstreamer-%d.%d/dvb-channels.conf",
-        g_get_home_dir (), major, minor);
+    filename = g_strdup_printf ("%s/gstreamer-%d.%d/dvb-channels.conf",
+        g_get_user_cache_dir (), major, minor);
   }
   channels = parse_channels_conf_from_file (filename);
   g_free (filename);
