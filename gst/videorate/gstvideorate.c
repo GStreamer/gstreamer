@@ -86,6 +86,7 @@ enum
 #define DEFAULT_SILENT          TRUE
 #define DEFAULT_NEW_PREF        1.0
 #define DEFAULT_SKIP_TO_FIRST   FALSE
+#define DEFAULT_DROP_ONLY       FALSE
 
 enum
 {
@@ -96,7 +97,8 @@ enum
   ARG_DROP,
   ARG_SILENT,
   ARG_NEW_PREF,
-  ARG_SKIP_TO_FIRST
+  ARG_SKIP_TO_FIRST,
+  ARG_DROP_ONLY
       /* FILL ME */
 };
 
@@ -198,6 +200,18 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
       g_param_spec_boolean ("skip-to-first", "Skip to first buffer",
           "Don't produce buffers before the first one we receive",
           DEFAULT_SKIP_TO_FIRST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVideoRate:drop-only:
+   *
+   * Only drop frames, no duplicates are produced.
+   *
+   * Since: 0.10.34
+   */
+  g_object_class_install_property (object_class, ARG_DROP_ONLY,
+      g_param_spec_boolean ("drop-only", "Only Drop",
+          "Only drop frames, no duplicates are produced",
+          DEFAULT_DROP_ONLY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_video_rate_change_state);
 }
@@ -450,6 +464,7 @@ gst_video_rate_init (GstVideoRate * videorate, GstVideoRateClass * klass)
   gst_video_rate_reset (videorate);
   videorate->silent = DEFAULT_SILENT;
   videorate->new_pref = DEFAULT_NEW_PREF;
+  videorate->drop_only = DEFAULT_DROP_ONLY;
 
   videorate->from_rate_numerator = 0;
   videorate->from_rate_denominator = 0;
@@ -501,9 +516,11 @@ gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate)
     GST_BUFFER_DURATION (outbuf) = videorate->next_ts - push_ts;
   }
 
-  /* adapt for looping, bring back to time in current segment. */
-  GST_BUFFER_TIMESTAMP (outbuf) = push_ts - videorate->segment.accum;
-
+  /* We do not need to update time in VFR (variable frame rate) mode */
+  if (!videorate->drop_only) {
+    /* adapt for looping, bring back to time in current segment. */
+    GST_BUFFER_TIMESTAMP (outbuf) = push_ts - videorate->segment.accum;
+  }
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (videorate->srcpad));
 
   GST_LOG_OBJECT (videorate,
@@ -867,6 +884,10 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
           goto done;
         }
       }
+
+      /* Do not produce any dups. We can exit loop now */
+      if (videorate->drop_only)
+        break;
       /* continue while the first one was the best, if they were equal avoid
        * going into an infinite loop */
     }
@@ -937,6 +958,9 @@ gst_video_rate_set_property (GObject * object,
     case ARG_SKIP_TO_FIRST:
       videorate->skip_to_first = g_value_get_boolean (value);
       break;
+    case ARG_DROP_ONLY:
+      videorate->drop_only = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -970,6 +994,9 @@ gst_video_rate_get_property (GObject * object,
       break;
     case ARG_SKIP_TO_FIRST:
       g_value_set_boolean (value, videorate->skip_to_first);
+      break;
+    case ARG_DROP_ONLY:
+      g_value_set_boolean (value, videorate->drop_only);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

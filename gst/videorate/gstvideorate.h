@@ -71,6 +71,7 @@ struct _GstVideoRate
   gboolean silent;
   gdouble new_pref;
   gboolean skip_to_first;
+  gboolean drop_only;
 };
 
 struct _GstVideoRateClass
