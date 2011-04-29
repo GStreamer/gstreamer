@@ -137,8 +137,6 @@ static void gst_tee_dispose (GObject * object);
 
 static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_tee_chain_list (GstPad * pad, GstBufferList * list);
-static GstFlowReturn gst_tee_buffer_alloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf);
 static gboolean gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_tee_sink_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_tee_src_check_get_range (GstPad * pad);
@@ -253,8 +251,6 @@ gst_tee_init (GstTee * tee)
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_acceptcaps_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_sink_acceptcaps));
-  gst_pad_set_bufferalloc_function (tee->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_tee_buffer_alloc));
   gst_pad_set_activatepush_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_sink_activate_push));
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
@@ -467,122 +463,6 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
       break;
   }
   GST_OBJECT_UNLOCK (tee);
-}
-
-/* we have no previous source pad we can use to proxy the pad alloc. Loop over
- * the source pads, try to alloc a buffer on each one of them. Keep a reference
- * to the first pad that succeeds, we will be using it to alloc more buffers
- * later.  must be called with the OBJECT_LOCK on tee. */
-static GstFlowReturn
-gst_tee_find_buffer_alloc (GstTee * tee, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstFlowReturn res;
-  GList *pads;
-  guint32 cookie;
-
-  res = GST_FLOW_NOT_LINKED;
-
-retry:
-  pads = GST_ELEMENT_CAST (tee)->srcpads;
-  cookie = GST_ELEMENT_CAST (tee)->pads_cookie;
-
-  while (pads) {
-    GstPad *pad;
-    PushData *data;
-
-    pad = GST_PAD_CAST (pads->data);
-    gst_object_ref (pad);
-    GST_DEBUG_OBJECT (tee, "try alloc on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
-    GST_OBJECT_UNLOCK (tee);
-
-    GST_TEE_DYN_LOCK (tee);
-    data = g_object_get_qdata ((GObject *) pad, push_data);
-    if (!data->removed)
-      res = gst_pad_alloc_buffer (pad, offset, size, caps, buf);
-    else
-      res = GST_FLOW_NOT_LINKED;
-    GST_TEE_DYN_UNLOCK (tee);
-
-    GST_DEBUG_OBJECT (tee, "got return value %d", res);
-
-    gst_object_unref (pad);
-
-    GST_OBJECT_LOCK (tee);
-    if (GST_ELEMENT_CAST (tee)->pads_cookie != cookie) {
-      GST_DEBUG_OBJECT (tee, "pad list changed, restart");
-      /* pad list changed, restart. If the pad alloc function returned OK we
-       * need to unref the buffer */
-      if (res == GST_FLOW_OK)
-        gst_buffer_unref (*buf);
-      *buf = NULL;
-      goto retry;
-    }
-    if (!data->removed && res == GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (tee, "we have a buffer on pad %s:%s",
-          GST_DEBUG_PAD_NAME (pad));
-      /* we have a buffer, keep the pad for later and exit the loop. */
-      tee->allocpad = pad;
-      GST_OBJECT_UNLOCK (tee);
-      gst_tee_notify_alloc_pad (tee);
-      GST_OBJECT_LOCK (tee);
-      break;
-    }
-    /* no valid buffer, try another pad */
-    pads = g_list_next (pads);
-  }
-
-  return res;
-}
-
-static GstFlowReturn
-gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstTee *tee;
-  GstFlowReturn res;
-  GstPad *allocpad;
-
-  tee = GST_TEE_CAST (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (tee == NULL))
-    return GST_FLOW_WRONG_STATE;
-
-  res = GST_FLOW_NOT_LINKED;
-
-  GST_OBJECT_LOCK (tee);
-  if ((allocpad = tee->allocpad)) {
-    PushData *data;
-
-    /* if we had a previous pad we used for allocating a buffer, continue using
-     * it. */
-    GST_DEBUG_OBJECT (tee, "using pad %s:%s for alloc",
-        GST_DEBUG_PAD_NAME (allocpad));
-    gst_object_ref (allocpad);
-    GST_OBJECT_UNLOCK (tee);
-
-    GST_TEE_DYN_LOCK (tee);
-    data = g_object_get_qdata ((GObject *) allocpad, push_data);
-    if (!data->removed)
-      res = gst_pad_alloc_buffer (allocpad, offset, size, caps, buf);
-    else
-      res = GST_FLOW_NOT_LINKED;
-    GST_TEE_DYN_UNLOCK (tee);
-
-    gst_object_unref (allocpad);
-
-    GST_OBJECT_LOCK (tee);
-  }
-  /* either we failed to alloc on the the previous pad or we did not have a
-   * previous pad. */
-  if (res == GST_FLOW_NOT_LINKED) {
-    /* find a new pad to alloc a buffer on */
-    GST_DEBUG_OBJECT (tee, "finding pad for alloc");
-    res = gst_tee_find_buffer_alloc (tee, offset, size, caps, buf);
-  }
-  GST_OBJECT_UNLOCK (tee);
-
-  gst_object_unref (tee);
-  return res;
 }
 
 /* on the sink we accept caps that are acceptable to all srcpads */

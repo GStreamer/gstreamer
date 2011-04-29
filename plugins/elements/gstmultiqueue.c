@@ -1425,15 +1425,6 @@ gst_multi_queue_acceptcaps (GstPad * pad, GstCaps * caps)
   return result;
 }
 
-static GstFlowReturn
-gst_multi_queue_bufferalloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstSingleQueue *sq = gst_pad_get_element_private (pad);
-
-  return gst_pad_alloc_buffer (sq->srcpad, offset, size, caps, buf);
-}
-
 static gboolean
 gst_multi_queue_src_activate_push (GstPad * pad, gboolean active)
 {
@@ -1787,8 +1778,6 @@ gst_single_queue_new (GstMultiQueue * mqueue, gint id)
       GST_DEBUG_FUNCPTR (gst_multi_queue_getcaps));
   gst_pad_set_acceptcaps_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_acceptcaps));
-  gst_pad_set_bufferalloc_function (sq->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_multi_queue_bufferalloc));
   gst_pad_set_iterate_internal_links_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_iterate_internal_links));
 

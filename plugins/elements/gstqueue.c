@@ -193,8 +193,6 @@ static void gst_queue_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_queue_chain (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_queue_bufferalloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf);
 static GstFlowReturn gst_queue_push_one (GstQueue * queue);
 static void gst_queue_loop (GstPad * pad);
 
@@ -375,7 +373,6 @@ gst_queue_class_init (GstQueueClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_sink);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_getcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_acceptcaps);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_bufferalloc);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_src_activate_push);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_src);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_src_event);
@@ -394,7 +391,6 @@ gst_queue_init (GstQueue * queue)
   gst_pad_set_link_function (queue->sinkpad, gst_queue_link_sink);
   gst_pad_set_getcaps_function (queue->sinkpad, gst_queue_getcaps);
   gst_pad_set_acceptcaps_function (queue->sinkpad, gst_queue_acceptcaps);
-  gst_pad_set_bufferalloc_function (queue->sinkpad, gst_queue_bufferalloc);
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
@@ -533,24 +529,6 @@ gst_queue_link_src (GstPad * pad, GstPad * peer)
   }
   gst_object_unref (queue);
 
-  return result;
-}
-
-static GstFlowReturn
-gst_queue_bufferalloc (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
-    GstBuffer ** buf)
-{
-  GstQueue *queue;
-  GstFlowReturn result;
-
-  queue = GST_QUEUE (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (queue == NULL))
-    return GST_FLOW_WRONG_STATE;
-
-  /* Forward to src pad, without setting caps on the src pad */
-  result = gst_pad_alloc_buffer (queue->srcpad, offset, size, caps, buf);
-
-  gst_object_unref (queue);
   return result;
 }
 

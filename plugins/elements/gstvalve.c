@@ -73,8 +73,6 @@ static void gst_valve_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_valve_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_valve_buffer_alloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf);
 static GstFlowReturn gst_valve_chain (GstPad * pad, GstBuffer * buffer);
 static GstCaps *gst_valve_getcaps (GstPad * pad);
 
@@ -126,8 +124,6 @@ gst_valve_init (GstValve * valve)
       GST_DEBUG_FUNCPTR (gst_valve_chain));
   gst_pad_set_event_function (valve->sinkpad,
       GST_DEBUG_FUNCPTR (gst_valve_event));
-  gst_pad_set_bufferalloc_function (valve->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_valve_buffer_alloc));
   gst_pad_set_getcaps_function (valve->sinkpad,
       GST_DEBUG_FUNCPTR (gst_valve_getcaps));
   gst_element_add_pad (GST_ELEMENT (valve), valve->sinkpad);
@@ -214,29 +210,6 @@ gst_valve_event (GstPad * pad, GstEvent * event)
     ret = TRUE;
 
   gst_object_unref (valve);
-  return ret;
-}
-
-static GstFlowReturn
-gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstValve *valve = GST_VALVE (gst_pad_get_parent_element (pad));
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  if (g_atomic_int_get (&valve->drop))
-    *buf = NULL;
-  else
-    ret = gst_pad_alloc_buffer (valve->srcpad, offset, size, caps, buf);
-
-  /* Ignore errors if "drop" was changed while the thread was blocked
-   * downwards
-   */
-  if (g_atomic_int_get (&valve->drop))
-    ret = GST_FLOW_OK;
-
-  gst_object_unref (valve);
-
   return ret;
 }
 

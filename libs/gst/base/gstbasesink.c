@@ -105,10 +105,6 @@
  * very specific elements (such as file sinks) which need to handle the
  * newsegment event specially.
  *
- * #GstBaseSink provides an overridable #GstBaseSinkClass.buffer_alloc()
- * function that can be used by sinks that want to do reverse negotiation or to
- * provide custom buffers (hardware buffers for example) to upstream elements.
- *
  * The #GstBaseSinkClass.unlock() method is called when the elements should
  * unblock any blocking operations they perform in the
  * #GstBaseSinkClass.render() method. This is mostly useful when the
@@ -369,8 +365,6 @@ static const GstQueryType *gst_base_sink_get_query_types (GstElement * element);
 
 static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink);
 static gboolean gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps);
-static GstFlowReturn gst_base_sink_buffer_alloc (GstBaseSink * sink,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static void gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
 static gboolean gst_base_sink_set_flushing (GstBaseSink * basesink,
@@ -399,9 +393,6 @@ static gboolean gst_base_sink_negotiate_pull (GstBaseSink * basesink);
 static GstCaps *gst_base_sink_pad_getcaps (GstPad * pad);
 static gboolean gst_base_sink_pad_setcaps (GstPad * pad, GstCaps * caps);
 static void gst_base_sink_pad_fixate (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_base_sink_pad_buffer_alloc (GstPad * pad,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
-
 
 /* check if an object was too late */
 static gboolean gst_base_sink_is_too_late (GstBaseSink * basesink,
@@ -556,7 +547,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
 
   klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_sink_get_caps);
   klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
-  klass->buffer_alloc = GST_DEBUG_FUNCPTR (gst_base_sink_buffer_alloc);
   klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_get_times);
   klass->activate_pull =
       GST_DEBUG_FUNCPTR (gst_base_sink_default_activate_pull);
@@ -565,7 +555,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_getcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_setcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_fixate);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_buffer_alloc);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_push);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_pull);
@@ -644,29 +633,6 @@ gst_base_sink_pad_fixate (GstPad * pad, GstCaps * caps)
   gst_object_unref (bsink);
 }
 
-static GstFlowReturn
-gst_base_sink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstBaseSinkClass *bclass;
-  GstBaseSink *bsink;
-  GstFlowReturn result = GST_FLOW_OK;
-
-  bsink = GST_BASE_SINK (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (bsink == NULL))
-    return GST_FLOW_WRONG_STATE;
-  bclass = GST_BASE_SINK_GET_CLASS (bsink);
-
-  if (bclass->buffer_alloc)
-    result = bclass->buffer_alloc (bsink, offset, size, caps, buf);
-  else
-    *buf = NULL;                /* fallback in gstpad.c will allocate generic buffer */
-
-  gst_object_unref (bsink);
-
-  return result;
-}
-
 static void
 gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
 {
@@ -684,8 +650,6 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   gst_pad_set_getcaps_function (basesink->sinkpad, gst_base_sink_pad_getcaps);
   gst_pad_set_setcaps_function (basesink->sinkpad, gst_base_sink_pad_setcaps);
   gst_pad_set_fixatecaps_function (basesink->sinkpad, gst_base_sink_pad_fixate);
-  gst_pad_set_bufferalloc_function (basesink->sinkpad,
-      gst_base_sink_pad_buffer_alloc);
   gst_pad_set_activate_function (basesink->sinkpad, gst_base_sink_pad_activate);
   gst_pad_set_activatepush_function (basesink->sinkpad,
       gst_base_sink_pad_activate_push);
@@ -1462,14 +1426,6 @@ static gboolean
 gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 {
   return TRUE;
-}
-
-static GstFlowReturn
-gst_base_sink_buffer_alloc (GstBaseSink * sink, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  *buf = NULL;
-  return GST_FLOW_OK;
 }
 
 /* with PREROLL_LOCK, STREAM_LOCK */

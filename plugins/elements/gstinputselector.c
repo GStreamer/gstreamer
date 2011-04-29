@@ -177,8 +177,6 @@ static GstCaps *gst_selector_pad_getcaps (GstPad * pad);
 static gboolean gst_selector_pad_acceptcaps (GstPad * pad, GstCaps * caps);
 static GstIterator *gst_selector_pad_iterate_linked_pads (GstPad * pad);
 static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
-static GstFlowReturn gst_selector_pad_bufferalloc (GstPad * pad,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 
 G_DEFINE_TYPE (GstSelectorPad, gst_selector_pad, GST_TYPE_PAD);
 
@@ -517,70 +515,6 @@ gst_selector_pad_acceptcaps (GstPad * pad, GstCaps * caps)
   gst_object_unref (sel);
 
   return res;
-}
-
-static GstFlowReturn
-gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf)
-{
-  GstInputSelector *sel;
-  GstFlowReturn result;
-  GstPad *active_sinkpad;
-  GstPad *prev_active_sinkpad;
-  GstSelectorPad *selpad;
-
-  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL))
-    return GST_FLOW_WRONG_STATE;
-
-  selpad = GST_SELECTOR_PAD_CAST (pad);
-
-  GST_LOG_OBJECT (pad, "received alloc");
-
-  GST_INPUT_SELECTOR_LOCK (sel);
-  prev_active_sinkpad = sel->active_sinkpad;
-  active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
-
-  if (pad != active_sinkpad)
-    goto not_active;
-
-  GST_INPUT_SELECTOR_UNLOCK (sel);
-
-  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad) {
-    NOTIFY_MUTEX_LOCK ();
-    g_object_notify (G_OBJECT (sel), "active-pad");
-    NOTIFY_MUTEX_UNLOCK ();
-  }
-
-  result = gst_pad_alloc_buffer (sel->srcpad, offset, size, caps, buf);
-
-done:
-  gst_object_unref (sel);
-
-  return result;
-
-  /* ERRORS */
-not_active:
-  {
-    gboolean active_pad_pushed = GST_SELECTOR_PAD_CAST (active_sinkpad)->pushed;
-
-    GST_INPUT_SELECTOR_UNLOCK (sel);
-
-    /* unselected pad, perform fallback alloc or return unlinked when
-     * asked */
-    GST_OBJECT_LOCK (selpad);
-    if (selpad->always_ok || !active_pad_pushed) {
-      GST_DEBUG_OBJECT (pad, "Not selected, performing fallback allocation");
-      *buf = NULL;
-      result = GST_FLOW_OK;
-    } else {
-      GST_DEBUG_OBJECT (pad, "Not selected, return NOT_LINKED");
-      result = GST_FLOW_NOT_LINKED;
-    }
-    GST_OBJECT_UNLOCK (selpad);
-
-    goto done;
-  }
 }
 
 /* must be called with the SELECTOR_LOCK, will block while the pad is blocked 
@@ -1349,8 +1283,6 @@ gst_input_selector_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_selector_pad_chain));
   gst_pad_set_iterate_internal_links_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_selector_pad_iterate_linked_pads));
-  gst_pad_set_bufferalloc_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_selector_pad_bufferalloc));
 
   gst_pad_set_active (sinkpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (sel), sinkpad);

@@ -34,8 +34,7 @@ struct TestData
 };
 
 static void
-setup_test_objects (struct TestData *td, GstPadChainFunction chain_func,
-    GstPadBufferAllocFunction alloc_func)
+setup_test_objects (struct TestData *td, GstPadChainFunction chain_func)
 {
   td->mycaps = gst_caps_new_simple ("test/test", NULL);
 
@@ -57,7 +56,6 @@ setup_test_objects (struct TestData *td, GstPadChainFunction chain_func,
 
   td->mysink = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_chain_function (td->mysink, chain_func);
-  gst_pad_set_bufferalloc_function (td->mysink, alloc_func);
   gst_pad_set_active (td->mysink, TRUE);
   gst_pad_set_caps (td->mysink, td->mycaps);
 
@@ -117,29 +115,15 @@ chain_ok (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
-static GstFlowReturn
-alloc_ok (GstPad * pad,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buffer)
-{
-  alloccount++;
-
-  fail_unless (buffer != NULL);
-  fail_unless (*buffer == NULL);
-
-  *buffer = gst_buffer_new_and_alloc (size);
-  gst_buffer_set_caps (*buffer, caps);
-  GST_BUFFER_OFFSET (*buffer) = offset;
-
-  return GST_FLOW_OK;
-}
-
 GST_START_TEST (test_funnel_simple)
 {
   struct TestData td;
+#if 0
   GstBuffer *buf1 = NULL;
   GstBuffer *buf2 = NULL;
+#endif
 
-  setup_test_objects (&td, chain_ok, alloc_ok);
+  setup_test_objects (&td, chain_ok);
 
   bufcount = 0;
   alloccount = 0;
@@ -149,6 +133,7 @@ GST_START_TEST (test_funnel_simple)
 
   fail_unless (bufcount == 2);
 
+#if 0
   fail_unless (gst_pad_alloc_buffer (td.mysrc1, 0, 1024, td.mycaps,
           &buf1) == GST_FLOW_OK);
   fail_unless (gst_pad_alloc_buffer (td.mysrc2, 1024, 1024, td.mycaps,
@@ -158,6 +143,7 @@ GST_START_TEST (test_funnel_simple)
 
   gst_buffer_unref (buf1);
   gst_buffer_unref (buf2);
+#endif
 
   release_test_objects (&td);
 }

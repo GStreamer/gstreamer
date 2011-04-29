@@ -224,8 +224,6 @@ static void gst_queue2_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_queue2_chain (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_queue2_bufferalloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf);
 static GstFlowReturn gst_queue2_push_one (GstQueue2 * queue);
 static void gst_queue2_loop (GstPad * pad);
 
@@ -386,8 +384,6 @@ gst_queue2_init (GstQueue2 * queue)
       GST_DEBUG_FUNCPTR (gst_queue2_getcaps));
   gst_pad_set_acceptcaps_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue2_acceptcaps));
-  gst_pad_set_bufferalloc_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue2_bufferalloc));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
@@ -650,21 +646,6 @@ gst_queue2_getcaps (GstPad * pad)
     result = gst_caps_new_any ();
 
   gst_object_unref (queue);
-
-  return result;
-}
-
-static GstFlowReturn
-gst_queue2_bufferalloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstQueue2 *queue;
-  GstFlowReturn result;
-
-  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
-
-  /* Forward to src pad, without setting caps on the src pad */
-  result = gst_pad_alloc_buffer (queue->srcpad, offset, size, caps, buf);
 
   return result;
 }

@@ -463,41 +463,6 @@ typedef gboolean		(*GstPadAcceptCapsFunction)	(GstPad *pad, GstCaps *caps);
  * elements can override this function to perform other behaviour.
  */
 typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
-/**
- * GstPadBufferAllocFunction:
- * @pad: a sink #GstPad
- * @offset: the desired offset of the buffer
- * @size: the desired size of the buffer
- * @caps: the desired caps of the buffer
- * @buf: pointer to hold the allocated buffer.
- *
- * Ask the sinkpad @pad to allocate a buffer with @offset, @size and @caps.
- * The result will be stored in @buf.
- *
- * The purpose of this function is to allocate a buffer that is optimal to
- * be processed by @pad. The function is mostly overridden by elements that can
- * provide a hardware buffer in order to avoid additional memcpy operations.
- *
- * The function can return a buffer that has caps different from the requested
- * @caps, in which case the upstream element requests a format change to this
- * new caps.
- * If a format change was requested, the returned buffer will be one to hold
- * the data of said new caps, so its size might be different from the requested
- * @size.
- *
- * When this function returns anything else than #GST_FLOW_OK, the buffer allocation
- * failed and @buf does not contain valid data. If the function returns #GST_FLOW_OK and
- * the @buf is NULL, a #GstBuffer will be created with @caps, @offset and @size.
- *
- * By default this function returns a new buffer of @size and with @caps containing
- * purely malloced data. The buffer should be freed with gst_buffer_unref()
- * after usage.
- *
- * Returns: #GST_FLOW_OK if @buf contains a valid buffer, any other return
- *  value means @buf does not hold a valid buffer.
- */
-typedef GstFlowReturn		(*GstPadBufferAllocFunction)	(GstPad *pad, guint64 offset, guint size,
-								 GstCaps *caps, GstBuffer **buf);
 
 /* misc */
 /**
@@ -595,7 +560,6 @@ typedef struct _GstPadTemplate GstPadTemplate;
  * @querytypefunc: get list of supported queries
  * @queryfunc: perform a query on the pad
  * @intlinkfunc: get the internal links of this pad
- * @bufferallocfunc: function to allocate a buffer for this pad
  * @do_buffer_signals: counter counting installed buffer signals
  * @do_event_signals: counter counting installed event signals
  * @iterintlinkfunc: get the internal links iterator of this pad
@@ -660,8 +624,6 @@ struct _GstPad {
   /* internal links */
   GstPadIterIntLinkFunction      iterintlinkfunc;
 
-  GstPadBufferAllocFunction      bufferallocfunc;
-
   /* whether to emit signals for have-data. counts number
    * of handlers attached. */
   gint				 do_buffer_signals;
@@ -724,8 +686,6 @@ struct _GstPadClass {
 #define GST_PAD_SETCAPSFUNC(pad)	(GST_PAD_CAST(pad)->setcapsfunc)
 #define GST_PAD_ACCEPTCAPSFUNC(pad)	(GST_PAD_CAST(pad)->acceptcapsfunc)
 #define GST_PAD_FIXATECAPSFUNC(pad)	(GST_PAD_CAST(pad)->fixatecapsfunc)
-
-#define GST_PAD_BUFFERALLOCFUNC(pad)	(GST_PAD_CAST(pad)->bufferallocfunc)
 
 #define GST_PAD_DO_BUFFER_SIGNALS(pad) 	(GST_PAD_CAST(pad)->do_buffer_signals)
 #define GST_PAD_DO_EVENT_SIGNALS(pad) 	(GST_PAD_CAST(pad)->do_event_signals)
@@ -846,12 +806,6 @@ void			gst_pad_set_element_private		(GstPad *pad, gpointer priv);
 gpointer		gst_pad_get_element_private		(GstPad *pad);
 
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
-
-void			gst_pad_set_bufferalloc_function	(GstPad *pad, GstPadBufferAllocFunction bufalloc);
-GstFlowReturn		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, guint size,
-								 GstCaps *caps, GstBuffer **buf);
-GstFlowReturn		gst_pad_alloc_buffer_and_set_caps	(GstPad *pad, guint64 offset, guint size,
-								 GstCaps *caps, GstBuffer **buf);
 
 /* data passing setup functions */
 void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activate);

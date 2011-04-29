@@ -47,24 +47,11 @@ event_func (GstPad * pad, GstEvent * event)
   return TRUE;
 }
 
-static GstFlowReturn
-bufferalloc_func (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
-    GstBuffer ** buf)
-{
-  buffer_allocated = TRUE;
-  *buf = gst_buffer_new_and_alloc (size);
-  GST_BUFFER_OFFSET (*buf) = offset;
-  gst_buffer_set_caps (*buf, caps);
-
-  return GST_FLOW_OK;
-}
-
 GST_START_TEST (test_valve_basic)
 {
   GstElement *valve;
   GstPad *sink;
   GstPad *src;
-  GstBuffer *buf;
   GstCaps *caps;
 
   valve = gst_check_setup_element ("valve");
@@ -72,7 +59,6 @@ GST_START_TEST (test_valve_basic)
   sink = gst_check_setup_sink_pad_by_name (valve, &sinktemplate, "src");
   src = gst_check_setup_src_pad_by_name (valve, &srctemplate, "sink");
   gst_pad_set_event_function (sink, event_func);
-  gst_pad_set_bufferalloc_function (sink, bufferalloc_func);
   gst_pad_set_active (src, TRUE);
   gst_pad_set_active (sink, TRUE);
   gst_element_set_state (valve, GST_STATE_PLAYING);
@@ -81,9 +67,6 @@ GST_START_TEST (test_valve_basic)
 
   fail_unless (gst_pad_push_event (src, gst_event_new_eos ()) == TRUE);
   fail_unless (event_received == TRUE);
-  fail_unless (gst_pad_alloc_buffer (src, 0, 10, NULL, &buf) == GST_FLOW_OK);
-  fail_unless (buffer_allocated == TRUE);
-  gst_buffer_unref (buf);
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (g_list_length (buffers) == 2);
@@ -98,9 +81,6 @@ GST_START_TEST (test_valve_basic)
   g_object_set (valve, "drop", TRUE, NULL);
   fail_unless (gst_pad_push_event (src, gst_event_new_eos ()) == TRUE);
   fail_unless (event_received == FALSE);
-  fail_unless (gst_pad_alloc_buffer (src, 0, 10, NULL, &buf) == GST_FLOW_OK);
-  fail_unless (buffer_allocated == FALSE);
-  gst_buffer_unref (buf);
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (buffers == NULL);

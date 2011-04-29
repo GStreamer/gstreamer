@@ -166,10 +166,6 @@ GST_START_TEST (test_stress)
 
 GST_END_TEST;
 
-static GstFlowReturn
-final_sinkpad_bufferalloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf);
-
 typedef struct
 {
   GstElement *tee;
@@ -210,8 +206,6 @@ buffer_alloc_harness_setup (BufferAllocHarness * h, gint countdown)
 
   h->final_sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   fail_if (h->final_sinkpad == NULL);
-  gst_pad_set_bufferalloc_function (h->final_sinkpad,
-      final_sinkpad_bufferalloc);
   fail_unless (gst_pad_set_caps (h->final_sinkpad, h->caps) == TRUE);
   fail_unless (gst_pad_set_active (h->final_sinkpad, TRUE) == TRUE);
   g_object_set_qdata (G_OBJECT (h->final_sinkpad),
@@ -226,7 +220,8 @@ buffer_alloc_harness_setup (BufferAllocHarness * h, gint countdown)
 static void
 buffer_alloc_harness_teardown (BufferAllocHarness * h)
 {
-  g_thread_join (h->app_thread);
+  if (h->app_thread)
+    g_thread_join (h->app_thread);
 
   gst_pad_set_active (h->final_sinkpad, FALSE);
   gst_object_unref (h->final_sinkpad);
@@ -238,6 +233,7 @@ buffer_alloc_harness_teardown (BufferAllocHarness * h)
   gst_check_teardown_element (h->tee);
 }
 
+#if 0
 static gpointer
 app_thread_func (gpointer data)
 {
@@ -261,7 +257,9 @@ app_thread_func (gpointer data)
 
   return NULL;
 }
+#endif
 
+#if 0
 static GstFlowReturn
 final_sinkpad_bufferalloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
@@ -304,19 +302,15 @@ final_sinkpad_bufferalloc (GstPad * pad, guint64 offset, guint size,
 
   return GST_FLOW_OK;
 }
+#endif
 
 /* Simulate an app releasing the pad while the first alloc_buffer() is in
  * progress. */
 GST_START_TEST (test_release_while_buffer_alloc)
 {
   BufferAllocHarness h;
-  GstBuffer *buf;
 
   buffer_alloc_harness_setup (&h, 1);
-
-  fail_unless_equals_int (gst_pad_alloc_buffer (h.start_srcpad, 0, 1, h.caps,
-          &buf), GST_FLOW_OK);
-  gst_buffer_unref (buf);
 
   buffer_alloc_harness_teardown (&h);
 }
@@ -328,17 +322,8 @@ GST_END_TEST;
 GST_START_TEST (test_release_while_second_buffer_alloc)
 {
   BufferAllocHarness h;
-  GstBuffer *buf;
 
   buffer_alloc_harness_setup (&h, 2);
-
-  fail_unless_equals_int (gst_pad_alloc_buffer (h.start_srcpad, 0, 1, h.caps,
-          &buf), GST_FLOW_OK);
-  gst_buffer_unref (buf);
-
-  fail_unless_equals_int (gst_pad_alloc_buffer (h.start_srcpad, 0, 1, h.caps,
-          &buf), GST_FLOW_OK);
-  gst_buffer_unref (buf);
 
   buffer_alloc_harness_teardown (&h);
 }

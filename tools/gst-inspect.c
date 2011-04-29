@@ -836,10 +836,6 @@ print_pad_info (GstElement * element)
       n_print ("      Has custom iterintlinkfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (pad->iterintlinkfunc));
 
-    if (pad->bufferallocfunc)
-      n_print ("      Has bufferallocfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (pad->bufferallocfunc));
-
     if (pad->getcapsfunc)
       n_print ("      Has getcapsfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (pad->getcapsfunc));

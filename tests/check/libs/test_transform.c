@@ -9,8 +9,6 @@ typedef struct
   GList *buffers;
   GstElement *trans;
   GstBaseTransformClass *klass;
-
-  GstPadBufferAllocFunction buffer_alloc;
 } TestTransData;
 
 static GstStaticPadTemplate gst_test_trans_src_template =
@@ -123,6 +121,7 @@ result_sink_chain (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
+#if 0
 static GstFlowReturn
 result_buffer_alloc (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
     GstBuffer ** buf)
@@ -132,16 +131,13 @@ result_buffer_alloc (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
 
   data = gst_pad_get_element_private (pad);
 
-  if (data->buffer_alloc) {
-    res = data->buffer_alloc (pad, offset, size, caps, buf);
-  } else {
-    *buf = gst_buffer_new_and_alloc (size);
-    gst_buffer_set_caps (*buf, caps);
-    res = GST_FLOW_OK;
-  }
+  *buf = gst_buffer_new_and_alloc (size);
+  gst_buffer_set_caps (*buf, caps);
+  res = GST_FLOW_OK;
 
   return res;
 }
+#endif
 
 static TestTransData *
 gst_test_trans_new (void)
@@ -168,7 +164,6 @@ gst_test_trans_new (void)
   gst_test_trans_set_data (GST_TEST_TRANS (res->trans), res);
   gst_pad_set_element_private (res->sinkpad, res);
 
-  gst_pad_set_bufferalloc_function (res->sinkpad, result_buffer_alloc);
   gst_pad_set_chain_function (res->sinkpad, result_sink_chain);
 
   tmp = gst_element_get_static_pad (res->trans, "sink");

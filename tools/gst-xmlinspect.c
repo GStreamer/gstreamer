@@ -590,9 +590,6 @@ print_element_info (GstElementFactory * factory)
         PUT_STRING (4, "<iterintlink-function function=\"%s\"/>",
             GST_DEBUG_FUNCPTR_NAME (pad->iterintlinkfunc));
 
-      if (pad->bufferallocfunc)
-        PUT_STRING (4, "<bufferalloc-function function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (pad->bufferallocfunc));
       PUT_END_TAG (3, "implementation");
 
       if (pad->caps) {

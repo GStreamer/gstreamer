@@ -140,21 +140,6 @@ gst_proxy_pad_do_iterate_internal_links (GstPad * pad)
 }
 
 static GstFlowReturn
-gst_proxy_pad_do_bufferalloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstFlowReturn result = GST_FLOW_WRONG_STATE;
-  GstPad *internal = gst_proxy_pad_get_internal (pad);
-
-  if (internal) {
-    result = gst_pad_alloc_buffer (internal, offset, size, caps, buf);
-    gst_object_unref (internal);
-  }
-
-  return result;
-}
-
-static GstFlowReturn
 gst_proxy_pad_do_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn res;
@@ -408,7 +393,6 @@ gst_proxy_pad_class_init (GstProxyPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_fixatecaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_setcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_unlink);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_bufferalloc);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_chain);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_chain_list);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_getrange);
@@ -854,7 +838,6 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
 
   /* Set directional padfunctions for ghostpad */
   if (dir == GST_PAD_SINK) {
-    gst_pad_set_bufferalloc_function (pad, gst_proxy_pad_do_bufferalloc);
     gst_pad_set_chain_function (pad, gst_proxy_pad_do_chain);
     gst_pad_set_chain_list_function (pad, gst_proxy_pad_do_chain_list);
   } else {
@@ -883,7 +866,6 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
 
   /* Set directional padfunctions for internal pad */
   if (dir == GST_PAD_SRC) {
-    gst_pad_set_bufferalloc_function (internal, gst_proxy_pad_do_bufferalloc);
     gst_pad_set_chain_function (internal, gst_proxy_pad_do_chain);
     gst_pad_set_chain_list_function (internal, gst_proxy_pad_do_chain_list);
   } else {

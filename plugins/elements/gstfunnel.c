@@ -118,8 +118,6 @@ static GstPad *gst_funnel_request_new_pad (GstElement * element,
 static void gst_funnel_release_pad (GstElement * element, GstPad * pad);
 
 static GstFlowReturn gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_funnel_sink_buffer_alloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf);
 static gboolean gst_funnel_sink_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_funnel_sink_getcaps (GstPad * pad);
 
@@ -176,23 +174,6 @@ gst_funnel_init (GstFunnel * funnel)
   gst_element_add_pad (GST_ELEMENT (funnel), funnel->srcpad);
 }
 
-static GstFlowReturn
-gst_funnel_sink_buffer_alloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent_element (pad));
-  GstFlowReturn ret;
-
-  if (G_UNLIKELY (funnel == NULL))
-    return GST_FLOW_WRONG_STATE;
-
-  ret = gst_pad_alloc_buffer (funnel->srcpad, offset, size, caps, buf);
-
-  gst_object_unref (funnel);
-
-  return ret;
-}
-
 static GstPad *
 gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name)
@@ -211,8 +192,6 @@ gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_FUNCPTR (gst_funnel_sink_event));
   gst_pad_set_getcaps_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_funnel_sink_getcaps));
-  gst_pad_set_bufferalloc_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_funnel_sink_buffer_alloc));
 
   gst_pad_set_active (sinkpad, TRUE);
 

@@ -634,8 +634,6 @@ EXPORTS
 	gst_pad_add_data_probe_full
 	gst_pad_add_event_probe
 	gst_pad_add_event_probe_full
-	gst_pad_alloc_buffer
-	gst_pad_alloc_buffer_and_set_caps
 	gst_pad_can_link
 	gst_pad_chain
 	gst_pad_chain_list
@@ -703,7 +701,6 @@ EXPORTS
 	gst_pad_set_blocked
 	gst_pad_set_blocked_async
 	gst_pad_set_blocked_async_full
-	gst_pad_set_bufferalloc_function
 	gst_pad_set_caps
 	gst_pad_set_chain_function
 	gst_pad_set_chain_list_function

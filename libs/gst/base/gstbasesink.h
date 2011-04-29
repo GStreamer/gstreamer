@@ -117,7 +117,6 @@ struct _GstBaseSink {
  * @parent_class: Element parent class
  * @get_caps: Called to get sink pad caps from the subclass
  * @set_caps: Notify subclass of changed caps
- * @buffer_alloc: Subclasses can override to perform custom buffer allocations
  * @get_times: Called to get the start and end times for synchronising
  *     the passed buffer to the clock
  * @start: Start processing. Ideal for opening resources in the subclass
@@ -160,10 +159,6 @@ struct _GstBaseSinkClass {
   void          (*fixate)       (GstBaseSink *sink, GstCaps *caps);
   /* start or stop a pulling thread */
   gboolean      (*activate_pull)(GstBaseSink *sink, gboolean active);
-
-  /* allocate a new buffer with given caps */
-  GstFlowReturn (*buffer_alloc) (GstBaseSink *sink, guint64 offset, guint size,
-                                 GstCaps *caps, GstBuffer **buf);
 
   /* get the start and end times for syncing on this buffer */
   void          (*get_times)    (GstBaseSink *sink, GstBuffer *buffer,

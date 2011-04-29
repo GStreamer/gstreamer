@@ -103,8 +103,6 @@ static GstPad *gst_output_selector_request_new_pad (GstElement * element,
 static void gst_output_selector_release_pad (GstElement * element,
     GstPad * pad);
 static GstFlowReturn gst_output_selector_chain (GstPad * pad, GstBuffer * buf);
-static GstFlowReturn gst_output_selector_buffer_alloc (GstPad * pad,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstStateChangeReturn gst_output_selector_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_output_selector_handle_sink_event (GstPad * pad,
@@ -164,8 +162,6 @@ gst_output_selector_init (GstOutputSelector * sel)
       GST_DEBUG_FUNCPTR (gst_output_selector_chain));
   gst_pad_set_event_function (sel->sinkpad,
       GST_DEBUG_FUNCPTR (gst_output_selector_handle_sink_event));
-  gst_pad_set_bufferalloc_function (sel->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_output_selector_buffer_alloc));
 
   gst_element_add_pad (GST_ELEMENT (sel), sel->sinkpad);
 
@@ -351,47 +347,6 @@ gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector * sel,
     gst_pad_set_setcaps_function (sel->sinkpad,
         gst_output_selector_sink_setcaps);
   }
-}
-
-static GstFlowReturn
-gst_output_selector_buffer_alloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  GstOutputSelector *sel;
-  GstFlowReturn res;
-  GstPad *allocpad;
-
-  sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL))
-    return GST_FLOW_WRONG_STATE;
-  res = GST_FLOW_NOT_LINKED;
-
-  GST_OBJECT_LOCK (sel);
-  allocpad = sel->pending_srcpad ? sel->pending_srcpad : sel->active_srcpad;
-  if (allocpad) {
-    /* if we had a previous pad we used for allocating a buffer, continue using
-     * it. */
-    GST_DEBUG_OBJECT (sel, "using pad %s:%s for alloc",
-        GST_DEBUG_PAD_NAME (allocpad));
-    gst_object_ref (allocpad);
-    GST_OBJECT_UNLOCK (sel);
-
-    res = gst_pad_alloc_buffer (allocpad, offset, size, caps, buf);
-    gst_object_unref (allocpad);
-
-    GST_OBJECT_LOCK (sel);
-  } else {
-    /* fallback case, allocate a buffer of our own, add pad caps. */
-    GST_DEBUG_OBJECT (pad, "fallback buffer alloc");
-    *buf = NULL;
-    res = GST_FLOW_OK;
-  }
-  GST_OBJECT_UNLOCK (sel);
-
-  GST_DEBUG_OBJECT (sel, "buffer alloc finished: %s", gst_flow_get_name (res));
-
-  gst_object_unref (sel);
-  return res;
 }
 
 static GstPad *
