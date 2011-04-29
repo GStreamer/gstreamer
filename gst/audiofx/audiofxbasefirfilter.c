@@ -666,16 +666,9 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
       g_free (out);
     }
 
-    res = gst_pad_alloc_buffer (GST_BASE_TRANSFORM_CAST (self)->srcpad,
-        GST_BUFFER_OFFSET_NONE, outsize,
-        GST_PAD_CAPS (GST_BASE_TRANSFORM_CAST (self)->srcpad), &outbuf);
-
-    if (G_UNLIKELY (res != GST_FLOW_OK)) {
-      GST_WARNING_OBJECT (self, "failed allocating buffer of %d bytes",
-          outsize);
-      self->buffer_fill = 0;
-      return;
-    }
+    outbuf = gst_buffer_new_and_alloc (outsize);
+    gst_buffer_set_caps (outbuf,
+        GST_PAD_CAPS (GST_BASE_TRANSFORM_CAST (self)->srcpad));
 
     /* Convolve the residue with zeros to get the actual remaining data */
     in = g_new0 (guint8, outsize);
