@@ -275,7 +275,7 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
 
-  if (wavenc->sent_header) {
+  if (wavenc->sent_header && !gst_caps_can_intersect (caps, GST_PAD_CAPS (pad))) {
     GST_WARNING_OBJECT (wavenc, "cannot change format in middle of stream");
     goto fail;
   }
