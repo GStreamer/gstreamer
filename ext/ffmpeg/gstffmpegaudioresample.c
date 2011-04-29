@@ -247,9 +247,12 @@ gst_ffmpegaudioresample_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   if (!gst_structure_get_int (outstructure, "rate", &resample->out_rate))
     return FALSE;
 
+  /* FIXME : Allow configuring the various resampling properties */
+#define TAPS 16
   resample->res =
-      audio_resample_init (resample->out_channels, resample->in_channels,
-      resample->out_rate, resample->in_rate);
+      av_audio_resample_init (resample->out_channels, resample->in_channels,
+      resample->out_rate, resample->in_rate,
+      AV_SAMPLE_FMT_S16, AV_SAMPLE_FMT_S16, TAPS, 10, 0, 0.8);
   if (resample->res == NULL)
     return FALSE;
 

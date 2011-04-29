@@ -116,7 +116,7 @@ struct _GstFFMpegDec
   gboolean extra_ref;           /* keep extra ref around in get/release */
 
   /* some properties */
-  gint hurry_up;
+  enum AVDiscard skip_frame;
   gint lowres;
   gboolean direct_rendering;
   gboolean do_padding;
@@ -301,7 +301,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
   /* construct the element details struct */
   longname = g_strdup_printf ("FFmpeg %s decoder", in_plugin->long_name);
   classification = g_strdup_printf ("Codec/Decoder/%s",
-      (in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
+      (in_plugin->type == AVMEDIA_TYPE_VIDEO) ? "Video" : "Audio");
   description = g_strdup_printf ("FFmpeg %s decoder", in_plugin->name);
   gst_element_class_set_details_simple (element_class, longname, classification,
       description,
@@ -318,7 +318,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
     GST_DEBUG ("Couldn't get sink caps for decoder '%s'", in_plugin->name);
     sinkcaps = gst_caps_from_string ("unknown/unknown");
   }
-  if (in_plugin->type == CODEC_TYPE_VIDEO) {
+  if (in_plugin->type == AVMEDIA_TYPE_VIDEO) {
     srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
   } else {
     srccaps = gst_ffmpeg_codectype_to_audio_caps (NULL,
@@ -355,7 +355,7 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
   gobject_class->set_property = gst_ffmpegdec_set_property;
   gobject_class->get_property = gst_ffmpegdec_get_property;
 
-  if (klass->in_plugin->type == CODEC_TYPE_VIDEO) {
+  if (klass->in_plugin->type == AVMEDIA_TYPE_VIDEO) {
     g_object_class_install_property (gobject_class, PROP_SKIPFRAME,
         g_param_spec_enum ("skip-frame", "Skip frames",
             "Which types of frames to skip during decoding",
@@ -421,7 +421,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->par = NULL;
   ffmpegdec->opened = FALSE;
   ffmpegdec->waiting_for_key = TRUE;
-  ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
+  ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
   ffmpegdec->do_padding = DEFAULT_DO_PADDING;
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
@@ -665,7 +665,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
   }
 
   switch (oclass->in_plugin->type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
       ffmpegdec->format.video.width = 0;
       ffmpegdec->format.video.height = 0;
       ffmpegdec->format.video.clip_width = -1;
@@ -673,7 +673,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
       ffmpegdec->format.video.pix_fmt = PIX_FMT_NB;
       ffmpegdec->format.video.interlaced = FALSE;
       break;
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
       ffmpegdec->format.audio.samplerate = 0;
       ffmpegdec->format.audio.channels = 0;
       ffmpegdec->format.audio.depth = 0;
@@ -836,7 +836,7 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
 
   /* for slow cpus */
   ffmpegdec->context->lowres = ffmpegdec->lowres;
-  ffmpegdec->context->hurry_up = ffmpegdec->hurry_up;
+  ffmpegdec->context->skip_frame = ffmpegdec->skip_frame;
 
   /* ffmpeg can draw motion vectors on top of the image (not every decoder
    * supports it) */
@@ -984,9 +984,9 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   }
 
   switch (context->codec_type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
       /* some ffmpeg video plugins don't see the point in setting codec_type ... */
-    case CODEC_TYPE_UNKNOWN:
+    case AVMEDIA_TYPE_UNKNOWN:
     {
       GstFlowReturn ret;
       gint clip_width, clip_height;
@@ -1029,7 +1029,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
           data, context->pix_fmt, width, height);
       break;
     }
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
     default:
       GST_ERROR_OBJECT (ffmpegdec,
           "_get_buffer() should never get called for non-video buffers !");
@@ -1222,7 +1222,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   switch (oclass->in_plugin->type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
       if (!force && ffmpegdec->format.video.width == ffmpegdec->context->width
           && ffmpegdec->format.video.height == ffmpegdec->context->height
           && ffmpegdec->format.video.fps_n == ffmpegdec->format.video.old_fps_n
@@ -1252,7 +1252,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
       ffmpegdec->format.video.par_d =
           ffmpegdec->context->sample_aspect_ratio.den;
       break;
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
     {
       gint depth = av_smp_format_depth (ffmpegdec->context->sample_fmt);
       if (!force && ffmpegdec->format.audio.samplerate ==
@@ -1281,7 +1281,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
     goto no_caps;
 
   switch (oclass->in_plugin->type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
     {
       gint width, height;
       gboolean interlaced;
@@ -1311,7 +1311,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
           gst_caps_get_structure (caps, 0));
       break;
     }
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
     {
       break;
     }
@@ -1373,7 +1373,7 @@ no_bufferpool:
 
 /* perform qos calculations before decoding the next frame.
  *
- * Sets the hurry_up flag and if things are really bad, skips to the next
+ * Sets the skip_frame flag and if things are really bad, skips to the next
  * keyframe.
  * 
  * Returns TRUE if the frame should be decoded, FALSE if the frame can be dropped
@@ -1398,8 +1398,8 @@ gst_ffmpegdec_do_qos (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
 
   /* skip qos if we have no observation (yet) */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (earliest_time))) {
-    /* no hurry_up initialy */
-    ffmpegdec->context->hurry_up = 0;
+    /* no skip_frame initialy */
+    ffmpegdec->context->skip_frame = AVDISCARD_DEFAULT;
     goto no_qos;
   }
 
@@ -1437,8 +1437,8 @@ gst_ffmpegdec_do_qos (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
         /* we were waiting for a keyframe, that's ok */
         goto skipping;
       }
-      /* switch to hurry_up mode */
-      goto hurry_up;
+      /* switch to skip_frame mode */
+      goto skip_frame;
     }
   }
 
@@ -1451,8 +1451,8 @@ skipping:
   }
 normal_mode:
   {
-    if (ffmpegdec->context->hurry_up != 0) {
-      ffmpegdec->context->hurry_up = 0;
+    if (ffmpegdec->context->skip_frame != AVDISCARD_DEFAULT) {
+      ffmpegdec->context->skip_frame = AVDISCARD_DEFAULT;
       *mode_switch = TRUE;
       GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode %g < 0.4", proportion);
     }
@@ -1460,7 +1460,7 @@ normal_mode:
   }
 skip_to_keyframe:
   {
-    ffmpegdec->context->hurry_up = 1;
+    ffmpegdec->context->skip_frame = AVDISCARD_NONKEY;
     ffmpegdec->waiting_for_key = TRUE;
     *mode_switch = TRUE;
     GST_DEBUG_OBJECT (ffmpegdec,
@@ -1468,10 +1468,10 @@ skip_to_keyframe:
     /* we can skip the current frame */
     return FALSE;
   }
-hurry_up:
+skip_frame:
   {
-    if (ffmpegdec->context->hurry_up != 1) {
-      ffmpegdec->context->hurry_up = 1;
+    if (ffmpegdec->context->skip_frame != AVDISCARD_NONREF) {
+      ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
       *mode_switch = TRUE;
       GST_DEBUG_OBJECT (ffmpegdec,
           "QOS: hurry up, diff %" G_GINT64_FORMAT " >= 0", diff);
@@ -1677,6 +1677,18 @@ flush_queued (GstFFMpegDec * ffmpegdec)
   return res;
 }
 
+static AVPacket *
+gst_avpacket_new (guint8 * data, guint size)
+{
+  AVPacket *res;
+
+  res = g_malloc0 (sizeof (AVPacket));
+  res->data = data;
+  res->size = size;
+
+  return res;
+}
+
 /* gst_ffmpegdec_[video|audio]_frame:
  * ffmpegdec:
  * data: pointer to the data to decode
@@ -1700,10 +1712,11 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   gboolean iskeyframe;
   gboolean mode_switch;
   gboolean decode;
-  gint hurry_up = 0;
+  gint skip_frame = AVDISCARD_DEFAULT;
   GstClockTime out_timestamp, out_duration, out_pts;
   gint64 out_offset;
   const GstTSInfo *out_info;
+  AVPacket *packet;
 
   *ret = GST_FLOW_OK;
   *outbuf = NULL;
@@ -1736,10 +1749,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   }
 
   if (!decode) {
-    /* no decoding needed, save previous hurry_up value and brutely skip
+    /* no decoding needed, save previous skip_frame value and brutely skip
      * decoding everything */
-    hurry_up = ffmpegdec->context->hurry_up;
-    ffmpegdec->context->hurry_up = 2;
+    skip_frame = ffmpegdec->context->skip_frame;
+    ffmpegdec->context->skip_frame = AVDISCARD_NONREF;
   }
 
   /* save reference to the timing info */
@@ -1749,23 +1762,24 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   GST_DEBUG_OBJECT (ffmpegdec, "stored opaque values idx %d", dec_info->idx);
 
   /* now decode the frame */
-  len = avcodec_decode_video (ffmpegdec->context,
-      ffmpegdec->picture, &have_data, data, size);
+  packet = gst_avpacket_new (data, size);
+  len = avcodec_decode_video2 (ffmpegdec->context,
+      ffmpegdec->picture, &have_data, packet);
 
   /* restore previous state */
   if (!decode)
-    ffmpegdec->context->hurry_up = hurry_up;
+    ffmpegdec->context->skip_frame = skip_frame;
 
   GST_DEBUG_OBJECT (ffmpegdec, "after decode: len %d, have_data %d",
       len, have_data);
 
-  /* when we are in hurry_up mode, don't complain when ffmpeg returned
+  /* when we are in skip_frame mode, don't complain when ffmpeg returned
    * no data because we told it to skip stuff. */
-  if (len < 0 && (mode_switch || ffmpegdec->context->hurry_up))
+  if (len < 0 && (mode_switch || ffmpegdec->context->skip_frame))
     len = 0;
 
   if (len > 0 && have_data <= 0 && (mode_switch
-          || ffmpegdec->context->hurry_up)) {
+          || ffmpegdec->context->skip_frame)) {
     /* we consumed some bytes but nothing decoded and we are skipping frames,
      * disable the interpollation of DTS timestamps */
     ffmpegdec->last_out = -1;
@@ -2111,6 +2125,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
   GstClockTime out_timestamp, out_duration;
   gint64 out_offset;
   int16_t *odata;
+  AVPacket *packet;
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "size:%d, offset:%" G_GINT64_FORMAT ", ts:%" GST_TIME_FORMAT ", dur:%"
@@ -2123,8 +2138,10 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       GST_PAD_CAPS (ffmpegdec->srcpad));
 
   odata = gst_buffer_map (*outbuf, NULL, NULL, GST_MAP_WRITE);
-  len = avcodec_decode_audio2 (ffmpegdec->context, odata, &have_data,
-      data, size);
+
+  packet = gst_avpacket_new (data, size);
+  len = avcodec_decode_audio3 (ffmpegdec->context, odata, &have_data, packet);
+
   GST_DEBUG_OBJECT (ffmpegdec,
       "Decode audio: len=%d, have_data=%d", len, have_data);
 
@@ -2176,6 +2193,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
     GST_BUFFER_TIMESTAMP (*outbuf) = out_timestamp;
     GST_BUFFER_DURATION (*outbuf) = out_duration;
     GST_BUFFER_OFFSET (*outbuf) = out_offset;
+    gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
 
     /* the next timestamp we'll use when interpolating */
     ffmpegdec->next_out = out_timestamp + out_duration;
@@ -2249,12 +2267,12 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   switch (oclass->in_plugin->type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
       len =
           gst_ffmpegdec_video_frame (ffmpegdec, data, size, dec_info, &outbuf,
           ret);
       break;
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
       len =
           gst_ffmpegdec_audio_frame (ffmpegdec, oclass->in_plugin, data, size,
           dec_info, &outbuf, ret);
@@ -2369,8 +2387,8 @@ gst_ffmpegdec_flush_pcache (GstFFMpegDec * ffmpegdec)
 
     /* parse some dummy data to work around some ffmpeg weirdness where it keeps
      * the previous pts around */
-    av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
-        &data, &size, bdata, bsize, -1, -1);
+    av_parser_parse2 (ffmpegdec->pctx, ffmpegdec->context,
+        &data, &size, bdata, bsize, -1, -1, -1);
     ffmpegdec->pctx->pts = -1;
     ffmpegdec->pctx->dts = -1;
   }
@@ -2551,7 +2569,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   if (G_UNLIKELY (ffmpegdec->waiting_for_key)) {
     GST_DEBUG_OBJECT (ffmpegdec, "waiting for keyframe");
     if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DELTA_UNIT) &&
-        oclass->in_plugin->type != CODEC_TYPE_AUDIO)
+        oclass->in_plugin->type != AVMEDIA_TYPE_AUDIO)
       goto skip_keyframe;
 
     GST_DEBUG_OBJECT (ffmpegdec, "got keyframe");
@@ -2641,14 +2659,14 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       gint res;
 
       GST_LOG_OBJECT (ffmpegdec,
-          "Calling av_parser_parse with offset %" G_GINT64_FORMAT ", ts:%"
+          "Calling av_parser_parse2 with offset %" G_GINT64_FORMAT ", ts:%"
           GST_TIME_FORMAT " size %d", in_offset, GST_TIME_ARGS (in_timestamp),
           bsize);
 
       /* feed the parser. We pass the timestamp info so that we can recover all
        * info again later */
-      res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
-          &data, &size, bdata, bsize, in_info->idx, in_info->idx);
+      res = av_parser_parse2 (ffmpegdec->pctx, ffmpegdec->context,
+          &data, &size, bdata, bsize, in_info->idx, in_info->idx, in_offset);
 
       GST_LOG_OBJECT (ffmpegdec,
           "parser returned res %d and size %d, id %" G_GINT64_FORMAT, res, size,
@@ -2844,7 +2862,7 @@ gst_ffmpegdec_set_property (GObject * object,
       ffmpegdec->lowres = ffmpegdec->context->lowres = g_value_get_enum (value);
       break;
     case PROP_SKIPFRAME:
-      ffmpegdec->hurry_up = ffmpegdec->context->hurry_up =
+      ffmpegdec->skip_frame = ffmpegdec->context->skip_frame =
           g_value_get_enum (value);
       break;
     case PROP_DIRECT_RENDERING:
@@ -2877,7 +2895,7 @@ gst_ffmpegdec_get_property (GObject * object,
       g_value_set_enum (value, ffmpegdec->context->lowres);
       break;
     case PROP_SKIPFRAME:
-      g_value_set_enum (value, ffmpegdec->context->hurry_up);
+      g_value_set_enum (value, ffmpegdec->context->skip_frame);
       break;
     case PROP_DIRECT_RENDERING:
       g_value_set_boolean (value, ffmpegdec->direct_rendering);

@@ -488,15 +488,15 @@ gst_ffmpeg_cfg_init (void)
       1, 31, 3, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.max_qdiff, FALSE, mpeg, NULL);
 
-  pspec = g_param_spec_int ("mb-qmin", "Minimum MB Quantizer",
-      "Minimum MB Quantizer", 0, 31, 2,
+  pspec = g_param_spec_int ("mb-qmin", "Minimum MB Quantizer (DEPRECATED)",
+      "Minimum MB Quantizer (DEPRECATED, use qmin instead)", 0, 31, 2,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  gst_ffmpeg_add_pspec (pspec, config.mb_qmin, FALSE, mpeg, NULL);
+  gst_ffmpeg_add_pspec (pspec, config.qmin, FALSE, mpeg, NULL);
 
-  pspec = g_param_spec_int ("mb-qmax", "Maximum MB Quantizer",
-      "Maximum MB Quantizer", 0, 31, 31,
+  pspec = g_param_spec_int ("mb-qmax", "Maximum MB Quantizer (DEPRECATED)",
+      "Maximum MB Quantizer (DEPRECATED, use qmax instead)", 0, 31, 31,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  gst_ffmpeg_add_pspec (pspec, config.mb_qmax, FALSE, mpeg, NULL);
+  gst_ffmpeg_add_pspec (pspec, config.qmax, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("lmin", "Minimum Lagrange Multiplier",
       "Minimum Lagrange Multiplier", 1, 31, 2,

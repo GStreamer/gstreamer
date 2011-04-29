@@ -8,7 +8,7 @@ DIST_SUBDIRS = $(COMMON_SUBDIRS) gst-libs
 include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
-	gst-ffmpeg.spec depcomp ffmpegrev autogen.sh \
+	gst-ffmpeg.spec depcomp autogen.sh \
 	AUTHORS COPYING NEWS README ChangeLog gst-ffmpeg.doap \
 	$(win32)
 
