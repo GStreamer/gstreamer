@@ -1466,6 +1466,8 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
 
   if (packet->payload)
     gst_ts_demux_queue_data (demux, stream, packet);
+  else
+    gst_buffer_unref (packet->buffer);
 
   return res;
 }
