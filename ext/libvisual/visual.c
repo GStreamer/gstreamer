@@ -74,6 +74,7 @@ struct _GstVisual
   gint height;
   GstClockTime duration;
   guint outsize;
+  GstBufferPool *pool;
 
   /* samples per frame based on caps */
   guint spf;
@@ -128,7 +129,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 static void gst_visual_class_init (gpointer g_class, gpointer class_data);
 static void gst_visual_init (GstVisual * visual);
-static void gst_visual_dispose (GObject * object);
+static void gst_visual_finalize (GObject * object);
 
 static GstStateChangeReturn gst_visual_change_state (GstElement * element,
     GstStateChange transition);
@@ -198,6 +199,7 @@ gst_visual_class_init (gpointer g_class, gpointer class_data)
         gst_static_pad_template_get (&src_template));
     gst_element_class_add_pad_template (element,
         gst_static_pad_template_get (&sink_template));
+
     gst_element_class_set_details_simple (element,
         longname, "Visualization",
         klass->plugin->info->about, "Benjamin Otte <otte@gnome.org>");
@@ -205,7 +207,7 @@ gst_visual_class_init (gpointer g_class, gpointer class_data)
     g_free (longname);
   }
 
-  object->dispose = gst_visual_dispose;
+  object->finalize = gst_visual_finalize;
 }
 
 static void
@@ -246,17 +248,15 @@ gst_visual_clear_actors (GstVisual * visual)
 }
 
 static void
-gst_visual_dispose (GObject * object)
+gst_visual_finalize (GObject * object)
 {
   GstVisual *visual = GST_VISUAL (object);
 
-  if (visual->adapter) {
-    g_object_unref (visual->adapter);
-    visual->adapter = NULL;
-  }
+  g_object_unref (visual->adapter);
+  gst_object_unref (visual->pool);
   gst_visual_clear_actors (visual);
 
-  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
 static void
@@ -393,6 +393,9 @@ gst_vis_src_negotiate (GstVisual * visual)
   GstCaps *othercaps, *target;
   GstStructure *structure;
   GstCaps *caps;
+  GstQuery *query;
+  GstBufferPool *pool = NULL;
+  guint alignment, prefix, size;
 
   caps = gst_pad_get_caps (visual->srcpad);
 
@@ -424,6 +427,38 @@ gst_vis_src_negotiate (GstVisual * visual)
 
   gst_pad_set_caps (visual->srcpad, target);
   gst_caps_unref (target);
+
+  /* try to get a bufferpool now */
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (target, TRUE);
+
+  if (gst_pad_peer_query (visual->srcpad, query)) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_allocation_params (query, &alignment, &prefix, &size,
+        &pool);
+  } else {
+    alignment = 0;
+    prefix = 0;
+    size = visual->outsize;
+  }
+
+  if (pool == NULL) {
+    GstStructure *config;
+
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_buffer_pool_new ();
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (config, caps, size, 0, 0, prefix, 0, alignment);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  if (visual->pool)
+    gst_object_unref (visual->pool);
+  visual->pool = pool;
+
+  /* and activate */
+  gst_buffer_pool_set_active (pool, TRUE);
 
   return TRUE;
 
@@ -588,6 +623,8 @@ gst_visual_src_query (GstPad * pad, GstQuery * query)
 static GstFlowReturn
 get_buffer (GstVisual * visual, GstBuffer ** outbuf)
 {
+  GstFlowReturn ret;
+
   /* we don't know an output format yet, pick one */
   if (GST_PAD_CAPS (visual->srcpad) == NULL) {
     if (!gst_vis_src_negotiate (visual))
@@ -597,7 +634,10 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
   GST_DEBUG_OBJECT (visual, "allocating output buffer with caps %"
       GST_PTR_FORMAT, GST_PAD_CAPS (visual->srcpad));
 
-  *outbuf = gst_buffer_new_and_alloc (visual->outsize);
+  ret = gst_buffer_pool_acquire_buffer (visual->pool, outbuf, NULL);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
   gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (visual->srcpad));
 
   return GST_FLOW_OK;
@@ -853,6 +893,11 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (visual->pool) {
+        gst_buffer_pool_set_active (visual->pool, FALSE);
+        gst_object_unref (visual->pool);
+        visual->pool = NULL;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_visual_clear_actors (visual);
