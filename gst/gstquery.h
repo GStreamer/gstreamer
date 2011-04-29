@@ -330,10 +330,11 @@ void            gst_query_set_uri                 (GstQuery *query, const gchar 
 
 /* allocation query */
 GstQuery *      gst_query_new_allocation          (GstCaps *caps, gboolean need_pool);
+void            gst_query_parse_allocation        (GstQuery *query, GstCaps **caps, gboolean *need_pool);
 
-void            gst_query_set_allocation          (GstQuery *query, guint alignment, guint prefix,
+void            gst_query_set_allocation_params   (GstQuery *query, guint alignment, guint prefix,
                                                    guint size, GstBufferPool *pool);
-void            gst_query_parse_allocation        (GstQuery *query, guint *alignment, guint *prefix,
+void            gst_query_parse_allocation_params (GstQuery *query, guint *alignment, guint *prefix,
                                                    guint *size, GstBufferPool **pool);
 
 void            gst_query_add_allocation_meta     (GstQuery *query, const gchar *api);

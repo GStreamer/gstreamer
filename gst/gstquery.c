@@ -1498,19 +1498,30 @@ gst_query_new_allocation (GstCaps * caps, gboolean need_pool)
   return query;
 }
 
+void
+gst_query_parse_allocation (GstQuery * query, GstCaps ** caps,
+    gboolean * need_pool)
+{
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+
+  gst_structure_id_get (query->structure,
+      GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
+      GST_QUARK (NEED_POOL), G_TYPE_BOOLEAN, need_pool, NULL);
+}
+
 /**
- * gst_query_set_allocation
+ * gst_query_set_allocation_params
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
  * @alignment: the alignment
  * @prefix: the prefix
  * @size: the size
  * @pool: the #GstBufferPool
  *
- * Set the allocation properties in @query.
+ * Set the allocation parameters in @query.
  */
 void
-gst_query_set_allocation (GstQuery * query, guint alignment, guint prefix,
-    guint size, GstBufferPool * pool)
+gst_query_set_allocation_params (GstQuery * query, guint alignment,
+    guint prefix, guint size, GstBufferPool * pool)
 {
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
 
@@ -1522,18 +1533,18 @@ gst_query_set_allocation (GstQuery * query, guint alignment, guint prefix,
 }
 
 /**
- * gst_query_parse_allocation
+ * gst_query_parse_allocation_params
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
  * @alignment: the alignment
  * @prefix: the prefix
  * @size: the size
  * @pool: the #GstBufferPool
  *
- * Get the allocation properties in @query.
+ * Get the allocation parameters in @query.
  */
 void
-gst_query_parse_allocation (GstQuery * query, guint * alignment, guint * prefix,
-    guint * size, GstBufferPool ** pool)
+gst_query_parse_allocation_params (GstQuery * query, guint * alignment,
+    guint * prefix, guint * size, GstBufferPool ** pool)
 {
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
 

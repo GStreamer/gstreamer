@@ -846,6 +846,7 @@ EXPORTS
 	gst_query_new_uri
 	gst_query_parse_allocation
 	gst_query_parse_allocation_meta
+	gst_query_parse_allocation_params
 	gst_query_parse_buffering_percent
 	gst_query_parse_buffering_range
 	gst_query_parse_buffering_stats
@@ -859,7 +860,7 @@ EXPORTS
 	gst_query_parse_seeking
 	gst_query_parse_segment
 	gst_query_parse_uri
-	gst_query_set_allocation
+	gst_query_set_allocation_params
 	gst_query_set_buffering_percent
 	gst_query_set_buffering_range
 	gst_query_set_buffering_stats
