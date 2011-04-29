@@ -1417,8 +1417,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       GST_DEBUG_OBJECT (trans, "doing alloc with caps %" GST_PTR_FORMAT,
           oldcaps);
 
-      *out_buf = gst_buffer_ref (in_buf);
-
+      *out_buf = gst_buffer_new_and_alloc (outsize);
+      gst_buffer_set_caps (*out_buf, oldcaps);
 #if 0
       ret = gst_pad_alloc_buffer (trans->srcpad,
           GST_BUFFER_OFFSET (in_buf), outsize, oldcaps, out_buf);
