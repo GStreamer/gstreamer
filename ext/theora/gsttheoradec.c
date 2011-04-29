@@ -1043,12 +1043,12 @@ static GstFlowReturn
 theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
 {
   gint width, height, stride;
-  GstFlowReturn result;
   int i, plane;
   GstVideoFormat format;
   guint8 *dest, *src;
   gsize size;
   guint8 *data;
+  guint vsize;
 
   switch (dec->info.pixel_fmt) {
     case TH_PF_444:
@@ -1064,15 +1064,9 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
       g_assert_not_reached ();
   }
 
-  result =
-      gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-      gst_video_format_get_size (format, dec->width, dec->height),
-      GST_PAD_CAPS (dec->srcpad), out);
-  if (G_UNLIKELY (result != GST_FLOW_OK)) {
-    GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
-        gst_flow_get_name (result));
-    return result;
-  }
+  vsize = gst_video_format_get_size (format, dec->width, dec->height);
+  *out = gst_buffer_new_and_alloc (vsize);
+  gst_buffer_set_caps (*out, GST_PAD_CAPS (dec->srcpad));
 
   data = gst_buffer_map (*out, &size, NULL, GST_MAP_WRITE);
 

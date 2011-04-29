@@ -820,15 +820,9 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
   if (out_len == 0)
     return;
 
-  res =
-      gst_pad_alloc_buffer_and_set_caps (GST_BASE_TRANSFORM_SRC_PAD (resample),
-      GST_BUFFER_OFFSET_NONE, outsize,
-      GST_PAD_CAPS (GST_BASE_TRANSFORM_SRC_PAD (resample)), &outbuf);
-  if (G_UNLIKELY (res != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (resample, "failed allocating buffer of %d bytes",
-        outsize);
-    return;
-  }
+  outbuf = gst_buffer_new_and_alloc (outsize);
+  gst_buffer_set_caps (outbuf,
+      GST_PAD_CAPS (GST_BASE_TRANSFORM_SRC_PAD (resample)));
 
   data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
 

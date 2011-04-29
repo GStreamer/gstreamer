@@ -331,8 +331,6 @@ static gboolean gst_base_text_overlay_video_event (GstPad * pad,
     GstEvent * event);
 static GstFlowReturn gst_base_text_overlay_video_chain (GstPad * pad,
     GstBuffer * buffer);
-static GstFlowReturn gst_base_text_overlay_video_bufferalloc (GstPad * pad,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buffer);
 
 static gboolean gst_base_text_overlay_text_event (GstPad * pad,
     GstEvent * event);
@@ -622,8 +620,6 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_video_event));
   gst_pad_set_chain_function (overlay->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_video_chain));
-  gst_pad_set_bufferalloc_function (overlay->video_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_text_overlay_video_bufferalloc));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->video_sinkpad);
 
   template =
@@ -2267,28 +2263,6 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
 
   gst_object_unref (overlay);
 
-  return ret;
-}
-
-static GstFlowReturn
-gst_base_text_overlay_video_bufferalloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buffer)
-{
-  GstBaseTextOverlay *overlay =
-      GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
-  GstFlowReturn ret = GST_FLOW_WRONG_STATE;
-  GstPad *allocpad;
-
-  GST_OBJECT_LOCK (overlay);
-  allocpad = overlay->srcpad ? gst_object_ref (overlay->srcpad) : NULL;
-  GST_OBJECT_UNLOCK (overlay);
-
-  if (allocpad) {
-    ret = gst_pad_alloc_buffer (allocpad, offset, size, caps, buffer);
-    gst_object_unref (allocpad);
-  }
-
-  gst_object_unref (overlay);
   return ret;
 }
 

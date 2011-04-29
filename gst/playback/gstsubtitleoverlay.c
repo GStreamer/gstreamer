@@ -2099,7 +2099,6 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_getcaps));
   gst_pad_set_acceptcaps_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_acceptcaps));
-  gst_pad_set_bufferalloc_function (self->subtitle_sinkpad, NULL);
 
   proxypad = NULL;
   it = gst_pad_iterate_internal_links (self->subtitle_sinkpad);

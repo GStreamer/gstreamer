@@ -551,26 +551,6 @@ done:
 }
 
 static GstFlowReturn
-gst_stream_synchronizer_sink_bufferalloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf)
-{
-  GstPad *opad;
-  GstFlowReturn ret = GST_FLOW_ERROR;
-
-  GST_LOG_OBJECT (pad, "Allocating buffer: size=%u", size);
-
-  opad = gst_stream_get_other_pad_from_pad (pad);
-  if (opad) {
-    ret = gst_pad_alloc_buffer (opad, offset, size, caps, buf);
-    gst_object_unref (opad);
-  }
-
-  GST_LOG_OBJECT (pad, "Allocation: %s", gst_flow_get_name (ret));
-
-  return ret;
-}
-
-static GstFlowReturn
 gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstStreamSynchronizer *self =
@@ -727,8 +707,6 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_sink_event));
   gst_pad_set_chain_function (stream->sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_sink_chain));
-  gst_pad_set_bufferalloc_function (stream->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_stream_synchronizer_sink_bufferalloc));
 
   tmp = g_strdup_printf ("src_%d", self->current_stream_number);
   stream->srcpad = gst_pad_new_from_static_template (&srctemplate, tmp);

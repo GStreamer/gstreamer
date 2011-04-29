@@ -103,8 +103,6 @@ static void gst_selector_pad_reset (GstSelectorPad * pad);
 static gboolean gst_selector_pad_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_selector_pad_getcaps (GstPad * pad);
 static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
-static GstFlowReturn gst_selector_pad_bufferalloc (GstPad * pad,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 
 enum
 {
@@ -310,48 +308,6 @@ gst_selector_pad_getcaps (GstPad * pad)
   gst_object_unref (sel);
 
   return caps;
-}
-
-static GstFlowReturn
-gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf)
-{
-  GstStreamSelector *sel;
-  GstFlowReturn result;
-  GstPad *active_sinkpad;
-
-  sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
-
-  active_sinkpad = gst_stream_selector_activate_sinkpad (sel, pad);
-
-  /* Fallback allocation for buffers from pads except the selected one */
-  if (pad != active_sinkpad) {
-    GST_DEBUG_OBJECT (sel,
-        "Pad %s:%s is not selected. Performing fallback allocation",
-        GST_DEBUG_PAD_NAME (pad));
-
-    *buf = NULL;
-    result = GST_FLOW_OK;
-  } else {
-    result = gst_pad_alloc_buffer (sel->srcpad, offset, size, caps, buf);
-
-    /* FIXME: HACK. If buffer alloc returns not-linked, perform a fallback
-     * allocation.  This should NOT be necessary, because playbin should
-     * properly block the source pad from running until it's finished hooking 
-     * everything up, but playbin needs refactoring first. */
-    if (result == GST_FLOW_NOT_LINKED) {
-      GST_DEBUG_OBJECT (sel,
-          "No peer pad yet - performing fallback allocation for pad %s:%s",
-          GST_DEBUG_PAD_NAME (pad));
-
-      *buf = NULL;
-      result = GST_FLOW_OK;
-    }
-  }
-
-  gst_object_unref (sel);
-
-  return result;
 }
 
 static GstFlowReturn
@@ -719,8 +675,6 @@ gst_stream_selector_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_selector_pad_chain));
   gst_pad_set_iterate_internal_links_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_selector_pad_iterate_linked_pads));
-  gst_pad_set_bufferalloc_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_selector_pad_bufferalloc));
 
   gst_pad_set_active (sinkpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (sel), sinkpad);

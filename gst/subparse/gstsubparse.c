@@ -1483,37 +1483,34 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
       guint subtitle_len = strlen (subtitle);
 
       /* +1 for terminating NUL character */
-      ret = gst_pad_alloc_buffer_and_set_caps (self->srcpad,
-          GST_BUFFER_OFFSET_NONE, subtitle_len + 1,
-          GST_PAD_CAPS (self->srcpad), &buf);
+      buf = gst_buffer_new_and_alloc (subtitle_len + 1);
+      gst_buffer_set_caps (buf, GST_PAD_CAPS (self->srcpad));
 
-      if (ret == GST_FLOW_OK) {
-        /* copy terminating NUL character as well */
-        gst_buffer_fill (buf, 0, subtitle, subtitle_len + 1);
-        gst_buffer_set_size (buf, subtitle_len);
+      /* copy terminating NUL character as well */
+      gst_buffer_fill (buf, 0, subtitle, subtitle_len + 1);
+      gst_buffer_set_size (buf, subtitle_len);
 
-        GST_BUFFER_TIMESTAMP (buf) = self->state.start_time;
-        GST_BUFFER_DURATION (buf) = self->state.duration;
+      GST_BUFFER_TIMESTAMP (buf) = self->state.start_time;
+      GST_BUFFER_DURATION (buf) = self->state.duration;
 
-        /* in some cases (e.g. tmplayer) we can only determine the duration
-         * of a text chunk from the timestamp of the next text chunk; in those
-         * cases, we probably want to limit the duration to something
-         * reasonable, so we don't end up showing some text for e.g. 40 seconds
-         * just because nothing else is being said during that time */
-        if (self->state.max_duration > 0 && GST_BUFFER_DURATION_IS_VALID (buf)) {
-          if (GST_BUFFER_DURATION (buf) > self->state.max_duration)
-            GST_BUFFER_DURATION (buf) = self->state.max_duration;
-        }
-
-        gst_segment_set_last_stop (&self->segment, GST_FORMAT_TIME,
-            self->state.start_time);
-
-        GST_DEBUG_OBJECT (self, "Sending text '%s', %" GST_TIME_FORMAT " + %"
-            GST_TIME_FORMAT, subtitle, GST_TIME_ARGS (self->state.start_time),
-            GST_TIME_ARGS (self->state.duration));
-
-        ret = gst_pad_push (self->srcpad, buf);
+      /* in some cases (e.g. tmplayer) we can only determine the duration
+       * of a text chunk from the timestamp of the next text chunk; in those
+       * cases, we probably want to limit the duration to something
+       * reasonable, so we don't end up showing some text for e.g. 40 seconds
+       * just because nothing else is being said during that time */
+      if (self->state.max_duration > 0 && GST_BUFFER_DURATION_IS_VALID (buf)) {
+        if (GST_BUFFER_DURATION (buf) > self->state.max_duration)
+          GST_BUFFER_DURATION (buf) = self->state.max_duration;
       }
+
+      gst_segment_set_last_stop (&self->segment, GST_FORMAT_TIME,
+          self->state.start_time);
+
+      GST_DEBUG_OBJECT (self, "Sending text '%s', %" GST_TIME_FORMAT " + %"
+          GST_TIME_FORMAT, subtitle, GST_TIME_ARGS (self->state.start_time),
+          GST_TIME_ARGS (self->state.duration));
+
+      ret = gst_pad_push (self->srcpad, buf);
 
       /* move this forward (the tmplayer parser needs this) */
       if (self->state.duration != GST_CLOCK_TIME_NONE)

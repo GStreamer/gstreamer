@@ -913,11 +913,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
       size);
 
   /* alloc buffer for it */
-  result =
-      gst_pad_alloc_buffer_and_set_caps (vd->srcpad, GST_BUFFER_OFFSET_NONE,
-      size, GST_PAD_CAPS (vd->srcpad), &out);
-  if (G_UNLIKELY (result != GST_FLOW_OK))
-    goto done;
+  out = gst_buffer_new_and_alloc (size);
+  gst_buffer_set_caps (out, GST_PAD_CAPS (vd->srcpad));
 
   /* get samples ready for reading now, should be sample_count */
 #ifdef USE_TREMOLO

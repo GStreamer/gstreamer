@@ -588,8 +588,6 @@ gst_visual_src_query (GstPad * pad, GstQuery * query)
 static GstFlowReturn
 get_buffer (GstVisual * visual, GstBuffer ** outbuf)
 {
-  GstFlowReturn ret;
-
   /* we don't know an output format yet, pick one */
   if (GST_PAD_CAPS (visual->srcpad) == NULL) {
     if (!gst_vis_src_negotiate (visual))
@@ -599,17 +597,8 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
   GST_DEBUG_OBJECT (visual, "allocating output buffer with caps %"
       GST_PTR_FORMAT, GST_PAD_CAPS (visual->srcpad));
 
-  /* now allocate a buffer with the last negotiated format. 
-   * Downstream could renegotiate a new format, which will trigger
-   * our setcaps function on the source pad. */
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (visual->srcpad,
-      GST_BUFFER_OFFSET_NONE, visual->outsize,
-      GST_PAD_CAPS (visual->srcpad), outbuf);
-
-  /* no buffer allocated, we don't care why. */
-  if (ret != GST_FLOW_OK)
-    return ret;
+  *outbuf = gst_buffer_new_and_alloc (visual->outsize);
+  gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (visual->srcpad));
 
   return GST_FLOW_OK;
 }

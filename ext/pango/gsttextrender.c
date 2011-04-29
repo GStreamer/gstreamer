@@ -505,12 +505,8 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   }
 
   GST_DEBUG ("Allocating buffer WxH = %dx%d", render->width, render->height);
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (render->srcpad, GST_BUFFER_OFFSET_NONE,
-      render->width * render->height * 4, caps, &outbuf);
-
-  if (ret != GST_FLOW_OK)
-    goto done;
+  outbuf = gst_buffer_new_and_alloc (render->width * render->height * 4);
+  gst_buffer_set_caps (outbuf, caps);
 
   gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
   data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
