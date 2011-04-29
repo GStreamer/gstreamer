@@ -1410,6 +1410,8 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
       /* FIXME : combine flow returns */
       res = tsdemux_combine_flows (demux, stream, res);
       GST_DEBUG_OBJECT (stream->pad, "combined %s", gst_flow_get_name (res));
+    } else {
+      gst_buffer_list_unref (stream->current);
     }
   }
 
