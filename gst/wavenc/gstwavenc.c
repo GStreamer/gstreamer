@@ -179,6 +179,7 @@ gst_wavenc_init (GstWavEnc * wavenc, GstWavEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_wavenc_event));
   gst_pad_set_setcaps_function (wavenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavenc_sink_setcaps));
+  gst_pad_use_fixed_caps (wavenc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->sinkpad);
 
   wavenc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
