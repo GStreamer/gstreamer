@@ -1711,23 +1711,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         }
 
         /* will attach the caps to the buffer */
-        result =
-            gst_pad_alloc_buffer_and_set_caps (mad->srcpad, 0,
-            nsamples * mad->channels * 4, GST_PAD_CAPS (mad->srcpad),
-            &outbuffer);
-        if (result != GST_FLOW_OK) {
-          /* Head for the exit, dropping samples as we go */
-          GST_LOG ("Skipping frame synthesis due to pad_alloc return value");
-          goto_exit = TRUE;
-          goto skip_frame;
-        }
-
-        if (gst_buffer_get_size (outbuffer) != nsamples * mad->channels * 4) {
-          gst_buffer_unref (outbuffer);
-
-          outbuffer = gst_buffer_new_and_alloc (nsamples * mad->channels * 4);
-          gst_buffer_set_caps (outbuffer, GST_PAD_CAPS (mad->srcpad));
-        }
+        outbuffer = gst_buffer_new_and_alloc (nsamples * mad->channels * 4);
+        gst_buffer_set_caps (outbuffer, GST_PAD_CAPS (mad->srcpad));
 
         mad_synth_frame (&mad->synth, &mad->frame);
         left_ch = mad->synth.pcm.samples[0];
@@ -1793,7 +1778,6 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         }
       }
 
-    skip_frame:
       mad->total_samples += nsamples;
 
       /* we have a queued timestamp on the incoming buffer that we should
