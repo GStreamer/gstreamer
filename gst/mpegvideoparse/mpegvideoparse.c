@@ -434,6 +434,7 @@ mpegvideoparse_handle_picture (MpegVideoParse * mpegvideoparse, GstBuffer * buf)
           picture_type_name (hdr.pic_type));
       /* FIXME: Can use the picture type and number of fields to track a
        * timestamp */
+      break;
     }
     cur = mpeg_util_find_start_code (&sync_word, cur, end);
   }
