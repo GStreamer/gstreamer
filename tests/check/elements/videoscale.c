@@ -576,6 +576,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB));
 
+#if 0
 static GstFlowReturn
 gst_test_reverse_negotiation_sink_buffer_alloc (GstBaseSink * bsink,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf)
@@ -609,6 +610,7 @@ gst_test_reverse_negotiation_sink_buffer_alloc (GstBaseSink * bsink,
 
   return GST_FLOW_OK;
 }
+#endif
 
 static GstFlowReturn
 gst_test_reverse_negotiation_sink_render (GstBaseSink * bsink,
@@ -656,8 +658,10 @@ gst_test_reverse_negotiation_sink_class_init (GstTestReverseNegotiationSinkClass
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
+#if 0
   gstbase_sink_class->buffer_alloc =
       GST_DEBUG_FUNCPTR (gst_test_reverse_negotiation_sink_buffer_alloc);
+#endif
   gstbase_sink_class->render =
       GST_DEBUG_FUNCPTR (gst_test_reverse_negotiation_sink_render);
 }

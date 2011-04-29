@@ -460,6 +460,7 @@ GST_START_TEST (test_shutdown)
 
 GST_END_TEST;
 
+#if 0
 static GstFlowReturn
 live_switch_alloc_only_48000 (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf)
@@ -485,6 +486,7 @@ live_switch_alloc_only_48000 (GstPad * pad, guint64 offset,
 
   return GST_FLOW_OK;
 }
+#endif
 
 static GstCaps *
 live_switch_get_sink_caps (GstPad * pad)
@@ -511,8 +513,12 @@ live_switch_push (int rate, GstCaps * caps)
   gst_caps_set_simple (desired, "rate", G_TYPE_INT, rate, NULL);
   gst_pad_set_caps (mysrcpad, desired);
 
+#if 0
   fail_unless (gst_pad_alloc_buffer_and_set_caps (mysrcpad,
           GST_BUFFER_OFFSET_NONE, rate * 4, desired, &inbuffer) == GST_FLOW_OK);
+#endif
+  inbuffer = gst_buffer_new_and_alloc (rate * 4);
+  gst_buffer_set_caps (inbuffer, desired);
 
   /* When the basetransform hits the non-configured case it always
    * returns a buffer with exactly the same caps as we requested so the actual
@@ -560,7 +566,7 @@ GST_START_TEST (test_live_switch)
    * rate 48000- and can only allocate buffers for that rate, but if someone
    * tries to get a buffer with a rate higher then 48000 tries to renegotiate
    * */
-  gst_pad_set_bufferalloc_function (mysinkpad, live_switch_alloc_only_48000);
+  //gst_pad_set_bufferalloc_function (mysinkpad, live_switch_alloc_only_48000);
   gst_pad_set_getcaps_function (mysinkpad, live_switch_get_sink_caps);
 
   gst_pad_use_fixed_caps (mysrcpad);
