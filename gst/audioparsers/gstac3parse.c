@@ -164,12 +164,20 @@ static gboolean gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
 static GstFlowReturn gst_ac3_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
-GST_BOILERPLATE (GstAc3Parse, gst_ac3_parse, GstBaseParse, GST_TYPE_BASE_PARSE);
+#define gst_ac3_parse_parent_class parent_class
+G_DEFINE_TYPE (GstAc3Parse, gst_ac3_parse, GST_TYPE_BASE_PARSE);
 
 static void
-gst_ac3_parse_base_init (gpointer klass)
+gst_ac3_parse_class_init (GstAc3ParseClass * klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (ac3_parse_debug, "ac3parse", 0,
+      "AC3 audio stream parser");
+
+  object_class->finalize = gst_ac3_parse_finalize;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -179,18 +187,6 @@ gst_ac3_parse_base_init (gpointer klass)
   gst_element_class_set_details_simple (element_class,
       "AC3 audio stream parser", "Codec/Parser/Audio",
       "AC3 parser", "Tim-Philipp Müller <tim centricular net>");
-}
-
-static void
-gst_ac3_parse_class_init (GstAc3ParseClass * klass)
-{
-  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  GST_DEBUG_CATEGORY_INIT (ac3_parse_debug, "ac3parse", 0,
-      "AC3 audio stream parser");
-
-  object_class->finalize = gst_ac3_parse_finalize;
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_ac3_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_ac3_parse_stop);
@@ -208,7 +204,7 @@ gst_ac3_parse_reset (GstAc3Parse * ac3parse)
 }
 
 static void
-gst_ac3_parse_init (GstAc3Parse * ac3parse, GstAc3ParseClass * klass)
+gst_ac3_parse_init (GstAc3Parse * ac3parse)
 {
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (ac3parse), 64 * 2);
   gst_ac3_parse_reset (ac3parse);

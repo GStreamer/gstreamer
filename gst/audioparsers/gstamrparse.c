@@ -83,23 +83,21 @@ gboolean gst_amr_parse_check_valid_frame (GstBaseParse * parse,
 GstFlowReturn gst_amr_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (amrparse_debug, "amrparse", 0, \
-                             "AMR-NB audio stream parser");
-
-GST_BOILERPLATE_FULL (GstAmrParse, gst_amr_parse, GstBaseParse,
-    GST_TYPE_BASE_PARSE, _do_init);
-
+G_DEFINE_TYPE (GstAmrParse, gst_amr_parse, GST_TYPE_BASE_PARSE);
 
 /**
- * gst_amr_parse_base_init:
- * @klass: #GstElementClass.
+ * gst_amr_parse_class_init:
+ * @klass: GstAmrParseClass.
  *
  */
 static void
-gst_amr_parse_base_init (gpointer klass)
+gst_amr_parse_class_init (GstAmrParseClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (amrparse_debug, "amrparse", 0,
+      "AMR-NB audio stream parser");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -110,18 +108,6 @@ gst_amr_parse_base_init (gpointer klass)
       "AMR audio stream parser", "Codec/Parser/Audio",
       "Adaptive Multi-Rate audio parser",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-}
-
-
-/**
- * gst_amr_parse_class_init:
- * @klass: GstAmrParseClass.
- *
- */
-static void
-gst_amr_parse_class_init (GstAmrParseClass * klass)
-{
-  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_amr_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_amr_parse_stop);
@@ -139,7 +125,7 @@ gst_amr_parse_class_init (GstAmrParseClass * klass)
  *
  */
 static void
-gst_amr_parse_init (GstAmrParse * amrparse, GstAmrParseClass * klass)
+gst_amr_parse_init (GstAmrParse * amrparse)
 {
   /* init rest */
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (amrparse), 62);
@@ -270,14 +256,17 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
   GstBuffer *buffer;
-  const guint8 *data;
+  guint8 *data;
+  gsize size;
   gint fsize, mode, dsize;
   GstAmrParse *amrparse;
+  gboolean ret = FALSE;
 
   amrparse = GST_AMR_PARSE (parse);
   buffer = frame->buffer;
-  data = GST_BUFFER_DATA (buffer);
-  dsize = GST_BUFFER_SIZE (buffer);
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  dsize = size;
 
   GST_LOG ("buffer: %d bytes", dsize);
 
@@ -291,7 +280,7 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
     }
     /* We return FALSE, so this frame won't get pushed forward. Instead,
        the "skip" value is set, so next time we will receive a valid frame. */
-    return FALSE;
+    goto done;
   }
 
   /* Does this look like a possible frame header candidate? */
@@ -311,12 +300,16 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
         (!GST_BASE_PARSE_LOST_SYNC (parse) || GST_BASE_PARSE_DRAINING (parse)
             || (dsize > fsize && (data[fsize] & 0x83) == 0))) {
       *framesize = fsize;
-      return TRUE;
+      ret = TRUE;
+      goto done;
     }
   }
-
   GST_LOG ("sync lost");
-  return FALSE;
+
+done:
+  gst_buffer_unmap (buffer, data, size);
+
+  return ret;
 }
 
 
