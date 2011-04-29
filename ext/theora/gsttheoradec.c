@@ -796,6 +796,52 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 }
 
 static GstFlowReturn
+theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps)
+{
+  GstQuery *query;
+  GstBufferPool *pool = NULL;
+  guint alignment, prefix, size;
+
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (caps, TRUE);
+
+  if (gst_pad_peer_query (dec->srcpad, query)) {
+    GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_allocation_params (query, &alignment, &prefix, &size,
+        &pool);
+  } else {
+    GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
+    alignment = 0;
+    prefix = 0;
+    size = gst_video_format_get_size (dec->format, dec->width, dec->height);
+  }
+
+  if (pool == NULL) {
+    GstStructure *config;
+
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_buffer_pool_new ();
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (config, caps, size, 0, 0, prefix, 0, alignment);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  if (dec->pool)
+    gst_object_unref (dec->pool);
+  dec->pool = pool;
+
+  /* FIXME, we can check if downstream supports clipping and/or video
+   * metadata. */
+
+  /* and activate */
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
 theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
 {
   GstCaps *caps;
@@ -837,18 +883,24 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
       dec->info.pic_width, dec->info.pic_height,
       dec->info.pic_x, dec->info.pic_y);
 
-  if (dec->info.pixel_fmt == TH_PF_420) {
-    dec->output_bpp = 12;       /* Average bits per pixel. */
-    fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
-  } else if (dec->info.pixel_fmt == TH_PF_422) {
-    dec->output_bpp = 16;
-    fourcc = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
-  } else if (dec->info.pixel_fmt == TH_PF_444) {
-    dec->output_bpp = 24;
-    fourcc = GST_MAKE_FOURCC ('Y', '4', '4', '4');
-  } else {
-    GST_ERROR_OBJECT (dec, "Invalid pixel format %d", dec->info.pixel_fmt);
-    return GST_FLOW_ERROR;
+  switch (dec->info.pixel_fmt) {
+    case TH_PF_444:
+      dec->output_bpp = 24;
+      dec->format = GST_VIDEO_FORMAT_Y444;
+      fourcc = GST_MAKE_FOURCC ('Y', '4', '4', '4');
+      break;
+    case TH_PF_420:
+      dec->output_bpp = 12;     /* Average bits per pixel. */
+      dec->format = GST_VIDEO_FORMAT_I420;
+      fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
+      break;
+    case TH_PF_422:
+      dec->output_bpp = 16;
+      dec->format = GST_VIDEO_FORMAT_Y42B;
+      fourcc = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
+      break;
+    default:
+      goto invalid_format;
   }
 
   if (dec->crop) {
@@ -909,6 +961,10 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   gst_pad_set_caps (dec->srcpad, caps);
   gst_caps_unref (caps);
 
+  /* negotiate a bufferpool */
+  if ((ret = theora_negotiate_pool (dec, caps)) != GST_FLOW_OK)
+    goto no_bufferpool;
+
   dec->have_header = TRUE;
 
   if (dec->pendingevents) {
@@ -925,6 +981,17 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   }
 
   return ret;
+
+  /* ERRORS */
+invalid_format:
+  {
+    GST_ERROR_OBJECT (dec, "Invalid pixel format %d", dec->info.pixel_fmt);
+    return GST_FLOW_ERROR;
+  }
+no_bufferpool:
+  {
+    return ret;
+  }
 }
 
 static GstFlowReturn
@@ -1043,39 +1110,31 @@ static GstFlowReturn
 theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
 {
   gint width, height, stride;
+  GstFlowReturn result;
   int i, plane;
-  GstVideoFormat format;
   guint8 *dest, *src;
   gsize size;
   guint8 *data;
-  guint vsize;
 
-  switch (dec->info.pixel_fmt) {
-    case TH_PF_444:
-      format = GST_VIDEO_FORMAT_Y444;
-      break;
-    case TH_PF_420:
-      format = GST_VIDEO_FORMAT_I420;
-      break;
-    case TH_PF_422:
-      format = GST_VIDEO_FORMAT_Y42B;
-      break;
-    default:
-      g_assert_not_reached ();
-  }
+  result = gst_buffer_pool_acquire_buffer (dec->pool, out, NULL);
+  if (G_UNLIKELY (result != GST_FLOW_OK))
+    goto no_buffer;
 
-  vsize = gst_video_format_get_size (format, dec->width, dec->height);
-  *out = gst_buffer_new_and_alloc (vsize);
   gst_buffer_set_caps (*out, GST_PAD_CAPS (dec->srcpad));
 
   data = gst_buffer_map (*out, &size, NULL, GST_MAP_WRITE);
 
-  for (plane = 0; plane < 3; plane++) {
-    width = gst_video_format_get_component_width (format, plane, dec->width);
-    height = gst_video_format_get_component_height (format, plane, dec->height);
-    stride = gst_video_format_get_row_stride (format, plane, dec->width);
+  /* FIXME, we can do things slightly more efficient when we know that
+   * downstream understands clipping and video metadata */
 
-    dest = data + gst_video_format_get_component_offset (format,
+  for (plane = 0; plane < 3; plane++) {
+    width =
+        gst_video_format_get_component_width (dec->format, plane, dec->width);
+    height =
+        gst_video_format_get_component_height (dec->format, plane, dec->height);
+    stride = gst_video_format_get_row_stride (dec->format, plane, dec->width);
+
+    dest = data + gst_video_format_get_component_offset (dec->format,
         plane, dec->width, dec->height);
     src = buf[plane].data;
     src += ((height == dec->height) ? dec->offset_y : dec->offset_y / 2)
@@ -1092,6 +1151,14 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   gst_buffer_unmap (*out, data, size);
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
+        gst_flow_get_name (result));
+    return result;
+  }
 }
 
 static GstFlowReturn
@@ -1525,6 +1592,11 @@ theora_dec_change_state (GstElement * element, GstStateChange transition)
       th_decode_free (dec->decoder);
       dec->decoder = NULL;
       gst_theora_dec_reset (dec);
+      if (dec->pool) {
+        gst_buffer_pool_set_active (dec->pool, FALSE);
+        gst_object_unref (dec->pool);
+        dec->pool = NULL;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

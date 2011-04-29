@@ -27,6 +27,7 @@
 #include <gst/gst.h>
 #include <theora/theoradec.h>
 #include <string.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -59,7 +60,6 @@ struct _GstTheoraDec
 
   /* theora decoder state */
   th_dec_ctx *decoder;
-  //theora_state state;
   th_setup_info *setup;
   th_info info;
   th_comment comment;
@@ -69,9 +69,11 @@ struct _GstTheoraDec
   GstClockTime last_timestamp;
   guint64 frame_nr;
   gboolean need_keyframe;
+  GstVideoFormat format;
   gint width, height;
   gint offset_x, offset_y;
   gint output_bpp;
+  GstBufferPool *pool;
 
   /* telemetry debuging options */
   gint telemetry_mv;
