@@ -1083,7 +1083,8 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
     } else if (base->is_pes[packet.pid]) {
       /* push the packet downstream */
       res = mpegts_base_push (base, &packet, NULL);
-    }
+    } else
+      gst_buffer_unref (packet.buffer);
 
   next:
     mpegts_packetizer_clear_packet (base->packetizer, &packet);
