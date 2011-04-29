@@ -429,6 +429,7 @@ mpegts_base_free_program (MpegTSBaseProgram * program)
   for (i = 0; i < 0x2000; i++)
     if (program->streams[i])
       mpegts_base_free_stream (program->streams[i]);
+  g_free (program->streams);
 
   if (program->tags)
     gst_tag_list_free (program->tags);
