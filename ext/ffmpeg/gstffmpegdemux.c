@@ -1398,15 +1398,11 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
   else
     outsize = pkt.size;
 
-  stream->last_flow = gst_pad_alloc_buffer_and_set_caps (srcpad,
-      GST_CLOCK_TIME_NONE, outsize, GST_PAD_CAPS (srcpad), &outbuf);
+  outbuf = gst_buffer_new_and_alloc (outsize);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (srcpad));
 
   if ((ret = gst_ffmpegdemux_aggregated_flow (demux)) != GST_FLOW_OK)
     goto no_buffer;
-
-  /* If the buffer allocation failed, don't try sending it ! */
-  if (stream->last_flow != GST_FLOW_OK)
-    goto done;
 
   /* copy the data from packet into the target buffer
    * and do conversions for raw video packets */

@@ -166,31 +166,28 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstBuffer * inbuf)
       GST_FFMPEGDEINTERLACE (gst_pad_get_parent (pad));
   GstBuffer *outbuf = NULL;
   GstFlowReturn result;
+  guint8 *from_data, *to_data;
+  gsize from_size, to_size;
 
-  result =
-      gst_pad_alloc_buffer (deinterlace->srcpad, GST_BUFFER_OFFSET_NONE,
-      deinterlace->to_size, GST_PAD_CAPS (deinterlace->srcpad), &outbuf);
-  if (result == GST_FLOW_OK) {
-    guint8 *from_data, *to_data;
-    gsize from_size, to_size;
+  outbuf = gst_buffer_new_and_alloc (deinterlace->to_size);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (deinterlace->srcpad));
 
-    from_data = gst_buffer_map (inbuf, &from_size, NULL, GST_MAP_READ);
-    gst_ffmpeg_avpicture_fill (&deinterlace->from_frame, from_data,
-        deinterlace->pixfmt, deinterlace->width, deinterlace->height);
+  from_data = gst_buffer_map (inbuf, &from_size, NULL, GST_MAP_READ);
+  gst_ffmpeg_avpicture_fill (&deinterlace->from_frame, from_data,
+      deinterlace->pixfmt, deinterlace->width, deinterlace->height);
 
-    to_data = gst_buffer_map (outbuf, &to_size, NULL, GST_MAP_WRITE);
-    gst_ffmpeg_avpicture_fill (&deinterlace->to_frame, to_data,
-        deinterlace->pixfmt, deinterlace->width, deinterlace->height);
+  to_data = gst_buffer_map (outbuf, &to_size, NULL, GST_MAP_WRITE);
+  gst_ffmpeg_avpicture_fill (&deinterlace->to_frame, to_data,
+      deinterlace->pixfmt, deinterlace->width, deinterlace->height);
 
-    avpicture_deinterlace (&deinterlace->to_frame, &deinterlace->from_frame,
-        deinterlace->pixfmt, deinterlace->width, deinterlace->height);
-    gst_buffer_unmap (outbuf, to_data, to_size);
-    gst_buffer_unmap (inbuf, from_data, from_size);
+  avpicture_deinterlace (&deinterlace->to_frame, &deinterlace->from_frame,
+      deinterlace->pixfmt, deinterlace->width, deinterlace->height);
+  gst_buffer_unmap (outbuf, to_data, to_size);
+  gst_buffer_unmap (inbuf, from_data, from_size);
 
-    gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+  gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
-    result = gst_pad_push (deinterlace->srcpad, outbuf);
-  }
+  result = gst_pad_push (deinterlace->srcpad, outbuf);
 
   gst_buffer_unref (inbuf);
 

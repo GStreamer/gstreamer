@@ -165,9 +165,8 @@ gst_ffmpegdata_write (URLContext * h, const unsigned char *buf, int size)
   g_return_val_if_fail (h->flags != URL_RDONLY, -EIO);
 
   /* create buffer and push data further */
-  if (gst_pad_alloc_buffer_and_set_caps (info->pad,
-          info->offset, size, GST_PAD_CAPS (info->pad), &outbuf) != GST_FLOW_OK)
-    return 0;
+  outbuf = gst_buffer_new_and_alloc (size);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (info->pad));
 
   gst_buffer_fill (outbuf, 0, buf, size);
 

@@ -68,6 +68,7 @@ struct _GstFFMpegDec
   AVCodecContext *context;
   AVFrame *picture;
   gboolean opened;
+  GstBufferPool *pool;
   union
   {
     struct
@@ -136,9 +137,6 @@ struct _GstFFMpegDec
 
   /* reverse playback queue */
   GList *queued;
-
-  /* Can downstream allocate 16bytes aligned data. */
-  gboolean can_allocate_aligned;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -433,9 +431,6 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
   gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
-
-  /* We initially assume downstream can allocate 16 bytes aligned buffers */
-  ffmpegdec->can_allocate_aligned = TRUE;
 }
 
 static void
@@ -443,15 +438,14 @@ gst_ffmpegdec_finalize (GObject * object)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
 
-  if (ffmpegdec->context != NULL) {
+  if (ffmpegdec->context != NULL)
     av_free (ffmpegdec->context);
-    ffmpegdec->context = NULL;
-  }
 
-  if (ffmpegdec->picture != NULL) {
+  if (ffmpegdec->picture != NULL)
     av_free (ffmpegdec->picture);
-    ffmpegdec->picture = NULL;
-  }
+
+  if (ffmpegdec->pool)
+    gst_object_unref (ffmpegdec->pool);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -913,12 +907,10 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
   fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
       width, height);
 
-  if (!ffmpegdec->context->palctrl && ffmpegdec->can_allocate_aligned) {
+  if (!ffmpegdec->context->palctrl) {
     GST_LOG_OBJECT (ffmpegdec, "calling pad_alloc");
     /* no pallete, we can use the buffer size to alloc */
-    ret = gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad,
-        GST_BUFFER_OFFSET_NONE, fsize,
-        GST_PAD_CAPS (ffmpegdec->srcpad), outbuf);
+    ret = gst_buffer_pool_acquire_buffer (ffmpegdec->pool, outbuf, NULL);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto alloc_failed;
   } else {
@@ -1031,15 +1023,6 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
       /* FIXME, unmap me later */
       data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-      if (((uintptr_t) data) % 16) {
-        /* If buffer isn't 128-bit aligned, create a memaligned one ourselves */
-        gst_buffer_unmap (buf, data, size);
-        gst_buffer_unref (buf);
-        GST_DEBUG_OBJECT (ffmpegdec,
-            "Downstream can't allocate aligned buffers.");
-        ffmpegdec->can_allocate_aligned = FALSE;
-        return avcodec_default_get_buffer (context, picture);
-      }
 
       /* copy the right pointers and strides in the picture object */
       gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
@@ -1189,6 +1172,48 @@ no_par:
 }
 
 static gboolean
+gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
+{
+  GstQuery *query;
+  GstBufferPool *pool = NULL;
+  guint alignment, prefix, size;
+  GstStructure *config;
+
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (caps, TRUE);
+
+  if (gst_pad_peer_query (ffmpegdec->srcpad, query)) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_allocation_params (query, &alignment, &prefix, &size,
+        &pool);
+  } else {
+    alignment = 16;
+    prefix = 0;
+    size = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
+        ffmpegdec->context->width, ffmpegdec->context->height);
+  }
+
+  if (pool == NULL) {
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_buffer_pool_new ();
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set (config, caps, size, 0, 0, prefix, 0,
+      MAX (alignment, 16));
+  gst_buffer_pool_set_config (pool, config);
+
+  if (ffmpegdec->pool)
+    gst_object_unref (ffmpegdec->pool);
+  ffmpegdec->pool = pool;
+
+  /* and activate */
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  return TRUE;
+}
+
+static gboolean
 gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
 {
   GstFFMpegDecClass *oclass;
@@ -1297,6 +1322,10 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   if (!gst_pad_set_caps (ffmpegdec->srcpad, caps))
     goto caps_failed;
 
+  /* now figure out a bufferpool */
+  if (!gst_ffmpegdec_bufferpool (ffmpegdec, caps))
+    goto no_bufferpool;
+
   gst_caps_unref (caps);
 
   return TRUE;
@@ -1326,6 +1355,15 @@ caps_failed:
   {
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
         ("Could not set caps for ffmpeg decoder (%s), not fixed?",
+            oclass->in_plugin->name));
+    gst_caps_unref (caps);
+
+    return FALSE;
+  }
+no_bufferpool:
+  {
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
+        ("Could not create bufferpool for fmpeg decoder (%s)",
             oclass->in_plugin->name));
     gst_caps_unref (caps);
 
@@ -2782,7 +2820,11 @@ gst_ffmpegdec_change_state (GstElement * element, GstStateChange transition)
       g_free (ffmpegdec->padded);
       ffmpegdec->padded = NULL;
       ffmpegdec->padded_size = 0;
-      ffmpegdec->can_allocate_aligned = TRUE;
+      if (ffmpegdec->pool) {
+        gst_buffer_pool_set_active (ffmpegdec->pool, FALSE);
+        gst_object_unref (ffmpegdec->pool);
+      }
+      ffmpegdec->pool = NULL;
       break;
     default:
       break;
