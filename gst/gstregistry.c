@@ -1509,8 +1509,9 @@ scan_and_update_registry (GstRegistry * default_registry,
 
     /* plugins in the user's home directory take precedence over
      * system-installed ones */
-    home_plugins = g_build_filename (g_get_home_dir (),
-        ".gstreamer-" GST_MAJORMINOR, "plugins", NULL);
+    home_plugins = g_build_filename (g_get_user_data_dir (),
+        "gstreamer-" GST_MAJORMINOR, "plugins", NULL);
+
     GST_DEBUG ("scanning home plugins %s", home_plugins);
     changed |= gst_registry_scan_path_internal (&context, home_plugins);
     g_free (home_plugins);
@@ -1589,8 +1590,8 @@ ensure_current_registry (GError ** error)
   default_registry = gst_registry_get_default ();
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
   if (registry_file == NULL) {
-    registry_file = g_build_filename (g_get_home_dir (),
-        ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".bin", NULL);
+    registry_file = g_build_filename (g_get_user_cache_dir (),
+        "gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".bin", NULL);
   }
 
   if (!_gst_disable_registry_cache) {

@@ -12,6 +12,11 @@ The 0.11 porting guide
 * multifdsink, tcpclientsink, tcpclientsrc, tcpserversrc the protocol property
   is removed, use gdppay and gdpdepay.
 
+* Presets and plugins moved to $XDG_DATA_HOME/gstreamer-0.11/ root
+  directory. Registry moved to $XDG_CACHE_HOME/gstreamer-0.11/.
+  XDG_CACHE_HOME usually points to $HOME/.cache and XDG_DATA_HOME
+  usually is $HOME/.local/share/.
+
 * GstObject:
     GST_OBJECT_DISPOSING flag removed
     GST_OBJECT_IS_DISPOSING removed
