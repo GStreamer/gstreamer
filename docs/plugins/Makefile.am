@@ -190,9 +190,9 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/multifile/gstmultifilesrc.h \
 	$(top_srcdir)/gst/multipart/multipartdemux.h \
 	$(top_srcdir)/gst/multipart/multipartmux.h \
-	$(top_srcdir)/gst/quicktime/qtdemux.h \
-	$(top_srcdir)/gst/quicktime/gstqtmux.h \
-	$(top_srcdir)/gst/quicktime/gstqtmux-doc.h \
+	$(top_srcdir)/gst/isomp4/qtdemux.h \
+	$(top_srcdir)/gst/isomp4/gstqtmux.h \
+	$(top_srcdir)/gst/isomp4/gstqtmux-doc.h \
 	$(top_srcdir)/gst/replaygain/gstrganalysis.h \
 	$(top_srcdir)/gst/replaygain/gstrglimiter.h \
 	$(top_srcdir)/gst/replaygain/gstrgvolume.h \

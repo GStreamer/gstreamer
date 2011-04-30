@@ -98,7 +98,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstlevel.so
 %{_libdir}/gstreamer-%{majorminor}/libgstefence.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmulaw.so
-%{_libdir}/gstreamer-%{majorminor}/libgstquicktime.so
+%{_libdir}/gstreamer-%{majorminor}/libgstisomp4.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtpmanager.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtsp.so
