@@ -337,11 +337,10 @@ gst_chop_my_data_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      /* FIXME: I don't think it should be doing this in FLUSH_START */
-      gst_chop_my_data_process (chopmydata, TRUE);
       res = gst_pad_push_event (chopmydata->srcpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
+      gst_adapter_clear (chopmydata->adapter);
       res = gst_pad_push_event (chopmydata->srcpad, event);
       break;
     case GST_EVENT_NEWSEGMENT:
