@@ -3,7 +3,7 @@
   <description>transfer data over the network via DCCP.</description>
   <filename>../../gst/dccp/.libs/libgstdccp.so</filename>
   <basename>libgstdccp.so</basename>
-  <version>0.10.21.3</version>
+  <version>0.10.21.4</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>DCCP</package>

@@ -1,9 +1,9 @@
 <plugin>
   <name>y4mdec</name>
-  <description>FIXME</description>
+  <description>Demuxes/decodes YUV4MPEG streams</description>
   <filename>../../gst/y4m/.libs/libgsty4mdec.so</filename>
   <basename>libgsty4mdec.so</basename>
-  <version>0.10.21.3</version>
+  <version>0.10.21.4</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>

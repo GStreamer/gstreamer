@@ -1,15 +1,16 @@
 # Ukrainian translation to gst-plugins-bad
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
 #
+# Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.5\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2007-07-04 12:19+0200\n"
-"Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
+"POT-Creation-Date: 2011-04-30 18:56+0100\n"
+"PO-Revision-Date: 2011-04-30 14:00+0300\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
@@ -17,54 +18,57 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Lokalize 1.2\n"
 
 msgid "Could not read title information for DVD."
-msgstr ""
+msgstr "Не вдалося прочитати дані щодо записів на DVD."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Не вдається відкрити пристрій відтворення \"%s\"."
+msgstr "Не вдалося відкрити пристрій DVD «%s»."
 
 msgid "Failed to set PGC based seeking."
-msgstr ""
+msgstr "Не вдалося позиціювання на основі програмної послідовності."
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Не вдалося прочитати DVD. Причиною може бути те, що DVD зашифровано, а "
+"бібліотеку розшифрування DVD не встановлено."
 
 msgid "Could not read DVD."
-msgstr ""
+msgstr "Не вдалося прочитати DVD."
 
 msgid "No file name specified for writing."
-msgstr ""
+msgstr "Не вказано назви файла для запису."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Не вдається відкрити файл \"%s\" для читання."
+msgstr "Не вдалося відкрити файл «%s» для запису."
 
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Помилка внутрішнього потоку даних."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not write to file \"%s\"."
-msgstr "Не вдається відкрити пристрій відтворення \"%s\"."
+msgstr "Спроба запису до файла «%s» завершилася невдало"
 
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Помилка внутрішнього перенесення даних."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Пристрій \"%s\" не існує."
+msgstr "Пристрою «%s» не існує."
 
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Не вдається відкрити пристрій відтворення \"%s\"."
+msgstr "Не вдалося відкрити пристрій відтворення «%s»."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Не вдається отримати параметри пристрою відтворення \"%s\"."
+msgstr "Не вдалося отримати параметри пристрою відтворення «%s»."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Не вдається відкрити файл \"%s\" для читання."
+msgstr "Не вдалося відкрити файл «%s» для читання."

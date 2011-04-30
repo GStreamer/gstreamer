@@ -3,7 +3,7 @@
   <description>MPEG TS demuxer</description>
   <filename>../../gst/mpegtsdemux/.libs/libgstmpegtsdemux.so</filename>
   <basename>libgstmpegtsdemux.so</basename>
-  <version>0.10.21.3</version>
+  <version>0.10.21.4</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>

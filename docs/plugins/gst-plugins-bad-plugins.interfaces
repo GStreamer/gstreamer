@@ -2,6 +2,7 @@ GstBin GstChildProxy
 GstPipeline GstChildProxy
 GstCameraBin GstChildProxy GstImplementsInterface GstColorBalance GstTagSetter
 GstCameraBin2 GstChildProxy GstTagSetter
+GstFPSDisplaySink GstChildProxy
 GstGSettingsSwitchSink GstChildProxy
 GstGSettingsAudioSink GstChildProxy
 GstGSettingsVideoSink GstChildProxy
@@ -13,15 +14,14 @@ DvbBaseBin GstChildProxy GstURIHandler
 GstAutoConvert GstChildProxy
 GstAutoVideoConvert GstChildProxy
 GstSDPDemux GstChildProxy
-GstFPSDisplaySink GstChildProxy
 GstViewfinderBin GstChildProxy
 GstImageCaptureBin GstChildProxy
 GstBaseCameraSrc GstChildProxy
 GstWrapperCameraBinSrc GstChildProxy
-GstMpeg2enc GstPreset
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 VdpSink GstImplementsInterface GstNavigation GstXOverlay
+GstMpeg2enc GstPreset
 GstCeltEnc GstTagSetter GstPreset
 GstCDAudio GstURIHandler
 GstRTMPSrc GstURIHandler

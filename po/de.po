@@ -1,15 +1,15 @@
-# German po for gst-plugins-bad
+# German po for gst-plugins-bad 0.10.21.2
 # Copyright (C) 2007 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Andre Klapper <ak-47@gmx.net>, 2008.
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2009.
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2009-08-22 16:58+0200\n"
+"POT-Creation-Date: 2011-04-30 18:56+0100\n"
+"PO-Revision-Date: 2011-04-28 00:04+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -32,10 +32,12 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"DVD konnten nicht gelesen werden. Dies könnte daran liegen, dass die DVD "
+"verschlüsselt ist und eine Bibliothek zur DVD-Entschlüsselung nicht "
+"installiert ist."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Die Titelinformationen der DVD konnten nicht gelesen werden."
+msgstr "DVD konnten nicht gelesen werden."
 
 msgid "No file name specified for writing."
 msgstr "Kein Dateiname zum Schreiben angegeben."
@@ -71,11 +73,359 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "Datei »%s« konnte nicht zum Lesen geöffnet werden."
 
+#~ msgid "Internal clock error."
+#~ msgstr "Interner Zeitfehler."
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Audio-Gerät konnte nicht zum Regeln geöffnet werden."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Audio-Gerät konnte nicht zum Regeln geöffnet werden. Diese Version des "
+#~ "Open Sound System (OSS) wird nicht von diesem Element unterstützt."
+
+#~ msgid "Volume"
+#~ msgstr "Lautstärke"
+
+#~ msgid "Master"
+#~ msgstr "Hauptregler"
+
+#~ msgid "Front"
+#~ msgstr "Vorne"
+
+#~ msgid "Rear"
+#~ msgstr "Hinten"
+
+#~ msgid "Headphones"
+#~ msgstr "Kopfhörer"
+
+#~ msgid "Center"
+#~ msgstr "Mitte"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Surround"
+
+#~ msgid "Side"
+#~ msgstr "Seite"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Eingebauter Lautsprecher"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX-Ausgang 1"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX-Ausgang 2"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX-Ausgang"
+
+#~ msgid "Bass"
+#~ msgstr "Bass"
+
+#~ msgid "Treble"
+#~ msgstr "Höhen"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D-Tiefe"
+
+#~ msgid "3D Center"
+#~ msgstr "3D-Mitte"
+
+#~ msgid "3D Enhance"
+#~ msgstr "3D-Erweiterung"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefon"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "Line Out"
+#~ msgstr "Line-Ausgang"
+
+#~ msgid "Line In"
+#~ msgstr "Line-Eingang"
+
+#~ msgid "Internal CD"
+#~ msgstr "Interne CD"
+
+#~ msgid "Video In"
+#~ msgstr "Video-Eingang"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX-Eingang 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX-Eingang 2"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX-Eingang"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Record Gain"
+#~ msgstr "Aufnahmepegel"
+
+#~ msgid "Output Gain"
+#~ msgstr "Ausgabepegel"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Mikrofon-Boost"
+
+#~ msgid "Loopback"
+#~ msgstr "Schleife"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Zur Diagnose"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Bass-Boost"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Wiedergabe-Ports"
+
+#~ msgid "Input"
+#~ msgstr "Eingang"
+
+#~ msgid "Record Source"
+#~ msgstr "Aufnahmequelle"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Beobachtungsquelle"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Tastaturpiepsen"
+
+#~ msgid "Monitor"
+#~ msgstr "Beobachtung"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Stereo simulieren"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Surround-Ton"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Mikrofonpegel"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Lautsprecherquelle"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Mikrofonquelle"
+
+#~ msgid "Jack"
+#~ msgstr "Stecker"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Mitte / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Stereo-Mischer"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mono-Mischer"
+
+#~ msgid "Input Mix"
+#~ msgstr "Aufnahme-Mischer"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF-Eingang"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF-Ausgang"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Mikrofon 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Mikrofon 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Digitaler Ausgang"
+
+#~ msgid "Digital In"
+#~ msgstr "Digitaler Eingang"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Hörer"
+
+#~ msgid "Other"
+#~ msgstr "Andere"
+
+#~ msgid "None"
+#~ msgstr "Keine"
+
+#~ msgid "On"
+#~ msgstr "Ein"
+
+#~ msgid "Off"
+#~ msgstr "Aus"
+
+#~ msgid "Mute"
+#~ msgstr "Stumm"
+
+#~ msgid "Fast"
+#~ msgstr "Schnell"
+
+#~ msgid "Very Low"
+#~ msgstr "Sehr tief"
+
+#~ msgid "Low"
+#~ msgstr "Tief"
+
+#~ msgid "Medium"
+#~ msgstr "Mittel"
+
+#~ msgid "High"
+#~ msgstr "Hoch"
+
+#~ msgid "Very High"
+#~ msgstr "Sehr hoch"
+
+#~ msgid "Production"
+#~ msgstr "Produktion"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Mikrofon an der Front"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Line-Eingang an der Front"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Kopfhörer an der Front"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Line-Ausgang an der Front"
+
+#~ msgid "Green Connector"
+#~ msgstr "Grüner Stecker"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Rosa Stecker"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Blauer Stecker"
+
+#~ msgid "White Connector"
+#~ msgstr "Weißer Stecker"
+
+#~ msgid "Black Connector"
+#~ msgstr "Schwarzer Stecker"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Grauer Stecker"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Oranger Stecker"
+
+#~ msgid "Red Connector"
+#~ msgstr "Roter Stecker"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Gelber Stecker"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Grüner Frontstecker"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Rosa Frontstecker"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Blauer Frontstecker"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Weißer Frontstecker"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Schwarzer Frontstecker"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Grauer Frontstecker"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Oranger Frontstecker"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Roter Frontstecker"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Gelber Frontstecker"
+
+#~ msgid "Spread Output"
+#~ msgstr "Verteilter Ausgang"
+
+# Als Downmix wird im Bereich der Tontechnik ein manuelles oder automatisches Verfahren bezeichnet, bei dem der Ton eines Mehrkanal-Tonformats zu einer Fassung mit weniger unabhängigen Kanälen zusammengefasst wird. In den meisten Fällen ist dies eine Stereo-Fassung.
+#~ msgid "Downmix"
+#~ msgstr "Downmix"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Eingang des virtuellen Mischers"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Ausgang des virtuellen Mischers"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Kanäle des virtuellen Mischers"
+
+#~ msgid "%s Function"
+#~ msgstr "%s-Funktion"
+
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid "Internal clock error."
-#~ msgstr "Interner Zeitfehler."
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Das Gerät "
+#~ "wird von einer anderen Anwendung verwendet."
+
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden.  Sie haben "
+#~ "nicht die Berechtigungen zum Öffnen des Gerätes."
+
+#~ msgid "Could not open audio device for playback."
+#~ msgstr "Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. "
+
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Diese "
+#~ "Version des Open Sound System (OSS) wird nicht von diesem Element "
+#~ "unterstützt."
+
+#~ msgid "Playback is not supported by this audio device."
+#~ msgstr "Die Wiedergabe wird nicht von diesem Audio-Gerät unterstützt."
+
+#~ msgid "Audio playback error."
+#~ msgstr "Fehler bei Audio-Wiedergabe."
+
+#~ msgid "Recording is not supported by this audio device."
+#~ msgstr "Die Aufnahme wird nicht von diesem Audio-Gerät unterstützt."
+
+#~ msgid "Error recording from audio device."
+#~ msgstr "Fehler bei der Aufnahme vom Audio-Gerät."
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"

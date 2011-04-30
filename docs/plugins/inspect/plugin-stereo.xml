@@ -3,7 +3,7 @@
   <description>Muck with the stereo signal, enhance it&apos;s &apos;stereo-ness&apos;</description>
   <filename>../../gst/stereo/.libs/libgststereo.so</filename>
   <basename>libgststereo.so</basename>
-  <version>0.10.21.3</version>
+  <version>0.10.21.4</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>

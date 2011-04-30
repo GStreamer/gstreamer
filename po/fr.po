@@ -1,15 +1,15 @@
 # Translation of gst-plugins-bad to French
-# Copyright (C) 2003-2009 GStreamer core team
+# Copyright (C) 2003-2011 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-bad package.
 #
-# Claude Paroz <claude@2xlibre.net>, 2008-2009.
+# Claude Paroz <claude@2xlibre.net>, 2008-2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2009-09-22 20:27+0200\n"
+"POT-Creation-Date: 2011-04-30 18:56+0100\n"
+"PO-Revision-Date: 2011-04-28 09:13+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -31,10 +31,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Impossible de lire le DVD. Il se peut que le DVD soit chiffré et qu'aucune "
+"biblithèque de déchiffrement ne soit disponible."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Impossible de lire les informations de titre du DVD."
+msgstr "Impossible de lire le DVD."
 
 msgid "No file name specified for writing."
 msgstr "Aucun nom de fichier indiqué pour l'écriture."
@@ -68,9 +69,3 @@ msgstr "Impossible d'obtenir les paramètres du périphérique frontal « %s �
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossible d'ouvrir le fichier « %s » en lecture."
-
-#~ msgid "%s %d"
-#~ msgstr "%s %d"
-
-#~ msgid "Internal clock error."
-#~ msgstr "Erreur d'horloge interne."

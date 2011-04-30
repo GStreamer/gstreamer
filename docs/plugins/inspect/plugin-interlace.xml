@@ -3,7 +3,7 @@
   <description>Create an interlaced video stream</description>
   <filename>../../gst/interlace/.libs/libgstinterlace.so</filename>
   <basename>libgstinterlace.so</basename>
-  <version>0.10.21.3</version>
+  <version>0.10.21.4</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>

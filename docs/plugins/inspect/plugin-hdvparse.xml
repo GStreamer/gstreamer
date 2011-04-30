@@ -3,7 +3,7 @@
   <description>HDV private stream parser</description>
   <filename>../../gst/hdvparse/.libs/libgsthdvparse.so</filename>
   <basename>libgsthdvparse.so</basename>
-  <version>0.10.21.3</version>
+  <version>0.10.21.4</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>

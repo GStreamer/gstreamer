@@ -3,7 +3,7 @@
   <description>DirectFB video output plugin</description>
   <filename>../../ext/directfb/.libs/libgstdfbvideosink.so</filename>
   <basename>libgstdfbvideosink.so</basename>
-  <version>0.10.21.3</version>
+  <version>0.10.21.4</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>
