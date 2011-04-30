@@ -3,7 +3,7 @@
   <description>decoder bin</description>
   <filename>../../gst/playback/.libs/libgstdecodebin.so</filename>
   <basename>libgstdecodebin.so</basename>
-  <version>0.10.32.3</version>
+  <version>0.10.32.4</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins prerelease</package>

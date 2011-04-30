@@ -1,5 +1,5 @@
 # Danish translation of gst-plugins-base.
-# Copyright (C) 2009 gst, Mogens Jaeger, Joe Hansen.
+# Copyright (C) 2011 gst, Mogens Jaeger, Joe Hansen.
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
@@ -31,10 +31,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.31.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
-"PO-Revision-Date: 2011-01-07 16:38+0100\n"
+"POT-Creation-Date: 2011-04-30 17:11+0100\n"
+"PO-Revision-Date: 2011-04-28 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -359,13 +359,11 @@ msgstr "belysningstilstand for optagelse"
 msgid "The exposure mode used when capturing an image"
 msgstr "Belysningstilstanden brugt under optagelse af et billede"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "belysningstilstand for optagelse"
+msgstr "belysningskompensation for optagelse"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "Belysningstilstanden brugt under optagelse af et billede"
+msgstr "Belysningskompensationen brugt under optagelse af et billede"
 
 # "optagelsestype for optagelse af scene" /
 # "optagelsestype for sceneoptagelse" /

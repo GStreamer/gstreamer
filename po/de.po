@@ -1,16 +1,16 @@
-# German messages for gst-plugins-base 0.10.30.3
+# German messages for gst-plugins-base 0.10.32.2
 # Copyright © 2006 Karl Eichwalder
 # This file is distributed under the same license as the gst-plugins-base package.
 # Karl Eichwalder <ke@suse.de>, 2006.
 # Mario Blättermann <mariobl@gnome.org>, 2010.
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010.
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
-"PO-Revision-Date: 2010-10-30 20:41+0100\n"
+"POT-Creation-Date: 2011-04-30 17:11+0100\n"
+"PO-Revision-Date: 2011-04-28 00:04+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -337,13 +337,11 @@ msgstr "Belichtungsmodus der Aufnahme"
 msgid "The exposure mode used when capturing an image"
 msgstr "Der verwendete Belichtungsmodus bei Bildaufnahme"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "Belichtungsmodus der Aufnahme"
+msgstr "Belichtungskorrektur der Aufnahme"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "Der verwendete Belichtungsmodus bei Bildaufnahme"
+msgstr "Der verwendete Belichtungskorrektur bei Bildaufnahme"
 
 msgid "capturing scene capture type"
 msgstr "Motivwahl"
