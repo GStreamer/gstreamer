@@ -3,7 +3,7 @@
   <description>Plugin contains auto-detection plugins for video/audio in- and outputs</description>
   <filename>../../gst/autodetect/.libs/libgstautodetect.so</filename>
   <basename>libgstautodetect.so</basename>
-  <version>0.10.28.3</version>
+  <version>0.10.28.4</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins prerelease</package>

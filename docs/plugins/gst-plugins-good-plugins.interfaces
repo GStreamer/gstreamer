@@ -20,6 +20,7 @@ GstRgVolume GstChildProxy
 GstAspectRatioCrop GstChildProxy
 GstPulseSink GstStreamVolume GstImplementsInterface GstPropertyProbe
 GstOss4Sink GstStreamVolume GstPropertyProbe
+GstV4l2Sink GstImplementsInterface GstXOverlay GstNavigation GstColorBalance GstVideoOrientation GstPropertyProbe
 GstShout2send GstTagSetter
 GstUDPSink GstURIHandler
 GstDV1394Src GstURIHandler GstPropertyProbe
@@ -47,16 +48,16 @@ GstOssMixerElement GstImplementsInterface GstMixer
 GstV4l2Radio GstURIHandler GstImplementsInterface GstTuner GstPropertyProbe
 GstOss4Mixer GstImplementsInterface GstMixer GstPropertyProbe
 GstAviMux GstTagSetter
+GstMatroskaMux GstTagSetter
+GstWebMMux GstTagSetter
+GstDeinterlace GstChildProxy
+GstFlvMux GstTagSetter
 GstQTMux GstTagSetter GstTagXmpWriter
 GstMP4Mux GstTagSetter GstTagXmpWriter
 GstISMLMux GstTagSetter GstTagXmpWriter
 Gst3GPPMux GstTagSetter GstTagXmpWriter
 GstGPPMux GstTagSetter GstTagXmpWriter
 GstMJ2Mux GstTagSetter GstTagXmpWriter
-GstMatroskaMux GstTagSetter
-GstWebMMux GstTagSetter
-GstDeinterlace GstChildProxy
-GstFlvMux GstTagSetter
 GstVideoMixer GstChildProxy
 GstVideoMixer2 GstChildProxy
 GdkPixbuf GIcon

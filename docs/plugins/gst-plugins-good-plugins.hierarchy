@@ -44,6 +44,7 @@ GObject
         GstCACASink
         GstVideoSink
           GstGdkPixbufSink
+          GstV4l2Sink
         GstShout2send
         GstTest
         GstMultiFileSink
@@ -230,13 +231,6 @@ GObject
       GstRtpPtDemux
       GstRtpSession
       GstRtpSsrcDemux
-      GstQTDemux
-      GstQTMux
-      GstMP4Mux
-      GstISMLMux
-      Gst3GPPMux
-      GstGPPMux
-      GstMJ2Mux
       GstRndBufferSize
       GstCapsDebug
       GstEFence
@@ -273,6 +267,14 @@ GObject
       GstWavParse
       GstFlvDemux
       GstFlvMux
+      GstQTDemux
+      GstQTMux
+      GstMP4Mux
+      GstISMLMux
+      Gst3GPPMux
+      GstGPPMux
+      GstMJ2Mux
+      GstMonoscope
       GstICYDemux
       GstVideoMixer
       GstVideoMixer2
@@ -313,5 +315,7 @@ GInterface
   GstTuner
   GstColorBalance
   GstVideoOrientation
+  GstXOverlay
+  GstNavigation
   GstTagXmpWriter
   GIcon

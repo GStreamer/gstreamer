@@ -3,7 +3,7 @@
   <description>GOOM visualization filter</description>
   <filename>../../gst/goom/.libs/libgstgoom.so</filename>
   <basename>libgstgoom.so</basename>
-  <version>0.10.28.3</version>
+  <version>0.10.28.4</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins prerelease</package>

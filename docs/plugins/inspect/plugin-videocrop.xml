@@ -3,7 +3,7 @@
   <description>Crops video into a user-defined region</description>
   <filename>../../gst/videocrop/.libs/libgstvideocrop.so</filename>
   <basename>libgstvideocrop.so</basename>
-  <version>0.10.28.3</version>
+  <version>0.10.28.4</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins prerelease</package>

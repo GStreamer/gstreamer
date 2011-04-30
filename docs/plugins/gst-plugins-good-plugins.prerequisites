@@ -6,5 +6,6 @@ GstMixer GstImplementsInterface GstElement
 GstTuner GstImplementsInterface GstElement
 GstColorBalance GstImplementsInterface GstElement
 GstVideoOrientation GstImplementsInterface GstElement
+GstXOverlay GstImplementsInterface GstElement
 GstTagXmpWriter GstElement
 GIcon GObject

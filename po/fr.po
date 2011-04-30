@@ -1,16 +1,16 @@
 # Translation of gst-plugins-good to French
-# Copyright (C) 2003-2010 GStreamer core team
+# Copyright (C) 2003-2011 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Nicolas Velin <nicolas@velin.fr>, 2008.
-# Claude Paroz <claude@2xlibre.net>, 2008-2010.
+# Claude Paroz <claude@2xlibre.net>, 2008-2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 01:15+0000\n"
-"PO-Revision-Date: 2010-10-27 09:48+0200\n"
+"POT-Creation-Date: 2011-04-30 17:52+0100\n"
+"PO-Revision-Date: 2011-04-28 09:22+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -76,7 +76,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Ce fichier est corrompu et ne peut pas être lu."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Taille d'atome non valide."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Ce fichier n'est pas complet et ne peut donc pas être lu."
@@ -640,16 +640,16 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Impossible de définir l'entrée %d du périphérique %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Impossible d'obtenir l'entrée actuelle du périphérique « %s ». C'est peut-"
+"Impossible d'obtenir la sortie actuelle du périphérique « %s ». C'est peut-"
 "être un périphérique radio"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Impossible de définir l'entrée %d du périphérique %s."
+msgstr "Impossible de définir la sortie %d du périphérique %s."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
