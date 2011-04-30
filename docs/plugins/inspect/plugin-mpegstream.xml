@@ -3,7 +3,7 @@
   <description>MPEG system stream parser</description>
   <filename>../../gst/mpegstream/.libs/libgstmpegstream.so</filename>
   <basename>libgstmpegstream.so</basename>
-  <version>0.10.17.3</version>
+  <version>0.10.17.4</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins prerelease</package>

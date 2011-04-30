@@ -1,15 +1,15 @@
 # Translation of gst-plugins-ugly to French
-# Copyright (C) 2003-2008 GStreamer core team
+# Copyright (C) 2003-2011 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-ugly package.
 #
-# Claude Paroz <claude@2xlibre.net>, 2008.
+# Claude Paroz <claude@2xlibre.net>, 2008-2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
-"PO-Revision-Date: 2008-08-22 11:49+0200\n"
+"POT-Creation-Date: 2011-04-30 20:03+0100\n"
+"PO-Revision-Date: 2011-04-28 09:25+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -49,10 +49,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Impossible de lire le DVD. Il se peut que le DVD soit chiffré et qu'aucune "
+"bibliothèque de déchiffrement ne soit installée."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Impossible d'ouvrir le DVD"
+msgstr "Impossible de lire le DVD."
 
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
@@ -66,25 +67,13 @@ msgstr ""
 "Le débit binaire demandé de %d kbit/s pour la propriété « %s » n'est pas "
 "autorisé. Le débit binaire a été défini à %d kbits/s."
 
-#, fuzzy
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
-"La configuration du codeur LAME a échoué. Vérifiez vos paramètres de codage."
+"La configuration du codeur TwoLAME a échoué. Vérifiez vos paramètres de "
+"codage."
 
 msgid "This stream contains no data."
 msgstr "Ce flux ne contient aucune donnée."
 
 msgid "Internal data stream error."
 msgstr "Erreur interne de flux de données."
-
-#~ msgid "Invalid title information on DVD."
-#~ msgstr "Le DVD contient des informations de titre non valides."
-
-#~ msgid "Could not read title information for DVD."
-#~ msgstr "Impossible de lire les informations de titre sur le DVD."
-
-#~ msgid "Failed to open DVD device '%s'."
-#~ msgstr "L'ouverture du lecteur DVD « %s » a échoué."
-
-#~ msgid "Failed to set PGC based seeking."
-#~ msgstr "La définition du positionnement basé sur PGC a échoué."
