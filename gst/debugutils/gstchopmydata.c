@@ -300,9 +300,15 @@ gst_chop_my_data_process (GstChopMyData * chopmydata, gboolean flush)
   }
 
   if (flush) {
-    buffer = gst_adapter_take_buffer (chopmydata->adapter,
-        gst_adapter_available (chopmydata->adapter));
-    ret = gst_pad_push (chopmydata->srcpad, buffer);
+    guint min_size = chopmydata->min_size;
+
+    while (gst_adapter_available (chopmydata->adapter) >= min_size) {
+      buffer = gst_adapter_take_buffer (chopmydata->adapter, min_size);
+      ret = gst_pad_push (chopmydata->srcpad, buffer);
+      if (ret != GST_FLOW_OK)
+        break;
+    }
+    gst_adapter_clear (chopmydata->adapter);
   }
 
   return ret;
