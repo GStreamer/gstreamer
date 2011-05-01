@@ -766,7 +766,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     }
   }
 
-  if (mux->duration != GST_CLOCK_TIME_NONE) {
+  if (!mux->streamable && mux->duration != GST_CLOCK_TIME_NONE) {
     gdouble d;
     d = gst_guint64_to_gdouble (mux->duration);
     d /= (gdouble) GST_SECOND;
