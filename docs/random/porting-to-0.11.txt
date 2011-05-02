@@ -150,6 +150,8 @@ The 0.11 porting guide
     GstBuffer and use the normal buffer API to get and merge the groups.
 
 * GstEvent
+    GST_EVENT_SRC is removed. Don't use this anymore.
+
 * GstQuery
     Boxed types derived from GstMiniObject.
 
