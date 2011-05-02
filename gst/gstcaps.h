@@ -49,20 +49,21 @@ typedef enum {
  * @GST_CAPS_INTERSECT_FIRST    : Keeps the first caps order.
  *
  * Modes of caps intersection
- * 
- * #GST_CAPS_INTERSECT_ZIG_ZAG tries to preserve overall order of both caps
+ *
+ * @GST_CAPS_INTERSECT_ZIG_ZAG tries to preserve overall order of both caps
  * by iterating on the caps' structures as the following matrix shows:
+ * |[
  *          caps1
  *       +-------------
  *       | 1  2  4  7
  * caps2 | 3  5  8 10
  *       | 6  9 11 12
- *
+ * ]|
  * Used when there is no explicit precedence of one caps over the other. e.g.
  * tee's sink pad getcaps function, it will probe its src pad peers' for their
  * caps and intersect them with this mode.
  *
- * #GST_CAPS_INTERSECT_FIRST is useful when an element wants to preserve
+ * @GST_CAPS_INTERSECT_FIRST is useful when an element wants to preserve
  * another element's caps priority order when intersecting with its own caps.
  * Example: If caps1 is [A, B, C] and caps2 is [E, B, D, A], the result
  * would be [A, B], maintaining the first caps priority on the intersection.
