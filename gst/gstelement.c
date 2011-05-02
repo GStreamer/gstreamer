@@ -206,7 +206,7 @@ gst_element_class_init (GstElementClass * klass)
    * usually be emitted from the context of the streaming thread. Also keep in
    * mind that if you add new elements to the pipeline in the signal handler
    * you will need to set them to the desired target state with
-   * gst_element_set() or gst_element_sync_state_with_parent().
+   * gst_element_set_state() or gst_element_sync_state_with_parent().
    */
   gst_element_signals[PAD_ADDED] =
       g_signal_new ("pad-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -2233,7 +2233,7 @@ interrupted:
  *
  * This function returns %GST_STATE_CHANGE_NO_PREROLL if the element
  * successfully changed its state but is not able to provide data yet.
- * This mostly happens for live sources that only produce data in 
+ * This mostly happens for live sources that only produce data in
  * %GST_STATE_PLAYING. While the state change return is equivalent to
  * %GST_STATE_CHANGE_SUCCESS, it is returned to the application to signal that
  * some sink elements might not be able to complete their state change because
