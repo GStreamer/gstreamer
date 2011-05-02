@@ -185,6 +185,11 @@ void       gst_base_audio_sink_set_alignment_threshold (GstBaseAudioSink * sink,
 GstClockTime
            gst_base_audio_sink_get_alignment_threshold (GstBaseAudioSink * sink);
 
+void       gst_base_audio_sink_set_discont_wait       (GstBaseAudioSink * sink,
+                                                       GstClockTime discont_wait);
+GstClockTime
+           gst_base_audio_sink_get_discont_wait       (GstBaseAudioSink * sink);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_AUDIO_SINK_H__ */
