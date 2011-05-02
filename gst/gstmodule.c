@@ -75,7 +75,8 @@ pygstminiobject_to_gvalue (GValue * value, PyObject * obj)
 {
   PyGstMiniObject *self = (PyGstMiniObject *) obj;
 
-  gst_value_set_mini_object (value, self->obj);
+  gst_value_set_mini_object (value, obj == Py_None ? NULL : self->obj);
+
   return 0;
 }
 
