@@ -427,8 +427,8 @@ gst_value_mini_object_copy (const GValue * src_value, GValue * dest_value)
 {
   if (src_value->data[0].v_pointer) {
     dest_value->data[0].v_pointer =
-        gst_mini_object_ref (GST_MINI_OBJECT_CAST (src_value->data[0].
-            v_pointer));
+        gst_mini_object_ref (GST_MINI_OBJECT_CAST (src_value->
+            data[0].v_pointer));
   } else {
     dest_value->data[0].v_pointer = NULL;
   }
@@ -544,7 +544,8 @@ gst_value_get_mini_object (const GValue * value)
  * @value:   a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
  *
  * Get the contents of a %GST_TYPE_MINI_OBJECT derived #GValue,
- * increasing its reference count.
+ * increasing its reference count. If the contents of the #GValue
+ * are %NULL, %NULL will be returned.
  *
  * Returns: (transfer full): mini object contents of @value
  *
@@ -555,7 +556,8 @@ gst_value_dup_mini_object (const GValue * value)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_MINI_OBJECT (value), NULL);
 
-  return gst_mini_object_ref (value->data[0].v_pointer);
+  return value->data[0].v_pointer ? gst_mini_object_ref (value->data[0].
+      v_pointer) : NULL;
 }
 
 
