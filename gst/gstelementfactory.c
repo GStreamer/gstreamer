@@ -597,7 +597,7 @@ gst_element_factory_get_documentation_uri (GstElementFactory * factory)
 }
 
 /**
- * gst_element_factory_get_documentation_uri:
+ * gst_element_factory_get_icon_name:
  * @factory: a #GstElementFactory
  *
  * Gets icon name for this factory if set.
