@@ -184,7 +184,7 @@ gst_event_type_get_flags (GstEventType type)
 {
   GstEventTypeFlags ret;
 
-  ret = type & ((1 << GST_EVENT_TYPE_SHIFT) - 1);
+  ret = type & ((1 << GST_EVENT_STICKY_SHIFT) - 1);
 
   return ret;
 }
@@ -207,10 +207,6 @@ _gst_event_free (GstEvent * event)
   GST_CAT_LOG (GST_CAT_EVENT, "freeing event %p type %s", event,
       GST_EVENT_TYPE_NAME (event));
 
-  if (GST_EVENT_SRC (event)) {
-    gst_object_unref (GST_EVENT_SRC (event));
-    GST_EVENT_SRC (event) = NULL;
-  }
   if (event->structure) {
     gst_structure_set_parent_refcount (event->structure, NULL);
     gst_structure_free (event->structure);
@@ -233,9 +229,6 @@ _gst_event_copy (GstEvent * event)
   GST_EVENT_TIMESTAMP (copy) = GST_EVENT_TIMESTAMP (event);
   GST_EVENT_SEQNUM (copy) = GST_EVENT_SEQNUM (event);
 
-  if (GST_EVENT_SRC (event)) {
-    GST_EVENT_SRC (copy) = gst_object_ref (GST_EVENT_SRC (event));
-  }
   if (event->structure) {
     copy->structure = gst_structure_copy (event->structure);
     gst_structure_set_parent_refcount (copy->structure,

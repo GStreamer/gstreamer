@@ -40,6 +40,7 @@ G_BEGIN_DECLS
  * @GST_EVENT_TYPE_DOWNSTREAM: Set if the event can travel downstream.
  * @GST_EVENT_TYPE_SERIALIZED: Set if the event should be serialized with data
  *                             flow.
+ * @GST_EVENT_TYPE_STICKY:     Set if the event is sticky on the pads.
  *
  * #GstEventTypeFlags indicate the aspects of the different #GstEventType
  * values. You can get the type flags of a #GstEventType with the
@@ -48,7 +49,8 @@ G_BEGIN_DECLS
 typedef enum {
   GST_EVENT_TYPE_UPSTREAM       = 1 << 0,
   GST_EVENT_TYPE_DOWNSTREAM     = 1 << 1,
-  GST_EVENT_TYPE_SERIALIZED     = 1 << 2
+  GST_EVENT_TYPE_SERIALIZED     = 1 << 2,
+  GST_EVENT_TYPE_STICKY         = 1 << 3
 } GstEventTypeFlags;
 
 /**
@@ -59,20 +61,24 @@ typedef enum {
 #define GST_EVENT_TYPE_BOTH \
     (GST_EVENT_TYPE_UPSTREAM | GST_EVENT_TYPE_DOWNSTREAM)
 
-#define GST_EVENT_TYPE_SHIFT    4
+#define GST_EVENT_STICKY_SHIFT  8
+#define GST_EVENT_NUM_SHIFT     16
 
 /**
  * GST_EVENT_MAKE_TYPE:
  * @num: the event number to create
+ * @idx: the index in the sticky array
  * @flags: the event flags
  *
  * when making custom event types, use this macro with the num and
  * the given flags
  */
-#define GST_EVENT_MAKE_TYPE(num,flags) \
-    (((num) << GST_EVENT_TYPE_SHIFT) | (flags))
+#define GST_EVENT_MAKE_TYPE(num,idx,flags) \
+    (((num) << GST_EVENT_NUM_SHIFT) | ((idx) << GST_EVENT_STICKY_SHIFT) | (flags))
 
 #define FLAG(name) GST_EVENT_TYPE_##name
+
+#define GST_EVENT_STICKY_IDX(ev)  ((GST_EVENT_TYPE(ev) >> GST_EVENT_STICKY_SHIFT) & 0xff)
 
 /**
  * GstEventType:
@@ -124,29 +130,29 @@ typedef enum {
  */
 /* NOTE: keep in sync with quark registration in gstevent.c */
 typedef enum {
-  GST_EVENT_UNKNOWN               = GST_EVENT_MAKE_TYPE (0, 0),
+  GST_EVENT_UNKNOWN               = GST_EVENT_MAKE_TYPE (0, 0, 0),
   /* bidirectional events */
-  GST_EVENT_FLUSH_START           = GST_EVENT_MAKE_TYPE (1, FLAG(BOTH)),
-  GST_EVENT_FLUSH_STOP            = GST_EVENT_MAKE_TYPE (2, FLAG(BOTH) | FLAG(SERIALIZED)),
+  GST_EVENT_FLUSH_START           = GST_EVENT_MAKE_TYPE (1, 0, FLAG(BOTH)),
+  GST_EVENT_FLUSH_STOP            = GST_EVENT_MAKE_TYPE (2, 0, FLAG(BOTH) | FLAG(SERIALIZED)),
   /* downstream serialized events */
-  GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (5, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_EVENT_NEWSEGMENT            = GST_EVENT_MAKE_TYPE (6, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (7, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (8, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (9, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (5, 0, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_NEWSEGMENT            = GST_EVENT_MAKE_TYPE (6, 1, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (7, 2, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (8, 3, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (9, 4, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   /* upstream events */
-  GST_EVENT_QOS                   = GST_EVENT_MAKE_TYPE (15, FLAG(UPSTREAM)),
-  GST_EVENT_SEEK                  = GST_EVENT_MAKE_TYPE (16, FLAG(UPSTREAM)),
-  GST_EVENT_NAVIGATION            = GST_EVENT_MAKE_TYPE (17, FLAG(UPSTREAM)),
-  GST_EVENT_LATENCY               = GST_EVENT_MAKE_TYPE (18, FLAG(UPSTREAM)),
-  GST_EVENT_STEP                  = GST_EVENT_MAKE_TYPE (19, FLAG(UPSTREAM)),
+  GST_EVENT_QOS                   = GST_EVENT_MAKE_TYPE (15, 0, FLAG(UPSTREAM)),
+  GST_EVENT_SEEK                  = GST_EVENT_MAKE_TYPE (16, 0, FLAG(UPSTREAM)),
+  GST_EVENT_NAVIGATION            = GST_EVENT_MAKE_TYPE (17, 0, FLAG(UPSTREAM)),
+  GST_EVENT_LATENCY               = GST_EVENT_MAKE_TYPE (18, 0, FLAG(UPSTREAM)),
+  GST_EVENT_STEP                  = GST_EVENT_MAKE_TYPE (19, 0, FLAG(UPSTREAM)),
 
   /* custom events start here */
-  GST_EVENT_CUSTOM_UPSTREAM       = GST_EVENT_MAKE_TYPE (32, FLAG(UPSTREAM)),
-  GST_EVENT_CUSTOM_DOWNSTREAM     = GST_EVENT_MAKE_TYPE (32, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_EVENT_CUSTOM_DOWNSTREAM_OOB = GST_EVENT_MAKE_TYPE (32, FLAG(DOWNSTREAM)),
-  GST_EVENT_CUSTOM_BOTH           = GST_EVENT_MAKE_TYPE (32, FLAG(BOTH) | FLAG(SERIALIZED)),
-  GST_EVENT_CUSTOM_BOTH_OOB       = GST_EVENT_MAKE_TYPE (32, FLAG(BOTH))
+  GST_EVENT_CUSTOM_UPSTREAM       = GST_EVENT_MAKE_TYPE (32, 0, FLAG(UPSTREAM)),
+  GST_EVENT_CUSTOM_DOWNSTREAM     = GST_EVENT_MAKE_TYPE (32, 0, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_EVENT_CUSTOM_DOWNSTREAM_OOB = GST_EVENT_MAKE_TYPE (32, 0, FLAG(DOWNSTREAM)),
+  GST_EVENT_CUSTOM_BOTH           = GST_EVENT_MAKE_TYPE (32, 0, FLAG(BOTH) | FLAG(SERIALIZED)),
+  GST_EVENT_CUSTOM_BOTH_OOB       = GST_EVENT_MAKE_TYPE (32, 0, FLAG(BOTH))
 } GstEventType;
 #undef FLAG
 
@@ -190,14 +196,6 @@ typedef struct _GstEvent GstEvent;
 #define GST_EVENT_TIMESTAMP(event)      (GST_EVENT_CAST(event)->timestamp)
 
 /**
- * GST_EVENT_SRC:
- * @event: the event to query
- *
- * The source #GstObject that generated this event.
- */
-#define GST_EVENT_SRC(event)            (GST_EVENT_CAST(event)->src)
-
-/**
  * GST_EVENT_SEQNUM:
  * @event: the event to query
  *
@@ -226,6 +224,13 @@ typedef struct _GstEvent GstEvent;
  * Check if an event is serialized with the data stream.
  */
 #define GST_EVENT_IS_SERIALIZED(ev)     !!(GST_EVENT_TYPE (ev) & GST_EVENT_TYPE_SERIALIZED)
+/**
+ * GST_EVENT_IS_STICKY:
+ * @ev: the event to query
+ *
+ * Check if an event is sticky on the pads.
+ */
+#define GST_EVENT_IS_STICKY(ev)     !!(GST_EVENT_TYPE (ev) & GST_EVENT_TYPE_STICKY)
 
 /**
  * gst_event_replace:
@@ -345,7 +350,6 @@ typedef enum {
  * @mini_object: the parent structure
  * @type: the #GstEventType of the event
  * @timestamp: the timestamp of the event
- * @src: the src of the event
  * @structure: the #GstStructure containing the event info.
  *
  * A #GstEvent.
@@ -356,7 +360,6 @@ struct _GstEvent {
   /*< public >*/ /* with COW */
   GstEventType  type;
   guint64       timestamp;
-  GstObject    *src;
   guint32       seqnum;
 
   GstStructure  *structure;

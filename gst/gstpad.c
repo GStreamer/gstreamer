@@ -374,6 +374,17 @@ gst_pad_init (GstPad * pad)
 }
 
 static void
+clear_sticky_events (GstPad * pad)
+{
+  guint i;
+
+  for (i = 0; i < 16; i++) {
+    GstEvent **eventp = &pad->sticky[i];
+    gst_event_replace (eventp, NULL);
+  }
+}
+
+static void
 gst_pad_dispose (GObject * object)
 {
   GstPad *pad = GST_PAD_CAST (object);
@@ -403,6 +414,8 @@ gst_pad_dispose (GObject * object)
     pad->block_destroy_data (pad->block_data);
     pad->block_data = NULL;
   }
+
+  clear_sticky_events (pad);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -614,6 +627,7 @@ post_activate (GstPad * pad, GstActivateMode new_mode)
       /* ensures that streaming stops */
       GST_PAD_STREAM_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "stopped streaming");
+      clear_sticky_events (pad);
       GST_PAD_STREAM_UNLOCK (pad);
       break;
   }
@@ -4438,11 +4452,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  if (G_UNLIKELY (GST_EVENT_SRC (event) == NULL)) {
-    GST_LOG_OBJECT (pad, "event had no source, setting pad as event source");
-    GST_EVENT_SRC (event) = gst_object_ref (pad);
-  }
-
   if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {
     GST_OBJECT_UNLOCK (pad);
 
@@ -4451,6 +4460,15 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
     GST_OBJECT_LOCK (pad);
   }
+
+  /* store the event on the pad, but only on srcpads */
+  if (GST_PAD_IS_SRC (pad) && GST_EVENT_IS_STICKY (event)) {
+    GstEvent **eventp = &pad->sticky[GST_EVENT_STICKY_IDX (event)];
+    GST_LOG_OBJECT (pad, "storing sticky event %s",
+        GST_EVENT_TYPE_NAME (event));
+    gst_event_replace (eventp, event);
+  }
+
   peerpad = GST_PAD_PEER (pad);
   if (peerpad == NULL)
     goto not_linked;
@@ -4543,11 +4561,6 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
     serialized = FALSE;
   } else
     goto unknown_direction;
-
-  if (G_UNLIKELY (GST_EVENT_SRC (event) == NULL)) {
-    GST_LOG_OBJECT (pad, "event had no source, setting pad as event source");
-    GST_EVENT_SRC (event) = gst_object_ref (pad);
-  }
 
   /* pad signals */
   if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {

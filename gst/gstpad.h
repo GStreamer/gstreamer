@@ -614,6 +614,7 @@ struct _GstPad {
   GstPadCheckGetRangeFunction	 checkgetrangefunc;
   GstPadGetRangeFunction	 getrangefunc;
   GstPadEventFunction		 eventfunc;
+  GstEvent                      *sticky[16];
 
   GstActivateMode		 mode;
 
