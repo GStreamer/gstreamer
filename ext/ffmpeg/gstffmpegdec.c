@@ -1176,7 +1176,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
 {
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint alignment, prefix, size;
+  guint size, min, max, prefix, alignment;
   GstStructure *config;
 
   /* find a pool for the negotiated caps now */
@@ -1184,13 +1184,14 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
 
   if (gst_pad_peer_query (ffmpegdec->srcpad, query)) {
     /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &alignment, &prefix, &size,
-        &pool);
+    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+        &alignment, &pool);
   } else {
-    alignment = 16;
-    prefix = 0;
     size = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
         ffmpegdec->context->width, ffmpegdec->context->height);
+    min = max = 0;
+    prefix = 0;
+    alignment = 16;
   }
 
   if (pool == NULL) {
@@ -1199,7 +1200,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   }
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, 0, 0, prefix, 0,
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, 0,
       MAX (alignment, 16));
   gst_buffer_pool_set_config (pool, config);
 
