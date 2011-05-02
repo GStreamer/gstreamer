@@ -2986,7 +2986,7 @@ gst_base_parse_set_syncable (GstBaseParse * parse, gboolean syncable)
 /**
  * gst_base_parse_set_passthrough:
  * @parse: a #GstBaseParse
- * @passthrough:
+ * @passthrough: @TRUE if parser should run in passthrough mode
  *
  * Set if the nature of the format or configuration does not allow (much)
  * parsing, and the parser should operate in passthrough mode (which only
