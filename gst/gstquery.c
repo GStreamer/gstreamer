@@ -1519,15 +1519,18 @@ gst_query_parse_allocation (GstQuery * query, GstCaps ** caps,
  * Set the allocation parameters in @query.
  */
 void
-gst_query_set_allocation_params (GstQuery * query, guint alignment,
-    guint prefix, guint size, GstBufferPool * pool)
+gst_query_set_allocation_params (GstQuery * query, guint size,
+    guint min_buffers, guint max_buffers, guint prefix,
+    guint alignment, GstBufferPool * pool)
 {
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
 
   gst_structure_id_set (query->structure,
-      GST_QUARK (ALIGN), G_TYPE_UINT, alignment,
-      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
       GST_QUARK (SIZE), G_TYPE_UINT, size,
+      GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
+      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
+      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
+      GST_QUARK (ALIGN), G_TYPE_UINT, alignment,
       GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, pool, NULL);
 }
 
@@ -1542,15 +1545,18 @@ gst_query_set_allocation_params (GstQuery * query, guint alignment,
  * Get the allocation parameters in @query.
  */
 void
-gst_query_parse_allocation_params (GstQuery * query, guint * alignment,
-    guint * prefix, guint * size, GstBufferPool ** pool)
+gst_query_parse_allocation_params (GstQuery * query, guint * size,
+    guint * min_buffers, guint * max_buffers, guint * prefix,
+    guint * alignment, GstBufferPool ** pool)
 {
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
 
   gst_structure_id_get (query->structure,
-      GST_QUARK (ALIGN), G_TYPE_UINT, alignment,
-      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
       GST_QUARK (SIZE), G_TYPE_UINT, size,
+      GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
+      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
+      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
+      GST_QUARK (ALIGN), G_TYPE_UINT, alignment,
       GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, pool, NULL);
 }
 
