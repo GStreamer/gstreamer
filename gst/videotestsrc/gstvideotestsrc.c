@@ -667,8 +667,8 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   GstVideoTestSrc *videotestsrc;
   GstVideoTestSrcColorSpec color_spec;
   GstQuery *query;
-  GstBufferPool *pool = NULL;
-  guint alignment, prefix, size;
+  GstBufferPool *pool;
+  guint size, min, max, prefix, alignment;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
@@ -692,14 +692,17 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
+
   if (gst_pad_peer_query (bsrc->srcpad, query)) {
     /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &alignment, &prefix, &size,
-        &pool);
+    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+        &alignment, &pool);
   } else {
-    alignment = 0;
-    prefix = 0;
     size = gst_video_test_src_get_size (videotestsrc, width, height);
+    min = max = 0;
+    prefix = 0;
+    alignment = 1;
+    pool = NULL;
   }
 
   if (pool == NULL) {
@@ -709,7 +712,8 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     pool = gst_buffer_pool_new ();
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, 0, 0, prefix, 0, alignment);
+    gst_buffer_pool_config_set (config, caps, size, min, max, prefix, 0,
+        alignment);
     gst_buffer_pool_set_config (pool, config);
   }
 

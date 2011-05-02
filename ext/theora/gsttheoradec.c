@@ -800,7 +800,7 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps)
 {
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint alignment, prefix, size;
+  guint size, min, max, prefix, alignment;
 
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
@@ -808,13 +808,14 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps)
   if (gst_pad_peer_query (dec->srcpad, query)) {
     GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
     /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &alignment, &prefix, &size,
-        &pool);
+    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+        &alignment, &pool);
   } else {
     GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
-    alignment = 0;
-    prefix = 0;
     size = gst_video_format_get_size (dec->format, dec->width, dec->height);
+    min = max = 0;
+    prefix = 0;
+    alignment = 1;
   }
 
   if (pool == NULL) {
@@ -824,7 +825,8 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps)
     pool = gst_buffer_pool_new ();
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, 0, 0, prefix, 0, alignment);
+    gst_buffer_pool_config_set (config, caps, size, min, max, prefix, 0,
+        alignment);
     gst_buffer_pool_set_config (pool, config);
   }
 

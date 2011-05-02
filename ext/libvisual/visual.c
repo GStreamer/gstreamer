@@ -394,8 +394,8 @@ gst_vis_src_negotiate (GstVisual * visual)
   GstStructure *structure;
   GstCaps *caps;
   GstQuery *query;
-  GstBufferPool *pool = NULL;
-  guint alignment, prefix, size;
+  GstBufferPool *pool;
+  guint size, min, max, prefix, alignment;
 
   caps = gst_pad_get_caps (visual->srcpad);
 
@@ -434,12 +434,13 @@ gst_vis_src_negotiate (GstVisual * visual)
 
   if (gst_pad_peer_query (visual->srcpad, query)) {
     /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &alignment, &prefix, &size,
-        &pool);
+    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+        &alignment, &pool);
   } else {
-    alignment = 0;
-    prefix = 0;
     size = visual->outsize;
+    min = max = 0;
+    prefix = 0;
+    alignment = 1;
   }
 
   if (pool == NULL) {
@@ -449,7 +450,8 @@ gst_vis_src_negotiate (GstVisual * visual)
     pool = gst_buffer_pool_new ();
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, 0, 0, prefix, 0, alignment);
+    gst_buffer_pool_config_set (config, caps, size, min, max, prefix, 0,
+        alignment);
     gst_buffer_pool_set_config (pool, config);
   }
 
@@ -865,8 +867,8 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       visual->actor =
-          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->
-          info->plugname);
+          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
+          plugname);
       visual->video = visual_video_new ();
       visual->audio = visual_audio_new ();
       /* can't have a play without actors */
