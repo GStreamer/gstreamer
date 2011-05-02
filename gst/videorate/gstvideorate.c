@@ -87,6 +87,7 @@ enum
 #define DEFAULT_NEW_PREF        1.0
 #define DEFAULT_SKIP_TO_FIRST   FALSE
 #define DEFAULT_DROP_ONLY       FALSE
+#define DEFAULT_AVERAGE_PERIOD  0
 
 enum
 {
@@ -98,7 +99,8 @@ enum
   ARG_SILENT,
   ARG_NEW_PREF,
   ARG_SKIP_TO_FIRST,
-  ARG_DROP_ONLY
+  ARG_DROP_ONLY,
+  ARG_AVERAGE_PERIOD
       /* FILL ME */
 };
 
@@ -213,6 +215,21 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
           "Only drop frames, no duplicates are produced",
           DEFAULT_DROP_ONLY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVideoRate:average-period:
+   *
+   * Arrange for maximum framerate by dropping frames beyond a certain framerate,
+   * where the framerate is calculated using a moving average over the
+   * configured.
+   *
+   * Since: 0.10.34
+   */
+  g_object_class_install_property (object_class, ARG_AVERAGE_PERIOD,
+      g_param_spec_uint64 ("average-period", "Period over which to average",
+          "Period over which to average the framerate (in ns) (0 = disabled)",
+          0, G_MAXINT64, DEFAULT_AVERAGE_PERIOD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_video_rate_change_state);
 }
 
@@ -316,6 +333,8 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
     videorate->out_frame_count = 0;
     videorate->to_rate_numerator = rate_numerator;
     videorate->to_rate_denominator = rate_denominator;
+    videorate->wanted_diff = gst_util_uint64_scale_int (GST_SECOND,
+        rate_denominator, rate_numerator);
     otherpad = videorate->sinkpad;
   } else {
     videorate->from_rate_numerator = rate_numerator;
@@ -431,6 +450,7 @@ gst_video_rate_reset (GstVideoRate * videorate)
   videorate->next_ts = GST_CLOCK_TIME_NONE;
   videorate->last_ts = GST_CLOCK_TIME_NONE;
   videorate->discont = TRUE;
+  videorate->average = 0;
   gst_video_rate_swap_prev (videorate, NULL, 0);
 
   gst_segment_init (&videorate->segment, GST_FORMAT_TIME);
@@ -465,6 +485,7 @@ gst_video_rate_init (GstVideoRate * videorate, GstVideoRateClass * klass)
   videorate->silent = DEFAULT_SILENT;
   videorate->new_pref = DEFAULT_NEW_PREF;
   videorate->drop_only = DEFAULT_DROP_ONLY;
+  videorate->average_period = DEFAULT_AVERAGE_PERIOD;
 
   videorate->from_rate_numerator = 0;
   videorate->from_rate_denominator = 0;
@@ -775,11 +796,68 @@ gst_video_rate_query (GstPad * pad, GstQuery * query)
 }
 
 static GstFlowReturn
+gst_video_rate_chain_max_avg (GstVideoRate * videorate, GstBuffer * buf)
+{
+  GstClockTime ts = GST_BUFFER_TIMESTAMP (buf);
+
+  videorate->in++;
+
+  if (!GST_CLOCK_TIME_IS_VALID (ts) || videorate->wanted_diff == 0)
+    goto push;
+
+  /* drop frames if they exceed our output rate */
+  if (GST_CLOCK_TIME_IS_VALID (videorate->last_ts)) {
+    GstClockTimeDiff diff = ts - videorate->last_ts;
+
+    /* Drop buffer if its early compared to the desired frame rate and
+     * the current average is higher than the desired average
+     */
+    if (diff < videorate->wanted_diff &&
+        videorate->average < videorate->wanted_diff)
+      goto drop;
+
+    /* Update average */
+    if (videorate->average) {
+      GstClockTimeDiff wanted_diff;
+
+      if (G_LIKELY (videorate->average_period > videorate->wanted_diff))
+        wanted_diff = videorate->wanted_diff;
+      else
+        wanted_diff = videorate->average_period * 10;
+
+      videorate->average =
+          gst_util_uint64_scale_round (videorate->average,
+          videorate->average_period - wanted_diff,
+          videorate->average_period) +
+          gst_util_uint64_scale_round (diff, wanted_diff,
+          videorate->average_period);
+    } else {
+      videorate->average = diff;
+    }
+  }
+
+  videorate->last_ts = ts;
+
+push:
+  videorate->out++;
+
+  return gst_pad_push (videorate->srcpad, buf);
+
+drop:
+  gst_buffer_unref (buf);
+  if (!videorate->silent)
+    gst_video_rate_notify_drop (videorate);
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
 gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstVideoRate *videorate;
   GstFlowReturn res = GST_FLOW_OK;
   GstClockTime intime, in_ts, in_dur;
+  GstClockTime avg_period;
+  gboolean skip = FALSE;
 
   videorate = GST_VIDEO_RATE (GST_PAD_PARENT (pad));
 
@@ -787,6 +865,29 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
   if (videorate->from_rate_denominator == 0 ||
       videorate->to_rate_denominator == 0)
     goto not_negotiated;
+
+  GST_OBJECT_LOCK (videorate);
+  avg_period = videorate->average_period_set;
+  GST_OBJECT_UNLOCK (videorate);
+
+  /* MT-safe switching between modes */
+  if (G_UNLIKELY (avg_period != videorate->average_period)) {
+    videorate->average_period = avg_period;
+    videorate->last_ts = GST_CLOCK_TIME_NONE;
+    if (avg_period && !videorate->average) {
+      /* enabling average mode */
+      videorate->average = 0;
+    } else {
+      /* enable regular mode */
+      gst_video_rate_swap_prev (videorate, NULL, 0);
+      /* arrange for skip-to-first behaviour */
+      videorate->next_ts = GST_CLOCK_TIME_NONE;
+      skip = TRUE;
+    }
+  }
+
+  if (videorate->average_period > 0)
+    return gst_video_rate_chain_max_avg (videorate, buffer);
 
   in_ts = GST_BUFFER_TIMESTAMP (buffer);
   in_dur = GST_BUFFER_DURATION (buffer);
@@ -817,7 +918,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
     if (!GST_CLOCK_TIME_IS_VALID (videorate->next_ts)) {
       /* new buffer, we expect to output a buffer that matches the first
        * timestamp in the segment */
-      if (videorate->skip_to_first) {
+      if (videorate->skip_to_first || skip) {
         videorate->next_ts = intime;
         videorate->base_ts = in_ts - videorate->segment.start;
         videorate->out_frame_count = 0;
@@ -948,6 +1049,7 @@ gst_video_rate_set_property (GObject * object,
 {
   GstVideoRate *videorate = GST_VIDEO_RATE (object);
 
+  GST_OBJECT_LOCK (videorate);
   switch (prop_id) {
     case ARG_SILENT:
       videorate->silent = g_value_get_boolean (value);
@@ -961,10 +1063,14 @@ gst_video_rate_set_property (GObject * object,
     case ARG_DROP_ONLY:
       videorate->drop_only = g_value_get_boolean (value);
       break;
+    case ARG_AVERAGE_PERIOD:
+      videorate->average_period = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (videorate);
 }
 
 static void
@@ -973,6 +1079,7 @@ gst_video_rate_get_property (GObject * object,
 {
   GstVideoRate *videorate = GST_VIDEO_RATE (object);
 
+  GST_OBJECT_LOCK (videorate);
   switch (prop_id) {
     case ARG_IN:
       g_value_set_uint64 (value, videorate->in);
@@ -998,10 +1105,14 @@ gst_video_rate_get_property (GObject * object,
     case ARG_DROP_ONLY:
       g_value_set_boolean (value, videorate->drop_only);
       break;
+    case ARG_AVERAGE_PERIOD:
+      g_value_set_uint64 (value, videorate->average_period);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (videorate);
 }
 
 static GstStateChangeReturn
