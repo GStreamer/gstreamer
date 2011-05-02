@@ -1132,7 +1132,7 @@ had_right_state:
  * take an indeterminate amount of time.
  * You can pass NULL as the callback to make this call block. Be careful with
  * this blocking call as it might not return for reasons stated above.
- * 
+ *
  * <note>
  *  Pad block handlers are only called for source pads in push mode
  *  and sink pads in pull mode.
@@ -2022,7 +2022,7 @@ no_format:
  * @sinkpad: the sink #GstPad.
  *
  * Checks if the source pad and the sink pad are compatible so they can be
- * linked. 
+ * linked.
  *
  * Returns: TRUE if the pads can be linked.
  */
@@ -3287,7 +3287,7 @@ gst_pad_iterate_internal_links_default (GstPad * pad)
      * two concurrent iterators were used and the last iterator would still be
      * thread-unsafe. Just don't use this method anymore. */
     data = g_slice_new (IntLinkIterData);
-    data->list = GST_PAD_INTLINKFUNC (pad) (pad);
+    data->list = ((GstPadIntLinkFunction) GST_PAD_INTLINKFUNC (pad)) (pad);
     data->cookie = 0;
 
     GST_WARNING_OBJECT (pad, "Making unsafe iterator");
@@ -3398,7 +3398,7 @@ add_unref_pad_to_list (GstPad * pad, GList ** list)
  * Deprecated: This function does not ref the pads in the list so that they
  * could become invalid by the time the application accesses them. It's also
  * possible that the list changes while handling the pads, which the caller of
- * this function is unable to know. Use the thread-safe 
+ * this function is unable to know. Use the thread-safe
  * gst_pad_iterate_internal_links_default() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
@@ -3490,11 +3490,11 @@ no_parent:
  *
  * Returns: (transfer full) (element-type Gst.Pad): a newly allocated #GList
  *     of pads, free with g_list_free().
- * 
+ *
  * Deprecated: This function does not ref the pads in the list so that they
  * could become invalid by the time the application accesses them. It's also
  * possible that the list changes while handling the pads, which the caller of
- * this function is unable to know. Use the thread-safe 
+ * this function is unable to know. Use the thread-safe
  * gst_pad_iterate_internal_links() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
@@ -3511,7 +3511,7 @@ gst_pad_get_internal_links (GstPad * pad)
   GST_WARNING_OBJECT (pad, "Calling unsafe internal links");
 
   if (GST_PAD_INTLINKFUNC (pad))
-    res = GST_PAD_INTLINKFUNC (pad) (pad);
+    res = ((GstPadIntLinkFunction) GST_PAD_INTLINKFUNC (pad)) (pad);
 
   return res;
 }

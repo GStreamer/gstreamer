@@ -298,6 +298,7 @@ G_END_DECLS
 /* We don't have deprecation guards here on purpose, it's enough to have
  * deprecation guards around _gst_plugin_register_static(), and will result in
  * much better error messages when compiling with -DGST_DISABLE_DEPRECATED */
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,package,origin)  \
 static void GST_GNUC_CONSTRUCTOR			\
 _gst_plugin_static_init__ ##init (void)			\
@@ -318,6 +319,7 @@ _gst_plugin_static_init__ ##init (void)			\
   };							\
   _gst_plugin_register_static (&plugin_desc_);		\
 }
+#endif
 
 /**
  * GST_LICENSE_UNKNOWN:
