@@ -501,7 +501,7 @@
   (parameters
     '("GstCaps*" "format")
     '("const-gchar*" "preset" (null-ok) (default "NULL"))
-    '("GstCaps*" "restriction")
+    '("GstCaps*" "restriction" (null-ok))
     '("guint" "presence")
   )
 )
@@ -513,7 +513,7 @@
   (parameters
     '("GstCaps*" "format")
     '("const-gchar*" "preset" (null-ok) (default "NULL"))
-    '("GstCaps*" "restriction")
+    '("GstCaps*" "restriction" (null-ok))
     '("guint" "presence")
   )
 )
