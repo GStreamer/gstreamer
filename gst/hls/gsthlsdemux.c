@@ -422,9 +422,25 @@ gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
         ret = TRUE;
       }
       break;
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+      gint stop = -1;
+
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      if (fmt == GST_FORMAT_TIME) {
+        GstClockTime duration;
+
+        duration = gst_m3u8_client_get_duration (hlsdemux->client);
+        if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0)
+          stop = duration;
+      }
+      gst_query_set_seeking (query, fmt, FALSE, 0, stop);
+      ret = TRUE;
+      break;
+    }
     default:
       /* Don't fordward queries upstream because of the special nature of this
-       * "demuxer", which relies on the upstream element only to be feed with the
+       * "demuxer", which relies on the upstream element only to be fed with the
        * first playlist */
       break;
   }
