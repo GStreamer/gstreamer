@@ -1310,8 +1310,12 @@ orc_process_controlled_f32_2ch (gfloat * ORC_RESTRICT d1,
       var37.i = ORC_DENORMAL (_dest.i);
     }
     /* 2: mergelq */
-    var38.i = ((orc_uint64) var37.i & ORC_UINT64_C (0xffffffff)) | ((orc_uint64)
-        var37.i << 32);
+    {
+      orc_union64 _dest;
+      _dest.x2[0] = var37.i;
+      _dest.x2[1] = var37.i;
+      var38.i = _dest.i;
+    }
     /* 3: loadq */
     var35 = ptr0[i];
     /* 4: mulf */
@@ -1369,8 +1373,12 @@ _backup_orc_process_controlled_f32_2ch (OrcExecutor * ORC_RESTRICT ex)
       var37.i = ORC_DENORMAL (_dest.i);
     }
     /* 2: mergelq */
-    var38.i = ((orc_uint64) var37.i & ORC_UINT64_C (0xffffffff)) | ((orc_uint64)
-        var37.i << 32);
+    {
+      orc_union64 _dest;
+      _dest.x2[0] = var37.i;
+      _dest.x2[1] = var37.i;
+      var38.i = _dest.i;
+    }
     /* 3: loadq */
     var35 = ptr0[i];
     /* 4: mulf */
@@ -1732,8 +1740,12 @@ orc_process_controlled_int16_2ch (gint16 * ORC_RESTRICT d1,
       var40.i = ORC_DENORMAL (_dest.i);
     }
     /* 5: mergelq */
-    var41.i = ((orc_uint64) var40.i & ORC_UINT64_C (0xffffffff)) | ((orc_uint64)
-        var40.i << 32);
+    {
+      orc_union64 _dest;
+      _dest.x2[0] = var40.i;
+      _dest.x2[1] = var40.i;
+      var41.i = _dest.i;
+    }
     /* 6: mulf */
     {
       orc_union32 _src1;
@@ -1819,8 +1831,12 @@ _backup_orc_process_controlled_int16_2ch (OrcExecutor * ORC_RESTRICT ex)
       var40.i = ORC_DENORMAL (_dest.i);
     }
     /* 5: mergelq */
-    var41.i = ((orc_uint64) var40.i & ORC_UINT64_C (0xffffffff)) | ((orc_uint64)
-        var40.i << 32);
+    {
+      orc_union64 _dest;
+      _dest.x2[0] = var40.i;
+      _dest.x2[1] = var40.i;
+      var41.i = _dest.i;
+    }
     /* 6: mulf */
     {
       orc_union32 _src1;
@@ -2095,8 +2111,12 @@ orc_process_controlled_int8_2ch (gint8 * ORC_RESTRICT d1,
       var41.i = ORC_DENORMAL (_dest.i);
     }
     /* 6: mergelq */
-    var42.i = ((orc_uint64) var41.i & ORC_UINT64_C (0xffffffff)) | ((orc_uint64)
-        var41.i << 32);
+    {
+      orc_union64 _dest;
+      _dest.x2[0] = var41.i;
+      _dest.x2[1] = var41.i;
+      var42.i = _dest.i;
+    }
     /* 7: mulf */
     {
       orc_union32 _src1;
@@ -2190,8 +2210,12 @@ _backup_orc_process_controlled_int8_2ch (OrcExecutor * ORC_RESTRICT ex)
       var41.i = ORC_DENORMAL (_dest.i);
     }
     /* 6: mergelq */
-    var42.i = ((orc_uint64) var41.i & ORC_UINT64_C (0xffffffff)) | ((orc_uint64)
-        var41.i << 32);
+    {
+      orc_union64 _dest;
+      _dest.x2[0] = var41.i;
+      _dest.x2[1] = var41.i;
+      var42.i = _dest.i;
+    }
     /* 7: mulf */
     {
       orc_union32 _src1;

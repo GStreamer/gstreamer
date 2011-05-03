@@ -3,7 +3,7 @@
   <description>colorspace conversion copied from FFMpeg 0.4.9-pre1</description>
   <filename>../../gst/ffmpegcolorspace/.libs/libgstffmpegcolorspace.so</filename>
   <basename>libgstffmpegcolorspace.so</basename>
-  <version>0.10.32.3</version>
+  <version>0.10.32.4</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>FFMpeg</package>

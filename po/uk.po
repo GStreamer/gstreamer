@@ -1,20 +1,23 @@
 # Ukrainian translation to gst-plugins.
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
 #
+# Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
+# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.14\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
-"PO-Revision-Date: 2007-09-07 15:40+0200\n"
-"Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
+"POT-Creation-Date: 2011-04-30 17:11+0100\n"
+"PO-Revision-Date: 2011-04-27 17:49+0300\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Lokalize 1.1\n"
 
 msgid "Master"
 msgstr "Головний"
@@ -50,69 +53,69 @@ msgid "Capture"
 msgstr "Запис"
 
 msgid "Could not open device for playback in mono mode."
-msgstr "Не вдається відкрити пристрій відтворення у режимі моно."
+msgstr "Не вдалося відкрити пристрій відтворення у режимі моно."
 
 msgid "Could not open device for playback in stereo mode."
-msgstr "Не вдається відкрити пристрій відтворення у режимі стерео."
+msgstr "Не вдалося відкрити пристрій відтворення у режимі стерео."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Не вдається відкрити пристрій відтворення у %d канальному режимі."
+msgstr "Не вдалося відкрити пристрій відтворення у %d канальному режимі."
 
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
-msgstr "Не вдається відкрити пристрій відтворення у режимі стерео."
+msgstr ""
+"Не вдалося відкрити пристрій для відтворення. Пристрій використовується "
+"сторонньою програмою."
 
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "Не вдається відкрити пристрій відтворення у режимі моно."
+msgstr "Не вдалося відкрити пристрій для відтворення."
 
 msgid "Could not open device for recording in mono mode."
-msgstr "Не вдається відкрити пристрій запису у режимі моно."
+msgstr "Не вдалося відкрити пристрій запису у режимі моно."
 
 msgid "Could not open device for recording in stereo mode."
-msgstr "Не вдається відкрити пристрій запису у режимі стерео."
+msgstr "Не вдалося відкрити пристрій запису у режимі стерео."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Не вдається відкрити пристрій запису у %d-канальному режимі."
+msgstr "Не вдалося відкрити пристрій запису у %d-канальному режимі."
 
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
-msgstr "Не вдається відкрити пристрій запису у режимі стерео."
+msgstr ""
+"Не вдалося відкрити пристрій для запису. Пристрій використовується "
+"сторонньою програмою."
 
-#, fuzzy
 msgid "Could not open audio device for recording."
-msgstr "Не вдається відкрити пристрій компакт-дисків для читання."
+msgstr "Не вдалося відкрити пристрій для запису."
 
 msgid "Could not open CD device for reading."
-msgstr "Не вдається відкрити пристрій компакт-дисків для читання."
+msgstr "Не вдалося відкрити пристрій компакт-дисків для читання."
 
 msgid "Could not seek CD."
-msgstr "Не вдається встановити позицію на CD."
+msgstr "Не вдалося встановити позицію на CD."
 
 msgid "Could not read CD."
-msgstr "Не вдається прочитати CD."
+msgstr "Не вдалося прочитати CD."
 
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr ""
-"Не вдається відкрити файл віртуальної файлової системи \"%s\" для запису: %s."
+"Не вдалося відкрити файл віртуальної файлової системи «%s» для запису: %s."
 
 msgid "No filename given"
 msgstr "Не вказано файл"
 
 #, c-format
 msgid "Could not close vfs file \"%s\"."
-msgstr "Не вдається закрити файл віртуальної файлової системи \"%s\"."
+msgstr "Не вдалося закрити файл віртуальної файлової системи «%s»."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Помилка при записі у файл \"%s\"."
+msgstr "Помилка при записі у файл «%s»."
 
 msgid "Internal data stream error."
 msgstr "Помилка внутрішнього потоку даних."
@@ -124,26 +127,25 @@ msgstr "Для відтворення потоку потрібен модуль
 msgid "This appears to be a text file"
 msgstr "Файл схожий на текстовий файл"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Не вдається створити елемент \"decodebin\"."
+msgstr "Не вдалося визначити тип даних потоку"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Неправильний URI субтитру \"%s\", субтитри вимкнено."
+msgstr "Неправильний URI субтитру «%s», субтитри вимкнено."
 
 msgid "No URI specified to play from."
 msgstr "Не вказано URI для відтворення."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "Неправильний URI \"%s\"."
+msgstr "Неправильний URI «%s»."
 
 msgid "RTSP streams cannot be played yet."
 msgstr "Відтворення потоків RTSP поки-що не підтримується."
 
 msgid "Could not create \"decodebin\" element."
-msgstr "Не вдається створити елемент \"decodebin\"."
+msgstr "Не вдалося створити елемент \"decodebin\"."
 
 msgid "Source element is invalid."
 msgstr "Неправильний вхідний елемент."
@@ -166,66 +168,64 @@ msgid "This is not a media file"
 msgstr "Файл не є мультимедійним"
 
 msgid "A subtitle stream was detected, but no video stream."
-msgstr "Виявлено потік субтитрів, с не відео-потік."
+msgstr "Виявлено потік субтитрів, але не відеопотік."
 
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Відсутні елементи autovideosink та xvimagesink."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Відсутній елемент '%s' - перевірте встановлення GStreamer."
+msgstr ""
+"Відсутній елемент «%s». Перевірте чи встановлено GStreamer належним чином."
 
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Відсутні елементи autoaudiosink та alsasink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Відсутні елементи autovideosink та xvimagesink."
+msgstr "Не вказано елементів autovideosink і %s."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "Відсутні елементи autovideosink та xvimagesink."
+msgstr "Не вказано елемента autovideosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Відсутні елементи autovideosink та xvimagesink."
+msgstr "Налаштований приймач відеоданих, %s, не працює."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Відсутні елементи autovideosink та xvimagesink."
+msgstr "Непридатними є обидва елементи: autovideosink і %s."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "Відсутні елементи autovideosink та xvimagesink."
+msgstr "Елемент autovideosink є непридатним."
 
 msgid "Custom text sink element is not usable."
 msgstr ""
+"Нетиповий елемент приймача текстових даних непридатний до використання."
 
 msgid "No volume control found"
-msgstr ""
+msgstr "Не знайдено регулятора гучності"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Відсутні елементи autoaudiosink та alsasink."
+msgstr "Не вказано обох елементів: autoaudiosink і %s."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "Відсутні елементи autoaudiosink та alsasink."
+msgstr "Не вказано елемента autoaudiosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Відсутні елементи autoaudiosink та alsasink."
+msgstr "Налаштований приймач звукових даних, %s, не працює."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Відсутні елементи autoaudiosink та alsasink."
+msgstr "Елементи autoaudiosink і %s є непридатними."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Відсутні елементи autoaudiosink та alsasink."
+msgstr "Елемент autoaudiosink є непридатним."
 
 msgid "Can't play a text file without video or visualizations."
-msgstr ""
+msgstr "Відтворення текстового файла без відео або візуалізації неможливе."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -236,7 +236,7 @@ msgstr "Цей потік поки-що не може бути відтворе�
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Не реалізовано обробник URI для \"%s\"."
+msgstr "Не реалізовано обробник URI для «%s»."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -248,17 +248,17 @@ msgstr "Помилка при надсиланні заголовку gdp дан
 
 #, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Помилка при надсиланні даних gdp до \"%s:%d\"."
+msgstr "Помилка при надсиланні даних gdp до «%s:%d»."
 
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "У з'єднанні з %s:%d відмовлено."
 
 msgid "Can't record audio fast enough"
-msgstr "Не вдається запис аудіоданих з потрібною швидкістю"
+msgstr "Не вдалося запис аудіоданих з потрібною швидкістю"
 
 msgid "Failed to read tag: not enough data"
-msgstr ""
+msgstr "Не вдалося прочитати мітку: недостатньо даних"
 
 msgid "track ID"
 msgstr "ідентифікатор доріжки"
@@ -291,137 +291,148 @@ msgid "MusicBrainz TRM ID"
 msgstr "Ідентифікатор доріжки TRM у MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "швидкість затвору"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Швидкість затвору (діафрагми) під час створення зображення, у секундах"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "фокальний коефіцієнт"
 
 msgid "Focal ratio (f-number) used when capturing the image"
 msgstr ""
+"Фокальний коефіцієнт (число діафрагми), використаний під час створення "
+"зображення"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "фокальна відстань"
 
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr ""
+"Фокальна відстань об’єктива, використаного при створенні зображення, у мм"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "коефіцієнт цифрового збільшення"
 
 msgid "Digital zoom ratio used when capturing an image"
 msgstr ""
+"Коефіцієнт цифрового збільшення, використаний під час створення зображення"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "світлочутливість ISO"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "Світлочутливість ISO, використана під час створення зображення"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "програма експозиції"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Програма експозиції, використана під час створення зображення"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "режим експозиції"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Режим експозиції, використаний під час створення зображення"
 
 msgid "capturing exposure compensation"
-msgstr ""
+msgstr "компенсація експозиції під час захоплення"
 
 msgid "The exposure compensation used when capturing an image"
-msgstr ""
+msgstr "Компенсація часу експозиції, потрібного для захоплення зображення"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "тип сцени"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Режим типу сцени, використаний під час створення зображення"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "коригування підсилання"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Загальне коригування підсилення, застосоване до зображення"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "баланс білого"
 
 msgid "The white balance mode set when capturing an image"
 msgstr ""
+"Режим балансування білого кольору, використаний під час створення зображення"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "контрастність"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Напрям обробки контрастності, застосований при створенні зображення"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "насиченість"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "Напрям обробки насиченості, застосований при створенні зображення"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "різкість"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Напрям обробки різкості, застосований при створенні зображення"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "спалах"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Чи було використано спалах при створенні зображення"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "режим спалаху"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Вибраний режим спалаху під час створення зображення"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "режим вимірювання"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
+"Режим вимірювання, застосований для визначення експозиції створеного "
+"зображення"
 
 msgid "capturing source"
-msgstr ""
+msgstr "джерело"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Тип пристрою-джерела зображення"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "горизонтальна щільність пікселів"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr ""
+"Горизонтальна щільність пікселів на матриці (зображення або відео), у точках "
+"на дюйм"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "вертикальна щільність пікселів"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
+"Вертикальна щільність пікселів на матриці (зображення або відео), у точках "
+"на дюйм"
 
 msgid "This CD has no audio tracks"
-msgstr "На цьому компакт-диску немає аудіо доріжок"
+msgstr "На цьому компакт-диску немає звукових доріжок"
 
 msgid "ID3 tag"
-msgstr ""
+msgstr "Мітка ID3"
 
 msgid "APE tag"
-msgstr ""
+msgstr "Мітка APE"
 
 msgid "ICY internet radio"
-msgstr ""
+msgstr "Інтернет-радіо ICY"
 
 msgid "Apple Lossless Audio (ALAC)"
 msgstr "Аудіо без втрат від Apple (ALAC)"
@@ -456,9 +467,8 @@ msgstr "Формат субтитрів Sami"
 msgid "TMPlayer subtitle format"
 msgstr "Формат субтитрів TMPlayer"
 
-#, fuzzy
 msgid "Kate subtitle format"
-msgstr "Формат субтитрів Sami"
+msgstr "Формат субтитрів Kate"
 
 msgid "Uncompressed planar YUV 4:2:0"
 msgstr "Нестиснений планарний YUV 4:2:0"
@@ -495,7 +505,7 @@ msgstr "Нестиснений YUV"
 
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Нестиснений пакетний %d-біт %s"
+msgstr "Нестиснений пакетний %d-бітовий %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -503,17 +513,17 @@ msgstr "DivX MPEG-4 версії %d"
 
 #, c-format
 msgid "Raw %d-bit PCM audio"
-msgstr "Необроблений %d-біт PCM звук"
+msgstr "Необроблений %d-бітовий PCM-звук"
 
 msgid "Raw PCM audio"
-msgstr "Необроблений PCM звук"
+msgstr "Необроблений PCM-звук"
 
 #, c-format
 msgid "Raw %d-bit floating-point audio"
-msgstr "Необроблений %d-біт звук з плаваючою комою"
+msgstr "Необроблений %d-бітовий звук (дані з плаваючою комою)"
 
 msgid "Raw floating-point audio"
-msgstr "Необроблений звук з плаваючою комою"
+msgstr "Необроблений звук (дані з плаваючою комою)"
 
 msgid "Audio CD source"
 msgstr "Джерело аудіо-CD"
@@ -579,16 +589,16 @@ msgid "Unknown source element"
 msgstr "Невідомий елемент джерела"
 
 msgid "Unknown sink element"
-msgstr "Невідомий елемент споживання"
+msgstr "Невідомий елемент приймача"
 
 msgid "Unknown element"
 msgstr "Невідомий елемент"
 
 msgid "Unknown decoder element"
-msgstr "Невідомий елемент декодеру"
+msgstr "Невідомий елемент декодера"
 
 msgid "Unknown encoder element"
-msgstr "Невідомий елемент кодеру"
+msgstr "Невідомий елемент кодера"
 
 msgid "Plugin or element of unknown type"
 msgstr "Модуль або елемент невідомого типу"
@@ -598,43 +608,27 @@ msgstr "Пристрій не вказано."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Пристрій \"%s\" не існує."
+msgstr "Пристрою «%s» не існує."
 
 #, c-format
 msgid "Device \"%s\" is already being used."
-msgstr "Пристрій \"%s\" вже використовується іншою програмою."
+msgstr "Пристрій «%s» вже використовується іншою програмою."
 
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Не вдається відкрити пристрій \"%s\" для читання чи запису."
+msgstr "Не вдалося відкрити пристрій «%s» для читання чи запису."
+
+#~ msgid "No file name specified."
+#~ msgstr "Не вказано назву файлу."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Не вдається відкрити файл \"%s\" для читання."
 
 #~ msgid "Could not create \"decodebin2\" element."
 #~ msgstr "Не вдається створити елемент \"decodebin2\"."
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "Не вдається створити елемент \"queue2\"."
-
-#, fuzzy
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Не вдається створити елемент \"decodebin\"."
-
-#, fuzzy
-#~ msgid "No Temp directory specified."
-#~ msgstr "Пристрій не вказано."
-
-#, fuzzy
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Не вдається закрити файл віртуальної файлової системи \"%s\"."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Не вдається відкрити файл \"%s\" для читання."
-
-#, fuzzy
-#~ msgid "Internal data flow error."
-#~ msgstr "Помилка внутрішнього потоку даних."
-
-#~ msgid "No file name specified."
-#~ msgstr "Не вказано назву файлу."
 
 #~ msgid "artist sortname"
 #~ msgstr "категорія виконавця"

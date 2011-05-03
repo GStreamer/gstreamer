@@ -1,16 +1,16 @@
 # Translation of gst-plugins-base to French
-# Copyright (C) 2003-2010 GStreamer core team
+# Copyright (C) 2003-2011 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Nicolas Velin <nicolas@velin.fr>, 2008.
-# Claude Paroz <claude@2xlibre.net>, 2008-2010.
+# Claude Paroz <claude@2xlibre.net>, 2008-2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 15:41+0100\n"
-"PO-Revision-Date: 2010-10-27 09:44+0200\n"
+"POT-Creation-Date: 2011-04-30 17:11+0100\n"
+"PO-Revision-Date: 2011-04-28 09:19+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -339,13 +339,11 @@ msgstr "mode d'exposition de la capture"
 msgid "The exposure mode used when capturing an image"
 msgstr "Le mode d'exposition utilisé lors de la capture de l'image"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "mode d'exposition de la capture"
+msgstr "compensation d'exposition de la capture"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "Le mode d'exposition utilisé lors de la capture de l'image"
+msgstr "La compensation d'exposition utilisée lors de la capture de l'image"
 
 msgid "capturing scene capture type"
 msgstr "type de mode scène de la capture"

@@ -3,7 +3,7 @@
   <description>elements to read from and write to  Gnome-VFS uri&apos;s</description>
   <filename>../../ext/gnomevfs/.libs/libgstgnomevfs.so</filename>
   <basename>libgstgnomevfs.so</basename>
-  <version>0.10.32.3</version>
+  <version>0.10.32.4</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins prerelease</package>
