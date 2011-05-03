@@ -705,6 +705,12 @@ gst_pad_set_active (GstPad * pad, gboolean active)
       GST_WARNING_OBJECT (pad, "Failed to activate pad");
     }
     GST_OBJECT_UNLOCK (pad);
+  } else {
+    if (!active) {
+      GST_OBJECT_LOCK (pad);
+      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_RECONFIGURE);
+      GST_OBJECT_UNLOCK (pad);
+    }
   }
 
   return ret;
@@ -2063,7 +2069,7 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
     GST_CAT_INFO (GST_CAT_PADS, "linked %s:%s and %s:%s, successful",
         GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
-    gst_pad_send_event (srcpad, gst_event_new_renegotiate ());
+    gst_pad_send_event (srcpad, gst_event_new_reconfigure ());
   } else {
     GST_CAT_INFO (GST_CAT_PADS, "link between %s:%s and %s:%s failed",
         GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
@@ -4541,9 +4547,9 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
         goto flushed;
       }
       break;
-    case GST_EVENT_RENEGOTIATE:
-      if (GST_PAD_IS_SINK (pad) && GST_PAD_GETCAPSFUNC (pad) == NULL)
-        goto drop_renegotiate;
+    case GST_EVENT_RECONFIGURE:
+      if (GST_PAD_IS_SINK (pad))
+        GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_RECONFIGURE);
     default:
       while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
         /* block the event as long as the pad is blocked */
@@ -4700,6 +4706,9 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       need_unlock = TRUE;
       GST_OBJECT_LOCK (pad);
       break;
+    case GST_EVENT_RECONFIGURE:
+      if (GST_PAD_IS_SRC (pad))
+        GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_RECONFIGURE);
     default:
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "have event type %s",
           GST_EVENT_TYPE_NAME (event));
@@ -4924,14 +4933,6 @@ concurrent_stop:
   {
     GST_OBJECT_UNLOCK (pad);
     return TRUE;
-  }
-drop_renegotiate:
-  {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad,
-        "No getcaps function on sink pad, dropping renegotiate event");
-    gst_event_unref (event);
-    GST_OBJECT_UNLOCK (pad);
-    return FALSE;
   }
 }
 

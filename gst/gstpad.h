@@ -510,18 +510,23 @@ typedef enum {
  * @GST_PAD_IN_GETCAPS: GstPadGetCapsFunction() is running now
  * @GST_PAD_IN_SETCAPS: GstPadSetCapsFunction() is running now
  * @GST_PAD_BLOCKING: is pad currently blocking on a buffer or event
+ * @GST_PAD_NEED_RECONFIGURE: the pad should be reconfigured/renegotiated.
+ *                            The flag has to be unset manually after
+ *                            reconfiguration happened.
+ *                            Since: 0.10.34.
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
  */
 typedef enum {
-  GST_PAD_BLOCKED        = (GST_OBJECT_FLAG_LAST << 0),
-  GST_PAD_FLUSHING       = (GST_OBJECT_FLAG_LAST << 1),
-  GST_PAD_IN_GETCAPS     = (GST_OBJECT_FLAG_LAST << 2),
-  GST_PAD_IN_SETCAPS     = (GST_OBJECT_FLAG_LAST << 3),
-  GST_PAD_BLOCKING	 = (GST_OBJECT_FLAG_LAST << 4),
+  GST_PAD_BLOCKED          = (GST_OBJECT_FLAG_LAST << 0),
+  GST_PAD_FLUSHING         = (GST_OBJECT_FLAG_LAST << 1),
+  GST_PAD_IN_GETCAPS       = (GST_OBJECT_FLAG_LAST << 2),
+  GST_PAD_IN_SETCAPS       = (GST_OBJECT_FLAG_LAST << 3),
+  GST_PAD_BLOCKING         = (GST_OBJECT_FLAG_LAST << 4),
+  GST_PAD_NEED_RECONFIGURE = (GST_OBJECT_FLAG_LAST << 5),
   /* padding */
-  GST_PAD_FLAG_LAST      = (GST_OBJECT_FLAG_LAST << 16)
+  GST_PAD_FLAG_LAST        = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
 
 /* FIXME: this awful circular dependency need to be resolved properly (see padtemplate.h) */
@@ -699,6 +704,7 @@ struct _GstPadClass {
 #define GST_PAD_IS_FLUSHING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING))
 #define GST_PAD_IS_IN_GETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS))
 #define GST_PAD_IS_IN_SETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS))
+#define GST_PAD_NEEDS_RECONFIGURE(pad)  (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_NEED_RECONFIGURE))
 #define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
 #define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
 
