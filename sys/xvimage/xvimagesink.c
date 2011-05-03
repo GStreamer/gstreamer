@@ -191,7 +191,12 @@ enum
   PROP_WINDOW_HEIGHT
 };
 
-static GstVideoSinkClass *parent_class = NULL;
+static void
+gst_xvimagesink_init_interfaces (GType type);
+
+GST_BOILERPLATE_FULL (GstXvImageSink, gst_xvimagesink, GstVideoSink,
+    GST_TYPE_VIDEO_SINK, gst_xvimagesink_init_interfaces);
+
 
 /* ============================================================= */
 /*                                                               */
@@ -3471,7 +3476,7 @@ gst_xvimagesink_finalize (GObject * object)
 }
 
 static void
-gst_xvimagesink_init (GstXvImageSink * xvimagesink)
+gst_xvimagesink_init (GstXvImageSink * xvimagesink, GstXvImageSinkClass *xvimagesinkclass)
 {
   xvimagesink->display_name = NULL;
   xvimagesink->adaptor_no = 0;
@@ -3537,8 +3542,6 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
   videosink_class = (GstVideoSinkClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_xvimagesink_set_property;
   gobject_class->get_property = gst_xvimagesink_get_property;
@@ -3696,25 +3699,10 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
 /*          Object typing & Creation           */
 /*                                             */
 /* =========================================== */
-
-GType
-gst_xvimagesink_get_type (void)
+static void
+gst_xvimagesink_init_interfaces (GType type)
 {
-  static GType xvimagesink_type = 0;
-
-  if (!xvimagesink_type) {
-    static const GTypeInfo xvimagesink_info = {
-      sizeof (GstXvImageSinkClass),
-      gst_xvimagesink_base_init,
-      NULL,
-      (GClassInitFunc) gst_xvimagesink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstXvImageSink),
-      0,
-      (GInstanceInitFunc) gst_xvimagesink_init,
-    };
-    static const GInterfaceInfo iface_info = {
+   static const GInterfaceInfo iface_info = {
       (GInterfaceInitFunc) gst_xvimagesink_interface_init,
       NULL,
       NULL,
@@ -3738,29 +3726,23 @@ gst_xvimagesink_get_type (void)
       (GInterfaceInitFunc) gst_xvimagesink_property_probe_interface_init,
       NULL,
       NULL,
-    };
-    xvimagesink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
-        "GstXvImageSink", &xvimagesink_info, 0);
+  };
 
-    g_type_add_interface_static (xvimagesink_type,
+   g_type_add_interface_static (type,
         GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
-    g_type_add_interface_static (xvimagesink_type, GST_TYPE_NAVIGATION,
+   g_type_add_interface_static (type, GST_TYPE_NAVIGATION,
         &navigation_info);
-    g_type_add_interface_static (xvimagesink_type, GST_TYPE_X_OVERLAY,
+   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY,
         &overlay_info);
-    g_type_add_interface_static (xvimagesink_type, GST_TYPE_COLOR_BALANCE,
+   g_type_add_interface_static (type, GST_TYPE_COLOR_BALANCE,
         &colorbalance_info);
-    g_type_add_interface_static (xvimagesink_type, GST_TYPE_PROPERTY_PROBE,
+   g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
         &propertyprobe_info);
 
-
-    /* register type and create class in a more safe place instead of at
-     * runtime since the type registration and class creation is not
-     * threadsafe. */
-    g_type_class_ref (gst_xvimage_buffer_get_type ());
-  }
-
-  return xvimagesink_type;
+   /* register type and create class in a more safe place instead of at
+    * runtime since the type registration and class creation is not
+    * threadsafe. */
+   g_type_class_ref (gst_xvimage_buffer_get_type ());
 }
 
 static gboolean
