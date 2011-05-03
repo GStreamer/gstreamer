@@ -165,6 +165,7 @@ namespace Gst {
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-server.h")]
 	public class RTSPServer : GLib.Object {
+		public signal void client_connected (RTSPClient client);
 		public weak GLib.IOChannel io_channel;
 		public weak GLib.TimeoutSource io_watch;
 		public void* server_sin;
