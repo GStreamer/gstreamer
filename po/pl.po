@@ -1,13 +1,13 @@
 # Polish translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2010.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.30.3\n"
+"Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 14:53+0100\n"
-"PO-Revision-Date: 2010-10-24 18:54+0200\n"
+"POT-Creation-Date: 2011-04-27 11:27+0100\n"
+"PO-Revision-Date: 2011-04-26 17:54+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -403,12 +403,11 @@ msgstr "URI praw autorskich"
 msgid "URI to the copyright notice of the data"
 msgstr "URI do informacji o prawach autorskich do tych danych"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "koder"
+msgstr "kodujący"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "nazwa osoby lub organizacji kodującej nagranie"
 
 msgid "contact"
 msgstr "kontakt"
@@ -1058,7 +1057,7 @@ msgid "WARNING: element named '%s' not found.\n"
 msgstr "UWAGA: nie znaleziono elementu o nazwie '%s'.\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Statystyki indeksu"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1166,7 +1165,7 @@ msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Wymuszanie EOS na źródłach przed zamknięciem potoku"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Zebranie i wypisanie statystyk indeksu"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

@@ -1,15 +1,15 @@
 # Bulgarian translation of gstreamer.
-# Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Fondation, Inc.
+# Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Fondation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-# Alexander Shopov <ash@contact.bg>, 2005, 2006, 2007, 2008, 2009, 2010.
+# Alexander Shopov <ash@contact.bg>, 2005, 2006, 2007, 2008, 2009, 2010, 2011.
 #
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.30.3\n"
+"Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 14:53+0100\n"
-"PO-Revision-Date: 2010-11-04 14:22+0200\n"
+"POT-Creation-Date: 2011-04-27 11:27+0100\n"
+"PO-Revision-Date: 2011-04-26 22:40+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "Language: bg\n"
@@ -109,8 +109,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
-"Грешка на GStreamer: неуспех при промяната на състоянието, а някой от "
-"елементите пропусна да подаде съобщение за грешка с причината за това."
+"Грешка на GStreamer: неуспешна промяна на състоянието, а някой от елементите "
+"пропусна да подаде съобщение за грешка с причината за това."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Вътрешна грешка на GStreamer: проблем в допълването."
@@ -406,12 +406,11 @@ msgstr "адрес за авторски права"
 msgid "URI to the copyright notice of the data"
 msgstr "адрес на означението на авторските права на данните"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "кодер"
+msgstr "кодирано от"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "име на човека или организацията извършващи кодирането"
 
 msgid "contact"
 msgstr "контакт"
@@ -1056,7 +1055,7 @@ msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: елементът на име „%s“ не е открит.\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Статистика на индекса"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1167,7 +1166,7 @@ msgstr ""
 "Принудително извеждане на EOS за източниците преди спирането на конвейера"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Събиране и показване на статистика за индекса"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

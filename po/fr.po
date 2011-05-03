@@ -1,16 +1,16 @@
 # Translation of GStreamer to French
-# Copyright (C) 2003-2010 GStreamer core team
+# Copyright (C) 2003-2011 GStreamer core team
 # This file is distributed under the same license as the gstreamer package.
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
-# Claude Paroz <claude@2xlibre.net>, 2008-2010.
+# Claude Paroz <claude@2xlibre.net>, 2008-2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.30.3\n"
+"Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-16 14:53+0100\n"
-"PO-Revision-Date: 2010-10-27 08:47+0200\n"
+"POT-Creation-Date: 2011-04-30 15:35+0100\n"
+"PO-Revision-Date: 2011-04-28 09:34+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -407,12 +407,11 @@ msgstr "URI du copyright"
 msgid "URI to the copyright notice of the data"
 msgstr "URI vers l'information de copyright des données"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "codeur"
+msgstr "codé par"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "nom de la personne ou de l'organisation qui a effectué le codage"
 
 msgid "contact"
 msgstr "contact"
@@ -1063,7 +1062,7 @@ msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVERTISSEMENT : l'élément nommé « %s » est introuvable.\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Statistiques d'index"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1171,7 +1170,7 @@ msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Force l'EOS sur les sources avant de fermer le pipeline"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Rassemble et affiche les statistiques d'index"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

@@ -3,7 +3,7 @@
   <description>standard GStreamer elements</description>
   <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
   <basename>libgstcoreelements.so</basename>
-  <version>0.10.32.2</version>
+  <version>0.10.32.4</version>
   <license>LGPL</license>
   <source>gstreamer</source>
   <package>GStreamer prerelease</package>
