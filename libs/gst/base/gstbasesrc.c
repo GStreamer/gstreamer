@@ -247,8 +247,6 @@ struct _GstBaseSrcPrivate
   gboolean qos_enabled;
   gdouble proportion;
   GstClockTime earliest_time;
-
-  gboolean renegotiate;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1737,12 +1735,6 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
       result = TRUE;
       break;
     }
-    case GST_EVENT_RENEGOTIATE:
-    {
-      g_atomic_int_set (&src->priv->renegotiate, TRUE);
-      result = TRUE;
-      break;
-    }
     default:
       result = FALSE;
       break;
@@ -2369,13 +2361,18 @@ gst_base_src_loop (GstPad * pad)
   gboolean eos;
   gulong blocksize;
   GList *pending_events = NULL, *tmp;
+  gboolean reconfigure;
 
   eos = FALSE;
 
   src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
+  GST_OBJECT_LOCK (pad);
+  reconfigure = GST_PAD_NEEDS_RECONFIGURE (pad);
+  GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_RECONFIGURE);
+  GST_OBJECT_UNLOCK (pad);
   /* check if we need to renegotiate */
-  if (g_atomic_int_compare_and_exchange (&src->priv->renegotiate, TRUE, FALSE)) {
+  if (reconfigure) {
     if (!gst_base_src_negotiate (src))
       GST_DEBUG_OBJECT (src, "Failed to renegotiate");
   }
