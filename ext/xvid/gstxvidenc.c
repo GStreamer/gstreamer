@@ -806,7 +806,7 @@ gst_xvidenc_getcaps (GstPad * pad)
 
   /* If we already have caps return them */
   if (GST_PAD_CAPS (pad))
-    return GST_PAD_CAPS (pad);
+    return gst_caps_ref (GST_PAD_CAPS (pad));
 
   xvidenc = GST_XVIDENC (gst_pad_get_parent (pad));
   if (!xvidenc)
