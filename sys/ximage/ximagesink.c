@@ -475,6 +475,7 @@ static void
 gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink)
 {
   XWindowAttributes attr;
+  gboolean reconfigure;
 
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
 
@@ -488,10 +489,17 @@ gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink)
   XGetWindowAttributes (ximagesink->xcontext->disp,
       ximagesink->xwindow->win, &attr);
 
+  /* Check if we would suggest a different width/height now */
+  reconfigure = (ximagesink->xwindow->width != attr.width)
+      || (ximagesink->xwindow->height != attr.height);
   ximagesink->xwindow->width = attr.width;
   ximagesink->xwindow->height = attr.height;
 
   g_mutex_unlock (ximagesink->x_lock);
+
+  if (reconfigure)
+    gst_pad_push_event (GST_BASE_SINK (ximagesink)->sinkpad,
+        gst_event_new_reconfigure ());
 }
 
 static void
