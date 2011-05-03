@@ -1466,7 +1466,7 @@ gst_x264_enc_sink_get_caps (GstPad * pad)
 
   /* If we already have caps return them */
   if (GST_PAD_CAPS (pad))
-    return gst_caps_copy (GST_PAD_CAPS (pad));
+    return gst_caps_ref (GST_PAD_CAPS (pad));
 
   encoder = GST_X264_ENC (gst_pad_get_parent (pad));
   if (!encoder)
@@ -1496,7 +1496,7 @@ gst_x264_enc_sink_get_caps (GstPad * pad)
     caps = gst_caps_intersect (peercaps, templcaps);
     gst_caps_unref (peercaps);
   } else {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_caps_ref (gst_pad_get_pad_template_caps (pad));
   }
 
   gst_object_unref (encoder);
