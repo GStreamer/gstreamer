@@ -61,8 +61,9 @@ typedef enum {
 #define GST_EVENT_TYPE_BOTH \
     (GST_EVENT_TYPE_UPSTREAM | GST_EVENT_TYPE_DOWNSTREAM)
 
+#define GST_EVENT_MAX_STICKY    16
 #define GST_EVENT_STICKY_SHIFT  8
-#define GST_EVENT_NUM_SHIFT     16
+#define GST_EVENT_NUM_SHIFT     (GST_EVENT_STICKY_SHIFT + 4)
 
 /**
  * GST_EVENT_MAKE_TYPE:
@@ -78,7 +79,8 @@ typedef enum {
 
 #define FLAG(name) GST_EVENT_TYPE_##name
 
-#define GST_EVENT_STICKY_IDX(ev)  ((GST_EVENT_TYPE(ev) >> GST_EVENT_STICKY_SHIFT) & 0xff)
+
+#define GST_EVENT_STICKY_IDX(ev)  ((GST_EVENT_TYPE(ev) >> GST_EVENT_STICKY_SHIFT) & 0xf)
 
 /**
  * GstEventType:
