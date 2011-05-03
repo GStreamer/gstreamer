@@ -115,8 +115,8 @@ typedef enum {
  *                     Since: 0.10.12
  * @GST_EVENT_STEP: A request for stepping through the media. Sinks will usually
  *                  execute the step operation. Since: 0.10.24
- * @GST_EVENT_RENEGOTIATE: A request for upstream renegotiating caps.
- *                           Since: 0.10.33
+ * @GST_EVENT_RECONFIGURE: A request for upstream renegotiating caps and reconfiguring.
+ *                         Since: 0.10.34
  * @GST_EVENT_CUSTOM_UPSTREAM: Upstream custom event
  * @GST_EVENT_CUSTOM_DOWNSTREAM: Downstream custom event that travels in the
  *                        data flow.
@@ -152,7 +152,7 @@ typedef enum {
   GST_EVENT_NAVIGATION            = GST_EVENT_MAKE_TYPE (17, 0, FLAG(UPSTREAM)),
   GST_EVENT_LATENCY               = GST_EVENT_MAKE_TYPE (18, 0, FLAG(UPSTREAM)),
   GST_EVENT_STEP                  = GST_EVENT_MAKE_TYPE (19, 0, FLAG(UPSTREAM)),
-  GST_EVENT_RENEGOTIATE           = GST_EVENT_MAKE_TYPE (20, 0, FLAG(UPSTREAM)),
+  GST_EVENT_RECONFIGURE           = GST_EVENT_MAKE_TYPE (20, 0, FLAG(UPSTREAM)),
 
   /* custom events start here */
   GST_EVENT_CUSTOM_UPSTREAM       = GST_EVENT_MAKE_TYPE (32, 0, FLAG(UPSTREAM)),
@@ -527,7 +527,7 @@ void            gst_event_parse_step            (GstEvent *event, GstFormat *for
                                                  gdouble *rate, gboolean *flush, gboolean *intermediate);
 
 /* renegotiate event */
-GstEvent*       gst_event_new_renegotiate       (void);
+GstEvent*       gst_event_new_reconfigure       (void);
 
 G_END_DECLS
 

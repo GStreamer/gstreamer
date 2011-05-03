@@ -404,7 +404,7 @@ EXPORTS
 	gst_event_new_new_segment_full
 	gst_event_new_qos
 	gst_event_new_qos_full
-	gst_event_new_renegotiate
+	gst_event_new_reconfigure
 	gst_event_new_seek
 	gst_event_new_sink_message
 	gst_event_new_step

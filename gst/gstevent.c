@@ -109,7 +109,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_NAVIGATION, "navigation", 0},
   {GST_EVENT_LATENCY, "latency", 0},
   {GST_EVENT_STEP, "step", 0},
-  {GST_EVENT_RENEGOTIATE, "renegotiate", 0},
+  {GST_EVENT_RECONFIGURE, "reconfigure", 0},
   {GST_EVENT_CUSTOM_UPSTREAM, "custom-upstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM, "custom-downstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM_OOB, "custom-downstream-oob", 0},
@@ -1283,24 +1283,24 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
 }
 
 /**
- * gst_event_new_renegotiate:
+ * gst_event_new_reconfigure:
 
- * Create a new renegotiate event. The purpose of the step event is to travel
+ * Create a new reconfigure event. The purpose of the step event is to travel
  * upstream and make elements renegotiate its caps. This is useful when changing
  * properties or elements on the pipeline.
  *
  * Returns: (transfer full): a new #GstEvent
  *
- * Since: 0.10.33
+ * Since: 0.10.34
  */
 GstEvent *
-gst_event_new_renegotiate (void)
+gst_event_new_reconfigure (void)
 {
   GstEvent *event;
 
-  GST_CAT_INFO (GST_CAT_EVENT, "creating renegotiate event");
+  GST_CAT_INFO (GST_CAT_EVENT, "creating reconfigure event");
 
-  event = gst_event_new_custom (GST_EVENT_RENEGOTIATE, NULL);
+  event = gst_event_new_custom (GST_EVENT_RECONFIGURE, NULL);
 
   return event;
 }
