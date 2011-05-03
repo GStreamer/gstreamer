@@ -406,11 +406,15 @@ gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
   switch (query->type) {
     case GST_QUERY_DURATION:{
       GstClockTime duration;
+      GstFormat fmt;
 
-      duration = gst_m3u8_client_get_duration (hlsdemux->client);
-      if (duration) {
-        gst_query_set_duration (query, GST_FORMAT_TIME, duration);
-        ret = TRUE;
+      gst_query_parse_duration (query, &fmt, NULL);
+      if (fmt == GST_FORMAT_TIME) {
+        duration = gst_m3u8_client_get_duration (hlsdemux->client);
+        if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0) {
+          gst_query_set_duration (query, GST_FORMAT_TIME, duration);
+          ret = TRUE;
+        }
       }
       break;
     }
