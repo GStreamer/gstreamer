@@ -68,6 +68,11 @@ The 0.11 porting guide
     A similar change was done for gst_pad_peer_get_caps() and
     gst_pad_peer_get_caps_reffed()
 
+    gst_pad_set_bufferalloc_function(), gst_pad_alloc_buffer() and
+    gst_pad_alloc_buffer_and_set_caps() are removed. Use the ALLOCATION query
+    now to obtain a reference to a bufferpool object that can be used to
+    allocate buffers.
+
 * GstMiniObject
     A miniobject is now a simple refcounted structure holding the information
     common to buffers, events, messages, queries and caps.
