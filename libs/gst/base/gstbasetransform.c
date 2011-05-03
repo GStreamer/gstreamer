@@ -853,7 +853,9 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
     GST_DEBUG_OBJECT (trans,
         "intersecting against padtemplate %" GST_PTR_FORMAT, templ_caps);
 
-    intersect = gst_caps_intersect (othercaps, templ_caps);
+    intersect =
+        gst_caps_intersect_full (othercaps, templ_caps,
+        GST_CAPS_INTERSECT_FIRST);
 
     gst_caps_unref (othercaps);
     othercaps = intersect;
