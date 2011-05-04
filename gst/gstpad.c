@@ -371,17 +371,8 @@ gst_pad_init (GstPad * pad)
   g_static_rec_mutex_init (pad->stream_rec_lock);
 
   pad->block_cond = g_cond_new ();
-}
 
-static void
-clear_sticky_events (GstPad * pad)
-{
-  guint i;
-
-  for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
-    GstEvent **eventp = &pad->sticky[i];
-    gst_event_replace (eventp, NULL);
-  }
+  pad->context = gst_context_new ();
 }
 
 static void
@@ -415,7 +406,7 @@ gst_pad_dispose (GObject * object)
     pad->block_data = NULL;
   }
 
-  clear_sticky_events (pad);
+  gst_context_clear (pad->context);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -442,6 +433,8 @@ gst_pad_finalize (GObject * object)
     g_cond_free (pad->block_cond);
     pad->block_cond = NULL;
   }
+
+  gst_context_unref (pad->context);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -627,7 +620,7 @@ post_activate (GstPad * pad, GstActivateMode new_mode)
       /* ensures that streaming stops */
       GST_PAD_STREAM_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "stopped streaming");
-      clear_sticky_events (pad);
+      gst_context_clear (pad->context);
       GST_PAD_STREAM_UNLOCK (pad);
       break;
   }
@@ -1693,9 +1686,6 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   GST_PAD_PEER (srcpad) = NULL;
   GST_PAD_PEER (sinkpad) = NULL;
 
-  /* clear the events on the sinkpad */
-  clear_sticky_events (sinkpad);
-
   GST_OBJECT_UNLOCK (sinkpad);
   GST_OBJECT_UNLOCK (srcpad);
 
@@ -2013,7 +2003,6 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 {
   GstPadLinkReturn result;
   GstElement *parent;
-  guint i;
 
   g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), GST_PAD_LINK_WRONG_DIRECTION);
@@ -2042,15 +2031,6 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
   /* must set peers before calling the link function */
   GST_PAD_PEER (srcpad) = sinkpad;
   GST_PAD_PEER (sinkpad) = srcpad;
-
-  /* copy the events */
-  for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
-    GstEvent **eventp = &sinkpad->sticky[i], *event;
-
-    if ((event = srcpad->sticky[i]))
-      GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_STICKY_PENDING);
-    gst_event_replace (eventp, event);
-  }
 
   GST_OBJECT_UNLOCK (sinkpad);
   GST_OBJECT_UNLOCK (srcpad);
@@ -3459,7 +3439,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
 
   GST_PAD_STREAM_LOCK (pad);
 
-again:
   GST_OBJECT_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
@@ -3469,6 +3448,7 @@ again:
 
   emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
 
+#if 0
   if (G_UNLIKELY (GST_PAD_IS_STICKY_PENDING (pad))) {
     GstPadEventFunction eventfunc;
 
@@ -3499,6 +3479,7 @@ again:
       goto again;
     }
   }
+#endif
 
   GST_OBJECT_UNLOCK (pad);
 
@@ -4515,11 +4496,8 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
   /* store the event on the pad, but only on srcpads */
   if (GST_PAD_IS_SRC (pad) && GST_EVENT_IS_STICKY (event)) {
-    guint idx = GST_EVENT_STICKY_IDX (event);
-    GstEvent **eventp = &pad->sticky[idx];
-    GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
-        GST_EVENT_TYPE_NAME (event), idx);
-    gst_event_replace (eventp, event);
+    pad->context = gst_context_make_writable (pad->context);
+    gst_context_update (pad->context, event);
   }
 
   peerpad = GST_PAD_PEER (pad);

@@ -29,6 +29,7 @@
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstbufferlist.h>
+#include <gst/gstcontext.h>
 #include <gst/gstcaps.h>
 #include <gst/gstevent.h>
 #include <gst/gstquery.h>
@@ -509,7 +510,6 @@ typedef enum {
  * @GST_PAD_IN_GETCAPS: GstPadGetCapsFunction() is running now
  * @GST_PAD_IN_SETCAPS: GstPadSetCapsFunction() is running now
  * @GST_PAD_BLOCKING: is pad currently blocking on a buffer or event
- * @GST_PAD_STICKY_PENDING: sticky events should be pushed
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
@@ -520,7 +520,6 @@ typedef enum {
   GST_PAD_IN_GETCAPS     = (GST_OBJECT_FLAG_LAST << 2),
   GST_PAD_IN_SETCAPS     = (GST_OBJECT_FLAG_LAST << 3),
   GST_PAD_BLOCKING	 = (GST_OBJECT_FLAG_LAST << 4),
-  GST_PAD_STICKY_PENDING = (GST_OBJECT_FLAG_LAST << 5),
   /* padding */
   GST_PAD_FLAG_LAST      = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
@@ -616,7 +615,7 @@ struct _GstPad {
   GstPadCheckGetRangeFunction	 checkgetrangefunc;
   GstPadGetRangeFunction	 getrangefunc;
   GstPadEventFunction		 eventfunc;
-  GstEvent                      *sticky[GST_EVENT_MAX_STICKY];
+  GstContext                    *context;
 
   GstActivateMode		 mode;
 
@@ -699,7 +698,6 @@ struct _GstPadClass {
 #define GST_PAD_IS_FLUSHING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING))
 #define GST_PAD_IS_IN_GETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS))
 #define GST_PAD_IS_IN_SETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS))
-#define GST_PAD_IS_STICKY_PENDING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_STICKY_PENDING))
 #define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
 #define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
 

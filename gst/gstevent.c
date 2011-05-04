@@ -493,7 +493,7 @@ gst_event_new_caps (GstCaps * caps)
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating caps event %" GST_PTR_FORMAT, caps);
 
-  event = gst_event_new_custom (GST_EVENT_BUFFERSIZE,
+  event = gst_event_new_custom (GST_EVENT_CAPS,
       gst_structure_id_new (GST_QUARK (EVENT_CAPS),
           GST_QUARK (CAPS), GST_TYPE_CAPS, caps, NULL));
 

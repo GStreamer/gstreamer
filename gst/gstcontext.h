@@ -57,7 +57,7 @@ typedef struct _GstContext GstContext;
  * Returns: (transfer full): a writable context which may or may not be the
  *     same as @ctx
  */
-#define         gst_context_make_writable(ctx)   GST_CONTEXT_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (buf)))
+#define         gst_context_make_writable(ctx)   GST_CONTEXT_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (ctx)))
 
 /**
  * gst_context_replace:
