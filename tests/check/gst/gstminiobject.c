@@ -450,14 +450,14 @@ GST_END_TEST;
 GST_START_TEST (test_dup_null_mini_object)
 {
   GValue value = { 0, };
-  GstBuffer *buf;
+  GstMiniObject *mo;
 
   g_value_init (&value, GST_TYPE_BUFFER);
 
   gst_value_set_mini_object (&value, NULL);
 
-  buf = gst_value_dup_mini_object (&value);
-  g_assert (buf == NULL);
+  mo = gst_value_dup_mini_object (&value);
+  g_assert (mo == NULL);
 
   g_value_unset (&value);
 }
