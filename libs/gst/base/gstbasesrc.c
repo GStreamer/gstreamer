@@ -2160,7 +2160,7 @@ again:
 
   /* no timestamp set and we are at offset 0, we can timestamp with 0 */
   if (offset == 0 && src->segment.time == 0
-      && GST_BUFFER_TIMESTAMP (*buf) == -1) {
+      && GST_BUFFER_TIMESTAMP (*buf) == -1 && !src->is_live) {
     *buf = gst_buffer_make_metadata_writable (*buf);
     GST_BUFFER_TIMESTAMP (*buf) = 0;
   }
