@@ -1380,14 +1380,7 @@ gst_ffmpegdec_do_qos (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
   if (proportion < 0.4 && diff < 0) {
     goto normal_mode;
   } else {
-    /* if we're more than two seconds late, switch to the next keyframe */
-    /* FIXME, let the demuxer decide what's the best since we might be dropping
-     * a lot of frames when the keyframe is far away or we even might not get a new
-     * keyframe at all.. */
-    if (diff > ((GstClockTimeDiff) GST_SECOND * 2)
-        && !ffmpegdec->waiting_for_key) {
-      goto skip_to_keyframe;
-    } else if (diff >= 0) {
+    if (diff >= 0) {
       /* we're too slow, try to speed up */
       if (ffmpegdec->waiting_for_key) {
         /* we were waiting for a keyframe, that's ok */
@@ -1413,16 +1406,6 @@ normal_mode:
       GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode %g < 0.4", proportion);
     }
     return TRUE;
-  }
-skip_to_keyframe:
-  {
-    ffmpegdec->context->skip_frame = AVDISCARD_NONKEY;
-    ffmpegdec->waiting_for_key = TRUE;
-    *mode_switch = TRUE;
-    GST_DEBUG_OBJECT (ffmpegdec,
-        "QOS: keyframe, %" G_GINT64_FORMAT " > GST_SECOND/2", diff);
-    /* we can skip the current frame */
-    return FALSE;
   }
 skip_frame:
   {
