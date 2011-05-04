@@ -387,6 +387,7 @@ EXPORTS
 	gst_event_get_type
 	gst_event_has_name
 	gst_event_new_buffer_size
+	gst_event_new_caps
 	gst_event_new_custom
 	gst_event_new_eos
 	gst_event_new_flush_start
@@ -402,6 +403,7 @@ EXPORTS
 	gst_event_new_step
 	gst_event_new_tag
 	gst_event_parse_buffer_size
+	gst_event_parse_caps
 	gst_event_parse_latency
 	gst_event_parse_new_segment
 	gst_event_parse_new_segment_full
