@@ -138,10 +138,11 @@ typedef enum {
   GST_EVENT_FLUSH_STOP            = GST_EVENT_MAKE_TYPE (2, 0, FLAG(BOTH) | FLAG(SERIALIZED)),
   /* downstream serialized events */
   GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (5, 0, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_NEWSEGMENT            = GST_EVENT_MAKE_TYPE (6, 1, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (7, 2, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (8, 3, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (9, 4, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_CAPS                  = GST_EVENT_MAKE_TYPE (6, 5, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_NEWSEGMENT            = GST_EVENT_MAKE_TYPE (7, 1, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (8, 2, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (9, 3, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (10, 4, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   /* upstream events */
   GST_EVENT_QOS                   = GST_EVENT_MAKE_TYPE (15, 0, FLAG(UPSTREAM)),
   GST_EVENT_SEEK                  = GST_EVENT_MAKE_TYPE (16, 0, FLAG(UPSTREAM)),
@@ -451,6 +452,10 @@ GstEvent *      gst_event_new_flush_stop        (void);
 
 /* EOS event */
 GstEvent *      gst_event_new_eos               (void);
+
+/* Caps events */
+GstEvent *      gst_event_new_caps              (GstCaps *caps);
+void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps);
 
 /* newsegment events */
 GstEvent*       gst_event_new_new_segment       (gboolean update, gdouble rate,

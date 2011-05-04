@@ -99,6 +99,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_FLUSH_START, "flush-start", 0},
   {GST_EVENT_FLUSH_STOP, "flush-stop", 0},
   {GST_EVENT_EOS, "eos", 0},
+  {GST_EVENT_CAPS, "caps", 0},
   {GST_EVENT_NEWSEGMENT, "newsegment", 0},
   {GST_EVENT_TAG, "tag", 0},
   {GST_EVENT_BUFFERSIZE, "buffersize", 0},
@@ -473,6 +474,47 @@ GstEvent *
 gst_event_new_eos (void)
 {
   return gst_event_new (GST_EVENT_EOS);
+}
+
+/**
+ * gst_event_new_caps:
+ * @caps: a #GstCaps
+ *
+ * Create a new CAPS event for @caps. The caps event can only travel downstream
+ * synchronized with the buffer flow and contain the format of the buffers
+ * that will follow after the event.
+ *
+ * Returns: (transfer full): the new CAPS event.
+ */
+GstEvent *
+gst_event_new_caps (GstCaps * caps)
+{
+  GstEvent *event;
+
+  GST_CAT_INFO (GST_CAT_EVENT, "creating caps event %" GST_PTR_FORMAT, caps);
+
+  event = gst_event_new_custom (GST_EVENT_BUFFERSIZE,
+      gst_structure_id_new (GST_QUARK (EVENT_CAPS),
+          GST_QUARK (CAPS), GST_TYPE_CAPS, caps, NULL));
+
+  return event;
+}
+
+/**
+ * gst_event_parse_caps:
+ * @event: The event to parse
+ * @caps: (out): A pointer to the caps
+ *
+ * Get the caps from @event.
+ */
+void
+gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
+{
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
+
+  gst_structure_id_get (event->structure,
+      GST_QUARK (CAPS), GST_TYPE_CAPS, caps, NULL);
 }
 
 /**
