@@ -1498,7 +1498,7 @@ gst_x264_enc_sink_get_caps (GstPad * pad)
     gst_object_unref (peer);
     peer = NULL;
   } else {
-    caps = gst_caps_ref (gst_pad_get_pad_template_caps (pad));
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
 
   gst_object_unref (encoder);
