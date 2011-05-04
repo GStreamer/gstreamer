@@ -835,6 +835,8 @@ gst_xvidenc_getcaps (GstPad * pad)
 
     caps = gst_caps_intersect (peercaps, templcaps);
     gst_caps_unref (peercaps);
+    gst_object_unref (peer);
+    peer = NULL;
   } else {
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
