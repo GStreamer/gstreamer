@@ -579,7 +579,6 @@ GST_START_TEST (test_push_negotiation)
 
   /* Should fail if src pad caps are incompatible with sink pad caps */
   gst_pad_set_caps (src, caps);
-  gst_buffer_set_caps (buffer, caps);
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_NOT_NEGOTIATED);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);

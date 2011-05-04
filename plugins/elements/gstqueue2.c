@@ -2204,15 +2204,8 @@ next:
 
   if (is_buffer) {
     GstBuffer *buffer;
-    GstCaps *caps;
 
     buffer = GST_BUFFER_CAST (data);
-    caps = GST_BUFFER_CAPS (buffer);
-
-    /* set caps before pushing the buffer so that core does not try to do
-     * something fancy to check if this is possible. */
-    if (caps && caps != GST_PAD_CAPS (queue->srcpad))
-      gst_pad_set_caps (queue->srcpad, caps);
 
     result = gst_pad_push (queue->srcpad, buffer);
 

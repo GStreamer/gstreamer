@@ -321,6 +321,10 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
+  *buf = input;
+  gst_buffer_ref (input);
+
+#if 0
   if (GST_BUFFER_CAPS (input) != NULL) {
     /* Output buffer already has caps */
     GST_LOG_OBJECT (trans, "Input buffer already has caps (implicitely fixed)");
@@ -389,6 +393,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
       g_free (caps_str);
     }
   }
+#endif
 
   return ret;
 }

@@ -751,6 +751,7 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
   return ret;
 }
 
+#if 0
 /* check if caps @in on @pad can be transformed to @out on the other pad.
  * We don't have a vmethod to test this yet so we have to do a somewhat less
  * efficient check for this.
@@ -798,6 +799,7 @@ no_subset:
     return FALSE;
   }
 }
+#endif
 
 /* given a fixed @caps on @pad, create the best possible caps for the
  * other pad.
@@ -1273,6 +1275,7 @@ gst_base_transform_query_type (GstPad * pad)
   return types;
 }
 
+#if 0
 static void
 compute_upstream_suggestion (GstBaseTransform * trans, gsize expsize,
     GstCaps * caps)
@@ -1317,6 +1320,7 @@ compute_upstream_suggestion (GstBaseTransform * trans, gsize expsize,
     gst_caps_unref (othercaps);
   }
 }
+#endif
 
 /* Allocate a buffer using gst_pad_alloc_buffer
  *
@@ -1333,9 +1337,9 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   GstBaseTransformClass *bclass;
   GstBaseTransformPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  gsize insize, outsize, newsize, expsize;
+  gsize insize, outsize;
   gboolean discard, setcaps, copymeta;
-  GstCaps *incaps, *oldcaps, *newcaps, *outcaps;
+  GstCaps *oldcaps, *outcaps;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
@@ -1418,7 +1422,6 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
           oldcaps);
 
       *out_buf = gst_buffer_new_and_alloc (outsize);
-      gst_buffer_set_caps (*out_buf, oldcaps);
 #if 0
       ret = gst_pad_alloc_buffer (trans->srcpad,
           GST_BUFFER_OFFSET (in_buf), outsize, oldcaps, out_buf);
@@ -1431,108 +1434,6 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   /* must always have a buffer by now */
   if (*out_buf == NULL)
     goto no_buffer;
-
-  /* check if we got different caps on this new output buffer */
-  newcaps = GST_BUFFER_CAPS (*out_buf);
-  newsize = gst_buffer_get_size (*out_buf);
-
-  if (newcaps && !gst_caps_is_equal (newcaps, oldcaps)) {
-    GstCaps *othercaps;
-    gboolean can_convert;
-
-    GST_DEBUG_OBJECT (trans, "received new caps %" GST_PTR_FORMAT, newcaps);
-
-    incaps = GST_PAD_CAPS (trans->sinkpad);
-
-    /* check if we can convert the current incaps to the new target caps */
-    can_convert =
-        gst_base_transform_can_transform (trans, trans->sinkpad, incaps,
-        newcaps);
-
-    if (!can_convert) {
-      GST_DEBUG_OBJECT (trans, "cannot perform transform on current buffer");
-
-      gst_base_transform_transform_size (trans,
-          GST_PAD_SINK, incaps, insize, newcaps, &expsize);
-
-      compute_upstream_suggestion (trans, expsize, newcaps);
-
-      /* we got a suggested caps but we can't transform to it. See if there is
-       * another downstream format that we can transform to */
-      othercaps =
-          gst_base_transform_find_transform (trans, trans->sinkpad, incaps);
-
-      if (othercaps && !gst_caps_is_empty (othercaps)) {
-        GST_DEBUG_OBJECT (trans, "we found target caps %" GST_PTR_FORMAT,
-            othercaps);
-        *out_buf = gst_buffer_make_writable (*out_buf);
-        gst_buffer_set_caps (*out_buf, othercaps);
-        gst_caps_unref (othercaps);
-        newcaps = GST_BUFFER_CAPS (*out_buf);
-        can_convert = TRUE;
-      } else if (othercaps)
-        gst_caps_unref (othercaps);
-    }
-
-    /* it's possible that the buffer we got is of the wrong size, get the
-     * expected size here, we will check the size if we are going to use the
-     * buffer later on. */
-    gst_base_transform_transform_size (trans,
-        GST_PAD_SINK, incaps, insize, newcaps, &expsize);
-
-    if (can_convert) {
-      GST_DEBUG_OBJECT (trans, "reconfigure transform for current buffer");
-
-      /* subclass might want to add fields to the caps */
-      if (bclass->fixate_caps != NULL) {
-        newcaps = gst_caps_copy (newcaps);
-
-        GST_DEBUG_OBJECT (trans, "doing fixate %" GST_PTR_FORMAT
-            " using caps %" GST_PTR_FORMAT
-            " on pad %s:%s using fixate_caps vmethod", newcaps, incaps,
-            GST_DEBUG_PAD_NAME (trans->srcpad));
-        bclass->fixate_caps (trans, GST_PAD_SINK, incaps, newcaps);
-
-        *out_buf = gst_buffer_make_writable (*out_buf);
-        gst_buffer_set_caps (*out_buf, newcaps);
-        gst_caps_unref (newcaps);
-        newcaps = GST_BUFFER_CAPS (*out_buf);
-      }
-
-      /* caps not empty, try to renegotiate to the new format */
-      if (!gst_base_transform_configure_caps (trans, incaps, newcaps)) {
-        /* not sure we need to fail hard here, we can simply continue our
-         * conversion with what we negotiated before */
-        goto failed_configure;
-      }
-      /* new format configure, and use the new output buffer */
-      gst_pad_set_caps (trans->srcpad, newcaps);
-      discard = FALSE;
-      /* clear previous cached sink-pad caps, so buffer_alloc knows that
-       * it needs to revisit the decision about whether to proxy or not: */
-      gst_caps_replace (&priv->sink_alloc, NULL);
-      /* if we got a buffer of the wrong size, discard it now and make sure we
-       * allocate a propertly sized buffer later. */
-      if (newsize != expsize) {
-        if (in_buf != *out_buf)
-          gst_buffer_unref (*out_buf);
-        *out_buf = NULL;
-      }
-      outsize = expsize;
-    } else {
-      compute_upstream_suggestion (trans, expsize, newcaps);
-
-      if (in_buf != *out_buf)
-        gst_buffer_unref (*out_buf);
-      *out_buf = NULL;
-    }
-  } else if (outsize != newsize) {
-    GST_WARNING_OBJECT (trans, "Caps did not change but allocated size does "
-        "not match expected size (%d != %d)", newsize, outsize);
-    if (in_buf != *out_buf)
-      gst_buffer_unref (*out_buf);
-    *out_buf = NULL;
-  }
 
   /* these are the final output caps */
   outcaps = GST_PAD_CAPS (trans->srcpad);
@@ -1586,21 +1487,12 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     }
   }
 
-  /* check if we need to make things writable. We need this when we need to
-   * update the caps or the metadata on the output buffer. */
-  newcaps = GST_BUFFER_CAPS (*out_buf);
-  /* we check the pointers as a quick check and then go to the more involved
-   * check. This is needed when we receive different pointers on the sinkpad
-   * that mean the same caps. What we then want to do is prefer those caps over
-   * the ones on the srcpad and set the srcpad caps to the buffer caps */
-  setcaps = !newcaps || ((newcaps != outcaps)
-      && (!gst_caps_is_equal (newcaps, outcaps)));
   /* we need to modify the metadata when the element is not gap aware,
    * passthrough is not used and the gap flag is set */
   copymeta |= !trans->priv->gap_aware && !trans->passthrough
       && (GST_MINI_OBJECT_FLAGS (*out_buf) & GST_BUFFER_FLAG_GAP);
 
-  if (setcaps || copymeta) {
+  if (copymeta) {
     GST_DEBUG_OBJECT (trans, "setcaps %d, copymeta %d", setcaps, copymeta);
     if (!gst_buffer_is_writable (*out_buf)) {
       GST_DEBUG_OBJECT (trans, "buffer %p not writable", *out_buf);
@@ -1610,8 +1502,6 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
         *out_buf = gst_buffer_make_writable (*out_buf);
     }
     /* when we get here, the metadata should be writable */
-    if (setcaps)
-      gst_buffer_set_caps (*out_buf, outcaps);
     if (copymeta)
       gst_buffer_copy_into (*out_buf, in_buf,
           GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
@@ -1638,11 +1528,6 @@ unknown_size:
   {
     GST_ERROR_OBJECT (trans, "unknown output size");
     return GST_FLOW_ERROR;
-  }
-failed_configure:
-  {
-    GST_WARNING_OBJECT (trans, "failed to configure caps");
-    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
@@ -1864,14 +1749,14 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
 {
   GstBaseTransformClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean want_in_place, reconfigure;
+  gboolean want_in_place;
   GstClockTime running_time;
   GstClockTime timestamp;
-  GstCaps *incaps;
   gsize insize;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
+#if 0
   if (G_LIKELY ((incaps = GST_BUFFER_CAPS (inbuf)))) {
     GST_OBJECT_LOCK (trans);
     reconfigure = trans->priv->reconfigure;
@@ -1887,6 +1772,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
         goto not_negotiated;
     }
   }
+#endif
 
   insize = gst_buffer_get_size (inbuf);
 

@@ -490,7 +490,7 @@ GST_START_TEST (test_flow_aggregation)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
 
   buffer = gst_buffer_new ();
-  gst_buffer_set_caps (buffer, caps);
+  //gst_buffer_set_caps (buffer, caps);
 
   /* First check if everything works in normal state */
   fail_unless (gst_pad_push (mysrc, gst_buffer_ref (buffer)) == GST_FLOW_OK);

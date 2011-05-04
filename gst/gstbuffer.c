@@ -306,10 +306,6 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     }
   }
 
-  if (flags & GST_BUFFER_COPY_CAPS) {
-    gst_caps_replace (&GST_BUFFER_CAPS (dest), GST_BUFFER_CAPS (src));
-  }
-
   if (flags & GST_BUFFER_COPY_MEMORY) {
     GstMemory *mem;
     gsize skip, left, len, i, bsize;
@@ -402,7 +398,7 @@ _gst_buffer_free (GstBuffer * buffer)
 
   GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
 
-  gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
+  gst_context_replace (&GST_BUFFER_CONTEXT (buffer), NULL);
 
   /* free metadata */
   for (walk = GST_BUFFER_META (buffer); walk; walk = next) {
@@ -444,7 +440,7 @@ gst_buffer_init (GstBufferImpl * buffer, gsize size)
       (GstMiniObjectFreeFunction) _gst_buffer_free;
 
   GST_BUFFER (buffer)->pool = NULL;
-  GST_BUFFER_CAPS (buffer) = NULL;
+  GST_BUFFER_CONTEXT (buffer) = NULL;
   GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
@@ -1057,71 +1053,65 @@ gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
 }
 
 /**
- * gst_buffer_get_caps:
+ * gst_buffer_get_context:
  * @buffer: a #GstBuffer.
  *
- * Gets the media type of the buffer. This can be NULL if there
- * is no media type attached to this buffer.
+ * Gets the context of the buffer. This can be NULL if there
+ * is no context attached to this buffer.
  *
- * Returns: (transfer full): a reference to the #GstCaps. unref after usage.
- * Returns NULL if there were no caps on this buffer.
+ * Returns: (transfer full): a reference to the #GstContext. unref after usage.
+ * Returns NULL if there was no context on this buffer.
  */
 /* this is not made atomic because if the buffer were reffed from multiple
  * threads, it would have a refcount > 2 and thus be immutable.
  */
-GstCaps *
-gst_buffer_get_caps (GstBuffer * buffer)
+GstContext *
+gst_buffer_get_context (GstBuffer * buffer)
 {
-  GstCaps *ret;
+  GstContext *ret;
 
   g_return_val_if_fail (buffer != NULL, NULL);
 
-  ret = GST_BUFFER_CAPS (buffer);
+  ret = GST_BUFFER_CONTEXT (buffer);
 
   if (ret)
-    gst_caps_ref (ret);
+    gst_context_ref (ret);
 
   return ret;
 }
 
 /**
- * gst_buffer_set_caps:
+ * gst_buffer_set_context:
  * @buffer: a #GstBuffer.
- * @caps: (transfer none): a #GstCaps.
+ * @context: (transfer none): a #GstContext.
  *
- * Sets the media type on the buffer. The refcount of the caps will
- * be increased and any previous caps on the buffer will be
+ * Sets the media type on the buffer. The refcount of the context will
+ * be increased and any previous context on the buffer will be
  * unreffed.
  */
 /* this is not made atomic because if the buffer were reffed from multiple
  * threads, it would have a refcount > 2 and thus be immutable.
  */
 void
-gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
+gst_buffer_set_context (GstBuffer * buffer, GstContext * context)
 {
   g_return_if_fail (buffer != NULL);
-  g_return_if_fail (caps == NULL || GST_CAPS_IS_SIMPLE (caps));
+  g_return_if_fail (gst_buffer_is_writable (buffer));
 
-#if GST_VERSION_NANO == 1
-  /* we enable this extra debugging in git versions only for now */
-  g_warn_if_fail (gst_buffer_is_writable (buffer));
-  /* FIXME: would be nice to also check if caps are fixed here, but expensive */
-#endif
-
-  gst_caps_replace (&GST_BUFFER_CAPS (buffer), caps);
+  gst_context_replace (&GST_BUFFER_CONTEXT (buffer), context);
 }
 
 /**
  * gst_buffer_copy_region:
  * @parent: a #GstBuffer.
- * @offset: the offset into parent #GstBuffer at which the new sub-buffer 
+ * @offset: the offset into parent #GstBuffer at which the new sub-buffer
  *          begins.
  * @size: the size of the new #GstBuffer sub-buffer, in bytes.
  *
  * Creates a sub-buffer from @parent at @offset and @size.
  * This sub-buffer uses the actual memory space of the parent buffer.
  * This function will copy the offset and timestamp fields when the
- * offset is 0. If not, they will be set to #GST_CLOCK_TIME_NONE and 
+ * offset is 0. If not, they will be set to #GST_CLOCK_TIME_NONE and
  * #GST_BUFFER_OFFSET_NONE.
  * If @offset equals 0 and @size equals the total size of @buffer, the
  * duration and offset end fields are also copied. If not they will be set
@@ -1508,4 +1498,23 @@ gst_buffer_iterate_meta (GstBuffer * buffer, gpointer * state)
     return &(*meta)->meta;
   else
     return NULL;
+}
+
+GstCaps *
+gst_buffer_caps (GstBuffer * buffer)
+{
+  GstContext *context;
+  GstEvent *event;
+  GstCaps *caps = NULL;
+
+  if (!(context = GST_BUFFER_CONTEXT (buffer)))
+    return NULL;
+
+  if (!(event = gst_context_get (context, GST_EVENT_CAPS)))
+    return NULL;
+
+  gst_event_parse_caps (event, &caps);
+  gst_event_unref (event);
+
+  return caps;
 }

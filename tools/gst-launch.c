@@ -367,12 +367,15 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
       img = gst_value_get_buffer (gst_tag_list_get_value_index (list, tag, i));
       if (img) {
         gchar *caps_str;
+        GstCaps *caps;
 
-        caps_str = GST_BUFFER_CAPS (img) ?
-            gst_caps_to_string (GST_BUFFER_CAPS (img)) : g_strdup ("unknown");
+        caps = gst_buffer_caps (img);
+        caps_str = caps ? gst_caps_to_string (caps) : g_strdup ("unknown");
         str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes, type: %s",
             gst_buffer_get_size (img), caps_str);
         g_free (caps_str);
+        if (caps)
+          gst_caps_unref (caps);
       } else {
         str = g_strdup ("NULL buffer");
       }

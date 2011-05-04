@@ -23,6 +23,8 @@
 #ifndef __GST_CONTEXT_H__
 #define __GST_CONTEXT_H__
 
+typedef struct _GstContext GstContext;
+
 #include <gst/gstminiobject.h>
 #include <gst/gstevent.h>
 
@@ -30,7 +32,6 @@ G_BEGIN_DECLS
 
 #define GST_CONTEXT_TRACE_NAME    "GstContext"
 
-typedef struct _GstContext GstContext;
 
 #define GST_TYPE_CONTEXT                (gst_context_get_type())
 #define GST_IS_CONTEXT(obj)             (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_CONTEXT))
@@ -134,10 +135,14 @@ gst_context_copy (const GstContext * context)
 
 GstContext *   gst_context_new         (void);
 
+/* updating and setting events */
 void           gst_context_update      (GstContext *context, GstEvent *event);
 GstEvent *     gst_context_get         (GstContext *context, GstEventType type);
 
 void           gst_context_clear       (GstContext *context);
+
+/* foreach */
+void           gst_context_foreach     (GstContext *context, GFunc func, gpointer user_data);
 
 G_END_DECLS
 

@@ -66,7 +66,6 @@ GST_START_TEST (test_buffer)
   gst_buffer_unref (buffer);
 
   buffer = gst_buffer_new_and_alloc (1000);
-  gst_buffer_set_caps (buffer, c1);     /* doesn't give away our c1 ref */
 
   gst_caps_unref (c1);
   gst_buffer_unref (buffer);    /* Should now drop both references */

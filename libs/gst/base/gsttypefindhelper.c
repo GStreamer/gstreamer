@@ -136,7 +136,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   if (ret != GST_FLOW_OK)
     goto error;
 
-  caps = GST_BUFFER_CAPS (buffer);
+  caps = gst_buffer_caps (buffer);
 
   if (caps && !gst_caps_is_empty (caps) && !gst_caps_is_any (caps)) {
     GST_DEBUG ("buffer has caps %" GST_PTR_FORMAT ", suggest max probability",
