@@ -80,7 +80,8 @@ typedef enum {
 #define FLAG(name) GST_EVENT_TYPE_##name
 
 
-#define GST_EVENT_STICKY_IDX(ev)  ((GST_EVENT_TYPE(ev) >> GST_EVENT_STICKY_SHIFT) & 0xf)
+#define GST_EVENT_STICKY_IDX_TYPE(type)  (((type) >> GST_EVENT_STICKY_SHIFT) & 0xf)
+#define GST_EVENT_STICKY_IDX(ev)         GST_EVENT_STICKY_IDX_TYPE(GST_EVENT_TYPE(ev))
 
 /**
  * GstEventType:
