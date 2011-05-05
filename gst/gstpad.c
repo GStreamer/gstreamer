@@ -2038,6 +2038,9 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
   GST_PAD_PEER (srcpad) = sinkpad;
   GST_PAD_PEER (sinkpad) = srcpad;
 
+  /* make sure we push a context to this new peer */
+  GST_OBJECT_FLAG_SET (srcpad, GST_PAD_CONTEXT_PENDING);
+
   GST_OBJECT_UNLOCK (sinkpad);
   GST_OBJECT_UNLOCK (srcpad);
 
@@ -2628,7 +2631,7 @@ context_func (GstEvent * event, ContextData * data)
 }
 
 static GstFlowReturn
-gst_pad_update_context (GstPad * pad, GstContext * old, GstContext * context)
+gst_pad_update_context (GstPad * pad, GstContext * context)
 {
   ContextData data;
 
@@ -3476,7 +3479,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
   gboolean caps_changed;
   GstFlowReturn ret;
   gboolean emit_signal;
-  GstContext *oldctx = NULL;
 
   GST_PAD_STREAM_LOCK (pad);
 
@@ -3488,9 +3490,10 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
 
   if (G_LIKELY (context)) {
-    oldctx = GST_PAD_CONTEXT (pad);
+    GstContext *oldctx = GST_PAD_CONTEXT (pad);
     if (G_UNLIKELY (context != oldctx)) {
       GST_PAD_CONTEXT (pad) = context;
+      gst_context_unref (oldctx);
     } else {
       gst_context_unref (context);
       context = NULL;
@@ -3515,9 +3518,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
 
   if (G_UNLIKELY (context)) {
     GST_DEBUG_OBJECT (pad, "context changed to %p", context);
-    ret = gst_pad_update_context (pad, oldctx, context);
-    if (oldctx)
-      gst_context_unref (oldctx);
+    ret = gst_pad_update_context (pad, context);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto context_error;
   }
@@ -4389,7 +4390,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn ret;
   gboolean emit_signal;
   GstCaps *caps;
-  GstContext *context = NULL, *oldctx = NULL;
+  GstContext *context = NULL;
   gboolean caps_changed;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
@@ -4431,9 +4432,10 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
 
   if (G_UNLIKELY (context)) {
-    oldctx = GST_PAD_CONTEXT (pad);
+    GstContext *oldctx = GST_PAD_CONTEXT (pad);
     if (G_UNLIKELY (context != oldctx)) {
       GST_PAD_CONTEXT (pad) = context;
+      gst_context_unref (oldctx);
     } else {
       gst_context_unref (context);
       context = NULL;
@@ -4443,9 +4445,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
   if (G_UNLIKELY (context)) {
     GST_DEBUG_OBJECT (pad, "context changed to %p", context);
-    ret = gst_pad_update_context (pad, oldctx, context);
-    if (oldctx)
-      gst_context_unref (oldctx);
+    ret = gst_pad_update_context (pad, context);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto context_error;
   }
@@ -4526,6 +4526,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
   GstPad *peerpad;
   gboolean result;
+  GstContext *context = NULL;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -4585,28 +4586,54 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
   /* store the event on the pad, but only on srcpads */
   if (GST_PAD_IS_SRC (pad) && GST_EVENT_IS_STICKY (event)) {
-    if (GST_PAD_CONTEXT (pad))
-      GST_PAD_CONTEXT (pad) = gst_context_make_writable (GST_PAD_CONTEXT (pad));
+    if (context)
+      context = gst_context_make_writable (GST_PAD_CONTEXT (pad));
     else
-      GST_PAD_CONTEXT (pad) = gst_context_new ();
+      context = gst_context_new ();
 
-    gst_context_update (GST_PAD_CONTEXT (pad), event);
+    GST_LOG_OBJECT (pad, "update context %p", context);
+
+    gst_context_update (context, event);
+    GST_PAD_CONTEXT (pad) = context;
   }
 
   peerpad = GST_PAD_PEER (pad);
   if (peerpad == NULL)
     goto not_linked;
 
-  GST_LOG_OBJECT (pad, "sending event %s to peerpad %" GST_PTR_FORMAT,
-      GST_EVENT_TYPE_NAME (event), peerpad);
+  if (context) {
+    /* set the context on the peerpad too */
+    GST_LOG_OBJECT (pad, "pushing context %p to peerpad", context);
+
+    GST_OBJECT_LOCK (peerpad);
+    gst_context_replace (&GST_PAD_CONTEXT (peerpad), context);
+    GST_OBJECT_UNLOCK (peerpad);
+  }
+
   gst_object_ref (peerpad);
-  GST_OBJECT_UNLOCK (pad);
 
-  result = gst_pad_send_event (peerpad, event);
+  if (context && GST_PAD_IS_CONTEXT_PENDING (pad)) {
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_CONTEXT_PENDING);
+    GST_OBJECT_UNLOCK (pad);
 
-  /* Note: we gave away ownership of the event at this point */
-  GST_LOG_OBJECT (pad, "sent event to peerpad %" GST_PTR_FORMAT ", result %d",
-      peerpad, result);
+    GST_LOG_OBJECT (pad, "do full context update to peerpad %" GST_PTR_FORMAT,
+        peerpad);
+
+    /* we need to send all events in the context to the peer, this will include
+     * the newly added event to the context */
+    gst_pad_update_context (peerpad, context);
+    result = TRUE;
+  } else {
+    GST_LOG_OBJECT (pad, "sending event %s to peerpad %" GST_PTR_FORMAT,
+        GST_EVENT_TYPE_NAME (event), peerpad);
+    GST_OBJECT_UNLOCK (pad);
+
+    result = gst_pad_send_event (peerpad, event);
+
+    /* Note: we gave away ownership of the event at this point */
+    GST_LOG_OBJECT (pad, "sent event to peerpad %" GST_PTR_FORMAT ", result %d",
+        peerpad, result);
+  }
   gst_object_unref (peerpad);
 
   return result;
