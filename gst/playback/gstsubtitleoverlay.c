@@ -2025,6 +2025,7 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
 {
   GstPadTemplate *templ;
   GstIterator *it;
+  GValue item = { 0, };
   GstPad *proxypad = NULL;
 
   self->lock = g_mutex_new ();
@@ -2034,8 +2035,8 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
   self->srcpad = gst_ghost_pad_new_no_target_from_template ("src", templ);
   it = gst_pad_iterate_internal_links (self->srcpad);
   if (G_UNLIKELY (!it
-          || gst_iterator_next (it, (gpointer) & proxypad) != GST_ITERATOR_OK
-          || proxypad == NULL)) {
+          || gst_iterator_next (it, &item) != GST_ITERATOR_OK
+          || ((proxypad = g_value_get_object (&item)) == NULL))) {
     GST_ERROR_OBJECT (self, "Failed to get proxypad of srcpad");
   } else {
     self->src_proxy_event = GST_PAD_EVENTFUNC (proxypad);
@@ -2044,7 +2045,7 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
     self->src_proxy_chain = GST_PAD_CHAINFUNC (proxypad);
     gst_pad_set_chain_function (proxypad,
         GST_DEBUG_FUNCPTR (gst_subtitle_overlay_src_proxy_chain));
-    gst_object_unref (proxypad);
+    g_value_unset (&item);
   }
   if (it)
     gst_iterator_free (it);
@@ -2067,14 +2068,15 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
   proxypad = NULL;
   it = gst_pad_iterate_internal_links (self->video_sinkpad);
   if (G_UNLIKELY (!it
-          || gst_iterator_next (it, (gpointer) & proxypad) != GST_ITERATOR_OK
-          || proxypad == NULL)) {
+          || gst_iterator_next (it, &item) != GST_ITERATOR_OK
+          || ((proxypad = g_value_dup_object (&item)) == NULL))) {
     GST_ERROR_OBJECT (self,
         "Failed to get internally linked pad from video sinkpad");
   }
   if (it)
     gst_iterator_free (it);
   self->video_block_pad = proxypad;
+  g_value_unset (&item);
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->video_sinkpad);
 
   templ = gst_static_pad_template_get (&subtitle_sinktemplate);
@@ -2103,13 +2105,14 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
   proxypad = NULL;
   it = gst_pad_iterate_internal_links (self->subtitle_sinkpad);
   if (G_UNLIKELY (!it
-          || gst_iterator_next (it, (gpointer) & proxypad) != GST_ITERATOR_OK
-          || proxypad == NULL)) {
+          || gst_iterator_next (it, &item) != GST_ITERATOR_OK
+          || ((proxypad = g_value_dup_object (&item)) == NULL))) {
     GST_ERROR_OBJECT (self,
         "Failed to get internally linked pad from subtitle sinkpad");
   }
   if (it)
     gst_iterator_free (it);
+  g_value_unset (&item);
   self->subtitle_block_pad = proxypad;
 
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->subtitle_sinkpad);
