@@ -611,7 +611,6 @@ EXPORTS
 	gst_meta_get_info
 	gst_meta_register
 	gst_meta_timing_get_info
-	gst_meta_transform_type_get_type
 	gst_mini_object_copy
 	gst_mini_object_flags_get_type
 	gst_mini_object_init
