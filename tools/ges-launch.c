@@ -326,11 +326,20 @@ static void
 bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
 {
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR:
-      g_printerr ("ERROR\n");
+    case GST_MESSAGE_ERROR:{
+      GError *err = NULL;
+      gchar *dbg_info = NULL;
+
+      gst_message_parse_error (message, &err, &dbg_info);
+      g_printerr ("ERROR from element %s: %s\n",
+          GST_OBJECT_NAME (message->src), err->message);
+      g_printerr ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
+      g_error_free (err);
+      g_free (dbg_info);
       seenerrors = TRUE;
       g_main_loop_quit (mainloop);
       break;
+    }
     case GST_MESSAGE_EOS:
       if (repeat > 0) {
         g_printerr ("Looping again\n");
