@@ -60,11 +60,11 @@ static void
 dump_element_stats (GstElement * element)
 {
   GstIterator *it;
-  gpointer data;
+  GValue data = { 0, };
 
   it = gst_element_iterate_src_pads (element);
   while (gst_iterator_next (it, &data) == GST_ITERATOR_OK) {
-    GstPad *pad = GST_PAD (data);
+    GstPad *pad = g_value_get_object (&data);
     GstCaps *caps;
     gchar *str;
     GstQuery *query;
@@ -87,8 +87,9 @@ dump_element_stats (GstElement * element)
     }
     gst_query_unref (query);
 
-    gst_object_unref (pad);
+    g_value_reset (&data);
   }
+  g_value_unset (&data);
   gst_iterator_free (it);
 }
 

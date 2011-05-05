@@ -79,7 +79,7 @@ main (gint argc, gchar * argv[])
   GstStateChangeReturn res;
   GstIterator *it;
   GstBus *bus;
-  gpointer data;
+  GValue data = { 0, };
 
   gst_init (&argc, &argv);
 
@@ -133,7 +133,7 @@ main (gint argc, gchar * argv[])
 
   it = gst_element_iterate_src_pads (decodebin);
   while (gst_iterator_next (it, &data) == GST_ITERATOR_OK) {
-    GstPad *pad = GST_PAD (data);
+    GstPad *pad = g_value_get_object (&data);
     GstCaps *caps;
     gchar *str;
     GstQuery *query;
@@ -156,8 +156,9 @@ main (gint argc, gchar * argv[])
     }
     gst_query_unref (query);
 
-    gst_object_unref (pad);
+    g_value_reset (&data);
   }
+  g_value_unset (&data);
   gst_iterator_free (it);
 
   return 0;
