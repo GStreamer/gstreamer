@@ -134,10 +134,14 @@ gst_context_copy (const GstContext * context)
 
 GstContext *   gst_context_new         (void);
 
+/* updating and setting events */
 void           gst_context_update      (GstContext *context, GstEvent *event);
 GstEvent *     gst_context_get         (GstContext *context, GstEventType type);
 
 void           gst_context_clear       (GstContext *context);
+
+/* foreach */
+void           gst_context_foreach     (GstContext *context, GFunc func, gpointer user_data);
 
 G_END_DECLS
 
