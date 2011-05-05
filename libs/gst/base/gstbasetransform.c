@@ -1169,8 +1169,6 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
   gboolean ret = TRUE;
   GstCaps *incaps, *outcaps;
 
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
   otherpeer = gst_pad_get_peer (otherpad);
 
