@@ -1582,9 +1582,10 @@ gst_play_bin_suburidecodebin_seek_to_start (GstElement * suburidecodebin)
 {
   GstIterator *it = gst_element_iterate_src_pads (suburidecodebin);
   GstPad *sinkpad;
+  GValue item = { 0, };
 
-  if (it && gst_iterator_next (it, (gpointer) & sinkpad) == GST_ITERATOR_OK
-      && sinkpad) {
+  if (it && gst_iterator_next (it, &item) == GST_ITERATOR_OK
+      && ((sinkpad = g_value_get_object (&item)) != NULL)) {
     GstEvent *event;
 
     event =
@@ -1598,7 +1599,7 @@ gst_play_bin_suburidecodebin_seek_to_start (GstElement * suburidecodebin)
         GST_DEBUG_OBJECT (suburidecodebin, "Seeking to the beginning failed!");
     }
 
-    gst_object_unref (sinkpad);
+    g_value_unset (&item);
   }
 
   if (it)
@@ -1611,6 +1612,7 @@ gst_play_bin_suburidecodebin_block (GstElement * suburidecodebin,
 {
   GstIterator *it = gst_element_iterate_src_pads (suburidecodebin);
   gboolean done = FALSE;
+  GValue item = { 0, };
 
   GST_DEBUG_OBJECT (suburidecodebin, "Blocking suburidecodebin: %d", block);
 
@@ -1619,11 +1621,12 @@ gst_play_bin_suburidecodebin_block (GstElement * suburidecodebin,
   while (!done) {
     GstPad *sinkpad;
 
-    switch (gst_iterator_next (it, (gpointer) & sinkpad)) {
+    switch (gst_iterator_next (it, &item)) {
       case GST_ITERATOR_OK:
+        sinkpad = g_value_get_object (&item);
         gst_pad_set_blocked_async (sinkpad, block, _suburidecodebin_blocked_cb,
             NULL);
-        gst_object_unref (sinkpad);
+        g_value_reset (&item);
         break;
       case GST_ITERATOR_DONE:
         done = TRUE;
@@ -1636,6 +1639,7 @@ gst_play_bin_suburidecodebin_block (GstElement * suburidecodebin,
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (it);
 }
 
@@ -2237,6 +2241,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
         GstMessage *new_msg;
         GstIterator *it;
         gboolean done = FALSE;
+        GValue item = { 0, };
 
         gst_message_parse_error (msg, &err, &debug);
         new_msg = gst_message_new_warning (msg->src, err, debug);
@@ -2256,15 +2261,16 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
           GstPad *p = NULL;
           GstIteratorResult res;
 
-          res = gst_iterator_next (it, (gpointer) & p);
+          res = gst_iterator_next (it, &item);
 
           switch (res) {
             case GST_ITERATOR_DONE:
               done = TRUE;
               break;
             case GST_ITERATOR_OK:
+              p = g_value_get_object (&item);
               pad_removed_cb (NULL, p, group);
-              gst_object_unref (p);
+              g_value_reset (&item);
               break;
 
             case GST_ITERATOR_RESYNC:
@@ -2275,6 +2281,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
               break;
           }
         }
+        g_value_unset (&item);
         if (it)
           gst_iterator_free (it);
 
