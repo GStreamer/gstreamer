@@ -684,6 +684,7 @@ struct _GstPadClass {
  * The caps for this pad.
  */
 #define GST_PAD_CAPS(pad)		(GST_PAD_CAST(pad)->caps)
+#define GST_PAD_CONTEXT(pad)		(GST_PAD_CAST(pad)->context)
 #define GST_PAD_GETCAPSFUNC(pad)	(GST_PAD_CAST(pad)->getcapsfunc)
 #define GST_PAD_SETCAPSFUNC(pad)	(GST_PAD_CAST(pad)->setcapsfunc)
 #define GST_PAD_ACCEPTCAPSFUNC(pad)	(GST_PAD_CAST(pad)->acceptcapsfunc)

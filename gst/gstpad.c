@@ -371,8 +371,6 @@ gst_pad_init (GstPad * pad)
   g_static_rec_mutex_init (pad->stream_rec_lock);
 
   pad->block_cond = g_cond_new ();
-
-  pad->context = gst_context_new ();
 }
 
 static void
@@ -406,7 +404,8 @@ gst_pad_dispose (GObject * object)
     pad->block_data = NULL;
   }
 
-  gst_context_clear (pad->context);
+  if (GST_PAD_CONTEXT (pad))
+    gst_context_replace (&GST_PAD_CONTEXT (pad), NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -433,8 +432,6 @@ gst_pad_finalize (GObject * object)
     g_cond_free (pad->block_cond);
     pad->block_cond = NULL;
   }
-
-  gst_context_unref (pad->context);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -620,7 +617,8 @@ post_activate (GstPad * pad, GstActivateMode new_mode)
       /* ensures that streaming stops */
       GST_PAD_STREAM_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "stopped streaming");
-      gst_context_clear (pad->context);
+      if (GST_PAD_CONTEXT (pad))
+        gst_context_clear (GST_PAD_CONTEXT (pad));
       GST_PAD_STREAM_UNLOCK (pad);
       break;
   }
@@ -3449,39 +3447,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
 
   emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
 
-#if 0
-  if (G_UNLIKELY (GST_PAD_IS_STICKY_PENDING (pad))) {
-    GstPadEventFunction eventfunc;
-
-    if (G_LIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)))) {
-      GstEvent *events[GST_EVENT_MAX_STICKY];
-      GstEvent *event;
-      guint i;
-
-      /* need to make a copy because when we release the object lock, things
-       * could just change */
-      for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
-        if ((event = pad->sticky[i]))
-          events[i] = gst_event_ref (event);
-        else
-          events[i] = NULL;
-      }
-      /* clear the flag */
-      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_STICKY_PENDING);
-      GST_OBJECT_UNLOCK (pad);
-
-      /* and push */
-      GST_DEBUG_OBJECT (pad, "pushing sticky events");
-      for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
-        if ((event = events[i]))
-          eventfunc (pad, event);
-      }
-      /* and restart, we released the lock things might have changed */
-      goto again;
-    }
-  }
-#endif
-
   GST_OBJECT_UNLOCK (pad);
 
   /* see if the signal should be emited, we emit before caps nego as
@@ -4497,8 +4462,12 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
   /* store the event on the pad, but only on srcpads */
   if (GST_PAD_IS_SRC (pad) && GST_EVENT_IS_STICKY (event)) {
-    pad->context = gst_context_make_writable (pad->context);
-    gst_context_update (pad->context, event);
+    if (GST_PAD_CONTEXT (pad))
+      GST_PAD_CONTEXT (pad) = gst_context_make_writable (GST_PAD_CONTEXT (pad));
+    else
+      GST_PAD_CONTEXT (pad) = gst_context_new ();
+
+    gst_context_update (GST_PAD_CONTEXT (pad), event);
   }
 
   peerpad = GST_PAD_PEER (pad);
