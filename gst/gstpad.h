@@ -514,6 +514,7 @@ typedef enum {
  *                            The flag has to be unset manually after
  *                            reconfiguration happened.
  *                            Since: 0.10.34.
+ * @GST_PAD_CONTEXT_PENDING: the pad has a pending context
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
@@ -525,6 +526,7 @@ typedef enum {
   GST_PAD_IN_SETCAPS       = (GST_OBJECT_FLAG_LAST << 3),
   GST_PAD_BLOCKING         = (GST_OBJECT_FLAG_LAST << 4),
   GST_PAD_NEED_RECONFIGURE = (GST_OBJECT_FLAG_LAST << 5),
+  GST_PAD_CONTEXT_PENDING  = (GST_OBJECT_FLAG_LAST << 6),
   /* padding */
   GST_PAD_FLAG_LAST        = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
@@ -705,6 +707,7 @@ struct _GstPadClass {
 #define GST_PAD_IS_IN_GETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS))
 #define GST_PAD_IS_IN_SETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS))
 #define GST_PAD_NEEDS_RECONFIGURE(pad)  (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_NEED_RECONFIGURE))
+#define GST_PAD_IS_CONTEXT_PENDING(pad) (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_CONTEXT_PENDING))
 #define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
 #define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
 

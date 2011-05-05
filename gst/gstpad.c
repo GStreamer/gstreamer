@@ -2628,7 +2628,7 @@ context_func (GstEvent * event, ContextData * data)
 }
 
 static GstFlowReturn
-gst_pad_update_context (GstPad * pad, GstContext * context)
+gst_pad_update_context (GstPad * pad, GstContext * old, GstContext * context)
 {
   ContextData data;
 
@@ -2638,9 +2638,6 @@ gst_pad_update_context (GstPad * pad, GstContext * context)
   data.ret = GST_FLOW_OK;
   data.pad = pad;
   gst_context_foreach (context, (GFunc) context_func, &data);
-
-  /* set context on pad if all succeeds */
-  gst_context_replace (&GST_PAD_CONTEXT (pad), context);
 
   return data.ret;
 
@@ -3474,9 +3471,10 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
     GstContext * context, GstPadPushCache * cache)
 {
   GstCaps *caps;
-  gboolean caps_changed, context_changed;
+  gboolean caps_changed;
   GstFlowReturn ret;
   gboolean emit_signal;
+  GstContext *oldctx = NULL;
 
   GST_PAD_STREAM_LOCK (pad);
 
@@ -3487,10 +3485,16 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
   caps = gst_pad_data_get_caps (is_buffer, data);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
 
-  context_changed = context && context != GST_PAD_CONTEXT (pad);
-
+  if (G_LIKELY (context)) {
+    oldctx = GST_PAD_CONTEXT (pad);
+    if (G_UNLIKELY (context != oldctx)) {
+      GST_PAD_CONTEXT (pad) = context;
+    } else {
+      gst_context_unref (context);
+      context = NULL;
+    }
+  }
   emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
-
   GST_OBJECT_UNLOCK (pad);
 
   /* see if the signal should be emited, we emit before caps nego as
@@ -3507,15 +3511,14 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
     }
   }
 
-  if (G_UNLIKELY (context_changed)) {
+  if (G_UNLIKELY (context)) {
     GST_DEBUG_OBJECT (pad, "context changed to %p", context);
-    ret = gst_pad_update_context (pad, context);
+    ret = gst_pad_update_context (pad, oldctx, context);
+    if (oldctx)
+      gst_context_unref (oldctx);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto context_error;
   }
-
-  if (context)
-    gst_context_unref (context);
 
   if (G_UNLIKELY (caps_changed)) {
     GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
@@ -3725,7 +3728,7 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
   GstPad *peer;
   GstFlowReturn ret;
   GstCaps *caps;
-  GstContext *context;
+  GstContext *context = NULL;
   gboolean caps_changed;
 
   GST_OBJECT_LOCK (pad);
@@ -3763,9 +3766,13 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
   caps = gst_pad_data_get_caps (is_buffer, data);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
 
-  context = GST_PAD_CONTEXT (pad);
-  if (G_LIKELY (context))
-    gst_context_ref (context);
+  /* if we have a context pending, push it along too */
+  if (GST_PAD_IS_CONTEXT_PENDING (pad)) {
+    context = GST_PAD_CONTEXT (pad);
+    if (G_LIKELY (context))
+      gst_context_ref (context);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_CONTEXT_PENDING);
+  }
 
   /* take ref to peer pad before releasing the lock */
   gst_object_ref (peer);
@@ -4236,8 +4243,11 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
       goto dropping;
   }
 
-  if (context)
-    gst_context_replace (context, GST_PAD_CONTEXT (pad));
+  if (GST_PAD_IS_CONTEXT_PENDING (pad)) {
+    if (context)
+      gst_context_replace (context, GST_PAD_CONTEXT (pad));
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_CONTEXT_PENDING);
+  }
   GST_PAD_STREAM_UNLOCK (pad);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -4287,6 +4297,8 @@ dropping:
 get_range_failed:
   {
     *buffer = NULL;
+    if (context && *context)
+      gst_context_unref (*context);
     GST_CAT_LEVEL_LOG (GST_CAT_SCHEDULING,
         (ret >= GST_FLOW_UNEXPECTED) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
         pad, "getrange failed, flow: %s", gst_flow_get_name (ret));
@@ -4296,6 +4308,8 @@ not_negotiated:
   {
     gst_buffer_unref (*buffer);
     *buffer = NULL;
+    if (context && *context)
+      gst_context_unref (*context);
     GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
         "getrange returned buffer of unaccaptable caps");
     return GST_FLOW_NOT_NEGOTIATED;
@@ -4373,8 +4387,8 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn ret;
   gboolean emit_signal;
   GstCaps *caps;
-  GstContext *context = NULL;
-  gboolean caps_changed, context_changed;
+  GstContext *context = NULL, *oldctx = NULL;
+  gboolean caps_changed;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
@@ -4414,15 +4428,22 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   caps = GST_BUFFER_CAPS (*buffer);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
 
-  context_changed = context && context != GST_PAD_CONTEXT (pad);
+  if (G_UNLIKELY (context)) {
+    oldctx = GST_PAD_CONTEXT (pad);
+    if (G_UNLIKELY (context != oldctx)) {
+      GST_PAD_CONTEXT (pad) = context;
+    } else {
+      gst_context_unref (context);
+      context = NULL;
+    }
+  }
   GST_OBJECT_UNLOCK (pad);
 
-  if (context)
-    gst_context_unref (context);
-
-  if (G_UNLIKELY (context_changed)) {
+  if (G_UNLIKELY (context)) {
     GST_DEBUG_OBJECT (pad, "context changed to %p", context);
-    ret = gst_pad_update_context (pad, context);
+    ret = gst_pad_update_context (pad, oldctx, context);
+    if (oldctx)
+      gst_context_unref (oldctx);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto context_error;
   }
@@ -4568,7 +4589,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
       GST_PAD_CONTEXT (pad) = gst_context_new ();
 
     gst_context_update (GST_PAD_CONTEXT (pad), event);
-    _priv_gst_pad_invalidate_cache (pad);
   }
 
   peerpad = GST_PAD_PEER (pad);
