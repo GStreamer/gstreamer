@@ -344,6 +344,7 @@ gst_adder_query_duration (GstAdder * adder, GstQuery * query)
   GstFormat format;
   GstIterator *it;
   gboolean done;
+  GValue item = { 0, };
 
   /* parse format */
   gst_query_parse_duration (query, &format, NULL);
@@ -356,8 +357,6 @@ gst_adder_query_duration (GstAdder * adder, GstQuery * query)
   while (!done) {
     GstIteratorResult ires;
 
-    gpointer item;
-
     ires = gst_iterator_next (it, &item);
     switch (ires) {
       case GST_ITERATOR_DONE:
@@ -365,8 +364,7 @@ gst_adder_query_duration (GstAdder * adder, GstQuery * query)
         break;
       case GST_ITERATOR_OK:
       {
-        GstPad *pad = GST_PAD_CAST (item);
-
+        GstPad *pad = g_value_get_object (&item);
         gint64 duration;
 
         /* ask sink peer for duration */
@@ -382,7 +380,7 @@ gst_adder_query_duration (GstAdder * adder, GstQuery * query)
           else if (duration > max)
             max = duration;
         }
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -396,6 +394,7 @@ gst_adder_query_duration (GstAdder * adder, GstQuery * query)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (it);
 
   if (res) {
@@ -416,6 +415,7 @@ gst_adder_query_latency (GstAdder * adder, GstQuery * query)
   gboolean res;
   GstIterator *it;
   gboolean done;
+  GValue item = { 0, };
 
   res = TRUE;
   done = FALSE;
@@ -429,8 +429,6 @@ gst_adder_query_latency (GstAdder * adder, GstQuery * query)
   while (!done) {
     GstIteratorResult ires;
 
-    gpointer item;
-
     ires = gst_iterator_next (it, &item);
     switch (ires) {
       case GST_ITERATOR_DONE:
@@ -438,7 +436,7 @@ gst_adder_query_latency (GstAdder * adder, GstQuery * query)
         break;
       case GST_ITERATOR_OK:
       {
-        GstPad *pad = GST_PAD_CAST (item);
+        GstPad *pad = g_value_get_object (&item);
         GstQuery *peerquery;
         GstClockTime min_cur, max_cur;
         gboolean live_cur;
@@ -464,7 +462,7 @@ gst_adder_query_latency (GstAdder * adder, GstQuery * query)
         }
 
         gst_query_unref (peerquery);
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -480,6 +478,7 @@ gst_adder_query_latency (GstAdder * adder, GstQuery * query)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (it);
 
   if (res) {
@@ -545,8 +544,9 @@ typedef struct
 } EventData;
 
 static gboolean
-forward_event_func (GstPad * pad, GValue * ret, EventData * data)
+forward_event_func (const GValue * val, GValue * ret, EventData * data)
 {
+  GstPad *pad = g_value_get_object (val);
   GstEvent *event = data->event;
 
   gst_event_ref (event);
@@ -563,7 +563,6 @@ forward_event_func (GstPad * pad, GValue * ret, EventData * data)
     GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
         event, GST_EVENT_TYPE_NAME (event));
   }
-  gst_object_unref (pad);
 
   /* continue on other pads, even if one failed */
   return TRUE;
@@ -594,7 +593,8 @@ forward_event (GstAdder * adder, GstEvent * event, gboolean flush)
   g_value_set_boolean (&vret, FALSE);
   it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (adder));
   while (TRUE) {
-    ires = gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func,
+    ires =
+        gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func,
         &vret, &data);
     switch (ires) {
       case GST_ITERATOR_RESYNC:

@@ -952,15 +952,14 @@ typedef struct
 } FindPropertyHelper;
 
 static gint
-find_property (GstElement * element, FindPropertyHelper * helper)
+find_property (const GValue * item, FindPropertyHelper * helper)
 {
+  GstElement *element = g_value_get_object (item);
   if (helper->need_sink && !element_is_sink (element)) {
-    gst_object_unref (element);
     return 1;
   }
 
   if (!element_has_property (element, helper->prop_name, helper->prop_type)) {
-    gst_object_unref (element);
     return 1;
   }
 
@@ -983,15 +982,18 @@ gst_play_sink_find_property_sinks (GstPlaySink * playsink, GstElement * obj,
   if (element_has_property (obj, name, expected_type)) {
     result = obj;
   } else if (GST_IS_BIN (obj)) {
+    gboolean found;
+    GValue item = { 0, };
     FindPropertyHelper helper = { name, expected_type, TRUE };
 
     it = gst_bin_iterate_recurse (GST_BIN_CAST (obj));
-    result = gst_iterator_find_custom (it,
-        (GCompareFunc) find_property, &helper);
+    found = gst_iterator_find_custom (it,
+        (GCompareFunc) find_property, &item, &helper);
     gst_iterator_free (it);
+    if (found)
+      result = g_value_get_object (&item);
     /* we don't need the extra ref */
-    if (result)
-      gst_object_unref (result);
+    g_value_unset (&item);
   }
   return result;
 }
@@ -1005,12 +1007,17 @@ gst_play_sink_find_property (GstPlaySink * playsink, GstElement * obj,
   GstIterator *it;
 
   if (GST_IS_BIN (obj)) {
+    gboolean found;
+    GValue item = { 0, };
     FindPropertyHelper helper = { name, expected_type, FALSE };
 
     it = gst_bin_iterate_recurse (GST_BIN_CAST (obj));
-    result = gst_iterator_find_custom (it,
-        (GCompareFunc) find_property, &helper);
+    found = gst_iterator_find_custom (it,
+        (GCompareFunc) find_property, &item, &helper);
     gst_iterator_free (it);
+    if (found)
+      result = g_value_dup_object (&item);
+    g_value_unset (&item);
   } else {
     if (element_has_property (obj, name, expected_type)) {
       result = obj;
@@ -2241,6 +2248,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       goto no_chain;
 
     if (!playsink->video_sinkpad_stream_synchronizer) {
+      GValue item = { 0, };
       GstIterator *it;
 
       playsink->video_sinkpad_stream_synchronizer =
@@ -2249,8 +2257,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       it = gst_pad_iterate_internal_links
           (playsink->video_sinkpad_stream_synchronizer);
       g_assert (it);
-      gst_iterator_next (it,
-          (gpointer *) & playsink->video_srcpad_stream_synchronizer);
+      gst_iterator_next (it, &item);
+      playsink->video_srcpad_stream_synchronizer = g_value_dup_object (&item);
+      g_value_unset (&item);
       g_assert (playsink->video_srcpad_stream_synchronizer);
       gst_iterator_free (it);
     }
@@ -2397,6 +2406,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     }
 
     if (!playsink->audio_sinkpad_stream_synchronizer) {
+      GValue item = { 0, };
       GstIterator *it;
 
       playsink->audio_sinkpad_stream_synchronizer =
@@ -2405,8 +2415,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       it = gst_pad_iterate_internal_links
           (playsink->audio_sinkpad_stream_synchronizer);
       g_assert (it);
-      gst_iterator_next (it,
-          (gpointer *) & playsink->audio_srcpad_stream_synchronizer);
+      gst_iterator_next (it, &item);
+      playsink->audio_srcpad_stream_synchronizer = g_value_dup_object (&item);
+      g_value_unset (&item);
       g_assert (playsink->audio_srcpad_stream_synchronizer);
       gst_iterator_free (it);
     }
@@ -2516,14 +2527,17 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       add_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
 
       if (!playsink->text_sinkpad_stream_synchronizer) {
+        GValue item = { 0, };
+
         playsink->text_sinkpad_stream_synchronizer =
             gst_element_get_request_pad (GST_ELEMENT_CAST
             (playsink->stream_synchronizer), "sink_%d");
         it = gst_pad_iterate_internal_links
             (playsink->text_sinkpad_stream_synchronizer);
         g_assert (it);
-        gst_iterator_next (it,
-            (gpointer *) & playsink->text_srcpad_stream_synchronizer);
+        gst_iterator_next (it, &item);
+        playsink->text_srcpad_stream_synchronizer = g_value_dup_object (&item);
+        g_value_unset (&item);
         g_assert (playsink->text_srcpad_stream_synchronizer);
         gst_iterator_free (it);
 

@@ -633,13 +633,15 @@ static GstIterator *
 gst_stream_selector_pad_iterate_linked_pads (GstPad * pad)
 {
   GstStreamSelector *sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
+  GValue value = { 0, };
   GstPad *otherpad;
   GstIterator *ret;
 
   otherpad = gst_stream_selector_get_linked_pad (pad, TRUE);
-  ret =
-      gst_iterator_new_single (GST_TYPE_PAD, otherpad,
-      (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
+  g_value_init (&value, GST_TYPE_PAD);
+  g_value_set_object (&value, otherpad);
+  ret = gst_iterator_new_single (GST_TYPE_PAD, &value);
+  g_value_unset (&value);
 
   if (otherpad)
     gst_object_unref (otherpad);

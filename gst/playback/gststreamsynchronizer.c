@@ -121,8 +121,12 @@ gst_stream_synchronizer_iterate_internal_links (GstPad * pad)
 
   opad = gst_stream_get_other_pad_from_pad (pad);
   if (opad) {
-    it = gst_iterator_new_single (GST_TYPE_PAD, opad,
-        (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
+    GValue value = { 0, };
+
+    g_value_init (&value, GST_TYPE_PAD);
+    g_value_set_object (&value, opad);
+    it = gst_iterator_new_single (GST_TYPE_PAD, &value);
+    g_value_unset (&value);
     gst_object_unref (opad);
   }
 

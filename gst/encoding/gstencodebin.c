@@ -1511,8 +1511,9 @@ stream_error:
 }
 
 static void
-release_pads (GstPad * pad, GstElement * elt)
+release_pads (const GValue * item, GstElement * elt)
 {
+  GstPad *pad = g_value_get_object (item);
   GstPad *peer = NULL;
 
   GST_DEBUG_OBJECT (elt, "Releasing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
@@ -1528,9 +1529,6 @@ release_pads (GstPad * pad, GstElement * elt)
 
   /* Release it from the object */
   gst_element_release_request_pad (elt, pad);
-
-  /* And remove the reference added by the iterator */
-  gst_object_unref (pad);
 }
 
 static void inline
@@ -1604,7 +1602,9 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
     GstIteratorResult itret = GST_ITERATOR_OK;
 
     while (itret == GST_ITERATOR_OK || itret == GST_ITERATOR_RESYNC) {
-      itret = gst_iterator_foreach (it, (GFunc) release_pads, sgroup->combiner);
+      itret =
+          gst_iterator_foreach (it, (GstIteratorForeachFunction) release_pads,
+          sgroup->combiner);
       gst_iterator_resync (it);
     }
     gst_iterator_free (it);
@@ -1616,7 +1616,9 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
     GstIterator *it = gst_element_iterate_src_pads (sgroup->splitter);
     GstIteratorResult itret = GST_ITERATOR_OK;
     while (itret == GST_ITERATOR_OK || itret == GST_ITERATOR_RESYNC) {
-      itret = gst_iterator_foreach (it, (GFunc) release_pads, sgroup->splitter);
+      itret =
+          gst_iterator_foreach (it, (GstIteratorForeachFunction) release_pads,
+          sgroup->splitter);
       gst_iterator_resync (it);
     }
     gst_iterator_free (it);

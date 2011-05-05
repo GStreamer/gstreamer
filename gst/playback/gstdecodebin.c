@@ -1236,6 +1236,7 @@ static GstPad *
 get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
 {
   GstIterator *pad_it = NULL;
+  GValue item = { 0, };
   GstPad *db_pad = NULL;
   gboolean done = FALSE;
 
@@ -1248,8 +1249,9 @@ get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
   pad_it = gst_element_iterate_src_pads (GST_ELEMENT (decode_bin));
   while (!done) {
     db_pad = NULL;
-    switch (gst_iterator_next (pad_it, (gpointer) & db_pad)) {
-      case GST_ITERATOR_OK:
+    switch (gst_iterator_next (pad_it, &item)) {
+      case GST_ITERATOR_OK:{
+        db_pad = g_value_get_object (&item);
         GST_DEBUG_OBJECT (decode_bin, "looking at pad %s:%s",
             GST_DEBUG_PAD_NAME (db_pad));
         if (GST_IS_GHOST_PAD (db_pad)) {
@@ -1268,8 +1270,9 @@ get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
           }
         }
         /* Not the right one */
-        gst_object_unref (db_pad);
+        g_value_reset (&item);
         break;
+      }
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (pad_it);
         break;
@@ -1281,6 +1284,7 @@ get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (pad_it);
 
   return db_pad;
@@ -1295,7 +1299,7 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
 {
   GstIterator *iter;
   gboolean done = FALSE;
-  gpointer item;
+  GValue item = { 0, };
   GstElement *elem = GST_ELEMENT (GST_OBJECT_PARENT (pad));
 
   while (GST_OBJECT_PARENT (elem) &&
@@ -1322,7 +1326,7 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
         GstPad *ghostpad;
         GstPad *peer;
 
-        pad = GST_PAD (item);
+        pad = g_value_get_object (&item);
         GST_DEBUG_OBJECT (decode_bin, "inspecting internal pad %s:%s",
             GST_DEBUG_PAD_NAME (pad));
 
@@ -1336,6 +1340,7 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
 
           gst_element_remove_pad (GST_ELEMENT (decode_bin), ghostpad);
           gst_object_unref (ghostpad);
+          g_value_reset (&item);
           continue;
         } else {
           GST_DEBUG_OBJECT (decode_bin, "not one of our ghostpads");
@@ -1368,7 +1373,7 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
           }
           gst_object_unref (peer);
         }
-        gst_object_unref (item);
+        g_value_reset (&item);
       }
         break;
       case GST_ITERATOR_RESYNC:
@@ -1384,7 +1389,7 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
     }
   }
   GST_DEBUG_OBJECT (decode_bin, "removing %s", GST_ELEMENT_NAME (elem));
-
+  g_value_unset (&item);
   gst_iterator_free (iter);
 
 no_iter:
@@ -1860,16 +1865,17 @@ disconnect_unlinked_signals (GstDecodeBin * decode_bin, GstElement * element)
 {
   GstIterator *pad_it = NULL;
   gboolean done = FALSE;
+  GstPad *pad = NULL;
+  GValue item = { 0, };
 
   pad_it = gst_element_iterate_src_pads (element);
   while (!done) {
-    GstPad *pad = NULL;
-
-    switch (gst_iterator_next (pad_it, (gpointer) & pad)) {
+    switch (gst_iterator_next (pad_it, &item)) {
       case GST_ITERATOR_OK:
+        pad = g_value_get_object (&item);
         g_signal_handlers_disconnect_by_func (pad, (gpointer) unlinked,
             decode_bin);
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (pad_it);
@@ -1879,6 +1885,7 @@ disconnect_unlinked_signals (GstDecodeBin * decode_bin, GstElement * element)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (pad_it);
 }
 
@@ -1889,6 +1896,9 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
   GstIterator *elem_it = NULL, *gpad_it = NULL;
   GstPad *typefind_pad = NULL;
   gboolean done = FALSE;
+  GstElement *element = NULL;
+  GstPad *pad = NULL;
+  GValue item = { 0, };
 
   g_return_if_fail (GST_IS_DECODE_BIN (decode_bin));
 
@@ -1902,17 +1912,16 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
 
   elem_it = gst_bin_iterate_elements (GST_BIN (decode_bin));
   while (!done) {
-    GstElement *element = NULL;
-
-    switch (gst_iterator_next (elem_it, (gpointer) & element)) {
+    switch (gst_iterator_next (elem_it, &item)) {
       case GST_ITERATOR_OK:
+        element = g_value_get_object (&item);
         if (element != decode_bin->typefind && element != decode_bin->fakesink) {
           GST_DEBUG_OBJECT (element, "removing autoplugged element");
           disconnect_unlinked_signals (decode_bin, element);
           gst_element_set_state (element, GST_STATE_NULL);
           gst_bin_remove (GST_BIN (decode_bin), element);
         }
-        gst_object_unref (element);
+        g_value_reset (&item);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (elem_it);
@@ -1925,22 +1934,22 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (elem_it);
 
   done = FALSE;
   gpad_it = gst_element_iterate_pads (GST_ELEMENT (decode_bin));
   while (!done) {
-    GstPad *pad = NULL;
-
-    switch (gst_iterator_next (gpad_it, (gpointer) & pad)) {
+    switch (gst_iterator_next (gpad_it, &item)) {
       case GST_ITERATOR_OK:
+        pad = g_value_get_object (&item);
         GST_DEBUG_OBJECT (pad, "inspecting pad %s:%s",
             GST_DEBUG_PAD_NAME (pad));
         if (GST_IS_GHOST_PAD (pad) && GST_PAD_IS_SRC (pad)) {
           GST_DEBUG_OBJECT (pad, "removing ghost pad");
           gst_element_remove_pad (GST_ELEMENT (decode_bin), pad);
         }
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (gpad_it);
@@ -1953,6 +1962,7 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (gpad_it);
 
   if (GST_IS_PAD (typefind_pad)) {

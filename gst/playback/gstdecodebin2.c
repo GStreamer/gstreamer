@@ -2740,6 +2740,7 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
   GstDecodeBin *dbin;
   GstPad *srcpad, *sinkpad;
   GstIterator *it = NULL;
+  GValue item = { 0, };
 
   dbin = group->dbin;
 
@@ -2762,19 +2763,19 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
 
   it = gst_pad_iterate_internal_links (sinkpad);
 
-  if (!it || (gst_iterator_next (it, (gpointer) & srcpad)) != GST_ITERATOR_OK
-      || srcpad == NULL) {
+  if (!it || (gst_iterator_next (it, &item)) != GST_ITERATOR_OK
+      || ((srcpad = g_value_dup_object (&item)) == NULL)) {
     GST_ERROR_OBJECT (dbin,
         "Couldn't get srcpad from multiqueue for sinkpad %" GST_PTR_FORMAT,
         sinkpad);
     goto error;
   }
-
   CHAIN_MUTEX_LOCK (group->parent);
   group->reqpads = g_list_prepend (group->reqpads, gst_object_ref (sinkpad));
   CHAIN_MUTEX_UNLOCK (group->parent);
 
 beach:
+  g_value_unset (&item);
   if (it)
     gst_iterator_free (it);
   gst_object_unref (sinkpad);
@@ -3065,11 +3066,13 @@ _gst_element_get_linked_caps (GstElement * src, GstElement * sink)
   GstPad *pad, *peer;
   gboolean done = FALSE;
   GstCaps *caps = NULL;
+  GValue item = { 0, };
 
   it = gst_element_iterate_src_pads (src);
   while (!done) {
-    switch (gst_iterator_next (it, (gpointer) & pad)) {
+    switch (gst_iterator_next (it, &item)) {
       case GST_ITERATOR_OK:
+        pad = g_value_get_object (&item);
         peer = gst_pad_get_peer (pad);
         if (peer) {
           parent = gst_pad_get_parent_element (peer);
@@ -3082,7 +3085,7 @@ _gst_element_get_linked_caps (GstElement * src, GstElement * sink)
             gst_object_unref (parent);
           gst_object_unref (peer);
         }
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (it);
@@ -3093,7 +3096,7 @@ _gst_element_get_linked_caps (GstElement * src, GstElement * sink)
         break;
     }
   }
-
+  g_value_unset (&item);
   gst_iterator_free (it);
 
   return caps;
@@ -3592,13 +3595,13 @@ find_sink_pad (GstElement * element)
 {
   GstIterator *it;
   GstPad *pad = NULL;
-  gpointer point;
+  GValue item = { 0, };
 
   it = gst_element_iterate_sink_pads (element);
 
-  if ((gst_iterator_next (it, &point)) == GST_ITERATOR_OK)
-    pad = (GstPad *) point;
-
+  if ((gst_iterator_next (it, &item)) == GST_ITERATOR_OK)
+    pad = g_value_dup_object (&item);
+  g_value_unset (&item);
   gst_iterator_free (it);
 
   return pad;
