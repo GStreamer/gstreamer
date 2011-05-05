@@ -769,9 +769,10 @@ gst_qt_mux_add_3gp_location (GstQTMux * qtmux, const GstTagList * list,
   /* role */
   GST_WRITE_UINT8 (data, 0);
   /* long, lat, alt */
-  GST_WRITE_UINT32_BE (data + 1, (guint32) (longitude * 65536.0));
-  GST_WRITE_UINT32_BE (data + 5, (guint32) (latitude * 65536.0));
-  GST_WRITE_UINT32_BE (data + 9, (guint32) (altitude * 65536.0));
+#define QT_WRITE_SFP32(data, fp) GST_WRITE_UINT32_BE(data, (guint32) ((gint) (fp * 65536.0)))
+  QT_WRITE_SFP32 (data + 1, longitude);
+  QT_WRITE_SFP32 (data + 5, latitude);
+  QT_WRITE_SFP32 (data + 9, altitude);
   /* neither astronomical body nor notes */
   GST_WRITE_UINT16_BE (data + 13, 0);
 
