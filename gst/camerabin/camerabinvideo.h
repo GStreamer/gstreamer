@@ -52,10 +52,6 @@ struct _GstCameraBinVideo
   guint64 last_ts_video;
   gboolean calculate_adjust_ts_video;
 
-  guint64 adjust_ts_aud;
-  guint64 last_ts_aud;
-  gboolean calculate_adjust_ts_aud;
-
   /* Sink and src pads of video bin */
   GstPad *sinkpad;
   GstPad *srcpad;
@@ -84,7 +80,6 @@ struct _GstCameraBinVideo
   GstEvent *pending_eos;
 
   /* Probe IDs */
-  gulong aud_src_probe_id;
   gulong vid_src_probe_id;
   gulong vid_tee_probe_id;
   gulong vid_sink_probe_id;
