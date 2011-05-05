@@ -1871,6 +1871,7 @@ analyse_source (GstPlayBaseBin * play_base_bin, gboolean * is_raw,
   GstIterator *pads_iter;
   gboolean done = FALSE;
   gboolean res = TRUE;
+  GValue item = { 0, };
 
   *have_out = FALSE;
   *is_raw = FALSE;
@@ -1880,7 +1881,7 @@ analyse_source (GstPlayBaseBin * play_base_bin, gboolean * is_raw,
   while (!done) {
     GstPad *pad = NULL;
 
-    switch (gst_iterator_next (pads_iter, (gpointer) & pad)) {
+    switch (gst_iterator_next (pads_iter, &item)) {
       case GST_ITERATOR_ERROR:
         res = FALSE;
         /* FALLTROUGH */
@@ -1895,12 +1896,13 @@ analyse_source (GstPlayBaseBin * play_base_bin, gboolean * is_raw,
         gst_iterator_resync (pads_iter);
         break;
       case GST_ITERATOR_OK:
+        pad = g_value_get_object (&item);
         /* we now officially have an ouput pad */
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */
         if (!has_all_raw_caps (pad, is_raw)) {
-          gst_object_unref (pad);
+          g_value_reset (&item);
           break;
         }
 
@@ -1910,10 +1912,11 @@ analyse_source (GstPlayBaseBin * play_base_bin, gboolean * is_raw,
               play_base_bin, FALSE);
         }
 
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (pads_iter);
 
   if (!*have_out) {
