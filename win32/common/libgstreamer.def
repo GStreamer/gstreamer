@@ -237,6 +237,12 @@ EXPORTS
 	gst_clock_single_shot_id_reinit
 	gst_clock_type_get_type
 	gst_clock_unadjust_unlocked
+	gst_context_clear
+	gst_context_foreach
+	gst_context_get
+	gst_context_get_type
+	gst_context_new
+	gst_context_update
 	gst_core_error_get_type
 	gst_core_error_quark
 	gst_date_get_type
