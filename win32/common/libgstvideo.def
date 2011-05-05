@@ -1,4 +1,9 @@
 EXPORTS
+	gst_buffer_add_meta_video
+	gst_buffer_add_meta_video_full
+	gst_meta_video_get_info
+	gst_meta_video_map
+	gst_meta_video_unmap
 	gst_video_calculate_display_ratio
 	gst_video_convert_frame
 	gst_video_convert_frame_async
