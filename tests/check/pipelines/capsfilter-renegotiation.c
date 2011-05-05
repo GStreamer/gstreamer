@@ -91,8 +91,7 @@ buffer_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
 /* launch line is a pipeline that must have a capsfilter named 'cf' that
  * will be used to trigger the renegotiation */
 static void
-run_capsfilter_renegotiation (const gchar * launch_line,
-    gboolean reset_buffer_alloc)
+run_capsfilter_renegotiation (const gchar * launch_line)
 {
   GstElement *capsfilter;
   GstElement *sink;
@@ -100,7 +99,6 @@ run_capsfilter_renegotiation (const gchar * launch_line,
   GstBus *bus;
   GstMessage *msg;
   GstPad *pad;
-  GstPad *sinkpad;
 
   caps_change = 0;
   buffer_count = 0;
@@ -113,12 +111,6 @@ run_capsfilter_renegotiation (const gchar * launch_line,
 
   capsfilter = gst_bin_get_by_name (GST_BIN (pipeline), "cf");
   g_assert (capsfilter);
-
-  if (reset_buffer_alloc) {
-    sinkpad = gst_element_get_static_pad (capsfilter, "sink");
-    gst_pad_set_bufferalloc_function (sinkpad, NULL);
-    gst_object_unref (sinkpad);
-  }
 
   sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
   g_assert (sink);
@@ -151,15 +143,13 @@ run_capsfilter_renegotiation (const gchar * launch_line,
 GST_START_TEST (test_capsfilter_renegotiation)
 {
   run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=true"
-      " ! capsfilter caps=\"" FIRST_CAPS "\" name=cf ! fakesink name=sink",
-      FALSE);
+      " ! capsfilter caps=\"" FIRST_CAPS "\" name=cf ! fakesink name=sink");
   run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=false"
-      " ! capsfilter caps=\"" FIRST_CAPS "\" name=cf ! fakesink name=sink",
-      FALSE);
+      " ! capsfilter caps=\"" FIRST_CAPS "\" name=cf ! fakesink name=sink");
   run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=false"
       " ! capsfilter caps=\"video/x-raw-yuv, format=(fourcc)I420, width=(int)100, height=(int)100\" "
       " ! ffmpegcolorspace ! videoscale ! capsfilter caps=\"" FIRST_CAPS
-      "\" name=cf " " ! fakesink name=sink", TRUE);
+      "\" name=cf " " ! fakesink name=sink");
 }
 
 GST_END_TEST;
