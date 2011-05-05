@@ -369,7 +369,7 @@ else
 
      AS_MKDIR_P(["$ac_top_build_prefix"gst-libs/ext/libav])
      cd "$ac_top_build_prefix"gst-libs/ext/libav &&
-         $confcmd $embffmpeg_configure_args ||
+         eval "$confcmd $embffmpeg_configure_args" ||
          AC_MSG_ERROR([Failed to configure embedded Libav tree])
      cd "$origdir"
     ],
