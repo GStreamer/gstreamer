@@ -1261,6 +1261,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
   gboolean res = TRUE;
   GstCaps *rawcaps;
   GstPad *pad;
+  GValue item = { 0, };
 
   *have_out = FALSE;
   *is_raw = FALSE;
@@ -1272,7 +1273,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
 
   pads_iter = gst_element_iterate_src_pads (decoder->source);
   while (!done) {
-    switch (gst_iterator_next (pads_iter, (gpointer) & pad)) {
+    switch (gst_iterator_next (pads_iter, &item)) {
       case GST_ITERATOR_ERROR:
         res = FALSE;
         /* FALLTROUGH */
@@ -1287,12 +1288,13 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
         gst_iterator_resync (pads_iter);
         break;
       case GST_ITERATOR_OK:
+        pad = g_value_get_object (&item);
         /* we now officially have an ouput pad */
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */
         if (!has_all_raw_caps (pad, rawcaps, is_raw)) {
-          gst_object_unref (pad);
+          g_value_reset (&item);
           break;
         }
 
@@ -1325,10 +1327,11 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
           }
           expose_decoded_pad (outelem, pad, decoder);
         }
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (pads_iter);
   gst_caps_unref (rawcaps);
 
@@ -1359,7 +1362,7 @@ no_queue2:
   {
     post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "queue2");
 
-    gst_object_unref (pad);
+    g_value_unset (&item);
     gst_iterator_free (pads_iter);
     gst_caps_unref (rawcaps);
 
@@ -2127,9 +2130,12 @@ decoder_query_init (GstURIDecodeBin * dec, QueryFold * fold)
 }
 
 static gboolean
-decoder_query_duration_fold (GstPad * item, GValue * ret, QueryFold * fold)
+decoder_query_duration_fold (const GValue * item, GValue * ret,
+    QueryFold * fold)
 {
-  if (gst_pad_query (item, fold->query)) {
+  GstPad *pad = g_value_get_object (item);
+
+  if (gst_pad_query (pad, fold->query)) {
     gint64 duration;
 
     g_value_set_boolean (ret, TRUE);
@@ -2141,7 +2147,6 @@ decoder_query_duration_fold (GstPad * item, GValue * ret, QueryFold * fold)
     if (duration > fold->max)
       fold->max = duration;
   }
-  gst_object_unref (item);
   return TRUE;
 }
 
@@ -2158,9 +2163,12 @@ decoder_query_duration_done (GstURIDecodeBin * dec, QueryFold * fold)
 }
 
 static gboolean
-decoder_query_position_fold (GstPad * item, GValue * ret, QueryFold * fold)
+decoder_query_position_fold (const GValue * item, GValue * ret,
+    QueryFold * fold)
 {
-  if (gst_pad_query (item, fold->query)) {
+  GstPad *pad = g_value_get_object (item);
+
+  if (gst_pad_query (pad, fold->query)) {
     gint64 position;
 
     g_value_set_boolean (ret, TRUE);
@@ -2173,7 +2181,6 @@ decoder_query_position_fold (GstPad * item, GValue * ret, QueryFold * fold)
       fold->max = position;
   }
 
-  gst_object_unref (item);
   return TRUE;
 }
 
@@ -2190,9 +2197,11 @@ decoder_query_position_done (GstURIDecodeBin * dec, QueryFold * fold)
 }
 
 static gboolean
-decoder_query_latency_fold (GstPad * item, GValue * ret, QueryFold * fold)
+decoder_query_latency_fold (const GValue * item, GValue * ret, QueryFold * fold)
 {
-  if (gst_pad_query (item, fold->query)) {
+  GstPad *pad = g_value_get_object (item);
+
+  if (gst_pad_query (pad, fold->query)) {
     GstClockTime min, max;
     gboolean live;
 
@@ -2216,7 +2225,6 @@ decoder_query_latency_fold (GstPad * item, GValue * ret, QueryFold * fold)
       fold->live = live;
   }
 
-  gst_object_unref (item);
   return TRUE;
 }
 
@@ -2234,9 +2242,11 @@ decoder_query_latency_done (GstURIDecodeBin * dec, QueryFold * fold)
 
 /* we are seekable if all srcpads are seekable */
 static gboolean
-decoder_query_seeking_fold (GstPad * item, GValue * ret, QueryFold * fold)
+decoder_query_seeking_fold (const GValue * item, GValue * ret, QueryFold * fold)
 {
-  if (gst_pad_query (item, fold->query)) {
+  GstPad *pad = g_value_get_object (item);
+
+  if (gst_pad_query (pad, fold->query)) {
     gboolean seekable;
 
     g_value_set_boolean (ret, TRUE);
@@ -2247,7 +2257,6 @@ decoder_query_seeking_fold (GstPad * item, GValue * ret, QueryFold * fold)
     if (fold->seekable == TRUE)
       fold->seekable = seekable;
   }
-  gst_object_unref (item);
 
   return TRUE;
 }
@@ -2265,16 +2274,15 @@ decoder_query_seeking_done (GstURIDecodeBin * dec, QueryFold * fold)
 
 /* generic fold, return first valid result */
 static gboolean
-decoder_query_generic_fold (GstPad * item, GValue * ret, QueryFold * fold)
+decoder_query_generic_fold (const GValue * item, GValue * ret, QueryFold * fold)
 {
+  GstPad *pad = g_value_get_object (item);
   gboolean res;
 
-  if ((res = gst_pad_query (item, fold->query))) {
+  if ((res = gst_pad_query (pad, fold->query))) {
     g_value_set_boolean (ret, TRUE);
     GST_DEBUG_OBJECT (item, "answered query %p", fold->query);
   }
-
-  gst_object_unref (item);
 
   /* and stop as soon as we have a valid result */
   return !res;
