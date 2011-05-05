@@ -1799,7 +1799,9 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
         if (peercaps) {
           GstCaps *intersect;
 
-          intersect = gst_caps_intersect (peercaps, sink_suggest);
+          intersect =
+              gst_caps_intersect_full (sink_suggest, peercaps,
+              GST_CAPS_INTERSECT_FIRST);
           gst_caps_unref (peercaps);
           gst_caps_unref (sink_suggest);
           sink_suggest = intersect;
@@ -1814,7 +1816,9 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
           GST_DEBUG_OBJECT (trans, "Checking if the input caps is compatible "
               "with the non-fixed caps suggestion");
-          intersect = gst_caps_intersect (sink_suggest, caps);
+          intersect =
+              gst_caps_intersect_full (sink_suggest, caps,
+              GST_CAPS_INTERSECT_FIRST);
           if (!gst_caps_is_empty (intersect)) {
             GST_DEBUG_OBJECT (trans, "It is, using it");
             gst_caps_replace (&sink_suggest, caps);
