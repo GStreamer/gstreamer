@@ -1338,7 +1338,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   GstBaseTransformPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
   gsize insize, outsize;
-  gboolean discard, setcaps, copymeta;
+  gboolean discard, copymeta;
   GstCaps *oldcaps, *outcaps;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -1493,7 +1493,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       && (GST_MINI_OBJECT_FLAGS (*out_buf) & GST_BUFFER_FLAG_GAP);
 
   if (copymeta) {
-    GST_DEBUG_OBJECT (trans, "setcaps %d, copymeta %d", setcaps, copymeta);
+    GST_DEBUG_OBJECT (trans, "copymeta %d", copymeta);
     if (!gst_buffer_is_writable (*out_buf)) {
       GST_DEBUG_OBJECT (trans, "buffer %p not writable", *out_buf);
       if (in_buf == *out_buf)
