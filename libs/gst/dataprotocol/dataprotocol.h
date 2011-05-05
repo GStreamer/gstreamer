@@ -111,6 +111,16 @@ typedef gboolean (*GstDPPacketFromEventFunction) (const GstEvent * event,
 						guint * length,
 						guint8 ** header,
 						guint8 ** payload);
+
+/**
+ * GstDPPacketizer:
+ * @version: the #GstDPVersion of the protocol to be used
+ * @header_from_buffer: buffer serializer function
+ * @packet_from_caps: caps serializer function
+ * @packet_from_event: event serializer function
+ *
+ * Data protocol packetizer handle.
+ */
 typedef struct {
   GstDPVersion version;
 

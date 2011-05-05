@@ -712,6 +712,8 @@ GType                   gst_element_get_type            (void);
  * gst_element_get_parent:
  * @elem: a #GstElement to get the parent of.
  *
+ * Get the parent of an element.
+ *
  * Returns: (transfer full): the parent of an element.
  */
 #define                 gst_element_get_parent(elem)    gst_object_get_parent(GST_OBJECT_CAST(elem))

@@ -229,6 +229,7 @@ gst_base_parse_set_frame_rate
 gst_base_parse_convert_default
 gst_base_parse_add_index_entry
 
+GstBaseParseFrame
 GstBaseParseFrameFlags
 gst_base_parse_frame_new
 gst_base_parse_frame_init
@@ -236,6 +237,13 @@ gst_base_parse_frame_free
 
 gst_base_parse_push_frame
 
+GST_BASE_PARSE_DRAINING
+GST_BASE_PARSE_FLAG_DRAINING
+GST_BASE_PARSE_FLAG_LOST_SYNC
+GST_BASE_PARSE_FLOW_DROPPED
+GST_BASE_PARSE_FLOW_QUEUED
+GST_BASE_PARSE_LOST_SYNC
+GST_BASE_PARSE_SINK_PAD
 GST_BASE_PARSE_SRC_PAD
 <SUBSECTION Standard>
 GstBaseParsePrivate

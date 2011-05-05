@@ -29,6 +29,7 @@ G_BEGIN_DECLS
 
 /**
  * GstAtomicQueue:
+ *
  * Opaque atomic data queue.
  *
  * Use the acessor functions to get the stored values.

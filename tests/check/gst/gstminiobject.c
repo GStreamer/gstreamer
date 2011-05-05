@@ -402,6 +402,23 @@ GST_START_TEST (test_value_collection)
 GST_END_TEST;
 
 
+GST_START_TEST (test_dup_null_mini_object)
+{
+  GValue value = { 0, };
+  GstMiniObject *mo;
+
+  g_value_init (&value, GST_TYPE_BUFFER);
+
+  g_value_set_boxed (&value, NULL);
+
+  mo = GST_MINI_OBJECT_CAST (g_value_dup_boxed (&value));
+  g_assert (mo == NULL);
+
+  g_value_unset (&value);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_mini_object_suite (void)
 {
@@ -419,6 +436,7 @@ gst_mini_object_suite (void)
   tcase_add_test (tc_chain, test_unref_threaded);
   //tcase_add_test (tc_chain, test_recycle_threaded);
   tcase_add_test (tc_chain, test_value_collection);
+  tcase_add_test (tc_chain, test_dup_null_mini_object);
   return s;
 }
 

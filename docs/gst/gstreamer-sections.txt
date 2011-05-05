@@ -320,6 +320,7 @@ gst_buffer_list_get_type
 <TITLE>GstCaps</TITLE>
 GstCaps
 GstStaticCaps
+GstCapsIntersectMode
 
 GstCapsFlags
 GST_CAPS_ANY
@@ -359,6 +360,7 @@ gst_caps_is_always_compatible
 gst_caps_is_subset
 gst_caps_can_intersect
 gst_caps_intersect
+gst_caps_intersect_full
 gst_caps_union
 gst_caps_normalize
 gst_caps_do_simplify
@@ -375,9 +377,11 @@ GST_CAPS
 GST_IS_CAPS
 GST_TYPE_CAPS
 GST_TYPE_CAPS_FLAGS
+GST_TYPE_CAPS_INTERSECT_MODE
 <SUBSECTION Private>
 gst_caps_flags_get_type
 gst_caps_get_type
+gst_caps_intersect_mode_get_type
 </SECTION>
 
 <SECTION>
@@ -702,6 +706,10 @@ gst_element_factory_create
 gst_element_factory_make
 gst_element_factory_can_sink_caps
 gst_element_factory_can_src_caps
+gst_element_factory_can_sink_all_caps
+gst_element_factory_can_src_all_caps
+gst_element_factory_can_sink_any_caps
+gst_element_factory_can_src_any_caps
 gst_element_factory_get_static_pad_templates
 GstElementFactoryListType
 GST_ELEMENT_FACTORY_TYPE_ANY
@@ -1804,7 +1812,9 @@ gst_parse_context_get_missing_elements
 <SUBSECTION Standard>
 GST_TYPE_PARSE_ERROR
 GST_TYPE_PARSE_FLAGS
+GST_TYPE_PARSE_CONTEXT
 <SUBSECTION Private>
+gst_parse_context_get_type
 gst_parse_error_get_type
 gst_parse_flags_get_type
 </SECTION>
@@ -2728,7 +2738,6 @@ gst_date_time_get_time_zone_offset
 gst_date_time_get_second
 gst_date_time_get_year
 gst_date_time_new
-gst_date_time_new_from_unix_epoch
 gst_date_time_new_from_unix_epoch_local_time
 gst_date_time_new_from_unix_epoch_utc
 gst_date_time_new_local_time

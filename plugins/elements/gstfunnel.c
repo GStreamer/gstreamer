@@ -24,7 +24,6 @@
 
 /**
  * SECTION:element-funnel
- * @short_description: N-to-1 simple funnel
  *
  * Takes packets from various input sinks into one output source.
  *
