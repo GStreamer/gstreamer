@@ -3491,13 +3491,8 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
 
   if (G_LIKELY (context)) {
     GstContext *oldctx = GST_PAD_CONTEXT (pad);
-    if (G_UNLIKELY (context != oldctx)) {
-      GST_PAD_CONTEXT (pad) = context;
-      gst_context_unref (oldctx);
-    } else {
-      gst_context_unref (context);
-      context = NULL;
-    }
+    GST_PAD_CONTEXT (pad) = context;
+    gst_context_unref (oldctx);
   }
   emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
   GST_OBJECT_UNLOCK (pad);
@@ -3771,8 +3766,7 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
 
   /* if we have a context pending, push it along too */
   if (GST_PAD_IS_CONTEXT_PENDING (pad)) {
-    context = GST_PAD_CONTEXT (pad);
-    if (G_LIKELY (context))
+    if (G_LIKELY ((context = GST_PAD_CONTEXT (pad))))
       gst_context_ref (context);
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_CONTEXT_PENDING);
   }
@@ -4433,13 +4427,8 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
   if (G_UNLIKELY (context)) {
     GstContext *oldctx = GST_PAD_CONTEXT (pad);
-    if (G_UNLIKELY (context != oldctx)) {
-      GST_PAD_CONTEXT (pad) = context;
-      gst_context_unref (oldctx);
-    } else {
-      gst_context_unref (context);
-      context = NULL;
-    }
+    GST_PAD_CONTEXT (pad) = context;
+    gst_context_unref (oldctx);
   }
   GST_OBJECT_UNLOCK (pad);
 
