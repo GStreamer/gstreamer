@@ -2912,6 +2912,8 @@ gst_pad_iterate_internal_links_default (GstPad * pad)
   res = gst_iterator_new_list (GST_TYPE_PAD,
       lock, cookie, padlist, (GObject *) owner, NULL);
 
+  gst_object_unref (owner);
+
   return res;
 
   /* ERRORS */
