@@ -60,10 +60,10 @@ gst_context_get_type (void)
 static void
 _gst_context_free (GstContext * context)
 {
-  GST_LOG ("freeing context %p", context);
-
   g_return_if_fail (context != NULL);
   g_return_if_fail (GST_IS_CONTEXT (context));
+
+  GST_LOG ("freeing context %p", context);
 
   gst_context_clear (context);
 
@@ -180,23 +180,4 @@ gst_context_clear (GstContext * context)
 
   for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
     gst_event_replace (&context->events[i], NULL);
-}
-
-/**
- * gst_context_foreach:
- * @context: a #GstContext
- * @func: a #GFunc
- * @user_data: user data
- *
- * Call @func with the non NULL event and @user_data.
- */
-void
-gst_context_foreach (GstContext * context, GFunc func, gpointer user_data)
-{
-  guint i;
-  GstEvent *event;
-
-  for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
-    if ((event = context->events[i]))
-      func (event, user_data);
 }

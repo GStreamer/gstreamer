@@ -1668,8 +1668,8 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
 
     while ((queued_frame = g_queue_pop_head (&parse->priv->queued_frames))) {
       queued_frame->buffer = gst_buffer_make_writable (queued_frame->buffer);
-      gst_buffer_set_context (queued_frame->buffer,
-          GST_PAD_CONTEXT (GST_BASE_PARSE_SRC_PAD (parse)));
+      gst_buffer_set_caps (queued_frame->buffer,
+          GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (parse)));
       gst_base_parse_push_frame (parse, queued_frame);
       gst_base_parse_frame_free (queued_frame);
     }
@@ -1858,7 +1858,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   /* decorate */
   buffer = gst_buffer_make_writable (buffer);
-  gst_buffer_set_context (buffer, GST_PAD_CONTEXT (parse->srcpad));
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
 
   parse->priv->seen_keyframe |= parse->priv->is_video &&
       !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);

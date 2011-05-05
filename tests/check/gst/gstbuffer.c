@@ -32,6 +32,50 @@
 
 #include <gst/check/gstcheck.h>
 
+GST_START_TEST (test_caps)
+{
+  GstBuffer *buffer;
+  GstCaps *caps, *caps2;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  caps = gst_caps_from_string ("audio/x-raw-int");
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+
+  fail_unless (GST_BUFFER_CAPS (buffer) == NULL);
+
+  gst_buffer_set_caps (buffer, caps);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
+  fail_unless (GST_BUFFER_CAPS (buffer) == caps);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
+  fail_unless (gst_buffer_get_caps (buffer) == caps);
+  gst_caps_unref (caps);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
+  caps2 = gst_caps_from_string ("audio/x-raw-float");
+  ASSERT_CAPS_REFCOUNT (caps2, "caps2", 1);
+
+  gst_buffer_set_caps (buffer, caps2);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  ASSERT_CAPS_REFCOUNT (caps2, "caps2", 2);
+
+  gst_buffer_set_caps (buffer, NULL);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  ASSERT_CAPS_REFCOUNT (caps2, "caps2", 1);
+
+  /* clean up, with caps2 still set as caps */
+  gst_buffer_set_caps (buffer, caps2);
+  ASSERT_CAPS_REFCOUNT (caps2, "caps2", 2);
+  gst_buffer_unref (buffer);
+  ASSERT_CAPS_REFCOUNT (caps2, "caps2", 1);
+  gst_caps_unref (caps);
+  gst_caps_unref (caps2);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_subbuffer)
 {
   GstBuffer *buffer, *sub;
@@ -448,6 +492,7 @@ gst_buffer_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_caps);
   tcase_add_test (tc_chain, test_subbuffer);
   tcase_add_test (tc_chain, test_subbuffer_make_writable);
   tcase_add_test (tc_chain, test_make_writable);

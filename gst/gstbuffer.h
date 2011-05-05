@@ -24,17 +24,17 @@
 #ifndef __GST_BUFFER_H__
 #define __GST_BUFFER_H__
 
-typedef struct _GstBuffer GstBuffer;
-typedef struct _GstBufferPool GstBufferPool;
-
 #include <gst/gstminiobject.h>
 #include <gst/gstclock.h>
-#include <gst/gstcontext.h>
+#include <gst/gstcaps.h>
 #include <gst/gstmemory.h>
 
 G_BEGIN_DECLS
 
 extern GType _gst_buffer_type;
+
+typedef struct _GstBuffer GstBuffer;
+typedef struct _GstBufferPool GstBufferPool;
 
 /**
  * GST_BUFFER_TRACE_NAME:
@@ -112,12 +112,12 @@ extern GType _gst_buffer_type;
  */
 #define GST_BUFFER_DURATION(buf)                (GST_BUFFER_CAST(buf)->duration)
 /**
- * GST_BUFFER_CONTEXT:
+ * GST_BUFFER_CAPS:
  * @buf: a #GstBuffer.
  *
- * The context for this buffer.
+ * The caps for this buffer.
  */
-#define GST_BUFFER_CONTEXT(buf)                 (GST_BUFFER_CAST(buf)->context)
+#define GST_BUFFER_CAPS(buf)                    (GST_BUFFER_CAST(buf)->caps)
 /**
  * GST_BUFFER_OFFSET:
  * @buf: a #GstBuffer.
@@ -260,7 +260,7 @@ struct _GstBuffer {
   /*< public >*/ /* with COW */
   GstBufferPool         *pool;
   /* the media type of this buffer */
-  GstContext            *context;
+  GstCaps               *caps;
 
   /* timestamp */
   GstClockTime           timestamp;
@@ -386,6 +386,7 @@ gst_buffer_copy (const GstBuffer * buf)
  * @GST_BUFFER_COPY_FLAGS: flag indicating that buffer flags should be copied
  * @GST_BUFFER_COPY_TIMESTAMPS: flag indicating that buffer timestamp, duration,
  * offset and offset_end should be copied
+ * @GST_BUFFER_COPY_CAPS: flag indicating that buffer caps should be copied
  * @GST_BUFFER_COPY_MEMORY: flag indicating that buffer memory should be copied
  * and appended to already existing memory
  * @GST_BUFFER_COPY_MERGE: flag indicating that buffer memory should be
@@ -398,6 +399,7 @@ typedef enum {
   GST_BUFFER_COPY_NONE           = 0,
   GST_BUFFER_COPY_FLAGS          = (1 << 0),
   GST_BUFFER_COPY_TIMESTAMPS     = (1 << 1),
+  GST_BUFFER_COPY_CAPS           = (1 << 2),
   GST_BUFFER_COPY_MEMORY         = (1 << 3),
   GST_BUFFER_COPY_MERGE          = (1 << 4)
 } GstBufferCopyFlags;
@@ -408,7 +410,7 @@ typedef enum {
  * Combination of all possible metadata fields that can be copied with
  * gst_buffer_copy_into().
  */
-#define GST_BUFFER_COPY_METADATA       (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS)
+#define GST_BUFFER_COPY_METADATA       (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS)
 
 /**
  * GST_BUFFER_COPY_ALL:
@@ -467,8 +469,8 @@ G_STMT_START {                                                                \
       GST_MINI_OBJECT_CAST (nbuf));                       \
 } G_STMT_END
 
-GstContext*     gst_buffer_get_context          (GstBuffer *buffer);
-void            gst_buffer_set_context          (GstBuffer *buffer, GstContext *context);
+GstCaps*        gst_buffer_get_caps             (GstBuffer *buffer);
+void            gst_buffer_set_caps             (GstBuffer *buffer, GstCaps *caps);
 
 /* creating a region */
 GstBuffer*      gst_buffer_copy_region          (GstBuffer *parent, GstBufferCopyFlags flags,
@@ -515,9 +517,6 @@ GstMeta *       gst_buffer_iterate_meta         (GstBuffer *buffer, gpointer *st
  * Returns: (transfer none): buffer
  */
 #define         gst_value_get_buffer(v)         GST_BUFFER_CAST (g_value_get_boxed(v))
-
-/* shortcuts */
-GstCaps *      gst_buffer_caps (GstBuffer *buffer);
 
 G_END_DECLS
 

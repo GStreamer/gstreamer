@@ -623,8 +623,6 @@ gst_ghost_pad_do_unlink (GstPad * pad)
 static void
 on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 {
-  /* FIXME, add new signal for notifying when the context caps change */
-#if 0
   GstCaps *caps;
   gboolean changed;
 
@@ -648,14 +646,11 @@ on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 
   if (caps)
     gst_caps_unref (caps);
-#endif
 }
 
 static void
 on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
 {
-  /* FIXME, add new signal for notifying when the context caps change */
-#if 0
   GstProxyPad *proxypad;
   GstGhostPad *gpad;
   GstCaps *caps;
@@ -707,7 +702,6 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
 done:
   if (caps)
     gst_caps_unref (caps);
-#endif
 }
 
 static gboolean

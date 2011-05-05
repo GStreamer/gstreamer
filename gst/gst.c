@@ -670,7 +670,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   _gst_query_initialize ();
   _gst_caps_initialize ();
   _gst_meta_init ();
-  gst_context_get_type ();
 
   g_type_class_ref (gst_object_get_type ());
   g_type_class_ref (gst_pad_get_type ());

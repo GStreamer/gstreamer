@@ -25,13 +25,10 @@
 #ifndef __GST_EVENT_H__
 #define __GST_EVENT_H__
 
-typedef struct _GstEvent GstEvent;
-
 #include <gst/gstminiobject.h>
 #include <gst/gstformat.h>
 #include <gst/gstobject.h>
 #include <gst/gstclock.h>
-#include <gst/gstcaps.h>
 #include <gst/gststructure.h>
 #include <gst/gsttaglist.h>
 
@@ -169,6 +166,8 @@ typedef enum {
  * The name used for memory allocation tracing
  */
 #define GST_EVENT_TRACE_NAME    "GstEvent"
+
+typedef struct _GstEvent GstEvent;
 
 #define GST_TYPE_EVENT                  (gst_event_get_type())
 #define GST_IS_EVENT(obj)               (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_EVENT))
