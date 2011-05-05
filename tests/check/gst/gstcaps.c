@@ -811,6 +811,24 @@ GST_START_TEST (test_intersect_first2)
 
 GST_END_TEST;
 
+GST_START_TEST (test_intersect_duplication)
+{
+  GstCaps *c1, *c2, *test;
+
+  c1 = gst_caps_from_string
+      ("audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]");
+  c2 = gst_caps_from_string
+      ("audio/x-raw-int, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int){ 1234, 4321 }, signed=(boolean){ true, false }; audio/x-raw-int, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 11 ], endianness=(int){ 1234, 4321 }, signed=(boolean){ true, false }; audio/x-raw-int, width=(int)16, depth=(int)[ 1, 16 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 11 ], endianness=(int){ 1234, 4321 }, signed=(boolean){ true, false }");
+
+  test = gst_caps_intersect_full (c1, c2, GST_CAPS_INTERSECT_FIRST);
+  fail_unless_equals_int (gst_caps_get_size (test), 1);
+  fail_unless (gst_caps_is_equal (c1, test));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+  gst_caps_unref (test);
+}
+
+GST_END_TEST;
 
 static gboolean
 _caps_is_fixed_foreach (GQuark field_id, const GValue * value, gpointer unused)
@@ -921,6 +939,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_intersect_zigzag);
   tcase_add_test (tc_chain, test_intersect_first);
   tcase_add_test (tc_chain, test_intersect_first2);
+  tcase_add_test (tc_chain, test_intersect_duplication);
   tcase_add_test (tc_chain, test_normalize);
   tcase_add_test (tc_chain, test_broken);
 

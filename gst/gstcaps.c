@@ -1361,7 +1361,7 @@ gst_caps_intersect_zig_zag (const GstCaps * caps1, const GstCaps * caps2)
 
       istruct = gst_caps_structure_intersect (struct1, struct2);
 
-      gst_caps_append_structure (dest, istruct);
+      gst_caps_merge_structure (dest, istruct);
       /* move down left */
       k++;
       if (G_UNLIKELY (j == 0))
@@ -1420,7 +1420,7 @@ gst_caps_intersect_first (const GstCaps * caps1, const GstCaps * caps2)
       struct2 = gst_caps_get_structure_unchecked (caps2, j);
       istruct = gst_caps_structure_intersect (struct1, struct2);
       if (istruct)
-        gst_caps_append_structure (dest, istruct);
+        gst_caps_merge_structure (dest, istruct);
     }
   }
 
