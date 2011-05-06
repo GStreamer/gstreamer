@@ -759,12 +759,15 @@ ges_timeline_object_find_track_object (GESTimelineObject * object,
   GList *tmp;
   GESTrackObject *otmp;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
+  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+
   for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
     otmp = (GESTrackObject *) tmp->data;
 
     if (ges_track_object_get_track (otmp) == track) {
-      if ((type != G_TYPE_NONE) && !G_TYPE_CHECK_INSTANCE_TYPE (tmp->data,
-              type))
+      if ((type != G_TYPE_NONE) &&
+          !G_TYPE_CHECK_INSTANCE_TYPE (tmp->data, type))
         continue;
 
       ret = GES_TRACK_OBJECT (tmp->data);
