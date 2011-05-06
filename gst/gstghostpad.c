@@ -73,7 +73,6 @@ struct _GstProxyPadPrivate
 G_DEFINE_TYPE (GstProxyPad, gst_proxy_pad, GST_TYPE_PAD);
 
 static GstPad *gst_proxy_pad_get_target (GstPad * pad);
-static GstPad *gst_proxy_pad_get_internal (GstPad * pad);
 
 static void gst_proxy_pad_dispose (GObject * object);
 static void gst_proxy_pad_finalize (GObject * object);
@@ -108,7 +107,8 @@ static gboolean
 gst_proxy_pad_do_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = FALSE;
-  GstPad *internal = gst_proxy_pad_get_internal (pad);
+  GstPad *internal =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad)));
 
   if (internal) {
     res = gst_pad_push_event (internal, event);
@@ -152,7 +152,8 @@ gst_proxy_pad_do_bufferalloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   GstFlowReturn result = GST_FLOW_WRONG_STATE;
-  GstPad *internal = gst_proxy_pad_get_internal (pad);
+  GstPad *internal =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad)));
 
   if (internal) {
     result = gst_pad_alloc_buffer (internal, offset, size, caps, buf);
@@ -364,10 +365,24 @@ gst_proxy_pad_get_target (GstPad * pad)
   return target;
 }
 
-static GstPad *
-gst_proxy_pad_get_internal (GstPad * pad)
+/**
+ * gst_proxy_pad_get_internal:
+ * @pad: the #GstProxyPad
+ *
+ * Get the internal pad of @pad. Unref target pad after usage.
+ *
+ * The internal pad of a #GstGhostPad is the internally used
+ * pad of opposite direction, which is used to link to the target.
+ *
+ * Returns: (transfer full): the target #GstProxyPad, can be NULL.
+ * Unref target pad after usage.
+ */
+GstProxyPad *
+gst_proxy_pad_get_internal (GstProxyPad * pad)
 {
   GstPad *internal;
+
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), NULL);
 
   GST_PROXY_LOCK (pad);
   internal = GST_PROXY_PAD_INTERNAL (pad);
@@ -375,7 +390,7 @@ gst_proxy_pad_get_internal (GstPad * pad)
     gst_object_ref (internal);
   GST_PROXY_UNLOCK (pad);
 
-  return internal;
+  return GST_PROXY_PAD_CAST (internal);
 }
 
 static void

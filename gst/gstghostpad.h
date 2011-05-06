@@ -59,6 +59,8 @@ struct _GstProxyPadClass
 
 GType gst_proxy_pad_get_type (void);
 
+GstProxyPad*     gst_proxy_pad_get_internal     (GstProxyPad *pad);
+
 
 #define GST_TYPE_GHOST_PAD		(gst_ghost_pad_get_type ())
 #define GST_IS_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GHOST_PAD))

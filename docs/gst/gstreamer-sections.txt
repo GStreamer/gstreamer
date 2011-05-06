@@ -902,14 +902,20 @@ gst_format_get_type
 <SECTION>
 <FILE>gstghostpad</FILE>
 <TITLE>GstGhostPad</TITLE>
+GstProxyPad
 GstGhostPad
+
 gst_ghost_pad_new
 gst_ghost_pad_new_no_target
 gst_ghost_pad_new_from_template
 gst_ghost_pad_new_no_target_from_template
+
 gst_ghost_pad_set_target
 gst_ghost_pad_get_target
+
 gst_ghost_pad_construct
+
+gst_proxy_pad_get_internal
 <SUBSECTION Standard>
 GstGhostPadClass
 GST_GHOST_PAD

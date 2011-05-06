@@ -255,7 +255,7 @@ GST_END_TEST;
 GST_START_TEST (test_link)
 {
   GstElement *b1, *b2, *src, *sink;
-  GstPad *srcpad, *sinkpad, *gpad;
+  GstPad *srcpad, *sinkpad, *gpad, *ppad, *tmp;
   GstPadLinkReturn ret;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -278,6 +278,14 @@ GST_START_TEST (test_link)
 
   /* now setup a ghostpad */
   gpad = gst_ghost_pad_new ("sink", sinkpad);
+
+  /* Check if the internal pads are set correctly */
+  ppad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (gpad)));
+  fail_unless (ppad == GST_PAD_PEER (sinkpad));
+  tmp = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (ppad)));
+  fail_unless (tmp == gpad);
+  gst_object_unref (tmp);
+  gst_object_unref (ppad);
   gst_object_unref (sinkpad);
   /* need to ref as _add_pad takes ownership */
   gst_object_ref (gpad);

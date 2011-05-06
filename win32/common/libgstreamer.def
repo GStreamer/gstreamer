@@ -832,6 +832,7 @@ EXPORTS
 	gst_print_element_args
 	gst_print_pad_caps
 	gst_progress_type_get_type
+	gst_proxy_pad_get_internal
 	gst_proxy_pad_get_type
 	gst_qos_type_get_type
 	gst_query_add_buffering_range
