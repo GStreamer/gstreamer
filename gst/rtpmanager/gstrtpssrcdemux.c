@@ -121,7 +121,8 @@ static gboolean gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad,
 
 /* srcpad stuff */
 static gboolean gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event);
-static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links (GstPad * pad);
+static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad *
+    pad);
 static gboolean gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query);
 
 static guint gst_rtp_ssrc_demux_signals[LAST_SIGNAL] = { 0 };
@@ -203,12 +204,12 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
   gst_pad_set_event_function (rtp_pad, gst_rtp_ssrc_demux_src_event);
   gst_pad_set_query_function (rtp_pad, gst_rtp_ssrc_demux_src_query);
   gst_pad_set_iterate_internal_links_function (rtp_pad,
-      gst_rtp_ssrc_demux_iterate_internal_links);
+      gst_rtp_ssrc_demux_iterate_internal_links_src);
   gst_pad_set_active (rtp_pad, TRUE);
 
   gst_pad_set_event_function (rtcp_pad, gst_rtp_ssrc_demux_src_event);
   gst_pad_set_iterate_internal_links_function (rtcp_pad,
-      gst_rtp_ssrc_demux_iterate_internal_links);
+      gst_rtp_ssrc_demux_iterate_internal_links_src);
   gst_pad_set_active (rtcp_pad, TRUE);
 
   GST_OBJECT_UNLOCK (demux);
@@ -652,25 +653,23 @@ gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event)
 }
 
 static GstIterator *
-gst_rtp_ssrc_demux_iterate_internal_links (GstPad * pad)
+gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad * pad)
 {
   GstRtpSsrcDemux *demux;
   GstPad *otherpad = NULL;
-  GstIterator *it;
+  GstIterator *it = NULL;
   GSList *current;
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+
+  if (!demux)
+    return NULL;
 
   GST_PAD_LOCK (demux);
   for (current = demux->srcpads; current; current = g_slist_next (current)) {
     GstRtpSsrcDemuxPad *dpad = (GstRtpSsrcDemuxPad *) current->data;
 
-    if (pad == demux->rtp_sink) {
-      otherpad = dpad->rtp_pad;
-      break;
-    } else if (pad == demux->rtcp_sink) {
-      otherpad = dpad->rtcp_pad;
-    } else if (pad == dpad->rtp_pad) {
+    if (pad == dpad->rtp_pad) {
       otherpad = demux->rtp_sink;
       break;
     } else if (pad == dpad->rtcp_pad) {
