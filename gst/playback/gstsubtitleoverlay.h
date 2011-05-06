@@ -68,26 +68,16 @@ struct _GstSubtitleOverlay
   gboolean do_async;
 
   GstPad *srcpad;
-  GstPadEventFunction src_proxy_event;
-  GstPadChainFunction src_proxy_chain;
   gboolean downstream_chain_error;
 
   GstPad *video_sinkpad;
   GstPad *video_block_pad;
-  GstPadSetCapsFunction video_sink_setcaps;
-  GstPadEventFunction video_sink_event;
-  GstPadChainFunction video_sink_chain;
   gboolean video_sink_blocked;
   GstSegment video_segment;
   gint fps_n, fps_d;
 
   GstPad *subtitle_sinkpad;
   GstPad *subtitle_block_pad;
-  GstPadLinkFunction subtitle_sink_link;
-  GstPadUnlinkFunction subtitle_sink_unlink;
-  GstPadEventFunction subtitle_sink_event;
-  GstPadChainFunction subtitle_sink_chain;
-  GstPadSetCapsFunction subtitle_sink_setcaps;
   gboolean subtitle_sink_blocked;
   GstSegment subtitle_segment;
   gboolean subtitle_flush;
