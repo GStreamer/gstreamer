@@ -266,6 +266,8 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    * @effect: the #GESTrackEffect that was added.
    *
    * Will be emitted after an effect was added to the object.
+   *
+   * Since: 0.10.2
    */
   ges_timeline_object_signals[EFFECT_ADDED] =
       g_signal_new ("effect-added", G_TYPE_FROM_CLASS (klass),
@@ -278,6 +280,8 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    * @effect: the #GESTrackEffect that was added.
    *
    * Will be emitted after an effect was remove from the object.
+   *
+   * Since: 0.10.2
    */
   ges_timeline_object_signals[EFFECT_REMOVED] =
       g_signal_new ("effect-removed", G_TYPE_FROM_CLASS (klass),
@@ -862,6 +866,8 @@ sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object)
 * @object order by ascendant priorities.
 * The refcount of the objects will be increased. The user will have to
 * unref each #GESTrackEffect and free the #GList.
+*
+* Since: 0.10.2
 */
 GList *
 ges_timeline_object_get_top_effects (GESTimelineObject * object)
@@ -888,6 +894,8 @@ ges_timeline_object_get_top_effects (GESTimelineObject * object)
 * Gets the top position of an effect.
 *
 * Returns: The top position of the effect, -1 if something went wrong.
+*
+* Since: 0.10.2
 */
 gint
 ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
@@ -907,6 +915,8 @@ ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
 * This is a convenience method that lets you set the priority of a top effect.
 *
 * Returns: %TRUE if @effect was successfuly moved, %FALSE otherwise.
+*
+* Since: 0.10.2
 */
 gboolean
 ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,

@@ -22,6 +22,7 @@
  * @short_description: adds an effect to a stream in a #GESTimelineSource or a
  * #GESTimelineLayer
  *
+ * Since: 0.10.2
  */
 
 #include <glib/gprintf.h>
