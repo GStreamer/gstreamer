@@ -2696,17 +2696,6 @@ activate_pads (const GValue * vpad, GValue * ret, gboolean * active)
   return cont;
 }
 
-/* set the caps on the pad to NULL */
-static gboolean
-clear_caps (const GValue * vpad, GValue * ret, gboolean * active)
-{
-  GstPad *pad = g_value_get_object (vpad);
-
-  gst_pad_set_caps (pad, NULL);
-
-  return TRUE;
-}
-
 /* returns false on error or early cutout of the fold, true if all
  * pads in @iter were (de)activated successfully. */
 static gboolean
@@ -2772,17 +2761,6 @@ gst_element_pads_activate (GstElement * element, gboolean active)
   if (G_UNLIKELY (!res))
     goto sink_failed;
 
-  if (!active) {
-    /* clear the caps on all pads, this should never fail */
-    iter = gst_element_iterate_pads (element);
-    res =
-        iterator_activate_fold_with_resync (iter,
-        (GstIteratorFoldFunction) clear_caps, &active);
-    gst_iterator_free (iter);
-    if (G_UNLIKELY (!res))
-      goto caps_failed;
-  }
-
   GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
       "pads_activate successful");
 
@@ -2799,12 +2777,6 @@ sink_failed:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
         "sink pads_activate failed");
-    return FALSE;
-  }
-caps_failed:
-  {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
-        "failed to clear caps on pads");
     return FALSE;
   }
 }
