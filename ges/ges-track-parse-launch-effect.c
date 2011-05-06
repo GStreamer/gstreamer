@@ -145,7 +145,8 @@ ges_track_parse_launch_effect_create_element (GESTrackObject * object)
 
   if (!track) {
     GST_WARNING
-      ("The object %p should be in a Track for the element to be created", object);
+        ("The object %p should be in a Track for the element to be created",
+        object);
     return NULL;
   }
 
@@ -153,9 +154,11 @@ ges_track_parse_launch_effect_create_element (GESTrackObject * object)
     bin_desc = g_strconcat ("ffmpegcolorspace !",
         self->priv->bin_description, " ! ffmpegcolorspace", NULL);
   } else if (track->type == GES_TRACK_TYPE_AUDIO) {
-    bin_desc = g_strconcat ("audioconvert ! audioresample !", self->priv->bin_description, NULL);
+    bin_desc =
+        g_strconcat ("audioconvert ! audioresample !",
+        self->priv->bin_description, NULL);
   } else {
-    GST_DEBUG ("We don not suppoort this track type here");
+    GST_DEBUG ("Track type not supported");
     return NULL;
   }
 
@@ -164,7 +167,8 @@ ges_track_parse_launch_effect_create_element (GESTrackObject * object)
   g_free (bin_desc);
 
   if (error != NULL) {
-    GST_DEBUG ("An error occured while creating the GstElement: %s", error->message);
+    GST_DEBUG ("An error occured while creating the GstElement: %s",
+        error->message);
     g_error_free (error);
     return NULL;
   }
