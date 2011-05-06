@@ -136,12 +136,16 @@ static GstIterator *
 gst_proxy_pad_do_iterate_internal_links (GstPad * pad)
 {
   GstIterator *res = NULL;
-  GstPad *internal = GST_PROXY_PAD_INTERNAL (pad);
+  GstPad *internal;
+
+  internal =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad)));
 
   if (internal) {
     res =
         gst_iterator_new_single (GST_TYPE_PAD, internal,
         (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
+    gst_object_unref (internal);
   }
 
   return res;
@@ -816,21 +820,6 @@ gst_ghost_pad_do_setcaps (GstPad * pad, GstCaps * caps)
   return gst_proxy_pad_do_setcaps (pad, caps);
 }
 
-static GstIterator *
-gst_ghost_pad_do_iterate_internal_links (GstPad * pad)
-{
-  GstIterator *res = NULL;
-  GstPad *internal = GST_PROXY_PAD_INTERNAL (GST_GHOST_PAD_CAST (pad));
-
-  if (internal) {
-    res =
-        gst_iterator_new_single (GST_TYPE_PAD, internal,
-        (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
-  }
-
-  return res;
-}
-
 static void
 gst_ghost_pad_class_init (GstGhostPadClass * klass)
 {
@@ -859,8 +848,6 @@ gst_ghost_pad_init (GstGhostPad * pad)
       gst_ghost_pad_do_activate_pull);
   gst_pad_set_activatepush_function (GST_PAD_CAST (pad),
       gst_ghost_pad_do_activate_push);
-  gst_pad_set_iterate_internal_links_function (GST_PAD_CAST (pad),
-      gst_ghost_pad_do_iterate_internal_links);
 }
 
 static void
