@@ -21,8 +21,7 @@
 #define _GES_TIMELINE_PARSE_LAUNCH_EFFECT
 
 #include <glib-object.h>
-#include <ges/ges.h>
-#include <ges/ges-timeline-effect.h>
+#include <ges/ges-types.h>
 
 G_BEGIN_DECLS
 

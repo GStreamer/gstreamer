@@ -22,7 +22,7 @@
 #define _GES_TIMELINE_STANDARD_TRANSITION
 
 #include <glib-object.h>
-#include <ges/ges.h>
+#include <ges/ges-types.h>
 #include <ges/ges-timeline-transition.h>
 
 G_BEGIN_DECLS

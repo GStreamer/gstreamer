@@ -36,18 +36,21 @@
 #include <ges/ges-timeline-test-source.h>
 #include <ges/ges-timeline-title-source.h>
 #include <ges/ges-timeline-operation.h>
+#include <ges/ges-timeline-effect.h>
 #include <ges/ges-timeline-overlay.h>
 #include <ges/ges-timeline-text-overlay.h>
 #include <ges/ges-timeline-transition.h>
 #include <ges/ges-timeline-standard-transition.h>
 #include <ges/ges-timeline-parse-launch-effect.h>
-#include <ges/ges-track.h>
-#include <ges/ges-track-object.h>
-#include <ges/ges-track-source.h>
-
 #include <ges/ges-custom-timeline-source.h>
 #include <ges/ges-timeline-effect.h>
 #include <ges/ges-timeline-file-source.h>
+
+#include <ges/ges-track.h>
+#include <ges/ges-track-object.h>
+#include <ges/ges-track-source.h>
+#include <ges/ges-track-operation.h>
+
 #include <ges/ges-track-filesource.h>
 #include <ges/ges-track-image-source.h>
 #include <ges/ges-track-video-test-source.h>

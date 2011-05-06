@@ -21,8 +21,7 @@
 #define _GES_TIMELINE_EFFECT
 
 #include <glib-object.h>
-#include <ges/ges.h>
-#include "ges-types.h"
+#include <ges/ges-types.h>
 
 G_BEGIN_DECLS
 
