@@ -90,7 +90,7 @@ static void on_src_target_notify (GstPad * target,
 
 static GParamSpec *pspec_caps = NULL;
 
-static const GstQueryType *
+const GstQueryType *
 gst_proxy_pad_do_query_type (GstPad * pad)
 {
   GstPad *target = gst_proxy_pad_get_target (pad);
@@ -103,7 +103,7 @@ gst_proxy_pad_do_query_type (GstPad * pad)
   return res;
 }
 
-static gboolean
+gboolean
 gst_proxy_pad_do_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = FALSE;
@@ -118,7 +118,7 @@ gst_proxy_pad_do_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-static gboolean
+gboolean
 gst_proxy_pad_do_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = FALSE;
@@ -132,7 +132,7 @@ gst_proxy_pad_do_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
-static GstIterator *
+GstIterator *
 gst_proxy_pad_do_iterate_internal_links (GstPad * pad)
 {
   GstIterator *res = NULL;
@@ -151,7 +151,7 @@ gst_proxy_pad_do_iterate_internal_links (GstPad * pad)
   return res;
 }
 
-static GstFlowReturn
+GstFlowReturn
 gst_proxy_pad_do_bufferalloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
@@ -167,7 +167,7 @@ gst_proxy_pad_do_bufferalloc (GstPad * pad, guint64 offset, guint size,
   return result;
 }
 
-static GstFlowReturn
+GstFlowReturn
 gst_proxy_pad_do_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn res;
@@ -178,7 +178,7 @@ gst_proxy_pad_do_chain (GstPad * pad, GstBuffer * buffer)
   return res;
 }
 
-static GstFlowReturn
+GstFlowReturn
 gst_proxy_pad_do_chain_list (GstPad * pad, GstBufferList * list)
 {
   GstFlowReturn res;
@@ -189,7 +189,7 @@ gst_proxy_pad_do_chain_list (GstPad * pad, GstBufferList * list)
   return res;
 }
 
-static GstFlowReturn
+GstFlowReturn
 gst_proxy_pad_do_getrange (GstPad * pad, guint64 offset, guint size,
     GstBuffer ** buffer)
 {
@@ -201,7 +201,7 @@ gst_proxy_pad_do_getrange (GstPad * pad, guint64 offset, guint size,
   return res;
 }
 
-static gboolean
+gboolean
 gst_proxy_pad_do_checkgetrange (GstPad * pad)
 {
   gboolean result;
@@ -212,7 +212,7 @@ gst_proxy_pad_do_checkgetrange (GstPad * pad)
   return result;
 }
 
-static GstCaps *
+GstCaps *
 gst_proxy_pad_do_getcaps (GstPad * pad)
 {
   GstPad *target = gst_proxy_pad_get_target (pad);
@@ -261,7 +261,7 @@ done:
   return res;
 }
 
-static gboolean
+gboolean
 gst_proxy_pad_do_acceptcaps (GstPad * pad, GstCaps * caps)
 {
   GstPad *target = gst_proxy_pad_get_target (pad);
@@ -279,7 +279,7 @@ gst_proxy_pad_do_acceptcaps (GstPad * pad, GstCaps * caps)
   return res;
 }
 
-static void
+void
 gst_proxy_pad_do_fixatecaps (GstPad * pad, GstCaps * caps)
 {
   GstPad *target = gst_proxy_pad_get_target (pad);
@@ -290,7 +290,7 @@ gst_proxy_pad_do_fixatecaps (GstPad * pad, GstCaps * caps)
   }
 }
 
-static gboolean
+gboolean
 gst_proxy_pad_do_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstPad *target = gst_proxy_pad_get_target (pad);
@@ -628,7 +628,7 @@ gst_ghost_pad_internal_do_activate_pull (GstPad * pad, gboolean active)
   return ret;
 }
 
-static gboolean
+gboolean
 gst_ghost_pad_do_activate_push (GstPad * pad, gboolean active)
 {
   gboolean ret;
@@ -644,7 +644,7 @@ gst_ghost_pad_do_activate_push (GstPad * pad, gboolean active)
   return ret;
 }
 
-static gboolean
+gboolean
 gst_ghost_pad_do_activate_pull (GstPad * pad, gboolean active)
 {
   gboolean ret;
@@ -675,7 +675,7 @@ gst_ghost_pad_do_activate_pull (GstPad * pad, gboolean active)
   return ret;
 }
 
-static GstPadLinkReturn
+GstPadLinkReturn
 gst_ghost_pad_do_link (GstPad * pad, GstPad * peer)
 {
   GstPadLinkReturn ret;
@@ -714,7 +714,7 @@ link_failed:
   }
 }
 
-static void
+void
 gst_ghost_pad_do_unlink (GstPad * pad)
 {
   GstPad *internal;
@@ -811,7 +811,7 @@ done:
     gst_caps_unref (caps);
 }
 
-static gboolean
+gboolean
 gst_ghost_pad_do_setcaps (GstPad * pad, GstCaps * caps)
 {
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)

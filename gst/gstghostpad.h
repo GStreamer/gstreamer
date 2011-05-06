@@ -62,6 +62,20 @@ GType gst_proxy_pad_get_type (void);
 GstProxyPad*     gst_proxy_pad_get_internal     (GstProxyPad *pad);
 
 
+const GstQueryType* gst_proxy_pad_do_query_type             (GstPad *pad);
+gboolean            gst_proxy_pad_do_event                  (GstPad *pad, GstEvent *event);
+gboolean            gst_proxy_pad_do_query                  (GstPad *pad, GstQuery *query);
+GstIterator*        gst_proxy_pad_do_iterate_internal_links (GstPad *pad);
+GstFlowReturn       gst_proxy_pad_do_bufferalloc            (GstPad *pad, guint64 offset, guint size, GstCaps *caps, GstBuffer **buf);
+GstFlowReturn       gst_proxy_pad_do_chain                  (GstPad *pad, GstBuffer *buf);
+GstFlowReturn       gst_proxy_pad_do_chain_list             (GstPad *pad, GstBufferList *list);
+GstFlowReturn       gst_proxy_pad_do_getrange               (GstPad *pad, guint64 offset, guint size, GstBuffer **buffer);
+gboolean            gst_proxy_pad_do_checkgetrange          (GstPad *pad);
+GstCaps*            gst_proxy_pad_do_getcaps                (GstPad *pad);
+gboolean            gst_proxy_pad_do_acceptcaps             (GstPad *pad, GstCaps *caps);
+void                gst_proxy_pad_do_fixatecaps             (GstPad *pad, GstCaps *caps);
+gboolean            gst_proxy_pad_do_setcaps                (GstPad *pad, GstCaps *caps);
+
 #define GST_TYPE_GHOST_PAD		(gst_ghost_pad_get_type ())
 #define GST_IS_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GHOST_PAD))
 #define GST_IS_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GHOST_PAD))
@@ -107,6 +121,12 @@ GstPad*		 gst_ghost_pad_get_target	(GstGhostPad *gpad);
 gboolean	 gst_ghost_pad_set_target	(GstGhostPad *gpad, GstPad *newtarget);
 
 gboolean	 gst_ghost_pad_construct	(GstGhostPad *gpad);
+
+gboolean         gst_ghost_pad_do_setcaps        (GstPad * pad, GstCaps * caps);
+void             gst_ghost_pad_do_unlink         (GstPad * pad);
+GstPadLinkReturn gst_ghost_pad_do_link           (GstPad * pad, GstPad * peer);
+gboolean         gst_ghost_pad_do_activate_pull  (GstPad * pad, gboolean active);
+gboolean         gst_ghost_pad_do_activate_push  (GstPad * pad, gboolean active);
 
 G_END_DECLS
 
