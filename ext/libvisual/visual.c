@@ -253,7 +253,8 @@ gst_visual_finalize (GObject * object)
   GstVisual *visual = GST_VISUAL (object);
 
   g_object_unref (visual->adapter);
-  gst_object_unref (visual->pool);
+  if (visual->pool)
+    gst_object_unref (visual->pool);
   gst_visual_clear_actors (visual);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
