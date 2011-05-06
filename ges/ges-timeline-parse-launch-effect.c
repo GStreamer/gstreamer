@@ -161,8 +161,8 @@ ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
       return GES_TRACK_OBJECT (ges_track_parse_launch_effect_new
           (effect->priv->video_bin_description));
     }
-    GST_DEBUG ("Can't create the track Object, the\
-                 video_bin_description is not set");
+    GST_DEBUG ("Can't create the track Object, the"
+        "video_bin_description is not set");
   }
   if (track->type == GES_TRACK_TYPE_AUDIO) {
     if (effect->priv->audio_bin_description != NULL) {
@@ -170,8 +170,8 @@ ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
       return GES_TRACK_OBJECT (ges_track_parse_launch_effect_new
           (effect->priv->audio_bin_description));
     }
-    GST_DEBUG ("Can't create the track Object, the\
-                 audio_bin_description is not set");
+    GST_DEBUG ("Can't create the track Object, the"
+        "audio_bin_description is not set");
   }
 
   GST_WARNING ("Effect doesn't handle this track type");

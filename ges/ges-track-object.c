@@ -769,8 +769,8 @@ ensure_gnl_object (GESTrackObject * object)
         props_hash = class->get_props_hastable (object);
 
         if (props_hash == NULL) {
-          GST_DEBUG ("'get_props_hastable' implementation returned TRUE but no\
-                 properties_hashtable is available");
+          GST_DEBUG ("'get_props_hastable' implementation returned TRUE but no"
+              "properties_hashtable is available");
         } else {
           object->priv->properties_hashtable = props_hash;
           connect_properties_signals (object);
