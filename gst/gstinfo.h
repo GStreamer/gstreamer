@@ -341,20 +341,6 @@ void            gst_debug_add_log_function            (GstLogFunction func,
 guint           gst_debug_remove_log_function         (GstLogFunction func);
 guint           gst_debug_remove_log_function_by_data (gpointer       data);
 
-#define gst_debug_add_log_function(func,data) \
-G_STMT_START{                                 \
-  if (func == gst_debug_log_default) {        \
-    gst_debug_add_log_function(NULL,data);    \
-  } else {                                    \
-    gst_debug_add_log_function(func,data);    \
-  }                                           \
-}G_STMT_END
-
-#define gst_debug_remove_log_function(func)   \
-    (func == gst_debug_log_default) ?         \
-        gst_debug_remove_log_function(NULL) : \
-        gst_debug_remove_log_function(func)
-
 void            gst_debug_set_active  (gboolean active);
 gboolean        gst_debug_is_active   (void);
 
@@ -386,6 +372,20 @@ gint    gst_debug_construct_win_color  (guint colorinfo);
 
 
 #ifndef GST_DISABLE_GST_DEBUG
+
+#define gst_debug_add_log_function(func,data) \
+G_STMT_START{                                 \
+  if (func == gst_debug_log_default) {        \
+    gst_debug_add_log_function(NULL,data);    \
+  } else {                                    \
+    gst_debug_add_log_function(func,data);    \
+  }                                           \
+}G_STMT_END
+
+#define gst_debug_remove_log_function(func)   \
+    (func == gst_debug_log_default) ?         \
+        gst_debug_remove_log_function(NULL) : \
+        gst_debug_remove_log_function(func)
 
 /**
  * GST_DEBUG_CATEGORY:
@@ -497,7 +497,7 @@ extern gboolean			__gst_debug_enabled;
 
 /* since 0.10.7, the min debug level, used for quickly discarding debug
  * messages that fall under the threshold. */
-GST_EXPORT GstDebugLevel            __gst_debug_min; 
+GST_EXPORT GstDebugLevel            __gst_debug_min;
 
 /**
  * GST_CAT_LEVEL_LOG:
