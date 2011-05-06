@@ -1258,6 +1258,9 @@ ges_track_object_list_children_properties (GESTrackObject * object,
     guint * n_properties)
 {
   GESTrackObjectClass *class;
+
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
+
   class = GES_TRACK_OBJECT_GET_CLASS (object);
 
   return class->list_children_properties (object, n_properties);
