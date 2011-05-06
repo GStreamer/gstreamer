@@ -75,6 +75,7 @@ GstCaps*            gst_proxy_pad_getcaps_default                (GstPad *pad);
 gboolean            gst_proxy_pad_acceptcaps_default             (GstPad *pad, GstCaps *caps);
 void                gst_proxy_pad_fixatecaps_default             (GstPad *pad, GstCaps *caps);
 gboolean            gst_proxy_pad_setcaps_default                (GstPad *pad, GstCaps *caps);
+void                gst_proxy_pad_unlink_default                 (GstPad * pad);
 
 #define GST_TYPE_GHOST_PAD		(gst_ghost_pad_get_type ())
 #define GST_IS_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GHOST_PAD))

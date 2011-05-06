@@ -854,6 +854,7 @@ EXPORTS
 	gst_proxy_pad_query_default
 	gst_proxy_pad_query_type_default
 	gst_proxy_pad_setcaps_default
+	gst_proxy_pad_unlink_default
 	gst_qos_type_get_type
 	gst_query_add_buffering_range
 	gst_query_get_n_buffering_ranges
