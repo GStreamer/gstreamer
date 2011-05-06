@@ -492,6 +492,8 @@ gst_event_new_caps (GstCaps * caps)
 {
   GstEvent *event;
 
+  g_return_val_if_fail (caps != NULL && gst_caps_is_fixed (caps), NULL);
+
   GST_CAT_INFO (GST_CAT_EVENT, "creating caps event %" GST_PTR_FORMAT, caps);
 
   event = gst_event_new_custom (GST_EVENT_CAPS,
@@ -506,7 +508,8 @@ gst_event_new_caps (GstCaps * caps)
  * @event: The event to parse
  * @caps: (out): A pointer to the caps
  *
- * Get the caps from @event.
+ * Get the caps from @event. The caps remains valid as long as @event remains
+ * valid.
  */
 void
 gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
