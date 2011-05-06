@@ -2377,9 +2377,8 @@ gst_element_seek_simple (GstElement * element, GstFormat format,
  * gst_pad_use_fixed_caps:
  * @pad: the pad to use
  *
- * A helper function you can use that sets the
- * @gst_pad_get_fixed_caps_func as the getcaps function for the
- * pad. This way the function will always return the negotiated caps
+ * A helper function you can use that sets the FIXED_CAPS flag
+ * This way the default getcaps function will always return the negotiated caps
  * or in case the pad is not negotiated, the padtemplate caps.
  *
  * Use this function on a pad that, once gst_pad_set_caps() has been called
@@ -2388,52 +2387,7 @@ gst_element_seek_simple (GstElement * element, GstFormat format,
 void
 gst_pad_use_fixed_caps (GstPad * pad)
 {
-  gst_pad_set_getcaps_function (pad, gst_pad_get_fixed_caps_func);
-}
-
-/**
- * gst_pad_get_fixed_caps_func:
- * @pad: the pad to use
- *
- * A helper function you can use as a GetCaps function that
- * will return the currently negotiated caps or the padtemplate
- * when NULL.
- *
- * Free-function: gst_caps_unref
- *
- * Returns: (transfer full): the currently negotiated caps or the padtemplate.
- */
-GstCaps *
-gst_pad_get_fixed_caps_func (GstPad * pad)
-{
-  GstCaps *result;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  GST_OBJECT_LOCK (pad);
-  if (GST_PAD_CAPS (pad)) {
-    result = GST_PAD_CAPS (pad);
-
-    GST_CAT_DEBUG (GST_CAT_CAPS,
-        "using pad caps %p %" GST_PTR_FORMAT, result, result);
-
-    result = gst_caps_ref (result);
-  } else if (GST_PAD_PAD_TEMPLATE (pad)) {
-    GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
-
-    result = GST_PAD_TEMPLATE_CAPS (templ);
-    GST_CAT_DEBUG (GST_CAT_CAPS,
-        "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
-        result);
-
-    result = gst_caps_ref (result);
-  } else {
-    GST_CAT_DEBUG (GST_CAT_CAPS, "pad has no caps");
-    result = gst_caps_new_empty ();
-  }
-  GST_OBJECT_UNLOCK (pad);
-
-  return result;
+  GST_OBJECT_FLAG_SET (pad, GST_PAD_FIXED_CAPS);
 }
 
 /**

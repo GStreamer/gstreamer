@@ -514,6 +514,9 @@ typedef enum {
  *                            reconfiguration happened.
  *                            Since: 0.10.34.
  * @GST_PAD_NEED_EVENTS: the pad has pending events
+ * @GST_PAD_FIXED_CAPS: the pad is using fixed caps this means that once the
+ *                      caps are set on the pad, the getcaps function only
+ *                      returns those caps.
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
@@ -526,6 +529,7 @@ typedef enum {
   GST_PAD_BLOCKING         = (GST_OBJECT_FLAG_LAST << 4),
   GST_PAD_NEED_RECONFIGURE = (GST_OBJECT_FLAG_LAST << 5),
   GST_PAD_NEED_EVENTS      = (GST_OBJECT_FLAG_LAST << 6),
+  GST_PAD_FIXED_CAPS       = (GST_OBJECT_FLAG_LAST << 7),
   /* padding */
   GST_PAD_FLAG_LAST        = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
@@ -693,7 +697,11 @@ struct _GstPadClass {
 #define GST_PAD_DO_BUFFER_SIGNALS(pad) 	(GST_PAD_CAST(pad)->do_buffer_signals)
 #define GST_PAD_DO_EVENT_SIGNALS(pad) 	(GST_PAD_CAST(pad)->do_event_signals)
 
+#define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
+#define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
+
 #define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
+
 #define GST_PAD_IS_BLOCKED(pad)		(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKED))
 #define GST_PAD_IS_BLOCKING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKING))
 #define GST_PAD_IS_FLUSHING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING))
@@ -701,8 +709,7 @@ struct _GstPadClass {
 #define GST_PAD_IS_IN_SETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS))
 #define GST_PAD_NEEDS_RECONFIGURE(pad)  (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_NEED_RECONFIGURE))
 #define GST_PAD_NEEDS_EVENTS(pad)       (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_NEED_EVENTS))
-#define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
-#define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
+#define GST_PAD_IS_FIXED_CAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FIXED_CAPS))
 
 #define GST_PAD_SET_FLUSHING(pad)	(GST_OBJECT_FLAG_SET (pad, GST_PAD_FLUSHING))
 #define GST_PAD_UNSET_FLUSHING(pad)	(GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLUSHING))

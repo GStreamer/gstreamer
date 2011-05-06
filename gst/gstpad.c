@@ -333,9 +333,6 @@ gst_pad_class_init (GstPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_iterate_internal_links_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_acceptcaps_default);
 
-  /* from gstutils.c */
-  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_get_fixed_caps_func);
-
   klass->have_data = default_have_data;
 }
 
@@ -2180,10 +2177,13 @@ gst_pad_get_caps_unlocked (GstPad * pad)
 {
   GstCaps *result = NULL;
   GstPadTemplate *templ;
+  gboolean fixed_caps;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
 
-  if (GST_PAD_GETCAPSFUNC (pad)) {
+  fixed_caps = GST_PAD_IS_FIXED_CAPS (pad);
+
+  if (!fixed_caps && GST_PAD_GETCAPSFUNC (pad)) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "dispatching to pad getcaps function");
 
@@ -2223,6 +2223,12 @@ gst_pad_get_caps_unlocked (GstPad * pad)
       goto done;
     }
   }
+  if (fixed_caps && (result = get_pad_caps (pad))) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "using pad caps %p %" GST_PTR_FORMAT, result, result);
+    result = gst_caps_ref (result);
+    goto done;
+  }
   if ((templ = GST_PAD_PAD_TEMPLATE (pad))) {
     result = GST_PAD_TEMPLATE_CAPS (templ);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
@@ -2232,10 +2238,9 @@ gst_pad_get_caps_unlocked (GstPad * pad)
     result = gst_caps_ref (result);
     goto done;
   }
-  if ((result = get_pad_caps (pad))) {
+  if (!fixed_caps && (result = get_pad_caps (pad))) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "using pad caps %p %" GST_PTR_FORMAT, result, result);
-
     result = gst_caps_ref (result);
     goto done;
   }

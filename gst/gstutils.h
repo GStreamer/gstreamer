@@ -907,7 +907,6 @@ void			gst_element_class_install_std_props (GstElementClass * klass,
 
 /* pad functions */
 void			gst_pad_use_fixed_caps		(GstPad *pad);
-GstCaps*		gst_pad_get_fixed_caps_func	(GstPad *pad);
 GstCaps*		gst_pad_proxy_getcaps		(GstPad * pad);
 gboolean		gst_pad_proxy_setcaps		(GstPad * pad, GstCaps * caps);
 
