@@ -1798,7 +1798,7 @@
       <method name="InstallPlugins" cname="gst_install_plugins_async" shared="true">
         <return-type type="GstInstallPluginsReturn" />
         <parameters>
-          <parameter type="gchar**" name="details" />
+          <parameter type="GStrv" name="details" />
           <parameter type="GstInstallPluginsContext*" name="ctx" />
           <parameter type="GstInstallPluginsResultFunc" name="func" />
           <parameter type="gpointer" name="user_data" />
@@ -1813,7 +1813,7 @@
       <method name="InstallPlugins" cname="gst_install_plugins_sync" shared="true">
         <return-type type="GstInstallPluginsReturn" />
         <parameters>
-          <parameter type="gchar**" name="details" />
+          <parameter type="GStrv" name="details" />
           <parameter type="GstInstallPluginsContext*" name="ctx" />
         </parameters>
       </method>
