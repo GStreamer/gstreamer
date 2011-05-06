@@ -60,6 +60,9 @@ The 0.11 porting guide
     Elements that change the duration must post DURATION messages on the
     bus when the duration changes in PAUSED or PLAYING.
 
+    gst_element_lost_state_full() -> gst_element_lost_state()
+    gst_element_lost_state() -> gst_element_lost_state(, TRUE)
+
 * GstPad:
     gst_pad_get_caps() does not return writable caps anymore and an explicit
     gst_caps_make_writable() needs to be performed. This was the functionality
@@ -72,6 +75,9 @@ The 0.11 porting guide
     gst_pad_alloc_buffer_and_set_caps() are removed. Use the ALLOCATION query
     now to obtain a reference to a bufferpool object that can be used to
     allocate buffers.
+
+    removed sched_private, it should not be used, use g_object_set_qdata() or
+    use element_private.
 
 * GstMiniObject
     A miniobject is now a simple refcounted structure holding the information
