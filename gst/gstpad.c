@@ -2254,6 +2254,54 @@ done:
 }
 
 /**
+ * gst_pad_has_current_caps:
+ * @pad: a  #GstPad to check
+ *
+ * Check if @pad has caps set on it with gst_pad_set_caps().
+ *
+ * Returns: TRUE when @pad has caps associated with it.
+ */
+gboolean
+gst_pad_has_current_caps (GstPad * pad)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  GST_OBJECT_LOCK (pad);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "check current pad caps");
+  result = (get_pad_caps (pad) != NULL);
+  GST_OBJECT_UNLOCK (pad);
+
+  return result;
+}
+
+/**
+ * gst_pad_get_current_caps:
+ * @pad: a  #GstPad to get the current capabilities of.
+ *
+ * Gets the capabilities currently configured on @pad with the last call to
+ * gst_pad_set_caps().
+ *
+ * Returns: the current caps of the pad with incremented ref-count.
+ */
+GstCaps *
+gst_pad_get_current_caps (GstPad * pad)
+{
+  GstCaps *result;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  GST_OBJECT_LOCK (pad);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get current pad caps");
+  if ((result = get_pad_caps (pad)))
+    gst_caps_ref (result);
+  GST_OBJECT_UNLOCK (pad);
+
+  return result;
+}
+
+/**
  * gst_pad_get_caps:
  * @pad: a  #GstPad to get the capabilities of.
  *
@@ -2286,6 +2334,7 @@ gst_pad_get_caps (GstPad * pad)
 
   return result;
 }
+
 
 /**
  * gst_pad_peer_get_caps:

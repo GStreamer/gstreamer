@@ -850,6 +850,8 @@ void			gst_pad_set_setcaps_function		(GstPad *pad, GstPadSetCapsFunction setcaps
 G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
 
 /* capsnego function for linked/unlinked pads */
+GstCaps *		gst_pad_get_current_caps                (GstPad * pad);
+gboolean		gst_pad_has_current_caps                (GstPad * pad);
 GstCaps *		gst_pad_get_caps			(GstPad * pad);
 void			gst_pad_fixate_caps			(GstPad * pad, GstCaps *caps);
 gboolean		gst_pad_accept_caps			(GstPad * pad, GstCaps *caps);
@@ -860,7 +862,7 @@ gboolean		gst_pad_peer_accept_caps		(GstPad * pad, GstCaps *caps);
 
 /* capsnego for linked pads */
 GstCaps *		gst_pad_get_allowed_caps		(GstPad * pad);
-GstCaps *		gst_pad_get_negotiated_caps		(GstPad * pad);
+GstCaps *               gst_pad_get_negotiated_caps             (GstPad * pad);
 
 /* data passing functions to peer */
 GstFlowReturn		gst_pad_push				(GstPad *pad, GstBuffer *buffer);
