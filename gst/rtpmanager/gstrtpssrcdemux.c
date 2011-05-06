@@ -118,6 +118,8 @@ static GstFlowReturn gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad,
     GstBuffer * buf);
 static gboolean gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad,
     GstEvent * event);
+static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad *
+    pad);
 
 /* srcpad stuff */
 static gboolean gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event);
@@ -320,6 +322,8 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux,
           "sink"), "sink");
   gst_pad_set_chain_function (demux->rtp_sink, gst_rtp_ssrc_demux_chain);
   gst_pad_set_event_function (demux->rtp_sink, gst_rtp_ssrc_demux_sink_event);
+  gst_pad_set_iterate_internal_links_function (demux->rtp_sink,
+      gst_rtp_ssrc_demux_iterate_internal_links_sink);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtp_sink);
 
   demux->rtcp_sink =
@@ -328,6 +332,8 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux,
   gst_pad_set_chain_function (demux->rtcp_sink, gst_rtp_ssrc_demux_rtcp_chain);
   gst_pad_set_event_function (demux->rtcp_sink,
       gst_rtp_ssrc_demux_rtcp_sink_event);
+  gst_pad_set_iterate_internal_links_function (demux->rtcp_sink,
+      gst_rtp_ssrc_demux_iterate_internal_links_sink);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtcp_sink);
 
   demux->padlock = g_mutex_new ();
@@ -684,6 +690,44 @@ gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad * pad)
   gst_object_unref (demux);
   return it;
 }
+
+/* Should return 0 for elements to be included */
+static gint
+src_pad_compare_func (gconstpointer a, gconstpointer b)
+{
+  GstPad *pad = GST_PAD (a);
+  const gchar *prefix = b;
+  gint res = 1;
+
+  GST_OBJECT_LOCK (pad);
+  res = !GST_PAD_NAME (pad) || g_str_has_prefix (GST_PAD_NAME (pad), prefix);
+  GST_OBJECT_UNLOCK (pad);
+
+  return res;
+}
+
+static GstIterator *
+gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad * pad)
+{
+  GstRtpSsrcDemux *demux;
+  GstIterator *it = NULL;
+  const gchar *prefix;
+
+  demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+
+  if (!demux)
+    return NULL;
+
+  if (pad == demux->rtp_sink)
+    prefix = "src_";
+  else if (pad == demux->rtcp_sink)
+    prefix = "rtcp_src_";
+
+  it = gst_element_iterate_src_pads (GST_ELEMENT (demux));
+
+  return gst_iterator_filter (it, src_pad_compare_func, (gpointer) prefix);
+}
+
 
 static gboolean
 gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query)
