@@ -306,7 +306,7 @@ flags_to_string (GFlagsValue * vals, guint flags)
     --i;
     if (vals[i].value != 0 && (flags_left & vals[i].value) == vals[i].value) {
       if (s->len > 0)
-        g_string_append (s, " | ");
+        g_string_append_c (s, '+');
       g_string_append (s, vals[i].value_nick);
       flags_left -= vals[i].value;
       if (flags_left == 0)
