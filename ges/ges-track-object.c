@@ -119,7 +119,7 @@ static inline gboolean ges_track_object_set_duration_internal (GESTrackObject *
 static inline gboolean ges_track_object_set_priority_internal (GESTrackObject *
     object, guint32 priority);
 
-GParamSpec **default_list_children_properties (GESTrackObject * object,
+static GParamSpec **default_list_children_properties (GESTrackObject * object,
     guint * n_properties);
 
 static void
@@ -1323,7 +1323,7 @@ prop_hash_not_set:
   }
 }
 
-GParamSpec **
+static GParamSpec **
 default_list_children_properties (GESTrackObject * object, guint * n_properties)
 {
   GParamSpec **pspec, *spec;
