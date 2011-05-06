@@ -120,9 +120,6 @@ cleanup_pad (GstPad * pad, GstElement * element)
     gst_pad_unlink (pad, selpad);
   }
 
-  /* caps could have been set, make sure they get unset */
-  gst_pad_set_caps (pad, NULL);
-
   GST_DEBUG_OBJECT (pad, "clean up %" GST_PTR_FORMAT " and  %" GST_PTR_FORMAT,
       selpad, pad);
 
