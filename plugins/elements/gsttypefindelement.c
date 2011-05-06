@@ -450,7 +450,6 @@ static void
 start_typefinding (GstTypeFindElement * typefind)
 {
   GST_DEBUG_OBJECT (typefind, "starting typefinding");
-  gst_pad_set_caps (typefind->src, NULL);
 
   GST_OBJECT_LOCK (typefind);
   if (typefind->caps)
