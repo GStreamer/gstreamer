@@ -62,19 +62,19 @@ GType gst_proxy_pad_get_type (void);
 GstProxyPad*     gst_proxy_pad_get_internal     (GstProxyPad *pad);
 
 
-const GstQueryType* gst_proxy_pad_do_query_type             (GstPad *pad);
-gboolean            gst_proxy_pad_do_event                  (GstPad *pad, GstEvent *event);
-gboolean            gst_proxy_pad_do_query                  (GstPad *pad, GstQuery *query);
-GstIterator*        gst_proxy_pad_do_iterate_internal_links (GstPad *pad);
-GstFlowReturn       gst_proxy_pad_do_bufferalloc            (GstPad *pad, guint64 offset, guint size, GstCaps *caps, GstBuffer **buf);
-GstFlowReturn       gst_proxy_pad_do_chain                  (GstPad *pad, GstBuffer *buf);
-GstFlowReturn       gst_proxy_pad_do_chain_list             (GstPad *pad, GstBufferList *list);
-GstFlowReturn       gst_proxy_pad_do_getrange               (GstPad *pad, guint64 offset, guint size, GstBuffer **buffer);
-gboolean            gst_proxy_pad_do_checkgetrange          (GstPad *pad);
-GstCaps*            gst_proxy_pad_do_getcaps                (GstPad *pad);
-gboolean            gst_proxy_pad_do_acceptcaps             (GstPad *pad, GstCaps *caps);
-void                gst_proxy_pad_do_fixatecaps             (GstPad *pad, GstCaps *caps);
-gboolean            gst_proxy_pad_do_setcaps                (GstPad *pad, GstCaps *caps);
+const GstQueryType* gst_proxy_pad_query_type_default             (GstPad *pad);
+gboolean            gst_proxy_pad_event_default                  (GstPad *pad, GstEvent *event);
+gboolean            gst_proxy_pad_query_default                  (GstPad *pad, GstQuery *query);
+GstIterator*        gst_proxy_pad_iterate_internal_links_default (GstPad *pad);
+GstFlowReturn       gst_proxy_pad_bufferalloc_default            (GstPad *pad, guint64 offset, guint size, GstCaps *caps, GstBuffer **buf);
+GstFlowReturn       gst_proxy_pad_chain_default                  (GstPad *pad, GstBuffer *buf);
+GstFlowReturn       gst_proxy_pad_chain_list_default             (GstPad *pad, GstBufferList *list);
+GstFlowReturn       gst_proxy_pad_getrange_default               (GstPad *pad, guint64 offset, guint size, GstBuffer **buffer);
+gboolean            gst_proxy_pad_checkgetrange_default          (GstPad *pad);
+GstCaps*            gst_proxy_pad_getcaps_default                (GstPad *pad);
+gboolean            gst_proxy_pad_acceptcaps_default             (GstPad *pad, GstCaps *caps);
+void                gst_proxy_pad_fixatecaps_default             (GstPad *pad, GstCaps *caps);
+gboolean            gst_proxy_pad_setcaps_default                (GstPad *pad, GstCaps *caps);
 
 #define GST_TYPE_GHOST_PAD		(gst_ghost_pad_get_type ())
 #define GST_IS_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GHOST_PAD))
@@ -122,11 +122,14 @@ gboolean	 gst_ghost_pad_set_target	(GstGhostPad *gpad, GstPad *newtarget);
 
 gboolean	 gst_ghost_pad_construct	(GstGhostPad *gpad);
 
-gboolean         gst_ghost_pad_do_setcaps        (GstPad * pad, GstCaps * caps);
-void             gst_ghost_pad_do_unlink         (GstPad * pad);
-GstPadLinkReturn gst_ghost_pad_do_link           (GstPad * pad, GstPad * peer);
-gboolean         gst_ghost_pad_do_activate_pull  (GstPad * pad, gboolean active);
-gboolean         gst_ghost_pad_do_activate_push  (GstPad * pad, gboolean active);
+gboolean         gst_ghost_pad_setcaps_default        (GstPad * pad, GstCaps * caps);
+void             gst_ghost_pad_unlink_default         (GstPad * pad);
+GstPadLinkReturn gst_ghost_pad_link_default           (GstPad * pad, GstPad * peer);
+gboolean         gst_ghost_pad_activate_pull_default  (GstPad * pad, gboolean active);
+gboolean         gst_ghost_pad_activate_push_default  (GstPad * pad, gboolean active);
+
+gboolean         gst_ghost_pad_internal_activate_push_default (GstPad * pad, gboolean active);
+gboolean         gst_ghost_pad_internal_activate_pull_default (GstPad * pad, gboolean active);
 
 G_END_DECLS
 

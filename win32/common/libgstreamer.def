@@ -444,14 +444,21 @@ EXPORTS
 	gst_fraction_get_type
 	gst_fraction_range_get_type
 	gst_g_error_get_type
+	gst_ghost_pad_activate_pull_default
+	gst_ghost_pad_activate_push_default
 	gst_ghost_pad_construct
 	gst_ghost_pad_get_target
 	gst_ghost_pad_get_type
+	gst_ghost_pad_internal_activate_pull_default
+	gst_ghost_pad_internal_activate_push_default
+	gst_ghost_pad_link_default
 	gst_ghost_pad_new
 	gst_ghost_pad_new_from_template
 	gst_ghost_pad_new_no_target
 	gst_ghost_pad_new_no_target_from_template
 	gst_ghost_pad_set_target
+	gst_ghost_pad_setcaps_default
+	gst_ghost_pad_unlink_default
 	gst_implements_interface_cast
 	gst_implements_interface_check
 	gst_implements_interface_get_type
@@ -832,8 +839,21 @@ EXPORTS
 	gst_print_element_args
 	gst_print_pad_caps
 	gst_progress_type_get_type
+	gst_proxy_pad_acceptcaps_default
+	gst_proxy_pad_bufferalloc_default
+	gst_proxy_pad_chain_default
+	gst_proxy_pad_chain_list_default
+	gst_proxy_pad_checkgetrange_default
+	gst_proxy_pad_event_default
+	gst_proxy_pad_fixatecaps_default
 	gst_proxy_pad_get_internal
 	gst_proxy_pad_get_type
+	gst_proxy_pad_getcaps_default
+	gst_proxy_pad_getrange_default
+	gst_proxy_pad_iterate_internal_links_default
+	gst_proxy_pad_query_default
+	gst_proxy_pad_query_type_default
+	gst_proxy_pad_setcaps_default
 	gst_qos_type_get_type
 	gst_query_add_buffering_range
 	gst_query_get_n_buffering_ranges
