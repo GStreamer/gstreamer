@@ -2237,8 +2237,6 @@ activate_pads (const GValue * vpad, GValue * ret, gboolean * active)
 
   if (!(cont = gst_pad_set_active (pad, *active)))
     g_value_set_boolean (ret, FALSE);
-  else if (!*active)
-    gst_pad_set_caps (pad, NULL);
 
   /* unref the object that was reffed for us by _fold */
   return cont;
