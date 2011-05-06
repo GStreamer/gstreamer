@@ -108,11 +108,12 @@ ges_timeline_parse_launch_effect_class_init (GESTimelineParseLaunchEffectClass *
   object_class->set_property = ges_timeline_parse_launch_effect_set_property;
 
   /**
-   * GESTimelineParseLaunchEffect:video_bin_description:
+   * GESTimelineParseLaunchEffect:video-bin-description:
    *
    * The description of the video track of the effect bin with a gst-launch-style
    * pipeline description. This should be used for test purposes.
-   * exemple: videobalance saturation=1.5 hue=+0.5
+   *
+   * Example: "videobalance saturation=1.5 hue=+0.5"
    */
   g_object_class_install_property (object_class, PROP_VIDEO_BIN_DESCRIPTION,
       g_param_spec_string ("video-bin-description",
@@ -121,11 +122,12 @@ ges_timeline_parse_launch_effect_class_init (GESTimelineParseLaunchEffectClass *
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
-   * GESTimelineParseLaunchEffect:audio_bin_description:
+   * GESTimelineParseLaunchEffect:audio-bin-description:
    *
    * The description of the audio track of the effect bin with a gst-launch-style
    * pipeline description. This should be used for test purposes.
-   * exemple: videobalance saturation=1.5 hue=+0.5
+   *
+   * Example: "audiopanorama panorama=1.0"
    */
   g_object_class_install_property (object_class, PROP_AUDIO_BIN_DESCRIPTION,
       g_param_spec_string ("audio-bin-description",
@@ -153,7 +155,6 @@ ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
 {
   GESTimelineParseLaunchEffect *effect =
       GES_TIMELINE_PARSE_LAUNCH_EFFECT (self);
-
 
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     if (effect->priv->video_bin_description != NULL) {

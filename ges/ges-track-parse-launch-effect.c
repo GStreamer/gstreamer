@@ -93,11 +93,12 @@ ges_track_parse_launch_effect_class_init (GESTrackParseLaunchEffectClass *
   obj_bg_class->create_element = ges_track_parse_launch_effect_create_element;
 
   /**
-   * GESTrackParseLaunchEffect:bin_description:
+   * GESTrackParseLaunchEffect:bin-description:
    *
    * The description of the effect bin with a gst-launch-style
    * pipeline description.
-   * exemple: videobalance saturation=1.5 hue=+0.5
+   *
+   * Example: "videobalance saturation=1.5 hue=+0.5"
    */
   g_object_class_install_property (object_class, PROP_BIN_DESCRIPTION,
       g_param_spec_string ("bin-description",
@@ -144,7 +145,7 @@ ges_track_parse_launch_effect_create_element (GESTrackObject * object)
 
   if (!track) {
     GST_WARNING
-        ("The object %p should be in a Track for the element to be created");
+      ("The object %p should be in a Track for the element to be created", object);
     return NULL;
   }
 
@@ -163,25 +164,25 @@ ges_track_parse_launch_effect_create_element (GESTrackObject * object)
   g_free (bin_desc);
 
   if (error != NULL) {
-    GST_DEBUG ("%s accured while creating the GstElement", error->message);
+    GST_DEBUG ("An error occured while creating the GstElement: %s", error->message);
     g_error_free (error);
     return NULL;
   }
 
-  GST_DEBUG ("Created %p", effect);
+  GST_DEBUG ("Created effect %p", effect);
 
   return effect;
 }
 
 /**
-* ges_track_parse_launch_effect_new:
-* @bin_description: The gst-launch like bin description of the effect
-*
-* Creates a new #GESTrackParseLaunchEffect from the description of the bin.
-*
-* Returns: a newly created #GESTrackParseLaunchEffect, or %NULL if something went
-* wrong.
-*/
+ * ges_track_parse_launch_effect_new:
+ * @bin_description: The gst-launch like bin description of the effect
+ *
+ * Creates a new #GESTrackParseLaunchEffect from the description of the bin.
+ *
+ * Returns: a newly created #GESTrackParseLaunchEffect, or %NULL if something went
+ * wrong.
+ */
 GESTrackParseLaunchEffect *
 ges_track_parse_launch_effect_new (const gchar * bin_description)
 {

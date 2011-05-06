@@ -744,10 +744,11 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
  * Finds the #GESTrackObject controlled by @object that is used in @track. You
  * may optionally specify a GType to further narrow search criteria.
  *
- * Note: The reference count of the returned #GESTrackObject will be increased,
- * unref when done with it.
+ * Note: If many objects match, then the one with the highest priority will be
+ * returned.
  *
  * Returns: (transfer full): The #GESTrackObject used by @track, else #NULL.
+ * Unref after usage.
  */
 
 GESTrackObject *
@@ -779,11 +780,11 @@ ges_timeline_object_find_track_object (GESTimelineObject * object,
  * ges_timeline_object_get_layer:
  * @object: a #GESTimelineObject
  *
- * Note: The reference count of the returned #GESTimelineLayer will be increased,
- * The user is responsible for unreffing it.
+ * Get the #GESTimelineLayer to which this object belongs.
  *
- * Returns: (transfer full): The #GESTimelineLayer where this @object is being used, #NULL if
- * it is not used on any layer.
+ * Returns: (transfer full): The #GESTimelineLayer where this @object is being
+ * used, or #NULL if it is not used on any layer. The caller should unref it
+ * usage.
  */
 GESTimelineLayer *
 ges_timeline_object_get_layer (GESTimelineObject * object)
@@ -902,7 +903,7 @@ ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
 *
 * This is a convenience method that lets you set the priority of a top effect.
 *
-* Returns: %TRUE if @effect was successfuly moved, %FALSE otherwize.
+* Returns: %TRUE if @effect was successfuly moved, %FALSE otherwise.
 */
 gboolean
 ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,

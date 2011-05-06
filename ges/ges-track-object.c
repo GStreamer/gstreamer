@@ -286,7 +286,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       G_TYPE_NONE, 2, GST_TYPE_ELEMENT, G_TYPE_PARAM);
 
   klass->create_gnl_object = ges_track_object_create_gnl_object_func;
-  /*  There is no 'get_props_hastable' default implementation */
+  /*  There is no 'get_props_hashtable' default implementation */
   klass->get_props_hastable = NULL;
   klass->list_children_properties = default_list_children_properties;
 }
@@ -991,11 +991,11 @@ ges_track_object_is_active (GESTrackObject * object)
     return object->active;
 }
 
-/*
+/**
  * ges_track_object_lookup_child:
  * @object: object to lookup the property in
  * @prop_name: name of the property to look up. You can specify the name of the
- *     class as such: ClassName::property-name, to guarantee that you get the
+ *     class as such: "ClassName::property-name", to guarantee that you get the
  *     proper GParamSpec in case various GstElement-s contain the same property
  *     name. If you don't do so, you will get the first element found, having
  *     this property and the and the corresponding GParamSpec.
@@ -1250,7 +1250,7 @@ cant_copy:
  * Gets an array of #GParamSpec* for all configurable properties of the
  * children of @object.
  *
- * Returns: an array of #GParamSpec* which should be freed after use or %NULL
+ * Returns: (array): an array of #GParamSpec* which should be freed after use or %NULL
  * if something went wrong
  */
 GParamSpec **
