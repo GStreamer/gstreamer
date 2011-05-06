@@ -558,7 +558,6 @@ typedef struct _GstPadTemplate GstPadTemplate;
  * @linkfunc: function called when pad is linked
  * @unlinkfunc: function called when pad is unlinked
  * @peer: the pad this pad is linked to
- * @sched_private: private storage for the scheduler
  * @chainfunc: function to chain buffer to pad
  * @checkgetrangefunc: function to check if pad can operate in pull mode
  * @getrangefunc: function to get a range of data from a pad
@@ -575,14 +574,14 @@ typedef struct _GstPadTemplate GstPadTemplate;
  * The #GstPad structure. Use the functions to update the variables.
  */
 struct _GstPad {
-  GstObject			object;
+  GstObject                      object;
 
   /*< public >*/
-  gpointer			element_private;
+  gpointer                       element_private;
 
-  GstPadTemplate		*padtemplate;
+  GstPadTemplate                *padtemplate;
 
-  GstPadDirection		 direction;
+  GstPadDirection                direction;
 
   /*< public >*/ /* with STREAM_LOCK */
   /* streaming rec_lock */
@@ -604,16 +603,15 @@ struct _GstPad {
   GstPadAcceptCapsFunction	 acceptcapsfunc;
   GstPadFixateCapsFunction	 fixatecapsfunc;
 
+  GstActivateMode		 mode;
   GstPadActivateFunction	 activatefunc;
   GstPadActivateModeFunction	 activatepushfunc;
   GstPadActivateModeFunction	 activatepullfunc;
 
   /* pad link */
+  GstPad			*peer;
   GstPadLinkFunction		 linkfunc;
   GstPadUnlinkFunction		 unlinkfunc;
-  GstPad			*peer;
-
-  gpointer			 sched_private;
 
   /* data transport functions */
   GstPadChainFunction		 chainfunc;
@@ -621,8 +619,6 @@ struct _GstPad {
   GstPadCheckGetRangeFunction	 checkgetrangefunc;
   GstPadGetRangeFunction	 getrangefunc;
   GstPadEventFunction		 eventfunc;
-
-  GstActivateMode		 mode;
 
   /* generic query method */
   GstPadQueryTypeFunction	 querytypefunc;
@@ -660,7 +656,7 @@ struct _GstPadClass {
 /* GstPad */
 #define GST_PAD_NAME(pad)		(GST_OBJECT_NAME(pad))
 #define GST_PAD_PARENT(pad)		(GST_ELEMENT_CAST(GST_OBJECT_PARENT(pad)))
-#define GST_PAD_ELEMENT_PRIVATE(pad)	(GST_PAD_CAST(pad)->element_private)
+#define GST_PAD_ELEMENT_PRIVATE(pad)    (GST_PAD_CAST(pad)->element_private)
 #define GST_PAD_PAD_TEMPLATE(pad)	(GST_PAD_CAST(pad)->padtemplate)
 #define GST_PAD_DIRECTION(pad)		(GST_PAD_CAST(pad)->direction)
 #define GST_PAD_TASK(pad)		(GST_PAD_CAST(pad)->task)
