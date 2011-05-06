@@ -153,10 +153,8 @@ find_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
   return NULL;
 }
 
-/* with PAD_LOCK */
 static GstRtpSsrcDemuxPad *
-create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
-    GstClockTime timestamp)
+find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
 {
   GstPad *rtp_pad, *rtcp_pad;
   GstElementClass *klass;
@@ -165,6 +163,14 @@ create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   GstRtpSsrcDemuxPad *demuxpad;
 
   GST_DEBUG_OBJECT (demux, "creating pad for SSRC %08x", ssrc);
+
+  GST_OBJECT_LOCK (demux);
+
+  demuxpad = find_demux_pad_for_ssrc (demux, ssrc);
+  if (demuxpad != NULL) {
+    GST_OBJECT_UNLOCK (demux);
+    return demuxpad;
+  }
 
   klass = GST_ELEMENT_GET_CLASS (demux);
   templ = gst_element_class_get_pad_template (klass, "src_%d");
@@ -177,19 +183,11 @@ create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   rtcp_pad = gst_pad_new_from_template (templ, padname);
   g_free (padname);
 
-  /* we use the first timestamp received to calculate the difference between
-   * timestamps on all streams */
-  GST_DEBUG_OBJECT (demux, "SSRC %08x, first timestamp %" GST_TIME_FORMAT,
-      ssrc, GST_TIME_ARGS (timestamp));
-
   /* wrap in structure and add to list */
   demuxpad = g_new0 (GstRtpSsrcDemuxPad, 1);
   demuxpad->ssrc = ssrc;
   demuxpad->rtp_pad = rtp_pad;
   demuxpad->rtcp_pad = rtcp_pad;
-
-  GST_DEBUG_OBJECT (demux, "first timestamp %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (timestamp));
 
   gst_pad_set_element_private (rtp_pad, demuxpad);
   gst_pad_set_element_private (rtcp_pad, demuxpad);
@@ -212,6 +210,8 @@ create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   gst_pad_set_iterate_internal_links_function (rtcp_pad,
       gst_rtp_ssrc_demux_iterate_internal_links);
   gst_pad_set_active (rtcp_pad, TRUE);
+
+  GST_OBJECT_UNLOCK (demux);
 
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtp_pad);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtcp_pad);
@@ -521,15 +521,9 @@ gst_rtp_ssrc_demux_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (demux, "received buffer of SSRC %08x", ssrc);
 
-  GST_PAD_LOCK (demux);
-  dpad = find_demux_pad_for_ssrc (demux, ssrc);
-  if (dpad == NULL) {
-    if (!(dpad =
-            create_demux_pad_for_ssrc (demux, ssrc,
-                GST_BUFFER_TIMESTAMP (buf))))
-      goto create_failed;
-  }
-  GST_PAD_UNLOCK (demux);
+  dpad = find_or_create_demux_pad_for_ssrc (demux, ssrc);
+  if (dpad == NULL)
+    goto create_failed;
 
   /* push to srcpad */
   ret = gst_pad_push (dpad->rtp_pad, buf);
@@ -549,7 +543,6 @@ create_failed:
   {
     GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
         ("Could not create new pad"));
-    GST_PAD_UNLOCK (demux);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
@@ -585,14 +578,10 @@ gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (demux, "received RTCP of SSRC %08x", ssrc);
 
-  GST_PAD_LOCK (demux);
-  dpad = find_demux_pad_for_ssrc (demux, ssrc);
-  if (dpad == NULL) {
-    GST_DEBUG_OBJECT (demux, "creating pad for SSRC %08x", ssrc);
-    if (!(dpad = create_demux_pad_for_ssrc (demux, ssrc, -1)))
-      goto create_failed;
-  }
-  GST_PAD_UNLOCK (demux);
+  dpad = find_or_create_demux_pad_for_ssrc (demux, ssrc);
+  if (dpad == NULL)
+    goto create_failed;
+
 
   /* push to srcpad */
   ret = gst_pad_push (dpad->rtcp_pad, buf);
@@ -618,7 +607,6 @@ create_failed:
   {
     GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
         ("Could not create new pad"));
-    GST_PAD_UNLOCK (demux);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
