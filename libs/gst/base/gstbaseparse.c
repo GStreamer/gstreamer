@@ -1233,27 +1233,40 @@ static void
 gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
     gboolean post_avg, gboolean post_max)
 {
-  GstTagList *taglist = gst_tag_list_new ();
+  GstTagList *taglist = NULL;
 
-  if (post_min && parse->priv->post_min_bitrate)
+  if (post_min && parse->priv->post_min_bitrate) {
+    taglist = gst_tag_list_new ();
+
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MINIMUM_BITRATE, parse->priv->min_bitrate, NULL);
+  }
 
   if (post_avg && parse->priv->post_avg_bitrate) {
+    if (taglist == NULL)
+      taglist = gst_tag_list_new ();
+
     parse->priv->posted_avg_bitrate = parse->priv->avg_bitrate;
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
         parse->priv->avg_bitrate, NULL);
   }
 
-  if (post_max && parse->priv->post_max_bitrate)
+  if (post_max && parse->priv->post_max_bitrate) {
+    if (taglist == NULL)
+      taglist = gst_tag_list_new ();
+
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MAXIMUM_BITRATE, parse->priv->max_bitrate, NULL);
+  }
 
   GST_DEBUG_OBJECT (parse, "Updated bitrates. Min: %u, Avg: %u, Max: %u",
       parse->priv->min_bitrate, parse->priv->avg_bitrate,
       parse->priv->max_bitrate);
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (parse), parse->srcpad, taglist);
+  if (taglist != NULL) {
+    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse), parse->srcpad,
+        taglist);
+  }
 }
 
 /* gst_base_parse_update_bitrates:
