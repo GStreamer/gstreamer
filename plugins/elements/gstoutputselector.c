@@ -571,7 +571,8 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
       /* Send other events to pending or active src pad */
       output_pad =
           sel->pending_srcpad ? sel->pending_srcpad : sel->active_srcpad;
-      res = gst_pad_push_event (output_pad, event);
+      if (output_pad)
+        res = gst_pad_push_event (output_pad, event);
       break;
   }
 
