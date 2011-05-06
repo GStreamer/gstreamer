@@ -72,8 +72,9 @@ struct _GESTimelineParseLaunchEffectClass {
 
 GType ges_timeline_parse_launch_effect_get_type (void);
 
-GESTimelineParseLaunchEffect *ges_timeline_parse_launch_effect_new (const gchar *
-    video_bin_description, const gchar * audio_bin_description);
+GESTimelineParseLaunchEffect *
+ges_timeline_parse_launch_effect_new (const gchar * video_bin_description,
+				      const gchar * audio_bin_description);
 
 G_END_DECLS
 #endif /* _GES_TIMELINE_PARSE_LAUNCH_EFFECT */
