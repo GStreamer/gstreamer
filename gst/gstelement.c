@@ -2343,7 +2343,7 @@ complete:
 }
 
 /**
- * gst_element_lost_state_full:
+ * gst_element_lost_state:
  * @element: a #GstElement the state is lost of
  * @new_base_time: if a new base time should be distributed
  *
@@ -2365,13 +2365,9 @@ complete:
  *
  * This function is used internally and should normally not be called from
  * plugins or applications.
- *
- * MT safe.
- *
- * Since: 0.10.24
  */
 void
-gst_element_lost_state_full (GstElement * element, gboolean new_base_time)
+gst_element_lost_state (GstElement * element, gboolean new_base_time)
 {
   GstState old_state, new_state;
   GstMessage *message;
@@ -2430,24 +2426,6 @@ only_async_start:
     gst_element_post_message (element, message);
     return;
   }
-}
-
-/**
- * gst_element_lost_state:
- * @element: a #GstElement the state is lost of
- *
- * Brings the element to the lost state. This function calls
- * gst_element_lost_state_full() with the new_base_time set to %TRUE.
- *
- * This function is used internally and should normally not be called from
- * plugins or applications.
- *
- * MT safe.
- */
-void
-gst_element_lost_state (GstElement * element)
-{
-  gst_element_lost_state_full (element, TRUE);
 }
 
 /**

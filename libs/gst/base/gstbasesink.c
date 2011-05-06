@@ -3320,7 +3320,7 @@ gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
    * prerolled buffer */
   basesink->playing_async = TRUE;
   if (basesink->priv->async_enabled) {
-    gst_element_lost_state (GST_ELEMENT_CAST (basesink));
+    gst_element_lost_state (GST_ELEMENT_CAST (basesink), TRUE);
   } else {
     basesink->priv->have_latency = TRUE;
   }
@@ -3978,7 +3978,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       sink->playing_async = TRUE;
       priv->pending_step.need_preroll = TRUE;
       sink->need_preroll = FALSE;
-      gst_element_lost_state_full (GST_ELEMENT_CAST (sink), FALSE);
+      gst_element_lost_state (GST_ELEMENT_CAST (sink), FALSE);
     } else {
       sink->priv->have_latency = TRUE;
       sink->need_preroll = FALSE;
