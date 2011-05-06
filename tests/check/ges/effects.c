@@ -384,6 +384,7 @@ GST_START_TEST (test_track_effect_set_properties)
   for (i = 0; i < n_props; i++) {
     g_param_spec_unref (pspecs[i]);
   }
+  g_free (pspecs);
 
   ges_timeline_layer_remove_object (layer, (GESTimelineObject *) tl_effect);
 

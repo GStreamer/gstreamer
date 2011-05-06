@@ -137,6 +137,8 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
                     g_object_ref (child));
               }
             }
+            g_free (parray);
+
             GST_DEBUG ("%i configurable properties added to %p", child,
                 nb_specs);
             gst_object_unref (child);
