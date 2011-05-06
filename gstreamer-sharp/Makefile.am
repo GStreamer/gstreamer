@@ -51,6 +51,7 @@ sources = \
 	PadQueryTypeFunction.cs \
 	TypeFindDelegates.cs \
 	PresetDefault.cs \
+	MissingPluginMessage.cs \
 	MixerMessage.cs \
 	NavigationMessage.cs \
 	NavigationEvent.cs \
@@ -118,8 +119,7 @@ customs = 			\
 	VideoUtil.custom	\
 	BitReader.custom        \
 	ByteReader.custom       \
-	ByteWriter.custom       \
-	MissingPluginMessage.cs
+	ByteWriter.custom
 
 plugin_csfiles = $(builddir)/coreplugins/generated/*.cs \
 	$(builddir)/baseplugins/generated/*.cs \

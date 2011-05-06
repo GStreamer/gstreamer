@@ -9,10 +9,10 @@ namespace Gst.PbUtils {
   public static class MissingPluginMessage {
 
     [DllImport ("libgstpbutils-0.10.dll") ]
-    static extern IntPtr gst_is_missing_plugin_message (IntPtr msg);
+    static extern bool gst_is_missing_plugin_message (IntPtr msg);
 
-    public bool IsMissingPluginMessage (Gst.Message msg) {
-      return (msg != null) : gst_is_missing_plugin_message (msg.Handle) : false;
+    public static bool IsMissingPluginMessage (Gst.Message msg) {
+      return msg != null && gst_is_missing_plugin_message (msg.Handle);
     }
 
     [DllImport ("libgstpbutils-0.10.dll") ]
