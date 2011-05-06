@@ -1285,9 +1285,10 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
 /**
  * gst_event_new_reconfigure:
 
- * Create a new reconfigure event. The purpose of the step event is to travel
- * upstream and make elements renegotiate its caps. This is useful when changing
- * properties or elements on the pipeline.
+ * Create a new reconfigure event. The purpose of the reconfingure event is
+ * to travel upstream and make elements renegotiate their caps or reconfigure
+ * their buffer pools. This is useful when changing properties on elements
+ * or changing the topology of the pipeline.
  *
  * Returns: (transfer full): a new #GstEvent
  *
