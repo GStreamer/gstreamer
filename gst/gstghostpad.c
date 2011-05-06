@@ -90,12 +90,16 @@ static void on_src_target_notify (GstPad * target,
 
 static GParamSpec *pspec_caps = NULL;
 
+
 const GstQueryType *
 gst_proxy_pad_query_type_default (GstPad * pad)
 {
-  GstPad *target = gst_proxy_pad_get_target (pad);
+  GstPad *target;
   const GstQueryType *res = NULL;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), NULL);
+
+  target = gst_proxy_pad_get_target (pad);
   if (target) {
     res = gst_pad_get_query_types (target);
     gst_object_unref (target);
@@ -107,9 +111,13 @@ gboolean
 gst_proxy_pad_event_default (GstPad * pad, GstEvent * event)
 {
   gboolean res = FALSE;
-  GstPad *internal =
-      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad)));
+  GstPad *internal;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+
+  internal =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad)));
   if (internal) {
     res = gst_pad_push_event (internal, event);
     gst_object_unref (internal);
@@ -122,8 +130,12 @@ gboolean
 gst_proxy_pad_query_default (GstPad * pad, GstQuery * query)
 {
   gboolean res = FALSE;
-  GstPad *target = gst_proxy_pad_get_target (pad);
+  GstPad *target;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
+
+  target = gst_proxy_pad_get_target (pad);
   if (target) {
     res = gst_pad_query (target, query);
     gst_object_unref (target);
@@ -137,6 +149,8 @@ gst_proxy_pad_iterate_internal_links_default (GstPad * pad)
 {
   GstIterator *res = NULL;
   GstPad *internal;
+
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), NULL);
 
   internal =
       GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad)));
@@ -156,9 +170,14 @@ gst_proxy_pad_bufferalloc_default (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   GstFlowReturn result = GST_FLOW_WRONG_STATE;
-  GstPad *internal =
-      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad)));
+  GstPad *internal;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (caps == NULL || GST_IS_CAPS (caps), GST_FLOW_ERROR);
+  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
+
+  internal =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad)));
   if (internal) {
     result = gst_pad_alloc_buffer (internal, offset, size, caps, buf);
     gst_object_unref (internal);
@@ -171,8 +190,12 @@ GstFlowReturn
 gst_proxy_pad_chain_default (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn res;
-  GstPad *internal = GST_PROXY_PAD_INTERNAL (pad);
+  GstPad *internal;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
+
+  internal = GST_PROXY_PAD_INTERNAL (pad);
   res = gst_pad_push (internal, buffer);
 
   return res;
@@ -182,8 +205,12 @@ GstFlowReturn
 gst_proxy_pad_chain_list_default (GstPad * pad, GstBufferList * list)
 {
   GstFlowReturn res;
-  GstPad *internal = GST_PROXY_PAD_INTERNAL (pad);
+  GstPad *internal;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
+
+  internal = GST_PROXY_PAD_INTERNAL (pad);
   res = gst_pad_push_list (internal, list);
 
   return res;
@@ -194,8 +221,12 @@ gst_proxy_pad_getrange_default (GstPad * pad, guint64 offset, guint size,
     GstBuffer ** buffer)
 {
   GstFlowReturn res;
-  GstPad *internal = GST_PROXY_PAD_INTERNAL (pad);
+  GstPad *internal;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
+
+  internal = GST_PROXY_PAD_INTERNAL (pad);
   res = gst_pad_pull_range (internal, offset, size, buffer);
 
   return res;
@@ -205,8 +236,11 @@ gboolean
 gst_proxy_pad_checkgetrange_default (GstPad * pad)
 {
   gboolean result;
-  GstPad *internal = GST_PROXY_PAD_INTERNAL (pad);
+  GstPad *internal;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
+
+  internal = GST_PROXY_PAD_INTERNAL (pad);
   result = gst_pad_check_pull_range (internal);
 
   return result;
@@ -215,10 +249,14 @@ gst_proxy_pad_checkgetrange_default (GstPad * pad)
 GstCaps *
 gst_proxy_pad_getcaps_default (GstPad * pad)
 {
-  GstPad *target = gst_proxy_pad_get_target (pad);
+  GstPad *target;
   GstCaps *res;
-  GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
+  GstPadTemplate *templ;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), NULL);
+
+  templ = GST_PAD_PAD_TEMPLATE (pad);
+  target = gst_proxy_pad_get_target (pad);
   if (target) {
     /* if we have a real target, proxy the call */
     res = gst_pad_get_caps_reffed (target);
@@ -264,9 +302,13 @@ done:
 gboolean
 gst_proxy_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
 {
-  GstPad *target = gst_proxy_pad_get_target (pad);
+  GstPad *target;
   gboolean res;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
+  g_return_val_if_fail (caps == NULL || GST_IS_CAPS (caps), FALSE);
+
+  target = gst_proxy_pad_get_target (pad);
   if (target) {
     res = gst_pad_accept_caps (target, caps);
     gst_object_unref (target);
@@ -282,8 +324,12 @@ gst_proxy_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
 void
 gst_proxy_pad_fixatecaps_default (GstPad * pad, GstCaps * caps)
 {
-  GstPad *target = gst_proxy_pad_get_target (pad);
+  GstPad *target;
 
+  g_return_if_fail (GST_IS_PROXY_PAD (pad));
+  g_return_if_fail (GST_IS_CAPS (caps));
+
+  target = gst_proxy_pad_get_target (pad);
   if (target) {
     gst_pad_fixate_caps (target, caps);
     gst_object_unref (target);
@@ -293,9 +339,13 @@ gst_proxy_pad_fixatecaps_default (GstPad * pad, GstCaps * caps)
 gboolean
 gst_proxy_pad_setcaps_default (GstPad * pad, GstCaps * caps)
 {
-  GstPad *target = gst_proxy_pad_get_target (pad);
+  GstPad *target;
   gboolean res;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
+  g_return_val_if_fail (caps == NULL || GST_IS_CAPS (caps), FALSE);
+
+  target = gst_proxy_pad_get_target (pad);
   if (target) {
     res = gst_pad_set_caps (target, caps);
     gst_object_unref (target);
@@ -584,6 +634,8 @@ gst_ghost_pad_internal_activate_push_default (GstPad * pad, gboolean active)
   gboolean ret;
   GstPad *other;
 
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
+
   GST_LOG_OBJECT (pad, "%sactivate push on %s:%s, we're ok",
       (active ? "" : "de"), GST_DEBUG_PAD_NAME (pad));
 
@@ -600,6 +652,8 @@ gst_ghost_pad_internal_activate_pull_default (GstPad * pad, gboolean active)
 {
   gboolean ret;
   GstPad *other;
+
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
 
   GST_LOG_OBJECT (pad, "%sactivate pull on %s:%s", (active ? "" : "de"),
       GST_DEBUG_PAD_NAME (pad));
@@ -634,6 +688,8 @@ gst_ghost_pad_activate_push_default (GstPad * pad, gboolean active)
   gboolean ret;
   GstPad *other;
 
+  g_return_val_if_fail (GST_IS_GHOST_PAD (pad), FALSE);
+
   GST_LOG_OBJECT (pad, "%sactivate push on %s:%s, proxy internal",
       (active ? "" : "de"), GST_DEBUG_PAD_NAME (pad));
 
@@ -649,6 +705,8 @@ gst_ghost_pad_activate_pull_default (GstPad * pad, gboolean active)
 {
   gboolean ret;
   GstPad *other;
+
+  g_return_val_if_fail (GST_IS_GHOST_PAD (pad), FALSE);
 
   GST_LOG_OBJECT (pad, "%sactivate pull on %s:%s", (active ? "" : "de"),
       GST_DEBUG_PAD_NAME (pad));
@@ -680,6 +738,9 @@ gst_ghost_pad_link_default (GstPad * pad, GstPad * peer)
 {
   GstPadLinkReturn ret;
   GstPad *internal;
+
+  g_return_val_if_fail (GST_IS_GHOST_PAD (pad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_PAD (peer), GST_PAD_LINK_REFUSED);
 
   GST_DEBUG_OBJECT (pad, "linking ghostpad");
 
@@ -718,6 +779,8 @@ void
 gst_ghost_pad_unlink_default (GstPad * pad)
 {
   GstPad *internal;
+
+  g_return_if_fail (GST_IS_GHOST_PAD (pad));
 
   internal = GST_PROXY_PAD_INTERNAL (pad);
 
@@ -814,6 +877,9 @@ done:
 gboolean
 gst_ghost_pad_setcaps_default (GstPad * pad, GstCaps * caps)
 {
+  g_return_val_if_fail (GST_IS_GHOST_PAD (pad), FALSE);
+  g_return_val_if_fail (caps == NULL || GST_IS_CAPS (caps), FALSE);
+
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
     return TRUE;
 
