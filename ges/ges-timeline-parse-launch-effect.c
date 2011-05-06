@@ -54,9 +54,23 @@ enum
   PROP_AUDIO_BIN_DESCRIPTION,
 };
 
+static void ges_timeline_parse_launch_effect_finalize (GObject * object);
 static GESTrackObject
     * ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
     GESTrack * track);
+
+static void
+ges_timeline_parse_launch_effect_finalize (GObject * object)
+{
+  GESTimelineParseLaunchEffectPrivate *priv =
+      GES_TIMELINE_PARSE_LAUNCH_EFFECT (object)->priv;
+
+  g_free (priv->audio_bin_description);
+  g_free (priv->video_bin_description);
+
+  G_OBJECT_CLASS (ges_timeline_parse_launch_effect_parent_class)->finalize
+      (object);
+}
 
 static void
 ges_timeline_parse_launch_effect_get_property (GObject * object,
@@ -108,6 +122,7 @@ ges_timeline_parse_launch_effect_class_init (GESTimelineParseLaunchEffectClass *
 
   object_class->get_property = ges_timeline_parse_launch_effect_get_property;
   object_class->set_property = ges_timeline_parse_launch_effect_set_property;
+  object_class->finalize = ges_timeline_parse_launch_effect_finalize;
 
   /**
    * GESTimelineParseLaunchEffect:video-bin-description:
