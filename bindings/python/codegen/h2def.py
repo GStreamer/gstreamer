@@ -509,7 +509,13 @@ class DefsWriter:
         m = func_new_pat.match(name)
         if pointer_pat.match(ret) and m:
             cname = ''
-            for s in m.group(1).split ('_'):
+            names = m.group(1).split('_')
+
+            if self.namespace:
+                cname = self.namespace
+                names = names[1:]
+
+            for s in names:
                 cname += s.title()
             if cname != '':
                 self.fp.write('  (is-constructor-of "' + cname + '")\n')
