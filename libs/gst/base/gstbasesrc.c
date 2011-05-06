@@ -2161,12 +2161,6 @@ again:
     GST_BUFFER_TIMESTAMP (*buf) = 0;
   }
 
-  /* set pad caps on the buffer if the buffer had no caps */
-  if (GST_BUFFER_CAPS (*buf) == NULL) {
-    *buf = gst_buffer_make_writable (*buf);
-    gst_buffer_set_caps (*buf, GST_PAD_CAPS (src->srcpad));
-  }
-
   /* now sync before pushing the buffer */
   status = gst_base_src_do_sync (src, *buf);
 

@@ -575,10 +575,7 @@ gst_base_sink_pad_getcaps (GstPad * pad)
 
   if (bsink->pad_mode == GST_ACTIVATE_PULL) {
     /* if we are operating in pull mode we only accept the negotiated caps */
-    GST_OBJECT_LOCK (pad);
-    if ((caps = GST_PAD_CAPS (pad)))
-      gst_caps_ref (caps);
-    GST_OBJECT_UNLOCK (pad);
+    caps = gst_pad_get_current_caps (pad);
   }
   if (caps == NULL) {
     if (bclass->get_caps)

@@ -169,7 +169,7 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
 
       /* filter the currently negotiated format against the new caps */
       GST_OBJECT_LOCK (GST_BASE_TRANSFORM_SINK_PAD (object));
-      nego = GST_PAD_CAPS (GST_BASE_TRANSFORM_SINK_PAD (object));
+      nego = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SINK_PAD (object));
       if (nego) {
         GST_DEBUG_OBJECT (capsfilter, "we had negotiated caps %" GST_PTR_FORMAT,
             nego);
@@ -198,6 +198,7 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
             suggest = gst_caps_copy (new_caps);
           }
         }
+        gst_caps_unref (nego);
       } else {
         GST_DEBUG_OBJECT (capsfilter, "no negotiated caps");
         /* no previous caps, the getcaps function will be used to find suitable
@@ -349,11 +350,8 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
     /* Buffer has no caps. See if the output pad only supports fixed caps */
     GstCaps *out_caps;
 
-    out_caps = GST_PAD_CAPS (trans->srcpad);
-
-    if (out_caps != NULL) {
-      gst_caps_ref (out_caps);
-    } else {
+    out_caps = gst_pad_get_current_caps (trans->srcpad);
+    if (out_caps == NULL) {
       out_caps = gst_pad_get_allowed_caps (trans->srcpad);
       g_return_val_if_fail (out_caps != NULL, GST_FLOW_ERROR);
     }
@@ -373,7 +371,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
       }
       GST_BUFFER_CAPS (*buf) = out_caps;
 
-      if (GST_PAD_CAPS (trans->srcpad) == NULL)
+      if (!gst_pad_has_current_caps (trans->srcpad))
         gst_pad_set_caps (trans->srcpad, out_caps);
     } else {
       gchar *caps_str = gst_caps_to_string (out_caps);

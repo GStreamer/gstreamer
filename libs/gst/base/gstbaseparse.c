@@ -1519,7 +1519,7 @@ gst_base_parse_check_media (GstBaseParse * parse)
   GstCaps *caps;
   GstStructure *s;
 
-  caps = GST_PAD_CAPS (parse->srcpad);
+  caps = gst_pad_get_current_caps (parse->srcpad);
   if (G_LIKELY (caps) && (s = gst_caps_get_structure (caps, 0))) {
     parse->priv->is_video =
         g_str_has_prefix (gst_structure_get_name (s), "video");
@@ -1527,6 +1527,8 @@ gst_base_parse_check_media (GstBaseParse * parse)
     /* historical default */
     parse->priv->is_video = FALSE;
   }
+  if (caps)
+    gst_caps_unref (caps);
 
   GST_DEBUG_OBJECT (parse, "media is video == %d", parse->priv->is_video);
 }
@@ -1667,9 +1669,6 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
     GstBaseParseFrame *queued_frame;
 
     while ((queued_frame = g_queue_pop_head (&parse->priv->queued_frames))) {
-      queued_frame->buffer = gst_buffer_make_writable (queued_frame->buffer);
-      gst_buffer_set_caps (queued_frame->buffer,
-          GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (parse)));
       gst_base_parse_push_frame (parse, queued_frame);
       gst_base_parse_frame_free (queued_frame);
     }
@@ -1740,7 +1739,8 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     last_stop = last_start + GST_BUFFER_DURATION (buffer);
 
   /* should have caps by now */
-  g_return_val_if_fail (GST_PAD_CAPS (parse->srcpad), GST_FLOW_ERROR);
+  g_return_val_if_fail (gst_pad_has_current_caps (parse->srcpad),
+      GST_FLOW_ERROR);
 
   /* segment adjustment magic; only if we are running the whole show */
   if (!parse->priv->passthrough && parse->segment.rate > 0.0 &&
@@ -1855,10 +1855,6 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   /* subclass must play nice */
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
-
-  /* decorate */
-  buffer = gst_buffer_make_writable (buffer);
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
 
   parse->priv->seen_keyframe |= parse->priv->is_video &&
       !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);

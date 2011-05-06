@@ -237,7 +237,9 @@ gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
   GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
   GstEvent *event = NULL;
   GstClockTime newts;
+#if 0
   GstCaps *padcaps;
+#endif
 
   GST_DEBUG_OBJECT (funnel, "received buffer %p", buffer);
 
@@ -271,7 +273,7 @@ gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
     if (!gst_pad_push_event (funnel->srcpad, event))
       GST_WARNING_OBJECT (funnel, "Could not push out newsegment event");
   }
-
+#if 0
   GST_OBJECT_LOCK (pad);
   padcaps = GST_PAD_CAPS (funnel->srcpad);
   GST_OBJECT_UNLOCK (pad);
@@ -282,12 +284,15 @@ gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
       goto out;
     }
   }
+#endif
 
   res = gst_pad_push (funnel->srcpad, buffer);
 
   GST_LOG_OBJECT (funnel, "handled buffer %s", gst_flow_get_name (res));
 
+#if 0
 out:
+#endif
   gst_object_unref (funnel);
 
   return res;

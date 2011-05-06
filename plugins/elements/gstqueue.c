@@ -1094,7 +1094,9 @@ gst_queue_push_one (GstQueue * queue)
 next:
   if (is_buffer) {
     GstBuffer *buffer;
+#if 0
     GstCaps *caps;
+#endif
 
     buffer = GST_BUFFER_CAST (data);
 
@@ -1109,10 +1111,12 @@ next:
       }
       queue->head_needs_discont = FALSE;
     }
-
+#if 0
     caps = GST_BUFFER_CAPS (buffer);
+#endif
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
+#if 0
     /* set the right caps on the pad now. We do this before pushing the buffer
      * because the pad_push call will check (using acceptcaps) if the buffer can
      * be set on the pad, which might fail because this will be propagated
@@ -1120,6 +1124,7 @@ next:
      * caps did not change, so we don't have to change caps on the pad. */
     if (caps && caps != GST_PAD_CAPS (queue->srcpad))
       gst_pad_set_caps (queue->srcpad, caps);
+#endif
 
     if (queue->push_newsegment) {
       gst_queue_push_newsegment (queue);

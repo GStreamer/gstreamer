@@ -626,6 +626,7 @@ gst_ghost_pad_do_unlink (GstPad * pad)
 static void
 on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 {
+#if 0
   GstCaps *caps;
   gboolean changed;
 
@@ -649,6 +650,7 @@ on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 
   if (caps)
     gst_caps_unref (caps);
+#endif
 }
 
 static void
@@ -657,7 +659,9 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
   GstProxyPad *proxypad;
   GstGhostPad *gpad;
   GstCaps *caps;
+#if 0
   gboolean changed;
+#endif
 
   g_object_get (target, "caps", &caps, NULL);
 
@@ -683,6 +687,7 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
   GST_PROXY_UNLOCK (proxypad);
   GST_OBJECT_UNLOCK (target);
 
+#if 0
   GST_OBJECT_LOCK (gpad);
 
   GST_DEBUG_OBJECT (gpad, "notified %p %" GST_PTR_FORMAT, caps, caps);
@@ -699,6 +704,7 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
     g_object_notify ((GObject *) gpad, "caps");
 #endif
   }
+#endif
 
   g_object_unref (gpad);
 

@@ -952,12 +952,16 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
   if (GST_IS_BUFFER (object)) {
     GstBuffer *buffer;
     GstClockTime timestamp, duration;
+#if 0
     GstCaps *caps;
+#endif
 
     buffer = GST_BUFFER_CAST (object);
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     duration = GST_BUFFER_DURATION (buffer);
+#if 0
     caps = GST_BUFFER_CAPS (buffer);
+#endif
 
     apply_buffer (mq, sq, timestamp, duration, &sq->src_segment);
 
@@ -968,11 +972,13 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
         "SingleQueue %d : Pushing buffer %p with ts %" GST_TIME_FORMAT,
         sq->id, buffer, GST_TIME_ARGS (timestamp));
 
+#if 0
     /* Set caps on pad before pushing, this avoids core calling the acceptcaps
      * function on the srcpad, which will call acceptcaps upstream, which might
      * not accept these caps (anymore). */
     if (caps && caps != GST_PAD_CAPS (sq->srcpad))
       gst_pad_set_caps (sq->srcpad, caps);
+#endif
 
     result = gst_pad_push (sq->srcpad, buffer);
   } else if (GST_IS_EVENT (object)) {
