@@ -255,9 +255,6 @@ gst_check_teardown_pad_by_name (GstElement * element, const gchar * name)
       gst_pad_unlink (pad_peer, pad_element);
     else
       gst_pad_unlink (pad_element, pad_peer);
-
-    /* caps could have been set, make sure they get unset */
-    gst_pad_set_caps (pad_peer, NULL);
   }
 
   /* pad refs held by both creator and this function (through _get) */
