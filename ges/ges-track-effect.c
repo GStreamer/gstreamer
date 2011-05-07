@@ -94,12 +94,9 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
   GstIterator *it;
   GParamSpec **parray;
   GObjectClass *class;
-  guint i, nb_specs;
   const gchar *klass;
   GstElementFactory *factory;
-  GstElement *child, *element;
-  gchar **categories, *categorie;
-
+  GstElement *element;
   gboolean done = FALSE;
   GHashTable *ret = NULL;
 
@@ -117,17 +114,26 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
    *  hashtable
    *  FIXME: Add a blacklist of properties */
   it = gst_bin_iterate_recurse (GST_BIN (element));
+
   while (!done) {
     switch (gst_iterator_next (it, &data)) {
       case GST_ITERATOR_OK:
-        child = GST_ELEMENT_CAST (data);
+      {
+        gchar **categories;
+        guint category;
+        GstElement *child = GST_ELEMENT_CAST (data);
+
         factory = gst_element_get_factory (child);
         klass = gst_element_factory_get_klass (factory);
+
+        GST_DEBUG ("Looking at element '%s' of klass '%s'",
+            GST_ELEMENT_NAME (child), klass);
+
         categories = g_strsplit (klass, "/", 0);
 
-        i = 0;
-        for (categorie = categories[0]; categorie;) {
-          if (g_strcmp0 (categorie, "Effect") == 0) {
+        for (category = 0; categories[category]; category++) {
+          if (g_strcmp0 (categories[category], "Effect") == 0) {
+            guint i, nb_specs;
 
             class = G_OBJECT_GET_CLASS (child);
             parray = g_object_class_list_properties (class, &nb_specs);
@@ -139,18 +145,19 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
             }
             g_free (parray);
 
-            GST_DEBUG ("%i configurable properties added to %p", child,
-                nb_specs);
+            GST_DEBUG
+                ("%d configurable properties of '%s' added to property hashtable",
+                nb_specs, GST_ELEMENT_NAME (child));
             break;
           }
-          i++;
-          categorie = categories[i];
         }
+
         g_strfreev (categories);
         gst_object_unref (child);
         break;
-
+      }
       case GST_ITERATOR_RESYNC:
+        /* FIXME, properly restart the process */
         GST_DEBUG ("iterator resync");
         gst_iterator_resync (it);
         break;
