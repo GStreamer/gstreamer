@@ -111,7 +111,7 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
   }
 
   ret = g_hash_table_new_full ((GHashFunc) pspec_hash, pspec_equal,
-      (GDestroyNotify) g_param_spec_unref, g_object_unref);
+      (GDestroyNotify) g_param_spec_unref, gst_object_unref);
 
   /*  We go over child elements recursivly, and add writable properties to the
    *  hashtable
