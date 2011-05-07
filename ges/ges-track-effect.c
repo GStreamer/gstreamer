@@ -134,7 +134,7 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
             for (i = 0; i < nb_specs; i++) {
               if (parray[i]->flags & G_PARAM_WRITABLE) {
                 g_hash_table_insert (ret, g_param_spec_ref (parray[i]),
-                    g_object_ref (child));
+                    gst_object_ref (child));
               }
             }
             g_free (parray);
