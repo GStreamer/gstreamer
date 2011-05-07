@@ -1,190 +1,210 @@
 ;; -*- scheme -*-
 ; object definitions ...
-
-(define-object Source
-  (in-module "GESTimeline")
-  (parent "GESTimelineObject")
-  (c-name "GESTimelineSource")
-  (gtype-id "GES_TYPE_TIMELINE_SOURCE")
-)
-
-(define-object TimelineSource
-  (in-module "GESCustom")
-  (parent "GESTimelineSource")
-  (c-name "GESCustomTimelineSource")
-  (gtype-id "GES_TYPE_CUSTOM_TIMELINE_SOURCE")
-)
-
-(define-object r
-  (in-module "GESFormatte")
+(define-object Formatter
+  (in-module "GES")
   (parent "GObject")
   (c-name "GESFormatter")
   (gtype-id "GES_TYPE_FORMATTER")
 )
 
-(define-object Formatter
-  (in-module "GESKeyfile")
+(define-object KeyfileFormatter
+  (in-module "GES")
   (parent "GESFormatter")
   (c-name "GESKeyfileFormatter")
   (gtype-id "GES_TYPE_KEYFILE_FORMATTER")
 )
 
-(define-object e
-  (in-module "GESTimelin")
+(define-object Timeline
+  (in-module "GES")
   (parent "GstBin")
   (c-name "GESTimeline")
   (gtype-id "GES_TYPE_TIMELINE")
 )
 
-(define-object FileSource
-  (in-module "GESTimeline")
-  (parent "GESTimelineSource")
-  (c-name "GESTimelineFileSource")
-  (gtype-id "GES_TYPE_TIMELINE_FILE_SOURCE")
-)
-
-(define-object Layer
-  (in-module "GESTimeline")
+(define-object TimelineLayer
+  (in-module "GES")
   (parent "GInitiallyUnowned")
   (c-name "GESTimelineLayer")
   (gtype-id "GES_TYPE_TIMELINE_LAYER")
 )
 
-(define-object TimelineLayer
-  (in-module "GESSimple")
+(define-object SimpleTimelineLayer
+  (in-module "GES")
   (parent "GESTimelineLayer")
   (c-name "GESSimpleTimelineLayer")
   (gtype-id "GES_TYPE_SIMPLE_TIMELINE_LAYER")
 )
 
-(define-object Object
-  (in-module "GESTimeline")
+(define-object TimelineObject
+  (in-module "GES")
   (parent "GInitiallyUnowned")
   (c-name "GESTimelineObject")
   (gtype-id "GES_TYPE_TIMELINE_OBJECT")
 )
 
-(define-object Operation
-  (in-module "GESTimeline")
+(define-object TimelineOperation
+  (in-module "GES")
   (parent "GESTimelineObject")
   (c-name "GESTimelineOperation")
   (gtype-id "GES_TYPE_TIMELINE_OPERATION")
 )
 
-(define-object Overlay
-  (in-module "GESTimeline")
+(define-object TimelineOverlay
+  (in-module "GES")
   (parent "GESTimelineOperation")
   (c-name "GESTimelineOverlay")
   (gtype-id "GES_TYPE_TIMELINE_OVERLAY")
 )
 
-(define-object Pipeline
-  (in-module "GESTimeline")
+(define-object TimelinePipeline
+  (in-module "GES")
   (parent "GstPipeline")
   (c-name "GESTimelinePipeline")
   (gtype-id "GES_TYPE_TIMELINE_PIPELINE")
 )
 
-(define-object TestSource
-  (in-module "GESTimeline")
+(define-object TimelineSource
+  (in-module "GES")
+  (parent "GESTimelineObject")
+  (c-name "GESTimelineSource")
+  (gtype-id "GES_TYPE_TIMELINE_SOURCE")
+)
+
+(define-object TimelineFileSource
+  (in-module "GES")
+  (parent "GESTimelineSource")
+  (c-name "GESTimelineFileSource")
+  (gtype-id "GES_TYPE_TIMELINE_FILE_SOURCE")
+)
+
+(define-object CustomTimelineSource
+  (in-module "GES")
+  (parent "GESTimelineSource")
+  (c-name "GESCustomTimelineSource")
+  (gtype-id "GES_TYPE_CUSTOM_TIMELINE_SOURCE")
+)
+
+(define-object TimelineTestSource
+  (in-module "GES")
   (parent "GESTimelineSource")
   (c-name "GESTimelineTestSource")
   (gtype-id "GES_TYPE_TIMELINE_TEST_SOURCE")
 )
 
-(define-object TextOverlay
-  (in-module "GESTimeline")
+(define-object TimelineTextOverlay
+  (in-module "GES")
   (parent "GESTimelineOverlay")
   (c-name "GESTimelineTextOverlay")
   (gtype-id "GES_TYPE_TIMELINE_TEXT_OVERLAY")
 )
 
-(define-object TitleSource
-  (in-module "GESTimeline")
+(define-object TimelineTitleSource
+  (in-module "GES")
   (parent "GESTimelineSource")
   (c-name "GESTimelineTitleSource")
   (gtype-id "GES_TYPE_TIMELINE_TITLE_SOURCE")
 )
 
-(define-object Transition
-  (in-module "GESTimeline")
+(define-object TimelineTransition
+  (in-module "GES")
   (parent "GESTimelineOperation")
   (c-name "GESTimelineTransition")
   (gtype-id "GES_TYPE_TIMELINE_TRANSITION")
 )
 
-(define-object StandardTransition
-  (in-module "GESTimeline")
+(define-object TimelineStandardTransition
+  (in-module "GES")
   (parent "GESTimelineTransition")
   (c-name "GESTimelineStandardTransition")
   (gtype-id "GES_TYPE_TIMELINE_STANDARD_TRANSITION")
 )
 
-(define-object Object
-  (in-module "GESTrack")
+(define-object Track
+  (in-module "GES")
+  (parent "GstBin")
+  (c-name "GESTrack")
+  (gtype-id "GES_TYPE_TRACK")
+)
+
+(define-object TrackObject
+  (in-module "GES")
   (parent "GInitiallyUnowned")
   (c-name "GESTrackObject")
   (gtype-id "GES_TYPE_TRACK_OBJECT")
 )
 
-(define-object Operation
-  (in-module "GESTrack")
+(define-object TrackOperation
+  (in-module "GES")
   (parent "GESTrackObject")
   (c-name "GESTrackOperation")
   (gtype-id "GES_TYPE_TRACK_OPERATION")
 )
 
-(define-object Source
-  (in-module "GESTrack")
+(define-object TrackSource
+  (in-module "GES")
   (parent "GESTrackObject")
   (c-name "GESTrackSource")
   (gtype-id "GES_TYPE_TRACK_SOURCE")
 )
 
-(define-object ImageSource
-  (in-module "GESTrack")
+(define-object TrackImageSource
+  (in-module "GES")
   (parent "GESTrackSource")
   (c-name "GESTrackImageSource")
   (gtype-id "GES_TYPE_TRACK_IMAGE_SOURCE")
 )
 
-(define-object FileSource
-  (in-module "GESTrack")
+(define-object TrackFileSource
+  (in-module "GES")
   (parent "GESTrackSource")
   (c-name "GESTrackFileSource")
-  (gtype-id "GES_TYPE_TRACK_FILESOURCE")
+  (gtype-id "GES_TYPE_TRACK_FILE_SOURCE")
 )
 
-(define-object TextOverlay
-  (in-module "GESTrack")
+(define-object TrackAudioTestSource
+  (in-module "GES")
+  (parent "GESTrackSource")
+  (c-name "GESTrackAudioTestSource")
+  (gtype-id "GES_TYPE_TRACK_AUDIO_TEST_SOURCE")
+)
+
+(define-object TrackTextOverlay
+  (in-module "GES")
   (parent "GESTrackOperation")
   (c-name "GESTrackTextOverlay")
   (gtype-id "GES_TYPE_TRACK_TEXT_OVERLAY")
 )
 
-(define-object TitleSource
-  (in-module "GESTrack")
+(define-object TrackTitleSource
+  (in-module "GES")
   (parent "GESTrackSource")
   (c-name "GESTrackTitleSource")
   (gtype-id "GES_TYPE_TRACK_TITLE_SOURCE")
 )
 
-(define-object Transition
-  (in-module "GESTrack")
+(define-object TrackTransition
+  (in-module "GES")
   (parent "GESTrackOperation")
   (c-name "GESTrackTransition")
   (gtype-id "GES_TYPE_TRACK_TRANSITION")
 )
 
-(define-object VideoTestSource
-  (in-module "GESTrack")
+(define-object TrackAudioTransition
+  (in-module "GES")
+  (parent "GESTrackTransition")
+  (c-name "GESTrackAudioTransition")
+  (gtype-id "GES_TYPE_TRACK_AUDIO_TRANSITION")
+)
+
+(define-object TrackVideoTestSource
+  (in-module "GES")
   (parent "GESTrackSource")
   (c-name "GESTrackVideoTestSource")
   (gtype-id "GES_TYPE_TRACK_VIDEO_TEST_SOURCE")
 )
 
-(define-object VideoTransition
-  (in-module "GESTrack")
+(define-object TrackVideoTransition
+  (in-module "GES")
   (parent "GESTrackTransition")
   (c-name "GESTrackVideoTransition")
   (gtype-id "GES_TYPE_TRACK_VIDEO_TRANSITION")
@@ -192,8 +212,8 @@
 
 ;; Enumerations and flags ...
 
-(define-flags Type
-  (in-module "GESTrack")
+(define-flags TrackType
+  (in-module "GES")
   (c-name "GESTrackType")
   (gtype-id "GES_TYPE_TRACK_TYPE")
   (values
@@ -205,8 +225,8 @@
   )
 )
 
-(define-enum StandardTransitionType
-  (in-module "GESVideo")
+(define-enum VideoStandardTransitionType
+  (in-module "GES")
   (c-name "GESVideoStandardTransitionType")
   (gtype-id "GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE")
   (values
@@ -285,8 +305,8 @@
   )
 )
 
-(define-enum VAlign
-  (in-module "GESText")
+(define-enum TextVAlign
+  (in-module "GES")
   (c-name "GESTextVAlign")
   (gtype-id "GES_TEXT_VALIGN_TYPE")
   (values
@@ -296,8 +316,8 @@
   )
 )
 
-(define-enum HAlign
-  (in-module "GESText")
+(define-enum TextHAlign
+  (in-module "GES")
   (c-name "GESTextHAlign")
   (gtype-id "GES_TEXT_HALIGN_TYPE")
   (values
@@ -307,8 +327,8 @@
   )
 )
 
-(define-enum TestPattern
-  (in-module "GESVideo")
+(define-enum VideoTestPattern
+  (in-module "GES")
   (c-name "GESVideoTestPattern")
   (gtype-id "GES_VIDEO_TEST_PATTERN_TYPE")
   (values
@@ -329,4 +349,15 @@
   )
 )
 
-
+(define-flags PipelineFlags
+  (in-module "GES")
+  (c-name "GESPipelineFlags")
+  (gtype-id "GES_TYPE_PIPELINE_FLAGS")
+  (values
+    '("preview-audio" "TIMELINE_MODE_PREVIEW_AUDIO")
+    '("preview-video" "TIMELINE_MODE_PREVIEW_VIDEO")
+    '("preview" "TIMELINE_MODE_PREVIEW")
+    '("render" "TIMELINE_MODE_RENDER")
+    '("smart-render" "TIMELINE_MODE_SMART_RENDER")
+  )
+)

@@ -1,190 +1,210 @@
 ;; -*- scheme -*-
 ; object definitions ...
-
-(define-object Source
-  (in-module "GESTimeline")
-  (parent "GESTimelineObject")
-  (c-name "GESTimelineSource")
-  (gtype-id "GES_TYPE_TIMELINE_SOURCE")
-)
-
-(define-object TimelineSource
-  (in-module "GESCustom")
-  (parent "GESTimelineSource")
-  (c-name "GESCustomTimelineSource")
-  (gtype-id "GES_TYPE_CUSTOM_TIMELINE_SOURCE")
-)
-
-(define-object r
-  (in-module "GESFormatte")
+(define-object Formatter
+  (in-module "GES")
   (parent "GObject")
   (c-name "GESFormatter")
   (gtype-id "GES_TYPE_FORMATTER")
 )
 
-(define-object Formatter
-  (in-module "GESKeyfile")
+(define-object KeyfileFormatter
+  (in-module "GES")
   (parent "GESFormatter")
   (c-name "GESKeyfileFormatter")
   (gtype-id "GES_TYPE_KEYFILE_FORMATTER")
 )
 
-(define-object e
-  (in-module "GESTimelin")
+(define-object Timeline
+  (in-module "GES")
   (parent "GstBin")
   (c-name "GESTimeline")
   (gtype-id "GES_TYPE_TIMELINE")
 )
 
-(define-object FileSource
-  (in-module "GESTimeline")
-  (parent "GESTimelineSource")
-  (c-name "GESTimelineFileSource")
-  (gtype-id "GES_TYPE_TIMELINE_FILE_SOURCE")
-)
-
-(define-object Layer
-  (in-module "GESTimeline")
+(define-object TimelineLayer
+  (in-module "GES")
   (parent "GInitiallyUnowned")
   (c-name "GESTimelineLayer")
   (gtype-id "GES_TYPE_TIMELINE_LAYER")
 )
 
-(define-object TimelineLayer
-  (in-module "GESSimple")
+(define-object SimpleTimelineLayer
+  (in-module "GES")
   (parent "GESTimelineLayer")
   (c-name "GESSimpleTimelineLayer")
   (gtype-id "GES_TYPE_SIMPLE_TIMELINE_LAYER")
 )
 
-(define-object Object
-  (in-module "GESTimeline")
+(define-object TimelineObject
+  (in-module "GES")
   (parent "GInitiallyUnowned")
   (c-name "GESTimelineObject")
   (gtype-id "GES_TYPE_TIMELINE_OBJECT")
 )
 
-(define-object Operation
-  (in-module "GESTimeline")
+(define-object TimelineOperation
+  (in-module "GES")
   (parent "GESTimelineObject")
   (c-name "GESTimelineOperation")
   (gtype-id "GES_TYPE_TIMELINE_OPERATION")
 )
 
-(define-object Overlay
-  (in-module "GESTimeline")
+(define-object TimelineOverlay
+  (in-module "GES")
   (parent "GESTimelineOperation")
   (c-name "GESTimelineOverlay")
   (gtype-id "GES_TYPE_TIMELINE_OVERLAY")
 )
 
-(define-object Pipeline
-  (in-module "GESTimeline")
+(define-object TimelinePipeline
+  (in-module "GES")
   (parent "GstPipeline")
   (c-name "GESTimelinePipeline")
   (gtype-id "GES_TYPE_TIMELINE_PIPELINE")
 )
 
-(define-object TestSource
-  (in-module "GESTimeline")
+(define-object TimelineSource
+  (in-module "GES")
+  (parent "GESTimelineObject")
+  (c-name "GESTimelineSource")
+  (gtype-id "GES_TYPE_TIMELINE_SOURCE")
+)
+
+(define-object TimelineFileSource
+  (in-module "GES")
+  (parent "GESTimelineSource")
+  (c-name "GESTimelineFileSource")
+  (gtype-id "GES_TYPE_TIMELINE_FILE_SOURCE")
+)
+
+(define-object CustomTimelineSource
+  (in-module "GES")
+  (parent "GESTimelineSource")
+  (c-name "GESCustomTimelineSource")
+  (gtype-id "GES_TYPE_CUSTOM_TIMELINE_SOURCE")
+)
+
+(define-object TimelineTestSource
+  (in-module "GES")
   (parent "GESTimelineSource")
   (c-name "GESTimelineTestSource")
   (gtype-id "GES_TYPE_TIMELINE_TEST_SOURCE")
 )
 
-(define-object TextOverlay
-  (in-module "GESTimeline")
+(define-object TimelineTextOverlay
+  (in-module "GES")
   (parent "GESTimelineOverlay")
   (c-name "GESTimelineTextOverlay")
   (gtype-id "GES_TYPE_TIMELINE_TEXT_OVERLAY")
 )
 
-(define-object TitleSource
-  (in-module "GESTimeline")
+(define-object TimelineTitleSource
+  (in-module "GES")
   (parent "GESTimelineSource")
   (c-name "GESTimelineTitleSource")
   (gtype-id "GES_TYPE_TIMELINE_TITLE_SOURCE")
 )
 
-(define-object Transition
-  (in-module "GESTimeline")
+(define-object TimelineTransition
+  (in-module "GES")
   (parent "GESTimelineOperation")
   (c-name "GESTimelineTransition")
   (gtype-id "GES_TYPE_TIMELINE_TRANSITION")
 )
 
-(define-object StandardTransition
-  (in-module "GESTimeline")
+(define-object TimelineStandardTransition
+  (in-module "GES")
   (parent "GESTimelineTransition")
   (c-name "GESTimelineStandardTransition")
   (gtype-id "GES_TYPE_TIMELINE_STANDARD_TRANSITION")
 )
 
-(define-object Object
-  (in-module "GESTrack")
+(define-object Track
+  (in-module "GES")
+  (parent "GstBin")
+  (c-name "GESTrack")
+  (gtype-id "GES_TYPE_TRACK")
+)
+
+(define-object TrackObject
+  (in-module "GES")
   (parent "GInitiallyUnowned")
   (c-name "GESTrackObject")
   (gtype-id "GES_TYPE_TRACK_OBJECT")
 )
 
-(define-object Operation
-  (in-module "GESTrack")
+(define-object TrackOperation
+  (in-module "GES")
   (parent "GESTrackObject")
   (c-name "GESTrackOperation")
   (gtype-id "GES_TYPE_TRACK_OPERATION")
 )
 
-(define-object Source
-  (in-module "GESTrack")
+(define-object TrackSource
+  (in-module "GES")
   (parent "GESTrackObject")
   (c-name "GESTrackSource")
   (gtype-id "GES_TYPE_TRACK_SOURCE")
 )
 
-(define-object ImageSource
-  (in-module "GESTrack")
+(define-object TrackImageSource
+  (in-module "GES")
   (parent "GESTrackSource")
   (c-name "GESTrackImageSource")
   (gtype-id "GES_TYPE_TRACK_IMAGE_SOURCE")
 )
 
-(define-object FileSource
-  (in-module "GESTrack")
+(define-object TrackFileSource
+  (in-module "GES")
   (parent "GESTrackSource")
   (c-name "GESTrackFileSource")
   (gtype-id "GES_TYPE_TRACK_FILESOURCE")
 )
 
-(define-object TextOverlay
-  (in-module "GESTrack")
+(define-object TrackAudioTestSource
+  (in-module "GES")
+  (parent "GESTrackSource")
+  (c-name "GESTrackAudioTestSource")
+  (gtype-id "GES_TYPE_TRACK_AUDIO_TEST_SOURCE")
+)
+
+(define-object TrackTextOverlay
+  (in-module "GES")
   (parent "GESTrackOperation")
   (c-name "GESTrackTextOverlay")
   (gtype-id "GES_TYPE_TRACK_TEXT_OVERLAY")
 )
 
-(define-object TitleSource
-  (in-module "GESTrack")
+(define-object TrackTitleSource
+  (in-module "GES")
   (parent "GESTrackSource")
   (c-name "GESTrackTitleSource")
   (gtype-id "GES_TYPE_TRACK_TITLE_SOURCE")
 )
 
-(define-object Transition
-  (in-module "GESTrack")
+(define-object TrackTransition
+  (in-module "GES")
   (parent "GESTrackOperation")
   (c-name "GESTrackTransition")
   (gtype-id "GES_TYPE_TRACK_TRANSITION")
 )
 
-(define-object VideoTestSource
-  (in-module "GESTrack")
+(define-object TrackAudioTransition
+  (in-module "GES")
+  (parent "GESTrackTransition")
+  (c-name "GESTrackAudioTransition")
+  (gtype-id "GES_TYPE_TRACK_AUDIO_TRANSITION")
+)
+
+(define-object TrackVideoTestSource
+  (in-module "GES")
   (parent "GESTrackSource")
   (c-name "GESTrackVideoTestSource")
   (gtype-id "GES_TYPE_TRACK_VIDEO_TEST_SOURCE")
 )
 
-(define-object VideoTransition
-  (in-module "GESTrack")
+(define-object TrackVideoTransition
+  (in-module "GES")
   (parent "GESTrackTransition")
   (c-name "GESTrackVideoTransition")
   (gtype-id "GES_TYPE_TRACK_VIDEO_TRANSITION")
@@ -192,8 +212,8 @@
 
 ;; Enumerations and flags ...
 
-(define-flags Type
-  (in-module "GESTrack")
+(define-flags TrackType
+  (in-module "GES")
   (c-name "GESTrackType")
   (gtype-id "GES_TYPE_TRACK_TYPE")
   (values
@@ -205,8 +225,8 @@
   )
 )
 
-(define-enum StandardTransitionType
-  (in-module "GESVideo")
+(define-enum VideoStandardTransitionType
+  (in-module "GES")
   (c-name "GESVideoStandardTransitionType")
   (gtype-id "GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE")
   (values
@@ -285,8 +305,8 @@
   )
 )
 
-(define-enum VAlign
-  (in-module "GESText")
+(define-enum TextVAlign
+  (in-module "GES")
   (c-name "GESTextVAlign")
   (gtype-id "GES_TEXT_VALIGN_TYPE")
   (values
@@ -296,8 +316,8 @@
   )
 )
 
-(define-enum HAlign
-  (in-module "GESText")
+(define-enum TextHAlign
+  (in-module "GES")
   (c-name "GESTextHAlign")
   (gtype-id "GES_TEXT_HALIGN_TYPE")
   (values
@@ -307,8 +327,8 @@
   )
 )
 
-(define-enum TestPattern
-  (in-module "GESVideo")
+(define-enum VideoTestPattern
+  (in-module "GES")
   (c-name "GESVideoTestPattern")
   (gtype-id "GES_VIDEO_TEST_PATTERN_TYPE")
   (values
@@ -329,26 +349,30 @@
   )
 )
 
-
-;; From ges.h
-
-(define-function ges_init
-  (c-name "ges_init")
-  (return-type "gboolean")
+(define-flags PipelineFlags
+  (in-module "GES")
+  (c-name "GESPipelineFlags")
+  (gtype-id "GES_TYPE_PIPELINE_FLAGS")
+  (values
+    '("preview-audio" "TIMELINE_MODE_PREVIEW_AUDIO")
+    '("preview-video" "TIMELINE_MODE_PREVIEW_VIDEO")
+    '("preview" "TIMELINE_MODE_PREVIEW")
+    '("render" "TIMELINE_MODE_RENDER")
+    '("smart-render" "TIMELINE_MODE_SMART_RENDER")
+  )
 )
-
 
 
 ;; From ges-custom-timeline-source.h
 
-(define-function ges_custom_timeline_source_get_type
+(define-function custom_timeline_source_get_type
   (c-name "ges_custom_timeline_source_get_type")
   (return-type "GType")
 )
 
-(define-function ges_custom_timeline_source_new
+(define-function custom_timeline_source_new
   (c-name "ges_custom_timeline_source_new")
-  (is-constructor-of "GesCustomTimelineSource")
+  (is-constructor-of "GESCustomTimelineSource")
   (return-type "GESCustomTimelineSource*")
   (parameters
     '("GESFillTrackObjectUserFunc" "func")
@@ -360,28 +384,33 @@
 
 ;; From ges-enums.h
 
-(define-function ges_track_type_get_type
+(define-function track_type_get_type
   (c-name "ges_track_type_get_type")
   (return-type "GType")
 )
 
-(define-function ges_video_standard_transition_type_get_type
+(define-function video_standard_transition_type_get_type
   (c-name "ges_video_standard_transition_type_get_type")
   (return-type "GType")
 )
 
-(define-function ges_text_valign_get_type
+(define-function text_valign_get_type
   (c-name "ges_text_valign_get_type")
   (return-type "GType")
 )
 
-(define-function ges_text_halign_get_type
+(define-function text_halign_get_type
   (c-name "ges_text_halign_get_type")
   (return-type "GType")
 )
 
-(define-function ges_video_test_pattern_get_type
+(define-function video_test_pattern_get_type
   (c-name "ges_video_test_pattern_get_type")
+  (return-type "GType")
+)
+
+(define-function pipeline_flags_get_type
+  (c-name "ges_pipeline_flags_get_type")
   (return-type "GType")
 )
 
@@ -389,12 +418,12 @@
 
 ;; From ges-formatter.h
 
-(define-function ges_formatter_get_type
+(define-function formatter_get_type
   (c-name "ges_formatter_get_type")
   (return-type "GType")
 )
 
-(define-function ges_formatter_new_for_uri
+(define-function formatter_new_for_uri
   (c-name "ges_formatter_new_for_uri")
   (return-type "GESFormatter*")
   (parameters
@@ -402,13 +431,13 @@
   )
 )
 
-(define-function ges_default_formatter_new
+(define-function default_formatter_new
   (c-name "ges_default_formatter_new")
-  (is-constructor-of "GesDefaultFormatter")
+  (is-constructor-of "GESDefaultFormatter")
   (return-type "GESFormatter*")
 )
 
-(define-function ges_formatter_can_load_uri
+(define-function formatter_can_load_uri
   (c-name "ges_formatter_can_load_uri")
   (return-type "gboolean")
   (parameters
@@ -416,7 +445,7 @@
   )
 )
 
-(define-function ges_formatter_can_save_uri
+(define-function formatter_can_save_uri
   (c-name "ges_formatter_can_save_uri")
   (return-type "gboolean")
   (parameters
@@ -489,20 +518,29 @@
 
 
 
+;; From ges.h
+
+(define-function init
+  (c-name "ges_init")
+  (return-type "gboolean")
+)
+
+
+
 ;; From ges-internal.h
 
 
 
 ;; From ges-keyfile-formatter.h
 
-(define-function ges_keyfile_formatter_get_type
+(define-function keyfile_formatter_get_type
   (c-name "ges_keyfile_formatter_get_type")
   (return-type "GType")
 )
 
-(define-function ges_keyfile_formatter_new
+(define-function keyfile_formatter_new
   (c-name "ges_keyfile_formatter_new")
-  (is-constructor-of "GesKeyfileFormatter")
+  (is-constructor-of "GESKeyfileFormatter")
   (return-type "GESKeyfileFormatter*")
 )
 
@@ -514,7 +552,7 @@
 
 ;; From ges-screenshot.h
 
-(define-function ges_play_sink_convert_frame
+(define-function play_sink_convert_frame
   (c-name "ges_play_sink_convert_frame")
   (return-type "GstBuffer*")
   (parameters
@@ -527,14 +565,14 @@
 
 ;; From ges-simple-timeline-layer.h
 
-(define-function ges_simple_timeline_layer_get_type
+(define-function simple_timeline_layer_get_type
   (c-name "ges_simple_timeline_layer_get_type")
   (return-type "GType")
 )
 
-(define-function ges_simple_timeline_layer_new
+(define-function simple_timeline_layer_new
   (c-name "ges_simple_timeline_layer_new")
-  (is-constructor-of "GesSimpleTimelineLayer")
+  (is-constructor-of "GESSimpleTimelineLayer")
   (return-type "GESSimpleTimelineLayer*")
 )
 
@@ -583,21 +621,104 @@
 )
 
 
+;; From ges-timeline-file-source.h
+
+(define-function timeline_filesource_get_type
+  (c-name "ges_timeline_filesource_get_type")
+  (return-type "GType")
+)
+
+(define-method set_mute
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_set_mute")
+  (return-type "none")
+  (parameters
+    '("gboolean" "mute")
+  )
+)
+
+(define-method set_max_duration
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_set_max_duration")
+  (return-type "none")
+  (parameters
+    '("guint64" "maxduration")
+  )
+)
+
+(define-method set_supported_formats
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_set_supported_formats")
+  (return-type "none")
+  (parameters
+    '("GESTrackType" "supportedformats")
+  )
+)
+
+(define-method set_is_image
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_set_is_image")
+  (return-type "none")
+  (parameters
+    '("gboolean" "is_image")
+  )
+)
+
+(define-method is_muted
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_is_muted")
+  (return-type "gboolean")
+)
+
+(define-method get_max_duration
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_get_max_duration")
+  (return-type "guint64")
+)
+
+(define-method is_image
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_is_image")
+  (return-type "gboolean")
+)
+
+(define-method get_uri
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_get_uri")
+  (return-type "const-gchar*")
+)
+
+(define-method get_supported_formats
+  (of-object "GESTimelineFileSource")
+  (c-name "ges_timeline_filesource_get_supported_formats")
+  (return-type "GESTrackType")
+)
+
+(define-function timeline_filesource_new
+  (c-name "ges_timeline_filesource_new")
+  (is-constructor-of "GESTimelineFileSource")
+  (return-type "GESTimelineFileSource*")
+  (parameters
+    '("gchar*" "uri")
+  )
+)
+
+
 
 ;; From ges-timeline.h
 
-(define-function ges_timeline_get_type
+(define-function timeline_get_type
   (c-name "ges_timeline_get_type")
   (return-type "GType")
 )
 
-(define-function ges_timeline_new
+(define-function timeline_new
   (c-name "ges_timeline_new")
-  (is-constructor-of "GesTimeline")
+  (is-constructor-of "GESTimeline")
   (return-type "GESTimeline*")
 )
 
-(define-function ges_timeline_new_from_uri
+(define-function timeline_new_from_uri
   (c-name "ges_timeline_new_from_uri")
   (return-type "GESTimeline*")
   (parameters
@@ -682,100 +803,16 @@
 
 
 
-;; From ges-timeline-file-source.h
-
-(define-function ges_timeline_filesource_get_type
-  (c-name "ges_timeline_filesource_get_type")
-  (return-type "GType")
-)
-
-(define-method set_mute
-  (of-object "GESTimelineFileSource")
-  (c-name "ges_timeline_filesource_set_mute")
-  (return-type "none")
-  (parameters
-    '("gboolean" "mute")
-  )
-)
-
-(define-method set_max_duration
-  (of-object "GESTimelineFileSource")
-  (c-name "ges_timeline_filesource_set_max_duration")
-  (return-type "none")
-  (parameters
-    '("guint64" "maxduration")
-  )
-)
-
-(define-method set_supported_formats
-  (of-object "GESTimelineFileSource")
-  (c-name "ges_timeline_filesource_set_supported_formats")
-  (return-type "none")
-  (parameters
-    '("GESTrackType" "supportedformats")
-  )
-)
-
-(define-method set_is_image
-  (of-object "GESTimelineFileSource")
-  (c-name "ges_timeline_filesource_set_is_image")
-  (return-type "none")
-  (parameters
-    '("gboolean" "is_image")
-  )
-)
-
-(define-method is_muted
-  (of-object "GESTimelineFileSource")
-  (c-name "ges_timeline_filesource_is_muted")
-  (return-type "gboolean")
-)
-
-(define-method get_max_duration
-  (of-object "GESTimelineFileSource")
-  (c-name "ges_timeline_filesource_get_max_duration")
-  (return-type "guint64")
-)
-
-(define-method is_image
-  (of-object "GESTimelineFileSource")
-  (c-name "ges_timeline_filesource_is_image")
-  (return-type "gboolean")
-)
-
-(define-method get_uri
-  (of-object "GESTimelineFileSource")
-  (c-name "ges_timeline_filesource_get_uri")
-  (return-type "const-gchar*")
-)
-
-(define-method get_supported_formats
-  (of-object "GESTimelineFileSource")
-  (c-name "ges_timeline_filesource_get_supported_formats")
-  (return-type "GESTrackType")
-)
-
-(define-function ges_timeline_filesource_new
-  (c-name "ges_timeline_filesource_new")
-  (is-constructor-of "GesTimelineFilesource")
-  (return-type "GESTimelineFileSource*")
-  (parameters
-    '("gchar*" "uri")
-  )
-)
-
-
-
 ;; From ges-timeline-layer.h
 
-(define-function ges_timeline_layer_get_type
+(define-function timeline_layer_get_type
   (c-name "ges_timeline_layer_get_type")
   (return-type "GType")
 )
 
-(define-function ges_timeline_layer_new
+(define-function timeline_layer_new
   (c-name "ges_timeline_layer_new")
-  (is-constructor-of "GesTimelineLayer")
+  (is-constructor-of "GESTimelineLayer")
   (return-type "GESTimelineLayer*")
 )
 
@@ -831,7 +868,7 @@
 
 ;; From ges-timeline-object.h
 
-(define-function ges_timeline_object_get_type
+(define-function timeline_object_get_type
   (c-name "ges_timeline_object_get_type")
   (return-type "GType")
 )
@@ -934,12 +971,6 @@
   (return-type "GList*")
 )
 
-(define-method get_layer
-  (of-object "GESTimelineObject")
-  (c-name "ges_timeline_object_get_layer")
-  (return-type "GESTimelineLayer*")
-)
-
 (define-method add_track_object
   (of-object "GESTimelineObject")
   (c-name "ges_timeline_object_add_track_object")
@@ -949,11 +980,16 @@
   )
 )
 
+(define-method get_layer
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_get_layer")
+  (return-type "GESTimelineLayer*")
+)
 
 
 ;; From ges-timeline-operation.h
 
-(define-function ges_timeline_operation_get_type
+(define-function timeline_operation_get_type
   (c-name "ges_timeline_operation_get_type")
   (return-type "GType")
 )
@@ -962,7 +998,7 @@
 
 ;; From ges-timeline-overlay.h
 
-(define-function ges_timeline_overlay_get_type
+(define-function timeline_overlay_get_type
   (c-name "ges_timeline_overlay_get_type")
   (return-type "GType")
 )
@@ -971,14 +1007,14 @@
 
 ;; From ges-timeline-pipeline.h
 
-(define-function ges_timeline_pipeline_get_type
+(define-function timeline_pipeline_get_type
   (c-name "ges_timeline_pipeline_get_type")
   (return-type "GType")
 )
 
-(define-function ges_timeline_pipeline_new
+(define-function timeline_pipeline_new
   (c-name "ges_timeline_pipeline_new")
-  (is-constructor-of "GesTimelinePipeline")
+  (is-constructor-of "GESTimelinePipeline")
   (return-type "GESTimelinePipeline*")
 )
 
@@ -1043,9 +1079,44 @@
 
 
 
+;; From ges-timeline-source.h
+
+(define-function timeline_source_get_type
+  (c-name "ges_timeline_source_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ges-timeline-standard-transition.h
+
+(define-function timeline_standard_transition_get_type
+  (c-name "ges_timeline_standard_transition_get_type")
+  (return-type "GType")
+)
+
+(define-function timeline_standard_transition_new
+  (c-name "ges_timeline_standard_transition_new")
+  (is-constructor-of "GESTimelineStandardTransition")
+  (return-type "GESTimelineStandardTransition*")
+  (parameters
+    '("GESVideoStandardTransitionType" "vtype")
+  )
+)
+
+(define-function timeline_standard_transition_new_for_nick
+  (c-name "ges_timeline_standard_transition_new_for_nick")
+  (return-type "GESTimelineStandardTransition*")
+  (parameters
+    '("char*" "nick")
+  )
+)
+
+
+
 ;; From ges-timeline-test-source.h
 
-(define-function ges_timeline_test_source_get_type
+(define-function timeline_test_source_get_type
   (c-name "ges_timeline_test_source_get_type")
   (return-type "GType")
 )
@@ -1110,13 +1181,13 @@
   (return-type "gdouble")
 )
 
-(define-function ges_timeline_test_source_new
+(define-function timeline_test_source_new
   (c-name "ges_timeline_test_source_new")
-  (is-constructor-of "GesTimelineTestSource")
+  (is-constructor-of "GESTimelineTestSource")
   (return-type "GESTimelineTestSource*")
 )
 
-(define-function ges_timeline_test_source_new_for_nick
+(define-function timeline_test_source_new_for_nick
   (c-name "ges_timeline_test_source_new_for_nick")
   (return-type "GESTimelineTestSource*")
   (parameters
@@ -1126,35 +1197,9 @@
 
 
 
-;; From ges-timeline-standard-transition.h
-
-(define-function ges_timeline_standard_transition_get_type
-  (c-name "ges_timeline_standard_transition_get_type")
-  (return-type "GType")
-)
-
-(define-function ges_timeline_standard_transition_new
-  (c-name "ges_timeline_standard_transition_new")
-  (is-constructor-of "GesTimelineStandardTransition")
-  (return-type "GESTimelineStandardTransition*")
-  (parameters
-    '("GESVideoStandardTransitionType" "vtype")
-  )
-)
-
-(define-function ges_timeline_standard_transition_new_for_nick
-  (c-name "ges_timeline_standard_transition_new_for_nick")
-  (return-type "GESTimelineStandardTransition*")
-  (parameters
-    '("char*" "nick")
-  )
-)
-
-
-
 ;; From ges-timeline-text-overlay.h
 
-(define-function ges_timeline_text_overlay_get_type
+(define-function timeline_text_overlay_get_type
   (c-name "ges_timeline_text_overlay_get_type")
   (return-type "GType")
 )
@@ -1219,9 +1264,9 @@
   (return-type "GESTextHAlign")
 )
 
-(define-function ges_timeline_text_overlay_new
+(define-function timeline_text_overlay_new
   (c-name "ges_timeline_text_overlay_new")
-  (is-constructor-of "GesTimelineTextOverlay")
+  (is-constructor-of "GESTimelineTextOverlay")
   (return-type "GESTimelineTextOverlay*")
 )
 
@@ -1229,7 +1274,7 @@
 
 ;; From ges-timeline-title-source.h
 
-(define-function ges_timeline_title_source_get_type
+(define-function timeline_title_source_get_type
   (c-name "ges_timeline_title_source_get_type")
   (return-type "GType")
 )
@@ -1309,9 +1354,9 @@
   (return-type "const-gchar*")
 )
 
-(define-function ges_timeline_title_source_new
+(define-function timeline_title_source_new
   (c-name "ges_timeline_title_source_new")
-  (is-constructor-of "GesTimelineTitleSource")
+  (is-constructor-of "GESTimelineTitleSource")
   (return-type "GESTimelineTitleSource*")
 )
 
@@ -1319,23 +1364,82 @@
 
 ;; From ges-timeline-transition.h
 
-(define-function ges_timeline_transition_get_type
+(define-function timeline_transition_get_type
   (c-name "ges_timeline_transition_get_type")
   (return-type "GType")
 )
 
 
 
+;; From ges-track-audio-test-source.h
+
+(define-function track_audio_test_source_get_type
+  (c-name "ges_track_audio_test_source_get_type")
+  (return-type "GType")
+)
+
+(define-method set_freq
+  (of-object "GESTrackAudioTestSource")
+  (c-name "ges_track_audio_test_source_set_freq")
+  (return-type "none")
+  (parameters
+    '("gdouble" "freq")
+  )
+)
+
+(define-method set_volume
+  (of-object "GESTrackAudioTestSource")
+  (c-name "ges_track_audio_test_source_set_volume")
+  (return-type "none")
+  (parameters
+    '("gdouble" "volume")
+  )
+)
+
+(define-method get_freq
+  (of-object "GESTrackAudioTestSource")
+  (c-name "ges_track_audio_test_source_get_freq")
+  (return-type "double")
+)
+
+(define-method get_volume
+  (of-object "GESTrackAudioTestSource")
+  (c-name "ges_track_audio_test_source_get_volume")
+  (return-type "double")
+)
+
+(define-function track_audio_test_source_new
+  (c-name "ges_track_audio_test_source_new")
+  (is-constructor-of "GESTrackAudioTestSource")
+  (return-type "GESTrackAudioTestSource*")
+)
+
+
+
+;; From ges-track-audio-transition.h
+
+(define-function track_audio_transition_get_type
+  (c-name "ges_track_audio_transition_get_type")
+  (return-type "GType")
+)
+
+(define-function track_audio_transition_new
+  (c-name "ges_track_audio_transition_new")
+  (is-constructor-of "GESTrackAudioTransition")
+  (return-type "GESTrackAudioTransition*")
+)
+
+
 ;; From ges-track-filesource.h
 
-(define-function ges_track_filesource_get_type
+(define-function track_filesource_get_type
   (c-name "ges_track_filesource_get_type")
   (return-type "GType")
 )
 
-(define-function ges_track_filesource_new
+(define-function track_filesource_new
   (c-name "ges_track_filesource_new")
-  (is-constructor-of "GesTrackFilesource")
+  (is-constructor-of "GESTrackFilesource")
   (return-type "GESTrackFileSource*")
   (parameters
     '("gchar*" "uri")
@@ -1344,16 +1448,95 @@
 
 
 
+;; From ges-track.h
+
+(define-function track_get_type
+  (c-name "ges_track_get_type")
+  (return-type "GType")
+)
+
+(define-function track_new
+  (c-name "ges_track_new")
+  (is-constructor-of "GESTrack")
+  (return-type "GESTrack*")
+  (parameters
+    '("GESTrackType" "type")
+    '("GstCaps*" "caps")
+  )
+)
+
+(define-method set_timeline
+  (of-object "GESTrack")
+  (c-name "ges_track_set_timeline")
+  (return-type "none")
+  (parameters
+    '("GESTimeline*" "timeline")
+  )
+)
+
+(define-method set_caps
+  (of-object "GESTrack")
+  (c-name "ges_track_set_caps")
+  (return-type "none")
+  (parameters
+    '("const-GstCaps*" "caps")
+  )
+)
+
+(define-method get_caps
+  (of-object "GESTrack")
+  (c-name "ges_track_get_caps")
+  (return-type "const-GstCaps*")
+)
+
+(define-method get_timeline
+  (of-object "GESTrack")
+  (c-name "ges_track_get_timeline")
+  (return-type "const-GESTimeline*")
+)
+
+(define-method add_object
+  (of-object "GESTrack")
+  (c-name "ges_track_add_object")
+  (return-type "gboolean")
+  (parameters
+    '("GESTrackObject*" "object")
+  )
+)
+
+(define-method remove_object
+  (of-object "GESTrack")
+  (c-name "ges_track_remove_object")
+  (return-type "gboolean")
+  (parameters
+    '("GESTrackObject*" "object")
+  )
+)
+
+(define-function track_video_raw_new
+  (c-name "ges_track_video_raw_new")
+  (is-constructor-of "GESTrackVideoRaw")
+  (return-type "GESTrack*")
+)
+
+(define-function track_audio_raw_new
+  (c-name "ges_track_audio_raw_new")
+  (is-constructor-of "GESTrackAudioRaw")
+  (return-type "GESTrack*")
+)
+
+
+
 ;; From ges-track-image-source.h
 
-(define-function ges_track_image_source_get_type
+(define-function track_image_source_get_type
   (c-name "ges_track_image_source_get_type")
   (return-type "GType")
 )
 
-(define-function ges_track_image_source_new
+(define-function track_image_source_new
   (c-name "ges_track_image_source_new")
-  (is-constructor-of "GesTrackImageSource")
+  (is-constructor-of "GESTrackImageSource")
   (return-type "GESTrackImageSource*")
   (parameters
     '("gchar*" "uri")
@@ -1364,7 +1547,7 @@
 
 ;; From ges-track-object.h
 
-(define-function ges_track_object_get_type
+(define-function track_object_get_type
   (c-name "ges_track_object_get_type")
   (return-type "GType")
 )
@@ -1471,20 +1654,129 @@
   )
 )
 
+(define-method get_start
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_start")
+  (return-type "guint64")
+)
+
+(define-method get_inpoint
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_inpoint")
+  (return-type "guint64")
+)
+
+(define-method get_duration
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_duration")
+  (return-type "guint64")
+)
+
+(define-method get_priority
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_priority")
+  (return-type "guint32")
+)
+
+(define-method is_active
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_is_active")
+  (return-type "gboolean")
+)
+
+(define-method list_children_properties
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_list_children_properties")
+  (return-type "GParamSpec**")
+  (parameters
+    '("guint*" "n_properties")
+  )
+)
+
+(define-method lookup_child
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_lookup_child")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "prop_name")
+    '("GstElement**" "element")
+    '("GParamSpec**" "pspec")
+  )
+)
+
+(define-method get_child_property_by_pspec
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_child_property_by_pspec")
+  (return-type "none")
+  (parameters
+    '("GParamSpec*" "pspec")
+    '("GValue*" "value")
+  )
+)
+
+(define-method get_child_property_valist
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_child_property_valist")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "first_property_name")
+    '("va_list" "var_args")
+  )
+)
+
+(define-method get_child_property
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_child_property")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "first_property_name")
+  )
+  (varargs #t)
+)
+
+(define-method set_child_property_valist
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_child_property_valist")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "first_property_name")
+    '("va_list" "var_args")
+  )
+)
+
+(define-method set_child_property_by_pspec
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_child_property_by_pspec")
+  (return-type "none")
+  (parameters
+    '("GParamSpec*" "pspec")
+    '("GValue*" "value")
+  )
+)
+
+(define-method set_child_property
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_child_property")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "first_property_name")
+  )
+  (varargs #t)
+)
+
 
 
 ;; From ges-track-operation.h
 
-(define-function ges_track_operation_get_type
+(define-function track_operation_get_type
   (c-name "ges_track_operation_get_type")
   (return-type "GType")
 )
 
 
-
 ;; From ges-track-source.h
 
-(define-function ges_track_source_get_type
+(define-function track_source_get_type
   (c-name "ges_track_source_get_type")
   (return-type "GType")
 )
@@ -1493,7 +1785,7 @@
 
 ;; From ges-track-text-overlay.h
 
-(define-function ges_track_text_overlay_get_type
+(define-function track_text_overlay_get_type
   (c-name "ges_track_text_overlay_get_type")
   (return-type "GType")
 )
@@ -1558,9 +1850,9 @@
   (return-type "GESTextVAlign")
 )
 
-(define-function ges_track_text_overlay_new
+(define-function track_text_overlay_new
   (c-name "ges_track_text_overlay_new")
-  (is-constructor-of "GesTrackTextOverlay")
+  (is-constructor-of "GESTrackTextOverlay")
   (return-type "GESTrackTextOverlay*")
 )
 
@@ -1568,7 +1860,7 @@
 
 ;; From ges-track-title-source.h
 
-(define-function ges_track_title_source_get_type
+(define-function track_title_source_get_type
   (c-name "ges_track_title_source_get_type")
   (return-type "GType")
 )
@@ -1633,9 +1925,9 @@
   (return-type "GESTextVAlign")
 )
 
-(define-function ges_track_title_source_new
+(define-function track_title_source_new
   (c-name "ges_track_title_source_new")
-  (is-constructor-of "GesTrackTitleSource")
+  (is-constructor-of "GESTrackTitleSource")
   (return-type "GESTrackTitleSource*")
 )
 
@@ -1643,7 +1935,7 @@
 
 ;; From ges-track-transition.h
 
-(define-function ges_track_transition_get_type
+(define-function track_transition_get_type
   (c-name "ges_track_transition_get_type")
   (return-type "GType")
 )
@@ -1652,14 +1944,14 @@
 
 ;; From ges-track-video-test-source.h
 
-(define-function ges_track_video_test_source_get_type
+(define-function track_video_test_source_get_type
   (c-name "ges_track_video_test_source_get_type")
   (return-type "GType")
 )
 
-(define-function ges_track_video_test_source_new
+(define-function track_video_test_source_new
   (c-name "ges_track_video_test_source_new")
-  (is-constructor-of "GesTrackVideoTestSource")
+  (is-constructor-of "GESTrackVideoTestSource")
   (return-type "GESTrackVideoTestSource*")
 )
 
@@ -1678,16 +1970,11 @@
   (return-type "GESVideoTestPattern")
 )
 
-;; From ges-timeline-source.h
 
-(define-function ges_timeline_source_get_type
-  (c-name "ges_timeline_source_get_type")
-  (return-type "GType")
-)
 
 ;; From ges-track-video-transition.h
 
-(define-function ges_track_video_transition_get_type
+(define-function track_video_transition_get_type
   (c-name "ges_track_video_transition_get_type")
   (return-type "GType")
 )
@@ -1707,9 +1994,9 @@
   (return-type "GESVideoStandardTransitionType")
 )
 
-(define-function ges_track_video_transition_new
+(define-function track_video_transition_new
   (c-name "ges_track_video_transition_new")
-  (is-constructor-of "GesTrackVideoTransition")
+  (is-constructor-of "GESTrackVideoTransition")
   (return-type "GESTrackVideoTransition*")
 )
 
@@ -1721,9 +2008,13 @@
 
 ;; From ges-utils.h
 
-(define-function ges_timeline_new_audio_video
+(define-function timeline_new_audio_video
   (c-name "ges_timeline_new_audio_video")
   (return-type "GESTimeline*")
 )
+
+
+
+;; From config.h
 
 
