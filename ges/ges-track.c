@@ -375,7 +375,8 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
   }
 
   if ((gnlobject = ges_track_object_get_gnlobject (object))) {
-    GST_DEBUG ("Removing GnlObject from composition");
+    GST_DEBUG ("Removing GnlObject '%s' from composition '%s'",
+        GST_ELEMENT_NAME (gnlobject), GST_ELEMENT_NAME (priv->composition));
     if (!gst_bin_remove (GST_BIN (priv->composition), gnlobject)) {
       GST_WARNING ("Failed to remove gnlobject from composition");
       return FALSE;
