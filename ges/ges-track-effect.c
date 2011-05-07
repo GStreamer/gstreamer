@@ -141,13 +141,13 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
 
             GST_DEBUG ("%i configurable properties added to %p", child,
                 nb_specs);
-            gst_object_unref (child);
             break;
           }
           i++;
           categorie = categories[i];
         }
         g_strfreev (categories);
+        gst_object_unref (child);
         break;
 
       case GST_ITERATOR_RESYNC:
