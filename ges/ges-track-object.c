@@ -882,7 +882,7 @@ ges_track_object_get_element (GESTrackObject * object)
  * Set the locking status of the @object in relationship to its controlling
  * #GESTimelineObject. If @locked is %TRUE, then this object will move synchronously
  * with its controlling #GESTimelineObject.
-*/
+ */
 void
 ges_track_object_set_locked (GESTrackObject * object, gboolean locked)
 {
@@ -1250,8 +1250,8 @@ cant_copy:
  * Gets an array of #GParamSpec* for all configurable properties of the
  * children of @object.
  *
- * Returns: (array): an array of #GParamSpec* which should be freed after use or %NULL
- * if something went wrong
+ * Returns: (transfer full) (array): an array of #GParamSpec* which should be freed after use or
+ * %NULL if something went wrong
  */
 GParamSpec **
 ges_track_object_list_children_properties (GESTrackObject * object,

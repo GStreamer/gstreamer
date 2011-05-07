@@ -197,15 +197,15 @@ ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
 }
 
 /**
-* ges_timeline_parse_launch_effect_new:
-* @video_bin_description: The gst-launch like bin description of the effect
-* @audio_bin_description: The gst-launch like bin description of the effect
-*
-* Creates a new #GESTimelineParseLaunchEffect from the description of the bin.
-*
-* Returns: a newly created #GESTimelineParseLaunchEffect, or %NULL if something went
-* wrong.
-*/
+ * ges_timeline_parse_launch_effect_new:
+ * @video_bin_description: The gst-launch like bin description of the effect
+ * @audio_bin_description: The gst-launch like bin description of the effect
+ *
+ * Creates a new #GESTimelineParseLaunchEffect from the description of the bin.
+ *
+ * Returns: (transfer full): a newly created #GESTimelineParseLaunchEffect, or
+ * %NULL if something went wrong.
+ */
 GESTimelineParseLaunchEffect *
 ges_timeline_parse_launch_effect_new (const gchar * video_bin_description,
     const gchar * audio_bin_description)

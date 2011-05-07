@@ -75,8 +75,8 @@ struct _GESTrackParseLaunchEffectClass
 
 GType ges_track_parse_launch_effect_get_type (void);
 
-GESTrackParseLaunchEffect
-*ges_track_parse_launch_effect_new (const gchar * bin_description);
+GESTrackParseLaunchEffect*
+ges_track_parse_launch_effect_new (const gchar * bin_description);
 
 G_END_DECLS
 #endif /* _GES_TRACK_PARSE_LAUNCH_EFFECT */

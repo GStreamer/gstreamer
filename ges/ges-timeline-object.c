@@ -857,18 +857,18 @@ sort_track_effects (gpointer a, gpointer b, GESTimelineObject * object)
 }
 
 /**
-* ges_timeline_object_get_top_effects:
-* @object: The origin #GESTimelineObject
-*
-* Get effects applied on @object
-*
-* Returns: a #GList of the #GESTrackEffect that are applied on
-* @object order by ascendant priorities.
-* The refcount of the objects will be increased. The user will have to
-* unref each #GESTrackEffect and free the #GList.
-*
-* Since: 0.10.2
-*/
+ * ges_timeline_object_get_top_effects:
+ * @object: The origin #GESTimelineObject
+ *
+ * Get effects applied on @object
+ *
+ * Returns: (transfer full) (element-type GESTrackObject): a #GList of the
+ * #GESTrackEffect that are applied on @object order by ascendant priorities.
+ * The refcount of the objects will be increased. The user will have to
+ * unref each #GESTrackEffect and free the #GList.
+ *
+ * Since: 0.10.2
+ */
 GList *
 ges_timeline_object_get_top_effects (GESTimelineObject * object)
 {
@@ -887,16 +887,16 @@ ges_timeline_object_get_top_effects (GESTimelineObject * object)
 }
 
 /**
-* ges_timeline_object_get_top_effect_position:
-* @object: The origin #GESTimelineObject
-* @effect: The #GESTrackEffect we want to get the top position from
-*
-* Gets the top position of an effect.
-*
-* Returns: The top position of the effect, -1 if something went wrong.
-*
-* Since: 0.10.2
-*/
+ * ges_timeline_object_get_top_effect_position:
+ * @object: The origin #GESTimelineObject
+ * @effect: The #GESTrackEffect we want to get the top position from
+ *
+ * Gets the top position of an effect.
+ *
+ * Returns: The top position of the effect, -1 if something went wrong.
+ *
+ * Since: 0.10.2
+ */
 gint
 ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
     GESTrackEffect * effect)
@@ -906,18 +906,18 @@ ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
 }
 
 /**
-* ges_timeline_object_set_top_effect_priority:
-* @object: The origin #GESTimelineObject
-* @effect: The #GESTrackEffect to move
-* @newpriority: the new position at which to move the @effect inside this
-* #GESTimelineObject
-*
-* This is a convenience method that lets you set the priority of a top effect.
-*
-* Returns: %TRUE if @effect was successfuly moved, %FALSE otherwise.
-*
-* Since: 0.10.2
-*/
+ * ges_timeline_object_set_top_effect_priority:
+ * @object: The origin #GESTimelineObject
+ * @effect: The #GESTrackEffect to move
+ * @newpriority: the new position at which to move the @effect inside this
+ * #GESTimelineObject
+ *
+ * This is a convenience method that lets you set the priority of a top effect.
+ *
+ * Returns: %TRUE if @effect was successfuly moved, %FALSE otherwise.
+ *
+ * Since: 0.10.2
+ */
 gboolean
 ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
     GESTrackEffect * effect, guint newpriority)
