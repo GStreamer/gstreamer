@@ -391,7 +391,6 @@ static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_base_sink_negotiate_pull (GstBaseSink * basesink);
 static GstCaps *gst_base_sink_pad_getcaps (GstPad * pad);
-static gboolean gst_base_sink_pad_setcaps (GstPad * pad, GstCaps * caps);
 static void gst_base_sink_pad_fixate (GstPad * pad, GstCaps * caps);
 
 /* check if an object was too late */
@@ -553,7 +552,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_getcaps);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_setcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_fixate);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_push);
@@ -597,24 +595,6 @@ gst_base_sink_pad_getcaps (GstPad * pad)
   return caps;
 }
 
-static gboolean
-gst_base_sink_pad_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstBaseSinkClass *bclass;
-  GstBaseSink *bsink;
-  gboolean res = TRUE;
-
-  bsink = GST_BASE_SINK (gst_pad_get_parent (pad));
-  bclass = GST_BASE_SINK_GET_CLASS (bsink);
-
-  if (res && bclass->set_caps)
-    res = bclass->set_caps (bsink, caps);
-
-  gst_object_unref (bsink);
-
-  return res;
-}
-
 static void
 gst_base_sink_pad_fixate (GstPad * pad, GstCaps * caps)
 {
@@ -645,7 +625,6 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->sinkpad = gst_pad_new_from_template (pad_template, "sink");
 
   gst_pad_set_getcaps_function (basesink->sinkpad, gst_base_sink_pad_getcaps);
-  gst_pad_set_setcaps_function (basesink->sinkpad, gst_base_sink_pad_setcaps);
   gst_pad_set_fixatecaps_function (basesink->sinkpad, gst_base_sink_pad_fixate);
   gst_pad_set_activate_function (basesink->sinkpad, gst_base_sink_pad_activate);
   gst_pad_set_activatepush_function (basesink->sinkpad,
@@ -3393,6 +3372,17 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
           result = FALSE;
       }
       GST_BASE_SINK_PREROLL_UNLOCK (basesink);
+      break;
+    }
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      if (bclass->set_caps)
+        result = bclass->set_caps (basesink, caps);
+
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
