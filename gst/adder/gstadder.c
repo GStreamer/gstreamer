@@ -174,9 +174,16 @@ gst_adder_sink_getcaps (GstPad * pad)
   /* get the downstream possible caps */
   peercaps = gst_pad_peer_get_caps (adder->srcpad);
 
-  /* get the allowed caps on this sinkpad, we use the fixed caps function so
-   * that it does not call recursively in this function. */
-  sinkcaps = gst_pad_get_fixed_caps_func (pad);
+  /* get the allowed caps on this sinkpad */
+  sinkcaps = gst_pad_get_current_caps (pad);
+  if (sinkcaps == NULL) {
+    sinkcaps = (GstCaps *) gst_pad_get_pad_template_caps (pad);
+    if (sinkcaps)
+      gst_caps_ref (sinkcaps);
+    else
+      sinkcaps = gst_caps_new_any ();
+  }
+
   if (peercaps) {
     /* restrict with filter-caps if any */
     if (filter_caps) {
