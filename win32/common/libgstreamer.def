@@ -649,9 +649,9 @@ EXPORTS
 	gst_pad_flags_get_type
 	gst_pad_get_allowed_caps
 	gst_pad_get_caps
+	gst_pad_get_current_caps
 	gst_pad_get_direction
 	gst_pad_get_element_private
-	gst_pad_get_fixed_caps_func
 	gst_pad_get_negotiated_caps
 	gst_pad_get_pad_template
 	gst_pad_get_pad_template_caps
@@ -661,6 +661,7 @@ EXPORTS
 	gst_pad_get_query_types_default
 	gst_pad_get_range
 	gst_pad_get_type
+	gst_pad_has_current_caps
 	gst_pad_is_active
 	gst_pad_is_blocked
 	gst_pad_is_blocking
