@@ -514,11 +514,16 @@ gst_event_new_caps (GstCaps * caps)
 void
 gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
 {
+  GstStructure *structure;
+
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
 
-  gst_structure_id_get (event->structure,
-      GST_QUARK (CAPS), GST_TYPE_CAPS, caps, NULL);
+  structure = event->structure;
+  if (G_LIKELY (caps))
+    *caps =
+        g_value_get_boxed (gst_structure_id_get_value (structure,
+            GST_QUARK (CAPS)));
 }
 
 /**
