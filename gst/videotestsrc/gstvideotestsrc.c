@@ -893,8 +893,6 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   if (res != GST_FLOW_OK)
     goto no_buffer;
 
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
-
   data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
   memset (data, 0, size);
   src->tmpline_u8 = g_malloc (src->width + 8);
