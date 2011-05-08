@@ -370,6 +370,15 @@ clear_events (GstEvent * events[])
 }
 
 static void
+replace_events (GstEvent * events[], GstEvent * dest[])
+{
+  guint i;
+
+  for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
+    gst_event_replace (&dest[i], events[i]);
+}
+
+static void
 copy_events (GstEvent * events[], GstEvent * dest[])
 {
   guint i;
@@ -2059,7 +2068,7 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 
   /* make sure we push the events from the source to this new peer, for this we
    * copy the events on the sinkpad and mark EVENTS_PENDING */
-  copy_events (srcpad->priv->events, sinkpad->priv->events);
+  replace_events (srcpad->priv->events, sinkpad->priv->events);
   GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_NEED_EVENTS);
 
   GST_OBJECT_UNLOCK (sinkpad);
@@ -2629,6 +2638,7 @@ gboolean
 gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstEvent *event;
+  gboolean res = TRUE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (caps == NULL || gst_caps_is_fixed (caps), FALSE);
@@ -2638,35 +2648,9 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
   if (GST_PAD_IS_SRC (pad))
     gst_pad_push_event (pad, event);
   else
-    gst_pad_send_event (pad, event);
+    res = gst_pad_send_event (pad, event);
 
-  return TRUE;
-}
-
-static GstFlowReturn
-gst_pad_update_events (GstPad * pad, GstEvent * events[])
-{
-  guint i;
-  GstPadEventFunction eventfunc;
-  GstEvent *event;
-
-  if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
-    goto no_function;
-
-  for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
-    if ((event = events[i]))
-      eventfunc (pad, event);
-  }
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-no_function:
-  {
-    g_warning ("pad %s:%s has no event handler, file a bug.",
-        GST_DEBUG_PAD_NAME (pad));
-    clear_events (events);
-    return GST_FLOW_NOT_SUPPORTED;
-  }
+  return res;
 }
 
 static gboolean
@@ -2702,7 +2686,7 @@ setcaps_failed:
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
 {
   /* See if pad accepts the caps */
@@ -2712,13 +2696,42 @@ gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
   if (!gst_pad_call_setcaps (pad, caps))
     goto not_accepted;
 
-  return TRUE;
+  return GST_FLOW_OK;
 
 not_accepted:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "caps %" GST_PTR_FORMAT " not accepted", caps);
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+}
+
+static GstFlowReturn
+gst_pad_update_events (GstPad * pad, GstEvent * events[])
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint i;
+  GstPadEventFunction eventfunc;
+  GstEvent *event;
+
+  if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
+    goto no_function;
+
+  for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
+    if ((event = events[i])) {
+      eventfunc (pad, event);
+      events[i] = NULL;
+    }
+  }
+  return ret;
+
+  /* ERRORS */
+no_function:
+  {
+    g_warning ("pad %s:%s has no event handler, file a bug.",
+        GST_DEBUG_PAD_NAME (pad));
+    clear_events (events);
+    return GST_FLOW_NOT_SUPPORTED;
   }
 }
 
@@ -3082,6 +3095,8 @@ no_iter:
 gboolean
 gst_pad_event_default (GstPad * pad, GstEvent * event)
 {
+  gboolean result = TRUE, forward = TRUE;
+
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
 
@@ -3092,13 +3107,31 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
     {
       GST_DEBUG_OBJECT (pad, "pausing task because of eos");
       gst_pad_pause_task (pad);
+      break;
     }
-      /* fall thru */
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      /* backwards compatibility mode for caps */
+      gst_event_parse_caps (event, &caps);
+      if (gst_pad_configure_sink (pad, caps) != GST_FLOW_OK)
+        result = FALSE;
+
+      /* don't forward by default */
+      forward = FALSE;
+      break;
+    }
     default:
       break;
   }
 
-  return gst_pad_event_default_dispatch (pad, event);
+  if (forward)
+    result = gst_pad_event_default_dispatch (pad, event);
+  else
+    gst_event_unref (event);
+
+  return result;
 }
 
 /**
@@ -3514,7 +3547,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
     GST_DEBUG_OBJECT (pad, "need to update all events");
     ret = gst_pad_update_events (pad, events);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
-      goto context_error;
+      goto events_error;
   }
 
   /* NOTE: we read the chainfunc unlocked.
@@ -3606,10 +3639,10 @@ dropping:
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_OK;
   }
-context_error:
+events_error:
   {
     gst_pad_data_unref (is_buffer, data);
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "context was not accepted");
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "events were not accepted");
     GST_PAD_STREAM_UNLOCK (pad);
     return ret;
   }
@@ -4460,6 +4493,9 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
     GstCaps *caps;
     gst_event_parse_caps (event, &caps);
+    /* FIXME, this is awkward because we don't check flushing here which means
+     * that we can call the setcaps functions on flushing pads, this is not
+     * quite what we want */
     gst_pad_call_setcaps (pad, caps);
   }
 
@@ -4639,17 +4675,14 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 
   if (G_UNLIKELY (needs_events)) {
     GST_DEBUG_OBJECT (pad, "updating all events");
-    gst_pad_update_events (pad, events);
-    result = TRUE;
+    if (gst_pad_update_events (pad, events) != GST_FLOW_OK)
+      result = FALSE;
+    else
+      result = TRUE;
+
+    gst_event_unref (event);
   } else {
     result = eventfunc (pad, event);
-  }
-
-  /* backwards compatibility mode for caps */
-  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
-    GstCaps *caps;
-    gst_event_parse_caps (event, &caps);
-    gst_pad_configure_sink (pad, caps);
   }
 
   if (need_unlock)
