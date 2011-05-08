@@ -1200,8 +1200,8 @@ static GstMemory *
 _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
     gsize size, gboolean writable)
 {
-  GstMemory *span, *parent;
-  gsize poffset;
+  GstMemory *span, *parent = NULL;
+  gsize poffset = 0;
 
   if (!writable
       && _gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
