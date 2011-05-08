@@ -305,10 +305,11 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_NONE;
     }
   }
-
+#if 0
   if (flags & GST_BUFFER_COPY_CAPS) {
     gst_caps_replace (&GST_BUFFER_CAPS (dest), GST_BUFFER_CAPS (src));
   }
+#endif
 
   if (flags & GST_BUFFER_COPY_MEMORY) {
     GstMemory *mem;
@@ -402,7 +403,9 @@ _gst_buffer_free (GstBuffer * buffer)
 
   GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
 
+#if 0
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
+#endif
 
   /* free metadata */
   for (walk = GST_BUFFER_META (buffer); walk; walk = next) {
@@ -444,7 +447,9 @@ gst_buffer_init (GstBufferImpl * buffer, gsize size)
       (GstMiniObjectFreeFunction) _gst_buffer_free;
 
   GST_BUFFER (buffer)->pool = NULL;
+#if 0
   GST_BUFFER_CAPS (buffer) = NULL;
+#endif
   GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
