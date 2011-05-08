@@ -1784,11 +1784,14 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   gboolean want_in_place;
   GstClockTime running_time;
   GstClockTime timestamp;
+#if 0
   GstCaps *incaps;
+#endif
   gsize insize;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
+#if 0
   if (G_LIKELY ((incaps = GST_BUFFER_CAPS (inbuf)))) {
     gboolean reconfigure;
 
@@ -1813,6 +1816,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
         goto not_negotiated;
     }
   }
+#endif
 
   insize = gst_buffer_get_size (inbuf);
 

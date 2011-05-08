@@ -368,8 +368,7 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
       if (img) {
         gchar *caps_str;
 
-        caps_str = GST_BUFFER_CAPS (img) ?
-            gst_caps_to_string (GST_BUFFER_CAPS (img)) : g_strdup ("unknown");
+        caps_str = g_strdup ("unknown");
         str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes, type: %s",
             gst_buffer_get_size (img), caps_str);
         g_free (caps_str);

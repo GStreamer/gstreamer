@@ -322,33 +322,15 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (GST_BUFFER_CAPS (input) != NULL) {
-    /* Output buffer already has caps */
-    GST_LOG_OBJECT (trans, "Input buffer already has caps (implicitely fixed)");
-    /* FIXME : Move this behaviour to basetransform. The given caps are the ones
-     * of the source pad, therefore our outgoing buffers should always have
-     * those caps. */
-    if (GST_BUFFER_CAPS (input) != caps) {
-      /* caps are different, make a metadata writable output buffer to set
-       * caps */
-      if (gst_buffer_is_writable (input)) {
-        /* input is writable, just set caps and use this as the output */
-        *buf = input;
-        gst_buffer_set_caps (*buf, caps);
-        gst_buffer_ref (input);
-      } else {
-        GST_DEBUG_OBJECT (trans, "Creating sub-buffer and setting caps");
-        *buf = gst_buffer_copy (input);
-        gst_buffer_set_caps (*buf, caps);
-      }
-    } else {
-      /* caps are right, just use a ref of the input as the outbuf */
-      *buf = input;
-      gst_buffer_ref (input);
-    }
-  } else {
+  /* always ref input as output buffer */
+  *buf = input;
+  gst_buffer_ref (input);
+
+  if (!gst_pad_has_current_caps (trans->sinkpad)) {
     /* Buffer has no caps. See if the output pad only supports fixed caps */
     GstCaps *out_caps;
+
+    GST_LOG_OBJECT (trans, "Input pad does not have caps");
 
     out_caps = gst_pad_get_current_caps (trans->srcpad);
     if (out_caps == NULL) {
@@ -361,15 +343,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 
     if (gst_caps_is_fixed (out_caps) && !gst_caps_is_empty (out_caps)) {
       GST_DEBUG_OBJECT (trans, "Have fixed output caps %"
-          GST_PTR_FORMAT " to apply to buffer with no caps", out_caps);
-      if (gst_buffer_is_writable (input)) {
-        gst_buffer_ref (input);
-        *buf = input;
-      } else {
-        GST_DEBUG_OBJECT (trans, "Creating sub-buffer and setting caps");
-        *buf = gst_buffer_copy (input);
-      }
-      GST_BUFFER_CAPS (*buf) = out_caps;
+          GST_PTR_FORMAT " to apply to srcpad", out_caps);
 
       if (!gst_pad_has_current_caps (trans->srcpad))
         gst_pad_set_caps (trans->srcpad, out_caps);

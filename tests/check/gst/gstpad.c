@@ -89,6 +89,7 @@ GST_START_TEST (test_link_unlink_threaded)
 
   caps = gst_caps_from_string ("foo/bar");
   gst_pad_set_caps (src, caps);
+  gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
@@ -100,10 +101,10 @@ GST_START_TEST (test_link_unlink_threaded)
   }
   MAIN_STOP_THREADS ();
 
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   gst_caps_unref (caps);
 
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_object_unref (src);
   gst_object_unref (sink);
 }
@@ -126,17 +127,23 @@ GST_START_TEST (test_refcount)
   /* one for me */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
-  gst_pad_set_caps (src, caps);
-  gst_pad_set_caps (sink, caps);
+  fail_unless (gst_pad_set_caps (src, caps) == TRUE);
+  /* can't set caps on flushing sinkpad */
+  fail_if (gst_pad_set_caps (sink, caps) == TRUE);
   /* one for me and one for each set_caps */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
+  gst_pad_set_active (sink, TRUE);
+  fail_unless (gst_pad_set_caps (sink, caps) == TRUE);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   plr = gst_pad_link (src, sink);
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  /* caps replaced by src caps */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   gst_pad_unlink (src, sink);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   /* cleanup */
   gst_object_unref (src);
@@ -169,8 +176,12 @@ GST_START_TEST (test_get_allowed_caps)
   caps = gst_caps_from_string ("foo/bar");
 
   sink = gst_pad_new ("sink", GST_PAD_SINK);
-  gst_pad_set_caps (src, caps);
-  gst_pad_set_caps (sink, caps);
+  fail_unless (gst_pad_set_caps (src, caps) == TRUE);
+  fail_if (gst_pad_set_caps (sink, caps) == TRUE);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
+  gst_pad_set_active (sink, TRUE);
+  fail_unless (gst_pad_set_caps (sink, caps) == TRUE);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   plr = gst_pad_link (src, sink);
@@ -186,7 +197,7 @@ GST_START_TEST (test_get_allowed_caps)
   gst_pad_unlink (src, sink);
 
   /* cleanup */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
 
@@ -324,13 +335,14 @@ GST_START_TEST (test_push_linked)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   gst_pad_set_caps (src, caps);
+  gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
   /* one for me and one for each set_caps */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   plr = gst_pad_link (src, sink);
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   buffer = gst_buffer_new ();
 #if 0
@@ -389,7 +401,7 @@ GST_START_TEST (test_push_linked)
 
   /* teardown */
   gst_pad_unlink (src, sink);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   gst_object_unref (src);
   gst_object_unref (sink);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
@@ -451,6 +463,7 @@ GST_START_TEST (test_push_buffer_list_compat)
   caps = gst_caps_from_string ("foo/bar");
 
   gst_pad_set_caps (src, caps);
+  gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
 
   plr = gst_pad_link (src, sink);
@@ -579,11 +592,7 @@ GST_START_TEST (test_push_negotiation)
 
   /* Should fail if src pad caps are incompatible with sink pad caps */
   gst_pad_set_caps (src, caps);
-  gst_buffer_set_caps (buffer, caps);
-  gst_buffer_ref (buffer);
-  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_NOT_NEGOTIATED);
-  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
-  gst_buffer_unref (buffer);
+  fail_unless (gst_pad_set_caps (sink, caps) == FALSE);
 
   /* teardown */
   gst_pad_unlink (src, sink);
@@ -612,6 +621,7 @@ GST_START_TEST (test_src_unref_unlink)
   caps = gst_caps_from_string ("foo/bar");
 
   gst_pad_set_caps (src, caps);
+  gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
 
   plr = gst_pad_link (src, sink);
@@ -646,6 +656,7 @@ GST_START_TEST (test_sink_unref_unlink)
   caps = gst_caps_from_string ("foo/bar");
 
   gst_pad_set_caps (src, caps);
+  gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
 
   plr = gst_pad_link (src, sink);

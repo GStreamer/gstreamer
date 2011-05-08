@@ -79,7 +79,9 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   GSList *insert_pos = NULL;
   gsize buf_size;
   guint64 buf_offset;
+#if 0
   GstCaps *caps;
+#endif
 
   helper = (GstTypeFindHelper *) data;
 
@@ -136,6 +138,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   if (ret != GST_FLOW_OK)
     goto error;
 
+#if 0
   caps = GST_BUFFER_CAPS (buffer);
 
   if (caps && !gst_caps_is_empty (caps) && !gst_caps_is_any (caps)) {
@@ -148,6 +151,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     gst_buffer_unref (buffer);
     return NULL;
   }
+#endif
 
   /* getrange might silently return shortened buffers at the end of a file,
    * we must, however, always return either the full requested data or NULL */
