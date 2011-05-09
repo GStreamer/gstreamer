@@ -215,7 +215,6 @@ gst_visual_init (GstVisual * visual)
 {
   /* create the sink and src pads */
   visual->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_setcaps_function (visual->sinkpad, gst_visual_sink_setcaps);
   gst_pad_set_chain_function (visual->sinkpad, gst_visual_chain);
   gst_pad_set_event_function (visual->sinkpad, gst_visual_sink_event);
   gst_element_add_pad (GST_ELEMENT (visual), visual->sinkpad);
@@ -395,7 +394,7 @@ gst_vis_src_negotiate (GstVisual * visual)
   GstStructure *structure;
   GstCaps *caps;
   GstQuery *query;
-  GstBufferPool *pool;
+  GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
 
   caps = gst_pad_get_caps (visual->srcpad);
@@ -492,6 +491,14 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
       gst_visual_reset (visual);
       res = gst_pad_push_event (visual->srcpad, event);
       break;
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_visual_sink_setcaps (pad, caps);
+      break;
+    }
     case GST_EVENT_NEWSEGMENT:
     {
       GstFormat format;
@@ -514,7 +521,7 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_push_event (visual->srcpad, event);
+      res = gst_pad_event_default (visual->srcpad, event);
       break;
   }
 

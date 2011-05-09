@@ -4,6 +4,7 @@ GstImplementsInterface GstElement
 GstMixer GstImplementsInterface GstElement
 GstXOverlay GstImplementsInterface GstElement
 GstColorBalance GstImplementsInterface GstElement
+GstTuner GstImplementsInterface GstElement
 GstStreamVolume GObject
 PangoCairoFontMap PangoFontMap
 GFile GObject
