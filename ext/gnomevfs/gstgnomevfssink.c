@@ -445,7 +445,7 @@ gst_gnome_vfs_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
       GstFormat format;
       gint64 offset;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &format, &offset,
+      gst_event_parse_new_segment (event, NULL, NULL, NULL, &format, &offset,
           NULL, NULL);
 
       if (format != GST_FORMAT_BYTES) {

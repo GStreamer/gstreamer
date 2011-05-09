@@ -562,7 +562,7 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
       gboolean update;
       GstFormat format;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
       if (format != GST_FORMAT_TIME)
@@ -604,7 +604,7 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
       }
 
       /* We just want to update the accumulated stream_time  */
-      gst_segment_set_newsegment_full (&videorate->segment, update, rate, arate,
+      gst_segment_set_newsegment (&videorate->segment, update, rate, arate,
           format, start, stop, time);
 
       GST_DEBUG_OBJECT (videorate, "updated segment: %" GST_SEGMENT_FORMAT,

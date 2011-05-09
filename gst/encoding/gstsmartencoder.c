@@ -357,7 +357,7 @@ smart_encoder_sink_event (GstPad * pad, GstEvent * event)
       gint64 start, stop, time;
       gboolean update;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
       GST_DEBUG_OBJECT (smart_encoder,
           "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
@@ -369,7 +369,7 @@ smart_encoder_sink_event (GstPad * pad, GstEvent * event)
             ("smart_encoder can not handle streams not specified in GST_FORMAT_TIME");
 
       /* now configure the values */
-      gst_segment_set_newsegment_full (smart_encoder->segment, update,
+      gst_segment_set_newsegment (smart_encoder->segment, update,
           rate, arate, format, start, stop, time);
 
       /* And keep a copy for further usage */

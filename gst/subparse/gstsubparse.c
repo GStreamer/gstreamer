@@ -1542,8 +1542,9 @@ gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf)
         &self->segment);
 
     gst_pad_push_event (self->srcpad, gst_event_new_new_segment (FALSE,
-            self->segment.rate, self->segment.format,
-            self->segment.last_stop, self->segment.stop, self->segment.time));
+            self->segment.rate, self->segment.applied_rate,
+            self->segment.format, self->segment.last_stop, self->segment.stop,
+            self->segment.time));
     self->need_segment = FALSE;
   }
 
@@ -1584,17 +1585,17 @@ gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
     {
       GstFormat format;
-      gdouble rate;
+      gdouble rate, arate;
       gint64 start, stop, time;
       gboolean update;
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
 
       GST_DEBUG_OBJECT (self, "newsegment (%s)", gst_format_get_name (format));
 
       if (format == GST_FORMAT_TIME) {
-        gst_segment_set_newsegment (&self->segment, update, rate, format,
+        gst_segment_set_newsegment (&self->segment, update, rate, arate, format,
             start, stop, time);
       } else {
         /* if not time format, we'll either start with a 0 timestamp anyway or

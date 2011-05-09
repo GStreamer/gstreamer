@@ -1179,7 +1179,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
      * event. We also adjust offset & timestamp acordingly.
      * This basically ignores all newsegments sent by upstream.
      */
-    event = gst_event_new_new_segment_full (FALSE, adder->segment_rate,
+    event = gst_event_new_new_segment (FALSE, adder->segment_rate,
         1.0, GST_FORMAT_TIME, adder->segment_start, adder->segment_end,
         adder->segment_start);
     if (adder->segment_rate > 0.0) {

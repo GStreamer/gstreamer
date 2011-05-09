@@ -213,8 +213,8 @@ gst_gio_base_sink_event (GstBaseSink * base_sink, GstEvent * event)
         GstFormat format;
         gint64 offset;
 
-        gst_event_parse_new_segment (event, NULL, NULL, &format, &offset, NULL,
-            NULL);
+        gst_event_parse_new_segment (event, NULL, NULL, NULL, &format, &offset,
+            NULL, NULL);
 
         if (format != GST_FORMAT_BYTES) {
           GST_WARNING_OBJECT (sink, "ignored NEWSEGMENT event in %s format",

@@ -288,7 +288,7 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 start, stop, position;
 
-      gst_event_parse_new_segment_full (event, &update, &rate,
+      gst_event_parse_new_segment (event, &update, &rate,
           &applied_rate, &format, &start, &stop, &position);
 
       /* We don't support non time NEWSEGMENT events */
@@ -298,7 +298,7 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
         break;
       }
 
-      gst_segment_set_newsegment_full (&ogg_pad->segment, update, rate,
+      gst_segment_set_newsegment (&ogg_pad->segment, update, rate,
           applied_rate, format, start, stop, position);
 
       break;

@@ -970,11 +970,11 @@ gst_vorbis_enc_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 start, stop, position;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+      gst_event_parse_new_segment (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &position);
       if (format == GST_FORMAT_TIME) {
-        gst_segment_set_newsegment (&vorbisenc->segment, update, rate, format,
-            start, stop, position);
+        gst_segment_set_newsegment (&vorbisenc->segment, update, rate,
+            applied_rate, format, start, stop, position);
         if (vorbisenc->initial_ts == GST_CLOCK_TIME_NONE) {
           GST_DEBUG_OBJECT (vorbisenc, "Initial segment %" GST_SEGMENT_FORMAT,
               &vorbisenc->segment);

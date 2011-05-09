@@ -413,9 +413,9 @@ gst_basertppayload_event (GstPad * pad, GstEvent * event)
 
       segment = &basertppayload->segment;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &fmt,
           &start, &stop, &position);
-      gst_segment_set_newsegment_full (segment, update, rate, arate, fmt, start,
+      gst_segment_set_newsegment (segment, update, rate, arate, fmt, start,
           stop, position);
 
       GST_DEBUG_OBJECT (basertppayload,

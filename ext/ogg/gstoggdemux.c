@@ -877,6 +877,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
           /* create the newsegment event we are going to send out */
           event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
+              ogg->segment.applied_rate,
               GST_FORMAT_TIME, start_time, chain->segment_stop, segment_time);
 
           ogg->resync = FALSE;
@@ -895,6 +896,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
           /* create the newsegment event we are going to send out */
           event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
+              ogg->segment.applied_rate,
               GST_FORMAT_TIME, chain->segment_start, chain->segment_stop,
               chain->begin_time);
         }
@@ -2306,6 +2308,7 @@ gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
         chain_start = chain->segment_start;
 
       newseg = gst_event_new_new_segment (TRUE, ogg->segment.rate,
+          ogg->segment.applied_rate,
           GST_FORMAT_TIME, ogg->segment.start + chain_start,
           ogg->segment.last_stop + chain_start, ogg->segment.time);
       /* set the seqnum of the running segment */
@@ -2408,9 +2411,11 @@ gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
     /* create the segment event we are going to send out */
     if (ogg->segment.rate >= 0.0)
       event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
+          ogg->segment.applied_rate,
           ogg->segment.format, last_stop, stop, ogg->segment.time);
     else
       event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
+          ogg->segment.applied_rate,
           ogg->segment.format, start, last_stop, ogg->segment.time);
 
     gst_event_set_seqnum (event, seqnum);
@@ -3067,6 +3072,7 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
 
       /* create the newsegment event we are going to send out */
       event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
+          ogg->segment.applied_rate,
           GST_FORMAT_TIME, start, chain->segment_stop, chain->begin_time);
       gst_event_set_seqnum (event, ogg->seqnum);
 
@@ -3366,6 +3372,7 @@ gst_ogg_demux_sync_streams (GstOggDemux * ogg)
         /* advance stream time (FIXME: is this right, esp. time_pos?) */
         gst_pad_push_event (GST_PAD_CAST (stream),
             gst_event_new_new_segment (TRUE, ogg->segment.rate,
+                ogg->segment.applied_rate,
                 GST_FORMAT_TIME, stream->last_stop, -1, stream->last_stop));
       }
     }

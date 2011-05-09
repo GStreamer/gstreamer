@@ -827,10 +827,10 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 start, stop, time;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+      gst_event_parse_new_segment (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &time);
 
-      gst_segment_set_newsegment_full (&enc->segment, update, rate,
+      gst_segment_set_newsegment (&enc->segment, update, rate,
           applied_rate, format, start, stop, time);
 
       res = gst_pad_push_event (enc->srcpad, event);

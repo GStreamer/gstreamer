@@ -353,7 +353,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 start, stop, position;
 
-      gst_event_parse_new_segment_full (event,
+      gst_event_parse_new_segment (event,
           &update, &rate, &applied_rate, &format, &start, &stop, &position);
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
@@ -399,11 +399,11 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
             if (stop_running_time < last_stop_running_time) {
               GST_DEBUG_OBJECT (pad, "Updating stop position");
               gst_pad_push_event (stream->srcpad,
-                  gst_event_new_new_segment_full (TRUE, stream->segment.rate,
+                  gst_event_new_new_segment (TRUE, stream->segment.rate,
                       stream->segment.applied_rate, GST_FORMAT_TIME,
                       stream->segment.start, stream->segment.last_stop,
                       stream->segment.time));
-              gst_segment_set_newsegment_full (&stream->segment, TRUE,
+              gst_segment_set_newsegment (&stream->segment, TRUE,
                   stream->segment.rate, stream->segment.applied_rate,
                   GST_FORMAT_TIME, stream->segment.start,
                   stream->segment.last_stop, stream->segment.time);
@@ -423,16 +423,16 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
                 "Advancing running time for other streams by: %"
                 GST_TIME_FORMAT, GST_TIME_ARGS (diff));
             gst_pad_push_event (stream->srcpad,
-                gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
+                gst_event_new_new_segment (FALSE, 1.0, 1.0,
                     GST_FORMAT_TIME, 0, diff, 0));
-            gst_segment_set_newsegment_full (&stream->segment, FALSE, 1.0, 1.0,
+            gst_segment_set_newsegment (&stream->segment, FALSE, 1.0, 1.0,
                 GST_FORMAT_TIME, 0, diff, 0);
           }
         }
 
         GST_DEBUG_OBJECT (pad, "Segment was: %" GST_SEGMENT_FORMAT,
             &stream->segment);
-        gst_segment_set_newsegment_full (&stream->segment, update, rate,
+        gst_segment_set_newsegment (&stream->segment, update, rate,
             applied_rate, format, start, stop, position);
         GST_DEBUG_OBJECT (pad, "Segment now is: %" GST_SEGMENT_FORMAT,
             &stream->segment);
@@ -658,10 +658,10 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
             GST_TIME_ARGS (new_start));
 
         gst_pad_push_event (ostream->srcpad,
-            gst_event_new_new_segment_full (TRUE, ostream->segment.rate,
+            gst_event_new_new_segment (TRUE, ostream->segment.rate,
                 ostream->segment.applied_rate, ostream->segment.format,
                 new_start, new_stop, new_start));
-        gst_segment_set_newsegment_full (&ostream->segment, TRUE,
+        gst_segment_set_newsegment (&ostream->segment, TRUE,
             ostream->segment.rate, ostream->segment.applied_rate,
             ostream->segment.format, new_start, new_stop, new_start);
         gst_segment_set_last_stop (&ostream->segment, GST_FORMAT_TIME,

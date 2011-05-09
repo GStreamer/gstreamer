@@ -868,7 +868,7 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       gdouble rate;
 
       /* we only need the rate */
-      gst_event_parse_new_segment_full (event, NULL, &rate, NULL, NULL,
+      gst_event_parse_new_segment (event, NULL, &rate, NULL, NULL,
           NULL, NULL, NULL);
 
       GST_DEBUG_OBJECT (sink, "new segment rate of %f", rate);

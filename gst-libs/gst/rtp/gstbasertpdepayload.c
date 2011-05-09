@@ -443,14 +443,14 @@ gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload * filter,
     case GST_EVENT_NEWSEGMENT:
     {
       gboolean update;
-      gdouble rate;
+      gdouble rate, arate;
       GstFormat fmt;
       gint64 start, stop, position;
 
-      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
-          &position);
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &fmt, &start,
+          &stop, &position);
 
-      gst_segment_set_newsegment (&filter->segment, update, rate, fmt,
+      gst_segment_set_newsegment (&filter->segment, update, rate, arate, fmt,
           start, stop, position);
 
       /* don't pass the event downstream, we generate our own segment including
@@ -531,7 +531,7 @@ create_segment_event (GstBaseRTPDepayload * filter, gboolean update,
   else
     stop = -1;
 
-  event = gst_event_new_new_segment_full (update, priv->play_speed,
+  event = gst_event_new_new_segment (update, priv->play_speed,
       priv->play_scale, GST_FORMAT_TIME, position, stop,
       position + priv->npt_start);
 

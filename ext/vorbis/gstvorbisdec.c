@@ -493,7 +493,7 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       gint64 start, stop, time;
       gboolean update;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
       /* we need time for now */
@@ -507,7 +507,7 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
           GST_TIME_ARGS (time));
 
       /* now configure the values */
-      gst_segment_set_newsegment_full (&dec->segment, update,
+      gst_segment_set_newsegment (&dec->segment, update,
           rate, arate, format, start, stop, time);
       dec->seqnum = gst_event_get_seqnum (event);
 

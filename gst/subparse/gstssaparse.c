@@ -326,7 +326,8 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
   if (ret != GST_FLOW_OK && GST_CLOCK_TIME_IS_VALID (ts)) {
     /* just advance time without sending anything */
     gst_pad_push_event (parse->srcpad,
-        gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, ts, -1, ts));
+        gst_event_new_new_segment (TRUE, 1.0, 1.0, GST_FORMAT_TIME, ts, -1,
+            ts));
     ret = GST_FLOW_OK;
   }
 

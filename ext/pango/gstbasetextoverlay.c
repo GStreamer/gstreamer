@@ -2129,12 +2129,12 @@ gst_base_text_overlay_text_event (GstPad * pad, GstEvent * event)
 
       overlay->text_eos = FALSE;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+      gst_event_parse_new_segment (event, &update, &rate, &applied_rate,
           &fmt, &cur, &stop, &time);
 
       if (fmt == GST_FORMAT_TIME) {
         GST_OBJECT_LOCK (overlay);
-        gst_segment_set_newsegment_full (&overlay->text_segment, update, rate,
+        gst_segment_set_newsegment (&overlay->text_segment, update, rate,
             applied_rate, GST_FORMAT_TIME, cur, stop, time);
         GST_DEBUG_OBJECT (overlay, "TEXT SEGMENT now: %" GST_SEGMENT_FORMAT,
             &overlay->text_segment);
@@ -2209,21 +2209,21 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
     {
       GstFormat format;
-      gdouble rate;
+      gdouble rate, arate;
       gint64 start, stop, time;
       gboolean update;
 
       GST_DEBUG_OBJECT (overlay, "received new segment");
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
 
       if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (overlay, "VIDEO SEGMENT now: %" GST_SEGMENT_FORMAT,
             &overlay->segment);
 
-        gst_segment_set_newsegment (&overlay->segment, update, rate, format,
-            start, stop, time);
+        gst_segment_set_newsegment (&overlay->segment, update, rate, arate,
+            format, start, stop, time);
       } else {
         GST_ELEMENT_WARNING (overlay, STREAM, MUX, (NULL),
             ("received non-TIME newsegment event on video input"));

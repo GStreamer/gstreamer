@@ -321,7 +321,7 @@ gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
       gint64 start, stop, time;
       gboolean update;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
       GST_DEBUG_OBJECT (audiorate, "handle NEWSEGMENT");
@@ -338,7 +338,7 @@ gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
       }
 
       /* we accept all formats */
-      gst_segment_set_newsegment_full (&audiorate->sink_segment, update, rate,
+      gst_segment_set_newsegment (&audiorate->sink_segment, update, rate,
           arate, format, start, stop, time);
 
       GST_DEBUG_OBJECT (audiorate, "updated segment: %" GST_SEGMENT_FORMAT,

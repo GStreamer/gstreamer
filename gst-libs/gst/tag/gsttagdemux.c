@@ -744,10 +744,10 @@ gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 start, stop, position;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate,
+      gst_event_parse_new_segment (event, &update, &rate, &arate,
           &format, &start, &stop, &position);
 
-      gst_segment_set_newsegment_full (&demux->priv->segment, update, rate,
+      gst_segment_set_newsegment (&demux->priv->segment, update, rate,
           arate, format, start, stop, position);
       demux->priv->newseg_update = update;
       demux->priv->need_newseg = TRUE;
@@ -1485,14 +1485,14 @@ gst_tag_demux_send_new_segment (GstTagDemux * tagdemux)
   if (seg->format == GST_FORMAT_UNDEFINED) {
     GST_LOG_OBJECT (tagdemux,
         "No new segment received before first buffer. Using default");
-    gst_segment_set_newsegment (seg, FALSE, 1.0,
+    gst_segment_set_newsegment (seg, FALSE, 1.0, 1.0,
         GST_FORMAT_BYTES, tagdemux->priv->strip_start, -1,
         tagdemux->priv->strip_start);
   }
 
   /* Can't adjust segments in non-BYTES formats */
   if (tagdemux->priv->segment.format != GST_FORMAT_BYTES) {
-    event = gst_event_new_new_segment_full (tagdemux->priv->newseg_update,
+    event = gst_event_new_new_segment (tagdemux->priv->newseg_update,
         seg->rate, seg->applied_rate, seg->format, seg->start,
         seg->stop, seg->time);
     return gst_pad_push_event (tagdemux->priv->srcpad, event);
@@ -1550,7 +1550,7 @@ gst_tag_demux_send_new_segment (GstTagDemux * tagdemux)
       G_GINT64_FORMAT, tagdemux->priv->newseg_update, seg->rate, seg->format,
       start, stop, position);
 
-  event = gst_event_new_new_segment_full (tagdemux->priv->newseg_update,
+  event = gst_event_new_new_segment (tagdemux->priv->newseg_update,
       seg->rate, seg->applied_rate, seg->format, start, stop, position);
   return gst_pad_push_event (tagdemux->priv->srcpad, event);
 }
