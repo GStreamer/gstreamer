@@ -118,7 +118,7 @@ ges_formatter_new_for_uri (const gchar * uri)
  * Creates a new instance of the default GESFormatter type on this system
  * (currently #GESKeyfileFormatter).
  *
- * Returns: a #GESFormatter instance or NULL 
+ * Returns: (transfer full): a #GESFormatter instance or %NULL
  */
 
 GESFormatter *
