@@ -1629,7 +1629,6 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
   /* set the new rate for the remainder of the segment */
   current->start_rate = segment->rate;
   segment->rate *= current->rate;
-  segment->abs_rate = ABS (segment->rate);
 
   /* save values */
   if (segment->rate > 0.0)
@@ -1717,7 +1716,6 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
 
   /* restore the previous rate */
   segment->rate = current->start_rate;
-  segment->abs_rate = ABS (segment->rate);
 
   if (segment->rate > 0.0)
     segment->stop = current->start_stop;
@@ -1755,6 +1753,7 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
     {
       guint64 end;
       gint64 first, last;
+      gdouble abs_rate;
 
       if (segment->rate > 0.0) {
         if (segment->stop == *cstop)
@@ -1773,8 +1772,9 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
       end = current->start + current->amount;
       current->position = first - current->start;
 
-      if (G_UNLIKELY (segment->abs_rate != 1.0))
-        current->position /= segment->abs_rate;
+      abs_rate = ABS (segment->rate);
+      if (G_UNLIKELY (abs_rate != 1.0))
+        current->position /= abs_rate;
 
       GST_DEBUG_OBJECT (sink,
           "buffer: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,

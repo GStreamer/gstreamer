@@ -35,7 +35,6 @@ typedef struct _GstSegment GstSegment;
 /**
  * GstSegment:
  * @rate: the rate of the segment
- * @abs_rate: absolute value of @rate
  * @format: the format of the segment values
  * @flags: flags for this segment
  * @start: the start of the segment
@@ -52,7 +51,6 @@ typedef struct _GstSegment GstSegment;
 struct _GstSegment {
   /*< public >*/
   gdouble        rate;
-  gdouble        abs_rate;
   gdouble        applied_rate;
   GstFormat      format;
   GstSeekFlags   flags;

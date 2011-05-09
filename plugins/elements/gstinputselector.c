@@ -934,7 +934,8 @@ gst_segment_get_timestamp (GstSegment * segment, gint64 running_time)
   if (running_time <= segment->accum)
     return segment->start;
   else
-    return (running_time - segment->accum) * segment->abs_rate + segment->start;
+    return (running_time - segment->accum) * ABS (segment->rate) +
+        segment->start;
 }
 
 static void

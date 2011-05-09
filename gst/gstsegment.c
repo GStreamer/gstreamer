@@ -170,7 +170,6 @@ gst_segment_init (GstSegment * segment, GstFormat format)
   g_return_if_fail (segment != NULL);
 
   segment->rate = 1.0;
-  segment->abs_rate = 1.0;
   segment->applied_rate = 1.0;
   segment->format = format;
   segment->flags = 0;
@@ -372,7 +371,6 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
     g_return_if_fail (start <= stop);
 
   segment->rate = rate;
-  segment->abs_rate = ABS (rate);
   segment->applied_rate = 1.0;
   segment->flags = flags;
   segment->start = start;
@@ -443,6 +441,7 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
     gint64 stop, gint64 time)
 {
   gint64 duration, last_stop;
+  gdouble abs_rate;
 
   g_return_if_fail (rate != 0.0);
   g_return_if_fail (applied_rate != 0.0);
@@ -516,15 +515,15 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
       last_stop = stop;
   }
   /* use previous rate to calculate duration */
-  if (G_LIKELY (segment->abs_rate != 1.0))
-    duration /= segment->abs_rate;
+  abs_rate = ABS (segment->rate);
+  if (G_LIKELY (abs_rate != 1.0))
+    duration /= abs_rate;
 
   /* accumulate duration */
   segment->accum += duration;
 
   /* then update the current segment */
   segment->rate = rate;
-  segment->abs_rate = ABS (rate);
   segment->applied_rate = applied_rate;
   segment->start = start;
   segment->last_stop = last_stop;
@@ -644,6 +643,7 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
 {
   gint64 result;
   gint64 start, stop, accum;
+  gdouble abs_rate;
 
   if (G_UNLIKELY (position == -1))
     return -1;
@@ -688,8 +688,9 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
 
   /* scale based on the rate, avoid division by and conversion to 
    * float when not needed */
-  if (G_UNLIKELY (segment->abs_rate != 1.0))
-    result /= segment->abs_rate;
+  abs_rate = ABS (segment->rate);
+  if (G_UNLIKELY (abs_rate != 1.0))
+    result /= abs_rate;
 
   /* correct for accumulated segments */
   result += accum;
@@ -790,6 +791,7 @@ gst_segment_to_position (GstSegment * segment, GstFormat format,
 {
   gint64 result;
   gint64 start, stop, accum;
+  gdouble abs_rate;
 
   g_return_val_if_fail (segment != NULL, -1);
 
@@ -819,8 +821,9 @@ gst_segment_to_position (GstSegment * segment, GstFormat format,
   result = running_time - accum;
 
   /* move into the segment at the right rate */
-  if (G_UNLIKELY (segment->abs_rate != 1.0))
-    result = ceil (result * segment->abs_rate);
+  abs_rate = ABS (segment->rate);
+  if (G_UNLIKELY (abs_rate != 1.0))
+    result = ceil (result * abs_rate);
 
   if (G_LIKELY (segment->rate > 0.0)) {
     /* bring to corrected position in segment */
