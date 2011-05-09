@@ -1839,7 +1839,7 @@ gst_avdtp_sink_audioservice_recv (GstAvdtpSink * self,
   ssize_t bytes_read;
   const char *type, *name;
   uint16_t length;
-  int fd, err;
+  int fd, err = 0;
 
   length = inmsg->length ? inmsg->length : BT_SUGGESTED_BUFFER_SIZE;
 
