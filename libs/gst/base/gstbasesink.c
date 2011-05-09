@@ -3378,6 +3378,8 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
     {
       GstCaps *caps;
 
+      GST_DEBUG_OBJECT (basesink, "caps %p", event);
+
       gst_event_parse_caps (event, &caps);
       if (bclass->set_caps)
         result = bclass->set_caps (basesink, caps);
