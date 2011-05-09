@@ -65,25 +65,26 @@ GST_START_TEST (create_events)
     gboolean update;
 
     event =
-        gst_event_new_new_segment (FALSE, 0.5, GST_FORMAT_TIME, 1, G_MAXINT64,
-        0xdeadbeef);
+        gst_event_new_new_segment (FALSE, 0.5, 1.0, GST_FORMAT_TIME, 1,
+        G_MAXINT64, 0xdeadbeef);
     fail_if (event == NULL);
     fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT);
     fail_if (GST_EVENT_IS_UPSTREAM (event));
     fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
     fail_unless (GST_EVENT_IS_SERIALIZED (event));
 
-    gst_event_parse_new_segment (event, &update, &rate, &format, &start, &end,
-        &base);
+    gst_event_parse_new_segment (event, &update, &rate, &applied_rate, &format,
+        &start, &end, &base);
     fail_unless (update == FALSE);
     fail_unless (rate == 0.5);
+    fail_unless (applied_rate == 1.0);
     fail_unless (format == GST_FORMAT_TIME);
     fail_unless (start == 1);
     fail_unless (end == G_MAXINT64);
     fail_unless (base == 0xdeadbeef);
 
     /* Check that the new segment was created with applied_rate of 1.0 */
-    gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+    gst_event_parse_new_segment (event, &update, &rate, &applied_rate,
         &format, &start, &end, &base);
 
     fail_unless (update == FALSE);
@@ -96,7 +97,7 @@ GST_START_TEST (create_events)
     gst_event_unref (event);
 
     event =
-        gst_event_new_new_segment_full (TRUE, 0.75, 0.5, GST_FORMAT_BYTES, 0,
+        gst_event_new_new_segment (TRUE, 0.75, 0.5, GST_FORMAT_BYTES, 0,
         G_MAXINT64 - 1, 0xdeadbeef);
 
     fail_if (event == NULL);
@@ -105,7 +106,7 @@ GST_START_TEST (create_events)
     fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
     fail_unless (GST_EVENT_IS_SERIALIZED (event));
 
-    gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+    gst_event_parse_new_segment (event, &update, &rate, &applied_rate,
         &format, &start, &end, &base);
 
     fail_unless (update == TRUE);

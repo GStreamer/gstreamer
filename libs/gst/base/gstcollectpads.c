@@ -1205,14 +1205,14 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gboolean update;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
       GST_DEBUG_OBJECT (data->pad, "got newsegment, start %" GST_TIME_FORMAT
           ", stop %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
-      gst_segment_set_newsegment_full (&data->segment, update, rate, arate,
+      gst_segment_set_newsegment (&data->segment, update, rate, arate,
           format, start, stop, time);
 
       data->abidata.ABI.new_segment = TRUE;

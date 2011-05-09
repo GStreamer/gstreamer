@@ -1448,14 +1448,14 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
 
   /* the newsegment event is needed to bring the buffer timestamps to the
    * stream time and to drop samples outside of the playback segment. */
-  gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+  gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
       &start, &stop, &time);
 
   /* The segment is protected with both the STREAM_LOCK and the OBJECT_LOCK.
    * We protect with the OBJECT_LOCK so that we can use the values to
    * safely answer a POSITION query. */
   GST_OBJECT_LOCK (basesink);
-  gst_segment_set_newsegment_full (segment, update, rate, arate, format, start,
+  gst_segment_set_newsegment (segment, update, rate, arate, format, start,
       stop, time);
 
   if (format == GST_FORMAT_TIME) {
@@ -3398,7 +3398,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       if (G_UNLIKELY (basesink->flushing))
         goto flushing;
 
-      gst_event_parse_new_segment_full (event, &update, NULL, NULL, NULL, NULL,
+      gst_event_parse_new_segment (event, &update, NULL, NULL, NULL, NULL,
           NULL, NULL);
 
       if (G_UNLIKELY (basesink->priv->received_eos && !update)) {

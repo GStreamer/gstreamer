@@ -548,14 +548,14 @@ GST_START_TEST (test_time_level_task_not_started)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  event = gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME,
+  event = gst_event_new_new_segment (TRUE, 1.0, 1.0, GST_FORMAT_TIME,
       1 * GST_SECOND, 5 * GST_SECOND, 0);
   gst_pad_push_event (mysrcpad, event);
 
   g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
   fail_if (time != 0 * GST_SECOND);
 
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+  event = gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_TIME,
       1 * GST_SECOND, 5 * GST_SECOND, 0);
   gst_pad_push_event (mysrcpad, event);
 
@@ -574,7 +574,7 @@ event_equals_newsegment (GstEvent * event, gboolean update, gdouble rate,
     GstFormat format, gint64 start, gint64 stop, gint64 position)
 {
   gboolean ns_update;
-  gdouble ns_rate;
+  gdouble ns_rate, ns_arate;
   GstFormat ns_format;
   gint64 ns_start;
   gint64 ns_stop;
@@ -584,8 +584,8 @@ event_equals_newsegment (GstEvent * event, gboolean update, gdouble rate,
     return FALSE;
   }
 
-  gst_event_parse_new_segment (event, &ns_update, &ns_rate, &ns_format,
-      &ns_start, &ns_stop, &ns_position);
+  gst_event_parse_new_segment (event, &ns_update, &ns_rate, &ns_arate,
+      &ns_format, &ns_start, &ns_stop, &ns_position);
 
   GST_DEBUG ("update %d, rate %lf, format %s, start %" GST_TIME_FORMAT
       ", stop %" GST_TIME_FORMAT ", position %" GST_TIME_FORMAT, ns_update,
@@ -615,7 +615,7 @@ GST_START_TEST (test_newsegment)
   fail_unless (overrun_count == 0);
   fail_unless (underrun_count == 0);
 
-  event = gst_event_new_new_segment (FALSE, 2.0, GST_FORMAT_TIME, 0,
+  event = gst_event_new_new_segment (FALSE, 2.0, 1.0, GST_FORMAT_TIME, 0,
       2 * GST_SECOND, 0);
   gst_pad_push_event (mysrcpad, event);
 
@@ -623,7 +623,7 @@ GST_START_TEST (test_newsegment)
   fail_unless (overrun_count == 0);
   fail_unless (underrun_count == 0);
 
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0,
+  event = gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_TIME, 0,
       3 * GST_SECOND, 0);
   gst_pad_push_event (mysrcpad, event);
 
@@ -631,7 +631,7 @@ GST_START_TEST (test_newsegment)
   fail_unless (overrun_count == 0);
   fail_unless (underrun_count == 0);
 
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+  event = gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_TIME,
       4 * GST_SECOND, 5 * GST_SECOND, 4 * GST_SECOND);
   gst_pad_push_event (mysrcpad, event);
 

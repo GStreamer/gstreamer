@@ -404,29 +404,6 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
  * @segment: a #GstSegment structure.
  * @update: flag indicating a new segment is started or updated
  * @rate: the rate of the segment.
- * @format: the format of the segment.
- * @start: the new start value
- * @stop: the new stop value
- * @time: the new stream time
- *
- * Update the segment structure with the field values of a new segment event and
- * with a default applied_rate of 1.0.
- *
- * Since: 0.10.6
- */
-void
-gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
-    GstFormat format, gint64 start, gint64 stop, gint64 time)
-{
-  gst_segment_set_newsegment_full (segment, update, rate, 1.0, format, start,
-      stop, time);
-}
-
-/**
- * gst_segment_set_newsegment_full:
- * @segment: a #GstSegment structure.
- * @update: flag indicating a new segment is started or updated
- * @rate: the rate of the segment.
  * @applied_rate: the applied rate of the segment.
  * @format: the format of the segment.
  * @start: the new start value
@@ -436,7 +413,7 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
  * Update the segment structure with the field values of a new segment event.
  */
 void
-gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
+gst_segment_set_newsegment (GstSegment * segment, gboolean update,
     gdouble rate, gdouble applied_rate, GstFormat format, gint64 start,
     gint64 stop, gint64 time)
 {

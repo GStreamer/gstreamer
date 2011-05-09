@@ -247,7 +247,7 @@ gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
   if (fpad->segment.format == GST_FORMAT_UNDEFINED) {
     GST_WARNING_OBJECT (funnel, "Got buffer without segment,"
         " setting segment [0,inf[");
-    gst_segment_set_newsegment_full (&fpad->segment, FALSE, 1.0, 1.0,
+    gst_segment_set_newsegment (&fpad->segment, FALSE, 1.0, 1.0,
         GST_FORMAT_TIME, 0, -1, 0);
   }
 
@@ -263,7 +263,7 @@ gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   if (!funnel->has_segment) {
-    event = gst_event_new_new_segment_full (FALSE, 1.0, 1.0, GST_FORMAT_TIME,
+    event = gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_TIME,
         0, -1, 0);
     funnel->has_segment = TRUE;
   }
@@ -321,11 +321,11 @@ gst_funnel_sink_event (GstPad * pad, GstEvent * event)
       gint64 stop;
       gint64 time;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate,
+      gst_event_parse_new_segment (event, &update, &rate, &arate,
           &format, &start, &stop, &time);
 
       GST_OBJECT_LOCK (funnel);
-      gst_segment_set_newsegment_full (&fpad->segment, update, rate, arate,
+      gst_segment_set_newsegment (&fpad->segment, update, rate, arate,
           format, start, stop, time);
       GST_OBJECT_UNLOCK (funnel);
 

@@ -354,11 +354,11 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
       GstEvent *news;
       GstFormat format;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &format, NULL, NULL,
+      gst_event_parse_new_segment (event, NULL, NULL, NULL, &format, NULL, NULL,
           NULL);
 
       /* This is the first newsegment, send out a (0, -1) newsegment */
-      news = gst_event_new_new_segment (TRUE, 1.0, format, 0, -1, 0);
+      news = gst_event_new_new_segment (TRUE, 1.0, 1.0, format, 0, -1, 0);
 
       gst_pad_event_default (trans->sinkpad, news);
     }

@@ -1655,12 +1655,12 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       gint64 start, stop, time;
       gboolean update;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
       trans->have_newsegment = TRUE;
 
-      gst_segment_set_newsegment_full (&trans->segment, update, rate, arate,
+      gst_segment_set_newsegment (&trans->segment, update, rate, arate,
           format, start, stop, time);
 
       if (format == GST_FORMAT_TIME) {

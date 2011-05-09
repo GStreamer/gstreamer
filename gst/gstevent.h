@@ -463,21 +463,11 @@ void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps
 
 /* newsegment events */
 GstEvent*       gst_event_new_new_segment       (gboolean update, gdouble rate,
-                                                 GstFormat format,
-                                                 gint64 start, gint64 stop,
-                                                 gint64 time);
-GstEvent*       gst_event_new_new_segment_full  (gboolean update, gdouble rate,
                                                  gdouble applied_rate,
                                                  GstFormat format,
                                                  gint64 start, gint64 stop,
                                                  gint64 time);
 void            gst_event_parse_new_segment     (GstEvent *event,
-                                                 gboolean *update,
-                                                 gdouble *rate,
-                                                 GstFormat *format,
-                                                 gint64 *start, gint64 *stop,
-                                                 gint64 *time);
-void            gst_event_parse_new_segment_full (GstEvent *event,
                                                  gboolean *update,
                                                  gdouble *rate,
                                                  gdouble *applied_rate,

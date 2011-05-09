@@ -757,12 +757,12 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
     if (src->priv->close_segment)
       gst_event_unref (src->priv->close_segment);
     src->priv->close_segment =
-        gst_event_new_new_segment_full (TRUE,
+        gst_event_new_new_segment (TRUE,
         src->segment.rate, src->segment.applied_rate, src->segment.format,
         src->segment.start, src->segment.last_stop, src->segment.time);
   }
 
-  gst_segment_set_newsegment_full (&src->segment, FALSE, src->segment.rate,
+  gst_segment_set_newsegment (&src->segment, FALSE, src->segment.rate,
       src->segment.applied_rate, src->segment.format, start, stop, position);
 
   if (src->priv->start_segment)
@@ -770,13 +770,13 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
   if (src->segment.rate >= 0.0) {
     /* forward, we send data from last_stop to stop */
     src->priv->start_segment =
-        gst_event_new_new_segment_full (FALSE,
+        gst_event_new_new_segment (FALSE,
         src->segment.rate, src->segment.applied_rate, src->segment.format,
         src->segment.last_stop, stop, src->segment.time);
   } else {
     /* reverse, we send data from last_stop to start */
     src->priv->start_segment =
-        gst_event_new_new_segment_full (FALSE,
+        gst_event_new_new_segment (FALSE,
         src->segment.rate, src->segment.applied_rate, src->segment.format,
         src->segment.start, src->segment.last_stop, src->segment.time);
   }
@@ -1419,7 +1419,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     if (src->priv->close_segment)
       gst_event_unref (src->priv->close_segment);
     src->priv->close_segment =
-        gst_event_new_new_segment_full (TRUE,
+        gst_event_new_new_segment (TRUE,
         src->segment.rate, src->segment.applied_rate, src->segment.format,
         src->segment.start, src->segment.last_stop, src->segment.time);
     gst_event_set_seqnum (src->priv->close_segment, seqnum);
@@ -1465,13 +1465,13 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     if (seeksegment.rate >= 0.0) {
       /* forward, we send data from last_stop to stop */
       src->priv->start_segment =
-          gst_event_new_new_segment_full (FALSE,
+          gst_event_new_new_segment (FALSE,
           seeksegment.rate, seeksegment.applied_rate, seeksegment.format,
           seeksegment.last_stop, stop, seeksegment.time);
     } else {
       /* reverse, we send data from last_stop to start */
       src->priv->start_segment =
-          gst_event_new_new_segment_full (FALSE,
+          gst_event_new_new_segment (FALSE,
           seeksegment.rate, seeksegment.applied_rate, seeksegment.format,
           seeksegment.start, seeksegment.last_stop, seeksegment.time);
     }

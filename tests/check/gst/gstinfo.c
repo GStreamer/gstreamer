@@ -127,7 +127,7 @@ GST_START_TEST (info_segment_format_printf_extension)
 
     gst_segment_init (&segment, GST_FORMAT_TIME);
 
-    gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 2.0,
+    gst_segment_set_newsegment (&segment, FALSE, 1.0, 2.0,
         GST_FORMAT_TIME, 0, 5 * 60 * GST_SECOND, 0);
 
     segment.last_stop = 2 * GST_SECOND;
@@ -142,7 +142,7 @@ GST_START_TEST (info_segment_format_printf_extension)
 
     gst_segment_init (&segment, GST_FORMAT_BYTES);
 
-    gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 1.0,
+    gst_segment_set_newsegment (&segment, FALSE, 1.0, 1.0,
         GST_FORMAT_BYTES, 0, 9999999, 0);
 
     GST_LOG ("BYTE: %" GST_SEGMENT_FORMAT, &segment);
@@ -154,7 +154,7 @@ GST_START_TEST (info_segment_format_printf_extension)
 
     gst_segment_init (&segment, 98765432);
 
-    gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 1.0,
+    gst_segment_set_newsegment (&segment, FALSE, 1.0, 1.0,
         GST_FORMAT_BYTES, 0, 987654321, 0);
 
     GST_LOG ("UNKNOWN: %" GST_SEGMENT_FORMAT, &segment);

@@ -582,7 +582,7 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   fail_unless (newseg_event != NULL);
 
   gst_event_parse_new_segment (newseg_event, NULL, &rate, NULL, NULL, NULL,
-      NULL);
+      NULL, NULL);
   fail_unless (rate == 0.5);
 
   gst_pad_remove_event_probe (probe_pad, probe);

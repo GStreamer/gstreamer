@@ -400,7 +400,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
       gdouble rate, arate;
       gint64 start, stop, time;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
       GST_DEBUG_OBJECT (pad,
@@ -411,7 +411,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
 
       GST_INPUT_SELECTOR_LOCK (sel);
       GST_OBJECT_LOCK (selpad);
-      gst_segment_set_newsegment_full (&selpad->segment, update,
+      gst_segment_set_newsegment (&selpad->segment, update,
           rate, arate, format, start, stop, time);
       GST_OBJECT_UNLOCK (selpad);
 
@@ -591,7 +591,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
         cseg->start, cseg->stop, cseg->time);
 
     /* create update segment */
-    close_event = gst_event_new_new_segment_full (TRUE, cseg->rate,
+    close_event = gst_event_new_new_segment (TRUE, cseg->rate,
         cseg->applied_rate, cseg->format, cseg->start, cseg->stop, cseg->time);
 
     sel->pending_close = FALSE;
@@ -605,7 +605,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
         G_GINT64_FORMAT, FALSE, seg->rate, seg->applied_rate, seg->format,
         seg->start, seg->stop, seg->time);
 
-    start_event = gst_event_new_new_segment_full (FALSE, seg->rate,
+    start_event = gst_event_new_new_segment (FALSE, seg->rate,
         seg->applied_rate, seg->format, seg->start, seg->stop, seg->time);
 
     selpad->segment_pending = FALSE;

@@ -575,7 +575,7 @@ apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment,
   gdouble rate, arate;
   gint64 start, stop, time;
 
-  gst_event_parse_new_segment_full (event, &update, &rate, &arate,
+  gst_event_parse_new_segment (event, &update, &rate, &arate,
       &format, &start, &stop, &time);
 
   /* now configure the values, we use these to track timestamps on the
@@ -589,7 +589,7 @@ apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment,
     stop = -1;
     time = 0;
   }
-  gst_segment_set_newsegment_full (segment, update,
+  gst_segment_set_newsegment (segment, update,
       rate, arate, format, start, stop, time);
 
   if (sink)
@@ -1065,14 +1065,14 @@ gst_queue_push_newsegment (GstQueue * queue)
   s = &queue->src_segment;
 
   if (s->accum != 0) {
-    event = gst_event_new_new_segment_full (FALSE, 1.0, 1.0, s->format, 0,
+    event = gst_event_new_new_segment (FALSE, 1.0, 1.0, s->format, 0,
         s->accum, 0);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "pushing accum newsegment event");
     gst_pad_push_event (queue->srcpad, event);
   }
 
-  event = gst_event_new_new_segment_full (FALSE, s->rate, s->applied_rate,
+  event = gst_event_new_new_segment (FALSE, s->rate, s->applied_rate,
       s->format, s->start, s->stop, s->time);
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "pushing real newsegment event");
   gst_pad_push_event (queue->srcpad, event);

@@ -35,6 +35,7 @@ typedef struct _GstSegment GstSegment;
 /**
  * GstSegment:
  * @rate: the rate of the segment
+ * @applied_rate: the already applied rate to the segment
  * @format: the format of the segment values
  * @flags: flags for this segment
  * @start: the start of the segment
@@ -43,7 +44,6 @@ typedef struct _GstSegment GstSegment;
  * @accum: accumulated segment
  * @last_stop: last known stop time
  * @duration: total duration of segment
- * @applied_rate: the already applied rate to the segment
  *
  * A helper structure that holds the configured region of
  * interest in a media file.
@@ -84,8 +84,6 @@ void         gst_segment_set_seek            (GstSegment *segment, gdouble rate,
                                               gboolean *update);
 
 void         gst_segment_set_newsegment      (GstSegment *segment, gboolean update, gdouble rate,
-                                              GstFormat format, gint64 start, gint64 stop, gint64 time);
-void         gst_segment_set_newsegment_full (GstSegment *segment, gboolean update, gdouble rate,
                                               gdouble applied_rate, GstFormat format, gint64 start,
                                               gint64 stop, gint64 time);
 

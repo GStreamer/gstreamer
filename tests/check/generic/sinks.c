@@ -1072,7 +1072,7 @@ GST_START_TEST (test_async_done)
   /* make newsegment, this sets the position to 10sec when the buffer prerolls */
   GST_DEBUG ("sending segment");
   event =
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1,
+      gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_TIME, 0, -1,
       10 * GST_SECOND);
   res = gst_pad_send_event (sinkpad, event);
 
@@ -1210,7 +1210,7 @@ GST_START_TEST (test_async_done_eos)
   /* make newsegment, this sets the position to 10sec when the buffer prerolls */
   GST_DEBUG ("sending segment");
   event =
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1,
+      gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_TIME, 0, -1,
       10 * GST_SECOND);
   res = gst_pad_send_event (sinkpad, event);
 

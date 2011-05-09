@@ -878,7 +878,7 @@ apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
   gdouble rate, arate;
   gint64 start, stop, time;
 
-  gst_event_parse_new_segment_full (event, &update, &rate, &arate,
+  gst_event_parse_new_segment (event, &update, &rate, &arate,
       &format, &start, &stop, &time);
 
   /* now configure the values, we use these to track timestamps on the
@@ -895,7 +895,7 @@ apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
-  gst_segment_set_newsegment_full (segment, update,
+  gst_segment_set_newsegment (segment, update,
       rate, arate, format, start, stop, time);
 
   if (segment == &sq->sink_segment)

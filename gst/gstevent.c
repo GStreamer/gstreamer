@@ -528,55 +528,6 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
 
 /**
  * gst_event_new_new_segment:
- * @update: is this segment an update to a previous one
- * @rate: a new rate for playback
- * @format: The format of the segment values
- * @start: the start value of the segment
- * @stop: the stop value of the segment
- * @time: the time value of the segment
- *
- * Allocate a new newsegment event with the given format/values tripplets
- *
- * This method calls gst_event_new_new_segment_full() passing a default
- * value of 1.0 for applied_rate
- *
- * Returns: (transfer full): a new newsegment event.
- */
-GstEvent *
-gst_event_new_new_segment (gboolean update, gdouble rate, GstFormat format,
-    gint64 start, gint64 stop, gint64 time)
-{
-  return gst_event_new_new_segment_full (update, rate, 1.0, format, start,
-      stop, time);
-}
-
-/**
- * gst_event_parse_new_segment:
- * @event: The event to query
- * @update: (out): A pointer to the update flag of the segment
- * @rate: (out): A pointer to the rate of the segment
- * @format: (out): A pointer to the format of the newsegment values
- * @start: (out): A pointer to store the start value in
- * @stop: (out): A pointer to store the stop value in
- * @time: (out): A pointer to store the time value in
- *
- * Get the update flag, rate, format, start, stop and time in the 
- * newsegment event. In general, gst_event_parse_new_segment_full() should
- * be used instead of this, to also retrieve the applied_rate value of the
- * segment. See gst_event_new_new_segment_full() for a full description 
- * of the newsegment event.
- */
-void
-gst_event_parse_new_segment (GstEvent * event, gboolean * update,
-    gdouble * rate, GstFormat * format, gint64 * start,
-    gint64 * stop, gint64 * time)
-{
-  gst_event_parse_new_segment_full (event, update, rate, NULL, format, start,
-      stop, time);
-}
-
-/**
- * gst_event_new_new_segment_full:
  * @update: Whether this segment is an update to a previous one
  * @rate: A new rate for playback
  * @applied_rate: The rate factor which has already been applied
@@ -620,7 +571,7 @@ gst_event_parse_new_segment (GstEvent * event, gboolean * update,
  * Since: 0.10.6
  */
 GstEvent *
-gst_event_new_new_segment_full (gboolean update, gdouble rate,
+gst_event_new_new_segment (gboolean update, gdouble rate,
     gdouble applied_rate, GstFormat format, gint64 start, gint64 stop,
     gint64 time)
 {
@@ -664,7 +615,7 @@ gst_event_new_new_segment_full (gboolean update, gdouble rate,
 }
 
 /**
- * gst_event_parse_new_segment_full:
+ * gst_event_parse_new_segment:
  * @event: The event to query
  * @update: (out): A pointer to the update flag of the segment
  * @rate: (out): A pointer to the rate of the segment
@@ -675,13 +626,13 @@ gst_event_new_new_segment_full (gboolean update, gdouble rate,
  * @time: (out): A pointer to store the time value in
  *
  * Get the update, rate, applied_rate, format, start, stop and 
- * time in the newsegment event. See gst_event_new_new_segment_full() 
+ * time in the newsegment event. See gst_event_new_new_segment() 
  * for a full description of the newsegment event.
  *
  * Since: 0.10.6
  */
 void
-gst_event_parse_new_segment_full (GstEvent * event, gboolean * update,
+gst_event_parse_new_segment (GstEvent * event, gboolean * update,
     gdouble * rate, gdouble * applied_rate, GstFormat * format,
     gint64 * start, gint64 * stop, gint64 * time)
 {

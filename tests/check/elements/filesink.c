@@ -145,7 +145,8 @@ GST_START_TEST (test_seeking)
 #endif
 
   fail_unless (gst_pad_push_event (mysrcpad,
-          gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0)));
+          gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_BYTES, 0, -1,
+              0)));
 
   CHECK_QUERY_POSITION (filesink, GST_FORMAT_BYTES, 0);
 
@@ -163,7 +164,7 @@ GST_START_TEST (test_seeking)
   CHECK_QUERY_POSITION (filesink, GST_FORMAT_BYTES, 8900);
 
   if (gst_pad_push_event (mysrcpad,
-          gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_BYTES, 8800, -1,
+          gst_event_new_new_segment (TRUE, 1.0, 1.0, GST_FORMAT_BYTES, 8800, -1,
               0))) {
     GST_LOG ("seek ok");
     /* make sure that that new position is reported immediately */

@@ -691,7 +691,7 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
   gdouble rate, arate;
   gint64 start, stop, time;
 
-  gst_event_parse_new_segment_full (event, &update, &rate, &arate,
+  gst_event_parse_new_segment (event, &update, &rate, &arate,
       &format, &start, &stop, &time);
 
   GST_DEBUG_OBJECT (queue,
@@ -720,7 +720,7 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
     stop = -1;
     time = 0;
   }
-  gst_segment_set_newsegment_full (segment, update,
+  gst_segment_set_newsegment (segment, update,
       rate, arate, format, start, stop, time);
 
   GST_DEBUG_OBJECT (queue,

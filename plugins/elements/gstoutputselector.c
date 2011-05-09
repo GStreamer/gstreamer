@@ -422,7 +422,7 @@ gst_output_selector_switch (GstOutputSelector * osel)
     } else {
       start = position = seg->last_stop;
     }
-    ev = gst_event_new_new_segment (TRUE, seg->rate,
+    ev = gst_event_new_new_segment (TRUE, seg->rate, seg->applied_rate,
         seg->format, start, seg->stop, position);
     if (!gst_pad_push_event (osel->active_srcpad, ev)) {
       GST_WARNING_OBJECT (osel,
@@ -548,7 +548,7 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
       gdouble rate, arate;
       gint64 start, stop, time;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
       GST_DEBUG_OBJECT (sel,
@@ -556,7 +556,7 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
           "format %d, " "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
           G_GINT64_FORMAT, update, rate, arate, format, start, stop, time);
 
-      gst_segment_set_newsegment_full (&sel->segment, update,
+      gst_segment_set_newsegment (&sel->segment, update,
           rate, arate, format, start, stop, time);
 
       /* Send newsegment to all src pads */

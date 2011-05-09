@@ -104,7 +104,8 @@ GST_START_TEST (test_clipping)
 
     GST_DEBUG ("sending segment");
     segment = gst_event_new_new_segment (FALSE,
-        1.0, GST_FORMAT_TIME, 1 * GST_SECOND, 5 * GST_SECOND, 1 * GST_SECOND);
+        1.0, 1.0, GST_FORMAT_TIME, 1 * GST_SECOND, 5 * GST_SECOND,
+        1 * GST_SECOND);
 
     eret = gst_pad_send_event (sinkpad, segment);
     fail_if (eret == FALSE);
@@ -263,7 +264,8 @@ GST_START_TEST (test_preroll_sync)
 
     GST_DEBUG ("sending segment");
     segment = gst_event_new_new_segment (FALSE,
-        1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 102 * GST_SECOND, 0 * GST_SECOND);
+        1.0, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 102 * GST_SECOND,
+        0 * GST_SECOND);
 
     eret = gst_pad_send_event (sinkpad, segment);
     fail_if (eret == FALSE);
@@ -423,7 +425,8 @@ GST_START_TEST (test_eos)
 
     GST_DEBUG ("sending segment");
     segment = gst_event_new_new_segment (FALSE,
-        1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND, 0 * GST_SECOND);
+        1.0, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND,
+        0 * GST_SECOND);
 
     eret = gst_pad_send_event (sinkpad, segment);
     fail_if (eret == TRUE);
@@ -468,7 +471,8 @@ GST_START_TEST (test_eos)
 
     GST_DEBUG ("sending segment");
     segment = gst_event_new_new_segment (FALSE,
-        1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND, 0 * GST_SECOND);
+        1.0, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND,
+        0 * GST_SECOND);
 
     eret = gst_pad_send_event (sinkpad, segment);
     fail_unless (eret == TRUE);
@@ -529,7 +533,8 @@ GST_START_TEST (test_eos2)
 
     GST_DEBUG ("sending segment");
     segment = gst_event_new_new_segment (FALSE,
-        1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND, 0 * GST_SECOND);
+        1.0, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND,
+        0 * GST_SECOND);
 
     eret = gst_pad_send_event (sinkpad, segment);
     fail_if (eret == FALSE);
@@ -631,7 +636,8 @@ GST_START_TEST (test_position)
   {
     GST_DEBUG ("sending segment");
     event = gst_event_new_new_segment (FALSE,
-        1.0, GST_FORMAT_TIME, 1 * GST_SECOND, 3 * GST_SECOND, 1 * GST_SECOND);
+        1.0, 1.0, GST_FORMAT_TIME, 1 * GST_SECOND, 3 * GST_SECOND,
+        1 * GST_SECOND);
 
     eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);
@@ -703,7 +709,8 @@ GST_START_TEST (test_position)
   {
     GST_DEBUG ("sending segment");
     event = gst_event_new_new_segment (FALSE,
-        1.0, GST_FORMAT_TIME, 2 * GST_SECOND, 4 * GST_SECOND, 1 * GST_SECOND);
+        1.0, 1.0, GST_FORMAT_TIME, 2 * GST_SECOND, 4 * GST_SECOND,
+        1 * GST_SECOND);
 
     eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);
@@ -786,7 +793,8 @@ GST_START_TEST (test_position)
   {
     GST_DEBUG ("sending segment");
     event = gst_event_new_new_segment (FALSE,
-        1.0, GST_FORMAT_TIME, 2 * GST_SECOND, 4 * GST_SECOND, 1 * GST_SECOND);
+        1.0, 1.0, GST_FORMAT_TIME, 2 * GST_SECOND, 4 * GST_SECOND,
+        1 * GST_SECOND);
 
     eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);

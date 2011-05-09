@@ -904,7 +904,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       gint64 start, stop, pos, next_ts, offset = 0;
       gboolean update;
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+      gst_event_parse_new_segment (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &pos);
 
       GST_DEBUG_OBJECT (parse, "newseg rate %g, applied rate %g, "
@@ -955,7 +955,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
         }
 
         gst_event_unref (event);
-        event = gst_event_new_new_segment_full (update, rate, applied_rate,
+        event = gst_event_new_new_segment (update, rate, applied_rate,
             GST_FORMAT_TIME, seg_start, seg_stop, seg_start);
         format = GST_FORMAT_TIME;
         start = seg_start;
@@ -967,7 +967,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
         /* Unknown incoming segment format. Output a default open-ended
          * TIME segment */
         gst_event_unref (event);
-        event = gst_event_new_new_segment_full (update, rate, applied_rate,
+        event = gst_event_new_new_segment (update, rate, applied_rate,
             GST_FORMAT_TIME, 0, GST_CLOCK_TIME_NONE, 0);
         format = GST_FORMAT_TIME;
         next_ts = start = 0;
@@ -979,7 +979,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
         next_ts = start;
       }
 
-      gst_segment_set_newsegment_full (&parse->segment, update, rate,
+      gst_segment_set_newsegment (&parse->segment, update, rate,
           applied_rate, format, start, stop, start);
 
       /* save the segment for later, right before we push a new buffer so that
@@ -1772,6 +1772,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           GST_TIME_ARGS (parse->segment.start));
       parse->priv->pending_segment =
           gst_event_new_new_segment (FALSE, parse->segment.rate,
+          parse->segment.applied_rate,
           parse->segment.format, parse->segment.start,
           parse->segment.stop, parse->segment.start);
     }
@@ -1799,6 +1800,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           parse->segment.start = last_start;
           parse->priv->pending_segment =
               gst_event_new_new_segment (FALSE, parse->segment.rate,
+              parse->segment.applied_rate,
               parse->segment.format, parse->segment.start,
               parse->segment.stop, parse->segment.start);
         } else {
@@ -1807,19 +1809,21 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           /* close ahead of gap */
           gst_pad_push_event (parse->srcpad,
               gst_event_new_new_segment (TRUE, parse->segment.rate,
+                  parse->segment.applied_rate,
                   parse->segment.format, parse->segment.last_stop,
                   parse->segment.last_stop, parse->segment.last_stop));
           /* skip gap */
           gst_pad_push_event (parse->srcpad,
               gst_event_new_new_segment (FALSE, parse->segment.rate,
+                  parse->segment.applied_rate,
                   parse->segment.format, last_start,
                   parse->segment.stop, last_start));
         }
         /* align segment view with downstream,
          * prevents double-counting accum when closing segment */
         gst_segment_set_newsegment (&parse->segment, FALSE,
-            parse->segment.rate, parse->segment.format, last_start,
-            parse->segment.stop, last_start);
+            parse->segment.rate, parse->segment.applied_rate,
+            parse->segment.format, last_start, parse->segment.stop, last_start);
         parse->segment.last_stop = last_start;
       }
     }
@@ -2794,8 +2798,9 @@ gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
   if (result) {
     if (active) {
       parse->priv->pending_segment = gst_event_new_new_segment (FALSE,
-          parse->segment.rate, parse->segment.format,
-          parse->segment.start, parse->segment.stop, parse->segment.last_stop);
+          parse->segment.rate, parse->segment.applied_rate,
+          parse->segment.format, parse->segment.start, parse->segment.stop,
+          parse->segment.last_stop);
       result &=
           gst_pad_start_task (sinkpad, (GstTaskFunction) gst_base_parse_loop,
           sinkpad);
@@ -3569,8 +3574,9 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
         gst_event_unref (parse->priv->close_segment);
 
       parse->priv->close_segment = gst_event_new_new_segment (TRUE,
-          parse->segment.rate, parse->segment.format,
-          parse->segment.accum, parse->segment.last_stop, parse->segment.accum);
+          parse->segment.rate, parse->segment.applied_rate,
+          parse->segment.format, parse->segment.accum, parse->segment.last_stop,
+          parse->segment.accum);
 
       /* keep track of our last_stop */
       seeksegment.accum = parse->segment.last_stop;
@@ -3592,6 +3598,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     /* This will be sent later in _loop() */
     parse->priv->pending_segment =
         gst_event_new_new_segment (FALSE, parse->segment.rate,
+        parse->segment.applied_rate,
         parse->segment.format, parse->segment.start,
         parse->segment.stop, parse->segment.start);
 

@@ -628,7 +628,8 @@ GST_START_TEST (test_sparse_stream)
   gst_element_set_state (pipe, GST_STATE_PLAYING);
 
   /* Push 2 new segment events */
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  event =
+      gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_TIME, 0, -1, 0);
   gst_pad_push_event (inputpads[0], gst_event_ref (event));
   gst_pad_push_event (inputpads[1], event);
 
@@ -662,7 +663,8 @@ GST_START_TEST (test_sparse_stream)
     g_static_mutex_unlock (&_check_lock);
 
     /* Push a new segment update on the 2nd pad */
-    event = gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, ts, -1, ts);
+    event =
+        gst_event_new_new_segment (TRUE, 1.0, 1.0, GST_FORMAT_TIME, ts, -1, ts);
     gst_pad_push_event (inputpads[1], event);
   }
 
