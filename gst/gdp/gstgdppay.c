@@ -210,6 +210,7 @@ gst_gdp_stamp_buffer (GstGDPPay * this, GstBuffer * buffer)
   this->offset = GST_BUFFER_OFFSET_END (buffer);
 }
 
+#if 0
 static GstBuffer *
 gst_gdp_buffer_from_caps (GstGDPPay * this, GstCaps * caps)
 {
@@ -241,6 +242,7 @@ packet_failed:
     return NULL;
   }
 }
+#endif
 
 static GstBuffer *
 gst_gdp_pay_buffer_from_buffer (GstGDPPay * this, GstBuffer * buffer)
@@ -352,7 +354,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     GST_DEBUG_OBJECT (this, "1.0, appending copy of new segment buffer %p",
         this->new_segment_buf);
     new_segment_buf = gst_buffer_copy (this->new_segment_buf);
-    gst_buffer_set_caps (new_segment_buf, NULL);
     g_value_init (&value, GST_TYPE_BUFFER);
     gst_value_set_buffer (&value, new_segment_buf);
     gst_value_array_append_value (&array, &value);
@@ -366,7 +367,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
       tag_buf = this->tag_buf;
       this->tag_buf = NULL;
 
-      gst_buffer_set_caps (tag_buf, NULL);
       g_value_init (&value, GST_TYPE_BUFFER);
       gst_value_set_buffer (&value, tag_buf);
       gst_value_array_append_value (&array, &value);
@@ -378,7 +378,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
   gst_gdp_stamp_buffer (this, this->caps_buf);
   GST_DEBUG_OBJECT (this, "appending copy of caps buffer %p", this->caps_buf);
   caps_buf = gst_buffer_copy (this->caps_buf);
-  gst_buffer_set_caps (caps_buf, NULL);
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, caps_buf);
   gst_value_array_append_value (&array, &value);
@@ -453,10 +452,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
 
   GST_DEBUG_OBJECT (this, "Setting caps on src pad %" GST_PTR_FORMAT, caps);
   gst_pad_set_caps (this->srcpad, caps);
-  this->caps_buf = gst_buffer_make_writable (this->caps_buf);
-  gst_buffer_set_caps (this->caps_buf, caps);
-  this->new_segment_buf = gst_buffer_make_writable (this->new_segment_buf);
-  gst_buffer_set_caps (this->new_segment_buf, caps);
 
   /* if these are our first ever buffers, send out new_segment first */
   if (!this->sent_streamheader) {
@@ -482,7 +477,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     goto done;
   }
   if (this->tag_buf) {
-    gst_buffer_set_caps (this->tag_buf, caps);
     GST_DEBUG_OBJECT (this, "Pushing GDP tag buffer %p", this->tag_buf);
     /* we stored these bufs with refcount 1, so make sure we keep a ref */
     r = gst_pad_push (this->srcpad, gst_buffer_ref (this->tag_buf));
@@ -510,7 +504,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     this->queue = g_list_delete_link (this->queue, this->queue);
 
     /* set caps and push */
-    gst_buffer_set_caps (buffer, caps);
     r = gst_pad_push (this->srcpad, buffer);
     if (r != GST_FLOW_OK) {
       GST_WARNING_OBJECT (this, "pushing queued GDP buffer returned %d", r);
@@ -540,7 +533,6 @@ gst_gdp_queue_buffer (GstGDPPay * this, GstBuffer * buffer)
   if (this->sent_streamheader) {
     GST_LOG_OBJECT (this, "Pushing GDP buffer %p, caps %" GST_PTR_FORMAT,
         buffer, this->caps);
-    gst_buffer_set_caps (buffer, GST_PAD_CAPS (this->srcpad));
     return gst_pad_push (this->srcpad, buffer);
   }
 
@@ -557,7 +549,9 @@ static GstFlowReturn
 gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstGDPPay *this;
+#if 0
   GstCaps *caps;
+#endif
   GstBuffer *outbuffer;
   GstFlowReturn ret;
 
@@ -587,7 +581,7 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
       this->new_segment_buf = outbuffer;
     }
   }
-
+#if 0
   /* make sure we've received caps before */
   caps = gst_buffer_get_caps (buffer);
   if (!this->caps && !caps)
@@ -613,6 +607,7 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
 
   if (caps)
     gst_caps_unref (caps);
+#endif
 
   /* create a GDP header packet,
    * then create a GST buffer of the header packet and the buffer contents */
@@ -641,6 +636,7 @@ done:
   return ret;
 
   /* ERRORS */
+#if 0
 no_caps:
   {
     /* when returning a fatal error as a GstFlowReturn we must post an error
@@ -660,6 +656,7 @@ no_caps_buffer:
     ret = GST_FLOW_ERROR;
     goto done;
   }
+#endif
 no_buffer:
   {
     GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
