@@ -1730,7 +1730,7 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
       GstClockTimeDiff diff;
       GstClockTime timestamp;
 
-      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+      gst_event_parse_qos (event, NULL, &proportion, &diff, &timestamp);
       gst_base_src_update_qos (src, proportion, diff, timestamp);
       result = TRUE;
       break;

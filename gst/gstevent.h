@@ -486,13 +486,9 @@ void            gst_event_parse_buffer_size     (GstEvent *event, GstFormat *for
                                                  gint64 *maxsize, gboolean *async);
 
 /* QOS events */
-GstEvent*       gst_event_new_qos               (gdouble proportion, GstClockTimeDiff diff,
-                                                 GstClockTime timestamp);
-GstEvent*       gst_event_new_qos_full          (GstQOSType type, gdouble proportion,
+GstEvent*       gst_event_new_qos               (GstQOSType type, gdouble proportion,
                                                  GstClockTimeDiff diff, GstClockTime timestamp);
-void            gst_event_parse_qos             (GstEvent *event, gdouble *proportion, GstClockTimeDiff *diff,
-                                                 GstClockTime *timestamp);
-void            gst_event_parse_qos_full        (GstEvent *event, GstQOSType *type,
+void            gst_event_parse_qos             (GstEvent *event, GstQOSType *type,
                                                  gdouble *proportion, GstClockTimeDiff *diff,
                                                  GstClockTime *timestamp);
 /* seek event */

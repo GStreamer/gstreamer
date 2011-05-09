@@ -144,18 +144,18 @@ GST_START_TEST (create_events)
     GstClockTimeDiff ctd1 = G_GINT64_CONSTANT (10), ctd2;
     GstClockTime ct1 = G_GUINT64_CONSTANT (20), ct2;
 
-    event = gst_event_new_qos (p1, ctd1, ct1);
+    event = gst_event_new_qos (t1, p1, ctd1, ct1);
     fail_if (event == NULL);
     fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_QOS);
     fail_unless (GST_EVENT_IS_UPSTREAM (event));
     fail_if (GST_EVENT_IS_DOWNSTREAM (event));
     fail_if (GST_EVENT_IS_SERIALIZED (event));
 
-    gst_event_parse_qos (event, &p2, &ctd2, &ct2);
+    gst_event_parse_qos (event, &t2, &p2, &ctd2, &ct2);
     fail_unless (p1 == p2);
     fail_unless (ctd1 == ctd2);
     fail_unless (ct1 == ct2);
-    gst_event_parse_qos_full (event, &t2, &p2, &ctd2, &ct2);
+    gst_event_parse_qos (event, &t2, &p2, &ctd2, &ct2);
     fail_unless (t2 == GST_QOS_TYPE_UNDERFLOW);
     fail_unless (p1 == p2);
     fail_unless (ctd1 == ctd2);
@@ -163,13 +163,13 @@ GST_START_TEST (create_events)
     gst_event_unref (event);
 
     ctd1 = G_GINT64_CONSTANT (-10);
-    event = gst_event_new_qos (p1, ctd1, ct1);
-    gst_event_parse_qos_full (event, &t2, &p2, &ctd2, &ct2);
+    event = gst_event_new_qos (t1, p1, ctd1, ct1);
+    gst_event_parse_qos (event, &t2, &p2, &ctd2, &ct2);
     fail_unless (t2 == GST_QOS_TYPE_OVERFLOW);
     gst_event_unref (event);
 
-    event = gst_event_new_qos_full (t1, p1, ctd1, ct1);
-    gst_event_parse_qos_full (event, &t2, &p2, &ctd2, &ct2);
+    event = gst_event_new_qos (t1, p1, ctd1, ct1);
+    gst_event_parse_qos (event, &t2, &p2, &ctd2, &ct2);
     fail_unless (t2 == GST_QOS_TYPE_THROTTLE);
     fail_unless (p1 == p2);
     fail_unless (ctd1 == ctd2);

@@ -786,33 +786,6 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
 
 /**
  * gst_event_new_qos:
- * @proportion: the proportion of the qos message
- * @diff: The time difference of the last Clock sync
- * @timestamp: The timestamp of the buffer
- *
- * Allocate a new qos event with the given values. This function calls
- * gst_event_new_qos_full() with the type set to #GST_QOS_TYPE_OVERFLOW
- * when diff is negative (buffers are in time) and #GST_QOS_TYPE_UNDERFLOW
- * when @diff is positive (buffers are late).
- *
- * Returns: (transfer full): a new QOS event.
- */
-GstEvent *
-gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
-    GstClockTime timestamp)
-{
-  GstQOSType type;
-
-  if (diff <= 0)
-    type = GST_QOS_TYPE_OVERFLOW;
-  else
-    type = GST_QOS_TYPE_UNDERFLOW;
-
-  return gst_event_new_qos_full (type, proportion, diff, timestamp);
-}
-
-/**
- * gst_event_new_qos_full:
  * @type: the QoS type
  * @proportion: the proportion of the qos message
  * @diff: The time difference of the last Clock sync
@@ -862,11 +835,9 @@ gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
  * event and implement custom application specific QoS handling.
  *
  * Returns: (transfer full): a new QOS event.
- *
- * Since: 0.10.33
  */
 GstEvent *
-gst_event_new_qos_full (GstQOSType type, gdouble proportion,
+gst_event_new_qos (GstQOSType type, gdouble proportion,
     GstClockTimeDiff diff, GstClockTime timestamp)
 {
   GstEvent *event;
@@ -893,35 +864,16 @@ gst_event_new_qos_full (GstQOSType type, gdouble proportion,
 /**
  * gst_event_parse_qos:
  * @event: The event to query
- * @proportion: (out): A pointer to store the proportion in
- * @diff: (out): A pointer to store the diff in
- * @timestamp: (out): A pointer to store the timestamp in
- *
- * Get the proportion, diff and timestamp in the qos event. See
- * gst_event_new_qos() for more information about the different QoS values.
- */
-void
-gst_event_parse_qos (GstEvent * event, gdouble * proportion,
-    GstClockTimeDiff * diff, GstClockTime * timestamp)
-{
-  gst_event_parse_qos_full (event, NULL, proportion, diff, timestamp);
-}
-
-/**
- * gst_event_parse_qos_full:
- * @event: The event to query
  * @type: (out): A pointer to store the QoS type in
  * @proportion: (out): A pointer to store the proportion in
  * @diff: (out): A pointer to store the diff in
  * @timestamp: (out): A pointer to store the timestamp in
  *
  * Get the type, proportion, diff and timestamp in the qos event. See
- * gst_event_new_qos_full() for more information about the different QoS values.
- *
- * Since: 0.10.33
+ * gst_event_new_qos() for more information about the different QoS values.
  */
 void
-gst_event_parse_qos_full (GstEvent * event, GstQOSType * type,
+gst_event_parse_qos (GstEvent * event, GstQOSType * type,
     gdouble * proportion, GstClockTimeDiff * diff, GstClockTime * timestamp)
 {
   const GstStructure *structure;

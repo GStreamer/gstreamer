@@ -2554,7 +2554,7 @@ gst_base_sink_send_qos (GstBaseSink * basesink, GstQOSType type,
       "qos: type %d, proportion: %lf, diff %" G_GINT64_FORMAT ", timestamp %"
       GST_TIME_FORMAT, type, proportion, diff, GST_TIME_ARGS (time));
 
-  event = gst_event_new_qos_full (type, proportion, diff, time);
+  event = gst_event_new_qos (type, proportion, diff, time);
 
   /* send upstream */
   res = gst_pad_push_event (basesink->sinkpad, event);
