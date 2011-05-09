@@ -2856,22 +2856,6 @@ is_raw_pad (GstPad * pad)
   return raw;
 }
 
-static GstPad *
-get_internally_linked_pad (GstPad * pad)
-{
-  GstIterator *it;
-  GstPad *res = NULL;
-
-  it = gst_pad_iterate_internal_links (pad);
-  if (!it)
-    return NULL;
-
-  gst_iterator_next (it, (gpointer) & res);
-  gst_iterator_free (it);
-
-  return res;
-}
-
 static void
 sinkpad_blocked_cb (GstPad * blockedpad, gboolean blocked, gpointer user_data)
 {
@@ -2880,7 +2864,7 @@ sinkpad_blocked_cb (GstPad * blockedpad, gboolean blocked, gpointer user_data)
 
   GST_PLAY_SINK_LOCK (playsink);
 
-  pad = get_internally_linked_pad (blockedpad);
+  pad = GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (blockedpad)));
   if (pad == playsink->video_pad) {
     playsink->video_pad_blocked = blocked;
     GST_DEBUG_OBJECT (pad, "Video pad blocked: %d", blocked);
@@ -2918,21 +2902,27 @@ sinkpad_blocked_cb (GstPad * blockedpad, gboolean blocked, gpointer user_data)
     gst_play_sink_reconfigure (playsink);
 
     if (playsink->video_pad) {
-      GstPad *opad = get_internally_linked_pad (playsink->video_pad);
+      GstPad *opad =
+          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+              (playsink->video_pad)));
       gst_pad_set_blocked_async_full (opad, FALSE, sinkpad_blocked_cb,
           gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
       gst_object_unref (opad);
     }
 
     if (playsink->audio_pad) {
-      GstPad *opad = get_internally_linked_pad (playsink->audio_pad);
+      GstPad *opad =
+          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+              (playsink->audio_pad)));
       gst_pad_set_blocked_async_full (opad, FALSE, sinkpad_blocked_cb,
           gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
       gst_object_unref (opad);
     }
 
     if (playsink->text_pad) {
-      GstPad *opad = get_internally_linked_pad (playsink->text_pad);
+      GstPad *opad =
+          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+              (playsink->text_pad)));
       gst_pad_set_blocked_async_full (opad, FALSE, sinkpad_blocked_cb,
           gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
       gst_object_unref (opad);
@@ -2976,21 +2966,27 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
   if (reconfigure) {
     GST_PLAY_SINK_LOCK (playsink);
     if (playsink->video_pad) {
-      GstPad *opad = get_internally_linked_pad (playsink->video_pad);
+      GstPad *opad =
+          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+              (playsink->video_pad)));
       gst_pad_set_blocked_async_full (opad, TRUE, sinkpad_blocked_cb,
           gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
       gst_object_unref (opad);
     }
 
     if (playsink->audio_pad) {
-      GstPad *opad = get_internally_linked_pad (playsink->audio_pad);
+      GstPad *opad =
+          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+              (playsink->audio_pad)));
       gst_pad_set_blocked_async_full (opad, TRUE, sinkpad_blocked_cb,
           gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
       gst_object_unref (opad);
     }
 
     if (playsink->text_pad) {
-      GstPad *opad = get_internally_linked_pad (playsink->text_pad);
+      GstPad *opad =
+          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+              (playsink->text_pad)));
       gst_pad_set_blocked_async_full (opad, TRUE, sinkpad_blocked_cb,
           gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
       gst_object_unref (opad);
@@ -3103,7 +3099,8 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
     gst_pad_set_active (res, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (playsink), res);
     if (type != GST_PLAY_SINK_TYPE_FLUSHING) {
-      GstPad *blockpad = get_internally_linked_pad (res);
+      GstPad *blockpad =
+          GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (res)));
 
       gst_pad_set_blocked_async_full (blockpad, TRUE, sinkpad_blocked_cb,
           gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
@@ -3354,7 +3351,9 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       /* unblock all pads here */
       GST_PLAY_SINK_LOCK (playsink);
       if (playsink->video_pad) {
-        GstPad *opad = get_internally_linked_pad (playsink->video_pad);
+        GstPad *opad =
+            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+                (playsink->video_pad)));
         if (gst_pad_is_blocked (opad)) {
           gst_pad_set_blocked_async_full (opad, FALSE, sinkpad_blocked_cb,
               gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
@@ -3364,7 +3363,9 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       }
 
       if (playsink->audio_pad) {
-        GstPad *opad = get_internally_linked_pad (playsink->audio_pad);
+        GstPad *opad =
+            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+                (playsink->audio_pad)));
 
         if (gst_pad_is_blocked (opad)) {
           gst_pad_set_blocked_async_full (opad, FALSE, sinkpad_blocked_cb,
@@ -3375,7 +3376,9 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       }
 
       if (playsink->text_pad) {
-        GstPad *opad = get_internally_linked_pad (playsink->text_pad);
+        GstPad *opad =
+            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+                (playsink->text_pad)));
         if (gst_pad_is_blocked (opad)) {
           gst_pad_set_blocked_async_full (opad, FALSE, sinkpad_blocked_cb,
               gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
