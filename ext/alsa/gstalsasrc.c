@@ -91,7 +91,7 @@ static GstStateChangeReturn gst_alsasrc_change_state (GstElement * element,
     GstStateChange transition);
 static GstFlowReturn gst_alsasrc_create (GstBaseSrc * bsrc, guint64 offset,
     guint length, GstBuffer ** outbuf);
-GstClockTime gst_alsasrc_get_timestamp (GObject * object);
+static GstClockTime gst_alsasrc_get_timestamp (GstAlsaSrc * src);
 
 
 /* AlsaSrc signals and args */
@@ -249,27 +249,27 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
           DEFAULT_PROP_CARD_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
-GstClockTime
-gst_alsasrc_get_timestamp (GstAlsaSrc * asrc)
+static GstClockTime
+gst_alsasrc_get_timestamp (GstAlsaSrc * src)
 {
   snd_pcm_status_t *status;
   snd_htimestamp_t tstamp;
   GstClockTime timestamp;
   snd_pcm_uframes_t availmax;
 
-  GST_DEBUG_OBJECT (object, "Getting alsa timestamp!");
+  GST_DEBUG_OBJECT (src, "Getting alsa timestamp!");
 
-  if (!asrc) {
-    GST_ERROR_OBJECT (asrc, "No alsa handle created yet !");
+  if (!src) {
+    GST_ERROR_OBJECT (src, "No alsa handle created yet !");
     return 0;
   }
 
   if (snd_pcm_status_malloc (&status) != 0) {
-    GST_ERROR_OBJECT (asrc, "snd_pcm_status_malloc failed");
+    GST_ERROR_OBJECT (src, "snd_pcm_status_malloc failed");
   }
 
-  if (snd_pcm_status (asrc->handle, status) != 0) {
-    GST_ERROR_OBJECT (asrc, "snd_pcm_status failed");
+  if (snd_pcm_status (src->handle, status) != 0) {
+    GST_ERROR_OBJECT (src, "snd_pcm_status failed");
   }
 
   /* get high resolution time stamp from driver */
@@ -280,14 +280,15 @@ gst_alsasrc_get_timestamp (GstAlsaSrc * asrc)
   availmax = snd_pcm_status_get_avail_max (status);
 
   /* Compensate the fact that the timestamp references the last sample */
-  timestamp -= gst_util_uint64_scale_int (availmax * 2, GST_SECOND, asrc->rate);
+  timestamp -= gst_util_uint64_scale_int (availmax * 2, GST_SECOND, src->rate);
   /* Compensate for the delay until the package is available */
   timestamp += gst_util_uint64_scale_int (snd_pcm_status_get_delay (status),
-      GST_SECOND, asrc->rate);
+      GST_SECOND, src->rate);
 
   snd_pcm_status_free (status);
 
-  GST_DEBUG ("ALSA timestamp : %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
+  GST_DEBUG_OBJECT (src, "ALSA timestamp : %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
   return timestamp;
 }
 
@@ -386,7 +387,7 @@ gst_alsasrc_create (GstBaseSrc * bsrc, guint64 offset, guint length,
       GST_BASE_SRC_CLASS (parent_class)->create (bsrc, offset, length, outbuf);
   if (asrc->driver_timestamps == TRUE && *outbuf) {
     GST_BUFFER_TIMESTAMP (*outbuf) =
-        gst_alsasrc_get_timestamp ((GObject *) bsrc);
+        gst_alsasrc_get_timestamp ((GstAlsaSrc *) bsrc);
   }
 
   return ret;
