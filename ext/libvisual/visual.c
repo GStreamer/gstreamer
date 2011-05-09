@@ -521,7 +521,7 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (visual->srcpad, event);
+      res = gst_pad_event_default (pad, event);
       break;
   }
 
@@ -562,7 +562,7 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_push_event (visual->sinkpad, event);
+      res = gst_pad_event_default (pad, event);
       break;
   }
 
