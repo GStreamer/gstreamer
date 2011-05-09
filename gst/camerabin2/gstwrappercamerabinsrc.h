@@ -74,6 +74,7 @@ struct _GstWrapperCameraBinSrc
 
   /* source elements */
   GstElement *src_vid_src;
+  GstElement *video_filter;
   GstElement *src_filter;
   GstElement *src_zoom_crop;
   GstElement *src_zoom_scale;
@@ -94,6 +95,7 @@ struct _GstWrapperCameraBinSrc
 
   /* Application configurable elements */
   GstElement *app_vid_src;
+  GstElement *app_vid_filter;
 
   /* Caps that videosrc supports */
   GstCaps *allowed_caps;

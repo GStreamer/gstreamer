@@ -37,7 +37,8 @@
 enum
 {
   PROP_0,
-  PROP_VIDEO_SRC
+  PROP_VIDEO_SRC,
+  PROP_VIDEO_SRC_FILTER
 };
 
 GST_DEBUG_CATEGORY (wrapper_camera_bin_src_debug);
@@ -57,6 +58,10 @@ gst_wrapper_camera_bin_src_dispose (GObject * object)
   if (self->app_vid_src) {
     gst_object_unref (self->app_vid_src);
     self->app_vid_src = NULL;
+  }
+  if (self->app_vid_filter) {
+    gst_object_unref (self->app_vid_filter);
+    self->app_vid_filter = NULL;
   }
   gst_caps_replace (&self->image_capture_caps, NULL);
 
@@ -89,6 +94,19 @@ gst_wrapper_camera_bin_src_set_property (GObject * object,
           gst_object_ref (self->app_vid_src);
       }
       break;
+    case PROP_VIDEO_SRC_FILTER:
+      if (GST_STATE (self) != GST_STATE_NULL) {
+        GST_ELEMENT_ERROR (self, CORE, FAILED,
+            ("camerasrc must be in NULL state when setting the video source filter element"),
+            (NULL));
+      } else {
+        if (self->app_vid_filter)
+          gst_object_unref (self->app_vid_filter);
+        self->app_vid_filter = g_value_get_object (value);
+        if (self->app_vid_filter)
+          gst_object_ref (self->app_vid_filter);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
       break;
@@ -107,6 +125,12 @@ gst_wrapper_camera_bin_src_get_property (GObject * object,
         g_value_set_object (value, self->src_vid_src);
       else
         g_value_set_object (value, self->app_vid_src);
+      break;
+    case PROP_VIDEO_SRC_FILTER:
+      if (self->video_filter)
+        g_value_set_object (value, self->video_filter);
+      else
+        g_value_set_object (value, self->app_vid_filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -352,7 +376,8 @@ gst_wrapper_camera_bin_src_max_zoom_cb (GObject * self, GParamSpec * pspec,
  * @bcamsrc: camerasrc object
  *
  * This function creates and links the elements of the camerasrc bin
- * videosrc ! cspconv ! capsfilter ! crop ! scale ! capsfilter ! tee name=t !
+ * videosrc ! cspconv ! srcfilter ! cspconv ! capsfilter ! crop ! scale ! \
+ * capsfilter ! tee name=t
  *    t. ! ... (viewfinder pad)
  *    t. ! output-selector name=outsel
  *        outsel. ! (image pad)
@@ -366,6 +391,9 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
   GstBin *cbin = GST_BIN (bcamsrc);
   GstElement *tee;
+  GstElement *filter_csp;
+  GstElement *src_csp;
+  GstElement *capsfilter;
   gboolean ret = FALSE;
   GstElement *videoscale;
   GstPad *vf_pad;
@@ -506,6 +534,37 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     gst_pad_set_active (self->vfsrc, TRUE);
     gst_pad_set_active (self->imgsrc, TRUE);    /* XXX ??? */
     gst_pad_set_active (self->vidsrc, TRUE);    /* XXX ??? */
+  }
+
+  /* Do this even if pipeline is constructed */
+
+  if (self->video_filter) {
+    /* check if we need to replace the current one */
+    if (self->video_filter != self->app_vid_filter) {
+      gst_bin_remove (cbin, self->video_filter);
+      gst_object_unref (self->video_filter);
+      self->video_filter = NULL;
+      filter_csp = gst_bin_get_by_name (cbin, "filter-colorspace");
+      gst_bin_remove (cbin, filter_csp);
+      gst_object_unref (filter_csp);
+      filter_csp = NULL;
+    }
+  }
+
+  if (!self->video_filter) {
+    if (self->app_vid_filter) {
+      self->video_filter = gst_object_ref (self->app_vid_filter);
+      filter_csp = gst_element_factory_make ("ffmpegcolorspace",
+          "filter-colorspace");
+      gst_bin_add_many (cbin, self->video_filter, filter_csp, NULL);
+      src_csp = gst_bin_get_by_name (cbin, "src-colorspace");
+      capsfilter = gst_bin_get_by_name (cbin, "src-capsfilter");
+      if (gst_pad_is_linked (gst_element_get_static_pad (src_csp, "src")))
+        gst_element_unlink (src_csp, capsfilter);
+      if (!gst_element_link_many (src_csp, self->video_filter, filter_csp,
+              capsfilter, NULL))
+        goto done;
+    }
   }
   ret = TRUE;
   self->elements_created = TRUE;
@@ -1102,6 +1161,10 @@ gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
       g_param_spec_object ("video-source", "Video source",
           "The video source element to be used",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_VIDEO_SRC_FILTER,
+      g_param_spec_object ("video-source-filter", "Video source filter",
+          "Optional video source filter element",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_wrapper_camera_bin_src_change_state;
 
@@ -1148,6 +1211,7 @@ gst_wrapper_camera_bin_src_init (GstWrapperCameraBinSrc * self,
   self->video_renegotiate = TRUE;
   self->image_renegotiate = TRUE;
   self->mode = GST_BASE_CAMERA_SRC_CAST (self)->mode;
+  self->app_vid_filter = NULL;
 }
 
 gboolean
