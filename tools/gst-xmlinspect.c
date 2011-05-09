@@ -550,6 +550,8 @@ print_element_info (GstElementFactory * factory)
 
     pads = element->pads;
     while (pads) {
+      GstCaps *caps;
+
       pad = GST_PAD (pads->data);
       pads = g_list_next (pads);
 
@@ -592,8 +594,10 @@ print_element_info (GstElementFactory * factory)
 
       PUT_END_TAG (3, "implementation");
 
-      if (pad->caps) {
-        print_caps (pad->caps, 3);
+      caps = gst_pad_get_current_caps (pad);
+      if (caps) {
+        print_caps (caps, 3);
+        gst_caps_unref (caps);
       }
       PUT_END_TAG (2, "pad");
     }

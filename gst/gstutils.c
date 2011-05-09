@@ -758,7 +758,7 @@ gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
 {
   GstCaps *caps;
 
-  caps = pad->caps;
+  caps = gst_pad_get_current_caps (pad);
 
   if (!caps) {
     string_append_indent (buf, indent);
@@ -770,6 +770,8 @@ gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
     s = gst_caps_to_string (caps);
     g_string_append (buf, s);
     g_free (s);
+
+    gst_caps_unref (caps);
   }
 }
 
