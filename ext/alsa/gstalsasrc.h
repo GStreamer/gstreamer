@@ -64,6 +64,7 @@ struct _GstAlsaSrc {
   guint                 rate;
   guint                 channels;
   gint                  bytes_per_sample;
+  gboolean              driver_timestamps;
 
   guint                 buffer_time;
   guint                 period_time;

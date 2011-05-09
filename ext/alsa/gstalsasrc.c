@@ -87,6 +87,12 @@ static gboolean gst_alsasrc_close (GstAudioSrc * asrc);
 static guint gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length);
 static guint gst_alsasrc_delay (GstAudioSrc * asrc);
 static void gst_alsasrc_reset (GstAudioSrc * asrc);
+static GstStateChangeReturn gst_alsasrc_change_state (GstElement * element,
+    GstStateChange transition);
+static GstFlowReturn gst_alsasrc_create (GstBaseSrc * bsrc, guint64 offset,
+    guint length, GstBuffer ** outbuf);
+GstClockTime gst_alsasrc_get_timestamp (GObject * object);
+
 
 /* AlsaSrc signals and args */
 enum
@@ -199,18 +205,25 @@ static void
 gst_alsasrc_class_init (GstAlsaSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstAudioSrcClass *gstaudiosrc_class;
+  GstBaseAudioSrcClass *gstbaseaudiosrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
+  gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
 
   gobject_class->finalize = gst_alsasrc_finalize;
   gobject_class->get_property = gst_alsasrc_get_property;
   gobject_class->set_property = gst_alsasrc_set_property;
 
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_alsasrc_change_state);
+
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasrc_getcaps);
+  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_alsasrc_create);
 
   gstaudiosrc_class->open = GST_DEBUG_FUNCPTR (gst_alsasrc_open);
   gstaudiosrc_class->prepare = GST_DEBUG_FUNCPTR (gst_alsasrc_prepare);
@@ -234,6 +247,48 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
       g_param_spec_string ("card-name", "Card name",
           "Human-readable name of the sound card",
           DEFAULT_PROP_CARD_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+}
+
+GstClockTime
+gst_alsasrc_get_timestamp (GstAlsaSrc * asrc)
+{
+  snd_pcm_status_t *status;
+  snd_htimestamp_t tstamp;
+  GstClockTime timestamp;
+  snd_pcm_uframes_t availmax;
+
+  GST_DEBUG_OBJECT (object, "Getting alsa timestamp!");
+
+  if (!asrc) {
+    GST_ERROR_OBJECT (asrc, "No alsa handle created yet !");
+    return 0;
+  }
+
+  if (snd_pcm_status_malloc (&status) != 0) {
+    GST_ERROR_OBJECT (asrc, "snd_pcm_status_malloc failed");
+  }
+
+  if (snd_pcm_status (asrc->handle, status) != 0) {
+    GST_ERROR_OBJECT (asrc, "snd_pcm_status failed");
+  }
+
+  /* get high resolution time stamp from driver */
+  snd_pcm_status_get_htstamp (status, &tstamp);
+  timestamp = GST_TIMESPEC_TO_TIME (tstamp);
+
+  /* Max available frames sets the depth of the buffer */
+  availmax = snd_pcm_status_get_avail_max (status);
+
+  /* Compensate the fact that the timestamp references the last sample */
+  timestamp -= gst_util_uint64_scale_int (availmax * 2, GST_SECOND, asrc->rate);
+  /* Compensate for the delay until the package is available */
+  timestamp += gst_util_uint64_scale_int (snd_pcm_status_get_delay (status),
+      GST_SECOND, asrc->rate);
+
+  snd_pcm_status_free (status);
+
+  GST_DEBUG ("ALSA timestamp : %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
+  return timestamp;
 }
 
 static void
@@ -286,6 +341,57 @@ gst_alsasrc_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstStateChangeReturn
+gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (element);
+  GstAlsaSrc *asrc = GST_ALSA_SRC (element);
+  GstClock *clk;
+
+  switch (transition) {
+      /* Show the compiler that we care */
+    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      clk = src->clock;
+      asrc->driver_timestamps = FALSE;
+      if (GST_IS_SYSTEM_CLOCK (clk)) {
+        gint clocktype;
+        g_object_get (clk, "clock-type", &clocktype, NULL);
+        if (clocktype == GST_CLOCK_TYPE_MONOTONIC) {
+          asrc->driver_timestamps = TRUE;
+        }
+      }
+      break;
+  }
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_alsasrc_create (GstBaseSrc * bsrc, guint64 offset, guint length,
+    GstBuffer ** outbuf)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstAlsaSrc *asrc = GST_ALSA_SRC (bsrc);
+
+  ret =
+      GST_BASE_SRC_CLASS (parent_class)->create (bsrc, offset, length, outbuf);
+  if (asrc->driver_timestamps == TRUE && *outbuf) {
+    GST_BUFFER_TIMESTAMP (*outbuf) =
+        gst_alsasrc_get_timestamp ((GObject *) bsrc);
+  }
+
+  return ret;
+}
+
 static void
 gst_alsasrc_init (GstAlsaSrc * alsasrc, GstAlsaSrcClass * g_class)
 {
@@ -293,6 +399,7 @@ gst_alsasrc_init (GstAlsaSrc * alsasrc, GstAlsaSrcClass * g_class)
 
   alsasrc->device = g_strdup (DEFAULT_PROP_DEVICE);
   alsasrc->cached_caps = NULL;
+  alsasrc->driver_timestamps = FALSE;
 
   alsasrc->alsa_lock = g_mutex_new ();
 }
