@@ -317,7 +317,6 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         }
 
         /* set caps and push */
-        gst_buffer_set_caps (buf, this->caps);
         GST_LOG_OBJECT (this, "deserialized buffer %p, pushing, timestamp %"
             GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
             ", offset %" G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT

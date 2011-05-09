@@ -229,7 +229,7 @@ gst_ogg_pad_query_types (GstPad * pad)
 static GstCaps *
 gst_ogg_pad_getcaps (GstPad * pad)
 {
-  return gst_caps_ref (GST_PAD_CAPS (pad));
+  return gst_pad_get_current_caps (pad);
 }
 
 static gboolean
@@ -574,7 +574,6 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     goto not_added;
 
   buf = gst_buffer_new_and_alloc (packet->bytes - offset - trim);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
 
   /* set delta flag for OGM content */
   if (delta_unit)
@@ -1772,7 +1771,8 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     gst_ogg_pad_mark_discont (pad);
     pad->last_ret = GST_FLOW_OK;
 
-    if (pad->map.is_skeleton || pad->added || GST_PAD_CAPS (pad) == NULL)
+    if (pad->map.is_skeleton || pad->added
+        || !gst_pad_has_current_caps (GST_PAD_CAST (pad)))
       continue;
 
     GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);

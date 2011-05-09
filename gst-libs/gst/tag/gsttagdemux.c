@@ -468,7 +468,6 @@ gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref,
 
     GST_BUFFER_OFFSET (buf) = out_offset;
     GST_BUFFER_OFFSET_END (buf) = out_offset + out_size;
-    gst_buffer_set_caps (buf, tagdemux->priv->src_caps);
   }
 
   return TRUE;
@@ -708,10 +707,6 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
           gst_tag_demux_send_tag_event (demux);
           demux->priv->send_tag_event = FALSE;
         }
-
-        /* Ensure the caps are set correctly */
-        outbuf = gst_buffer_make_writable (outbuf);
-        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (demux->priv->srcpad));
 
         GST_LOG_OBJECT (demux, "Pushing buffer %p", outbuf);
 
@@ -1327,8 +1322,6 @@ gst_tag_demux_read_range (GstTagDemux * demux,
 
     /* this should only happen in streaming mode */
     g_assert (*buffer != NULL);
-
-    gst_buffer_set_caps (*buffer, demux->priv->src_caps);
   }
 
   return ret;

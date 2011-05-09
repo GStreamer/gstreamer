@@ -499,8 +499,6 @@ static GstFlowReturn
 gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer,
     GstOggPadData * oggpad)
 {
-  GstCaps *caps;
-
   /* fix up OFFSET and OFFSET_END again */
   GST_BUFFER_OFFSET (buffer) = mux->offset;
   mux->offset += gst_buffer_get_size (buffer);
@@ -514,11 +512,6 @@ gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer,
     else
       mux->last_ts = run_time;
   }
-
-  caps = gst_pad_get_negotiated_caps (mux->srcpad);
-  gst_buffer_set_caps (buffer, caps);
-  if (caps)
-    gst_caps_unref (caps);
 
   return gst_pad_push (mux->srcpad, buffer);
 }
@@ -806,13 +799,15 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
           /* if we're not yet in data mode, ensure we're setup on the first packet */
           if (!pad->have_type) {
+            GstCaps *caps;
+
             /* Use headers in caps, if any; this will allow us to be resilient
              * to starting streams on the fly, and some streams (like VP8
              * at least) do not send headers packets, as other muxers don't
              * expect/need them. */
+            caps = gst_pad_get_current_caps (GST_PAD_CAST (pad));
             pad->have_type =
-                gst_ogg_stream_setup_map_from_caps_headers (&pad->map,
-                GST_BUFFER_CAPS (buf));
+                gst_ogg_stream_setup_map_from_caps_headers (&pad->map, caps);
 
             if (!pad->have_type) {
               /* fallback on the packet */
@@ -820,11 +815,13 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
             }
             if (!pad->have_type) {
               GST_ERROR_OBJECT (pad, "mapper didn't recognise input stream "
-                  "(pad caps: %" GST_PTR_FORMAT ")", GST_PAD_CAPS (pad));
+                  "(pad caps: %" GST_PTR_FORMAT ")", caps);
             } else {
               GST_DEBUG_OBJECT (pad, "caps detected: %" GST_PTR_FORMAT,
                   pad->map.caps);
             }
+            if (caps)
+              gst_caps_unref (caps);
           }
 
           if (pad->have_type)

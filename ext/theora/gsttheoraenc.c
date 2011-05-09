@@ -696,7 +696,6 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
   }
 
   gst_buffer_fill (buf, 0, packet->packet, packet->bytes);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (enc->srcpad));
   /* see ext/ogg/README; OFFSET_END takes "our" granulepos, OFFSET its
    * time representation */
   GST_BUFFER_OFFSET_END (buf) =
@@ -1208,9 +1207,6 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     caps = theora_set_header_on_caps (caps, buffers);
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (enc->srcpad, caps);
-
-    g_slist_foreach (buffers, (GFunc) gst_buffer_set_caps, caps);
-
     gst_caps_unref (caps);
 
     /* push out the header buffers */

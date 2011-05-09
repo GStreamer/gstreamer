@@ -49,24 +49,31 @@ gst_audio_frame_byte_size (GstPad * pad)
 
   int width = 0;
   int channels = 0;
-  const GstCaps *caps = NULL;
+  GstCaps *caps;
   GstStructure *structure;
 
   /* get caps of pad */
-  caps = GST_PAD_CAPS (pad);
+  caps = gst_pad_get_current_caps (pad);
 
-  if (caps == NULL) {
-    /* ERROR: could not get caps of pad */
-    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
-        GST_DEBUG_PAD_NAME (pad));
-    return 0;
-  }
+  if (caps == NULL)
+    goto no_caps;
 
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "channels", &channels);
+  gst_caps_unref (caps);
+
   return (width / 8) * channels;
+
+  /* ERRORS */
+no_caps:
+  {
+    /* ERROR: could not get caps of pad */
+    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
+        GST_DEBUG_PAD_NAME (pad));
+    return 0;
+  }
 }
 
 /**
@@ -113,34 +120,38 @@ gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
   int width = 0;
   int channels = 0;
   int rate = 0;
-
-  GstClockTime length;
-
-  const GstCaps *caps = NULL;
+  GstCaps *caps;
   GstStructure *structure;
 
   g_assert (GST_IS_BUFFER (buf));
+
   /* get caps of pad */
-  caps = GST_PAD_CAPS (pad);
-  if (caps == NULL) {
+  caps = gst_pad_get_current_caps (pad);
+  if (caps == NULL)
+    goto no_caps;
+
+  structure = gst_caps_get_structure (caps, 0);
+  bytes = gst_buffer_get_size (buf);
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_int (structure, "channels", &channels);
+  gst_structure_get_int (structure, "rate", &rate);
+  gst_caps_unref (caps);
+
+  g_assert (bytes != 0);
+  g_assert (width != 0);
+  g_assert (channels != 0);
+  g_assert (rate != 0);
+
+  return (bytes * 8 * GST_SECOND) / (rate * channels * width);
+
+  /* ERRORS */
+no_caps:
+  {
     /* ERROR: could not get caps of pad */
     g_warning ("gstaudio: could not get caps of pad %s:%s\n",
         GST_DEBUG_PAD_NAME (pad));
-    length = GST_CLOCK_TIME_NONE;
-  } else {
-    structure = gst_caps_get_structure (caps, 0);
-    bytes = gst_buffer_get_size (buf);
-    gst_structure_get_int (structure, "width", &width);
-    gst_structure_get_int (structure, "channels", &channels);
-    gst_structure_get_int (structure, "rate", &rate);
-
-    g_assert (bytes != 0);
-    g_assert (width != 0);
-    g_assert (channels != 0);
-    g_assert (rate != 0);
-    length = (bytes * 8 * GST_SECOND) / (rate * channels * width);
+    return GST_CLOCK_TIME_NONE;
   }
-  return length;
 }
 
 /**

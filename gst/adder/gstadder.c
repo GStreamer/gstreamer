@@ -220,6 +220,21 @@ gst_adder_sink_getcaps (GstPad * pad)
   return result;
 }
 
+typedef struct
+{
+  GstPad *pad;
+  GstCaps *caps;
+} IterData;
+
+static void
+setcapsfunc (const GValue * item, IterData * data)
+{
+  GstPad *otherpad = g_value_get_object (item);
+
+  if (otherpad != data->pad)
+    gst_pad_set_caps (data->pad, data->caps);
+}
+
 /* the first caps we receive on any of the sinkpads will define the caps for all
  * the other sinkpads because we can only mix streams with the same caps.
  */
@@ -227,28 +242,39 @@ static gboolean
 gst_adder_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstAdder *adder;
-  GList *pads;
   GstStructure *structure;
   const char *media_type;
+  GstIterator *it;
+  GstIteratorResult ires;
+  IterData idata;
+  gboolean done;
 
   adder = GST_ADDER (GST_PAD_PARENT (pad));
 
   GST_LOG_OBJECT (adder, "setting caps on pad %p,%s to %" GST_PTR_FORMAT, pad,
       GST_PAD_NAME (pad), caps);
 
+  it = gst_element_iterate_pads (GST_ELEMENT_CAST (adder));
+
   /* FIXME, see if the other pads can accept the format. Also lock the
    * format on the other pads to this new format. */
-  GST_OBJECT_LOCK (adder);
-  pads = GST_ELEMENT (adder)->pads;
-  while (pads) {
-    GstPad *otherpad = GST_PAD (pads->data);
+  idata.caps = caps;
+  idata.pad = pad;
 
-    if (otherpad != pad) {
-      gst_caps_replace (&GST_PAD_CAPS (otherpad), caps);
+  done = FALSE;
+  while (!done) {
+    ires = gst_iterator_foreach (it, (GstIteratorForeachFunction) setcapsfunc,
+        &idata);
+
+    switch (ires) {
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        break;
+      default:
+        done = TRUE;
+        break;
     }
-    pads = g_list_next (pads);
   }
-  GST_OBJECT_UNLOCK (adder);
 
   /* parse caps now */
   structure = gst_caps_get_structure (caps, 0);
@@ -1100,11 +1126,6 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
       GST_LOG_OBJECT (adder, "channel %p: preparing output buffer of %d bytes",
           collect_data, outsize);
-      /* make data and metadata writable, can simply return the inbuf when we
-       * are the only one referencing this buffer. If this is the last (and
-       * only) GAP buffer, it will automatically copy the GAP flag. */
-      outbuf = gst_buffer_make_writable (inbuf);
-      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (adder->srcpad));
 
       outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
     } else {

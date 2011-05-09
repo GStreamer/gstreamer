@@ -629,19 +629,16 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
   GstFlowReturn ret;
 
   /* we don't know an output format yet, pick one */
-  if (GST_PAD_CAPS (visual->srcpad) == NULL) {
+  if (!gst_pad_has_current_caps (visual->srcpad)) {
     if (!gst_vis_src_negotiate (visual))
       return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  GST_DEBUG_OBJECT (visual, "allocating output buffer with caps %"
-      GST_PTR_FORMAT, GST_PAD_CAPS (visual->srcpad));
+  GST_DEBUG_OBJECT (visual, "allocating output buffer");
 
   ret = gst_buffer_pool_acquire_buffer (visual->pool, outbuf, NULL);
   if (ret != GST_FLOW_OK)
     return ret;
-
-  gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (visual->srcpad));
 
   return GST_FLOW_OK;
 }
@@ -659,7 +656,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
   /* If we don't have an output format yet, preallocate a buffer to try and
    * set one */
-  if (GST_PAD_CAPS (visual->srcpad) == NULL) {
+  if (!gst_pad_has_current_caps (visual->srcpad)) {
     ret = get_buffer (visual, &outbuf);
     if (ret != GST_FLOW_OK) {
       gst_buffer_unref (buffer);

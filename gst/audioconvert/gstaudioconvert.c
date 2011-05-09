@@ -1070,10 +1070,6 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   gint samples;
   gpointer src, dst;
 
-  GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, base, "converting audio from %"
-      GST_PTR_FORMAT " to %" GST_PTR_FORMAT, GST_BUFFER_CAPS (inbuf),
-      GST_BUFFER_CAPS (outbuf));
-
   /* get amount of samples to convert. */
   samples = gst_buffer_get_size (inbuf) / this->ctx.in.unit_size;
 

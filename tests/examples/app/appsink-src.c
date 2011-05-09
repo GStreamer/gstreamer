@@ -36,10 +36,6 @@ on_new_buffer_from_source (GstElement * elt, ProgramData * data)
 
   gst_buffer_copy_into (app_buffer, buffer, GST_BUFFER_COPY_MEMORY, 0, size);
 
-  /* newer basesrc will set caps for use automatically but it does not really
-   * hurt to set it on the buffer again */
-  gst_buffer_set_caps (app_buffer, GST_BUFFER_CAPS (buffer));
-
   /* we don't need the appsink buffer anymore */
   gst_buffer_unref (buffer);
 

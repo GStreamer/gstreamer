@@ -2041,7 +2041,11 @@ shot_cb (GtkButton * button, gpointer data)
      * that it can only be an rgb buffer. The only thing we have not specified
      * on the caps is the height, which is dependant on the pixel-aspect-ratio
      * of the source material */
+#if 0
     caps = GST_BUFFER_CAPS (buffer);
+#endif
+    /* FIXME, need to get the caps of the buffer somehow */
+    caps = NULL;
     if (!caps) {
       g_warning ("could not get snapshot format\n");
       goto done;

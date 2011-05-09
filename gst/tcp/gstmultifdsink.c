@@ -1303,9 +1303,13 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
   gboolean send_streamheader = FALSE;
   GstStructure *s;
 
+#if 0
   /* before we queue the buffer, we check if we need to queue streamheader
    * buffers (because it's a new client, or because they changed) */
   caps = gst_buffer_get_caps (buffer);  /* cleaned up after streamheader */
+#else
+  caps = NULL;
+#endif
   if (!client->caps) {
     GST_DEBUG_OBJECT (sink,
         "[fd %5d] no previous caps for this client, send streamheader",
@@ -2476,13 +2480,16 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstMultiFdSink *sink;
   gboolean in_caps;
+#if 0
   GstCaps *bufcaps, *padcaps;
+#endif
 
   sink = GST_MULTI_FD_SINK (bsink);
 
   g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_MULTI_FD_SINK_OPEN),
       GST_FLOW_WRONG_STATE);
 
+#if 0
   /* since we check every buffer for streamheader caps, we need to make
    * sure every buffer has caps set */
   bufcaps = gst_buffer_get_caps (buf);
@@ -2491,10 +2498,12 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* make sure we have caps on the pad */
   if (!padcaps && !bufcaps)
     goto no_caps;
+#endif
 
   /* get IN_CAPS first, code below might mess with the flags */
   in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
+#if 0
   /* stamp the buffer with previous caps if no caps set */
   if (!bufcaps) {
     if (!gst_buffer_is_writable (buf)) {
@@ -2518,6 +2527,7 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     /* since we keep this buffer out of the scope of this method */
     gst_buffer_ref (buf);
   }
+#endif
 
   GST_LOG_OBJECT (sink, "received buffer %p, in_caps: %s, offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT
@@ -2563,12 +2573,14 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   return GST_FLOW_OK;
 
   /* ERRORS */
+#if 0
 no_caps:
   {
     GST_ELEMENT_ERROR (sink, CORE, NEGOTIATION, (NULL),
         ("Received first buffer without caps set"));
     return GST_FLOW_NOT_NEGOTIATED;
   }
+#endif
 }
 
 static void

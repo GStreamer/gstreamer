@@ -612,8 +612,9 @@ gst_tag_image_data_to_image_buffer (const guint8 * image_data,
         image_type, NULL);
   }
 
-  gst_buffer_set_caps (image, caps);
+  g_warning ("extra image data can't be set");
   gst_caps_unref (caps);
+
   return image;
 
 /* ERRORS */

@@ -275,8 +275,6 @@ gst_ssa_parse_push_line (GstSsaParse * parse, gchar * txt,
   GST_BUFFER_TIMESTAMP (buf) = start;
   GST_BUFFER_DURATION (buf) = duration;
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
-
   GST_LOG_OBJECT (parse, "Pushing buffer with timestamp %" GST_TIME_FORMAT
       " and duration %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
       GST_TIME_ARGS (duration));

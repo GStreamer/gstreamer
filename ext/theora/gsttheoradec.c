@@ -1122,8 +1122,6 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   if (G_UNLIKELY (result != GST_FLOW_OK))
     goto no_buffer;
 
-  gst_buffer_set_caps (*out, GST_PAD_CAPS (dec->srcpad));
-
   data = gst_buffer_map (*out, &size, NULL, GST_MAP_WRITE);
 
   /* FIXME, we can do things slightly more efficient when we know that

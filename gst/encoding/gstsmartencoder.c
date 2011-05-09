@@ -510,6 +510,7 @@ static gboolean
 setup_recoder_pipeline (GstSmartEncoder * smart_encoder)
 {
   GstPad *tmppad;
+  GstCaps *caps;
 
   /* Fast path */
   if (G_UNLIKELY (smart_encoder->encoder))
@@ -518,14 +519,18 @@ setup_recoder_pipeline (GstSmartEncoder * smart_encoder)
   GST_DEBUG ("Creating internal decoder and encoder");
 
   /* Create decoder/encoder */
-  smart_encoder->decoder = get_decoder (GST_PAD_CAPS (smart_encoder->sinkpad));
+  caps = gst_pad_get_current_caps (smart_encoder->sinkpad);
+  smart_encoder->decoder = get_decoder (caps);
   if (G_UNLIKELY (smart_encoder->decoder == NULL))
     goto no_decoder;
+  gst_caps_unref (caps);
   gst_element_set_bus (smart_encoder->decoder, GST_ELEMENT_BUS (smart_encoder));
 
-  smart_encoder->encoder = get_encoder (GST_PAD_CAPS (smart_encoder->sinkpad));
+  caps = gst_pad_get_current_caps (smart_encoder->sinkpad);
+  smart_encoder->encoder = get_encoder (caps);
   if (G_UNLIKELY (smart_encoder->encoder == NULL))
     goto no_encoder;
+  gst_caps_unref (caps);
   gst_element_set_bus (smart_encoder->encoder, GST_ELEMENT_BUS (smart_encoder));
 
   GST_DEBUG ("Creating internal pads");
@@ -536,8 +541,6 @@ setup_recoder_pipeline (GstSmartEncoder * smart_encoder)
   smart_encoder->internal_srcpad = gst_pad_new ("internal_src", GST_PAD_SRC);
   g_object_set_qdata ((GObject *) smart_encoder->internal_srcpad,
       INTERNAL_ELEMENT, smart_encoder);
-  gst_pad_set_caps (smart_encoder->internal_srcpad,
-      GST_PAD_CAPS (smart_encoder->sinkpad));
   gst_pad_set_active (smart_encoder->internal_srcpad, TRUE);
 
   /* Sink pad which will get the buffers from the encoder.
@@ -546,8 +549,6 @@ setup_recoder_pipeline (GstSmartEncoder * smart_encoder)
   smart_encoder->internal_sinkpad = gst_pad_new ("internal_sink", GST_PAD_SINK);
   g_object_set_qdata ((GObject *) smart_encoder->internal_sinkpad,
       INTERNAL_ELEMENT, smart_encoder);
-  gst_pad_set_caps (smart_encoder->internal_sinkpad,
-      GST_PAD_CAPS (smart_encoder->sinkpad));
   gst_pad_set_chain_function (smart_encoder->internal_sinkpad, internal_chain);
   gst_pad_set_active (smart_encoder->internal_sinkpad, TRUE);
 
@@ -575,15 +576,15 @@ setup_recoder_pipeline (GstSmartEncoder * smart_encoder)
 
 no_decoder:
   {
-    GST_WARNING ("Couldn't find a decoder for %" GST_PTR_FORMAT,
-        GST_PAD_CAPS (smart_encoder->sinkpad));
+    GST_WARNING ("Couldn't find a decoder for %" GST_PTR_FORMAT, caps);
+    gst_caps_unref (caps);
     return FALSE;
   }
 
 no_encoder:
   {
-    GST_WARNING ("Couldn't find an encoder for %" GST_PTR_FORMAT,
-        GST_PAD_CAPS (smart_encoder->sinkpad));
+    GST_WARNING ("Couldn't find an encoder for %" GST_PTR_FORMAT, caps);
+    gst_caps_unref (caps);
     return FALSE;
   }
 

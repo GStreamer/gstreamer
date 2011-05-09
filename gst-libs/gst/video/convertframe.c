@@ -233,6 +233,7 @@ link_failed:
 /**
  * gst_video_convert_frame:
  * @buf: a #GstBuffer
+ * @from_caps: the #GstCaps to convert from
  * @to_caps: the #GstCaps to convert to
  * @timeout: the maximum amount of time allowed for the processing.
  * @err: pointer to a #GError. Can be %NULL.
@@ -250,23 +251,21 @@ link_failed:
  *
  */
 GstBuffer *
-gst_video_convert_frame (GstBuffer * buf, const GstCaps * to_caps,
-    GstClockTime timeout, GError ** err)
+gst_video_convert_frame (GstBuffer * buf, GstCaps * from_caps,
+    const GstCaps * to_caps, GstClockTime timeout, GError ** err)
 {
   GstMessage *msg;
   GstBuffer *result = NULL;
   GError *error = NULL;
   GstBus *bus;
-  GstCaps *from_caps, *to_caps_copy = NULL;
+  GstCaps *to_caps_copy = NULL;
   GstFlowReturn ret;
   GstElement *pipeline, *src, *sink;
   guint i, n;
 
   g_return_val_if_fail (buf != NULL, NULL);
   g_return_val_if_fail (to_caps != NULL, NULL);
-  g_return_val_if_fail (GST_BUFFER_CAPS (buf) != NULL, NULL);
-
-  from_caps = GST_BUFFER_CAPS (buf);
+  g_return_val_if_fail (from_caps != NULL, NULL);
 
   to_caps_copy = gst_caps_new_empty ();
   n = gst_caps_get_size (to_caps);
@@ -597,14 +596,15 @@ done:
  *
  */
 void
-gst_video_convert_frame_async (GstBuffer * buf, const GstCaps * to_caps,
-    GstClockTime timeout, GstVideoConvertFrameCallback callback,
-    gpointer user_data, GDestroyNotify destroy_notify)
+gst_video_convert_frame_async (GstBuffer * buf, GstCaps * from_caps,
+    const GstCaps * to_caps, GstClockTime timeout,
+    GstVideoConvertFrameCallback callback, gpointer user_data,
+    GDestroyNotify destroy_notify)
 {
   GMainContext *context = NULL;
   GError *error = NULL;
   GstBus *bus;
-  GstCaps *from_caps, *to_caps_copy = NULL;
+  GstCaps *to_caps_copy = NULL;
   GstElement *pipeline, *src, *sink;
   guint i, n;
   GSource *source;
@@ -612,15 +612,13 @@ gst_video_convert_frame_async (GstBuffer * buf, const GstCaps * to_caps,
 
   g_return_if_fail (buf != NULL);
   g_return_if_fail (to_caps != NULL);
-  g_return_if_fail (GST_BUFFER_CAPS (buf) != NULL);
+  g_return_if_fail (from_caps != NULL);
   g_return_if_fail (callback != NULL);
 
   context = g_main_context_get_thread_default ();
 
   if (!context)
     context = g_main_context_default ();
-
-  from_caps = GST_BUFFER_CAPS (buf);
 
   to_caps_copy = gst_caps_new_empty ();
   n = gst_caps_get_size (to_caps);

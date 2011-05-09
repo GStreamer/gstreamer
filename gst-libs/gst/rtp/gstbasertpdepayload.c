@@ -392,22 +392,14 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
 not_negotiated:
   {
     /* this is not fatal but should be filtered earlier */
-    if (GST_BUFFER_CAPS (in) == NULL) {
-      GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION,
-          ("No RTP format was negotiated."),
-          ("Input buffers need to have RTP caps set on them. This is usually "
-              "achieved by setting the 'caps' property of the upstream source "
-              "element (often udpsrc or appsrc), or by putting a capsfilter "
-              "element before the depayloader and setting the 'caps' property "
-              "on that. Also see http://cgit.freedesktop.org/gstreamer/"
-              "gst-plugins-good/tree/gst/rtp/README"));
-    } else {
-      GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION,
-          ("No RTP format was negotiated."),
-          ("RTP caps on input buffer were rejected, most likely because they "
-              "were incomplete or contained wrong values. Check the debug log "
-              "for more information."));
-    }
+    GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION,
+        ("No RTP format was negotiated."),
+        ("Input buffers need to have RTP caps set on them. This is usually "
+            "achieved by setting the 'caps' property of the upstream source "
+            "element (often udpsrc or appsrc), or by putting a capsfilter "
+            "element before the depayloader and setting the 'caps' property "
+            "on that. Also see http://cgit.freedesktop.org/gstreamer/"
+            "gst-plugins-good/tree/gst/rtp/README"));
     gst_buffer_unref (in);
     return GST_FLOW_NOT_NEGOTIATED;
   }
@@ -550,7 +542,6 @@ typedef struct
 {
   GstBaseRTPDepayload *depayload;
   GstBaseRTPDepayloadClass *bclass;
-  GstCaps *caps;
   gboolean do_ts;
   gboolean rtptime;
 } HeaderData;
@@ -561,7 +552,6 @@ set_headers (GstBuffer ** buffer, guint idx, HeaderData * data)
   GstBaseRTPDepayload *depayload = data->depayload;
 
   *buffer = gst_buffer_make_writable (*buffer);
-  gst_buffer_set_caps (*buffer, data->caps);
 
   /* set the timestamp if we must and can */
   if (data->bclass->set_gst_timestamp && data->do_ts)
@@ -583,7 +573,6 @@ gst_base_rtp_depayload_prepare_push (GstBaseRTPDepayload * filter,
   HeaderData data;
 
   data.depayload = filter;
-  data.caps = GST_PAD_CAPS (filter->srcpad);
   data.rtptime = rtptime;
   data.do_ts = do_ts;
   data.bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);

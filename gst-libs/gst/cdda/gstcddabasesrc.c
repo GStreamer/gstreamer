@@ -1613,10 +1613,6 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     return GST_FLOW_ERROR;
   }
 
-  if (GST_BUFFER_CAPS (buf) == NULL) {
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
-  }
-
   format = GST_FORMAT_TIME;
   if (gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &qry_position)) {
     gint64 next_ts = 0;

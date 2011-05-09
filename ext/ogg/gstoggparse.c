@@ -604,9 +604,6 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               GstOggStream *stream = (GstOggStream *) l->data;
               GstBuffer *buf = GST_BUFFER (stream->headers->data);
 
-              buf = gst_buffer_make_writable (buf);
-              gst_buffer_set_caps (buf, caps);
-
               result = gst_pad_push (ogg->srcpad, buf);
               if (result != GST_FLOW_OK)
                 return result;
@@ -618,9 +615,6 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               /* pushed the first one for each stream already, now do 2-N */
               for (j = stream->headers->next; j != NULL; j = j->next) {
                 GstBuffer *buf = GST_BUFFER (j->data);
-
-                buf = gst_buffer_make_writable (buf);
-                gst_buffer_set_caps (buf, caps);
 
                 result = gst_pad_push (ogg->srcpad, buf);
                 if (result != GST_FLOW_OK)
@@ -648,10 +642,8 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
                   g_list_length (stream->unknown_pages) + 1);
 
               for (k = stream->unknown_pages; k != NULL; k = k->next) {
-                GstBuffer *buf;
+                GstBuffer *buf = GST_BUFFER (k->data);
 
-                buf = gst_buffer_make_writable (GST_BUFFER (k->data));
-                gst_buffer_set_caps (buf, caps);
                 result = gst_pad_push (ogg->srcpad, buf);
                 if (result != GST_FLOW_OK)
                   return result;
@@ -671,7 +663,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               GstBuffer *buf = stream->stored_buffers->data;
 
               buf = gst_buffer_make_writable (buf);
-              gst_buffer_set_caps (buf, ogg->caps);
+
               GST_BUFFER_TIMESTAMP (buf) = buffertimestamp;
               if (!keyframe) {
                 GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -689,7 +681,6 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             }
 
             pagebuffer = gst_buffer_make_writable (pagebuffer);
-            gst_buffer_set_caps (pagebuffer, ogg->caps);
             if (!keyframe) {
               GST_BUFFER_FLAG_SET (pagebuffer, GST_BUFFER_FLAG_DELTA_UNIT);
             } else {

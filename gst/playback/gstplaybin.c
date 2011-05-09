@@ -784,6 +784,7 @@ handoff (GstElement * identity, GstBuffer * frame, gpointer data)
 {
   GstPlayBin *play_bin = GST_PLAY_BIN (data);
 
+#if 0
   /* applications need to know the buffer caps,
    * make sure they are always set on the frame */
   if (GST_BUFFER_CAPS (frame) == NULL) {
@@ -794,6 +795,7 @@ handoff (GstElement * identity, GstBuffer * frame, gpointer data)
       gst_object_unref (pad);
     }
   }
+#endif
 
   gst_buffer_replace (&play_bin->frame, frame);
 }

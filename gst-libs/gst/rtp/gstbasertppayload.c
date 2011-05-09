@@ -708,7 +708,6 @@ typedef struct
   guint32 ssrc;
   guint16 seqnum;
   guint8 pt;
-  GstCaps *caps;
   GstClockTime timestamp;
   guint64 offset;
   guint32 rtptime;
@@ -740,7 +739,6 @@ set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
   gst_rtp_buffer_set_timestamp (&rtp, data->rtptime);
   gst_rtp_buffer_unmap (&rtp);
 
-  gst_buffer_set_caps (*buffer, data->caps);
   /* increment the seqnum for each buffer */
   data->seqnum++;
 
@@ -770,7 +768,6 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
   data.seqnum = payload->seqnum;
   data.ssrc = payload->current_ssrc;
   data.pt = payload->pt;
-  data.caps = GST_PAD_CAPS (payload->srcpad);
 
   /* find the first buffer with a timestamp */
   if (is_list) {

@@ -840,8 +840,6 @@ gst_vorbis_enc_buffer_from_packet (GstVorbisEnc * vorbisenc,
     vorbisenc->next_discont = FALSE;
   }
 
-  gst_buffer_set_caps (outbuf, vorbisenc->srccaps);
-
   GST_LOG_OBJECT (vorbisenc, "encoded buffer of %d bytes",
       gst_buffer_get_size (outbuf));
   return outbuf;
@@ -861,8 +859,6 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
   GST_BUFFER_OFFSET_END (outbuf) = 0;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
-
-  gst_buffer_set_caps (outbuf, vorbisenc->srccaps);
 
   GST_DEBUG ("created header packet buffer, %d bytes",
       gst_buffer_get_size (outbuf));
@@ -1098,10 +1094,6 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
     /* negotiate with these caps */
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (vorbisenc->srcpad, caps);
-
-    gst_buffer_set_caps (buf1, caps);
-    gst_buffer_set_caps (buf2, caps);
-    gst_buffer_set_caps (buf3, caps);
 
     /* push out buffers */
     /* push_buffer takes the reference even for failure */

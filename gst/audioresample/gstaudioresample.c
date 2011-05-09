@@ -821,8 +821,6 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
     return;
 
   outbuf = gst_buffer_new_and_alloc (outsize);
-  gst_buffer_set_caps (outbuf,
-      GST_PAD_CAPS (GST_BASE_TRANSFORM_SRC_PAD (resample)));
 
   data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
 

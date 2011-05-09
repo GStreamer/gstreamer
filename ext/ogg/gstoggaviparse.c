@@ -261,7 +261,6 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
 
     /* now output the raw vorbis header packets */
     out = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offs, sizes[i]);
-    gst_buffer_set_caps (out, outcaps);
     gst_pad_push (ogg->srcpad, out);
 
     offs += sizes[i];

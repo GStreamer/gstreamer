@@ -1484,7 +1484,6 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
 
       /* +1 for terminating NUL character */
       buf = gst_buffer_new_and_alloc (subtitle_len + 1);
-      gst_buffer_set_caps (buf, GST_PAD_CAPS (self->srcpad));
 
       /* copy terminating NUL character as well */
       gst_buffer_fill (buf, 0, subtitle, subtitle_len + 1);

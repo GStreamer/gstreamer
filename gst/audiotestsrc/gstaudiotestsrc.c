@@ -1092,7 +1092,6 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   bytes = src->generate_samples_per_buffer * src->sample_size * src->channels;
 
   buf = gst_buffer_new_and_alloc (bytes);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (basesrc->srcpad));
 
   next_byte = src->next_byte + (src->reverse ? (-bytes) : bytes);
   next_time = gst_util_uint64_scale_int (next_sample, GST_SECOND,

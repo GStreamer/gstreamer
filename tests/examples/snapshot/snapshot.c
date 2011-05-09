@@ -118,7 +118,11 @@ main (int argc, char *argv[])
      * that it can only be an rgb buffer. The only thing we have not specified
      * on the caps is the height, which is dependant on the pixel-aspect-ratio
      * of the source material */
+#if 0
     caps = GST_BUFFER_CAPS (buffer);
+#endif
+    /* FIXME, get buffer caps somehow */
+    caps = NULL;
     if (!caps) {
       g_print ("could not get snapshot format\n");
       exit (-1);

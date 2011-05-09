@@ -498,8 +498,6 @@ gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate)
   /* adapt for looping, bring back to time in current segment. */
   GST_BUFFER_TIMESTAMP (outbuf) = push_ts - videorate->segment.accum;
 
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (videorate->srcpad));
-
   GST_LOG_OBJECT (videorate,
       "old is best, dup, pushing buffer outgoing ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (push_ts));

@@ -232,14 +232,8 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   vorbis_parse_drain_event_queue (parse);
 
   /* push out buffers, ignoring return value... */
-  outbuf1 = gst_buffer_make_writable (outbuf1);
-  gst_buffer_set_caps (outbuf1, GST_PAD_CAPS (parse->srcpad));
   gst_pad_push (parse->srcpad, outbuf1);
-  outbuf2 = gst_buffer_make_writable (outbuf2);
-  gst_buffer_set_caps (outbuf2, GST_PAD_CAPS (parse->srcpad));
   gst_pad_push (parse->srcpad, outbuf2);
-  outbuf3 = gst_buffer_make_writable (outbuf3);
-  gst_buffer_set_caps (outbuf3, GST_PAD_CAPS (parse->srcpad));
   gst_pad_push (parse->srcpad, outbuf3);
 
   g_list_free (parse->streamheader);
@@ -277,8 +271,6 @@ vorbis_parse_push_buffer (GstVorbisParse * parse, GstBuffer * buf,
   GST_BUFFER_OFFSET (buf) = granulepos * GST_SECOND / parse->sample_rate;
   GST_BUFFER_TIMESTAMP (buf) =
       GST_BUFFER_OFFSET (buf) - GST_BUFFER_DURATION (buf);
-
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
 
   return gst_pad_push (parse->srcpad, buf);
 }

@@ -551,12 +551,15 @@ static GList *
 gst_tag_to_metadata_block_picture (const gchar * tag,
     const GValue * image_value)
 {
+#if 0
   gchar *comment_data, *data_result;
   const gchar *mime_type;
   guint mime_type_len;
   GstStructure *mime_struct;
   GstBuffer *buffer;
+#endif
   GList *l = NULL;
+#if 0
   guint8 *data;
   gsize size;
   GstByteWriter writer;
@@ -564,9 +567,14 @@ gst_tag_to_metadata_block_picture (const gchar * tag,
   gint width = 0, height = 0;
   guint8 *metadata_block;
   guint metadata_block_len;
+#endif
 
   g_return_val_if_fail (image_value != NULL, NULL);
 
+  /* FIXME, no more buffer caps */
+  g_assert_not_reached ();
+
+#if 0
   buffer = gst_value_get_buffer (image_value);
   g_return_val_if_fail (gst_caps_is_fixed (buffer->caps), NULL);
   mime_struct = gst_caps_get_structure (buffer->caps, 0);
@@ -621,6 +629,7 @@ gst_tag_to_metadata_block_picture (const gchar * tag,
   g_free (comment_data);
 
   l = g_list_append (l, data_result);
+#endif
 
   return l;
 }

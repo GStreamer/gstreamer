@@ -622,16 +622,19 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
     goto cannot_decode;
 
   if (ogm->srcpad) {
-    GstCaps *current_caps = GST_PAD_CAPS (ogm->srcpad);
+    GstCaps *current_caps = gst_pad_get_current_caps (ogm->srcpad);
 
-    if (current_caps && caps && !gst_caps_is_equal (current_caps, caps)) {
-      GST_WARNING_OBJECT (ogm, "Already an existing pad %s:%s",
-          GST_DEBUG_PAD_NAME (ogm->srcpad));
-      gst_pad_set_active (ogm->srcpad, FALSE);
-      gst_element_remove_pad (GST_ELEMENT (ogm), ogm->srcpad);
-      ogm->srcpad = NULL;
-    } else {
-      GST_DEBUG_OBJECT (ogm, "Existing pad has the same caps, do nothing");
+    if (current_caps) {
+      if (caps && !gst_caps_is_equal (current_caps, caps)) {
+        GST_WARNING_OBJECT (ogm, "Already an existing pad %s:%s",
+            GST_DEBUG_PAD_NAME (ogm->srcpad));
+        gst_pad_set_active (ogm->srcpad, FALSE);
+        gst_element_remove_pad (GST_ELEMENT (ogm), ogm->srcpad);
+        ogm->srcpad = NULL;
+      } else {
+        GST_DEBUG_OBJECT (ogm, "Existing pad has the same caps, do nothing");
+      }
+      gst_caps_unref (current_caps);
     }
   }
 
@@ -640,8 +643,8 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
 
     ogm->srcpad = gst_pad_new_from_template (ogm->srcpadtempl, "src");
     gst_pad_use_fixed_caps (ogm->srcpad);
-    gst_pad_set_caps (ogm->srcpad, caps);
     gst_pad_set_active (ogm->srcpad, TRUE);
+    gst_pad_set_caps (ogm->srcpad, caps);
     gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
     GST_INFO_OBJECT (ogm, "Added pad %s:%s with caps %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (ogm->srcpad), caps);
@@ -714,8 +717,6 @@ gst_ogm_parse_comment_packet (GstOgmParse * ogm, GstBuffer * buf)
     /* do not push packet downstream, just let parent unref it */
     ret = GST_FLOW_OK;
   } else {
-    buf = gst_buffer_copy (buf);
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (ogm->srcpad));
     ret = gst_pad_push (ogm->srcpad, buf);
   }
 
@@ -820,7 +821,6 @@ gst_ogm_parse_data_packet (GstOgmParse * ogm, GstBuffer * buf,
   }
 
   if (ogm->srcpad) {
-    gst_buffer_set_caps (sbuf, GST_PAD_CAPS (ogm->srcpad));
     GST_LOG_OBJECT (ogm, "Pushing buffer with ts=%" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (sbuf)));
     ret = gst_pad_push (ogm->srcpad, sbuf);

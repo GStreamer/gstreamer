@@ -197,8 +197,6 @@ gst_tcp_client_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (*outbuf)),
         GST_BUFFER_OFFSET (*outbuf), GST_BUFFER_OFFSET_END (*outbuf));
-
-    gst_buffer_set_caps (*outbuf, src->caps);
   }
 
   return ret;

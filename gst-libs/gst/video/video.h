@@ -488,11 +488,11 @@ gboolean gst_video_format_convert (GstVideoFormat format, int width, int height,
 GstEvent *gst_video_event_new_still_frame (gboolean in_still);
 gboolean gst_video_event_parse_still_frame (GstEvent *event, gboolean *in_still);
 
-GstBuffer *gst_video_convert_frame(GstBuffer *buf, const GstCaps *to_caps,
+GstBuffer *gst_video_convert_frame(GstBuffer *buf, GstCaps *from_caps, const GstCaps *to_caps,
 				   GstClockTime timeout, GError **error);
 
 typedef void (*GstVideoConvertFrameCallback) (GstBuffer *buf, GError *error, gpointer user_data);
-void gst_video_convert_frame_async(GstBuffer *buf, const GstCaps *to_caps,
+void gst_video_convert_frame_async(GstBuffer *buf, GstCaps *from_caps, const GstCaps *to_caps,
 				   GstClockTime timeout, GstVideoConvertFrameCallback callback,
                                    gpointer user_data, GDestroyNotify destroy_notify);
 

@@ -364,8 +364,6 @@ theora_parse_push_headers (GstTheoraParse * parse)
     GstBuffer *buf;
 
     if ((buf = parse->streamheader[i])) {
-      buf = gst_buffer_make_writable (buf);
-      gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
       gst_pad_push (parse->srcpad, buf);
       parse->streamheader[i] = NULL;
     }
@@ -497,8 +495,6 @@ theora_parse_push_buffer (GstTheoraParse * parse, GstBuffer * buf,
   GST_BUFFER_OFFSET (buf) = this_time;
   GST_BUFFER_TIMESTAMP (buf) = this_time;
   GST_BUFFER_DURATION (buf) = next_time - this_time;
-
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
 
   if (parse->times)
     theora_parse_munge_granulepos (parse, buf, keyframe, frame);
