@@ -145,6 +145,7 @@ GES-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libges-@GST_MAJORMINOR@.la
 		--pkg gstreamer-@GST_MAJORMINOR@ \
 		--pkg gstreamer-pbutils-@GST_MAJORMINOR@ \
 		--pkg-export ges-@GST_MAJORMINOR@ \
+		--add-init-section="ges_init(NULL, NULL);" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
