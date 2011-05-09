@@ -170,6 +170,8 @@ struct _GstDecodeBin
   GList *blocked_pads;          /* pads that have set to block */
 
   gboolean expose_allstreams;   /* Whether to expose unknow type streams or not */
+
+  gboolean upstream_seekable;   /* if upstream is seekable */
 };
 
 struct _GstDecodeBinClass
@@ -216,9 +218,10 @@ enum
 
 /* automatic sizes, while prerolling we buffer up to 2MB, we ignore time
  * and buffers in this case. */
-#define AUTO_PREROLL_SIZE_BYTES     2 * 1024 * 1024
-#define AUTO_PREROLL_SIZE_BUFFERS   0
-#define AUTO_PREROLL_SIZE_TIME      0
+#define AUTO_PREROLL_SIZE_BYTES                  2 * 1024 * 1024
+#define AUTO_PREROLL_SIZE_BUFFERS                0
+#define AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME      0
+#define AUTO_PREROLL_SEEKABLE_SIZE_TIME          10 * GST_SECOND
 
 /* whan playing, keep a max of 2MB of data but try to keep the number of buffers
  * as low as possible (try to aim for 5 buffers) */
@@ -2045,6 +2048,48 @@ beach:
   return;
 }
 
+/* check_upstream_seekable:
+ *
+ * Check if upstream is seekable.
+ */
+static void
+check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad)
+{
+  GstQuery *query;
+  gint64 start = -1, stop = -1;
+
+  dbin->upstream_seekable = FALSE;
+
+  query = gst_query_new_seeking (GST_FORMAT_BYTES);
+  if (!gst_pad_peer_query (pad, query)) {
+    GST_DEBUG_OBJECT (dbin, "seeking query failed");
+    gst_query_unref (query);
+    return;
+  }
+
+  gst_query_parse_seeking (query, NULL, &dbin->upstream_seekable,
+      &start, &stop);
+
+  gst_query_unref (query);
+
+  /* try harder to query upstream size if we didn't get it the first time */
+  if (dbin->upstream_seekable && stop == -1) {
+    GstFormat fmt = GST_FORMAT_BYTES;
+
+    GST_DEBUG_OBJECT (dbin, "doing duration query to fix up unset stop");
+    gst_pad_query_peer_duration (pad, &fmt, &stop);
+  }
+
+  /* if upstream doesn't know the size, it's likely that it's not seekable in
+   * practice even if it technically may be seekable */
+  if (dbin->upstream_seekable && (start != 0 || stop <= start)) {
+    GST_DEBUG_OBJECT (dbin, "seekable but unknown start/stop -> disable");
+    dbin->upstream_seekable = FALSE;
+  }
+
+  GST_DEBUG_OBJECT (dbin, "upstream seekable: %d", dbin->upstream_seekable);
+}
+
 static void
 type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin)
@@ -2072,6 +2117,10 @@ type_found (GstElement * typefind, guint probability,
 
   pad = gst_element_get_static_pad (typefind, "src");
   sink_pad = gst_element_get_static_pad (typefind, "sink");
+
+  /* if upstream is seekable we can safely set a limit in time to the queues so
+   * that streams at low bitrates can preroll */
+  check_upstream_seekable (decode_bin, sink_pad);
 
   /* need some lock here to prevent race with shutdown state change
    * which might yank away e.g. decode_chain while building stuff here.
@@ -2656,7 +2705,8 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
     if ((max_buffers = dbin->max_size_buffers) == 0)
       max_buffers = AUTO_PREROLL_SIZE_BUFFERS;
     if ((max_time = dbin->max_size_time) == 0)
-      max_time = AUTO_PREROLL_SIZE_TIME;
+      max_time = dbin->upstream_seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
+          AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME;
   } else {
     /* update runtime limits. At runtime, we try to keep the amount of buffers
      * in the queues as low as possible (but at least 5 buffers). */
