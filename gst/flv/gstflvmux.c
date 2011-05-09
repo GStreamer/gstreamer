@@ -73,7 +73,7 @@ static GstStaticPadTemplate audiosink_templ = GST_STATIC_PAD_TEMPLATE ("audio",
     GST_STATIC_CAPS
     ("audio/x-adpcm, layout = (string) swf, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/mpeg, mpegversion = (int) 1, layer = (int) 3, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 22050, 44100 }, parsed = (boolean) TRUE; "
-        "audio/mpeg, mpegversion = (int) 4, framed = (boolean) TRUE; "
+        "audio/mpeg, mpegversion = (int) { 2, 4 }, framed = (boolean) TRUE; "
         "audio/x-nellymoser, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 16000, 22050, 44100 }; "
         "audio/x-raw-int, endianness = (int) LITTLE_ENDIAN, channels = (int) { 1, 2 }, width = (int) 8, depth = (int) 8, rate = (int) { 5512, 11025, 22050, 44100 }, signed = (boolean) FALSE; "
         "audio/x-raw-int, endianness = (int) LITTLE_ENDIAN, channels = (int) { 1, 2 }, width = (int) 16, depth = (int) 16, rate = (int) { 5512, 11025, 22050, 44100 }, signed = (boolean) TRUE; "
@@ -361,7 +361,7 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         } else {
           ret = FALSE;
         }
-      } else if (mpegversion == 4) {
+      } else if (mpegversion == 4 || mpegversion == 2) {
         cpad->audio_codec = 10;
       } else {
         ret = FALSE;
