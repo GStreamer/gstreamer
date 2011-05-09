@@ -675,7 +675,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      ret = gst_pad_push_event (dec->srcpad, event);
+      ret = gst_pad_event_default (pad, event);
       break;
   }
 done:
