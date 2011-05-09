@@ -751,7 +751,7 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
  * Note: If many objects match, then the one with the highest priority will be
  * returned.
  *
- * Returns: (transfer full): The #GESTrackObject used by @track, else #NULL.
+ * Returns: (transfer full): The #GESTrackObject used by @track, else %NULL.
  * Unref after usage.
  */
 
@@ -790,7 +790,7 @@ ges_timeline_object_find_track_object (GESTimelineObject * object,
  * Get the #GESTimelineLayer to which this object belongs.
  *
  * Returns: (transfer full): The #GESTimelineLayer where this @object is being
- * used, or #NULL if it is not used on any layer. The caller should unref it
+ * used, or %NULL if it is not used on any layer. The caller should unref it
  * usage.
  */
 GESTimelineLayer *

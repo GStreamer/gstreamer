@@ -932,7 +932,7 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
  * Search the #GESTrack corresponding to the given @timeline's @pad.
  *
  * Returns: (transfer none): The corresponding #GESTrack if it is found,
- * or #NULL if there is an error.
+ * or %NULL if there is an error.
  */
 
 GESTrack *
