@@ -1666,6 +1666,7 @@ GST_START_TEST (test_raw_compressed_audio_stream_demuxer_manual_sink)
 
 GST_END_TEST;
 
+#if 0
 typedef struct
 {
   GstElement *playbin;
@@ -2469,7 +2470,7 @@ GST_START_TEST
 }
 
 GST_END_TEST;
-
+#endif
 #endif
 
 static Suite *
@@ -2502,6 +2503,9 @@ playbin2_compressed_suite (void)
   tcase_add_test (tc_chain,
       test_raw_compressed_video_stream_demuxer_manual_sink);
 
+  /* These tests need something like the stream-activate event
+   * and are racy otherwise */
+#if 0
   tcase_add_test (tc_chain,
       test_raw_raw_audio_stream_demuxer_switch_manual_sink);
   tcase_add_test (tc_chain,
@@ -2518,7 +2522,7 @@ playbin2_compressed_suite (void)
       test_compressed_raw_video_stream_demuxer_switch_manual_sink);
   tcase_add_test (tc_chain,
       test_compressed_compressed_video_stream_demuxer_switch_manual_sink);
-
+#endif
 #endif
 
   return s;
