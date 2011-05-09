@@ -53,27 +53,6 @@ GST_START_TEST (test_from_string)
 
 GST_END_TEST;
 
-GST_START_TEST (test_buffer)
-{
-  GstCaps *c1;
-  GstBuffer *buffer;
-
-  buffer = gst_buffer_new_and_alloc (1000);
-  c1 = gst_caps_new_simple ("audio/x-raw-int",
-      "buffer", GST_TYPE_BUFFER, buffer, NULL);
-
-  GST_DEBUG ("caps: %" GST_PTR_FORMAT, c1);
-  gst_buffer_unref (buffer);
-
-  buffer = gst_buffer_new_and_alloc (1000);
-  gst_buffer_set_caps (buffer, c1);     /* doesn't give away our c1 ref */
-
-  gst_caps_unref (c1);
-  gst_buffer_unref (buffer);    /* Should now drop both references */
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_double_append)
 {
   GstStructure *s1;
@@ -927,7 +906,6 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_from_string);
   tcase_add_test (tc_chain, test_double_append);
   tcase_add_test (tc_chain, test_mutability);
-  tcase_add_test (tc_chain, test_buffer);
   tcase_add_test (tc_chain, test_static_caps);
   tcase_add_test (tc_chain, test_simplify);
   tcase_add_test (tc_chain, test_truncate);

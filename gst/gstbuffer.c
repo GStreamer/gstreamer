@@ -305,11 +305,6 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_NONE;
     }
   }
-#if 0
-  if (flags & GST_BUFFER_COPY_CAPS) {
-    gst_caps_replace (&GST_BUFFER_CAPS (dest), GST_BUFFER_CAPS (src));
-  }
-#endif
 
   if (flags & GST_BUFFER_COPY_MEMORY) {
     GstMemory *mem;
@@ -403,10 +398,6 @@ _gst_buffer_free (GstBuffer * buffer)
 
   GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
 
-#if 0
-  gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
-#endif
-
   /* free metadata */
   for (walk = GST_BUFFER_META (buffer); walk; walk = next) {
     GstMeta *meta = &walk->meta;
@@ -447,9 +438,6 @@ gst_buffer_init (GstBufferImpl * buffer, gsize size)
       (GstMiniObjectFreeFunction) _gst_buffer_free;
 
   GST_BUFFER (buffer)->pool = NULL;
-#if 0
-  GST_BUFFER_CAPS (buffer) = NULL;
-#endif
   GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
@@ -1059,61 +1047,6 @@ gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
     gst_memory_unmap (mem, data, ssize);
   }
   return res;
-}
-
-/**
- * gst_buffer_get_caps:
- * @buffer: a #GstBuffer.
- *
- * Gets the media type of the buffer. This can be NULL if there
- * is no media type attached to this buffer.
- *
- * Returns: (transfer full): a reference to the #GstCaps. unref after usage.
- * Returns NULL if there were no caps on this buffer.
- */
-/* this is not made atomic because if the buffer were reffed from multiple
- * threads, it would have a refcount > 2 and thus be immutable.
- */
-GstCaps *
-gst_buffer_get_caps (GstBuffer * buffer)
-{
-  GstCaps *ret;
-
-  g_return_val_if_fail (buffer != NULL, NULL);
-
-  ret = GST_BUFFER_CAPS (buffer);
-
-  if (ret)
-    gst_caps_ref (ret);
-
-  return ret;
-}
-
-/**
- * gst_buffer_set_caps:
- * @buffer: a #GstBuffer.
- * @caps: (transfer none): a #GstCaps.
- *
- * Sets the media type on the buffer. The refcount of the caps will
- * be increased and any previous caps on the buffer will be
- * unreffed.
- */
-/* this is not made atomic because if the buffer were reffed from multiple
- * threads, it would have a refcount > 2 and thus be immutable.
- */
-void
-gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
-{
-  g_return_if_fail (buffer != NULL);
-  g_return_if_fail (caps == NULL || GST_CAPS_IS_SIMPLE (caps));
-
-#if GST_VERSION_NANO == 1
-  /* we enable this extra debugging in git versions only for now */
-  g_warn_if_fail (gst_buffer_is_writable (buffer));
-  /* FIXME: would be nice to also check if caps are fixed here, but expensive */
-#endif
-
-  gst_caps_replace (&GST_BUFFER_CAPS (buffer), caps);
 }
 
 /**

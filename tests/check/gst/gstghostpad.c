@@ -697,7 +697,7 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
 
   caps1 = gst_caps_from_string ("meh");
   fail_unless (gst_pad_set_caps (src, caps1));
-  caps2 = GST_PAD_CAPS (ghost);
+  caps2 = gst_pad_get_current_caps (ghost);
   fail_unless (gst_caps_is_equal (caps1, caps2));
   fail_unless_equals_int (notify_counter, 1);
 
@@ -716,7 +716,7 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
 
   caps1 = gst_caps_from_string ("meh");
   fail_unless (gst_pad_set_caps (ghost, caps1));
-  caps2 = GST_PAD_CAPS (src);
+  caps2 = gst_pad_get_current_caps (src);
   fail_unless (caps2 == NULL);
   fail_unless_equals_int (notify_counter, 1);
 
@@ -734,7 +734,7 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
 
   caps1 = gst_caps_from_string ("muh");
   fail_unless (gst_pad_set_caps (ghost, caps1));
-  caps2 = GST_PAD_CAPS (sink);
+  caps2 = gst_pad_get_current_caps (sink);
   fail_unless (gst_caps_is_equal (caps1, caps2));
   fail_unless_equals_int (notify_counter, 1);
 
@@ -751,7 +751,7 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
 
   caps1 = gst_caps_from_string ("muh");
   fail_unless (gst_pad_set_caps (sink, caps1));
-  caps2 = GST_PAD_CAPS (ghost);
+  caps2 = gst_pad_get_current_caps (ghost);
   fail_unless (caps2 == NULL);
   fail_unless_equals_int (notify_counter, 0);
 

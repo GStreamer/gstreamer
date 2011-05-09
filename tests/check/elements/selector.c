@@ -208,8 +208,6 @@ push_switched_buffers (GList * input_pads,
   /* setup dummy buffer */
   caps = gst_caps_from_string ("application/x-unknown");
   buf = gst_buffer_new_and_alloc (1);
-  gst_buffer_set_caps (buf, caps);
-  gst_caps_unref (caps);
 
   while (l != NULL) {
     /* set selector pad */
@@ -226,6 +224,7 @@ push_switched_buffers (GList * input_pads,
 
   /* cleanup buffer */
   gst_buffer_unref (buf);
+  gst_caps_unref (caps);
 }
 
 /* Create output-selector with given number of src pads and switch

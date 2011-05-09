@@ -87,8 +87,10 @@ GST_START_TEST (basetransform_chain_pt1)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 20);
+#if 0
   /* caps should not have been set */
   fail_unless (GST_BUFFER_CAPS (buffer) == NULL);
+#endif
 
   gst_buffer_unref (buffer);
 
@@ -106,8 +108,10 @@ GST_START_TEST (basetransform_chain_pt1)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 10);
+#if 0
   /* caps should not have been set */
   fail_unless (GST_BUFFER_CAPS (buffer) == NULL);
+#endif
 
   gst_buffer_unref (buffer);
 
@@ -173,7 +177,9 @@ GST_START_TEST (basetransform_chain_pt2)
   GST_DEBUG_OBJECT (trans, "buffer with caps, size 20");
 
   buffer = gst_buffer_new_and_alloc (20);
+#if 0
   gst_buffer_set_caps (buffer, caps);
+#endif
 
   buffer_alloc_pt1_called = FALSE;
   set_caps_pt2_called = FALSE;
@@ -186,7 +192,9 @@ GST_START_TEST (basetransform_chain_pt2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 20);
+#if 0
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
+#endif
 
   gst_buffer_unref (buffer);
 
@@ -211,7 +219,9 @@ GST_START_TEST (basetransform_chain_pt2)
   GST_DEBUG_OBJECT (trans, "buffer with caps, size 10");
 
   buffer = gst_buffer_new_and_alloc (10);
+#if 0
   gst_buffer_set_caps (buffer, caps);
+#endif
 
   buffer_alloc_pt1_called = FALSE;
   set_caps_pt2_called = FALSE;
@@ -224,7 +234,9 @@ GST_START_TEST (basetransform_chain_pt2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 10);
+#if 0
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
+#endif
 
   gst_buffer_unref (buffer);
 
@@ -438,7 +450,9 @@ GST_START_TEST (basetransform_chain_ip2)
   GST_DEBUG_OBJECT (trans, "buffer with caps, size 20");
 
   buffer = gst_buffer_new_and_alloc (20);
+#if 0
   gst_buffer_set_caps (buffer, caps);
+#endif
 
   transform_ip_1_called = FALSE;
   transform_ip_1_writable = FALSE;
@@ -455,7 +469,9 @@ GST_START_TEST (basetransform_chain_ip2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 20);
+#if 0
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
+#endif
   gst_buffer_unref (buffer);
 
 #if 0
@@ -472,7 +488,9 @@ GST_START_TEST (basetransform_chain_ip2)
   GST_DEBUG_OBJECT (trans, "buffer with caps extra ref, size 20");
 
   buffer = gst_buffer_new_and_alloc (20);
+#if 0
   gst_buffer_set_caps (buffer, caps);
+#endif
   /* take additional ref to make it non-writable */
   gst_buffer_ref (buffer);
 
@@ -492,7 +510,9 @@ GST_START_TEST (basetransform_chain_ip2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 20);
+#if 0
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
+#endif
 
   /* output buffer has refcount 1 */
   //fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 1);
@@ -686,7 +706,9 @@ GST_START_TEST (basetransform_chain_ct1)
 
   /* try to push a buffer with caps */
   buffer = gst_buffer_new_and_alloc (20);
+#if 0
   gst_buffer_set_caps (buffer, incaps);
+#endif
 
   GST_DEBUG_OBJECT (trans, "buffer with caps %" GST_PTR_FORMAT, incaps);
 
@@ -704,11 +726,15 @@ GST_START_TEST (basetransform_chain_ct1)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 40);
+#if 0
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), outcaps));
+#endif
   gst_buffer_unref (buffer);
 
   buffer = gst_buffer_new_and_alloc (20);
+#if 0
   gst_buffer_set_caps (buffer, incaps);
+#endif
   /* take additional ref to make it non-writable */
   gst_buffer_ref (buffer);
 
@@ -730,7 +756,9 @@ GST_START_TEST (basetransform_chain_ct1)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 40);
+#if 0
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), outcaps));
+#endif
 
   /* output buffer has refcount 1 */
   fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 1);
@@ -977,7 +1005,9 @@ GST_START_TEST (basetransform_chain_ct2)
 
   /* try to push a buffer with caps */
   buffer = gst_buffer_new_and_alloc (20);
+#if 0
   gst_buffer_set_caps (buffer, incaps);
+#endif
 
   GST_DEBUG_OBJECT (trans, "buffer with caps %" GST_PTR_FORMAT, incaps);
 
@@ -997,11 +1027,15 @@ GST_START_TEST (basetransform_chain_ct2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 20);
+#if 0
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+#endif
   gst_buffer_unref (buffer);
 
   buffer = gst_buffer_new_and_alloc (20);
+#if 0
   gst_buffer_set_caps (buffer, incaps);
+#endif
   /* take additional ref to make it non-writable */
   gst_buffer_ref (buffer);
 
@@ -1023,7 +1057,9 @@ GST_START_TEST (basetransform_chain_ct2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 20);
+#if 0
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+#endif
 
   /* output buffer has refcount 1 */
   //fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 1);
@@ -1139,7 +1175,9 @@ GST_START_TEST (basetransform_chain_ct3)
 
   /* try to push a buffer with caps */
   buffer = gst_buffer_new_and_alloc (20);
+#if 0
   gst_buffer_set_caps (buffer, incaps);
+#endif
 
   GST_DEBUG_OBJECT (trans, "buffer with caps %" GST_PTR_FORMAT, incaps);
 
@@ -1157,11 +1195,15 @@ GST_START_TEST (basetransform_chain_ct3)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 20);
+#if 0
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+#endif
   gst_buffer_unref (buffer);
 
   buffer = gst_buffer_new_and_alloc (20);
+#if 0
   gst_buffer_set_caps (buffer, incaps);
+#endif
   /* take additional ref to make it non-writable */
   gst_buffer_ref (buffer);
 
@@ -1181,7 +1223,9 @@ GST_START_TEST (basetransform_chain_ct3)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (gst_buffer_get_size (buffer) == 20);
+#if 0
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+#endif
 
   /* output buffer has refcount 1 */
   fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 1);
@@ -1224,7 +1268,9 @@ GST_START_TEST (basetransform_chain_ct3)
   GST_DEBUG_OBJECT (trans,
       "buffer with in passthrough with caps %" GST_PTR_FORMAT, incaps);
   buffer = gst_buffer_new_and_alloc (10);
+#if 0
   gst_buffer_set_caps (buffer, incaps);
+#endif
 
   /* don't suggest anything else */
   buffer_alloc_ct2_case = 1;
@@ -1241,8 +1287,10 @@ GST_START_TEST (basetransform_chain_ct3)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   /* FIXME changing src caps should produce converted buffer */
+#if 0
   GST_DEBUG_OBJECT (trans, "received caps %" GST_PTR_FORMAT,
       GST_BUFFER_CAPS (buffer));
+#endif
   //fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), outcaps));
   //fail_unless (gst_buffer_get_size (buffer) == 20);
 
@@ -1272,7 +1320,9 @@ GST_START_TEST (basetransform_chain_ct3)
 
   GST_DEBUG_OBJECT (trans, "buffer with caps %" GST_PTR_FORMAT, incaps);
   buffer = gst_buffer_new_and_alloc (10);
+#if 0
   gst_buffer_set_caps (buffer, incaps);
+#endif
 
   /* don't suggest anything else */
   buffer_alloc_ct2_suggest = FALSE;

@@ -2316,7 +2316,7 @@ gst_pad_get_current_caps (GstPad * pad)
  *
  * Gets the capabilities this pad can produce or consume.
  * Note that this method doesn't necessarily return the caps set by
- * gst_pad_set_caps() - use GST_PAD_CAPS() for that instead.
+ * gst_pad_set_caps() - use gst_pad_get_current_caps() for that instead.
  * gst_pad_get_caps returns all possible caps a pad can operate with, using
  * the pad's get_caps function;
  * this returns the pad template caps if not explicitly set.
