@@ -64,8 +64,6 @@ struct _GstPlaySinkAudioConvert
   GMutex *lock;
 
   GstPad *sinkpad, *sink_proxypad;
-  GstPadEventFunction sink_event;
-  GstPadSetCapsFunction sink_setcaps;
   gboolean sink_proxypad_blocked;
   GstSegment segment;
 

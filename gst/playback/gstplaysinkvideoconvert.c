@@ -239,7 +239,7 @@ gst_play_sink_video_convert_sink_event (GstPad * pad, GstEvent * event)
       GST_PLAY_SINK_VIDEO_CONVERT (gst_pad_get_parent (pad));
   gboolean ret;
 
-  ret = self->sink_event (pad, gst_event_ref (event));
+  ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
     gboolean update;
@@ -310,7 +310,7 @@ gst_play_sink_video_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
   GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
 
-  ret = self->sink_setcaps (pad, caps);
+  ret = gst_ghost_pad_setcaps_default (pad, caps);
 
   GST_DEBUG_OBJECT (self, "Setting sink caps %" GST_PTR_FORMAT ": %d", caps,
       ret);
@@ -448,27 +448,21 @@ static void
 gst_play_sink_video_convert_init (GstPlaySinkVideoConvert * self)
 {
   GstPadTemplate *templ;
-  GstIterator *it;
 
   self->lock = g_mutex_new ();
   gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
 
   templ = gst_static_pad_template_get (&sinktemplate);
   self->sinkpad = gst_ghost_pad_new_no_target_from_template ("sink", templ);
-  self->sink_event = GST_PAD_EVENTFUNC (self->sinkpad);
   gst_pad_set_event_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_play_sink_video_convert_sink_event));
-  self->sink_setcaps = GST_PAD_SETCAPSFUNC (self->sinkpad);
   gst_pad_set_setcaps_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_play_sink_video_convert_sink_setcaps));
   gst_pad_set_getcaps_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_play_sink_video_convert_getcaps));
 
-  it = gst_pad_iterate_internal_links (self->sinkpad);
-  g_assert (it);
-  gst_iterator_next (it, (gpointer *) & self->sink_proxypad);
-  g_assert (self->sink_proxypad);
-  gst_iterator_free (it);
+  self->sink_proxypad =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (self->sinkpad)));
 
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->sinkpad);
   gst_object_unref (templ);
