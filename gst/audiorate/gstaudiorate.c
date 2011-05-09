@@ -461,7 +461,6 @@ gst_audio_rate_convert_segments (GstAudioRate * audiorate)
 		dst_fmt, &audiorate->src_segment.field);
 
   audiorate->sink_segment.rate = audiorate->src_segment.rate;
-  audiorate->sink_segment.abs_rate = audiorate->src_segment.abs_rate;
   audiorate->sink_segment.flags = audiorate->src_segment.flags;
   audiorate->sink_segment.applied_rate = audiorate->src_segment.applied_rate;
   CONVERT_VAL (start);
