@@ -456,7 +456,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
   /* if these are our first ever buffers, send out new_segment first */
   if (!this->sent_streamheader) {
     GstEvent *event =
-        gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
+        gst_event_new_new_segment (TRUE, 1.0, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
     GST_DEBUG_OBJECT (this, "Sending out new_segment event %p", event);
     if (!gst_pad_push_event (this->srcpad, event)) {
       GST_WARNING_OBJECT (this, "pushing new segment failed");
@@ -564,7 +564,8 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
 
     GST_WARNING_OBJECT (this,
         "did not receive new-segment before first buffer");
-    event = gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
+    event =
+        gst_event_new_new_segment (TRUE, 1.0, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
     outbuffer = gst_gdp_buffer_from_event (this, event);
     gst_event_unref (event);
 
