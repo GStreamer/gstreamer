@@ -574,7 +574,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
       GstClockTimeDiff diff;
       GstClockTime timestamp;
 
-      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+      gst_event_parse_qos (event, NULL, &proportion, &diff, &timestamp);
 
       /* we cannot randomly skip frame decoding since we don't have
        * B frames. we can however use the timestamp and diff to not

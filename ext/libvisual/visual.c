@@ -544,7 +544,7 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
       GstClockTimeDiff diff;
       GstClockTime timestamp;
 
-      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+      gst_event_parse_qos (event, NULL, &proportion, &diff, &timestamp);
 
       /* save stuff for the _chain function */
       GST_OBJECT_LOCK (visual);

@@ -211,7 +211,7 @@ gst_stream_synchronizer_src_event (GstPad * pad, GstEvent * event)
       gint64 running_time_diff;
       GstStream *stream;
 
-      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+      gst_event_parse_qos (event, NULL, &proportion, &diff, &timestamp);
       gst_event_unref (event);
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
@@ -245,7 +245,9 @@ gst_stream_synchronizer_src_event (GstPad * pad, GstEvent * event)
         goto out;
       }
 
-      event = gst_event_new_qos (proportion, diff, timestamp);
+      event =
+          gst_event_new_qos (GST_QOS_TYPE_UNDERFLOW, proportion, diff,
+          timestamp);
       break;
     }
     default:
