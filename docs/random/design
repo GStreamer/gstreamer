@@ -81,8 +81,19 @@ FUNDAMENTAL GOALS:
 
 
 * Effects support
-  TBD (Pending proposal by Thibault)
+  Status:
+    Implemented, requires API addition for all use-cases.
 
+  Problems:
+    We must be able to provide a list of effects available on the system at
+    runtime.
+    We must be able to configure effects through an API in GES
+    withtout having to access the GstElements properties directly.
+    We should also expose the GstElement-s contained in an effect so
+    it is possible for people to control their properties as they wish.
+    We must be able to implement and handle complexe effects directly in GES
+    We must be able to configure effects through time -> Keyframes without
+    duplicating code from GStreamer
 
 * Source Material object
 
