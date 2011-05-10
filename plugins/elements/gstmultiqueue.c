@@ -1755,8 +1755,6 @@ gst_single_queue_new (GstMultiQueue * mqueue, gint id)
   sq->extra_size.bytes = mqueue->extra_size.bytes;
   sq->extra_size.time = mqueue->extra_size.time;
 
-  GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
-
   GST_DEBUG_OBJECT (mqueue, "Creating GstSingleQueue id:%d", sq->id);
 
   sq->mqueue = mqueue;
@@ -1817,6 +1815,8 @@ gst_single_queue_new (GstMultiQueue * mqueue, gint id)
 
   gst_pad_set_element_private (sq->sinkpad, (gpointer) sq);
   gst_pad_set_element_private (sq->srcpad, (gpointer) sq);
+
+  GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
 
   /* only activate the pads when we are not in the NULL state
    * and add the pad under the state_lock to prevend state changes
