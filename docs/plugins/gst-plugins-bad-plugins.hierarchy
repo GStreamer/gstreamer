@@ -13,8 +13,6 @@ GObject
       GstBin
         GstPipeline
           GstCameraBin
-          GstCameraBin2
-        GstFPSDisplaySink
         GstGSettingsSwitchSink
           GstGSettingsAudioSink
           GstGSettingsVideoSink
@@ -26,12 +24,10 @@ GObject
         GstAutoConvert
         GstAutoVideoConvert
         GstSDPDemux
-        GstViewfinderBin
-        GstImageCaptureBin
-        GstBaseCameraSrc
-          GstWrapperCameraBinSrc
+        GstFPSDisplaySink
+      GstWildmidi
+      GstMpeg2enc
       GstBaseSink
-        GstChecksumSink
         GstVideoSink
           GstSDLVideoSink
           GstDfbVideoSink
@@ -47,9 +43,7 @@ GObject
         GstFBDEVSink
         GstDCCPServerSink
         GstDCCPClientSink
-      GstChopMyData
-      GstWildmidi
-      GstMpeg2enc
+        GstChecksumSink
       GstAssRender
       GstCeltEnc
       GstCeltDec
@@ -416,6 +410,7 @@ GObject
       MpegTSBase
         MpegTSParse2
         GstTSDemux
+      GstChopMyData
       ADPCMDec
       GstInterlace
       GstFestival

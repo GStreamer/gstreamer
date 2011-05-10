@@ -3,10 +3,10 @@
   <description>Parses byte streams into raw frames</description>
   <filename>../../gst/rawparse/.libs/libgstrawparse.so</filename>
   <basename>libgstrawparse.so</basename>
-  <version>0.10.21.4</version>
+  <version>0.10.22</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins prerelease</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
