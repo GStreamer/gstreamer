@@ -596,7 +596,7 @@ structure_to_pretty_string (const GstStructure * s)
 }
 
 static inline gchar *
-gst_info_structure_to_string (GstStructure * s)
+gst_info_structure_to_string (const GstStructure * s)
 {
   if (G_UNLIKELY (pretty_tags && s->name == GST_QUARK (TAGLIST)))
     return structure_to_pretty_string (s);
@@ -627,10 +627,10 @@ gst_debug_print_object (gpointer ptr)
     return g_strdup ("(NULL)");
   }
   if (*(GType *) ptr == GST_TYPE_CAPS) {
-    return gst_caps_to_string ((GstCaps *) ptr);
+    return gst_caps_to_string ((const GstCaps *) ptr);
   }
   if (*(GType *) ptr == GST_TYPE_STRUCTURE) {
-    return gst_info_structure_to_string ((GstStructure *) ptr);
+    return gst_info_structure_to_string ((const GstStructure *) ptr);
   }
 #ifdef USE_POISONING
   if (*(guint32 *) ptr == 0xffffffff) {
@@ -649,9 +649,9 @@ gst_debug_print_object (gpointer ptr)
   if (GST_IS_MESSAGE (object)) {
     GstMessage *msg = GST_MESSAGE_CAST (object);
     gchar *s, *ret;
-    GstStructure *structure;
+    const GstStructure *structure;
 
-    structure = (GstStructure *) gst_message_get_structure (msg);
+    structure = gst_message_get_structure (msg);
 
     if (structure) {
       s = gst_info_structure_to_string (structure);
@@ -667,9 +667,12 @@ gst_debug_print_object (gpointer ptr)
   }
   if (GST_IS_QUERY (object)) {
     GstQuery *query = GST_QUERY_CAST (object);
+    const GstStructure *structure;
 
-    if (query->structure) {
-      return gst_info_structure_to_string (query->structure);
+    structure = gst_query_get_structure (query);
+
+    if (structure) {
+      return gst_info_structure_to_string (structure);
     } else {
       const gchar *query_type_name;
 

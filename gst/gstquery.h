@@ -2,6 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
  *                    2005 Wim Taymans <wim@fluendo.com>
+ *                    2011 Wim Taymans <wim.taymans@gmail.com>
  *
  * gstquery.h: GstQuery API declaration
  *
@@ -150,11 +151,6 @@ struct _GstQuery
 
   /*< public > *//* with COW */
   GstQueryType type;
-
-  GstStructure *structure;
-
-  /*< private >*/
-  gpointer _gst_reserved;
 };
 
 const gchar*    gst_query_type_get_name        (GstQueryType query);
@@ -235,6 +231,13 @@ gst_query_copy (const GstQuery * q)
 }
 
 /**
+ * gst_query_is_writable:
+ * @q: a #GstQuery
+ *
+ * Tests if you can safely write data into a query's structure.
+ */
+#define         gst_query_is_writable(q)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (q))
+/**
  * gst_query_make_writable:
  * @q: (transfer full): a #GstQuery to make writable
  *
@@ -243,6 +246,29 @@ gst_query_copy (const GstQuery * q)
  * Returns: (transfer full): a new writable query (possibly same as @q)
  */
 #define         gst_query_make_writable(q)      GST_QUERY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (q)))
+/**
+ * gst_query_replace:
+ * @old_query: (inout) (transfer full): pointer to a pointer to a #GstQuery
+ *     to be replaced.
+ * @new_query: (allow-none) (transfer none): pointer to a #GstQuery that will
+ *     replace the query pointed to by @old_query.
+ *
+ * Modifies a pointer to a #GstQuery to point to a different #GstQuery. The
+ * modification is done atomically (so this is useful for ensuring thread safety
+ * in some cases), and the reference counts are updated appropriately (the old
+ * query is unreffed, the new one is reffed).
+ *
+ * Either @new_query or the #GstQuery pointed to by @old_query may be NULL.
+ */
+#define         gst_query_replace(old_query,new_query) \
+    gst_mini_object_replace ((GstMiniObject **)(old_query), GST_MINI_OBJECT_CAST (new_query))
+
+
+/* application specific query */
+GstQuery *      gst_query_new_custom            (GstQueryType type, GstStructure *structure);
+const GstStructure *
+                gst_query_get_structure         (GstQuery *query);
+GstStructure *  gst_query_writable_structure    (GstQuery *query);
 
 /* position query */
 GstQuery*       gst_query_new_position          (GstFormat format);
@@ -274,11 +300,6 @@ void            gst_query_set_segment           (GstQuery *query, gdouble rate, 
 void            gst_query_parse_segment         (GstQuery *query, gdouble *rate, GstFormat *format,
                                                  gint64 *start_value, gint64 *stop_value);
 
-/* application specific query */
-GstQuery *      gst_query_new_application       (GstQueryType type,
-                                                 GstStructure *structure);
-GstStructure *  gst_query_get_structure         (GstQuery *query);
-
 /* seeking query */
 GstQuery*       gst_query_new_seeking           (GstFormat format);
 void            gst_query_set_seeking           (GstQuery *query, GstFormat format,
@@ -293,8 +314,8 @@ void            gst_query_parse_seeking         (GstQuery *query, GstFormat *for
 GstQuery*       gst_query_new_formats           (void);
 void            gst_query_set_formats           (GstQuery *query, gint n_formats, ...);
 void            gst_query_set_formatsv          (GstQuery *query, gint n_formats, const GstFormat *formats);
-void            gst_query_parse_formats_length  (GstQuery *query, guint *n_formats);
-void            gst_query_parse_formats_nth     (GstQuery *query, guint nth, GstFormat *format);
+void            gst_query_parse_n_formats       (GstQuery *query, guint *n_formats);
+void            gst_query_parse_nth_format      (GstQuery *query, guint nth, GstFormat *format);
 
 /* buffering query */
 GstQuery*       gst_query_new_buffering           (GstFormat format);
@@ -314,11 +335,10 @@ void            gst_query_set_buffering_range     (GstQuery *query, GstFormat fo
 void            gst_query_parse_buffering_range   (GstQuery *query, GstFormat *format,
                                                    gint64 *start, gint64 *stop,
                                                    gint64 *estimated_total);
-gboolean        gst_query_add_buffering_range     (GstQuery *query,
-                                                   gint64 start, gint64 stop);
 
-guint           gst_query_get_n_buffering_ranges  (GstQuery *query);
-
+gboolean        gst_query_add_buffering_range       (GstQuery *query,
+                                                     gint64 start, gint64 stop);
+guint           gst_query_get_n_buffering_ranges    (GstQuery *query);
 gboolean        gst_query_parse_nth_buffering_range (GstQuery *query,
                                                      guint index, gint64 *start,
                                                      gint64 *stop);
@@ -339,9 +359,9 @@ void            gst_query_parse_allocation_params (GstQuery *query, guint *size,
                                                    guint *max_buffers, guint *prefix, guint *alignment,
                                                    GstBufferPool **pool);
 
-void            gst_query_add_allocation_meta     (GstQuery *query, const gchar *api);
-guint           gst_query_get_n_allocation_meta   (GstQuery *query);
-const gchar *   gst_query_parse_allocation_meta   (GstQuery *query, guint index);
+void            gst_query_add_allocation_meta       (GstQuery *query, const gchar *api);
+guint           gst_query_get_n_allocation_metas    (GstQuery *query);
+const gchar *   gst_query_parse_nth_allocation_meta (GstQuery *query, guint index);
 
 
 G_END_DECLS
