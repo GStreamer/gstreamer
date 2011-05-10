@@ -131,7 +131,7 @@ static gboolean gst_adder_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_adder_sink_event (GstPad * pad, GstEvent * event);
 
 static GstPad *gst_adder_request_new_pad (GstElement * element,
-    GstPadTemplate * temp, const gchar * unused);
+    GstPadTemplate * temp, const gchar * unused, const GstCaps * caps);
 static void gst_adder_release_pad (GstElement * element, GstPad * pad);
 
 static GstStateChangeReturn gst_adder_change_state (GstElement * element,
@@ -958,7 +958,7 @@ gst_adder_get_property (GObject * object, guint prop_id, GValue * value,
 
 static GstPad *
 gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * unused)
+    const gchar * unused, const GstCaps * caps)
 {
   gchar *name;
   GstAdder *adder;

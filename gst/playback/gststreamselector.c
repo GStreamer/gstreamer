@@ -376,7 +376,7 @@ static void gst_stream_selector_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstPad *gst_stream_selector_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * unused);
+    GstPadTemplate * templ, const gchar * unused, const GstCaps * caps);
 static void gst_stream_selector_release_pad (GstElement * element,
     GstPad * pad);
 static GstIterator *gst_stream_selector_pad_iterate_linked_pads (GstPad * pad);
@@ -652,7 +652,7 @@ gst_stream_selector_pad_iterate_linked_pads (GstPad * pad)
 
 static GstPad *
 gst_stream_selector_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * unused)
+    GstPadTemplate * templ, const gchar * unused, const GstCaps * caps)
 {
   GstStreamSelector *sel;
   gchar *name = NULL;

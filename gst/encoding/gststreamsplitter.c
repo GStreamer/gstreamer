@@ -44,7 +44,7 @@ G_DEFINE_TYPE (GstStreamSplitter, gst_stream_splitter, GST_TYPE_ELEMENT);
 static void gst_stream_splitter_dispose (GObject * object);
 
 static GstPad *gst_stream_splitter_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_stream_splitter_release_pad (GstElement * element,
     GstPad * pad);
 
@@ -387,7 +387,7 @@ gst_stream_splitter_init (GstStreamSplitter * stream_splitter)
 
 static GstPad *
 gst_stream_splitter_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   GstStreamSplitter *stream_splitter = (GstStreamSplitter *) element;
   GstPad *srcpad;

@@ -368,7 +368,7 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_encode_bin_change_state);
-  gstelement_klass->request_new_pad_full =
+  gstelement_klass->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_encode_bin_request_new_pad);
   gstelement_klass->release_pad =
       GST_DEBUG_FUNCPTR (gst_encode_bin_release_pad);
@@ -820,7 +820,7 @@ beach:
 
 static GstPad *
 local_element_request_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * name)
+    const gchar * name, const GstCaps * caps)
 {
   GstPad *newpad = NULL;
   GstElementClass *oclass;
@@ -828,7 +828,7 @@ local_element_request_pad (GstElement * element, GstPadTemplate * templ,
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   if (oclass->request_new_pad)
-    newpad = (oclass->request_new_pad) (element, templ, name);
+    newpad = (oclass->request_new_pad) (element, templ, name, caps);
 
   if (newpad)
     gst_object_ref (newpad);
@@ -1095,7 +1095,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
   /* Path 1 : Already-encoded data */
   sinkpad =
-      local_element_request_pad (sgroup->combiner, NULL, "passthroughsink");
+      local_element_request_pad (sgroup->combiner, NULL, "passthroughsink",
+      NULL);
   if (G_UNLIKELY (sinkpad == NULL))
     goto no_combiner_sinkpad;
 
@@ -1122,7 +1123,9 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     g_object_unref (srcpad);
   }
 
-  srcpad = local_element_request_pad (sgroup->splitter, NULL, "passthroughsrc");
+  srcpad =
+      local_element_request_pad (sgroup->splitter, NULL, "passthroughsrc",
+      NULL);
   if (G_UNLIKELY (srcpad == NULL))
     goto no_splitter_srcpad;
 
@@ -1141,7 +1144,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   gst_bin_add ((GstBin *) ebin, sgroup->encoder);
   tosync = g_list_append (tosync, sgroup->encoder);
 
-  sinkpad = local_element_request_pad (sgroup->combiner, NULL, "encodingsink");
+  sinkpad =
+      local_element_request_pad (sgroup->combiner, NULL, "encodingsink", NULL);
   if (G_UNLIKELY (sinkpad == NULL))
     goto no_combiner_sinkpad;
   srcpad = gst_element_get_static_pad (sgroup->encoder, "src");
@@ -1235,7 +1239,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
   /* Link to stream splitter */
   sinkpad = gst_element_get_static_pad (last, "sink");
-  srcpad = local_element_request_pad (sgroup->splitter, NULL, "encodingsrc");
+  srcpad =
+      local_element_request_pad (sgroup->splitter, NULL, "encodingsrc", NULL);
   if (G_UNLIKELY (srcpad == NULL))
     goto no_splitter_srcpad;
   if (G_UNLIKELY (fast_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK))

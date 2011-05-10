@@ -44,7 +44,7 @@ G_DEFINE_TYPE (GstStreamCombiner, gst_stream_combiner, GST_TYPE_ELEMENT);
 static void gst_stream_combiner_dispose (GObject * object);
 
 static GstPad *gst_stream_combiner_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_stream_combiner_release_pad (GstElement * element,
     GstPad * pad);
 
@@ -217,7 +217,7 @@ gst_stream_combiner_init (GstStreamCombiner * stream_combiner)
 
 static GstPad *
 gst_stream_combiner_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   GstStreamCombiner *stream_combiner = (GstStreamCombiner *) element;
   GstPad *sinkpad;

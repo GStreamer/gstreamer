@@ -681,7 +681,7 @@ done:
 /* GstElement vfuncs */
 static GstPad *
 gst_stream_synchronizer_request_new_pad (GstElement * element,
-    GstPadTemplate * temp, const gchar * name)
+    GstPadTemplate * temp, const gchar * name, const GstCaps * caps)
 {
   GstStreamSynchronizer *self = GST_STREAM_SYNCHRONIZER (element);
   GstStream *stream;

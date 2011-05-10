@@ -116,7 +116,7 @@ static GstFlowReturn
 gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux);
 static gboolean gst_ogg_mux_handle_src_event (GstPad * pad, GstEvent * event);
 static GstPad *gst_ogg_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_ogg_mux_release_pad (GstElement * element, GstPad * pad);
 
 static void gst_ogg_mux_set_property (GObject * object,
@@ -349,7 +349,7 @@ gst_ogg_mux_generate_serialno (GstOggMux * ogg_mux)
 
 static GstPad *
 gst_ogg_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * req_name)
+    GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
 {
   GstOggMux *ogg_mux;
   GstPad *newpad;

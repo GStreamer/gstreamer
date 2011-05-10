@@ -245,7 +245,7 @@ static void gst_play_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
 
 static GstPad *gst_play_sink_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_play_sink_release_request_pad (GstElement * element,
     GstPad * pad);
 static gboolean gst_play_sink_send_event (GstElement * element,
@@ -2979,7 +2979,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
 
 static GstPad *
 gst_play_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * name)
+    const gchar * name, const GstCaps * caps)
 {
   GstPlaySink *psink;
   GstPad *pad;
