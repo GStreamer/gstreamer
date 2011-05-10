@@ -846,6 +846,25 @@ gst_query_get_structure (GstQuery * query)
 }
 
 /**
+ * gst_query_writable_structure:
+ * @query: a #GstQuery
+ *
+ * Get the structure of a query.
+ *
+ * Returns: (transfer none): the #GstStructure of the query. The structure is
+ *     still owned by the query and will therefore be freed when the query
+ *     is unreffed.
+ */
+GstStructure *
+gst_query_writable_structure (GstQuery * query)
+{
+  g_return_val_if_fail (GST_IS_QUERY (query), NULL);
+  g_return_val_if_fail (gst_query_is_writable (query), NULL);
+
+  return GST_QUERY_STRUCTURE (query);
+}
+
+/**
  * gst_query_new_seeking:
  * @format: the default #GstFormat for the new query
  *
@@ -890,6 +909,7 @@ gst_query_set_seeking (GstQuery * query, GstFormat format,
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SEEKING);
+  g_return_if_fail (gst_query_is_writable (query));
 
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_set (structure,
@@ -988,6 +1008,7 @@ gst_query_set_formats (GstQuery * query, gint n_formats, ...)
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_FORMATS);
+  g_return_if_fail (gst_query_is_writable (query));
 
   g_value_init (&list, GST_TYPE_LIST);
 
@@ -1025,6 +1046,7 @@ gst_query_set_formatsv (GstQuery * query, gint n_formats,
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_FORMATS);
+  g_return_if_fail (gst_query_is_writable (query));
 
   g_value_init (&list, GST_TYPE_LIST);
   for (i = 0; i < n_formats; i++) {
@@ -1152,6 +1174,7 @@ gst_query_set_buffering_percent (GstQuery * query, gboolean busy, gint percent)
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
+  g_return_if_fail (gst_query_is_writable (query));
   g_return_if_fail (percent >= 0 && percent <= 100);
 
   structure = GST_QUERY_STRUCTURE (query);
@@ -1207,6 +1230,7 @@ gst_query_set_buffering_stats (GstQuery * query, GstBufferingMode mode,
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
+  g_return_if_fail (gst_query_is_writable (query));
 
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_set (structure,
@@ -1273,6 +1297,7 @@ gst_query_set_buffering_range (GstQuery * query, GstFormat format,
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
+  g_return_if_fail (gst_query_is_writable (query));
 
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_set (structure,
@@ -1345,6 +1370,7 @@ gst_query_add_buffering_range (GstQuery * query, gint64 start, gint64 stop)
   GstStructure *structure;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING, FALSE);
+  g_return_val_if_fail (gst_query_is_writable (query), FALSE);
 
   if (G_UNLIKELY (start >= stop))
     return FALSE;
@@ -1493,6 +1519,7 @@ gst_query_set_uri (GstQuery * query, const gchar * uri)
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_URI);
+  g_return_if_fail (gst_query_is_writable (query));
   g_return_if_fail (gst_uri_is_valid (uri));
 
   structure = GST_QUERY_STRUCTURE (query);
@@ -1586,6 +1613,7 @@ gst_query_set_allocation_params (GstQuery * query, guint size,
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+  g_return_if_fail (gst_query_is_writable (query));
 
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_set (structure,
@@ -1642,6 +1670,7 @@ gst_query_add_allocation_meta (GstQuery * query, const gchar * api)
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+  g_return_if_fail (gst_query_is_writable (query));
 
   structure = GST_QUERY_STRUCTURE (query);
   value = gst_structure_id_get_value (structure, GST_QUARK (META));
