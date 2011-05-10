@@ -627,7 +627,8 @@ struct _GstElementClass
   /* virtual methods for subclasses */
 
   /* request/release pads */
-  GstPad*               (*request_new_pad)      (GstElement *element, GstPadTemplate *templ, const gchar* name);
+  GstPad*               (*request_new_pad)      (GstElement *element, GstPadTemplate *templ,
+                                                 const gchar* name, const GstCaps *caps);
   void                  (*release_pad)          (GstElement *element, GstPad *pad);
 
   /* state changes */
@@ -652,14 +653,6 @@ struct _GstElementClass
 
   const GstQueryType*   (*get_query_types)      (GstElement *element);
   gboolean              (*query)                (GstElement *element, GstQuery *query);
-
-  /*< private >*/
-
-  /*< public >*/
-  /* Virtual method for subclasses (additions) */
-  /* FIXME-0.11 Make this the default behaviour */
-  GstPad*		(*request_new_pad_full) (GstElement *element, GstPadTemplate *templ,
-						 const gchar* name, const GstCaps *caps);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -754,8 +747,7 @@ void                    gst_element_no_more_pads        (GstElement *element);
 
 GstPad*                 gst_element_get_static_pad      (GstElement *element, const gchar *name);
 GstPad*                 gst_element_get_request_pad     (GstElement *element, const gchar *name);
-GstPad*                 gst_element_request_pad         (GstElement *element,
-							 GstPadTemplate *templ,
+GstPad*                 gst_element_request_pad         (GstElement *element, GstPadTemplate *templ,
 							 const gchar * name, const GstCaps *caps);
 void                    gst_element_release_request_pad (GstElement *element, GstPad *pad);
 

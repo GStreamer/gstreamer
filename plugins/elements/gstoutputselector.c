@@ -99,7 +99,7 @@ static void gst_output_selector_set_property (GObject * object,
 static void gst_output_selector_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static GstPad *gst_output_selector_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * unused);
+    GstPadTemplate * templ, const gchar * unused, const GstCaps * caps);
 static void gst_output_selector_release_pad (GstElement * element,
     GstPad * pad);
 static GstFlowReturn gst_output_selector_chain (GstPad * pad, GstBuffer * buf);
@@ -351,7 +351,7 @@ gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector * sel,
 
 static GstPad *
 gst_output_selector_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   gchar *padname;
   GstPad *srcpad;

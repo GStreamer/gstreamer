@@ -125,7 +125,7 @@ typedef struct
 } PushData;
 
 static GstPad *gst_tee_request_new_pad (GstElement * element,
-    GstPadTemplate * temp, const gchar * unused);
+    GstPadTemplate * temp, const gchar * unused, const GstCaps * caps);
 static void gst_tee_release_pad (GstElement * element, GstPad * pad);
 
 static void gst_tee_finalize (GObject * object);
@@ -273,7 +273,7 @@ gst_tee_notify_alloc_pad (GstTee * tee)
 
 static GstPad *
 gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * unused)
+    const gchar * unused, const GstCaps * caps)
 {
   gchar *name;
   GstPad *srcpad;

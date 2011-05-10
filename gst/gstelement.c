@@ -1013,10 +1013,8 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
   }
 #endif
 
-  if (oclass->request_new_pad_full)
-    newpad = (oclass->request_new_pad_full) (element, templ, name, caps);
-  else if (oclass->request_new_pad)
-    newpad = (oclass->request_new_pad) (element, templ, name);
+  if (oclass->request_new_pad)
+    newpad = (oclass->request_new_pad) (element, templ, name, caps);
 
   if (newpad)
     gst_object_ref (newpad);

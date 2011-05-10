@@ -688,7 +688,7 @@ static void gst_input_selector_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstPad *gst_input_selector_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * unused);
+    GstPadTemplate * templ, const gchar * unused, const GstCaps * caps);
 static void gst_input_selector_release_pad (GstElement * element, GstPad * pad);
 
 static GstStateChangeReturn gst_input_selector_change_state (GstElement *
@@ -1261,7 +1261,7 @@ gst_input_selector_activate_sinkpad (GstInputSelector * sel, GstPad * pad)
 
 static GstPad *
 gst_input_selector_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * unused)
+    GstPadTemplate * templ, const gchar * unused, const GstCaps * caps)
 {
   GstInputSelector *sel;
   gchar *name = NULL;

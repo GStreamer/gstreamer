@@ -255,7 +255,7 @@ static void gst_multi_queue_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstPad *gst_multi_queue_request_new_pad (GstElement * element,
-    GstPadTemplate * temp, const gchar * name);
+    GstPadTemplate * temp, const gchar * name, const GstCaps * caps);
 static void gst_multi_queue_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn gst_multi_queue_change_state (GstElement *
     element, GstStateChange transition);
@@ -585,7 +585,7 @@ out:
 
 static GstPad *
 gst_multi_queue_request_new_pad (GstElement * element, GstPadTemplate * temp,
-    const gchar * name)
+    const gchar * name, const GstCaps * caps)
 {
   GstMultiQueue *mqueue = GST_MULTI_QUEUE (element);
   GstSingleQueue *squeue;

@@ -113,7 +113,7 @@ G_DEFINE_TYPE_WITH_CODE (GstFunnel, gst_funnel, GST_TYPE_ELEMENT, _do_init);
 static GstStateChangeReturn gst_funnel_change_state (GstElement * element,
     GstStateChange transition);
 static GstPad *gst_funnel_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_funnel_release_pad (GstElement * element, GstPad * pad);
 
 static GstFlowReturn gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer);
@@ -175,7 +175,7 @@ gst_funnel_init (GstFunnel * funnel)
 
 static GstPad *
 gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * name)
+    const gchar * name, const GstCaps * caps)
 {
   GstPad *sinkpad;
 
