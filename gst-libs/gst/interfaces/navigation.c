@@ -237,7 +237,7 @@ gst_navigation_query_new_commands (void)
 
   structure = gst_structure_new (GST_NAVIGATION_QUERY_NAME,
       "type", G_TYPE_STRING, "commands", NULL);
-  query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
+  query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
 
   return query;
 }
@@ -283,7 +283,7 @@ gst_navigation_query_set_commands (GstQuery * query, gint n_cmds, ...)
   }
   va_end (ap);
 
-  structure = gst_query_get_structure (query);
+  structure = gst_query_writable_structure (query);
   gst_structure_set_value (structure, "commands", &list);
 
   g_value_unset (&list);
@@ -314,7 +314,7 @@ gst_navigation_query_set_commandsv (GstQuery * query, gint n_cmds,
   for (i = 0; i < n_cmds; i++) {
     gst_query_list_add_command (&list, cmds[i]);
   }
-  structure = gst_query_get_structure (query);
+  structure = gst_query_writable_structure (query);
   gst_structure_set_value (structure, "commands", &list);
 
   g_value_unset (&list);
@@ -333,7 +333,7 @@ gst_navigation_query_set_commandsv (GstQuery * query, gint n_cmds,
 gboolean
 gst_navigation_query_parse_commands_length (GstQuery * query, guint * n_cmds)
 {
-  GstStructure *structure;
+  const GstStructure *structure;
   const GValue *list;
 
   g_return_val_if_fail (GST_NAVIGATION_QUERY_HAS_TYPE (query, COMMANDS), FALSE);
@@ -368,7 +368,7 @@ gboolean
 gst_navigation_query_parse_commands_nth (GstQuery * query, guint nth,
     GstNavigationCommand * cmd)
 {
-  GstStructure *structure;
+  const GstStructure *structure;
   const GValue *list;
 
   g_return_val_if_fail (GST_NAVIGATION_QUERY_HAS_TYPE (query, COMMANDS), FALSE);
@@ -409,7 +409,7 @@ gst_navigation_query_new_angles (void)
 
   structure = gst_structure_new (GST_NAVIGATION_QUERY_NAME,
       "type", G_TYPE_STRING, "angles", NULL);
-  query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
+  query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
 
   return query;
 }
@@ -432,7 +432,7 @@ gst_navigation_query_set_angles (GstQuery * query, guint cur_angle,
 
   g_return_if_fail (GST_NAVIGATION_QUERY_HAS_TYPE (query, ANGLES));
 
-  structure = gst_query_get_structure (query);
+  structure = gst_query_writable_structure (query);
   gst_structure_set (structure,
       "angle", G_TYPE_UINT, cur_angle, "angles", G_TYPE_UINT, n_angles, NULL);
 }
@@ -456,7 +456,7 @@ gboolean
 gst_navigation_query_parse_angles (GstQuery * query, guint * cur_angle,
     guint * n_angles)
 {
-  GstStructure *structure;
+  const GstStructure *structure;
   gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_NAVIGATION_QUERY_HAS_TYPE (query, ANGLES), FALSE);
