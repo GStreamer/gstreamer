@@ -649,9 +649,12 @@ gst_debug_print_object (gpointer ptr)
   if (GST_IS_MESSAGE (object)) {
     GstMessage *msg = GST_MESSAGE_CAST (object);
     gchar *s, *ret;
+    GstStructure *structure;
 
-    if (msg->structure) {
-      s = gst_info_structure_to_string (msg->structure);
+    structure = (GstStructure *) gst_message_get_structure (msg);
+
+    if (structure) {
+      s = gst_info_structure_to_string (structure);
     } else {
       s = g_strdup ("(NULL)");
     }

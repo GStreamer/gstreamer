@@ -283,20 +283,15 @@ struct _GstMessage
 {
   GstMiniObject mini_object;
 
-  /*< private >*//* with MESSAGE_LOCK */
-  GMutex *lock;                 /* lock and cond for async delivery */
-  GCond *cond;
-
   /*< public > *//* with COW */
   GstMessageType type;
   guint64 timestamp;
   GstObject *src;
   guint32 seqnum;
 
-  GstStructure *structure;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  /*< private >*//* with MESSAGE_LOCK */
+  GMutex *lock;                 /* lock and cond for async delivery */
+  GCond *cond;
 };
 
 GType           gst_message_get_type            (void);
@@ -362,6 +357,14 @@ gst_message_copy (const GstMessage * msg)
 }
 
 /**
+ * gst_message_is_writable:
+ * @msg: a #GstMessage
+ *
+ * Tests if you can safely write into a message's structure or validly
+ * modify the seqnum and timestamp fields.
+ */
+#define         gst_message_is_writable(msg)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (msg))
+/**
  * gst_message_make_writable:
  * @msg: (transfer full): the message to make writable
  *
@@ -373,6 +376,32 @@ gst_message_copy (const GstMessage * msg)
  * MT safe
  */
 #define         gst_message_make_writable(msg)  GST_MESSAGE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (msg)))
+/**
+ * gst_message_replace:
+ * @old_message: (inout) (transfer full): pointer to a pointer to a #GstMessage
+ *     to be replaced.
+ * @new_message: (allow-none) (transfer none): pointer to a #GstMessage that will
+ *     replace the message pointed to by @old_message.
+ *
+ * Modifies a pointer to a #GstMessage to point to a different #GstMessage. The
+ * modification is done atomically (so this is useful for ensuring thread safety
+ * in some cases), and the reference counts are updated appropriately (the old
+ * message is unreffed, the new one is reffed).
+ *
+ * Either @new_message or the #GstMessage pointed to by @old_message may be NULL.
+ */
+#define         gst_message_replace(old_message,new_message) \
+    gst_mini_object_replace ((GstMiniObject **)(old_message), GST_MINI_OBJECT_CAST (new_message))
+
+
+/* custom messages */
+GstMessage *    gst_message_new_custom          (GstMessageType type,
+                                                 GstObject    * src,
+                                                 GstStructure * structure);
+const GstStructure *
+                gst_message_get_structure       (GstMessage *message);
+
+gboolean        gst_message_has_name            (GstMessage *message, const gchar *name);
 
 /* identifiers for events and messages */
 guint32         gst_message_get_seqnum          (GstMessage *message);
@@ -515,12 +544,6 @@ GstMessage *    gst_message_new_progress           (GstObject * src, GstProgress
 void            gst_message_parse_progress         (GstMessage * message, GstProgressType * type, gchar ** code,
                                                     gchar ** text);
 
-
-/* custom messages */
-GstMessage *    gst_message_new_custom          (GstMessageType type,
-                                                 GstObject    * src,
-                                                 GstStructure * structure);
-const GstStructure *  gst_message_get_structure (GstMessage *message);
 
 G_END_DECLS
 

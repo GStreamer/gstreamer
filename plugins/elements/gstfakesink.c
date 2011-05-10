@@ -399,9 +399,11 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
 
     if (GST_EVENT_TYPE (event) == GST_EVENT_SINK_MESSAGE) {
       GstMessage *msg;
+      const GstStructure *structure;
 
       gst_event_parse_sink_message (event, &msg);
-      sstr = gst_structure_to_string (msg->structure);
+      structure = gst_message_get_structure (msg);
+      sstr = gst_structure_to_string (structure);
       sink->last_message =
           g_strdup_printf ("message ******* M (type: %d, %s) %p",
           GST_MESSAGE_TYPE (msg), sstr, msg);
