@@ -499,20 +499,23 @@ _generate_update_newsegment_event (GstSegment * segment, GstEvent ** event1,
     GstEvent ** event2)
 {
   GstEvent *event;
+  GstStructure *structure;
 
   *event1 = NULL;
   *event2 = NULL;
 
   event = gst_event_new_new_segment (FALSE, segment->rate,
       segment->applied_rate, segment->format, 0, segment->accum, 0);
-  gst_structure_id_set (event->structure, _subtitle_overlay_event_marker_id,
+  structure = (GstStructure *) gst_event_get_structure (event);
+  gst_structure_id_set (structure, _subtitle_overlay_event_marker_id,
       G_TYPE_BOOLEAN, TRUE, NULL);
   *event1 = event;
 
   event = gst_event_new_new_segment (FALSE, segment->rate,
       segment->applied_rate, segment->format,
       segment->start, segment->stop, segment->time);
-  gst_structure_id_set (event->structure, _subtitle_overlay_event_marker_id,
+  structure = (GstStructure *) gst_event_get_structure (event);
+  gst_structure_id_set (structure, _subtitle_overlay_event_marker_id,
       G_TYPE_BOOLEAN, TRUE, NULL);
   *event2 = event;
 }
@@ -582,11 +585,9 @@ _setup_passthrough (GstSubtitleOverlay * self)
 
     _generate_update_newsegment_event (&self->video_segment, &event1, &event2);
     GST_DEBUG_OBJECT (self,
-        "Pushing video accumulate newsegment event: %" GST_PTR_FORMAT,
-        event1->structure);
+        "Pushing video accumulate newsegment event: %" GST_PTR_FORMAT, event1);
     GST_DEBUG_OBJECT (self,
-        "Pushing video update newsegment event: %" GST_PTR_FORMAT,
-        event2->structure);
+        "Pushing video update newsegment event: %" GST_PTR_FORMAT, event2);
     gst_pad_send_event (sink, event1);
     gst_pad_send_event (sink, event2);
   }
@@ -1002,10 +1003,9 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
             &event2);
         GST_DEBUG_OBJECT (self,
             "Pushing video accumulate newsegment event: %" GST_PTR_FORMAT,
-            event1->structure);
+            event1);
         GST_DEBUG_OBJECT (self,
-            "Pushing video update newsegment event: %" GST_PTR_FORMAT,
-            event2->structure);
+            "Pushing video update newsegment event: %" GST_PTR_FORMAT, event2);
         gst_pad_send_event (sink, event1);
         gst_pad_send_event (sink, event2);
 
@@ -1025,10 +1025,10 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
             &event2);
         GST_DEBUG_OBJECT (self,
             "Pushing subtitle accumulate newsegment event: %" GST_PTR_FORMAT,
-            event1->structure);
+            event1);
         GST_DEBUG_OBJECT (self,
             "Pushing subtitle update newsegment event: %" GST_PTR_FORMAT,
-            event2->structure);
+            event2);
         gst_pad_send_event (sink, event1);
         gst_pad_send_event (sink, event2);
 
@@ -1171,10 +1171,9 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
             &event2);
         GST_DEBUG_OBJECT (self,
             "Pushing video accumulate newsegment event: %" GST_PTR_FORMAT,
-            event1->structure);
+            event1);
         GST_DEBUG_OBJECT (self,
-            "Pushing video update newsegment event: %" GST_PTR_FORMAT,
-            event2->structure);
+            "Pushing video update newsegment event: %" GST_PTR_FORMAT, event2);
         gst_pad_send_event (sink, event1);
         gst_pad_send_event (sink, event2);
         gst_object_unref (sink);
@@ -1193,10 +1192,10 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
             &event2);
         GST_DEBUG_OBJECT (self,
             "Pushing subtitle accumulate newsegment event: %" GST_PTR_FORMAT,
-            event1->structure);
+            event1);
         GST_DEBUG_OBJECT (self,
             "Pushing subtitle update newsegment event: %" GST_PTR_FORMAT,
-            event2->structure);
+            event2);
         gst_pad_send_event (sink, event1);
         gst_pad_send_event (sink, event2);
         gst_object_unref (sink);
@@ -1615,7 +1614,7 @@ gst_subtitle_overlay_src_proxy_event (GstPad * proxypad, GstEvent * event)
   s = gst_event_get_structure (event);
   if (s && gst_structure_id_has_field (s, _subtitle_overlay_event_marker_id)) {
     GST_DEBUG_OBJECT (ghostpad, "Dropping event with marker: %" GST_PTR_FORMAT,
-        event->structure);
+        event);
     gst_event_unref (event);
     event = NULL;
     ret = TRUE;
@@ -1686,8 +1685,7 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
     GstFormat format;
     gint64 start, stop, position;
 
-    GST_DEBUG_OBJECT (pad, "Newsegment event: %" GST_PTR_FORMAT,
-        event->structure);
+    GST_DEBUG_OBJECT (pad, "Newsegment event: %" GST_PTR_FORMAT, event);
     gst_event_parse_new_segment (event, &update, &rate, &applied_rate,
         &format, &start, &stop, &position);
 
@@ -1927,9 +1925,7 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
   GstFormat format;
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM_OOB &&
-      event->structure
-      && strcmp (gst_structure_get_name (event->structure),
-          "subtitleoverlay-flush-subtitle") == 0) {
+      gst_event_has_name (event, "subtitleoverlay-flush-subtitle")) {
     GST_DEBUG_OBJECT (pad, "Custom subtitle flush event");
     GST_SUBTITLE_OVERLAY_LOCK (self);
     self->subtitle_flush = TRUE;
@@ -1969,20 +1965,18 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_NEWSEGMENT:
     case GST_EVENT_EOS:
+    {
+      GstStructure *structure;
+
       /* Add our event marker to make sure no events from here go ever outside
        * the element, they're only interesting for our internal elements */
-      event =
-          GST_EVENT_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST
-              (event)));
-      if (!event->structure) {
-        event->structure =
-            gst_structure_id_empty_new (_subtitle_overlay_event_marker_id);
-        gst_structure_set_parent_refcount (event->structure,
-            &event->mini_object.refcount);
-      }
-      gst_structure_id_set (event->structure, _subtitle_overlay_event_marker_id,
+      event = GST_EVENT_CAST (gst_event_make_writable (event));
+      structure = gst_event_writable_structure (event);
+
+      gst_structure_id_set (structure, _subtitle_overlay_event_marker_id,
           G_TYPE_BOOLEAN, TRUE, NULL);
       break;
+    }
     default:
       break;
   }
@@ -1994,8 +1988,7 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
     gdouble rate, applied_rate;
     gint64 start, stop, position;
 
-    GST_DEBUG_OBJECT (pad, "Newsegment event: %" GST_PTR_FORMAT,
-        event->structure);
+    GST_DEBUG_OBJECT (pad, "Newsegment event: %" GST_PTR_FORMAT, event);
     gst_event_parse_new_segment (event, &update, &rate, &applied_rate,
         &format, &start, &stop, &position);
 

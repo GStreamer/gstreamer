@@ -201,7 +201,7 @@ gst_stream_synchronizer_src_event (GstPad * pad, GstEvent * event)
     goto skip_adjustments;
 
   GST_LOG_OBJECT (pad, "Handling event %s: %" GST_PTR_FORMAT,
-      GST_EVENT_TYPE_NAME (event), event->structure);
+      GST_EVENT_TYPE_NAME (event), event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:{
@@ -281,7 +281,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
     goto skip_adjustments;
 
   GST_LOG_OBJECT (pad, "Handling event %s: %" GST_PTR_FORMAT,
-      GST_EVENT_TYPE_NAME (event), event->structure);
+      GST_EVENT_TYPE_NAME (event), event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SINK_MESSAGE:{
