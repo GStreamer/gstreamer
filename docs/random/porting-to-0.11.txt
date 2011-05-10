@@ -79,6 +79,9 @@ The 0.11 porting guide
     removed sched_private, it should not be used, use g_object_set_qdata() or
     use element_private.
 
+    Removed GST_PAD_CAPS() use gst_pad_get_current_caps() to get a handle to the
+    currently configured caps.
+
 * GstMiniObject
     A miniobject is now a simple refcounted structure holding the information
     common to buffers, events, messages, queries and caps.
@@ -148,6 +151,10 @@ The 0.11 porting guide
     gst_buffer_try_new_and_alloc() is replaced with gst_buffer_new_and_alloc(),
     which now returns NULL when memory allocation fails.
 
+    GST_BUFFER_CAPS() is gone, caps are not set on buffers anymore but are set
+    on the pads where the buffer is pushed on. Likewise GST_BUFFER_COPY_CAPS is
+    not needed anymore. gst_buffer_get/set_caps() are gone too.
+
 * GstBufferList
     The GstBufferList object is much simplified because most of the
     functionality in the groups is now part of the GstMemory in buffers.
@@ -163,8 +170,20 @@ The 0.11 porting guide
 * GstEvent
     GST_EVENT_SRC is removed. Don't use this anymore.
 
+    gst_event_new_new_segment_full() -> gst_event_new_new_segment()
+    gst_event_parse_new_segment_full() -> gst_event_parse_new_segment()
+
+    gst_event_new_qos_full() -> gst_event_new_qos()
+    gst_event_parse_qos_full() -> gst_event_parse_qos()
+
+    The GstStructure is removed from the public API, use the getters to get
+    a handle to a GstStructure.
+
 * GstQuery
     Boxed types derived from GstMiniObject.
+
+    The GstStructure is removed from the public API, use the getters to get
+    a handle to a GstStructure.
 
 * GstBufferList
     Is now a boxed type derived from GstMiniObject.
@@ -172,8 +191,15 @@ The 0.11 porting guide
 * GstMessage
     Is now a boxed type derived from GstMiniObject
 
+    The GstStructure is removed from the public API, use the getters to get
+    a handle to a GstStructure.
+
 * GstCaps
     Is now a boxed type derived from GstMiniObject. 
+
+* GstSegment
+    abs_rate was removed from the public fields, it can be trivially calculated
+    from the rate field.
 
 * GstTypeFind
     gst_type_find_peek() returns a const guin8 * now.
