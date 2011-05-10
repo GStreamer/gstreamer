@@ -1140,7 +1140,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
           gboolean compatible;
 
           /* Now check if the two pads' caps are compatible */
-          temp = gst_pad_get_caps (pad);
+          temp = gst_pad_get_caps (pad, NULL);
           if (caps) {
             intersection = gst_caps_intersect (temp, caps);
             gst_caps_unref (temp);
@@ -1148,7 +1148,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
             intersection = temp;
           }
 
-          temp = gst_pad_get_caps (current);
+          temp = gst_pad_get_caps (current, NULL);
           compatible = gst_caps_can_intersect (temp, intersection);
           gst_caps_unref (temp);
           gst_caps_unref (intersection);
@@ -1198,7 +1198,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   /* try to create a new one */
   /* requesting is a little crazy, we need a template. Let's create one */
   /* FIXME: why not gst_pad_get_pad_template (pad); */
-  templcaps = gst_pad_get_caps (pad);
+  templcaps = gst_pad_get_caps (pad, NULL);
 
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
       GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
@@ -2691,16 +2691,15 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
   return result;
 }
 
-
 static gboolean
-getcaps_fold_func (const GValue * vpad, GValue * ret, GstPad * orig)
+getcaps_fold_func (const GValue * vpad, GValue * ret, GstCaps * filter)
 {
   GstPad *pad = g_value_get_object (vpad);
   gboolean empty = FALSE;
   GstCaps *peercaps, *existing;
 
   existing = g_value_get_pointer (ret);
-  peercaps = gst_pad_peer_get_caps (pad);
+  peercaps = gst_pad_peer_get_caps (pad, filter);
   if (G_LIKELY (peercaps)) {
     GstCaps *intersection = gst_caps_intersect (existing, peercaps);
 
@@ -2716,6 +2715,7 @@ getcaps_fold_func (const GValue * vpad, GValue * ret, GstPad * orig)
 /**
  * gst_pad_proxy_getcaps:
  * @pad: a #GstPad to proxy.
+ * @filter: a #GstCaps filter.
  *
  * Calls gst_pad_get_allowed_caps() for every other pad belonging to the
  * same element as @pad, and returns the intersection of the results.
@@ -2729,7 +2729,7 @@ getcaps_fold_func (const GValue * vpad, GValue * ret, GstPad * orig)
  * Returns: (transfer full): the intersection of the other pads' allowed caps.
  */
 GstCaps *
-gst_pad_proxy_getcaps (GstPad * pad)
+gst_pad_proxy_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstElement *element;
   GstCaps *caps, *intersected;
@@ -2760,7 +2760,7 @@ gst_pad_proxy_getcaps (GstPad * pad)
   while (1) {
     res =
         gst_iterator_fold (iter, (GstIteratorFoldFunction) getcaps_fold_func,
-        &ret, pad);
+        &ret, filter);
     switch (res) {
       case GST_ITERATOR_RESYNC:
         /* unref any value stored */

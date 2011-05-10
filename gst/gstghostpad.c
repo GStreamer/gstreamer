@@ -188,7 +188,7 @@ gst_proxy_pad_do_checkgetrange (GstPad * pad)
 }
 
 static GstCaps *
-gst_proxy_pad_do_getcaps (GstPad * pad)
+gst_proxy_pad_do_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstPad *target = gst_proxy_pad_get_target (pad);
   GstCaps *res;
@@ -196,7 +196,7 @@ gst_proxy_pad_do_getcaps (GstPad * pad)
 
   if (target) {
     /* if we have a real target, proxy the call */
-    res = gst_pad_get_caps (target);
+    res = gst_pad_get_caps (target, filter);
 
     GST_DEBUG_OBJECT (pad, "get caps of target %s:%s : %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (target), res);
@@ -209,7 +209,7 @@ gst_proxy_pad_do_getcaps (GstPad * pad)
 
       filt = GST_PAD_TEMPLATE_CAPS (templ);
       if (filt) {
-        tmp = gst_caps_intersect (filt, res);
+        tmp = gst_caps_intersect_full (res, filt, GST_CAPS_INTERSECT_FIRST);
         gst_caps_unref (res);
         res = tmp;
         GST_DEBUG_OBJECT (pad,
@@ -224,6 +224,15 @@ gst_proxy_pad_do_getcaps (GstPad * pad)
           "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, res,
           res);
       res = gst_caps_ref (res);
+
+      if (filter) {
+        GstCaps *intersection =
+            gst_caps_intersect_full (filter, res, GST_CAPS_INTERSECT_FIRST);
+
+        gst_caps_unref (res);
+        res = intersection;
+      }
+
       goto done;
     }
 

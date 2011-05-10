@@ -124,7 +124,7 @@ static void gst_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn handle_pad_block (GstPad * pad);
-static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad);
+static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad, GstCaps * filter);
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
 static gboolean gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps);
@@ -1796,8 +1796,8 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink,
 
   /* Doing the expensive caps checking takes priority over only checking the template caps */
   if (flags & GST_PAD_LINK_CHECK_CAPS) {
-    srccaps = gst_pad_get_caps_unlocked (src);
-    sinkcaps = gst_pad_get_caps_unlocked (sink);
+    srccaps = gst_pad_get_caps_unlocked (src, NULL);
+    sinkcaps = gst_pad_get_caps_unlocked (sink, NULL);
   } else {
     /* If one of the two pads doesn't have a template, consider the intersection
      * as valid.*/
@@ -2188,7 +2188,7 @@ gst_pad_get_pad_template (GstPad * pad)
 /* should be called with the pad LOCK held */
 /* refs the caps, so caller is responsible for getting it unreffed */
 static GstCaps *
-gst_pad_get_caps_unlocked (GstPad * pad)
+gst_pad_get_caps_unlocked (GstPad * pad, GstCaps * filter)
 {
   GstCaps *result = NULL;
   GstPadTemplate *templ;
@@ -2200,11 +2200,12 @@ gst_pad_get_caps_unlocked (GstPad * pad)
 
   if (!fixed_caps && GST_PAD_GETCAPSFUNC (pad)) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-        "dispatching to pad getcaps function");
+        "dispatching to pad getcaps function with "
+        "filter %" GST_PTR_FORMAT, filter);
 
     GST_OBJECT_FLAG_SET (pad, GST_PAD_IN_GETCAPS);
     GST_OBJECT_UNLOCK (pad);
-    result = GST_PAD_GETCAPSFUNC (pad) (pad);
+    result = GST_PAD_GETCAPSFUNC (pad) (pad, filter);
     GST_OBJECT_LOCK (pad);
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_IN_GETCAPS);
 
@@ -2234,29 +2235,80 @@ gst_pad_get_caps_unlocked (GstPad * pad)
           result = temp;
         }
       }
+      if (filter) {
+        if (!gst_caps_is_subset (result, filter)) {
+          GstCaps *temp;
+
+          GST_CAT_ERROR_OBJECT (GST_CAT_CAPS, pad,
+              "pad returned caps %" GST_PTR_FORMAT
+              " which are not a real subset of the filter caps %"
+              GST_PTR_FORMAT, result, filter);
+          g_warning ("pad %s:%s returned caps which are not a real "
+              "subset of the filter caps", GST_DEBUG_PAD_NAME (pad));
+          /* FIXME: Order? But shouldn't happen anyway... */
+          temp =
+              gst_caps_intersect_full (filter, result,
+              GST_CAPS_INTERSECT_FIRST);
+          gst_caps_unref (result);
+          result = temp;
+        }
+      }
 #endif
       goto done;
     }
   }
   if (fixed_caps && (result = get_pad_caps (pad))) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-        "using pad caps %p %" GST_PTR_FORMAT, result, result);
-    result = gst_caps_ref (result);
+    if (filter) {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+          "using pad caps %p %" GST_PTR_FORMAT " with filter %p %"
+          GST_PTR_FORMAT, result, result, filter, filter);
+      result =
+          gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "result %p %" GST_PTR_FORMAT,
+          result);
+    } else {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+          "using pad caps %p %" GST_PTR_FORMAT, result, result);
+      result = gst_caps_ref (result);
+    }
     goto done;
   }
   if ((templ = GST_PAD_PAD_TEMPLATE (pad))) {
     result = GST_PAD_TEMPLATE_CAPS (templ);
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-        "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
-        result);
 
-    result = gst_caps_ref (result);
+    if (filter) {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+          "using pad template %p with caps %p %" GST_PTR_FORMAT
+          " and filter %p %" GST_PTR_FORMAT, templ, result, result, filter,
+          filter);
+      result =
+          gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "result %p %" GST_PTR_FORMAT,
+          result);
+    } else {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+          "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
+          result);
+      result = gst_caps_ref (result);
+    }
+
     goto done;
   }
   if (!fixed_caps && (result = get_pad_caps (pad))) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-        "using pad caps %p %" GST_PTR_FORMAT, result, result);
-    result = gst_caps_ref (result);
+    if (filter) {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+          "using pad caps %p %" GST_PTR_FORMAT " with filter %p %"
+          GST_PTR_FORMAT, result, result, filter, filter);
+      result =
+          gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "result %p %" GST_PTR_FORMAT,
+          result);
+    } else {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+          "using pad caps %p %" GST_PTR_FORMAT, result, result);
+      result = gst_caps_ref (result);
+    }
+
     goto done;
   }
 
@@ -2319,6 +2371,7 @@ gst_pad_get_current_caps (GstPad * pad)
 /**
  * gst_pad_get_caps:
  * @pad: a  #GstPad to get the capabilities of.
+ * @filter: suggested #GstCaps.
  *
  * Gets the capabilities this pad can produce or consume.
  * Note that this method doesn't necessarily return the caps set by
@@ -2327,23 +2380,30 @@ gst_pad_get_current_caps (GstPad * pad)
  * the pad's get_caps function;
  * this returns the pad template caps if not explicitly set.
  *
+ * When called on sinkpads @filter contains the caps that
+ * upstream could produce in the order preferred by upstream. When
+ * called on srcpads @filter contains the caps accepted by
+ * downstream in the preffered order. @filter might be %NULL but
+ * if it is not %NULL the returned caps will be a subset of @filter.
+ *
  * Note that this function does not return writable #GstCaps, use
  * gst_caps_make_writable() before modifying the caps.
  *
  * Returns: the caps of the pad with incremented ref-count.
  */
 GstCaps *
-gst_pad_get_caps (GstPad * pad)
+gst_pad_get_caps (GstPad * pad, GstCaps * filter)
 {
   GstCaps *result = NULL;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+  g_return_val_if_fail (filter == NULL || GST_IS_CAPS (filter), NULL);
 
   GST_OBJECT_LOCK (pad);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
 
-  result = gst_pad_get_caps_unlocked (pad);
+  result = gst_pad_get_caps_unlocked (pad, filter);
 
   GST_OBJECT_UNLOCK (pad);
 
@@ -2354,20 +2414,28 @@ gst_pad_get_caps (GstPad * pad)
 /**
  * gst_pad_peer_get_caps:
  * @pad: a  #GstPad to get the capabilities of.
+ * @filter: a #GstCaps filter.
  *
  * Gets the capabilities of the peer connected to this pad. Similar to
  * gst_pad_get_caps().
+ *
+ * When called on srcpads @filter contains the caps that
+ * upstream could produce in the order preferred by upstream. When
+ * called on sinkpads @filter contains the caps accepted by
+ * downstream in the preffered order. @filter might be %NULL but
+ * if it is not %NULL the returned caps will be a subset of @filter.
  *
  * Returns: the caps of the peer pad with incremented ref-count. This function
  * returns %NULL when there is no peer pad.
  */
 GstCaps *
-gst_pad_peer_get_caps (GstPad * pad)
+gst_pad_peer_get_caps (GstPad * pad, GstCaps * filter)
 {
   GstPad *peerpad;
   GstCaps *result = NULL;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+  g_return_val_if_fail (filter == NULL || GST_IS_CAPS (filter), NULL);
 
   GST_OBJECT_LOCK (pad);
 
@@ -2380,7 +2448,7 @@ gst_pad_peer_get_caps (GstPad * pad)
   gst_object_ref (peerpad);
   GST_OBJECT_UNLOCK (pad);
 
-  result = gst_pad_get_caps (peerpad);
+  result = gst_pad_get_caps (peerpad, filter);
 
   gst_object_unref (peerpad);
 
@@ -2503,7 +2571,7 @@ gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (pad, "caps %" GST_PTR_FORMAT, caps);
 
-  allowed = gst_pad_get_caps (pad);
+  allowed = gst_pad_get_caps (pad, NULL);
   if (!allowed)
     goto nothing_allowed;
 
@@ -2826,9 +2894,9 @@ gst_pad_get_allowed_caps (GstPad * pad)
 
   gst_object_ref (peer);
   GST_OBJECT_UNLOCK (pad);
-  mycaps = gst_pad_get_caps (pad);
+  mycaps = gst_pad_get_caps (pad, NULL);
 
-  peercaps = gst_pad_get_caps (peer);
+  peercaps = gst_pad_get_caps (peer, NULL);
   gst_object_unref (peer);
 
   caps = gst_caps_intersect (mycaps, peercaps);

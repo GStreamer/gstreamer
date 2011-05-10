@@ -84,6 +84,10 @@ The 0.11 porting guide
     Removed GST_PAD_CAPS() use gst_pad_get_current_caps() to get a handle to the
     currently configured caps.
 
+    GstPadGetCapsFunction, gst_pad_get_caps(), gst_pad_peer_get_caps(),
+    gst_pad_proxy_getcaps() now takes a GstCaps* parameter to inform
+    the other side about the possible caps and preferences.
+
 * GstMiniObject
     A miniobject is now a simple refcounted structure holding the information
     common to buffers, events, messages, queries and caps.

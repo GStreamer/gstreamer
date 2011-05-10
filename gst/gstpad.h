@@ -420,6 +420,13 @@ typedef void			(*GstPadUnlinkFunction)		(GstPad *pad);
 /**
  * GstPadGetCapsFunction:
  * @pad: the #GstPad to get the capabilities of.
+ * @filter: filter #GstCaps.
+ *
+ * When called on sinkpads @filter contains the caps that
+ * upstream could produce in the order preferred by upstream. When
+ * called on srcpads @filter contains the caps accepted by
+ * downstream in the preffered order. @filter might be %NULL but if
+ * it is not %NULL only a subset of @filter must be returned.
  *
  * Returns a copy of the capabilities of the specified pad. By default this
  * function will return the pad template capabilities, but can optionally
@@ -427,7 +434,7 @@ typedef void			(*GstPadUnlinkFunction)		(GstPad *pad);
  *
  * Returns: a newly allocated copy #GstCaps of the pad.
  */
-typedef GstCaps*		(*GstPadGetCapsFunction)	(GstPad *pad);
+typedef GstCaps*		(*GstPadGetCapsFunction)	(GstPad *pad, GstCaps *filter);
 
 /**
  * GstPadSetCapsFunction:
@@ -845,12 +852,12 @@ G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
 /* capsnego function for linked/unlinked pads */
 GstCaps *		gst_pad_get_current_caps                (GstPad * pad);
 gboolean		gst_pad_has_current_caps                (GstPad * pad);
-GstCaps *		gst_pad_get_caps			(GstPad * pad);
+GstCaps *		gst_pad_get_caps			(GstPad * pad, GstCaps *filter);
 void			gst_pad_fixate_caps			(GstPad * pad, GstCaps *caps);
 gboolean		gst_pad_accept_caps			(GstPad * pad, GstCaps *caps);
 gboolean		gst_pad_set_caps			(GstPad * pad, GstCaps *caps);
 
-GstCaps *		gst_pad_peer_get_caps			(GstPad * pad);
+GstCaps *		gst_pad_peer_get_caps			(GstPad * pad, GstCaps *filter);
 gboolean		gst_pad_peer_accept_caps		(GstPad * pad, GstCaps *caps);
 
 /* capsnego for linked pads */
