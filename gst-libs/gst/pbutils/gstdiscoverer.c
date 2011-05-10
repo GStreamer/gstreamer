@@ -1079,16 +1079,20 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
 
     case GST_MESSAGE_ELEMENT:
     {
-      GQuark sttype = gst_structure_get_name_id (msg->structure);
+      GQuark sttype;
+      const GstStructure *structure;
+
+      structure = gst_message_get_structure (msg);
+      sttype = gst_structure_get_name_id (structure);
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
-          "structure %" GST_PTR_FORMAT, msg->structure);
+          "structure %" GST_PTR_FORMAT, structure);
       if (sttype == _MISSING_PLUGIN_QUARK) {
         GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
             "Setting result to MISSING_PLUGINS");
         dc->priv->current_info->result = GST_DISCOVERER_MISSING_PLUGINS;
-        dc->priv->current_info->misc = gst_structure_copy (msg->structure);
+        dc->priv->current_info->misc = gst_structure_copy (structure);
       } else if (sttype == _STREAM_TOPOLOGY_QUARK) {
-        dc->priv->current_topology = gst_structure_copy (msg->structure);
+        dc->priv->current_topology = gst_structure_copy (structure);
       }
     }
       break;

@@ -288,9 +288,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
       GstMessage *message;
 
       gst_event_parse_sink_message (event, &message);
-      if (message->structure
-          && gst_structure_has_name (message->structure,
-              "playbin2-stream-changed")) {
+      if (gst_message_has_name (message, "playbin2-stream-changed")) {
         GstStream *stream;
 
         GST_STREAM_SYNCHRONIZER_LOCK (self);

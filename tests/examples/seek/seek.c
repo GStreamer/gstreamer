@@ -2445,7 +2445,7 @@ static GstBusSyncReply
 bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
 {
   if ((GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) &&
-      gst_structure_has_name (message->structure, "prepare-xwindow-id")) {
+      gst_message_has_name (message, "prepare-xwindow-id")) {
     GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (message));
 
     g_print ("got prepare-xwindow-id, setting XID %lu\n", embed_xid);

@@ -2033,14 +2033,16 @@ handle_redirect_message (GstURIDecodeBin * dec, GstMessage * msg)
   GList *l_good = NULL, *l_neutral = NULL, *l_bad = NULL;
   GValue new_list = { 0, };
   guint size, i;
+  const GstStructure *structure;
 
   GST_DEBUG_OBJECT (dec, "redirect message: %" GST_PTR_FORMAT, msg);
   GST_DEBUG_OBJECT (dec, "connection speed: %u", dec->connection_speed);
 
-  if (dec->connection_speed == 0 || msg->structure == NULL)
+  structure = gst_message_get_structure (msg);
+  if (dec->connection_speed == 0 || structure == NULL)
     return msg;
 
-  locations_list = gst_structure_get_value (msg->structure, "locations");
+  locations_list = gst_structure_get_value (structure, "locations");
   if (locations_list == NULL)
     return msg;
 
@@ -2092,8 +2094,8 @@ handle_redirect_message (GstURIDecodeBin * dec, GstMessage * msg)
 static void
 handle_message (GstBin * bin, GstMessage * msg)
 {
-  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ELEMENT && msg->structure != NULL
-      && gst_structure_has_name (msg->structure, "redirect")) {
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ELEMENT
+      && gst_message_has_name (msg, "redirect")) {
     /* sort redirect messages based on the connection speed. This simplifies
      * the user of this element as it can in most cases just pick the first item
      * of the sorted list as a good redirection candidate. It can of course

@@ -57,8 +57,7 @@ message_handler (GstBus * bus, GstMessage * message, gpointer user_data)
       if (strcmp (name, "not-mounted") == 0) {
         GMountOperation *mop = gtk_mount_operation_new (NULL);
         GFile *file =
-            G_FILE (g_value_get_object (gst_structure_get_value
-                (message->structure, "file")));
+            G_FILE (g_value_get_object (gst_structure_get_value (s, "file")));
 
         g_print ("not-mounted\n");
         gst_element_set_state (pipeline, GST_STATE_NULL);

@@ -1859,14 +1859,16 @@ gst_play_bin_handle_redirect_message (GstPlayBin * playbin, GstMessage * msg)
   guint size, i;
   GstPlayBaseBin *playbasebin = GST_PLAY_BASE_BIN (playbin);
   guint connection_speed = playbasebin->connection_speed;
+  const GstStructure *structure;
 
   GST_DEBUG_OBJECT (playbin, "redirect message: %" GST_PTR_FORMAT, msg);
   GST_DEBUG_OBJECT (playbin, "connection speed: %u", connection_speed);
 
-  if (connection_speed == 0 || msg->structure == NULL)
+  structure = gst_message_get_structure (msg);
+  if (connection_speed == 0 || structure == NULL)
     return msg;
 
-  locations_list = gst_structure_get_value (msg->structure, "locations");
+  locations_list = gst_structure_get_value (structure, "locations");
   if (locations_list == NULL)
     return msg;
 
@@ -1918,8 +1920,11 @@ gst_play_bin_handle_redirect_message (GstPlayBin * playbin, GstMessage * msg)
 static void
 gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
 {
-  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ELEMENT && msg->structure != NULL
-      && gst_structure_has_name (msg->structure, "redirect")) {
+  const GstStructure *structure;
+
+  structure = gst_message_get_structure (msg);
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ELEMENT && structure != NULL
+      && gst_structure_has_name (structure, "redirect")) {
     msg = gst_play_bin_handle_redirect_message (GST_PLAY_BIN (bin), msg);
   }
 
