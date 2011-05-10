@@ -3,10 +3,10 @@
   <description>Audio Cutter to split audio into non-silent bits</description>
   <filename>../../gst/cutter/.libs/libgstcutter.so</filename>
   <basename>libgstcutter.so</basename>
-  <version>0.10.28.4</version>
+  <version>0.10.29</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

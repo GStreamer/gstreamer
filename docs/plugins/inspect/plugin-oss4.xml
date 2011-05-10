@@ -3,10 +3,10 @@
   <description>Open Sound System (OSS) version 4 support for GStreamer</description>
   <filename>../../sys/oss4/.libs/libgstoss4audio.so</filename>
   <basename>libgstoss4audio.so</basename>
-  <version>0.10.28.4</version>
+  <version>0.10.29</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

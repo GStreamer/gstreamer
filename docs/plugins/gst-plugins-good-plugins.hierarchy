@@ -44,7 +44,6 @@ GObject
         GstCACASink
         GstVideoSink
           GstGdkPixbufSink
-          GstV4l2Sink
         GstShout2send
         GstTest
         GstMultiFileSink
@@ -274,7 +273,6 @@ GObject
       Gst3GPPMux
       GstGPPMux
       GstMJ2Mux
-      GstMonoscope
       GstICYDemux
       GstVideoMixer
       GstVideoMixer2
@@ -315,7 +313,5 @@ GInterface
   GstTuner
   GstColorBalance
   GstVideoOrientation
-  GstXOverlay
-  GstNavigation
   GstTagXmpWriter
   GIcon

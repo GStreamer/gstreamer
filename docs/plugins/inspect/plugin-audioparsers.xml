@@ -3,10 +3,10 @@
   <description>Parsers for various audio formats</description>
   <filename>../../gst/audioparsers/.libs/libgstaudioparsers.so</filename>
   <basename>libgstaudioparsers.so</basename>
-  <version>0.10.28.4</version>
+  <version>0.10.29</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

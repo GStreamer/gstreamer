@@ -20,7 +20,6 @@ GstRgVolume GstChildProxy
 GstAspectRatioCrop GstChildProxy
 GstPulseSink GstStreamVolume GstImplementsInterface GstPropertyProbe
 GstOss4Sink GstStreamVolume GstPropertyProbe
-GstV4l2Sink GstImplementsInterface GstXOverlay GstNavigation GstColorBalance GstVideoOrientation GstPropertyProbe
 GstShout2send GstTagSetter
 GstUDPSink GstURIHandler
 GstDV1394Src GstURIHandler GstPropertyProbe

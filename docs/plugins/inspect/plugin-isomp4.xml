@@ -3,10 +3,10 @@
   <description>ISO base media file format support (mp4, 3gpp, qt, mj2)</description>
   <filename>../../gst/isomp4/.libs/libgstisomp4.so</filename>
   <basename>libgstisomp4.so</basename>
-  <version>0.10.28.4</version>
+  <version>0.10.29</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

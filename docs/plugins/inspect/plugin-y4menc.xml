@@ -3,10 +3,10 @@
   <description>Encodes a YUV frame into the yuv4mpeg format (mjpegtools)</description>
   <filename>../../gst/y4m/.libs/libgsty4menc.so</filename>
   <basename>libgsty4menc.so</basename>
-  <version>0.10.28.4</version>
+  <version>0.10.29</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
