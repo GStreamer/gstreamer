@@ -3,10 +3,10 @@
   <description>Adaptive Multi-Rate Narrow-Band</description>
   <filename>../../ext/amrnb/.libs/libgstamrnb.so</filename>
   <basename>libgstamrnb.so</basename>
-  <version>0.10.17.4</version>
+  <version>0.10.18</version>
   <license>unknown</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins prerelease</package>
+  <package>GStreamer Ugly Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

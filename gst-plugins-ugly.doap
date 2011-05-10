@@ -35,6 +35,17 @@ might be widely known to present patent problems.
 
  <release>
   <Version>
+   <revision>0.10.18</revision>
+   <branch>0.10</branch>
+   <name>Extra Life</name>
+   <created>2011-05-10</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.18.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.18.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.17</revision>
    <branch>0.10</branch>
    <name>Raised by Wolves</name>

@@ -1,4 +1,35 @@
-This is GStreamer Ugly Plug-ins 0.10.17 "Raised by Wolves"
+This is GStreamer Ugly Plug-ins 0.10.18 "Extra Life"
+
+Changes since 0.10.17:
+
+      * amrwbdec: avoid stalling on invalid frame
+      * asfpacket: don't rely on data from duration extension
+      * dvdsubdec: Implement clipping if the video size is smaller than the subpicture size
+      * dvdsubdec: Output only a single buffer per subpicture and set the correct duration
+      * lamemp3enc: implement sinkpad get_caps() function to proxy rate and channels restrictions from downstream
+      * mad: build the mad plugin even if libid3tag is not available
+      * mpeg2dec: do not fail fatally when downstream is unlinked (let upstream handle that)
+      * mpeg2dec: don't deadlock when setting an index
+      * mpegstream: increase allowable gap between streams
+      * x264enc: allow changing the bitrate and quantitizers dynamically
+      * x264enc: don't register flags with a value of 0
+      * x264enc: implement getcaps function to proxy downstream caps restrictions upstream
+      * x264enc: make tag event writable before modifying tag list in place
+      * x264enc: set max bitrate in quality mode
+
+Bugs fixed since 0.10.17:
+
+      * 539708 : [mpegstream] Increase allowable gap between streams
+      * 607698 : asfdemux: fix parsing of packets with padding
+      * 619136 : [dvdsubdec] spits out buffers at video framerate
+      * 621663 : x264enc: support changing bitrate property on the fly
+      * 639291 : [xingmux] Return NULL instead of 0 for a function returning gboolean
+      * 639715 : amrparse: seek error with EOS
+      * 640272 : x264enc: make tag event writable before modifying tag list in place
+      * 641151 : lame: doesn't negotiate sample rate properly
+      * 642360 : x264enc: Don't register flags which have 0 as a value
+      * 644704 : [dvdsubedc] no SPU clipping implemented
+      * 647709 : mpeg2dec: errors out on not-linked flow return
 
 Changes since 0.10.16:
 

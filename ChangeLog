@@ -1,9 +1,479 @@
-=== release 0.10.17 ===
+=== release 0.10.18 ===
 
-2011-01-21  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2011-05-10  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.17, "Raised by Wolves"
+	  releasing 0.10.18, "Extra Life"
+
+2011-05-04 12:39:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Copy the template caps, it's not allowed to increase the refcount of const caps
+
+2011-05-04 12:30:39 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: do not leak peer pad reference
+
+2011-05-03 15:27:43 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: No need to copy, reffing is enough
+
+2011-05-03 14:57:16 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: get_caps function should return a copy of the caps
+
+2011-04-30 20:07:44 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-synaesthesia.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* po/da.po:
+	* po/de.po:
+	* po/fr.po:
+	* po/uk.po:
+	* win32/common/config.h:
+	  0.10.17.4 pre-release
+
+2011-04-27 12:48:31 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-synaesthesia.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* po/bg.po:
+	* po/ja.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/sl.po:
+	* po/tr.po:
+	  0.10.17.3 pre-release
+
+2011-04-24 14:04:39 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From c3cafe1 to 46dfcea
+
+2011-04-19 17:26:42 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/gst-plugins-ugly.supp:
+	  tests: add suppression for lame unit test
+
+2011-04-19 14:41:48 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/generic/.gitignore:
+	* tests/check/generic/index.c:
+	  tests: add generic index-setting test
+
+2011-04-19 15:24:03 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: don't deadlock when setting an index
+
+2011-04-16 23:26:27 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-synaesthesia.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* po/sl.po:
+	* win32/common/config.h:
+	  0.10.17.2 pre-release
+
+2011-04-16 23:23:56 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rademux.c:
+	  rademux: fix two 'variable may be used uninitialized' warnings caused by -DG_DISABLE_ASSERT
+
+2011-04-14 15:04:19 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/mpegstream/gstmpegdemux.c:
+	  mpegstream: fix unused-but-set-variable warnings with gcc 4.6
+
+2011-04-14 15:03:56 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/sidplay/gstsiddec.cc:
+	* ext/x264/gstx264enc.c:
+	  dvdread, sidplay, x264enc: fix unused-but-set-variable warnings with gcc 4.6
+
+2011-04-14 15:03:33 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix unused-but-set-variable warnings with gcc 4.6
+
+2011-04-13 20:31:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Implement getcaps function
+	  This allows to set width/height/etc restrictions downstream.
+
+2011-04-10 18:24:22 -0400  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* Android.mk:
+	* ext/mad/Makefile.am:
+	* ext/x264/Makefile.am:
+	* gst/asfdemux/Makefile.am:
+	* gst/dvdlpcmdec/Makefile.am:
+	* gst/dvdsub/Makefile.am:
+	* gst/iec958/Makefile.am:
+	* gst/mpegaudioparse/Makefile.am:
+	* gst/mpegstream/Makefile.am:
+	* gst/realmedia/Makefile.am:
+	* gst/synaesthesia/Makefile.am:
+	  android: make it ready for androgenizer
+	  To build gstreamer for android we are now using androgenizer which
+	  generates the needed Android.mk files.
+	  Androgenizer can be found here: http://git.collabora.co.uk/?p=user/derek/androgenizer.git
+
+2011-04-10 18:34:11 -0400  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* android/NOTICE:
+	* android/amrnb.mk:
+	* android/amrwbdec.mk:
+	* android/asf.mk:
+	* android/mpegaudioparse.mk:
+	  android: remove the android/ folder
+
+2011-04-04 15:57:58 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1ccbe09 to c3cafe1
+
+2010-09-21 20:14:04 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Allow changing the bitrate and quantitizers dynamically
+	  https://bugzilla.gnome.org/show_bug.cgi?id=621663
+
+2010-09-21 19:33:10 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Set max bitrate in quality mode
+	  https://bugzilla.gnome.org/show_bug.cgi?id=621663
+
+2010-09-21 19:20:29 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Make it clear that constant quantizer is for debugging only
+	  https://bugzilla.gnome.org/show_bug.cgi?id=621663
+
+2011-03-25 22:34:31 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 193b717 to 1ccbe09
+
+2011-03-25 14:57:00 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From b77e2bf to 193b717
+
+2011-03-25 09:33:04 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From d8814b6 to b77e2bf
+
+2011-03-25 09:09:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6aaa286 to d8814b6
+
+2011-03-24 18:50:17 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6aec6b9 to 6aaa286
+
+2011-03-22 12:59:33 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* configure.ac:
+	  configure.ac: redundant use of AC_MSG_RESULT()
+	  cleaned the redundant use of AC_MSG_RESULT() in configure.ac
+
+2011-03-18 19:34:57 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* autogen.sh:
+	  autogen: wingo signed comment
+
+2011-03-15 11:02:42 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/dvdsub/gstdvdsubdec.h:
+	  dvdsubdec: Rearrange buffer allocation and pushing code a bit
+	  This makes the code easier to read, doesn't store every buffer
+	  in the instance until the next buffer is to be drawn and
+	  fixes an unitialized variable compiler warning.
+
+2011-03-15 10:59:23 +0100  Brendan Le Foll <blefoll@fluendo.com>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: Output only a single buffer per subpicture and set the correct duration
+	  Fixes bug #619136.
+
+2011-03-14 18:39:35 +0100  Brendan Le Foll <blefoll@fluendo.com>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: Implement clipping if the video size is smaller than the subpicture size
+	  Fixes bug #644704.
+
+2011-03-11 17:45:37 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* ext/mad/gstmad.c:
+	* ext/mad/gstmad.h:
+	  mad: build the mad plugin even if libid3tag is not available
+	  ID3 tags are usually handled by id3demux, and should be handled
+	  by id3demux. Tag handling in mad based on libid3tag is very basic
+	  and mostly unnecessary really, so just build this plugin without
+	  ID3 tag support if libid3tag is not available.
+
+2011-03-02 13:12:11 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/mpegstream/gstdvddemux.c:
+	  dvddemux: small code cleanup
+	  Don't duplicate the 'if' check. Makes the 2nd condition easier to read also
+	  and avoid empty 'if' when logging is disabled.
+
+2011-02-28 19:27:21 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: export plugin description more platform independent
+	  Fixes #642504.
+
+2011-02-28 18:33:34 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1de7f6a to 6aec6b9
+
+2011-02-21 13:13:11 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: do not fail fatally when unlinked
+	  ... as _NOT_LINKED was neither tested as fatal before nor complained about.
+
+2011-02-21 11:05:31 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/mad/gstmad.c:
+	* ext/mad/gstmad.h:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  index: remove conditional index support
+	  Index support cannot be disabled since commit
+	  4bfb1fe70c6f0d5e29c17a8eeffb02f7fd083f11
+	  in core, which removed the configure flags to disable index.
+
+2011-02-17 18:06:51 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/mad/gstmad.c:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  formatting: trim trailing whitespace
+
+2011-02-17 18:05:58 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/mad/gstmad.c:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* gst/mpegstream/gstmpegdemux.c:
+	  index: use delta frame flags instead of 0 or none
+
+2011-02-14 17:52:09 +0000  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Don't register flags with a value of 0
+	  Flags with a value of 0 aren't meaningful and will cause
+	  g_value_transform to go into an endless loop when trying to
+	  convert the flags to a string
+
+2011-02-14 12:54:10 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f94d739 to 1de7f6a
+
+2011-02-07 19:58:45 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/amrwbdec/amrwbdec.c:
+	  amrwbdec: avoid stalling on invalid frame
+	  Skip 1 byte indicating invalid frame type index rather than stalling
+	  on it indefinitely until EOS.
+	  Fixes #639715.
+
+2011-02-03 18:25:00 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/pipelines/lame.c:
+	  tests: add unit test for lamemp3enc negotiation issue
+	  https://bugzilla.gnome.org/show_bug.cgi?id=641151
+
+2011-02-03 18:18:35 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: implement sinkpad get_caps() function to proxy rate and channels restrictions from downstream
+	  The element downstream of mp3enc might only accept certain sample rates or channels,
+	  make sure we relay any restrictions that do exist to upstream when it does a
+	  get_caps() on the sink pad. That way upstream elements like audioresample or
+	  audioconvert can pick a sample rate / channel configuration that will be accepted,
+	  instead of just negotiating to the highest, which might then be rejected.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=641151
+
+2011-01-30 16:17:19 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfpacket: Avoid using broken duration extension
+	  Quite a few (broken?) files have a packet duration of 1ms, which is
+	  most definitely wrong for either audio or video packets.
+	  We therefore avoid using that value and instead use other metrics to
+	  determine the buffer duration (like using the extended stream properties
+	  average frame duration if present and valid).
+
+2011-01-27 15:33:40 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  win32: fix DEFAULT_AUDIOSINK, should be direct*sound*sink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=640705
+
+2011-01-12 16:48:57 +0800  Yang Xichuan <xichuan.yang@tieto.com>
+
+	* gst/mpegaudioparse/gstxingmux.c:
+	  xingmux: Use FALSE instead of 0 as return value for a function returning gboolean
+	  Fixes bug #639291.
+
+2011-01-06 18:29:06 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/mpegstream/gstdvddemux.c:
+	  mpegstream: increase allowable gap between streams
+	  The new delay is three times as much as the old one, and just happens
+	  to let me properly decode my "Princess Mononoke" DVD, on which dvdreadsrc
+	  was chocking before at 5:11.
+	  While there, merge the constants used in two places into a define.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=539708
+
+2011-01-22 17:31:40 +0100  Miguel Angel Cabrera Moya <madmac2501@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: make tag event writable before modifying tag list in place
+	  To modify an event tag is necessary to be sure that x264enc
+	  has its own copy.
+	  Also fix indentation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=640272
+
+2011-01-24 10:14:56 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* win32/common/config.h:
+	  Back to development
+
+=== release 0.10.17 ===
+
+2011-01-21 13:18:51 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 0.10.17
 
 2011-01-18 11:11:28 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 

@@ -26,7 +26,6 @@ GObject
       GstMpeg2dec
       GstAmrnbDec
       GstAmrnbEnc
-      GstSynaesthesia
       GstDvdSubDec
       GstDvdSubParse
       AC3IEC

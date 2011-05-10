@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.17 "Raised by Wolves"
+Release notes for GStreamer Ugly Plug-ins 0.10.18 "Extra Life"
         
 
 The GStreamer team is proud to announce a new release
@@ -8,6 +8,8 @@ GStreamer Ugly Plug-ins.
 
 
 The 0.10.x series is a stable series targeted at end users.
+It is not API or ABI compatible with the stable 0.8.x series.
+It is, however, parallel installable with the 0.8.x series.
 
 
 
@@ -53,40 +55,34 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * asfdemux: Handle new type of DRM'd asf files
-      * dvdreadsrc: fix handling of multi-angle streams
-      * dvdreadsrc: improve error messages on read errors
-      * mad: if gst_pad_alloc_buffer() returns a buffer with the wrong size allocate a new one
-      * mad: support reverse playback
-      * mpeg2dec: convert the position to stream time before answering to a position query
-      * mpeg2dec: fix position query by trusting upstream
-      * mpeg2dec: refactor cropping code to use libgstvideo functions
-      * mpeg2dec: use gst_pad_alloc_buffer() when cropping buffers
-      * mpegparse: re-fix flow return handling
-      * rmdemux: set GST_BUFFER_FLAG_DELTA_UNIT properly
-      * x264enc: add a note to the docs about encoder latency and queues
-      * x264enc: also accept YV12 input
-      * x264enc: Handle codec/encoder tags
-      * x264enc: Work around a rate control issue in libx264
-      * x264: use pkg-config to locate libx264
-      * x264: vbv-buf-capacity should have a minimum of 0
-      * xingmux: Don't ignore WRONG_STATE and NOT_LINKED when pushing data downstream
+      * amrwbdec: avoid stalling on invalid frame
+      * asfpacket: don't rely on data from duration extension
+      * dvdsubdec: Implement clipping if the video size is smaller than the subpicture size
+      * dvdsubdec: Output only a single buffer per subpicture and set the correct duration
+      * lamemp3enc: implement sinkpad get_caps() function to proxy rate and channels restrictions from downstream
+      * mad: build the mad plugin even if libid3tag is not available
+      * mpeg2dec: do not fail fatally when downstream is unlinked (let upstream handle that)
+      * mpeg2dec: don't deadlock when setting an index
+      * mpegstream: increase allowable gap between streams
+      * x264enc: allow changing the bitrate and quantitizers dynamically
+      * x264enc: don't register flags with a value of 0
+      * x264enc: implement getcaps function to proxy downstream caps restrictions upstream
+      * x264enc: make tag event writable before modifying tag list in place
+      * x264enc: set max bitrate in quality mode
 
 Bugs fixed in this release
      
-      * 539254 : [dvdreadsrc] DVDs with multiple angles switch angles during read
-      * 571146 : mpeg2dec: possibly uses wrong strides for 4:2:2 and 4:4:4 YUV with unusual display width or height
-      * 599515 : Fix dvb for DVB API 3.3
-      * 621465 : [x264enc] Video codec information copied incorrectly to output
-      * 632549 : [mpeg2dec] answers to position queries are wrong for DVDs
-      * 632861 : [x264enc] really bad quality with tune=zerolatency
-      * 634840 : x264: use pkg-config to locate dependencies for plugin
-      * 635291 : x264enc: " vbv-buf-capacity " property should have minimum value of 0
-      * 635461 : Crash in mad decoder when changing number of audio output channels in Totem while media is running
-      * 636107 : x264enc: docs should indicate specifics of using with queues
-      * 637093 : rmdemux: set GST_BUFFER_FLAG_DELTA_UNIT properly
-      * 637932 : realmedia: do not use the pad buffer allocation functions in demuxers
-      * 639226 : [asfdemux] Doesn't handle new PlayReady DRM files
+      * 539708 : [mpegstream] Increase allowable gap between streams
+      * 607698 : asfdemux: fix parsing of packets with padding
+      * 619136 : [dvdsubdec] spits out buffers at video framerate
+      * 621663 : x264enc: support changing bitrate property on the fly
+      * 639291 : [xingmux] Return NULL instead of 0 for a function returning gboolean
+      * 639715 : amrparse: seek error with EOS
+      * 640272 : x264enc: make tag event writable before modifying tag list in place
+      * 641151 : lame: doesn't negotiate sample rate properly
+      * 642360 : x264enc: Don't register flags which have 0 as a value
+      * 644704 : [dvdsubedc] no SPU clipping implemented
+      * 647709 : mpeg2dec: errors out on not-linked flow return
 
 Download
 
@@ -115,21 +111,17 @@ Applications
   
 Contributors to this release
     
-      * Benjamin Gaignard
-      * David Schleef
+      * Brendan Le Foll
       * Edward Hervey
-      * Guillaume Emont
-      * Jan Schmidt
-      * Leo Singer
+      * Luis de Bethencourt
       * Mark Nauwelaerts
-      * Rob Clark
-      * Robert Swain
+      * Miguel Angel Cabrera Moya
+      * Olivier Crête
       * Sebastian Dröge
+      * Sjoerd Simons
       * Stefan Kost
-      * Thiago Santos
-      * Thomas Green
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Tristan Matthews
       * Vincent Penquerc'h
-      * Wim Taymans
+      * Yang Xichuan
  
