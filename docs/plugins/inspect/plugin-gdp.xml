@@ -3,10 +3,10 @@
   <description>Payload/depayload GDP packets</description>
   <filename>../../gst/gdp/.libs/libgstgdp.so</filename>
   <basename>libgstgdp.so</basename>
-  <version>0.10.32.4</version>
+  <version>0.10.33</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins prerelease</package>
+  <package>GStreamer Base Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
