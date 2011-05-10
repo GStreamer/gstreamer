@@ -181,7 +181,7 @@ gst_stream_combiner_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_stream_combiner_src_query (GstPad * pad, GstQuery * query)
+gst_stream_combiner_src_query (GstPad * pad, GstQuery ** query)
 {
   GstStreamCombiner *stream_combiner =
       (GstStreamCombiner *) GST_PAD_PARENT (pad);

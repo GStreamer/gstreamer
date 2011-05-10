@@ -122,7 +122,7 @@ static void gst_cdda_base_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_cdda_base_src_finalize (GObject * obj);
 static const GstQueryType *gst_cdda_base_src_get_query_types (GstPad * pad);
-static gboolean gst_cdda_base_src_query (GstBaseSrc * src, GstQuery * query);
+static gboolean gst_cdda_base_src_query (GstBaseSrc * src, GstQuery ** query);
 static gboolean gst_cdda_base_src_handle_event (GstBaseSrc * basesrc,
     GstEvent * event);
 static gboolean gst_cdda_base_src_do_seek (GstBaseSrc * basesrc,
@@ -585,7 +585,7 @@ not_started:
 }
 
 static gboolean
-gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
+gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery ** query)
 {
   GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (basesrc);
   gboolean started;
@@ -593,15 +593,15 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
   started = GST_OBJECT_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED);
 
   GST_LOG_OBJECT (src, "handling %s query",
-      gst_query_type_get_name (GST_QUERY_TYPE (query)));
+      gst_query_type_get_name (GST_QUERY_TYPE (*query)));
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_DURATION:{
       GstFormat dest_format;
       gint64 dest_val;
       guint sectors;
 
-      gst_query_parse_duration (query, &dest_format, NULL);
+      gst_query_parse_duration (*query, &dest_format, NULL);
 
       if (!started)
         return FALSE;
@@ -610,7 +610,7 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
 
       if (dest_format == track_format) {
         GST_LOG_OBJECT (src, "duration: %d tracks", src->num_tracks);
-        gst_query_set_duration (query, track_format, src->num_tracks);
+        gst_query_set_duration (*query, track_format, src->num_tracks);
         return TRUE;
       }
 
@@ -631,7 +631,7 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
         return FALSE;
       }
 
-      gst_query_set_duration (query, dest_format, dest_val);
+      gst_query_set_duration (*query, dest_format, dest_val);
 
       GST_LOG ("duration: %u sectors, %" G_GINT64_FORMAT " in format %s",
           sectors, dest_val, gst_format_get_name (dest_format));
@@ -642,7 +642,7 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
       gint64 pos_sector;
       gint64 dest_val;
 
-      gst_query_parse_position (query, &dest_format, NULL);
+      gst_query_parse_position (*query, &dest_format, NULL);
 
       if (!started)
         return FALSE;
@@ -651,7 +651,7 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
 
       if (dest_format == track_format) {
         GST_LOG_OBJECT (src, "position: track %d", src->cur_track);
-        gst_query_set_position (query, track_format, src->cur_track);
+        gst_query_set_position (*query, track_format, src->cur_track);
         return TRUE;
       }
 
@@ -669,7 +669,7 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
         return FALSE;
       }
 
-      gst_query_set_position (query, dest_format, dest_val);
+      gst_query_set_position (*query, dest_format, dest_val);
 
       GST_LOG ("position: sector %u, %" G_GINT64_FORMAT " in format %s",
           (guint) pos_sector, dest_val, gst_format_get_name (dest_format));
@@ -679,7 +679,7 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
       GstFormat src_format, dest_format;
       gint64 src_val, dest_val;
 
-      gst_query_parse_convert (query, &src_format, &src_val, &dest_format,
+      gst_query_parse_convert (*query, &src_format, &src_val, &dest_format,
           NULL);
 
       if (!gst_cdda_base_src_convert (src, src_format, src_val, dest_format,
@@ -687,7 +687,8 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
         return FALSE;
       }
 
-      gst_query_set_convert (query, src_format, src_val, dest_format, dest_val);
+      gst_query_set_convert (*query, src_format, src_val, dest_format,
+          dest_val);
       break;
     }
     default:{

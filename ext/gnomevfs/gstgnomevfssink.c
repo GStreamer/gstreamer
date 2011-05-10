@@ -96,7 +96,7 @@ static GstFlowReturn gst_gnome_vfs_sink_render (GstBaseSink * basesink,
     GstBuffer * buffer);
 static gboolean gst_gnome_vfs_sink_handle_event (GstBaseSink * basesink,
     GstEvent * event);
-static gboolean gst_gnome_vfs_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_gnome_vfs_sink_query (GstPad * pad, GstQuery ** query);
 
 static guint gst_gnome_vfs_sink_signals[LAST_SIGNAL];   /* all 0 */
 
@@ -481,31 +481,31 @@ gst_gnome_vfs_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
 }
 
 static gboolean
-gst_gnome_vfs_sink_query (GstPad * pad, GstQuery * query)
+gst_gnome_vfs_sink_query (GstPad * pad, GstQuery ** query)
 {
   GstGnomeVFSSink *sink;
   GstFormat format;
 
   sink = GST_GNOME_VFS_SINK (GST_PAD_PARENT (pad));
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_POSITION:
-      gst_query_parse_position (query, &format, NULL);
+      gst_query_parse_position (*query, &format, NULL);
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          gst_query_set_position (query, GST_FORMAT_BYTES, sink->current_pos);
+          gst_query_set_position (*query, GST_FORMAT_BYTES, sink->current_pos);
           return TRUE;
         default:
           return FALSE;
       }
 
     case GST_QUERY_FORMATS:
-      gst_query_set_formats (query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
+      gst_query_set_formats (*query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
       return TRUE;
 
     case GST_QUERY_URI:
-      gst_query_set_uri (query, sink->uri_name);
+      gst_query_set_uri (*query, sink->uri_name);
       return TRUE;
 
     default:

@@ -139,7 +139,7 @@ static GstStateChangeReturn gst_base_audio_sink_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_base_audio_sink_activate_pull (GstBaseSink * basesink,
     gboolean active);
-static gboolean gst_base_audio_sink_query (GstElement * element, GstQuery *
+static gboolean gst_base_audio_sink_query (GstElement * element, GstQuery **
     query);
 
 static GstClock *gst_base_audio_sink_provide_clock (GstElement * elem);
@@ -160,7 +160,7 @@ static gboolean gst_base_audio_sink_setcaps (GstBaseSink * bsink,
     GstCaps * caps);
 static void gst_base_audio_sink_fixate (GstBaseSink * bsink, GstCaps * caps);
 
-static gboolean gst_base_audio_sink_query_pad (GstPad * pad, GstQuery * query);
+static gboolean gst_base_audio_sink_query_pad (GstPad * pad, GstQuery ** query);
 
 
 /* static guint gst_base_audio_sink_signals[LAST_SIGNAL] = { 0 }; */
@@ -338,14 +338,14 @@ clock_disabled:
 }
 
 static gboolean
-gst_base_audio_sink_query_pad (GstPad * pad, GstQuery * query)
+gst_base_audio_sink_query_pad (GstPad * pad, GstQuery ** query)
 {
   gboolean res = FALSE;
   GstBaseAudioSink *basesink;
 
   basesink = GST_BASE_AUDIO_SINK (gst_pad_get_parent (pad));
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;
@@ -354,11 +354,11 @@ gst_base_audio_sink_query_pad (GstPad * pad, GstQuery * query)
       GST_LOG_OBJECT (pad, "query convert");
 
       if (basesink->ringbuffer) {
-        gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, NULL);
+        gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt, NULL);
         res = gst_ring_buffer_convert (basesink->ringbuffer, src_fmt, src_val,
             dest_fmt, &dest_val);
         if (res) {
-          gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+          gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
         }
       }
       break;
@@ -373,14 +373,14 @@ gst_base_audio_sink_query_pad (GstPad * pad, GstQuery * query)
 }
 
 static gboolean
-gst_base_audio_sink_query (GstElement * element, GstQuery * query)
+gst_base_audio_sink_query (GstElement * element, GstQuery ** query)
 {
   gboolean res = FALSE;
   GstBaseAudioSink *basesink;
 
   basesink = GST_BASE_AUDIO_SINK (element);
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_LATENCY:
     {
       gboolean live, us_live;
@@ -432,7 +432,7 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
           min_latency = min_l;
           max_latency = max_l;
         }
-        gst_query_set_latency (query, live, min_latency, max_latency);
+        gst_query_set_latency (*query, live, min_latency, max_latency);
       }
       break;
     }
@@ -444,11 +444,11 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
       GST_LOG_OBJECT (basesink, "query convert");
 
       if (basesink->ringbuffer) {
-        gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, NULL);
+        gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt, NULL);
         res = gst_ring_buffer_convert (basesink->ringbuffer, src_fmt, src_val,
             dest_fmt, &dest_val);
         if (res) {
-          gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+          gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
         }
       }
       break;

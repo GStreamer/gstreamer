@@ -1952,12 +1952,12 @@ gst_xvimagesink_event (GstBaseSink * sink, GstEvent * event)
 }
 
 static gboolean
-gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
+gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery ** query)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (GST_PAD_PARENT (sinkpad));
   gboolean res = TRUE;
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_ALLOCATION:
     {
       GstCaps *caps;
@@ -1967,7 +1967,7 @@ gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
       GstVideoFormat format;
       gint width, height;
 
-      gst_query_parse_allocation (query, &caps, &need_pool);
+      gst_query_parse_allocation (*query, &caps, &need_pool);
 
       if (caps == NULL)
         goto no_caps;
@@ -1989,10 +1989,10 @@ gst_xvimagesink_sink_query (GstPad * sinkpad, GstQuery * query)
         if (!gst_buffer_pool_set_config (pool, config))
           goto config_failed;
       }
-      gst_query_set_allocation_params (query, size, 0, 0, 0, 16, pool);
+      gst_query_set_allocation_params (*query, size, 0, 0, 0, 16, pool);
 
       /* we also support various metadata */
-      gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
+      gst_query_add_allocation_meta (*query, GST_META_API_VIDEO);
       break;
     }
     default:

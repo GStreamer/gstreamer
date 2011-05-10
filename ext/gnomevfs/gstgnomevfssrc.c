@@ -132,7 +132,7 @@ static gboolean gst_gnome_vfs_src_check_get_range (GstBaseSrc * src);
 static gboolean gst_gnome_vfs_src_get_size (GstBaseSrc * src, guint64 * size);
 static GstFlowReturn gst_gnome_vfs_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint size, GstBuffer ** buffer);
-static gboolean gst_gnome_vfs_src_query (GstBaseSrc * src, GstQuery * query);
+static gboolean gst_gnome_vfs_src_query (GstBaseSrc * src, GstQuery ** query);
 
 #define gst_gnome_vfs_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGnomeVFSSrc, gst_gnome_vfs_src, GST_TYPE_BASE_SRC,
@@ -657,14 +657,14 @@ eos:
 }
 
 static gboolean
-gst_gnome_vfs_src_query (GstBaseSrc * basesrc, GstQuery * query)
+gst_gnome_vfs_src_query (GstBaseSrc * basesrc, GstQuery ** query)
 {
   gboolean ret = FALSE;
   GstGnomeVFSSrc *src = GST_GNOME_VFS_SRC (basesrc);
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_URI:
-      gst_query_set_uri (query, src->uri_name);
+      gst_query_set_uri (*query, src->uri_name);
       ret = TRUE;
       break;
     default:

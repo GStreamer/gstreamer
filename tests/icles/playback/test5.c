@@ -78,7 +78,7 @@ dump_element_stats (GstElement * element)
     gst_caps_unref (caps);
 
     query = gst_query_new_duration (GST_FORMAT_TIME);
-    if (gst_pad_query (pad, query)) {
+    if (gst_pad_query (pad, &query)) {
       gint64 duration;
 
       gst_query_parse_duration (query, NULL, &duration);

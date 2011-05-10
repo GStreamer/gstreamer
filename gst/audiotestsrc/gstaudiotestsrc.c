@@ -155,7 +155,7 @@ static gboolean gst_audio_test_src_check_get_range (GstBaseSrc * basesrc);
 static gboolean gst_audio_test_src_do_seek (GstBaseSrc * basesrc,
     GstSegment * segment);
 static gboolean gst_audio_test_src_query (GstBaseSrc * basesrc,
-    GstQuery * query);
+    GstQuery ** query);
 
 static void gst_audio_test_src_change_wave (GstAudioTestSrc * src);
 
@@ -355,18 +355,19 @@ gst_audio_test_src_setcaps (GstBaseSrc * basesrc, GstCaps * caps)
 }
 
 static gboolean
-gst_audio_test_src_query (GstBaseSrc * basesrc, GstQuery * query)
+gst_audio_test_src_query (GstBaseSrc * basesrc, GstQuery ** query)
 {
   GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (basesrc);
   gboolean res = FALSE;
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt,
+          &dest_val);
       if (src_fmt == dest_fmt) {
         dest_val = src_val;
         goto done;
@@ -401,7 +402,7 @@ gst_audio_test_src_query (GstBaseSrc * basesrc, GstQuery * query)
           goto error;
       }
     done:
-      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
       res = TRUE;
       break;
     }

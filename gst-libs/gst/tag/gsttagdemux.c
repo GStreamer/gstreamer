@@ -154,7 +154,7 @@ static gboolean gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event);
 static gboolean gst_tag_demux_sink_activate (GstPad * sinkpad);
 static GstStateChangeReturn gst_tag_demux_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean gst_tag_demux_pad_query (GstPad * pad, GstQuery * query);
+static gboolean gst_tag_demux_pad_query (GstPad * pad, GstQuery ** query);
 static const GstQueryType *gst_tag_demux_get_query_types (GstPad * pad);
 static gboolean gst_tag_demux_get_upstream_size (GstTagDemux * tagdemux);
 static void gst_tag_demux_send_pending_events (GstTagDemux * tagdemux);
@@ -1377,7 +1377,7 @@ gst_tag_demux_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_tag_demux_pad_query (GstPad * pad, GstQuery * query)
+gst_tag_demux_pad_query (GstPad * pad, GstQuery ** query)
 {
   /* For a position or duration query, adjust the returned
    * bytes to strip off the end and start areas */
@@ -1397,22 +1397,22 @@ gst_tag_demux_pad_query (GstPad * pad, GstQuery * query)
 
   gst_object_unref (peer);
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_POSITION:
     {
-      gst_query_parse_position (query, &format, &result);
+      gst_query_parse_position (*query, &format, &result);
       if (format == GST_FORMAT_BYTES) {
         result -= demux->priv->strip_start;
-        gst_query_set_position (query, format, result);
+        gst_query_set_position (*query, format, result);
       }
       break;
     }
     case GST_QUERY_DURATION:
     {
-      gst_query_parse_duration (query, &format, &result);
+      gst_query_parse_duration (*query, &format, &result);
       if (format == GST_FORMAT_BYTES) {
         result -= demux->priv->strip_start + demux->priv->strip_end;
-        gst_query_set_duration (query, format, result);
+        gst_query_set_duration (*query, format, result);
       }
       break;
     }

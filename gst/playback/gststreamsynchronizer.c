@@ -134,12 +134,12 @@ gst_stream_synchronizer_iterate_internal_links (GstPad * pad)
 }
 
 static gboolean
-gst_stream_synchronizer_query (GstPad * pad, GstQuery * query)
+gst_stream_synchronizer_query (GstPad * pad, GstQuery ** query)
 {
   GstPad *opad;
   gboolean ret = FALSE;
 
-  GST_LOG_OBJECT (pad, "Handling query %s", GST_QUERY_TYPE_NAME (query));
+  GST_LOG_OBJECT (pad, "Handling query %s", GST_QUERY_TYPE_NAME (*query));
 
   opad = gst_stream_get_other_pad_from_pad (pad);
   if (opad) {

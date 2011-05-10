@@ -79,7 +79,7 @@ static GstFlowReturn vorbis_parse_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn vorbis_parse_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean vorbis_parse_sink_event (GstPad * pad, GstEvent * event);
-static gboolean vorbis_parse_src_query (GstPad * pad, GstQuery * query);
+static gboolean vorbis_parse_src_query (GstPad * pad, GstQuery ** query);
 static gboolean vorbis_parse_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
@@ -545,7 +545,7 @@ vorbis_parse_convert (GstPad * pad,
 }
 
 static gboolean
-vorbis_parse_src_query (GstPad * pad, GstQuery * query)
+vorbis_parse_src_query (GstPad * pad, GstQuery ** query)
 {
   gint64 granulepos;
   GstVorbisParse *parse;
@@ -553,7 +553,7 @@ vorbis_parse_src_query (GstPad * pad, GstQuery * query)
 
   parse = GST_VORBIS_PARSE (GST_PAD_PARENT (pad));
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_POSITION:
     {
       GstFormat format;
@@ -561,7 +561,7 @@ vorbis_parse_src_query (GstPad * pad, GstQuery * query)
 
       granulepos = parse->prev_granulepos;
 
-      gst_query_parse_position (query, &format, NULL);
+      gst_query_parse_position (*query, &format, NULL);
 
       /* and convert to the final format */
       if (!(res =
@@ -573,11 +573,11 @@ vorbis_parse_src_query (GstPad * pad, GstQuery * query)
          value = (value - parse->segment_start) + parse->segment_time;
        */
 
-      gst_query_set_position (query, format, value);
+      gst_query_set_position (*query, format, value);
 
       GST_LOG_OBJECT (parse, "query %p: peer returned granulepos: %"
           G_GUINT64_FORMAT " - we return %" G_GUINT64_FORMAT " (format %u)",
-          query, granulepos, value, format);
+          *query, granulepos, value, format);
 
       break;
     }
@@ -590,7 +590,7 @@ vorbis_parse_src_query (GstPad * pad, GstQuery * query)
             parse->sinkpad);
         goto error;
       }
-      if (!(res = gst_pad_query (GST_PAD_PEER (parse->sinkpad), query)))
+      if (!(res = gst_pad_peer_query (parse->sinkpad, query)))
         goto error;
       break;
     }
@@ -599,12 +599,13 @@ vorbis_parse_src_query (GstPad * pad, GstQuery * query)
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt,
+          &dest_val);
       if (!(res =
               vorbis_parse_convert (pad, src_fmt, src_val, &dest_fmt,
                   &dest_val)))
         goto error;
-      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
     default:

@@ -353,7 +353,7 @@ gst_stream_splitter_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_stream_splitter_src_query (GstPad * pad, GstQuery * query)
+gst_stream_splitter_src_query (GstPad * pad, GstQuery ** query)
 {
   GstStreamSplitter *stream_splitter =
       (GstStreamSplitter *) GST_PAD_PARENT (pad);

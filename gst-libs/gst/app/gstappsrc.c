@@ -242,7 +242,7 @@ static gboolean gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment);
 static gboolean gst_app_src_is_seekable (GstBaseSrc * src);
 static gboolean gst_app_src_check_get_range (GstBaseSrc * src);
 static gboolean gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size);
-static gboolean gst_app_src_query (GstBaseSrc * src, GstQuery * query);
+static gboolean gst_app_src_query (GstBaseSrc * src, GstQuery ** query);
 
 static GstFlowReturn gst_app_src_push_buffer_action (GstAppSrc * appsrc,
     GstBuffer * buffer);
@@ -793,13 +793,13 @@ gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size)
 }
 
 static gboolean
-gst_app_src_query (GstBaseSrc * src, GstQuery * query)
+gst_app_src_query (GstBaseSrc * src, GstQuery ** query)
 {
   GstAppSrc *appsrc = GST_APP_SRC_CAST (src);
   GstAppSrcPrivate *priv = appsrc->priv;
   gboolean res;
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_LATENCY:
     {
       GstClockTime min, max;
@@ -816,7 +816,7 @@ gst_app_src_query (GstBaseSrc * src, GstQuery * query)
         max = priv->max_latency;
       g_mutex_unlock (priv->mutex);
 
-      gst_query_set_latency (query, live, min, max);
+      gst_query_set_latency (*query, live, min, max);
       break;
     }
     default:

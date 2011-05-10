@@ -51,7 +51,7 @@ static gboolean gst_gio_base_src_check_get_range (GstBaseSrc * base_src);
 static GstFlowReturn gst_gio_base_src_create (GstBaseSrc * base_src,
     guint64 offset, guint size, GstBuffer ** buf);
 static gboolean gst_gio_base_src_query (GstBaseSrc * base_src,
-    GstQuery * query);
+    GstQuery ** query);
 
 static void
 gst_gio_base_src_class_init (GstGioBaseSrcClass * klass)
@@ -418,16 +418,16 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
 }
 
 static gboolean
-gst_gio_base_src_query (GstBaseSrc * base_src, GstQuery * query)
+gst_gio_base_src_query (GstBaseSrc * base_src, GstQuery ** query)
 {
   gboolean ret = FALSE;
   GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_URI:
       if (GST_IS_URI_HANDLER (src)) {
         const gchar *uri = gst_uri_handler_get_uri (GST_URI_HANDLER (src));
-        gst_query_set_uri (query, uri);
+        gst_query_set_uri (*query, uri);
         ret = TRUE;
       }
       break;

@@ -1192,7 +1192,7 @@ update_fill (gpointer data)
       GstQuery *query;
 
       query = gst_query_new_buffering (GST_FORMAT_PERCENT);
-      if (gst_element_query (element, query)) {
+      if (gst_element_query (element, &query)) {
         gint64 start, stop, buffering_total;
         GstFormat format;
         gdouble fill;

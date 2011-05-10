@@ -955,7 +955,7 @@ discoverer_collect (GstDiscoverer * dc)
       }
 
       if (dc->priv->seeking_query) {
-        if (gst_element_query (pipeline, dc->priv->seeking_query)) {
+        if (gst_element_query (pipeline, &dc->priv->seeking_query)) {
           gboolean seekable;
 
           gst_query_parse_seeking (dc->priv->seeking_query, &format,

@@ -325,7 +325,7 @@ static gboolean gst_base_text_overlay_setcaps_txt (GstPad * pad,
 static gboolean gst_base_text_overlay_src_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_base_text_overlay_src_query (GstPad * pad,
-    GstQuery * query);
+    GstQuery ** query);
 
 static gboolean gst_base_text_overlay_video_event (GstPad * pad,
     GstEvent * event);
@@ -1004,7 +1004,7 @@ gst_base_text_overlay_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_base_text_overlay_src_query (GstPad * pad, GstQuery * query)
+gst_base_text_overlay_src_query (GstPad * pad, GstQuery ** query)
 {
   gboolean ret = FALSE;
   GstBaseTextOverlay *overlay = NULL;

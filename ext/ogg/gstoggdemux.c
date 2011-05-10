@@ -112,7 +112,7 @@ static void gst_ogg_pad_dispose (GObject * object);
 static void gst_ogg_pad_finalize (GObject * object);
 
 static const GstQueryType *gst_ogg_pad_query_types (GstPad * pad);
-static gboolean gst_ogg_pad_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_ogg_pad_src_query (GstPad * pad, GstQuery ** query);
 static gboolean gst_ogg_pad_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_ogg_pad_getcaps (GstPad * pad);
 static GstOggPad *gst_ogg_chain_get_stream (GstOggChain * chain,
@@ -233,20 +233,20 @@ gst_ogg_pad_getcaps (GstPad * pad)
 }
 
 static gboolean
-gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
+gst_ogg_pad_src_query (GstPad * pad, GstQuery ** query)
 {
   gboolean res = TRUE;
   GstOggDemux *ogg;
 
   ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_DURATION:
     {
       GstFormat format;
       gint64 total_time = -1;
 
-      gst_query_parse_duration (query, &format, NULL);
+      gst_query_parse_duration (*query, &format, NULL);
       /* can only get position in time */
       if (format != GST_FORMAT_TIME)
         goto wrong_format;
@@ -263,7 +263,7 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
 
           /* ask upstream for total length in bytes */
           uquery = gst_query_new_duration (GST_FORMAT_BYTES);
-          if (gst_pad_peer_query (ogg->sinkpad, uquery)) {
+          if (gst_pad_peer_query (ogg->sinkpad, &uquery)) {
             gint64 length;
 
             gst_query_parse_duration (uquery, NULL, &length);
@@ -280,14 +280,14 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
         }
       }
 
-      gst_query_set_duration (query, GST_FORMAT_TIME, total_time);
+      gst_query_set_duration (*query, GST_FORMAT_TIME, total_time);
       break;
     }
     case GST_QUERY_SEEKING:
     {
       GstFormat format;
 
-      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      gst_query_parse_seeking (*query, &format, NULL, NULL, NULL);
       if (format == GST_FORMAT_TIME) {
         gboolean seekable = FALSE;
         gint64 stop = -1;
@@ -321,7 +321,7 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
           }
         }
 
-        gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0, stop);
+        gst_query_set_seeking (*query, GST_FORMAT_TIME, seekable, 0, stop);
       } else {
         res = FALSE;
       }

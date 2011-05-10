@@ -81,7 +81,7 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
 
 
 static gboolean gst_sub_parse_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_sub_parse_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_sub_parse_src_query (GstPad * pad, GstQuery ** query);
 static gboolean gst_sub_parse_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_sub_parse_change_state (GstElement * element,
@@ -209,23 +209,23 @@ gst_sub_parse_init (GstSubParse * subparse)
  */
 
 static gboolean
-gst_sub_parse_src_query (GstPad * pad, GstQuery * query)
+gst_sub_parse_src_query (GstPad * pad, GstQuery ** query)
 {
   GstSubParse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
   gboolean ret = FALSE;
 
-  GST_DEBUG ("Handling %s query", GST_QUERY_TYPE_NAME (query));
+  GST_DEBUG ("Handling %s query", GST_QUERY_TYPE_NAME (*query));
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_POSITION:{
       GstFormat fmt;
 
-      gst_query_parse_position (query, &fmt, NULL);
+      gst_query_parse_position (*query, &fmt, NULL);
       if (fmt != GST_FORMAT_TIME) {
         ret = gst_pad_peer_query (self->sinkpad, query);
       } else {
         ret = TRUE;
-        gst_query_set_position (query, GST_FORMAT_TIME,
+        gst_query_set_position (*query, GST_FORMAT_TIME,
             self->segment.last_stop);
       }
     }
@@ -236,17 +236,17 @@ gst_sub_parse_src_query (GstPad * pad, GstQuery * query)
 
       ret = TRUE;
 
-      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      gst_query_parse_seeking (*query, &fmt, NULL, NULL, NULL);
       if (fmt == GST_FORMAT_TIME) {
         GstQuery *peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
 
-        seekable = gst_pad_peer_query (self->sinkpad, peerquery);
+        seekable = gst_pad_peer_query (self->sinkpad, &peerquery);
         if (seekable)
           gst_query_parse_seeking (peerquery, NULL, &seekable, NULL, NULL);
         gst_query_unref (peerquery);
       }
 
-      gst_query_set_seeking (query, fmt, seekable, seekable ? 0 : -1, -1);
+      gst_query_set_seeking (*query, fmt, seekable, seekable ? 0 : -1, -1);
 
       break;
     }

@@ -439,7 +439,7 @@ gst_vorbis_enc_get_query_types (GstPad * pad)
 }
 
 static gboolean
-gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
+gst_vorbis_enc_src_query (GstPad * pad, GstQuery ** query)
 {
   gboolean res = TRUE;
   GstVorbisEnc *vorbisenc;
@@ -454,9 +454,9 @@ gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
       GstFormat fmt, req_fmt;
       gint64 pos, val;
 
-      gst_query_parse_position (query, &req_fmt, NULL);
+      gst_query_parse_position (*query, &req_fmt, NULL);
       if ((res = gst_pad_query_position (peerpad, &req_fmt, &val))) {
-        gst_query_set_position (query, req_fmt, val);
+        gst_query_set_position (*query, req_fmt, val);
         break;
       }
 
@@ -465,7 +465,7 @@ gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
         break;
 
       if ((res = gst_pad_query_convert (peerpad, fmt, pos, &req_fmt, &val))) {
-        gst_query_set_position (query, req_fmt, val);
+        gst_query_set_position (*query, req_fmt, val);
       }
       break;
     }
@@ -474,9 +474,9 @@ gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
       GstFormat fmt, req_fmt;
       gint64 dur, val;
 
-      gst_query_parse_duration (query, &req_fmt, NULL);
+      gst_query_parse_duration (*query, &req_fmt, NULL);
       if ((res = gst_pad_query_duration (peerpad, &req_fmt, &val))) {
-        gst_query_set_duration (query, req_fmt, val);
+        gst_query_set_duration (*query, req_fmt, val);
         break;
       }
 
@@ -485,7 +485,7 @@ gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
         break;
 
       if ((res = gst_pad_query_convert (peerpad, fmt, dur, &req_fmt, &val))) {
-        gst_query_set_duration (query, req_fmt, val);
+        gst_query_set_duration (*query, req_fmt, val);
       }
       break;
     }
@@ -494,12 +494,13 @@ gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt,
+          &dest_val);
       if (!(res =
               gst_vorbis_enc_convert_src (pad, src_fmt, src_val, &dest_fmt,
                   &dest_val)))
         goto error;
-      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
     case GST_QUERY_LATENCY:
@@ -509,7 +510,7 @@ gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
       gint64 latency;
 
       if ((res = gst_pad_query (peerpad, query))) {
-        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+        gst_query_parse_latency (*query, &live, &min_latency, &max_latency);
 
         latency = gst_vorbis_enc_get_latency (vorbisenc);
 
@@ -518,7 +519,7 @@ gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
         if (max_latency != -1)
           max_latency += latency;
 
-        gst_query_set_latency (query, live, min_latency, max_latency);
+        gst_query_set_latency (*query, live, min_latency, max_latency);
       }
       break;
     }
@@ -534,22 +535,23 @@ error:
 }
 
 static gboolean
-gst_vorbis_enc_sink_query (GstPad * pad, GstQuery * query)
+gst_vorbis_enc_sink_query (GstPad * pad, GstQuery ** query)
 {
   gboolean res = TRUE;
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt,
+          &dest_val);
       if (!(res =
               gst_vorbis_enc_convert_sink (pad, src_fmt, src_val, &dest_fmt,
                   &dest_val)))
         goto error;
-      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
     default:

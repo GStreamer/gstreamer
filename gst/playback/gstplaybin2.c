@@ -526,7 +526,7 @@ static GstStateChangeReturn gst_play_bin_change_state (GstElement * element,
     GstStateChange transition);
 
 static void gst_play_bin_handle_message (GstBin * bin, GstMessage * message);
-static gboolean gst_play_bin_query (GstElement * element, GstQuery * query);
+static gboolean gst_play_bin_query (GstElement * element, GstQuery ** query);
 
 static GstTagList *gst_play_bin_get_video_tags (GstPlayBin * playbin,
     gint stream);
@@ -2086,14 +2086,14 @@ gst_play_bin_update_cached_duration (GstPlayBin * playbin)
     query = gst_query_new_duration (formats[i]);
     ret =
         GST_ELEMENT_CLASS (parent_class)->query (GST_ELEMENT_CAST (playbin),
-        query);
+        &query);
     gst_play_bin_update_cached_duration_from_query (playbin, ret, query);
     gst_query_unref (query);
   }
 }
 
 static gboolean
-gst_play_bin_query (GstElement * element, GstQuery * query)
+gst_play_bin_query (GstElement * element, GstQuery ** query)
 {
   GstPlayBin *playbin = GST_PLAY_BIN (element);
   gboolean ret;
@@ -2109,7 +2109,7 @@ gst_play_bin_query (GstElement * element, GstQuery * query)
    */
   GST_PLAY_BIN_LOCK (playbin);
 
-  if (GST_QUERY_TYPE (query) == GST_QUERY_DURATION) {
+  if (GST_QUERY_TYPE (*query) == GST_QUERY_DURATION) {
     GstSourceGroup *group = playbin->curr_group;
     gboolean pending;
 
@@ -2126,11 +2126,11 @@ gst_play_bin_query (GstElement * element, GstQuery * query)
       gint i;
 
       ret = FALSE;
-      gst_query_parse_duration (query, &fmt, NULL);
+      gst_query_parse_duration (*query, &fmt, NULL);
       for (i = 0; i < G_N_ELEMENTS (playbin->duration); i++) {
         if (fmt == playbin->duration[i].format) {
           ret = playbin->duration[i].valid;
-          gst_query_set_duration (query, fmt,
+          gst_query_set_duration (*query, fmt,
               (ret ? playbin->duration[i].duration : -1));
           break;
         }
@@ -2150,8 +2150,8 @@ gst_play_bin_query (GstElement * element, GstQuery * query)
 
   ret = GST_ELEMENT_CLASS (parent_class)->query (element, query);
 
-  if (GST_QUERY_TYPE (query) == GST_QUERY_DURATION)
-    gst_play_bin_update_cached_duration_from_query (playbin, ret, query);
+  if (GST_QUERY_TYPE (*query) == GST_QUERY_DURATION)
+    gst_play_bin_update_cached_duration_from_query (playbin, ret, *query);
   GST_PLAY_BIN_UNLOCK (playbin);
 
   return ret;
