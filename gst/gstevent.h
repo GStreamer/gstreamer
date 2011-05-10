@@ -240,6 +240,26 @@ typedef struct _GstEvent GstEvent;
 #define GST_EVENT_IS_STICKY(ev)     !!(GST_EVENT_TYPE (ev) & GST_EVENT_TYPE_STICKY)
 
 /**
+ * gst_event_is_writable:
+ * @ev: a #GstEvent
+ *
+ * Tests if you can safely write data into a event's structure or validly
+ * modify the seqnum and timestamp field.
+ */
+#define         gst_event_is_writable(ev)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (ev))
+/**
+ * gst_event_make_writable:
+ * @ev: (transfer full): a #GstEvent
+ *
+ * Makes a writable event from the given event. If the source event is
+ * already writable, this will simply return the same event. A copy will
+ * otherwise be made using gst_event_copy().
+ *
+ * Returns: (transfer full): a writable event which may or may not be the
+ *     same as @ev
+ */
+#define         gst_event_make_writable(ev)   GST_EVENT_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (ev)))
+/**
  * gst_event_replace:
  * @old_event: (inout) (transfer full): pointer to a pointer to a #GstEvent
  *     to be replaced.
@@ -337,12 +357,12 @@ typedef enum {
  *    type is also used when buffers arrive early or in time.
  * @GST_QOS_TYPE_UNDERFLOW: The QoS event type that is produced when downstream
  *    elements are producing data too slowly and need to speed up their processing
- *    rate. 
+ *    rate.
  * @GST_QOS_TYPE_THROTTLE: The QoS event type that is produced when the
  *    application enabled throttling to limit the datarate.
  *
- * The different types of QoS events that can be given to the 
- * gst_event_new_qos_full() method. 
+ * The different types of QoS events that can be given to the
+ * gst_event_new_qos() method.
  *
  * Since: 0.10.33
  */
@@ -368,11 +388,6 @@ struct _GstEvent {
   GstEventType  type;
   guint64       timestamp;
   guint32       seqnum;
-
-  GstStructure  *structure;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 const gchar*    gst_event_type_get_name         (GstEventType type);
@@ -443,6 +458,7 @@ GstEvent*       gst_event_new_custom            (GstEventType type, GstStructure
 
 const GstStructure *
                 gst_event_get_structure         (GstEvent *event);
+GstStructure *  gst_event_writable_structure    (GstEvent *event);
 
 gboolean        gst_event_has_name              (GstEvent *event, const gchar *name);
 

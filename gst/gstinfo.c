@@ -681,9 +681,11 @@ gst_debug_print_object (gpointer ptr)
   if (GST_IS_EVENT (object)) {
     GstEvent *event = GST_EVENT_CAST (object);
     gchar *s, *ret;
+    GstStructure *structure;
 
-    if (event->structure) {
-      s = gst_info_structure_to_string (event->structure);
+    structure = (GstStructure *) gst_event_get_structure (event);
+    if (structure) {
+      s = gst_info_structure_to_string (structure);
     } else {
       s = g_strdup ("(NULL)");
     }

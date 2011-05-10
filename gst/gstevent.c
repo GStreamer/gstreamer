@@ -89,6 +89,15 @@ static GType _gst_event_type = 0;
 
 typedef struct
 {
+  GstEvent event;
+
+  GstStructure *structure;
+} GstEventImpl;
+
+#define GST_EVENT_STRUCTURE(e)  (((GstEventImpl *)(e))->structure)
+
+typedef struct
+{
   const gint type;
   const gchar *name;
   GQuark quark;
@@ -203,49 +212,55 @@ gst_event_get_type (void)
 static void
 _gst_event_free (GstEvent * event)
 {
+  GstStructure *s;
+
   g_return_if_fail (event != NULL);
   g_return_if_fail (GST_IS_EVENT (event));
 
   GST_CAT_LOG (GST_CAT_EVENT, "freeing event %p type %s", event,
       GST_EVENT_TYPE_NAME (event));
 
-  if (event->structure) {
-    gst_structure_set_parent_refcount (event->structure, NULL);
-    gst_structure_free (event->structure);
+  s = GST_EVENT_STRUCTURE (event);
+
+  if (s) {
+    gst_structure_set_parent_refcount (s, NULL);
+    gst_structure_free (s);
   }
 
   g_slice_free1 (GST_MINI_OBJECT_SIZE (event), event);
 }
 
-static void gst_event_init (GstEvent * event, gsize size, GstEventType type);
+static void gst_event_init (GstEventImpl * event, gsize size,
+    GstEventType type);
 
 static GstEvent *
 _gst_event_copy (GstEvent * event)
 {
-  GstEvent *copy;
+  GstEventImpl *copy;
+  GstStructure *s;
 
-  copy = g_slice_new0 (GstEvent);
+  copy = g_slice_new0 (GstEventImpl);
 
-  gst_event_init (copy, sizeof (GstEvent), GST_EVENT_TYPE (event));
+  gst_event_init (copy, sizeof (GstEventImpl), GST_EVENT_TYPE (event));
 
   GST_EVENT_TIMESTAMP (copy) = GST_EVENT_TIMESTAMP (event);
   GST_EVENT_SEQNUM (copy) = GST_EVENT_SEQNUM (event);
 
-  if (event->structure) {
-    copy->structure = gst_structure_copy (event->structure);
-    gst_structure_set_parent_refcount (copy->structure,
-        &copy->mini_object.refcount);
+  s = GST_EVENT_STRUCTURE (event);
+  if (s) {
+    GST_EVENT_STRUCTURE (copy) = gst_structure_copy (s);
+    gst_structure_set_parent_refcount (s, &copy->event.mini_object.refcount);
   }
-  return copy;
+  return GST_EVENT_CAST (copy);
 }
 
 static void
-gst_event_init (GstEvent * event, gsize size, GstEventType type)
+gst_event_init (GstEventImpl * event, gsize size, GstEventType type)
 {
   gst_mini_object_init (GST_MINI_OBJECT_CAST (event), _gst_event_type, size);
 
-  event->mini_object.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
-  event->mini_object.free = (GstMiniObjectFreeFunction) _gst_event_free;
+  event->event.mini_object.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
+  event->event.mini_object.free = (GstMiniObjectFreeFunction) _gst_event_free;
 
   GST_EVENT_TYPE (event) = type;
   GST_EVENT_TIMESTAMP (event) = GST_CLOCK_TIME_NONE;
@@ -255,16 +270,16 @@ gst_event_init (GstEvent * event, gsize size, GstEventType type)
 static GstEvent *
 gst_event_new (GstEventType type)
 {
-  GstEvent *event;
+  GstEventImpl *event;
 
-  event = g_slice_new0 (GstEvent);
+  event = g_slice_new0 (GstEventImpl);
 
   GST_CAT_DEBUG (GST_CAT_EVENT, "creating new event %p %s %d", event,
       gst_event_type_get_name (type), type);
 
-  gst_event_init (event, sizeof (GstEvent), type);
+  gst_event_init (event, sizeof (GstEventImpl), type);
 
-  return event;
+  return GST_EVENT_CAST (event);
 }
 
 /**
@@ -298,7 +313,7 @@ gst_event_new_custom (GstEventType type, GstStructure * structure)
   event = gst_event_new (type);
   if (structure) {
     gst_structure_set_parent_refcount (structure, &event->mini_object.refcount);
-    event->structure = structure;
+    GST_EVENT_STRUCTURE (event) = structure;
   }
   return event;
 }
@@ -320,7 +335,40 @@ gst_event_get_structure (GstEvent * event)
 {
   g_return_val_if_fail (GST_IS_EVENT (event), NULL);
 
-  return event->structure;
+  return GST_EVENT_STRUCTURE (event);
+}
+
+/**
+ * gst_event_writable_structure:
+ * @event: The #GstEvent.
+ *
+ * Get a writable version of the structure.
+ *
+ * Returns: The structure of the event. The structure is still
+ * owned by the event, which means that you should not free it and
+ * that the pointer becomes invalid when you free the event.
+ * This function checks if @event is writable and will never return NULL.
+ *
+ * MT safe.
+ */
+GstStructure *
+gst_event_writable_structure (GstEvent * event)
+{
+  GstStructure *structure;
+
+  g_return_val_if_fail (GST_IS_EVENT (event), NULL);
+  g_return_val_if_fail (gst_event_is_writable (event), NULL);
+
+  structure = GST_EVENT_STRUCTURE (event);
+
+  if (structure == NULL) {
+    structure =
+        gst_structure_id_empty_new (gst_event_type_to_quark (GST_EVENT_TYPE
+            (event)));
+    gst_structure_set_parent_refcount (structure, &event->mini_object.refcount);
+    GST_EVENT_STRUCTURE (event) = structure;
+  }
+  return structure;
 }
 
 /**
@@ -340,10 +388,10 @@ gst_event_has_name (GstEvent * event, const gchar * name)
 {
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
 
-  if (event->structure == NULL)
+  if (GST_EVENT_STRUCTURE (event) == NULL)
     return FALSE;
 
-  return gst_structure_has_name (event->structure, name);
+  return gst_structure_has_name (GST_EVENT_STRUCTURE (event), name);
 }
 
 /**
@@ -519,7 +567,7 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
 
-  structure = event->structure;
+  structure = GST_EVENT_STRUCTURE (event);
   if (G_LIKELY (caps))
     *caps =
         g_value_get_boxed (gst_structure_id_get_value (structure,
@@ -641,7 +689,7 @@ gst_event_parse_new_segment (GstEvent * event, gboolean * update,
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT);
 
-  structure = event->structure;
+  structure = GST_EVENT_STRUCTURE (event);
   if (G_LIKELY (update))
     *update =
         g_value_get_boolean (gst_structure_id_get_value (structure,
@@ -706,7 +754,7 @@ gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_TAG);
 
   if (taglist)
-    *taglist = (GstTagList *) event->structure;
+    *taglist = (GstTagList *) GST_EVENT_STRUCTURE (event);
 }
 
 /* buffersize event */
@@ -765,7 +813,7 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_BUFFERSIZE);
 
-  structure = event->structure;
+  structure = GST_EVENT_STRUCTURE (event);
   if (format)
     *format =
         g_value_get_enum (gst_structure_id_get_value (structure,
@@ -881,7 +929,7 @@ gst_event_parse_qos (GstEvent * event, GstQOSType * type,
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_QOS);
 
-  structure = event->structure;
+  structure = GST_EVENT_STRUCTURE (event);
   if (type)
     *type =
         g_value_get_enum (gst_structure_id_get_value (structure,
@@ -1005,7 +1053,7 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEEK);
 
-  structure = event->structure;
+  structure = GST_EVENT_STRUCTURE (event);
   if (rate)
     *rate =
         g_value_get_double (gst_structure_id_get_value (structure,
@@ -1101,8 +1149,8 @@ gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
 
   if (latency)
     *latency =
-        g_value_get_uint64 (gst_structure_id_get_value (event->structure,
-            GST_QUARK (LATENCY)));
+        g_value_get_uint64 (gst_structure_id_get_value (GST_EVENT_STRUCTURE
+            (event), GST_QUARK (LATENCY)));
 }
 
 /**
@@ -1175,7 +1223,7 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STEP);
 
-  structure = event->structure;
+  structure = GST_EVENT_STRUCTURE (event);
   if (format)
     *format = g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
@@ -1264,7 +1312,7 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SINK_MESSAGE);
 
-  structure = event->structure;
+  structure = GST_EVENT_STRUCTURE (event);
   if (msg)
     *msg =
         GST_MESSAGE (g_value_dup_boxed (gst_structure_id_get_value

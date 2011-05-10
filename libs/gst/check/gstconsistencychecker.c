@@ -78,7 +78,8 @@ source_pad_data_cb (GstPad * pad, GstMiniObject * data,
         consist->newsegment = FALSE;
         break;
       case GST_EVENT_TAG:
-        GST_DEBUG_OBJECT (pad, "tag %" GST_PTR_FORMAT, event->structure);
+        GST_DEBUG_OBJECT (pad, "tag %" GST_PTR_FORMAT,
+            gst_event_get_structure (event));
         /* fall through */
       default:
         if (GST_EVENT_IS_SERIALIZED (event) && GST_EVENT_IS_DOWNSTREAM (event)) {

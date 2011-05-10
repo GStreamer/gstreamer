@@ -394,6 +394,7 @@ gst_dp_packet_from_event_1_0 (const GstEvent * event, GstDPHeaderFlag flags,
   guint8 *h;
   guint32 pl_length;            /* length of payload */
   guchar *string = NULL;
+  const GstStructure *structure;
 
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
   g_return_val_if_fail (length, FALSE);
@@ -403,8 +404,9 @@ gst_dp_packet_from_event_1_0 (const GstEvent * event, GstDPHeaderFlag flags,
   *length = GST_DP_HEADER_LENGTH;
   h = g_malloc0 (GST_DP_HEADER_LENGTH);
 
-  if (event->structure) {
-    string = (guchar *) gst_structure_to_string (event->structure);
+  structure = gst_event_get_structure ((GstEvent *) event);
+  if (structure) {
+    string = (guchar *) gst_structure_to_string (structure);
     GST_LOG ("event %p has structure, string %s", event, string);
     pl_length = strlen ((gchar *) string) + 1;  /* include trailing 0 */
   } else {
