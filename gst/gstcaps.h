@@ -30,8 +30,9 @@ G_BEGIN_DECLS
 extern GType _gst_caps_type;
 
 #define GST_TYPE_CAPS             (_gst_caps_type)
-#define GST_CAPS(object)          ((GstCaps*)object)
-#define GST_IS_CAPS(object)       (GST_IS_MINI_OBJECT_TYPE(object, GST_TYPE_CAPS))
+#define GST_IS_CAPS(obj)          (GST_IS_MINI_OBJECT_TYPE((obj), GST_TYPE_CAPS))
+#define GST_CAPS_CAST(obj)        ((GstCaps*)(obj))
+#define GST_CAPS(obj)             (GST_CAPS_CAST(obj))
 
 #define GST_TYPE_STATIC_CAPS      (gst_static_caps_get_type())
 
