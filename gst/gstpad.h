@@ -386,13 +386,14 @@ typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 /**
  * GstPadQueryFunction:
  * @pad: the #GstPad to query.
- * @query: the #GstQuery object to execute
+ * @query: a pointer to a #GstQuery object to execute
  *
- * The signature of the query function.
+ * The signature of the query function. This function takes ownership of the
+ * query pointed to by @query and might change @query.
  *
  * Returns: TRUE if the query could be performed.
  */
-typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstQuery *query);
+typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstQuery **query);
 
 
 /* linking */
@@ -892,10 +893,10 @@ G_CONST_RETURN GstQueryType*
 G_CONST_RETURN GstQueryType*
 			gst_pad_get_query_types_default		(GstPad *pad);
 
-gboolean		gst_pad_query				(GstPad *pad, GstQuery *query);
-gboolean		gst_pad_peer_query			(GstPad *pad, GstQuery *query);
+gboolean		gst_pad_query				(GstPad *pad, GstQuery **query);
+gboolean		gst_pad_peer_query			(GstPad *pad, GstQuery **query);
 void			gst_pad_set_query_function		(GstPad *pad, GstPadQueryFunction query);
-gboolean		gst_pad_query_default			(GstPad *pad, GstQuery *query);
+gboolean		gst_pad_query_default			(GstPad *pad, GstQuery **query);
 
 /* misc helper functions */
 gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,

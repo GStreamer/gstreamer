@@ -368,7 +368,7 @@ static void gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event);
 
 static gboolean gst_base_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_parse_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_base_parse_query (GstPad * pad, GstQuery * query);
+static gboolean gst_base_parse_query (GstPad * pad, GstQuery ** query);
 static gboolean gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps);
 static const GstQueryType *gst_base_parse_get_querytypes (GstPad * pad);
 
@@ -1462,7 +1462,7 @@ gst_base_parse_check_seekability (GstBaseParse * parse)
   guint idx_interval = 0;
 
   query = gst_query_new_seeking (GST_FORMAT_BYTES);
-  if (!gst_pad_peer_query (parse->sinkpad, query)) {
+  if (!gst_pad_peer_query (parse->sinkpad, &query)) {
     GST_DEBUG_OBJECT (parse, "seeking query failed");
     goto done;
   }
@@ -3067,7 +3067,7 @@ gst_base_parse_get_querytypes (GstPad * pad)
 }
 
 static gboolean
-gst_base_parse_query (GstPad * pad, GstQuery * query)
+gst_base_parse_query (GstPad * pad, GstQuery ** query)
 {
   GstBaseParse *parse;
   gboolean res = FALSE;
@@ -3076,14 +3076,14 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
 
   GST_LOG_OBJECT (parse, "handling query: %" GST_PTR_FORMAT, query);
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_POSITION:
     {
       gint64 dest_value;
       GstFormat format;
 
       GST_DEBUG_OBJECT (parse, "position query");
-      gst_query_parse_position (query, &format, NULL);
+      gst_query_parse_position (*query, &format, NULL);
 
       GST_OBJECT_LOCK (parse);
       if (format == GST_FORMAT_BYTES) {
@@ -3096,9 +3096,10 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       }
       GST_OBJECT_UNLOCK (parse);
 
-      if (res)
-        gst_query_set_position (query, format, dest_value);
-      else {
+      if (res) {
+        *query = gst_query_make_writable (*query);
+        gst_query_set_position (*query, format, dest_value);
+      } else {
         res = gst_pad_query_default (pad, query);
         if (!res) {
           /* no precise result, upstream no idea either, then best estimate */
@@ -3115,7 +3116,7 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       GstClockTime duration;
 
       GST_DEBUG_OBJECT (parse, "duration query");
-      gst_query_parse_duration (query, &format, NULL);
+      gst_query_parse_duration (*query, &format, NULL);
 
       /* consult upstream */
       res = gst_pad_query_default (pad, query);
@@ -3123,8 +3124,10 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       /* otherwise best estimate from us */
       if (!res) {
         res = gst_base_parse_get_duration (parse, format, &duration);
-        if (res)
-          gst_query_set_duration (query, format, duration);
+        if (res) {
+          *query = gst_query_make_writable (*query);
+          gst_query_set_duration (*query, format, duration);
+        }
       }
       break;
     }
@@ -3135,14 +3138,14 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       gboolean seekable = FALSE;
 
       GST_DEBUG_OBJECT (parse, "seeking query");
-      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      gst_query_parse_seeking (*query, &fmt, NULL, NULL, NULL);
 
       /* consult upstream */
       res = gst_pad_query_default (pad, query);
 
       /* we may be able to help if in TIME */
       if (fmt == GST_FORMAT_TIME && gst_base_parse_is_seekable (parse)) {
-        gst_query_parse_seeking (query, &fmt, &seekable, NULL, NULL);
+        gst_query_parse_seeking (*query, &fmt, &seekable, NULL, NULL);
         /* already OK if upstream takes care */
         GST_LOG_OBJECT (parse, "upstream handled %d, seekable %d",
             res, seekable);
@@ -3157,14 +3160,17 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
             GST_LOG_OBJECT (parse, "already determine upstream seekabled: %d",
                 seekable);
           }
-          gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0, duration);
+          *query = gst_query_make_writable (*query);
+          gst_query_set_seeking (*query, GST_FORMAT_TIME, seekable, 0,
+              duration);
           res = TRUE;
         }
       }
       break;
     }
     case GST_QUERY_FORMATS:
-      gst_query_set_formatsv (query, 3, fmtlist);
+      *query = gst_query_make_writable (*query);
+      gst_query_set_formatsv (*query, 3, fmtlist);
       res = TRUE;
       break;
     case GST_QUERY_CONVERT:
@@ -3172,13 +3178,14 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       GstFormat src_format, dest_format;
       gint64 src_value, dest_value;
 
-      gst_query_parse_convert (query, &src_format, &src_value,
+      gst_query_parse_convert (*query, &src_format, &src_value,
           &dest_format, &dest_value);
 
       res = gst_base_parse_convert (parse, src_format, src_value,
           dest_format, &dest_value);
       if (res) {
-        gst_query_set_convert (query, src_format, src_value,
+        *query = gst_query_make_writable (*query);
+        gst_query_set_convert (*query, src_format, src_value,
             dest_format, dest_value);
       }
       break;

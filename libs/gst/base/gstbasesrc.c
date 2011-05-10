@@ -297,12 +297,13 @@ static gboolean gst_base_src_send_event (GstElement * elem, GstEvent * event);
 static gboolean gst_base_src_default_event (GstBaseSrc * src, GstEvent * event);
 static const GstQueryType *gst_base_src_get_query_types (GstElement * element);
 
-static gboolean gst_base_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_base_src_query (GstPad * pad, GstQuery ** query);
 
 static gboolean gst_base_src_default_negotiate (GstBaseSrc * basesrc);
 static gboolean gst_base_src_default_do_seek (GstBaseSrc * src,
     GstSegment * segment);
-static gboolean gst_base_src_default_query (GstBaseSrc * src, GstQuery * query);
+static gboolean gst_base_src_default_query (GstBaseSrc * src,
+    GstQuery ** query);
 static gboolean gst_base_src_default_prepare_seek_segment (GstBaseSrc * src,
     GstEvent * event, GstSegment * segment);
 
@@ -844,16 +845,16 @@ gst_base_src_fixate (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
-gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
+gst_base_src_default_query (GstBaseSrc * src, GstQuery ** query)
 {
   gboolean res;
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_POSITION:
     {
       GstFormat format;
 
-      gst_query_parse_position (query, &format, NULL);
+      gst_query_parse_position (*query, &format, NULL);
 
       GST_DEBUG_OBJECT (src, "position query in format %s",
           gst_format_get_name (format));
@@ -879,7 +880,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
           } else
             percent = -1;
 
-          gst_query_set_position (query, GST_FORMAT_PERCENT, percent);
+          gst_query_set_position (*query, GST_FORMAT_PERCENT, percent);
           res = TRUE;
           break;
         }
@@ -903,7 +904,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
           } else
             res = TRUE;
 
-          gst_query_set_position (query, format, position);
+          gst_query_set_position (*query, format, position);
           break;
         }
       }
@@ -913,14 +914,14 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
     {
       GstFormat format;
 
-      gst_query_parse_duration (query, &format, NULL);
+      gst_query_parse_duration (*query, &format, NULL);
 
       GST_DEBUG_OBJECT (src, "duration query in format %s",
           gst_format_get_name (format));
 
       switch (format) {
         case GST_FORMAT_PERCENT:
-          gst_query_set_duration (query, GST_FORMAT_PERCENT,
+          gst_query_set_duration (*query, GST_FORMAT_PERCENT,
               GST_FORMAT_PERCENT_MAX);
           res = TRUE;
           break;
@@ -951,7 +952,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
              * means that we cannot report the duration at all. */
             res = TRUE;
           }
-          gst_query_set_duration (query, format, duration);
+          gst_query_set_duration (*query, format, duration);
           break;
         }
       }
@@ -968,9 +969,9 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       seg_format = src->segment.format;
       GST_OBJECT_UNLOCK (src);
 
-      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      gst_query_parse_seeking (*query, &format, NULL, NULL, NULL);
       if (format == seg_format) {
-        gst_query_set_seeking (query, seg_format,
+        gst_query_set_seeking (*query, seg_format,
             gst_base_src_seekable (src), 0, duration);
         res = TRUE;
       } else {
@@ -999,7 +1000,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
           stop -= src->segment.time;
       }
 
-      gst_query_set_segment (query, src->segment.rate, src->segment.format,
+      gst_query_set_segment (*query, src->segment.rate, src->segment.format,
           start, stop);
       GST_OBJECT_UNLOCK (src);
       res = TRUE;
@@ -1008,7 +1009,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
 
     case GST_QUERY_FORMATS:
     {
-      gst_query_set_formats (query, 3, GST_FORMAT_DEFAULT,
+      gst_query_set_formats (*query, 3, GST_FORMAT_DEFAULT,
           GST_FORMAT_BYTES, GST_FORMAT_PERCENT);
       res = TRUE;
       break;
@@ -1018,7 +1019,8 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt,
+          &dest_val);
 
       /* we can only convert between equal formats... */
       if (src_fmt == dest_fmt) {
@@ -1027,7 +1029,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       } else
         res = FALSE;
 
-      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
     case GST_QUERY_LATENCY:
@@ -1042,7 +1044,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
           ", max %" GST_TIME_FORMAT, live, GST_TIME_ARGS (min),
           GST_TIME_ARGS (max));
 
-      gst_query_set_latency (query, live, min, max);
+      gst_query_set_latency (*query, live, min, max);
       break;
     }
     case GST_QUERY_JITTER:
@@ -1054,7 +1056,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       GstFormat format, seg_format;
       gint64 start, stop, estimated;
 
-      gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
+      gst_query_parse_buffering_range (*query, &format, NULL, NULL, NULL);
 
       GST_DEBUG_OBJECT (src, "buffering query in format %s",
           gst_format_get_name (format));
@@ -1088,20 +1090,20 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
         res = gst_pad_query_convert (src->srcpad, seg_format,
             start, &format, &start);
 
-      gst_query_set_buffering_range (query, format, start, stop, estimated);
+      gst_query_set_buffering_range (*query, format, start, stop, estimated);
       break;
     }
     default:
       res = FALSE;
       break;
   }
-  GST_DEBUG_OBJECT (src, "query %s returns %d", GST_QUERY_TYPE_NAME (query),
+  GST_DEBUG_OBJECT (src, "query %s returns %d", GST_QUERY_TYPE_NAME (*query),
       res);
   return res;
 }
 
 static gboolean
-gst_base_src_query (GstPad * pad, GstQuery * query)
+gst_base_src_query (GstPad * pad, GstQuery ** query)
 {
   GstBaseSrc *src;
   GstBaseSrcClass *bclass;

@@ -200,7 +200,7 @@ static gboolean gst_file_src_is_seekable (GstBaseSrc * src);
 static gboolean gst_file_src_get_size (GstBaseSrc * src, guint64 * size);
 static GstFlowReturn gst_file_src_create (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer ** buffer);
-static gboolean gst_file_src_query (GstBaseSrc * src, GstQuery * query);
+static gboolean gst_file_src_query (GstBaseSrc * src, GstQuery ** query);
 
 static void gst_file_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -893,14 +893,14 @@ gst_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
 }
 
 static gboolean
-gst_file_src_query (GstBaseSrc * basesrc, GstQuery * query)
+gst_file_src_query (GstBaseSrc * basesrc, GstQuery ** query)
 {
   gboolean ret = FALSE;
   GstFileSrc *src = GST_FILE_SRC (basesrc);
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_URI:
-      gst_query_set_uri (query, src->uri);
+      gst_query_set_uri (*query, src->uri);
       ret = TRUE;
       break;
     default:

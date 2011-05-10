@@ -2252,7 +2252,7 @@ gst_element_query_position (GstElement * element, GstFormat * format,
   g_return_val_if_fail (format != NULL, FALSE);
 
   query = gst_query_new_position (*format);
-  ret = gst_element_query (element, query);
+  ret = gst_element_query (element, &query);
 
   if (ret)
     gst_query_parse_position (query, format, cur);
@@ -2284,7 +2284,7 @@ gst_element_query_duration (GstElement * element, GstFormat * format,
   g_return_val_if_fail (format != NULL, FALSE);
 
   query = gst_query_new_duration (*format);
-  ret = gst_element_query (element, query);
+  ret = gst_element_query (element, &query);
 
   if (ret)
     gst_query_parse_duration (query, format, duration);
@@ -2323,7 +2323,7 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
   }
 
   query = gst_query_new_convert (src_format, src_val, *dest_format);
-  ret = gst_element_query (element, query);
+  ret = gst_element_query (element, &query);
 
   if (ret)
     gst_query_parse_convert (query, NULL, NULL, dest_format, dest_val);
@@ -2938,7 +2938,7 @@ gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur)
   g_return_val_if_fail (format != NULL, FALSE);
 
   query = gst_query_new_position (*format);
-  ret = gst_pad_query (pad, query);
+  ret = gst_pad_query (pad, &query);
 
   if (ret)
     gst_query_parse_position (query, format, cur);
@@ -3002,7 +3002,7 @@ gst_pad_query_duration (GstPad * pad, GstFormat * format, gint64 * duration)
   g_return_val_if_fail (format != NULL, FALSE);
 
   query = gst_query_new_duration (*format);
-  ret = gst_pad_query (pad, query);
+  ret = gst_pad_query (pad, &query);
 
   if (ret)
     gst_query_parse_duration (query, format, duration);
@@ -3074,7 +3074,7 @@ gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
   }
 
   query = gst_query_new_convert (src_format, src_val, *dest_format);
-  ret = gst_pad_query (pad, query);
+  ret = gst_pad_query (pad, &query);
 
   if (ret)
     gst_query_parse_convert (query, NULL, NULL, dest_format, dest_val);

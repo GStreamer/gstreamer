@@ -111,7 +111,7 @@ gst_proxy_pad_do_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_proxy_pad_do_query (GstPad * pad, GstQuery * query)
+gst_proxy_pad_do_query (GstPad * pad, GstQuery ** query)
 {
   gboolean res = FALSE;
   GstPad *target = gst_proxy_pad_get_target (pad);

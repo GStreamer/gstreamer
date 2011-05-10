@@ -136,7 +136,7 @@ GST_START_TEST (test_nonseeking)
   /* Test that fdsrc is non-seekable with a pipe */
   fail_unless ((seeking_query = gst_query_new_seeking (GST_FORMAT_BYTES))
       != NULL);
-  fail_unless (gst_element_query (src, seeking_query) == TRUE);
+  fail_unless (gst_element_query (src, &seeking_query) == TRUE);
   gst_query_parse_seeking (seeking_query, NULL, &seekable, NULL, NULL);
   fail_unless (seekable == FALSE);
   gst_query_unref (seeking_query);
@@ -173,7 +173,7 @@ GST_START_TEST (test_seeking)
   /* Test that fdsrc is seekable with a file fd */
   fail_unless ((seeking_query = gst_query_new_seeking (GST_FORMAT_BYTES))
       != NULL);
-  fail_unless (gst_element_query (src, seeking_query) == TRUE);
+  fail_unless (gst_element_query (src, &seeking_query) == TRUE);
   gst_query_parse_seeking (seeking_query, NULL, &seekable, NULL, NULL);
   fail_unless (seekable == TRUE);
   gst_query_unref (seeking_query);

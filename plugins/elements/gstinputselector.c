@@ -696,7 +696,7 @@ static GstStateChangeReturn gst_input_selector_change_state (GstElement *
 
 static GstCaps *gst_input_selector_getcaps (GstPad * pad);
 static gboolean gst_input_selector_event (GstPad * pad, GstEvent * event);
-static gboolean gst_input_selector_query (GstPad * pad, GstQuery * query);
+static gboolean gst_input_selector_query (GstPad * pad, GstQuery ** query);
 static gint64 gst_input_selector_block (GstInputSelector * self);
 static void gst_input_selector_switch (GstInputSelector * self,
     GstPad * pad, gint64 stop_time, gint64 start_time);
@@ -1112,7 +1112,7 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
 /* query on the srcpad. We override this function because by default it will
  * only forward the query to one random sinkpad */
 static gboolean
-gst_input_selector_query (GstPad * pad, GstQuery * query)
+gst_input_selector_query (GstPad * pad, GstQuery ** query)
 {
   gboolean res = TRUE;
   GstInputSelector *sel;
@@ -1124,7 +1124,7 @@ gst_input_selector_query (GstPad * pad, GstQuery * query)
 
   otherpad = gst_input_selector_get_linked_pad (sel, pad, TRUE);
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_LATENCY:
     {
       GList *walk;
@@ -1152,7 +1152,7 @@ gst_input_selector_query (GstPad * pad, GstQuery * query)
           /* one query succeeded, we succeed too */
           res = TRUE;
 
-          gst_query_parse_latency (query, &live, &min, &max);
+          gst_query_parse_latency (*query, &live, &min, &max);
 
           GST_DEBUG_OBJECT (sinkpad,
               "peer latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
@@ -1172,7 +1172,7 @@ gst_input_selector_query (GstPad * pad, GstQuery * query)
       }
       GST_INPUT_SELECTOR_UNLOCK (sel);
       if (res) {
-        gst_query_set_latency (query, reslive, resmin, resmax);
+        gst_query_set_latency (*query, reslive, resmin, resmax);
 
         GST_DEBUG_OBJECT (sel,
             "total latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT

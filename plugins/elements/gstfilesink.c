@@ -168,7 +168,7 @@ static gboolean gst_file_sink_do_seek (GstFileSink * filesink,
 static gboolean gst_file_sink_get_current_offset (GstFileSink * filesink,
     guint64 * p_pos);
 
-static gboolean gst_file_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_file_sink_query (GstPad * pad, GstQuery ** query);
 
 static void gst_file_sink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -449,31 +449,31 @@ close_failed:
 }
 
 static gboolean
-gst_file_sink_query (GstPad * pad, GstQuery * query)
+gst_file_sink_query (GstPad * pad, GstQuery ** query)
 {
   GstFileSink *self;
   GstFormat format;
 
   self = GST_FILE_SINK (GST_PAD_PARENT (pad));
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_POSITION:
-      gst_query_parse_position (query, &format, NULL);
+      gst_query_parse_position (*query, &format, NULL);
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          gst_query_set_position (query, GST_FORMAT_BYTES, self->current_pos);
+          gst_query_set_position (*query, GST_FORMAT_BYTES, self->current_pos);
           return TRUE;
         default:
           return FALSE;
       }
 
     case GST_QUERY_FORMATS:
-      gst_query_set_formats (query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
+      gst_query_set_formats (*query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
       return TRUE;
 
     case GST_QUERY_URI:
-      gst_query_set_uri (query, self->uri);
+      gst_query_set_uri (*query, self->uri);
       return TRUE;
 
     default:

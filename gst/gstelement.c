@@ -128,7 +128,7 @@ static void gst_element_set_bus_func (GstElement * element, GstBus * bus);
 static gboolean gst_element_default_send_event (GstElement * element,
     GstEvent * event);
 static gboolean gst_element_default_query (GstElement * element,
-    GstQuery * query);
+    GstQuery ** query);
 
 static GstPadTemplate
     * gst_element_class_get_request_pad_template (GstElementClass *
@@ -1628,7 +1628,7 @@ gst_element_get_query_types (GstElement * element)
 }
 
 static gboolean
-gst_element_default_query (GstElement * element, GstQuery * query)
+gst_element_default_query (GstElement * element, GstQuery ** query)
 {
   gboolean result = FALSE;
   GstPad *pad;
@@ -1672,13 +1672,14 @@ gst_element_default_query (GstElement * element, GstQuery * query)
  * MT safe.
  */
 gboolean
-gst_element_query (GstElement * element, GstQuery * query)
+gst_element_query (GstElement * element, GstQuery ** query)
 {
   GstElementClass *oclass;
   gboolean result = FALSE;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (query != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (*query), FALSE);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 

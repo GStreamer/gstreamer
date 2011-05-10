@@ -3223,14 +3223,15 @@ no_iter:
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query (GstPad * pad, GstQuery * query)
+gst_pad_query (GstPad * pad, GstQuery ** query)
 {
   GstPadQueryFunction func;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
+  g_return_val_if_fail (query != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (*query), FALSE);
 
-  GST_DEBUG_OBJECT (pad, "sending query %p", query);
+  GST_DEBUG_OBJECT (pad, "sending query %p", *query);
 
   if ((func = GST_PAD_QUERYFUNC (pad)) == NULL)
     goto no_func;
@@ -3260,13 +3261,14 @@ no_func:
  * Since: 0.10.15
  */
 gboolean
-gst_pad_peer_query (GstPad * pad, GstQuery * query)
+gst_pad_peer_query (GstPad * pad, GstQuery ** query)
 {
   GstPad *peerpad;
   gboolean result;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
+  g_return_val_if_fail (query != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (*query), FALSE);
 
   GST_OBJECT_LOCK (pad);
 
@@ -3308,7 +3310,7 @@ no_peer:
  * Returns: TRUE if the query was performed succesfully.
  */
 gboolean
-gst_pad_query_default (GstPad * pad, GstQuery * query)
+gst_pad_query_default (GstPad * pad, GstQuery ** query)
 {
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:

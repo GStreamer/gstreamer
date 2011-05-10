@@ -360,7 +360,7 @@ static void gst_base_sink_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_base_sink_send_event (GstElement * element,
     GstEvent * event);
-static gboolean gst_base_sink_query (GstElement * element, GstQuery * query);
+static gboolean gst_base_sink_query (GstElement * element, GstQuery ** query);
 static const GstQueryType *gst_base_sink_get_query_types (GstElement * element);
 
 static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink);
@@ -1090,7 +1090,7 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
     query = gst_query_new_latency ();
 
     /* ask the peer for the latency */
-    if ((res = gst_pad_peer_query (sink->sinkpad, query))) {
+    if ((res = gst_pad_peer_query (sink->sinkpad, &query))) {
       /* get upstream min and max latency */
       gst_query_parse_latency (query, &us_live, &us_min, &us_max);
 
@@ -4724,20 +4724,20 @@ gst_base_sink_get_query_types (GstElement * element)
 }
 
 static gboolean
-gst_base_sink_query (GstElement * element, GstQuery * query)
+gst_base_sink_query (GstElement * element, GstQuery ** query)
 {
   gboolean res = FALSE;
 
   GstBaseSink *basesink = GST_BASE_SINK (element);
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_POSITION:
     {
       gint64 cur = 0;
       GstFormat format;
       gboolean upstream = FALSE;
 
-      gst_query_parse_position (query, &format, NULL);
+      gst_query_parse_position (*query, &format, NULL);
 
       GST_DEBUG_OBJECT (basesink, "position query in format %s",
           gst_format_get_name (format));
@@ -4745,7 +4745,8 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       /* first try to get the position based on the clock */
       if ((res =
               gst_base_sink_get_position (basesink, format, &cur, &upstream))) {
-        gst_query_set_position (query, format, cur);
+        *query = gst_query_make_writable (*query);
+        gst_query_set_position (*query, format, cur);
       } else if (upstream) {
         /* fallback to peer query */
         res = gst_pad_peer_query (basesink->sinkpad, query);
@@ -4775,7 +4776,8 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
 
             pos = gst_util_uint64_scale (100 * GST_FORMAT_PERCENT_SCALE, cur,
                 dur);
-            gst_query_set_position (query, GST_FORMAT_PERCENT, pos);
+            *query = gst_query_make_writable (*query);
+            gst_query_set_position (*query, GST_FORMAT_PERCENT, pos);
           }
         }
       }
@@ -4787,14 +4789,15 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       GstFormat format;
       gboolean upstream = FALSE;
 
-      gst_query_parse_duration (query, &format, NULL);
+      gst_query_parse_duration (*query, &format, NULL);
 
       GST_DEBUG_OBJECT (basesink, "duration query in format %s",
           gst_format_get_name (format));
 
       if ((res =
               gst_base_sink_get_duration (basesink, format, &dur, &upstream))) {
-        gst_query_set_duration (query, format, dur);
+        *query = gst_query_make_writable (*query);
+        gst_query_set_duration (*query, format, dur);
       } else if (upstream) {
         /* fallback to peer query */
         res = gst_pad_peer_query (basesink->sinkpad, query);
@@ -4802,7 +4805,8 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       if (!res) {
         /* we can handle a few things if upstream failed */
         if (format == GST_FORMAT_PERCENT) {
-          gst_query_set_duration (query, GST_FORMAT_PERCENT,
+          *query = gst_query_make_writable (*query);
+          gst_query_set_duration (*query, GST_FORMAT_PERCENT,
               GST_FORMAT_PERCENT_MAX);
           res = TRUE;
         }
@@ -4816,7 +4820,8 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
 
       if ((res = gst_base_sink_query_latency (basesink, &live, &us_live, &min,
                   &max))) {
-        gst_query_set_latency (query, live, min, max);
+        *query = gst_query_make_writable (*query);
+        gst_query_set_latency (*query, live, min, max);
       }
       break;
     }
@@ -4829,7 +4834,8 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
     case GST_QUERY_SEGMENT:
     {
       if (basesink->pad_mode == GST_ACTIVATE_PULL) {
-        gst_query_set_segment (query, basesink->segment.rate,
+        *query = gst_query_make_writable (*query);
+        gst_query_set_segment (*query, basesink->segment.rate,
             GST_FORMAT_TIME, basesink->segment.start, basesink->segment.stop);
         res = TRUE;
       } else {
@@ -4845,7 +4851,7 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       break;
   }
   GST_DEBUG_OBJECT (basesink, "query %s returns %d",
-      GST_QUERY_TYPE_NAME (query), res);
+      GST_QUERY_TYPE_NAME (*query), res);
   return res;
 }
 

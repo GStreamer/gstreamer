@@ -132,7 +132,7 @@ static gboolean gst_fd_src_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_fd_src_is_seekable (GstBaseSrc * bsrc);
 static gboolean gst_fd_src_get_size (GstBaseSrc * src, guint64 * size);
 static gboolean gst_fd_src_do_seek (GstBaseSrc * src, GstSegment * segment);
-static gboolean gst_fd_src_query (GstBaseSrc * src, GstQuery * query);
+static gboolean gst_fd_src_query (GstBaseSrc * src, GstQuery ** query);
 
 static GstFlowReturn gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf);
 
@@ -507,14 +507,14 @@ read_error:
 }
 
 static gboolean
-gst_fd_src_query (GstBaseSrc * basesrc, GstQuery * query)
+gst_fd_src_query (GstBaseSrc * basesrc, GstQuery ** query)
 {
   gboolean ret = FALSE;
   GstFdSrc *src = GST_FD_SRC (basesrc);
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_URI:
-      gst_query_set_uri (query, src->uri);
+      gst_query_set_uri (*query, src->uri);
       ret = TRUE;
       break;
     default:

@@ -142,7 +142,8 @@ static const GstEventMask *gst_type_find_element_src_event_mask (GstPad * pad);
 
 static gboolean gst_type_find_element_src_event (GstPad * pad,
     GstEvent * event);
-static gboolean gst_type_find_handle_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_type_find_handle_src_query (GstPad * pad,
+    GstQuery ** query);
 
 static gboolean gst_type_find_element_handle_event (GstPad * pad,
     GstEvent * event);
@@ -370,7 +371,7 @@ gst_type_find_element_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
+gst_type_find_handle_src_query (GstPad * pad, GstQuery ** query)
 {
   GstTypeFindElement *typefind;
   gboolean res = FALSE;
@@ -386,13 +387,13 @@ gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
   if (!res)
     goto out;
 
-  switch (GST_QUERY_TYPE (query)) {
+  switch (GST_QUERY_TYPE (*query)) {
     case GST_QUERY_POSITION:
     {
       gint64 peer_pos;
       GstFormat format;
 
-      gst_query_parse_position (query, &format, &peer_pos);
+      gst_query_parse_position (*query, &format, &peer_pos);
 
       GST_OBJECT_LOCK (typefind);
       /* FIXME: this code assumes that there's no discont in the queue */
@@ -405,7 +406,7 @@ gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
           break;
       }
       GST_OBJECT_UNLOCK (typefind);
-      gst_query_set_position (query, format, peer_pos);
+      gst_query_set_position (*query, format, peer_pos);
       break;
     }
     default:
@@ -652,7 +653,7 @@ gst_type_find_get_extension (GstTypeFindElement * typefind, GstPad * pad)
   query = gst_query_new_uri ();
 
   /* try getting the caps with an uri query and from the extension */
-  if (!gst_pad_peer_query (pad, query))
+  if (!gst_pad_peer_query (pad, &query))
     goto peer_query_failed;
 
   gst_query_parse_uri (query, &uri);
