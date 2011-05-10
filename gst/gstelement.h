@@ -602,6 +602,7 @@ struct _GstElement
  * @get_query_types: get the supported #GstQueryType of this element
  * @query: perform a #GstQuery on the element
  * @request_new_pad_full: called when a new pad is requested. Since: 0.10.32.
+ * @state_changed: called immediately after a new state was set. Since: 0.10.34.
  *
  * GStreamer element class. Override the vmethods to implement the element
  * functionality.
@@ -669,8 +670,11 @@ struct _GstElementClass
   GstPad*		(*request_new_pad_full) (GstElement *element, GstPadTemplate *templ,
 						 const gchar* name, const GstCaps *caps);
 
+  void                  (*state_changed)        (GstElement *element, GstState oldstate,
+                                                 GstState newstate, GstState pending);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-2];
+  gpointer _gst_reserved[GST_PADDING-3];
 };
 
 /* element class pad templates */

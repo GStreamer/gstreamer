@@ -2828,9 +2828,8 @@ bin_handle_async_start (GstBin * bin, gboolean new_base_time)
   GST_OBJECT_UNLOCK (bin);
 
   /* post message */
-  gst_element_post_message (GST_ELEMENT_CAST (bin),
-      gst_message_new_state_changed (GST_OBJECT_CAST (bin),
-          new_state, new_state, new_state));
+  _priv_gst_element_state_changed (GST_ELEMENT_CAST (bin), new_state, new_state,
+      new_state);
 
 post_start:
   if (amessage) {
@@ -2872,8 +2871,8 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
   GstState current, pending, target;
   GstStateChangeReturn old_ret;
   GstState old_state, old_next;
-  gboolean toplevel;
-  GstMessage *smessage = NULL, *amessage = NULL;
+  gboolean toplevel, state_changed = FALSE;
+  GstMessage *amessage = NULL;
   BinContinueData *cont = NULL;
 
   if (GST_STATE_RETURN (bin) == GST_STATE_CHANGE_FAILURE)
@@ -2952,15 +2951,14 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
 
   if (old_next != GST_STATE_PLAYING) {
     if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
-      smessage = gst_message_new_state_changed (GST_OBJECT_CAST (bin),
-          old_state, old_next, pending);
+      state_changed = TRUE;
     }
   }
   GST_OBJECT_UNLOCK (bin);
 
-  if (smessage) {
-    GST_DEBUG_OBJECT (bin, "posting state change message");
-    gst_element_post_message (GST_ELEMENT_CAST (bin), smessage);
+  if (state_changed) {
+    _priv_gst_element_state_changed (GST_ELEMENT_CAST (bin), old_state,
+        old_next, pending);
   }
   if (amessage) {
     /* post our combined ASYNC_DONE when all is ASYNC_DONE. */
