@@ -168,7 +168,6 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
       GST_DEBUG_OBJECT (capsfilter, "set new caps %" GST_PTR_FORMAT, new_caps);
 
       /* filter the currently negotiated format against the new caps */
-      GST_OBJECT_LOCK (GST_BASE_TRANSFORM_SINK_PAD (object));
       nego = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SINK_PAD (object));
       if (nego) {
         GST_DEBUG_OBJECT (capsfilter, "we had negotiated caps %" GST_PTR_FORMAT,
@@ -205,7 +204,6 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
          * caps */
         suggest = NULL;
       }
-      GST_OBJECT_UNLOCK (GST_BASE_TRANSFORM_SINK_PAD (object));
 
       GST_DEBUG_OBJECT (capsfilter, "suggesting new caps %" GST_PTR_FORMAT,
           suggest);
