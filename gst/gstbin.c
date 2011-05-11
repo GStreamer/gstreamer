@@ -3649,7 +3649,7 @@ gst_bin_query (GstElement * element, GstQuery ** query)
 
   iter = gst_bin_iterate_sinks (bin);
   GST_DEBUG_OBJECT (bin, "Sending query %p (type %s) to sink children",
-      query, GST_QUERY_TYPE_NAME (query));
+      query, GST_QUERY_TYPE_NAME (*query));
 
   if (fold_init)
     fold_init (bin, &fold_data);
