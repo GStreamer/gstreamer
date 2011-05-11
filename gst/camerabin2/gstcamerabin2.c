@@ -466,12 +466,14 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
 
   g_object_class_install_property (object_class, PROP_CAMERA_SRC,
       g_param_spec_object ("camera-src", "Camera source",
-          "The camera source element to be used",
+          "The camera source element to be used. It is only taken into use on"
+          " the next null to ready transition",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_AUDIO_SRC,
       g_param_spec_object ("audio-src", "Audio source",
-          "The audio source element to be used on video recordings",
+          "The audio source element to be used on video recordings. It is only"
+          " taken into use on the next null to ready transition",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_MUTE_AUDIO,
@@ -565,7 +567,8 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
 
   g_object_class_install_property (object_class, PROP_VIEWFINDER_SINK,
       g_param_spec_object ("viewfinder-sink", "Viewfinder sink",
-          "The video sink of the viewfinder.",
+          "The video sink of the viewfinder. It is only taken into use"
+          " on the next null to ready transition",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class,
@@ -1496,10 +1499,10 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       }
       break;
     case PROP_CAMERA_SRC:
-      g_value_set_object (value, camera->src);
+      g_value_set_object (value, camera->user_src);
       break;
     case PROP_AUDIO_SRC:
-      g_value_set_object (value, camera->audio_src);
+      g_value_set_object (value, camera->user_audio_src);
       break;
     case PROP_MUTE_AUDIO:{
       gboolean mute;
@@ -1596,16 +1599,16 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       }
       break;
     case PROP_VIDEO_FILTER:
-      if (camera->video_filter)
-        g_value_set_object (value, camera->video_filter);
+      if (camera->user_video_filter)
+        g_value_set_object (value, camera->user_video_filter);
       break;
     case PROP_IMAGE_FILTER:
-      if (camera->image_filter)
-        g_value_set_object (value, camera->image_filter);
+      if (camera->user_image_filter)
+        g_value_set_object (value, camera->user_image_filter);
       break;
     case PROP_VIEWFINDER_FILTER:
-      if (camera->viewfinder_filter)
-        g_value_set_object (value, camera->viewfinder_filter);
+      if (camera->user_viewfinder_filter)
+        g_value_set_object (value, camera->user_viewfinder_filter);
       break;
     case PROP_PREVIEW_FILTER:
       if (camera->preview_filter)
