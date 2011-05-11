@@ -323,6 +323,46 @@ gst_event_new_custom (GstEventType type, GstStructure * structure)
   return event;
 }
 
+static inline GstStructure *
+add_structure (GstEvent * event, GQuark name)
+{
+  GstStructure *structure;
+
+  structure = gst_structure_id_empty_new (name);
+  gst_structure_set_parent_refcount (structure, &event->mini_object.refcount);
+  /* FIXME, concurrent access can make us leak this */
+  GST_EVENT_STRUCTURE (event) = structure;
+
+  return structure;
+}
+
+static GstStructure *
+update_structure (GstEvent * event)
+{
+  GstStructure *structure;
+
+  structure = GST_EVENT_STRUCTURE (event);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:
+    {
+      if (structure == NULL)
+        structure = add_structure (event, GST_QUARK (EVENT_QOS));
+
+      gst_structure_id_set (structure,
+          GST_QUARK (TYPE), GST_TYPE_QOS_TYPE, GST_EVENT_IMPL (event, qos,
+              type), GST_QUARK (PROPORTION), G_TYPE_DOUBLE,
+          GST_EVENT_IMPL (event, qos, proportion), GST_QUARK (DIFF),
+          G_TYPE_INT64, GST_EVENT_IMPL (event, qos, diff),
+          GST_QUARK (TIMESTAMP), G_TYPE_UINT64, GST_EVENT_IMPL (event, qos,
+              timestamp), NULL);
+      break;
+    }
+    default:
+      break;
+  }
+  return structure;
+}
+
 /**
  * gst_event_get_structure:
  * @event: The #GstEvent.
@@ -340,7 +380,7 @@ gst_event_get_structure (GstEvent * event)
 {
   g_return_val_if_fail (GST_IS_EVENT (event), NULL);
 
-  return GST_EVENT_STRUCTURE (event);
+  return update_structure (event);
 }
 
 /**
@@ -364,15 +404,12 @@ gst_event_writable_structure (GstEvent * event)
   g_return_val_if_fail (GST_IS_EVENT (event), NULL);
   g_return_val_if_fail (gst_event_is_writable (event), NULL);
 
-  structure = GST_EVENT_STRUCTURE (event);
+  structure = update_structure (event);
 
-  if (structure == NULL) {
+  if (structure == NULL)
     structure =
-        gst_structure_id_empty_new (gst_event_type_to_quark (GST_EVENT_TYPE
-            (event)));
-    gst_structure_set_parent_refcount (structure, &event->mini_object.refcount);
-    GST_EVENT_STRUCTURE (event) = structure;
-  }
+        add_structure (event, gst_event_type_to_quark (GST_EVENT_TYPE (event)));
+
   return structure;
 }
 
