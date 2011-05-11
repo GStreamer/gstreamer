@@ -1757,39 +1757,39 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   gboolean want_in_place;
   GstClockTime running_time;
   GstClockTime timestamp;
-#if 0
-  GstCaps *incaps;
-#endif
   gsize insize;
+  gboolean reconfigure;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-#if 0
-  if (G_LIKELY ((incaps = GST_BUFFER_CAPS (inbuf)))) {
-    gboolean reconfigure;
 
-    GST_OBJECT_LOCK (trans->sinkpad);
-    reconfigure = GST_PAD_NEEDS_RECONFIGURE (trans->sinkpad)
-        || trans->priv->reconfigure;
-    GST_OBJECT_FLAG_UNSET (trans->sinkpad, GST_PAD_NEED_RECONFIGURE);
-    trans->priv->reconfigure = FALSE;
-    GST_OBJECT_UNLOCK (trans->sinkpad);
+  GST_OBJECT_LOCK (trans->sinkpad);
+  reconfigure = GST_PAD_NEEDS_RECONFIGURE (trans->srcpad)
+      || trans->priv->reconfigure;
+  GST_OBJECT_FLAG_UNSET (trans->srcpad, GST_PAD_NEED_RECONFIGURE);
+  trans->priv->reconfigure = FALSE;
+  GST_OBJECT_UNLOCK (trans->sinkpad);
 
-    if (G_UNLIKELY (reconfigure)) {
-      GST_DEBUG_OBJECT (trans, "we had a pending reconfigure");
+  if (G_UNLIKELY (reconfigure)) {
+    GstCaps *incaps;
 
-      GST_OBJECT_LOCK (trans);
-      gst_caps_replace (&trans->priv->sink_alloc, NULL);
-      GST_OBJECT_UNLOCK (trans);
+    GST_DEBUG_OBJECT (trans, "we had a pending reconfigure");
 
-      /* if we need to reconfigure we pretend a buffer with new caps arrived. This
-       * will reconfigure the transform with the new output format. We can only
-       * do this if the buffer actually has caps. */
-      if (!gst_base_transform_setcaps (trans, trans->sinkpad, incaps, TRUE))
-        goto not_negotiated;
+    GST_OBJECT_LOCK (trans);
+    gst_caps_replace (&trans->priv->sink_alloc, NULL);
+    GST_OBJECT_UNLOCK (trans);
+
+    incaps = gst_pad_get_current_caps (trans->sinkpad);
+
+    /* if we need to reconfigure we pretend a buffer with new caps arrived. This
+     * will reconfigure the transform with the new output format. We can only
+     * do this if the buffer actually has caps. */
+    if (!gst_base_transform_setcaps (trans, trans->sinkpad, incaps, TRUE)) {
+      gst_caps_unref (incaps);
+      goto not_negotiated;
     }
+    gst_caps_unref (incaps);
   }
-#endif
 
   insize = gst_buffer_get_size (inbuf);
 
