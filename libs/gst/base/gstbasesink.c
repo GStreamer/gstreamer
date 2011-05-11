@@ -363,7 +363,7 @@ static gboolean gst_base_sink_send_event (GstElement * element,
 static gboolean gst_base_sink_query (GstElement * element, GstQuery ** query);
 static const GstQueryType *gst_base_sink_get_query_types (GstElement * element);
 
-static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink);
+static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink, GstCaps * caps);
 static gboolean gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps);
 static void gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
@@ -390,7 +390,7 @@ static gboolean gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_base_sink_negotiate_pull (GstBaseSink * basesink);
-static GstCaps *gst_base_sink_pad_getcaps (GstPad * pad);
+static GstCaps *gst_base_sink_pad_getcaps (GstPad * pad, GstCaps * filter);
 static void gst_base_sink_pad_fixate (GstPad * pad, GstCaps * caps);
 
 /* check if an object was too late */
@@ -562,7 +562,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
 }
 
 static GstCaps *
-gst_base_sink_pad_getcaps (GstPad * pad)
+gst_base_sink_pad_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstBaseSinkClass *bclass;
   GstBaseSink *bsink;
@@ -577,7 +577,7 @@ gst_base_sink_pad_getcaps (GstPad * pad)
   }
   if (caps == NULL) {
     if (bclass->get_caps)
-      caps = bclass->get_caps (bsink);
+      caps = bclass->get_caps (bsink, filter);
 
     if (caps == NULL) {
       GstPadTemplate *pad_template;
@@ -587,6 +587,15 @@ gst_base_sink_pad_getcaps (GstPad * pad)
           "sink");
       if (pad_template != NULL) {
         caps = gst_caps_ref (gst_pad_template_get_caps (pad_template));
+
+        if (filter) {
+          GstCaps *intersection;
+
+          intersection =
+              gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+          gst_caps_unref (caps);
+          caps = intersection;
+        }
       }
     }
   }
@@ -1393,7 +1402,7 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
 
 
 static GstCaps *
-gst_base_sink_get_caps (GstBaseSink * sink)
+gst_base_sink_get_caps (GstBaseSink * sink, GstCaps * filter)
 {
   return NULL;
 }

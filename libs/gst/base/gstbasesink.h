@@ -151,7 +151,7 @@ struct _GstBaseSinkClass {
   GstElementClass parent_class;
 
   /* get caps from subclass */
-  GstCaps*      (*get_caps)     (GstBaseSink *sink);
+  GstCaps*      (*get_caps)     (GstBaseSink *sink, GstCaps *filter);
   /* notify subclass of new caps */
   gboolean      (*set_caps)     (GstBaseSink *sink, GstCaps *caps);
 

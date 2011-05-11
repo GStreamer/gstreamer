@@ -227,6 +227,9 @@ The 0.11 porting guide
     gst_collect_pads_read() removed, use _read_buffer() or _take_buffer() and
     then use the memory API to get to the memory.
 
-
+* GstBaseSrc, GstBaseTransform, GstBaseSink
+    GstBaseSrc::get_caps(), GstBaseTransform::transform_caps() and
+    GstBaseSink::get_caps() now take a filter GstCaps* parameter to
+    filter the caps and allow better negotiation decisions.
  
   

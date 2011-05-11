@@ -280,7 +280,7 @@ gst_base_src_get_type (void)
   return base_src_type;
 }
 
-static GstCaps *gst_base_src_getcaps (GstPad * pad);
+static GstCaps *gst_base_src_getcaps (GstPad * pad, GstCaps * filter);
 static gboolean gst_base_src_setcaps (GstPad * pad, GstCaps * caps);
 static void gst_base_src_fixate (GstPad * pad, GstCaps * caps);
 
@@ -786,7 +786,7 @@ gst_base_src_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstCaps *
-gst_base_src_getcaps (GstPad * pad)
+gst_base_src_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstBaseSrcClass *bclass;
   GstBaseSrc *bsrc;
@@ -795,7 +795,7 @@ gst_base_src_getcaps (GstPad * pad)
   bsrc = GST_BASE_SRC (GST_PAD_PARENT (pad));
   bclass = GST_BASE_SRC_GET_CLASS (bsrc);
   if (bclass->get_caps)
-    caps = bclass->get_caps (bsrc);
+    caps = bclass->get_caps (bsrc, filter);
 
   if (caps == NULL) {
     GstPadTemplate *pad_template;
@@ -804,6 +804,15 @@ gst_base_src_getcaps (GstPad * pad)
         gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "src");
     if (pad_template != NULL) {
       caps = gst_caps_ref (gst_pad_template_get_caps (pad_template));
+
+      if (filter) {
+        GstCaps *intersection;
+
+        intersection =
+            gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (caps);
+        caps = intersection;
+      }
     }
   }
   return caps;
@@ -2551,7 +2560,7 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
   gboolean result = FALSE;
 
   /* first see what is possible on our source pad */
-  thiscaps = gst_pad_get_caps (GST_BASE_SRC_PAD (basesrc));
+  thiscaps = gst_pad_get_caps (GST_BASE_SRC_PAD (basesrc), NULL);
   GST_DEBUG_OBJECT (basesrc, "caps of src: %" GST_PTR_FORMAT, thiscaps);
   /* nothing or anything is allowed, we're done */
   if (thiscaps == NULL || gst_caps_is_any (thiscaps))
@@ -2561,38 +2570,35 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
     goto no_caps;
 
   /* get the peer caps */
-  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
+  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc), thiscaps);
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   if (peercaps) {
-    /* get intersection */
-    caps =
-        gst_caps_intersect_full (peercaps, thiscaps, GST_CAPS_INTERSECT_FIRST);
-    GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, caps);
-    gst_caps_unref (peercaps);
+    /* The result is already a subset of our caps */
+    caps = peercaps;
+    gst_caps_unref (thiscaps);
   } else {
     /* no peer, work with our own caps then */
-    caps = gst_caps_copy (thiscaps);
+    caps = thiscaps;
   }
-  gst_caps_unref (thiscaps);
-  if (caps) {
+  if (caps && !gst_caps_is_empty (caps)) {
+    caps = gst_caps_make_writable (caps);
+
     /* take first (and best, since they are sorted) possibility */
     gst_caps_truncate (caps);
 
     /* now fixate */
-    if (!gst_caps_is_empty (caps)) {
-      GST_DEBUG_OBJECT (basesrc, "have caps: %" GST_PTR_FORMAT, caps);
-      if (gst_caps_is_any (caps)) {
-        /* hmm, still anything, so element can do anything and
-         * nego is not needed */
-        result = TRUE;
-      } else {
-        gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
-        GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
-        if (gst_caps_is_fixed (caps)) {
-          /* yay, fixed caps, use those then, it's possible that the subclass does
-           * not accept this caps after all and we have to fail. */
-          result = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
-        }
+    GST_DEBUG_OBJECT (basesrc, "have caps: %" GST_PTR_FORMAT, caps);
+    if (gst_caps_is_any (caps)) {
+      /* hmm, still anything, so element can do anything and
+       * nego is not needed */
+      result = TRUE;
+    } else {
+      gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
+      GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
+      if (gst_caps_is_fixed (caps)) {
+        /* yay, fixed caps, use those then, it's possible that the subclass does
+         * not accept this caps after all and we have to fail. */
+        result = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
       }
     }
     gst_caps_unref (caps);

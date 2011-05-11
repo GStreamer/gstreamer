@@ -168,7 +168,7 @@ struct _GstBaseSrcClass {
   /* virtual methods for subclasses */
 
   /* get caps from subclass */
-  GstCaps*      (*get_caps)     (GstBaseSrc *src);
+  GstCaps*      (*get_caps)     (GstBaseSrc *src, GstCaps *filter);
   /* notify the subclass of new caps */
   gboolean      (*set_caps)     (GstBaseSrc *src, GstCaps *caps);
 

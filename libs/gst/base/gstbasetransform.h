@@ -205,7 +205,7 @@ struct _GstBaseTransformClass {
   /* virtual methods for subclasses */
   GstCaps*	(*transform_caps) (GstBaseTransform *trans,
                                    GstPadDirection direction,
-                                   GstCaps *caps);
+                                   GstCaps *caps, GstCaps *filter);
 
   void		(*fixate_caps)	  (GstBaseTransform *trans,
                                    GstPadDirection direction, GstCaps *caps,
