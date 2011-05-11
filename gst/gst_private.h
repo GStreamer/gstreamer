@@ -98,6 +98,7 @@ void _priv_gst_quarks_initialize (void);
  * we want enterprise edition packagers dancing on our heads) */
 void  _gst_buffer_initialize (void);
 void  _gst_buffer_list_initialize (void);
+void  _gst_structure_initialize (void);
 void  _gst_caps_initialize (void);
 void  _gst_event_initialize (void);
 void  _gst_format_initialize (void);
@@ -115,7 +116,7 @@ gboolean _gst_plugin_loader_client_run (void);
 void _priv_gst_pad_invalidate_cache (GstPad *pad);
 
 /* used in both gststructure.c and gstcaps.c; numbers are completely made up */
-#define STRUCTURE_ESTIMATED_STRING_LEN(s) (16 + (s)->fields->len * 22)
+#define STRUCTURE_ESTIMATED_STRING_LEN(s) (16 + gst_structure_n_fields(s) * 22)
 
 gboolean  priv_gst_structure_append_to_gstring (const GstStructure * structure,
                                                 GString            * s);

@@ -312,15 +312,23 @@ gst_event_new_custom (GstEventType type, GstStructure * structure)
   GstEvent *event;
 
   /* structure must not have a parent */
-  if (structure)
-    g_return_val_if_fail (structure->parent_refcount == NULL, NULL);
-
   event = gst_event_new (type);
   if (structure) {
-    gst_structure_set_parent_refcount (structure, &event->mini_object.refcount);
+    if (!gst_structure_set_parent_refcount (structure,
+            &event->mini_object.refcount))
+      goto had_parent;
+
     GST_EVENT_STRUCTURE (event) = structure;
   }
   return event;
+
+  /* ERRORS */
+had_parent:
+  {
+    gst_event_unref (event);
+    g_warning ("structure is already owned by another object");
+    return NULL;
+  }
 }
 
 static inline GstStructure *

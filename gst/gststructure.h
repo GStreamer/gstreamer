@@ -28,11 +28,15 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_STRUCTURE             (gst_structure_get_type ())
-#define GST_STRUCTURE(object)          ((GstStructure *)(object))
-#define GST_IS_STRUCTURE(object)       ((object) && (GST_STRUCTURE(object)->type == GST_TYPE_STRUCTURE))
+extern GType _gst_structure_type;
 
 typedef struct _GstStructure GstStructure;
+
+#define GST_TYPE_STRUCTURE             (_gst_structure_type)
+#define GST_IS_STRUCTURE(object)       ((object) && (GST_STRUCTURE(object)->type == GST_TYPE_STRUCTURE))
+#define GST_STRUCTURE_CAST(object)     ((GstStructure *)(object))
+#define GST_STRUCTURE(object)          (GST_STRUCTURE_CAST(object))
+
 
 /**
  * GstStructureForeachFunc:
@@ -77,16 +81,7 @@ struct _GstStructure {
 
   /*< private >*/
   GQuark name;
-
-  /* owned by parent structure, NULL if no parent */
-  gint *parent_refcount;
-
-  GArray *fields;
-
-  gpointer _gst_reserved;
 };
-
-GType                   gst_structure_get_type             (void);
 
 GstStructure *          gst_structure_empty_new            (const gchar *            name);
 GstStructure *          gst_structure_id_empty_new         (GQuark                   quark);
@@ -100,8 +95,8 @@ GstStructure *          gst_structure_id_new               (GQuark              
                                                             GQuark                   field_quark,
                                                             ...);
 GstStructure *          gst_structure_copy                 (const GstStructure      *structure);
-void			gst_structure_set_parent_refcount  (GstStructure            *structure,
-                                                            gint            *refcount);
+gboolean		gst_structure_set_parent_refcount  (GstStructure            *structure,
+                                                            gint                    *refcount);
 void                    gst_structure_free                 (GstStructure            *structure);
 
 G_CONST_RETURN gchar *  gst_structure_get_name             (const GstStructure      *structure);
@@ -110,6 +105,9 @@ gboolean                gst_structure_has_name             (const GstStructure  
 							    const gchar             *name);
 void                    gst_structure_set_name             (GstStructure            *structure,
 							    const gchar             *name);
+
+gboolean                gst_structure_is_equal             (GstStructure            *struct1,
+							    GstStructure            *struct2);
 
 void                    gst_structure_id_set_value         (GstStructure            *structure,
 							    GQuark                   field,

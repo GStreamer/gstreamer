@@ -465,22 +465,6 @@ gst_caps_steal_structure (GstCaps * caps, guint index)
 }
 
 static gboolean
-gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
-    gpointer data)
-{
-  GstStructure *struct1 = (GstStructure *) data;
-  const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
-
-  if (G_UNLIKELY (val1 == NULL))
-    return FALSE;
-  if (gst_value_compare (val1, val2) == GST_VALUE_EQUAL) {
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-static gboolean
 gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
@@ -530,8 +514,8 @@ static gboolean
 gst_caps_structure_is_subset (const GstStructure * minuend,
     const GstStructure * subtrahend)
 {
-  if ((minuend->name != subtrahend->name) ||
-      (gst_structure_n_fields (minuend) !=
+  if ((minuend->name != subtrahend->name)
+      || (gst_structure_n_fields (minuend) !=
           gst_structure_n_fields (subtrahend))) {
     return FALSE;
   }
@@ -643,7 +627,6 @@ gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
   g_return_if_fail (IS_WRITABLE (caps));
 
   if (G_LIKELY (structure)) {
-    g_return_if_fail (structure->parent_refcount == NULL);
     gst_caps_append_structure_unchecked (caps, structure);
   }
 }
@@ -688,7 +671,6 @@ gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
     int i;
     gboolean unique = TRUE;
 
-    g_return_if_fail (structure->parent_refcount == NULL);
     /* check each structure */
     for (i = caps->structs->len - 1; i >= 0; i--) {
       structure1 = gst_caps_get_structure_unchecked (caps, i);
@@ -1000,15 +982,7 @@ gst_caps_is_equal_fixed (const GstCaps * caps1, const GstCaps * caps2)
   struct1 = gst_caps_get_structure_unchecked (caps1, 0);
   struct2 = gst_caps_get_structure_unchecked (caps2, 0);
 
-  if (struct1->name != struct2->name) {
-    return FALSE;
-  }
-  if (struct1->fields->len != struct2->fields->len) {
-    return FALSE;
-  }
-
-  return gst_structure_foreach (struct1, gst_structure_is_equal_foreach,
-      struct2);
+  return gst_structure_is_equal (struct1, struct2);
 }
 
 /**
