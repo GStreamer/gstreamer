@@ -74,7 +74,7 @@ static void gst_valve_get_property (GObject * object,
 
 static gboolean gst_valve_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_valve_chain (GstPad * pad, GstBuffer * buffer);
-static GstCaps *gst_valve_getcaps (GstPad * pad);
+static GstCaps *gst_valve_getcaps (GstPad * pad, GstCaps * filter);
 
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (valve_debug, "valve", 0, "Valve");
@@ -214,18 +214,18 @@ gst_valve_event (GstPad * pad, GstEvent * event)
 }
 
 static GstCaps *
-gst_valve_getcaps (GstPad * pad)
+gst_valve_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstValve *valve = GST_VALVE (gst_pad_get_parent (pad));
   GstCaps *caps;
 
   if (pad == valve->sinkpad)
-    caps = gst_pad_peer_get_caps (valve->srcpad);
+    caps = gst_pad_peer_get_caps (valve->srcpad, filter);
   else
-    caps = gst_pad_peer_get_caps (valve->sinkpad);
+    caps = gst_pad_peer_get_caps (valve->sinkpad, filter);
 
   if (caps == NULL)
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   gst_object_unref (valve);
 

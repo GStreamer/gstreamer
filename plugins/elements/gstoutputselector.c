@@ -281,14 +281,14 @@ gst_output_selector_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_output_selector_sink_getcaps (GstPad * pad)
+gst_output_selector_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstOutputSelector *sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
   GstPad *active = NULL;
   GstCaps *caps = NULL;
 
   if (G_UNLIKELY (sel == NULL))
-    return gst_caps_new_any ();
+    return (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   GST_OBJECT_LOCK (sel);
   if (sel->pending_srcpad)
@@ -298,11 +298,11 @@ gst_output_selector_sink_getcaps (GstPad * pad)
   GST_OBJECT_UNLOCK (sel);
 
   if (active) {
-    caps = gst_pad_peer_get_caps_reffed (active);
+    caps = gst_pad_peer_get_caps (active, filter);
     gst_object_unref (active);
   }
   if (caps == NULL) {
-    caps = gst_caps_new_any ();
+    caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
   }
 
   gst_object_unref (sel);

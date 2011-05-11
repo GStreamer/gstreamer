@@ -118,7 +118,7 @@ static void gst_funnel_release_pad (GstElement * element, GstPad * pad);
 
 static GstFlowReturn gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_funnel_sink_event (GstPad * pad, GstEvent * event);
-static GstCaps *gst_funnel_sink_getcaps (GstPad * pad);
+static GstCaps *gst_funnel_sink_getcaps (GstPad * pad, GstCaps * filter);
 
 static gboolean gst_funnel_src_event (GstPad * pad, GstEvent * event);
 
@@ -212,7 +212,7 @@ gst_funnel_release_pad (GstElement * element, GstPad * pad)
 }
 
 static GstCaps *
-gst_funnel_sink_getcaps (GstPad * pad)
+gst_funnel_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
   GstCaps *caps;
@@ -220,9 +220,9 @@ gst_funnel_sink_getcaps (GstPad * pad)
   if (G_UNLIKELY (funnel == NULL))
     return gst_caps_new_any ();
 
-  caps = gst_pad_peer_get_caps_reffed (funnel->srcpad);
+  caps = gst_pad_peer_get_caps (funnel->srcpad, filter);
   if (caps == NULL)
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   gst_object_unref (funnel);
 

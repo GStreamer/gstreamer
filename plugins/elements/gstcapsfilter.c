@@ -76,7 +76,7 @@ static void gst_capsfilter_get_property (GObject * object, guint prop_id,
 static void gst_capsfilter_dispose (GObject * object);
 
 static GstCaps *gst_capsfilter_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_capsfilter_accept_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
 static GstFlowReturn gst_capsfilter_transform_ip (GstBaseTransform * base,
@@ -249,18 +249,22 @@ gst_capsfilter_dispose (GObject * object)
 
 static GstCaps *
 gst_capsfilter_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCapsFilter *capsfilter = GST_CAPSFILTER (base);
-  GstCaps *ret, *filter_caps;
+  GstCaps *ret, *filter_caps, *tmp;
 
   GST_OBJECT_LOCK (capsfilter);
   filter_caps = gst_caps_ref (capsfilter->filter_caps);
   GST_OBJECT_UNLOCK (capsfilter);
 
-  ret = gst_caps_intersect (caps, filter_caps);
+  tmp = gst_caps_intersect_full (filter, filter_caps, GST_CAPS_INTERSECT_FIRST);
+  ret = gst_caps_intersect_full (tmp, caps, GST_CAPS_INTERSECT_FIRST);
+
   GST_DEBUG_OBJECT (capsfilter, "input:     %" GST_PTR_FORMAT, caps);
-  GST_DEBUG_OBJECT (capsfilter, "filter:    %" GST_PTR_FORMAT, filter_caps);
+  GST_DEBUG_OBJECT (capsfilter, "filter:    %" GST_PTR_FORMAT, filter);
+  GST_DEBUG_OBJECT (capsfilter, "caps filter:    %" GST_PTR_FORMAT,
+      filter_caps);
   GST_DEBUG_OBJECT (capsfilter, "intersect: %" GST_PTR_FORMAT, ret);
 
   gst_caps_unref (filter_caps);

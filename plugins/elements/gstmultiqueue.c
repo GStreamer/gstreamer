@@ -1390,7 +1390,7 @@ was_eos:
 }
 
 static GstCaps *
-gst_multi_queue_getcaps (GstPad * pad)
+gst_multi_queue_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstSingleQueue *sq = gst_pad_get_element_private (pad);
   GstPad *otherpad;
@@ -1400,9 +1400,9 @@ gst_multi_queue_getcaps (GstPad * pad)
 
   GST_LOG_OBJECT (otherpad, "Getting caps from the peer of this pad");
 
-  result = gst_pad_peer_get_caps (otherpad);
+  result = gst_pad_peer_get_caps (otherpad, filter);
   if (result == NULL)
-    result = gst_caps_new_any ();
+    result = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   return result;
 }

@@ -234,7 +234,7 @@ static gboolean gst_queue2_handle_src_query (GstPad * pad, GstQuery ** query);
 static gboolean gst_queue2_handle_query (GstElement * element,
     GstQuery ** query);
 
-static GstCaps *gst_queue2_getcaps (GstPad * pad);
+static GstCaps *gst_queue2_getcaps (GstPad * pad, GstCaps * filter);
 static gboolean gst_queue2_acceptcaps (GstPad * pad, GstCaps * caps);
 
 static GstFlowReturn gst_queue2_get_range (GstPad * pad, guint64 offset,
@@ -630,7 +630,7 @@ gst_queue2_acceptcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstCaps *
-gst_queue2_getcaps (GstPad * pad)
+gst_queue2_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstQueue2 *queue;
   GstPad *otherpad;
@@ -638,12 +638,12 @@ gst_queue2_getcaps (GstPad * pad)
 
   queue = GST_QUEUE2 (gst_pad_get_parent (pad));
   if (G_UNLIKELY (queue == NULL))
-    return gst_caps_new_any ();
+    return (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
-  result = gst_pad_peer_get_caps (otherpad);
+  result = gst_pad_peer_get_caps (otherpad, filter);
   if (result == NULL)
-    result = gst_caps_new_any ();
+    result = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   gst_object_unref (queue);
 
@@ -2792,7 +2792,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = !!queue->ring_buffer;
+        result = ! !queue->ring_buffer;
       } else {
         result = TRUE;
       }

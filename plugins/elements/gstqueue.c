@@ -202,7 +202,7 @@ static gboolean gst_queue_handle_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_queue_handle_src_query (GstPad * pad, GstQuery ** query);
 
 static gboolean gst_queue_acceptcaps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_queue_getcaps (GstPad * pad);
+static GstCaps *gst_queue_getcaps (GstPad * pad, GstCaps * filter);
 static GstPadLinkReturn gst_queue_link_sink (GstPad * pad, GstPad * peer);
 static GstPadLinkReturn gst_queue_link_src (GstPad * pad, GstPad * peer);
 static void gst_queue_locked_flush (GstQueue * queue);
@@ -475,7 +475,7 @@ gst_queue_acceptcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstCaps *
-gst_queue_getcaps (GstPad * pad)
+gst_queue_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstQueue *queue;
   GstPad *otherpad;
@@ -483,12 +483,12 @@ gst_queue_getcaps (GstPad * pad)
 
   queue = GST_QUEUE (gst_pad_get_parent (pad));
   if (G_UNLIKELY (queue == NULL))
-    return gst_caps_new_any ();
+    return (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
-  result = gst_pad_peer_get_caps (otherpad);
+  result = gst_pad_peer_get_caps (otherpad, filter);
   if (result == NULL)
-    result = gst_caps_new_any ();
+    result = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   gst_object_unref (queue);
 
