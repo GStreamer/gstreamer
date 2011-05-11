@@ -55,8 +55,7 @@ gst_meta_net_address_get_info (void)
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
         (GstMetaCopyFunction) meta_net_address_copy,
-        (GstMetaTransformFunction) NULL,
-        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+        (GstMetaTransformFunction) NULL);
   }
   return meta_info;
 }

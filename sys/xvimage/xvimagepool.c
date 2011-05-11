@@ -43,9 +43,7 @@ gst_meta_xvimage_get_info (void)
         sizeof (GstMetaXvImage),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_meta_xvimage_free,
-        (GstMetaCopyFunction) NULL,
-        (GstMetaTransformFunction) NULL,
-        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+        (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
   }
   return meta_xvimage_info;
 }

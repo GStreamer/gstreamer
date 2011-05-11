@@ -30,9 +30,7 @@ gst_meta_video_get_info (void)
         sizeof (GstMetaVideo),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
-        (GstMetaCopyFunction) NULL,
-        (GstMetaTransformFunction) NULL,
-        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+        (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
   }
   return meta_video_info;
 }
