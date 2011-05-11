@@ -1079,6 +1079,33 @@ gst_flac_dec_loop (GstPad * sinkpad)
 
   GST_LOG_OBJECT (flacdec, "entering loop");
 
+  if (flacdec->eos) {
+    GST_DEBUG_OBJECT (flacdec, "Seeked after end of file");
+
+    if (flacdec->close_segment) {
+      GST_DEBUG_OBJECT (flacdec, "pushing close segment");
+      gst_pad_push_event (flacdec->srcpad, flacdec->close_segment);
+      flacdec->close_segment = NULL;
+    }
+    if (flacdec->start_segment) {
+      GST_DEBUG_OBJECT (flacdec, "pushing start segment");
+      gst_pad_push_event (flacdec->srcpad, flacdec->start_segment);
+      flacdec->start_segment = NULL;
+    }
+
+    if (flacdec->tags) {
+      gst_element_found_tags_for_pad (GST_ELEMENT (flacdec), flacdec->srcpad,
+          flacdec->tags);
+      flacdec->tags = NULL;
+    }
+
+    if ((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) == 0) {
+      goto eos_and_pause;
+    } else {
+      goto segment_done_and_pause;
+    }
+  }
+
   if (flacdec->init) {
     GST_DEBUG_OBJECT (flacdec, "initializing new decoder");
     is = FLAC__stream_decoder_init_stream (flacdec->decoder,
@@ -1840,6 +1867,14 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
     }
   }
 
+  /* Check if we seeked after the end of file */
+  if (start_type != GST_SEEK_TYPE_NONE && flacdec->segment.duration > 0 &&
+      start >= flacdec->segment.duration) {
+    flacdec->eos = TRUE;
+  } else {
+    flacdec->eos = FALSE;
+  }
+
   flush = ((seek_flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
 
   if (flush) {
@@ -1903,16 +1938,20 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
    * callbacks that need to behave differently when seeking */
   flacdec->seeking = TRUE;
 
-  GST_LOG_OBJECT (flacdec, "calling seek_absolute");
-  seek_ok = FLAC__stream_decoder_seek_absolute (flacdec->decoder,
-      flacdec->segment.last_stop);
-  GST_LOG_OBJECT (flacdec, "done with seek_absolute, seek_ok=%d", seek_ok);
+  if (!flacdec->eos) {
+    GST_LOG_OBJECT (flacdec, "calling seek_absolute");
+    seek_ok = FLAC__stream_decoder_seek_absolute (flacdec->decoder,
+        flacdec->segment.last_stop);
+    GST_LOG_OBJECT (flacdec, "done with seek_absolute, seek_ok=%d", seek_ok);
+  } else {
+    GST_LOG_OBJECT (flacdec, "not seeking, seeked after end of file");
+    seek_ok = TRUE;
+  }
 
   flacdec->seeking = FALSE;
 
   GST_DEBUG_OBJECT (flacdec, "performed seek to sample %" G_GINT64_FORMAT,
       flacdec->segment.last_stop);
-
 
   if (!seek_ok) {
     GST_WARNING_OBJECT (flacdec, "seek failed");
@@ -2086,6 +2125,7 @@ gst_flac_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      flacdec->eos = FALSE;
       flacdec->seeking = FALSE;
       flacdec->channels = 0;
       flacdec->depth = 0;

@@ -61,6 +61,8 @@ struct _GstFlacDec {
                                * don't push any buffers in the write callback
                                * until we are actually at the new position */
 
+  gboolean       eos;         /* set to TRUE if seeked after the end of file */
+
   GstSegment     segment;     /* the currently configured segment, in
                                * samples/audio frames (DEFAULT format) */
   gboolean       running;
