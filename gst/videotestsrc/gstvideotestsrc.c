@@ -92,7 +92,8 @@ static void gst_video_test_src_set_property (GObject * object, guint prop_id,
 static void gst_video_test_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_video_test_src_getcaps (GstBaseSrc * bsrc);
+static GstCaps *gst_video_test_src_getcaps (GstBaseSrc * bsrc,
+    GstCaps * filter);
 static gboolean gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 static void gst_video_test_src_src_fixate (GstPad * pad, GstCaps * caps);
 
@@ -297,7 +298,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_video_test_src_getcaps (NULL)));
+          gst_video_test_src_getcaps (NULL, NULL)));
 
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
@@ -574,7 +575,7 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
 
 /* threadsafe because this gets called as the plugin is loaded */
 static GstCaps *
-gst_video_test_src_getcaps (GstBaseSrc * bsrc)
+gst_video_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   static GstCaps *capslist = NULL;
 
@@ -596,7 +597,10 @@ gst_video_test_src_getcaps (GstBaseSrc * bsrc)
     capslist = caps;
   }
 
-  return gst_caps_copy (capslist);
+  if (filter)
+    return gst_caps_intersect_full (filter, capslist, GST_CAPS_INTERSECT_FIRST);
+  else
+    return gst_caps_ref (capslist);
 }
 
 static gboolean
