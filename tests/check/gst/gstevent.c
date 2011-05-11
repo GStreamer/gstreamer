@@ -156,7 +156,7 @@ GST_START_TEST (create_events)
     fail_unless (ctd1 == ctd2);
     fail_unless (ct1 == ct2);
     gst_event_parse_qos (event, &t2, &p2, &ctd2, &ct2);
-    fail_unless (t2 == GST_QOS_TYPE_UNDERFLOW);
+    fail_unless (t2 == GST_QOS_TYPE_THROTTLE);
     fail_unless (p1 == p2);
     fail_unless (ctd1 == ctd2);
     fail_unless (ct1 == ct2);
@@ -165,7 +165,7 @@ GST_START_TEST (create_events)
     ctd1 = G_GINT64_CONSTANT (-10);
     event = gst_event_new_qos (t1, p1, ctd1, ct1);
     gst_event_parse_qos (event, &t2, &p2, &ctd2, &ct2);
-    fail_unless (t2 == GST_QOS_TYPE_OVERFLOW);
+    fail_unless (t2 == GST_QOS_TYPE_THROTTLE);
     gst_event_unref (event);
 
     event = gst_event_new_qos (t1, p1, ctd1, ct1);

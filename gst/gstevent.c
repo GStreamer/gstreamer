@@ -89,12 +89,26 @@ static GType _gst_event_type = 0;
 
 typedef struct
 {
+  GstQOSType type;
+  gdouble proportion;
+  gint64 diff;
+  GstClockTime timestamp;
+} GstEventQOSData;
+
+typedef struct
+{
   GstEvent event;
 
   GstStructure *structure;
+
+  union
+  {
+    GstEventQOSData qos;
+  };
 } GstEventImpl;
 
-#define GST_EVENT_STRUCTURE(e)  (((GstEventImpl *)(e))->structure)
+#define GST_EVENT_STRUCTURE(e)        (((GstEventImpl *)(e))->structure)
+#define GST_EVENT_IMPL(e,data,field)  (((GstEventImpl *)(e))->data.field)
 
 typedef struct
 {
@@ -230,26 +244,25 @@ _gst_event_free (GstEvent * event)
   g_slice_free1 (GST_MINI_OBJECT_SIZE (event), event);
 }
 
-static void gst_event_init (GstEventImpl * event, gsize size,
-    GstEventType type);
-
 static GstEvent *
-_gst_event_copy (GstEvent * event)
+_gst_event_copy (GstEventImpl * event)
 {
   GstEventImpl *copy;
   GstStructure *s;
 
-  copy = g_slice_new0 (GstEventImpl);
+  copy = g_slice_dup (GstEventImpl, event);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (copy), _gst_event_type,
+      sizeof (GstEventImpl));
 
-  gst_event_init (copy, sizeof (GstEventImpl), GST_EVENT_TYPE (event));
-
+  GST_EVENT_TYPE (copy) = GST_EVENT_TYPE (event);
   GST_EVENT_TIMESTAMP (copy) = GST_EVENT_TIMESTAMP (event);
   GST_EVENT_SEQNUM (copy) = GST_EVENT_SEQNUM (event);
 
   s = GST_EVENT_STRUCTURE (event);
   if (s) {
     GST_EVENT_STRUCTURE (copy) = gst_structure_copy (s);
-    gst_structure_set_parent_refcount (s, &copy->event.mini_object.refcount);
+    gst_structure_set_parent_refcount (GST_EVENT_STRUCTURE (copy),
+        &copy->event.mini_object.refcount);
   }
   return GST_EVENT_CAST (copy);
 }
@@ -889,7 +902,6 @@ gst_event_new_qos (GstQOSType type, gdouble proportion,
     GstClockTimeDiff diff, GstClockTime timestamp)
 {
   GstEvent *event;
-  GstStructure *structure;
 
   /* diff must be positive or timestamp + diff must be positive */
   g_return_val_if_fail (diff >= 0 || -diff <= timestamp, NULL);
@@ -899,12 +911,12 @@ gst_event_new_qos (GstQOSType type, gdouble proportion,
       ", timestamp %" GST_TIME_FORMAT, type, proportion,
       diff, GST_TIME_ARGS (timestamp));
 
-  structure = gst_structure_id_new (GST_QUARK (EVENT_QOS),
-      GST_QUARK (TYPE), GST_TYPE_QOS_TYPE, type,
-      GST_QUARK (PROPORTION), G_TYPE_DOUBLE, proportion,
-      GST_QUARK (DIFF), G_TYPE_INT64, diff,
-      GST_QUARK (TIMESTAMP), G_TYPE_UINT64, timestamp, NULL);
-  event = gst_event_new_custom (GST_EVENT_QOS, structure);
+  event = gst_event_new (GST_EVENT_QOS);
+
+  GST_EVENT_IMPL (event, qos, type) = type;
+  GST_EVENT_IMPL (event, qos, proportion) = proportion;
+  GST_EVENT_IMPL (event, qos, diff) = diff;
+  GST_EVENT_IMPL (event, qos, timestamp) = timestamp;
 
   return event;
 }
@@ -924,28 +936,17 @@ void
 gst_event_parse_qos (GstEvent * event, GstQOSType * type,
     gdouble * proportion, GstClockTimeDiff * diff, GstClockTime * timestamp)
 {
-  const GstStructure *structure;
-
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_QOS);
 
-  structure = GST_EVENT_STRUCTURE (event);
   if (type)
-    *type =
-        g_value_get_enum (gst_structure_id_get_value (structure,
-            GST_QUARK (TYPE)));
+    *type = GST_EVENT_IMPL (event, qos, type);
   if (proportion)
-    *proportion =
-        g_value_get_double (gst_structure_id_get_value (structure,
-            GST_QUARK (PROPORTION)));
+    *proportion = GST_EVENT_IMPL (event, qos, proportion);
   if (diff)
-    *diff =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (DIFF)));
+    *diff = GST_EVENT_IMPL (event, qos, diff);
   if (timestamp)
-    *timestamp =
-        g_value_get_uint64 (gst_structure_id_get_value (structure,
-            GST_QUARK (TIMESTAMP)));
+    *timestamp = GST_EVENT_IMPL (event, qos, timestamp);
 }
 
 /**
