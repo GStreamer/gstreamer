@@ -175,6 +175,33 @@ GST_START_TEST (test_unref_threaded)
 
 GST_END_TEST;
 
+/* ======== weak ref test ======== */
+
+static gboolean weak_ref_notify_succeeded = FALSE;
+
+static void
+on_weak_ref_notify (gpointer data, GstMiniObject * where_object_was)
+{
+  weak_ref_notify_succeeded = TRUE;
+}
+
+GST_START_TEST (test_weak_ref)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_and_alloc (4);
+
+  gst_mini_object_weak_ref (GST_MINI_OBJECT (buffer), on_weak_ref_notify,
+      &buffer);
+
+  gst_buffer_unref (buffer);
+
+  fail_unless (weak_ref_notify_succeeded,
+      "No weak reference notification took place.");
+}
+
+GST_END_TEST;
+
 /* ======== recycle test ======== */
 
 static gint recycle_buffer_count = 10;
@@ -479,6 +506,7 @@ gst_mini_object_suite (void)
   tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_ref_threaded);
   tcase_add_test (tc_chain, test_unref_threaded);
+  tcase_add_test (tc_chain, test_weak_ref);
   tcase_add_test (tc_chain, test_recycle_threaded);
   tcase_add_test (tc_chain, test_value_collection);
   tcase_add_test (tc_chain, test_dup_null_mini_object);

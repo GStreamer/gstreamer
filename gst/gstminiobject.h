@@ -136,6 +136,22 @@ typedef enum
 #define GST_MINI_OBJECT_REFCOUNT_VALUE(obj)     (g_atomic_int_get (&(GST_MINI_OBJECT_CAST(obj))->refcount))
 
 /**
+ * GstMiniObjectWeakNotify:
+ * @data: data that was provided when the weak reference was established
+ * @where_the_mini_object_was: the mini object being finalized
+ * 
+ * A #GstMiniObjectWeakNotify function can be added to a mini object as a
+ * callback that gets triggered when the mini object is finalized. Since the
+ * mini object is already being finalized when the #GstMiniObjectWeakNotify is
+ * called, there's not much you could do with the object, apart from e.g. using
+ * its adress as hash-index or the like. 
+ */
+typedef void (*GstMiniObjectWeakNotify) (gpointer data,
+    GstMiniObject * where_the_mini_object_was);
+
+typedef struct _GstMiniObjectPrivateData GstMiniObjectPrivateData;
+
+/**
  * GstMiniObject:
  * @instance: type instance
  * @refcount: atomic refcount
@@ -154,7 +170,7 @@ struct _GstMiniObject {
   guint flags;
 
   /*< private >*/
-  gpointer _gst_reserved;
+  GstMiniObjectPrivateData *priv;
 };
 
 struct _GstMiniObjectClass {
@@ -177,6 +193,12 @@ GstMiniObject*  gst_mini_object_make_writable 	(GstMiniObject *mini_object);
 /* refcounting */
 GstMiniObject* 	gst_mini_object_ref 		(GstMiniObject *mini_object);
 void 		gst_mini_object_unref 		(GstMiniObject *mini_object);
+void	        gst_mini_object_weak_ref        (GstMiniObject *object,
+					         GstMiniObjectWeakNotify notify,
+					         gpointer data);
+void	        gst_mini_object_weak_unref	(GstMiniObject *object,
+					         GstMiniObjectWeakNotify notify,
+					         gpointer data);
 void 		gst_mini_object_replace 	(GstMiniObject **olddata, GstMiniObject *newdata);
 
 /* GParamSpec */
