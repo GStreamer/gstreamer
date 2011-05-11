@@ -54,10 +54,7 @@ _gst_meta_init (void)
 const GstMetaInfo *
 gst_meta_register (const gchar * api, const gchar * impl, gsize size,
     GstMetaInitFunction init_func, GstMetaFreeFunction free_func,
-    GstMetaCopyFunction copy_func,
-    GstMetaTransformFunction transform_func,
-    GstMetaSerializeFunction serialize_func,
-    GstMetaDeserializeFunction deserialize_func)
+    GstMetaCopyFunction copy_func, GstMetaTransformFunction transform_func)
 {
   GstMetaInfo *info;
 
@@ -67,14 +64,12 @@ gst_meta_register (const gchar * api, const gchar * impl, gsize size,
 
   info = g_slice_new (GstMetaInfo);
   info->api = g_quark_from_string (api);
-  info->impl = g_quark_from_string (impl);
+  info->type = g_pointer_type_register_static (impl);
   info->size = size;
   info->init_func = init_func;
   info->free_func = free_func;
   info->copy_func = copy_func;
   info->transform_func = transform_func;
-  info->serialize_func = serialize_func;
-  info->deserialize_func = deserialize_func;
 
   GST_DEBUG ("register \"%s\" implementing \"%s\" of size %" G_GSIZE_FORMAT,
       api, impl, size);
@@ -151,8 +146,7 @@ gst_meta_timing_get_info (void)
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
         (GstMetaCopyFunction) meta_timing_copy,
-        (GstMetaTransformFunction) NULL,
-        (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+        (GstMetaTransformFunction) NULL);
   }
   return meta_info;
 }

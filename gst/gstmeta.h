@@ -84,44 +84,27 @@ typedef void (*GstMetaTransformFunction) (GstBuffer *transbuf, GstMeta *meta,
                                           GstBuffer *buffer, gpointer data);
 
 /**
- * GstMetaSerializeFunction:
- * @meta: a #GstMeta
- */
-typedef gchar * (*GstMetaSerializeFunction) (GstMeta *meta);
-
-/**
- * GstMetaDeserializeFunction:
- * @meta: a #GstMeta
- */
-typedef gboolean (*GstMetaDeserializeFunction) (GstMeta *meta,
-                                                const gchar *s);
-
-/**
  * GstMetaInfo:
  * @api: tag indentifying the metadata structure and api
- * @impl: tag indentifying the implementor of the api
+ * @type: type indentifying the implementor of the api
  * @size: size of the metadata
  * @init_func: function for initializing the metadata
  * @free_func: function for freeing the metadata
  * @copy_func: function for copying the metadata
  * @transform_func: function for transforming the metadata
- * @serialize_func: function for serializing
- * @deserialize_func: function for deserializing
  *
  * The #GstMetaInfo provides information about a specific metadata
  * structure.
  */
 struct _GstMetaInfo {
   GQuark                     api;
-  GQuark                     impl;
+  GType                      type;
   gsize                      size;
 
   GstMetaInitFunction        init_func;
   GstMetaFreeFunction        free_func;
   GstMetaCopyFunction        copy_func;
   GstMetaTransformFunction   transform_func;
-  GstMetaSerializeFunction   serialize_func;
-  GstMetaDeserializeFunction deserialize_func;
 };
 
 void _gst_meta_init (void);
@@ -131,9 +114,7 @@ const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *im
                                                GstMetaInitFunction        init_func,
                                                GstMetaFreeFunction        free_func,
                                                GstMetaCopyFunction        copy_func,
-                                               GstMetaTransformFunction   transform_func,
-                                               GstMetaSerializeFunction   serialize_func,
-                                               GstMetaDeserializeFunction deserialize_func);
+                                               GstMetaTransformFunction   transform_func);
 const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
 
 /* default metadata */
