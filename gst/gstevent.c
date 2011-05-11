@@ -85,7 +85,7 @@
 #include "gstutils.h"
 #include "gstquark.h"
 
-static GType _gst_event_type = 0;
+GType _gst_event_type = 0;
 
 typedef struct
 {
@@ -147,7 +147,8 @@ _gst_event_initialize (void)
 {
   gint i;
 
-  gst_event_get_type ();
+  _gst_event_type = gst_mini_object_register ("GstEvent");
+
   g_type_class_ref (gst_seek_flags_get_type ());
   g_type_class_ref (gst_seek_type_get_type ());
 
@@ -212,15 +213,6 @@ gst_event_type_get_flags (GstEventType type)
   ret = type & ((1 << GST_EVENT_STICKY_SHIFT) - 1);
 
   return ret;
-}
-
-GType
-gst_event_get_type (void)
-{
-  if (G_UNLIKELY (_gst_event_type == 0)) {
-    _gst_event_type = gst_mini_object_register ("GstEvent");
-  }
-  return _gst_event_type;
 }
 
 static void

@@ -34,6 +34,22 @@
 
 G_BEGIN_DECLS
 
+extern GType _gst_event_type;
+
+typedef struct _GstEvent GstEvent;
+
+#define GST_TYPE_EVENT                  (_gst_event_type)
+#define GST_IS_EVENT(obj)               (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_EVENT))
+#define GST_EVENT_CAST(obj)             ((GstEvent *)(obj))
+#define GST_EVENT(obj)                  (GST_EVENT_CAST(obj))
+
+/**
+ * GST_EVENT_TRACE_NAME:
+ *
+ * The name used for memory allocation tracing
+ */
+#define GST_EVENT_TRACE_NAME    "GstEvent"
+
 /**
  * GstEventTypeFlags:
  * @GST_EVENT_TYPE_UPSTREAM:   Set if the event can travel upstream.
@@ -162,20 +178,6 @@ typedef enum {
   GST_EVENT_CUSTOM_BOTH_OOB       = GST_EVENT_MAKE_TYPE (32, 0, FLAG(BOTH))
 } GstEventType;
 #undef FLAG
-
-/**
- * GST_EVENT_TRACE_NAME:
- *
- * The name used for memory allocation tracing
- */
-#define GST_EVENT_TRACE_NAME    "GstEvent"
-
-typedef struct _GstEvent GstEvent;
-
-#define GST_TYPE_EVENT                  (gst_event_get_type())
-#define GST_IS_EVENT(obj)               (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_EVENT))
-#define GST_EVENT(obj)                  ((GstEvent *)(obj))
-#define GST_EVENT_CAST(obj)             ((GstEvent *)(obj))
 
 /**
  * GST_EVENT_TYPE:
@@ -395,8 +397,6 @@ GQuark          gst_event_type_to_quark         (GstEventType type);
 GstEventTypeFlags
                 gst_event_type_get_flags        (GstEventType type);
 
-
-GType           gst_event_get_type              (void);
 
 /* refcounting */
 /**
