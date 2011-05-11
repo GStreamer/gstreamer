@@ -974,7 +974,7 @@ gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
 /* Element stuff */
 
 static GstCaps *
-gst_ximagesink_getcaps (GstBaseSink * bsink)
+gst_ximagesink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstXImageSink *ximagesink;
   GstCaps *caps;
@@ -984,23 +984,48 @@ gst_ximagesink_getcaps (GstBaseSink * bsink)
 
   g_mutex_lock (ximagesink->x_lock);
   if (ximagesink->xcontext) {
+    GstCaps *caps;
+
+    caps = gst_caps_ref (ximagesink->xcontext->caps);
+
+    if (filter) {
+      GstCaps *intersection;
+
+      intersection =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = intersection;
+    }
+
     if (ximagesink->xwindow && ximagesink->xwindow->width) {
       GstStructure *s0, *s1;
 
-      caps = gst_caps_copy (ximagesink->xcontext->caps);
+      caps = gst_caps_make_writable (caps);
 
-      s1 = gst_structure_copy (gst_caps_get_structure (caps, 0));
+      /* There can only be a single structure because the xcontext
+       * caps only have a single structure */
       s0 = gst_caps_get_structure (caps, 0);
+      s1 = gst_structure_copy (gst_caps_get_structure (caps, 0));
+
       gst_structure_set (s0, "width", G_TYPE_INT, ximagesink->xwindow->width,
           "height", G_TYPE_INT, ximagesink->xwindow->height, NULL);
       gst_caps_append_structure (caps, s1);
-      g_mutex_unlock (ximagesink->x_lock);
-      return caps;
-    } else {
-      caps = gst_caps_ref (ximagesink->xcontext->caps);
-      g_mutex_unlock (ximagesink->x_lock);
-      return caps;
+
+      /* This will not change the order but will remove the
+       * fixed width/height caps again if not possible
+       * upstream */
+      if (filter) {
+        GstCaps *intersection;
+
+        intersection =
+            gst_caps_intersect_full (caps, filter, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (caps);
+        caps = intersection;
+      }
     }
+
+    g_mutex_unlock (ximagesink->x_lock);
+    return caps;
   }
   g_mutex_unlock (ximagesink->x_lock);
 
@@ -1019,6 +1044,15 @@ gst_ximagesink_getcaps (GstBaseSink * bsink)
       gst_structure_set (structure, "pixel-aspect-ratio",
           GST_TYPE_FRACTION, nom, den, NULL);
     }
+  }
+
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = intersection;
   }
 
   return caps;
