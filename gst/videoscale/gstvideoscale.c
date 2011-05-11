@@ -335,7 +335,7 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
   ret = gst_caps_copy (caps);
-  structure = gst_structure_copy (gst_caps_get_structure (ret, 0));
+  structure = gst_caps_get_structure (ret, 0);
 
   gst_structure_set (structure,
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
@@ -346,7 +346,6 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
     gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE,
         1, G_MAXINT, G_MAXINT, 1, NULL);
   }
-  gst_caps_append_structure (ret, structure);
 
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
 
