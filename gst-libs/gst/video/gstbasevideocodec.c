@@ -119,6 +119,7 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
     gst_base_video_codec_free_frame ((GstVideoFrame *) g->data);
   }
   g_list_free (base_video_codec->frames);
+  base_video_codec->frames = NULL;
 
   if (base_video_codec->caps) {
     gst_caps_unref (base_video_codec->caps);
