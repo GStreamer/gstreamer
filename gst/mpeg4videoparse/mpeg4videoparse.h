@@ -21,7 +21,9 @@
 #define __MPEG4VIDEOPARSE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/base/gstbaseparse.h>
+
+#include "mpeg4parse.h"
 
 G_BEGIN_DECLS
 
@@ -40,47 +42,30 @@ G_BEGIN_DECLS
 typedef struct _GstMpeg4VParse GstMpeg4VParse;
 typedef struct _GstMpeg4VParseClass GstMpeg4VParseClass;
 
-typedef enum {
-  PARSE_NEED_START,
-  PARSE_START_FOUND,
-  PARSE_VO_FOUND,
-  PARSE_VOS_FOUND,
-  PARSE_VOP_FOUND
-} GstMpeg4VParseState;
-
 struct _GstMpeg4VParse {
-  GstElement element;
+  GstBaseParse element;
 
-  GstPad * sinkpad;
-  GstPad * srcpad;
-
-  GstCaps *sink_caps;
-
-  guint interval;
   GstClockTime last_report;
 
-  GstAdapter * adapter;
-  guint offset;
-  guint vos_offset;
+  /* parse state */
+  gint last_sc;
+  gint vop_offset;
+  gint vos_offset;
+  gint vo_offset;
   gboolean intra_frame;
-  
-  GstMpeg4VParseState state;
-  GstClockTime timestamp;
+  gboolean update_caps;
 
   GstBuffer *config;
-  gboolean have_config;
   guint8 profile;
-  GstClockTime frame_duration;
+  MPEG4Params params;
 
+  /* properties */
   gboolean drop;
-
-  gboolean have_src_caps;
-  GstEvent *pending_segment;
-  GList *pending_events;
+  guint interval;
 };
 
 struct _GstMpeg4VParseClass {
-  GstElementClass parent_class;
+  GstBaseParseClass parent_class;
 };
 
 GType gst_mpeg4vparse_get_type (void);
