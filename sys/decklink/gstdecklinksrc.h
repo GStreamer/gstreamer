@@ -56,10 +56,10 @@ struct _GstDecklinkSrc
   GstTask *task;
   GStaticRecMutex task_mutex;
 
-  int num_audio_samples;
+  guint64 num_audio_samples;
 
   GstCaps *video_caps;
-  int num_frames;
+  guint64 num_frames;
   int fps_n;
   int fps_d;
   int width;
