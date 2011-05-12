@@ -746,6 +746,7 @@ gst_h264_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     buf = gst_adapter_take_buffer (h264parse->frame_out, av);
     gst_buffer_copy_metadata (buf, buffer, GST_BUFFER_COPY_ALL);
     gst_buffer_replace (&frame->buffer, buf);
+    gst_buffer_unref (buf);
   }
 
   return GST_FLOW_OK;
@@ -869,6 +870,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           new_buf = gst_byte_writer_reset_and_get_buffer (&bw);
           gst_buffer_copy_metadata (new_buf, buffer, GST_BUFFER_COPY_ALL);
           gst_buffer_replace (&frame->buffer, new_buf);
+          gst_buffer_unref (new_buf);
         }
       }
       /* we pushed whatever we had */
