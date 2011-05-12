@@ -145,11 +145,14 @@ typedef enum
  * mini object is already being finalized when the #GstMiniObjectWeakNotify is
  * called, there's not much you could do with the object, apart from e.g. using
  * its adress as hash-index or the like. 
+ *
+ * Since: 0.10.34
+ *
  */
 typedef void (*GstMiniObjectWeakNotify) (gpointer data,
     GstMiniObject * where_the_mini_object_was);
 
-typedef struct _GstMiniObjectPrivateData GstMiniObjectPrivateData;
+typedef struct _GstMiniObjectPrivate GstMiniObjectPrivate;
 
 /**
  * GstMiniObject:
@@ -170,7 +173,7 @@ struct _GstMiniObject {
   guint flags;
 
   /*< private >*/
-  GstMiniObjectPrivateData *priv;
+  GstMiniObjectPrivate *priv;
 };
 
 struct _GstMiniObjectClass {

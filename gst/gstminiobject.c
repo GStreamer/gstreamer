@@ -59,7 +59,7 @@ typedef struct
 } WeakRefStack;
 
 /* Structure for storing a mini object's private data */
-struct _GstMiniObjectPrivateData
+struct _GstMiniObjectPrivate
 {
   WeakRefStack *wstack;
 };
@@ -162,7 +162,7 @@ gst_mini_object_class_init (gpointer g_class, gpointer class_data)
   mo_class->finalize = gst_mini_object_finalize;
 
   /* Set the instance data type */
-  g_type_class_add_private (g_class, sizeof (GstMiniObjectPrivateData));
+  g_type_class_add_private (g_class, sizeof (GstMiniObjectPrivate));
 }
 
 static void
@@ -174,9 +174,9 @@ gst_mini_object_init (GTypeInstance * instance, gpointer klass)
 
   /* Initialize the mini object's private data */
 
-  mini_object->priv = (GstMiniObjectPrivateData *)
+  mini_object->priv = (GstMiniObjectPrivate *)
       G_TYPE_INSTANCE_GET_PRIVATE (instance, GST_TYPE_MINI_OBJECT,
-      GstMiniObjectPrivateData);
+      GstMiniObjectPrivate);
 
   mini_object->priv->wstack = NULL;
 }
