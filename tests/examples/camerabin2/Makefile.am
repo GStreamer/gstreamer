@@ -38,6 +38,8 @@ gst_camerabin2_test_LDADD   = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstinterfaces-@GST_MAJORMINOR@ \
 	-lgstpbutils-@GST_MAJORMINOR@ \
+	-lgstvideo-@GST_MAJORMINOR@ \
+	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(X11_LIBS)
 
