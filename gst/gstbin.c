@@ -996,6 +996,7 @@ static gboolean
 is_eos (GstBin * bin, guint32 * seqnum)
 {
   gboolean result;
+  gint n_eos = 0;
   GList *walk, *msgs;
 
   result = TRUE;
@@ -1009,6 +1010,7 @@ is_eos (GstBin * bin, guint32 * seqnum)
               find_message (bin, GST_OBJECT_CAST (element), GST_MESSAGE_EOS))) {
         GST_DEBUG ("sink '%s' posted EOS", GST_ELEMENT_NAME (element));
         *seqnum = gst_message_get_seqnum (GST_MESSAGE_CAST (msgs->data));
+        n_eos++;
       } else {
         GST_DEBUG ("sink '%s' did not post EOS yet",
             GST_ELEMENT_NAME (element));
@@ -1017,7 +1019,13 @@ is_eos (GstBin * bin, guint32 * seqnum)
       }
     }
   }
-  return result;
+  /* FIXME: Some tests (e.g. elements/capsfilter) use
+   * pipelines with a dangling sinkpad but no sink element.
+   * These tests assume that no EOS message is ever
+   * posted on the bus so let's keep that behaviour.
+   * In valid pipelines this doesn't make a difference.
+   */
+  return result && n_eos > 0;
 }
 
 static void
