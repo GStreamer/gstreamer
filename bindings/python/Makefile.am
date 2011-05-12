@@ -39,3 +39,6 @@ CLEANFILES = ges.c
 		--prefix pyges $<) > gen-$*.c \
 	&& cp gen-$*.c $*.c \
 	&& rm -f gen-$*.c
+
+check:
+	@PYTHONPATH=$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/testsuite/runtests.py
