@@ -148,6 +148,8 @@ static void gst_camera_bin_dispose (GObject * object);
 static void gst_camera_bin_finalize (GObject * object);
 
 static void gst_camera_bin_handle_message (GstBin * bin, GstMessage * message);
+static gboolean gst_camera_bin_send_event (GstElement * element,
+    GstEvent * event);
 
 GType
 gst_camera_bin_get_type (void)
@@ -459,6 +461,7 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
   object_class->get_property = gst_camera_bin_get_property;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_camera_bin_change_state);
+  element_class->send_event = GST_DEBUG_FUNCPTR (gst_camera_bin_send_event);
 
   bin_class->handle_message = gst_camera_bin_handle_message;
 
@@ -1321,6 +1324,40 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
   }
 
   return ret;
+}
+
+static gboolean
+gst_camera_bin_send_event (GstElement * element, GstEvent * event)
+{
+  GstCameraBin *camera = GST_CAMERA_BIN_CAST (element);
+  gboolean res;
+
+  res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    {
+      GstState current;
+
+      if (camera->videosink) {
+        gst_element_get_state (camera->videosink, &current, NULL, 0);
+        if (current <= GST_STATE_READY)
+          gst_element_post_message (camera->videosink,
+              gst_message_new_eos (GST_OBJECT (camera->videosink)));
+      }
+      if (camera->imagesink) {
+        gst_element_get_state (camera->imagesink, &current, NULL, 0);
+        if (current <= GST_STATE_READY)
+          gst_element_post_message (camera->imagesink,
+              gst_message_new_eos (GST_OBJECT (camera->imagesink)));
+      }
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  return res;
 }
 
 static void
