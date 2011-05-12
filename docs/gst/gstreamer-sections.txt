@@ -1343,6 +1343,7 @@ GstMiniObject
 GstMiniObjectFlags
 GstMiniObjectCopyFunction
 GstMiniObjectFinalizeFunction
+GstMiniObjectWeakNotify
 
 GST_MINI_OBJECT_FLAGS
 GST_MINI_OBJECT_FLAG_IS_SET
@@ -1359,6 +1360,9 @@ gst_mini_object_make_writable
 gst_mini_object_ref
 gst_mini_object_unref
 gst_mini_object_replace
+
+gst_mini_object_weak_ref
+gst_mini_object_weak_unref
 
 GstParamSpecMiniObject
 gst_param_spec_mini_object

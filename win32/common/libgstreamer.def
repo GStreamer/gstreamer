@@ -608,6 +608,8 @@ EXPORTS
 	gst_mini_object_ref
 	gst_mini_object_replace
 	gst_mini_object_unref
+	gst_mini_object_weak_ref
+	gst_mini_object_weak_unref
 	gst_object_check_uniqueness
 	gst_object_default_deep_notify
 	gst_object_default_error
