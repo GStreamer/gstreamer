@@ -297,6 +297,10 @@ void            gst_base_parse_set_frame_rate  (GstBaseParse * parse,
                                                 guint          lead_in,
                                                 guint          lead_out);
 
+void            gst_base_parse_set_latency     (GstBaseParse * parse,
+                                                GstClockTime min_latency,
+                                                GstClockTime max_latency);
+
 gboolean        gst_base_parse_convert_default (GstBaseParse * parse,
                                                 GstFormat      src_format,
                                                 gint64         src_value,

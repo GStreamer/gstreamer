@@ -241,6 +241,7 @@ struct _GstBaseParsePrivate
   guint bitrate;
   guint lead_in, lead_out;
   GstClockTime lead_in_ts, lead_out_ts;
+  GstClockTime min_latency, max_latency;
 
   gboolean discont;
   gboolean flushing;
@@ -3032,6 +3033,31 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
   GST_INFO_OBJECT (parse, "passthrough: %s", (passthrough) ? "yes" : "no");
 }
 
+/**
+ * gst_base_parse_set_latency:
+ * @parse: a #GstBaseParse
+ * @min_latency: minimum parse latency
+ * @max_latency: maximum parse latency
+ *
+ * Sets the minimum and maximum (which may likely be equal) latency introduced
+ * by the parsing process.  If there is such a latency, which depends on the
+ * particular parsing of the format, it typically corresponds to 1 frame duration.
+ *
+ * Since: 0.10.34
+ */
+void
+gst_base_parse_set_latency (GstBaseParse * parse, GstClockTime min_latency,
+    GstClockTime max_latency)
+{
+  GST_OBJECT_LOCK (parse);
+  parse->priv->min_latency = min_latency;
+  parse->priv->max_latency = max_latency;
+  GST_OBJECT_UNLOCK (parse);
+  GST_INFO_OBJECT (parse, "min/max latency %" GST_TIME_FORMAT ", %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (min_latency),
+      GST_TIME_ARGS (max_latency));
+}
+
 static gboolean
 gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
     GstClockTime * duration)
@@ -3189,6 +3215,29 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       if (res) {
         gst_query_set_convert (query, src_format, src_value,
             dest_format, dest_value);
+      }
+      break;
+    }
+    case GST_QUERY_LATENCY:
+    {
+      if ((res = gst_pad_peer_query (parse->sinkpad, query))) {
+        gboolean live;
+        GstClockTime min_latency, max_latency;
+
+        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+        GST_DEBUG_OBJECT (parse, "Peer latency: live %d, min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT, live,
+            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+        GST_OBJECT_LOCK (parse);
+        /* add our latency */
+        if (min_latency != -1)
+          min_latency += parse->priv->min_latency;
+        if (max_latency != -1)
+          max_latency += parse->priv->max_latency;
+        GST_OBJECT_UNLOCK (parse);
+
+        gst_query_set_latency (query, live, min_latency, max_latency);
       }
       break;
     }
