@@ -68,7 +68,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, parsed = (boolean) true"));
 
-GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_BASE_PARSE);
+GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstBaseParse,
+    GST_TYPE_BASE_PARSE);
 
 static void gst_h264_parse_finalize (GObject * object);
 
@@ -203,7 +204,7 @@ gst_h264_parse_start (GstBaseParse * parse)
 {
   GstH264Parse *h264parse = GST_H264_PARSE (parse);
 
-  GST_DEBUG ("Start");
+  GST_DEBUG_OBJECT (parse, "start");
   gst_h264_parse_reset (h264parse);
 
   gst_h264_params_create (&h264parse->params, GST_ELEMENT (h264parse));
@@ -218,7 +219,7 @@ gst_h264_parse_stop (GstBaseParse * parse)
 {
   GstH264Parse *h264parse = GST_H264_PARSE (parse);
 
-  GST_DEBUG ("Stop");
+  GST_DEBUG_OBJECT (parse, "stop");
   gst_h264_parse_reset (h264parse);
 
   gst_h264_params_free (h264parse->params);
