@@ -143,7 +143,7 @@ gst_jif_mux_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_jif_mux_sink_pad_template));
   gst_element_class_set_details_simple (element_class,
       "JPEG stream muxer",
-      "Video/Muxer",
+      "Video/Formatter",
       "Remuxes JPEG images with markers and tags",
       "Arnout Vandecappelle (Essensium/Mind) <arnout@mind.be>");
 }
