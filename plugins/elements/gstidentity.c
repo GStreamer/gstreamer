@@ -197,7 +197,7 @@ gst_identity_class_init (GstIdentityClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SINGLE_SEGMENT,
       g_param_spec_boolean ("single-segment", "Single Segment",
-          "Timestamp buffers and eat newsegments so as to appear as one segment",
+          "Timestamp buffers and eat segments so as to appear as one segment",
           DEFAULT_SINGLE_SEGMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   pspec_last_message = g_param_spec_string ("last-message", "last-message",
       "last-message", NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
@@ -348,17 +348,16 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
     gst_identity_notify_last_message (identity);
   }
 
-  if (identity->single_segment
-      && (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT)) {
-    if (trans->have_newsegment == FALSE) {
+  if (identity->single_segment && (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT)) {
+    if (trans->have_segment == FALSE) {
       GstEvent *news;
-      GstFormat format;
+      GstSegment segment;
 
-      gst_event_parse_new_segment (event, NULL, NULL, NULL, &format, NULL, NULL,
-          NULL);
+      gst_event_parse_segment (event, &segment);
 
-      /* This is the first newsegment, send out a (0, -1) newsegment */
-      news = gst_event_new_new_segment (TRUE, 1.0, 1.0, format, 0, -1, 0);
+      /* This is the first segment, send out a (0, -1) segment */
+      gst_segment_init (&segment, segment.format);
+      news = gst_event_new_segment (&segment);
 
       gst_pad_event_default (trans->sinkpad, news);
     }
@@ -366,15 +365,14 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
 
   /* Reset previous timestamp, duration and offsets on NEWSEGMENT
    * to prevent false warnings when checking for perfect streams */
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     identity->prev_timestamp = identity->prev_duration = GST_CLOCK_TIME_NONE;
     identity->prev_offset = identity->prev_offset_end = GST_BUFFER_OFFSET_NONE;
   }
 
   ret = GST_BASE_TRANSFORM_CLASS (parent_class)->event (trans, event);
 
-  if (identity->single_segment
-      && (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT)) {
+  if (identity->single_segment && (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT)) {
     /* eat up segments */
     ret = FALSE;
   }

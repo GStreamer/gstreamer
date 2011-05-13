@@ -484,15 +484,14 @@ GST_END_TEST;
 
 
 static gboolean
-newsegment_event_catcher (GstObject * pad, GstEvent * event,
-    gpointer * user_data)
+segment_event_catcher (GstObject * pad, GstEvent * event, gpointer * user_data)
 {
   GstEvent **last_event = (GstEvent **) user_data;
   fail_unless (event != NULL);
   fail_unless (GST_IS_EVENT (event));
   fail_unless (user_data != NULL);
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     if (*last_event)
       gst_event_unref (*last_event);
     *last_event = gst_event_copy (event);
@@ -502,7 +501,7 @@ newsegment_event_catcher (GstObject * pad, GstEvent * event,
 }
 
 /* basesrc_seek_events_rate_update:
- *  - make sure we get expected newsegment after sending a seek event
+ *  - make sure we get expected segment after sending a seek event
  */
 GST_START_TEST (basesrc_seek_events_rate_update)
 {
@@ -512,10 +511,10 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   GstBus *bus;
   GstPad *probe_pad;
   guint probe;
-  GstEvent *newseg_event = NULL;
+  GstEvent *seg_event = NULL;
   GstEvent *rate_seek;
   gboolean event_ret;
-  gdouble rate = 0.5;
+  GstSegment segment;
 
   pipe = gst_pipeline_new ("pipeline");
   sink = gst_element_factory_make ("fakesink", "sink");
@@ -537,7 +536,7 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   fail_unless (probe_pad != NULL);
 
   probe = gst_pad_add_event_probe (probe_pad,
-      G_CALLBACK (newsegment_event_catcher), &newseg_event);
+      G_CALLBACK (segment_event_catcher), &seg_event);
 
   /* prepare the seek */
   rate_seek = gst_event_new_seek (0.5, GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
@@ -579,16 +578,15 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   GST_INFO ("stopped");
 
   /* check that we have go the event */
-  fail_unless (newseg_event != NULL);
+  fail_unless (seg_event != NULL);
 
-  gst_event_parse_new_segment (newseg_event, NULL, &rate, NULL, NULL, NULL,
-      NULL, NULL);
-  fail_unless (rate == 0.5);
+  gst_event_parse_segment (seg_event, &segment);
+  fail_unless (segment.rate == 0.5);
 
   gst_pad_remove_event_probe (probe_pad, probe);
   gst_object_unref (probe_pad);
   gst_message_unref (msg);
-  gst_event_unref (newseg_event);
+  gst_event_unref (seg_event);
   gst_object_unref (bus);
   gst_object_unref (pipe);
 }

@@ -411,19 +411,22 @@ gst_output_selector_switch (GstOutputSelector * osel)
   osel->pending_srcpad = NULL;
   GST_OBJECT_UNLOCK (GST_OBJECT (osel));
 
-  /* Send NEWSEGMENT event and latest buffer if switching succeeded */
+  /* Send SEGMENT event and latest buffer if switching succeeded */
   if (res) {
-    /* Send NEWSEGMENT to the pad we are going to switch to */
+    /* Send SEGMENT to the pad we are going to switch to */
     seg = &osel->segment;
-    /* If resending then mark newsegment start and position accordingly */
+    /* If resending then mark segment start and position accordingly */
     if (osel->resend_latest && osel->latest_buffer &&
         GST_BUFFER_TIMESTAMP_IS_VALID (osel->latest_buffer)) {
       start = position = GST_BUFFER_TIMESTAMP (osel->latest_buffer);
     } else {
-      start = position = seg->last_stop;
+      start = position = seg->position;
     }
-    ev = gst_event_new_new_segment (TRUE, seg->rate, seg->applied_rate,
-        seg->format, start, seg->stop, position);
+
+    seg->start = start;
+    seg->position = position;
+    ev = gst_event_new_segment (seg);
+
     if (!gst_pad_push_event (osel->active_srcpad, ev)) {
       GST_WARNING_OBJECT (osel,
           "newsegment handling failed in %" GST_PTR_FORMAT,
@@ -447,7 +450,7 @@ gst_output_selector_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn res;
   GstOutputSelector *osel;
-  GstClockTime last_stop, duration;
+  GstClockTime position, duration;
 
   osel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
 
@@ -479,15 +482,15 @@ gst_output_selector_chain (GstPad * pad, GstBuffer * buf)
 
   /* Keep track of last stop and use it in NEWSEGMENT start after 
      switching to a new src pad */
-  last_stop = GST_BUFFER_TIMESTAMP (buf);
-  if (GST_CLOCK_TIME_IS_VALID (last_stop)) {
+  position = GST_BUFFER_TIMESTAMP (buf);
+  if (GST_CLOCK_TIME_IS_VALID (position)) {
     duration = GST_BUFFER_DURATION (buf);
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
-      last_stop += duration;
+      position += duration;
     }
     GST_LOG_OBJECT (osel, "setting last stop %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (last_stop));
-    gst_segment_set_last_stop (&osel->segment, osel->segment.format, last_stop);
+        GST_TIME_ARGS (position));
+    osel->segment.position = position;
   }
 
   GST_LOG_OBJECT (osel, "pushing buffer to %" GST_PTR_FORMAT,
@@ -541,23 +544,12 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
   }
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
+      gst_event_parse_segment (event, &sel->segment);
 
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-
-      GST_DEBUG_OBJECT (sel,
-          "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
-          "format %d, " "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
-          G_GINT64_FORMAT, update, rate, arate, format, start, stop, time);
-
-      gst_segment_set_newsegment (&sel->segment, update,
-          rate, arate, format, start, stop, time);
+      GST_DEBUG_OBJECT (sel, "configured SEGMENT update %" GST_SEGMENT_FORMAT,
+          &sel->segment);
 
       /* Send newsegment to all src pads */
       gst_pad_event_default (pad, event);

@@ -35,7 +35,7 @@
 struct _GstStreamConsistency
 {
   gboolean flushing;
-  gboolean newsegment;
+  gboolean segment;
   gboolean eos;
   gulong probeid;
   GstPad *pad;
@@ -50,8 +50,8 @@ source_pad_data_cb (GstPad * pad, GstMiniObject * data,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (GST_BUFFER (data))));
     /* If an EOS went through, a buffer would be invalid */
     fail_if (consist->eos, "Buffer received after EOS");
-    /* Buffers need to be preceded by a newsegment event */
-    fail_unless (consist->newsegment, "Buffer received without newsegment");
+    /* Buffers need to be preceded by a segment event */
+    fail_unless (consist->segment, "Buffer received without segment");
   } else if (GST_IS_EVENT (data)) {
     GstEvent *event = (GstEvent *) data;
 
@@ -67,15 +67,15 @@ source_pad_data_cb (GstPad * pad, GstMiniObject * data,
         fail_if (consist->eos, "Received a FLUSH_STOP after an EOS");
         consist->flushing = FALSE;
         break;
-      case GST_EVENT_NEWSEGMENT:
-        consist->newsegment = TRUE;
+      case GST_EVENT_SEGMENT:
+        consist->segment = TRUE;
         consist->eos = FALSE;
         break;
       case GST_EVENT_EOS:
         /* FIXME : not 100% sure about whether two eos in a row is valid */
         fail_if (consist->eos, "Received EOS just after another EOS");
         consist->eos = TRUE;
-        consist->newsegment = FALSE;
+        consist->segment = FALSE;
         break;
       case GST_EVENT_TAG:
         GST_DEBUG_OBJECT (pad, "tag %" GST_PTR_FORMAT,
@@ -84,7 +84,7 @@ source_pad_data_cb (GstPad * pad, GstMiniObject * data,
       default:
         if (GST_EVENT_IS_SERIALIZED (event) && GST_EVENT_IS_DOWNSTREAM (event)) {
           fail_if (consist->eos, "Event received after EOS");
-          fail_unless (consist->newsegment, "Event received before newsegment");
+          fail_unless (consist->segment, "Event received before segment");
         }
         /* FIXME : Figure out what to do for other events */
         break;
@@ -137,7 +137,7 @@ gst_consistency_checker_reset (GstStreamConsistency * consist)
 {
   consist->eos = FALSE;
   consist->flushing = FALSE;
-  consist->newsegment = FALSE;
+  consist->segment = FALSE;
 }
 
 /**

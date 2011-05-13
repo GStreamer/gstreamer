@@ -250,7 +250,7 @@ struct _GstBaseTransformPrivate
   guint64 processed;
   guint64 dropped;
 
-  GstClockTime last_stop_out;
+  GstClockTime position_out;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1163,13 +1163,13 @@ gst_base_transform_query (GstPad * pad, GstQuery ** query)
         ret = TRUE;
 
         if ((pad == trans->sinkpad)
-            || (trans->priv->last_stop_out == GST_CLOCK_TIME_NONE)) {
+            || (trans->priv->position_out == GST_CLOCK_TIME_NONE)) {
           pos =
               gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
-              trans->segment.last_stop);
+              trans->segment.position);
         } else {
           pos = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
-              trans->priv->last_stop_out);
+              trans->priv->position_out);
         }
         gst_query_set_position (*query, format, pos);
       } else {
@@ -1515,9 +1515,9 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       trans->priv->dropped = 0;
       GST_OBJECT_UNLOCK (trans);
       /* we need new segment info after the flush. */
-      trans->have_newsegment = FALSE;
+      trans->have_segment = FALSE;
       gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
-      trans->priv->last_stop_out = GST_CLOCK_TIME_NONE;
+      trans->priv->position_out = GST_CLOCK_TIME_NONE;
       break;
     case GST_EVENT_EOS:
       break;
@@ -1533,36 +1533,13 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       forward = FALSE;
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-      gboolean update;
+      gst_event_parse_segment (event, &trans->segment);
+      trans->have_segment = TRUE;
 
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-
-      trans->have_newsegment = TRUE;
-
-      gst_segment_set_newsegment (&trans->segment, update, rate, arate,
-          format, start, stop, time);
-
-      if (format == GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (trans, "received TIME NEW_SEGMENT %" GST_TIME_FORMAT
-            " -- %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT
-            ", accum %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (trans->segment.start),
-            GST_TIME_ARGS (trans->segment.stop),
-            GST_TIME_ARGS (trans->segment.time),
-            GST_TIME_ARGS (trans->segment.accum));
-      } else {
-        GST_DEBUG_OBJECT (trans, "received NEW_SEGMENT %" G_GINT64_FORMAT
-            " -- %" G_GINT64_FORMAT ", time %" G_GINT64_FORMAT
-            ", accum %" G_GINT64_FORMAT,
-            trans->segment.start, trans->segment.stop,
-            trans->segment.time, trans->segment.accum);
-      }
+      GST_DEBUG_OBJECT (trans, "received SEGMENT %" GST_SEGMENT_FORMAT,
+          &trans->segment);
       break;
     }
     default:
@@ -1896,7 +1873,7 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   GstBaseTransform *trans;
   GstBaseTransformClass *klass;
   GstFlowReturn ret;
-  GstClockTime last_stop = GST_CLOCK_TIME_NONE;
+  GstClockTime position = GST_CLOCK_TIME_NONE;
   GstClockTime timestamp, duration;
   GstBuffer *outbuf = NULL;
 
@@ -1908,9 +1885,9 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   /* calculate end position of the incoming buffer */
   if (timestamp != GST_CLOCK_TIME_NONE) {
     if (duration != GST_CLOCK_TIME_NONE)
-      last_stop = timestamp + duration;
+      position = timestamp + duration;
     else
-      last_stop = timestamp;
+      position = timestamp;
   }
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -1926,23 +1903,23 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
    * GST_BASE_TRANSFORM_FLOW_DROPPED we will not push either. */
   if (outbuf != NULL) {
     if ((ret == GST_FLOW_OK)) {
-      GstClockTime last_stop_out = GST_CLOCK_TIME_NONE;
+      GstClockTime position_out = GST_CLOCK_TIME_NONE;
 
       /* Remember last stop position */
-      if (last_stop != GST_CLOCK_TIME_NONE &&
+      if (position != GST_CLOCK_TIME_NONE &&
           trans->segment.format == GST_FORMAT_TIME)
-        gst_segment_set_last_stop (&trans->segment, GST_FORMAT_TIME, last_stop);
+        trans->segment.position = position;
 
       if (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf)) {
-        last_stop_out = GST_BUFFER_TIMESTAMP (outbuf);
+        position_out = GST_BUFFER_TIMESTAMP (outbuf);
         if (GST_BUFFER_DURATION_IS_VALID (outbuf))
-          last_stop_out += GST_BUFFER_DURATION (outbuf);
-      } else if (last_stop != GST_CLOCK_TIME_NONE) {
-        last_stop_out = last_stop;
+          position_out += GST_BUFFER_DURATION (outbuf);
+      } else if (position != GST_CLOCK_TIME_NONE) {
+        position_out = position;
       }
-      if (last_stop_out != GST_CLOCK_TIME_NONE
+      if (position_out != GST_CLOCK_TIME_NONE
           && trans->segment.format == GST_FORMAT_TIME)
-        trans->priv->last_stop_out = last_stop_out;
+        trans->priv->position_out = position_out;
 
       /* apply DISCONT flag if the buffer is not yet marked as such */
       if (trans->priv->discont) {
@@ -2030,9 +2007,9 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
       trans->have_same_caps = trans->passthrough;
     GST_DEBUG_OBJECT (trans, "have_same_caps %d", trans->have_same_caps);
     trans->negotiated = FALSE;
-    trans->have_newsegment = FALSE;
+    trans->have_segment = FALSE;
     gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
-    trans->priv->last_stop_out = GST_CLOCK_TIME_NONE;
+    trans->priv->position_out = GST_CLOCK_TIME_NONE;
     trans->priv->proportion = 1.0;
     trans->priv->earliest_time = -1;
     trans->priv->discont = FALSE;

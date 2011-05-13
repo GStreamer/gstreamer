@@ -1050,6 +1050,7 @@ GST_START_TEST (test_async_done)
   GstFormat format;
   gint64 position;
   gboolean qret;
+  GstSegment segment;
 
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
@@ -1071,9 +1072,10 @@ GST_START_TEST (test_async_done)
 
   /* make newsegment, this sets the position to 10sec when the buffer prerolls */
   GST_DEBUG ("sending segment");
-  event =
-      gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_TIME, 0, -1,
-      10 * GST_SECOND);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.time = 10 * GST_SECOND;
+
+  event = gst_event_new_segment (&segment);
   res = gst_pad_send_event (sinkpad, event);
 
   /* We have not yet received any buffers so we are still in the READY state,
@@ -1192,6 +1194,7 @@ GST_START_TEST (test_async_done_eos)
   GstFormat format;
   gint64 position;
   gboolean qret;
+  GstSegment segment;
 
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
@@ -1209,9 +1212,9 @@ GST_START_TEST (test_async_done_eos)
 
   /* make newsegment, this sets the position to 10sec when the buffer prerolls */
   GST_DEBUG ("sending segment");
-  event =
-      gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_TIME, 0, -1,
-      10 * GST_SECOND);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.time = 10 * GST_SECOND;
+  event = gst_event_new_segment (&segment);
   res = gst_pad_send_event (sinkpad, event);
 
   /* We have not yet received any buffers so we are still in the READY state,

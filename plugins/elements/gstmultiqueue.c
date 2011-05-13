@@ -832,7 +832,7 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
   if (sq->sink_tainted) {
     sink_time = sq->sinktime =
         gst_segment_to_running_time (&sq->sink_segment, GST_FORMAT_TIME,
-        sq->sink_segment.last_stop);
+        sq->sink_segment.position);
 
     if (G_UNLIKELY (sink_time != GST_CLOCK_TIME_NONE))
       /* if we have a time, we become untainted and use the time */
@@ -843,7 +843,7 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
   if (sq->src_tainted) {
     src_time = sq->srctime =
         gst_segment_to_running_time (&sq->src_segment, GST_FORMAT_TIME,
-        sq->src_segment.last_stop);
+        sq->src_segment.position);
     /* if we have a time, we become untainted and use the time */
     if (G_UNLIKELY (src_time != GST_CLOCK_TIME_NONE))
       sq->src_tainted = FALSE;
@@ -867,36 +867,25 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
   return;
 }
 
-/* take a NEWSEGMENT event and apply the values to segment, updating the time
+/* take a SEGMENT event and apply the values to segment, updating the time
  * level of queue. */
 static void
 apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
     GstSegment * segment)
 {
-  gboolean update;
-  GstFormat format;
-  gdouble rate, arate;
-  gint64 start, stop, time;
-
-  gst_event_parse_new_segment (event, &update, &rate, &arate,
-      &format, &start, &stop, &time);
+  gst_event_parse_segment (event, segment);
 
   /* now configure the values, we use these to track timestamps on the
    * sinkpad. */
-  if (format != GST_FORMAT_TIME) {
+  if (segment->format != GST_FORMAT_TIME) {
     /* non-time format, pretent the current time segment is closed with a
      * 0 start and unknown stop time. */
-    update = FALSE;
-    format = GST_FORMAT_TIME;
-    start = 0;
-    stop = -1;
-    time = 0;
+    segment->format = GST_FORMAT_TIME;
+    segment->start = 0;
+    segment->stop = -1;
+    segment->time = 0;
   }
-
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-
-  gst_segment_set_newsegment (segment, update,
-      rate, arate, format, start, stop, time);
 
   if (segment == &sq->sink_segment)
     sq->sink_tainted = TRUE;
@@ -904,7 +893,7 @@ apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
     sq->src_tainted = TRUE;
 
   GST_DEBUG_OBJECT (mq,
-      "queue %d, configured NEWSEGMENT %" GST_SEGMENT_FORMAT, sq->id, segment);
+      "queue %d, configured SEGMENT %" GST_SEGMENT_FORMAT, sq->id, segment);
 
   /* segment can update the time level of the queue */
   update_time_level (mq, sq);
@@ -922,16 +911,16 @@ apply_buffer (GstMultiQueue * mq, GstSingleQueue * sq, GstClockTime timestamp,
   /* if no timestamp is set, assume it's continuous with the previous 
    * time */
   if (timestamp == GST_CLOCK_TIME_NONE)
-    timestamp = segment->last_stop;
+    timestamp = segment->position;
 
   /* add duration */
   if (duration != GST_CLOCK_TIME_NONE)
     timestamp += duration;
 
-  GST_DEBUG_OBJECT (mq, "queue %d, last_stop updated to %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (mq, "queue %d, position updated to %" GST_TIME_FORMAT,
       sq->id, GST_TIME_ARGS (timestamp));
 
-  gst_segment_set_last_stop (segment, GST_FORMAT_TIME, timestamp);
+  segment->position = timestamp;
 
   if (segment == &sq->sink_segment)
     sq->sink_tainted = TRUE;
@@ -990,7 +979,7 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
       case GST_EVENT_EOS:
         result = GST_FLOW_UNEXPECTED;
         break;
-      case GST_EVENT_NEWSEGMENT:
+      case GST_EVENT_SEGMENT:
         apply_segment (mq, sq, event, &sq->src_segment);
         /* Applying the segment may have made the queue non-full again, unblock it if needed */
         gst_data_queue_limits_changed (sq->queue);
@@ -1330,7 +1319,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
 
       gst_single_queue_flush (mq, sq, FALSE);
       goto done;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       /* take ref because the queue will take ownership and we need the event
        * afterwards to update the segment */
       sref = gst_event_ref (event);
@@ -1371,7 +1360,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
       update_buffering (mq, sq);
       single_queue_overrun_cb (sq->queue, sq);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       apply_segment (mq, sq, sref, &sq->sink_segment);
       gst_event_unref (sref);
       break;

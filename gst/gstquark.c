@@ -37,7 +37,7 @@ static const gchar *_quark_strings[] = {
   "max-latency", "busy", "type", "owner", "update", "applied-rate",
   "start", "stop", "minsize", "maxsize", "async", "proportion",
   "diff", "timestamp", "flags", "cur-type", "cur", "stop-type",
-  "latency", "uri", "object", "taglist", "GstEventNewsegment",
+  "latency", "uri", "object", "taglist", "GstEventSegment",
   "GstEventBufferSize", "GstEventQOS", "GstEventSeek", "GstEventLatency",
   "GstMessageError", "GstMessageWarning", "GstMessageInfo",
   "GstMessageBuffering", "GstMessageState", "GstMessageClockProvide",
@@ -52,7 +52,9 @@ static const gchar *_quark_strings[] = {
   "quality", "processed", "dropped", "buffering-ranges", "GstMessageProgress",
   "code", "text", "percent", "timeout", "GstBufferPoolConfig", "caps", "size",
   "min-buffers", "max-buffers", "prefix", "postfix", "align", "time",
-  "GstQueryAllocation", "need-pool", "meta", "pool", "GstEventCaps", "GstEventReconfigure"
+  "GstQueryAllocation", "need-pool", "meta", "pool", "GstEventCaps",
+  "GstEventReconfigure",
+  "segment"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];

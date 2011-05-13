@@ -658,14 +658,14 @@ update_time_level (GstQueue2 * queue)
   if (queue->sink_tainted) {
     queue->sinktime =
         gst_segment_to_running_time (&queue->sink_segment, GST_FORMAT_TIME,
-        queue->sink_segment.last_stop);
+        queue->sink_segment.position);
     queue->sink_tainted = FALSE;
   }
 
   if (queue->src_tainted) {
     queue->srctime =
         gst_segment_to_running_time (&queue->src_segment, GST_FORMAT_TIME,
-        queue->src_segment.last_stop);
+        queue->src_segment.position);
     queue->src_tainted = FALSE;
   }
 
@@ -680,30 +680,18 @@ update_time_level (GstQueue2 * queue)
     queue->cur_level.time = 0;
 }
 
-/* take a NEWSEGMENT event and apply the values to segment, updating the time
+/* take a SEGMENT event and apply the values to segment, updating the time
  * level of queue. */
 static void
 apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
     gboolean is_sink)
 {
-  gboolean update;
-  GstFormat format;
-  gdouble rate, arate;
-  gint64 start, stop, time;
+  gst_event_parse_segment (event, segment);
 
-  gst_event_parse_new_segment (event, &update, &rate, &arate,
-      &format, &start, &stop, &time);
-
-  GST_DEBUG_OBJECT (queue,
-      "received NEWSEGMENT update %d, rate %lf, applied rate %lf, "
-      "format %d, "
-      "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
-      G_GINT64_FORMAT, update, rate, arate, format, start, stop, time);
-
-  if (format == GST_FORMAT_BYTES) {
+  if (segment->format == GST_FORMAT_BYTES) {
     if (QUEUE_IS_USING_TEMP_FILE (queue)) {
       /* start is where we'll be getting from and as such writing next */
-      queue->current = add_range (queue, start);
+      queue->current = add_range (queue, segment->start);
       /* update the stats for this range */
       update_cur_level (queue, queue->current);
     }
@@ -711,20 +699,16 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
 
   /* now configure the values, we use these to track timestamps on the
    * sinkpad. */
-  if (format != GST_FORMAT_TIME) {
+  if (segment->format != GST_FORMAT_TIME) {
     /* non-time format, pretent the current time segment is closed with a
      * 0 start and unknown stop time. */
-    update = FALSE;
-    format = GST_FORMAT_TIME;
-    start = 0;
-    stop = -1;
-    time = 0;
+    segment->format = GST_FORMAT_TIME;
+    segment->start = 0;
+    segment->stop = -1;
+    segment->time = 0;
   }
-  gst_segment_set_newsegment (segment, update,
-      rate, arate, format, start, stop, time);
 
-  GST_DEBUG_OBJECT (queue,
-      "configured NEWSEGMENT %" GST_SEGMENT_FORMAT, segment);
+  GST_DEBUG_OBJECT (queue, "configured SEGMENT %" GST_SEGMENT_FORMAT, segment);
 
   if (is_sink)
     queue->sink_tainted = TRUE;
@@ -748,16 +732,16 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
   /* if no timestamp is set, assume it's continuous with the previous
    * time */
   if (timestamp == GST_CLOCK_TIME_NONE)
-    timestamp = segment->last_stop;
+    timestamp = segment->position;
 
   /* add duration */
   if (duration != GST_CLOCK_TIME_NONE)
     timestamp += duration;
 
-  GST_DEBUG_OBJECT (queue, "last_stop updated to %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (queue, "position updated to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
 
-  gst_segment_set_last_stop (segment, GST_FORMAT_TIME, timestamp);
+  segment->position = timestamp;
 
   if (is_sink)
     queue->sink_tainted = TRUE;
@@ -1825,7 +1809,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item, gboolean isbuffer)
         GST_DEBUG_OBJECT (queue, "we have EOS");
         queue->is_eos = TRUE;
         break;
-      case GST_EVENT_NEWSEGMENT:
+      case GST_EVENT_SEGMENT:
         apply_segment (queue, event, &queue->sink_segment, TRUE);
         /* This is our first new segment, we hold it
          * as we can't save it on the temp file */
@@ -1934,7 +1918,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
         /* queue is empty now that we dequeued the EOS */
         GST_QUEUE2_CLEAR_LEVEL (queue->cur_level);
         break;
-      case GST_EVENT_NEWSEGMENT:
+      case GST_EVENT_SEGMENT:
         apply_segment (queue, event, &queue->src_segment, FALSE);
         break;
       default:
@@ -2228,7 +2212,7 @@ next:
       GST_CAT_LOG_OBJECT (queue_dataflow, queue,
           "got UNEXPECTED from downstream");
       /* stop pushing buffers, we dequeue all items until we see an item that we
-       * can push again, which is EOS or NEWSEGMENT. If there is nothing in the
+       * can push again, which is EOS or SEGMENT. If there is nothing in the
        * queue we can push, we set a flag to make the sinkpad refuse more
        * buffers with an UNEXPECTED return value until we receive something
        * pushable again or we get flushed. */
@@ -2241,7 +2225,7 @@ next:
           GstEvent *event = GST_EVENT_CAST (data);
           GstEventType type = GST_EVENT_TYPE (event);
 
-          if (type == GST_EVENT_EOS || type == GST_EVENT_NEWSEGMENT) {
+          if (type == GST_EVENT_EOS || type == GST_EVENT_SEGMENT) {
             /* we found a pushable item in the queue, push it out */
             GST_CAT_LOG_OBJECT (queue_dataflow, queue,
                 "pushing pushable event %s after UNEXPECTED",
@@ -2255,7 +2239,7 @@ next:
       }
       /* no more items in the queue. Set the unexpected flag so that upstream
        * make us refuse any more buffers on the sinkpad. Since we will still
-       * accept EOS and NEWSEGMENT we return _FLOW_OK to the caller so that the
+       * accept EOS and SEGMENT we return _FLOW_OK to the caller so that the
        * task function does not shut down. */
       queue->unexpected = TRUE;
       result = GST_FLOW_OK;

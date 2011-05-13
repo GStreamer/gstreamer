@@ -217,10 +217,8 @@ struct _GstBaseSrcPrivate
   gboolean discont;
   gboolean flushing;
 
-  /* two segments to be sent in the streaming thread with STREAM_LOCK */
-  GstEvent *close_segment;
-  GstEvent *start_segment;
-  gboolean newsegment_pending;
+  /* if segment should be sent */
+  gboolean segment_pending;
 
   /* if EOS is pending (atomic) */
   gint pending_eos;
@@ -754,33 +752,15 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
       GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
 
   GST_OBJECT_LOCK (src);
-  if (src->running && !src->priv->newsegment_pending) {
-    if (src->priv->close_segment)
-      gst_event_unref (src->priv->close_segment);
-    src->priv->close_segment =
-        gst_event_new_new_segment (TRUE,
-        src->segment.rate, src->segment.applied_rate, src->segment.format,
-        src->segment.start, src->segment.last_stop, src->segment.time);
-  }
 
-  gst_segment_set_newsegment (&src->segment, FALSE, src->segment.rate,
-      src->segment.applied_rate, src->segment.format, start, stop, position);
+  src->segment.base = gst_segment_to_running_time (&src->segment,
+      src->segment.format, src->segment.position);
+  src->segment.start = start;
+  src->segment.stop = stop;
+  src->segment.position = position;
 
-  if (src->priv->start_segment)
-    gst_event_unref (src->priv->start_segment);
-  if (src->segment.rate >= 0.0) {
-    /* forward, we send data from last_stop to stop */
-    src->priv->start_segment =
-        gst_event_new_new_segment (FALSE,
-        src->segment.rate, src->segment.applied_rate, src->segment.format,
-        src->segment.last_stop, stop, src->segment.time);
-  } else {
-    /* reverse, we send data from last_stop to start */
-    src->priv->start_segment =
-        gst_event_new_new_segment (FALSE,
-        src->segment.rate, src->segment.applied_rate, src->segment.format,
-        src->segment.start, src->segment.last_stop, src->segment.time);
-  }
+  /* forward, we send data from position to stop */
+  src->priv->segment_pending = TRUE;
   GST_OBJECT_UNLOCK (src);
 
   src->priv->discont = TRUE;
@@ -867,7 +847,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery ** query)
           gint64 duration;
 
           GST_OBJECT_LOCK (src);
-          position = src->segment.last_stop;
+          position = src->segment.position;
           duration = src->segment.duration;
           GST_OBJECT_UNLOCK (src);
 
@@ -892,7 +872,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery ** query)
           GST_OBJECT_LOCK (src);
           position =
               gst_segment_to_stream_time (&src->segment, src->segment.format,
-              src->segment.last_stop);
+              src->segment.position);
           seg_format = src->segment.format;
           GST_OBJECT_UNLOCK (src);
 
@@ -1184,7 +1164,7 @@ gst_base_src_default_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
   dest_format = segment->format;
 
   if (seek_format == dest_format) {
-    gst_segment_set_seek (segment, rate, seek_format, flags,
+    gst_segment_do_seek (segment, rate, seek_format, flags,
         cur_type, cur, stop_type, stop, &update);
     return TRUE;
   }
@@ -1206,7 +1186,7 @@ gst_base_src_default_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
   }
 
   /* And finally, configure our output segment in the desired format */
-  gst_segment_set_seek (segment, rate, dest_format, flags, cur_type, cur,
+  gst_segment_do_seek (segment, rate, dest_format, flags, cur_type, cur,
       stop_type, stop, &update);
 
   if (!res)
@@ -1387,7 +1367,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
       } else {
         /* The seek format matches our processing format, no need to ask the
          * the subclass to configure the segment. */
-        gst_segment_set_seek (&seeksegment, rate, seek_format, flags,
+        gst_segment_do_seek (&seeksegment, rate, seek_format, flags,
             cur_type, cur, stop_type, stop, &update);
       }
     }
@@ -1398,9 +1378,9 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   if (res) {
     GST_DEBUG_OBJECT (src, "segment configured from %" G_GINT64_FORMAT
         " to %" G_GINT64_FORMAT ", position %" G_GINT64_FORMAT,
-        seeksegment.start, seeksegment.stop, seeksegment.last_stop);
+        seeksegment.start, seeksegment.stop, seeksegment.position);
 
-    /* do the seek, segment.last_stop contains the new position. */
+    /* do the seek, segment.position contains the new position. */
     res = gst_base_src_do_seek (src, &seeksegment);
   }
 
@@ -1411,20 +1391,6 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     /* send flush stop, peer will accept data and events again. We
      * are not yet providing data as we still have the STREAM_LOCK. */
     gst_pad_push_event (src->srcpad, tevent);
-  } else if (res && src->running) {
-    /* we are running the current segment and doing a non-flushing seek,
-     * close the segment first based on the last_stop. */
-    GST_DEBUG_OBJECT (src, "closing running segment %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, src->segment.start, src->segment.last_stop);
-
-    /* queue the segment for sending in the stream thread */
-    if (src->priv->close_segment)
-      gst_event_unref (src->priv->close_segment);
-    src->priv->close_segment =
-        gst_event_new_new_segment (TRUE,
-        src->segment.rate, src->segment.applied_rate, src->segment.format,
-        src->segment.start, src->segment.last_stop, src->segment.time);
-    gst_event_set_seqnum (src->priv->close_segment, seqnum);
   }
 
   /* The subclass must have converted the segment to the processing format
@@ -1446,7 +1412,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
       GstMessage *message;
 
       message = gst_message_new_segment_start (GST_OBJECT (src),
-          seeksegment.format, seeksegment.last_stop);
+          seeksegment.format, seeksegment.position);
       gst_message_set_seqnum (message, seqnum);
 
       gst_element_post_message (GST_ELEMENT (src), message);
@@ -1457,28 +1423,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     if ((stop = seeksegment.stop) == -1)
       stop = seeksegment.duration;
 
-    GST_DEBUG_OBJECT (src, "Sending newsegment from %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, seeksegment.start, stop);
-
-    /* now replace the old segment so that we send it in the stream thread the
-     * next time it is scheduled. */
-    if (src->priv->start_segment)
-      gst_event_unref (src->priv->start_segment);
-    if (seeksegment.rate >= 0.0) {
-      /* forward, we send data from last_stop to stop */
-      src->priv->start_segment =
-          gst_event_new_new_segment (FALSE,
-          seeksegment.rate, seeksegment.applied_rate, seeksegment.format,
-          seeksegment.last_stop, stop, seeksegment.time);
-    } else {
-      /* reverse, we send data from last_stop to start */
-      src->priv->start_segment =
-          gst_event_new_new_segment (FALSE,
-          seeksegment.rate, seeksegment.applied_rate, seeksegment.format,
-          seeksegment.start, seeksegment.last_stop, seeksegment.time);
-    }
-    gst_event_set_seqnum (src->priv->start_segment, seqnum);
-    src->priv->newsegment_pending = TRUE;
+    src->priv->segment_pending = TRUE;
   }
 
   src->priv->discont = TRUE;
@@ -1584,8 +1529,8 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       result = TRUE;
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
-      /* sending random NEWSEGMENT downstream can break sync. */
+    case GST_EVENT_SEGMENT:
+      /* sending random SEGMENT downstream can break sync. */
       break;
     case GST_EVENT_TAG:
     case GST_EVENT_CUSTOM_DOWNSTREAM:
@@ -2081,8 +2026,8 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
   /* keep track of current position and update duration.
    * segment is in bytes, we checked that above. */
   GST_OBJECT_LOCK (src);
-  gst_segment_set_duration (&src->segment, GST_FORMAT_BYTES, size);
-  gst_segment_set_last_stop (&src->segment, GST_FORMAT_BYTES, offset);
+  src->segment.duration = size;
+  src->segment.position = offset;
   GST_OBJECT_UNLOCK (src);
 
   return TRUE;
@@ -2384,7 +2329,7 @@ gst_base_src_loop (GstPad * pad)
 
   /* if we operate in bytes, we can calculate an offset */
   if (src->segment.format == GST_FORMAT_BYTES) {
-    position = src->segment.last_stop;
+    position = src->segment.position;
     /* for negative rates, start with subtracting the blocksize */
     if (src->segment.rate < 0.0) {
       /* we cannot go below segment.start */
@@ -2414,15 +2359,10 @@ gst_base_src_loop (GstPad * pad)
     goto null_buffer;
 
   /* push events to close/start our segment before we push the buffer. */
-  if (G_UNLIKELY (src->priv->close_segment)) {
-    gst_pad_push_event (pad, src->priv->close_segment);
-    src->priv->close_segment = NULL;
+  if (G_UNLIKELY (src->priv->segment_pending)) {
+    gst_pad_push_event (pad, gst_event_new_segment (&src->segment));
+    src->priv->segment_pending = FALSE;
   }
-  if (G_UNLIKELY (src->priv->start_segment)) {
-    gst_pad_push_event (pad, src->priv->start_segment);
-    src->priv->start_segment = NULL;
-  }
-  src->priv->newsegment_pending = FALSE;
 
   if (g_atomic_int_get (&src->priv->have_events)) {
     GST_OBJECT_LOCK (src);
@@ -2463,7 +2403,7 @@ gst_base_src_loop (GstPad * pad)
       if (GST_CLOCK_TIME_IS_VALID (start))
         position = start;
       else
-        position = src->segment.last_stop;
+        position = src->segment.position;
 
       if (GST_CLOCK_TIME_IS_VALID (duration)) {
         if (src->segment.rate >= 0.0)
@@ -2505,7 +2445,7 @@ gst_base_src_loop (GstPad * pad)
       src->priv->discont = TRUE;
     }
     GST_OBJECT_LOCK (src);
-    gst_segment_set_last_stop (&src->segment, src->segment.format, position);
+    src->segment.position = position;
     GST_OBJECT_UNLOCK (src);
   }
 
@@ -2551,18 +2491,18 @@ pause:
     if (ret == GST_FLOW_UNEXPECTED) {
       gboolean flag_segment;
       GstFormat format;
-      gint64 last_stop;
+      gint64 position;
 
       /* perform EOS logic */
       flag_segment = (src->segment.flags & GST_SEEK_FLAG_SEGMENT) != 0;
       format = src->segment.format;
-      last_stop = src->segment.last_stop;
+      position = src->segment.position;
 
       if (flag_segment) {
         GstMessage *message;
 
         message = gst_message_new_segment_done (GST_OBJECT_CAST (src),
-            format, last_stop);
+            format, position);
         gst_message_set_seqnum (message, src->priv->seqnum);
         gst_element_post_message (GST_ELEMENT_CAST (src), message);
       } else {
@@ -2714,7 +2654,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   GST_OBJECT_UNLOCK (basesrc);
 
   basesrc->running = FALSE;
-  basesrc->priv->newsegment_pending = FALSE;
+  basesrc->priv->segment_pending = FALSE;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
   if (bclass->start)
@@ -2742,7 +2682,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
     /* only update the size when operating in bytes, subclass is supposed
      * to set duration in the start method for other formats */
     GST_OBJECT_LOCK (basesrc);
-    gst_segment_set_duration (&basesrc->segment, GST_FORMAT_BYTES, size);
+    basesrc->segment.duration = size;
     GST_OBJECT_UNLOCK (basesrc);
   } else {
     size = -1;
@@ -3132,10 +3072,6 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       }
       g_atomic_int_set (&basesrc->priv->pending_eos, FALSE);
       event_p = &basesrc->pending_seek;
-      gst_event_replace (event_p, NULL);
-      event_p = &basesrc->priv->close_segment;
-      gst_event_replace (event_p, NULL);
-      event_p = &basesrc->priv->start_segment;
       gst_event_replace (event_p, NULL);
       break;
     }

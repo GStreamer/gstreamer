@@ -1198,23 +1198,12 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       goto done;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gint64 start, stop, time;
-      gdouble rate, arate;
-      GstFormat format;
-      gboolean update;
+      gst_event_parse_segment (event, &data->segment);
 
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-
-      GST_DEBUG_OBJECT (data->pad, "got newsegment, start %" GST_TIME_FORMAT
-          ", stop %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
-          GST_TIME_ARGS (stop));
-
-      gst_segment_set_newsegment (&data->segment, update, rate, arate,
-          format, start, stop, time);
-
+      GST_DEBUG_OBJECT (data->pad, "got newsegment %" GST_SEGMENT_FORMAT,
+          &data->segment);
       data->abidata.ABI.new_segment = TRUE;
 
       /* we must not forward this event since multiple segments will be
@@ -1317,7 +1306,7 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
     GstClockTime timestamp = GST_BUFFER_TIMESTAMP (data->buffer);
 
     if (GST_CLOCK_TIME_IS_VALID (timestamp))
-      gst_segment_set_last_stop (&data->segment, GST_FORMAT_TIME, timestamp);
+      data->segment.position = timestamp;
   }
 
   /* While we have data queued on this pad try to collect stuff */

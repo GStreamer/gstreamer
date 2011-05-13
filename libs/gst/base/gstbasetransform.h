@@ -128,7 +128,7 @@ struct _GstBaseTransform {
   gboolean	 pending_configure;
   gboolean	 negotiated;
 
-  gboolean       have_newsegment;
+  gboolean       have_segment;
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment     segment;

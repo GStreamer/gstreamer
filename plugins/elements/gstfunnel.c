@@ -247,13 +247,11 @@ gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
   if (fpad->segment.format == GST_FORMAT_UNDEFINED) {
     GST_WARNING_OBJECT (funnel, "Got buffer without segment,"
         " setting segment [0,inf[");
-    gst_segment_set_newsegment (&fpad->segment, FALSE, 1.0, 1.0,
-        GST_FORMAT_TIME, 0, -1, 0);
+    gst_segment_init (&fpad->segment, GST_FORMAT_TIME);
   }
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)))
-    gst_segment_set_last_stop (&fpad->segment, fpad->segment.format,
-        GST_BUFFER_TIMESTAMP (buffer));
+    fpad->segment.position = GST_BUFFER_TIMESTAMP (buffer);
 
   newts = gst_segment_to_running_time (&fpad->segment,
       fpad->segment.format, GST_BUFFER_TIMESTAMP (buffer));
@@ -263,8 +261,10 @@ gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   if (!funnel->has_segment) {
-    event = gst_event_new_new_segment (FALSE, 1.0, 1.0, GST_FORMAT_TIME,
-        0, -1, 0);
+    GstSegment segment;
+
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    event = gst_event_new_segment (&segment);
     funnel->has_segment = TRUE;
   }
   GST_OBJECT_UNLOCK (funnel);
@@ -312,34 +312,23 @@ gst_funnel_sink_event (GstPad * pad, GstEvent * event)
   }
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      gdouble rate, arate;
-      GstFormat format;
-      gint64 start;
-      gint64 stop;
-      gint64 time;
-
-      gst_event_parse_new_segment (event, &update, &rate, &arate,
-          &format, &start, &stop, &time);
-
       GST_OBJECT_LOCK (funnel);
-      gst_segment_set_newsegment (&fpad->segment, update, rate, arate,
-          format, start, stop, time);
+      gst_event_parse_segment (event, &fpad->segment);
       GST_OBJECT_UNLOCK (funnel);
 
       forward = FALSE;
-    }
       break;
+    }
     case GST_EVENT_FLUSH_STOP:
     {
       GST_OBJECT_LOCK (funnel);
       gst_segment_init (&fpad->segment, GST_FORMAT_UNDEFINED);
       funnel->has_segment = FALSE;
       GST_OBJECT_UNLOCK (funnel);
-    }
       break;
+    }
     default:
       break;
   }

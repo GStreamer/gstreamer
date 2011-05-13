@@ -123,7 +123,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_FLUSH_STOP, "flush-stop", 0},
   {GST_EVENT_EOS, "eos", 0},
   {GST_EVENT_CAPS, "caps", 0},
-  {GST_EVENT_NEWSEGMENT, "newsegment", 0},
+  {GST_EVENT_SEGMENT, "segment", 0},
   {GST_EVENT_TAG, "tag", 0},
   {GST_EVENT_BUFFERSIZE, "buffersize", 0},
   {GST_EVENT_SINK_MESSAGE, "sink-message", 0},
@@ -580,7 +580,7 @@ gst_event_new_eos (void)
  * @caps: a #GstCaps
  *
  * Create a new CAPS event for @caps. The caps event can only travel downstream
- * synchronized with the buffer flow and contain the format of the buffers
+ * synchronized with the buffer flow and contains the format of the buffers
  * that will follow after the event.
  *
  * Returns: (transfer full): the new CAPS event.
@@ -590,7 +590,8 @@ gst_event_new_caps (GstCaps * caps)
 {
   GstEvent *event;
 
-  g_return_val_if_fail (caps != NULL && gst_caps_is_fixed (caps), NULL);
+  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating caps event %" GST_PTR_FORMAT, caps);
 
@@ -625,16 +626,12 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
 }
 
 /**
- * gst_event_new_new_segment:
- * @update: Whether this segment is an update to a previous one
- * @rate: A new rate for playback
- * @applied_rate: The rate factor which has already been applied
- * @format: The format of the segment values
- * @start: The start value of the segment
- * @stop: The stop value of the segment
- * @time: the time value of the segment
+ * gst_event_new_segment:
+ * @segment: a #GstSegment
  *
- * Allocate a new newsegment event with the given format/values triplets.
+ * Create a new SEGMENT event for @segment. The segment event can only travel
+ * downstream synchronized with the buffer flow and contains timing information
+ * and playback properties for the buffers that will follow.
  *
  * The newsegment event marks the range of buffers to be processed. All
  * data not within the segment range is not to be processed. This can be
@@ -643,131 +640,90 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
  * values.
  *
  * The time value of the segment is used in conjunction with the start
- * value to convert the buffer timestamps into the stream time. This is 
- * usually done in sinks to report the current stream_time. 
- * @time represents the stream_time of a buffer carrying a timestamp of 
+ * value to convert the buffer timestamps into the stream time. This is
+ * usually done in sinks to report the current stream_time.
+ * @time represents the stream_time of a buffer carrying a timestamp of
  * @start. @time cannot be -1.
  *
  * @start cannot be -1, @stop can be -1. If there
- * is a valid @stop given, it must be greater or equal the @start, including 
+ * is a valid @stop given, it must be greater or equal the @start, including
  * when the indicated playback @rate is < 0.
  *
  * The @applied_rate value provides information about any rate adjustment that
- * has already been made to the timestamps and content on the buffers of the 
- * stream. (@rate * @applied_rate) should always equal the rate that has been 
- * requested for playback. For example, if an element has an input segment 
- * with intended playback @rate of 2.0 and applied_rate of 1.0, it can adjust 
- * incoming timestamps and buffer content by half and output a newsegment event 
+ * has already been made to the timestamps and content on the buffers of the
+ * stream. (@rate * @applied_rate) should always equal the rate that has been
+ * requested for playback. For example, if an element has an input segment
+ * with intended playback @rate of 2.0 and applied_rate of 1.0, it can adjust
+ * incoming timestamps and buffer content by half and output a newsegment event
  * with @rate of 1.0 and @applied_rate of 2.0
  *
  * After a newsegment event, the buffer stream time is calculated with:
  *
  *   time + (TIMESTAMP(buf) - start) * ABS (rate * applied_rate)
  *
- * Returns: (transfer full): a new newsegment event.
- *
- * Since: 0.10.6
+ * Returns: (transfer full): the new SEGMENT event.
  */
 GstEvent *
-gst_event_new_new_segment (gboolean update, gdouble rate,
-    gdouble applied_rate, GstFormat format, gint64 start, gint64 stop,
-    gint64 time)
+gst_event_new_segment (GstSegment * segment)
 {
   GstEvent *event;
-  GstStructure *structure;
 
-  g_return_val_if_fail (rate != 0.0, NULL);
-  g_return_val_if_fail (applied_rate != 0.0, NULL);
+  g_return_val_if_fail (segment != NULL, NULL);
 
-  if (format == GST_FORMAT_TIME) {
-    GST_CAT_INFO (GST_CAT_EVENT,
-        "creating newsegment update %d, rate %lf, format GST_FORMAT_TIME, "
-        "start %" GST_TIME_FORMAT ", stop %" GST_TIME_FORMAT
-        ", time %" GST_TIME_FORMAT,
-        update, rate, GST_TIME_ARGS (start),
-        GST_TIME_ARGS (stop), GST_TIME_ARGS (time));
-  } else {
-    GST_CAT_INFO (GST_CAT_EVENT,
-        "creating newsegment update %d, rate %lf, format %s, "
-        "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", time %"
-        G_GINT64_FORMAT, update, rate, gst_format_get_name (format), start,
-        stop, time);
-  }
+  GST_CAT_INFO (GST_CAT_EVENT, "creating segment event %" GST_PTR_FORMAT,
+      segment);
 
-  g_return_val_if_fail (time != -1, NULL);
-  g_return_val_if_fail (start != -1, NULL);
-  if (stop != -1)
-    g_return_val_if_fail (start <= stop, NULL);
-
-  structure = gst_structure_id_new (GST_QUARK (EVENT_NEWSEGMENT),
-      GST_QUARK (UPDATE), G_TYPE_BOOLEAN, update,
-      GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
-      GST_QUARK (APPLIED_RATE), G_TYPE_DOUBLE, applied_rate,
-      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
-      GST_QUARK (START), G_TYPE_INT64, start,
-      GST_QUARK (STOP), G_TYPE_INT64, stop,
-      GST_QUARK (TIME), G_TYPE_INT64, time, NULL);
-  event = gst_event_new_custom (GST_EVENT_NEWSEGMENT, structure);
+  event = gst_event_new_custom (GST_EVENT_SEGMENT,
+      gst_structure_id_new (GST_QUARK (EVENT_SEGMENT),
+          GST_QUARK (SEGMENT), GST_TYPE_SEGMENT, segment, NULL));
 
   return event;
 }
 
 /**
- * gst_event_parse_new_segment:
- * @event: The event to query
- * @update: (out): A pointer to the update flag of the segment
- * @rate: (out): A pointer to the rate of the segment
- * @applied_rate: (out): A pointer to the applied_rate of the segment
- * @format: (out): A pointer to the format of the newsegment values
- * @start: (out): A pointer to store the start value in
- * @stop: (out): A pointer to store the stop value in
- * @time: (out): A pointer to store the time value in
+ * gst_event_get_segment:
+ * @event: The event
  *
- * Get the update, rate, applied_rate, format, start, stop and 
- * time in the newsegment event. See gst_event_new_new_segment() 
- * for a full description of the newsegment event.
+ * Get the segment from @event. The segment remains valid as long as @event remains
+ * valid.
  *
- * Since: 0.10.6
+ * Returns: the #GstSegment. The segment stays valid for as long as @event is
+ * valid.
  */
-void
-gst_event_parse_new_segment (GstEvent * event, gboolean * update,
-    gdouble * rate, gdouble * applied_rate, GstFormat * format,
-    gint64 * start, gint64 * stop, gint64 * time)
+const GstSegment *
+gst_event_get_segment (GstEvent * event)
 {
-  const GstStructure *structure;
+  GstStructure *structure;
+  GstSegment *segment;
 
-  g_return_if_fail (GST_IS_EVENT (event));
-  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT);
+  g_return_val_if_fail (GST_IS_EVENT (event), NULL);
+  g_return_val_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT, NULL);
 
   structure = GST_EVENT_STRUCTURE (event);
-  if (G_LIKELY (update))
-    *update =
-        g_value_get_boolean (gst_structure_id_get_value (structure,
-            GST_QUARK (UPDATE)));
-  if (G_LIKELY (rate))
-    *rate =
-        g_value_get_double (gst_structure_id_get_value (structure,
-            GST_QUARK (RATE)));
-  if (G_LIKELY (applied_rate))
-    *applied_rate =
-        g_value_get_double (gst_structure_id_get_value (structure,
-            GST_QUARK (APPLIED_RATE)));
-  if (G_LIKELY (format))
-    *format =
-        g_value_get_enum (gst_structure_id_get_value (structure,
-            GST_QUARK (FORMAT)));
-  if (G_LIKELY (start))
-    *start =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (START)));
-  if (G_LIKELY (stop))
-    *stop =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (STOP)));
-  if (G_LIKELY (time))
-    *time =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (TIME)));
+  segment = g_value_get_boxed (gst_structure_id_get_value (structure,
+          GST_QUARK (SEGMENT)));
+
+  return segment;
+}
+
+/**
+ * gst_event_parse_segment:
+ * @event: The event to parse
+ * @segment: a #GstSegment
+ *
+ * Copy the segment values from @event into @segment.
+ */
+void
+gst_event_parse_segment (GstEvent * event, GstSegment * segment)
+{
+  const GstSegment *src;
+
+  g_return_if_fail (segment != NULL);
+
+  src = gst_event_get_segment (event);
+  g_return_if_fail (src != NULL);
+
+  gst_segment_copy_into (src, segment);
 }
 
 /**

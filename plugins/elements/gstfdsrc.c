@@ -584,7 +584,7 @@ gst_fd_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
   if (G_UNLIKELY (res < 0 || res != offset))
     goto seek_failed;
 
-  segment->last_stop = segment->start;
+  segment->position = segment->start;
   segment->time = segment->start;
 
   return TRUE;

@@ -434,7 +434,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Single Segment</NICK>
-<BLURB>Timestamp buffers and eat newsegments so as to appear as one segment.</BLURB>
+<BLURB>Timestamp buffers and eat segments so as to appear as one segment.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 

@@ -292,11 +292,11 @@ gst_selector_pad_get_running_time (GstSelectorPad * pad)
 
   GST_OBJECT_LOCK (pad);
   if (pad->active) {
-    gint64 last_stop = pad->segment.last_stop;
+    gint64 position = pad->segment.position;
 
-    if (last_stop >= 0)
+    if (position >= 0)
       ret = gst_segment_to_running_time (&pad->segment, GST_FORMAT_TIME,
-          last_stop);
+          position);
   }
   GST_OBJECT_UNLOCK (pad);
 
@@ -393,26 +393,13 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
       sel->pending_close = FALSE;
       GST_INPUT_SELECTOR_UNLOCK (sel);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-
-      GST_DEBUG_OBJECT (pad,
-          "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
-          "format %d, "
-          "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
-          G_GINT64_FORMAT, update, rate, arate, format, start, stop, time);
-
       GST_INPUT_SELECTOR_LOCK (sel);
       GST_OBJECT_LOCK (selpad);
-      gst_segment_set_newsegment (&selpad->segment, update,
-          rate, arate, format, start, stop, time);
+      gst_event_parse_segment (event, &selpad->segment);
+      GST_DEBUG_OBJECT (pad, "configured SEGMENT %" GST_SEGMENT_FORMAT,
+          &selpad->segment);
       GST_OBJECT_UNLOCK (selpad);
 
       /* If we aren't forwarding the event because the pad is not the
@@ -543,7 +530,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   GstSelectorPad *selpad;
   GstClockTime start_time;
   GstSegment *seg;
-  GstEvent *close_event = NULL, *start_event = NULL;
+  GstEvent *start_event = NULL;
 #if 0
   GstCaps *caps;
 #endif
@@ -572,7 +559,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
           GST_TIME_ARGS (start_time + GST_BUFFER_DURATION (buf)));
 
     GST_OBJECT_LOCK (pad);
-    gst_segment_set_last_stop (seg, seg->format, start_time);
+    seg->position = start_time;
     GST_OBJECT_UNLOCK (pad);
   }
 
@@ -580,22 +567,6 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   if (pad != active_sinkpad)
     goto ignore;
 
-  if (G_UNLIKELY (sel->pending_close)) {
-    GstSegment *cseg = &sel->segment;
-
-    GST_DEBUG_OBJECT (sel,
-        "pushing close NEWSEGMENT update %d, rate %lf, applied rate %lf, "
-        "format %d, "
-        "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
-        G_GINT64_FORMAT, TRUE, cseg->rate, cseg->applied_rate, cseg->format,
-        cseg->start, cseg->stop, cseg->time);
-
-    /* create update segment */
-    close_event = gst_event_new_new_segment (TRUE, cseg->rate,
-        cseg->applied_rate, cseg->format, cseg->start, cseg->stop, cseg->time);
-
-    sel->pending_close = FALSE;
-  }
   /* if we have a pending segment, push it out now */
   if (G_UNLIKELY (selpad->segment_pending)) {
     GST_DEBUG_OBJECT (pad,
@@ -605,8 +576,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
         G_GINT64_FORMAT, FALSE, seg->rate, seg->applied_rate, seg->format,
         seg->start, seg->stop, seg->time);
 
-    start_event = gst_event_new_new_segment (FALSE, seg->rate,
-        seg->applied_rate, seg->format, seg->start, seg->stop, seg->time);
+    start_event = gst_event_new_segment (seg);
 
     selpad->segment_pending = FALSE;
   }
@@ -617,9 +587,6 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
     g_object_notify (G_OBJECT (sel), "active-pad");
     NOTIFY_MUTEX_UNLOCK ();
   }
-
-  if (close_event)
-    gst_pad_push_event (sel->srcpad, close_event);
 
   if (start_event)
     gst_pad_push_event (sel->srcpad, start_event);
@@ -931,10 +898,10 @@ gst_input_selector_dispose (GObject * object)
 static gint64
 gst_segment_get_timestamp (GstSegment * segment, gint64 running_time)
 {
-  if (running_time <= segment->accum)
+  if (running_time <= segment->base)
     return segment->start;
   else
-    return (running_time - segment->accum) * ABS (segment->rate) +
+    return (running_time - segment->base) * ABS (segment->rate) +
         segment->start;
 }
 
@@ -942,7 +909,7 @@ static void
 gst_segment_set_stop (GstSegment * segment, gint64 running_time)
 {
   segment->stop = gst_segment_get_timestamp (segment, running_time);
-  segment->last_stop = -1;
+  segment->position = -1;
 }
 
 static void
@@ -955,7 +922,7 @@ gst_segment_set_start (GstSegment * segment, gint64 running_time)
   /* this is the duration we skipped */
   duration = new_start - segment->start;
   /* add the duration to the accumulated segment time */
-  segment->accum += duration;
+  segment->base += duration;
   /* move position in the segment */
   segment->time += duration;
   segment->start += duration;

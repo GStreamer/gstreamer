@@ -99,15 +99,19 @@ GST_START_TEST (test_clipping)
 
   /* send segment */
   {
-    GstEvent *segment;
+    GstEvent *event;
+    GstSegment segment;
     gboolean eret;
 
     GST_DEBUG ("sending segment");
-    segment = gst_event_new_new_segment (FALSE,
-        1.0, 1.0, GST_FORMAT_TIME, 1 * GST_SECOND, 5 * GST_SECOND,
-        1 * GST_SECOND);
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = 1 * GST_SECOND;
+    segment.stop = 5 * GST_SECOND;
+    segment.time = 1 * GST_SECOND;
 
-    eret = gst_pad_send_event (sinkpad, segment);
+    event = gst_event_new_segment (&segment);
+
+    eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);
   }
 
@@ -259,15 +263,18 @@ GST_START_TEST (test_preroll_sync)
 
   /* send segment */
   {
-    GstEvent *segment;
+    GstEvent *event;
+    GstSegment segment;
     gboolean eret;
 
     GST_DEBUG ("sending segment");
-    segment = gst_event_new_new_segment (FALSE,
-        1.0, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 102 * GST_SECOND,
-        0 * GST_SECOND);
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = 0 * GST_SECOND;
+    segment.stop = 102 * GST_SECOND;
+    segment.time = 0 * GST_SECOND;
 
-    eret = gst_pad_send_event (sinkpad, segment);
+    event = gst_event_new_segment (&segment);
+    eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);
   }
 
@@ -420,15 +427,18 @@ GST_START_TEST (test_eos)
 
   /* send segment, this should fail */
   {
-    GstEvent *segment;
+    GstEvent *event;
+    GstSegment segment;
     gboolean eret;
 
     GST_DEBUG ("sending segment");
-    segment = gst_event_new_new_segment (FALSE,
-        1.0, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND,
-        0 * GST_SECOND);
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = 0 * GST_SECOND;
+    segment.stop = 2 * GST_SECOND;
+    segment.time = 0 * GST_SECOND;
+    event = gst_event_new_segment (&segment);
 
-    eret = gst_pad_send_event (sinkpad, segment);
+    eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == TRUE);
   }
 
@@ -466,15 +476,18 @@ GST_START_TEST (test_eos)
 
   /* send segment, this should now work again */
   {
-    GstEvent *segment;
+    GstEvent *event;
+    GstSegment segment;
     gboolean eret;
 
     GST_DEBUG ("sending segment");
-    segment = gst_event_new_new_segment (FALSE,
-        1.0, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND,
-        0 * GST_SECOND);
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = 0 * GST_SECOND;
+    segment.stop = 2 * GST_SECOND;
+    segment.time = 0 * GST_SECOND;
+    event = gst_event_new_segment (&segment);
 
-    eret = gst_pad_send_event (sinkpad, segment);
+    eret = gst_pad_send_event (sinkpad, event);
     fail_unless (eret == TRUE);
   }
 
@@ -528,15 +541,18 @@ GST_START_TEST (test_eos2)
 
   /* send segment, this should work */
   {
-    GstEvent *segment;
+    GstEvent *event;
+    GstSegment segment;
     gboolean eret;
 
     GST_DEBUG ("sending segment");
-    segment = gst_event_new_new_segment (FALSE,
-        1.0, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND,
-        0 * GST_SECOND);
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = 0 * GST_SECOND;
+    segment.stop = 2 * GST_SECOND;
+    segment.time = 0 * GST_SECOND;
+    event = gst_event_new_segment (&segment);
 
-    eret = gst_pad_send_event (sinkpad, segment);
+    eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);
   }
 
@@ -634,10 +650,14 @@ GST_START_TEST (test_position)
 
   /* send segment, this should work */
   {
+    GstSegment segment;
+
     GST_DEBUG ("sending segment");
-    event = gst_event_new_new_segment (FALSE,
-        1.0, 1.0, GST_FORMAT_TIME, 1 * GST_SECOND, 3 * GST_SECOND,
-        1 * GST_SECOND);
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = 1 * GST_SECOND;
+    segment.stop = 3 * GST_SECOND;
+    segment.time = 1 * GST_SECOND;
+    event = gst_event_new_segment (&segment);
 
     eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);
@@ -707,10 +727,14 @@ GST_START_TEST (test_position)
 
   /* send segment, this should work */
   {
+    GstSegment segment;
+
     GST_DEBUG ("sending segment");
-    event = gst_event_new_new_segment (FALSE,
-        1.0, 1.0, GST_FORMAT_TIME, 2 * GST_SECOND, 4 * GST_SECOND,
-        1 * GST_SECOND);
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = 2 * GST_SECOND;
+    segment.stop = 4 * GST_SECOND;
+    segment.time = 1 * GST_SECOND;
+    event = gst_event_new_segment (&segment);
 
     eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);
@@ -791,10 +815,14 @@ GST_START_TEST (test_position)
 
   /* send segment, this should work */
   {
+    GstSegment segment;
+
     GST_DEBUG ("sending segment");
-    event = gst_event_new_new_segment (FALSE,
-        1.0, 1.0, GST_FORMAT_TIME, 2 * GST_SECOND, 4 * GST_SECOND,
-        1 * GST_SECOND);
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = 2 * GST_SECOND;
+    segment.stop = 4 * GST_SECOND;
+    segment.time = 1 * GST_SECOND;
+    event = gst_event_new_segment (&segment);
 
     eret = gst_pad_send_event (sinkpad, event);
     fail_if (eret == FALSE);

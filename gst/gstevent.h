@@ -31,6 +31,7 @@
 #include <gst/gstclock.h>
 #include <gst/gststructure.h>
 #include <gst/gsttaglist.h>
+#include <gst/gstsegment.h>
 
 G_BEGIN_DECLS
 
@@ -107,8 +108,8 @@ typedef enum {
  * @GST_EVENT_FLUSH_STOP: Stop a flush operation. This event resets the
  *                 running-time of the pipeline.
  * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
- *                 without a NEWSEGMENT event.
- * @GST_EVENT_NEWSEGMENT: A new media segment follows in the dataflow. The
+ *                 without a SEGMENT event.
+ * @GST_EVENT_SEGMENT: A new media segment follows in the dataflow. The
  *                 segment events contains information for clipping buffers and
  *                 converting buffer timestamps to running-time and
  *                 stream-time.
@@ -157,11 +158,12 @@ typedef enum {
   GST_EVENT_FLUSH_STOP            = GST_EVENT_MAKE_TYPE (2, 0, FLAG(BOTH) | FLAG(SERIALIZED)),
   /* downstream serialized events */
   GST_EVENT_CAPS                  = GST_EVENT_MAKE_TYPE (5, 1, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_NEWSEGMENT            = GST_EVENT_MAKE_TYPE (6, 2, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_SEGMENT               = GST_EVENT_MAKE_TYPE (6, 2, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (7, 3, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (8, 4, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (9, 5, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (10, 6, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+
   /* upstream events */
   GST_EVENT_QOS                   = GST_EVENT_MAKE_TYPE (15, 0, FLAG(UPSTREAM)),
   GST_EVENT_SEEK                  = GST_EVENT_MAKE_TYPE (16, 0, FLAG(UPSTREAM)),
@@ -279,77 +281,6 @@ typedef enum {
  */
 #define         gst_event_replace(old_event,new_event) \
     gst_mini_object_replace ((GstMiniObject **)(old_event), GST_MINI_OBJECT_CAST (new_event))
-
-/**
- * GstSeekType:
- * @GST_SEEK_TYPE_NONE: no change in position is required
- * @GST_SEEK_TYPE_CUR: change relative to currently configured segment. This
- *    can't be used to seek relative to the current playback position - do a
- *    position query, calculate the desired position and then do an absolute
- *    position seek instead if that's what you want to do.
- * @GST_SEEK_TYPE_SET: absolute position is requested
- * @GST_SEEK_TYPE_END: relative position to duration is requested
- *
- * The different types of seek events. When constructing a seek event with
- * gst_event_new_seek(), a format, a seek method and optional flags are to
- * be provided. The seek event is then inserted into the graph with
- * gst_pad_send_event() or gst_element_send_event().
- */
-typedef enum {
-  /* one of these */
-  GST_SEEK_TYPE_NONE            = 0,
-  GST_SEEK_TYPE_CUR             = 1,
-  GST_SEEK_TYPE_SET             = 2,
-  GST_SEEK_TYPE_END             = 3
-} GstSeekType;
-
-/**
- * GstSeekFlags:
- * @GST_SEEK_FLAG_NONE: no flag
- * @GST_SEEK_FLAG_FLUSH: flush pipeline
- * @GST_SEEK_FLAG_ACCURATE: accurate position is requested, this might
- *                     be considerably slower for some formats.
- * @GST_SEEK_FLAG_KEY_UNIT: seek to the nearest keyframe. This might be
- *                     faster but less accurate.
- * @GST_SEEK_FLAG_SEGMENT: perform a segment seek.
- * @GST_SEEK_FLAG_SKIP: when doing fast foward or fast reverse playback, allow
- *                     elements to skip frames instead of generating all
- *                     frames. Since 0.10.22.
- *
- * Flags to be used with gst_element_seek() or gst_event_new_seek(). All flags
- * can be used together.
- *
- * A non flushing seek might take some time to perform as the currently
- * playing data in the pipeline will not be cleared.
- *
- * An accurate seek might be slower for formats that don't have any indexes
- * or timestamp markers in the stream. Specifying this flag might require a
- * complete scan of the file in those cases.
- *
- * When performing a segment seek: after the playback of the segment completes,
- * no EOS will be emmited by the element that performed the seek, but a
- * #GST_MESSAGE_SEGMENT_DONE message will be posted on the bus by the element.
- * When this message is posted, it is possible to send a new seek event to
- * continue playback. With this seek method it is possible to perform seemless
- * looping or simple linear editing.
- *
- * When doing fast forward (rate > 1.0) or fast reverse (rate < -1.0) trickmode
- * playback, the @GST_SEEK_FLAG_SKIP flag can be used to instruct decoders
- * and demuxers to adjust the playback rate by skipping frames. This can improve
- * performance and decrease CPU usage because not all frames need to be decoded.
- *
- * Also see part-seeking.txt in the GStreamer design documentation for more
- * details on the meaning of these flags and the behaviour expected of
- * elements that handle them.
- */
-typedef enum {
-  GST_SEEK_FLAG_NONE            = 0,
-  GST_SEEK_FLAG_FLUSH           = (1 << 0),
-  GST_SEEK_FLAG_ACCURATE        = (1 << 1),
-  GST_SEEK_FLAG_KEY_UNIT        = (1 << 2),
-  GST_SEEK_FLAG_SEGMENT         = (1 << 3),
-  GST_SEEK_FLAG_SKIP            = (1 << 4)
-} GstSeekFlags;
 
 /**
  * GstQOSType:
@@ -477,19 +408,11 @@ GstEvent *      gst_event_new_eos               (void);
 GstEvent *      gst_event_new_caps              (GstCaps *caps);
 void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps);
 
-/* newsegment events */
-GstEvent*       gst_event_new_new_segment       (gboolean update, gdouble rate,
-                                                 gdouble applied_rate,
-                                                 GstFormat format,
-                                                 gint64 start, gint64 stop,
-                                                 gint64 time);
-void            gst_event_parse_new_segment     (GstEvent *event,
-                                                 gboolean *update,
-                                                 gdouble *rate,
-                                                 gdouble *applied_rate,
-                                                 GstFormat *format,
-                                                 gint64 *start, gint64 *stop,
-                                                 gint64 *time);
+/* segment event */
+GstEvent*       gst_event_new_segment           (GstSegment *segment);
+const GstSegment *
+                gst_event_get_segment           (GstEvent *event);
+void            gst_event_parse_segment         (GstEvent *event, GstSegment *segment);
 
 /* tag event */
 GstEvent*       gst_event_new_tag               (GstTagList *taglist);
@@ -515,6 +438,7 @@ void            gst_event_parse_seek            (GstEvent *event, gdouble *rate,
                                                  GstSeekFlags *flags,
                                                  GstSeekType *start_type, gint64 *start,
                                                  GstSeekType *stop_type, gint64 *stop);
+
 /* navigation event */
 GstEvent*       gst_event_new_navigation        (GstStructure *structure);
 
