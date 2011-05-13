@@ -1051,14 +1051,19 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
         NULL);
 
     if (camera->image_profile == NULL) {
-      GstEncodingVideoProfile *prof;
+      GstEncodingContainerProfile *prof;
+      GstEncodingVideoProfile *vprof;
       GstCaps *caps;
 
       caps = gst_caps_new_simple ("image/jpeg", NULL);
-      prof = gst_encoding_video_profile_new (caps, NULL, NULL, 1);
-      gst_encoding_video_profile_set_variableframerate (prof, TRUE);
-      gst_caps_unref (caps);
+      vprof = gst_encoding_video_profile_new (caps, NULL, NULL, 1);
+      gst_encoding_video_profile_set_variableframerate (vprof, TRUE);
 
+      prof = gst_encoding_container_profile_new ("jpeg", "jpeg container", caps,
+          NULL);
+      gst_encoding_container_profile_add_profile (prof, vprof);
+
+      gst_caps_unref (caps);
       camera->image_profile = (GstEncodingProfile *) prof;
       camera->image_profile_switch = TRUE;
     }
