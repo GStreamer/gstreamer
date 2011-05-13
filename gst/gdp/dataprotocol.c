@@ -523,7 +523,7 @@ gst_dp_event_from_packet_0_2 (guint header_length, const guint8 * header,
     case GST_EVENT_EOS:
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       event = gst_event_new_custom (type, NULL);
       GST_EVENT_TIMESTAMP (event) = GST_DP_HEADER_TIMESTAMP (header);
       break;
