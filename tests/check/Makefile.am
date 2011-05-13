@@ -141,7 +141,6 @@ VALGRIND_TESTS_DISABLE = \
 
 if BUILD_EXPERIMENTAL
 EXPERIMENTAL_CHECKS=elements/camerabin2 \
-		elements/imagecapturebin \
 		elements/viewfinderbin
 endif
 
@@ -219,13 +218,6 @@ elements_camerabin2_LDADD = \
         $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 elements_camerabin2_SOURCES = elements/camerabin2.c
 
-elements_imagecapturebin_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS) -DGST_USE_UNSTABLE_API
-elements_imagecapturebin_LDADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstapp-@GST_MAJORMINOR@ \
-	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
-elements_imagecapturebin_SOURCES = elements/imagecapturebin.c
 endif
 
 elements_jifmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(EXIF_CFLAGS) $(AM_CFLAGS)

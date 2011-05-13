@@ -1061,7 +1061,8 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
 
       prof = gst_encoding_container_profile_new ("jpeg", "jpeg container", caps,
           NULL);
-      gst_encoding_container_profile_add_profile (prof, vprof);
+      gst_encoding_container_profile_add_profile (prof,
+          (GstEncodingProfile *) vprof);
 
       gst_caps_unref (caps);
       camera->image_profile = (GstEncodingProfile *) prof;
