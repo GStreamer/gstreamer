@@ -290,9 +290,9 @@ GST_START_TEST (test_request_pads_named)
 GST_END_TEST;
 
 static GstCaps *
-mq_dummypad_getcaps (GstPad * sinkpad)
+mq_dummypad_getcaps (GstPad * sinkpad, GstCaps * filter)
 {
-  return gst_caps_new_any ();
+  return (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 }
 
 struct PadData

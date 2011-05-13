@@ -64,7 +64,7 @@ static GstFlowReturn (*klass_transform_ip) (GstBaseTransform * trans,
 static gboolean (*klass_set_caps) (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps) = NULL;
 static GstCaps *(*klass_transform_caps) (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps) = NULL;
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter) = NULL;
 static gboolean (*klass_transform_size) (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, gsize size, GstCaps * othercaps,
     gsize * othersize) = NULL;

@@ -581,7 +581,7 @@ transform_ct1 (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 
 static GstCaps *
 transform_caps_ct1 (GstBaseTransform * trans, GstPadDirection dir,
-    GstCaps * caps)
+    GstCaps * caps, GstCaps * filter)
 {
   GstCaps *res;
 
@@ -590,6 +590,14 @@ transform_caps_ct1 (GstBaseTransform * trans, GstPadDirection dir,
   } else {
     res = gst_caps_new_simple ("baz/x-foo", NULL);
   }
+
+  if (filter) {
+    GstCaps *temp =
+        gst_caps_intersect_full (filter, res, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (res);
+    res = temp;
+  }
+
   return res;
 }
 
@@ -849,7 +857,7 @@ transform_ct2 (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 
 static GstCaps *
 transform_caps_ct2 (GstBaseTransform * trans, GstPadDirection dir,
-    GstCaps * caps)
+    GstCaps * caps, GstCaps * filter)
 {
   GstCaps *res;
 
@@ -860,6 +868,14 @@ transform_caps_ct2 (GstBaseTransform * trans, GstPadDirection dir,
     /* all on the srcpad can be transformed to the format of the sinkpad */
     res = gst_caps_new_simple ("foo/x-bar", NULL);
   }
+
+  if (filter) {
+    GstCaps *temp =
+        gst_caps_intersect_full (filter, res, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (res);
+    res = temp;
+  }
+
   return res;
 }
 
