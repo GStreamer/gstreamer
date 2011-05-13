@@ -74,6 +74,24 @@
     --image-capture-caps              Image capture caps (e.g. video/x-raw-rgb,width=640,height=480)
     --viewfinder-caps                 Viewfinder caps (e.g. video/x-raw-rgb,width=640,height=480)
     --video-capture-caps              Video capture caps (e.g. video/x-raw-rgb,width=640,height=480)
+    --performance-measure             Collect timing information about the
+    captures and provides performance statistics at the end
+    --performance-targets             A list of doubles that are the performance target
+    times for each of the measured timestamps. The order is
+    startup time, change mode time, shot to save, shot to snapshot,
+    shot to shot, preview to precapture, shot to buffer.
+    e.g. 3.5,1.0,5.0,2.5,5.0,1.5,1.0
+    * Startup time -> time it takes for camerabin2 to reach playing
+    * Change mode time -> time it takes for camerabin2 to change to the selected
+    mode in playing
+    * Shot to save -> time it takes from start-capture to having the image saved
+    to disk
+    * Shot to snapshot -> time it takes from start-capture to getting a snapshot
+    * Shot to shot -> time from one start-capture to the next one
+    * Preview to precapture -> time it takes from getting the snapshot to the
+    next buffer that reaches the viewfinder
+    * Shot to buffer -> time it takes from start-capture to the moment a buffer
+    is pushed out of the camera source
 
   */
 
@@ -105,18 +123,78 @@
  */
 GST_DEBUG_CATEGORY_STATIC (camerabin_test);
 #define GST_CAT_DEFAULT camerabin_test
-typedef struct _ResultType
+
+#define TIME_DIFF(a,b) ((((gint64)(a)) - ((gint64)(b))) / (gdouble) GST_SECOND)
+
+#define TIME_FORMAT "02d.%09u"
+#define TIMEDIFF_FORMAT "0.6lf"
+
+#define TIME_ARGS(t) \
+        (GST_CLOCK_TIME_IS_VALID (t) && (t) < 99 * GST_SECOND) ? \
+        (gint) ((((GstClockTime)(t)) / GST_SECOND) % 60) : 99, \
+        (GST_CLOCK_TIME_IS_VALID (t) && ((t) < 99 * GST_SECOND)) ? \
+        (guint) (((GstClockTime)(t)) % GST_SECOND) : 999999999
+
+#define TIMEDIFF_ARGS(t) (t)
+
+typedef struct _CaptureTiming
 {
-  GstClockTime avg;
-  GstClockTime min;
-  GstClockTime max;
-  guint32 times;
-} ResultType;
+  GstClockTime start_capture;
+  GstClockTime got_preview;
+  GstClockTime capture_done;
+  GstClockTime precapture;
+  GstClockTime camera_capture;
+} CaptureTiming;
+
+typedef struct _CaptureTimingStats
+{
+  GstClockTime shot_to_shot;
+  GstClockTime shot_to_save;
+  GstClockTime shot_to_snapshot;
+  GstClockTime preview_to_precapture;
+  GstClockTime shot_to_buffer;
+} CaptureTimingStats;
+
+static void
+capture_timing_stats_add (CaptureTimingStats * a, CaptureTimingStats * b)
+{
+  a->shot_to_shot += b->shot_to_shot;
+  a->shot_to_snapshot += b->shot_to_snapshot;
+  a->shot_to_save += b->shot_to_save;
+  a->preview_to_precapture += b->preview_to_precapture;
+  a->shot_to_buffer += b->shot_to_buffer;
+}
+
+static void
+capture_timing_stats_div (CaptureTimingStats * stats, gint div)
+{
+  stats->shot_to_shot /= div;
+  stats->shot_to_snapshot /= div;
+  stats->shot_to_save /= div;
+  stats->preview_to_precapture /= div;
+  stats->shot_to_buffer /= div;
+}
+
+#define PRINT_STATS(d,s) g_print ("%02d | %" TIME_FORMAT " | %" \
+    TIME_FORMAT "   | %" TIME_FORMAT " | %" TIME_FORMAT \
+    "    | %" TIME_FORMAT "\n", d, \
+    TIME_ARGS ((s)->shot_to_save), TIME_ARGS ((s)->shot_to_snapshot), \
+    TIME_ARGS ((s)->shot_to_shot), \
+    TIME_ARGS ((s)->preview_to_precapture), \
+    TIME_ARGS ((s)->shot_to_buffer))
+
+#define SHOT_TO_SAVE(t) ((t)->capture_done - (t)->start_capture)
+#define SHOT_TO_SNAPSHOT(t) ((t)->got_preview - (t)->start_capture)
+#define PREVIEW_TO_PRECAPTURE(t) ((t)->precapture - (t)->got_preview)
+#define SHOT_TO_BUFFER(t) ((t)->camera_capture - (t)->start_capture)
 
 /*
  * Global vars
  */
 static GstElement *camerabin = NULL;
+static GstElement *viewfinder_sink = NULL;
+static gulong camera_probe_id = 0;
+static gulong viewfinder_probe_id = 0;
 static GMainLoop *loop = NULL;
 
 /* commandline options */
@@ -137,6 +215,8 @@ static gchar *gep_filename = NULL;
 static gchar *image_capture_caps_str = NULL;
 static gchar *viewfinder_caps_str = NULL;
 static gchar *video_capture_caps_str = NULL;
+static gboolean performance_measure = FALSE;
+static gchar *performance_targets_str = NULL;
 
 
 #define MODE_VIDEO 2
@@ -181,7 +261,21 @@ static gchar *preview_caps_name = NULL;
 static Display *display = NULL;
 static Window window = 0;
 
-GTimer *timer = NULL;
+/* timing data */
+static GstClockTime initial_time = 0;
+static GstClockTime startup_time = 0;
+static GstClockTime change_mode_before = 0;
+static GstClockTime change_mode_after = 0;
+static GList *capture_times = NULL;
+
+static GstClockTime target_startup;
+static GstClockTime target_change_mode;
+static GstClockTime target_shot_to_shot;
+static GstClockTime target_shot_to_save;
+static GstClockTime target_shot_to_snapshot;
+static GstClockTime target_preview_to_precapture;
+static GstClockTime target_shot_to_buffer;
+
 
 /*
  * Prototypes
@@ -215,6 +309,34 @@ create_host_window (void)
   }
 }
 
+static gboolean
+camera_src_get_timestamp_probe (GstPad * pad, GstMiniObject * obj,
+    gpointer udata)
+{
+  CaptureTiming *timing;
+
+  timing = (CaptureTiming *) g_list_first (capture_times)->data;
+  timing->camera_capture = gst_util_get_timestamp ();
+
+  gst_pad_remove_data_probe (pad, camera_probe_id);
+
+  return TRUE;
+}
+
+static gboolean
+viewfinder_get_timestamp_probe (GstPad * pad, GstMiniObject * obj,
+    gpointer udata)
+{
+  CaptureTiming *timing;
+
+  timing = (CaptureTiming *) g_list_first (capture_times)->data;
+  timing->precapture = gst_util_get_timestamp ();
+
+  gst_pad_remove_data_probe (pad, viewfinder_probe_id);
+
+  return TRUE;
+}
+
 static GstBusSyncReply
 sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
@@ -241,7 +363,23 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             return GST_BUS_DROP;
           }
         } else if (gst_structure_has_name (st, "preview-image")) {
+          CaptureTiming *timing;
+
           GST_DEBUG ("preview-image");
+
+          timing = (CaptureTiming *) g_list_first (capture_times)->data;
+          timing->got_preview = gst_util_get_timestamp ();
+
+          {
+            /* set up probe to check when the viewfinder gets data */
+            GstPad *pad = gst_element_get_static_pad (viewfinder_sink, "sink");
+
+            viewfinder_probe_id = gst_pad_add_buffer_probe (pad,
+                (GCallback) viewfinder_get_timestamp_probe, NULL);
+
+            gst_object_unref (pad);
+          }
+
           /* extract preview-image from msg */
           image = gst_structure_get_value (st, "buffer");
           if (image) {
@@ -250,8 +388,6 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             size = GST_BUFFER_SIZE (buf);
             preview_filename = g_strdup_printf ("test_vga.rgb");
             caps_string = gst_caps_to_string (GST_BUFFER_CAPS (buf));
-            g_print ("writing buffer to %s, elapsed: %.2fs, buffer caps: %s\n",
-                preview_filename, g_timer_elapsed (timer, NULL), caps_string);
             g_free (caps_string);
             f = g_fopen (preview_filename, "w");
             if (f) {
@@ -269,6 +405,16 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       }
       break;
     }
+    case GST_MESSAGE_STATE_CHANGED:
+      if (GST_MESSAGE_SRC (message) == (GstObject *) camerabin) {
+        GstState newstate;
+
+        gst_message_parse_state_changed (message, NULL, &newstate, NULL);
+        if (newstate == GST_STATE_PLAYING) {
+          startup_time = gst_util_get_timestamp ();
+        }
+      }
+      break;
     default:
       /* unhandled message */
       break;
@@ -316,11 +462,15 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         const GstStructure *structure = gst_message_get_structure (message);
 
         if (gst_structure_has_name (structure, "image-done")) {
+          CaptureTiming *timing;
 #ifndef GST_DISABLE_GST_DEBUG
           const gchar *fname = gst_structure_get_string (structure, "filename");
 
           GST_DEBUG ("image done: %s", fname);
 #endif
+          timing = (CaptureTiming *) g_list_first (capture_times)->data;
+          timing->capture_done = gst_util_get_timestamp ();
+
           if (capture_count < capture_total) {
             g_idle_add ((GSourceFunc) run_pipeline, NULL);
           } else {
@@ -508,6 +658,9 @@ setup_pipeline (void)
   GstBus *bus;
   GstElement *sink = NULL, *ipp = NULL;
   GstEncodingProfile *prof = NULL;
+
+  initial_time = gst_util_get_timestamp ();
+
   camerabin = gst_element_factory_make ("camerabin2", NULL);
   if (NULL == camerabin) {
     g_warning ("can't create camerabin element\n");
@@ -569,8 +722,20 @@ setup_pipeline (void)
 
   GST_INFO_OBJECT (camerabin, "elements created");
 
-  if (sink)
+  if (sink) {
     g_object_set (sink, "sync", TRUE, NULL);
+  } else {
+    /* Get the inner viewfinder sink, this uses fixed names given
+     * by default in camerabin2 */
+    sink = gst_bin_get_by_name (GST_BIN (camerabin), "vf-bin");
+    g_assert (sink);
+    gst_object_unref (sink);
+
+    sink = gst_bin_get_by_name (GST_BIN (sink), "vfbin-sink");
+    g_assert (sink);
+    gst_object_unref (sink);
+  }
+  viewfinder_sink = sink;
 
   GST_INFO_OBJECT (camerabin, "elements configured");
 
@@ -614,6 +779,13 @@ setup_pipeline (void)
 
   set_camerabin2_caps_from_string ();
 
+  /* change to the wrong mode if timestamping if performance mode is on so
+   * we can change it back and measure the time after in playing */
+  if (performance_measure) {
+    g_object_set (camerabin, "mode",
+        mode == MODE_VIDEO ? MODE_IMAGE : MODE_VIDEO, NULL);
+  }
+
   if (GST_STATE_CHANGE_FAILURE ==
       gst_element_set_state (camerabin, GST_STATE_READY)) {
     g_warning ("can't set camerabin to ready\n");
@@ -628,6 +800,14 @@ setup_pipeline (void)
   }
 
   GST_INFO_OBJECT (camerabin, "camera started");
+
+  /* do the mode change timestamping if performance mode is on */
+  if (performance_measure) {
+    change_mode_before = gst_util_get_timestamp ();
+    g_object_set (camerabin, "mode", mode, NULL);
+    change_mode_after = gst_util_get_timestamp ();
+  }
+
   return TRUE;
 error:
   cleanup_pipeline ();
@@ -695,6 +875,7 @@ run_pipeline (gpointer user_data)
   gchar *filename_str = NULL;
   GstElement *video_source = NULL;
   const gchar *filename_suffix;
+  CaptureTiming *timing;
 
   g_object_set (camerabin, "mode", mode, NULL);
 
@@ -745,19 +926,212 @@ run_pipeline (gpointer user_data)
         g_object_set (video_source, "colour-tone-mode", color_mode, NULL);
     }
     g_object_unref (video_source);
+  } else {
+    video_source = gst_bin_get_by_name (GST_BIN (camerabin), "camerasrc");
+    gst_object_unref (video_source);
   }
   g_object_set (camerabin, "zoom", zoom / 100.0f, NULL);
 
   capture_count++;
-  g_timer_start (timer);
-  g_signal_emit_by_name (camerabin, "start-capture", 0);
 
+  timing = g_slice_new0 (CaptureTiming);
+  capture_times = g_list_prepend (capture_times, timing);
+
+  /* set pad probe to check when buffer leaves the camera source */
+  if (mode == MODE_IMAGE) {
+    GstPad *pad;
+
+    pad = gst_element_get_static_pad (video_source, "imgsrc");
+    camera_probe_id = gst_pad_add_buffer_probe (pad,
+        (GCallback) camera_src_get_timestamp_probe, NULL);
+
+    gst_object_unref (pad);
+  }
+  timing->start_capture = gst_util_get_timestamp ();
+  g_signal_emit_by_name (camerabin, "start-capture", 0);
 
   if (mode == MODE_VIDEO) {
     g_timeout_add ((capture_time * 1000), (GSourceFunc) stop_capture, NULL);
   }
 
   return FALSE;
+}
+
+static void
+parse_target_values (void)
+{
+  gdouble startup = 0, change_mode = 0, shot_to_save = 0, shot_to_snapshot = 0;
+  gdouble shot_to_shot = 0, preview_to_precapture = 0, shot_to_buffer = 0;
+
+  if (performance_targets_str == NULL)
+    return;
+
+  /*
+     startup time, change mode time, shot to save, shot to snapshot,
+     shot to shot, preview to precapture, shot to buffer.
+   */
+  sscanf (performance_targets_str, "%lf,%lf,%lf,%lf,%lf,%lf,%lf",
+      &startup, &change_mode, &shot_to_save,
+      &shot_to_snapshot, &shot_to_shot, &preview_to_precapture,
+      &shot_to_buffer);
+
+  target_startup = (GstClockTime) (startup * GST_SECOND);
+  target_change_mode = (GstClockTime) (change_mode * GST_SECOND);
+  target_shot_to_save = (GstClockTime) (shot_to_save * GST_SECOND);
+  target_shot_to_snapshot = (GstClockTime) (shot_to_snapshot * GST_SECOND);
+  target_shot_to_shot = (GstClockTime) (shot_to_shot * GST_SECOND);
+  target_preview_to_precapture =
+      (GstClockTime) (preview_to_precapture * GST_SECOND);
+  target_shot_to_buffer = (GstClockTime) (shot_to_buffer * GST_SECOND);
+}
+
+static void
+print_performance_data (void)
+{
+  GList *iter;
+  gint i = 0;
+  GstClockTime last_start = 0;
+  CaptureTimingStats max;
+  CaptureTimingStats min;
+  CaptureTimingStats avg;
+  CaptureTimingStats avg_wo_first;
+  GstClockTime shot_to_shot;
+
+  if (!performance_measure)
+    return;
+
+  parse_target_values ();
+
+  /* Initialize stats */
+  min.shot_to_shot = -1;
+  min.shot_to_save = -1;
+  min.shot_to_snapshot = -1;
+  min.preview_to_precapture = -1;
+  min.shot_to_buffer = -1;
+  memset (&avg, 0, sizeof (CaptureTimingStats));
+  memset (&avg_wo_first, 0, sizeof (CaptureTimingStats));
+  memset (&max, 0, sizeof (CaptureTimingStats));
+
+  g_print ("-- Performance results --\n");
+  g_print ("Startup time: %" TIME_FORMAT "; Target: %" TIME_FORMAT "\n",
+      TIME_ARGS (startup_time - initial_time), TIME_ARGS (target_startup));
+  g_print ("Change mode time: %" TIME_FORMAT "; Target: %" TIME_FORMAT "\n",
+      TIME_ARGS (change_mode_after - change_mode_before),
+      TIME_ARGS (target_change_mode));
+
+  g_print
+      ("\n   | Shot to save |Shot to snapshot| Shot to shot |"
+      "Preview to precap| Shot to buffer\n");
+  capture_times = g_list_reverse (capture_times);
+  for (iter = capture_times; iter; iter = g_list_next (iter)) {
+    CaptureTiming *t = (CaptureTiming *) iter->data;
+    CaptureTimingStats stats;
+
+    stats.shot_to_save = SHOT_TO_SAVE (t);
+    stats.shot_to_snapshot = SHOT_TO_SNAPSHOT (t);
+    stats.shot_to_shot = i == 0 ? 0 : t->start_capture - last_start;
+    stats.preview_to_precapture = PREVIEW_TO_PRECAPTURE (t);
+    stats.shot_to_buffer = SHOT_TO_BUFFER (t);
+
+    PRINT_STATS (i, &stats);
+
+    if (i != 0) {
+      capture_timing_stats_add (&avg_wo_first, &stats);
+    }
+    capture_timing_stats_add (&avg, &stats);
+
+    if (stats.shot_to_save < min.shot_to_save) {
+      min.shot_to_save = stats.shot_to_save;
+    }
+    if (stats.shot_to_snapshot < min.shot_to_snapshot) {
+      min.shot_to_snapshot = stats.shot_to_snapshot;
+    }
+    if (stats.shot_to_shot < min.shot_to_shot && stats.shot_to_shot > 0) {
+      min.shot_to_shot = stats.shot_to_shot;
+    }
+    if (stats.preview_to_precapture < min.preview_to_precapture) {
+      min.preview_to_precapture = stats.preview_to_precapture;
+    }
+    if (stats.shot_to_buffer < min.shot_to_buffer) {
+      min.shot_to_buffer = stats.shot_to_buffer;
+    }
+
+
+    if (stats.shot_to_save > max.shot_to_save) {
+      max.shot_to_save = stats.shot_to_save;
+    }
+    if (stats.shot_to_snapshot > max.shot_to_snapshot) {
+      max.shot_to_snapshot = stats.shot_to_snapshot;
+    }
+    if (stats.shot_to_shot > max.shot_to_shot) {
+      max.shot_to_shot = stats.shot_to_shot;
+    }
+    if (stats.preview_to_precapture > max.preview_to_precapture) {
+      max.preview_to_precapture = stats.preview_to_precapture;
+    }
+    if (stats.shot_to_buffer > max.shot_to_buffer) {
+      max.shot_to_buffer = stats.shot_to_buffer;
+    }
+
+    last_start = t->start_capture;
+    i++;
+  }
+
+  if (i > 1)
+    shot_to_shot = avg.shot_to_shot / (i - 1);
+  else
+    shot_to_shot = GST_CLOCK_TIME_NONE;
+  capture_timing_stats_div (&avg, i);
+  avg.shot_to_shot = shot_to_shot;
+  if (i > 1)
+    capture_timing_stats_div (&avg_wo_first, i - 1);
+  else {
+    memset (&avg_wo_first, 0, sizeof (CaptureTimingStats));
+  }
+
+  g_print ("\n    Stats             |     MIN      |     MAX      |"
+      "     AVG      | AVG wo First |   Target     | Diff \n");
+  g_print ("Shot to shot          | %" TIME_FORMAT " | %" TIME_FORMAT
+      " | %" TIME_FORMAT " | %" TIME_FORMAT " | %" TIME_FORMAT
+      " | %" TIMEDIFF_FORMAT "\n",
+      TIME_ARGS (min.shot_to_shot), TIME_ARGS (max.shot_to_shot),
+      TIME_ARGS (avg.shot_to_shot),
+      TIME_ARGS (avg_wo_first.shot_to_shot),
+      TIME_ARGS (target_shot_to_shot),
+      TIMEDIFF_ARGS (TIME_DIFF (avg.shot_to_shot, target_shot_to_shot)));
+  g_print ("Shot to save          | %" TIME_FORMAT " | %" TIME_FORMAT
+      " | %" TIME_FORMAT " | %" TIME_FORMAT " | %" TIME_FORMAT
+      " | %" TIMEDIFF_FORMAT "\n",
+      TIME_ARGS (min.shot_to_save), TIME_ARGS (max.shot_to_save),
+      TIME_ARGS (avg.shot_to_save),
+      TIME_ARGS (avg_wo_first.shot_to_save),
+      TIME_ARGS (target_shot_to_save),
+      TIMEDIFF_ARGS (TIME_DIFF (avg.shot_to_save, target_shot_to_save)));
+  g_print ("Shot to snapshot      | %" TIME_FORMAT " | %" TIME_FORMAT
+      " | %" TIME_FORMAT " | %" TIME_FORMAT " | %" TIME_FORMAT
+      " | %" TIMEDIFF_FORMAT "\n",
+      TIME_ARGS (min.shot_to_snapshot),
+      TIME_ARGS (max.shot_to_snapshot),
+      TIME_ARGS (avg.shot_to_snapshot),
+      TIME_ARGS (avg_wo_first.shot_to_snapshot),
+      TIME_ARGS (target_shot_to_snapshot),
+      TIMEDIFF_ARGS (TIME_DIFF (avg.shot_to_snapshot,
+              target_shot_to_snapshot)));
+  g_print ("Preview to precapture | %" TIME_FORMAT " | %" TIME_FORMAT " | %"
+      TIME_FORMAT " | %" TIME_FORMAT " | %" TIME_FORMAT " | %" TIMEDIFF_FORMAT
+      "\n", TIME_ARGS (min.preview_to_precapture),
+      TIME_ARGS (max.preview_to_precapture),
+      TIME_ARGS (avg.preview_to_precapture),
+      TIME_ARGS (avg_wo_first.preview_to_precapture),
+      TIME_ARGS (target_preview_to_precapture),
+      TIMEDIFF_ARGS (TIME_DIFF (avg.preview_to_precapture,
+              target_preview_to_precapture)));
+  g_print ("Shot to buffer        | %" TIME_FORMAT " | %" TIME_FORMAT " | %"
+      TIME_FORMAT " | %" TIME_FORMAT " | %" TIME_FORMAT " | %" TIMEDIFF_FORMAT
+      "\n", TIME_ARGS (min.shot_to_buffer), TIME_ARGS (max.shot_to_buffer),
+      TIME_ARGS (avg.shot_to_buffer), TIME_ARGS (avg_wo_first.shot_to_buffer),
+      TIME_ARGS (target_shot_to_buffer),
+      TIMEDIFF_ARGS (TIME_DIFF (avg.shot_to_buffer, target_shot_to_buffer)));
 }
 
 int
@@ -849,6 +1223,17 @@ main (int argc, char *argv[])
     {"video-capture-caps", '\0', 0,
           G_OPTION_ARG_STRING, &video_capture_caps_str,
         "Video capture caps (e.g. video/x-raw-rgb,width=640,height=480)", NULL},
+    {"performance-measure", '\0', 0,
+          G_OPTION_ARG_NONE, &performance_measure,
+          "If performance information should be printed at the end of execution",
+        NULL},
+    {"performance-targets", '\0', 0,
+          G_OPTION_ARG_STRING, &performance_targets_str,
+          "Comma separated list of doubles representing the target values in "
+          "seconds. The order is: startup time, change mode time, shot to save"
+          ", shot to snapshot, shot to shot, preview to shot, shot to buffer. "
+          "e.g. 3.5,1.0,5.0,2.5,5.0,1.5,1.0",
+        NULL},
     {NULL}
   };
 
@@ -885,8 +1270,6 @@ main (int argc, char *argv[])
   if (filename->len == 0)
     filename = g_string_append (filename, ".");
 
-  timer = g_timer_new ();
-
   /* init */
   if (setup_pipeline ()) {
     loop = g_main_loop_new (NULL, FALSE);
@@ -895,7 +1278,22 @@ main (int argc, char *argv[])
     cleanup_pipeline ();
     g_main_loop_unref (loop);
   }
+
+  /* performance */
+  if (performance_measure) {
+    print_performance_data ();
+  }
+
   /* free */
+  {
+    GList *iter;
+
+    for (iter = capture_times; iter; iter = g_list_next (iter)) {
+      g_slice_free (CaptureTiming, iter->data);
+    }
+    g_list_free (capture_times);
+  }
+
   g_string_free (filename, TRUE);
   g_free (ev_option);
   g_free (wrappersrc_name);
@@ -908,7 +1306,7 @@ main (int argc, char *argv[])
   g_free (gep_targetname);
   g_free (gep_profilename);
   g_free (gep_filename);
-  g_timer_destroy (timer);
+  g_free (performance_targets_str);
 
   if (window)
     XDestroyWindow (display, window);
