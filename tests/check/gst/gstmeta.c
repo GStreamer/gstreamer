@@ -118,8 +118,7 @@ gst_meta_test_get_info (void)
         sizeof (GstMetaTest),
         (GstMetaInitFunction) test_init_func,
         (GstMetaFreeFunction) test_free_func,
-        (GstMetaCopyFunction) test_copy_func,
-        (GstMetaTransformFunction) NULL, NULL, NULL);
+        (GstMetaCopyFunction) test_copy_func, (GstMetaTransformFunction) NULL);
   }
   return meta_test_info;
 }
