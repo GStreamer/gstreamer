@@ -107,7 +107,6 @@ GObject
       GstAudioSinkRingBuffer
   GstSignalObject
   GstMixerTrack
-    GstMixerOptions
   GstStreamInfo
   GstColorBalanceChannel
   PangoFontMap

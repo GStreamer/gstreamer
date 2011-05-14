@@ -3,10 +3,10 @@
   <description>Convert audio to different formats</description>
   <filename>../../gst/audioconvert/.libs/libgstaudioconvert.so</filename>
   <basename>libgstaudioconvert.so</basename>
-  <version>0.10.34</version>
+  <version>0.10.34.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
