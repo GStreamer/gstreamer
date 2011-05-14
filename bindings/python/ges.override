@@ -70,6 +70,26 @@ _wrap_ges_timeline_get_tracks(PyGObject *self)
 }
 
 %%
+override ges_timeline_parse_launch_effect_new kwargs
+static int
+_wrap_ges_timeline_parse_launch_effect_new(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "video_bin_description", "audio_bin_description", NULL };
+    char *video_bin_description, *audio_bin_description = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"zz:GES.TimelineParseLaunchEffect.__init__", kwlist, &video_bin_description, &audio_bin_description))
+        return -1;
+    self->obj = (GObject *)ges_timeline_parse_launch_effect_new(video_bin_description, audio_bin_description);
+
+    if (!self->obj) {
+        PyErr_SetString(PyExc_RuntimeError, "could not create GESTimelineParseLaunchEffect object");
+        return -1;
+    }
+    pygobject_register_wrapper((PyObject *)self);
+    return 0;
+}
+
+%%
 override ges_timeline_get_layers noargs
 static PyObject *
 _wrap_ges_timeline_get_layers(PyGObject *self)
