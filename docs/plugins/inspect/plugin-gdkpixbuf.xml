@@ -3,10 +3,10 @@
   <description>GdkPixbuf-based image decoder, scaler and sink</description>
   <filename>../../ext/gdk_pixbuf/.libs/libgstgdkpixbuf.so</filename>
   <basename>libgstgdkpixbuf.so</basename>
-  <version>0.10.29</version>
+  <version>0.10.29.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

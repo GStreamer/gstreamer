@@ -3,10 +3,10 @@
   <description>AVI stream handling</description>
   <filename>../../gst/avi/.libs/libgstavi.so</filename>
   <basename>libgstavi.so</basename>
-  <version>0.10.29</version>
+  <version>0.10.29.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
