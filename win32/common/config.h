@@ -52,7 +52,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#undef GST_PACKAGE_RELEASE_DATETIME
+#define GST_PACKAGE_RELEASE_DATETIME "2011-05-14T09:08Z"
 
 /* Define to enable a52dec (used by a52dec). */
 #undef HAVE_A52DEC
