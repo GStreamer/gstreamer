@@ -1320,7 +1320,8 @@ flushing:
 }
 
 static gint64
-gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink, GstClockTime sample_offset)
+gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
+    GstClockTime sample_offset)
 {
   GstRingBuffer *ringbuf = sink->ringbuffer;
   gint64 align;
@@ -1355,14 +1356,14 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink, GstClockTime sample_
         G_GINT64_FORMAT, align, maxdrift);
   } else {
     /* calculate sample diff in seconds for error message */
-    gint64 diff_s = gst_util_uint64_scale_int (diff, GST_SECOND, ringbuf->spec.rate);
+    gint64 diff_s = gst_util_uint64_scale_int (diff, GST_SECOND,
+        ringbuf->spec.rate);
     /* timestamps drifted apart from previous samples too much, we need to
      * resync. We log this as an element warning. */
     GST_WARNING_OBJECT (sink,
         "Unexpected discontinuity in audio timestamps of "
         "%s%" GST_TIME_FORMAT ", resyncing",
-        sample_offset > sink->next_sample ? "+" : "-",
-        GST_TIME_ARGS (diff_s));
+        sample_offset > sink->next_sample ? "+" : "-", GST_TIME_ARGS (diff_s));
     align = 0;
   }
 
