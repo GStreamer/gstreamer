@@ -24,7 +24,7 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Bad Plug-ins source release"
+#define GST_PACKAGE_NAME "GStreamer Bad Plug-ins git"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -199,7 +199,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.22"
+#define VERSION "0.10.22.1"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

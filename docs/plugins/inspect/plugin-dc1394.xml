@@ -3,10 +3,10 @@
   <description>1394 IIDC Video Source</description>
   <filename>../../ext/dc1394/.libs/libgstdc1394.so</filename>
   <basename>libgstdc1394.so</basename>
-  <version>0.10.22</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

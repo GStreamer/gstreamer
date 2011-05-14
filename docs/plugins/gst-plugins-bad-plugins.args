@@ -26550,7 +26550,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>4.77831e-299</DEFAULT>
+<DEFAULT>-5.83036e+303</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26590,7 +26590,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>4.77773e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26600,7 +26600,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>4.77831e-299</DEFAULT>
+<DEFAULT>4.77773e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26630,7 +26630,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>1.87849e-316</DEFAULT>
+<DEFAULT>1.21136e-314</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26640,7 +26640,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>8.52263e-321</DEFAULT>
+<DEFAULT>2.33156e-310</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26650,7 +26650,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.37974e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26700,7 +26700,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>1.44112e-37</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27030,7 +27030,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>1.2957e-318</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27050,7 +27050,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>1.36347e+161</DEFAULT>
+<DEFAULT>8.20074e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27220,7 +27220,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>4.77831e-299</DEFAULT>
+<DEFAULT>7.75037e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27230,7 +27230,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>3.84008e-315</DEFAULT>
 </ARG>
 
 <ARG>

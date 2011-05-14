@@ -3,10 +3,10 @@
   <description>Elements to convert Bayer images</description>
   <filename>../../gst/bayer/.libs/libgstbayer.so</filename>
   <basename>libgstbayer.so</basename>
-  <version>0.10.22</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

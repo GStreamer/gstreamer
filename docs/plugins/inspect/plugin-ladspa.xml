@@ -3,10 +3,10 @@
   <description>All LADSPA plugins</description>
   <filename>../../ext/ladspa/.libs/libgstladspa.so</filename>
   <basename>libgstladspa.so</basename>
-  <version>0.10.22</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

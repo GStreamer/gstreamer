@@ -3,10 +3,10 @@
   <description>NAS (Network Audio System) support for GStreamer</description>
   <filename>../../ext/nas/.libs/libgstnassink.so</filename>
   <basename>libgstnassink.so</basename>
-  <version>0.10.22</version>
+  <version>0.10.22.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
