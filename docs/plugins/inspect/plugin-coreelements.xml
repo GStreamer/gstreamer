@@ -3,10 +3,10 @@
   <description>standard GStreamer elements</description>
   <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
   <basename>libgstcoreelements.so</basename>
-  <version>0.10.34</version>
+  <version>0.10.34.1</version>
   <license>LGPL</license>
   <source>gstreamer</source>
-  <package>GStreamer source release</package>
+  <package>GStreamer git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
