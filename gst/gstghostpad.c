@@ -99,7 +99,7 @@ static GParamSpec *pspec_caps = NULL;
  * Returns: (transfer none) (array zero-terminated=1): a zero-terminated array
  *     of #GstQueryType.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 const GstQueryType *
 gst_proxy_pad_query_type_default (GstPad * pad)
@@ -126,7 +126,7 @@ gst_proxy_pad_query_type_default (GstPad * pad)
  *
  * Returns: TRUE if the event was handled.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 gboolean
 gst_proxy_pad_event_default (GstPad * pad, GstEvent * event)
@@ -156,7 +156,7 @@ gst_proxy_pad_event_default (GstPad * pad, GstEvent * event)
  *
  * Returns: TRUE if the query could be performed.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 gboolean
 gst_proxy_pad_query_default (GstPad * pad, GstQuery * query)
@@ -185,7 +185,7 @@ gst_proxy_pad_query_default (GstPad * pad, GstQuery * query)
  * Returns: a #GstIterator of #GstPad, or NULL if @pad has no parent. Unref each
  * returned pad with gst_object_unref().
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 GstIterator *
 gst_proxy_pad_iterate_internal_links_default (GstPad * pad)
@@ -224,7 +224,7 @@ gst_proxy_pad_iterate_internal_links_default (GstPad * pad)
  * An error can occur if the pad is not connected or when the downstream
  * peer elements cannot provide an acceptable buffer.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 GstFlowReturn
 gst_proxy_pad_bufferalloc_default (GstPad * pad, guint64 offset, guint size,
@@ -257,7 +257,7 @@ gst_proxy_pad_bufferalloc_default (GstPad * pad, guint64 offset, guint size,
  *
  * Returns: a #GstFlowReturn from the pad.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 GstFlowReturn
 gst_proxy_pad_chain_default (GstPad * pad, GstBuffer * buffer)
@@ -284,7 +284,7 @@ gst_proxy_pad_chain_default (GstPad * pad, GstBuffer * buffer)
  *
  * Returns: a #GstFlowReturn from the pad.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 GstFlowReturn
 gst_proxy_pad_chain_list_default (GstPad * pad, GstBufferList * list)
@@ -313,7 +313,7 @@ gst_proxy_pad_chain_list_default (GstPad * pad, GstBufferList * list)
  *
  * Returns: a #GstFlowReturn from the pad.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 GstFlowReturn
 gst_proxy_pad_getrange_default (GstPad * pad, guint64 offset, guint size,
@@ -339,7 +339,7 @@ gst_proxy_pad_getrange_default (GstPad * pad, guint64 offset, guint size,
  *
  * Returns: a #gboolean from the pad.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 gboolean
 gst_proxy_pad_checkgetrange_default (GstPad * pad)
@@ -363,7 +363,7 @@ gst_proxy_pad_checkgetrange_default (GstPad * pad)
  *
  * Returns: (transfer full): the caps of the pad with incremented ref-count
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 GstCaps *
 gst_proxy_pad_getcaps_default (GstPad * pad)
@@ -427,7 +427,7 @@ done:
  *
  * Returns: TRUE if the pad can accept the caps.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 gboolean
 gst_proxy_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
@@ -458,7 +458,7 @@ gst_proxy_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
  *
  * Invoke the default fixatecaps function of the proxy pad.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 void
 gst_proxy_pad_fixatecaps_default (GstPad * pad, GstCaps * caps)
@@ -485,7 +485,7 @@ gst_proxy_pad_fixatecaps_default (GstPad * pad, GstCaps * caps)
  * Returns: TRUE if the caps could be set. FALSE if the caps were not fixed
  * or bad parameters were provided to this function.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 gboolean
 gst_proxy_pad_setcaps_default (GstPad * pad, GstCaps * caps)
@@ -582,7 +582,7 @@ gst_proxy_pad_get_target (GstPad * pad)
  * Returns: (transfer full): the target #GstProxyPad, can be NULL.
  * Unref target pad after usage.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 GstProxyPad *
 gst_proxy_pad_get_internal (GstProxyPad * pad)
@@ -606,7 +606,7 @@ gst_proxy_pad_get_internal (GstProxyPad * pad)
  *
  * Invoke the default unlink function of the proxy pad.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 void
 gst_proxy_pad_unlink_default (GstPad * pad)
@@ -798,7 +798,7 @@ static void gst_ghost_pad_dispose (GObject * object);
  *
  * Returns: %TRUE if the operation was successful.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 gboolean
 gst_ghost_pad_internal_activate_push_default (GstPad * pad, gboolean active)
@@ -829,7 +829,7 @@ gst_ghost_pad_internal_activate_push_default (GstPad * pad, gboolean active)
  *
  * Returns: %TRUE if the operation was successful.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 gboolean
 gst_ghost_pad_internal_activate_pull_default (GstPad * pad, gboolean active)
@@ -875,7 +875,7 @@ gst_ghost_pad_internal_activate_pull_default (GstPad * pad, gboolean active)
  *
  * Returns: %TRUE if the operation was successful.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 gboolean
 gst_ghost_pad_activate_push_default (GstPad * pad, gboolean active)
@@ -904,7 +904,7 @@ gst_ghost_pad_activate_push_default (GstPad * pad, gboolean active)
  *
  * Returns: %TRUE if the operation was successful.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 gboolean
 gst_ghost_pad_activate_pull_default (GstPad * pad, gboolean active)
@@ -948,7 +948,7 @@ gst_ghost_pad_activate_pull_default (GstPad * pad, gboolean active)
  *
  * Returns: #GstPadLinkReturn of the operation
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 GstPadLinkReturn
 gst_ghost_pad_link_default (GstPad * pad, GstPad * peer)
@@ -998,7 +998,7 @@ link_failed:
  *
  * Invoke the default unlink function of a ghost pad.
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 void
 gst_ghost_pad_unlink_default (GstPad * pad)
@@ -1108,7 +1108,7 @@ done:
  *
  * Returns: %TRUE if the operation was successful
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  */
 gboolean
 gst_ghost_pad_setcaps_default (GstPad * pad, GstCaps * caps)

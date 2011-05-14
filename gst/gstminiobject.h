@@ -146,7 +146,7 @@ typedef enum
  * called, there's not much you could do with the object, apart from e.g. using
  * its adress as hash-index or the like. 
  *
- * Since: 0.10.34
+ * Since: 0.10.35
  *
  */
 typedef void (*GstMiniObjectWeakNotify) (gpointer data,

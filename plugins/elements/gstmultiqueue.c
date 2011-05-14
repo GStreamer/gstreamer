@@ -410,7 +410,7 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    * streams by keeping the order in which buffers and events arrived compared
    * to active and linked streams.
    *
-   * Since: 0.10.33
+   * Since: 0.10.35
    */
   g_object_class_install_property (gobject_class, PROP_SYNC_BY_RUNNING_TIME,
       g_param_spec_boolean ("sync-by-running-time", "Sync By Running Time",
