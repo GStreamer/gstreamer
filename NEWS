@@ -1,4 +1,9 @@
-This is GStreamer Base Plug-ins 0.10.33, "Relaxing Distractions"
+This is GStreamer Base Plug-ins 0.10.34, "Lemmings"
+
+Changes since 0.10.33:
+
+      * None: this release is identical to 0.10.33 and just done to keep core/base
+       versions in sync
 
 Changes since 0.10.32:
 

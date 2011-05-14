@@ -3,7 +3,7 @@
   <description>various encoding-related elements</description>
   <filename>../../gst/encoding/.libs/libgstencodebin.so</filename>
   <basename>libgstencodebin.so</basename>
-  <version>0.10.33</version>
+  <version>0.10.34</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
