@@ -1,4 +1,15 @@
-This is GStreamer 0.10.33 "Prior Spaceflight Experience is an Advantage"
+This is GStreamer 0.10.34 "Misfits"
+
+Changes since 0.10.33:
+
+      * Fix multiqueue thread-safety regression
+      * Don't set artificial 0-timestamp on first packet for TIME-based live sources
+      * Otherwise identical to the previous release (0.10.33)
+
+Bugs fixed since 0.10.33:
+
+      * 649369 : basesrc: do not set first buffer timestamp to 0 for live sources
+      * 649878 : multiqueue regression: gst_single_queue_new not MT-safe
 
 Changes since 0.10.32:
 

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.33 "Prior Spaceflight Experience is an Advantage"
+Release notes for GStreamer 0.10.34 "Misfits"
         
 
 
@@ -37,160 +37,14 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * atomicqueue: add an atomic/lock-free queue structure based
-      * bufferlist: improve _add*() performance
-      * bus: in _add_watch() honour any per-thread default main context set via g_main_thread_push_thread_default()
-      * caps: new gst_caps_intersect_full() to intersect in different modes
-      * clock: add functions to re-init existing periodic GstClockIDs
-      * event: add QoS type (overflow, underflow, throttle) for QoS events
-      * ghostpad: The internally linked pad of the proxypad is the ghostpad
-      * gstpoll: retry reading the control socket to release properly all wakeups
-      * message: new progress message API for asynchronous operations
-      * pad: unlock before freeing the pad cache to avoid deadlock
-      * pad: better handling for when parent goes away during data/query/event flow
-      * parse-launch: allow element names to begin with digits
-      * pluginloader: call gst-plugin-scanner with the right arch on OSX, fixing hangs with firefox
-      * registry: fixes elements (features) disappearing if a plugin or plugin file is renamed
-      * structure: Add "(date)" as a type abbreviation of GDate
-      * structure: Don't allow invalid GDates in all structures and don't allow NULL GDates in taglists
-      * taglist: add a new "encoded-by" tag
-      * uri: add gst_filename_to_uri() that takes relative filenames
-      * utils: add gst_element_factory_can_{src|sink}_{any|all}_caps() to replace can_{sink,src}_caps()
-      * baseparse: new GstBaseParse class for parsers
-      * basesink: improve rate, duration, and average duration calculation
-      * basesink: use new QoS types and add add "throttle-time" property
-      * basesrc: Handle tag and custom downstream events the same
-      * basesrc: keep downstream caps order when fixating, to honour downstream preferences when negotiating
-      * basesrc: Return FALSE if we don't handle an event
-      * basesrc: Send synchronized custom downstream/both events downstream from the streaming thread
-      * basetransform: Be smarter with pad allocs
-      * basetransform: Check for pad alloc caps when suggestion is not fixed
-      * basetransform: Retain caps order when getting caps, to honour downstream preferences when negotiating
-      * funnel: new N-to-1 pipe fitting element imported from farsight
-      * fakesink: print buffer flags
-      * filesink: Fix escaping of URIs
-      * file{sink,src}: Check if non-URI characters are escaped, but only for the URI not the location property
-      * filesrc, filesink: fix URI creation regression for non-absolute locations
-      * filesrc: Fix escaping of file uris
-      * inputselector: Hold the selector lock while reading properties of the active pad
-      * inputselector: Make sure that EOS is always sent downstream for the active pad
-      * inputselector: Return GST_FLOW_OK until the selected pad pushed something downstream
-      * inputselector: Stop waiting for a pad switch when the pad is flushing
-      * multiqueue: fix some potential corner-case deadlocks and some leaks
-      * multiqueue: handle arbitrary sink + source pad naming
-      * queue2: don't read beyond the end of file upstream in pull mode; leak fixes
-      * plugins: make query and event functions more thread-safe, protect against parent-pad disappearing
-      * gst-launch: add GstIndex support
+      * Fix multiqueue thread-safety regression
+      * Don't set artificial 0-timestamp on first packet for TIME-based live sources
+      * Otherwise identical to the previous release (0.10.33)
 
 Bugs fixed in this release
      
-      * 642356 : [Index] review api and add an example
-      * 402141 : gst_element_factory_can_{sink,src}_caps seems to be broken
-      * 518857 : [API] GstBaseParse: new base class for parsers
-      * 604094 : registry: do not remove features when removing a cached plugin that no longer is present
-      * 615357 : [macosx] Handle multi-arch plugin-scanner
-      * 617045 : [caps] New method for intersecting caps while retaining order
-      * 639674 : parse-launch: improve parsing resilience (for escapes at end of string)
-      * 639962 : design docs: Fix a few typos and a think
-      * 640071 : pluginloader: do not leak the description string of blacklisted plugin
-      * 640437 : design docs: fix 2 typos in part-MT-refcounting
-      * 640502 : fix a few typos
-      * 640622 : gst_element_link_pads_full function return wrong error information
-      * 640675 : high cpu-load with 0.10.32 release
-      * 640850 : GstElement: Fix warning with GCC 4.6
-      * 641212 : gst-uninstalled: use $GST_PREFIX variable
-      * 641928 : gst_pad_push fast path races with pad deactivation
-      * 642071 : Incorrect comparing of number of source and sink links when parsing a launch string
-      * 642130 : [basetransform] Check for pad alloc caps when suggestion is not fixed
-      * 642271 : crash in gst_caps_structure_intersect, encoder_match_media_type
-      * 642373 : [basetransform] Avoid too may pad allocs
-      * 642393 : [filesrc] Fails setting the same uri it's setting in the uri queries.
-      * 642504 : [mingw/cygwin build] correctly export plugin description
-      * 642522 : gstvalue.c does not include a deserialize function for uchar
-      * 642869 : gst_index_new: documentation typo
-      * 643301 : Adding a buffer to a buffer list iterates the list
-      * 643455 : [regression] Lots of dropouts in Empathy voip calls
-      * 644935 : [inputselector] During switching of streams it can happen that all pads returned not-linked last
-      * 645022 : GstTask: typo in GST_TASK_BROADCAST - g_cond_breadcast should probably be g_cond_broadcast
-      * 645267 : build: fix build with -Werror with GCC 4.6.0
-      * 645595 : bytereader, bytewriter: fix warnings when using inline functions with g++
-      * 645746 : [gstpoll] Regression causes 100% cpu usage in multifdsink
-      * 645877 : commit 14d7db1 causes cpu spinning and other bus weirdness
-      * 645931 : [gstmultiqueue] fix arbitrary sink + source pad naming
-      * 646118 : [gstmultiqueue] if arbitrary sink number is specified by caller, use this as single queue id
-      * 646341 : [baseparse] Add a queued flow return so parsers can keep frames in a queue
-      * 646531 : GST_BOILERPLATE: don't use " type " as both a variable name and a macro argument
-      * 646566 : Protect against Pad-Parent disappearing
-      * 646569 : poll: don't call WSAWaitForMultipleEvents with no events
-      * 646624 : GstBin: regression: creating too many bins fails, exhausting allowed file descriptor limit
-      * 646811 : baseparse: deadlock in gst_base_parse_set_index
-      * 646971 : iterator: resync to avoid infinite loop
-      * 647005 : GstBus: Only create the socketpair for async message delivery if required
-      * 647131 : recent multiqueue changes break DVD playback (again)
-      * 647293 : Fix pad callbacks so they handle when parent goes away
-      * 647763 : [bus] Bus is leaked if a watch is installed in the default main context
-      * 647844 : baseparse: Remove unused but set variable
-      * 647922 : [introspection] Needs to call gst_init() before anything else
-      * 648199 : pad: potential deadlock / crash when freeing cache
-      * 648215 : basetransform: unref in wrong place
-      * 648220 : Regression: videoscale fails to negotiate for PAR transformation
-      * 648297 : [bus] regression: critical assertion failure
-      * 649195 : [miniobject] Fix dup_mini_object function to handle NULL gvalues
-      * 635718 : [basesrc] custom, non-OOB events aren't pushed downstream
-      * 625396 : gst_debug_remove_log_function doesn't remove default log handler
-      * 640771 : amarok doesn't start with new phonon gstreamer
-      * 646972 : queue2: Fixes memory leak on out_flushing error in gst_queue2_create_read
-      * 640665 : basesink: drops too many buffers when there's no duration
-
-API changed in this release
-     
-- API additions:
-    
-      * gst_atomic_queue_length()
-      * gst_atomic_queue_new()
-      * gst_atomic_queue_peek()
-      * gst_atomic_queue_pop()
-      * gst_atomic_queue_push()
-      * gst_atomic_queue_ref()
-      * gst_atomic_queue_unref()
-      * gst_buffer_list_iterator_get_type()
-      * gst_caps_intersect_full()
-      * gst_caps_intersect_mode_get_type()
-      * gst_clock_periodic_id_reinit()
-      * gst_element_factory_can_sink_all_caps()
-      * gst_element_factory_can_sink_any_caps()
-      * gst_element_factory_can_src_all_caps()
-      * gst_element_factory_can_src_any_caps()
-      * gst_event_new_qos_full()
-      * gst_event_parse_qos_full()
-      * gst_filename_to_uri()
-      * gst_message_new_progress()
-      * gst_message_parse_progress()
-      * gst_parse_context_get_type()
-      * gst_progress_type_get_type()
-      * gst_qos_type_get_type()
-      * GST_TAG_ENCODED_BY
-      * gst_base_parse_add_index_entry()
-      * gst_base_parse_convert_default()
-      * gst_base_parse_frame_free()
-      * gst_base_parse_frame_get_type()
-      * gst_base_parse_frame_init()
-      * gst_base_parse_frame_new()
-      * gst_base_parse_get_type()
-      * gst_base_parse_push_frame()
-      * gst_base_parse_set_average_bitrate()
-      * gst_base_parse_set_duration()
-      * gst_base_parse_set_frame_rate()
-      * gst_base_parse_set_has_timing_info()
-      * gst_base_parse_set_min_frame_size()
-      * gst_base_parse_set_passthrough()
-      * gst_base_parse_set_syncable()
-      * gst_base_sink_get_throttle_time()
-      * gst_base_sink_set_throttle_time()
-- API deprecations:
-    
-      * gst_element_factory_can_src_caps()
-      * gst_element_factory_can_sink_caps()
+      * 649369 : basesrc: do not set first buffer timestamp to 0 for live sources
+      * 649878 : [multiqueue] regression: gst_single_queue_new not MT-safe
 
 Download
 
@@ -224,49 +78,6 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Andoni Morales Alastruey
-      * Andreas Frisch
-      * Arun Raghavan
-      * Bastien Nocera
-      * Cai Yuanqing
-      * Chen Rui
-      * Daniel Macks
-      * David Schleef
-      * Edward Hervey
-      * Fraxinas
-      * Havard Graff
-      * Idar Tollefsen
-      * Jan Schmidt
-      * Janne Grunau
-      * Jason D. Clinton
-      * Jonas Holmberg
-      * Jonathan Matthew
-      * Josep Torra
-      * Joshua M. Doe
-      * Julien Moutte
-      * Luis de Bethencourt
       * Mark Nauwelaerts
-      * Mart Raudsepp
-      * Michael Smith
-      * Miguel Angel Cabrera Moya
-      * Ole André Vadla Ravnås
-      * Olivier Crête
-      * Peter Collingbourne
-      * Philip Jägenstedt
-      * René Stadler
-      * Robert Swain
-      * Sebastian Dröge
-      * Sreerenj Balachandran
-      * Stefan Kost
-      * Stian Selnes
-      * Thiago Santos
-      * Thijs Vermeir
-      * Thomas Kristensen
-      * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Wim Taymans
-      * Yang Xichuan
-      * Zaheer Abbas Merali
-      * Zhang Wanming
  

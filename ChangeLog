@@ -1,9 +1,85 @@
-=== release 0.10.33 ===
+=== release 0.10.34 ===
 
-2011-05-10  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2011-05-14  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.33, "Prior Spaceflight Experience is an Advantage"
+	  releasing 0.10.34, "Misfits"
+
+2011-05-04 15:31:56 +0300  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: do not set first buffer timestamp to 0 for live sources
+	  Doing so avoids a large timestamp gap between first and second buffer
+	  for live sources which take time to start up.
+	  The first buffer now has a "live" timestamp based on the running time,
+	  as other buffers do.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=649369
+
+2011-05-10 11:11:15 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: ensure thread safety when adding a pad
+	  This seems to be a regression, and was causing crashes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=649878
+
+=== release 0.10.33 ===
+
+2011-05-10 08:55:10 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* docs/plugins/inspect/plugin-coreindexers.xml:
+	* gstreamer.doap:
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 0.10.33
+	  Highlights:
+	  - new parser base class: GstBaseParse
+	  - new core element: funnel
+	  - OSX multi-arch fixes
+	  - new QoS type for QoS events
+	  - new progress message API to notify applications of asynchronous operations
+	  - countless other fixes and improvements
 
 2011-05-06 23:40:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
