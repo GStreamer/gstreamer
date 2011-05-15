@@ -33,13 +33,11 @@
 GST_DEBUG_CATEGORY (h264_parse_debug);
 #define GST_CAT_DEFAULT h264_parse_debug
 
-#define DEFAULT_SPLIT_PACKETIZED     FALSE
 #define DEFAULT_CONFIG_INTERVAL      (0)
 
 enum
 {
   PROP_0,
-  PROP_SPLIT_PACKETIZED,
   PROP_CONFIG_INTERVAL,
   PROP_LAST
 };
@@ -118,10 +116,6 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
   gobject_class->set_property = gst_h264_parse_set_property;
   gobject_class->get_property = gst_h264_parse_get_property;
 
-  g_object_class_install_property (gobject_class, PROP_SPLIT_PACKETIZED,
-      g_param_spec_boolean ("split-packetized", "Split packetized",
-          "Split NAL units of packetized streams", DEFAULT_SPLIT_PACKETIZED,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CONFIG_INTERVAL,
       g_param_spec_uint ("config-interval",
           "SPS PPS Send Interval",
@@ -252,6 +246,40 @@ gst_h264_parse_get_string (GstH264Parse * parse, gboolean format, gint code)
   }
 }
 
+static void
+gst_h264_parse_format_from_caps (GstCaps * caps, guint * format, guint * align)
+{
+
+  if (format)
+    *format = GST_H264_PARSE_FORMAT_NONE;
+
+  if (align)
+    *align = GST_H264_PARSE_ALIGN_NONE;
+
+  if (caps && gst_caps_get_size (caps) > 0) {
+    GstStructure *s = gst_caps_get_structure (caps, 0);
+    const gchar *str = NULL;
+
+    if (format) {
+      if ((str = gst_structure_get_string (s, "stream-format"))) {
+        if (strcmp (str, "avc") == 0)
+          *format = GST_H264_PARSE_FORMAT_AVC;
+        else if (strcmp (str, "byte-stream") == 0)
+          *format = GST_H264_PARSE_FORMAT_BYTE;
+      }
+    }
+
+    if (align) {
+      if ((str = gst_structure_get_string (s, "alignment"))) {
+        if (strcmp (str, "au") == 0)
+          *align = GST_H264_PARSE_ALIGN_AU;
+        else if (strcmp (str, "nal") == 0)
+          *align = GST_H264_PARSE_ALIGN_NAL;
+      }
+    }
+  }
+}
+
 /* check downstream caps to configure format and alignment */
 static void
 gst_h264_parse_negotiate (GstH264Parse * h264parse)
@@ -263,30 +291,7 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse)
   caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
   GST_DEBUG_OBJECT (h264parse, "allowed caps: %" GST_PTR_FORMAT, caps);
 
-  if (caps && gst_caps_get_size (caps) > 0) {
-    GstStructure *s = gst_caps_get_structure (caps, 0);
-    const gchar *str = NULL;
-
-    if ((str = gst_structure_get_string (s, "stream-format"))) {
-      if (strcmp (str, "avc") == 0) {
-        format = GST_H264_PARSE_FORMAT_AVC;
-      } else if (strcmp (str, "byte-stream") == 0) {
-        format = GST_H264_PARSE_FORMAT_BYTE;
-      } else {
-        GST_DEBUG_OBJECT (h264parse, "unknown stream-format: %s", str);
-      }
-    }
-
-    if ((str = gst_structure_get_string (s, "alignment"))) {
-      if (strcmp (str, "au") == 0) {
-        align = GST_H264_PARSE_ALIGN_AU;
-      } else if (strcmp (str, "nal") == 0) {
-        align = GST_H264_PARSE_ALIGN_NAL;
-      } else {
-        GST_DEBUG_OBJECT (h264parse, "unknown alignment: %s", str);
-      }
-    }
-  }
+  gst_h264_parse_format_from_caps (caps, &format, &align);
 
   if (caps)
     gst_caps_unref (caps);
@@ -662,10 +667,10 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
 }
 
 static void
-gst_h264_parse_update_src_caps (GstH264Parse * h264parse)
+gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 {
   GstH264ParamsSPS *sps;
-  GstCaps *caps = NULL, *sink_caps;
+  GstCaps *sink_caps;
   gboolean modified = FALSE;
   GstBuffer *buf = NULL;
 
@@ -674,8 +679,14 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse)
   else if (G_UNLIKELY (!h264parse->update_caps))
     return;
 
+  /* if this is being called from the first _setcaps call, caps on the sinkpad
+   * aren't set yet and so they need to be passed as an argument */
+  if (caps)
+    sink_caps = caps;
+  else
+    sink_caps = GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (h264parse));
+
   /* carry over input caps as much as possible; override with our own stuff */
-  sink_caps = GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (h264parse));
   if (sink_caps)
     gst_caps_ref (sink_caps);
   else
@@ -700,6 +711,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse)
     }
   }
 
+  caps = NULL;
   if (G_UNLIKELY (!sps)) {
     caps = gst_caps_copy (sink_caps);
   } else if (G_UNLIKELY (h264parse->width != sps->width ||
@@ -759,7 +771,7 @@ gst_h264_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   h264parse = GST_H264_PARSE (parse);
   buffer = frame->buffer;
 
-  gst_h264_parse_update_src_caps (h264parse);
+  gst_h264_parse_update_src_caps (h264parse, NULL);
 
   gst_h264_params_get_timestamp (h264parse->params,
       &GST_BUFFER_TIMESTAMP (buffer), &GST_BUFFER_DURATION (buffer),
@@ -921,8 +933,8 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   GstH264Parse *h264parse;
   GstStructure *str;
   const GValue *value;
-  GstBuffer *buffer = NULL;
-  guint size;
+  GstBuffer *codec_data = NULL;
+  guint size, format, align;
 
   h264parse = GST_H264_PARSE (parse);
 
@@ -947,11 +959,11 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     /* make note for optional split processing */
     h264parse->packetized = TRUE;
 
-    buffer = gst_value_get_buffer (value);
-    if (!buffer)
+    codec_data = gst_value_get_buffer (value);
+    if (!codec_data)
       goto wrong_type;
-    data = GST_BUFFER_DATA (buffer);
-    size = GST_BUFFER_SIZE (buffer);
+    data = GST_BUFFER_DATA (codec_data);
+    size = GST_BUFFER_SIZE (codec_data);
 
     /* parse the avcC data */
     if (size < 7)
@@ -996,6 +1008,8 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       data += len + 2;
       size -= len + 2;
     }
+
+    h264parse->codec_data = gst_buffer_ref (codec_data);
   } else {
     GST_DEBUG_OBJECT (h264parse, "have bytestream h264");
     /* nothing to pre-process */
@@ -1004,32 +1018,35 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     h264parse->nal_length_size = 4;
   }
 
-  if (h264parse->packetized) {
-    if (h264parse->split_packetized) {
-      GST_DEBUG_OBJECT (h264parse,
-          "converting AVC to nal bytestream prior to parsing");
-      /* negotiate behaviour with upstream */
-      gst_h264_parse_negotiate (h264parse);
-      if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
-        /* arrange to insert codec-data in-stream if needed */
-        h264parse->push_codec = h264parse->packetized;
-      }
-      gst_base_parse_set_passthrough (parse, FALSE);
-    } else {
-      GST_DEBUG_OBJECT (h264parse, "passing on packetized AVC");
-      /* no choice to negotiate */
-      h264parse->format = GST_H264_PARSE_FORMAT_AVC;
-      h264parse->align = GST_H264_PARSE_ALIGN_AU;
-      /* fallback codec-data */
-      h264parse->codec_data = gst_buffer_ref (buffer);
-      /* pass through unharmed, though _chain will parse a bit */
-      gst_base_parse_set_passthrough (parse, TRUE);
-      /* we did parse codec-data and might supplement src caps */
-      gst_h264_parse_update_src_caps (h264parse);
-    }
+  /* negotiate with downstream, sets ->format and ->align */
+  gst_h264_parse_negotiate (h264parse);
+
+  /* get upstream format and align from caps */
+  gst_h264_parse_format_from_caps (caps, &format, &align);
+
+  /* if upstream sets codec_data without setting stream-format and alignment, we
+   * assume stream-format=avc,alignment=au */
+  if (format == GST_H264_PARSE_FORMAT_NONE) {
+    if (codec_data == NULL)
+      goto unknown_input_format;
+
+    format = GST_H264_PARSE_FORMAT_AVC;
+    align = GST_H264_PARSE_ALIGN_AU;
   }
 
-  /* src caps are only arranged for later on */
+  if (format == h264parse->format && align == h264parse->align) {
+    gst_base_parse_set_passthrough (parse, TRUE);
+
+    /* we did parse codec-data and might supplement src caps */
+    gst_h264_parse_update_src_caps (h264parse, caps);
+  } else if (format == GST_H264_PARSE_FORMAT_AVC &&
+      h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+    /* arrange to insert codec-data in-stream if needed.
+     * src caps are only arranged for later on */
+    h264parse->push_codec = TRUE;
+    h264parse->split_packetized = TRUE;
+  }
+
   return TRUE;
 
   /* ERRORS */
@@ -1046,6 +1063,11 @@ wrong_version:
 wrong_type:
   {
     GST_DEBUG_OBJECT (h264parse, "wrong codec-data type");
+    goto refuse_caps;
+  }
+unknown_input_format:
+  {
+    GST_DEBUG_OBJECT (h264parse, "unknown stream-format and no codec_data");
     goto refuse_caps;
   }
 refuse_caps:
@@ -1155,9 +1177,6 @@ gst_h264_parse_set_property (GObject * object, guint prop_id,
   parse = GST_H264_PARSE (object);
 
   switch (prop_id) {
-    case PROP_SPLIT_PACKETIZED:
-      parse->split_packetized = g_value_get_boolean (value);
-      break;
     case PROP_CONFIG_INTERVAL:
       parse->interval = g_value_get_uint (value);
       break;
@@ -1176,9 +1195,6 @@ gst_h264_parse_get_property (GObject * object, guint prop_id, GValue * value,
   parse = GST_H264_PARSE (object);
 
   switch (prop_id) {
-    case PROP_SPLIT_PACKETIZED:
-      g_value_set_boolean (value, parse->split_packetized);
-      break;
     case PROP_CONFIG_INTERVAL:
       g_value_set_uint (value, parse->interval);
       break;
