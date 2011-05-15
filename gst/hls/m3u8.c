@@ -104,20 +104,28 @@ static gboolean
 int_from_string (gchar * ptr, gchar ** endptr, gint * val)
 {
   gchar *end;
+  glong ret;
 
   g_return_val_if_fail (ptr != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
   errno = 0;
-  *val = strtol (ptr, &end, 10);
-  if ((errno == ERANGE && (*val == LONG_MAX || *val == LONG_MIN))
-      || (errno != 0 && *val == 0)) {
+  ret = strtol (ptr, &end, 10);
+  if ((errno == ERANGE && (ret == LONG_MAX || ret == LONG_MIN))
+      || (errno != 0 && ret == 0)) {
     GST_WARNING ("%s", g_strerror (errno));
+    return FALSE;
+  }
+
+  if (ret > G_MAXINT) {
+    GST_WARNING ("%s", g_strerror (ERANGE));
     return FALSE;
   }
 
   if (endptr)
     *endptr = end;
+
+  *val = (gint) ret;
 
   return end != ptr;
 }
