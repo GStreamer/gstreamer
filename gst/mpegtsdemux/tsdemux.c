@@ -530,7 +530,7 @@ gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
   GstTSDemux *demux = (GstTSDemux *) base;
   GstFlowReturn res = GST_FLOW_ERROR;
   gboolean done = FALSE;
-  gboolean found_keyframe = FALSE, found_accurate = FALSE;
+  gboolean found_keyframe = FALSE, found_accurate = FALSE, need_more = TRUE;
   GstBuffer *buf;
   MpegTSPacketizerPacket packet;
   MpegTSPacketizerPacketReturn pret;
@@ -590,17 +590,19 @@ gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
             goto next;
           /* reset state for new packet */
           state = 0xffffffff;
+          need_more = TRUE;
         }
 
         if (auxiliary_seek_fn) {
-          gboolean is_keyframe = auxiliary_seek_fn (&state, &packet);
-          if (is_keyframe) {
-            found_keyframe = TRUE;
-            key_pos = *pcroffset;
-            GST_DEBUG ("found keyframe: time: %" GST_TIME_FORMAT " pcr: %"
-                GST_TIME_FORMAT " offset %" G_GINT64_FORMAT,
-                GST_TIME_ARGS (pcroffset->gsttime),
-                GST_TIME_ARGS (pcroffset->pcr), pcroffset->offset);
+          if (need_more) {
+            if (auxiliary_seek_fn (&state, &packet, &need_more)) {
+              found_keyframe = TRUE;
+              key_pos = *pcroffset;
+              GST_DEBUG ("found keyframe: time: %" GST_TIME_FORMAT " pcr: %"
+                  GST_TIME_FORMAT " offset %" G_GINT64_FORMAT,
+                  GST_TIME_ARGS (pcroffset->gsttime),
+                  GST_TIME_ARGS (pcroffset->pcr), pcroffset->offset);
+            }
           }
         } else {
           /* if we don't have a payload parsing function

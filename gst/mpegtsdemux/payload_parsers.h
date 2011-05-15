@@ -23,10 +23,14 @@
 
 #include "mpegtspacketizer.h"
 
-typedef gboolean (*payload_parse_keyframe) (guint32 *state, MpegTSPacketizerPacket * packet);
+typedef gboolean (*payload_parse_keyframe) (guint32 *state,
+					    MpegTSPacketizerPacket * packet,
+					    gboolean *need_more);
 
-gboolean
-gst_tsdemux_has_mpeg2_keyframe (guint32 *state, MpegTSPacketizerPacket * packet);
+gboolean gst_tsdemux_has_mpeg2_keyframe (guint32 *state,
+					 MpegTSPacketizerPacket * packet,
+					 gboolean *need_more);
 
-gboolean
-gst_tsdemux_has_h264_keyframe (guint32 *state, MpegTSPacketizerPacket * packet);
+gboolean gst_tsdemux_has_h264_keyframe (guint32 *state,
+					MpegTSPacketizerPacket * packet,
+					gboolean *need_more);

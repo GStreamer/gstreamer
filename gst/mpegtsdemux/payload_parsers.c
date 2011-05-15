@@ -103,7 +103,7 @@ parse_mpeg2_picture_header (Mpeg2PictureHeader * hdr, guint8 * buffer,
 
 gboolean
 gst_tsdemux_has_mpeg2_keyframe (guint32 * state,
-    MpegTSPacketizerPacket * packet)
+    MpegTSPacketizerPacket * packet, gboolean * need_more)
 {
   guint8 *data = packet->payload;
   guint8 *data_end = packet->data_end;
@@ -122,6 +122,7 @@ gst_tsdemux_has_mpeg2_keyframe (guint32 * state,
     if (*state == GROUP_START_CODE) {
       GST_DEBUG ("found group start code");
       *state = 0xffffffff;
+      *need_more = FALSE;
       return TRUE;
     } else if (*state == PICTURE_START_CODE) {
       Mpeg2PictureHeader hdr = { 0 };
@@ -132,6 +133,7 @@ gst_tsdemux_has_mpeg2_keyframe (guint32 * state,
           success ? "" : "not ", hdr.picture_coding_type);
 
       *state = 0xffffffff;
+      *need_more = FALSE;
       return success && hdr.picture_coding_type == 1;
     }
   }
@@ -210,7 +212,8 @@ is_key_slice (guint8 slice_type)
 }
 
 gboolean
-gst_tsdemux_has_h264_keyframe (guint32 * state, MpegTSPacketizerPacket * packet)
+gst_tsdemux_has_h264_keyframe (guint32 * state, MpegTSPacketizerPacket * packet,
+    gboolean * need_more)
 {
   guint8 *data = packet->payload;
   guint8 *data_end = packet->data_end;
@@ -243,6 +246,7 @@ gst_tsdemux_has_h264_keyframe (guint32 * state, MpegTSPacketizerPacket * packet)
       case SLICE_IDR_NAL_UNIT_TYPE:
         GST_DEBUG ("found SLICE_IDR NAL unit type");
         *state = 0xffffffff;
+        *need_more = FALSE;
         return TRUE;
       case SLICE_NAL_UNIT_TYPE:
       {
@@ -254,6 +258,7 @@ gst_tsdemux_has_h264_keyframe (guint32 * state, MpegTSPacketizerPacket * packet)
             hdr.slice_type);
 
         *state = 0xffffffff;
+        *need_more = FALSE;
         return success && is_key_slice (hdr.slice_type);
       }
       case SEI_NAL_UNIT_TYPE:
