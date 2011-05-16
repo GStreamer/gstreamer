@@ -2715,7 +2715,7 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
   gboolean res = TRUE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (caps == NULL || gst_caps_is_fixed (caps), FALSE);
+  g_return_val_if_fail (caps != NULL && gst_caps_is_fixed (caps), FALSE);
 
   event = gst_event_new_caps (caps);
 
