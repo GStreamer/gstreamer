@@ -180,7 +180,7 @@ static GstFlowReturn gst_app_sink_render (GstBaseSink * psink,
     GstBuffer * buffer);
 static GstFlowReturn gst_app_sink_render_list (GstBaseSink * psink,
     GstBufferList * list);
-static GstCaps *gst_app_sink_getcaps (GstBaseSink * psink);
+static GstCaps *gst_app_sink_getcaps (GstBaseSink * psink, GstCaps * filter);
 static GstMiniObject *gst_app_sink_pull_object (GstAppSink * appsink);
 
 static guint gst_app_sink_signals[LAST_SIGNAL] = { 0 };
@@ -846,15 +846,19 @@ gst_app_sink_render_list (GstBaseSink * sink, GstBufferList * list)
 }
 
 static GstCaps *
-gst_app_sink_getcaps (GstBaseSink * psink)
+gst_app_sink_getcaps (GstBaseSink * psink, GstCaps * filter)
 {
   GstCaps *caps;
   GstAppSink *appsink = GST_APP_SINK_CAST (psink);
   GstAppSinkPrivate *priv = appsink->priv;
 
   GST_OBJECT_LOCK (appsink);
-  if ((caps = priv->caps))
-    gst_caps_ref (caps);
+  if ((caps = priv->caps)) {
+    if (filter)
+      caps = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    else
+      gst_caps_ref (caps);
+  }
   GST_DEBUG_OBJECT (appsink, "got caps %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (appsink);
 
