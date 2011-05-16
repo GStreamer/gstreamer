@@ -65,6 +65,22 @@ typedef void (*GstMiniObjectDisposeFunction) (GstMiniObject *obj);
  */
 typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
 
+ /**
+ * GstMiniObjectWeakNotify:
+ * @data: data that was provided when the weak reference was established
+ * @where_the_mini_object_was: the mini object being finalized
+ * 
+ * A #GstMiniObjectWeakNotify function can be added to a mini object as a
+ * callback that gets triggered when the mini object is finalized. Since the
+ * mini object is already being finalized when the #GstMiniObjectWeakNotify is
+ * called, there's not much you could do with the object, apart from e.g. using
+ * its adress as hash-index or the like.
+ *
+ * Since: 0.10.35
+ */
+typedef void (*GstMiniObjectWeakNotify) (gpointer data,
+    GstMiniObject * where_the_mini_object_was);
+
 /**
  * GST_MINI_OBJECT_FLAGS:
  * @obj: MiniObject to return flags for.
@@ -165,6 +181,15 @@ struct _GstMiniObject {
   GstMiniObjectCopyFunction copy;
   GstMiniObjectDisposeFunction dispose;
   GstMiniObjectFreeFunction free;
+
+  /* < private > */
+  /* Used to keep track of weak ref notifies */
+  guint n_weak_refs;
+  struct
+  {
+    GstMiniObjectWeakNotify notify;
+    gpointer data;
+  } *weak_refs;
 };
 
 GType           gst_mini_object_register        (const gchar *name);
@@ -179,6 +204,13 @@ GstMiniObject*  gst_mini_object_make_writable	(GstMiniObject *mini_object);
 /* refcounting */
 GstMiniObject*	gst_mini_object_ref		(GstMiniObject *mini_object);
 void		gst_mini_object_unref		(GstMiniObject *mini_object);
+
+void	        gst_mini_object_weak_ref        (GstMiniObject *object,
+					         GstMiniObjectWeakNotify notify,
+					         gpointer data);
+void	        gst_mini_object_weak_unref	(GstMiniObject *object,
+					         GstMiniObjectWeakNotify notify,
+					         gpointer data);
 
 void		gst_mini_object_replace         (GstMiniObject **olddata, GstMiniObject *newdata);
 

@@ -40,6 +40,28 @@ hierarchy, and a set of media-agnostic core elements.
 
  <release>
   <Version>
+   <revision>0.10.34</revision>
+   <branch>0.10</branch>
+   <name>Misfits</name>
+   <created>2011-05-13</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.34.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.34.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.33</revision>
+   <branch>0.10</branch>
+   <name>Prior Spaceflight Experience is an Advantage</name>
+   <created>2011-05-10</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.33.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.33.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.32</revision>
    <branch>0.10</branch>
    <name>Take Me to the Bonus Level</name>

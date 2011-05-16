@@ -45,8 +45,8 @@
 static GstAllocTrace *_gst_mini_object_trace;
 #endif
 
-#define GST_MINI_OBJECT_GET_CLASS_UNCHECKED(obj) \
-    ((GstMiniObjectClass *) (((GTypeInstance*)(obj))->g_class))
+/* Mutex used for weak referencing */
+G_LOCK_DEFINE_STATIC (weak_refs_mutex);
 
 /* boxed copy and free functions. Don't real copy or free but simply
  * change the refcount */
@@ -109,6 +109,8 @@ gst_mini_object_init (GstMiniObject * mini_object, GType type, gsize size)
   mini_object->refcount = 1;
   mini_object->flags = 0;
   mini_object->size = size;
+  mini_object->n_weak_refs = 0;
+  mini_object->weak_refs = NULL;
 }
 
 /**
@@ -223,6 +225,16 @@ gst_mini_object_ref (GstMiniObject * mini_object)
   return mini_object;
 }
 
+static void
+weak_refs_notify (GstMiniObject * obj)
+{
+  guint i;
+
+  for (i = 0; i < obj->n_weak_refs; i++)
+    obj->weak_refs[i].notify (obj->weak_refs[i].data, obj);
+  g_free (obj->weak_refs);
+}
+
 /**
  * gst_mini_object_unref:
  * @mini_object: the mini-object
@@ -253,6 +265,10 @@ gst_mini_object_unref (GstMiniObject * mini_object)
     /* decrement the refcount again, if the subclass recycled the object we don't
      * want to free the instance anymore */
     if (G_LIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
+      /* The weak reference stack is freed in the notification function */
+      if (mini_object->n_weak_refs)
+        weak_refs_notify (mini_object);
+
 #ifndef GST_DISABLE_TRACE
       gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
 #endif
@@ -298,4 +314,96 @@ gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
 
   if (olddata_val)
     gst_mini_object_unref (olddata_val);
+}
+
+/**
+ * gst_mini_object_weak_ref: (skip)
+ * @mini_object: #GstMiniObject to reference weakly
+ * @notify: callback to invoke before the mini object is freed
+ * @data: extra data to pass to notify
+ *
+ * Adds a weak reference callback to a mini object. Weak references are
+ * used for notification when a mini object is finalized. They are called
+ * "weak references" because they allow you to safely hold a pointer
+ * to the mini object without calling gst_mini_object_ref()
+ * (gst_mini_object_ref() adds a strong reference, that is, forces the object
+ * to stay alive).
+ *
+ * Since: 0.10.35
+ */
+void
+gst_mini_object_weak_ref (GstMiniObject * object,
+    GstMiniObjectWeakNotify notify, gpointer data)
+{
+  guint i;
+
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (notify != NULL);
+  g_return_if_fail (GST_MINI_OBJECT_REFCOUNT_VALUE (object) >= 1);
+
+  G_LOCK (weak_refs_mutex);
+
+  if (object->n_weak_refs) {
+    /* Don't add the weak reference if it already exists. */
+    for (i = 0; i < object->n_weak_refs; i++) {
+      if (object->weak_refs[i].notify == notify &&
+          object->weak_refs[i].data == data) {
+        g_warning ("%s: Attempt to re-add existing weak ref %p(%p) failed.",
+            G_STRFUNC, notify, data);
+        goto found;
+      }
+    }
+
+    i = object->n_weak_refs++;
+    object->weak_refs =
+        g_realloc (object->weak_refs, sizeof (object->weak_refs[0]) * i);
+  } else {
+    object->weak_refs = g_malloc0 (sizeof (object->weak_refs[0]));
+    object->n_weak_refs = 1;
+    i = 0;
+  }
+  object->weak_refs[i].notify = notify;
+  object->weak_refs[i].data = data;
+found:
+  G_UNLOCK (weak_refs_mutex);
+}
+
+/**
+ * gst_mini_object_weak_unref: (skip)
+ * @mini_object: #GstMiniObject to remove a weak reference from
+ * @notify: callback to search for
+ * @data: data to search for
+ *
+ * Removes a weak reference callback to a mini object.
+ *
+ * Since: 0.10.35
+ */
+void
+gst_mini_object_weak_unref (GstMiniObject * object,
+    GstMiniObjectWeakNotify notify, gpointer data)
+{
+  gboolean found_one = FALSE;
+
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (notify != NULL);
+
+  G_LOCK (weak_refs_mutex);
+
+  if (object->n_weak_refs) {
+    guint i;
+
+    for (i = 0; i < object->n_weak_refs; i++)
+      if (object->weak_refs[i].notify == notify &&
+          object->weak_refs[i].data == data) {
+        found_one = TRUE;
+        object->n_weak_refs -= 1;
+        if (i != object->n_weak_refs)
+          object->weak_refs[i] = object->weak_refs[object->n_weak_refs];
+
+        break;
+      }
+  }
+  G_UNLOCK (weak_refs_mutex);
+  if (!found_one)
+    g_warning ("%s: couldn't find weak ref %p(%p)", G_STRFUNC, notify, data);
 }

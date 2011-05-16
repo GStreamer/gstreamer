@@ -597,6 +597,7 @@ struct _GstElement
  * @get_query_types: get the supported #GstQueryType of this element
  * @query: perform a #GstQuery on the element
  * @request_new_pad_full: called when a new pad is requested. Since: 0.10.32.
+ * @state_changed: called immediately after a new state was set. Since: 0.10.35.
  *
  * GStreamer element class. Override the vmethods to implement the element
  * functionality.
@@ -636,6 +637,8 @@ struct _GstElementClass
                                                  GstState * pending, GstClockTime timeout);
   GstStateChangeReturn (*set_state)             (GstElement *element, GstState state);
   GstStateChangeReturn (*change_state)          (GstElement *element, GstStateChange transition);
+  void                 (*state_changed)         (GstElement *element, GstState oldstate,
+                                                 GstState newstate, GstState pending);
 
   /* bus */
   void                  (*set_bus)              (GstElement * element, GstBus * bus);

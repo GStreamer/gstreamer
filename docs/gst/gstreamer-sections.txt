@@ -933,14 +933,43 @@ gst_format_get_type
 <SECTION>
 <FILE>gstghostpad</FILE>
 <TITLE>GstGhostPad</TITLE>
+GstProxyPad
 GstGhostPad
+
 gst_ghost_pad_new
 gst_ghost_pad_new_no_target
 gst_ghost_pad_new_from_template
 gst_ghost_pad_new_no_target_from_template
+
 gst_ghost_pad_set_target
 gst_ghost_pad_get_target
+
 gst_ghost_pad_construct
+
+gst_ghost_pad_setcaps_default
+gst_ghost_pad_unlink_default
+gst_ghost_pad_link_default
+gst_ghost_pad_activate_pull_default
+gst_ghost_pad_activate_push_default
+
+gst_ghost_pad_internal_activate_push_default
+gst_ghost_pad_internal_activate_pull_default
+
+gst_proxy_pad_get_internal
+
+gst_proxy_pad_query_type_default
+gst_proxy_pad_event_default
+gst_proxy_pad_query_default
+gst_proxy_pad_iterate_internal_links_default
+gst_proxy_pad_chain_default
+gst_proxy_pad_chain_list_default
+gst_proxy_pad_getrange_default
+gst_proxy_pad_checkgetrange_default
+gst_proxy_pad_getcaps_default
+gst_proxy_pad_acceptcaps_default
+gst_proxy_pad_fixatecaps_default
+gst_proxy_pad_setcaps_default
+gst_proxy_pad_unlink_default
 <SUBSECTION Standard>
 GstGhostPadClass
 GST_GHOST_PAD
@@ -1393,6 +1422,7 @@ GstMiniObjectFlags
 GstMiniObjectCopyFunction
 GstMiniObjectDisposeFunction
 GstMiniObjectFreeFunction
+GstMiniObjectWeakNotify
 
 GST_MINI_OBJECT_TYPE
 GST_MINI_OBJECT_FLAGS
@@ -1412,6 +1442,9 @@ gst_mini_object_make_writable
 
 gst_mini_object_ref
 gst_mini_object_unref
+
+gst_mini_object_weak_ref
+gst_mini_object_weak_unref
 
 gst_mini_object_replace
 
@@ -1539,11 +1572,6 @@ gst_pad_remove_event_probe
 gst_pad_new
 gst_pad_new_from_template
 gst_pad_new_from_static_template
-
-gst_pad_alloc_buffer
-gst_pad_alloc_buffer_and_set_caps
-gst_pad_set_bufferalloc_function
-GstPadBufferAllocFunction
 
 gst_pad_set_chain_function
 GstPadChainFunction

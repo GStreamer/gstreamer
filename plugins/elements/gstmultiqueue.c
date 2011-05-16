@@ -156,6 +156,8 @@ struct _GstSingleQueue
   guint32 nextid;               /* ID of the next object waiting to be pushed */
   guint32 oldid;                /* ID of the last object pushed (last in a series) */
   guint32 last_oldid;           /* Previously observed old_id, reset to MAXUINT32 on flush */
+  GstClockTime next_time;       /* End running time of next buffer to be pushed */
+  GstClockTime last_time;       /* Start running time of last pushed buffer */
   GCond *turn;                  /* SingleQueue turn waiting conditional */
 };
 
@@ -179,6 +181,7 @@ static void gst_single_queue_free (GstSingleQueue * squeue);
 
 static void wake_up_next_non_linked (GstMultiQueue * mq);
 static void compute_high_id (GstMultiQueue * mq);
+static void compute_high_time (GstMultiQueue * mq);
 static void single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 static void single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 
@@ -224,6 +227,7 @@ enum
 #define DEFAULT_USE_BUFFERING FALSE
 #define DEFAULT_LOW_PERCENT   10
 #define DEFAULT_HIGH_PERCENT  99
+#define DEFAULT_SYNC_BY_RUNNING_TIME FALSE
 
 enum
 {
@@ -237,6 +241,7 @@ enum
   PROP_USE_BUFFERING,
   PROP_LOW_PERCENT,
   PROP_HIGH_PERCENT,
+  PROP_SYNC_BY_RUNNING_TIME,
   PROP_LAST
 };
 
@@ -382,6 +387,22 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
           "High threshold for buffering to finish", 0, 100,
           DEFAULT_HIGH_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMultiQueue:sync-by-running-time
+   * 
+   * If enabled multiqueue will synchronize deactivated or not-linked streams
+   * to the activated and linked streams by taking the running time.
+   * Otherwise multiqueue will synchronize the deactivated or not-linked
+   * streams by keeping the order in which buffers and events arrived compared
+   * to active and linked streams.
+   *
+   * Since: 0.10.35
+   */
+  g_object_class_install_property (gobject_class, PROP_SYNC_BY_RUNNING_TIME,
+      g_param_spec_boolean ("sync-by-running-time", "Sync By Running Time",
+          "Synchronize deactivated or not-linked streams by running time",
+          DEFAULT_SYNC_BY_RUNNING_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_multi_queue_finalize;
 
@@ -419,8 +440,11 @@ gst_multi_queue_init (GstMultiQueue * mqueue)
   mqueue->low_percent = DEFAULT_LOW_PERCENT;
   mqueue->high_percent = DEFAULT_HIGH_PERCENT;
 
+  mqueue->sync_by_running_time = DEFAULT_SYNC_BY_RUNNING_TIME;
+
   mqueue->counter = 1;
   mqueue->highid = -1;
+  mqueue->high_time = GST_CLOCK_TIME_NONE;
 
   mqueue->qlock = g_mutex_new ();
 }
@@ -493,6 +517,9 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
     case PROP_HIGH_PERCENT:
       mq->high_percent = g_value_get_int (value);
       break;
+    case PROP_SYNC_BY_RUNNING_TIME:
+      mq->sync_by_running_time = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -534,6 +561,9 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HIGH_PERCENT:
       g_value_set_int (value, mq->high_percent);
+      break;
+    case PROP_SYNC_BY_RUNNING_TIME:
+      g_value_set_boolean (value, mq->sync_by_running_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -737,7 +767,14 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
     sq->nextid = 0;
     sq->oldid = 0;
     sq->last_oldid = G_MAXUINT32;
+    sq->next_time = GST_CLOCK_TIME_NONE;
+    sq->last_time = GST_CLOCK_TIME_NONE;
     gst_data_queue_set_flushing (sq->queue, FALSE);
+
+    /* Reset high time to be recomputed next */
+    GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+    mq->high_time = GST_CLOCK_TIME_NONE;
+    GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
     sq->flushing = FALSE;
 
@@ -932,6 +969,63 @@ apply_buffer (GstMultiQueue * mq, GstSingleQueue * sq, GstClockTime timestamp,
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 }
 
+static GstClockTime
+get_running_time (GstSegment * segment, GstMiniObject * object, gboolean end)
+{
+  GstClockTime time = GST_CLOCK_TIME_NONE;
+
+  if (GST_IS_BUFFER (object)) {
+    GstBuffer *buf = GST_BUFFER_CAST (object);
+
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+      time = GST_BUFFER_TIMESTAMP (buf);
+      if (end && GST_BUFFER_DURATION_IS_VALID (buf))
+        time += GST_BUFFER_DURATION (buf);
+      if (time > segment->stop)
+        time = segment->stop;
+      time = gst_segment_to_running_time (segment, GST_FORMAT_TIME, time);
+    }
+  } else if (GST_IS_BUFFER_LIST (object)) {
+    GstBufferList *list = GST_BUFFER_LIST_CAST (object);
+    gint i, n;
+    GstBuffer *buf;
+
+    n = gst_buffer_list_len (list);
+    for (i = 0; i < n; i++) {
+      buf = gst_buffer_list_get (list, i);
+      if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+        time = GST_BUFFER_TIMESTAMP (buf);
+        if (end && GST_BUFFER_DURATION_IS_VALID (buf))
+          time += GST_BUFFER_DURATION (buf);
+        if (time > segment->stop)
+          time = segment->stop;
+        time = gst_segment_to_running_time (segment, GST_FORMAT_TIME, time);
+        if (!end)
+          goto done;
+      } else if (!end) {
+        goto done;
+      }
+    }
+  } else if (GST_IS_EVENT (object)) {
+    GstEvent *event = GST_EVENT_CAST (object);
+
+    /* For newsegment events return the running time of the start position */
+    if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+      GstSegment new_segment = *segment;
+
+      gst_event_parse_segment (event, &new_segment);
+      if (new_segment.format == GST_FORMAT_TIME) {
+        time =
+            gst_segment_to_running_time (&new_segment, GST_FORMAT_TIME,
+            new_segment.start);
+      }
+    }
+  }
+
+done:
+  return time;
+}
+
 static GstFlowReturn
 gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     GstMiniObject * object)
@@ -1070,6 +1164,7 @@ gst_multi_queue_loop (GstPad * pad)
   GstMiniObject *object = NULL;
   guint32 newid;
   GstFlowReturn result;
+  GstClockTime next_time;
 
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
   mq = sq->mqueue;
@@ -1091,6 +1186,9 @@ gst_multi_queue_loop (GstPad * pad)
   object = gst_multi_queue_item_steal_object (item);
   gst_multi_queue_item_destroy (item);
 
+  /* Get running time of the item. Events will have GST_CLOCK_TIME_NONE */
+  next_time = get_running_time (&sq->src_segment, object, TRUE);
+
   GST_LOG_OBJECT (mq, "SingleQueue %d : newid:%d , oldid:%d",
       sq->id, newid, sq->last_oldid);
 
@@ -1099,9 +1197,9 @@ gst_multi_queue_loop (GstPad * pad)
    * or it's the first loop, or we just passed the previous highid, 
    * we might need to wake some sleeping pad up, so there's extra work 
    * there too */
-  if (sq->srcresult == GST_FLOW_NOT_LINKED ||
-      (sq->last_oldid == G_MAXUINT32) || (newid != (sq->last_oldid + 1)) ||
-      sq->last_oldid > mq->highid) {
+  if (sq->srcresult == GST_FLOW_NOT_LINKED
+      || (sq->last_oldid == G_MAXUINT32) || (newid != (sq->last_oldid + 1))
+      || sq->last_oldid > mq->highid) {
     GST_LOG_OBJECT (mq, "CHECKING sq->srcresult: %s",
         gst_flow_get_name (sq->srcresult));
 
@@ -1116,6 +1214,7 @@ gst_multi_queue_loop (GstPad * pad)
 
     /* Update the nextid so other threads know when to wake us up */
     sq->nextid = newid;
+    sq->next_time = next_time;
 
     /* Update the oldid (the last ID we output) for highid tracking */
     if (sq->last_oldid != G_MAXUINT32)
@@ -1126,10 +1225,20 @@ gst_multi_queue_loop (GstPad * pad)
 
       /* Recompute the highid */
       compute_high_id (mq);
-      while (newid > mq->highid && sq->srcresult == GST_FLOW_NOT_LINKED) {
-        GST_DEBUG_OBJECT (mq, "queue %d sleeping for not-linked wakeup with "
-            "newid %u and highid %u", sq->id, newid, mq->highid);
+      /* Recompute the high time */
+      compute_high_time (mq);
 
+      while (((mq->sync_by_running_time && next_time != GST_CLOCK_TIME_NONE &&
+                  (mq->high_time == GST_CLOCK_TIME_NONE
+                      || next_time >= mq->high_time))
+              || (!mq->sync_by_running_time && newid > mq->highid))
+          && sq->srcresult == GST_FLOW_NOT_LINKED) {
+
+        GST_DEBUG_OBJECT (mq,
+            "queue %d sleeping for not-linked wakeup with "
+            "newid %u, highid %u, next_time %" GST_TIME_FORMAT
+            ", high_time %" GST_TIME_FORMAT, sq->id, newid, mq->highid,
+            GST_TIME_ARGS (next_time), GST_TIME_ARGS (mq->high_time));
 
         /* Wake up all non-linked pads before we sleep */
         wake_up_next_non_linked (mq);
@@ -1143,8 +1252,13 @@ gst_multi_queue_loop (GstPad * pad)
           goto out_flushing;
         }
 
+        /* Recompute the high time */
+        compute_high_time (mq);
+
         GST_DEBUG_OBJECT (mq, "queue %d woken from sleeping for not-linked "
-            "wakeup with newid %u and highid %u", sq->id, newid, mq->highid);
+            "wakeup with newid %u, highid %u, next_time %" GST_TIME_FORMAT
+            ", high_time %" GST_TIME_FORMAT, sq->id, newid, mq->highid,
+            GST_TIME_ARGS (next_time), GST_TIME_ARGS (mq->high_time));
       }
 
       /* Re-compute the high_id in case someone else pushed */
@@ -1154,8 +1268,9 @@ gst_multi_queue_loop (GstPad * pad)
       /* Wake up all non-linked pads */
       wake_up_next_non_linked (mq);
     }
-    /* We're done waiting, we can clear the nextid */
+    /* We're done waiting, we can clear the nextid and nexttime */
     sq->nextid = 0;
+    sq->next_time = GST_CLOCK_TIME_NONE;
 
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
   }
@@ -1165,6 +1280,18 @@ gst_multi_queue_loop (GstPad * pad)
 
   GST_LOG_OBJECT (mq, "BEFORE PUSHING sq->srcresult: %s",
       gst_flow_get_name (sq->srcresult));
+
+  /* Update time stats */
+  next_time = get_running_time (&sq->src_segment, object, FALSE);
+  if (next_time != GST_CLOCK_TIME_NONE) {
+    if (sq->last_time == GST_CLOCK_TIME_NONE || sq->last_time < next_time)
+      sq->last_time = next_time;
+    if (mq->high_time == GST_CLOCK_TIME_NONE || mq->high_time <= next_time) {
+      /* Wake up all non-linked pads now that we advanceed the high time */
+      mq->high_time = next_time;
+      wake_up_next_non_linked (mq);
+    }
+  }
 
   /* Try to push out the new object */
   result = gst_single_queue_push_one (mq, sq, object);
@@ -1179,6 +1306,7 @@ gst_multi_queue_loop (GstPad * pad)
       gst_flow_get_name (sq->srcresult));
 
   sq->last_oldid = newid;
+
   return;
 
 out_flushing:
@@ -1499,7 +1627,10 @@ wake_up_next_non_linked (GstMultiQueue * mq)
     GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
 
     if (sq->srcresult == GST_FLOW_NOT_LINKED) {
-      if (sq->nextid != 0 && sq->nextid <= mq->highid) {
+      if ((mq->sync_by_running_time && mq->high_time != GST_CLOCK_TIME_NONE
+              && sq->next_time != GST_CLOCK_TIME_NONE
+              && sq->next_time >= mq->high_time)
+          || (sq->nextid != 0 && sq->nextid <= mq->highid)) {
         GST_LOG_OBJECT (mq, "Waking up singlequeue %d", sq->id);
         g_cond_signal (sq->turn);
       }
@@ -1548,6 +1679,49 @@ compute_high_id (GstMultiQueue * mq)
 
   GST_LOG_OBJECT (mq, "Highid is now : %u, lowest non-linked %u", mq->highid,
       lowest);
+}
+
+/* WITH LOCK TAKEN */
+static void
+compute_high_time (GstMultiQueue * mq)
+{
+  /* The high-id is either the highest id among the linked pads, or if all
+   * pads are not-linked, it's the lowest not-linked pad */
+  GList *tmp;
+  GstClockTime highest = GST_CLOCK_TIME_NONE;
+  GstClockTime lowest = GST_CLOCK_TIME_NONE;
+
+  for (tmp = mq->queues; tmp; tmp = g_list_next (tmp)) {
+    GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
+
+    GST_LOG_OBJECT (mq,
+        "inspecting sq:%d , next_time:%" GST_TIME_FORMAT ", last_time:%"
+        GST_TIME_FORMAT ", srcresult:%s", sq->id, GST_TIME_ARGS (sq->next_time),
+        GST_TIME_ARGS (sq->last_time), gst_flow_get_name (sq->srcresult));
+
+    if (sq->srcresult == GST_FLOW_NOT_LINKED) {
+      /* No need to consider queues which are not waiting */
+      if (sq->next_time == GST_CLOCK_TIME_NONE) {
+        GST_LOG_OBJECT (mq, "sq:%d is not waiting - ignoring", sq->id);
+        continue;
+      }
+
+      if (lowest == GST_CLOCK_TIME_NONE || sq->next_time < lowest)
+        lowest = sq->next_time;
+    } else if (sq->srcresult != GST_FLOW_UNEXPECTED) {
+      /* If we don't have a global highid, or the global highid is lower than
+       * this single queue's last outputted id, store the queue's one, 
+       * unless the singlequeue is at EOS (srcresult = UNEXPECTED) */
+      if (highest == GST_CLOCK_TIME_NONE || sq->last_time > highest)
+        highest = sq->last_time;
+    }
+  }
+
+  mq->high_time = highest;
+
+  GST_LOG_OBJECT (mq,
+      "High time is now : %" GST_TIME_FORMAT ", lowest non-linked %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (mq->high_time), GST_TIME_ARGS (lowest));
 }
 
 #define IS_FILLED(q, format, value) (((q)->max_size.format) != 0 && \
@@ -1738,8 +1912,6 @@ gst_single_queue_new (GstMultiQueue * mqueue, gint id)
   sq->extra_size.bytes = mqueue->extra_size.bytes;
   sq->extra_size.time = mqueue->extra_size.time;
 
-  GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
-
   GST_DEBUG_OBJECT (mqueue, "Creating GstSingleQueue id:%d", sq->id);
 
   sq->mqueue = mqueue;
@@ -1755,6 +1927,8 @@ gst_single_queue_new (GstMultiQueue * mqueue, gint id)
 
   sq->nextid = 0;
   sq->oldid = 0;
+  sq->next_time = GST_CLOCK_TIME_NONE;
+  sq->last_time = GST_CLOCK_TIME_NONE;
   sq->turn = g_cond_new ();
 
   sq->sinktime = GST_CLOCK_TIME_NONE;
@@ -1798,6 +1972,8 @@ gst_single_queue_new (GstMultiQueue * mqueue, gint id)
 
   gst_pad_set_element_private (sq->sinkpad, (gpointer) sq);
   gst_pad_set_element_private (sq->srcpad, (gpointer) sq);
+
+  GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
 
   /* only activate the pads when we are not in the NULL state
    * and add the pad under the state_lock to prevend state changes

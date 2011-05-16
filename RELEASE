@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.32 "Take Me to the Bonus Level"
+Release notes for GStreamer 0.10.34 "Misfits"
         
 
 
@@ -9,6 +9,12 @@ core of the GStreamer streaming media framework.
 
 
 The 0.10.x series is a stable series targeted at end users.
+It is not API or ABI compatible with the stable 0.8.x series.
+It is, however, parallel installable with the 0.8.x series.
+
+
+The 0.10.x series has been reworked for threadsafety.  It also features
+various feature additions and enhancements.
 
 
 This module, gstreamer, only contains core functionality.
@@ -31,64 +37,14 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * GLib requirement is now >= 2.22
-      * New core element: valve (moved from -bad)
-      * New core element: input-selector (N.B. without "select-all" property, use fsfunnel instead) (moved from -bad)
-      * New core element: output-selector (with different negotiation behaviour by default, set pad-negotiation-mode=active for previous behaviour) (moved from -bad)
-      * Performance improvements for many heavily-used code paths: GstPad, GstPoll, GstClock, GstTask, basesink, basesrc, queue2, multiqueue
-      * gobject-introspection: add annotations for most core API
-      * clock: make sync clock wait lockfree
-      * fdsrc/fdsink: reenable on MSVC
-      * registry: fix GStatBuf definition for win32 when building against older glib (fixes unnecessary rescanning of plugins at start-up)
-      * element: add a more flexible way to get request pads from elements
-      * multiqueue: return upon input when already eos
-      * object: fix creation of default name (when creating more than 100000 elements)
-      * pluginloader: fix hangs on OSX
-      * poll: fixes for (p)select backend (used e.g. on OSX)
-      * poll: refactor and make more lockfree; fixes for win32 and OSX (pselect backend)
-      * registry: don't replace valid existing plugins by blacklisted ones
-      * tags: don't produce duplicated entries when merging same value twice
-      * basesink: preroll fixes for async=false case
-      * basesink: rework position reporting code
-      * basetransform: handle downstream giving a buffer with new caps but invalid size
+      * Fix multiqueue thread-safety regression
+      * Don't set artificial 0-timestamp on first packet for TIME-based live sources
+      * Otherwise identical to the previous release (0.10.33)
 
 Bugs fixed in this release
      
-      * 635785 : basesrc: fix deadlock
-      * 638599 : GST_PTR_FORMAT causes crashes if GLib-internal printf is used but system provides register_printf_specifier
-      * 503592 : gstpad.c does many ref/unref of peer pad in dataflow
-      * 564056 : Protect against umask(0177)
-      * 607513 : input-selector segfaults in g_object_notify()
-      * 632168 : [gsttask] MSVC thread names for task debugging
-      * 632447 : reduce static memory allocated by the registry
-      * 632557 : [macros] Define restrict keyword if not available
-      * 632778 : Optimisations to GstBaseSink
-      * 632779 : gstdataqueue: Only emit g_cond_signal when needed
-      * 632780 : queue: Remove useless checks from e406f7
-      * 633918 : [fakesink] [PATCH] print sink-message events like a  message and its structure
-      * 634965 : sinks render buffers in state PAUSED when async is FALSE
-      * 635001 : basesink: fix position reporting in PAUSED
-      * 636268 : configure test fails on FreeBSD
-      * 636455 : basesrc: Avoid taking object locks for just checking tag presence
-      * 637057 : [plugin-scanner] gstpoll fails with select backend
-      * 637300 : [API] request pad based on caps
-      * 637549 : build fails: ./.libs/libgstbase-0.10.so: undefined reference to `gst_clock_single_shot_id_reinit'
-      * 637776 : merging the same tag values again produces lists containing duplicates
-      * 638381 : {input,output}-selector: double-check API before release
-      * 638399 : a few typos in GStreamer
-      * 638900 : [GstPoll] Doesn't compile with MinGW
-      * 638941 : registry scan/loading race and inconsistency
-
-API changed in this release
-     
-- API additions:
-    
-      * gst_clock_single_shot_id_reinit()
-      * gst_element_request_pad()
-      * GstElementClass::request_new_pad_full()
-      * gst_poll_get_read_gpollfd()
-      * gst_value_list_merge()
-      * GST_CLOCK_DONE
+      * 649369 : basesrc: do not set first buffer timestamp to 0 for live sources
+      * 649878 : [multiqueue] regression: gst_single_queue_new not MT-safe
 
 Download
 
@@ -113,31 +69,15 @@ subscribe to the gstreamer-devel list. If there is sufficient interest we
 will create more lists as necessary.
 
         
+Applications
+
+Applications ported to GStreamer 0.10 include Totem, RhythmBox, Sound-Juicer,
+Gnome Media, Flumotion, Amarok, Jamboree, Pitivi, Istanbul, AnnoAmp, Elisa, and others.
+Let us know if you want to be added to this list.
+
+  
 Contributors to this release
     
-      * Andoni Morales Alastruey
-      * Benjamin Gaignard
-      * Benjamin Otte
-      * David Hoyt
-      * David Schleef
-      * Edward Hervey
-      * Havard Graff
-      * Jan Schmidt
-      * Kipp Cannon
-      * Koop Mast
-      * Lasse Laukkanen
       * Mark Nauwelaerts
-      * Michael Smith
-      * Olivier Crete
-      * Olivier Crête
-      * Raimo Järvi
-      * Sebastian Dröge
-      * Stefan Kost
-      * Thiago Santos
-      * Tim-Philipp Müller
-      * Tommi Myöhänen
-      * Wim Taymans
-      * Zhang Wanming
-      * Christian Schaller
-      * Sjoerd Simons
+      * Vincent Penquerc'h
  

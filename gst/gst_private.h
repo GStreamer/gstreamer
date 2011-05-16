@@ -51,6 +51,9 @@ extern const char             g_log_domain_gstreamer[];
 /* for the pad cache */
 #include "gstpad.h"
 
+/* for GstElement */
+#include "gstelement.h"
+
 G_BEGIN_DECLS
 
 /* used by gstparse.c and grammar.y */
@@ -114,6 +117,10 @@ void _priv_gst_registry_cleanup (void);
 gboolean _gst_plugin_loader_client_run (void);
 
 void _priv_gst_pad_invalidate_cache (GstPad *pad);
+
+/* Used in GstBin for manual state handling */
+void _priv_gst_element_state_changed (GstElement *element, GstState oldstate,
+    GstState newstate, GstState pending);
 
 /* used in both gststructure.c and gstcaps.c; numbers are completely made up */
 #define STRUCTURE_ESTIMATED_STRING_LEN(s) (16 + gst_structure_n_fields(s) * 22)

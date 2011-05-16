@@ -2227,6 +2227,28 @@ nothing_aborted:
   }
 }
 
+/* Not static because GstBin has manual state handling too */
+void
+_priv_gst_element_state_changed (GstElement * element, GstState oldstate,
+    GstState newstate, GstState pending)
+{
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+  GstMessage *message;
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "notifying about state-changed %s to %s (%s pending)",
+      gst_element_state_get_name (oldstate),
+      gst_element_state_get_name (newstate),
+      gst_element_state_get_name (pending));
+
+  if (klass->state_changed)
+    klass->state_changed (element, oldstate, newstate, pending);
+
+  message = gst_message_new_state_changed (GST_OBJECT_CAST (element),
+      oldstate, newstate, pending);
+  gst_element_post_message (element, message);
+}
+
 /**
  * gst_element_continue_state:
  * @element: a #GstElement to continue the state change of.
@@ -2254,7 +2276,6 @@ gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
   GstStateChangeReturn old_ret;
   GstState old_state, old_next;
   GstState current, next, pending;
-  GstMessage *message;
   GstStateChange transition;
 
   GST_OBJECT_LOCK (element);
@@ -2290,9 +2311,7 @@ gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
       gst_element_state_get_name (old_next),
       gst_element_state_get_name (pending), gst_element_state_get_name (next));
 
-  message = gst_message_new_state_changed (GST_OBJECT_CAST (element),
-      old_state, old_next, pending);
-  gst_element_post_message (element, message);
+  _priv_gst_element_state_changed (element, old_state, old_next, pending);
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
       "continue state change %s to %s, final %s",
@@ -2324,16 +2343,9 @@ complete:
      * previous return value.
      * We do signal the cond though as a _get_state() might be blocking
      * on it. */
-    if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
-      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-          "posting state-changed %s to %s",
-          gst_element_state_get_name (old_state),
-          gst_element_state_get_name (old_next));
-      message =
-          gst_message_new_state_changed (GST_OBJECT_CAST (element), old_state,
-          old_next, GST_STATE_VOID_PENDING);
-      gst_element_post_message (element, message);
-    }
+    if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC)
+      _priv_gst_element_state_changed (element, old_state, old_next,
+          GST_STATE_VOID_PENDING);
 
     GST_STATE_BROADCAST (element);
 
@@ -2402,9 +2414,7 @@ gst_element_lost_state (GstElement * element, gboolean new_base_time)
     GST_ELEMENT_START_TIME (element) = 0;
   GST_OBJECT_UNLOCK (element);
 
-  message = gst_message_new_state_changed (GST_OBJECT_CAST (element),
-      new_state, new_state, new_state);
-  gst_element_post_message (element, message);
+  _priv_gst_element_state_changed (element, new_state, new_state, new_state);
 
   message =
       gst_message_new_async_start (GST_OBJECT_CAST (element), new_base_time);
@@ -2691,7 +2701,6 @@ activate_pads (const GValue * vpad, GValue * ret, gboolean * active)
   if (!(cont = gst_pad_set_active (pad, *active)))
     g_value_set_boolean (ret, FALSE);
 
-  /* unref the object that was reffed for us by _fold */
   return cont;
 }
 

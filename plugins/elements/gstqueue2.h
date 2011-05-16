@@ -116,6 +116,7 @@ struct _GstQueue2
   gdouble last_in_elapsed;
   guint64 bytes_in;
   gdouble byte_in_rate;
+  gdouble byte_in_period;
 
   GTimer *out_timer;
   gboolean out_timer_started;

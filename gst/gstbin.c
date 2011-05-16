@@ -222,6 +222,8 @@ static void gst_bin_get_property (GObject * object, guint prop_id,
 
 static GstStateChangeReturn gst_bin_change_state_func (GstElement * element,
     GstStateChange transition);
+static void gst_bin_state_changed (GstElement * element, GstState oldstate,
+    GstState newstate, GstState pending);
 static GstStateChangeReturn gst_bin_get_state_func (GstElement * element,
     GstState * state, GstState * pending, GstClockTime timeout);
 static void bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
@@ -468,6 +470,7 @@ gst_bin_class_init (GstBinClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_bin_change_state_func);
+  gstelement_class->state_changed = GST_DEBUG_FUNCPTR (gst_bin_state_changed);
   gstelement_class->get_state = GST_DEBUG_FUNCPTR (gst_bin_get_state_func);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_bin_get_index_func);
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_bin_set_index_func);
@@ -983,6 +986,7 @@ static gboolean
 is_eos (GstBin * bin, guint32 * seqnum)
 {
   gboolean result;
+  gint n_eos = 0;
   GList *walk, *msgs;
 
   result = TRUE;
@@ -996,6 +1000,7 @@ is_eos (GstBin * bin, guint32 * seqnum)
               find_message (bin, GST_OBJECT_CAST (element), GST_MESSAGE_EOS))) {
         GST_DEBUG ("sink '%s' posted EOS", GST_ELEMENT_NAME (element));
         *seqnum = gst_message_get_seqnum (GST_MESSAGE_CAST (msgs->data));
+        n_eos++;
       } else {
         GST_DEBUG ("sink '%s' did not post EOS yet",
             GST_ELEMENT_NAME (element));
@@ -1004,7 +1009,13 @@ is_eos (GstBin * bin, guint32 * seqnum)
       }
     }
   }
-  return result;
+  /* FIXME: Some tests (e.g. elements/capsfilter) use
+   * pipelines with a dangling sinkpad but no sink element.
+   * These tests assume that no EOS message is ever
+   * posted on the bus so let's keep that behaviour.
+   * In valid pipelines this doesn't make a difference.
+   */
+  return result && n_eos > 0;
 }
 
 static void
@@ -2238,7 +2249,6 @@ activate_pads (const GValue * vpad, GValue * ret, gboolean * active)
   if (!(cont = gst_pad_set_active (pad, *active)))
     g_value_set_boolean (ret, FALSE);
 
-  /* unref the object that was reffed for us by _fold */
   return cont;
 }
 
@@ -2385,6 +2395,19 @@ gst_bin_do_latency_func (GstBin * bin)
   gst_query_unref (query);
 
   return res;
+}
+
+static void
+gst_bin_state_changed (GstElement * element, GstState oldstate,
+    GstState newstate, GstState pending)
+{
+  GstElementClass *pklass = (GstElementClass *) parent_class;
+
+  if (newstate == GST_STATE_PLAYING && pending == GST_STATE_VOID_PENDING)
+    bin_do_eos (GST_BIN_CAST (element));
+
+  if (pklass->state_changed)
+    pklass->state_changed (element, oldstate, newstate, pending);
 }
 
 static GstStateChangeReturn
@@ -2621,8 +2644,6 @@ state_end:
       gst_element_state_get_name (GST_STATE (element)),
       gst_element_state_change_return_get_name (ret));
 
-  bin_do_eos (bin);
-
   return ret;
 
   /* ERRORS */
@@ -2736,8 +2757,6 @@ gst_bin_continue_func (BinContinueData * data)
   GST_STATE_UNLOCK (bin);
   GST_DEBUG_OBJECT (bin, "state continue done");
 
-  bin_do_eos (bin);
-
   gst_object_unref (bin);
   g_slice_free (BinContinueData, data);
   return;
@@ -2832,9 +2851,8 @@ bin_handle_async_start (GstBin * bin, gboolean new_base_time)
   GST_OBJECT_UNLOCK (bin);
 
   /* post message */
-  gst_element_post_message (GST_ELEMENT_CAST (bin),
-      gst_message_new_state_changed (GST_OBJECT_CAST (bin),
-          new_state, new_state, new_state));
+  _priv_gst_element_state_changed (GST_ELEMENT_CAST (bin), new_state, new_state,
+      new_state);
 
 post_start:
   if (amessage) {
@@ -2876,8 +2894,8 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
   GstState current, pending, target;
   GstStateChangeReturn old_ret;
   GstState old_state, old_next;
-  gboolean toplevel;
-  GstMessage *smessage = NULL, *amessage = NULL;
+  gboolean toplevel, state_changed = FALSE;
+  GstMessage *amessage = NULL;
   BinContinueData *cont = NULL;
 
   if (GST_STATE_RETURN (bin) == GST_STATE_CHANGE_FAILURE)
@@ -2956,24 +2974,20 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
 
   if (old_next != GST_STATE_PLAYING) {
     if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
-      smessage = gst_message_new_state_changed (GST_OBJECT_CAST (bin),
-          old_state, old_next, pending);
+      state_changed = TRUE;
     }
   }
   GST_OBJECT_UNLOCK (bin);
 
-  if (smessage) {
-    GST_DEBUG_OBJECT (bin, "posting state change message");
-    gst_element_post_message (GST_ELEMENT_CAST (bin), smessage);
+  if (state_changed) {
+    _priv_gst_element_state_changed (GST_ELEMENT_CAST (bin), old_state,
+        old_next, pending);
   }
   if (amessage) {
     /* post our combined ASYNC_DONE when all is ASYNC_DONE. */
     GST_DEBUG_OBJECT (bin, "posting ASYNC_DONE to parent");
     gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
   }
-
-  if (!cont)
-    bin_do_eos (bin);
 
   GST_OBJECT_LOCK (bin);
   if (cont) {

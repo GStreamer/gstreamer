@@ -849,6 +849,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiQueue::sync-by-running-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync By Running Time</NICK>
+<BLURB>Synchronize deactivated or not-linked streams by running time.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstBin::async-handling</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -1065,6 +1075,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Select all mode</NICK>
 <BLURB>Forwards data from all input pads.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInputSelector::sync-streams</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync Streams</NICK>
+<BLURB>Synchronize inactive streams to the running time of the active stream.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
