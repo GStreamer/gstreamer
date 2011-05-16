@@ -158,7 +158,7 @@ MAKE_FUNC_NC (add_float64, gdouble)
  * if we have filtercaps set, use those to constrain the target caps.
  */
 static GstCaps *
-gst_adder_sink_getcaps (GstPad * pad)
+gst_adder_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstAdder *adder;
   GstCaps *result, *peercaps, *sinkcaps, *filter_caps;
@@ -167,12 +167,25 @@ gst_adder_sink_getcaps (GstPad * pad)
 
   GST_OBJECT_LOCK (adder);
   /* take filter */
-  if ((filter_caps = adder->filter_caps))
-    gst_caps_ref (filter_caps);
+  if ((filter_caps = adder->filter_caps)) {
+    if (filter)
+      filter_caps =
+          gst_caps_intersect_full (filter, filter_caps,
+          GST_CAPS_INTERSECT_FIRST);
+    else
+      gst_caps_ref (filter_caps);
+  } else {
+    filter_caps = gst_caps_ref (filter);
+  }
   GST_OBJECT_UNLOCK (adder);
 
+  if (filter_caps && gst_caps_is_empty (filter_caps)) {
+    GST_WARNING_OBJECT (pad, "Empty filter caps");
+    return filter_caps;
+  }
+
   /* get the downstream possible caps */
-  peercaps = gst_pad_peer_get_caps (adder->srcpad);
+  peercaps = gst_pad_peer_get_caps (adder->srcpad, filter_caps);
 
   /* get the allowed caps on this sinkpad */
   sinkcaps = gst_pad_get_current_caps (pad);
@@ -185,16 +198,10 @@ gst_adder_sink_getcaps (GstPad * pad)
   }
 
   if (peercaps) {
-    /* restrict with filter-caps if any */
-    if (filter_caps) {
-      GST_DEBUG_OBJECT (adder, "filtering peer caps");
-      result = gst_caps_intersect (peercaps, filter_caps);
-      gst_caps_unref (peercaps);
-      peercaps = result;
-    }
     /* if the peer has caps, intersect */
     GST_DEBUG_OBJECT (adder, "intersecting peer and template caps");
-    result = gst_caps_intersect (peercaps, sinkcaps);
+    result =
+        gst_caps_intersect_full (peercaps, sinkcaps, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
     gst_caps_unref (sinkcaps);
   } else {
@@ -203,7 +210,9 @@ gst_adder_sink_getcaps (GstPad * pad)
     /* restrict with filter-caps if any */
     if (filter_caps) {
       GST_DEBUG_OBJECT (adder, "no peer caps, using filtered sinkcaps");
-      result = gst_caps_intersect (sinkcaps, filter_caps);
+      result =
+          gst_caps_intersect_full (filter_caps, sinkcaps,
+          GST_CAPS_INTERSECT_FIRST);
       gst_caps_unref (sinkcaps);
     } else {
       GST_DEBUG_OBJECT (adder, "no peer caps, using sinkcaps");
