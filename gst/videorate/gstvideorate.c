@@ -200,7 +200,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
 /* return the caps that can be used on out_pad given in_caps on in_pad */
 static gboolean
 gst_video_rate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
-    GstPad * out_pad, GstCaps ** out_caps)
+    GstPad * out_pad, GstCaps ** out_caps, GstCaps * filter)
 {
   GstCaps *intersect;
   const GstCaps *in_templ;
@@ -209,7 +209,8 @@ gst_video_rate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
   GSList *iter;
 
   in_templ = gst_pad_get_pad_template_caps (in_pad);
-  intersect = gst_caps_intersect (in_caps, in_templ);
+  intersect =
+      gst_caps_intersect_full (in_caps, in_templ, GST_CAPS_INTERSECT_FIRST);
 
   /* all possible framerates are allowed */
   for (i = 0; i < gst_caps_get_size (intersect); i++) {
@@ -233,13 +234,21 @@ gst_video_rate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
   }
   g_slist_free (extra_structures);
 
+  if (filter) {
+    GstCaps *tmp;
+
+    tmp = gst_caps_intersect_full (filter, intersect, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (intersect);
+    intersect = tmp;
+  }
+
   *out_caps = intersect;
 
   return TRUE;
 }
 
 static GstCaps *
-gst_video_rate_getcaps (GstPad * pad)
+gst_video_rate_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstVideoRate *videorate;
   GstPad *otherpad;
@@ -251,16 +260,31 @@ gst_video_rate_getcaps (GstPad * pad)
       videorate->srcpad;
 
   /* we can do what the peer can */
-  caps = gst_pad_peer_get_caps (otherpad);
+  caps = gst_pad_peer_get_caps (otherpad, filter);
   if (caps) {
-    GstCaps *transform;
+    GstCaps *transform, *intersect;
 
-    gst_video_rate_transformcaps (otherpad, caps, pad, &transform);
-    gst_caps_unref (caps);
-    caps = transform;
+    gst_video_rate_transformcaps (otherpad, caps, pad, &transform, filter);
+
+    /* Now prefer the downstream caps if possible */
+    intersect =
+        gst_caps_intersect_full (caps, transform, GST_CAPS_INTERSECT_FIRST);
+    if (!gst_caps_is_empty (intersect)) {
+      gst_caps_append (intersect, transform);
+      gst_caps_unref (caps);
+      caps = intersect;
+    } else {
+      gst_caps_unref (intersect);
+      caps = transform;
+    }
   } else {
     /* no peer, our padtemplate is enough then */
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    if (filter)
+      caps =
+          gst_caps_intersect_full (filter, gst_pad_get_pad_template_caps (pad),
+          GST_CAPS_INTERSECT_FIRST);
+    else
+      caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
 
   return caps;
@@ -313,27 +337,20 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
 
       ret = TRUE;
     } else {
-      GstCaps *peercaps;
       GstCaps *transform = NULL;
 
       ret = FALSE;
 
       /* see how we can transform the input caps */
-      if (!gst_video_rate_transformcaps (pad, caps, otherpad, &transform))
+      if (!gst_video_rate_transformcaps (pad, caps, otherpad, &transform, NULL))
         goto no_transform;
 
-      /* see what the peer can do */
-      peercaps = gst_pad_get_caps (opeer);
-
-      GST_DEBUG_OBJECT (opeer, "icaps %" GST_PTR_FORMAT, peercaps);
       GST_DEBUG_OBJECT (videorate, "transform %" GST_PTR_FORMAT, transform);
 
-      /* filter against our possibilities */
-      caps = gst_caps_intersect (peercaps, transform);
-      gst_caps_unref (peercaps);
-      gst_caps_unref (transform);
+      /* see what the peer can do */
+      caps = gst_pad_get_caps (opeer, transform);
 
-      GST_DEBUG_OBJECT (videorate, "intersect %" GST_PTR_FORMAT, caps);
+      GST_DEBUG_OBJECT (opeer, "icaps %" GST_PTR_FORMAT, caps);
 
       /* could turn up empty, due to e.g. colorspace etc */
       if (gst_caps_get_size (caps) == 0) {
@@ -342,6 +359,7 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
       }
 
       /* take first possibility */
+      caps = gst_caps_make_writable (caps);
       gst_caps_truncate (caps);
       structure = gst_caps_get_structure (caps, 0);
 
