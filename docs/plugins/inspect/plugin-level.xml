@@ -3,10 +3,10 @@
   <description>Audio level plugin</description>
   <filename>../../gst/level/.libs/libgstlevel.so</filename>
   <basename>libgstlevel.so</basename>
-  <version>0.10.28.3</version>
+  <version>0.10.29.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins prerelease</package>
+  <package>GStreamer Good Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

@@ -222,6 +222,7 @@
     <xi:include href="xml/plugin-id3demux.xml" />
     <xi:include href="xml/plugin-imagefreeze.xml" />
     <xi:include href="xml/plugin-interleave.xml" />
+    <xi:include href="xml/plugin-isomp4.xml" />
     <xi:include href="xml/plugin-jack.xml" />
     <xi:include href="xml/plugin-jpeg.xml" />
     <xi:include href="xml/plugin-level.xml" />
@@ -237,7 +238,6 @@
     <xi:include href="xml/plugin-osxvideo.xml" />
     <xi:include href="xml/plugin-png.xml" />
     <xi:include href="xml/plugin-pulseaudio.xml" />
-    <xi:include href="xml/plugin-quicktime.xml" />
     <xi:include href="xml/plugin-replaygain.xml" />
     <xi:include href="xml/plugin-rtp.xml" />
     <xi:include href="xml/plugin-gstrtpmanager.xml" />

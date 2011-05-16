@@ -2711,9 +2711,10 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
    * the block in the cluster which contains the timestamp, should also work
    * for files with multiple audio tracks.
    */
-  if (is_video_keyframe ||
-      ((collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
-          (mux->num_streams == 1))) {
+  if (!mux->streamable &&
+      (is_video_keyframe ||
+          ((collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
+              (mux->num_streams == 1)))) {
     gint last_idx = -1;
 
     if (mux->min_index_interval != 0) {

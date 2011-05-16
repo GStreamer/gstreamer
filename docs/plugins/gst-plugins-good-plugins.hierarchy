@@ -230,13 +230,6 @@ GObject
       GstRtpPtDemux
       GstRtpSession
       GstRtpSsrcDemux
-      GstQTDemux
-      GstQTMux
-      GstMP4Mux
-      GstISMLMux
-      Gst3GPPMux
-      GstGPPMux
-      GstMJ2Mux
       GstRndBufferSize
       GstCapsDebug
       GstEFence
@@ -273,6 +266,13 @@ GObject
       GstWavParse
       GstFlvDemux
       GstFlvMux
+      GstQTDemux
+      GstQTMux
+      GstMP4Mux
+      GstISMLMux
+      Gst3GPPMux
+      GstGPPMux
+      GstMJ2Mux
       GstICYDemux
       GstVideoMixer
       GstVideoMixer2
@@ -295,8 +295,6 @@ GObject
   GstCmmlTagClip
   GstColorBalanceChannel
   RTPSession
-  GstMixerTrack
-    GstMixerOptions
   GstTunerNorm
   GstTunerChannel
   GdkPixbuf

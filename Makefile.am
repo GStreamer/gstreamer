@@ -79,9 +79,15 @@ include $(top_srcdir)/common/coverage/lcov.mak
 CRUFT_FILES = \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
+	$(top_builddir)/gst/qtdemux/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/quicktime/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/videofilter/.libs/*videoflip.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/videofilter/.libs/*videobalance.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/videofilter/.libs/*gamma.{so,dll,DLL,dylib}
+
+CRUFT_DIRS = \
+	$(top_srcdir)/gst/qtdemux \
+	$(top_srcdir)/gst/quicktime
 
 include $(top_srcdir)/common/cruft.mak
 

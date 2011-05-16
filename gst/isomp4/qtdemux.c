@@ -427,7 +427,6 @@ static gboolean qtdemux_parse_samples (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 n);
 static GstFlowReturn qtdemux_expose_streams (GstQTDemux * qtdemux);
 
-
 static void
 gst_qtdemux_base_init (gpointer klass)
 {
@@ -1835,6 +1834,7 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       qtdemux->posted_redirect = FALSE;
       qtdemux->offset = 0;
       qtdemux->first_mdat = -1;
+      qtdemux->header_size = 0;
       qtdemux->got_moov = FALSE;
       qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
       if (qtdemux->mdatbuffer)
@@ -1888,6 +1888,9 @@ qtdemux_post_global_tags (GstQTDemux * qtdemux)
 static void
 qtdemux_parse_ftyp (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
 {
+  /* counts as header data */
+  qtdemux->header_size += length;
+
   /* only consider at least a sufficiently complete ftyp atom */
   if (length >= 20) {
     GstBuffer *buf;
@@ -1927,6 +1930,9 @@ qtdemux_parse_uuid (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
     0x91, 0xE3, 0xAF, 0xAC
   };
   guint offset;
+
+  /* counts as header data */
+  qtdemux->header_size += length;
 
   offset = (QT_UINT32 (buffer) == 0) ? 16 : 8;
 
@@ -4450,6 +4456,9 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer, guint length)
 
   qtdemux->moov_node = g_node_new ((guint8 *) buffer);
 
+  /* counts as header data */
+  qtdemux->header_size += length;
+
   GST_DEBUG_OBJECT (qtdemux, "parsing 'moov' atom");
   qtdemux_parse_node (qtdemux, qtdemux->moov_node, buffer, length);
 
@@ -6136,6 +6145,63 @@ less_than (gconstpointer a, gconstpointer b)
   return *av - *bv;
 }
 
+#define AMR_NB_ALL_MODES        0x81ff
+#define AMR_WB_ALL_MODES        0x83ff
+static guint
+qtdemux_parse_amr_bitrate (GstBuffer * buf, gboolean wb)
+{
+  /* The 'damr' atom is of the form:
+   *
+   * | vendor | decoder_ver | mode_set | mode_change_period | frames/sample |
+   *    32 b       8 b          16 b           8 b                 8 b
+   *
+   * The highest set bit of the first 7 (AMR-NB) or 8 (AMR-WB) bits of mode_set
+   * represents the highest mode used in the stream (and thus the maximum
+   * bitrate), with a couple of special cases as seen below.
+   */
+
+  /* Map of frame type ID -> bitrate */
+  static const guint nb_bitrates[] = {
+    4750, 5150, 5900, 6700, 7400, 7950, 10200, 12200
+  };
+  static const guint wb_bitrates[] = {
+    6600, 8850, 12650, 14250, 15850, 18250, 19850, 23050, 23850
+  };
+  const guint8 *data = GST_BUFFER_DATA (buf);
+  guint size = QT_UINT32 (data), max_mode;
+  guint16 mode_set;
+
+  if (GST_BUFFER_SIZE (buf) != 0x11) {
+    GST_DEBUG ("Atom should have size 0x11, not %u", size);
+    goto bad_data;
+  }
+
+  if (QT_FOURCC (data + 4) != GST_MAKE_FOURCC ('d', 'a', 'm', 'r')) {
+    GST_DEBUG ("Unknown atom in %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (QT_UINT32 (data + 4)));
+    goto bad_data;
+  }
+
+  mode_set = QT_UINT16 (data + 13);
+
+  if (mode_set == (wb ? AMR_WB_ALL_MODES : AMR_NB_ALL_MODES))
+    max_mode = 7 + (wb ? 1 : 0);
+  else
+    /* AMR-NB modes fo from 0-7, and AMR-WB modes go from 0-8 */
+    max_mode = g_bit_nth_msf ((gulong) mode_set & (wb ? 0x1ff : 0xff), -1);
+
+  if (max_mode == -1) {
+    GST_DEBUG ("No mode indication was found (mode set) = %x",
+        (guint) mode_set);
+    goto bad_data;
+  }
+
+  return wb ? wb_bitrates[max_mode] : nb_bitrates[max_mode];
+
+bad_data:
+  return 0;
+}
+
 /* parse the traks.
  * With each track we associate a new QtDemuxStream that contains all the info
  * about the trak.
@@ -6759,6 +6825,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   } else if (stream->subtype == FOURCC_soun) {
     int version, samplesize;
     guint16 compression_id;
+    gboolean amrwb = FALSE;
 
     offset = 32;
     if (len < 36)
@@ -6988,11 +7055,21 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     if (codec) {
+      GstStructure *s;
+      gint bitrate = 0;
+
       list = gst_tag_list_new ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_AUDIO_CODEC, codec, NULL);
       g_free (codec);
       codec = NULL;
+
+      /* some bitrate info may have ended up in caps */
+      s = gst_caps_get_structure (stream->caps, 0);
+      gst_structure_get_int (s, "bitrate", &bitrate);
+      if (bitrate > 0)
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
+            bitrate, NULL);
     }
 
     mp4a = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4a);
@@ -7126,14 +7203,28 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               "samplesize", G_TYPE_INT, samplesize, NULL);
           break;
         }
+        case FOURCC_sawb:
+          /* Fallthrough! */
+          amrwb = TRUE;
         case FOURCC_samr:
         {
           gint len = QT_UINT32 (stsd_data);
 
           if (len > 0x34) {
             GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x34);
+            guint bitrate;
 
             memcpy (GST_BUFFER_DATA (buf), stsd_data + 0x34, len - 0x34);
+
+            /* If we have enough data, let's try to get the 'damr' atom. See
+             * the 3GPP container spec (26.244) for more details. */
+            if ((len - 0x34) > 8 &&
+                (bitrate = qtdemux_parse_amr_bitrate (buf, amrwb))) {
+              if (!list)
+                list = gst_tag_list_new ();
+              gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+                  GST_TAG_MAXIMUM_BITRATE, bitrate, NULL);
+            }
 
             gst_caps_set_simple (stream->caps,
                 "codec_data", GST_TYPE_BUFFER, buf, NULL);
@@ -7337,6 +7428,98 @@ too_many_streams:
   }
 }
 
+/* If we can estimate the overall bitrate, and don't have information about the
+ * stream bitrate for exactly one stream, this guesses the stream bitrate as
+ * the overall bitrate minus the sum of the bitrates of all other streams. This
+ * should be useful for the common case where we have one audio and one video
+ * stream and can estimate the bitrate of one, but not the other. */
+static void
+gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
+{
+  GstFormat format = GST_FORMAT_BYTES;
+  QtDemuxStream *stream = NULL;
+  gint64 size, duration, sys_bitrate, sum_bitrate = 0;
+  gint i;
+  guint bitrate;
+
+  if (qtdemux->fragmented)
+    return;
+
+  GST_DEBUG_OBJECT (qtdemux, "Looking for streams with unknown bitrate");
+
+  if (!gst_pad_query_peer_duration (qtdemux->sinkpad, &format, &size) ||
+      format != GST_FORMAT_BYTES) {
+    GST_DEBUG_OBJECT (qtdemux,
+        "Size in bytes of the stream not known - bailing");
+    return;
+  }
+
+  /* Subtract the header size */
+  GST_DEBUG_OBJECT (qtdemux, "Total size %" G_GINT64_FORMAT ", header size %u",
+      size, qtdemux->header_size);
+  g_assert (size > qtdemux->header_size);
+  size = size - qtdemux->header_size;
+
+  if (!gst_qtdemux_get_duration (qtdemux, &duration) ||
+      duration == GST_CLOCK_TIME_NONE) {
+    GST_DEBUG_OBJECT (qtdemux, "Stream duration not known - bailing");
+    return;
+  }
+
+  for (i = 0; i < qtdemux->n_streams; i++) {
+    switch (qtdemux->streams[i]->subtype) {
+      case FOURCC_soun:
+      case FOURCC_vide:
+        /* retrieve bitrate, prefer avg then max */
+        if (qtdemux->streams[i]->pending_tags) {
+          gst_tag_list_get_uint (qtdemux->streams[i]->pending_tags,
+              GST_TAG_MAXIMUM_BITRATE, &bitrate);
+          gst_tag_list_get_uint (qtdemux->streams[i]->pending_tags,
+              GST_TAG_BITRATE, &bitrate);
+        }
+        if (bitrate)
+          sum_bitrate += bitrate;
+        else {
+          if (stream) {
+            GST_DEBUG_OBJECT (qtdemux,
+                ">1 stream with unknown bitrate - bailing");
+            return;
+          } else
+            stream = qtdemux->streams[i];
+        }
+
+      default:
+        /* For other subtypes, we assume no significant impact on bitrate */
+        break;
+    }
+  }
+
+  if (!stream) {
+    GST_DEBUG_OBJECT (qtdemux, "All stream bitrates are known");
+    return;
+  }
+
+  sys_bitrate = gst_util_uint64_scale (size, GST_SECOND * 8, duration);
+
+  if (sys_bitrate < sum_bitrate) {
+    /* This can happen, since sum_bitrate might be derived from maximum
+     * bitrates and not average bitrates */
+    GST_DEBUG_OBJECT (qtdemux,
+        "System bitrate less than sum bitrate - bailing");
+    return;
+  }
+
+  bitrate = sys_bitrate - sum_bitrate;
+  GST_DEBUG_OBJECT (qtdemux, "System bitrate = %" G_GINT64_FORMAT
+      ", Stream bitrate = %u", sys_bitrate, bitrate);
+
+  if (!stream->pending_tags)
+    stream->pending_tags = gst_tag_list_new ();
+
+  gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_REPLACE,
+      GST_TAG_BITRATE, bitrate, NULL);
+}
+
 static GstFlowReturn
 qtdemux_expose_streams (GstQTDemux * qtdemux)
 {
@@ -7411,6 +7594,8 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     stream->pending_tags = NULL;
     gst_qtdemux_add_stream (qtdemux, stream, list);
   }
+
+  gst_qtdemux_guess_bitrate (qtdemux);
 
   gst_element_no_more_pads (GST_ELEMENT_CAST (qtdemux));
 

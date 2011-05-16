@@ -69,6 +69,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "quicktime",
-    "Quicktime support",
+    "isomp4",
+    "ISO base media file format support (mp4, 3gpp, qt, mj2)",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

@@ -1,23 +1,26 @@
 # Ukrainian translation to gst-plugins.
 # Copyright (C) 2004 Free Software Foundation, Inc.
-# This file is distributed under the same license as the gst-plugins package.
-# Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
+# This file is distributed under the same license as the gst-plugins-good package.
 #
+# Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.6\n"
+"Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 01:15+0000\n"
-"PO-Revision-Date: 2007-07-05 15:40+0200\n"
-"Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
+"POT-Creation-Date: 2011-05-10 09:38+0100\n"
+"PO-Revision-Date: 2011-05-01 11:55+0300\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.2\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Could not establish connection to sound server"
-msgstr "Не вдається встановити з'єднання із звуковим сервером."
+msgstr "Не вдалося встановити з'єднання із звуковим сервером."
 
 msgid "Failed to query sound server capabilities"
 msgstr "Помилка при запиті можливостей звукового сервера"
@@ -25,7 +28,7 @@ msgstr "Помилка при запиті можливостей звуково
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "«%s» виконує %s"
 
 msgid "Internal data stream error."
 msgstr "Внутрішня помилка потоку даних."
@@ -34,72 +37,77 @@ msgid "Failed to decode JPEG image"
 msgstr "Помилка при декодуванні зображення JPEG"
 
 msgid "Could not connect to server"
-msgstr "Не вдається з'єднатись з сервером"
+msgstr "Не вдалося з'єднатись з сервером"
 
-#, fuzzy
 msgid "Server does not support seeking."
-msgstr "Пристрій \"%s\" не підтримує захоплення відео"
+msgstr "Сервером не підтримується позиціювання."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Не вдається з'єднатись з сервером"
+msgstr "Не вдалося визначити адресу сервера за назвою."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Не вдається встановити з'єднання із звуковим сервером."
+msgstr "Не вдалося встановити з'єднання з сервером."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Помилка під час спроби налаштування безпечного з’єднання."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
+"Сталася помилка роботи з мережею або з’єднання було несподівано розірвано з "
+"боку сервера."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Сервером надіслано помилкові дані."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Не вказано адресу"
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Відсутній або неправильний вхід звуку, AVI потік буде пошкоджений."
+msgstr ""
+"Не вказано або вказано некоректний вхід звукових даних, AVI-потік буде "
+"пошкоджено."
 
 msgid "This file contains no playable streams."
-msgstr "Файл містить потоки, які неможливо відтворити."
+msgstr "Файл не містить потоків, які можна відтворити."
 
-#, fuzzy
 msgid "This file is invalid and cannot be played."
-msgstr "Файл неповний або не може відтворюватись."
+msgstr "Файл є некоректним, його не можна відтворити."
 
 msgid "This file is corrupt and cannot be played."
-msgstr "Файл пошкоджений та не може бути відтворений."
+msgstr "Файл пошкоджено, його не можна відтворити."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Некоректний розмір елементарного фрагмента."
 
 msgid "This file is incomplete and cannot be played."
-msgstr "Файл неповний або не може відтворюватись."
+msgstr "Файл неповний, його не можна відтворити."
 
 msgid "The video in this file might not play correctly."
-msgstr "Потік відео у цьому файлі неможливо коректно відтворити."
+msgstr ""
+"Ймовірно, відеодані цього файла не можна буде відтворити належним чином."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr "Файл містить надто багато потоків. Відтворюються перші %d"
+msgstr "Файл містить надто багато потоків. Відтворюються лише перші %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
+"Не знайдено підтримуваних потоків. Ймовірно, вам слід встановити модуль RTSP "
+"GStreamer для відтворення потоків Real media."
 
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
+"Не знайдено підтримуваних потоків. Ймовірно, вам слід увімкнути додаткові "
+"протоколи передавання даних або встановити додатковий модуль RTSP GStreamer."
 
 msgid "Internal data flow error."
-msgstr "Внутрішня помилка потоку даних."
+msgstr "Помилка внутрішнього перенесення даних."
 
 msgid "Volume"
 msgstr "Гучність"
@@ -126,7 +134,7 @@ msgid "Microphone"
 msgstr "Мікрофон"
 
 msgid "CD"
-msgstr "CD"
+msgstr "КД"
 
 msgid "Mixer"
 msgstr "Мікшер"
@@ -159,7 +167,7 @@ msgid "Digital-2"
 msgstr "Цифровий-2"
 
 msgid "Digital-3"
-msgstr "Цифровий-2"
+msgstr "Цифровий-3"
 
 msgid "Phone-in"
 msgstr "Вх.телефон"
@@ -180,371 +188,377 @@ msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
+"Не вдалося відкрити пристрій для відтворення. Пристрій використовується "
+"сторонньою програмою."
 
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
+"Не вдалося відкрити пристрій для відтворення. У вас недостатньо прав для "
+"відкриття пристрою."
 
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "Не вдається відкрити пристрій компакт-дисків читання."
+msgstr "Не вдалося відкрити пристрій для відтворення."
 
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
+"Не вдалося відкрити пристрій для запису. У вас недостатньо прав для "
+"відкриття пристрою."
 
-#, fuzzy
 msgid "Could not open audio device for recording."
-msgstr "Не вдається відкрити пристрій компакт-дисків читання."
+msgstr "Не вдалося відкрити пристрій для запису."
 
-#, fuzzy
 msgid "Could not open audio device for mixer control handling."
-msgstr "Не вдається відкрити файл \"%s\" для читання."
+msgstr "Не вдалося відкрити пристрій для керування регуляторами мікшера."
 
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
+"Не вдалося відкрити пристрій для керування регуляторами мікшера. Ця версія "
+"Open Sound System не підтримується цим елементом."
 
 msgid "Master"
-msgstr ""
+msgstr "Основний"
 
 msgid "Front"
-msgstr ""
+msgstr "Передній"
 
 msgid "Rear"
-msgstr ""
+msgstr "Задній"
 
 msgid "Headphones"
-msgstr ""
+msgstr "Навушники"
 
 msgid "Center"
-msgstr ""
+msgstr "Центральний"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
 msgid "Surround"
-msgstr ""
+msgstr "Об'ємний"
 
 msgid "Side"
-msgstr ""
+msgstr "Боковий"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Динамік"
+msgstr "Вбудований динамік"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "Вихід AUX 1"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "Вихід AUX 2"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "Вихід AUX"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "Просторова глибина"
 
 msgid "3D Center"
-msgstr ""
+msgstr "Просторовий центр"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "Просторове покращення"
 
 msgid "Telephone"
-msgstr ""
+msgstr "Телефон"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Лінійний вихід"
 
 msgid "Line In"
-msgstr ""
+msgstr "Лінійний вхід"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Вбудований КД"
 
 msgid "Video In"
-msgstr ""
+msgstr "Відеовхід"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "Вхід AUX 1"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "Вхід AUX 2"
 
 msgid "AUX In"
-msgstr ""
+msgstr "Вхід AUX"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Підсилення запису"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Підсилення виходу"
 
 msgid "Microphone Boost"
-msgstr ""
+msgstr "Підсилення мікрофона"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Заглушка"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Діагностика"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Підсилення басів"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Порти відтворення"
 
 msgid "Input"
-msgstr ""
+msgstr "Вхід"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Запис джерела"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Спостереження за джерелом"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Гудок клавіатури"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Імітація стерео"
 
 msgid "Stereo"
-msgstr ""
+msgstr "Стерео"
 
 msgid "Surround Sound"
-msgstr ""
+msgstr "Об'ємний звук"
 
 msgid "Microphone Gain"
-msgstr ""
+msgstr "Підсилення мікрофона"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Основний динамік"
 
 msgid "Microphone Source"
-msgstr ""
+msgstr "Основний мікрофон"
 
 msgid "Jack"
-msgstr ""
+msgstr "Jack"
 
 msgid "Center / LFE"
-msgstr ""
+msgstr "Центральний/LFE"
 
 msgid "Stereo Mix"
-msgstr ""
+msgstr "Стереомікшер"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Мономікшер"
 
 msgid "Input Mix"
-msgstr ""
+msgstr "Мікшер вх. даних"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "Вхід SPDIF"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "Вихід SPDIF"
 
 msgid "Microphone 1"
-msgstr ""
+msgstr "Мікрофон 1"
 
 msgid "Microphone 2"
-msgstr ""
+msgstr "Мікрофон 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Цифровий вихід"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Цифровий вхід"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Модем"
 
 msgid "Handset"
-msgstr ""
+msgstr "Гарнітура"
 
 msgid "Other"
-msgstr ""
+msgstr "Інше"
 
 msgid "None"
-msgstr ""
+msgstr "Немає"
 
 msgid "On"
-msgstr ""
+msgstr "Увімкн."
 
 msgid "Off"
-msgstr ""
+msgstr "Вимкн."
 
 msgid "Mute"
-msgstr ""
+msgstr "Вимкнути звук"
 
 msgid "Fast"
-msgstr ""
+msgstr "Швидко"
 
 #. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
-msgstr ""
+msgstr "Дуже низька"
 
 #. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
-msgstr ""
+msgstr "Низька"
 
 #. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
-msgstr ""
+msgstr "Середня"
 
 #. TRANSLATORS: "High" is a quality setting here
 msgid "High"
-msgstr ""
+msgstr "Висока"
 
 #. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
-msgstr ""
+msgstr "Дуже висока"
 
 #. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
-msgstr ""
+msgstr "Промислова"
 
 msgid "Front Panel Microphone"
-msgstr ""
+msgstr "Мікрофон передньої панелі"
 
 msgid "Front Panel Line In"
-msgstr ""
+msgstr "Лінійний вхід передньої панелі"
 
 msgid "Front Panel Headphones"
-msgstr ""
+msgstr "Вихід навушників передньої панелі"
 
 msgid "Front Panel Line Out"
-msgstr ""
+msgstr "Лінійний вихід передньої панелі"
 
 msgid "Green Connector"
-msgstr ""
+msgstr "Зелений рознім"
 
 msgid "Pink Connector"
-msgstr ""
+msgstr "Рожевий рознім"
 
 msgid "Blue Connector"
-msgstr ""
+msgstr "Синій рознім"
 
 msgid "White Connector"
-msgstr ""
+msgstr "Білий рознім"
 
 msgid "Black Connector"
-msgstr ""
+msgstr "Чорний рознім"
 
 msgid "Gray Connector"
-msgstr ""
+msgstr "Сірий рознім"
 
 msgid "Orange Connector"
-msgstr ""
+msgstr "Помаранчевий рознім"
 
 msgid "Red Connector"
-msgstr ""
+msgstr "Червоний рознім"
 
 msgid "Yellow Connector"
-msgstr ""
+msgstr "Жовтий рознім"
 
 msgid "Green Front Panel Connector"
-msgstr ""
+msgstr "Зелений рознім передньої панелі"
 
 msgid "Pink Front Panel Connector"
-msgstr ""
+msgstr "Рожевий рознім передньої панелі"
 
 msgid "Blue Front Panel Connector"
-msgstr ""
+msgstr "Синій рознім передньої панелі"
 
 msgid "White Front Panel Connector"
-msgstr ""
+msgstr "Білий рознім передньої панелі"
 
 msgid "Black Front Panel Connector"
-msgstr ""
+msgstr "Чорний рознім передньої панелі"
 
 msgid "Gray Front Panel Connector"
-msgstr ""
+msgstr "Сірий рознім передньої панелі"
 
 msgid "Orange Front Panel Connector"
-msgstr ""
+msgstr "Помаранчевий рознім передньої панелі"
 
 msgid "Red Front Panel Connector"
-msgstr ""
+msgstr "Червоний рознім передньої панелі"
 
 msgid "Yellow Front Panel Connector"
-msgstr ""
+msgstr "Жовтий рознім передньої панелі"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Розгорнути вихід"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Об’єднання каналів"
 
 msgid "Virtual Mixer Input"
-msgstr ""
+msgstr "Вхід віртуального мікшера"
 
 msgid "Virtual Mixer Output"
-msgstr ""
+msgstr "Вихід віртуального мікшера"
 
 msgid "Virtual Mixer Channels"
-msgstr ""
+msgstr "Канали віртуального мікшера"
 
 #. TRANSLATORS: name + number of a volume mixer control
 #, c-format
 msgid "%s %d Function"
-msgstr ""
+msgstr "%s, функція %d"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "Функція %s"
 
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
+"Не вдалося відкрити пристрій для відтворення. Ця версія Open Sound System не "
+"підтримується цим елементом."
 
 msgid "Playback is not supported by this audio device."
-msgstr ""
+msgstr "Відтворення не підтримується цим звуковим пристроєм."
 
 msgid "Audio playback error."
-msgstr ""
+msgstr "Помилка відтворення звуку."
 
 msgid "Recording is not supported by this audio device."
-msgstr ""
+msgstr "Запис не підтримується цим звуковим пристроєм."
 
 msgid "Error recording from audio device."
-msgstr ""
+msgstr "Помилка записування зі звукового пристрою."
 
 msgid "Gain"
 msgstr "Підсилення"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Навушники"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Помилка при читанні %d байтів на пристрої '%s'."
+msgstr "Помилка під час спроби читання %d байтів з пристрою «%s»."
 
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
-msgstr ""
+msgstr "Отримано неочікуваний розмір блоку %u замість %u."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
-msgstr "Помилка при читанні %d байтів на пристрої '%s'."
+msgstr "Помилка під час спроби читання %d байтів на пристрої «%s»."
 
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Помилка при отриманні можливостей пристрою '%s': Драйвер не є драйвером для "
+"Помилка при отриманні можливостей пристрою «%s»: драйвер не є драйвером для "
 "v4l2. Перевірте, може це драйвер типу v4l1."
 
 #, c-format
@@ -553,90 +567,89 @@ msgstr "Помилка при запиті атрибутів вводу %d пр
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Помилка при встановленні приймача %d пристрою '%s'."
+msgstr "Помилка при встановленні приймача %d пристрою «%s»."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Помилка при запиті норми пристрою '%s'."
+msgstr "Помилка при запиті норми пристрою «%s»."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Не вдається отримати атрибути органів керування пристрою \"%s\"."
+msgstr "Не вдалося отримати атрибути регуляторів керування пристрою «%s»."
 
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr "Не вдається ідентифікувати пристрій \"%s\"."
+msgstr "Не вдалося ідентифікувати пристрій «%s»."
 
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr "Це не пристрій '%s'."
+msgstr "Це не пристрій «%s»."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "Не вдається відкрити пристрій \"%s\" для читання та запису."
+msgstr "Не вдалося відкрити пристрій «%s» для читання та запису."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Пристрій \"%s\" не є пристроєм захоплення."
+msgstr "Пристрій «%s» не є пристроєм захоплення."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Пристрій \"%s\" не є пристроєм захоплення."
+msgstr "Пристрій «%s» не є пристроєм виведення даних."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Не вдається встановити норму пристрою \"%s\"."
+msgstr "Не вдалося встановити норму пристрою «%s»."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Не вдається отримати поточну частоту приймача пристрою \"%s\"."
+msgstr "Не вдалося отримати поточну частоту приймача пристрою «%s»."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr ""
-"Не вдається встановити поточну частоту приймача пристрою \"%s\" у %lu Гц."
+msgstr "Не вдалося встановити поточну частоту приймача пристрою «%s» у %lu Гц."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Помилка при отриманні сили сигналу пристрою \"%s\"."
+msgstr "Помилка при отриманні сили сигналу пристрою «%s»."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Не вдається отримати значення від органу керування %d пристрою \"%s\"."
+msgstr "Не вдалося отримати значення від органу керування %d пристрою «%s»."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
-"Не вдається встановити значення %d для органу керування %d пристрою \"%s\"."
+"Не вдалося встановити значення %d для органу керування %d пристрою «%s»."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Не вдається отримати поточний ввід пристрою \"%s\". Можливо цей пристрій - "
+"Не вдалося отримати поточний ввід пристрою «%s». Можливо цей пристрій — "
 "радіо."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Не вдається встановити ввід %d пристрою \"%s\"."
+msgstr "Не вдалося встановити ввід %d пристрою «%s»."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Не вдається отримати поточний ввід пристрою \"%s\". Можливо цей пристрій - "
+"Не вдалося отримати поточний вихід пристрою «%s». Можливо цей пристрій — "
 "радіо."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Не вдається встановити ввід %d пристрою \"%s\"."
+msgstr "Не вдалося встановити вихід %d пристрою «%s»."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
-msgstr "Не вдається опитати буфери від пристрою \"%s\"."
+msgstr "Не вдалося опитати буфери від пристрою «%s»."
 
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
-msgstr "Не вдається отримати відеокадри з пристрою \"%s\"."
+msgstr "Не вдалося отримати відеокадри з пристрою «%s»."
 
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
@@ -644,18 +657,19 @@ msgstr "Помилка після %d спроб. Пристрій %s. Систе
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "Не вдається отримати параметри пристрою \"%s\"."
+msgstr "Не вдалося отримати параметри пристрою «%s»."
 
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
+"Пристроєм відеовходу не підтримується нове значення параметра частоти кадрів."
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Не вдається відобразити буфери на пристрій \"%s\"."
+msgstr "Не вдалося пов’язати буфери з пристрою «%s»."
 
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
-msgstr "Драйвер пристрою \"%s\" не підтримує жоден відомий метод захоплення."
+msgstr "Драйвер пристрою «%s» не підтримує жоден відомий метод захоплення."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Зміна роздільної здатності при відтворенні ще не підтримується."

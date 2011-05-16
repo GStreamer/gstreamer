@@ -120,6 +120,11 @@ gst_pulse_fill_sample_spec (GstRingBufferSpec * spec, pa_sample_spec * ss)
   return TRUE;
 }
 
+/* PATH_MAX is not defined everywhere, e.g. on GNU Hurd */
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 gchar *
 gst_pulse_client_name (void)
 {

@@ -28,7 +28,7 @@ GST_PLUGINS_GOOD_BUILT_SOURCES = \
 	gst/matroska/Android.mk		\
 	gst/multifile/Android.mk	\
 	gst/multipart/Android.mk	\
-	gst/quicktime/Android.mk	\
+	gst/isomp4/Android.mk	\
 	gst/replaygain/Android.mk	\
 	gst/rtp/Android.mk		\
 	gst/rtpmanager/Android.mk	\
@@ -94,7 +94,7 @@ CONFIGURE_TARGETS += gst-plugins-good-configure
 -include $(GST_PLUGINS_GOOD_TOP)/gst/matroska/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/multifile/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/multipart/Android.mk
--include $(GST_PLUGINS_GOOD_TOP)/gst/quicktime/Android.mk
+-include $(GST_PLUGINS_GOOD_TOP)/gst/isomp4/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/replaygain/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/rtp/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/rtpmanager/Android.mk
