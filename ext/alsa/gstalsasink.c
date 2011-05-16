@@ -79,7 +79,7 @@ static void gst_alsasink_set_property (GObject * object,
 static void gst_alsasink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_alsasink_getcaps (GstBaseSink * bsink);
+static GstCaps *gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter);
 
 static gboolean gst_alsasink_open (GstAudioSink * asink);
 static gboolean gst_alsasink_prepare (GstAudioSink * asink,
@@ -291,7 +291,7 @@ if ((err = call) < 0)           \
 } G_STMT_END;
 
 static GstCaps *
-gst_alsasink_getcaps (GstBaseSink * bsink)
+gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstElementClass *element_class;
   GstPadTemplate *pad_template;
@@ -305,7 +305,11 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
 
   if (sink->cached_caps) {
     GST_LOG_OBJECT (sink, "Returning cached caps");
-    return gst_caps_ref (sink->cached_caps);
+    if (filter)
+      return gst_caps_intersect_full (filter, sink->cached_caps,
+          GST_CAPS_INTERSECT_FIRST);
+    else
+      return gst_caps_ref (sink->cached_caps);
   }
 
   element_class = GST_ELEMENT_GET_CLASS (sink);
@@ -321,7 +325,16 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
 
   GST_INFO_OBJECT (sink, "returning caps %" GST_PTR_FORMAT, caps);
 
-  return caps;
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    return intersection;
+  } else {
+    return caps;
+  }
 }
 
 static int
