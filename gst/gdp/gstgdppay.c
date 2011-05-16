@@ -455,8 +455,12 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
 
   /* if these are our first ever buffers, send out new_segment first */
   if (!this->sent_streamheader) {
-    GstEvent *event =
-        gst_event_new_new_segment (TRUE, 1.0, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
+    GstEvent *event;
+    GstSegment segment;
+
+    gst_segment_init (&segment, GST_FORMAT_BYTES);
+    event = gst_event_new_segment (&segment);
+
     GST_DEBUG_OBJECT (this, "Sending out new_segment event %p", event);
     if (!gst_pad_push_event (this->srcpad, event)) {
       GST_WARNING_OBJECT (this, "pushing new segment failed");
@@ -561,11 +565,12 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
    * fake one in that case */
   if (!this->new_segment_buf) {
     GstEvent *event;
+    GstSegment segment;
 
     GST_WARNING_OBJECT (this,
         "did not receive new-segment before first buffer");
-    event =
-        gst_event_new_new_segment (TRUE, 1.0, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
+    gst_segment_init (&segment, GST_FORMAT_BYTES);
+    event = gst_event_new_segment (&segment);
     outbuffer = gst_gdp_buffer_from_event (this, event);
     gst_event_unref (event);
 
@@ -689,7 +694,7 @@ gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event)
   /* if we got a new segment or tag event, we should put it on our streamheader,
    * and not send it on */
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       GST_DEBUG_OBJECT (this, "Storing in caps buffer %p as new_segment_buf",
           outbuffer);
 
