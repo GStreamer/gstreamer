@@ -2058,7 +2058,7 @@ check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad)
   dbin->upstream_seekable = FALSE;
 
   query = gst_query_new_seeking (GST_FORMAT_BYTES);
-  if (!gst_pad_peer_query (pad, query)) {
+  if (!gst_pad_peer_query (pad, &query)) {
     GST_DEBUG_OBJECT (dbin, "seeking query failed");
     gst_query_unref (query);
     return;
