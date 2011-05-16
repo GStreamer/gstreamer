@@ -269,14 +269,18 @@ gst_vorbis_enc_generate_sink_caps (void)
 }
 
 static GstCaps *
-gst_vorbis_enc_sink_getcaps (GstPad * pad)
+gst_vorbis_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstVorbisEnc *vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
   if (vorbisenc->sinkcaps == NULL)
     vorbisenc->sinkcaps = gst_vorbis_enc_generate_sink_caps ();
 
-  return gst_caps_ref (vorbisenc->sinkcaps);
+  if (filter)
+    return gst_caps_intersect_full (filter, vorbisenc->sinkcaps,
+        GST_CAPS_INTERSECT_FIRST);
+  else
+    return gst_caps_ref (vorbisenc->sinkcaps);
 }
 
 static gboolean

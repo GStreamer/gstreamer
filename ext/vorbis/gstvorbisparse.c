@@ -188,7 +188,7 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   gsize size;
 
   /* get the headers into the caps, passing them to vorbis as we go */
-  caps = gst_caps_make_writable (gst_pad_get_caps (parse->srcpad));
+  caps = gst_caps_make_writable (gst_pad_get_caps (parse->srcpad, NULL));
   vorbis_parse_set_header_on_caps (parse, caps);
   GST_DEBUG_OBJECT (parse, "here are the caps: %" GST_PTR_FORMAT, caps);
   gst_pad_set_caps (parse->srcpad, caps);
