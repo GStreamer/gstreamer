@@ -295,11 +295,11 @@ gst_selector_pad_get_running_time (GstSelectorPad * pad)
 
   GST_OBJECT_LOCK (pad);
   if (pad->active) {
-    gint64 position = pad->segment.position;
+    guint64 position = pad->segment.position;
+    GstFormat format = pad->segment.format;
 
     if (position >= 0)
-      ret = gst_segment_to_running_time (&pad->segment, GST_FORMAT_TIME,
-          position);
+      ret = gst_segment_to_running_time (&pad->segment, format, position);
   }
   GST_OBJECT_UNLOCK (pad);
 
