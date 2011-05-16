@@ -140,7 +140,7 @@ main (gint argc, gchar * argv[])
 
     g_print ("stream %s:\n", GST_OBJECT_NAME (pad));
 
-    caps = gst_pad_get_caps (pad);
+    caps = gst_pad_get_caps (pad, NULL);
     str = gst_caps_to_string (caps);
     g_print (" caps: %s\n", str);
     g_free (str);

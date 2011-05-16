@@ -225,7 +225,7 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstElement * encodebin)
     GstCaps *caps;
 
     /* Ask encodebin for a compatible pad */
-    caps = gst_pad_get_caps (pad);
+    caps = gst_pad_get_caps (pad, NULL);
     g_signal_emit_by_name (encodebin, "request-pad", caps, &sinkpad);
     if (caps)
       gst_caps_unref (caps);
