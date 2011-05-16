@@ -552,7 +552,7 @@ gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate)
   /* We do not need to update time in VFR (variable frame rate) mode */
   if (!videorate->drop_only) {
     /* adapt for looping, bring back to time in current segment. */
-    GST_BUFFER_TIMESTAMP (outbuf) = push_ts - videorate->segment.accum;
+    GST_BUFFER_TIMESTAMP (outbuf) = push_ts - videorate->segment.base;
   }
 
   GST_LOG_OBJECT (videorate,
