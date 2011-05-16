@@ -258,8 +258,14 @@ gst_capsfilter_transform_caps (GstBaseTransform * base,
   filter_caps = gst_caps_ref (capsfilter->filter_caps);
   GST_OBJECT_UNLOCK (capsfilter);
 
-  tmp = gst_caps_intersect_full (filter, filter_caps, GST_CAPS_INTERSECT_FIRST);
-  ret = gst_caps_intersect_full (tmp, caps, GST_CAPS_INTERSECT_FIRST);
+  if (filter) {
+    tmp =
+        gst_caps_intersect_full (filter, filter_caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (filter_caps);
+    filter_caps = tmp;
+  }
+
+  ret = gst_caps_intersect_full (filter_caps, caps, GST_CAPS_INTERSECT_FIRST);
 
   GST_DEBUG_OBJECT (capsfilter, "input:     %" GST_PTR_FORMAT, caps);
   GST_DEBUG_OBJECT (capsfilter, "filter:    %" GST_PTR_FORMAT, filter);
