@@ -371,12 +371,30 @@ gst_v4lsrc_get_caps (GstBaseSrc * src, GstCaps * filter)
   GList *item;
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
-    return gst_v4lsrc_get_any_caps ();
+    GstCaps *caps, *intersection;
+
+    caps = gst_v4lsrc_get_any_caps ();
+    if (filter) {
+      intersection =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = intersection;
+    }
+    return caps;
   }
 
   if (!v4lsrc->autoprobe) {
+    GstCaps *caps, *intersection;
+
     /* FIXME: query current caps and return those, with _any appended */
-    return gst_v4lsrc_get_any_caps ();
+    caps = gst_v4lsrc_get_any_caps ();
+    if (filter) {
+      intersection =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = intersection;
+    }
+    return caps;
   }
 
   if (!v4lsrc->colorspaces) {
@@ -449,6 +467,15 @@ gst_v4lsrc_get_caps (GstBaseSrc * src, GstCaps * filter)
 
     GST_DEBUG_OBJECT (v4lsrc, "caps: %" GST_PTR_FORMAT, one);
     gst_caps_append (list, one);
+  }
+
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, list, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (list);
+    list = intersection;
   }
 
   return list;
