@@ -582,7 +582,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               }
             }
 
-            caps = gst_pad_get_caps (ogg->srcpad);
+            caps = gst_pad_get_caps (ogg->srcpad, NULL);
             caps = gst_caps_make_writable (caps);
 
             structure = gst_caps_get_structure (caps, 0);

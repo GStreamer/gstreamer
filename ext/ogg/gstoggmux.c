@@ -1187,7 +1187,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
   /* hbufs holds all buffers for the headers now */
 
   /* create caps with the buffers */
-  caps = gst_pad_get_caps (mux->srcpad);
+  caps = gst_pad_get_caps (mux->srcpad, NULL);
   if (caps) {
     caps = gst_ogg_mux_set_header_on_caps (caps, hbufs);
     gst_pad_set_caps (mux->srcpad, caps);

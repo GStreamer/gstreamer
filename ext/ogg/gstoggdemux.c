@@ -114,7 +114,6 @@ static void gst_ogg_pad_finalize (GObject * object);
 static const GstQueryType *gst_ogg_pad_query_types (GstPad * pad);
 static gboolean gst_ogg_pad_src_query (GstPad * pad, GstQuery ** query);
 static gboolean gst_ogg_pad_event (GstPad * pad, GstEvent * event);
-static GstCaps *gst_ogg_pad_getcaps (GstPad * pad);
 static GstOggPad *gst_ogg_chain_get_stream (GstOggChain * chain,
     glong serialno);
 
@@ -144,12 +143,11 @@ gst_ogg_pad_init (GstOggPad * pad)
 {
   gst_pad_set_event_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (gst_ogg_pad_event));
-  gst_pad_set_getcaps_function (GST_PAD (pad),
-      GST_DEBUG_FUNCPTR (gst_ogg_pad_getcaps));
   gst_pad_set_query_type_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (gst_ogg_pad_query_types));
   gst_pad_set_query_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (gst_ogg_pad_src_query));
+  gst_pad_use_fixed_caps (GST_PAD (pad));
 
   pad->mode = GST_OGG_PAD_MODE_INIT;
 
@@ -224,12 +222,6 @@ gst_ogg_pad_query_types (GstPad * pad)
   };
 
   return query_types;
-}
-
-static GstCaps *
-gst_ogg_pad_getcaps (GstPad * pad)
-{
-  return gst_pad_get_current_caps (pad);
 }
 
 static gboolean
