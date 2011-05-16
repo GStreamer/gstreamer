@@ -2037,6 +2037,7 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 {
   GstPadLinkReturn result;
   GstElement *parent;
+  GstCaps *oldcaps, *newcaps;
 
   g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), GST_PAD_LINK_WRONG_DIRECTION);
@@ -2068,11 +2069,16 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 
   /* make sure we push the events from the source to this new peer, for this we
    * copy the events on the sinkpad and mark EVENTS_PENDING */
+  oldcaps = get_pad_caps (sinkpad);
   replace_events (srcpad->priv->events, sinkpad->priv->events);
+  newcaps = get_pad_caps (sinkpad);
   GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_NEED_EVENTS);
 
   GST_OBJECT_UNLOCK (sinkpad);
   GST_OBJECT_UNLOCK (srcpad);
+
+  if (oldcaps != newcaps)
+    g_object_notify_by_pspec ((GObject *) sinkpad, pspec_caps);
 
   /* FIXME released the locks here, concurrent thread might link
    * something else. */
@@ -4419,6 +4425,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
   GstPad *peerpad;
   gboolean result;
+  GstCaps *oldcaps = NULL, *newcaps = NULL;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -4484,12 +4491,18 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     GST_LOG_OBJECT (pad, "storing sticky event %s at index %u",
         GST_EVENT_TYPE_NAME (event), idx);
 
+    oldcaps = get_pad_caps (pad);
     gst_event_replace (&pad->priv->events[idx], event);
+    newcaps = get_pad_caps (pad);
   }
 
   if ((peerpad = GST_PAD_PEER (pad)))
     gst_object_ref (peerpad);
   GST_OBJECT_UNLOCK (pad);
+
+  if (oldcaps != newcaps)
+    g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
+
 
   /* backwards compatibility mode for caps */
   if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
