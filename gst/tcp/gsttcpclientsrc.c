@@ -71,7 +71,8 @@ G_DEFINE_TYPE (GstTCPClientSrc, gst_tcp_client_src, GST_TYPE_PUSH_SRC);
 
 static void gst_tcp_client_src_finalize (GObject * gobject);
 
-static GstCaps *gst_tcp_client_src_getcaps (GstBaseSrc * psrc);
+static GstCaps *gst_tcp_client_src_getcaps (GstBaseSrc * psrc,
+    GstCaps * filter);
 
 static GstFlowReturn gst_tcp_client_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
@@ -153,7 +154,7 @@ gst_tcp_client_src_finalize (GObject * gobject)
 }
 
 static GstCaps *
-gst_tcp_client_src_getcaps (GstBaseSrc * bsrc)
+gst_tcp_client_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   GstTCPClientSrc *src;
   GstCaps *caps = NULL;
@@ -161,11 +162,15 @@ gst_tcp_client_src_getcaps (GstBaseSrc * bsrc)
   src = GST_TCP_CLIENT_SRC (bsrc);
 
   if (!GST_OBJECT_FLAG_IS_SET (src, GST_TCP_CLIENT_SRC_OPEN))
-    caps = gst_caps_new_any ();
+    caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
+  else if (src->caps && filter)
+    caps =
+        gst_caps_intersect_full (filter, src->caps, GST_CAPS_INTERSECT_FIRST);
   else if (src->caps)
     caps = gst_caps_copy (src->caps);
   else
-    caps = gst_caps_new_any ();
+    caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
+
   GST_DEBUG_OBJECT (src, "returning caps %" GST_PTR_FORMAT, caps);
   g_assert (GST_IS_CAPS (caps));
   return caps;
