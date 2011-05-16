@@ -699,7 +699,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
     if (peer) {
       subcaps = gst_pad_get_negotiated_caps (peer);
       if (!subcaps) {
-        subcaps = gst_pad_get_caps_reffed (peer);
+        subcaps = gst_pad_get_caps (peer, NULL);
         if (!gst_caps_is_fixed (subcaps)) {
           gst_caps_unref (subcaps);
           subcaps = NULL;
@@ -840,7 +840,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 
         video_caps = gst_pad_get_negotiated_caps (video_peer);
         if (!video_caps) {
-          video_caps = gst_pad_get_caps_reffed (video_peer);
+          video_caps = gst_pad_get_caps (video_peer, NULL);
           if (!gst_caps_is_fixed (video_caps)) {
             gst_caps_unref (video_caps);
             video_caps = NULL;
@@ -1721,7 +1721,7 @@ gst_subtitle_overlay_subtitle_sink_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static GstCaps *
-gst_subtitle_overlay_subtitle_sink_getcaps (GstPad * pad)
+gst_subtitle_overlay_subtitle_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
   GstCaps *ret;
@@ -1729,6 +1729,10 @@ gst_subtitle_overlay_subtitle_sink_getcaps (GstPad * pad)
   g_mutex_lock (self->factories_lock);
   if (G_UNLIKELY (!gst_subtitle_overlay_update_factory_list (self)))
     ret = GST_CAPS_NONE;
+  else if (filter)
+    ret =
+        gst_caps_intersect_full (filter, self->factory_caps,
+        GST_CAPS_INTERSECT_FIRST);
   else
     ret = gst_caps_ref (self->factory_caps);
   g_mutex_unlock (self->factories_lock);
@@ -1743,7 +1747,7 @@ gst_subtitle_overlay_subtitle_sink_getcaps (GstPad * pad)
 static gboolean
 gst_subtitle_overlay_subtitle_sink_acceptcaps (GstPad * pad, GstCaps * caps)
 {
-  GstCaps *othercaps = gst_subtitle_overlay_subtitle_sink_getcaps (pad);
+  GstCaps *othercaps = gst_subtitle_overlay_subtitle_sink_getcaps (pad, NULL);
   gboolean ret = gst_caps_can_intersect (caps, othercaps);
 
   gst_caps_unref (othercaps);
@@ -1804,7 +1808,7 @@ gst_subtitle_overlay_subtitle_sink_link (GstPad * pad, GstPad * peer)
 
   caps = gst_pad_get_negotiated_caps (peer);
   if (!caps) {
-    caps = gst_pad_get_caps_reffed (peer);
+    caps = gst_pad_get_caps (peer, NULL);
     if (!gst_caps_is_fixed (caps)) {
       gst_caps_unref (caps);
       caps = NULL;

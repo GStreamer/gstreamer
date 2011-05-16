@@ -1513,7 +1513,7 @@ new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
   /* see if any more pending dynamic connections exist */
   more = gst_decode_bin_is_dynamic (decode_bin);
 
-  caps = gst_pad_get_caps (pad);
+  caps = gst_pad_get_caps (pad, NULL);
   close_pad_link (element, pad, caps, decode_bin, more);
   if (caps)
     gst_caps_unref (caps);
@@ -1782,7 +1782,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
         GST_OBJECT_NAME (pad));
 
     /* continue autoplugging on the pads */
-    caps = gst_pad_get_caps (pad);
+    caps = gst_pad_get_caps (pad, NULL);
     close_pad_link (element, pad, caps, decode_bin, more);
     if (caps)
       gst_caps_unref (caps);

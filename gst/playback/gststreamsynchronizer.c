@@ -151,19 +151,19 @@ gst_stream_synchronizer_query (GstPad * pad, GstQuery ** query)
 }
 
 static GstCaps *
-gst_stream_synchronizer_getcaps (GstPad * pad)
+gst_stream_synchronizer_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstPad *opad;
   GstCaps *ret = NULL;
 
   opad = gst_stream_get_other_pad_from_pad (pad);
   if (opad) {
-    ret = gst_pad_peer_get_caps (opad);
+    ret = gst_pad_peer_get_caps (opad, filter);
     gst_object_unref (opad);
   }
 
   if (ret == NULL)
-    ret = gst_caps_new_any ();
+    ret = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   GST_LOG_OBJECT (pad, "Returning caps: %" GST_PTR_FORMAT, ret);
 

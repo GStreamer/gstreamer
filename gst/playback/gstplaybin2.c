@@ -2462,7 +2462,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
   playbin = group->playbin;
 
-  caps = gst_pad_get_caps_reffed (pad);
+  caps = gst_pad_get_caps (pad, NULL);
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
 
@@ -2980,7 +2980,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     if (GST_STATE (sink) < GST_STATE_READY)
       gst_element_set_state (sink, GST_STATE_READY);
 
-    sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+    sinkcaps = gst_pad_get_caps (sinkpad, NULL);
     if (!gst_caps_is_any (sinkcaps))
       ret = !gst_pad_accept_caps (sinkpad, caps);
     gst_caps_unref (sinkcaps);
@@ -3012,7 +3012,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
       if (GST_STATE (sink) < GST_STATE_READY)
         gst_element_set_state (sink, GST_STATE_READY);
 
-      sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+      sinkcaps = gst_pad_get_caps (sinkpad, NULL);
       if (!gst_caps_is_any (sinkcaps))
         ret = !gst_pad_accept_caps (sinkpad, caps);
       gst_caps_unref (sinkcaps);
@@ -3033,7 +3033,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
       if (GST_STATE (sink) < GST_STATE_READY)
         gst_element_set_state (sink, GST_STATE_READY);
 
-      sinkcaps = gst_pad_get_caps_reffed (sinkpad);
+      sinkcaps = gst_pad_get_caps (sinkpad, NULL);
       if (!gst_caps_is_any (sinkcaps))
         ret = !gst_pad_accept_caps (sinkpad, caps);
       gst_caps_unref (sinkcaps);

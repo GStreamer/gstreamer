@@ -1538,7 +1538,7 @@ link_failed:
     GstCaps *caps;
 
     /* could not link this stream */
-    caps = gst_pad_get_caps (srcpad);
+    caps = gst_pad_get_caps (srcpad, NULL);
     capsstr = gst_caps_to_string (caps);
     g_warning ("could not link %s: %d", capsstr, linkres);
     GST_DEBUG_OBJECT (play_bin,
@@ -1555,7 +1555,7 @@ subtitle_failed:
     GstCaps *caps;
 
     /* could not link this stream */
-    caps = gst_pad_get_caps (subtitle_pad);
+    caps = gst_pad_get_caps (subtitle_pad, NULL);
     GST_WARNING_OBJECT (play_bin, "subtitle link failed when adding sink, "
         "caps = %" GST_PTR_FORMAT ", reason %d", caps, linkres);
     gst_caps_unref (caps);

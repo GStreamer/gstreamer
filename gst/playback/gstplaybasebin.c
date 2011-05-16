@@ -1333,7 +1333,7 @@ new_decoded_pad_full (GstElement * element, GstPad * pad, gboolean last,
   GST_DEBUG ("play base: new decoded pad. Last: %d", last);
 
   /* first see if this pad has interesting caps */
-  caps = gst_pad_get_caps (pad);
+  caps = gst_pad_get_caps (pad, NULL);
   if (caps == NULL || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
     goto no_type;
 
@@ -1815,7 +1815,7 @@ has_all_raw_caps (GstPad * pad, gboolean * all_raw)
   guint i, num_raw = 0;
   gboolean res = FALSE;
 
-  caps = gst_pad_get_caps (pad);
+  caps = gst_pad_get_caps (pad, NULL);
   if (caps == NULL)
     return FALSE;
 

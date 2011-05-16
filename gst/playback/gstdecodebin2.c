@@ -1891,7 +1891,7 @@ get_pad_caps (GstPad * pad)
    * be fixed in some cases, in which case analyze_new_pad will set up a
    * notify::caps signal to continue autoplugging. */
   if (caps == NULL)
-    caps = gst_pad_get_caps_reffed (pad);
+    caps = gst_pad_get_caps (pad, NULL);
 
   return caps;
 }

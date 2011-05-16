@@ -101,7 +101,7 @@ static GstPadClass *selector_pad_parent_class = NULL;
 
 static void gst_selector_pad_reset (GstSelectorPad * pad);
 static gboolean gst_selector_pad_event (GstPad * pad, GstEvent * event);
-static GstCaps *gst_selector_pad_getcaps (GstPad * pad);
+static GstCaps *gst_selector_pad_getcaps (GstPad * pad, GstCaps * filter);
 static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
 
 enum
@@ -281,7 +281,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
 }
 
 static GstCaps *
-gst_selector_pad_getcaps (GstPad * pad)
+gst_selector_pad_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstStreamSelector *sel;
   GstCaps *caps;
@@ -289,9 +289,9 @@ gst_selector_pad_getcaps (GstPad * pad)
   sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (sel, "Getting caps of srcpad peer");
-  caps = gst_pad_peer_get_caps (sel->srcpad);
+  caps = gst_pad_peer_get_caps (sel->srcpad, filter);
   if (caps == NULL)
-    caps = gst_caps_new_any ();
+    caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   gst_object_unref (sel);
 
@@ -365,7 +365,7 @@ static GstPad *gst_stream_selector_request_new_pad (GstElement * element,
 static void gst_stream_selector_release_pad (GstElement * element,
     GstPad * pad);
 static GstIterator *gst_stream_selector_pad_iterate_linked_pads (GstPad * pad);
-static GstCaps *gst_stream_selector_getcaps (GstPad * pad);
+static GstCaps *gst_stream_selector_getcaps (GstPad * pad, GstCaps * filter);
 
 static GstElementClass *parent_class = NULL;
 
@@ -552,7 +552,7 @@ gst_stream_selector_get_linked_pad (GstPad * pad, gboolean strict)
 }
 
 static GstCaps *
-gst_stream_selector_getcaps (GstPad * pad)
+gst_stream_selector_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstPad *otherpad;
   GstObject *parent;
@@ -563,15 +563,15 @@ gst_stream_selector_getcaps (GstPad * pad)
   if (!otherpad) {
     GST_DEBUG_OBJECT (parent,
         "Pad %s:%s not linked, returning ANY", GST_DEBUG_PAD_NAME (pad));
-    caps = gst_caps_new_any ();
+    caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
   } else {
     GST_DEBUG_OBJECT (parent,
         "Pad %s:%s is linked (to %s:%s), returning peer caps",
         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (otherpad));
     /* if the peer has caps, use those. If the pad is not linked, this function
      * returns NULL and we return ANY */
-    if (!(caps = gst_pad_peer_get_caps (otherpad)))
-      caps = gst_caps_new_any ();
+    if (!(caps = gst_pad_peer_get_caps (otherpad, filter)))
+      caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
     gst_object_unref (otherpad);
   }
 
