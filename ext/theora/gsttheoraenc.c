@@ -252,7 +252,7 @@ static gboolean theora_enc_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn theora_enc_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_enc_change_state (GstElement * element,
     GstStateChange transition);
-static GstCaps *theora_enc_sink_getcaps (GstPad * pad);
+static GstCaps *theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter);
 static gboolean theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps);
 static void theora_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -578,7 +578,7 @@ theora_enc_get_supported_formats (void)
 }
 
 static GstCaps *
-theora_enc_sink_getcaps (GstPad * pad)
+theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstCaps *caps;
   char *supported_formats, *caps_string;
@@ -598,6 +598,15 @@ theora_enc_sink_getcaps (GstPad * pad)
   g_free (caps_string);
   g_free (supported_formats);
   GST_DEBUG ("Supported caps: %" GST_PTR_FORMAT, caps);
+
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = intersection;
+  }
 
   return caps;
 }
@@ -1194,7 +1203,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     buffers = g_slist_reverse (buffers);
 
     /* mark buffers and put on caps */
-    caps = gst_pad_get_caps (enc->srcpad);
+    caps = gst_pad_get_caps (enc->srcpad, NULL);
     caps = theora_set_header_on_caps (caps, buffers);
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (enc->srcpad, caps);

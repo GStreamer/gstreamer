@@ -287,7 +287,7 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
 
   g_assert (!parse->streamheader_received);
 
-  caps = gst_caps_make_writable (gst_pad_get_caps (parse->srcpad));
+  caps = gst_caps_make_writable (gst_pad_get_caps (parse->srcpad, NULL));
   theora_parse_set_header_on_caps (parse, caps);
   GST_DEBUG_OBJECT (parse, "here are the caps: %" GST_PTR_FORMAT, caps);
   gst_pad_set_caps (parse->srcpad, caps);
