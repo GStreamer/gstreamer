@@ -48,7 +48,9 @@ EXPORTS
 	_gst_disable_registry_cache DATA
 	_gst_element_error_printf
 	_gst_elementclass_factory DATA
+	_gst_event_type DATA
 	_gst_plugin_loader_client_run
+	_gst_structure_type DATA
 	_gst_trace_add_entry
 	_gst_trace_mutex DATA
 	_gst_trace_on DATA
@@ -96,7 +98,6 @@ EXPORTS
 	gst_buffer_extract
 	gst_buffer_fill
 	gst_buffer_flag_get_type
-	gst_buffer_get_caps
 	gst_buffer_get_meta
 	gst_buffer_get_size
 	gst_buffer_is_span_fast
@@ -129,7 +130,6 @@ EXPORTS
 	gst_buffer_remove_memory_range
 	gst_buffer_remove_meta
 	gst_buffer_resize
-	gst_buffer_set_caps
 	gst_buffer_span
 	gst_buffer_take_memory
 	gst_buffer_unmap
@@ -381,9 +381,9 @@ EXPORTS
 	gst_element_unlink_many
 	gst_element_unlink_pads
 	gst_error_get_message
+	gst_event_get_segment
 	gst_event_get_seqnum
 	gst_event_get_structure
-	gst_event_get_type
 	gst_event_has_name
 	gst_event_new_buffer_size
 	gst_event_new_caps
@@ -393,23 +393,19 @@ EXPORTS
 	gst_event_new_flush_stop
 	gst_event_new_latency
 	gst_event_new_navigation
-	gst_event_new_new_segment
-	gst_event_new_new_segment_full
 	gst_event_new_qos
-	gst_event_new_qos_full
 	gst_event_new_reconfigure
 	gst_event_new_seek
+	gst_event_new_segment
 	gst_event_new_sink_message
 	gst_event_new_step
 	gst_event_new_tag
 	gst_event_parse_buffer_size
 	gst_event_parse_caps
 	gst_event_parse_latency
-	gst_event_parse_new_segment
-	gst_event_parse_new_segment_full
 	gst_event_parse_qos
-	gst_event_parse_qos_full
 	gst_event_parse_seek
+	gst_event_parse_segment
 	gst_event_parse_sink_message
 	gst_event_parse_step
 	gst_event_parse_tag
@@ -419,6 +415,7 @@ EXPORTS
 	gst_event_type_get_name
 	gst_event_type_get_type
 	gst_event_type_to_quark
+	gst_event_writable_structure
 	gst_filename_to_uri
 	gst_filter_run
 	gst_flow_get_name
@@ -548,6 +545,7 @@ EXPORTS
 	gst_message_get_stream_status_object
 	gst_message_get_structure
 	gst_message_get_type
+	gst_message_has_name
 	gst_message_new_application
 	gst_message_new_async_done
 	gst_message_new_async_start
@@ -837,7 +835,6 @@ EXPORTS
 	gst_print_pad_caps
 	gst_progress_type_get_type
 	gst_proxy_pad_acceptcaps_default
-	gst_proxy_pad_bufferalloc_default
 	gst_proxy_pad_chain_default
 	gst_proxy_pad_chain_list_default
 	gst_proxy_pad_checkgetrange_default
@@ -855,14 +852,14 @@ EXPORTS
 	gst_qos_type_get_type
 	gst_query_add_allocation_meta
 	gst_query_add_buffering_range
-	gst_query_get_n_allocation_meta
+	gst_query_get_n_allocation_metas
 	gst_query_get_n_buffering_ranges
 	gst_query_get_structure
 	gst_query_get_type
 	gst_query_new_allocation
-	gst_query_new_application
 	gst_query_new_buffering
 	gst_query_new_convert
+	gst_query_new_custom
 	gst_query_new_duration
 	gst_query_new_formats
 	gst_query_new_latency
@@ -871,17 +868,17 @@ EXPORTS
 	gst_query_new_segment
 	gst_query_new_uri
 	gst_query_parse_allocation
-	gst_query_parse_allocation_meta
 	gst_query_parse_allocation_params
 	gst_query_parse_buffering_percent
 	gst_query_parse_buffering_range
 	gst_query_parse_buffering_stats
 	gst_query_parse_convert
 	gst_query_parse_duration
-	gst_query_parse_formats_length
-	gst_query_parse_formats_nth
 	gst_query_parse_latency
+	gst_query_parse_n_formats
+	gst_query_parse_nth_allocation_meta
 	gst_query_parse_nth_buffering_range
+	gst_query_parse_nth_format
 	gst_query_parse_position
 	gst_query_parse_seeking
 	gst_query_parse_segment
@@ -907,6 +904,7 @@ EXPORTS
 	gst_query_type_register
 	gst_query_type_to_quark
 	gst_query_types_contains
+	gst_query_writable_structure
 	gst_rank_get_type
 	gst_registry_add_feature
 	gst_registry_add_path
@@ -938,16 +936,13 @@ EXPORTS
 	gst_seek_type_get_type
 	gst_segment_clip
 	gst_segment_copy
+	gst_segment_copy_into
+	gst_segment_do_seek
 	gst_segment_free
 	gst_segment_get_type
 	gst_segment_init
 	gst_segment_new
-	gst_segment_set_duration
-	gst_segment_set_last_stop
-	gst_segment_set_newsegment
-	gst_segment_set_newsegment_full
 	gst_segment_set_running_time
-	gst_segment_set_seek
 	gst_segment_to_position
 	gst_segment_to_running_time
 	gst_segment_to_stream_time
@@ -989,7 +984,6 @@ EXPORTS
 	gst_structure_get_name
 	gst_structure_get_name_id
 	gst_structure_get_string
-	gst_structure_get_type
 	gst_structure_get_uint
 	gst_structure_get_valist
 	gst_structure_get_value
@@ -1007,6 +1001,7 @@ EXPORTS
 	gst_structure_id_set_valist
 	gst_structure_id_set_value
 	gst_structure_id_take_value
+	gst_structure_is_equal
 	gst_structure_map_in_place
 	gst_structure_n_fields
 	gst_structure_new
