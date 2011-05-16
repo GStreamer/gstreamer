@@ -73,28 +73,6 @@ post_missing_element_message (GstPlaySinkAudioConvert * self,
 }
 
 static void
-distribute_running_time (GstElement * element, const GstSegment * segment)
-{
-  GstEvent *event;
-  GstPad *pad;
-
-  pad = gst_element_get_static_pad (element, "sink");
-
-  if (segment->accum) {
-    event = gst_event_new_new_segment_full (FALSE, segment->rate,
-        segment->applied_rate, segment->format, 0, segment->accum, 0);
-    gst_pad_push_event (pad, event);
-  }
-
-  event = gst_event_new_new_segment_full (FALSE, segment->rate,
-      segment->applied_rate, segment->format,
-      segment->start, segment->stop, segment->time);
-  gst_pad_push_event (pad, event);
-
-  gst_object_unref (pad);
-}
-
-static void
 pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkAudioConvert * self)
 {
   GstPad *peer;
@@ -111,7 +89,7 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkAudioConvert * self)
   peer = gst_pad_get_peer (self->sinkpad);
   caps = gst_pad_get_negotiated_caps (peer);
   if (!caps)
-    caps = gst_pad_get_caps_reffed (peer);
+    caps = gst_pad_get_caps (peer, NULL);
   gst_object_unref (peer);
 
   raw = is_raw_caps (caps);
@@ -142,7 +120,6 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkAudioConvert * self)
       } else {
         gst_bin_add (bin, self->conv);
         gst_element_sync_state_with_parent (self->conv);
-        distribute_running_time (self->conv, &self->segment);
         prev = head = self->conv;
       }
 
@@ -155,7 +132,6 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkAudioConvert * self)
       } else {
         gst_bin_add (bin, self->resample);
         gst_element_sync_state_with_parent (self->resample);
-        distribute_running_time (self->resample, &self->segment);
         if (prev) {
           if (!gst_element_link_pads_full (prev, "src", self->resample, "sink",
                   GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
@@ -170,7 +146,6 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkAudioConvert * self)
     if (self->use_volume && self->volume) {
       gst_bin_add (bin, gst_object_ref (self->volume));
       gst_element_sync_state_with_parent (self->volume);
-      distribute_running_time (self->volume, &self->segment);
       if (prev) {
         if (!gst_element_link_pads_full (prev, "src", self->volume, "sink",
                 GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
@@ -261,20 +236,11 @@ gst_play_sink_audio_convert_sink_event (GstPad * pad, GstEvent * event)
 
   ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
-    gboolean update;
-    gdouble rate, applied_rate;
-    GstFormat format;
-    gint64 start, stop, position;
-
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
-    gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-        &format, &start, &stop, &position);
-
     GST_DEBUG_OBJECT (self, "Segment before %" GST_SEGMENT_FORMAT,
         &self->segment);
-    gst_segment_set_newsegment_full (&self->segment, update, rate, applied_rate,
-        format, start, stop, position);
+    gst_event_parse_segment (event, &self->segment);
     GST_DEBUG_OBJECT (self, "Segment after %" GST_SEGMENT_FORMAT,
         &self->segment);
     GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
@@ -341,7 +307,7 @@ gst_play_sink_audio_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstCaps *
-gst_play_sink_audio_convert_getcaps (GstPad * pad)
+gst_play_sink_audio_convert_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstPlaySinkAudioConvert *self =
       GST_PLAY_SINK_AUDIO_CONVERT (gst_pad_get_parent (pad));
@@ -357,10 +323,10 @@ gst_play_sink_audio_convert_getcaps (GstPad * pad)
 
   peer = gst_pad_get_peer (otherpad);
   if (peer) {
-    ret = gst_pad_get_caps_reffed (peer);
+    ret = gst_pad_get_caps (peer, filter);
     gst_object_unref (peer);
   } else {
-    ret = gst_caps_new_any ();
+    ret = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
   }
 
   gst_object_unref (otherpad);
