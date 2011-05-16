@@ -172,13 +172,8 @@ gst_mini_object_init (GTypeInstance * instance, gpointer klass)
 
   mini_object->refcount = 1;
 
-  /* Initialize the mini object's private data */
-
-  mini_object->priv = (GstMiniObjectPrivate *)
-      G_TYPE_INSTANCE_GET_PRIVATE (instance, GST_TYPE_MINI_OBJECT,
-      GstMiniObjectPrivate);
-
-  mini_object->priv->wstack = NULL;
+  /* we delay initialising the mini object's private data until it's actually
+   * needed for now (mini_object->priv automatically inited to NULL) */
 }
 
 static GstMiniObject *
@@ -384,7 +379,7 @@ gst_mini_object_free (GstMiniObject * mini_object)
    * want to free the instance anymore */
   if (G_LIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
     /* The weak reference stack is freed in the notification function */
-    if (mini_object->priv->wstack)
+    if (mini_object->priv != NULL && mini_object->priv->wstack != NULL)
       weak_refs_notify (mini_object->priv->wstack);
 
 #ifndef GST_DISABLE_TRACE
@@ -444,6 +439,13 @@ gst_mini_object_weak_ref (GstMiniObject * object,
 
   G_LOCK (weak_refs_mutex);
 
+  if (object->priv == NULL) {
+    object->priv = G_TYPE_INSTANCE_GET_PRIVATE (object, GST_TYPE_MINI_OBJECT,
+        GstMiniObjectPrivate);
+
+    /* object->priv->wstack will have been inited to NULL automatically */
+  }
+
   if (object->priv->wstack) {
     /* Don't add the weak reference if it already exists. */
     for (i = 0; i < object->priv->wstack->n_weak_refs; i++) {
@@ -492,7 +494,7 @@ gst_mini_object_weak_unref (GstMiniObject * object,
 
   G_LOCK (weak_refs_mutex);
 
-  if (object->priv->wstack) {
+  if (object->priv != NULL && object->priv->wstack != NULL) {
     guint i;
 
     for (i = 0; i < object->priv->wstack->n_weak_refs; i++)
