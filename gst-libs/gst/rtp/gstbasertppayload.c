@@ -99,7 +99,8 @@ static void gst_basertppayload_init (GstBaseRTPPayload * basertppayload,
 static void gst_basertppayload_finalize (GObject * object);
 
 static gboolean gst_basertppayload_sink_setcaps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_basertppayload_sink_getcaps (GstPad * pad);
+static GstCaps *gst_basertppayload_sink_getcaps (GstPad * pad,
+    GstCaps * filter);
 static gboolean gst_basertppayload_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_basertppayload_chain (GstPad * pad,
     GstBuffer * buffer);
@@ -347,7 +348,7 @@ gst_basertppayload_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstCaps *
-gst_basertppayload_sink_getcaps (GstPad * pad)
+gst_basertppayload_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstBaseRTPPayload *basertppayload;
   GstBaseRTPPayloadClass *basertppayload_class;
@@ -359,7 +360,7 @@ gst_basertppayload_sink_getcaps (GstPad * pad)
   basertppayload_class = GST_BASE_RTP_PAYLOAD_GET_CLASS (basertppayload);
 
   if (basertppayload_class->get_caps)
-    caps = basertppayload_class->get_caps (basertppayload, pad);
+    caps = basertppayload_class->get_caps (basertppayload, pad, filter);
 
   if (!caps) {
     caps = GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
@@ -367,7 +368,10 @@ gst_basertppayload_sink_getcaps (GstPad * pad)
         "using pad template %p with caps %p %" GST_PTR_FORMAT,
         GST_PAD_PAD_TEMPLATE (pad), caps, caps);
 
-    caps = gst_caps_ref (caps);
+    if (filter)
+      caps = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    else
+      caps = gst_caps_ref (caps);
   }
 
   gst_object_unref (basertppayload);
@@ -551,7 +555,7 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload,
   payload->abidata.ABI.ptime = 0;
 
   /* the peer caps can override some of the defaults */
-  peercaps = gst_pad_peer_get_caps (payload->srcpad);
+  peercaps = gst_pad_peer_get_caps (payload->srcpad, srccaps);
   if (peercaps == NULL) {
     /* no peer caps, just add the other properties */
     gst_caps_set_simple (srccaps,
@@ -568,11 +572,10 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload,
     gint pt;
     guint max_ptime, ptime;
 
-    /* peer provides caps we can use to fixate, intersect. This always returns a
-     * writable caps. */
-    temp = gst_caps_intersect (srccaps, peercaps);
+    /* peer provides caps we can use to fixate. They are already intersected
+     * with our srccaps, just make them writable */
+    temp = gst_caps_make_writable (peercaps);
     gst_caps_unref (srccaps);
-    gst_caps_unref (peercaps);
 
     if (gst_caps_is_empty (temp)) {
       gst_caps_unref (temp);

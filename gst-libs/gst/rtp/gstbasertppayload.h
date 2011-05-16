@@ -131,7 +131,7 @@ struct _GstBaseRTPPayloadClass
   GstFlowReturn (*handle_buffer)        (GstBaseRTPPayload *payload,
                                          GstBuffer *buffer);
   gboolean      (*handle_event)         (GstPad * pad, GstEvent * event);
-  GstCaps *     (*get_caps)             (GstBaseRTPPayload *payload, GstPad * pad);
+  GstCaps *     (*get_caps)             (GstBaseRTPPayload *payload, GstPad * pad, GstCaps * filter);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING-2];
