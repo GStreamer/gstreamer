@@ -262,7 +262,7 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
        * accept only sinks that match with the filter caps */
       if (sink->filter_caps) {
         el_pad = gst_element_get_static_pad (GST_ELEMENT (el), "sink");
-        el_caps = gst_pad_get_caps (el_pad);
+        el_caps = gst_pad_get_caps (el_pad, NULL);
         gst_object_unref (el_pad);
         GST_DEBUG_OBJECT (sink,
             "Checking caps: %" GST_PTR_FORMAT " vs. %" GST_PTR_FORMAT,

@@ -265,7 +265,7 @@ gst_auto_audio_src_find_best (GstAutoAudioSrc * src)
        * accept only sources that match with the filter caps */
       if (src->filter_caps) {
         el_pad = gst_element_get_static_pad (GST_ELEMENT (el), "src");
-        el_caps = gst_pad_get_caps (el_pad);
+        el_caps = gst_pad_get_caps (el_pad, NULL);
         gst_object_unref (el_pad);
         GST_DEBUG_OBJECT (src,
             "Checking caps: %" GST_PTR_FORMAT " vs. %" GST_PTR_FORMAT,
