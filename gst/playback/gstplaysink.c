@@ -2847,7 +2847,7 @@ is_raw_pad (GstPad * pad)
   if (!caps) {
     guint i, n;
 
-    caps = gst_pad_get_caps_reffed (peer);
+    caps = gst_pad_get_caps (peer, NULL);
 
     n = gst_caps_get_size (caps);
     for (i = 0; i < n; i++) {
