@@ -80,7 +80,7 @@ static gboolean setup_recoder_pipeline (GstSmartEncoder * smart_encoder);
 
 static GstFlowReturn gst_smart_encoder_chain (GstPad * pad, GstBuffer * buf);
 static gboolean smart_encoder_sink_event (GstPad * pad, GstEvent * event);
-static GstCaps *smart_encoder_sink_getcaps (GstPad * pad);
+static GstCaps *smart_encoder_sink_getcaps (GstPad * pad, GstCaps * filter);
 static GstStateChangeReturn
 gst_smart_encoder_change_state (GstElement * element,
     GstStateChange transition);
@@ -381,13 +381,10 @@ smart_encoder_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static GstCaps *
-smart_encoder_sink_getcaps (GstPad * pad)
+smart_encoder_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstCaps *peer, *tmpl, *res;
   GstSmartEncoder *smart_encoder = GST_SMART_ENCODER (gst_pad_get_parent (pad));
-
-  /* Try getting it from downstream */
-  peer = gst_pad_peer_get_caps_reffed (smart_encoder->srcpad);
 
   /* Use computed caps */
   if (smart_encoder->available_caps)
@@ -395,11 +392,13 @@ smart_encoder_sink_getcaps (GstPad * pad)
   else
     tmpl = gst_static_pad_template_get_caps (&src_template);
 
+  /* Try getting it from downstream */
+  peer = gst_pad_peer_get_caps (smart_encoder->srcpad, tmpl);
+
   if (peer == NULL) {
     res = tmpl;
   } else {
-    res = gst_caps_intersect (peer, tmpl);
-    gst_caps_unref (peer);
+    res = peer;
     gst_caps_unref (tmpl);
   }
 

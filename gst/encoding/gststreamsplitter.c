@@ -242,7 +242,7 @@ beach:
 }
 
 static GstCaps *
-gst_stream_splitter_sink_getcaps (GstPad * pad)
+gst_stream_splitter_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstStreamSplitter *stream_splitter =
       (GstStreamSplitter *) GST_PAD_PARENT (pad);
@@ -256,7 +256,7 @@ gst_stream_splitter_sink_getcaps (GstPad * pad)
 
 resync:
   if (G_UNLIKELY (stream_splitter->srcpads == NULL)) {
-    res = gst_caps_new_any ();
+    res = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
     goto beach;
   }
 
@@ -269,9 +269,9 @@ resync:
 
     STREAMS_UNLOCK (stream_splitter);
     if (res)
-      gst_caps_merge (res, gst_pad_peer_get_caps_reffed (srcpad));
+      gst_caps_merge (res, gst_pad_peer_get_caps (srcpad, filter));
     else
-      res = gst_pad_peer_get_caps (srcpad);
+      res = gst_pad_peer_get_caps (srcpad, filter);
     STREAMS_LOCK (stream_splitter);
 
     if (G_UNLIKELY (cookie != stream_splitter->cookie)) {
@@ -316,7 +316,7 @@ resync:
     GstCaps *peercaps;
 
     STREAMS_UNLOCK (stream_splitter);
-    peercaps = gst_pad_peer_get_caps_reffed (srcpad);
+    peercaps = gst_pad_peer_get_caps (srcpad, NULL);
     if (peercaps) {
       res = gst_caps_can_intersect (caps, peercaps);
       gst_caps_unref (peercaps);

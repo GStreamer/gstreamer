@@ -132,12 +132,12 @@ gst_stream_combiner_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static GstCaps *
-gst_stream_combiner_sink_getcaps (GstPad * pad)
+gst_stream_combiner_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstStreamCombiner *stream_combiner =
       (GstStreamCombiner *) GST_PAD_PARENT (pad);
 
-  return gst_pad_peer_get_caps_reffed (stream_combiner->srcpad);
+  return gst_pad_peer_get_caps (stream_combiner->srcpad, filter);
 }
 
 static gboolean
