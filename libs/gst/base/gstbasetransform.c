@@ -1781,9 +1781,7 @@ no_reconfigure:
 no_qos:
 
   /* first try to allocate an output buffer based on the currently negotiated
-   * format. While we call pad-alloc we could renegotiate the srcpad format or
-   * have a new suggestion for upstream buffer-alloc. 
-   * In any case, outbuf will contain a buffer suitable for doing the configured
+   * format. outbuf will contain a buffer suitable for doing the configured
    * transform after this function. */
   ret = gst_base_transform_prepare_output_buffer (trans, inbuf, outbuf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -1852,6 +1850,7 @@ not_negotiated:
 no_buffer:
   {
     gst_buffer_unref (inbuf);
+    *outbuf = NULL;
     GST_WARNING_OBJECT (trans, "could not get buffer from pool: %s",
         gst_flow_get_name (ret));
     return ret;
