@@ -344,7 +344,7 @@ cb_newpad (GstElement *element,
 {
   GstCaps *caps;
 
-  caps = gst_pad_get_caps (pad);
+  caps = gst_pad_get_caps (pad, NULL);
   try_to_plug (pad, caps);
   gst_caps_unref (caps);
 }
@@ -389,7 +389,7 @@ close_link (GstPad      *srcpad,
     switch (templ->presence) {
       case GST_PAD_ALWAYS: {
         GstPad *pad = gst_element_get_static_pad (sinkelement, templ->name_template);
-        GstCaps *caps = gst_pad_get_caps (pad);
+        GstCaps *caps = gst_pad_get_caps (pad, NULL);
 
         /* link */
         try_to_plug (pad, caps);
@@ -436,7 +436,8 @@ try_to_plug (GstPad        *pad,
   }
 
   /* can it link to the audiopad? */
-  audiocaps = gst_pad_get_caps (gst_element_get_static_pad (audiosink, "sink"));
+  audiocaps = gst_pad_get_caps (gst_element_get_static_pad (audiosink, "sink"),
+  NULL);
   res = gst_caps_intersect (caps, audiocaps);
   if (res &amp;&amp; !gst_caps_is_empty (res)) {
     g_print ("Found pad to link to audiosink - plugging is now done\n");
