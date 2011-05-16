@@ -141,7 +141,7 @@ static gboolean gst_visual_src_query (GstPad * pad, GstQuery ** query);
 
 static gboolean gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_visual_src_setcaps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_visual_getcaps (GstPad * pad);
+static GstCaps *gst_visual_getcaps (GstPad * pad, GstCaps * filter);
 static void libvisual_log_handler (const char *message, const char *funcname,
     void *priv);
 
@@ -272,7 +272,7 @@ gst_visual_reset (GstVisual * visual)
 }
 
 static GstCaps *
-gst_visual_getcaps (GstPad * pad)
+gst_visual_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstCaps *ret;
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
@@ -311,6 +311,15 @@ gst_visual_getcaps (GstPad * pad)
   }
 
 beach:
+
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = intersection;
+  }
 
   GST_DEBUG_OBJECT (visual, "returning caps %" GST_PTR_FORMAT, ret);
   gst_object_unref (visual);
@@ -397,18 +406,18 @@ gst_vis_src_negotiate (GstVisual * visual)
   GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
 
-  caps = gst_pad_get_caps (visual->srcpad);
+  caps = gst_pad_get_caps (visual->srcpad, NULL);
 
   /* see what the peer can do */
-  othercaps = gst_pad_peer_get_caps (visual->srcpad);
+  othercaps = gst_pad_peer_get_caps (visual->srcpad, caps);
   if (othercaps) {
-    target = gst_caps_intersect (othercaps, caps);
-    gst_caps_unref (othercaps);
+    target = othercaps;
     gst_caps_unref (caps);
 
     if (gst_caps_is_empty (target))
       goto no_format;
 
+    target = gst_caps_make_writable (target);
     gst_caps_truncate (target);
   } else {
     /* need a copy, we'll be modifying it when fixating */
