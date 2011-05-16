@@ -57,6 +57,12 @@ typedef struct _GstURIDecodeBinClass GstURIDecodeBinClass;
 #define GST_URI_DECODE_BIN_LOCK(dec) (g_mutex_lock(GST_URI_DECODE_BIN_GET_LOCK(dec)))
 #define GST_URI_DECODE_BIN_UNLOCK(dec) (g_mutex_unlock(GST_URI_DECODE_BIN_GET_LOCK(dec)))
 
+typedef struct _GstURIDecodeBinStream
+{
+  gulong probe_id;
+  guint bitrate;
+} GstURIDecodeBinStream;
+
 /**
  * GstURIDecodeBin
  *
@@ -91,7 +97,7 @@ struct _GstURIDecodeBin
   guint have_type_id;           /* have-type signal id from typefind */
   GSList *decodebins;
   GSList *pending_decodebins;
-  GSList *srcpads;
+  GHashTable *streams;
   gint numpads;
 
   /* for dynamic sources */
@@ -930,7 +936,99 @@ source_no_more_pads (GstElement * element, GstURIDecodeBin * bin)
   no_more_pads_full (element, FALSE, bin);
 }
 
-/* Called by the signal handlers when a decodebin has 
+static void
+configure_stream_buffering (GstURIDecodeBin * decoder)
+{
+  GstElement *queue = NULL;
+  GHashTableIter iter;
+  gpointer key, value;
+  gint bitrate = 0;
+
+  /* automatic configuration enabled ? */
+  if (decoder->buffer_size != -1)
+    return;
+
+  GST_URI_DECODE_BIN_LOCK (decoder);
+  if (decoder->queue)
+    queue = gst_object_ref (decoder->queue);
+
+  g_hash_table_iter_init (&iter, decoder->streams);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    GstURIDecodeBinStream *stream = value;
+
+    if (stream->bitrate && bitrate >= 0)
+      bitrate += stream->bitrate;
+    else
+      bitrate = -1;
+  }
+  GST_URI_DECODE_BIN_UNLOCK (decoder);
+
+  GST_DEBUG_OBJECT (decoder, "overall bitrate %d", bitrate);
+  if (!queue)
+    return;
+
+  if (bitrate > 0) {
+    guint64 time;
+    guint bytes;
+
+    /* all streams have a bitrate;
+     * configure queue size based on queue duration using combined bitrate */
+    g_object_get (queue, "max-size-time", &time, NULL);
+    GST_DEBUG_OBJECT (decoder, "queue buffering time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (time));
+    if (time > 0) {
+      bytes = gst_util_uint64_scale (time, bitrate, 8 * GST_SECOND);
+      GST_DEBUG_OBJECT (decoder, "corresponds to buffer size %d", bytes);
+      g_object_set (queue, "max-size-bytes", bytes, NULL);
+    }
+  }
+
+  gst_object_unref (queue);
+}
+
+static gboolean
+decoded_pad_event_probe (GstPad * pad, GstEvent * event,
+    GstURIDecodeBin * decoder)
+{
+  GST_LOG_OBJECT (pad, "%s, decoder %p", GST_EVENT_TYPE_NAME (event), decoder);
+
+  /* look for a bitrate tag */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+    {
+      GstTagList *list;
+      guint bitrate = 0;
+      GstURIDecodeBinStream *stream;
+
+      gst_event_parse_tag (event, &list);
+      if (!gst_tag_list_get_uint_index (list, GST_TAG_NOMINAL_BITRATE, 0,
+              &bitrate)) {
+        gst_tag_list_get_uint_index (list, GST_TAG_BITRATE, 0, &bitrate);
+      }
+      GST_DEBUG_OBJECT (pad, "found bitrate %u", bitrate);
+      if (bitrate) {
+        GST_URI_DECODE_BIN_LOCK (decoder);
+        stream = g_hash_table_lookup (decoder->streams, pad);
+        GST_URI_DECODE_BIN_UNLOCK (decoder);
+        if (stream) {
+          stream->bitrate = bitrate;
+          /* no longer need this probe now */
+          gst_pad_remove_event_probe (pad, stream->probe_id);
+          /* configure buffer if possible */
+          configure_stream_buffering (decoder);
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  /* never drop */
+  return TRUE;
+}
+
+/* Called by the signal handlers when a decodebin has
  * found a new raw pad.  
  */
 static void
@@ -940,6 +1038,7 @@ new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
   GstPad *newpad;
   GstPadTemplate *pad_tmpl;
   gchar *padname;
+  GstURIDecodeBinStream *stream;
 
   GST_DEBUG_OBJECT (element, "new decoded pad, name: <%s>. Last: %d",
       GST_PAD_NAME (pad), last);
@@ -957,10 +1056,18 @@ new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
   /* store ref to the ghostpad so we can remove it */
   g_object_set_data (G_OBJECT (pad), "uridecodebin.ghostpad", newpad);
 
+  /* add event probe to monitor tags */
+  stream = g_slice_alloc0 (sizeof (GstURIDecodeBinStream));
+  stream->probe_id =
+      gst_pad_add_event_probe (pad, G_CALLBACK (decoded_pad_event_probe),
+      decoder);
+  GST_URI_DECODE_BIN_LOCK (decoder);
+  g_hash_table_insert (decoder->streams, pad, stream);
+  GST_URI_DECODE_BIN_UNLOCK (decoder);
+
   gst_pad_set_active (newpad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (decoder), newpad);
 }
-
 
 static gboolean
 source_pad_event_probe (GstPad * pad, GstEvent * event,
@@ -1423,22 +1530,6 @@ remove_decoders (GstURIDecodeBin * bin, gboolean force)
 }
 
 static void
-remove_pads (GstURIDecodeBin * bin)
-{
-  GSList *walk;
-
-  for (walk = bin->srcpads; walk; walk = g_slist_next (walk)) {
-    GstPad *pad = GST_PAD_CAST (walk->data);
-
-    GST_DEBUG_OBJECT (bin, "removing old pad");
-    gst_pad_set_active (pad, FALSE);
-    gst_element_remove_pad (GST_ELEMENT_CAST (bin), pad);
-  }
-  g_slist_free (bin->srcpads);
-  bin->srcpads = NULL;
-}
-
-static void
 proxy_unknown_type_signal (GstElement * element, GstPad * pad, GstCaps * caps,
     GstURIDecodeBin * dec)
 {
@@ -1789,6 +1880,12 @@ could_not_link:
   }
 }
 
+static void
+free_stream (gpointer value)
+{
+  g_slice_free (GstURIDecodeBinStream, value);
+}
+
 /* remove source and all related elements */
 static void
 remove_source (GstURIDecodeBin * bin)
@@ -1821,6 +1918,10 @@ remove_source (GstURIDecodeBin * bin)
     gst_element_set_state (bin->typefind, GST_STATE_NULL);
     gst_bin_remove (GST_BIN_CAST (bin), bin->typefind);
     bin->typefind = NULL;
+  }
+  if (bin->streams) {
+    g_hash_table_destroy (bin->streams);
+    bin->streams = NULL;
   }
   /* Don't loose the SOURCE flag */
   GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_IS_SOURCE);
@@ -1915,6 +2016,9 @@ setup_source (GstURIDecodeBin * decoder)
 
   /* remove the old decoders now, if any */
   remove_decoders (decoder, FALSE);
+
+  /* stream admin setup */
+  decoder->streams = g_hash_table_new_full (NULL, NULL, NULL, free_stream);
 
   /* see if the source element emits raw audio/video all by itself,
    * if so, we can create streams for the pads and be done with it.
@@ -2408,14 +2512,12 @@ gst_uri_decode_bin_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("paused to ready");
       remove_decoders (decoder, FALSE);
-      remove_pads (decoder);
       remove_source (decoder);
       do_async_done (decoder);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_DEBUG ("ready to null");
       remove_decoders (decoder, TRUE);
-      remove_pads (decoder);
       remove_source (decoder);
       break;
     default:

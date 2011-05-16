@@ -17,6 +17,8 @@ EXPORTS
 	gst_audio_frame_byte_size
 	gst_audio_frame_length
 	gst_audio_get_channel_positions
+	gst_audio_iec61937_frame_size
+	gst_audio_iec61937_payload
 	gst_audio_is_buffer_framed
 	gst_audio_set_caps_channel_positions_list
 	gst_audio_set_channel_positions

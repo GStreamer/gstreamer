@@ -928,6 +928,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   GList *tmp, *tosync = NULL;
   const GstCaps *format;
   const GstCaps *restriction;
+  const gchar *missing_element_name;
 
   format = gst_encoding_profile_get_format (sprof);
   restriction = gst_encoding_profile_get_restriction (sprof);
@@ -1177,9 +1178,18 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
     cspace = gst_element_factory_make ("ffmpegcolorspace", NULL);
     scale = gst_element_factory_make ("videoscale", NULL);
+    if (!scale) {
+      missing_element_name = "videoscale";
+      goto missing_element;
+    }
     /* 4-tap scaling and black borders */
     g_object_set (scale, "method", 2, "add-borders", TRUE, NULL);
     cspace2 = gst_element_factory_make ("ffmpegcolorspace", NULL);
+
+    if (!cspace || !cspace2) {
+      missing_element_name = "ffmpegcolorspace";
+      goto missing_element;
+    }
 
     gst_bin_add_many ((GstBin *) ebin, cspace, scale, cspace2, NULL);
     tosync = g_list_append (tosync, cspace);
@@ -1197,6 +1207,11 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     if (!gst_encoding_video_profile_get_variableframerate
         (GST_ENCODING_VIDEO_PROFILE (sprof))) {
       vrate = gst_element_factory_make ("videorate", NULL);
+      if (!vrate) {
+        missing_element_name = "videorate";
+        goto missing_element;
+      }
+
       gst_bin_add ((GstBin *) ebin, vrate);
       tosync = g_list_prepend (tosync, vrate);
       sgroup->converters = g_list_prepend (sgroup->converters, vrate);
@@ -1215,9 +1230,21 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
     arate = gst_element_factory_make ("audiorate", NULL);
     g_object_set (arate, "tolerance", (guint64) ebin->tolerance, NULL);
+    if (!arate) {
+      missing_element_name = "audiorate";
+      goto missing_element;
+    }
     aconv = gst_element_factory_make ("audioconvert", NULL);
     aconv2 = gst_element_factory_make ("audioconvert", NULL);
     ares = gst_element_factory_make ("audioresample", NULL);
+    if (!aconv || !aconv2) {
+      missing_element_name = "audioconvert";
+      goto missing_element;
+    }
+    if (!ares) {
+      missing_element_name = "audioresample";
+      goto missing_element;
+    }
 
     gst_bin_add_many ((GstBin *) ebin, arate, aconv, ares, aconv2, NULL);
     tosync = g_list_append (tosync, arate);
@@ -1286,6 +1313,15 @@ no_encoder:
 no_muxer_pad:
   GST_ERROR_OBJECT (ebin,
       "Couldn't find a compatible muxer pad to link encoder to");
+  goto cleanup;
+
+missing_element:
+  gst_element_post_message (GST_ELEMENT_CAST (ebin),
+      gst_missing_element_message_new (GST_ELEMENT_CAST (ebin),
+          missing_element_name));
+  GST_ELEMENT_ERROR (ebin, CORE, MISSING_PLUGIN,
+      (_("Missing element '%s' - check your GStreamer installation."),
+          missing_element_name), (NULL));
   goto cleanup;
 
 encoder_link_failure:

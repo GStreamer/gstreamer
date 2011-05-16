@@ -88,12 +88,14 @@ typedef enum {
  * @GST_BUFTYPE_MU_LAW: samples in mulaw
  * @GST_BUFTYPE_A_LAW: samples in alaw
  * @GST_BUFTYPE_IMA_ADPCM: samples in ima adpcm
- * @GST_BUFTYPE_MPEG: samples in mpeg audio format
+ * @GST_BUFTYPE_MPEG: samples in mpeg audio (but not AAC) format
  * @GST_BUFTYPE_GSM: samples in gsm format
  * @GST_BUFTYPE_IEC958: samples in IEC958 frames (e.g. AC3)
  * @GST_BUFTYPE_AC3: samples in AC3 format
  * @GST_BUFTYPE_EAC3: samples in EAC3 format
  * @GST_BUFTYPE_DTS: samples in DTS format
+ * @GST_BUFTYPE_MPEG2_AAC: samples in MPEG-2 AAC format
+ * @GST_BUFTYPE_MPEG4_AAC: samples in MPEG-4 AAC format
  *
  * The format of the samples in the ringbuffer.
  */
@@ -109,7 +111,9 @@ typedef enum
   GST_BUFTYPE_IEC958,
   GST_BUFTYPE_AC3,
   GST_BUFTYPE_EAC3,
-  GST_BUFTYPE_DTS
+  GST_BUFTYPE_DTS,
+  GST_BUFTYPE_MPEG2_AAC,
+  GST_BUFTYPE_MPEG4_AAC,
 } GstBufferFormatType;
 
 typedef enum
@@ -161,7 +165,9 @@ typedef enum
   GST_IEC958,
   GST_AC3,
   GST_EAC3,
-  GST_DTS
+  GST_DTS,
+  GST_MPEG2_AAC,
+  GST_MPEG4_AAC,
 } GstBufferFormat;
 
 /**

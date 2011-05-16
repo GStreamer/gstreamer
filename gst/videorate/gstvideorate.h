@@ -63,6 +63,10 @@ struct _GstVideoRate
   gboolean discont;
   guint64 last_ts;              /* Timestamp of last input buffer */
 
+  guint64 average_period;
+  GstClockTimeDiff wanted_diff; /* target average diff */
+  GstClockTimeDiff average;     /* moving average period */
+
   /* segment handling */
   GstSegment segment;
 
@@ -71,6 +75,8 @@ struct _GstVideoRate
   gboolean silent;
   gdouble new_pref;
   gboolean skip_to_first;
+  gboolean drop_only;
+  guint64 average_period_set;
 };
 
 struct _GstVideoRateClass

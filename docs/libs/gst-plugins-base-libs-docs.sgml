@@ -52,6 +52,7 @@
       <xi:include href="xml/gstbaseaudiosrc.xml" />
       <xi:include href="xml/gstmultichannel.xml" />
       <xi:include href="xml/gstringbuffer.xml" />
+      <xi:include href="xml/gstaudioiec61937.xml" />
     </chapter>
 
     <chapter id="gstreamer-cdda">

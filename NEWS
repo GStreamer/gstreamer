@@ -1,4 +1,165 @@
-This is GStreamer Base Plug-ins 0.10.32, "Your Life You Like It Well"
+This is GStreamer Base Plug-ins 0.10.34, "Lemmings"
+
+Changes since 0.10.33:
+
+      * None: this release is identical to 0.10.33 and just done to keep core/base
+       versions in sync
+
+Changes since 0.10.32:
+
+      * audioringbuffer: make sure to not start if the may_start flag is FALSE
+      * baseaudiosink: arrange for running clock when rendering eos
+      * baseaudiosink: don't allow aligning behind the read-segment
+      * baseaudiosink: start ringbuffer upon going to PLAYING and already EOS
+      * riff: Add support for video/x-camstudio
+      * rtcpbuffer: fix invalid read in validation of padding in rtcp packet
+      * rtcpbuffer: Round to next 32bit word, not current 32bit word at end of SDES chunk
+      * rtpbuffer: Off-by-one error when creating RTP header extensions with a two-byte header
+      * rtsptransport: ensure valid int result when parsing ranges
+      * tag: map the ID3v2 TENC frame to GST_TAG_ENCODED_BY
+      * tag: add GST_TAG_CAPTURING_EXPOSURE_COMPENSATION incl. EXIF/XMP mappings
+      * tag: add a new GstTagXmpWriter interface to select XMP schemas to be used
+      * tagdemux: also push cached events downstream when operating in pull mode
+      * video: add GST_VIDEO_BUFFER_PROGRESSIVE flag
+      * video: add ARGB64 and AYUV64 (16 bits per channel) formats
+      * video: add r210 (10 bits per channel) format
+      * video: add gst_video_format_get_component_depth() and _new_template_caps()
+      * video: fix creation of grayscale caps and height calculation for YUV9/YVU9
+      * appsink: emit "new-buffer-list" signal for buffer lists if handled by app
+      * audiorate: add "skip-to-first" property
+      * decodebin2: don't use the same parser element multiple times in the same chain
+      * decodebin2: improve detection of raw caps in expose-all-streams=false mode
+      * discoverer: don't wait for subtitle streams to preroll; leak fixes
+      * discoverer: use nominal bitrate if bitrate tag is unavailable
+      * encodebin: add an audioconvert after the audio resampler
+      * encodebin: fix refcounting issues and leaks related to request pads
+      * encodebin: return a new reference of the pad for the "request-pad" signal
+      * encodebin: set all elements to NULL and remove them from the bin when removing a source group
+      * encodebin: tear down old profiles when setting new ones
+      * multifdsink: disconnect inactive clients in the select loop too
+      * oggmux: prefer headers from caps to determine stream type (for VP8)
+      * oggmux: fix issue with ogg page numbering and discont flag handling
+      * oggmux: ensure stream serial numbers are unique
+      * oggmux: use running time for muxing instead of timestamps
+      * oggparse: better detection of delta unit flag
+      * playbin2, uridecodebin: add "source-setup" signal
+      * playbin2: always prefer the custom set sink and also set it back to NULL in all cases
+      * playbin2: check if an already existing sink supports the non-raw format too
+      * playbin2: fix handling of non-raw custom sinks
+      * playbin2: if a sink claims to support ANY caps assume that it only supports the usual raw formats
+      * playbin2: only consider the audio/video sinks in autoplug_continue for the normal uridecodebin
+      * playbin2: use gst_pad_accept_caps() instead of intersecting with the getcaps caps
+      * playbin2: set sinks to READY before checking if it accept caps
+      * textoverlay: add support for ARGB and other RGB alpha variants, and xBGR and RGBx
+      * textoverlay: add support for vertical center alignment
+      * textoverlay: converted AYUV to use 'A OVER B' alpha compositing
+      * textoverlay: use a class wide mutex to work around pango reentrance issues
+      * theoraenc: don't reset the video quality when setting the bitrate
+      * theoraenc: allow adjustment of the speed level while running
+      * theoraenc: set speed-level property defaults from libtheora's defaults
+      * typefinding: MPEG-TS detection fixes
+      * typefinding: detect HTTP live streaming m3u8 playlists
+      * typefinding: detect windows icon files and DEGAS images (to avoid false positives)
+      * typefinding: detect raw h.263
+      * typefinding: add depth and endianness fields to DTS caps
+      * uridecodebin: Add default handler for autoplug-select
+      * uridecodebin: add https:// to protocols for which to enable buffering
+      * uridecodebin: expose "autoplug-sort" signal
+      * uridecodebin: post proper error message if decodebin2/typefind elements are missing
+      * uridecodebin: Return NULL from the default autoplug-sort handler
+      * videorate: fix "skip-to-first" timestamp setup
+      * videoscale: add 16-bit-channel support (ARGB64, AYUV64), fix ARGB bilinear scaling
+      * videotestsrc: add 16-bit-per-channel support (ARGB64, AYUV64)
+      * vorbis: add support for using tremolo on android
+      * vorbistag: Add support for METADATA_BLOCK_PICTURE tags
+      * vorbistag: Write GST_TAG_IMAGE and GST_TAG_PREVIEW_IMAGE as METADATA_BLOCK_PICTURE
+      * win32: fix DEFAULT_AUDIOSINK, should be direct*sound*sink
+      * xvimagesink: don't paint the window black when going to NULL
+
+Bugs fixed since 0.10.32:
+
+      * 618516 : [typefinding] need raw H.263 typefinder
+      * 619778 : oggdemux: fails on zero-length pages with Patent_Absurdity_HD_3540kbit.ogv
+      * 633837 : videoscale: invalid reads after conversion to orc linear scaling
+      * 412678 : random segfaults or memory corruptions with multiple textoverlays (pango not reentrant)
+      * 620364 : [typefinding] .ico file detected as AAC
+      * 625129 : typefinding: file incorrectly detected as audio/x-dts
+      * 626152 : [playbin2] add " source-setup " signal
+      * 627268 : [tag] add GST_TAG_ENCODED_BY and map id3v2 TENC frame
+      * 629196 : oggmux: re-tagging an Ogg Vorbis file may corrupt audio data
+      * 632291 : discoverer: sparse tracks cause prerolling to hang till timeout
+      * 632889 : [multifdsink] [PATCH] Disconnect inactive clients in the select loop too
+      * 635669 : [vorbistag] Support METADATA_BLOCK_PICTURE for Vorbis cover art
+      * 635784 : ringbuffer: make sure to not start if the may_start flag is FALSE
+      * 635800 : xvimagesink flashes black when going from READY_TO_NULL
+      * 636886 : baseaudiosink: no running clock when eos leads to hang in PLAYING
+      * 639136 : [oggparse]code is not safe when using libogg fuctions
+      * 639159 : [textoverloay] Add vertical center alignment option
+      * 639237 : textoverlay: patch to use " A OVER B " alpha compositing
+      * 639744 : [oggdemux] Removing dead code:
+      * 640189 : oggmux: cleanup
+      * 640211 : oggmux: ensure serialnos are unique
+      * 640607 : appsink never sends " new-buffer-list " signal
+      * 640709 : [typefindfunctions] h264 typefinder registered with MPEG_VIDEO_CAPS
+      * 640804 : checks: encodebin test fails if theora or vorbis plugins are not available
+      * 641706 : discoverer: Keep references on discoverer objects for callbacks
+      * 641860 : discoverer: Use nominal bitrate if bitrate tag is unavailable
+      * 641917 : [gdppay] Ensure buffer's medata is writeable before setting it
+      * 641927 : [encodebin] refcount issue with the " request-pad " signal
+      * 641952 : [videoscale] assertion on fixate_caps
+      * 642174 : Playbin2 cannot work with non-raw custom sinks
+      * 642232 : theoraenc sets Video quality to zero when explicitely setting the bitrate to 0
+      * 642274 : [playbin2] arbitrary audio-sink is chosen even though explicitely having set a custom audio-sink bin
+      * 642381 : potential memleak in decodebin2
+      * 642466 : playbin2: after replacing a video sink with the pipeline in NULL state I still get the old one
+      * 642720 : audiotestsrc: pipelines with multiple instances with wave=gaussian-noise, white-noise, or pink-noise are very slow
+      * 642942 : adder: offset_end field of outgoing buffers is set to GST_BUFFER_OFFSET_NONE
+      * 642949 : pbutils: encoding-target: chaining error object in loading target from file may cause crash if there is no error
+      * 643775 : [oggmux] use running time instead of timestamps
+      * 644416 : [encodebin] Cannot be reused
+      * 644745 : [oggmux] Fails to mux Speex content, doesn't preroll
+      * 644845 : [alsa] Comparison of unsigned int < 0 always false in gstalsamixer.c
+      * 644996 : libsABI check doesn't depend only on architecture
+      * 645167 : [xmp] Add a new XmpConfig interface
+      * 645437 : encoding-profile: Fix syntax in Example: Creating a profile
+      * 646570 : baseaudiosink: don't allow aligning behind the read-segment
+      * 646572 : baseaudiosrc: protect against ringbuffer disappearing while in a query
+      * 646573 : baseaudiosrc: Add src object lock around call to ringbuffer parse caps
+      * 646575 : rtcpbuffer: Round to next 32bit word, not current 32bit word at end of SDES chunk
+      * 646576 : rtcpbuffer: fix invalid read in validation of padding in rtcp packet
+      * 646923 : video: Remove unused variable
+      * 646924 : rtp: Remove unused variables
+      * 646925 : encoding-profile: Remove unused variables
+      * 646952 : Fix the strlol return type mismatch :
+      * 647399 : Bad typo in ID3 tags: psychadelic - > psychedelic
+      * 647721 : Remove excessive checking for video.c
+      * 647781 : [playbin2] missing shutdown steps and inconsistent error behaviour
+      * 647856 : [oggmux] Assumes that the first buffer can be used to detect the stream type
+      * 647857 : [xvimagesink/ximagesink] Handle NULL caps in buffer_alloc()
+      * 647942 : [pango] Use different Pango contexts for the different subclasses
+      * 647943 : [pango] Class global pango mutex not always used
+      * 648459 : tag: exif: register common tags from tag library
+      * 648466 : Ogg to LPCM transcoding fails
+      * 648548 : videoscale broken with orc 0.4.13
+      * 642667 : [playbin2] autoplug-factories code does not do what it claims to do
+      * 642732 : [playbin2] sinks set to READY after activating groups causes bad autoplug-continue decisions
+      * 646744 : libgsttag: Minor issues building gst-plugins-base with MS compiler
+      * 647294 : gst-plugins-base doesn't compile with GCC 4.6
+
+API additions since 0.10.32:
+
+      * gst_tag_list_to_xmp_buffer_full()
+      * gst_tag_xmp_list_schemas()
+      * gst_tag_xmp_writer_add_all_schemas()
+      * gst_tag_xmp_writer_add_schema()
+      * gst_tag_xmp_writer_get_type()
+      * gst_tag_xmp_writer_has_schema()
+      * gst_tag_xmp_writer_remove_all_schemas()
+      * gst_tag_xmp_writer_remove_schema()
+      * gst_tag_xmp_writer_tag_list_to_xmp_buffer()
+      * GST_TAG_CAPTURING_EXPOSURE_COMPENSATION
+      * gst_video_format_get_component_depth()
+      * gst_video_format_new_template_caps()
 
 Changes since 0.10.31:
 

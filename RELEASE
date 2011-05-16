@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.32 "Your Life You Like It Well"
+Release notes for GStreamer Base Plug-ins 0.10.34 "Lemmings"
         
 
 
@@ -9,6 +9,8 @@ GStreamer Base Plug-ins.
 
 
 The 0.10.x series is a stable series targeted at end users.
+It is not API or ABI compatible with the stable 0.8.x series.
+It is, however, parallel installable with the 0.8.x series.
 
 
 
@@ -53,130 +55,9 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * GLib requirement is now >= 2.22, gobject-introspection >= 0.9.12
-      * New encodebin element
-      * New encoding profile and encoding targets API in pbutils
-      * audioresample: corrected buffer duration calculation to account for nonzero initial timestamp
-      * audioresample: provide as much valid output ts and offset as valid input
-      * audioresample: push half a history length, instead of a full history length, at end-of-stream so that output segment and input segment have same duration
-      * decodebin2: deprecate new-decoded-pad and removed-decoded-pad signals (use "pad-added" and "pad-removed" instead)
-      * multifdsink: add first and last buffer's timestamp to the stats; only keep last valid timestamp
-      * oggdemux: extract more tags (vorbis comment headers, Kate)
-      * oggdemux: ignore header pages when looking for keyframe; set headers on caps
-      * oggdemux: fix interpretation of Theora granule position and parsing of Theora size
-      * oggparse: Set DELTA_UNIT on buffers
-      * playbin2: delay stream-changed messages, fixing KATE subtitle recognition
-      * textoverlay: make text, xpos, ypos, color, and silent properties controllable
-      * typefinding: (E)AC-3 and ISO typefinder improvements; add yuv4mpeg typefinder
-      * typefinding: add "stream-format" to h264 caps, and framed=false to DTS caps
-      * typefinding: assume EBML files without doctype are matroska
-      * videorate: fix behaviour for frame rate cap changes
-      * vorbisdec: avoid using invalid timestamps; keep timestamps when no decoded output
-      * ximagesink, xvimagesink: add read-only window-width and window-height properties
-      * baseaudiopay: fix timestamps on buffer lists
-      * baseaudiosink: protect against ringbuffer disappearing while in a query
-      * basedepay: add support for buffer lists in the depayloader
-      * basertppay: use RTP base time when invalid timestamps
-      * rtpbuffer: relax arrangement for RTP bufferlists
-      * rtpdepayloader: add support for getting events
-      * rtppayload: copy applied rate to segment
-      * sdp: add method to check for multicast addresses
-      * sdp: only parse TTL for IP4 addresses
-      * video: add 8-bit paletted RGB, YUV9, YVU9 and IYU1 video formats
-      * video: return correct component width/height for A420
-
-Bugs fixed in this release
-     
-      * 619778 : oggdemux: fails on zero-length pages with Patent_Absurdity_HD_3540kbit.ogv
-      * 586570 : Add GAP Flag support to audioresample
-      * 623413 : pbutils: Add/Fix some media descriptions
-      * 627476 : New profile library and encoding plugin
-      * 629349 : [oggdemux] extract stream tags for tagreadbin and transcoding
-      * 632667 : [ximagesink] added read-only properties window-width and window-height
-      * 634397 : [multifdsink] [PATCH] Add the timestamp of the first and last buffer to the stats
-      * 634522 : gst-visualize-m.m imports but doesn't use File::Basename
-      * 635231 : baseaudiosink: protect against ringbuffer disappearing while in a query
-      * 636198 : decodebin2: " removed-decoded-pad " signal never fired
-      * 636769 : [appsink] Flushing property is never reset
-      * 636827 : Usage of gst_caps_interset where gst_caps_can_intersect was intended?
-      * 637324 : oggdemux: unable to demux Ogg files with Skeleton in push mode
-      * 637377 : timeoverlay: add missing break
-      * 637519 : ogg: implement packet duration query for kate streams
-      * 637586 : playbin2 fails to recognize subtitle caps from katedec
-      * 637735 : [encoding-profile] automatic load/save support and registry
-      * 637758 : [exiftag] Generates buffers with uninitialized data during taglist- > exif buffer serialization
-      * 637822 : oggdemux: allocate buffers using gst_buffer_new_and_alloc
-      * 637927 : oggdemux: set headers on caps
-      * 638200 : [oggdemux] fails to playback video file
-      * 638276 : oggstream: when the last keyframe position is not known, do not use -1
-      * 638859 : textoverlay: make misc. properties controllable
-      * 638901 : [encodebin] proper element documentation
-      * 638903 : [encodebin] missing-plugin support
-      * 638961 : Small configure bashism 0.10.31.2
-      * 639039 : gobject-introspection: GstPbutils gir scanner fails to link with gold linker
-      * 639121 : oggdemux: outdated comment for gst_ogg_demux_submit_buffer()
-      * 639215 : examples: Allow building with newer GTK+
-      * 639730 : discoverer: Validate timeouts before processing them
-      * 639755 : discoverer: Clean up callbacks in dispose()
-      * 639778 : discoverer: Drop new stream tags once preroll is done
-      * 639790 : [gdp] Fix metadata g_warning
-      * 639747 : Please export GST_TYPE_APP_STREAM_TYPE
-      * 553244 : theoraparse doesn't work at all (throws criticals and asserts)
-
-API changed in this release
-     
-- API additions:
+      * This release is identical to 0.10.33 (to keep core/base versions in sync)
+There were no bugs fixed in this release
     
-      * gst_app_stream_type_get_type()
-      * gst_discoverer_info_get_seekable()
-      * gst_encoding_audio_profile_get_type()
-      * gst_encoding_audio_profile_new()
-      * gst_encoding_container_profile_add_profile()
-      * gst_encoding_container_profile_contains_profile()
-      * gst_encoding_container_profile_get_profiles()
-      * gst_encoding_container_profile_get_type()
-      * gst_encoding_container_profile_new()
-      * gst_encoding_list_all_targets()
-      * gst_encoding_list_available_categories()
-      * gst_encoding_profile_find()
-      * gst_encoding_profile_get_description()
-      * gst_encoding_profile_get_format()
-      * gst_encoding_profile_get_input_caps()
-      * gst_encoding_profile_get_name()
-      * gst_encoding_profile_get_presence()
-      * gst_encoding_profile_get_preset()
-      * gst_encoding_profile_get_restriction()
-      * gst_encoding_profile_get_type()
-      * gst_encoding_profile_get_type_nick()
-      * gst_encoding_profile_is_equal()
-      * gst_encoding_profile_set_description()
-      * gst_encoding_profile_set_format()
-      * gst_encoding_profile_set_name()
-      * gst_encoding_profile_set_presence()
-      * gst_encoding_profile_set_preset()
-      * gst_encoding_profile_set_restriction()
-      * gst_encoding_target_add_profile()
-      * gst_encoding_target_get_category()
-      * gst_encoding_target_get_description()
-      * gst_encoding_target_get_name()
-      * gst_encoding_target_get_profile()
-      * gst_encoding_target_get_profiles()
-      * gst_encoding_target_get_type()
-      * gst_encoding_target_load()
-      * gst_encoding_target_load_from_file()
-      * gst_encoding_target_new()
-      * gst_encoding_target_save()
-      * gst_encoding_target_save_to_file()
-      * gst_encoding_video_profile_get_pass()
-      * gst_encoding_video_profile_get_type()
-      * gst_encoding_video_profile_get_variableframerate()
-      * gst_encoding_video_profile_new()
-      * gst_encoding_video_profile_set_pass()
-      * gst_encoding_video_profile_set_variableframerate()
-      * gst_base_rtp_depayload_push_list()
-      * gst_rtsp_url_decode_path_components()
-      * gst_sdp_address_is_multicast()
-      * gst_video_parse_caps_palette()
 
 Download
 
@@ -205,35 +86,5 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Andoni Morales Alastruey
-      * Andrea Sebastianutti
-      * Andy Wingo
-      * Arun Raghavan
-      * Bastien Nocera
-      * Benjamin Gaignard
-      * Byeong-ryeol Kim
-      * David Schleef
-      * Edward Hervey
-      * Evan Broder
-      * Gavin Stark
-      * Havard Graff
-      * Koop Mast
-      * Lane Brooks
-      * Leo Singer
-      * Mark Nauwelaerts
-      * Michael Smith
-      * René Stadler
-      * Rob Clark
-      * Robert Swain
-      * Sebastian Dröge
-      * Sreerenj Balachandran
-      * Stefan Kost
-      * Thiago Santos
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Wim Taymans
-      * Yang Xichuan
-      * Zeeshan Ali (Khattak)
-      * christian schaller
  

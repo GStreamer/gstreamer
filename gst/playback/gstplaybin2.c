@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
+ * Copyright (C) <2011> Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -271,6 +272,14 @@ struct _GstSourceSelect
 #define GST_SOURCE_GROUP_LOCK(group) (g_mutex_lock (GST_SOURCE_GROUP_GET_LOCK(group)))
 #define GST_SOURCE_GROUP_UNLOCK(group) (g_mutex_unlock (GST_SOURCE_GROUP_GET_LOCK(group)))
 
+enum
+{
+  PLAYBIN_STREAM_AUDIO = 0,
+  PLAYBIN_STREAM_VIDEO,
+  PLAYBIN_STREAM_TEXT,
+  PLAYBIN_STREAM_LAST
+};
+
 /* a structure to hold the objects for decoding a uri and the subtitle uri
  */
 struct _GstSourceGroup
@@ -319,7 +328,7 @@ struct _GstSourceGroup
   GList *stream_changed_pending;
 
   /* selectors for different streams */
-  GstSourceSelect selector[GST_PLAY_SINK_TYPE_LAST];
+  GstSourceSelect selector[PLAYBIN_STREAM_LAST];
 };
 
 #define GST_PLAY_BIN_GET_LOCK(bin) (&((GstPlayBin*)(bin))->lock)
@@ -1089,30 +1098,25 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   /* If you add any items to these lists, check that media_list[] is defined
    * above to be large enough to hold MAX(items)+1, so as to accomodate a
    * NULL terminator (set when the memory is zeroed on allocation) */
-  group->selector[0].media_list[0] = "audio/x-raw-";
-  group->selector[0].type = GST_PLAY_SINK_TYPE_AUDIO_RAW;
-  group->selector[0].channels = group->audio_channels;
-  group->selector[1].media_list[0] = "audio/";
-  group->selector[1].type = GST_PLAY_SINK_TYPE_AUDIO;
-  group->selector[1].channels = group->audio_channels;
-  group->selector[2].media_list[0] = "text/";
-  group->selector[2].media_list[1] = "application/x-subtitle";
-  group->selector[2].media_list[2] = "application/x-ssa";
-  group->selector[2].media_list[3] = "application/x-ass";
-  group->selector[2].media_list[4] = "video/x-dvd-subpicture";
-  group->selector[2].media_list[5] = "subpicture/";
-  group->selector[2].media_list[6] = "subtitle/";
-  group->selector[2].get_media_caps = gst_subtitle_overlay_create_factory_caps;
-  group->selector[2].type = GST_PLAY_SINK_TYPE_TEXT;
-  group->selector[2].channels = group->text_channels;
-  group->selector[3].media_list[0] = "video/x-raw-";
-  group->selector[3].type = GST_PLAY_SINK_TYPE_VIDEO_RAW;
-  group->selector[3].channels = group->video_channels;
-  group->selector[4].media_list[0] = "video/";
-  group->selector[4].type = GST_PLAY_SINK_TYPE_VIDEO;
-  group->selector[4].channels = group->video_channels;
+  group->selector[PLAYBIN_STREAM_AUDIO].media_list[0] = "audio/";
+  group->selector[PLAYBIN_STREAM_AUDIO].type = GST_PLAY_SINK_TYPE_AUDIO;
+  group->selector[PLAYBIN_STREAM_AUDIO].channels = group->audio_channels;
+  group->selector[PLAYBIN_STREAM_VIDEO].media_list[0] = "video/";
+  group->selector[PLAYBIN_STREAM_VIDEO].type = GST_PLAY_SINK_TYPE_VIDEO;
+  group->selector[PLAYBIN_STREAM_VIDEO].channels = group->video_channels;
+  group->selector[PLAYBIN_STREAM_TEXT].media_list[0] = "text/";
+  group->selector[PLAYBIN_STREAM_TEXT].media_list[1] = "application/x-subtitle";
+  group->selector[PLAYBIN_STREAM_TEXT].media_list[2] = "application/x-ssa";
+  group->selector[PLAYBIN_STREAM_TEXT].media_list[3] = "application/x-ass";
+  group->selector[PLAYBIN_STREAM_TEXT].media_list[4] = "video/x-dvd-subpicture";
+  group->selector[PLAYBIN_STREAM_TEXT].media_list[5] = "subpicture/";
+  group->selector[PLAYBIN_STREAM_TEXT].media_list[6] = "subtitle/";
+  group->selector[PLAYBIN_STREAM_TEXT].get_media_caps =
+      gst_subtitle_overlay_create_factory_caps;
+  group->selector[PLAYBIN_STREAM_TEXT].type = GST_PLAY_SINK_TYPE_TEXT;
+  group->selector[PLAYBIN_STREAM_TEXT].channels = group->text_channels;
 
-  for (n = 0; n < GST_PLAY_SINK_TYPE_LAST; n++) {
+  for (n = 0; n < PLAYBIN_STREAM_LAST; n++) {
     GstSourceSelect *select = &group->selector[n];
     select->sinkpad_delayed_event = NULL;
     select->sinkpad_data_probe = 0;
@@ -1124,7 +1128,7 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
 {
   int n;
 
-  for (n = 0; n < GST_PLAY_SINK_TYPE_LAST; n++) {
+  for (n = 0; n < PLAYBIN_STREAM_LAST; n++) {
     GstSourceSelect *select = &group->selector[n];
     if (select->sinkpad && select->sinkpad_data_probe)
       gst_pad_remove_data_probe (select->sinkpad, select->sinkpad_data_probe);
@@ -1493,6 +1497,10 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
   GstPad *sinkpad;
 
   GST_PLAY_BIN_LOCK (playbin);
+
+  GST_DEBUG_OBJECT (playbin, "Changing current video stream %d -> %d",
+      playbin->current_video, stream);
+
   group = get_group (playbin);
   if (!(channels = group->video_channels))
     goto no_channels;
@@ -1536,6 +1544,10 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
   GstPad *sinkpad;
 
   GST_PLAY_BIN_LOCK (playbin);
+
+  GST_DEBUG_OBJECT (playbin, "Changing current audio stream %d -> %d",
+      playbin->current_audio, stream);
+
   group = get_group (playbin);
   if (!(channels = group->audio_channels))
     goto no_channels;
@@ -1651,6 +1663,10 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
   GstPad *sinkpad;
 
   GST_PLAY_BIN_LOCK (playbin);
+
+  GST_DEBUG_OBJECT (playbin, "Changing current text stream %d -> %d",
+      playbin->current_text, stream);
+
   group = get_group (playbin);
   if (!(channels = group->text_channels))
     goto no_channels;
@@ -2313,7 +2329,7 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
   GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
 
-  for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
+  for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
     if (selector == G_OBJECT (group->selector[i].selector)) {
       select = &group->selector[i];
     }
@@ -2399,7 +2415,7 @@ array_has_value (const gchar * values[], const gchar * value)
   gint i;
 
   for (i = 0; values[i]; i++) {
-    if (g_str_has_prefix (value, values[i]))
+    if (values[i] && g_str_has_prefix (value, values[i]))
       return TRUE;
   }
   return FALSE;
@@ -2471,7 +2487,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       GST_DEBUG_PAD_NAME (pad), caps, group);
 
   /* major type of the pad, this determines the selector to use */
-  for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
+  for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
     if (array_has_value (group->selector[i].media_list, name)) {
       select = &group->selector[i];
       break;
@@ -2730,7 +2746,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
   GST_PLAY_BIN_SHUTDOWN_LOCK (playbin, shutdown);
 
   GST_SOURCE_GROUP_LOCK (group);
-  for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
+  for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
 
     /* check if the specific media type was detected and thus has a selector
@@ -2793,14 +2809,10 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 
     GST_SOURCE_GROUP_UNLOCK (group);
 
-    GST_LOG_OBJECT (playbin, "reconfigure sink");
-    /* we configure the modes if we were the last decodebin to complete. */
-    gst_play_sink_reconfigure (playbin->playsink);
-
     /* signal the other decodebins that they can continue now. */
     GST_SOURCE_GROUP_LOCK (group);
     /* unblock all selectors */
-    for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
+    for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
       GstSourceSelect *select = &group->selector[i];
 
       /* All streamsynchronizer streams should see stream-changed message,
@@ -2866,7 +2878,7 @@ shutdown:
      * instead of a NOT_LINKED error.
      */
     GST_SOURCE_GROUP_LOCK (group);
-    for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
+    for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
       GstSourceSelect *select = &group->selector[i];
 
       if (select->srcpad) {
@@ -3464,7 +3476,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
 
   GST_SOURCE_GROUP_LOCK (group);
   group->active = FALSE;
-  for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
+  for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
 
     GST_DEBUG_OBJECT (playbin, "unlinking selector %s", select->media_list[0]);

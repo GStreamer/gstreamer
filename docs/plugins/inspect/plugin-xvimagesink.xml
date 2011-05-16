@@ -3,10 +3,10 @@
   <description>XFree86 video output plugin using Xv extension</description>
   <filename>../../sys/xvimage/.libs/libgstxvimagesink.so</filename>
   <basename>libgstxvimagesink.so</basename>
-  <version>0.10.32.4</version>
+  <version>0.10.34.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins prerelease</package>
+  <package>GStreamer Base Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

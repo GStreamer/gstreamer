@@ -1544,7 +1544,7 @@ gst_subtitle_overlay_src_proxy_chain (GstPad * proxypad, GstBuffer * buffer)
     return GST_FLOW_ERROR;
   }
 
-  ret = self->src_proxy_chain (proxypad, buffer);
+  ret = gst_proxy_pad_chain_default (proxypad, buffer);
 
   if (IS_VIDEO_CHAIN_IGNORE_ERROR (ret)) {
     GST_ERROR_OBJECT (self, "Downstream chain error: %s",
@@ -1581,7 +1581,7 @@ gst_subtitle_overlay_src_proxy_event (GstPad * proxypad, GstEvent * event)
     event = NULL;
     ret = TRUE;
   } else {
-    ret = self->src_proxy_event (proxypad, event);
+    ret = gst_proxy_pad_event_default (proxypad, event);
     event = NULL;
   }
 
@@ -1619,7 +1619,7 @@ gst_subtitle_overlay_video_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
   GST_SUBTITLE_OVERLAY_UNLOCK (self);
 
-  ret = self->video_sink_setcaps (pad, caps);
+  ret = gst_ghost_pad_setcaps_default (pad, caps);
 
 out:
   gst_object_unref (self);
@@ -1639,7 +1639,7 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
     self->fps_n = self->fps_d = 0;
   }
 
-  ret = self->video_sink_event (pad, gst_event_ref (event));
+  ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
 
@@ -1664,7 +1664,7 @@ static GstFlowReturn
 gst_subtitle_overlay_video_sink_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (GST_PAD_PARENT (pad));
-  GstFlowReturn ret = self->video_sink_chain (pad, buffer);
+  GstFlowReturn ret = gst_proxy_pad_chain_default (pad, buffer);
 
   if (G_UNLIKELY (self->downstream_chain_error) || self->passthrough_identity) {
     return ret;
@@ -1697,7 +1697,7 @@ gst_subtitle_overlay_subtitle_sink_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   } else {
-    GstFlowReturn ret = self->subtitle_sink_chain (pad, buffer);
+    GstFlowReturn ret = gst_proxy_pad_chain_default (pad, buffer);
 
     if (IS_SUBTITLE_CHAIN_IGNORE_ERROR (ret)) {
       GST_DEBUG_OBJECT (self, "Subtitle chain error: %s",
@@ -1772,7 +1772,7 @@ gst_subtitle_overlay_subtitle_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   if (target && gst_pad_accept_caps (target, caps)) {
     GST_DEBUG_OBJECT (pad, "Target accepts caps");
-    ret = self->subtitle_sink_setcaps (pad, caps);
+    ret = gst_ghost_pad_setcaps_default (pad, caps);
     GST_SUBTITLE_OVERLAY_UNLOCK (self);
     goto out;
   }
@@ -1833,7 +1833,7 @@ gst_subtitle_overlay_subtitle_sink_link (GstPad * pad, GstPad * peer)
     gst_caps_unref (caps);
   }
 
-  ret = self->subtitle_sink_link (pad, peer);
+  ret = gst_ghost_pad_link_default (pad, peer);
 
   gst_object_unref (self);
   return ret;
@@ -1852,7 +1852,7 @@ gst_subtitle_overlay_subtitle_sink_unlink (GstPad * pad)
   GST_DEBUG_OBJECT (pad, "Pad unlinking");
   gst_caps_replace (&self->subcaps, NULL);
 
-  self->subtitle_sink_unlink (pad);
+  gst_ghost_pad_unlink_default (pad);
 
   GST_SUBTITLE_OVERLAY_LOCK (self);
   self->subtitle_error = FALSE;
@@ -1924,7 +1924,7 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  ret = self->subtitle_sink_event (pad, gst_event_ref (event));
+  ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GST_DEBUG_OBJECT (pad, "segment event: %" GST_PTR_FORMAT, event);
@@ -1943,8 +1943,6 @@ static void
 gst_subtitle_overlay_init (GstSubtitleOverlay * self)
 {
   GstPadTemplate *templ;
-  GstIterator *it;
-  GValue item = { 0, };
   GstPad *proxypad = NULL;
 
   self->lock = g_mutex_new ();
@@ -1952,68 +1950,45 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
 
   templ = gst_static_pad_template_get (&srctemplate);
   self->srcpad = gst_ghost_pad_new_no_target_from_template ("src", templ);
-  it = gst_pad_iterate_internal_links (self->srcpad);
-  if (G_UNLIKELY (!it
-          || gst_iterator_next (it, &item) != GST_ITERATOR_OK
-          || ((proxypad = g_value_get_object (&item)) == NULL))) {
-    GST_ERROR_OBJECT (self, "Failed to get proxypad of srcpad");
-  } else {
-    self->src_proxy_event = GST_PAD_EVENTFUNC (proxypad);
-    gst_pad_set_event_function (proxypad,
-        GST_DEBUG_FUNCPTR (gst_subtitle_overlay_src_proxy_event));
-    self->src_proxy_chain = GST_PAD_CHAINFUNC (proxypad);
-    gst_pad_set_chain_function (proxypad,
-        GST_DEBUG_FUNCPTR (gst_subtitle_overlay_src_proxy_chain));
-    g_value_unset (&item);
-  }
-  if (it)
-    gst_iterator_free (it);
+
+  proxypad =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (self->srcpad)));
+  gst_pad_set_event_function (proxypad,
+      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_src_proxy_event));
+  gst_pad_set_chain_function (proxypad,
+      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_src_proxy_chain));
+  gst_object_unref (proxypad);
 
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->srcpad);
 
   templ = gst_static_pad_template_get (&video_sinktemplate);
   self->video_sinkpad =
       gst_ghost_pad_new_no_target_from_template ("video_sink", templ);
-  self->video_sink_event = GST_PAD_EVENTFUNC (self->video_sinkpad);
   gst_pad_set_event_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_event));
-  self->video_sink_setcaps = GST_PAD_SETCAPSFUNC (self->video_sinkpad);
   gst_pad_set_setcaps_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_setcaps));
-  self->video_sink_chain = GST_PAD_CHAINFUNC (self->video_sinkpad);
   gst_pad_set_chain_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_chain));
 
-  proxypad = NULL;
-  it = gst_pad_iterate_internal_links (self->video_sinkpad);
-  if (G_UNLIKELY (!it
-          || gst_iterator_next (it, &item) != GST_ITERATOR_OK
-          || ((proxypad = g_value_dup_object (&item)) == NULL))) {
-    GST_ERROR_OBJECT (self,
-        "Failed to get internally linked pad from video sinkpad");
-  }
-  if (it)
-    gst_iterator_free (it);
+  proxypad =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+          (self->video_sinkpad)));
   self->video_block_pad = proxypad;
-  g_value_unset (&item);
+
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->video_sinkpad);
 
   templ = gst_static_pad_template_get (&subtitle_sinktemplate);
   self->subtitle_sinkpad =
       gst_ghost_pad_new_no_target_from_template ("subtitle_sink", templ);
-  self->subtitle_sink_link = GST_PAD_LINKFUNC (self->subtitle_sinkpad);
   gst_pad_set_link_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_link));
-  self->subtitle_sink_unlink = GST_PAD_UNLINKFUNC (self->subtitle_sinkpad);
   gst_pad_set_unlink_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_unlink));
-  self->subtitle_sink_event = GST_PAD_EVENTFUNC (self->subtitle_sinkpad);
   gst_pad_set_event_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_event));
-  self->subtitle_sink_setcaps = GST_PAD_SETCAPSFUNC (self->subtitle_sinkpad);
   gst_pad_set_setcaps_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_setcaps));
-  self->subtitle_sink_chain = GST_PAD_CHAINFUNC (self->subtitle_sinkpad);
   gst_pad_set_chain_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_chain));
   gst_pad_set_getcaps_function (self->subtitle_sinkpad,
@@ -2021,17 +1996,9 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
   gst_pad_set_acceptcaps_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_acceptcaps));
 
-  proxypad = NULL;
-  it = gst_pad_iterate_internal_links (self->subtitle_sinkpad);
-  if (G_UNLIKELY (!it
-          || gst_iterator_next (it, &item) != GST_ITERATOR_OK
-          || ((proxypad = g_value_dup_object (&item)) == NULL))) {
-    GST_ERROR_OBJECT (self,
-        "Failed to get internally linked pad from subtitle sinkpad");
-  }
-  if (it)
-    gst_iterator_free (it);
-  g_value_unset (&item);
+  proxypad =
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+          (self->subtitle_sinkpad)));
   self->subtitle_block_pad = proxypad;
 
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->subtitle_sinkpad);

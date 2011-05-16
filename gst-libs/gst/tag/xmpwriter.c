@@ -1,4 +1,4 @@
-/* GStreamer XmpConfig
+/* GStreamer TagXmpWriter
  * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:gstxmpconfig
+ * SECTION:gsttagxmpwriter
  * @short_description: Interface for elements that provide XMP serialization
  *
  * <refsect2>
