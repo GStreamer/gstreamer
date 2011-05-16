@@ -124,40 +124,16 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
   return caps;
 }
 
-
-static gboolean
-gst_ffmpegcsp_structure_is_alpha (GstStructure * s)
-{
-  GQuark name;
-
-  name = gst_structure_get_name_id (s);
-
-  if (name == _QRAWRGB) {
-    return gst_structure_id_has_field (s, _QALPHAMASK);
-  } else if (name == _QRAWYUV) {
-    guint32 fourcc;
-
-    if (!gst_structure_get_fourcc (s, "format", &fourcc))
-      return FALSE;
-
-    return (fourcc == GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'));
-  }
-
-  return FALSE;
-}
-
 /* The caps can be transformed into any other caps with format info removed.
  * However, we should prefer passthrough, so if passthrough is possible,
  * put it first in the list. */
 static GstCaps *
 gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *template;
   GstCaps *tmp, *tmp2;
   GstCaps *result;
-  GstStructure *s;
-  GstCaps *alpha, *non_alpha;
 
   template = gst_static_pad_template_get_caps (&gst_ffmpegcsp_src_template);
   result = gst_caps_copy (caps);
@@ -168,30 +144,11 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
   gst_caps_unref (tmp);
   tmp = tmp2;
 
-  /* Now move alpha formats to the beginning if caps is an alpha format
-   * or at the end if caps is no alpha format */
-  alpha = gst_caps_new_empty ();
-  non_alpha = gst_caps_new_empty ();
-
-  while ((s = gst_caps_steal_structure (tmp, 0))) {
-    if (gst_ffmpegcsp_structure_is_alpha (s))
-      gst_caps_append_structure (alpha, s);
-    else
-      gst_caps_append_structure (non_alpha, s);
+  if (filter) {
+    tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+    tmp = tmp2;
   }
-
-  s = gst_caps_get_structure (caps, 0);
-  gst_caps_unref (tmp);
-
-  if (gst_ffmpegcsp_structure_is_alpha (s)) {
-    gst_caps_append (alpha, non_alpha);
-    tmp = alpha;
-  } else {
-    gst_caps_append (non_alpha, alpha);
-    tmp = non_alpha;
-  }
-
-  gst_caps_append (result, tmp);
 
   GST_DEBUG_OBJECT (btrans, "transformed %" GST_PTR_FORMAT " into %"
       GST_PTR_FORMAT, caps, result);
