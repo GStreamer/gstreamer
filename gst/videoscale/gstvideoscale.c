@@ -197,7 +197,7 @@ static gboolean gst_video_scale_src_event (GstBaseTransform * trans,
 
 /* base transform vmethods */
 static GstCaps *gst_video_scale_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_video_scale_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
 static gboolean gst_video_scale_get_unit_size (GstBaseTransform * trans,
@@ -322,7 +322,7 @@ gst_video_scale_get_property (GObject * object, guint prop_id, GValue * value,
 
 static GstCaps *
 gst_video_scale_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *ret;
   GstStructure *structure;
@@ -345,6 +345,15 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
     gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE,
         1, G_MAXINT, G_MAXINT, 1, NULL);
+  }
+
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = intersection;
   }
 
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
