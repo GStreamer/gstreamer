@@ -974,6 +974,10 @@ GST_START_TEST (test_pad_proxy_getcaps_aggregation)
 
   tee_sink = gst_element_get_static_pad (tee, "sink");
 
+  gst_element_set_state (sink1, GST_STATE_PAUSED);
+  gst_element_set_state (sink2, GST_STATE_PAUSED);
+  gst_element_set_state (tee, GST_STATE_PAUSED);
+
   /* by default, ANY caps should intersect to ANY */
   caps = gst_pad_get_caps (tee_sink, NULL);
   GST_INFO ("got caps: %" GST_PTR_FORMAT, caps);
@@ -1015,6 +1019,10 @@ GST_START_TEST (test_pad_proxy_getcaps_aggregation)
     fail_unless (gst_structure_has_field_typed (s, "barversion", G_TYPE_INT));
   }
   gst_caps_unref (caps);
+
+  gst_element_set_state (sink1, GST_STATE_NULL);
+  gst_element_set_state (sink2, GST_STATE_NULL);
+  gst_element_set_state (tee, GST_STATE_NULL);
 
   /* clean up */
   gst_element_release_request_pad (tee, tee_src1);
