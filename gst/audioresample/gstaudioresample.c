@@ -128,7 +128,7 @@ static void gst_audio_resample_get_property (GObject * object,
 static gboolean gst_audio_resample_get_unit_size (GstBaseTransform * base,
     GstCaps * caps, gsize * size);
 static GstCaps *gst_audio_resample_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static void gst_audio_resample_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_audio_resample_transform_size (GstBaseTransform * trans,
@@ -283,7 +283,7 @@ gst_audio_resample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
 
 static GstCaps *
 gst_audio_resample_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   const GValue *val;
   GstStructure *s;
@@ -312,6 +312,15 @@ gst_audio_resample_transform_caps (GstBaseTransform * base,
     s = gst_structure_copy (s);
     gst_structure_set (s, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
     gst_caps_append_structure (res, s);
+  }
+
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, res, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (res);
+    res = intersection;
   }
 
   return res;
