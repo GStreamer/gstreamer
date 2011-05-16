@@ -859,7 +859,7 @@ gen_video_element (GstPlayBin * play_bin)
   element = gst_bin_new ("vbin");
   gst_bin_add (GST_BIN_CAST (element), sink);
 
-  conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
+  conv = gst_element_factory_make (COLORSPACE, "vconv");
   if (conv == NULL)
     goto no_colorspace;
   gst_bin_add (GST_BIN_CAST (element), conv);
@@ -905,10 +905,10 @@ no_sinks:
   }
 no_colorspace:
   {
-    post_missing_element_message (play_bin, "ffmpegcolorspace");
+    post_missing_element_message (play_bin, COLORSPACE);
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
-            "ffmpegcolorspace"), (NULL));
+            COLORSPACE), (NULL));
     gst_object_unref (element);
     return NULL;
   }
@@ -972,7 +972,7 @@ add_text_element (GstPlayBin * play_bin, GstElement * vbin)
   play_bin->textoverlay_element = GST_ELEMENT_CAST (gst_object_ref (overlay));
 
   /* we know this will succeed, as the video bin already created one before */
-  csp = gst_element_factory_make ("ffmpegcolorspace", "subtitlecsp");
+  csp = gst_element_factory_make (COLORSPACE, "subtitlecsp");
 
   /* Add our elements */
   gst_bin_add_many (GST_BIN_CAST (element), csp, overlay, vbin, NULL);
@@ -1046,7 +1046,7 @@ add_spu_element (GstPlayBin * play_bin, GstElement * vbin)
   play_bin->spu_element = GST_ELEMENT_CAST (gst_object_ref (overlay));
 
   /* we know this will succeed, as the video bin already created one before */
-  csp = gst_element_factory_make ("ffmpegcolorspace", "spucsp");
+  csp = gst_element_factory_make (COLORSPACE, "spucsp");
 
   /* Add our elements */
   gst_bin_add_many (GST_BIN_CAST (element), csp, overlay, vbin, NULL);

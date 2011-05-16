@@ -132,12 +132,12 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkVideoConvert * self)
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), NULL);
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), NULL);
 
-    self->conv = gst_element_factory_make ("ffmpegcolorspace", "conv");
+    self->conv = gst_element_factory_make (COLORSPACE, "conv");
     if (self->conv == NULL) {
-      post_missing_element_message (self, "ffmpegcolorspace");
+      post_missing_element_message (self, COLORSPACE);
       GST_ELEMENT_WARNING (self, CORE, MISSING_PLUGIN,
           (_("Missing element '%s' - check your GStreamer installation."),
-              "ffmpegcolorspace"), ("video rendering might fail"));
+              COLORSPACE), ("video rendering might fail"));
     } else {
       gst_bin_add (bin, self->conv);
       gst_element_sync_state_with_parent (self->conv);

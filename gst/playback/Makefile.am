@@ -8,6 +8,8 @@ built_headers = gstplay-marshal.h
 
 plugin_LTLIBRARIES = libgstplaybin.la libgstdecodebin.la libgstdecodebin2.la
 
+csp_cflags = -DCOLORSPACE=\"ffmpegcolorspace\"
+
 libgstplaybin_la_SOURCES = \
 	gstplayback.c \
 	gstplaybin.c \
@@ -23,7 +25,7 @@ libgstplaybin_la_SOURCES = \
 	gststreamsynchronizer.c
 
 nodist_libgstplaybin_la_SOURCES = $(built_sources)
-libgstplaybin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstplaybin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(csp_cflags)
 libgstplaybin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstplaybin_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
@@ -34,7 +36,7 @@ libgstplaybin_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstdecodebin_la_SOURCES = gstdecodebin.c
 nodist_libgstdecodebin_la_SOURCES = $(built_sources)
-libgstdecodebin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstdecodebin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(csp_cflags)
 libgstdecodebin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdecodebin_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
@@ -43,7 +45,7 @@ libgstdecodebin_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstdecodebin2_la_SOURCES = gstdecodebin2.c gsturidecodebin.c gstplay-enum.c
 nodist_libgstdecodebin2_la_SOURCES = $(built_sources)
-libgstdecodebin2_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstdecodebin2_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(csp_cflags)
 libgstdecodebin2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdecodebin2_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
@@ -78,7 +80,7 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
 	 -:SOURCES $(libgstdecodebin_la_SOURCES) \
 	           $(nodist_libgstdecodebin_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstdecodebin_la_CFLAGS) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstdecodebin_la_CFLAGS) $(csp_cflags) \
 	 -:LDFLAGS $(libgstdecodebin_la_LDFLAGS) \
 	           $(libgstdecodebin_la_LIBADD) \
 	           -ldl \
@@ -90,7 +92,7 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
 	 -:SOURCES $(libgstdecodebin2_la_SOURCES) \
 	           $(nodist_libgstdecodebin2_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstdecodebin2_la_CFLAGS) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstdecodebin2_la_CFLAGS) $(csp_cflags) \
 	 -:LDFLAGS $(libgstdecodebin2_la_LDFLAGS) \
 	           $(libgstdecodebin2_la_LIBADD) \
 	           -ldl \
@@ -102,7 +104,7 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
 	 -:SOURCES $(libgstplaybin_la_SOURCES) \
 	           $(nodist_libgstplaybin_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstplaybin_la_CFLAGS) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstplaybin_la_CFLAGS) $(csp_cflags) \
 	 -:LDFLAGS $(libgstplaybin_la_LDFLAGS) \
 	           $(libgstplaybin_la_LIBADD) \
 	           -ldl \
