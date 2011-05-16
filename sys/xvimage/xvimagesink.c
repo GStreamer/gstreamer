@@ -1509,18 +1509,29 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
 /* Element stuff */
 
 static GstCaps *
-gst_xvimagesink_getcaps (GstBaseSink * bsink)
+gst_xvimagesink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstXvImageSink *xvimagesink;
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 
-  if (xvimagesink->xcontext)
-    return gst_caps_ref (xvimagesink->xcontext->caps);
+  if (xvimagesink->xcontext) {
+    if (filter)
+      return gst_caps_intersect_full (filter, xvimagesink->xcontext->caps,
+          GST_CAPS_INTERSECT_FIRST);
+    else
+      return gst_caps_ref (xvimagesink->xcontext->caps);
+  }
 
-  return
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
-          (xvimagesink)));
+  if (filter) {
+    return gst_caps_intersect_full (filter,
+        gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (xvimagesink)),
+        GST_CAPS_INTERSECT_FIRST);
+  } else {
+    return
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
+            (xvimagesink)));
+  }
 }
 
 static gboolean
