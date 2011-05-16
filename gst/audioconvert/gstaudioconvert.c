@@ -78,7 +78,7 @@ static void gst_audio_convert_dispose (GObject * obj);
 static gboolean gst_audio_convert_get_unit_size (GstBaseTransform * base,
     GstCaps * caps, gsize * size);
 static GstCaps *gst_audio_convert_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static void gst_audio_convert_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_audio_convert_set_caps (GstBaseTransform * base,
@@ -557,7 +557,7 @@ structure_has_fixed_channel_positions (GstStructure * s,
  */
 static GstCaps *
 gst_audio_convert_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *ret;
   GstStructure *s, *structure;
@@ -697,6 +697,17 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
     gst_caps_append_structure (ret, s);
 
   GST_DEBUG_OBJECT (base, "Caps transformed to %" GST_PTR_FORMAT, ret);
+
+  if (filter) {
+    GstCaps *intersection;
+
+    GST_DEBUG_OBJECT (base, "Using filter caps %" GST_PTR_FORMAT, filter);
+    intersection =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = intersection;
+    GST_DEBUG_OBJECT (base, "Intersection %" GST_PTR_FORMAT, ret);
+  }
 
   return ret;
 }
