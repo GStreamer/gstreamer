@@ -1455,7 +1455,7 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
   /* the newsegment event is needed to bring the buffer timestamps to the
    * stream time and to drop samples outside of the playback segment. */
   gst_event_parse_segment (event, segment);
-  GST_DEBUG_OBJECT (basesink, "configured NEWSEGMENT %" GST_SEGMENT_FORMAT,
+  GST_DEBUG_OBJECT (basesink, "configured SEGMENT %" GST_SEGMENT_FORMAT,
       segment);
   GST_OBJECT_UNLOCK (basesink);
 }
@@ -1896,18 +1896,8 @@ again:
   /* collect segment and format for code clarity */
   format = segment->format;
 
-  /* no timestamp clipping if we did not get a TIME segment format */
-  if (G_UNLIKELY (format != GST_FORMAT_TIME)) {
-    cstart = start;
-    cstop = stop;
-    /* do running and stream time in TIME format */
-    format = GST_FORMAT_TIME;
-    GST_LOG_OBJECT (basesink, "not time format, don't clip");
-    goto do_times;
-  }
-
-  /* clip, only when we know about time */
-  if (G_UNLIKELY (!gst_segment_clip (segment, GST_FORMAT_TIME,
+  /* clip */
+  if (G_UNLIKELY (!gst_segment_clip (segment, format,
               start, stop, &cstart, &cstop))) {
     if (step->valid) {
       GST_DEBUG_OBJECT (basesink, "step out of segment");
