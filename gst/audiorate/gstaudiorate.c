@@ -314,41 +314,35 @@ gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
       gst_audio_rate_reset (audiorate);
       res = gst_pad_push_event (audiorate->srcpad, event);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-      gboolean update;
-
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
+      gst_event_parse_segment (event, &audiorate->sink_segment);
 
       GST_DEBUG_OBJECT (audiorate, "handle NEWSEGMENT");
+#if 0
       /* FIXME: bad things will likely happen if rate < 0 ... */
       if (!update) {
         /* a new segment starts. We need to figure out what will be the next
          * sample offset. We mark the offsets as invalid so that the _chain
          * function will perform this calculation. */
         gst_audio_rate_fill_to_time (audiorate, audiorate->src_segment.stop);
+#endif
         audiorate->next_offset = -1;
         audiorate->next_ts = -1;
+#if 0
       } else {
         gst_audio_rate_fill_to_time (audiorate, audiorate->src_segment.start);
       }
-
-      /* we accept all formats */
-      gst_segment_set_newsegment (&audiorate->sink_segment, update, rate,
-          arate, format, start, stop, time);
+#endif
 
       GST_DEBUG_OBJECT (audiorate, "updated segment: %" GST_SEGMENT_FORMAT,
           &audiorate->sink_segment);
 
-      if (format == GST_FORMAT_TIME) {
+      if (audiorate->sink_segment.format == GST_FORMAT_TIME) {
         /* TIME formats can be copied to src and forwarded */
         res = gst_pad_push_event (audiorate->srcpad, event);
-        memcpy (&audiorate->src_segment, &audiorate->sink_segment,
-            sizeof (GstSegment));
+        gst_segment_copy_into (&audiorate->sink_segment,
+            &audiorate->src_segment);
       } else {
         /* other formats will be handled in the _chain function */
         gst_event_unref (event);
@@ -393,7 +387,7 @@ gst_audio_rate_src_event (GstPad * pad, GstEvent * event)
 
 static gboolean
 gst_audio_rate_convert (GstAudioRate * audiorate,
-    GstFormat src_fmt, gint64 src_val, GstFormat dest_fmt, gint64 * dest_val)
+    GstFormat src_fmt, guint64 src_val, GstFormat dest_fmt, guint64 * dest_val)
 {
   if (src_fmt == dest_fmt) {
     *dest_val = src_val;
@@ -466,8 +460,8 @@ gst_audio_rate_convert_segments (GstAudioRate * audiorate)
   CONVERT_VAL (start);
   CONVERT_VAL (stop);
   CONVERT_VAL (time);
-  CONVERT_VAL (accum);
-  CONVERT_VAL (last_stop);
+  CONVERT_VAL (base);
+  CONVERT_VAL (position);
 #undef CONVERT_VAL
 
   return TRUE;
@@ -717,8 +711,8 @@ send:
   }
 
   /* set last_stop on segment */
-  gst_segment_set_last_stop (&audiorate->src_segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf));
+  audiorate->src_segment.position =
+      GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
 
   ret = gst_pad_push (audiorate->srcpad, buf);
   buf = NULL;

@@ -541,7 +541,7 @@ gst_adder_query (GstPad * pad, GstQuery ** query)
       switch (format) {
         case GST_FORMAT_TIME:
           /* FIXME, bring to stream time, might be tricky */
-          gst_query_set_position (*query, format, adder->timestamp);
+          gst_query_set_position (*query, format, adder->segment.position);
           res = TRUE;
           break;
         case GST_FORMAT_DEFAULT:
@@ -665,12 +665,13 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:
     {
       GstSeekFlags flags;
+      gdouble rate;
       GstSeekType curtype, endtype;
       gint64 cur, end;
       gboolean flush;
 
       /* parse the seek parameters */
-      gst_event_parse_seek (event, &adder->segment_rate, NULL, &flags, &curtype,
+      gst_event_parse_seek (event, &rate, NULL, &flags, &curtype,
           &cur, &endtype, &end);
 
       if ((curtype != GST_SEEK_TYPE_NONE) && (curtype != GST_SEEK_TYPE_SET)) {
@@ -711,14 +712,15 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
        * segment. After we have the lock, no collect function is running and no
        * new collect function will be called for as long as we're flushing. */
       GST_OBJECT_LOCK (adder->collect);
+      adder->segment.rate = rate;
       if (curtype == GST_SEEK_TYPE_SET)
-        adder->segment_start = cur;
+        adder->segment.start = cur;
       else
-        adder->segment_start = 0;
+        adder->segment.start = 0;
       if (endtype == GST_SEEK_TYPE_SET)
-        adder->segment_end = end;
+        adder->segment.stop = end;
       else
-        adder->segment_end = GST_CLOCK_TIME_NONE;
+        adder->segment.stop = GST_CLOCK_TIME_NONE;
       /* make sure we push a new segment, to inform about new basetime
        * see FIXME in gst_adder_collected() */
       adder->segment_pending = TRUE;
@@ -1179,20 +1181,19 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
      * event. We also adjust offset & timestamp acordingly.
      * This basically ignores all newsegments sent by upstream.
      */
-    event = gst_event_new_new_segment (FALSE, adder->segment_rate,
-        1.0, GST_FORMAT_TIME, adder->segment_start, adder->segment_end,
-        adder->segment_start);
-    if (adder->segment_rate > 0.0) {
-      adder->timestamp = adder->segment_start;
+    event = gst_event_new_segment (&adder->segment);
+
+    if (adder->segment.rate > 0.0) {
+      adder->segment.position = adder->segment.start;
     } else {
-      adder->timestamp = adder->segment_end;
+      adder->segment.position = adder->segment.stop;
     }
-    adder->offset = gst_util_uint64_scale (adder->timestamp,
+    adder->offset = gst_util_uint64_scale (adder->segment.position,
         adder->rate, GST_SECOND);
     GST_INFO_OBJECT (adder, "seg_start %" G_GUINT64_FORMAT ", seg_end %"
-        G_GUINT64_FORMAT, adder->segment_start, adder->segment_end);
+        G_GUINT64_FORMAT, adder->segment.start, adder->segment.stop);
     GST_INFO_OBJECT (adder, "timestamp %" G_GINT64_FORMAT ",new offset %"
-        G_GINT64_FORMAT, adder->timestamp, adder->offset);
+        G_GINT64_FORMAT, adder->segment.position, adder->offset);
 
     if (event) {
       if (!gst_pad_push_event (adder->srcpad, event)) {
@@ -1203,7 +1204,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     } else {
       GST_WARNING_OBJECT (adder->srcpad, "Creating new segment event for "
           "start:%" G_GINT64_FORMAT "  end:%" G_GINT64_FORMAT " failed",
-          adder->segment_start, adder->segment_end);
+          adder->segment.start, adder->segment.stop);
     }
   }
 
@@ -1222,7 +1223,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
   /* for the next timestamp, use the sample counter, which will
    * never accumulate rounding errors */
-  if (adder->segment_rate > 0.0) {
+  if (adder->segment.rate > 0.0) {
     next_offset = adder->offset + outsize / adder->bps;
   } else {
     next_offset = adder->offset - outsize / adder->bps;
@@ -1231,20 +1232,20 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
 
   /* set timestamps on the output buffer */
-  if (adder->segment_rate > 0.0) {
-    GST_BUFFER_TIMESTAMP (outbuf) = adder->timestamp;
+  if (adder->segment.rate > 0.0) {
+    GST_BUFFER_TIMESTAMP (outbuf) = adder->segment.position;
     GST_BUFFER_OFFSET (outbuf) = adder->offset;
     GST_BUFFER_OFFSET_END (outbuf) = next_offset;
-    GST_BUFFER_DURATION (outbuf) = next_timestamp - adder->timestamp;
+    GST_BUFFER_DURATION (outbuf) = next_timestamp - adder->segment.position;
   } else {
     GST_BUFFER_TIMESTAMP (outbuf) = next_timestamp;
     GST_BUFFER_OFFSET (outbuf) = next_offset;
     GST_BUFFER_OFFSET_END (outbuf) = adder->offset;
-    GST_BUFFER_DURATION (outbuf) = adder->timestamp - next_timestamp;
+    GST_BUFFER_DURATION (outbuf) = adder->segment.position - next_timestamp;
   }
 
   adder->offset = next_offset;
-  adder->timestamp = next_timestamp;
+  adder->segment.position = next_timestamp;
 
   /* send it out */
   GST_LOG_OBJECT (adder, "pushing outbuf %p, timestamp %" GST_TIME_FORMAT
@@ -1284,14 +1285,11 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      adder->timestamp = 0;
+      adder->segment.position = 0;
       adder->offset = 0;
       adder->flush_stop_pending = FALSE;
       adder->segment_pending = TRUE;
-      adder->segment_start = 0;
-      adder->segment_end = GST_CLOCK_TIME_NONE;
-      adder->segment_rate = 1.0;
-      gst_segment_init (&adder->segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (&adder->segment, GST_FORMAT_TIME);
       gst_collect_pads_start (adder->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

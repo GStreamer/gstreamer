@@ -926,7 +926,7 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       resample->samples_out = 0;
       resample->need_discont = TRUE;
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       if (resample->state) {
         guint latency = resample->funcs->get_input_latency (resample->state);
         gst_audio_resample_push_drain (resample, latency);

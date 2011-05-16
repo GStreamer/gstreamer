@@ -81,7 +81,6 @@ struct _GstVorbisEnc {
   guint64          granulepos_offset;
   gint64           subgranule_offset;
   GstSegment       segment;
-  GstClockTime     initial_ts;
 
   GstTagList *     tags;
 

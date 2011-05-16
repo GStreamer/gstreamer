@@ -95,7 +95,6 @@ struct _GstSubParse {
   
   /* Segment */
   GstSegment    segment;
-  GstSeekFlags  segment_flags;
   gboolean      need_segment;
   
   gboolean flushing;

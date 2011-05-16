@@ -31,15 +31,6 @@
 
 #include "gstbasertpdepayload.h"
 
-#ifdef GST_DISABLE_DEPRECATED
-#define QUEUE_LOCK_INIT(base)   (g_static_rec_mutex_init(&base->queuelock))
-#define QUEUE_LOCK_FREE(base)   (g_static_rec_mutex_free(&base->queuelock))
-#define QUEUE_LOCK(base)        (g_static_rec_mutex_lock(&base->queuelock))
-#define QUEUE_UNLOCK(base)      (g_static_rec_mutex_unlock(&base->queuelock))
-#else
-/* otherwise it's already been defined in the header (FIXME 0.11)*/
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (basertpdepayload_debug);
 #define GST_CAT_DEFAULT (basertpdepayload_debug)
 
@@ -69,12 +60,9 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_QUEUE_DELAY	0
-
 enum
 {
   PROP_0,
-  PROP_QUEUE_DELAY,
   PROP_LAST
 };
 
@@ -131,7 +119,6 @@ gst_base_rtp_depayload_get_type (void)
   return base_rtp_depayload_type;
 }
 
-
 static void
 gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
 {
@@ -147,21 +134,6 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
   gobject_class->finalize = gst_base_rtp_depayload_finalize;
   gobject_class->set_property = gst_base_rtp_depayload_set_property;
   gobject_class->get_property = gst_base_rtp_depayload_get_property;
-
-  /**
-   * GstBaseRTPDepayload::queue-delay
-   *
-   * Control the amount of packets to buffer.
-   *
-   * Deprecated: Use a jitterbuffer or RTP session manager to delay packet
-   * playback. This property has no effect anymore since 0.10.15.
-   */
-#ifndef GST_REMOVE_DEPRECATED
-  g_object_class_install_property (gobject_class, PROP_QUEUE_DELAY,
-      g_param_spec_uint ("queue-delay", "Queue Delay",
-          "Amount of ms to queue/buffer, deprecated", 0, G_MAXUINT,
-          DEFAULT_QUEUE_DELAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#endif
 
   gstelement_class->change_state = gst_base_rtp_depayload_change_state;
 
@@ -203,19 +175,12 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter,
   gst_pad_use_fixed_caps (filter->srcpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
-  filter->queue = g_queue_new ();
-  filter->queue_delay = DEFAULT_QUEUE_DELAY;
-
   gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
 }
 
 static void
 gst_base_rtp_depayload_finalize (GObject * object)
 {
-  GstBaseRTPDepayload *filter = GST_BASE_RTP_DEPAYLOAD (object);
-
-  g_queue_free (filter->queue);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -440,19 +405,9 @@ gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload * filter,
       filter->need_newsegment = TRUE;
       filter->priv->next_seqnum = -1;
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      gdouble rate, arate;
-      GstFormat fmt;
-      gint64 start, stop, position;
-
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &fmt, &start,
-          &stop, &position);
-
-      gst_segment_set_newsegment (&filter->segment, update, rate, arate, fmt,
-          start, stop, position);
-
+      gst_event_parse_segment (event, &filter->segment);
       /* don't pass the event downstream, we generate our own segment including
        * the NTP time and other things we receive in caps */
       forward = FALSE;
@@ -523,6 +478,7 @@ create_segment_event (GstBaseRTPDepayload * filter, gboolean update,
   GstEvent *event;
   GstClockTime stop;
   GstBaseRTPDepayloadPrivate *priv;
+  GstSegment segment;
 
   priv = filter->priv;
 
@@ -531,9 +487,15 @@ create_segment_event (GstBaseRTPDepayload * filter, gboolean update,
   else
     stop = -1;
 
-  event = gst_event_new_new_segment (update, priv->play_speed,
-      priv->play_scale, GST_FORMAT_TIME, position, stop,
-      position + priv->npt_start);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.rate = priv->play_speed;
+  segment.applied_rate = priv->play_scale;
+  segment.start = 0;
+  segment.stop = stop;
+  segment.time = priv->npt_start;
+  segment.position = position;
+
+  event = gst_event_new_segment (&segment);
 
   return event;
 }
@@ -794,9 +756,6 @@ gst_base_rtp_depayload_set_property (GObject * object, guint prop_id,
   filter = GST_BASE_RTP_DEPAYLOAD (object);
 
   switch (prop_id) {
-    case PROP_QUEUE_DELAY:
-      filter->queue_delay = g_value_get_uint (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -812,9 +771,6 @@ gst_base_rtp_depayload_get_property (GObject * object, guint prop_id,
   filter = GST_BASE_RTP_DEPAYLOAD (object);
 
   switch (prop_id) {
-    case PROP_QUEUE_DELAY:
-      g_value_set_uint (value, filter->queue_delay);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

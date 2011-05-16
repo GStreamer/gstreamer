@@ -630,29 +630,20 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
+      GstSegment segment;
 
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
+      gst_event_parse_segment (event, &segment);
 
       /* we need TIME format */
-      if (format != GST_FORMAT_TIME)
+      if (segment.format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
-      GST_DEBUG_OBJECT (dec,
-          "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
-          ", stop %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
-          update, rate, arate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
-          GST_TIME_ARGS (time));
+      GST_DEBUG_OBJECT (dec, "segment: %" GST_SEGMENT_FORMAT, &segment);
 
       /* now configure the values */
-      gst_segment_set_newsegment (&dec->segment, update,
-          rate, arate, format, start, stop, time);
+      gst_segment_copy_into (&segment, &dec->segment);
       dec->seqnum = gst_event_get_seqnum (event);
 
       /* We don't forward this unless/until the decoder is initialised */
@@ -1044,7 +1035,7 @@ clip_buffer (GstTheoraDec * dec, GstBuffer * buf)
 {
   gboolean res = TRUE;
   GstClockTime in_ts, in_dur, stop;
-  gint64 cstart, cstop;
+  guint64 cstart, cstop;
 
   in_ts = GST_BUFFER_TIMESTAMP (buf);
   in_dur = GST_BUFFER_DURATION (buf);

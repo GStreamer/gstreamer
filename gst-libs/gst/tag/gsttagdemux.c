@@ -111,7 +111,6 @@ struct _GstTagDemuxPrivate
 
   GstSegment segment;
   gboolean need_newseg;
-  gboolean newseg_update;
 
   GList *pending_events;
 };
@@ -271,7 +270,6 @@ gst_tag_demux_reset (GstTagDemux * tagdemux)
 
   gst_segment_init (&tagdemux->priv->segment, GST_FORMAT_UNDEFINED);
   tagdemux->priv->need_newseg = TRUE;
-  tagdemux->priv->newseg_update = FALSE;
 
   g_list_foreach (tagdemux->priv->pending_events,
       (GFunc) gst_mini_object_unref, NULL);
@@ -587,16 +585,16 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
 
   size = gst_buffer_get_size (buf);
 
-  /* Update our segment last_stop info */
+  /* Update our segment position info */
   if (demux->priv->segment.format == GST_FORMAT_BYTES) {
     if (GST_BUFFER_OFFSET_IS_VALID (buf))
-      demux->priv->segment.last_stop = GST_BUFFER_OFFSET (buf);
-    demux->priv->segment.last_stop += size;
+      demux->priv->segment.position = GST_BUFFER_OFFSET (buf);
+    demux->priv->segment.position += size;
   } else if (demux->priv->segment.format == GST_FORMAT_TIME) {
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buf))
-      demux->priv->segment.last_stop = GST_BUFFER_TIMESTAMP (buf);
+      demux->priv->segment.position = GST_BUFFER_TIMESTAMP (buf);
     if (GST_BUFFER_DURATION_IS_VALID (buf))
-      demux->priv->segment.last_stop += GST_BUFFER_DURATION (buf);
+      demux->priv->segment.position += GST_BUFFER_DURATION (buf);
   }
 
   if (demux->priv->collect == NULL) {
@@ -738,18 +736,10 @@ gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
       }
       ret = gst_pad_event_default (pad, event);
       break;
-    case GST_EVENT_NEWSEGMENT:{
-      gboolean update;
-      gdouble rate, arate;
-      GstFormat format;
-      gint64 start, stop, position;
+    case GST_EVENT_SEGMENT:
+    {
+      gst_event_parse_segment (event, &demux->priv->segment);
 
-      gst_event_parse_new_segment (event, &update, &rate, &arate,
-          &format, &start, &stop, &position);
-
-      gst_segment_set_newsegment (&demux->priv->segment, update, rate,
-          arate, format, start, stop, position);
-      demux->priv->newseg_update = update;
       demux->priv->need_newseg = TRUE;
       gst_event_unref (event);
       ret = TRUE;
@@ -1481,20 +1471,19 @@ gst_tag_demux_send_new_segment (GstTagDemux * tagdemux)
   GstEvent *event;
   gint64 start, stop, position;
   GstSegment *seg = &tagdemux->priv->segment;
+  GstSegment newseg;
 
   if (seg->format == GST_FORMAT_UNDEFINED) {
     GST_LOG_OBJECT (tagdemux,
         "No new segment received before first buffer. Using default");
-    gst_segment_set_newsegment (seg, FALSE, 1.0, 1.0,
-        GST_FORMAT_BYTES, tagdemux->priv->strip_start, -1,
-        tagdemux->priv->strip_start);
+    gst_segment_init (seg, GST_FORMAT_BYTES);
+    seg->start = tagdemux->priv->strip_start;
+    seg->time = tagdemux->priv->strip_start;
   }
 
   /* Can't adjust segments in non-BYTES formats */
   if (tagdemux->priv->segment.format != GST_FORMAT_BYTES) {
-    event = gst_event_new_new_segment (tagdemux->priv->newseg_update,
-        seg->rate, seg->applied_rate, seg->format, seg->start,
-        seg->stop, seg->time);
+    event = gst_event_new_segment (seg);
     return gst_pad_push_event (tagdemux->priv->srcpad, event);
   }
 
@@ -1544,13 +1533,13 @@ gst_tag_demux_send_new_segment (GstTagDemux * tagdemux)
     }
   }
 
-  GST_DEBUG_OBJECT (tagdemux,
-      "Sending new segment update %d, rate %g, format %d, "
-      "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", position %"
-      G_GINT64_FORMAT, tagdemux->priv->newseg_update, seg->rate, seg->format,
-      start, stop, position);
+  GST_DEBUG_OBJECT (tagdemux, "Sending segment %" GST_SEGMENT_FORMAT, seg);
 
-  event = gst_event_new_new_segment (tagdemux->priv->newseg_update,
-      seg->rate, seg->applied_rate, seg->format, start, stop, position);
+  gst_segment_copy_into (seg, &newseg);
+  newseg.start = start;
+  newseg.stop = stop;
+  newseg.position = position;
+  event = gst_event_new_segment (&newseg);
+
   return gst_pad_push_event (tagdemux->priv->srcpad, event);
 }

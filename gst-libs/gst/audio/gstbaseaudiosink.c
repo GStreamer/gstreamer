@@ -863,17 +863,6 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       /* now wait till we played everything */
       gst_base_audio_sink_drain (sink);
       break;
-    case GST_EVENT_NEWSEGMENT:
-    {
-      gdouble rate;
-
-      /* we only need the rate */
-      gst_event_parse_new_segment (event, NULL, &rate, NULL, NULL,
-          NULL, NULL, NULL);
-
-      GST_DEBUG_OBJECT (sink, "new segment rate of %f", rate);
-      break;
-    }
     default:
       break;
   }
@@ -1358,7 +1347,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstClockTimeDiff sync_offset, ts_offset;
   GstBaseAudioSink *sink;
   GstRingBuffer *ringbuf;
-  gint64 diff, align, ctime, cstop;
+  gint64 diff, align;
+  guint64 ctime, cstop;
   gsize offset;
   guint8 *data;
   gsize size;
@@ -1764,7 +1754,7 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
   GST_LOG_OBJECT (basesink, "pulling %d bytes offset %" G_GUINT64_FORMAT
       " to fill audio buffer", len, basesink->offset);
   ret =
-      gst_pad_pull_range (basesink->sinkpad, basesink->segment.last_stop, len,
+      gst_pad_pull_range (basesink->sinkpad, basesink->segment.position, len,
       &buf);
 
   if (ret != GST_FLOW_OK) {
@@ -1791,7 +1781,7 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
     len = MIN (size, len);
   }
 
-  basesink->segment.last_stop += len;
+  basesink->segment.position += len;
 
   gst_buffer_extract (buf, 0, data, len);
   GST_BASE_SINK_PREROLL_UNLOCK (basesink);

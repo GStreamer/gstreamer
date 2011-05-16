@@ -2379,7 +2379,7 @@ stream_changed_data_probe (GstPad * pad, GstMiniObject * object, gpointer data)
   }
 
   if (GST_IS_EVENT (object)
-      && GST_EVENT_TYPE (GST_EVENT_CAST (object)) == GST_EVENT_NEWSEGMENT) {
+      && GST_EVENT_TYPE (GST_EVENT_CAST (object)) == GST_EVENT_SEGMENT) {
     /* push the event first, then send the delayed one */
     gst_event_ref (GST_EVENT_CAST (object));
     gst_pad_send_event (pad, GST_EVENT_CAST (object));

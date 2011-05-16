@@ -163,7 +163,7 @@ gst_gdp_depay_sink_event (GstPad * pad, GstEvent * event)
       /* after EOS, we don't expect to output anything anymore */
       res = gst_pad_push_event (this->srcpad, event);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     case GST_EVENT_TAG:
     case GST_EVENT_BUFFERSIZE:
     default:

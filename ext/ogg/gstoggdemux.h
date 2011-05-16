@@ -103,7 +103,7 @@ struct _GstOggPad
   gint64 first_granule;         /* the granulepos of first page == first sample in next page */
   GstClockTime first_time;      /* the timestamp of the second page or granuletime of first page */
 
-  GstClockTime last_stop;       /* last_stop when last push occured; used to detect when we
+  GstClockTime position;        /* position when last push occured; used to detect when we
                                  * need to send a newsegment update event for sparse streams */
 
   GList *continued;
@@ -152,7 +152,6 @@ struct _GstOggDemux
 
   /* playback start/stop positions */
   GstSegment segment;
-  gboolean segment_running;
   guint32  seqnum;
 
   GstEvent *event;

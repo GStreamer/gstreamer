@@ -351,7 +351,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
   if (segment->format == GST_FORMAT_TIME) {
     /* Handle clipping for GST_FORMAT_TIME */
 
-    gint64 start, stop, cstart, cstop, diff;
+    guint64 start, stop, cstart, cstop, diff;
 
     start = timestamp;
     stop = timestamp + duration;
@@ -389,7 +389,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
     }
   } else {
     /* Handle clipping for GST_FORMAT_DEFAULT */
-    gint64 start, stop, cstart, cstop, diff;
+    guint64 start, stop, cstart, cstop, diff;
 
     g_return_val_if_fail (GST_BUFFER_OFFSET_IS_VALID (buffer), buffer);
 

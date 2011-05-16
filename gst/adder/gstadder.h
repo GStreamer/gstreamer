@@ -79,15 +79,12 @@ struct _GstAdder {
   GstAdderFunction func;
 
   /* counters to keep track of timestamps */
-  gint64          timestamp;
   gint64          offset;
 
   /* sink event handling */
   GstPadEventFunction  collect_event;
   GstSegment      segment;
   gboolean        segment_pending;
-  guint64         segment_start, segment_end;
-  gdouble         segment_rate;
   /* src event handling */
   gboolean        flush_stop_pending;
   

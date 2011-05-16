@@ -834,17 +834,17 @@ gst_video_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
 static gboolean
 gst_video_test_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 {
-  GstClockTime time;
+  GstClockTime position;
   GstVideoTestSrc *src;
 
   src = GST_VIDEO_TEST_SRC (bsrc);
 
   segment->time = segment->start;
-  time = segment->last_stop;
+  position = segment->position;
 
-  /* now move to the time indicated */
+  /* now move to the position indicated */
   if (src->rate_numerator) {
-    src->n_frames = gst_util_uint64_scale (time,
+    src->n_frames = gst_util_uint64_scale (position,
         src->rate_numerator, src->rate_denominator * GST_SECOND);
   } else {
     src->n_frames = 0;
@@ -857,7 +857,7 @@ gst_video_test_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
     src->running_time = 0;
   }
 
-  g_assert (src->running_time <= time);
+  g_assert (src->running_time <= position);
 
   return TRUE;
 }

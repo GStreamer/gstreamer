@@ -500,22 +500,12 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
       res = gst_visual_sink_setcaps (pad, caps);
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-      gboolean update;
-
       /* the newsegment values are used to clip the input samples
        * and to convert the incomming timestamps to running time so
        * we can do QoS */
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-
-      /* now configure the values */
-      gst_segment_set_newsegment (&visual->segment, update,
-          rate, arate, format, start, stop, time);
+      gst_event_parse_segment (event, &visual->segment);
 
       /* and forward */
       res = gst_pad_push_event (visual->srcpad, event);

@@ -832,8 +832,7 @@ gst_vorbis_enc_buffer_from_packet (GstVorbisEnc * vorbisenc,
   /* update the next timestamp, taking granulepos_offset and subgranule offset
    * into account */
   vorbisenc->next_ts =
-      granulepos_to_timestamp_offset (vorbisenc, packet->granulepos) +
-      vorbisenc->initial_ts;
+      granulepos_to_timestamp_offset (vorbisenc, packet->granulepos);
   GST_BUFFER_DURATION (outbuf) =
       vorbisenc->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
 
@@ -965,23 +964,14 @@ gst_vorbis_enc_sink_event (GstPad * pad, GstEvent * event)
       }
       res = gst_pad_push_event (vorbisenc->srcpad, event);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      gdouble rate, applied_rate;
-      GstFormat format;
-      gint64 start, stop, position;
+      GstSegment segment;
 
-      gst_event_parse_new_segment (event, &update, &rate, &applied_rate,
-          &format, &start, &stop, &position);
-      if (format == GST_FORMAT_TIME) {
-        gst_segment_set_newsegment (&vorbisenc->segment, update, rate,
-            applied_rate, format, start, stop, position);
-        if (vorbisenc->initial_ts == GST_CLOCK_TIME_NONE) {
-          GST_DEBUG_OBJECT (vorbisenc, "Initial segment %" GST_SEGMENT_FORMAT,
-              &vorbisenc->segment);
-          vorbisenc->initial_ts = start;
-        }
+      gst_event_parse_segment (event, &segment);
+
+      if (segment.format == GST_FORMAT_TIME) {
+        gst_segment_copy_into (&segment, &vorbisenc->segment);
       }
     }
       /* fall through */
@@ -1056,10 +1046,9 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
   running_time =
       gst_segment_to_running_time (&vorbisenc->segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (buffer));
-  timestamp = running_time + vorbisenc->initial_ts;
-  GST_DEBUG_OBJECT (vorbisenc, "Initial ts is %" GST_TIME_FORMAT
-      " timestamp %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (vorbisenc->initial_ts), GST_TIME_ARGS (timestamp));
+  timestamp = running_time;
+  GST_DEBUG_OBJECT (vorbisenc, " timestamp %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
   if (!vorbisenc->header_sent) {
     /* Vorbis streams begin with three headers; the initial header (with
        most of the codec setup parameters) which is mandated by the Ogg
@@ -1118,8 +1107,7 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
         (running_time, vorbisenc->frequency, GST_SECOND);
     vorbisenc->subgranule_offset = 0;
     vorbisenc->subgranule_offset =
-        (vorbisenc->next_ts - vorbisenc->initial_ts) -
-        granulepos_to_timestamp_offset (vorbisenc, 0);
+        vorbisenc->next_ts - granulepos_to_timestamp_offset (vorbisenc, 0);
 
     vorbisenc->header_sent = TRUE;
     first = TRUE;
@@ -1390,7 +1378,6 @@ gst_vorbis_enc_change_state (GstElement * element, GstStateChange transition)
       vorbisenc->next_discont = FALSE;
       vorbisenc->header_sent = FALSE;
       gst_segment_init (&vorbisenc->segment, GST_FORMAT_TIME);
-      vorbisenc->initial_ts = GST_CLOCK_TIME_NONE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;

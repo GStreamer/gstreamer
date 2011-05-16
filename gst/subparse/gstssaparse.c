@@ -324,10 +324,13 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
   ret = gst_ssa_parse_push_line (parse, txt, ts, GST_BUFFER_DURATION (buf));
 
   if (ret != GST_FLOW_OK && GST_CLOCK_TIME_IS_VALID (ts)) {
+    GstSegment segment;
+
     /* just advance time without sending anything */
-    gst_pad_push_event (parse->srcpad,
-        gst_event_new_new_segment (TRUE, 1.0, 1.0, GST_FORMAT_TIME, ts, -1,
-            ts));
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = ts;
+    segment.time = ts;
+    gst_pad_push_event (parse->srcpad, gst_event_new_segment (&segment));
     ret = GST_FLOW_OK;
   }
 

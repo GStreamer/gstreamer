@@ -836,7 +836,7 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
   gint64 desired_position;
   gboolean res = FALSE;
 
-  desired_position = segment->last_stop;
+  desired_position = segment->position;
 
   GST_DEBUG_OBJECT (appsrc, "seeking to %" G_GINT64_FORMAT ", format %s",
       desired_position, gst_format_get_name (segment->format));
@@ -934,7 +934,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
     GST_DEBUG_OBJECT (appsrc,
         "Size changed from %" G_GINT64_FORMAT " to %" G_GINT64_FORMAT,
         bsrc->segment.duration, priv->size);
-    gst_segment_set_duration (&bsrc->segment, GST_FORMAT_BYTES, priv->size);
+    bsrc->segment.duration = priv->size;
     GST_OBJECT_UNLOCK (appsrc);
 
     gst_element_post_message (GST_ELEMENT (appsrc),

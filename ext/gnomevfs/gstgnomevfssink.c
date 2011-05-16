@@ -440,29 +440,29 @@ gst_gnome_vfs_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
   GST_DEBUG_OBJECT (sink, "processing %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:{
+    case GST_EVENT_SEGMENT:{
       GnomeVFSResult res;
-      GstFormat format;
-      gint64 offset;
+      GstSegment segment;
 
-      gst_event_parse_new_segment (event, NULL, NULL, NULL, &format, &offset,
-          NULL, NULL);
+      gst_event_parse_segment (event, &segment);
 
-      if (format != GST_FORMAT_BYTES) {
+      if (segment.format != GST_FORMAT_BYTES) {
         GST_WARNING_OBJECT (sink, "ignored NEWSEGMENT event in %s format",
-            gst_format_get_name (format));
+            gst_format_get_name (segment.format));
         break;
       }
 
-      GST_LOG_OBJECT (sink, "seeking to offset %" G_GINT64_FORMAT, offset);
-      res = gnome_vfs_seek (sink->handle, GNOME_VFS_SEEK_START, offset);
+      GST_LOG_OBJECT (sink, "seeking to offset %" G_GINT64_FORMAT,
+          segment.start);
+      res = gnome_vfs_seek (sink->handle, GNOME_VFS_SEEK_START, segment.start);
 
       if (res != GNOME_VFS_OK) {
         GST_ERROR_OBJECT (sink, "Failed to seek to offset %"
-            G_GINT64_FORMAT ": %s", offset, gnome_vfs_result_to_string (res));
+            G_GINT64_FORMAT ": %s", segment.start,
+            gnome_vfs_result_to_string (res));
         ret = FALSE;
       } else {
-        sink->current_pos = offset;
+        sink->current_pos = segment.start;
       }
 
       break;

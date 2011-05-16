@@ -237,24 +237,12 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_selector_pad_reset (selpad);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
+      gst_event_parse_segment (event, &selpad->segment);
 
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-
-      GST_DEBUG_OBJECT (selpad,
-          "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
-          "format %d, "
-          "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
-          G_GINT64_FORMAT, update, rate, arate, format, start, stop, time);
-
-      gst_segment_set_newsegment (&selpad->segment, update,
-          rate, arate, format, start, stop, time);
+      GST_DEBUG_OBJECT (selpad, "configured SEGMENT %" GST_SEGMENT_FORMAT,
+          &selpad->segment);
       /* if we are not going to forward the segment, mark the segment as
        * pending */
       if (!forward)
@@ -330,7 +318,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     GST_DEBUG_OBJECT (sel, "received timestamp %" GST_TIME_FORMAT,
         GST_TIME_ARGS (timestamp));
-    gst_segment_set_last_stop (seg, seg->format, timestamp);
+    seg->position = timestamp;
   }
 
   /* Ignore buffers from pads except the selected one */
@@ -339,10 +327,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
 
   /* if we have a pending segment, push it out now */
   if (selpad->segment_pending) {
-    gst_pad_push_event (sel->srcpad, gst_event_new_new_segment (FALSE,
-            seg->rate, seg->applied_rate, seg->format, seg->start, seg->stop,
-            seg->time));
-
+    gst_pad_push_event (sel->srcpad, gst_event_new_segment (seg));
     selpad->segment_pending = FALSE;
   }
 

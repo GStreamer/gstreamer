@@ -40,15 +40,6 @@ G_BEGIN_DECLS
 #define GST_BASE_RTP_DEPAYLOAD_SINKPAD(depayload) (GST_BASE_RTP_DEPAYLOAD (depayload)->sinkpad)
 #define GST_BASE_RTP_DEPAYLOAD_SRCPAD(depayload)  (GST_BASE_RTP_DEPAYLOAD (depayload)->srcpad)
 
-#ifndef GST_DISABLE_DEPRECATED
-/* this was presumably never meant to be public API, or should at least
- * have been prefixed if it was. Don't use. (FIXME: remove in 0.11) */
-#define QUEUE_LOCK_INIT(base)   (g_static_rec_mutex_init(&base->queuelock))
-#define QUEUE_LOCK_FREE(base)   (g_static_rec_mutex_free(&base->queuelock))
-#define QUEUE_LOCK(base)        (g_static_rec_mutex_lock(&base->queuelock))
-#define QUEUE_UNLOCK(base)      (g_static_rec_mutex_unlock(&base->queuelock))
-#endif
-
 typedef struct _GstBaseRTPDepayload      GstBaseRTPDepayload;
 typedef struct _GstBaseRTPDepayloadClass GstBaseRTPDepayloadClass;
 typedef struct _GstBaseRTPDepayloadPrivate GstBaseRTPDepayloadPrivate;
@@ -59,29 +50,8 @@ struct _GstBaseRTPDepayload
 
   GstPad *sinkpad, *srcpad;
 
-#ifndef GST_REMOVE_DEPRECATED
-  /* lock to protect the queue, deprecated */
-  GStaticRecMutex queuelock;
-
-  /* deprecated */
-  gboolean thread_running;
-  /* the releaser thread, deprecated */
-  GThread *thread;
-#endif
-
   /* this attribute must be set by the child */
   guint clock_rate;
-
-#ifndef GST_REMOVE_DEPRECATED
-  /* this value can be modified by the child if needed, deprecated */
-  guint queue_delay;
-#endif
-
-  /* we will queue up to RTP_QUEUEDELAY ms of packets,
-   * reordering them if necessary
-   * dropping any packets that are more than
-   * RTP_QUEUEDELAY ms late, deprecated */
-  GQueue *queue;
 
   GstSegment segment;
   gboolean need_newsegment;
@@ -98,10 +68,6 @@ struct _GstBaseRTPDepayloadClass
 
   /* virtuals, inform the subclass of the caps. */
   gboolean (*set_caps) (GstBaseRTPDepayload *filter, GstCaps *caps);
-
-  /* non-pure function, default implementation in base class
-   * this does buffering, reordering and dropping, deprecated */
-  GstFlowReturn (*add_to_queue) (GstBaseRTPDepayload *filter, GstBuffer *in);
 
   /* pure virtual function, child must use this to process incoming
    * rtp packets. If the child returns a buffer without a valid timestamp,

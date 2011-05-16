@@ -242,7 +242,7 @@ gst_smart_encoder_reencode_gop (GstSmartEncoder * smart_encoder)
 static GstFlowReturn
 gst_smart_encoder_push_pending_gop (GstSmartEncoder * smart_encoder)
 {
-  gint64 cstart, cstop;
+  guint64 cstart, cstop;
   GList *tmp;
   GstFlowReturn res = GST_FLOW_OK;
 
@@ -350,27 +350,15 @@ smart_encoder_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       smart_encoder_reset (smart_encoder);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-      gboolean update;
+      gst_event_parse_segment (event, smart_encoder->segment);
 
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-      GST_DEBUG_OBJECT (smart_encoder,
-          "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
-          ", stop %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
-          update, rate, arate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
-          GST_TIME_ARGS (time));
-      if (format != GST_FORMAT_TIME)
+      GST_DEBUG_OBJECT (smart_encoder, "segment: %" GST_SEGMENT_FORMAT,
+          smart_encoder->segment);
+      if (smart_encoder->segment->format != GST_FORMAT_TIME)
         GST_ERROR
             ("smart_encoder can not handle streams not specified in GST_FORMAT_TIME");
-
-      /* now configure the values */
-      gst_segment_set_newsegment (smart_encoder->segment, update,
-          rate, arate, format, start, stop, time);
 
       /* And keep a copy for further usage */
       if (smart_encoder->newsegment)

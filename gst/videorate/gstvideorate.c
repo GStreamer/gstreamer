@@ -488,7 +488,7 @@ gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate)
   if (videorate->to_rate_numerator) {
     /* interpolate next expected timestamp in the segment */
     videorate->next_ts =
-        videorate->segment.accum + videorate->segment.start +
+        videorate->segment.base + videorate->segment.start +
         videorate->base_ts + gst_util_uint64_scale (videorate->out_frame_count,
         videorate->to_rate_denominator * GST_SECOND,
         videorate->to_rate_numerator);
@@ -496,7 +496,7 @@ gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate)
   }
 
   /* adapt for looping, bring back to time in current segment. */
-  GST_BUFFER_TIMESTAMP (outbuf) = push_ts - videorate->segment.accum;
+  GST_BUFFER_TIMESTAMP (outbuf) = push_ts - videorate->segment.base;
 
   GST_LOG_OBJECT (videorate,
       "old is best, dup, pushing buffer outgoing ts %" GST_TIME_FORMAT,
@@ -555,23 +555,19 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
   videorate = GST_VIDEO_RATE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gint64 start, stop, time;
-      gdouble rate, arate;
-      gboolean update;
-      GstFormat format;
+      GstSegment segment;
 
-      gst_event_parse_new_segment (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
+      gst_event_parse_segment (event, &segment);
 
-      if (format != GST_FORMAT_TIME)
+      if (segment.format != GST_FORMAT_TIME)
         goto format_error;
 
       GST_DEBUG_OBJECT (videorate, "handle NEWSEGMENT");
 
       /* close up the previous segment, if appropriate */
-      if (!update && videorate->prevbuf) {
+      if (videorate->prevbuf) {
         gint count = 0;
         GstFlowReturn res;
 
@@ -581,7 +577,7 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
          * regardless, prevent going loopy in strange cases */
         while (res == GST_FLOW_OK && count <= MAGIC_LIMIT &&
             ((GST_CLOCK_TIME_IS_VALID (videorate->segment.stop) &&
-                    videorate->next_ts - videorate->segment.accum
+                    videorate->next_ts - videorate->segment.base
                     < videorate->segment.stop)
                 || count < 1)) {
           res = gst_video_rate_flush_prev (videorate, count > 0);
@@ -604,8 +600,7 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
       }
 
       /* We just want to update the accumulated stream_time  */
-      gst_segment_set_newsegment (&videorate->segment, update, rate, arate,
-          format, start, stop, time);
+      gst_segment_copy_into (&segment, &videorate->segment);
 
       GST_DEBUG_OBJECT (videorate, "updated segment: %" GST_SEGMENT_FORMAT,
           &videorate->segment);
@@ -623,7 +618,7 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
          * or only send out the stored buffer if there is no specific stop.
          * regardless, prevent going loopy in strange cases */
         while (res == GST_FLOW_OK && count <= MAGIC_LIMIT &&
-            ((videorate->next_ts - videorate->segment.accum <
+            ((videorate->next_ts - videorate->segment.base <
                     videorate->segment.stop)
                 || count < 1)) {
           res = gst_video_rate_flush_prev (videorate, count > 0);
@@ -637,7 +632,7 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
               videorate->next_ts + GST_BUFFER_DURATION (videorate->prevbuf);
 
           while (res == GST_FLOW_OK && count <= MAGIC_LIMIT &&
-              ((videorate->next_ts - videorate->segment.accum < end_ts)
+              ((videorate->next_ts - videorate->segment.base < end_ts)
                   || count < 1)) {
             res = gst_video_rate_flush_prev (videorate, count > 0);
             count++;
@@ -783,7 +778,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 
   /* the input time is the time in the segment + all previously accumulated
    * segments */
-  intime = in_ts + videorate->segment.accum;
+  intime = in_ts + videorate->segment.base;
 
   /* we need to have two buffers to compare */
   if (videorate->prevbuf == NULL) {
@@ -797,8 +792,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
         videorate->base_ts = in_ts - videorate->segment.start;
         videorate->out_frame_count = 0;
       } else {
-        videorate->next_ts =
-            videorate->segment.start + videorate->segment.accum;
+        videorate->next_ts = videorate->segment.start + videorate->segment.base;
       }
     }
   } else {

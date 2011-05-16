@@ -1087,12 +1087,10 @@ gst_cdda_base_src_update_duration (GstCddaBaseSrc * src)
   basesrc = GST_BASE_SRC (src);
 
   format = GST_FORMAT_TIME;
-  if (gst_pad_query_duration (GST_BASE_SRC_PAD (src), &format, &duration)) {
-    gst_segment_set_duration (&basesrc->segment, GST_FORMAT_TIME, duration);
-  } else {
-    gst_segment_set_duration (&basesrc->segment, GST_FORMAT_TIME, -1);
+  if (!gst_pad_query_duration (GST_BASE_SRC_PAD (src), &format, &duration)) {
     duration = GST_CLOCK_TIME_NONE;
   }
+  basesrc->segment.duration = duration;
 
   gst_element_post_message (GST_ELEMENT (src),
       gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_TIME, -1));

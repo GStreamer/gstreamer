@@ -281,26 +281,20 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:{
-      gboolean update;
-      gdouble rate;
-      gdouble applied_rate;
-      GstFormat format;
-      gint64 start, stop, position;
+    case GST_EVENT_SEGMENT:
+    {
+      GstSegment segment;
 
-      gst_event_parse_new_segment (event, &update, &rate,
-          &applied_rate, &format, &start, &stop, &position);
+      gst_event_parse_segment (event, &segment);
 
       /* We don't support non time NEWSEGMENT events */
-      if (format != GST_FORMAT_TIME) {
+      if (segment.format != GST_FORMAT_TIME) {
         gst_event_unref (event);
         event = NULL;
         break;
       }
 
-      gst_segment_set_newsegment (&ogg_pad->segment, update, rate,
-          applied_rate, format, start, stop, position);
-
+      gst_segment_copy_into (&segment, &ogg_pad->segment);
       break;
     }
     case GST_EVENT_FLUSH_STOP:{

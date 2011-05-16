@@ -820,18 +820,9 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
   enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      gdouble rate, applied_rate;
-      GstFormat format;
-      gint64 start, stop, time;
-
-      gst_event_parse_new_segment (event, &update, &rate, &applied_rate,
-          &format, &start, &stop, &time);
-
-      gst_segment_set_newsegment (&enc->segment, update, rate,
-          applied_rate, format, start, stop, time);
+      gst_event_parse_segment (event, &enc->segment);
 
       res = gst_pad_push_event (enc->srcpad, event);
       break;

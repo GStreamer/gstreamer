@@ -961,7 +961,7 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
 
   GST_DEBUG_OBJECT (src, "seeking %" GST_SEGMENT_FORMAT, segment);
 
-  time = segment->last_stop;
+  time = segment->position;
   src->reverse = (segment->rate < 0.0);
 
   /* now move to the time indicated */
