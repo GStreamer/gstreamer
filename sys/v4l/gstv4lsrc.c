@@ -56,7 +56,7 @@ static GstStaticPadTemplate v4l_src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static gboolean gst_v4lsrc_start (GstBaseSrc * src);
 static gboolean gst_v4lsrc_stop (GstBaseSrc * src);
 static gboolean gst_v4lsrc_set_caps (GstBaseSrc * src, GstCaps * caps);
-static GstCaps *gst_v4lsrc_get_caps (GstBaseSrc * src);
+static GstCaps *gst_v4lsrc_get_caps (GstBaseSrc * src, GstCaps * filter);
 static GstFlowReturn gst_v4lsrc_create (GstPushSrc * src, GstBuffer ** out);
 static gboolean gst_v4lsrc_query (GstBaseSrc * bsrc, GstQuery ** query);
 static void gst_v4lsrc_fixate (GstBaseSrc * bsrc, GstCaps * caps);
@@ -359,7 +359,7 @@ gst_v4lsrc_get_any_caps (void)
 }
 
 static GstCaps *
-gst_v4lsrc_get_caps (GstBaseSrc * src)
+gst_v4lsrc_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
   GstCaps *list;
   GstV4lSrc *v4lsrc = GST_V4LSRC (src);
