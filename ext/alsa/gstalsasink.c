@@ -296,7 +296,7 @@ gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   GstElementClass *element_class;
   GstPadTemplate *pad_template;
   GstAlsaSink *sink = GST_ALSA_SINK (bsink);
-  GstCaps *caps;
+  GstCaps *caps, *templ_caps;
 
   if (sink->handle == NULL) {
     GST_DEBUG_OBJECT (sink, "device not open, using template caps");
@@ -316,8 +316,10 @@ gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   pad_template = gst_element_class_get_pad_template (element_class, "sink");
   g_return_val_if_fail (pad_template != NULL, NULL);
 
+  templ_caps = gst_pad_template_get_caps (pad_template);
   caps = gst_alsa_probe_supported_formats (GST_OBJECT (sink), sink->handle,
-      gst_pad_template_get_caps (pad_template));
+      templ_caps);
+  gst_caps_unref (templ_caps);
 
   if (caps) {
     sink->cached_caps = gst_caps_ref (caps);

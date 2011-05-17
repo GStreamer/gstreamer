@@ -1096,8 +1096,7 @@ gst_base_text_overlay_getcaps (GstPad * pad, GstCaps * filter)
   /* we can do what the peer can */
   caps = gst_pad_peer_get_caps (otherpad, filter);
   if (caps) {
-    GstCaps *temp;
-    const GstCaps *templ;
+    GstCaps *temp, *templ;
 
     GST_DEBUG_OBJECT (pad, "peer caps  %" GST_PTR_FORMAT, caps);
 
@@ -1107,16 +1106,20 @@ gst_base_text_overlay_getcaps (GstPad * pad, GstCaps * filter)
     temp = gst_caps_intersect_full (caps, templ, GST_CAPS_INTERSECT_FIRST);
     GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
     gst_caps_unref (caps);
+    gst_caps_unref (templ);
     /* this is what we can do */
     caps = temp;
   } else {
     /* no peer, our padtemplate is enough then */
-    if (filter)
-      caps =
-          gst_caps_intersect_full (filter, gst_pad_get_pad_template_caps (pad),
-          GST_CAPS_INTERSECT_FIRST);
-    else
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_pad_get_pad_template_caps (pad);
+    if (filter) {
+      GstCaps *intersection;
+
+      intersection =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = intersection;
+    }
   }
 
   GST_DEBUG_OBJECT (overlay, "returning  %" GST_PTR_FORMAT, caps);

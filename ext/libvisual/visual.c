@@ -279,7 +279,7 @@ gst_visual_getcaps (GstPad * pad, GstCaps * filter)
   int depths;
 
   if (!visual->actor) {
-    ret = gst_caps_copy (gst_pad_get_pad_template_caps (visual->srcpad));
+    ret = gst_pad_get_pad_template_caps (visual->srcpad);
     goto beach;
   }
 

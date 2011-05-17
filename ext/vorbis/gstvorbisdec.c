@@ -597,7 +597,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
    * for mono/stereo and avoid the depth switch in tremor case */
   vd->copy_samples = get_copy_sample_func (vd->vi.channels, vd->width);
 
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (vd->srcpad));
+  caps = gst_caps_make_writable (gst_pad_get_pad_template_caps (vd->srcpad));
   gst_caps_set_simple (caps, "rate", G_TYPE_INT, vd->vi.rate,
       "channels", G_TYPE_INT, vd->vi.channels,
       "width", G_TYPE_INT, width, NULL);

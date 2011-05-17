@@ -412,7 +412,7 @@ gst_alsasrc_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
   GstElementClass *element_class;
   GstPadTemplate *pad_template;
   GstAlsaSrc *src;
-  GstCaps *caps;
+  GstCaps *caps, *templ_caps;
 
   src = GST_ALSA_SRC (bsrc);
 
@@ -434,8 +434,10 @@ gst_alsasrc_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
   pad_template = gst_element_class_get_pad_template (element_class, "src");
   g_return_val_if_fail (pad_template != NULL, NULL);
 
+  templ_caps = gst_pad_template_get_caps (pad_template);
   caps = gst_alsa_probe_supported_formats (GST_OBJECT (src), src->handle,
-      gst_pad_template_get_caps (pad_template));
+      templ_caps);
+  gst_caps_unref (templ_caps);
 
   if (caps) {
     src->cached_caps = gst_caps_ref (caps);

@@ -284,6 +284,7 @@ gst_ogm_audio_parse_base_init (GstOgmParseClass * klass)
   audio_src_templ = gst_pad_template_new ("src",
       GST_PAD_SRC, GST_PAD_SOMETIMES, caps);
   gst_element_class_add_pad_template (element_class, audio_src_templ);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -302,6 +303,7 @@ gst_ogm_video_parse_base_init (GstOgmParseClass * klass)
   video_src_templ = gst_pad_template_new ("src",
       GST_PAD_SRC, GST_PAD_SOMETIMES, caps);
   gst_element_class_add_pad_template (element_class, video_src_templ);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -320,6 +322,7 @@ gst_ogm_text_parse_base_init (GstOgmParseClass * klass)
   text_src_templ = gst_pad_template_new ("src",
       GST_PAD_SRC, GST_PAD_SOMETIMES, caps);
   gst_element_class_add_pad_template (element_class, text_src_templ);
+  gst_caps_unref (caps);
 }
 
 static void
