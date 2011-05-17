@@ -205,7 +205,7 @@ static void gst_uri_decode_bin_finalize (GObject * obj);
 static void handle_message (GstBin * bin, GstMessage * msg);
 
 static gboolean gst_uri_decode_bin_query (GstElement * element,
-    GstQuery ** query);
+    GstQuery * query);
 static GstStateChangeReturn gst_uri_decode_bin_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -2214,7 +2214,7 @@ handle_message (GstBin * bin, GstMessage * msg)
  */
 typedef struct
 {
-  GstQuery **query;
+  GstQuery *query;
   gint64 min;
   gint64 max;
   gboolean seekable;
@@ -2246,7 +2246,7 @@ decoder_query_duration_fold (const GValue * item, GValue * ret,
 
     g_value_set_boolean (ret, TRUE);
 
-    gst_query_parse_duration (*fold->query, NULL, &duration);
+    gst_query_parse_duration (fold->query, NULL, &duration);
 
     GST_DEBUG_OBJECT (item, "got duration %" G_GINT64_FORMAT, duration);
 
@@ -2261,9 +2261,9 @@ decoder_query_duration_done (GstURIDecodeBin * dec, QueryFold * fold)
 {
   GstFormat format;
 
-  gst_query_parse_duration (*fold->query, &format, NULL);
+  gst_query_parse_duration (fold->query, &format, NULL);
   /* store max in query result */
-  gst_query_set_duration (*fold->query, format, fold->max);
+  gst_query_set_duration (fold->query, format, fold->max);
 
   GST_DEBUG ("max duration %" G_GINT64_FORMAT, fold->max);
 }
@@ -2279,7 +2279,7 @@ decoder_query_position_fold (const GValue * item, GValue * ret,
 
     g_value_set_boolean (ret, TRUE);
 
-    gst_query_parse_position (*fold->query, NULL, &position);
+    gst_query_parse_position (fold->query, NULL, &position);
 
     GST_DEBUG_OBJECT (item, "got position %" G_GINT64_FORMAT, position);
 
@@ -2295,9 +2295,9 @@ decoder_query_position_done (GstURIDecodeBin * dec, QueryFold * fold)
 {
   GstFormat format;
 
-  gst_query_parse_position (*fold->query, &format, NULL);
+  gst_query_parse_position (fold->query, &format, NULL);
   /* store max in query result */
-  gst_query_set_position (*fold->query, format, fold->max);
+  gst_query_set_position (fold->query, format, fold->max);
 
   GST_DEBUG_OBJECT (dec, "max position %" G_GINT64_FORMAT, fold->max);
 }
@@ -2313,7 +2313,7 @@ decoder_query_latency_fold (const GValue * item, GValue * ret, QueryFold * fold)
 
     g_value_set_boolean (ret, TRUE);
 
-    gst_query_parse_latency (*fold->query, &live, &min, &max);
+    gst_query_parse_latency (fold->query, &live, &min, &max);
 
     GST_DEBUG_OBJECT (item,
         "got latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
@@ -2338,7 +2338,7 @@ static void
 decoder_query_latency_done (GstURIDecodeBin * dec, QueryFold * fold)
 {
   /* store max in query result */
-  gst_query_set_latency (*fold->query, fold->live, fold->min, fold->max);
+  gst_query_set_latency (fold->query, fold->live, fold->min, fold->max);
 
   GST_DEBUG_OBJECT (dec,
       "latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
@@ -2356,7 +2356,7 @@ decoder_query_seeking_fold (const GValue * item, GValue * ret, QueryFold * fold)
     gboolean seekable;
 
     g_value_set_boolean (ret, TRUE);
-    gst_query_parse_seeking (*fold->query, NULL, &seekable, NULL, NULL);
+    gst_query_parse_seeking (fold->query, NULL, &seekable, NULL, NULL);
 
     GST_DEBUG_OBJECT (item, "got seekable %d", seekable);
 
@@ -2372,8 +2372,8 @@ decoder_query_seeking_done (GstURIDecodeBin * dec, QueryFold * fold)
 {
   GstFormat format;
 
-  gst_query_parse_seeking (*fold->query, &format, NULL, NULL, NULL);
-  gst_query_set_seeking (*fold->query, format, fold->seekable, 0, -1);
+  gst_query_parse_seeking (fold->query, &format, NULL, NULL, NULL);
+  gst_query_set_seeking (fold->query, format, fold->seekable, 0, -1);
 
   GST_DEBUG_OBJECT (dec, "seekable %d", fold->seekable);
 }
@@ -2399,7 +2399,7 @@ decoder_query_generic_fold (const GValue * item, GValue * ret, QueryFold * fold)
  * have normally. We should just query all source pads.
  */
 static gboolean
-gst_uri_decode_bin_query (GstElement * element, GstQuery ** query)
+gst_uri_decode_bin_query (GstElement * element, GstQuery * query)
 {
   GstURIDecodeBin *decoder;
   gboolean res = FALSE;
@@ -2412,7 +2412,7 @@ gst_uri_decode_bin_query (GstElement * element, GstQuery ** query)
 
   decoder = GST_URI_DECODE_BIN (element);
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
       /* iterate and collect durations */
       fold_func = (GstIteratorFoldFunction) decoder_query_duration_fold;
@@ -2449,7 +2449,7 @@ gst_uri_decode_bin_query (GstElement * element, GstQuery ** query)
 
   iter = gst_element_iterate_src_pads (element);
   GST_DEBUG_OBJECT (element, "Sending query %p (type %d) to src pads",
-      *query, GST_QUERY_TYPE (*query));
+      query, GST_QUERY_TYPE (query));
 
   if (fold_init)
     fold_init (decoder, &fold_data);

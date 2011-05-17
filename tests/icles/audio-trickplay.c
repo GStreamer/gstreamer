@@ -20,11 +20,11 @@
 #include <gst/controller/gstinterpolationcontrolsource.h>
 
 static void
-check_position (GstElement * elem, GstQuery ** pos, const gchar * info)
+check_position (GstElement * elem, GstQuery * pos, const gchar * info)
 {
   if (gst_element_query (elem, pos)) {
     gint64 play_pos;
-    gst_query_parse_position (*pos, NULL, &play_pos);
+    gst_query_parse_position (pos, NULL, &play_pos);
     GST_INFO ("pos : %" GST_TIME_FORMAT " %s", GST_TIME_ARGS (play_pos), info);
   } else {
     GST_WARNING ("position query failed");
@@ -187,21 +187,21 @@ main (gint argc, gchar ** argv)
 
     if (gst_element_set_state (bin,
             GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
-      check_position (bin, &pos, "start");
+      check_position (bin, pos, "start");
       if ((wait_ret = gst_clock_id_wait (clock_id, NULL)) != GST_CLOCK_OK) {
         GST_WARNING ("clock_id_wait returned: %d", wait_ret);
       }
     }
     gst_clock_id_unref (clock_id);
 
-    check_position (bin, &pos, "before seek to new pos");
+    check_position (bin, pos, "before seek to new pos");
 
     /* seek to 3:00 sec (back 2 sec) */
     if (!gst_element_send_event (sink, pos_seek)) {
       GST_WARNING ("element failed to seek to new position");
     }
 
-    check_position (bin, &pos, "after seek to new pos");
+    check_position (bin, pos, "after seek to new pos");
 
     /* run for 2 seconds */
     clock_id =
@@ -212,14 +212,14 @@ main (gint argc, gchar ** argv)
     }
     gst_clock_id_unref (clock_id);
 
-    check_position (bin, &pos, "before slow down rate change");
+    check_position (bin, pos, "before slow down rate change");
 
     /* change playback rate to 0.5 */
     if (!gst_element_send_event (sink, rate_seek1)) {
       GST_WARNING ("element failed to change playback rate");
     }
 
-    check_position (bin, &pos, "after slow down rate change");
+    check_position (bin, pos, "after slow down rate change");
 
     /* run for 4 seconds */
     clock_id =
@@ -230,14 +230,14 @@ main (gint argc, gchar ** argv)
     }
     gst_clock_id_unref (clock_id);
 
-    check_position (bin, &pos, "before reverse rate change");
+    check_position (bin, pos, "before reverse rate change");
 
     /* change playback rate to -1.0  */
     if (!gst_element_send_event (sink, rate_seek2)) {
       GST_WARNING ("element failed to change playback rate");
     }
 
-    check_position (bin, &pos, "after reverse rate change");
+    check_position (bin, pos, "after reverse rate change");
 
     /* run for 7 seconds */
     clock_id =
@@ -248,7 +248,7 @@ main (gint argc, gchar ** argv)
     }
     gst_clock_id_unref (clock_id);
 
-    check_position (bin, &pos, "done");
+    check_position (bin, pos, "done");
 
     gst_element_set_state (bin, GST_STATE_NULL);
   }

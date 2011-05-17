@@ -126,7 +126,7 @@ static void gst_adder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_adder_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_adder_query (GstPad * pad, GstQuery ** query);
+static gboolean gst_adder_query (GstPad * pad, GstQuery * query);
 static gboolean gst_adder_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_adder_sink_event (GstPad * pad, GstEvent * event);
 
@@ -379,7 +379,7 @@ not_supported:
  * cases work at least somewhat.
  */
 static gboolean
-gst_adder_query_duration (GstAdder * adder, GstQuery ** query)
+gst_adder_query_duration (GstAdder * adder, GstQuery * query)
 {
   gint64 max;
   gboolean res;
@@ -389,7 +389,7 @@ gst_adder_query_duration (GstAdder * adder, GstQuery ** query)
   GValue item = { 0, };
 
   /* parse format */
-  gst_query_parse_duration (*query, &format, NULL);
+  gst_query_parse_duration (query, &format, NULL);
 
   max = -1;
   res = TRUE;
@@ -443,14 +443,14 @@ gst_adder_query_duration (GstAdder * adder, GstQuery ** query)
     /* and store the max */
     GST_DEBUG_OBJECT (adder, "Total duration in format %s: %"
         GST_TIME_FORMAT, gst_format_get_name (format), GST_TIME_ARGS (max));
-    gst_query_set_duration (*query, format, max);
+    gst_query_set_duration (query, format, max);
   }
 
   return res;
 }
 
 static gboolean
-gst_adder_query_latency (GstAdder * adder, GstQuery ** query)
+gst_adder_query_latency (GstAdder * adder, GstQuery * query)
 {
   GstClockTime min, max;
   gboolean live;
@@ -486,7 +486,7 @@ gst_adder_query_latency (GstAdder * adder, GstQuery ** query)
         peerquery = gst_query_new_latency ();
 
         /* Ask peer for latency */
-        res &= gst_pad_peer_query (pad, &peerquery);
+        res &= gst_pad_peer_query (pad, peerquery);
 
         /* take max from all valid return values */
         if (res) {
@@ -528,33 +528,33 @@ gst_adder_query_latency (GstAdder * adder, GstQuery ** query)
     GST_DEBUG_OBJECT (adder, "Calculated total latency: live %s, min %"
         GST_TIME_FORMAT ", max %" GST_TIME_FORMAT,
         (live ? "yes" : "no"), GST_TIME_ARGS (min), GST_TIME_ARGS (max));
-    gst_query_set_latency (*query, live, min, max);
+    gst_query_set_latency (query, live, min, max);
   }
 
   return res;
 }
 
 static gboolean
-gst_adder_query (GstPad * pad, GstQuery ** query)
+gst_adder_query (GstPad * pad, GstQuery * query)
 {
   GstAdder *adder = GST_ADDER (gst_pad_get_parent (pad));
   gboolean res = FALSE;
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
       GstFormat format;
 
-      gst_query_parse_position (*query, &format, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
       switch (format) {
         case GST_FORMAT_TIME:
           /* FIXME, bring to stream time, might be tricky */
-          gst_query_set_position (*query, format, adder->segment.position);
+          gst_query_set_position (query, format, adder->segment.position);
           res = TRUE;
           break;
         case GST_FORMAT_DEFAULT:
-          gst_query_set_position (*query, format, adder->offset);
+          gst_query_set_position (query, format, adder->offset);
           res = TRUE;
           break;
         default:

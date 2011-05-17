@@ -144,7 +144,7 @@ static gboolean gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static void gst_base_audio_src_get_times (GstBaseSrc * bsrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
-static gboolean gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery ** query);
+static gboolean gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query);
 static void gst_base_audio_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 /* static guint gst_base_audio_src_signals[LAST_SIGNAL] = { 0 }; */
@@ -617,12 +617,12 @@ gst_base_audio_src_get_times (GstBaseSrc * bsrc, GstBuffer * buffer,
 }
 
 static gboolean
-gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery ** query)
+gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
   gboolean res = FALSE;
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
     {
       GstClockTime min_latency, max_latency;
@@ -653,7 +653,7 @@ gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery ** query)
 
       /* we are always live, the min latency is 1 segment and the max latency is
        * the complete buffer of segments. */
-      gst_query_set_latency (*query, TRUE, min_latency, max_latency);
+      gst_query_set_latency (query, TRUE, min_latency, max_latency);
 
       res = TRUE;
       break;

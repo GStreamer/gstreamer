@@ -123,7 +123,7 @@ static GstStaticPadTemplate gst_video_rate_sink_template =
 static void gst_video_rate_swap_prev (GstVideoRate * videorate,
     GstBuffer * buffer, gint64 time);
 static gboolean gst_video_rate_event (GstPad * pad, GstEvent * event);
-static gboolean gst_video_rate_query (GstPad * pad, GstQuery ** query);
+static gboolean gst_video_rate_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn gst_video_rate_chain (GstPad * pad, GstBuffer * buffer);
 
 static void gst_video_rate_set_property (GObject * object,
@@ -740,14 +740,14 @@ format_error:
 }
 
 static gboolean
-gst_video_rate_query (GstPad * pad, GstQuery ** query)
+gst_video_rate_query (GstPad * pad, GstQuery * query)
 {
   GstVideoRate *videorate;
   gboolean res = FALSE;
 
   videorate = GST_VIDEO_RATE (gst_pad_get_parent (pad));
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
     {
       GstClockTime min, max;
@@ -757,7 +757,7 @@ gst_video_rate_query (GstPad * pad, GstQuery ** query)
 
       if ((peer = gst_pad_get_peer (videorate->sinkpad))) {
         if ((res = gst_pad_query (peer, query))) {
-          gst_query_parse_latency (*query, &live, &min, &max);
+          gst_query_parse_latency (query, &live, &min, &max);
 
           GST_DEBUG_OBJECT (videorate, "Peer latency: min %"
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
@@ -786,7 +786,7 @@ gst_video_rate_query (GstPad * pad, GstQuery ** query)
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
-          gst_query_set_latency (*query, live, min, max);
+          gst_query_set_latency (query, live, min, max);
         }
         gst_object_unref (peer);
       }

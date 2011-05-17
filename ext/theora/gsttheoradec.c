@@ -95,7 +95,7 @@ static GstFlowReturn theora_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_dec_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean theora_dec_src_event (GstPad * pad, GstEvent * event);
-static gboolean theora_dec_src_query (GstPad * pad, GstQuery ** query);
+static gboolean theora_dec_src_query (GstPad * pad, GstQuery * query);
 static gboolean theora_dec_src_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
@@ -447,7 +447,7 @@ no_header:
 #endif
 
 static gboolean
-theora_dec_src_query (GstPad * pad, GstQuery ** query)
+theora_dec_src_query (GstPad * pad, GstQuery * query)
 {
   GstTheoraDec *dec;
 
@@ -455,7 +455,7 @@ theora_dec_src_query (GstPad * pad, GstQuery ** query)
 
   dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
       gint64 value;
@@ -463,24 +463,23 @@ theora_dec_src_query (GstPad * pad, GstQuery ** query)
       gint64 time;
 
       /* parse format */
-      gst_query_parse_position (*query, &format, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
       time = dec->last_timestamp;
       time = gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, time);
 
       GST_LOG_OBJECT (dec,
-          "query %p: our time: %" GST_TIME_FORMAT, *query,
-          GST_TIME_ARGS (time));
+          "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
 
       if (!(res =
               theora_dec_src_convert (pad, GST_FORMAT_TIME, time, &format,
                   &value)))
         goto error;
 
-      gst_query_set_position (*query, format, value);
+      gst_query_set_position (query, format, value);
 
       GST_LOG_OBJECT (dec,
-          "query %p: we return %" G_GINT64_FORMAT " (format %u)", *query, value,
+          "query %p: we return %" G_GINT64_FORMAT " (format %u)", query, value,
           format);
       break;
     }
@@ -498,14 +497,13 @@ theora_dec_src_query (GstPad * pad, GstQuery ** query)
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt,
-          &dest_val);
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
               theora_dec_src_convert (pad, src_fmt, src_val, &dest_fmt,
                   &dest_val)))
         goto error;
 
-      gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
     default:
@@ -798,7 +796,7 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps)
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
 
-  if (gst_pad_peer_query (dec->srcpad, &query)) {
+  if (gst_pad_peer_query (dec->srcpad, query)) {
     GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
@@ -810,7 +808,6 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps)
     prefix = 0;
     alignment = 1;
   }
-  gst_query_unref (query);
 
   if (pool == NULL) {
     GstStructure *config;

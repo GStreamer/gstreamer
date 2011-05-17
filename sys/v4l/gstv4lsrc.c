@@ -58,7 +58,7 @@ static gboolean gst_v4lsrc_stop (GstBaseSrc * src);
 static gboolean gst_v4lsrc_set_caps (GstBaseSrc * src, GstCaps * caps);
 static GstCaps *gst_v4lsrc_get_caps (GstBaseSrc * src, GstCaps * filter);
 static GstFlowReturn gst_v4lsrc_create (GstPushSrc * src, GstBuffer ** out);
-static gboolean gst_v4lsrc_query (GstBaseSrc * bsrc, GstQuery ** query);
+static gboolean gst_v4lsrc_query (GstBaseSrc * bsrc, GstQuery * query);
 static void gst_v4lsrc_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 static void gst_v4lsrc_set_property (GObject * object,
@@ -639,14 +639,14 @@ gst_v4lsrc_set_caps (GstBaseSrc * src, GstCaps * caps)
 }
 
 static gboolean
-gst_v4lsrc_query (GstBaseSrc * bsrc, GstQuery ** query)
+gst_v4lsrc_query (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstV4lSrc *v4lsrc;
   gboolean res = FALSE;
 
   v4lsrc = GST_V4LSRC (bsrc);
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
     {
       GstClockTime min_latency, max_latency;
@@ -672,7 +672,7 @@ gst_v4lsrc_query (GstBaseSrc * bsrc, GstQuery ** query)
 
       /* we are always live, the min latency is 1 frame and the max latency is
        * the complete buffer of frames. */
-      gst_query_set_latency (*query, TRUE, min_latency, max_latency);
+      gst_query_set_latency (query, TRUE, min_latency, max_latency);
 
       res = TRUE;
       break;

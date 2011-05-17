@@ -100,7 +100,7 @@ static void gst_video_test_src_src_fixate (GstPad * pad, GstCaps * caps);
 static gboolean gst_video_test_src_is_seekable (GstBaseSrc * psrc);
 static gboolean gst_video_test_src_do_seek (GstBaseSrc * bsrc,
     GstSegment * segment);
-static gboolean gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery ** query);
+static gboolean gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query);
 
 static void gst_video_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
@@ -697,7 +697,7 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
 
-  if (gst_pad_peer_query (bsrc->srcpad, &query)) {
+  if (gst_pad_peer_query (bsrc->srcpad, query)) {
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
         &alignment, &pool);
@@ -708,7 +708,6 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     alignment = 1;
     pool = NULL;
   }
-  gst_query_unref (query);
 
   if (pool == NULL) {
     GstStructure *config;
@@ -740,21 +739,20 @@ parse_failed:
 }
 
 static gboolean
-gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery ** query)
+gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
 {
   gboolean res;
   GstVideoTestSrc *src;
 
   src = GST_VIDEO_TEST_SRC (bsrc);
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt,
-          &dest_val);
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (src_fmt == dest_fmt) {
         dest_val = src_val;
         goto done;
@@ -795,7 +793,7 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery ** query)
           goto error;
       }
     done:
-      gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       res = TRUE;
       break;
     }

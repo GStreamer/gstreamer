@@ -137,7 +137,7 @@ static GstFlowReturn gst_visual_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_visual_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_visual_src_event (GstPad * pad, GstEvent * event);
 
-static gboolean gst_visual_src_query (GstPad * pad, GstQuery ** query);
+static gboolean gst_visual_src_query (GstPad * pad, GstQuery * query);
 
 static gboolean gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_visual_src_setcaps (GstPad * pad, GstCaps * caps);
@@ -441,7 +441,7 @@ gst_vis_src_negotiate (GstVisual * visual)
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (target, TRUE);
 
-  if (gst_pad_peer_query (visual->srcpad, &query)) {
+  if (gst_pad_peer_query (visual->srcpad, query)) {
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
         &alignment, &pool);
@@ -451,7 +451,6 @@ gst_vis_src_negotiate (GstVisual * visual)
     prefix = 0;
     alignment = 1;
   }
-  gst_query_unref (query);
 
   if (pool == NULL) {
     GstStructure *config;
@@ -571,14 +570,14 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_visual_src_query (GstPad * pad, GstQuery ** query)
+gst_visual_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res;
   GstVisual *visual;
 
   visual = GST_VISUAL (gst_pad_get_parent (pad));
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
     {
       /* We need to send the query upstream and add the returned latency to our
@@ -589,7 +588,7 @@ gst_visual_src_query (GstPad * pad, GstQuery ** query)
       guint max_samples;
 
       if ((res = gst_pad_peer_query (visual->sinkpad, query))) {
-        gst_query_parse_latency (*query, &us_live, &min_latency, &max_latency);
+        gst_query_parse_latency (query, &us_live, &min_latency, &max_latency);
 
         GST_DEBUG_OBJECT (visual, "Peer latency: min %"
             GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
@@ -613,7 +612,7 @@ gst_visual_src_query (GstPad * pad, GstQuery ** query)
             GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
             GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
 
-        gst_query_set_latency (*query, TRUE, min_latency, max_latency);
+        gst_query_set_latency (query, TRUE, min_latency, max_latency);
       }
       break;
     }

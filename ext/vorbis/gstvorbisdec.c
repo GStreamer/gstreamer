@@ -78,12 +78,12 @@ static GstStateChangeReturn vorbis_dec_change_state (GstElement * element,
     GstStateChange transition);
 
 static gboolean vorbis_dec_src_event (GstPad * pad, GstEvent * event);
-static gboolean vorbis_dec_src_query (GstPad * pad, GstQuery ** query);
+static gboolean vorbis_dec_src_query (GstPad * pad, GstQuery * query);
 static gboolean vorbis_dec_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
 
-static gboolean vorbis_dec_sink_query (GstPad * pad, GstQuery ** query);
+static gboolean vorbis_dec_sink_query (GstPad * pad, GstQuery * query);
 
 static void
 gst_vorbis_dec_class_init (GstVorbisDecClass * klass)
@@ -284,7 +284,7 @@ no_format:
 }
 
 static gboolean
-vorbis_dec_src_query (GstPad * pad, GstQuery ** query)
+vorbis_dec_src_query (GstPad * pad, GstQuery * query)
 {
   GstVorbisDec *dec;
   gboolean res = FALSE;
@@ -293,14 +293,14 @@ vorbis_dec_src_query (GstPad * pad, GstQuery ** query)
   if (G_UNLIKELY (dec == NULL))
     return FALSE;
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
       gint64 value;
       GstFormat format;
       gint64 time;
 
-      gst_query_parse_position (*query, &format, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
       /* we start from the last seen time */
       time = dec->last_timestamp;
@@ -308,18 +308,17 @@ vorbis_dec_src_query (GstPad * pad, GstQuery ** query)
       time = gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, time);
 
       GST_LOG_OBJECT (dec,
-          "query %p: our time: %" GST_TIME_FORMAT, *query,
-          GST_TIME_ARGS (time));
+          "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
 
       /* and convert to the final format */
       if (!(res =
               vorbis_dec_convert (pad, GST_FORMAT_TIME, time, &format, &value)))
         goto error;
 
-      gst_query_set_position (*query, format, value);
+      gst_query_set_position (query, format, value);
 
       GST_LOG_OBJECT (dec,
-          "query %p: we return %" G_GINT64_FORMAT " (format %u)", *query, value,
+          "query %p: we return %" G_GINT64_FORMAT " (format %u)", query, value,
           format);
 
       break;
@@ -337,12 +336,11 @@ vorbis_dec_src_query (GstPad * pad, GstQuery ** query)
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt,
-          &dest_val);
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
               vorbis_dec_convert (pad, src_fmt, src_val, &dest_fmt, &dest_val)))
         goto error;
-      gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
     default:
@@ -363,25 +361,24 @@ error:
 }
 
 static gboolean
-vorbis_dec_sink_query (GstPad * pad, GstQuery ** query)
+vorbis_dec_sink_query (GstPad * pad, GstQuery * query)
 {
   GstVorbisDec *dec;
   gboolean res;
 
   dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt,
-          &dest_val);
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
               vorbis_dec_convert (pad, src_fmt, src_val, &dest_fmt, &dest_val)))
         goto error;
-      gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
     default:

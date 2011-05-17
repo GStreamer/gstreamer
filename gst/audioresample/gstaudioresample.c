@@ -142,7 +142,7 @@ static gboolean gst_audio_resample_event (GstBaseTransform * base,
     GstEvent * event);
 static gboolean gst_audio_resample_start (GstBaseTransform * base);
 static gboolean gst_audio_resample_stop (GstBaseTransform * base);
-static gboolean gst_audio_resample_query (GstPad * pad, GstQuery ** query);
+static gboolean gst_audio_resample_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_audio_resample_query_type (GstPad * pad);
 
 #define gst_audio_resample_parent_class parent_class
@@ -1249,7 +1249,7 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
 }
 
 static gboolean
-gst_audio_resample_query (GstPad * pad, GstQuery ** query)
+gst_audio_resample_query (GstPad * pad, GstQuery * query)
 {
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (gst_pad_get_parent (pad));
   GstBaseTransform *trans;
@@ -1259,7 +1259,7 @@ gst_audio_resample_query (GstPad * pad, GstQuery ** query)
 
   trans = GST_BASE_TRANSFORM (resample);
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
     {
       GstClockTime min, max;
@@ -1280,7 +1280,7 @@ gst_audio_resample_query (GstPad * pad, GstQuery ** query)
 
       if ((peer = gst_pad_get_peer (GST_BASE_TRANSFORM_SINK_PAD (trans)))) {
         if ((res = gst_pad_query (peer, query))) {
-          gst_query_parse_latency (*query, &live, &min, &max);
+          gst_query_parse_latency (query, &live, &min, &max);
 
           GST_DEBUG_OBJECT (resample, "Peer latency: min %"
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
@@ -1304,7 +1304,7 @@ gst_audio_resample_query (GstPad * pad, GstQuery ** query)
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
-          gst_query_set_latency (*query, live, min, max);
+          gst_query_set_latency (query, live, min, max);
         }
         gst_object_unref (peer);
       }

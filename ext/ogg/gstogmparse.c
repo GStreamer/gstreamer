@@ -153,7 +153,7 @@ static void gst_ogm_text_parse_init (GstOgmParse * ogm);
 
 static const GstQueryType *gst_ogm_parse_get_sink_querytypes (GstPad * pad);
 static gboolean gst_ogm_parse_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstQuery ** query);
+static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_ogm_parse_sink_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
@@ -465,18 +465,18 @@ gst_ogm_parse_sink_convert (GstPad * pad,
 }
 
 static gboolean
-gst_ogm_parse_sink_query (GstPad * pad, GstQuery ** query)
+gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query)
 {
   GstOgmParse *ogm = GST_OGM_PARSE (gst_pad_get_parent (pad));
   GstFormat format;
   gboolean res = FALSE;
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
       gint64 val;
 
-      gst_query_parse_position (*query, &format, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
       if (format != GST_FORMAT_DEFAULT && format != GST_FORMAT_TIME)
         break;
@@ -484,7 +484,7 @@ gst_ogm_parse_sink_query (GstPad * pad, GstQuery ** query)
       if ((res = gst_ogm_parse_sink_convert (pad,
                   GST_FORMAT_DEFAULT, ogm->next_granulepos, &format, &val))) {
         /* don't know the total length here.. */
-        gst_query_set_position (*query, format, val);
+        gst_query_set_position (query, format, val);
       }
       break;
     }
@@ -494,12 +494,10 @@ gst_ogm_parse_sink_query (GstPad * pad, GstQuery ** query)
       gint64 src_val, dest_val;
 
       /* peel off input */
-      gst_query_parse_convert (*query, &src_fmt, &src_val, &dest_fmt,
-          &dest_val);
-      if ((res =
-              gst_ogm_parse_sink_convert (pad, src_fmt, src_val, &dest_fmt,
-                  &dest_val))) {
-        gst_query_set_convert (*query, src_fmt, src_val, dest_fmt, dest_val);
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if ((res = gst_ogm_parse_sink_convert (pad, src_fmt, src_val,
+                  &dest_fmt, &dest_val))) {
+        gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       }
       break;
     }
