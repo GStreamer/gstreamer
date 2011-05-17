@@ -321,6 +321,10 @@ gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstBuffer * buf,
   return FALSE;
 }
 
+/* FIXME move into baseparse, or anything equivalent;
+ * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
+#define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
+
 static gboolean
 gst_mpeg4vparse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
@@ -336,6 +340,15 @@ retry:
   /* at least start code and subsequent byte */
   if (G_UNLIKELY (GST_BUFFER_SIZE (buf) - off < 5))
     return FALSE;
+
+  /* avoid stale cached parsing state */
+  if (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_PARSING)) {
+    GST_LOG_OBJECT (mp4vparse, "parsing new frame");
+    gst_mpeg4vparse_reset_frame (mp4vparse);
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_PARSING;
+  } else {
+    GST_LOG_OBJECT (mp4vparse, "resuming frame parsing");
+  }
 
   /* if already found a previous start code, e.g. start of frame, go for next */
   if (mp4vparse->last_sc >= 0) {
@@ -410,7 +423,6 @@ next:
 
   if (ret) {
     *framesize = off;
-    gst_mpeg4vparse_reset_frame (mp4vparse);
   } else {
     goto next;
   }
