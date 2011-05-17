@@ -586,7 +586,7 @@ gst_base_sink_pad_getcaps (GstPad * pad, GstCaps * filter)
           gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass),
           "sink");
       if (pad_template != NULL) {
-        caps = gst_caps_ref (gst_pad_template_get_caps (pad_template));
+        caps = gst_pad_template_get_caps (pad_template);
 
         if (filter) {
           GstCaps *intersection;

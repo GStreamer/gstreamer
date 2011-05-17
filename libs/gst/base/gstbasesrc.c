@@ -802,7 +802,7 @@ gst_base_src_getcaps (GstPad * pad, GstCaps * filter)
     pad_template =
         gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "src");
     if (pad_template != NULL) {
-      caps = gst_caps_ref (gst_pad_template_get_caps (pad_template));
+      caps = gst_pad_template_get_caps (pad_template);
 
       if (filter) {
         GstCaps *intersection;
