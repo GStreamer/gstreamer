@@ -311,6 +311,9 @@ struct _GstBaseParsePrivate
 
   /* Segment event that closes the running segment prior to SEEK */
   GstEvent *close_segment;
+
+  /* push mode helper frame */
+  GstBaseParseFrame frame;
 };
 
 typedef struct _GstBaseParseSeek
@@ -571,8 +574,11 @@ gst_base_parse_frame_free (GstBaseParseFrame * frame)
     frame->buffer = NULL;
   }
 
-  if (!(frame->_private_flags & GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC))
+  if (!(frame->_private_flags & GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC)) {
     g_slice_free (GstBaseParseFrame, frame);
+  } else {
+    memset (frame, 0, sizeof (*frame));
+  }
 }
 
 GType
@@ -725,6 +731,11 @@ gst_base_parse_reset (GstBaseParse * parse)
   g_slist_foreach (parse->priv->pending_seeks, (GFunc) g_free, NULL);
   g_slist_free (parse->priv->pending_seeks);
   parse->priv->pending_seeks = NULL;
+
+  /* we know it is not alloc'ed, but maybe other stuff to free, some day ... */
+  parse->priv->frame._private_flags |=
+      GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
+  gst_base_parse_frame_free (&parse->priv->frame);
   GST_OBJECT_UNLOCK (parse);
 }
 
@@ -1028,6 +1039,9 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       parse->priv->flushing = FALSE;
       parse->priv->discont = TRUE;
       parse->priv->last_ts = GST_CLOCK_TIME_NONE;
+      parse->priv->frame._private_flags |=
+          GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
+      gst_base_parse_frame_free (&parse->priv->frame);
       break;
 
     case GST_EVENT_EOS:
@@ -2162,19 +2176,17 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   const guint8 *data;
   guint old_min_size = 0, min_size, av;
   GstClockTime timestamp;
-  GstBaseParseFrame _frame;
   GstBaseParseFrame *frame;
 
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
-  frame = &_frame;
-
-  gst_base_parse_frame_init (frame);
+  frame = &parse->priv->frame;
 
   if (G_LIKELY (buffer)) {
     GST_LOG_OBJECT (parse, "buffer size: %d, offset = %" G_GINT64_FORMAT,
         GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
     if (G_UNLIKELY (parse->priv->passthrough)) {
+      gst_base_parse_frame_init (frame);
       frame->buffer = gst_buffer_make_metadata_writable (buffer);
       return gst_base_parse_push_frame (parse, frame);
     }
@@ -2191,10 +2203,21 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_push (parse->priv->adapter, buffer);
   }
 
+  if (G_UNLIKELY (buffer &&
+          GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
+    frame->_private_flags |= GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
+    gst_base_parse_frame_free (frame);
+  }
+
   /* Parse and push as many frames as possible */
   /* Stop either when adapter is empty or we are flushing */
   while (!parse->priv->flushing) {
     gboolean res;
+
+    /* maintain frame state for a single frame parsing round across _chain calls,
+     * so only init when needed */
+    if (!frame->_private_flags)
+      gst_base_parse_frame_init (frame);
 
     tmpbuf = gst_buffer_new ();
 
