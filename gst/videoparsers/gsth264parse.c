@@ -209,7 +209,7 @@ gst_h264_parse_start (GstBaseParse * parse)
 
   gst_h264_params_create (&h264parse->params, GST_ELEMENT (h264parse));
 
-  gst_base_parse_set_min_frame_size (parse, 512);
+  gst_base_parse_set_min_frame_size (parse, 6);
 
   return TRUE;
 }
@@ -565,8 +565,8 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   return TRUE;
 
 more:
-  /* Ask for 1024 bytes more - this is an arbitrary choice */
-  gst_base_parse_set_min_frame_size (parse, GST_BUFFER_SIZE (buffer) + 1024);
+  /* ask for best next available */
+  *framesize = G_MAXUINT;
 
   /* skip up to initial startcode */
   *skipsize = sc_pos;
