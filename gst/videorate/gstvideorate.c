@@ -233,8 +233,7 @@ static gboolean
 gst_video_rate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
     GstPad * out_pad, GstCaps ** out_caps, GstCaps * filter)
 {
-  GstCaps *intersect;
-  const GstCaps *in_templ;
+  GstCaps *intersect, *in_templ;
   gint i;
   GSList *extra_structures = NULL;
   GSList *iter;
@@ -242,6 +241,7 @@ gst_video_rate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
   in_templ = gst_pad_get_pad_template_caps (in_pad);
   intersect =
       gst_caps_intersect_full (in_caps, in_templ, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (in_templ);
 
   /* all possible framerates are allowed */
   for (i = 0; i < gst_caps_get_size (intersect); i++) {
@@ -310,12 +310,14 @@ gst_video_rate_getcaps (GstPad * pad, GstCaps * filter)
     }
   } else {
     /* no peer, our padtemplate is enough then */
-    if (filter)
-      caps =
-          gst_caps_intersect_full (filter, gst_pad_get_pad_template_caps (pad),
-          GST_CAPS_INTERSECT_FIRST);
-    else
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_pad_get_pad_template_caps (pad);
+    if (filter) {
+      GstCaps *intersection;
+      intersection =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = intersection;
+    }
   }
 
   return caps;

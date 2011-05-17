@@ -180,14 +180,14 @@ static GstPadTemplate *
 gst_video_scale_src_template_factory (void)
 {
   return gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-      gst_caps_ref (gst_video_scale_get_capslist ()));
+      gst_video_scale_get_capslist ());
 }
 
 static GstPadTemplate *
 gst_video_scale_sink_template_factory (void)
 {
   return gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      gst_caps_ref (gst_video_scale_get_capslist ()));
+      gst_video_scale_get_capslist ());
 }
 
 

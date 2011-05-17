@@ -190,10 +190,8 @@ gst_adder_sink_getcaps (GstPad * pad, GstCaps * filter)
   /* get the allowed caps on this sinkpad */
   sinkcaps = gst_pad_get_current_caps (pad);
   if (sinkcaps == NULL) {
-    sinkcaps = (GstCaps *) gst_pad_get_pad_template_caps (pad);
-    if (sinkcaps)
-      gst_caps_ref (sinkcaps);
-    else
+    sinkcaps = gst_pad_get_pad_template_caps (pad);
+    if (!sinkcaps)
       sinkcaps = gst_caps_new_any ();
   }
 

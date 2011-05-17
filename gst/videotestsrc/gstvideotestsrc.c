@@ -172,6 +172,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
+  GstCaps *templ_caps;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -296,9 +297,10 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
       "Video test source", "Source/Video",
       "Creates a test video stream", "David A. Schleef <ds@schleef.org>");
 
+  templ_caps = gst_video_test_src_getcaps (NULL, NULL);
   gst_element_class_add_pad_template (gstelement_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_video_test_src_getcaps (NULL, NULL)));
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
+  gst_caps_unref (templ_caps);
 
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
