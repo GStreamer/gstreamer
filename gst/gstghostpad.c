@@ -77,11 +77,6 @@ static GstPad *gst_proxy_pad_get_target (GstPad * pad);
 static void gst_proxy_pad_dispose (GObject * object);
 static void gst_proxy_pad_finalize (GObject * object);
 
-static void on_src_target_notify (GstPad * target,
-    GParamSpec * unused, gpointer user_data);
-
-static GParamSpec *pspec_caps = NULL;
-
 /**
  * gst_proxy_pad_query_type_default:
  * @pad: a #GstPad.
@@ -680,8 +675,6 @@ gst_proxy_pad_init (GstProxyPad * ppad)
 struct _GstGhostPadPrivate
 {
   /* with PROXY_LOCK */
-  gulong notify_id;
-
   gboolean constructed;
 };
 
@@ -916,96 +909,6 @@ gst_ghost_pad_unlink_default (GstPad * pad)
   gst_proxy_pad_set_target (internal, NULL);
 }
 
-static void
-on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
-{
-#if 0
-  GstCaps *caps;
-  gboolean changed;
-
-  g_object_get (internal, "caps", &caps, NULL);
-
-  GST_DEBUG_OBJECT (pad, "notified %p %" GST_PTR_FORMAT, caps, caps);
-
-  GST_OBJECT_LOCK (pad);
-  changed = (GST_PAD_CAPS (pad) != caps);
-  if (changed)
-    gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
-  GST_OBJECT_UNLOCK (pad);
-
-  if (changed) {
-#if GLIB_CHECK_VERSION(2,26,0)
-    g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
-#else
-    g_object_notify ((GObject *) pad, "caps");
-#endif
-  }
-
-  if (caps)
-    gst_caps_unref (caps);
-#endif
-}
-
-static void
-on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
-{
-  GstProxyPad *proxypad;
-  GstGhostPad *gpad;
-  GstCaps *caps;
-#if 0
-  gboolean changed;
-#endif
-
-  g_object_get (target, "caps", &caps, NULL);
-
-  GST_OBJECT_LOCK (target);
-  /* First check if the peer is still available and our proxy pad */
-  if (!GST_PAD_PEER (target) || !GST_IS_PROXY_PAD (GST_PAD_PEER (target))) {
-    GST_OBJECT_UNLOCK (target);
-    goto done;
-  }
-
-  proxypad = GST_PROXY_PAD (GST_PAD_PEER (target));
-  GST_PROXY_LOCK (proxypad);
-  /* Now check if the proxypad's internal pad is still there and
-   * a ghostpad */
-  if (!GST_PROXY_PAD_INTERNAL (proxypad) ||
-      !GST_IS_GHOST_PAD (GST_PROXY_PAD_INTERNAL (proxypad))) {
-    GST_OBJECT_UNLOCK (target);
-    GST_PROXY_UNLOCK (proxypad);
-    goto done;
-  }
-  gpad = GST_GHOST_PAD (GST_PROXY_PAD_INTERNAL (proxypad));
-  g_object_ref (gpad);
-  GST_PROXY_UNLOCK (proxypad);
-  GST_OBJECT_UNLOCK (target);
-
-#if 0
-  GST_OBJECT_LOCK (gpad);
-
-  GST_DEBUG_OBJECT (gpad, "notified %p %" GST_PTR_FORMAT, caps, caps);
-
-  changed = (GST_PAD_CAPS (gpad) != caps);
-  if (changed)
-    gst_caps_replace (&(GST_PAD_CAPS (gpad)), caps);
-  GST_OBJECT_UNLOCK (gpad);
-
-  if (changed) {
-#if GLIB_CHECK_VERSION(2,26,0)
-    g_object_notify_by_pspec ((GObject *) gpad, pspec_caps);
-#else
-    g_object_notify ((GObject *) gpad, "caps");
-#endif
-  }
-#endif
-
-  g_object_unref (gpad);
-
-done:
-  if (caps)
-    gst_caps_unref (caps);
-}
-
 /**
  * gst_ghost_pad_setcaps_default:
  * @pad: the #GstPad to link.
@@ -1035,8 +938,6 @@ gst_ghost_pad_class_init (GstGhostPadClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGhostPadPrivate));
-
-  pspec_caps = g_object_class_find_property (gobject_class, "caps");
 
   gobject_class->dispose = gst_ghost_pad_dispose;
 
@@ -1090,9 +991,6 @@ gst_ghost_pad_dispose (GObject * object)
 
   gst_pad_set_activatepull_function (internal, NULL);
   gst_pad_set_activatepush_function (internal, NULL);
-
-  g_signal_handler_disconnect (internal,
-      GST_GHOST_PAD_PRIVATE (pad)->notify_id);
 
   /* disposes of the internal pad, since the ghostpad is the only possible object
    * that has a refcount on the internal pad. */
@@ -1193,15 +1091,6 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
    */
   GST_PROXY_PAD_INTERNAL (pad) = internal;
   GST_PROXY_PAD_INTERNAL (internal) = pad;
-
-  /* could be more general here, iterating over all writable properties...
-   * taking the short road for now tho */
-  GST_GHOST_PAD_PRIVATE (pad)->notify_id =
-      g_signal_connect (internal, "notify::caps", G_CALLBACK (on_int_notify),
-      pad);
-
-  /* call function to init values of the pad caps */
-  on_int_notify (internal, NULL, GST_GHOST_PAD_CAST (pad));
 
   /* special activation functions for the internal pad */
   gst_pad_set_activatepull_function (internal,
@@ -1453,10 +1342,6 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   /* clear old target */
   GST_PROXY_LOCK (gpad);
   if ((oldtarget = GST_PROXY_PAD_TARGET (gpad))) {
-    if (GST_PAD_IS_SRC (oldtarget)) {
-      g_signal_handlers_disconnect_by_func (oldtarget,
-          (gpointer) on_src_target_notify, NULL);
-    }
 
     GST_PROXY_PAD_RETARGET (internal) = TRUE;
 
@@ -1473,11 +1358,6 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   GST_PROXY_UNLOCK (gpad);
 
   if (result && newtarget) {
-    if (GST_PAD_IS_SRC (newtarget)) {
-      g_signal_connect (newtarget, "notify::caps",
-          G_CALLBACK (on_src_target_notify), NULL);
-    }
-
     /* and link to internal pad without any checks */
     GST_DEBUG_OBJECT (gpad, "connecting internal pad to target");
 
