@@ -393,10 +393,9 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
   padname = gst_pad_get_name (pad);
 
   /* get pad caps first, then call get_caps, then fail */
-  if ((caps = GST_PAD_CAPS (pad)))
-    gst_caps_ref (caps);
-  else if ((caps = gst_pad_get_caps (pad)) == NULL)
-    goto no_caps;
+  if ((caps = gst_pad_get_current_caps (pad)) == NULL)
+    if ((caps = gst_pad_get_caps (pad, NULL)) == NULL)
+      goto no_caps;
 
   /* check for raw caps */
   if (gst_caps_can_intersect (caps, urifact->raw_vcaps)) {
@@ -422,10 +421,9 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
 
     /* continue with new pad and caps */
     pad = gst_element_get_static_pad (convert, "src");
-    if ((caps = GST_PAD_CAPS (pad)))
-      gst_caps_ref (caps);
-    else if ((caps = gst_pad_get_caps (pad)) == NULL)
-      goto no_caps;
+    if ((caps = gst_pad_get_current_caps (pad)) == NULL)
+      if ((caps = gst_pad_get_caps (pad, NULL)) == NULL)
+        goto no_caps;
   }
 
   if (!(factory = find_payloader (urifact, caps)))

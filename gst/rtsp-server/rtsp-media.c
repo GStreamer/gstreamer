@@ -977,8 +977,7 @@ caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
   gchar *capsstr;
   GstCaps *newcaps, *oldcaps;
 
-  if ((newcaps = GST_PAD_CAPS (pad)))
-    gst_caps_ref (newcaps);
+  newcaps = gst_pad_get_current_caps (pad);
 
   oldcaps = stream->caps;
   stream->caps = newcaps;
