@@ -129,10 +129,10 @@ GType gst_encoding_audio_profile_get_type (void);
 
 const gchar *	gst_encoding_profile_get_name(GstEncodingProfile *profile);
 const gchar *	gst_encoding_profile_get_description(GstEncodingProfile *profile);
-const GstCaps *	gst_encoding_profile_get_format(GstEncodingProfile *profile);
+GstCaps *	gst_encoding_profile_get_format(GstEncodingProfile *profile);
 const gchar *	gst_encoding_profile_get_preset(GstEncodingProfile *profile);
 guint	gst_encoding_profile_get_presence(GstEncodingProfile *profile);
-const GstCaps *	gst_encoding_profile_get_restriction(GstEncodingProfile *profile);
+GstCaps *	gst_encoding_profile_get_restriction(GstEncodingProfile *profile);
 
 void	gst_encoding_profile_set_name(GstEncodingProfile *profile, const gchar *name);
 void	gst_encoding_profile_set_description(GstEncodingProfile *profile, const gchar *description);

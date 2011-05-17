@@ -248,12 +248,13 @@ gst_encoding_profile_get_description (GstEncodingProfile * profile)
  *
  * Since: 0.10.32
  *
- * Returns: the #GstCaps corresponding to the media format used in the profile.
+ * Returns: (transfer full): the #GstCaps corresponding to the media format used
+ * in the profile. Unref after usage.
  */
-const GstCaps *
+GstCaps *
 gst_encoding_profile_get_format (GstEncodingProfile * profile)
 {
-  return profile->format;
+  return (profile->format ? gst_caps_ref (profile->format) : NULL);
 }
 
 /**
@@ -291,17 +292,17 @@ gst_encoding_profile_get_presence (GstEncodingProfile * profile)
  *
  * Since: 0.10.32
  *
- * Returns: The restriction #GstCaps to apply before the encoder
+ * Returns: (transfer full): The restriction #GstCaps to apply before the encoder
  * that will be used in the profile. The fields present in restriction caps are
  * properties of the raw stream (that is before encoding), such as height and
  * width for video and depth and sampling rate for audio. Does not apply to
  * #GstEncodingContainerProfile (since there is no corresponding raw stream).
- * Can be %NULL.
+ * Can be %NULL. Unref after usage.
  */
-const GstCaps *
+GstCaps *
 gst_encoding_profile_get_restriction (GstEncodingProfile * profile)
 {
-  return profile->restriction;
+  return (profile->restriction ? gst_caps_ref (profile->restriction) : NULL);
 }
 
 /**
@@ -816,8 +817,8 @@ gst_encoding_profile_is_equal (GstEncodingProfile * a, GstEncodingProfile * b)
  *
  * Since: 0.10.32
  *
- * Returns: The full caps the given @profile can consume. Call gst_caps_unref()
- * when you are done with the caps.
+ * Returns: (transfer full): The full caps the given @profile can consume. Call
+ * gst_caps_unref() when you are done with the caps.
  */
 GstCaps *
 gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
@@ -827,7 +828,7 @@ gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
   GstStructure *st, *outst;
   GQuark out_name;
   guint i, len;
-  const GstCaps *fcaps;
+  GstCaps *fcaps;
 
   if (GST_IS_ENCODING_CONTAINER_PROFILE (profile)) {
     GstCaps *res = gst_caps_new_empty ();
@@ -844,7 +845,7 @@ gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
 
   /* fast-path */
   if ((profile->restriction == NULL) || gst_caps_is_any (profile->restriction))
-    return gst_caps_copy (fcaps);
+    return gst_caps_ref (fcaps);
 
   /* Combine the format with the restriction caps */
   outst = gst_caps_get_structure (fcaps, 0);
