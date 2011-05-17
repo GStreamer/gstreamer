@@ -4662,7 +4662,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 {
   gboolean result = FALSE;
   GstPadEventFunction eventfunc;
-  gboolean serialized, need_unlock = FALSE, needs_events;
+  gboolean serialized, need_unlock = FALSE, needs_events, sticky;
   GstEvent *events[GST_EVENT_MAX_STICKY];
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -4673,11 +4673,12 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
     if (G_UNLIKELY (!GST_EVENT_IS_DOWNSTREAM (event)))
       goto wrong_direction;
     serialized = GST_EVENT_IS_SERIALIZED (event);
+    sticky = GST_EVENT_IS_STICKY (event);
   } else if (GST_PAD_IS_SRC (pad)) {
     if (G_UNLIKELY (!GST_EVENT_IS_UPSTREAM (event)))
       goto wrong_direction;
-    /* events on srcpad never are serialized */
-    serialized = FALSE;
+    /* events on srcpad never are serialized and sticky */
+    serialized = sticky = FALSE;
   } else
     goto unknown_direction;
 
@@ -4690,6 +4691,9 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 
     GST_OBJECT_LOCK (pad);
   }
+  /* get the flag first, we clear it when we have a FLUSH or a non-serialized
+   * event. */
+  needs_events = GST_PAD_NEEDS_EVENTS (pad);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -4703,6 +4707,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       _priv_gst_pad_invalidate_cache (pad);
       GST_PAD_SET_FLUSHING (pad);
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "set flush flag");
+      needs_events = FALSE;
       break;
     case GST_EVENT_FLUSH_STOP:
       if (G_LIKELY (GST_PAD_ACTIVATE_MODE (pad) != GST_ACTIVATE_NONE)) {
@@ -4714,6 +4719,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       GST_PAD_STREAM_LOCK (pad);
       need_unlock = TRUE;
       GST_OBJECT_LOCK (pad);
+      needs_events = FALSE;
       break;
     case GST_EVENT_RECONFIGURE:
       if (GST_PAD_IS_SRC (pad))
@@ -4735,12 +4741,15 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
         GST_OBJECT_LOCK (pad);
         if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
           goto flushing;
+      } else {
+        /* don't forward events on non-serialized events */
+        needs_events = FALSE;
       }
       break;
   }
 
   /* store the event on the pad, but only on srcpads */
-  if (GST_PAD_IS_SINK (pad) && GST_EVENT_IS_STICKY (event)) {
+  if (sticky) {
     guint idx;
 
     idx = GST_EVENT_STICKY_IDX (event);
@@ -4753,7 +4762,6 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
     goto no_function;
 
-  needs_events = GST_PAD_NEEDS_EVENTS (pad);
   if (G_UNLIKELY (needs_events)) {
     /* need to make a copy because when we release the object lock, things
      * could just change */
