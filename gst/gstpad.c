@@ -2362,9 +2362,10 @@ gst_pad_get_current_caps (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   GST_OBJECT_LOCK (pad);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get current pad caps");
   if ((result = get_pad_caps (pad)))
     gst_caps_ref (result);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+      "get current pad caps %" GST_PTR_FORMAT, result);
   GST_OBJECT_UNLOCK (pad);
 
   return result;
