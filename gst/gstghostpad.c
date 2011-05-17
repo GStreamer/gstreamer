@@ -157,8 +157,7 @@ gst_proxy_pad_query_default (GstPad * pad, GstQuery ** query)
   GstPad *target;
 
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
-  g_return_val_if_fail (query != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_QUERY (*query), FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
   target = gst_proxy_pad_get_target (pad);
   if (target) {
