@@ -185,7 +185,7 @@ gst_audio_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
  */
 void
 gst_audio_filter_class_add_pad_templates (GstAudioFilterClass * klass,
-    const GstCaps * allowed_caps)
+    GstCaps * allowed_caps)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstPadTemplate *pad_template;
@@ -194,10 +194,10 @@ gst_audio_filter_class_add_pad_templates (GstAudioFilterClass * klass,
   g_return_if_fail (GST_IS_CAPS (allowed_caps));
 
   pad_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-      gst_caps_copy (allowed_caps));
+      allowed_caps);
   gst_element_class_add_pad_template (element_class, pad_template);
 
   pad_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      gst_caps_copy (allowed_caps));
+      allowed_caps);
   gst_element_class_add_pad_template (element_class, pad_template);
 }

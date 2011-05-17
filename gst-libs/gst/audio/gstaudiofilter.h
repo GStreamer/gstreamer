@@ -88,7 +88,7 @@ struct _GstAudioFilterClass {
 GType   gst_audio_filter_get_type (void);
 
 void    gst_audio_filter_class_add_pad_templates (GstAudioFilterClass * klass,
-                                                  const GstCaps       * allowed_caps);
+                                                  GstCaps             * allowed_caps);
 
 G_END_DECLS
 
