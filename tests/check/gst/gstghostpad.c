@@ -752,15 +752,21 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
   gst_object_unref (ghost);
   gst_caps_unref (caps1);
 
+  /* clear caps on pads */
+  gst_pad_set_active (src, FALSE);
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (sink, FALSE);
+  gst_pad_set_active (sink, TRUE);
+
   /* sink pad 2, setting caps just on the target pad should not influence the caps
    * on the ghostpad. */
   notify_counter = 0;
   ghost = gst_ghost_pad_new ("ghostsink", sink);
+  fail_unless (gst_pad_get_current_caps (ghost) == NULL);
   g_signal_connect (ghost, "notify::caps",
       G_CALLBACK (ghost_notify_caps), &notify_counter);
   fail_unless (gst_pad_link (src, ghost) == GST_PAD_LINK_OK);
 
-  gst_pad_set_active (src, TRUE);
   gst_pad_set_active (ghost, TRUE);
 
   caps1 = gst_caps_from_string ("muh");
