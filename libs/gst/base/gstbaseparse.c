@@ -2224,7 +2224,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       /* always pass all available data */
       data = gst_adapter_peek (parse->priv->adapter, av);
       GST_BUFFER_DATA (tmpbuf) = (guint8 *) data;
-      GST_BUFFER_SIZE (tmpbuf) = min_size;
+      GST_BUFFER_SIZE (tmpbuf) = av;
       GST_BUFFER_OFFSET (tmpbuf) = parse->priv->offset;
       GST_BUFFER_FLAG_SET (tmpbuf, GST_MINI_OBJECT_FLAG_READONLY);
 
