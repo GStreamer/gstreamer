@@ -722,6 +722,8 @@ gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad * pad)
     prefix = "src_";
   else if (pad == demux->rtcp_sink)
     prefix = "rtcp_src_";
+  else
+    g_assert_not_reached ();
 
   it = gst_element_iterate_src_pads (GST_ELEMENT (demux));
 
