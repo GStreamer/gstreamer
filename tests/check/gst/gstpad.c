@@ -52,7 +52,6 @@ GST_START_TEST (test_link)
   srct = gst_pad_get_pad_template (src);
   fail_unless (srct == NULL);
   ASSERT_OBJECT_REFCOUNT (src, "source pad", 1);
-  gst_object_unref (srct);
 
   /* clean up */
   ASSERT_OBJECT_REFCOUNT (src, "source pad", 1);
