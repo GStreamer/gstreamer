@@ -87,8 +87,11 @@ struct _GstRTSPServer {
 struct _GstRTSPServerClass {
   GObjectClass  parent_class;
 
-  GstRTSPClient * (*create_client) (GstRTSPServer *server);
-  gboolean        (*accept_client) (GstRTSPServer *server, GstRTSPClient *client, GIOChannel *channel);
+  GstRTSPClient * (*create_client)      (GstRTSPServer *server);
+  gboolean        (*accept_client)      (GstRTSPServer *server, GstRTSPClient *client, GIOChannel *channel);
+  
+  /* signals */
+  void            (*client_connected)   (GstRTSPServer *server, GstRTSPClient *client);
 };
 
 GType                 gst_rtsp_server_get_type             (void);

@@ -57,10 +57,18 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  SIGNAL_CLIENT_CONNECTED,
+  SIGNAL_LAST
+};
+
 G_DEFINE_TYPE (GstRTSPServer, gst_rtsp_server, G_TYPE_OBJECT);
 
 GST_DEBUG_CATEGORY_STATIC (rtsp_server_debug);
 #define GST_CAT_DEFAULT rtsp_server_debug
+
+static guint gst_rtsp_server_signals[SIGNAL_LAST] = { 0 };
 
 static void gst_rtsp_server_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec);
@@ -140,6 +148,12 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
           "The media mapping to use for client session",
           GST_TYPE_RTSP_MEDIA_MAPPING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED] =
+      g_signal_new ("client-connected", G_TYPE_FROM_CLASS (gobject_class),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPServerClass, client_connected),
+      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+      gst_rtsp_client_get_type ());
 
   klass->create_client = default_create_client;
   klass->accept_client = default_accept_client;
@@ -793,6 +807,9 @@ gst_rtsp_server_io_func (GIOChannel * channel, GIOCondition condition,
 
     /* manage the client connection */
     manage_client (server, client);
+
+    g_signal_emit (server, gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED], 0,
+        client);
   } else {
     GST_WARNING_OBJECT (server, "received unknown event %08x", condition);
   }

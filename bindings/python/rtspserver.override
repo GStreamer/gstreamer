@@ -65,3 +65,23 @@ _wrap_gst_rtsp_server_create_watch(PyGObject *self, PyObject *args, PyObject *ke
     pyg_end_allow_threads;
     return pygobject_new((GObject *)ret);
 }
+
+%%
+override gst_rtsp_media_mapping_add_factory kwargs
+static PyObject *
+_wrap_gst_rtsp_media_mapping_add_factory(PyGObject *self, PyObject *args, PyObject *kwargs) 
+{
+    static char *kwlist[] = { "path", "factory", NULL };
+    char *path;
+    PyGObject *factory;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"sO!:GstRTSPMediaMapping.add_factory", kwlist, &path, &PyGstRTSPMediaFactory_Type, &factory)) 
+        return NULL;
+    pyg_begin_allow_threads;
+    gst_rtsp_media_mapping_add_factory(GST_RTSP_MEDIA_MAPPING(self->obj), path,
+        g_object_ref (GST_RTSP_MEDIA_FACTORY(factory->obj))); 
+    pyg_end_allow_threads;
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
