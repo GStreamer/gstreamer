@@ -641,7 +641,7 @@ gst_v4lmjpegsrc_getcaps (GstPad * pad)
   0};
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lmjpegsrc))) {
-    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    return gst_pad_get_pad_template_caps (pad);
   }
 
   g_value_init (&fps, GST_TYPE_FRACTION);

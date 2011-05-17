@@ -1030,13 +1030,11 @@ gst_ximagesink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   g_mutex_unlock (ximagesink->x_lock);
 
   /* get a template copy and add the pixel aspect ratio */
-  caps =
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK
-          (ximagesink)->sinkpad));
-  for (i = 0; i < gst_caps_get_size (caps); ++i) {
-    GstStructure *structure = gst_caps_get_structure (caps, i);
-
-    if (ximagesink->par) {
+  caps = gst_pad_get_pad_template_caps (GST_BASE_SINK (ximagesink)->sinkpad);
+  if (ximagesink->par) {
+    caps = gst_caps_make_writable (caps);
+    for (i = 0; i < gst_caps_get_size (caps); ++i) {
+      GstStructure *structure = gst_caps_get_structure (caps, i);
       int nom, den;
 
       nom = gst_value_get_fraction_numerator (ximagesink->par);

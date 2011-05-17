@@ -1512,6 +1512,7 @@ static GstCaps *
 gst_xvimagesink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstXvImageSink *xvimagesink;
+  GstCaps *caps;
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 
@@ -1523,15 +1524,16 @@ gst_xvimagesink_getcaps (GstBaseSink * bsink, GstCaps * filter)
       return gst_caps_ref (xvimagesink->xcontext->caps);
   }
 
+  caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (xvimagesink));
   if (filter) {
-    return gst_caps_intersect_full (filter,
-        gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (xvimagesink)),
-        GST_CAPS_INTERSECT_FIRST);
-  } else {
-    return
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
-            (xvimagesink)));
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = intersection;
   }
+  return caps;
 }
 
 static gboolean
