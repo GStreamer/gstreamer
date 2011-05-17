@@ -711,7 +711,7 @@ gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad * pad)
 {
   GstRtpSsrcDemux *demux;
   GstIterator *it = NULL;
-  const gchar *prefix;
+  const gchar *prefix = NULL;
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
 
