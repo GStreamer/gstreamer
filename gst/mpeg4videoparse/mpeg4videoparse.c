@@ -203,7 +203,8 @@ gst_mpeg4vparse_start (GstBaseParse * parse)
   GST_DEBUG_OBJECT (parse, "start");
 
   gst_mpeg4vparse_reset (mp4vparse);
-  gst_base_parse_set_min_frame_size (parse, 512);
+  /* at least this much for a valid frame */
+  gst_base_parse_set_min_frame_size (parse, 6);
 
   return TRUE;
 }
@@ -413,7 +414,8 @@ next:
     } else {
       /* resume scan where we left it */
       mp4vparse->last_sc = GST_BUFFER_SIZE (buf) - 4;
-      gst_base_parse_set_min_frame_size (parse, GST_BUFFER_SIZE (buf) + 64);
+      /* request best next available */
+      *framesize = G_MAXUINT;
       return FALSE;
     }
   } else {
