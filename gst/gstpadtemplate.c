@@ -397,15 +397,18 @@ gst_static_pad_template_get_caps (GstStaticPadTemplate * templ)
  *
  * Gets the capabilities of the pad template.
  *
- * Returns: (transfer none): the #GstCaps of the pad template. If you need to
- *     keep a reference to the caps, take a ref (see gst_caps_ref ()).
+ * Returns: (transfer full): the #GstCaps of the pad template.
+ * Unref after usage.
  */
 GstCaps *
 gst_pad_template_get_caps (GstPadTemplate * templ)
 {
+  GstCaps *caps;
   g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
 
-  return GST_PAD_TEMPLATE_CAPS (templ);
+  caps = GST_PAD_TEMPLATE_CAPS (templ);
+
+  return (caps ? gst_caps_ref (caps) : NULL);
 }
 
 /**

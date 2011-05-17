@@ -88,6 +88,14 @@ The 0.11 porting guide
     gst_pad_proxy_getcaps() now takes a GstCaps* parameter to inform
     the other side about the possible caps and preferences.
 
+    gst_pad_get_pad_template_caps() and gst_pad_get_pad_template()
+    return a new reference of the caps or template now and the return
+    value needs to be unreffed after usage.
+
+* GstPadTemplate
+    gst_pad_template_get_caps() returns a new reference of the caps
+    and the return value needs to be unreffed after usage.
+
 * GstMiniObject
     A miniobject is now a simple refcounted structure holding the information
     common to buffers, events, messages, queries and caps.

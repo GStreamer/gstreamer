@@ -2171,19 +2171,21 @@ gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ)
  *
  * Gets the template for @pad.
  *
- * Returns: (transfer none): the #GstPadTemplate from which this pad was
- *     instantiated, or %NULL if this pad has no template.
- *
- * FIXME: currently returns an unrefcounted padtemplate.
+ * Returns: (transfer full): the #GstPadTemplate from which this pad was
+ *     instantiated, or %NULL if this pad has no template. Unref after
+ *     usage.
  */
 GstPadTemplate *
 gst_pad_get_pad_template (GstPad * pad)
 {
+  GstPadTemplate *templ;
+
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  return GST_PAD_PAD_TEMPLATE (pad);
-}
+  templ = GST_PAD_PAD_TEMPLATE (pad);
 
+  return (templ ? gst_object_ref (templ) : NULL);
+}
 
 /* should be called with the pad LOCK held */
 /* refs the caps, so caller is responsible for getting it unreffed */
@@ -2815,10 +2817,10 @@ no_function:
  *
  * Gets the capabilities for @pad's template.
  *
- * Returns: (transfer none): the #GstCaps of this pad template. If you intend
- *     to keep a reference on the caps, make a copy (see gst_caps_copy ()).
+ * Returns: (transfer full): the #GstCaps of this pad template.
+ * Unref after usage.
  */
-const GstCaps *
+GstCaps *
 gst_pad_get_pad_template_caps (GstPad * pad)
 {
   static GstStaticCaps anycaps = GST_STATIC_CAPS ("ANY");
@@ -2826,7 +2828,7 @@ gst_pad_get_pad_template_caps (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   if (GST_PAD_PAD_TEMPLATE (pad))
-    return GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
+    return gst_pad_template_get_caps (GST_PAD_PAD_TEMPLATE (pad));
 
   return gst_static_caps_get (&anycaps);
 }
