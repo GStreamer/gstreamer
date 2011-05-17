@@ -2270,7 +2270,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
       goto socket_error;
 
     /* once we start reading the wait cannot be controlled */
-    if (builder.state != STATE START)
+    if (builder.state != STATE_START)
       gst_poll_set_controllable (conn->fdset, FALSE);
   }
 
