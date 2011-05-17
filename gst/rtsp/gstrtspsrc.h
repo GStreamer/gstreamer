@@ -79,10 +79,6 @@ typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
 #define GST_RTSP_STREAM_LOCK(rtsp)       (g_static_rec_mutex_lock (GST_RTSP_STREAM_GET_LOCK(rtsp)))
 #define GST_RTSP_STREAM_UNLOCK(rtsp)     (g_static_rec_mutex_unlock (GST_RTSP_STREAM_GET_LOCK(rtsp)))
 
-#define GST_RTSP_CONN_GET_LOCK(rtsp)     (GST_RTSPSRC_CAST(rtsp)->conn_rec_lock)
-#define GST_RTSP_CONN_LOCK(rtsp)         (g_static_rec_mutex_lock (GST_RTSP_CONN_GET_LOCK(rtsp)))
-#define GST_RTSP_CONN_UNLOCK(rtsp)       (g_static_rec_mutex_unlock (GST_RTSP_CONN_GET_LOCK(rtsp)))
-
 typedef struct _GstRTSPConnInfo GstRTSPConnInfo;
 
 struct _GstRTSPConnInfo {
@@ -131,7 +127,7 @@ struct _GstRTSPStream {
   gboolean      container;
   /* original control url */
   gchar        *control_url;
-  guint32       ssrc; 
+  guint32       ssrc;
   guint32       seqbase;
   guint64       timebase;
 
@@ -184,12 +180,11 @@ struct _GstRTSPSrc {
   /* UDP mode loop */
   gint             loop_cmd;
   gboolean         ignore_timeout;
+  gboolean         waiting;
+  gboolean         open_error;
 
   /* mutex for protecting state changes */
   GStaticRecMutex *state_rec_lock;
-
-  /* mutex for protecting the connection */
-  GStaticRecMutex *conn_rec_lock;
 
   GstSDPMessage   *sdp;
   gboolean         from_sdp;
@@ -201,7 +196,7 @@ struct _GstRTSPSrc {
   /* properties */
   GstRTSPLowerTrans protocols;
   gboolean          debug;
-  guint   	    retry;
+  guint             retry;
   guint64           udp_timeout;
   GTimeVal          tcp_timeout;
   GTimeVal         *ptcp_timeout;

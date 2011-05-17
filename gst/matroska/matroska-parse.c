@@ -2808,6 +2808,7 @@ static GstFlowReturn
 gst_matroska_parse_parse_info (GstMatroskaParse * parse, GstEbmlRead * ebml)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  gdouble dur_f = -1.0;
   guint32 id;
 
   DEBUG_ELEMENT_START (parse, ebml, "SegmentInfo");
@@ -2836,23 +2837,15 @@ gst_matroska_parse_parse_info (GstMatroskaParse * parse, GstEbmlRead * ebml)
       }
 
       case GST_MATROSKA_ID_DURATION:{
-        gdouble num;
-        GstClockTime dur;
-
-        if ((ret = gst_ebml_read_float (ebml, &id, &num)) != GST_FLOW_OK)
+        if ((ret = gst_ebml_read_float (ebml, &id, &dur_f)) != GST_FLOW_OK)
           break;
 
-        if (num <= 0.0) {
-          GST_WARNING_OBJECT (parse, "Invalid duration %lf", num);
+        if (dur_f <= 0.0) {
+          GST_WARNING_OBJECT (parse, "Invalid duration %lf", dur_f);
           break;
         }
 
-        GST_DEBUG_OBJECT (parse, "Duration: %lf", num);
-
-        dur = gst_gdouble_to_guint64 (num *
-            gst_guint64_to_gdouble (parse->time_scale));
-        if (GST_CLOCK_TIME_IS_VALID (dur) && dur <= G_MAXINT64)
-          gst_segment_set_duration (&parse->segment, GST_FORMAT_TIME, dur);
+        GST_DEBUG_OBJECT (parse, "Duration: %lf", dur_f);
         break;
       }
 
@@ -2921,6 +2914,15 @@ gst_matroska_parse_parse_info (GstMatroskaParse * parse, GstEbmlRead * ebml)
         ret = gst_ebml_read_skip (ebml);
         break;
     }
+  }
+
+  if (dur_f > 0.0) {
+    GstClockTime dur_u;
+
+    dur_u = gst_gdouble_to_guint64 (dur_f *
+        gst_guint64_to_gdouble (parse->time_scale));
+    if (GST_CLOCK_TIME_IS_VALID (dur_u) && dur_u <= G_MAXINT64)
+      gst_segment_set_duration (&parse->segment, GST_FORMAT_TIME, dur_u);
   }
 
   DEBUG_ELEMENT_STOP (parse, ebml, "SegmentInfo", ret);

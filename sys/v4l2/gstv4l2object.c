@@ -2049,7 +2049,9 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
   GST_V4L2_CHECK_OPEN (v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
 
-  if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
+  /* Only unconditionally accept mpegts for sources */
+  if ((v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) &&
+      (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G')))
     return TRUE;
 
   memset (&format, 0x00, sizeof (struct v4l2_format));
