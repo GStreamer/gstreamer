@@ -2942,7 +2942,7 @@ gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
  *
  * Returns: TRUE if the two structures have the same name and field.
  *
- * Since: 0.10.31
+ * Since: 0.10.35
  **/
 gboolean
 gst_structure_is_equal (const GstStructure * structure1,
@@ -3085,7 +3085,7 @@ gst_caps_structure_can_intersect_field (GQuark id, const GValue * val1,
  *
  * Returns: %TRUE if intersection would not be empty
  *
- * Since: 0.10.31
+ * Since: 0.10.35
  */
 gboolean
 gst_structure_can_intersect (const GstStructure * struct1,
