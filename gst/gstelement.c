@@ -251,14 +251,10 @@ gst_element_base_class_init (gpointer g_class)
    * from their base class but elements can add pad templates in class_init
    * instead of base_init.
    */
-  /* FIXME: Do we consider GstPadTemplates as immutable? If so we can
-   * simply ref them instead of copying.
-   */
   padtemplates = g_list_copy (element_class->padtemplates);
   for (node = padtemplates; node != NULL; node = node->next) {
     GstPadTemplate *tmpl = (GstPadTemplate *) node->data;
-    node->data = gst_pad_template_new (tmpl->name_template,
-        tmpl->direction, tmpl->presence, gst_caps_copy (tmpl->caps));
+    gst_object_ref (tmpl);
   }
   element_class->padtemplates = padtemplates;
 

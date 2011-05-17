@@ -101,6 +101,9 @@ The 0.11 porting guide
     GstPadTemplate is now created with a floating ref and
     gst_element_class_add_pad_template() takes ownership of this floating ref.
 
+    GstPadTemplate instances are considered immutable and must not be
+    changed.
+
 * GstMiniObject
     A miniobject is now a simple refcounted structure holding the information
     common to buffers, events, messages, queries and caps.
