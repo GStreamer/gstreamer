@@ -2921,7 +2921,7 @@ static gboolean
 gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
     gpointer data)
 {
-  GstStructure *struct1 = (GstStructure *) data;
+  const GstStructure *struct1 = (const GstStructure *) data;
   const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
 
   if (G_UNLIKELY (val1 == NULL))
@@ -2946,7 +2946,7 @@ gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
  **/
 gboolean
 gst_structure_is_equal (const GstStructure * structure1,
-    GstStructure * structure2)
+    const GstStructure * structure2)
 {
   g_return_val_if_fail (GST_IS_STRUCTURE (structure1), FALSE);
   g_return_val_if_fail (GST_IS_STRUCTURE (structure2), FALSE);
@@ -2959,7 +2959,7 @@ gst_structure_is_equal (const GstStructure * structure1,
   }
 
   return gst_structure_foreach (structure1, gst_structure_is_equal_foreach,
-      structure2);
+      (gpointer) structure2);
 }
 
 

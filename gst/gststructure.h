@@ -249,7 +249,7 @@ gboolean                 gst_structure_fixate_field_nearest_fraction (GstStructu
 									 const gint target_denominator);
 
 gboolean                 gst_structure_is_equal(const GstStructure *structure1,
-						GstStructure *structure2);
+						const GstStructure *structure2);
 gboolean                 gst_structure_can_intersect(const GstStructure *struct1,
 						     const GstStructure *struct2);
 GstStructure*            gst_structure_intersect (const GstStructure *struct1,
