@@ -2211,6 +2211,7 @@ gst_structure_has_field
 gst_structure_has_field_typed
 gst_structure_is_equal
 gst_structure_can_intersect
+gst_structure_intersect
 gst_structure_id_has_field
 gst_structure_id_has_field_typed
 gst_structure_get_boolean

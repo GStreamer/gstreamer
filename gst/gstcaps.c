@@ -1191,81 +1191,6 @@ gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
 
 /* intersect operation */
 
-typedef struct
-{
-  GstStructure *dest;
-  const GstStructure *intersect;
-}
-IntersectData;
-
-static gboolean
-gst_caps_structure_intersect_field1 (GQuark id, const GValue * val1,
-    gpointer data)
-{
-  IntersectData *idata = (IntersectData *) data;
-  const GValue *val2 = gst_structure_id_get_value (idata->intersect, id);
-
-  if (G_UNLIKELY (val2 == NULL)) {
-    gst_structure_id_set_value (idata->dest, id, val1);
-  } else {
-    GValue dest_value = { 0 };
-    if (gst_value_intersect (&dest_value, val1, val2)) {
-      gst_structure_id_set_value (idata->dest, id, &dest_value);
-      g_value_unset (&dest_value);
-    } else {
-      return FALSE;
-    }
-  }
-  return TRUE;
-}
-
-static gboolean
-gst_caps_structure_intersect_field2 (GQuark id, const GValue * val1,
-    gpointer data)
-{
-  IntersectData *idata = (IntersectData *) data;
-  const GValue *val2 = gst_structure_id_get_value (idata->intersect, id);
-
-  if (G_UNLIKELY (val2 == NULL)) {
-    gst_structure_id_set_value (idata->dest, id, val1);
-  }
-  return TRUE;
-}
-
-static GstStructure *
-gst_caps_structure_intersect (const GstStructure * struct1,
-    const GstStructure * struct2)
-{
-  IntersectData data;
-
-  g_assert (struct1 != NULL);
-  g_assert (struct2 != NULL);
-
-  if (G_UNLIKELY (struct1->name != struct2->name))
-    return NULL;
-
-  /* copy fields from struct1 which we have not in struct2 to target
-   * intersect if we have the field in both */
-  data.dest = gst_structure_id_empty_new (struct1->name);
-  data.intersect = struct2;
-  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
-              gst_caps_structure_intersect_field1, &data)))
-    goto error;
-
-  /* copy fields from struct2 which we have not in struct1 to target */
-  data.intersect = struct1;
-  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct2,
-              gst_caps_structure_intersect_field2, &data)))
-    goto error;
-
-  return data.dest;
-
-error:
-  gst_structure_free (data.dest);
-  return NULL;
-}
-
-
 /**
  * gst_caps_can_intersect:
  * @caps1: a #GstCaps to intersect
@@ -1404,7 +1329,7 @@ gst_caps_intersect_zig_zag (const GstCaps * caps1, const GstCaps * caps2)
       struct1 = gst_caps_get_structure_unchecked (caps1, j);
       struct2 = gst_caps_get_structure_unchecked (caps2, k);
 
-      istruct = gst_caps_structure_intersect (struct1, struct2);
+      istruct = gst_structure_intersect (struct1, struct2);
 
       gst_caps_merge_structure (dest, istruct);
       /* move down left */
@@ -1463,7 +1388,7 @@ gst_caps_intersect_first (const GstCaps * caps1, const GstCaps * caps2)
     struct1 = gst_caps_get_structure_unchecked (caps1, i);
     for (j = 0; j < len2; j++) {
       struct2 = gst_caps_get_structure_unchecked (caps2, j);
-      istruct = gst_caps_structure_intersect (struct1, struct2);
+      istruct = gst_structure_intersect (struct1, struct2);
       if (istruct)
         gst_caps_merge_structure (dest, istruct);
     }
