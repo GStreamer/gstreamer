@@ -133,7 +133,7 @@ typedef enum {
  * @GST_EVENT_STEP: A request for stepping through the media. Sinks will usually
  *                  execute the step operation. Since: 0.10.24
  * @GST_EVENT_RECONFIGURE: A request for upstream renegotiating caps and reconfiguring.
- *                         Since: 0.10.34
+ *                         Since: 0.11.0
  * @GST_EVENT_CUSTOM_UPSTREAM: Upstream custom event
  * @GST_EVENT_CUSTOM_DOWNSTREAM: Downstream custom event that travels in the
  *                        data flow.

@@ -1207,7 +1207,7 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
  *
  * Returns: (transfer full): a new #GstEvent
  *
- * Since: 0.10.34
+ * Since: 0.11.0
  */
 GstEvent *
 gst_event_new_reconfigure (void)
