@@ -219,20 +219,6 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
 static void
 gst_pad_template_init (GstPadTemplate * templ)
 {
-  /* FIXME 0.11: Does anybody remember why this is here? If not, let's
-   * change it for 0.11 and let gst_element_class_add_pad_template() for
-   * example ref/sink the pad templates.
-   */
-  /* We ensure that the pad template we're creating has a sunken reference.
-   * Inconsistencies in pad templates being floating or sunken has caused
-   * problems in the past with leaks, etc.
-   *
-   * For consistency, then, we only produce them  with sunken references
-   * owned by the creator of the object
-   */
-  if (g_object_is_floating (templ)) {
-    gst_object_ref_sink (templ);
-  }
 }
 
 static void
