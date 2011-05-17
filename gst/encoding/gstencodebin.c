@@ -869,7 +869,7 @@ gst_element_get_pad_from_template (GstElement * element, GstPadTemplate * templ)
 /* FIXME : Improve algorithm for finding compatible muxer sink pad */
 static inline GstPad *
 get_compatible_muxer_sink_pad (GstEncodeBin * ebin, GstElement * encoder,
-    const GstCaps * sinkcaps)
+    GstCaps * sinkcaps)
 {
   GstPad *sinkpad;
   GstPadTemplate *srctempl = NULL;
@@ -887,10 +887,11 @@ get_compatible_muxer_sink_pad (GstEncodeBin * ebin, GstElement * encoder,
 
     gst_object_unref (srcpad);
     sinktempl = gst_element_get_compatible_pad_template (ebin->muxer, srctempl);
+    gst_object_unref (srctempl);
   } else {
     srctempl =
         gst_pad_template_new ("whatever", GST_PAD_SRC, GST_PAD_ALWAYS,
-        gst_caps_copy (sinkcaps));
+        sinkcaps);
     g_assert (srctempl != NULL);
     sinktempl = gst_element_get_compatible_pad_template (ebin->muxer, srctempl);
     g_object_unref (srctempl);
@@ -926,8 +927,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   /* Element we will link to the encoder */
   GstElement *last = NULL;
   GList *tmp, *tosync = NULL;
-  const GstCaps *format;
-  const GstCaps *restriction;
+  GstCaps *format, *restriction;
   const gchar *missing_element_name;
 
   format = gst_encoding_profile_get_format (sprof);
@@ -1294,6 +1294,11 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
   ebin->streams = g_list_prepend (ebin->streams, sgroup);
 
+  if (format)
+    gst_caps_unref (format);
+  if (restriction)
+    gst_caps_unref (restriction);
+
   return sgroup;
 
 splitter_encoding_failure:
@@ -1368,6 +1373,10 @@ converter_link_failure:
 
 cleanup:
   /* FIXME : Actually properly cleanup everything */
+  if (format)
+    gst_caps_unref (format);
+  if (restriction)
+    gst_caps_unref (restriction);
   g_slice_free (StreamGroup, sgroup);
   return NULL;
 }
