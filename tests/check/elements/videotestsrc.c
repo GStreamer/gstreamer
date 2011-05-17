@@ -261,7 +261,7 @@ GST_START_TEST (test_rgb_formats)
     "xRGB1555", 16, 15, 0x00007c00, 0x000003e0, 0x0000001f, 0x0000000}
   };
   GstElement *pipeline, *src, *filter, *sink;
-  const GstCaps *template_caps;
+  GstCaps *template_caps;
   GstBuffer *buf = NULL;
   GstPad *srcpad;
   gint p, i, e;
@@ -396,6 +396,7 @@ GST_START_TEST (test_rgb_formats)
       gst_caps_unref (caps);
     }
   }
+  gst_caps_unref (template_caps);
 
   gst_object_unref (pipeline);
 }

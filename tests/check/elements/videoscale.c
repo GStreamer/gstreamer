@@ -54,6 +54,7 @@ videoscale_get_allowed_caps (void)
     gst_caps_append_structure (ret[i], gst_structure_copy (s));
   }
 
+  gst_caps_unref (caps);
   gst_object_unref (scale);
 
   return ret;

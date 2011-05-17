@@ -264,7 +264,7 @@ GST_START_TEST (test_rgb_to_rgb)
     "black", 2, 0x00, 0x00, 0x00}
   };
   GstElement *pipeline, *src, *filter1, *csp, *filter2, *sink;
-  const GstCaps *template_caps;
+  GstCaps *template_caps;
   GstBuffer *buf = NULL;
   GstPad *srcpad;
   GList *conversions, *l;
@@ -406,6 +406,8 @@ GST_START_TEST (test_rgb_to_rgb)
       buf = NULL;
     }
   }
+
+  gst_caps_unref (template_caps);
 
   g_list_foreach (conversions, (GFunc) rgb_conversion_free, NULL);
   g_list_free (conversions);
