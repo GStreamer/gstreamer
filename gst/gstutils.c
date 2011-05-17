@@ -1199,9 +1199,9 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   /* requesting is a little crazy, we need a template. Let's create one */
   /* FIXME: why not gst_pad_get_pad_template (pad); */
   templcaps = gst_pad_get_caps (pad, NULL);
-
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
       GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
+  gst_caps_unref (templcaps);
 
   foundpad = gst_element_request_compatible_pad (element, templ);
   gst_object_unref (templ);
@@ -1844,8 +1844,11 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
           desttempl = (GstPadTemplate *) l->data;
           if (desttempl->presence == GST_PAD_REQUEST &&
               desttempl->direction != srctempl->direction) {
-            if (gst_caps_is_always_compatible (gst_pad_template_get_caps
-                    (srctempl), gst_pad_template_get_caps (desttempl))) {
+            GstCaps *srccaps, *destcaps;
+
+            srccaps = gst_pad_template_get_caps (srctempl);
+            destcaps = gst_pad_template_get_caps (desttempl);
+            if (gst_caps_is_always_compatible (srccaps, destcaps)) {
               srcpad =
                   gst_element_request_pad (src, srctempl,
                   srctempl->name_template, NULL);
@@ -1859,6 +1862,8 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
                     GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
                 gst_object_unref (srcpad);
                 gst_object_unref (destpad);
+                gst_caps_unref (srccaps);
+                gst_caps_unref (destcaps);
                 return TRUE;
               }
               /* it failed, so we release the request pads */
@@ -1867,6 +1872,8 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
               if (destpad)
                 gst_element_release_request_pad (dest, destpad);
             }
+            gst_caps_unref (srccaps);
+            gst_caps_unref (destcaps);
           }
         }
       }

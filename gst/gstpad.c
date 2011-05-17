@@ -2765,17 +2765,23 @@ setcaps_failed:
 static GstFlowReturn
 gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
 {
+  GstCaps *templ;
+
   /* See if pad accepts the caps */
-  if (!gst_caps_can_intersect (caps, gst_pad_get_pad_template_caps (pad)))
+  templ = gst_pad_get_pad_template_caps (pad);
+  if (!gst_caps_can_intersect (caps, templ))
     goto not_accepted;
 
   if (!gst_pad_call_setcaps (pad, caps))
     goto not_accepted;
 
+  gst_caps_unref (templ);
+
   return GST_FLOW_OK;
 
 not_accepted:
   {
+    gst_caps_unref (templ);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "caps %" GST_PTR_FORMAT " not accepted", caps);
     return GST_FLOW_NOT_NEGOTIATED;
