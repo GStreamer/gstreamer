@@ -96,6 +96,8 @@ The 0.11 porting guide
     gst_pad_template_get_caps() returns a new reference of the caps
     and the return value needs to be unreffed after usage.
 
+    gst_pad_template_new() does not take ownership of the caps anymore.
+
 * GstMiniObject
     A miniobject is now a simple refcounted structure holding the information
     common to buffers, events, messages, queries and caps.

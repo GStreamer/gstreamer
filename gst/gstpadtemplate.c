@@ -336,12 +336,10 @@ gst_static_pad_template_get (GstStaticPadTemplate * pad_template)
  * @name_template: the name template.
  * @direction: the #GstPadDirection of the template.
  * @presence: the #GstPadPresence of the pad.
- * @caps: (transfer full): a #GstCaps set for the template. The caps are
- *     taken ownership of.
+ * @caps: a #GstCaps set for the template.
  *
  * Creates a new pad template with a name according to the given template
- * and with the given arguments. This functions takes ownership of the provided
- * caps, so be sure to not use them afterwards.
+ * and with the given arguments.
  *
  * Returns: (transfer full): a new #GstPadTemplate.
  */
@@ -359,15 +357,12 @@ gst_pad_template_new (const gchar * name_template,
       || presence == GST_PAD_SOMETIMES || presence == GST_PAD_REQUEST, NULL);
 
   if (!name_is_valid (name_template, presence)) {
-    gst_caps_unref (caps);
     return NULL;
   }
 
   new = g_object_new (gst_pad_template_get_type (),
       "name", name_template, "name-template", name_template,
       "direction", direction, "presence", presence, "caps", caps, NULL);
-
-  gst_caps_unref (caps);
 
   return new;
 }
@@ -440,12 +435,7 @@ gst_pad_template_set_property (GObject * object, guint prop_id,
       GST_PAD_TEMPLATE_PRESENCE (object) = g_value_get_enum (value);
       break;
     case PROP_CAPS:
-      /* allow caps == NULL for backwards compatibility (ie. g_object_new()
-       * called without any of the new properties) (FIXME 0.11) */
-      if (g_value_get_boxed (value) != NULL) {
-        GST_PAD_TEMPLATE_CAPS (object) =
-            gst_caps_copy (g_value_get_boxed (value));
-      }
+      GST_PAD_TEMPLATE_CAPS (object) = g_value_dup_boxed (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
