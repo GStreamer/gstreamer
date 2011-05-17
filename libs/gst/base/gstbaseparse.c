@@ -82,7 +82,11 @@
  *       contain a valid frame, this call must return FALSE and optionally
  *       set the @skipsize value to inform base class that how many bytes
  *       it needs to skip in order to find a valid frame. @framesize can always
- *       indicate a new minimum for current frame parsing.  The passed buffer
+ *       indicate a new minimum for current frame parsing.  Indicating G_MAXUINT
+ *       for requested amount means subclass simply needs best available
+ *       subsequent data.  In push mode this amounts to an additional input buffer
+ *       (thus minimal additional latency), in pull mode this amounts to some
+ *       arbitrary reasonable buffer size increase.  The passed buffer
  *       is read-only.  Note that @check_valid_frame might receive any small
  *       amount of input data when leftover data is being drained (e.g. at EOS).
  *     </para></listitem>
@@ -2196,6 +2200,8 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     old_min_size = 0;
     /* Synchronization loop */
     for (;;) {
+      /* note: if subclass indicates MAX fsize,
+       * this will not likely be available anyway ... */
       min_size = MAX (parse->priv->min_frame_size, fsize);
       av = gst_adapter_available (parse->priv->adapter);
 
@@ -2497,6 +2503,12 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
   GST_LOG_OBJECT (parse, "scanning for frame at offset %" G_GUINT64_FORMAT
       " (%#" G_GINT64_MODIFIER "x)", parse->priv->offset, parse->priv->offset);
 
+  /* let's make this efficient for all subclass once and for all;
+   * maybe it does not need this much, but in the latter case, we know we are
+   * in pull mode here and might as well try to read and supply more anyway
+   * (so does the buffer caching mechanism) */
+  fsize = 64 * 1024;
+
   while (TRUE) {
     gboolean res;
 
@@ -2547,7 +2559,9 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
       if (!parse->priv->discont)
         parse->priv->sync_offset = parse->priv->offset;
       parse->priv->discont = TRUE;
-      /* something changed least; nullify loop check */
+      /* something changed at least; nullify loop check */
+      if (fsize == G_MAXUINT)
+        fsize = old_min_size + 64 * 1024;
       old_min_size = 0;
     }
     /* skip == 0 should imply subclass set min_size to need more data;
