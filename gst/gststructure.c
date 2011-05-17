@@ -2976,7 +2976,8 @@ gst_structure_is_equal (const GstStructure * structure1,
   if (structure1->name != structure2->name) {
     return FALSE;
   }
-  if (structure1->fields->len != structure2->fields->len) {
+  if (GST_STRUCTURE_FIELDS (structure1)->len !=
+      GST_STRUCTURE_FIELDS (structure2)->len) {
     return FALSE;
   }
 
