@@ -245,7 +245,7 @@ static void gst_bin_handle_message_func (GstBin * bin, GstMessage * message);
 static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
 static GstBusSyncReply bin_bus_handler (GstBus * bus,
     GstMessage * message, GstBin * bin);
-static gboolean gst_bin_query (GstElement * element, GstQuery ** query);
+static gboolean gst_bin_query (GstElement * element, GstQuery * query);
 
 static gboolean gst_bin_do_latency_func (GstBin * bin);
 
@@ -2359,7 +2359,7 @@ gst_bin_do_latency_func (GstBin * bin)
   GST_DEBUG_OBJECT (element, "querying latency");
 
   query = gst_query_new_latency ();
-  if ((res = gst_element_query (element, &query))) {
+  if ((res = gst_element_query (element, query))) {
     gboolean live;
 
     gst_query_parse_latency (query, &live, &min_latency, &max_latency);
@@ -3426,7 +3426,7 @@ forward:
 /* generic struct passed to all query fold methods */
 typedef struct
 {
-  GstQuery **query;
+  GstQuery *query;
   gint64 min;
   gint64 max;
   gboolean live;
@@ -3455,7 +3455,7 @@ bin_query_duration_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
 
     g_value_set_boolean (ret, TRUE);
 
-    gst_query_parse_duration (*fold->query, NULL, &duration);
+    gst_query_parse_duration (fold->query, NULL, &duration);
 
     GST_DEBUG_OBJECT (item, "got duration %" G_GINT64_FORMAT, duration);
 
@@ -3471,10 +3471,9 @@ bin_query_duration_done (GstBin * bin, QueryFold * fold)
 {
   GstFormat format;
 
-  gst_query_parse_duration (*fold->query, &format, NULL);
-  *fold->query = gst_query_make_writable (*fold->query);
+  gst_query_parse_duration (fold->query, &format, NULL);
   /* store max in query result */
-  gst_query_set_duration (*fold->query, format, fold->max);
+  gst_query_set_duration (fold->query, format, fold->max);
 
   GST_DEBUG_OBJECT (bin, "max duration %" G_GINT64_FORMAT, fold->max);
 
@@ -3495,7 +3494,7 @@ bin_query_position_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
 
     g_value_set_boolean (ret, TRUE);
 
-    gst_query_parse_position (*fold->query, NULL, &position);
+    gst_query_parse_position (fold->query, NULL, &position);
 
     GST_DEBUG_OBJECT (item, "got position %" G_GINT64_FORMAT, position);
 
@@ -3511,10 +3510,9 @@ bin_query_position_done (GstBin * bin, QueryFold * fold)
 {
   GstFormat format;
 
-  gst_query_parse_position (*fold->query, &format, NULL);
-  *fold->query = gst_query_make_writable (*fold->query);
+  gst_query_parse_position (fold->query, &format, NULL);
   /* store max in query result */
-  gst_query_set_position (*fold->query, format, fold->max);
+  gst_query_set_position (fold->query, format, fold->max);
 
   GST_DEBUG_OBJECT (bin, "max position %" G_GINT64_FORMAT, fold->max);
 }
@@ -3528,7 +3526,7 @@ bin_query_latency_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
     GstClockTime min, max;
     gboolean live;
 
-    gst_query_parse_latency (*fold->query, &live, &min, &max);
+    gst_query_parse_latency (fold->query, &live, &min, &max);
 
     GST_DEBUG_OBJECT (item,
         "got latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
@@ -3558,8 +3556,7 @@ static void
 bin_query_latency_done (GstBin * bin, QueryFold * fold)
 {
   /* store max in query result */
-  *fold->query = gst_query_make_writable (*fold->query);
-  gst_query_set_latency (*fold->query, fold->live, fold->min, fold->max);
+  gst_query_set_latency (fold->query, fold->live, fold->min, fold->max);
 
   GST_DEBUG_OBJECT (bin,
       "latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
@@ -3576,7 +3573,7 @@ bin_query_generic_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
 
   if ((res = gst_element_query (item, fold->query))) {
     g_value_set_boolean (ret, TRUE);
-    GST_DEBUG_OBJECT (item, "answered query %" GST_PTR_FORMAT, *fold->query);
+    GST_DEBUG_OBJECT (item, "answered query %p", fold->query);
   }
 
   /* and stop as soon as we have a valid result */
@@ -3584,7 +3581,7 @@ bin_query_generic_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
 }
 
 static gboolean
-gst_bin_query (GstElement * element, GstQuery ** query)
+gst_bin_query (GstElement * element, GstQuery * query)
 {
   GstBin *bin = GST_BIN_CAST (element);
   GstIterator *iter;
@@ -3595,13 +3592,13 @@ gst_bin_query (GstElement * element, GstQuery ** query)
   QueryFold fold_data;
   GValue ret = { 0 };
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
     {
       GList *cached;
       GstFormat qformat;
 
-      gst_query_parse_duration (*query, &qformat, NULL);
+      gst_query_parse_duration (query, &qformat, NULL);
 
       /* find cached duration query */
       GST_OBJECT_LOCK (bin);
@@ -3621,8 +3618,7 @@ gst_bin_query (GstElement * element, GstQuery ** query)
                 duration);
             GST_OBJECT_UNLOCK (bin);
 
-            *query = gst_query_make_writable (*query);
-            gst_query_set_duration (*query, qformat, duration);
+            gst_query_set_duration (query, qformat, duration);
             res = TRUE;
             goto exit;
           }

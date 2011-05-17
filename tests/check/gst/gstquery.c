@@ -236,28 +236,28 @@ GST_START_TEST (test_queries)
     gst_element_get_state (GST_ELEMENT (bin), NULL, NULL, GST_CLOCK_TIME_NONE);
 
   /* Query the bin */
-  fail_unless (gst_element_query (GST_ELEMENT (bin), &pos),
+  fail_unless (gst_element_query (GST_ELEMENT (bin), pos),
       "Could not query pipeline position");
-  fail_unless (gst_element_query (GST_ELEMENT (bin), &dur),
+  fail_unless (gst_element_query (GST_ELEMENT (bin), dur),
       "Could not query pipeline duration");
 
   /* Query elements */
-  fail_unless (gst_element_query (GST_ELEMENT (src), &pos),
+  fail_unless (gst_element_query (GST_ELEMENT (src), pos),
       "Could not query position of fakesrc");
-  fail_unless (gst_element_query (GST_ELEMENT (src), &pos),
+  fail_unless (gst_element_query (GST_ELEMENT (src), pos),
       "Could not query duration of fakesrc");
 
-  fail_unless (gst_element_query (GST_ELEMENT (sink), &pos),
+  fail_unless (gst_element_query (GST_ELEMENT (sink), pos),
       "Could not query position of fakesink");
-  fail_unless (gst_element_query (GST_ELEMENT (sink), &pos),
+  fail_unless (gst_element_query (GST_ELEMENT (sink), pos),
       "Could not query duration of fakesink");
 
   /* Query pads */
   fail_unless ((pad = gst_element_get_static_pad (src, "src")) != NULL,
       "Could not get source pad of fakesrc");
-  fail_unless (gst_pad_query (pad, &pos),
+  fail_unless (gst_pad_query (pad, pos),
       "Could not query position of fakesrc src pad");
-  fail_unless (gst_pad_query (pad, &dur),
+  fail_unless (gst_pad_query (pad, dur),
       "Could not query duration of fakesrc src pad");
   gst_object_unref (pad);
 

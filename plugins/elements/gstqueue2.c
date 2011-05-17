@@ -230,9 +230,9 @@ static void gst_queue2_loop (GstPad * pad);
 static gboolean gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_queue2_handle_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_queue2_handle_src_query (GstPad * pad, GstQuery ** query);
+static gboolean gst_queue2_handle_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_queue2_handle_query (GstElement * element,
-    GstQuery ** query);
+    GstQuery * query);
 
 static GstCaps *gst_queue2_getcaps (GstPad * pad, GstCaps * filter);
 static gboolean gst_queue2_acceptcaps (GstPad * pad, GstCaps * caps);
@@ -2415,7 +2415,7 @@ gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_queue2_peer_query (GstQueue2 * queue, GstPad * pad, GstQuery ** query)
+gst_queue2_peer_query (GstQueue2 * queue, GstPad * pad, GstQuery * query)
 {
   gboolean ret = FALSE;
   GstPad *peer;
@@ -2428,7 +2428,7 @@ gst_queue2_peer_query (GstQueue2 * queue, GstPad * pad, GstQuery ** query)
 }
 
 static gboolean
-gst_queue2_handle_src_query (GstPad * pad, GstQuery ** query)
+gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
 {
   GstQueue2 *queue;
 
@@ -2436,7 +2436,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery ** query)
   if (G_UNLIKELY (queue == NULL))
     return FALSE;
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
       gint64 peer_pos;
@@ -2446,7 +2446,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery ** query)
         goto peer_failed;
 
       /* get peer position */
-      gst_query_parse_position (*query, &format, &peer_pos);
+      gst_query_parse_position (query, &format, &peer_pos);
 
       /* FIXME: this code assumes that there's no discont in the queue */
       switch (format) {
@@ -2462,7 +2462,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery ** query)
           return FALSE;
       }
       /* set updated position */
-      gst_query_set_position (*query, format, peer_pos);
+      gst_query_set_position (query, format, peer_pos);
       break;
     }
     case GST_QUERY_DURATION:
@@ -2531,7 +2531,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery ** query)
         GST_DEBUG_OBJECT (queue, "estimated %" G_GINT64_FORMAT ", left %"
             G_GINT64_FORMAT, estimated_total, buffering_left);
 
-        gst_query_parse_buffering_range (*query, &format, NULL, NULL, NULL);
+        gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
 
         switch (format) {
           case GST_FORMAT_PERCENT:
@@ -2587,13 +2587,13 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery ** query)
           GST_DEBUG_OBJECT (queue,
               "range starting at %" G_GINT64_FORMAT " and finishing at %"
               G_GINT64_FORMAT, range_start, range_stop);
-          gst_query_add_buffering_range (*query, range_start, range_stop);
+          gst_query_add_buffering_range (query, range_start, range_stop);
         }
 
-        gst_query_set_buffering_percent (*query, is_buffering, percent);
-        gst_query_set_buffering_range (*query, format, start, stop,
+        gst_query_set_buffering_percent (query, is_buffering, percent);
+        gst_query_set_buffering_range (query, format, start, stop,
             estimated_total);
-        gst_query_set_buffering_stats (*query, GST_BUFFERING_DOWNLOAD,
+        gst_query_set_buffering_stats (query, GST_BUFFERING_DOWNLOAD,
             byte_in_rate, byte_out_rate, buffering_left);
       }
       break;
@@ -2618,7 +2618,7 @@ peer_failed:
 }
 
 static gboolean
-gst_queue2_handle_query (GstElement * element, GstQuery ** query)
+gst_queue2_handle_query (GstElement * element, GstQuery * query)
 {
   /* simply forward to the srcpad query function */
   return gst_queue2_handle_src_query (GST_QUEUE2_CAST (element)->srcpad, query);

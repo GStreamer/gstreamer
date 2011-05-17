@@ -199,7 +199,7 @@ static void gst_queue_loop (GstPad * pad);
 static gboolean gst_queue_handle_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_queue_handle_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_queue_handle_src_query (GstPad * pad, GstQuery ** query);
+static gboolean gst_queue_handle_src_query (GstPad * pad, GstQuery * query);
 
 static gboolean gst_queue_acceptcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_queue_getcaps (GstPad * pad, GstCaps * filter);
@@ -1270,7 +1270,7 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_queue_handle_src_query (GstPad * pad, GstQuery ** query)
+gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
 {
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
   GstPad *peer;
@@ -1291,14 +1291,14 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery ** query)
     return FALSE;
   }
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
       gint64 peer_pos;
       GstFormat format;
 
       /* get peer position */
-      gst_query_parse_position (*query, &format, &peer_pos);
+      gst_query_parse_position (query, &format, &peer_pos);
 
       /* FIXME: this code assumes that there's no discont in the queue */
       switch (format) {
@@ -1314,7 +1314,7 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery ** query)
           return TRUE;
       }
       /* set updated position */
-      gst_query_set_position (*query, format, peer_pos);
+      gst_query_set_position (query, format, peer_pos);
       break;
     }
     case GST_QUERY_LATENCY:
@@ -1322,7 +1322,7 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery ** query)
       gboolean live;
       GstClockTime min, max;
 
-      gst_query_parse_latency (*query, &live, &min, &max);
+      gst_query_parse_latency (query, &live, &min, &max);
 
       /* we can delay up to the limit of the queue in time. If we have no time
        * limit, the best thing we can do is to return an infinite delay. In
@@ -1337,7 +1337,7 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery ** query)
       if (queue->min_threshold.time > 0 && min != -1)
         min += queue->min_threshold.time;
 
-      gst_query_set_latency (*query, live, min, max);
+      gst_query_set_latency (query, live, min, max);
       break;
     }
     default:

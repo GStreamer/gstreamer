@@ -213,7 +213,7 @@ struct _GstBaseSrcClass {
   gboolean      (*unlock_stop)  (GstBaseSrc *src);
 
   /* notify subclasses of a query */
-  gboolean      (*query)        (GstBaseSrc *src, GstQuery ** query);
+  gboolean      (*query)        (GstBaseSrc *src, GstQuery *query);
 
   /* notify subclasses of an event */
   gboolean      (*event)        (GstBaseSrc *src, GstEvent *event);

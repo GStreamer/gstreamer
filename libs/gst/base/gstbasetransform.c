@@ -318,7 +318,7 @@ static gboolean gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps);
 static gboolean gst_base_transform_setcaps (GstBaseTransform * trans,
     GstPad * pad, GstCaps * caps);
-static gboolean gst_base_transform_query (GstPad * pad, GstQuery ** query);
+static gboolean gst_base_transform_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_base_transform_query_type (GstPad * pad);
 
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
@@ -1188,7 +1188,7 @@ failed_configure:
 }
 
 static gboolean
-gst_base_transform_query (GstPad * pad, GstQuery ** query)
+gst_base_transform_query (GstPad * pad, GstQuery * query)
 {
   gboolean ret = FALSE;
   GstBaseTransform *trans;
@@ -1199,11 +1199,11 @@ gst_base_transform_query (GstPad * pad, GstQuery ** query)
     return FALSE;
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
       GstFormat format;
 
-      gst_query_parse_position (*query, &format, NULL);
+      gst_query_parse_position (query, &format, NULL);
       if (format == GST_FORMAT_TIME && trans->segment.format == GST_FORMAT_TIME) {
         gint64 pos;
         ret = TRUE;
@@ -1217,7 +1217,7 @@ gst_base_transform_query (GstPad * pad, GstQuery ** query)
           pos = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
               trans->priv->position_out);
         }
-        gst_query_set_position (*query, format, pos);
+        gst_query_set_position (query, format, pos);
       } else {
         ret = gst_pad_peer_query (otherpad, query);
       }

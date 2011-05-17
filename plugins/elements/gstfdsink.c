@@ -106,7 +106,7 @@ static void gst_fd_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_fd_sink_dispose (GObject * obj);
 
-static gboolean gst_fd_sink_query (GstPad * pad, GstQuery ** query);
+static gboolean gst_fd_sink_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn gst_fd_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 static gboolean gst_fd_sink_start (GstBaseSink * basesink);
@@ -179,32 +179,31 @@ gst_fd_sink_dispose (GObject * obj)
 }
 
 static gboolean
-gst_fd_sink_query (GstPad * pad, GstQuery ** query)
+gst_fd_sink_query (GstPad * pad, GstQuery * query)
 {
   GstFdSink *fdsink;
   GstFormat format;
 
   fdsink = GST_FD_SINK (GST_PAD_PARENT (pad));
 
-  switch (GST_QUERY_TYPE (*query)) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      gst_query_parse_position (*query, &format, NULL);
+      gst_query_parse_position (query, &format, NULL);
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          gst_query_set_position (*query, GST_FORMAT_BYTES,
-              fdsink->current_pos);
+          gst_query_set_position (query, GST_FORMAT_BYTES, fdsink->current_pos);
           return TRUE;
         default:
           return FALSE;
       }
 
     case GST_QUERY_FORMATS:
-      gst_query_set_formats (*query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
+      gst_query_set_formats (query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
       return TRUE;
 
     case GST_QUERY_URI:
-      gst_query_set_uri (*query, fdsink->uri);
+      gst_query_set_uri (query, fdsink->uri);
       return TRUE;
 
     default:

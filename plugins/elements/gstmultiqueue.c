@@ -1582,7 +1582,7 @@ gst_multi_queue_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_multi_queue_src_query (GstPad * pad, GstQuery ** query)
+gst_multi_queue_src_query (GstPad * pad, GstQuery * query)
 {
   GstSingleQueue *sq = gst_pad_get_element_private (pad);
   GstPad *peerpad;

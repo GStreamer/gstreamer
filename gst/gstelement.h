@@ -655,7 +655,7 @@ struct _GstElementClass
   gboolean              (*send_event)           (GstElement *element, GstEvent *event);
 
   const GstQueryType*   (*get_query_types)      (GstElement *element);
-  gboolean              (*query)                (GstElement *element, GstQuery **query);
+  gboolean              (*query)                (GstElement *element, GstQuery *query);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -766,7 +766,7 @@ gboolean                gst_element_seek                (GstElement *element, gd
                                                          GstSeekType stop_type, gint64 stop);
 G_CONST_RETURN GstQueryType*
                         gst_element_get_query_types     (GstElement *element);
-gboolean                gst_element_query               (GstElement *element, GstQuery **query);
+gboolean                gst_element_query               (GstElement *element, GstQuery *query);
 
 /* messages */
 gboolean                gst_element_post_message        (GstElement * element, GstMessage * message);

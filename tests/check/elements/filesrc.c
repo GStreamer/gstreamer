@@ -113,7 +113,7 @@ GST_START_TEST (test_seeking)
   /* Test that filesrc is seekable with a file fd */
   fail_unless ((seeking_query = gst_query_new_seeking (GST_FORMAT_BYTES))
       != NULL);
-  fail_unless (gst_element_query (src, &seeking_query) == TRUE);
+  fail_unless (gst_element_query (src, seeking_query) == TRUE);
   gst_query_parse_seeking (seeking_query, NULL, &seekable, NULL, NULL);
   fail_unless (seekable == TRUE);
   gst_query_unref (seeking_query);
@@ -197,7 +197,7 @@ GST_START_TEST (test_pull)
   /* Test that filesrc is seekable with a file fd */
   fail_unless ((seeking_query = gst_query_new_seeking (GST_FORMAT_BYTES))
       != NULL);
-  fail_unless (gst_element_query (src, &seeking_query) == TRUE);
+  fail_unless (gst_element_query (src, seeking_query) == TRUE);
 
   /* get the seeking capabilities */
   gst_query_parse_seeking (seeking_query, NULL, &seekable, &start, &stop);
@@ -399,7 +399,7 @@ check_uri_for_location (GstElement * e, const gchar * location,
 
   g_object_set (e, "location", location, NULL);
   query = gst_query_new_uri ();
-  fail_unless (gst_element_query (e, &query));
+  fail_unless (gst_element_query (e, query));
   gst_query_parse_uri (query, &query_uri);
   gst_query_unref (query);
 

@@ -151,7 +151,7 @@ gst_proxy_pad_event_default (GstPad * pad, GstEvent * event)
  * Since: 0.10.35
  */
 gboolean
-gst_proxy_pad_query_default (GstPad * pad, GstQuery ** query)
+gst_proxy_pad_query_default (GstPad * pad, GstQuery * query)
 {
   gboolean res = FALSE;
   GstPad *target;
