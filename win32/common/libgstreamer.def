@@ -959,6 +959,7 @@ EXPORTS
 	gst_stream_error_get_type
 	gst_stream_error_quark
 	gst_stream_status_type_get_type
+	gst_structure_can_intersect
 	gst_structure_change_type_get_type
 	gst_structure_copy
 	gst_structure_empty_new
@@ -1001,6 +1002,7 @@ EXPORTS
 	gst_structure_id_set_valist
 	gst_structure_id_set_value
 	gst_structure_id_take_value
+	gst_structure_intersect
 	gst_structure_is_equal
 	gst_structure_map_in_place
 	gst_structure_n_fields

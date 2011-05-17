@@ -443,46 +443,6 @@ gst_structure_set_name (GstStructure * structure, const gchar * name)
   structure->name = g_quark_from_string (name);
 }
 
-
-static gboolean
-gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
-    gpointer data)
-{
-  GstStructure *struct1 = (GstStructure *) data;
-  const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
-
-  if (G_UNLIKELY (val1 == NULL))
-    return FALSE;
-  if (gst_value_compare (val1, val2) == GST_VALUE_EQUAL) {
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-/**
- * gst_structure_is_equal:
- * @struct1: a #GstStructure
- * @struct2: another #GstStructure
- *
- * Tests if two #GstStructure are equal.
- *
- * Returns: TRUE if the arguments represent the same structure
- */
-gboolean
-gst_structure_is_equal (GstStructure * struct1, GstStructure * struct2)
-{
-  if (struct1->name != struct2->name)
-    return FALSE;
-
-  if (GST_STRUCTURE_FIELDS (struct1)->len !=
-      GST_STRUCTURE_FIELDS (struct2)->len)
-    return FALSE;
-
-  return gst_structure_foreach (struct1, gst_structure_is_equal_foreach,
-      struct2);
-}
-
 static inline void
 gst_structure_id_set_value_internal (GstStructure * structure, GQuark field,
     const GValue * value)
@@ -2977,4 +2937,192 @@ gst_structure_id_get (const GstStructure * structure, GQuark first_field_id,
   va_end (args);
 
   return ret;
+}
+
+static gboolean
+gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
+    gpointer data)
+{
+  const GstStructure *struct1 = (const GstStructure *) data;
+  const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
+
+  if (G_UNLIKELY (val1 == NULL))
+    return FALSE;
+  if (gst_value_compare (val1, val2) == GST_VALUE_EQUAL) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_structure_is_equal:
+ * @structure1: a #GstStructure.
+ * @structure2: a #GstStructure.
+ *
+ * Tests if the two #GstStructure are equal.
+ *
+ * Returns: TRUE if the two structures have the same name and field.
+ *
+ * Since: 0.10.35
+ **/
+gboolean
+gst_structure_is_equal (const GstStructure * structure1,
+    const GstStructure * structure2)
+{
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure1), FALSE);
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure2), FALSE);
+
+  if (structure1->name != structure2->name) {
+    return FALSE;
+  }
+  if (structure1->fields->len != structure2->fields->len) {
+    return FALSE;
+  }
+
+  return gst_structure_foreach (structure1, gst_structure_is_equal_foreach,
+      (gpointer) structure2);
+}
+
+
+typedef struct
+{
+  GstStructure *dest;
+  const GstStructure *intersect;
+}
+IntersectData;
+
+static gboolean
+gst_structure_intersect_field1 (GQuark id, const GValue * val1, gpointer data)
+{
+  IntersectData *idata = (IntersectData *) data;
+  const GValue *val2 = gst_structure_id_get_value (idata->intersect, id);
+
+  if (G_UNLIKELY (val2 == NULL)) {
+    gst_structure_id_set_value (idata->dest, id, val1);
+  } else {
+    GValue dest_value = { 0 };
+    if (gst_value_intersect (&dest_value, val1, val2)) {
+      gst_structure_id_set_value (idata->dest, id, &dest_value);
+      g_value_unset (&dest_value);
+    } else {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_structure_intersect_field2 (GQuark id, const GValue * val1, gpointer data)
+{
+  IntersectData *idata = (IntersectData *) data;
+  const GValue *val2 = gst_structure_id_get_value (idata->intersect, id);
+
+  if (G_UNLIKELY (val2 == NULL)) {
+    gst_structure_id_set_value (idata->dest, id, val1);
+  }
+  return TRUE;
+}
+
+/**
+ * gst_structure_intersect:
+ * @struct1: a #GstStructure
+ * @struct2: a #GstStructure
+ *
+ * Interesects @struct1 and @struct2 and returns the intersection.
+ *
+ * Returns: Intersection of @struct1 and @struct2
+ *
+ * Since: 0.10.35
+ */
+GstStructure *
+gst_structure_intersect (const GstStructure * struct1,
+    const GstStructure * struct2)
+{
+  IntersectData data;
+
+  g_assert (struct1 != NULL);
+  g_assert (struct2 != NULL);
+
+  if (G_UNLIKELY (struct1->name != struct2->name))
+    return NULL;
+
+  /* copy fields from struct1 which we have not in struct2 to target
+   * intersect if we have the field in both */
+  data.dest = gst_structure_id_empty_new (struct1->name);
+  data.intersect = struct2;
+  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
+              gst_structure_intersect_field1, &data)))
+    goto error;
+
+  /* copy fields from struct2 which we have not in struct1 to target */
+  data.intersect = struct1;
+  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct2,
+              gst_structure_intersect_field2, &data)))
+    goto error;
+
+  return data.dest;
+
+error:
+  gst_structure_free (data.dest);
+  return NULL;
+}
+
+static gboolean
+gst_caps_structure_can_intersect_field (GQuark id, const GValue * val1,
+    gpointer data)
+{
+  GstStructure *other = (GstStructure *) data;
+  const GValue *val2 = gst_structure_id_get_value (other, id);
+
+  if (G_LIKELY (val2)) {
+    if (!gst_value_can_intersect (val1, val2)) {
+      return FALSE;
+    } else {
+      gint eq = gst_value_compare (val1, val2);
+
+      if (eq == GST_VALUE_UNORDERED) {
+        /* we need to try interseting */
+        GValue dest_value = { 0 };
+        if (gst_value_intersect (&dest_value, val1, val2)) {
+          g_value_unset (&dest_value);
+        } else {
+          return FALSE;
+        }
+      } else if (eq != GST_VALUE_EQUAL) {
+        return FALSE;
+      }
+    }
+  }
+  return TRUE;
+}
+
+/**
+ * gst_structure_can_intersect:
+ * @struct1: a #GstStructure
+ * @struct2: a #GstStructure
+ *
+ * Tries interesecting @struct1 and @struct2 and reports whether the result
+ * would not be empty.
+ *
+ * Returns: %TRUE if intersection would not be empty
+ *
+ * Since: 0.10.35
+ */
+gboolean
+gst_structure_can_intersect (const GstStructure * struct1,
+    const GstStructure * struct2)
+{
+  g_return_val_if_fail (GST_IS_STRUCTURE (struct1), FALSE);
+  g_return_val_if_fail (GST_IS_STRUCTURE (struct2), FALSE);
+
+  if (G_UNLIKELY (struct1->name != struct2->name))
+    return FALSE;
+
+  /* tries to intersect if we have the field in both */
+  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
+              gst_caps_structure_can_intersect_field, (gpointer) struct2)))
+    return FALSE;
+
+  return TRUE;
 }

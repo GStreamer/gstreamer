@@ -106,9 +106,6 @@ gboolean                gst_structure_has_name             (const GstStructure  
 void                    gst_structure_set_name             (GstStructure            *structure,
 							    const gchar             *name);
 
-gboolean                gst_structure_is_equal             (GstStructure            *struct1,
-							    GstStructure            *struct2);
-
 void                    gst_structure_id_set_value         (GstStructure            *structure,
 							    GQuark                   field,
 							    const GValue            *value);
@@ -245,6 +242,13 @@ gboolean                 gst_structure_fixate_field_nearest_fraction (GstStructu
 									 const char   *field_name,
 									 const gint target_numerator,
 									 const gint target_denominator);
+
+gboolean                 gst_structure_is_equal(const GstStructure *structure1,
+						const GstStructure *structure2);
+gboolean                 gst_structure_can_intersect(const GstStructure *struct1,
+						     const GstStructure *struct2);
+GstStructure*            gst_structure_intersect (const GstStructure *struct1,
+                                                  const GstStructure *struct2);
 
 G_END_DECLS
 
