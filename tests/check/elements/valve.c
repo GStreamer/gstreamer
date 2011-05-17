@@ -52,7 +52,7 @@ GST_START_TEST (test_valve_basic)
   GstElement *valve;
   GstPad *sink;
   GstPad *src;
-  GstCaps *caps;
+  GstCaps *caps, *templ_caps;
 
   valve = gst_check_setup_element ("valve");
 
@@ -71,8 +71,9 @@ GST_START_TEST (test_valve_basic)
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (g_list_length (buffers) == 2);
   caps = gst_pad_get_caps (src, NULL);
-  fail_unless (caps && gst_caps_is_equal (caps,
-          gst_pad_get_pad_template_caps (src)));
+  templ_caps = gst_pad_get_pad_template_caps (src);
+  fail_unless (caps && gst_caps_is_equal (caps, templ_caps));
+  gst_caps_unref (templ_caps);
   gst_caps_unref (caps);
 
   gst_check_drop_buffers ();
@@ -85,8 +86,9 @@ GST_START_TEST (test_valve_basic)
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (buffers == NULL);
   caps = gst_pad_get_caps (src, NULL);
-  fail_unless (caps && gst_caps_is_equal (caps,
-          gst_pad_get_pad_template_caps (src)));
+  templ_caps = gst_pad_get_pad_template_caps (src);
+  fail_unless (caps && gst_caps_is_equal (caps, templ_caps));
+  gst_caps_unref (templ_caps);
   gst_caps_unref (caps);
 
   gst_pad_set_active (src, FALSE);

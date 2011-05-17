@@ -576,16 +576,14 @@ GST_START_TEST (test_ghost_pads_new_from_template)
   GstPad *sinkpad, *ghostpad;
   GstPadTemplate *padtempl, *ghosttempl;
   GstCaps *padcaps, *ghostcaps, *newcaps;
-  GstCaps *copypadcaps;
 
   padcaps = gst_caps_from_string ("some/caps");
   fail_unless (padcaps != NULL);
   ghostcaps = gst_caps_from_string ("some/caps;some/other-caps");
   fail_unless (ghostcaps != NULL);
 
-  copypadcaps = gst_caps_copy (padcaps);
   padtempl = gst_pad_template_new ("padtempl", GST_PAD_SINK,
-      GST_PAD_ALWAYS, copypadcaps);
+      GST_PAD_ALWAYS, padcaps);
   fail_unless (padtempl != NULL);
   ghosttempl = gst_pad_template_new ("ghosttempl", GST_PAD_SINK,
       GST_PAD_ALWAYS, ghostcaps);
@@ -605,6 +603,7 @@ GST_START_TEST (test_ghost_pads_new_from_template)
   fail_unless (gst_caps_is_equal (newcaps, padcaps));
   gst_caps_unref (newcaps);
   gst_caps_unref (padcaps);
+  gst_caps_unref (ghostcaps);
 
   gst_object_unref (sinkpad);
   gst_object_unref (ghostpad);
@@ -620,21 +619,17 @@ GST_START_TEST (test_ghost_pads_new_no_target_from_template)
   GstPad *sinkpad, *ghostpad;
   GstPadTemplate *padtempl, *ghosttempl;
   GstCaps *padcaps, *ghostcaps, *newcaps;
-  GstCaps *copypadcaps, *copyghostcaps;
 
   padcaps = gst_caps_from_string ("some/caps");
   fail_unless (padcaps != NULL);
   ghostcaps = gst_caps_from_string ("some/caps;some/other-caps");
   fail_unless (ghostcaps != NULL);
 
-  copypadcaps = gst_caps_copy (padcaps);
-  copyghostcaps = gst_caps_copy (ghostcaps);
-
   padtempl = gst_pad_template_new ("padtempl", GST_PAD_SINK,
-      GST_PAD_ALWAYS, copypadcaps);
+      GST_PAD_ALWAYS, padcaps);
   fail_unless (padtempl != NULL);
   ghosttempl = gst_pad_template_new ("ghosttempl", GST_PAD_SINK,
-      GST_PAD_ALWAYS, copyghostcaps);
+      GST_PAD_ALWAYS, ghostcaps);
 
   sinkpad = gst_pad_new_from_template (padtempl, "sinkpad");
   fail_unless (sinkpad != NULL);
@@ -688,10 +683,12 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
   templ_caps = gst_caps_from_string ("meh; muh");
   src_template = gst_pad_template_new ("src", GST_PAD_SRC,
       GST_PAD_ALWAYS, templ_caps);
+  gst_caps_unref (templ_caps);
 
   templ_caps = gst_caps_from_string ("muh; meh");
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
       GST_PAD_ALWAYS, templ_caps);
+  gst_caps_unref (templ_caps);
 
   src = gst_pad_new_from_template (src_template, "src");
   sink = gst_pad_new_from_template (sink_template, "sink");
@@ -828,11 +825,13 @@ GST_START_TEST (test_ghost_pads_sink_link_unlink)
   fail_unless (padcaps != NULL);
   srctempl = gst_pad_template_new ("srctempl", GST_PAD_SRC,
       GST_PAD_ALWAYS, padcaps);
+  gst_caps_unref (padcaps);
 
   padcaps = gst_caps_from_string ("some/caps");
   fail_unless (padcaps != NULL);
   sinktempl = gst_pad_template_new ("sinktempl", GST_PAD_SINK,
       GST_PAD_ALWAYS, padcaps);
+  gst_caps_unref (padcaps);
 
   srcpad = gst_pad_new_from_template (srctempl, "src");
   fail_unless (srcpad != NULL);
@@ -900,11 +899,13 @@ GST_START_TEST (test_ghost_pads_src_link_unlink)
   fail_unless (padcaps != NULL);
   srctempl = gst_pad_template_new ("srctempl", GST_PAD_SRC,
       GST_PAD_ALWAYS, padcaps);
+  gst_caps_unref (padcaps);
 
   padcaps = gst_caps_from_string ("some/caps");
   fail_unless (padcaps != NULL);
   sinktempl = gst_pad_template_new ("sinktempl", GST_PAD_SINK,
       GST_PAD_ALWAYS, padcaps);
+  gst_caps_unref (padcaps);
 
   srcpad = gst_pad_new_from_template (srctempl, "src");
   fail_unless (srcpad != NULL);

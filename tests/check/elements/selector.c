@@ -554,6 +554,7 @@ GST_START_TEST (test_output_selector_getcaps_active);
 
     g_assert (gst_caps_is_equal (caps, expected));
     gst_caps_unref (caps);
+    gst_caps_unref (expected);
     gst_object_unref (pad);
   }
 

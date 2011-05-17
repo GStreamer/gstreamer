@@ -52,6 +52,7 @@ GST_START_TEST (test_link)
   srct = gst_pad_get_pad_template (src);
   fail_unless (srct == NULL);
   ASSERT_OBJECT_REFCOUNT (src, "source pad", 1);
+  gst_object_unref (srct);
 
   /* clean up */
   ASSERT_OBJECT_REFCOUNT (src, "source pad", 1);
@@ -571,6 +572,8 @@ GST_START_TEST (test_push_negotiation)
       GST_PAD_ALWAYS, srccaps);
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
       GST_PAD_ALWAYS, sinkcaps);
+  gst_caps_unref (srccaps);
+  gst_caps_unref (sinkcaps);
 
   sink = gst_pad_new_from_template (sink_template, "sink");
   fail_if (sink == NULL);
