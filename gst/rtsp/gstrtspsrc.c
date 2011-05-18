@@ -5525,8 +5525,10 @@ restart:
   src->need_redirect = FALSE;
 
   /* can't continue without a valid url */
-  if (G_UNLIKELY (src->conninfo.url == NULL))
+  if (G_UNLIKELY (src->conninfo.url == NULL)) {
+    res = GST_RTSP_EINVAL;
     goto no_url;
+  }
   src->tried_url_auth = FALSE;
 
   if ((res = gst_rtsp_conninfo_connect (src, &src->conninfo, async)) < 0)
