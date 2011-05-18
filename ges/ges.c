@@ -53,7 +53,8 @@ ges_check_gnonlin_availability (void)
  * ges_init:
  *
  * Initialize the GStreamer Editing Service. Call this before any usage of
- * GES.
+ * GES. You should take care of initilizing GStreamer before calling this
+ * function.
  */
 
 gboolean
