@@ -2766,29 +2766,47 @@ setcaps_failed:
   }
 }
 
-static GstFlowReturn
-gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
+static gboolean
+do_event_function (GstPad * pad, GstEvent * event,
+    GstPadEventFunction eventfunc)
 {
-  GstCaps *templ;
+  gboolean result = TRUE;
+  GstCaps *caps, *templ;
 
-  /* See if pad accepts the caps */
-  templ = gst_pad_get_pad_template_caps (pad);
-  if (!gst_caps_can_intersect (caps, templ))
-    goto not_accepted;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      /* backwards compatibility mode for caps */
+      gst_event_parse_caps (event, &caps);
 
-  if (!gst_pad_call_setcaps (pad, caps))
-    goto not_accepted;
+      /* See if pad accepts the caps */
+      templ = gst_pad_get_pad_template_caps (pad);
+      if (!gst_caps_can_intersect (caps, templ))
+        goto not_accepted;
 
-  gst_caps_unref (templ);
+      if (!gst_pad_call_setcaps (pad, caps))
+        goto not_accepted;
 
-  return GST_FLOW_OK;
+      gst_caps_unref (templ);
+      break;
+    }
+    default:
+      break;
+  }
 
+  GST_DEBUG_OBJECT (pad, "calling event function with event %p", event);
+  result = eventfunc (pad, event);
+
+  return result;
+
+  /* ERRORS */
 not_accepted:
   {
     gst_caps_unref (templ);
+    gst_event_unref (event);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "caps %" GST_PTR_FORMAT " not accepted", caps);
-    return GST_FLOW_NOT_NEGOTIATED;
+    return FALSE;
   }
 }
 
@@ -2807,6 +2825,7 @@ gst_pad_update_events (GstPad * pad)
   if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
     goto no_function;
 
+restart:
   for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
     /* skip already active events */
     if (pad->priv->events[i].active)
@@ -2818,11 +2837,17 @@ gst_pad_update_events (GstPad * pad)
       gst_event_ref (event);
       GST_OBJECT_UNLOCK (pad);
 
-      res = eventfunc (pad, event);
+      res = do_event_function (pad, event, eventfunc);
 
       GST_OBJECT_LOCK (pad);
-      /* FIXME, things could have changed here, probably use a cookie
-       * to check for changes. */
+      /* things could have changed while we release the lock, check if we still
+       * are handling the same event, if we don't something changed and we have
+       * to try again. FIXME. we need a cookie here. */
+      if (event != pad->priv->events[i].event) {
+        GST_DEBUG_OBJECT (pad, "events changed, restarting");
+        goto restart;
+      }
+
       pad->priv->events[i].active = res;
       /* remove the event when the event function did not accept it */
       if (!res) {
@@ -3220,13 +3245,6 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_CAPS:
     {
-      GstCaps *caps;
-
-      /* backwards compatibility mode for caps */
-      gst_event_parse_caps (event, &caps);
-      if (gst_pad_configure_sink (pad, caps) != GST_FLOW_OK)
-        result = FALSE;
-
       /* don't forward by default */
       forward = FALSE;
       break;
@@ -4673,7 +4691,6 @@ gboolean
 gst_pad_send_event (GstPad * pad, GstEvent * event)
 {
   gboolean result = FALSE;
-  GstPadEventFunction eventfunc;
   gboolean serialized, need_unlock = FALSE, needs_events, sticky;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -4774,24 +4791,29 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
     }
   }
 
-  if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
-    goto no_function;
-
   if (G_UNLIKELY (needs_events)) {
+    GstFlowReturn ret;
+
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_EVENTS);
 
     GST_DEBUG_OBJECT (pad, "need to update all events");
-    if (gst_pad_update_events (pad) != GST_FLOW_OK)
-      result = FALSE;
-    else
-      result = TRUE;
+    ret = gst_pad_update_events (pad);
+    if (ret != GST_FLOW_OK)
+      goto update_failed;
     GST_OBJECT_UNLOCK (pad);
 
     gst_event_unref (event);
+
+    result = TRUE;
   } else {
+    GstPadEventFunction eventfunc;
+
+    if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
+      goto no_function;
+
     GST_OBJECT_UNLOCK (pad);
 
-    result = eventfunc (pad, event);
+    result = do_event_function (pad, event, eventfunc);
   }
 
   if (need_unlock)
@@ -4840,6 +4862,15 @@ flushing:
 dropping:
   {
     GST_DEBUG_OBJECT (pad, "Dropping event after FALSE probe return");
+    gst_event_unref (event);
+    return FALSE;
+  }
+update_failed:
+  {
+    GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
+    GST_CAT_INFO_OBJECT (GST_CAT_EVENT, pad, "Update events failed");
     gst_event_unref (event);
     return FALSE;
   }
