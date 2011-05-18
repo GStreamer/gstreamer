@@ -459,7 +459,12 @@ gst_proxy_pad_setcaps_default (GstPad * pad, GstCaps * caps)
 
   target = gst_proxy_pad_get_target (pad);
   if (target) {
+#if 0
+    /* FIXME, not needed, the caps event will propagate over the pads
+     * correctly */
     res = gst_pad_set_caps (target, caps);
+#endif
+    res = TRUE;
     gst_object_unref (target);
   } else {
     /* We don't have any target, but we shouldn't return FALSE since this
