@@ -68,6 +68,8 @@
 #include "gstlamemp3enc.h"
 #include <gst/gst-i18n-plugin.h>
 
+#include <gst/pbutils/descriptions.h>
+
 /* lame < 3.98 */
 #ifndef HAVE_LAME_SET_VBR_QUALITY
 #define lame_set_VBR_quality(flags,q) lame_set_VBR_q((flags),(int)(q))
@@ -186,7 +188,7 @@ static void gst_lamemp3enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_lamemp3enc_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_lamemp3enc_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_lamemp3enc_setup (GstLameMP3Enc * lame);
+static gboolean gst_lamemp3enc_setup (GstLameMP3Enc * lame, GstTagList ** tags);
 static GstStateChangeReturn gst_lamemp3enc_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -320,6 +322,7 @@ gst_lamemp3enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   gint version;
   GstStructure *structure;
   GstCaps *othercaps;
+  GstTagList *tags = NULL;
 
   lame = GST_LAMEMP3ENC (GST_PAD_PARENT (pad));
   structure = gst_caps_get_structure (caps, 0);
@@ -330,9 +333,8 @@ gst_lamemp3enc_sink_setcaps (GstPad * pad, GstCaps * caps)
     goto no_channels;
 
   GST_DEBUG_OBJECT (lame, "setting up lame");
-  if (!gst_lamemp3enc_setup (lame))
+  if (!gst_lamemp3enc_setup (lame, &tags))
     goto setup_failed;
-
 
   out_samplerate = lame_get_out_samplerate (lame->lgf);
   if (out_samplerate == 0)
@@ -361,7 +363,19 @@ gst_lamemp3enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   /* and use these caps */
   gst_pad_set_caps (lame->srcpad, othercaps);
+
+  if (tags) {
+    gst_pb_utils_add_codec_description_to_tag_list (tags, GST_TAG_CODEC,
+        othercaps);
+    gst_pb_utils_add_codec_description_to_tag_list (tags, GST_TAG_AUDIO_CODEC,
+        othercaps);
+  }
+
   gst_caps_unref (othercaps);
+
+  if (tags)
+    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (lame), lame->srcpad,
+        tags);
 
   return TRUE;
 
@@ -379,6 +393,8 @@ zero_output_rate:
   {
     GST_ELEMENT_ERROR (lame, LIBRARY, SETTINGS, (NULL),
         ("LAMEMP3ENC decided on a zero sample rate"));
+    if (tags)
+      gst_tag_list_free (tags);
     return FALSE;
   }
 setup_failed:
@@ -710,10 +726,21 @@ gst_lamemp3enc_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (lame->srcpad, event);
       break;
     }
-    case GST_EVENT_TAG:
-      GST_DEBUG_OBJECT (lame, "ignoring TAG event, passing it on");
+    case GST_EVENT_TAG:{
+      GstTagList *tags;
+
+      gst_event_parse_tag (event, &tags);
+
+      tags = gst_tag_list_copy (tags);
+      gst_event_unref (event);
+
+      gst_tag_list_remove_tag (tags, GST_TAG_CODEC);
+      gst_tag_list_remove_tag (tags, GST_TAG_AUDIO_CODEC);
+      event = gst_event_new_tag (tags);
+
       ret = gst_pad_push_event (lame->srcpad, event);
       break;
+    }
     default:
       ret = gst_pad_event_default (pad, event);
       break;
@@ -831,12 +858,16 @@ not_setup:
 
 /* set up the encoder state */
 static gboolean
-gst_lamemp3enc_setup (GstLameMP3Enc * lame)
+gst_lamemp3enc_setup (GstLameMP3Enc * lame, GstTagList ** tags)
 {
 
 #define CHECK_ERROR(command) G_STMT_START {\
   if ((command) < 0) { \
     GST_ERROR_OBJECT (lame, "setup failed: " G_STRINGIFY (command)); \
+    if (*tags) { \
+      gst_tag_list_free (*tags); \
+      *tags = NULL; \
+    } \
     return FALSE; \
   } \
 }G_STMT_END
@@ -858,6 +889,8 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame)
 
   if (lame->lgf == NULL)
     return FALSE;
+
+  *tags = gst_tag_list_new ();
 
   /* post latency message on the bus */
   gst_element_post_message (GST_ELEMENT (lame),
@@ -905,6 +938,8 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame)
       CHECK_ERROR (lame_set_VBR (lame->lgf, vbr_abr));
       CHECK_ERROR (lame_set_VBR_mean_bitrate_kbps (lame->lgf, lame->bitrate));
     }
+    gst_tag_list_add (*tags, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
+        lame->bitrate, NULL);
   }
 
   if (lame->encoding_engine_quality == LAMEMP3ENC_ENCODING_ENGINE_QUALITY_FAST)
