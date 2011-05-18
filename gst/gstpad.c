@@ -4875,6 +4875,39 @@ gst_pad_get_element_private (GstPad * pad)
   return pad->element_private;
 }
 
+/**
+ * gst_pad_get_sticky_event:
+ * @pad: the #GstPad to get the event from.
+ * @event_type: the #GstEventType that should be retrieved.
+ * @active: If only active events should be retrieved
+ *
+ * Returns a new reference of the sticky event of type @event_type
+ * from the event. If @active is #TRUE only active events that
+ * were accepted downstream are returned.
+ *
+ * Returns: (transfer full): a #GstEvent of type @event_type. Unref after usage.
+ */
+GstEvent *
+gst_pad_get_sticky_event (GstPad * pad, GstEventType event_type,
+    gboolean active)
+{
+  GstEvent *event = NULL;
+  guint idx;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+  g_return_val_if_fail ((event_type & GST_EVENT_TYPE_STICKY) != 0, NULL);
+
+  idx = GST_EVENT_STICKY_IDX_TYPE (event_type);
+
+  if (!active || pad->priv->events[idx].active) {
+    if ((event = pad->priv->events[idx].event)) {
+      gst_event_ref (event);
+    }
+  }
+
+  return event;
+}
+
 static void
 do_stream_status (GstPad * pad, GstStreamStatusType type,
     GThread * thread, GstTask * task)
