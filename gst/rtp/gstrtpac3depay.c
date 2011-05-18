@@ -193,8 +193,9 @@ gst_rtp_ac3_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     /* We don't bother with fragmented packets yet */
     outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 2, -1);
 
-    GST_DEBUG_OBJECT (rtpac3depay, "pushing buffer of size %d",
-        GST_BUFFER_SIZE (outbuf));
+    if (outbuf)
+        GST_DEBUG_OBJECT (rtpac3depay, "pushing buffer of size %d",
+            GST_BUFFER_SIZE (outbuf));
 
     return outbuf;
   }

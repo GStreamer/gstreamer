@@ -176,9 +176,11 @@ gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, payload_header, -1);
 
-    GST_DEBUG_OBJECT (rtpmpvdepay,
-        "gst_rtp_mpv_depay_chain: pushing buffer of size %d",
-        GST_BUFFER_SIZE (outbuf));
+    if (outbuf) {
+      GST_DEBUG_OBJECT (rtpmpvdepay,
+          "gst_rtp_mpv_depay_chain: pushing buffer of size %d",
+          GST_BUFFER_SIZE (outbuf));
+    }
 
     return outbuf;
   }
