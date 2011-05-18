@@ -169,8 +169,9 @@ gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       gst_rtp_buffer_get_payload_subbuffer (buf, rtpmp2tdepay->skip_first_bytes,
       -1);
 
-  GST_DEBUG ("gst_rtp_mp2t_depay_chain: pushing buffer of size %d",
-      GST_BUFFER_SIZE (outbuf));
+  if (outbuf)
+    GST_DEBUG ("gst_rtp_mp2t_depay_chain: pushing buffer of size %d",
+        GST_BUFFER_SIZE (outbuf));
 
   return outbuf;
 

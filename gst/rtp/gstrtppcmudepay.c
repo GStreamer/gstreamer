@@ -143,12 +143,14 @@ gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   len = gst_rtp_buffer_get_payload_len (buf);
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 
-  GST_BUFFER_DURATION (outbuf) =
-      gst_util_uint64_scale_int (len, GST_SECOND, depayload->clock_rate);
+  if (outbuf) {
+    GST_BUFFER_DURATION (outbuf) =
+        gst_util_uint64_scale_int (len, GST_SECOND, depayload->clock_rate);
 
-  if (marker) {
-    /* mark start of talkspurt with DISCONT */
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    if (marker) {
+      /* mark start of talkspurt with DISCONT */
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    }
   }
 
   return outbuf;

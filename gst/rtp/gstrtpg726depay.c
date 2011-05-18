@@ -222,6 +222,8 @@ gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (depay->aal2 || depay->force_aal2) {
     /* AAL2, we can just copy the bytes */
     outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+    if (!outbuf)
+      goto bad_len;
   } else {
     guint8 *in, *out, tmp;
     guint len;
@@ -239,6 +241,10 @@ gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       outbuf = gst_rtp_buffer_get_payload_buffer (copy);
       gst_buffer_unref (copy);
     }
+
+    if (!outbuf)
+      goto bad_len;
+
     out = GST_BUFFER_DATA (outbuf);
 
     /* we need to reshuffle the bytes, input is always of the form
@@ -335,6 +341,9 @@ gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   return outbuf;
+
+bad_len:
+  return NULL;
 }
 
 static void

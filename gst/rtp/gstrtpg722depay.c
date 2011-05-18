@@ -236,7 +236,7 @@ gst_rtp_g722_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
   marker = gst_rtp_buffer_get_marker (buf);
 
-  if (marker) {
+  if (marker && outbuf) {
     /* mark talk spurt with DISCONT */
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   }

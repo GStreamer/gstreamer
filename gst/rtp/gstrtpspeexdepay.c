@@ -212,7 +212,8 @@ gst_rtp_speex_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   /* nothing special to be done */
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 
-  GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+  if (outbuf)
+    GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
 
   return outbuf;
 }
