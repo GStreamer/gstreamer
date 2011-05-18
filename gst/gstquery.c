@@ -103,6 +103,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_BUFFERING, "buffering", "Buffering status", 0},
   {GST_QUERY_CUSTOM, "custom", "Custom query", 0},
   {GST_QUERY_URI, "uri", "URI of the source or sink", 0},
+  {GST_QUERY_ALLOCATION, "allocation", "Allocation properties", 0},
   {0, NULL, NULL, 0}
 };
 
@@ -150,6 +151,7 @@ gst_query_type_get_name (GstQueryType query)
   const GstQueryTypeDefinition *def;
 
   def = gst_query_type_get_details (query);
+  g_return_val_if_fail (def != NULL, NULL);
 
   return def->nick;
 }
@@ -168,6 +170,7 @@ gst_query_type_to_quark (GstQueryType query)
   const GstQueryTypeDefinition *def;
 
   def = gst_query_type_get_details (query);
+  g_return_val_if_fail (def != NULL, 0);
 
   return def->quark;
 }
