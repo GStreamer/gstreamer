@@ -39,27 +39,30 @@ Note that the behaviour is not influenced by a flushing pad.
 sink pads
 ---------
 
-A gst_pad_send_event() on a sinkpad will put the event into the pending array of
-sticky tags.
+When the pad is flushing, the _send_event() function returns WRONG_STATE
+immediately.
 
-When the pad is flushing, the _send_event() function returns WRONG_STATE.
+A gst_pad_send_event() on a sinkpad will check the new event against the
+existing event. If they are different, the old event is replaced with the new
+event and the event is marked as inactive. If the events are the same, nothing
+changes.
 
-When the pad is not flushing, the event function is called for all sticky events
-in the pending array. If the event function returns success, the event is moved
-to the sticky array. If the event function returns failure, the event is removed 
-from the pending array.
+The event function is then called for all inactive events. If the function
+returns success, the event is marked active, else the event is removed and set
+to NULL in the array.
 
 This ensures that the event function is never called for flushing pads and that
 the sticky array only contains events for which the event function returned
 success.
 
+
 pad link
 --------
 
 When linking pads, all the sticky events from the srcpad are copied to the
-pending array on the sinkpad. The events will be sent to the event function of
-the sinkpad on the next event or buffer.
-
+array on the sinkpad. All the different events are marked inactive.
+The inactive events will be sent to the event function of the sinkpad on the next
+event or buffer.
 
 
 FLUSH_START/STOP
