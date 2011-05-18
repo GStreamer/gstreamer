@@ -67,6 +67,8 @@ typedef struct
 
 #define DEFAULT_BITRATE 0
 #define DEFAULT_MODE VPX_VBR
+#define DEFAULT_MIN_QUANTIZER 0
+#define DEFAULT_MAX_QUANTIZER 63
 #define DEFAULT_QUALITY 5
 #define DEFAULT_ERROR_RESILIENT FALSE
 #define DEFAULT_MAX_LATENCY 10
@@ -82,6 +84,8 @@ enum
   PROP_0,
   PROP_BITRATE,
   PROP_MODE,
+  PROP_MIN_QUANTIZER,
+  PROP_MAX_QUANTIZER,
   PROP_QUALITY,
   PROP_ERROR_RESILIENT,
   PROP_MAX_LATENCY,
@@ -240,6 +244,18 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           GST_VP8_ENC_MODE_TYPE, DEFAULT_MODE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_MIN_QUANTIZER,
+      g_param_spec_int ("qp-min", "Minimum quantizer",
+          "Minimum (best) quantizer",
+          0, 63, DEFAULT_MIN_QUANTIZER,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_QUANTIZER,
+      g_param_spec_int ("qp-max", "Maximum quantizer",
+          "Maximum (worst) quantizer",
+          0, 63, DEFAULT_MAX_QUANTIZER,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_double ("quality", "Quality",
           "Quality. This parameter set constant quantizer.",
@@ -305,6 +321,8 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   GST_DEBUG_OBJECT (gst_vp8_enc, "init");
 
   gst_vp8_enc->bitrate = DEFAULT_BITRATE;
+  gst_vp8_enc->min_quantizer = DEFAULT_MIN_QUANTIZER;
+  gst_vp8_enc->max_quantizer = DEFAULT_MAX_QUANTIZER;
   gst_vp8_enc->mode = DEFAULT_MODE;
   gst_vp8_enc->quality = DEFAULT_QUALITY;
   gst_vp8_enc->error_resilient = DEFAULT_ERROR_RESILIENT;
@@ -348,6 +366,12 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_MODE:
       gst_vp8_enc->mode = g_value_get_enum (value);
+      break;
+    case PROP_MIN_QUANTIZER:
+      gst_vp8_enc->min_quantizer = g_value_get_int (value);
+      break;
+    case PROP_MAX_QUANTIZER:
+      gst_vp8_enc->max_quantizer = g_value_get_int (value);
       break;
     case PROP_QUALITY:
       gst_vp8_enc->quality = g_value_get_double (value);
@@ -398,6 +422,12 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MODE:
       g_value_set_enum (value, gst_vp8_enc->mode);
+      break;
+    case PROP_MIN_QUANTIZER:
+      g_value_set_int (value, gst_vp8_enc->min_quantizer);
+      break;
+    case PROP_MAX_QUANTIZER:
+      g_value_set_int (value, gst_vp8_enc->max_quantizer);
       break;
     case PROP_QUALITY:
       g_value_set_double (value, gst_vp8_enc->quality);
@@ -505,8 +535,15 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   cfg.g_lag_in_frames = encoder->max_latency;
   cfg.g_threads = encoder->threads;
   cfg.rc_end_usage = encoder->mode;
-  if (encoder->bitrate) {
+  /* Standalone qp-min do not make any sence, with bitrate=0 and qp-min=1
+   * encoder will use only default qp-max=63. Also this will make
+   * worst possbile quality.
+   */
+  if (encoder->bitrate != DEFAULT_BITRATE ||
+      encoder->max_quantizer != DEFAULT_MAX_QUANTIZER) {
     cfg.rc_target_bitrate = encoder->bitrate / 1000;
+    cfg.rc_min_quantizer = encoder->min_quantizer;
+    cfg.rc_max_quantizer = encoder->max_quantizer;
   } else {
     cfg.rc_min_quantizer = (gint) (63 - encoder->quality * 6.2);
     cfg.rc_max_quantizer = (gint) (63 - encoder->quality * 6.2);
