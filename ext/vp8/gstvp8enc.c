@@ -242,7 +242,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_double ("quality", "Quality",
-          "Quality",
+          "Quality. This parameter set constant quantizer.",
           0, 10.0, DEFAULT_QUALITY,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -508,8 +508,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   if (encoder->bitrate) {
     cfg.rc_target_bitrate = encoder->bitrate / 1000;
   } else {
-    cfg.rc_min_quantizer = 63 - encoder->quality * 5.0;
-    cfg.rc_max_quantizer = 63 - encoder->quality * 5.0;
+    cfg.rc_min_quantizer = (gint) (63 - encoder->quality * 6.2);
+    cfg.rc_max_quantizer = (gint) (63 - encoder->quality * 6.2);
     cfg.rc_target_bitrate = encoder->bitrate;
   }
 
